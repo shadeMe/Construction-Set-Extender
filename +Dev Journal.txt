@@ -1,0 +1,39 @@
+Done
+====
+ ++   * Blocktype invalid for this type of script (GECK catches this when reference-specific blocktypes are used for quest scripts, but not when effect-only blocktypes are used in non-effect scripts)
+ ++   * Script already has a ScriptName declaration 
+ ++   * Condition not allowed (applied to lines starting with "Return", "End", "else" and "endif"
+ ++   * Multiple editorIDs (applied to ScriptName declarations)
+ ++   * EditorID starts with a number
+ ++   * EditorID contains invalid character (applied to ScriptName declarations. The compiler will truncate the editorID just before the invalid character)
+ ++   * EditorID starts with a number (applied to "set" commands with remote variables. The compiler will say that it can't find the variable, whereas the error is due to the editorID starting with a number)
+ ++   * Variable declaration invalid within Begin/End block
+ ++   * Variable "varName" has already been declared
+ ++		The validator will also give a warning if a variable is declared but not used, and if a condition appears on its own line (therefore having no use). All other warnings and errors should be caught by the compiler already.
+
+Notes
+=====
+. Preprocessor directives must be on a line of their own
+. Prepro. variables must be in uppercase and can only contain alpha numerics and underscores
+. Preproc vars must be delimited with one of the following chars to be recognized : .,<WHITESPACE>(){}[]<TABCHAR><NEWLINECHAR>
+. The code that uses or defines such variables mustn't be modified outside CSE's script editor.
+
+To-Do
+=====
+> Another random thing - note if the script requires OBSE, which version, especially if the whole thing requires v18 because of the bytecode thing, allow the modder to select a section and ask which version it requires.
+> Version history
+1. the display room for the path is hideously narrow... would be nicer to a) have the display be wider or b ) (probably better I think) if the mouse hovers over to pop up a text bar with the whole path 
+3.  clicking those opens up a file browser set to oblivion/data (or for icons data/textures/menu/icons IIRC)... I'd rather it opened the current path (if it exists).
+
+
+Auto-Endif. After an If line, the next line is auto-indented; on the line after that, insert an un-indented endif. 
+Also add closing Loop for While/ForEach. 
+Don't do this if there is a line immediately following the If which is already more deeply indented, as this probably means you're adding a condition to an existing block. 
+Should have a method of expressly disabling this behavior (Shift-Enter?) for other cases where it's undesired.
+
+
+
+Changes
+=======
+The Data\Backup folder is now created at app load, if it doesn't exist in the first place
+The View->Render Window menu item now works
