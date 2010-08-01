@@ -164,18 +164,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\obse\obse\GameRTTI_1_1.inl"
-				>
-			</File>
-			<File
-				RelativePath="..\obse\obse\GameRTTI_1_2.inl"
-				>
-			</File>
-			<File
-				RelativePath="..\obse\obse\GameRTTI_1_2_416.inl"
-				>
-			</File>
-			<File
 				RelativePath="..\obse\obse\GameTypes.h"
 				>
 			</File>

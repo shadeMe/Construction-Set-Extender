@@ -21,6 +21,8 @@ static bool							g_DataHandlerPopulateModList_QuitReturn = true;
 static char*						g_CustomWorkspacePath = new char[MAX_PATH];
 static const char*					g_DefaultWorkspacePath = "Data\\";
 
+static const char*					g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
+
 void __stdcall DoT()		
 {
 	MessageBox(NULL, "Hooked", NULL, 1);
@@ -91,8 +93,10 @@ bool PatchMiscHooks()
 //	PLACE_HOOK(TESCtorSkipModListPopulation);
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 
+	SafeWrite32(kDefaultWaterTextureFixPatchAddr, (UInt32)g_DefaultWaterTextureStr);
+
 	WriteRelJump(0x0047BCBC, (UInt32)T);
-	if (CreateDirectory(std::string(g_AppPath + "Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
 		_D_PRINT("Couldn't create the Backup folder in Data directory");
 	}
 	return true;

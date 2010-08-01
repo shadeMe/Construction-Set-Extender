@@ -255,4 +255,6 @@ const UInt32			kTESCtorSkipModListPopulationRetnAddr = 0x00475CD3;
 const UInt32			kTESCtorSkipModListPopulationCallAddr = 0x0047E4C0;
 
 void TESCtorSkipModListPopulationHook(void);
+// gets rid of the ugly pink default water texture
+const UInt32			kDefaultWaterTextureFixPatchAddr = 0x0047F792;
 

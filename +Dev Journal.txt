@@ -37,3 +37,4 @@ Changes
 =======
 The Data\Backup folder is now created at app load, if it doesn't exist in the first place
 The View->Render Window menu item now works
+The default water texture no longer points to a nnon-existent file
