@@ -56,7 +56,6 @@ const UInt32			kDataHandlerPostErrorPatchAddr = 0x004852F0;
 const UInt32			kExitCSHookAddr = 0x00419354;
 const UInt32			kExitCSJumpAddr = 0x004B52C1;
 
-void __stdcall DoExitCS(HWND MainWindow);
 void ExitCSHook(void);
 // makes the No button in the warning dialog box redundant
 const UInt32			kEditorWarningPatchAddr = 0x004B52B0;
@@ -64,14 +63,12 @@ const UInt32			kEditorWarningPatchAddr = 0x004B52B0;
 const UInt32			kFindTextInitHookAddr = 0x00419A42;
 const UInt32			kFindTextInitRetnAddr = 0x00419A48;
 
-void __stdcall DoFindTextInitHook(HWND FindTextDialog);
 void FindTextInitHook(void);
 // adds a one-time only hook to the CS main windows wndproc as an alternative to WinMain()
 const UInt32			kCSInitHookAddr = 0x00419260;
 const UInt32			kCSInitRetnAddr = 0x00419265;
 const UInt32			kCSInitCallAddr = 0x006E5850;
 
-void __stdcall DoCSInitHook();
 void CSInitHook(void);
 // replaces the otiose "Recreate facial animation files" menu item with "Use Info Listings"
 const UInt32			kUseInfoListInitHookAddr = 0x00419833;
@@ -220,7 +217,6 @@ const UInt32			kNPCFaceGenHookAddr = 0x004D76AC;
 const UInt32			kNPCFaceGenRetnAddr = 0x004D76B1;
 const UInt32			kNPCFaceGenCallAddr = 0x0049C230;
 
-void __stdcall DoNPCFaceGenHook(HWND Dialog);
 void NPCFaceGenHook(void);
 // removes the Missing Master warning while saving plugins -- TODO: issues need fixing
 const UInt32			kSavePluginWarnMissingMastersPatchAddr = 0x0047ED01;
@@ -241,7 +237,6 @@ const UInt32			kDataDlgCallPopulateModListHookAddr = 0x0040B41B;
 const UInt32			kDataDlgCallPopulateModListRetnAddr = 0x0040B421;
 const UInt32			kDataDlgCallPopulateModListCallAddr = 0x0047E4C0;	// f_DataHandler::PopulateModList(DataHandler* this, LPSTR localMasterPath)
 
-void __stdcall DoDataDlgCallPopulateModListHook(INISetting* Path);
 void DataDlgCallPopulateModListHook(void);
 
 const UInt32			kDataHandlerPopulateModListQuickExitHookAddr = 0x0047E4F5;
@@ -257,4 +252,31 @@ const UInt32			kTESCtorSkipModListPopulationCallAddr = 0x0047E4C0;
 void TESCtorSkipModListPopulationHook(void);
 // gets rid of the ugly pink default water texture
 const UInt32			kDefaultWaterTextureFixPatchAddr = 0x0047F792;
+// hooks the data window for subclassing
+const UInt32			kDataDlgInitHookAddr = 0x0040C6D7;
+const UInt32			kDataDlgInitRetnAddr = 0x0040C6DC;
+const UInt32			kDataDlgInitCallAddr = 0x00404A90;
+
+void DataDlgInitHook(void);
+// quick loading of plugins (only loads the active plugin)
+const UInt32			kQuickLoadPluginLoadHandlerPrologueHookAddr = 0x0040D073;
+const UInt32			kQuickLoadPluginLoadHandlerPrologueCallAddr = 0x0040CA30;
+const UInt32			kQuickLoadPluginLoadHandlerPrologueRetnAddr = 0x0040D078;
+
+void QuickLoadPluginLoadHandlerPrologueHook(void);
+
+const UInt32			kQuickLoadPluginLoadHandlerHookAddr = 0x004852E5;
+const UInt32			kQuickLoadPluginLoadHandlerCallAddr = 0x00484A60;		// f_DataHandler::LoadTESFile
+const UInt32			kQuickLoadPluginLoadHandlerRetnAddr = 0x004852EE;
+const UInt32			kQuickLoadPluginLoadHandlerSkipAddr = 0x004852F0;
+
+void QuickLoadPluginLoadHandlerHook(void);
+
+const UInt32			kQuickLoadPluginSaveHandlerHookAddr = 0x0041BA98;
+const UInt32			kQuickLoadPluginSaveHandlerCallAddr = 0x00404410;
+const UInt32			kQuickLoadPluginSaveHandlerRetnAddr = 0x0041BA9D;
+const UInt32			kQuickLoadPluginSaveHandlerSkipAddr = 0x0041A94C;
+
+void QuickLoadPluginSaveHandlerHook(void);
+
 

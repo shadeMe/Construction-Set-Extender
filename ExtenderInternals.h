@@ -154,6 +154,12 @@ public:
 
 extern INISetting*			g_INI_LocalMasterPath;
 
+extern ModEntry::Data**		g_TESActivePlugin;
+
+
+
+
+
 
 
 // __thisCall handlers (non-virtual)

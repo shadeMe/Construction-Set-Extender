@@ -7,7 +7,7 @@
 	RootNamespace="CSEScriptEditor"
 	Keyword="ManagedCProj"
 	AssemblyReferenceSearchPaths="&quot;Data\OBSE\Plugins\ComponentDLLs\CSE\&quot;"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -273,6 +273,11 @@
 			CopyLocal="true"
 			MinFrameworkVersion="131072"
 		/>
+		<AssemblyReference
+			RelativePath="..\..\..\..\..\..\Documents\Visual Studio 2008\Projects\SharpDev 4.0 Beta\bin\ICSharpCode.AvalonEdit.dll"
+			AssemblyName="ICSharpCode.AvalonEdit, Version=0.0.0.0, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL"
+			MinFrameworkVersion="196613"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -495,11 +500,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
+					RelativePath=".\Images\warning.png"
 					>
 				</File>
 				<File
-					RelativePath=".\Images\warning.png"
+					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
 					>
 				</File>
 				<File

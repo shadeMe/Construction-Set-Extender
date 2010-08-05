@@ -8,6 +8,7 @@
 #include "shlobj.h"
 
 static WNDPROC						g_FindTextOrgWindowProc = NULL;
+static WNDPROC						g_DataDlgOrgWindowProc = NULL;
 extern FARPROC						g_WindowHandleCallAddr;
 
 FormData*							UIL_FormData = new FormData();
@@ -22,6 +23,9 @@ static char*						g_CustomWorkspacePath = new char[MAX_PATH];
 static const char*					g_DefaultWorkspacePath = "Data\\";
 
 static const char*					g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
+
+static bool							g_QuickLoadToggle = false;
+static HFONT						g_CSDefaultFont = NULL;
 
 void __stdcall DoT()		
 {
@@ -94,6 +98,10 @@ bool PatchMiscHooks()
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 
 	SafeWrite32(kDefaultWaterTextureFixPatchAddr, (UInt32)g_DefaultWaterTextureStr);
+	PLACE_HOOK(QuickLoadPluginLoadHandlerPrologue);
+	PLACE_HOOK(QuickLoadPluginLoadHandler);
+	PLACE_HOOK(QuickLoadPluginSaveHandler);
+	PLACE_HOOK(DataDlgInit);
 
 	WriteRelJump(0x0047BCBC, (UInt32)T);
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -132,14 +140,6 @@ void DoNop(const NopData* Data)
 	}	
 }
 
-void _declspec(naked) ExitCSHook(void)
-{
-	__asm
-	{
-		push    ebx
-		call    DoExitCS
-	}
-}
 
 void __stdcall DoExitCS(HWND MainWindow)
 {
@@ -148,6 +148,15 @@ void __stdcall DoExitCS(HWND MainWindow)
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
 	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");;
 	ExitProcess(0);
+}
+
+void _declspec(naked) ExitCSHook(void)
+{
+	__asm
+	{
+		push    ebx
+		call    DoExitCS
+	}
 }
 
 
@@ -500,5 +509,138 @@ void __declspec(naked) TESCtorSkipModListPopulationHook(void)
 		mov		[g_DataHandlerPopulateModList_QuitReturn], 0
 		call	DoT
 		jmp		[kTESCtorSkipModListPopulationRetnAddr]
+	}
+}
+
+void __stdcall DoQuickLoadPluginLoadHandlerPrologueHook(HWND DataDlg)
+{
+	if (IsDlgButtonChecked(DataDlg, 9900) == BST_CHECKED)
+		g_QuickLoadToggle = true;
+	else
+		g_QuickLoadToggle = false;
+}
+
+void __declspec(naked) QuickLoadPluginLoadHandlerPrologueHook(void)
+{
+	__asm
+	{
+		pushad
+		push	edi
+		call	DoQuickLoadPluginLoadHandlerPrologueHook
+		popad
+		call	[kQuickLoadPluginLoadHandlerPrologueCallAddr]
+		jmp		[kQuickLoadPluginLoadHandlerPrologueRetnAddr]
+	}
+}
+
+bool __stdcall DoQuickLoadPluginLoadHandlerHook(ModEntry::Data* CurrentFile)
+{
+	return _stricmp(CurrentFile->name, (*g_TESActivePlugin)->name);
+}
+
+void __declspec(naked) QuickLoadPluginLoadHandlerHook(void)
+{
+	__asm
+	{
+		pushad
+		mov		al, g_QuickLoadToggle
+		test	al, al
+		jz		CONTINUE
+		push	edx
+		call	DoQuickLoadPluginLoadHandlerHook
+		test	eax, eax
+		jnz		SKIP
+	CONTINUE:
+		popad
+
+		push	ecx
+		push	edx
+		mov		ecx, edi
+		call	[kQuickLoadPluginLoadHandlerCallAddr]
+		jmp		[kQuickLoadPluginLoadHandlerRetnAddr]
+	SKIP:
+		popad
+		jmp		[kQuickLoadPluginLoadHandlerSkipAddr]
+	}
+}
+
+bool __stdcall DoQuickLoadPluginSaveHandlerHook()
+{
+	if (MessageBox(*g_HWND_CSParent, 
+					"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains overridden records", 
+					"Save Warning", 
+					MB_ICONWARNING|MB_YESNO) == IDYES)
+		return false;
+	else
+		return true;
+}
+
+void __declspec(naked) QuickLoadPluginSaveHandlerHook(void)
+{
+	__asm
+	{
+		pushad
+		mov		al, g_QuickLoadToggle
+		test	al, al
+		jz		CONTINUE
+
+		call	DoQuickLoadPluginSaveHandlerHook
+		test	eax, eax
+		jnz		SKIP
+	CONTINUE:
+		popad
+		call	[kQuickLoadPluginSaveHandlerCallAddr]
+		jmp		[kQuickLoadPluginSaveHandlerRetnAddr]
+	SKIP:
+		popad
+		jmp		[kQuickLoadPluginSaveHandlerSkipAddr]
+	}
+}
+
+LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{ 
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+		break;
+	case WM_DESTROY: 
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_DataDlgOrgWindowProc);
+		break; 
+	}
+ 
+	return CallWindowProc(g_DataDlgOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+} 
+
+void __stdcall DoDataDlgInitHook(HWND DataDialog)
+{
+	// create new controls
+	HWND QuickLoadCheckBox = CreateWindowEx(0, 
+											"BUTTON", 
+											"Quickload active plugin", 
+											BS_AUTOCHECKBOX|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
+											474, 198, 142, 15, 
+											DataDialog, 
+											(HMENU)9900, 
+											GetModuleHandle(NULL), 
+											NULL);
+	CheckDlgButton(DataDialog, 9900, (!g_QuickLoadToggle ? BST_UNCHECKED : BST_CHECKED));
+	g_CSDefaultFont = (HFONT)SendMessage(GetDlgItem(DataDialog, 1), WM_GETFONT, NULL, NULL);
+	SendMessage(QuickLoadCheckBox, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
+
+	g_DataDlgOrgWindowProc = (WNDPROC)SetWindowLong(DataDialog, GWL_WNDPROC, (LONG)DataDlgSubClassProc);
+}
+
+void __declspec(naked) DataDlgInitHook(void)
+{
+	__asm
+	{
+		call	[kDataDlgInitCallAddr]
+
+		pushad
+		push	esi
+		call	DoDataDlgInitHook
+		popad
+
+		jmp		[kDataDlgInitRetnAddr]
 	}
 }

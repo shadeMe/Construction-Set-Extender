@@ -38,6 +38,7 @@ const UInt32						kTESObjectCELL_GetParentWorldSpaceFnAddr = 0x00532E50;
 INISetting*							g_INI_LocalMasterPath = (INISetting*)0x009ED710;
 
 const _GetComboBoxItemData			GetComboBoxItemData = (_GetComboBoxItemData)0x00403690;
+ModEntry::Data**					g_TESActivePlugin = (ModEntry::Data**)0x00A0AA7C;
 
 
 TES* TES::GetSingleton()

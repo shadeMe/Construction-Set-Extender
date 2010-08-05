@@ -31,6 +31,8 @@ Also add closing Loop for While/ForEach.
 Don't do this if there is a line immediately following the If which is already more deeply indented, as this probably means you're adding a condition to an existing block. 
 Should have a method of expressly disabling this behavior (Shift-Enter?) for other cases where it's undesired.
 
+Quick load plugins by skipping the loading of their masters.
+
 
 
 Changes
