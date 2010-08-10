@@ -192,7 +192,7 @@ public:
 		TextBox^											ConsoleBox;
 		ListView^											VariableBox;
 
-	ToolStrip^											EditorToolBar;		// toolbar, technically
+	ToolStrip^											EditorToolBar;
 		ToolStripTextBox^									ToolBarCommonTextBox;
 		ToolStripDropDownButton^							ToolBarEditMenu;
 			ToolStripDropDown^									ToolBarEditMenuContents;

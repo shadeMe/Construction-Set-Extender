@@ -86,6 +86,62 @@ BEGIN
     END
 END
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    DLG_ASSETSEL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 106
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 94
+    END
+
+    DLG_TEXTEDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 257
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 37
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_ASSETSEL DIALOGEX 0, 0, 115, 101
+STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_CLIENTEDGE
+CAPTION "Asset Selector"
+FONT 12, "Consolas", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Select asset on disk",BTN_FILEB,7,7,99,13,WS_GROUP
+    PUSHBUTTON      "Select asset in archive",BTN_BSAB,7,25,99,13,WS_GROUP
+    PUSHBUTTON      "Edit asset path",BTN_EDITPATH,7,43,99,13,WS_GROUP
+    PUSHBUTTON      "Clear asset path",BTN_CLEARPATH,7,62,99,13,WS_GROUP
+    PUSHBUTTON      "Cancel",BTN_CANCEL,33,83,41,11,WS_GROUP
+END
+
+DLG_TEXTEDIT DIALOGEX 0, 0, 264, 39
+STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Edit Text"
+FONT 12, "Consolas", 400, 0, 0x0
+BEGIN
+    EDITTEXT        EDIT_TEXTLINE,7,2,250,18,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",BTN_OK,56,23,57,14
+    PUSHBUTTON      "Cancel",BTN_CANCEL,131,23,57,14
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

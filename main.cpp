@@ -79,7 +79,7 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	g_msgIntfc = (OBSEMessagingInterface*)obse->QueryInterface(kInterface_Messaging);
 	g_commandTableIntfc = (OBSECommandTableInterface*)obse->QueryInterface(kInterface_CommandTable);
 
-	if (g_msgIntfc == NULL || g_commandTableIntfc == NULL) {
+	if (!g_msgIntfc|| !g_commandTableIntfc) {
 		_D_PRINT("OBSE Messaging/CommandTable interface not found !");
 		return false;
 	}
@@ -99,7 +99,11 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 	} else if (!PatchSEHooks() || !PatchMiscHooks())					// initialize modules
 		return false;
 
-
+	g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
+	if (!g_DLLInstance) {
+		_D_PRINT("Couldn't fetch the DLL's handle!");
+		return false;
+	}
 	
 	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
 	_D_PRINT("CS patched !\n\n");

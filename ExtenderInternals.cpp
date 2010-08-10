@@ -4,6 +4,7 @@
 EditorAllocator*					EditorAllocator::Singleton = NULL;
 EditorAllocator::SEAlloc*			EditorAllocator::NullRef = new EditorAllocator::SEAlloc(NULL, NULL, NULL);
 char								g_Buffer[0x200] = {0};
+HINSTANCE							g_DLLInstance = NULL;
 
 
 HINSTANCE*							g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;

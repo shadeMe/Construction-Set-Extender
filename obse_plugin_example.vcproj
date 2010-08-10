@@ -292,6 +292,14 @@
 			RelativePath=".\main.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\WindowManager.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\WindowManager.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

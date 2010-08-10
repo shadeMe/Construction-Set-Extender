@@ -1,6 +1,15 @@
 #pragma once
 
-// TODO: ++++++++++++++++++
+// TODO: ++++++++++++++++++ 
+/*
+Option to automatically dump & reload models on cell load without plugin reload
+		sub_431220();  
+		SendMessageA(g_HWND_RenderWindow, 0x40Du, 0, (LPARAM)&qword_A8AF64);
+		SendMessageA(g_HWND_RenderWindow, 0x419u, 6u, 0);
+		SendMessageA(g_HWND_RenderWindow, 0x40Au, 0, 0);
+	    SendMessageA(g_HWND_RenderWindow, 0x419u, 5u, 0);
+
+*/
 
 
 struct NopData
@@ -77,8 +86,7 @@ const UInt32			kUseInfoListInitRetnAddr = 0x00419848;
 void UseInfoListInitHook(void);
 void PatchUseInfoListMenu(void);
 
-// common dialog patches - adds support for the BSA viewer, patches cancel/close behaviour
-void __stdcall			ShowBSAViewer(UInt32 Filter);
+// common dialog patches - adds support for the BSA viewer, path editing, patches cancel/close behaviour
 // models
 const UInt32			kModelCancelCommonDialogHookAddr = 0x0049BDB0;
 const UInt32			kModelCancelCommonDialogRestoreRetnAddr = 0x0049BE6B;
@@ -86,15 +94,16 @@ const UInt32			kModelCancelCommonDialogNewFileRetnAddr = 0x0049BDBB;
 const UInt32			kModelCancelCommonDialogRemoveRetnAddr = 0x0049BE5B;
 const UInt32			kModelCancelCommonDialogStackOffset = 0x10;
 
-const UInt32			kModelBSACommonDialogHookAddr = 0x0049BDAB;
-const UInt32			kModelBSACommonDialogRetnAddr = 0x0049BDB0;
-const UInt32			kModelBSACommonDialogCallAddr = 0x00446C60;
-const UInt32			kModelBSACommonDialogFilterType = 1;
+const UInt32			kModelSelectorCommonDialogHookAddr = 0x0049BDAB;
+const UInt32			kModelSelectorCommonDialogRetnAddr = 0x0049BDB0;
+const UInt32			kModelSelectorCommonDialogCallAddr = 0x00446C60;
+const UInt32			kModelSelectorCommonDialogFilterType = 0;
+#define					kModelPathButtonID				 edi + 0x20
 
 const UInt32			kModelPostCommonDialogHookAddr = 0x0049BDBE;
 const UInt32			kModelPostCommonDialogRetnAddr = 0x0049BDC4;
 
-void					ModelBSACommonDialogHook(void);
+void					ModelSelectorCommonDialogHook(void);
 void					ModelPostCommonDialogHook(void);
 void					ModelCancelCommonDialogHook(void);
 // animations
@@ -104,15 +113,17 @@ const UInt32			kAnimationCancelCommonDialogNewFileRetnAddr = 0x0049D920;
 const UInt32			kAnimationCancelCommonDialogRemoveRetnAddr = 0x0049D9F4;
 const UInt32			kAnimationCancelCommonDialogStackOffset = 0x28;
 
-const UInt32			kAnimationBSACommonDialogHookAddr = 0x0049D910;
-const UInt32			kAnimationBSACommonDialogRetnAddr = 0x0049D915;
-const UInt32			kAnimationBSACommonDialogCallAddr = 0x00446A30;
-const UInt32			kAnimationBSACommonDialogFilterType = 2;
+const UInt32			kAnimationSelectorCommonDialogHookAddr = 0x0049D910;
+const UInt32			kAnimationSelectorCommonDialogRetnAddr = 0x0049D915;
+const UInt32			kAnimationSelectorCommonDialogCallAddr = 0x00446A30;
+const UInt32			kAnimationSelectorCommonDialogFilterType = 1;
+#define					kAnimationPathButtonID				 esi + 0x20
 
 const UInt32			kAnimationPostCommonDialogHookAddr = 0x0049D93C;
 const UInt32			kAnimationPostCommonDialogRetnAddr = 0x0049D943;
 
-void					AnimationBSACommonDialogHook(void);
+
+void					AnimationSelectorCommonDialogHook(void);
 void					AnimationPostCommonDialogHook(void);
 void					AnimationCancelCommonDialogHook(void);
 // sounds
@@ -122,6 +133,17 @@ const UInt32			kSoundCancelCommonDialogNewFileRetnAddr = 0x004A1C8F;
 const UInt32			kSoundCancelCommonDialogRemoveRetnAddr = 0x004A1C96;
 const UInt32			kSoundCancelCommonDialogStackOffset = 0x10;
 
+const UInt32			kSoundSelectorCommonDialogHookAddr = 0x004A1C83;
+const UInt32			kSoundSelectorCommonDialogRetnAddr = 0x004A1C88;
+const UInt32			kSoundSelectorCommonDialogCallAddr = 0x004431A0;
+const UInt32			kSoundSelectorCommonDialogFilterType = 2;
+#define					kSoundPathButtonID				 1451
+
+const UInt32			kSoundPostCommonDialogHookAddr = 0x004A1C8F;
+const UInt32			kSoundPostCommonDialogRetnAddr = 0x004A1C9B;
+
+void					SoundSelectorCommonDialogHook(void);
+void					SoundPostCommonDialogHook(void);
 void					SoundCancelCommonDialogHook(void);
 // textures
 const UInt32			kTextureCancelCommonDialogHookAddr = 0x004A4150;
@@ -130,15 +152,16 @@ const UInt32			kTextureCancelCommonDialogNewFileRetnAddr = 0x004A415B;
 const UInt32			kTextureCancelCommonDialogRemoveRetnAddr = 0x004A4240;
 const UInt32			kTextureCancelCommonDialogStackOffset = 0x14;
 
-const UInt32			kTextureBSACommonDialogHookAddr = 0x004A414B;
-const UInt32			kTextureBSACommonDialogRetnAddr = 0x004A4150;
-const UInt32			kTextureBSACommonDialogCallAddr = 0x00446CA0;
-const UInt32			kTextureBSACommonDialogFilterType = 3;
+const UInt32			kTextureSelectorCommonDialogHookAddr = 0x004A414B;
+const UInt32			kTextureSelectorCommonDialogRetnAddr = 0x004A4150;
+const UInt32			kTextureSelectorCommonDialogCallAddr = 0x00446CA0;
+const UInt32			kTextureSelectorCommonDialogFilterType = 3;
+#define					kTexturePathButtonID				 esi + 0x10
 
 const UInt32			kTexturePostCommonDialogHookAddr = 0x004A415B;
 const UInt32			kTexturePostCommonDialogRetnAddr = 0x004A4162;
 
-void					TextureBSACommonDialogHook(void);
+void					TextureSelectorCommonDialogHook(void);
 void					TexturePostCommonDialogHook(void);
 void					TextureCancelCommonDialogHook(void);
 // speed tree files
@@ -148,61 +171,86 @@ const UInt32			kSPTCancelCommonDialogNewFileRetnAddr = 0x0049EAE0;
 const UInt32			kSPTCancelCommonDialogRemoveRetnAddr = 0x0049EB80;
 const UInt32			kSPTCancelCommonDialogStackOffset = 0x28;
 
-const UInt32			kSPTBSACommonDialogHookAddr = 0x0049EAD0;
-const UInt32			kSPTBSACommonDialogRetnAddr = 0x0049EAD5;
-const UInt32			kSPTBSACommonDialogCallAddr = 0x00446A30;
-const UInt32			kSPTBSACommonDialogFilterType = 4;
+const UInt32			kSPTSelectorCommonDialogHookAddr = 0x0049EAD0;
+const UInt32			kSPTSelectorCommonDialogRetnAddr = 0x0049EAD5;
+const UInt32			kSPTSelectorCommonDialogCallAddr = 0x00446A30;
+const UInt32			kSPTSelectorCommonDialogFilterType = 4;
+#define					kSPTPathButtonID				 edi + 0x20
 
 const UInt32			kSPTPostCommonDialogHookAddr = 0x0049EAE3;
 const UInt32			kSPTPostCommonDialogRetnAddr = 0x0049EAE9;
 
-void					SPTBSACommonDialogHook(void);
+void					SPTSelectorCommonDialogHook(void);
 void					SPTPostCommonDialogHook(void);
 void					SPTCancelCommonDialogHook(void);
 
+UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
+UInt32 __stdcall InitPathEditor(int ID, HWND Dialog);
+UInt32 __stdcall InitBSAViewer(UInt32 Filter);
+
+#define e_FetchPath			0x32
+
 // using macros to avoid tedious redefinitions 
+#define COMMON_DIALOG_SELECTOR_HOOK(name)  \
+void __declspec(naked) ##name##SelectorCommonDialogHook(void)  \
+{  \
+    {  \
+		__asm mov		eax, [esp] \
+        __asm pushad  \
+		__asm push		eax \
+        __asm call		InitAssetSelectorDlg  \
+		__asm cmp		eax, e_Close \
+		__asm jz		CLOSE \
+        __asm cmp		eax, e_FileBrowser  \
+        __asm jz		FILEB  \
+		__asm cmp		eax, e_BSABrowser \
+		__asm jz		BSAB \
+		__asm cmp		eax, e_EditPath \
+		__asm jz		EDITP \
+        __asm popad  \
+		__asm mov		eax, e_ClearPath \
+        __asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
+	__asm CLOSE: \
+		__asm popad \
+		__asm mov		eax, e_Close \
+        __asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
+	__asm FILEB: \
+		__asm popad \
+		__asm call		[k##name##SelectorCommonDialogCallAddr]  \
+        __asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
+    __asm BSAB:  \
+        __asm popad  \
+		__asm push		k##name##SelectorCommonDialogFilterType	\
+		__asm call		InitBSAViewer \
+        __asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
+	__asm EDITP: \
+		__asm popad \
+		__asm push		eax \
+		__asm mov		eax, [k##name##PathButtonID] \
+		__asm push		eax \
+		__asm call		InitPathEditor \
+        __asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
+    }  \
+}
 #define COMMON_DIALOG_CANCEL_HOOK(name)  \
 void __declspec(naked) ##name##CancelCommonDialogHook(void)  \
 {  \
     {  \
         __asm add		esp, [k##name##CancelCommonDialogStackOffset]  \
+		__asm cmp		eax, e_ClearPath \
+		__asm jz		REMOVE \
 		__asm test		al, al  \
         __asm jz		RESTORE  \
         __asm jmp		[k##name##CancelCommonDialogNewFileRetnAddr]  \
     __asm RESTORE:  \
-        __asm pushad  \
-        __asm call		IsControlKeyDown  \
-        __asm test		eax, eax  \
-        __asm jnz		REMOVE  \
-        __asm popad  \
         __asm jmp		[k##name##CancelCommonDialogRestoreRetnAddr]  \
     __asm REMOVE:  \
-        __asm popad  \
         __asm jmp		[k##name##CancelCommonDialogRemoveRetnAddr]      \
-    }  \
-}
-#define COMMON_DIALOG_BSA_HOOK(name)  \
-void __declspec(naked) ##name##BSACommonDialogHook(void)  \
-{  \
-    {  \
-        __asm mov		g_BSAReturnPath, 0  \
-        __asm pushad  \
-        __asm call		IsControlKeyDown  \
-        __asm test		eax, eax  \
-        __asm jnz		BSA  \
-        __asm popad  \
-		__asm call		[k##name##BSACommonDialogCallAddr]  \
-        __asm jmp		[k##name##BSACommonDialogRetnAddr]  \
-    __asm BSA:  \
-        __asm popad  \
-		__asm push		k##name##BSACommonDialogFilterType	\
-		__asm call		ShowBSAViewer \
-        __asm jmp		[k##name##BSACommonDialogRetnAddr]      \
     }  \
 }
 
 #define COMMON_DIALOG_CANCEL_PATCH(name)						WriteRelJump(k##name##CancelCommonDialogHookAddr, (UInt32)##name##CancelCommonDialogHook);
-#define COMMON_DIALOG_BSA_PATCH(name)							WriteRelJump(k##name##BSACommonDialogHookAddr, (UInt32)##name##BSACommonDialogHook);
+#define COMMON_DIALOG_SELECTOR_PATCH(name)						WriteRelJump(k##name##SelectorCommonDialogHookAddr, (UInt32)##name##SelectorCommonDialogHook);
 #define COMMON_DIALOG_POST_PATCH(name)							WriteRelJump(k##name##PostCommonDialogHookAddr, (UInt32)##name##PostCommonDialogHook);
 
 // removes the ostentatious warning
@@ -278,5 +326,6 @@ const UInt32			kQuickLoadPluginSaveHandlerRetnAddr = 0x0041BA9D;
 const UInt32			kQuickLoadPluginSaveHandlerSkipAddr = 0x0041A94C;
 
 void QuickLoadPluginSaveHandlerHook(void);
+
 
 

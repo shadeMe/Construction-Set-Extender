@@ -1,20 +1,17 @@
 #include "MiscHooks.h"
 #include "SEHooks.h"
 #include "Common/CLIWrapper.h"
-#include "commctrl.h"
 #include "Exports.h"
 #include "ExtenderInternals.h"
 #include "Common/HandshakeStructs.h"
-#include "shlobj.h"
+#include "WindowManager.h"
 
-static WNDPROC						g_FindTextOrgWindowProc = NULL;
-static WNDPROC						g_DataDlgOrgWindowProc = NULL;
 extern FARPROC						g_WindowHandleCallAddr;
 
 FormData*							UIL_FormData = new FormData();
 UseListCellItemData*				UIL_CellData = new UseListCellItemData();
 
-static const char*					g_BSAReturnPath = NULL;
+static const char*					g_AssetSelectorReturnPath = NULL;
 static bool							g_DataHandlerPopulateModListInit_PerformCleanup = false;
 static bool							g_DataHandlerPopulateModList_ProcessESPs = true;
 static bool							g_DataHandlerPopulateModList_DefaultWorkspace = true;
@@ -74,13 +71,15 @@ bool PatchMiscHooks()
 	COMMON_DIALOG_CANCEL_PATCH(Texture)
 	COMMON_DIALOG_CANCEL_PATCH(SPT)
 
-	COMMON_DIALOG_BSA_PATCH(Model);
-	COMMON_DIALOG_BSA_PATCH(Animation);
-	COMMON_DIALOG_BSA_PATCH(Texture);
-	COMMON_DIALOG_BSA_PATCH(SPT);
+	COMMON_DIALOG_SELECTOR_PATCH(Model);
+	COMMON_DIALOG_SELECTOR_PATCH(Animation);
+	COMMON_DIALOG_SELECTOR_PATCH(Sound);
+	COMMON_DIALOG_SELECTOR_PATCH(Texture);
+	COMMON_DIALOG_SELECTOR_PATCH(SPT);
 
 	COMMON_DIALOG_POST_PATCH(Model);
 	COMMON_DIALOG_POST_PATCH(Animation);
+	COMMON_DIALOG_POST_PATCH(Sound);
 	COMMON_DIALOG_POST_PATCH(Texture);
 	COMMON_DIALOG_POST_PATCH(SPT);
 
@@ -159,36 +158,6 @@ void _declspec(naked) ExitCSHook(void)
 	}
 }
 
-
-LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{ 
-	switch (uMsg)
-	{
-	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code)
-		{
-		case LVN_ITEMACTIVATE:				// ID = 1018
-			NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
-			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 0, g_Buffer, sizeof(g_Buffer));
-			std::string EditorID, FormTypeStr(g_Buffer);
-
-			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 1, g_Buffer, sizeof(g_Buffer));
-			EditorID = g_Buffer;
-			UInt32 PadStart = EditorID.find("'") + 1, PadEnd  = EditorID.find("'", PadStart + 1);
-			if (PadStart != std::string::npos && PadEnd != std::string::npos) {
-				EditorID = EditorID.substr(PadStart, PadEnd - PadStart);
-				LoadFormIntoView(EditorID.c_str(), FormTypeStr.c_str());
-			}
-			break;
-		}
-		break;
-	case WM_DESTROY: 
-		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_FindTextOrgWindowProc);
-		break; 
-	}
- 
-	return CallWindowProc(g_FindTextOrgWindowProc, hWnd, uMsg, wParam, lParam); 
-} 
 
 void __stdcall DoFindTextInitHook(HWND FindTextDialog)
 {
@@ -269,47 +238,73 @@ void PatchUseInfoListMenu()
 	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemDataRenderWindow);	
 }
 
+
 COMMON_DIALOG_CANCEL_HOOK(Model)
 COMMON_DIALOG_CANCEL_HOOK(Animation)
 COMMON_DIALOG_CANCEL_HOOK(Sound)
 COMMON_DIALOG_CANCEL_HOOK(Texture)
 COMMON_DIALOG_CANCEL_HOOK(SPT)
 
-void __stdcall ShowBSAViewer(UInt32 Filter)
+UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 {
 	switch (Filter)
 	{
 	case 0:
-		g_BSAReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "nif");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "nif");
 		break;
 	case 1:
-		g_BSAReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "kf");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "kf");
+		break;
+	case 2:
+		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "wav");
 		break;
 	case 3:
-		g_BSAReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "dds");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "dds");
 		break;
 	case 4:
-		g_BSAReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "spt");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "spt");
 		break;
 	}
+
+	if (!g_AssetSelectorReturnPath)
+		return 0;
+	else
+		return e_FetchPath;
 }
 
-COMMON_DIALOG_BSA_HOOK(Model)
-COMMON_DIALOG_BSA_HOOK(Animation)
-COMMON_DIALOG_BSA_HOOK(Texture)
-COMMON_DIALOG_BSA_HOOK(SPT)
+UInt32 __stdcall InitPathEditor(int ID, HWND Dialog)
+{
+	GetDlgItemText(Dialog, ID, g_Buffer, sizeof(g_Buffer));
+	g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
+
+	if (!g_AssetSelectorReturnPath)
+		return 0;
+	else
+		return e_FetchPath;
+}
+
+UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog)
+{
+	return DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_ASSETSEL), Dialog, (DLGPROC)AssetSelectorDlgProc);
+}
+
+COMMON_DIALOG_SELECTOR_HOOK(Model)
+COMMON_DIALOG_SELECTOR_HOOK(Animation)
+COMMON_DIALOG_SELECTOR_HOOK(Sound)
+COMMON_DIALOG_SELECTOR_HOOK(Texture)
+COMMON_DIALOG_SELECTOR_HOOK(SPT)
 
 void __declspec(naked) ModelPostCommonDialogHook(void)     
 {
     __asm
     {
-		cmp		[g_BSAReturnPath], 0
-		jnz		BSA
+		cmp		eax, e_FetchPath	
+		jz		SELECT
 
 		lea		eax, [esp + 0x14]
         jmp     [kModelPostCommonDialogRetnAddr]
-	BSA:
-		mov		eax, g_BSAReturnPath
+	SELECT:
+		mov		eax, g_AssetSelectorReturnPath
         jmp     [kModelPostCommonDialogRetnAddr]
     }
 }
@@ -317,30 +312,46 @@ void __declspec(naked) AnimationPostCommonDialogHook(void)
 {
     __asm
     {
-		cmp		[g_BSAReturnPath], 0
-		jnz		BSA
+		cmp		eax, e_FetchPath
+		jz		SELECT
 
 		lea		edx, [ebp]
         jmp		POST
-	BSA:
-		mov		edx, g_BSAReturnPath
+	SELECT:
+		mov		edx, g_AssetSelectorReturnPath
 	POST:
 		push	edx
 		lea		ecx, [esp + 0x24]
         jmp     [kAnimationPostCommonDialogRetnAddr]
     }
 }
+void __declspec(naked) SoundPostCommonDialogHook(void)     
+{
+    __asm
+    {
+		cmp		eax, e_FetchPath	
+		jz		SELECT
+
+		lea		ecx, [esp + 8]
+		push	ecx
+        jmp     [kSoundPostCommonDialogRetnAddr]
+	SELECT:
+		mov		ecx, g_AssetSelectorReturnPath
+		push	ecx
+        jmp     [kSoundPostCommonDialogRetnAddr]
+    }
+}
 void __declspec(naked) TexturePostCommonDialogHook(void)     
 {
     __asm
     {
-		cmp		[g_BSAReturnPath], 0
-		jnz		BSA
+		cmp		eax, e_FetchPath
+		jz		SELECT
 
 		lea		eax, [ebp]
         jmp		POST
-	BSA:
-		mov		edx, g_BSAReturnPath
+	SELECT:
+		mov		edx, g_AssetSelectorReturnPath
 	POST:
 		push	eax
 		lea		ecx, [ebp - 0x14]
@@ -351,13 +362,13 @@ void __declspec(naked) SPTPostCommonDialogHook(void)
 {
     __asm
     {
-		cmp		[g_BSAReturnPath], 0
-		jnz		BSA
+		cmp		eax, e_FetchPath
+		jz		SELECT
 
 		lea		ecx, [esp + 0x14]
         jmp     [kSPTPostCommonDialogRetnAddr]
-	BSA:
-		mov		ecx, g_BSAReturnPath
+	SELECT:
+		mov		ecx, g_AssetSelectorReturnPath
         jmp     [kSPTPostCommonDialogRetnAddr]
     }
 }
@@ -597,26 +608,12 @@ void __declspec(naked) QuickLoadPluginSaveHandlerHook(void)
 	}
 }
 
-LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{ 
-	switch (uMsg)
-	{
-	case WM_COMMAND:
-		break;
-	case WM_DESTROY: 
-		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_DataDlgOrgWindowProc);
-		break; 
-	}
- 
-	return CallWindowProc(g_DataDlgOrgWindowProc, hWnd, uMsg, wParam, lParam); 
-} 
-
 void __stdcall DoDataDlgInitHook(HWND DataDialog)
 {
 	// create new controls
 	HWND QuickLoadCheckBox = CreateWindowEx(0, 
 											"BUTTON", 
-											"Quickload active plugin", 
+											"Quick-Load Plugin", 
 											BS_AUTOCHECKBOX|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
 											474, 198, 142, 15, 
 											DataDialog, 

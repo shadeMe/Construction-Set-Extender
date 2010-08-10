@@ -15,6 +15,8 @@
 #include "atltypes.h"
 #include "commctrl.h"
 #include "richedit.h"
+#include "shlobj.h"
+#include "resource.h"
 
 extern std::fstream					g_DEBUG_LOG;
 extern std::string					g_AppPath;
@@ -23,6 +25,7 @@ extern char							g_Buffer[0x200];
 
 extern OBSEMessagingInterface*		g_msgIntfc;
 extern PluginHandle					g_pluginHandle;
+extern HINSTANCE					g_DLLInstance;
 
 // TODO: ++++++++++++++++++
 
