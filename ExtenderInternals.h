@@ -6,6 +6,7 @@
 #include "obse/Script.h"
 #include "obse/PluginAPI.h"
 #include "obse/obse_common/SafeWrite.h"
+#include "obse/GameObjects.h"
 
 
 #include <string>
@@ -68,9 +69,61 @@ void																		LogWinAPIErrorMessage(DWORD ErrorID);
 				
 // EDITOR API
 
+// 0C+?
+class TESDialogInitParam
+{
+public:
+	UInt32		TypeID;					// 00
+	TESForm*	Form;					// 04
+	UInt32		unk08;					// 08
+
+	TESDialogInitParam(const char* EditorID);
+};
+
+
+UInt32 GetDialogTemplate(const char* FormType);
+
+void RemoteLoadRef(const char* EditorID);
+void LoadFormIntoView(const char* EditorID, const char* FormType);
+void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
+
+
+// 08
+class TESCellUseData
+{
+public:
+	TESCellUseData();
+	~TESCellUseData();
+
+	TESObjectCELL*		Cell;		// 00
+	UInt32				Count;		// 04	
+};
+
+class TESCellUseList;
+
+// 08
+class INISetting
+{
+public:
+	INISetting();
+	~INISetting();
+
+	char*			Data;			// 00
+	const char*		Name;			// 04
+
+	INISetting(char* Data, char* Name) : Data(Data), Name(Name) {}
+};
+
+template<typename Type> struct GenericNode
+{
+	Type				* data;
+	GenericNode<Type>	* next;
+};
+
+
 #define CS_CAST(obj, from, to) (to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
 
-extern HINSTANCE*		g_TESCS_Instance;
+extern const HINSTANCE*	g_TESCS_Instance;
 extern const DLGPROC	g_ScriptEditor_DlgProc;
 extern const DLGPROC	g_UseReport_DlgProc;
 extern const DLGPROC	g_TESDialog_DlgProc;
@@ -110,58 +163,17 @@ extern const UInt32			kTESObjectCELL_GetParentWorldSpaceFnAddr;
 typedef void*			(__cdecl *_GetComboBoxItemData)(HWND ComboBox);
 extern const _GetComboBoxItemData GetComboBoxItemData;
 
+typedef bool			(__cdecl *_SelectTESFileCommonDialog)(HWND Parent, const char* SaveDir, bool SaveAsESM, char* Buffer, size_t Size);
+extern const _SelectTESFileCommonDialog SelectTESFileCommonDialog;
 
-// 0C+?
-class TESDialogInitParam
-{
-public:
-	UInt32		TypeID;					// 00
-	TESForm*	Form;					// 04
-	UInt32		unk08;					// 08
-
-	TESDialogInitParam(const char* EditorID);
-};
-
-
-UInt32 GetDialogTemplate(const char* FormType);
-
-void RemoteLoadRef(const char* EditorID);
-void LoadFormIntoView(const char* EditorID, const char* FormType);
-
-
-// 08
-class TESCellUseData
-{
-public:
-	TESCellUseData();
-	~TESCellUseData();
-
-	TESObjectCELL*		Cell;		// 00
-	UInt32				Count;		// 04	
-};
-
-class TESCellUseList;
-
-// 08
-class INISetting
-{
-public:
-	INISetting();
-	~INISetting();
-
-	char*			Data;			// 00
-	const char*		Name;			// 04
-
-	INISetting(char* Data, char* Name) : Data(Data), Name(Name) {}
-};
+typedef void			(__cdecl *_sub_4306F0)(bool unk01);
+extern const _sub_4306F0 sub_4306F0;
 
 extern INISetting*			g_INI_LocalMasterPath;
-
 extern ModEntry::Data**		g_TESActivePlugin;
-
-
-
-
+extern char**				g_TESActivePluginName;
+extern UInt8*				g_WorkingFileFlag;
+extern UInt8*				g_ActiveChangesFlag;
 
 
 

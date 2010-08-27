@@ -21,8 +21,10 @@ static const char*					g_DefaultWorkspacePath = "Data\\";
 
 static const char*					g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 
-static bool							g_QuickLoadToggle = false;
+bool								g_QuickLoadToggle = false;
 static HFONT						g_CSDefaultFont = NULL;
+bool								g_SaveAsRoutine = false;
+ModEntry::Data*						g_SaveAsBuffer = NULL;
 
 void __stdcall DoT()		
 {
@@ -43,7 +45,6 @@ void _declspec(naked) T(void)
 
 bool PatchMiscHooks()
 {
-	DoNop(&kCheckLoadedPluginTypePatch);
 	DoNop(&kCheckIsActivePluginAnESMPatch);
 	DoNop(&kDoValidateBitArrayPatch[0]);
 	DoNop(&kDoValidateBitArrayPatch[1]);
@@ -53,14 +54,13 @@ bool PatchMiscHooks()
 	SafeWrite8(kDataDialogPluginAuthorPatchAddr, 0xEB);
 
 	PLACE_HOOK(SavePluginCommonDialog);
+	PLACE_HOOK(SavePluginMasterEnum);
 
 	WriteRelJump(kConstructObjectUnknownRecordPatchJmpAddr, kConstructObjectUnknownRecordPatchDestAddr);
-	SafeWrite8(kDataHandlerPostErrorPatchAddr, 0xEB);
-
-	PLACE_HOOK(ExitCS);	
-	
+	SafeWrite8(kDataHandlerPostErrorPatchAddr, 0xEB);	
 	SafeWrite8(kEditorWarningPatchAddr, 0xEB);
 
+	PLACE_HOOK(ExitCS);	
 	PLACE_HOOK(FindTextInit);
 	PLACE_HOOK(UseInfoListInit);
 	PLACE_HOOK(CSInit);
@@ -87,7 +87,6 @@ bool PatchMiscHooks()
 	DoNop(&kTopicResultScriptResetPatch);
 
 	PLACE_HOOK(NPCFaceGen);
-//	SafeWrite8(kSavePluginWarnMissingMastersPatchAddr, 0);		// TODO: Check ** issues with the render window
 	
 //	PLACE_HOOK(DataDlgCallPopulateModList);
 //	PLACE_HOOK(DataHandlerPopulateModListFindLoop);
@@ -99,7 +98,6 @@ bool PatchMiscHooks()
 	SafeWrite32(kDefaultWaterTextureFixPatchAddr, (UInt32)g_DefaultWaterTextureStr);
 	PLACE_HOOK(QuickLoadPluginLoadHandlerPrologue);
 	PLACE_HOOK(QuickLoadPluginLoadHandler);
-	PLACE_HOOK(QuickLoadPluginSaveHandler);
 	PLACE_HOOK(DataDlgInit);
 
 	WriteRelJump(0x0047BCBC, (UInt32)T);
@@ -115,12 +113,17 @@ SHORT __stdcall IsControlKeyDown(void)
 	return GetAsyncKeyState(VK_CONTROL);
 }
 
+bool __stdcall InitTESFileSaveDlg()
+{
+	return DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_TESFILE), *g_HWND_CSParent, (DLGPROC)TESFileDlgProc);
+}
+
 void _declspec(naked) SavePluginCommonDialogHook(void)
 {
 	_asm
 	{
 		pushad
-		call	IsControlKeyDown
+		call	InitTESFileSaveDlg
 		test	eax, eax
 		jnz		ESM
 
@@ -137,6 +140,28 @@ void DoNop(const NopData* Data)
 	for (int Offset = 0; Offset < Data->Size; Offset++) {
 		SafeWrite8(Data->Address + Offset, 0x90);
 	}	
+}
+
+bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
+{
+	if (g_SaveAsRoutine && !_stricmp(g_SaveAsBuffer->name, CurrentFile->name))
+		return false;
+	else
+		return true;
+}
+
+void _declspec(naked) SavePluginMasterEnumHook(void)
+{
+	__asm
+	{
+		push	ecx
+		call	DoSavePluginMasterEnumHook
+		test	eax, eax
+		jz		SKIP
+		jmp		[kSavePluginMasterEnumRetnPassAddr]
+	SKIP:
+		jmp		[kSavePluginMasterEnumRetnFailAddr]
+	}
 }
 
 
@@ -180,13 +205,6 @@ void __declspec(naked) FindTextInitHook(void)
 	}
 }
 
-void RemoteLoadRef(const char* EditorID)
-{
-	TESObjectREFR* Reference = CS_CAST(GetFormByID(EditorID), TESForm, TESObjectREFR);
-	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kTESObjectREFR_VTBL, 0x1A0, Reference);
-	thisCall(kTESChildCell_LoadCellFnAddr, Cell, Cell, Reference);
-}
-
 void __declspec(naked) UseInfoListInitHook(void)
 {
 	__asm
@@ -196,14 +214,54 @@ void __declspec(naked) UseInfoListInitHook(void)
 	}
 }
 
+void PatchMenus()
+{
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent),
+		  GameplayMenu = GetSubMenu(MainMenu, 5),
+		  ViewMenu = GetSubMenu(MainMenu, 2),
+		  FileMenu = GetSubMenu(MainMenu, 0),
+		  WorldMenu = GetSubMenu(MainMenu, 3);
+
+	MENUITEMINFO ItemDataUseInfo, ItemDataRenderWindow, ItemDataSaveAs, ItemWorldBatchEdit;
+	ItemDataUseInfo.cbSize = sizeof(MENUITEMINFO);
+	ItemDataUseInfo.fMask = MIIM_STRING;
+	ItemDataUseInfo.dwTypeData = "Use Info Listings";
+	ItemDataUseInfo.cch = 15;
+	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemDataUseInfo);
+
+	ItemDataRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the controlID for the button
+	ItemDataRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is present in the wndproc
+	ItemDataRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
+	ItemDataRenderWindow.fState = MFS_CHECKED;
+	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemDataRenderWindow);	
+
+	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
+	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemDataSaveAs.wID = 40128;
+	ItemDataSaveAs.fState = MFS_ENABLED;
+	ItemDataSaveAs.dwTypeData = "Save As";
+	ItemDataSaveAs.cch = 7;
+	InsertMenuItem(FileMenu, 40127, FALSE, &ItemDataSaveAs);
+
+	ItemWorldBatchEdit.cbSize = sizeof(MENUITEMINFO);		
+	ItemWorldBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldBatchEdit.wID = 9902;
+	ItemWorldBatchEdit.fState = MFS_ENABLED;
+	ItemWorldBatchEdit.dwTypeData = "Batch Edit References";
+	ItemWorldBatchEdit.cch = 0;
+	InsertMenuItem(WorldMenu, 40194, FALSE, &ItemWorldBatchEdit);
+
+}
+
 void __stdcall DoCSInitHook()
 {
 	static bool DoOnce = false;
 	if (DoOnce)		return;
 
 								// perform deferred patching
-								// do NOT do anything that would pump messages to the main WndProc
-	PatchUseInfoListMenu();
+	PatchMenus();
+	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
+	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
 	DoOnce = true;
 }
 
@@ -216,26 +274,6 @@ void __declspec(naked) CSInitHook(void)
 		call	DoCSInitHook
 		jmp		[kCSInitRetnAddr]
 	}
-}
-
-void PatchUseInfoListMenu()
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent),
-		  GameplayMenu = GetSubMenu(MainMenu, 5),
-		  ViewMenu = GetSubMenu(MainMenu, 2);
-
-	MENUITEMINFO ItemDataUseInfo, ItemDataRenderWindow;
-	ItemDataUseInfo.cbSize = sizeof(MENUITEMINFO);
-	ItemDataUseInfo.fMask = MIIM_STRING;
-	ItemDataUseInfo.dwTypeData = "Use Info Listings";
-	ItemDataUseInfo.cch = 15;
-	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemDataUseInfo);
-
-	ItemDataRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the menucode for the button
-	ItemDataRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is present in the wndproc
-	ItemDataRenderWindow.wID = 40423;						// we simply change the code to the one that's expected by the proc
-	ItemDataRenderWindow.fState = MFS_CHECKED;
-	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemDataRenderWindow);	
 }
 
 
@@ -351,7 +389,7 @@ void __declspec(naked) TexturePostCommonDialogHook(void)
 		lea		eax, [ebp]
         jmp		POST
 	SELECT:
-		mov		edx, g_AssetSelectorReturnPath
+		mov		eax, g_AssetSelectorReturnPath
 	POST:
 		push	eax
 		lea		ecx, [ebp - 0x14]
@@ -456,11 +494,6 @@ void __stdcall DoDataDlgCallPopulateModListHook(INISetting* Path)
 	else	g_DataHandlerPopulateModList_DefaultWorkspace = false;
 }
 
-void __stdcall CleanUpModList(void)
-{
-//	FormHeap_Free
-}
-
 void __declspec(naked) DataDlgCallPopulateModListHook(void)
 {
 	__asm
@@ -546,7 +579,7 @@ void __declspec(naked) QuickLoadPluginLoadHandlerPrologueHook(void)
 
 bool __stdcall DoQuickLoadPluginLoadHandlerHook(ModEntry::Data* CurrentFile)
 {
-	return _stricmp(CurrentFile->name, (*g_TESActivePlugin)->name);
+	return _stricmp(CurrentFile->name, (*g_dataHandler)->unk8B8.activeFile->name);
 }
 
 void __declspec(naked) QuickLoadPluginLoadHandlerHook(void)
@@ -572,39 +605,6 @@ void __declspec(naked) QuickLoadPluginLoadHandlerHook(void)
 	SKIP:
 		popad
 		jmp		[kQuickLoadPluginLoadHandlerSkipAddr]
-	}
-}
-
-bool __stdcall DoQuickLoadPluginSaveHandlerHook()
-{
-	if (MessageBox(*g_HWND_CSParent, 
-					"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains overridden records", 
-					"Save Warning", 
-					MB_ICONWARNING|MB_YESNO) == IDYES)
-		return false;
-	else
-		return true;
-}
-
-void __declspec(naked) QuickLoadPluginSaveHandlerHook(void)
-{
-	__asm
-	{
-		pushad
-		mov		al, g_QuickLoadToggle
-		test	al, al
-		jz		CONTINUE
-
-		call	DoQuickLoadPluginSaveHandlerHook
-		test	eax, eax
-		jnz		SKIP
-	CONTINUE:
-		popad
-		call	[kQuickLoadPluginSaveHandlerCallAddr]
-		jmp		[kQuickLoadPluginSaveHandlerRetnAddr]
-	SKIP:
-		popad
-		jmp		[kQuickLoadPluginSaveHandlerSkipAddr]
 	}
 }
 

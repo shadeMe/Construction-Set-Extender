@@ -98,11 +98,10 @@ void ConsoleManager::Log(String^% Message, bool PrintC)
 {
 	MessageDump += Message->Replace("\n", "\r\n") + "\r\n";
 	
-	if (!PrintC || ScriptEditorManager::GetSingleton()->ActiveEditor == nullptr)		return;
-
-	ScriptEditorManager::GetSingleton()->ActiveEditor->ConsoleBox->Text = GetDump();
-	ScriptEditorManager::GetSingleton()->ActiveEditor->ConsoleBox->SelectionStart = MessageDump->Length - 1;
-	ScriptEditorManager::GetSingleton()->ActiveEditor->ConsoleBox->ScrollToCaret(); 
+	if (PrintC)
+	{
+		SEMGR->UpdateWorkspaceConsole();
+	}
 }
 
 void DebugPrint(String^ Message, bool PrintC, bool Achtung)	

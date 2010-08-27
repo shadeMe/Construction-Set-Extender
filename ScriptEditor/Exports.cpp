@@ -41,6 +41,7 @@ __declspec(dllexport) void InitializeScript(UInt32 VanillaHandleIndex, ScriptDat
 	Parameters->ParameterList->Add(gcnew String(Data->EditorID));
 	Parameters->ParameterList->Add((UInt32)Data->ByteCode);
 	Parameters->ParameterList->Add(Data->Length);
+	Parameters->ParameterList->Add(Data->FormID);
 
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_InitializeScript, Parameters);
 } 

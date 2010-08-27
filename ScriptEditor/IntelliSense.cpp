@@ -805,7 +805,7 @@ bool SyntaxBox::QuickView(String^ TextUnderMouse)
 		Point TipLoc = ParentEditor->EditorBox->GetPositionFromCharIndex(ParentEditor->EditorBox->SelectionStart);
 		TipLoc.X += 55, TipLoc.Y += ParentEditor->EditorBox->Font->Height + 25;
 		InfoTip->ToolTipTitle = Item->GetTypeIdentifier();
-		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->EditorControlBox->Handle), TipLoc, 4000);
+		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->EditorControlBox->Handle), TipLoc, 8000);
 		return true;
 	} else
 		return false;

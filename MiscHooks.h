@@ -1,13 +1,17 @@
 #pragma once
+#include "obse/GameData.h"
 
 // TODO: ++++++++++++++++++ 
 /*
 Option to automatically dump & reload models on cell load without plugin reload
 		sub_431220();  
-		SendMessageA(g_HWND_RenderWindow, 0x40Du, 0, (LPARAM)&qword_A8AF64);
+		SendMessageA(g_HWND_RenderWindow, 0x417u, 0, 0);
+	X	SendMessageA(g_HWND_RenderWindow, 0x40Du, 0, (LPARAM)&qword_A8AF64);
 		SendMessageA(g_HWND_RenderWindow, 0x419u, 6u, 0);
-		SendMessageA(g_HWND_RenderWindow, 0x40Au, 0, 0);
+	X	SendMessageA(g_HWND_RenderWindow, 0x40Au, 0, 0);
 	    SendMessageA(g_HWND_RenderWindow, 0x419u, 5u, 0);
+
+Try passing 1 as unk03 to DataHandler::SavePlugin for ESMs
 
 */
 
@@ -25,6 +29,7 @@ struct FormData;
 struct UseListCellItemData;
 class INISetting;
 
+
 bool					PatchMiscHooks(void);
 void					DoNop(const NopData* Data);
 SHORT __stdcall			IsControlKeyDown(void);
@@ -32,11 +37,17 @@ void __stdcall CreateDialogParamAddress(void);
 
 extern FormData*				UIL_FormData;
 extern UseListCellItemData*		UIL_CellData;
+extern bool						g_SaveAsRoutine;
+extern ModEntry::Data*			g_SaveAsBuffer;
+extern bool						g_QuickLoadToggle;
 
 
-// nop out conditional jump to allow ESP files be processed when populating the master list during a save callback
-// the cs' sanity check should handle the modified code path
-const NopData			kCheckLoadedPluginTypePatch = { 0x0047ECCD, 2 };
+// allows esps to be enumerated while filling the file header and provides support for the save as tool
+const UInt32			kSavePluginMasterEnumHookAddr = 0x0047ECC6;
+const UInt32			kSavePluginMasterEnumRetnPassAddr = 0x0047ECCF;
+const UInt32			kSavePluginMasterEnumRetnFailAddr = 0x0047ECEB;
+
+void					SavePluginMasterEnumHook(void);
 // allows master files to be set as active plugins
 const NopData			kCheckIsActivePluginAnESMPatch = { 0x0040B65E, 2 };
 // nops out a couple of mov instructions that are invalid when editing an active ESM
@@ -84,8 +95,6 @@ const UInt32			kUseInfoListInitHookAddr = 0x00419833;
 const UInt32			kUseInfoListInitRetnAddr = 0x00419848;
 
 void UseInfoListInitHook(void);
-void PatchUseInfoListMenu(void);
-
 // common dialog patches - adds support for the BSA viewer, path editing, patches cancel/close behaviour
 // models
 const UInt32			kModelCancelCommonDialogHookAddr = 0x0049BDB0;
@@ -266,9 +275,8 @@ const UInt32			kNPCFaceGenRetnAddr = 0x004D76B1;
 const UInt32			kNPCFaceGenCallAddr = 0x0049C230;
 
 void NPCFaceGenHook(void);
-// removes the Missing Master warning while saving plugins -- TODO: issues need fixing
-const UInt32			kSavePluginWarnMissingMastersPatchAddr = 0x0047ED01;
 // adds various hooks to allow the use of a custom workspace (LocalMasterPath) while loading masters from the default Data\ directory
+// TODO: Do it correctly
 const UInt32			kDataHandlerPopulateModListInitCleanupHookAddr = 0x0047E539;
 const UInt32			kDataHandlerPopulateModListInitCleanupPassRetnAddr = 0x0047E53F;
 const UInt32			kDataHandlerPopulateModListInitCleanupFailRetnAddr = 0x0047E54D;
@@ -319,13 +327,6 @@ const UInt32			kQuickLoadPluginLoadHandlerRetnAddr = 0x004852EE;
 const UInt32			kQuickLoadPluginLoadHandlerSkipAddr = 0x004852F0;
 
 void QuickLoadPluginLoadHandlerHook(void);
-
-const UInt32			kQuickLoadPluginSaveHandlerHookAddr = 0x0041BA98;
-const UInt32			kQuickLoadPluginSaveHandlerCallAddr = 0x00404410;
-const UInt32			kQuickLoadPluginSaveHandlerRetnAddr = 0x0041BA9D;
-const UInt32			kQuickLoadPluginSaveHandlerSkipAddr = 0x0041A94C;
-
-void QuickLoadPluginSaveHandlerHook(void);
 
 
 

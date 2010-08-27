@@ -22,6 +22,7 @@ class CLIWrapper
 	typedef void							(*_UIL_SetUseListCellItemData)(UseListCellItemData*);
 
 	typedef const char*						(*_BSAV_InitializeViewer)(const char*, const char*);
+	typedef bool							(*_BE_InitializeRefBatchEditor)(BatchRefData*);
 public:
 	static _SE_AllocateNewEditor			SE_AllocateNewEditor;
 	static _SE_InitializeScript				SE_InitializeScript;
@@ -41,6 +42,7 @@ public:
 	static _UIL_SetUseListCellItemData		UIL_SetUseListCellItemData;
 	
 	static _BSAV_InitializeViewer			BSAV_InitializeViewer;
+	static _BE_InitializeRefBatchEditor		BE_InitializeRefBatchEditor;
 
 	static bool								Import(const OBSEInterface * obse);
 };

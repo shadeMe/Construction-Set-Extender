@@ -19,6 +19,7 @@ CLIWrapper::_UIL_SetUseListObjectItemData		CLIWrapper::UIL_SetUseListObjectItemD
 CLIWrapper::_UIL_SetUseListCellItemData			CLIWrapper::UIL_SetUseListCellItemData = NULL;
 
 CLIWrapper::_BSAV_InitializeViewer				CLIWrapper::BSAV_InitializeViewer = NULL;
+CLIWrapper::_BE_InitializeRefBatchEditor		CLIWrapper::BE_InitializeRefBatchEditor = NULL;
 
 
 bool CLIWrapper::Import(const OBSEInterface * obse)
@@ -91,6 +92,22 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
+
+	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BatchEditor.dll").c_str());
+	if (hMod == NULL) {
+		_D_PRINT("Couldn't load BatchEditor.dll");
+		LogWinAPIErrorMessage(GetLastError());
+		return false;
+	}
+
+	CLIWrapper::BE_InitializeRefBatchEditor = (CLIWrapper::_BE_InitializeRefBatchEditor)GetProcAddress(hMod, "InitializeRefBatchEditor");
+
+	if (!BE_InitializeRefBatchEditor)
+	{	
+		LogWinAPIErrorMessage(GetLastError());
+		return false;
+	}
+
 
 	return true;
 }

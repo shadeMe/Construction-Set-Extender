@@ -9,7 +9,6 @@ ScriptEditorManager::ScriptEditorManager()
 {
 	WorkspaceAllocationMap = gcnew LinkedList<ScriptEditor::Workspace^>();
 	TabContainerAllocationMap = gcnew LinkedList<ScriptEditor::TabContainer^>();
-	ActiveEditor = nullptr;
 }
 
 ScriptEditorManager^% ScriptEditorManager::GetSingleton()
@@ -45,7 +44,8 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 						(UInt16)Parameters->ParameterList[1],
 						dynamic_cast<String^>(Parameters->ParameterList[2]),
 						(UInt32)Parameters->ParameterList[3],
-						(UInt32)Parameters->ParameterList[4]);
+						(UInt32)Parameters->ParameterList[4],
+						(UInt32)Parameters->ParameterList[5]);
 			break;
 
 		case OperationType::e_SendMessage:
@@ -176,7 +176,8 @@ void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspac
 						g_ScriptDataPackage->Type, 
 						gcnew String((const char*)g_ScriptDataPackage->EditorID), 
 						(UInt32)g_ScriptDataPackage->ByteCode, 
-						g_ScriptDataPackage->Length);
+						g_ScriptDataPackage->Length,
+						g_ScriptDataPackage->FormID);
 }
 
 void ScriptEditorManager::AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height)
@@ -188,14 +189,14 @@ void ScriptEditorManager::AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt
 	TabContainerAllocationMap->AddLast(gcnew ScriptEditor::TabContainer(PosX, PosY, Width, Height));
 }
 
-void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength)
+void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
 	Itr->TextSet = true;
 	Itr->PreProcessScriptText(PreProcessor::PreProcessOp::e_Collapse, ScriptText);
-	Itr->EditorTab->Text = ScriptName;
-	Itr->ParentStrip->EditorForm->Text = ScriptName + " - CSE Editor";
+	Itr->EditorTab->Text = ScriptName + " [" + FormID.ToString("X8") + "]";
+	Itr->ParentStrip->EditorForm->Text = Itr->EditorTab->Text + " - CSE Editor";
 	Itr->SetScriptType(ScriptType);
 
 	Itr->EnableControls();
@@ -285,7 +286,7 @@ void ScriptEditorManager::MessageHandler_ReceiveNew(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
-	InitializeScript(AllocatedIndex, "", (UInt16)ScriptParser::ScriptType::e_Object, "New Script", 0, 0);
+	InitializeScript(AllocatedIndex, "", (UInt16)ScriptParser::ScriptType::e_Object, "New Script", 0, 0, 0);
 	Itr->EditorTab->ImageIndex = 1;
 }
 void ScriptEditorManager::MessageHandler_ReceiveOpen(UInt32 AllocatedIndex)
@@ -416,6 +417,16 @@ void ScriptEditorManager::AllocateNewWorkspace(UInt32 AllocatedIndex, ScriptEdit
 
 void ScriptEditorManager::DestroyTabContainer(ScriptEditor::TabContainer^ Container)
 {
+	Container->Destroy();
 	TabContainerAllocationMap->Remove(Container);
 	DebugPrint("Released an allocated container");
+}
+
+void ScriptEditorManager::UpdateWorkspaceConsole()
+{
+	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
+		Itr->ConsoleBox->Text = ConsoleManager::GetSingleton()->GetDump();
+		Itr->ConsoleBox->SelectionStart = Itr->ConsoleBox->Text->Length - 1;
+		Itr->ConsoleBox->ScrollToCaret(); 
+	}
 }

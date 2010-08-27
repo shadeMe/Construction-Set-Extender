@@ -103,7 +103,10 @@ void TabContainer::EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E)
 			return;
 		}
 	}
+
+	Destroying = true;
 	CloseAllTabs();
+	Destroying = false;
 }
 
 void TabContainer::ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::TabStripActionEventArgs^ E)
@@ -135,7 +138,6 @@ void TabContainer::ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::Tab
 
 	Workspace^ Itr = dynamic_cast<Workspace^>(ScriptStrip->SelectedTab->Tag);
 	EditorForm->Text = Itr->EditorTab->Text + " - CSE Script Editor";
-	SEMGR->ActiveEditor = Itr;
 	EditorForm->Focus();
 }
 
@@ -143,9 +145,9 @@ void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 {
 	RemovingTab = true;
 	if (ScriptStrip->Tabs->Count == 1) {
-		Destroy();
-		SEMGR->DestroyTabContainer(this);
-	}
+		if (!Destroying)		CreateNewTab(nullptr);
+		else					SEMGR->DestroyTabContainer(this);
+	}	
 }
 
 
@@ -907,11 +909,6 @@ void Workspace::Destroy()
 {
 	Destroying = true;
 	ScriptListBox->ScriptBox->Close();
-
-	if (ScriptEditorManager::GetSingleton()->ActiveEditor == this) {
-		ScriptEditorManager::GetSingleton()->ActiveEditor = nullptr;
-	}
-
 	EditorControlBox->Controls->Clear();
 	ParentStrip->ScriptStrip->Tabs->Remove(EditorTab);
 }
@@ -1115,8 +1112,6 @@ void Workspace::FindAndReplace(bool Replace)
 			ToolBarFindList_Click(nullptr, nullptr);
 
 		MessageBox::Show(String::Format("{0} hits in the current script.", Hits), "Find and Replace");
-		EditorBox->SelectionStart = 0;
-		EditorBox->ScrollToCaret();
 	} finally {
 		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
 	}
@@ -2317,7 +2312,6 @@ void Workspace::EditorBox_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 		String^ TextUnderMouse = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, false, false, EditorBox->SelectionStart, true);
 		if (!IsCursorInsideCommentSeg(false)) {
 			if (ISBox->QuickView(TextUnderMouse)) {
-				EditorBox->SelectionLength = 0;
 				return;
 			}
 		}

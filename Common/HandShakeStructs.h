@@ -7,10 +7,10 @@ struct FormData
 	UInt8											TypeID;
 	UInt32											Flags;
 
-	bool											IsValid() { return (EditorID) ? true : false; }
+	virtual bool									IsValid() { return (EditorID) ? true : false; }
 };
 
-struct ScriptData : FormData
+struct ScriptData : public FormData
 {
 	const char*										Text;
 	UInt16											Type;
@@ -81,4 +81,36 @@ struct UseListCellItemData : public FormData
 	int												XCoord;
 	int												YCoord;
 	UInt32											UseCount;
+};
+
+struct CellObjectData : public FormData
+{
+	void*											ParentREFR;
+	bool											Selected;
+
+	bool											IsValid() { return (FormID) ? true : false; }
+};
+
+struct BatchRefData
+{
+	CellObjectData*									CellObjectListHead;
+	UInt32											ObjectCount;
+
+	struct _3DData
+	{
+		float										RotX, RotY, RotZ;
+		float										PosX, PosY, PosZ;
+		float										Scale;
+	};
+	struct _Flags
+	{
+		bool										Persistent;
+		bool										VWD;
+		bool										Disabled;
+	};
+
+	_3DData											World3DData;
+	bool											Use3DData;
+	_Flags											Flags;
+	bool											UseFlags;
 };

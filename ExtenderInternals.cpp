@@ -7,7 +7,7 @@ char								g_Buffer[0x200] = {0};
 HINSTANCE							g_DLLInstance = NULL;
 
 
-HINSTANCE*							g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
+const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 
 const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
 const DLGPROC						g_UseReport_DlgProc = (DLGPROC)0x00433FE0;
@@ -40,6 +40,13 @@ INISetting*							g_INI_LocalMasterPath = (INISetting*)0x009ED710;
 
 const _GetComboBoxItemData			GetComboBoxItemData = (_GetComboBoxItemData)0x00403690;
 ModEntry::Data**					g_TESActivePlugin = (ModEntry::Data**)0x00A0AA7C;
+char**								g_TESActivePluginName = (char**)0x00A0AF00;
+UInt8*								g_WorkingFileFlag = (UInt8*)0x00A0B628;
+
+const _SelectTESFileCommonDialog	SelectTESFileCommonDialog = (_SelectTESFileCommonDialog)0x00446D40;
+const _sub_4306F0					sub_4306F0 = (_sub_4306F0)0x004306F0;
+
+UInt8*								g_ActiveChangesFlag = (UInt8*)0x00A0B13C;
 
 
 TES* TES::GetSingleton()
@@ -221,4 +228,17 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 							(LPARAM)&InitData);
 		break;
 	}
+}
+
+void RemoteLoadRef(const char* EditorID)
+{
+	TESObjectREFR* Reference = CS_CAST(GetFormByID(EditorID), TESForm, TESObjectREFR);
+	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kTESObjectREFR_VTBL, 0x1A0, Reference);
+	thisCall(kTESChildCell_LoadCellFnAddr, Cell, Cell, Reference);
+}
+
+void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
+{
+	if (State)	*Flag |= Mask;
+	else		*Flag &= ~Mask;
 }

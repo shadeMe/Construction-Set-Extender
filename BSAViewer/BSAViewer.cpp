@@ -44,7 +44,7 @@ BSAViewer::BSAViewer()
 	ResourceManager^ ImageResources = gcnew ResourceManager("CSEBSAViewer.Images", Assembly::GetExecutingAssembly());
 
 	OpenDialog->DefaultExt = "bsa";
-	OpenDialog->Filter = "Bethesda Archives|*.bsa";
+	OpenDialog->Filter = "Bethesda Archive|*.bsa";
 	OpenDialog->Title = "Select a TES 4 Oblivion BSA Archive";
 
 	ToolBar->GripStyle = ToolStripGripStyle::Hidden;

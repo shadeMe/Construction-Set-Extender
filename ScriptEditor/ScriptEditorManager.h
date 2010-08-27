@@ -18,7 +18,7 @@ private:
 
 																										// exported wrappers
 	void												AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);
-	void												InitializeScript(UInt32 AllocatedIndex, String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength);
+	void												InitializeScript(UInt32 AllocatedIndex, String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID);
 
 																										// message handlers
 	void												MessageHandler_SendNew(UInt32 AllocatedIndex);
@@ -45,8 +45,6 @@ private:
 	void												SetVariableListItemData(UInt32 AllocatedIndex, String^% Name, UInt32 Type, UInt32 Index);
 	void												AllocateNewWorkspace(UInt32 AllocatedIndex, ScriptEditor::TabContainer^% Parent);
 public:
-	ScriptEditor::Workspace^							ActiveEditor;
-
 	static enum class									OperationType
 															{
 																e_AllocateTabContainer = 0,
@@ -110,6 +108,7 @@ public:
 	void												PerformOperation(OperationType Op, OperationParams^ Parameters);
 	ScriptEditor::Workspace^							GetAllocatedWorkspace(UInt32 AllocatedIndex);
 	void												DestroyTabContainer(ScriptEditor::TabContainer^ Container);
+	void												UpdateWorkspaceConsole();
 };
 
 #define SEMGR											ScriptEditorManager::GetSingleton()

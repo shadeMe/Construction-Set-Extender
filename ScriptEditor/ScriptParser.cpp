@@ -534,7 +534,7 @@ try {
 		
 		for each (String^% Itr in TextParser->Tokens) {
 			MacroIdx = FindPreProcessMacro(Itr);
-			if (MacroIdx != -1) {
+			if (MacroIdx != -1 && TextParser->IsComment(TokenIdx) == -1) {
 				ExpandedLine += PreProcessMacros[Itr];
 				ScriptParser^ TempParser = gcnew ScriptParser();
 				TempParser->Tokenize(PreProcessMacros[Itr], true);
