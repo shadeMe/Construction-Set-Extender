@@ -7,10 +7,11 @@ struct FormData;
 struct ScriptVarInfo;
 struct ScriptVarIndexData;
 class DataHandler;
+struct BatchRefData;
 
 extern "C"{
 
-__declspec(dllexport) void _D_PRINT(const char* Message);
+__declspec(dllexport) void _D_PRINT_EXP(const char* Message);
 __declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default);
 __declspec(dllexport) const char* GetAppPath(void);
 __declspec(dllexport) void WriteStatusBarText(int PanelIndex, const char* Message);
@@ -41,9 +42,15 @@ __declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID)
 
 __declspec(dllexport) void TESForm_LoadIntoView(const char* EditorID, const char* FormType);
 
+__declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID);
+__declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent);
+
 }
 
 template <typename tData>
 void UseInfoList_SetFormListItemText_ParseFormNode(DataHandler::Node<tData>* ThisNode);
 
 TESObjectREFR* TESForm_LoadIntoView_GetReference(TESObjectCELL* Cell, TESForm* Parent);
+
+template <typename tData>
+void BatchRefEditor_ParseFormNode(DataHandler::Node<tData>* ThisNode, UInt8 ListID);

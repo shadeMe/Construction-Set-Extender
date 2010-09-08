@@ -40,6 +40,7 @@ extern UseListCellItemData*		UIL_CellData;
 extern bool						g_SaveAsRoutine;
 extern ModEntry::Data*			g_SaveAsBuffer;
 extern bool						g_QuickLoadToggle;
+extern FARPROC					g_WindowHandleCallAddr;
 
 
 // allows esps to be enumerated while filling the file header and provides support for the save as tool
@@ -276,7 +277,7 @@ const UInt32			kNPCFaceGenCallAddr = 0x0049C230;
 
 void NPCFaceGenHook(void);
 // adds various hooks to allow the use of a custom workspace (LocalMasterPath) while loading masters from the default Data\ directory
-// TODO: Do it correctly
+// TODO: Do this right
 const UInt32			kDataHandlerPopulateModListInitCleanupHookAddr = 0x0047E539;
 const UInt32			kDataHandlerPopulateModListInitCleanupPassRetnAddr = 0x0047E53F;
 const UInt32			kDataHandlerPopulateModListInitCleanupFailRetnAddr = 0x0047E54D;
@@ -327,6 +328,12 @@ const UInt32			kQuickLoadPluginLoadHandlerRetnAddr = 0x004852EE;
 const UInt32			kQuickLoadPluginLoadHandlerSkipAddr = 0x004852F0;
 
 void QuickLoadPluginLoadHandlerHook(void);
+// provide support for the manual updating of a reference's ninode in the render window
+const UInt32			kUpdate3DHookAddr = 0x00549ACA;
+const UInt32			kUpdate3DCallAddr = 0x00496C90;
+const UInt32			kUpdate3DSkipAddr = 0x00549B2E;
+const UInt32			kUpdate3DRetnAddr = 0x00549AD2;
 
+void Update3DHook(void);
 
 

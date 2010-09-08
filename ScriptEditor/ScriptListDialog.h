@@ -24,18 +24,17 @@ public:
 private:
 	void												ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 	void												ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E);
-	void												ScriptList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
+	void												ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+	void												ScriptList_ItemActivate(Object^ Sender, EventArgs^ E);
 	void												ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-	void												ScriptList_MouseUp(Object^ Sender, MouseEventArgs^ E);
 
 	void												ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 	void												SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
 	void												SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
-
 	void												GetUseReport();
-	void												OpenScript();
+	void												SelectScript();
 	void												Close();
 
 	UInt32												ParentIndex;

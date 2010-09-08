@@ -2,7 +2,6 @@
 #include "SEHooks.h"
 #include "MiscHooks.h"
 #include "Common/CLIWrapper.h"
-#include "Exports.h"
 #include "Common/HandShakeStructs.h"
 
 
@@ -44,7 +43,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		CLIWrapper::SE_InitializeComponents(&g_CommandTableData);
 
 														// register known plugins with the messaging API
-		g_msgIntfc->RegisterListener(g_pluginHandle, "NifSE", CSEInteropHandler);	
+	//	g_msgIntfc->RegisterListener(g_pluginHandle, "NifSE", CSEInteropHandler);	
 		g_msgIntfc->RegisterListener(g_pluginHandle, "ConScribe", CSEInteropHandler);
 	}
 }

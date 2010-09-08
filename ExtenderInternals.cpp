@@ -13,6 +13,7 @@ const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
 const DLGPROC						g_UseReport_DlgProc = (DLGPROC)0x00433FE0;
 const DLGPROC						g_TESDialog_DlgProc = (DLGPROC)0x00447580;
 const DLGPROC						g_TESDialogListView_DlgProc = (DLGPROC)0x00448820;
+const DLGPROC						g_ChooseReference_DlgProc = (DLGPROC)0x0044D470;
 
 const _WriteToStatusBar				WriteToStatusBar	=	(_WriteToStatusBar)0x00431310;
 
@@ -26,10 +27,11 @@ const _GetPositionFromINI			GetPositionFromINI = (_GetPositionFromINI)0x004176D0
 const _GetTESDialogTemplateForType	GetTESDialogTemplateForType = (_GetTESDialogTemplateForType)0x00442050;
 
 const UInt32						kTESChildCell_LoadCellFnAddr = 0x00430F40; 
-const void*							RTTI_TESObjectCELL = (void*)0x009EA750;
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
-const UInt32						kTESObjectREFR_VTBL = 0x00958824;
+const UInt32						g_VTBL_TESObjectREFR = 0x00958824;
+const UInt32						g_VTBL_TESForm = 0x0094688C;
+
 const UInt32						kTESForm_GetObjectUseRefHeadFnAddr = 0x00496380;		// Node<TESForm*>* GetObjectUseRefHead(UInt32 unk01);
 
 TES**								g_TES = (TES**)0x00A0ABB0;
@@ -45,8 +47,24 @@ UInt8*								g_WorkingFileFlag = (UInt8*)0x00A0B628;
 
 const _SelectTESFileCommonDialog	SelectTESFileCommonDialog = (_SelectTESFileCommonDialog)0x00446D40;
 const _sub_4306F0					sub_4306F0 = (_sub_4306F0)0x004306F0;
+const _ChooseRefWrapper				ChooseRefWrapper = (_ChooseRefWrapper)0x0044D660;	// pass 0x00545B10 as arg3 and 0 as args 2 and 4
 
 UInt8*								g_ActiveChangesFlag = (UInt8*)0x00A0B13C;
+
+const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
+const UInt32						kBaseExtraList_ModExtraOwnership = 0x0045E060;
+const UInt32						kBaseExtraList_ModExtraGlobal = 0x0045E120;
+const UInt32						kBaseExtraList_ModExtraRank = 0x0045E1E0;
+const UInt32						kBaseExtraList_ModExtraCount = 0x0045E2A0;
+
+const UInt32						kTESObjectREFR_ModExtraHealth = 0x0053F4E0;
+const UInt32						kTESObjectREFR_ModExtraCharge = 0x0053F3C0;
+const UInt32						kTESObjectREFR_ModExtraTimeLeft = 0x0053F620;
+const UInt32						kTESObjectREFR_ModExtraSoul = 0x0053F710;
+const UInt32						kTESObjectREFR_SetExtraEnableStateParent_OppositeState = 0x0053FA80;
+
+RendSel**								g_RenderWindow_UnkLL = (RendSel**)0x00A0AF60;
+
 
 
 TES* TES::GetSingleton()
@@ -145,7 +163,6 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 	LocalFree(ErrorMsg);
 }
 
-
 TESDialogInitParam::TESDialogInitParam(const char* EditorID)
 {
 	Form = GetFormByID(EditorID);
@@ -233,7 +250,7 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 void RemoteLoadRef(const char* EditorID)
 {
 	TESObjectREFR* Reference = CS_CAST(GetFormByID(EditorID), TESForm, TESObjectREFR);
-	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kTESObjectREFR_VTBL, 0x1A0, Reference);
+	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(g_VTBL_TESObjectREFR, 0x1A0, Reference);
 	thisCall(kTESChildCell_LoadCellFnAddr, Cell, Cell, Reference);
 }
 
@@ -241,4 +258,21 @@ void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
 {
 	if (State)	*Flag |= Mask;
 	else		*Flag &= ~Mask;
+}
+
+TESObjectREFR* ChooseReferenceDlg(HWND Parent)
+{
+	return ChooseRefWrapper(Parent, 0, 0x00545B10, 0);
+}
+
+void UpdateTESObjectREFR3D(TESObjectREFR* Object)
+{
+	static const UInt32 kTESObjectREFR_sub549450 = 0x00549450;
+	static const UInt32 kUnk_sub511C20 = 0x00511C20;
+
+	g_Update3DBuffer = Object;
+	thisCall(kTESObjectREFR_sub549450, Object, 0);
+	thisCall(kUnk_sub511C20, *g_RenderWindow_UnkLL, 1);
+	thisVirtualCall(g_VTBL_TESObjectREFR, 0x11C, Object, NULL);
+	g_Update3DBuffer = NULL;
 }

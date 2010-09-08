@@ -7,6 +7,8 @@
 #include "obse/PluginAPI.h"
 #include "obse/obse_common/SafeWrite.h"
 #include "obse/GameObjects.h"
+#include "Editor_RTTI.h"
+//#include "EditorBSExtraData.h"
 
 
 #include <string>
@@ -27,6 +29,7 @@ extern char							g_Buffer[0x200];
 extern OBSEMessagingInterface*		g_msgIntfc;
 extern PluginHandle					g_pluginHandle;
 extern HINSTANCE					g_DLLInstance;
+extern TESObjectREFR*				g_Update3DBuffer;
 
 // TODO: ++++++++++++++++++
 
@@ -120,6 +123,16 @@ template<typename Type> struct GenericNode
 	GenericNode<Type>	* next;
 };
 
+struct RendSel // 0x18 ; ctor = 0x511A20
+{
+	GenericNode<TESObjectREFR>*		unk00;			// 00 - sel head?
+	UInt32		unk04;			// 04 - sel count
+	UInt32		unk08;			// 08 init to 0x00A8AF64
+	UInt32		unk0C;			// 0C
+	UInt32		unk10;			// 10 init to 0x00A8AF6C
+	double		unk14;			// 14 init to 0.0
+}; // = 0x00A0AF60;
+
 
 #define CS_CAST(obj, from, to) (to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
 
@@ -137,9 +150,6 @@ extern HWND*			g_HWND_ObjectWindow;
 extern HWND*			g_HWND_CellView;
 extern HWND*			g_HWND_CSParent;
 
-
-
-
 typedef UInt32			(__cdecl *_WritePositionToINI)(HWND Handle, CHAR* ClassName);
 extern const _WritePositionToINI WritePositionToINI;
 
@@ -150,12 +160,12 @@ typedef UInt32			(__cdecl *_GetTESDialogTemplateForType)(UInt8 FormTypeID);
 extern const _GetTESDialogTemplateForType GetTESDialogTemplateForType;
 
 extern const UInt32			kTESChildCell_LoadCellFnAddr;
-extern const void *			RTTI_TESObjectCELL;
 extern const void *			RTTI_TESCellUseList;
 
 extern TES** g_TES;
 
-extern const UInt32			kTESObjectREFR_VTBL;
+extern const UInt32			g_VTBL_TESObjectREFR;
+extern const UInt32			g_VTBL_TESForm;
 extern const UInt32			kTESForm_GetObjectUseRefHeadFnAddr;
 extern const UInt32			kTESCellUseList_GetUseListRefHeadFnAddr;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpaceFnAddr;
@@ -175,6 +185,36 @@ extern char**				g_TESActivePluginName;
 extern UInt8*				g_WorkingFileFlag;
 extern UInt8*				g_ActiveChangesFlag;
 
+typedef TESObjectREFR* (__cdecl *_ChooseRefWrapper)(HWND Parent, UInt32 unk01, UInt32 unk02, UInt32 unk03);
+extern const _ChooseRefWrapper	ChooseRefWrapper;
+
+extern const UInt32				kBaseExtraList_ModExtraEnableStateParent;
+extern const UInt32				kBaseExtraList_ModExtraOwnership;
+extern const UInt32				kBaseExtraList_ModExtraGlobal;
+extern const UInt32				kBaseExtraList_ModExtraRank;
+extern const UInt32				kTESObjectREFR_ModExtraHealth;
+extern const UInt32				kBaseExtraList_ModExtraCount;
+extern const UInt32				kTESObjectREFR_ModExtraCharge;
+extern const UInt32				kTESObjectREFR_ModExtraTimeLeft;
+extern const UInt32				kTESObjectREFR_ModExtraSoul;
+extern const UInt32				kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
+
+extern RendSel**					g_RenderWindow_UnkLL;
+
+TESObjectREFR* ChooseReferenceDlg(HWND Parent);
+
+inline void _D_PRINT(const char* fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
+	va_end(args);
+
+	g_DEBUG_LOG << g_Buffer << std::endl;
+}
+
+void UpdateTESObjectREFR3D(TESObjectREFR* Object);	// in the render window
 
 
 // __thisCall handlers (non-virtual)

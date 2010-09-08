@@ -5,6 +5,8 @@ extern WNDPROC						g_DataDlgOrgWindowProc;
 extern WNDPROC						g_CSMainWndOrgWindowProc;
 extern WNDPROC						g_RenderWndOrgWindowProc;
 
+
+
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

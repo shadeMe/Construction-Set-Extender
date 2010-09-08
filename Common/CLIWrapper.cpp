@@ -20,6 +20,7 @@ CLIWrapper::_UIL_SetUseListCellItemData			CLIWrapper::UIL_SetUseListCellItemData
 
 CLIWrapper::_BSAV_InitializeViewer				CLIWrapper::BSAV_InitializeViewer = NULL;
 CLIWrapper::_BE_InitializeRefBatchEditor		CLIWrapper::BE_InitializeRefBatchEditor = NULL;
+CLIWrapper::_BE_AddFormListItem					CLIWrapper::BE_AddFormListItem = NULL;
 
 
 bool CLIWrapper::Import(const OBSEInterface * obse)
@@ -101,8 +102,10 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	}
 
 	CLIWrapper::BE_InitializeRefBatchEditor = (CLIWrapper::_BE_InitializeRefBatchEditor)GetProcAddress(hMod, "InitializeRefBatchEditor");
+	CLIWrapper::BE_AddFormListItem = (CLIWrapper::_BE_AddFormListItem)GetProcAddress(hMod, "AddFormListItem");
 
-	if (!BE_InitializeRefBatchEditor)
+	if (!BE_InitializeRefBatchEditor ||
+		!BE_AddFormListItem)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;

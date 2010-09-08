@@ -341,6 +341,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorBox->Multiline = true;
 	EditorBox->WordWrap = false;
 	EditorBox->BorderStyle = BorderStyle::Fixed3D;
+	EditorBox->AutoWordSelection = false;
 
 	int TabSize = Decimal::ToInt32(GLOB->ScriptEditorOptions->TabSize->Value);
 	if (TabSize) {
@@ -443,13 +444,16 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	ToolBarScriptType = gcnew ToolStripDropDownButton();
 		ToolBarScriptTypeContents = gcnew ToolStripDropDown();
 			ToolBarScriptTypeContentsObject = gcnew ToolStripButton();
-				ToolBarScriptTypeContentsObject->Text = "Object";
+				ToolBarScriptTypeContentsObject->Text = "Object                  ";
+				ToolBarScriptTypeContentsObject->ToolTipText = "Object";
 				ToolBarScriptTypeContentsObject->Click += gcnew EventHandler(this, &Workspace::ToolBarScriptTypeContentsObject_Click);
 			ToolBarScriptTypeContentsQuest = gcnew ToolStripButton();
-				ToolBarScriptTypeContentsQuest->Text = "Quest";
+				ToolBarScriptTypeContentsQuest->Text = "Quest                    ";
+				ToolBarScriptTypeContentsQuest->ToolTipText = "Quest";
 				ToolBarScriptTypeContentsQuest->Click += gcnew EventHandler(this, &Workspace::ToolBarScriptTypeContentsQuest_Click);
 			ToolBarScriptTypeContentsMagicEffect = gcnew ToolStripButton();
-				ToolBarScriptTypeContentsMagicEffect->Text = "Magic Effect";
+				ToolBarScriptTypeContentsMagicEffect->Text = "Magic Effect     ";
+				ToolBarScriptTypeContentsMagicEffect->ToolTipText = "Magic Effect";
 				ToolBarScriptTypeContentsMagicEffect->Click += gcnew EventHandler(this, &Workspace::ToolBarScriptTypeContentsMagicEffect_Click);
 				
 		ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsObject);
@@ -2014,17 +2018,17 @@ void Workspace::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
 {
-	ToolBarScriptType->Text = ToolBarScriptTypeContentsObject->Text + " Script";
+	ToolBarScriptType->Text = ToolBarScriptTypeContentsObject->ToolTipText + " Script";
 	ScriptType = 0;
 }
 void Workspace::ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E)
 {
-	ToolBarScriptType->Text = ToolBarScriptTypeContentsQuest->Text + " Script";
+	ToolBarScriptType->Text = ToolBarScriptTypeContentsQuest->ToolTipText + " Script";
 	ScriptType = 1;
 }
 void Workspace::ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E)
 {
-	ToolBarScriptType->Text = ToolBarScriptTypeContentsMagicEffect->Text + " Script";
+	ToolBarScriptType->Text = ToolBarScriptTypeContentsMagicEffect->ToolTipText + " Script";
 	ScriptType = 2;
 }
 
@@ -2034,11 +2038,24 @@ void Workspace::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
 	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 	Parameters->VanillaHandleIndex = AllocatedIndex;
 
-	if (Control::ModifierKeys == Keys::Control) {
+	switch (Control::ModifierKeys)
+	{
+	case Keys::Control:
 		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_New);
-	} else {
+		break;
+	case Keys::Shift:
+		Parameters->VanillaHandleIndex = 0;
+		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Location.X);
+		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Location.Y);
+		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Width);
+		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Height);
+
+		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateTabContainer, Parameters);
+		break;
+	default:
 		Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_New);
 		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+		break;
 	}
 }
 void Workspace::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)

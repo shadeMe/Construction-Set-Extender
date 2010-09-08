@@ -9,6 +9,8 @@ WNDPROC						g_DataDlgOrgWindowProc = NULL;
 WNDPROC						g_CSMainWndOrgWindowProc = NULL;
 WNDPROC						g_RenderWndOrgWindowProc = NULL;
 
+#define PI					3.151592653589793
+
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 { 
 	switch (uMsg)
@@ -96,16 +98,6 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
 
-			struct RendSel // 0x18 ; ctor = 0x511A20
-			{
-				void*		unk00;			// 00 - sel head?
-				UInt32		unk04;			// 04 - sel count
-				UInt32		unk08;			// 08 init to 0x00A8AF64
-				UInt32		unk0C;			// 0C
-				UInt32		unk10;			// 10 init to 0x00A8AF6C
-				double		unk14;			// 14 init to 0.0
-			} **TestX = (RendSel**)0x00A0AF60;
-
 			if (ThisCell) {
 				UInt32 RefCount = 0, i = 0;
 				TESObjectCELL::ObjectListEntry* ThisNode = &ThisCell->objectList;
@@ -135,7 +127,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRefData->TypeID = ThisRef->baseForm->typeID;
 					ThisRefData->Flags = ThisRef->flags;
 					ThisRefData->Selected = false;							// TODO: Figure out where the selected objects linked lists exists
-					ThisRefData->ParentREFR = ThisRef;
+					ThisRefData->ParentForm = ThisRef;
 
 					i++;
 					ThisNode = ThisNode->Next();
@@ -146,50 +138,95 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 				if (CLIWrapper::BE_InitializeRefBatchEditor(BatchData)) {
 					for (UInt32 k = 0; k < RefCount; k++) {
-						ThisRef = (TESObjectREFR*)RefData[k].ParentREFR;
-						ThisRefData = &RefData[i];
+						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
+						ThisRefData = &RefData[k];
+						bool Modified = false;
 	
-						if (ThisRefData->Selected) {
-							if (BatchData->Use3DData) {
-								ThisRef->posX = BatchData->World3DData.PosX;
-								ThisRef->posY = BatchData->World3DData.PosY;
-								ThisRef->posZ = BatchData->World3DData.PosZ;
+						if (ThisRefData->Selected) {		// TODO: filter out ref types that don't have ownership extradata and count
+							if (BatchData->World3DData.UsePosX())	ThisRef->posX = BatchData->World3DData.PosX, Modified = true;
+							if (BatchData->World3DData.UsePosY())	ThisRef->posY = BatchData->World3DData.PosY, Modified = true;
+							if (BatchData->World3DData.UsePosZ())	ThisRef->posZ = BatchData->World3DData.PosZ, Modified = true;
 
-								ThisRef->rotX = BatchData->World3DData.RotX;
-								ThisRef->rotY = BatchData->World3DData.RotY;
-								ThisRef->rotZ = BatchData->World3DData.RotZ;
+							if (BatchData->World3DData.UseRotX())	ThisRef->rotX = BatchData->World3DData.RotX * PI / 180, Modified = true;
+							if (BatchData->World3DData.UseRotY())	ThisRef->rotY = BatchData->World3DData.RotY * PI / 180, Modified = true;
+							if (BatchData->World3DData.UseRotZ())	ThisRef->rotZ = BatchData->World3DData.RotZ * PI / 180, Modified = true;
 
-								ThisRef->scale = BatchData->World3DData.Scale;
+							if (BatchData->World3DData.UseScale())	ThisRef->scale = BatchData->World3DData.Scale, Modified = true;
+
+							if (BatchData->Flags.UsePersistent() && 
+								ThisRef->baseForm->typeID != kFormType_NPC && 
+								ThisRef->baseForm->typeID != kFormType_Creature)	ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent), Modified = true;
+							if (BatchData->Flags.UseDisabled())		ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Disabled, BatchData->Flags.Disabled), Modified = true;
+							if (BatchData->Flags.UseVWD())			ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_VWD, BatchData->Flags.VWD), Modified = true;
+
+							if (BatchData->EnableParent.UseEnableParent()) {
+								TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
+								if (Parent != ThisRef) {
+									ThisRef->baseExtraList.ModExtraEnableStateParent(Parent);
+									ThisRef->baseExtraList.ModExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
+								//	thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->baseExtraList, Parent);
+								//	thisCall(kTESObjectREFR_SetExtraEnableStateParent_OppositeState, ThisRef, BatchData->EnableParent.OppositeState);
+									Modified = true;
+								}
 							}
 
-							if (BatchData->UseFlags) {
-								ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent);
-								ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Disabled, BatchData->Flags.Disabled);
-								ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_VWD, BatchData->Flags.VWD);
+							if (BatchData->Ownership.UseOwnership() &&
+								ThisRef->baseForm->typeID != kFormType_NPC && 
+								ThisRef->baseForm->typeID != kFormType_Creature) {
+								ThisRef->baseExtraList.ModExtraOwnership(NULL);
+								ThisRef->baseExtraList.ModExtraGlobal(NULL);
+								ThisRef->baseExtraList.ModExtraRank(-1);
+
+								TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
+								ThisRef->baseExtraList.ModExtraOwnership(Owner);
+						//		thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, Owner);
+								if (BatchData->Ownership.UseNPCOwner()) {
+									ThisRef->baseExtraList.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
+						//			thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
+								} else {
+									ThisRef->baseExtraList.ModExtraRank(BatchData->Ownership.Rank);
+						//			thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
+								}
+								Modified = true;
+							}
+
+							if (BatchData->Extra.UseCharge())		thisCall(kTESObjectREFR_ModExtraCharge, ThisRef, BatchData->Extra.Charge), Modified = true;
+							if (BatchData->Extra.UseHealth())		thisCall(kTESObjectREFR_ModExtraHealth, ThisRef, BatchData->Extra.Health), Modified = true;
+							if (BatchData->Extra.UseTimeLeft())		thisCall(kTESObjectREFR_ModExtraTimeLeft, ThisRef, BatchData->Extra.TimeLeft), Modified = true;
+							if (BatchData->Extra.UseSoulLevel())	thisCall(kTESObjectREFR_ModExtraSoul, ThisRef, BatchData->Extra.SoulLevel), Modified = true;
+							if (BatchData->Extra.UseCount()) {
+								switch (ThisRef->baseForm->typeID)
+								{
+									case kFormType_Apparatus:
+									case kFormType_Armor:
+									case kFormType_Book:
+									case kFormType_Clothing:
+									case kFormType_Ingredient:
+									case kFormType_Misc:
+									case kFormType_Weapon:
+									case kFormType_Ammo:
+									case kFormType_SoulGem:
+									case kFormType_Key:
+									case kFormType_AlchemyItem:
+									case kFormType_SigilStone:
+										thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
+									case kFormType_Light:
+										TESObjectLIGH* Light = (TESObjectLIGH*)CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
+										if (Light)
+											if (Light->IsCarriable())
+												thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
+								}							
 							}
 						}
-					}
 
-					*g_ActiveChangesFlag = 1;
-				//	SendMessageA(*g_HWND_RenderWindow, 0x419u, 6u, 1);
-				//	SendMessageA(*g_HWND_RenderWindow, 0x419u, 5u, 0);
-				//	InvalidateRect(*g_HWND_RenderWindow, 0, 1);
-
-					
-					UInt8* X1 = (UInt8*)0x00A0BC4C, *Y0 = (UInt8*)0x009ED634, *Z0 = (UInt8*)0x00A0BBCC;
-				//	*X1 = 1;
-				//	*Y0 = 0;
-				//	*Z0 = 0;
-				//	SendMessage(*g_HWND_RenderWindow, 0x111, 0, 0);
-
-				//	SendMessage(*g_HWND_RenderWindow, 0x417u, 0, 0);
-				//	thisVirtualCall(0x00957E0C, 0x70, ThisCell);
-				//	SendMessageA(*g_HWND_RenderWindow, 0x40Du, 0, (LPARAM)((void**)0x00A8AF64));
-				//	SendMessageA(*g_HWND_RenderWindow, 0x419u, 6u, 0);
-				//	SendMessage(*g_HWND_RenderWindow, 0x40Au, 0, 0);
-				//	SendMessageA(*g_HWND_RenderWindow, 0x419u, 5u, 0);
-
-				
+						if (Modified) {
+							thisVirtualCall(g_VTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
+							UpdateTESObjectREFR3D(ThisRef);
+							GenericNode<TESObjectREFR>**				g_SelLL = (GenericNode<TESObjectREFR>**)0x00A0BC48;
+					_D_PRINT("REF --- %08X", ThisRef->refID);
+							ThisRef->baseExtraList.DebugDump();
+						}
+					}			
 				}
 
 				delete [] RefData;

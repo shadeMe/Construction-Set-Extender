@@ -147,7 +147,6 @@ void __stdcall SendMessageAddress(void)
 
 void DispatchInteropMessage(void)
 {
-//	SendMessage(*g_HWND_RenderWindow, 0x111, 2, 0);
 	static bool InterOpMessageDispatched = false;
 
 	if (!InterOpMessageDispatched) {
@@ -167,13 +166,13 @@ void __stdcall InstantiateTabContainer(void)
 	tagRECT ScriptEditorLoc;
 	GetPositionFromINI("Script Edit", &ScriptEditorLoc);
 	CLIWrapper::SE_AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+	g_EditorAuxHWND = NULL;
 }
 
 void __declspec(naked) MainWindowEntryPointHook(void)
 {
     __asm
     {
-		mov		g_EditorAuxHWND, 0
 		call	InstantiateTabContainer
 		jmp		[kMainWindowEntryPointRetnAddr]
     }

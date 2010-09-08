@@ -183,11 +183,11 @@
 			Name="Common"
 			>
 			<File
-				RelativePath="..\..\Common\HandShakeStructs.h"
+				RelativePath="..\Common\HandShakeStructs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Common\Includes.h"
+				RelativePath="..\Common\Includes.h"
 				>
 			</File>
 			<File
@@ -195,7 +195,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Common\ListViewUtilities.h"
+				RelativePath="..\Common\ListViewUtilities.h"
 				>
 			</File>
 			<File
@@ -203,7 +203,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Common\MiscUtilities.h"
+				RelativePath="..\Common\MiscUtilities.h"
 				>
 			</File>
 		</Filter>
@@ -225,7 +225,7 @@
 			Name="Wrappers"
 			>
 			<File
-				RelativePath="..\..\Common\NativeWrapper.h"
+				RelativePath="..\Common\NativeWrapper.h"
 				>
 			</File>
 		</Filter>

@@ -6,8 +6,6 @@
 #include "Common/HandshakeStructs.h"
 #include "WindowManager.h"
 
-extern FARPROC						g_WindowHandleCallAddr;
-
 FormData*							UIL_FormData = new FormData();
 UseListCellItemData*				UIL_CellData = new UseListCellItemData();
 
@@ -25,6 +23,7 @@ bool								g_QuickLoadToggle = false;
 static HFONT						g_CSDefaultFont = NULL;
 bool								g_SaveAsRoutine = false;
 ModEntry::Data*						g_SaveAsBuffer = NULL;
+TESObjectREFR*						g_Update3DBuffer = NULL;		
 
 void __stdcall DoT()		
 {
@@ -99,6 +98,7 @@ bool PatchMiscHooks()
 	PLACE_HOOK(QuickLoadPluginLoadHandlerPrologue);
 	PLACE_HOOK(QuickLoadPluginLoadHandler);
 	PLACE_HOOK(DataDlgInit);
+	PLACE_HOOK(Update3D);
 
 	WriteRelJump(0x0047BCBC, (UInt32)T);
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -639,5 +639,23 @@ void __declspec(naked) DataDlgInitHook(void)
 		popad
 
 		jmp		[kDataDlgInitRetnAddr]
+	}
+}
+
+void __declspec(naked) Update3DHook(void)
+{
+	__asm
+	{
+		mov		eax, g_Update3DBuffer
+		test	eax, eax
+		jnz		SKIP
+
+		push	esi
+		mov		ebp, ecx
+		call	[kUpdate3DCallAddr]
+		jmp		[kUpdate3DRetnAddr]
+	SKIP:
+		mov		ebx, g_Update3DBuffer
+		jmp		[kUpdate3DSkipAddr]
 	}
 }

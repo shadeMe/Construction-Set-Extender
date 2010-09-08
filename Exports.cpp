@@ -9,7 +9,7 @@
 
 extern "C"{
 
-__declspec(dllexport) void _D_PRINT(const char* Message)
+__declspec(dllexport) void _D_PRINT_EXP(const char* Message)
 {
 	g_DEBUG_LOG << Message << std::endl;
 }
@@ -351,6 +351,60 @@ __declspec(dllexport) void TESForm_LoadIntoView(const char* EditorID, const char
 	LoadFormIntoView(EditorID, FormType);
 }
 
+__declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID)
+{
+	switch(ListID)
+	{
+	case BatchRefData::kListID_NPC:
+		{
+		FormData Data;
+		Data.EditorID = "NONE";
+		Data.ParentForm = NULL;
+		CLIWrapper::BE_AddFormListItem(&Data, ListID);
+
+		for (TESBoundObject* Itr = (*g_dataHandler)->boundObjects->last; Itr; Itr = Itr->next) {
+			TESNPC* NPC = CS_CAST(Itr, TESBoundObject, TESNPC);
+
+			if (NPC) {
+				Data.EditorID = Itr->editorData.editorID.m_data;
+				Data.FormID = Itr->refID;
+				Data.TypeID = Itr->typeID;
+				Data.ParentForm = (void*)Itr;
+				CLIWrapper::BE_AddFormListItem(&Data, ListID);
+			}
+		}
+		break;
+		}
+	case BatchRefData::kListID_Global:
+		BatchRefEditor_ParseFormNode(&(*g_dataHandler)->globals, ListID);
+		break;
+	case BatchRefData::kListID_Faction:
+		BatchRefEditor_ParseFormNode(&(*g_dataHandler)->factions, ListID);
+		break;
+	}		
+}
+
+__declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent)
+{
+	TESObjectREFR* Ref = NULL;
+	while (true) {
+		Ref = ChooseReferenceDlg(Parent);
+		if (!Ref)	break;
+		if (!Ref->IsPersistent()) {		// not required as the dialog doesn't enumerate non-persistent refs
+			MessageBox(Parent, "The parent needs to be a presistent reference", "Choose Reference", MB_OK|MB_ICONERROR);
+			continue;
+		}
+		break;
+	}
+
+	Data->EnableParent.Parent = Ref;
+	if (Ref)
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Ref->refID);
+	else
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "NONE");
+	return (!Ref || !Ref->editorData.editorID.m_data)?g_Buffer:Ref->editorData.editorID.m_data;
+}
+
 }
 
 template <typename tData>
@@ -386,4 +440,26 @@ TESObjectREFR* TESForm_LoadIntoView_GetReference(TESObjectCELL* Cell, TESForm* P
 		}
 	}
 	return NULL;
+}
+
+template <typename tData>
+void BatchRefEditor_ParseFormNode(DataHandler::Node<tData>* ThisNode, UInt8 ListID)
+{
+	FormData Data;
+	Data.EditorID = "NONE";
+	Data.ParentForm = NULL;
+	CLIWrapper::BE_AddFormListItem(&Data, ListID);
+
+	while (ThisNode) {
+		tData* ThisObject = ThisNode->data;
+		if (!ThisObject)		break;
+
+		Data.EditorID = ThisObject->editorData.editorID.m_data;
+		Data.FormID = ThisObject->refID;
+		Data.TypeID = ThisObject->typeID;
+		Data.ParentForm = (void*)ThisObject;
+
+		CLIWrapper::BE_AddFormListItem(&Data, ListID);
+		ThisNode = ThisNode->next;
+	}
 }

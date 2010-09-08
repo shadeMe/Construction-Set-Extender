@@ -23,6 +23,7 @@ class CLIWrapper
 
 	typedef const char*						(*_BSAV_InitializeViewer)(const char*, const char*);
 	typedef bool							(*_BE_InitializeRefBatchEditor)(BatchRefData*);
+	typedef void							(*_BE_AddFormListItem)(FormData*, UInt8);
 public:
 	static _SE_AllocateNewEditor			SE_AllocateNewEditor;
 	static _SE_InitializeScript				SE_InitializeScript;
@@ -43,6 +44,7 @@ public:
 	
 	static _BSAV_InitializeViewer			BSAV_InitializeViewer;
 	static _BE_InitializeRefBatchEditor		BE_InitializeRefBatchEditor;
+	static _BE_AddFormListItem				BE_AddFormListItem;
 
 	static bool								Import(const OBSEInterface * obse);
 };

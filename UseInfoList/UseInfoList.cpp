@@ -143,9 +143,9 @@ UseInfoList::UseInfoList()
 	FilterLabel->Name = L"FilterLabel";
 	FilterLabel->Size = System::Drawing::Size(98, 29);
 	FilterLabel->TabIndex = 5;
-	FilterLabel->Text = L"<< Filter String";
+	FilterLabel->Text = L"[Filter]";
 	FilterLabel->UseVisualStyleBackColor = true;
-	FilterLabel->Font = gcnew Font("Consolas", 6);
+	FilterLabel->Font = gcnew Font("Consolas", 8);
 
 	UseInfoListBox = gcnew Form();
 	UseInfoListBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);

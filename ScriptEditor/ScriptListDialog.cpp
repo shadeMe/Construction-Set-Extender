@@ -46,9 +46,9 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptList->MultiSelect = false;
 	ScriptList->SelectedIndexChanged += gcnew EventHandler(this, &ScriptListDialog::ScriptList_SelectedIndexChanged);
 	ScriptList->KeyDown += gcnew KeyEventHandler(this, &ScriptListDialog::ScriptList_KeyDown);
-	ScriptList->MouseDoubleClick += gcnew MouseEventHandler(this, &ScriptListDialog::ScriptList_MouseDoubleClick);
+	ScriptList->ItemActivate += gcnew EventHandler(this, &ScriptListDialog::ScriptList_ItemActivate);
 	ScriptList->ColumnClick += gcnew ColumnClickEventHandler(this, &ScriptListDialog::ScriptList_ColumnClick);
-	ScriptList->MouseUp += gcnew MouseEventHandler(this, &ScriptListDialog::ScriptList_MouseUp);
+	ScriptList->KeyPress += gcnew KeyPressEventHandler(this, &ScriptListDialog::ScriptList_KeyPress);
 	ScriptList->CheckBoxes = false;
 	ScriptList->FullRowSelect = true;
 	ScriptList->HideSelection = false;
@@ -73,10 +73,10 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	SearchBox->TextChanged += gcnew EventHandler(this, &ScriptListDialog::SearchBox_TextChanged);
 	SearchBox->KeyDown += gcnew KeyEventHandler(this, &ScriptListDialog::SearchBox_KeyDown);
 
-	FilterBox->Font = gcnew Font("Consolas", 6);
+	FilterBox->Font = gcnew Font("Consolas", 8);
 	FilterBox->Enabled = false;
 	FilterBox->Location = Point(261, 409);
-	FilterBox->Text = "<< Filter String";
+	FilterBox->Text = "[Filter]";
 	FilterBox->Size = Size(108, 30);
 
 	ScriptBox->ClientSize = Size(744, 451);
@@ -142,7 +142,7 @@ void ScriptListDialog::AddScript(String^% ScriptName, String^% FormID, String^% 
 	ScriptList->Items->Add(NewScript);
 }
 
-void ScriptListDialog::OpenScript()
+void ScriptListDialog::SelectScript()
 {
 	if (GetListViewSelectedItem(ScriptList) == nullptr)		return;
 
@@ -192,6 +192,8 @@ void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs
 
 	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
 	PreviewBox->Text = gcnew String(NativeWrapper::ScriptEditor_GetScriptListItemText(CEID->String()));
+
+	SearchBox->Focus();
 }
 
 void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -199,7 +201,7 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	switch (E->KeyCode)
 	{
 	case Keys::Enter:
-		OpenScript();
+		SelectScript();
 		break;
 	case Keys::F1:
 		GetUseReport();
@@ -207,17 +209,31 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	case Keys::Escape:
 		ScriptBox->Close();
 		break;
+	case Keys::Back:
+		if (SearchBox->Text->Length >= 1) {
+			SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
+			ScriptList->Focus();
+		}
+		break;
 	}
+	E->Handled = true;
 }
 
-void ScriptListDialog::ScriptList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
+void ScriptListDialog::ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 {
-	OpenScript();
+	if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) || 
+		(E->KeyChar > 0x60 && E->KeyChar < 0x7B))
+	{
+		SearchBox->Text += E->KeyChar.ToString();
+		ScriptList->Focus();
+	}
+	E->Handled = true;
 }
 
-void ScriptListDialog::ScriptList_MouseUp(Object^ Sender, MouseEventArgs^ E)
+
+void ScriptListDialog::ScriptList_ItemActivate(Object^ Sender, EventArgs^ E)
 {
-	if (!SearchBox->Focused)	SearchBox->Focus();
+	SelectScript();
 }
 
 void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -267,5 +283,10 @@ void ScriptListDialog::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 
 void ScriptListDialog::SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 {
+	switch (E->KeyCode)
+	{
+	case Keys::Back:
+		return;
+	}
 	ScriptListDialog::ScriptList_KeyDown(nullptr, E);
 }

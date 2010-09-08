@@ -5,7 +5,7 @@
 class NativeWrapper
 {
 	[DllImport("Construction Set Extender.dll")] 
-	static void											_D_PRINT(const char* Message);
+	static void											_D_PRINT_EXP(const char* Message);
 	[DllImport("Construction Set Extender.dll")] 
 	static void											WriteStatusBarText(int PanelIndex, const char* Message);
 public:
@@ -57,12 +57,14 @@ public:
 	[DllImport("Construction Set Extender.dll")] 
 	static void											TESForm_LoadIntoView(const char* EditorID, const char* FormType);
 
+	[DllImport("Construction Set Extender.dll")] 
+	static void											BatchRefEditor_SetFormListItem(UInt8 ListID);
+	[DllImport("Construction Set Extender.dll")] 
+	static const char*									BatchRefEditor_ChooseParentReference(BatchRefData* Data, IntPtr Parent);
 
 	[DllImport("user32.dll")]
 	static bool											LockWindowUpdate(IntPtr hWndLock);
-
 	static void											PrintToCSStatusBar(int PanelIndex, String^ Message);
-
 	friend void											DumpToLog(String^% Message);
 };
 

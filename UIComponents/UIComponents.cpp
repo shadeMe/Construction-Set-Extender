@@ -1,7 +1,6 @@
 // UIComponents.cpp : main project file.
 
-#include "stdafx.h"
-#include "OpenDialog.h"
+#include "BatchEditor_Reference.h"
 
 using namespace UIComponents;
 
@@ -13,6 +12,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Create the main window and run it
-	Application::Run(gcnew Form1());
+	Application::Run(gcnew BatchEditor_Reference());
 	return 0;
 }
