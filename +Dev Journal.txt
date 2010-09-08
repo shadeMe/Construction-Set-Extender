@@ -20,23 +20,53 @@ Notes
 
 To-Do
 =====
-> Another random thing - note if the script requires OBSE, which version, especially if the whole thing requires v18 because of the bytecode thing, allow the modder to select a section and ask which version it requires.
-> Version history
-1. the display room for the path is hideously narrow... would be nicer to a) have the display be wider or b ) (probably better I think) if the mouse hovers over to pop up a text bar with the whole path 
-3.  clicking those opens up a file browser set to oblivion/data (or for icons data/textures/menu/icons IIRC)... I'd rather it opened the current path (if it exists).
+MISC-->
+> Nudge IanPat to implement the loader fix *The default water fix won't work without it*
 
+BE---->
+> Look into the extraData fuckup
+> Filter out refs that don't haev ownership data and count
 
-Auto-Endif. After an If line, the next line is auto-indented; on the line after that, insert an un-indented endif. 
-Also add closing Loop for While/ForEach. 
-Don't do this if there is a line immediately following the If which is already more deeply indented, as this probably means you're adding a condition to an existing block. 
-Should have a method of expressly disabling this behavior (Shift-Enter?) for other cases where it's undesired.
+CSE--->
+> Find the render window's selected objects list
+> Figure out how to update the model of references
+> Pass data for the CSEL message dispatch as a vector, a la OBSE's array helper functions
+> Add an "All Active Mods" button to the Data screen
+> Fix the issue with loading and saving active ESMs
+> Look into fixing lip sync generation
 
+# Recompile all scripts, including dialog results, which reference this script's variables" button.
+# The ability to specify a custom workspace.
+# The ability to pull up a 3D position edit window on door markers. I could swear we had this with Morrowind.
+# Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
+# Allow and display icons with mipmaps, since they do work in-game
+# Fixing whatever it is that causes certain dialog and worldspace edit flags to occur when no such edits have been made to the active plugin (specifically: Load two plugins, one with dialogue type edits, particularly GREETING records, and one without. Make the one without dialogue records your active plugin. Make some edits that have nothing to do with dialogue, save, then go see your shiny new GREETINGS empty nothing whatever in TES4Edit).
+# NPC refs update visually when their inventory is changed without plugin reload
+# Option to automatically dump & reload models on cell load without plugin reload
+# Default z-coordinate when one drops pieces in the render window
+# On-the-fly adjustment of zoom sensitivity
 
-Changes
-=======
-Show the script formID in the title.
-Closing last tab shouldn't close the window; have it display "New Workspace" instead.
-Doubleclicking command should keep highlighting
-Increase timeout of popup text when double-click quest name
-Retain scroll position of script window after using the replace operation
-Macros don't respect comments
+* The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
+* Land LOD meshes that aren't such terrible approximations of the real landscape. I remember seeing somewhere that what we get is a 1% representation of the real thing. Could we bump this to 5% or something?
+* The ability to generate landscape LOD textures that are better than the 1024x1024 quality we get now. Something on the quality level of the local maps. Or at the very least higher resolution.
+* Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
+* Don't make the LOD texture generator load all the objects on the surface since they're not going to be used in the results anyway. Saves untold amounts of memory.
+* Generate the textures and normal maps for LOD land in DXT1 format with appropriate mipmap levels to start with. Easy enough to fix, but why incur extra work?
+
+SE---->
+> LoadRelease throws an exception
+> Implement regEx
+> Script Validator seems to be wonky at times - Try it on VectorDiseaseTokenOS
+> Compiler errors are offset by the CSE block
+> Variable index editor
+> Find seems to edit the send a message to save
+> IMPLEMENT AVALONEDIT
+
+# Ability to select multiple scripts to open, and have each open in a new tab.
+# No helper text on Begin/End/If/EndIf/ElseIf/Return/Set? Not really needed, but seems an oversight.
+# Shift-home doesn't work as you'd expect. The first time it highlights whitespace of next line, and if its used a second time it works, but places the cursor at the end of the line rather than the beginning.
+# Be nice if the script tab and window title updated with the script name when saved.
+# Be nice if there was a Sanitize option that forced proper capitalization of function names(begin->Begin, elseif->ElseIf, etc) and stripped excess whitespace.
+# Be nice if ctrl-tab worked to tab through tabs
+# Would be nice if the mouse middle-click closed the clicked tab
+# Ability to drag tabs in/out of workspaces, creating/destroying workspaces dynamically 

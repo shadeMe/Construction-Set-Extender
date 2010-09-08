@@ -5,7 +5,6 @@
 using namespace System::ComponentModel;
 
 // TODO: ++++++++++++++++++
-//		> Replace ugly switch code with a generic function
 
 
 

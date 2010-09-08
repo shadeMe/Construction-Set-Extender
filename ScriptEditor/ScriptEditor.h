@@ -6,11 +6,6 @@
 struct ScriptData;
 
 // TODO: ++++++++++++++++++
-//		> Implement regEx
-//		> Script Validator seems to be wonky at times - Try it on VectorDiseaseTokenOS
-//		> Compiler errors are offset by the CSE block
-//		> Variable index editor
-//		> Find seems to edit the send a message to save
 
 
 using namespace DevComponents;

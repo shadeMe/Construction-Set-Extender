@@ -2130,7 +2130,6 @@ void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
 {
 	if (VariableBox->Items->Count) {
-		// TODO: Update indices
 		if (VariableBox->View == View::Details)		VariableBox->View = View::Tile;
 		else										VariableBox->View = View::Details;
 		ToolBarUpdateVarIndices->Enabled = false;
