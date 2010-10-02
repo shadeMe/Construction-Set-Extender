@@ -100,6 +100,9 @@ bool PatchMiscHooks()
 	PLACE_HOOK(DataDlgInit);
 	PLACE_HOOK(Update3D);
 
+	WriteRelJump(kMissingMasterOverrideAPatchAddr, kMissingMasterOverrideJumpAddr);
+	WriteRelJump(kMissingMasterOverrideBPatchAddr, kMissingMasterOverrideJumpAddr);
+
 	WriteRelJump(0x0047BCBC, (UInt32)T);
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
 		_D_PRINT("Couldn't create the Backup folder in Data directory");

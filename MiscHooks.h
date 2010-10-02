@@ -328,12 +328,15 @@ const UInt32			kQuickLoadPluginLoadHandlerRetnAddr = 0x004852EE;
 const UInt32			kQuickLoadPluginLoadHandlerSkipAddr = 0x004852F0;
 
 void QuickLoadPluginLoadHandlerHook(void);
-// provide support for the manual updating of a reference's ninode in the render window
+// provides support for the manual updating of a reference's ninode in the render window
 const UInt32			kUpdate3DHookAddr = 0x00549ACA;
 const UInt32			kUpdate3DCallAddr = 0x00496C90;
 const UInt32			kUpdate3DSkipAddr = 0x00549B2E;
 const UInt32			kUpdate3DRetnAddr = 0x00549AD2;
 
 void Update3DHook(void);
-
+// allows the loading of plugins with missing masters
+const UInt32			kMissingMasterOverrideAPatchAddr = 0x00484E5F;
+const UInt32			kMissingMasterOverrideBPatchAddr = 0x00484E6E;
+const UInt32			kMissingMasterOverrideJumpAddr = 0x00484E8E;
 

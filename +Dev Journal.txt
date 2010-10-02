@@ -1,5 +1,5 @@
-Done
-====
+Script Validator
+================
  ++   * Blocktype invalid for this type of script (GECK catches this when reference-specific blocktypes are used for quest scripts, but not when effect-only blocktypes are used in non-effect scripts)
  ++   * Script already has a ScriptName declaration 
  ++   * Condition not allowed (applied to lines starting with "Return", "End", "else" and "endif"
@@ -11,8 +11,8 @@ Done
  ++   * Variable "varName" has already been declared
  ++		The validator will also give a warning if a variable is declared but not used, and if a condition appears on its own line (therefore having no use). All other warnings and errors should be caught by the compiler already.
 
-Notes
-=====
+Preprocessor
+============
 . Preprocessor directives must be on a line of their own
 . Prepro. variables must be in uppercase and can only contain alpha numerics and underscores
 . Preproc vars must be delimited with one of the following chars to be recognized : .,<WHITESPACE>(){}[]<TABCHAR><NEWLINECHAR>
@@ -28,16 +28,15 @@ BE---->
 > Filter out refs that don't haev ownership data and count
 
 CSE--->
+> Pass data for the CSEL message dispatch as a vector, a la OBSE's array helper functions
 > Find the render window's selected objects list
 > Figure out how to update the model of references
-> Pass data for the CSEL message dispatch as a vector, a la OBSE's array helper functions
 > Add an "All Active Mods" button to the Data screen
 > Fix the issue with loading and saving active ESMs
 > Look into fixing lip sync generation
 
 # Recompile all scripts, including dialog results, which reference this script's variables" button.
 # The ability to specify a custom workspace.
-# The ability to pull up a 3D position edit window on door markers. I could swear we had this with Morrowind.
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
 # Allow and display icons with mipmaps, since they do work in-game
 # Fixing whatever it is that causes certain dialog and worldspace edit flags to occur when no such edits have been made to the active plugin (specifically: Load two plugins, one with dialogue type edits, particularly GREETING records, and one without. Make the one without dialogue records your active plugin. Make some edits that have nothing to do with dialogue, save, then go see your shiny new GREETINGS empty nothing whatever in TES4Edit).

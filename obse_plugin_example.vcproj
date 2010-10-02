@@ -128,10 +128,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\obse\obse_editor\EditorRTTI.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\obse\obse_editor\EditorRTTI.h"
 				>
 			</File>

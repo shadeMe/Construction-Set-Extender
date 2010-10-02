@@ -162,10 +162,13 @@ PluginParser::PluginParser(String^ PluginName)
 	Valid = false;
 
 	DebugPrint("Parsing plugin " + PluginName, false, false);
-	FileInfo^ FI = gcnew FileInfo(GLOB->AppPath + "Data\\" + PluginName);
-	BinaryReader^ Stream = gcnew BinaryReader(FI->OpenRead());
+	BinaryReader^ Stream = nullptr;
 
-	try {
+	try 
+	{
+		FileInfo^ FI = gcnew FileInfo(GLOB->AppPath + "Data\\" + PluginName);
+		Stream = gcnew BinaryReader(FI->OpenRead());
+
 		String^ Name;
 		UInt32 Size, GroupType;
 		array<Byte>^ Label = {'z','z','z','z'};
@@ -208,9 +211,8 @@ PluginParser::PluginParser(String^ PluginName)
 	} catch (Exception^ E) {
 		String^ Message = "Unknown Exception raised while parsing plugin " + PluginName + ":\n\t " + E->Message;
 		DebugPrint(Message, false, true);
-	}
-	finally {
-		Stream->Close();
+	} finally {
+		if (Stream != nullptr)	Stream->Close();
 		DebugPrint("Finished parsing " + PluginName, false, false);	
 
 #ifdef _DEBUG
