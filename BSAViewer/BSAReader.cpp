@@ -111,7 +111,7 @@ bool BSAReader::OpenArchive(String^% Path)
 		return true;
 	} catch (Exception^ E) {
 		String^ Message = "Exception raised while processing BSA archive '" + Path + "'!\n\tException: " + E->Message;
-		DumpToLog(Message);
+		DebugPrint(Message);
 		MessageBox::Show(Message, "CSE");
 		return false;
 	}

@@ -297,7 +297,15 @@
 			>
 		</File>
 		<File
-			RelativePath=".\main.cpp"
+			RelativePath=".\Main.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\UtilityBox.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\UtilityBox.h"
 			>
 		</File>
 		<File

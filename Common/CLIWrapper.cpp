@@ -28,7 +28,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	SetErrorMode(0);
 	HMODULE hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\ScriptEditor.dll").c_str());
 	if (hMod == NULL) {
-		_D_PRINT("Couldn't load ScriptEditor.dll");
+		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load ScriptEditor.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -60,7 +60,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\UseInfoList.dll").c_str());
 	if (hMod == NULL) {
-		_D_PRINT("Couldn't load UseInfoList.dll");
+		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load UseInfoList.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -81,7 +81,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BSAViewer.dll").c_str());
 	if (hMod == NULL) {
-		_D_PRINT("Couldn't load BSAViewer.dll");
+		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load BSAViewer.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -96,7 +96,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BatchEditor.dll").c_str());
 	if (hMod == NULL) {
-		_D_PRINT("Couldn't load BatchEditor.dll");
+		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load BatchEditor.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}

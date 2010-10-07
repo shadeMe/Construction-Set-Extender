@@ -108,7 +108,6 @@ public:
 	void												PerformOperation(OperationType Op, OperationParams^ Parameters);
 	ScriptEditor::Workspace^							GetAllocatedWorkspace(UInt32 AllocatedIndex);
 	void												DestroyTabContainer(ScriptEditor::TabContainer^ Container);
-	void												UpdateWorkspaceConsole();
 };
 
 #define SEMGR											ScriptEditorManager::GetSingleton()

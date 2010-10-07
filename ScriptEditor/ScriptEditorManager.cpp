@@ -130,7 +130,7 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 		}
 	}
 	catch (Exception^ E) {
-		DebugPrint("ScriptEditorManager couldn't complete operation '" + TypeIdentifier[(int)Op] + "'\n\tException: " + E->Message, true, true);
+		DebugPrint("ScriptEditorManager couldn't complete operation '" + TypeIdentifier[(int)Op] + "'\n\tException: " + E->Message, true);
 	}
 }
 
@@ -167,7 +167,7 @@ void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspac
 		g_ScriptDataPackage->Type = 0;
 		break;
 	case 99:
-		DebugPrint("Couldn't fetch script data from the vanilla editor!", true, true);
+		DebugPrint("Couldn't fetch script data from the vanilla editor!", true);
 		return;
 	}
 
@@ -202,6 +202,7 @@ void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ Script
 	Itr->EnableControls();
 	Itr->EditorTab->ImageIndex = 0;
 	Itr->ErrorBox->Items->Clear();
+	Itr->VariableBox->Items->Clear();
 	Itr->ToolBarByteCodeSize->Value = DataLength;
 	Itr->ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(DataLength / (float)1024));
 
@@ -210,8 +211,6 @@ void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ Script
 
 	Itr->GetVariableData = false;
 	Itr->ToolBarUpdateVarIndices->Enabled = false;
-	Itr->VariableBox->Clear();
-	Itr->ToolBarConsole_Click(nullptr, nullptr);
 	Itr->ClearFindImagePointers();
 }
 
@@ -320,14 +319,15 @@ void ScriptEditorManager::MessageHandler_ReceiveSave(UInt32 AllocatedIndex)
 		g_ScriptDataPackage->Type = 0;
 		break;
 	case 99:
-		DebugPrint("Couldn't fetch script data from the vanilla editor!", true, true);
+		DebugPrint("Couldn't fetch script data from the vanilla editor!", true);
 		return;
 	}
 	Itr->CalculateLineOffsets((UInt32)g_ScriptDataPackage->ByteCode, g_ScriptDataPackage->Length, gcnew String(g_ScriptDataPackage->Text));
 	Itr->ToolBarByteCodeSize->Value = g_ScriptDataPackage->Length;
 	Itr->ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(g_ScriptDataPackage->Length / (float)1024));
 	Itr->ValidateScript(Itr->GetScriptType());
-	Itr->GetVariableIndices();
+	Itr->ToolBarUpdateVarIndices->Enabled = false;
+	Itr->GetVariableIndices(false);
 }
 void ScriptEditorManager::MessageHandler_ReceiveClose(UInt32 AllocatedIndex)
 {
@@ -340,13 +340,14 @@ void ScriptEditorManager::MessageHandler_ReceiveClose(UInt32 AllocatedIndex)
 
 void ScriptEditorManager::MessageHandler_ReceiveLoadRelease()
 {
+	for each (ScriptEditor::TabContainer^% Itr in TabContainerAllocationMap) {
+		Itr->Destroying = true;
+	}
 	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
 		Itr->Destroy();
 	}
+
 	WorkspaceAllocationMap->Clear();
-	for each (ScriptEditor::TabContainer^% Itr in TabContainerAllocationMap) {
-		Itr->Destroy();
-	}
 	TabContainerAllocationMap->Clear();
 
 	DebugPrint("Released all allocated editors");
@@ -396,10 +397,13 @@ void ScriptEditorManager::SetVariableListItemData(UInt32 AllocatedIndex, String^
 	switch (Type)
 	{
 	case 0:
-		VarType = "Float/Reference";
+		VarType = "Float";
 		break;
 	case 1:
 		VarType = "Integer";
+		break;
+	case 2:
+		VarType = "Reference";
 		break;
 	}
 
@@ -420,13 +424,4 @@ void ScriptEditorManager::DestroyTabContainer(ScriptEditor::TabContainer^ Contai
 	Container->Destroy();
 	TabContainerAllocationMap->Remove(Container);
 	DebugPrint("Released an allocated container");
-}
-
-void ScriptEditorManager::UpdateWorkspaceConsole()
-{
-	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
-		Itr->ConsoleBox->Text = ConsoleManager::GetSingleton()->GetDump();
-		Itr->ConsoleBox->SelectionStart = Itr->ConsoleBox->Text->Length - 1;
-		Itr->ConsoleBox->ScrollToCaret(); 
-	}
 }

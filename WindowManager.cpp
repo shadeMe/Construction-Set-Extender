@@ -3,11 +3,13 @@
 #include "MiscHooks.h"
 #include "Common\HandShakeStructs.h"
 #include "Common\CLIWrapper.h"
+#include "resource.h"
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
 WNDPROC						g_CSMainWndOrgWindowProc = NULL;
 WNDPROC						g_RenderWndOrgWindowProc = NULL;
+WNDPROC						g_ConsoleWndOrgWindowProc = NULL;
 
 #define PI					3.151592653589793
 
@@ -71,7 +73,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case 40128:		// save as menu item
+		case 9901:		// save as menu item
 			if (!(*g_dataHandler)->unk8B8.activeFile)		break;
 
 			*g_WorkingFileFlag = 0;
@@ -95,6 +97,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			g_SaveAsRoutine = false;
 			break;
 		case 9902:				// batch edit menu item
+			{
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
 
@@ -141,7 +144,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
 						ThisRefData = &RefData[k];
 						bool Modified = false;
-	
+															// Pass the Actor VTBl for actors
 						if (ThisRefData->Selected) {		// TODO: filter out ref types that don't have ownership extradata and count
 							if (BatchData->World3DData.UsePosX())	ThisRef->posX = BatchData->World3DData.PosX, Modified = true;
 							if (BatchData->World3DData.UsePosY())	ThisRef->posY = BatchData->World3DData.PosY, Modified = true;
@@ -211,7 +214,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 									case kFormType_SigilStone:
 										thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
 									case kFormType_Light:
-										TESObjectLIGH* Light = (TESObjectLIGH*)CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
+										TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
 										if (Light)
 											if (Light->IsCarriable())
 												thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
@@ -220,17 +223,29 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 
 						if (Modified) {
+						//	if (!thisVirtualCall(g_VTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
+						//		CONSOLE->LogMessage(Console::e_CSE, "REF: %08X | virt BC returned false!", ThisRef->refID);
+						//	if (!thisVirtualCall(g_VTBL_TESObjectREFR, 0x104, ThisRef))
+						//		CONSOLE->LogMessage(Console::e_CSE, "REF: %08X | virt 104 returned false!", ThisRef->refID);
 							thisVirtualCall(g_VTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
-							UpdateTESObjectREFR3D(ThisRef);
-							GenericNode<TESObjectREFR>**				g_SelLL = (GenericNode<TESObjectREFR>**)0x00A0BC48;
-					_D_PRINT("REF --- %08X", ThisRef->refID);
-							ThisRef->baseExtraList.DebugDump();
+						//	thisVirtualCall(g_VTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
+						//	UpdateTESObjectREFR3D(ThisRef);
 						}
 					}			
 				}
 
 				delete [] RefData;
 				delete BatchData;
+			}
+			break;
+			}
+		case 9903:				// console window menu item
+			if (CONSOLE->IsConsoleInitalized()) {
+				HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+				if (CONSOLE->ToggleDisplayState())
+					CheckMenuItem(ViewMenu, 9903, MF_CHECKED);
+				else
+					CheckMenuItem(ViewMenu, 9903, MF_UNCHECKED);
 			}
 			break;
 		}
@@ -326,4 +341,23 @@ BOOL CALLBACK TESFileDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return FALSE;
+}
+
+LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_SIZE:
+		{
+		tagRECT WindowRect;
+		GetWindowRect(hWnd, &WindowRect);
+		MoveWindow(GetDlgItem(hWnd, EDIT_CONSOLE), 0, 0, WindowRect.right - WindowRect.left - 9, WindowRect.bottom  - WindowRect.top - 27, TRUE);
+		break;
+		}
+	case WM_DESTROY: 
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleWndOrgWindowProc);
+		break; 
+	}
+
+	return CallWindowProc(g_ConsoleWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 }

@@ -33,7 +33,7 @@ class INISetting;
 bool					PatchMiscHooks(void);
 void					DoNop(const NopData* Data);
 SHORT __stdcall			IsControlKeyDown(void);
-void __stdcall CreateDialogParamAddress(void);
+void __stdcall			CreateDialogParamAddress(void);
 
 extern FormData*				UIL_FormData;
 extern UseListCellItemData*		UIL_CellData;
@@ -41,6 +41,8 @@ extern bool						g_SaveAsRoutine;
 extern ModEntry::Data*			g_SaveAsBuffer;
 extern bool						g_QuickLoadToggle;
 extern FARPROC					g_WindowHandleCallAddr;
+extern bool						g_PluginPostLoad;
+
 
 
 // allows esps to be enumerated while filling the file header and provides support for the save as tool
@@ -70,8 +72,6 @@ void					SavePluginCommonDialogHook(void);
 // nops out the call to the delinquent sound struct initializer sub, fixing a crash
 const NopData			kResponseEditorMicPatch = { 0x00407F3D, 5 };
 // fixes a crash when the CS attempts to load an unknown record/group
-const UInt32			kConstructObjectUnknownRecordPatchJmpAddr = 0x00479E5B;
-const UInt32			kConstructObjectUnknownRecordPatchDestAddr = 0x00479E92;
 const UInt32			kDataHandlerPostErrorPatchAddr = 0x004852F0;
 // adds fast exit to the CS
 const UInt32			kExitCSHookAddr = 0x00419354;
@@ -336,7 +336,21 @@ const UInt32			kUpdate3DRetnAddr = 0x00549AD2;
 
 void Update3DHook(void);
 // allows the loading of plugins with missing masters
-const UInt32			kMissingMasterOverrideAPatchAddr = 0x00484E5F;
-const UInt32			kMissingMasterOverrideBPatchAddr = 0x00484E6E;
+const UInt32			kMissingMasterOverridePatchAddr = 0x00484FC9;
 const UInt32			kMissingMasterOverrideJumpAddr = 0x00484E8E;
+// fixes crashes from assertion calls in the code and log them to the console/log instead
+const UInt32			kAssertOverrideHookAddr = 0x004B5670;
+const UInt32			kAssertOverrideRetnAddr = 0x004B575E;
+
+void AssertOverrideHook(void);
+// whisks away CS warnings to the console
+const UInt32			kCSWarningsDetourHookAddr = 0x004B5140;
+const UInt32			kCSWarningsDetourRetnAddr = 0x004B5146;
+
+void CSWarningsDetourHook(void);
+/* huge file loads
+004F6BAF - jump directly to 004F6E41
+004F6D4F - jump to 004F6C97
+*/
+
 

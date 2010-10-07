@@ -1,7 +1,6 @@
 #include "Exports.h"
 #include "ExtenderInternals.h"
 #include "SEHooks.h"
-#include "Common\HandShakeStructs.h"
 #include "Common\CLIWrapper.h"
 #include "MiscHooks.h"
 
@@ -9,9 +8,9 @@
 
 extern "C"{
 
-__declspec(dllexport) void _D_PRINT_EXP(const char* Message)
+__declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message)
 {
-	g_DEBUG_LOG << Message << std::endl;
+	CONSOLE->LogMessage(Source, Message);
 }
 
 __declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default)
@@ -215,7 +214,7 @@ __declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedE
 
 	Script::VarInfoEntry* ThisNode = &ScriptForm->varList;
 	Script::VariableInfo* ThisVariable = NULL;
-	UInt32 Count = 0;
+
 	ScriptVarIndexData::ScriptVarInfo Data;
 
 	while (ThisNode) {
@@ -224,12 +223,39 @@ __declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedE
 
 		Data.Name = ThisVariable->name.m_data;
 		Data.Type = ThisVariable->type;
+		if (Data.Type == 0) {
+			for (Script::RefListEntry* entry = &ScriptForm->refList; entry; entry = entry->next) {
+				if (entry->var && entry->var->name.m_data && !_stricmp(entry->var->name.m_data, Data.Name)) {
+					Data.Type = 2;
+				}
+			}
+		}
 		Data.Index = ThisVariable->idx;
 		CLIWrapper::SE_SetVariableListItemData(TrackedEditorIndex, &Data);
 
 		ThisNode = ThisNode->next;
-		Count++;
 	}
+}
+
+__declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data)
+{
+	TESForm* Form = GetFormByID(EditorID);
+	if (!Form)						return false;
+	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
+	if (!ScriptForm)				return false;
+
+	Script::VariableInfo* ScriptVar = ScriptForm->GetVariableByName(Data->Name);
+	if (ScriptVar) {
+		if (Data->Type == 2) {
+			Script::RefVariable* RefVar = ScriptForm->GetVariable(ScriptVar->idx);
+			if (RefVar) {
+				RefVar->varIdx = Data->Index;
+			} else return false;
+		}
+		ScriptVar->idx = Data->Index;
+	} else return false;
+
+	return true;
 }
 
 

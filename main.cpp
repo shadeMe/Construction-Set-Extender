@@ -12,9 +12,9 @@ OBSECommandTableInterface*			g_commandTableIntfc = NULL;
 CommandTableData					g_CommandTableData;
 
 
-std::fstream						g_DEBUG_LOG;
 std::string							g_INIPath;
 std::string							g_AppPath;
+bool								g_PluginPostLoad = false;
 
 
 // PLUGIN INTEROP
@@ -22,7 +22,7 @@ std::string							g_AppPath;
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
 	if (Msg->type == 'CSEL') {
-		_D_PRINT(std::string("CSEL message dispatched by " + std::string(Msg->sender)).c_str());
+		CONSOLE->LogMessage(Console::e_CSE, "CSEL message dispatched by %s", Msg->sender);
 		std::map<const  char*, const char*>* URLMap = static_cast<std::map<const  char*, const char*>*>(Msg->data);
 		
 		for (std::map<const  char*, const char*>::const_iterator Itr = URLMap->begin(); Itr != URLMap->end(); Itr++) {
@@ -44,7 +44,8 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 
 														// register known plugins with the messaging API
 	//	g_msgIntfc->RegisterListener(g_pluginHandle, "NifSE", CSEInteropHandler);	
-		g_msgIntfc->RegisterListener(g_pluginHandle, "ConScribe", CSEInteropHandler);
+	//	g_msgIntfc->RegisterListener(g_pluginHandle, "ConScribe", CSEInteropHandler);
+		g_PluginPostLoad = true;
 	}
 }
 
@@ -53,25 +54,35 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 //	HOUSEKEEPING & INIT
 
 extern "C" {
+
 bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 {
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "CSE";
 	info->version = 3;
 
+	g_AppPath = obse->GetOblivionDirectory();
+	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
+	CONSOLE->InitializeLog(g_AppPath.c_str());
+	CONSOLE->LogMessage(Console::e_CSE, "Construction Set Extender Initializing ...");
+
+	g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
+	if (!g_DLLInstance) {
+		CONSOLE->LogMessage(Console::e_CSE, "Couldn't fetch the DLL's handle!");
+		return false;
+	}
+
 	if (!obse->isEditor)					// we don't want to screw with the game
 		return false;
-	else 
-		g_DEBUG_LOG.open(std::string(std::string(obse->GetOblivionDirectory()) + "Construction Set Extender.log").c_str(), std::fstream::out);
 
 	if(obse->obseVersion < OBSE_VERSION_INTEGER)
 	{
-		_D_PRINT("OBSE version too old");
+		CONSOLE->LogMessage(Console::e_CSE, "OBSE version too old");
 		return false;
 	}
 	else if (obse->editorVersion < CS_VERSION_1_2)
 	{
-		_D_PRINT("Running CS 1.0. Unsupported !");
+		CONSOLE->LogMessage(Console::e_CSE, "Running CS 1.0. Unsupported !");
 		return false;
 	}
 
@@ -79,7 +90,7 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	g_commandTableIntfc = (OBSECommandTableInterface*)obse->QueryInterface(kInterface_CommandTable);
 
 	if (!g_msgIntfc|| !g_commandTableIntfc) {
-		_D_PRINT("OBSE Messaging/CommandTable interface not found !");
+		CONSOLE->LogMessage(Console::e_CSE, "OBSE Messaging/CommandTable interface not found !");
 		return false;
 	}
 	return true;
@@ -90,22 +101,13 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 {
 	g_pluginHandle = obse->GetPluginHandle();
 
-	g_AppPath = obse->GetOblivionDirectory();
-	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
-
 	if (!CLIWrapper::Import(obse)) {
 		return false;
 	} else if (!PatchSEHooks() || !PatchMiscHooks())					// initialize modules
 		return false;
-
-	g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
-	if (!g_DLLInstance) {
-		_D_PRINT("Couldn't fetch the DLL's handle!");
-		return false;
-	}
 	
 	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
-	_D_PRINT("CS patched !\n\n");
+	CONSOLE->LogMessage(Console::e_CSE, "CS patched !\n\n");
 
 	return true;
 }

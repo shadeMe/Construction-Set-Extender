@@ -16,7 +16,7 @@ public:
 	const char*											String() { return CString; }
 };
 
-void													DumpToLog(String^% Message);
+void													DebugDump(UInt8 Source, String^% Message);
 void													ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
 
 public ref class CSEGeneralException : Exception
@@ -24,3 +24,33 @@ public ref class CSEGeneralException : Exception
 public:
 	CSEGeneralException(String^ Message) : Exception(Message) {};
 };
+
+namespace Log
+{
+	enum MessageSource
+	{
+		e_CSE = 0,
+		e_CS,
+		e_BE,
+		e_UL,
+		e_SE,
+		e_BSA
+	};
+
+	namespace ScriptEditor 
+	{
+		void DebugPrint(String^ Message, bool Achtung = false);	
+	}
+	namespace UseInfoList
+	{
+		void DebugPrint(String^ Message, bool Achtung = false);	
+	}
+	namespace BatchEditor
+	{
+		void DebugPrint(String^ Message, bool Achtung = false);	
+	}
+	namespace BSAViewer
+	{
+		void DebugPrint(String^ Message, bool Achtung = false);	
+	}
+}

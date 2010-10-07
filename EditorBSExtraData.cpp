@@ -16,7 +16,7 @@ BSExtraData * BaseExtraList::GetByType(UInt32 type) const
 		if(traverse->type == type)
 			return traverse;
 
-	_D_PRINT("ExtraData HasType(%d) is true but it wasn't found!", type);
+	CONSOLE->LogMessage(Console::e_CSE, "ExtraData HasType(%d) is true but it wasn't found!", type);
 	return NULL;
 }
 
@@ -95,16 +95,16 @@ bool BaseExtraList::IsWorn()
 
 void BaseExtraList::DebugDump()
 {
-	_D_PRINT("BaseExtraList Dump:");
+	CONSOLE->LogMessage(Console::e_CSE, "BaseExtraList Dump:");
 	gLog.Indent();
 
 	if (m_data)
 	{
 		for(BSExtraData * traverse = m_data; traverse; traverse = traverse->next)
-			_D_PRINT("%s", GetObjectClassName(traverse));
+			CONSOLE->LogMessage(Console::e_CSE, "%s", GetObjectClassName(traverse));
 	}
 	else
-		_D_PRINT("No data in list");
+		CONSOLE->LogMessage(Console::e_CSE, "No data in list");
 
 	gLog.Outdent();
 }

@@ -5,6 +5,7 @@
 #include "ExtenderInternals.h"
 #include "Common/HandshakeStructs.h"
 #include "WindowManager.h"
+#include "resource.h"
 
 FormData*							UIL_FormData = new FormData();
 UseListCellItemData*				UIL_CellData = new UseListCellItemData();
@@ -17,13 +18,14 @@ static bool							g_DataHandlerPopulateModList_QuitReturn = true;
 static char*						g_CustomWorkspacePath = new char[MAX_PATH];
 static const char*					g_DefaultWorkspacePath = "Data\\";
 
-static const char*					g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
+const char*							g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 
 bool								g_QuickLoadToggle = false;
 static HFONT						g_CSDefaultFont = NULL;
 bool								g_SaveAsRoutine = false;
 ModEntry::Data*						g_SaveAsBuffer = NULL;
-TESObjectREFR*						g_Update3DBuffer = NULL;		
+TESObjectREFR*						g_Update3DBuffer = NULL;	
+	
 
 void __stdcall DoT()		
 {
@@ -55,7 +57,6 @@ bool PatchMiscHooks()
 	PLACE_HOOK(SavePluginCommonDialog);
 	PLACE_HOOK(SavePluginMasterEnum);
 
-	WriteRelJump(kConstructObjectUnknownRecordPatchJmpAddr, kConstructObjectUnknownRecordPatchDestAddr);
 	SafeWrite8(kDataHandlerPostErrorPatchAddr, 0xEB);	
 	SafeWrite8(kEditorWarningPatchAddr, 0xEB);
 
@@ -87,11 +88,6 @@ bool PatchMiscHooks()
 
 	PLACE_HOOK(NPCFaceGen);
 	
-//	PLACE_HOOK(DataDlgCallPopulateModList);
-//	PLACE_HOOK(DataHandlerPopulateModListFindLoop);
-//	PLACE_HOOK(DataHandlerPopulateModListInitCleanup);
-//	PLACE_HOOK(DataHandlerPopulateModListQuickExit);
-//	PLACE_HOOK(TESCtorSkipModListPopulation);
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 
 	SafeWrite32(kDefaultWaterTextureFixPatchAddr, (UInt32)g_DefaultWaterTextureStr);
@@ -100,12 +96,17 @@ bool PatchMiscHooks()
 	PLACE_HOOK(DataDlgInit);
 	PLACE_HOOK(Update3D);
 
-	WriteRelJump(kMissingMasterOverrideAPatchAddr, kMissingMasterOverrideJumpAddr);
-	WriteRelJump(kMissingMasterOverrideBPatchAddr, kMissingMasterOverrideJumpAddr);
+	WriteRelJump(kMissingMasterOverridePatchAddr, kMissingMasterOverrideJumpAddr);
 
-	WriteRelJump(0x0047BCBC, (UInt32)T);
+	PLACE_HOOK(AssertOverride);
+//	PLACE_HOOK(CSWarningsDetour);		
+
+	WriteRelJump(0x004F6BAF, 0x004F6E41);
+	WriteRelJump(0x004F6D4F, 0x004F6C97);
+
+//	WriteRelJump(0x0047BCBC, (UInt32)T);
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
-		_D_PRINT("Couldn't create the Backup folder in Data directory");
+		CONSOLE->LogMessage(Console::e_CSE, "Couldn't create the Backup folder in Data directory");
 	}
 	return true;
 }
@@ -173,7 +174,8 @@ void __stdcall DoExitCS(HWND MainWindow)
 	WritePositionToINI(MainWindow, NULL);
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
-	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");;
+	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
+	CONSOLE->SaveINISettings(g_INIPath.c_str());
 	ExitProcess(0);
 }
 
@@ -225,7 +227,7 @@ void PatchMenus()
 		  FileMenu = GetSubMenu(MainMenu, 0),
 		  WorldMenu = GetSubMenu(MainMenu, 3);
 
-	MENUITEMINFO ItemDataUseInfo, ItemDataRenderWindow, ItemDataSaveAs, ItemWorldBatchEdit;
+	MENUITEMINFO ItemDataUseInfo, ItemDataRenderWindow, ItemDataSaveAs, ItemWorldBatchEdit, ItemViewConsole;
 	ItemDataUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemDataUseInfo.fMask = MIIM_STRING;
 	ItemDataUseInfo.dwTypeData = "Use Info Listings";
@@ -240,7 +242,7 @@ void PatchMenus()
 
 	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
 	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemDataSaveAs.wID = 40128;
+	ItemDataSaveAs.wID = 9901;
 	ItemDataSaveAs.fState = MFS_ENABLED;
 	ItemDataSaveAs.dwTypeData = "Save As";
 	ItemDataSaveAs.cch = 7;
@@ -254,18 +256,31 @@ void PatchMenus()
 	ItemWorldBatchEdit.cch = 0;
 	InsertMenuItem(WorldMenu, 40194, FALSE, &ItemWorldBatchEdit);
 
+	
+	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewConsole.wID = 9903;
+	ItemViewConsole.fState = MFS_ENABLED|MFS_CHECKED;
+	ItemViewConsole.dwTypeData = "Console Window";
+	ItemViewConsole.cch = 0;
+	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
 }
 
 void __stdcall DoCSInitHook()
 {
 	static bool DoOnce = false;
-	if (DoOnce)		return;
-
-								// perform deferred patching
+	if (DoOnce)					return;
+	else if (!g_PluginPostLoad) return;		// prevents inappropriate pumping of messages to the main window
+	DoOnce = true;
+											// perform deferred patching
 	PatchMenus();
 	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
-	DoOnce = true;
+
+	CONSOLE->InitializeConsole();
+	CONSOLE->LoadINISettings(g_INIPath.c_str());
+
+	(*g_SpecialForm_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
 }
 
 
@@ -430,7 +445,7 @@ void __declspec(naked) NPCFaceGenHook(void)
 	}
 }
 
-void __declspec(naked) DataHandlerPopulateModListInitCleanupHook(void)
+/*void __declspec(naked) DataHandlerPopulateModListInitCleanupHook(void)
 {
 	__asm
 	{
@@ -480,7 +495,7 @@ void __stdcall DoDataDlgCallPopulateModListHook(INISetting* Path)
 		PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&WorkspaceInfo);
 		if (ReturnPath) {
 			if (!SHGetPathFromIDList(ReturnPath, g_CustomWorkspacePath)) {
-				_D_PRINT("Had trouble extracting workspace path!");
+				CONSOLE->LogMessage(Console::e_CSE, "Had trouble extracting workspace path!");
 			}
 		}
 		else
@@ -557,7 +572,7 @@ void __declspec(naked) TESCtorSkipModListPopulationHook(void)
 		call	DoT
 		jmp		[kTESCtorSkipModListPopulationRetnAddr]
 	}
-}
+} */
 
 void __stdcall DoQuickLoadPluginLoadHandlerPrologueHook(HWND DataDlg)
 {
@@ -660,5 +675,48 @@ void __declspec(naked) Update3DHook(void)
 	SKIP:
 		mov		ebx, g_Update3DBuffer
 		jmp		[kUpdate3DSkipAddr]
+	}
+}
+
+void __stdcall DoAssertOverrideHook(UInt32 EIP)
+{
+	CONSOLE->LogMessage(Console::e_CSE, "{{ Assert call handled at 0x%08X }}", EIP);
+	MessageBeep(MB_ICONHAND);
+}
+
+void __declspec(naked) AssertOverrideHook(void)
+{
+	__asm
+	{
+		mov		eax, [esp]
+		sub		eax, 5
+		pushad
+		push	eax
+		call	DoAssertOverrideHook
+		popad
+
+		jmp		[kAssertOverrideRetnAddr]
+	}
+}
+
+void __stdcall DoCSWarningsDetourHook(LPCSTR DebugMessage)
+{
+	CONSOLE->LogMessage(Console::e_CS, "%s", DebugMessage);
+}
+
+
+void __declspec(naked) CSWarningsDetourHook(void)
+{
+	__asm
+	{
+		mov		esi, [esp + 0x4]
+		pushad
+		push	esi
+		call	DoCSWarningsDetourHook
+		popad
+		xor		esi, esi
+
+		sub		esp, 0x520
+		jmp		[kCSWarningsDetourRetnAddr]
 	}
 }

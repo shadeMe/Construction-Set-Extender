@@ -53,13 +53,11 @@ CSE--->
 * Generate the textures and normal maps for LOD land in DXT1 format with appropriate mipmap levels to start with. Easy enough to fix, but why incur extra work?
 
 SE---->
-> LoadRelease throws an exception
-> Implement regEx
 > Script Validator seems to be wonky at times - Try it on VectorDiseaseTokenOS
 > Compiler errors are offset by the CSE block
-> Variable index editor
 > Find seems to edit the send a message to save
 > IMPLEMENT AVALONEDIT
+> Implement regEx
 
 # Ability to select multiple scripts to open, and have each open in a new tab.
 # No helper text on Begin/End/If/EndIf/ElseIf/Return/Set? Not really needed, but seems an oversight.

@@ -31,7 +31,7 @@ UInt32 CSERecord::ParseSubRecord(String^% RecordName, Array^% RecordData, Binary
 	RecordSize = Stream->ReadUInt16();
 
 	if (RecordName == "XXXX") {
-		DebugPrint("\tEncountered subrecord XXXX", false, false);
+		DebugPrint("\tEncountered subrecord XXXX", false);
 		RecordSize = Stream->ReadUInt32();
 		RecordName = REC_NAME(Stream);
 		Stream->BaseStream->Position += 2;
@@ -161,7 +161,7 @@ PluginParser::PluginParser(String^ PluginName)
 	ScriptRecords = gcnew List<SCPTRecord^>();
 	Valid = false;
 
-	DebugPrint("Parsing plugin " + PluginName, false, false);
+	DebugPrint("Parsing plugin " + PluginName);
 	BinaryReader^ Stream = nullptr;
 
 	try 
@@ -187,7 +187,7 @@ PluginParser::PluginParser(String^ PluginName)
 					Stream->BaseStream->Seek(Size - 20, SeekOrigin::Current);
 				}
 				else {
-					DebugPrint("Reading GRUP " + ARR_STR(static_cast<Array^>(Label)), false, false);
+					DebugPrint("Reading GRUP " + ARR_STR(static_cast<Array^>(Label)));
 					UInt32 AmountRead = 0, RecSize = 0;
 					while (AmountRead < Size - 20) {		
 						Name = REC_NAME(Stream);
@@ -200,31 +200,31 @@ PluginParser::PluginParser(String^ PluginName)
 				}
 			}
 			else {
-				DebugPrint("Unexpected record " + Name, false, false);
+				DebugPrint("Unexpected record " + Name);
 				Stream->BaseStream->Seek(Size, SeekOrigin::Current);				// skip record
 			}
 		}
 		Valid = true;
 	} catch (CSEPluginParserException^ E) {
 		String^ Message = "Parser Exception raised while parsing plugin " + PluginName + ":\n\t " + E->Message;
-		DebugPrint(Message, false, true);
+		DebugPrint(Message, true);
 	} catch (Exception^ E) {
 		String^ Message = "Unknown Exception raised while parsing plugin " + PluginName + ":\n\t " + E->Message;
-		DebugPrint(Message, false, true);
+		DebugPrint(Message, true);
 	} finally {
 		if (Stream != nullptr)	Stream->Close();
-		DebugPrint("Finished parsing " + PluginName, false, false);	
+		DebugPrint("Finished parsing " + PluginName);	
 
 #ifdef _DEBUG
-		DebugPrint("Dumping records ...", false, false);	
-		DebugPrint(PluginHeader->Describe(), false, false);
+		DebugPrint("Dumping records ...");	
+		DebugPrint(PluginHeader->Describe());
 		for each (QUSTRecord^% Itr in QuestRecords) {
-			DebugPrint(Itr->Describe(), false, false);
+			DebugPrint(Itr->Describe());
 		}
 		for each (SCPTRecord^% Itr in ScriptRecords) {
-			DebugPrint(Itr->Describe(), false, false);
+			DebugPrint(Itr->Describe());
 		}
-		DebugPrint("Dumped all saved records!", false, false);
+		DebugPrint("Dumped all saved records!");
 #endif
 	}
 }

@@ -415,7 +415,7 @@ try {
 			Result += ReadLine->Substring(0, TextParser->Indices[0]) + ";</CSEImportSeg> \"" + ImportFileName + "\"\n";
 			ImportParser->Close();
 		} catch (Exception^ E) {
-			DebugPrint("Couldn't import from script '" + ImportFileName + "'\n\tException: " + E->Message, true, true);
+			DebugPrint("Couldn't import from script '" + ImportFileName + "'\n\tException: " + E->Message, true);
 			Result = ReadLine + "\n";
 		}
 	}
@@ -427,7 +427,7 @@ try {
 		String^ ImportedText = DoPreProcess(Source->Substring(0, LineStart - 1), Operation, true, Dummy)->Replace("\n", "\r\n");		// needs to be preprocessed as source is always a substring of the original script text
 
 		if (!File::Exists(String::Format("{0}Data\\Scripts\\{1}.txt", GLOB->AppPath, ImportFileName))) {
-			DebugPrint("Import segment '" + ImportFileName + "' couldn't be found", true, true);
+			DebugPrint("Import segment '" + ImportFileName + "' couldn't be found", true);
 			if (Globals::GetSingleton()->ScriptEditorOptions->CreateMissingFromSegment->Checked) {
 				try {
 					StreamWriter^ ImportParser = gcnew StreamWriter(String::Format("{0}Data\\Scripts\\{1}.txt", GLOB->AppPath, ImportFileName));
@@ -444,7 +444,7 @@ try {
 		Result = ReadLine->Substring(0, TextParser->Indices[0]) + "//import \"" + ImportFileName + "\"\n";
 	}
 } catch (Exception^ E) {
-	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true, true);
+	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 	return Result;
 }
@@ -467,14 +467,14 @@ try {
 
 			if (FindPreProcessMacro(Macro) != -1) {
 				if (Globals::GetSingleton()->ScriptEditorOptions->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value;
-				else								DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true, true);
+				else								DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true);
 			}
 			else if (Value->IndexOfAny(InvalidChars->ToCharArray()) != -1)
-				DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true, true);
+				DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true);
 			else 
 				PreProcessMacros->Add(Macro, Value);
 		} else
-			DebugPrint("Preprocessor macro '" + Macro + "' is formatted incorrectly", true, true);
+			DebugPrint("Preprocessor macro '" + Macro + "' is formatted incorrectly", true);
 	}
 	else if (DefineColIdx == 0 && Operation == PreProcessOp::e_Collapse) {
 		String^ Macro = TextParser->Tokens[DefineColIdx + 1];
@@ -558,7 +558,7 @@ try {
 			Result += "\n";
 	}
 } catch (Exception^ E) {
-	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true, true);
+	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 
 	return Result;
@@ -583,19 +583,19 @@ void PreProcessor::ParseEnumMacros(String^% Items, bool ReportErrors)
 			Value = Int32::Parse(ValueStr);
 		} catch (...) {
 			Value = 0;
-			if (ReportErrors)	DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true, true);
+			if (ReportErrors)	DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true);
 		}
 		PreviousValue = Value;
 		
 		if (!String::Compare(Macro, Macro->ToUpper())) {
 			if (FindPreProcessMacro(Macro) != -1) {
 				if (Globals::GetSingleton()->ScriptEditorOptions->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value.ToString();
-				else {		if (ReportErrors)		DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true, true); }
+				else {		if (ReportErrors)		DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true); }
 			}
 			else 
 				PreProcessMacros->Add(Macro, Value.ToString());
 		} else if (ReportErrors)
-			DebugPrint("Preprocessor macro '" + Macro + "' is formatted incorrectly", true, true);
+			DebugPrint("Preprocessor macro '" + Macro + "' is formatted incorrectly", true);
 	}
 }
 
@@ -624,7 +624,7 @@ try {
 		ParseEnumMacros(Value, false);
 	}
 } catch (Exception^ E) {
-	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true, true);
+	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 
 	return Result;
@@ -775,6 +775,6 @@ void PreProcessor::ProcessStandardDefineDirectives(void)
 			DebugPrint("Couldn't read from Standard define directives file!\n\tException: " + E->Message);
 		}
 	} else
-		DebugPrint("Standard define directives file not found!", true, true);
+		DebugPrint("Standard define directives file not found!", true);
 }
 

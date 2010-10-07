@@ -22,7 +22,6 @@ Script*								g_ScriptListResult = NULL;				// used by our script list hook, to
 
 static const void*					g_ExpressionBuffer = new char[0x400];
 
-ScriptVarIndexData*					g_ScriptVarIndices = new ScriptVarIndexData();
 Script*								g_EditorAuxScript = NULL;
 HWND								g_EditorAuxHWND = NULL;
 
@@ -150,7 +149,7 @@ void DispatchInteropMessage(void)
 	static bool InterOpMessageDispatched = false;
 
 	if (!InterOpMessageDispatched) {
-		_D_PRINT("Plugin interop initialized; Message dispatched\n");
+		CONSOLE->LogMessage(Console::e_CSE, "Plugin interop initialized; Message dispatched\n");
 		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEL', NULL, 0, NULL);
 		InterOpMessageDispatched = true;
 	}
@@ -278,6 +277,11 @@ void __declspec(naked) GetPluginNameSaveHook(void)
     }
 }
 
+void __stdcall FixDefaultWater(void)
+{
+	(*g_SpecialForm_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
+}
+
 void __declspec(naked) GetPluginNameLoadHook(void)
 {
     __asm
@@ -286,6 +290,7 @@ void __declspec(naked) GetPluginNameLoadHook(void)
 		call	SetWindowTextAddress
 		push	ebx
 		call	DoGetPluginNameHook
+		call	FixDefaultWater
 		popad
 
 		call	[g_WindowHandleCallAddr]				// SetWindowTextA

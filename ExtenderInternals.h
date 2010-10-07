@@ -1,6 +1,7 @@
 #pragma once
 #pragma warning(disable : 4800; disable : 4005)
 
+#include "UtilityBox.h"
 #include "obse_editor/EditorAPI.h"
 #include "obse/GameData.h"
 #include "obse/Script.h"
@@ -8,18 +9,6 @@
 #include "obse/obse_common/SafeWrite.h"
 #include "obse/GameObjects.h"
 #include "Editor_RTTI.h"
-//#include "EditorBSExtraData.h"
-
-
-#include <string>
-#include <fstream>
-#include <map>
-#include "windows.h"
-#include "atltypes.h"
-#include "commctrl.h"
-#include "richedit.h"
-#include "shlobj.h"
-#include "resource.h"
 
 extern std::fstream					g_DEBUG_LOG;
 extern std::string					g_AppPath;
@@ -88,7 +77,7 @@ UInt32 GetDialogTemplate(const char* FormType);
 
 void RemoteLoadRef(const char* EditorID);
 void LoadFormIntoView(const char* EditorID, const char* FormType);
-void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
+
 
 
 // 08
@@ -199,111 +188,13 @@ extern const UInt32				kTESObjectREFR_ModExtraTimeLeft;
 extern const UInt32				kTESObjectREFR_ModExtraSoul;
 extern const UInt32				kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
 
+extern TESWaterForm**			g_SpecialForm_DefaultWater;
+
 extern RendSel**					g_RenderWindow_UnkLL;
 
 TESObjectREFR* ChooseReferenceDlg(HWND Parent);
 
-inline void _D_PRINT(const char* fmt, ...)
-{
-	va_list args;
 
-	va_start(args, fmt);
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
-	va_end(args);
-
-	g_DEBUG_LOG << g_Buffer << std::endl;
-}
 
 void UpdateTESObjectREFR3D(TESObjectREFR* Object);	// in the render window
-
-
-// __thisCall handlers (non-virtual)
-template <typename Tthis>
-__forceinline UInt32 thisCall(UInt32 addr, Tthis _this)
-{
-	if (!addr) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(); } u = {addr};
-    return ((T*)_this->*u.m)();
-}
-template <typename Tthis, typename T1>
-__forceinline UInt32 thisCall(UInt32 addr, Tthis _this, T1 arg1)
-{
-	if (!addr) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1); } u = {addr};
-    return ((T*)_this->*u.m)(arg1);
-}
-template <typename Tthis, typename T1, typename T2>
-__forceinline UInt32 thisCall(UInt32 addr, Tthis _this, T1 arg1, T2 arg2)
-{
-	if (!addr) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2); } u = {addr};
-    return ((T*)_this->*u.m)(arg1, arg2);
-}
-template <typename Tthis, typename T1, typename T2, typename T3>
-__forceinline UInt32 thisCall(UInt32 addr, Tthis _this, T1 arg1, T2 arg2, T3 arg3)
-{
-	if (!addr) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3); } u = {addr};
-    return ((T*)_this->*u.m)(arg1, arg2, arg3);
-}
-template <typename Tthis, typename T1, typename T2, typename T3, typename T4>
-__forceinline UInt32 thisCall(UInt32 addr, Tthis _this, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-{
-	if (!addr) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3, T4); } u = {addr};
-    return ((T*)_this->*u.m)(arg1, arg2, arg3, arg4);
-}
-template <typename Tthis, typename T1, typename T2, typename T3, typename T4, typename T5>
-__forceinline UInt32 thisCall(UInt32 addr, Tthis _this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
-{
-	if (!addr) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3, T4, T5); } u = {addr};
-    return ((T*)_this->*u.m)(arg1, arg2, arg3, arg6, arg5);
-}
-
-// __thisCall handlers (virtual)
-template <typename Tthis>
-__forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this)
-{
-	if (!vtbl) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(); } u = {*(UInt32*)(vtbl + offset)};
-    return ((T*)_this->*u.m)();
-}
-template <typename Tthis, typename T1>
-__forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this, T1 arg1)
-{
-	if (!vtbl) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1); } u = {*(UInt32*)(vtbl + offset)};
-    return ((T*)_this->*u.m)(arg1);
-}
-template <typename Tthis, typename T1, typename T2>
-__forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this, T1 arg1, T2 arg2)
-{
-	if (!vtbl) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2); } u = {*(UInt32*)(vtbl + offset)};
-    return ((T*)_this->*u.m)(arg1, arg2);
-}
-template <typename Tthis, typename T1, typename T2, typename T3>
-__forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this, T1 arg1, T2 arg2, T3 arg3)
-{
-	if (!vtbl) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3); } u = {*(UInt32*)(vtbl + offset)};
-    return ((T*)_this->*u.m)(arg1, arg2, arg3);
-}
-template <typename Tthis, typename T1, typename T2, typename T3, typename T4>
-__forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
-{
-	if (!vtbl) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3, T4); } u = {*(UInt32*)(vtbl + offset)};
-    return ((T*)_this->*u.m)(arg1, arg2, arg3, arg4);
-}
-template <typename Tthis, typename T1, typename T2, typename T3, typename T4, typename T5>
-__forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
-{
-	if (!vtbl) return 0; 
-    class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3, T4, T5); } u = {*(UInt32*)(vtbl + offset)};
-    return ((T*)_this->*u.m)(arg1, arg2, arg3, arg6, arg5);
-}
-
-#define PLACE_HOOK(name)									WriteRelJump(k##name##HookAddr, (UInt32)##name##Hook)
 

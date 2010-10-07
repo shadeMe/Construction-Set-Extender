@@ -78,15 +78,3 @@ public:
 };
 
 #define GLOB											Globals::GetSingleton()
-
-public ref class ConsoleManager	
-{
-	static ConsoleManager^								Singleton = nullptr;
-	String^												MessageDump;
-public:
-	static ConsoleManager^%								GetSingleton();
-	void												Log(String^% Message, bool PrintC);
-	String^%											GetDump(void) { return MessageDump; }
-};
-
-void													DebugPrint(String^ Message, bool PrintC = true, bool Achtung = false);

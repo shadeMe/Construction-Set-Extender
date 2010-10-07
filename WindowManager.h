@@ -4,7 +4,7 @@ extern WNDPROC						g_FindTextOrgWindowProc;
 extern WNDPROC						g_DataDlgOrgWindowProc;
 extern WNDPROC						g_CSMainWndOrgWindowProc;
 extern WNDPROC						g_RenderWndOrgWindowProc;
-
+extern WNDPROC						g_ConsoleWndOrgWindowProc;
 
 
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -23,3 +23,5 @@ enum AssetSelectorResult
 };
 BOOL CALLBACK TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK TESFileDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

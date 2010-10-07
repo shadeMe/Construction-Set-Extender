@@ -162,7 +162,7 @@ UInt32 TabContainer::CreateNewTab(String^ ScriptName)
 		AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(0);
 
 	if (!AllocatedIndex) {
-		DebugPrint("Fatal error occured when allocating a custom editor!", true, true);
+		DebugPrint("Fatal error occured when allocating a custom editor!", true);
 		return AllocatedIndex;
 	}
 
@@ -513,16 +513,6 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	ToolBarOptions->Alignment = ToolStripItemAlignment::Right;
 
 
-
-	ToolBarConsole = gcnew ToolStripButton();
-	ToolBarConsole->ToolTipText = "Console";
-	ToolBarConsole->Image = Globals::GetSingleton()->SEConsoleImg;
-	ToolBarConsole->AutoSize = true;
-	ToolBarConsole->Click += gcnew EventHandler(this, &Workspace::ToolBarConsole_Click);
-	ToolBarConsole->Margin = SecondaryButtonPad;
-
-
-
 	ToolBarNewScript = gcnew ToolStripButton();
 	ToolBarNewScript->ToolTipText = "New Script";
 	ToolBarNewScript->Image = Globals::GetSingleton()->SENewImg;
@@ -657,7 +647,6 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	BoxToolBar->Items->Add(ToolBarErrorList);
 	BoxToolBar->Items->Add(ToolBarFindList);
 	BoxToolBar->Items->Add(ToolBarBookmarkList);
-	BoxToolBar->Items->Add(ToolBarConsole);
 	BoxToolBar->Items->Add(ToolBarDumpScript);
 	BoxToolBar->Items->Add(ToolBarLoadScript);
 	BoxToolBar->Items->Add(ToolBarGetVarIndices);
@@ -831,30 +820,29 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	ColumnHeader^ VariableBoxName = gcnew ColumnHeader();
 	VariableBoxName->Text = "Variable Name";
-	VariableBoxName->Width = 70;
+	VariableBoxName->Width = 300;
 	ColumnHeader^ VariableBoxType = gcnew ColumnHeader();
 	VariableBoxType->Text = "Type";
-	VariableBoxType->Width = 50;
+	VariableBoxType->Width = 300;
 	ColumnHeader^ VariableBoxIndex = gcnew ColumnHeader();
 	VariableBoxIndex->Text = "Index";
-	VariableBoxIndex->Width = 50;
-	VariableBox->Columns->Add(VariableBoxName);
-	VariableBox->Columns->Add(VariableBoxType);
-	VariableBox->Columns->Add(VariableBoxIndex);
+	VariableBoxIndex->Width = 100;
+	VariableBox->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {VariableBoxName,
+																		 VariableBoxType,
+																		 VariableBoxIndex});
 	VariableBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::VariableBox_ColumnClick);
 
-	ConsoleBox = gcnew TextBox();
-	ConsoleBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
-	ConsoleBox->Text = ConsoleManager::GetSingleton()->GetDump();
-	ConsoleBox->BorderStyle = BorderStyle::Fixed3D;
-	ConsoleBox->Dock = DockStyle::Fill;
-	ConsoleBox->ScrollBars = ScrollBars::Both;
-	ConsoleBox->ReadOnly = true;
-	ConsoleBox->Multiline = true;
-	ConsoleBox->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-	ConsoleBox->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	IndexEditBox = gcnew TextBox();
+	IndexEditBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	IndexEditBox->Multiline = true;
+	IndexEditBox->BorderStyle = BorderStyle::FixedSingle;
+	IndexEditBox->Visible = false;
+	IndexEditBox->AcceptsReturn = true;
+	IndexEditBox->LostFocus += gcnew EventHandler(this, &Workspace::IndexEditBox_LostFocus);
+	IndexEditBox->KeyDown += gcnew KeyEventHandler(this, &Workspace::IndexEditBox_KeyDown);
 
-	
+	VariableBox->Controls->Add(IndexEditBox);
+
 	EditorSplitter->Panel1->Controls->Add(EditorLineNo);
 	EditorSplitter->Panel1->BorderStyle = BorderStyle::Fixed3D;
 	EditorSplitter->Panel2->Controls->Add(EditorBox);
@@ -864,7 +852,6 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorBoxSplitter->Panel2->Controls->Add(ErrorBox);
 	EditorBoxSplitter->Panel2->Controls->Add(FindBox);
 	EditorBoxSplitter->Panel2->Controls->Add(BookmarkBox);
-	EditorBoxSplitter->Panel2->Controls->Add(ConsoleBox);
 	EditorBoxSplitter->Panel2->Controls->Add(VariableBox);
 
 	ISBox = gcnew SyntaxBox(const_cast<ScriptEditor::Workspace^>(this));
@@ -879,7 +866,6 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorBox->ContextMenuStrip = EditorContextMenu;
 
 	ISBox->Hide();
-	ConsoleBox->BringToFront();
 	EditorBoxSplitter->SplitterDistance = ((ParentStrip->EditorForm->Height - 65 < 0)?500 : ParentStrip->EditorForm->Height - 65);
 
 	EditorBoxSplitter->Enabled = false;
@@ -1818,16 +1804,51 @@ void Workspace::ValidateLineLimit(void)
 }
 
 
-void Workspace::GetVariableIndices(void)
+void Workspace::GetVariableIndices(bool SetFlag)
 {
 	if (GetVariableData) {
 		VariableBox->Items->Clear();
 		NativeWrapper::ScriptEditor_GetScriptVariableIndices(AllocatedIndex, g_ScriptDataPackage->EditorID);
-		ToolBarUpdateVarIndices->Enabled = true;
 		VariableBox->Show();
 		VariableBox->BringToFront();
+		if (VariableBox->Items->Count) {
+			ToolBarUpdateVarIndices->Enabled = true;
+		}
+		GetVariableData = false;
+	} else if (SetFlag) {
+		GetVariableData = true;
 	}
-	GetVariableData = false;
+}
+
+void Workspace::SetVariableIndices(void)
+{
+	ScriptVarIndexData::ScriptVarInfo Data;
+
+	for each (ListViewItem^ Itr in VariableBox->Items) {
+		try {
+			if (Itr->Tag != nullptr) {
+				CStringWrapper^ CEID = gcnew CStringWrapper(Itr->Text);
+				UInt32 Index = 0;
+
+				try {
+					Index = UInt32::Parse(Itr->SubItems[2]->Text);
+				} catch (Exception^ E) {
+					throw gcnew CSEGeneralException("Couldn't parse index of variable  '" + Itr->Text + "' in script '" + EditorTab->Text + "'\n\tError Message: " + E->Message);
+				}
+				Data.Index = Index;
+				if		(!String::Compare(Itr->SubItems[1]->Text, "Integer", true))			Data.Type = 1;
+				else if (!String::Compare(Itr->SubItems[1]->Text, "Float", true))			Data.Type = 0;
+				else																		Data.Type = 2;
+				Data.Name = CEID->String();		
+
+				if (!NativeWrapper::ScriptEditor_SetScriptVariableIndex(g_ScriptDataPackage->EditorID, &Data)) {	// shaky code, need to be certain of g_ScriptDataPackage's state
+					throw gcnew CSEGeneralException("Couldn't update the index of variable '" + Itr->Text + "' in script '" + EditorTab->Text + "'");
+				}
+			}
+		} catch (CSEGeneralException^ E) {
+			DebugPrint(E->Message, true);
+		}
+	}
 }
 
 
@@ -1884,7 +1905,6 @@ void Workspace::ToolBarErrorList_Click(Object^ Sender, EventArgs^ E)
 	}
 	else {
 		ErrorBox->Hide();
-		ToolBarConsole_Click(nullptr, nullptr);
 		ToolBarErrorList->Checked = false;
 	}
 }
@@ -1904,7 +1924,6 @@ void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 	else {
 		FindBox->Hide();
 		ClearFindImagePointers();
-		ToolBarConsole_Click(nullptr, nullptr);
 		ToolBarFindList->Checked = false;
 	}
 }
@@ -1923,22 +1942,8 @@ void Workspace::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
 	}
 	else {
 		BookmarkBox->Hide();
-		ToolBarConsole_Click(nullptr, nullptr);
 		ToolBarBookmarkList->Checked = false;
 	}
-}
-
-void Workspace::ToolBarConsole_Click(Object^ Sender, EventArgs^ E)
-{
-	BookmarkBox->Hide();
-	FindBox->Hide();
-	ErrorBox->Hide();
-
-	ToolBarBookmarkList->Checked = false;
-	ToolBarFindList->Checked = false;
-	ToolBarErrorList->Checked = false;
-
-	ConsoleBox->BringToFront();
 }
 
 void Workspace::ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -1949,7 +1954,7 @@ void Workspace::ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		if (ToolBarCommonTextBox->Tag->ToString() != "") {
 			if		(ToolBarCommonTextBox->Tag->ToString() == "Find")				ToolBarEditMenuContentsFind_Click(nullptr, nullptr);
 			else if (ToolBarCommonTextBox->Tag->ToString() == "Replace")			ToolBarEditMenuContentsReplace_Click(nullptr, nullptr);
-			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Line")		ToolBarEditMenuContentsGotoLine_Click(nullptr, nullptr);
+			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Line")			ToolBarEditMenuContentsGotoLine_Click(nullptr, nullptr);
 			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Offset")		ToolBarEditMenuContentsGotoOffset_Click(nullptr, nullptr);
 		}	
 
@@ -2123,17 +2128,13 @@ void Workspace::ToolBarNavForward_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
 {
-	GetVariableData = true;
+	GetVariableIndices(true);
 	Workspace::ToolBarSaveScript_Click(nullptr, nullptr);	
 }
 
 void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
 {
-	if (VariableBox->Items->Count) {
-		if (VariableBox->View == View::Details)		VariableBox->View = View::Tile;
-		else										VariableBox->View = View::Details;
-		ToolBarUpdateVarIndices->Enabled = false;
-	}
+	SetVariableIndices();
 }
 
 void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
@@ -2150,7 +2151,7 @@ void Workspace::ContextMenuCopy_Click(Object^ Sender, EventArgs^ E)
 		Clipboard::Clear();
 		Clipboard::SetText(GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, false));
 	} catch (Exception^ E) {
-		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true, true);
+		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
 }
 
@@ -2159,7 +2160,7 @@ void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 	try {
 		EditorBox->SelectedText = Clipboard::GetText();
 	} catch (Exception^ E) {
-		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true, true);
+		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
 
 }
@@ -2366,7 +2367,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 				} 
 				else ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 			} catch (Exception^ E) {
-				DebugPrint("IntelliSense threw an exception while initializing.\n\tException: " + E->Message, true, true);
+				DebugPrint("IntelliSense threw an exception while initializing.\n\tException: " + E->Message, true);
 			}
 		}
 	}
@@ -2385,7 +2386,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					E->Handled = true;
 				}
 			} catch (Exception^ E) {
-				DebugPrint("Had trouble stripping RTF elements in editor " + AllocatedIndex + ".\n\tException: " + E->Message, true, true);
+				DebugPrint("Had trouble stripping RTF elements in editor " + AllocatedIndex + ".\n\tException: " + E->Message, true);
 			}
 			HandleTextChanged = false;
 		}
@@ -2732,7 +2733,19 @@ void Workspace::BookmarkBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 
 void Workspace::VariableBox_DoubleClick(Object^ Sender, EventArgs^ E)
 {
-	
+	if (GetListViewSelectedItem(VariableBox) != nullptr) {
+		ListViewItem^ Item = GetListViewSelectedItem(VariableBox);
+		Rectangle Bounds = Item->SubItems[2]->Bounds;
+		if (Bounds.Width > 35) {
+			IndexEditBox->SetBounds(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, BoundsSpecified::All);
+			IndexEditBox->Show();
+			IndexEditBox->BringToFront();
+			IndexEditBox->Focus();
+		} else {
+			MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents", "CSE Script Editor", 
+							MessageBoxButtons::OK, MessageBoxIcon::Information);
+		}
+	}		
 }
 
 void Workspace::VariableBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -2760,4 +2773,33 @@ void Workspace::VariableBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 	}
 	VariableBox->ListViewItemSorter = Sorter;
 }
+
+void Workspace::IndexEditBox_LostFocus(Object^ Sender, EventArgs^ E)
+{
+	IndexEditBox->Hide();
+
+	UInt32 Index = 0;
+	try {
+		Index = UInt32::Parse(IndexEditBox->Text);
+	} catch (...) {
+		IndexEditBox->Text = "";
+		return;
+	}
+
+	IndexEditBox->Text = "";
+	if (GetListViewSelectedItem(VariableBox) != nullptr) {
+		ListViewItem^ Item = GetListViewSelectedItem(VariableBox);
+		Item->SubItems[2]->Text = Index.ToString();
+		Item->Tag = (int)1;
+		DebugPrint("Set the index of variable '" + Item->Text + "' in script '" + EditorTab->Text + "' to " + Index.ToString());
+	}
+}
+
+void Workspace::IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
+{
+	if (E->KeyCode == Keys::Enter) {
+		Workspace::IndexEditBox_LostFocus(nullptr, nullptr);
+	}
+}
+
 }

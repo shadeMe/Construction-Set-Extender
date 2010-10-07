@@ -42,13 +42,13 @@ private:
 	Stack<UInt32>^										BackStack;
 	Stack<UInt32>^										ForwardStack;
 
-	bool												Destroying;
 	bool												RemovingTab;
 	static ImageList^									FileFlags = gcnew ImageList();
 public:
 	Form^												EditorForm;
 	DotNetBar::TabControl^								ScriptStrip;
 	DotNetBar::TabItem^									NewTabButton;
+	bool												Destroying;
 
 	TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);
 
@@ -65,7 +65,6 @@ public:
 public ref class Workspace
 {
 public:
-	void												ToolBarConsole_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
 private:
@@ -149,6 +148,9 @@ private:
 	void												VariableBox_DoubleClick(Object^ Sender, EventArgs^ E);
 	void												VariableBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 
+	void												IndexEditBox_LostFocus(Object^ Sender, EventArgs^ E);
+	void												IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
+
 
 	void												UpdateLineNumbers(void);
 	void												FindAndReplace(bool Replace);
@@ -172,7 +174,22 @@ private:
 	bool												IsCursorInsideCommentSeg(bool OneLessIdx);
 	bool												HasLineChanged();
 	void												ValidateLineLimit(void);
-public:							
+public:	
+	void												ValidateScript(UInt32 ScriptType);
+	void												Destroy();
+	void												EnableControls();
+	UInt16												GetScriptType();
+	void												SetScriptType(UInt16 ScriptType);
+	void												PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText);
+	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
+	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
+	void												GetVariableIndices(bool SetFlag);
+	void												SetVariableIndices(void);
+	void												ClearFindImagePointers(void);
+
+	Workspace(UInt32 Index, TabContainer^% Parent);
+	Workspace(UInt32 Index);
+
 	SyntaxBox^											ISBox;
 	DotNetBar::TabItem^									EditorTab;
 	DotNetBar::TabControlPanel^							EditorControlBox;
@@ -184,8 +201,8 @@ public:
 		ListView^											FindBox;
 		ListView^											BookmarkBox;
 		ListView^											ErrorBox;
-		TextBox^											ConsoleBox;
 		ListView^											VariableBox;
+			TextBox^											IndexEditBox;
 
 	ToolStrip^											EditorToolBar;
 		ToolStripTextBox^									ToolBarCommonTextBox;
@@ -201,7 +218,6 @@ public:
 		ToolStripButton^									ToolBarDumpScript;
 		ToolStripButton^									ToolBarLoadScript;
 		ToolStripButton^									ToolBarOptions;
-		ToolStripButton^									ToolBarConsole;
 
 		ToolStripButton^									ToolBarNewScript;
 		ToolStripButton^									ToolBarOpenScript;
@@ -264,20 +280,6 @@ public:
 	bool												GetVariableData;
 	UInt32												ScriptType;
 	TabContainer^										ParentStrip;
-	
-	void												ValidateScript(UInt32 ScriptType);
-	void												Destroy();
-	void												EnableControls();
-	UInt16												GetScriptType();
-	void												SetScriptType(UInt16 ScriptType);
-	void												PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText);
-	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
-	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
-	void												GetVariableIndices(void);
-	void												ClearFindImagePointers(void);
-
-	Workspace(UInt32 Index, TabContainer^% Parent);
-	Workspace(UInt32 Index);
 
 	static Workspace^									NullSE = gcnew Workspace(0);
 };

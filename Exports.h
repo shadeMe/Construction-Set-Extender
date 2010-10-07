@@ -1,17 +1,13 @@
 #pragma once
 
 #include "ExtenderInternals.h"
+#include "Common\HandShakeStructs.h"
 
-struct ScriptData;
-struct FormData;
-struct ScriptVarInfo;
-struct ScriptVarIndexData;
 class DataHandler;
-struct BatchRefData;
 
 extern "C"{
 
-__declspec(dllexport) void _D_PRINT_EXP(const char* Message);
+__declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message);
 __declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default);
 __declspec(dllexport) const char* GetAppPath(void);
 __declspec(dllexport) void WriteStatusBarText(int PanelIndex, const char* Message);
@@ -35,6 +31,7 @@ __declspec(dllexport) const char* ScriptEditor_GetActivePluginName();
 __declspec(dllexport) void ScriptEditor_GetUseReportForForm(const char* EditorID);
 
 __declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID);
+__declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data);
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText();
 __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorID);

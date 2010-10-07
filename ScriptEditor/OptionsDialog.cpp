@@ -67,7 +67,7 @@ void BoundControl::SetValue(String^ Value)
 	} catch (...) {	
 		Numeric = 0;
 		if (Property != ValueType::e_Font_FontFamily_Name)
-			DebugPrint(String::Format("Couldn't parse INI value of type {0}", (int)Property), true, true);
+			DebugPrint(String::Format("Couldn't parse INI value of type {0}", (int)Property), true);
 	}
 
 	switch (BoundType)
@@ -121,39 +121,39 @@ void BoundControl::SetValue(String^ Value)
 void OptionsDialog::PopulateINIMap()
 {
 	// Script Editor
-	INIMap->Add(gcnew INISetting("Font", "ScriptEditor", "Lucida Console"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_FontFamily_Name));
-	INIMap->Add(gcnew INISetting("FontSize", "ScriptEditor", "10"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
+	INIMap->Add(gcnew INISetting("Font", "ScriptEditor::General", "Lucida Console"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_FontFamily_Name));
+	INIMap->Add(gcnew INISetting("FontSize", "ScriptEditor::General", "10"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
 
-	INIMap->Add(gcnew INISetting("ForeColorR", "ScriptEditor", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("ForeColorG", "ScriptEditor", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("ForeColorB", "ScriptEditor", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	INIMap->Add(gcnew INISetting("ForeColorR", "ScriptEditor::General", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
+	INIMap->Add(gcnew INISetting("ForeColorG", "ScriptEditor::General", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
+	INIMap->Add(gcnew INISetting("ForeColorB", "ScriptEditor::General", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
 
-	INIMap->Add(gcnew INISetting("BackColorR", "ScriptEditor", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("BackColorG", "ScriptEditor", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("BackColorB", "ScriptEditor", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	INIMap->Add(gcnew INISetting("BackColorR", "ScriptEditor::General", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
+	INIMap->Add(gcnew INISetting("BackColorG", "ScriptEditor::General", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
+	INIMap->Add(gcnew INISetting("BackColorB", "ScriptEditor::General", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
 
-	INIMap->Add(gcnew INISetting("HiliteColorR", "ScriptEditor", "158"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("HiliteColorG", "ScriptEditor", "195"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("HiliteColorB", "ScriptEditor", "200"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	INIMap->Add(gcnew INISetting("HiliteColorR", "ScriptEditor::General", "158"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
+	INIMap->Add(gcnew INISetting("HiliteColorG", "ScriptEditor::General", "195"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
+	INIMap->Add(gcnew INISetting("HiliteColorB", "ScriptEditor::General", "200"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
 
-	INIMap->Add(gcnew INISetting("BookmarkColorR", "ScriptEditor", "235"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("BookmarkColorG", "ScriptEditor", "33"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("BookmarkColorB", "ScriptEditor", "38"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	INIMap->Add(gcnew INISetting("BookmarkColorR", "ScriptEditor::General", "235"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
+	INIMap->Add(gcnew INISetting("BookmarkColorG", "ScriptEditor::General", "33"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
+	INIMap->Add(gcnew INISetting("BookmarkColorB", "ScriptEditor::General", "38"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
 
-	INIMap->Add(gcnew INISetting("UseRegEx", "ScriptEditor", "0"), gcnew BoundControl(UseRegEx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("ColorEditorBox", "ScriptEditor", "0"), gcnew BoundControl(ColorEditorBox, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("AutoIndent", "ScriptEditor", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("SaveLastKnownPos", "ScriptEditor", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+	INIMap->Add(gcnew INISetting("UseRegEx", "ScriptEditor::General", "0"), gcnew BoundControl(UseRegEx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("ColorEditorBox", "ScriptEditor::General", "0"), gcnew BoundControl(ColorEditorBox, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("AutoIndent", "ScriptEditor::General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("SaveLastKnownPos", "ScriptEditor::General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::General", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 
 
 	// IntelliSense
-	INIMap->Add(gcnew INISetting("ThresholdLength", "IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+	INIMap->Add(gcnew INISetting("ThresholdLength", "ScriptEditor::IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 
 
 	// Preprocessor
-	INIMap->Add(gcnew INISetting("CreateMissingFromSegment", "Preprocessor", "1"), gcnew BoundControl(CreateMissingFromSegment, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("AllowRedefinitions", "Preprocessor", "1"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("CreateMissingFromSegment", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(CreateMissingFromSegment, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("AllowRedefinitions", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	DebugPrint("Populated INI Map");
 }

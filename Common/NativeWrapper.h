@@ -5,7 +5,7 @@
 class NativeWrapper
 {
 	[DllImport("Construction Set Extender.dll")] 
-	static void											_D_PRINT_EXP(const char* Message);
+	static void											_D_PRINT(UInt8 Source, const char* Message);
 	[DllImport("Construction Set Extender.dll")] 
 	static void											WriteStatusBarText(int PanelIndex, const char* Message);
 public:
@@ -42,6 +42,8 @@ public:
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID);
 	[DllImport("Construction Set Extender.dll")] 
+	static bool											ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data);
+	[DllImport("Construction Set Extender.dll")] 
 	static const char*									ScriptEditor_GetAuxScriptName();
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex);
@@ -65,7 +67,7 @@ public:
 	[DllImport("user32.dll")]
 	static bool											LockWindowUpdate(IntPtr hWndLock);
 	static void											PrintToCSStatusBar(int PanelIndex, String^ Message);
-	friend void											DumpToLog(String^% Message);
+	friend void											DebugDump(UInt8 Source, String^% Message);
 };
 
 class INIWrapper

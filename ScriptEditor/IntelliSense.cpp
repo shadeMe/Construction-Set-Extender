@@ -201,11 +201,11 @@ void IntelliSenseDatabase::PluginParserThread_DoWork(Object^ Sender, DoWorkEvent
 void IntelliSenseDatabase::PluginParserThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E)
 {
 	if (E->Error != nullptr)
-		DebugPrint("The PluginParser thread raised an exception!\n\tException: " + E->Error->Message, true, true);
+		DebugPrint("The PluginParser thread raised an exception!\n\tException: " + E->Error->Message, true);
 	else if (E->Cancelled)
-		DebugPrint("Huh?! PluginParser thread was cancelled", true, true);
+		DebugPrint("Huh?! PluginParser thread was cancelled", true);
 	else if (E->Result == nullptr)
-		DebugPrint("Something seriously went wrong when parsing the loaded plugins!", true, true);
+		DebugPrint("Something seriously went wrong when parsing the loaded plugins!", true);
 	else
 		PostUpdateDatabase(dynamic_cast<ParsedPluginData^>(E->Result));
 
@@ -413,7 +413,7 @@ void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 
 	DebugPrint(String::Format("\tSuccessfully parsed {0} commands!", Count));
 	} catch (Exception^ E) {
-		DebugPrint("Exception raised!\n\tMessage: " + E->Message, true, true);
+		DebugPrint("Exception raised!\n\tMessage: " + E->Message, true);
 	}
 }
 

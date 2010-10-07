@@ -19,7 +19,6 @@ extern ScriptData*			g_ScriptDataPackage;
 extern Script*				g_SetEditorTextCache;
 extern Script*				g_ScriptListResult;
 extern std::string			g_ActivePluginName;
-extern ScriptVarIndexData*	g_ScriptVarIndices;
 
 bool PatchSEHooks();
 void FillScriptDataPackage(Script* ScriptForm);
@@ -28,6 +27,7 @@ const UInt32				kScriptSetEditorTextCallAddr = 0x004FC1F0;
 const UInt32				kRecompileScriptsMessageBoxStringPatchAddr = 0x004FEF3F;
 
 extern Script*				g_EditorAuxScript;
+extern const char*			g_DefaultWaterTextureStr;
 
 
 

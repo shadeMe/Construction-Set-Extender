@@ -31,7 +31,6 @@ struct ScriptVarIndexData
 	};
 
 	ScriptVarInfo*									Data;
-	UInt32											Count;
 };
 
 #ifdef CSE_USER

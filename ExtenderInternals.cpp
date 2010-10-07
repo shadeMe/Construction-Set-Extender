@@ -63,6 +63,8 @@ const UInt32						kTESObjectREFR_ModExtraTimeLeft = 0x0053F620;
 const UInt32						kTESObjectREFR_ModExtraSoul = 0x0053F710;
 const UInt32						kTESObjectREFR_SetExtraEnableStateParent_OppositeState = 0x0053FA80;
 
+TESWaterForm**						g_SpecialForm_DefaultWater = (TESWaterForm**)0x00A137CC;
+
 RendSel**								g_RenderWindow_UnkLL = (RendSel**)0x00A0AF60;
 
 
@@ -144,23 +146,6 @@ HWND EditorAllocator::GetTrackedDialog(UInt32 TrackedEditorIndex)
 			break;
 	}
 	return Result;
-}
-
-void LogWinAPIErrorMessage(DWORD ErrorID)
-{
-	LPVOID ErrorMsg;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-		FORMAT_MESSAGE_FROM_SYSTEM |
-		FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		ErrorID,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR) &ErrorMsg,
-		0, NULL );
-
-	_D_PRINT(("\tError Message: " + std::string((LPSTR)ErrorMsg)).c_str()); 
-	LocalFree(ErrorMsg);
 }
 
 TESDialogInitParam::TESDialogInitParam(const char* EditorID)
@@ -252,12 +237,6 @@ void RemoteLoadRef(const char* EditorID)
 	TESObjectREFR* Reference = CS_CAST(GetFormByID(EditorID), TESForm, TESObjectREFR);
 	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(g_VTBL_TESObjectREFR, 0x1A0, Reference);
 	thisCall(kTESChildCell_LoadCellFnAddr, Cell, Cell, Reference);
-}
-
-void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
-{
-	if (State)	*Flag |= Mask;
-	else		*Flag &= ~Mask;
 }
 
 TESObjectREFR* ChooseReferenceDlg(HWND Parent)

@@ -119,6 +119,8 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				ForcedIncludeFiles="Prefix.h"
+				ForcedUsingFiles=""
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -243,6 +245,10 @@
 		</File>
 		<File
 			RelativePath=".\Exports.h"
+			>
+		</File>
+		<File
+			RelativePath=".\Prefix.h"
 			>
 		</File>
 	</Files>

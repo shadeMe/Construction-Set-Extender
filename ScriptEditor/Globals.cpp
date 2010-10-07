@@ -84,30 +84,3 @@ Globals::Globals()
 
 	ScriptEditorOptions = OptionsDialog::GetSingleton();
 }
-
-ConsoleManager^% ConsoleManager::GetSingleton()
-{
-	if (Singleton == nullptr) {
-		Singleton = gcnew ConsoleManager();
-		DebugPrint("Initialized Console");
-	}
-	return Singleton;
-}
-
-void ConsoleManager::Log(String^% Message, bool PrintC)
-{
-	MessageDump += Message->Replace("\n", "\r\n") + "\r\n";
-	
-	if (PrintC)
-	{
-		SEMGR->UpdateWorkspaceConsole();
-	}
-}
-
-void DebugPrint(String^ Message, bool PrintC, bool Achtung)	
-{
-	ConsoleManager::GetSingleton()->Log(Message, PrintC);
-	if (Achtung)						Media::SystemSounds::Hand->Play();
-
-	DumpToLog(Message);
-}
