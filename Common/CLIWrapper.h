@@ -11,7 +11,6 @@ class CLIWrapper
 
 	typedef void							(*_SE_InitializeComponents)(CommandTableData*);
 	typedef void							(*_SE_AddToURLMap)(const char*, const char*);
-	typedef bool							(*_SE_IsActivePluginScriptRecord)(const char*);
 	typedef void							(*_SE_SetScriptListItemData)(UInt32, ScriptData*);
 
 	typedef void							(*_SE_SetVariableListItemData)(UInt32, ScriptVarIndexData::ScriptVarInfo*);
@@ -32,7 +31,6 @@ public:
 
 	static _SE_InitializeComponents			SE_InitializeComponents;
 	static _SE_AddToURLMap					SE_AddToURLMap;
-	static _SE_IsActivePluginScriptRecord	SE_IsActivePluginScriptRecord;
 	static _SE_SetScriptListItemData		SE_SetScriptListItemData;
 
 	static _SE_SetVariableListItemData		SE_SetVariableListItemData;

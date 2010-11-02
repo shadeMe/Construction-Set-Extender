@@ -23,7 +23,7 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 		(LPTSTR) &ErrorMsg,
 		0, NULL );
 
-	CONSOLE->LogMessage(Console::e_CSE, "\tError Message: %s", (LPSTR)ErrorMsg); 
+	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg); 
 	LocalFree(ErrorMsg);
 }
 
@@ -34,7 +34,8 @@ Console::Console()
 	WindowHandle = NULL;
 	EditHandle = NULL;
 	DisplayState = false;
-	MessageBuffer.reserve(0x1000);
+	MessageBuffer.reserve(0x3000);
+	IndentLevel = 0;
 }
 
 Console* Console::GetSingleton()
@@ -50,7 +51,6 @@ void Console::InitializeLog(const char* AppPath)
 	if (IsLogInitalized())	return;
 
 	DebugLog.open(std::string(std::string(AppPath) + "Construction Set Extender.log").c_str(), std::fstream::out);
-	DebugLog << MessageBuffer << std::endl;
 }
 
 void Console::InitializeConsole()
@@ -59,6 +59,7 @@ void Console::InitializeConsole()
 
 	WindowHandle = CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_CONSOLE), NULL, (DLGPROC)ConsoleDlgProc);
 	EditHandle = GetDlgItem(WindowHandle, EDIT_CONSOLE);
+	g_ConsoleEditControlOrgWindowProc = (WNDPROC)SetWindowLong(EditHandle, GWL_WNDPROC, (LONG)ConsoleEditControlSubClassProc);
 	Edit_LimitText(EditHandle, sizeof(int));
 	ToggleDisplayState();
 }
@@ -77,38 +78,37 @@ bool Console::ToggleDisplayState()
 	return DisplayState;
 }
 
-void Console::LoadINISettings(const char* INIPath)
+void Console::LoadINISettings()
 {
-	int Top = GetPrivateProfileIntA("Console::General", "Top", 150, (LPCSTR)INIPath), 
-		Left = GetPrivateProfileIntA("Console::General", "Left", 150, (LPCSTR)INIPath),
-		Right = GetPrivateProfileIntA("Console::General", "Right", 500, (LPCSTR)INIPath),
-		Bottom = GetPrivateProfileIntA("Console::General", "Bottom", 350, (LPCSTR)INIPath);
+	int Top = g_INIManager->FetchSetting("Top")->GetValueAsInteger(), 
+		Left = g_INIManager->FetchSetting("Left")->GetValueAsInteger(),
+		Right = g_INIManager->FetchSetting("Right")->GetValueAsInteger(),
+		Bottom = g_INIManager->FetchSetting("Bottom")->GetValueAsInteger();
 
 	SetWindowPos(WindowHandle, HWND_NOTOPMOST, Left, Top, Right, Bottom, NULL);
 }
 
-void Console::SaveINISettings(const char* INIPath)
+void Console::SaveINISettings()
 {
 	tagRECT WindowRect;
 	GetWindowRect(WindowHandle, &WindowRect);
 
 	_itoa_s(WindowRect.top, g_Buffer, sizeof(g_Buffer), 10);
-	WritePrivateProfileStringA("Console::General", "Top", (LPCSTR)g_Buffer, (LPCSTR)INIPath); 
+	g_INIManager->FetchSetting("Top")->SetValue(g_Buffer);
+
 	_itoa_s(WindowRect.left, g_Buffer, sizeof(g_Buffer), 10);
-	WritePrivateProfileStringA("Console::General", "Left", (LPCSTR)g_Buffer, (LPCSTR)INIPath);
+	g_INIManager->FetchSetting("Left")->SetValue(g_Buffer);
+
 	_itoa_s(WindowRect.right - WindowRect.left, g_Buffer, sizeof(g_Buffer), 10);
-	WritePrivateProfileStringA("Console::General", "Right", (LPCSTR)g_Buffer, (LPCSTR)INIPath);
+	g_INIManager->FetchSetting("Right")->SetValue(g_Buffer);
+
 	_itoa_s(WindowRect.bottom - WindowRect.top, g_Buffer, sizeof(g_Buffer), 10);
-	WritePrivateProfileStringA("Console::General", "Bottom", (LPCSTR)g_Buffer, (LPCSTR)INIPath);
+	g_INIManager->FetchSetting("Bottom")->SetValue(g_Buffer);
 }
 
-void Console::LogMessage(UInt8 Source, const char* Format, ...)
+void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 {
-	va_list Args;
-
-	va_start(Args, Format);
 	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
-	va_end(Args);
 
 	std::string Message;
 	switch (Source)
@@ -133,6 +133,10 @@ void Console::LogMessage(UInt8 Source, const char* Format, ...)
 		break;
 	}
 
+	for (int i = 0; i < IndentLevel; i++) {
+		Message += "\t";
+	}
+
 	Message += std::string(g_Buffer);
 	if (Message.rfind("\r\n") != Message.length() - 2)
 		MessageBuffer += Message + "\r\n";
@@ -144,10 +148,84 @@ void Console::LogMessage(UInt8 Source, const char* Format, ...)
 	}
 
 	if (IsConsoleInitalized() && !IsHidden()) {
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, FALSE, 0);
 		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
-	//	Edit_SetSel(EditHandle, - 1, - 1);
-	//	Edit_ReplaceSel(EditHandle, (LPCSTR)Message.c_str());
-	//	SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_REPLACESEL, 0, (LPARAM)Message.c_str());
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
+	}
+}
+
+void Console::Clear()
+{
+	MessageBuffer.clear();
+	Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
+}
+
+UInt32 Console::Indent()
+{
+	if (++IndentLevel > 10)		IndentLevel = 10;
+	return IndentLevel;
+}
+
+UInt32 Console::Exdent()
+{
+	if (IndentLevel > 0)		--IndentLevel;
+	return IndentLevel;
+}
+
+void DebugPrint(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	CONSOLE->LogMessage(Console::e_CSE, fmt, args);
+	va_end(args);
+}
+void DebugPrint(UInt8 source, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	CONSOLE->LogMessage(source, fmt, args);
+	va_end(args);
+}
+
+void DoNop(const NopData* Data)
+{
+	for (int Offset = 0; Offset < Data->Size; Offset++) {
+		SafeWrite8(Data->Address + Offset, 0x90);
+	}	
+}
+
+// modified to use plugin debugging tools
+void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump)
+{
+	DebugPrint("DumpClass:");
+	UInt32* basePtr = (UInt32*)theClassPtr;
+
+	if (!theClassPtr) return;
+	for (UInt32 ix = 0; ix < nIntsToDump; ix++ ) {
+		UInt32* curPtr = basePtr+ix;
+		const char* curPtrName = NULL;
+		UInt32 otherPtr = 0;
+		float otherFloat = 0.0;
+		const char* otherPtrName = NULL;
+		if (curPtr) {
+			curPtrName = GetObjectClassName((void*)curPtr);
+
+			__try
+			{
+				otherPtr = *curPtr;
+				otherFloat = *(float*)(curPtr);
+			}
+			__except(EXCEPTION_EXECUTE_HANDLER)
+			{
+				//
+			}
+
+			if (otherPtr) {
+				otherPtrName = GetObjectClassName((void*)otherPtr);
+			}
+		}
+
+		DebugPrint("\t%3d +%03X ptr: 0x%08X: %32s *ptr: 0x%08x | %f: %32s", ix, ix*4, curPtr, curPtrName, otherPtr, otherFloat, otherPtrName);
 	}
 }

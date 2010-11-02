@@ -29,15 +29,19 @@ const _GetTESDialogTemplateForType	GetTESDialogTemplateForType = (_GetTESDialogT
 const UInt32						kTESChildCell_LoadCellFnAddr = 0x00430F40; 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
-const UInt32						g_VTBL_TESObjectREFR = 0x00958824;
-const UInt32						g_VTBL_TESForm = 0x0094688C;
+const UInt32						kVTBL_TESObjectREFR = 0x00958824;
+const UInt32						kVTBL_TESForm = 0x0094688C;
+const UInt32						kVTBL_TESTopicInfo = 0x0094820C;
+const UInt32						kVTBL_TESQuest = 0x00945D7C;
 
-const UInt32						kTESForm_GetObjectUseRefHeadFnAddr = 0x00496380;		// Node<TESForm*>* GetObjectUseRefHead(UInt32 unk01);
+const UInt32						kTESForm_GetObjectUseListAddr = 0x00496380;		// Node<TESForm> GetObjectUseRefHead(UInt32 unk01 = 0);
 
 TES**								g_TES = (TES**)0x00A0ABB0;
 
 const UInt32						kTESCellUseList_GetUseListRefHeadFnAddr = 0x006E5850;
 const UInt32						kTESObjectCELL_GetParentWorldSpaceFnAddr = 0x00532E50;
+const UInt32						kScript_SaveResultScript = 0x005034E0;
+const UInt32						kScript_SaveScript = 0x00503450;
 INISetting*							g_INI_LocalMasterPath = (INISetting*)0x009ED710;
 
 const _GetComboBoxItemData			GetComboBoxItemData = (_GetComboBoxItemData)0x00403690;
@@ -65,7 +69,9 @@ const UInt32						kTESObjectREFR_SetExtraEnableStateParent_OppositeState = 0x005
 
 TESWaterForm**						g_SpecialForm_DefaultWater = (TESWaterForm**)0x00A137CC;
 
-RendSel**								g_RenderWindow_UnkLL = (RendSel**)0x00A0AF60;
+TESRenderWindowBuffer**				g_TESRenderWindowBuffer = (TESRenderWindowBuffer**)0x00A0AF60;
+HMENU*								g_RenderWindowPopup = (HMENU*)0x00A0BC40;
+void*								g_ScriptCompilerUnkObj = (void*)0x00A0B128;
 
 
 
@@ -147,6 +153,35 @@ HWND EditorAllocator::GetTrackedDialog(UInt32 TrackedEditorIndex)
 	}
 	return Result;
 }
+
+void CSEINIManager::Initialize()
+{
+	DebugPrint("INI Path: %s", INIFile.c_str());
+	std::fstream INIStream(INIFile.c_str(), std::fstream::in);
+	bool CreateINI = false;
+
+	if (INIStream.fail()) {
+		_MESSAGE("INI File not found; Creating one...");
+		CreateINI = true;
+	}
+
+	INIStream.close();
+	INIStream.clear();		// only initializing non script editor keys as those are taken care of by its code
+	
+	RegisterSetting(new SME::INI::INISetting(this, "Top", "Console::General", "150"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "Left", "Console::General", "150"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "Right", "Console::General", "500"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "Bottom", "Console::General", "350"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "LogCSWarnings", "Console::General", "1"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "LogAssertions", "Console::General", "1"), (CreateINI == false));
+
+	if (CreateINI)		SaveSettingsToINI();
+	else				ReadSettingsFromINI();
+}
+
+
+
+
 
 TESDialogInitParam::TESDialogInitParam(const char* EditorID)
 {
@@ -235,23 +270,11 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 void RemoteLoadRef(const char* EditorID)
 {
 	TESObjectREFR* Reference = CS_CAST(GetFormByID(EditorID), TESForm, TESObjectREFR);
-	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(g_VTBL_TESObjectREFR, 0x1A0, Reference);
+	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kVTBL_TESObjectREFR, 0x1A0, Reference);
 	thisCall(kTESChildCell_LoadCellFnAddr, Cell, Cell, Reference);
 }
 
 TESObjectREFR* ChooseReferenceDlg(HWND Parent)
 {
 	return ChooseRefWrapper(Parent, 0, 0x00545B10, 0);
-}
-
-void UpdateTESObjectREFR3D(TESObjectREFR* Object)
-{
-	static const UInt32 kTESObjectREFR_sub549450 = 0x00549450;
-	static const UInt32 kUnk_sub511C20 = 0x00511C20;
-
-	g_Update3DBuffer = Object;
-	thisCall(kTESObjectREFR_sub549450, Object, 0);
-	thisCall(kUnk_sub511C20, *g_RenderWindow_UnkLL, 1);
-	thisVirtualCall(g_VTBL_TESObjectREFR, 0x11C, Object, NULL);
-	g_Update3DBuffer = NULL;
 }

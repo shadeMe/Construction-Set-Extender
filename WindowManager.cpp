@@ -10,6 +10,7 @@ WNDPROC						g_DataDlgOrgWindowProc = NULL;
 WNDPROC						g_CSMainWndOrgWindowProc = NULL;
 WNDPROC						g_RenderWndOrgWindowProc = NULL;
 WNDPROC						g_ConsoleWndOrgWindowProc = NULL;
+WNDPROC						g_ConsoleEditControlOrgWindowProc = NULL;
 
 #define PI					3.151592653589793
 
@@ -129,7 +130,13 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRefData->FormID = ThisRef->refID;
 					ThisRefData->TypeID = ThisRef->baseForm->typeID;
 					ThisRefData->Flags = ThisRef->flags;
-					ThisRefData->Selected = false;							// TODO: Figure out where the selected objects linked lists exists
+					ThisRefData->Selected = false;
+					for (TESRenderWindowBuffer::SelectedObjectsEntry* j = (*g_TESRenderWindowBuffer)->RenderSelection; j != 0; j = j->Next) {
+						if (j->Data && j->Data == ThisRef) {
+							ThisRefData->Selected = true;
+							break;
+						}
+					}
 					ThisRefData->ParentForm = ThisRef;
 
 					i++;
@@ -223,13 +230,13 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 
 						if (Modified) {
-						//	if (!thisVirtualCall(g_VTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
-						//		CONSOLE->LogMessage(Console::e_CSE, "REF: %08X | virt BC returned false!", ThisRef->refID);
-						//	if (!thisVirtualCall(g_VTBL_TESObjectREFR, 0x104, ThisRef))
-						//		CONSOLE->LogMessage(Console::e_CSE, "REF: %08X | virt 104 returned false!", ThisRef->refID);
-							thisVirtualCall(g_VTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
-						//	thisVirtualCall(g_VTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
-						//	UpdateTESObjectREFR3D(ThisRef);
+							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
+								DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
+							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef))
+								DebugPrint("REF: %08X | virt 104 returned false!", ThisRef->refID);
+							thisVirtualCall(kVTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
+							thisVirtualCall(kVTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
+					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x17C, ThisRef, thisCall(0x00542950, ThisRef));
 						}
 					}			
 				}
@@ -263,7 +270,12 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	switch (uMsg)
 	{
 	case WM_COMMAND:
-		break;
+		switch (LOWORD(wParam))
+		{
+		case 9903:	
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 9902, 0);
+			break;
+		}
 	case WM_DESTROY: 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_RenderWndOrgWindowProc);
 		break; 
@@ -360,4 +372,55 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 
 	return CallWindowProc(g_ConsoleWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
+LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_RBUTTONUP:
+		{
+		static bool AlwaysOnTopFlag = false;
+
+		RECT Rect;
+		POINT Point;
+
+		GetClientRect(hWnd, &Rect);
+		Point.x = GET_X_LPARAM(lParam); 
+        Point.y = GET_Y_LPARAM(lParam); 
+
+		if (PtInRect((LPRECT) &Rect, Point)) {
+			HMENU Popup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU1);
+			Popup = GetSubMenu(Popup, 0);
+			if (AlwaysOnTopFlag)	CheckMenuItem(Popup, 1, MF_CHECKED|MF_BYPOSITION);
+			else					CheckMenuItem(Popup, 1, MF_UNCHECKED|MF_BYPOSITION);
+
+			ClientToScreen(hWnd, (LPPOINT) &Point); 
+
+			switch (TrackPopupMenu(Popup, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, Point.x, Point.y, 0, hWnd, NULL))
+			{
+			case CONSOLEMENU_CLEARCONSOLE:
+				CONSOLE->Clear();
+				break;
+			case CONSOLEMENU_ALWAYSONTOP:
+				if (AlwaysOnTopFlag) {
+					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_TOP, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+					AlwaysOnTopFlag = false;
+				}
+				else {
+					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_TOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+					AlwaysOnTopFlag = true;
+				}
+				break;
+			}
+			DestroyMenu(Popup); 
+		}
+		return FALSE;
+		}
+	case WM_DESTROY: 
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleEditControlOrgWindowProc);
+		break; 
+	}
+ 
+	return CallWindowProc(g_ConsoleEditControlOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 }

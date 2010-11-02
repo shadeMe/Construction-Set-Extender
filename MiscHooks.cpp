@@ -24,21 +24,20 @@ bool								g_QuickLoadToggle = false;
 static HFONT						g_CSDefaultFont = NULL;
 bool								g_SaveAsRoutine = false;
 ModEntry::Data*						g_SaveAsBuffer = NULL;
-TESObjectREFR*						g_Update3DBuffer = NULL;	
-	
+static bool							g_BitSwapBuffer = false;
 
-void __stdcall DoT()		
+
+void __stdcall DoTestHook(void* Ref3DData)
 {
-	MessageBox(NULL, "Hooked", NULL, 1);
+	DumpClass(Ref3DData, 6);
 }
 
-void _declspec(naked) T(void)
+void _declspec(naked) TestHook(void)
 {
-	static const UInt32 kT = 0x0047BCCF, kC = 0x004038F0;
+	static const UInt32 kReturn = 0x00497460, kCall = 0x004F4670;
 	__asm
 	{
-	//	call	DoT
-		jmp		[kT]
+		jmp		kReturn
 	}
 }
 
@@ -47,8 +46,8 @@ void _declspec(naked) T(void)
 bool PatchMiscHooks()
 {
 	DoNop(&kCheckIsActivePluginAnESMPatch);
-	DoNop(&kDoValidateBitArrayPatch[0]);
-	DoNop(&kDoValidateBitArrayPatch[1]);
+	PLACE_HOOK(LoadPluginsProlog);
+	PLACE_HOOK(LoadPluginsEpilog);
 	DoNop(&kResponseEditorMicPatch);
 
 	SafeWrite8(kDataDialogPluginDescriptionPatchAddr, 0xEB);
@@ -94,20 +93,31 @@ bool PatchMiscHooks()
 	PLACE_HOOK(QuickLoadPluginLoadHandlerPrologue);
 	PLACE_HOOK(QuickLoadPluginLoadHandler);
 	PLACE_HOOK(DataDlgInit);
-	PLACE_HOOK(Update3D);
 
 	WriteRelJump(kMissingMasterOverridePatchAddr, kMissingMasterOverrideJumpAddr);
 
-	PLACE_HOOK(AssertOverride);
-//	PLACE_HOOK(CSWarningsDetour);		
-
-	WriteRelJump(0x004F6BAF, 0x004F6E41);
-	WriteRelJump(0x004F6D4F, 0x004F6C97);
-
-//	WriteRelJump(0x0047BCBC, (UInt32)T);
-	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
-		CONSOLE->LogMessage(Console::e_CSE, "Couldn't create the Backup folder in Data directory");
+	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger()) {
+		PLACE_HOOK(CSWarningsDetour);
 	}
+	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger()) {
+		PLACE_HOOK(AssertOverride);
+	}
+	SafeWrite8(kTextureMipMapCheckPatchAddr, 0xEB);
+	DoNop(&kAnimGroupNotePatch);
+
+	SafeWrite8(kUnnecessaryCellEditsPatchAddr, 0xEB);
+	SafeWrite8(kUnnecessaryDialogEditsPatchAddr, 0xEB);
+	PLACE_HOOK(RenderWindowPopupPatch);
+	PLACE_HOOK(CustomCSWindowPatch);
+	SafeWrite8(kRaceDescriptionDirtyEditPatchAddr, 0xEB);
+	
+
+	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+		DebugPrint("Couldn't create the Backup folder in Data directory");
+	}
+
+	//	WriteRelJump(0x0049745A, (UInt32)TestHook);
+	
 	return true;
 }
 
@@ -139,12 +149,61 @@ void _declspec(naked) SavePluginCommonDialogHook(void)
 	}
 }
 
-void DoNop(const NopData* Data)
+
+void __stdcall DoLoadPluginsPrologHook(void)
 {
-	for (int Offset = 0; Offset < Data->Size; Offset++) {
-		SafeWrite8(Data->Address + Offset, 0x90);
-	}	
+	g_BitSwapBuffer = false;
+	ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
+
+	if (!ActiveFile ||
+		(ActiveFile->flags & ModEntry::Data::kFlag_IsMaster) == 0)
+		return;
+	else {
+		g_BitSwapBuffer = true;
+		ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+	}
 }
+
+void _declspec(naked) LoadPluginsPrologHook(void)
+{
+	__asm
+	{
+		pushad
+		call	DoLoadPluginsPrologHook
+		popad
+
+		call	[kLoadPluginsPrologCallAddr]
+		jmp		[kLoadPluginsPrologRetnAddr]
+	}
+}
+
+void __stdcall DoLoadPluginsEpilogHook(void)
+{
+	if (g_BitSwapBuffer) {
+		ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
+
+		if (!ActiveFile ||
+			ActiveFile->flags & ModEntry::Data::kFlag_IsMaster)
+			DebugPrint("Assertion Error - LoadPluginEpilog encountered a swapped master"), MessageBeep(MB_ICONHAND);
+		else {
+			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 1);
+		}
+	}
+}
+
+void _declspec(naked) LoadPluginsEpilogHook(void)
+{
+	__asm
+	{
+		pushad
+		call	DoLoadPluginsEpilogHook
+		popad
+
+		call	[kLoadPluginsEpilogCallAddr]
+		jmp		[kLoadPluginsEpilogRetnAddr]		
+	}
+}
+
 
 bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
 {
@@ -175,7 +234,8 @@ void __stdcall DoExitCS(HWND MainWindow)
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
 	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
-	CONSOLE->SaveINISettings(g_INIPath.c_str());
+	CONSOLE->SaveINISettings();
+	g_INIManager->SaveSettingsToINI();
 	ExitProcess(0);
 }
 
@@ -255,7 +315,7 @@ void PatchMenus()
 	ItemWorldBatchEdit.dwTypeData = "Batch Edit References";
 	ItemWorldBatchEdit.cch = 0;
 	InsertMenuItem(WorldMenu, 40194, FALSE, &ItemWorldBatchEdit);
-
+	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldBatchEdit);
 	
 	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);		
 	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
@@ -268,19 +328,22 @@ void PatchMenus()
 
 void __stdcall DoCSInitHook()
 {
-	static bool DoOnce = false;
-	if (DoOnce)					return;
-	else if (!g_PluginPostLoad) return;		// prevents inappropriate pumping of messages to the main window
-	DoOnce = true;
+	if (!g_PluginPostLoad) return;			// prevents inappropriate pumping of messages to the main window
 											// perform deferred patching
 	PatchMenus();
+
+	CONSOLE->InitializeConsole();
+	CONSOLE->LoadINISettings();
+
+	(*g_SpecialForm_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
+
 	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
 
-	CONSOLE->InitializeConsole();
-	CONSOLE->LoadINISettings(g_INIPath.c_str());
-
-	(*g_SpecialForm_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
+											// remove hook
+	for (UInt32 i = 0; i < sizeof(kCSInitCodeBuffer); i++) {
+		SafeWrite8(kCSInitHookAddr + i, kCSInitCodeBuffer[i]);
+	}
 }
 
 
@@ -495,7 +558,7 @@ void __stdcall DoDataDlgCallPopulateModListHook(INISetting* Path)
 		PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&WorkspaceInfo);
 		if (ReturnPath) {
 			if (!SHGetPathFromIDList(ReturnPath, g_CustomWorkspacePath)) {
-				CONSOLE->LogMessage(Console::e_CSE, "Had trouble extracting workspace path!");
+				DebugPrint("Had trouble extracting workspace path!");
 			}
 		}
 		else
@@ -660,27 +723,10 @@ void __declspec(naked) DataDlgInitHook(void)
 	}
 }
 
-void __declspec(naked) Update3DHook(void)
-{
-	__asm
-	{
-		mov		eax, g_Update3DBuffer
-		test	eax, eax
-		jnz		SKIP
-
-		push	esi
-		mov		ebp, ecx
-		call	[kUpdate3DCallAddr]
-		jmp		[kUpdate3DRetnAddr]
-	SKIP:
-		mov		ebx, g_Update3DBuffer
-		jmp		[kUpdate3DSkipAddr]
-	}
-}
-
 void __stdcall DoAssertOverrideHook(UInt32 EIP)
 {
-	CONSOLE->LogMessage(Console::e_CSE, "{{ Assert call handled at 0x%08X }}", EIP);
+	if (EIP == 0x005390C9 || EIP == 0x005390B2)		return;		// these locations spam a lot
+	DebugPrint("{{ Assert call handled at 0x%08X }}", EIP);
 	MessageBeep(MB_ICONHAND);
 }
 
@@ -701,7 +747,7 @@ void __declspec(naked) AssertOverrideHook(void)
 
 void __stdcall DoCSWarningsDetourHook(LPCSTR DebugMessage)
 {
-	CONSOLE->LogMessage(Console::e_CS, "%s", DebugMessage);
+	DebugPrint(Console::e_CS, "%s", DebugMessage);
 }
 
 
@@ -719,4 +765,59 @@ void __declspec(naked) CSWarningsDetourHook(void)
 		sub		esp, 0x520
 		jmp		[kCSWarningsDetourRetnAddr]
 	}
+}
+
+void __stdcall DoRenderWindowPopupPatchHook()
+{
+	MENUITEMINFO ItemRenderBatchEdit;
+
+	ItemRenderBatchEdit.cbSize = sizeof(MENUITEMINFO);		
+	ItemRenderBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemRenderBatchEdit.wID = 9903;
+	ItemRenderBatchEdit.fState = MFS_ENABLED;
+	ItemRenderBatchEdit.dwTypeData = "Batch Edit References";
+	ItemRenderBatchEdit.cch = 0;
+	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemRenderBatchEdit);	
+}
+
+void __declspec(naked) RenderWindowPopupPatchHook(void)
+{
+	__asm
+	{
+		pushad
+		call	DoRenderWindowPopupPatchHook
+		popad
+		call	GetPositionFromINI
+		jmp		[kRenderWindowPopupPatchRetnAddr]
+	}
+}
+
+bool __stdcall DoCustomCSWindowPatchHook(HWND Window)
+{
+									// enumerate custom windows here
+	if (Window == CONSOLE->GetWindowHandle())
+		return false;
+	else
+		return true;
+}
+
+void __declspec(naked) CustomCSWindowPatchHook(void)
+{
+	__asm
+	{
+		mov		edi, [g_HWND_CSParent]
+		cmp		eax, edi
+		jnz		FAIL
+		xor		edi, edi
+		pushad
+		push	esi
+		call	DoCustomCSWindowPatchHook
+		test	eax, eax
+		jz		FAIL
+		popad
+		mov		edi, esi
+	FAIL:
+		jmp		[kCustomCSWindowPatchRetnAddr]
+	}
+
 }

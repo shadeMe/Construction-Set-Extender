@@ -9,7 +9,7 @@ extern "C"
 [STAThread]
 __declspec(dllexport) void InitializeComponents(CommandTableData* Data)
 {	
-
+	Globals^ Dummy = gcnew Globals();		// makes sure all of the class' static members get initialized
 	ScriptEditorManager::GetSingleton();
 	ISDB->ParseCommandTable(Data);
 	DebugPrint("ScriptEditor Components Initialized");
@@ -53,11 +53,6 @@ __declspec(dllexport) void SendMessagePingback(UInt32 VanillaHandleIndex, UInt16
 	Parameters->ParameterList->Add(Message);
 
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_ReceiveMessage, Parameters);
-}
-
-__declspec(dllexport) bool IsActivePluginScriptRecord(const char* EditorID)
-{
-	return ISDB->IsActiveScriptRecord(gcnew String(EditorID));
 }
 
 __declspec(dllexport) void SetScriptListItemData(UInt32 VanillaHandleIndex, ScriptData* Data)

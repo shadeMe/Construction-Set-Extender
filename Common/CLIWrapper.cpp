@@ -8,7 +8,6 @@ CLIWrapper::_SE_SendMessagePingback				CLIWrapper::SE_SendMessagePingback = NULL
 
 CLIWrapper::_SE_InitializeComponents			CLIWrapper::SE_InitializeComponents = NULL;
 CLIWrapper::_SE_AddToURLMap						CLIWrapper::SE_AddToURLMap = NULL;
-CLIWrapper::_SE_IsActivePluginScriptRecord		CLIWrapper::SE_IsActivePluginScriptRecord = NULL;
 CLIWrapper::_SE_SetScriptListItemData			CLIWrapper::SE_SetScriptListItemData = NULL;
 
 CLIWrapper::_SE_SetVariableListItemData			CLIWrapper::SE_SetVariableListItemData = NULL;
@@ -28,7 +27,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	SetErrorMode(0);
 	HMODULE hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\ScriptEditor.dll").c_str());
 	if (hMod == NULL) {
-		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load ScriptEditor.dll");
+		DebugPrint("Couldn't load ScriptEditor.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -40,7 +39,6 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::SE_InitializeComponents = (CLIWrapper::_SE_InitializeComponents)GetProcAddress(hMod, "InitializeComponents");
 	CLIWrapper::SE_AddToURLMap = (CLIWrapper::_SE_AddToURLMap)GetProcAddress(hMod, "AddToURLMap");
 
-	CLIWrapper::SE_IsActivePluginScriptRecord = (CLIWrapper::_SE_IsActivePluginScriptRecord)GetProcAddress(hMod, "IsActivePluginScriptRecord");
 	CLIWrapper::SE_SetScriptListItemData = (CLIWrapper::_SE_SetScriptListItemData)GetProcAddress(hMod, "SetScriptListItemData");
 	CLIWrapper::SE_SetVariableListItemData = (CLIWrapper::_SE_SetVariableListItemData)GetProcAddress(hMod, "SetVariableListItemData");
 
@@ -50,7 +48,6 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		!SE_InitializeComponents ||
 		!SE_InitializeScript ||
 		!SE_SendMessagePingback ||
-		!SE_IsActivePluginScriptRecord ||
 		!SE_SetScriptListItemData ||
 		!SE_SetVariableListItemData)
 	{	
@@ -60,7 +57,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\UseInfoList.dll").c_str());
 	if (hMod == NULL) {
-		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load UseInfoList.dll");
+		DebugPrint("Couldn't load UseInfoList.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -81,7 +78,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BSAViewer.dll").c_str());
 	if (hMod == NULL) {
-		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load BSAViewer.dll");
+		DebugPrint("Couldn't load BSAViewer.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -96,7 +93,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BatchEditor.dll").c_str());
 	if (hMod == NULL) {
-		CONSOLE->LogMessage(Console::e_CSE, "Couldn't load BatchEditor.dll");
+		DebugPrint("Couldn't load BatchEditor.dll");
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}

@@ -184,7 +184,6 @@ OptionsDialog^% OptionsDialog::GetSingleton()
 {
 	if (Singleton == nullptr) {
 		Singleton = gcnew OptionsDialog();
-		DebugPrint("Options Dialog singleton created");
 	}
 	return Singleton;
 }
@@ -386,7 +385,7 @@ OptionsDialog::OptionsDialog()
 	OptionsBox->MaximizeBox = false;
 	OptionsBox->MinimizeBox = false;
 	OptionsBox->StartPosition = FormStartPosition::CenterScreen;
-	OptionsBox->Name = L"ScriptEditorOptions";
+	OptionsBox->Name = L"OptionsDialog::GetSingleton()";
 	OptionsBox->Text = L"Options";
 	OptionsBox->Closing += gcnew CancelEventHandler(this, &OptionsDialog::OptionsBox_Cancel);
 

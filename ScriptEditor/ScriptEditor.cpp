@@ -14,19 +14,22 @@ using namespace System::Text::RegularExpressions;
 
 namespace ScriptEditor
 {
+
 TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height)
 {
 	Application::EnableVisualStyles();
 	EditorForm = gcnew Form();
 	EditorForm->FormBorderStyle = ::FormBorderStyle::Sizable;
 	EditorForm->Closing += gcnew CancelEventHandler(this, &TabContainer::EditorForm_Cancel);
+	EditorForm->KeyDown += gcnew KeyEventHandler(this, &TabContainer::EditorForm_KeyDown);
 	EditorForm->AutoScaleMode = AutoScaleMode::Font;
 	EditorForm->Size = Size(Width, Height);	
+	EditorForm->KeyPreview = true;
 	
 
 	if (!FileFlags->Images->Count) {
-		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(GLOB->ImageResources->GetObject("SEModifiedFlagEx"))));	// unmodified
-		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(GLOB->ImageResources->GetObject("SEModifiedFlag"))));		// modified
+		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEModifiedFlagEx"))));		// unmodified
+		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEModifiedFlag"))));		// modified
 		FileFlags->ImageSize = Size(12, 12);
 	}
 
@@ -43,6 +46,9 @@ TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height
 	ScriptStrip->SelectedTabChanged += gcnew DotNetBar::TabStrip::SelectedTabChangedEventHandler(this, &TabContainer::ScriptStrip_SelectedTabChanged);
 	ScriptStrip->SelectedTabChanging += gcnew DotNetBar::TabStrip::SelectedTabChangingEventHandler(this, &TabContainer::ScriptStrip_SelectedTabChanging);
 	ScriptStrip->TabRemoved += gcnew EventHandler(this, &TabContainer::ScriptStrip_TabRemoved);
+	ScriptStrip->TabStrip->MouseClick += gcnew MouseEventHandler(this, &TabContainer::ScriptStrip_MouseClick);
+	ScriptStrip->TabStrip->MouseDown += gcnew MouseEventHandler(this, &TabContainer::ScriptStrip_MouseDown);
+	ScriptStrip->TabStrip->MouseUp += gcnew MouseEventHandler(this, &TabContainer::ScriptStrip_MouseUp);
 	ScriptStrip->AntiAlias = true;
 	ScriptStrip->CloseButtonPosition = DotNetBar::eTabCloseButtonPosition::Right;
 	ScriptStrip->KeyboardNavigationEnabled = false;
@@ -53,9 +59,10 @@ TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height
 	ScriptStrip->Style = DotNetBar::eTabStripStyle::VS2005Dock;
 	DotNetBar::TabColorScheme^ TabItemColorScheme = gcnew DotNetBar::TabColorScheme(DotNetBar::eTabStripStyle::SimulatedTheme);
 	ScriptStrip->ColorScheme = TabItemColorScheme;
+	ScriptStrip->TabStrip->Tag = this;
 
 	NewTabButton = gcnew DotNetBar::TabItem;
-	NewTabButton->Image = GLOB->SENewTabImg;
+	NewTabButton->Image = gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SENewTab")));
 	NewTabButton->CloseButtonVisible = false;
 	NewTabButton->BackColor = Color::AliceBlue;
 	NewTabButton->BackColor2 = Color::BurlyWood;
@@ -82,7 +89,6 @@ TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height
 	BackStack = gcnew Stack<UInt32>();
 	ForwardStack = gcnew Stack<UInt32>();
 	RemovingTab = false;
-
 
 	const char* EditorID = NativeWrapper::ScriptEditor_GetAuxScriptName();
 	if (EditorID)			CreateNewTab(gcnew String(EditorID));
@@ -146,7 +152,12 @@ void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 	RemovingTab = true;
 	if (ScriptStrip->Tabs->Count == 1) {
 		if (!Destroying)		CreateNewTab(nullptr);
-		else					SEMGR->DestroyTabContainer(this);
+		else {
+			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+			Parameters->VanillaHandleIndex = 0;
+			Parameters->ParameterList->Add(this);
+			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_DestroyTabContainer, Parameters);			
+		}
 	}	
 }
 
@@ -262,7 +273,7 @@ void TabContainer::NewTabButton_Click(Object^ Sender, EventArgs^ E)
 	CreateNewTab(nullptr);
 }
 
-/*void TabContainer::ScriptStrip_KeyDown(Object^ Sender, KeyEventArgs^ E)
+void TabContainer::EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E)
 {
 	switch (E->KeyCode)
 	{
@@ -271,8 +282,158 @@ void TabContainer::NewTabButton_Click(Object^ Sender, EventArgs^ E)
 			CreateNewTab(nullptr);
 		}
 		break;
+	case Keys::Tab:
+		if (ScriptStrip->Tabs->Count < 2)	break;
+
+		if (E->Control == true && E->Shift == false) {
+			if (ScriptStrip->SelectedTabIndex == ScriptStrip->Tabs->Count - 1) {
+				ScriptStrip->SelectedTab = ScriptStrip->Tabs[1];
+			} else {
+				ScriptStrip->SelectNextTab();
+			}
+			E->Handled = true;
+		}
+		else if (E->Control == true && E->Shift == true) {
+			if (ScriptStrip->SelectedTabIndex == 1) {
+				ScriptStrip->SelectedTab = ScriptStrip->Tabs[ScriptStrip->Tabs->Count - 1];
+			} else {
+				ScriptStrip->SelectPreviousTab();
+			}
+			E->Handled = true;
+		}
+		break;
 	}
-}*/
+}
+
+DotNetBar::TabItem^ TabContainer::GetMouseOverTab()
+{
+	for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
+		if (Itr->IsMouseOver)	return Itr;
+	}
+	return nullptr;
+}
+
+void TabContainer::ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E)
+{
+	switch (E->Button)
+	{
+	case MouseButtons::Middle:
+	{
+		DotNetBar::TabItem^ MouseOverTab = GetMouseOverTab();
+		if (MouseOverTab != nullptr && MouseOverTab != NewTabButton)
+		{
+			Workspace^% Itr = dynamic_cast<Workspace^>(MouseOverTab->Tag);
+
+			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+			Parameters->VanillaHandleIndex = Itr->AllocatedIndex;
+			Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Close);
+			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+		}
+		break;
+	}
+	}
+}
+
+void TabContainer::ScriptStrip_MouseDown(Object^ Sender, MouseEventArgs^ E)
+{
+	switch (E->Button)
+	{
+	case MouseButtons::Left:
+	{
+		if (SEMGR->TornWorkspace != nullptr) {
+			DebugPrint("A previous tab tearing operation did not complete successfully!");
+			SEMGR->TornWorkspace = nullptr;
+		}
+
+		DotNetBar::TabItem^ MouseOverTab = GetMouseOverTab();
+		if (MouseOverTab != nullptr && MouseOverTab != NewTabButton)
+		{
+			SEMGR->TornWorkspace = dynamic_cast<Workspace^>(MouseOverTab->Tag);;
+			HookManager::MouseUp += GlobalMouseHook_MouseUpHandler;
+		}
+		break;
+	}
+	}
+}
+
+void TabContainer::ScriptStrip_MouseUp(Object^ Sender, MouseEventArgs^ E)
+{
+	switch (E->Button)
+	{
+	case MouseButtons::Left:
+		break;
+	}
+}
+
+void Global_MouseUp(Object^ Sender, MouseEventArgs^ E)
+{
+	switch (E->Button)
+	{
+	case MouseButtons::Left:
+	{
+		if (SEMGR->TornWorkspace != nullptr)
+		{
+			IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
+			if (Wnd == IntPtr::Zero) {
+				ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+				Parameters->VanillaHandleIndex = 0;
+				Parameters->ParameterList->Add(ScriptEditorManager::TabTearOpType::e_NewContainer);
+				Parameters->ParameterList->Add(SEMGR->TornWorkspace);
+				Parameters->ParameterList->Add(nullptr);
+				Parameters->ParameterList->Add(E->Location);
+				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_TabTearOp, Parameters);	
+
+				HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
+				SEMGR->TornWorkspace = nullptr;
+			}
+
+			DotNetBar::TabStrip^ Strip = nullptr;
+			try {
+				Strip = dynamic_cast<DotNetBar::TabStrip^>(Control::FromHandle(Wnd));
+			} catch (Exception^ E)
+			{
+				DebugPrint("An exception was raised during a tab tearing operation!\n\tError Message: " + E->Message);
+				Strip = nullptr;
+			}
+			if (Strip != nullptr) {
+
+				if (Strip->Tabs->IndexOf(SEMGR->TornWorkspace->EditorTab) != -1)		// not a tearing op a the strip's the same
+				{
+					HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
+					SEMGR->TornWorkspace = nullptr;
+				} else {
+					ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+					Parameters->VanillaHandleIndex = 0;
+					Parameters->ParameterList->Add(ScriptEditorManager::TabTearOpType::e_RelocateToContainer);
+					Parameters->ParameterList->Add(SEMGR->TornWorkspace);
+					Parameters->ParameterList->Add(dynamic_cast<TabContainer^>(Strip->Tag));
+					Parameters->ParameterList->Add(E->Location);
+					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_TabTearOp, Parameters);
+
+					HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
+					SEMGR->TornWorkspace = nullptr;		
+				}
+			} else {
+				ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+				Parameters->VanillaHandleIndex = 0;
+				Parameters->ParameterList->Add(ScriptEditorManager::TabTearOpType::e_NewContainer);
+				Parameters->ParameterList->Add(SEMGR->TornWorkspace);
+				Parameters->ParameterList->Add(nullptr);
+				Parameters->ParameterList->Add(E->Location);
+				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_TabTearOp, Parameters);
+
+				HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
+				SEMGR->TornWorkspace = nullptr;
+			}
+		} else {
+			DebugPrint("Global tab tear hook called out of turn! Expecting an unresolved operration.");
+		}
+		break;
+	}
+	}
+}
+
+
 
 void TabContainer::SaveAllTabs()
 {
@@ -302,14 +463,19 @@ void TabContainer::CloseAllTabs()
 }
 
 
-
-
-
 Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 {
 	ParentStrip = Parent;
 	EditorTab = gcnew DotNetBar::TabItem();
 	EditorControlBox = gcnew DotNetBar::TabControlPanel();
+	if (Icons->Images->Count == 0) {
+		Icons->TransparentColor = Color::White;
+		Icons->ColorDepth = ColorDepth::Depth32Bit;
+
+		for (int i = 0; i < (int)IconEnum::e_Bookend; i++) {
+			Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject(IconStr[i]))));
+		}
+	}
 
 	EditorControlBox->Dock = DockStyle::Fill;
 	EditorControlBox->Location = Point(0, 26);
@@ -336,14 +502,14 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	EditorBox = gcnew RichTextBox();
 
-	EditorBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	EditorBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
 	EditorBox->Dock = DockStyle::Fill;
 	EditorBox->Multiline = true;
 	EditorBox->WordWrap = false;
 	EditorBox->BorderStyle = BorderStyle::Fixed3D;
 	EditorBox->AutoWordSelection = false;
 
-	int TabSize = Decimal::ToInt32(GLOB->ScriptEditorOptions->TabSize->Value);
+	int TabSize = Decimal::ToInt32(OptionsDialog::GetSingleton()->TabSize->Value);
 	if (TabSize) {
 		Array^ TabStops = Array::CreateInstance(int::typeid, 32);
 		for (int i = 0; i < 32; i++) {
@@ -352,9 +518,9 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 		EditorBox->SelectionTabs = static_cast<array<int>^>(TabStops);
 	}
 
-	if (Globals::GetSingleton()->ScriptEditorOptions->ColorEditorBox->Checked) {
-		EditorBox->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-		EditorBox->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	if (OptionsDialog::GetSingleton()->ColorEditorBox->Checked) {
+		EditorBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
+		EditorBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	}		
 
 	EditorBox->TextChanged += gcnew EventHandler(this, &Workspace::EditorBox_TextChanged);
@@ -369,7 +535,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorBox->HScroll += gcnew EventHandler(this, &Workspace::EditorBox_HScroll);
 
 	ScriptLineLimitIndicator = gcnew PictureBox();
-	ScriptLineLimitIndicator->Image = GLOB->SELineLimitImg;
+	ScriptLineLimitIndicator->Image = Icons->Images[(int)IconEnum::e_LineLimit];
 	ScriptLineLimitIndicator->Visible = false;
 	ScriptLineLimitIndicator->BorderStyle = BorderStyle::None;
 	ScriptLineLimitIndicator->SizeMode = PictureBoxSizeMode::AutoSize;
@@ -384,8 +550,8 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
     EditorLineNo->Text = "";
 	EditorLineNo->ScrollBars = RichTextBoxScrollBars::None;
 	EditorLineNo->BorderStyle = BorderStyle::Fixed3D;
-	EditorLineNo->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-	EditorLineNo->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	EditorLineNo->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
+	EditorLineNo->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	EditorLineNo->MouseDown += gcnew MouseEventHandler(this, &Workspace::EditorLineNo_MouseDown);
 	EditorLineNo->SelectionAlignment = HorizontalAlignment::Right;
 
@@ -473,98 +639,98 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	ToolBarErrorList = gcnew ToolStripButton();
 	ToolBarErrorList->ToolTipText = "Error List";
-	ToolBarErrorList->Image = Globals::GetSingleton()->SEErrorListImg;
+	ToolBarErrorList->Image = Icons->Images[(int)IconEnum::e_ErrorList];
 	ToolBarErrorList->AutoSize = true;
 	ToolBarErrorList->Click += gcnew EventHandler(this, &Workspace::ToolBarErrorList_Click);
 	ToolBarErrorList->Margin = PrimaryButtonPad;
 
 	ToolBarFindList = gcnew ToolStripButton();
 	ToolBarFindList->ToolTipText = "Find/Replace Results";
-	ToolBarFindList->Image = Globals::GetSingleton()->SEFindListImg;
+	ToolBarFindList->Image = Icons->Images[(int)IconEnum::e_FindList];
 	ToolBarFindList->AutoSize = true;
 	ToolBarFindList->Click += gcnew EventHandler(this, &Workspace::ToolBarFindList_Click);
 	ToolBarFindList->Margin = PrimaryButtonPad;
 
 	ToolBarBookmarkList = gcnew ToolStripButton();
 	ToolBarBookmarkList->ToolTipText = "Bookmarks";
-	ToolBarBookmarkList->Image = Globals::GetSingleton()->SEBookmarkListImg;
+	ToolBarBookmarkList->Image = Icons->Images[(int)IconEnum::e_BookmarkList];
 	ToolBarBookmarkList->AutoSize = true;
 	ToolBarBookmarkList->Click += gcnew EventHandler(this, &Workspace::ToolBarBookmarkList_Click);
 	ToolBarBookmarkList->Margin = PrimaryButtonPad;
 
 	ToolBarDumpScript = gcnew ToolStripButton();
 	ToolBarDumpScript->ToolTipText = "Dump Script";
-	ToolBarDumpScript->Image = Globals::GetSingleton()->SEDumpScriptImg;
+	ToolBarDumpScript->Image = Icons->Images[(int)IconEnum::e_DumpScript];
 	ToolBarDumpScript->AutoSize = true;
 	ToolBarDumpScript->Click += gcnew EventHandler(this, &Workspace::ToolBarDumpScript_Click);
 	ToolBarDumpScript->Margin = PrimaryButtonPad;
 	
 	ToolBarLoadScript = gcnew ToolStripButton();
 	ToolBarLoadScript->ToolTipText = "Load Script";
-	ToolBarLoadScript->Image = Globals::GetSingleton()->SELoadScriptImg;
+	ToolBarLoadScript->Image = Icons->Images[(int)IconEnum::e_LoadScript];
 	ToolBarLoadScript->AutoSize = true;
 	ToolBarLoadScript->Click += gcnew EventHandler(this, &Workspace::ToolBarLoadScript_Click);
 	ToolBarLoadScript->Margin = SecondaryButtonPad;
 
 	ToolBarOptions = gcnew ToolStripButton();
 	ToolBarOptions->ToolTipText = "Preferences";
-	ToolBarOptions->Image = Globals::GetSingleton()->SEOptionsImg;
+	ToolBarOptions->Image = Icons->Images[(int)IconEnum::e_Options];
 	ToolBarOptions->Click += gcnew EventHandler(this, &Workspace::ToolBarOptions_Click);
 	ToolBarOptions->Alignment = ToolStripItemAlignment::Right;
 
 
 	ToolBarNewScript = gcnew ToolStripButton();
 	ToolBarNewScript->ToolTipText = "New Script";
-	ToolBarNewScript->Image = Globals::GetSingleton()->SENewImg;
+	ToolBarNewScript->Image = Icons->Images[(int)IconEnum::e_New];
 	ToolBarNewScript->AutoSize = true;
 	ToolBarNewScript->Click += gcnew EventHandler(this, &Workspace::ToolBarNewScript_Click);
 	ToolBarNewScript->Margin = SecondaryButtonPad;
 
 	ToolBarOpenScript = gcnew ToolStripButton();
 	ToolBarOpenScript->ToolTipText = "Open Script";
-	ToolBarOpenScript->Image = Globals::GetSingleton()->SEOpenImg;
+	ToolBarOpenScript->Image = Icons->Images[(int)IconEnum::e_Open];
 	ToolBarOpenScript->AutoSize = true;
 	ToolBarOpenScript->Click += gcnew EventHandler(this, &Workspace::ToolBarOpenScript_Click);
 	ToolBarOpenScript->Margin = SecondaryButtonPad;
 
 	ToolBarPreviousScript = gcnew ToolStripButton();
 	ToolBarPreviousScript->ToolTipText = "Previous Script";
-	ToolBarPreviousScript->Image = Globals::GetSingleton()->SEPreviousImg;
+	ToolBarPreviousScript->Image = Icons->Images[(int)IconEnum::e_Previous];
 	ToolBarPreviousScript->AutoSize = true;
 	ToolBarPreviousScript->Click += gcnew EventHandler(this, &Workspace::ToolBarPreviousScript_Click);
 	ToolBarPreviousScript->Margin = PrimaryButtonPad;
 
 	ToolBarNextScript = gcnew ToolStripButton();
 	ToolBarNextScript->ToolTipText = "Next Script";
-	ToolBarNextScript->Image = Globals::GetSingleton()->SENextImg;
+	ToolBarNextScript->Image = Icons->Images[(int)IconEnum::e_Next];
 	ToolBarNextScript->AutoSize = true;
 	ToolBarNextScript->Click += gcnew EventHandler(this, &Workspace::ToolBarNextScript_Click);
 	ToolBarNextScript->Margin = SecondaryButtonPad;
 
 	ToolBarSaveScript = gcnew ToolStripButton();
 	ToolBarSaveScript->ToolTipText = "Save Script";
-	ToolBarSaveScript->Image = Globals::GetSingleton()->SESaveImg;
+	ToolBarSaveScript->Image = Icons->Images[(int)IconEnum::e_Save];
 	ToolBarSaveScript->AutoSize = true;
 	ToolBarSaveScript->Click += gcnew EventHandler(this, &Workspace::ToolBarSaveScript_Click);
 	ToolBarSaveScript->Margin = SecondaryButtonPad;
 
 	ToolBarRecompileScripts = gcnew ToolStripButton();
-	ToolBarRecompileScripts->ToolTipText = "Recompile Scripts";
-	ToolBarRecompileScripts->Image = Globals::GetSingleton()->SERecompileImg;
+	ToolBarRecompileScripts->ToolTipText = "Recompile Active Scripts";
+	ToolBarRecompileScripts->Image = Icons->Images[(int)IconEnum::e_Recompile];
 	ToolBarRecompileScripts->AutoSize = true;
 	ToolBarRecompileScripts->Click += gcnew EventHandler(this, &Workspace::ToolBarRecompileScripts_Click);
 	ToolBarRecompileScripts->Margin = SecondaryButtonPad;
 
 	ToolBarDeleteScript = gcnew ToolStripButton();
 	ToolBarDeleteScript->ToolTipText = "Delete Script";
-	ToolBarDeleteScript->Image = Globals::GetSingleton()->SEDeleteImg;
+	ToolBarDeleteScript->Image = Icons->Images[(int)IconEnum::e_Delete];
 	ToolBarDeleteScript->AutoSize = true;
 	ToolBarDeleteScript->Click += gcnew EventHandler(this, &Workspace::ToolBarDeleteScript_Click);
 	ToolBarDeleteScript->Margin = PrimaryButtonPad;
 
 	ToolBarOffsetToggle = gcnew ToolStripButton();
 	ToolBarOffsetToggle->ToolTipText = "Toggle Offsets";
-	ToolBarOffsetToggle->Image = Globals::GetSingleton()->SEOffsetImg;
+	ToolBarOffsetToggle->Image = Icons->Images[(int)IconEnum::e_Offset];
 	ToolBarOffsetToggle->AutoSize = true;
 	ToolBarOffsetToggle->Click += gcnew EventHandler(this, &Workspace::ToolBarOffsetToggle_Click);
 	Padding OffsetPad = Padding(0);
@@ -576,7 +742,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	ToolBarNavigationBack = gcnew ToolStripButton();
 	ToolBarNavigationBack->ToolTipText = "Navigate Back";
-	ToolBarNavigationBack->Image = Globals::GetSingleton()->SENavBackImg;
+	ToolBarNavigationBack->Image = Icons->Images[(int)IconEnum::e_NavBack];
 	ToolBarNavigationBack->AutoSize = true;
 	ToolBarNavigationBack->Click += gcnew EventHandler(this, &Workspace::ToolBarNavBack_Click);
 	ToolBarNavigationBack->Margin = PrimaryButtonPad;
@@ -584,7 +750,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	ToolBarNavigationForward = gcnew ToolStripButton();
 	ToolBarNavigationForward->ToolTipText = "Navigate Forward";
-	ToolBarNavigationForward->Image = Globals::GetSingleton()->SENavForwardImg;
+	ToolBarNavigationForward->Image = Icons->Images[(int)IconEnum::e_NavForward];
 	ToolBarNavigationForward->AutoSize = true;
 	ToolBarNavigationForward->Click += gcnew EventHandler(this, &Workspace::ToolBarNavForward_Click);
 	ToolBarNavigationForward->Margin = SecondaryButtonPad;
@@ -602,25 +768,32 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	
 	ToolBarGetVarIndices = gcnew ToolStripButton();
 	ToolBarGetVarIndices->ToolTipText = "Get Variable Indices";
-	ToolBarGetVarIndices->Image = Globals::GetSingleton()->SEVarIdxListImg;
+	ToolBarGetVarIndices->Image = Icons->Images[(int)IconEnum::e_VarIdxList];
 	ToolBarGetVarIndices->AutoSize = true;
 	ToolBarGetVarIndices->Click += gcnew EventHandler(this, &Workspace::ToolBarGetVarIndices_Click);
 	ToolBarGetVarIndices->Margin = PrimaryButtonPad;
 
 	ToolBarUpdateVarIndices = gcnew ToolStripButton();
 	ToolBarUpdateVarIndices->ToolTipText = "Update Variable Indices";
-	ToolBarUpdateVarIndices->Image = Globals::GetSingleton()->SEVarIdxUpdateImg;
+	ToolBarUpdateVarIndices->Image = Icons->Images[(int)IconEnum::e_VarIdxUpdate];
 	ToolBarUpdateVarIndices->AutoSize = true;
 	ToolBarUpdateVarIndices->Click += gcnew EventHandler(this, &Workspace::ToolBarUpdateVarIndices_Click);
 	ToolBarUpdateVarIndices->Margin = PrimaryButtonPad;
 
 	ToolBarSaveAll = gcnew ToolStripButton();
 	ToolBarSaveAll->ToolTipText = "Save all open scripts";
-	ToolBarSaveAll->Image = Globals::GetSingleton()->SESaveAllImg;
+	ToolBarSaveAll->Image = Icons->Images[(int)IconEnum::e_SaveAll];
 	ToolBarSaveAll->AutoSize = true;
 	ToolBarSaveAll->Click += gcnew EventHandler(this, &Workspace::ToolBarSaveAll_Click);
 	ToolBarSaveAll->Margin = SecondaryButtonPad;
 	ToolBarSaveAll->Alignment = ToolStripItemAlignment::Right;
+
+	ToolBarCompileDependencies = gcnew ToolStripButton();
+	ToolBarCompileDependencies->ToolTipText = "Compile Dependencies";
+	ToolBarCompileDependencies->Image = Icons->Images[(int)IconEnum::e_CompileDependencies];
+	ToolBarCompileDependencies->AutoSize = true;
+	ToolBarCompileDependencies->Click += gcnew EventHandler(this, &Workspace::ToolBarCompileDependencies_Click);
+	ToolBarCompileDependencies->Margin = SecondaryButtonPad;
 	
 	EditorToolBar->Dock = DockStyle::Top;
 	EditorToolBar->Items->Add(ToolBarNewScript);
@@ -629,6 +802,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorToolBar->Items->Add(ToolBarPreviousScript);
 	EditorToolBar->Items->Add(ToolBarNextScript);
 	EditorToolBar->Items->Add(ToolBarRecompileScripts);
+	EditorToolBar->Items->Add(ToolBarCompileDependencies);
 	EditorToolBar->Items->Add(ToolBarDeleteScript);
 	EditorToolBar->Items->Add(ToolBarScriptType);
 	EditorToolBar->Items->Add(ToolBarSpacerA);
@@ -660,44 +834,44 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 		ContextMenuCopy = gcnew ToolStripMenuItem();
 			ContextMenuCopy->Click += gcnew EventHandler(this, &Workspace::ContextMenuCopy_Click);
 			ContextMenuCopy->Text = "Copy";
-			ContextMenuCopy->Image = GLOB->SEContextCopyImg;
+			ContextMenuCopy->Image = Icons->Images[(int)IconEnum::e_ContextCopy];
 		ContextMenuPaste = gcnew ToolStripMenuItem();
 			ContextMenuPaste->Click += gcnew EventHandler(this, &Workspace::ContextMenuPaste_Click);
 			ContextMenuPaste->Text = "Paste";
-			ContextMenuPaste->Image = GLOB->SEContextPasteImg;
+			ContextMenuPaste->Image = Icons->Images[(int)IconEnum::e_ContextPaste];
 		ContextMenuWord = gcnew ToolStripMenuItem();
 			ContextMenuWord->Enabled = false;
 		ContextMenuWikiLookup = gcnew ToolStripMenuItem();
 			ContextMenuWikiLookup->Click += gcnew EventHandler(this, &Workspace::ContextMenuWikiLookup_Click);
 			ContextMenuWikiLookup->Text = "Look up on the Wiki";
-			ContextMenuWikiLookup->Image = GLOB->SEContextLookupImg;
+			ContextMenuWikiLookup->Image = Icons->Images[(int)IconEnum::e_ContextLookup];
 		ContextMenuOBSEDocLookup = gcnew ToolStripMenuItem();
 			ContextMenuOBSEDocLookup->Click += gcnew EventHandler(this, &Workspace::ContextMenuOBSEDocLookup_Click);
 			ContextMenuOBSEDocLookup->Text = "Look up on the OBSE Doc";
 		ContextMenuCopyToCTB = gcnew ToolStripMenuItem();
 			ContextMenuCopyToCTB->Click += gcnew EventHandler(this, &Workspace::ContextMenuCopyToCTB_Click);
 			ContextMenuCopyToCTB->Text = "Copy to Edit Box";
-			ContextMenuCopyToCTB->Image = GLOB->SEContextCTBImg;
+			ContextMenuCopyToCTB->Image = Icons->Images[(int)IconEnum::e_ContextCTB];
 		ContextMenuFind = gcnew ToolStripMenuItem();
 			ContextMenuFind->Click += gcnew EventHandler(this, &Workspace::ContextMenuFind_Click);
 			ContextMenuFind->Text = "Find";
-			ContextMenuFind->Image = GLOB->SEContextFindImg;
+			ContextMenuFind->Image = Icons->Images[(int)IconEnum::e_ContextFind];
 		ContextMenuToggleComment = gcnew ToolStripMenuItem();
 			ContextMenuToggleComment->Click += gcnew EventHandler(this, &Workspace::ContextMenuToggleComment_Click);
 			ContextMenuToggleComment->Text = "Toggle Comment";
-			ContextMenuToggleComment->Image = GLOB->SEContextCommentImg;
+			ContextMenuToggleComment->Image = Icons->Images[(int)IconEnum::e_ContextComment];
 		ContextMenuToggleBookmark = gcnew ToolStripMenuItem();
 			ContextMenuToggleBookmark->Click += gcnew EventHandler(this, &Workspace::ContextMenuToggleBookmark_Click);
 			ContextMenuToggleBookmark->Text = "Toggle Bookmark";
-			ContextMenuToggleBookmark->Image = GLOB->SEContextBookmarkImg;
+			ContextMenuToggleBookmark->Image = Icons->Images[(int)IconEnum::e_ContextBookmark];
 		ContextMenuDirectLink = gcnew ToolStripMenuItem();
 			ContextMenuDirectLink->Click += gcnew EventHandler(this, &Workspace::ContextMenuDirectLink_Click);
 			ContextMenuDirectLink->Text = "Developer Page";
-			ContextMenuDirectLink->Image = GLOB->SEContextDevLinkImg;
+			ContextMenuDirectLink->Image = Icons->Images[(int)IconEnum::e_ContextDevLink];
 		ContextMenuJumpToScript = gcnew ToolStripMenuItem();
 			ContextMenuJumpToScript->Click += gcnew EventHandler(this, &Workspace::ContextMenuJumpToScript_Click);
 			ContextMenuJumpToScript->Text = "Jump into Script";
-			ContextMenuJumpToScript->Image = GLOB->SEContextJumpImg;
+			ContextMenuJumpToScript->Image = Icons->Images[(int)IconEnum::e_ContextJump];
 		
 			
 
@@ -718,16 +892,16 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	if (!MessageIcon->Images->Count) {
 		MessageIcon->TransparentColor = Color::White;
-		MessageIcon->Images->Add(GLOB->SEWarningImg);
-		MessageIcon->Images->Add(GLOB->SEErrorImg);
+		MessageIcon->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEWarning"))));
+		MessageIcon->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEError"))));
 	}
 
 	ErrorBox = gcnew ListView();
-	ErrorBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	ErrorBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
 	ErrorBox->Dock = DockStyle::Fill;
 	ErrorBox->BorderStyle = BorderStyle::Fixed3D;
-	ErrorBox->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-	ErrorBox->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	ErrorBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
+	ErrorBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	ErrorBox->DoubleClick += gcnew EventHandler(this, &Workspace::ErrorBox_DoubleClick);
 	ErrorBox->Visible = false;
 	ErrorBox->View = View::Details;
@@ -754,11 +928,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 
 	FindBox = gcnew ListView();
-	FindBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	FindBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
 	FindBox->Dock = DockStyle::Fill;
 	FindBox->BorderStyle = BorderStyle::Fixed3D;
-	FindBox->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-	FindBox->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	FindBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
+	FindBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	FindBox->DoubleClick += gcnew EventHandler(this, &Workspace::FindBox_DoubleClick);	
 	FindBox->Visible = false;
 	FindBox->View = View::Details;
@@ -779,11 +953,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	FindBox->Tag = (int)1;
 
 	BookmarkBox = gcnew ListView();
-	BookmarkBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	BookmarkBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
 	BookmarkBox->Dock = DockStyle::Fill;
 	BookmarkBox->BorderStyle = BorderStyle::Fixed3D;
-	BookmarkBox->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-	BookmarkBox->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	BookmarkBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
+	BookmarkBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	BookmarkBox->DoubleClick += gcnew EventHandler(this, &Workspace::BookmarkBox_DoubleClick);	
 	BookmarkBox->Visible = false;
 	BookmarkBox->View = View::Details;
@@ -804,11 +978,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	BookmarkBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::BookmarkBox_ColumnClick);
 
 	VariableBox = gcnew ListView();
-	VariableBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	VariableBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
 	VariableBox->Dock = DockStyle::Fill;
 	VariableBox->BorderStyle = BorderStyle::Fixed3D;
-	VariableBox->BackColor = Globals::GetSingleton()->ScriptEditorOptions->BCDialog->Color;
-	VariableBox->ForeColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	VariableBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
+	VariableBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	VariableBox->DoubleClick += gcnew EventHandler(this, &Workspace::VariableBox_DoubleClick);	
 	VariableBox->Visible = false;
 	VariableBox->View = View::Details;
@@ -833,7 +1007,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	VariableBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::VariableBox_ColumnClick);
 
 	IndexEditBox = gcnew TextBox();
-	IndexEditBox->Font = Globals::GetSingleton()->ScriptEditorOptions->FontSelection->Font;
+	IndexEditBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
 	IndexEditBox->Multiline = true;
 	IndexEditBox->BorderStyle = BorderStyle::FixedSingle;
 	IndexEditBox->Visible = false;
@@ -842,6 +1016,12 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	IndexEditBox->KeyDown += gcnew KeyEventHandler(this, &Workspace::IndexEditBox_KeyDown);
 
 	VariableBox->Controls->Add(IndexEditBox);
+
+	SpoilerText = gcnew Label();
+	SpoilerText->AutoSize = false;
+	SpoilerText->Size = Size(500, 300);
+	SpoilerText->SetBounds(EditorBoxSplitter->Panel2->Width * 2, EditorBoxSplitter->Panel2->Height, 300, 400);
+	SpoilerText->Text = "Right, everybody out! Smash the Spinning Jenny! Burn the rolling Rosalind! Destroy the going-up-and-down-a-bit-and-then-moving-along Gertrude! And death to the stupid Prince who grows fat on the profits!";
 
 	EditorSplitter->Panel1->Controls->Add(EditorLineNo);
 	EditorSplitter->Panel1->BorderStyle = BorderStyle::Fixed3D;
@@ -853,6 +1033,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorBoxSplitter->Panel2->Controls->Add(FindBox);
 	EditorBoxSplitter->Panel2->Controls->Add(BookmarkBox);
 	EditorBoxSplitter->Panel2->Controls->Add(VariableBox);
+	EditorBoxSplitter->Panel2->Controls->Add(SpoilerText);
 
 	ISBox = gcnew SyntaxBox(const_cast<ScriptEditor::Workspace^>(this));
 
@@ -884,6 +1065,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	CurrentLineNo = 0;
 	LineOffsets = gcnew List<UInt16>();
 	GetVariableData = false;
+	ScriptEditorID = "";
 
 	ScriptListBox = gcnew ScriptListDialog(AllocatedIndex);
 }
@@ -901,6 +1083,7 @@ void Workspace::Destroy()
 	ScriptListBox->ScriptBox->Close();
 	EditorControlBox->Controls->Clear();
 	ParentStrip->ScriptStrip->Tabs->Remove(EditorTab);
+	ParentStrip->ScriptStrip->Controls->Remove(EditorControlBox);
 }
 
 void Workspace::EnableControls()
@@ -955,14 +1138,14 @@ void Workspace::PerformLineNumberHighlights(void)
 
 		for each (ListViewItem^% Itr in BookmarkBox->Items) {
 			if (FindLineNumberInLineBox(int::Parse(Itr->SubItems[0]->Text)) != -1) {
-				EditorLineNo->SelectionColor = Globals::GetSingleton()->ScriptEditorOptions->BMCDialog->Color;
+				EditorLineNo->SelectionColor = OptionsDialog::GetSingleton()->BMCDialog->Color;
 				EditorLineNo->SelectionFont = BoldStyle;
 			}			
 		}
 
 		CurrentLine = EditorBox->GetLineFromCharIndex(EditorBox->SelectionStart) + 1;
 		if (FindLineNumberInLineBox(CurrentLine) != -1) {
-			EditorLineNo->SelectionColor = Globals::GetSingleton()->ScriptEditorOptions->HCDialog->Color;
+			EditorLineNo->SelectionColor = OptionsDialog::GetSingleton()->HCDialog->Color;
 			EditorLineNo->SelectionFont = BoldStyle;
 		}
 	}
@@ -974,7 +1157,7 @@ void Workspace::UpdateLineNumbers(void)
     int LastLine = EditorBox->GetLineFromCharIndex(EditorBox->GetCharIndexFromPosition(Point(EditorBox->Width, EditorBox->Height)));
 
 	EditorLineNo->Clear();
-	EditorLineNo->SelectionColor = Globals::GetSingleton()->ScriptEditorOptions->FCDialog->Color;
+	EditorLineNo->SelectionColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	EditorLineNo->SelectionFont = EditorLineNo->Font;
 
 	for (int i = FirstLine + 1; i <= LastLine + 2; i++) {
@@ -1008,14 +1191,14 @@ String^ Workspace::GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int 
 	int SearchIndex = Source->Length, SubStrStart = 0, SubStrEnd = SearchIndex;
 
 	for (int i = Index; i > 0; i--) {
-		if (Globals::GetSingleton()->Delimiters->IndexOf(Source[i]) != -1) {
+		if (Globals::Delimiters->IndexOf(Source[i]) != -1) {
 			SubStrStart = i + 1;
 			break;
 		}
 	}
 
 	for (int i = Index; i < SearchIndex; i++) {
-		if (Globals::GetSingleton()->Delimiters->IndexOf(Source[i]) != -1) {
+		if (Globals::Delimiters->IndexOf(Source[i]) != -1) {
 			SubStrEnd = i;
 			break;
 		}
@@ -1049,7 +1232,7 @@ void Workspace::PlaceFindImagePointer(int Index)
 	IP->SizeMode = PictureBoxSizeMode::AutoSize;
 	IP->Location = Point(EditorBox->GetPositionFromCharIndex(Index).X, EditorBox->GetPositionFromCharIndex(Index).Y - 25);
 	IP->Tag = String::Format("{0}", Index);
-	IP->Image = dynamic_cast<Image^>(Globals::GetSingleton()->PosPointerImg);
+	IP->Image = dynamic_cast<Image^>(Icons->Images[(int)IconEnum::e_PosPointer]);
 	EditorBox->Controls->Add(IP);
 }
 
@@ -1061,7 +1244,7 @@ void Workspace::FindAndReplace(bool Replace)
 		String^ SearchString = ToolBarCommonTextBox->Text;
 		String^ ReplaceString = "NULL";
 		FindBox->Items->Clear();
-		bool UseRegEx = Globals::GetSingleton()->ScriptEditorOptions->UseRegEx->Checked;
+		bool UseRegEx = OptionsDialog::GetSingleton()->UseRegEx->Checked;
 
 		if (Replace)
 			ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string.", "Find and Replace", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
@@ -1144,7 +1327,7 @@ int Workspace::CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLine
 {
 	int Indents = 0;
 
-	if (!Globals::GetSingleton()->ScriptEditorOptions->AutoIndent->Checked)
+	if (!OptionsDialog::GetSingleton()->AutoIndent->Checked)
 		return Indents;
 
 	ExdentLine = false;
@@ -1409,8 +1592,6 @@ bool Workspace::TabIndent()
 {
 	int SelStart = EditorBox->SelectionStart, Operation = 0;
 	String^ Source = EditorBox->SelectedText, ^Result;
-//	if (Control::ModifierKeys == Keys::Control)		Operation = 1;			// indent
-//	else if (Control::ModifierKeys == Keys::Shift)	Operation = -1;			// exdent
 	if (Control::ModifierKeys == Keys::Shift)	Operation = -1;				// exdent
 	else										Operation = 1;				// indent
 
@@ -1470,7 +1651,7 @@ bool Workspace::IsDelimiterKey(Keys KeyCode)
 {
 	bool Result = false;
 
-	for each (Keys Itr in Globals::GetSingleton()->DelimiterKeys) {
+	for each (Keys Itr in Globals::DelimiterKeys) {
 		if (Itr == KeyCode) {
 			Result = true;
 			break;
@@ -1672,7 +1853,7 @@ void Workspace::ReadBookmarks(String^ ExtractedBlock)
 		}
 
 		if (!TextParser->HasToken(";<CSEBookmark>")) {
-			array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split(static_cast<array<Char>^>(Globals::GetSingleton()->TabDelimit));
+			array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split(Globals::TabDelimit);
 			try { LineNo = int::Parse(Splits[1]); } catch (...) { LineNo = 1; }
 
 			ListViewItem^ Item = gcnew ListViewItem(LineNo.ToString());
@@ -1687,7 +1868,7 @@ void Workspace::ReadBookmarks(String^ ExtractedBlock)
 
 void Workspace::SaveCaretPos()
 {
-	if (Globals::GetSingleton()->ScriptEditorOptions->SaveLastKnownPos->Checked) {
+	if (OptionsDialog::GetSingleton()->SaveLastKnownPos->Checked) {
 		PreProcessedText += String::Format(";<CSECaretPos> {0} </CSECaretPos>\n", EditorBox->SelectionStart);
 	}
 }
@@ -1823,6 +2004,7 @@ void Workspace::GetVariableIndices(bool SetFlag)
 void Workspace::SetVariableIndices(void)
 {
 	ScriptVarIndexData::ScriptVarInfo Data;
+	CStringWrapper^ CScriptName = gcnew CStringWrapper(ScriptEditorID);
 
 	for each (ListViewItem^ Itr in VariableBox->Items) {
 		try {
@@ -1841,7 +2023,7 @@ void Workspace::SetVariableIndices(void)
 				else																		Data.Type = 2;
 				Data.Name = CEID->String();		
 
-				if (!NativeWrapper::ScriptEditor_SetScriptVariableIndex(g_ScriptDataPackage->EditorID, &Data)) {	// shaky code, need to be certain of g_ScriptDataPackage's state
+				if (!NativeWrapper::ScriptEditor_SetScriptVariableIndex(CScriptName->String(), &Data)) {
 					throw gcnew CSEGeneralException("Couldn't update the index of variable '" + Itr->Text + "' in script '" + EditorTab->Text + "'");
 				}
 			}
@@ -2017,8 +2199,8 @@ void Workspace::ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
 {
-	Globals::GetSingleton()->ScriptEditorOptions->LoadINI();
-	Globals::GetSingleton()->ScriptEditorOptions->OptionsBox->ShowDialog();
+	OptionsDialog::GetSingleton()->LoadINI();
+	OptionsDialog::GetSingleton()->OptionsBox->ShowDialog();
 }
 
 void Workspace::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
@@ -2142,6 +2324,16 @@ void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
 	ParentStrip->SaveAllTabs();
 }
 
+void Workspace::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
+{
+	if (ScriptEditorID != "") {
+		CStringWrapper^ CEID = gcnew CStringWrapper(ScriptEditorID);
+		NativeWrapper::ScriptEditor_CompileDependencies(CEID->String());
+		MessageBox::Show("Operation complete! Script variables used as condition parameters will need to be corrected manually. The results have been logged to the console.", "CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
+	}
+}
+
+
 
 
 //	CONTEXT MENU  
@@ -2149,7 +2341,7 @@ void Workspace::ContextMenuCopy_Click(Object^ Sender, EventArgs^ E)
 {
 	try {
 		Clipboard::Clear();
-		Clipboard::SetText(GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, false));
+		Clipboard::SetText(GetTextAtLoc(Globals::MouseLocation, true, false, -1, false));
 	} catch (Exception^ E) {
 		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
@@ -2167,11 +2359,11 @@ void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
 {
-	EditorContextMenu->Items[6]->Text = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, true);
+	EditorContextMenu->Items[6]->Text = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
 	if (EditorContextMenu->Items[6]->Text->Length > 20)
 		EditorContextMenu->Items[6]->Text = EditorContextMenu->Items[6]->Text->Substring(0, 17) + gcnew String("...");
 
-	String^ TextUnderMouse = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, true);
+	String^ TextUnderMouse = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
 
 	ContextMenuDirectLink->Tag = nullptr;
 	if (ISDB->IsCommand(TextUnderMouse))			ContextMenuDirectLink->Tag = ISDB->GetCommandURL(TextUnderMouse);
@@ -2204,12 +2396,12 @@ void Workspace::EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
 
 void Workspace::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)
 {
-	Process::Start("http://cs.elderscrolls.com/constwiki/index.php/Special:Search?search=" + GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, true) + "&fulltext=Search");
+	Process::Start("http://cs.elderscrolls.com/constwiki/index.php/Special:Search?search=" + GetTextAtLoc(Globals::MouseLocation, true, false, -1, true) + "&fulltext=Search");
 }
 
 void Workspace::ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E)
 {
-	Process::Start("http://obse.silverlock.org/obse_command_doc.html#" + GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, true));
+	Process::Start("http://obse.silverlock.org/obse_command_doc.html#" + GetTextAtLoc(Globals::MouseLocation, true, false, -1, true));
 }
 
 void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
@@ -2224,24 +2416,24 @@ void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E)
 {
-	ToolBarCommonTextBox->Text = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, true);
+	ToolBarCommonTextBox->Text = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
 	ToolBarCommonTextBox->Focus();
 }
 
 void Workspace::ContextMenuFind_Click(Object^ Sender, EventArgs^ E)
 {
-	ToolBarCommonTextBox->Text = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, false, -1, true);
+	ToolBarCommonTextBox->Text = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
 	ToolBarEditMenuContentsFind_Click(nullptr, nullptr);
 }
 
 void Workspace::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
 {
-	ToggleComment(EditorBox->GetCharIndexFromPosition(Globals::GetSingleton()->MouseLocation));
+	ToggleComment(EditorBox->GetCharIndexFromPosition(Globals::MouseLocation));
 }
 
 void Workspace::ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E)
 {
-	ToggleBookmark(EditorBox->GetCharIndexFromPosition(Globals::GetSingleton()->MouseLocation));
+	ToggleBookmark(EditorBox->GetCharIndexFromPosition(Globals::MouseLocation));
 }
 
 void Workspace::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
@@ -2305,10 +2497,10 @@ void Workspace::EditorBox_MouseDown(Object^ Sender, MouseEventArgs^ E)
 		ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 		ValidateLineLimit();
 	}
-	Globals::GetSingleton()->MouseLocation = E->Location;
+	Globals::MouseLocation = E->Location;
 
 	if (Control::ModifierKeys == Keys::Control) {
-		GetTextAtLoc(Globals::GetSingleton()->MouseLocation, true, true, -1, false);
+		GetTextAtLoc(Globals::MouseLocation, true, true, -1, false);
 	}
 
 	if (ISBox->IsVisible()) {
@@ -2326,7 +2518,7 @@ void Workspace::EditorBox_MouseUp(Object^ Sender, MouseEventArgs^ E)
 void Workspace::EditorBox_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 {
 	if (E->Button == MouseButtons::Left && EditorBox->Text->Length > 0) {
-		String^ TextUnderMouse = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, false, false, EditorBox->SelectionStart, true);
+		String^ TextUnderMouse = GetTextAtLoc(Globals::MouseLocation, false, false, EditorBox->SelectionStart, true);
 		if (!IsCursorInsideCommentSeg(false)) {
 			if (ISBox->QuickView(TextUnderMouse)) {
 				return;
@@ -2354,7 +2546,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					HandleTextChanged = false;
 				} 
 				else if (E->KeyCode == Keys::Space) {
-					String^ CommandName = GetTextAtLoc(Globals::GetSingleton()->MouseLocation, false, false, EditorBox->SelectionStart - 1, true);
+					String^ CommandName = GetTextAtLoc(Globals::MouseLocation, false, false, EditorBox->SelectionStart - 1, true);
 
 					if (!String::Compare(CommandName, "call", true)) {
 						ISBox->Initialize(SyntaxBox::Operation::e_Call, false, true);
@@ -2487,7 +2679,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		}
 		break;																														
 	case Keys::Home:
-		if (!E->Control) {
+		if (!E->Control && !E->Shift) {
 			MoveCaretToValidHome();
 			HandleKeyEditorBox = E->KeyCode;
 			E->Handled = true;

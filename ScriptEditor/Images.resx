@@ -849,4 +849,15 @@
         gg==
 </value>
   </data>
+  <data name="SECompileDependencies" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAEpSURBVDhPY/iPBL69u/FwlQiQRBZEYzPA+RDVXx+2npgh
+        jkcPVANE9ZeHbV+uZX88HYCm5++bv3BzQRqgZj9o/Xwt59PpgPcHTN5ulW1M4oHYA1R9KfUyXA8DzCVt
+        ENUfDpi+3SqDpvrX2l9wPQwQd3+5DnLJhwMm7zDMBqr+NeP37YI7Pbq9QAtBNsyr4Pt42h/okvf79IFm
+        5zdMh6AbOTeRVUNcBfUDUM+7bTJAEuJuoGqI6zfZbIaYjfADxPsQe+ChCdEA0QNU/ejed5RQguuBi8I1
+        AEWAqqNn33j87gdEFhFxyDEK1wBUB1Q98+x/5+KTED34NMBV12x5CdTGYDwTnwagJRCz4arx2QBxHlCF
+        afJWiNkE/AD3D1AdsmqcTkIOALjZEEEATP2NM/2aY5wAAAAASUVORK5CYII=
+</value>
+  </data>
 </root>

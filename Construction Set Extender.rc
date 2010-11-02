@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,0,0
- PRODUCTVERSION 3,0,0,0
+ FILEVERSION 4,0,0,0
+ PRODUCTVERSION 4,0,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,12 +72,12 @@ BEGIN
             VALUE "Comments", "A plugin for the Oblivion Script Extender"
             VALUE "CompanyName", "shadeMe"
             VALUE "FileDescription", "Construction Set Extender Dynamic Link Library"
-            VALUE "FileVersion", "3, 0, 0, 0"
+            VALUE "FileVersion", "4, 0, 0, 0"
             VALUE "InternalName", "Construction Set Extender"
             VALUE "LegalCopyright", "Copyright (C) 2010"
             VALUE "OriginalFilename", "Construction Set Extender.dll"
             VALUE "ProductName", "Construction Set Extender Dynamic Link Library"
-            VALUE "ProductVersion", "3, 0, 0, 0"
+            VALUE "ProductVersion", "4, 0, 0, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -166,12 +166,27 @@ BEGIN
 END
 
 DLG_CONSOLE DIALOGEX 0, 0, 266, 232
-STYLE DS_SETFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_THICKFRAME
+STYLE DS_SETFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Console Window"
 FONT 8, "Lucida Console", 400, 0, 0x0
 BEGIN
     EDITTEXT        EDIT_CONSOLE,0,0,265,231,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU 
+BEGIN
+    POPUP "Console Settings", MENUBARBREAK
+    BEGIN
+        MENUITEM "Clear Console",               CONSOLEMENU_CLEARCONSOLE
+        MENUITEM "Always on top",               CONSOLEMENU_ALWAYSONTOP
+    END
 END
 
 #endif    // English (U.S.) resources

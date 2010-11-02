@@ -20,9 +20,8 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 
 	if (!FlagIcons->Images->Count) {
 		FlagIcons->TransparentColor = Color::White;
-
-		FlagIcons->Images->Add(GLOB->SLDDeletedImg);
-		FlagIcons->Images->Add(GLOB->SLDActiveImg);
+		FlagIcons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SLDDeleted"))));
+		FlagIcons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SLDActive"))));
 	}
 
 	PreviewBox->Font = gcnew Font("Consolas", 9, FontStyle::Regular);

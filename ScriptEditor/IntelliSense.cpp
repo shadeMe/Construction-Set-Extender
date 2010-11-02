@@ -510,12 +510,12 @@ SyntaxBox::SyntaxBox(ScriptEditor::Workspace^%	Parent)
 
 	if (Icons->Images->Count == 0) {
 		Icons->TransparentColor = Color::White;
-		Icons->Images->Add(Globals::GetSingleton()->ISEmptyImg);
-		Icons->Images->Add(Globals::GetSingleton()->ISCommandImg);
-		Icons->Images->Add(Globals::GetSingleton()->ISLocalVarImg);
-		Icons->Images->Add(Globals::GetSingleton()->ISRemoteVarImg);
-		Icons->Images->Add(Globals::GetSingleton()->ISUserFImg);
-		Icons->Images->Add(Globals::GetSingleton()->ISQuestImg);
+		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISEmpty"))));
+		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISCommand"))));
+		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISLocalVar"))));
+		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISRemoteVar"))));
+		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISUserF"))));
+		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISQuest"))));
 	}
 
 	IntelliSenseList = gcnew ListView();
@@ -561,12 +561,12 @@ void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 	IntelliSenseList->Size = ::Size(220, 108);
 	IntelliSenseList->BeginUpdate();
 
-	String^ Extract = ParentEditor->GetTextAtLoc(Globals::GetSingleton()->MouseLocation, false, false, ParentEditor->EditorBox->SelectionStart - 1, true);
+	String^ Extract = ParentEditor->GetTextAtLoc(Globals::MouseLocation, false, false, ParentEditor->EditorBox->SelectionStart - 1, true);
 
 	switch (Op)
 	{
 	case Operation::e_Default:
-		if (Extract->Length >= Globals::GetSingleton()->ScriptEditorOptions->ThresholdLength->Value || Force) {
+		if (Extract->Length >= OptionsDialog::GetSingleton()->ThresholdLength->Value || Force) {
 			for each (IntelliSenseItem^% Itr in VarList) {
 				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr)) {
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));

@@ -41,7 +41,9 @@ bool PatchSEHooks()
 	PLACE_HOOK(EditorInitScript);
 	PLACE_HOOK(EditorInitGetAuxScript);
 	PLACE_HOOK(EditorInitWindowPos);
-	
+
+	PLACE_HOOK(ExpressionParserSwapBufferA);
+	PLACE_HOOK(ExpressionParserSwapBufferB);
 
 	PLACE_HOOK(MessagingCallbackNewScript);
 	PLACE_HOOK(MessagingCallbackPreviousScript);
@@ -55,10 +57,8 @@ bool PatchSEHooks()
 	PLACE_HOOK(ScriptListOpen);
 	PLACE_HOOK(ScriptListDelete);	
 
-	PLACE_HOOK(ExpressionParserSwapBufferA);
-	PLACE_HOOK(ExpressionParserSwapBufferB);
-
 	PLACE_HOOK(SaveDialogBox);
+	PLACE_HOOK(LogRecompileResults);
 	
 	SafeWrite32(kRecompileScriptsMessageBoxStringPatchAddr, (UInt32)g_RecompileAllScriptsStr);
 	SafeWrite8(kSaveDialogBoxTypePatchAddr, 3);
@@ -149,7 +149,7 @@ void DispatchInteropMessage(void)
 	static bool InterOpMessageDispatched = false;
 
 	if (!InterOpMessageDispatched) {
-		CONSOLE->LogMessage(Console::e_CSE, "Plugin interop initialized; Message dispatched\n");
+		DebugPrint("Plugin interop initialized; Message dispatched\n");
 		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEL', NULL, 0, NULL);
 		InterOpMessageDispatched = true;
 	}
@@ -304,9 +304,7 @@ void __declspec(naked) GetPluginNameLoadHook(void)
 
 bool __stdcall DoRecompileScriptsHook(TESForm* Form)
 {
-	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-
-	if (g_ActivePluginName != "" && CLIWrapper::SE_IsActivePluginScriptRecord(ScriptForm->editorData.editorID.m_data))		// the 0x00000002 flag isn't reliable as it seems to mark the first (script) record as modified
+	if (Form->flags & TESForm::kFormFlags_FromActiveFile)
 		return false;										// don't skip, script is from the active plugin
 	else
 		return true;										// skip
@@ -585,5 +583,26 @@ void __declspec(naked) SaveDialogBoxHook(void)
 	CANCEL:
 		mov		al, 0
 		jmp		[kSaveDialogBoxCancelRetnAddr]
+	}
+}
+
+void __stdcall DoLogRecompileResultsHook(Script* Arg)
+{
+	DebugPrint(Console::e_CS, "Script '%s' failed to recompile due to compile errors.", Arg->editorData.editorID.m_data);
+}
+
+void __declspec(naked) LogRecompileResultsHook(void)
+{
+	__asm
+	{
+		call	[kLogRecompileResultsCallAddr]
+		test	al, al
+		jz		LOG
+		jmp		EXIT
+	LOG:
+		push	edi
+		call	DoLogRecompileResultsHook
+	EXIT:
+		jmp		[kLogRecompileResultsRetnAddr]
 	}
 }

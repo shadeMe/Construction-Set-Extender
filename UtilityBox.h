@@ -26,6 +26,7 @@ class Console
 	bool						DisplayState;
 	std::string					MessageBuffer;
 	std::fstream				DebugLog;
+	UInt32						IndentLevel;
 public:
 	static Console*				GetSingleton();
 
@@ -45,13 +46,31 @@ public:
 	bool						IsConsoleInitalized() { return WindowHandle != 0; }
 	bool						IsLogInitalized() { return DebugLog.is_open(); }
 	bool						ToggleDisplayState();
-	void						LoadINISettings(const char* INIPath);
-	void						SaveINISettings(const char* INIPath);
+	void						LoadINISettings();
+	void						SaveINISettings();
+	HWND						GetWindowHandle() { return WindowHandle; }		
 
-	void						LogMessage(UInt8 Source, const char* Format, ...);
+	void						LogMessage(UInt8 Source, const char* Format, va_list Args);
+	UInt32						Indent();
+	UInt32						Exdent();
+	void						ExdentAll() { IndentLevel = 0; }
+	void						Clear();
 };
 
 #define CONSOLE					Console::GetSingleton()
+
+void DebugPrint(const char* fmt, ...);
+void DebugPrint(UInt8 source, const char* fmt, ...);
+
+struct NopData
+{
+	UInt32				Address;
+	UInt8				Size;
+};
+
+void DoNop(const NopData* Data);
+
+void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump = 512);
 
 
 

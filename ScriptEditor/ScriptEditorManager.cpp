@@ -127,6 +127,15 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 			AllocateNewWorkspace((UInt32)Parameters->ParameterList[0],
 						dynamic_cast<ScriptEditor::TabContainer^>(Parameters->ParameterList[1]));
 			break;
+		case OperationType::e_DestroyTabContainer:
+			DestroyTabContainer(dynamic_cast<ScriptEditor::TabContainer^>(Parameters->ParameterList[0]));
+			break;
+		case OperationType::e_TabTearOp:
+			TabTearOpHandler((TabTearOpType)Parameters->ParameterList[0],
+						dynamic_cast<ScriptEditor::Workspace^>(Parameters->ParameterList[1]),
+						dynamic_cast<ScriptEditor::TabContainer^>(Parameters->ParameterList[2]),
+						(Point)(Parameters->ParameterList[3]));
+			break;
 		}
 	}
 	catch (Exception^ E) {
@@ -187,6 +196,10 @@ void ScriptEditorManager::AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt
 #endif
 	DebugPrint(String::Format("Allocated a new tab container"));
 	TabContainerAllocationMap->AddLast(gcnew ScriptEditor::TabContainer(PosX, PosY, Width, Height));
+	ScriptEditor::TabContainer::LastUsedBounds.X = PosX; 
+	ScriptEditor::TabContainer::LastUsedBounds.Y = PosY; 
+	ScriptEditor::TabContainer::LastUsedBounds.Width = Width; 
+	ScriptEditor::TabContainer::LastUsedBounds.Height = Height; 
 }
 
 void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID)
@@ -195,6 +208,7 @@ void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ Script
 
 	Itr->TextSet = true;
 	Itr->PreProcessScriptText(PreProcessor::PreProcessOp::e_Collapse, ScriptText);
+	Itr->ScriptEditorID = gcnew String(ScriptName);
 	Itr->EditorTab->Text = ScriptName + " [" + FormID.ToString("X8") + "]";
 	Itr->ParentStrip->EditorForm->Text = Itr->EditorTab->Text + " - CSE Editor";
 	Itr->SetScriptType(ScriptType);
@@ -322,6 +336,9 @@ void ScriptEditorManager::MessageHandler_ReceiveSave(UInt32 AllocatedIndex)
 		DebugPrint("Couldn't fetch script data from the vanilla editor!", true);
 		return;
 	}
+	Itr->ScriptEditorID = gcnew String(g_ScriptDataPackage->EditorID);
+	Itr->EditorTab->Text = Itr->ScriptEditorID + " [" + g_ScriptDataPackage->FormID.ToString("X8") + "]";
+	Itr->ParentStrip->EditorForm->Text = Itr->EditorTab->Text + " - CSE Editor";
 	Itr->CalculateLineOffsets((UInt32)g_ScriptDataPackage->ByteCode, g_ScriptDataPackage->Length, gcnew String(g_ScriptDataPackage->Text));
 	Itr->ToolBarByteCodeSize->Value = g_ScriptDataPackage->Length;
 	Itr->ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(g_ScriptDataPackage->Length / (float)1024));
@@ -333,9 +350,9 @@ void ScriptEditorManager::MessageHandler_ReceiveClose(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
+	DebugPrint(String::Format("Released allocated workspace at index {0}", AllocatedIndex));
 	Itr->Destroy();
 	WorkspaceAllocationMap->Remove(Itr);
-	DebugPrint(String::Format("Released allocated workspace at index {0}", AllocatedIndex));
 }
 
 void ScriptEditorManager::MessageHandler_ReceiveLoadRelease()
@@ -421,7 +438,39 @@ void ScriptEditorManager::AllocateNewWorkspace(UInt32 AllocatedIndex, ScriptEdit
 
 void ScriptEditorManager::DestroyTabContainer(ScriptEditor::TabContainer^ Container)
 {
+	DebugPrint("Released an allocated container");
 	Container->Destroy();
 	TabContainerAllocationMap->Remove(Container);
-	DebugPrint("Released an allocated container");
+}
+
+void ScriptEditorManager::TabTearOpHandler(TabTearOpType Operation, ScriptEditor::Workspace^ Workspace, ScriptEditor::TabContainer^ Container, Point MousePos)
+{
+	switch (Operation)
+	{
+	case TabTearOpType::e_NewContainer:
+		{
+			AllocateNewTabContainer(MousePos.X, MousePos.Y, ScriptEditor::TabContainer::LastUsedBounds.Width, ScriptEditor::TabContainer::LastUsedBounds.Height);
+			Container = TabContainerAllocationMap->Last->Value;
+			TabTearOpHandler(TabTearOpType::e_RelocateToContainer, Workspace, Container, MousePos);
+			MessageHandler_ReceiveClose((dynamic_cast<ScriptEditor::Workspace^>(Container->ScriptStrip->Tabs[1]->Tag))->AllocatedIndex);	
+			DebugPrint("Moved workspace " + Workspace->AllocatedIndex.ToString() + " to a new tab container");
+			break;
+		}
+	case TabTearOpType::e_RelocateToContainer:
+		{
+			ScriptEditor::TabContainer^ Parent = Workspace->ParentStrip;
+			Workspace->ParentStrip = Container;
+			Parent->Destroying = true;
+			Parent->ScriptStrip->Tabs->Remove(Workspace->EditorTab);
+			Parent->Destroying = false;
+				
+			Container->ScriptStrip->Tabs->Add(Workspace->EditorTab);
+			Container->ScriptStrip->Controls->Add(Workspace->EditorControlBox);
+			DebugPrint("Moved workspace " + Workspace->AllocatedIndex.ToString() + " to another tab container");
+			break;
+		}
+	}
+	Container->EditorForm->Invalidate(true);
+	Container->ScriptStrip->SelectedTab = Workspace->EditorTab;
+	Container->ScriptStrip->TabStrip->EnsureVisible(Container->ScriptStrip->SelectedTab);
 }

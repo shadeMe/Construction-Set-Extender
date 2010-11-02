@@ -279,6 +279,11 @@
 			AssemblyName="ICSharpCode.AvalonEdit, Version=0.0.0.0, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL"
 			MinFrameworkVersion="196613"
 		/>
+		<AssemblyReference
+			RelativePath="..\MouseHook\Gma.UserActivityMonitor\bin\Release\GlobalHookManager.dll"
+			AssemblyName="GlobalHookManager, Version=1.0.0.0, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -501,11 +506,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
+					RelativePath=".\Images\warning.png"
 					>
 				</File>
 				<File
-					RelativePath=".\Images\warning.png"
+					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
 					>
 				</File>
 				<File
@@ -607,10 +612,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Globals.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\Globals.h"
 			>
 		</File>
@@ -632,10 +633,6 @@
 		</File>
 		<File
 			RelativePath=".\ScriptEditorManager.h"
-			>
-		</File>
-		<File
-			RelativePath="G:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\STDPreprocDefs.txt"
 			>
 		</File>
 	</Files>

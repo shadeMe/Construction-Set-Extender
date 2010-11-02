@@ -166,7 +166,7 @@ PluginParser::PluginParser(String^ PluginName)
 
 	try 
 	{
-		FileInfo^ FI = gcnew FileInfo(GLOB->AppPath + "Data\\" + PluginName);
+		FileInfo^ FI = gcnew FileInfo(Globals::AppPath + "Data\\" + PluginName);
 		Stream = gcnew BinaryReader(FI->OpenRead());
 
 		String^ Name;

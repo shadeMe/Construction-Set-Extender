@@ -47,6 +47,8 @@ public:
 	static const char*									ScriptEditor_GetAuxScriptName();
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex);
+	[DllImport("Construction Set Extender.dll")] 
+	static void											ScriptEditor_CompileDependencies(const char* EditorID);
 
 
 	[DllImport("Construction Set Extender.dll")] 
@@ -66,6 +68,10 @@ public:
 
 	[DllImport("user32.dll")]
 	static bool											LockWindowUpdate(IntPtr hWndLock);
+	[DllImport("user32.dll")]
+	static IntPtr										WindowFromPoint(Point Point);
+
+
 	static void											PrintToCSStatusBar(int PanelIndex, String^ Message);
 	friend void											DebugDump(UInt8 Source, String^% Message);
 };

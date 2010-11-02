@@ -10,7 +10,7 @@ extern "C"{
 
 __declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message)
 {
-	CONSOLE->LogMessage(Source, Message);
+	DebugPrint(Source, Message);
 }
 
 __declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default)
@@ -258,6 +258,85 @@ __declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* Edito
 	return true;
 }
 
+__declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID)
+{
+	TESForm* Form = GetFormByID(EditorID);
+	if (!Form)						return;
+	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
+	if (!ScriptForm)				return;	
+
+	DebugPrint("Recompiling dependencies of script %s {%08X}...", ScriptForm->editorData.editorID.m_data, ScriptForm->refID);
+	CONSOLE->Indent();
+
+	DebugPrint("Resolving script parent...");
+	CONSOLE->Indent();
+	switch (ScriptForm->info.type)
+	{
+	case Script::eType_Object:
+	{
+		DebugPrint("Source script type = Object Script");
+		for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseListAddr, Form, 0); i != 0; i = i->next) {
+			if (!i || !i->data) {
+				DebugPrint("No Parents found!");
+				break;
+			}
+
+			TESForm* Parent = i->data;
+			TESScriptableForm* ValidParent = CS_CAST(Parent, TESForm, TESScriptableForm);
+
+			if (ValidParent)
+			{
+				DebugPrint("Scriptable Form EDID = %s ; TYPE = %d", Parent->editorData.editorID.m_data, Parent->typeID);
+				DebugPrint("Parsing cell use list...");
+				CONSOLE->Indent();
+				TESCellUseList* UseList = CS_CAST(Parent, TESForm, TESCellUseList);
+				for (GenericNode<TESCellUseData>* CellList = (GenericNode<TESCellUseData>*)thisCall(kTESCellUseList_GetUseListRefHeadFnAddr, UseList); CellList; CellList = CellList->next) {
+					TESCellUseData* Data = CellList->data;
+					if (!Data)		break;
+					
+					for (TESObjectCELL::ObjectListEntry* RefList = &Data->Cell->objectList; RefList; RefList = RefList->Next()) {
+						TESObjectREFR* ThisReference = RefList->Info();
+						if (!ThisReference)		break;
+
+						if (ThisReference->baseForm == Parent)
+						{
+							ScriptEditor_CompileDependencies_ParseObjectUseList((TESForm*)ThisReference);
+						}
+					}
+				}
+				CONSOLE->Exdent();
+			}
+		}
+		break;
+	}
+	case Script::eType_Quest:
+	{
+		DebugPrint("Source script type = Quest Script");
+		for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseListAddr, Form, 0); i != 0; i = i->next) {
+			if (!i || !i->data) {
+				DebugPrint("No Parents found!");
+				break;
+			}
+
+			TESForm* Parent = i->data;
+			if (Parent->typeID == kFormType_Quest)
+			{
+				DebugPrint("Quest EDID = %s", Parent->editorData.editorID.m_data);
+				ScriptEditor_CompileDependencies_ParseObjectUseList(Parent);
+			}
+		}
+		break;
+	}
+	}
+	CONSOLE->Exdent();
+
+	DebugPrint("Parsing direct dependencies...");
+	ScriptEditor_CompileDependencies_ParseObjectUseList(Form);
+
+	CONSOLE->Exdent();
+	DebugPrint("Recompile operation completed!");
+}
+
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText()
 {
@@ -335,7 +414,7 @@ __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorI
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)									return;
 
-	for (DataHandler::Node<TESForm>* UseList = (DataHandler::Node<TESForm>*)thisCall(kTESForm_GetObjectUseRefHeadFnAddr, Form, 0); UseList; UseList = UseList->next) {
+	for (DataHandler::Node<TESForm>* UseList = (DataHandler::Node<TESForm>*)thisCall(kTESForm_GetObjectUseListAddr, Form, 0); UseList; UseList = UseList->next) {
 		TESForm* Reference = UseList->data;
 
 		UIL_FormData->EditorID = Reference->editorData.editorID.m_data;
@@ -352,7 +431,7 @@ __declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID)
 	if (!Form)									return;
 
 	TESCellUseList* UseList = CS_CAST(Form, TESForm, TESCellUseList);
-	for (DataHandler::Node<TESCellUseData>* CellList = (DataHandler::Node<TESCellUseData>*)thisCall(kTESCellUseList_GetUseListRefHeadFnAddr, UseList); CellList; CellList = CellList->next) {
+	for (GenericNode<TESCellUseData>* CellList = (GenericNode<TESCellUseData>*)thisCall(kTESCellUseList_GetUseListRefHeadFnAddr, UseList); CellList; CellList = CellList->next) {
 		TESCellUseData* Data = CellList->data;
 		if (!Data)		break;
 		
@@ -457,7 +536,7 @@ void UseInfoList_SetFormListItemText_ParseFormNode(DataHandler::Node<tData>* Thi
 TESObjectREFR* TESForm_LoadIntoView_GetReference(TESObjectCELL* Cell, TESForm* Parent)
 {
 	TESObjectREFR* ThisReference = NULL;
-	DataHandler::Node<Script>* ThisNode = &(*g_dataHandler)->scripts;
+
 	for (TESObjectCELL::ObjectListEntry* RefList = &Cell->objectList; RefList; RefList = RefList->Next()) {
 		ThisReference = RefList->Info();
 		if (!ThisReference)		break;
@@ -488,4 +567,133 @@ void BatchRefEditor_ParseFormNode(DataHandler::Node<tData>* ThisNode, UInt8 List
 		CLIWrapper::BE_AddFormListItem(&Data, ListID);
 		ThisNode = ThisNode->next;
 	}
+}
+
+UInt32 ScriptEditor_CompileDependencies_CheckConditions(ConditionEntry* Entry, TESForm* ToCompare)
+{
+	UInt32 ScriptableConditions = 0;
+
+	for (ConditionEntry* j = Entry; j != 0; j = j->next) {
+		if (!j || !j->data)		break;	
+
+		ConditionEntry::Data* Data = j->data;
+		if (Data->functionIndex == (53 & 0x0FFF) || j->data->functionIndex == (79 & 0x0FFF))			// GetScriptVariable || GetQuestVariable
+		{
+			if (Data->param1.form && Data->param1.form == ToCompare)
+			{
+				ScriptableConditions++;
+			}
+		}
+
+	}
+	return ScriptableConditions;
+}
+
+void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
+{
+	DebugPrint("Parsing object use list of %08X...", Form->refID);
+	CONSOLE->Indent();
+
+	std::vector<Script*> ScriptDepends;		// updating usage info inside an use list loop invalidates the list.
+	std::vector<TESTopicInfo*> InfoDepends; // so store the objects ptrs and parse them later
+	std::vector<TESQuest*> QuestDepends;
+
+	for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseListAddr, Form, 0); i != 0; i = i->next) {
+		if (!i || !i->data) {
+			DebugPrint("No dependencies found!");
+			break;
+		}
+
+		TESForm* Depends = i->data;
+		switch (Depends->typeID)
+		{
+		case kFormType_DialogInfo:
+		{
+			InfoDepends.push_back(CS_CAST(Depends, TESForm, TESTopicInfo));
+			break;
+		}
+		case kFormType_Quest:
+		{
+			QuestDepends.push_back(CS_CAST(Depends, TESForm, TESQuest));
+			break;
+		}
+		case kFormType_Script:
+		{
+			ScriptDepends.push_back(CS_CAST(Depends, TESForm, Script));
+			break;
+		}
+		default:	// ### any other type that needs handling ?
+	//		DebugPrint("Skipping form type %d", Depends->typeID);
+			break;
+		}
+	}
+
+	// scripts
+	for (std::vector<Script*>::const_iterator Itr = ScriptDepends.begin(); Itr != ScriptDepends.end(); Itr++)
+	{
+		DebugPrint("Script %s {%08X}:", (*Itr)->editorData.editorID.m_data, (*Itr)->refID);
+		CONSOLE->Indent();
+		
+		if ((*Itr)->info.dataLength > 0) {
+			if (!thisCall(kScript_SaveScript, g_ScriptCompilerUnkObj, (*Itr), 0)) {
+				DebugPrint("Script failed to compile due to errors!");
+			}
+		}
+
+		CONSOLE->Exdent();		
+	}
+	// quests
+	for (std::vector<TESQuest*>::const_iterator Itr = QuestDepends.begin(); Itr != QuestDepends.end(); Itr++)
+	{
+		DebugPrint("Quest %s {%08X}:", (*Itr)->editorData.editorID.m_data, (*Itr)->refID);
+		CONSOLE->Indent();
+
+		for (TESQuest::StageEntry* j = &(*Itr)->stageList; j != 0; j = j->next) 
+		{
+			if (!j->data)		break;
+
+			for (TESQuest::StageItemList* l = &j->data->itemList; l != 0; l = l->next) 
+			{
+				if (!l->item)		break;
+
+				QuestStageItem* QuestStage = l->item;
+				if (QuestStage->resultScript.info.dataLength > 0) {
+					if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &QuestStage->resultScript, 0, 0)) {
+						DebugPrint("Result script in stage %d-%d failed to compile due to errors!", j->data->index, QuestStage->index);
+					}
+				}
+
+				DebugPrint("Found %d conditions in stage %d-%d that referenced source script", ScriptEditor_CompileDependencies_CheckConditions(&QuestStage->conditionList, Form), j->data->index, QuestStage->index);
+			}
+		}
+
+		for (TESQuest::TargetEntry* j = &(*Itr)->targetList; j != 0; j = j->next) 
+		{
+			if (!j->data)		break;
+
+			DebugPrint("Found %d conditions in target entry {%08X} that referenced source script", ScriptEditor_CompileDependencies_CheckConditions(&j->data->conditionList, Form), j->data->target->refID);
+		}
+
+		thisVirtualCall(kVTBL_TESQuest, 0x104, (*Itr));	// UpdateUsageInfo.
+		CONSOLE->Exdent();	
+	}
+	// topic infos
+	for (std::vector<TESTopicInfo*>::const_iterator Itr = InfoDepends.begin(); Itr != InfoDepends.end(); Itr++)
+	{
+		DebugPrint("Topic info %08X:", (*Itr)->refID);
+		CONSOLE->Indent();
+		
+		if ((*Itr)->resultScript.info.dataLength > 0) {
+			if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &(*Itr)->resultScript, 0, 0)) {
+				DebugPrint("Result script failed to compile due to errors!");
+			}
+		}
+
+		DebugPrint("Found %d conditions that referenced source script", ScriptEditor_CompileDependencies_CheckConditions(&(*Itr)->conditions, Form));
+		thisVirtualCall(kVTBL_TESTopicInfo, 0x104, (*Itr));	// UpdateUsageInfo
+		CONSOLE->Exdent();	
+	}
+
+	CONSOLE->Exdent();
+	DebugPrint("Operation complete!");
 }

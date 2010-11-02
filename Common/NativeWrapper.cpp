@@ -17,5 +17,5 @@ String^ INIWrapper::GetINIValue(String^ Section, String^ Key, String^ Default)
 
 void INIWrapper::SetINIValue(String^ Section, String^ Key, String^ Value)
 {
-	INIWrapper::WritePrivateProfileString(Section, Key, Value, Globals::GetSingleton()->INIPath);
+	INIWrapper::WritePrivateProfileString(Section, Key, Value, Globals::INIPath);
 }

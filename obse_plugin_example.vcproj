@@ -261,7 +261,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\+Dev Journal.txt"
+			RelativePath="..\[ Libraries ]\CSE Handshake\CSEL.h"
 			>
 		</File>
 		<File
@@ -294,6 +294,14 @@
 		</File>
 		<File
 			RelativePath=".\ExtenderInternals.h"
+			>
+		</File>
+		<File
+			RelativePath="..\[ Libraries ]\INI Manager\INIManager.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\[ Libraries ]\INI Manager\INIManager.h"
 			>
 		</File>
 		<File

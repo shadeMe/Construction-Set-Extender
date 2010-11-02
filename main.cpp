@@ -3,6 +3,7 @@
 #include "MiscHooks.h"
 #include "Common/CLIWrapper.h"
 #include "Common/HandShakeStructs.h"
+#include "[ Libraries ]\CSE Handshake\CSEL.h"
 
 
 PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
@@ -15,18 +16,26 @@ CommandTableData					g_CommandTableData;
 std::string							g_INIPath;
 std::string							g_AppPath;
 bool								g_PluginPostLoad = false;
-
+CSEINIManager*						g_INIManager = new CSEINIManager();
 
 // PLUGIN INTEROP
 
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
 	if (Msg->type == 'CSEL') {
-		CONSOLE->LogMessage(Console::e_CSE, "CSEL message dispatched by %s", Msg->sender);
-		std::map<const  char*, const char*>* URLMap = static_cast<std::map<const  char*, const char*>*>(Msg->data);
+		DebugPrint("CSEL message dispatched by %s", Msg->sender);
 		
-		for (std::map<const  char*, const char*>::const_iterator Itr = URLMap->begin(); Itr != URLMap->end(); Itr++) {
-			CLIWrapper::SE_AddToURLMap(Itr->first, Itr->second);
+		CSELData* Data = (CSELData*)Msg->data;
+		for (int i = 0; i < Data->Size; i++) {
+			std::string String(Data->Data[i]), Command, URL;
+			std::string::size_type Delimiter = String.find(" ");
+			if (Delimiter == std::string::npos) {
+				DebugPrint("Couldn't find delimiter in %s", Data->Data[i]);
+				continue;
+			}
+			Command = String.substr(0, Delimiter);
+			URL = String.substr(Delimiter + 1, String.length());
+			CLIWrapper::SE_AddToURLMap( Command.c_str(), URL.c_str());
 		}
 	}
 }
@@ -44,7 +53,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 
 														// register known plugins with the messaging API
 	//	g_msgIntfc->RegisterListener(g_pluginHandle, "NifSE", CSEInteropHandler);	
-	//	g_msgIntfc->RegisterListener(g_pluginHandle, "ConScribe", CSEInteropHandler);
+		g_msgIntfc->RegisterListener(g_pluginHandle, "ConScribe", CSEInteropHandler);
 		g_PluginPostLoad = true;
 	}
 }
@@ -57,18 +66,20 @@ extern "C" {
 
 bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 {
+	CONSOLE->InitializeLog(g_AppPath.c_str());
+
+	DebugPrint("Construction Set Extender Initializing ...");
+
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "CSE";
-	info->version = 3;
+	info->version = 4;
 
 	g_AppPath = obse->GetOblivionDirectory();
-	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
-	CONSOLE->InitializeLog(g_AppPath.c_str());
-	CONSOLE->LogMessage(Console::e_CSE, "Construction Set Extender Initializing ...");
+	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";	
 
 	g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
 	if (!g_DLLInstance) {
-		CONSOLE->LogMessage(Console::e_CSE, "Couldn't fetch the DLL's handle!");
+		DebugPrint("Couldn't fetch the DLL's handle!");
 		return false;
 	}
 
@@ -77,12 +88,12 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 
 	if(obse->obseVersion < OBSE_VERSION_INTEGER)
 	{
-		CONSOLE->LogMessage(Console::e_CSE, "OBSE version too old");
+		DebugPrint("OBSE version too old");
 		return false;
 	}
 	else if (obse->editorVersion < CS_VERSION_1_2)
 	{
-		CONSOLE->LogMessage(Console::e_CSE, "Running CS 1.0. Unsupported !");
+		DebugPrint("Running CS 1.0. Unsupported !");
 		return false;
 	}
 
@@ -90,7 +101,7 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	g_commandTableIntfc = (OBSECommandTableInterface*)obse->QueryInterface(kInterface_CommandTable);
 
 	if (!g_msgIntfc|| !g_commandTableIntfc) {
-		CONSOLE->LogMessage(Console::e_CSE, "OBSE Messaging/CommandTable interface not found !");
+		DebugPrint("OBSE Messaging/CommandTable interface not found !");
 		return false;
 	}
 	return true;
@@ -100,14 +111,17 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 bool OBSEPlugin_Load(const OBSEInterface * obse)
 {
 	g_pluginHandle = obse->GetPluginHandle();
+	g_INIManager->SetINIPath(g_INIPath);
+	g_INIManager->Initialize();
 
 	if (!CLIWrapper::Import(obse)) {
 		return false;
-	} else if (!PatchSEHooks() || !PatchMiscHooks())					// initialize modules
+	} else if (!PatchSEHooks() || !PatchMiscHooks())
 		return false;
 	
 	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
-	CONSOLE->LogMessage(Console::e_CSE, "CS patched !\n\n");
+
+	DebugPrint("CS patched !\n\n");
 
 	return true;
 }

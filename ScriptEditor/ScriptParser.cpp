@@ -90,7 +90,7 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 	Indices->Clear();
 
 	for each (Char Itr in Source) {
-		if (Globals::GetSingleton()->ControlChars->IndexOf(Itr) == -1) {
+		if (Globals::ControlChars->IndexOf(Itr) == -1) {
 			StartPos = Source->IndexOf(Itr);
 			break;
 		}
@@ -102,7 +102,7 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 
 	LastPos = StartPos;
 
-	String^ TokenString = Source->Substring(StartPos), ^%DelimiterStr = Globals::GetSingleton()->Delimiters, ^Token, ^Delimiter;
+	String^ TokenString = Source->Substring(StartPos), ^%DelimiterStr = Globals::Delimiters, ^Token, ^Delimiter;
 	while (TokenString->IndexOfAny(DelimiterStr->ToCharArray()) != -1) {
 		int Idx = TokenString->IndexOfAny(DelimiterStr->ToCharArray());
 		if (TokenString[0] == '\"' && TokenString->IndexOf('\"', 1) != -1)
@@ -409,7 +409,7 @@ try {
 	if (ImportDefIdx == 0 && TextParser->IsComment(ImportDefIdx) == -1 && ImportDefIdx + 1 < TextParser->Tokens->Count && Operation == PreProcessOp::e_Expand && TextParser->IsLiteral(TextParser->Tokens[ImportDefIdx + 1])) {
 		ImportFileName = TextParser->Tokens[ImportDefIdx + 1]->Split(QuoteDelimit)[1];
 		try {
-			StreamReader^ ImportParser = gcnew StreamReader(String::Format("{0}Data\\Scripts\\{1}.txt", GLOB->AppPath, ImportFileName));
+			StreamReader^ ImportParser = gcnew StreamReader(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName));
 			Result = ";<CSEImportSeg>" + "\n";
 			Result += DoPreProcess(ImportParser->ReadToEnd(), Operation, false, Dummy);
 			Result += ReadLine->Substring(0, TextParser->Indices[0]) + ";</CSEImportSeg> \"" + ImportFileName + "\"\n";
@@ -426,11 +426,11 @@ try {
 		ImportFileName = TextParser->Tokens[ImportColStopIdx + 1]->Split(QuoteDelimit)[1];
 		String^ ImportedText = DoPreProcess(Source->Substring(0, LineStart - 1), Operation, true, Dummy)->Replace("\n", "\r\n");		// needs to be preprocessed as source is always a substring of the original script text
 
-		if (!File::Exists(String::Format("{0}Data\\Scripts\\{1}.txt", GLOB->AppPath, ImportFileName))) {
+		if (!File::Exists(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName))) {
 			DebugPrint("Import segment '" + ImportFileName + "' couldn't be found", true);
-			if (Globals::GetSingleton()->ScriptEditorOptions->CreateMissingFromSegment->Checked) {
+			if (OptionsDialog::GetSingleton()->CreateMissingFromSegment->Checked) {
 				try {
-					StreamWriter^ ImportParser = gcnew StreamWriter(String::Format("{0}Data\\Scripts\\{1}.txt", GLOB->AppPath, ImportFileName));
+					StreamWriter^ ImportParser = gcnew StreamWriter(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName));
 					ImportParser->Write(ImportedText);
 					ImportParser->Flush();
 					ImportParser->Close();
@@ -466,7 +466,7 @@ try {
 			Result += ";<CSEMacroDef> " + Macro + " " + Value + " </CSEMacroDef>\n";
 
 			if (FindPreProcessMacro(Macro) != -1) {
-				if (Globals::GetSingleton()->ScriptEditorOptions->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value;
+				if (OptionsDialog::GetSingleton()->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value;
 				else								DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true);
 			}
 			else if (Value->IndexOfAny(InvalidChars->ToCharArray()) != -1)
@@ -483,7 +483,7 @@ try {
 
 		if (FindPreProcessMacro(Macro) == -1)
 			PreProcessMacros->Add(Macro, Value);
-		else if (Globals::GetSingleton()->ScriptEditorOptions->AllowRedefinitions->Checked)
+		else if (OptionsDialog::GetSingleton()->AllowRedefinitions->Checked)
 			PreProcessMacros[Macro] = Value;
 	}
 	else if (DefineRstrIdx != -1 && Operation == PreProcessOp::e_Collapse) {
@@ -492,7 +492,7 @@ try {
 		String^ RestoredLine = ReadLine->Substring(0, TextParser->Indices[0]), 
 				^BreadCrumb = TextParser->Tokens[DefineRstrIdx + 1],
 				^Token, ^Value;
-		array<String^>^ Offsets = BreadCrumb->Split(static_cast<array<Char>^>(Globals::GetSingleton()->PipeDelimit));
+		array<String^>^ Offsets = BreadCrumb->Split(static_cast<array<Char>^>(Globals::PipeDelimit));
 		int TokenIdx = 0, MacroIdx = 0, TokenIdxOffset = 0;
 
 		while (TokenIdx < TextParser->Tokens->Count) {
@@ -589,7 +589,7 @@ void PreProcessor::ParseEnumMacros(String^% Items, bool ReportErrors)
 		
 		if (!String::Compare(Macro, Macro->ToUpper())) {
 			if (FindPreProcessMacro(Macro) != -1) {
-				if (Globals::GetSingleton()->ScriptEditorOptions->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value.ToString();
+				if (OptionsDialog::GetSingleton()->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value.ToString();
 				else {		if (ReportErrors)		DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true); }
 			}
 			else 
@@ -734,7 +734,7 @@ String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp O
 
 String^ PreProcessor::PreProcess(String^% Source, PreProcessor::PreProcessOp Operation, bool DoCollapseReplace, String^% ExtractedCSEBlock)
 {
-	bool Cache = GLOB->ScriptEditorOptions->AllowRedefinitions->Checked;
+	bool Cache = OptionsDialog::GetSingleton()->AllowRedefinitions->Checked;
 	PreProcessMacros->Clear();
 	TextParser->Reset();
 
@@ -744,16 +744,16 @@ String^ PreProcessor::PreProcess(String^% Source, PreProcessor::PreProcessOp Ope
 	ProcessStandardDefineDirectives();
 	TextParser->Reset();
 
-	GLOB->ScriptEditorOptions->AllowRedefinitions->Checked = true;
+	OptionsDialog::GetSingleton()->AllowRedefinitions->Checked = true;
 	Pass = DoPreProcess(Source, Operation, DoCollapseReplace, Dummy);
-	GLOB->ScriptEditorOptions->AllowRedefinitions->Checked = Cache;
+	OptionsDialog::GetSingleton()->AllowRedefinitions->Checked = Cache;
 
 	return Pass;
 }
 
 void PreProcessor::ProcessStandardDefineDirectives(void)
 {
-	String^ Path = GLOB->AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
+	String^ Path = Globals::AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
 	if (File::Exists(Path)) {
 		try {
 			StreamReader^ STDFileParser = gcnew StreamReader(Path);

@@ -10,6 +10,11 @@
 #include "obse/GameObjects.h"
 #include "Editor_RTTI.h"
 
+#include "[ Libraries ]\CSE Handshake\CSEL.h"
+#include "[ Libraries ]\INI Manager\INIManager.h"
+
+class CSEINIManager;
+
 extern std::fstream					g_DEBUG_LOG;
 extern std::string					g_AppPath;
 extern std::string					g_INIPath;
@@ -18,11 +23,7 @@ extern char							g_Buffer[0x200];
 extern OBSEMessagingInterface*		g_msgIntfc;
 extern PluginHandle					g_pluginHandle;
 extern HINSTANCE					g_DLLInstance;
-extern TESObjectREFR*				g_Update3DBuffer;
-
-// TODO: ++++++++++++++++++
-
-
+extern CSEINIManager*				g_INIManager;
 
 class EditorAllocator
 {
@@ -56,6 +57,12 @@ public:
 void																		LogWinAPIErrorMessage(DWORD ErrorID);
 
 #define EDAL																EditorAllocator::GetSingleton()
+
+class CSEINIManager : public SME::INI::INIManager
+{
+public:
+	void									Initialize();
+};
 
 
 				
@@ -100,7 +107,7 @@ public:
 	INISetting();
 	~INISetting();
 
-	char*			Data;			// 00
+	char*			Data;			// 00 - use a union ?
 	const char*		Name;			// 04
 
 	INISetting(char* Data, char* Name) : Data(Data), Name(Name) {}
@@ -112,15 +119,108 @@ template<typename Type> struct GenericNode
 	GenericNode<Type>	* next;
 };
 
-struct RendSel // 0x18 ; ctor = 0x511A20
+// 18 
+struct TESRenderWindowBuffer 
 {
-	GenericNode<TESObjectREFR>*		unk00;			// 00 - sel head?
-	UInt32		unk04;			// 04 - sel count
-	UInt32		unk08;			// 08 init to 0x00A8AF64
-	UInt32		unk0C;			// 0C
-	UInt32		unk10;			// 10 init to 0x00A8AF6C
-	double		unk14;			// 14 init to 0.0
-}; // = 0x00A0AF60;
+	struct SelectedObjectsEntry
+	{
+		TESObjectREFR*			Data;
+		SelectedObjectsEntry*	Prev;
+		SelectedObjectsEntry*	Next;
+	};
+
+	SelectedObjectsEntry*	RenderSelection;	// 00
+	UInt32					SelectionCount;		// 04
+	float					x, y, z;			// 08 sum of position vectors of selected refr's
+	float					unk14;				// 14 init to 0.0
+};
+
+// 38 / A0
+class TESTopicInfo : public TESForm
+{
+public:
+	TESTopicInfo();
+	~TESTopicInfo();
+
+	struct TopicListEntry
+	{
+		TESTopic*			data;
+		TopicListEntry*		next;
+	};
+
+	struct LinkedTopics
+	{
+		TopicListEntry		topicsLinkedFrom;
+		TopicListEntry		topicsLinkedTo;		// doubles as choices for appropriate infotype
+	};
+
+	struct ResponseEntry
+	{
+		// ? / 24
+		struct Data 
+		{
+			enum 
+			{
+				kEmotionType_Neutral = 0,
+				kEmotionType_Anger,
+				kEmotionType_Disgust,
+				kEmotionType_Fear,
+				kEmotionType_Sad,
+				kEmotionType_Happy,
+				kEmotionType_Surprise,
+			};
+
+			UInt32			emotionType;				// 00
+			UInt32			emotionValue;				// 04
+			UInt32			unk08;						// 08
+			UInt32			unk0C;						// 0C
+			String			responseText;				// 10
+			String			actorNotes;					// 18	
+			UInt32			unk20;						// 20
+		};
+
+		Data*				data;
+		ResponseEntry*		next;		
+	};
+
+	 enum
+	 {
+		kInfoType_Topic = 0,
+		kInfoType_Conversation,
+		kInfoType_Combat,
+		kInfoType_Persuasion,
+		kInfoType_Detection,
+		kInfoType_Service,
+		kInfoType_Miscellaneous
+	 };
+
+	 enum
+	 {
+		kFlags_Goodbye = 0x0001,
+		kFlags_Random = 0x0002,
+		kFlags_SayOnce = 0x0004,
+		kFlags_Unk008 = 0x0008,
+		kFlags_InfoRefusal = 0x0010,
+		kFlags_RandomEnd = 0x0020,
+		kFlags_RunforRumors = 0x0040
+	 };
+
+	TESTopic*			topic024;		// 24 - always NULL ?
+	ConditionEntry		conditions;		// 28
+	UInt16				unk30;			// 30 - init to -1. used to determine previous info	
+	UInt16				infotype;		// 32 
+	UInt8				flags;			// 34
+	UInt8				flagsPad[3];	// 35
+	TopicListEntry		addedTopics;	// 38
+	LinkedTopics*		linkedTopics;	// 40
+	ResponseEntry		responses;		// 44
+	Script				resultScript;	// 4C
+};
+
+#ifndef OBLIVION
+STATIC_ASSERT(sizeof(TESTopicInfo) == 0xA0);
+#endif
+
 
 
 #define CS_CAST(obj, from, to) (to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
@@ -153,11 +253,13 @@ extern const void *			RTTI_TESCellUseList;
 
 extern TES** g_TES;
 
-extern const UInt32			g_VTBL_TESObjectREFR;
-extern const UInt32			g_VTBL_TESForm;
-extern const UInt32			kTESForm_GetObjectUseRefHeadFnAddr;
+extern const UInt32			kVTBL_TESObjectREFR;
+extern const UInt32			kVTBL_TESForm;
+extern const UInt32			kTESForm_GetObjectUseListAddr;
 extern const UInt32			kTESCellUseList_GetUseListRefHeadFnAddr;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpaceFnAddr;
+extern const UInt32			kScript_SaveResultScript;
+extern const UInt32			kScript_SaveScript;
 
 typedef void*			(__cdecl *_GetComboBoxItemData)(HWND ComboBox);
 extern const _GetComboBoxItemData GetComboBoxItemData;
@@ -190,11 +292,11 @@ extern const UInt32				kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
 
 extern TESWaterForm**			g_SpecialForm_DefaultWater;
 
-extern RendSel**					g_RenderWindow_UnkLL;
+extern TESRenderWindowBuffer**	g_TESRenderWindowBuffer;
 
 TESObjectREFR* ChooseReferenceDlg(HWND Parent);
 
-
-
-void UpdateTESObjectREFR3D(TESObjectREFR* Object);	// in the render window
-
+extern HMENU*					g_RenderWindowPopup;
+extern void*					g_ScriptCompilerUnkObj;
+extern const UInt32				kVTBL_TESTopicInfo;
+extern const UInt32				kVTBL_TESQuest;

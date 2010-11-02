@@ -14,32 +14,27 @@ Script Validator
 Preprocessor
 ============
 . Preprocessor directives must be on a line of their own
-. Prepro. variables must be in uppercase and can only contain alpha numerics and underscores
-. Preproc vars must be delimited with one of the following chars to be recognized : .,<WHITESPACE>(){}[]<TABCHAR><NEWLINECHAR>
-. The code that uses or defines such variables mustn't be modified outside CSE's script editor.
+. Prepro. macro names must be in uppercase and can only contain alpha numerics and underscores
+. Preproc macro names must be delimited with one of the following chars to be recognized : .,<WHITESPACE>(){}[]<TABCHAR><NEWLINECHAR>
+. The code that uses or defines such macros mustn't be modified outside CSE's script editor.
 
 To-Do
 =====
 MISC-->
-> Nudge IanPat to implement the loader fix *The default water fix won't work without it*
+> Nudge IanPat to implement the loader fix
 
 BE---->
 > Look into the extraData fuckup
-> Filter out refs that don't haev ownership data and count
+> Filter out refs that don't have ownership data and count
 
 CSE--->
-> Pass data for the CSEL message dispatch as a vector, a la OBSE's array helper functions
-> Find the render window's selected objects list
+> Console window brings down the cs when usign the main window as its parent
 > Figure out how to update the model of references
 > Add an "All Active Mods" button to the Data screen
-> Fix the issue with loading and saving active ESMs
 > Look into fixing lip sync generation
 
-# Recompile all scripts, including dialog results, which reference this script's variables" button.
 # The ability to specify a custom workspace.
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
-# Allow and display icons with mipmaps, since they do work in-game
-# Fixing whatever it is that causes certain dialog and worldspace edit flags to occur when no such edits have been made to the active plugin (specifically: Load two plugins, one with dialogue type edits, particularly GREETING records, and one without. Make the one without dialogue records your active plugin. Make some edits that have nothing to do with dialogue, save, then go see your shiny new GREETINGS empty nothing whatever in TES4Edit).
 # NPC refs update visually when their inventory is changed without plugin reload
 # Option to automatically dump & reload models on cell load without plugin reload
 # Default z-coordinate when one drops pieces in the render window
@@ -58,12 +53,7 @@ SE---->
 > Find seems to edit the send a message to save
 > IMPLEMENT AVALONEDIT
 > Implement regEx
+> Make changes to script type trigger an edit response
 
 # Ability to select multiple scripts to open, and have each open in a new tab.
-# No helper text on Begin/End/If/EndIf/ElseIf/Return/Set? Not really needed, but seems an oversight.
-# Shift-home doesn't work as you'd expect. The first time it highlights whitespace of next line, and if its used a second time it works, but places the cursor at the end of the line rather than the beginning.
-# Be nice if the script tab and window title updated with the script name when saved.
 # Be nice if there was a Sanitize option that forced proper capitalization of function names(begin->Begin, elseif->ElseIf, etc) and stripped excess whitespace.
-# Be nice if ctrl-tab worked to tab through tabs
-# Would be nice if the mouse middle-click closed the clicked tab
-# Ability to drag tabs in/out of workspaces, creating/destroying workspaces dynamically 

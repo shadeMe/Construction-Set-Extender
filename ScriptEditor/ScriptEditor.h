@@ -1,15 +1,16 @@
 #pragma once
 #include "Common\Includes.h"
 #include "ScriptParser.h"
+#include "OptionsDialog.h"
+
 
 
 struct ScriptData;
 
-// TODO: ++++++++++++++++++
-
 
 using namespace DevComponents;
 using namespace ICSharpCode::AvalonEdit;
+using namespace Gma::UserActivityMonitor;
 
 ref class ScriptListDialog;
 ref class ScriptParser;
@@ -18,6 +19,8 @@ ref class SyntaxBox;
 
 namespace ScriptEditor
 {
+void													Global_MouseUp(Object^ Sender, MouseEventArgs^ E);
+
 public ref class TabContainer
 {
 public:
@@ -31,12 +34,18 @@ public:
 																e_New = 0,
 																e_Open
 															};
+	static MouseEventHandler^							GlobalMouseHook_MouseUpHandler = gcnew MouseEventHandler(&Global_MouseUp);
+	static Rectangle									LastUsedBounds = Rectangle(100, 100, 100, 100);
 private:
 	void												EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);
+	void												EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void												ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::TabStripActionEventArgs^ E);
 	void												ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::TabStripTabChangedEventArgs^ E);
 	void												ScriptStrip_SelectedTabChanging(Object^ Sender, DotNetBar::TabStripTabChangingEventArgs^ E);
 	void												ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E);
+	void												ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E);
+	void												ScriptStrip_MouseDown(Object^ Sender, MouseEventArgs^ E);
+	void												ScriptStrip_MouseUp(Object^ Sender, MouseEventArgs^ E);
 	void												NewTabButton_Click(Object^ Sender, EventArgs^ E);
 	 
 	Stack<UInt32>^										BackStack;
@@ -44,6 +53,8 @@ private:
 
 	bool												RemovingTab;
 	static ImageList^									FileFlags = gcnew ImageList();
+
+	DotNetBar::TabItem^									GetMouseOverTab();
 public:
 	Form^												EditorForm;
 	DotNetBar::TabControl^								ScriptStrip;
@@ -74,6 +85,87 @@ private:
 															e_Error
 														};
 	static ImageList^									MessageIcon = gcnew ImageList();
+
+	static enum class									IconEnum
+														{
+															e_PosPointer = 0,
+															e_New,
+															e_Open,
+															e_Previous,
+															e_Next,
+															e_Save,
+															e_Delete,
+															e_Recompile,
+															e_Options,
+															e_ErrorList,
+															e_FindList,
+															e_BookmarkList,
+															e_Console,
+															e_DumpScript,
+															e_LoadScript,
+															e_Offset,
+															e_Error,
+															e_Warning,
+															e_NavBack,
+															e_NavForward,
+															e_LineLimit,
+															e_VarIdxUpdate,
+															e_VarIdxList,
+
+															e_ContextCopy,
+															e_ContextPaste,
+															e_ContextFind,
+															e_ContextComment,
+															e_ContextBookmark,
+															e_ContextCTB,
+															e_ContextLookup,
+															e_ContextDevLink,
+															e_ContextJump,
+															e_SaveAll,
+															e_CompileDependencies,
+
+															e_Bookend
+														};
+	static array<String^>^								IconStr =
+														{
+															"IndexPointer",
+															"SENew",
+															"SEOpen",
+															"SEPrevious",
+															"SENext",
+															"SESave",
+															"SEDelete",
+															"SERecompile",
+															"SEOptions",
+															"SEErrorList",
+															"SEFindList",
+															"SEBookmarkList",
+															"SEConsole",
+															"SEDumpScript",
+															"SELoadScript",
+															"SEOffset",
+															"SEError",
+															"SEWarning",
+															"SENavBack",
+															"SENavForward",
+															"SELineLimit",
+															"SEVarIdxUpdate",
+															"SEVarIdxList",
+
+															"SEContextCopy",
+															"SEContextPaste",
+															"SEContextFind",
+															"SEContextComment",
+															"SEContextBookmark",
+															"SEContextCTB",
+															"SEContextLookup",
+															"SEContextDevLink",
+															"SEContextJump",
+															"SESaveAll",
+															"SECompileDependencies"
+														};
+	static ImageList^									Icons = gcnew ImageList();
+	
 
 														// EVENT HANDLERS
 
@@ -124,6 +216,7 @@ private:
 	void												ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E);
 
 	void												EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
@@ -203,6 +296,7 @@ public:
 		ListView^											ErrorBox;
 		ListView^											VariableBox;
 			TextBox^											IndexEditBox;
+		Label^												SpoilerText;
 
 	ToolStrip^											EditorToolBar;
 		ToolStripTextBox^									ToolBarCommonTextBox;
@@ -236,6 +330,7 @@ public:
 		ToolStripButton^									ToolBarGetVarIndices;
 		ToolStripButton^									ToolBarUpdateVarIndices;
 		ToolStripButton^									ToolBarSaveAll;
+		ToolStripButton^									ToolBarCompileDependencies;
 
 		ToolStripDropDownButton^							ToolBarScriptType;
 			ToolStripDropDown^									ToolBarScriptTypeContents;
@@ -280,6 +375,7 @@ public:
 	bool												GetVariableData;
 	UInt32												ScriptType;
 	TabContainer^										ParentStrip;
+	String^												ScriptEditorID;
 
 	static Workspace^									NullSE = gcnew Workspace(0);
 };

@@ -3,9 +3,71 @@
 #include "ScriptEditor.h"
 
 struct ScriptData;
+using namespace DevComponents;
 
 public ref class ScriptEditorManager
 {
+public:
+	static enum class									OperationType
+															{
+																e_AllocateTabContainer = 0,
+																e_InitializeScript,
+
+																e_SendMessage,				// to the vanilla editor
+																e_ReceiveMessage,			// from the vanilla editor, on a successful operation
+																e_SetOpenDialogItemData,
+																e_SetVariableListItemData,
+																e_AllocateWorkspace,
+																e_DestroyTabContainer,
+																e_TabTearOp
+															};
+
+	static enum class									SendReceiveMessageType
+															{
+																e_New = 0,
+																e_Open,
+																e_Previous,
+																e_Next,
+																e_Save,
+																e_Recompile,
+																e_Delete,
+																e_Close,
+																							// receiving-only
+																e_LoadRelease,
+																e_PostPluginLoad,
+																e_PostPluginSave
+															};
+	static enum class									TabTearOpType
+															{
+																e_NewContainer = 0,
+																e_RelocateToContainer
+															};
+
+	static array<String^>^								TypeIdentifier =
+															{
+																"Allocate TabContainer",
+																"Initialize Script",
+																"Send Message",
+																"Receive Message",
+																"Set OpenDialog Item Data",
+																"Set VariableList Item Data",
+																"Allocate Workspace",
+																"Destroy TabContainer",
+																"Tab Tear Operation"
+															};
+
+	static array<UInt16>^								ParamCount = 
+															{ 
+																4,
+																5, 
+																1, 
+																1,
+																3,
+																3,
+																2,
+																1,
+																4
+															};
 private:
 	static ScriptEditorManager^							Singleton = nullptr;
 	LinkedList<ScriptEditor::Workspace^>^				WorkspaceAllocationMap;
@@ -44,58 +106,9 @@ private:
 	void												SetOpenDialogItemData(UInt32 AllocatedIndex, String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags);
 	void												SetVariableListItemData(UInt32 AllocatedIndex, String^% Name, UInt32 Type, UInt32 Index);
 	void												AllocateNewWorkspace(UInt32 AllocatedIndex, ScriptEditor::TabContainer^% Parent);
+	void												DestroyTabContainer(ScriptEditor::TabContainer^ Container);
+	void												TabTearOpHandler(TabTearOpType Operation, ScriptEditor::Workspace^ Workspace, ScriptEditor::TabContainer^ Container, Point MousePos);
 public:
-	static enum class									OperationType
-															{
-																e_AllocateTabContainer = 0,
-																e_InitializeScript,
-
-																e_SendMessage,			// to the vanilla editor
-																e_ReceiveMessage,		// from the vanilla editor, on a successful operation
-																e_SetOpenDialogItemData,
-																e_SetVariableListItemData,
-																e_AllocateWorkspace
-															};
-
-	static enum class									SendReceiveMessageType
-															{
-																e_New = 0,
-																e_Open,
-																e_Previous,
-																e_Next,
-																e_Save,
-																e_Recompile,
-																e_Delete,
-																e_Close,
-																							// receiving-only
-																e_LoadRelease,
-																e_PostPluginLoad,
-																e_PostPluginSave
-															};
-
-	static array<String^>^								TypeIdentifier =
-															{
-																"Allocate Editor",
-																"Initialize Script",
-																"Send Message",
-																"Receive Message",
-																"Set OpenDialog Item Data",
-																"Set VariableList Item Data",
-																"Allocate Workspace"
-															};
-
-	static array<UInt16>^								ParamCount = 
-															{ 
-																4,
-																5, 
-																1, 
-																1,
-																3,
-																3,
-																2
-															};
-
-
 	ref struct											OperationParams
 	{
 		UInt32											VanillaHandleIndex;
@@ -104,10 +117,11 @@ public:
 		OperationParams() : VanillaHandleIndex(0), ParameterList(gcnew List<Object^>()) {}
 	};
 
+	property ScriptEditor::Workspace^					TornWorkspace;
+
 	static ScriptEditorManager^%						GetSingleton();
 	void												PerformOperation(OperationType Op, OperationParams^ Parameters);
 	ScriptEditor::Workspace^							GetAllocatedWorkspace(UInt32 AllocatedIndex);
-	void												DestroyTabContainer(ScriptEditor::TabContainer^ Container);
 };
 
 #define SEMGR											ScriptEditorManager::GetSingleton()

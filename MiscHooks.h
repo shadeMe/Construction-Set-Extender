@@ -1,26 +1,6 @@
 #pragma once
 #include "obse/GameData.h"
-
-// TODO: ++++++++++++++++++ 
-/*
-Option to automatically dump & reload models on cell load without plugin reload
-		sub_431220();  
-		SendMessageA(g_HWND_RenderWindow, 0x417u, 0, 0);
-	X	SendMessageA(g_HWND_RenderWindow, 0x40Du, 0, (LPARAM)&qword_A8AF64);
-		SendMessageA(g_HWND_RenderWindow, 0x419u, 6u, 0);
-	X	SendMessageA(g_HWND_RenderWindow, 0x40Au, 0, 0);
-	    SendMessageA(g_HWND_RenderWindow, 0x419u, 5u, 0);
-
-Try passing 1 as unk03 to DataHandler::SavePlugin for ESMs
-
-*/
-
-
-struct NopData
-{
-	UInt32				Address;
-	UInt8				Size;
-};
+#include "UtilityBox.h"
 
 class TESForm;
 class TESObjectCELL;
@@ -28,10 +8,13 @@ class TESWorldSpace;
 struct FormData;
 struct UseListCellItemData;
 class INISetting;
+struct NopData;
 
 
 bool					PatchMiscHooks(void);
-void					DoNop(const NopData* Data);
+void __stdcall			DoCSInitHook();
+void __stdcall			DoExitCS(HWND MainWindow);
+
 SHORT __stdcall			IsControlKeyDown(void);
 void __stdcall			CreateDialogParamAddress(void);
 
@@ -53,13 +36,17 @@ const UInt32			kSavePluginMasterEnumRetnFailAddr = 0x0047ECEB;
 void					SavePluginMasterEnumHook(void);
 // allows master files to be set as active plugins
 const NopData			kCheckIsActivePluginAnESMPatch = { 0x0040B65E, 2 };
-// nops out a couple of mov instructions that are invalid when editing an active ESM
-// TODO: Figure out what I'm screwing with
-const NopData			kDoValidateBitArrayPatch[2] = 
-												{
-													{ 0x00408261, 6 },
-													{ 0x0040826D, 6 }
-												};
+const UInt32			kLoadPluginsPrologHookAddr = 0x00485252;
+const UInt32			kLoadPluginsPrologRetnAddr = 0x00485257;
+const UInt32			kLoadPluginsPrologCallAddr = 0x00431310;
+
+void LoadPluginsPrologHook(void);
+
+const UInt32			kLoadPluginsEpilogHookAddr = 0x004856B2;
+const UInt32			kLoadPluginsEpilogRetnAddr = 0x004856B7;
+const UInt32			kLoadPluginsEpilogCallAddr = 0x0047DA60;
+
+void LoadPluginsEpilogHook(void);
 // allows the Author and Description fields of an ESM file to be viewed and modified correctly
 const UInt32			kDataDialogPluginDescriptionPatchAddr = 0x0040CAB6;
 const UInt32			kDataDialogPluginAuthorPatchAddr = 0x0040CAFE;
@@ -89,6 +76,7 @@ void FindTextInitHook(void);
 const UInt32			kCSInitHookAddr = 0x00419260;
 const UInt32			kCSInitRetnAddr = 0x00419265;
 const UInt32			kCSInitCallAddr = 0x006E5850;
+const UInt8				kCSInitCodeBuffer[5] = { 0xE8, 0xEB, 0xC5, 0x2C, 0 };
 
 void CSInitHook(void);
 // replaces the otiose "Recreate facial animation files" menu item with "Use Info Listings"
@@ -328,13 +316,6 @@ const UInt32			kQuickLoadPluginLoadHandlerRetnAddr = 0x004852EE;
 const UInt32			kQuickLoadPluginLoadHandlerSkipAddr = 0x004852F0;
 
 void QuickLoadPluginLoadHandlerHook(void);
-// provides support for the manual updating of a reference's ninode in the render window
-const UInt32			kUpdate3DHookAddr = 0x00549ACA;
-const UInt32			kUpdate3DCallAddr = 0x00496C90;
-const UInt32			kUpdate3DSkipAddr = 0x00549B2E;
-const UInt32			kUpdate3DRetnAddr = 0x00549AD2;
-
-void Update3DHook(void);
 // allows the loading of plugins with missing masters
 const UInt32			kMissingMasterOverridePatchAddr = 0x00484FC9;
 const UInt32			kMissingMasterOverrideJumpAddr = 0x00484E8E;
@@ -348,9 +329,25 @@ const UInt32			kCSWarningsDetourHookAddr = 0x004B5140;
 const UInt32			kCSWarningsDetourRetnAddr = 0x004B5146;
 
 void CSWarningsDetourHook(void);
-/* huge file loads
-004F6BAF - jump directly to 004F6E41
-004F6D4F - jump to 004F6C97
-*/
+// allows the preview of textures with mipmaps
+const UInt32			kTextureMipMapCheckPatchAddr = 0x0044F49B;
+// removes the now unnecessary 'See editorWarnings file' anim group debug message
+const NopData			kAnimGroupNotePatch = { 0x004CA21D, 5 };
+// prevents unnecessary dialog edits in active plugins should its master have a DIAL record
+const UInt32			kUnnecessaryDialogEditsPatchAddr = 0x004EDFF7;
+// adds the batch ref editor to the render window's popup menu
+const UInt32			kRenderWindowPopupPatchHookAddr = 0x004297CE;
+const UInt32			kRenderWindowPopupPatchRetnAddr = 0x004297D3;
 
+void RenderWindowPopupPatchHook(void);
+// prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record
+// ### Figure out what the function's doing
+const UInt32			kUnnecessaryCellEditsPatchAddr = 0x005349A5;
+// patch to keep custom child windows of the CS main window from being closed on plugin load
+const UInt32			kCustomCSWindowPatchHookAddr = 0x004311E5;
+const UInt32			kCustomCSWindowPatchRetnAddr = 0x004311EF;
+
+void CustomCSWindowPatchHook(void);
+// prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.
+const UInt32			kRaceDescriptionDirtyEditPatchAddr = 0x0049405C;
 

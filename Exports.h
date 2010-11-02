@@ -32,6 +32,7 @@ __declspec(dllexport) void ScriptEditor_GetUseReportForForm(const char* EditorID
 
 __declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID);
 __declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data);
+__declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID);
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText();
 __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorID);
@@ -51,3 +52,6 @@ TESObjectREFR* TESForm_LoadIntoView_GetReference(TESObjectCELL* Cell, TESForm* P
 
 template <typename tData>
 void BatchRefEditor_ParseFormNode(DataHandler::Node<tData>* ThisNode, UInt8 ListID);
+
+UInt32 ScriptEditor_CompileDependencies_CheckConditions(ConditionEntry* Entry, TESForm* ToCompare);
+void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form);
