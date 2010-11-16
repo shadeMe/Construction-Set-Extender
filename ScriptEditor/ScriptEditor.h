@@ -123,6 +123,8 @@ private:
 															e_ContextJump,
 															e_SaveAll,
 															e_CompileDependencies,
+															e_SavePlugin,
+															e_SaveNoCompile,
 
 															e_Bookend
 														};
@@ -162,7 +164,9 @@ private:
 															"SEContextDevLink",
 															"SEContextJump",
 															"SESaveAll",
-															"SECompileDependencies"
+															"SECompileDependencies",
+															"SESavePlugin",
+															"SESaveNoCompile"
 														};
 	static ImageList^									Icons = gcnew ImageList();
 	
@@ -205,6 +209,9 @@ private:
 	void												ToolBarNextScript_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E);
+
+	void												ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E);
 
 	void												ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E);
@@ -267,13 +274,14 @@ private:
 	bool												IsCursorInsideCommentSeg(bool OneLessIdx);
 	bool												HasLineChanged();
 	void												ValidateLineLimit(void);
+	void												ProcessWarnings(String^ ExtractedBlock);
 public:	
 	void												ValidateScript(UInt32 ScriptType);
 	void												Destroy();
 	void												EnableControls();
 	UInt16												GetScriptType();
 	void												SetScriptType(UInt16 ScriptType);
-	void												PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText);
+	void												PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning);
 	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
 	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
 	void												GetVariableIndices(bool SetFlag);
@@ -317,7 +325,10 @@ public:
 		ToolStripButton^									ToolBarOpenScript;
 		ToolStripButton^									ToolBarPreviousScript;
 		ToolStripButton^									ToolBarNextScript;
-		ToolStripButton^									ToolBarSaveScript;
+		ToolStripSplitButton^								ToolBarSaveScript;
+			ToolStripDropDown^									ToolBarSaveScriptDropDown;
+			ToolStripButton^									ToolBarSaveScriptNoCompile;
+			ToolStripButton^									ToolBarSaveScriptAndPlugin;			
 		ToolStripButton^									ToolBarRecompileScripts;
 		ToolStripButton^									ToolBarDeleteScript;
 

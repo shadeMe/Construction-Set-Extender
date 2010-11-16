@@ -26,6 +26,9 @@ bool								g_SaveAsRoutine = false;
 ModEntry::Data*						g_SaveAsBuffer = NULL;
 static bool							g_BitSwapBuffer = false;
 
+void __stdcall SetWindowTextAddress(void);
+void DispatchInteropMessage(void);
+
 
 void __stdcall DoTestHook(void* Ref3DData)
 {
@@ -84,6 +87,7 @@ bool PatchMiscHooks()
 
 	DoNop(&kMissingTextureWarningPatch);
 	DoNop(&kTopicResultScriptResetPatch);
+	DoNop(&kTESFormGetUnUsedFormIDPatch);
 
 	PLACE_HOOK(NPCFaceGen);
 	
@@ -110,11 +114,22 @@ bool PatchMiscHooks()
 	PLACE_HOOK(RenderWindowPopupPatch);
 	PLACE_HOOK(CustomCSWindowPatch);
 	SafeWrite8(kRaceDescriptionDirtyEditPatchAddr, 0xEB);
-	
+
+	PLACE_HOOK(PluginSave);
+	PLACE_HOOK(PluginLoad);
+//	PLACE_HOOK(AddListViewItem);
+//	PLACE_HOOK(AddComboBoxItem);
+	PLACE_HOOK(ObjectListPopulateListViewItems);
+
 
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
 		DebugPrint("Couldn't create the Backup folder in Data directory");
 	}
+
+	OSVERSIONINFO OSInfo;
+	GetVersionEx(&OSInfo);
+	if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
+		RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");	
 
 	//	WriteRelJump(0x0049745A, (UInt32)TestHook);
 	
@@ -228,7 +243,7 @@ void _declspec(naked) SavePluginMasterEnumHook(void)
 }
 
 
-void __stdcall DoExitCS(HWND MainWindow)
+void __stdcall DoExitCSHook(HWND MainWindow)
 {
 	WritePositionToINI(MainWindow, NULL);
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
@@ -244,7 +259,7 @@ void _declspec(naked) ExitCSHook(void)
 	__asm
 	{
 		push    ebx
-		call    DoExitCS
+		call    DoExitCSHook
 	}
 }
 
@@ -274,7 +289,7 @@ void __declspec(naked) UseInfoListInitHook(void)
 {
 	__asm
 	{
-		call	CLIWrapper::UIL_OpenUseInfoBox
+		call	CLIWrapper::UseInfoList::OpenUseInfoBox
 		jmp		[kUseInfoListInitRetnAddr]
 	}
 }
@@ -287,18 +302,24 @@ void PatchMenus()
 		  FileMenu = GetSubMenu(MainMenu, 0),
 		  WorldMenu = GetSubMenu(MainMenu, 3);
 
-	MENUITEMINFO ItemDataUseInfo, ItemDataRenderWindow, ItemDataSaveAs, ItemWorldBatchEdit, ItemViewConsole;
-	ItemDataUseInfo.cbSize = sizeof(MENUITEMINFO);
-	ItemDataUseInfo.fMask = MIIM_STRING;
-	ItemDataUseInfo.dwTypeData = "Use Info Listings";
-	ItemDataUseInfo.cch = 15;
-	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemDataUseInfo);
+	MENUITEMINFO ItemGameplayUseInfo, 
+				ItemViewRenderWindow, 
+				ItemDataSaveAs, 
+				ItemWorldBatchEdit, 
+				ItemViewConsole, 
+				ItemViewModifiedRecords,
+				ItemFileCSEPreferences;
+	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
+	ItemGameplayUseInfo.fMask = MIIM_STRING;
+	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
+	ItemGameplayUseInfo.cch = 15;
+	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemGameplayUseInfo);
 
-	ItemDataRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the controlID for the button
-	ItemDataRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is present in the wndproc
-	ItemDataRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
-	ItemDataRenderWindow.fState = MFS_CHECKED;
-	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemDataRenderWindow);	
+	ItemViewRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the controlID for the button
+	ItemViewRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is present in the wndproc
+	ItemViewRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
+	ItemViewRenderWindow.fState = MFS_CHECKED;
+	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemViewRenderWindow);	
 
 	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
 	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
@@ -324,26 +345,43 @@ void PatchMenus()
 	ItemViewConsole.dwTypeData = "Console Window";
 	ItemViewConsole.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
+
+	ItemViewModifiedRecords.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewModifiedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewModifiedRecords.wID = 9904;
+	ItemViewModifiedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
+	ItemViewModifiedRecords.dwTypeData = "Hide Unmodified Forms";
+	ItemViewModifiedRecords.cch = 0;
+	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewModifiedRecords);
+
+	ItemFileCSEPreferences.cbSize = sizeof(MENUITEMINFO);		
+	ItemFileCSEPreferences.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemFileCSEPreferences.wID = 9905;
+	ItemFileCSEPreferences.fState = MFS_ENABLED;
+	ItemFileCSEPreferences.dwTypeData = "CSE Preferences";
+	ItemFileCSEPreferences.cch = 0;
+	InsertMenuItem(FileMenu, 40003, FALSE, &ItemFileCSEPreferences);
 }
 
 void __stdcall DoCSInitHook()
 {
-	if (!g_PluginPostLoad) return;			// prevents inappropriate pumping of messages to the main window
+	if (!g_PluginPostLoad) return;			// prevents the hook from being called before the full init
 											// perform deferred patching
+											// remove hook rightaway to keep it from hindering the subclassing that follows
+	for (UInt32 i = 0; i < sizeof(kCSInitCodeBuffer); i++) {
+		SafeWrite8(kCSInitHookAddr + i, kCSInitCodeBuffer[i]);
+	}
+
 	PatchMenus();
+	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
 
 	CONSOLE->InitializeConsole();
 	CONSOLE->LoadINISettings();
 
-	(*g_SpecialForm_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
+	(*g_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
 
-	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
-
-											// remove hook
-	for (UInt32 i = 0; i < sizeof(kCSInitCodeBuffer); i++) {
-		SafeWrite8(kCSInitHookAddr + i, kCSInitCodeBuffer[i]);
-	}
+	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
 }
 
 
@@ -369,19 +407,19 @@ UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 	switch (Filter)
 	{
 	case 0:
-		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "nif");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "nif");
 		break;
 	case 1:
-		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "kf");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "kf");
 		break;
 	case 2:
-		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "wav");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "wav");
 		break;
 	case 3:
-		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "dds");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "dds");
 		break;
 	case 4:
-		g_AssetSelectorReturnPath = CLIWrapper::BSAV_InitializeViewer(g_AppPath.c_str(), "spt");
+		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "spt");
 		break;
 	}
 
@@ -507,135 +545,6 @@ void __declspec(naked) NPCFaceGenHook(void)
 		jmp		[kNPCFaceGenRetnAddr]
 	}
 }
-
-/*void __declspec(naked) DataHandlerPopulateModListInitCleanupHook(void)
-{
-	__asm
-	{
-		test	eax, eax
-		jz		FAIL
-		
-		mov		al, [g_DataHandlerPopulateModListInit_PerformCleanup]		// our test
-		test	al, al
-		jz		FAIL
-
-		jmp		[kDataHandlerPopulateModListInitCleanupPassRetnAddr]		// perform cleanup
-	FAIL:
-		jmp		[kDataHandlerPopulateModListInitCleanupFailRetnAddr]		// don't cleanup
-	}
-}
-
-void __declspec(naked) DataHandlerPopulateModListFindLoopHook(void)
-{
-	__asm
-	{
-		jb		PASS
-		jmp		[kDataHandlerPopulateModListFindLoopFailRetnAddr]
-	PASS:
-		mov		al, [g_DataHandlerPopulateModList_ProcessESPs]
-		test	al, al
-		jz		SKIP
-
-		jmp		[kDataHandlerPopulateModListFindLoopPassRetnAddr]
-	SKIP:
-		jmp		[kDataHandlerPopulateModListFindLoopFailRetnAddr]
-	}
-}
-
-void __stdcall DoDataDlgCallPopulateModListHook(INISetting* Path)
-{
-	if (IsControlKeyDown()) {
-		BROWSEINFO WorkspaceInfo;
-		WorkspaceInfo.hwndOwner = *g_HWND_CSParent;
-		WorkspaceInfo.iImage = NULL;
-		WorkspaceInfo.pszDisplayName = g_CustomWorkspacePath;
-		WorkspaceInfo.lpszTitle = "Select a folder to use as this session's workspace";
-		WorkspaceInfo.ulFlags = BIF_NEWDIALOGSTYLE|BIF_RETURNONLYFSDIRS;
-		WorkspaceInfo.pidlRoot = NULL;
-		WorkspaceInfo.lpfn = NULL;
-		WorkspaceInfo.lParam = NULL;
-
-		PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&WorkspaceInfo);
-		if (ReturnPath) {
-			if (!SHGetPathFromIDList(ReturnPath, g_CustomWorkspacePath)) {
-				DebugPrint("Had trouble extracting workspace path!");
-			}
-		}
-		else
-			sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");	
-	}
-	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "%s\\", g_CustomWorkspacePath);
-	g_INI_LocalMasterPath->Data = g_CustomWorkspacePath;
-
-	if (!_stricmp(g_CustomWorkspacePath, (std::string(g_AppPath + "Data\\")).c_str()) ||
-		!_stricmp(g_CustomWorkspacePath, g_DefaultWorkspacePath))
-	{
-			g_DataHandlerPopulateModList_DefaultWorkspace = true;
-	}
-	else	g_DataHandlerPopulateModList_DefaultWorkspace = false;
-}
-
-void __declspec(naked) DataDlgCallPopulateModListHook(void)
-{
-	__asm
-	{
-		pushad
-		push	eax
-		call	DoDataDlgCallPopulateModListHook
-		popad
-		
-		mov		al, g_DataHandlerPopulateModList_DefaultWorkspace
-		test	al, al
-		jnz		DEFAULT
-		
-		mov		[g_DataHandlerPopulateModList_ProcessESPs], 0				// custom workspace
-		mov		[g_DataHandlerPopulateModListInit_PerformCleanup], 1
-		push	g_DefaultWorkspacePath
-		call	[kDataDlgCallPopulateModListCallAddr]						// parse masters in the default workspace before proceeding to the custom
-
-	//	push	g_CustomWorkspacePath
-	//	mov		ecx, [g_dataHandler]
-	//	mov		[g_DataHandlerPopulateModList_ProcessESPs], 1
-	//	mov		[g_DataHandlerPopulateModListInit_PerformCleanup], 1
-	//	call	[kDataDlgCallPopulateModListCallAddr]
-
-		jmp		EXIT
-	DEFAULT:																// workspace is set to default
-		push	g_DefaultWorkspacePath
-		call	[kDataDlgCallPopulateModListCallAddr]
-	EXIT:																	// reset flags
-		mov		[g_DataHandlerPopulateModList_ProcessESPs], 1
-		mov		[g_DataHandlerPopulateModListInit_PerformCleanup], 0
-		jmp		[kDataDlgCallPopulateModListRetnAddr]
-	}
-}
-
-void __declspec(naked) DataHandlerPopulateModListQuickExitHook(void)
-{
-	__asm
-	{
-		mov		al, [g_DataHandlerPopulateModList_QuitReturn]
-		test	al, al
-		jz		FAIL
-
-	//	mov		large fs:0, eax
-		jmp		[kDataHandlerPopulateModListQuickExitPassRetnAddr]		// continue
-	FAIL:
-		jmp		[kDataHandlerPopulateModListQuickExitFailRetnAddr]		// exit
-	}
-}
-
-void __declspec(naked) TESCtorSkipModListPopulationHook(void)
-{
-	__asm
-	{
-		mov		[g_DataHandlerPopulateModList_QuitReturn], 1
-		call	[kTESCtorSkipModListPopulationCallAddr]
-		mov		[g_DataHandlerPopulateModList_QuitReturn], 0
-		call	DoT
-		jmp		[kTESCtorSkipModListPopulationRetnAddr]
-	}
-} */
 
 void __stdcall DoQuickLoadPluginLoadHandlerPrologueHook(HWND DataDlg)
 {
@@ -820,4 +729,149 @@ void __declspec(naked) CustomCSWindowPatchHook(void)
 		jmp		[kCustomCSWindowPatchRetnAddr]
 	}
 
+}
+
+void __declspec(naked) PluginSaveHook(void)
+{
+    __asm
+    {
+		call	SetWindowTextAddress
+		call	[g_WindowHandleCallAddr]				// SetWindowTextA
+		pushad
+		push	10
+		call	SendPingBack
+		popad
+		jmp		[kPluginSaveRetnAddr]
+    }
+}
+
+void __stdcall FixDefaultWater(void)
+{
+	(*g_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
+}
+
+void __stdcall DoHiddenFormsCheck(void)
+{
+	if (AreUnModifiedFormsHidden())
+		ToggleHideUnModifiedForms(true);
+}
+
+void __declspec(naked) PluginLoadHook(void)
+{
+    __asm
+    {
+		pushad
+		call	FixDefaultWater
+		popad
+
+		call	InitializeCSWindows
+
+		pushad
+		push	9
+		call	SendPingBack
+		call	DoHiddenFormsCheck
+		popad
+
+		jmp		[kPluginLoadRetnAddr]
+    }
+}
+
+bool __stdcall PerformControlPopulationPrologCheck(TESForm* Form)
+{
+	if (AreUnModifiedFormsHidden() && ((Form->flags & TESForm::kFormFlags_FromActiveFile) == 0))
+		return false;		// skip addition
+	else
+		return true;
+}
+
+UInt8 __stdcall CheckCallLocations(UInt32 CallAddress)
+{
+	switch (CallAddress)
+	{
+	case 0x00445C88:
+	case 0x00445DC8:
+	case 0x00445E6E:
+	case 0x00452FA8:
+	case 0x00440FBD:
+	case 0x0040A4BF:
+	case 0x00412F7A:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+void __declspec(naked) AddListViewItemHook(void)
+{
+    __asm
+    {
+		mov		eax, [esp]
+		sub		eax, 5
+		pushad
+		push	eax
+		call	CheckCallLocations
+		test	al, al
+		jz		SKIP
+		popad
+
+		mov		eax, [esp + 8]
+		pushad
+		push	eax
+		call	PerformControlPopulationPrologCheck
+		test	al, al
+		jz		EXIT
+	SKIP:
+		popad
+
+		mov		ecx, [esp + 0x16]
+		or		edx, 0x0FFFFFFFF
+		jmp		[kAddListViewItemRetnAddr]
+	EXIT:
+		popad
+		jmp		[kAddListViewItemExitAddr]
+    }
+}
+
+void __declspec(naked) AddComboBoxItemHook(void)
+{
+    __asm
+    {
+		pushad
+		push	[esp + 0xC]
+		call	PerformControlPopulationPrologCheck
+		test	al, al
+		jz		EXIT
+		popad
+
+		sub		esp, 8
+		push	esi
+		mov		esi, [esp + 0x10]
+		jmp		[kAddComboBoxItemRetnAddr]
+	EXIT:
+		popad
+		jmp		[kAddComboBoxItemExitAddr]
+    }
+}
+
+void __declspec(naked) ObjectListPopulateListViewItemsHook(void)
+{
+	__asm
+	{
+		mov		eax, [esp + 8]
+		pushad
+		push	eax
+		call	PerformControlPopulationPrologCheck
+		test	al, al
+		jz		EXIT2
+		popad
+
+		sub		esp, 0x28
+		mov		eax, [0x00A0AF40]		// object window menu item checked state
+		cmp		eax, 0
+
+		jmp		[kObjectListPopulateListViewItemsRetnAddr]
+	EXIT2:
+		popad
+		jmp		[kObjectListPopulateListViewItemsExitAddr]
+	}
 }

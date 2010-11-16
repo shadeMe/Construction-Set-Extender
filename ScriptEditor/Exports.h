@@ -15,5 +15,6 @@ __declspec(dllexport) void SendMessagePingback(UInt32 VanillaHandleIndex, UInt16
 __declspec(dllexport) void SetScriptListItemData(UInt32 VanillaHandleIndex, ScriptData* Data);
 
 __declspec(dllexport) void SetVariableListItemData(UInt32 VanillaHandleIndex, ScriptVarIndexData::ScriptVarInfo* Data);
+__declspec(dllexport) void InitializeDatabaseUpdateTimer();
 
 }

@@ -42,6 +42,12 @@ public:
 																e_NewContainer = 0,
 																e_RelocateToContainer
 															};
+	static enum class									SaveWorkspaceOpType
+															{
+																e_SaveAndCompile = 0,
+																e_SaveButDontCompile,
+																e_SaveActivePluginToo
+															};
 
 	static array<String^>^								TypeIdentifier =
 															{
@@ -75,7 +81,7 @@ private:
 
 	ScriptEditorManager();
 
-	void												MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor);
+	void												MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor, SaveWorkspaceOpType SaveOperation);
 	void												MoveScriptDataFromVanillaEditor(ScriptEditor::Workspace^% CSEEditor);
 
 																										// exported wrappers
@@ -87,7 +93,7 @@ private:
 	void												MessageHandler_SendOpen(UInt32 AllocatedIndex);
 	void												MessageHandler_SendPrevious(UInt32 AllocatedIndex);
 	void												MessageHandler_SendNext(UInt32 AllocatedIndex);
-	void												MessageHandler_SendSave(UInt32 AllocatedIndex);
+	void												MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWorkspaceOpType Operation);
 	void												MessageHandler_SendRecompile(UInt32 AllocatedIndex);
 	void												MessageHandler_SendDelete(UInt32 AllocatedIndex);
 	void												MessageHandler_SendClose(UInt32 AllocatedIndex);

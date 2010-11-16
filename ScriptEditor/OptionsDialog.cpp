@@ -120,7 +120,7 @@ void BoundControl::SetValue(String^ Value)
 
 void OptionsDialog::PopulateINIMap()
 {
-	// Script Editor
+	// General
 	INIMap->Add(gcnew INISetting("Font", "ScriptEditor::General", "Lucida Console"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_FontFamily_Name));
 	INIMap->Add(gcnew INISetting("FontSize", "ScriptEditor::General", "10"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
 
@@ -145,7 +145,8 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("AutoIndent", "ScriptEditor::General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("SaveLastKnownPos", "ScriptEditor::General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::General", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-
+	INIMap->Add(gcnew INISetting("RecompileVarIdx", "ScriptEditor::General", "1"), gcnew BoundControl(RecompileVarIdx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("UseCSParent", "ScriptEditor::General", "0"), gcnew BoundControl(UseCSParent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// IntelliSense
 	INIMap->Add(gcnew INISetting("ThresholdLength", "ScriptEditor::IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
@@ -154,6 +155,7 @@ void OptionsDialog::PopulateINIMap()
 	// Preprocessor
 	INIMap->Add(gcnew INISetting("CreateMissingFromSegment", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(CreateMissingFromSegment, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("AllowRedefinitions", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("PreprocessorWarnings", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(PreprocessorWarnings, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	DebugPrint("Populated INI Map");
 }
@@ -200,6 +202,9 @@ OptionsDialog::OptionsDialog()
 	GroupGen = gcnew GroupBox();
 	UseRegEx = gcnew CheckBox();
 	ColorEditorBox = gcnew CheckBox();
+	RecompileVarIdx = gcnew CheckBox();
+	PreprocessorWarnings = gcnew CheckBox();
+	UseCSParent = gcnew CheckBox();
 
 	FontButton = gcnew Button();
 	FCButton = gcnew Button();
@@ -229,6 +234,8 @@ OptionsDialog::OptionsDialog()
 
 	GroupPreP->Controls->Add(CreateMissingFromSegment);
 	GroupPreP->Controls->Add(AllowRedefinitions);
+	GroupPreP->Controls->Add(PreprocessorWarnings);
+	
 	GroupPreP->Location = System::Drawing::Point(12, 16);
 	GroupPreP->Name = L"GroupPreP";
 	GroupPreP->Size = System::Drawing::Size(240, 162);
@@ -251,6 +258,14 @@ OptionsDialog::OptionsDialog()
 	AllowRedefinitions->UseVisualStyleBackColor = true;
 	AllowRedefinitions->AutoSize = true;
 
+	PreprocessorWarnings->AutoSize = true;
+	PreprocessorWarnings->Location = System::Drawing::Point(13, 111);
+	PreprocessorWarnings->Name = L"PreprocessorWarnings";
+	PreprocessorWarnings->Size = System::Drawing::Size(130, 17);
+	PreprocessorWarnings->TabIndex = 10;
+	PreprocessorWarnings->Text = L"Show Script Warnings";
+	PreprocessorWarnings->UseVisualStyleBackColor = true;
+
 	GroupIS->Controls->Add(ISThreshold);
 	GroupIS->Controls->Add(ThresholdLength);
 	GroupIS->Location = System::Drawing::Point(258, 16);
@@ -265,7 +280,7 @@ OptionsDialog::OptionsDialog()
 	ISThreshold->Name = L"ISThreshold";
 	ISThreshold->Size = System::Drawing::Size(148, 13);
 	ISThreshold->TabIndex = 1;
-	ISThreshold->Text = L"Threshold Length";
+	ISThreshold->Text = L"IntelliSense Pop-up Threshold";
 
 	ThresholdLength->Location = System::Drawing::Point(21, 53);
 	ThresholdLength->Name = L"ThresholdLength";
@@ -283,6 +298,10 @@ OptionsDialog::OptionsDialog()
 	GroupGen->Controls->Add(BMCButton);
 	GroupGen->Controls->Add(TabStopSize);
 	GroupGen->Controls->Add(TabSize);
+	GroupGen->Controls->Add(RecompileVarIdx);
+	GroupGen->Controls->Add(UseCSParent);
+	
+	
 	GroupGen->Location = System::Drawing::Point(12, 184);
 	GroupGen->Name = L"GroupGen";
 	GroupGen->Size = System::Drawing::Size(488, 263);
@@ -297,6 +316,7 @@ OptionsDialog::OptionsDialog()
 	UseRegEx->Text = L"Use Regular Expressions";
 	UseRegEx->UseVisualStyleBackColor = true;
 	UseRegEx->AutoSize = true;
+	UseRegEx->Enabled = false;
 
 	ColorEditorBox->AutoSize = true;
 	ColorEditorBox->Location = System::Drawing::Point(324, 68);
@@ -374,6 +394,22 @@ OptionsDialog::OptionsDialog()
 	TabSize->Minimum = 0;
 	TabSize->Maximum = 100;
 
+	RecompileVarIdx->AutoSize = true;
+	RecompileVarIdx->Location = System::Drawing::Point(15, 114);
+	RecompileVarIdx->Name = L"RecompileVarIdx";
+	RecompileVarIdx->Size = System::Drawing::Size(272, 17);
+	RecompileVarIdx->TabIndex = 9;
+	RecompileVarIdx->Text = L"Recompile dependencies post variable index update";
+	RecompileVarIdx->UseVisualStyleBackColor = true;
+
+	UseCSParent->AutoSize = true;
+	UseCSParent->Location = System::Drawing::Point(324, 114);
+	UseCSParent->Name = L"UseCSParent";
+	UseCSParent->Size = System::Drawing::Size(109, 17);
+	UseCSParent->TabIndex = 10;
+	UseCSParent->Text = L"Use CS as Parent";
+	UseCSParent->UseVisualStyleBackColor = true;
+
 	OptionsBox = gcnew Form();
 	OptionsBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	OptionsBox->AutoScaleMode = AutoScaleMode::Font;
@@ -425,6 +461,4 @@ void OptionsDialog::BMCButton_Click(Object^ Sender, EventArgs^ E)
 void OptionsDialog::OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
 	SaveINI();
-	OptionsBox->Hide();
-	E->Cancel = true;
 }

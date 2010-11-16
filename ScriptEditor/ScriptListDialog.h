@@ -2,10 +2,6 @@
 #include "Common\Includes.h"
 
 
-// TODO: ++++++++++++++++++
-
-
-
 public ref class ScriptListDialog
 {
 	int													LastSortColumn;

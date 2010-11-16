@@ -4,10 +4,6 @@
 
 using namespace System::ComponentModel;
 
-// TODO: ++++++++++++++++++
-
-
-
 ref class IntelliSenseItem;
 ref class CommandInfo;
 ref class VariableInfo;
@@ -15,7 +11,6 @@ ref class UserFunction;
 ref class SyntaxBox;
 ref class Script;
 ref class SyntaxBoxInitializer;
-ref class Quest;
 struct CommandTableData;
 
 
@@ -44,27 +39,31 @@ public ref class IntelliSenseDatabase
 	static IntelliSenseDatabase^						Singleton = nullptr;
 	IntelliSenseDatabase();
 
-	ref struct ParsedPluginData
+	ref struct ParsedUpdateData
 	{
 		LinkedList<UserFunction^>^						UDFList;
-		LinkedList<Quest^>^								QuestList;
-		LinkedList<String^>^							ActiveScriptRecords;
-
-		ParsedPluginData() : UDFList(gcnew LinkedList<UserFunction^>()), QuestList(gcnew LinkedList<Quest^>()), ActiveScriptRecords(gcnew LinkedList<String^>()) {}
+		LinkedList<IntelliSenseItem^>^					Enumerables;
+	
+		ParsedUpdateData() : UDFList(gcnew LinkedList<UserFunction^>()), Enumerables(gcnew LinkedList<IntelliSenseItem^>()) {}
 	};
 
 
-	BackgroundWorker^									PluginParserThread;
-	ParsedPluginData^									DoUpdateDatabase(String^ PluginName);
-	void												PostUpdateDatabase(ParsedPluginData^ Data);
-	void												PluginParserThread_DoWork(Object^ Sender, DoWorkEventArgs^ E);
-	void												PluginParserThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E);
+	Timers::Timer^										DatabaseUpdateTimer;
+	BackgroundWorker^									DatabaseUpdateThread;
+	ParsedUpdateData^									DoUpdateDatabase();
+	void												PostUpdateDatabase(ParsedUpdateData^ Data);
+
+	void												DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E);
+	void												DatabaseUpdateThread_DoWork(Object^ Sender, DoWorkEventArgs^ E);
+	void												DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E);
 
 	LinkedList<UserFunction^>^							UserFunctionList;
-	LinkedList<Quest^>^									QuestList;
 	Dictionary<String^, String^>^						URLMap;
 	Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
-	LinkedList<String^>^								ActiveScriptRecords;		// used by the recompile all hook
+
+	bool												ForceUpdateFlag;
+
+	void												UpdateDatabase();
 public:
 	LinkedList<IntelliSenseItem^>^						Enumerables;
 
@@ -75,12 +74,12 @@ public:
 
 	static void											ParseScript(String^% SourceText, Boxer^ Box);
 	void												AddToURLMap(String^% CmdName, String^% URL);
-	void												UpdateDatabase(String^ PluginName);
 	String^												GetCommandURL(String^% CmdName);
 	Script^												GetRemoteScript(String^ BaseEditorID, String^ ScriptText);
 	bool												IsUDF(String^% Name);
-	bool												IsCommand(String^ Name);
-	bool												IsActiveScriptRecord(String^% EditorID);
+	bool												IsCommand(String^% Name);
+	void												ForceUpdateDatabase();
+	void												InitializeDatabaseUpdateTimer();
 };
 
 #define ISDB											IntelliSenseDatabase::GetSingleton()
@@ -109,7 +108,7 @@ public:
 
 	String^%											Describe() { return Description; }
 
-	IntelliSenseItem(String^% Desc, ItemType Type) : Description(Desc), Type(Type) {};
+	IntelliSenseItem(String^ Desc, ItemType Type) : Description(Desc), Type(Type) {};
 
 	virtual String^%									GetIdentifier() { return Name; }
 	ItemType%											GetType() { return Type; }
@@ -214,10 +213,17 @@ protected:
 	Script(String^% ScriptText, String^% Name);
 };
 
-public ref class Quest : public Script
+public ref class Quest : public IntelliSenseItem 
 {
 public:
-	Quest(String^% ScriptText, String^% EditorID) : Script(ScriptText, EditorID) {}
+	String^												Name;
+	String^												ScriptName;
+
+	Quest(String^% EditorID, String^% Desc, String^% ScrName) :
+															IntelliSenseItem((gcnew String(EditorID + ((Desc != "")?"\n":"") + Desc + ((ScrName != "")?"\n\nQuest Script: ":"") + ScrName)), IntelliSenseItem::ItemType::e_Quest),
+															Name(EditorID), ScriptName(ScrName) {}
+
+	virtual String^%									GetIdentifier() override { return Name; }
 };
 
 public ref class UserFunction : public Script
@@ -229,7 +235,6 @@ public:
 	UserFunction(String^% ScriptText);
 
 	virtual String^										Describe() override;
-	void												DumpData();
 };
 
 public ref class UserFunctionDelegate : public IntelliSenseItem	
@@ -241,17 +246,6 @@ public:
 
 	virtual String^%									GetIdentifier() override { return Parent->Name; }
 };
-
-public ref class QuestDelegate : public IntelliSenseItem	
-{
-public:
-	Quest^												Parent;
-
-	QuestDelegate(Quest^% Parent) : Parent(Parent), IntelliSenseItem(Parent->Describe(), ItemType::e_Quest) {}
-
-	virtual String^%									GetIdentifier() override { return Parent->Name; }
-};
-
 
 public ref class SyntaxBox
 {

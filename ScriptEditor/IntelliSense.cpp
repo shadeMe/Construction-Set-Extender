@@ -6,7 +6,6 @@
 #include "PluginParser.h"
 #include "Common\HandShakeStructs.h"
 
-
 ScriptData*							g_ScriptDataPackage = new ScriptData();
 
 Script::Script()
@@ -75,12 +74,6 @@ String^ UserFunction::Describe()
 	return Description;
 }
 
-void UserFunction::DumpData()
-{
-	DebugPrint("\n");
-	DebugPrint(Name + "\n" + this->Description + "\n");
-}
-
 IntelliSenseDatabase^% IntelliSenseDatabase::GetSingleton()
 {
 	if (Singleton == nullptr) {
@@ -93,138 +86,109 @@ IntelliSenseDatabase::IntelliSenseDatabase()
 {
 	Enumerables = gcnew LinkedList<IntelliSenseItem^>();
 	UserFunctionList = gcnew LinkedList<UserFunction^>();						
-	QuestList = nullptr;
 	URLMap = gcnew Dictionary<String^, String^>();
 	RemoteScripts = gcnew Dictionary<String^, Script^>();
-	ActiveScriptRecords = gcnew LinkedList<String^>();
 
-	PluginParserThread = gcnew BackgroundWorker();
-	PluginParserThread->DoWork += gcnew DoWorkEventHandler(this, &IntelliSenseDatabase::PluginParserThread_DoWork);
-	PluginParserThread->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &IntelliSenseDatabase::PluginParserThread_RunWorkerCompleted);
+	DatabaseUpdateThread = gcnew BackgroundWorker();
+	DatabaseUpdateThread->DoWork += gcnew DoWorkEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_DoWork);
+	DatabaseUpdateThread->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted);
+
+	DatabaseUpdateTimer = gcnew Timers::Timer(10 * 60 * 1000);	// init to 10 earth minutes
+	DatabaseUpdateTimer->Elapsed += gcnew Timers::ElapsedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed);
+	DatabaseUpdateTimer->AutoReset = true;
+	DatabaseUpdateTimer->SynchronizingObject = nullptr;
+	ForceUpdateFlag = false;
 
 	DebugPrint("Initialized IntelliSense");
 }
 
-IntelliSenseDatabase::ParsedPluginData^ IntelliSenseDatabase::DoUpdateDatabase(String^ PluginName)
+IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::DoUpdateDatabase()
 {
-	ParsedPluginData^ Data = nullptr;
-	List<PluginParser^>^ ParsedPlugins = gcnew List<PluginParser^>();
+	ParsedUpdateData^ Data = gcnew ParsedUpdateData();
 
-	PluginParser^ ActivePlugin = gcnew PluginParser(PluginName);
+	IntelliSenseUpdateData* DataHandlerData = NativeWrapper::ScriptEditor_BeginIntelliSenseDatabaseUpdate();
 
-	if (!ActivePlugin->IsUsable())		return Data;
+	for (ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr) {
+		if (!Itr->IsValid())		continue;
 
-	for each (String^% Itr in ActivePlugin->PluginHeader->MasterList) {
-		if (!String::Compare(Itr, "Oblivion.esm"))	continue;
-		ParsedPlugins->Add(gcnew PluginParser(Itr));
-	}
-	ParsedPlugins->Add(ActivePlugin);
-
-	Data = gcnew ParsedPluginData();
-	Dictionary<UInt32, SCPTRecord^>^ ProcessedScriptRecords = gcnew Dictionary<UInt32, SCPTRecord^>();
-	Dictionary<UInt32, QUSTRecord^>^ ProcessedQuestRecords = gcnew Dictionary<UInt32, QUSTRecord^>();
-
-	for each (PluginParser^% Itr in ParsedPlugins) {
-		if (!Itr->IsUsable())			continue;
-																						// create a list of overridden records
-		for each (SCPTRecord^% ScriptRecord in Itr->ScriptRecords) {
-			if (ProcessedScriptRecords->ContainsKey(ScriptRecord->GetFormID()))				ProcessedScriptRecords[ScriptRecord->GetFormID()] = ScriptRecord;
-			else																			ProcessedScriptRecords->Add(ScriptRecord->GetFormID(), ScriptRecord);
-		}
-
-		for each (QUSTRecord^% QuestRecord in Itr->QuestRecords) {
-			if (ProcessedQuestRecords->ContainsKey(QuestRecord->GetFormID()))				ProcessedQuestRecords[QuestRecord->GetFormID()] = QuestRecord;
-			else																			ProcessedQuestRecords->Add(QuestRecord->GetFormID(), QuestRecord);
-		}
+		Data->UDFList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
 	}
 
-	for each (SCPTRecord^% ScriptRecord in ActivePlugin->ScriptRecords) {
-		Data->ActiveScriptRecords->AddLast(ScriptRecord->GetEditorID());
+	for (QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr) {
+		if (!Itr->IsValid())		continue;
+
+		Data->Enumerables->AddLast(gcnew Quest(gcnew String(Itr->EditorID), gcnew String(Itr->FullName), gcnew String(Itr->ScriptName)));
 	}
 
-																						// parse overriden list
-	for each (KeyValuePair<UInt32, SCPTRecord^>% Itr in ProcessedScriptRecords) {
-		if (Itr.Value->Type == SCPTRecord::ScriptType::e_Object && Itr.Value->UDF)
-			Data->UDFList->AddLast(gcnew UserFunction(Itr.Value->ScriptText));
+	for each (IntelliSenseItem^ Itr in Enumerables) {
+		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
+			Data->Enumerables->AddLast(Itr);
 	}
 
-	for each (KeyValuePair<UInt32, QUSTRecord^>% Itr in ProcessedQuestRecords) {
-		for each (KeyValuePair<UInt32, SCPTRecord^>% ItrEx in ProcessedScriptRecords) {
-			if (ItrEx.Value->Type == SCPTRecord::ScriptType::e_Quest) {
-				String^ QFID = Itr.Value->QuestScript.ToString("x8")->Substring(2),
-						^SFID = ItrEx.Value->GetFormID().ToString("x8")->Substring(2);
-				if (!String::Compare(QFID, SFID)) {
-					Data->QuestList->AddLast(gcnew Quest(ItrEx.Value->ScriptText, Itr.Value->GetEditorID()));
-					break;
-				}
-			}
-		}
+	for each (UserFunction^% Itr in Data->UDFList) {
+		Data->Enumerables->AddLast(gcnew UserFunctionDelegate(Itr));
 	}
 
-	DebugPrint("PluginParser thread ended successfully!", false);
+
+	NativeWrapper::ScriptEditor_EndIntelliSenseDatabaseUpdate(DataHandlerData);
+
 	return Data;
 }
 
-void IntelliSenseDatabase::PostUpdateDatabase(ParsedPluginData^ Data)
+void IntelliSenseDatabase::PostUpdateDatabase(ParsedUpdateData^ Data)
 {
-	if (UserFunctionList != nullptr)	UserFunctionList->Clear();
-										UserFunctionList = Data->UDFList;
-	if (QuestList != nullptr)			QuestList->Clear();
-										QuestList = Data->QuestList;
-	ActiveScriptRecords = Data->ActiveScriptRecords;
-
-	LinkedList<IntelliSenseItem^>^ EnumerablesClone = gcnew LinkedList<IntelliSenseItem^>();
-	for each (IntelliSenseItem^ Itr in Enumerables) {
-		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
-			EnumerablesClone->AddLast(Itr);
-	}
-	Enumerables->Clear(), Enumerables = EnumerablesClone;
-
-	for each (UserFunction^% Itr in UserFunctionList) {
-		Enumerables->AddLast(gcnew UserFunctionDelegate(Itr));
-	}
-	for each (Quest^% Itr in QuestList) {
-		Enumerables->AddLast(gcnew QuestDelegate(Itr));
-	}
-
+	UserFunctionList->Clear();
+	Enumerables->Clear();
 	RemoteScripts->Clear();
 
+	UserFunctionList = Data->UDFList;
+	Enumerables = Data->Enumerables;
+	
 	NativeWrapper::PrintToCSStatusBar(2, "IntelliSense database updated");
 	DebugPrint("IntelliSense database updated");
 }
 
-void IntelliSenseDatabase::PluginParserThread_DoWork(Object^ Sender, DoWorkEventArgs^ E)
+void IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E)
 {
-	E->Result = DoUpdateDatabase(dynamic_cast<String^>(E->Argument));
+	if (ForceUpdateFlag)
+	{
+		DatabaseUpdateTimer->Interval = 10 * 60 * 1000;
+		ForceUpdateFlag = false;
+	} 
+
+	UpdateDatabase();
 }
 
-void IntelliSenseDatabase::PluginParserThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E)
+void IntelliSenseDatabase::DatabaseUpdateThread_DoWork(Object^ Sender, DoWorkEventArgs^ E)
+{
+	E->Result = DoUpdateDatabase();
+}
+
+void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E)
 {
 	if (E->Error != nullptr)
-		DebugPrint("The PluginParser thread raised an exception!\n\tException: " + E->Error->Message, true);
+		DebugPrint("The ISDatabaseUpdate thread raised an exception!\n\tException: " + E->Error->Message, true);
 	else if (E->Cancelled)
-		DebugPrint("Huh?! PluginParser thread was cancelled", true);
+		DebugPrint("Huh?! ISDatabaseUpdate thread was cancelled", true);
 	else if (E->Result == nullptr)
 		DebugPrint("Something seriously went wrong when parsing the loaded plugins!", true);
-	else
-		PostUpdateDatabase(dynamic_cast<ParsedPluginData^>(E->Result));
-
-	if (E->Result == nullptr)
-		NativeWrapper::PrintToCSStatusBar(2, "Error encountered while updating IntelliSense database !");
-}
-
-void IntelliSenseDatabase::UpdateDatabase(String^ PluginName)
-{
-	if (PluginName == "") {
-		String^ Message = "Couldn't extract plugin name from window title - No active plugin?";
-		DebugPrint(Message);
-		NativeWrapper::PrintToCSStatusBar(2, Message);
-		return;
+	else 
+	{
+		PostUpdateDatabase(dynamic_cast<ParsedUpdateData^>(E->Result));
+		DebugPrint("ISDatabaseUpdate thread ended successfully!", false);
 	}
 
-	if (!PluginParserThread->IsBusy) {
-		DebugPrint("PluginParser thread started");
-		PluginParserThread->RunWorkerAsync(PluginName);
+	if (E->Result == nullptr)
+	{
+		NativeWrapper::PrintToCSStatusBar(2, "Error encountered while updating IntelliSense database !");
+	}	
+}
+
+void IntelliSenseDatabase::UpdateDatabase()
+{
+	if (!DatabaseUpdateThread->IsBusy) {
+		DebugPrint("ISDatabaseUpdateThread thread started");
+		DatabaseUpdateThread->RunWorkerAsync();
 		NativeWrapper::PrintToCSStatusBar(2, "Updating IntelliSense database ...");
 	}
 }
@@ -412,7 +376,7 @@ void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 	}
 
 	DebugPrint(String::Format("\tSuccessfully parsed {0} commands!", Count));
-	} catch (Exception^ E) {
+	} catch (CSEGeneralException^ E) {
 		DebugPrint("Exception raised!\n\tMessage: " + E->Message, true);
 	}
 }
@@ -469,21 +433,7 @@ bool IntelliSenseDatabase::IsUDF(String^% Name)
 	return Result;
 }
 
-bool IntelliSenseDatabase::IsActiveScriptRecord(String^% EditorID)
-{
-	bool Result = false;
-	
-	for each (String^% Itr in ActiveScriptRecords) {
-		if (!String::Compare(EditorID, Itr, true)) {
-			Result = true;
-			break;
-		}
-	}
-
-	return Result;	
-}
-
-bool IntelliSenseDatabase::IsCommand(String^ Name)
+bool IntelliSenseDatabase::IsCommand(String^% Name)
 {
 	bool Result = false;
 	
@@ -498,6 +448,22 @@ bool IntelliSenseDatabase::IsCommand(String^ Name)
 
 	return Result;
 }
+
+void IntelliSenseDatabase::ForceUpdateDatabase()
+{
+	ForceUpdateFlag = true;
+	DatabaseUpdateTimer->Interval = 500;
+}
+
+void IntelliSenseDatabase::InitializeDatabaseUpdateTimer()
+{
+	static bool DatabaseTimerInitialized = false;
+	if (DatabaseTimerInitialized)	return;
+
+	DatabaseUpdateTimer->Start();
+	DatabaseTimerInitialized = true;
+}
+
 
 
 

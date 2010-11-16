@@ -62,6 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ComCtl32.lib shell32.lib"
 				LinkIncremental="1"
 				ModuleDefinitionFile="exports.def"
 				GenerateDebugInformation="true"
@@ -125,6 +126,10 @@
 			</File>
 			<File
 				RelativePath="..\obse\obse_editor\EditorAPI.h"
+				>
+			</File>
+			<File
+				RelativePath="..\obse\obse_editor\EditorRTTI.cpp"
 				>
 			</File>
 			<File
@@ -228,6 +233,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI_Res.h"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI_Res.rc"
+				>
+			</File>
+			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
@@ -235,6 +248,10 @@
 		<Filter
 			Name="Common"
 			>
+			<File
+				RelativePath=".\Common\HandshakeStructs.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\Common\HandShakeStructs.h"
 				>
@@ -261,23 +278,15 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\[ Libraries ]\CSE Handshake\CSEL.h"
+			RelativePath=".\CSEInterfaceAPI.h"
 			>
 		</File>
 		<File
-			RelativePath=".\Editor_RTTI.cpp"
+			RelativePath=".\CSEInterfaceManager.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Editor_RTTI.h"
-			>
-		</File>
-		<File
-			RelativePath=".\EditorBSExtraData.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\EditorBSExtraData.h"
+			RelativePath=".\CSEInterfaceManager.h"
 			>
 		</File>
 		<File
@@ -294,6 +303,14 @@
 		</File>
 		<File
 			RelativePath=".\ExtenderInternals.h"
+			>
+		</File>
+		<File
+			RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI.h"
 			>
 		</File>
 		<File

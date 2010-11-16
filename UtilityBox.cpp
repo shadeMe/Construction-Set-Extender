@@ -1,6 +1,7 @@
 #include "ExtenderInternals.h"
 #include "WindowManager.h"
 #include "resource.h"
+#include "CSEInterfaceManager.h"
 
 extern HINSTANCE g_DLLInstance;
 
@@ -57,7 +58,7 @@ void Console::InitializeConsole()
 {
 	if (IsConsoleInitalized())	return;
 
-	WindowHandle = CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_CONSOLE), NULL, (DLGPROC)ConsoleDlgProc);
+	WindowHandle = CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_CONSOLE), *g_HWND_CSParent, (DLGPROC)ConsoleDlgProc);
 	EditHandle = GetDlgItem(WindowHandle, EDIT_CONSOLE);
 	g_ConsoleEditControlOrgWindowProc = (WNDPROC)SetWindowLong(EditHandle, GWL_WNDPROC, (LONG)ConsoleEditControlSubClassProc);
 	Edit_LimitText(EditHandle, sizeof(int));
@@ -110,28 +111,29 @@ void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 {
 	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
 
-	std::string Message;
+	std::string Message, Prefix;
 	switch (Source)
 	{
 	case e_CSE:
-		Message += "[CSE]\t";
+		Prefix += "[CSE]\t";
 		break;
 	case e_CS:
-		Message += "[CS]\t";
+		Prefix += "[CS]\t";
 		break;
 	case e_BE:
-		Message += "[BE]\t";
+		Prefix += "[BE]\t";
 		break;
 	case e_UL:
-		Message += "[UL]\t";
+		Prefix += "[UL]\t";
 		break;
 	case e_SE:
-		Message += "[SE]\t";
+		Prefix += "[SE]\t";
 		break;
 	case e_BSA:
-		Message += "[BSA]\t";
+		Prefix += "[BSA]\t";
 		break;
 	}
+	Message += Prefix;
 
 	for (int i = 0; i < IndentLevel; i++) {
 		Message += "\t";
@@ -152,6 +154,38 @@ void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
+
+		CSEInterfaceManager::HandleConsoleCallback(Message.c_str(), Prefix.c_str());
+	}
+}
+
+void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
+{
+	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
+
+	std::string Message("[" + std::string(Prefix) + "]\t");
+
+	for (int i = 0; i < IndentLevel; i++) {
+		Message += "\t";
+	}
+
+	Message += std::string(g_Buffer);
+	if (Message.rfind("\r\n") != Message.length() - 2)
+		MessageBuffer += Message + "\r\n";
+	else
+		MessageBuffer += Message;
+
+	if (IsLogInitalized()) {
+		DebugLog << Message << std::endl;
+	}
+
+	if (IsConsoleInitalized() && !IsHidden()) {
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, FALSE, 0);
+		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
+
+		CSEInterfaceManager::HandleConsoleCallback(Message.c_str(), Prefix);
 	}
 }
 

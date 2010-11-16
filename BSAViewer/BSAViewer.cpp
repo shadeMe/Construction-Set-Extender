@@ -198,6 +198,10 @@ void BSAViewer::PopulateContentList(FolderObject^% WorkingDirectory)
 	else								LocationBox->Text = "root";
 
 	this->WorkingDirectory = WorkingDirectory;
+
+	ContentList->Sorting = SortOrder::Ascending;
+	ContentList->Sort();
+	ContentList->ListViewItemSorter = gcnew CSEListViewStringSorter(0, ContentList->Sorting);
 }
 
 void BSAViewer::Close()

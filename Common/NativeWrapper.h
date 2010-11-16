@@ -11,7 +11,8 @@ class NativeWrapper
 public:
 	[DllImport("Construction Set Extender.dll")] 
 	static const char*									GetAppPath(void);
-
+	[DllImport("Construction Set Extender.dll")] 
+	static IntPtr										GetCSMainWindowHandle(void);
 
 	[DllImport("Construction Set Extender.dll")] 
 	static ScriptData*									FetchScriptFromForm(const char* EditorID);
@@ -36,8 +37,6 @@ public:
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_SetScriptListResult(const char* EditorID);
 	[DllImport("Construction Set Extender.dll")] 
-	static const char*									ScriptEditor_GetActivePluginName();
-	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_GetUseReportForForm(const char* EditorID);
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID);
@@ -49,7 +48,14 @@ public:
 	static void											ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex);
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_CompileDependencies(const char* EditorID);
-
+	[DllImport("Construction Set Extender.dll")] 
+	static IntelliSenseUpdateData*						ScriptEditor_BeginIntelliSenseDatabaseUpdate();
+	[DllImport("Construction Set Extender.dll")] 
+	static void											ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSenseUpdateData* Data);
+	[DllImport("Construction Set Extender.dll")] 
+	static void											ScriptEditor_ToggleScriptCompiling(bool Enable);
+	[DllImport("Construction Set Extender.dll")] 
+	static void											ScriptEditor_SaveActivePlugin();
 
 	[DllImport("Construction Set Extender.dll")] 
 	static void											UseInfoList_SetFormListItemText();
@@ -90,3 +96,20 @@ public:
 	static String^										GetINIValue(String^ Section, String^ Key, String^ Default);
 	static void											SetINIValue(String^ Section, String^ Key, String^ Value);
 };
+
+public ref class WindowHandleWrapper : public IWin32Window
+{
+	IntPtr					_hwnd;
+public:
+	WindowHandleWrapper(IntPtr Handle) : _hwnd(Handle) {}
+
+    property IntPtr Handle
+    {
+        virtual IntPtr get()
+        {
+            return _hwnd;
+        }
+    };
+};
+
+

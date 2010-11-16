@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Construction Set Extender", "obse_plugin_example.vcproj", "{D4DDA734-7E93-4581-8F82-32BB738F69FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "__Common", "..\common\common.vcproj", "{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_Common", "..\common\common.vcproj", "{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor", "ScriptEditor\ScriptEditor.vcproj", "{AA53012B-2307-47FE-B637-4A828BA77A24}"
 EndProject
@@ -15,7 +15,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchEditor", "BatchEditor\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{754B623C-5C4E-4EC4-9AAC-28BED9F83C8B}"
 	ProjectSection(SolutionItems) = preProject
-		+Dev Journal.txt = +Dev Journal.txt
+		Dev Journal.txt = Dev Journal.txt
 		G:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\STDPreprocDefs.txt = G:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\STDPreprocDefs.txt
 	EndProjectSection
 EndProject

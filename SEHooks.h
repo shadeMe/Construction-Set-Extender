@@ -12,7 +12,6 @@ extern Script*				g_EditorInitScript;
 extern ScriptData*			g_ScriptDataPackage;
 extern Script*				g_SetEditorTextCache;
 extern Script*				g_ScriptListResult;
-extern std::string			g_ActivePluginName;
 
 bool PatchSEHooks();
 void FillScriptDataPackage(Script* ScriptForm);
@@ -52,16 +51,6 @@ const UInt32			kEditorWindowWParamHookAddr =	0x004FEC46;
 const UInt32			kEditorWindowWParamRetnAddr =	0x004FED08;	
 
 void EditorWindowWParamHook(void);
-// calls CLIWrapper::UpdateIntelliSense and fixes the default water texture
-const UInt32			kGetPluginNameSaveHookAddr	=	0x0041BBCD;
-const UInt32			kGetPluginNameSaveRetnAddr	=	0x0041BBD3;
-
-void GetPluginNameSaveHook(void);
-
-const UInt32			kGetPluginNameLoadHookAddr	=	0x0041BEF4;
-const UInt32			kGetPluginNameLoadRetnAddr	=	0x0041BEFA;
-
-void GetPluginNameLoadHook(void);
 // patches the recompile script routine to skip scripts outside the active plugin
 const UInt32 kRecompileScriptsHookAddr = 0x004FEFEA;
 const UInt32 kRecompileScriptsRetnAddr = 0x004FEFF1;
@@ -147,3 +136,9 @@ const UInt32			kLogRecompileResultsRetnAddr = 0x004FF083;
 const UInt32			kLogRecompileResultsCallAddr = 0x00503450;
 
 void LogRecompileResultsHook(void);
+// toggles script compiling during a save callback
+void ToggleScriptCompiling(bool Enable);
+
+const UInt32			kToggleScriptCompilingPatchAddr = 0x00503450;
+const UInt8				kToggleScriptCompilingOriginalData[] = { 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64 };
+const UInt8				kToggleScriptCompilingNewData[] = { 0xB8, 1, 0, 0, 0, 0xC2, 8, 0 };

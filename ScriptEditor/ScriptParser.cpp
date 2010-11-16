@@ -414,7 +414,7 @@ try {
 			Result += DoPreProcess(ImportParser->ReadToEnd(), Operation, false, Dummy);
 			Result += ReadLine->Substring(0, TextParser->Indices[0]) + ";</CSEImportSeg> \"" + ImportFileName + "\"\n";
 			ImportParser->Close();
-		} catch (Exception^ E) {
+		} catch (CSEGeneralException^ E) {
 			DebugPrint("Couldn't import from script '" + ImportFileName + "'\n\tException: " + E->Message, true);
 			Result = ReadLine + "\n";
 		}
@@ -436,14 +436,14 @@ try {
 					ImportParser->Close();
 					DebugPrint("\tImport segment '" + ImportFileName + "' created!");
 					
-				} catch (Exception^ E) {
+				} catch (CSEGeneralException^ E) {
 					DebugPrint("Couldn't write import segment to '" + ImportFileName + "'\n\tException: " + E->Message);
 				}
 			}
 		}
 		Result = ReadLine->Substring(0, TextParser->Indices[0]) + "//import \"" + ImportFileName + "\"\n";
 	}
-} catch (Exception^ E) {
+} catch (CSEGeneralException^ E) {
 	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 	return Result;
@@ -557,7 +557,7 @@ try {
 		else
 			Result += "\n";
 	}
-} catch (Exception^ E) {
+} catch (CSEGeneralException^ E) {
 	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 
@@ -623,7 +623,7 @@ try {
 
 		ParseEnumMacros(Value, false);
 	}
-} catch (Exception^ E) {
+} catch (CSEGeneralException^ E) {
 	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 
@@ -771,7 +771,7 @@ void PreProcessor::ProcessStandardDefineDirectives(void)
 			}
 
 			STDFileParser->Close();		
-		} catch (Exception^ E) {
+		} catch (CSEGeneralException^ E) {
 			DebugPrint("Couldn't read from Standard define directives file!\n\tException: " + E->Message);
 		}
 	} else

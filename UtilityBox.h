@@ -14,6 +14,7 @@ void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [O
 void LogWinAPIErrorMessage(DWORD ErrorID);
 
 #define PLACE_HOOK(name)									WriteRelJump(k##name##HookAddr, (UInt32)##name##Hook)
+#define CS_CAST(obj, from, to)								(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
 
 class Console
 {
@@ -51,6 +52,7 @@ public:
 	HWND						GetWindowHandle() { return WindowHandle; }		
 
 	void						LogMessage(UInt8 Source, const char* Format, va_list Args);
+	void						LogMessage(const char* Prefix,  const char* Format, va_list Args);
 	UInt32						Indent();
 	UInt32						Exdent();
 	void						ExdentAll() { IndentLevel = 0; }
@@ -67,7 +69,6 @@ struct NopData
 	UInt32				Address;
 	UInt8				Size;
 };
-
 void DoNop(const NopData* Data);
 
 void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump = 512);

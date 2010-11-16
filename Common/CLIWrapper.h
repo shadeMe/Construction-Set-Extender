@@ -3,46 +3,58 @@
 #include "SEHooks.h"
 #include "Common\HandShakeStructs.h"
 
-class CLIWrapper
+namespace CLIWrapper
 {
-	typedef void							(*_SE_AllocateNewEditor)(UInt32, UInt32, UInt32, UInt32);
-	typedef void							(*_SE_InitializeScript)(UInt32, ScriptData*);
-	typedef void							(*_SE_SendMessagePingback)(UInt32, UInt16);
+	namespace ScriptEditor
+	{
+		typedef void							(*_AllocateNewEditor)(UInt32, UInt32, UInt32, UInt32);
+		typedef void							(*_InitializeScript)(UInt32, ScriptData*);
+		typedef void							(*_SendMessagePingback)(UInt32, UInt16);
 
-	typedef void							(*_SE_InitializeComponents)(CommandTableData*);
-	typedef void							(*_SE_AddToURLMap)(const char*, const char*);
-	typedef void							(*_SE_SetScriptListItemData)(UInt32, ScriptData*);
+		typedef void							(*_InitializeComponents)(CommandTableData*);
+		typedef void							(*_AddToURLMap)(const char*, const char*);
+		typedef void							(*_SetScriptListItemData)(UInt32, ScriptData*);
 
-	typedef void							(*_SE_SetVariableListItemData)(UInt32, ScriptVarIndexData::ScriptVarInfo*);
+		typedef void							(*_SetVariableListItemData)(UInt32, ScriptVarIndexData::ScriptVarInfo*);
+		typedef void							(*_InitializeDatabaseUpdateTimer)();
 
-	typedef void							(*_UIL_OpenUseInfoBox)(void);
-	typedef void							(*_UIL_SetFormListItemData)(FormData*);
-	typedef void							(*_UIL_SetUseListObjectItemData)(FormData*);
-	typedef void							(*_UIL_SetUseListCellItemData)(UseListCellItemData*);
-
-	typedef const char*						(*_BSAV_InitializeViewer)(const char*, const char*);
-	typedef bool							(*_BE_InitializeRefBatchEditor)(BatchRefData*);
-	typedef void							(*_BE_AddFormListItem)(FormData*, UInt8);
-public:
-	static _SE_AllocateNewEditor			SE_AllocateNewEditor;
-	static _SE_InitializeScript				SE_InitializeScript;
-	static _SE_SendMessagePingback			SE_SendMessagePingback;
+		extern _AllocateNewEditor				AllocateNewEditor;
+		extern _InitializeScript				InitializeScript;
+		extern _SendMessagePingback				SendMessagePingback;
 
 
-	static _SE_InitializeComponents			SE_InitializeComponents;
-	static _SE_AddToURLMap					SE_AddToURLMap;
-	static _SE_SetScriptListItemData		SE_SetScriptListItemData;
+		extern _InitializeComponents			InitializeComponents;
+		extern _AddToURLMap						AddToURLMap;
+		extern _SetScriptListItemData			SetScriptListItemData;
 
-	static _SE_SetVariableListItemData		SE_SetVariableListItemData;
+		extern _SetVariableListItemData			SetVariableListItemData;
+		extern _InitializeDatabaseUpdateTimer	InitializeDatabaseUpdateTimer;
+	}
+	namespace UseInfoList
+	{
+		typedef void							(*_OpenUseInfoBox)(void);
+		typedef void							(*_SetFormListItemData)(FormData*);
+		typedef void							(*_SetUseListObjectItemData)(FormData*);
+		typedef void							(*_SetUseListCellItemData)(UseListCellItemData*);
 
-	static _UIL_OpenUseInfoBox				UIL_OpenUseInfoBox;
-	static _UIL_SetFormListItemData			UIL_SetFormListItemData;
-	static _UIL_SetUseListObjectItemData	UIL_SetUseListObjectItemData;
-	static _UIL_SetUseListCellItemData		UIL_SetUseListCellItemData;
-	
-	static _BSAV_InitializeViewer			BSAV_InitializeViewer;
-	static _BE_InitializeRefBatchEditor		BE_InitializeRefBatchEditor;
-	static _BE_AddFormListItem				BE_AddFormListItem;
+		extern _OpenUseInfoBox					OpenUseInfoBox;
+		extern _SetFormListItemData				SetFormListItemData;
+		extern _SetUseListObjectItemData		SetUseListObjectItemData;
+		extern _SetUseListCellItemData			SetUseListCellItemData;
+	}
+	namespace BSAViewer
+	{
+		typedef const char*						(*_InitializeViewer)(const char*, const char*);
 
-	static bool								Import(const OBSEInterface * obse);
-};
+		extern _InitializeViewer				InitializeViewer;
+	}
+	namespace BatchEditor
+	{
+		typedef bool							(*_InitializeRefBatchEditor)(BatchRefData*);
+		typedef void							(*_AddFormListItem)(FormData*, UInt8);
+
+		extern _InitializeRefBatchEditor		InitializeRefBatchEditor;
+		extern _AddFormListItem					AddFormListItem;
+	}
+	bool										Import(const OBSEInterface * obse);
+}

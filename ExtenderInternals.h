@@ -8,12 +8,9 @@
 #include "obse/PluginAPI.h"
 #include "obse/obse_common/SafeWrite.h"
 #include "obse/GameObjects.h"
-#include "Editor_RTTI.h"
 
-#include "[ Libraries ]\CSE Handshake\CSEL.h"
 #include "[ Libraries ]\INI Manager\INIManager.h"
-
-class CSEINIManager;
+#include "[ Libraries ]\INI Manager\INIEditGUI.h"
 
 extern std::fstream					g_DEBUG_LOG;
 extern std::string					g_AppPath;
@@ -23,7 +20,8 @@ extern char							g_Buffer[0x200];
 extern OBSEMessagingInterface*		g_msgIntfc;
 extern PluginHandle					g_pluginHandle;
 extern HINSTANCE					g_DLLInstance;
-extern CSEINIManager*				g_INIManager;
+extern SME::INI::INIManager*		g_INIManager;
+extern SME::INI::INIEditGUI*		g_INIEditGUI;
 
 class EditorAllocator
 {
@@ -78,14 +76,6 @@ public:
 
 	TESDialogInitParam(const char* EditorID);
 };
-
-
-UInt32 GetDialogTemplate(const char* FormType);
-
-void RemoteLoadRef(const char* EditorID);
-void LoadFormIntoView(const char* EditorID, const char* FormType);
-
-
 
 // 08
 class TESCellUseData
@@ -222,22 +212,34 @@ STATIC_ASSERT(sizeof(TESTopicInfo) == 0xA0);
 #endif
 
 
+extern const HINSTANCE*			g_TESCS_Instance;
 
-#define CS_CAST(obj, from, to) (to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
+extern const DLGPROC			g_ScriptEditor_DlgProc;
+extern const DLGPROC			g_UseReport_DlgProc;
+extern const DLGPROC			g_TESDialog_DlgProc;
+extern const DLGPROC			g_TESDialogListView_DlgProc;
 
-extern const HINSTANCE*	g_TESCS_Instance;
-extern const DLGPROC	g_ScriptEditor_DlgProc;
-extern const DLGPROC	g_UseReport_DlgProc;
-extern const DLGPROC	g_TESDialog_DlgProc;
-extern const DLGPROC	g_TESDialogListView_DlgProc;
+extern HWND*					g_HWND_RenderWindow;
+extern HWND*					g_HWND_ObjectWindow;
+extern HWND*					g_HWND_CellView;
+extern HWND*					g_HWND_CSParent;
+extern HWND*					g_HWND_AIPackagesDlg;
+extern HWND*					g_HWND_ObjectWindow_FormList;
+
+extern INISetting*				g_LocalMasterPath;
+extern ModEntry::Data**			g_TESActivePlugin;
+extern char**					g_TESActivePluginName;
+extern UInt8*					g_WorkingFileFlag;
+extern UInt8*					g_ActiveChangesFlag;
+
+extern TESWaterForm**			g_DefaultWater;
+extern TESRenderWindowBuffer**	g_TESRenderWindowBuffer;
+extern HMENU*					g_RenderWindowPopup;
+extern void*					g_ScriptCompilerUnkObj;
+
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
 extern const _WriteToStatusBar WriteToStatusBar;
-
-extern HWND*			g_HWND_RenderWindow;
-extern HWND*			g_HWND_ObjectWindow;
-extern HWND*			g_HWND_CellView;
-extern HWND*			g_HWND_CSParent;
 
 typedef UInt32			(__cdecl *_WritePositionToINI)(HWND Handle, CHAR* ClassName);
 extern const _WritePositionToINI WritePositionToINI;
@@ -248,19 +250,6 @@ extern const _GetPositionFromINI GetPositionFromINI;
 typedef UInt32			(__cdecl *_GetTESDialogTemplateForType)(UInt8 FormTypeID);
 extern const _GetTESDialogTemplateForType GetTESDialogTemplateForType;
 
-extern const UInt32			kTESChildCell_LoadCellFnAddr;
-extern const void *			RTTI_TESCellUseList;
-
-extern TES** g_TES;
-
-extern const UInt32			kVTBL_TESObjectREFR;
-extern const UInt32			kVTBL_TESForm;
-extern const UInt32			kTESForm_GetObjectUseListAddr;
-extern const UInt32			kTESCellUseList_GetUseListRefHeadFnAddr;
-extern const UInt32			kTESObjectCELL_GetParentWorldSpaceFnAddr;
-extern const UInt32			kScript_SaveResultScript;
-extern const UInt32			kScript_SaveScript;
-
 typedef void*			(__cdecl *_GetComboBoxItemData)(HWND ComboBox);
 extern const _GetComboBoxItemData GetComboBoxItemData;
 
@@ -270,33 +259,49 @@ extern const _SelectTESFileCommonDialog SelectTESFileCommonDialog;
 typedef void			(__cdecl *_sub_4306F0)(bool unk01);
 extern const _sub_4306F0 sub_4306F0;
 
-extern INISetting*			g_INI_LocalMasterPath;
-extern ModEntry::Data**		g_TESActivePlugin;
-extern char**				g_TESActivePluginName;
-extern UInt8*				g_WorkingFileFlag;
-extern UInt8*				g_ActiveChangesFlag;
-
 typedef TESObjectREFR* (__cdecl *_ChooseRefWrapper)(HWND Parent, UInt32 unk01, UInt32 unk02, UInt32 unk03);
 extern const _ChooseRefWrapper	ChooseRefWrapper;
 
-extern const UInt32				kBaseExtraList_ModExtraEnableStateParent;
-extern const UInt32				kBaseExtraList_ModExtraOwnership;
-extern const UInt32				kBaseExtraList_ModExtraGlobal;
-extern const UInt32				kBaseExtraList_ModExtraRank;
-extern const UInt32				kTESObjectREFR_ModExtraHealth;
-extern const UInt32				kBaseExtraList_ModExtraCount;
-extern const UInt32				kTESObjectREFR_ModExtraCharge;
-extern const UInt32				kTESObjectREFR_ModExtraTimeLeft;
-extern const UInt32				kTESObjectREFR_ModExtraSoul;
-extern const UInt32				kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
+typedef void*			(__cdecl *_InitializeCSWindows)();
+extern const _InitializeCSWindows		InitializeCSWindows;
 
-extern TESWaterForm**			g_SpecialForm_DefaultWater;
+typedef void			(__cdecl *_DeInitializeCSWindows)();
+extern const _DeInitializeCSWindows		DeInitializeCSWindows;
 
-extern TESRenderWindowBuffer**	g_TESRenderWindowBuffer;
+typedef void			(__cdecl *_AddFormToObjectWindow)(TESForm* Form);
+extern const _AddFormToObjectWindow		AddFormToObjectWindow;
 
-TESObjectREFR* ChooseReferenceDlg(HWND Parent);
+extern const void *			RTTI_TESCellUseList;
 
-extern HMENU*					g_RenderWindowPopup;
-extern void*					g_ScriptCompilerUnkObj;
-extern const UInt32				kVTBL_TESTopicInfo;
-extern const UInt32				kVTBL_TESQuest;
+extern const UInt32			kTESChildCell_LoadCell;
+extern const UInt32			kTESForm_GetObjectUseList;
+extern const UInt32			kTESCellUseList_GetUseListRefHead;
+extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
+extern const UInt32			kScript_SaveResultScript;
+extern const UInt32			kScript_SaveScript;
+extern const UInt32			kLinkedListNode_NewNode;
+
+extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
+extern const UInt32			kBaseExtraList_ModExtraOwnership;
+extern const UInt32			kBaseExtraList_ModExtraGlobal;
+extern const UInt32			kBaseExtraList_ModExtraRank;
+extern const UInt32			kBaseExtraList_ModExtraCount;
+extern const UInt32			kTESObjectREFR_ModExtraHealth;
+extern const UInt32			kTESObjectREFR_ModExtraCharge;
+extern const UInt32			kTESObjectREFR_ModExtraTimeLeft;
+extern const UInt32			kTESObjectREFR_ModExtraSoul;
+extern const UInt32			kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
+
+extern const UInt32			kVTBL_TESObjectREFR;
+extern const UInt32			kVTBL_TESForm;
+extern const UInt32			kVTBL_TESTopicInfo;
+extern const UInt32			kVTBL_TESQuest;
+
+
+TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
+UInt32						GetDialogTemplate(const char* FormType);
+void						RemoteLoadRef(const char* EditorID);
+void						LoadFormIntoView(const char* EditorID, const char* FormType);
+bool __stdcall				AreUnModifiedFormsHidden();
+void						ToggleHideUnModifiedForms(bool State);
+

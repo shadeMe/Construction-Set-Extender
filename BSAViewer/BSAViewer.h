@@ -2,8 +2,6 @@
 
 #include "Common\Includes.h"
 
-// TODO: ++++++++++++++++++
-
 
 ref class FolderObject;
 

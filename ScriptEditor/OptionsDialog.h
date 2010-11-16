@@ -83,6 +83,9 @@ public:
 	CheckBox^										SaveLastKnownPos;
 	Label^  										TabStopSize;
 	NumericUpDown^  								TabSize;
+	CheckBox^										RecompileVarIdx;
+	CheckBox^										PreprocessorWarnings;
+	CheckBox^										UseCSParent;
 
 	OptionsDialog();
 
@@ -92,3 +95,5 @@ public:
 
 	static OptionsDialog^%							GetSingleton();
 };
+
+#define OPTIONS										OptionsDialog::GetSingleton()

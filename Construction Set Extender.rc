@@ -186,6 +186,7 @@ BEGIN
     BEGIN
         MENUITEM "Clear Console",               CONSOLEMENU_CLEARCONSOLE
         MENUITEM "Always on top",               CONSOLEMENU_ALWAYSONTOP
+        MENUITEM "Hide Console",                CONSOLEMENU_HIDECONSOLE
     END
 END
 

@@ -83,7 +83,7 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptBox->Controls->Add(PreviewBox);
 	ScriptBox->Controls->Add(FilterBox);
 	ScriptBox->Controls->Add(SearchBox);
-	ScriptBox->FormBorderStyle = FormBorderStyle::FixedDialog;
+	ScriptBox->FormBorderStyle = FormBorderStyle::FixedToolWindow;
 	ScriptBox->StartPosition = FormStartPosition::CenterScreen;
 	ScriptBox->MaximizeBox = false;
 	ScriptBox->MinimizeBox = false;
@@ -91,7 +91,10 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptBox->Closing += gcnew CancelEventHandler(this, &ScriptListDialog::ScriptBox_Cancel);
 
 	ScriptBox->Hide();
-	LastSortColumn = -1;
+	LastSortColumn = 0;
+	ScriptList->Sorting = SortOrder::Descending;
+	ScriptList->Sort();
+	ScriptList->ListViewItemSorter = gcnew CSEListViewImgSorter(LastSortColumn, ScriptList->Sorting);
 }
 
 void ScriptListDialog::Show(Operation Op)
@@ -103,7 +106,7 @@ void ScriptListDialog::Show(Operation Op)
 	ScriptList->EndUpdate();
 
 	if (ScriptList->Items->Count > 0) {
-		String^ CurrentScript = dynamic_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->ParentStrip->EditorForm->Tag);
+		String^ CurrentScript = dynamic_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->ScriptEditorID);
 		if (CurrentScript != "New Script")
 			SearchBox->Text = CurrentScript;
 	}
@@ -191,8 +194,6 @@ void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs
 
 	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
 	PreviewBox->Text = gcnew String(NativeWrapper::ScriptEditor_GetScriptListItemText(CEID->String()));
-
-	SearchBox->Focus();
 }
 
 void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -213,9 +214,10 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 			SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
 			ScriptList->Focus();
 		}
+		E->Handled = true;
 		break;
 	}
-	E->Handled = true;
+	
 }
 
 void ScriptListDialog::ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
@@ -225,8 +227,8 @@ void ScriptListDialog::ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 	{
 		SearchBox->Text += E->KeyChar.ToString();
 		ScriptList->Focus();
+		E->Handled = true;
 	}
-	E->Handled = true;
 }
 
 

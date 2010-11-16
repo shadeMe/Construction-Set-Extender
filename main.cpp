@@ -3,7 +3,8 @@
 #include "MiscHooks.h"
 #include "Common/CLIWrapper.h"
 #include "Common/HandShakeStructs.h"
-#include "[ Libraries ]\CSE Handshake\CSEL.h"
+#include "WindowManager.h"
+#include "CSEInterfaceManager.h"
 
 
 PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
@@ -16,45 +17,35 @@ CommandTableData					g_CommandTableData;
 std::string							g_INIPath;
 std::string							g_AppPath;
 bool								g_PluginPostLoad = false;
-CSEINIManager*						g_INIManager = new CSEINIManager();
+SME::INI::INIManager*				g_INIManager = new CSEINIManager();
+SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();
 
 // PLUGIN INTEROP
 
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
-	if (Msg->type == 'CSEL') {
-		DebugPrint("CSEL message dispatched by %s", Msg->sender);
-		
-		CSELData* Data = (CSELData*)Msg->data;
-		for (int i = 0; i < Data->Size; i++) {
-			std::string String(Data->Data[i]), Command, URL;
-			std::string::size_type Delimiter = String.find(" ");
-			if (Delimiter == std::string::npos) {
-				DebugPrint("Couldn't find delimiter in %s", Data->Data[i]);
-				continue;
-			}
-			Command = String.substr(0, Delimiter);
-			URL = String.substr(Delimiter + 1, String.length());
-			CLIWrapper::SE_AddToURLMap( Command.c_str(), URL.c_str());
-		}
+	if (Msg->type == 'CSEI') {
+		DebugPrint("Dispatching interface to '%s'", Msg->sender);
+
+		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEI', CSEInterfaceManager::GetInterface(), 4, Msg->sender);
 	}
 }
 
 
 void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 {
-	if (Msg->type == OBSEMessagingInterface::kMessage_PostLoad) {
-														// initialize script editor components
+	switch (Msg->type)
+	{
+	case OBSEMessagingInterface::kMessage_PostLoad:
 		g_CommandTableData.CommandTableStart = g_commandTableIntfc->Start();
 		g_CommandTableData.CommandTableEnd = g_commandTableIntfc->End();
-		g_CommandTableData.GetCommandReturnType = g_commandTableIntfc->GetReturnType;
-		g_CommandTableData.GetParentPlugin = g_commandTableIntfc->GetParentPlugin;
-		CLIWrapper::SE_InitializeComponents(&g_CommandTableData);
-
-														// register known plugins with the messaging API
-	//	g_msgIntfc->RegisterListener(g_pluginHandle, "NifSE", CSEInteropHandler);	
-		g_msgIntfc->RegisterListener(g_pluginHandle, "ConScribe", CSEInteropHandler);
+		CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData);
+					
+		g_msgIntfc->RegisterListener(g_pluginHandle, NULL, CSEInteropHandler);
 		g_PluginPostLoad = true;
+		break;
+	case OBSEMessagingInterface::kMessage_PostPostLoad:
+		break;
 	}
 }
 
@@ -110,9 +101,16 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 
 bool OBSEPlugin_Load(const OBSEInterface * obse)
 {
+    INITCOMMONCONTROLSEX icex;
+    
+															 // ensure that the common control DLL is loaded. 
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC  = ICC_LISTVIEW_CLASSES;
+    InitCommonControlsEx(&icex); 
+    
 	g_pluginHandle = obse->GetPluginHandle();
 	g_INIManager->SetINIPath(g_INIPath);
-	g_INIManager->Initialize();
+	((CSEINIManager*)g_INIManager)->Initialize();			// ### eugh! need to implement RTTI for the INIManager class
 
 	if (!CLIWrapper::Import(obse)) {
 		return false;
@@ -120,6 +118,8 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 		return false;
 	
 	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
+	g_CommandTableData.GetCommandReturnType = g_commandTableIntfc->GetReturnType;
+	g_CommandTableData.GetParentPlugin = g_commandTableIntfc->GetParentPlugin;
 
 	DebugPrint("CS patched !\n\n");
 

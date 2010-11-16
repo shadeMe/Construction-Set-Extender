@@ -78,5 +78,10 @@ __declspec(dllexport) void SetVariableListItemData(UInt32 VanillaHandleIndex, Sc
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SetVariableListItemData, Parameters);
 }
 
+__declspec(dllexport) void InitializeDatabaseUpdateTimer()
+{
+	ISDB->InitializeDatabaseUpdateTimer();
+}
+
 
 }

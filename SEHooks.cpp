@@ -15,7 +15,6 @@ static UInt32						g_WParamBuffer		=	0;				// WParam processed by the WndProc
 
 
 ScriptData*							g_ScriptDataPackage = new ScriptData();
-std::string							g_ActivePluginName  =	"";
 static const char*					g_RecompileAllScriptsStr = "Are you sure you want to recompile every script in the active plugin?";
 
 Script*								g_ScriptListResult = NULL;				// used by our script list hook, to set the selected script form
@@ -51,9 +50,6 @@ bool PatchSEHooks()
 	PLACE_HOOK(MessagingCallbackClose);
 	PLACE_HOOK(MessagingCallbackSave);
 
-	PLACE_HOOK(GetPluginNameSave);
-	PLACE_HOOK(GetPluginNameLoad);
-
 	PLACE_HOOK(ScriptListOpen);
 	PLACE_HOOK(ScriptListDelete);	
 
@@ -74,7 +70,6 @@ void FillScriptDataPackage(Script* ScriptForm)
 
 	if (ScriptForm->IsObjectScript()) {
 														g_ScriptDataPackage->Type = 0;
-
 		if (ScriptForm->info.dataLength >= 15) {
 			UInt8* Data = (UInt8*)ScriptForm->data;
 			if (*(Data + 8) == 7)						g_ScriptDataPackage->Type = 9;			// function script
@@ -143,28 +138,14 @@ void __stdcall SendMessageAddress(void)
 
 // Hooks
 
-
-void DispatchInteropMessage(void)
-{
-	static bool InterOpMessageDispatched = false;
-
-	if (!InterOpMessageDispatched) {
-		DebugPrint("Plugin interop initialized; Message dispatched\n");
-		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEL', NULL, 0, NULL);
-		InterOpMessageDispatched = true;
-	}
-}
-
 void __stdcall InstantiateTabContainer(void)
 {
-	DispatchInteropMessage();
-
 	if (g_EditorAuxHWND)		g_EditorAuxScript = (Script*)GetComboBoxItemData(GetDlgItem(g_EditorAuxHWND, 1226));
 	else						g_EditorAuxScript = NULL;
 
 	tagRECT ScriptEditorLoc;
 	GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-	CLIWrapper::SE_AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 	g_EditorAuxHWND = NULL;
 }
 
@@ -247,60 +228,6 @@ void __declspec(naked) EditorWindowWParamHook(void)
 		jmp		[kEditorWindowWParamRetnAddr]
     }
 } 
-
-
-
-void __stdcall DoGetPluginNameHook(const char* WindowTitle)
-{
-	g_ActivePluginName = WindowTitle;
-	UInt32 PadStart = g_ActivePluginName.find("[") + 1, PadEnd  = g_ActivePluginName.rfind("]");
-	if (PadStart == std::string::npos || PadEnd == std::string::npos)	g_ActivePluginName = "";
-	else																g_ActivePluginName = g_ActivePluginName.substr(PadStart, PadEnd - PadStart);
-}
-
-void __declspec(naked) GetPluginNameSaveHook(void)
-{
-    __asm
-    {
-		pushad
-		call	SetWindowTextAddress
-		push	ebx
-		call	DoGetPluginNameHook
-		popad
-
-		call	[g_WindowHandleCallAddr]				// SetWindowTextA
-		pushad
-		push	10
-		call	SendPingBack
-		popad
-		jmp		[kGetPluginNameSaveRetnAddr]
-    }
-}
-
-void __stdcall FixDefaultWater(void)
-{
-	(*g_SpecialForm_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
-}
-
-void __declspec(naked) GetPluginNameLoadHook(void)
-{
-    __asm
-    {
-		pushad
-		call	SetWindowTextAddress
-		push	ebx
-		call	DoGetPluginNameHook
-		call	FixDefaultWater
-		popad
-
-		call	[g_WindowHandleCallAddr]				// SetWindowTextA
-		pushad
-		push	9
-		call	SendPingBack
-		popad
-		jmp		[kGetPluginNameLoadRetnAddr]
-    }
-}
 
 bool __stdcall DoRecompileScriptsHook(TESForm* Form)
 {
@@ -412,7 +339,7 @@ void __stdcall SendPingBack(UInt16 Message)
 		break;
 	}
 	 
-	CLIWrapper::SE_SendMessagePingback(TrackedIndex, Message);
+	CLIWrapper::ScriptEditor::SendMessagePingback(TrackedIndex, Message);
 }
 
 void __stdcall DoMessagingCallbackCloseHookRelease(void)
@@ -604,5 +531,21 @@ void __declspec(naked) LogRecompileResultsHook(void)
 		call	DoLogRecompileResultsHook
 	EXIT:
 		jmp		[kLogRecompileResultsRetnAddr]
+	}
+}
+
+void ToggleScriptCompiling(bool Enable)
+{
+	if (Enable)
+	{
+		for (int i = 0; i < sizeof(kToggleScriptCompilingOriginalData); i++) {
+			SafeWrite8(kToggleScriptCompilingPatchAddr + i, kToggleScriptCompilingOriginalData[i]);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < sizeof(kToggleScriptCompilingNewData); i++) {
+			SafeWrite8(kToggleScriptCompilingPatchAddr + i, kToggleScriptCompilingNewData[i]);
+		}
 	}
 }

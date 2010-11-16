@@ -74,6 +74,12 @@ namespace UIComponents {
 	private: System::Windows::Forms::NumericUpDown^  ThresholdBox;
 	private: System::Windows::Forms::Label^  tabsizelabel;
 	private: System::Windows::Forms::NumericUpDown^  tabsizebox;
+	private: System::Windows::Forms::CheckBox^  RecompileVarIdx;
+	private: System::Windows::Forms::CheckBox^  PreprocessorWarnings;
+	private: System::Windows::Forms::CheckBox^  UseCSParent;
+
+
+
 
 
 
@@ -96,32 +102,36 @@ namespace UIComponents {
 		void InitializeComponent(void)
 		{
 			this->PreProcGrup = (gcnew System::Windows::Forms::GroupBox());
-			this->IntelliSenseGrup = (gcnew System::Windows::Forms::GroupBox());
-			this->generalGrup = (gcnew System::Windows::Forms::GroupBox());
-			this->font = (gcnew System::Windows::Forms::Button());
-			this->forecolor = (gcnew System::Windows::Forms::Button());
-			this->backcolor = (gcnew System::Windows::Forms::Button());
-			this->highlightcolor = (gcnew System::Windows::Forms::Button());
-			this->bookmarkcolor = (gcnew System::Windows::Forms::Button());
-			this->autoindent = (gcnew System::Windows::Forms::CheckBox());
-			this->regex = (gcnew System::Windows::Forms::CheckBox());
-			this->painteditor = (gcnew System::Windows::Forms::CheckBox());
-			this->caretpos = (gcnew System::Windows::Forms::CheckBox());
+			this->PreprocessorWarnings = (gcnew System::Windows::Forms::CheckBox());
 			this->Redefs = (gcnew System::Windows::Forms::CheckBox());
 			this->ImprotSeg = (gcnew System::Windows::Forms::CheckBox());
-			this->ThresholdBox = (gcnew System::Windows::Forms::NumericUpDown());
+			this->IntelliSenseGrup = (gcnew System::Windows::Forms::GroupBox());
 			this->thresholdLabel = (gcnew System::Windows::Forms::Label());
+			this->ThresholdBox = (gcnew System::Windows::Forms::NumericUpDown());
+			this->generalGrup = (gcnew System::Windows::Forms::GroupBox());
+			this->RecompileVarIdx = (gcnew System::Windows::Forms::CheckBox());
 			this->tabsizelabel = (gcnew System::Windows::Forms::Label());
 			this->tabsizebox = (gcnew System::Windows::Forms::NumericUpDown());
+			this->caretpos = (gcnew System::Windows::Forms::CheckBox());
+			this->painteditor = (gcnew System::Windows::Forms::CheckBox());
+			this->regex = (gcnew System::Windows::Forms::CheckBox());
+			this->autoindent = (gcnew System::Windows::Forms::CheckBox());
+			this->bookmarkcolor = (gcnew System::Windows::Forms::Button());
+			this->highlightcolor = (gcnew System::Windows::Forms::Button());
+			this->backcolor = (gcnew System::Windows::Forms::Button());
+			this->forecolor = (gcnew System::Windows::Forms::Button());
+			this->font = (gcnew System::Windows::Forms::Button());
+			this->UseCSParent = (gcnew System::Windows::Forms::CheckBox());
 			this->PreProcGrup->SuspendLayout();
 			this->IntelliSenseGrup->SuspendLayout();
-			this->generalGrup->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdBox))->BeginInit();
+			this->generalGrup->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->tabsizebox))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// PreProcGrup
 			// 
+			this->PreProcGrup->Controls->Add(this->PreprocessorWarnings);
 			this->PreProcGrup->Controls->Add(this->Redefs);
 			this->PreProcGrup->Controls->Add(this->ImprotSeg);
 			this->PreProcGrup->Location = System::Drawing::Point(12, 16);
@@ -131,6 +141,35 @@ namespace UIComponents {
 			this->PreProcGrup->TabStop = false;
 			this->PreProcGrup->Text = L"Preprocessor";
 			this->PreProcGrup->Enter += gcnew System::EventHandler(this, &OptionsDialog::groupBox1_Enter);
+			// 
+			// PreprocessorWarnings
+			// 
+			this->PreprocessorWarnings->AutoSize = true;
+			this->PreprocessorWarnings->Location = System::Drawing::Point(13, 111);
+			this->PreprocessorWarnings->Name = L"PreprocessorWarnings";
+			this->PreprocessorWarnings->Size = System::Drawing::Size(130, 17);
+			this->PreprocessorWarnings->TabIndex = 10;
+			this->PreprocessorWarnings->Text = L"Show Script Warnings";
+			this->PreprocessorWarnings->UseVisualStyleBackColor = true;
+			// 
+			// Redefs
+			// 
+			this->Redefs->AutoSize = true;
+			this->Redefs->Location = System::Drawing::Point(13, 79);
+			this->Redefs->Name = L"Redefs";
+			this->Redefs->Size = System::Drawing::Size(141, 17);
+			this->Redefs->TabIndex = 9;
+			this->Redefs->Text = L"Allow macro redefinitions";
+			this->Redefs->UseVisualStyleBackColor = true;
+			// 
+			// ImprotSeg
+			// 
+			this->ImprotSeg->Location = System::Drawing::Point(14, 30);
+			this->ImprotSeg->Name = L"ImprotSeg";
+			this->ImprotSeg->Size = System::Drawing::Size(167, 43);
+			this->ImprotSeg->TabIndex = 10;
+			this->ImprotSeg->Text = L"Create missing import segments from script code";
+			this->ImprotSeg->UseVisualStyleBackColor = true;
 			// 
 			// IntelliSenseGrup
 			// 
@@ -143,8 +182,26 @@ namespace UIComponents {
 			this->IntelliSenseGrup->TabStop = false;
 			this->IntelliSenseGrup->Text = L"IntelliSense";
 			// 
+			// thresholdLabel
+			// 
+			this->thresholdLabel->AutoSize = true;
+			this->thresholdLabel->Location = System::Drawing::Point(18, 30);
+			this->thresholdLabel->Name = L"thresholdLabel";
+			this->thresholdLabel->Size = System::Drawing::Size(148, 13);
+			this->thresholdLabel->TabIndex = 1;
+			this->thresholdLabel->Text = L"IntelliSense Pop-up Threshold";
+			// 
+			// ThresholdBox
+			// 
+			this->ThresholdBox->Location = System::Drawing::Point(21, 53);
+			this->ThresholdBox->Name = L"ThresholdBox";
+			this->ThresholdBox->Size = System::Drawing::Size(201, 20);
+			this->ThresholdBox->TabIndex = 0;
+			// 
 			// generalGrup
 			// 
+			this->generalGrup->Controls->Add(this->UseCSParent);
+			this->generalGrup->Controls->Add(this->RecompileVarIdx);
 			this->generalGrup->Controls->Add(this->tabsizelabel);
 			this->generalGrup->Controls->Add(this->tabsizebox);
 			this->generalGrup->Controls->Add(this->caretpos);
@@ -163,126 +220,15 @@ namespace UIComponents {
 			this->generalGrup->TabStop = false;
 			this->generalGrup->Text = L"General";
 			// 
-			// font
+			// RecompileVarIdx
 			// 
-			this->font->Location = System::Drawing::Point(6, 19);
-			this->font->Name = L"font";
-			this->font->Size = System::Drawing::Size(83, 29);
-			this->font->TabIndex = 0;
-			this->font->Text = L"Font";
-			this->font->UseVisualStyleBackColor = true;
-			this->font->Click += gcnew System::EventHandler(this, &OptionsDialog::button1_Click);
-			// 
-			// forecolor
-			// 
-			this->forecolor->Location = System::Drawing::Point(95, 19);
-			this->forecolor->Name = L"forecolor";
-			this->forecolor->Size = System::Drawing::Size(83, 29);
-			this->forecolor->TabIndex = 1;
-			this->forecolor->Text = L"Fore Color";
-			this->forecolor->UseVisualStyleBackColor = true;
-			// 
-			// backcolor
-			// 
-			this->backcolor->Location = System::Drawing::Point(184, 19);
-			this->backcolor->Name = L"backcolor";
-			this->backcolor->Size = System::Drawing::Size(83, 29);
-			this->backcolor->TabIndex = 2;
-			this->backcolor->Text = L"Back Color";
-			this->backcolor->UseVisualStyleBackColor = true;
-			// 
-			// highlightcolor
-			// 
-			this->highlightcolor->Location = System::Drawing::Point(379, 19);
-			this->highlightcolor->Name = L"highlightcolor";
-			this->highlightcolor->Size = System::Drawing::Size(103, 29);
-			this->highlightcolor->TabIndex = 3;
-			this->highlightcolor->Text = L"Highlight Color";
-			this->highlightcolor->UseVisualStyleBackColor = true;
-			// 
-			// bookmarkcolor
-			// 
-			this->bookmarkcolor->Location = System::Drawing::Point(273, 19);
-			this->bookmarkcolor->Name = L"bookmarkcolor";
-			this->bookmarkcolor->Size = System::Drawing::Size(103, 29);
-			this->bookmarkcolor->TabIndex = 4;
-			this->bookmarkcolor->Text = L"Bookmark Color";
-			this->bookmarkcolor->UseVisualStyleBackColor = true;
-			// 
-			// autoindent
-			// 
-			this->autoindent->AutoSize = true;
-			this->autoindent->Location = System::Drawing::Point(14, 68);
-			this->autoindent->Name = L"autoindent";
-			this->autoindent->Size = System::Drawing::Size(81, 17);
-			this->autoindent->TabIndex = 5;
-			this->autoindent->Text = L"Auto-Indent";
-			this->autoindent->UseVisualStyleBackColor = true;
-			// 
-			// regex
-			// 
-			this->regex->AutoSize = true;
-			this->regex->Location = System::Drawing::Point(324, 91);
-			this->regex->Name = L"regex";
-			this->regex->Size = System::Drawing::Size(144, 17);
-			this->regex->TabIndex = 6;
-			this->regex->Text = L"Use Regular Expressions";
-			this->regex->UseVisualStyleBackColor = true;
-			// 
-			// painteditor
-			// 
-			this->painteditor->AutoSize = true;
-			this->painteditor->Location = System::Drawing::Point(324, 68);
-			this->painteditor->Name = L"painteditor";
-			this->painteditor->Size = System::Drawing::Size(122, 17);
-			this->painteditor->TabIndex = 7;
-			this->painteditor->Text = L"Paint Editor Window";
-			this->painteditor->UseVisualStyleBackColor = true;
-			// 
-			// caretpos
-			// 
-			this->caretpos->AutoSize = true;
-			this->caretpos->Location = System::Drawing::Point(14, 91);
-			this->caretpos->Name = L"caretpos";
-			this->caretpos->Size = System::Drawing::Size(167, 17);
-			this->caretpos->TabIndex = 8;
-			this->caretpos->Text = L"Save caret position with script";
-			this->caretpos->UseVisualStyleBackColor = true;
-			// 
-			// Redefs
-			// 
-			this->Redefs->AutoSize = true;
-			this->Redefs->Location = System::Drawing::Point(14, 95);
-			this->Redefs->Name = L"Redefs";
-			this->Redefs->Size = System::Drawing::Size(142, 17);
-			this->Redefs->TabIndex = 9;
-			this->Redefs->Text = L"Allow macro redefinitions";
-			this->Redefs->UseVisualStyleBackColor = true;
-			// 
-			// ImprotSeg
-			// 
-			this->ImprotSeg->Location = System::Drawing::Point(14, 30);
-			this->ImprotSeg->Name = L"ImprotSeg";
-			this->ImprotSeg->Size = System::Drawing::Size(167, 43);
-			this->ImprotSeg->TabIndex = 10;
-			this->ImprotSeg->Text = L"Create missing import segments from script code";
-			this->ImprotSeg->UseVisualStyleBackColor = true;
-			// 
-			// ThresholdBox
-			// 
-			this->ThresholdBox->Location = System::Drawing::Point(21, 53);
-			this->ThresholdBox->Name = L"ThresholdBox";
-			this->ThresholdBox->Size = System::Drawing::Size(201, 20);
-			this->ThresholdBox->TabIndex = 0;
-			// 
-			// thresholdLabel
-			// 
-			this->thresholdLabel->AutoSize = true;
-			this->thresholdLabel->Location = System::Drawing::Point(18, 30);
-			this->thresholdLabel->Name = L"thresholdLabel";
-			this->thresholdLabel->Size = System::Drawing::Size(148, 13);
-			this->thresholdLabel->TabIndex = 1;
-			this->thresholdLabel->Text = L"IntelliSense Pop-up Threshold";
+			this->RecompileVarIdx->AutoSize = true;
+			this->RecompileVarIdx->Location = System::Drawing::Point(15, 114);
+			this->RecompileVarIdx->Name = L"RecompileVarIdx";
+			this->RecompileVarIdx->Size = System::Drawing::Size(272, 17);
+			this->RecompileVarIdx->TabIndex = 9;
+			this->RecompileVarIdx->Text = L"Recompile dependencies post variable index update";
+			this->RecompileVarIdx->UseVisualStyleBackColor = true;
 			// 
 			// tabsizelabel
 			// 
@@ -301,6 +247,102 @@ namespace UIComponents {
 			this->tabsizebox->Size = System::Drawing::Size(98, 20);
 			this->tabsizebox->TabIndex = 2;
 			// 
+			// caretpos
+			// 
+			this->caretpos->AutoSize = true;
+			this->caretpos->Location = System::Drawing::Point(14, 91);
+			this->caretpos->Name = L"caretpos";
+			this->caretpos->Size = System::Drawing::Size(166, 17);
+			this->caretpos->TabIndex = 8;
+			this->caretpos->Text = L"Save caret position with script";
+			this->caretpos->UseVisualStyleBackColor = true;
+			// 
+			// painteditor
+			// 
+			this->painteditor->AutoSize = true;
+			this->painteditor->Location = System::Drawing::Point(324, 68);
+			this->painteditor->Name = L"painteditor";
+			this->painteditor->Size = System::Drawing::Size(121, 17);
+			this->painteditor->TabIndex = 7;
+			this->painteditor->Text = L"Paint Editor Window";
+			this->painteditor->UseVisualStyleBackColor = true;
+			// 
+			// regex
+			// 
+			this->regex->AutoSize = true;
+			this->regex->Location = System::Drawing::Point(324, 91);
+			this->regex->Name = L"regex";
+			this->regex->Size = System::Drawing::Size(143, 17);
+			this->regex->TabIndex = 6;
+			this->regex->Text = L"Use Regular Expressions";
+			this->regex->UseVisualStyleBackColor = true;
+			// 
+			// autoindent
+			// 
+			this->autoindent->AutoSize = true;
+			this->autoindent->Location = System::Drawing::Point(14, 68);
+			this->autoindent->Name = L"autoindent";
+			this->autoindent->Size = System::Drawing::Size(80, 17);
+			this->autoindent->TabIndex = 5;
+			this->autoindent->Text = L"Auto-Indent";
+			this->autoindent->UseVisualStyleBackColor = true;
+			// 
+			// bookmarkcolor
+			// 
+			this->bookmarkcolor->Location = System::Drawing::Point(273, 19);
+			this->bookmarkcolor->Name = L"bookmarkcolor";
+			this->bookmarkcolor->Size = System::Drawing::Size(103, 29);
+			this->bookmarkcolor->TabIndex = 4;
+			this->bookmarkcolor->Text = L"Bookmark Color";
+			this->bookmarkcolor->UseVisualStyleBackColor = true;
+			// 
+			// highlightcolor
+			// 
+			this->highlightcolor->Location = System::Drawing::Point(379, 19);
+			this->highlightcolor->Name = L"highlightcolor";
+			this->highlightcolor->Size = System::Drawing::Size(103, 29);
+			this->highlightcolor->TabIndex = 3;
+			this->highlightcolor->Text = L"Highlight Color";
+			this->highlightcolor->UseVisualStyleBackColor = true;
+			// 
+			// backcolor
+			// 
+			this->backcolor->Location = System::Drawing::Point(184, 19);
+			this->backcolor->Name = L"backcolor";
+			this->backcolor->Size = System::Drawing::Size(83, 29);
+			this->backcolor->TabIndex = 2;
+			this->backcolor->Text = L"Back Color";
+			this->backcolor->UseVisualStyleBackColor = true;
+			// 
+			// forecolor
+			// 
+			this->forecolor->Location = System::Drawing::Point(95, 19);
+			this->forecolor->Name = L"forecolor";
+			this->forecolor->Size = System::Drawing::Size(83, 29);
+			this->forecolor->TabIndex = 1;
+			this->forecolor->Text = L"Fore Color";
+			this->forecolor->UseVisualStyleBackColor = true;
+			// 
+			// font
+			// 
+			this->font->Location = System::Drawing::Point(6, 19);
+			this->font->Name = L"font";
+			this->font->Size = System::Drawing::Size(83, 29);
+			this->font->TabIndex = 0;
+			this->font->Text = L"Font";
+			this->font->UseVisualStyleBackColor = true;
+			this->font->Click += gcnew System::EventHandler(this, &OptionsDialog::button1_Click);
+			// 
+			// UseCSParent
+			// 
+			this->UseCSParent->AutoSize = true;
+			this->UseCSParent->Location = System::Drawing::Point(324, 114);
+			this->UseCSParent->Name = L"UseCSParent";
+			this->UseCSParent->Size = System::Drawing::Size(109, 17);
+			this->UseCSParent->TabIndex = 10;
+			this->UseCSParent->Text = L"Use CS as Parent";
+			this->UseCSParent->UseVisualStyleBackColor = true;
+			// 
 			// OptionsDialog
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -317,9 +359,9 @@ namespace UIComponents {
 			this->PreProcGrup->PerformLayout();
 			this->IntelliSenseGrup->ResumeLayout(false);
 			this->IntelliSenseGrup->PerformLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdBox))->EndInit();
 			this->generalGrup->ResumeLayout(false);
 			this->generalGrup->PerformLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdBox))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->tabsizebox))->EndInit();
 			this->ResumeLayout(false);
 

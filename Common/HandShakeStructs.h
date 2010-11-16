@@ -1,14 +1,22 @@
 #pragma once
 
+class TESForm;
+#ifdef CSE_INTERFACE
+class Script;
+struct CommandInfo;
+struct PluginInfo;
+#endif
+
 struct FormData
 {
 	const char*										EditorID;
 	UInt32											FormID;
 	UInt8											TypeID;
 	UInt32											Flags;
-	void*											ParentForm;		// TESForm*
+	TESForm*										ParentForm;	
 
 	virtual bool									IsValid() { return (EditorID) ? true : false; }
+	void											FillFormData(TESForm* Form);
 };
 
 struct ScriptData : public FormData
@@ -19,6 +27,25 @@ struct ScriptData : public FormData
 	void*											ByteCode;
 	UInt32											Length;
 	const char*										ParentID;
+	bool											UDF;
+#ifdef CSE_INTERFACE
+	void											FillScriptData(Script* Form);
+#endif
+};
+
+struct QuestData : public FormData
+{
+	const char*										FullName;
+	const char*										ScriptName;
+};
+
+struct IntelliSenseUpdateData
+{
+	ScriptData*										ScriptListHead;
+	UInt32											ScriptCount;
+
+	QuestData*										QuestListHead;
+	UInt32											QuestCount;
 };
 
 struct ScriptVarIndexData

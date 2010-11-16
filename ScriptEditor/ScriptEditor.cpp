@@ -9,6 +9,7 @@
 #include "Common\HandShakeStructs.h"
 #include "Common\ListViewUtilities.h"
 
+
 #using "Microsoft.VisualBasic.dll"
 using namespace System::Text::RegularExpressions;
 
@@ -80,7 +81,14 @@ TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height
 	EditorForm->Text = "CSE Script Editor";
 
 	EditorForm->Controls->Add(ScriptStrip);
-	EditorForm->Show();
+
+	if (OptionsDialog::GetSingleton()->UseCSParent->Checked) {
+		EditorForm->ShowInTaskbar = false;
+		EditorForm->Show(gcnew WindowHandleWrapper(NativeWrapper::GetCSMainWindowHandle()));
+	} else {
+		EditorForm->Show();
+	}
+
 
 
 	EditorForm->Location = Point(PosX, PosY);
@@ -369,6 +377,14 @@ void Global_MouseUp(Object^ Sender, MouseEventArgs^ E)
 {
 	switch (E->Button)
 	{
+	case MouseButtons::Right:
+		if (SEMGR->TornWorkspace != nullptr)
+		{
+			DebugPrint("Tab Tear Operation interrupted by right mouse button");
+			HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
+			SEMGR->TornWorkspace = nullptr;	
+		}
+		break;
 	case MouseButtons::Left:
 	{
 		if (SEMGR->TornWorkspace != nullptr)
@@ -390,7 +406,7 @@ void Global_MouseUp(Object^ Sender, MouseEventArgs^ E)
 			DotNetBar::TabStrip^ Strip = nullptr;
 			try {
 				Strip = dynamic_cast<DotNetBar::TabStrip^>(Control::FromHandle(Wnd));
-			} catch (Exception^ E)
+			} catch (CSEGeneralException^ E)
 			{
 				DebugPrint("An exception was raised during a tab tearing operation!\n\tError Message: " + E->Message);
 				Strip = nullptr;
@@ -427,6 +443,7 @@ void Global_MouseUp(Object^ Sender, MouseEventArgs^ E)
 			}
 		} else {
 			DebugPrint("Global tab tear hook called out of turn! Expecting an unresolved operration.");
+			HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
 		}
 		break;
 	}
@@ -707,12 +724,29 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	ToolBarNextScript->Click += gcnew EventHandler(this, &Workspace::ToolBarNextScript_Click);
 	ToolBarNextScript->Margin = SecondaryButtonPad;
 
-	ToolBarSaveScript = gcnew ToolStripButton();
-	ToolBarSaveScript->ToolTipText = "Save Script";
+	ToolBarSaveScript = gcnew ToolStripSplitButton();
+	ToolBarSaveScript->ToolTipText = "Compile and Save Script";
 	ToolBarSaveScript->Image = Icons->Images[(int)IconEnum::e_Save];
 	ToolBarSaveScript->AutoSize = true;
-	ToolBarSaveScript->Click += gcnew EventHandler(this, &Workspace::ToolBarSaveScript_Click);
+	ToolBarSaveScript->ButtonClick += gcnew EventHandler(this, &Workspace::ToolBarSaveScript_Click);
 	ToolBarSaveScript->Margin = SecondaryButtonPad;
+
+	ToolBarSaveScriptNoCompile = gcnew ToolStripButton();
+	ToolBarSaveScriptNoCompile->ToolTipText = "Save But Don't Compile Script";
+	ToolBarSaveScriptNoCompile->Image = Icons->Images[(int)IconEnum::e_SaveNoCompile];
+	ToolBarSaveScriptNoCompile->AutoSize = true;
+	ToolBarSaveScriptNoCompile->Click += gcnew EventHandler(this, &Workspace::ToolBarSaveScriptNoCompile_Click);
+
+	ToolBarSaveScriptAndPlugin = gcnew ToolStripButton();
+	ToolBarSaveScriptAndPlugin->ToolTipText = "Save Script and Active Plugin";
+	ToolBarSaveScriptAndPlugin->Image = Icons->Images[(int)IconEnum::e_SavePlugin];
+	ToolBarSaveScriptAndPlugin->AutoSize = true;
+	ToolBarSaveScriptAndPlugin->Click += gcnew EventHandler(this, &Workspace::ToolBarSaveScriptAndPlugin_Click);
+
+	ToolBarSaveScriptDropDown = gcnew ToolStripDropDown();
+	ToolBarSaveScriptDropDown->Items->Add(ToolBarSaveScriptNoCompile);
+	ToolBarSaveScriptDropDown->Items->Add(ToolBarSaveScriptAndPlugin);
+	ToolBarSaveScript->DropDown = ToolBarSaveScriptDropDown;
 
 	ToolBarRecompileScripts = gcnew ToolStripButton();
 	ToolBarRecompileScripts->ToolTipText = "Recompile Active Scripts";
@@ -1249,7 +1283,7 @@ void Workspace::FindAndReplace(bool Replace)
 		if (Replace)
 			ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string.", "Find and Replace", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
 
-		if (SearchString == "" || ReplaceString == "") {
+		if (SearchString == "") {
 			MessageBox::Show("Enter a valid search/replace string.", "Find and Replace");
 			return;
 		}
@@ -1600,23 +1634,8 @@ bool Workspace::TabIndent()
 	case 0:
 		return false;
 	case 1:
-		if (Source == "")	return false;
-		break;
 	case -1:
-		if (Source == "") {
-			int LineStart = ScriptTextParser->GetLineStartIndex(SelStart - 1, EditorBox->Text);	
-
-			if (LineStart > -1) {
-				if (ScriptTextParser->GetTrailingTabCount(LineStart, EditorBox->Text) > 0) {
-					EditorBox->SelectionStart = LineStart;
-					EditorBox->SelectionLength = 1;
-					EditorBox->SelectedText = "";
-					EditorBox->SelectionStart = SelStart;
-					EditorBox->SelectionLength = 0;
-				}
-			}
-			return true;
-		}
+		if (Source == nullptr || Source == "")	return false;
 		break;
 	}
 
@@ -1625,20 +1644,35 @@ bool Workspace::TabIndent()
 	String^ ReadLine = TabIndentParser->ReadLine();
 
 	while (ReadLine != nullptr) {
-		if (ReadLine != "") {
-			if (Operation == -1) {
-				Char Itr = ReadLine[0];
-				if (Itr == '\t')		Result += ReadLine->Substring(1);
-				else					Result += ReadLine;
-			}
-			else {
-				Result += "\t" + ReadLine;
+		ScriptTextParser->Tokenize(ReadLine, false);
+		if (!ScriptTextParser->Valid) {
+			Result += ReadLine + "\n";
+			ReadLine = TabIndentParser->ReadLine();
+			continue;
+		}
+	
+		if (ReadLine != "") 
+		{
+			Char Itr = ReadLine[0];
+			if (Itr != '\n' && Itr != '\r\n')
+			{
+				switch (Operation)
+				{
+				case 1:
+					Result += "\t" + ReadLine;
+					break;
+				case -1:
+					if (Itr == '\t')		Result += ReadLine->Substring(1);
+					else					Result += ReadLine;
+					break;
+				}
 			}
 		}
+	//	else
+	//		Result += ReadLine;
 
 		ReadLine = TabIndentParser->ReadLine();
-		if (ReadLine != nullptr)
-			Result += "\n";
+		if (ReadLine != nullptr)	Result += "\n";
 	}
 
 	EditorBox->SelectedText = Result;
@@ -1803,7 +1837,7 @@ void Workspace::MoveCaretToValidHome(void)
 		EditorBox->SelectionLength = 0;
 }
 
-void Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText)
+void Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning)
 {
 	String^ ExtractedBlock = "";
 	switch (Operation)
@@ -1812,11 +1846,15 @@ void Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, Strin
 		EditorBox->Text = PREPROC->PreProcess(ScriptText, Operation, false, ExtractedBlock);
 		ReadBookmarks(ExtractedBlock);
 		LoadSavedCaretPos(ExtractedBlock);
+		ProcessWarnings(ExtractedBlock);
 		break;
 	case PreProcessor::PreProcessOp::e_Expand:		// before moving editor text
 		PreProcessedText = PREPROC->PreProcess(EditorBox->Text, Operation, false, ExtractedBlock);
 		PreProcessedText += ";<CSEBlock>\n";
-		PreProcessedText += ";<CSEWarning>This script may contain preprocessor directives parsed by the CSE Script Editor. Refrain from modifying it in the vanilla editor.</CSEWarning>\n";
+		PreProcessedText += ";<CSEStatutoryWarning> This script may contain preprocessor directives parsed by the CSE Script Editor. Refrain from modifying it in the vanilla editor. </CSEStatutoryWarning>\n";
+		if (AddNoCompileWarning) {
+			PreProcessedText += ";<CSEWarning> This script was saved but not compiled. Expect weird behavior during runtime execution. </CSEWarning>\n";
+		}
 		SaveCaretPos();
 		DumpBookmarks();
 		PreProcessedText += ";</CSEBlock>\n";
@@ -1900,6 +1938,31 @@ void Workspace::LoadSavedCaretPos(String^ ExtractedBlock)
 	else					EditorBox->SelectionStart = 0;
 	EditorBox->ScrollToCaret();
 
+}
+
+void Workspace::ProcessWarnings(String^ ExtractedBlock)
+{
+	if (!OptionsDialog::GetSingleton()->PreprocessorWarnings->Checked)	return;
+
+	ScriptParser^ TextParser = gcnew ScriptParser();
+	StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
+	String^ ReadLine = StringParser->ReadLine();
+
+	while (ReadLine != nullptr) {
+		TextParser->Tokenize(ReadLine, false);
+		if (!TextParser->Valid) {
+			ReadLine = StringParser->ReadLine();
+			continue;
+		}
+
+		if (!TextParser->HasToken(";<CSEWarning>"))
+		{
+			String^ Warning = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEWarning>", "");
+			MessageBox::Show(Warning, "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+		}
+
+		ReadLine = StringParser->ReadLine();
+	}	
 }
 
 bool Workspace::IsCursorInsideCommentSeg(bool OneLessIdx)
@@ -2014,7 +2077,7 @@ void Workspace::SetVariableIndices(void)
 
 				try {
 					Index = UInt32::Parse(Itr->SubItems[2]->Text);
-				} catch (Exception^ E) {
+				} catch (CSEGeneralException^ E) {
 					throw gcnew CSEGeneralException("Couldn't parse index of variable  '" + Itr->Text + "' in script '" + EditorTab->Text + "'\n\tError Message: " + E->Message);
 				}
 				Data.Index = Index;
@@ -2274,6 +2337,7 @@ void Workspace::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
 	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 	Parameters->VanillaHandleIndex = AllocatedIndex;
 	Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Save);
+	Parameters->ParameterList->Add(ScriptEditorManager::SaveWorkspaceOpType::e_SaveAndCompile);
 
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 }
@@ -2288,6 +2352,30 @@ void Workspace::ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E)
 {
 	ScriptListBox->Show(ScriptListDialog::Operation::e_Delete);
+}
+void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
+{
+	if (ScriptEditorID == "")
+	{
+		MessageBox::Show("You may not perform this operation on a script without a name/editorID.", "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
+		return;
+	}
+
+	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+	Parameters->VanillaHandleIndex = AllocatedIndex;
+	Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Save);
+	Parameters->ParameterList->Add(ScriptEditorManager::SaveWorkspaceOpType::e_SaveButDontCompile);
+
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+}
+void Workspace::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
+{
+	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+	Parameters->VanillaHandleIndex = AllocatedIndex;
+	Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Save);
+	Parameters->ParameterList->Add(ScriptEditorManager::SaveWorkspaceOpType::e_SaveActivePluginToo);
+
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 }
 
 
@@ -2317,6 +2405,10 @@ void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
 {
 	SetVariableIndices();
+	if (OPTIONS->RecompileVarIdx->Checked)
+	{
+		ToolBarCompileDependencies->PerformClick();
+	}
 }
 
 void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
@@ -2342,7 +2434,7 @@ void Workspace::ContextMenuCopy_Click(Object^ Sender, EventArgs^ E)
 	try {
 		Clipboard::Clear();
 		Clipboard::SetText(GetTextAtLoc(Globals::MouseLocation, true, false, -1, false));
-	} catch (Exception^ E) {
+	} catch (CSEGeneralException^ E) {
 		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
 }
@@ -2351,7 +2443,7 @@ void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 {
 	try {
 		EditorBox->SelectedText = Clipboard::GetText();
-	} catch (Exception^ E) {
+	} catch (CSEGeneralException^ E) {
 		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
 
@@ -2407,7 +2499,7 @@ void Workspace::ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
 {
 	try { Process::Start(dynamic_cast<String^>(ContextMenuDirectLink->Tag)); }
-	catch (Exception^ E) {
+	catch (CSEGeneralException^ E) {
 		DebugPrint("Exception raised while opening internet page.\n\tException: " + E->Message);
 		MessageBox::Show("Couldn't open internet page. Mostly likely caused by an improperly formatted URL.", "CSE Script Editor");
 	}
@@ -2548,7 +2640,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 				else if (E->KeyCode == Keys::Space) {
 					String^ CommandName = GetTextAtLoc(Globals::MouseLocation, false, false, EditorBox->SelectionStart - 1, true);
 
-					if (!String::Compare(CommandName, "call", true)) {
+					if (!String::Compare(CommandName, "call", true)) {	// ### un-hardcode this
 						ISBox->Initialize(SyntaxBox::Operation::e_Call, false, true);
 						HandleTextChanged = false;
 					} else if (!String::Compare(CommandName, "let", true) || !String::Compare(CommandName, "set", true)) {
@@ -2558,7 +2650,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					else ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 				} 
 				else ISBox->LastOperation = SyntaxBox::Operation::e_Default;
-			} catch (Exception^ E) {
+			} catch (CSEGeneralException^ E) {
 				DebugPrint("IntelliSense threw an exception while initializing.\n\tException: " + E->Message, true);
 			}
 		}
@@ -2577,7 +2669,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					HandleKeyEditorBox = E->KeyCode;	
 					E->Handled = true;
 				}
-			} catch (Exception^ E) {
+			} catch (CSEGeneralException^ E) {
 				DebugPrint("Had trouble stripping RTF elements in editor " + AllocatedIndex + ".\n\tException: " + E->Message, true);
 			}
 			HandleTextChanged = false;

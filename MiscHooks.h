@@ -13,7 +13,7 @@ struct NopData;
 
 bool					PatchMiscHooks(void);
 void __stdcall			DoCSInitHook();
-void __stdcall			DoExitCS(HWND MainWindow);
+void __stdcall			DoExitCSHook(HWND MainWindow);
 
 SHORT __stdcall			IsControlKeyDown(void);
 void __stdcall			CreateDialogParamAddress(void);
@@ -36,6 +36,7 @@ const UInt32			kSavePluginMasterEnumRetnFailAddr = 0x0047ECEB;
 void					SavePluginMasterEnumHook(void);
 // allows master files to be set as active plugins
 const NopData			kCheckIsActivePluginAnESMPatch = { 0x0040B65E, 2 };
+const NopData			kTESFormGetUnUsedFormIDPatch = { 0x00486C08, 2};
 const UInt32			kLoadPluginsPrologHookAddr = 0x00485252;
 const UInt32			kLoadPluginsPrologRetnAddr = 0x00485257;
 const UInt32			kLoadPluginsPrologCallAddr = 0x00431310;
@@ -76,7 +77,7 @@ void FindTextInitHook(void);
 const UInt32			kCSInitHookAddr = 0x00419260;
 const UInt32			kCSInitRetnAddr = 0x00419265;
 const UInt32			kCSInitCallAddr = 0x006E5850;
-const UInt8				kCSInitCodeBuffer[5] = { 0xE8, 0xEB, 0xC5, 0x2C, 0 };
+const UInt8				kCSInitCodeBuffer[5] = { 0xE8, 0xEB, 0xC5, 0x2C, 0 };	// overwritten code
 
 void CSInitHook(void);
 // replaces the otiose "Recreate facial animation files" menu item with "Use Info Listings"
@@ -264,37 +265,6 @@ const UInt32			kNPCFaceGenRetnAddr = 0x004D76B1;
 const UInt32			kNPCFaceGenCallAddr = 0x0049C230;
 
 void NPCFaceGenHook(void);
-// adds various hooks to allow the use of a custom workspace (LocalMasterPath) while loading masters from the default Data\ directory
-// TODO: Do this right
-const UInt32			kDataHandlerPopulateModListInitCleanupHookAddr = 0x0047E539;
-const UInt32			kDataHandlerPopulateModListInitCleanupPassRetnAddr = 0x0047E53F;
-const UInt32			kDataHandlerPopulateModListInitCleanupFailRetnAddr = 0x0047E54D;
-
-void DataHandlerPopulateModListInitCleanupHook(void);
-
-const UInt32			kDataHandlerPopulateModListFindLoopHookAddr = 0x0047E70F;
-const UInt32			kDataHandlerPopulateModListFindLoopPassRetnAddr = 0x0047E570;
-const UInt32			kDataHandlerPopulateModListFindLoopFailRetnAddr = 0x0047E715;
-
-void DataHandlerPopulateModListFindLoopHook(void);
-
-const UInt32			kDataDlgCallPopulateModListHookAddr = 0x0040B41B;
-const UInt32			kDataDlgCallPopulateModListRetnAddr = 0x0040B421;
-const UInt32			kDataDlgCallPopulateModListCallAddr = 0x0047E4C0;	// f_DataHandler::PopulateModList(DataHandler* this, LPSTR localMasterPath)
-
-void DataDlgCallPopulateModListHook(void);
-
-const UInt32			kDataHandlerPopulateModListQuickExitHookAddr = 0x0047E4F5;
-const UInt32			kDataHandlerPopulateModListQuickExitPassRetnAddr = 0x0047E4FB;
-const UInt32			kDataHandlerPopulateModListQuickExitFailRetnAddr = 0x0047E980;
-
-void DataHandlerPopulateModListQuickExitHook(void);
-
-const UInt32			kTESCtorSkipModListPopulationHookAddr = 0x00475CCE;
-const UInt32			kTESCtorSkipModListPopulationRetnAddr = 0x00475CD3;
-const UInt32			kTESCtorSkipModListPopulationCallAddr = 0x0047E4C0;
-
-void TESCtorSkipModListPopulationHook(void);
 // gets rid of the ugly pink default water texture
 const UInt32			kDefaultWaterTextureFixPatchAddr = 0x0047F792;
 // hooks the data window for subclassing
@@ -343,11 +313,42 @@ void RenderWindowPopupPatchHook(void);
 // prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record
 // ### Figure out what the function's doing
 const UInt32			kUnnecessaryCellEditsPatchAddr = 0x005349A5;
-// patch to keep custom child windows of the CS main window from being closed on plugin load
+// keeps custom child windows of the CS main window from being closed on plugin load
 const UInt32			kCustomCSWindowPatchHookAddr = 0x004311E5;
 const UInt32			kCustomCSWindowPatchRetnAddr = 0x004311EF;
 
 void CustomCSWindowPatchHook(void);
 // prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.
 const UInt32			kRaceDescriptionDirtyEditPatchAddr = 0x0049405C;
+// provides a callback post-plugin load/save
+void __stdcall SendPingBack(UInt16 Message);
 
+const UInt32			kPluginSaveHookAddr	=	0x0041BBCD;
+const UInt32			kPluginSaveRetnAddr	=	0x0041BBD3;
+
+void PluginSaveHook(void);
+
+const UInt32			kPluginLoadHookAddr	=	0x0041BEFA;
+const UInt32			kPluginLoadRetnAddr	=	0x0041BEFF;
+
+void PluginLoadHook(void);
+// patches various routines to check for the 'Hide UnModified Forms' flag before populating controls with forms
+bool __stdcall			PerformControlPopulationPrologCheck(TESForm* Form);
+
+const UInt32			kAddListViewItemHookAddr = 0x004038F0;
+const UInt32			kAddListViewItemRetnAddr = 0x004038F7;
+const UInt32			kAddListViewItemExitAddr = 0x0040396E;
+
+void AddListViewItemHook(void);
+
+const UInt32			kAddComboBoxItemHookAddr = 0x00403540;
+const UInt32			kAddComboBoxItemRetnAddr = 0x00403548;
+const UInt32			kAddComboBoxItemExitAddr = 0x004035F4;
+
+void AddComboBoxItemHook(void);
+
+const UInt32			kObjectListPopulateListViewItemsHookAddr = 0x00413980;
+const UInt32			kObjectListPopulateListViewItemsRetnAddr = 0x0041398A;
+const UInt32			kObjectListPopulateListViewItemsExitAddr = 0x00413A50;
+
+void ObjectListPopulateListViewItemsHook(void);

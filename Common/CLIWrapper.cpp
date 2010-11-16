@@ -1,26 +1,39 @@
 #include "CLIWrapper.h"
 #include "Exports.h"
 
-CLIWrapper::_SE_AllocateNewEditor				CLIWrapper::SE_AllocateNewEditor = NULL;
-CLIWrapper::_SE_InitializeScript				CLIWrapper::SE_InitializeScript = NULL;
-CLIWrapper::_SE_SendMessagePingback				CLIWrapper::SE_SendMessagePingback = NULL;
+namespace CLIWrapper
+{
+
+namespace ScriptEditor
+{
+	_AllocateNewEditor						AllocateNewEditor;
+	_InitializeScript						InitializeScript;
+	_SendMessagePingback					SendMessagePingback;
 
 
-CLIWrapper::_SE_InitializeComponents			CLIWrapper::SE_InitializeComponents = NULL;
-CLIWrapper::_SE_AddToURLMap						CLIWrapper::SE_AddToURLMap = NULL;
-CLIWrapper::_SE_SetScriptListItemData			CLIWrapper::SE_SetScriptListItemData = NULL;
+	_InitializeComponents					InitializeComponents;
+	_AddToURLMap							AddToURLMap;
+	_SetScriptListItemData					SetScriptListItemData;
 
-CLIWrapper::_SE_SetVariableListItemData			CLIWrapper::SE_SetVariableListItemData = NULL;
-
-CLIWrapper::_UIL_OpenUseInfoBox					CLIWrapper::UIL_OpenUseInfoBox = NULL;
-CLIWrapper::_UIL_SetFormListItemData			CLIWrapper::UIL_SetFormListItemData = NULL;
-CLIWrapper::_UIL_SetUseListObjectItemData		CLIWrapper::UIL_SetUseListObjectItemData = NULL;
-CLIWrapper::_UIL_SetUseListCellItemData			CLIWrapper::UIL_SetUseListCellItemData = NULL;
-
-CLIWrapper::_BSAV_InitializeViewer				CLIWrapper::BSAV_InitializeViewer = NULL;
-CLIWrapper::_BE_InitializeRefBatchEditor		CLIWrapper::BE_InitializeRefBatchEditor = NULL;
-CLIWrapper::_BE_AddFormListItem					CLIWrapper::BE_AddFormListItem = NULL;
-
+	_SetVariableListItemData				SetVariableListItemData;
+	_InitializeDatabaseUpdateTimer			InitializeDatabaseUpdateTimer;
+}
+namespace UseInfoList
+{
+	_OpenUseInfoBox							OpenUseInfoBox;
+	_SetFormListItemData					SetFormListItemData;
+	_SetUseListObjectItemData				SetUseListObjectItemData;
+	_SetUseListCellItemData					SetUseListCellItemData;
+}
+namespace BSAViewer
+{
+	_InitializeViewer						InitializeViewer;
+}
+namespace BatchEditor
+{
+	_InitializeRefBatchEditor				InitializeRefBatchEditor;
+	_AddFormListItem						AddFormListItem;
+}
 
 bool CLIWrapper::Import(const OBSEInterface * obse)
 {
@@ -32,24 +45,24 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	CLIWrapper::SE_AllocateNewEditor = (CLIWrapper::_SE_AllocateNewEditor)GetProcAddress(hMod, "AllocateNewEditor");
-	CLIWrapper::SE_InitializeScript = (CLIWrapper::_SE_InitializeScript)GetProcAddress(hMod, "InitializeScript");
-	CLIWrapper::SE_SendMessagePingback = (CLIWrapper::_SE_SendMessagePingback)GetProcAddress(hMod, "SendMessagePingback");
+	CLIWrapper::ScriptEditor::AllocateNewEditor = (CLIWrapper::ScriptEditor::_AllocateNewEditor)GetProcAddress(hMod, "AllocateNewEditor");
+	CLIWrapper::ScriptEditor::InitializeScript = (CLIWrapper::ScriptEditor::_InitializeScript)GetProcAddress(hMod, "InitializeScript");
+	CLIWrapper::ScriptEditor::SendMessagePingback = (CLIWrapper::ScriptEditor::_SendMessagePingback)GetProcAddress(hMod, "SendMessagePingback");
+	CLIWrapper::ScriptEditor::InitializeComponents = (CLIWrapper::ScriptEditor::_InitializeComponents)GetProcAddress(hMod, "InitializeComponents");
+	CLIWrapper::ScriptEditor::AddToURLMap = (CLIWrapper::ScriptEditor::_AddToURLMap)GetProcAddress(hMod, "AddToURLMap");
+	CLIWrapper::ScriptEditor::SetScriptListItemData = (CLIWrapper::ScriptEditor::_SetScriptListItemData)GetProcAddress(hMod, "SetScriptListItemData");
+	CLIWrapper::ScriptEditor::SetVariableListItemData = (CLIWrapper::ScriptEditor::_SetVariableListItemData)GetProcAddress(hMod, "SetVariableListItemData");
+	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer = (CLIWrapper::ScriptEditor::_InitializeDatabaseUpdateTimer)GetProcAddress(hMod, "InitializeDatabaseUpdateTimer");
 
-	CLIWrapper::SE_InitializeComponents = (CLIWrapper::_SE_InitializeComponents)GetProcAddress(hMod, "InitializeComponents");
-	CLIWrapper::SE_AddToURLMap = (CLIWrapper::_SE_AddToURLMap)GetProcAddress(hMod, "AddToURLMap");
 
-	CLIWrapper::SE_SetScriptListItemData = (CLIWrapper::_SE_SetScriptListItemData)GetProcAddress(hMod, "SetScriptListItemData");
-	CLIWrapper::SE_SetVariableListItemData = (CLIWrapper::_SE_SetVariableListItemData)GetProcAddress(hMod, "SetVariableListItemData");
-
-
-	if (!SE_AddToURLMap || 
-		!SE_AllocateNewEditor || 
-		!SE_InitializeComponents ||
-		!SE_InitializeScript ||
-		!SE_SendMessagePingback ||
-		!SE_SetScriptListItemData ||
-		!SE_SetVariableListItemData)
+	if (!CLIWrapper::ScriptEditor::AddToURLMap || 
+		!CLIWrapper::ScriptEditor::AllocateNewEditor || 
+		!CLIWrapper::ScriptEditor::InitializeComponents ||
+		!CLIWrapper::ScriptEditor::InitializeScript ||
+		!CLIWrapper::ScriptEditor::SendMessagePingback ||
+		!CLIWrapper::ScriptEditor::SetScriptListItemData ||
+		!CLIWrapper::ScriptEditor::SetVariableListItemData ||
+		!CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
@@ -62,15 +75,15 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	CLIWrapper::UIL_OpenUseInfoBox = (CLIWrapper::_UIL_OpenUseInfoBox)GetProcAddress(hMod, "OpenUseInfoBox");
-	CLIWrapper::UIL_SetFormListItemData = (CLIWrapper::_UIL_SetFormListItemData)GetProcAddress(hMod, "SetFormListItemData");
-	CLIWrapper::UIL_SetUseListObjectItemData = (CLIWrapper::_UIL_SetUseListObjectItemData)GetProcAddress(hMod, "SetUseListObjectItemData");
-	CLIWrapper::UIL_SetUseListCellItemData = (CLIWrapper::_UIL_SetUseListCellItemData)GetProcAddress(hMod, "SetUseListCellItemData");
+	CLIWrapper::UseInfoList::OpenUseInfoBox = (CLIWrapper::UseInfoList::_OpenUseInfoBox)GetProcAddress(hMod, "OpenUseInfoBox");
+	CLIWrapper::UseInfoList::SetFormListItemData = (CLIWrapper::UseInfoList::_SetFormListItemData)GetProcAddress(hMod, "SetFormListItemData");
+	CLIWrapper::UseInfoList::SetUseListObjectItemData = (CLIWrapper::UseInfoList::_SetUseListObjectItemData)GetProcAddress(hMod, "SetUseListObjectItemData");
+	CLIWrapper::UseInfoList::SetUseListCellItemData = (CLIWrapper::UseInfoList::_SetUseListCellItemData)GetProcAddress(hMod, "SetUseListCellItemData");
 
-	if (!UIL_OpenUseInfoBox || 
-		!UIL_SetFormListItemData ||
-		!UIL_SetUseListObjectItemData || 
-		!UIL_SetUseListCellItemData)
+	if (!CLIWrapper::UseInfoList::OpenUseInfoBox || 
+		!CLIWrapper::UseInfoList::SetFormListItemData ||
+		!CLIWrapper::UseInfoList::SetUseListObjectItemData || 
+		!CLIWrapper::UseInfoList::SetUseListCellItemData)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
@@ -83,9 +96,9 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	CLIWrapper::BSAV_InitializeViewer = (CLIWrapper::_BSAV_InitializeViewer)GetProcAddress(hMod, "InitializeViewer");
+	CLIWrapper::BSAViewer::InitializeViewer = (CLIWrapper::BSAViewer::_InitializeViewer)GetProcAddress(hMod, "InitializeViewer");
 
-	if (!BSAV_InitializeViewer)
+	if (!CLIWrapper::BSAViewer::InitializeViewer)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
@@ -98,11 +111,11 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	CLIWrapper::BE_InitializeRefBatchEditor = (CLIWrapper::_BE_InitializeRefBatchEditor)GetProcAddress(hMod, "InitializeRefBatchEditor");
-	CLIWrapper::BE_AddFormListItem = (CLIWrapper::_BE_AddFormListItem)GetProcAddress(hMod, "AddFormListItem");
+	CLIWrapper::BatchEditor::InitializeRefBatchEditor = (CLIWrapper::BatchEditor::_InitializeRefBatchEditor)GetProcAddress(hMod, "InitializeRefBatchEditor");
+	CLIWrapper::BatchEditor::AddFormListItem = (CLIWrapper::BatchEditor::_AddFormListItem)GetProcAddress(hMod, "AddFormListItem");
 
-	if (!BE_InitializeRefBatchEditor ||
-		!BE_AddFormListItem)
+	if (!CLIWrapper::BatchEditor::InitializeRefBatchEditor ||
+		!CLIWrapper::BatchEditor::AddFormListItem)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
@@ -110,4 +123,6 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 
 	return true;
+}
+
 }

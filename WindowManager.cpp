@@ -80,7 +80,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			*g_WorkingFileFlag = 0;
 			g_SaveAsRoutine = true;
 			char FileName[0x104];
-			if (SelectTESFileCommonDialog(hWnd, g_INI_LocalMasterPath->Data, 0, FileName, 0x104)) {
+			if (SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->Data, 0, FileName, 0x104)) {
 				g_SaveAsBuffer = (*g_dataHandler)->unk8B8.activeFile;
 
 				g_SaveAsBuffer->flags &= ~(1 << 3);			// clear active flag
@@ -146,7 +146,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				BatchData->CellObjectListHead = RefData;
 				BatchData->ObjectCount = RefCount;
 
-				if (CLIWrapper::BE_InitializeRefBatchEditor(BatchData)) {
+				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData)) {
 					for (UInt32 k = 0; k < RefCount; k++) {
 						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
 						ThisRefData = &RefData[k];
@@ -167,13 +167,13 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 								ThisRef->baseForm->typeID != kFormType_NPC && 
 								ThisRef->baseForm->typeID != kFormType_Creature)	ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent), Modified = true;
 							if (BatchData->Flags.UseDisabled())		ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Disabled, BatchData->Flags.Disabled), Modified = true;
-							if (BatchData->Flags.UseVWD())			ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_VWD, BatchData->Flags.VWD), Modified = true;
+							if (BatchData->Flags.UseVWD())			ToggleFlag(&ThisRef->flags, TESForm::kFormFlags_VisibleWhenDistant, BatchData->Flags.VWD), Modified = true;
 
 							if (BatchData->EnableParent.UseEnableParent()) {
 								TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
 								if (Parent != ThisRef) {
-									ThisRef->baseExtraList.ModExtraEnableStateParent(Parent);
-									ThisRef->baseExtraList.ModExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
+							//		ThisRef->baseExtraList.ModExtraEnableStateParent(Parent);
+							//		ThisRef->baseExtraList.ModExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
 								//	thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->baseExtraList, Parent);
 								//	thisCall(kTESObjectREFR_SetExtraEnableStateParent_OppositeState, ThisRef, BatchData->EnableParent.OppositeState);
 									Modified = true;
@@ -183,18 +183,18 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							if (BatchData->Ownership.UseOwnership() &&
 								ThisRef->baseForm->typeID != kFormType_NPC && 
 								ThisRef->baseForm->typeID != kFormType_Creature) {
-								ThisRef->baseExtraList.ModExtraOwnership(NULL);
-								ThisRef->baseExtraList.ModExtraGlobal(NULL);
-								ThisRef->baseExtraList.ModExtraRank(-1);
+							//	ThisRef->baseExtraList.ModExtraOwnership(NULL);
+							//	ThisRef->baseExtraList.ModExtraGlobal(NULL);
+							//	ThisRef->baseExtraList.ModExtraRank(-1);
 
 								TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
-								ThisRef->baseExtraList.ModExtraOwnership(Owner);
+							//	ThisRef->baseExtraList.ModExtraOwnership(Owner);
 						//		thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, Owner);
 								if (BatchData->Ownership.UseNPCOwner()) {
-									ThisRef->baseExtraList.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
+							//		ThisRef->baseExtraList.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
 						//			thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
 								} else {
-									ThisRef->baseExtraList.ModExtraRank(BatchData->Ownership.Rank);
+							//		ThisRef->baseExtraList.ModExtraRank(BatchData->Ownership.Rank);
 						//			thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
 								}
 								Modified = true;
@@ -254,6 +254,26 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				else
 					CheckMenuItem(ViewMenu, 9903, MF_UNCHECKED);
 			}
+			break;
+		case 9904:				// hide unmodified forms item
+			{
+			HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+			if (AreUnModifiedFormsHidden())
+			{
+				// show all forms
+				ToggleHideUnModifiedForms(false);
+				CheckMenuItem(ViewMenu, 9904, MF_UNCHECKED);
+			}
+			else
+			{
+				// only show active forms
+				ToggleHideUnModifiedForms(true);
+				CheckMenuItem(ViewMenu, 9904, MF_CHECKED);		
+			}
+			break;
+			}
+		case 9905:				// CSE preferences item
+			g_INIEditGUI->InitializeGUI(g_DLLInstance, *g_HWND_CSParent, g_INIManager);
 			break;
 		}
 		break;
@@ -404,13 +424,16 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				break;
 			case CONSOLEMENU_ALWAYSONTOP:
 				if (AlwaysOnTopFlag) {
-					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_TOP, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_NOTOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
 					AlwaysOnTopFlag = false;
 				}
 				else {
 					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_TOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
 					AlwaysOnTopFlag = true;
 				}
+				break;
+			case CONSOLEMENU_HIDECONSOLE:
+				CONSOLE->ToggleDisplayState();
 				break;
 			}
 			DestroyMenu(Popup); 

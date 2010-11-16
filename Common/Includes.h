@@ -3,6 +3,7 @@
 
 
 #ifndef CSE_INTERFACE
+
 #using <mscorlib.dll>
 using namespace System;
 using namespace System::ComponentModel;
@@ -23,4 +24,5 @@ using namespace cli;
 using namespace System::Runtime::InteropServices;
 
 typedef unsigned char		UInt8;
+
 #endif
