@@ -35,7 +35,7 @@ struct CSEConsoleInterface
 
 	// Prints a message to the console. Prefix can be an abbreviated string of any kind.
 	// Printed messages will be of the following format: [<Prefix>]\t\t<Message>
-	// Mustn't be called during a callback.
+	// Mustn't be called inside a callback.
 	void			(* PrintToConsole)(const char*	Prefix, const char* FormatString, ...);
 	// Registers a handler that gets called whenever a message is printed to the console.
 	void			(* RegisterCallback)(ConsolePrintCallback Handler);

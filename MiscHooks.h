@@ -352,3 +352,15 @@ const UInt32			kObjectListPopulateListViewItemsRetnAddr = 0x0041398A;
 const UInt32			kObjectListPopulateListViewItemsExitAddr = 0x00413A50;
 
 void ObjectListPopulateListViewItemsHook(void);
+
+const UInt32			kCellViewPopulateObjectListHookAddr = 0x004087C0;
+const UInt32			kCellViewPopulateObjectListRetnAddr = 0x004087D3;
+const UInt32			kCellViewPopulateObjectListExitAddr = 0x004088AF;
+
+void CellViewPopulateObjectListHook(void);
+// allows the displaying of reference properties for door markers 
+const UInt32			kDoorMarkerPropertiesHookAddr = 0x00429EA9;
+const UInt32			kDoorMarkerPropertiesPropertiesAddr = 0x00429EB1;
+const UInt32			kDoorMarkerPropertiesTeleportAddr = 0x00429EE8;
+
+void DoorMarkerPropertiesHook(void);

@@ -172,10 +172,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							if (BatchData->EnableParent.UseEnableParent()) {
 								TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
 								if (Parent != ThisRef) {
-							//		ThisRef->baseExtraList.ModExtraEnableStateParent(Parent);
-							//		ThisRef->baseExtraList.ModExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
-								//	thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->baseExtraList, Parent);
-								//	thisCall(kTESObjectREFR_SetExtraEnableStateParent_OppositeState, ThisRef, BatchData->EnableParent.OppositeState);
+									thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->baseExtraList, Parent);
+									thisCall(kTESObjectREFR_SetExtraEnableStateParent_OppositeState, ThisRef, BatchData->EnableParent.OppositeState);
 									Modified = true;
 								}
 							}
@@ -188,13 +186,9 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							//	ThisRef->baseExtraList.ModExtraRank(-1);
 
 								TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
-							//	ThisRef->baseExtraList.ModExtraOwnership(Owner);
-						//		thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, Owner);
 								if (BatchData->Ownership.UseNPCOwner()) {
-							//		ThisRef->baseExtraList.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
 						//			thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
 								} else {
-							//		ThisRef->baseExtraList.ModExtraRank(BatchData->Ownership.Rank);
 						//			thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
 								}
 								Modified = true;
@@ -230,12 +224,11 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 
 						if (Modified) {
-							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
-								DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
-							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef))
-								DebugPrint("REF: %08X | virt 104 returned false!", ThisRef->refID);
-							thisVirtualCall(kVTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
-							thisVirtualCall(kVTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
+					//		if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
+					//			DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
+					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef);
+					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
+					//		thisVirtualCall(kVTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
 					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x17C, ThisRef, thisCall(0x00542950, ThisRef));
 						}
 					}			
@@ -292,12 +285,10 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case 9903:	
+		case 9902:	
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 9902, 0);
 			break;
 		}
-	case WM_DESTROY: 
-		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_RenderWndOrgWindowProc);
 		break; 
 	}
  

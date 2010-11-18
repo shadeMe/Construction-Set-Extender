@@ -111,15 +111,18 @@ bool PatchMiscHooks()
 
 	SafeWrite8(kUnnecessaryCellEditsPatchAddr, 0xEB);
 	SafeWrite8(kUnnecessaryDialogEditsPatchAddr, 0xEB);
-	PLACE_HOOK(RenderWindowPopupPatch);
+//	PLACE_HOOK(RenderWindowPopupPatch);
 	PLACE_HOOK(CustomCSWindowPatch);
 	SafeWrite8(kRaceDescriptionDirtyEditPatchAddr, 0xEB);
 
 	PLACE_HOOK(PluginSave);
 	PLACE_HOOK(PluginLoad);
-//	PLACE_HOOK(AddListViewItem);
-//	PLACE_HOOK(AddComboBoxItem);
+	PLACE_HOOK(AddListViewItem);
 	PLACE_HOOK(ObjectListPopulateListViewItems);
+	PLACE_HOOK(CellViewPopulateObjectList);
+
+//	PLACE_HOOK(DoorMarkerProperties);		### TODO screws up dialog instantiation for no reason. messed up stack ?
+	SafeWrite16(kDoorMarkerPropertiesHookAddr, 0x9090);
 
 
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -130,8 +133,6 @@ bool PatchMiscHooks()
 	GetVersionEx(&OSInfo);
 	if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
 		RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");	
-
-	//	WriteRelJump(0x0049745A, (UInt32)TestHook);
 	
 	return true;
 }
@@ -634,7 +635,6 @@ void __declspec(naked) DataDlgInitHook(void)
 
 void __stdcall DoAssertOverrideHook(UInt32 EIP)
 {
-	if (EIP == 0x005390C9 || EIP == 0x005390B2)		return;		// these locations spam a lot
 	DebugPrint("{{ Assert call handled at 0x%08X }}", EIP);
 	MessageBeep(MB_ICONHAND);
 }
@@ -795,6 +795,10 @@ UInt8 __stdcall CheckCallLocations(UInt32 CallAddress)
 	case 0x00440FBD:
 	case 0x0040A4BF:
 	case 0x00412F7A:
+	case 0x0043FDFF:
+	case 0x00442576:
+	case 0x00452409:
+	case 0x00560DC2:
 		return 1;
 	default:
 		return 0;
@@ -823,7 +827,7 @@ void __declspec(naked) AddListViewItemHook(void)
 	SKIP:
 		popad
 
-		mov		ecx, [esp + 0x16]
+		mov		ecx, [esp + 0x10]
 		or		edx, 0x0FFFFFFFF
 		jmp		[kAddListViewItemRetnAddr]
 	EXIT:
@@ -873,5 +877,53 @@ void __declspec(naked) ObjectListPopulateListViewItemsHook(void)
 	EXIT2:
 		popad
 		jmp		[kObjectListPopulateListViewItemsExitAddr]
+	}
+}
+
+void __declspec(naked) CellViewPopulateObjectListHook(void)
+{
+	__asm
+	{
+		mov		eax, [esp + 8]
+
+		sub		esp, 0x28
+		push	esi
+		mov		esi, eax
+		push	edi
+		xor		edi, edi
+		cmp		esi, edi
+
+		jz		EXIT2
+
+		pushad
+		push	eax
+		call	PerformControlPopulationPrologCheck
+		test	al, al
+		jz		EXIT1
+		popad
+
+		jmp		[kCellViewPopulateObjectListRetnAddr]
+	EXIT1:
+		popad
+	EXIT2:
+		jmp		[kCellViewPopulateObjectListExitAddr]
+	}
+}
+
+void __declspec(naked) DoorMarkerPropertiesHook(void)
+{
+	__asm
+	{
+		pushad
+		call	IsControlKeyDown
+		test	al, al
+		jnz		TELEPORT
+		popad
+
+		mov		edx, [g_HWND_CSParent]
+		jmp		[kDoorMarkerPropertiesPropertiesAddr]
+	TELEPORT:
+		popad
+		jmp		[kDoorMarkerPropertiesTeleportAddr]
 	}
 }
