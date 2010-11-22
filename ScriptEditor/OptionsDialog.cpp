@@ -147,6 +147,7 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::General", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 	INIMap->Add(gcnew INISetting("RecompileVarIdx", "ScriptEditor::General", "1"), gcnew BoundControl(RecompileVarIdx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("UseCSParent", "ScriptEditor::General", "0"), gcnew BoundControl(UseCSParent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("DestroyOnLastTabClose", "ScriptEditor::General", "1"), gcnew BoundControl(DestroyOnLastTabClose, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// IntelliSense
 	INIMap->Add(gcnew INISetting("ThresholdLength", "ScriptEditor::IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
@@ -205,6 +206,7 @@ OptionsDialog::OptionsDialog()
 	RecompileVarIdx = gcnew CheckBox();
 	PreprocessorWarnings = gcnew CheckBox();
 	UseCSParent = gcnew CheckBox();
+	DestroyOnLastTabClose = gcnew CheckBox();
 
 	FontButton = gcnew Button();
 	FCButton = gcnew Button();
@@ -300,6 +302,7 @@ OptionsDialog::OptionsDialog()
 	GroupGen->Controls->Add(TabSize);
 	GroupGen->Controls->Add(RecompileVarIdx);
 	GroupGen->Controls->Add(UseCSParent);
+	GroupGen->Controls->Add(DestroyOnLastTabClose);
 	
 	
 	GroupGen->Location = System::Drawing::Point(12, 184);
@@ -409,6 +412,14 @@ OptionsDialog::OptionsDialog()
 	UseCSParent->TabIndex = 10;
 	UseCSParent->Text = L"Use CS as Parent";
 	UseCSParent->UseVisualStyleBackColor = true;
+
+	DestroyOnLastTabClose->AutoSize = true;
+	DestroyOnLastTabClose->Location = System::Drawing::Point(15, 137);
+	DestroyOnLastTabClose->Name = L"DestroyOnLastTabClose";
+	DestroyOnLastTabClose->Size = System::Drawing::Size(224, 17);
+	DestroyOnLastTabClose->TabIndex = 11;
+	DestroyOnLastTabClose->Text = L"Close script window on closing the last tab";
+	DestroyOnLastTabClose->UseVisualStyleBackColor = true;
 
 	OptionsBox = gcnew Form();
 	OptionsBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);

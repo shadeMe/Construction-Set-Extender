@@ -26,7 +26,6 @@ void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
 	if (Msg->type == 'CSEI') {
 		DebugPrint("Dispatching interface to '%s'", Msg->sender);
-
 		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEI', CSEInterfaceManager::GetInterface(), 4, Msg->sender);
 	}
 }
@@ -57,6 +56,7 @@ extern "C" {
 
 bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 {
+//	WaitUntilDebuggerAttached();
 	CONSOLE->InitializeLog(g_AppPath.c_str());
 
 	DebugPrint("Construction Set Extender Initializing ...");

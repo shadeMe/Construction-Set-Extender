@@ -280,7 +280,7 @@
 			MinFrameworkVersion="196613"
 		/>
 		<AssemblyReference
-			RelativePath="..\MouseHook\Gma.UserActivityMonitor\bin\Release\GlobalHookManager.dll"
+			RelativePath="..\mousehook\gma.useractivitymonitor\bin\release\globalhookmanager.dll"
 			AssemblyName="GlobalHookManager, Version=1.0.0.0, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
@@ -339,6 +339,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ConflictHS.png"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\CopyFolderHS.png"
 					>
 				</File>
 				<File
@@ -490,6 +494,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\Images\saveTabs.png"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SearchWebHS.png"
 					>
 				</File>
@@ -514,11 +522,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
+					RelativePath=".\Images\warning.png"
 					>
 				</File>
 				<File
-					RelativePath=".\Images\warning.png"
+					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
 					>
 				</File>
 				<File

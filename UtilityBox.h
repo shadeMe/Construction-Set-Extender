@@ -9,11 +9,8 @@
 #include "commctrl.h"
 #include "richedit.h"
 #include "shlobj.h"
+#include "obse/obse_common/SafeWrite.h"
 
-void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
-void LogWinAPIErrorMessage(DWORD ErrorID);
-
-#define PLACE_HOOK(name)									WriteRelJump(k##name##HookAddr, (UInt32)##name##Hook)
 #define CS_CAST(obj, from, to)								(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
 
 class Console
@@ -26,7 +23,7 @@ class Console
 	HWND						EditHandle;
 	bool						DisplayState;
 	std::string					MessageBuffer;
-	std::fstream				DebugLog;
+	FILE*						DebugLog;
 	UInt32						IndentLevel;
 public:
 	static Console*				GetSingleton();
@@ -45,7 +42,7 @@ public:
 	void						InitializeLog(const char* AppPath);
 	bool						IsHidden() { return DisplayState == 0; }
 	bool						IsConsoleInitalized() { return WindowHandle != 0; }
-	bool						IsLogInitalized() { return DebugLog.is_open(); }
+	bool						IsLogInitalized() { return DebugLog != 0; }
 	bool						ToggleDisplayState();
 	void						LoadINISettings();
 	void						SaveINISettings();
@@ -63,20 +60,50 @@ public:
 
 void DebugPrint(const char* fmt, ...);
 void DebugPrint(UInt8 source, const char* fmt, ...);
-
-struct NopData
-{
-	UInt32				Address;
-	UInt8				Size;
-};
-void DoNop(const NopData* Data);
-
 void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump = 512);
+void WaitUntilDebuggerAttached();
+UInt8*	MakeUInt8Array(UInt32 Size, ...);
+void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
+void LogWinAPIErrorMessage(DWORD ErrorID);
+
+namespace MemoryHandler
+{
+	class Handler_Nop
+	{
+		UInt32				m_Address;
+		UInt32				m_Size;
+	public:
+		Handler_Nop(UInt32 PatchAddr, UInt32 Size) : m_Address(PatchAddr), m_Size(Size) {}
+
+		void				WriteNop();
+	};
+	typedef Handler_Nop NopHdlr;
+
+	class Handler_Ace
+	{
+		UInt32				m_AddressA;
+		UInt32				m_AddressB;
+		UInt8*				m_Buffer;
+		UInt32				m_BufferSize;
+	public:
+		Handler_Ace(UInt32 HookAddr, UInt32 JumpAddr, UInt8* Buffer, UInt32 BufferSize) : m_AddressA(HookAddr), m_AddressB(JumpAddr), m_Buffer(Buffer), m_BufferSize(BufferSize) {}
+		Handler_Ace(UInt32 HookAddr, void* JumpAddr, UInt8* Buffer, UInt32 BufferSize) : m_AddressA(HookAddr), m_AddressB((UInt32)JumpAddr), m_Buffer(Buffer), m_BufferSize(BufferSize) {}
+
+		void				WriteJump();
+		void				WriteCall();
+
+		void				WriteBuffer();
+		void				WriteUInt32(UInt32 Data);
+		void				WriteUInt16(UInt16 Data);
+		void				WriteUInt8(UInt8 Data);
+	};
+	typedef Handler_Ace MemHdlr;
+
+//#define DEFINE_MEM_HDLR(name, addressA, addressB, buffer, size)		MemHdlr		k##name##(##addressA##, (UInt32)##addressB##, ##buffer##, ##size##)
+}
 
 
-
-
-
+#pragma region Executable Code Handlers
 // __thisCall handlers (non-virtual)
 template <typename Tthis>
 __forceinline UInt32 thisCall(UInt32 addr, Tthis _this)
@@ -164,3 +191,4 @@ __forceinline UInt32 thisVirtualCall(UInt32 vtbl, UInt32 offset, Tthis _this, T1
     class T {}; union { UInt32 x; UInt32 (T::*m)(T1, T2, T3, T4, T5); } u = {*(UInt32*)(vtbl + offset)};
     return ((T*)_this->*u.m)(arg1, arg2, arg3, arg6, arg5);
 }
+#pragma endregion

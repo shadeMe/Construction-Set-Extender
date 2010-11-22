@@ -86,6 +86,7 @@ public:
 	CheckBox^										RecompileVarIdx;
 	CheckBox^										PreprocessorWarnings;
 	CheckBox^										UseCSParent;
+	CheckBox^										DestroyOnLastTabClose;
 
 	OptionsDialog();
 

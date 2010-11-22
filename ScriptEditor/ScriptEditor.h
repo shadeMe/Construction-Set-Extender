@@ -32,7 +32,8 @@ public:
 	static enum class									RemoteOperation
 															{
 																e_New = 0,
-																e_Open
+																e_Open,
+																e_LoadNew
 															};
 	static MouseEventHandler^							GlobalMouseHook_MouseUpHandler = gcnew MouseEventHandler(&Global_MouseUp);
 	static Rectangle									LastUsedBounds = Rectangle(100, 100, 100, 100);
@@ -66,9 +67,12 @@ public:
 	UInt32												CreateNewTab(String^ ScriptName);
 	void												NavigateStack(UInt32 AllocatedIndex, NavigationDirection Direction);
 	void												JumpToScript(UInt32 AllocatedIndex, String^% ScriptName);
-	void												PerformRemoteOperation(RemoteOperation Operation);
+	void												PerformRemoteOperation(RemoteOperation Operation, Object^ Arbitrary);
 	void												SaveAllTabs();
 	void												CloseAllTabs();
+
+	void												DumpAllTabs(String^ FolderPath);
+	void												LoadToTab(String^ FileName);
 
 	void												Destroy();
 };
@@ -125,6 +129,8 @@ private:
 															e_CompileDependencies,
 															e_SavePlugin,
 															e_SaveNoCompile,
+															e_DumpTabs,
+															e_LoadToTabs,
 
 															e_Bookend
 														};
@@ -166,7 +172,9 @@ private:
 															"SESaveAll",
 															"SECompileDependencies",
 															"SESavePlugin",
-															"SESaveNoCompile"
+															"SESaveNoCompile",
+															"SEDumpTabs",
+															"SELoadToTabs"
 														};
 	static ImageList^									Icons = gcnew ImageList();
 	
@@ -224,6 +232,9 @@ private:
 	void												ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E);
+
+	void												ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
 
 	void												EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
@@ -317,8 +328,12 @@ public:
 		ToolStripButton^									ToolBarErrorList;
 		ToolStripButton^									ToolBarFindList;
 		ToolStripButton^									ToolBarBookmarkList;
-		ToolStripButton^									ToolBarDumpScript;
-		ToolStripButton^									ToolBarLoadScript;
+		ToolStripSplitButton^								ToolBarDumpScript;
+			ToolStripDropDown^									ToolBarDumpScriptDropDown;
+			ToolStripButton^									ToolBarDumpAllScripts;
+		ToolStripSplitButton^								ToolBarLoadScript;
+			ToolStripDropDown^									ToolBarLoadScriptDropDown;
+			ToolStripButton^									ToolBarLoadScriptsToTabs;
 		ToolStripButton^									ToolBarOptions;
 
 		ToolStripButton^									ToolBarNewScript;

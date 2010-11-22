@@ -16,6 +16,7 @@ using namespace System::Text::RegularExpressions;
 namespace ScriptEditor
 {
 
+#pragma region TabContainer
 TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height)
 {
 	Application::EnableVisualStyles();
@@ -159,7 +160,7 @@ void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 {
 	RemovingTab = true;
 	if (ScriptStrip->Tabs->Count == 1) {
-		if (!Destroying)		CreateNewTab(nullptr);
+		if (!Destroying && OPTIONS->DestroyOnLastTabClose->Checked == 0)		CreateNewTab(nullptr);
 		else {
 			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 			Parameters->VanillaHandleIndex = 0;
@@ -196,7 +197,7 @@ UInt32 TabContainer::CreateNewTab(String^ ScriptName)
 	return AllocatedIndex;
 }
 
-void TabContainer::PerformRemoteOperation(RemoteOperation Operation)
+void TabContainer::PerformRemoteOperation(RemoteOperation Operation, Object^ Arbitrary)
 {
 	UInt32 AllocatedIndex = CreateNewTab(nullptr);
 	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
@@ -210,6 +211,19 @@ void TabContainer::PerformRemoteOperation(RemoteOperation Operation)
 		break;
 	case RemoteOperation::e_Open:
 		SEMGR->GetAllocatedWorkspace(AllocatedIndex)->ScriptListBox->Show(ScriptListDialog::Operation::e_Open);
+		break;
+	case RemoteOperation::e_LoadNew:
+		Parameters->VanillaHandleIndex = AllocatedIndex;
+		Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_New);
+		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+
+		String^ FilePath = dynamic_cast<String^>(Arbitrary);
+		try {
+			SEMGR->GetAllocatedWorkspace(AllocatedIndex)->EditorBox->LoadFile(FilePath, RichTextBoxStreamType::PlainText);
+		} catch (CSEGeneralException^ E)
+		{
+			DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
+		}
 		break;
 	}
 }
@@ -477,9 +491,34 @@ void TabContainer::CloseAllTabs()
 		Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Close);
 		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 	}
+
+	EditorForm->Invalidate(true);
 }
 
+void TabContainer::DumpAllTabs(String^ FolderPath)
+{
+	for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
+		if (Itr == NewTabButton)	continue;
+		Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
+		if (Editor->ScriptEditorID == "New Script")	continue;
 
+		try {
+			Editor->EditorBox->SaveFile(FolderPath + "\\" + Editor->EditorTab->Text + ".txt", RichTextBoxStreamType::PlainText);
+		} catch (CSEGeneralException^ E)
+		{
+			DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
+		}		
+	}
+}
+
+void TabContainer::LoadToTab(String^ FileName)
+{
+	PerformRemoteOperation(RemoteOperation::e_LoadNew, FileName);
+}
+
+#pragma endregion
+
+#pragma region Workspace
 Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 {
 	ParentStrip = Parent;
@@ -675,19 +714,42 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	ToolBarBookmarkList->Click += gcnew EventHandler(this, &Workspace::ToolBarBookmarkList_Click);
 	ToolBarBookmarkList->Margin = PrimaryButtonPad;
 
-	ToolBarDumpScript = gcnew ToolStripButton();
+
+	ToolBarDumpScript = gcnew ToolStripSplitButton();
 	ToolBarDumpScript->ToolTipText = "Dump Script";
 	ToolBarDumpScript->Image = Icons->Images[(int)IconEnum::e_DumpScript];
 	ToolBarDumpScript->AutoSize = true;
-	ToolBarDumpScript->Click += gcnew EventHandler(this, &Workspace::ToolBarDumpScript_Click);
+	ToolBarDumpScript->ButtonClick += gcnew EventHandler(this, &Workspace::ToolBarDumpScript_Click);
 	ToolBarDumpScript->Margin = PrimaryButtonPad;
-	
-	ToolBarLoadScript = gcnew ToolStripButton();
+
+	ToolBarDumpAllScripts = gcnew ToolStripButton();
+	ToolBarDumpAllScripts->ToolTipText = "Dump All Tabs";
+	ToolBarDumpAllScripts->Image = Icons->Images[(int)IconEnum::e_DumpTabs];
+	ToolBarDumpAllScripts->AutoSize = true;
+	ToolBarDumpAllScripts->Click += gcnew EventHandler(this, &Workspace::ToolBarDumpAllScripts_Click);
+
+	ToolBarDumpScriptDropDown = gcnew ToolStripDropDown();
+	ToolBarDumpScriptDropDown->Items->Add(ToolBarDumpAllScripts);
+	ToolBarDumpScript->DropDown = ToolBarDumpScriptDropDown;
+
+
+	ToolBarLoadScript = gcnew ToolStripSplitButton();
 	ToolBarLoadScript->ToolTipText = "Load Script";
 	ToolBarLoadScript->Image = Icons->Images[(int)IconEnum::e_LoadScript];
 	ToolBarLoadScript->AutoSize = true;
-	ToolBarLoadScript->Click += gcnew EventHandler(this, &Workspace::ToolBarLoadScript_Click);
+	ToolBarLoadScript->ButtonClick += gcnew EventHandler(this, &Workspace::ToolBarLoadScript_Click);
 	ToolBarLoadScript->Margin = SecondaryButtonPad;
+
+	ToolBarLoadScriptsToTabs = gcnew ToolStripButton();
+	ToolBarLoadScriptsToTabs->ToolTipText = "Load Multiple Scripts Into Tabs";
+	ToolBarLoadScriptsToTabs->Image = Icons->Images[(int)IconEnum::e_LoadToTabs];
+	ToolBarLoadScriptsToTabs->AutoSize = true;
+	ToolBarLoadScriptsToTabs->Click += gcnew EventHandler(this, &Workspace::ToolBarLoadScriptsToTabs_Click);
+
+	ToolBarLoadScriptDropDown = gcnew ToolStripDropDown();
+	ToolBarLoadScriptDropDown->Items->Add(ToolBarLoadScriptsToTabs);
+	ToolBarLoadScript->DropDown = ToolBarLoadScriptDropDown;
+
 
 	ToolBarOptions = gcnew ToolStripButton();
 	ToolBarOptions->ToolTipText = "Preferences";
@@ -815,7 +877,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	ToolBarUpdateVarIndices->Margin = PrimaryButtonPad;
 
 	ToolBarSaveAll = gcnew ToolStripButton();
-	ToolBarSaveAll->ToolTipText = "Save all open scripts";
+	ToolBarSaveAll->ToolTipText = "Save All Open Scripts";
 	ToolBarSaveAll->Image = Icons->Images[(int)IconEnum::e_SaveAll];
 	ToolBarSaveAll->AutoSize = true;
 	ToolBarSaveAll->Click += gcnew EventHandler(this, &Workspace::ToolBarSaveAll_Click);
@@ -1118,6 +1180,7 @@ void Workspace::Destroy()
 	EditorControlBox->Controls->Clear();
 	ParentStrip->ScriptStrip->Tabs->Remove(EditorTab);
 	ParentStrip->ScriptStrip->Controls->Remove(EditorControlBox);
+	ParentStrip->EditorForm->Invalidate(true);
 }
 
 void Workspace::EnableControls()
@@ -2241,8 +2304,27 @@ void Workspace::ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E)
 	SaveManager->FileName = EditorTab->Text;
 
 	if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0) {
-		EditorBox->SaveFile(SaveManager->FileName, RichTextBoxStreamType::PlainText);
-		DebugPrint("Dumped editor " + AllocatedIndex + "'s text to " + SaveManager->FileName);
+		try {
+			EditorBox->SaveFile(SaveManager->FileName, RichTextBoxStreamType::PlainText);
+			DebugPrint("Dumped editor " + AllocatedIndex + "'s text to " + SaveManager->FileName);
+		} catch (CSEGeneralException^ E)
+		{
+			DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
+		}	
+	}
+}
+
+void Workspace::ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E)
+{
+	FolderBrowserDialog^ SaveManager = gcnew FolderBrowserDialog();
+
+	SaveManager->Description = "All open scripts in this window will be dumped to the selected folder.";
+	SaveManager->ShowNewFolderButton = true;
+	SaveManager->SelectedPath = Globals::AppPath + "\\Data\\Scripts";
+
+	if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0) {
+		ParentStrip->DumpAllTabs(SaveManager->SelectedPath);
+		DebugPrint("Dumped all open scripts to " + SaveManager->SelectedPath);
 	}
 }
 
@@ -2255,10 +2337,34 @@ void Workspace::ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E)
 
 	if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0) {
 		HandleTextChanged = false;
-		EditorBox->LoadFile(LoadManager->FileName, RichTextBoxStreamType::PlainText);
-		DebugPrint("Loaded text from " + LoadManager->FileName + " to editor " + AllocatedIndex);
+		try {
+			EditorBox->LoadFile(LoadManager->FileName, RichTextBoxStreamType::PlainText);
+			DebugPrint("Loaded text from " + LoadManager->FileName + " to editor " + AllocatedIndex);
+		} catch (CSEGeneralException^ E)
+		{
+			DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
+		}		
 	}
 }
+
+void Workspace::ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E)
+{
+	OpenFileDialog^ LoadManager = gcnew OpenFileDialog();
+
+	LoadManager->DefaultExt = "*.txt";
+	LoadManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
+	LoadManager->Multiselect = true;
+
+	if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0) {
+		for each (String^ Itr in LoadManager->FileNames)
+		{
+			ParentStrip->LoadToTab(Itr);
+			DebugPrint("Loaded text from " + Itr + " into a new workspace");
+		}
+	}
+}
+
+
 
 void Workspace::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
 {
@@ -2291,7 +2397,7 @@ void Workspace::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
 	switch (Control::ModifierKeys)
 	{
 	case Keys::Control:
-		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_New);
+		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_New, nullptr);
 		break;
 	case Keys::Shift:
 		Parameters->VanillaHandleIndex = 0;
@@ -2311,7 +2417,7 @@ void Workspace::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
 {
 	if (Control::ModifierKeys == Keys::Control) {
-		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_Open);
+		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_Open, nullptr);
 	} else {
 		ScriptListBox->Show(ScriptListDialog::Operation::e_Open);
 	}
@@ -3085,5 +3191,6 @@ void Workspace::IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		Workspace::IndexEditBox_LostFocus(nullptr, nullptr);
 	}
 }
+#pragma endregion
 
 }

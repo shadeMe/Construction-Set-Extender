@@ -1,5 +1,6 @@
 #include "ExtenderInternals.h"
 #include "Exports.h"
+#include "MiscHooks.h"
 
 EditorAllocator*					EditorAllocator::Singleton = NULL;
 EditorAllocator::SEAlloc*			EditorAllocator::NullRef = new EditorAllocator::SEAlloc(NULL, NULL, NULL);
@@ -90,6 +91,10 @@ UInt32 EditorAllocator::TrackNewEditor(HWND EditorDialog)
 	UInt32 Result = NextIndex;
 	AllocationMap.insert(std::make_pair<HWND, SEAlloc*>(EditorDialog, new SEAlloc(GetDlgItem(EditorDialog, 1166), GetDlgItem(EditorDialog, 2259), Result)));
 	++NextIndex;
+	if (NextIndex == sizeof(UInt32))
+	{
+		MessageBox(*g_HWND_CSParent, "Holy crap, mate! I have no idea how you managed to create 2147483648 editor workspaces xO I'd suggest that you pack up some essentials and head to the Andes as the next allocation is certain to warp the space-time continuum in unimaginable ways.\n\nDamn you...", "The Developer Speaks", MB_HELP|MB_ICONSTOP);
+	}
 	return Result;
 }
 
@@ -170,6 +175,8 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "Bottom", "Console::General", "350", "Client Rect Bottom"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LogCSWarnings", "Console::General", "1", "Log CS Warnings to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LogAssertions", "Console::General", "1", "Log CS Assertions to the Console"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "1", "Loads a plugin on CS startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "Plugin.esp", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
 
 	if (CreateINI)		SaveSettingsToINI();
 	else				ReadSettingsFromINI();
@@ -292,4 +299,28 @@ void ToggleHideUnModifiedForms(bool State)
 
 	InitializeCSWindows();
 	InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
+}
+
+void LoadStartupPlugin()
+{
+	// prolog
+	kAutoLoadActivePluginOnStartup.WriteJump();
+
+	const char* PluginName = g_INIManager->GET_INI_STR("StartupPluginName");
+	const ModEntry* TESFile = (*g_dataHandler)->LookupModByName(PluginName);
+	if (TESFile)
+	{
+		DebugPrint("Loading plugin '%s' on startup...", PluginName);
+
+		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
+		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
+		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
+	} 
+	else
+	{
+		DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
+	}
+
+	// epilog
+	kAutoLoadActivePluginOnStartup.WriteBuffer();
 }

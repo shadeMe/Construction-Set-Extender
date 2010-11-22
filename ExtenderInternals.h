@@ -6,7 +6,6 @@
 #include "obse/GameData.h"
 #include "obse/Script.h"
 #include "obse/PluginAPI.h"
-#include "obse/obse_common/SafeWrite.h"
 #include "obse/GameObjects.h"
 
 #include "[ Libraries ]\INI Manager\INIManager.h"
@@ -50,6 +49,7 @@ public:
 	HWND																	GetTrackedLBC(HWND TrackedEditorDialog);
 	UInt32																	GetTrackedIndex(HWND TrackedEditorDialog);
 	HWND																	GetTrackedDialog(UInt32 TrackedEditorIndex);
+	UInt32																	GetTrackedEditorCount() { return AllocationMap.size(); }
 };
 
 void																		LogWinAPIErrorMessage(DWORD ErrorID);
@@ -304,4 +304,5 @@ void						RemoteLoadRef(const char* EditorID);
 void						LoadFormIntoView(const char* EditorID, const char* FormType);
 bool __stdcall				AreUnModifiedFormsHidden();
 void						ToggleHideUnModifiedForms(bool State);
+void						LoadStartupPlugin();
 

@@ -37,6 +37,7 @@ Console::Console()
 	DisplayState = false;
 	MessageBuffer.reserve(0x3000);
 	IndentLevel = 0;
+	DebugLog = NULL;
 }
 
 Console* Console::GetSingleton()
@@ -51,7 +52,10 @@ void Console::InitializeLog(const char* AppPath)
 {
 	if (IsLogInitalized())	return;
 
-	DebugLog.open(std::string(std::string(AppPath) + "Construction Set Extender.log").c_str(), std::fstream::out);
+	DebugLog = _fsopen((std::string(std::string(AppPath) + "Construction Set Extender.log").c_str()), "w", _SH_DENYWR);
+
+	if (!DebugLog) 
+		DebugPrint("Couldn't initialize debug log.");
 }
 
 void Console::InitializeConsole()
@@ -146,7 +150,9 @@ void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 		MessageBuffer += Message;
 
 	if (IsLogInitalized()) {
-		DebugLog << Message << std::endl;
+		fputs(Message.c_str(), DebugLog);
+		fputs("\n", DebugLog);
+		fflush(DebugLog);
 	}
 
 	if (IsConsoleInitalized() && !IsHidden()) {
@@ -176,7 +182,9 @@ void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
 		MessageBuffer += Message;
 
 	if (IsLogInitalized()) {
-		DebugLog << Message << std::endl;
+		fputs(Message.c_str(), DebugLog);
+		fputs("\n", DebugLog);
+		fflush(DebugLog);
 	}
 
 	if (IsConsoleInitalized() && !IsHidden()) {
@@ -222,12 +230,6 @@ void DebugPrint(UInt8 source, const char* fmt, ...)
 	va_end(args);
 }
 
-void DoNop(const NopData* Data)
-{
-	for (int Offset = 0; Offset < Data->Size; Offset++) {
-		SafeWrite8(Data->Address + Offset, 0x90);
-	}	
-}
 
 // modified to use plugin debugging tools
 void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump)
@@ -262,4 +264,93 @@ void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump)
 
 		DebugPrint("\t%3d +%03X ptr: 0x%08X: %32s *ptr: 0x%08x | %f: %32s", ix, ix*4, curPtr, curPtrName, otherPtr, otherFloat, otherPtrName);
 	}
+}
+
+void WaitUntilDebuggerAttached()
+{
+	DebugPrint("\t\t----> Waiting For Debugger <----");
+	while (IsDebuggerPresent() == FALSE){
+		Sleep(5000);
+	}
+	DebugPrint("\t\t----> Debugger Attached <----");
+}
+
+namespace MemoryHandler
+{
+	void Handler_Nop::WriteNop()
+	{
+		if (m_Address == 0)	
+			return;
+
+		for (int i = 0; i < m_Size; i++) {
+			SafeWrite8(m_Address + i, 0x90);
+		}	
+	}
+
+	void Handler_Ace::WriteBuffer()
+	{
+		if (m_Buffer == 0 || m_BufferSize == 0 || m_AddressA == 0)	
+			return;
+
+		for (int i = 0; i < m_BufferSize; i++) {
+			SafeWrite8(m_AddressA + i, m_Buffer[i]);
+		}	
+	}
+
+	void Handler_Ace::WriteCall()
+	{
+		if (m_AddressA == 0 || m_AddressB == 0)
+			return;
+
+		WriteRelCall(m_AddressA, m_AddressB);
+	}
+
+	void Handler_Ace::WriteJump()
+	{
+		if (m_AddressA == 0 || m_AddressB == 0)
+			return;
+
+		WriteRelJump(m_AddressA, m_AddressB);
+	}
+
+	void Handler_Ace::WriteUInt32(UInt32 Data)
+	{
+		if (m_AddressA == 0)
+			return;
+
+		SafeWrite32(m_AddressA, Data);
+	}
+
+	void Handler_Ace::WriteUInt16(UInt16 Data)
+	{
+		if (m_AddressA == 0)
+			return;
+
+		SafeWrite16(m_AddressA, Data);
+	}
+
+	void Handler_Ace::WriteUInt8(UInt8 Data)
+	{
+		if (m_AddressA == 0)
+			return;
+
+		SafeWrite8(m_AddressA, Data);
+	}
+
+
+}
+UInt8* MakeUInt8Array(UInt32 Size, ...)
+{
+	va_list Args;
+	UInt8* ResultArray = new UInt8[Size];
+
+	va_start(Args, Size);
+	for (int i = 0; i < Size; i++)
+	{
+		UInt8 Value = va_arg(Args, UInt8);
+		ResultArray[i] = Value;
+	}
+	va_end(Args);
+
+	return ResultArray;
 }

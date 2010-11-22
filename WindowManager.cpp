@@ -48,6 +48,44 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	switch (uMsg)
 	{
 	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case 9906:		// startup plugin btn
+			{
+			HWND PluginList = GetDlgItem(hWnd, 1056);
+			int SelectedItem = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
+
+			if (SelectedItem != -1)
+			{
+				LVITEM SelectedPluginItem;
+
+				SelectedPluginItem.iItem = SelectedItem;
+				SelectedPluginItem.iSubItem = 0;
+				SelectedPluginItem.mask = LVIF_TEXT;
+				SelectedPluginItem.pszText = g_Buffer;
+				SelectedPluginItem.cchTextMax = sizeof(g_Buffer);
+
+				if (ListView_GetItem(PluginList, &SelectedPluginItem) == TRUE)
+				{
+					g_INIManager->FetchSetting("StartupPluginName")->SetValue(g_Buffer);
+
+					char Buffer[0x200];
+					sprintf_s(Buffer, 0x200, "Startup plugin set to '%s'.", g_Buffer);
+
+					MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+					DebugPrint(Buffer);
+				}
+			}
+			break;
+			}
+		case 1:		// OK btn
+			if (EDAL->GetTrackedEditorCount())
+			{
+				if (MessageBox(hWnd, "There are open script windows. Are you sure you'd like to proceed?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
+					return FALSE;
+			}
+			break;
+		}
 		break;
 	case WM_DESTROY: 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_DataDlgOrgWindowProc);

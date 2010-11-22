@@ -15,7 +15,7 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptListCScriptName = gcnew ColumnHeader();
 	ScriptListCFormID = gcnew ColumnHeader();
 	ScriptListCScriptType= gcnew ColumnHeader();	
-	FilterBox = gcnew Button();
+	SelectBox = gcnew Button();
 	SearchBox = gcnew TextBox();
 
 	if (!FlagIcons->Images->Count) {
@@ -72,16 +72,16 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	SearchBox->TextChanged += gcnew EventHandler(this, &ScriptListDialog::SearchBox_TextChanged);
 	SearchBox->KeyDown += gcnew KeyEventHandler(this, &ScriptListDialog::SearchBox_KeyDown);
 
-	FilterBox->Font = gcnew Font("Consolas", 8);
-	FilterBox->Enabled = false;
-	FilterBox->Location = Point(261, 409);
-	FilterBox->Text = "[Filter]";
-	FilterBox->Size = Size(108, 30);
+	SelectBox->Font = gcnew Font("Consolas", 7.5);
+	SelectBox->Location = Point(261, 409);
+	SelectBox->Text = "Select Script(s)";
+	SelectBox->Size = Size(114, 30);
+	SelectBox->Click += gcnew EventHandler(this, &ScriptListDialog::SelectBox_Click);
 
 	ScriptBox->ClientSize = Size(744, 451);
 	ScriptBox->Controls->Add(ScriptList);
 	ScriptBox->Controls->Add(PreviewBox);
-	ScriptBox->Controls->Add(FilterBox);
+	ScriptBox->Controls->Add(SelectBox);
 	ScriptBox->Controls->Add(SearchBox);
 	ScriptBox->FormBorderStyle = FormBorderStyle::FixedToolWindow;
 	ScriptBox->StartPosition = FormStartPosition::CenterScreen;
@@ -100,6 +100,8 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 void ScriptListDialog::Show(Operation Op)
 {
 	CurrentOp = Op;
+	if (Op == Operation::e_Open)
+		ScriptList->MultiSelect = true;
 
 	ScriptList->BeginUpdate();
 	NativeWrapper::ScriptEditor_GetScriptListData(ParentIndex);
@@ -126,7 +128,7 @@ void ScriptListDialog::Close()
 	SearchBox->Enabled = true;
 	PreviewBox->Text = "";
 	SearchBox->Text = "";
-	ScriptBox->Hide();
+	ScriptList->MultiSelect = false;
 }
 
 void ScriptListDialog::AddScript(String^% ScriptName, String^% FormID, String^% ScriptType, UInt32 Flags)
@@ -148,24 +150,39 @@ void ScriptListDialog::SelectScript()
 {
 	if (GetListViewSelectedItem(ScriptList) == nullptr)		return;
 
-	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
-	NativeWrapper::ScriptEditor_SetScriptListResult(CEID->String());
-	ScriptBox->Close();
+	bool PerformedOpOnActiveTab = false;
 
-	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-	Parameters->VanillaHandleIndex = ParentIndex;
+	for (UInt32 i = 0; i < ScriptList->SelectedItems->Count; i++)
+	{	
+		ListViewItem^ Itr = ScriptList->SelectedItems[i];
 
-	switch (CurrentOp)
-	{
-	case Operation::e_Open:
-		Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Open);
-		break;
-	case Operation::e_Delete:
-		Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Delete);
-		break;
+		if (!PerformedOpOnActiveTab)
+		{
+			CStringWrapper^ CEID = gcnew CStringWrapper(Itr->SubItems[1]->Text);
+			NativeWrapper::ScriptEditor_SetScriptListResult(CEID->String());
+
+			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+			Parameters->VanillaHandleIndex = ParentIndex;
+
+			switch (CurrentOp)
+			{
+			case Operation::e_Open:
+				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Open);
+				break;
+			case Operation::e_Delete:
+				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Delete);
+				break;
+			}
+
+			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);		
+			PerformedOpOnActiveTab = true;
+		}
+		else
+		{
+			SEMGR->GetAllocatedWorkspace(ParentIndex)->ParentStrip->CreateNewTab(Itr->SubItems[1]->Text);
+		}
 	}
-
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+	ScriptBox->Close();
 }
 
 void ScriptListDialog::GetUseReport()
@@ -183,8 +200,11 @@ void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
 	bool Destroy = SEMGR->GetAllocatedWorkspace(ParentIndex)->Destroying;
 	Close();
-	if (!Destroy)
-		E->Cancel = true;
+}
+
+void ScriptListDialog::SelectBox_Click(Object^ Sender, EventArgs^ E)
+{
+	SelectScript();
 }
 
 

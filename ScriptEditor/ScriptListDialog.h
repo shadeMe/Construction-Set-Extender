@@ -25,6 +25,7 @@ private:
 	void												ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 
 	void												ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+	void												SelectBox_Click(Object^ Sender, EventArgs^ E);
 
 	void												SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
 	void												SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
@@ -47,7 +48,7 @@ public:
 		ColumnHeader^										ScriptListCFormID;
 		ColumnHeader^										ScriptListCScriptType;
 	TextBox^											SearchBox;
-	Button^												FilterBox;
+	Button^												SelectBox;
 
 	ScriptListDialog(UInt32 AllocatedIndex);
 

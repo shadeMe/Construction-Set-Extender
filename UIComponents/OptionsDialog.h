@@ -77,6 +77,8 @@ namespace UIComponents {
 	private: System::Windows::Forms::CheckBox^  RecompileVarIdx;
 	private: System::Windows::Forms::CheckBox^  PreprocessorWarnings;
 	private: System::Windows::Forms::CheckBox^  UseCSParent;
+	private: System::Windows::Forms::CheckBox^  DestroyOnLastTabClose;
+
 
 
 
@@ -109,6 +111,7 @@ namespace UIComponents {
 			this->thresholdLabel = (gcnew System::Windows::Forms::Label());
 			this->ThresholdBox = (gcnew System::Windows::Forms::NumericUpDown());
 			this->generalGrup = (gcnew System::Windows::Forms::GroupBox());
+			this->UseCSParent = (gcnew System::Windows::Forms::CheckBox());
 			this->RecompileVarIdx = (gcnew System::Windows::Forms::CheckBox());
 			this->tabsizelabel = (gcnew System::Windows::Forms::Label());
 			this->tabsizebox = (gcnew System::Windows::Forms::NumericUpDown());
@@ -121,7 +124,7 @@ namespace UIComponents {
 			this->backcolor = (gcnew System::Windows::Forms::Button());
 			this->forecolor = (gcnew System::Windows::Forms::Button());
 			this->font = (gcnew System::Windows::Forms::Button());
-			this->UseCSParent = (gcnew System::Windows::Forms::CheckBox());
+			this->DestroyOnLastTabClose = (gcnew System::Windows::Forms::CheckBox());
 			this->PreProcGrup->SuspendLayout();
 			this->IntelliSenseGrup->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdBox))->BeginInit();
@@ -200,6 +203,7 @@ namespace UIComponents {
 			// 
 			// generalGrup
 			// 
+			this->generalGrup->Controls->Add(this->DestroyOnLastTabClose);
 			this->generalGrup->Controls->Add(this->UseCSParent);
 			this->generalGrup->Controls->Add(this->RecompileVarIdx);
 			this->generalGrup->Controls->Add(this->tabsizelabel);
@@ -219,6 +223,16 @@ namespace UIComponents {
 			this->generalGrup->TabIndex = 2;
 			this->generalGrup->TabStop = false;
 			this->generalGrup->Text = L"General";
+			// 
+			// UseCSParent
+			// 
+			this->UseCSParent->AutoSize = true;
+			this->UseCSParent->Location = System::Drawing::Point(324, 114);
+			this->UseCSParent->Name = L"UseCSParent";
+			this->UseCSParent->Size = System::Drawing::Size(109, 17);
+			this->UseCSParent->TabIndex = 10;
+			this->UseCSParent->Text = L"Use CS as Parent";
+			this->UseCSParent->UseVisualStyleBackColor = true;
 			// 
 			// RecompileVarIdx
 			// 
@@ -333,15 +347,15 @@ namespace UIComponents {
 			this->font->UseVisualStyleBackColor = true;
 			this->font->Click += gcnew System::EventHandler(this, &OptionsDialog::button1_Click);
 			// 
-			// UseCSParent
+			// DestroyOnLastTabClose
 			// 
-			this->UseCSParent->AutoSize = true;
-			this->UseCSParent->Location = System::Drawing::Point(324, 114);
-			this->UseCSParent->Name = L"UseCSParent";
-			this->UseCSParent->Size = System::Drawing::Size(109, 17);
-			this->UseCSParent->TabIndex = 10;
-			this->UseCSParent->Text = L"Use CS as Parent";
-			this->UseCSParent->UseVisualStyleBackColor = true;
+			this->DestroyOnLastTabClose->AutoSize = true;
+			this->DestroyOnLastTabClose->Location = System::Drawing::Point(15, 137);
+			this->DestroyOnLastTabClose->Name = L"DestroyOnLastTabClose";
+			this->DestroyOnLastTabClose->Size = System::Drawing::Size(224, 17);
+			this->DestroyOnLastTabClose->TabIndex = 11;
+			this->DestroyOnLastTabClose->Text = L"Close script window on closing the last tab";
+			this->DestroyOnLastTabClose->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 

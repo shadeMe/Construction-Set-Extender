@@ -7,27 +7,60 @@
 #include "WindowManager.h"
 #include "resource.h"
 
-FormData*							UIL_FormData = new FormData();
-UseListCellItemData*				UIL_CellData = new UseListCellItemData();
+FormData*						UIL_FormData = new FormData();
+UseListCellItemData*			UIL_CellData = new UseListCellItemData();
+const char*						g_AssetSelectorReturnPath = NULL;
+char*							g_CustomWorkspacePath = new char[MAX_PATH];
+const char*						g_DefaultWorkspacePath = "Data\\";
+const char*						g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
+bool							g_QuickLoadToggle = false;
+static HFONT					g_CSDefaultFont = NULL;
+bool							g_SaveAsRoutine = false;
+ModEntry::Data*					g_SaveAsBuffer = NULL;
+static bool						g_BitSwapBuffer = false;
 
-static const char*					g_AssetSelectorReturnPath = NULL;
-static bool							g_DataHandlerPopulateModListInit_PerformCleanup = false;
-static bool							g_DataHandlerPopulateModList_ProcessESPs = true;
-static bool							g_DataHandlerPopulateModList_DefaultWorkspace = true;
-static bool							g_DataHandlerPopulateModList_QuitReturn = true;
-static char*						g_CustomWorkspacePath = new char[MAX_PATH];
-static const char*					g_DefaultWorkspacePath = "Data\\";
 
-const char*							g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
-
-bool								g_QuickLoadToggle = false;
-static HFONT						g_CSDefaultFont = NULL;
-bool								g_SaveAsRoutine = false;
-ModEntry::Data*						g_SaveAsBuffer = NULL;
-static bool							g_BitSwapBuffer = false;
-
-void __stdcall SetWindowTextAddress(void);
-void DispatchInteropMessage(void);
+MemHdlr							kSavePluginMasterEnum				(0x0047ECC6, SavePluginMasterEnumHook, 0, 0);
+NopHdlr							kCheckIsActivePluginAnESM			(0x0040B65E, 2);
+NopHdlr							kTESFormGetUnUsedFormID				(0x00486C08, 2);
+MemHdlr							kLoadPluginsProlog					(0x00485252, LoadPluginsPrologHook, 0, 0);
+MemHdlr							kLoadPluginsEpilog					(0x004856B2, LoadPluginsEpilogHook, 0, 0);
+MemHdlr							kDataDialogPluginDescription		(0x0040CAB6, (UInt32)0, 0, 0);
+MemHdlr							kDataDialogPluginAuthor				(0x0040CAFE, (UInt32)0, 0, 0);
+MemHdlr							kSavePluginCommonDialog				(0x00446D51, SavePluginCommonDialogHook, 0, 0);
+NopHdlr							kResponseEditorMic					(0x00407F3D, 5);
+MemHdlr							kDataHandlerPostError				(0x004852F0, (UInt32)0, 0, 0);
+MemHdlr							kExitCS								(0x00419354, ExitCSHook, 0, 0);
+MemHdlr							kEditorWarning						(0x004B52B0, (UInt32)0, 0, 0);
+MemHdlr							kFindTextInit						(0x00419A42, FindTextInitHook, 0, 0);
+MemHdlr							kCSInit								(0x00419260, CSInitHook, MakeUInt8Array(5, 0xE8, 0xEB, 0xC5, 0x2C, 0), 5);
+MemHdlr							kUseInfoListInit					(0x00419833, UseInfoListInitHook, 0, 0);
+NopHdlr							kMissingTextureWarning				(0x0044F3AF, 14);
+NopHdlr							kTopicResultScriptResetNop			(0x004F49A0, 90);
+MemHdlr							kTopicResultScriptReset				(0x004F49A0, 0x004F49FA, 0, 0);
+MemHdlr							kNPCFaceGen							(0x004D76AC, NPCFaceGenHook, 0, 0);
+MemHdlr							kDefaultWaterTextureFix				(0x0047F792, (UInt32)0, 0, 0);
+MemHdlr							kDataDlgInit						(0x0040C6D7, DataDlgInitHook, 0, 0);
+MemHdlr							kQuickLoadPluginLoadHandlerPrologue	(0x0040D073, QuickLoadPluginLoadHandlerPrologueHook, 0, 0);
+MemHdlr							kQuickLoadPluginLoadHandler			(0x004852E5, QuickLoadPluginLoadHandlerHook, 0, 0);
+MemHdlr							kMissingMasterOverride				(0x00484FC9, 0x00484E8E, 0, 0);
+MemHdlr							kAssertOverride						(0x004B5670, AssertOverrideHook, 0, 0);
+MemHdlr							kCSWarningsDetour					(0x004B5140, CSWarningsDetourHook, 0, 0);
+MemHdlr							kTextureMipMapCheck					(0x0044F49B, (UInt32)0, 0, 0);
+NopHdlr							kAnimGroupNote						(0x004CA21D, 5);
+MemHdlr							kUnnecessaryDialogEdits				(0x004EDFF7, (UInt32)0, 0, 0);
+MemHdlr							kRenderWindowPopup					(0x004297CE, RenderWindowPopupPatchHook, 0, 0);
+MemHdlr							kUnnecessaryCellEdits				(0x005349A5, (UInt32)0, 0, 0);
+MemHdlr							kCustomCSWindow						(0x004311E5, CustomCSWindowPatchHook, 0, 0);
+MemHdlr							kRaceDescriptionDirtyEdit			(0x0049405C, (UInt32)0, 0, 0);
+MemHdlr							kPluginSave							(0x0041BBCD, PluginSaveHook, 0, 0);
+MemHdlr							kPluginLoad							(0x0041BEFA, PluginLoadHook, 0, 0);
+MemHdlr							kAddListViewItem					(0x004038F0, AddListViewItemHook, 0, 0);
+MemHdlr							AddComboBoxItem						(0x00403540, AddComboBoxItemHook, 0, 0);
+MemHdlr							kObjectListPopulateListViewItems	(0x00413980, ObjectListPopulateListViewItemsHook, 0, 0);
+MemHdlr							kCellViewPopulateObjectList			(0x004087C0, CellViewPopulateObjectListHook, 0, 0);
+MemHdlr							kDoorMarkerProperties				(0x00429EA9, DoorMarkerPropertiesHook, 0, 0);
+MemHdlr							kAutoLoadActivePluginOnStartup		(0x0041A26A, AutoLoadActivePluginOnStartupHook, MakeUInt8Array(6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0), 6);
 
 
 void __stdcall DoTestHook(void* Ref3DData)
@@ -48,25 +81,6 @@ void _declspec(naked) TestHook(void)
 
 bool PatchMiscHooks()
 {
-	DoNop(&kCheckIsActivePluginAnESMPatch);
-	PLACE_HOOK(LoadPluginsProlog);
-	PLACE_HOOK(LoadPluginsEpilog);
-	DoNop(&kResponseEditorMicPatch);
-
-	SafeWrite8(kDataDialogPluginDescriptionPatchAddr, 0xEB);
-	SafeWrite8(kDataDialogPluginAuthorPatchAddr, 0xEB);
-
-	PLACE_HOOK(SavePluginCommonDialog);
-	PLACE_HOOK(SavePluginMasterEnum);
-
-	SafeWrite8(kDataHandlerPostErrorPatchAddr, 0xEB);	
-	SafeWrite8(kEditorWarningPatchAddr, 0xEB);
-
-	PLACE_HOOK(ExitCS);	
-	PLACE_HOOK(FindTextInit);
-	PLACE_HOOK(UseInfoListInit);
-	PLACE_HOOK(CSInit);
-	
 	COMMON_DIALOG_CANCEL_PATCH(Model)
 	COMMON_DIALOG_CANCEL_PATCH(Animation)
 	COMMON_DIALOG_CANCEL_PATCH(Sound)
@@ -85,46 +99,52 @@ bool PatchMiscHooks()
 	COMMON_DIALOG_POST_PATCH(Texture);
 	COMMON_DIALOG_POST_PATCH(SPT);
 
-	DoNop(&kMissingTextureWarningPatch);
-	DoNop(&kTopicResultScriptResetPatch);
-	DoNop(&kTESFormGetUnUsedFormIDPatch);
+	kLoadPluginsProlog.WriteJump();
+	kLoadPluginsEpilog.WriteJump();
+	kSavePluginCommonDialog.WriteJump();
+	kSavePluginMasterEnum.WriteJump();
+	kExitCS.WriteJump();
+	kFindTextInit.WriteJump();
+	kUseInfoListInit.WriteJump();
+	kCSInit.WriteJump();
+	kQuickLoadPluginLoadHandlerPrologue.WriteJump();
+	kQuickLoadPluginLoadHandler.WriteJump();
+	kDataDlgInit.WriteJump();
+	kNPCFaceGen.WriteJump();
+	kMissingMasterOverride.WriteJump();
+	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
+		kCSWarningsDetour.WriteJump();
+	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
+		kAssertOverride.WriteJump();
+//	kRenderWindowPopupPatch.WriteJump();
+	kCustomCSWindow.WriteJump();
+	kPluginSave.WriteJump();
+	kPluginLoad.WriteJump();
+	kAddListViewItem.WriteJump();
+	kObjectListPopulateListViewItems.WriteJump();
+	kCellViewPopulateObjectList.WriteJump();
+	kTopicResultScriptReset.WriteJump();
+//	kDoorMarkerProperties.WriteJump();		### TODO screws up dialog instantiation for no reason.
 
-	PLACE_HOOK(NPCFaceGen);
+	kDoorMarkerProperties.WriteUInt16(0x9090);
+	kDataHandlerPostError.WriteUInt8(0xEB);	
+	kEditorWarning.WriteUInt8(0xEB);	
+	kDataDialogPluginDescription.WriteUInt8(0xEB);
+	kDataDialogPluginAuthor.WriteUInt8(0xEB);
+	kDefaultWaterTextureFix.WriteUInt32((UInt32)g_DefaultWaterTextureStr);
+	kTextureMipMapCheck.WriteUInt8(0xEB);
+	kUnnecessaryCellEdits.WriteUInt8(0xEB);
+	kUnnecessaryDialogEdits.WriteUInt8(0xEB);
+	kRaceDescriptionDirtyEdit.WriteUInt8(0xEB);
+	
+
+	kCheckIsActivePluginAnESM.WriteNop();
+	kMissingTextureWarning.WriteNop();
+	kResponseEditorMic.WriteNop(); 
+	kTESFormGetUnUsedFormID.WriteNop();
+	kAnimGroupNote.WriteNop();
 	
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
-
-	SafeWrite32(kDefaultWaterTextureFixPatchAddr, (UInt32)g_DefaultWaterTextureStr);
-	PLACE_HOOK(QuickLoadPluginLoadHandlerPrologue);
-	PLACE_HOOK(QuickLoadPluginLoadHandler);
-	PLACE_HOOK(DataDlgInit);
-
-	WriteRelJump(kMissingMasterOverridePatchAddr, kMissingMasterOverrideJumpAddr);
-
-	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger()) {
-		PLACE_HOOK(CSWarningsDetour);
-	}
-	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger()) {
-		PLACE_HOOK(AssertOverride);
-	}
-	SafeWrite8(kTextureMipMapCheckPatchAddr, 0xEB);
-	DoNop(&kAnimGroupNotePatch);
-
-	SafeWrite8(kUnnecessaryCellEditsPatchAddr, 0xEB);
-	SafeWrite8(kUnnecessaryDialogEditsPatchAddr, 0xEB);
-//	PLACE_HOOK(RenderWindowPopupPatch);
-	PLACE_HOOK(CustomCSWindowPatch);
-	SafeWrite8(kRaceDescriptionDirtyEditPatchAddr, 0xEB);
-
-	PLACE_HOOK(PluginSave);
-	PLACE_HOOK(PluginLoad);
-	PLACE_HOOK(AddListViewItem);
-	PLACE_HOOK(ObjectListPopulateListViewItems);
-	PLACE_HOOK(CellViewPopulateObjectList);
-
-//	PLACE_HOOK(DoorMarkerProperties);		### TODO screws up dialog instantiation for no reason. messed up stack ?
-	SafeWrite16(kDoorMarkerPropertiesHookAddr, 0x9090);
-
-
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
 		DebugPrint("Couldn't create the Backup folder in Data directory");
 	}
@@ -150,6 +170,8 @@ bool __stdcall InitTESFileSaveDlg()
 
 void _declspec(naked) SavePluginCommonDialogHook(void)
 {
+	static const UInt32			kSavePluginCommonDialogESMRetnAddr = 0x00446D58;
+	static const UInt32			kSavePluginCommonDialogESPRetnAddr = 0x00446D69;
 	_asm
 	{
 		pushad
@@ -182,6 +204,8 @@ void __stdcall DoLoadPluginsPrologHook(void)
 
 void _declspec(naked) LoadPluginsPrologHook(void)
 {
+	static const UInt32			kLoadPluginsPrologRetnAddr = 0x00485257;
+	static const UInt32			kLoadPluginsPrologCallAddr = 0x00431310;
 	__asm
 	{
 		pushad
@@ -209,6 +233,8 @@ void __stdcall DoLoadPluginsEpilogHook(void)
 
 void _declspec(naked) LoadPluginsEpilogHook(void)
 {
+	static const UInt32			kLoadPluginsEpilogRetnAddr = 0x004856B7;
+	static const UInt32			kLoadPluginsEpilogCallAddr = 0x0047DA60;
 	__asm
 	{
 		pushad
@@ -231,6 +257,8 @@ bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
 
 void _declspec(naked) SavePluginMasterEnumHook(void)
 {
+	static const UInt32			kSavePluginMasterEnumRetnPassAddr = 0x0047ECCF;
+	static const UInt32			kSavePluginMasterEnumRetnFailAddr = 0x0047ECEB;
 	__asm
 	{
 		push	ecx
@@ -257,6 +285,7 @@ void __stdcall DoExitCSHook(HWND MainWindow)
 
 void _declspec(naked) ExitCSHook(void)
 {
+	static const UInt32			kExitCSJumpAddr = 0x004B52C1;
 	__asm
 	{
 		push    ebx
@@ -272,6 +301,7 @@ void __stdcall DoFindTextInitHook(HWND FindTextDialog)
 
 void __declspec(naked) FindTextInitHook(void)
 {
+	static const UInt32			kFindTextInitRetnAddr = 0x00419A48;
 	__asm
 	{
 		call	CreateDialogParamAddress
@@ -288,6 +318,7 @@ void __declspec(naked) FindTextInitHook(void)
 
 void __declspec(naked) UseInfoListInitHook(void)
 {
+	static const UInt32			kUseInfoListInitRetnAddr = 0x00419848;
 	__asm
 	{
 		call	CLIWrapper::UseInfoList::OpenUseInfoBox
@@ -369,9 +400,7 @@ void __stdcall DoCSInitHook()
 	if (!g_PluginPostLoad) return;			// prevents the hook from being called before the full init
 											// perform deferred patching
 											// remove hook rightaway to keep it from hindering the subclassing that follows
-	for (UInt32 i = 0; i < sizeof(kCSInitCodeBuffer); i++) {
-		SafeWrite8(kCSInitHookAddr + i, kCSInitCodeBuffer[i]);
-	}
+	kCSInit.WriteBuffer();
 
 	PatchMenus();
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
@@ -383,11 +412,16 @@ void __stdcall DoCSInitHook()
 
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
 	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
+
+	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
+		LoadStartupPlugin();
 }
 
 
 void __declspec(naked) CSInitHook(void)
 {
+	static const UInt32			kCSInitRetnAddr = 0x00419265;
+	static const UInt32			kCSInitCallAddr = 0x006E5850;
 	__asm
 	{
 		call	[kCSInitCallAddr]
@@ -538,6 +572,8 @@ void __stdcall DoNPCFaceGenHook(HWND Dialog)
 
 void __declspec(naked) NPCFaceGenHook(void)     
 {
+	static const UInt32			kNPCFaceGenRetnAddr = 0x004D76B1;
+	static const UInt32			kNPCFaceGenCallAddr = 0x0049C230;
     __asm
     {
 		call	[kNPCFaceGenCallAddr]
@@ -557,6 +593,8 @@ void __stdcall DoQuickLoadPluginLoadHandlerPrologueHook(HWND DataDlg)
 
 void __declspec(naked) QuickLoadPluginLoadHandlerPrologueHook(void)
 {
+	static const UInt32			kQuickLoadPluginLoadHandlerPrologueCallAddr = 0x0040CA30;
+	static const UInt32			kQuickLoadPluginLoadHandlerPrologueRetnAddr = 0x0040D078;
 	__asm
 	{
 		pushad
@@ -575,6 +613,9 @@ bool __stdcall DoQuickLoadPluginLoadHandlerHook(ModEntry::Data* CurrentFile)
 
 void __declspec(naked) QuickLoadPluginLoadHandlerHook(void)
 {
+	static const UInt32			kQuickLoadPluginLoadHandlerCallAddr = 0x00484A60;		// f_DataHandler::LoadTESFile
+	static const UInt32			kQuickLoadPluginLoadHandlerRetnAddr = 0x004852EE;
+	static const UInt32			kQuickLoadPluginLoadHandlerSkipAddr = 0x004852F0;
 	__asm
 	{
 		pushad
@@ -610,16 +651,28 @@ void __stdcall DoDataDlgInitHook(HWND DataDialog)
 											DataDialog, 
 											(HMENU)9900, 
 											GetModuleHandle(NULL), 
+											NULL),
+		 StartupPluginBtn = CreateWindowEx(0, 
+											"BUTTON", 
+											"Set As Startup Plugin", 
+											WS_CHILD|WS_VISIBLE|WS_TABSTOP,
+											474, 215, 130, 20, 
+											DataDialog, 
+											(HMENU)9906, 
+											GetModuleHandle(NULL), 
 											NULL);
 	CheckDlgButton(DataDialog, 9900, (!g_QuickLoadToggle ? BST_UNCHECKED : BST_CHECKED));
 	g_CSDefaultFont = (HFONT)SendMessage(GetDlgItem(DataDialog, 1), WM_GETFONT, NULL, NULL);
 	SendMessage(QuickLoadCheckBox, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
+	SendMessage(StartupPluginBtn, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 
 	g_DataDlgOrgWindowProc = (WNDPROC)SetWindowLong(DataDialog, GWL_WNDPROC, (LONG)DataDlgSubClassProc);
 }
 
 void __declspec(naked) DataDlgInitHook(void)
 {
+	static const UInt32			kDataDlgInitRetnAddr = 0x0040C6DC;
+	static const UInt32			kDataDlgInitCallAddr = 0x00404A90;
 	__asm
 	{
 		call	[kDataDlgInitCallAddr]
@@ -635,12 +688,13 @@ void __declspec(naked) DataDlgInitHook(void)
 
 void __stdcall DoAssertOverrideHook(UInt32 EIP)
 {
-	DebugPrint("{{ Assert call handled at 0x%08X }}", EIP);
+	DebugPrint("\t\tAssert call handled at 0x%08X !", EIP);
 	MessageBeep(MB_ICONHAND);
 }
 
 void __declspec(naked) AssertOverrideHook(void)
 {
+	static const UInt32			kAssertOverrideRetnAddr = 0x004B575E;
 	__asm
 	{
 		mov		eax, [esp]
@@ -662,6 +716,7 @@ void __stdcall DoCSWarningsDetourHook(LPCSTR DebugMessage)
 
 void __declspec(naked) CSWarningsDetourHook(void)
 {
+	static const UInt32			kCSWarningsDetourRetnAddr = 0x004B5146;
 	__asm
 	{
 		mov		esi, [esp + 0x4]
@@ -691,6 +746,7 @@ void __stdcall DoRenderWindowPopupPatchHook()
 
 void __declspec(naked) RenderWindowPopupPatchHook(void)
 {
+	static const UInt32			kRenderWindowPopupPatchRetnAddr = 0x004297D3;
 	__asm
 	{
 		pushad
@@ -712,6 +768,7 @@ bool __stdcall DoCustomCSWindowPatchHook(HWND Window)
 
 void __declspec(naked) CustomCSWindowPatchHook(void)
 {
+	static const UInt32			kCustomCSWindowPatchRetnAddr = 0x004311EF;
 	__asm
 	{
 		mov		edi, [g_HWND_CSParent]
@@ -733,6 +790,7 @@ void __declspec(naked) CustomCSWindowPatchHook(void)
 
 void __declspec(naked) PluginSaveHook(void)
 {
+	static const UInt32			kPluginSaveRetnAddr	=	0x0041BBD3;
     __asm
     {
 		call	SetWindowTextAddress
@@ -758,6 +816,7 @@ void __stdcall DoHiddenFormsCheck(void)
 
 void __declspec(naked) PluginLoadHook(void)
 {
+	static const UInt32			kPluginLoadRetnAddr	=	0x0041BEFF;
     __asm
     {
 		pushad
@@ -807,6 +866,8 @@ UInt8 __stdcall CheckCallLocations(UInt32 CallAddress)
 
 void __declspec(naked) AddListViewItemHook(void)
 {
+	static const UInt32			kAddListViewItemRetnAddr = 0x004038F7;
+	static const UInt32			kAddListViewItemExitAddr = 0x0040396E;
     __asm
     {
 		mov		eax, [esp]
@@ -838,6 +899,8 @@ void __declspec(naked) AddListViewItemHook(void)
 
 void __declspec(naked) AddComboBoxItemHook(void)
 {
+	static const UInt32			kAddComboBoxItemRetnAddr = 0x00403548;
+	static const UInt32			kAddComboBoxItemExitAddr = 0x004035F4;
     __asm
     {
 		pushad
@@ -859,6 +922,8 @@ void __declspec(naked) AddComboBoxItemHook(void)
 
 void __declspec(naked) ObjectListPopulateListViewItemsHook(void)
 {
+	static const UInt32			kObjectListPopulateListViewItemsRetnAddr = 0x0041398A;
+	static const UInt32			kObjectListPopulateListViewItemsExitAddr = 0x00413A50;
 	__asm
 	{
 		mov		eax, [esp + 8]
@@ -882,6 +947,8 @@ void __declspec(naked) ObjectListPopulateListViewItemsHook(void)
 
 void __declspec(naked) CellViewPopulateObjectListHook(void)
 {
+	static const UInt32			kCellViewPopulateObjectListRetnAddr = 0x004087D3;
+	static const UInt32			kCellViewPopulateObjectListExitAddr = 0x004088AF;
 	__asm
 	{
 		mov		eax, [esp + 8]
@@ -912,6 +979,8 @@ void __declspec(naked) CellViewPopulateObjectListHook(void)
 
 void __declspec(naked) DoorMarkerPropertiesHook(void)
 {
+	static const UInt32			kDoorMarkerPropertiesPropertiesAddr = 0x00429EB1;
+	static const UInt32			kDoorMarkerPropertiesTeleportAddr = 0x00429EE8;
 	__asm
 	{
 		pushad
@@ -925,5 +994,15 @@ void __declspec(naked) DoorMarkerPropertiesHook(void)
 	TELEPORT:
 		popad
 		jmp		[kDoorMarkerPropertiesTeleportAddr]
+	}
+}
+
+void __declspec(naked) AutoLoadActivePluginOnStartupHook(void)
+{
+	static const UInt32			kAutoLoadActivePluginOnStartupRetnAddr = 0x0041A284;
+	__asm
+	{
+		mov		eax, 1
+		jmp		[kAutoLoadActivePluginOnStartupRetnAddr]
 	}
 }

@@ -7,57 +7,72 @@
 
 static HWND							g_ScriptEditorBuffer = NULL;			// handle to the editor dialog being processed by the WndProc
 FARPROC								g_WindowHandleCallAddr = NULL;			// used to call WndMgmt functions
-
 Script*								g_EditorInitScript	=	NULL;			// must point to valid Script object to be used. needs to be reset right after dialog instantiation
 Script*								g_SetEditorTextCache = NULL;			// stores the script object from the last call of f_Script::SetEditorText
-
 static UInt32						g_WParamBuffer		=	0;				// WParam processed by the WndProc
-
-
 ScriptData*							g_ScriptDataPackage = new ScriptData();
 static const char*					g_RecompileAllScriptsStr = "Are you sure you want to recompile every script in the active plugin?";
-
 Script*								g_ScriptListResult = NULL;				// used by our script list hook, to set the selected script form
-
 static const void*					g_ExpressionBuffer = new char[0x400];
-
 Script*								g_EditorAuxScript = NULL;
 HWND								g_EditorAuxHWND = NULL;
 
 
+MemHdlr								kMainWindowEntryPoint				(0x0041A5F6, MainWindowEntryPointHook, 0, 0);
+MemHdlr								kScriptableFormEntryPoint			(0x004A16AD, ScriptableFormEntryPointHook, 0, 0);
+MemHdlr								kScriptEffectItemEntryPoint			(0x00566387, ScriptEffectItemEntryPointHook, 0, 0);
+MemHdlr								kLoadRelease						(0x0040D090, LoadReleaseHook, 0, 0);
+MemHdlr								kEditorWindowProc					(0x004FE7AC, EditorWindowProcHook, 0, 0);
+MemHdlr								kEditorWindowWParam					(0x004FEC46, EditorWindowWParamHook, 0, 0);
+MemHdlr								kRecompileScripts					(0x004FEFEA, RecompileScriptsHook, 0, 0);
+MemHdlr								kEditorInitScript					(0x004FEB1F, EditorInitScriptHook, 0, 0);
+MemHdlr								kEditorInitGetAuxScript				(0x004FEB48, EditorInitGetAuxScriptHook, 0, 0);
+MemHdlr								kEditorInitWindowPos				(0x004FEB9A, EditorInitWindowPosHook, 0, 0);
+MemHdlr								kMessagingCallbackNewScript			(0x004FEDFD, MessagingCallbackNewScriptHook, 0, 0);
+MemHdlr								kMessagingCallbackOpenNextScript	(0x004FEE6F, MessagingCallbackOpenNextScriptHook, 0, 0);	
+MemHdlr								kMessagingCallbackPreviousScript	(0x004FEEDF, MessagingCallbackPreviousScriptHook, 0, 0);
+MemHdlr								kMessagingCallbackClose				(0x004FED69, MessagingCallbackCloseHook, 0, 0);
+MemHdlr								kMessagingCallbackSave				(0x004FE63D, MessagingCallbackSaveHook, 0, 0);
+MemHdlr								kScriptListOpen						(0x004FEE1D, ScriptListOpenHook, 0, 0);
+MemHdlr								kScriptListDelete					(0x004FF133, ScriptListDeleteHook, 0, 0);
+MemHdlr								kSaveDialogBox						(0x004FE56D, SaveDialogBoxHook, 0, 0);
+MemHdlr								kLogRecompileResults				(0x004FF07E, LogRecompileResultsHook, 0, 0);
+MemHdlr								kRecompileScriptsMessageBoxString	(0x004FEF3F, (UInt32)0, 0, 0);
+MemHdlr								kSaveDialogBoxType					(0x004FE558, (UInt32)0, 0, 0);
+MemHdlr								kToggleScriptCompilingOriginalData	(0x00503450, (UInt32)0, MakeUInt8Array(8, 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64), 8);
+MemHdlr								kToggleScriptCompilingNewData		(0x00503450, (UInt32)0, MakeUInt8Array(8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0), 8);
+
+
 bool PatchSEHooks()
 {
-	PLACE_HOOK(LoadRelease);
+	kLoadRelease.WriteJump();
 
-	PLACE_HOOK(ScriptableFormEntryPoint);	
-	PLACE_HOOK(ScriptEffectItemEntryPoint);	
-	PLACE_HOOK(MainWindowEntryPoint);	
+	kScriptableFormEntryPoint.WriteJump();	
+	kScriptEffectItemEntryPoint.WriteJump();	
+	kMainWindowEntryPoint.WriteJump();	
 
-	PLACE_HOOK(EditorWindowProc);
-	PLACE_HOOK(EditorWindowWParam);
+	kEditorWindowProc.WriteJump();
+	kEditorWindowWParam.WriteJump();
 
-	PLACE_HOOK(RecompileScripts);
-	PLACE_HOOK(EditorInitScript);
-	PLACE_HOOK(EditorInitGetAuxScript);
-	PLACE_HOOK(EditorInitWindowPos);
+	kRecompileScripts.WriteJump();
+	kEditorInitScript.WriteJump();
+	kEditorInitGetAuxScript.WriteJump();
+	kEditorInitWindowPos.WriteJump();
 
-	PLACE_HOOK(ExpressionParserSwapBufferA);
-	PLACE_HOOK(ExpressionParserSwapBufferB);
+	kMessagingCallbackNewScript.WriteJump();
+	kMessagingCallbackPreviousScript.WriteJump();
+	kMessagingCallbackOpenNextScript.WriteJump();
+	kMessagingCallbackClose.WriteJump();
+	kMessagingCallbackSave.WriteJump();
 
-	PLACE_HOOK(MessagingCallbackNewScript);
-	PLACE_HOOK(MessagingCallbackPreviousScript);
-	PLACE_HOOK(MessagingCallbackOpenNextScript);
-	PLACE_HOOK(MessagingCallbackClose);
-	PLACE_HOOK(MessagingCallbackSave);
+	kScriptListOpen.WriteJump();
+	kScriptListDelete.WriteJump();	
 
-	PLACE_HOOK(ScriptListOpen);
-	PLACE_HOOK(ScriptListDelete);	
-
-	PLACE_HOOK(SaveDialogBox);
-	PLACE_HOOK(LogRecompileResults);
+	kSaveDialogBox.WriteJump();
+	kLogRecompileResults.WriteJump();
 	
-	SafeWrite32(kRecompileScriptsMessageBoxStringPatchAddr, (UInt32)g_RecompileAllScriptsStr);
-	SafeWrite8(kSaveDialogBoxTypePatchAddr, 3);
+	kRecompileScriptsMessageBoxString.WriteUInt32((UInt32)g_RecompileAllScriptsStr);
+	kSaveDialogBoxType.WriteUInt8(3);
 	return true;
 }
 
@@ -87,8 +102,7 @@ void FillScriptDataPackage(Script* ScriptForm)
 
 
 
-// User32.dll calls
-
+#pragma region User32.dll calls
 void __stdcall GetWindowTextAddress(void)
 {
 	HMODULE hMod = GetModuleHandle("USER32.DLL");
@@ -134,10 +148,10 @@ void __stdcall SendMessageAddress(void)
 	HMODULE hMod = GetModuleHandle("USER32.DLL");
 	g_WindowHandleCallAddr = GetProcAddress(hMod, "SendMessageA");
 }
+#pragma endregion
 
 
-// Hooks
-
+#pragma region Hooks
 void __stdcall InstantiateTabContainer(void)
 {
 	if (g_EditorAuxHWND)		g_EditorAuxScript = (Script*)GetComboBoxItemData(GetDlgItem(g_EditorAuxHWND, 1226));
@@ -148,9 +162,10 @@ void __stdcall InstantiateTabContainer(void)
 	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 	g_EditorAuxHWND = NULL;
 }
-
+	
 void __declspec(naked) MainWindowEntryPointHook(void)
 {
+	static const UInt32 kMainWindowEntryPointRetnAddr =	0x0041A610;	
     __asm
     {
 		call	InstantiateTabContainer
@@ -161,6 +176,7 @@ void __declspec(naked) MainWindowEntryPointHook(void)
 
 void __declspec(naked) ScriptableFormEntryPointHook(void)			
 {
+	static const UInt32	kScriptableFormEntryPointRetnAddr =	0x004A16C5;	
     __asm
     {
 		mov		g_EditorAuxHWND, eax
@@ -171,6 +187,7 @@ void __declspec(naked) ScriptableFormEntryPointHook(void)
 
 void __declspec(naked) ScriptEffectItemEntryPointHook(void)			
 {
+	static const UInt32			kScriptEffectItemEntryPointRetnAddr =	0x0056639F;	
     __asm
     {
 		mov		g_EditorAuxHWND, eax
@@ -189,6 +206,7 @@ void __stdcall DoLoadReleaseHook(void)
 
 void __declspec(naked) LoadReleaseHook(void)
 {
+	static const UInt32			kLoadReleaseRetnAddr =	0x0040D096;	
     __asm
     {
 		call	EndDialogAddress	
@@ -206,6 +224,7 @@ void __declspec(naked) LoadReleaseHook(void)
 
 void __declspec(naked) EditorWindowProcHook(void)
 {
+	static const UInt32			kEditorWindowProcRetnAddr =	0x004FE7B2;	
     __asm
     {
 		mov		[g_ScriptEditorBuffer], edi
@@ -220,6 +239,7 @@ void __declspec(naked) EditorWindowProcHook(void)
 
 void __declspec(naked) EditorWindowWParamHook(void)
 {
+	static const UInt32			kEditorWindowWParamRetnAddr =	0x004FED08;	
     __asm
     {
 		mov		[g_WParamBuffer], eax
@@ -240,7 +260,9 @@ bool __stdcall DoRecompileScriptsHook(TESForm* Form)
 void __declspec(naked) RecompileScriptsHook(void)
 {
 	static bool bShouldSkip = false;
-
+	static const UInt32 kRecompileScriptsRetnAddr = 0x004FEFF1;
+	static const UInt32 kRecompileScriptsCallAddr = 0x0047A4E0;				// sub_47A4E0
+	static const UInt32 kRecompileScriptsSkipAddr = 0x004FF102;
     __asm
     {
 		pushad
@@ -270,6 +292,9 @@ bool __stdcall DoEditorInitScriptHook(void)
 
 void __declspec(naked) EditorInitScriptHook(void)
 {
+	static const UInt32			kEditorInitScriptAuxRetnAddr =	0x004FEB28;	
+	static const UInt32			kEditorInitScriptCSERetnAddr =	0x004FEB51;	
+	static const UInt32			kScriptSetEditorTextCallAddr = 0x004FC1F0;
 	__asm
 	{
 		call	SendMessageAddress
@@ -300,6 +325,7 @@ void __declspec(naked) EditorInitScriptHook(void)
 
 void __declspec(naked) EditorInitGetAuxScriptHook(void)
 {
+	static const UInt32			kEditorInitGetAuxScriptRetnAddr =	0x004FEB4E;	
 	__asm
 	{
 		mov		g_SetEditorTextCache, ecx
@@ -312,6 +338,7 @@ void __declspec(naked) EditorInitGetAuxScriptHook(void)
 
 void __declspec(naked) EditorInitWindowPosHook(void)
 {
+	static const UInt32			kEditorInitWindowPosRetnAddr =	0x004FEBB0;
 	__asm
 	{
 		push	4
@@ -349,6 +376,7 @@ void __stdcall DoMessagingCallbackCloseHookRelease(void)
 
 void __declspec(naked) MessagingCallbackNewScriptHook(void)
 {
+	static const UInt32			kMessagingCallbackNewScriptRetnAddr =	0x004FEE0E;	
 	__asm
 	{
 		mov		g_SetEditorTextCache, ecx			// cache Script*
@@ -369,8 +397,9 @@ void __declspec(naked) MessagingCallbackNewScriptHook(void)
 }
 
 void __declspec(naked) MessagingCallbackOpenNextScriptHook(void)
-{			// ugh!
-	__asm
+{			
+	static const UInt32			kMessagingCallbackOpenNextScriptRetnAddr =	0x004FEE75;	
+	__asm											// ugh!
 	{
 		cmp		[g_WParamBuffer], 0x9D13			// Delete
 		jz		DELEC
@@ -401,6 +430,7 @@ void __declspec(naked) MessagingCallbackOpenNextScriptHook(void)
 
 void __declspec(naked) MessagingCallbackPreviousScriptHook(void)
 {
+	static const UInt32			kMessagingCallbackPreviousScriptRetnAddr =	0x004FF2D2;	
 	__asm
 	{
 		mov		g_SetEditorTextCache, ecx
@@ -418,6 +448,7 @@ void __declspec(naked) MessagingCallbackPreviousScriptHook(void)
 
 void __declspec(naked) MessagingCallbackCloseHook(void)
 {
+	static const UInt32			kMessagingCallbackCloseRetnAddr =	0x004FED6F;	
 	__asm
 	{
 		call	EndDialogAddress
@@ -434,7 +465,8 @@ void __declspec(naked) MessagingCallbackCloseHook(void)
 void __declspec(naked) MessagingCallbackSaveHook(void)			
 {
 	static Script* ScriptToBeCompiled = NULL;
-
+	static const UInt32			kMessagingCallbackSaveRetnAddr	=	0x004FE642;	
+	static const UInt32			kMessagingCallbackSaveCallAddr	=	0x00503450;					// f_PrecompileSub()
     __asm
     {
 		mov		ScriptToBeCompiled, esi
@@ -459,6 +491,7 @@ void __declspec(naked) MessagingCallbackSaveHook(void)
 
 void __declspec(naked) ScriptListOpenHook(void)
 {
+	static const UInt32			kScriptListOpenRetnAddr	=	0x004FEE33;	
 	__asm
 	{
 		mov		eax, g_ScriptListResult
@@ -468,6 +501,7 @@ void __declspec(naked) ScriptListOpenHook(void)
 
 void __declspec(naked) ScriptListDeleteHook(void)
 {
+	static const UInt32			kScriptListDeleteRetnAddr	=	0x004FF14B;	
 	__asm
 	{
 		mov		ebx, g_ScriptListResult
@@ -475,28 +509,13 @@ void __declspec(naked) ScriptListDeleteHook(void)
 	}
 }
 
-void __declspec(naked) ExpressionParserSwapBufferAHook(void)
-{
-	__asm
-	{
-		mov		edx, g_ExpressionBuffer
-		push	edx
-		jmp		[kExpressionParserSwapBufferARetnAddr]
-	}
-}
-
-void __declspec(naked) ExpressionParserSwapBufferBHook(void)
-{
-	__asm
-	{
-		mov		edx, g_ExpressionBuffer
-		mov		byte ptr [esi], 0x20
-		jmp		[kExpressionParserSwapBufferBRetnAddr]
-	}
-}
 
 void __declspec(naked) SaveDialogBoxHook(void)
 {
+	static const UInt32			kSaveDialogBoxYesRetnAddr	=	0x004FE59D;	
+	static const UInt32			kSaveDialogBoxNoRetnAddr	=	0x004FE572;	
+	static const UInt32			kSaveDialogBoxCancelRetnAddr	=	0x004FE731;	
+	static const UInt32			kSaveDialogBoxTypePatchAddr	=	0x004FE558;	
 	__asm
 	{
 		cmp		eax, 7
@@ -520,6 +539,8 @@ void __stdcall DoLogRecompileResultsHook(Script* Arg)
 
 void __declspec(naked) LogRecompileResultsHook(void)
 {
+	static const UInt32			kLogRecompileResultsRetnAddr = 0x004FF083;
+	static const UInt32			kLogRecompileResultsCallAddr = 0x00503450;
 	__asm
 	{
 		call	[kLogRecompileResultsCallAddr]
@@ -537,15 +558,8 @@ void __declspec(naked) LogRecompileResultsHook(void)
 void ToggleScriptCompiling(bool Enable)
 {
 	if (Enable)
-	{
-		for (int i = 0; i < sizeof(kToggleScriptCompilingOriginalData); i++) {
-			SafeWrite8(kToggleScriptCompilingPatchAddr + i, kToggleScriptCompilingOriginalData[i]);
-		}
-	}
+		kToggleScriptCompilingNewData.WriteBuffer();
 	else
-	{
-		for (int i = 0; i < sizeof(kToggleScriptCompilingNewData); i++) {
-			SafeWrite8(kToggleScriptCompilingPatchAddr + i, kToggleScriptCompilingNewData[i]);
-		}
-	}
+		kToggleScriptCompilingOriginalData.WriteBuffer();
 }
+#pragma endregion
