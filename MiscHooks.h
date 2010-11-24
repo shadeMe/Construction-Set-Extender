@@ -58,7 +58,6 @@ extern MemHdlr					kRaceDescriptionDirtyEdit;// prevent dirty edits occuring whe
 extern MemHdlr					kPluginSave;
 extern MemHdlr					kPluginLoad;
 extern MemHdlr					kAddListViewItem;
-extern MemHdlr					kAddListViewItem;
 extern MemHdlr					kObjectListPopulateListViewItems;
 extern MemHdlr					kCellViewPopulateObjectList;
 extern MemHdlr					kDoorMarkerProperties;
@@ -97,6 +96,7 @@ void PluginSaveHook(void);// provides a callback post-plugin load/save
 void PluginLoadHook(void);
 void AddListViewItemHook(void);// patches various routines to check for the 'Hide UnModified Forms' flag before populating controls with forms
 void AddComboBoxItemHook(void);
+void AddListBoxItemHook(void);
 void ObjectListPopulateListViewItemsHook(void);
 void CellViewPopulateObjectListHook(void);
 void DoorMarkerPropertiesHook(void);// allows the displaying of reference properties for door markers 

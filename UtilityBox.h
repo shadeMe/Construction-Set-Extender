@@ -11,6 +11,8 @@
 #include "shlobj.h"
 #include "obse/obse_common/SafeWrite.h"
 
+struct BaseExtraList;
+
 #define CS_CAST(obj, from, to)								(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
 
 class Console
@@ -65,6 +67,7 @@ void WaitUntilDebuggerAttached();
 UInt8*	MakeUInt8Array(UInt32 Size, ...);
 void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
 void LogWinAPIErrorMessage(DWORD ErrorID);
+void DumpExtraDataList(BaseExtraList* List);
 
 namespace MemoryHandler
 {

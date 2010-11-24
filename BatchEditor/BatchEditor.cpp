@@ -799,6 +799,7 @@ RefBatchEditor::RefBatchEditor()
 	BatchEditBox->AutoScaleMode = AutoScaleMode::Font;
 	BatchEditBox->ClientSize = System::Drawing::Size(686, 482);
 	BatchEditBox->ControlBox = false;
+	BatchEditBox->FormBorderStyle = FormBorderStyle::FixedDialog;
 	BatchEditBox->Controls->Add(this->DataBox);
 	BatchEditBox->Controls->Add(this->CancelButton);
 	BatchEditBox->Controls->Add(this->ApplyButton);
@@ -880,7 +881,7 @@ void RefBatchEditor::PopulateObjectList(BatchRefData* Data)
 
 		ListViewItem^ NewItem = gcnew ListViewItem(gcnew String(Itr->EditorID));
 		NewItem->SubItems->Add(Itr->FormID.ToString("X8"));
-		NewItem->SubItems->Add(Itr->TypeID.ToString("X2"));
+		NewItem->SubItems->Add(TypeIdentifier[Itr->TypeID]);
 		NewItem->Tag = (UInt32)Itr;
 
 		if (Itr->Selected)

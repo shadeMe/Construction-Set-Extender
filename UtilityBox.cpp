@@ -66,18 +66,27 @@ void Console::InitializeConsole()
 	EditHandle = GetDlgItem(WindowHandle, EDIT_CONSOLE);
 	g_ConsoleEditControlOrgWindowProc = (WNDPROC)SetWindowLong(EditHandle, GWL_WNDPROC, (LONG)ConsoleEditControlSubClassProc);
 	Edit_LimitText(EditHandle, sizeof(int));
+
+	if (g_INIManager->GET_INI_INT("HideOnStartup"))
+		DisplayState = true;
+
 	ToggleDisplayState();
 }
 
 bool Console::ToggleDisplayState()
 {
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+					
 	if (IsHidden()) {
 		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());
 		ShowWindow(WindowHandle, SW_SHOWNA);
+		CheckMenuItem(ViewMenu, 9903, MF_CHECKED);
+		
 		DisplayState = true;
 	} else {
 		ShowWindow(WindowHandle, SW_HIDE);
+		CheckMenuItem(ViewMenu, 9903, MF_UNCHECKED);
 		DisplayState = false;
 	}
 	return DisplayState;
@@ -353,4 +362,20 @@ UInt8* MakeUInt8Array(UInt32 Size, ...)
 	va_end(Args);
 
 	return ResultArray;
+}
+
+void DumpExtraDataList(BaseExtraList* List)
+{
+	DebugPrint("BaseExtraList Dump:");
+	CONSOLE->Indent();
+
+	if (List->m_data)
+	{
+		for(BSExtraData * traverse = List->m_data; traverse; traverse = traverse->next)
+			DebugPrint("%s", GetObjectClassName(traverse));
+	}
+	else
+		DebugPrint("No data in list");
+
+	CONSOLE->Exdent();
 }

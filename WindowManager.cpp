@@ -79,7 +79,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			break;
 			}
 		case 1:		// OK btn
-			if (EDAL->GetTrackedEditorCount())
+			if (EDAL->GetTrackedEditorCount() > 1)
 			{
 				if (MessageBox(hWnd, "There are open script windows. Are you sure you'd like to proceed?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
 					return FALSE;
@@ -163,6 +163,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRef = ThisNode->refr;
 					if (!ThisRef)		break;
 					ThisRefData = &RefData[i];
+					DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
+							DumpExtraDataList(&ThisRef->baseExtraList);
 
 					ThisRefData->EditorID = (!ThisRef->editorData.editorID.m_data)?ThisRef->baseForm->editorData.editorID.m_data:ThisRef->editorData.editorID.m_data;
 					ThisRefData->FormID = ThisRef->refID;
@@ -219,15 +221,17 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							if (BatchData->Ownership.UseOwnership() &&
 								ThisRef->baseForm->typeID != kFormType_NPC && 
 								ThisRef->baseForm->typeID != kFormType_Creature) {
-							//	ThisRef->baseExtraList.ModExtraOwnership(NULL);
-							//	ThisRef->baseExtraList.ModExtraGlobal(NULL);
-							//	ThisRef->baseExtraList.ModExtraRank(-1);
+
+								thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, 0);
+								thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, -1);
+								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, 0);
 
 								TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
+								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, Owner);
 								if (BatchData->Ownership.UseNPCOwner()) {
-						//			thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
+									thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
 								} else {
-						//			thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
+									thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
 								}
 								Modified = true;
 							}
@@ -262,12 +266,14 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 
 						if (Modified) {
-					//		if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
+							DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
+							DumpExtraDataList(&ThisRef->baseExtraList);
+							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
 					//			DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
-					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef);
-					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
-					//		thisVirtualCall(kVTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
-					//		thisVirtualCall(kVTBL_TESObjectREFR, 0x17C, ThisRef, thisCall(0x00542950, ThisRef));
+							thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef);
+							thisVirtualCall(kVTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
+							thisVirtualCall(kVTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
+							thisVirtualCall(kVTBL_TESObjectREFR, 0x17C, ThisRef, thisCall(0x00542950, ThisRef));
 						}
 					}			
 				}

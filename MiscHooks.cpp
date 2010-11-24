@@ -56,7 +56,7 @@ MemHdlr							kRaceDescriptionDirtyEdit			(0x0049405C, (UInt32)0, 0, 0);
 MemHdlr							kPluginSave							(0x0041BBCD, PluginSaveHook, 0, 0);
 MemHdlr							kPluginLoad							(0x0041BEFA, PluginLoadHook, 0, 0);
 MemHdlr							kAddListViewItem					(0x004038F0, AddListViewItemHook, 0, 0);
-MemHdlr							AddComboBoxItem						(0x00403540, AddComboBoxItemHook, 0, 0);
+MemHdlr							kAddComboBoxItem					(0x00403540, AddComboBoxItemHook, 0, 0);
 MemHdlr							kObjectListPopulateListViewItems	(0x00413980, ObjectListPopulateListViewItemsHook, 0, 0);
 MemHdlr							kCellViewPopulateObjectList			(0x004087C0, CellViewPopulateObjectListHook, 0, 0);
 MemHdlr							kDoorMarkerProperties				(0x00429EA9, DoorMarkerPropertiesHook, 0, 0);
@@ -143,6 +143,7 @@ bool PatchMiscHooks()
 	kResponseEditorMic.WriteNop(); 
 	kTESFormGetUnUsedFormID.WriteNop();
 	kAnimGroupNote.WriteNop();
+
 	
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -415,6 +416,21 @@ void __stdcall DoCSInitHook()
 
 	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
 		LoadStartupPlugin();
+
+	if (g_INIManager->GET_INI_INT("OpenScriptWindowOnStartup"))
+	{
+		const char* ScriptID = g_INIManager->GET_INI_STR("StartupScriptEditorID");
+		if (strcmp(ScriptID, "") && GetFormByID(ScriptID)) {
+			g_EditorAuxScript = CS_CAST(GetFormByID(ScriptID), TESForm, Script);
+
+			tagRECT ScriptEditorLoc;
+			GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+			CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+			g_EditorAuxScript = NULL;
+		}
+		else
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
+	}
 }
 
 
@@ -716,7 +732,7 @@ void __stdcall DoCSWarningsDetourHook(LPCSTR DebugMessage)
 
 void __declspec(naked) CSWarningsDetourHook(void)
 {
-	static const UInt32			kCSWarningsDetourRetnAddr = 0x004B5146;
+	static const UInt32			kCSWarningsDetourRetnAddr = 0x004B52F2;
 	__asm
 	{
 		mov		esi, [esp + 0x4]
@@ -724,9 +740,6 @@ void __declspec(naked) CSWarningsDetourHook(void)
 		push	esi
 		call	DoCSWarningsDetourHook
 		popad
-		xor		esi, esi
-
-		sub		esp, 0x520
 		jmp		[kCSWarningsDetourRetnAddr]
 	}
 }
@@ -858,6 +871,9 @@ UInt8 __stdcall CheckCallLocations(UInt32 CallAddress)
 	case 0x00442576:
 	case 0x00452409:
 	case 0x00560DC2:
+	case 0x00445E12:	// ?
+	case 0x00445D81:
+	case 0x004F00C3:
 		return 1;
 	default:
 		return 0;

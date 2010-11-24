@@ -1326,7 +1326,8 @@ void Workspace::PlaceFindImagePointer(int Index)
 	IndexPointers->Add(gcnew PictureBox());
 	PictureBox^% IP = IndexPointers[IndexPointers->Count - 1];
 	IP->BorderStyle = BorderStyle::None;
-	IP->SizeMode = PictureBoxSizeMode::AutoSize;
+	IP->Size = Size(12, 12);
+	IP->SizeMode = PictureBoxSizeMode::CenterImage;
 	IP->Location = Point(EditorBox->GetPositionFromCharIndex(Index).X, EditorBox->GetPositionFromCharIndex(Index).Y - 25);
 	IP->Tag = String::Format("{0}", Index);
 	IP->Image = dynamic_cast<Image^>(Icons->Images[(int)IconEnum::e_PosPointer]);
@@ -1454,6 +1455,24 @@ int Workspace::CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLine
 		ReadLineEx = ReadLine;
 		ReadLine = IndentParser->ReadLine();
 	}
+			
+
+	if (EndPos + 1 < EditorBox->Text->Length)
+	{
+		UInt32 EndChar = EndPos;
+		for (int i = EndPos; i < EditorBox->Text->Length; i++) {
+			if (EditorBox->Text[i] == '\t' || EditorBox->Text[i] == ' ')	{
+				EndChar++;
+				continue;
+			}
+			else
+				break;
+		}
+		EditorBox->SelectionStart = EndPos;
+		EditorBox->SelectionLength = EndChar - EndPos;
+		EditorBox->SelectedText = "";
+		EditorBox->SelectionStart = EndPos;
+	}
 
 	if (ReadLineEx != nullptr) {		// last line needs to be checked separately for exdents
 		ReadLine = ReadLineEx;
@@ -1497,7 +1516,7 @@ void Workspace::ExdentLine(void)
 			}
 		}
 
-		UInt32 Count = ScriptTextParser->GetTrailingTabCount(Index + 1, EditorBox->Text), Exs = 0;
+		UInt32 Count = ScriptTextParser->GetTrailingTabCount(Index + 1, EditorBox->Text, nullptr), Exs = 0;
 
 		EditorBox->SelectionStart = Index + 1;
 		EditorBox->SelectionLength = 1;
@@ -1698,24 +1717,38 @@ bool Workspace::TabIndent()
 		return false;
 	case 1:
 	case -1:
-		if (Source == nullptr || Source == "")	return false;
+		if (Source == nullptr)	return false;
+		else {
+			ScriptTextParser->Tokenize(Source, false);
+			if (!ScriptTextParser->Valid)	return false;
+		}
 		break;
 	}
 
+	int LineStartIdx = ScriptTextParser->GetLineStartIndex(SelStart - 1, EditorBox->Text), SelLength = EditorBox->SelectionLength;
+	if (LineStartIdx < 0)	LineStartIdx = 0;
+	int LineEndIdx = ScriptTextParser->GetLineEndIndex(SelStart, EditorBox->Text);
+	if (LineEndIdx < 0)		LineEndIdx = EditorBox->Text->Length;
 
-	StringReader^ TabIndentParser = gcnew StringReader(Source);
-	String^ ReadLine = TabIndentParser->ReadLine();
+	if (SelLength) 
+	{
+		SelStart = EditorBox->SelectionStart;
+		LineStartIdx = ScriptTextParser->GetLineStartIndex(SelStart - 1, EditorBox->Text);
+		if (LineStartIdx < 0)	LineStartIdx = 0;
+		LineEndIdx = ScriptTextParser->GetLineEndIndex(SelStart + SelLength, EditorBox->Text);
+		if (LineEndIdx < 0)		LineEndIdx = EditorBox->Text->Length;
+		
+		String^ Lines = EditorBox->Text->Substring(LineStartIdx, LineEndIdx - LineStartIdx), ^ReadLine;
+		StringReader^ TabIndentParser = gcnew StringReader(Lines); ReadLine = TabIndentParser->ReadLine();
 
-	while (ReadLine != nullptr) {
-		ScriptTextParser->Tokenize(ReadLine, false);
-		if (!ScriptTextParser->Valid) {
-			Result += ReadLine + "\n";
-			ReadLine = TabIndentParser->ReadLine();
-			continue;
-		}
-	
-		if (ReadLine != "") 
-		{
+		while (ReadLine != nullptr) {
+			ScriptTextParser->Tokenize(ReadLine, false);
+			if (!ScriptTextParser->Valid) {
+				Result += ReadLine + "\n";
+				ReadLine = TabIndentParser->ReadLine();
+				continue;
+			}
+		
 			Char Itr = ReadLine[0];
 			if (Itr != '\n' && Itr != '\r\n')
 			{
@@ -1730,17 +1763,18 @@ bool Workspace::TabIndent()
 					break;
 				}
 			}
+
+			ReadLine = TabIndentParser->ReadLine();
+			if (ReadLine != nullptr)	Result += "\n";
 		}
-	//	else
-	//		Result += ReadLine;
 
-		ReadLine = TabIndentParser->ReadLine();
-		if (ReadLine != nullptr)	Result += "\n";
+		HandleTextChanged = false;
+		EditorBox->SelectionStart = LineStartIdx;
+		EditorBox->SelectionLength = LineEndIdx - LineStartIdx;
+		EditorBox->SelectedText = Result;
+		EditorBox->SelectionStart = SelStart;
+		EditorBox->SelectionLength = Result->Length;
 	}
-
-	EditorBox->SelectedText = Result;
-	EditorBox->SelectionStart = SelStart;
-	EditorBox->SelectionLength = Result->Length;
 	return true;
 }
 
@@ -1855,7 +1889,7 @@ void Workspace::ToggleBookmark(int CaretPos)
 	if (!BookmarkBox->Visible)		ToolBarBookmarkList_Click(nullptr, nullptr);
 }
 
-void Workspace::UpdateImagePointers(void)
+void Workspace::UpdateFindImagePointers(void)
 {
 	if (IndexPointers != nullptr) {
 		for each (PictureBox^% Itr in IndexPointers) {
@@ -1875,6 +1909,7 @@ void Workspace::UpdateImagePointers(void)
 		Loc.Y -= 15;
 		ScriptLineLimitIndicator->Location = Loc;
 	}
+	EditorBox->Invalidate(true);
 }
 
 void Workspace::MoveCaretToValidHome(void)
@@ -2649,7 +2684,7 @@ void Workspace::EditorBox_TextChanged(Object^ Sender, EventArgs^ E)
 		HasChanged = false;
 		EditorTab->ImageIndex = 0;
 		UpdateLineNumbers();
-		if (IndexPointers != nullptr)	UpdateImagePointers();
+		if (IndexPointers != nullptr)	UpdateFindImagePointers();
 		return;
 	}
 	else {
@@ -2677,7 +2712,7 @@ void Workspace::EditorBox_VScroll(Object^ Sender, EventArgs^ E)
 {
 	EditorLineNo->Location = Point(0, EditorBox->GetPositionFromCharIndex(0).Y % (EditorBox->Font->Height - 1));
 	UpdateLineNumbers();
-	UpdateImagePointers();
+	UpdateFindImagePointers();
 }
 
 void Workspace::EditorBox_Resize(Object^ Sender, EventArgs^ E)
@@ -2734,8 +2769,8 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		ISBox->UpdateLocalVars();
 		ISBox->CanShow = true;
 
-		Indents = CalculateIndents(EditorBox->SelectionStart, Exdent, false);
-		if (Exdent && E->KeyCode != Keys::Enter)		ExdentLine();
+	//	Indents = CalculateIndents(EditorBox->SelectionStart, Exdent, false);
+	//	if (Exdent && E->KeyCode != Keys::Enter)		ExdentLine();
 
 		if (!IsCursorInsideCommentSeg(true)) {
 			try {
@@ -2776,7 +2811,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					E->Handled = true;
 				}
 			} catch (CSEGeneralException^ E) {
-				DebugPrint("Had trouble stripping RTF elements in editor " + AllocatedIndex + ".\n\tException: " + E->Message, true);
+				DebugPrint("Had trouble stripping RTF elements in editor " + AllocatedIndex + ".\n\tException: " + E->Message);
 			}
 			HandleTextChanged = false;
 		}
@@ -2941,11 +2976,29 @@ void Workspace::EditorBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 	case Keys::Enter:
 		if (Indents) {
 			try {
-				String^ IndentStr;
+				NativeWrapper::LockWindowUpdate(EditorBox->Handle);
+				int SelStart = EditorBox->SelectionStart;
+				if (SelStart - 1 > 0)
+				{
+					UInt32 EndChar = SelStart;
+					for (int i = SelStart; i > 0 && i < EditorBox->Text->Length; i--) {
+						if (EditorBox->Text[i] == '\t' || EditorBox->Text[i] == ' ')	{
+							EndChar--;
+							continue;
+						}
+						else
+							break;
+					}
+					EditorBox->SelectionStart = SelStart;
+					EditorBox->SelectionLength = SelStart - EndChar;
+					EditorBox->SelectedText = "";
+					EditorBox->SelectionStart = SelStart;
+				}
+
+				String^ IndentStr = "";
 				for (int i = 0; i < Indents; i++) {
 					IndentStr += "\t";
 				}
-				NativeWrapper::LockWindowUpdate(EditorBox->Handle);
 				EditorBox->SelectedText = IndentStr;
 			} finally {
 				NativeWrapper::LockWindowUpdate(IntPtr::Zero);
@@ -2965,23 +3018,45 @@ void Workspace::EditorBox_KeyUp(Object^ Sender, KeyEventArgs^ E)
 		return;
 	}
 
-	if (E->KeyCode == Keys::Back || E->KeyCode == Keys::Enter || E->KeyCode == Keys::Delete)
+	switch (E->KeyCode)
+	{
+	case Keys::Back:
+	case Keys::Enter:
+	case Keys::Delete:
 		UpdateLineNumbers();
-	else if (EditorBox->SelectedText != "")
-		UpdateLineNumbers();
-	else if (E->KeyCode == Keys::Up || E->KeyCode == Keys::Down) {
+		break;
+	case Keys::Up:
+	case Keys::Down:
 		if (HasLineChanged()) {
 			UpdateLineNumbers();
 			ISBox->CanShow = true;
 			ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 			ValidateLineLimit();
 		}
+		break;
+	case Keys::End:
+		if (EditorBox->SelectedText != "")
+		{
+			try {
+				NativeWrapper::LockWindowUpdate(EditorBox->Handle);
+				if (EditorBox->SelectedText[EditorBox->SelectedText->Length - 1] == '\n' ||
+					EditorBox->SelectedText[EditorBox->SelectedText->Length - 1] == '\r\n')
+					EditorBox->SelectionLength -= 1;
+				} finally {
+				NativeWrapper::LockWindowUpdate(IntPtr::Zero);
+			}
+		}
+		break;
+	default:
+		if (EditorBox->SelectedText != "")
+			UpdateLineNumbers();
+		break;
 	}
 }
 
 void Workspace::EditorBox_HScroll(Object^ Sender, EventArgs^ E)
 {
-	UpdateImagePointers();
+	UpdateFindImagePointers();
 }
 
 

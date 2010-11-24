@@ -305,4 +305,3 @@ void						LoadFormIntoView(const char* EditorID, const char* FormType);
 bool __stdcall				AreUnModifiedFormsHidden();
 void						ToggleHideUnModifiedForms(bool State);
 void						LoadStartupPlugin();
-

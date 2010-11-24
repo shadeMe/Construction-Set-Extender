@@ -239,7 +239,7 @@ int ScriptParser::GetLineStartIndex(UInt32 StartPosition, String^% Source)
 {
 	int Result = -1;
 	for (int i = StartPosition; i > 0; i--) {
-		if (Source[i] == '\n') {
+		if (Source[i] == '\n' || Source[i] == '\r\n') {
 			Result = i + 1;
 			break;
 		}
@@ -250,20 +250,31 @@ int ScriptParser::GetLineEndIndex(UInt32 StartPosition, String^% Source)
 {
 	int Result = -1;
 	for (int i = StartPosition; i < Source->Length; i++) {
-		if (Source[i] == '\n') {
+		if (Source[i] == '\n' || Source[i] == '\r\n') {
 			Result = i;
 			break;
 		}
 	}
 	return Result;
 }
-UInt32 ScriptParser::GetTrailingTabCount(UInt32 StartPosition, String^% Source)
+UInt32 ScriptParser::GetTrailingTabCount(UInt32 StartPosition, String^% Source, String^ CharactersToSkip)
 {
 	UInt32 Result = 0;
 	for (int i = StartPosition; i < Source->Length; i++) {
-		if (Source[i] == '\t') {
+		if (Source[i] == '\t')
 			Result += 1;
-		} else	break;
+		else if (CharactersToSkip != nullptr)
+		{
+			array<Char>^ SkipArray = CharactersToSkip->ToCharArray();
+
+			for each (Char Itr in SkipArray) {
+				if (Itr == Source[i])
+					continue;
+			}
+			break;
+		}
+		else
+			break;
 	}
 	return Result;
 }

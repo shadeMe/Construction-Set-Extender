@@ -125,7 +125,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="4"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\obse\obse&quot;;&quot;$(SolutionDir)\..\obse\&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE"
 				GeneratePreprocessedFile="0"
@@ -234,6 +234,14 @@
 			</File>
 			<File
 				RelativePath=".\exports.def"
+				>
+			</File>
+			<File
+				RelativePath="..\obse\obse\GameBSExtraData.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\obse\obse\GameBSExtraData.h"
 				>
 			</File>
 			<File

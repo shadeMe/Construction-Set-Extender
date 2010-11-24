@@ -1,6 +1,7 @@
 #include "ExtenderInternals.h"
 #include "Exports.h"
 #include "MiscHooks.h"
+#include "Common\CLIWrapper.h"
 
 EditorAllocator*					EditorAllocator::Singleton = NULL;
 EditorAllocator::SEAlloc*			EditorAllocator::NullRef = new EditorAllocator::SEAlloc(NULL, NULL, NULL);
@@ -91,10 +92,9 @@ UInt32 EditorAllocator::TrackNewEditor(HWND EditorDialog)
 	UInt32 Result = NextIndex;
 	AllocationMap.insert(std::make_pair<HWND, SEAlloc*>(EditorDialog, new SEAlloc(GetDlgItem(EditorDialog, 1166), GetDlgItem(EditorDialog, 2259), Result)));
 	++NextIndex;
-	if (NextIndex == sizeof(UInt32))
-	{
+	if (NextIndex == 2147483648)
 		MessageBox(*g_HWND_CSParent, "Holy crap, mate! I have no idea how you managed to create 2147483648 editor workspaces xO I'd suggest that you pack up some essentials and head to the Andes as the next allocation is certain to warp the space-time continuum in unimaginable ways.\n\nDamn you...", "The Developer Speaks", MB_HELP|MB_ICONSTOP);
-	}
+
 	return Result;
 }
 
@@ -177,6 +177,9 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "LogAssertions", "Console::General", "1", "Log CS Assertions to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "1", "Loads a plugin on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "Plugin.esp", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "OpenScriptWindowOnStartup", "Extender::General", "0", "Open an empty script editor window on startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "StartupScriptEditorID", "Extender::General", "", "EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Console::General", "0", "Hide the console on CS startup"), (CreateINI == false));
 
 	if (CreateINI)		SaveSettingsToINI();
 	else				ReadSettingsFromINI();
@@ -254,7 +257,14 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 	switch (Type)
 	{
 	case 9:					
-		ScriptEditor_InstantiateCustomEditor(EditorID);
+		if (GetFormByID(EditorID))
+		{
+			g_EditorAuxScript =  CS_CAST(GetFormByID(EditorID), TESForm, Script);;
+			tagRECT ScriptEditorLoc;
+			GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+			CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+			g_EditorAuxScript = NULL;
+		}
 		break;
 	case 10:
 		RemoteLoadRef(EditorID);

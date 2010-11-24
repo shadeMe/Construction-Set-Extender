@@ -68,7 +68,7 @@ public:
 
 	int													GetLineStartIndex(UInt32 StartPosition, String^% Source);
 	int													GetLineEndIndex(UInt32 StartPosition, String^% Source);
-	UInt32												GetTrailingTabCount(UInt32 StartPosition, String^% Source);
+	UInt32												GetTrailingTabCount(UInt32 StartPosition, String^% Source, String^ CharactersToSkip);
 
 	LinkedList<VariableInfo^>^							Variables;
 	Stack<BlockType>^									BlockStack;

@@ -1,5 +1,4 @@
 #pragma once
-#include "ExtenderInternals.h"
 #include "SEHooks.h"
 #include "Common\HandShakeStructs.h"
 

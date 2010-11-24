@@ -273,7 +273,7 @@ private:
 	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
 	bool												TabIndent();
 	void												ToggleComment(int CaretPos);
-	void												UpdateImagePointers(void);
+	void												UpdateFindImagePointers(void);
 	void												PlaceFindImagePointer(int Index);
 	bool												IsDelimiterKey(Keys KeyCode);
 	void												MoveCaretToValidHome(void);
