@@ -438,7 +438,7 @@ void __declspec(naked) MessagingCallbackPreviousScriptHook(void)
 
 		pushad
 		push	2
-		call	SendPingBack
+		call	SendPingBack		
 		popad
 
 		mov     byte ptr [esi + 0x14], 0
@@ -457,6 +457,7 @@ void __declspec(naked) MessagingCallbackCloseHook(void)
 		pushad
 		push	7
 		call	SendPingBack
+		call	DoMessagingCallbackCloseHookRelease
 		popad
 		jmp		[kMessagingCallbackCloseRetnAddr]
 	}

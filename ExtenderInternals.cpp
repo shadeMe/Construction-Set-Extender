@@ -112,8 +112,9 @@ void EditorAllocator::DeleteTrackedEditor(UInt32 TrackedEditorIndex)
 void EditorAllocator::DeleteAllTrackedEditors(void)
 {
 	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++) {	
-		DeleteTrackedEditor(Itr->second->Index);
-	}	
+		delete Itr->second;
+	}
+	AllocationMap.clear();
 }
 
 HWND EditorAllocator::GetTrackedREC(HWND TrackedEditorDialog)

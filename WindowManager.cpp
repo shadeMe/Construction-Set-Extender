@@ -79,7 +79,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			break;
 			}
 		case 1:		// OK btn
-			if (EDAL->GetTrackedEditorCount() > 1)
+			if (EDAL->GetTrackedEditorCount())
 			{
 				if (MessageBox(hWnd, "There are open script windows. Are you sure you'd like to proceed?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
 					return FALSE;

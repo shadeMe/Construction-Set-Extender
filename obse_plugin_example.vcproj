@@ -149,9 +149,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ComCtl32.lib shell32.lib"
+				AdditionalDependencies="ComCtl32.lib shell32.lib "
 				LinkIncremental="1"
-				IgnoreDefaultLibraryNames=""
+				IgnoreAllDefaultLibraries="false"
+				IgnoreDefaultLibraryNames="LIBCMTD.lib"
 				ModuleDefinitionFile="exports.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

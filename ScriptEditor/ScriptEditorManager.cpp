@@ -192,7 +192,7 @@ void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspac
 void ScriptEditorManager::AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height)
 {
 #ifdef _DEBUG
-	Debugger::Launch();
+//	Debugger::Launch();
 #endif
 	DebugPrint(String::Format("Allocated a new tab container"));
 	TabContainerAllocationMap->AddLast(gcnew ScriptEditor::TabContainer(PosX, PosY, Width, Height));
