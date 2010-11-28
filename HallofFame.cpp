@@ -34,6 +34,16 @@ namespace HallOfFame
 			FormID++;
 		}
 
+		void* Throwaway = NULL;
+		SpellItem* Spell = InitializeDefaultPlayerSpell(Throwaway);
+		String* FullNamePtr = (String*)((UInt32)Spell + 0x28);
+		FullNamePtr->Set("Deadliest Smiley Alive");
+		thisCall(kTESForm_SetFormID, Spell, FormID, 1);
+		thisCall(kTESForm_SetEditorID, Spell, "kyoma");
+		thisVirtualCall(kVTBL_SpellItem, 0x94, Spell, 0);
+		thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->spellitems, Spell);
+
+
 		// temporarily "killing" the dataHandler to prevent the TESForm ctor from assigning formIDs
 		void* DataHandlerInstance = *g_dataHandler;
 		*g_dataHandler = NULL;

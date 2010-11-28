@@ -17,7 +17,7 @@ namespace HallOfFame
 		const char*		Name;
 	};
 
-	const UInt32			ListSize = 16;
+	const UInt32			ListSize = 15;
 	const Entry				Entries[ListSize] =
 	{	
 		{ "shadeMe",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Likes Andrea Corr" },
@@ -28,7 +28,6 @@ namespace HallOfFame
 		{ "haama",						kTESFurniture_Ctor,		0x9C,	kVTBL_TESFurniture, NULL,	"Think Tank. Not Literally" },
 		{ "Waruddar",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"He-Whose-Name-I-Could-Never-Spell-Right" },
 		{ "Corepc",						kTESObjectMISC_Ctor,	0xBC,	kVTBL_TESObjectMISC, NULL,	"The Curator" },
-		{ "kyoma",						kTESObjectWEAP_Ctor,	0xEC,	kVTBL_TESObjectWEAP, NULL,	"Sharpest Smiley Alive" },
 		{ "DragoonWraith",				kTESObjectWEAP_Ctor,	0xEC,	kVTBL_TESObjectWEAP, NULL,	"The Mighty ARSE" },
 		{ "PacificMorrowind",			kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"The Jack" },
 		{ "tejon",						kTESCreature_Ctor,		0x18C,	kVTBL_TESCreature, NULL,	"Goblin Tinkerer" },
