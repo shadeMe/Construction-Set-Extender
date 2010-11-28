@@ -33,7 +33,6 @@ extern MemHdlr					kSavePluginCommonDialog;
 extern NopHdlr					kResponseEditorMic;// nops out the call to the delinquent sound struct initializer sub, fixing a crash
 extern MemHdlr					kDataHandlerPostError;// fixes a crash when the CS attempts to load an unknown record/group
 extern MemHdlr					kExitCS;
-extern MemHdlr					kEditorWarning;// makes the No button in the warning dialog box redundant
 extern MemHdlr					kFindTextInit;
 extern MemHdlr					kCSInit;
 extern MemHdlr					kUseInfoListInit;
@@ -62,6 +61,8 @@ extern MemHdlr					kObjectListPopulateListViewItems;
 extern MemHdlr					kCellViewPopulateObjectList;
 extern MemHdlr					kDoorMarkerProperties;
 extern MemHdlr					kAutoLoadActivePluginOnStartup;
+extern MemHdlr					kDataHandlerClearDataShadeMeRefDtor;
+extern MemHdlr					kCellObjectListShadeMeRefAppend;
 
 bool PatchMiscHooks(void);
 void __stdcall DoCSInitHook();
@@ -101,6 +102,8 @@ void ObjectListPopulateListViewItemsHook(void);
 void CellViewPopulateObjectListHook(void);
 void DoorMarkerPropertiesHook(void);// allows the displaying of reference properties for door markers 
 void AutoLoadActivePluginOnStartupHook(void);// temporary hook that allows the automatic loading of plugins on startup
+void DataHandlerClearDataShadeMeRefDtorHook(void);
+void CellObjectListShadeMeRefAppendHook(void);
 
 void ModelSelectorCommonDialogHook(void);
 void ModelPostCommonDialogHook(void);

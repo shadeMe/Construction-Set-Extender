@@ -1233,7 +1233,7 @@ void Workspace::PerformLineNumberHighlights(void)
 		int LineField = 0, CurrentLine = 0;
 		Font^ BoldStyle = gcnew Font(EditorLineNo->Font->FontFamily, EditorLineNo->Font->Size, FontStyle::Bold);
 
-		for each (ListViewItem^% Itr in BookmarkBox->Items) {
+		for each (ListViewItem^ Itr in BookmarkBox->Items) {
 			if (FindLineNumberInLineBox(int::Parse(Itr->SubItems[0]->Text)) != -1) {
 				EditorLineNo->SelectionColor = OptionsDialog::GetSingleton()->BMCDialog->Color;
 				EditorLineNo->SelectionFont = BoldStyle;

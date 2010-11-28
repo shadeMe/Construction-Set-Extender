@@ -252,7 +252,7 @@ OptionsDialog::OptionsDialog()
 	CreateMissingFromSegment->Text = L"Create missing import segments from code";
 	CreateMissingFromSegment->UseVisualStyleBackColor = true;
 
-	AllowRedefinitions->Location = System::Drawing::Point(14, 95);
+	AllowRedefinitions->Location = System::Drawing::Point(14, 80);
 	AllowRedefinitions->Name = L"AllowRedefinitions";
 	AllowRedefinitions->Size = System::Drawing::Size(142, 17);
 	AllowRedefinitions->TabIndex = 1;

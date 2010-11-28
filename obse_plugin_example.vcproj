@@ -41,7 +41,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="4"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\obse\obse&quot;;&quot;$(SolutionDir)\..\obse\&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE"
 				GeneratePreprocessedFile="0"
@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ComCtl32.lib shell32.lib "
-				LinkIncremental="1"
+				LinkIncremental="0"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="LIBCMTD.lib"
 				ModuleDefinitionFile="exports.def"
@@ -408,6 +408,14 @@
 		</File>
 		<File
 			RelativePath=".\ExtenderInternals.h"
+			>
+		</File>
+		<File
+			RelativePath=".\HallofFame.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\HallofFame.h"
 			>
 		</File>
 		<File

@@ -66,7 +66,7 @@ String^ UserFunction::Describe()
 		ParamIdx++;
 	}
 
-	Description += Name + "\n\nDescription: " + this->Description + "\n" + ParamIdx + " Arguments" + Scratch + "\n\n";
+	Description += Name + "\n\nDescription: " + this->Description + "\n" + ParamIdx + " Parameters" + Scratch + "\n\n";
 	if (ReturnVar == -1)			Description += "Does not return a value";
 	else if (ReturnVar == -9)		Description += "Return Type: Ambiguous";
 	else							Description += "Return Type: " + VariableInfo::TypeIdentifier[(int)VarList[ReturnVar]->Type];

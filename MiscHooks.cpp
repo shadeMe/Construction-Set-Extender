@@ -6,6 +6,7 @@
 #include "Common/HandshakeStructs.h"
 #include "WindowManager.h"
 #include "resource.h"
+#include "HallofFame.h"
 
 FormData*						UIL_FormData = new FormData();
 UseListCellItemData*			UIL_CellData = new UseListCellItemData();
@@ -31,7 +32,6 @@ MemHdlr							kSavePluginCommonDialog				(0x00446D51, SavePluginCommonDialogHook
 NopHdlr							kResponseEditorMic					(0x00407F3D, 5);
 MemHdlr							kDataHandlerPostError				(0x004852F0, (UInt32)0, 0, 0);
 MemHdlr							kExitCS								(0x00419354, ExitCSHook, 0, 0);
-MemHdlr							kEditorWarning						(0x004B52B0, (UInt32)0, 0, 0);
 MemHdlr							kFindTextInit						(0x00419A42, FindTextInitHook, 0, 0);
 MemHdlr							kCSInit								(0x00419260, CSInitHook, MakeUInt8Array(5, 0xE8, 0xEB, 0xC5, 0x2C, 0), 5);
 MemHdlr							kUseInfoListInit					(0x00419833, UseInfoListInitHook, 0, 0);
@@ -61,6 +61,8 @@ MemHdlr							kObjectListPopulateListViewItems	(0x00413980, ObjectListPopulateLi
 MemHdlr							kCellViewPopulateObjectList			(0x004087C0, CellViewPopulateObjectListHook, 0, 0);
 MemHdlr							kDoorMarkerProperties				(0x00429EA9, DoorMarkerPropertiesHook, 0, 0);
 MemHdlr							kAutoLoadActivePluginOnStartup		(0x0041A26A, AutoLoadActivePluginOnStartupHook, MakeUInt8Array(6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0), 6);
+MemHdlr							kDataHandlerClearDataShadeMeRefDtor	(0x0047AE76, DataHandlerClearDataShadeMeRefDtorHook, 0, 0);
+MemHdlr							kCellObjectListShadeMeRefAppend		(0x00445128, CellObjectListShadeMeRefAppendHook, 0, 0);
 
 
 void __stdcall DoTestHook(void* Ref3DData)
@@ -113,9 +115,9 @@ bool PatchMiscHooks()
 	kNPCFaceGen.WriteJump();
 	kMissingMasterOverride.WriteJump();
 	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
-		kCSWarningsDetour.WriteJump();
+	kCSWarningsDetour.WriteJump();
 	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
-		kAssertOverride.WriteJump();
+	kAssertOverride.WriteJump();
 //	kRenderWindowPopupPatch.WriteJump();
 	kCustomCSWindow.WriteJump();
 	kPluginSave.WriteJump();
@@ -125,10 +127,8 @@ bool PatchMiscHooks()
 	kCellViewPopulateObjectList.WriteJump();
 	kTopicResultScriptReset.WriteJump();
 //	kDoorMarkerProperties.WriteJump();		### TODO screws up dialog instantiation for no reason.
-
 	kDoorMarkerProperties.WriteUInt16(0x9090);
 	kDataHandlerPostError.WriteUInt8(0xEB);	
-	kEditorWarning.WriteUInt8(0xEB);	
 	kDataDialogPluginDescription.WriteUInt8(0xEB);
 	kDataDialogPluginAuthor.WriteUInt8(0xEB);
 	kDefaultWaterTextureFix.WriteUInt32((UInt32)g_DefaultWaterTextureStr);
@@ -136,20 +136,21 @@ bool PatchMiscHooks()
 	kUnnecessaryCellEdits.WriteUInt8(0xEB);
 	kUnnecessaryDialogEdits.WriteUInt8(0xEB);
 	kRaceDescriptionDirtyEdit.WriteUInt8(0xEB);
-	
-
 	kCheckIsActivePluginAnESM.WriteNop();
 	kMissingTextureWarning.WriteNop();
 	kResponseEditorMic.WriteNop(); 
 	kTESFormGetUnUsedFormID.WriteNop();
 	kAnimGroupNote.WriteNop();
+	kDataHandlerClearDataShadeMeRefDtor.WriteJump();
+	kCellObjectListShadeMeRefAppend.WriteJump();
 
-	
+
+
+
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
 		DebugPrint("Couldn't create the Backup folder in Data directory");
 	}
-
 	OSVERSIONINFO OSInfo;
 	GetVersionEx(&OSInfo);
 	if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
@@ -431,6 +432,8 @@ void __stdcall DoCSInitHook()
 		else
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
 	}
+
+	HallOfFame::Initialize(true);
 }
 
 
@@ -835,6 +838,10 @@ void __declspec(naked) PluginLoadHook(void)
 		pushad
 		call	FixDefaultWater
 		popad
+		pushad
+		push	0
+		call	HallOfFame::Initialize
+		popad
 
 		call	InitializeCSWindows
 
@@ -1020,5 +1027,49 @@ void __declspec(naked) AutoLoadActivePluginOnStartupHook(void)
 	{
 		mov		eax, 1
 		jmp		[kAutoLoadActivePluginOnStartupRetnAddr]
+	}
+}
+
+void __stdcall DestroyShadeMeRef(void)
+{
+	TESForm* Ref = GetFormByID("TheShadeMeRef");
+	if (Ref)
+		thisVirtualCall(kVTBL_TESObjectREFR, 0x34, Ref);
+}
+
+void __declspec(naked) DataHandlerClearDataShadeMeRefDtorHook(void)
+{
+	static const UInt32			kDataHandlerClearDataShadeMeRefDtorRetnAddr = 0x0047AE7B;
+	__asm
+	{
+		lea     edi, [ebx+44h]
+		mov     ecx, edi
+		pushad
+		call	DestroyShadeMeRef
+		popad
+
+		jmp		[kDataHandlerClearDataShadeMeRefDtorRetnAddr]
+	}
+}
+
+void __stdcall AppendShadeMeRefToComboBox(HWND hWnd)
+{
+	TESForm* Ref = GetFormByID("TheShadeMeRef");
+	sprintf_s(g_Buffer, sizeof(g_Buffer), "'shadeMe' 'TheShadeMeRef'");
+	TESDialog_AddComboBoxItem(hWnd, g_Buffer, (LPARAM)Ref, 1);
+}
+
+void __declspec(naked) CellObjectListShadeMeRefAppendHook(void)
+{
+	static const UInt32			kCellObjectListShadeMeRefAppendRetnAddr = 0x0044512D;
+	__asm
+	{
+		pushad
+		push	edx
+		call	AppendShadeMeRefToComboBox
+		popad
+
+		call	TESDialog_AddComboBoxItem
+		jmp		[kCellObjectListShadeMeRefAppendRetnAddr]
 	}
 }

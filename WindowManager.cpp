@@ -163,8 +163,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRef = ThisNode->refr;
 					if (!ThisRef)		break;
 					ThisRefData = &RefData[i];
-					DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
-							DumpExtraDataList(&ThisRef->baseExtraList);
+			//		DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
+			//				DumpExtraDataList(&ThisRef->baseExtraList);
 
 					ThisRefData->EditorID = (!ThisRef->editorData.editorID.m_data)?ThisRef->baseForm->editorData.editorID.m_data:ThisRef->editorData.editorID.m_data;
 					ThisRefData->FormID = ThisRef->refID;
@@ -266,8 +266,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 
 						if (Modified) {
-							DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
-							DumpExtraDataList(&ThisRef->baseExtraList);
+				//			DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
+				//			DumpExtraDataList(&ThisRef->baseExtraList);
 							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
 					//			DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
 							thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef);

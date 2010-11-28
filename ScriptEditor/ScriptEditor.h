@@ -395,7 +395,6 @@ public:
 	int													Indents;
 	String^												PreProcessedText;
 	List<PictureBox^>^									IndexPointers;
-	List<int>^											BookmarkedLines;
 	UInt32												CurrentLineNo;
 	List<UInt16>^										LineOffsets;
 	bool												GetVariableData;

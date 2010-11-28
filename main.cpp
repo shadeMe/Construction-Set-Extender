@@ -91,7 +91,7 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	g_msgIntfc = (OBSEMessagingInterface*)obse->QueryInterface(kInterface_Messaging);
 	g_commandTableIntfc = (OBSECommandTableInterface*)obse->QueryInterface(kInterface_CommandTable);
 
-	if (!g_msgIntfc|| !g_commandTableIntfc) {
+	if (!g_msgIntfc || !g_commandTableIntfc) {
 		DebugPrint("OBSE Messaging/CommandTable interface not found !");
 		return false;
 	}

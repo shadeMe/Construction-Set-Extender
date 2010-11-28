@@ -23,6 +23,7 @@ HWND*								g_HWND_CellView = (HWND*)0x00A0AF4C;
 HWND*								g_HWND_CSParent = (HWND*)0x00A0AF20;
 HWND*								g_HWND_AIPackagesDlg = (HWND*)0x00A0AFD8;
 HWND*								g_HWND_ObjectWindow_FormList = (HWND*)0x00A0BAA0;
+HWND*								g_HWND_ObjectWindow_Tree = (HWND*)0x00A0BAA4;
 
 INISetting*							g_LocalMasterPath = (INISetting*)0x009ED710;
 ModEntry::Data**					g_TESActivePlugin = (ModEntry::Data**)0x00A0AA7C;
@@ -33,6 +34,7 @@ TESRenderWindowBuffer**				g_TESRenderWindowBuffer = (TESRenderWindowBuffer**)0x
 HMENU*								g_RenderWindowPopup = (HMENU*)0x00A0BC40;
 void*								g_ScriptCompilerUnkObj = (void*)0x00A0B128;
 TESWaterForm**						g_DefaultWater = (TESWaterForm**)0x00A137CC;
+TESObjectREFR**						g_PlayerRef = (TESObjectREFR**)0x00A0E088;
 
 const _WriteToStatusBar				WriteToStatusBar	=	(_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -45,6 +47,9 @@ const _ChooseRefWrapper				ChooseRefWrapper = (_ChooseRefWrapper)0x0044D660;	// 
 const _InitializeCSWindows			InitializeCSWindows = (_InitializeCSWindows)0x00430980;
 const _DeInitializeCSWindows		DeInitializeCSWindows = (_DeInitializeCSWindows)0x00431220;
 const _AddFormToObjectWindow		AddFormToObjectWindow = (_AddFormToObjectWindow)0x00422470;
+const _InitializeDefaultPlayerSpell	InitializeDefaultPlayerSpell = (_InitializeDefaultPlayerSpell)0x0056FD90;
+const _ConstructEffectSetting		ConstructEffectSetting = (_ConstructEffectSetting)0x0056AC40;
+const _TESDialog_AddComboBoxItem	TESDialog_AddComboBoxItem = (_TESDialog_AddComboBoxItem)0x00403540;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -52,6 +57,21 @@ const UInt32						kVTBL_TESObjectREFR = 0x00958824;
 const UInt32						kVTBL_TESForm = 0x0094688C;
 const UInt32						kVTBL_TESTopicInfo = 0x0094820C;
 const UInt32						kVTBL_TESQuest = 0x00945D7C;
+const UInt32						kVTBL_TESNPC = 0x0094561C;
+const UInt32						kVTBL_TESCreature = 0x00944334;
+const UInt32						kVTBL_TESFurniture = 0x00950E94;
+const UInt32						kVTBL_TESObjectMISC = 0x00955224;
+const UInt32						kVTBL_TESObjectWEAP = 0x00955C8C;
+const UInt32						kVTBL_TESObjectCONT = 0x00954B44;
+const UInt32						kVTBL_SpellItem = 0x0095E504;
+
+const UInt32						kTESNPC_Ctor = 0x004D8FF0;
+const UInt32						kTESCreature_Ctor = 0x004CE820;
+const UInt32						kTESFurniture_Ctor = 0x0050C830;
+const UInt32						kTESObjectMISC_Ctor = 0x0051ABA0;
+const UInt32						kTESObjectWEAP_Ctor = 0x0051DAB0;
+const UInt32						kTESObjectCONT_Ctor = 0x00518F60;
+const UInt32						kTESObjectREFR_Ctor = 0x00541870;
 
 const UInt32						kTESChildCell_LoadCell = 0x00430F40; 
 const UInt32						kTESForm_GetObjectUseList = 0x00496380;		// Node<TESForm> GetObjectUseRefHead(UInt32 unk01 = 0);
@@ -60,6 +80,11 @@ const UInt32						kTESObjectCELL_GetParentWorldSpace = 0x00532E50;
 const UInt32						kScript_SaveResultScript = 0x005034E0;
 const UInt32						kScript_SaveScript = 0x00503450;
 const UInt32						kLinkedListNode_NewNode = 0x004E3900;
+const UInt32						kDataHandler_AddBoundObject = 0x005135F0;
+const UInt32						kTESForm_SetFormID = 0x00497E50;
+const UInt32						kTESForm_SetEditorID = 0x00497670;
+const UInt32						kTESObjectREFR_SetBaseForm = 0x005415A0;
+const UInt32						kTESObjectREFR_SetFlagPersistent = 0x0053F0D0;
 
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
 const UInt32						kBaseExtraList_ModExtraOwnership = 0x0045E060;

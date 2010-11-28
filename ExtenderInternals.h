@@ -225,6 +225,7 @@ extern HWND*					g_HWND_CellView;
 extern HWND*					g_HWND_CSParent;
 extern HWND*					g_HWND_AIPackagesDlg;
 extern HWND*					g_HWND_ObjectWindow_FormList;
+extern HWND*					g_HWND_ObjectWindow_Tree;
 
 extern INISetting*				g_LocalMasterPath;
 extern ModEntry::Data**			g_TESActivePlugin;
@@ -236,6 +237,7 @@ extern TESWaterForm**			g_DefaultWater;
 extern TESRenderWindowBuffer**	g_TESRenderWindowBuffer;
 extern HMENU*					g_RenderWindowPopup;
 extern void*					g_ScriptCompilerUnkObj;
+extern TESObjectREFR**			g_PlayerRef;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -271,6 +273,15 @@ extern const _DeInitializeCSWindows		DeInitializeCSWindows;
 typedef void			(__cdecl *_AddFormToObjectWindow)(TESForm* Form);
 extern const _AddFormToObjectWindow		AddFormToObjectWindow;
 
+typedef SpellItem*		(__stdcall *_InitializeDefaultPlayerSpell)(void* Throwaway);
+extern const _InitializeDefaultPlayerSpell		InitializeDefaultPlayerSpell;
+
+typedef void (__cdecl *_ConstructEffectSetting)(int EffectID, const char *EffectName, int School, float BaseCost, int MGEFParamA, int Flags, int ResistAV, int NoOfCounterEffects, ...);
+extern const _ConstructEffectSetting	ConstructEffectSetting;
+
+typedef void (__cdecl *_TESDialog_AddComboBoxItem)(HWND hWnd, const char* Text, LPARAM unk3, UInt8 unk4);
+extern const _TESDialog_AddComboBoxItem TESDialog_AddComboBoxItem;
+
 extern const void *			RTTI_TESCellUseList;
 
 extern const UInt32			kTESChildCell_LoadCell;
@@ -280,6 +291,11 @@ extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
 extern const UInt32			kScript_SaveResultScript;
 extern const UInt32			kScript_SaveScript;
 extern const UInt32			kLinkedListNode_NewNode;
+extern const UInt32			kDataHandler_AddBoundObject;
+extern const UInt32			kTESForm_SetFormID;
+extern const UInt32			kTESForm_SetEditorID;
+extern const UInt32			kTESObjectREFR_SetBaseForm;
+extern const UInt32			kTESObjectREFR_SetFlagPersistent;
 
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
 extern const UInt32			kBaseExtraList_ModExtraOwnership;
@@ -296,6 +312,21 @@ extern const UInt32			kVTBL_TESObjectREFR;
 extern const UInt32			kVTBL_TESForm;
 extern const UInt32			kVTBL_TESTopicInfo;
 extern const UInt32			kVTBL_TESQuest;
+extern const UInt32			kVTBL_TESNPC;
+extern const UInt32			kVTBL_TESCreature;
+extern const UInt32			kVTBL_TESFurniture;
+extern const UInt32			kVTBL_TESObjectMISC;
+extern const UInt32			kVTBL_TESObjectWEAP;
+extern const UInt32			kVTBL_TESObjectCONT;
+extern const UInt32			kVTBL_SpellItem;
+
+extern const UInt32			kTESNPC_Ctor;
+extern const UInt32			kTESCreature_Ctor;
+extern const UInt32			kTESFurniture_Ctor;
+extern const UInt32			kTESObjectMISC_Ctor;
+extern const UInt32			kTESObjectWEAP_Ctor;
+extern const UInt32			kTESObjectCONT_Ctor;
+extern const UInt32			kTESObjectREFR_Ctor;
 
 
 TESObjectREFR*				ChooseReferenceDlg(HWND Parent);

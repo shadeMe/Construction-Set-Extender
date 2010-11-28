@@ -59,7 +59,7 @@ public ref class IntelliSenseDatabase
 
 	LinkedList<UserFunction^>^							UserFunctionList;
 	Dictionary<String^, String^>^						URLMap;
-	Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
+	Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID, value = scriptID
 
 	bool												ForceUpdateFlag;
 
