@@ -23,30 +23,6 @@ extern const char*			g_DefaultWaterTextureStr;
 
 
 
-extern MemHdlr				kMainWindowEntryPoint;
-extern MemHdlr				kScriptableFormEntryPoint;
-extern MemHdlr				kScriptEffectItemEntryPoint;
-extern MemHdlr				kLoadRelease;
-extern MemHdlr				kEditorWindowProc;
-extern MemHdlr				kEditorWindowWParam;
-extern MemHdlr				kRecompileScripts;
-extern MemHdlr				kEditorInitScript;
-extern MemHdlr				kEditorInitGetAuxScript;
-extern MemHdlr				kEditorInitWindowPos;
-extern MemHdlr				kMessagingCallbackNewScript;
-extern MemHdlr				kMessagingCallbackOpenNextScript;
-extern MemHdlr				kMessagingCallbackPreviousScript;
-extern MemHdlr				kMessagingCallbackClose;
-extern MemHdlr				kMessagingCallbackSave;
-extern MemHdlr				kScriptListOpen;
-extern MemHdlr				kScriptListDelete;
-extern MemHdlr				kSaveDialogBox;
-extern MemHdlr				kLogRecompileResults;
-extern MemHdlr				kRecompileScriptsMessageBoxString;
-extern MemHdlr				kSaveDialogBoxType;
-extern MemHdlr				kToggleScriptCompilingOriginalData;
-extern MemHdlr				kToggleScriptCompilingNewData;
-
 void __stdcall SendPingBack(UInt16 Message);
 
 void MainWindowEntryPointHook(void);// patches the various entry points to spawn our editor
@@ -74,3 +50,5 @@ void SaveDialogBoxHook(void);// adds a cancel option to the message box
 void LogRecompileResultsHook(void);// logs failed recompile script calls to the console
 void ToggleScriptCompiling(bool Enable);// toggles script compiling during a save callback
 
+void MaxScriptSizeOverrideScriptBufferCtorHook(void);
+void MaxScriptSizeOverrideParseScriptLineHook(void);

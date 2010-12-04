@@ -32,10 +32,10 @@ namespace HallOfFame
 		{ "PacificMorrowind",			kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"The Jack" },
 		{ "tejon",						kTESCreature_Ctor,		0x18C,	kVTBL_TESCreature, NULL,	"Goblin Tinkerer" },
 		{ "Vacuity",					kTESObjectCONT_Ctor,	0xBC,	kVTBL_TESObjectCONT, NULL,	"                " },
-		{ "SenChan",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Is One Year Older Now" },
+		{ "SenChan",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Is A Year Older Now" },
 		{ "lilith",						kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Likes Tea. Black. Like Me" },
-		{ "daemondarque",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"His Majestry" }
+		{ "daemondarque",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"His Majestry the CTD" }
 	};
 
-	void __stdcall				Initialize(bool ResetObjectWindow);
+	void __stdcall				Initialize(bool ResetCSWindows);
 }

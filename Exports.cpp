@@ -3,6 +3,7 @@
 #include "SEHooks.h"
 #include "Common\CLIWrapper.h"
 #include "MiscHooks.h"
+#include "resource.h"
 
 
 
@@ -52,6 +53,16 @@ __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorI
 	};
 
 	HWND ScriptEditor = EDAL->GetTrackedDialog(TrackedEditorIndex);
+	switch (Message)
+	{
+	case 5:
+		EDAL->SetLastContactedEditor(0);
+		break;
+	default:
+		EDAL->SetLastContactedEditor(TrackedEditorIndex);
+		break;
+	}
+	
 	SendMessage(ScriptEditor, WM_COMMAND, ReturnType[Message], NULL);
 }
 
@@ -84,7 +95,8 @@ __declspec(dllexport) UInt32 ScriptEditor_InstantiateCustomEditor(const char* Sc
 		g_EditorInitScript = NULL;
 
 
-	HWND CustomEditor = CreateDialogParamA(*g_TESCS_Instance, (LPCSTR)0xBC, *g_HWND_CSParent, g_ScriptEditor_DlgProc, NULL);
+//	HWND CustomEditor = CreateDialogParamA(*g_TESCS_Instance, (LPCSTR)0xBC, *g_HWND_CSParent, g_ScriptEditor_DlgProc, NULL);
+	HWND CustomEditor = CreateDialogParamA(*g_TESCS_Instance, (LPCSTR)0xBC, NULL, g_ScriptEditor_DlgProc, NULL);
 	g_EditorInitScript = NULL;
 	UInt32 AllocatedIndex = EDAL->TrackNewEditor(CustomEditor);
 

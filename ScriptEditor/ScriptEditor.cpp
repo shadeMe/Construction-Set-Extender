@@ -242,7 +242,9 @@ void TabContainer::JumpToScript(UInt32 AllocatedIndex, String^% ScriptName)
 	DotNetBar::TabItem^ OpenedWorkspace = nullptr;
 
 	for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
-		if (!String::Compare(Itr->Text, ScriptName, true)) {
+		Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
+
+		if (Editor != nullptr && !String::Compare(Editor->ScriptEditorID, ScriptName, true)) {
 			Count++;
 			OpenedWorkspace = Itr;
 		}
@@ -854,7 +856,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 	ToolBarByteCodeSize = gcnew ToolStripProgressBar();
 	ToolBarByteCodeSize->Minimum = 0;
-	ToolBarByteCodeSize->Maximum = 0x4000;
+	ToolBarByteCodeSize->Maximum = 0x8000;
 	ToolBarByteCodeSize->AutoSize = false;
 	ToolBarByteCodeSize->Size = Size(85, 13);
 	ToolBarByteCodeSize->ToolTipText = "Compiled Script Size";
@@ -1544,7 +1546,10 @@ void Workspace::AddMessageToPool(MessageType Type, UInt32 Line, String^ Message)
 	Item->SubItems->Add(Line.ToString());
 	Item->SubItems->Add(Message);
 	ErrorBox->Items->Add(Item);
-	return;
+
+	EditorBoxSplitter->SplitterDistance = 150;
+	if (ErrorBox->Visible == false)
+		ToolBarErrorList_Click(nullptr, nullptr);
 }
 
 void Workspace::ValidateScript(UInt32 ScriptType)

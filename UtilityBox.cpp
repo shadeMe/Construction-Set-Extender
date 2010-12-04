@@ -65,6 +65,8 @@ void Console::InitializeConsole()
 	WindowHandle = CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_CONSOLE), *g_HWND_CSParent, (DLGPROC)ConsoleDlgProc);
 	EditHandle = GetDlgItem(WindowHandle, EDIT_CONSOLE);
 	g_ConsoleEditControlOrgWindowProc = (WNDPROC)SetWindowLong(EditHandle, GWL_WNDPROC, (LONG)ConsoleEditControlSubClassProc);
+	g_ConsoleCmdBoxOrgWindowProc = (WNDPROC)SetWindowLong(GetDlgItem(WindowHandle, EDIT_CMDBOX), GWL_WNDPROC, (LONG)ConsoleCmdBoxSubClassProc);
+
 	Edit_LimitText(EditHandle, sizeof(int));
 
 	if (g_INIManager->GET_INI_INT("HideOnStartup"))
@@ -75,6 +77,8 @@ void Console::InitializeConsole()
 
 bool Console::ToggleDisplayState()
 {
+	if (IsConsoleInitalized() == 0)	return false;
+
 	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 					
 	if (IsHidden()) {
@@ -94,6 +98,8 @@ bool Console::ToggleDisplayState()
 
 void Console::LoadINISettings()
 {
+	if (IsConsoleInitalized() == 0)	return;
+
 	int Top = g_INIManager->FetchSetting("Top")->GetValueAsInteger(), 
 		Left = g_INIManager->FetchSetting("Left")->GetValueAsInteger(),
 		Right = g_INIManager->FetchSetting("Right")->GetValueAsInteger(),
@@ -104,6 +110,8 @@ void Console::LoadINISettings()
 
 void Console::SaveINISettings()
 {
+	if (IsConsoleInitalized() == 0)	return;
+
 	tagRECT WindowRect;
 	GetWindowRect(WindowHandle, &WindowRect);
 
@@ -206,20 +214,56 @@ void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
 	}
 }
 
+void Console::LogMessage(const char* Prefix, const char* MessageStr)
+{
+	std::string Message("[" + std::string(Prefix) + "]\t");
+
+	for (int i = 0; i < IndentLevel; i++) {
+		Message += "\t";
+	}
+
+	Message += std::string(MessageStr);
+	if (Message.rfind("\r\n") != Message.length() - 2)
+		MessageBuffer += Message + "\r\n";
+	else
+		MessageBuffer += Message;
+
+	if (IsLogInitalized()) {
+		fputs(Message.c_str(), DebugLog);
+		fputs("\n", DebugLog);
+		fflush(DebugLog);
+	}
+
+	if (IsConsoleInitalized() && !IsHidden()) {
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, FALSE, 0);
+		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
+		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
+
+		CSEInterfaceManager::HandleConsoleCallback(Message.c_str(), Prefix);
+	}
+}
+
 void Console::Clear()
 {
+	if (IsConsoleInitalized() == 0)	return;
+
 	MessageBuffer.clear();
 	Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
 }
 
 UInt32 Console::Indent()
 {
+	if (IsConsoleInitalized() == 0)	return 0;
+
 	if (++IndentLevel > 10)		IndentLevel = 10;
 	return IndentLevel;
 }
 
 UInt32 Console::Exdent()
 {
+	if (IsConsoleInitalized() == 0)	return 0;
+
 	if (IndentLevel > 0)		--IndentLevel;
 	return IndentLevel;
 }

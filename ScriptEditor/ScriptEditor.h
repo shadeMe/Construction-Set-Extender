@@ -82,12 +82,13 @@ public ref class Workspace
 public:
 	void												ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
-private:
+
 	static enum class									MessageType
 														{
 															e_Warning	= 0,
 															e_Error
 														};
+private:
 	static ImageList^									MessageIcon = gcnew ImageList();
 
 	static enum class									IconEnum
@@ -270,7 +271,6 @@ private:
 	void												PerformLineNumberHighlights(void);
 	int													CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLines);
 	void												ExdentLine(void);
-	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
 	bool												TabIndent();
 	void												ToggleComment(int CaretPos);
 	void												UpdateFindImagePointers(void);
@@ -298,6 +298,7 @@ public:
 	void												GetVariableIndices(bool SetFlag);
 	void												SetVariableIndices(void);
 	void												ClearFindImagePointers(void);
+	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
 
 	Workspace(UInt32 Index, TabContainer^% Parent);
 	Workspace(UInt32 Index);

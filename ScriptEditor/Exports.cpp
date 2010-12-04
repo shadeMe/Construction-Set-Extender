@@ -9,7 +9,7 @@ extern "C"
 [STAThread]
 __declspec(dllexport) void InitializeComponents(CommandTableData* Data)
 {	
-	Globals^ Dummy = gcnew Globals();		// makes sure all of the class' static members get initialized
+	Globals^ Dummy = gcnew Globals();		// makes sure the class' static members get initialized
 	ScriptEditorManager::GetSingleton();
 	ISDB->ParseCommandTable(Data);
 	DebugPrint("ScriptEditor Components Initialized");
@@ -81,6 +81,16 @@ __declspec(dllexport) void SetVariableListItemData(UInt32 VanillaHandleIndex, Sc
 __declspec(dllexport) void InitializeDatabaseUpdateTimer()
 {
 	ISDB->InitializeDatabaseUpdateTimer();
+}
+
+__declspec(dllexport) void PassScriptError(UInt32 LineNumber, const char* Message, UInt32 EditorIndex)
+{
+	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
+	Parameters->VanillaHandleIndex = EditorIndex;
+	Parameters->ParameterList->Add(LineNumber);
+	Parameters->ParameterList->Add(gcnew String(Message));
+
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AddToCompileErrorPool, Parameters);	
 }
 
 

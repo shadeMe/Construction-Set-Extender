@@ -26,7 +26,6 @@ HWND*								g_HWND_ObjectWindow_FormList = (HWND*)0x00A0BAA0;
 HWND*								g_HWND_ObjectWindow_Tree = (HWND*)0x00A0BAA4;
 
 INISetting*							g_LocalMasterPath = (INISetting*)0x009ED710;
-ModEntry::Data**					g_TESActivePlugin = (ModEntry::Data**)0x00A0AA7C;
 char**								g_TESActivePluginName = (char**)0x00A0AF00;
 UInt8*								g_WorkingFileFlag = (UInt8*)0x00A0B628;
 UInt8*								g_ActiveChangesFlag = (UInt8*)0x00A0B13C;
@@ -36,7 +35,7 @@ void*								g_ScriptCompilerUnkObj = (void*)0x00A0B128;
 TESWaterForm**						g_DefaultWater = (TESWaterForm**)0x00A137CC;
 TESObjectREFR**						g_PlayerRef = (TESObjectREFR**)0x00A0E088;
 
-const _WriteToStatusBar				WriteToStatusBar	=	(_WriteToStatusBar)0x00431310;
+const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
 const _GetPositionFromINI			GetPositionFromINI = (_GetPositionFromINI)0x004176D0;
 const _GetTESDialogTemplateForType	GetTESDialogTemplateForType = (_GetTESDialogTemplateForType)0x00442050;
@@ -50,6 +49,8 @@ const _AddFormToObjectWindow		AddFormToObjectWindow = (_AddFormToObjectWindow)0x
 const _InitializeDefaultPlayerSpell	InitializeDefaultPlayerSpell = (_InitializeDefaultPlayerSpell)0x0056FD90;
 const _ConstructEffectSetting		ConstructEffectSetting = (_ConstructEffectSetting)0x0056AC40;
 const _TESDialog_AddComboBoxItem	TESDialog_AddComboBoxItem = (_TESDialog_AddComboBoxItem)0x00403540;
+const _BSPrintF						BSPrintF = (_BSPrintF)0x004053F0;
+const _ShowCompilerError			ShowCompilerErrorEx = (_ShowCompilerError)0x004FFF40;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -140,6 +141,12 @@ void EditorAllocator::DeleteAllTrackedEditors(void)
 		delete Itr->second;
 	}
 	AllocationMap.clear();
+}
+
+void EditorAllocator::DestroyVanillaDialogs(void)
+{
+	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++) 
+		DestroyWindow(Itr->first);
 }
 
 HWND EditorAllocator::GetTrackedREC(HWND TrackedEditorDialog)

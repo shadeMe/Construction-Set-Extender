@@ -3,19 +3,22 @@
 #include "Common/CLIWrapper.h"
 #include "Exports.h"
 #include "Common/HandShakeStructs.h"
+#include "CompilerErrorDetours.h"
 
 
-static HWND							g_ScriptEditorBuffer = NULL;			// handle to the editor dialog being processed by the WndProc
+HWND								g_ScriptEditorBuffer = NULL;			// handle to the editor dialog being processed by the WndProc
 FARPROC								g_WindowHandleCallAddr = NULL;			// used to call WndMgmt functions
 Script*								g_EditorInitScript	=	NULL;			// must point to valid Script object to be used. needs to be reset right after dialog instantiation
 Script*								g_SetEditorTextCache = NULL;			// stores the script object from the last call of f_Script::SetEditorText
-static UInt32						g_WParamBuffer		=	0;				// WParam processed by the WndProc
+UInt32								g_WParamBuffer		=	0;				// WParam processed by the WndProc
 ScriptData*							g_ScriptDataPackage = new ScriptData();
-static const char*					g_RecompileAllScriptsStr = "Are you sure you want to recompile every script in the active plugin?";
+const char*							g_RecompileAllScriptsStr = "Are you sure you want to recompile every script in the active plugin?";
 Script*								g_ScriptListResult = NULL;				// used by our script list hook, to set the selected script form
-static const void*					g_ExpressionBuffer = new char[0x400];
+const void*							g_ExpressionBuffer = new char[0x400];
 Script*								g_EditorAuxScript = NULL;
 HWND								g_EditorAuxHWND = NULL;
+UInt32								g_MaxScriptDataSize = 0x8000;
+
 
 
 MemHdlr								kMainWindowEntryPoint				(0x0041A5F6, MainWindowEntryPointHook, 0, 0);
@@ -41,6 +44,10 @@ MemHdlr								kRecompileScriptsMessageBoxString	(0x004FEF3F, (UInt32)0, 0, 0);
 MemHdlr								kSaveDialogBoxType					(0x004FE558, (UInt32)0, 0, 0);
 MemHdlr								kToggleScriptCompilingOriginalData	(0x00503450, (UInt32)0, MakeUInt8Array(8, 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64), 8);
 MemHdlr								kToggleScriptCompilingNewData		(0x00503450, (UInt32)0, MakeUInt8Array(8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0), 8);
+MemHdlr								kMaxScriptSizeOverrideScriptBufferCtor
+																		(0x004FFECB, MaxScriptSizeOverrideScriptBufferCtorHook, 0, 0);
+MemHdlr								kMaxScriptSizeOverridesParseScriptLine
+																		(0x005031C6, MaxScriptSizeOverrideParseScriptLineHook, 0, 0);
 
 
 bool PatchSEHooks()
@@ -73,6 +80,11 @@ bool PatchSEHooks()
 	
 	kRecompileScriptsMessageBoxString.WriteUInt32((UInt32)g_RecompileAllScriptsStr);
 	kSaveDialogBoxType.WriteUInt8(3);
+
+	kMaxScriptSizeOverrideScriptBufferCtor.WriteJump();
+	kMaxScriptSizeOverridesParseScriptLine.WriteJump();
+
+	PatchCompilerErrorDetours();
 	return true;
 }
 
@@ -200,6 +212,7 @@ void __declspec(naked) ScriptEffectItemEntryPointHook(void)
 
 void __stdcall DoLoadReleaseHook(void)
 {
+	EditorAllocator::GetSingleton()->DestroyVanillaDialogs();
 	EditorAllocator::GetSingleton()->DeleteAllTrackedEditors();
 	SendPingBack(8);
 }
@@ -563,4 +576,36 @@ void ToggleScriptCompiling(bool Enable)
 	else
 		kToggleScriptCompilingOriginalData.WriteBuffer();
 }
+
+void __declspec(naked) MaxScriptSizeOverrideScriptBufferCtorHook(void)
+{
+	static const UInt32			kMaxScriptSizeOverrideScriptBufferCtorRetnAddr = 0x004FFEE8;
+	static const UInt32			kMaxScriptSizeOverrideScriptBufferCtorCallAddr = 0x00401DA0;
+	__asm
+	{
+		push	g_MaxScriptDataSize
+		mov     ecx, 0x00A09E90
+		mov     [esi + 0x1C], ebx
+		mov     [esi + 4], ebx
+		mov     [esi + 0x24], ebx
+		call    kMaxScriptSizeOverrideScriptBufferCtorCallAddr
+		push    g_MaxScriptDataSize
+		jmp		kMaxScriptSizeOverrideScriptBufferCtorRetnAddr
+	}
+}
+
+void __declspec(naked) MaxScriptSizeOverrideParseScriptLineHook(void)
+{
+	static const UInt32			kMaxScriptSizeOverrideParseScriptLineRetnAddr = 0x005031D9;
+	__asm
+	{
+		mov     eax, [edi+24h]
+		mov     ecx, [esi+40Ch]
+		lea     edx, [eax+ecx+0Ah]
+		cmp     edx, g_MaxScriptDataSize
+		jmp		kMaxScriptSizeOverrideParseScriptLineRetnAddr
+	}
+}
+
 #pragma endregion
+

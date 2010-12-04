@@ -63,6 +63,7 @@ extern MemHdlr					kDoorMarkerProperties;
 extern MemHdlr					kAutoLoadActivePluginOnStartup;
 extern MemHdlr					kDataHandlerClearDataShadeMeRefDtor;
 extern MemHdlr					kCellObjectListShadeMeRefAppend;
+extern MemHdlr					kDeathToTheCloseOpenDialogsMessage;
 
 bool PatchMiscHooks(void);
 void __stdcall DoCSInitHook();

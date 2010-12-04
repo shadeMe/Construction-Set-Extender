@@ -3,7 +3,7 @@
 namespace HallOfFame
 {
 
-	void __stdcall Initialize(bool ResetObjectWindow)
+	void __stdcall Initialize(bool ResetCSWindows)
 	{
 		UInt32 FormID = kBaseFormID;
 		for (int i = 0; i < ListSize; i++)
@@ -22,7 +22,8 @@ namespace HallOfFame
 			else if (!_stricmp("DragoonWraith", Itr.EditorID))
 			{
 				TESObjectWEAP* Weapon = (TESObjectWEAP*)Itr.Form;
-				Weapon->type = TESObjectWEAP::kType_Staff;
+				UInt32 Type = (UInt32)Weapon + 0xDC;
+				*(UInt32*)Type = TESObjectWEAP::kType_Staff;
 			}
 
 			TESFullName* Name = CS_CAST(Itr.Form, TESForm, TESFullName);
@@ -58,7 +59,7 @@ namespace HallOfFame
 		thisVirtualCall(kVTBL_TESObjectREFR, 0x94, shadeMeRef, 0);
 		thisCall(kTESObjectREFR_SetFlagPersistent, shadeMeRef, 1);
 
-		if (ResetObjectWindow) {
+		if (ResetCSWindows) {
 			DeInitializeCSWindows();
 			InitializeCSWindows();
 		}

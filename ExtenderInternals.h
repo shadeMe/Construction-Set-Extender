@@ -39,20 +39,22 @@ class EditorAllocator
 	typedef std::map<HWND, SEAlloc*>										AlMap;
 	AlMap																	AllocationMap;
 	UInt32																	NextIndex;
+	UInt32																	LastContactedEditor;
 public:
 	static EditorAllocator*													GetSingleton(void);
 	UInt32																	TrackNewEditor(HWND EditorDialog);
 	void																	DeleteTrackedEditor(UInt32 TrackedEditorIndex);
 	void																	DeleteAllTrackedEditors(void);
+	void																	DestroyVanillaDialogs(void);
 
 	HWND																	GetTrackedREC(HWND TrackedEditorDialog);
 	HWND																	GetTrackedLBC(HWND TrackedEditorDialog);
 	UInt32																	GetTrackedIndex(HWND TrackedEditorDialog);
 	HWND																	GetTrackedDialog(UInt32 TrackedEditorIndex);
 	UInt32																	GetTrackedEditorCount() { return AllocationMap.size(); }
+	UInt32																	GetLastContactedEditor() { return LastContactedEditor; }
+	void																	SetLastContactedEditor(UInt32 TrackedEditorIndex) { LastContactedEditor = TrackedEditorIndex; }
 };
-
-void																		LogWinAPIErrorMessage(DWORD ErrorID);
 
 #define EDAL																EditorAllocator::GetSingleton()
 
@@ -64,8 +66,6 @@ public:
 
 
 				
-// EDITOR API
-
 // 0C+?
 class TESDialogInitParam
 {
@@ -97,7 +97,7 @@ public:
 	INISetting();
 	~INISetting();
 
-	char*			Data;			// 00 - use a union ?
+	char*			Data;			// 00 - use a union
 	const char*		Name;			// 04
 
 	INISetting(char* Data, char* Name) : Data(Data), Name(Name) {}
@@ -228,7 +228,6 @@ extern HWND*					g_HWND_ObjectWindow_FormList;
 extern HWND*					g_HWND_ObjectWindow_Tree;
 
 extern INISetting*				g_LocalMasterPath;
-extern ModEntry::Data**			g_TESActivePlugin;
 extern char**					g_TESActivePluginName;
 extern UInt8*					g_WorkingFileFlag;
 extern UInt8*					g_ActiveChangesFlag;
@@ -281,6 +280,12 @@ extern const _ConstructEffectSetting	ConstructEffectSetting;
 
 typedef void (__cdecl *_TESDialog_AddComboBoxItem)(HWND hWnd, const char* Text, LPARAM unk3, UInt8 unk4);
 extern const _TESDialog_AddComboBoxItem TESDialog_AddComboBoxItem;
+
+typedef void			(__cdecl *_BSPrintF)(const char* format, ...);
+extern const _BSPrintF		BSPrintF;
+
+typedef void			(__cdecl *_ShowCompilerError)(ScriptBuffer* Buffer, const char* format, ...);
+extern const _ShowCompilerError		ShowCompilerErrorEx;
 
 extern const void *			RTTI_TESCellUseList;
 

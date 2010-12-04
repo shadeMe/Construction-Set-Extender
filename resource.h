@@ -6,12 +6,18 @@
 #define DLG_TESFILE                     104
 #define DLG_CONSOLE                     106
 #define IDR_MENU1                       107
+#define DLG_SCRIPTEDIT                  188
 #define EDIT_TEXTLINE                   1002
 #define BTN_OK                          1003
 #define BTN_CANCEL                      1004
 #define BTN_ESP                         1004
 #define BTN_ESM                         1005
 #define EDIT_CONSOLE                    1006
+#define IDC_EDIT1                       1008
+#define EDIT_CMDBOX                     1008
+#define STC_TYPE                        1009
+#define IDC_RICHEDIT21                  1010
+#define EDIT_SCTX                       1228
 #define DLG_ASSETSEL                    9800
 #define BTN_FILEB                       9801
 #define BTN_BSAB                        9802
@@ -33,9 +39,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        109
+#define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40012
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

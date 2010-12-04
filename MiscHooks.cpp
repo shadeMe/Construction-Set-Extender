@@ -63,6 +63,7 @@ MemHdlr							kDoorMarkerProperties				(0x00429EA9, DoorMarkerPropertiesHook, 0,
 MemHdlr							kAutoLoadActivePluginOnStartup		(0x0041A26A, AutoLoadActivePluginOnStartupHook, MakeUInt8Array(6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0), 6);
 MemHdlr							kDataHandlerClearDataShadeMeRefDtor	(0x0047AE76, DataHandlerClearDataShadeMeRefDtorHook, 0, 0);
 MemHdlr							kCellObjectListShadeMeRefAppend		(0x00445128, CellObjectListShadeMeRefAppendHook, 0, 0);
+MemHdlr							kDeathToTheCloseOpenDialogsMessage	(0x0041BAA7, (UInt32)0, 0, 0);
 
 
 void __stdcall DoTestHook(void* Ref3DData)
@@ -143,6 +144,7 @@ bool PatchMiscHooks()
 	kAnimGroupNote.WriteNop();
 	kDataHandlerClearDataShadeMeRefDtor.WriteJump();
 	kCellObjectListShadeMeRefAppend.WriteJump();
+	kDeathToTheCloseOpenDialogsMessage.WriteUInt8(0xEB);
 
 
 
@@ -837,8 +839,6 @@ void __declspec(naked) PluginLoadHook(void)
     {
 		pushad
 		call	FixDefaultWater
-		popad
-		pushad
 		push	0
 		call	HallOfFame::Initialize
 		popad

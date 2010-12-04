@@ -1,14 +1,12 @@
 #pragma once
 
-/*** CSE Interface API **********************
-*	Interface object passed through the OBSE messaging system.
-*	A pointer to the object will be dispatched to plugins that
-*	pass an arbitrary message of type 'CSEI' post post-plugin load (reply 
-*	will be of the same type).
+/********** CSE Interface API ****************************************************
+*	Interface object passed through the OBSE messaging system. A pointer to the 
+*	object will be dispatched to plugins that pass an arbitrary message of type 
+*	'CSEI' post post-plugin load (reply will be of the same type).
 *	
-*	All other interfaces need to be initialized by calling
-*	InitializeInterface().
-********************************************/
+*	All other interfaces need to be initialized by calling InitializeInterface().
+*********************************************************************************/
 
 struct CSEInterface
 {

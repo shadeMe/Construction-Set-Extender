@@ -11,6 +11,7 @@ WNDPROC						g_CSMainWndOrgWindowProc = NULL;
 WNDPROC						g_RenderWndOrgWindowProc = NULL;
 WNDPROC						g_ConsoleWndOrgWindowProc = NULL;
 WNDPROC						g_ConsoleEditControlOrgWindowProc = NULL;
+WNDPROC						g_ConsoleCmdBoxOrgWindowProc = NULL;
 
 #define PI					3.151592653589793
 
@@ -416,9 +417,11 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	{
 	case WM_SIZE:
 		{
-		tagRECT WindowRect;
+		tagRECT WindowRect, EditRect;
 		GetWindowRect(hWnd, &WindowRect);
-		MoveWindow(GetDlgItem(hWnd, EDIT_CONSOLE), 0, 0, WindowRect.right - WindowRect.left - 9, WindowRect.bottom  - WindowRect.top - 27, TRUE);
+		MoveWindow(GetDlgItem(hWnd, EDIT_CONSOLE), 0, 0, WindowRect.right - WindowRect.left - 9, WindowRect.bottom - WindowRect.top - 50, TRUE);
+		GetWindowRect(GetDlgItem(hWnd, EDIT_CONSOLE), &EditRect);
+		SetWindowPos(GetDlgItem(hWnd, EDIT_CMDBOX), HWND_NOTOPMOST, 0, EditRect.bottom - EditRect.top, WindowRect.right - WindowRect.left - 10, 45, SWP_NOZORDER);
 		break;
 		}
 	case WM_DESTROY: 
@@ -481,4 +484,30 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 	}
  
 	return CallWindowProc(g_ConsoleEditControlOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
+LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_CHAR:
+		if (wParam == VK_RETURN)
+			return TRUE;
+		break;
+	case WM_KEYDOWN:
+		if (wParam == VK_RETURN)
+		{
+			char Buffer[0x200];
+			Edit_GetText(hWnd, Buffer, sizeof(Buffer));
+			CONSOLE->LogMessage("CMD", Buffer);
+			Edit_SetText(hWnd, NULL);
+			return TRUE;
+		}
+		break;
+	case WM_DESTROY: 
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleCmdBoxOrgWindowProc);
+		break; 
+	}
+ 
+	return CallWindowProc(g_ConsoleCmdBoxOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 }

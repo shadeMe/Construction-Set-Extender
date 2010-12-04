@@ -128,6 +128,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\obse\obse&quot;;&quot;$(SolutionDir)\..\obse\&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE"
+				IgnoreStandardIncludePath="false"
 				GeneratePreprocessedFile="0"
 				KeepComments="false"
 				RuntimeLibrary="0"
@@ -365,6 +366,14 @@
 		<Filter
 			Name="Hooks"
 			>
+			<File
+				RelativePath=".\CompilerErrorDetours.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CompilerErrorDetours.h"
+				>
+			</File>
 			<File
 				RelativePath=".\MiscHooks.cpp"
 				>

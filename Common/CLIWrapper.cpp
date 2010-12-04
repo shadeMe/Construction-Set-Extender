@@ -17,6 +17,7 @@ namespace ScriptEditor
 
 	_SetVariableListItemData				SetVariableListItemData;
 	_InitializeDatabaseUpdateTimer			InitializeDatabaseUpdateTimer;
+	_PassScriptError						PassScriptError;
 }
 namespace UseInfoList
 {
@@ -53,6 +54,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::ScriptEditor::SetScriptListItemData = (CLIWrapper::ScriptEditor::_SetScriptListItemData)GetProcAddress(hMod, "SetScriptListItemData");
 	CLIWrapper::ScriptEditor::SetVariableListItemData = (CLIWrapper::ScriptEditor::_SetVariableListItemData)GetProcAddress(hMod, "SetVariableListItemData");
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer = (CLIWrapper::ScriptEditor::_InitializeDatabaseUpdateTimer)GetProcAddress(hMod, "InitializeDatabaseUpdateTimer");
+	CLIWrapper::ScriptEditor::PassScriptError = (CLIWrapper::ScriptEditor::_PassScriptError)GetProcAddress(hMod, "PassScriptError");
 
 
 	if (!CLIWrapper::ScriptEditor::AddToURLMap || 
@@ -62,7 +64,8 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		!CLIWrapper::ScriptEditor::SendMessagePingback ||
 		!CLIWrapper::ScriptEditor::SetScriptListItemData ||
 		!CLIWrapper::ScriptEditor::SetVariableListItemData ||
-		!CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer)
+		!CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer ||
+		!CLIWrapper::ScriptEditor::PassScriptError)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;

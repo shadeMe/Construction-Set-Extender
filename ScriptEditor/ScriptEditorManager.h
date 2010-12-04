@@ -19,7 +19,8 @@ public:
 																e_SetVariableListItemData,
 																e_AllocateWorkspace,
 																e_DestroyTabContainer,
-																e_TabTearOp
+																e_TabTearOp,
+																e_AddToCompileErrorPool
 															};
 
 	static enum class									SendReceiveMessageType
@@ -59,7 +60,8 @@ public:
 																"Set VariableList Item Data",
 																"Allocate Workspace",
 																"Destroy TabContainer",
-																"Tab Tear Operation"
+																"Tab Tear Operation",
+																"Add Compile Error To Message Pool"
 															};
 
 	static array<UInt16>^								ParamCount = 
@@ -72,7 +74,8 @@ public:
 																3,
 																2,
 																1,
-																4
+																4,
+																2
 															};
 private:
 	static ScriptEditorManager^							Singleton = nullptr;
@@ -114,6 +117,7 @@ private:
 	void												AllocateNewWorkspace(UInt32 AllocatedIndex, ScriptEditor::TabContainer^% Parent);
 	void												DestroyTabContainer(ScriptEditor::TabContainer^ Container);
 	void												TabTearOpHandler(TabTearOpType Operation, ScriptEditor::Workspace^ Workspace, ScriptEditor::TabContainer^ Container, Point MousePos);
+	void												AddToCompileErrorPool(UInt32 AllocatedIndex, UInt32 Line, String^% Message);
 public:
 	ref struct											OperationParams
 	{

@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <vector>
 #include "windows.h"
 #include "windowsx.h"
 #include "atltypes.h"
@@ -52,6 +53,7 @@ public:
 
 	void						LogMessage(UInt8 Source, const char* Format, va_list Args);
 	void						LogMessage(const char* Prefix,  const char* Format, va_list Args);
+	void						LogMessage(const char* Prefix,  const char* MessageStr);
 	UInt32						Indent();
 	UInt32						Exdent();
 	void						ExdentAll() { IndentLevel = 0; }
@@ -101,8 +103,6 @@ namespace MemoryHandler
 		void				WriteUInt8(UInt8 Data);
 	};
 	typedef Handler_Ace MemHdlr;
-
-//#define DEFINE_MEM_HDLR(name, addressA, addressB, buffer, size)		MemHdlr		k##name##(##addressA##, (UInt32)##addressB##, ##buffer##, ##size##)
 }
 
 

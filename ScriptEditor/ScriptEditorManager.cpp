@@ -136,6 +136,11 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 						dynamic_cast<ScriptEditor::TabContainer^>(Parameters->ParameterList[2]),
 						(Point)(Parameters->ParameterList[3]));
 			break;
+		case OperationType::e_AddToCompileErrorPool:
+			AddToCompileErrorPool(Parameters->VanillaHandleIndex,
+						(UInt32)Parameters->ParameterList[0],
+						dynamic_cast<String^>(Parameters->ParameterList[1]));
+			break;
 		}
 	}
 	catch (CSEGeneralException^ E) {
@@ -206,7 +211,8 @@ void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ Script
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
-	Itr->TextSet = true;
+	if (ScriptName != "New Script")
+		Itr->TextSet = true;
 	Itr->PreProcessScriptText(PreProcessor::PreProcessOp::e_Collapse, ScriptText, false);
 	Itr->ScriptEditorID = gcnew String(ScriptName);
 	Itr->EditorTab->Text = ScriptName + " [" + FormID.ToString("X8") + "]";
@@ -268,6 +274,7 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 	switch (Operation)
 	{
 	case SaveWorkspaceOpType::e_SaveAndCompile:
+		Itr->ValidateScript(Itr->GetScriptType());
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		break;
 	case SaveWorkspaceOpType::e_SaveButDontCompile:
@@ -276,6 +283,7 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 		NativeWrapper::ScriptEditor_ToggleScriptCompiling(true);
 		break;
 	case SaveWorkspaceOpType::e_SaveActivePluginToo:
+		Itr->ValidateScript(Itr->GetScriptType());
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		NativeWrapper::ScriptEditor_SaveActivePlugin();
 		break;
@@ -357,7 +365,6 @@ void ScriptEditorManager::MessageHandler_ReceiveSave(UInt32 AllocatedIndex)
 	Itr->CalculateLineOffsets((UInt32)g_ScriptDataPackage->ByteCode, g_ScriptDataPackage->Length, gcnew String(g_ScriptDataPackage->Text));
 	Itr->ToolBarByteCodeSize->Value = g_ScriptDataPackage->Length;
 	Itr->ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(g_ScriptDataPackage->Length / (float)1024));
-	Itr->ValidateScript(Itr->GetScriptType());
 	Itr->ToolBarUpdateVarIndices->Enabled = false;
 	Itr->GetVariableIndices(false);
 }
@@ -486,4 +493,14 @@ void ScriptEditorManager::TabTearOpHandler(TabTearOpType Operation, ScriptEditor
 	Container->EditorForm->Invalidate(true);
 	Container->ScriptStrip->SelectedTab = Workspace->EditorTab;
 	Container->ScriptStrip->TabStrip->EnsureVisible(Container->ScriptStrip->SelectedTab);
+}
+
+void ScriptEditorManager::AddToCompileErrorPool(UInt32 AllocatedIndex, UInt32 Line, String^% Message)
+{
+	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
+
+	if (Itr != ScriptEditor::Workspace::NullSE)
+	{
+		Itr->AddMessageToPool(ScriptEditor::Workspace::MessageType::e_Error, Line, Message);
+	}
 }
