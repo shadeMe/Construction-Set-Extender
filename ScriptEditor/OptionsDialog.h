@@ -1,7 +1,8 @@
 #pragma once
 #include "Common\Includes.h"
 
-public ref class INISetting {
+public ref class INISetting 
+{
 public:
 	String^											Key;
 	String^											Section;
@@ -10,7 +11,8 @@ public:
 	INISetting(String^ Key, String^ Section, String^ DefaultValue) : Key(Key), Section(Section), DefaultValue(DefaultValue) {}
 };
 
-public ref class BoundControl {
+public ref class BoundControl 
+{
 public:
 	static enum class								ControlType
 														{
@@ -29,17 +31,18 @@ public:
 															e_Color_G,
 															e_Color_B
 														};
-
+private:
 	Control^										INIControl;
 	CommonDialog^									INIDialog;
 	ControlType										BoundType;
 	ValueType										Property;
-
+public:
 	BoundControl(Control^ Ctrl, ControlType CtrlType, ValueType ValType) : INIControl(Ctrl), INIDialog(nullptr), BoundType(CtrlType), Property(ValType) {}			// for controls derived from Windows::Forms::Control
 	BoundControl(CommonDialog^ Ctrl, ControlType CtrlType, ValueType ValType) : INIControl(nullptr), INIDialog(Ctrl), BoundType(CtrlType), Property(ValType) {}		// for controls derived from Windows::Forms::CommonDialog
 
 	String^											GetValue();
 	void											SetValue(String^ Value);
+
 };
 
 
@@ -54,7 +57,7 @@ public ref class OptionsDialog
 	void											BMCButton_Click(Object^ Sender, EventArgs^ E);
 
 	void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
-public:	
+
 	Dictionary<INISetting^, BoundControl^>^			INIMap;
 
 	Form^											OptionsBox;
@@ -72,13 +75,11 @@ public:
 	Button^  										FontButton;
 	CheckBox^  										UseRegEx;
 	CheckBox^  										ColorEditorBox;
-	ColorDialog^  									FCDialog;
+
 	FontDialog^  									FontSelection;
-	ColorDialog^  									BCDialog;
-	ColorDialog^  									HCDialog;
 	Button^  										BCButton;
 	Button^  										HCButton;
-	ColorDialog^  									BMCDialog;
+	
 	Button^  										BMCButton;
 	CheckBox^										SaveLastKnownPos;
 	Label^  										TabStopSize;
@@ -88,11 +89,24 @@ public:
 	CheckBox^										UseCSParent;
 	CheckBox^										DestroyOnLastTabClose;
 
+
+public:	
 	OptionsDialog();
+
+	ColorDialog^  									FCDialog;
+	ColorDialog^  									BCDialog;
+	ColorDialog^  									HCDialog;
+	ColorDialog^  									BMCDialog;
 
 	void											LoadINI();
 	void											SaveINI();
 	void											PopulateINIMap();
+
+	BoundControl^									FetchSetting(String^ Key);
+	int												FetchSettingAsInt(String^ Key);
+	String^											FetchSettingAsString(String^ Key);
+
+	void											Show() { OptionsBox->ShowDialog(); }
 
 	static OptionsDialog^%							GetSingleton();
 };

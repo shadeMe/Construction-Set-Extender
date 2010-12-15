@@ -1,6 +1,7 @@
 #include "CSEInterfaceManager.h"
 #include "UtilityBox.h"
 #include "Common\CLIWrapper.h"
+#include "Console.h"
 
 static CSEInterface				s_CSEInterface =
 {

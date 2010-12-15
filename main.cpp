@@ -5,6 +5,7 @@
 #include "Common/HandShakeStructs.h"
 #include "WindowManager.h"
 #include "CSEInterfaceManager.h"
+#include "Console.h"
 
 
 PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
@@ -30,7 +31,6 @@ void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 	}
 }
 
-
 void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 {
 	switch (Msg->type)
@@ -44,6 +44,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		g_PluginPostLoad = true;
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
+		InitializeDefaultGMSTMap();
 		break;
 	}
 }
@@ -102,7 +103,6 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 bool OBSEPlugin_Load(const OBSEInterface * obse)
 {
     INITCOMMONCONTROLSEX icex;
-    
 															 // ensure that the common control DLL is loaded. 
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icex.dwICC  = ICC_LISTVIEW_CLASSES;
@@ -110,7 +110,7 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
     
 	g_pluginHandle = obse->GetPluginHandle();
 	g_INIManager->SetINIPath(g_INIPath);
-	((CSEINIManager*)g_INIManager)->Initialize();			// ### eugh! need to implement RTTI for the INIManager class
+	dynamic_cast<CSEINIManager*>(g_INIManager)->Initialize();
 
 	if (!CLIWrapper::Import(obse)) {
 		return false;

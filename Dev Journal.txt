@@ -9,12 +9,10 @@ BE---->
 > Filter out refs that don't have ownership data and count
 
 CSE--->
+> Fully implement GMST reinit
 > Figure out how to update the model of references
-> Add an "All Active Mods" button to the Data screen
 > Look into fixing lip sync generation
 > Set FormID (use a global hook to monitor messages - kludgy but much easier than hooking at several dozen places )
-> Suppress the activation of the CS windows when script dialogs are created (this causes the z-order change when creating new tabs) 
-> Add a commandline component to the console and add a fews commands or something
 
 # The ability to specify a custom workspace.
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
@@ -32,8 +30,6 @@ CSE--->
 
 SE---->
 > Script Validator seems to be wonky at times - Try it on VectorDiseaseTokenOS
-> Compiler errors are offset by the CSE block
-> Find seems to edit the send a message to save
 > IMPLEMENT AVALONEDIT
 > Implement regEx
 > Get quickView to work on remote vars

@@ -64,7 +64,7 @@ __declspec(dllexport) void SetScriptListItemData(UInt32 VanillaHandleIndex, Scri
 	Parameters->ParameterList->Add(Data->Type);
 	Parameters->ParameterList->Add(Data->Flags);
 
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SetOpenDialogItemData, Parameters);
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SetScriptSelectItemData, Parameters);
 }
 
 __declspec(dllexport) void SetVariableListItemData(UInt32 VanillaHandleIndex, ScriptVarIndexData::ScriptVarInfo* Data)

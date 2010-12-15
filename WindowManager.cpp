@@ -4,6 +4,7 @@
 #include "Common\HandShakeStructs.h"
 #include "Common\CLIWrapper.h"
 #include "resource.h"
+#include "Console.h"
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -119,7 +120,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			*g_WorkingFileFlag = 0;
 			g_SaveAsRoutine = true;
 			char FileName[0x104];
-			if (SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->Data, 0, FileName, 0x104)) {
+			if (SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->sData, 0, FileName, 0x104)) {
 				g_SaveAsBuffer = (*g_dataHandler)->unk8B8.activeFile;
 
 				g_SaveAsBuffer->flags &= ~(1 << 3);			// clear active flag

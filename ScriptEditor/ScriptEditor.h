@@ -1,7 +1,9 @@
 #pragma once
 #include "Common\Includes.h"
+#include "Globals.h"
 #include "ScriptParser.h"
 #include "OptionsDialog.h"
+#include "ScriptListDialog.h"
 
 
 
@@ -12,14 +14,14 @@ using namespace DevComponents;
 using namespace ICSharpCode::AvalonEdit;
 using namespace Gma::UserActivityMonitor;
 
-ref class ScriptListDialog;
-ref class ScriptParser;
 ref class SyntaxBox;
 
 
 namespace ScriptEditor
 {
 void													Global_MouseUp(Object^ Sender, MouseEventArgs^ E);
+
+ref class Workspace;
 
 public ref class TabContainer
 {
@@ -48,6 +50,8 @@ private:
 	void												ScriptStrip_MouseDown(Object^ Sender, MouseEventArgs^ E);
 	void												ScriptStrip_MouseUp(Object^ Sender, MouseEventArgs^ E);
 	void												NewTabButton_Click(Object^ Sender, EventArgs^ E);
+
+
 	 
 	Stack<UInt32>^										BackStack;
 	Stack<UInt32>^										ForwardStack;
@@ -56,12 +60,12 @@ private:
 	static ImageList^									FileFlags = gcnew ImageList();
 
 	DotNetBar::TabItem^									GetMouseOverTab();
-public:
+
 	Form^												EditorForm;
 	DotNetBar::TabControl^								ScriptStrip;
 	DotNetBar::TabItem^									NewTabButton;
 	bool												Destroying;
-
+public:
 	TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);
 
 	UInt32												CreateNewTab(String^ ScriptName);
@@ -75,20 +79,47 @@ public:
 	void												LoadToTab(String^ FileName);
 
 	void												Destroy();
+
+	void												FlagDestruction(bool Destroying) { this->Destroying = Destroying; }
+	Workspace^											LookupWorkspaceByTab(UInt32 TabIndex);
+	void												RemoveTab(DotNetBar::TabItem^ Tab);
+	void												AddTab(DotNetBar::TabItem^ Tab);
+	
+	void												AddTabControlBox(DotNetBar::TabControlPanel^ Box);
+	void												RemoveTabControlBox(DotNetBar::TabControlPanel^ Box);
+	
+	void												SelectTab(DotNetBar::TabItem^ Tab);
+	void												RedrawContainer() { EditorForm->Invalidate(true); }
+	void												SetWindowTitle(String^ Title) { EditorForm->Text = Title; }
+
+	Rectangle											GetEditorFormRect();
 };
 
 public ref class Workspace
 {
-public:
+
 	void												ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
-
+public:
 	static enum class									MessageType
 														{
 															e_Warning	= 0,
 															e_Error
 														};
+
+	Workspace(UInt32 Index, TabContainer^ Parent);
+	Workspace(UInt32 Index);
+
+	static Workspace^									NullSE = gcnew Workspace(0);
 private:
+	ref class SimpleScrollRTB : public RichTextBox
+	{
+	public:
+		property UInt32										LinesToScroll;
+	protected:
+		virtual	void										WndProc(Message% m) override;
+	};
+
 	static ImageList^									MessageIcon = gcnew ImageList();
 
 	static enum class									IconEnum
@@ -286,22 +317,13 @@ private:
 	bool												HasLineChanged();
 	void												ValidateLineLimit(void);
 	void												ProcessWarnings(String^ ExtractedBlock);
-public:	
-	void												ValidateScript(UInt32 ScriptType);
-	void												Destroy();
-	void												EnableControls();
-	UInt16												GetScriptType();
 	void												SetScriptType(UInt16 ScriptType);
-	void												PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning);
+	void												EnableControls();
 	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
 	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
 	void												GetVariableIndices(bool SetFlag);
 	void												SetVariableIndices(void);
 	void												ClearFindImagePointers(void);
-	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
-
-	Workspace(UInt32 Index, TabContainer^% Parent);
-	Workspace(UInt32 Index);
 
 	SyntaxBox^											ISBox;
 	DotNetBar::TabItem^									EditorTab;
@@ -310,7 +332,7 @@ public:
 	SplitContainer^										EditorBoxSplitter;
 		SplitContainer^										EditorSplitter;	
 			RichTextBox^										EditorLineNo;
-			RichTextBox^										EditorBox;
+			SimpleScrollRTB^									EditorBox;
 		ListView^											FindBox;
 		ListView^											BookmarkBox;
 		ListView^											ErrorBox;
@@ -400,10 +422,39 @@ public:
 	List<UInt16>^										LineOffsets;
 	bool												GetVariableData;
 	UInt32												ScriptType;
-	TabContainer^										ParentStrip;
+	TabContainer^										ParentContainer;
 	String^												ScriptEditorID;
-
-	static Workspace^									NullSE = gcnew Workspace(0);
+public:	
+	UInt32												GetAllocatedIndex() { return AllocatedIndex; }
+	bool												GetModifiedStatus() { return EditorTab->ImageIndex; }
+	void												SetModifiedStatus(bool Modified) { EditorTab->ImageIndex = (UInt32)Modified; }
+	TabContainer^%										GetParentContainer() { return ParentContainer; }
+	void												InitializeScript(String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID);
+	void												UpdateScriptFromDataPackage(ScriptData* Package);
+	void												AddItemToScriptListBox(String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags);
+	void												AddItemToVariableBox(String^% Name, UInt32 Type, UInt32 Index);
+	String^												GetScriptDescription() { return EditorTab->Text; }
+	const String^										GetScriptID() { return ScriptEditorID; }
+	void												ShowScriptListBox(ScriptListDialog::Operation Op) { ScriptListBox->Show(Op); }
+	void												LoadFileFromDisk(String^ Path);
+	void												SaveScriptToDisk(String^ Path, String^ FileName);
+	void												MakeActiveInParentContainer() { ParentContainer->SelectTab(EditorTab); }
+	bool												GetIsTabStripParent(DotNetBar::TabStrip^ Strip) { return Strip->Tabs->IndexOf(EditorTab) != -1; }
+	void												PerformCompileAndSave() { ToolBarSaveScript->PerformClick(); }
+	String^												GetCurrentToken() { return GetTextAtLoc(Globals::MouseLocation, false, false, EditorBox->SelectionStart - 1, true); }
+	Point												GetCaretLocation() { return EditorBox->GetPositionFromCharIndex(EditorBox->SelectionStart); }
+	IntPtr												GetControlBoxHandle() { return EditorControlBox->Handle; }
+	IntPtr												GetEditorBoxHandle() { return EditorBox->Handle; }
+	const String^										GetScriptText() { return EditorBox->Text; }
+	void												DontHandleNextTextChange() { HandleTextChanged = false; }
+	void												SetCurrentToken(String^% Replacement);
+	void												FocusTextArea() { EditorBox->Focus(); }
+	void												ValidateScript();
+	void												Destroy();
+	UInt16												GetScriptType();
+	const String^										PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning);
+	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
+	void												Relocate(TabContainer^ Destination);
 };
 
 }

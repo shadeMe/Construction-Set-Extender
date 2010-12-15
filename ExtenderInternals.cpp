@@ -7,6 +7,8 @@ EditorAllocator*					EditorAllocator::Singleton = NULL;
 EditorAllocator::SEAlloc*			EditorAllocator::NullRef = new EditorAllocator::SEAlloc(NULL, NULL, NULL);
 char								g_Buffer[0x200] = {0};
 
+_DefaultGMSTMap						g_DefaultGMSTMap;
+
 HINSTANCE							g_DLLInstance = NULL;
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
@@ -34,6 +36,8 @@ HMENU*								g_RenderWindowPopup = (HMENU*)0x00A0BC40;
 void*								g_ScriptCompilerUnkObj = (void*)0x00A0B128;
 TESWaterForm**						g_DefaultWater = (TESWaterForm**)0x00A137CC;
 TESObjectREFR**						g_PlayerRef = (TESObjectREFR**)0x00A0E088;
+GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
+void*								g_GMSTMap = (void*)0x00A102A4;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -51,6 +55,7 @@ const _ConstructEffectSetting		ConstructEffectSetting = (_ConstructEffectSetting
 const _TESDialog_AddComboBoxItem	TESDialog_AddComboBoxItem = (_TESDialog_AddComboBoxItem)0x00403540;
 const _BSPrintF						BSPrintF = (_BSPrintF)0x004053F0;
 const _ShowCompilerError			ShowCompilerErrorEx = (_ShowCompilerError)0x004FFF40;
+const _AutoSavePlugin				AutoSavePlugin = (_AutoSavePlugin)0x004307C0;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -115,9 +120,8 @@ EditorAllocator* EditorAllocator::GetSingleton(void)
 
 UInt32 EditorAllocator::TrackNewEditor(HWND EditorDialog)
 {
-	UInt32 Result = NextIndex;
+	UInt32 Result = NextIndex++;
 	AllocationMap.insert(std::make_pair<HWND, SEAlloc*>(EditorDialog, new SEAlloc(GetDlgItem(EditorDialog, 1166), GetDlgItem(EditorDialog, 2259), Result)));
-	++NextIndex;
 	if (NextIndex == 2147483648)
 		MessageBox(*g_HWND_CSParent, "Holy crap, mate! I have no idea how you managed to create 2147483648 editor workspaces xO I'd suggest that you pack up some essentials and head to the Andes as the next allocation is certain to warp the space-time continuum in unimaginable ways.\n\nDamn you...", "The Developer Speaks", MB_HELP|MB_ICONSTOP);
 
@@ -282,7 +286,168 @@ UInt32 GetDialogTemplate(const char* FormType)
 			return 0;
 }
 
+UInt32 GetDialogTemplate(UInt8 FormTypeID)
+{
+	static const char*	TypeIdentifier[] =			// uses TESForm::typeID as its index
+										{
+											"None",
+											"TES4",
+											"Group",
+											"GMST",
+											"Global",
+											"Class",
+											"Faction",
+											"Hair",
+											"Eyes",
+											"Race",
+											"Sound",
+											"Skill",
+											"Effect",
+											"Script",
+											"LandTexture",
+											"Enchantment",
+											"Spell",
+											"BirthSign",
+											"Activator",
+											"Apparatus",
+											"Armor",
+											"Book",
+											"Clothing",
+											"Container",
+											"Door",
+											"Ingredient",
+											"Light",
+											"MiscItem",
+											"Static",
+											"Grass",
+											"Tree",
+											"Flora",
+											"Furniture",
+											"Weapon",
+											"Ammo",
+											"NPC",
+											"Creature",
+											"LeveledCreature",
+											"SoulGem",
+											"Key",
+											"AlchemyItem",
+											"SubSpace",
+											"SigilStone",
+											"LeveledItem",
+											"SNDG",
+											"Weather",
+											"Climate",
+											"Region",
+											"Cell",
+											"Reference",
+											"Reference",			// ACHR
+											"Reference",			// ACRE
+											"PathGrid",
+											"World Space",
+											"Land",
+											"TLOD",
+											"Road",
+											"Dialog",
+											"Dialog Info",
+											"Quest",
+											"Idle",
+											"AI Package",
+											"CombatStyle",
+											"LoadScreen",
+											"LeveledSpell",
+											"AnimObject",
+											"WaterType",
+											"EffectShader",
+											"TOFT"
+										};
+
+	const char* FormType = TypeIdentifier[FormTypeID];
+
+	if (!_stricmp(FormType, "Activator") ||
+		!_stricmp(FormType, "Apparatus") ||
+		!_stricmp(FormType, "Armor") ||
+		!_stricmp(FormType, "Book") ||
+		!_stricmp(FormType, "Clothing") ||
+		!_stricmp(FormType, "Container") ||
+		!_stricmp(FormType, "Door") ||
+		!_stricmp(FormType, "Ingredient") ||
+		!_stricmp(FormType, "Light") ||
+		!_stricmp(FormType, "MiscItem") ||
+		!_stricmp(FormType, "SoulGem") ||
+		!_stricmp(FormType, "Static") ||
+		!_stricmp(FormType, "Grass") ||
+		!_stricmp(FormType, "Tree") ||
+		!_stricmp(FormType, "Flora") ||
+		!_stricmp(FormType, "Furniture") ||
+		!_stricmp(FormType, "Ammo") ||
+		!_stricmp(FormType, "Weapon") ||
+		!_stricmp(FormType, "NPC") ||
+		!_stricmp(FormType, "Creature") ||
+		!_stricmp(FormType, "LeveledCreature") ||
+		!_stricmp(FormType, "Spell") ||
+		!_stricmp(FormType, "Enchantment") ||
+		!_stricmp(FormType, "Potion") ||
+		!_stricmp(FormType, "Leveled Item") ||
+		!_stricmp(FormType, "Sound") ||
+		!_stricmp(FormType, "LandTexture") ||
+		!_stricmp(FormType, "CombatStyle") ||
+		!_stricmp(FormType, "LoadScreen") ||
+		!_stricmp(FormType, "WaterType") ||
+		!_stricmp(FormType, "LeveledSpell") ||
+		!_stricmp(FormType, "AnimObject") ||
+		!_stricmp(FormType, "Subspace") ||
+		!_stricmp(FormType, "EffectShader") ||
+		!_stricmp(FormType, "SigilStone"))
+			return 1;									// TESDialog
+	else if (!_stricmp(FormType, "Script"))
+			return 9;
+	else if (!_stricmp(FormType, "Reference"))				
+			return 10;									// Special Handlers
+	else if (!_stricmp(FormType, "Hair") ||				
+		!_stricmp(FormType, "Eyes") ||					
+		!_stricmp(FormType, "Race") ||
+		!_stricmp(FormType, "Class") ||
+		!_stricmp(FormType, "Birthsign") ||				
+		!_stricmp(FormType, "Climate") ||
+		!_stricmp(FormType, "World Space"))
+			return 2;									// TESDialog ListView
+	else
+			return 0;
+}
+
+
 void LoadFormIntoView(const char* EditorID, const char* FormType)
+{
+	UInt32 Type = GetDialogTemplate(FormType);
+	TESDialogInitParam InitData(EditorID);
+
+	switch (Type)
+	{
+	case 9:					
+		if (GetFormByID(EditorID))
+		{
+			g_EditorAuxScript =  CS_CAST(GetFormByID(EditorID), TESForm, Script);;
+			tagRECT ScriptEditorLoc;
+			GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+			CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+			g_EditorAuxScript = NULL;
+		}
+		break;
+	case 10:
+		RemoteLoadRef(EditorID);
+		break;
+	case 1:
+	case 2:
+		CreateDialogParamA(*g_TESCS_Instance, 
+							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID), 
+							*g_HWND_CSParent, 
+							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc), 
+							(LPARAM)&InitData);
+		break;
+	}
+}
+
+void LoadFormIntoView(const char* EditorID, UInt8 FormType)
 {
 	UInt32 Type = GetDialogTemplate(FormType);
 	TESDialogInitParam InitData(EditorID);
@@ -366,4 +531,22 @@ void LoadStartupPlugin()
 
 	// epilog
 	kAutoLoadActivePluginOnStartup.WriteBuffer();
+}
+
+void InitializeDefaultGMSTMap()
+{
+//	WaitUntilDebuggerAttached();
+	void* Unk01 = (void*)thisCall(0x0051F920, (void*)g_GMSTMap);
+
+	while (Unk01)
+	{
+		const char*	 Name = NULL;
+		GMSTData*	 Data;
+
+		thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
+		if (Name)
+		{
+			g_DefaultGMSTMap.insert(std::make_pair<const char*, GMSTData*>(Name, Data));
+		}
+	}
 }

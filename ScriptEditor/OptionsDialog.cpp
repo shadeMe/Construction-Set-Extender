@@ -183,6 +183,51 @@ void OptionsDialog::SaveINI()
 	DebugPrint("Saved settings to INI");
 }
 
+BoundControl^ OptionsDialog::FetchSetting(String^ Key)
+{
+	for each (KeyValuePair<INISetting^, BoundControl^>% Itr in INIMap)
+	{
+		INISetting^ INI = Itr.Key;
+		if (!String::Compare(INI->Key, Key, true))
+			return Itr.Value;
+	}
+	return nullptr;
+}
+
+int OptionsDialog::FetchSettingAsInt(String^ Key)
+{
+	BoundControl^ Control = FetchSetting(Key);
+	if (Control)
+	{
+		String^ Value = Control->GetValue();
+		int Result = 0;
+		try {
+			Result = int::Parse(Value);
+		} catch (Exception^ E)
+		{
+			DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: " + E->Message);
+		}
+		return Result;
+	}
+	else
+	{
+		DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: Key desn't exist.");
+		return 0;
+	}
+}
+
+String^ OptionsDialog::FetchSettingAsString(String^ Key)
+{
+	BoundControl^ Control = FetchSetting(Key);
+	if (Control)
+		return Control->GetValue();
+	else
+	{
+		DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: Key desn't exist.");
+		return "";
+	}
+}
+
 OptionsDialog^% OptionsDialog::GetSingleton()
 {
 	if (Singleton == nullptr) {

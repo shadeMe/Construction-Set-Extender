@@ -80,8 +80,6 @@ void _declspec(naked) TestHook(void)
 	}
 }
 
-
-
 bool PatchMiscHooks()
 {
 	COMMON_DIALOG_CANCEL_PATCH(Model)
@@ -127,8 +125,10 @@ bool PatchMiscHooks()
 	kObjectListPopulateListViewItems.WriteJump();
 	kCellViewPopulateObjectList.WriteJump();
 	kTopicResultScriptReset.WriteJump();
+
 //	kDoorMarkerProperties.WriteJump();		### TODO screws up dialog instantiation for no reason.
 	kDoorMarkerProperties.WriteUInt16(0x9090);
+
 	kDataHandlerPostError.WriteUInt8(0xEB);	
 	kDataDialogPluginDescription.WriteUInt8(0xEB);
 	kDataDialogPluginAuthor.WriteUInt8(0xEB);
@@ -145,9 +145,6 @@ bool PatchMiscHooks()
 	kDataHandlerClearDataShadeMeRefDtor.WriteJump();
 	kCellObjectListShadeMeRefAppend.WriteJump();
 	kDeathToTheCloseOpenDialogsMessage.WriteUInt8(0xEB);
-
-
-
 
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -408,7 +405,7 @@ void __stdcall DoCSInitHook()
 
 	PatchMenus();
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
-
+	HallOfFame::Initialize(true);
 	CONSOLE->InitializeConsole();
 	CONSOLE->LoadINISettings();
 
@@ -435,7 +432,7 @@ void __stdcall DoCSInitHook()
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
 	}
 
-	HallOfFame::Initialize(true);
+	
 }
 
 

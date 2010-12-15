@@ -30,15 +30,16 @@ TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height
 	
 
 	if (!FileFlags->Images->Count) {
-		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEModifiedFlagEx"))));		// unmodified
-		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEModifiedFlag"))));		// modified
+		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEModifiedFlagOff"))));		// unmodified
+		FileFlags->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEModifiedFlagOn"))));			// modified
 		FileFlags->ImageSize = Size(12, 12);
 	}
 
 	ScriptStrip = gcnew DotNetBar::TabControl();
 	ScriptStrip->CanReorderTabs = true;
-	ScriptStrip->CloseButtonOnTabsAlwaysDisplayed = false;
-	ScriptStrip->CloseButtonOnTabsVisible = true;
+	ScriptStrip->TabStrip->CloseButtonOnTabsAlwaysDisplayed = true;
+	ScriptStrip->TabStrip->CloseButtonOnTabsVisible = true;
+	ScriptStrip->CloseButtonVisible = false;
 	ScriptStrip->Dock = DockStyle::Fill;
 	ScriptStrip->Location = Point(0, 0);
 	ScriptStrip->Font = gcnew Font("Segoe UI", 7.75F, FontStyle::Regular);
@@ -83,7 +84,7 @@ TabContainer::TabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height
 
 	EditorForm->Controls->Add(ScriptStrip);
 
-	if (OptionsDialog::GetSingleton()->UseCSParent->Checked) {
+	if (OPTIONS->FetchSettingAsInt("UseCSParent")) {
 		EditorForm->ShowInTaskbar = false;
 		EditorForm->Show(gcnew WindowHandleWrapper(NativeWrapper::GetCSMainWindowHandle()));
 	} else {
@@ -130,7 +131,7 @@ void TabContainer::ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::TabStripA
 
 	E->Cancel = true;
 	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-	Parameters->VanillaHandleIndex = Itr->AllocatedIndex;
+	Parameters->VanillaHandleIndex = Itr->GetAllocatedIndex();
 	Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Close);
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 }
@@ -152,7 +153,7 @@ void TabContainer::ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::Tab
 	}
 
 	Workspace^ Itr = dynamic_cast<Workspace^>(ScriptStrip->SelectedTab->Tag);
-	EditorForm->Text = Itr->EditorTab->Text + " - CSE Script Editor";
+	EditorForm->Text = Itr->GetScriptDescription();
 	EditorForm->Focus();
 }
 
@@ -160,7 +161,8 @@ void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 {
 	RemovingTab = true;
 	if (ScriptStrip->Tabs->Count == 1) {
-		if (!Destroying && OPTIONS->DestroyOnLastTabClose->Checked == 0)		CreateNewTab(nullptr);
+		if (!Destroying && OPTIONS->FetchSettingAsInt("DestroyOnLastTabClose") == 0)
+			CreateNewTab(nullptr);
 		else {
 			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 			Parameters->VanillaHandleIndex = 0;
@@ -174,7 +176,7 @@ void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 UInt32 TabContainer::CreateNewTab(String^ ScriptName)
 {
 	UInt32 AllocatedIndex = 0;
-	if (ScriptName != "") {
+	if (ScriptName != nullptr) {
 		CStringWrapper^ CEID = gcnew CStringWrapper(ScriptName);
 		AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(CEID->String());
 	}
@@ -193,7 +195,7 @@ UInt32 TabContainer::CreateNewTab(String^ ScriptName)
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspace, Parameters);
 
 	NativeWrapper::ScriptEditor_PostProcessEditorInit(AllocatedIndex);
-	ScriptStrip->SelectedTab = (SEMGR->GetAllocatedWorkspace(AllocatedIndex))->EditorTab;
+	SEMGR->GetAllocatedWorkspace(AllocatedIndex)->MakeActiveInParentContainer();
 	return AllocatedIndex;
 }
 
@@ -210,7 +212,7 @@ void TabContainer::PerformRemoteOperation(RemoteOperation Operation, Object^ Arb
 		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 		break;
 	case RemoteOperation::e_Open:
-		SEMGR->GetAllocatedWorkspace(AllocatedIndex)->ScriptListBox->Show(ScriptListDialog::Operation::e_Open);
+		SEMGR->GetAllocatedWorkspace(AllocatedIndex)->ShowScriptListBox(ScriptListDialog::Operation::e_Open);
 		break;
 	case RemoteOperation::e_LoadNew:
 		Parameters->VanillaHandleIndex = AllocatedIndex;
@@ -218,19 +220,14 @@ void TabContainer::PerformRemoteOperation(RemoteOperation Operation, Object^ Arb
 		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 
 		String^ FilePath = dynamic_cast<String^>(Arbitrary);
-		try {
-			SEMGR->GetAllocatedWorkspace(AllocatedIndex)->EditorBox->LoadFile(FilePath, RichTextBoxStreamType::PlainText);
-		} catch (CSEGeneralException^ E)
-		{
-			DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
-		}
+		SEMGR->GetAllocatedWorkspace(AllocatedIndex)->LoadFileFromDisk(FilePath);
 		break;
 	}
 }
 
 void TabContainer::Destroy()
 {
-	Destroying = true;
+	FlagDestruction(true);
 	EditorForm->Close();
 	BackStack->Clear();
 	ForwardStack->Clear();
@@ -244,7 +241,7 @@ void TabContainer::JumpToScript(UInt32 AllocatedIndex, String^% ScriptName)
 	for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
 		Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 
-		if (Editor != nullptr && !String::Compare(Editor->ScriptEditorID, ScriptName, true)) {
+		if (Editor != nullptr && !String::Compare(const_cast<String^>(Editor->GetScriptID()), ScriptName, true)) {
 			Count++;
 			OpenedWorkspace = Itr;
 		}
@@ -287,7 +284,7 @@ void TabContainer::NavigateStack(UInt32 AllocatedIndex, TabContainer::Navigation
 			BackStack->Push(AllocatedIndex);
 			break;
 		}	
-		ScriptStrip->SelectedTab = Itr->EditorTab;
+		Itr->MakeActiveInParentContainer();
 		DebugPrint("Jumping from index " + AllocatedIndex + " to " + JumpIndex);
 	}
 }
@@ -349,7 +346,7 @@ void TabContainer::ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E)
 			Workspace^% Itr = dynamic_cast<Workspace^>(MouseOverTab->Tag);
 
 			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-			Parameters->VanillaHandleIndex = Itr->AllocatedIndex;
+			Parameters->VanillaHandleIndex = Itr->GetAllocatedIndex();
 			Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Close);
 			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 		}
@@ -422,14 +419,14 @@ void Global_MouseUp(Object^ Sender, MouseEventArgs^ E)
 			DotNetBar::TabStrip^ Strip = nullptr;
 			try {
 				Strip = dynamic_cast<DotNetBar::TabStrip^>(Control::FromHandle(Wnd));
-			} catch (CSEGeneralException^ E)
+			} catch (Exception^ E)
 			{
 				DebugPrint("An exception was raised during a tab tearing operation!\n\tError Message: " + E->Message);
 				Strip = nullptr;
 			}
 			if (Strip != nullptr) {
 
-				if (Strip->Tabs->IndexOf(SEMGR->TornWorkspace->EditorTab) != -1)		// not a tearing op a the strip's the same
+				if (SEMGR->TornWorkspace->GetIsTabStripParent(Strip))		// not a tearing op , the strip's the same
 				{
 					HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
 					SEMGR->TornWorkspace = nullptr;
@@ -475,7 +472,7 @@ void TabContainer::SaveAllTabs()
 	for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
 		if (Itr == NewTabButton)	continue;
 		Editor = dynamic_cast<Workspace^>(Itr->Tag);
-		Editor->ToolBarSaveScript_Click(nullptr, nullptr);
+		Editor->PerformCompileAndSave();
 	}
 }
 
@@ -489,7 +486,7 @@ void TabContainer::CloseAllTabs()
 		Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 
 		ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-		Parameters->VanillaHandleIndex = Editor->AllocatedIndex;
+		Parameters->VanillaHandleIndex = Editor->GetAllocatedIndex();
 		Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Close);
 		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 	}
@@ -502,14 +499,9 @@ void TabContainer::DumpAllTabs(String^ FolderPath)
 	for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
 		if (Itr == NewTabButton)	continue;
 		Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
-		if (Editor->ScriptEditorID == "New Script")	continue;
+		if (Editor->GetScriptID() == "New Script")	continue;
 
-		try {
-			Editor->EditorBox->SaveFile(FolderPath + "\\" + Editor->EditorTab->Text + ".txt", RichTextBoxStreamType::PlainText);
-		} catch (CSEGeneralException^ E)
-		{
-			DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
-		}		
+		Editor->SaveScriptToDisk(FolderPath, nullptr);	
 	}
 }
 
@@ -518,12 +510,68 @@ void TabContainer::LoadToTab(String^ FileName)
 	PerformRemoteOperation(RemoteOperation::e_LoadNew, FileName);
 }
 
+Rectangle TabContainer::GetEditorFormRect()
+{
+	return EditorForm->Bounds;
+}
+
+Workspace^ TabContainer::LookupWorkspaceByTab(UInt32 TabIndex)
+{
+	if (TabIndex >= ScriptStrip->Tabs->Count)
+		return Workspace::NullSE;
+	else
+		return dynamic_cast<Workspace^>(ScriptStrip->Tabs[TabIndex]->Tag);
+}
+
+void TabContainer::AddTab(DotNetBar::TabItem^ Tab)
+{
+	ScriptStrip->Tabs->Add(Tab);
+}
+void TabContainer::RemoveTab(DotNetBar::TabItem^ Tab)
+{
+	ScriptStrip->Tabs->Remove(Tab);
+}
+
+void TabContainer::AddTabControlBox(DotNetBar::TabControlPanel^ Box)
+{
+	ScriptStrip->Controls->Add(Box);
+}
+
+void TabContainer::RemoveTabControlBox(DotNetBar::TabControlPanel^ Box)
+{
+	ScriptStrip->Controls->Remove(Box);
+}
+
+void TabContainer::SelectTab(DotNetBar::TabItem^ Tab)
+{
+	ScriptStrip->SelectedTab = Tab;
+	ScriptStrip->TabStrip->EnsureVisible(Tab);
+}
+
+
 #pragma endregion
 
 #pragma region Workspace
-Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
+void Workspace::SimpleScrollRTB::WndProc(Message% e)
 {
-	ParentStrip = Parent;
+	switch(e.Msg)
+	{
+	case 0x20A:					// WM_MOUSEWHEEL
+		int ZDelta = (int)e.WParam;
+		ZDelta = -Math::Sign(ZDelta) * LinesToScroll;
+		Message Scroll(e);
+		Scroll.Msg = 0xB6;		// EM_LINESCROLL
+		Scroll.LParam = (IntPtr)ZDelta;
+		Scroll.WParam = IntPtr::Zero;
+		RichTextBox::WndProc(Scroll);
+		return;
+	}
+	RichTextBox::WndProc(e);
+}
+
+Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
+{
+	ParentContainer = Parent;
 	EditorTab = gcnew DotNetBar::TabItem();
 	EditorControlBox = gcnew DotNetBar::TabControlPanel();
 	if (Icons->Images->Count == 0) {
@@ -543,7 +591,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorTab->AttachedControl = EditorControlBox;
 	EditorTab->Text = "New Workspace";
 	EditorTab->Tag = this;
-	EditorTab->ImageIndex = 0;
+	SetModifiedStatus(false);
 
 	EditorSplitter = gcnew SplitContainer();
 
@@ -555,19 +603,22 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorSplitter->Dock = DockStyle::Fill;
 	EditorSplitter->FixedPanel = FixedPanel::Panel1;
     EditorSplitter->IsSplitterFixed = true;
-    EditorSplitter->SplitterDistance = 48;
+    EditorSplitter->SplitterDistance = 40;
     EditorSplitter->SplitterWidth = 1;
+	EditorSplitter->BorderStyle = BorderStyle::None;
 
-	EditorBox = gcnew RichTextBox();
+	EditorBox = gcnew SimpleScrollRTB();
 
-	EditorBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
+	EditorBox->Font = gcnew Font(OPTIONS->FetchSettingAsString("Font"), OPTIONS->FetchSettingAsInt("FontSize"), FontStyle::Regular);
 	EditorBox->Dock = DockStyle::Fill;
 	EditorBox->Multiline = true;
 	EditorBox->WordWrap = false;
 	EditorBox->BorderStyle = BorderStyle::Fixed3D;
 	EditorBox->AutoWordSelection = false;
+	EditorBox->LinesToScroll = 5;
+	EditorBox->Location = Point(40, EditorBox->Location.Y);
 
-	int TabSize = Decimal::ToInt32(OptionsDialog::GetSingleton()->TabSize->Value);
+	int TabSize = Decimal::ToInt32(OPTIONS->FetchSettingAsInt("TabSize"));
 	if (TabSize) {
 		Array^ TabStops = Array::CreateInstance(int::typeid, 32);
 		for (int i = 0; i < 32; i++) {
@@ -576,9 +627,9 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 		EditorBox->SelectionTabs = static_cast<array<int>^>(TabStops);
 	}
 
-	if (OptionsDialog::GetSingleton()->ColorEditorBox->Checked) {
-		EditorBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
-		EditorBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
+	if (OPTIONS->FetchSettingAsInt("ColorEditorBox")) {
+		EditorBox->BackColor = OPTIONS->BCDialog->Color;
+		EditorBox->ForeColor = OPTIONS->FCDialog->Color;
 	}		
 
 	EditorBox->TextChanged += gcnew EventHandler(this, &Workspace::EditorBox_TextChanged);
@@ -612,11 +663,12 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorLineNo->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
 	EditorLineNo->MouseDown += gcnew MouseEventHandler(this, &Workspace::EditorLineNo_MouseDown);
 	EditorLineNo->SelectionAlignment = HorizontalAlignment::Right;
+	EditorLineNo->Dock = DockStyle::Fill;
 
 	EditorBoxSplitter = gcnew SplitContainer();
 	
 	EditorBoxSplitter->Dock = DockStyle::Fill;
-    EditorBoxSplitter->SplitterWidth = 3;
+    EditorBoxSplitter->SplitterWidth = 5;
 	EditorBoxSplitter->Orientation = Orientation::Horizontal;
 	
 
@@ -995,11 +1047,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	}
 
 	ErrorBox = gcnew ListView();
-	ErrorBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
+	ErrorBox->Font = EditorBox->Font;
 	ErrorBox->Dock = DockStyle::Fill;
 	ErrorBox->BorderStyle = BorderStyle::Fixed3D;
-	ErrorBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
-	ErrorBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
+	ErrorBox->BackColor = EditorLineNo->BackColor;
+	ErrorBox->ForeColor = EditorLineNo->ForeColor;
 	ErrorBox->DoubleClick += gcnew EventHandler(this, &Workspace::ErrorBox_DoubleClick);
 	ErrorBox->Visible = false;
 	ErrorBox->View = View::Details;
@@ -1026,11 +1078,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 
 
 	FindBox = gcnew ListView();
-	FindBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
+	FindBox->Font = EditorBox->Font;
 	FindBox->Dock = DockStyle::Fill;
 	FindBox->BorderStyle = BorderStyle::Fixed3D;
-	FindBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
-	FindBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
+	FindBox->BackColor = EditorLineNo->BackColor;
+	FindBox->ForeColor = EditorLineNo->ForeColor;
 	FindBox->DoubleClick += gcnew EventHandler(this, &Workspace::FindBox_DoubleClick);	
 	FindBox->Visible = false;
 	FindBox->View = View::Details;
@@ -1051,11 +1103,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	FindBox->Tag = (int)1;
 
 	BookmarkBox = gcnew ListView();
-	BookmarkBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
+	BookmarkBox->Font = EditorBox->Font;
 	BookmarkBox->Dock = DockStyle::Fill;
 	BookmarkBox->BorderStyle = BorderStyle::Fixed3D;
-	BookmarkBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
-	BookmarkBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
+	BookmarkBox->BackColor = EditorLineNo->BackColor;
+	BookmarkBox->ForeColor = EditorLineNo->ForeColor;
 	BookmarkBox->DoubleClick += gcnew EventHandler(this, &Workspace::BookmarkBox_DoubleClick);	
 	BookmarkBox->Visible = false;
 	BookmarkBox->View = View::Details;
@@ -1076,11 +1128,11 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	BookmarkBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::BookmarkBox_ColumnClick);
 
 	VariableBox = gcnew ListView();
-	VariableBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
+	VariableBox->Font = EditorBox->Font;
 	VariableBox->Dock = DockStyle::Fill;
 	VariableBox->BorderStyle = BorderStyle::Fixed3D;
-	VariableBox->BackColor = OptionsDialog::GetSingleton()->BCDialog->Color;
-	VariableBox->ForeColor = OptionsDialog::GetSingleton()->FCDialog->Color;
+	VariableBox->BackColor = EditorLineNo->BackColor;
+	VariableBox->ForeColor = EditorLineNo->ForeColor;
 	VariableBox->DoubleClick += gcnew EventHandler(this, &Workspace::VariableBox_DoubleClick);	
 	VariableBox->Visible = false;
 	VariableBox->View = View::Details;
@@ -1105,7 +1157,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	VariableBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::VariableBox_ColumnClick);
 
 	IndexEditBox = gcnew TextBox();
-	IndexEditBox->Font = OptionsDialog::GetSingleton()->FontSelection->Font;
+	IndexEditBox->Font = EditorBox->Font;
 	IndexEditBox->Multiline = true;
 	IndexEditBox->BorderStyle = BorderStyle::FixedSingle;
 	IndexEditBox->Visible = false;
@@ -1122,7 +1174,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	SpoilerText->Text = "Right, everybody out! Smash the Spinning Jenny! Burn the rolling Rosalind! Destroy the going-up-and-down-a-bit-and-then-moving-along Gertrude! And death to the stupid Prince who grows fat on the profits!";
 
 	EditorSplitter->Panel1->Controls->Add(EditorLineNo);
-	EditorSplitter->Panel1->BorderStyle = BorderStyle::Fixed3D;
+	EditorSplitter->Panel1->BorderStyle = BorderStyle::None;
 	EditorSplitter->Panel2->Controls->Add(EditorBox);
 
 	EditorBoxSplitter->Panel1->Controls->Add(EditorSplitter);
@@ -1138,14 +1190,14 @@ Workspace::Workspace(UInt32 Index, TabContainer^% Parent)
 	EditorControlBox->Controls->Add(EditorBoxSplitter);
 	EditorControlBox->Controls->Add(EditorToolBar);
 
-	Parent->ScriptStrip->Tabs->Add(EditorTab);
-	Parent->ScriptStrip->Controls->Add(EditorControlBox);
+	Parent->AddTab(EditorTab);
+	Parent->AddTabControlBox(EditorControlBox);
 
-	EditorBox->Controls->Add(ISBox->IntelliSenseList);
+	EditorBox->Controls->Add(ISBox->GetInternalListView());
 	EditorBox->ContextMenuStrip = EditorContextMenu;
 
 	ISBox->Hide();
-	EditorBoxSplitter->SplitterDistance = ((ParentStrip->EditorForm->Height - 65 < 0)?500 : ParentStrip->EditorForm->Height - 65);
+	EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
 
 	EditorBoxSplitter->Enabled = false;
 	ToolBarUpdateVarIndices->Enabled = false;
@@ -1178,11 +1230,11 @@ Workspace::Workspace(UInt32 Index)
 void Workspace::Destroy()
 {
 	Destroying = true;
-	ScriptListBox->ScriptBox->Close();
+	ScriptListBox->Destroy();
 	EditorControlBox->Controls->Clear();
-	ParentStrip->ScriptStrip->Tabs->Remove(EditorTab);
-	ParentStrip->ScriptStrip->Controls->Remove(EditorControlBox);
-	ParentStrip->EditorForm->Invalidate(true);
+	ParentContainer->RemoveTab(EditorTab);
+	ParentContainer->RemoveTabControlBox(EditorControlBox);
+	ParentContainer->RedrawContainer();
 }
 
 void Workspace::EnableControls()
@@ -1219,11 +1271,16 @@ void Workspace::SetScriptType(UInt16 ScriptType)
 int Workspace::FindLineNumberInLineBox(UInt32 Line)		// Parameter is one-based, as opposed to a zero-based index
 {
 	if (ToolBarOffsetToggle->Checked && Line - 1 < EditorBox->Lines->Length) {
-		UInt32 Offset = LineOffsets[Line - 1];
-		if (Offset == 0xFFFF)	return -1;
-		else {
-			return EditorLineNo->Find(Offset.ToString("X4"), 0, RichTextBoxFinds::WholeWord);
+		try {
+			UInt32 Offset = LineOffsets[Line - 1];
+			if (Offset == 0xFFFF)	throw gcnew CSEGeneralException("ugh!");
+			else {
+				return EditorLineNo->Find(Offset.ToString("X4"), 0, RichTextBoxFinds::WholeWord);
+			}
+		} catch (...) {
+			return -1;
 		}
+
 	} else
 		return EditorLineNo->Find(Line.ToString(), 0, EditorLineNo->Text->Length, RichTextBoxFinds::WholeWord);
 }
@@ -1252,28 +1309,36 @@ void Workspace::PerformLineNumberHighlights(void)
 
 void Workspace::UpdateLineNumbers(void)
 {
-    int FirstLine = EditorBox->GetLineFromCharIndex(EditorBox->GetCharIndexFromPosition(Point(0, 0)));
-    int LastLine = EditorBox->GetLineFromCharIndex(EditorBox->GetCharIndexFromPosition(Point(EditorBox->Width, EditorBox->Height)));
+	try
+	{
+		NativeWrapper::LockWindowUpdate(EditorLineNo->Handle);
+		int FirstLine = EditorBox->GetLineFromCharIndex(EditorBox->GetCharIndexFromPosition(Point(5, 5))) + 1;
+		int LastLine = EditorBox->GetLineFromCharIndex(EditorBox->GetCharIndexFromPosition(Point(EditorBox->Width, EditorBox->Height))) + 2;
 
-	EditorLineNo->Clear();
-	EditorLineNo->SelectionColor = OptionsDialog::GetSingleton()->FCDialog->Color;
-	EditorLineNo->SelectionFont = EditorLineNo->Font;
+		EditorLineNo->Clear();
+		EditorLineNo->SelectionColor = OptionsDialog::GetSingleton()->FCDialog->Color;
+		EditorLineNo->SelectionFont = EditorLineNo->Font;
 
-	for (int i = FirstLine + 1; i <= LastLine + 2; i++) {
-		if (i <= EditorBox->Lines->Length) {
-			if (ToolBarOffsetToggle->Checked) {
-				try {
-					UInt32 Offset = LineOffsets[i - 1];
-					EditorLineNo->Text += ((Offset == 0xFFFF)? "":Offset.ToString("X4")) + "\n";
-				} catch (...) {
-					EditorLineNo->Text += "----" + "\n";
-				}
-			} else
-				EditorLineNo->Text += i + "\n";
+		for (int i = FirstLine; i <= LastLine; i++) {
+			if (i <= EditorBox->Lines->Length) {
+				if (ToolBarOffsetToggle->Checked) {
+					try {
+						UInt32 Offset = LineOffsets[i - 1];
+						EditorLineNo->Text += ((Offset == 0xFFFF)? "":Offset.ToString("X4")) + "\n";
+					} catch (...) {
+					//	EditorLineNo->Text += "----" + "\n";
+					}
+				} else
+					EditorLineNo->Text += i + "\n";
+			}
 		}
-    }
 
-	PerformLineNumberHighlights();
+		PerformLineNumberHighlights();
+	}
+	finally
+	{
+		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
+	}
 }
 
 
@@ -1344,13 +1409,13 @@ void Workspace::FindAndReplace(bool Replace)
 		String^ SearchString = ToolBarCommonTextBox->Text;
 		String^ ReplaceString = "NULL";
 		FindBox->Items->Clear();
-		bool UseRegEx = OptionsDialog::GetSingleton()->UseRegEx->Checked;
+		bool UseRegEx = OPTIONS->FetchSettingAsInt("UseRegEx");
 
 		if (Replace)
-			ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string.", "Find and Replace", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
+			ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string.", "Find and Replace - CSE Editor", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
 
 		if (SearchString == "") {
-			MessageBox::Show("Enter a valid search/replace string.", "Find and Replace");
+			MessageBox::Show("Enter a valid search/replace string.", "Find and Replace - CSE Editor");
 			return;
 		}
 
@@ -1382,9 +1447,9 @@ void Workspace::FindAndReplace(bool Replace)
 		}
 
 		if (Hits > 0 && FindBox->Visible == false)
-			ToolBarFindList_Click(nullptr, nullptr);
+			ToolBarFindList->PerformClick();
 
-		MessageBox::Show(String::Format("{0} hits in the current script.", Hits), "Find and Replace");
+		MessageBox::Show(String::Format("{0} hits in the current script.", Hits), "Find and Replace - CSE Editor");
 	} finally {
 		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
 	}
@@ -1410,9 +1475,9 @@ void Workspace::JumpToLine(String^ LineStr, bool OffsetSearch)
 
 	if (LineNo > EditorBox->Lines->Length || !LineNo) {
 		if (!OffsetSearch)
-			MessageBox::Show("The line to jump to must be less than or equal to " + EditorBox->Lines->Length + ".", "Goto Line");
+			MessageBox::Show("The line to jump to must be less than or equal to " + EditorBox->Lines->Length + ".", "Goto Line - CSE Editor");
 		else
-			MessageBox::Show("Unknown offset.", "Goto Line");
+			MessageBox::Show("Unknown offset.", "Goto Line - CSE Editor");
 	}
 	else {
 		--LineNo;
@@ -1427,7 +1492,7 @@ int Workspace::CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLine
 {
 	int Indents = 0;
 
-	if (!OptionsDialog::GetSingleton()->AutoIndent->Checked)
+	if (!OPTIONS->FetchSettingAsInt("AutoIndent"))
 		return Indents;
 
 	ExdentLine = false;
@@ -1547,18 +1612,20 @@ void Workspace::AddMessageToPool(MessageType Type, UInt32 Line, String^ Message)
 	Item->SubItems->Add(Message);
 	ErrorBox->Items->Add(Item);
 
-	EditorBoxSplitter->SplitterDistance = 150;
+	EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 	if (ErrorBox->Visible == false)
-		ToolBarErrorList_Click(nullptr, nullptr);
+		ToolBarErrorList->PerformClick();
 }
 
-void Workspace::ValidateScript(UInt32 ScriptType)
+void Workspace::ValidateScript()
 {
 	StringReader^ ValidateParser = gcnew StringReader(PreProcessedText);	
 	String^ ReadLine = ValidateParser->ReadLine();
 	ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
 	ErrorBox->Items->Clear();
 	ScriptTextParser->Variables->Clear();
+	UInt32 ScriptType = GetScriptType();
+
 
 	while (ReadLine != nullptr) {
 		ScriptTextParser->Tokenize(ReadLine, false);
@@ -1705,7 +1772,7 @@ void Workspace::ValidateScript(UInt32 ScriptType)
 
 	ScriptTextParser->Reset();
 	if (ErrorBox->Items->Count && ErrorBox->Visible == false) {
-		ToolBarErrorList_Click(nullptr, nullptr);
+		ToolBarErrorList->PerformClick();
 	}
 }
 
@@ -1891,7 +1958,7 @@ void Workspace::ToggleBookmark(int CaretPos)
 
 	UpdateLineNumbers();
 
-	if (!BookmarkBox->Visible)		ToolBarBookmarkList_Click(nullptr, nullptr);
+	if (!BookmarkBox->Visible)		ToolBarBookmarkList->PerformClick();
 }
 
 void Workspace::UpdateFindImagePointers(void)
@@ -1914,7 +1981,7 @@ void Workspace::UpdateFindImagePointers(void)
 		Loc.Y -= 15;
 		ScriptLineLimitIndicator->Location = Loc;
 	}
-	EditorBox->Invalidate(true);
+//	EditorBox->Invalidate(true);
 }
 
 void Workspace::MoveCaretToValidHome(void)
@@ -1940,7 +2007,7 @@ void Workspace::MoveCaretToValidHome(void)
 		EditorBox->SelectionLength = 0;
 }
 
-void Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning)
+const String^ Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning)
 {
 	String^ ExtractedBlock = "";
 	switch (Operation)
@@ -1950,7 +2017,7 @@ void Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, Strin
 		ReadBookmarks(ExtractedBlock);
 		LoadSavedCaretPos(ExtractedBlock);
 		ProcessWarnings(ExtractedBlock);
-		break;
+		return nullptr;
 	case PreProcessor::PreProcessOp::e_Expand:		// before moving editor text
 		PreProcessedText = PREPROC->PreProcess(EditorBox->Text, Operation, false, ExtractedBlock);
 		PreProcessedText += ";<CSEBlock>\n";
@@ -1961,8 +2028,9 @@ void Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, Strin
 		SaveCaretPos();
 		DumpBookmarks();
 		PreProcessedText += ";</CSEBlock>\n";
-		break;
+		return PreProcessedText;
 	}
+	return nullptr;
 }
 
 void Workspace::DumpBookmarks()
@@ -2009,7 +2077,7 @@ void Workspace::ReadBookmarks(String^ ExtractedBlock)
 
 void Workspace::SaveCaretPos()
 {
-	if (OptionsDialog::GetSingleton()->SaveLastKnownPos->Checked) {
+	if (OPTIONS->FetchSettingAsInt("SaveLastKnownPos")) {
 		PreProcessedText += String::Format(";<CSECaretPos> {0} </CSECaretPos>\n", EditorBox->SelectionStart);
 	}
 }
@@ -2045,7 +2113,7 @@ void Workspace::LoadSavedCaretPos(String^ ExtractedBlock)
 
 void Workspace::ProcessWarnings(String^ ExtractedBlock)
 {
-	if (!OptionsDialog::GetSingleton()->PreprocessorWarnings->Checked)	return;
+	if (!OPTIONS->FetchSettingAsInt("PreprocessorWarnings"))	return;
 
 	ScriptParser^ TextParser = gcnew ScriptParser();
 	StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
@@ -2129,7 +2197,7 @@ void Workspace::CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% Script
 		}
 	}
 
-	if (ToolBarOffsetToggle->Checked) ToolBarOffsetToggle_Click(nullptr, nullptr);
+	if (ToolBarOffsetToggle->Checked) ToolBarOffsetToggle->PerformClick();
 	if (LineOffsets->Count < 1)			ToolBarOffsetToggle->Enabled = false;
 	else								ToolBarOffsetToggle->Enabled = true;
 }
@@ -2180,7 +2248,7 @@ void Workspace::SetVariableIndices(void)
 
 				try {
 					Index = UInt32::Parse(Itr->SubItems[2]->Text);
-				} catch (CSEGeneralException^ E) {
+				} catch (Exception^ E) {
 					throw gcnew CSEGeneralException("Couldn't parse index of variable  '" + Itr->Text + "' in script '" + EditorTab->Text + "'\n\tError Message: " + E->Message);
 				}
 				Data.Index = Index;
@@ -2193,26 +2261,151 @@ void Workspace::SetVariableIndices(void)
 					throw gcnew CSEGeneralException("Couldn't update the index of variable '" + Itr->Text + "' in script '" + EditorTab->Text + "'");
 				}
 			}
-		} catch (CSEGeneralException^ E) {
+		} catch (Exception^ E) {
 			DebugPrint(E->Message, true);
 		}
 	}
 }
 
 
+void Workspace::InitializeScript(String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID)
+{
+	if (ScriptName != "New Script")
+		TextSet = true;
+
+	PreProcessScriptText(PreProcessor::PreProcessOp::e_Collapse, ScriptText, false);
+	ScriptEditorID = gcnew String(ScriptName);
+	EditorTab->Text = ScriptName + " [" + FormID.ToString("X8") + "]";
+	ParentContainer->SetWindowTitle(EditorTab->Text + " - CSE Editor");
+	SetScriptType(ScriptType);
+
+	EnableControls();
+	SetModifiedStatus(false);
+	ErrorBox->Items->Clear();
+	VariableBox->Items->Clear();
+	ToolBarByteCodeSize->Value = DataLength;
+	ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(DataLength / (float)1024));
+
+	CalculateLineOffsets(Data, DataLength, ScriptText);
+	ISBox->UpdateLocalVars();
+
+	GetVariableData = false;
+	ToolBarUpdateVarIndices->Enabled = false;
+	ClearFindImagePointers();
+}
+
+void Workspace::UpdateScriptFromDataPackage(ScriptData* Package)
+{
+	SetModifiedStatus(false);
+	switch (Package->Type)
+	{
+	case 9:									// Function script
+		Package->Type = 0;
+		break;
+	case 99:
+		DebugPrint("Couldn't fetch script data from the vanilla editor!", true);
+		return;
+	}
+
+	ScriptEditorID = gcnew String(Package->EditorID);
+	EditorTab->Text = ScriptEditorID + " [" + Package->FormID.ToString("X8") + "]";
+	ParentContainer->SetWindowTitle(EditorTab->Text + " - CSE Editor");
+	CalculateLineOffsets((UInt32)Package->ByteCode, Package->Length, gcnew String(Package->Text));
+	ToolBarByteCodeSize->Value = Package->Length;
+	ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(Package->Length / (float)1024));
+	ToolBarUpdateVarIndices->Enabled = false;
+	GetVariableIndices(false);
+}
+	
+void Workspace::AddItemToScriptListBox(String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags)
+{
+	String^ ScriptType;
+	switch (Type)
+	{
+	case 0:
+		ScriptType = "Object";
+		break;
+	case 1:
+		ScriptType = "Quest";
+		break;
+	case 2:
+		ScriptType = "Magic Effect";
+		break;
+	case 9:
+		ScriptType = "Function";
+		break;
+	}
+	ScriptListBox->AddScript(ScriptName, FormID.ToString("X8"), ScriptType, Flags);
+}
+
+void Workspace::AddItemToVariableBox(String^% Name, UInt32 Type, UInt32 Index)
+{
+	String^ VarType;
+	switch (Type)
+	{
+	case 0:
+		VarType = "Float";
+		break;
+	case 1:
+		VarType = "Integer";
+		break;
+	case 2:
+		VarType = "Reference";
+		break;
+	}
+
+	ListViewItem^ Item = gcnew ListViewItem(Name);
+	Item->SubItems->Add(VarType);
+	Item->SubItems->Add(Index.ToString());
+	VariableBox->Items->Add(Item);	
+}
+
+void Workspace::LoadFileFromDisk(String^ Path)
+{
+	try {
+		EditorBox->LoadFile(Path, RichTextBoxStreamType::PlainText);
+		DebugPrint("Loaded text from " + Path + " to editor " + AllocatedIndex);
+	} catch (Exception^ E)
+	{
+		DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
+	}	
+	
+}
+
+void Workspace::SaveScriptToDisk(String^ Path, String^ FileName)
+{
+	if (FileName == nullptr)
+		FileName = "" + EditorTab->Text + ".txt";
+
+	try {
+		EditorBox->SaveFile(Path + "\\" + FileName, RichTextBoxStreamType::PlainText);
+		DebugPrint("Dumped editor " + AllocatedIndex + "'s text to " + Path + "\\" + FileName);
+	} catch (Exception^ E)
+	{
+		DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
+	}
+}
+	
+void Workspace::SetCurrentToken(String^% Replacement)
+{
+ 	GetTextAtLoc(EditorBox->GetPositionFromCharIndex(EditorBox->SelectionStart), false, true, EditorBox->SelectionStart - 1, true); 
+	EditorBox->SelectedText	= Replacement;
+}
+
+void Workspace::Relocate(TabContainer^ Destination)
+{
+	ParentContainer = Destination;
+	ParentContainer->FlagDestruction(true);
+	ParentContainer->RemoveTab(EditorTab);
+	ParentContainer->FlagDestruction(false);
+					
+	Destination->AddTab(EditorTab);
+	Destination->AddTabControlBox(EditorControlBox);	
+}
 
 
 
-
-
-
-
-
-
-
-
-//  EVENT HANDLERS
-
+#pragma region Event Handlers
 //	STATUS BAR CONTENTS 
 void Workspace::ToolBarEditMenuContentsFind_Click(Object^ Sender, EventArgs^ E)
 {
@@ -2242,9 +2435,9 @@ void Workspace::ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArg
 void Workspace::ToolBarErrorList_Click(Object^ Sender, EventArgs^ E)
 {
 	if (FindBox->Visible)
-		ToolBarFindList_Click(nullptr, nullptr);
+		ToolBarFindList->PerformClick();
 	else if (BookmarkBox->Visible)
-		ToolBarBookmarkList_Click(nullptr, nullptr);
+		ToolBarBookmarkList->PerformClick();
 
 	if (!ErrorBox->Visible) {
 		ErrorBox->Show();
@@ -2260,9 +2453,9 @@ void Workspace::ToolBarErrorList_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 {
 	if (ErrorBox->Visible)
-		ToolBarErrorList_Click(nullptr, nullptr);
+		ToolBarErrorList->PerformClick();
 	else if (BookmarkBox->Visible)
-		ToolBarBookmarkList_Click(nullptr, nullptr);
+		ToolBarBookmarkList->PerformClick();
 
 	if (!FindBox->Visible) {
 		FindBox->Show();
@@ -2279,9 +2472,9 @@ void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
 {
 	if (ErrorBox->Visible)
-		ToolBarErrorList_Click(nullptr, nullptr);
+		ToolBarErrorList->PerformClick();
 	else if (FindBox->Visible)
-		ToolBarFindList_Click(nullptr, nullptr);
+		ToolBarFindList->PerformClick();
 
 	if (!BookmarkBox->Visible) {
 		BookmarkBox->Show();
@@ -2300,10 +2493,10 @@ void Workspace::ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	{
 	case Keys::Enter:
 		if (ToolBarCommonTextBox->Tag->ToString() != "") {
-			if		(ToolBarCommonTextBox->Tag->ToString() == "Find")				ToolBarEditMenuContentsFind_Click(nullptr, nullptr);
-			else if (ToolBarCommonTextBox->Tag->ToString() == "Replace")			ToolBarEditMenuContentsReplace_Click(nullptr, nullptr);
-			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Line")			ToolBarEditMenuContentsGotoLine_Click(nullptr, nullptr);
-			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Offset")		ToolBarEditMenuContentsGotoOffset_Click(nullptr, nullptr);
+			if		(ToolBarCommonTextBox->Tag->ToString() == "Find")				ToolBarEditMenuContentsFind->PerformClick();
+			else if (ToolBarCommonTextBox->Tag->ToString() == "Replace")			ToolBarEditMenuContentsReplace->PerformClick();
+			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Line")			ToolBarEditMenuContentsGotoLine->PerformClick();
+			else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Offset")		ToolBarEditMenuContentsGotoOffset->PerformClick();
 		}	
 
 		E->Handled = true;
@@ -2344,13 +2537,7 @@ void Workspace::ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E)
 	SaveManager->FileName = EditorTab->Text;
 
 	if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0) {
-		try {
-			EditorBox->SaveFile(SaveManager->FileName, RichTextBoxStreamType::PlainText);
-			DebugPrint("Dumped editor " + AllocatedIndex + "'s text to " + SaveManager->FileName);
-		} catch (CSEGeneralException^ E)
-		{
-			DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
-		}	
+		SaveScriptToDisk(SaveManager->FileName, nullptr);
 	}
 }
 
@@ -2363,7 +2550,7 @@ void Workspace::ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E)
 	SaveManager->SelectedPath = Globals::AppPath + "\\Data\\Scripts";
 
 	if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0) {
-		ParentStrip->DumpAllTabs(SaveManager->SelectedPath);
+		ParentContainer->DumpAllTabs(SaveManager->SelectedPath);
 		DebugPrint("Dumped all open scripts to " + SaveManager->SelectedPath);
 	}
 }
@@ -2377,13 +2564,7 @@ void Workspace::ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E)
 
 	if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0) {
 		HandleTextChanged = false;
-		try {
-			EditorBox->LoadFile(LoadManager->FileName, RichTextBoxStreamType::PlainText);
-			DebugPrint("Loaded text from " + LoadManager->FileName + " to editor " + AllocatedIndex);
-		} catch (CSEGeneralException^ E)
-		{
-			DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
-		}		
+		LoadFileFromDisk(LoadManager->FileName);		
 	}
 }
 
@@ -2398,7 +2579,7 @@ void Workspace::ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E)
 	if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0) {
 		for each (String^ Itr in LoadManager->FileNames)
 		{
-			ParentStrip->LoadToTab(Itr);
+			ParentContainer->LoadToTab(Itr);
 			DebugPrint("Loaded text from " + Itr + " into a new workspace");
 		}
 	}
@@ -2409,7 +2590,7 @@ void Workspace::ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
 {
 	OptionsDialog::GetSingleton()->LoadINI();
-	OptionsDialog::GetSingleton()->OptionsBox->ShowDialog();
+	OptionsDialog::GetSingleton()->Show();
 }
 
 void Workspace::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
@@ -2437,14 +2618,14 @@ void Workspace::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
 	switch (Control::ModifierKeys)
 	{
 	case Keys::Control:
-		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_New, nullptr);
+		ParentContainer->PerformRemoteOperation(TabContainer::RemoteOperation::e_New, nullptr);
 		break;
 	case Keys::Shift:
 		Parameters->VanillaHandleIndex = 0;
-		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Location.X);
-		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Location.Y);
-		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Width);
-		Parameters->ParameterList->Add((UInt32)ParentStrip->EditorForm->Height);
+		Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().X);
+		Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().Y);
+		Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().Width);
+		Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().Height);
 
 		SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateTabContainer, Parameters);
 		break;
@@ -2457,7 +2638,7 @@ void Workspace::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
 {
 	if (Control::ModifierKeys == Keys::Control) {
-		ParentStrip->PerformRemoteOperation(TabContainer::RemoteOperation::e_Open, nullptr);
+		ParentContainer->PerformRemoteOperation(TabContainer::RemoteOperation::e_Open, nullptr);
 	} else {
 		ScriptListBox->Show(ScriptListDialog::Operation::e_Open);
 	}
@@ -2534,24 +2715,24 @@ void Workspace::ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarNavBack_Click(Object^ Sender, EventArgs^ E)
 {
-	ParentStrip->NavigateStack(AllocatedIndex, TabContainer::NavigationDirection::e_Back);
+	ParentContainer->NavigateStack(AllocatedIndex, TabContainer::NavigationDirection::e_Back);
 }
 
 void Workspace::ToolBarNavForward_Click(Object^ Sender, EventArgs^ E)
 {
-	ParentStrip->NavigateStack(AllocatedIndex, TabContainer::NavigationDirection::e_Forward);
+	ParentContainer->NavigateStack(AllocatedIndex, TabContainer::NavigationDirection::e_Forward);
 }
 
 void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
 {
 	GetVariableIndices(true);
-	Workspace::ToolBarSaveScript_Click(nullptr, nullptr);	
+	Workspace::ToolBarSaveScript->PerformClick();	
 }
 
 void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
 {
 	SetVariableIndices();
-	if (OPTIONS->RecompileVarIdx->Checked)
+	if (OPTIONS->FetchSettingAsInt("RecompileVarIdx"))
 	{
 		ToolBarCompileDependencies->PerformClick();
 	}
@@ -2559,7 +2740,7 @@ void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
 {
-	ParentStrip->SaveAllTabs();
+	ParentContainer->SaveAllTabs();
 }
 
 void Workspace::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
@@ -2580,7 +2761,7 @@ void Workspace::ContextMenuCopy_Click(Object^ Sender, EventArgs^ E)
 	try {
 		Clipboard::Clear();
 		Clipboard::SetText(GetTextAtLoc(Globals::MouseLocation, true, false, -1, false));
-	} catch (CSEGeneralException^ E) {
+	} catch (Exception^ E) {
 		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
 }
@@ -2589,7 +2770,7 @@ void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 {
 	try {
 		EditorBox->SelectedText = Clipboard::GetText();
-	} catch (CSEGeneralException^ E) {
+	} catch (Exception^ E) {
 		DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 	}
 
@@ -2645,7 +2826,7 @@ void Workspace::ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
 {
 	try { Process::Start(dynamic_cast<String^>(ContextMenuDirectLink->Tag)); }
-	catch (CSEGeneralException^ E) {
+	catch (Exception^ E) {
 		DebugPrint("Exception raised while opening internet page.\n\tException: " + E->Message);
 		MessageBox::Show("Couldn't open internet page. Mostly likely caused by an improperly formatted URL.", "CSE Script Editor");
 	}
@@ -2661,7 +2842,7 @@ void Workspace::ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ContextMenuFind_Click(Object^ Sender, EventArgs^ E)
 {
 	ToolBarCommonTextBox->Text = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
-	ToolBarEditMenuContentsFind_Click(nullptr, nullptr);
+	ToolBarEditMenuContentsFind->PerformClick();
 }
 
 void Workspace::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
@@ -2676,7 +2857,7 @@ void Workspace::ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
 {
-	ParentStrip->JumpToScript(AllocatedIndex, dynamic_cast<String^>(ContextMenuJumpToScript->Tag));
+	ParentContainer->JumpToScript(AllocatedIndex, dynamic_cast<String^>(ContextMenuJumpToScript->Tag));
 }
 
 
@@ -2696,7 +2877,7 @@ void Workspace::EditorBox_TextChanged(Object^ Sender, EventArgs^ E)
 		HasChanged = true;
 		EditorTab->ImageIndex = 1;
 
-		if (ToolBarOffsetToggle->Checked)		ToolBarOffsetToggle_Click(nullptr, nullptr);
+		if (ToolBarOffsetToggle->Checked)		ToolBarOffsetToggle->PerformClick();
 		ToolBarOffsetToggle->Enabled = false;
 
 		ClearFindImagePointers();
@@ -2715,15 +2896,15 @@ void Workspace::EditorBox_TextChanged(Object^ Sender, EventArgs^ E)
 
 void Workspace::EditorBox_VScroll(Object^ Sender, EventArgs^ E)
 {
-	EditorLineNo->Location = Point(0, EditorBox->GetPositionFromCharIndex(0).Y % (EditorBox->Font->Height - 1));
 	UpdateLineNumbers();
 	UpdateFindImagePointers();
+	ISBox->HideInfoTip();
 }
 
 void Workspace::EditorBox_Resize(Object^ Sender, EventArgs^ E)
 {
-	EditorLineNo->Size = Size(48, EditorBoxSplitter->SplitterDistance + EditorBox->Font->Height);
-	EditorBox_VScroll(nullptr, nullptr);
+	UpdateLineNumbers();
+	UpdateFindImagePointers();
 }
 
 void Workspace::EditorBox_MouseDown(Object^ Sender, MouseEventArgs^ E)
@@ -2731,7 +2912,7 @@ void Workspace::EditorBox_MouseDown(Object^ Sender, MouseEventArgs^ E)
 
 	if (HasLineChanged()) {
 		UpdateLineNumbers();
-		ISBox->CanShow = true;
+		ISBox->Enabled = true;
 		ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 		ValidateLineLimit();
 	}
@@ -2743,9 +2924,10 @@ void Workspace::EditorBox_MouseDown(Object^ Sender, MouseEventArgs^ E)
 
 	if (ISBox->IsVisible()) {
 		ISBox->Hide();
-		ISBox->CanShow = false;
+		ISBox->Enabled = false;
 		ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 	}
+	ISBox->HideInfoTip();
 }
 
 void Workspace::EditorBox_MouseUp(Object^ Sender, MouseEventArgs^ E)
@@ -2772,10 +2954,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 
 	if (IsDelimiterKey(E->KeyCode)) {
 		ISBox->UpdateLocalVars();
-		ISBox->CanShow = true;
-
-	//	Indents = CalculateIndents(EditorBox->SelectionStart, Exdent, false);
-	//	if (Exdent && E->KeyCode != Keys::Enter)		ExdentLine();
+		ISBox->Enabled = true;
 
 		if (!IsCursorInsideCommentSeg(true)) {
 			try {
@@ -2796,7 +2975,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					else ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 				} 
 				else ISBox->LastOperation = SyntaxBox::Operation::e_Default;
-			} catch (CSEGeneralException^ E) {
+			} catch (Exception^ E) {
 				DebugPrint("IntelliSense threw an exception while initializing.\n\tException: " + E->Message, true);
 			}
 		}
@@ -2815,7 +2994,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 					HandleKeyEditorBox = E->KeyCode;	
 					E->Handled = true;
 				}
-			} catch (CSEGeneralException^ E) {
+			} catch (Exception^ E) {
 				DebugPrint("Had trouble stripping RTF elements in editor " + AllocatedIndex + ".\n\tException: " + E->Message);
 			}
 			HandleTextChanged = false;
@@ -2829,37 +3008,37 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		break;
 	case Keys::O:									// Open script
 		if (E->Modifiers == Keys::Control) {
-			ToolBarOpenScript_Click(nullptr, nullptr);
+			ToolBarOpenScript->PerformClick();
 		}
 		break;
 	case Keys::S:									// Save script
 		if (E->Modifiers == Keys::Control) {
-			ToolBarSaveScript_Click(nullptr, nullptr);
+			ToolBarSaveScript->PerformClick();
 		}
 		break;
 	case Keys::D:									// Delete script
 		if (E->Modifiers == Keys::Control) {
-			ToolBarDeleteScript_Click(nullptr, nullptr);
+			ToolBarDeleteScript->PerformClick();
 		}
 		break;
 	case Keys::Left:								// Previous script
 		if (E->Control && E->Alt) {
-			ToolBarPreviousScript_Click(nullptr, nullptr);
+			ToolBarPreviousScript->PerformClick();
 		}
 		break;
 	case Keys::Right:								// Next script
 		if (E->Control && E->Alt) {
-			ToolBarNextScript_Click(nullptr, nullptr);
+			ToolBarNextScript->PerformClick();
 		}
 		break;
 	case Keys::N:									// New script
 		if (E->Modifiers == Keys::Control) {
-			ToolBarNewScript_Click(nullptr, nullptr);
+			ToolBarNewScript->PerformClick();
 		}
 		break;
 	case Keys::B:									// Toggle bookmark
 		if (E->Modifiers == Keys::Control) {
-			ContextMenuToggleBookmark_Click(nullptr, nullptr);
+			ContextMenuToggleBookmark->PerformClick();
 		}
 		break;
 	case Keys::Enter:								// Show syntax box
@@ -2882,7 +3061,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	case Keys::Escape:
 		if (ISBox->IsVisible()) {
 			ISBox->Hide();
-			ISBox->CanShow = false;
+			ISBox->Enabled = false;
 			ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 			E->Handled = true;
 			HandleKeyEditorBox = E->KeyCode;
@@ -3034,7 +3213,7 @@ void Workspace::EditorBox_KeyUp(Object^ Sender, KeyEventArgs^ E)
 	case Keys::Down:
 		if (HasLineChanged()) {
 			UpdateLineNumbers();
-			ISBox->CanShow = true;
+			ISBox->Enabled = true;
 			ISBox->LastOperation = SyntaxBox::Operation::e_Default;
 			ValidateLineLimit();
 		}
@@ -3061,7 +3240,9 @@ void Workspace::EditorBox_KeyUp(Object^ Sender, KeyEventArgs^ E)
 
 void Workspace::EditorBox_HScroll(Object^ Sender, EventArgs^ E)
 {
+	UpdateLineNumbers();
 	UpdateFindImagePointers();
+	ISBox->HideInfoTip();
 }
 
 
@@ -3271,6 +3452,7 @@ void Workspace::IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		Workspace::IndexEditBox_LostFocus(nullptr, nullptr);
 	}
 }
+#pragma endregion
 #pragma endregion
 
 }

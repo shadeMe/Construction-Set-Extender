@@ -11,6 +11,7 @@ NopHdlr								kRidScriptErrorMessageBox			(0x004FFFEC, 20);
 MemHdlr								kRerouteScriptErrors				(0x004FFF9C, RerouteScriptErrorsHook, 0, 0);
 MemHdlr								kCompilerPrologReset				(0x00503330, CompilerPrologResetHook, 0, 0);
 MemHdlr								kCompilerEpilogCheck				(0x0050341F, CompilerEpilogCheckHook, 0, 0);
+MemHdlr								kParseScriptLineOverride			(0x00503401, ParseScriptLineOverride, 0, 0);
 
 
 
@@ -29,6 +30,7 @@ void __declspec(naked) RerouteScriptErrorsHook(void)
 		mov     [esp + 0x18], ebx
 		mov     [esp + 0x1C], bx
 
+		mov		g_CompileResultBuffer, 0
 		lea     edx, [esp + 0x20]
 		pushad
 		push	edx
@@ -73,44 +75,27 @@ void __declspec(naked) CompilerPrologResetHook(void)
 	}
 }
 
+void __declspec(naked) ParseScriptLineOverride(void)
+{
+	static const UInt32			kParseScriptLineOverrideCallAddr = 0x005028D0;
+	static const UInt32			kParseScriptLineOverrideRetnAddr = 0x0050340A;
 
+	__asm
+	{
+		call	kParseScriptLineOverrideCallAddr
+		test	al, al
+		jz		FAIL
 
-
-
-
-
-
-
-
-
-
-
-
+		jmp		kParseScriptLineOverrideRetnAddr
+	FAIL:
+		mov		g_CompileResultBuffer, 0
+		jmp		kParseScriptLineOverrideRetnAddr
+	}
+}
 
 // ERROR HANDLERS
 
 																//  sub_502680
-#define CURRENT_ADDR	0x0050016F
-BEGIN_ERROR_HOOK(CURRENT_ADDR)
-{
-	SET_ERROR_CUSTOMADDR(CURRENT_ADDR, Retn, 0x00500186);
-
-	__asm
-	{
-		call	ShowCompilerErrorEx
-		add		esp, 0xC
-		SET_COMPILE_BUFFER_VALUE(0)
-		mov		eax, [esi + 0x204]
-		sub		eax, 2
-		pop     edi
-		pop     esi
-		pop     ebp
-
-		jmp		[GET_ERROR_CUSTOMADDR(CURRENT_ADDR, Retn)]
-	}
-}
-DEFINE_ERROR_MEMHDLR(CURRENT_ADDR);
-
 DEFINE_SHOWCOMPILERERROR_HOOK(0x00502781, 0x00502791, 0xC)
 DEFINE_SHOWCOMPILERERROR_HOOK(0x00502813, 0x005027AD, 0xC)
 DEFINE_SHOWCOMPILERERROR_HOOK(0x005027D3, 0x00502824, 0xC)
@@ -130,28 +115,23 @@ DEFINE_SHOWCOMPILERERROR_HOOK(0x00500CA7, 0x00500CB6, 0x8)
 DEFINE_SHOWCOMPILERERROR_HOOK(0x00500669, 0x00500676, 0xC)
 DEFINE_SHOWCOMPILERERROR_HOOK(0x0050068F, 0x0050069E, 0xC)
 																// f_ValidateScriptBlocks
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500262, 0x00500232, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x0050027D, 0x0050023A, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500298, 0x00500242, 0x8)
+DEFINE_SHOWCOMPILERERROR_HOOK(0x00500262, 0x0050024F, 0x8)
+DEFINE_SHOWCOMPILERERROR_HOOK(0x0050027D, 0x0050024F, 0x8)
+DEFINE_SHOWCOMPILERERROR_HOOK(0x00500298, 0x0050024F, 0x8)
 																// f_ScriptBuffer__CheckReferencedObjects
 DEFINE_SHOWCOMPILERERROR_HOOK(0x005001DC, 0x005001C9, 0xC)
 
 
 
-
-
-
 void PatchCompilerErrorDetours()
 {
-//	return;
-
 	kRidScriptErrorMessageBox.WriteNop();
 	kRerouteScriptErrors.WriteJump();
 	kCompilerPrologReset.WriteJump();
 	kCompilerEpilogCheck.WriteJump();
+	kParseScriptLineOverride.WriteJump();
 
 
-//	GET_ERROR_MEMHDLR(0x0050016F).WriteJump();		will cause a stack overflow - too much trouble
 	GET_ERROR_MEMHDLR(0x00502781).WriteJump();
 	GET_ERROR_MEMHDLR(0x00502813).WriteJump();
 	GET_ERROR_MEMHDLR(0x005027D3).WriteJump();
@@ -171,9 +151,9 @@ void PatchCompilerErrorDetours()
 	GET_ERROR_MEMHDLR(0x00500669).WriteJump();
 	GET_ERROR_MEMHDLR(0x0050068F).WriteJump();
 																
-//	GET_ERROR_MEMHDLR(0x00500262).WriteJump();
-//	GET_ERROR_MEMHDLR(0x0050027D).WriteJump();
-//	GET_ERROR_MEMHDLR(0x00500298).WriteJump();
+	GET_ERROR_MEMHDLR(0x00500262).WriteJump();
+	GET_ERROR_MEMHDLR(0x0050027D).WriteJump();
+	GET_ERROR_MEMHDLR(0x00500298).WriteJump();
 															
 	GET_ERROR_MEMHDLR(0x005001DC).WriteJump();
 }

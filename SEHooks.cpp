@@ -382,9 +382,9 @@ void __stdcall SendPingBack(UInt16 Message)
 	CLIWrapper::ScriptEditor::SendMessagePingback(TrackedIndex, Message);
 }
 
-void __stdcall DoMessagingCallbackCloseHookRelease(void)
+void __stdcall DoMessagingCallbackCloseHookRelease(HWND Editor)
 {
-	EDAL->DeleteTrackedEditor(EDAL->GetTrackedIndex(g_ScriptEditorBuffer));
+	EDAL->DeleteTrackedEditor(EDAL->GetTrackedIndex(Editor));
 }
 
 void __declspec(naked) MessagingCallbackNewScriptHook(void)
@@ -470,6 +470,8 @@ void __declspec(naked) MessagingCallbackCloseHook(void)
 		pushad
 		push	7
 		call	SendPingBack
+
+		push	edi
 		call	DoMessagingCallbackCloseHookRelease
 		popad
 		jmp		[kMessagingCallbackCloseRetnAddr]

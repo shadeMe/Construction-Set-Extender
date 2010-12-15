@@ -208,7 +208,7 @@ PluginParser::PluginParser(String^ PluginName)
 	} catch (CSEPluginParserException^ E) {
 		String^ Message = "Parser Exception raised while parsing plugin " + PluginName + ":\n\t " + E->Message;
 		DebugPrint(Message, true);
-	} catch (CSEGeneralException^ E) {
+	} catch (Exception^ E) {
 		String^ Message = "Unknown Exception raised while parsing plugin " + PluginName + ":\n\t " + E->Message;
 		DebugPrint(Message, true);
 	} finally {

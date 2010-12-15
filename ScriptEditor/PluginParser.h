@@ -1,10 +1,6 @@
 #pragma once
 #include "Common\Includes.h"
 
-// TODO: ++++++++++++++++++++++
-//	
-
-
 public ref class CSEPluginParserException : Exception
 {
 public:

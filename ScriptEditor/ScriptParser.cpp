@@ -425,7 +425,7 @@ try {
 			Result += DoPreProcess(ImportParser->ReadToEnd(), Operation, false, Dummy);
 			Result += ReadLine->Substring(0, TextParser->Indices[0]) + ";</CSEImportSeg> \"" + ImportFileName + "\"\n";
 			ImportParser->Close();
-		} catch (CSEGeneralException^ E) {
+		} catch (Exception^ E) {
 			DebugPrint("Couldn't import from script '" + ImportFileName + "'\n\tException: " + E->Message, true);
 			Result = ReadLine + "\n";
 		}
@@ -439,7 +439,7 @@ try {
 
 		if (!File::Exists(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName))) {
 			DebugPrint("Import segment '" + ImportFileName + "' couldn't be found", true);
-			if (OptionsDialog::GetSingleton()->CreateMissingFromSegment->Checked) {
+			if (OPTIONS->FetchSettingAsInt("CreateMissingFromSegment")) {
 				try {
 					StreamWriter^ ImportParser = gcnew StreamWriter(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName));
 					ImportParser->Write(ImportedText);
@@ -447,14 +447,14 @@ try {
 					ImportParser->Close();
 					DebugPrint("\tImport segment '" + ImportFileName + "' created!");
 					
-				} catch (CSEGeneralException^ E) {
+				} catch (Exception^ E) {
 					DebugPrint("Couldn't write import segment to '" + ImportFileName + "'\n\tException: " + E->Message);
 				}
 			}
 		}
 		Result = ReadLine->Substring(0, TextParser->Indices[0]) + "//import \"" + ImportFileName + "\"\n";
 	}
-} catch (CSEGeneralException^ E) {
+} catch (Exception^ E) {
 	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 	return Result;
@@ -477,7 +477,7 @@ try {
 			Result += ";<CSEMacroDef> " + Macro + " " + Value + " </CSEMacroDef>\n";
 
 			if (FindPreProcessMacro(Macro) != -1) {
-				if (OptionsDialog::GetSingleton()->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value;
+				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreProcessMacros[Macro] = Value;
 				else								DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true);
 			}
 			else if (Value->IndexOfAny(InvalidChars->ToCharArray()) != -1)
@@ -494,7 +494,7 @@ try {
 
 		if (FindPreProcessMacro(Macro) == -1)
 			PreProcessMacros->Add(Macro, Value);
-		else if (OptionsDialog::GetSingleton()->AllowRedefinitions->Checked)
+		else if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))
 			PreProcessMacros[Macro] = Value;
 	}
 	else if (DefineRstrIdx != -1 && Operation == PreProcessOp::e_Collapse) {
@@ -568,7 +568,7 @@ try {
 		else
 			Result += "\n";
 	}
-} catch (CSEGeneralException^ E) {
+} catch (Exception^ E) {
 	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 
@@ -600,7 +600,7 @@ void PreProcessor::ParseEnumMacros(String^% Items, bool ReportErrors)
 		
 		if (!String::Compare(Macro, Macro->ToUpper())) {
 			if (FindPreProcessMacro(Macro) != -1) {
-				if (OptionsDialog::GetSingleton()->AllowRedefinitions->Checked)	PreProcessMacros[Macro] = Value.ToString();
+				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreProcessMacros[Macro] = Value.ToString();
 				else {		if (ReportErrors)		DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true); }
 			}
 			else 
@@ -634,7 +634,7 @@ try {
 
 		ParseEnumMacros(Value, false);
 	}
-} catch (CSEGeneralException^ E) {
+} catch (Exception^ E) {
 	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
 }
 
@@ -745,7 +745,7 @@ String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp O
 
 String^ PreProcessor::PreProcess(String^% Source, PreProcessor::PreProcessOp Operation, bool DoCollapseReplace, String^% ExtractedCSEBlock)
 {
-	bool Cache = OptionsDialog::GetSingleton()->AllowRedefinitions->Checked;
+	int Cache = OPTIONS->FetchSettingAsInt("AllowRedefinitions");
 	PreProcessMacros->Clear();
 	TextParser->Reset();
 
@@ -755,9 +755,9 @@ String^ PreProcessor::PreProcess(String^% Source, PreProcessor::PreProcessOp Ope
 	ProcessStandardDefineDirectives();
 	TextParser->Reset();
 
-	OptionsDialog::GetSingleton()->AllowRedefinitions->Checked = true;
+	OPTIONS->FetchSetting("AllowRedefinitions")->SetValue("1");
 	Pass = DoPreProcess(Source, Operation, DoCollapseReplace, Dummy);
-	OptionsDialog::GetSingleton()->AllowRedefinitions->Checked = Cache;
+	OPTIONS->FetchSetting("AllowRedefinitions")->SetValue(Cache.ToString());
 
 	return Pass;
 }
@@ -782,7 +782,7 @@ void PreProcessor::ProcessStandardDefineDirectives(void)
 			}
 
 			STDFileParser->Close();		
-		} catch (CSEGeneralException^ E) {
+		} catch (Exception^ E) {
 			DebugPrint("Couldn't read from Standard define directives file!\n\tException: " + E->Message);
 		}
 	} else

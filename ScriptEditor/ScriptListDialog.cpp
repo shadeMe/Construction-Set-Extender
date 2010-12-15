@@ -108,7 +108,7 @@ void ScriptListDialog::Show(Operation Op)
 	ScriptList->EndUpdate();
 
 	if (ScriptList->Items->Count > 0) {
-		String^ CurrentScript = dynamic_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->ScriptEditorID);
+		String^ CurrentScript = const_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->GetScriptID());
 		if (CurrentScript != "New Script")
 			SearchBox->Text = CurrentScript;
 	}
@@ -179,7 +179,7 @@ void ScriptListDialog::SelectScript()
 		}
 		else
 		{
-			SEMGR->GetAllocatedWorkspace(ParentIndex)->ParentStrip->CreateNewTab(Itr->SubItems[1]->Text);
+			SEMGR->GetAllocatedWorkspace(ParentIndex)->GetParentContainer()->CreateNewTab(Itr->SubItems[1]->Text);
 		}
 	}
 	ScriptBox->Close();
@@ -198,7 +198,7 @@ void ScriptListDialog::GetUseReport()
 
 void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
-	bool Destroy = SEMGR->GetAllocatedWorkspace(ParentIndex)->Destroying;
+//	bool Destroy = SEMGR->GetAllocatedWorkspace(ParentIndex)->Destroying;
 	Close();
 }
 

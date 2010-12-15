@@ -7,6 +7,7 @@
 #include "obse/Script.h"
 #include "obse/PluginAPI.h"
 #include "obse/GameObjects.h"
+#include "Console.h"
 
 #include "[ Libraries ]\INI Manager\INIManager.h"
 #include "[ Libraries ]\INI Manager\INIEditGUI.h"
@@ -97,11 +98,52 @@ public:
 	INISetting();
 	~INISetting();
 
-	char*			Data;			// 00 - use a union
-	const char*		Name;			// 04
+	union							// 00
+	{
+		int			iData;
+		UInt32		uData;
+		float		fData;
+		char*		sData;
+	};
 
-	INISetting(char* Data, char* Name) : Data(Data), Name(Name) {}
+	const char*		Name;			// 04
 };
+
+// 24
+class TESFormIDListView
+{
+public:
+	TESFormIDListView();
+	~TESFormIDListView();
+
+	// bases
+	TESForm					Form;
+
+	// no members
+};
+
+// 2C
+class GameSetting
+{
+public:
+	GameSetting();
+	~GameSetting();
+
+	// bases
+	TESFormIDListView		listView;
+
+	//members
+	union								// 24
+	{
+		int					iData;
+		float				fData;
+		const char*			sData;
+	};
+
+	const char*				settingID;	// 28
+};
+
+class GameSettingCollection;
 
 template<typename Type> struct GenericNode
 {
@@ -125,7 +167,7 @@ struct TESRenderWindowBuffer
 	float					unk14;				// 14 init to 0.0
 };
 
-// 38 / A0
+// A0
 class TESTopicInfo : public TESForm
 {
 public:
@@ -146,7 +188,7 @@ public:
 
 	struct ResponseEntry
 	{
-		// ? / 24
+		// 24
 		struct Data 
 		{
 			enum 
@@ -207,9 +249,21 @@ public:
 	Script				resultScript;	// 4C
 };
 
-#ifndef OBLIVION
-STATIC_ASSERT(sizeof(TESTopicInfo) == 0xA0);
-#endif
+union GMSTData
+{
+	int				i;
+	float			f;
+	const char*		s;	
+};
+struct GMSTMap_Key_Comparer
+{
+	bool operator()(const char* Key1, const char* Key2) const {
+		return _stricmp(Key1, Key2) < 0;
+	}
+};
+
+typedef std::map<const char*, GMSTData*, GMSTMap_Key_Comparer>		_DefaultGMSTMap;
+extern _DefaultGMSTMap			g_DefaultGMSTMap;
 
 
 extern const HINSTANCE*			g_TESCS_Instance;
@@ -237,6 +291,8 @@ extern TESRenderWindowBuffer**	g_TESRenderWindowBuffer;
 extern HMENU*					g_RenderWindowPopup;
 extern void*					g_ScriptCompilerUnkObj;
 extern TESObjectREFR**			g_PlayerRef;
+extern GameSettingCollection*	g_GMSTCollection;
+extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>* , should be similar to OBSE's SettingInfo
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -287,6 +343,9 @@ extern const _BSPrintF		BSPrintF;
 typedef void			(__cdecl *_ShowCompilerError)(ScriptBuffer* Buffer, const char* format, ...);
 extern const _ShowCompilerError		ShowCompilerErrorEx;
 
+typedef void			(__cdecl *_AutoSavePlugin)(void);
+extern const _AutoSavePlugin		AutoSavePlugin;
+
 extern const void *			RTTI_TESCellUseList;
 
 extern const UInt32			kTESChildCell_LoadCell;
@@ -336,8 +395,11 @@ extern const UInt32			kTESObjectREFR_Ctor;
 
 TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
 UInt32						GetDialogTemplate(const char* FormType);
+UInt32						GetDialogTemplate(UInt8 FormTypeID);
 void						RemoteLoadRef(const char* EditorID);
 void						LoadFormIntoView(const char* EditorID, const char* FormType);
+void						LoadFormIntoView(const char* EditorID, UInt8 FormType);
 bool __stdcall				AreUnModifiedFormsHidden();
 void						ToggleHideUnModifiedForms(bool State);
 void						LoadStartupPlugin();
+void						InitializeDefaultGMSTMap();

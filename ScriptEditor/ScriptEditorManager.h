@@ -15,7 +15,7 @@ public:
 
 																e_SendMessage,				// to the vanilla editor
 																e_ReceiveMessage,			// from the vanilla editor, on a successful operation
-																e_SetOpenDialogItemData,
+																e_SetScriptSelectItemData,
 																e_SetVariableListItemData,
 																e_AllocateWorkspace,
 																e_DestroyTabContainer,
@@ -56,7 +56,7 @@ public:
 																"Initialize Script",
 																"Send Message",
 																"Receive Message",
-																"Set OpenDialog Item Data",
+																"Set ScriptSelect Item Data",
 																"Set VariableList Item Data",
 																"Allocate Workspace",
 																"Destroy TabContainer",
@@ -112,7 +112,7 @@ private:
 	void												MessageHandler_ReceivePostPluginLoad();
 	void												MessageHandler_ReceivePostPluginSave();
 
-	void												SetOpenDialogItemData(UInt32 AllocatedIndex, String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags);
+	void												SetScriptSelectItemData(UInt32 AllocatedIndex, String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags);
 	void												SetVariableListItemData(UInt32 AllocatedIndex, String^% Name, UInt32 Type, UInt32 Index);
 	void												AllocateNewWorkspace(UInt32 AllocatedIndex, ScriptEditor::TabContainer^% Parent);
 	void												DestroyTabContainer(ScriptEditor::TabContainer^ Container);

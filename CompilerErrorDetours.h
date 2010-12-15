@@ -12,6 +12,7 @@ void PatchCompilerErrorDetours();
 void RerouteScriptErrorsHook(void);
 void CompilerPrologResetHook(void);
 void CompilerEpilogCheckHook(void);
+void ParseScriptLineOverride(void);
 
 #define CURRENT_ADDR		0x0
 

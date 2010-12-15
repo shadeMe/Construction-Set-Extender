@@ -249,17 +249,6 @@ public:
 
 public ref class SyntaxBox
 {
-	void												Cleanup();
-
-	void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
-	void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
-	void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
-
-	static ToolTip^										InfoTip = gcnew ToolTip();
-	static ImageList^									Icons = gcnew ImageList();
-
-	int													GetSelectedIndex();
-	VariableInfo^										GetLocalVar(String^% Identifier);
 public:
 	static enum class									Operation
 															{
@@ -274,15 +263,8 @@ public:
 																e_Down
 															};
 
-	bool												CanShow;
-	ScriptEditor::Workspace^							ParentEditor;
-	Operation											LastOperation;
-	Script^												RemoteScript;
-	bool												IsObjRefr;
-
 	List<IntelliSenseItem^>^							VarList;														// local variables
-	List<IntelliSenseItem^>^							ListContents;													// handles of the list's items
-	ListView^											IntelliSenseList;
+
 	void												Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll);
 	void												Hide();
 
@@ -292,4 +274,29 @@ public:
 	void												MoveIndex(Direction Direction);
 	void												UpdateLocalVars();
 	bool												QuickView(String^ TextUnderMouse);
+	ListView^%											GetInternalListView() { return IntelliSenseList; }
+
+	property Operation									LastOperation;
+	property bool										Enabled;
+private:
+	void												Cleanup();
+
+	void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
+	void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
+
+	static ToolTip^										InfoTip = gcnew ToolTip();
+	static ImageList^									Icons = gcnew ImageList();
+
+	int													GetSelectedIndex();
+	VariableInfo^										GetLocalVar(String^% Identifier);
+
+	ScriptEditor::Workspace^							ParentEditor;
+	Script^												RemoteScript;
+	bool												IsObjRefr;
+
+	List<IntelliSenseItem^>^							ListContents;													// handles of the list's items
+	ListView^											IntelliSenseList;
+public:
+	void												HideInfoTip() { InfoTip->Hide(Control::FromHandle(IntelliSenseList->Parent->Handle)); }
 };

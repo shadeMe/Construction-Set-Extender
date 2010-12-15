@@ -27,14 +27,14 @@ namespace HallOfFame
 		{ "Cipscis",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"ACRONYM" },
 		{ "haama",						kTESFurniture_Ctor,		0x9C,	kVTBL_TESFurniture, NULL,	"Think Tank. Not Literally" },
 		{ "Waruddar",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"He-Whose-Name-I-Could-Never-Spell-Right" },
-		{ "Corepc",						kTESObjectMISC_Ctor,	0xBC,	kVTBL_TESObjectMISC, NULL,	"The Curator" },
+		{ "Corepc",						kTESObjectMISC_Ctor,	0xBC,	kVTBL_TESObjectMISC, NULL,	"Has Finally Changed His Avatar." },
 		{ "DragoonWraith",				kTESObjectWEAP_Ctor,	0xEC,	kVTBL_TESObjectWEAP, NULL,	"The Mighty ARSE" },
 		{ "PacificMorrowind",			kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"The Jack" },
 		{ "tejon",						kTESCreature_Ctor,		0x18C,	kVTBL_TESCreature, NULL,	"Goblin Tinkerer" },
 		{ "Vacuity",					kTESObjectCONT_Ctor,	0xBC,	kVTBL_TESObjectCONT, NULL,	"                " },
 		{ "SenChan",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Is A Year Older Now" },
 		{ "lilith",						kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Likes Tea. Black. Like Me" },
-		{ "daemondarque",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"His Majestry the CTD" }
+		{ "daemondarque",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"His Majestry The CTD" }
 	};
 
 	void __stdcall				Initialize(bool ResetCSWindows);

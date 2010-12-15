@@ -391,6 +391,26 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Console"
+			>
+			<File
+				RelativePath=".\Console.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Console.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsoleCommands.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConsoleCommands.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\CSEInterfaceAPI.h"
 			>

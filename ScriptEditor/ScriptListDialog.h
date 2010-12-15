@@ -34,9 +34,10 @@ private:
 	void												SelectScript();
 	void												Close();
 
+
 	UInt32												ParentIndex;
 	Operation											CurrentOp;
-public:
+
 	static ImageList^									FlagIcons = gcnew ImageList();
 
 
@@ -49,9 +50,10 @@ public:
 		ColumnHeader^										ScriptListCScriptType;
 	TextBox^											SearchBox;
 	Button^												SelectBox;
-
+public:
 	ScriptListDialog(UInt32 AllocatedIndex);
 
 	void												Show(Operation Op);
 	void												AddScript(String^% ScriptName, String^% FormID, String^% ScriptType, UInt32 Flags);
+	void												Destroy() { ScriptBox->Close(); }
 };

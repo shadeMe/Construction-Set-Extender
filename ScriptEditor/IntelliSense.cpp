@@ -376,7 +376,7 @@ void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 	}
 
 	DebugPrint(String::Format("\tSuccessfully parsed {0} commands!", Count));
-	} catch (CSEGeneralException^ E) {
+	} catch (Exception^ E) {
 		DebugPrint("Exception raised!\n\tMessage: " + E->Message, true);
 	}
 }
@@ -512,14 +512,14 @@ SyntaxBox::SyntaxBox(ScriptEditor::Workspace^%	Parent)
 	InfoTip->ReshowDelay = 500;
 	InfoTip->ToolTipIcon = ToolTipIcon::Info;
 
-	CanShow = true;
+	Enabled = true;
 	ParentEditor = Parent;
 	LastOperation = Operation::e_Default;
 }
 
 void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 {
-	if (!CanShow && !Force)		return;
+	if (!Enabled && !Force)		return;
 
 	UInt32 ItemCount = 0;
 	Cleanup();
@@ -527,12 +527,12 @@ void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 	IntelliSenseList->Size = ::Size(220, 108);
 	IntelliSenseList->BeginUpdate();
 
-	String^ Extract = ParentEditor->GetTextAtLoc(Globals::MouseLocation, false, false, ParentEditor->EditorBox->SelectionStart - 1, true);
+	String^ Extract = ParentEditor->GetCurrentToken();
 
 	switch (Op)
 	{
 	case Operation::e_Default:
-		if (Extract->Length >= OptionsDialog::GetSingleton()->ThresholdLength->Value || Force) {
+		if (Extract->Length >= OPTIONS->FetchSettingAsInt("ThresholdLength") || Force) {
 			for each (IntelliSenseItem^% Itr in VarList) {
 				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr)) {
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
@@ -631,8 +631,8 @@ void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 
 	if (ItemCount > 0) {
 		IntelliSenseList->Items[0]->Selected = true;
-		Point Loc = ParentEditor->EditorBox->GetPositionFromCharIndex(ParentEditor->EditorBox->SelectionStart);
-		IntelliSenseList->Location = Point(Loc.X + 3, Loc.Y + (ParentEditor->EditorBox->Font->Size + 10));
+		Point Loc = ParentEditor->GetCaretLocation();
+		IntelliSenseList->Location = Point(Loc.X + 3, Loc.Y + (OPTIONS->FetchSettingAsInt("FontSize") + 10));
 
 		if (ItemCount < 6)			IntelliSenseList->Size = ::Size(220, 108 - ((6 - ItemCount) * 18));			
 
@@ -660,7 +660,7 @@ void SyntaxBox::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^
 
 		Point TipLoc = Point(IntelliSenseList->Location.X + 275, IntelliSenseList->Location.Y + 25);
 		InfoTip->ToolTipTitle = ListContents[GetSelectedIndex()]->GetTypeIdentifier();
-		InfoTip->Show(ListContents[GetSelectedIndex()]->Describe(), Control::FromHandle(ParentEditor->EditorControlBox->Handle), TipLoc);
+		InfoTip->Show(ListContents[GetSelectedIndex()]->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), TipLoc);
 	}
 }
 
@@ -709,7 +709,7 @@ void SyntaxBox::MoveIndex(SyntaxBox::Direction Direction)
 
 void SyntaxBox::UpdateLocalVars()
 {
-	IntelliSenseDatabase::ParseScript(ParentEditor->EditorBox->Text, gcnew Boxer(this));
+	IntelliSenseDatabase::ParseScript(const_cast<String^>(ParentEditor->GetScriptText()), gcnew Boxer(this));
 }
 
 void SyntaxBox::PickIdentifier()
@@ -722,11 +722,10 @@ void SyntaxBox::PickIdentifier()
 	}
 
 	try {
-		NativeWrapper::LockWindowUpdate(ParentEditor->EditorBox->Handle);
-		ParentEditor->HandleTextChanged = false;
-		ParentEditor->GetTextAtLoc(ParentEditor->EditorBox->GetPositionFromCharIndex(ParentEditor->EditorBox->SelectionStart), false, true, ParentEditor->EditorBox->SelectionStart - 1, true);
-		ParentEditor->EditorBox->SelectedText = Result;
-		ParentEditor->EditorBox->Focus();
+		NativeWrapper::LockWindowUpdate(ParentEditor->GetEditorBoxHandle());
+		ParentEditor->DontHandleNextTextChange();
+		ParentEditor->SetCurrentToken(Result);
+		ParentEditor->FocusTextArea();
 	} finally {
 		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
 	}
@@ -768,10 +767,10 @@ bool SyntaxBox::QuickView(String^ TextUnderMouse)
 		}
 	}
 	if (Item != nullptr) {
-		Point TipLoc = ParentEditor->EditorBox->GetPositionFromCharIndex(ParentEditor->EditorBox->SelectionStart);
-		TipLoc.X += 55, TipLoc.Y += ParentEditor->EditorBox->Font->Height + 25;
+		Point TipLoc = ParentEditor->GetCaretLocation();
+		TipLoc.X += 42, TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 35;
 		InfoTip->ToolTipTitle = Item->GetTypeIdentifier();
-		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->EditorControlBox->Handle), TipLoc, 8000);
+		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), TipLoc, 8000);
 		return true;
 	} else
 		return false;

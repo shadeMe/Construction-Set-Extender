@@ -7,6 +7,7 @@
 
 
 
+
 extern "C"{
 
 __declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message)
@@ -94,8 +95,6 @@ __declspec(dllexport) UInt32 ScriptEditor_InstantiateCustomEditor(const char* Sc
 	} else
 		g_EditorInitScript = NULL;
 
-
-//	HWND CustomEditor = CreateDialogParamA(*g_TESCS_Instance, (LPCSTR)0xBC, *g_HWND_CSParent, g_ScriptEditor_DlgProc, NULL);
 	HWND CustomEditor = CreateDialogParamA(*g_TESCS_Instance, (LPCSTR)0xBC, NULL, g_ScriptEditor_DlgProc, NULL);
 	g_EditorInitScript = NULL;
 	UInt32 AllocatedIndex = EDAL->TrackNewEditor(CustomEditor);
