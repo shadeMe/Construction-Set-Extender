@@ -3,8 +3,10 @@
 #include "MiscHooks.h"
 #include "Common\HandShakeStructs.h"
 #include "Common\CLIWrapper.h"
-#include "resource.h"
 #include "Console.h"
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -13,6 +15,8 @@ WNDPROC						g_RenderWndOrgWindowProc = NULL;
 WNDPROC						g_ConsoleWndOrgWindowProc = NULL;
 WNDPROC						g_ConsoleEditControlOrgWindowProc = NULL;
 WNDPROC						g_ConsoleCmdBoxOrgWindowProc = NULL;
+WNDPROC						g_ObjectWndOrgWindowProc = NULL;
+WNDPROC						g_CellViewWndOrgWindowProc = NULL;
 
 #define PI					3.151592653589793
 
@@ -52,7 +56,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case 9906:		// startup plugin btn
+		case DATA_SETSTARTUPPLUGIN:		// startup plugin btn
 			{
 			HWND PluginList = GetDlgItem(hWnd, 1056);
 			int SelectedItem = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
@@ -114,7 +118,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case 9901:		// save as menu item
+		case MAIN_DATA_SAVEAS:		// save as menu item
 			if (!(*g_dataHandler)->unk8B8.activeFile)		break;
 
 			*g_WorkingFileFlag = 0;
@@ -137,7 +141,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			*g_WorkingFileFlag = 1;
 			g_SaveAsRoutine = false;
 			break;
-		case 9902:				// batch edit menu item
+		case MAIN_WORLD_BATCHEDIT:				// batch edit menu item
 			{
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
@@ -285,34 +289,23 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			}
 			break;
 			}
-		case 9903:				// console window menu item
+		case MAIN_VIEW_CONSOLEWINDOW:				// console window menu item
 			if (CONSOLE->IsConsoleInitalized()) {
 				HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 				if (CONSOLE->ToggleDisplayState())
-					CheckMenuItem(ViewMenu, 9903, MF_CHECKED);
+					CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_CHECKED);
 				else
-					CheckMenuItem(ViewMenu, 9903, MF_UNCHECKED);
+					CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_UNCHECKED);
 			}
 			break;
-		case 9904:				// hide unmodified forms item
-			{
-			HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-			if (AreUnModifiedFormsHidden())
-			{
-				// show all forms
-				ToggleHideUnModifiedForms(false);
-				CheckMenuItem(ViewMenu, 9904, MF_UNCHECKED);
-			}
-			else
-			{
-				// only show active forms
-				ToggleHideUnModifiedForms(true);
-				CheckMenuItem(ViewMenu, 9904, MF_CHECKED);		
-			}
+		case MAIN_VIEW_MODIFIEDRECORDS:				// hide unmodified forms item
+			FormEnumerationWrapper::ToggleUnmodifiedFormVisibility();
 			break;
-			}
-		case 9905:				// CSE preferences item
+		case MAIN_DATA_CSEPREFERENCES:				// CSE preferences item
 			g_INIEditGUI->InitializeGUI(g_DLLInstance, *g_HWND_CSParent, g_INIManager);
+			break;
+		case MAIN_VIEW_DELETEDRECORDS:				// hide deleted forms item
+			FormEnumerationWrapper::ToggleDeletedFormVisibility();
 			break;
 		}
 		break;
@@ -331,8 +324,8 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case 9902:	
-			SendMessage(*g_HWND_CSParent, WM_COMMAND, 9902, 0);
+		case RENDER_BATCHEDIT:	
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, MAIN_WORLD_BATCHEDIT, 0);
 			break;
 		}
 		break; 
@@ -500,7 +493,8 @@ LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 		{
 			char Buffer[0x200];
 			Edit_GetText(hWnd, Buffer, sizeof(Buffer));
-			CONSOLE->LogMessage("CMD", Buffer);
+			if (strlen(Buffer) > 2)
+				CONSOLE->LogMessage("CMD", Buffer);
 			Edit_SetText(hWnd, NULL);
 			return TRUE;
 		}
@@ -511,4 +505,123 @@ LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 	}
  
 	return CallWindowProc(g_ConsoleCmdBoxOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
+void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
+{
+	switch (Identifier)
+	{
+	case POPUP_SETFORMID:
+	{
+		if (Form->refID < 0x800)	break;
+
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
+		LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
+		if (FormIDString)
+		{
+			UInt32 FormID = 0;
+			sscanf_s(FormIDString, "%08X", &FormID);
+			if (errno == ERANGE || errno == EINVAL)
+			{
+				MessageBox(hWnd, "Bad FormID string - FormIDs should be unsigned 32-bit hex integers (e.g: 00503AB8)", "CSE", MB_OK);
+				break;
+			}
+			else if ((FormID & 0x00FFFFFF) < 0x800)
+			{
+				MessageBox(hWnd, "Invalid FormID - Base should be at least 0x800", "CSE", MB_OK);
+				break;
+			}
+
+			sprintf_s(g_Buffer, sizeof(g_Buffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
+			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+			{
+				thisCall(kTESForm_SetFormID, Form, (UInt32)FormID, true);
+				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
+			}
+		}
+		break;
+	}
+	case POPUP_MARKUNMODIFIED:			 
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
+		if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+		{
+			thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);		
+		}			
+		break;
+	case POPUP_JUMPTOUSEINFOLIST:		
+	{
+		const char* EditorID = Form->editorData.editorID.m_data;
+
+		if (EditorID)
+			CLIWrapper::UseInfoList::OpenUseInfoBox(EditorID);
+		else
+		{
+			sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
+			CLIWrapper::UseInfoList::OpenUseInfoBox(g_Buffer);
+		}
+		break;
+	}
+	case POPUP_UNDELETE:
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
+		if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+		{
+			thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
+		}
+		break;
+	}
+	UpdateWindow(hWnd);
+}
+
+LRESULT CALLBACK ObjectWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+#if 0
+		LVITEM SelectedItem;
+		int SelectedItemIndex = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, -1, LVNI_SELECTED);
+
+		if (SelectedItemIndex == -1)	break;
+		
+		SelectedItem.mask = LVIF_PARAM;
+		SelectedItem.iItem = SelectedItemIndex;
+		SelectedItem.iSubItem = 0;
+
+		if (ListView_GetItem(*g_HWND_ObjectWindow_FormList, &SelectedItem) != TRUE)	break;
+		TESForm* Object = (TESForm*)SelectedItem.lParam;
+		if (!Object)	break;
+#endif
+		break;
+	}
+ 
+	return CallWindowProc(g_ObjectWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
+LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static HWND* s_CellViewListViewUnderCursor = (HWND*)0x00A0A9E4;
+
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+#if 0
+		LVITEM SelectedItem;
+		int SelectedItemIndex = ListView_GetNextItem(*s_CellViewListViewUnderCursor, -1, LVNI_SELECTED);
+
+		if (SelectedItemIndex == -1)	break;
+		
+		SelectedItem.mask = LVIF_PARAM;
+		SelectedItem.iItem = SelectedItemIndex;
+		SelectedItem.iSubItem = 0;
+
+		if (ListView_GetItem(*s_CellViewListViewUnderCursor, &SelectedItem) != TRUE)	break;
+		TESForm* Object = (TESForm*)SelectedItem.lParam;
+		if (!Object)	break;
+
+		EvaluatePopupMenuItems(hWnd, LOWORD(wParam), Object);
+#endif
+		break;
+	}
+ 
+	return CallWindowProc(g_CellViewWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 }

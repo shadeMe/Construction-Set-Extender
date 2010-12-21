@@ -18,7 +18,9 @@ bool							g_QuickLoadToggle = false;
 static HFONT					g_CSDefaultFont = NULL;
 bool							g_SaveAsRoutine = false;
 ModEntry::Data*					g_SaveAsBuffer = NULL;
-static bool						g_BitSwapBuffer = false;
+bool							g_BitSwapBuffer = false;
+
+extern FARPROC					g_WindowHandleCallAddr;
 
 
 MemHdlr							kSavePluginMasterEnum				(0x0047ECC6, SavePluginMasterEnumHook, 0, 0);
@@ -64,6 +66,10 @@ MemHdlr							kAutoLoadActivePluginOnStartup		(0x0041A26A, AutoLoadActivePluginO
 MemHdlr							kDataHandlerClearDataShadeMeRefDtor	(0x0047AE76, DataHandlerClearDataShadeMeRefDtorHook, 0, 0);
 MemHdlr							kCellObjectListShadeMeRefAppend		(0x00445128, CellObjectListShadeMeRefAppendHook, 0, 0);
 MemHdlr							kDeathToTheCloseOpenDialogsMessage	(0x0041BAA7, (UInt32)0, 0, 0);
+MemHdlr							kTopicInfoCopyProlog				(0x004F0738, 0x004F07C4, 0, 0);
+MemHdlr							kTopicInfoCopyEpilog				(0x004F1280, TopicInfoCopyEpilogHook, 0, 0);
+MemHdlr							kTESDialogPopupMenu					(0x004435A6, TESDialogPopupMenuHook, 0, 0);
+
 
 
 void __stdcall DoTestHook(void* Ref3DData)
@@ -145,6 +151,10 @@ bool PatchMiscHooks()
 	kDataHandlerClearDataShadeMeRefDtor.WriteJump();
 	kCellObjectListShadeMeRefAppend.WriteJump();
 	kDeathToTheCloseOpenDialogsMessage.WriteUInt8(0xEB);
+	kTopicInfoCopyProlog.WriteJump();
+	kTopicInfoCopyEpilog.WriteJump();
+	kTESDialogPopupMenu.WriteJump();
+
 
 	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -223,8 +233,7 @@ void __stdcall DoLoadPluginsEpilogHook(void)
 	if (g_BitSwapBuffer) {
 		ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
 
-		if (!ActiveFile ||
-			ActiveFile->flags & ModEntry::Data::kFlag_IsMaster)
+		if (!ActiveFile || ActiveFile->flags & ModEntry::Data::kFlag_IsMaster)
 			DebugPrint("Assertion Error - LoadPluginEpilog encountered a swapped master"), MessageBeep(MB_ICONHAND);
 		else {
 			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 1);
@@ -322,6 +331,7 @@ void __declspec(naked) UseInfoListInitHook(void)
 	static const UInt32			kUseInfoListInitRetnAddr = 0x00419848;
 	__asm
 	{
+		push	0
 		call	CLIWrapper::UseInfoList::OpenUseInfoBox
 		jmp		[kUseInfoListInitRetnAddr]
 	}
@@ -341,7 +351,8 @@ void PatchMenus()
 				ItemWorldBatchEdit, 
 				ItemViewConsole, 
 				ItemViewModifiedRecords,
-				ItemFileCSEPreferences;
+				ItemFileCSEPreferences,
+				ItemViewDeletedRecords;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -349,14 +360,14 @@ void PatchMenus()
 	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemGameplayUseInfo);
 
 	ItemViewRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the controlID for the button
-	ItemViewRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is present in the wndproc
+	ItemViewRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is already present in the wndproc
 	ItemViewRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
 	ItemViewRenderWindow.fState = MFS_CHECKED;
 	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemViewRenderWindow);	
 
 	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
 	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemDataSaveAs.wID = 9901;
+	ItemDataSaveAs.wID = MAIN_DATA_SAVEAS;
 	ItemDataSaveAs.fState = MFS_ENABLED;
 	ItemDataSaveAs.dwTypeData = "Save As";
 	ItemDataSaveAs.cch = 7;
@@ -364,7 +375,7 @@ void PatchMenus()
 
 	ItemWorldBatchEdit.cbSize = sizeof(MENUITEMINFO);		
 	ItemWorldBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemWorldBatchEdit.wID = 9902;
+	ItemWorldBatchEdit.wID = MAIN_WORLD_BATCHEDIT;
 	ItemWorldBatchEdit.fState = MFS_ENABLED;
 	ItemWorldBatchEdit.dwTypeData = "Batch Edit References";
 	ItemWorldBatchEdit.cch = 0;
@@ -373,7 +384,7 @@ void PatchMenus()
 	
 	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);		
 	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemViewConsole.wID = 9903;
+	ItemViewConsole.wID = MAIN_VIEW_CONSOLEWINDOW;
 	ItemViewConsole.fState = MFS_ENABLED|MFS_CHECKED;
 	ItemViewConsole.dwTypeData = "Console Window";
 	ItemViewConsole.cch = 0;
@@ -381,7 +392,7 @@ void PatchMenus()
 
 	ItemViewModifiedRecords.cbSize = sizeof(MENUITEMINFO);		
 	ItemViewModifiedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemViewModifiedRecords.wID = 9904;
+	ItemViewModifiedRecords.wID = MAIN_VIEW_MODIFIEDRECORDS;
 	ItemViewModifiedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
 	ItemViewModifiedRecords.dwTypeData = "Hide Unmodified Forms";
 	ItemViewModifiedRecords.cch = 0;
@@ -389,11 +400,20 @@ void PatchMenus()
 
 	ItemFileCSEPreferences.cbSize = sizeof(MENUITEMINFO);		
 	ItemFileCSEPreferences.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemFileCSEPreferences.wID = 9905;
+	ItemFileCSEPreferences.wID = MAIN_DATA_CSEPREFERENCES;
 	ItemFileCSEPreferences.fState = MFS_ENABLED;
 	ItemFileCSEPreferences.dwTypeData = "CSE Preferences";
 	ItemFileCSEPreferences.cch = 0;
 	InsertMenuItem(FileMenu, 40003, FALSE, &ItemFileCSEPreferences);
+
+	
+	ItemViewDeletedRecords.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewDeletedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewDeletedRecords.wID = MAIN_VIEW_DELETEDRECORDS;
+	ItemViewDeletedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
+	ItemViewDeletedRecords.dwTypeData = "Hide Deleted Forms";
+	ItemViewDeletedRecords.cch = 0;
+	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewDeletedRecords);
 }
 
 void __stdcall DoCSInitHook()
@@ -413,6 +433,8 @@ void __stdcall DoCSInitHook()
 
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
 	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
+//	g_ObjectWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_ObjectWindow, GWL_WNDPROC, (LONG)ObjectWndSubClassProc);
+//	g_CellViewWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CellView, GWL_WNDPROC, (LONG)CellViewWndSubClassProc);
 
 	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
 		LoadStartupPlugin();
@@ -432,7 +454,7 @@ void __stdcall DoCSInitHook()
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
 	}
 
-	
+	LoadedMasterArchives();
 }
 
 
@@ -603,7 +625,7 @@ void __declspec(naked) NPCFaceGenHook(void)
 
 void __stdcall DoQuickLoadPluginLoadHandlerPrologueHook(HWND DataDlg)
 {
-	if (IsDlgButtonChecked(DataDlg, 9900) == BST_CHECKED)
+	if (IsDlgButtonChecked(DataDlg, DATA_QUICKLOAD) == BST_CHECKED)
 		g_QuickLoadToggle = true;
 	else
 		g_QuickLoadToggle = false;
@@ -661,25 +683,29 @@ void __declspec(naked) QuickLoadPluginLoadHandlerHook(void)
 void __stdcall DoDataDlgInitHook(HWND DataDialog)
 {
 	// create new controls
+	RECT DlgRect;
+	GetClientRect(DataDialog, &DlgRect);
+
 	HWND QuickLoadCheckBox = CreateWindowEx(0, 
 											"BUTTON", 
 											"Quick-Load Plugin", 
 											BS_AUTOCHECKBOX|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-											474, 198, 142, 15, 
+											DlgRect.right - 141, DlgRect.bottom - 82, 142, 15, 
 											DataDialog, 
-											(HMENU)9900, 
+											(HMENU)DATA_QUICKLOAD, 
 											GetModuleHandle(NULL), 
 											NULL),
 		 StartupPluginBtn = CreateWindowEx(0, 
 											"BUTTON", 
 											"Set As Startup Plugin", 
 											WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-											474, 215, 130, 20, 
+											DlgRect.right - 141, DlgRect.bottom - 64, 130, 20, 
 											DataDialog, 
-											(HMENU)9906, 
+											(HMENU)DATA_SETSTARTUPPLUGIN, 
 											GetModuleHandle(NULL), 
 											NULL);
-	CheckDlgButton(DataDialog, 9900, (!g_QuickLoadToggle ? BST_UNCHECKED : BST_CHECKED));
+
+	CheckDlgButton(DataDialog, DATA_QUICKLOAD, (!g_QuickLoadToggle ? BST_UNCHECKED : BST_CHECKED));
 	g_CSDefaultFont = (HFONT)SendMessage(GetDlgItem(DataDialog, 1), WM_GETFONT, NULL, NULL);
 	SendMessage(QuickLoadCheckBox, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 	SendMessage(StartupPluginBtn, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
@@ -752,7 +778,7 @@ void __stdcall DoRenderWindowPopupPatchHook()
 
 	ItemRenderBatchEdit.cbSize = sizeof(MENUITEMINFO);		
 	ItemRenderBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemRenderBatchEdit.wID = 9903;
+	ItemRenderBatchEdit.wID = RENDER_BATCHEDIT;
 	ItemRenderBatchEdit.fState = MFS_ENABLED;
 	ItemRenderBatchEdit.dwTypeData = "Batch Edit References";
 	ItemRenderBatchEdit.cch = 0;
@@ -823,12 +849,6 @@ void __stdcall FixDefaultWater(void)
 	(*g_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
 }
 
-void __stdcall DoHiddenFormsCheck(void)
-{
-	if (AreUnModifiedFormsHidden())
-		ToggleHideUnModifiedForms(true);
-}
-
 void __declspec(naked) PluginLoadHook(void)
 {
 	static const UInt32			kPluginLoadRetnAddr	=	0x0041BEFF;
@@ -845,43 +865,11 @@ void __declspec(naked) PluginLoadHook(void)
 		pushad
 		push	9
 		call	SendPingBack
-		call	DoHiddenFormsCheck
+		call	FormEnumerationWrapper::ResetFormVisibility
 		popad
 
 		jmp		[kPluginLoadRetnAddr]
     }
-}
-
-bool __stdcall PerformControlPopulationPrologCheck(TESForm* Form)
-{
-	if (AreUnModifiedFormsHidden() && ((Form->flags & TESForm::kFormFlags_FromActiveFile) == 0))
-		return false;		// skip addition
-	else
-		return true;
-}
-
-UInt8 __stdcall CheckCallLocations(UInt32 CallAddress)
-{
-	switch (CallAddress)
-	{
-	case 0x00445C88:
-	case 0x00445DC8:
-	case 0x00445E6E:
-	case 0x00452FA8:
-	case 0x00440FBD:
-	case 0x0040A4BF:
-	case 0x00412F7A:
-	case 0x0043FDFF:
-	case 0x00442576:
-	case 0x00452409:
-	case 0x00560DC2:
-	case 0x00445E12:	// ?
-	case 0x00445D81:
-	case 0x004F00C3:
-		return 1;
-	default:
-		return 0;
-	}
 }
 
 void __declspec(naked) AddListViewItemHook(void)
@@ -894,7 +882,7 @@ void __declspec(naked) AddListViewItemHook(void)
 		sub		eax, 5
 		pushad
 		push	eax
-		call	CheckCallLocations
+		call	FormEnumerationWrapper::PerformListViewPrologCheck
 		test	al, al
 		jz		SKIP
 		popad
@@ -902,7 +890,7 @@ void __declspec(naked) AddListViewItemHook(void)
 		mov		eax, [esp + 8]
 		pushad
 		push	eax
-		call	PerformControlPopulationPrologCheck
+		call	FormEnumerationWrapper::GetShouldEnumerateForm
 		test	al, al
 		jz		EXIT
 	SKIP:
@@ -925,7 +913,7 @@ void __declspec(naked) AddComboBoxItemHook(void)
     {
 		pushad
 		push	[esp + 0xC]
-		call	PerformControlPopulationPrologCheck
+		call	FormEnumerationWrapper::GetShouldEnumerateForm
 		test	al, al
 		jz		EXIT
 		popad
@@ -949,7 +937,7 @@ void __declspec(naked) ObjectListPopulateListViewItemsHook(void)
 		mov		eax, [esp + 8]
 		pushad
 		push	eax
-		call	PerformControlPopulationPrologCheck
+		call	FormEnumerationWrapper::GetShouldEnumerateForm
 		test	al, al
 		jz		EXIT2
 		popad
@@ -984,7 +972,7 @@ void __declspec(naked) CellViewPopulateObjectListHook(void)
 
 		pushad
 		push	eax
-		call	PerformControlPopulationPrologCheck
+		call	FormEnumerationWrapper::GetShouldEnumerateForm
 		test	al, al
 		jz		EXIT1
 		popad
@@ -1068,5 +1056,111 @@ void __declspec(naked) CellObjectListShadeMeRefAppendHook(void)
 
 		call	TESDialog_AddComboBoxItem
 		jmp		[kCellObjectListShadeMeRefAppendRetnAddr]
+	}
+}
+
+void __declspec(naked) TopicInfoCopyEpilogHook(void)
+{
+	static const UInt32			kTopicInfoCopyEpilogHookRetnAddr = 0x004F1286;
+	__asm
+	{
+		pushad
+		mov		eax, [esi]
+		mov		eax, [eax + 0x94]		// SetFromActiveFile
+		push	1
+		mov		ecx, esi
+		call	eax
+		popad
+
+		mov     [esi + 0x30], bx
+		mov     eax, [edi]
+		jmp		[kTopicInfoCopyEpilogHookRetnAddr]
+	}
+}
+
+
+void __stdcall InsertFormListPopupMenuItems(HMENU Menu)
+{
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SETFORMID, "Set FormID");
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_MARKUNMODIFIED, "Mark As Unmodified");
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
+}
+void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
+{
+	switch (MenuIdentifier)
+	{
+	case POPUP_SETFORMID:
+	case POPUP_MARKUNMODIFIED:
+	case POPUP_JUMPTOUSEINFOLIST:
+	case POPUP_UNDELETE:
+		EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
+		break;
+	default:
+		SendMessage(Parent, WM_COMMAND, (WPARAM)MenuIdentifier, NULL);
+		break;
+	}
+}
+void __stdcall RemoveFormListPopupMenuItems(HMENU Menu)
+{
+	DeleteMenu(Menu, POPUP_SETFORMID, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_MARKUNMODIFIED, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_JUMPTOUSEINFOLIST, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_UNDELETE, MF_BYCOMMAND);
+	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
+}
+
+
+void __declspec(naked) TESDialogPopupMenuHook(void)
+{
+	static const UInt32			kTESDialogPopupMenuHookRetnAddr = 0x004435C3;
+
+	static HWND					ParentHWND = NULL;
+	__asm
+	{
+		pushad
+		call	TrackPopupMenuAddress
+		popad
+
+		mov		eax, [esp + 0x18]
+		mov		ParentHWND, eax
+		push	0
+		push	eax
+		mov		eax, [esp + 0x1C]
+		mov		ecx, [eax + 4]
+		mov		edx, [eax]
+		push	0
+		push	ecx
+		push	edx
+
+		test	ebx, ebx
+		jz		SKIP
+
+		pushad
+		push	esi
+		call	InsertFormListPopupMenuItems
+		popad
+
+		push	0x102
+		push	esi
+		call	g_WindowHandleCallAddr
+
+		pushad
+		push	esi
+		call	RemoveFormListPopupMenuItems
+		popad
+
+		push	ebx
+		push	eax
+		push	ParentHWND
+		call	HandleHookedPopup
+		jmp		[kTESDialogPopupMenuHookRetnAddr]
+	SKIP:
+		push	2
+		push	esi
+		call	g_WindowHandleCallAddr
+
+		jmp		[kTESDialogPopupMenuHookRetnAddr]
 	}
 }

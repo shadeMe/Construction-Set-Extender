@@ -66,12 +66,12 @@ bool Console::ToggleDisplayState()
 		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());
 		ShowWindow(WindowHandle, SW_SHOWNA);
-		CheckMenuItem(ViewMenu, 9903, MF_CHECKED);
+		CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_CHECKED);
 		
 		DisplayState = true;
 	} else {
 		ShowWindow(WindowHandle, SW_HIDE);
-		CheckMenuItem(ViewMenu, 9903, MF_UNCHECKED);
+		CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_UNCHECKED);
 		DisplayState = false;
 	}
 	return DisplayState;

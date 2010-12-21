@@ -18,7 +18,7 @@ MemHdlr								kParseScriptLineOverride			(0x00503401, ParseScriptLineOverride, 
 
 void __stdcall DoRerouteScriptErrorsHook(UInt32 Line, const char* Message)
 {
-	if (g_CompileCallerAddr && g_CompileCallerAddr != 0x005035EE)
+	if (g_CompileCallerAddr && g_CompileCallerAddr != 0x005035EE)			// don't handle when compiling result scripts
 		CLIWrapper::ScriptEditor::PassScriptError(Line, Message, EDAL->GetLastContactedEditor());
 }
 
@@ -95,7 +95,7 @@ void __declspec(naked) ParseScriptLineOverride(void)
 
 // ERROR HANDLERS
 
-																//  sub_502680
+																//  f_ConstructLineBuffer
 DEFINE_SHOWCOMPILERERROR_HOOK(0x00502781, 0x00502791, 0xC)
 DEFINE_SHOWCOMPILERERROR_HOOK(0x00502813, 0x005027AD, 0xC)
 DEFINE_SHOWCOMPILERERROR_HOOK(0x005027D3, 0x00502824, 0xC)

@@ -3,9 +3,9 @@
 
 extern "C"{
 
-__declspec(dllexport) void OpenUseInfoBox(void)
+__declspec(dllexport) void OpenUseInfoBox(const char* InitForm)
 {
-	USELST->Open();
+	USELST->Open(InitForm);
 }
 
 __declspec(dllexport) void SetFormListItemData(FormData* Data)

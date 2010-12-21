@@ -38,6 +38,7 @@ TESWaterForm**						g_DefaultWater = (TESWaterForm**)0x00A137CC;
 TESObjectREFR**						g_PlayerRef = (TESObjectREFR**)0x00A0E088;
 GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
 void*								g_GMSTMap = (void*)0x00A102A4;
+GenericNode<Archive>**				g_LoadedArchives = (GenericNode<Archive>**)0x00A0DD8C;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -56,6 +57,7 @@ const _TESDialog_AddComboBoxItem	TESDialog_AddComboBoxItem = (_TESDialog_AddComb
 const _BSPrintF						BSPrintF = (_BSPrintF)0x004053F0;
 const _ShowCompilerError			ShowCompilerErrorEx = (_ShowCompilerError)0x004FFF40;
 const _AutoSavePlugin				AutoSavePlugin = (_AutoSavePlugin)0x004307C0;
+const _CreateArchive				CreateArchive = (_CreateArchive)0x004665C0;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -363,56 +365,7 @@ UInt32 GetDialogTemplate(UInt8 FormTypeID)
 
 	const char* FormType = TypeIdentifier[FormTypeID];
 
-	if (!_stricmp(FormType, "Activator") ||
-		!_stricmp(FormType, "Apparatus") ||
-		!_stricmp(FormType, "Armor") ||
-		!_stricmp(FormType, "Book") ||
-		!_stricmp(FormType, "Clothing") ||
-		!_stricmp(FormType, "Container") ||
-		!_stricmp(FormType, "Door") ||
-		!_stricmp(FormType, "Ingredient") ||
-		!_stricmp(FormType, "Light") ||
-		!_stricmp(FormType, "MiscItem") ||
-		!_stricmp(FormType, "SoulGem") ||
-		!_stricmp(FormType, "Static") ||
-		!_stricmp(FormType, "Grass") ||
-		!_stricmp(FormType, "Tree") ||
-		!_stricmp(FormType, "Flora") ||
-		!_stricmp(FormType, "Furniture") ||
-		!_stricmp(FormType, "Ammo") ||
-		!_stricmp(FormType, "Weapon") ||
-		!_stricmp(FormType, "NPC") ||
-		!_stricmp(FormType, "Creature") ||
-		!_stricmp(FormType, "LeveledCreature") ||
-		!_stricmp(FormType, "Spell") ||
-		!_stricmp(FormType, "Enchantment") ||
-		!_stricmp(FormType, "Potion") ||
-		!_stricmp(FormType, "Leveled Item") ||
-		!_stricmp(FormType, "Sound") ||
-		!_stricmp(FormType, "LandTexture") ||
-		!_stricmp(FormType, "CombatStyle") ||
-		!_stricmp(FormType, "LoadScreen") ||
-		!_stricmp(FormType, "WaterType") ||
-		!_stricmp(FormType, "LeveledSpell") ||
-		!_stricmp(FormType, "AnimObject") ||
-		!_stricmp(FormType, "Subspace") ||
-		!_stricmp(FormType, "EffectShader") ||
-		!_stricmp(FormType, "SigilStone"))
-			return 1;									// TESDialog
-	else if (!_stricmp(FormType, "Script"))
-			return 9;
-	else if (!_stricmp(FormType, "Reference"))				
-			return 10;									// Special Handlers
-	else if (!_stricmp(FormType, "Hair") ||				
-		!_stricmp(FormType, "Eyes") ||					
-		!_stricmp(FormType, "Race") ||
-		!_stricmp(FormType, "Class") ||
-		!_stricmp(FormType, "Birthsign") ||				
-		!_stricmp(FormType, "Climate") ||
-		!_stricmp(FormType, "World Space"))
-			return 2;									// TESDialog ListView
-	else
-			return 0;
+	return GetDialogTemplate(FormType);
 }
 
 
@@ -490,25 +443,6 @@ TESObjectREFR* ChooseReferenceDlg(HWND Parent)
 	return ChooseRefWrapper(Parent, 0, 0x00545B10, 0);
 }
 
-bool __stdcall AreUnModifiedFormsHidden()
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-	UInt32 State = GetMenuState(ViewMenu, 9904, MF_BYCOMMAND);
-
-	return (State & MF_CHECKED);
-}
-
-void ToggleHideUnModifiedForms(bool State)
-{
-	DeInitializeCSWindows();	
-
-	SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
-	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
-
-	InitializeCSWindows();
-	InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
-}
-
 void LoadStartupPlugin()
 {
 	// prolog
@@ -535,9 +469,7 @@ void LoadStartupPlugin()
 
 void InitializeDefaultGMSTMap()
 {
-//	WaitUntilDebuggerAttached();
 	void* Unk01 = (void*)thisCall(0x0051F920, (void*)g_GMSTMap);
-
 	while (Unk01)
 	{
 		const char*	 Name = NULL;
@@ -547,6 +479,39 @@ void InitializeDefaultGMSTMap()
 		if (Name)
 		{
 			g_DefaultGMSTMap.insert(std::make_pair<const char*, GMSTData*>(Name, Data));
+		}
+	}
+}
+
+void LoadedMasterArchives()
+{
+	if (*g_LoadedArchives == 0)		return;
+
+	for (IDirectoryIterator Itr((std::string(g_AppPath + "Data\\")).c_str(), "*.bsa"); !Itr.Done(); Itr.Next())
+	{
+		std::string FileName(Itr.Get()->cFileName);
+		FileName = FileName.substr(FileName.find_last_of("\\") + 1);
+		
+		bool IsLoaded = false;
+		for (GenericNode<Archive>* Itr = (*g_LoadedArchives); Itr; Itr = Itr->next)
+		{
+			if (Itr->data)
+			{
+				std::string LoadedFileName(Itr->data->bsfile.m_path);
+				LoadedFileName = LoadedFileName.substr(LoadedFileName.find_last_of("\\") + 1);
+
+				if (!_stricmp(LoadedFileName.c_str(), FileName.c_str()))
+				{	
+					IsLoaded = true;
+					break;
+				}	
+			}
+		}
+
+		if (IsLoaded == false)
+		{
+			CreateArchive(FileName.c_str(), 0, 0);
+			DebugPrint("BSA Archive %s loaded", FileName.c_str());
 		}
 	}
 }

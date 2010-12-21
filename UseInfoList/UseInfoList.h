@@ -19,7 +19,9 @@ public ref class UseInfoList
 	void												UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
 	void												UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
 
-	void												UseListInfoBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+	void												UseInfoListBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+	void												UseInfoListBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+	void												UseInfoListBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
 	void												SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
 	void												SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
@@ -129,7 +131,8 @@ public ref class UseInfoList
 public:
 	static UseInfoList^%								GetSingleton(void);
 
-	void												Open(void);
+	void												Open(const char* InitForm);
+
 	void												AddFormListItem(String^% EditorID, String^% FormID, UInt32 Type);
 	void												AddObjectListItem(String^% EditorID, String^% FormID, UInt32 Type);
 	void												AddCellListItem(String^% RefID, String^% WorldEditorID, String^% CellFormID, String^% CellEditorID, String^% CellGrid, UInt32 UseCount);

@@ -97,9 +97,6 @@ public:
 
 public ref class Workspace
 {
-
-	void												ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
 public:
 	static enum class									MessageType
 														{
@@ -210,121 +207,6 @@ private:
 														};
 	static ImageList^									Icons = gcnew ImageList();
 	
-
-														// EVENT HANDLERS
-
-	void												EditorBox_TextChanged(Object^ Sender, EventArgs^ E);
-	void												EditorBox_VScroll(Object^ Sender, EventArgs^ E);
-	void												EditorBox_Resize(Object^ Sender, EventArgs^ E);
-	void												EditorBox_KeyUp(Object^ Sender, KeyEventArgs^ E);
-	void												EditorBox_MouseDown(Object^ Sender, MouseEventArgs^ E);
-	void												EditorBox_MouseUp(Object^ Sender, MouseEventArgs^ E);
-	void												EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
-	void												EditorBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
-	void												EditorBox_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
-	void												EditorBox_HScroll(Object^ Sender, EventArgs^ E);
-	
-
-	void												EditorLineNo_MouseDown(Object^ Sender, MouseEventArgs^ E);
-
-	void												ToolBarEditMenuContentsFind_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarEditMenuContentsReplace_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
-	void												ToolBarCommonTextBox_KeyUp(Object^ Sender, KeyEventArgs^ E);
-	void												ToolBarCommonTextBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
-	void												ToolBarCommonTextBox_LostFocus(Object^ Sender, EventArgs^ E);
-	void												ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarOptions_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarErrorList_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarFindList_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarNextScript_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarNavBack_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarNavForward_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E);
-
-	void												ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
-
-	void												EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
-
-
-	void												ContextMenuCopy_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuPaste_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuFind_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E);
-	void												ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E);
-	
-	void												ErrorBox_DoubleClick(Object^ Sender, EventArgs^ E);
-	void												FindBox_DoubleClick(Object^ Sender, EventArgs^ E);
-	void												BookmarkBox_DoubleClick(Object^ Sender, EventArgs^ E);
-	void												ErrorBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-	void												FindBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-	void												BookmarkBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-	void												VariableBox_DoubleClick(Object^ Sender, EventArgs^ E);
-	void												VariableBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-
-	void												IndexEditBox_LostFocus(Object^ Sender, EventArgs^ E);
-	void												IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
-
-
-	void												UpdateLineNumbers(void);
-	void												FindAndReplace(bool Replace);
-	void												JumpToLine(String^ LineStr, bool OffsetSearch);
-	int													FindLineNumberInLineBox(UInt32 Line);
-	void												PerformLineNumberHighlights(void);
-	int													CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLines);
-	void												ExdentLine(void);
-	bool												TabIndent();
-	void												ToggleComment(int CaretPos);
-	void												UpdateFindImagePointers(void);
-	void												PlaceFindImagePointer(int Index);
-	bool												IsDelimiterKey(Keys KeyCode);
-	void												MoveCaretToValidHome(void);
-	void												ToggleBookmark(int CaretPos);
-	void												ReadBookmarks(String^ ExtractedBlock);
-	void												DumpBookmarks(void);
-	void												SaveCaretPos(void);
-	void												LoadSavedCaretPos(String^ ExtractedBlock);
-	bool												IsCursorInsideCommentSeg(bool OneLessIdx);
-	bool												HasLineChanged();
-	void												ValidateLineLimit(void);
-	void												ProcessWarnings(String^ ExtractedBlock);
-	void												SetScriptType(UInt16 ScriptType);
-	void												EnableControls();
-	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
-	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
-	void												GetVariableIndices(bool SetFlag);
-	void												SetVariableIndices(void);
-	void												ClearFindImagePointers(void);
-
 	SyntaxBox^											ISBox;
 	DotNetBar::TabItem^									EditorTab;
 	DotNetBar::TabControlPanel^							EditorControlBox;
@@ -424,6 +306,104 @@ private:
 	UInt32												ScriptType;
 	TabContainer^										ParentContainer;
 	String^												ScriptEditorID;
+
+	void												EditorBox_TextChanged(Object^ Sender, EventArgs^ E);
+	void												EditorBox_VScroll(Object^ Sender, EventArgs^ E);
+	void												EditorBox_Resize(Object^ Sender, EventArgs^ E);
+	void												EditorBox_KeyUp(Object^ Sender, KeyEventArgs^ E);
+	void												EditorBox_MouseDown(Object^ Sender, MouseEventArgs^ E);
+	void												EditorBox_MouseUp(Object^ Sender, MouseEventArgs^ E);
+	void												EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void												EditorBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+	void												EditorBox_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
+	void												EditorBox_HScroll(Object^ Sender, EventArgs^ E);
+	void												EditorLineNo_MouseDown(Object^ Sender, MouseEventArgs^ E);
+	void												ToolBarEditMenuContentsFind_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarEditMenuContentsReplace_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void												ToolBarCommonTextBox_KeyUp(Object^ Sender, KeyEventArgs^ E);
+	void												ToolBarCommonTextBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+	void												ToolBarCommonTextBox_LostFocus(Object^ Sender, EventArgs^ E);
+	void												ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarOptions_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarErrorList_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarFindList_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarNextScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarNavBack_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarNavForward_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
+	void												EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
+	void												ContextMenuCopy_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuPaste_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuFind_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E);
+	void												ErrorBox_DoubleClick(Object^ Sender, EventArgs^ E);
+	void												FindBox_DoubleClick(Object^ Sender, EventArgs^ E);
+	void												BookmarkBox_DoubleClick(Object^ Sender, EventArgs^ E);
+	void												ErrorBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+	void												FindBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+	void												BookmarkBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+	void												VariableBox_DoubleClick(Object^ Sender, EventArgs^ E);
+	void												VariableBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+	void												IndexEditBox_LostFocus(Object^ Sender, EventArgs^ E);
+	void												IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
+	void												ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
+
+	void												UpdateLineNumbers(void);
+	void												FindAndReplace(bool Replace);
+	void												JumpToLine(String^ LineStr, bool OffsetSearch);
+	int													FindLineNumberInLineBox(UInt32 Line);
+	void												PerformLineNumberHighlights(void);
+	int													CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLines);
+	void												ExdentLine(void);
+	bool												TabIndent();
+	void												ToggleComment(int CaretPos);
+	void												UpdateFindImagePointers(void);
+	void												PlaceFindImagePointer(int Index);
+	bool												IsDelimiterKey(Keys KeyCode);
+	void												MoveCaretToValidHome(void);
+	void												ToggleBookmark(int CaretPos);
+	void												ReadBookmarks(String^ ExtractedBlock);
+	void												DumpBookmarks(void);
+	void												SaveCaretPos(void);
+	void												LoadSavedCaretPos(String^ ExtractedBlock);
+	bool												IsCursorInsideCommentSeg(bool OneLessIdx);
+	bool												HasLineChanged();
+	void												ValidateLineLimit(void);
+	void												ProcessWarnings(String^ ExtractedBlock);
+	void												SetScriptType(UInt16 ScriptType);
+	void												EnableControls();
+	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
+	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
+	void												GetVariableIndices(bool SetFlag);
+	void												SetVariableIndices(void);
+	void												ClearFindImagePointers(void);
 public:	
 	UInt32												GetAllocatedIndex() { return AllocatedIndex; }
 	bool												GetModifiedStatus() { return EditorTab->ImageIndex; }

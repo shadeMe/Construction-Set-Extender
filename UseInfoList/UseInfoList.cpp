@@ -160,17 +160,48 @@ UseInfoList::UseInfoList()
 	UseInfoListBox->MaximizeBox = false;
 	UseInfoListBox->StartPosition = FormStartPosition::CenterScreen;
 	UseInfoListBox->Text = L"Use Info List";
-	UseInfoListBox->Closing += gcnew CancelEventHandler(this, &UseInfoList::UseListInfoBox_Cancel);
+	UseInfoListBox->Closing += gcnew CancelEventHandler(this, &UseInfoList::UseInfoListBox_Cancel);
+	UseInfoListBox->KeyPress += gcnew KeyPressEventHandler(this, &UseInfoList::UseInfoListBox_KeyPress);
+	UseInfoListBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::UseInfoListBox_KeyDown);
+	UseInfoListBox->KeyPreview = true;
 
 	UseInfoListBox->Hide();
 	LastSortColumn = -1;
 }
 
-void UseInfoList::UseListInfoBox_Cancel(Object^ Sender, CancelEventArgs^ E)
+void UseInfoList::UseInfoListBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
 	Close();
 	E->Cancel = true;
 }
+
+void UseInfoList::UseInfoListBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
+{
+	switch (E->KeyCode)
+	{
+	case Keys::Back:
+		if (SearchBox->Text->Length >= 1) {
+			SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
+			FormList->Focus();
+		}
+		E->Handled = true;
+		break;
+	}
+	
+}
+
+void UseInfoList::UseInfoListBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
+{
+	if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) || 
+		(E->KeyChar > 0x60 && E->KeyChar < 0x7B))
+	{
+		SearchBox->Text += E->KeyChar.ToString();
+		FormList->Focus();
+		E->Handled = true;
+	}
+}
+
+
 
 void UseInfoList::ClearLists()
 {
@@ -184,7 +215,7 @@ void UseInfoList::Close()
 	UseInfoListBox->Hide();
 }
 
-void UseInfoList::Open()
+void UseInfoList::Open(const char* InitForm)
 {
 	if (UseInfoListBox->Visible) {
 		UseInfoListBox->Focus();
@@ -194,6 +225,9 @@ void UseInfoList::Open()
 		UseInfoListBox->Show();
 		UseInfoListBox->Focus();
 	}
+
+	if (InitForm)
+		SearchBox->Text = gcnew String(InitForm);
 }
 
 void UseInfoList::PopulateFormList()

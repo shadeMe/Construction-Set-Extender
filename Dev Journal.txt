@@ -12,7 +12,10 @@ CSE--->
 > Fully implement GMST reinit
 > Figure out how to update the model of references
 > Look into fixing lip sync generation
-> Set FormID (use a global hook to monitor messages - kludgy but much easier than hooking at several dozen places )
+
+> Being able to see cell quadrant boundaries when the landscape and/or quadrant dialogue(s) are open, maybe even color-coded boundaries so it is easy to see which quadrant is which
+> Being able to re-order masters from the master list in the Data... dialogue
+> A tree-view of records from the "Details..." button in the Data... dialogue, similar to TES4Edit
 
 # The ability to specify a custom workspace.
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.

@@ -7,7 +7,8 @@ extern WNDPROC						g_RenderWndOrgWindowProc;
 extern WNDPROC						g_ConsoleWndOrgWindowProc;
 extern WNDPROC						g_ConsoleEditControlOrgWindowProc;
 extern WNDPROC						g_ConsoleCmdBoxOrgWindowProc;
-
+extern WNDPROC						g_ObjectWndOrgWindowProc;
+extern WNDPROC						g_CellViewWndOrgWindowProc;
 
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -29,3 +30,8 @@ BOOL CALLBACK TESFileDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form);
+
+LRESULT CALLBACK ObjectWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

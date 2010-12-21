@@ -5,9 +5,7 @@
 #include "Common/HandShakeStructs.h"
 #include "CompilerErrorDetours.h"
 
-
 HWND								g_ScriptEditorBuffer = NULL;			// handle to the editor dialog being processed by the WndProc
-FARPROC								g_WindowHandleCallAddr = NULL;			// used to call WndMgmt functions
 Script*								g_EditorInitScript	=	NULL;			// must point to valid Script object to be used. needs to be reset right after dialog instantiation
 Script*								g_SetEditorTextCache = NULL;			// stores the script object from the last call of f_Script::SetEditorText
 UInt32								g_WParamBuffer		=	0;				// WParam processed by the WndProc
@@ -113,54 +111,6 @@ void FillScriptDataPackage(Script* ScriptForm)
 }
 
 
-
-#pragma region User32.dll calls
-void __stdcall GetWindowTextAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "GetWindowTextA");
-}
-void __stdcall CreateDialogParamAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "CreateDialogParamA");
-}
-void __stdcall EndDialogAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "EndDialog");
-}
-void __stdcall EnableWindowAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "EnableWindow");
-}
-void __stdcall GetWindowLongAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "GetWindowLongA");
-}
-void __stdcall CreateWindowExAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "CreateWindowExA");
-}
-void __stdcall SetWindowTextAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "SetWindowTextA");
-}
-void __stdcall SendDlgItemMessageAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "SendDlgItemMessageA");
-}
-void __stdcall SendMessageAddress(void)
-{
-	HMODULE hMod = GetModuleHandle("USER32.DLL");
-	g_WindowHandleCallAddr = GetProcAddress(hMod, "SendMessageA");
-}
-#pragma endregion
 
 
 #pragma region Hooks
@@ -573,7 +523,7 @@ void __declspec(naked) LogRecompileResultsHook(void)
 
 void ToggleScriptCompiling(bool Enable)
 {
-	if (Enable)
+	if (!Enable)
 		kToggleScriptCompilingNewData.WriteBuffer();
 	else
 		kToggleScriptCompilingOriginalData.WriteBuffer();

@@ -2,7 +2,7 @@
 #include "Console.h"
 
 
-void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
+void __stdcall ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
 {
 	if (State)	*Flag |= Mask;
 	else		*Flag &= ~Mask;

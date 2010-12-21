@@ -1,5 +1,5 @@
 #pragma once
-#include "UtilityBox.h"
+#include "Hooks_Common.h"
 
 struct CommandTableData;
 struct FormData;
@@ -9,8 +9,6 @@ class Script;
 class TESForm;
 struct ScriptVarIndexData;
 
-using namespace	MemoryHandler;
-
 bool PatchSEHooks();
 void FillScriptDataPackage(Script* ScriptForm);
 
@@ -19,7 +17,6 @@ extern ScriptData*			g_ScriptDataPackage;
 extern Script*				g_SetEditorTextCache;
 extern Script*				g_ScriptListResult;
 extern Script*				g_EditorAuxScript;
-extern const char*			g_DefaultWaterTextureStr;
 
 
 extern MemHdlr				kMainWindowEntryPoint;
@@ -75,5 +72,5 @@ void SaveDialogBoxHook(void);// adds a cancel option to the message box
 void LogRecompileResultsHook(void);// logs failed recompile script calls to the console
 void ToggleScriptCompiling(bool Enable);// toggles script compiling during a save callback
 
-void MaxScriptSizeOverrideScriptBufferCtorHook(void);
+void MaxScriptSizeOverrideScriptBufferCtorHook(void);// sounds obvious enough
 void MaxScriptSizeOverrideParseScriptLineHook(void);

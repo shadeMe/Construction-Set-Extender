@@ -125,9 +125,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\obse\obse&quot;;&quot;$(SolutionDir)\..\obse\&quot;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE"
 				IgnoreStandardIncludePath="false"
 				GeneratePreprocessedFile="0"
 				KeepComments="false"
@@ -150,10 +149,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ComCtl32.lib shell32.lib "
+				AdditionalDependencies="ComCtl32.lib shell32.lib"
 				LinkIncremental="0"
 				IgnoreAllDefaultLibraries="false"
-				IgnoreDefaultLibraryNames="LIBCMTD.lib"
+				IgnoreDefaultLibraryNames="LIBCMT.lib"
 				ModuleDefinitionFile="exports.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -236,10 +235,6 @@
 			</File>
 			<File
 				RelativePath=".\exports.def"
-				>
-			</File>
-			<File
-				RelativePath="..\obse\obse\GameBSExtraData.cpp"
 				>
 			</File>
 			<File
@@ -372,6 +367,14 @@
 			</File>
 			<File
 				RelativePath=".\CompilerErrorDetours.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks_Common.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks_Common.h"
 				>
 			</File>
 			<File

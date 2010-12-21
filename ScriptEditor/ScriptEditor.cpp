@@ -153,7 +153,7 @@ void TabContainer::ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::Tab
 	}
 
 	Workspace^ Itr = dynamic_cast<Workspace^>(ScriptStrip->SelectedTab->Tag);
-	EditorForm->Text = Itr->GetScriptDescription();
+	EditorForm->Text = Itr->GetScriptDescription() + " - CSE Editor";
 	EditorForm->Focus();
 }
 
@@ -1326,10 +1326,10 @@ void Workspace::UpdateLineNumbers(void)
 						UInt32 Offset = LineOffsets[i - 1];
 						EditorLineNo->Text += ((Offset == 0xFFFF)? "":Offset.ToString("X4")) + "\n";
 					} catch (...) {
-					//	EditorLineNo->Text += "----" + "\n";
+						;//
 					}
 				} else
-					EditorLineNo->Text += i + "\n";
+					EditorLineNo->Text += i + " \n";
 			}
 		}
 
@@ -1740,7 +1740,7 @@ void Workspace::ValidateScript()
 						}
 					}
 				}
-				++Pos;
+				Pos++;
 			}
 		}
 
@@ -2162,44 +2162,52 @@ bool Workspace::HasLineChanged()
 
 void Workspace::CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText)
 {
-	LineOffsets->Clear();
-	if (Data) {
-		UInt8* DataPtr = (UInt8*)Data;
-		Array^ ByteCode = Array::CreateInstance(Byte::typeid, Length);
+	try
+	{
+		LineOffsets->Clear();
+		if (Data) {
+			UInt8* DataPtr = (UInt8*)Data;
+			Array^ ByteCode = Array::CreateInstance(Byte::typeid, Length);
 
-		for (UInt32 i = 0; i < Length; i++) {
-			ByteCode->SetValue(*(DataPtr + i), (int)i);
-		}
-
-		UInt32 ScriptOffset = 0, CurrentOffset = 0, SkipOffset = 0;
-
-		array<String^>^ Lines = ScriptText->Split('\n');
-		ScriptParser^ TextParser = gcnew ScriptParser();
-		for each (String^% Itr in Lines) {
-			TextParser->Tokenize(Itr, false);
-
-			if (!TextParser->HasToken(";<CSEImportSeg>")) {
-				SkipOffset++;
-				continue;
-			} else if (!TextParser->HasToken(";</CSEImportSeg>")) {			
-				if (!--SkipOffset)	LineOffsets->Add(0xffff);
-				continue;
-			} else if (!TextParser->HasToken(";<CSEMacroDef>") || !TextParser->HasToken(";<CSEEnum>")) {
-				if (!SkipOffset)	LineOffsets->Add(0xffff);
-				continue;
-			} else if (!Itr->IndexOf(";<CSE") || !Itr->IndexOf(";</CSE")) {
-				continue;
+			for (UInt32 i = 0; i < Length; i++) {
+				ByteCode->SetValue(*(DataPtr + i), (int)i);
 			}
 
-			
-			CurrentOffset = ByteCodeParser::GetOffsetForLine(Itr, ByteCode, ScriptOffset);
-			if (!SkipOffset)			LineOffsets->Add(CurrentOffset);
-		}
-	}
+			UInt32 ScriptOffset = 0, CurrentOffset = 0, SkipOffset = 0;
 
-	if (ToolBarOffsetToggle->Checked) ToolBarOffsetToggle->PerformClick();
-	if (LineOffsets->Count < 1)			ToolBarOffsetToggle->Enabled = false;
-	else								ToolBarOffsetToggle->Enabled = true;
+			array<String^>^ Lines = ScriptText->Split('\n');
+			ScriptParser^ TextParser = gcnew ScriptParser();
+			for each (String^% Itr in Lines) {
+				TextParser->Tokenize(Itr, false);
+
+				if (!TextParser->HasToken(";<CSEImportSeg>")) {
+					SkipOffset++;
+					continue;
+				} else if (!TextParser->HasToken(";</CSEImportSeg>")) {			
+					if (!--SkipOffset)	LineOffsets->Add(0xffff);
+					continue;
+				} else if (!TextParser->HasToken(";<CSEMacroDef>") || !TextParser->HasToken(";<CSEEnum>")) {
+					if (!SkipOffset)	LineOffsets->Add(0xffff);
+					continue;
+				} else if (!Itr->IndexOf(";<CSE") || !Itr->IndexOf(";</CSE")) {
+					continue;
+				}
+
+				
+				CurrentOffset = ByteCodeParser::GetOffsetForLine(Itr, ByteCode, ScriptOffset);
+				if (!SkipOffset)			LineOffsets->Add(CurrentOffset);
+			}
+		}
+
+		if (ToolBarOffsetToggle->Checked) ToolBarOffsetToggle->PerformClick();
+		if (LineOffsets->Count < 1)			ToolBarOffsetToggle->Enabled = false;
+		else								ToolBarOffsetToggle->Enabled = true;
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Error encountered when parsing bytecode. May safely be ignored if the current script was partially compiled.\n\tException: " + E->Message);
+		ToolBarOffsetToggle->Enabled = false;
+	}
 }
 
 void Workspace::ValidateLineLimit(void)
@@ -2310,11 +2318,11 @@ void Workspace::UpdateScriptFromDataPackage(ScriptData* Package)
 	ScriptEditorID = gcnew String(Package->EditorID);
 	EditorTab->Text = ScriptEditorID + " [" + Package->FormID.ToString("X8") + "]";
 	ParentContainer->SetWindowTitle(EditorTab->Text + " - CSE Editor");
-	CalculateLineOffsets((UInt32)Package->ByteCode, Package->Length, gcnew String(Package->Text));
 	ToolBarByteCodeSize->Value = Package->Length;
 	ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(Package->Length / (float)1024));
 	ToolBarUpdateVarIndices->Enabled = false;
 	GetVariableIndices(false);
+	CalculateLineOffsets((UInt32)Package->ByteCode, Package->Length, gcnew String(Package->Text));
 }
 	
 void Workspace::AddItemToScriptListBox(String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags)
@@ -2682,7 +2690,7 @@ void Workspace::ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E)
 }
 void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
 {
-	if (ScriptEditorID == "")
+	if (ScriptEditorID == "New Script")
 	{
 		MessageBox::Show("You may not perform this operation on a script without a name/editorID.", "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
 		return;
@@ -3261,7 +3269,12 @@ void Workspace::EditorLineNo_MouseDown(Object^ Sender, MouseEventArgs^ E)
 					Count++;
 				}
 				LineNo = Count;
-			} else LineNo = int::Parse(EditorLineNo->Lines[EditorLineNo->GetLineFromCharIndex(SelStart)]) - 1;
+			}
+			else
+			{
+				String^ Selection = EditorLineNo->Lines[EditorLineNo->GetLineFromCharIndex(SelStart)]->Replace(" ", "");;
+				LineNo = int::Parse(Selection) - 1;
+			}
 		} else	return;
 
 		EditorBox->SelectionStart = EditorBox->GetFirstCharIndexFromLine(LineNo);

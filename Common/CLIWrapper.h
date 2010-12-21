@@ -33,7 +33,7 @@ namespace CLIWrapper
 	}
 	namespace UseInfoList
 	{
-		typedef void							(*_OpenUseInfoBox)(void);
+		typedef void							(*_OpenUseInfoBox)(const char* InitForm);
 		typedef void							(*_SetFormListItemData)(FormData*);
 		typedef void							(*_SetUseListObjectItemData)(FormData*);
 		typedef void							(*_SetUseListCellItemData)(UseListCellItemData*);

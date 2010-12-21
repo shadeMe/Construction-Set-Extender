@@ -583,7 +583,7 @@ __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefD
 	while (true) {
 		Ref = ChooseReferenceDlg(Parent);
 		if (!Ref)	break;
-		if (!Ref->IsPersistent()) {		// not required as the dialog doesn't enumerate non-persistent refs
+		if (!Ref->IsPersistent()) {		// ### not required as the dialog doesn't enumerate non-persistent refs
 			MessageBox(Parent, "The parent needs to be a presistent reference", "Choose Reference", MB_OK|MB_ICONERROR);
 			continue;
 		}

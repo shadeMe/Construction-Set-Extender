@@ -11,6 +11,8 @@
 #include "richedit.h"
 #include "shlobj.h"
 #include "obse/obse_common/SafeWrite.h"
+#include "resource.h"
+#include "common/IDirectoryIterator.h"
 
 struct BaseExtraList;
 
@@ -21,7 +23,7 @@ void DebugPrint(UInt8 source, const char* fmt, ...);
 void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump = 512);
 void WaitUntilDebuggerAttached();
 UInt8*	MakeUInt8Array(UInt32 Size, ...);
-void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
+void __stdcall ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
 void LogWinAPIErrorMessage(DWORD ErrorID);
 void DumpExtraDataList(BaseExtraList* List);
 

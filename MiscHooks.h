@@ -1,8 +1,6 @@
 #pragma once
 #include "obse/GameData.h"
-#include "UtilityBox.h"
-
-using namespace MemoryHandler;
+#include "Hooks_Common.h"
 
 class TESForm;
 class TESObjectCELL;
@@ -18,7 +16,6 @@ extern UseListCellItemData*		UIL_CellData;
 extern bool						g_SaveAsRoutine;
 extern ModEntry::Data*			g_SaveAsBuffer;
 extern bool						g_QuickLoadToggle;
-extern FARPROC					g_WindowHandleCallAddr;
 extern bool						g_PluginPostLoad;
 
 
@@ -64,18 +61,18 @@ extern MemHdlr					kAutoLoadActivePluginOnStartup;
 extern MemHdlr					kDataHandlerClearDataShadeMeRefDtor;
 extern MemHdlr					kCellObjectListShadeMeRefAppend;
 extern MemHdlr					kDeathToTheCloseOpenDialogsMessage;
+extern MemHdlr					kTopicInfoCopyEpilog;// fixes the bug that causes the wrong topic info to be flagged as active when using the copy popup menu option
+extern MemHdlr					kTopicInfoCopyProlog;
+extern MemHdlr					kTESDialogPopupMenu;// hooks popup menu instantiation for new menu items
 
 bool PatchMiscHooks(void);
 void __stdcall DoCSInitHook();
 void __stdcall DoExitCSHook(HWND MainWindow);
 SHORT __stdcall IsControlKeyDown(void);
-void __stdcall CreateDialogParamAddress(void);
 UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
 UInt32 __stdcall InitPathEditor(int ID, HWND Dialog);
 UInt32 __stdcall InitBSAViewer(UInt32 Filter);
-bool __stdcall PerformControlPopulationPrologCheck(TESForm* Form);
 void __stdcall SendPingBack(UInt16 Message);
-void __stdcall SetWindowTextAddress(void);
 
 
 void SavePluginMasterEnumHook(void);// allows esps to be enumerated while filling the file header and provides support for the save as tool
@@ -105,6 +102,9 @@ void DoorMarkerPropertiesHook(void);// allows the displaying of reference proper
 void AutoLoadActivePluginOnStartupHook(void);// temporary hook that allows the automatic loading of plugins on startup
 void DataHandlerClearDataShadeMeRefDtorHook(void);
 void CellObjectListShadeMeRefAppendHook(void);
+void TopicInfoCopyEpilogHook(void);
+void TESDialogPopupMenuHook(void);
+
 
 void ModelSelectorCommonDialogHook(void);
 void ModelPostCommonDialogHook(void);

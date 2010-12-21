@@ -480,6 +480,8 @@ try {
 				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreProcessMacros[Macro] = Value;
 				else								DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true);
 			}
+			else if (Value == "")
+				DebugPrint("Preprocessor macro '" + Macro + "' doesn't have a value", true);
 			else if (Value->IndexOfAny(InvalidChars->ToCharArray()) != -1)
 				DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true);
 			else 
@@ -706,7 +708,7 @@ String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp O
 			EnumDefIdx = TextParser->HasToken("//enum"), 
 			EnumColIdx = TextParser->HasToken(";<CSEEnum>");	
 		
-		if (!ImportDefIdx || !ImportColIdx || !ImportColStopIdx) {								// could be more elegant
+		if (!ImportDefIdx || !ImportColIdx || !ImportColStopIdx) {								
 			if (DoCollapseReplace) {
 				if (!ImportColStopIdx) {		
 					Result = ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, DoCollapseReplace);					

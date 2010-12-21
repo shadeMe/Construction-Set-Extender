@@ -71,7 +71,8 @@ public:
 class TESDialogInitParam
 {
 public:
-	UInt32		TypeID;					// 00
+	UInt8		TypeID;					// 00
+	UInt8		Pad01[3];				
 	TESForm*	Form;					// 04
 	UInt32		unk08;					// 08
 
@@ -249,9 +250,41 @@ public:
 	Script				resultScript;	// 4C
 };
 
+// 280
+class Archive
+{
+public:
+	Archive();
+	~Archive();
+
+	// 22+? (nothing beyond 0x22 initialized)
+	struct Unk154
+	{
+		UInt32					unk00;			// initialized to 'BSA'
+		UInt32					unk04;			// initialized to 0x67
+		UInt32					unk08;			// initalized to 0x24
+		UInt32					unk0C;
+		UInt32					unk10;
+		UInt32					unk14;
+		UInt32					unk18;
+		UInt32					unk1C;
+		UInt16					unk20;			// flags of some sort
+	};
+
+	// bases
+	BSFile						bsfile;			// 000
+
+	//members
+	Unk154						unk154;			// 154
+	UInt32						unk176;			// 176
+	UInt32						unk194;			// 194	bitfield
+	LPCRITICAL_SECTION			archiveCS;		// 200
+};
+
 union GMSTData
 {
 	int				i;
+	UInt32			u;
 	float			f;
 	const char*		s;	
 };
@@ -293,6 +326,7 @@ extern void*					g_ScriptCompilerUnkObj;
 extern TESObjectREFR**			g_PlayerRef;
 extern GameSettingCollection*	g_GMSTCollection;
 extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>* , should be similar to OBSE's SettingInfo
+extern GenericNode<Archive>**	g_LoadedArchives;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -345,6 +379,9 @@ extern const _ShowCompilerError		ShowCompilerErrorEx;
 
 typedef void			(__cdecl *_AutoSavePlugin)(void);
 extern const _AutoSavePlugin		AutoSavePlugin;
+
+typedef Archive*		(__cdecl *_CreateArchive)(const char* ArchiveName, UInt16 unk01, UInt8 unk02);	// pass unk01 and unk02 as 0
+extern const _CreateArchive			CreateArchive;
 
 extern const void *			RTTI_TESCellUseList;
 
@@ -399,7 +436,102 @@ UInt32						GetDialogTemplate(UInt8 FormTypeID);
 void						RemoteLoadRef(const char* EditorID);
 void						LoadFormIntoView(const char* EditorID, const char* FormType);
 void						LoadFormIntoView(const char* EditorID, UInt8 FormType);
-bool __stdcall				AreUnModifiedFormsHidden();
-void						ToggleHideUnModifiedForms(bool State);
 void						LoadStartupPlugin();
 void						InitializeDefaultGMSTMap();
+void						LoadedMasterArchives();
+
+class FormEnumerationWrapper
+{
+	static bool GetUnmodifiedFormHiddenState()	// returns true when hidden
+	{
+		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+		UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_BYCOMMAND);
+
+		return (State & MF_CHECKED);
+	}
+
+	static bool GetDeletedFormHiddenState()
+	{
+		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+		UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_BYCOMMAND);
+
+		return (State & MF_CHECKED);
+	}
+	static void __stdcall ReinitializeFormLists()
+	{
+		DeInitializeCSWindows();	
+
+		SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
+		SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
+
+		InitializeCSWindows();
+		InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
+	}
+
+
+public:
+	static bool __stdcall GetShouldEnumerateForm(TESForm* Form)
+	{
+		if (GetUnmodifiedFormHiddenState() && (Form->flags & TESForm::kFormFlags_FromActiveFile) == 0)
+			return false;		// skip addition
+		else if (GetDeletedFormHiddenState() && (Form->flags & TESForm::kFormFlags_Deleted))
+			return false;
+		else
+			return true;
+	}
+
+	static bool __stdcall PerformListViewPrologCheck(UInt32 CallAddress)
+	{
+		switch (CallAddress)
+		{
+		case 0x00445C88:
+		case 0x00445DC8:
+		case 0x00445E6E:
+		case 0x00452FA8:
+		case 0x00440FBD:
+		case 0x0040A4BF:
+		case 0x00412F7A:
+		case 0x0043FDFF:
+		case 0x00442576:
+		case 0x00452409:
+		case 0x00560DC2:
+		case 0x00445E12:	// ?
+		case 0x00445D81:
+		case 0x004F00C3:
+			return 1;
+		default:
+			return 0;
+		}
+	}
+
+
+	static void ToggleUnmodifiedFormVisibility()
+	{
+		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+		if (GetUnmodifiedFormHiddenState())
+			CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_UNCHECKED);
+		else
+			CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_CHECKED);		
+
+		ReinitializeFormLists();
+	}
+	static void	ToggleDeletedFormVisibility()
+	{
+		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+		if (GetDeletedFormHiddenState())
+			CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_UNCHECKED);
+		else
+			CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_CHECKED);		
+
+		ReinitializeFormLists();
+	}
+
+
+	static void __stdcall ResetFormVisibility(void)
+	{
+		if (GetUnmodifiedFormHiddenState())
+			ToggleUnmodifiedFormVisibility();
+		if (GetDeletedFormHiddenState())
+			ToggleDeletedFormVisibility();
+	}
+};
