@@ -12,6 +12,8 @@ class Console
 	std::string					MessageBuffer;
 	FILE*						DebugLog;
 	UInt32						IndentLevel;
+
+	void						PrintMessage(std::string& Prefix, const char* MessageStr);
 public:
 	static Console*				GetSingleton();
 

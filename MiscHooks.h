@@ -64,6 +64,8 @@ extern MemHdlr					kDeathToTheCloseOpenDialogsMessage;
 extern MemHdlr					kTopicInfoCopyEpilog;// fixes the bug that causes the wrong topic info to be flagged as active when using the copy popup menu option
 extern MemHdlr					kTopicInfoCopyProlog;
 extern MemHdlr					kTESDialogPopupMenu;// hooks popup menu instantiation for new menu items
+extern MemHdlr					kResponseWindowLipButtonPatch;
+extern MemHdlr					kResponsWindowInit;
 
 bool PatchMiscHooks(void);
 void __stdcall DoCSInitHook();
@@ -104,6 +106,7 @@ void DataHandlerClearDataShadeMeRefDtorHook(void);
 void CellObjectListShadeMeRefAppendHook(void);
 void TopicInfoCopyEpilogHook(void);
 void TESDialogPopupMenuHook(void);
+void ResponseWindowInitHook(void);
 
 
 void ModelSelectorCommonDialogHook(void);

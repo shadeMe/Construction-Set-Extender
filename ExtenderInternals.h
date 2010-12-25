@@ -35,7 +35,6 @@ class EditorAllocator
 																			SEAlloc(HWND REC, HWND LBC, UInt32 IDX): 
 																			RichEditControl(REC), ListBoxControl(LBC), Index(IDX) {};
 	};
-	static SEAlloc*															NullRef;
 
 	typedef std::map<HWND, SEAlloc*>										AlMap;
 	AlMap																	AllocationMap;
@@ -250,6 +249,28 @@ public:
 	Script				resultScript;	// 4C
 };
 
+typedef TESTopicInfo::ResponseEntry::Data DialogResponse;
+
+// 2C
+struct ResponseEditorData
+{
+	struct VoiceRecorderData
+	{
+		HWND			recorderDlg;			// 00	
+	};
+
+	const char*				editorTitle;		// 00
+	UInt32					maxResponseLength;	// 04
+	DialogResponse*			selectedResponse;	// 08
+	DialogResponse*			responseLocalCopy;	// 0C	
+	VoiceRecorderData*		recorderData;		// 10
+	TESTopic*				parentTopic;		// 14
+	TESTopicInfo*			infoLocalCopy;		// 18
+	TESTopicInfo*			selectedInfo;		// 1C
+	TESQuest*				selectedQuest;		// 20
+	GenericNode<TESRace*>	voicedRaces;		// 24
+};
+
 // 280
 class Archive
 {
@@ -325,8 +346,11 @@ extern HMENU*					g_RenderWindowPopup;
 extern void*					g_ScriptCompilerUnkObj;
 extern TESObjectREFR**			g_PlayerRef;
 extern GameSettingCollection*	g_GMSTCollection;
-extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>* , should be similar to OBSE's SettingInfo
+extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>*
 extern GenericNode<Archive>**	g_LoadedArchives;
+extern ResponseEditorData**		g_ResponseEditorData;
+extern UInt8*					g_Flag_ObjectWindow_MenuState;
+extern UInt8*					g_Flag_CellView_MenuState;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -382,6 +406,9 @@ extern const _AutoSavePlugin		AutoSavePlugin;
 
 typedef Archive*		(__cdecl *_CreateArchive)(const char* ArchiveName, UInt16 unk01, UInt8 unk02);	// pass unk01 and unk02 as 0
 extern const _CreateArchive			CreateArchive;
+
+typedef void*			(__cdecl *_TESDialog_GetListViewSelectedItemLParam)(HWND ListView);
+extern const _TESDialog_GetListViewSelectedItemLParam			TESDialog_GetListViewSelectedItemLParam;
 
 extern const void *			RTTI_TESCellUseList;
 
@@ -439,6 +466,7 @@ void						LoadFormIntoView(const char* EditorID, UInt8 FormType);
 void						LoadStartupPlugin();
 void						InitializeDefaultGMSTMap();
 void						LoadedMasterArchives();
+void						UnloadLoadedCell();
 
 class FormEnumerationWrapper
 {

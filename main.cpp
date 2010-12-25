@@ -6,6 +6,7 @@
 #include "WindowManager.h"
 #include "CSEInterfaceManager.h"
 #include "Console.h"
+#include "CSInterop.h"
 
 
 PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
@@ -45,6 +46,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
 		InitializeDefaultGMSTMap();
+		CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll");
 		break;
 	}
 }

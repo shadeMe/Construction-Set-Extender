@@ -303,18 +303,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="SafeWrite"
-			>
-			<File
-				RelativePath="..\obse\obse_common\SafeWrite.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\obse\obse_common\SafeWrite.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="Wrappers"
 			>
 			<File
@@ -414,6 +402,62 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="CSInterop"
+			>
+			<File
+				RelativePath=".\CSInterop.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSInterop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CSInteropData.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Utilities"
+			>
+			<File
+				RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI.h"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\INI Manager\INIManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\INI Manager\INIManager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\MemoryHandler\MemoryHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\MemoryHandler\MemoryHandler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\[ Libraries ]\SME_Prefix.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UtilityBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UtilityBox.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\CSEInterfaceAPI.h"
 			>
@@ -424,6 +468,10 @@
 		</File>
 		<File
 			RelativePath=".\CSEInterfaceManager.h"
+			>
+		</File>
+		<File
+			RelativePath=".\CSInteropData.cpp"
 			>
 		</File>
 		<File
@@ -451,31 +499,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\[ Libraries ]\INI Manager\INIEditGUI.h"
-			>
-		</File>
-		<File
-			RelativePath="..\[ Libraries ]\INI Manager\INIManager.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\[ Libraries ]\INI Manager\INIManager.h"
-			>
-		</File>
-		<File
 			RelativePath=".\Main.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\UtilityBox.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\UtilityBox.h"
 			>
 		</File>
 		<File

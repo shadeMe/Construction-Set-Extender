@@ -2,6 +2,7 @@
 #include "ExtenderInternals.h"
 
 // vanity would an understatement.
+using namespace SME::MemoryHandler;
 
 namespace HallOfFame
 {

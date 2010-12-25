@@ -109,95 +109,9 @@ void Console::SaveINISettings()
 	g_INIManager->FetchSetting("Bottom")->SetValue(g_Buffer);
 }
 
-void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
+void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 {
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
-
-	std::string Message, Prefix;
-	switch (Source)
-	{
-	case e_CSE:
-		Prefix += "[CSE]\t";
-		break;
-	case e_CS:
-		Prefix += "[CS]\t";
-		break;
-	case e_BE:
-		Prefix += "[BE]\t";
-		break;
-	case e_UL:
-		Prefix += "[UL]\t";
-		break;
-	case e_SE:
-		Prefix += "[SE]\t";
-		break;
-	case e_BSA:
-		Prefix += "[BSA]\t";
-		break;
-	}
-	Message += Prefix;
-
-	for (int i = 0; i < IndentLevel; i++) {
-		Message += "\t";
-	}
-
-	Message += std::string(g_Buffer);
-	if (Message.rfind("\r\n") != Message.length() - 2)
-		MessageBuffer += Message + "\r\n";
-	else
-		MessageBuffer += Message;
-
-	if (IsLogInitalized()) {
-		fputs(Message.c_str(), DebugLog);
-		fputs("\n", DebugLog);
-		fflush(DebugLog);
-	}
-
-	if (IsConsoleInitalized() && !IsHidden()) {
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, FALSE, 0);
-		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
-
-		CSEInterfaceManager::HandleConsoleCallback(g_Buffer, Prefix.c_str());
-	}
-}
-
-void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
-{
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
-
-	std::string Message("[" + std::string(Prefix) + "]\t");
-
-	for (int i = 0; i < IndentLevel; i++) {
-		Message += "\t";
-	}
-
-	Message += std::string(g_Buffer);
-	if (Message.rfind("\r\n") != Message.length() - 2)
-		MessageBuffer += Message + "\r\n";
-	else
-		MessageBuffer += Message;
-
-	if (IsLogInitalized()) {
-		fputs(Message.c_str(), DebugLog);
-		fputs("\n", DebugLog);
-		fflush(DebugLog);
-	}
-
-	if (IsConsoleInitalized() && !IsHidden()) {
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, FALSE, 0);
-		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
-
-		CSEInterfaceManager::HandleConsoleCallback(g_Buffer, Prefix);
-	}
-}
-
-void Console::LogMessage(const char* Prefix, const char* MessageStr)
-{
-	std::string Message("[" + std::string(Prefix) + "]\t");
+	std::string Message(Prefix);
 
 	for (int i = 0; i < IndentLevel; i++) {
 		Message += "\t";
@@ -221,8 +135,52 @@ void Console::LogMessage(const char* Prefix, const char* MessageStr)
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
 
-		CSEInterfaceManager::HandleConsoleCallback(MessageStr, Prefix);
+		CSEInterfaceManager::HandleConsoleCallback(MessageStr, Prefix.c_str());
+	}	
+
+	if (IsDebuggerPresent())
+		OutputDebugString(Message.c_str());
+}
+
+void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
+{
+	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
+
+	std::string Prefix;
+	switch (Source)
+	{
+	case e_CSE:
+		Prefix += "[CSE]\t";
+		break;
+	case e_CS:
+		Prefix += "[CS]\t";
+		break;
+	case e_BE:
+		Prefix += "[BE]\t";
+		break;
+	case e_UL:
+		Prefix += "[UL]\t";
+		break;
+	case e_SE:
+		Prefix += "[SE]\t";
+		break;
+	case e_BSA:
+		Prefix += "[BSA]\t";
+		break;
 	}
+	PrintMessage(Prefix, g_Buffer);
+}
+
+void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
+{
+	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
+
+	PrintMessage(std::string("[" + std::string(Prefix) + "]\t"), g_Buffer);
+}
+
+void Console::LogMessage(const char* Prefix, const char* MessageStr)
+{
+	PrintMessage(std::string("[" + std::string(Prefix) + "]\t"), MessageStr);
 }
 
 void Console::Clear()
@@ -235,16 +193,12 @@ void Console::Clear()
 
 UInt32 Console::Indent()
 {
-	if (IsConsoleInitalized() == 0)	return 0;
-
 	if (++IndentLevel > 10)		IndentLevel = 10;
 	return IndentLevel;
 }
 
 UInt32 Console::Exdent()
 {
-	if (IsConsoleInitalized() == 0)	return 0;
-
 	if (IndentLevel > 0)		--IndentLevel;
 	return IndentLevel;
 }

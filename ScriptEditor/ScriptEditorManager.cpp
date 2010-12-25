@@ -27,7 +27,7 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 
 		if (NoOfParams < ParamsRequired)
 			throw gcnew CSEGeneralException("Incorrect number of parameters passed (" + NoOfParams + ")");
-		if (GetAllocatedWorkspace(Parameters->VanillaHandleIndex) == ScriptEditor::Workspace::NullSE && Parameters->VanillaHandleIndex)
+		if (GetAllocatedWorkspace(Parameters->VanillaHandleIndex)->IsValid() == 0 && Parameters->VanillaHandleIndex)
 			throw gcnew CSEGeneralException("Invalid editor index '" + Parameters->VanillaHandleIndex + "' passed");
 
 		switch (Op)
@@ -151,13 +151,18 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 
 ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 AllocatedIndex)
 {
-	ScriptEditor::Workspace^ Result = ScriptEditor::Workspace::NullSE;
+	ScriptEditor::Workspace^ Result = nullptr;
+
 	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
 		if (Itr->GetAllocatedIndex() == AllocatedIndex) {
 			Result = Itr;
 			break;
 		}
 	}
+
+	if (Result == nullptr)
+		throw gcnew CSEGeneralException("Couldn't fetch editor with an allocated index of " + AllocatedIndex.ToString());
+
 	return Result;
 }
 
@@ -418,7 +423,7 @@ void ScriptEditorManager::AddToCompileErrorPool(UInt32 AllocatedIndex, UInt32 Li
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
-	if (Itr != ScriptEditor::Workspace::NullSE)
+	if (Itr->IsValid())
 	{
 		Itr->AddMessageToPool(ScriptEditor::Workspace::MessageType::e_Error, Line, Message);
 	}

@@ -7,12 +7,11 @@
 #include "WindowManager.h"
 #include "resource.h"
 #include "HallofFame.h"
+#include "CSInterop.h"
 
 FormData*						UIL_FormData = new FormData();
 UseListCellItemData*			UIL_CellData = new UseListCellItemData();
 const char*						g_AssetSelectorReturnPath = NULL;
-char*							g_CustomWorkspacePath = new char[MAX_PATH];
-const char*						g_DefaultWorkspacePath = "Data\\";
 const char*						g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 bool							g_QuickLoadToggle = false;
 static HFONT					g_CSDefaultFont = NULL;
@@ -51,7 +50,6 @@ MemHdlr							kCSWarningsDetour					(0x004B5140, CSWarningsDetourHook, 0, 0);
 MemHdlr							kTextureMipMapCheck					(0x0044F49B, (UInt32)0, 0, 0);
 NopHdlr							kAnimGroupNote						(0x004CA21D, 5);
 MemHdlr							kUnnecessaryDialogEdits				(0x004EDFF7, (UInt32)0, 0, 0);
-MemHdlr							kRenderWindowPopup					(0x004297CE, RenderWindowPopupPatchHook, 0, 0);
 MemHdlr							kUnnecessaryCellEdits				(0x005349A5, (UInt32)0, 0, 0);
 MemHdlr							kCustomCSWindow						(0x004311E5, CustomCSWindowPatchHook, 0, 0);
 MemHdlr							kRaceDescriptionDirtyEdit			(0x0049405C, (UInt32)0, 0, 0);
@@ -69,6 +67,8 @@ MemHdlr							kDeathToTheCloseOpenDialogsMessage	(0x0041BAA7, (UInt32)0, 0, 0);
 MemHdlr							kTopicInfoCopyProlog				(0x004F0738, 0x004F07C4, 0, 0);
 MemHdlr							kTopicInfoCopyEpilog				(0x004F1280, TopicInfoCopyEpilogHook, 0, 0);
 MemHdlr							kTESDialogPopupMenu					(0x004435A6, TESDialogPopupMenuHook, 0, 0);
+MemHdlr							kResponseWindowLipButtonPatch		(0x004EC0E7, 0x004EC0F7, 0, 0);
+MemHdlr							kResponseWindowInit					(0x004EBA81, ResponseWindowInitHook, 0, 0);
 
 
 
@@ -88,11 +88,11 @@ void _declspec(naked) TestHook(void)
 
 bool PatchMiscHooks()
 {
-	COMMON_DIALOG_CANCEL_PATCH(Model)
-	COMMON_DIALOG_CANCEL_PATCH(Animation)
-	COMMON_DIALOG_CANCEL_PATCH(Sound)
-	COMMON_DIALOG_CANCEL_PATCH(Texture)
-	COMMON_DIALOG_CANCEL_PATCH(SPT)
+	COMMON_DIALOG_CANCEL_PATCH(Model);
+	COMMON_DIALOG_CANCEL_PATCH(Animation);
+	COMMON_DIALOG_CANCEL_PATCH(Sound);
+	COMMON_DIALOG_CANCEL_PATCH(Texture);
+	COMMON_DIALOG_CANCEL_PATCH(SPT);
 
 	COMMON_DIALOG_SELECTOR_PATCH(Model);
 	COMMON_DIALOG_SELECTOR_PATCH(Animation);
@@ -123,7 +123,6 @@ bool PatchMiscHooks()
 	kCSWarningsDetour.WriteJump();
 	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
 	kAssertOverride.WriteJump();
-//	kRenderWindowPopupPatch.WriteJump();
 	kCustomCSWindow.WriteJump();
 	kPluginSave.WriteJump();
 	kPluginLoad.WriteJump();
@@ -154,9 +153,9 @@ bool PatchMiscHooks()
 	kTopicInfoCopyProlog.WriteJump();
 	kTopicInfoCopyEpilog.WriteJump();
 	kTESDialogPopupMenu.WriteJump();
+	kResponseWindowLipButtonPatch.WriteJump();
+	kResponseWindowInit.WriteJump();
 
-
-	sprintf_s(g_CustomWorkspacePath, MAX_PATH, "Data");
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
 		DebugPrint("Couldn't create the Backup folder in Data directory");
 	}
@@ -290,6 +289,7 @@ void __stdcall DoExitCSHook(HWND MainWindow)
 	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
 	CONSOLE->SaveINISettings();
 	g_INIManager->SaveSettingsToINI();
+	CSIOM->Deinitialize();
 	ExitProcess(0);
 }
 
@@ -352,7 +352,8 @@ void PatchMenus()
 				ItemViewConsole, 
 				ItemViewModifiedRecords,
 				ItemFileCSEPreferences,
-				ItemViewDeletedRecords;
+				ItemViewDeletedRecords,
+				ItemWorldUnloadCell;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -414,6 +415,15 @@ void PatchMenus()
 	ItemViewDeletedRecords.dwTypeData = "Hide Deleted Forms";
 	ItemViewDeletedRecords.cch = 0;
 	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewDeletedRecords);
+
+
+	ItemWorldUnloadCell.cbSize = sizeof(MENUITEMINFO);		
+	ItemWorldUnloadCell.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldUnloadCell.wID = MAIN_WORLD_UNLOADCELL;
+	ItemWorldUnloadCell.fState = MFS_ENABLED;
+	ItemWorldUnloadCell.dwTypeData = "Unload Current Cell";
+	ItemWorldUnloadCell.cch = 0;
+	InsertMenuItem(WorldMenu, 40426, FALSE, &ItemWorldUnloadCell);
 }
 
 void __stdcall DoCSInitHook()
@@ -769,32 +779,6 @@ void __declspec(naked) CSWarningsDetourHook(void)
 		call	DoCSWarningsDetourHook
 		popad
 		jmp		[kCSWarningsDetourRetnAddr]
-	}
-}
-
-void __stdcall DoRenderWindowPopupPatchHook()
-{
-	MENUITEMINFO ItemRenderBatchEdit;
-
-	ItemRenderBatchEdit.cbSize = sizeof(MENUITEMINFO);		
-	ItemRenderBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemRenderBatchEdit.wID = RENDER_BATCHEDIT;
-	ItemRenderBatchEdit.fState = MFS_ENABLED;
-	ItemRenderBatchEdit.dwTypeData = "Batch Edit References";
-	ItemRenderBatchEdit.cch = 0;
-	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemRenderBatchEdit);	
-}
-
-void __declspec(naked) RenderWindowPopupPatchHook(void)
-{
-	static const UInt32			kRenderWindowPopupPatchRetnAddr = 0x004297D3;
-	__asm
-	{
-		pushad
-		call	DoRenderWindowPopupPatchHook
-		popad
-		call	GetPositionFromINI
-		jmp		[kRenderWindowPopupPatchRetnAddr]
 	}
 }
 
@@ -1162,5 +1146,34 @@ void __declspec(naked) TESDialogPopupMenuHook(void)
 		call	g_WindowHandleCallAddr
 
 		jmp		[kTESDialogPopupMenuHookRetnAddr]
+	}
+}
+
+void __stdcall DoResponseWindowInitHook(HWND hWnd)
+{
+	g_ResponseWndOrgWindowProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (LONG)ResponseWndSubClassProc);
+	
+	ShowWindow(GetDlgItem(hWnd, 2220), SW_HIDE);
+	ShowWindow(GetDlgItem(hWnd, 2221), SW_HIDE);
+	ShowWindow(GetDlgItem(hWnd, 2222), SW_HIDE);
+
+	EnableWindow(GetDlgItem(hWnd, 2379), FALSE);
+	EnableWindow(GetDlgItem(hWnd, 2380), FALSE);
+	EnableWindow(GetDlgItem(hWnd, 1016), TRUE);
+
+	CheckRadioButton(hWnd, 2379, 2380, 2379);
+
+	SetWindowText(GetDlgItem(hWnd, 2223), "Copy External File");
+	SetWindowPos(GetDlgItem(hWnd, 2223), HWND_TOP, 150, 550, 105, 20, SWP_NOZORDER|SWP_SHOWWINDOW);
+}
+
+void __declspec(naked) ResponseWindowInitHook(void)
+{
+	static UInt32 kResponseWindowInitHookRetnAddr = 0x004EBA92;
+	__asm
+	{
+		push	ebp
+		call	DoResponseWindowInitHook
+		jmp		[kResponseWindowInitHookRetnAddr]
 	}
 }

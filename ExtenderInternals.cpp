@@ -4,7 +4,7 @@
 #include "Common\CLIWrapper.h"
 
 EditorAllocator*					EditorAllocator::Singleton = NULL;
-EditorAllocator::SEAlloc*			EditorAllocator::NullRef = new EditorAllocator::SEAlloc(NULL, NULL, NULL);
+
 char								g_Buffer[0x200] = {0};
 
 _DefaultGMSTMap						g_DefaultGMSTMap;
@@ -39,6 +39,9 @@ TESObjectREFR**						g_PlayerRef = (TESObjectREFR**)0x00A0E088;
 GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
 void*								g_GMSTMap = (void*)0x00A102A4;
 GenericNode<Archive>**				g_LoadedArchives = (GenericNode<Archive>**)0x00A0DD8C;
+ResponseEditorData**				g_ResponseEditorData = (ResponseEditorData**)0x00A10E2C;
+UInt8*								g_Flag_ObjectWindow_MenuState = (UInt8*)0x00A0AF40;
+UInt8*								g_Flag_CellView_MenuState = (UInt8*)0x00A0AF48;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -58,6 +61,8 @@ const _BSPrintF						BSPrintF = (_BSPrintF)0x004053F0;
 const _ShowCompilerError			ShowCompilerErrorEx = (_ShowCompilerError)0x004FFF40;
 const _AutoSavePlugin				AutoSavePlugin = (_AutoSavePlugin)0x004307C0;
 const _CreateArchive				CreateArchive = (_CreateArchive)0x004665C0;
+const _TESDialog_GetListViewSelectedItemLParam
+									TESDialog_GetListViewSelectedItemLParam = (_TESDialog_GetListViewSelectedItemLParam)0x00403C40;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -105,6 +110,80 @@ const UInt32						kTESObjectREFR_ModExtraCharge = 0x0053F3C0;
 const UInt32						kTESObjectREFR_ModExtraTimeLeft = 0x0053F620;
 const UInt32						kTESObjectREFR_ModExtraSoul = 0x0053F710;
 const UInt32						kTESObjectREFR_SetExtraEnableStateParent_OppositeState = 0x0053FA80;
+
+const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its index
+									{
+											"None",
+											"TES4",
+											"Group",
+											"GMST",
+											"Global",
+											"Class",
+											"Faction",
+											"Hair",
+											"Eyes",
+											"Race",
+											"Sound",
+											"Skill",
+											"Effect",
+											"Script",
+											"LandTexture",
+											"Enchantment",
+											"Spell",
+											"BirthSign",
+											"Activator",
+											"Apparatus",
+											"Armor",
+											"Book",
+											"Clothing",
+											"Container",
+											"Door",
+											"Ingredient",
+											"Light",
+											"MiscItem",
+											"Static",
+											"Grass",
+											"Tree",
+											"Flora",
+											"Furniture",
+											"Weapon",
+											"Ammo",
+											"NPC",
+											"Creature",
+											"LeveledCreature",
+											"SoulGem",
+											"Key",
+											"AlchemyItem",
+											"SubSpace",
+											"SigilStone",
+											"LeveledItem",
+											"SNDG",
+											"Weather",
+											"Climate",
+											"Region",
+											"Cell",
+											"Reference",
+											"Reference",			// ACHR
+											"Reference",			// ACRE
+											"PathGrid",
+											"World Space",
+											"Land",
+											"TLOD",
+											"Road",
+											"Dialog",
+											"Dialog Info",
+											"Quest",
+											"Idle",
+											"AI Package",
+											"CombatStyle",
+											"LoadScreen",
+											"LeveledSpell",
+											"AnimObject",
+											"WaterType",
+											"EffectShader",
+											"TOFT"
+										};
+
 
 TES* TES::GetSingleton()
 {
@@ -290,80 +369,7 @@ UInt32 GetDialogTemplate(const char* FormType)
 
 UInt32 GetDialogTemplate(UInt8 FormTypeID)
 {
-	static const char*	TypeIdentifier[] =			// uses TESForm::typeID as its index
-										{
-											"None",
-											"TES4",
-											"Group",
-											"GMST",
-											"Global",
-											"Class",
-											"Faction",
-											"Hair",
-											"Eyes",
-											"Race",
-											"Sound",
-											"Skill",
-											"Effect",
-											"Script",
-											"LandTexture",
-											"Enchantment",
-											"Spell",
-											"BirthSign",
-											"Activator",
-											"Apparatus",
-											"Armor",
-											"Book",
-											"Clothing",
-											"Container",
-											"Door",
-											"Ingredient",
-											"Light",
-											"MiscItem",
-											"Static",
-											"Grass",
-											"Tree",
-											"Flora",
-											"Furniture",
-											"Weapon",
-											"Ammo",
-											"NPC",
-											"Creature",
-											"LeveledCreature",
-											"SoulGem",
-											"Key",
-											"AlchemyItem",
-											"SubSpace",
-											"SigilStone",
-											"LeveledItem",
-											"SNDG",
-											"Weather",
-											"Climate",
-											"Region",
-											"Cell",
-											"Reference",
-											"Reference",			// ACHR
-											"Reference",			// ACRE
-											"PathGrid",
-											"World Space",
-											"Land",
-											"TLOD",
-											"Road",
-											"Dialog",
-											"Dialog Info",
-											"Quest",
-											"Idle",
-											"AI Package",
-											"CombatStyle",
-											"LoadScreen",
-											"LeveledSpell",
-											"AnimObject",
-											"WaterType",
-											"EffectShader",
-											"TOFT"
-										};
-
-	const char* FormType = TypeIdentifier[FormTypeID];
+	const char* FormType = g_FormTypeIdentifier[FormTypeID];
 
 	return GetDialogTemplate(FormType);
 }
@@ -402,33 +408,7 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 
 void LoadFormIntoView(const char* EditorID, UInt8 FormType)
 {
-	UInt32 Type = GetDialogTemplate(FormType);
-	TESDialogInitParam InitData(EditorID);
-
-	switch (Type)
-	{
-	case 9:					
-		if (GetFormByID(EditorID))
-		{
-			g_EditorAuxScript =  CS_CAST(GetFormByID(EditorID), TESForm, Script);;
-			tagRECT ScriptEditorLoc;
-			GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-			CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
-			g_EditorAuxScript = NULL;
-		}
-		break;
-	case 10:
-		RemoteLoadRef(EditorID);
-		break;
-	case 1:
-	case 2:
-		CreateDialogParamA(*g_TESCS_Instance, 
-							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID), 
-							*g_HWND_CSParent, 
-							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc), 
-							(LPARAM)&InitData);
-		break;
-	}
+	LoadFormIntoView(EditorID, g_FormTypeIdentifier[FormType]);
 }
 
 void RemoteLoadRef(const char* EditorID)
@@ -458,7 +438,7 @@ void LoadStartupPlugin()
 		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 	} 
-	else
+	else if (strlen(PluginName) >= 1)
 	{
 		DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
 	}
@@ -514,4 +494,22 @@ void LoadedMasterArchives()
 			DebugPrint("BSA Archive %s loaded", FileName.c_str());
 		}
 	}
+}
+
+void UnloadLoadedCell()
+{
+	UInt8 ObjWndState = *g_Flag_ObjectWindow_MenuState, CellWndState = *g_Flag_CellView_MenuState;
+
+	*g_Flag_ObjectWindow_MenuState = 0;
+	*g_Flag_CellView_MenuState = 0;
+
+	SendMessage(*g_HWND_RenderWindow, 0x419, 6, 1);
+	SendMessage(*g_HWND_RenderWindow, 0x419, 5, 0);
+	InvalidateRect(*g_HWND_RenderWindow, 0, 1);
+
+	DeInitializeCSWindows();
+	InitializeCSWindows();
+
+	*g_Flag_ObjectWindow_MenuState = ObjWndState;
+	*g_Flag_CellView_MenuState = CellWndState;
 }

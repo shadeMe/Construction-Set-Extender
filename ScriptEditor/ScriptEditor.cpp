@@ -272,7 +272,7 @@ void TabContainer::NavigateStack(UInt32 AllocatedIndex, TabContainer::Navigation
 	}
 
 	Workspace^ Itr = SEMGR->GetAllocatedWorkspace(JumpIndex);
-	if (Itr == Workspace::NullSE) {
+	if (Itr->IsValid() == 0) {
 		NavigateStack(AllocatedIndex, Direction);
 	} else {
 		switch (Direction)
@@ -1612,7 +1612,6 @@ void Workspace::AddMessageToPool(MessageType Type, UInt32 Line, String^ Message)
 	Item->SubItems->Add(Message);
 	ErrorBox->Items->Add(Item);
 
-	EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 	if (ErrorBox->Visible == false)
 		ToolBarErrorList->PerformClick();
 }
@@ -1981,7 +1980,6 @@ void Workspace::UpdateFindImagePointers(void)
 		Loc.Y -= 15;
 		ScriptLineLimitIndicator->Location = Loc;
 	}
-//	EditorBox->Invalidate(true);
 }
 
 void Workspace::MoveCaretToValidHome(void)
@@ -2203,9 +2201,8 @@ void Workspace::CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% Script
 		if (LineOffsets->Count < 1)			ToolBarOffsetToggle->Enabled = false;
 		else								ToolBarOffsetToggle->Enabled = true;
 	}
-	catch (Exception^ E)
+	catch (...)		// exceptions raised when bytecode size doesn't correspond to text length
 	{
-		DebugPrint("Error encountered when parsing bytecode. May safely be ignored if the current script was partially compiled.\n\tException: " + E->Message);
 		ToolBarOffsetToggle->Enabled = false;
 	}
 }
@@ -2230,6 +2227,13 @@ void Workspace::ValidateLineLimit(void)
 void Workspace::GetVariableIndices(bool SetFlag)
 {
 	if (GetVariableData) {
+		if (ErrorBox->Visible)
+			ToolBarErrorList->PerformClick();
+		else if (FindBox->Visible)
+			ToolBarFindList->PerformClick();
+		else if (BookmarkBox->Visible)
+			ToolBarBookmarkList->PerformClick();
+
 		VariableBox->Items->Clear();
 		NativeWrapper::ScriptEditor_GetScriptVariableIndices(AllocatedIndex, g_ScriptDataPackage->EditorID);
 		VariableBox->Show();
@@ -2237,6 +2241,9 @@ void Workspace::GetVariableIndices(bool SetFlag)
 		if (VariableBox->Items->Count) {
 			ToolBarUpdateVarIndices->Enabled = true;
 		}
+
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
+		ToolBarGetVarIndices->Checked = true;
 		GetVariableData = false;
 	} else if (SetFlag) {
 		GetVariableData = true;
@@ -2446,15 +2453,19 @@ void Workspace::ToolBarErrorList_Click(Object^ Sender, EventArgs^ E)
 		ToolBarFindList->PerformClick();
 	else if (BookmarkBox->Visible)
 		ToolBarBookmarkList->PerformClick();
+	else if (VariableBox->Visible)
+		ToolBarGetVarIndices->PerformClick();
 
 	if (!ErrorBox->Visible) {
 		ErrorBox->Show();
 		ErrorBox->BringToFront();
 		ToolBarErrorList->Checked = true;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 	}
 	else {
 		ErrorBox->Hide();
 		ToolBarErrorList->Checked = false;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
 	}
 }
 
@@ -2464,16 +2475,20 @@ void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 		ToolBarErrorList->PerformClick();
 	else if (BookmarkBox->Visible)
 		ToolBarBookmarkList->PerformClick();
+	else if (VariableBox->Visible)
+		ToolBarGetVarIndices->PerformClick();
 
 	if (!FindBox->Visible) {
 		FindBox->Show();
 		FindBox->BringToFront();
 		ToolBarFindList->Checked = true;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 	}
 	else {
 		FindBox->Hide();
 		ClearFindImagePointers();
 		ToolBarFindList->Checked = false;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
 	}
 }
 
@@ -2483,16 +2498,45 @@ void Workspace::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
 		ToolBarErrorList->PerformClick();
 	else if (FindBox->Visible)
 		ToolBarFindList->PerformClick();
+	else if (VariableBox->Visible)
+		ToolBarGetVarIndices->PerformClick();
 
 	if (!BookmarkBox->Visible) {
 		BookmarkBox->Show();
 		BookmarkBox->BringToFront();
 		ToolBarBookmarkList->Checked = true;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 	}
 	else {
 		BookmarkBox->Hide();
 		ToolBarBookmarkList->Checked = false;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
 	}
+}
+
+void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
+{
+	if (!VariableBox->Visible) {
+		GetVariableIndices(true);
+		PerformCompileAndSave();
+	}
+	else {
+		VariableBox->Hide();
+		ToolBarGetVarIndices->Checked = false;
+		ToolBarUpdateVarIndices->Enabled = false;
+		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
+	}	
+}
+
+void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
+{
+	SetVariableIndices();
+	if (OPTIONS->FetchSettingAsInt("RecompileVarIdx"))
+	{
+		ToolBarCompileDependencies->PerformClick();
+	}
+	if (VariableBox->Visible)
+		ToolBarGetVarIndices->PerformClick();
 }
 
 void Workspace::ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -2729,21 +2773,6 @@ void Workspace::ToolBarNavBack_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ToolBarNavForward_Click(Object^ Sender, EventArgs^ E)
 {
 	ParentContainer->NavigateStack(AllocatedIndex, TabContainer::NavigationDirection::e_Forward);
-}
-
-void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
-{
-	GetVariableIndices(true);
-	Workspace::ToolBarSaveScript->PerformClick();	
-}
-
-void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
-{
-	SetVariableIndices();
-	if (OPTIONS->FetchSettingAsInt("RecompileVarIdx"))
-	{
-		ToolBarCompileDependencies->PerformClick();
-	}
 }
 
 void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
@@ -3021,7 +3050,7 @@ void Workspace::EditorBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		break;
 	case Keys::S:									// Save script
 		if (E->Modifiers == Keys::Control) {
-			ToolBarSaveScript->PerformClick();
+			PerformCompileAndSave();
 		}
 		break;
 	case Keys::D:									// Delete script

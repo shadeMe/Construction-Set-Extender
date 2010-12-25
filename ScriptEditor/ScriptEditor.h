@@ -9,9 +9,7 @@
 
 struct ScriptData;
 
-
 using namespace DevComponents;
-using namespace ICSharpCode::AvalonEdit;
 using namespace Gma::UserActivityMonitor;
 
 ref class SyntaxBox;
@@ -420,7 +418,7 @@ public:
 	void												SaveScriptToDisk(String^ Path, String^ FileName);
 	void												MakeActiveInParentContainer() { ParentContainer->SelectTab(EditorTab); }
 	bool												GetIsTabStripParent(DotNetBar::TabStrip^ Strip) { return Strip->Tabs->IndexOf(EditorTab) != -1; }
-	void												PerformCompileAndSave() { ToolBarSaveScript->PerformClick(); }
+	void												PerformCompileAndSave() { ToolBarSaveScript_Click(nullptr, nullptr); }
 	String^												GetCurrentToken() { return GetTextAtLoc(Globals::MouseLocation, false, false, EditorBox->SelectionStart - 1, true); }
 	Point												GetCaretLocation() { return EditorBox->GetPositionFromCharIndex(EditorBox->SelectionStart); }
 	IntPtr												GetControlBoxHandle() { return EditorControlBox->Handle; }
@@ -435,6 +433,8 @@ public:
 	const String^										PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning);
 	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
 	void												Relocate(TabContainer^ Destination);
+
+	bool												IsValid() { return this != NullSE; }
 };
 
 }

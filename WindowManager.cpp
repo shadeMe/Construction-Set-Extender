@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "CSInterop.h"
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -17,6 +18,7 @@ WNDPROC						g_ConsoleEditControlOrgWindowProc = NULL;
 WNDPROC						g_ConsoleCmdBoxOrgWindowProc = NULL;
 WNDPROC						g_ObjectWndOrgWindowProc = NULL;
 WNDPROC						g_CellViewWndOrgWindowProc = NULL;
+WNDPROC						g_ResponseWndOrgWindowProc = NULL;
 
 #define PI					3.151592653589793
 
@@ -49,6 +51,7 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
  
 	return CallWindowProc(g_FindTextOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 } 
+
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 { 
 	switch (uMsg)
@@ -56,7 +59,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case DATA_SETSTARTUPPLUGIN:		// startup plugin btn
+		case DATA_SETSTARTUPPLUGIN:	
 			{
 			HWND PluginList = GetDlgItem(hWnd, 1056);
 			int SelectedItem = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
@@ -100,11 +103,12 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
  
 	return CallWindowProc(g_DataDlgOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 } 
+
 LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 { 
 	switch (uMsg)
 	{
-	case 0x40C:			// save handler
+	case 0x40C:				// save handler
 		if (g_QuickLoadToggle) {
 			if (MessageBox(*g_HWND_CSParent, 
 					"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains master-dependent records.", 
@@ -118,7 +122,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case MAIN_DATA_SAVEAS:		// save as menu item
+		case MAIN_DATA_SAVEAS:		
 			if (!(*g_dataHandler)->unk8B8.activeFile)		break;
 
 			*g_WorkingFileFlag = 0;
@@ -141,7 +145,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			*g_WorkingFileFlag = 1;
 			g_SaveAsRoutine = false;
 			break;
-		case MAIN_WORLD_BATCHEDIT:				// batch edit menu item
+		case MAIN_WORLD_BATCHEDIT:				
 			{
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
@@ -197,8 +201,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
 						ThisRefData = &RefData[k];
 						bool Modified = false;
-															// Pass the Actor VTBl for actors
-						if (ThisRefData->Selected) {		// TODO: filter out ref types that don't have ownership extradata and count
+															// ### Pass the Actor VTBl for actors
+						if (ThisRefData->Selected) {
 							if (BatchData->World3DData.UsePosX())	ThisRef->posX = BatchData->World3DData.PosX, Modified = true;
 							if (BatchData->World3DData.UsePosY())	ThisRef->posY = BatchData->World3DData.PosY, Modified = true;
 							if (BatchData->World3DData.UsePosZ())	ThisRef->posZ = BatchData->World3DData.PosZ, Modified = true;
@@ -289,7 +293,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			}
 			break;
 			}
-		case MAIN_VIEW_CONSOLEWINDOW:				// console window menu item
+		case MAIN_VIEW_CONSOLEWINDOW:			
 			if (CONSOLE->IsConsoleInitalized()) {
 				HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 				if (CONSOLE->ToggleDisplayState())
@@ -298,14 +302,17 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_UNCHECKED);
 			}
 			break;
-		case MAIN_VIEW_MODIFIEDRECORDS:				// hide unmodified forms item
+		case MAIN_VIEW_MODIFIEDRECORDS:				
 			FormEnumerationWrapper::ToggleUnmodifiedFormVisibility();
 			break;
-		case MAIN_DATA_CSEPREFERENCES:				// CSE preferences item
+		case MAIN_DATA_CSEPREFERENCES:			
 			g_INIEditGUI->InitializeGUI(g_DLLInstance, *g_HWND_CSParent, g_INIManager);
 			break;
-		case MAIN_VIEW_DELETEDRECORDS:				// hide deleted forms item
+		case MAIN_VIEW_DELETEDRECORDS:				
 			FormEnumerationWrapper::ToggleDeletedFormVisibility();
+			break;
+		case MAIN_WORLD_UNLOADCELL:
+			UnloadLoadedCell();
 			break;
 		}
 		break;
@@ -577,20 +584,6 @@ LRESULT CALLBACK ObjectWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	switch (uMsg)
 	{
 	case WM_COMMAND:
-#if 0
-		LVITEM SelectedItem;
-		int SelectedItemIndex = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, -1, LVNI_SELECTED);
-
-		if (SelectedItemIndex == -1)	break;
-		
-		SelectedItem.mask = LVIF_PARAM;
-		SelectedItem.iItem = SelectedItemIndex;
-		SelectedItem.iSubItem = 0;
-
-		if (ListView_GetItem(*g_HWND_ObjectWindow_FormList, &SelectedItem) != TRUE)	break;
-		TESForm* Object = (TESForm*)SelectedItem.lParam;
-		if (!Object)	break;
-#endif
 		break;
 	}
  
@@ -604,24 +597,87 @@ LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	switch (uMsg)
 	{
 	case WM_COMMAND:
-#if 0
-		LVITEM SelectedItem;
-		int SelectedItemIndex = ListView_GetNextItem(*s_CellViewListViewUnderCursor, -1, LVNI_SELECTED);
-
-		if (SelectedItemIndex == -1)	break;
-		
-		SelectedItem.mask = LVIF_PARAM;
-		SelectedItem.iItem = SelectedItemIndex;
-		SelectedItem.iSubItem = 0;
-
-		if (ListView_GetItem(*s_CellViewListViewUnderCursor, &SelectedItem) != TRUE)	break;
-		TESForm* Object = (TESForm*)SelectedItem.lParam;
-		if (!Object)	break;
-
-		EvaluatePopupMenuItems(hWnd, LOWORD(wParam), Object);
-#endif
 		break;
 	}
  
 	return CallWindowProc(g_CellViewWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
+LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND VoiceList = GetDlgItem(hWnd, 2168);
+
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+	{
+		int SelectedItem = ListView_GetNextItem(VoiceList, -1, LVNI_SELECTED);
+
+		char VoicePath[0x200] = {0};
+		LVITEM SelectedVoiceItem;
+
+		SelectedVoiceItem.iItem = SelectedItem;
+		SelectedVoiceItem.iSubItem = 6;
+		SelectedVoiceItem.mask = LVIF_TEXT;
+		SelectedVoiceItem.pszText = VoicePath;
+		SelectedVoiceItem.cchTextMax = sizeof(VoicePath);
+
+		switch (LOWORD(wParam))
+		{
+		case 2223:					// Copy external file
+		{
+			if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
+				return FALSE;
+
+			char FilePath[0x200] = {0};
+			OPENFILENAME SelectFile;
+			SelectFile.lStructSize = sizeof(OPENFILENAME);
+			SelectFile.hwndOwner = hWnd;
+			SelectFile.lpstrFilter = "MP3 Files\0*.mp3\0\0";
+			SelectFile.lpstrCustomFilter = NULL;
+			SelectFile.nFilterIndex = 0;
+			SelectFile.lpstrFile = FilePath;
+			SelectFile.nMaxFile = sizeof(FilePath);
+			SelectFile.lpstrFileTitle = NULL;
+			SelectFile.lpstrInitialDir = NULL;
+			SelectFile.lpstrTitle = "Select an audio file to use as the current response's voice";
+			SelectFile.Flags = OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_HIDEREADONLY;
+
+			if (GetOpenFileName(&SelectFile))
+			{
+				std::string Destination(g_AppPath + "\\" + std::string(VoicePath));
+				if (!CopyFile(FilePath, Destination.c_str(), TRUE))
+				{
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "Couldn't copy external file '%s' to '%s'!\n\nCheck the console for more information.", FilePath, Destination.c_str());
+					LogWinAPIErrorMessage(GetLastError());
+				}
+				else
+					DebugPrint("Copied external audio file '%s' to '%s'", FilePath, Destination.c_str());
+			}
+			return FALSE;
+		}
+		case 1016:					// Generate LIP
+			if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
+				return FALSE;
+
+			std::string Path(VoicePath);
+			Path = Path.substr(0, Path.find_last_of(".")) + ".wav";
+
+			if (!CSIOM->DoGenerateLIPOperation(Path.c_str(), (*g_ResponseEditorData)->responseLocalCopy->responseText.m_data))
+			{
+				MessageBox(hWnd, "Couldn't generate LIP file for the selected voice.\n\nCheck the console for more information.", "CSE", MB_OK);
+			}
+			else
+				DebugPrint("Successfully generated LIP file for the selected voice");
+
+			return FALSE;
+		}
+		break;
+	}
+	case WM_DESTROY: 
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ResponseWndOrgWindowProc);
+		break; 
+	}
+ 
+	return CallWindowProc(g_ResponseWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
 }

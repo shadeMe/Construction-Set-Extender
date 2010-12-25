@@ -1,7 +1,6 @@
 To-Do
 =====
 MISC-->
-> Nudge IanPat to implement the loader fix
 > Turn off debug when releasing builds
 
 BE---->
@@ -9,9 +8,10 @@ BE---->
 > Filter out refs that don't have ownership data and count
 
 CSE--->
+> Auto convert mp3 voice files to wav for LIP generation
 > Fully implement GMST reinit
 > Figure out how to update the model of references
-> Look into fixing lip sync generation
+> Export/import result scripts
 
 > Being able to see cell quadrant boundaries when the landscape and/or quadrant dialogue(s) are open, maybe even color-coded boundaries so it is easy to see which quadrant is which
 > Being able to re-order masters from the master list in the Data... dialogue
