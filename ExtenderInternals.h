@@ -9,8 +9,8 @@
 #include "obse/GameObjects.h"
 #include "Console.h"
 
-#include "[ Libraries ]\INI Manager\INIManager.h"
-#include "[ Libraries ]\INI Manager\INIEditGUI.h"
+#include "[Libraries]\INI Manager\INIManager.h"
+#include "[Libraries]\INI Manager\INIEditGUI.h"
 
 extern std::fstream					g_DEBUG_LOG;
 extern std::string					g_AppPath;

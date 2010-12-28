@@ -1,8 +1,8 @@
 #include "SEHooks.h"
 #include "ExtenderInternals.h"
-#include "Common/CLIWrapper.h"
+#include "[Common]/CLIWrapper.h"
 #include "Exports.h"
-#include "Common/HandShakeStructs.h"
+#include "[Common]/HandShakeStructs.h"
 #include "CompilerErrorDetours.h"
 
 HWND								g_ScriptEditorBuffer = NULL;			// handle to the editor dialog being processed by the WndProc

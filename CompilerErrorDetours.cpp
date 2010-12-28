@@ -1,5 +1,5 @@
 #include "CompilerErrorDetours.h"
-#include "Common/CLIWrapper.h"
+#include "[Common]/CLIWrapper.h"
 #include "ExtenderInternals.h"
 
 #pragma warning (disable : 4005)

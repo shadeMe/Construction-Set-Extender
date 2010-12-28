@@ -1,8 +1,8 @@
 #include "ExtenderInternals.h"
 #include "SEHooks.h"
 #include "MiscHooks.h"
-#include "Common/CLIWrapper.h"
-#include "Common/HandShakeStructs.h"
+#include "[Common]/CLIWrapper.h"
+#include "[Common]/HandShakeStructs.h"
 #include "WindowManager.h"
 #include "CSEInterfaceManager.h"
 #include "Console.h"
@@ -45,8 +45,11 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		g_PluginPostLoad = true;
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
-		InitializeDefaultGMSTMap();
-		CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll");
+//		InitializeDefaultGMSTMap();
+		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll"))
+		{
+			MessageBox(*g_HWND_CSParent, "CSInterop Manager failed to initialize successfully!\n\nLIP generation services will be unavailable during this session.", "CSE", MB_OK);
+		}
 		break;
 	}
 }

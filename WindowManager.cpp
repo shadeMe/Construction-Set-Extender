@@ -1,8 +1,8 @@
 #include "ExtenderInternals.h"
 #include "WindowManager.h"
 #include "MiscHooks.h"
-#include "Common\HandShakeStructs.h"
-#include "Common\CLIWrapper.h"
+#include "[Common]\HandShakeStructs.h"
+#include "[Common]\CLIWrapper.h"
 #include "Console.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -661,7 +661,7 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 				return FALSE;
 
 			std::string Path(VoicePath);
-			Path = Path.substr(0, Path.find_last_of(".")) + ".wav";
+			Path = Path.substr(0, Path.find_last_of("."));
 
 			if (!CSIOM->DoGenerateLIPOperation(Path.c_str(), (*g_ResponseEditorData)->responseLocalCopy->responseText.m_data))
 			{

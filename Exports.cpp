@@ -1,7 +1,7 @@
 #include "Exports.h"
 #include "ExtenderInternals.h"
 #include "SEHooks.h"
-#include "Common\CLIWrapper.h"
+#include "[Common]\CLIWrapper.h"
 #include "MiscHooks.h"
 #include "resource.h"
 

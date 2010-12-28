@@ -12,7 +12,7 @@
 #include "shlobj.h"
 #include "resource.h"
 #include "common/IDirectoryIterator.h"
-#include "[ Libraries ]\MemoryHandler\MemoryHandler.h"
+#include "[Libraries]\MemoryHandler\MemoryHandler.h"
 
 using namespace SME;
 struct BaseExtraList;

@@ -1,7 +1,7 @@
 #include "ExtenderInternals.h"
 #include "Exports.h"
 #include "MiscHooks.h"
-#include "Common\CLIWrapper.h"
+#include "[Common]\CLIWrapper.h"
 
 EditorAllocator*					EditorAllocator::Singleton = NULL;
 

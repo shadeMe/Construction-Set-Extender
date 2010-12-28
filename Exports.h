@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ExtenderInternals.h"
-#include "Common\HandShakeStructs.h"
+#include "[Common]\HandShakeStructs.h"
 
 class DataHandler;
 

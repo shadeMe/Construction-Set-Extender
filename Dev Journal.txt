@@ -8,7 +8,6 @@ BE---->
 > Filter out refs that don't have ownership data and count
 
 CSE--->
-> Auto convert mp3 voice files to wav for LIP generation
 > Fully implement GMST reinit
 > Figure out how to update the model of references
 > Export/import result scripts
@@ -32,9 +31,7 @@ CSE--->
 * Generate the textures and normal maps for LOD land in DXT1 format with appropriate mipmap levels to start with. Easy enough to fix, but why incur extra work?
 
 SE---->
-> Script Validator seems to be wonky at times - Try it on VectorDiseaseTokenOS
 > IMPLEMENT AVALONEDIT
-> Implement regEx
 > Get quickView to work on remote vars
 
 # Be nice if there was a Sanitize option that forced proper capitalization of function names(begin->Begin, elseif->ElseIf, etc) and stripped excess whitespace.

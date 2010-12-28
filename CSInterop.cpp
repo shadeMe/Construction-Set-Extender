@@ -1,5 +1,5 @@
 #include "CSInterop.h"
-#include "CSInteropData.h"
+#include "[Common]\CSInteropData.h"
 #include "ExtenderInternals.h"
 #include "common/IFileStream.h"
 
@@ -186,6 +186,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	if(!tempFile.Open(this->DLLPath.c_str()))
 	{
 		DebugPrint("Couldn't find DLL (%s)!", this->DLLPath.c_str());
+		RpcStringFree((RPC_CSTR*)&GUIDStr);
 		CONSOLE->Exdent();
 		return false;
 	}
@@ -195,7 +196,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 		GUIDStr,	// pass the pipe guid
 		NULL,		// default process security
 		NULL,		// default thread security
-		TRUE,		// don't inherit handles
+		FALSE,		// don't inherit handles
 		CREATE_SUSPENDED,
 		NULL,		// no new environment
 		NULL,		// no new cwd
@@ -241,7 +242,49 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	return Loaded;
 }
 
-bool CSInteropManager::DoGenerateLIPOperation(const char* WAVPath, const char* ResponseText)
+bool CSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPath)
+{
+	STARTUPINFO StartupInfo = { 0 };
+	PROCESS_INFORMATION ProcInfo = { 0 };
+	StartupInfo.cb = sizeof(StartupInfo);
+
+	IFileStream	TempFile;
+
+	if(!TempFile.Open(MP3Path))
+	{
+		DebugPrint("Couldn't find source MP3 file '%s'!", MP3Path);
+		return false;
+	}
+	
+	std::string DecoderArgs = "lame.exe \"" + g_AppPath + std::string(MP3Path) + "\" \"" + g_AppPath + std::string(WAVPath) + "\" --decode";
+
+	bool Result = CreateProcess(
+		NULL,
+		(LPSTR)DecoderArgs.c_str(),
+		NULL,		// default process security
+		NULL,		// default thread security
+		FALSE,		// don't inherit handles
+		NULL,
+		NULL,		// no new environment
+		NULL,		// no new cwd
+		&StartupInfo, &ProcInfo) != 0;
+
+	if(!Result)
+	{
+		DebugPrint("Couldn't launch LAME decoder!");
+		LogWinAPIErrorMessage(GetLastError());
+		return false;
+	}
+
+	WaitForSingleObject(ProcInfo.hProcess, INFINITE);		// wait till the decoder's done its job
+
+	CloseHandle(ProcInfo.hProcess);
+	CloseHandle(ProcInfo.hThread);
+
+	return true;
+}
+
+bool CSInteropManager::DoGenerateLIPOperation(const char* InputPath, const char* ResponseText)
 {
 	if (!Loaded)
 	{
@@ -251,44 +294,60 @@ bool CSInteropManager::DoGenerateLIPOperation(const char* WAVPath, const char* R
 
 	bool Result = false, ExitLoop = false;
 	DWORD ByteCounter = 0;
+	std::string MP3Path(InputPath), WAVPath(InputPath);
+	MP3Path += ".mp3", WAVPath += ".wav";
+
 	CSECSInteropData InteropDataOut(CSECSInteropData::kMessageType_GenerateLIP), InteropDataIn(CSECSInteropData::kMessageType_Wait);
-	sprintf_s(InteropDataOut.StringBufferA, sizeof(InteropDataOut.StringBufferA), "%s", WAVPath);
+	sprintf_s(InteropDataOut.StringBufferA, sizeof(InteropDataOut.StringBufferA), "%s", WAVPath.c_str());
 	sprintf_s(InteropDataOut.StringBufferB, sizeof(InteropDataOut.StringBufferB), "%s", ResponseText);
 
 	HWND IdleWindow = CreateDialogParam(g_DLLInstance, MAKEINTRESOURCE(DLG_IDLE), *g_HWND_CSParent, NULL, NULL);
 
-	DebugPrint("Generating LIP file for '%s'...", WAVPath);
+	DebugPrint("Generating LIP file for '%s'...", MP3Path.c_str());
 	CONSOLE->Indent();
-
-	if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
+	
+	if (CreateTempWAVFile(MP3Path.c_str(), WAVPath.c_str()))
 	{
-		InteropDataOut.MessageType = CSECSInteropData::kMessageType_Wait;
-
-		while (1)
+		if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
 		{
-			if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Read, &InteropDataIn, &ByteCounter))
-			{
-				switch (InteropDataIn.MessageType)
-				{
-				case CSECSInteropData::kMessageType_DebugPrint:
-					DebugPrint(InteropDataIn.StringBufferA);
-					break;
-				case CSECSInteropData::kMessageType_OperationResult:
-					Result = InteropDataIn.OperationResult;
-					ExitLoop = true;
-					break;
-				}
+			InteropDataOut.MessageType = CSECSInteropData::kMessageType_Wait;
 
-				if (ExitLoop)
-					break;
-			}
-			else
+			while (1)
 			{
-				DebugPrint("GenerateLIP Operation idle loop encountered an error!");
-				LogWinAPIErrorMessage(GetLastError());
+				if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Read, &InteropDataIn, &ByteCounter))
+				{
+					switch (InteropDataIn.MessageType)
+					{
+					case CSECSInteropData::kMessageType_DebugPrint:
+						DebugPrint(InteropDataIn.StringBufferA);
+						break;
+					case CSECSInteropData::kMessageType_OperationResult:
+						Result = InteropDataIn.OperationResult;
+						ExitLoop = true;
+						break;
+					}
+
+					if (ExitLoop)
+						break;
+				}
+				else
+				{
+					DebugPrint("GenerateLIP Operation idle loop encountered an error!");
+					LogWinAPIErrorMessage(GetLastError());
+				}
 			}
-		}
-		PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
+			PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
+		}		
+	}
+	else
+	{
+		DebugPrint("Couldn't create temporary WAV file for LIP generation!");
+	}
+
+	if (!DeleteFile((std::string(g_AppPath + WAVPath)).c_str()) && GetLastError() != ERROR_FILE_NOT_FOUND)
+	{
+		DebugPrint("Couldn't delete temporary WAV file '%s'.");
+		LogWinAPIErrorMessage(GetLastError());
 	}
 
 	DestroyWindow(IdleWindow);
