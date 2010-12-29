@@ -185,10 +185,14 @@ bool ScriptParser::IsValidBlock(String^% Source, ScriptParser::ScriptType Editor
 	bool Result = true;
 
 	ScriptBlock ScriptBlockType = ScriptBlock::e_Universal;
+	String^ BlockType = gcnew String(Source);
 
-	if (!String::Compare(Source->Substring(0, 1)->ToLower(), "o"))
+	if (BlockType->Length > 0 && BlockType[0] == '_')
+		BlockType = BlockType->Substring(1);
+
+	if (!String::Compare(BlockType->Substring(0, 1)->ToLower(), "o"))
 		ScriptBlockType = ScriptBlock::e_ReferenceSpecific;
-	else if (!String::Compare(Source->Substring(0, 1)->ToLower(), "s"))
+	else if (!String::Compare(BlockType->Substring(0, 1)->ToLower(), "s"))
 		ScriptBlockType = ScriptBlock::e_MagicEffect;
 
 	switch (EditorScriptType)
@@ -282,6 +286,16 @@ UInt32 ScriptParser::GetTrailingTabCount(UInt32 StartPosition, String^% Source, 
 			break;
 	}
 	return Result;
+}
+
+bool ScriptParser::IsOperator(String^% Source)
+{
+	for each(String^% Itr in Operators)
+	{
+		if (!String::Compare(Source, Itr))
+			return true;
+	}
+	return false;
 }
 
 

@@ -48,7 +48,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 //		InitializeDefaultGMSTMap();
 		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll"))
 		{
-			MessageBox(*g_HWND_CSParent, "CSInterop Manager failed to initialize successfully!\n\nLIP generation services will be unavailable during this session.", "CSE", MB_OK);
+			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
 		}
 		break;
 	}

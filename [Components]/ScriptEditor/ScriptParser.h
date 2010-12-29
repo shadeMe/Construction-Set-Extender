@@ -55,6 +55,15 @@ public:
 																e_MagicEffect
 															};
 
+	static array<String^>^								Operators =
+															{
+																":=", "||", "&&", "+=", "-=", "*=" , 
+																"/=", "^=", ":", "::", "==", "!=",
+																">", "<", ">=", "<=", "|", "&", "<<",
+																">>", "+", "-", "*", "/", "%", "^",
+																"$", "#", "*", "!", "->"
+															};
+
 
 	void												Tokenize(String^ Source, bool AllowNulls);
 	TokenType											GetTokenType(String^% Token);
@@ -71,6 +80,7 @@ public:
 	int													GetLineStartIndex(UInt32 StartPosition, String^% Source);
 	int													GetLineEndIndex(UInt32 StartPosition, String^% Source);
 	UInt32												GetTrailingTabCount(UInt32 StartPosition, String^% Source, String^ CharactersToSkip);
+	bool												IsOperator(String^% Source);
 
 	LinkedList<VariableInfo^>^							Variables;
 	Stack<BlockType>^									BlockStack;

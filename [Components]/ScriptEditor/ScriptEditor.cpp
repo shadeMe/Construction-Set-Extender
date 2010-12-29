@@ -1745,24 +1745,30 @@ void Workspace::ValidateScript()
 		}
 
 		Pos = 0;
-		String^ Token;
+		String^ CurrentToken = "";
+		String^ LastToken = "";
+
 		for each (Char Itr in ScriptTextParser->Delimiters) {
-			Token = ScriptTextParser->Tokens[Pos];
+			CurrentToken = ScriptTextParser->Tokens[Pos];
 
-			if (Char::IsDigit(Token[0]) && ScriptTextParser->HasAlpha(Pos))
-				AddMessageToPool(MessageType::e_Warning, ScriptTextParser->CurrentLineNo, "Identifier '" + Token + "' starts with an integer. Can cause BadThings™.");
+			if (Char::IsDigit(CurrentToken[0]) && ScriptTextParser->HasAlpha(Pos))
+				AddMessageToPool(MessageType::e_Warning, ScriptTextParser->CurrentLineNo, "Identifier '" + CurrentToken + "' starts with an integer. Can cause BadThings™.");
 
-			if (ScriptTextParser->FindVariable(Token)->IsValid() == 0 && 
+			if (ScriptTextParser->FindVariable(CurrentToken)->IsValid() == 0 && 
 				ScriptTextParser->IsComment(Pos + 1) == -1 && 
-				ScriptTextParser->IsLiteral(Token) == 0 && 
-				ScriptTextParser->GetTokenType(Token) != ScriptParser::TokenType::e_Variable &&
-				ISDB->IsCommand(Token) == 0 &&
-				ScriptTextParser->HasStringGotIllegalChar(Token, "_", "$#!=^<>:|+-*"))
+				ScriptTextParser->IsLiteral(CurrentToken) == 0 && 
+				ScriptTextParser->GetTokenType(CurrentToken) != ScriptParser::TokenType::e_Variable &&
+				ISDB->IsCommand(CurrentToken) == 0 &&
+				ScriptTextParser->IsOperator(CurrentToken) == 0 &&
+				ScriptTextParser->HasStringGotIllegalChar(CurrentToken, "", "") &&
+				String::Compare(LastToken, "begin", true))
 			{
-				AddMessageToPool(MessageType::e_Warning, ScriptTextParser->CurrentLineNo, "Identifier '" + Token + "' contains an invalid character.");
+				AddMessageToPool(MessageType::e_Warning, ScriptTextParser->CurrentLineNo, "Identifier '" + CurrentToken + "' contains an invalid character.");
 			}
 			Pos++;
+			LastToken = CurrentToken;
 		}
+
 		ReadLine = ValidateParser->ReadLine();
 	}
 
@@ -2207,7 +2213,7 @@ void Workspace::CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% Script
 		else								ToolBarOffsetToggle->Enabled = true;
 	}
 	catch (...)		// exceptions raised when bytecode size doesn't correspond to text length
-	{
+	{				// can't be predicted as scripts can be saved without being compiled
 		ToolBarOffsetToggle->Enabled = false;
 	}
 }
@@ -2762,7 +2768,7 @@ void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
 {
 	if (ScriptEditorID == "New Script")
 	{
-		MessageBox::Show("You may not perform this operation on a script without a name/editorID.", "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
+		MessageBox::Show("You may only perform this operation on an existing script.", "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
 		return;
 	}
 
@@ -2808,7 +2814,7 @@ void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
 {
-	if (ScriptEditorID != "") {
+	if (ScriptEditorID != "" && ScriptEditorID != "New Script") {
 		CStringWrapper^ CEID = gcnew CStringWrapper(ScriptEditorID);
 		NativeWrapper::ScriptEditor_CompileDependencies(CEID->String());
 		MessageBox::Show("Operation complete! Script variables used as condition parameters will need to be corrected manually. The results have been logged to the console.", "CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);

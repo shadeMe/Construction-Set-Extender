@@ -74,7 +74,7 @@ void CSInteropManager::Deinitialize()
 			&InteropDataOut,
 			sizeof(CSECSInteropData),
 			&BytesWritten,
-			NULL))
+			NULL) && GetLastError() != ERROR_SUCCESS)
 	{
 		DebugPrint("Couldn't write exit message to interop pipe!");
 		LogWinAPIErrorMessage(GetLastError());
@@ -215,7 +215,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	
 	if (!Loaded)
 	{
-		DebugPrint("Couldn't load DLL (%s)!", this->DLLPath.c_str());
+		DebugPrint("Couldn't load CS 1.0!");
 		LogWinAPIErrorMessage(GetLastError());
 		CONSOLE->Exdent();
 		return Loaded;

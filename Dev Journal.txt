@@ -33,6 +33,7 @@ CSE--->
 SE---->
 > IMPLEMENT AVALONEDIT
 > Get quickView to work on remote vars
+> Redo most of the script validator
 
 # Be nice if there was a Sanitize option that forced proper capitalization of function names(begin->Begin, elseif->ElseIf, etc) and stripped excess whitespace.
 

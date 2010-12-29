@@ -131,7 +131,7 @@ bool PatchMiscHooks()
 	kCellViewPopulateObjectList.WriteJump();
 	kTopicResultScriptReset.WriteJump();
 
-//	kDoorMarkerProperties.WriteJump();		### TODO screws up dialog instantiation for no reason.
+//	kDoorMarkerProperties.WriteJump();		### screws up dialog instantiation for no reason.
 	kDoorMarkerProperties.WriteUInt16(0x9090);
 
 	kDataHandlerPostError.WriteUInt8(0xEB);	
@@ -1162,6 +1162,7 @@ void __stdcall DoResponseWindowInitHook(HWND hWnd)
 	EnableWindow(GetDlgItem(hWnd, 1016), TRUE);
 
 	CheckRadioButton(hWnd, 2379, 2380, 2379);
+	SetWindowText(GetDlgItem(hWnd, 2379), "From MP3");
 
 	SetWindowText(GetDlgItem(hWnd, 2223), "Copy External File");
 	SetWindowPos(GetDlgItem(hWnd, 2223), HWND_TOP, 150, 550, 105, 20, SWP_NOZORDER|SWP_SHOWWINDOW);
