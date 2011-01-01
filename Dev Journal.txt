@@ -32,7 +32,7 @@ CSE--->
 
 SE---->
 > Rewrite the preprocessor
-> //IF preproc directive
+> IF preproc directive
 > Fix the Load Scripts issue with Win XP
 > Multi line enums/macros
 > IMPLEMENT AVALONEDIT
