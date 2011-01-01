@@ -351,6 +351,7 @@ extern GenericNode<Archive>**	g_LoadedArchives;
 extern ResponseEditorData**		g_ResponseEditorData;
 extern UInt8*					g_Flag_ObjectWindow_MenuState;
 extern UInt8*					g_Flag_CellView_MenuState;
+extern CRITICAL_SECTION*		g_ExtraListCS;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -410,6 +411,9 @@ extern const _CreateArchive			CreateArchive;
 typedef void*			(__cdecl *_TESDialog_GetListViewSelectedItemLParam)(HWND ListView);
 extern const _TESDialog_GetListViewSelectedItemLParam			TESDialog_GetListViewSelectedItemLParam;
 
+typedef TESForm*			(__cdecl *_TESForm_LookupByFormID)(UInt32 FormID);
+extern const _TESForm_LookupByFormID			TESForm_LookupByFormID;
+
 extern const void *			RTTI_TESCellUseList;
 
 extern const UInt32			kTESChildCell_LoadCell;
@@ -418,12 +422,13 @@ extern const UInt32			kTESCellUseList_GetUseListRefHead;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
 extern const UInt32			kScript_SaveResultScript;
 extern const UInt32			kScript_SaveScript;
-extern const UInt32			kLinkedListNode_NewNode;
+extern const UInt32			kLinkedListNode_NewNode;		// BSSimpleList
 extern const UInt32			kDataHandler_AddBoundObject;
 extern const UInt32			kTESForm_SetFormID;
 extern const UInt32			kTESForm_SetEditorID;
 extern const UInt32			kTESObjectREFR_SetBaseForm;
 extern const UInt32			kTESObjectREFR_SetFlagPersistent;
+extern const UInt32			kExtraDataList_InitItem;
 
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
 extern const UInt32			kBaseExtraList_ModExtraOwnership;
@@ -435,6 +440,7 @@ extern const UInt32			kTESObjectREFR_ModExtraCharge;
 extern const UInt32			kTESObjectREFR_ModExtraTimeLeft;
 extern const UInt32			kTESObjectREFR_ModExtraSoul;
 extern const UInt32			kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
+extern const UInt32			kTESObjectREFR_GetExtraRef3DData;
 
 extern const UInt32			kVTBL_TESObjectREFR;
 extern const UInt32			kVTBL_TESForm;

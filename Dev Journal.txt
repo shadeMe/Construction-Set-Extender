@@ -31,6 +31,10 @@ CSE--->
 * Generate the textures and normal maps for LOD land in DXT1 format with appropriate mipmap levels to start with. Easy enough to fix, but why incur extra work?
 
 SE---->
+> Rewrite the preprocessor
+> //IF preproc directive
+> Fix the Load Scripts issue with Win XP
+> Multi line enums/macros
 > IMPLEMENT AVALONEDIT
 > Get quickView to work on remote vars
 > Redo most of the script validator

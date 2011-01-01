@@ -156,7 +156,6 @@ void OptionsDialog::PopulateINIMap()
 	// Preprocessor
 	INIMap->Add(gcnew INISetting("CreateMissingFromSegment", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(CreateMissingFromSegment, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("AllowRedefinitions", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("PreprocessorWarnings", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(PreprocessorWarnings, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	DebugPrint("Populated INI Map");
 }
@@ -249,7 +248,6 @@ OptionsDialog::OptionsDialog()
 	SuppressRefCountForQuestScripts = gcnew CheckBox();
 	ColorEditorBox = gcnew CheckBox();
 	RecompileVarIdx = gcnew CheckBox();
-	PreprocessorWarnings = gcnew CheckBox();
 	UseCSParent = gcnew CheckBox();
 	DestroyOnLastTabClose = gcnew CheckBox();
 
@@ -281,7 +279,6 @@ OptionsDialog::OptionsDialog()
 
 	GroupPreP->Controls->Add(CreateMissingFromSegment);
 	GroupPreP->Controls->Add(AllowRedefinitions);
-	GroupPreP->Controls->Add(PreprocessorWarnings);
 	
 	GroupPreP->Location = System::Drawing::Point(12, 16);
 	GroupPreP->Name = L"GroupPreP";
@@ -304,14 +301,6 @@ OptionsDialog::OptionsDialog()
 	AllowRedefinitions->Text = L"Allow Macro Re-Definitions";
 	AllowRedefinitions->UseVisualStyleBackColor = true;
 	AllowRedefinitions->AutoSize = true;
-
-	PreprocessorWarnings->AutoSize = true;
-	PreprocessorWarnings->Location = System::Drawing::Point(13, 111);
-	PreprocessorWarnings->Name = L"PreprocessorWarnings";
-	PreprocessorWarnings->Size = System::Drawing::Size(130, 17);
-	PreprocessorWarnings->TabIndex = 10;
-	PreprocessorWarnings->Text = L"Show Script Warnings";
-	PreprocessorWarnings->UseVisualStyleBackColor = true;
 
 	GroupIS->Controls->Add(ISThreshold);
 	GroupIS->Controls->Add(ThresholdLength);

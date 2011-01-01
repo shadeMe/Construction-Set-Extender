@@ -85,7 +85,6 @@ public ref class OptionsDialog
 	Label^  										TabStopSize;
 	NumericUpDown^  								TabSize;
 	CheckBox^										RecompileVarIdx;
-	CheckBox^										PreprocessorWarnings;
 	CheckBox^										UseCSParent;
 	CheckBox^										DestroyOnLastTabClose;
 

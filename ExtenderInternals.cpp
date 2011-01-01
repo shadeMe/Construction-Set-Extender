@@ -42,6 +42,7 @@ GenericNode<Archive>**				g_LoadedArchives = (GenericNode<Archive>**)0x00A0DD8C;
 ResponseEditorData**				g_ResponseEditorData = (ResponseEditorData**)0x00A10E2C;
 UInt8*								g_Flag_ObjectWindow_MenuState = (UInt8*)0x00A0AF40;
 UInt8*								g_Flag_CellView_MenuState = (UInt8*)0x00A0AF48;
+CRITICAL_SECTION*					g_ExtraListCS = (CRITICAL_SECTION*)0x00A0DA80;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -63,6 +64,7 @@ const _AutoSavePlugin				AutoSavePlugin = (_AutoSavePlugin)0x004307C0;
 const _CreateArchive				CreateArchive = (_CreateArchive)0x004665C0;
 const _TESDialog_GetListViewSelectedItemLParam
 									TESDialog_GetListViewSelectedItemLParam = (_TESDialog_GetListViewSelectedItemLParam)0x00403C40;
+const _TESForm_LookupByFormID		TESForm_LookupByFormID = (_TESForm_LookupByFormID)0x00495EF0;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -98,6 +100,7 @@ const UInt32						kTESForm_SetFormID = 0x00497E50;
 const UInt32						kTESForm_SetEditorID = 0x00497670;
 const UInt32						kTESObjectREFR_SetBaseForm = 0x005415A0;
 const UInt32						kTESObjectREFR_SetFlagPersistent = 0x0053F0D0;
+const UInt32						kExtraDataList_InitItem = 0x0045D740;
 
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
 const UInt32						kBaseExtraList_ModExtraOwnership = 0x0045E060;
@@ -110,6 +113,7 @@ const UInt32						kTESObjectREFR_ModExtraCharge = 0x0053F3C0;
 const UInt32						kTESObjectREFR_ModExtraTimeLeft = 0x0053F620;
 const UInt32						kTESObjectREFR_ModExtraSoul = 0x0053F710;
 const UInt32						kTESObjectREFR_SetExtraEnableStateParent_OppositeState = 0x0053FA80;
+const UInt32						kTESObjectREFR_GetExtraRef3DData = 0x00542950;
 
 const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its index
 									{

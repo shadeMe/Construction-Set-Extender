@@ -67,9 +67,9 @@ bool ScriptParser::HasAlpha(int Index)
 	return Result;
 }
 
-ScriptParser::VariableInfo^% ScriptParser::FindVariable(String^% Variable)
+ScriptParser::VariableInfo^ ScriptParser::FindVariable(String^% Variable)
 {
-	VariableInfo^% Result = const_cast<VariableInfo^>(VariableInfo::NullVar);
+	VariableInfo^ Result = const_cast<VariableInfo^>(VariableInfo::NullVar);
 
 	for each (VariableInfo^% Itr in Variables) {
 		if (!String::Compare(Itr->VarName, Variable, true)) {
@@ -381,27 +381,32 @@ UInt32 ByteCodeParser::GetOffsetForLine(String^% Line, Array^% Data, UInt32% Cur
 	}
 }
 
-PreProcessor::PreProcessor()
+#define		PREPROCESSOR_UNKNOWN_MACRO_VALUE			"<UNDEF>"
+
+Preprocessor::Preprocessor()
 {
-	PreProcessMacros = gcnew Dictionary<String^, String^>();
+	PreprocessMacros = gcnew Dictionary<String^, String^>();
 	TextParser = gcnew ScriptParser();
+	ErrorOutput = nullptr;
+	ErrorFlag = false;
+	SuppressOutput = false;
 }
 
-PreProcessor^% PreProcessor::GetSingleton()
+Preprocessor^% Preprocessor::GetSingleton()
 {
 	if (Singleton == nullptr) {
-		Singleton = gcnew PreProcessor();
+		Singleton = gcnew Preprocessor();
 	}
 	return Singleton;
 }
 
 
-int PreProcessor::FindPreProcessMacro(String^% Source)
+int Preprocessor::GetMacroIndex(String^% Macro)
 {
 	int Result = -1, Count = 0;
 	
-	for each (KeyValuePair<String^, String^>^ Itr in PreProcessMacros) {
-		if (!String::Compare(Itr->Key, Source)) {
+	for each (KeyValuePair<String^, String^>^ Itr in PreprocessMacros) {
+		if (!String::Compare(Itr->Key, Macro)) {
 			Result = Count;
 			break;
 		}
@@ -410,12 +415,12 @@ int PreProcessor::FindPreProcessMacro(String^% Source)
 	return Result;
 }
 
-String^ PreProcessor::GetPreProcessMacro(UInt32 Index)
+String^ Preprocessor::GetMacroAtIndex(UInt32 Index)
 {
-	String^ Result = "<UNDEF>";
+	String^ Result = PREPROCESSOR_UNKNOWN_MACRO_VALUE;
 	int Count = 0;
 	
-	for each (KeyValuePair<String^, String^>^ Itr in PreProcessMacros) {
+	for each (KeyValuePair<String^, String^>^ Itr in PreprocessMacros) {
 		if (Index == Count) {
 			Result = Itr->Key;
 			break;
@@ -425,7 +430,20 @@ String^ PreProcessor::GetPreProcessMacro(UInt32 Index)
 	return Result;
 }
 
-String^ PreProcessor::ParseImportDirective(String^% Source, PreProcessOp Operation, String^% ReadLine, UInt32 LineStart, UInt32 LineEnd, bool Recursing)
+void Preprocessor::LogErrorMessage(String^ Message, bool OverrideSuppression)
+{
+	if (!SuppressOutput || OverrideSuppression)
+		ErrorOutput(Message);
+	ErrorFlag = true;
+}
+
+void Preprocessor::LogDebugMessage(String^ Message)
+{
+	if (!SuppressOutput)
+		DebugPrint(Message);
+}
+
+String^ Preprocessor::ParseImportDirective(String^% Source, PreprocessOp Operation, String^% ReadLine, UInt32 LineStart, UInt32 LineEnd, bool Recursing)
 {
 	String^ Result = "", ^ImportFileName, ^Dummy = "";
 
@@ -436,49 +454,51 @@ try {
 
 	array<Char>^ QuoteDelimit = {'"'}, ^LFDelimit = {'\n'};
 
-	if (ImportDefIdx == 0 && TextParser->IsComment(ImportDefIdx) == -1 && ImportDefIdx + 1 < TextParser->Tokens->Count && Operation == PreProcessOp::e_Expand && TextParser->IsLiteral(TextParser->Tokens[ImportDefIdx + 1])) {
+	if (ImportDefIdx == 0 && TextParser->IsComment(ImportDefIdx) == -1 && ImportDefIdx + 1 < TextParser->Tokens->Count && Operation == PreprocessOp::e_Expand && TextParser->IsLiteral(TextParser->Tokens[ImportDefIdx + 1])) {
 		ImportFileName = TextParser->Tokens[ImportDefIdx + 1]->Split(QuoteDelimit)[1];
 		try {
 			StreamReader^ ImportParser = gcnew StreamReader(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName));
 			Result = ";<CSEImportSeg>" + "\n";
-			Result += DoPreProcess(ImportParser->ReadToEnd(), Operation, false, Dummy);
+			Result += DoPreprocess(Operation, ImportParser->ReadToEnd(), Dummy, false);
 			Result += ReadLine->Substring(0, TextParser->Indices[0]) + ";</CSEImportSeg> \"" + ImportFileName + "\"\n";
 			ImportParser->Close();
 		} catch (Exception^ E) {
-			DebugPrint("Couldn't import from script '" + ImportFileName + "'\n\tException: " + E->Message, true);
+			LogErrorMessage("Couldn't import from script '" + ImportFileName + "'. Exception: " + E->Message, false);
 			Result = ReadLine + "\n";
 		}
 	}
-	else if (ImportColIdx == 0 && Operation == PreProcessOp::e_Collapse) {
-		Result = DoPreProcess(Source->Substring(LineEnd + ((Source->Length > LineEnd + 1)?1:0)), Operation, true, Dummy);
+	else if (ImportColIdx == 0 && Operation == PreprocessOp::e_Collapse) {
+		Result = DoPreprocess(Operation, Source->Substring(LineEnd + ((Source->Length > LineEnd + 1)?1:0)), Dummy, true);
 	}
-	else if (ImportColStopIdx == 0 && Operation == PreProcessOp::e_Collapse) {
+	else if (ImportColStopIdx == 0 && Operation == PreprocessOp::e_Collapse) {
 		ImportFileName = TextParser->Tokens[ImportColStopIdx + 1]->Split(QuoteDelimit)[1];
-		String^ ImportedText = DoPreProcess(Source->Substring(0, LineStart - 1), Operation, true, Dummy)->Replace("\n", "\r\n");		// needs to be preprocessed as source is always a substring of the original script text
+		String^ ImportedText = DoPreprocess(Operation, Source->Substring(0, LineStart - 1), Dummy, true)->Replace("\n", "\r\n");		// needs to be preprocessed as source is always a substring of the original script text
 
 		if (!File::Exists(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName))) {
-			DebugPrint("Import segment '" + ImportFileName + "' couldn't be found", true);
+			LogDebugMessage("Import segment '" + ImportFileName + "' couldn't be found");
 			if (OPTIONS->FetchSettingAsInt("CreateMissingFromSegment")) {
 				try {
 					StreamWriter^ ImportParser = gcnew StreamWriter(String::Format("{0}Data\\Scripts\\{1}.txt",Globals::AppPath, ImportFileName));
 					ImportParser->Write(ImportedText);
 					ImportParser->Flush();
 					ImportParser->Close();
-					DebugPrint("\tImport segment '" + ImportFileName + "' created!");
+					LogDebugMessage("\tImport segment '" + ImportFileName + "' created!");
 					
 				} catch (Exception^ E) {
-					DebugPrint("Couldn't write import segment to '" + ImportFileName + "'\n\tException: " + E->Message);
+					LogErrorMessage("Couldn't write import segment to '" + ImportFileName + "'\n\tException: " + E->Message, false);
 				}
 			}
 		}
 		Result = ReadLine->Substring(0, TextParser->Indices[0]) + "//import \"" + ImportFileName + "\"\n";
 	}
 } catch (Exception^ E) {
-	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
+	String^ Error = "Preprocessing failed on line '" + ReadLine + "'. Check for incorrect syntax";
+	LogErrorMessage(Error, false);
+	LogDebugMessage(Error + "\n\tException: " + E->Message);
 }
 	return Result;
 }
-String^ PreProcessor::ParseDefineDirective(String^% Source, PreProcessOp Operation, String^% ReadLine)
+String^ Preprocessor::ParseDefineDirective(String^% Source, PreprocessOp Operation, String^% ReadLine)
 {
 	String^ Result = "";
 	String^ InvalidChars = "";
@@ -488,37 +508,37 @@ try {
 		DefineColIdx = TextParser->HasToken(";<CSEMacroDef>"), 
 		DefineRstrIdx = TextParser->HasToken(";<CSEMacroRef>");
 
-	if (DefineDefIdx == 0 && TextParser->IsComment(DefineDefIdx) == -1 && DefineDefIdx + 1 < TextParser->Tokens->Count && Operation == PreProcessOp::e_Expand) {
+	if (DefineDefIdx == 0 && TextParser->IsComment(DefineDefIdx) == -1 && DefineDefIdx + 1 < TextParser->Tokens->Count && Operation == PreprocessOp::e_Expand) {
 		String^ Macro = TextParser->Tokens[DefineDefIdx + 1];
 		String^ Value = ReadLine->Substring(TextParser->Indices[DefineDefIdx + 1] + Macro->Length + 1);
 
 		if (!String::Compare(Macro, Macro->ToUpper())) {
 			Result += ";<CSEMacroDef> " + Macro + " " + Value + " </CSEMacroDef>\n";
 
-			if (FindPreProcessMacro(Macro) != -1) {
-				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreProcessMacros[Macro] = Value;
-				else								DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true);
+			if (GetMacroIndex(Macro) != -1) {
+				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreprocessMacros[Macro] = Value;
+				else								LogErrorMessage("Illegal redefinition of preprocessor macro '" + Macro + "'", true);	// this error message needs to be displayed regardless of suppression as we override the associated INI setting during the second pass
 			}
 			else if (Value == "")
-				DebugPrint("Preprocessor macro '" + Macro + "' doesn't have a value", true);
+				LogErrorMessage("Preprocessor macro '" + Macro + "' doesn't have a value", false);
 			else if (Value->IndexOfAny(InvalidChars->ToCharArray()) != -1)
-				DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true);
+				LogErrorMessage("Preprocessor macro '" + Macro + "' contains an invalid character", false);
 			else 
-				PreProcessMacros->Add(Macro, Value);
+				PreprocessMacros->Add(Macro, Value);
 		} else
-			DebugPrint("Preprocessor macro '" + Macro + "' is formatted incorrectly", true);
+			LogErrorMessage("Preprocessor macro '" + Macro + "' is formatted incorrectly", false);
 	}
-	else if (DefineColIdx == 0 && Operation == PreProcessOp::e_Collapse) {
+	else if (DefineColIdx == 0 && Operation == PreprocessOp::e_Collapse) {
 		String^ Macro = TextParser->Tokens[DefineColIdx + 1];
 		String^ Value = ReadLine->Substring(TextParser->Indices[DefineColIdx + 2])->Replace(" </CSEMacroDef>", "");
 		Result += ReadLine->Substring(0, TextParser->Indices[0]) + "//define " + Macro + " " + Value + "\n";
 
-		if (FindPreProcessMacro(Macro) == -1)
-			PreProcessMacros->Add(Macro, Value);
+		if (GetMacroIndex(Macro) == -1)
+			PreprocessMacros->Add(Macro, Value);
 		else if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))
-			PreProcessMacros[Macro] = Value;
+			PreprocessMacros[Macro] = Value;
 	}
-	else if (DefineRstrIdx != -1 && Operation == PreProcessOp::e_Collapse) {
+	else if (DefineRstrIdx != -1 && Operation == PreprocessOp::e_Collapse) {
 		TextParser->Tokenize(ReadLine, true);
 		DefineRstrIdx = TextParser->HasToken(";<CSEMacroRef>");
 		String^ RestoredLine = ReadLine->Substring(0, TextParser->Indices[0]), 
@@ -538,8 +558,8 @@ try {
 					MacroIdx = Int32::Parse(Itr->Substring(Itr->IndexOf(";") + 1, Itr->IndexOf("|", Itr->IndexOf(";")) - Itr->IndexOf(";") - 1));
 				TokenIdxOffset = 0;
 				if (TokenIdx == RstrTokenIdx) {
-					Token = GetPreProcessMacro(MacroIdx);
-					if (Token != "<UNDEF>")			Value = PreProcessMacros[Token];
+					Token = GetMacroAtIndex(MacroIdx);
+					if (Token != PREPROCESSOR_UNKNOWN_MACRO_VALUE)			Value = PreprocessMacros[Token];
 					else							Value = "<CSEUnknownMacro>";
 					ScriptParser^ TempParser = gcnew ScriptParser();
 					TempParser->Tokenize(Value, true);
@@ -565,11 +585,11 @@ try {
 		int TokenIdx = 0, MacroIdx = 0, TokenIdxOffset = 0;
 		
 		for each (String^% Itr in TextParser->Tokens) {
-			MacroIdx = FindPreProcessMacro(Itr);
+			MacroIdx = GetMacroIndex(Itr);
 			if (MacroIdx != -1 && TextParser->IsComment(TokenIdx) == -1) {
-				ExpandedLine += PreProcessMacros[Itr];
+				ExpandedLine += PreprocessMacros[Itr];
 				ScriptParser^ TempParser = gcnew ScriptParser();
-				TempParser->Tokenize(PreProcessMacros[Itr], true);
+				TempParser->Tokenize(PreprocessMacros[Itr], true);
 				int TokenEncodeIdx = TokenIdx + TokenIdxOffset;								// offset by the token count of the macro's value to allow multiple tokens
 				TokenIdxOffset = TempParser->Tokens->Count - 1;
 				BreadCrumb += String::Format("{0};{1}|", TokenEncodeIdx, MacroIdx);			// breadcrumb format = |<TokenIndex>;<VarIndex>|...
@@ -590,13 +610,15 @@ try {
 			Result += "\n";
 	}
 } catch (Exception^ E) {
-	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
+	String^ Error = "Preprocessing failed on line '" + ReadLine + "'. Check for incorrect syntax";
+	LogErrorMessage(Error, false);
+	LogDebugMessage(Error + "\n\tException: " + E->Message);
 }
 
 	return Result;
 }
 
-void PreProcessor::ParseEnumMacros(String^% Items, bool ReportErrors)
+void Preprocessor::ParseEnumMacros(String^% Items, bool ReportErrors)
 {
 	TextParser->Tokenize(Items, false);
 	int PreviousValue = 0;
@@ -615,23 +637,23 @@ void PreProcessor::ParseEnumMacros(String^% Items, bool ReportErrors)
 			Value = Int32::Parse(ValueStr);
 		} catch (...) {
 			Value = 0;
-			if (ReportErrors)	DebugPrint("Preprocessor macro '" + Macro + "' contains an invalid character", true);
+			if (ReportErrors)	LogErrorMessage("Preprocessor macro '" + Macro + "' contains an invalid character", false);
 		}
 		PreviousValue = Value;
 		
 		if (!String::Compare(Macro, Macro->ToUpper())) {
-			if (FindPreProcessMacro(Macro) != -1) {
-				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreProcessMacros[Macro] = Value.ToString();
-				else {		if (ReportErrors)		DebugPrint("Illegal redefinition of preprocessor macro '" + Macro + "'", true); }
+			if (GetMacroIndex(Macro) != -1) {
+				if (OPTIONS->FetchSettingAsInt("AllowRedefinitions"))	PreprocessMacros[Macro] = Value.ToString();
+				else {		if (ReportErrors)		LogErrorMessage("Illegal redefinition of preprocessor macro '" + Macro + "'", true); }
 			}
 			else 
-				PreProcessMacros->Add(Macro, Value.ToString());
+				PreprocessMacros->Add(Macro, Value.ToString());
 		} else if (ReportErrors)
-			DebugPrint("Preprocessor macro '" + Macro + "' is formatted incorrectly", true);
+			LogErrorMessage("Preprocessor macro '" + Macro + "' is formatted incorrectly", false);
 	}
 }
 
-String^	PreProcessor::ParseEnumDirective(String^% Source, PreProcessOp Operation, String^% ReadLine)
+String^	Preprocessor::ParseEnumDirective(String^% Source, PreprocessOp Operation, String^% ReadLine)
 {
 	String^ Result = "";
 
@@ -639,15 +661,19 @@ try {
 	int EnumDefIdx = TextParser->HasToken("//enum"), 
 		EnumColIdx = TextParser->HasToken(";<CSEEnum>");
 
-	if (EnumDefIdx == 0 && TextParser->IsComment(EnumDefIdx) == -1 && EnumDefIdx + 1 < TextParser->Tokens->Count && Operation == PreProcessOp::e_Expand) {
+	if (EnumDefIdx == 0 && TextParser->IsComment(EnumDefIdx) == -1 && EnumDefIdx + 1 < TextParser->Tokens->Count && Operation == PreprocessOp::e_Expand) {
 		String^ Enum = TextParser->Tokens[EnumDefIdx + 1];
 		String^ Value = ReadLine->Substring(TextParser->Indices[EnumDefIdx + 1] + Enum->Length + 1);
+
+		if (Enum == "" || Value == "")
+			throw gcnew CSEGeneralException("Enum name/value is null");
+
 		Result += ";<CSEEnum> " + Enum + " " + Value + " </CSEEnum>\n";
 		Value = Value->Replace("{", "")->Replace("}", "");
 
 		ParseEnumMacros(Value, true);
 	}
-	else if (EnumColIdx == 0 && Operation == PreProcessOp::e_Collapse) {
+	else if (EnumColIdx == 0 && Operation == PreprocessOp::e_Collapse) {
 		String^ Enum = TextParser->Tokens[EnumColIdx + 1];
 		String^ Value = ReadLine->Substring(TextParser->Indices[EnumColIdx + 2])->Replace(" </CSEEnum>", "");
 		Result += ReadLine->Substring(0, TextParser->Indices[0]) + "//enum " + Enum + " " + Value + "\n";
@@ -656,17 +682,19 @@ try {
 		ParseEnumMacros(Value, false);
 	}
 } catch (Exception^ E) {
-	DebugPrint("Exception raised during preprocessing! Likely causes: Modifications to the script outside of CSE, Incorrect Syntax\n\tException: " + E->Message, true);
+	String^ Error = "Preprocessing failed on line '" + ReadLine + "'. Check for incorrect syntax";
+	LogErrorMessage(Error, false);
+	LogDebugMessage(Error + "\n\tException: " + E->Message);
 }
 
 	return Result;
 }
 
-void PreProcessor::ParseNestedDirectives(StringReader^% PreProcessParser, String^% ReadLine, UInt32& LineStart, UInt32& LineEnd)
+void Preprocessor::ParseNestedDirectives(StringReader^% PreprocessParser, String^% ReadLine, UInt32& LineStart, UInt32& LineEnd)
 {
 	int Counter = 1;										
 	LineStart = LineEnd + 1;	
-	ReadLine = PreProcessParser->ReadLine();
+	ReadLine = PreprocessParser->ReadLine();
 
 	while (ReadLine != nullptr && Counter > 0) {
 		TextParser->Tokenize(ReadLine, false);
@@ -678,16 +706,16 @@ void PreProcessor::ParseNestedDirectives(StringReader^% PreProcessParser, String
 		}
 
 		LineStart = LineEnd + 1;	
-		ReadLine = PreProcessParser->ReadLine();
+		ReadLine = PreprocessParser->ReadLine();
 	}
 }
 
-String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp Operation, bool DoCollapseReplace, String^% ExtractedCSEBlock)
+String^ Preprocessor::DoPreprocess(PreprocessOp Operation, String^% Source, String^% ExtractedCSEBlock, bool Recursing)
 {
 	String^ Result = "", ^ReadLine;
 	
-	StringReader^ PreProcessParser = gcnew StringReader(Source);
-	ReadLine = PreProcessParser->ReadLine();
+	StringReader^ PreprocessParser = gcnew StringReader(Source);
+	ReadLine = PreprocessParser->ReadLine();
 	UInt32 LineStart = 0, LineEnd = 0;								// relative to the source string
 	bool ExtractBlock = false;
 
@@ -702,19 +730,19 @@ String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp O
 				ExtractedCSEBlock += ReadLine + "\n";
 		
 			LineStart = LineEnd + 1;	
-			ReadLine = PreProcessParser->ReadLine();
+			ReadLine = PreprocessParser->ReadLine();
 			continue;
 		}
 		
 		if (!TextParser->Valid) {
 			Result += ReadLine + "\n";
 			LineStart = LineEnd + 1;	
-			ReadLine = PreProcessParser->ReadLine();
+			ReadLine = PreprocessParser->ReadLine();
 			continue;
 		} else if (!TextParser->HasToken(";<CSEBlock>")) {
 			ExtractBlock = true;
 			LineStart = LineEnd + 1;	
-			ReadLine = PreProcessParser->ReadLine();
+			ReadLine = PreprocessParser->ReadLine();
 			continue;
 		}
 
@@ -728,25 +756,25 @@ String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp O
 			EnumColIdx = TextParser->HasToken(";<CSEEnum>");	
 		
 		if (!ImportDefIdx || !ImportColIdx || !ImportColStopIdx) {								
-			if (DoCollapseReplace) {
+			if (Recursing) {
 				if (!ImportColStopIdx) {		
-					Result = ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, DoCollapseReplace);					
+					Result = ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, Recursing);					
 					return Result;																// quick return to prevent unnecessary snooping
 				}
 				else if (!ImportColIdx) {
-					Result += ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, DoCollapseReplace);
+					Result += ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, Recursing);
 
-					if (Operation == PreProcessOp::e_Collapse) {
-						ParseNestedDirectives(PreProcessParser, ReadLine, LineStart, LineEnd);
+					if (Operation == PreprocessOp::e_Collapse) {
+						ParseNestedDirectives(PreprocessParser, ReadLine, LineStart, LineEnd);
 						continue;
 					}
 				}
 			}
 			else {
-				Result += ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, DoCollapseReplace);
+				Result += ParseImportDirective(Source, Operation, ReadLine, LineStart, LineEnd, Recursing);
 
-				if (Operation == PreProcessOp::e_Collapse) {
-					ParseNestedDirectives(PreProcessParser, ReadLine, LineStart, LineEnd);		// skip processed lines
+				if (Operation == PreprocessOp::e_Collapse) {
+					ParseNestedDirectives(PreprocessParser, ReadLine, LineStart, LineEnd);		// skip processed lines
 					continue;
 				}
 			}
@@ -759,31 +787,35 @@ String^ PreProcessor::DoPreProcess(String^% Source, PreProcessor::PreProcessOp O
 
 
 		LineStart = LineEnd + 1;	
-		ReadLine = PreProcessParser->ReadLine();
+		ReadLine = PreprocessParser->ReadLine();
 	}
 	return Result;
 }
 
-String^ PreProcessor::PreProcess(String^% Source, PreProcessor::PreProcessOp Operation, bool DoCollapseReplace, String^% ExtractedCSEBlock)
+bool Preprocessor::Preprocess(PreprocessOp Operation, String^% Source, String^% Result, String^% ExtractedCSEBlock, StandardOutputError^ ErrorOutput)
 {
 	int Cache = OPTIONS->FetchSettingAsInt("AllowRedefinitions");
-	PreProcessMacros->Clear();
+	String^ Dummy = "";
+
+	PreprocessMacros->Clear();
 	TextParser->Reset();
+	ErrorFlag = false;
+	SuppressOutput = true;
+	this->ErrorOutput = ErrorOutput;
 
-	String^ Pass = DoPreProcess(Source, Operation, DoCollapseReplace, ExtractedCSEBlock),
-			^Dummy = "";
-
+	DoPreprocess(Operation, Source, ExtractedCSEBlock, false);
+	SuppressOutput = false;
 	ProcessStandardDefineDirectives();
 	TextParser->Reset();
 
 	OPTIONS->FetchSetting("AllowRedefinitions")->SetValue("1");
-	Pass = DoPreProcess(Source, Operation, DoCollapseReplace, Dummy);
+	Result = DoPreprocess(Operation, Source, Dummy, false);
 	OPTIONS->FetchSetting("AllowRedefinitions")->SetValue(Cache.ToString());
 
-	return Pass;
+	return (ErrorFlag == 0);
 }
 
-void PreProcessor::ProcessStandardDefineDirectives(void)
+void Preprocessor::ProcessStandardDefineDirectives(void)
 {
 	String^ Path = Globals::AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
 	if (File::Exists(Path)) {
@@ -796,7 +828,7 @@ void PreProcessor::ProcessStandardDefineDirectives(void)
 				if (ReadLine != "") {
 					if (ReadLine[0] != '@') {
 						TextParser->Tokenize(ReadLine, false);
-						ParseDefineDirective(ReadLine, PreProcessOp::e_Expand, ReadLine);
+						ParseDefineDirective(ReadLine, PreprocessOp::e_Expand, ReadLine);
 					}
 				}
 				ReadLine = STDFileParser->ReadLine();
@@ -804,9 +836,9 @@ void PreProcessor::ProcessStandardDefineDirectives(void)
 
 			STDFileParser->Close();		
 		} catch (Exception^ E) {
-			DebugPrint("Couldn't read from Standard define directives file!\n\tException: " + E->Message);
+			LogDebugMessage("Couldn't read from Standard define directives file!\n\tException: " + E->Message);
 		}
 	} else
-		DebugPrint("Standard define directives file not found!", true);
+		LogDebugMessage("Standard define directives file not found!");
 }
 

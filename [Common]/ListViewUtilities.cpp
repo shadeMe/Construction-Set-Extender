@@ -20,14 +20,18 @@ int CSEListViewStringSorter::Compare(Object^ X, Object^ Y)
 int CSEListViewIntSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;
-	if (Hex)
-		Result = Int32::Parse(	((ListViewItem^)X)->SubItems[_Column]->Text, 
-								Globalization::NumberStyles::HexNumber) - 
-				Int32::Parse(	((ListViewItem^)Y)->SubItems[_Column]->Text, 
-								Globalization::NumberStyles::HexNumber);
-	else
-		Result = Int32::Parse(((ListViewItem^)X)->SubItems[_Column]->Text) - 
-				Int32::Parse(((ListViewItem^)Y)->SubItems[_Column]->Text);
+	try
+	{
+		if (Hex)
+			Result = Int32::Parse(	((ListViewItem^)X)->SubItems[_Column]->Text, 
+									Globalization::NumberStyles::HexNumber) - 
+					Int32::Parse(	((ListViewItem^)Y)->SubItems[_Column]->Text, 
+									Globalization::NumberStyles::HexNumber);
+		else
+			Result = Int32::Parse(((ListViewItem^)X)->SubItems[_Column]->Text) - 
+					Int32::Parse(((ListViewItem^)Y)->SubItems[_Column]->Text);
+	}
+	catch (...) {}
 
 	if (_Order == SortOrder::Descending)	Result *= -1;
 	return Result;

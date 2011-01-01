@@ -455,7 +455,7 @@ void Global_MouseUp(Object^ Sender, MouseEventArgs^ E)
 				SEMGR->TornWorkspace = nullptr;
 			}
 		} else {
-			DebugPrint("Global tab tear hook called out of turn! Expecting an unresolved operration.");
+			DebugPrint("Global tab tear hook called out of turn! Expecting an unresolved operation.");
 			HookManager::MouseUp -= TabContainer::GlobalMouseHook_MouseUpHandler;
 		}
 		break;
@@ -748,12 +748,12 @@ Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
 	ToolStripStatusLabel^ ToolBarSpacerB = gcnew ToolStripStatusLabel();
 	ToolBarSpacerB->Spring = true;
 
-	ToolBarErrorList = gcnew ToolStripButton();
-	ToolBarErrorList->ToolTipText = "Error List";
-	ToolBarErrorList->Image = Icons->Images[(int)IconEnum::e_ErrorList];
-	ToolBarErrorList->AutoSize = true;
-	ToolBarErrorList->Click += gcnew EventHandler(this, &Workspace::ToolBarErrorList_Click);
-	ToolBarErrorList->Margin = PrimaryButtonPad;
+	ToolBarMessageList = gcnew ToolStripButton();
+	ToolBarMessageList->ToolTipText = "Message List";
+	ToolBarMessageList->Image = Icons->Images[(int)IconEnum::e_MessageList];
+	ToolBarMessageList->AutoSize = true;
+	ToolBarMessageList->Click += gcnew EventHandler(this, &Workspace::ToolBarMessageList_Click);
+	ToolBarMessageList->Margin = PrimaryButtonPad;
 
 	ToolBarFindList = gcnew ToolStripButton();
 	ToolBarFindList->ToolTipText = "Find/Replace Results";
@@ -969,7 +969,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
 	BoxToolBar->Items->Add(ToolBarOffsetToggle);
 	BoxToolBar->Items->Add(ToolBarCommonTextBox);
 	BoxToolBar->Items->Add(ToolBarEditMenu);
-	BoxToolBar->Items->Add(ToolBarErrorList);
+	BoxToolBar->Items->Add(ToolBarMessageList);
 	BoxToolBar->Items->Add(ToolBarFindList);
 	BoxToolBar->Items->Add(ToolBarBookmarkList);
 	BoxToolBar->Items->Add(ToolBarDumpScript);
@@ -1023,7 +1023,10 @@ Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
 			ContextMenuJumpToScript->Click += gcnew EventHandler(this, &Workspace::ContextMenuJumpToScript_Click);
 			ContextMenuJumpToScript->Text = "Jump into Script";
 			ContextMenuJumpToScript->Image = Icons->Images[(int)IconEnum::e_ContextJump];
-		
+		ContextMenuAddMessage = gcnew ToolStripMenuItem();
+			ContextMenuAddMessage->Click += gcnew EventHandler(this, &Workspace::ContextMenuAddMessage_Click);
+			ContextMenuAddMessage->Text = "Add Message";
+			ContextMenuAddMessage->Image = Icons->Images[(int)IconEnum::e_ContextMessage];		
 			
 
 	EditorContextMenu->Items->Add(ContextMenuCopy);
@@ -1031,6 +1034,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
 	EditorContextMenu->Items->Add(ContextMenuFind);
 	EditorContextMenu->Items->Add(ContextMenuToggleComment);
 	EditorContextMenu->Items->Add(ContextMenuToggleBookmark);
+	EditorContextMenu->Items->Add(ContextMenuAddMessage);
 	EditorContextMenu->Items->Add(ToolBarSeparatorA);
 	EditorContextMenu->Items->Add(ContextMenuWord);
 	EditorContextMenu->Items->Add(ContextMenuCopyToCTB);
@@ -1042,40 +1046,43 @@ Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
 	EditorContextMenu->Opening += gcnew CancelEventHandler(this, &Workspace::EditorContextMenu_Opening);
 
 	if (!MessageIcon->Images->Count) {
-		MessageIcon->TransparentColor = Color::White;
+	//	MessageIcon->TransparentColor = Color::White;
+	//	MessageIcon->ImageSize = Size(16, 16);
 		MessageIcon->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEWarning"))));
 		MessageIcon->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEError"))));
+		MessageIcon->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEMessage"))));
+		MessageIcon->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SEWarning"))));
 	}
 
-	ErrorBox = gcnew ListView();
-	ErrorBox->Font = EditorBox->Font;
-	ErrorBox->Dock = DockStyle::Fill;
-	ErrorBox->BorderStyle = BorderStyle::Fixed3D;
-	ErrorBox->BackColor = EditorLineNo->BackColor;
-	ErrorBox->ForeColor = EditorLineNo->ForeColor;
-	ErrorBox->DoubleClick += gcnew EventHandler(this, &Workspace::ErrorBox_DoubleClick);
-	ErrorBox->Visible = false;
-	ErrorBox->View = View::Details;
-	ErrorBox->MultiSelect = false;
-	ErrorBox->CheckBoxes = false;
-	ErrorBox->FullRowSelect = true;
-	ErrorBox->HideSelection = false;
-	ErrorBox->SmallImageList = MessageIcon;
+	MessageBox = gcnew ListView();
+	MessageBox->Font = EditorBox->Font;
+	MessageBox->Dock = DockStyle::Fill;
+	MessageBox->BorderStyle = BorderStyle::Fixed3D;
+	MessageBox->BackColor = EditorLineNo->BackColor;
+	MessageBox->ForeColor = EditorLineNo->ForeColor;
+	MessageBox->DoubleClick += gcnew EventHandler(this, &Workspace::MessageBox_DoubleClick);
+	MessageBox->Visible = false;
+	MessageBox->View = View::Details;
+	MessageBox->MultiSelect = false;
+	MessageBox->CheckBoxes = false;
+	MessageBox->FullRowSelect = true;
+	MessageBox->HideSelection = false;
+	MessageBox->SmallImageList = MessageIcon;
 
-	ColumnHeader^ ErrorBoxType = gcnew ColumnHeader();
-	ErrorBoxType->Text = " ";
-	ErrorBoxType->Width = 25;
-	ColumnHeader^ ErrorBoxLine = gcnew ColumnHeader();
-	ErrorBoxLine->Text = "Line";
-	ErrorBoxLine->Width = 50;
-	ColumnHeader^ ErrorBoxMessage = gcnew ColumnHeader();
-	ErrorBoxMessage->Text = "Message";
-	ErrorBoxMessage->Width = 300;
-	ErrorBox->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {ErrorBoxType, 
-																		 ErrorBoxLine,
-																		 ErrorBoxMessage});
-	ErrorBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::ErrorBox_ColumnClick);
-	ErrorBox->Tag = (int)1;
+	ColumnHeader^ MessageBoxType = gcnew ColumnHeader();
+	MessageBoxType->Text = " ";
+	MessageBoxType->Width = 25;
+	ColumnHeader^ MessageBoxLine = gcnew ColumnHeader();
+	MessageBoxLine->Text = "Line";
+	MessageBoxLine->Width = 50;
+	ColumnHeader^ MessageBoxMessage = gcnew ColumnHeader();
+	MessageBoxMessage->Text = "Message";
+	MessageBoxMessage->Width = 300;
+	MessageBox->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {MessageBoxType, 
+																		 MessageBoxLine,
+																		 MessageBoxMessage});
+	MessageBox->ColumnClick += gcnew ColumnClickEventHandler(this, &Workspace::MessageBox_ColumnClick);
+	MessageBox->Tag = (int)1;
 
 
 	FindBox = gcnew ListView();
@@ -1180,7 +1187,7 @@ Workspace::Workspace(UInt32 Index, TabContainer^ Parent)
 
 	EditorBoxSplitter->Panel1->Controls->Add(EditorSplitter);
 	EditorBoxSplitter->Panel2->Controls->Add(BoxToolBar);
-	EditorBoxSplitter->Panel2->Controls->Add(ErrorBox);
+	EditorBoxSplitter->Panel2->Controls->Add(MessageBox);
 	EditorBoxSplitter->Panel2->Controls->Add(FindBox);
 	EditorBoxSplitter->Panel2->Controls->Add(BookmarkBox);
 	EditorBoxSplitter->Panel2->Controls->Add(VariableBox);
@@ -1412,7 +1419,7 @@ void Workspace::FindAndReplace(bool Replace)
 		bool UseRegEx = OPTIONS->FetchSettingAsInt("UseRegEx");
 
 		if (Replace)
-			ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string.", "Find and Replace - CSE Editor", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
+			ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string", "Find and Replace - CSE Editor", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
 
 		if (SearchString == "") {
 			MessageBox::Show("Enter a valid search/replace string.", "Find and Replace - CSE Editor");
@@ -1605,23 +1612,28 @@ void Workspace::ExdentLine(void)
 	}
 }
 
-void Workspace::AddMessageToPool(MessageType Type, UInt32 Line, String^ Message)
+void Workspace::AddMessageToPool(MessageType Type, int Line, String^ Message)
 {
 	ListViewItem^ Item = gcnew ListViewItem(" ", (int)Type);
-	Item->SubItems->Add(Line.ToString());
+	if (Line != -1)
+		Item->SubItems->Add(Line.ToString());
+	else
+		Item->SubItems->Add("");
 	Item->SubItems->Add(Message);
-	ErrorBox->Items->Add(Item);
+	if (Type == MessageType::e_Message)
+		Item->ToolTipText = "Double click to remove message";
 
-	if (ErrorBox->Visible == false)
-		ToolBarErrorList->PerformClick();
+	MessageBox->Items->Add(Item);
+	if (MessageBox->Visible == false)
+		ToolBarMessageList_Click(nullptr, nullptr);
 }
 
 void Workspace::ValidateScript()
 {
-	StringReader^ ValidateParser = gcnew StringReader(PreProcessedText);	
+	StringReader^ ValidateParser = gcnew StringReader(PreprocessedText);		// expects to only be called after preprocessor operation
 	String^ ReadLine = ValidateParser->ReadLine();
 	ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
-	ErrorBox->Items->Clear();
+	ClearErrorsItemsFromMessagePool();
 	ScriptTextParser->Variables->Clear();
 	UInt32 ScriptType = GetScriptType();
 
@@ -1781,8 +1793,8 @@ void Workspace::ValidateScript()
 	}
 
 	ScriptTextParser->Reset();
-	if (ErrorBox->Items->Count && ErrorBox->Visible == false) {
-		ToolBarErrorList->PerformClick();
+	if (MessageBox->Items->Count && MessageBox->Visible == false) {
+		ToolBarMessageList->PerformClick();
 	}
 }
 
@@ -1958,7 +1970,7 @@ void Workspace::ToggleBookmark(int CaretPos)
 		Count++;
 	}
 
-	String^ BookmarkDesc = Microsoft::VisualBasic::Interaction::InputBox("Enter a description for the bookmark.", "Place Bookmark", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
+	String^ BookmarkDesc = Microsoft::VisualBasic::Interaction::InputBox("Enter a description for the bookmark", "Place Bookmark", "", EditorBox->Location.X + EditorBox->Width / 2, EditorBox->Location.Y + EditorBox->Height / 2);
 
 	if (BookmarkDesc == "")		return;
 
@@ -2016,44 +2028,122 @@ void Workspace::MoveCaretToValidHome(void)
 		EditorBox->SelectionLength = 0;
 }
 
-const String^ Workspace::PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning)
+void Workspace::ClearCSEMessagesFromMessagePool(void)
 {
-	String^ ExtractedBlock = "";
-	switch (Operation)
+	LinkedList<ListViewItem^>^ InvalidItems = gcnew LinkedList<ListViewItem^>();
+
+	for each (ListViewItem^ Itr in MessageBox->Items)
 	{
-	case PreProcessor::PreProcessOp::e_Collapse:	// before setting editor text
-		EditorBox->Text = PREPROC->PreProcess(ScriptText, Operation, false, ExtractedBlock);
-		ReadBookmarks(ExtractedBlock);
-		LoadSavedCaretPos(ExtractedBlock);
-		ProcessWarnings(ExtractedBlock);
-		return nullptr;
-	case PreProcessor::PreProcessOp::e_Expand:		// before moving editor text
-		PreProcessedText = PREPROC->PreProcess(EditorBox->Text, Operation, false, ExtractedBlock);
-		PreProcessedText += ";<CSEBlock>\n";
-		PreProcessedText += ";<CSEStatutoryWarning> This script may contain preprocessor directives parsed by the CSE Script Editor. Refrain from modifying it in the vanilla editor. </CSEStatutoryWarning>\n";
-		if (AddNoCompileWarning) {
-			PreProcessedText += ";<CSEWarning> This script was saved but not compiled. Expect weird behavior during runtime execution. </CSEWarning>\n";
-		}
-		SaveCaretPos();
-		DumpBookmarks();
-		PreProcessedText += ";</CSEBlock>\n";
-		return PreProcessedText;
+		if (Itr->ImageIndex == (int)MessageType::e_CSEMessage)
+			InvalidItems->AddLast(Itr);
 	}
-	return nullptr;
+
+	for each (ListViewItem^ Itr in InvalidItems)
+		MessageBox->Items->Remove(Itr);
 }
 
-void Workspace::DumpBookmarks()
+void Workspace::ClearErrorsItemsFromMessagePool(void)
+{
+	LinkedList<ListViewItem^>^ InvalidItems = gcnew LinkedList<ListViewItem^>();
+
+	for each (ListViewItem^ Itr in MessageBox->Items)
+	{
+		if (Itr->ImageIndex < (int)MessageType::e_Message)
+			InvalidItems->AddLast(Itr);
+	}
+
+	for each (ListViewItem^ Itr in InvalidItems)
+		MessageBox->Items->Remove(Itr);
+}
+
+String^ Workspace::SerializeCSEBlock(void)
+{
+	String^ Result = "";
+
+	Result += ";<CSEBlock>\n";
+	Result += ";<CSEStatutoryWarning> This script may contain preprocessor directives parsed by the CSE Script Editor. Refrain from modifying it in the vanilla editor. </CSEStatutoryWarning>\n";
+	SerializeCaretPos(Result);
+	SerializeBookmarks(Result);
+	SerializeMessages(Result);
+	Result += ";</CSEBlock>\n";
+
+	return Result;
+}
+
+void Workspace::SerializeMessages(String^% Result)
+{
+	for each (ListViewItem^ Itr in MessageBox->Items)
+	{
+		if (Itr->ImageIndex > (int)MessageType::e_Error)
+		switch ((MessageType)Itr->ImageIndex)
+		{
+		case MessageType::e_CSEMessage:
+			Result += ";<CSEMessageEditor> " + Itr->SubItems[2]->Text + " </CSEMessageEditor>\n";
+			break;
+		case MessageType::e_Message:
+			Result += ";<CSEMessageRegular> " + Itr->SubItems[2]->Text + " </CSEMessageRegular>\n";
+			break;
+		}
+	}
+}
+
+bool Workspace::PreprocessScriptText(Preprocessor::PreprocessOp Operation, String^ CollapseOpSource, String^% ExpandOpResult)
+{
+	String^ ExtractedBlock = "";
+	String^ PreprocessorResult = "";
+	bool Result = false;
+
+	switch (Operation)
+	{
+	case Preprocessor::PreprocessOp::e_Collapse:	// before setting editor text
+		if (PREPROC->Preprocess(Operation, 
+								CollapseOpSource, 
+								PreprocessorResult, 
+								ExtractedBlock, 
+								gcnew Preprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper)) == false)
+		{
+			AddMessageToPool(MessageType::e_Warning, 1, "Errors were encountered during the preprocessing of the script.\n\nThe un-preprocessed text will be loaded.");
+			EditorBox->Text = CollapseOpSource;
+		}
+		else
+		{
+			DeserializeBookmarks(ExtractedBlock);
+			DeserializeCaretPos(ExtractedBlock);
+			DeserializeMessages(ExtractedBlock);
+			EditorBox->Text = PreprocessorResult;
+			Result = true;
+		}
+		break;
+	case Preprocessor::PreprocessOp::e_Expand:		// before moving editor text
+		if (PREPROC->Preprocess(Operation, 
+									EditorBox->Text, 
+									PreprocessorResult, 
+									ExtractedBlock, 
+									gcnew Preprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper)))
+		{
+
+			PreprocessorResult += SerializeCSEBlock();
+			ExpandOpResult = PreprocessorResult;
+			PreprocessedText = PreprocessorResult;
+			Result = true;
+		}
+	}
+
+	return Result;
+}
+
+void Workspace::SerializeBookmarks(String^% Result)
 {
 	String^ BookmarkSegment = "";
 
 	for each (ListViewItem^ Itr in BookmarkBox->Items) {
 		BookmarkSegment += ";<CSEBookmark>\t" + Itr->SubItems[0]->Text + "\t" + Itr->SubItems[1]->Text + "\t</CSEBookmark>\n";
 	}
-	PreProcessedText += BookmarkSegment;
+	Result += BookmarkSegment;
 }
 
 
-void Workspace::ReadBookmarks(String^ ExtractedBlock)
+void Workspace::DeserializeBookmarks(String^ ExtractedBlock)
 {
 	BookmarkBox->Items->Clear();
 	BookmarkBox->BeginUpdate();
@@ -2084,14 +2174,14 @@ void Workspace::ReadBookmarks(String^ ExtractedBlock)
 	BookmarkBox->EndUpdate();
 }
 
-void Workspace::SaveCaretPos()
+void Workspace::SerializeCaretPos(String^% Result)
 {
 	if (OPTIONS->FetchSettingAsInt("SaveLastKnownPos")) {
-		PreProcessedText += String::Format(";<CSECaretPos> {0} </CSECaretPos>\n", EditorBox->SelectionStart);
+		Result += String::Format(";<CSECaretPos> {0} </CSECaretPos>\n", EditorBox->SelectionStart);
 	}
 }
 
-void Workspace::LoadSavedCaretPos(String^ ExtractedBlock)
+void Workspace::DeserializeCaretPos(String^ ExtractedBlock)
 {
 	ScriptParser^ TextParser = gcnew ScriptParser();
 	StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
@@ -2120,10 +2210,8 @@ void Workspace::LoadSavedCaretPos(String^ ExtractedBlock)
 
 }
 
-void Workspace::ProcessWarnings(String^ ExtractedBlock)
+void Workspace::DeserializeMessages(String^ ExtractedBlock)
 {
-	if (!OPTIONS->FetchSettingAsInt("PreprocessorWarnings"))	return;
-
 	ScriptParser^ TextParser = gcnew ScriptParser();
 	StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
 	String^ ReadLine = StringParser->ReadLine();
@@ -2135,14 +2223,25 @@ void Workspace::ProcessWarnings(String^ ExtractedBlock)
 			continue;
 		}
 
-		if (!TextParser->HasToken(";<CSEWarning>"))
+		String^ Message = "";
+		if (!TextParser->HasToken(";<CSEMessageEditor>"))
 		{
-			String^ Warning = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEWarning>", "");
-			MessageBox::Show(Warning, "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+			Message = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEMessageEditor>", "");
+			AddMessageToPool(MessageType::e_CSEMessage, -1, Message);
+		}
+		else if (!TextParser->HasToken(";<CSEMessageRegular>"))
+		{
+			Message = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEMessageRegular>", "");
+			AddMessageToPool(MessageType::e_Message, -1, Message);
 		}
 
 		ReadLine = StringParser->ReadLine();
 	}	
+}
+
+void Workspace::PreprocessorErrorOutputWrapper(String^ Message)
+{
+	AddMessageToPool(MessageType::e_Error, -1, Message);
 }
 
 bool Workspace::IsCursorInsideCommentSeg(bool OneLessIdx)
@@ -2240,8 +2339,8 @@ void Workspace::GetVariableIndices(bool SetFlag)
 	if (SetFlag)
 		GetVariableData = true;
 	else if (GetVariableData) {
-		if (ErrorBox->Visible)
-			ToolBarErrorList->PerformClick();
+		if (MessageBox->Visible)
+			ToolBarMessageList->PerformClick();
 		else if (FindBox->Visible)
 			ToolBarFindList->PerformClick();
 		else if (BookmarkBox->Visible)
@@ -2316,7 +2415,10 @@ void Workspace::InitializeScript(String^ ScriptText, UInt16 ScriptType, String^ 
 	if (ScriptName != "New Script")
 		TextSet = true;
 
-	PreProcessScriptText(PreProcessor::PreProcessOp::e_Collapse, ScriptText, false);
+	MessageBox->Items->Clear();
+	VariableBox->Items->Clear();
+
+	PreprocessScriptText(Preprocessor::PreprocessOp::e_Collapse, ScriptText, gcnew String(""));
 	ScriptEditorID = gcnew String(ScriptName);
 	EditorTab->Text = ScriptName + " [" + FormID.ToString("X8") + "]";
 	ParentContainer->SetWindowTitle(EditorTab->Text + " - CSE Editor");
@@ -2324,8 +2426,6 @@ void Workspace::InitializeScript(String^ ScriptText, UInt16 ScriptType, String^ 
 
 	EnableControls();
 	SetModifiedStatus(false);
-	ErrorBox->Items->Clear();
-	VariableBox->Items->Clear();
 	ToolBarByteCodeSize->Value = DataLength;
 	ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(DataLength / (float)1024));
 
@@ -2475,7 +2575,7 @@ void Workspace::ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArg
 		JumpToLine(ToolBarCommonTextBox->Text, true);
 }
 
-void Workspace::ToolBarErrorList_Click(Object^ Sender, EventArgs^ E)
+void Workspace::ToolBarMessageList_Click(Object^ Sender, EventArgs^ E)
 {
 	if (FindBox->Visible)
 		ToolBarFindList->PerformClick();
@@ -2484,23 +2584,23 @@ void Workspace::ToolBarErrorList_Click(Object^ Sender, EventArgs^ E)
 	else if (VariableBox->Visible)
 		ToolBarGetVarIndices->PerformClick();
 
-	if (!ErrorBox->Visible) {
-		ErrorBox->Show();
-		ErrorBox->BringToFront();
-		ToolBarErrorList->Checked = true;
+	if (!MessageBox->Visible) {
+		MessageBox->Show();
+		MessageBox->BringToFront();
+		ToolBarMessageList->Checked = true;
 		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 	}
 	else {
-		ErrorBox->Hide();
-		ToolBarErrorList->Checked = false;
+		MessageBox->Hide();
+		ToolBarMessageList->Checked = false;
 		EditorBoxSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
 	}
 }
 
 void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 {
-	if (ErrorBox->Visible)
-		ToolBarErrorList->PerformClick();
+	if (MessageBox->Visible)
+		ToolBarMessageList->PerformClick();
 	else if (BookmarkBox->Visible)
 		ToolBarBookmarkList->PerformClick();
 	else if (VariableBox->Visible)
@@ -2522,8 +2622,8 @@ void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
 {
-	if (ErrorBox->Visible)
-		ToolBarErrorList->PerformClick();
+	if (MessageBox->Visible)
+		ToolBarMessageList->PerformClick();
 	else if (FindBox->Visible)
 		ToolBarFindList->PerformClick();
 	else if (VariableBox->Visible)
@@ -2847,9 +2947,9 @@ void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 
 void Workspace::EditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
 {
-	EditorContextMenu->Items[6]->Text = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
-	if (EditorContextMenu->Items[6]->Text->Length > 20)
-		EditorContextMenu->Items[6]->Text = EditorContextMenu->Items[6]->Text->Substring(0, 17) + gcnew String("...");
+	EditorContextMenu->Items[7]->Text = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
+	if (EditorContextMenu->Items[7]->Text->Length > 20)
+		EditorContextMenu->Items[7]->Text = EditorContextMenu->Items[7]->Text->Substring(0, 17) + gcnew String("...");
 
 	String^ TextUnderMouse = GetTextAtLoc(Globals::MouseLocation, true, false, -1, true);
 
@@ -2927,6 +3027,18 @@ void Workspace::ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E)
 void Workspace::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
 {
 	ParentContainer->JumpToScript(AllocatedIndex, dynamic_cast<String^>(ContextMenuJumpToScript->Tag));
+}
+
+void Workspace::ContextMenuAddMessage_Click(Object^ Sender, EventArgs^ E)
+{
+	String^ Message = Microsoft::VisualBasic::Interaction::InputBox("Enter the message string", 
+																	"Add Message", "", 
+																	EditorBox->Location.X + EditorBox->Width / 2, 
+																	EditorBox->Location.Y + EditorBox->Height / 2);
+
+	if (Message == "")		return;
+
+	AddMessageToPool(MessageType::e_Message, -1, Message);
 }
 
 
@@ -3344,40 +3456,43 @@ void Workspace::EditorLineNo_MouseDown(Object^ Sender, MouseEventArgs^ E)
 
 
 //	ERROR BOX 
-void Workspace::ErrorBox_DoubleClick(Object^ Sender, EventArgs^ E)
+void Workspace::MessageBox_DoubleClick(Object^ Sender, EventArgs^ E)
 {
-	if (GetListViewSelectedItem(ErrorBox) != nullptr) {
-		JumpToLine(GetListViewSelectedItem(ErrorBox)->SubItems[1]->Text, false);
+	if (GetListViewSelectedItem(MessageBox) != nullptr) {
+		if (GetListViewSelectedItem(MessageBox)->ImageIndex == (int)MessageType::e_Message)
+			MessageBox->Items->Remove(GetListViewSelectedItem(MessageBox));
+		else
+			JumpToLine(GetListViewSelectedItem(MessageBox)->SubItems[1]->Text, false);
 	}
 }
 
-void Workspace::ErrorBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
+void Workspace::MessageBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 {
-	if (E->Column != (int)ErrorBox->Tag) {
-		ErrorBox->Tag = E->Column;
-		ErrorBox->Sorting = SortOrder::Ascending;
+	if (E->Column != (int)MessageBox->Tag) {
+		MessageBox->Tag = E->Column;
+		MessageBox->Sorting = SortOrder::Ascending;
 	} else {
-		if (ErrorBox->Sorting == SortOrder::Ascending)
-			ErrorBox->Sorting = SortOrder::Descending;
+		if (MessageBox->Sorting == SortOrder::Ascending)
+			MessageBox->Sorting = SortOrder::Descending;
 		else
-			ErrorBox->Sorting = SortOrder::Ascending;
+			MessageBox->Sorting = SortOrder::Ascending;
 	}
 
-	ErrorBox->Sort();
+	MessageBox->Sort();
 	System::Collections::IComparer^ Sorter;
 	switch (E->Column)
 	{
 	case 0:							
-		Sorter = gcnew CSEListViewImgSorter(E->Column, ErrorBox->Sorting);
+		Sorter = gcnew CSEListViewImgSorter(E->Column, MessageBox->Sorting);
 		break;
 	case 1:
-		Sorter = gcnew CSEListViewIntSorter(E->Column, ErrorBox->Sorting, false);
+		Sorter = gcnew CSEListViewIntSorter(E->Column, MessageBox->Sorting, false);
 		break;
 	default:
-		Sorter = gcnew CSEListViewStringSorter(E->Column, ErrorBox->Sorting);
+		Sorter = gcnew CSEListViewStringSorter(E->Column, MessageBox->Sorting);
 		break;
 	}
-	ErrorBox->ListViewItemSorter = Sorter;
+	MessageBox->ListViewItemSorter = Sorter;
 }
 
 

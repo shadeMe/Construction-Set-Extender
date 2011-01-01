@@ -173,8 +173,6 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRef = ThisNode->refr;
 					if (!ThisRef)		break;
 					ThisRefData = &RefData[i];
-			//		DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
-			//				DumpExtraDataList(&ThisRef->baseExtraList);
 
 					ThisRefData->EditorID = (!ThisRef->editorData.editorID.m_data)?ThisRef->baseForm->editorData.editorID.m_data:ThisRef->editorData.editorID.m_data;
 					ThisRefData->FormID = ThisRef->refID;
@@ -196,12 +194,19 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				BatchData->CellObjectListHead = RefData;
 				BatchData->ObjectCount = RefCount;
 
-				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData)) {
-					for (UInt32 k = 0; k < RefCount; k++) {
+				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData)) 
+				{
+					EnterCriticalSection(&(*g_ExtraListCS));
+
+					for (UInt32 k = 0; k < RefCount; k++) 
+					{
 						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
+					//	ThisRef = CS_CAST(TESForm_LookupByFormID(RefData[k].FormID), TESForm, TESObjectREFR);
 						ThisRefData = &RefData[k];
 						bool Modified = false;
-															// ### Pass the Actor VTBl for actors
+
+				//		thisCall(kExtraDataList_InitItem, &ThisRef->baseExtraList, ThisRef);
+
 						if (ThisRefData->Selected) {
 							if (BatchData->World3DData.UsePosX())	ThisRef->posX = BatchData->World3DData.PosX, Modified = true;
 							if (BatchData->World3DData.UsePosY())	ThisRef->posY = BatchData->World3DData.PosY, Modified = true;
@@ -276,16 +281,16 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 
 						if (Modified) {
-				//			DebugPrint("-------> Dumpinf extralist for %08X", ThisRef->refID);
-				//			DumpExtraDataList(&ThisRef->baseExtraList);
-							if (!thisVirtualCall(kVTBL_TESObjectREFR, 0xBC, ThisRef, (TESForm*)ThisRef))
-					//			DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
-							thisVirtualCall(kVTBL_TESObjectREFR, 0x104, ThisRef);
-							thisVirtualCall(kVTBL_TESObjectREFR, 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
-							thisVirtualCall(kVTBL_TESObjectREFR, 0xB8, ThisRef, (TESForm*)ThisRef);
-							thisVirtualCall(kVTBL_TESObjectREFR, 0x17C, ThisRef, thisCall(0x00542950, ThisRef));
+							if (!thisVirtualCall(*((UInt32*)ThisRef), 0xBC, ThisRef, (TESForm*)ThisRef))
+								DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
+							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);
+							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
+							thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, (TESForm*)ThisRef);
+							thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
 						}
-					}			
+					}	
+
+					LeaveCriticalSection(&(*g_ExtraListCS));
 				}
 
 				delete [] RefData;

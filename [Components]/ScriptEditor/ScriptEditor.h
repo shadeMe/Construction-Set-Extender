@@ -99,7 +99,9 @@ public:
 	static enum class									MessageType
 														{
 															e_Warning	= 0,
-															e_Error
+															e_Error,
+															e_Message,
+															e_CSEMessage			// for internal use only
 														};
 	static enum class									ModifiedStatus
 														{
@@ -163,6 +165,8 @@ private:
 															e_SaveNoCompile,
 															e_DumpTabs,
 															e_LoadToTabs,
+															e_MessageList,
+															e_ContextMessage,
 
 															e_Bookend
 														};
@@ -206,7 +210,9 @@ private:
 															"SESavePlugin",
 															"SESaveNoCompile",
 															"SEDumpTabs",
-															"SELoadToTabs"
+															"SELoadToTabs",
+															"SEMessages",
+															"SEContextMessage"
 														};
 	static ImageList^									Icons = gcnew ImageList();
 	
@@ -220,7 +226,7 @@ private:
 			SimpleScrollRTB^									EditorBox;
 		ListView^											FindBox;
 		ListView^											BookmarkBox;
-		ListView^											ErrorBox;
+		ListView^											MessageBox;
 		ListView^											VariableBox;
 			TextBox^											IndexEditBox;
 		Label^												SpoilerText;
@@ -233,7 +239,7 @@ private:
 				ToolStripButton^									ToolBarEditMenuContentsReplace;
 				ToolStripButton^									ToolBarEditMenuContentsGotoLine;
 				ToolStripButton^									ToolBarEditMenuContentsGotoOffset;
-		ToolStripButton^									ToolBarErrorList;
+		ToolStripButton^									ToolBarMessageList;
 		ToolStripButton^									ToolBarFindList;
 		ToolStripButton^									ToolBarBookmarkList;
 		ToolStripSplitButton^								ToolBarDumpScript;
@@ -279,7 +285,8 @@ private:
 		ToolStripMenuItem^									ContextMenuPaste;
 		ToolStripMenuItem^									ContextMenuFind;
 		ToolStripMenuItem^									ContextMenuToggleComment;		
-		ToolStripMenuItem^									ContextMenuToggleBookmark;		
+		ToolStripMenuItem^									ContextMenuToggleBookmark;
+		ToolStripMenuItem^									ContextMenuAddMessage;
 		ToolStripMenuItem^									ContextMenuWord;
 		ToolStripMenuItem^									ContextMenuWikiLookup;
 		ToolStripMenuItem^									ContextMenuOBSEDocLookup;
@@ -300,7 +307,7 @@ private:
 	bool												HandleTextChanged;			// must be set to false before modifying box text outside of the TextChanged handler
 																					// keeps the syntaxbox from showing up
 	int													Indents;
-	String^												PreProcessedText;
+	String^												PreprocessedText;			// used as buffer during save operations
 	List<PictureBox^>^									IndexPointers;
 	UInt32												CurrentLineNo;
 	List<UInt16>^										LineOffsets;
@@ -331,7 +338,7 @@ private:
 	void												ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarOptions_Click(Object^ Sender, EventArgs^ E);
-	void												ToolBarErrorList_Click(Object^ Sender, EventArgs^ E);
+	void												ToolBarMessageList_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarFindList_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
@@ -364,10 +371,10 @@ private:
 	void												ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E);
 	void												ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E);
 	void												ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E);
-	void												ErrorBox_DoubleClick(Object^ Sender, EventArgs^ E);
+	void												MessageBox_DoubleClick(Object^ Sender, EventArgs^ E);
 	void												FindBox_DoubleClick(Object^ Sender, EventArgs^ E);
 	void												BookmarkBox_DoubleClick(Object^ Sender, EventArgs^ E);
-	void												ErrorBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+	void												MessageBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 	void												FindBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 	void												BookmarkBox_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 	void												VariableBox_DoubleClick(Object^ Sender, EventArgs^ E);
@@ -376,36 +383,45 @@ private:
 	void												IndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void												ToolBarOffsetToggle_Click(Object^ Sender, EventArgs^ E);
 	void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
+	void												ContextMenuAddMessage_Click(Object^ Sender, EventArgs^ E);
 
 	void												UpdateLineNumbers(void);
-	void												FindAndReplace(bool Replace);
-	void												JumpToLine(String^ LineStr, bool OffsetSearch);
 	int													FindLineNumberInLineBox(UInt32 Line);
 	void												PerformLineNumberHighlights(void);
 	int													CalculateIndents(int EndPos, bool& ExdentLine, bool CullEmptyLines);
 	void												ExdentLine(void);
-	bool												TabIndent();
-	void												ToggleComment(int CaretPos);
 	void												UpdateFindImagePointers(void);
 	void												PlaceFindImagePointer(int Index);
 	bool												IsDelimiterKey(Keys KeyCode);
 	void												MoveCaretToValidHome(void);
-	void												ToggleBookmark(int CaretPos);
-	void												ReadBookmarks(String^ ExtractedBlock);
-	void												DumpBookmarks(void);
-	void												SaveCaretPos(void);
-	void												LoadSavedCaretPos(String^ ExtractedBlock);
 	bool												IsCursorInsideCommentSeg(bool OneLessIdx);
 	bool												HasLineChanged();
 	void												ValidateLineLimit(void);
-	void												ProcessWarnings(String^ ExtractedBlock);
-	void												SetScriptType(UInt16 ScriptType);
 	void												EnableControls();
 	String^												GetTextAtLoc(Point Loc, bool FromMouse, bool SelectText, int Index, bool ReplaceLineBreaks);
 	void												CalculateLineOffsets(UInt32 Data, UInt32 Length, String^% ScriptText);
+	void												ClearFindImagePointers(void);
+	void												ClearErrorsItemsFromMessagePool(void);
+
+	void												FindAndReplace(bool Replace);
+	void												JumpToLine(String^ LineStr, bool OffsetSearch);
+	bool												TabIndent();
+	void												ToggleComment(int CaretPos);
+	void												ToggleBookmark(int CaretPos);
+	void												SetScriptType(UInt16 ScriptType);
+
 	void												GetVariableIndices(bool SetFlag);
 	void												SetVariableIndices(void);
-	void												ClearFindImagePointers(void);
+
+	String^												SerializeCSEBlock(void);
+	void												SerializeCaretPos(String^% Result);
+	void												SerializeBookmarks(String^% Result);
+	void												SerializeMessages(String^% Result);
+	void												DeserializeCaretPos(String^ ExtractedBlock);
+	void												DeserializeBookmarks(String^ ExtractedBlock);
+	void												DeserializeMessages(String^ ExtractedBlock);
+
+	void												PreprocessorErrorOutputWrapper(String^ Message);
 public:	
 	UInt32												GetAllocatedIndex() { return AllocatedIndex; }
 	bool												GetModifiedStatus() { return EditorTab->ImageIndex; }
@@ -434,8 +450,9 @@ public:
 	void												ValidateScript();
 	void												Destroy();
 	UInt16												GetScriptType();
-	const String^										PreProcessScriptText(PreProcessor::PreProcessOp Operation, String^ ScriptText, bool AddNoCompileWarning);
-	void												AddMessageToPool(MessageType Type, UInt32 Line, String^ Message);
+	bool												PreprocessScriptText(Preprocessor::PreprocessOp Operation, String^ CollapseOpSource, String^% ExpandOpResult);
+	void												AddMessageToPool(MessageType Type, int Line, String^ Message);
+	void												ClearCSEMessagesFromMessagePool(void);
 	void												Relocate(TabContainer^ Destination);
 
 	bool												IsValid() { return this != NullSE; }

@@ -62,7 +62,9 @@ extern "C" {
 
 bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 {
-//	WaitUntilDebuggerAttached();
+	if (!obse->isEditor)					// we don't want to screw with the game
+		return false;
+
 	CONSOLE->InitializeLog(g_AppPath.c_str());
 
 	DebugPrint("Construction Set Extender Initializing ...");
@@ -79,9 +81,6 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 		DebugPrint("Couldn't fetch the DLL's handle!");
 		return false;
 	}
-
-	if (!obse->isEditor)					// we don't want to screw with the game
-		return false;
 
 	if(obse->obseVersion < OBSE_VERSION_INTEGER)
 	{

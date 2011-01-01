@@ -78,11 +78,11 @@ void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump)
 
 void WaitUntilDebuggerAttached()
 {
-	DebugPrint("\t\t----> Waiting For Debugger <----");
+	DebugPrint("----> Waiting For Debugger <----");
 	while (IsDebuggerPresent() == FALSE){
 		Sleep(5000);
 	}
-	DebugPrint("\t\t----> Debugger Attached <----");
+	DebugPrint("----> Debugger Attached <----");
 }
 
 void DumpExtraDataList(BaseExtraList* List)

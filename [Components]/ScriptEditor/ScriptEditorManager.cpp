@@ -159,20 +159,26 @@ ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 Alloc
 			break;
 		}
 	}
-
-//	if (Result == nullptr)
-//		throw gcnew CSEGeneralException("Couldn't fetch editor with an allocated index of " + AllocatedIndex.ToString());
-
 	return Result;
 }
 
-void ScriptEditorManager::MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor, SaveWorkspaceOpType SaveOperation)
+bool ScriptEditorManager::MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor)
 {
-	CStringWrapper^ CScriptText = gcnew CStringWrapper(const_cast<String^>(CSEEditor->PreProcessScriptText(PreProcessor::PreProcessOp::e_Expand, nullptr, (SaveOperation == SaveWorkspaceOpType::e_SaveButDontCompile))));
-	g_ScriptDataPackage->Text = CScriptText->String();
-	g_ScriptDataPackage->Type = CSEEditor->GetScriptType();
-	g_ScriptDataPackage->ModifiedFlag = CSEEditor->GetModifiedStatus();
-	NativeWrapper::ScriptEditor_SetScriptData(CSEEditor->GetAllocatedIndex(), g_ScriptDataPackage);
+	String^ PreprocessedScript = "";
+
+	if (CSEEditor->PreprocessScriptText(Preprocessor::PreprocessOp::e_Expand, nullptr, PreprocessedScript))
+	{
+		CStringWrapper^ CScriptText = gcnew CStringWrapper(PreprocessedScript);
+		g_ScriptDataPackage->Text = CScriptText->String();
+		g_ScriptDataPackage->Type = CSEEditor->GetScriptType();
+		g_ScriptDataPackage->ModifiedFlag = CSEEditor->GetModifiedStatus();
+		NativeWrapper::ScriptEditor_SetScriptData(CSEEditor->GetAllocatedIndex(), g_ScriptDataPackage);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspace^% CSEEditor)
@@ -221,7 +227,7 @@ void ScriptEditorManager::MessageHandler_SendNew(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 	
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_New);
 
 }
@@ -229,41 +235,51 @@ void ScriptEditorManager::MessageHandler_SendOpen(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 		
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Open);
 }
 void ScriptEditorManager::MessageHandler_SendPrevious(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 		
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Previous);
 }
 void ScriptEditorManager::MessageHandler_SendNext(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 		
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Next);
 }
 void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWorkspaceOpType Operation)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
+	Itr->ClearCSEMessagesFromMessagePool();
 	
-	MoveScriptDataToVanillaEditor(Itr, Operation);
-
 	switch (Operation)
 	{
 	case SaveWorkspaceOpType::e_SaveAndCompile:
+		if (MoveScriptDataToVanillaEditor(Itr) == false)
+			break;
+
 		Itr->ValidateScript();
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		break;
 	case SaveWorkspaceOpType::e_SaveButDontCompile:
+		Itr->AddMessageToPool(ScriptEditor::Workspace::MessageType::e_CSEMessage, -1, "This is an uncompiled script. Expect weird behavior during runtime execution");
+
+		if (MoveScriptDataToVanillaEditor(Itr) == false)
+			break;
+
 		NativeWrapper::ScriptEditor_ToggleScriptCompiling(false);
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		NativeWrapper::ScriptEditor_ToggleScriptCompiling(true);
 		break;
 	case SaveWorkspaceOpType::e_SaveActivePluginToo:
+		if (MoveScriptDataToVanillaEditor(Itr) == false)
+			break;
+
 		Itr->ValidateScript();
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		NativeWrapper::ScriptEditor_SaveActivePlugin();
@@ -274,21 +290,21 @@ void ScriptEditorManager::MessageHandler_SendRecompile(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 		
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Recompile);
 }
 void ScriptEditorManager::MessageHandler_SendDelete(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 		
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Delete);
 }
 void ScriptEditorManager::MessageHandler_SendClose(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
-	MoveScriptDataToVanillaEditor(Itr, SaveWorkspaceOpType::e_SaveAndCompile);
+	MoveScriptDataToVanillaEditor(Itr);
 	NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex, 
 													Itr->GetParentContainer()->GetEditorFormRect().Top, 
 													Itr->GetParentContainer()->GetEditorFormRect().Left, 

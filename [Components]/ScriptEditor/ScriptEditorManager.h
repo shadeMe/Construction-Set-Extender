@@ -84,7 +84,7 @@ private:
 
 	ScriptEditorManager();
 
-	void												MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor, SaveWorkspaceOpType SaveOperation);
+	bool												MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor);
 	void												MoveScriptDataFromVanillaEditor(ScriptEditor::Workspace^% CSEEditor);
 
 																										// exported wrappers

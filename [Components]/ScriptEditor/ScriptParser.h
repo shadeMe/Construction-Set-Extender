@@ -61,14 +61,14 @@ public:
 																"/=", "^=", ":", "::", "==", "!=",
 																">", "<", ">=", "<=", "|", "&", "<<",
 																">>", "+", "-", "*", "/", "%", "^",
-																"$", "#", "*", "!", "->"
+																"$", "#", "*", "!", "->", "<-"
 															};
 
 
 	void												Tokenize(String^ Source, bool AllowNulls);
 	TokenType											GetTokenType(String^% Token);
 	void												Reset();
-	VariableInfo^%										FindVariable(String^% Variable);	
+	VariableInfo^										FindVariable(String^% Variable);	
 	int													IsComment(int Index);					// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search
 	bool												IsLiteral(String^% Source);				// checks if the passed string in enclosed in quotes
 	bool												HasAlpha(int Index);
@@ -104,38 +104,46 @@ public:
 	static UInt32										GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
 };
 
-public ref class PreProcessor
+public ref class Preprocessor
 {
 public:
-	static enum	class									PreProcessOp
+	static enum	class									PreprocessOp
 															{
-																e_Expand = 0,
-																e_Collapse
+																e_Expand = 0,				// serialize
+																e_Collapse					// deserialize
 															};
+
+	delegate void										StandardOutputError(String^ Message);
 private:
-	static PreProcessor^								Singleton = nullptr;
-	PreProcessor();
+	static Preprocessor^								Singleton = nullptr;
+	Preprocessor();
 
-	Dictionary<String^, String^>^						PreProcessMacros;						// key = macro name, value = macro value
+	Dictionary<String^, String^>^						PreprocessMacros;					// key = macro name, value = macro value
 	ScriptParser^										TextParser;
+	StandardOutputError^								ErrorOutput;
+	bool												ErrorFlag;
+	bool												SuppressOutput;
 
-	int													FindPreProcessMacro(String^% Source);	// returns the index of the tracked macro, in the order of definition
-	String^												GetPreProcessMacro(UInt32 Index);		// returns the identifier of the macro at the passed index
+	void												LogErrorMessage(String^ Message, bool OverrideSuppression);
+	void												LogDebugMessage(String^ Message);
+
+	int													GetMacroIndex(String^% Macro);		// returns the index of the tracked macro, in the order of definition
+	String^												GetMacroAtIndex(UInt32 Index);		// returns the identifier of the macro at the passed index
 
 	void												ProcessStandardDefineDirectives(void);
 
 	void												ParseEnumMacros(String^% Items, bool ReportErrors);
 
-	void												ParseNestedDirectives(StringReader^% PreProcessParser, String^% ReadLine, UInt32& LineStart, UInt32& LineEnd);
-	String^												ParseImportDirective(String^% Source, PreProcessOp Operation, String^% ReadLine, UInt32 LineStart, UInt32 LineEnd, bool Recursing);
-	String^												ParseDefineDirective(String^% Source, PreProcessOp Operation, String^% ReadLine);
-	String^												ParseEnumDirective(String^% Source, PreProcessOp Operation, String^% ReadLine);
+	void												ParseNestedDirectives(StringReader^% PreprocessParser, String^% ReadLine, UInt32& LineStart, UInt32& LineEnd);
+	String^												ParseImportDirective(String^% Source, PreprocessOp Operation, String^% ReadLine, UInt32 LineStart, UInt32 LineEnd, bool Recursing);
+	String^												ParseDefineDirective(String^% Source, PreprocessOp Operation, String^% ReadLine);
+	String^												ParseEnumDirective(String^% Source, PreprocessOp Operation, String^% ReadLine);
 
-	String^												DoPreProcess(String^% Source, PreProcessOp Operation, bool DoCollapseReplace, String^% ExtractedCSEBlock);
+	String^												DoPreprocess(PreprocessOp Operation, String^% Source, String^% ExtractedCSEBlock, bool Recursing);
 public:
-	static PreProcessor^%								GetSingleton();
+	static Preprocessor^%								GetSingleton();
 
-	String^												PreProcess(String^% Source, PreProcessOp Operation, bool DoCollapseReplace, String^% ExtractedCSEBlock);
+	bool												Preprocess(PreprocessOp Operation, String^% Source, String^% Result, String^% ExtractedCSEBlock, StandardOutputError^ ErrorOutput);
 };
 
-#define PREPROC											PreProcessor::GetSingleton()
+#define PREPROC											Preprocessor::GetSingleton()
