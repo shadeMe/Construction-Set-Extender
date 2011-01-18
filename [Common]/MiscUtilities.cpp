@@ -19,6 +19,28 @@ void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
 	else		*Flag &= ~Mask;
 }
 
+ImageResourceManager::ImageResourceManager(String^ BaseName)
+{
+	Manager = gcnew ResourceManager(BaseName, Assembly::GetExecutingAssembly());
+}
+
+Image^ ImageResourceManager::CreateImageFromResource(String^ ResourceIdentifier)
+{
+	try
+	{
+		return dynamic_cast<Image^>(Manager->GetObject(ResourceIdentifier));
+	}
+	catch (...)
+	{
+		return nullptr;
+	}
+}
+
+void ImageResourceManager::SetupImageForToolStripButton(ToolStripButton^ Control)
+{
+	Control->Image = CreateImageFromResource(Control->Name);
+}
+
 namespace Log
 {
 	namespace ScriptEditor 

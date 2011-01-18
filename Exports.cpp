@@ -424,6 +424,16 @@ __declspec(dllexport) void ScriptEditor_SaveActivePlugin()
 	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD2, NULL);
 }
 
+__declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText)
+{
+	TESForm* Form = GetFormByID(EditorID);
+	if (!Form)						return;
+	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
+	if (!ScriptForm)				return;		
+
+	thisCall(kScript_SetText, ScriptForm, ScriptText);
+}
+
 
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText()
@@ -580,10 +590,12 @@ __declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID)
 __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent)
 {
 	TESObjectREFR* Ref = NULL;
-	while (true) {
+	while (true)
+	{
 		Ref = ChooseReferenceDlg(Parent);
 		if (!Ref)	break;
-		if (!Ref->IsPersistent()) {		// ### not required as the dialog doesn't enumerate non-persistent refs
+		if (!Ref->IsPersistent())
+		{
 			MessageBox(Parent, "The parent needs to be a presistent reference", "Choose Reference", MB_OK|MB_ICONERROR);
 			continue;
 		}

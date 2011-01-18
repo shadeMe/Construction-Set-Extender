@@ -44,6 +44,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;CSE_USER"
+				GeneratePreprocessedFile="0"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -244,6 +245,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\BehindTextHS.png"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\book_addressHS.png"
 					>
 				</File>
@@ -253,6 +258,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\CommentHS.png"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\compareversionsHS.png"
 					>
 				</File>
 				<File
@@ -361,6 +370,10 @@
 				</File>
 				<File
 					RelativePath=".\Images\ISUserF.png"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\List_NumberedRTLHS.png"
 					>
 				</File>
 				<File
@@ -505,11 +518,27 @@
 			Name="Components"
 			>
 			<File
+				RelativePath=".\AuxiliaryTextEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AuxiliaryTextEditor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IntelliSense.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\IntelliSense.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NumberedRichTextBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\NumberedRichTextBox.h"
 				>
 			</File>
 			<File
@@ -526,6 +555,26 @@
 			</File>
 			<File
 				RelativePath=".\PluginParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Preprocessor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Preprocessor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptEditorInterface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptEditorTextEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptEditorTextEditor.h"
 				>
 			</File>
 			<File

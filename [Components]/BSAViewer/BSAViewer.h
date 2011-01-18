@@ -1,8 +1,5 @@
 #pragma once
 
-#include "[Common]\Includes.h"
-
-
 ref class FolderObject;
 
 public ref class FileSystemObject

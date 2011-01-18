@@ -1,7 +1,5 @@
 #pragma once
 
-#include "[Common]\Includes.h"
-#include "[Common]\ListViewUtilities.h"
 #include "[Common]\HandshakeStructs.h"
 
 public ref class UseInfoList

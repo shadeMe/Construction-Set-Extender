@@ -1,6 +1,6 @@
 #include "UseInfoList.h"
 #include "[Common]\ListViewUtilities.h"
-#include "[Common]\MiscUtilities.h"
+#include "[Common]\HandshakeStructs.h"
 #include "[Common]\NativeWrapper.h"
 
 UseInfoList^% UseInfoList::GetSingleton()

@@ -25,6 +25,16 @@ public:
 	CSEGeneralException(String^ Message) : Exception(Message) {};
 };
 
+public ref class ImageResourceManager
+{
+	ResourceManager^					Manager;
+public:
+	ImageResourceManager(String^ BaseName);
+
+	Image^								CreateImageFromResource(String^ ResourceIdentifier);
+	void								SetupImageForToolStripButton(ToolStripButton^ Control);
+};
+
 namespace Log
 {
 	enum MessageSource

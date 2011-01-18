@@ -2,8 +2,6 @@
 #include "[Common]\NativeWrapper.h"
 #include "Globals.h"
 
-
-
 String^ BoundControl::GetValue()
 {
 	String^ Result = "0";
@@ -32,6 +30,9 @@ String^ BoundControl::GetValue()
 				break;
 			case ValueType::e_Font_Size:
 				Result = Control->Font->Size.ToString();
+				break;
+			case ValueType::e_Font_Style:
+				Result = ((int)Control->Font->Style).ToString();
 				break;
 			}
 			break;
@@ -95,7 +96,10 @@ void BoundControl::SetValue(String^ Value)
 			case ValueType::e_Font_Size:
 				Control->Font = gcnew Font(Control->Font->FontFamily->Name, Numeric, FontStyle::Regular);
 				break;
+			case ValueType::e_Font_Style:
+				Control->Font = gcnew Font(Control->Font->FontFamily->Name, Control->Font->Size, (FontStyle)(int)Numeric);
 			}
+
 			break;
 		}
 	case ControlType::e_ColorDialog:
@@ -123,6 +127,7 @@ void OptionsDialog::PopulateINIMap()
 	// General
 	INIMap->Add(gcnew INISetting("Font", "ScriptEditor::General", "Lucida Console"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_FontFamily_Name));
 	INIMap->Add(gcnew INISetting("FontSize", "ScriptEditor::General", "10"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
+	INIMap->Add(gcnew INISetting("FontStyle", "ScriptEditor::General", "0"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Style));
 
 	INIMap->Add(gcnew INISetting("ForeColorR", "ScriptEditor::General", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
 	INIMap->Add(gcnew INISetting("ForeColorG", "ScriptEditor::General", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
@@ -136,12 +141,7 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("HiliteColorG", "ScriptEditor::General", "195"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
 	INIMap->Add(gcnew INISetting("HiliteColorB", "ScriptEditor::General", "200"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
 
-	INIMap->Add(gcnew INISetting("BookmarkColorR", "ScriptEditor::General", "235"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("BookmarkColorG", "ScriptEditor::General", "33"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("BookmarkColorB", "ScriptEditor::General", "38"), gcnew BoundControl(BMCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
-
 	INIMap->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "ScriptEditor::General", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("ColorEditorBox", "ScriptEditor::General", "0"), gcnew BoundControl(ColorEditorBox, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("AutoIndent", "ScriptEditor::General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("SaveLastKnownPos", "ScriptEditor::General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::General", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
@@ -199,9 +199,9 @@ int OptionsDialog::FetchSettingAsInt(String^ Key)
 	if (Control)
 	{
 		String^ Value = Control->GetValue();
-		int Result = 0;
+		int Result = 1;
 		try {
-			Result = int::Parse(Value);
+			Result = float::Parse(Value);
 		} catch (Exception^ E)
 		{
 			DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: " + E->Message);
@@ -210,7 +210,7 @@ int OptionsDialog::FetchSettingAsInt(String^ Key)
 	}
 	else
 	{
-		DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: Key desn't exist.");
+		DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: Key doesn't exist.");
 		return 0;
 	}
 }
@@ -246,7 +246,6 @@ OptionsDialog::OptionsDialog()
 	ThresholdLength = gcnew NumericUpDown();
 	GroupGen = gcnew GroupBox();
 	SuppressRefCountForQuestScripts = gcnew CheckBox();
-	ColorEditorBox = gcnew CheckBox();
 	RecompileVarIdx = gcnew CheckBox();
 	UseCSParent = gcnew CheckBox();
 	DestroyOnLastTabClose = gcnew CheckBox();
@@ -255,13 +254,11 @@ OptionsDialog::OptionsDialog()
 	FCButton = gcnew Button();
 	HCButton = gcnew Button();
 	BCButton = gcnew Button();
-	BMCButton = gcnew Button();
 
 	FontSelection = gcnew FontDialog();
 	FCDialog = gcnew ColorDialog();
 	BCDialog = gcnew ColorDialog();
 	HCDialog = gcnew ColorDialog();
-	BMCDialog = gcnew ColorDialog();
 
 	SaveLastKnownPos = gcnew CheckBox();
 
@@ -327,11 +324,9 @@ OptionsDialog::OptionsDialog()
 	GroupGen->Controls->Add(HCButton);
 	GroupGen->Controls->Add(FontButton);
 	GroupGen->Controls->Add(SuppressRefCountForQuestScripts);
-	GroupGen->Controls->Add(ColorEditorBox);
 	GroupGen->Controls->Add(AutoIndent);
 	GroupGen->Controls->Add(FCButton);
 	GroupGen->Controls->Add(SaveLastKnownPos);
-	GroupGen->Controls->Add(BMCButton);
 	GroupGen->Controls->Add(TabStopSize);
 	GroupGen->Controls->Add(TabSize);
 	GroupGen->Controls->Add(RecompileVarIdx);
@@ -353,15 +348,6 @@ OptionsDialog::OptionsDialog()
 	SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
 	SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
 
-	ColorEditorBox->AutoSize = true;
-	ColorEditorBox->Location = System::Drawing::Point(324, 68);
-	ColorEditorBox->Name = L"ColorEditorBox";
-	ColorEditorBox->Size = System::Drawing::Size(122, 17);
-	ColorEditorBox->TabIndex = 2;
-	ColorEditorBox->Text = L"Paint Script Window";
-	ColorEditorBox->UseVisualStyleBackColor = true;
-	ColorEditorBox->AutoSize = true;
-
 	SaveLastKnownPos->Location = System::Drawing::Point(14, 91);
 	SaveLastKnownPos->Name = L"SaveLastKnownPos";
 	SaveLastKnownPos->Size = System::Drawing::Size(167, 17);
@@ -370,14 +356,6 @@ OptionsDialog::OptionsDialog()
 	SaveLastKnownPos->UseVisualStyleBackColor = true;
 	SaveLastKnownPos->AutoSize = true;
 
-	BMCButton->Location = System::Drawing::Point(273, 19);
-	BMCButton->Name = L"BMCButton";
-	BMCButton->Size = System::Drawing::Size(103, 29);
-	BMCButton->TabIndex = 6;
-	BMCButton->Text = L"Bookmark Color";
-	BMCButton->UseVisualStyleBackColor = true;
-	BMCButton->Click += gcnew System::EventHandler(this, &OptionsDialog::BMCButton_Click);
-	
 	FCButton->Location = System::Drawing::Point(95, 19);
 	FCButton->Name = L"FCButton";
 	FCButton->Size = System::Drawing::Size(83, 29);
@@ -400,7 +378,6 @@ OptionsDialog::OptionsDialog()
 	FCDialog->AnyColor = true;
 	BCDialog->AnyColor = true;
 	HCDialog->AnyColor = true;
-	BMCDialog->AnyColor = true;
 
 	HCButton->Location = System::Drawing::Point(379, 19);
 	HCButton->Name = L"HCButton";
@@ -494,11 +471,6 @@ void OptionsDialog::BCButton_Click(Object^ Sender, EventArgs^ E)
 void OptionsDialog::HCButton_Click(Object^ Sender, EventArgs^ E)
 {
 	HCDialog->ShowDialog();
-}
-
-void OptionsDialog::BMCButton_Click(Object^ Sender, EventArgs^ E)
-{
-	BMCDialog->ShowDialog();
 }
 
 void OptionsDialog::OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E)

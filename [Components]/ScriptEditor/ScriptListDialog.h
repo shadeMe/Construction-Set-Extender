@@ -1,6 +1,4 @@
 #pragma once
-#include "[Common]\Includes.h"
-
 
 public ref class ScriptListDialog
 {

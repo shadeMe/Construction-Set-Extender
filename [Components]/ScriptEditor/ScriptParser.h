@@ -1,7 +1,5 @@
 #pragma once
 
-#include "[Common]\Includes.h"
-
 public ref class ScriptParser
 {						
 public:	
@@ -64,6 +62,17 @@ public:
 																"$", "#", "*", "!", "->", "<-"
 															};
 
+	LinkedList<VariableInfo^>^							Variables;
+	Stack<BlockType>^									BlockStack;
+	List<String^>^										Tokens;
+	List<UInt32>^										Indices;								// the position of each token relative to its parent line
+	List<Char>^											Delimiters;
+
+	unsigned int										CurrentLineNo;
+	unsigned int										PreviousLineNo;
+	String^												ScriptName;
+	bool												Valid;
+
 
 	void												Tokenize(String^ Source, bool AllowNulls);
 	TokenType											GetTokenType(String^% Token);
@@ -81,19 +90,9 @@ public:
 	int													GetLineEndIndex(UInt32 StartPosition, String^% Source);
 	UInt32												GetTrailingTabCount(UInt32 StartPosition, String^% Source, String^ CharactersToSkip);
 	bool												IsOperator(String^% Source);
+	UInt32												GetCurrentTokenCount() { return Tokens->Count; }
 
-	LinkedList<VariableInfo^>^							Variables;
-	Stack<BlockType>^									BlockStack;
-	List<String^>^										Tokens;
-	List<UInt32>^										Indices;								// the position of each token relative to its parent line
-	List<Char>^											Delimiters;
-
-	unsigned int										CurrentLineNo;
-	unsigned int										PreviousLineNo;
-	String^												ScriptName;
-	bool												Valid;
-
-														ScriptParser();
+	ScriptParser();
 };
 
 class ByteCodeParser
@@ -103,47 +102,3 @@ class ByteCodeParser
 public:
 	static UInt32										GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
 };
-
-public ref class Preprocessor
-{
-public:
-	static enum	class									PreprocessOp
-															{
-																e_Expand = 0,				// serialize
-																e_Collapse					// deserialize
-															};
-
-	delegate void										StandardOutputError(String^ Message);
-private:
-	static Preprocessor^								Singleton = nullptr;
-	Preprocessor();
-
-	Dictionary<String^, String^>^						PreprocessMacros;					// key = macro name, value = macro value
-	ScriptParser^										TextParser;
-	StandardOutputError^								ErrorOutput;
-	bool												ErrorFlag;
-	bool												SuppressOutput;
-
-	void												LogErrorMessage(String^ Message, bool OverrideSuppression);
-	void												LogDebugMessage(String^ Message);
-
-	int													GetMacroIndex(String^% Macro);		// returns the index of the tracked macro, in the order of definition
-	String^												GetMacroAtIndex(UInt32 Index);		// returns the identifier of the macro at the passed index
-
-	void												ProcessStandardDefineDirectives(void);
-
-	void												ParseEnumMacros(String^% Items, bool ReportErrors);
-
-	void												ParseNestedDirectives(StringReader^% PreprocessParser, String^% ReadLine, UInt32& LineStart, UInt32& LineEnd);
-	String^												ParseImportDirective(String^% Source, PreprocessOp Operation, String^% ReadLine, UInt32 LineStart, UInt32 LineEnd, bool Recursing);
-	String^												ParseDefineDirective(String^% Source, PreprocessOp Operation, String^% ReadLine);
-	String^												ParseEnumDirective(String^% Source, PreprocessOp Operation, String^% ReadLine);
-
-	String^												DoPreprocess(PreprocessOp Operation, String^% Source, String^% ExtractedCSEBlock, bool Recursing);
-public:
-	static Preprocessor^%								GetSingleton();
-
-	bool												Preprocess(PreprocessOp Operation, String^% Source, String^% Result, String^% ExtractedCSEBlock, StandardOutputError^ ErrorOutput);
-};
-
-#define PREPROC											Preprocessor::GetSingleton()

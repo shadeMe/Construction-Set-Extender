@@ -1,7 +1,6 @@
 #include "BSAViewer.h"
 #include "BSAReader.h"
 #include "[Common]\ListViewUtilities.h"
-#include "[Common]\MiscUtilities.h"
 
 String^ FileSystemObject::GetPath(bool WithRoot)
 {

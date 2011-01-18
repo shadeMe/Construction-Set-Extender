@@ -5,7 +5,11 @@
 
 class DataHandler;
 
-extern "C"{
+// would be more aesthetically pleasing if this were rearranged into different interfaces but meh
+// CSE's gonna be the only user
+
+extern "C"
+{
 
 __declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message);
 __declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default);
@@ -38,6 +42,7 @@ __declspec(dllexport) IntelliSenseUpdateData* ScriptEditor_BeginIntelliSenseData
 __declspec(dllexport) void ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSenseUpdateData* Data);
 __declspec(dllexport) void ScriptEditor_ToggleScriptCompiling(bool Enable);
 __declspec(dllexport) void ScriptEditor_SaveActivePlugin();
+__declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText);
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText();
 __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorID);

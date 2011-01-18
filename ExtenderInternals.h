@@ -352,6 +352,7 @@ extern ResponseEditorData**		g_ResponseEditorData;
 extern UInt8*					g_Flag_ObjectWindow_MenuState;
 extern UInt8*					g_Flag_CellView_MenuState;
 extern CRITICAL_SECTION*		g_ExtraListCS;
+extern TESSound**				g_FSTSnowSneak;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -429,6 +430,7 @@ extern const UInt32			kTESForm_SetEditorID;
 extern const UInt32			kTESObjectREFR_SetBaseForm;
 extern const UInt32			kTESObjectREFR_SetFlagPersistent;
 extern const UInt32			kExtraDataList_InitItem;
+extern const UInt32			kScript_SetText;
 
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
 extern const UInt32			kBaseExtraList_ModExtraOwnership;
@@ -500,6 +502,7 @@ class FormEnumerationWrapper
 
 		InitializeCSWindows();
 		InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
+		SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
 	}
 
 

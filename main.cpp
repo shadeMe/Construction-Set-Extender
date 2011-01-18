@@ -118,7 +118,8 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 
 	if (!CLIWrapper::Import(obse)) {
 		return false;
-	} else if (!PatchSEHooks() || !PatchMiscHooks())
+	}
+	else if (!PatchSEHooks() || !PatchMiscHooks())
 		return false;
 	
 	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);

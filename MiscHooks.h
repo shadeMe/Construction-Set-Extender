@@ -32,6 +32,7 @@ extern MemHdlr					kDataHandlerPostError;// fixes a crash when the CS attempts t
 extern MemHdlr					kExitCS;
 extern MemHdlr					kFindTextInit;
 extern MemHdlr					kCSInit;
+extern MemHdlr					kMessagePumpInit;
 extern MemHdlr					kUseInfoListInit;
 extern NopHdlr					kMissingTextureWarning;// removes the ostentatious warning
 extern NopHdlr					kTopicResultScriptResetNop;// fixes the bug that clears all flags and the result script of a selected response when adding a new topic
@@ -84,6 +85,7 @@ void SavePluginCommonDialogHook(void);// allows the creation of ESM files in the
 void ExitCSHook(void);// adds fast exit to the CS
 void FindTextInitHook(void);// hooks the find text window for subclassing
 void CSInitHook(void);// adds a one-time only hook to the CS main windows wndproc as an alternative to WinMain()
+void MessagePumpInitHook(void);// prevents the premature calling of DoCSInitHook when the cs enters an idle state through a message loop
 void UseInfoListInitHook(void);// replaces the otiose "Recreate facial animation files" menu item with "Use Info Listings"
 void NPCFaceGenHook(void);// fixes the facegen crash by getting the CS to correctly render the model at dialog init
 void DataDlgInitHook(void);// hooks the data window for subclassing

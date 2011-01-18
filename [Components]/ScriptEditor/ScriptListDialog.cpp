@@ -18,10 +18,11 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	SelectBox = gcnew Button();
 	SearchBox = gcnew TextBox();
 
-	if (!FlagIcons->Images->Count) {
+	if (!FlagIcons->Images->Count)
+	{
 		FlagIcons->TransparentColor = Color::White;
-		FlagIcons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SLDDeleted"))));
-		FlagIcons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("SLDActive"))));
+		FlagIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagDeleted"));
+		FlagIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagActive"));
 	}
 
 	PreviewBox->Font = gcnew Font("Consolas", 9, FontStyle::Regular);

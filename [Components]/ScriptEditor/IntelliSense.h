@@ -1,5 +1,4 @@
 #pragma once
-#include "[Common]\Includes.h"
 #include "ScriptEditor.h"
 
 using namespace System::ComponentModel;
@@ -8,15 +7,14 @@ ref class IntelliSenseItem;
 ref class CommandInfo;
 ref class VariableInfo;
 ref class UserFunction;
-ref class SyntaxBox;
+ref class IntelliSenseThingy;
 ref class Script;
-ref class SyntaxBoxInitializer;
 struct CommandTableData;
 
 
 public ref struct Boxer
 {
-	SyntaxBox^											ISBox;						
+	IntelliSenseThingy^									ISBox;						
 	Script^												ScptBox;
 	UserFunction^										FunctBox;
 
@@ -29,7 +27,7 @@ public ref struct Boxer
 	
 	BoxType												Type;
 
-	Boxer(SyntaxBox^ Obj) : ISBox(Obj), Type(BoxType::e_SyntaxBox) {};
+	Boxer(IntelliSenseThingy^ Obj) : ISBox(Obj), Type(BoxType::e_SyntaxBox) {};
 	Boxer(Script^ Obj) : ScptBox(Obj), Type(BoxType::e_Script) {};
 	Boxer(UserFunction^ Obj) : FunctBox(Obj), Type(BoxType::e_UserFunct) {};
 };
@@ -132,7 +130,6 @@ public ref class CommandInfo : public IntelliSenseItem
 																"Array [Reference]",
 																"Ambiguous"
 															};
-public:
 	static enum class									CmdReturnType
 															{
 																e_Default = 0,
@@ -142,15 +139,14 @@ public:
 																e_ArrayIndex,
 																e_Ambiguous
 															};
-														
+
 	String^												Name;
 	String^												Description;
 	String^												Shorthand;
 	UInt16												ParamCount;
 	bool												RequiresParent;
 	UInt16												ReturnType;
-
-
+public:		
 	CommandInfo(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType) : 
 	IntelliSenseItem(String::Format("{0}{1}\n{2} parameter(s)\nReturn Type: {3}\n\n{4}{5}", Name, (Shorthand == "None")?"":("\t[ " + Shorthand + " ]"), NoOfParams.ToString(), CommandInfo::TypeIdentifier[(int)ReturnType], Desc, (RequiresParent)?"\n\nRequires a calling reference":""), ItemType::e_Cmd),
 										 Name(Name), 
@@ -161,6 +157,7 @@ public:
 										 ReturnType(ReturnType)		{};
 
 	virtual String^%									GetIdentifier() override { return Name; }
+	bool												GetRequiresParent() { return RequiresParent; }
 };
 
 public ref class VariableInfo : public IntelliSenseItem
@@ -174,7 +171,6 @@ public:
 																"String Variable",
 																"Array Variable"
 															};
-
 	static enum class									VariableType
 															{
 																e_Int = 0,
@@ -183,10 +179,11 @@ public:
 																e_String,
 																e_Array
 															};
+private:
 	String^												Name;
 	VariableType										Type;
-	String^												Comment;			
-
+	String^												Comment;	
+public:
 	VariableInfo(String^% Name, String^% Comment, VariableType Type, ItemType Scope) : 
 	IntelliSenseItem(String::Format("{0} [{1}]{2}{3}", Name, VariableInfo::TypeIdentifier[(int)Type], (Comment != "")?"\n\n":"", Comment), Scope), 
 										 Name(Name), 
@@ -194,13 +191,21 @@ public:
 										 Comment(Comment) {};											
 
 	virtual String^%									GetIdentifier() override { return Name; }
+	String^%											GetComment() { return Comment; }
+	String^												GetTypeIdentifier() { return TypeIdentifier[(int)Type]; }
+	String^%											GetName() { return Name; }
+	VariableType										GetType() { return Type; }
 };
 
 
 public ref class Script
 {
+protected:
+	Script();
+	Script(String^% ScriptText, String^% Name);
 public:
 	static Script^										NullScript = gcnew Script(gcnew String("scn nullscript"));
+
 	List<VariableInfo^>^								VarList;
 	String^												Name;
 	String^												Description;
@@ -208,17 +213,14 @@ public:
 	Script(String^% ScriptText);
 
 	virtual String^										Describe();
-protected:
-	Script();
-	Script(String^% ScriptText, String^% Name);
+	String^%											GetScriptName() { return Name; }
 };
 
 public ref class Quest : public IntelliSenseItem 
 {
-public:
 	String^												Name;
 	String^												ScriptName;
-
+public:
 	Quest(String^% EditorID, String^% Desc, String^% ScrName) :
 															IntelliSenseItem((gcnew String(EditorID + ((Desc != "")?"\n":"") + Desc + ((ScrName != "")?"\n\nQuest Script: ":"") + ScrName)), IntelliSenseItem::ItemType::e_Quest),
 															Name(EditorID), ScriptName(ScrName) {}
@@ -239,15 +241,14 @@ public:
 
 public ref class UserFunctionDelegate : public IntelliSenseItem	
 {
-public:
 	UserFunction^										Parent;
-
+public:
 	UserFunctionDelegate(UserFunction^% Parent) : Parent(Parent), IntelliSenseItem(Parent->Describe(), ItemType::e_UserFunct) {}
 
 	virtual String^%									GetIdentifier() override { return Parent->Name; }
 };
 
-public ref class SyntaxBox
+public ref class IntelliSenseThingy
 {
 public:
 	static enum class									Operation
@@ -265,16 +266,15 @@ public:
 
 	List<IntelliSenseItem^>^							VarList;														// local variables
 
-	void												Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll);
+	void												Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll);
 	void												Hide();
 
-	SyntaxBox(ScriptEditor::Workspace^% Parent);
+	IntelliSenseThingy(ScriptEditor::Workspace^% Parent);
 	void												PickIdentifier();
 	bool												IsVisible()	{ return IntelliSenseList->Visible; }
 	void												MoveIndex(Direction Direction);
 	void												UpdateLocalVars();
 	bool												QuickView(String^ TextUnderMouse);
-	ListView^%											GetInternalListView() { return IntelliSenseList; }
 
 	property Operation									LastOperation;
 	property bool										Enabled;
@@ -299,4 +299,12 @@ private:
 	ListView^											IntelliSenseList;
 public:
 	void												HideInfoTip() { InfoTip->Hide(Control::FromHandle(IntelliSenseList->Parent->Handle)); }
+
+	property ListView^									InternalListView
+	{
+		ListView^ get()
+		{
+			return IntelliSenseList;
+		}
+	}
 };

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "[Common]\Includes.h"
-
 // adapted from Timeslip's BSA reading code
 
 public ref class BSAFileInfo

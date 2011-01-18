@@ -1,6 +1,5 @@
 #include "Exports.h"
 #include "BSAViewer.h"
-#include "[Common]\MiscUtilities.h"
 
 extern "C"{
 

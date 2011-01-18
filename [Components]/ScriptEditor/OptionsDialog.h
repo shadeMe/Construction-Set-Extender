@@ -1,5 +1,4 @@
 #pragma once
-#include "[Common]\Includes.h"
 
 public ref class INISetting 
 {
@@ -27,6 +26,7 @@ public:
 															e_Value,
 															e_Font_FontFamily_Name,
 															e_Font_Size,
+															e_Font_Style,
 															e_Color_R,
 															e_Color_G,
 															e_Color_B
@@ -54,7 +54,6 @@ public ref class OptionsDialog
 	void											FCButton_Click(Object^ Sender, EventArgs^ E);
 	void											BCButton_Click(Object^ Sender, EventArgs^ E);
 	void											HCButton_Click(Object^ Sender, EventArgs^ E);
-	void											BMCButton_Click(Object^ Sender, EventArgs^ E);
 
 	void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
@@ -74,13 +73,11 @@ public ref class OptionsDialog
 	Button^  										FCButton;
 	Button^  										FontButton;
 	CheckBox^  										SuppressRefCountForQuestScripts;
-	CheckBox^  										ColorEditorBox;
 
 	FontDialog^  									FontSelection;
 	Button^  										BCButton;
 	Button^  										HCButton;
 	
-	Button^  										BMCButton;
 	CheckBox^										SaveLastKnownPos;
 	Label^  										TabStopSize;
 	NumericUpDown^  								TabSize;
@@ -95,7 +92,6 @@ public:
 	ColorDialog^  									FCDialog;
 	ColorDialog^  									BCDialog;
 	ColorDialog^  									HCDialog;
-	ColorDialog^  									BMCDialog;
 
 	void											LoadINI();
 	void											SaveINI();

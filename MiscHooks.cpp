@@ -34,6 +34,7 @@ NopHdlr							kResponseEditorMic					(0x00407F3D, 5);
 MemHdlr							kDataHandlerPostError				(0x004852F0, (UInt32)0, 0, 0);
 MemHdlr							kExitCS								(0x00419354, ExitCSHook, 0, 0);
 MemHdlr							kFindTextInit						(0x00419A42, FindTextInitHook, 0, 0);
+MemHdlr							kMessagePumpInit					(0x0041CF6F, MessagePumpInitHook, MakeUInt8Array(5, 0x8B, 0x3D, 0x58, 0x43, 0x92), 5);
 MemHdlr							kCSInit								(0x00419260, CSInitHook, MakeUInt8Array(5, 0xE8, 0xEB, 0xC5, 0x2C, 0), 5);
 MemHdlr							kUseInfoListInit					(0x00419833, UseInfoListInitHook, 0, 0);
 NopHdlr							kMissingTextureWarning				(0x0044F3AF, 14);
@@ -428,7 +429,9 @@ void PatchMenus()
 
 void __stdcall DoCSInitHook()
 {
-	if (!g_PluginPostLoad) return;			// prevents the hook from being called before the full init
+	if (!g_PluginPostLoad) 
+		return;
+											// prevents the hook from being called before the full init
 											// perform deferred patching
 											// remove hook rightaway to keep it from hindering the subclassing that follows
 	kCSInit.WriteBuffer();
@@ -443,8 +446,6 @@ void __stdcall DoCSInitHook()
 
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
 	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
-//	g_ObjectWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_ObjectWindow, GWL_WNDPROC, (LONG)ObjectWndSubClassProc);
-//	g_CellViewWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CellView, GWL_WNDPROC, (LONG)CellViewWndSubClassProc);
 
 	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
 		LoadStartupPlugin();
@@ -479,6 +480,25 @@ void __declspec(naked) CSInitHook(void)
 		jmp		[kCSInitRetnAddr]
 	}
 }
+
+void __declspec(naked) MessagePumpInitHook(void)
+{
+	static const UInt32			kMessagePumpInitRetnAddr = 0x0041CF75;
+	__asm
+	{
+		mov		g_PluginPostLoad, 1
+
+		_emit	0x8B
+		_emit	0x3D
+		_emit	0x58
+		_emit	0x43
+		_emit	0x92
+		_emit	0
+
+		jmp		[kMessagePumpInitRetnAddr]
+	}
+}
+
 
 
 COMMON_DIALOG_CANCEL_HOOK(Model)

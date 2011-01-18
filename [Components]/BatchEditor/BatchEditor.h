@@ -1,6 +1,5 @@
 #pragma once
 
-#include "[Common]\Includes.h"
 #include "[Common]\NativeWrapper.h"
 
 public ref class BatchEditor

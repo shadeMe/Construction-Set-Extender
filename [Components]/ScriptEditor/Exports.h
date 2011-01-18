@@ -1,6 +1,5 @@
 #pragma once
-#include "[Common]\Includes.h"
-#include "IntelliSense.h"
+
 #include "[Common]\HandShakeStructs.h"
 
 extern "C"{

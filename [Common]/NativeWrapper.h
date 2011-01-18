@@ -56,6 +56,8 @@ public:
 	static void											ScriptEditor_ToggleScriptCompiling(bool Enable);
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_SaveActivePlugin();
+	[DllImport("Construction Set Extender.dll")] 
+	static void											ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText);
 
 	[DllImport("Construction Set Extender.dll")] 
 	static void											UseInfoList_SetFormListItemText();

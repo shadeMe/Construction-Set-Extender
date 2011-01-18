@@ -9,12 +9,45 @@ BE---->
 
 CSE--->
 > Fully implement GMST reinit
-> Figure out how to update the model of references
+> Update the model of references
 > Export/import result scripts
+> Fix the water fix
+> Make the console work faster
+> Have the console keep a record of previously entered commands
+> Tackle the Search and Replace window (and do what ?)
+> Implement JRoush's fix for the FormIDListView dialogs.
+> Aesthetically improve the Export Dialog tool's result (as per Sjors_Boomscors's request)
+> Fix the door marker issue
+
+# The corruption has happened to me as well. Specifically, the file writes out correctly, but contains massive zero-filled padding (5-10 MB worth) after the normal end of the file.
+
+I'm going off memory, but it happened in two situations:
+1) When I edit the author / description.
+2) When I try to save the file, it's locked by another process (TES4Edit, typically) so the CS complains, I release the lock, and save the file again.
+
+The easiest way to fix it if it occurs is to open it in CBash and save it again. CBash automatically fixes this specific oddity.
+Another way to fix it is to use a hex editor and simply delete all the trailing zeroes at the end. Requires some knowledge of the file format so you don't accidentally erase anything you should (a few of the trailing zeroes could conceivably be part of the last record). 
+
+> Is it possible to make it so that a script refuses to compile/save if "Begin OnActivate <SomeReference>" is called. A script with this in it compiles even though OnActivate does not accept any parameters (correct format is "Begin OnActivate"). This can lead to an uninformed scripter creating a buggy object. 
+
+> These might be unique to my system, but I'm getting two errors from the CS, (without CSE installed). The first is that " 'Architecture\GodStatues\StatueGodsZenithar01.nif' for non-light object 'StatueGodsZenithar01' contains 1 lights" and " C:\Projects\TES4\BSHavok\bhkMoppBvTreeShape.cpp:215: Warning: File Meshes\Clutter\StonePedastelLarge01.nif contains an old bhkMoppBvTreeShape! mcarofano re-export ". Since CSE stops these warning messages from appearing, it freezes the CS. Could anyone else check and see if they get these errors please? There should be a statue of Zenithar in Leyawiin and the basement of the Chorrol Fighters Guild has a Stone Pedastel, it is commonly placed in front of forges for blacksmiths. Thanks. 
+
+> this is something that has driven me absolutely mad with the construction set when i try to make/edit custom races. i can't ever get the plugin to recognize generic voice files despite being named/encoded properly and placed in the proper directory as every single guide online tells me to do, the construction set forum is also flooded with similar posts
+
+my request is to overhaul the addition of generic hit/damage sounds for races or to have the CS generate generic voices for you to edit directly, something that makes setting up generic voices less maddening 
+> People would LOVE you if you would add the ability to copy hair and eye records from one race to another without having to add them one by one. 
 
 > Being able to see cell quadrant boundaries when the landscape and/or quadrant dialogue(s) are open, maybe even color-coded boundaries so it is easy to see which quadrant is which
 > Being able to re-order masters from the master list in the Data... dialogue
 > A tree-view of records from the "Details..." button in the Data... dialogue, similar to TES4Edit
+> Relative scaling and snap to bounding box
+
+1) Can we have more Edit based functions to the console? Like a "Find/Search" Function and/or "Copy Text"?
+2) I don't know if it's possible or if you already have done it, but can you output changes to your plugin, to the console?
+3) Can we get an option to output the console to a logfile? This might work hand in hand with #2 and be useful for logging what changes you made to your plugin as you go along. (This might be impossible for land based modding, but changes to a quest, script, NPC, or item might be possible and really useful)
+4) Also not to drive you insane with requests, but if you do manage to allow logging of plugin changes, can you add date/timestamps to the changes? Something like this would be amazing for people who work on large scale mods and forget where they've made certain small changes and when they did it. This would also be useful for letting you "continue where you left off" without wandering aimlessly in the CS. 
+
+startconversation player, sometopic - Apparently the comma is required for the syntax to be valid, otherwise the topic is never called up. The CS generates no warning/error about this which leads to much frustration wondering why sometimes topics set without the comma never trigger. 
 
 # The ability to specify a custom workspace.
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
@@ -22,6 +55,7 @@ CSE--->
 # Option to automatically dump & reload models on cell load without plugin reload
 # Default z-coordinate when one drops pieces in the render window
 # On-the-fly adjustment of zoom sensitivity
+# When duplicating a placed reference in the render window, can we get that to also copy the enable parent settings? The CS currently copies things like the disabled flag, but it never copies the enable parents.
 
 * The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
 * Land LOD meshes that aren't such terrible approximations of the real landscape. I remember seeing somewhere that what we get is a 1% representation of the real thing. Could we bump this to 5% or something?
@@ -30,16 +64,23 @@ CSE--->
 * Don't make the LOD texture generator load all the objects on the surface since they're not going to be used in the results anyway. Saves untold amounts of memory.
 * Generate the textures and normal maps for LOD land in DXT1 format with appropriate mipmap levels to start with. Easy enough to fix, but why incur extra work?
 
+> Fix stuff mentioned in http://cs.elderscrolls.com/constwiki/index.php/Landscape_LOD_Tutorial
+
+> I did mention this but a really big bug with construction set for anyone building a new worldspace is the very limited HeightMap Editor u need to use it to generate the lod land meshes for any worldspace but  if your worldspace is bigger than 16x16 grid i needs to be done in sections as the HeightMap only see whats loaded in it to a max of 16 x 16 grids. Each time you generate the land lod files in the HeightMap editor you have to restart the construction set as if you try and generate the lod land meshes more than once only they will be corrupted after the 1st time.  This makes this a very time consuming process . Would be great if you get the HeightMap editor to load the full worldspace at once. If all that make some sort of sense
+
 SE---->
-> Rewrite the preprocessor
-> IF preproc directive
+> Check the context menu linebreak issue
 > Fix the Load Scripts issue with Win XP
-> Multi line enums/macros
-> IMPLEMENT AVALONEDIT
+> Implement AvalonEdit ( implement Notepad++ like auto highlight selection)
 > Get quickView to work on remote vars
-> Redo most of the script validator
+> Redo the script validator / get rid of the bad identifier warning
+> Enable autoword selection property for the text editor {  also have a couple of small requests regarding the script editor. I'm used to writing my scripts in Notepad++, and there are two things I really miss in the CSE editor. One is that when I mark the text from the start of one line to the start of the line just below and copy/paste, I expect one newline to be copied/pasted as well, but that doesn't happen in the CSE. That is strange, since it happens in all text editors I can think of, including the forum editor here, and makes it more difficult to move lines around.}
+> Toggle comment doesn't work with lines starting with delimiters
+> The error 'Variable --- declared inside a script block." has the X icon instead of the ! warning icon. Seems right otherwise - script still compiled, no message in the console.
+> Script validator parses identifiers inside comment sections as well ( set SetNewAmount to (MaxNewAmount - MinNewAmount + 1) ;Pseudo-Set of numbers from 0-x. For example if Max is 11, Min will be 5 for the set 5-11. Take off 5 and you get 0-6. GetRandomPercent/100 * Set will return a random number from that set. As GRP never returns 100, need to add 1 so the full set is represented.)
+> References are reported as floats with the Get Variable Indices button.
+> Reference indicies won't update.
+> Add a way to cancel a replace operation
+> 
 
 # Be nice if there was a Sanitize option that forced proper capitalization of function names(begin->Begin, elseif->ElseIf, etc) and stripped excess whitespace.
-
-BSA---->
-# (not reproducible) The 'Change View' button on the BSA browser will sometimes not work until you close and re-open it

@@ -54,6 +54,8 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 { 
+	static ModEntry::Data** s_ActiveTESFile = (ModEntry::Data**)0x00A0AA7C;
+
 	switch (uMsg)
 	{
 	case WM_COMMAND:
@@ -92,6 +94,11 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			{
 				if (MessageBox(hWnd, "There are open script windows. Are you sure you'd like to proceed?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
 					return FALSE;
+			}
+			else if ((*s_ActiveTESFile) != NULL && !_stricmp((*s_ActiveTESFile)->name, "oblivion.esm"))
+			{
+				if (MessageBox(hWnd, "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world ?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
+					return FALSE;				
 			}
 			break;
 		}

@@ -1,15 +1,11 @@
 #pragma once
 
 #include "[Common]\NativeWrapper.h"
-#include "[Common]\Includes.h"
-#include "[Common]\MiscUtilities.h"
 
 public ref class Globals
 {
 public:
-	static ResourceManager^										ImageResources = gcnew ResourceManager("CSEScriptEditor.Images", Assembly::GetExecutingAssembly());
 	static String^												AppPath = gcnew String(NativeWrapper::GetAppPath());
-	static Point												MouseLocation = Point(0,0);
 	static String^												Delimiters = gcnew String("., (){}[]\t\n");
 	static String^												ControlChars = " \t";
 
@@ -25,4 +21,24 @@ public:
 																	Keys::Tab,
 																	Keys::Enter
 																};
+
+	static bool GetIsDelimiterKey(Keys KeyCode)
+	{
+		bool Result = false;
+
+		for each (Keys Itr in DelimiterKeys)
+		{
+			if (Itr == KeyCode) {
+				Result = true;
+				break;
+			}
+		}
+		return Result;
+	}
+
+	static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("CSEScriptEditor.Images");
 };
+
+#define SetupControlImage(Identifier)							Identifier##->Name = #Identifier;	\
+																Identifier##->Image = Globals::ScriptEditorImageResourceManager->CreateImageFromResource(#Identifier);	\
+																Identifier##->ImageTransparentColor = Color::White

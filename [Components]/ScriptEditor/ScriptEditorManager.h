@@ -1,5 +1,4 @@
 #pragma once
-#include "[Common]\Includes.h"
 #include "ScriptEditor.h"
 
 struct ScriptData;
@@ -84,7 +83,7 @@ private:
 
 	ScriptEditorManager();
 
-	bool												MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor);
+	bool												MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^% CSEEditor, String^% PreprocessedScriptResult);
 	void												MoveScriptDataFromVanillaEditor(ScriptEditor::Workspace^% CSEEditor);
 
 																										// exported wrappers

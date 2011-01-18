@@ -43,6 +43,7 @@ ResponseEditorData**				g_ResponseEditorData = (ResponseEditorData**)0x00A10E2C;
 UInt8*								g_Flag_ObjectWindow_MenuState = (UInt8*)0x00A0AF40;
 UInt8*								g_Flag_CellView_MenuState = (UInt8*)0x00A0AF48;
 CRITICAL_SECTION*					g_ExtraListCS = (CRITICAL_SECTION*)0x00A0DA80;
+TESSound**							g_FSTSnowSneak = (TESSound**)0x00A110F0;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -101,6 +102,7 @@ const UInt32						kTESForm_SetEditorID = 0x00497670;
 const UInt32						kTESObjectREFR_SetBaseForm = 0x005415A0;
 const UInt32						kTESObjectREFR_SetFlagPersistent = 0x0053F0D0;
 const UInt32						kExtraDataList_InitItem = 0x0045D740;
+const UInt32						kScript_SetText = 0x004FC6C0;
 
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
 const UInt32						kBaseExtraList_ModExtraOwnership = 0x0045E060;

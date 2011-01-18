@@ -61,15 +61,15 @@ String^ UserFunction::Describe()
 		int VarIdx = (int)Parameters->GetValue(ParamIdx);
 		if (VarIdx == -1)	break;
 
-		String^% Comment = VarList[VarIdx]->Comment, ^% Name = VarList[VarIdx]->Name;
-		Scratch += "\n\t" + ((Comment == "")?Name:Comment) + " [" + VariableInfo::TypeIdentifier[(int)VarList[VarIdx]->Type] + "]";
+		String^% Comment = VarList[VarIdx]->GetComment(), ^% Name = VarList[VarIdx]->GetName();
+		Scratch += "\n\t" + ((Comment == "")?Name:Comment) + " [" + VarList[VarIdx]->GetTypeIdentifier() + "]";
 		ParamIdx++;
 	}
 
 	Description += Name + "\n\nDescription: " + this->Description + "\n" + ParamIdx + " Parameters" + Scratch + "\n\n";
 	if (ReturnVar == -1)			Description += "Does not return a value";
 	else if (ReturnVar == -9)		Description += "Return Type: Ambiguous";
-	else							Description += "Return Type: " + VariableInfo::TypeIdentifier[(int)VarList[ReturnVar]->Type];
+	else							Description += "Return Type: " + VarList[ReturnVar]->GetTypeIdentifier();
 
 	return Description;
 }
@@ -336,47 +336,46 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 
 void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 {
-	try {
-	String^ Name, ^Desc, ^SH, ^PluginName;
-	int Count = 0, ReturnType = 0, CSCount = 0;
+	try 
+	{
+		String^ Name, ^Desc, ^SH, ^PluginName;
+		int Count = 0, ReturnType = 0, CSCount = 0;
 
-	for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr) {		
-		Name = gcnew String(Itr->longName);
-		if (!String::Compare(Name, "", true))	continue;
+		for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr) {		
+			Name = gcnew String(Itr->longName);
+			if (!String::Compare(Name, "", true))	continue;
 
-		const CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
+			const CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
 
-		if (CSCount < 370)													Desc = "[CS] ";				// 369 vanilla commands
-		else if (Info) {
-			PluginName = gcnew String(Info->name);
-			if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))			PluginName = "MenuQue";
-			else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))		PluginName = "Pluggy";
+			if (CSCount < 370)													Desc = "[CS] ";				// 369 vanilla commands
+			else if (Info) {
+				PluginName = gcnew String(Info->name);
+				if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))			PluginName = "MenuQue";
+				else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))		PluginName = "Pluggy";
 
-																			Desc = "[" + PluginName + " v" + Info->version + "] ";
+																				Desc = "[" + PluginName + " v" + Info->version + "] ";
+			}
+			else																Desc = "[OBSE] ";
+
+			if (!String::Compare(gcnew String(Itr->helpText), "", true))		Desc += "No description";
+			else																Desc += gcnew String(Itr->helpText);
+
+			if (!String::Compare(gcnew String(Itr->shortName), "", true))		SH = "None";
+			else																SH = gcnew String(Itr->shortName);
+
+			ReturnType = Data->GetCommandReturnType(Itr);
+			if (ReturnType == 6)												ReturnType = 0;
+
+			Enumerables->AddLast(gcnew CommandInfo(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType));
+
+			CSCount++;
+			Count++;
 		}
-		else																Desc = "[OBSE] ";
 
-		if (!String::Compare(gcnew String(Itr->helpText), "", true))		Desc += "No description";
-		else																Desc += gcnew String(Itr->helpText);
-
-		if (!String::Compare(gcnew String(Itr->shortName), "", true))		SH = "None";
-		else																SH = gcnew String(Itr->shortName);
-
-		ReturnType = Data->GetCommandReturnType(Itr);
-		if (ReturnType == 6)												ReturnType = 0;
-
-#ifdef SHADECASE
-	CmdName = String::Format("{0}", Char::ToLower(CmdName[0])) + CmdName->Substring(1);
-#endif
-
-		Enumerables->AddLast(gcnew CommandInfo(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType));
-
-		CSCount++;
-		Count++;
-	}
-
-	DebugPrint(String::Format("\tSuccessfully parsed {0} commands!", Count));
-	} catch (Exception^ E) {
+		DebugPrint(String::Format("\tSuccessfully parsed {0} commands!", Count));
+	} 
+	catch (Exception^ E)
+	{
 		DebugPrint("Exception raised!\n\tMessage: " + E->Message, true);
 	}
 }
@@ -469,31 +468,32 @@ void IntelliSenseDatabase::InitializeDatabaseUpdateTimer()
 
 // SYNTAX BOX
 
-SyntaxBox::SyntaxBox(ScriptEditor::Workspace^%	Parent)
+IntelliSenseThingy::IntelliSenseThingy(ScriptEditor::Workspace^% Parent)
 {
 	VarList = gcnew List<IntelliSenseItem^>();
 	ListContents = gcnew List<IntelliSenseItem^>();
 
-	if (Icons->Images->Count == 0) {
+	if (Icons->Images->Count == 0)
+	{
 		Icons->TransparentColor = Color::White;
-		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISEmpty"))));
-		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISCommand"))));
-		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISLocalVar"))));
-		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISRemoteVar"))));
-		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISUserF"))));
-		Icons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(Globals::ImageResources->GetObject("ISQuest"))));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemEmpty"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemCommand"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemLocalVar"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemRemoteVar"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemUDF"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemQuest"));
 	}
 
 	IntelliSenseList = gcnew ListView();
 	IntelliSenseList->View = View::Details;
 	IntelliSenseList->BorderStyle = BorderStyle::FixedSingle;
-//	IntelliSenseList->BackColor = Color::GhostWhite;
+	IntelliSenseList->BackColor = Color::GhostWhite;
 	IntelliSenseList->AutoSize = false;
 	IntelliSenseList->MultiSelect = false;
 	IntelliSenseList->SmallImageList = Icons;
-	IntelliSenseList->SelectedIndexChanged += gcnew EventHandler(this, &SyntaxBox::IntelliSenseList_SelectedIndexChanged);
-	IntelliSenseList->KeyDown += gcnew KeyEventHandler(this, &SyntaxBox::IntelliSenseList_KeyDown);
-	IntelliSenseList->MouseDoubleClick += gcnew MouseEventHandler(this, &SyntaxBox::IntelliSenseList_MouseDoubleClick);
+	IntelliSenseList->SelectedIndexChanged += gcnew EventHandler(this, &IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged);
+	IntelliSenseList->KeyDown += gcnew KeyEventHandler(this, &IntelliSenseThingy::IntelliSenseList_KeyDown);
+	IntelliSenseList->MouseDoubleClick += gcnew MouseEventHandler(this, &IntelliSenseThingy::IntelliSenseList_MouseDoubleClick);
 	IntelliSenseList->Location = Point(0, 0);
 	IntelliSenseList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
 	IntelliSenseList->LabelEdit = false;
@@ -517,7 +517,7 @@ SyntaxBox::SyntaxBox(ScriptEditor::Workspace^%	Parent)
 	LastOperation = Operation::e_Default;
 }
 
-void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
+void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll)
 {
 	if (!Enabled && !Force)		return;
 
@@ -541,7 +541,7 @@ void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 				}
 			}
 			for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
-				if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->RequiresParent) || Itr->GetType() == IntelliSenseItem::ItemType::e_Quest) {
+				if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) || Itr->GetType() == IntelliSenseItem::ItemType::e_Quest) {
 					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr)) {
 						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 						ListContents->Add(Itr);
@@ -566,7 +566,7 @@ void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 		if (InitAll) {
 			RemoteScript = Script::NullScript;
 			VariableInfo^ RefVar = GetLocalVar(Extract);
-			if (RefVar != nullptr && RefVar->Type == VariableInfo::VariableType::e_Ref) {									
+			if (RefVar != nullptr && RefVar->GetType() == VariableInfo::VariableType::e_Ref) {									
 				IsObjRefr = true;
 			} else if (!String::Compare(Extract, "player", true)) {
 				IsObjRefr = true;
@@ -642,7 +642,7 @@ void SyntaxBox::Initialize(SyntaxBox::Operation Op, bool Force, bool InitAll)
 	LastOperation = Op;
 }
 
-VariableInfo^ SyntaxBox::GetLocalVar(String^% Identifier)
+VariableInfo^ IntelliSenseThingy::GetLocalVar(String^% Identifier)
 {
 	for each (IntelliSenseItem^% Itr in VarList) {
 		if (!String::Compare(Itr->GetIdentifier(), Identifier, true)) {
@@ -652,7 +652,7 @@ VariableInfo^ SyntaxBox::GetLocalVar(String^% Identifier)
 	return nullptr;
 }
 
-void SyntaxBox::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
+void IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
 	if (IsVisible()) {
 		if (GetSelectedIndex() == -1)
@@ -665,13 +665,13 @@ void SyntaxBox::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^
 }
 
 
-void SyntaxBox::IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E)
+void IntelliSenseThingy::IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 {
 	if (E->KeyCode == Keys::Escape)
 		Hide();
 }
 
-void SyntaxBox::IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
+void IntelliSenseThingy::IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 {
 	if (GetSelectedIndex() == -1)
 		return;
@@ -679,7 +679,7 @@ void SyntaxBox::IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs
 	PickIdentifier();
 }
 
-void SyntaxBox::MoveIndex(SyntaxBox::Direction Direction)
+void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
 {
 	int SelectedIndex = GetSelectedIndex();
 	if (SelectedIndex == -1)		return;
@@ -707,44 +707,46 @@ void SyntaxBox::MoveIndex(SyntaxBox::Direction Direction)
 	}
 }
 
-void SyntaxBox::UpdateLocalVars()
+void IntelliSenseThingy::UpdateLocalVars()
 {
 	IntelliSenseDatabase::ParseScript(const_cast<String^>(ParentEditor->GetScriptText()), gcnew Boxer(this));
 }
 
-void SyntaxBox::PickIdentifier()
+void IntelliSenseThingy::PickIdentifier()
 {
 	String^ Result;
-	if (GetSelectedIndex() != -1) {
+	if (GetSelectedIndex() != -1) 
+	{
 		Result = ListContents[GetSelectedIndex()]->GetIdentifier();
 		Cleanup();
 		Hide();
 	}
 
-	try {
+	try
+	{
 		NativeWrapper::LockWindowUpdate(ParentEditor->GetEditorBoxHandle());
-		ParentEditor->DontHandleNextTextChange();
 		ParentEditor->SetCurrentToken(Result);
-		ParentEditor->FocusTextArea();
-	} finally {
+	} 
+	finally
+	{
 		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
 	}
 }
 
-void SyntaxBox::Hide()
+void IntelliSenseThingy::Hide()
 {
 	IntelliSenseList->Hide();
 	InfoTip->Hide(Control::FromHandle(IntelliSenseList->Parent->Handle));
 }
 
-void SyntaxBox::Cleanup()
+void IntelliSenseThingy::Cleanup()
 {
 	Hide();
 	IntelliSenseList->Items->Clear();
 	ListContents->Clear();
 }
 
-int	SyntaxBox::GetSelectedIndex()
+int	IntelliSenseThingy::GetSelectedIndex()
 {
 	int Result = -1;
 	for each (int SelectedIndex in IntelliSenseList->SelectedIndices) {
@@ -754,7 +756,7 @@ int	SyntaxBox::GetSelectedIndex()
 	return Result;
 }
 
-bool SyntaxBox::QuickView(String^ TextUnderMouse)
+bool IntelliSenseThingy::QuickView(String^ TextUnderMouse)
 {
 	IntelliSenseItem^ Item = GetLocalVar(TextUnderMouse);
 
@@ -768,9 +770,9 @@ bool SyntaxBox::QuickView(String^ TextUnderMouse)
 	}
 	if (Item != nullptr) {
 		Point TipLoc = ParentEditor->GetCaretLocation();
-		TipLoc.X += 42, TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 35;
+		TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 8;
 		InfoTip->ToolTipTitle = Item->GetTypeIdentifier();
-		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), TipLoc, 8000);
+		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->GetEditorBoxHandle()), TipLoc, 8000);
 		return true;
 	} else
 		return false;

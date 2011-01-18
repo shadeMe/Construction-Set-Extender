@@ -1,6 +1,5 @@
 #include "BatchEditor.h"
 #include "[Common]\ListViewUtilities.h"
-#include "[Common]\MiscUtilities.h"
 
 void BatchEditor::ApplyButton_Click(Object^ Sender, EventArgs^ E)
 {
