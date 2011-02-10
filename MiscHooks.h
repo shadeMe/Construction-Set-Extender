@@ -13,102 +13,124 @@ struct NopData;
 
 extern FormData*				UIL_FormData;
 extern UseListCellItemData*		UIL_CellData;
-extern bool						g_SaveAsRoutine;
-extern ModEntry::Data*			g_SaveAsBuffer;
 extern bool						g_QuickLoadToggle;
 extern bool						g_PluginPostLoad;
+extern HFONT					g_CSDefaultFont;
 
 
-extern MemHdlr					kSavePluginMasterEnum;
+extern MemHdlr					kSavePluginMasterEnum;// allows esps to be enumerated while filling the file header and provides support for the save as tool
 extern NopHdlr					kCheckIsActivePluginAnESM;// allows master files to be set as active plugins
 extern NopHdlr					kTESFormGetUnUsedFormID;
 extern MemHdlr					kLoadPluginsProlog;
 extern MemHdlr					kLoadPluginsEpilog;
-extern MemHdlr					kDataDialogPluginDescription;
-extern MemHdlr					kDataDialogPluginAuthor;// allows the Author and Description fields of an ESM file to be viewed and modified correctly
-extern MemHdlr					kSavePluginCommonDialog;
+extern MemHdlr					kDataDialogPluginDescription;// allows the Author and Description fields of an ESM file to be viewed and modified correctly
+extern MemHdlr					kDataDialogPluginAuthor;
+extern MemHdlr					kSavePluginCommonDialog;// allows the creation of ESM files in the CS
 extern NopHdlr					kResponseEditorMic;// nops out the call to the delinquent sound struct initializer sub, fixing a crash
 extern MemHdlr					kDataHandlerPostError;// fixes a crash when the CS attempts to load an unknown record/group
-extern MemHdlr					kExitCS;
-extern MemHdlr					kFindTextInit;
-extern MemHdlr					kCSInit;
-extern MemHdlr					kMessagePumpInit;
-extern MemHdlr					kUseInfoListInit;
+extern MemHdlr					kExitCS;// adds fast exit to the CS
+extern MemHdlr					kFindTextInit;// hooks the find text window for subclassing
+extern MemHdlr					kCSInit;// adds an one-time only hook to the CS main windows wndproc as an alternative to WinMain()
+extern MemHdlr					kMessagePumpInit;// prevents the premature calling of DoCSInitHook when the cs enters an idle state through a message loop
+extern MemHdlr					kUseInfoListInit;// replaces the redundant "Recreate facial animation files" menu item with "Use Info Listings"
 extern NopHdlr					kMissingTextureWarning;// removes the ostentatious warning
-extern NopHdlr					kTopicResultScriptResetNop;// fixes the bug that clears all flags and the result script of a selected response when adding a new topic
-extern MemHdlr					kTopicResultScriptReset;
-extern MemHdlr					kNPCFaceGen;
+extern MemHdlr					kTopicResultScriptReset;// fixes the bug that clears all flags and the result script of a selected response when adding a new topic
+extern MemHdlr					kNPCFaceGen;// fixes the facegen crash by getting the CS to correctly render the model at dialog init
 extern MemHdlr					kDefaultWaterTextureFix;// gets rid of the ugly pink default water texture
-extern MemHdlr					kDataDlgInit;
-extern MemHdlr					kQuickLoadPluginLoadHandlerPrologue;
+extern MemHdlr					kDataDlgInit;// hooks the data window for subclassing
+extern MemHdlr					kQuickLoadPluginLoadHandlerPrologue;// adds support for the quick loading of plugins (only loads the active plugin)
 extern MemHdlr					kQuickLoadPluginLoadHandler;
 extern MemHdlr					kMissingMasterOverride;// allows the loading of plugins with missing masters
-extern MemHdlr					kAssertOverride;
-extern MemHdlr					kCSWarningsDetour;
+extern MemHdlr					kAssertOverride;// fixes crashes from assertion calls in the code and log them to the console/log instead
+extern MemHdlr					kCSWarningsDetour;// whisks away CS warnings to the console
 extern MemHdlr					kTextureMipMapCheck;// allows the preview of textures with mipmaps
 extern NopHdlr					kAnimGroupNote;// removes the now unnecessary 'See editorWarnings file' anim group debug message
 extern MemHdlr					kUnnecessaryDialogEdits;// prevents unnecessary dialog edits in active plugins should its master have a DIAL record
-extern MemHdlr					kRenderWindowPopup;
+extern MemHdlr					kRenderWindowPopup;// adds the batch ref editor to the render window's popup menu
 extern MemHdlr					kUnnecessaryCellEdits;// prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record ### Figure out what the function's doing
-extern MemHdlr					kCustomCSWindow;
+extern MemHdlr					kCustomCSWindow;// keeps custom child windows of the CS main window from being closed on plugin load
 extern MemHdlr					kRaceDescriptionDirtyEdit;// prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.
-extern MemHdlr					kPluginSave;
+extern MemHdlr					kPluginSave;// provides a callback post-plugin load/save
 extern MemHdlr					kPluginLoad;
-extern MemHdlr					kAddListViewItem;
+extern MemHdlr					kAddListViewItem;// patches various routines to check for the 'Hide UnModified Forms' flag before populating controls with forms
 extern MemHdlr					kObjectListPopulateListViewItems;
 extern MemHdlr					kCellViewPopulateObjectList;
-extern MemHdlr					kDoorMarkerProperties;
-extern MemHdlr					kAutoLoadActivePluginOnStartup;
+extern MemHdlr					kDoorMarkerProperties;// allows the displaying of reference properties for door markers 
+extern MemHdlr					kAutoLoadActivePluginOnStartup;// temporary hook that allows the automatic loading of plugins on startup
 extern MemHdlr					kDataHandlerClearDataShadeMeRefDtor;
 extern MemHdlr					kCellObjectListShadeMeRefAppend;
-extern MemHdlr					kDeathToTheCloseOpenDialogsMessage;
+extern MemHdlr					kDeathToTheCloseOpenDialogsMessage;// gets rid of it
 extern MemHdlr					kTopicInfoCopyEpilog;// fixes the bug that causes the wrong topic info to be flagged as active when using the copy popup menu option
 extern MemHdlr					kTopicInfoCopyProlog;
 extern MemHdlr					kTESDialogPopupMenu;// hooks popup menu instantiation for new menu items
-extern MemHdlr					kResponseWindowLipButtonPatch;
-extern MemHdlr					kResponsWindowInit;
+extern MemHdlr					kResponseWindowLipButtonPatch;// adds suport for the 'fixed' lipsync tool
+extern MemHdlr					kResponseWindowInit;// hooks the response editor dialog for subclassing
+extern MemHdlr					kNumericEditorID;// displays a warning when editorIDs start with an integer
+extern MemHdlr					kDataHandlerConstructSpecialForms;// initializes easter egg forms
+extern MemHdlr					kResultScriptSaveForm;// prevents a crash that occurs when a result script has local variable declarations
+extern MemHdlr					kDataDlgZOrder;// prevents the data dlg from staying ontop of all other windows
+extern MemHdlr					kFormIDListViewInit;// changes the text of the OK and CANCEL buttons
+extern MemHdlr					kFormIDListViewSaveChanges;// prevents the OK button from closing the list view dialog
+extern MemHdlr					kFormIDListViewItemChange;// displays a confirmation message before comitting changes made to the active item when switching to another
+extern MemHdlr					kFormIDListViewSelectItem;// fixes a bug that prevents the correct selection of newly created list view items
+extern MemHdlr					kFormIDListViewDuplicateSelection;// increments the item index returned by TESDialog::LookupListViewItemByData when duplicating forms from the popup menu
+extern MemHdlr					kTESRaceCopyHairEyeDataInit;// adds buttons to the face data tab page of the TESRace formIDListView dialog
+extern MemHdlr					kTESRaceCopyHairEyeDataMessageHandler;// handles the WM_COMMAND messages sent by the newly added controls
+extern NopHdlr					kTESDialogSubwindowEnumChildCallback;// patches the TESDialogSubWindow::EnumChildWindowsCallback function to keep it from overwriting the subwindow object's container member
+extern MemHdlr					kTESObjectREFRDoCopyFrom;// patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source
 
 bool PatchMiscHooks(void);
 void __stdcall DoCSInitHook();
 void __stdcall DoExitCSHook(HWND MainWindow);
-SHORT __stdcall IsControlKeyDown(void);
+UInt32 __stdcall IsControlKeyDown(void);
 UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
 UInt32 __stdcall InitPathEditor(int ID, HWND Dialog);
 UInt32 __stdcall InitBSAViewer(UInt32 Filter);
 void __stdcall SendPingBack(UInt16 Message);
 
 
-void SavePluginMasterEnumHook(void);// allows esps to be enumerated while filling the file header and provides support for the save as tool
+void SavePluginMasterEnumHook(void);
 void LoadPluginsPrologHook(void);
 void LoadPluginsEpilogHook(void);
-void SavePluginCommonDialogHook(void);// allows the creation of ESM files in the CS
-void ExitCSHook(void);// adds fast exit to the CS
-void FindTextInitHook(void);// hooks the find text window for subclassing
-void CSInitHook(void);// adds a one-time only hook to the CS main windows wndproc as an alternative to WinMain()
-void MessagePumpInitHook(void);// prevents the premature calling of DoCSInitHook when the cs enters an idle state through a message loop
-void UseInfoListInitHook(void);// replaces the otiose "Recreate facial animation files" menu item with "Use Info Listings"
-void NPCFaceGenHook(void);// fixes the facegen crash by getting the CS to correctly render the model at dialog init
-void DataDlgInitHook(void);// hooks the data window for subclassing
-void QuickLoadPluginLoadHandlerPrologueHook(void);// quick loading of plugins (only loads the active plugin)
+void SavePluginCommonDialogHook(void);
+void ExitCSHook(void);
+void FindTextInitHook(void);
+void CSInitHook(void);
+void MessagePumpInitHook(void);
+void UseInfoListInitHook(void);
+void NPCFaceGenHook(void);
+void DataDlgInitHook(void);
+void QuickLoadPluginLoadHandlerPrologueHook(void);
 void QuickLoadPluginLoadHandlerHook(void);
-void AssertOverrideHook(void);// fixes crashes from assertion calls in the code and log them to the console/log instead
-void CSWarningsDetourHook(void);// whisks away CS warnings to the console
-void RenderWindowPopupPatchHook(void);// adds the batch ref editor to the render window's popup menu
-void CustomCSWindowPatchHook(void);// keeps custom child windows of the CS main window from being closed on plugin load
-void PluginSaveHook(void);// provides a callback post-plugin load/save
+void AssertOverrideHook(void);
+void CSWarningsDetourHook(void);
+void RenderWindowPopupPatchHook(void);
+void CustomCSWindowPatchHook(void);
+void PluginSaveHook(void);
 void PluginLoadHook(void);
-void AddListViewItemHook(void);// patches various routines to check for the 'Hide UnModified Forms' flag before populating controls with forms
+void AddListViewItemHook(void);
 void AddComboBoxItemHook(void);
 void AddListBoxItemHook(void);
 void ObjectListPopulateListViewItemsHook(void);
 void CellViewPopulateObjectListHook(void);
-void DoorMarkerPropertiesHook(void);// allows the displaying of reference properties for door markers 
-void AutoLoadActivePluginOnStartupHook(void);// temporary hook that allows the automatic loading of plugins on startup
+void DoorMarkerPropertiesHook(void);
+void AutoLoadActivePluginOnStartupHook(void);
 void DataHandlerClearDataShadeMeRefDtorHook(void);
 void CellObjectListShadeMeRefAppendHook(void);
 void TopicInfoCopyEpilogHook(void);
 void TESDialogPopupMenuHook(void);
 void ResponseWindowInitHook(void);
+void NumericEditorIDHook(void);
+void DataHandlerConstructSpecialFormsHook(void);
+void ResultScriptSaveFormHook(void);
+void FormIDListViewInitHook(void);
+void FormIDListViewItemChangeHook(void);
+void FormIDListViewSelectItemHook(void);
+void FormIDListViewDuplicateSelectionHook(void);
+void TESRaceCopyHairEyeDataInitHook(void);
+void TESRaceCopyHairEyeDataMessageHandlerHook(void);
+void FormIDListViewSaveChangesHook(void);
+void TESObjectREFRDoCopyFromHook(void);
 
 
 void ModelSelectorCommonDialogHook(void);
@@ -159,7 +181,7 @@ const UInt32			kAnimationSelectorCommonDialogCallAddr = 0x00446A30;
 const UInt32			kAnimationSelectorCommonDialogFilterType = 1;
 #define					kAnimationPathButtonID				 esi + 0x20
 
-const UInt32			kAnimationPostCommonDialogHookAddr = 0x0049D93C;
+const UInt32			kAnimationPostCommonDialogHookAddr = 0x0049D92B;
 const UInt32			kAnimationPostCommonDialogRetnAddr = 0x0049D943;
 
 // sounds
@@ -210,7 +232,16 @@ const UInt32			kSPTSelectorCommonDialogFilterType = 4;
 const UInt32			kSPTPostCommonDialogHookAddr = 0x0049EAE3;
 const UInt32			kSPTPostCommonDialogRetnAddr = 0x0049EAE9;
 
-#define e_FetchPath			0x32
+enum AssetSelectorResult
+{
+	e_Close = 0,
+	e_FileBrowser,
+	e_BSABrowser,
+	e_EditPath,
+	e_ClearPath
+};
+
+#define e_FetchPath		0x32
 
 // using macros to avoid tedious redefinitions 
 #define COMMON_DIALOG_SELECTOR_HOOK(name)  \

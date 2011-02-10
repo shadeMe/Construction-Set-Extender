@@ -189,14 +189,20 @@ DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, Stand
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + "define");
 			Name = LocalParser->Tokens[Index + 1];
-			Value = GetMultilineValue(TextReader, gcnew String(""), gcnew String(""));
+			Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
+			String^ Result = "";
 			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && OPTIONS->FetchSettingAsInt("AllowRedefinitions") == 0)
 				throw gcnew CSEGeneralException("Invalid redefinition.");
 			else if (IsNameValid(Name) == false)
 				throw gcnew CSEGeneralException("Invalid character in name.");
+			else if (!PreprocessorInstance->Preprocess(Value, Result, ErrorOutput))
+				throw gcnew CSEGeneralException("Errors encountered while preprocessing DEFINE block");
 			else
+			{
+				Value = Result;
 				PreprocessorInstance->RegisterDefineDirective(this);
+			}
 		}
 		else
 			throw gcnew CSEGeneralException("Token parser was in an invalid state.");
@@ -225,7 +231,7 @@ String^ DefineDirective::GetToken()
 	case EncodingType::e_SingleLine:
 		return Token;
 	case EncodingType::e_MultiLine:
-		return ObfuscateToCompiler(Token + "\n;{\n" + Value + "\n;}");
+		return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Value) + "\n" + SliceEnd + ";}";
 	default:
 		return Token;
 	}
@@ -391,7 +397,7 @@ EnumDirective::EnumDirective(String^ Token, StringReader^% TextReader, StandardO
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + "enum");
 
 			Name = LocalParser->Tokens[Index + 1];
-			Value = GetMultilineValue(TextReader, gcnew String(""), gcnew String(""));	
+			Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
 			String^ CondensedValue = "";
 			StringReader^ TextReader = gcnew StringReader(Value);
@@ -425,7 +431,7 @@ String^ EnumDirective::GetToken()
 	case EncodingType::e_SingleLine:
 		return Token;
 	case EncodingType::e_MultiLine:
-		return ObfuscateToCompiler(Token + "\n;{\n" + Value + "\n;}");
+		return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Value) + "\n" + SliceEnd + ";}";
 	default:
 		return Token;
 	}
@@ -904,8 +910,6 @@ IfDirective::IfDirective(String^ Token, StringReader^% TextReader, StandardOutpu
 		BaseCondition = "INVALID";
 		Block = "INVALID";
 		ValidationResult = false;
-		SliceStart = "";
-		SliceEnd = "";
 		ErrorOutput("Failed to parse IF directive in '" + Token + "' - " + E->Message);
 		ErrorFlag = true;
 	}	
@@ -1072,13 +1076,13 @@ bool Preprocessor::ScriptEditorDelegate(String^% Source, String^% Result, Standa
 	bool OperationResult = false;
 
 	RegisteredDefineDirectives->Clear();
-	ProcessStandardDefineDirectives(ErrorOutput);
+	ProcessStandardDirectives(ErrorOutput);
 	OperationResult = Preprocess(Source, Result, ErrorOutput);
 
 	return OperationResult;
 }
 
-void Preprocessor::ProcessStandardDefineDirectives(StandardOutputError^ ErrorOutput)
+void Preprocessor::ProcessStandardDirectives(StandardOutputError^ ErrorOutput)
 {
 	String^ Path = Globals::AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
 

@@ -93,7 +93,7 @@ IntelliSenseDatabase::IntelliSenseDatabase()
 	DatabaseUpdateThread->DoWork += gcnew DoWorkEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_DoWork);
 	DatabaseUpdateThread->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted);
 
-	DatabaseUpdateTimer = gcnew Timers::Timer(10 * 60 * 1000);	// init to 10 earth minutes
+	DatabaseUpdateTimer = gcnew Timers::Timer(UpdateThreadTimerInterval * 60 * 1000);	// init to 10 earth minutes
 	DatabaseUpdateTimer->Elapsed += gcnew Timers::ElapsedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed);
 	DatabaseUpdateTimer->AutoReset = true;
 	DatabaseUpdateTimer->SynchronizingObject = nullptr;
@@ -145,14 +145,14 @@ void IntelliSenseDatabase::PostUpdateDatabase(ParsedUpdateData^ Data)
 	Enumerables = Data->Enumerables;
 	
 	NativeWrapper::PrintToCSStatusBar(2, "IntelliSense database updated");
-	DebugPrint("IntelliSense database updated");
+//	DebugPrint("IntelliSense database updated");
 }
 
 void IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E)
 {
 	if (ForceUpdateFlag)
 	{
-		DatabaseUpdateTimer->Interval = 10 * 60 * 1000;
+		DatabaseUpdateTimer->Interval = UpdateThreadTimerInterval * 60 * 1000;
 		ForceUpdateFlag = false;
 	} 
 
@@ -171,11 +171,11 @@ void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sende
 	else if (E->Cancelled)
 		DebugPrint("Huh?! ISDatabaseUpdate thread was cancelled", true);
 	else if (E->Result == nullptr)
-		DebugPrint("Something seriously went wrong when parsing the loaded plugins!", true);
+		DebugPrint("Something seriously went wrong when parsing the datahandler!", true);
 	else 
 	{
 		PostUpdateDatabase(dynamic_cast<ParsedUpdateData^>(E->Result));
-		DebugPrint("ISDatabaseUpdate thread ended successfully!", false);
+//		DebugPrint("ISDatabaseUpdate thread ended successfully!", false);
 	}
 
 	if (E->Result == nullptr)
@@ -186,8 +186,9 @@ void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sende
 
 void IntelliSenseDatabase::UpdateDatabase()
 {
-	if (!DatabaseUpdateThread->IsBusy) {
-		DebugPrint("ISDatabaseUpdateThread thread started");
+	if (!DatabaseUpdateThread->IsBusy)
+	{
+//		DebugPrint("ISDatabaseUpdateThread thread started");
 		DatabaseUpdateThread->RunWorkerAsync();
 		NativeWrapper::PrintToCSStatusBar(2, "Updating IntelliSense database ...");
 	}
@@ -466,7 +467,7 @@ void IntelliSenseDatabase::InitializeDatabaseUpdateTimer()
 
 
 
-// SYNTAX BOX
+// INTELLISENSE THINGY
 
 IntelliSenseThingy::IntelliSenseThingy(ScriptEditor::Workspace^% Parent)
 {

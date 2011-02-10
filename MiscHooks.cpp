@@ -8,16 +8,16 @@
 #include "resource.h"
 #include "HallofFame.h"
 #include "CSInterop.h"
+#include "WindowManager.h"
 
 FormData*						UIL_FormData = new FormData();
 UseListCellItemData*			UIL_CellData = new UseListCellItemData();
 const char*						g_AssetSelectorReturnPath = NULL;
 const char*						g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 bool							g_QuickLoadToggle = false;
-static HFONT					g_CSDefaultFont = NULL;
-bool							g_SaveAsRoutine = false;
-ModEntry::Data*					g_SaveAsBuffer = NULL;
+HFONT							g_CSDefaultFont = NULL;
 bool							g_BitSwapBuffer = false;
+char							g_NumericIDWarningBuffer[0x10] = {0};
 
 extern FARPROC					g_WindowHandleCallAddr;
 
@@ -38,7 +38,6 @@ MemHdlr							kMessagePumpInit					(0x0041CF6F, MessagePumpInitHook, MakeUInt8Ar
 MemHdlr							kCSInit								(0x00419260, CSInitHook, MakeUInt8Array(5, 0xE8, 0xEB, 0xC5, 0x2C, 0), 5);
 MemHdlr							kUseInfoListInit					(0x00419833, UseInfoListInitHook, 0, 0);
 NopHdlr							kMissingTextureWarning				(0x0044F3AF, 14);
-NopHdlr							kTopicResultScriptResetNop			(0x004F49A0, 90);
 MemHdlr							kTopicResultScriptReset				(0x004F49A0, 0x004F49FA, 0, 0);
 MemHdlr							kNPCFaceGen							(0x004D76AC, NPCFaceGenHook, 0, 0);
 MemHdlr							kDefaultWaterTextureFix				(0x0047F792, (UInt32)0, 0, 0);
@@ -60,7 +59,7 @@ MemHdlr							kAddListViewItem					(0x004038F0, AddListViewItemHook, 0, 0);
 MemHdlr							kAddComboBoxItem					(0x00403540, AddComboBoxItemHook, 0, 0);
 MemHdlr							kObjectListPopulateListViewItems	(0x00413980, ObjectListPopulateListViewItemsHook, 0, 0);
 MemHdlr							kCellViewPopulateObjectList			(0x004087C0, CellViewPopulateObjectListHook, 0, 0);
-MemHdlr							kDoorMarkerProperties				(0x00429EA9, DoorMarkerPropertiesHook, 0, 0);
+MemHdlr							kDoorMarkerProperties				(0x00429EA1, DoorMarkerPropertiesHook, 0, 0);
 MemHdlr							kAutoLoadActivePluginOnStartup		(0x0041A26A, AutoLoadActivePluginOnStartupHook, MakeUInt8Array(6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0), 6);
 MemHdlr							kDataHandlerClearDataShadeMeRefDtor	(0x0047AE76, DataHandlerClearDataShadeMeRefDtorHook, 0, 0);
 MemHdlr							kCellObjectListShadeMeRefAppend		(0x00445128, CellObjectListShadeMeRefAppendHook, 0, 0);
@@ -70,43 +69,25 @@ MemHdlr							kTopicInfoCopyEpilog				(0x004F1280, TopicInfoCopyEpilogHook, 0, 0
 MemHdlr							kTESDialogPopupMenu					(0x004435A6, TESDialogPopupMenuHook, 0, 0);
 MemHdlr							kResponseWindowLipButtonPatch		(0x004EC0E7, 0x004EC0F7, 0, 0);
 MemHdlr							kResponseWindowInit					(0x004EBA81, ResponseWindowInitHook, 0, 0);
+MemHdlr							kNumericEditorID					(0x00497670, NumericEditorIDHook, 0, 0);
+MemHdlr							kDataHandlerConstructSpecialForms	(0x00481049, DataHandlerConstructSpecialFormsHook, 0, 0);
+MemHdlr							kResultScriptSaveForm				(0x004FD258, ResultScriptSaveFormHook, 0, 0);
+MemHdlr							kDataDlgZOrder						(0x0040C530, 0x0040C552, 0, 0);
+MemHdlr							kFormIDListViewInit					(0x00448A8A, FormIDListViewInitHook, 0, 0);
+MemHdlr							kFormIDListViewSaveChanges			(0x0044957A, FormIDListViewSaveChangesHook, 0, 0);
+MemHdlr							kFormIDListViewItemChange			(0x00448DEC, FormIDListViewItemChangeHook, 0, 0);
+MemHdlr							kFormIDListViewSelectItem			(0x00403B3D, FormIDListViewSelectItemHook, 0, 0);
+MemHdlr							kFormIDListViewDuplicateSelection	(0x004492AE, FormIDListViewDuplicateSelectionHook, 0, 0);
+MemHdlr							kTESRaceCopyHairEyeDataInit			(0x004E9735, TESRaceCopyHairEyeDataInitHook, 0, 0);
+MemHdlr							kTESRaceCopyHairEyeDataMessageHandler
+																	(0x004E8FE1, TESRaceCopyHairEyeDataMessageHandlerHook, 0, 0);
+NopHdlr							kTESDialogSubwindowEnumChildCallback
+																	(0x00404E69, 3);
+MemHdlr							kTESObjectREFRDoCopyFrom			(0x0054763D, TESObjectREFRDoCopyFromHook, 0, 0);
 
-
-
-void __stdcall DoTestHook(void* Ref3DData)
-{
-	DumpClass(Ref3DData, 6);
-}
-
-void _declspec(naked) TestHook(void)
-{
-	static const UInt32 kReturn = 0x00497460, kCall = 0x004F4670;
-	__asm
-	{
-		jmp		kReturn
-	}
-}
 
 bool PatchMiscHooks()
 {
-	COMMON_DIALOG_CANCEL_PATCH(Model);
-	COMMON_DIALOG_CANCEL_PATCH(Animation);
-	COMMON_DIALOG_CANCEL_PATCH(Sound);
-	COMMON_DIALOG_CANCEL_PATCH(Texture);
-	COMMON_DIALOG_CANCEL_PATCH(SPT);
-
-	COMMON_DIALOG_SELECTOR_PATCH(Model);
-	COMMON_DIALOG_SELECTOR_PATCH(Animation);
-	COMMON_DIALOG_SELECTOR_PATCH(Sound);
-	COMMON_DIALOG_SELECTOR_PATCH(Texture);
-	COMMON_DIALOG_SELECTOR_PATCH(SPT);
-
-	COMMON_DIALOG_POST_PATCH(Model);
-	COMMON_DIALOG_POST_PATCH(Animation);
-	COMMON_DIALOG_POST_PATCH(Sound);
-	COMMON_DIALOG_POST_PATCH(Texture);
-	COMMON_DIALOG_POST_PATCH(SPT);
-
 	kLoadPluginsProlog.WriteJump();
 	kLoadPluginsEpilog.WriteJump();
 	kSavePluginCommonDialog.WriteJump();
@@ -131,10 +112,7 @@ bool PatchMiscHooks()
 	kObjectListPopulateListViewItems.WriteJump();
 	kCellViewPopulateObjectList.WriteJump();
 	kTopicResultScriptReset.WriteJump();
-
-//	kDoorMarkerProperties.WriteJump();		### screws up dialog instantiation for no reason.
-	kDoorMarkerProperties.WriteUInt16(0x9090);
-
+	kDoorMarkerProperties.WriteJump();
 	kDataHandlerPostError.WriteUInt8(0xEB);	
 	kDataDialogPluginDescription.WriteUInt8(0xEB);
 	kDataDialogPluginAuthor.WriteUInt8(0xEB);
@@ -156,10 +134,42 @@ bool PatchMiscHooks()
 	kTESDialogPopupMenu.WriteJump();
 	kResponseWindowLipButtonPatch.WriteJump();
 	kResponseWindowInit.WriteJump();
+	kNumericEditorID.WriteJump();
+	kDataHandlerConstructSpecialForms.WriteJump();
+	kResultScriptSaveForm.WriteJump();
+	kDataDlgZOrder.WriteJump();
+	kFormIDListViewInit.WriteJump();
+	kFormIDListViewSaveChanges.WriteJump();
+	kFormIDListViewItemChange.WriteJump();
+	kFormIDListViewSelectItem.WriteJump();
+	kFormIDListViewDuplicateSelection.WriteJump();
+	kTESRaceCopyHairEyeDataInit.WriteJump();
+	kTESRaceCopyHairEyeDataMessageHandler.WriteJump();
+	kTESDialogSubwindowEnumChildCallback.WriteNop();
+	kTESObjectREFRDoCopyFrom.WriteJump();
 
-	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+	COMMON_DIALOG_CANCEL_PATCH(Model);
+	COMMON_DIALOG_CANCEL_PATCH(Animation);
+	COMMON_DIALOG_CANCEL_PATCH(Sound);
+	COMMON_DIALOG_CANCEL_PATCH(Texture);
+	COMMON_DIALOG_CANCEL_PATCH(SPT);
+
+	COMMON_DIALOG_SELECTOR_PATCH(Model);
+	COMMON_DIALOG_SELECTOR_PATCH(Animation);
+	COMMON_DIALOG_SELECTOR_PATCH(Sound);
+	COMMON_DIALOG_SELECTOR_PATCH(Texture);
+	COMMON_DIALOG_SELECTOR_PATCH(SPT);
+
+	COMMON_DIALOG_POST_PATCH(Model);
+	COMMON_DIALOG_POST_PATCH(Animation);
+	COMMON_DIALOG_POST_PATCH(Sound);
+	COMMON_DIALOG_POST_PATCH(Texture);
+	COMMON_DIALOG_POST_PATCH(SPT);
+
+
+	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 		DebugPrint("Couldn't create the Backup folder in Data directory");
-	}
+
 	OSVERSIONINFO OSInfo;
 	GetVersionEx(&OSInfo);
 	if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
@@ -169,7 +179,7 @@ bool PatchMiscHooks()
 }
 
 
-SHORT __stdcall IsControlKeyDown(void)
+UInt32 __stdcall IsControlKeyDown(void)
 {
 	return GetAsyncKeyState(VK_CONTROL);
 }
@@ -179,7 +189,7 @@ bool __stdcall InitTESFileSaveDlg()
 	return DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_TESFILE), *g_HWND_CSParent, (DLGPROC)TESFileDlgProc);
 }
 
-void _declspec(naked) SavePluginCommonDialogHook(void)
+void __declspec(naked) SavePluginCommonDialogHook(void)
 {
 	static const UInt32			kSavePluginCommonDialogESMRetnAddr = 0x00446D58;
 	static const UInt32			kSavePluginCommonDialogESPRetnAddr = 0x00446D69;
@@ -204,16 +214,18 @@ void __stdcall DoLoadPluginsPrologHook(void)
 	g_BitSwapBuffer = false;
 	ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
 
-	if (!ActiveFile ||
-		(ActiveFile->flags & ModEntry::Data::kFlag_IsMaster) == 0)
-		return;
-	else {
+	if (ActiveFile && (ActiveFile->flags & ModEntry::Data::kFlag_IsMaster))
+	{
 		g_BitSwapBuffer = true;
 		ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
 	}
+
+	sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GET_INI_STR("ShowNumericEditorIDWarning"));
+	static const char* Zero = "0";
+	g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue(Zero);
 }
 
-void _declspec(naked) LoadPluginsPrologHook(void)
+void __declspec(naked) LoadPluginsPrologHook(void)
 {
 	static const UInt32			kLoadPluginsPrologRetnAddr = 0x00485257;
 	static const UInt32			kLoadPluginsPrologCallAddr = 0x00431310;
@@ -230,7 +242,8 @@ void _declspec(naked) LoadPluginsPrologHook(void)
 
 void __stdcall DoLoadPluginsEpilogHook(void)
 {
-	if (g_BitSwapBuffer) {
+	if (g_BitSwapBuffer)
+	{
 		ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
 
 		if (!ActiveFile || ActiveFile->flags & ModEntry::Data::kFlag_IsMaster)
@@ -239,9 +252,11 @@ void __stdcall DoLoadPluginsEpilogHook(void)
 			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 1);
 		}
 	}
+
+	g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue(g_NumericIDWarningBuffer);
 }
 
-void _declspec(naked) LoadPluginsEpilogHook(void)
+void __declspec(naked) LoadPluginsEpilogHook(void)
 {
 	static const UInt32			kLoadPluginsEpilogRetnAddr = 0x004856B7;
 	static const UInt32			kLoadPluginsEpilogCallAddr = 0x0047DA60;
@@ -259,24 +274,28 @@ void _declspec(naked) LoadPluginsEpilogHook(void)
 
 bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
 {
-	if (g_SaveAsRoutine && !_stricmp(g_SaveAsBuffer->name, CurrentFile->name))
+	if ((CurrentFile->flags & ModEntry::Data::kFlag_Loaded) == 0)
 		return false;
 	else
 		return true;
 }
 
-void _declspec(naked) SavePluginMasterEnumHook(void)
+void __declspec(naked) SavePluginMasterEnumHook(void)
 {
 	static const UInt32			kSavePluginMasterEnumRetnPassAddr = 0x0047ECCF;
 	static const UInt32			kSavePluginMasterEnumRetnFailAddr = 0x0047ECEB;
 	__asm
 	{
+		pushad
 		push	ecx
 		call	DoSavePluginMasterEnumHook
-		test	eax, eax
+		test	al, al
 		jz		SKIP
+
+		popad
 		jmp		[kSavePluginMasterEnumRetnPassAddr]
 	SKIP:
+		popad
 		jmp		[kSavePluginMasterEnumRetnFailAddr]
 	}
 }
@@ -288,13 +307,15 @@ void __stdcall DoExitCSHook(HWND MainWindow)
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
 	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
-	CONSOLE->SaveINISettings();
 	g_INIManager->SaveSettingsToINI();
+
+	CONSOLE->Deinitialize();
 	CSIOM->Deinitialize();
+	
 	ExitProcess(0);
 }
 
-void _declspec(naked) ExitCSHook(void)
+void __declspec(naked) ExitCSHook(void)
 {
 	static const UInt32			kExitCSJumpAddr = 0x004B52C1;
 	__asm
@@ -338,95 +359,6 @@ void __declspec(naked) UseInfoListInitHook(void)
 	}
 }
 
-void PatchMenus()
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent),
-		  GameplayMenu = GetSubMenu(MainMenu, 5),
-		  ViewMenu = GetSubMenu(MainMenu, 2),
-		  FileMenu = GetSubMenu(MainMenu, 0),
-		  WorldMenu = GetSubMenu(MainMenu, 3);
-
-	MENUITEMINFO ItemGameplayUseInfo, 
-				ItemViewRenderWindow, 
-				ItemDataSaveAs, 
-				ItemWorldBatchEdit, 
-				ItemViewConsole, 
-				ItemViewModifiedRecords,
-				ItemFileCSEPreferences,
-				ItemViewDeletedRecords,
-				ItemWorldUnloadCell;
-	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
-	ItemGameplayUseInfo.fMask = MIIM_STRING;
-	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
-	ItemGameplayUseInfo.cch = 15;
-	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemGameplayUseInfo);
-
-	ItemViewRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the controlID for the button
-	ItemViewRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is already present in the wndproc
-	ItemViewRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
-	ItemViewRenderWindow.fState = MFS_CHECKED;
-	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemViewRenderWindow);	
-
-	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
-	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemDataSaveAs.wID = MAIN_DATA_SAVEAS;
-	ItemDataSaveAs.fState = MFS_ENABLED;
-	ItemDataSaveAs.dwTypeData = "Save As";
-	ItemDataSaveAs.cch = 7;
-	InsertMenuItem(FileMenu, 40127, FALSE, &ItemDataSaveAs);
-
-	ItemWorldBatchEdit.cbSize = sizeof(MENUITEMINFO);		
-	ItemWorldBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemWorldBatchEdit.wID = MAIN_WORLD_BATCHEDIT;
-	ItemWorldBatchEdit.fState = MFS_ENABLED;
-	ItemWorldBatchEdit.dwTypeData = "Batch Edit References";
-	ItemWorldBatchEdit.cch = 0;
-	InsertMenuItem(WorldMenu, 40194, FALSE, &ItemWorldBatchEdit);
-	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldBatchEdit);
-	
-	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemViewConsole.wID = MAIN_VIEW_CONSOLEWINDOW;
-	ItemViewConsole.fState = MFS_ENABLED|MFS_CHECKED;
-	ItemViewConsole.dwTypeData = "Console Window";
-	ItemViewConsole.cch = 0;
-	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
-
-	ItemViewModifiedRecords.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewModifiedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemViewModifiedRecords.wID = MAIN_VIEW_MODIFIEDRECORDS;
-	ItemViewModifiedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
-	ItemViewModifiedRecords.dwTypeData = "Hide Unmodified Forms";
-	ItemViewModifiedRecords.cch = 0;
-	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewModifiedRecords);
-
-	ItemFileCSEPreferences.cbSize = sizeof(MENUITEMINFO);		
-	ItemFileCSEPreferences.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemFileCSEPreferences.wID = MAIN_DATA_CSEPREFERENCES;
-	ItemFileCSEPreferences.fState = MFS_ENABLED;
-	ItemFileCSEPreferences.dwTypeData = "CSE Preferences";
-	ItemFileCSEPreferences.cch = 0;
-	InsertMenuItem(FileMenu, 40003, FALSE, &ItemFileCSEPreferences);
-
-	
-	ItemViewDeletedRecords.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewDeletedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemViewDeletedRecords.wID = MAIN_VIEW_DELETEDRECORDS;
-	ItemViewDeletedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
-	ItemViewDeletedRecords.dwTypeData = "Hide Deleted Forms";
-	ItemViewDeletedRecords.cch = 0;
-	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewDeletedRecords);
-
-
-	ItemWorldUnloadCell.cbSize = sizeof(MENUITEMINFO);		
-	ItemWorldUnloadCell.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemWorldUnloadCell.wID = MAIN_WORLD_UNLOADCELL;
-	ItemWorldUnloadCell.fState = MFS_ENABLED;
-	ItemWorldUnloadCell.dwTypeData = "Unload Current Cell";
-	ItemWorldUnloadCell.cch = 0;
-	InsertMenuItem(WorldMenu, 40426, FALSE, &ItemWorldUnloadCell);
-}
-
 void __stdcall DoCSInitHook()
 {
 	if (!g_PluginPostLoad) 
@@ -436,7 +368,7 @@ void __stdcall DoCSInitHook()
 											// remove hook rightaway to keep it from hindering the subclassing that follows
 	kCSInit.WriteBuffer();
 
-	PatchMenus();
+	InitializeWindowManager();
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
 	HallOfFame::Initialize(true);
 	CONSOLE->InitializeConsole();
@@ -444,23 +376,14 @@ void __stdcall DoCSInitHook()
 
 	(*g_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
 
-	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
-	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
-
 	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
 		LoadStartupPlugin();
 
 	if (g_INIManager->GET_INI_INT("OpenScriptWindowOnStartup"))
 	{
 		const char* ScriptID = g_INIManager->GET_INI_STR("StartupScriptEditorID");
-		if (strcmp(ScriptID, "") && GetFormByID(ScriptID)) {
-			g_EditorAuxScript = CS_CAST(GetFormByID(ScriptID), TESForm, Script);
-
-			tagRECT ScriptEditorLoc;
-			GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-			CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
-			g_EditorAuxScript = NULL;
-		}
+		if (strcmp(ScriptID, "") && GetFormByID(ScriptID))
+			SpawnCustomScriptEditor(ScriptID);
 		else
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
 	}
@@ -574,7 +497,16 @@ void __declspec(naked) AnimationPostCommonDialogHook(void)
 {
     __asm
     {
-		cmp		eax, e_FetchPath
+		mov		ebx, eax
+
+		mov     eax, [esi + 0x24]
+		push    ebx
+		push    eax
+		lea     ecx, [ebp - 0x14]
+		mov     byte ptr [ebp - 0x4], 1
+		call    kBSString_Set
+
+		cmp		ebx, e_FetchPath
 		jz		SELECT
 
 		lea		edx, [ebp]
@@ -736,11 +668,12 @@ void __stdcall DoDataDlgInitHook(HWND DataDialog)
 											NULL);
 
 	CheckDlgButton(DataDialog, DATA_QUICKLOAD, (!g_QuickLoadToggle ? BST_UNCHECKED : BST_CHECKED));
-	g_CSDefaultFont = (HFONT)SendMessage(GetDlgItem(DataDialog, 1), WM_GETFONT, NULL, NULL);
+
 	SendMessage(QuickLoadCheckBox, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 	SendMessage(StartupPluginBtn, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 
 	g_DataDlgOrgWindowProc = (WNDPROC)SetWindowLong(DataDialog, GWL_WNDPROC, (LONG)DataDlgSubClassProc);
+	SetWindowPos(DataDialog, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
 }
 
 void __declspec(naked) DataDlgInitHook(void)
@@ -858,12 +791,6 @@ void __declspec(naked) PluginLoadHook(void)
 	static const UInt32			kPluginLoadRetnAddr	=	0x0041BEFF;
     __asm
     {
-		pushad
-		call	FixDefaultWater
-		push	0
-		call	HallOfFame::Initialize
-		popad
-
 		call	InitializeCSWindows
 
 		pushad
@@ -991,21 +918,27 @@ void __declspec(naked) CellViewPopulateObjectListHook(void)
 
 void __declspec(naked) DoorMarkerPropertiesHook(void)
 {
-	static const UInt32			kDoorMarkerPropertiesPropertiesAddr = 0x00429EB1;
+	static const UInt32			kDoorMarkerPropertiesPropertiesAddr = 0x00429EAB;
 	static const UInt32			kDoorMarkerPropertiesTeleportAddr = 0x00429EE8;
 	__asm
 	{
-		pushad
-		call	IsControlKeyDown
-		test	al, al
-		jnz		TELEPORT
-		popad
+		mov		eax, [esi + 0x8]
+		shr		eax, 0x0E
+		test	al, 1
+		jnz		DOORMARKER	
 
-		mov		edx, [g_HWND_CSParent]
 		jmp		[kDoorMarkerPropertiesPropertiesAddr]
 	TELEPORT:
 		popad
 		jmp		[kDoorMarkerPropertiesTeleportAddr]
+	DOORMARKER:
+		pushad
+		call	IsControlKeyDown
+		test	eax, eax
+		jnz		TELEPORT
+		popad
+
+		jmp		[kDoorMarkerPropertiesPropertiesAddr]
 	}
 }
 
@@ -1083,12 +1016,16 @@ void __declspec(naked) TopicInfoCopyEpilogHook(void)
 }
 
 
-void __stdcall InsertFormListPopupMenuItems(HMENU Menu)
+void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 {
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SETFORMID, "Set FormID");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
+	if (SelectedForm->IsReference())
+	{
+		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_EDITBASEFORM, "Edit Base Form");
+	}
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 }
 void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
@@ -1099,6 +1036,7 @@ void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* Selec
 	case POPUP_MARKUNMODIFIED:
 	case POPUP_JUMPTOUSEINFOLIST:
 	case POPUP_UNDELETE:
+	case POPUP_EDITBASEFORM:
 		EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 		break;
 	default:
@@ -1112,6 +1050,7 @@ void __stdcall RemoveFormListPopupMenuItems(HMENU Menu)
 	DeleteMenu(Menu, POPUP_MARKUNMODIFIED, MF_BYCOMMAND);
 	DeleteMenu(Menu, POPUP_JUMPTOUSEINFOLIST, MF_BYCOMMAND);
 	DeleteMenu(Menu, POPUP_UNDELETE, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_EDITBASEFORM, MF_BYCOMMAND);
 	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 }
 
@@ -1142,6 +1081,7 @@ void __declspec(naked) TESDialogPopupMenuHook(void)
 		jz		SKIP
 
 		pushad
+		push	ebx
 		push	esi
 		call	InsertFormListPopupMenuItems
 		popad
@@ -1198,3 +1138,369 @@ void __declspec(naked) ResponseWindowInitHook(void)
 		jmp		[kResponseWindowInitHookRetnAddr]
 	}
 }
+
+void __stdcall DoNumericEditorIDHook(const char* EditorID)
+{
+	if (g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->GetValueAsInteger() && 
+		g_PluginPostLoad && 
+		strlen(EditorID) > 0 && 
+		isdigit((int)*EditorID))
+	{
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally acceptable by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
+		MessageBox(*g_HWND_CSParent, g_Buffer, "CSE", MB_OK|MB_ICONWARNING);
+	}
+}
+
+void __declspec(naked) NumericEditorIDHook(void)
+{
+	static UInt32 kNumericEditorIDHookRetnAddr = 0x00497676;
+	__asm
+	{
+		mov		eax, [esp + 0x4]
+		pushad
+		push	eax
+		call	DoNumericEditorIDHook
+		popad
+
+		xor		eax, eax
+		push	ebp
+		mov		ebp, esp
+		sub		esp, 0x10
+		jmp		[kNumericEditorIDHookRetnAddr]
+	}
+}
+
+void __declspec(naked) DataHandlerConstructSpecialFormsHook(void)
+{
+	static UInt32 kDataHandlerConstructSpecialFormsHookRetnAddr = 0x0048104E;
+	static UInt32 kDataHandlerConstructSpecialFormsHookCallAddr = 0x00505070;
+	__asm
+	{
+		pushad
+		call	FixDefaultWater
+		push	0
+		call	HallOfFame::Initialize
+		popad
+
+		call	[kDataHandlerConstructSpecialFormsHookCallAddr]
+		jmp		[kDataHandlerConstructSpecialFormsHookRetnAddr]
+	}
+}
+
+
+
+void __declspec(naked) ResultScriptSaveFormHook(void)
+{
+	static UInt32 kResultScriptSaveFormHookRetnAddr = 0x004FD260;
+	__asm
+	{
+		mov		eax, [ecx]
+		mov		edx, [eax + 0x8]
+		test	edx, edx
+		jz		FAIL
+
+		jmp		[kResultScriptSaveFormHookRetnAddr]
+	FAIL:
+		mov		eax, 0x004FD271
+		jmp		eax
+	}
+}
+
+void __stdcall DoFormIDListViewInitHook(HWND hWnd)
+{
+	if (hWnd != *g_HWND_QuestWindow)
+	{
+		SetWindowText(GetDlgItem(hWnd, 1), "Apply");
+		SetWindowText(GetDlgItem(hWnd, 2), "Close");
+	}
+}
+
+void __declspec(naked) FormIDListViewInitHook(void)
+{
+	static UInt32 kFormIDListViewInitHookRetnAddr = 0x00448A94;
+	static UInt32 kByteAddr = 0x00A0BE45;
+	__asm
+	{
+		pushad
+		push	esi
+		call	DoFormIDListViewInitHook
+		popad
+
+		push	5
+		push	esi
+		mov		[kByteAddr], 0
+
+		jmp		[kFormIDListViewInitHookRetnAddr]
+	}
+}
+
+UInt32 __stdcall DoFormIDListViewSaveChangesHookProlog(HWND Parent)
+{
+	return Parent != *g_HWND_QuestWindow;
+}
+
+void __stdcall DoFormIDListViewSaveChangesHookEpilog(HWND Parent)
+{
+	if (IsWindowEnabled(GetDlgItem(Parent, 1)))
+	{
+		TESForm* LocalCopy = TESDialog_GetDialogExtraLocalCopy(Parent);
+		TESForm* WorkingCopy = TESDialog_GetDialogExtraParam(Parent);
+
+		if (WorkingCopy)
+		{
+			thisVirtualCall(*((UInt32*)LocalCopy), 0x118, LocalCopy, Parent);						// GetDataFromDialog
+			if (thisVirtualCall(*((UInt32*)WorkingCopy), 0xBC, WorkingCopy, LocalCopy))				// CompareTo
+			{
+				if (thisVirtualCall(*((UInt32*)WorkingCopy), 0x104, WorkingCopy, LocalCopy))		// UpdateUsageInfo
+				{
+					thisVirtualCall(*((UInt32*)WorkingCopy), 0x94, LocalCopy, 1);					// SetFromActiveFile
+					thisVirtualCall(*((UInt32*)WorkingCopy), 0xB8, WorkingCopy, LocalCopy);			// CopyFrom
+				}
+			}
+		}
+	}
+}
+
+void __declspec(naked) FormIDListViewSaveChangesHook(void)
+{
+	static UInt32 kFormIDListViewSaveChangesHookQuestRetnAddr = 0x00449580;
+	static UInt32 kFormIDListViewSaveChangesHookExitRetnAddr = 0x00448BF0;	
+	__asm
+	{
+		push	esi
+		call	TESDialog_GetDialogExtraParam
+
+		pushad
+		push	esi
+		call	DoFormIDListViewSaveChangesHookProlog
+		test	eax, eax
+		jnz		NOTQUEST
+		popad
+
+		jmp		[kFormIDListViewSaveChangesHookQuestRetnAddr]
+	NOTQUEST:
+		popad
+
+		pushad
+		push	esi
+		call	DoFormIDListViewSaveChangesHookEpilog
+		popad
+
+		jmp		[kFormIDListViewSaveChangesHookExitRetnAddr]
+	}
+}
+
+int __stdcall DoFormIDListViewItemChangeHook(HWND Parent)
+{
+	return MessageBox(Parent, "Save Changes made to the active form?", "CSE", MB_YESNO);
+}
+
+void __declspec(naked) FormIDListViewItemChangeHook(void)
+{
+	static UInt32 kFormIDListViewItemChangeHookRetnAddr = 0x00448DF4;
+	__asm
+	{
+		pushad
+		push	esi
+		call	DoFormIDListViewItemChangeHook
+		cmp		eax, IDYES
+		jnz		REVERT
+		popad
+
+		mov		eax, [edi]
+		mov		edx, [eax + 0x104]
+
+		jmp		[kFormIDListViewItemChangeHookRetnAddr]
+	REVERT:
+		popad
+
+		mov		eax, 0x004494C9
+		jmp		eax
+	}
+}
+
+void __stdcall DoFormIDListViewSelectItemHook(HWND ListView, int ItemIndex)
+{
+	SetFocus(ListView);
+	ListView_SetItemState(ListView, ItemIndex, LVIS_FOCUSED | LVIS_SELECTED, 0x000F); 
+}
+
+void __declspec(naked) FormIDListViewSelectItemHook(void)
+{
+	static UInt32 kFormIDListViewSelectItemHookRetnAddr = 0x00403B8A;
+	__asm
+	{
+		pushad
+		push	ebx
+		push	esi
+		call	DoFormIDListViewSelectItemHook
+		popad
+
+		jmp		[kFormIDListViewSelectItemHookRetnAddr]
+	}
+}
+
+void __declspec(naked) FormIDListViewDuplicateSelectionHook(void)
+{
+	static UInt32 kFormIDListViewDuplicateSelectionHookRetnAddr = 0x004492B7;
+	__asm
+	{
+		add		eax, 1
+		push	eax
+		push	0x810
+		push	esi
+		call	edi
+
+		jmp		[kFormIDListViewDuplicateSelectionHookRetnAddr]
+	}
+}
+
+void __stdcall DoTESRaceCopyHairEyeDataInitHook(Subwindow* RaceDialogSubWindow, UInt8 Template)
+{
+	if (Template == 2)
+	{
+		HWND Parent = RaceDialogSubWindow->hDialog;
+
+		HWND CopyHairButton = CreateWindowEx(0, 
+												"BUTTON", 
+												"Copy Hair From Race", 
+												WS_CHILD|WS_VISIBLE|WS_TABSTOP,
+												RaceDialogSubWindow->position.x + 175 - 42, RaceDialogSubWindow->position.y + 285, 165, 25, 
+												Parent, 
+												(HMENU)RACE_COPYHAIR, 
+												GetModuleHandle(NULL), 
+												NULL);
+
+		HWND CopyEyesButton = CreateWindowEx(0, 
+												"BUTTON", 
+												"Copy Eyes From Race", 
+												WS_CHILD|WS_VISIBLE|WS_TABSTOP,
+												RaceDialogSubWindow->position.x + 175 + 130, RaceDialogSubWindow->position.y + 285, 165, 25,
+												Parent, 
+												(HMENU)RACE_COPYEYES, 
+												GetModuleHandle(NULL), 
+												NULL);
+
+		SendMessage(CopyHairButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
+		SendMessage(CopyEyesButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);	
+
+		thisCall(kLinkedListNode_NewNode, &RaceDialogSubWindow->controls, CopyHairButton);
+		thisCall(kLinkedListNode_NewNode, &RaceDialogSubWindow->controls, CopyEyesButton);
+	}
+}
+
+void __declspec(naked) TESRaceCopyHairEyeDataInitHook(void)
+{
+	static UInt32 kTESRaceCopyHairEyeDataInitHookRetnAddr = 0x004E973A;
+	static UInt32 kTESRaceCopyHairEyeDataInitHookCallAddr = 0x004E83B0;
+	__asm
+	{
+		call	[kTESRaceCopyHairEyeDataInitHookCallAddr]
+
+		pushad
+		push	ebx
+		push	edi
+		call	DoTESRaceCopyHairEyeDataInitHook
+		popad
+		jmp		[kTESRaceCopyHairEyeDataInitHookRetnAddr]
+	}
+}
+
+UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Identifier, TESRace* WorkingRace)
+{
+	switch (Identifier)
+	{
+	case RACE_COPYEYES:
+	case RACE_COPYHAIR:
+		TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), Dialog, (DLGPROC)TESComboBoxDlgProc, (LPARAM)kFormType_Race);
+		if (Selection)
+		{
+			TESRace* SelectedRace = CS_CAST(Selection, TESForm, TESRace);
+
+			if (WorkingRace)
+			{
+				int Count = 0;
+				if (Identifier == RACE_COPYEYES)
+				{
+					GenericNode<TESEyes>* Source = (GenericNode<TESEyes>*)&SelectedRace->eyes;
+					tList<TESEyes>* Destination = &WorkingRace->eyes;
+
+					Destination->RemoveAll();
+
+					for (;Source && Source->data; Source = Source->next, Count++)
+						thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
+					MessageBox(Dialog, g_Buffer, "CSE", MB_OK);
+				}
+				else if (Identifier == RACE_COPYHAIR)
+				{
+					GenericNode<TESHair>* Source = (GenericNode<TESHair>*)&SelectedRace->hairs;
+					tList<TESHair>* Destination = &WorkingRace->hairs;
+
+					Destination->RemoveAll();
+
+					for (;Source && Source->data; Source = Source->next, Count++)
+						thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
+					MessageBox(Dialog, g_Buffer, "CSE", MB_OK);
+				}
+			}
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+void __declspec(naked) TESRaceCopyHairEyeDataMessageHandlerHook(void)
+{
+	static UInt32 kTESRaceCopyHairEyeDataMessageHandlerHookRetnAddr = 0x004E8FF2;
+	static UInt32 kTESRaceCopyHairEyeDataMessageHandlerHookJumpAddr = 0x004E8E6D;
+	__asm
+	{
+		movzx	eax, di
+		add		eax, 0FFFFF78Ch
+		cmp		eax, 0x24 
+		ja		DEFAULT
+
+		jmp		[kTESRaceCopyHairEyeDataMessageHandlerHookRetnAddr]
+	DEFAULT:
+		pushad
+		push	ebp
+		push	edi
+		push	esi
+		call	DoTESRaceCopyHairEyeDataMessageHandlerHook
+		test	eax, eax
+		jnz		HANDLED
+		popad
+
+		jmp		[kTESRaceCopyHairEyeDataMessageHandlerHookJumpAddr]
+	HANDLED:
+		popad
+
+		xor		al, al
+		mov		ecx, 0x004E9D5B
+		jmp		ecx
+	}
+}
+
+void __declspec(naked) TESObjectREFRDoCopyFromHook(void)
+{
+	static UInt32 kTESObjectREFRDoCopyFromHookRetnAddr = 0x00547668;
+	__asm
+	{
+		pushad
+		push	ebx
+		mov		ecx, ebp
+		call	kExtraDataList_CopyList
+		popad
+
+		jmp		[kTESObjectREFRDoCopyFromHookRetnAddr]
+	}
+}
+
+
+
+

@@ -45,6 +45,7 @@ BSAViewer::BSAViewer()
 	OpenDialog->DefaultExt = "bsa";
 	OpenDialog->Filter = "Bethesda Archive|*.bsa";
 	OpenDialog->Title = "Select a TES 4 Oblivion BSA Archive";
+	OpenDialog->RestoreDirectory = true;
 
 	ToolBar->GripStyle = ToolStripGripStyle::Hidden;
 	ToolBar->Location = Point(0, 0);

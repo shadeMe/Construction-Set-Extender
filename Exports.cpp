@@ -170,6 +170,12 @@ __declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID)
 	else							return Form->IsReference();
 }
 
+__declspec(dllexport) void* LookupFormByEditorID(const char* EditorID)
+{
+	TESForm* Form = GetFormByID(EditorID);
+	return Form;
+}
+
 __declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex)
 {
 	Script* ThisScript = NULL;
@@ -234,14 +240,17 @@ __declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedE
 
 		Data.Name = ThisVariable->name.m_data;
 		Data.Type = ThisVariable->type;
-		if (Data.Type == 0) {
-			for (Script::RefListEntry* entry = &ScriptForm->refList; entry; entry = entry->next) {
-				if (entry->var && entry->var->name.m_data && !_stricmp(entry->var->name.m_data, Data.Name)) {
+		Data.Index = ThisVariable->idx;
+
+		if (Data.Type == 0)
+		{
+			for (Script::RefListEntry* entry = &ScriptForm->refList; entry; entry = entry->next)
+			{
+				if (entry->var && entry->var->varIdx == Data.Index)
 					Data.Type = 2;
-				}
 			}
 		}
-		Data.Index = ThisVariable->idx;
+
 		CLIWrapper::ScriptEditor::SetVariableListItemData(TrackedEditorIndex, &Data);
 
 		ThisNode = ThisNode->next;
@@ -256,15 +265,20 @@ __declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* Edito
 	if (!ScriptForm)				return false;
 
 	Script::VariableInfo* ScriptVar = ScriptForm->GetVariableByName(Data->Name);
-	if (ScriptVar) {
-		if (Data->Type == 2) {
+	if (ScriptVar)
+	{
+		if (Data->Type == 2)
+		{
 			Script::RefVariable* RefVar = ScriptForm->GetVariable(ScriptVar->idx);
-			if (RefVar) {
+			if (RefVar)
 				RefVar->varIdx = Data->Index;
-			} else return false;
+			else
+				return false;
 		}
 		ScriptVar->idx = Data->Index;
-	} else return false;
+	}
+	else
+		return false;
 
 	return true;
 }

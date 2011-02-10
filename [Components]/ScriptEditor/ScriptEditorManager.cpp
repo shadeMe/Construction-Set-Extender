@@ -267,7 +267,9 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 		if (MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult) == false)
 			break;
 
-		Itr->ValidateScript(PreprocessedScriptResult);
+		if (Itr->ValidateScript(PreprocessedScriptResult) == false)
+			return;
+
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		break;
 	case SaveWorkspaceOpType::e_SaveButDontCompile:
@@ -284,7 +286,9 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 		if (MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult) == false)
 			break;
 
-		Itr->ValidateScript(PreprocessedScriptResult);
+		if (Itr->ValidateScript(PreprocessedScriptResult) == false)
+			return;
+
 		NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Save);
 		NativeWrapper::ScriptEditor_SaveActivePlugin();
 		break;

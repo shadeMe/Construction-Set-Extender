@@ -58,10 +58,13 @@ protected:
 	EncodingType										Encoding;
 	bool												ErrorFlag;
 
+	String^												SliceStart;
+	String^												SliceEnd;
+
 	String^												GetMultilineValue(StringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
 	String^												ObfuscateToCompiler(String^% Token);
 public:
-	CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::e_Invalid), Encoding(EncodingType::e_Invalid), ErrorFlag(false) {}
+	CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::e_Invalid), Encoding(EncodingType::e_Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
 	
 	EncodingType										GetEncodingType() { return Encoding; }
 	DirectiveType										GetDirectiveType()	{ return Type; }
@@ -163,9 +166,6 @@ public ref class IfDirective : public CSEPreprocessorDirective
 	String^												BaseCondition;
 	String^												Block;
 	bool												ValidationResult;
-	String^												SliceStart;
-	String^												SliceEnd;
-
 
 	bool												CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
 public:
@@ -181,7 +181,7 @@ public ref class Preprocessor
 	
 	LinkedList<DefineDirective^>^						RegisteredDefineDirectives;
 
-	void												ProcessStandardDefineDirectives(StandardOutputError^ ErrorOutput);
+	void												ProcessStandardDirectives(StandardOutputError^ ErrorOutput);
 	CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, StringReader^ TextReader, StandardOutputError^ ErrorOutput);
 public:
 	static Preprocessor^%								GetSingleton();

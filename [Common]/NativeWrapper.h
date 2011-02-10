@@ -18,7 +18,8 @@ public:
 	static ScriptData*									FetchScriptFromForm(const char* EditorID);
 	[DllImport("Construction Set Extender.dll")] 
 	static bool											IsFormAnObjRefr(const char* EditorID);
-	
+	[DllImport("Construction Set Extender.dll")] 
+	static void*										LookupFormByEditorID(const char* EditorID);	
 
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message);

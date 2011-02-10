@@ -167,6 +167,21 @@ struct TESRenderWindowBuffer
 	float					unk14;				// 14 init to 0.0
 };
 
+// 20
+class Subwindow
+{
+public:
+	Subwindow();
+	~Subwindow();
+
+	GenericNode<HWND>     controls;		// 00
+    HWND                  hDialog;		// 08	handle of parent dialog window
+    HINSTANCE             hInstance;	// 0C	module instance of dialog template
+	POINT                 position;		// 10	position of subwindow withing parent dialog
+	HWND                  hContainer;	// 18	handle of container control (e.g. Tab Control)
+    HWND                  hSubwindow;	// 1C	handle of subwindow, if created
+};
+
 // A0
 class TESTopicInfo : public TESForm
 {
@@ -334,7 +349,10 @@ extern HWND*					g_HWND_CSParent;
 extern HWND*					g_HWND_AIPackagesDlg;
 extern HWND*					g_HWND_ObjectWindow_FormList;
 extern HWND*					g_HWND_ObjectWindow_Tree;
+extern HWND*					g_HWND_MainToolbar;
+extern HWND*					g_HWND_QuestWindow;
 
+extern TBBUTTON*				g_MainToolbarButtonArray;
 extern INISetting*				g_LocalMasterPath;
 extern char**					g_TESActivePluginName;
 extern UInt8*					g_WorkingFileFlag;
@@ -415,6 +433,18 @@ extern const _TESDialog_GetListViewSelectedItemLParam			TESDialog_GetListViewSel
 typedef TESForm*			(__cdecl *_TESForm_LookupByFormID)(UInt32 FormID);
 extern const _TESForm_LookupByFormID			TESForm_LookupByFormID;
 
+typedef TESForm*			(__cdecl *_TESDialog_GetDialogExtraParam)(HWND Dialog);
+extern const _TESDialog_GetDialogExtraParam		TESDialog_GetDialogExtraParam;
+
+typedef TESForm*			(__cdecl *_TESDialog_GetDialogExtraLocalCopy)(HWND Dialog);
+extern const _TESDialog_GetDialogExtraLocalCopy		TESDialog_GetDialogExtraLocalCopy;
+
+typedef void			(__cdecl *_TESDialog_ComboBoxPopulateWithRaces)(HWND ComboBox, bool NoneEntry);
+extern const _TESDialog_ComboBoxPopulateWithRaces		TESDialog_ComboBoxPopulateWithRaces;
+
+typedef void*			(__cdecl *_TESDialog_GetSelectedItemData)(HWND ComboBox);
+extern const _TESDialog_GetSelectedItemData		TESDialog_GetSelectedItemData;
+
 extern const void *			RTTI_TESCellUseList;
 
 extern const UInt32			kTESChildCell_LoadCell;
@@ -423,7 +453,7 @@ extern const UInt32			kTESCellUseList_GetUseListRefHead;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
 extern const UInt32			kScript_SaveResultScript;
 extern const UInt32			kScript_SaveScript;
-extern const UInt32			kLinkedListNode_NewNode;		// BSSimpleList
+extern const UInt32			kLinkedListNode_NewNode;		// BSTSimpleList
 extern const UInt32			kDataHandler_AddBoundObject;
 extern const UInt32			kTESForm_SetFormID;
 extern const UInt32			kTESForm_SetEditorID;
@@ -431,6 +461,11 @@ extern const UInt32			kTESObjectREFR_SetBaseForm;
 extern const UInt32			kTESObjectREFR_SetFlagPersistent;
 extern const UInt32			kExtraDataList_InitItem;
 extern const UInt32			kScript_SetText;
+extern const UInt32			kDataHandler_SortScripts;
+extern const UInt32			kTESScriptableForm_SetScript;
+extern const UInt32			kBSString_Set;
+extern const UInt32			kExtraDataList_CopyListForReference;
+extern const UInt32			kExtraDataList_CopyList;
 
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
 extern const UInt32			kBaseExtraList_ModExtraOwnership;
@@ -455,6 +490,7 @@ extern const UInt32			kVTBL_TESObjectMISC;
 extern const UInt32			kVTBL_TESObjectWEAP;
 extern const UInt32			kVTBL_TESObjectCONT;
 extern const UInt32			kVTBL_SpellItem;
+extern const UInt32			kVTBL_Script;
 
 extern const UInt32			kTESNPC_Ctor;
 extern const UInt32			kTESCreature_Ctor;
@@ -463,6 +499,8 @@ extern const UInt32			kTESObjectMISC_Ctor;
 extern const UInt32			kTESObjectWEAP_Ctor;
 extern const UInt32			kTESObjectCONT_Ctor;
 extern const UInt32			kTESObjectREFR_Ctor;
+extern const UInt32			kTESQuest_Ctor;
+extern const UInt32			kScript_Ctor;
 
 
 TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
@@ -475,6 +513,7 @@ void						LoadStartupPlugin();
 void						InitializeDefaultGMSTMap();
 void						LoadedMasterArchives();
 void						UnloadLoadedCell();
+void						SpawnCustomScriptEditor(const char* ScriptEditorID);
 
 class FormEnumerationWrapper
 {

@@ -110,10 +110,6 @@ void FillScriptDataPackage(Script* ScriptForm)
 	g_ScriptDataPackage->Flags = ScriptForm->flags;
 }
 
-
-
-
-#pragma region Hooks
 void __stdcall InstantiateTabContainer(void)
 {
 	if (g_EditorAuxHWND)		g_EditorAuxScript = (Script*)GetComboBoxItemData(GetDlgItem(g_EditorAuxHWND, 1226));
@@ -558,6 +554,4 @@ void __declspec(naked) MaxScriptSizeOverrideParseScriptLineHook(void)
 		jmp		kMaxScriptSizeOverrideParseScriptLineRetnAddr
 	}
 }
-
-#pragma endregion
 

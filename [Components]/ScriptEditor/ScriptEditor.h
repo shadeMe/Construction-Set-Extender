@@ -300,7 +300,7 @@ namespace ScriptEditor
 		IntPtr												GetEditorBoxHandle() { return TextEditor->GetHandle(); }
 		const String^										GetScriptText() { return TextEditor->GetText(); }
 		void												SetCurrentToken(String^% Replacement) { TextEditor->SetTokenAtCaretPos(Replacement); }
-		void												ValidateScript(String^% PreprocessedScriptText);
+		bool												ValidateScript(String^% PreprocessedScriptText);
 		void												Destroy();
 		UInt16												GetScriptType();
 		bool												PreprocessScriptText(String^% PreprocessorResult);

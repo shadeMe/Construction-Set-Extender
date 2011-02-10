@@ -13,9 +13,11 @@ Console::Console()
 	WindowHandle = NULL;
 	EditHandle = NULL;
 	DisplayState = false;
-	MessageBuffer.reserve(0x3000);
 	IndentLevel = 0;
 	DebugLog = NULL;
+	UpdateSignalFlag = false;
+
+	MessageBuffer.reserve(0x3000);
 
 	CSEInterfaceManager::RegisterConsoleCallback((CSEConsoleInterface::ConsolePrintCallback)&ConsoleCommandCallback);
 	g_ConsoleCommandTable.InitializeCommandTable();
@@ -23,9 +25,9 @@ Console::Console()
 
 Console* Console::GetSingleton()
 {
-	if (!Singleton) {
+	if (!Singleton)
 		Singleton = new Console();
-	}
+
 	return Singleton;
 }
 
@@ -47,6 +49,7 @@ void Console::InitializeConsole()
 	EditHandle = GetDlgItem(WindowHandle, EDIT_CONSOLE);
 	g_ConsoleEditControlOrgWindowProc = (WNDPROC)SetWindowLong(EditHandle, GWL_WNDPROC, (LONG)ConsoleEditControlSubClassProc);
 	g_ConsoleCmdBoxOrgWindowProc = (WNDPROC)SetWindowLong(GetDlgItem(WindowHandle, EDIT_CMDBOX), GWL_WNDPROC, (LONG)ConsoleCmdBoxSubClassProc);
+	SendDlgItemMessage(WindowHandle, EDIT_CMDBOX, WM_INITDIALOG, NULL, NULL);
 
 	Edit_LimitText(EditHandle, sizeof(int));
 
@@ -54,6 +57,13 @@ void Console::InitializeConsole()
 		DisplayState = true;
 
 	ToggleDisplayState();
+	SetTimer(EditHandle, CONSOLE_UPDATETIMER, CONSOLE_UPDATEPERIOD, NULL);
+}
+
+void Console::Deinitialize()
+{
+	SaveINISettings();
+	KillTimer(EditHandle, CONSOLE_UPDATETIMER);
 }
 
 bool Console::ToggleDisplayState()
@@ -62,14 +72,17 @@ bool Console::ToggleDisplayState()
 
 	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 					
-	if (IsHidden()) {
+	if (IsHidden())
+	{
 		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
 		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());
+
 		ShowWindow(WindowHandle, SW_SHOWNA);
 		CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_CHECKED);
-		
 		DisplayState = true;
-	} else {
+	}
+	else
+	{
 		ShowWindow(WindowHandle, SW_HIDE);
 		CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_UNCHECKED);
 		DisplayState = false;
@@ -111,30 +124,32 @@ void Console::SaveINISettings()
 
 void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 {
-	std::string Message(Prefix);
+	if (MessageBuffer.length() > 16000)
+		MessageBuffer.clear();
 
-	for (int i = 0; i < IndentLevel; i++) {
+	std::string Message = "[";
+	Message += std::string(Prefix) + "]\t";
+
+	for (int i = 0; i < IndentLevel; i++)
 		Message += "\t";
-	}
 
 	Message += std::string(MessageStr);
-	if (Message.rfind("\r\n") != Message.length() - 2)
-		MessageBuffer += Message + "\r\n";
-	else
-		MessageBuffer += Message;
 
-	if (IsLogInitalized()) {
+	if (IsLogInitalized())
+	{
 		fputs(Message.c_str(), DebugLog);
 		fputs("\n", DebugLog);
 		fflush(DebugLog);
 	}
 
-	if (IsConsoleInitalized() && !IsHidden()) {
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, FALSE, 0);
-		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, EM_LINESCROLL, 0, MessageBuffer.length());	
-		SendDlgItemMessage(WindowHandle, EDIT_CONSOLE, WM_SETREDRAW, TRUE, 0);
+	if (Message.rfind("\r\n") != Message.length() - 2)
+		MessageBuffer += Message + "\r\n";
+	else
+		MessageBuffer += Message;
 
+	if (IsConsoleInitalized() && !IsHidden())
+	{
+		UpdateSignalFlag = true;
 		CSEInterfaceManager::HandleConsoleCallback(MessageStr, Prefix.c_str());
 	}	
 
@@ -150,22 +165,22 @@ void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 	switch (Source)
 	{
 	case e_CSE:
-		Prefix += "[CSE]\t";
+		Prefix += "CSE";
 		break;
 	case e_CS:
-		Prefix += "[CS]\t";
+		Prefix += "CS";
 		break;
 	case e_BE:
-		Prefix += "[BE]\t";
+		Prefix += "BE";
 		break;
 	case e_UL:
-		Prefix += "[UL]\t";
+		Prefix += "UL";
 		break;
 	case e_SE:
-		Prefix += "[SE]\t";
+		Prefix += "SE";
 		break;
 	case e_BSA:
-		Prefix += "[BSA]\t";
+		Prefix += "BSA";
 		break;
 	}
 	PrintMessage(Prefix, g_Buffer);
@@ -175,20 +190,21 @@ void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
 {
 	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
 
-	PrintMessage(std::string("[" + std::string(Prefix) + "]\t"), g_Buffer);
+	PrintMessage(std::string(Prefix), g_Buffer);
 }
 
 void Console::LogMessage(const char* Prefix, const char* MessageStr)
 {
-	PrintMessage(std::string("[" + std::string(Prefix) + "]\t"), MessageStr);
+	PrintMessage(std::string(Prefix), MessageStr);
 }
 
 void Console::Clear()
 {
 	if (IsConsoleInitalized() == 0)	return;
 
+	Edit_SetText(EditHandle, 0);
 	MessageBuffer.clear();
-	Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
+	SendDlgItemMessage(WindowHandle, EDIT_CMDBOX, CONSOLECMDBOX_CLEARCOMMANDSTACK, NULL, NULL);
 }
 
 UInt32 Console::Indent()

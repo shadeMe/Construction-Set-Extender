@@ -162,8 +162,9 @@ void ScriptEditorTextEditor::LoadFileFromDisk(String^ Path, UInt32 AllocatedInde
 {
 	try
 	{
-		PreventTextChangedEvent();
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
 		TextField->LoadFile(Path, RichTextBoxStreamType::PlainText);
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 		DebugPrint("Loaded text from " + Path + " to editor " + AllocatedIndex);
 	} 
 	catch (Exception^ E)
@@ -242,7 +243,7 @@ UInt32 ScriptEditorTextEditor::FindReplace(ScriptEditorInterface::FindReplaceOpe
 
 			if (Operation == ScriptEditorInterface::FindReplaceOperation::e_Replace)
 			{
-				PreventTextChangedEvent();
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 				TextField->SelectionStart = Position;
 				TextField->SelectionLength = Query->Length;
 				TextField->SelectedText = Replacement;
@@ -277,21 +278,29 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 	{
 		String^ Line = TextField->Text->Substring(LineStartIdx, LineEndIdx - LineStartIdx);
 		LocalParser->Tokenize(Line, false);
-		if (!LocalParser->Valid)
-			return;
 
-		PreventTextChangedEvent();
-		TextField->SelectionStart = LineStartIdx + LocalParser->Indices[0];
-		if (Line->IndexOf(";") == LocalParser->Indices[0])				// is a comment
-		{			
-			TextField->SelectionLength = 1;
-			TextField->SelectedText = "";
-		}
-		else															// not a comment
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+		if (!LocalParser->Valid)
 		{
 			TextField->SelectionStart = LineStartIdx;
 			TextField->SelectionLength = 0;
 			TextField->SelectedText = ";";
+		}			
+		else
+		{
+			TextField->SelectionStart = LineStartIdx + LocalParser->Indices[0];
+
+			if (Line->IndexOf(";") == LocalParser->Indices[0])				// is a comment
+			{			
+				TextField->SelectionLength = 1;
+				TextField->SelectedText = "";
+			}
+			else															// not a comment
+			{
+				TextField->SelectionStart = LineStartIdx;
+				TextField->SelectionLength = 0;
+				TextField->SelectedText = ";";
+			}
 		}
 	}
 	else																// comment each line
@@ -314,7 +323,7 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 			LocalParser->Tokenize(ReadLine, false);
 			if (!LocalParser->Valid)
 			{
-				Result += ReadLine + "\n";
+				Result += ";" + ReadLine + "\n";
 				ReadLine = CommentParser->ReadLine();
 				continue;
 			}
@@ -340,7 +349,7 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 			Count++;
 		}
 
-		PreventTextChangedEvent();
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 		TextField->SelectionStart = LineStartIdx;
 		TextField->SelectionLength = LineEndIdx - LineStartIdx;
 		TextField->SelectedText = Result;
@@ -721,7 +730,7 @@ bool ScriptEditorTextEditor::PerformTabIndent(void)
 				Result += "\n";
 		}
 
-		PreventTextChangedEvent();
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 		TextField->SelectionStart = LineStartIdx;
 		TextField->SelectionLength = LineEndIdx - LineStartIdx;
 		TextField->SelectedText = Result;
@@ -841,9 +850,9 @@ void ScriptEditorTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 	else
 	{
 		SetModifiedStatus(true);
-		if (PreventTextChangedEventFlag)
-			PreventTextChangedEventFlag = false;
-		else
+		if (PreventTextChangedEventFlag == PreventTextChangeFlagState::e_AutoReset)
+			PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
+		else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::e_Disabled)
 		{
 			if (!GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
 			{
@@ -893,7 +902,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 				case  Keys::OemPeriod:
 					{
 						IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Dot, false, true);
-						PreventTextChangedEvent();
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 						break;
 					}
 				case Keys::Space:
@@ -903,12 +912,12 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 						if (!String::Compare(CommandName, "call", true))
 						{
 							IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Call, false, true);
-							PreventTextChangedEvent();
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 						} 
 						else if (!String::Compare(CommandName, "let", true) || !String::Compare(CommandName, "set", true)) 
 						{
 							IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Assign, false, true);
-							PreventTextChangedEvent();
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 						}
 						else 
 							IntelliSenseBox->LastOperation = IntelliSenseThingy::Operation::e_Default;
@@ -955,7 +964,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 				E->Handled = true;
 			}
 
-			PreventTextChangedEvent();
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 		}
 		break;	
 	case Keys::Q:					
@@ -1001,7 +1010,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	case Keys::Tab:
 		if (IntelliSenseBox->IsVisible())
 		{
-			PreventTextChangedEvent();
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 			IntelliSenseBox->PickIdentifier();
 			FocusTextArea();
 
@@ -1049,7 +1058,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	case Keys::Z:
 	case Keys::Y:
 		if (E->Modifiers == Keys::Control)
-			PreventTextChangedEvent();
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 		break;
 	}
 
@@ -1151,7 +1160,7 @@ ScriptEditorTextEditor::ScriptEditorTextEditor(UInt32 LinesToScroll, Font^ Font,
 	LineChangeBuffer = 0;
 	InitializingFlag = false;
 	ModifiedFlag = false;
-	PreventTextChangedEventFlag = false;
+	PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
 	KeyToPreventHandling = Keys::None;
 
 	FindReplaceResultIndicators = gcnew List<PictureBox^>();

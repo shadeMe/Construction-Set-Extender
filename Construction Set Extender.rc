@@ -132,6 +132,22 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 26
     END
+
+    DLG_GLOBALSCRIPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 102
+    END
+
+    DLG_TESCOMBOBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 211
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -202,6 +218,31 @@ BEGIN
     CTEXT           "Turn around while CSE does its magic",IDC_STATIC,7,7,92,20,WS_BORDER,WS_EX_TRANSPARENT
 END
 
+DLG_GLOBALSCRIPT DIALOGEX 0, 0, 220, 109
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Create Global Script"
+FONT 12, "Consolas", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",BTN_OK,51,90,50,14,NOT WS_TABSTOP
+    PUSHBUTTON      "Cancel",BTN_CANCEL,117,90,50,14,NOT WS_TABSTOP
+    EDITTEXT        EDIT_QUESTID,120,12,81,15,ES_AUTOHSCROLL
+    EDITTEXT        EDIT_DELAY,120,60,81,15,ES_AUTOHSCROLL
+    EDITTEXT        EDIT_SCRIPTID,120,36,81,15,ES_AUTOHSCROLL
+    LTEXT           "Container Quest EditorID",IDC_STATIC,12,12,102,18
+    LTEXT           "Quest Delay Time",IDC_STATIC,12,60,102,18
+    LTEXT           "Script EditorID (Leave blank to use Quest ID)",IDC_STATIC,12,36,102,18
+END
+
+DLG_TESCOMBOBOX DIALOGEX 0, 0, 218, 55
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Select ComboBox Item"
+FONT 10, "Consolas", 700, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",BTN_OK,55,34,50,14
+    PUSHBUTTON      "Cancel",BTN_CANCEL,111,34,50,14
+    COMBOBOX        COMBO_FORMLIST,17,16,183,70,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -216,6 +257,29 @@ BEGIN
         MENUITEM "Always on top",               CONSOLEMENU_ALWAYSONTOP
         MENUITEM "Hide Console",                CONSOLEMENU_HIDECONSOLE
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+DLG_TESCOMBOBOX DLGINIT
+BEGIN
+    COMBO_FORMLIST, 0x403, 2, 0
+0x0041, 
+    COMBO_FORMLIST, 0x403, 2, 0
+0x0042, 
+    COMBO_FORMLIST, 0x403, 2, 0
+0x0043, 
+    COMBO_FORMLIST, 0x403, 2, 0
+0x0044, 
+    COMBO_FORMLIST, 0x403, 2, 0
+0x0045, 
+    COMBO_FORMLIST, 0x403, 2, 0
+0x0046, 
+    0
 END
 
 #endif    // English (U.S.) resources

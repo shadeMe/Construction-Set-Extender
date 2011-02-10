@@ -35,6 +35,8 @@ public ref struct Boxer
 public ref class IntelliSenseDatabase								
 {
 	static IntelliSenseDatabase^						Singleton = nullptr;
+	static UInt32										UpdateThreadTimerInterval = 10;		// in minutes
+
 	IntelliSenseDatabase();
 
 	ref struct ParsedUpdateData

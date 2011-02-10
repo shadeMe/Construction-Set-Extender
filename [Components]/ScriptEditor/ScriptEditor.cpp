@@ -1541,7 +1541,7 @@ namespace ScriptEditor
 			{
 				TextEditor->SaveScriptToDisk(Path, PathIncludesFileName, EditorTab->Text, AllocatedIndex);
 			}
-			void Workspace::ValidateScript(String^% PreprocessedScriptText)
+			bool Workspace::ValidateScript(String^% PreprocessedScriptText)
 			{
 				StringReader^ ValidateParser = gcnew StringReader(PreprocessedScriptText);
 				String^ ReadLine = ValidateParser->ReadLine();
@@ -1550,6 +1550,8 @@ namespace ScriptEditor
 
 				ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
 				ClearErrorsItemsFromMessagePool();
+
+				bool Result = true;
 
 
 				while (ReadLine != nullptr) 
@@ -1584,7 +1586,10 @@ namespace ScriptEditor
 						break;
 					case ScriptParser::TokenType::e_Variable:
 						if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_Invalid)
+						{
 							AddMessageToPool(MessageType::e_Error, ScriptTextParser->CurrentLineNo, "Variable '" + SecondToken + "' declared inside a script block.");
+							Result = false;
+						}
 						if (ScriptTextParser->FindVariable(SecondToken)->IsValid())
 							AddMessageToPool(MessageType::e_Warning, ScriptTextParser->CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'.");
 						else
@@ -1659,24 +1664,11 @@ namespace ScriptEditor
 						}
 					}
 
-					Pos = 0;
-					String^ CurrentToken = "";
-					String^ LastToken = "";
-
-					for each (Char Itr in ScriptTextParser->Delimiters) {
-						CurrentToken = ScriptTextParser->Tokens[Pos];
-
-						if (Char::IsDigit(CurrentToken[0]) && ScriptTextParser->HasAlpha(Pos))
-							AddMessageToPool(MessageType::e_Warning, ScriptTextParser->CurrentLineNo, "Identifier '" + CurrentToken + "' starts with an integer. Can cause BadThings™.");
-
-						Pos++;
-						LastToken = CurrentToken;
-					}
-
 					ReadLine = ValidateParser->ReadLine();
 				}
 
-				for each (ScriptParser::VariableInfo^% Itr in ScriptTextParser->Variables) {
+				for each (ScriptParser::VariableInfo^% Itr in ScriptTextParser->Variables)
+				{
 					if (Itr->RefCount == 0)
 					{
 						if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest || OPTIONS->FetchSettingAsInt("SuppressRefCountForQuestScripts") == 0)
@@ -1684,8 +1676,21 @@ namespace ScriptEditor
 					}
 				}
 
+				if (NativeWrapper::LookupFormByEditorID((gcnew CStringWrapper(ScriptTextParser->ScriptName))->String()) && String::Compare(ScriptEditorID, ScriptTextParser->ScriptName, true) != 0)
+				{
+					if (MessageBox::Show("Script name '" + ScriptTextParser->ScriptName + "' is already used by another form. Proceeding with compilation will modify the script's editorID.\n\nDo you want to proceed?",
+						"CSE Editor",
+						MessageBoxButtons::YesNo,
+						MessageBoxIcon::Exclamation) == DialogResult::No)
+					{
+						Result = false;
+					}
+				}
+
 				if (MessageList->Items->Count && MessageList->Visible == false)
 					ToolBarMessageList->PerformClick();
+
+				return Result;
 			}
 			void Workspace::Destroy()
 			{
@@ -2197,7 +2202,8 @@ namespace ScriptEditor
 			void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 			{
 				try {
-					TextEditor->SetSelectedText(Clipboard::GetText());
+					if (Clipboard::GetText() != "")
+						TextEditor->SetSelectedText(Clipboard::GetText());
 				} catch (Exception^ E) {
 					DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 				}
@@ -2389,6 +2395,7 @@ namespace ScriptEditor
 				SaveManager->DefaultExt = "*.txt";
 				SaveManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
 				SaveManager->FileName = EditorTab->Text;
+				SaveManager->RestoreDirectory = true;
 
 				if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0) {
 					SaveScriptToDisk(SaveManager->FileName, true);
@@ -2413,6 +2420,7 @@ namespace ScriptEditor
 
 				LoadManager->DefaultExt = "*.txt";
 				LoadManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
+				LoadManager->RestoreDirectory = true;
 
 				if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0) {
 					LoadFileFromDisk(LoadManager->FileName);		
@@ -2425,6 +2433,7 @@ namespace ScriptEditor
 				LoadManager->DefaultExt = "*.txt";
 				LoadManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
 				LoadManager->Multiselect = true;
+				LoadManager->RestoreDirectory = true;
 
 				if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0) {
 					for each (String^ Itr in LoadManager->FileNames)

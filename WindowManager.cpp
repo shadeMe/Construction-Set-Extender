@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "CSInterop.h"
+#include <stack>
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -133,24 +134,30 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			if (!(*g_dataHandler)->unk8B8.activeFile)		break;
 
 			*g_WorkingFileFlag = 0;
-			g_SaveAsRoutine = true;
-			char FileName[0x104];
-			if (SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->sData, 0, FileName, 0x104)) {
-				g_SaveAsBuffer = (*g_dataHandler)->unk8B8.activeFile;
 
-				g_SaveAsBuffer->flags &= ~(1 << 3);			// clear active flag
+			char FileName[0x104];
+			if (SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->sData, 0, FileName, 0x104))
+			{
+				ModEntry::Data* SaveAsBuffer = (*g_dataHandler)->unk8B8.activeFile;
+
+				ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Active, false);
+				ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Loaded, false);
+
 				(*g_dataHandler)->unk8B8.activeFile = NULL;
 
-				if (SendMessage(*g_HWND_CSParent, 0x40C, NULL, (LPARAM)FileName)) {
+				if (SendMessage(*g_HWND_CSParent, 0x40C, NULL, (LPARAM)FileName))
+				{
 					sub_4306F0(false);
-					g_SaveAsBuffer->flags &= ~(1 << 2);		// clear loaded flag
-				} else {
-					(*g_dataHandler)->unk8B8.activeFile = g_SaveAsBuffer;
-					g_SaveAsBuffer->flags |= 1 << 3;
+				}
+				else
+				{
+					(*g_dataHandler)->unk8B8.activeFile = SaveAsBuffer;
+					ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Active, true);
+					ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Loaded, true);
 				}
 			}
+
 			*g_WorkingFileFlag = 1;
-			g_SaveAsRoutine = false;
 			break;
 		case MAIN_WORLD_BATCHEDIT:				
 			{
@@ -203,12 +210,11 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData)) 
 				{
-					EnterCriticalSection(&(*g_ExtraListCS));
+					EnterCriticalSection(g_ExtraListCS);
 
 					for (UInt32 k = 0; k < RefCount; k++) 
 					{
 						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
-					//	ThisRef = CS_CAST(TESForm_LookupByFormID(RefData[k].FormID), TESForm, TESObjectREFR);
 						ThisRefData = &RefData[k];
 						bool Modified = false;
 
@@ -227,13 +233,16 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 							if (BatchData->Flags.UsePersistent() && 
 								ThisRef->baseForm->typeID != kFormType_NPC && 
-								ThisRef->baseForm->typeID != kFormType_Creature)	ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent), Modified = true;
+								ThisRef->baseForm->typeID != kFormType_Creature)
+								ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent), Modified = true;
 							if (BatchData->Flags.UseDisabled())		ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Disabled, BatchData->Flags.Disabled), Modified = true;
 							if (BatchData->Flags.UseVWD())			ToggleFlag(&ThisRef->flags, TESForm::kFormFlags_VisibleWhenDistant, BatchData->Flags.VWD), Modified = true;
 
-							if (BatchData->EnableParent.UseEnableParent()) {
+							if (BatchData->EnableParent.UseEnableParent())
+							{
 								TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
-								if (Parent != ThisRef) {
+								if (Parent != ThisRef)
+								{
 									thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->baseExtraList, Parent);
 									thisCall(kTESObjectREFR_SetExtraEnableStateParent_OppositeState, ThisRef, BatchData->EnableParent.OppositeState);
 									Modified = true;
@@ -242,7 +251,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 							if (BatchData->Ownership.UseOwnership() &&
 								ThisRef->baseForm->typeID != kFormType_NPC && 
-								ThisRef->baseForm->typeID != kFormType_Creature) {
+								ThisRef->baseForm->typeID != kFormType_Creature)
+							{
 
 								thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, 0);
 								thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, -1);
@@ -250,9 +260,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 								TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
 								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, Owner);
-								if (BatchData->Ownership.UseNPCOwner()) {
+								if (BatchData->Ownership.UseNPCOwner())
+								{
 									thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
-								} else {
+								} 
+								else 
+								{
 									thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
 								}
 								Modified = true;
@@ -262,7 +275,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							if (BatchData->Extra.UseHealth())		thisCall(kTESObjectREFR_ModExtraHealth, ThisRef, BatchData->Extra.Health), Modified = true;
 							if (BatchData->Extra.UseTimeLeft())		thisCall(kTESObjectREFR_ModExtraTimeLeft, ThisRef, BatchData->Extra.TimeLeft), Modified = true;
 							if (BatchData->Extra.UseSoulLevel())	thisCall(kTESObjectREFR_ModExtraSoul, ThisRef, BatchData->Extra.SoulLevel), Modified = true;
-							if (BatchData->Extra.UseCount()) {
+							if (BatchData->Extra.UseCount()) 
+							{
 								switch (ThisRef->baseForm->typeID)
 								{
 									case kFormType_Apparatus:
@@ -287,17 +301,15 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							}
 						}
 
-						if (Modified) {
-							if (!thisVirtualCall(*((UInt32*)ThisRef), 0xBC, ThisRef, (TESForm*)ThisRef))
-								DebugPrint("REF: %08X | virt BC returned false!", ThisRef->refID);
+						if (Modified)
+						{
 							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);
 							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
-							thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, (TESForm*)ThisRef);
 							thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
 						}
 					}	
 
-					LeaveCriticalSection(&(*g_ExtraListCS));
+					LeaveCriticalSection(g_ExtraListCS);
 				}
 
 				delete [] RefData;
@@ -325,6 +337,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			break;
 		case MAIN_WORLD_UNLOADCELL:
 			UnloadLoadedCell();
+			break;
+		case MAIN_GAMEPLAY_GLOBALSCRIPT:
+			CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_GLOBALSCRIPT), hWnd, (DLGPROC)GlobalScriptDlgProc);
+			break;
+		case MAIN_LAUNCHGAME:
+			ShellExecute(NULL, "open", (LPSTR)(std::string(g_AppPath + "obse_loader.exe")).c_str(), NULL, NULL, SW_SHOW);
 			break;
 		}
 		break;
@@ -424,6 +442,38 @@ BOOL CALLBACK TESFileDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
+BOOL CALLBACK TESComboBoxDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND ComboBox = GetDlgItem(hWnd, COMBO_FORMLIST);
+
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case BTN_OK:
+		{
+			TESForm* SelectedForm = (TESForm*)TESDialog_GetSelectedItemData(ComboBox);
+			EndDialog(hWnd, (INT_PTR)SelectedForm);
+			return TRUE;
+		}
+		case BTN_CANCEL:
+			EndDialog(hWnd, 0);
+			return TRUE;
+		}
+		break;
+	case WM_INITDIALOG:
+		switch (lParam)		// ### add support for the remaining types
+		{
+		case kFormType_Race:
+			TESDialog_ComboBoxPopulateWithRaces(ComboBox, false);
+			break;
+		}
+		break;
+	}
+	return FALSE;
+}
+
 LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -449,6 +499,21 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 {
 	switch (uMsg)
 	{
+	case WM_TIMER:
+		switch (wParam)
+		{
+		case CONSOLE_UPDATETIMER:
+			if (CONSOLE->GetShouldUpdate())
+			{
+				SendMessage(hWnd, WM_SETREDRAW, FALSE, 0);
+				Edit_SetText(hWnd, (LPCSTR)CONSOLE->GetMessageBuffer());
+				SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);	
+				SendMessage(hWnd, WM_SETREDRAW, TRUE, 0);
+			}
+			SetTimer(hWnd, CONSOLE_UPDATETIMER, CONSOLE_UPDATEPERIOD, NULL);
+			break;
+		}
+		return TRUE;
 	case WM_RBUTTONUP:
 		{
 		static bool AlwaysOnTopFlag = false;
@@ -501,26 +566,78 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 
 LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static std::stack<std::string> CommandStack, AlternateCommandStack;
+
 	switch (uMsg)
 	{
+	case CONSOLECMDBOX_RESETCOMMANDSTACK:
+		while (AlternateCommandStack.empty() == false)
+		{
+			CommandStack.push(AlternateCommandStack.top());
+			AlternateCommandStack.pop();
+		}
+		return TRUE;
+	case CONSOLECMDBOX_CLEARCOMMANDSTACK:
+		while (AlternateCommandStack.empty() == false)
+			AlternateCommandStack.pop();
+		while (CommandStack.empty() == false)
+			CommandStack.pop();
+		return TRUE;
 	case WM_CHAR:
 		if (wParam == VK_RETURN)
 			return TRUE;
 		break;
 	case WM_KEYDOWN:
-		if (wParam == VK_RETURN)
+		switch (wParam)
 		{
-			char Buffer[0x200];
-			Edit_GetText(hWnd, Buffer, sizeof(Buffer));
-			if (strlen(Buffer) > 2)
-				CONSOLE->LogMessage("CMD", Buffer);
-			Edit_SetText(hWnd, NULL);
-			return TRUE;
+		case VK_RETURN:
+			{
+				char Buffer[0x200];
+				Edit_GetText(hWnd, Buffer, sizeof(Buffer));
+				if (strlen(Buffer) > 2)
+				{
+					CONSOLE->LogMessage("CMD", Buffer);
+					SendMessage(hWnd, CONSOLECMDBOX_RESETCOMMANDSTACK, NULL, NULL);
+					CommandStack.push(Buffer);
+				}
+				Edit_SetText(hWnd, NULL);
+				return TRUE;
+			}
+		case VK_UP:
+			{
+				if (CommandStack.empty() == false)
+				{
+					std::string Command(CommandStack.top());
+					Edit_SetText(hWnd, Command.c_str());
+					CommandStack.pop();
+					AlternateCommandStack.push(Command);
+				}
+				else
+					Edit_SetText(hWnd, NULL);
+
+				return TRUE;
+			}
+		case VK_DOWN:
+			{
+				if (AlternateCommandStack.empty() == false)
+				{
+					std::string Command(AlternateCommandStack.top());
+					Edit_SetText(hWnd, Command.c_str());
+					AlternateCommandStack.pop();
+					CommandStack.push(Command);
+				}
+				else
+					Edit_SetText(hWnd, NULL);
+
+				return TRUE;
+			}
 		}
 		break;
 	case WM_DESTROY: 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleCmdBoxOrgWindowProc);
 		break; 
+	case WM_INITDIALOG:
+		return TRUE;
 	}
  
 	return CallWindowProc(g_ConsoleCmdBoxOrgWindowProc, hWnd, uMsg, wParam, lParam); 
@@ -581,12 +698,23 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		break;
 	}
 	case POPUP_UNDELETE:
+	{
 		sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
 		if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
 		{
 			thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
 		}
 		break;
+	}
+	case POPUP_EDITBASEFORM:
+	{
+		TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
+		if (BaseForm && BaseForm->editorData.editorID.m_data)
+		{
+			LoadFormIntoView(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
+		}
+		break;
+	}
 	}
 	UpdateWindow(hWnd);
 }
@@ -692,4 +820,220 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	}
  
 	return CallWindowProc(g_ResponseWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
+LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case BTN_OK:
+			{
+				char QuestID[0x200] = {0};
+				char ScriptID[0x200] = {0};
+				char Delay[8] = {0};
+
+				GetDlgItemText(hWnd, EDIT_QUESTID, QuestID, sizeof(QuestID));
+				GetDlgItemText(hWnd, EDIT_SCRIPTID, ScriptID, sizeof(ScriptID));
+				GetDlgItemText(hWnd, EDIT_DELAY, Delay, sizeof(Delay));
+
+				TESForm* Form = NULL;
+				TESQuest* Quest = NULL;
+				Script* QuestScript = NULL;
+
+				Form = GetFormByID(QuestID);
+				if (Form)
+				{
+					if (Form->typeID == kFormType_Quest)
+					{
+						sprintf_s(g_Buffer, sizeof(g_Buffer), "Quest '%s' already exists. Do you want to replace its script with a newly created one ?", QuestID);
+						if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) != IDYES)
+							return TRUE;
+					}
+					else
+					{
+						sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", QuestID);
+						MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+						return TRUE;
+					}
+
+					Quest = CS_CAST(Form, TESForm, TESQuest);
+				}
+				else
+				{
+					Quest = (TESQuest*)FormHeap_Allocate(0x74);
+					thisCall(kTESQuest_Ctor, Quest);
+					thisVirtualCall(kVTBL_TESQuest, 0x94, Quest);
+					thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->quests, Quest);
+					thisCall(kTESForm_SetEditorID, Quest, QuestID);
+				}
+
+				if (strlen(ScriptID) < 1)
+					sprintf_s(ScriptID, sizeof(ScriptID), "%sScript", QuestID);
+
+				Form = GetFormByID(ScriptID);
+				if (Form)
+				{
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", ScriptID);
+					MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+					return TRUE;
+				}
+				else
+				{
+					QuestScript = (Script*)FormHeap_Allocate(0x54);
+					thisCall(kScript_Ctor, QuestScript);
+					thisVirtualCall(kVTBL_Script, 0x94, QuestScript);
+					thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->scripts, QuestScript);
+					thisCall(kDataHandler_SortScripts, (*g_dataHandler));
+					QuestScript->info.type = Script::eType_Quest;
+
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tlet fQuestDelayTime := %s\n\nend", ScriptID, Delay);
+					thisCall(kScript_SetText, QuestScript, g_Buffer);
+					thisCall(kTESForm_SetEditorID, QuestScript, ScriptID);
+				}
+
+				Quest->scriptable.script = QuestScript;
+
+				thisVirtualCall(kVTBL_TESQuest, 0x70, Quest);
+				thisVirtualCall(kVTBL_Script, 0x70, QuestScript);
+
+				thisVirtualCall(kVTBL_TESQuest, 0x104, Quest);	// ### need to update usage info for script
+				thisVirtualCall(kVTBL_Script, 0x104, QuestScript);
+
+				MessageBox(hWnd, "Global script created successfully.\n\nIt will now be opened for editing ...", "CSE", MB_OK|MB_ICONINFORMATION);
+				SpawnCustomScriptEditor(ScriptID);
+
+				DestroyWindow(hWnd);
+				return TRUE;
+			}
+		case BTN_CANCEL:
+			DestroyWindow(hWnd);
+			return TRUE;
+		}
+		break;
+	}
+	return FALSE;
+}
+
+
+
+void InitializeWindowManager(void)
+{
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent),
+		  GameplayMenu = GetSubMenu(MainMenu, 5),
+		  ViewMenu = GetSubMenu(MainMenu, 2),
+		  FileMenu = GetSubMenu(MainMenu, 0),
+		  WorldMenu = GetSubMenu(MainMenu, 3);
+
+	MENUITEMINFO ItemGameplayUseInfo, 
+				ItemViewRenderWindow, 
+				ItemDataSaveAs, 
+				ItemWorldBatchEdit, 
+				ItemViewConsole, 
+				ItemViewModifiedRecords,
+				ItemFileCSEPreferences,
+				ItemViewDeletedRecords,
+				ItemWorldUnloadCell,
+				ItemGameplayGlobalScript,
+				ItemLaunchGame;
+	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
+	ItemGameplayUseInfo.fMask = MIIM_STRING;
+	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
+	ItemGameplayUseInfo.cch = 15;
+	SetMenuItemInfo(GameplayMenu, 245, FALSE, &ItemGameplayUseInfo);
+
+	ItemViewRenderWindow.cbSize = sizeof(MENUITEMINFO);		// the tool coder seems to have mixed up the controlID for the button
+	ItemViewRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is already present in the wndproc
+	ItemViewRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
+	ItemViewRenderWindow.fState = MFS_CHECKED;
+	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemViewRenderWindow);	
+
+	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
+	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemDataSaveAs.wID = MAIN_DATA_SAVEAS;
+	ItemDataSaveAs.fState = MFS_ENABLED;
+	ItemDataSaveAs.dwTypeData = "Save As";
+	ItemDataSaveAs.cch = 7;
+	InsertMenuItem(FileMenu, 40127, FALSE, &ItemDataSaveAs);
+
+	ItemWorldBatchEdit.cbSize = sizeof(MENUITEMINFO);		
+	ItemWorldBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldBatchEdit.wID = MAIN_WORLD_BATCHEDIT;
+	ItemWorldBatchEdit.fState = MFS_ENABLED;
+	ItemWorldBatchEdit.dwTypeData = "Batch Edit References";
+	ItemWorldBatchEdit.cch = 0;
+	InsertMenuItem(WorldMenu, 40194, FALSE, &ItemWorldBatchEdit);
+	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldBatchEdit);
+	
+	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewConsole.wID = MAIN_VIEW_CONSOLEWINDOW;
+	ItemViewConsole.fState = MFS_ENABLED|MFS_CHECKED;
+	ItemViewConsole.dwTypeData = "Console Window";
+	ItemViewConsole.cch = 0;
+	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
+
+	ItemViewModifiedRecords.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewModifiedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewModifiedRecords.wID = MAIN_VIEW_MODIFIEDRECORDS;
+	ItemViewModifiedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
+	ItemViewModifiedRecords.dwTypeData = "Hide Unmodified Forms";
+	ItemViewModifiedRecords.cch = 0;
+	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewModifiedRecords);
+
+	ItemFileCSEPreferences.cbSize = sizeof(MENUITEMINFO);		
+	ItemFileCSEPreferences.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemFileCSEPreferences.wID = MAIN_DATA_CSEPREFERENCES;
+	ItemFileCSEPreferences.fState = MFS_ENABLED;
+	ItemFileCSEPreferences.dwTypeData = "CSE Preferences";
+	ItemFileCSEPreferences.cch = 0;
+	InsertMenuItem(FileMenu, 40003, FALSE, &ItemFileCSEPreferences);
+
+	
+	ItemViewDeletedRecords.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewDeletedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewDeletedRecords.wID = MAIN_VIEW_DELETEDRECORDS;
+	ItemViewDeletedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
+	ItemViewDeletedRecords.dwTypeData = "Hide Deleted Forms";
+	ItemViewDeletedRecords.cch = 0;
+	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewDeletedRecords);
+
+
+	ItemWorldUnloadCell.cbSize = sizeof(MENUITEMINFO);		
+	ItemWorldUnloadCell.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldUnloadCell.wID = MAIN_WORLD_UNLOADCELL;
+	ItemWorldUnloadCell.fState = MFS_ENABLED;
+	ItemWorldUnloadCell.dwTypeData = "Unload Current Cell";
+	ItemWorldUnloadCell.cch = 0;
+	InsertMenuItem(WorldMenu, 40426, FALSE, &ItemWorldUnloadCell);
+
+
+	ItemGameplayGlobalScript.cbSize = sizeof(MENUITEMINFO);		
+	ItemGameplayGlobalScript.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemGameplayGlobalScript.wID = MAIN_GAMEPLAY_GLOBALSCRIPT;
+	ItemGameplayGlobalScript.fState = MFS_ENABLED;
+	ItemGameplayGlobalScript.dwTypeData = "Create Global Script";
+	ItemGameplayGlobalScript.cch = 0;
+	InsertMenuItem(GameplayMenu, 40167, FALSE, &ItemGameplayGlobalScript);
+
+	ItemLaunchGame.cbSize = sizeof(MENUITEMINFO);		
+	ItemLaunchGame.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemLaunchGame.wID = MAIN_LAUNCHGAME;
+	ItemLaunchGame.fState = MFS_ENABLED;
+	ItemLaunchGame.dwTypeData = "Launch Game";
+	ItemLaunchGame.cch = 0;
+	InsertMenuItem(MainMenu, -1, FALSE, &ItemLaunchGame);
+
+	DrawMenuBar(*g_HWND_CSParent);
+
+	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
+	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
+
+	g_CSDefaultFont = CreateFont(12, 5.5, 0, 0,
+                             FW_THIN, FALSE, FALSE, FALSE,
+                             ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+                             CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                             FF_DONTCARE, "MS Shell Dlg");
 }

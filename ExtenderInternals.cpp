@@ -26,7 +26,10 @@ HWND*								g_HWND_CSParent = (HWND*)0x00A0AF20;
 HWND*								g_HWND_AIPackagesDlg = (HWND*)0x00A0AFD8;
 HWND*								g_HWND_ObjectWindow_FormList = (HWND*)0x00A0BAA0;
 HWND*								g_HWND_ObjectWindow_Tree = (HWND*)0x00A0BAA4;
+HWND*								g_HWND_MainToolbar = (HWND*)0x00A0AFD0;
+HWND*								g_HWND_QuestWindow = (HWND*)0x00A0B034;
 
+TBBUTTON*							g_MainToolbarButtonArray = (TBBUTTON*)0x009EAD50;
 INISetting*							g_LocalMasterPath = (INISetting*)0x009ED710;
 char**								g_TESActivePluginName = (char**)0x00A0AF00;
 UInt8*								g_WorkingFileFlag = (UInt8*)0x00A0B628;
@@ -66,6 +69,14 @@ const _CreateArchive				CreateArchive = (_CreateArchive)0x004665C0;
 const _TESDialog_GetListViewSelectedItemLParam
 									TESDialog_GetListViewSelectedItemLParam = (_TESDialog_GetListViewSelectedItemLParam)0x00403C40;
 const _TESForm_LookupByFormID		TESForm_LookupByFormID = (_TESForm_LookupByFormID)0x00495EF0;
+const _TESDialog_GetDialogExtraParam
+									TESDialog_GetDialogExtraParam = (_TESDialog_GetDialogExtraParam)0x004429D0;
+const _TESDialog_ComboBoxPopulateWithRaces
+									TESDialog_ComboBoxPopulateWithRaces = (_TESDialog_ComboBoxPopulateWithRaces)0x00445240;
+const _TESDialog_GetSelectedItemData
+									TESDialog_GetSelectedItemData = (_TESDialog_GetSelectedItemData)0x00403690;
+const _TESDialog_GetDialogExtraLocalCopy
+									TESDialog_GetDialogExtraLocalCopy = (_TESDialog_GetDialogExtraLocalCopy)0x004429B0;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -80,6 +91,7 @@ const UInt32						kVTBL_TESObjectMISC = 0x00955224;
 const UInt32						kVTBL_TESObjectWEAP = 0x00955C8C;
 const UInt32						kVTBL_TESObjectCONT = 0x00954B44;
 const UInt32						kVTBL_SpellItem = 0x0095E504;
+const UInt32						kVTBL_Script = 0x0094944C;
 
 const UInt32						kTESNPC_Ctor = 0x004D8FF0;
 const UInt32						kTESCreature_Ctor = 0x004CE820;
@@ -88,6 +100,8 @@ const UInt32						kTESObjectMISC_Ctor = 0x0051ABA0;
 const UInt32						kTESObjectWEAP_Ctor = 0x0051DAB0;
 const UInt32						kTESObjectCONT_Ctor = 0x00518F60;
 const UInt32						kTESObjectREFR_Ctor = 0x00541870;
+const UInt32						kTESQuest_Ctor = 0x004E0500;
+const UInt32						kScript_Ctor = 0x004FCA50;
 
 const UInt32						kTESChildCell_LoadCell = 0x00430F40; 
 const UInt32						kTESForm_GetObjectUseList = 0x00496380;		// Node<TESForm> GetObjectUseRefHead(UInt32 unk01 = 0);
@@ -103,6 +117,11 @@ const UInt32						kTESObjectREFR_SetBaseForm = 0x005415A0;
 const UInt32						kTESObjectREFR_SetFlagPersistent = 0x0053F0D0;
 const UInt32						kExtraDataList_InitItem = 0x0045D740;
 const UInt32						kScript_SetText = 0x004FC6C0;
+const UInt32						kDataHandler_SortScripts = 0x0047BA30;
+const UInt32						kTESScriptableForm_SetScript = 0x004A1830;
+const UInt32						kBSString_Set = 0x004051E0;
+const UInt32						kExtraDataList_CopyListForReference = 0x004603D0;
+const UInt32						kExtraDataList_CopyList = 0x00460380;
 
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
 const UInt32						kBaseExtraList_ModExtraOwnership = 0x0045E060;
@@ -299,11 +318,15 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "Bottom", "Console::General", "350", "Client Rect Bottom"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LogCSWarnings", "Console::General", "1", "Log CS Warnings to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LogAssertions", "Console::General", "1", "Log CS Assertions to the Console"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Console::General", "0", "Hide the console on CS startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "ConsoleUpdatePeriod", "Console::General", "2500", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
+
+
 	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "1", "Loads a plugin on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "Plugin.esp", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "OpenScriptWindowOnStartup", "Extender::General", "0", "Open an empty script editor window on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupScriptEditorID", "Extender::General", "", "EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace"), (CreateINI == false));
-	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Console::General", "0", "Hide the console on CS startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "ShowNumericEditorIDWarning", "Extender::General", "1", "Displays a warning when editorIDs start with an integer"), (CreateINI == false));
 
 	if (CreateINI)		SaveSettingsToINI();
 	else				ReadSettingsFromINI();
@@ -380,6 +403,15 @@ UInt32 GetDialogTemplate(UInt8 FormTypeID)
 	return GetDialogTemplate(FormType);
 }
 
+void SpawnCustomScriptEditor(const char* ScriptEditorID)
+{
+	g_EditorAuxScript =  CS_CAST(GetFormByID(ScriptEditorID), TESForm, Script);;
+	tagRECT ScriptEditorLoc;
+	GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+	g_EditorAuxScript = NULL;
+}
+
 
 void LoadFormIntoView(const char* EditorID, const char* FormType)
 {
@@ -390,13 +422,7 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 	{
 	case 9:					
 		if (GetFormByID(EditorID))
-		{
-			g_EditorAuxScript =  CS_CAST(GetFormByID(EditorID), TESForm, Script);;
-			tagRECT ScriptEditorLoc;
-			GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-			CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
-			g_EditorAuxScript = NULL;
-		}
+			SpawnCustomScriptEditor(EditorID);
 		break;
 	case 10:
 		RemoteLoadRef(EditorID);
@@ -431,7 +457,6 @@ TESObjectREFR* ChooseReferenceDlg(HWND Parent)
 
 void LoadStartupPlugin()
 {
-	// prolog
 	kAutoLoadActivePluginOnStartup.WriteJump();
 
 	const char* PluginName = g_INIManager->GET_INI_STR("StartupPluginName");
@@ -449,7 +474,6 @@ void LoadStartupPlugin()
 		DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
 	}
 
-	// epilog
 	kAutoLoadActivePluginOnStartup.WriteBuffer();
 }
 

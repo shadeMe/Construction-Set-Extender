@@ -26,7 +26,8 @@ SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();
 
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
-	if (Msg->type == 'CSEI') {
+	if (Msg->type == 'CSEI')
+	{
 		DebugPrint("Dispatching interface to '%s'", Msg->sender);
 		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEI', CSEInterfaceManager::GetInterface(), 4, Msg->sender);
 	}

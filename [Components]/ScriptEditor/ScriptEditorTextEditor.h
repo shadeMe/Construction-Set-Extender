@@ -20,10 +20,17 @@ public:
 	event MouseEventHandler^					MouseDown;
 	event MouseEventHandler^					MouseDoubleClick;
 protected:
+	static enum class							PreventTextChangeFlagState
+												{
+													e_Disabled = 0,
+													e_AutoReset,
+													e_ManualReset
+												};
+
 	int											IndentCountBuffer;
 	bool										InitializingFlag;
 	bool										ModifiedFlag;
-	bool										PreventTextChangedEventFlag;
+	PreventTextChangeFlagState										PreventTextChangedEventFlag;
 	Keys										KeyToPreventHandling;
 	PictureBox^									LineLimitIndicator;
 	List<PictureBox^>^							FindReplaceResultIndicators;
@@ -72,7 +79,7 @@ protected:
 	String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
 	String^										GetTextAtLocation(int Index, bool SelectText);
 
-	void										PreventTextChangedEvent() { PreventTextChangedEventFlag = true; }	
+	void										SetPreventTextChangedFlag(PreventTextChangeFlagState State) { PreventTextChangedEventFlag = State; }	
 	void										HandleKeyEventForKey(Keys Key) { KeyToPreventHandling = Key; }
 public:
 	// interface methods

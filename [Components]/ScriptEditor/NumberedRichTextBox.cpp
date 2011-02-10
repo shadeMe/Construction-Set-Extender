@@ -41,7 +41,7 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
 	TextField->Multiline = true;
 	TextField->WordWrap = false;
 	TextField->BorderStyle = BorderStyle::Fixed3D;
-	TextField->AutoWordSelection = false;
+	TextField->AutoWordSelection = true;
 	TextField->Font = Font;
 
 	TextField->TextChanged += gcnew EventHandler(this, &NumberedRichTextBox::TextField_TextChanged);
@@ -131,7 +131,7 @@ void NumberedRichTextBox::LineField_MouseDown(Object^ Sender, MouseEventArgs^ E)
 		if (SelStart != -1 &&
 			LineField->GetLineFromCharIndex(SelStart) < LineField->Lines->Length && LineField->Lines->Length > 0)
 		{
-			String^ Selection = LineField->Lines[LineField->GetLineFromCharIndex(SelStart)]->Replace(" ", "");;
+			String^ Selection = LineField->Lines[LineField->GetLineFromCharIndex(SelStart)]->Replace(" ", "");
 			LineNo = int::Parse(Selection) - 1;
 		}
 		else

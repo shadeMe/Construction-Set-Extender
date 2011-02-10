@@ -27,6 +27,7 @@ __declspec(dllexport) const char* ScriptEditor_GetAuxScriptName();
 
 __declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID);
 __declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID);
+__declspec(dllexport) void* LookupFormByEditorID(const char* EditorID);	
 
 __declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex);
 __declspec(dllexport) const char* ScriptEditor_GetScriptListItemText(const char* EditorID);
