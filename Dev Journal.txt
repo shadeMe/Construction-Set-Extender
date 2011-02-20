@@ -13,6 +13,7 @@ CSE--->
 > Export/import result scripts
 > Fix the water fix
 > Fix the f_PlaySoundFile
+> Consider the feasibility of implementing a scripting language for the CS
 
 > Tackle the Search and Replace window (and do what ?)
 > Aesthetically improve the Export Dialog tool's result (as per Sjors_Boomscors's request) {need to check with other users}
@@ -21,7 +22,6 @@ CSE--->
 > Fix the author/desc editing bug
 > Being able to see cell quadrant boundaries when the landscape and/or quadrant dialogue(s) are open, maybe even color-coded boundaries so it is easy to see which quadrant is which
 > Being able to re-order masters from the master list in the Data... dialogue
-> A tree-view of records from the "Details..." button in the Data... dialogue, similar to TES4Edit
 > Relative scaling and snap to bounding box
 
 

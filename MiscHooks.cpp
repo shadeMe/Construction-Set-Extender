@@ -46,7 +46,6 @@ MemHdlr							kQuickLoadPluginLoadHandlerPrologue	(0x0040D073, QuickLoadPluginLo
 MemHdlr							kQuickLoadPluginLoadHandler			(0x004852E5, QuickLoadPluginLoadHandlerHook, 0, 0);
 MemHdlr							kMissingMasterOverride				(0x00484FC9, 0x00484E8E, 0, 0);
 MemHdlr							kAssertOverride						(0x004B5670, AssertOverrideHook, 0, 0);
-MemHdlr							kCSWarningsDetour					(0x004B5140, CSWarningsDetourHook, 0, 0);
 MemHdlr							kTextureMipMapCheck					(0x0044F49B, (UInt32)0, 0, 0);
 NopHdlr							kAnimGroupNote						(0x004CA21D, 5);
 MemHdlr							kUnnecessaryDialogEdits				(0x004EDFF7, (UInt32)0, 0, 0);
@@ -102,7 +101,7 @@ bool PatchMiscHooks()
 	kNPCFaceGen.WriteJump();
 	kMissingMasterOverride.WriteJump();
 	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
-	kCSWarningsDetour.WriteJump();
+	PatchMessageHandler();
 	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
 	kAssertOverride.WriteJump();
 	kCustomCSWindow.WriteJump();
@@ -178,6 +177,20 @@ bool PatchMiscHooks()
 	return true;
 }
 
+void PatchMessageHandler(void)
+{
+	SafeWrite32(kVTBL_MessageHandler + 0, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x4, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x8, (UInt32)&MessageHandlerOverride);
+//	SafeWrite32(kVTBL_MessageHandler + 0xC, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x10, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x14, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x18, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x1C, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x20, (UInt32)&MessageHandlerOverride);
+	SafeWrite32(kVTBL_MessageHandler + 0x24, (UInt32)&MessageHandlerOverride);
+}
+
 
 UInt32 __stdcall IsControlKeyDown(void)
 {
@@ -187,6 +200,11 @@ UInt32 __stdcall IsControlKeyDown(void)
 bool __stdcall InitTESFileSaveDlg()
 {
 	return DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_TESFILE), *g_HWND_CSParent, (DLGPROC)TESFileDlgProc);
+}
+
+void __stdcall MessageHandlerOverride(const char* Message)
+{
+	DebugPrint(Console::e_CS, "%s", Message);
 }
 
 void __declspec(naked) SavePluginCommonDialogHook(void)
@@ -712,26 +730,6 @@ void __declspec(naked) AssertOverrideHook(void)
 		popad
 
 		jmp		[kAssertOverrideRetnAddr]
-	}
-}
-
-void __stdcall DoCSWarningsDetourHook(LPCSTR DebugMessage)
-{
-	DebugPrint(Console::e_CS, "%s", DebugMessage);
-}
-
-
-void __declspec(naked) CSWarningsDetourHook(void)
-{
-	static const UInt32			kCSWarningsDetourRetnAddr = 0x004B52F2;
-	__asm
-	{
-		mov		esi, [esp + 0x4]
-		pushad
-		push	esi
-		call	DoCSWarningsDetourHook
-		popad
-		jmp		[kCSWarningsDetourRetnAddr]
 	}
 }
 

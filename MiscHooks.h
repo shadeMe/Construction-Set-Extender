@@ -42,7 +42,6 @@ extern MemHdlr					kQuickLoadPluginLoadHandlerPrologue;// adds support for the q
 extern MemHdlr					kQuickLoadPluginLoadHandler;
 extern MemHdlr					kMissingMasterOverride;// allows the loading of plugins with missing masters
 extern MemHdlr					kAssertOverride;// fixes crashes from assertion calls in the code and log them to the console/log instead
-extern MemHdlr					kCSWarningsDetour;// whisks away CS warnings to the console
 extern MemHdlr					kTextureMipMapCheck;// allows the preview of textures with mipmaps
 extern NopHdlr					kAnimGroupNote;// removes the now unnecessary 'See editorWarnings file' anim group debug message
 extern MemHdlr					kUnnecessaryDialogEdits;// prevents unnecessary dialog edits in active plugins should its master have a DIAL record
@@ -80,6 +79,7 @@ extern NopHdlr					kTESDialogSubwindowEnumChildCallback;// patches the TESDialog
 extern MemHdlr					kTESObjectREFRDoCopyFrom;// patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source
 
 bool PatchMiscHooks(void);
+void PatchMessageHandler(void);
 void __stdcall DoCSInitHook();
 void __stdcall DoExitCSHook(HWND MainWindow);
 UInt32 __stdcall IsControlKeyDown(void);
@@ -87,6 +87,7 @@ UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
 UInt32 __stdcall InitPathEditor(int ID, HWND Dialog);
 UInt32 __stdcall InitBSAViewer(UInt32 Filter);
 void __stdcall SendPingBack(UInt16 Message);
+void __stdcall MessageHandlerOverride(const char* Message);
 
 
 void SavePluginMasterEnumHook(void);

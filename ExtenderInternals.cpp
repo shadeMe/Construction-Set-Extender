@@ -92,6 +92,7 @@ const UInt32						kVTBL_TESObjectWEAP = 0x00955C8C;
 const UInt32						kVTBL_TESObjectCONT = 0x00954B44;
 const UInt32						kVTBL_SpellItem = 0x0095E504;
 const UInt32						kVTBL_Script = 0x0094944C;
+const UInt32						kVTBL_MessageHandler = 0x00940760;
 
 const UInt32						kTESNPC_Ctor = 0x004D8FF0;
 const UInt32						kTESCreature_Ctor = 0x004CE820;

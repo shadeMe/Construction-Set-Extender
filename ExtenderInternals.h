@@ -491,6 +491,7 @@ extern const UInt32			kVTBL_TESObjectWEAP;
 extern const UInt32			kVTBL_TESObjectCONT;
 extern const UInt32			kVTBL_SpellItem;
 extern const UInt32			kVTBL_Script;
+extern const UInt32			kVTBL_MessageHandler;
 
 extern const UInt32			kTESNPC_Ctor;
 extern const UInt32			kTESCreature_Ctor;
