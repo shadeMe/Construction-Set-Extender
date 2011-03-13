@@ -89,6 +89,8 @@ namespace ScriptEditor
 		void												SetWindowTitle(String^ Title) { EditorForm->Text = Title; }
 
 		Rectangle											GetEditorFormRect();
+		IntPtr												GetEditorFormHandle() { return EditorForm->Handle; }
+		FormWindowState										GetEditorFormWindowState() { return EditorForm->WindowState; }
 	};
 
 	public ref class Workspace
@@ -107,6 +109,11 @@ namespace ScriptEditor
 		static Workspace^									NullWorkspace = gcnew Workspace(0);
 	private:
 		static ImageList^									MessageIcon = gcnew ImageList();
+		static enum class									SanitizeOperation
+															{
+																e_Indent = 0,
+																e_AnnealCasing
+															};
 		
 		DotNetBar::TabItem^									EditorTab;
 		DotNetBar::TabControlPanel^							EditorControlBox;
@@ -168,6 +175,9 @@ namespace ScriptEditor
 			ToolStripButton^									ToolBarUpdateVarIndices;
 			ToolStripButton^									ToolBarShowOffsets;
 			ToolStripButton^									ToolBarShowPreprocessedText;
+			ToolStripButton^									ToolBarSanitizeScriptText;
+			ToolStripButton^									ToolBarBindScript;
+
 			ToolStripProgressBar^								ToolBarByteCodeSize;
 
 		ContextMenuStrip^									TextEditorContextMenu;
@@ -258,6 +268,8 @@ namespace ScriptEditor
 		void												ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E);
+		void												ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
+		void												ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
 
 
 		void												EnableControls();
@@ -277,6 +289,7 @@ namespace ScriptEditor
 		void												DeserializeMessages(String^% ExtractedBlock);
 
 		void												PreprocessorErrorOutputWrapper(String^ Message);
+		void												SanitizeScriptText(SanitizeOperation Operation);
 	public:	
 		UInt32												GetAllocatedIndex() { return AllocatedIndex; }
 		bool												GetModifiedStatus() { return TextEditor->GetModifiedStatus(); }
@@ -288,6 +301,7 @@ namespace ScriptEditor
 		void												AddItemToVariableIndexList(String^% Name, UInt32 Type, UInt32 Index);
 		String^												GetScriptDescription() { return EditorTab->Text; }
 		const String^										GetScriptID() { return ScriptEditorID; }
+		bool												GetIsCurrentScriptNew(void) { return ScriptEditorID == "New Script"; }
 		void												ShowScriptListBox(ScriptListDialog::Operation Op) { ScriptListingDialog->Show(Op); }
 		void												LoadFileFromDisk(String^ Path);
 		void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);

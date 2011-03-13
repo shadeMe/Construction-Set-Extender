@@ -98,8 +98,8 @@ bool CSInteropManager::InjectDLL(PROCESS_INFORMATION * info)
 			// (can change across restarts)
 			UInt32	loadLibraryAAddr = (UInt32)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
 
-			DebugPrint("HookBase = %08X", hookBase);
-			DebugPrint("LoadLibraryAAddr = %08X", loadLibraryAAddr);
+		//	DebugPrint("HookBase = %08X", hookBase);
+		//	DebugPrint("LoadLibraryAAddr = %08X", loadLibraryAAddr);
 
 			UInt32	bytesWritten;
 			WriteProcessMemory(process, (LPVOID)(hookBase + 5), DLLPath.c_str(), strlen(DLLPath.c_str()) + 1, &bytesWritten);
@@ -117,7 +117,7 @@ bool CSInteropManager::InjectDLL(PROCESS_INFORMATION * info)
 				switch(WaitForSingleObject(thread, INJECT_TIMEOUT))
 				{
 					case WAIT_OBJECT_0:
-						DebugPrint("Hook thread complete");
+		//				DebugPrint("Hook thread complete");
 						result = true;
 						break;
 					case WAIT_ABANDONED:
@@ -178,7 +178,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	const char	* procName = "TESConstructionSetOld.exe";
 	this->DLLPath += DLLPath;
 
-	DebugPrint("Dll = %s", this->DLLPath.c_str());
+//	DebugPrint("Dll = %s", this->DLLPath.c_str());
 
 	// check to make sure the dll exists
 	IFileStream	tempFile;

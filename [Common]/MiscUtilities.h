@@ -44,7 +44,8 @@ namespace Log
 		e_BE,
 		e_UL,
 		e_SE,
-		e_BSA
+		e_BSA,
+		e_TAG
 	};
 
 	namespace ScriptEditor 
@@ -62,5 +63,9 @@ namespace Log
 	namespace BSAViewer
 	{
 		void DebugPrint(String^ Message, bool Achtung = false);	
+	}
+	namespace TagBrowser
+	{
+		void DebugPrint(String^ Message, bool Achtung = false);			
 	}
 }

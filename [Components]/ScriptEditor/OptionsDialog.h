@@ -50,48 +50,52 @@ public ref class OptionsDialog
 {
 	static OptionsDialog^							Singleton = nullptr;
 
-	void											FontButton_Click(Object^ Sender, EventArgs^ E);
-	void											FCButton_Click(Object^ Sender, EventArgs^ E);
-	void											BCButton_Click(Object^ Sender, EventArgs^ E);
-	void											HCButton_Click(Object^ Sender, EventArgs^ E);
+	void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
+	void											CmDlgForeColor_Click(Object^ Sender, EventArgs^ E);
+	void											CmDlgBackColor_Click(Object^ Sender, EventArgs^ E);
+	void											CmDlgHighlightColor_Click(Object^ Sender, EventArgs^ E);
 
 	void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 	Dictionary<INISetting^, BoundControl^>^			INIMap;
 
-	Form^											OptionsBox;
-	GroupBox^										GroupPreP;
-	CheckBox^										AllowRedefinitions;
-	CheckBox^										CreateMissingFromSegment;
+	Form^										OptionsBox;
+		TabControl^									TabContainer;
+			TabPage^										TabGeneral;
+				CheckBox^										AutoIndent;
+				CheckBox^										SaveLastKnownPos;
+				CheckBox^										RecompileVarIdx;
+				CheckBox^										UseCSParent;
+				CheckBox^										DestroyOnLastTabClose;
+				CheckBox^										SuppressRefCountForQuestScripts;
+				CheckBox^										LoadScriptUpdateExistingScripts;
+			TabPage^									TabIntelliSense;
+				Label^										LabelISThreshold;
+				NumericUpDown^								ThresholdLength;
+				Label^										LabelISDBUpdatePeriod;
+				NumericUpDown^								DatabaseUpdateInterval;
+				CheckBox^									UseQuickView;
+			TabPage^									TabPreprocessor;
+				CheckBox^									AllowRedefinitions;
+			TabPage^									TabAppearance;
+				Button^										CmDlgHighlightColor;
+				Button^										CmDlgBackColor;
+				Button^										CmDlgForeColor;
+				Button^										CmDlgFont;
+				Label^										LabelTabSize;
+				NumericUpDown^								TabSize;
+				Label^										LabelLinesToScroll;
+				NumericUpDown^								LinesToScroll;
+			TabPage^									TabSanitize;
+				CheckBox^									IndentLines;
+				CheckBox^									AnnealCasing;
 
-	GroupBox^  										GroupIS;
-	Label^  										ISThreshold;
-	NumericUpDown^  								ThresholdLength;
-
-	GroupBox^  										GroupGen;
-	CheckBox^										AutoIndent;
-	Button^  										FCButton;
-	Button^  										FontButton;
-	CheckBox^  										SuppressRefCountForQuestScripts;
-
-	FontDialog^  									FontSelection;
-	Button^  										BCButton;
-	Button^  										HCButton;
-	
-	CheckBox^										SaveLastKnownPos;
-	Label^  										TabStopSize;
-	NumericUpDown^  								TabSize;
-	CheckBox^										RecompileVarIdx;
-	CheckBox^										UseCSParent;
-	CheckBox^										DestroyOnLastTabClose;
-
-
+		ColorDialog^  								FCDialog;
+		ColorDialog^  								BCDialog;
+		ColorDialog^  								HCDialog;
+		FontDialog^									FontSelection;
 public:	
 	OptionsDialog();
-
-	ColorDialog^  									FCDialog;
-	ColorDialog^  									BCDialog;
-	ColorDialog^  									HCDialog;
 
 	void											LoadINI();
 	void											SaveINI();
@@ -100,6 +104,15 @@ public:
 	BoundControl^									FetchSetting(String^ Key);
 	int												FetchSettingAsInt(String^ Key);
 	String^											FetchSettingAsString(String^ Key);
+
+	static enum class								ColorType
+													{
+														e_Foreground = 0,
+														e_Background,
+														e_Highlight
+													};
+
+	Color											GetColor(ColorType Type);
 
 	void											Show() { OptionsBox->ShowDialog(); }
 

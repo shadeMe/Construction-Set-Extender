@@ -316,11 +316,15 @@ void ScriptEditorManager::MessageHandler_SendClose(UInt32 AllocatedIndex)
 
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
-	NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex, 
+	if (Itr->GetParentContainer()->GetEditorFormWindowState() != FormWindowState::Maximized)
+	{
+		NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex, 
 													Itr->GetParentContainer()->GetEditorFormRect().Top, 
 													Itr->GetParentContainer()->GetEditorFormRect().Left, 
 													Itr->GetParentContainer()->GetEditorFormRect().Width, 
 													Itr->GetParentContainer()->GetEditorFormRect().Height);
+	}
+
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Close);
 }
 

@@ -30,7 +30,7 @@ protected:
 	int											IndentCountBuffer;
 	bool										InitializingFlag;
 	bool										ModifiedFlag;
-	PreventTextChangeFlagState										PreventTextChangedEventFlag;
+	PreventTextChangeFlagState					PreventTextChangedEventFlag;
 	Keys										KeyToPreventHandling;
 	PictureBox^									LineLimitIndicator;
 	List<PictureBox^>^							FindReplaceResultIndicators;
@@ -91,10 +91,10 @@ public:
 
 	virtual String^								GetText(void);
 	virtual UInt32								GetTextLength(void);
-	virtual void								SetText(String^ Text);
+	virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling);
 
 	virtual String^								GetSelectedText(void);
-	virtual void								SetSelectedText(String^ Text);
+	virtual void								SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
 
 	virtual void								SetSelectionStart(int Index);
 	virtual void								SetSelectionLength(int Length);

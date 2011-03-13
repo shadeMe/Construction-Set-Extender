@@ -35,6 +35,12 @@ namespace BatchEditor
 	_InitializeRefBatchEditor				InitializeRefBatchEditor;
 	_AddFormListItem						AddFormListItem;
 }
+namespace TagBrowser
+{
+	_Show									Show;
+	_Hide									Hide;
+	_AddFormToActiveTag						AddFormToActiveTag;
+}
 
 bool CLIWrapper::Import(const OBSEInterface * obse)
 {
@@ -123,6 +129,27 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
+
+	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\TagBrowser.dll").c_str());
+	if (hMod == NULL) {
+		DebugPrint("Couldn't load TagBrowser.dll");
+		LogWinAPIErrorMessage(GetLastError());
+		return false;
+	}
+
+	CLIWrapper::TagBrowser::Show = (CLIWrapper::TagBrowser::_Show)GetProcAddress(hMod, "Show");
+	CLIWrapper::TagBrowser::Hide = (CLIWrapper::TagBrowser::_Hide)GetProcAddress(hMod, "Hide");
+	CLIWrapper::TagBrowser::AddFormToActiveTag = (CLIWrapper::TagBrowser::_AddFormToActiveTag)GetProcAddress(hMod, "AddFormToActiveTag");
+
+	if (!CLIWrapper::TagBrowser::Show ||
+		!CLIWrapper::TagBrowser::Hide || 
+		!CLIWrapper::TagBrowser::AddFormToActiveTag)
+	{	
+		LogWinAPIErrorMessage(GetLastError());
+		return false;
+	}
+
+
 
 
 	return true;

@@ -7,7 +7,10 @@
 #include "obse/Script.h"
 #include "obse/PluginAPI.h"
 #include "obse/GameObjects.h"
+#include "obse/NiNodes.h"
+#include "obse/NiObjects.h"
 #include "Console.h"
+#include <D3dx9tex.h>
 
 #include "[Libraries]\INI Manager\INIManager.h"
 #include "[Libraries]\INI Manager\INIEditGUI.h"
@@ -252,9 +255,9 @@ public:
 		kFlags_RunforRumors = 0x0040
 	 };
 
-	TESTopic*			topic024;		// 24 - always NULL ?
+	TESTopic*			unk024;			// 24 - always NULL ?
 	ConditionEntry		conditions;		// 28
-	UInt16				unk30;			// 30 - init to -1. used to determine previous info	
+	UInt16				unk30;			// 30 - init to -1. used to determine previous info	?
 	UInt16				infotype;		// 32 
 	UInt8				flags;			// 34
 	UInt8				flagsPad[3];	// 35
@@ -334,6 +337,17 @@ struct GMSTMap_Key_Comparer
 typedef std::map<const char*, GMSTData*, GMSTMap_Key_Comparer>		_DefaultGMSTMap;
 extern _DefaultGMSTMap			g_DefaultGMSTMap;
 
+class BSTextureManager;
+class BSRenderedTexture;
+class NiDX9Renderer;
+typedef ModEntry::Data			TESFile;
+
+enum 
+{
+	kTESObjectREFRSpecialFlags_3DInvisible				= 1 << 31,			// bits (only?) used in the runtime to mark modifications
+	kTESObjectREFRSpecialFlags_Children3DInvisible		= 1 << 30,
+};
+
 
 extern const HINSTANCE*			g_TESCS_Instance;
 
@@ -371,6 +385,28 @@ extern UInt8*					g_Flag_ObjectWindow_MenuState;
 extern UInt8*					g_Flag_CellView_MenuState;
 extern CRITICAL_SECTION*		g_ExtraListCS;
 extern TESSound**				g_FSTSnowSneak;
+extern BSTextureManager**		g_TextureManager;
+extern NiDX9Renderer**			g_CSRenderer;
+
+extern TESForm**				g_DoorMarker;
+extern TESForm**				g_NorthMarker;
+extern TESForm**				g_TravelMarker;
+extern TESForm**				g_MapMarker;
+extern TESForm**				g_HorseMarker;
+
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture32x; 
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture64x; 
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture128x;
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture512x; 
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture1024x;
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture2048x;
+
+extern BSRenderedTexture**		g_LODBSTexture32x;
+extern BSRenderedTexture**		g_LODBSTexture64x;
+extern BSRenderedTexture**		g_LODBSTexture128x;
+extern BSRenderedTexture**		g_LODBSTexture512x;
+extern BSRenderedTexture**		g_LODBSTexture1024x;
+extern BSRenderedTexture**		g_LODBSTexture2048x;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -442,8 +478,14 @@ extern const _TESDialog_GetDialogExtraLocalCopy		TESDialog_GetDialogExtraLocalCo
 typedef void			(__cdecl *_TESDialog_ComboBoxPopulateWithRaces)(HWND ComboBox, bool NoneEntry);
 extern const _TESDialog_ComboBoxPopulateWithRaces		TESDialog_ComboBoxPopulateWithRaces;
 
+typedef void			(__cdecl *_TESDialog_ComboBoxPopulateWithForms)(HWND ComboBox, UInt8 FormType, bool ClearItems, bool AddDefaultItem);
+extern const _TESDialog_ComboBoxPopulateWithForms		TESDialog_ComboBoxPopulateWithForms;
+
 typedef void*			(__cdecl *_TESDialog_GetSelectedItemData)(HWND ComboBox);
 extern const _TESDialog_GetSelectedItemData		TESDialog_GetSelectedItemData;
+
+typedef TESObjectREFR*			(__stdcall *_DataHandler_PlaceTESBoundObjectReference)(TESBoundObject* BaseForm, NiVector3* Position, NiVector3* Rotation, float unk03);
+extern const _DataHandler_PlaceTESBoundObjectReference		DataHandler_PlaceTESBoundObjectReference;
 
 extern const void *			RTTI_TESCellUseList;
 
@@ -453,7 +495,7 @@ extern const UInt32			kTESCellUseList_GetUseListRefHead;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
 extern const UInt32			kScript_SaveResultScript;
 extern const UInt32			kScript_SaveScript;
-extern const UInt32			kLinkedListNode_NewNode;		// BSTSimpleList
+extern const UInt32			kLinkedListNode_NewNode;		// some BSTSimpleList template initialization
 extern const UInt32			kDataHandler_AddBoundObject;
 extern const UInt32			kTESForm_SetFormID;
 extern const UInt32			kTESForm_SetEditorID;
@@ -466,7 +508,18 @@ extern const UInt32			kTESScriptableForm_SetScript;
 extern const UInt32			kBSString_Set;
 extern const UInt32			kExtraDataList_CopyListForReference;
 extern const UInt32			kExtraDataList_CopyList;
+extern const UInt32			kGMSTMap_Add;	// NiPointerMap<const char*, GMSTData>
+extern const UInt32			kBSTextureManager_CreateBSRenderedTexture;
+extern const UInt32			kTESForm_GetOverrideFile;
+extern const UInt32			kTESForm_AddReference;
+extern const UInt32			kTESQuest_SetStartEnabled;
+extern const UInt32			kTESQuest_SetAllowedRepeatedStages;
+extern const UInt32			kTESObjectCELL_GetIsInterior;
+extern const UInt32			kTESBipedModelForm_GetIsPlayable;
+extern const UInt32			kTESRenderSelection_ClearSelection;
+extern const UInt32			kTESRenderSelection_AddFormToSelection;
 
+extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
 extern const UInt32			kBaseExtraList_ModExtraOwnership;
 extern const UInt32			kBaseExtraList_ModExtraGlobal;
@@ -486,9 +539,11 @@ extern const UInt32			kVTBL_TESQuest;
 extern const UInt32			kVTBL_TESNPC;
 extern const UInt32			kVTBL_TESCreature;
 extern const UInt32			kVTBL_TESFurniture;
+extern const UInt32			kVTBL_TESObjectACTI;
 extern const UInt32			kVTBL_TESObjectMISC;
 extern const UInt32			kVTBL_TESObjectWEAP;
 extern const UInt32			kVTBL_TESObjectCONT;
+extern const UInt32			kVTBL_TESObjectCLOT;
 extern const UInt32			kVTBL_SpellItem;
 extern const UInt32			kVTBL_Script;
 extern const UInt32			kVTBL_MessageHandler;
@@ -496,10 +551,12 @@ extern const UInt32			kVTBL_MessageHandler;
 extern const UInt32			kTESNPC_Ctor;
 extern const UInt32			kTESCreature_Ctor;
 extern const UInt32			kTESFurniture_Ctor;
+extern const UInt32			kTESObjectACTI_Ctor;
 extern const UInt32			kTESObjectMISC_Ctor;
 extern const UInt32			kTESObjectWEAP_Ctor;
 extern const UInt32			kTESObjectCONT_Ctor;
 extern const UInt32			kTESObjectREFR_Ctor;
+extern const UInt32			kTESObjectCLOT_Ctor;
 extern const UInt32			kTESQuest_Ctor;
 extern const UInt32			kScript_Ctor;
 
@@ -518,6 +575,19 @@ void						SpawnCustomScriptEditor(const char* ScriptEditorID);
 
 class FormEnumerationWrapper
 {
+public:
+	static void __stdcall ReinitializeFormLists()
+	{
+		DeInitializeCSWindows();	
+
+		SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
+		SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
+
+		InitializeCSWindows();
+		InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
+		SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
+	}
+
 	static bool GetUnmodifiedFormHiddenState()	// returns true when hidden
 	{
 		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
@@ -533,20 +603,7 @@ class FormEnumerationWrapper
 
 		return (State & MF_CHECKED);
 	}
-	static void __stdcall ReinitializeFormLists()
-	{
-		DeInitializeCSWindows();	
 
-		SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
-		SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
-
-		InitializeCSWindows();
-		InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
-		SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
-	}
-
-
-public:
 	static bool __stdcall GetShouldEnumerateForm(TESForm* Form)
 	{
 		if (GetUnmodifiedFormHiddenState() && (Form->flags & TESForm::kFormFlags_FromActiveFile) == 0)
@@ -572,7 +629,7 @@ public:
 		case 0x00442576:
 		case 0x00452409:
 		case 0x00560DC2:
-		case 0x00445E12:	// ?
+		case 0x00445E12:	
 		case 0x00445D81:
 		case 0x004F00C3:
 			return 1;

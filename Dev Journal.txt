@@ -3,31 +3,20 @@ To-Do
 MISC-->
 > Turn off debug when releasing builds
 
-BE---->
-> Look into the extraData fuckup
-> Filter out refs that don't have ownership data and count
 
 CSE--->
 > Fully implement GMST reinit
 > Update the model of references
 > Export/import result scripts
-> Fix the water fix
+> Fix the water fix (enable water shader INI settings)
 > Fix the f_PlaySoundFile
-> Consider the feasibility of implementing a scripting language for the CS
+> Fix the CS adding water info to a cell even when it has no water
+> Investigate into the mysterious scale inc/dec buttons in the ref. edit dialog
 
-> Tackle the Search and Replace window (and do what ?)
-> Aesthetically improve the Export Dialog tool's result (as per Sjors_Boomscors's request) {need to check with other users}
-> When choosing a mesh/texture/resource, a "Copy from" option that let's you choose another base object to copy from.
-> Sound items have a handy-dandy Play button so you can hear them. Unfortunately, they only play the sound if they're actually extracted. If they're still in the Bsa, well you get to listen to the sound of silence.
-> Fix the author/desc editing bug
-> Being able to see cell quadrant boundaries when the landscape and/or quadrant dialogue(s) are open, maybe even color-coded boundaries so it is easy to see which quadrant is which
-> Being able to re-order masters from the master list in the Data... dialogue
 > Relative scaling and snap to bounding box
-
 
 startconversation player, sometopic - Apparently the comma is required for the syntax to be valid, otherwise the topic is never called up. The CS generates no warning/error about this which leads to much frustration wondering why sometimes topics set without the comma never trigger. 
 
-# The ability to specify a custom workspace.
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
 # NPC refs update visually when their inventory is changed without plugin reload
 # Option to automatically dump & reload models on cell load without plugin reload
@@ -38,15 +27,11 @@ startconversation player, sometopic - Apparently the comma is required for the s
 * Land LOD meshes that aren't such terrible approximations of the real landscape. I remember seeing somewhere that what we get is a 1% representation of the real thing. Could we bump this to 5% or something?
 * The ability to generate landscape LOD textures that are better than the 1024x1024 quality we get now. Something on the quality level of the local maps. Or at the very least higher resolution.
 * Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
-* Don't make the LOD texture generator load all the objects on the surface since they're not going to be used in the results anyway. Saves untold amounts of memory.
-* Generate the textures and normal maps for LOD land in DXT1 format with appropriate mipmap levels to start with. Easy enough to fix, but why incur extra work?
 
 > Fix stuff mentioned in http://cs.elderscrolls.com/constwiki/index.php/Landscape_LOD_Tutorial
 
-> I did mention this but a really big bug with construction set for anyone building a new worldspace is the very limited HeightMap Editor u need to use it to generate the lod land meshes for any worldspace but  if your worldspace is bigger than 16x16 grid i needs to be done in sections as the HeightMap only see whats loaded in it to a max of 16 x 16 grids. Each time you generate the land lod files in the HeightMap editor you have to restart the construction set as if you try and generate the lod land meshes more than once only they will be corrupted after the 1st time.  This makes this a very time consuming process . Would be great if you get the HeightMap editor to load the full worldspace at once. If all that make some sort of sense
 
 SE---->
+> Fix the 'Missing New Tab button' repaint issue
+> Fix the issue with the load tool update scripts option
 > Implement AvalonEdit ( implement Notepad++ like auto highlight selection)
-> From the script editor, a "Create Staple" command... not sure staple is the best word, but...
-It would create a corresponding form for the script to attach to. That is, for a quest script it would create a quest; for an activator, create an activator and place it in a cell, etc.
-> Dialogue would let you choose type up top (auto quest for quest, for object either token, activator, spell would be enchantment or ability); followed by text box for name; followed by necessary quick settings (for quest - start game enabled, repeat quest stages; for activator - which cell, initially disabled, persistent should be assumed)

@@ -182,6 +182,9 @@ void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 	case e_BSA:
 		Prefix += "BSA";
 		break;
+	case e_TAG:
+		Prefix += "TAG";
+		break;
 	}
 	PrintMessage(Prefix, g_Buffer);
 }

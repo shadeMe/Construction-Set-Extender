@@ -251,3 +251,26 @@ struct BatchRefData
 	_Ownership										Ownership;
 };
 
+struct TagBrowserInstantiationData
+{
+	struct Vec3
+	{
+		float x, y, z;
+	};
+
+	enum
+	{
+		kFlag_UsePosition = 1 << 0,
+		kFlag_UseRotation = 1 << 1
+	};
+
+	FormData*										FormListHead;
+	UInt32											FormCount;
+	Vec3											Position;
+	Vec3											Rotation;
+
+	UInt32											Flags;
+
+	bool UsePosition() { return (Flags & kFlag_UsePosition) ? true : false; }
+	bool UseRotation() { return (Flags & kFlag_UseRotation) ? true : false; }
+};

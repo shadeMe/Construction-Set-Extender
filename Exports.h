@@ -4,6 +4,8 @@
 #include "[Common]\HandShakeStructs.h"
 
 class DataHandler;
+extern FormData*				g_FormData;
+extern UseListCellItemData*		g_UseListCellItemData;
 
 // would be more aesthetically pleasing if this were rearranged into different interfaces but meh
 // CSE's gonna be the only user
@@ -27,7 +29,7 @@ __declspec(dllexport) const char* ScriptEditor_GetAuxScriptName();
 
 __declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID);
 __declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID);
-__declspec(dllexport) void* LookupFormByEditorID(const char* EditorID);	
+__declspec(dllexport) FormData* LookupFormByEditorID(const char* EditorID);	
 
 __declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex);
 __declspec(dllexport) const char* ScriptEditor_GetScriptListItemText(const char* EditorID);
@@ -44,6 +46,7 @@ __declspec(dllexport) void ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSen
 __declspec(dllexport) void ScriptEditor_ToggleScriptCompiling(bool Enable);
 __declspec(dllexport) void ScriptEditor_SaveActivePlugin();
 __declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText);
+__declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Parent);
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText();
 __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorID);
@@ -53,6 +56,9 @@ __declspec(dllexport) void TESForm_LoadIntoView(const char* EditorID, const char
 
 __declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID);
 __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent);
+
+__declspec(dllexport) void TagBrowser_GetObjectWindowSelection(void);
+__declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
 
 }
 

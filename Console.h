@@ -25,7 +25,8 @@ public:
 		e_BE,
 		e_UL,
 		e_SE,
-		e_BSA
+		e_BSA,
+		e_TAG
 	};
 
 	void						InitializeConsole();

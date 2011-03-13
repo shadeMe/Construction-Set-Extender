@@ -41,8 +41,11 @@ UInt32 ScriptEditorTextEditor::GetTextLength(void)
 	return TextField->Text->Length;	
 }
 
-void ScriptEditorTextEditor::SetText(String^ Text)
+void ScriptEditorTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling)
 {
+	if (PreventTextChangedEventHandling)
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+
 	TextField->Text = Text;
 }
 
@@ -51,8 +54,11 @@ String^ ScriptEditorTextEditor::GetSelectedText(void)
 	return TextField->SelectedText;
 }
 
-void ScriptEditorTextEditor::SetSelectedText(String^ Text)
+void ScriptEditorTextEditor::SetSelectedText(String^ Text, bool PreventTextChangedEventHandling)
 {
+	if (PreventTextChangedEventHandling)
+		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+
 	TextField->SelectedText = Text;
 }
 
@@ -84,6 +90,7 @@ int ScriptEditorTextEditor::GetLineNumberFromCharIndex(int Index)
 bool ScriptEditorTextEditor::GetCharIndexInsideCommentSegment(int Index)
 {
 	bool Result = true;
+
 
 	Point Location = TextField->GetPositionFromCharIndex(TextField->SelectionStart);
 	int LineNo = TextField->GetLineFromCharIndex(TextField->SelectionStart);
@@ -854,7 +861,7 @@ void ScriptEditorTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 			PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
 		else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::e_Disabled)
 		{
-			if (!GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
+			if (TextField->SelectionStart - 1 >= 0 && !GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
 			{
 				IntelliSenseBox->Initialize(IntelliSenseBox->LastOperation, false, false);
 			}
@@ -893,7 +900,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		IntelliSenseBox->UpdateLocalVars();
 		IntelliSenseBox->Enabled = true;
 
-		if (!GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
+		if (TextField->SelectionStart - 1 >= 0 && !GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
 		{
 			try
 			{

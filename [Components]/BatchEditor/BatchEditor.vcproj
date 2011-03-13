@@ -6,7 +6,7 @@
 	ProjectGUID="{F215DC0C-0A95-477D-A336-1A5080AE04AD}"
 	RootNamespace="BatchEditor"
 	Keyword="ManagedCProj"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform

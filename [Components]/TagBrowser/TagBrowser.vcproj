@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="BSAViewer"
-	ProjectGUID="{41E73AFC-9E62-4535-BC6C-C4FD9956128E}"
-	RootNamespace="CSEBSAViewer"
+	Name="TagBrowser"
+	ProjectGUID="{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}"
+	RootNamespace="UseInfoList"
 	Keyword="ManagedCProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG"
+				PreprocessorDefinitions="WIN32;_DEBUG;CSE_USER"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="4"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..\&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;CSE_USER;CSE_USEINFOLIST"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -163,7 +163,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\BSAViewer.dll&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\UseInfoList.dll&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -184,8 +184,8 @@
 			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
-			RelativePath="System.Drawing.dll"
-			AssemblyName="System.Drawing, Version=2.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+			RelativePath="DevComponents.DotNetBar2.dll"
+			AssemblyName="DevComponents.DotNetBar2, Version=8.0.0.0, PublicKeyToken=5fd520d36328f741, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
 	</References>
@@ -219,71 +219,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Resources"
-			>
-			<File
-				RelativePath=".\BSAViewer.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\Images.resx"
-				SubType="Designer"
-				>
-			</File>
-			<File
-				RelativePath=".\Resource.h"
-				>
-			</File>
-			<Filter
-				Name="Images"
-				>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\CHAT.A.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\DEFRAG.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - DLL.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - MOVIE.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - PICTURE.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - SOUND.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FOLDER.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\openfolderHS.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\PageUpHS.png"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ViewThumbnailsHS.png"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
 			Name="Wrappers"
 			>
 			<File
@@ -291,22 +226,18 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\BSAReader.cpp"
+		<Filter
+			Name="Resources"
 			>
-		</File>
-		<File
-			RelativePath=".\BSAReader.h"
-			>
-		</File>
-		<File
-			RelativePath=".\BSAViewer.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\BSAViewer.h"
-			>
-		</File>
+			<File
+				RelativePath=".\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TagBrowser.rc"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\Exports.cpp"
 			>
@@ -317,6 +248,14 @@
 		</File>
 		<File
 			RelativePath=".\Prefix.h"
+			>
+		</File>
+		<File
+			RelativePath=".\TagBrowser.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\TagBrowser.h"
 			>
 		</File>
 	</Files>

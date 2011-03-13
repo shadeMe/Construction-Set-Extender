@@ -4,15 +4,12 @@
 #include "[Common]\CLIWrapper.h"
 
 EditorAllocator*					EditorAllocator::Singleton = NULL;
-
 char								g_Buffer[0x200] = {0};
-
 _DefaultGMSTMap						g_DefaultGMSTMap;
-
 HINSTANCE							g_DLLInstance = NULL;
 
-const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 
+const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
 const DLGPROC						g_UseReport_DlgProc = (DLGPROC)0x00433FE0;
 const DLGPROC						g_TESDialog_DlgProc = (DLGPROC)0x00447580;
@@ -47,6 +44,28 @@ UInt8*								g_Flag_ObjectWindow_MenuState = (UInt8*)0x00A0AF40;
 UInt8*								g_Flag_CellView_MenuState = (UInt8*)0x00A0AF48;
 CRITICAL_SECTION*					g_ExtraListCS = (CRITICAL_SECTION*)0x00A0DA80;
 TESSound**							g_FSTSnowSneak = (TESSound**)0x00A110F0;
+BSTextureManager**					g_TextureManager = (BSTextureManager**)0x00A8E760;
+NiDX9Renderer**						g_CSRenderer = (NiDX9Renderer**)0x00A0F87C;
+
+TESForm**							g_DoorMarker = (TESForm**)0x00A13470;
+TESForm**							g_NorthMarker = (TESForm**)0x00A13484;
+TESForm**							g_TravelMarker = (TESForm**)0x00A13480;
+TESForm**							g_MapMarker = (TESForm**)0x00A13474;
+TESForm**							g_HorseMarker = (TESForm**)0x00A134A0;
+
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;  
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0; 
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture128x = (LPDIRECT3DTEXTURE9*)0x00A0AABC; 
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture512x = (LPDIRECT3DTEXTURE9*)0x00A0AAC8;  
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture1024x = (LPDIRECT3DTEXTURE9*)0x00A0AAD0;
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture2048x = (LPDIRECT3DTEXTURE9*)0x00A0AACC; 
+
+BSRenderedTexture**					g_LODBSTexture32x = (BSRenderedTexture**)0x00A0AADC;
+BSRenderedTexture**					g_LODBSTexture64x = (BSRenderedTexture**)0x00A0AAD8;
+BSRenderedTexture**					g_LODBSTexture128x = (BSRenderedTexture**)0x00A0AAD4;
+BSRenderedTexture**					g_LODBSTexture512x = (BSRenderedTexture**)0x00A0AAE0;
+BSRenderedTexture**					g_LODBSTexture1024x = (BSRenderedTexture**)0x00A0AAE8;
+BSRenderedTexture**					g_LODBSTexture2048x = (BSRenderedTexture**)0x00A0AAE4;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -73,10 +92,14 @@ const _TESDialog_GetDialogExtraParam
 									TESDialog_GetDialogExtraParam = (_TESDialog_GetDialogExtraParam)0x004429D0;
 const _TESDialog_ComboBoxPopulateWithRaces
 									TESDialog_ComboBoxPopulateWithRaces = (_TESDialog_ComboBoxPopulateWithRaces)0x00445240;
+const _TESDialog_ComboBoxPopulateWithForms
+									TESDialog_ComboBoxPopulateWithForms = (_TESDialog_ComboBoxPopulateWithForms)0x004456F0;
 const _TESDialog_GetSelectedItemData
 									TESDialog_GetSelectedItemData = (_TESDialog_GetSelectedItemData)0x00403690;
 const _TESDialog_GetDialogExtraLocalCopy
 									TESDialog_GetDialogExtraLocalCopy = (_TESDialog_GetDialogExtraLocalCopy)0x004429B0;
+const _DataHandler_PlaceTESBoundObjectReference
+									DataHandler_PlaceTESBoundObjectReference = (_DataHandler_PlaceTESBoundObjectReference)0x0047C610;
 
 const void*							RTTI_TESCellUseList = (void*)0x009EB2E4;
 
@@ -87,9 +110,11 @@ const UInt32						kVTBL_TESQuest = 0x00945D7C;
 const UInt32						kVTBL_TESNPC = 0x0094561C;
 const UInt32						kVTBL_TESCreature = 0x00944334;
 const UInt32						kVTBL_TESFurniture = 0x00950E94;
+const UInt32						kVTBL_TESObjectACTI = 0x009537DC;
 const UInt32						kVTBL_TESObjectMISC = 0x00955224;
 const UInt32						kVTBL_TESObjectWEAP = 0x00955C8C;
 const UInt32						kVTBL_TESObjectCONT = 0x00954B44;
+const UInt32						kVTBL_TESObjectCLOT = 0x0095482C;
 const UInt32						kVTBL_SpellItem = 0x0095E504;
 const UInt32						kVTBL_Script = 0x0094944C;
 const UInt32						kVTBL_MessageHandler = 0x00940760;
@@ -97,10 +122,12 @@ const UInt32						kVTBL_MessageHandler = 0x00940760;
 const UInt32						kTESNPC_Ctor = 0x004D8FF0;
 const UInt32						kTESCreature_Ctor = 0x004CE820;
 const UInt32						kTESFurniture_Ctor = 0x0050C830;
+const UInt32						kTESObjectACTI_Ctor = 0x00515530;
 const UInt32						kTESObjectMISC_Ctor = 0x0051ABA0;
 const UInt32						kTESObjectWEAP_Ctor = 0x0051DAB0;
 const UInt32						kTESObjectCONT_Ctor = 0x00518F60;
 const UInt32						kTESObjectREFR_Ctor = 0x00541870;
+const UInt32						kTESObjectCLOT_Ctor = 0x00518350;
 const UInt32						kTESQuest_Ctor = 0x004E0500;
 const UInt32						kScript_Ctor = 0x004FCA50;
 
@@ -123,7 +150,18 @@ const UInt32						kTESScriptableForm_SetScript = 0x004A1830;
 const UInt32						kBSString_Set = 0x004051E0;
 const UInt32						kExtraDataList_CopyListForReference = 0x004603D0;
 const UInt32						kExtraDataList_CopyList = 0x00460380;
+const UInt32						kGMSTMap_Add = 0x0044F680;
+const UInt32						kBSTextureManager_CreateBSRenderedTexture = 0x00773080;
+const UInt32						kTESForm_GetOverrideFile = 0x00495FE0;
+const UInt32						kTESForm_AddReference = 0x00496430;
+const UInt32						kTESQuest_SetStartEnabled = 0x004DD7E0;
+const UInt32						kTESQuest_SetAllowedRepeatedStages = 0x004DD7C0;
+const UInt32						kTESObjectCELL_GetIsInterior = 0x00532240;
+const UInt32						kTESBipedModelForm_GetIsPlayable = 0x00490290;
+const UInt32						kTESRenderSelection_ClearSelection = 0x00511C20;
+const UInt32						kTESRenderSelection_AddFormToSelection = 0x00512730;
 
+const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
 const UInt32						kBaseExtraList_ModExtraOwnership = 0x0045E060;
 const UInt32						kBaseExtraList_ModExtraGlobal = 0x0045E120;

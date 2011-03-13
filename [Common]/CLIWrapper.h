@@ -57,5 +57,17 @@ namespace CLIWrapper
 		extern _InitializeRefBatchEditor		InitializeRefBatchEditor;
 		extern _AddFormListItem					AddFormListItem;
 	}
+	namespace TagBrowser
+	{
+		typedef void							(*_Show)(HWND);
+		typedef void							(*_Hide)(void);
+		typedef void							(*_AddFormToActiveTag)(FormData*);
+
+		extern _Show							Show;
+		extern _Hide							Hide;
+		extern _AddFormToActiveTag				AddFormToActiveTag;
+	}
+
+
 	bool										Import(const OBSEInterface * obse);
 }

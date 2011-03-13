@@ -10,8 +10,7 @@
 #include "CSInterop.h"
 #include "WindowManager.h"
 
-FormData*						UIL_FormData = new FormData();
-UseListCellItemData*			UIL_CellData = new UseListCellItemData();
+
 const char*						g_AssetSelectorReturnPath = NULL;
 const char*						g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 bool							g_QuickLoadToggle = false;
@@ -83,10 +82,67 @@ MemHdlr							kTESRaceCopyHairEyeDataMessageHandler
 NopHdlr							kTESDialogSubwindowEnumChildCallback
 																	(0x00404E69, 3);
 MemHdlr							kTESObjectREFRDoCopyFrom			(0x0054763D, TESObjectREFRDoCopyFromHook, 0, 0);
+NopHdlr							kLODLandTextureMipMapLevelA			(0x00411008, 2);
+MemHdlr							kLODLandTextureMipMapLevelB			(0x005E0306, LODLandTextureMipMapLevelBHook, 0, 0);
+MemHdlr							kLODLandTextureResolution			(0x00410D08, LODLandTextureResolutionHook, 0, 0);
+MemHdlr							kDataHandlerSaveFormToFile			(0x00479181, DataHandlerSaveFormToFileHook, 0, 0);
+MemHdlr							kTESFileUpdateHeader				(0x004894D0, TESFileUpdateHeaderHook, 0, 0);
+MemHdlr							kTESObjectREFRGet3DData				(0x00542950, TESObjectREFRGet3DDataHook, 0, 0);
 
+void __declspec(naked) TestHook(void)
+{
+	static UInt32 RetnAddr = 0x0041261C, CallAddr = 0x00410A90;
+	__asm
+	{
+		mov     dword ptr [esp+20h], 256
+		jmp		[RetnAddr]
+	}
+}
+void __declspec(naked) TestHookEx(void)
+{
+	static UInt32 RetnAddr = 0x0041262D, CallAddr = 0x00410A90;
+	__asm
+	{
+		mov     esi, 256
+		jmp		[RetnAddr]
+	}
+}
+
+void __declspec(naked) TestHook1(void)
+{
+	static UInt32 RetnAddr = 0x00412692, CallAddr = 0x00410A90;
+	__asm
+	{
+		add     dword ptr [esp+18h], 32
+		jmp		[RetnAddr]
+	}
+}
+void __declspec(naked) TestHook2(void)
+{
+	static UInt32 RetnAddr = 0x0041269D, CallAddr = 0x00410A90;
+	__asm
+	{
+		add     edi, 32
+		jmp		[RetnAddr]
+	}
+}
+
+//static float f1 = 384.0, f2 = 2048.0;
 
 bool PatchMiscHooks()
 {
+//	WriteRelJump(0x00412614, (UInt32)TestHook);
+//	WriteRelJump(0x00412628, (UInt32)TestHookEx);
+//
+//	WriteRelJump(0x0041268A, (UInt32)TestHook1);
+//	WriteRelJump(0x00412697, (UInt32)TestHook2);
+//
+//	SafeWrite8(0x00412AB1 + 1, 128);
+//	SafeWrite8(0x0041298B + 1, 128);
+//	SafeWrite8(0x004128B5 + 1, 1);
+//	SafeWrite32(0x005BFCEB + 2, (UInt32)&f1);
+//	SafeWrite32(0x005BFD0B + 2, (UInt32)&f2);
+
 	kLoadPluginsProlog.WriteJump();
 	kLoadPluginsEpilog.WriteJump();
 	kSavePluginCommonDialog.WriteJump();
@@ -146,24 +202,30 @@ bool PatchMiscHooks()
 	kTESRaceCopyHairEyeDataMessageHandler.WriteJump();
 	kTESDialogSubwindowEnumChildCallback.WriteNop();
 	kTESObjectREFRDoCopyFrom.WriteJump();
+	kLODLandTextureMipMapLevelA.WriteNop();
+	kLODLandTextureMipMapLevelB.WriteJump();
+//	kLODLandTextureResolution.WriteJump();
+	kDataHandlerSaveFormToFile.WriteJump();
+	kTESFileUpdateHeader.WriteJump();
+	kTESObjectREFRGet3DData.WriteJump();
 
-	COMMON_DIALOG_CANCEL_PATCH(Model);
-	COMMON_DIALOG_CANCEL_PATCH(Animation);
-	COMMON_DIALOG_CANCEL_PATCH(Sound);
-	COMMON_DIALOG_CANCEL_PATCH(Texture);
-	COMMON_DIALOG_CANCEL_PATCH(SPT);
+	PatchCommonDialogCancelHandler(Model);
+	PatchCommonDialogCancelHandler(Animation);
+	PatchCommonDialogCancelHandler(Sound);
+	PatchCommonDialogCancelHandler(Texture);
+	PatchCommonDialogCancelHandler(SPT);
 
-	COMMON_DIALOG_SELECTOR_PATCH(Model);
-	COMMON_DIALOG_SELECTOR_PATCH(Animation);
-	COMMON_DIALOG_SELECTOR_PATCH(Sound);
-	COMMON_DIALOG_SELECTOR_PATCH(Texture);
-	COMMON_DIALOG_SELECTOR_PATCH(SPT);
+	PatchCommonDialogPrologHandler(Model);
+	PatchCommonDialogPrologHandler(Animation);
+	PatchCommonDialogPrologHandler(Sound);
+	PatchCommonDialogPrologHandler(Texture);
+	PatchCommonDialogPrologHandler(SPT);
 
-	COMMON_DIALOG_POST_PATCH(Model);
-	COMMON_DIALOG_POST_PATCH(Animation);
-	COMMON_DIALOG_POST_PATCH(Sound);
-	COMMON_DIALOG_POST_PATCH(Texture);
-	COMMON_DIALOG_POST_PATCH(SPT);
+	PatchCommonDialogEpilogHandler(Model);
+	PatchCommonDialogEpilogHandler(Animation);
+	PatchCommonDialogEpilogHandler(Sound);
+	PatchCommonDialogEpilogHandler(Texture);
+	PatchCommonDialogEpilogHandler(SPT);
 
 
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
@@ -387,6 +449,7 @@ void __stdcall DoCSInitHook()
 	kCSInit.WriteBuffer();
 
 	InitializeWindowManager();
+//	InitializeDefaultGMSTMap();
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
 	HallOfFame::Initialize(true);
 	CONSOLE->InitializeConsole();
@@ -442,29 +505,29 @@ void __declspec(naked) MessagePumpInitHook(void)
 
 
 
-COMMON_DIALOG_CANCEL_HOOK(Model)
-COMMON_DIALOG_CANCEL_HOOK(Animation)
-COMMON_DIALOG_CANCEL_HOOK(Sound)
-COMMON_DIALOG_CANCEL_HOOK(Texture)
-COMMON_DIALOG_CANCEL_HOOK(SPT)
+DefineCommonDialogCancelHandler(Model)
+DefineCommonDialogCancelHandler(Animation)
+DefineCommonDialogCancelHandler(Sound)
+DefineCommonDialogCancelHandler(Texture)
+DefineCommonDialogCancelHandler(SPT)
 
 UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 {
 	switch (Filter)
 	{
-	case 0:
+	case e_NIF:
 		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "nif");
 		break;
-	case 1:
+	case e_KF:
 		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "kf");
 		break;
-	case 2:
+	case e_WAV:
 		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "wav");
 		break;
-	case 3:
+	case e_DDS:
 		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "dds");
 		break;
-	case 4:
+	case e_SPT:
 		g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "spt");
 		break;
 	}
@@ -486,16 +549,25 @@ UInt32 __stdcall InitPathEditor(int ID, HWND Dialog)
 		return e_FetchPath;
 }
 
+UInt32 __stdcall InitPathCopier(UInt32 Filter, HWND Dialog)
+{
+	g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_COPYPATH), Dialog, (DLGPROC)CopyPathDlgProc, (LPARAM)Filter);
+	if (!g_AssetSelectorReturnPath)
+		return 0;
+	else
+		return e_FetchPath;
+}
+
 UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog)
 {
 	return DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_ASSETSEL), Dialog, (DLGPROC)AssetSelectorDlgProc);
 }
 
-COMMON_DIALOG_SELECTOR_HOOK(Model)
-COMMON_DIALOG_SELECTOR_HOOK(Animation)
-COMMON_DIALOG_SELECTOR_HOOK(Sound)
-COMMON_DIALOG_SELECTOR_HOOK(Texture)
-COMMON_DIALOG_SELECTOR_HOOK(SPT)
+DefineCommonDialogPrologHandler(Model)
+DefineCommonDialogPrologHandler(Animation)
+DefineCommonDialogPrologHandler(Sound)
+DefineCommonDialogPrologHandler(Texture)
+DefineCommonDialogPrologHandler(SPT)
 
 void __declspec(naked) ModelPostCommonDialogHook(void)     
 {
@@ -933,7 +1005,7 @@ void __declspec(naked) DoorMarkerPropertiesHook(void)
 		pushad
 		call	IsControlKeyDown
 		test	eax, eax
-		jnz		TELEPORT
+		jz		TELEPORT
 		popad
 
 		jmp		[kDoorMarkerPropertiesPropertiesAddr]
@@ -1020,11 +1092,20 @@ void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SETFORMID, "Set FormID");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
+	if (GetDialogTemplate(SelectedForm->typeID) == 1 && SelectedForm->IsReference() == 0)
+	{
+		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
+	}
+	
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 	if (SelectedForm->IsReference())
 	{
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_EDITBASEFORM, "Edit Base Form");
+		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
+		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 	}
-	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
+	
 }
 void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
 {
@@ -1035,6 +1116,9 @@ void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* Selec
 	case POPUP_JUMPTOUSEINFOLIST:
 	case POPUP_UNDELETE:
 	case POPUP_EDITBASEFORM:
+	case POPUP_TOGGLEVISIBILITY:
+	case POPUP_TOGGLECHILDRENVISIBILITY:
+	case POPUP_ADDTOTAG:
 		EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 		break;
 	default:
@@ -1049,6 +1133,10 @@ void __stdcall RemoveFormListPopupMenuItems(HMENU Menu)
 	DeleteMenu(Menu, POPUP_JUMPTOUSEINFOLIST, MF_BYCOMMAND);
 	DeleteMenu(Menu, POPUP_UNDELETE, MF_BYCOMMAND);
 	DeleteMenu(Menu, POPUP_EDITBASEFORM, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_TOGGLEVISIBILITY, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_TOGGLECHILDRENVISIBILITY, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_ADDTOTAG, MF_BYCOMMAND);
+	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 }
 
@@ -1144,7 +1232,7 @@ void __stdcall DoNumericEditorIDHook(const char* EditorID)
 		strlen(EditorID) > 0 && 
 		isdigit((int)*EditorID))
 	{
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally acceptable by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
+		sprintf_s(g_Buffer, sizeof(g_Buffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
 		MessageBox(*g_HWND_CSParent, g_Buffer, "CSE", MB_OK|MB_ICONWARNING);
 	}
 }
@@ -1499,6 +1587,177 @@ void __declspec(naked) TESObjectREFRDoCopyFromHook(void)
 	}
 }
 
+void __declspec(naked) LODLandTextureMipMapLevelBHook(void)
+{
+	static UInt32 kLODLandTextureMipMapLevelBHookRetnAddr = 0x005E030F;
+	__asm
+	{
+		push    2
+		push    0x14
+		push    0
+		mov		eax, 8
+		push	eax
+		push    ebx
+		
+		jmp		[kLODLandTextureMipMapLevelBHookRetnAddr]
+	}
+}
 
+void __stdcall DoLODLandTextureResolutionHook(void)
+{
+	LPDIRECT3DDEVICE9 D3DDevice = (LPDIRECT3DDEVICE9)(*((UInt32*)((UInt32)(*g_CSRenderer) + 0x280)));
+
+	D3DXCreateTexture(D3DDevice, 32, 32, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture32x);
+	D3DXCreateTexture(D3DDevice, 128, 128, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture128x);
+	D3DXCreateTexture(D3DDevice, 512, 512, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture512x);
+	D3DXCreateTexture(D3DDevice, 2048, 2048, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture2048x);
+
+	// increase size of the default textures used as buffers during LOD texture generation
+	D3DXCreateTexture(D3DDevice, 64, 64, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture64x);
+	D3DXCreateTexture(D3DDevice, 1024, 1024, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture1024x);
+//	D3DXCreateTexture(D3DDevice, 256, 256, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture64x);
+//	D3DXCreateTexture(D3DDevice, 4096, 4096, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture1024x);
+
+	*g_LODBSTexture32x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 32, 21, 0, 0);
+	*g_LODBSTexture128x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 128, 21, 0, 0);
+	*g_LODBSTexture512x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 512, 21, 0, 0);
+	*g_LODBSTexture2048x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 2048, 21, 0, 0);
+
+	*g_LODBSTexture64x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 64, 21, 0, 0);
+	*g_LODBSTexture1024x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 1024, 21, 0, 0);
+//	*g_LODBSTexture64x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 256, 21, 0, 0);
+//	*g_LODBSTexture1024x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 4096, 21, 0, 0);
+}
+
+void __declspec(naked) LODLandTextureResolutionHook(void)
+{
+	static UInt32 kLODLandTextureResolutionHookRetnAddr = 0x00410EB4;
+	__asm
+	{
+		call	DoLODLandTextureResolutionHook
+		jmp		[kLODLandTextureResolutionHookRetnAddr]
+	}
+}
+bool __stdcall DoDataHandlerSaveFormToFileHook(TESForm* Form)
+{
+	ModEntry::Data* OverrideFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Form, -1);
+	if (!OverrideFile || OverrideFile == (*g_dataHandler)->unk8B8.activeFile)
+		return false;
+	else
+		return true;
+}
+
+void __declspec(naked) DataHandlerSaveFormToFileHook(void)
+{
+	static UInt32 kDataHandlerSaveFormToFileHookRetnAddr = 0x00479187;
+	static UInt32 kDataHandlerSaveFormToFileHookJumpAddr = 0x0047919E;
+	__asm
+	{
+		test	byte ptr [esi + 0x8], 1
+		jz		FAIL
+	EXIT:
+		jmp		[kDataHandlerSaveFormToFileHookRetnAddr]
+	FAIL:
+		pushad
+		xor		eax, eax
+		push	esi
+		call	DoDataHandlerSaveFormToFileHook
+		test	al, al
+		jnz		FIX
+		popad
+
+		jmp		[kDataHandlerSaveFormToFileHookJumpAddr]
+	FIX:
+		popad
+		jmp		EXIT
+	}
+}
+
+bool __stdcall DoTESFileUpdateHeaderHook(TESFile* Plugin)
+{
+	PrintToBuffer("%s%s", Plugin->filepath, Plugin->name);
+	HANDLE TempFile = CreateFile(g_Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (TempFile == INVALID_HANDLE_VALUE)
+	{
+		LogWinAPIErrorMessage(GetLastError());
+		PrintToBuffer("Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->name);
+		MessageBox(NULL, g_Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+		return false;
+	}
+	else
+	{
+		CloseHandle(TempFile);
+		return true;
+	}
+}
+
+void __declspec(naked) TESFileUpdateHeaderHook(void)
+{
+	static UInt32 kTESFileUpdateHeaderHookRetnAddr = 0x004894D6;
+	static UInt32 kTESFileUpdateHeaderHookExitAddr = 0x0048957B;
+	__asm
+	{
+		pushad
+		xor		eax, eax
+		push	ecx
+		call	DoTESFileUpdateHeaderHook
+		test	al, al
+		jz		EXIT
+
+		popad
+		jmp		[kTESFileUpdateHeaderHookRetnAddr]
+	EXIT:
+		popad
+		jmp		[kTESFileUpdateHeaderHookExitAddr]
+	}
+}
+
+void __stdcall DoTESObjectREFRGet3DDataHook(TESObjectREFR* Object, NiNode* Node)
+{
+	ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
+
+	BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Object->baseExtraList, kExtraData_EnableStateParent);
+	if (xData)
+	{
+		ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+		if ((xParent->parent->flags & kTESObjectREFRSpecialFlags_Children3DInvisible))
+			ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+	}
+
+	if ((Object->flags & kTESObjectREFRSpecialFlags_3DInvisible))
+		ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+}
+
+void __declspec(naked) TESObjectREFRGet3DDataHook(void)
+{
+	__asm
+	{
+		push	esi
+		push	ecx		// store
+		push	0x56
+		add		ecx, 0x4C
+		xor		esi, esi
+		call	[kBaseExtraList_GetExtraDataByType]
+		test	eax, eax
+		jz		NO3DDATA
+
+		mov		eax, [eax + 0xC]
+		pop		ecx		// restore
+		push	ecx		// store again for epilog
+
+		pushad
+		push	eax
+		push	ecx
+		call	DoTESObjectREFRGet3DDataHook
+		popad
+		jmp		EXIT
+	NO3DDATA:
+		mov		eax, esi
+	EXIT:
+		pop		ecx
+		pop		esi
+		retn
+	}
+}
 
 

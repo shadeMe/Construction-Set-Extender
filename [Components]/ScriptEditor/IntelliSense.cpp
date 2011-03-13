@@ -93,6 +93,7 @@ IntelliSenseDatabase::IntelliSenseDatabase()
 	DatabaseUpdateThread->DoWork += gcnew DoWorkEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_DoWork);
 	DatabaseUpdateThread->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted);
 
+	UpdateThreadTimerInterval = 10;
 	DatabaseUpdateTimer = gcnew Timers::Timer(UpdateThreadTimerInterval * 60 * 1000);	// init to 10 earth minutes
 	DatabaseUpdateTimer->Elapsed += gcnew Timers::ElapsedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed);
 	DatabaseUpdateTimer->AutoReset = true;
@@ -145,7 +146,6 @@ void IntelliSenseDatabase::PostUpdateDatabase(ParsedUpdateData^ Data)
 	Enumerables = Data->Enumerables;
 	
 	NativeWrapper::PrintToCSStatusBar(2, "IntelliSense database updated");
-//	DebugPrint("IntelliSense database updated");
 }
 
 void IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E)
@@ -175,7 +175,6 @@ void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sende
 	else 
 	{
 		PostUpdateDatabase(dynamic_cast<ParsedUpdateData^>(E->Result));
-//		DebugPrint("ISDatabaseUpdate thread ended successfully!", false);
 	}
 
 	if (E->Result == nullptr)
@@ -188,7 +187,6 @@ void IntelliSenseDatabase::UpdateDatabase()
 {
 	if (!DatabaseUpdateThread->IsBusy)
 	{
-//		DebugPrint("ISDatabaseUpdateThread thread started");
 		DatabaseUpdateThread->RunWorkerAsync();
 		NativeWrapper::PrintToCSStatusBar(2, "Updating IntelliSense database ...");
 	}
@@ -349,7 +347,8 @@ void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 			const CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
 
 			if (CSCount < 370)													Desc = "[CS] ";				// 369 vanilla commands
-			else if (Info) {
+			else if (Info) 
+			{
 				PluginName = gcnew String(Info->name);
 				if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))			PluginName = "MenuQue";
 				else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))		PluginName = "Pluggy";
@@ -406,6 +405,22 @@ String^	IntelliSenseDatabase::GetCommandURL(String^% CmdName)
 	return Result;
 }
 
+String^	IntelliSenseDatabase::SanitizeCommandName(String^% CmdName)
+{
+	for each (IntelliSenseItem^% Itr in Enumerables) 
+	{
+		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
+		{
+			if (!String::Compare(Itr->GetIdentifier(), CmdName, true))
+			{
+				return Itr->GetIdentifier();
+			}
+		}
+	}
+
+	return CmdName;
+}
+
 Script^ IntelliSenseDatabase::GetRemoteScript(String^ BaseEditorID, String^ ScriptText)
 {
 	for each (KeyValuePair<String^, Script^>% Itr in RemoteScripts) {
@@ -437,9 +452,12 @@ bool IntelliSenseDatabase::IsCommand(String^% Name)
 {
 	bool Result = false;
 	
-	for each (IntelliSenseItem^% Itr in Enumerables) {
-		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd) {
-			if (!String::Compare(Itr->GetIdentifier(), Name, true)) {
+	for each (IntelliSenseItem^% Itr in Enumerables) 
+	{
+		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
+		{
+			if (!String::Compare(Itr->GetIdentifier(), Name, true))
+			{
 				Result = true;
 				break;
 			}
@@ -460,6 +478,7 @@ void IntelliSenseDatabase::InitializeDatabaseUpdateTimer()
 	static bool DatabaseTimerInitialized = false;
 	if (DatabaseTimerInitialized)	return;
 
+	UpdateThreadTimerInterval = OPTIONS->FetchSettingAsInt("DatabaseUpdateInterval");
 	DatabaseUpdateTimer->Start();
 	DatabaseTimerInitialized = true;
 }
@@ -759,6 +778,9 @@ int	IntelliSenseThingy::GetSelectedIndex()
 
 bool IntelliSenseThingy::QuickView(String^ TextUnderMouse)
 {
+	if (OPTIONS->FetchSettingAsInt("UseQuickView") == 0)
+		return false;
+
 	IntelliSenseItem^ Item = GetLocalVar(TextUnderMouse);
 
 	if (Item == nullptr) {

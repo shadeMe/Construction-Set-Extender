@@ -108,9 +108,10 @@ void ScriptListDialog::Show(Operation Op)
 	NativeWrapper::ScriptEditor_GetScriptListData(ParentIndex);
 	ScriptList->EndUpdate();
 
-	if (ScriptList->Items->Count > 0) {
+	if (ScriptList->Items->Count > 0) 
+	{
 		String^ CurrentScript = const_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->GetScriptID());
-		if (CurrentScript != "New Script")
+		if (!SEMGR->GetAllocatedWorkspace(ParentIndex)->GetIsCurrentScriptNew())
 			SearchBox->Text = CurrentScript;
 	}
 	else {

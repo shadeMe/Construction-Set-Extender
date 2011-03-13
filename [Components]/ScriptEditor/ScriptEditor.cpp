@@ -11,6 +11,7 @@
 
 namespace ScriptEditor
 {
+
 	void GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
 	{
 		switch (E->Button)
@@ -234,23 +235,28 @@ namespace ScriptEditor
 		void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 		{
 			RemovingTab = true;
-			if (ScriptStrip->Tabs->Count == 1) {
+	//		ScriptStrip->Refresh();
+
+			if (ScriptStrip->Tabs->Count == 1)
+			{
 				if (!DestructionFlag && OPTIONS->FetchSettingAsInt("DestroyOnLastTabClose") == 0)
 					CreateNewTab(nullptr);
-				else {
+				else
+				{
 					ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 					Parameters->VanillaHandleIndex = 0;
 					Parameters->ParameterList->Add(this);
 					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_DestroyTabContainer, Parameters);			
 				}
-			}	
+			}
 		}
 
 
 		UInt32 TabContainer::CreateNewTab(String^ ScriptName)
 		{
 			UInt32 AllocatedIndex = 0;
-			if (ScriptName != nullptr) {
+			if (ScriptName != nullptr)
+			{
 				CStringWrapper^ CEID = gcnew CStringWrapper(ScriptName);
 				AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(CEID->String());
 			}
@@ -258,8 +264,8 @@ namespace ScriptEditor
 				AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(0);
 
 			if (!AllocatedIndex) {
-				DebugPrint("Fatal error occured when allocating a custom editor!", true);
-				return AllocatedIndex;
+				DebugPrint("Fatal error occured when allocating a custom editor! Instantiating an empty workspace...", true);
+				AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(0);
 			}
 
 			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
@@ -275,27 +281,60 @@ namespace ScriptEditor
 
 		void TabContainer::PerformRemoteOperation(RemoteOperation Operation, Object^ Arbitrary)
 		{
-			UInt32 AllocatedIndex = CreateNewTab(nullptr);
 			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 
 			switch (Operation)
 			{
 			case RemoteOperation::e_New:
-				Parameters->VanillaHandleIndex = AllocatedIndex;
-				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_New);
-				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
-				break;
+				{
+					UInt32 AllocatedIndex = CreateNewTab(nullptr);
+					Parameters->VanillaHandleIndex = AllocatedIndex;
+					Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_New);
+					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+					break;
+				}
 			case RemoteOperation::e_Open:
-				SEMGR->GetAllocatedWorkspace(AllocatedIndex)->ShowScriptListBox(ScriptListDialog::Operation::e_Open);
-				break;
+				{
+					UInt32 AllocatedIndex = CreateNewTab(nullptr);
+					SEMGR->GetAllocatedWorkspace(AllocatedIndex)->ShowScriptListBox(ScriptListDialog::Operation::e_Open);
+					break;
+				}
 			case RemoteOperation::e_LoadNew:
-				Parameters->VanillaHandleIndex = AllocatedIndex;
-				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_New);
-				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
+				{
+					String^ FilePath = dynamic_cast<String^>(Arbitrary);
+					UInt32 AllocatedIndex = 0;
 
-				String^ FilePath = dynamic_cast<String^>(Arbitrary);
-				SEMGR->GetAllocatedWorkspace(AllocatedIndex)->LoadFileFromDisk(FilePath);
-				break;
+					if (OPTIONS->FetchSettingAsInt("LoadScriptUpdateExistingScripts") == 0)
+						AllocatedIndex = CreateNewTab(nullptr);
+					else
+					{
+						try 
+						{
+							StreamReader^ TextParser = gcnew StreamReader(FilePath);
+							String^ FileContents = TextParser->ReadToEnd();
+							TextParser->Close();
+
+							String^ ScriptName = ((FileContents->Split('\n', 1))[0]->Split(' '))[1];
+							CStringWrapper^ CEID = gcnew CStringWrapper(ScriptName);
+							if (NativeWrapper::LookupFormByEditorID(CEID->String()))
+								AllocatedIndex = CreateNewTab(ScriptName);
+							else
+								AllocatedIndex = CreateNewTab(nullptr);
+						}
+						catch (Exception^ E) 
+						{
+							DebugPrint("Couldn't read from file " + FilePath + " for script updating!\n\tException: " + E->Message);
+							AllocatedIndex = CreateNewTab(nullptr);
+						}
+					}
+					
+					Parameters->VanillaHandleIndex = AllocatedIndex;
+					Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_New);
+					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);	
+
+					SEMGR->GetAllocatedWorkspace(AllocatedIndex)->LoadFileFromDisk(FilePath);
+					break;
+				}
 			}
 		}
 
@@ -494,7 +533,7 @@ namespace ScriptEditor
 			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
 				if (Itr == NewTabButton)	continue;
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
-				if (Editor->GetScriptID() == "New Script")	continue;
+				if (Editor->GetIsCurrentScriptNew())	continue;
 
 				Editor->SaveScriptToDisk(FolderPath, false);	
 			}
@@ -606,6 +645,8 @@ namespace ScriptEditor
 			ToolBarUpdateVarIndices = gcnew ToolStripButton();
 			ToolBarShowOffsets = gcnew ToolStripButton();
 			ToolBarShowPreprocessedText = gcnew ToolStripButton();
+			ToolBarSanitizeScriptText = gcnew ToolStripButton();
+			ToolBarBindScript = gcnew ToolStripButton();
 			ToolBarByteCodeSize = gcnew ToolStripProgressBar();
 
 			TextEditorContextMenu = gcnew ContextMenuStrip();
@@ -650,7 +691,9 @@ namespace ScriptEditor
 			SetupControlImage(ToolBarUpdateVarIndices);
 			SetupControlImage(ToolBarShowOffsets);
 			SetupControlImage(ToolBarShowPreprocessedText);
-
+			SetupControlImage(ToolBarSanitizeScriptText);
+			SetupControlImage(ToolBarBindScript);
+			
 			SetupControlImage(ContextMenuCopy);
 			SetupControlImage(ContextMenuPaste);
 			SetupControlImage(ContextMenuFind);
@@ -690,12 +733,13 @@ namespace ScriptEditor
 			ToolStripStatusLabel^ ToolBarSpacerB = gcnew ToolStripStatusLabel();
 			ToolBarSpacerB->Spring = true;
 
-			Color ForeColor = OPTIONS->FCDialog->Color;
-			Color BackColor = OPTIONS->BCDialog->Color;
-			Color HighlightColor = OPTIONS->HCDialog->Color;
+			Color ForeColor = OPTIONS->GetColor(OptionsDialog::ColorType::e_Foreground);
+			Color BackColor = OPTIONS->GetColor(OptionsDialog::ColorType::e_Background);
+			Color HighlightColor = OPTIONS->GetColor(OptionsDialog::ColorType::e_Highlight);
+
 			Font^ CustomFont = gcnew Font(OPTIONS->FetchSettingAsString("Font"), OPTIONS->FetchSettingAsInt("FontSize"), (FontStyle)OPTIONS->FetchSettingAsInt("FontStyle"));
 			
-			TextEditor = gcnew ScriptEditorTextEditor(6, CustomFont, ForeColor, BackColor, HighlightColor, this);
+			TextEditor = gcnew ScriptEditorTextEditor(OPTIONS->FetchSettingAsInt("LinesToScroll"), CustomFont, ForeColor, BackColor, HighlightColor, this);
 			OffsetViewer = gcnew ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
 			PreprocessedTextViewer = gcnew SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
 
@@ -877,6 +921,20 @@ namespace ScriptEditor
 			ToolBarShowPreprocessedText->AutoSize = true;
 			ToolBarShowPreprocessedText->Click += gcnew EventHandler(this, &Workspace::ToolBarShowPreprocessedText_Click);
 
+			ToolBarSanitizeScriptText->ToolTipText = "Sanitize Script Text";
+			ToolBarSanitizeScriptText->AutoSize = true;
+			ToolBarSanitizeScriptText->Click += gcnew EventHandler(this, &Workspace::ToolBarSanitizeScriptText_Click);
+
+			Padding SanitizePad = Padding(0);
+			SanitizePad.Left = 17;
+			SanitizePad.Right = 5;
+			ToolBarSanitizeScriptText->Margin = SanitizePad;
+
+			ToolBarBindScript->ToolTipText = "Bind Script";
+			ToolBarBindScript->AutoSize = true;
+			ToolBarBindScript->Click += gcnew EventHandler(this, &Workspace::ToolBarBindScript_Click);
+			ToolBarBindScript->Margin = SecondaryButtonPad;
+			
 			ToolBarNavigationBack->ToolTipText = "Navigate Back";
 			ToolBarNavigationBack->AutoSize = true;
 			ToolBarNavigationBack->Click += gcnew EventHandler(this, &Workspace::ToolBarNavigationBack_Click);
@@ -949,6 +1007,9 @@ namespace ScriptEditor
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarSpacerB);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarShowOffsets);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarShowPreprocessedText);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarSanitizeScriptText);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarBindScript);
+
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarByteCodeSize);	
 			WorkspaceSecondaryToolBar->ShowItemToolTips = true;
 			
@@ -1323,7 +1384,7 @@ namespace ScriptEditor
 					
 					if (!TextParser->Valid)
 					{
-						Result += ReadLine + "\n";
+						Result += "\n" + ReadLine;
 						ReadLine = StringParser->ReadLine();
 						continue;
 					} 
@@ -1334,13 +1395,15 @@ namespace ScriptEditor
 						continue;
 					}
 
-					Result += ReadLine + "\n";
+					Result += "\n" + ReadLine;
 					ReadLine = StringParser->ReadLine();
 				}
 
 				ExtractedBlock = Block;
-
-				return Result;		
+				if (Result == "")
+					return Result;
+				else
+					return Result->Substring(1);		
 			}
 			void Workspace::DeserializeCaretPos(String^% ExtractedBlock)
 			{
@@ -1435,6 +1498,98 @@ namespace ScriptEditor
 			{
 				AddMessageToPool(MessageType::e_Error, -1, Message);
 			}
+			void Workspace::SanitizeScriptText(SanitizeOperation Operation)
+			{
+				String^ SanitizedScriptText = "";
+
+				StringReader^ TextReader = gcnew StringReader(TextEditor->GetText());
+				ScriptParser^ LocalParser = gcnew ScriptParser();
+
+				int IndentCount = 0;
+				for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
+				{
+					switch (Operation)
+					{
+					case SanitizeOperation::e_Indent:
+						{
+							int IndentMode = -1;		// 0 = Decrement
+														// 1 = Post-Increment
+														// 2 = Decrement&Increment
+
+							LocalParser->Tokenize(ReadLine, false);
+							if (LocalParser->Valid)
+							{
+								String^ Token = LocalParser->Tokens[0];
+								if (Token[0] != ';')
+								{
+									if (!String::Compare(Token, "begin", true) || 
+										!String::Compare(Token, "if", true) || 
+										!String::Compare(Token, "while", true) || 
+										!String::Compare(Token, "forEach", true)) 
+									{
+										IndentMode = 1;
+									}
+									else if	(!String::Compare(Token, "loop", true) || 
+											!String::Compare(Token, "endIf", true) || 
+											!String::Compare(Token, "end", true))
+									{
+										IndentMode = 0;
+									}
+									else if	(!String::Compare(Token, "else", true) || 
+											!String::Compare(Token, "elseIf", true))
+									{
+										IndentMode = 2;
+									}
+									
+									if (IndentMode == 0 || IndentMode == 2)
+										IndentCount--;
+
+									for (int i = 0; i < IndentCount; i++)
+										SanitizedScriptText += "\t";
+									SanitizedScriptText += ReadLine->Substring(LocalParser->Indices[0]) + "\n";
+
+									if (IndentMode == 1 || IndentMode == 2)
+										IndentCount++;
+								}
+								else
+									SanitizedScriptText += ReadLine + "\n";
+							}
+							else
+								SanitizedScriptText += ReadLine + "\n";
+
+							break;
+						}
+					case SanitizeOperation::e_AnnealCasing:
+						{
+							LocalParser->Tokenize(ReadLine, true);
+							if (LocalParser->Valid)
+							{
+								for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
+								{
+									String^ Token = LocalParser->Tokens[i];
+									String^ Delimiter = "" + LocalParser->Delimiters[i];
+
+									if (LocalParser->IsComment(i) == -1 && ISDB->IsCommand(Token))
+										SanitizedScriptText += ISDB->SanitizeCommandName(Token);
+									else
+										SanitizedScriptText += Token;
+
+									SanitizedScriptText += Delimiter;
+								}
+							}
+							else
+								SanitizedScriptText += ReadLine + "\n";
+
+							break;
+						}
+					}
+				}
+
+				if (SanitizedScriptText->Length > 0 && SanitizedScriptText[SanitizedScriptText->Length - 1] == '\n')
+					SanitizedScriptText = SanitizedScriptText->Substring(0, SanitizedScriptText->Length - 1);
+
+				TextEditor->SetText(SanitizedScriptText, true);
+			}
 
 
 
@@ -1448,7 +1603,7 @@ namespace ScriptEditor
 
 				String^ CSEBlock = "";
 				String^ DeserializedText = DeserializeCSEBlock(ScriptText, CSEBlock);
-				TextEditor->SetText(DeserializedText);
+				TextEditor->SetText(DeserializedText, false);
 
 				DeserializeCaretPos(CSEBlock);
 				DeserializeBookmarks(CSEBlock);
@@ -2055,7 +2210,7 @@ namespace ScriptEditor
 			}
 			void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
 			{
-				if (ScriptEditorID == "New Script")
+				if (GetIsCurrentScriptNew())
 				{
 					MessageBox::Show("You may only perform this operation on an existing script.", "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
 					return;
@@ -2087,7 +2242,7 @@ namespace ScriptEditor
 			}
 			void Workspace::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
 			{
-				if (ScriptEditorID != "" && ScriptEditorID != "New Script")
+				if (ScriptEditorID != "" && !GetIsCurrentScriptNew())
 				{
 					CStringWrapper^ CEID = gcnew CStringWrapper(ScriptEditorID);
 					NativeWrapper::ScriptEditor_CompileDependencies(CEID->String());
@@ -2188,11 +2343,12 @@ namespace ScriptEditor
 				try
 				{
 					Clipboard::Clear();
-					if (TextEditor->GetSelectedText() != "")
-						Clipboard::SetText(TextEditor->GetSelectedText());
-					else
-						Clipboard::SetText(TextEditor->GetTokenAtMouseLocation());
-						
+
+					String^ CopiedText = TextEditor->GetSelectedText();
+					if (CopiedText != "")
+						CopiedText = TextEditor->GetTokenAtMouseLocation();
+					if (CopiedText != "")
+						Clipboard::SetText(CopiedText->Replace("\n", "\r\n"));						
 				}
 				catch (Exception^ E)
 				{
@@ -2201,10 +2357,13 @@ namespace ScriptEditor
 			}
 			void Workspace::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
 			{
-				try {
+				try
+				{
 					if (Clipboard::GetText() != "")
-						TextEditor->SetSelectedText(Clipboard::GetText());
-				} catch (Exception^ E) {
+						TextEditor->SetSelectedText(Clipboard::GetText(), false);
+				}
+				catch (Exception^ E)
+				{
 					DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
 				}
 
@@ -2555,6 +2714,35 @@ namespace ScriptEditor
 					}
 					else
 						MessageBox::Show("The preprocessing operation was unsuccessful.", "CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				}
+			}
+			void Workspace::ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E)
+			{
+				try
+				{
+					NativeWrapper::LockWindowUpdate(TextEditor->GetHandle());
+					if (OPTIONS->FetchSettingAsInt("AnnealCasing"))
+						SanitizeScriptText(SanitizeOperation::e_AnnealCasing);
+
+					if (OPTIONS->FetchSettingAsInt("IndentLines"))
+						SanitizeScriptText(SanitizeOperation::e_Indent);
+				}
+				finally
+				{
+					NativeWrapper::LockWindowUpdate(IntPtr::Zero);
+				}
+			}
+
+			void Workspace::ToolBarBindScript_Click(Object^ Sender, EventArgs^ E)
+			{
+				if (GetIsCurrentScriptNew())
+				{
+					MessageBox::Show("You may only perform this operation on an existing script.", "Annoying Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
+					return;			
+				}
+				else
+				{
+					NativeWrapper::ScriptEditor_BindScript((gcnew CStringWrapper(ScriptEditorID))->String(), GetParentContainer()->GetEditorFormHandle());
 				}
 			}
 		#pragma endregion

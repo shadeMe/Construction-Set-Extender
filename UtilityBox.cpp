@@ -7,6 +7,11 @@ void __stdcall ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
 	if (State)	*Flag |= Mask;
 	else		*Flag &= ~Mask;
 }
+void __stdcall ToggleFlag(UInt16* Flag, UInt32 Mask, bool State)
+{
+	if (State)	*Flag |= Mask;
+	else		*Flag &= ~Mask;
+}
 
 void LogWinAPIErrorMessage(DWORD ErrorID)
 {
@@ -39,7 +44,13 @@ void DebugPrint(UInt8 source, const char* fmt, ...)
 	CONSOLE->LogMessage(source, fmt, args);
 	va_end(args);
 }
-
+void PrintToBuffer(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
+	va_end(args);
+}
 
 // modified to use plugin debugging tools
 void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump)

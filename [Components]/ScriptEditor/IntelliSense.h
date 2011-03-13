@@ -35,7 +35,6 @@ public ref struct Boxer
 public ref class IntelliSenseDatabase								
 {
 	static IntelliSenseDatabase^						Singleton = nullptr;
-	static UInt32										UpdateThreadTimerInterval = 10;		// in minutes
 
 	IntelliSenseDatabase();
 
@@ -62,6 +61,7 @@ public ref class IntelliSenseDatabase
 	Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID, value = scriptID
 
 	bool												ForceUpdateFlag;
+	UInt32												UpdateThreadTimerInterval;	// in minutes
 
 	void												UpdateDatabase();
 public:
@@ -75,6 +75,7 @@ public:
 	static void											ParseScript(String^% SourceText, Boxer^ Box);
 	void												AddToURLMap(String^% CmdName, String^% URL);
 	String^												GetCommandURL(String^% CmdName);
+	String^												SanitizeCommandName(String^% CmdName);
 	Script^												GetRemoteScript(String^ BaseEditorID, String^ ScriptText);
 	bool												IsUDF(String^% Name);
 	bool												IsCommand(String^% Name);

@@ -83,7 +83,7 @@ public:
 	DefineDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 	String^												GetName() { return Name; }
-	String^												GetValue() { return Value; }
+	String^												GetValue(String^% Prefix);
 	void												SetValue(String^% Value) { this->Value = Value; }
 	DefineDirective^									CreateCopy();
 

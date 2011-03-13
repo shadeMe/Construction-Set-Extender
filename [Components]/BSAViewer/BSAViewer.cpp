@@ -20,6 +20,8 @@ String^ FileSystemObject::GetPath(bool WithRoot)
 
 BSAViewer::BSAViewer()
 {
+	Application::EnableVisualStyles();
+
 	Root = gcnew FolderObject(gcnew String("__ROOT"), FSONULL);
 	ContentList= gcnew ListView();
 	BSABox = gcnew Form();

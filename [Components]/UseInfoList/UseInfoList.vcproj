@@ -6,7 +6,7 @@
 	ProjectGUID="{294A2A89-2979-4C16-AE16-595C50A44F11}"
 	RootNamespace="UseInfoList"
 	Keyword="ManagedCProj"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform

@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ComCtl32.lib shell32.lib"
+				AdditionalDependencies="ComCtl32.lib shell32.lib  d3dx9.lib"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="LIBCMTD.lib"
 				ModuleDefinitionFile="exports.def"
@@ -149,7 +149,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ComCtl32.lib shell32.lib"
+				AdditionalDependencies="ComCtl32.lib shell32.lib d3dx9.lib"
 				LinkIncremental="0"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="LIBCMT.lib"
@@ -270,11 +270,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\obse\obse\NiExtraData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\obse\obse\NiGeometry.h"
+				>
+			</File>
+			<File
 				RelativePath="..\obse\obse\NiNodes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\obse\obse\NiRTTI.h"
+				RelativePath="..\obse\obse\NiObjects.h"
+				>
+			</File>
+			<File
+				RelativePath="..\obse\obse\NiProperties.h"
+				>
+			</File>
+			<File
+				RelativePath="..\obse\obse\NiTypes.h"
 				>
 			</File>
 			<File

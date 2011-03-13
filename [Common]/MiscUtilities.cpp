@@ -83,4 +83,14 @@ namespace Log
 			DebugDump(e_BSA, Message);
 		}
 	}
+	namespace TagBrowser
+	{
+		void DebugPrint(String^ Message, bool Achtung)	
+		{
+			if (Achtung) {
+				Media::SystemSounds::Hand->Play();
+			}
+			DebugDump(e_TAG, Message);
+		}
+	}
 }

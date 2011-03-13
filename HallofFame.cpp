@@ -59,7 +59,8 @@ namespace HallOfFame
 		thisVirtualCall(kVTBL_TESObjectREFR, 0x94, shadeMeRef, 0);
 		thisCall(kTESObjectREFR_SetFlagPersistent, shadeMeRef, 1);
 
-		if (ResetCSWindows) {
+		if (ResetCSWindows)
+		{
 			DeInitializeCSWindows();
 			InitializeCSWindows();
 		}

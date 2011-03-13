@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "CSInterop.h"
+#include "Exports.h"
 #include <stack>
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
@@ -38,7 +39,8 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 1, g_Buffer, sizeof(g_Buffer));
 			EditorID = g_Buffer;
 			UInt32 PadStart = EditorID.find("'") + 1, PadEnd  = EditorID.find("'", PadStart + 1);
-			if (PadStart != std::string::npos && PadEnd != std::string::npos) {
+			if (PadStart != std::string::npos && PadEnd != std::string::npos)
+			{
 				EditorID = EditorID.substr(PadStart, PadEnd - PadStart);
 				LoadFormIntoView(EditorID.c_str(), FormTypeStr.c_str());
 			}
@@ -218,9 +220,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						ThisRefData = &RefData[k];
 						bool Modified = false;
 
-				//		thisCall(kExtraDataList_InitItem, &ThisRef->baseExtraList, ThisRef);
-
-						if (ThisRefData->Selected) {
+						if (ThisRefData->Selected)
+						{
 							if (BatchData->World3DData.UsePosX())	ThisRef->posX = BatchData->World3DData.PosX, Modified = true;
 							if (BatchData->World3DData.UsePosY())	ThisRef->posY = BatchData->World3DData.PosY, Modified = true;
 							if (BatchData->World3DData.UsePosZ())	ThisRef->posZ = BatchData->World3DData.PosZ, Modified = true;
@@ -303,8 +304,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 						if (Modified)
 						{
-							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);
-							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile(bool fromActiveFile);
+							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
+							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
 							thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
 						}
 					}	
@@ -343,6 +344,9 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			break;
 		case MAIN_LAUNCHGAME:
 			ShellExecute(NULL, "open", (LPSTR)(std::string(g_AppPath + "obse_loader.exe")).c_str(), NULL, NULL, SW_SHOW);
+			break;
+		case MAIN_VIEW_TAGBROWSER:
+			CLIWrapper::TagBrowser::Show(*g_HWND_CSParent);
 			break;
 		}
 		break;
@@ -389,6 +393,9 @@ BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			return TRUE;
 		case BTN_EDITPATH:
 			EndDialog(hWnd, e_EditPath);
+			return TRUE;
+		case BTN_COPYPATH:
+			EndDialog(hWnd, e_CopyPath);
 			return TRUE;
 		case BTN_CLEARPATH:
 			EndDialog(hWnd, e_ClearPath);
@@ -463,12 +470,117 @@ BOOL CALLBACK TESComboBoxDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		}
 		break;
 	case WM_INITDIALOG:
-		switch (lParam)		// ### add support for the remaining types
+		TESDialog_ComboBoxPopulateWithForms(ComboBox, lParam, true, false);
+		break;
+	}
+	return FALSE;
+}
+
+#define			MOUSEHOOK_CANCEL		0x9990
+#define			MOUSEHOOK_COMPLETE		0x9991
+HWND			g_MouseHookParentWindow = NULL;
+HHOOK			g_MouseHookHandle = NULL;
+
+LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	if (nCode < 0)  // do not process the message 
+		return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam); 
+
+	switch (wParam)
+	{
+	case WM_RBUTTONUP:
+		SendMessage(g_MouseHookParentWindow, MOUSEHOOK_COMPLETE, NULL, lParam);
+		break;
+	case WM_LBUTTONUP:
+		SendMessage(g_MouseHookParentWindow, MOUSEHOOK_CANCEL, NULL, NULL);
+		break;
+	}
+
+	return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam); 
+}
+
+BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case MOUSEHOOK_COMPLETE:
+	case MOUSEHOOK_CANCEL:
+		if (!UnhookWindowsHookEx(g_MouseHookHandle))
 		{
-		case kFormType_Race:
-			TESDialog_ComboBoxPopulateWithRaces(ComboBox, false);
+			MessageBox(hWnd, "Couldn't deinitialize mouse hook. Error logged to the console.", "CSE", MB_OK|MB_ICONERROR);
+			LogWinAPIErrorMessage(GetLastError());
+		}
+		SetCursor(LoadCursor(NULL, IDC_ARROW));
+		SetDlgItemText(hWnd, BTN_STARTMOUSEHOOK, "Click To Begin");
+		g_MouseHookParentWindow = NULL;
+
+		if (uMsg == MOUSEHOOK_COMPLETE)
+		{
+			MOUSEHOOKSTRUCT* Data = (MOUSEHOOKSTRUCT*)lParam;
+			HWND Window = WindowFromPoint(Data->pt);
+			if (Window)
+			{
+				GetWindowText(Window, g_Buffer, sizeof(g_Buffer));
+				Edit_SetText(GetDlgItem(hWnd, EDIT_PATH), g_Buffer);
+			}
+		}
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case BTN_STARTMOUSEHOOK:
+		{
+			if (g_MouseHookParentWindow == NULL)
+			{
+				g_MouseHookHandle = SetWindowsHookEx(WH_MOUSE, &CopyPathMouseHookProc, g_DLLInstance, NULL);
+				if (g_MouseHookHandle == NULL)
+				{
+					MessageBox(hWnd, "Couldn't initialize mouse hook. Error logged to the console.", "CSE", MB_OK|MB_ICONERROR);
+					LogWinAPIErrorMessage(GetLastError());
+				}
+				else
+				{
+					SetDlgItemText(hWnd, BTN_STARTMOUSEHOOK, "Right Click On The Button Displaying The New Path");
+					g_MouseHookParentWindow = hWnd;
+					SetCursor(LoadCursor(NULL, IDC_HAND));
+				}
+			}
+			else
+			{
+				MessageBox(hWnd, "A previous copy operation was in progress. Try again.", "CSE", MB_OK);
+			}
 			break;
 		}
+		case BTN_OK:
+		{
+			char Buffer[0x200] = {0};
+
+			GetDlgItemText(hWnd, EDIT_PATH, Buffer, sizeof(Buffer));
+			switch ((int)GetWindowLong(hWnd, GWL_USERDATA))
+			{
+			case e_SPT:
+				sprintf_s(g_Buffer, sizeof(g_Buffer), "\\%s", Buffer);
+				break;
+			case e_KF:
+				if (strlen(g_Buffer) > 27)
+				{
+					std::string Temp(Buffer); Temp = Temp.substr(26);
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "%s", Temp.c_str());
+				}
+				break;
+			default:
+				sprintf_s(g_Buffer, sizeof(g_Buffer), "%s", Buffer);
+			}
+			EndDialog(hWnd, (INT_PTR)g_Buffer);
+			return TRUE;
+		}
+		case BTN_CANCEL:
+			EndDialog(hWnd, 0);
+			return TRUE;
+		}
+		break;
+	case WM_INITDIALOG:
+		SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
 		break;
 	}
 	return FALSE;
@@ -479,14 +591,14 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	switch (uMsg)
 	{
 	case WM_SIZE:
-		{
+	{
 		tagRECT WindowRect, EditRect;
 		GetWindowRect(hWnd, &WindowRect);
 		MoveWindow(GetDlgItem(hWnd, EDIT_CONSOLE), 0, 0, WindowRect.right - WindowRect.left - 9, WindowRect.bottom - WindowRect.top - 50, TRUE);
 		GetWindowRect(GetDlgItem(hWnd, EDIT_CONSOLE), &EditRect);
 		SetWindowPos(GetDlgItem(hWnd, EDIT_CMDBOX), HWND_NOTOPMOST, 0, EditRect.bottom - EditRect.top, WindowRect.right - WindowRect.left - 10, 45, SWP_NOZORDER);
 		break;
-		}
+	}
 	case WM_DESTROY: 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleWndOrgWindowProc);
 		break; 
@@ -515,7 +627,7 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 		}
 		return TRUE;
 	case WM_RBUTTONUP:
-		{
+	{
 		static bool AlwaysOnTopFlag = false;
 
 		RECT Rect;
@@ -539,11 +651,13 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				CONSOLE->Clear();
 				break;
 			case CONSOLEMENU_ALWAYSONTOP:
-				if (AlwaysOnTopFlag) {
+				if (AlwaysOnTopFlag)
+				{
 					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_NOTOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
 					AlwaysOnTopFlag = false;
 				}
-				else {
+				else
+				{
 					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_TOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
 					AlwaysOnTopFlag = true;
 				}
@@ -555,7 +669,7 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 			DestroyMenu(Popup); 
 		}
 		return FALSE;
-		}
+	}
 	case WM_DESTROY: 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleEditControlOrgWindowProc);
 		break; 
@@ -699,7 +813,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 	}
 	case POPUP_UNDELETE:
 	{
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
+		PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
 		if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
 		{
 			thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
@@ -713,6 +827,26 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		{
 			LoadFormIntoView(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
 		}
+		break;
+	}
+	case POPUP_TOGGLEVISIBILITY:
+	{
+		TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+		ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_3DInvisible));
+		UnloadLoadedCell();
+		break;
+	}
+	case POPUP_TOGGLECHILDRENVISIBILITY:
+	{
+		TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+		ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+		UnloadLoadedCell();
+		break;
+	}
+	case POPUP_ADDTOTAG:
+	{
+		g_FormData->FillFormData(Form);
+		CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
 		break;
 	}
 	}
@@ -899,8 +1033,9 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				thisVirtualCall(kVTBL_TESQuest, 0x70, Quest);
 				thisVirtualCall(kVTBL_Script, 0x70, QuestScript);
 
-				thisVirtualCall(kVTBL_TESQuest, 0x104, Quest);	// ### need to update usage info for script
+				thisVirtualCall(kVTBL_TESQuest, 0x104, Quest);
 				thisVirtualCall(kVTBL_Script, 0x104, QuestScript);
+				thisCall(kTESForm_AddReference, QuestScript, Quest);
 
 				MessageBox(hWnd, "Global script created successfully.\n\nIt will now be opened for editing ...", "CSE", MB_OK|MB_ICONINFORMATION);
 				SpawnCustomScriptEditor(ScriptID);
@@ -917,6 +1052,181 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	return FALSE;
 }
 
+BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND EditorIDBox = GetDlgItem(hWnd, EDIT_EDITORID);
+	HWND RefIDBox = GetDlgItem(hWnd, EDIT_REFEDITORID);
+	HWND ExistFormList = GetDlgItem(hWnd, COMBO_FORMLIST);
+	HWND SelParentCellBtn = GetDlgItem(hWnd, BTN_PARENTCELL);
+
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case BTN_PARENTCELL:
+		{
+			TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), hWnd, (DLGPROC)TESComboBoxDlgProc, (LPARAM)kFormType_Cell);
+			if (Selection)
+			{
+				sprintf_s(g_Buffer, sizeof(g_Buffer), "%s (%08X)", Selection->editorData.editorID.m_data, Selection->refID);
+				SetWindowText(SelParentCellBtn, (LPCSTR)g_Buffer);
+				SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)Selection);
+			}
+			break;
+		}
+		case BTN_OK:
+		{
+			if (IsDlgButtonChecked(hWnd, RADIO_EXISTFORM))
+			{
+				TESForm* SelectedForm = (TESForm*)TESDialog_GetSelectedItemData(ExistFormList);
+				if (SelectedForm)
+				{
+					EndDialog(hWnd, (INT_PTR)SelectedForm);
+					return TRUE;
+				}
+				else
+					MessageBox(hWnd, "Invalid existing form selected", "CSE", MB_OK|MB_ICONERROR);
+			}
+			else
+			{
+				char BaseEditorID[0x200] = {0};
+				char RefEditorID[0x200] = {0};
+
+				Edit_GetText(EditorIDBox, BaseEditorID, 0x200);
+				if (GetFormByID(BaseEditorID))
+				{		
+					sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", BaseEditorID);
+					MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONERROR);
+				}
+				else
+				{
+					if (IsDlgButtonChecked(hWnd, RADIO_QUEST))
+					{
+						bool StartGameEnabledFlag = IsDlgButtonChecked(hWnd, CHECK_QUEST_STARTGAMEENABLED);
+						bool RepeatedStagesFlag = IsDlgButtonChecked(hWnd, CHECK_QUEST_REPEATEDSTAGES);
+
+						TESQuest* Quest = (TESQuest*)FormHeap_Allocate(0x74);
+						thisCall(kTESQuest_Ctor, Quest);
+						thisVirtualCall(kVTBL_TESQuest, 0x94, Quest);
+						thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->quests, Quest);
+						thisCall(kTESForm_SetEditorID, Quest, BaseEditorID);
+
+						thisCall(kTESQuest_SetStartEnabled, Quest, StartGameEnabledFlag);
+						thisCall(kTESQuest_SetAllowedRepeatedStages, Quest, RepeatedStagesFlag);
+
+						FormEnumerationWrapper::ReinitializeFormLists();
+						EndDialog(hWnd, (INT_PTR)Quest);
+						return TRUE;
+					}
+					else
+					{
+						if (IsDlgButtonChecked(hWnd, RADIO_OBJECTTOKEN))
+						{
+							bool QuestItem = IsDlgButtonChecked(hWnd, CHECK_OBJECTTOKEN_QUESTITEM);
+
+							TESObjectCLOT* Token = (TESObjectCLOT*)FormHeap_Allocate(0x158);
+							thisCall(kTESObjectCLOT_Ctor, Token);
+							thisVirtualCall(kVTBL_TESObjectCLOT, 0x94, Token);
+							thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Token);
+							thisCall(kTESForm_SetEditorID, Token, BaseEditorID);
+
+							ToggleFlag((UInt16*)((UInt32)Token + 0x96), 1 << TESBipedModelForm::kFlags_NotPlayable, true);
+							ToggleFlag(&Token->flags, TESForm::kFormFlags_Essential, QuestItem);
+
+							FormEnumerationWrapper::ReinitializeFormLists();
+							EndDialog(hWnd, (INT_PTR)Token);
+							return TRUE;
+						}
+						else
+						{
+							Edit_GetText(RefIDBox, RefEditorID, 0x200);
+							if (GetFormByID(RefEditorID))
+							{		
+								sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", RefEditorID);
+								MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONERROR);
+							}
+							else
+							{
+								bool InitiallyDisabled = IsDlgButtonChecked(hWnd, CHECK_OBJECTREFERENCE_DISABLED);
+								TESForm* ParentCell = (TESForm*)GetWindowLong(SelParentCellBtn, GWL_USERDATA);
+
+								if (!ParentCell || thisCall(kTESObjectCELL_GetIsInterior, ParentCell) == 0)
+								{
+									MessageBox(hWnd, "Invalid/exterior cell selected as parent.", "CSE", MB_OK|MB_ICONERROR);
+								}
+								else
+								{
+									TESObjectACTI* Activator = (TESObjectACTI*)FormHeap_Allocate(0x98);
+									thisCall(kTESObjectACTI_Ctor, Activator);
+									thisVirtualCall(kVTBL_TESObjectACTI, 0x94, Activator);
+									thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Activator);
+									thisCall(kTESForm_SetEditorID, Activator, BaseEditorID);
+
+									static NiVector3 ZeroVector = { 0.0, 0.0, 0.0 };		
+
+									TESObjectCELL* CurrentInteriorCell = TES::GetSingleton()->currentInteriorCell;	// kludgy, but should do the trick
+									TES::GetSingleton()->currentInteriorCell = CS_CAST(ParentCell, TESForm, TESObjectCELL);
+									TESObjectREFR* Ref = DataHandler_PlaceTESBoundObjectReference(Activator, &ZeroVector, &ZeroVector, 1);
+									TES::GetSingleton()->currentInteriorCell = CurrentInteriorCell;
+
+									ToggleFlag(&Ref->flags, TESForm::kFormFlags_InitiallyDisabled, InitiallyDisabled);
+									ToggleFlag(&Ref->flags, TESForm::kFormFlags_QuestItem, true);
+
+									thisCall(kTESForm_SetEditorID, Ref, RefEditorID);
+
+									FormEnumerationWrapper::ReinitializeFormLists();
+									EndDialog(hWnd, (INT_PTR)Activator);
+									return TRUE;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			return FALSE;
+		}
+		case BTN_CANCEL:
+			EndDialog(hWnd, 0);
+			return TRUE;
+		}
+		break;
+	case WM_INITDIALOG:
+		Edit_SetText(EditorIDBox, "Base Form EditorID");
+		Edit_SetText(RefIDBox, "Ref EditorID");
+
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Activator, true, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Apparatus, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Armor, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Book, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Clothing, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Container, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Door, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Ingredient, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Light, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Misc, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Furniture, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Weapon, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Ammo, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_NPC, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Creature, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_SoulGem, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Key, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_AlchemyItem, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_SigilStone, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Quest, false, false);
+
+		CheckDlgButton(hWnd, RADIO_EXISTFORM, BST_CHECKED);
+		CheckDlgButton(hWnd, RADIO_QUEST, BST_CHECKED);
+		CheckDlgButton(hWnd, RADIO_OBJECTTOKEN, BST_CHECKED);
+
+		SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)0);
+
+		break;
+	}
+	return FALSE;
+}
 
 
 void InitializeWindowManager(void)
@@ -937,7 +1247,8 @@ void InitializeWindowManager(void)
 				ItemViewDeletedRecords,
 				ItemWorldUnloadCell,
 				ItemGameplayGlobalScript,
-				ItemLaunchGame;
+				ItemLaunchGame,
+				ItemViewTagBrowser;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -1025,6 +1336,14 @@ void InitializeWindowManager(void)
 	ItemLaunchGame.dwTypeData = "Launch Game";
 	ItemLaunchGame.cch = 0;
 	InsertMenuItem(MainMenu, -1, FALSE, &ItemLaunchGame);
+
+	ItemViewTagBrowser.cbSize = sizeof(MENUITEMINFO);		
+	ItemViewTagBrowser.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewTagBrowser.wID = MAIN_VIEW_TAGBROWSER;
+	ItemViewTagBrowser.fState = MFS_ENABLED;
+	ItemViewTagBrowser.dwTypeData = "Tag Browser";
+	ItemViewTagBrowser.cch = 0;
+	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewTagBrowser);
 
 	DrawMenuBar(*g_HWND_CSParent);
 

@@ -4,11 +4,14 @@
 #include "[Common]\CLIWrapper.h"
 #include "MiscHooks.h"
 #include "resource.h"
+#include "WindowManager.h"
+
+FormData*						g_FormData = new FormData();
+UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();
 
 
-
-
-extern "C"{
+extern "C"
+{
 
 __declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message)
 {
@@ -170,28 +173,31 @@ __declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID)
 	else							return Form->IsReference();
 }
 
-__declspec(dllexport) void* LookupFormByEditorID(const char* EditorID)
+__declspec(dllexport) FormData* LookupFormByEditorID(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
-	return Form;
+	if (Form)
+	{
+		g_FormData->FillFormData(Form);
+		return g_FormData;
+	}
+	else
+		return NULL;
 }
 
 __declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex)
 {
 	Script* ThisScript = NULL;
-	DataHandler::Node<Script>* ThisNode = &(*g_dataHandler)->scripts;
-	while (ThisNode) {
+
+	for (DataHandler::Node<Script>* ThisNode = &(*g_dataHandler)->scripts; ThisNode && ThisNode->data; ThisNode = ThisNode->next)
+	{
 		ThisScript = ThisNode->data;
-		if (!ThisScript)		break;
-		else if (!ThisScript->editorData.editorID.m_data) {
-			ThisNode = ThisNode->next;
+		if (!ThisScript->editorData.editorID.m_data || !FormEnumerationWrapper::GetShouldEnumerateForm(ThisScript))
 			continue;
-		}
 
 		FillScriptDataPackage(ThisScript);
 
 		CLIWrapper::ScriptEditor::SetScriptListItemData(TrackedEditorIndex, g_ScriptDataPackage);
-		ThisNode = ThisNode->next;
 	}
 }
 
@@ -448,6 +454,39 @@ __declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, cons
 	thisCall(kScript_SetText, ScriptForm, ScriptText);
 }
 
+__declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Parent)
+{
+	TESForm* Form = GetFormByID(EditorID);
+	if (!Form)						return;
+	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
+	if (!ScriptForm)				return;		
+
+	Form = (TESForm*)DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_BINDSCRIPT), Parent, (DLGPROC)BindScriptDlgProc);
+	if (Form)
+	{
+		TESQuest* Quest = CS_CAST(Form, TESForm, TESQuest);
+		TESBoundObject* BoundObj = CS_CAST(Form, TESForm, TESBoundObject);
+		TESScriptableForm* ScriptableForm = CS_CAST(Form, TESForm, TESScriptableForm);
+
+		if ((Quest && ScriptForm->info.type != Script::eType_Quest) ||
+			(BoundObj && ScriptForm->info.type != Script::eType_Object))
+		{
+			MessageBox(Parent, "Script type doesn't correspond to binding form.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+		}
+		else if (ScriptableForm == NULL)
+			MessageBox(Parent, "Binding form isn't scriptable.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+		else
+		{
+			ScriptableForm->script = ScriptForm;
+			thisCall(kTESForm_AddReference, ScriptForm, Form);
+			thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
+
+			sprintf_s(g_Buffer, sizeof(g_Buffer), "Script '%s' bound to form '%s'", ScriptForm->editorData.editorID.m_data, Form->editorData.editorID.m_data);
+			MessageBox(Parent, g_Buffer, "CSE", MB_OK|MB_ICONINFORMATION);
+		}
+	}
+}
+
 
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText()
@@ -457,15 +496,15 @@ __declspec(dllexport) void UseInfoList_SetFormListItemText()
 	WriteStatusBarText(0, "FormList += BoundObjects...");
 
 	for (TESBoundObject* Itr = (*g_dataHandler)->boundObjects->last; Itr; Itr = Itr->next) {
-		UIL_FormData->EditorID = Itr->editorData.editorID.m_data;
-		UIL_FormData->FormID = Itr->refID;
-		UIL_FormData->TypeID = Itr->typeID;
-		CLIWrapper::UseInfoList::SetFormListItemData(UIL_FormData);
+		g_FormData->EditorID = Itr->editorData.editorID.m_data;
+		g_FormData->FormID = Itr->refID;
+		g_FormData->TypeID = Itr->typeID;
+		CLIWrapper::UseInfoList::SetFormListItemData(g_FormData);
 		Count++;
 
 		sprintf_s(g_Buffer, sizeof(g_Buffer), "[%d/%d]", Count, Total);
 		WriteStatusBarText(1, g_Buffer);
-		WriteStatusBarText(2, UIL_FormData->EditorID);
+		WriteStatusBarText(2, g_FormData->EditorID);
 	}
 
 	// everything else.
@@ -529,11 +568,11 @@ __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorI
 	for (DataHandler::Node<TESForm>* UseList = (DataHandler::Node<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); UseList; UseList = UseList->next) {
 		TESForm* Reference = UseList->data;
 
-		UIL_FormData->EditorID = Reference->editorData.editorID.m_data;
-		UIL_FormData->FormID = Reference->refID;
-		UIL_FormData->TypeID = Reference->typeID;
+		g_FormData->EditorID = Reference->editorData.editorID.m_data;
+		g_FormData->FormID = Reference->refID;
+		g_FormData->TypeID = Reference->typeID;
 
-		CLIWrapper::UseInfoList::SetUseListObjectItemData(UIL_FormData);
+		CLIWrapper::UseInfoList::SetUseListObjectItemData(g_FormData);
 	}
 }
 
@@ -550,16 +589,16 @@ __declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID)
 		TESObjectREFR* FirstRef = TESForm_LoadIntoView_GetReference(Data->Cell, Form);
 		TESWorldSpace* WorldSpace = (TESWorldSpace*)thisCall(kTESObjectCELL_GetParentWorldSpace, Data->Cell);
 
-		UIL_CellData->EditorID = Data->Cell->editorData.editorID.m_data;
-		UIL_CellData->FormID = Data->Cell->refID;
-		UIL_CellData->Flags = Data->Cell->flags0 & TESObjectCELL::kFlags0_Interior;
-		UIL_CellData->WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorData.editorID.m_data);
-		UIL_CellData->RefEditorID = ((!FirstRef || !FirstRef->editorData.editorID.m_data)?"<Unnamed>":FirstRef->editorData.editorID.m_data);
-		UIL_CellData->XCoord = Data->Cell->coords->x;
-		UIL_CellData->YCoord = Data->Cell->coords->y;
-		UIL_CellData->UseCount = Data->Count;
+		g_UseListCellItemData->EditorID = Data->Cell->editorData.editorID.m_data;
+		g_UseListCellItemData->FormID = Data->Cell->refID;
+		g_UseListCellItemData->Flags = Data->Cell->flags0 & TESObjectCELL::kFlags0_Interior;
+		g_UseListCellItemData->WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorData.editorID.m_data);
+		g_UseListCellItemData->RefEditorID = ((!FirstRef || !FirstRef->editorData.editorID.m_data)?"<Unnamed>":FirstRef->editorData.editorID.m_data);
+		g_UseListCellItemData->XCoord = Data->Cell->coords->x;
+		g_UseListCellItemData->YCoord = Data->Cell->coords->y;
+		g_UseListCellItemData->UseCount = Data->Count;
 
-		CLIWrapper::UseInfoList::SetUseListCellItemData(UIL_CellData);
+		CLIWrapper::UseInfoList::SetUseListCellItemData(g_UseListCellItemData);
 	}
 }
 
@@ -624,6 +663,58 @@ __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefD
 	return (!Ref || !Ref->editorData.editorID.m_data)?g_Buffer:Ref->editorData.editorID.m_data;
 }
 
+__declspec(dllexport) void TagBrowser_GetObjectWindowSelection(void)
+{
+	int SelectedItem = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, -1, LVNI_SELECTED);
+
+	while (SelectedItem != -1)
+	{
+		LVITEM SelectedPluginItem;
+
+		SelectedPluginItem.iItem = SelectedItem;
+		SelectedPluginItem.iSubItem = 0;
+		SelectedPluginItem.mask = LVIF_PARAM;
+
+		if (ListView_GetItem(*g_HWND_ObjectWindow_FormList, &SelectedPluginItem) == TRUE)
+		{
+			TESForm* Param = (TESForm*)SelectedPluginItem.lParam;
+			g_FormData->FillFormData(Param);
+			CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
+		}
+
+		SelectedItem = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, SelectedItem, LVNI_SELECTED);
+	}	
+}
+
+__declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
+{
+	bool Issues = false;
+	thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderWindowBuffer, 1);
+
+	for (int i = 0; i < Data->FormCount; i++)
+	{
+		FormData* ThisData = &Data->FormListHead[i];
+		UInt32 FormID = ThisData->FormID;
+
+		TESForm* Form = TESForm_LookupByFormID(FormID);
+		if (!Form)
+		{
+			Issues = true;
+			DebugPrint(Console::e_TAG, "Couldn't find form '%08X'!", FormID);
+			continue;
+		}
+
+		thisCall(kTESRenderSelection_AddFormToSelection, *g_TESRenderWindowBuffer, Form, 0);
+	}
+
+	RECT RenderBounds;
+	GetWindowRect(*g_HWND_RenderWindow, &RenderBounds);
+
+	POINT Insertion = { RenderBounds.left + (RenderBounds.right - RenderBounds.left), RenderBounds.top + (RenderBounds.bottom - RenderBounds.top) };
+	Insertion.x = 0, Insertion.y = 0;
+	SendMessage(*g_HWND_RenderWindow, 0x407, NULL, (LPARAM)&Insertion);
+}
+
 }
 
 template <typename tData>
@@ -634,11 +725,11 @@ void UseInfoList_SetFormListItemText_ParseFormNode(DataHandler::Node<tData>* Thi
 		tData* ThisObject = ThisNode->data;
 		if (!ThisObject)		break;
 
-		UIL_FormData->EditorID = ThisObject->editorData.editorID.m_data;
-		UIL_FormData->FormID = ThisObject->refID;
-		UIL_FormData->TypeID = ThisObject->typeID;
+		g_FormData->EditorID = ThisObject->editorData.editorID.m_data;
+		g_FormData->FormID = ThisObject->refID;
+		g_FormData->TypeID = ThisObject->typeID;
 
-		CLIWrapper::UseInfoList::SetFormListItemData(UIL_FormData);
+		CLIWrapper::UseInfoList::SetFormListItemData(g_FormData);
 		ThisNode = ThisNode->next;
 		Count++;
 

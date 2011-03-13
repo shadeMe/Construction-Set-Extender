@@ -216,14 +216,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\BatchEditor_Reference.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\OptionsDialog.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -244,11 +236,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\UIComponents.cpp"
+				RelativePath=".\TagBrowser.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\UseInfoList.cpp"
+				RelativePath=".\UIComponents.cpp"
 				>
 			</File>
 		</Filter>
@@ -258,31 +250,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\BatchEditor_Reference.h"
+				RelativePath=".\BE_Reference.h"
 				FileType="3"
 				>
 				<File
-					RelativePath=".\BatchEditor_Reference.resx"
-					SubType="Designer"
-					>
-				</File>
-			</File>
-			<File
-				RelativePath=".\OpenDialog.h"
-				FileType="3"
-				>
-				<File
-					RelativePath=".\OpenDialog.resX"
-					SubType="Designer"
-					>
-				</File>
-			</File>
-			<File
-				RelativePath=".\OptionsDialog.h"
-				FileType="3"
-				>
-				<File
-					RelativePath=".\OptionsDialog.resx"
+					RelativePath=".\BE_Reference.resx"
 					SubType="Designer"
 					>
 				</File>
@@ -292,8 +264,37 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SEOpenDialog.h"
+				FileType="3"
+				>
+				<File
+					RelativePath=".\SEOpenDialog.resX"
+					SubType="Designer"
+					>
+				</File>
+			</File>
+			<File
+				RelativePath=".\SEOptionsDialog.h"
+				FileType="3"
+				>
+				<File
+					RelativePath=".\SEOptionsDialog.resx"
+					SubType="Designer"
+					>
+				</File>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
+			</File>
+			<File
+				RelativePath=".\TagBrowser.h"
+				FileType="3"
+				>
+				<File
+					RelativePath=".\TagBrowser.resx"
+					>
+				</File>
 			</File>
 			<File
 				RelativePath=".\UseInfoList.h"

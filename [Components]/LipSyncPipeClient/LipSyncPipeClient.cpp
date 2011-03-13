@@ -116,14 +116,14 @@ bool GenerateLIPFile(char* FilePath, char* ResponseText)
 
 void ConnectToInteropPipe(void)
 {
+	const char* PipeGUID = GetCommandLine();
+	DebugPrint("Pipe GUID = %s", PipeGUID);
+
+	char PipeName[0x200] = {0};
+	sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", PipeGUID);
+
 	while (1)
 	{
-		const char* PipeGUID = GetCommandLine();
-		DebugPrint("Pipe GUID = %s", PipeGUID);
-
-		char PipeName[0x200] = {0};
-		sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", PipeGUID);
-
 		g_InteropPipeHandle = CreateFile(PipeName,
 							GENERIC_READ|GENERIC_WRITE,
 							0,

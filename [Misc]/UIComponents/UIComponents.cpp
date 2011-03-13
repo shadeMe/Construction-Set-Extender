@@ -1,6 +1,6 @@
 // UIComponents.cpp : main project file.
 
-#include "BatchEditor_Reference.h"
+#include "TagBrowser.h"
 
 using namespace UIComponents;
 
@@ -12,6 +12,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Create the main window and run it
-	Application::Run(gcnew BatchEditor_Reference());
+	Application::Run(gcnew TagBrowser());
 	return 0;
 }

@@ -10,9 +10,6 @@ struct UseListCellItemData;
 class INISetting;
 struct NopData;
 
-
-extern FormData*				UIL_FormData;
-extern UseListCellItemData*		UIL_CellData;
 extern bool						g_QuickLoadToggle;
 extern bool						g_PluginPostLoad;
 extern HFONT					g_CSDefaultFont;
@@ -77,6 +74,12 @@ extern MemHdlr					kTESRaceCopyHairEyeDataInit;// adds buttons to the face data 
 extern MemHdlr					kTESRaceCopyHairEyeDataMessageHandler;// handles the WM_COMMAND messages sent by the newly added controls
 extern NopHdlr					kTESDialogSubwindowEnumChildCallback;// patches the TESDialogSubWindow::EnumChildWindowsCallback function to keep it from overwriting the subwindow object's container member
 extern MemHdlr					kTESObjectREFRDoCopyFrom;// patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source
+extern NopHdlr					kLODLandTextureMipMapLevelA;// patches the LOD texture generator to generate the full mip chain for diffuse maps
+extern MemHdlr					kLODLandTextureMipMapLevelB;// patches the LOD texture generator to generate the full mip chain for normal maps
+extern MemHdlr					kLODLandTextureResolution;// quadruples the resolution of lod landscape diffuse maps
+extern MemHdlr					kDataHandlerSaveFormToFile;// allows records in esp masters to be overridden with deleted records
+extern MemHdlr					kTESFileUpdateHeader;// prevents TESFile::UpdateHeader from continuing for locked files
+extern MemHdlr					kTESObjectREFRGet3DData;// selectively culls reference nodes depending on the presence of various visibiity flags
 
 bool PatchMiscHooks(void);
 void PatchMessageHandler(void);
@@ -132,6 +135,11 @@ void TESRaceCopyHairEyeDataInitHook(void);
 void TESRaceCopyHairEyeDataMessageHandlerHook(void);
 void FormIDListViewSaveChangesHook(void);
 void TESObjectREFRDoCopyFromHook(void);
+void LODLandTextureMipMapLevelBHook(void);
+void LODLandTextureResolutionHook(void);
+void DataHandlerSaveFormToFileHook(void);
+void TESFileUpdateHeaderHook(void);
+void TESObjectREFRGet3DDataHook(void);
 
 
 void ModelSelectorCommonDialogHook(void);
@@ -153,6 +161,14 @@ void SPTCancelCommonDialogHook(void);
 
 
 // common dialog patches - adds support for the BSA viewer, path editing, patches cancel/close behaviour
+enum AssetSelectorFilter
+{
+	e_NIF = 0,
+	e_KF,
+	e_WAV,
+	e_DDS,
+	e_SPT
+};
 // models
 const UInt32			kModelCancelCommonDialogHookAddr = 0x0049BDB0;
 const UInt32			kModelCancelCommonDialogRestoreRetnAddr = 0x0049BE6B;
@@ -163,7 +179,7 @@ const UInt32			kModelCancelCommonDialogStackOffset = 0x10;
 const UInt32			kModelSelectorCommonDialogHookAddr = 0x0049BDAB;
 const UInt32			kModelSelectorCommonDialogRetnAddr = 0x0049BDB0;
 const UInt32			kModelSelectorCommonDialogCallAddr = 0x00446C60;
-const UInt32			kModelSelectorCommonDialogFilterType = 0;
+const UInt32			kModelSelectorCommonDialogFilterType = e_NIF;
 #define					kModelPathButtonID				 edi + 0x20
 
 const UInt32			kModelPostCommonDialogHookAddr = 0x0049BDBE;
@@ -179,7 +195,7 @@ const UInt32			kAnimationCancelCommonDialogStackOffset = 0x28;
 const UInt32			kAnimationSelectorCommonDialogHookAddr = 0x0049D910;
 const UInt32			kAnimationSelectorCommonDialogRetnAddr = 0x0049D915;
 const UInt32			kAnimationSelectorCommonDialogCallAddr = 0x00446A30;
-const UInt32			kAnimationSelectorCommonDialogFilterType = 1;
+const UInt32			kAnimationSelectorCommonDialogFilterType = e_KF;
 #define					kAnimationPathButtonID				 esi + 0x20
 
 const UInt32			kAnimationPostCommonDialogHookAddr = 0x0049D92B;
@@ -195,7 +211,7 @@ const UInt32			kSoundCancelCommonDialogStackOffset = 0x10;
 const UInt32			kSoundSelectorCommonDialogHookAddr = 0x004A1C83;
 const UInt32			kSoundSelectorCommonDialogRetnAddr = 0x004A1C88;
 const UInt32			kSoundSelectorCommonDialogCallAddr = 0x004431A0;
-const UInt32			kSoundSelectorCommonDialogFilterType = 2;
+const UInt32			kSoundSelectorCommonDialogFilterType = e_WAV;
 #define					kSoundPathButtonID				 1451
 
 const UInt32			kSoundPostCommonDialogHookAddr = 0x004A1C8F;
@@ -211,7 +227,7 @@ const UInt32			kTextureCancelCommonDialogStackOffset = 0x14;
 const UInt32			kTextureSelectorCommonDialogHookAddr = 0x004A414B;
 const UInt32			kTextureSelectorCommonDialogRetnAddr = 0x004A4150;
 const UInt32			kTextureSelectorCommonDialogCallAddr = 0x00446CA0;
-const UInt32			kTextureSelectorCommonDialogFilterType = 3;
+const UInt32			kTextureSelectorCommonDialogFilterType = e_DDS;
 #define					kTexturePathButtonID				 esi + 0x10
 
 const UInt32			kTexturePostCommonDialogHookAddr = 0x004A415B;
@@ -227,7 +243,7 @@ const UInt32			kSPTCancelCommonDialogStackOffset = 0x28;
 const UInt32			kSPTSelectorCommonDialogHookAddr = 0x0049EAD0;
 const UInt32			kSPTSelectorCommonDialogRetnAddr = 0x0049EAD5;
 const UInt32			kSPTSelectorCommonDialogCallAddr = 0x00446A30;
-const UInt32			kSPTSelectorCommonDialogFilterType = 4;
+const UInt32			kSPTSelectorCommonDialogFilterType = e_SPT;
 #define					kSPTPathButtonID				 edi + 0x20
 
 const UInt32			kSPTPostCommonDialogHookAddr = 0x0049EAE3;
@@ -239,13 +255,12 @@ enum AssetSelectorResult
 	e_FileBrowser,
 	e_BSABrowser,
 	e_EditPath,
-	e_ClearPath
+	e_ClearPath,
+	e_CopyPath,
+	e_FetchPath = 0x32
 };
 
-#define e_FetchPath		0x32
-
-// using macros to avoid tedious redefinitions 
-#define COMMON_DIALOG_SELECTOR_HOOK(name)  \
+#define DefineCommonDialogPrologHandler(name)  \
 void __declspec(naked) ##name##SelectorCommonDialogHook(void)  \
 {  \
     {  \
@@ -261,6 +276,8 @@ void __declspec(naked) ##name##SelectorCommonDialogHook(void)  \
 		__asm jz		BSAB \
 		__asm cmp		eax, e_EditPath \
 		__asm jz		EDITP \
+		__asm cmp		eax, e_CopyPath \
+		__asm jz		COPYP \
         __asm popad  \
 		__asm mov		eax, e_ClearPath \
         __asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
@@ -284,9 +301,15 @@ void __declspec(naked) ##name##SelectorCommonDialogHook(void)  \
 		__asm push		eax \
 		__asm call		InitPathEditor \
         __asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
+	__asm COPYP: \
+		__asm popad \
+		__asm push		eax \
+		__asm push		k##name##SelectorCommonDialogFilterType	\
+		__asm call		InitPathCopier \
+        __asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
     }  \
 }
-#define COMMON_DIALOG_CANCEL_HOOK(name)  \
+#define DefineCommonDialogCancelHandler(name)  \
 void __declspec(naked) ##name##CancelCommonDialogHook(void)  \
 {  \
     {  \
@@ -303,6 +326,6 @@ void __declspec(naked) ##name##CancelCommonDialogHook(void)  \
     }  \
 }
 
-#define COMMON_DIALOG_CANCEL_PATCH(name)						WriteRelJump(k##name##CancelCommonDialogHookAddr, (UInt32)##name##CancelCommonDialogHook);
-#define COMMON_DIALOG_SELECTOR_PATCH(name)						WriteRelJump(k##name##SelectorCommonDialogHookAddr, (UInt32)##name##SelectorCommonDialogHook);
-#define COMMON_DIALOG_POST_PATCH(name)							WriteRelJump(k##name##PostCommonDialogHookAddr, (UInt32)##name##PostCommonDialogHook);
+#define PatchCommonDialogCancelHandler(name)							WriteRelJump(k##name##CancelCommonDialogHookAddr, (UInt32)##name##CancelCommonDialogHook);
+#define PatchCommonDialogPrologHandler(name)							WriteRelJump(k##name##SelectorCommonDialogHookAddr, (UInt32)##name##SelectorCommonDialogHook);
+#define PatchCommonDialogEpilogHandler(name)							WriteRelJump(k##name##PostCommonDialogHookAddr, (UInt32)##name##PostCommonDialogHook);

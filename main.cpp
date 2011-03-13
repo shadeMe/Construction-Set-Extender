@@ -1,3 +1,5 @@
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
 #include "ExtenderInternals.h"
 #include "SEHooks.h"
 #include "MiscHooks.h"
@@ -46,7 +48,6 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		g_PluginPostLoad = true;
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
-//		InitializeDefaultGMSTMap();
 		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll"))
 		{
 			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
@@ -117,9 +118,10 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 	g_INIManager->SetINIPath(g_INIPath);
 	dynamic_cast<CSEINIManager*>(g_INIManager)->Initialize();
 
-	if (!CLIWrapper::Import(obse)) {
+//	WaitUntilDebuggerAttached();
+
+	if (!CLIWrapper::Import(obse))
 		return false;
-	}
 	else if (!PatchSEHooks() || !PatchMiscHooks())
 		return false;
 	
@@ -128,7 +130,6 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 	g_CommandTableData.GetParentPlugin = g_commandTableIntfc->GetParentPlugin;
 
 	DebugPrint("CS patched !\n\n");
-
 	return true;
 }
 

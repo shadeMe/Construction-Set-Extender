@@ -31,10 +31,10 @@ public interface class ScriptEditorInterface
 
 	String^										GetText(void);
 	UInt32										GetTextLength(void);
-	void										SetText(String^ Text);
+	void										SetText(String^ Text, bool PreventTextChangedEventHandling);
 
 	String^										GetSelectedText(void);
-	void										SetSelectedText(String^ Text);
+	void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
 
 	void										SetSelectionStart(int Index);
 	void										SetSelectionLength(int Length);

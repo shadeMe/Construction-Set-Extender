@@ -8,7 +8,7 @@ using namespace ScriptPreprocessor;
 CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 {
 	if (Token == nullptr || PreprocessorInstance == nullptr || ErrorOutput == nullptr)
-		return;																// invoked by CSEPreprocessorDirective
+		return;																				// invoked by CSEPreprocessorDirective::c'tor
 
 	try
 	{
@@ -16,7 +16,7 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 		ScriptParser^ LocalParser = gcnew ScriptParser();
 
 		LocalParser->Tokenize(Token, true);
-		ExpandedToken += Token->Substring(0, LocalParser->Indices[0]);		// gives us the controlchars to prepend
+		String^ Prefix = ExpandedToken += Token->Substring(0, LocalParser->Indices[0]);		// gives us the controlchars to prepend
 		int TokenIndex = 0;
 		
 		for each (String^% Itr in LocalParser->Tokens)
@@ -24,7 +24,7 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 			DefineDirective^ Macro = PreprocessorInstance->LookupDefineDirectiveByName(Itr);
 
 			if (Macro != nullptr && LocalParser->IsComment(TokenIndex) == -1)
-				ExpandedToken += Macro->GetValue();
+				ExpandedToken += Macro->GetValue(Prefix);
 			else
 				ExpandedToken += Itr;
 			
@@ -114,7 +114,7 @@ bool DefineDirective::IsNameValid(String^% Name)
 
 	for each (Char Itr in Name)
 	{
-		if (Char::IsLetter(Itr) == false && Itr != '_')
+		if (Char::IsLetter(Itr) == false && Char::IsNumber(Itr) == false && Itr != '_')
 		{
 			Result = false;
 			break;
@@ -214,6 +214,22 @@ DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, Stand
 		ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' - " + E->Message);
 		ErrorFlag = true;
 	}
+}
+
+String^ DefineDirective::GetValue(String^% Prefix)
+{
+	if (Encoding == EncodingType::e_MultiLine)
+	{
+		StringReader^ TextReader = gcnew StringReader(this->Value);
+		String^ Result = "\n" + TextReader->ReadLine();
+
+		for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
+			Result += "\n" + Prefix + ReadLine;
+
+		return Result->Substring(1);
+	}
+	else
+		return this->Value;
 }
 
 DefineDirective^ DefineDirective::CreateCopy()
@@ -378,7 +394,7 @@ EnumDirective::EnumDirective(String^ Token, StringReader^% TextReader, StandardO
 {
 	this->Token = Token;
 	this->Type = DirectiveType::e_Enum;
-	this->Encoding = EncodingType::e_SingleLine;
+	this->Encoding = EncodingType::e_MultiLine;
 	ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
 	ScriptParser^ LocalParser = gcnew ScriptParser();
@@ -466,8 +482,8 @@ void IfDirective::ProcessOperands(String^% LHSSource, String^% RHSSource, String
 	DefineDirective^ LHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(LHSSource);
 	DefineDirective^ RHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(RHSSource);
 
-	LHSResult = ((LHSDirective)?(LHSDirective->GetValue()):LHSSource);
-	RHSResult = ((RHSDirective)?(RHSDirective->GetValue()):RHSSource);
+	LHSResult = ((LHSDirective)?(LHSDirective->GetValue(gcnew String(""))):LHSSource);
+	RHSResult = ((RHSDirective)?(RHSDirective->GetValue(gcnew String(""))):RHSSource);
 }
 
 bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
@@ -946,7 +962,7 @@ void Preprocessor::RegisterDefineDirective(DefineDirective^ Directive)
 	DefineDirective^ ExistingDirective = LookupDefineDirectiveByName(Directive->GetName());
 
 	if (ExistingDirective != nullptr)
-		ExistingDirective->SetValue(Directive->GetValue());
+		ExistingDirective->SetValue(Directive->GetValue(gcnew String("")));
 	else
 		RegisteredDefineDirectives->AddLast(Directive->CreateCopy());
 }
