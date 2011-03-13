@@ -3,6 +3,7 @@
 #include "[Common]\HandshakeStructs.h"
 #include "[Common]\NativeWrapper.h"
 using namespace DevComponents;
+using namespace GlobalInputMonitor;
 
 public ref class TagDatabase
 {
@@ -32,10 +33,13 @@ public:
 };
 
 
+
 public ref class TagBrowser
 {
 	static TagBrowser^									Singleton = nullptr;
 
+	void												GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E);
+	MouseEventHandler^									GlobalMouseHook_MouseUpHandler;
 
 	void												TagBrowserBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
@@ -45,12 +49,9 @@ public ref class TagBrowser
 	void												TagTree_NodeClick(Object^ Sender, AdvTree::TreeNodeMouseEventArgs^ E);
 	void												TagTree_AfterCellEdit(Object^ Sender, AdvTree::CellEditEventArgs ^ E);
 
-	void												PlaceSelection_MouseDown(Object^ Sender, MouseEventArgs^ E);
-	void												PlaceSelection_MousUp(Object^ Sender, MouseEventArgs^ E);
+	void												FormList_MouseDown(Object^ Sender, MouseEventArgs^ E);
 
 	void												AddObjectSelection_Click(Object^ Sender, EventArgs^ E);
-	void												PlaceSelection_Click(Object^ Sender, EventArgs^ E);
-	void												ShowSelectionControls_Click(Object^ Sender, EventArgs^ E);
 	void												SaveTags_Click(Object^ Sender, EventArgs^ E);
 	void												LoadTags_Click(Object^ Sender, EventArgs^ E);
 
@@ -58,9 +59,7 @@ public ref class TagBrowser
 
 	void												TagTreeContextMenuAdd_Click(Object^ Sender, EventArgs^ E);
 	void												TagTreeContextMenuRemove_Click(Object^ Sender, EventArgs^ E);
-	void												FormListContextMenuAdd_Click(Object^ Sender, EventArgs^ E);
 	void												FormListContextMenuRemove_Click(Object^ Sender, EventArgs^ E);
-	void												SelectionListContextMenuRemove_Click(Object^ Sender, EventArgs^ E);
 
 	TagBrowser();
 
@@ -70,10 +69,6 @@ public ref class TagBrowser
 			ColumnHeader^										FormListHEditorID;
 			ColumnHeader^										FormListHRefID;
 			ColumnHeader^										FormListHType;
-	ListView^												SelectionList;
-		ColumnHeader^											SelectionListHEditorId;
-		ColumnHeader^											SelectionListHRefID;
-		ColumnHeader^											SelectionListHType;
 
 	AdvTree::AdvTree^										TagTree;
 		AdvTree::NodeConnector^									TagTreeNodeConnector;
@@ -81,30 +76,16 @@ public ref class TagBrowser
 		DotNetBar::ElementStyle^								TagTreeElementStyle2;
 
 	Button^													AddObjectSelection;
-	Button^													PlaceSelection;
-	Label^													LabelSelectionList;
-	CheckBox^												ClearSelectionOnInstantiation;
-	CheckBox^												CustomPos;
-		TextBox^												PositionX;
-		TextBox^												PositionY;
-		TextBox^												PositionZ;
-	CheckBox^												CustomRot;
-		TextBox^												RotationX;
-		TextBox^												RotationY;
-		TextBox^												RotationZ;
-	Button^													ShowSelectionControls;
 	Button^													SaveTags;
 	Button^													LoadTags;
 	ContextMenuStrip^										TagTreeContextMenu;
 		ToolStripMenuItem^										TagTreeContextMenuAdd;
 		ToolStripMenuItem^										TagTreeContextMenuRemove;
 	ContextMenuStrip^										FormListContextMenu;
-		ToolStripMenuItem^										FormListContextMenuAdd;
 		ToolStripMenuItem^										FormListContextMenuRemove;
-	ContextMenuStrip^										SelectionListContextMenu;
-		ToolStripMenuItem^										SelectionListContextMenuRemove;
 
 	TagDatabase^											Database;
+	bool													MouseDragInProgress;
 	
 
 	static array<String^>^								TypeIdentifier =			// uses TESForm::typeID as its index

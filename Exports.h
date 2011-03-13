@@ -18,6 +18,7 @@ __declspec(dllexport) const char* GetINIString(const char* Section, const char* 
 __declspec(dllexport) const char* GetAppPath(void);
 __declspec(dllexport) void WriteStatusBarText(int PanelIndex, const char* Message);
 __declspec(dllexport) HWND GetCSMainWindowHandle(void);
+__declspec(dllexport) HWND GetRenderWindowHandle(void);
 
 __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message);
 __declspec(dllexport) void ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex, ScriptData* Data);

@@ -13,6 +13,9 @@ public:
 	static const char*									GetAppPath(void);
 	[DllImport("Construction Set Extender.dll")] 
 	static IntPtr										GetCSMainWindowHandle(void);
+	[DllImport("Construction Set Extender.dll")] 
+	static IntPtr										GetRenderWindowHandle(void);
+	
 
 	[DllImport("Construction Set Extender.dll")] 
 	static ScriptData*									FetchScriptFromForm(const char* EditorID);
@@ -86,7 +89,8 @@ public:
 	static bool											LockWindowUpdate(IntPtr hWndLock);
 	[DllImport("user32.dll")]
 	static IntPtr										WindowFromPoint(Point Point);
-
+	[DllImport("user32.dll")]
+	static IntPtr										GetParent(IntPtr Handle);
 
 	static void											PrintToCSStatusBar(int PanelIndex, String^ Message);
 	friend void											DebugDump(UInt8 Source, String^% Message);

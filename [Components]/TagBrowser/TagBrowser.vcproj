@@ -188,6 +188,11 @@
 			AssemblyName="DevComponents.DotNetBar2, Version=8.0.0.0, PublicKeyToken=5fd520d36328f741, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
+		<AssemblyReference
+			RelativePath="..\..\[Depends]\GlobalInputMonitor.dll"
+			AssemblyName="GlobalInputMonitor, Version=1.0.0.0, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
+		/>
 	</References>
 	<Files>
 		<Filter

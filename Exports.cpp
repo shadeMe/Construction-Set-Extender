@@ -39,6 +39,10 @@ __declspec(dllexport) HWND GetCSMainWindowHandle(void)
 	return *g_HWND_CSParent;
 }
 
+__declspec(dllexport) HWND GetRenderWindowHandle(void)
+{
+	return *g_HWND_RenderWindow;
+}
 
 
 
@@ -688,7 +692,6 @@ __declspec(dllexport) void TagBrowser_GetObjectWindowSelection(void)
 
 __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
 {
-	bool Issues = false;
 	thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderWindowBuffer, 1);
 
 	for (int i = 0; i < Data->FormCount; i++)
@@ -699,7 +702,6 @@ __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiation
 		TESForm* Form = TESForm_LookupByFormID(FormID);
 		if (!Form)
 		{
-			Issues = true;
 			DebugPrint(Console::e_TAG, "Couldn't find form '%08X'!", FormID);
 			continue;
 		}
@@ -707,12 +709,7 @@ __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiation
 		thisCall(kTESRenderSelection_AddFormToSelection, *g_TESRenderWindowBuffer, Form, 0);
 	}
 
-	RECT RenderBounds;
-	GetWindowRect(*g_HWND_RenderWindow, &RenderBounds);
-
-	POINT Insertion = { RenderBounds.left + (RenderBounds.right - RenderBounds.left), RenderBounds.top + (RenderBounds.bottom - RenderBounds.top) };
-	Insertion.x = 0, Insertion.y = 0;
-	SendMessage(*g_HWND_RenderWindow, 0x407, NULL, (LPARAM)&Insertion);
+	SendMessage(*g_HWND_RenderWindow, 0x407, NULL, (LPARAM)&Data->InsertionPoint);
 }
 
 }

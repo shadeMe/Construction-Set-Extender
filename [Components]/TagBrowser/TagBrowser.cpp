@@ -215,14 +215,8 @@ TagBrowser::TagBrowser()
 	FormListHRefID = (gcnew ColumnHeader());
 	FormListHType = (gcnew ColumnHeader());
 	FormListContextMenu = (gcnew ContextMenuStrip());
-	FormListContextMenuAdd = (gcnew ToolStripMenuItem());
 	FormListContextMenuRemove = (gcnew ToolStripMenuItem());
-	SelectionList = (gcnew ListView());
-	SelectionListHEditorId = (gcnew ColumnHeader());
-	SelectionListHRefID = (gcnew ColumnHeader());
-	SelectionListHType = (gcnew ColumnHeader());
-	SelectionListContextMenu = (gcnew ContextMenuStrip());
-	SelectionListContextMenuRemove = (gcnew ToolStripMenuItem());
+
 	TagTree = (gcnew DevComponents::AdvTree::AdvTree());
 	TagTreeContextMenu = (gcnew ContextMenuStrip());
 	TagTreeContextMenuAdd = (gcnew ToolStripMenuItem());
@@ -231,22 +225,9 @@ TagBrowser::TagBrowser()
 	TagTreeElementStyle2 = (gcnew DevComponents::DotNetBar::ElementStyle());
 	TagTreeElementStyle1 = (gcnew DevComponents::DotNetBar::ElementStyle());
 	AddObjectSelection = (gcnew Button());
-	PlaceSelection = (gcnew Button());
-	LabelSelectionList = (gcnew Label());
-	ClearSelectionOnInstantiation = (gcnew CheckBox());
-	CustomPos = (gcnew CheckBox());
-	PositionX = (gcnew TextBox());
-	PositionZ = (gcnew TextBox());
-	PositionY = (gcnew TextBox());
-	CustomRot = (gcnew CheckBox());
-	RotationY = (gcnew TextBox());
-	RotationZ = (gcnew TextBox());
-	RotationX = (gcnew TextBox());
-	ShowSelectionControls = (gcnew Button());
 	SaveTags = (gcnew Button());
 	LoadTags = (gcnew Button());
 	FormListContextMenu->SuspendLayout();
-	SelectionListContextMenu->SuspendLayout();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TagTree))->BeginInit();
 	TagTreeContextMenu->SuspendLayout();
 	TagBrowserBox->SuspendLayout();
@@ -276,6 +257,8 @@ TagBrowser::TagBrowser()
 	FormList->Tag = (int)1;
 	FormList->ItemActivate += gcnew EventHandler(this, &TagBrowser::FormSelectionList_ItemActivate);
 	FormList->ColumnClick += gcnew ColumnClickEventHandler(this, &TagBrowser::FormSelectionList_ColumnClick);
+	FormList->MouseDown += gcnew MouseEventHandler(this, &TagBrowser::FormList_MouseDown);
+//	FormList->MouseUp += gcnew MouseEventHandler(this, &TagBrowser::FormList_MouseUp);
 	// 
 	// FormListHEditorID
 	// 
@@ -294,65 +277,14 @@ TagBrowser::TagBrowser()
 	// 
 	// FormListContextMenu
 	// 
-	FormListContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(2) {FormListContextMenuAdd, FormListContextMenuRemove});
+	FormListContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(1) {FormListContextMenuRemove});
 	FormListContextMenu->Name = L"FormListContextMenu";
 	FormListContextMenu->Size = Size(165, 26);
-	// 
-	// FormListContextMenuAdd
-	// 
-	FormListContextMenuAdd->Name = L"FormListContextMenuAdd";
-	FormListContextMenuAdd->Size = Size(164, 22);
-	FormListContextMenuAdd->Text = L"Add To Selection";
-	FormListContextMenuAdd->Click += gcnew EventHandler(this, &TagBrowser::FormListContextMenuAdd_Click);
 
 	FormListContextMenuRemove->Name = L"FormListContextMenuRemove";
 	FormListContextMenuRemove->Size = Size(164, 22);
 	FormListContextMenuRemove->Text = L"Remove From Tag";
 	FormListContextMenuRemove->Click += gcnew EventHandler(this, &TagBrowser::FormListContextMenuRemove_Click);
-	// 
-	// SelectionList
-	// 
-	SelectionList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {SelectionListHEditorId, 
-		SelectionListHRefID, SelectionListHType});
-	SelectionList->ContextMenuStrip = SelectionListContextMenu;
-	SelectionList->FullRowSelect = true;
-	SelectionList->Location = Point(692, 42);
-	SelectionList->Name = L"SelectionList";
-	SelectionList->Size = Size(350, 236);
-	SelectionList->TabIndex = 3;
-	SelectionList->UseCompatibleStateImageBehavior = false;
-	SelectionList->View = View::Details;
-	SelectionList->Tag = (int)1;
-	SelectionList->ItemActivate += gcnew EventHandler(this, &TagBrowser::FormSelectionList_ItemActivate);
-	SelectionList->ColumnClick += gcnew ColumnClickEventHandler(this, &TagBrowser::FormSelectionList_ColumnClick);
-	// 
-	// SelectionListHEditorId
-	// 
-	SelectionListHEditorId->Text = L"EditorID";
-	SelectionListHEditorId->Width = 128;
-	// 
-	// SelectionListHRefID
-	// 
-	SelectionListHRefID->Text = L"FormID";
-	SelectionListHRefID->Width = 70;
-	// 
-	// SelectionListHType
-	// 
-	SelectionListHType->Text = L"Type";
-	SelectionListHType->Width = 111;
-	// 
-	// SelectionListContextMenu
-	// 
-	SelectionListContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(1) {SelectionListContextMenuRemove});
-	SelectionListContextMenu->Name = L"SelectionListContextMenu";
-	SelectionListContextMenu->Size = Size(200, 26);
-	// 
-	// SelectionListContextMenuRemove
-	// 
-	SelectionListContextMenuRemove->Name = L"SelectionListContextMenuRemove";
-	SelectionListContextMenuRemove->Size = Size(199, 22);
-	SelectionListContextMenuRemove->Text = L"Remove From Selection";
-	SelectionListContextMenuRemove->Click += gcnew EventHandler(this, &TagBrowser::SelectionListContextMenuRemove_Click);
 	// 
 	// TagTree
 	// 
@@ -449,114 +381,7 @@ TagBrowser::TagBrowser()
 	AddObjectSelection->Text = L"Add Object Window Selection";
 	AddObjectSelection->UseVisualStyleBackColor = true;
 	AddObjectSelection->Click += gcnew EventHandler(this, &TagBrowser::AddObjectSelection_Click);
-	// 
-	// PlaceSelection
-	// 
-	PlaceSelection->Location = Point(692, 387);
-	PlaceSelection->Name = L"PlaceSelection";
-	PlaceSelection->Size = Size(350, 32);
-	PlaceSelection->TabIndex = 6;
-	PlaceSelection->Text = L"Place Selection In Active Cell";
-	PlaceSelection->UseVisualStyleBackColor = true;
-	PlaceSelection->Click += gcnew EventHandler(this, &TagBrowser::PlaceSelection_Click);
-	// 
-	// LabelSelectionList
-	// 
-	LabelSelectionList->Font = (gcnew Font(L"Lucida Grande", 14.25F, FontStyle::Regular, GraphicsUnit::Point, 
-		static_cast<System::Byte>(0)));
-	LabelSelectionList->Location = Point(692, 12);
-	LabelSelectionList->Name = L"LabelSelectionList";
-	LabelSelectionList->Size = Size(350, 27);
-	LabelSelectionList->TabIndex = 7;
-	LabelSelectionList->Text = L"Selection";
-	LabelSelectionList->TextAlign = ContentAlignment::MiddleCenter;
-	// 
-	// ClearSelectionOnInstantiation
-	// 
-	ClearSelectionOnInstantiation->Location = Point(692, 354);
-	ClearSelectionOnInstantiation->Name = L"ClearSelectionOnInstantiation";
-	ClearSelectionOnInstantiation->Size = Size(350, 32);
-	ClearSelectionOnInstantiation->TabIndex = 8;
-	ClearSelectionOnInstantiation->Text = L"Clear Selection After Reference Instantiation";
-	ClearSelectionOnInstantiation->TextImageRelation = TextImageRelation::ImageAboveText;
-	ClearSelectionOnInstantiation->UseVisualStyleBackColor = true;
-	// 
-	// CustomPos
-	// 
-	CustomPos->Location = Point(692, 284);
-	CustomPos->Name = L"CustomPos";
-	CustomPos->Size = Size(131, 32);
-	CustomPos->TabIndex = 9;
-	CustomPos->Text = L"Use Custom Position";
-	CustomPos->TextImageRelation = TextImageRelation::ImageAboveText;
-	CustomPos->UseVisualStyleBackColor = true;
-	// 
-	// PositionX
-	// 
-	PositionX->Location = Point(692, 325);
-	PositionX->Name = L"PositionX";
-	PositionX->Size = Size(55, 20);
-	PositionX->TabIndex = 10;
-	// 
-	// PositionZ
-	// 
-	PositionZ->Location = Point(804, 325);
-	PositionZ->Name = L"PositionZ";
-	PositionZ->Size = Size(55, 20);
-	PositionZ->TabIndex = 11;
-	// 
-	// PositionY
-	// 
-	PositionY->Location = Point(748, 325);
-	PositionY->Name = L"PositionY";
-	PositionY->Size = Size(55, 20);
-	PositionY->TabIndex = 12;
-	// 
-	// CustomRot
-	// 
-	CustomRot->Location = Point(911, 284);
-	CustomRot->Name = L"CustomRot";
-	CustomRot->Size = Size(131, 32);
-	CustomRot->TabIndex = 13;
-	CustomRot->Text = L"Use Custom Rotation";
-	CustomRot->TextImageRelation = TextImageRelation::ImageAboveText;
-	CustomRot->UseVisualStyleBackColor = true;
-	// 
-	// RotationY
-	// 
-	RotationY->Location = Point(931, 325);
-	RotationY->Name = L"RotationY";
-	RotationY->Size = Size(55, 20);
-	RotationY->TabIndex = 16;
-	// 
-	// RotationZ
-	// 
-	RotationZ->Location = Point(987, 325);
-	RotationZ->Name = L"RotationZ";
-	RotationZ->Size = Size(55, 20);
-	RotationZ->TabIndex = 15;
-	// 
-	// RotationX
-	// 
-	RotationX->Location = Point(875, 325);
-	RotationX->Name = L"RotationX";
-	RotationX->Size = Size(55, 20);
-	RotationX->TabIndex = 14;
-	// 
-	// ShowSelectionControls
-	// 
-	ShowSelectionControls->BackColor = SystemColors::Control;
-	ShowSelectionControls->Font = (gcnew Font(L"Microsoft Sans Serif", 14.25F, FontStyle::Bold, 
-		GraphicsUnit::Point, static_cast<System::Byte>(0)));
-	ShowSelectionControls->ForeColor = Color::Black;
-	ShowSelectionControls->Location = Point(639, 186);
-	ShowSelectionControls->Name = L"ShowSelectionControls";
-	ShowSelectionControls->Size = Size(40, 63);
-	ShowSelectionControls->TabIndex = 17;
-	ShowSelectionControls->Text = L"« »";
-	ShowSelectionControls->UseVisualStyleBackColor = false;
-	ShowSelectionControls->Click += gcnew EventHandler(this, &TagBrowser::ShowSelectionControls_Click);
-	// 
+	//
 	// SaveTags
 	// 
 	SaveTags->BackColor = System::Drawing::SystemColors::Control;
@@ -589,24 +414,11 @@ TagBrowser::TagBrowser()
 	// 
 	TagBrowserBox->AutoScaleDimensions = SizeF(6, 13);
 	TagBrowserBox->AutoScaleMode = AutoScaleMode::Font;
-	TagBrowserBox->ClientSize = Size(1054, 434);
+	TagBrowserBox->ClientSize = Size(696, 434);
 	TagBrowserBox->Controls->Add(LoadTags);
 	TagBrowserBox->Controls->Add(SaveTags);
-	TagBrowserBox->Controls->Add(ShowSelectionControls);
-	TagBrowserBox->Controls->Add(RotationY);
-	TagBrowserBox->Controls->Add(RotationZ);
-	TagBrowserBox->Controls->Add(RotationX);
-	TagBrowserBox->Controls->Add(CustomRot);
-	TagBrowserBox->Controls->Add(PositionY);
-	TagBrowserBox->Controls->Add(PositionZ);
-	TagBrowserBox->Controls->Add(PositionX);
-	TagBrowserBox->Controls->Add(CustomPos);
-	TagBrowserBox->Controls->Add(ClearSelectionOnInstantiation);
-	TagBrowserBox->Controls->Add(LabelSelectionList);
-	TagBrowserBox->Controls->Add(PlaceSelection);
 	TagBrowserBox->Controls->Add(AddObjectSelection);
 	TagBrowserBox->Controls->Add(TagTree);
-	TagBrowserBox->Controls->Add(SelectionList);
 	TagBrowserBox->Controls->Add(FormList);
 	TagBrowserBox->Controls->Add(SearchBox);
 	TagBrowserBox->FormBorderStyle = FormBorderStyle::FixedSingle;
@@ -614,9 +426,9 @@ TagBrowser::TagBrowser()
 	TagBrowserBox->Name = L"TagBrowser";
 	TagBrowserBox->StartPosition = FormStartPosition::CenterScreen;
 	TagBrowserBox->Text = L"Tag Browser";
+	TagBrowserBox->KeyPreview = true;
 	TagBrowserBox->Closing += gcnew CancelEventHandler(this, &TagBrowser::TagBrowserBox_Cancel);
 	FormListContextMenu->ResumeLayout(false);
-	SelectionListContextMenu->ResumeLayout(false);
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TagTree))->EndInit();
 	TagTreeContextMenu->ResumeLayout(false);
 	TagBrowserBox->ResumeLayout(false);
@@ -625,12 +437,66 @@ TagBrowser::TagBrowser()
 	TagBrowserBox->Hide();
 
 	Database = gcnew TagDatabase(TagTree); 
+	MouseDragInProgress = false;
+	GlobalMouseHook_MouseUpHandler = gcnew MouseEventHandler(this, &TagBrowser::GlobalInputMonitor_MouseUp);
+}
+
+void TagBrowser::GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
+{
+	switch (E->Button)
+	{
+	case MouseButtons::Right:
+		if (MouseDragInProgress)
+		{
+			DebugPrint("PlaceObject Operation interrupted by right mouse button");
+			HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
+			MouseDragInProgress = false;	
+		}
+		break;
+	case MouseButtons::Left:
+		if (MouseDragInProgress)
+		{
+			IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
+			if (Wnd == NativeWrapper::GetRenderWindowHandle())
+			{
+				TagBrowserInstantiationData InteropData;
+				FormData* Data = InteropData.FormListHead = new FormData[FormList->SelectedItems->Count];
+				InteropData.FormCount = FormList->SelectedItems->Count;
+				InteropData.InsertionPoint = E->Location;
+
+				UInt32 Index = 0;
+				for each (ListViewItem^ Itr in FormList->SelectedItems)
+				{
+					Data[Index].FormID = UInt32::Parse(Itr->SubItems[1]->Text, Globalization::NumberStyles::HexNumber);
+					Index++;
+				}
+
+				NativeWrapper::TagBrowser_InstantiateObjects(&InteropData);
+				delete [] Data;			
+			}
+		}
+		else
+			DebugPrint("Global PlaceObject hook called out of turn! Expecting an unresolved operation.");
+
+		HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
+		MouseDragInProgress = false;	
+		break;
+	}
 }
 
 void TagBrowser::TagBrowserBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
 	Hide();
 	E->Cancel = true;
+}
+
+void TagBrowser::FormList_MouseDown(Object^ Sender, MouseEventArgs^ E)
+{
+	if (FormList->SelectedItems->Count > 0)
+	{
+		MouseDragInProgress = true;
+		HookManager::MouseUp += GlobalMouseHook_MouseUpHandler;
+	}
 }
 void TagBrowser::FormSelectionList_ItemActivate(Object^ Sender, EventArgs^ E)
 {
@@ -699,61 +565,6 @@ void TagBrowser::TagTree_AfterCellEdit(Object^ Sender, AdvTree::CellEditEventArg
 void TagBrowser::AddObjectSelection_Click(Object^ Sender, EventArgs^ E)
 {
 	NativeWrapper::TagBrowser_GetObjectWindowSelection();
-}
-void TagBrowser::PlaceSelection_Click(Object^ Sender, EventArgs^ E)
-{
-	if (SelectionList->Items->Count == 0)
-	{
-		MessageBox::Show("No forms selected.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Information);
-		return;
-	}
-
-	TagBrowserInstantiationData InteropData = {0};
-	try
-	{
-		if (CustomPos->Checked)
-		{
-			ToggleFlag(&InteropData.Flags, TagBrowserInstantiationData::kFlag_UsePosition, true);
-			InteropData.Position.x = float::Parse(PositionX->Text);
-			InteropData.Position.y = float::Parse(PositionY->Text);
-			InteropData.Position.z = float::Parse(PositionZ->Text);
-		}
-		if (CustomRot->Checked)
-		{
-			ToggleFlag(&InteropData.Flags, TagBrowserInstantiationData::kFlag_UseRotation, true);
-			InteropData.Rotation.x = float::Parse(RotationX->Text);
-			InteropData.Rotation.y = float::Parse(RotationY->Text);
-			InteropData.Rotation.z = float::Parse(RotationZ->Text);
-		}
-	}
-	catch (...)
-	{
-		MessageBox::Show("Invalid 3D data entered.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Error);
-		return;		
-	}
-
-	FormData* Data = InteropData.FormListHead = new FormData[SelectionList->Items->Count];
-	InteropData.FormCount = SelectionList->Items->Count;
-
-	UInt32 Index = 0;
-	for each (ListViewItem^ Itr in SelectionList->Items)
-	{
-		Data[Index].FormID = UInt32::Parse(Itr->SubItems[1]->Text, Globalization::NumberStyles::HexNumber);
-		Index++;
-	}
-
-	NativeWrapper::TagBrowser_InstantiateObjects(&InteropData);
-	delete [] Data;
-
-	if (ClearSelectionOnInstantiation->Checked)
-		SelectionList->Items->Clear();
-}
-void TagBrowser::ShowSelectionControls_Click(Object^ Sender, EventArgs^ E)
-{
-	if (TagBrowserBox->Width != 696)
-		TagBrowserBox->Width = 696;
-	else
-		TagBrowserBox->Width = 1054;
 }
 void TagBrowser::SaveTags_Click(Object^ Sender, EventArgs^ E)
 {
@@ -867,18 +678,6 @@ void TagBrowser::TagTreeContextMenuRemove_Click(Object^ Sender, EventArgs^ E)
 		FormList->Items->Clear();
 	}
 }
-void TagBrowser::FormListContextMenuAdd_Click(Object^ Sender, EventArgs^ E)
-{
-	SelectionList->BeginUpdate();
-	for each (ListViewItem^ Itr in FormList->SelectedItems)
-	{
-		ListViewItem^ Item = gcnew ListViewItem(Itr->Text);
-		Item->SubItems->Add(Itr->SubItems[1]);
-		Item->SubItems->Add(Itr->SubItems[2]);
-		SelectionList->Items->Add(Item);
-	}
-	SelectionList->EndUpdate();
-}
 void TagBrowser::FormListContextMenuRemove_Click(Object^ Sender, EventArgs^ E)
 {
 	AdvTree::Node^ SelectedNode = TagTree->SelectedNode;
@@ -890,13 +689,6 @@ void TagBrowser::FormListContextMenuRemove_Click(Object^ Sender, EventArgs^ E)
 	for (ListViewItem^ Item = GetListViewSelectedItem(FormList); Item != nullptr; Item = GetListViewSelectedItem(FormList))
 		FormList->Items->Remove(Item);		
 	FormList->EndUpdate();	
-}
-void TagBrowser::SelectionListContextMenuRemove_Click(Object^ Sender, EventArgs^ E)
-{
-	SelectionList->BeginUpdate();
-	for (ListViewItem^ Item = GetListViewSelectedItem(SelectionList); Item != nullptr; Item = GetListViewSelectedItem(SelectionList))
-		SelectionList->Items->Remove(Item);
-	SelectionList->EndUpdate();	
 }
 
 void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
