@@ -22,6 +22,8 @@ WNDPROC						g_ObjectWndOrgWindowProc = NULL;
 WNDPROC						g_CellViewWndOrgWindowProc = NULL;
 WNDPROC						g_ResponseWndOrgWindowProc = NULL;
 
+HFONT						g_CSDefaultFont = NULL;
+
 #define PI					3.151592653589793
 
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -195,7 +197,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRefData->TypeID = ThisRef->baseForm->typeID;
 					ThisRefData->Flags = ThisRef->flags;
 					ThisRefData->Selected = false;
-					for (TESRenderWindowBuffer::SelectedObjectsEntry* j = (*g_TESRenderWindowBuffer)->RenderSelection; j != 0; j = j->Next) {
+					for (TESRenderSelection::SelectedObjectsEntry* j = (*g_TESRenderSelectionPrimary)->RenderSelection; j != 0; j = j->Next) {
 						if (j->Data && j->Data == ThisRef) {
 							ThisRefData->Selected = true;
 							break;
@@ -306,6 +308,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						{
 							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
 							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
+							thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef); // CopyFrom, to update NiNode data
 							thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
 						}
 					}	
@@ -368,6 +371,80 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case RENDER_BATCHEDIT:	
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, MAIN_WORLD_BATCHEDIT, 0);
 			break;
+		case RENDER_GROUPSELECTION:
+			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+			{
+				TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+				if (CurrentCell == NULL)
+					CurrentCell = (*g_TES)->currentExteriorCell;
+
+				if (CurrentCell == NULL)
+					break;
+
+				if (!g_RenderSelectionGroupManager.AddGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+				{
+					MessageBox(hWnd, "Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a pre-existing group",
+								"CSE", MB_OK|MB_ICONEXCLAMATION);
+				}
+				else
+					RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Created new selection group for current cell", 2);
+			}
+			break;
+		case RENDER_UNGROUPSELECTION:
+			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+			{
+				TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+				if (CurrentCell == NULL)
+					CurrentCell = (*g_TES)->currentExteriorCell;
+
+				if (CurrentCell == NULL)
+					break;
+
+				if (!g_RenderSelectionGroupManager.RemoveGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+				{
+					MessageBox(hWnd, "Couldn't remove current selection group.\n\nMake sure the selected objects belong to a pre-existing group",
+								"CSE", MB_OK|MB_ICONEXCLAMATION);
+				}
+				else
+					RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Removed selection group from current cell", 2);
+			}
+			break;
+		case ID_ALIGNSELECTION_BYXAXIS:
+		case ID_ALIGNSELECTION_BYYAXIS:
+		case ID_ALIGNSELECTION_BYZAXIS:
+			{
+				if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+				{
+					TESObjectREFR* AlignRef = (*g_TESRenderSelectionPrimary)->RenderSelection->Data;
+
+					for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection->Next; Itr && Itr->Data; Itr = Itr->Next)
+					{
+						TESObjectREFR* ThisRef = Itr->Data;
+
+						switch (LOWORD(wParam))
+						{
+						case ID_ALIGNSELECTION_BYXAXIS:
+							ThisRef->posX = AlignRef->posX;
+							break;
+						case ID_ALIGNSELECTION_BYYAXIS:
+							ThisRef->posY = AlignRef->posY;
+							break;
+						case ID_ALIGNSELECTION_BYZAXIS:
+							ThisRef->posZ = AlignRef->posZ;
+							break;
+						}
+						
+						thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
+						thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
+						thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef);
+						thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
+					}
+
+					PrintToBuffer("Selection aligned to %08X", AlignRef->refID);
+					PrintToRender(g_Buffer, 2);
+				}
+				break;
+			}
 		}
 		break; 
 	}
@@ -499,6 +576,7 @@ LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam); 
 }
 
+// ### replace mouse hook with setcapture()
 BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -1248,7 +1326,9 @@ void InitializeWindowManager(void)
 				ItemWorldUnloadCell,
 				ItemGameplayGlobalScript,
 				ItemLaunchGame,
-				ItemViewTagBrowser;
+				ItemViewTagBrowser,
+				ItemWorldGroupSelection,
+				ItemWorldUngroupSelection;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -1345,6 +1425,26 @@ void InitializeWindowManager(void)
 	ItemViewTagBrowser.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewTagBrowser);
 
+	
+	ItemWorldGroupSelection.cbSize = sizeof(MENUITEMINFO);		
+	ItemWorldGroupSelection.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldGroupSelection.wID = RENDER_GROUPSELECTION;
+	ItemWorldGroupSelection.fState = MFS_ENABLED;
+	ItemWorldGroupSelection.dwTypeData = "Group Selection";
+	ItemWorldGroupSelection.cch = 0;
+	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldGroupSelection);
+
+	ItemWorldUngroupSelection.cbSize = sizeof(MENUITEMINFO);		
+	ItemWorldUngroupSelection.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldUngroupSelection.wID = RENDER_UNGROUPSELECTION;
+	ItemWorldUngroupSelection.fState = MFS_ENABLED;
+	ItemWorldUngroupSelection.dwTypeData = "Ungroup Selection";
+	ItemWorldUngroupSelection.cch = 0;
+	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldUngroupSelection);
+
+	HMENU AlignMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU2); AlignMenuPopup = GetSubMenu(AlignMenuPopup, 0);
+	InsertMenu(*g_RenderWindowPopup, 293, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)AlignMenuPopup, "Align Selection");
+
 	DrawMenuBar(*g_HWND_CSParent);
 
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
@@ -1355,4 +1455,6 @@ void InitializeWindowManager(void)
                              ANSI_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                              FF_DONTCARE, "MS Shell Dlg");
+
+	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GET_INI_INT("UpdatePeriod"), NULL);
 }

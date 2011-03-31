@@ -1,6 +1,5 @@
 #include "ScriptParser.h"
 #include "Globals.h"
-#include "ScriptEditor.h"
 #include "[Common]\NativeWrapper.h"
 
 

@@ -38,3 +38,5 @@ LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void InitializeWindowManager();
+
+extern HFONT					g_CSDefaultFont;

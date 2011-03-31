@@ -44,12 +44,14 @@ void DebugPrint(UInt8 source, const char* fmt, ...)
 	CONSOLE->LogMessage(source, fmt, args);
 	va_end(args);
 }
-void PrintToBuffer(const char* fmt, ...)
+const char* PrintToBuffer(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
 	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
 	va_end(args);
+
+	return g_Buffer;
 }
 
 // modified to use plugin debugging tools

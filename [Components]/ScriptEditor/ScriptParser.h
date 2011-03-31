@@ -1,6 +1,6 @@
 #pragma once
 
-public ref class ScriptParser
+ref class ScriptParser
 {						
 public:	
 	ref struct												VariableInfo 

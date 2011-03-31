@@ -12,7 +12,7 @@ struct NopData;
 
 extern bool						g_QuickLoadToggle;
 extern bool						g_PluginPostLoad;
-extern HFONT					g_CSDefaultFont;
+
 
 
 extern MemHdlr					kSavePluginMasterEnum;// allows esps to be enumerated while filling the file header and provides support for the save as tool
@@ -33,16 +33,14 @@ extern MemHdlr					kUseInfoListInit;// replaces the redundant "Recreate facial a
 extern NopHdlr					kMissingTextureWarning;// removes the ostentatious warning
 extern MemHdlr					kTopicResultScriptReset;// fixes the bug that clears all flags and the result script of a selected response when adding a new topic
 extern MemHdlr					kNPCFaceGen;// fixes the facegen crash by getting the CS to correctly render the model at dialog init
-extern MemHdlr					kDefaultWaterTextureFix;// gets rid of the ugly pink default water texture
+extern MemHdlr					kDefaultWaterTextureFix;// gets rid of the ugly pink default water texture. doesn't work as the patching happens much too late
 extern MemHdlr					kDataDlgInit;// hooks the data window for subclassing
 extern MemHdlr					kQuickLoadPluginLoadHandlerPrologue;// adds support for the quick loading of plugins (only loads the active plugin)
 extern MemHdlr					kQuickLoadPluginLoadHandler;
 extern MemHdlr					kMissingMasterOverride;// allows the loading of plugins with missing masters
 extern MemHdlr					kAssertOverride;// fixes crashes from assertion calls in the code and log them to the console/log instead
 extern MemHdlr					kTextureMipMapCheck;// allows the preview of textures with mipmaps
-extern NopHdlr					kAnimGroupNote;// removes the now unnecessary 'See editorWarnings file' anim group debug message
 extern MemHdlr					kUnnecessaryDialogEdits;// prevents unnecessary dialog edits in active plugins should its master have a DIAL record
-extern MemHdlr					kRenderWindowPopup;// adds the batch ref editor to the render window's popup menu
 extern MemHdlr					kUnnecessaryCellEdits;// prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record ### Figure out what the function's doing
 extern MemHdlr					kCustomCSWindow;// keeps custom child windows of the CS main window from being closed on plugin load
 extern MemHdlr					kRaceDescriptionDirtyEdit;// prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.
@@ -53,7 +51,7 @@ extern MemHdlr					kObjectListPopulateListViewItems;
 extern MemHdlr					kCellViewPopulateObjectList;
 extern MemHdlr					kDoorMarkerProperties;// allows the displaying of reference properties for door markers 
 extern MemHdlr					kAutoLoadActivePluginOnStartup;// temporary hook that allows the automatic loading of plugins on startup
-extern MemHdlr					kDataHandlerClearDataShadeMeRefDtor;
+extern MemHdlr					kDataHandlerClearData;// event hook to perform various cleanup operations
 extern MemHdlr					kCellObjectListShadeMeRefAppend;
 extern MemHdlr					kDeathToTheCloseOpenDialogsMessage;// gets rid of it
 extern MemHdlr					kTopicInfoCopyEpilog;// fixes the bug that causes the wrong topic info to be flagged as active when using the copy popup menu option
@@ -80,6 +78,11 @@ extern MemHdlr					kLODLandTextureResolution;// quadruples the resolution of lod
 extern MemHdlr					kDataHandlerSaveFormToFile;// allows records in esp masters to be overridden with deleted records
 extern MemHdlr					kTESFileUpdateHeader;// prevents TESFile::UpdateHeader from continuing for locked files
 extern MemHdlr					kTESObjectREFRGet3DData;// selectively culls reference nodes depending on the presence of various visibiity flags
+extern MemHdlr					kNiWindowRender;// allows various obscenities to be written to the render window
+extern MemHdlr					kNiDX9RendererRecreate;// used to release any D3D resources
+extern MemHdlr					kRenderWindowStats;// displays the stats of selected refs/other info in the render window
+extern MemHdlr					kUpdateViewport;// updates the render window viewport regardless of user activity
+extern MemHdlr					kRenderWindowSelection;// allows groups of references to be selected at a time
 
 bool PatchMiscHooks(void);
 void PatchMessageHandler(void);
@@ -119,7 +122,7 @@ void ObjectListPopulateListViewItemsHook(void);
 void CellViewPopulateObjectListHook(void);
 void DoorMarkerPropertiesHook(void);
 void AutoLoadActivePluginOnStartupHook(void);
-void DataHandlerClearDataShadeMeRefDtorHook(void);
+void DataHandlerClearDataHook(void);
 void CellObjectListShadeMeRefAppendHook(void);
 void TopicInfoCopyEpilogHook(void);
 void TESDialogPopupMenuHook(void);
@@ -140,6 +143,11 @@ void LODLandTextureResolutionHook(void);
 void DataHandlerSaveFormToFileHook(void);
 void TESFileUpdateHeaderHook(void);
 void TESObjectREFRGet3DDataHook(void);
+void NiWindowRenderHook(void);
+void NiDX9RendererRecreateHook(void);
+void RenderWindowStatsHook(void);
+void RenderWindowSelectionHook(void);
+void UpdateViewportHook(void);
 
 
 void ModelSelectorCommonDialogHook(void);

@@ -13,6 +13,7 @@ public:
 	static void						RegisterCommandURL(const char* CommandName, const char* URL);
 	static void						PrintToConsole(const char*	Prefix, const char* FormatString, ...);
 	static void						RegisterConsoleCallback(CSEConsoleInterface::ConsolePrintCallback Handler);
+	static void						PrintToRenderWindow(const char* Message, long double DisplayDuration);
 
 	typedef std::vector<CSEConsoleInterface::ConsolePrintCallback> ConsolePrintCallbackList;
 };

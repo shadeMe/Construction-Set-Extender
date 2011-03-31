@@ -1,6 +1,5 @@
 #include "ScriptEditor.h"
 #include "ScriptEditorManager.h"
-#include "Preprocessor.h"
 #include "IntelliSense.h"
 
 #include "[Common]\HandShakeStructs.h"
@@ -87,6 +86,27 @@ namespace ScriptEditor
 			break;
 		}
 		}
+	}
+
+	Assembly^ ResolveMissingAssemblies(Object^ Sender, ResolveEventArgs^ E)
+	{
+		Assembly^ PreprocAssembly, ^ExecutingAssemblies;
+		String^ TempPath="";
+
+		ExecutingAssemblies = Assembly::GetExecutingAssembly();
+				
+		for each(AssemblyName^ AssmbName in ExecutingAssemblies->GetReferencedAssemblies())
+		{
+			if (AssmbName->FullName->Substring(0, AssmbName->FullName->IndexOf(",")) == E->Name->Substring(0, E->Name->IndexOf(",")))
+			{		
+				TempPath = Globals::AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\" + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
+				break;
+			}
+
+		}
+				
+		PreprocAssembly = Assembly::LoadFrom(TempPath);					
+		return PreprocAssembly;			
 	}
 
 	#pragma region TabContainer
@@ -1187,7 +1207,8 @@ namespace ScriptEditor
 			Parent->AddTab(EditorTab);
 			Parent->AddTabControlBox(EditorControlBox);
 
-			WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
+			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height; }
+			catch (...){}
 
 			WorkspaceSplitter->Enabled = false;
 			ToolBarUpdateVarIndices->Enabled = false;
@@ -1867,9 +1888,9 @@ namespace ScriptEditor
 			}
 			bool Workspace::PreprocessScriptText(String^% PreprocessorResult)
 			{
-				bool Result = PREPROC->ScriptEditorDelegate(TextEditor->GetText(), 
+				bool Result = Preprocessor::GetSingleton()->PreprocessScript(TextEditor->GetText(), 
 														PreprocessorResult, 
-														gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper));
+														gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper), gcnew ScriptEditorPreprocessorData(Globals::AppPath, OPTIONS->FetchSettingAsInt("AllowRedefinitions")));
 				return Result;
 			}
 			void Workspace::AddMessageToPool(MessageType Type, int Line, String^ Message)
@@ -2462,7 +2483,7 @@ namespace ScriptEditor
 					if (ToolBarShowPreprocessedText->Checked)
 						PreprocessedTextViewer->JumpToLine(ToolBarCommonTextBox->Text);
 					else if (ToolBarShowOffsets->Checked)
-						MessageBox::Show("This operation can only be performed with the text editor and the preprocesed text viewer", "CSE Editor");
+						MessageBox::Show("This operation can only be performed in the text editor and the preprocesed text viewer", "CSE Editor");
 					else
 						TextEditor->JumpToLine(ToolBarCommonTextBox->Text);
 
@@ -2475,7 +2496,7 @@ namespace ScriptEditor
 					if (ToolBarShowOffsets->Checked)
 						OffsetViewer->JumpToLine(ToolBarCommonTextBox->Text);
 					else
-						MessageBox::Show("This operation can only be performed with the offset viewer", "CSE Editor");
+						MessageBox::Show("This operation can only be performed in the offset viewer", "CSE Editor");
 				}
 			}
 

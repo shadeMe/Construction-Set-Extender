@@ -165,7 +165,7 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("AnnealCasing", "ScriptEditor::Sanitize", "1"), gcnew BoundControl(AnnealCasing, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("IndentLines", "ScriptEditor::Sanitize", "1"), gcnew BoundControl(IndentLines, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
-	DebugPrint("Populated INI Map");
+//	DebugPrint("Populated INI Map");
 }
 
 void OptionsDialog::LoadINI()
@@ -176,7 +176,7 @@ void OptionsDialog::LoadINI()
 
 		Control->SetValue(INIWrapper::GetINIValue(INI->Section, INI->Key, INI->DefaultValue));
 	}
-	DebugPrint("Loaded settings from INI");
+//	DebugPrint("Loaded settings from INI");
 }
 
 void OptionsDialog::SaveINI()
@@ -187,7 +187,7 @@ void OptionsDialog::SaveINI()
 
 		INIWrapper::SetINIValue(INI->Section, INI->Key, Control->GetValue());
 	}
-	DebugPrint("Saved settings to INI");
+//	DebugPrint("Saved settings to INI");
 }
 
 BoundControl^ OptionsDialog::FetchSetting(String^ Key)

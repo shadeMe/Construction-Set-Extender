@@ -9,6 +9,7 @@
 #include "obse/GameObjects.h"
 #include "obse/NiNodes.h"
 #include "obse/NiObjects.h"
+#include "obse/NiRenderer.h"
 #include "Console.h"
 #include <D3dx9tex.h>
 
@@ -94,7 +95,7 @@ public:
 
 class TESCellUseList;
 
-// 08
+// 08		### partial
 class INISetting
 {
 public:
@@ -125,7 +126,7 @@ public:
 	// no members
 };
 
-// 2C
+// 2C		### partial - look into the common settings class
 class GameSetting
 {
 public:
@@ -155,7 +156,7 @@ template<typename Type> struct GenericNode
 };
 
 // 18 
-struct TESRenderWindowBuffer 
+struct TESRenderSelection
 {
 	struct SelectedObjectsEntry
 	{
@@ -289,7 +290,7 @@ struct ResponseEditorData
 	GenericNode<TESRace*>	voicedRaces;		// 24
 };
 
-// 280
+// 280		### partial
 class Archive
 {
 public:
@@ -320,6 +321,7 @@ public:
 	LPCRITICAL_SECTION			archiveCS;		// 200
 };
 
+// ### partial
 union GMSTData
 {
 	int				i;
@@ -348,6 +350,208 @@ enum
 	kTESObjectREFRSpecialFlags_Children3DInvisible		= 1 << 30,
 };
 
+enum
+{	
+	// CS Main Dialogs
+	kDialogTemplate_About						= 100,
+	kDialogTemplate_Temp						= 102,
+	kDialogTemplate_ObjectWindow				= 122,
+	kDialogTemplate_CellEdit					= 125,
+	kDialogTemplate_Data						= 162,
+	kDialogTemplate_Preferences					= 169,
+	kDialogTemplate_CellView					= 175,
+	kDialogTemplate_RenderWindow				= 176,
+	kDialogTemplate_PreviewWindow				= 181,			// accessible through View > Preview Window
+	kDialogTemplate_ScriptEdit					= 188,
+	kDialogTemplate_SearchReplace				= 198,
+	kDialogTemplate_LandscapeEdit				= 203,
+	kDialogTemplate_FindText					= 233,
+	kDialogTemplate_RegionEditor				= 250,
+	kDialogTemplate_HeightMapEditor				= 295,
+	kDialogTemplate_IdleAnimations				= 302,
+	kDialogTemplate_AIPackages					= 303,
+	kDialogTemplate_AdjustExteriorCells			= 306,
+	kDialogTemplate_OpenWindows					= 307,
+	kDialogTemplate_DistantLODExport			= 317,
+	kDialogTemplate_FilteredDialog				= 3235,
+	kDialogTemplate_CreateLocalMaps				= 3249,
+
+
+	// TESBoundObject/FormEdit Dialogs
+	kDialogTemplate_Weapon						= 135,
+	kDialogTemplate_Armor						= 136,
+	kDialogTemplate_Clothing					= 137,
+	kDialogTemplate_MiscItem					= 138,
+	kDialogTemplate_Static						= 140,
+	kDialogTemplate_Reference					= 141,
+	kDialogTemplate_Apparatus					= 143,
+	kDialogTemplate_Book						= 144,
+	kDialogTemplate_Container					= 145,
+	kDialogTemplate_Activator					= 147,
+	kDialogTemplate_AIForm						= 154,
+	kDialogTemplate_Light						= 156,
+	kDialogTemplate_Potion						= 165,
+	kDialogTemplate_Enchantment					= 166,
+	kDialogTemplate_LeveledCreature				= 168,
+	kDialogTemplate_Sound						= 190,
+	kDialogTemplate_Door						= 196,
+	kDialogTemplate_LeveledItem					= 217,
+	kDialogTemplate_LandTexture					= 230,
+	kDialogTemplate_SoulGem						= 261,
+	kDialogTemplate_Ammo						= 262,
+	kDialogTemplate_Spell						= 279,
+	kDialogTemplate_Flora						= 280,
+	kDialogTemplate_Tree						= 287,
+	kDialogTemplate_CombatStyle					= 305,
+	kDialogTemplate_Water						= 314,
+	kDialogTemplate_NPC							= 3202,
+	kDialogTemplate_Creature					= 3206,
+	kDialogTemplate_Grass						= 3237,
+	kDialogTemplate_Furniture					= 3239,
+	kDialogTemplate_LoadingScreen				= 3246,
+	kDialogTemplate_Ingredient					= 3247,
+	kDialogTemplate_LeveledSpell				= 3250,
+	kDialogTemplate_AnimObject					= 3251,
+	kDialogTemplate_Subspace					= 3252,
+	kDialogTemplate_EffectShader				= 3253,
+	kDialogTemplate_SigilStone					= 3255,
+
+
+	// TESFormIDListView Dialogs
+	kDialogTemplate_Faction						= 157,
+	kDialogTemplate_Race						= 159,
+	kDialogTemplate_Class						= 160,
+	kDialogTemplate_Skill						= 161,
+	kDialogTemplate_EffectSetting				= 163,
+	kDialogTemplate_GameSetting					= 170,
+	kDialogTemplate_Globals						= 192,
+	kDialogTemplate_Birthsign					= 223,
+	kDialogTemplate_Climate						= 285,
+	kDialogTemplate_Worldspace					= 286,
+	kDialogTemplate_Hair						= 289,
+	kDialogTemplate_Quest						= 3225,
+	kDialogTemplate_Eyes						= 3228,
+
+
+	// Misc Dialogs
+	kDialogTemplate_StringEdit					= 174,
+	kDialogTemplate_SelectForm					= 189,
+	kDialogTemplate_SoundPick					= 195,
+	kDialogTemplate_UseReport					= 220,
+	kDialogTemplate_DialogNameConflicts			= 227,
+	kDialogTemplate_Package						= 243,
+	kDialogTemplate_FileInUse					= 244,
+	kDialogTemplate_RegionSystemTester			= 247,			// could be deprecated
+	kDialogTemplate_EffectItem					= 267,
+	kDialogTemplate_TESFileDetails				= 180,
+	kDialogTemplate_SelectWorldspace			= 291,
+	kDialogTemplate_FunctionParams				= 300,
+	kDialogTemplate_ConfirmFormUserChanges		= 301,
+	kDialogTemplate_ClimateChanceWarning		= 310,
+	kDialogTemplate_Progress					= 3166,
+	kDialogTemplate_ChooseReference				= 3224,
+	kDialogTemplate_SelectTopic					= 3226,
+	kDialogTemplate_ResponseEditor				= 3231,
+	kDialogTemplate_SelectAudioFormat			= 107,
+	kDialogTemplate_SelectAudioCaptureDevice	= 134,
+	kDialogTemplate_SelectQuests				= 3234,
+	kDialogTemplate_SelectQuestsEx				= 3236,
+	kDialogTemplate_SoundRecording				= 3241,
+
+
+	// Subwindows
+	kDialogTemplate_AIPackageLocationData		= 240,
+	kDialogTemplate_AIPackageTargetData			= 241,
+	kDialogTemplate_AIPackageTimeData			= 242,
+	kDialogTemplate_RegionEditorWeatherData		= 251,
+	kDialogTemplate_RegionEditorObjectsData		= 252,
+	kDialogTemplate_RegionEditorGeneral			= 253,
+	kDialogTemplate_Reference3DData				= 254,
+	kDialogTemplate_RegionEditorMapData			= 256,
+	kDialogTemplate_ReferenceLockData			= 257,
+	kDialogTemplate_ReferenceTeleportData		= 258,
+	kDialogTemplate_ReferenceOwnershipData		= 259,
+	kDialogTemplate_ReferenceExtraData			= 260,
+	kDialogTemplate_IdleConditionData			= 263,
+	kDialogTemplate_RaceBodyData				= 264,
+	kDialogTemplate_RaceGeneral					= 265,
+	kDialogTemplate_RaceTextData				= 266,
+	kDialogTemplate_CellLightingData			= 283,
+	kDialogTemplate_CellGeneral					= 284,
+	kDialogTemplate_NPCStatsData				= 288,
+	kDialogTemplate_RegionEditorObjectsExtraData
+												= 309,
+	kDialogTemplate_WeatherGeneral				= 311, 
+	kDialogTemplate_WeatherPecipitationData		= 312,
+	kDialogTemplate_WeatherSoundData			= 313,
+	kDialogTemplate_HeightMapEditorBrushData	= 3167,			// doubtful
+	kDialogTemplate_HeightMapEditorToolBar		= 3169,
+	kDialogTemplate_HeightMapEditorOverview		= 3180,
+	kDialogTemplate_HeightMapEditorPreview		= 3193,
+	kDialogTemplate_HeightMapEditorColorData	= 3201,
+	kDialogTemplate_ActorFactionData			= 3203,
+	kDialogTemplate_ActorInventoryData			= 3204,
+	kDialogTemplate_ActorBlank					= 3205,
+	kDialogTemplate_CreatureStatsData			= 3208,
+	kDialogTemplate_FactionInterfactionData		= 3209,
+	kDialogTemplate_PreferencesRenderWindow		= 3210,
+	kDialogTemplate_PreferencesMovement			= 3211,
+	kDialogTemplate_PreferencesMisc				= 3212,
+	kDialogTemplate_RegionEditorLandscapeData	= 3214,
+	kDialogTemplate_ActorAnimationData			= 3215,
+	kDialogTemplate_NPCFaceData					= 3217,
+	kDialogTemplate_ActorBlankEx				= 3219,			// spell list ?
+	kDialogTemplate_RegionEditorGrassData		= 3220,
+	kDialogTemplate_PreferencesShader			= 3221,
+	kDialogTemplate_PreferencesLOD				= 3222,
+	kDialogTemplate_ReferenceMapMarkerData		= 3223,
+	kDialogTemplate_QuestGeneral				= 3227,
+	kDialogTemplate_RaceFaceData				= 3229,
+	kDialogTemplate_DialogData					= 151,
+	kDialogTemplate_PreferencesPreviewMovement	= 3230,
+	kDialogTemplate_ConditionData				= 3232,
+	kDialogTemplate_RegionEditorSoundData		= 3233,
+	kDialogTemplate_QuestStageData				= 3240,
+	kDialogTemplate_CreatureSoundData			= 3242,
+	kDialogTemplate_CellInteriorData			= 3244,
+	kDialogTemplate_QuestTargetData				= 3245,
+	kDialogTemplate_ReferenceSelectRefData		= 3248,
+	kDialogTemplate_CreatureBloodData			= 3254,
+	kDialogTemplate_NPCFaceAdvancedData			= 3256,
+	kDialogTemplate_WeatherHDRData				= 3257,
+	kDialogTemplate_ReferenceLeveledCreatureData
+												= 3259,
+	
+
+	// Deprecated
+	kDialogTemplate_SelectModel					= 110,
+	kDialogTemplate_IngredientEx				= 139,	
+	kDialogTemplate_AnimGroup					= 155,
+	kDialogTemplate_BodyPart					= 153,
+	kDialogTemplate_FactionRankDisposition		= 158,
+	kDialogTemplate_FindObject					= 205,
+	kDialogTemplate_PathGrid					= 208,
+	kDialogTemplate_JournalPreview				= 222,
+	kDialogTemplate_ExtDoorTeleport				= 224,			// haven't seen it around
+	kDialogTemplate_SoundGen					= 228,
+	kDialogTemplate_IntDoorTeleport				= 229,			// same here
+	kDialogTemplate_IntNorthMarker				= 231,
+	kDialogTemplate_VersionControl				= 238,
+	kDialogTemplate_VersionControlCheckInProbs	= 255,
+	kDialogTemplate_MemoryUsage					= 304,
+	kDialogTemplate_TextureUse					= 316,
+	kDialogTemplate_CreatureSoundEx				= 3243,
+	kDialogTemplate_NPCFaceAdvancedDataEx		= 3216,
+
+
+	// Unknown
+	kDialogTemplate_Unk235						= 235,
+	kDialogTemplate_Dialog						= 308,			// looks like a base formIDListView template of sorts
+	kDialogTemplate_Progress3238				= 3238,			// could be version control related/ convert ESM for xBox tool related
+	kDialogTemplate_Preview3258					= 3258,
+	kDialogTemplate_Preview315					= 315
+};
+
 
 extern const HINSTANCE*			g_TESCS_Instance;
 
@@ -373,7 +577,7 @@ extern UInt8*					g_WorkingFileFlag;
 extern UInt8*					g_ActiveChangesFlag;
 
 extern TESWaterForm**			g_DefaultWater;
-extern TESRenderWindowBuffer**	g_TESRenderWindowBuffer;
+extern TESRenderSelection**		g_TESRenderSelectionPrimary;
 extern HMENU*					g_RenderWindowPopup;
 extern void*					g_ScriptCompilerUnkObj;
 extern TESObjectREFR**			g_PlayerRef;
@@ -387,6 +591,7 @@ extern CRITICAL_SECTION*		g_ExtraListCS;
 extern TESSound**				g_FSTSnowSneak;
 extern BSTextureManager**		g_TextureManager;
 extern NiDX9Renderer**			g_CSRenderer;
+extern UInt8*					g_Flag_RenderWindowUpdateViewPort;
 
 extern TESForm**				g_DoorMarker;
 extern TESForm**				g_NorthMarker;
@@ -508,7 +713,7 @@ extern const UInt32			kTESScriptableForm_SetScript;
 extern const UInt32			kBSString_Set;
 extern const UInt32			kExtraDataList_CopyListForReference;
 extern const UInt32			kExtraDataList_CopyList;
-extern const UInt32			kGMSTMap_Add;	// NiPointerMap<const char*, GMSTData>
+extern const UInt32			kGMSTMap_Add;	// NiTPointerMap<const char*, GMSTData>
 extern const UInt32			kBSTextureManager_CreateBSRenderedTexture;
 extern const UInt32			kTESForm_GetOverrideFile;
 extern const UInt32			kTESForm_AddReference;
@@ -518,6 +723,7 @@ extern const UInt32			kTESObjectCELL_GetIsInterior;
 extern const UInt32			kTESBipedModelForm_GetIsPlayable;
 extern const UInt32			kTESRenderSelection_ClearSelection;
 extern const UInt32			kTESRenderSelection_AddFormToSelection;
+extern const UInt32			kTESRenderSelection_Free;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
@@ -559,6 +765,7 @@ extern const UInt32			kTESObjectREFR_Ctor;
 extern const UInt32			kTESObjectCLOT_Ctor;
 extern const UInt32			kTESQuest_Ctor;
 extern const UInt32			kScript_Ctor;
+extern const UInt32			kTESRenderSelection_Ctor;
 
 
 TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
@@ -576,96 +783,170 @@ void						SpawnCustomScriptEditor(const char* ScriptEditorID);
 class FormEnumerationWrapper
 {
 public:
-	static void __stdcall ReinitializeFormLists()
-	{
-		DeInitializeCSWindows();	
+	static void __stdcall ReinitializeFormLists();
+	static bool GetUnmodifiedFormHiddenState();	// returns true when hidden
+	static bool GetDeletedFormHiddenState();
+	static bool __stdcall GetShouldEnumerateForm(TESForm* Form);
+	static bool __stdcall PerformListViewPrologCheck(UInt32 CallAddress);
+	static void ToggleUnmodifiedFormVisibility();
+	static void	ToggleDeletedFormVisibility();
 
-		SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
-		SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
-
-		InitializeCSWindows();
-		InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
-		SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
-	}
-
-	static bool GetUnmodifiedFormHiddenState()	// returns true when hidden
-	{
-		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-		UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_BYCOMMAND);
-
-		return (State & MF_CHECKED);
-	}
-
-	static bool GetDeletedFormHiddenState()
-	{
-		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-		UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_BYCOMMAND);
-
-		return (State & MF_CHECKED);
-	}
-
-	static bool __stdcall GetShouldEnumerateForm(TESForm* Form)
-	{
-		if (GetUnmodifiedFormHiddenState() && (Form->flags & TESForm::kFormFlags_FromActiveFile) == 0)
-			return false;		// skip addition
-		else if (GetDeletedFormHiddenState() && (Form->flags & TESForm::kFormFlags_Deleted))
-			return false;
-		else
-			return true;
-	}
-
-	static bool __stdcall PerformListViewPrologCheck(UInt32 CallAddress)
-	{
-		switch (CallAddress)
-		{
-		case 0x00445C88:
-		case 0x00445DC8:
-		case 0x00445E6E:
-		case 0x00452FA8:
-		case 0x00440FBD:
-		case 0x0040A4BF:
-		case 0x00412F7A:
-		case 0x0043FDFF:
-		case 0x00442576:
-		case 0x00452409:
-		case 0x00560DC2:
-		case 0x00445E12:	
-		case 0x00445D81:
-		case 0x004F00C3:
-			return 1;
-		default:
-			return 0;
-		}
-	}
-
-
-	static void ToggleUnmodifiedFormVisibility()
-	{
-		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-		if (GetUnmodifiedFormHiddenState())
-			CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_UNCHECKED);
-		else
-			CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_CHECKED);		
-
-		ReinitializeFormLists();
-	}
-	static void	ToggleDeletedFormVisibility()
-	{
-		HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-		if (GetDeletedFormHiddenState())
-			CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_UNCHECKED);
-		else
-			CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_CHECKED);		
-
-		ReinitializeFormLists();
-	}
-
-
-	static void __stdcall ResetFormVisibility(void)
-	{
-		if (GetUnmodifiedFormHiddenState())
-			ToggleUnmodifiedFormVisibility();
-		if (GetDeletedFormHiddenState())
-			ToggleDeletedFormVisibility();
-	}
+	static void __stdcall ResetFormVisibility(void);
 };
+
+class RenderTimeManager
+{
+	LARGE_INTEGER				ReferenceFrame;
+	LARGE_INTEGER				FrameBuffer;
+	LARGE_INTEGER				TimerFrequency;
+	long double					TimePassed;					// in seconds
+public:
+
+	RenderTimeManager()
+	{
+		QueryPerformanceCounter(&ReferenceFrame);
+		QueryPerformanceFrequency(&TimerFrequency);
+	}
+
+	void								Update(void);
+	long double							GetTimePassedSinceLastFrame(void) { return TimePassed; }
+};
+
+extern RenderTimeManager		g_RenderTimeManager;
+
+class RenderWindowTextPainter
+{
+	static RenderWindowTextPainter*		Singleton;
+
+	RenderWindowTextPainter();
+
+	class RenderChannelBase
+	{
+	protected:
+		LPD3DXFONT						Font;
+		D3DCOLOR						Color;
+		RECT							DrawArea;
+
+		bool							Valid;
+
+		RenderChannelBase(INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, DWORD Color, RECT* DrawArea)
+		{
+			this->Color = Color;
+
+			this->DrawArea.left = DrawArea->left;
+			this->DrawArea.right = DrawArea->right;
+			this->DrawArea.top = DrawArea->top;
+			this->DrawArea.bottom = DrawArea->bottom;
+
+			this->Valid = false;
+			if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, FontHeight, FontWidth, FontWeight, 0, FALSE, 
+						DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+						DEFAULT_PITCH|FF_DONTCARE, (LPCTSTR)FontFace, &Font)))
+			{
+				DebugPrint("Failed to create font for RenderChannelBase!");
+				return;
+			}
+			this->Valid = true;
+		}
+	public:
+		virtual void					Render() = 0;
+		virtual void					Release()
+		{
+			if (Valid == false)
+				return;
+
+			Font->Release();
+		}
+		bool							GetIsValid() { return Valid; }
+	};
+
+	class StaticRenderChannel : public RenderChannelBase
+	{
+		std::string						TextToRender;
+	public:
+		StaticRenderChannel(INT FontHeight, 
+							INT FontWidth, 
+							UINT FontWeight, 
+							const char* FontFace, 
+							DWORD Color, 
+							RECT* DrawArea) : RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea) {}
+		
+		virtual void					Render();
+		void							Queue(const char* Text);
+		UInt32							GetQueueSize() { return (TextToRender.length() < 1); }
+	};
+
+	class DynamicRenderChannel : public RenderChannelBase
+	{
+		long double						TimeLeft;
+
+		struct QueueTask
+		{
+			std::string					Text;
+			long double					RemainingTime;
+
+			QueueTask(const char* Text, long double SecondsToDisplay) :  Text(Text), RemainingTime(SecondsToDisplay) {}
+		};
+
+		std::queue<QueueTask*>			DrawQueue;
+	public:
+		DynamicRenderChannel(INT FontHeight, 
+							INT FontWidth, 
+							UINT FontWeight, 
+							const char* FontFace, 
+							DWORD Color, 
+							RECT* DrawArea) : RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea), TimeLeft(0) {}
+
+		virtual void					Render();
+		virtual void					Release();
+		void							Queue(const char* Text, long double SecondsToDisplay);
+		UInt32							GetQueueSize() { return DrawQueue.size(); }
+	};
+
+	StaticRenderChannel*					RenderChannel1;
+	DynamicRenderChannel*					RenderChannel2;
+	bool									Valid;
+public:
+
+	enum
+	{
+		kRenderChannel_1 = 0,			// static
+		kRenderChannel_2				// dynamic
+	};
+
+	static RenderWindowTextPainter*		GetSingleton(void);
+
+	bool								Initialize();			// must be called during init
+	bool								Recreate() { Release(); return Initialize(); }
+	void								Render();
+	void								Release();
+	void								QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay);
+
+	UInt32								GetRenderChannelQueueSize(UInt8 Channel);
+	
+};
+#define RENDERTEXT								RenderWindowTextPainter::GetSingleton()
+#define PrintToRender(message, duration)		RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, message, duration)
+
+class RenderSelectionGroupManager
+{
+	typedef std::map<TESObjectCELL*,
+					std::vector<TESRenderSelection*>>	_RenderSelectionGroupMap;
+
+	_RenderSelectionGroupMap					SelectionGroupMap;
+
+	TESObjectREFR*								GetRefAtSelectionIndex(TESRenderSelection* Selection, UInt32 Index);
+
+	std::vector<TESRenderSelection*>*			GetCellExists(TESObjectCELL* Cell);
+	TESRenderSelection*							AllocateNewSelection(TESRenderSelection* Selection);
+	TESRenderSelection*							GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection);	// returns the tracked copy of the source selection
+	void										UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* Selection);		// pass GetTrackedSelection's result
+public:
+	bool										AddGroup(TESObjectCELL* Cell, TESRenderSelection* Selection);
+	bool										RemoveGroup(TESObjectCELL* Cell, TESRenderSelection* Selection);
+
+	TESRenderSelection*							GetRefSelectionGroup(TESObjectREFR* Ref, TESObjectCELL* Cell);
+	void										Clear();
+};
+
+extern RenderSelectionGroupManager		g_RenderSelectionGroupManager;

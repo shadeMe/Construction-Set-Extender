@@ -63,7 +63,7 @@ __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorI
 	HWND ScriptEditor = EDAL->GetTrackedDialog(TrackedEditorIndex);
 	switch (Message)
 	{
-	case 5:
+	case 5:			// prevent error messages from accumulating when recompiling scripts
 		EDAL->SetLastContactedEditor(0);
 		break;
 	default:
@@ -692,7 +692,7 @@ __declspec(dllexport) void TagBrowser_GetObjectWindowSelection(void)
 
 __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
 {
-	thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderWindowBuffer, 1);
+	thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderSelectionPrimary, 1);
 
 	for (int i = 0; i < Data->FormCount; i++)
 	{
@@ -706,7 +706,7 @@ __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiation
 			continue;
 		}
 
-		thisCall(kTESRenderSelection_AddFormToSelection, *g_TESRenderWindowBuffer, Form, 0);
+		thisCall(kTESRenderSelection_AddFormToSelection, *g_TESRenderSelectionPrimary, Form, 0);
 	}
 
 	SendMessage(*g_HWND_RenderWindow, 0x407, NULL, (LPARAM)&Data->InsertionPoint);

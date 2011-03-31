@@ -3,10 +3,19 @@
 #include "MiscHooks.h"
 #include "[Common]\CLIWrapper.h"
 
+std::string							g_INIPath;
+std::string							g_AppPath;
+bool								g_PluginPostLoad = false;
+SME::INI::INIManager*				g_INIManager = new CSEINIManager();
+SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();
+
 EditorAllocator*					EditorAllocator::Singleton = NULL;
 char								g_Buffer[0x200] = {0};
 _DefaultGMSTMap						g_DefaultGMSTMap;
 HINSTANCE							g_DLLInstance = NULL;
+RenderTimeManager					g_RenderTimeManager;
+RenderWindowTextPainter*			RenderWindowTextPainter::Singleton = NULL;
+RenderSelectionGroupManager			g_RenderSelectionGroupManager;
 
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
@@ -31,7 +40,7 @@ INISetting*							g_LocalMasterPath = (INISetting*)0x009ED710;
 char**								g_TESActivePluginName = (char**)0x00A0AF00;
 UInt8*								g_WorkingFileFlag = (UInt8*)0x00A0B628;
 UInt8*								g_ActiveChangesFlag = (UInt8*)0x00A0B13C;
-TESRenderWindowBuffer**				g_TESRenderWindowBuffer = (TESRenderWindowBuffer**)0x00A0AF60;
+TESRenderSelection**				g_TESRenderSelectionPrimary = (TESRenderSelection**)0x00A0AF60;
 HMENU*								g_RenderWindowPopup = (HMENU*)0x00A0BC40;
 void*								g_ScriptCompilerUnkObj = (void*)0x00A0B128;
 TESWaterForm**						g_DefaultWater = (TESWaterForm**)0x00A137CC;
@@ -46,6 +55,7 @@ CRITICAL_SECTION*					g_ExtraListCS = (CRITICAL_SECTION*)0x00A0DA80;
 TESSound**							g_FSTSnowSneak = (TESSound**)0x00A110F0;
 BSTextureManager**					g_TextureManager = (BSTextureManager**)0x00A8E760;
 NiDX9Renderer**						g_CSRenderer = (NiDX9Renderer**)0x00A0F87C;
+UInt8*								g_Flag_RenderWindowUpdateViewPort = (UInt8*)0x00A0BC4D;
 
 TESForm**							g_DoorMarker = (TESForm**)0x00A13470;
 TESForm**							g_NorthMarker = (TESForm**)0x00A13484;
@@ -130,6 +140,7 @@ const UInt32						kTESObjectREFR_Ctor = 0x00541870;
 const UInt32						kTESObjectCLOT_Ctor = 0x00518350;
 const UInt32						kTESQuest_Ctor = 0x004E0500;
 const UInt32						kScript_Ctor = 0x004FCA50;
+const UInt32						kTESRenderSelection_Ctor = 0x00511A20;
 
 const UInt32						kTESChildCell_LoadCell = 0x00430F40; 
 const UInt32						kTESForm_GetObjectUseList = 0x00496380;		// Node<TESForm> GetObjectUseRefHead(UInt32 unk01 = 0);
@@ -160,6 +171,7 @@ const UInt32						kTESObjectCELL_GetIsInterior = 0x00532240;
 const UInt32						kTESBipedModelForm_GetIsPlayable = 0x00490290;
 const UInt32						kTESRenderSelection_ClearSelection = 0x00511C20;
 const UInt32						kTESRenderSelection_AddFormToSelection = 0x00512730;
+const UInt32						kTESRenderSelection_Free = 0x00511A50;
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
@@ -358,22 +370,21 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "LogCSWarnings", "Console::General", "1", "Log CS Warnings to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LogAssertions", "Console::General", "1", "Log CS Assertions to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Console::General", "0", "Hide the console on CS startup"), (CreateINI == false));
-	RegisterSetting(new SME::INI::INISetting(this, "ConsoleUpdatePeriod", "Console::General", "2500", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
-
+	RegisterSetting(new SME::INI::INISetting(this, "ConsoleUpdatePeriod", "Console::General", "2000", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
 
 	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "1", "Loads a plugin on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "Plugin.esp", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "OpenScriptWindowOnStartup", "Extender::General", "0", "Open an empty script editor window on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupScriptEditorID", "Extender::General", "", "EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "ShowNumericEditorIDWarning", "Extender::General", "1", "Displays a warning when editorIDs start with an integer"), (CreateINI == false));
+	
+	RegisterSetting(new SME::INI::INISetting(this, "UpdatePeriod", "Extender::Renderer", "8", "Duration, in milliseconds, between render window updates"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "DisplaySelectionStats", "Extender::Renderer", "1", "Display info on the render window selection"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "UpdateViewPortAsync", "Extender::Renderer", "0", "Allow the render window to be updated in the background"), (CreateINI == false));
 
 	if (CreateINI)		SaveSettingsToINI();
 	else				ReadSettingsFromINI();
 }
-
-
-
-
 
 TESDialogInitParam::TESDialogInitParam(const char* EditorID)
 {
@@ -451,7 +462,6 @@ void SpawnCustomScriptEditor(const char* ScriptEditorID)
 	g_EditorAuxScript = NULL;
 }
 
-
 void LoadFormIntoView(const char* EditorID, const char* FormType)
 {
 	UInt32 Type = GetDialogTemplate(FormType);
@@ -504,7 +514,8 @@ void LoadStartupPlugin()
 	{
 		DebugPrint("Loading plugin '%s' on startup...", PluginName);
 
-		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
+		if (_stricmp(PluginName, "Oblivion.esm"))
+			ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
 		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 	} 
@@ -581,4 +592,455 @@ void UnloadLoadedCell()
 
 	*g_Flag_ObjectWindow_MenuState = ObjWndState;
 	*g_Flag_CellView_MenuState = CellWndState;
+}
+
+
+void __stdcall FormEnumerationWrapper::ReinitializeFormLists()
+{
+	DeInitializeCSWindows();	
+
+	SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
+	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
+
+	InitializeCSWindows();
+	InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
+	SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
+}
+
+bool FormEnumerationWrapper::GetUnmodifiedFormHiddenState()	// returns true when hidden
+{
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+	UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_BYCOMMAND);
+
+	return (State & MF_CHECKED);
+}
+
+bool FormEnumerationWrapper::GetDeletedFormHiddenState()
+{
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+	UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_BYCOMMAND);
+
+	return (State & MF_CHECKED);
+}
+
+bool __stdcall FormEnumerationWrapper::GetShouldEnumerateForm(TESForm* Form)
+{
+	if (GetUnmodifiedFormHiddenState() && (Form->flags & TESForm::kFormFlags_FromActiveFile) == 0)
+		return false;		// skip addition
+	else if (GetDeletedFormHiddenState() && (Form->flags & TESForm::kFormFlags_Deleted))
+		return false;
+	else
+		return true;
+}
+
+bool __stdcall FormEnumerationWrapper::PerformListViewPrologCheck(UInt32 CallAddress)
+{
+	switch (CallAddress)
+	{
+	case 0x00445C88:
+	case 0x00445DC8:
+	case 0x00445E6E:
+	case 0x00452FA8:
+	case 0x00440FBD:
+	case 0x0040A4BF:
+	case 0x00412F7A:
+	case 0x0043FDFF:
+	case 0x00442576:
+	case 0x00452409:
+	case 0x00560DC2:
+	case 0x00445E12:	
+	case 0x00445D81:
+	case 0x004F00C3:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+
+void FormEnumerationWrapper::ToggleUnmodifiedFormVisibility()
+{
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+	if (GetUnmodifiedFormHiddenState())
+		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_UNCHECKED);
+	else
+		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_CHECKED);		
+
+	ReinitializeFormLists();
+}
+void FormEnumerationWrapper::ToggleDeletedFormVisibility()
+{
+	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+	if (GetDeletedFormHiddenState())
+		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_UNCHECKED);
+	else
+		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_CHECKED);		
+
+	ReinitializeFormLists();
+}
+
+void RenderTimeManager::Update(void)
+{
+	QueryPerformanceCounter(&FrameBuffer);
+	TimePassed = ((LONGLONG)((FrameBuffer.QuadPart - ReferenceFrame.QuadPart ) * 1000 / TimerFrequency.QuadPart)) / 1000.0;
+	ReferenceFrame = FrameBuffer;
+}
+
+
+void __stdcall FormEnumerationWrapper::ResetFormVisibility(void)
+{
+	if (GetUnmodifiedFormHiddenState())
+		ToggleUnmodifiedFormVisibility();
+	if (GetDeletedFormHiddenState())
+		ToggleDeletedFormVisibility();
+}
+
+
+void RenderWindowTextPainter::StaticRenderChannel::Render()
+{
+	if (Valid == false)
+		return;
+	else if (TextToRender.length() < 1)
+		return;
+
+	Font->DrawTextA(NULL, TextToRender.c_str(), -1, &DrawArea, 0, Color);
+}
+
+void RenderWindowTextPainter::StaticRenderChannel::Queue(const char* Text)
+{
+	if (Valid == false)
+		return;
+
+	if (Text)
+		TextToRender = Text;
+	else
+		TextToRender.clear();
+}
+
+void RenderWindowTextPainter::DynamicRenderChannel::Render()
+{
+	if (Valid == false)
+		return;
+	else if (DrawQueue.size() < 1)
+		return;
+
+	QueueTask* CurrentTask = DrawQueue.front();
+
+	if (CurrentTask->RemainingTime > 0)
+	{
+		Font->DrawTextA(NULL, CurrentTask->Text.c_str(), -1, &DrawArea, 0, Color);
+		CurrentTask->RemainingTime -= g_RenderTimeManager.GetTimePassedSinceLastFrame();
+	}
+	else
+	{
+		delete CurrentTask;
+		DrawQueue.pop();
+	}
+}
+
+void RenderWindowTextPainter::DynamicRenderChannel::Queue(const char* Text, long double SecondsToDisplay)
+{
+	if (Valid == false)
+		return;
+
+	if (GetQueueSize() == 0)
+		g_RenderTimeManager.Update();
+
+	if (Text && SecondsToDisplay > 0)
+		DrawQueue.push(new QueueTask(Text, SecondsToDisplay));
+}
+
+void RenderWindowTextPainter::DynamicRenderChannel::Release()
+{
+	if (Valid == false)
+		return;
+
+	while (DrawQueue.size())
+	{
+		QueueTask* CurrentTask = DrawQueue.front();
+		delete CurrentTask;
+		DrawQueue.pop();
+	}
+
+	RenderChannelBase::Release();
+}
+
+RenderWindowTextPainter::RenderWindowTextPainter()
+{
+	RenderChannel1 = NULL;
+	RenderChannel2 = NULL;
+	Valid = false;
+}
+
+RenderWindowTextPainter* RenderWindowTextPainter::GetSingleton(void)
+{
+	if (Singleton == NULL)
+		Singleton = new RenderWindowTextPainter();
+	return Singleton;
+}
+
+bool RenderWindowTextPainter::Initialize()
+{
+	if (Valid)
+		return true;
+
+	CONSOLE->Indent();
+
+	RECT DrawRect;
+	DrawRect.left = 3;
+	DrawRect.top = 3;
+	DrawRect.right = 1280;
+	DrawRect.bottom = 600;
+	RenderChannel1 = new StaticRenderChannel(12, 7, FW_THIN, "Lucida Console", D3DCOLOR_ARGB(220, 189, 237, 99), &DrawRect);
+
+	DrawRect.top += 350;
+	RenderChannel2 = new DynamicRenderChannel(12, 7, FW_THIN, "Lucida Console", D3DCOLOR_ARGB(255, 190, 35, 47), &DrawRect);
+
+	if (RenderChannel1->GetIsValid() == false || RenderChannel2->GetIsValid() == false)
+		Valid = false;
+	else
+		Valid = true;
+
+	CONSOLE->Exdent();
+	return Valid;
+}
+
+void RenderWindowTextPainter::Release()
+{
+	RenderChannel1->Release();
+	RenderChannel2->Release();
+
+	delete RenderChannel1;
+	delete RenderChannel2;
+
+	Valid = false;
+
+//	DebugPrint("RenderWindowTextPainter released");
+}
+
+void RenderWindowTextPainter::Render()
+{
+	if (Valid == false)
+		return;
+
+	RenderChannel1->Render();
+	RenderChannel2->Render();
+}
+
+void RenderWindowTextPainter::QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay)
+{
+	if (Valid == false)
+		return;
+
+	switch (Channel)
+	{
+	case kRenderChannel_1:
+		RenderChannel1->Queue(Text);
+		break;
+	case kRenderChannel_2:
+		RenderChannel2->Queue(Text, SecondsToDisplay);
+		break;
+	}
+}
+
+UInt32 RenderWindowTextPainter::GetRenderChannelQueueSize(UInt8 Channel)
+{
+	if (Valid == false)
+		return 0;
+
+	switch (Channel)
+	{
+	case kRenderChannel_1:
+		return RenderChannel1->GetQueueSize();
+	case kRenderChannel_2:
+		return RenderChannel2->GetQueueSize();
+	}
+
+	return 0;
+}
+
+
+std::vector<TESRenderSelection*>* RenderSelectionGroupManager::GetCellExists(TESObjectCELL* Cell)
+{
+	_RenderSelectionGroupMap::iterator Match = SelectionGroupMap.find(Cell);
+	if (Match != SelectionGroupMap.end())
+		return &Match->second;
+	else
+		return NULL;
+}
+
+TESRenderSelection* RenderSelectionGroupManager::GetRefSelectionGroup(TESObjectREFR* Ref, TESObjectCELL* Cell)
+{
+	TESRenderSelection* Result = NULL;
+
+	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
+	if (SelectionList)
+	{
+		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
+		{
+			for (TESRenderSelection::SelectedObjectsEntry* ItrEx = (*Itr)->RenderSelection; ItrEx && ItrEx->Data; ItrEx = ItrEx->Next)
+			{
+				if (ItrEx->Data == Ref)
+				{
+					Result = *Itr;
+					break;
+				}
+			}
+		}
+	}
+
+	return Result;
+}
+
+void RenderSelectionGroupManager::Clear()
+{
+	for (_RenderSelectionGroupMap::iterator Itr = SelectionGroupMap.begin(); Itr != SelectionGroupMap.end(); Itr++)
+	{
+		for (std::vector<TESRenderSelection*>::iterator ItrEx = Itr->second.begin(); ItrEx != Itr->second.end(); ItrEx++)
+		{
+			thisCall(kTESRenderSelection_ClearSelection, *ItrEx, 0);
+			thisCall(kTESRenderSelection_Free, *ItrEx);
+			FormHeap_Free(*ItrEx);
+		}
+
+		Itr->second.clear();
+	}
+	SelectionGroupMap.clear();
+}
+
+TESRenderSelection* RenderSelectionGroupManager::AllocateNewSelection(TESRenderSelection* Selection)
+{
+	TESRenderSelection* Group = (TESRenderSelection*)FormHeap_Allocate(0x18);
+	thisCall(kTESRenderSelection_Ctor, Group);
+
+	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
+		thisCall(kTESRenderSelection_AddFormToSelection, Group, Itr->Data, 0);
+
+//	DebugPrint("Allocated Selection %08X", (UInt32)Group);
+
+	return Group;
+}
+
+TESObjectREFR* RenderSelectionGroupManager::GetRefAtSelectionIndex(TESRenderSelection* Selection, UInt32 Index)
+{
+	UInt32 Count = 0;
+	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next, Count++)
+	{
+		if (Count == Index)
+			return Itr->Data;
+	}
+	return NULL;
+}
+
+TESRenderSelection* RenderSelectionGroupManager::GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection)
+{
+	TESRenderSelection* Result = NULL;
+
+	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
+	if (SelectionList)
+	{
+		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
+		{
+			TESRenderSelection* Base = *Itr;
+			if (Base->SelectionCount == Selection->SelectionCount)
+			{
+				bool Mismatch = false;
+				for (int i = 0; i < Selection->SelectionCount; i++)
+				{
+					if (GetRefAtSelectionIndex(Selection, i) != GetRefAtSelectionIndex(Base, i))
+					{
+						Mismatch = true;
+						break;
+					}
+				}
+				if (Mismatch)
+					break;
+
+				Result = Base;
+			}
+		}		
+	}
+
+	return Result;
+}
+
+void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* Selection)
+{
+	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
+	if (SelectionList)
+	{	
+		std::vector<TESRenderSelection*>::const_iterator EraseItr = SelectionList->end();
+
+		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
+		{
+			if (*Itr == Selection)
+			{
+				thisCall(kTESRenderSelection_ClearSelection, *Itr, 0);
+				thisCall(kTESRenderSelection_Free, *Itr);
+				FormHeap_Free(*Itr);
+
+//				DebugPrint("Freed Selection %08X", (UInt32)*Itr);
+
+				EraseItr = Itr;
+				break;
+			}
+		}
+
+		if (EraseItr != SelectionList->end())
+			SelectionList->erase(EraseItr);
+	}
+}
+
+bool RenderSelectionGroupManager::AddGroup(TESObjectCELL *Cell, TESRenderSelection *Selection)
+{
+	bool Result = false;
+
+	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
+	if (SelectionList)
+	{
+		bool ExistingGroup = false;
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
+		{
+			if (GetRefSelectionGroup(Itr->Data, Cell))
+			{
+				ExistingGroup = true;
+				break;
+			}
+		}
+
+		if (!ExistingGroup)
+		{
+			TESRenderSelection* Group = AllocateNewSelection(Selection);
+			SelectionList->push_back(Group);
+			Result = true;	
+		}
+	}
+	else
+	{
+		SelectionGroupMap[Cell] = std::vector<TESRenderSelection*>();
+
+		TESRenderSelection* Group = AllocateNewSelection(Selection);
+		SelectionGroupMap[Cell].push_back(Group);
+		Result = true;
+	}
+
+	return Result;
+}
+
+bool RenderSelectionGroupManager::RemoveGroup(TESObjectCELL *Cell, TESRenderSelection *Selection)
+{
+	bool Result = false;
+
+	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
+	if (SelectionList)
+	{
+		TESRenderSelection* TrackedSelection = GetTrackedSelection(Cell, Selection);
+		if (TrackedSelection)
+		{
+			UntrackSelection(Cell, TrackedSelection);
+			Result = true;
+		}
+	}
+
+	return Result;
 }

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="TagBrowser"
-	ProjectGUID="{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}"
-	RootNamespace="UseInfoList"
+	Name="ScriptEditor.Preprocessor"
+	ProjectGUID="{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
+	RootNamespace="ScriptEditorPreprocessor"
 	Keyword="ManagedCProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -42,8 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\..&quot;;&quot;$(SolutionDir)\..\..\..&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;CSE_SEPREPROC"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -117,9 +117,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="4"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..\&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\..&quot;;&quot;$(SolutionDir)\..\..\..&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;CSE_SEPREPROC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -163,7 +162,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\TagBrowser.dll&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -183,51 +182,21 @@
 			AssemblyName="System.Xml, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
-		<AssemblyReference
-			RelativePath="DevComponents.DotNetBar2.dll"
-			AssemblyName="DevComponents.DotNetBar2, Version=8.0.0.0, PublicKeyToken=5fd520d36328f741, processorArchitecture=MSIL"
-			MinFrameworkVersion="131072"
-		/>
-		<AssemblyReference
-			RelativePath="..\..\[Depends]\GlobalInputMonitor.dll"
-			AssemblyName="GlobalInputMonitor, Version=1.0.0.0, processorArchitecture=MSIL"
-			MinFrameworkVersion="131072"
-		/>
 	</References>
 	<Files>
 		<Filter
 			Name="Common"
 			>
 			<File
-				RelativePath="..\..\[Common]\HandShakeStructs.h"
+				RelativePath="..\..\..\[Common]\Includes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\[Common]\Includes.h"
+				RelativePath="..\..\..\[Common]\MiscUtilities.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\[Common]\ListViewUtilities.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\[Common]\ListViewUtilities.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\[Common]\MiscUtilities.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\[Common]\MiscUtilities.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Wrappers"
-			>
-			<File
-				RelativePath="..\..\[Common]\NativeWrapper.h"
+				RelativePath="..\..\..\[Common]\MiscUtilities.h"
 				>
 			</File>
 		</Filter>
@@ -239,28 +208,28 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TagBrowser.rc"
+				RelativePath=".\ScriptEditor.Preprocessor.rc"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\Exports.cpp"
+			RelativePath="..\Globals.h"
 			>
 		</File>
 		<File
-			RelativePath=".\Exports.h"
+			RelativePath=".\Preprocessor.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Prefix.h"
+			RelativePath=".\Preprocessor.h"
 			>
 		</File>
 		<File
-			RelativePath=".\TagBrowser.cpp"
+			RelativePath="..\ScriptParser.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\TagBrowser.h"
+			RelativePath="..\ScriptParser.h"
 			>
 		</File>
 	</Files>

@@ -60,7 +60,7 @@ public:
 																"Allocate Workspace",
 																"Destroy TabContainer",
 																"Tab Tear Operation",
-																"Add Compile Error To Message Pool"
+																"Add Compiler Error To Message Pool"
 															};
 
 	static array<UInt16>^								ParamCount = 

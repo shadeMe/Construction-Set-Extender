@@ -1,5 +1,3 @@
-#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-
 #include "ExtenderInternals.h"
 #include "SEHooks.h"
 #include "MiscHooks.h"
@@ -17,12 +15,6 @@ OBSECommandTableInterface*			g_commandTableIntfc = NULL;
 
 CommandTableData					g_CommandTableData;
 
-
-std::string							g_INIPath;
-std::string							g_AppPath;
-bool								g_PluginPostLoad = false;
-SME::INI::INIManager*				g_INIManager = new CSEINIManager();
-SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();
 
 // PLUGIN INTEROP
 

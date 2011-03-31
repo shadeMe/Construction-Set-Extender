@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <queue>
 #include "windows.h"
 #include "windowsx.h"
 #include "atltypes.h"
@@ -22,7 +23,7 @@ struct BaseExtraList;
 
 void DebugPrint(const char* fmt, ...);
 void DebugPrint(UInt8 source, const char* fmt, ...);
-void PrintToBuffer(const char* fmt, ...);
+const char* PrintToBuffer(const char* fmt, ...);
 void CSEDumpClass(void * theClassPtr, UInt32 nIntsToDump = 512);
 void WaitUntilDebuggerAttached();
 void __stdcall ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]

@@ -57,7 +57,8 @@ String^ UserFunction::Describe()
 	
 
 	int ParamIdx = 0;
-	while (ParamIdx < 10) {
+	while (ParamIdx < 10)
+	{
 		int VarIdx = (int)Parameters->GetValue(ParamIdx);
 		if (VarIdx == -1)	break;
 
@@ -76,7 +77,8 @@ String^ UserFunction::Describe()
 
 IntelliSenseDatabase^% IntelliSenseDatabase::GetSingleton()
 {
-	if (Singleton == nullptr) {
+	if (Singleton == nullptr)
+	{
 		Singleton = gcnew IntelliSenseDatabase();
 	}
 	return Singleton;
@@ -109,24 +111,28 @@ IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::DoUpdateDatabase()
 
 	IntelliSenseUpdateData* DataHandlerData = NativeWrapper::ScriptEditor_BeginIntelliSenseDatabaseUpdate();
 
-	for (ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr) {
+	for (ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr)
+	{
 		if (!Itr->IsValid())		continue;
 
 		Data->UDFList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
 	}
 
-	for (QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr) {
+	for (QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr)
+	{
 		if (!Itr->IsValid())		continue;
 
 		Data->Enumerables->AddLast(gcnew Quest(gcnew String(Itr->EditorID), gcnew String(Itr->FullName), gcnew String(Itr->ScriptName)));
 	}
 
-	for each (IntelliSenseItem^ Itr in Enumerables) {
+	for each (IntelliSenseItem^ Itr in Enumerables)
+	{
 		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
 			Data->Enumerables->AddLast(Itr);
 	}
 
-	for each (UserFunction^% Itr in Data->UDFList) {
+	for each (UserFunction^% Itr in Data->UDFList)
+	{
 		Data->Enumerables->AddLast(gcnew UserFunctionDelegate(Itr));
 	}
 
@@ -216,14 +222,17 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 		break;
 	}
 
-	while (ReadLine != nullptr) {
+	while (ReadLine != nullptr)
+	{
 		ScriptTextParser->Tokenize(ReadLine, false);
-		if (!ScriptTextParser->Valid) {
+		if (!ScriptTextParser->Valid)
+		{
 			ReadLine = TextParser->ReadLine();
 			continue;
 		}
 		
-		if (ScriptTextParser->Tokens[0][0] == ';' && ReadLine->IndexOf(";<CSE") != 0 && ReadLine->IndexOf(";</CSE") != 0 && GrabDef)		Description += ReadLine->Substring(ScriptTextParser->Indices[0] + 1) + "\n";
+		if (ScriptTextParser->Tokens[0][0] == ';' && ReadLine->IndexOf(";<CSE") != 0 && ReadLine->IndexOf(";</CSE") != 0 && GrabDef)
+			Description += ReadLine->Substring(ScriptTextParser->Indices[0] + 1) + "\n";
 
 		FirstToken = ScriptTextParser->Tokens[0], 
 		SecondToken = (ScriptTextParser->Tokens->Count > 1)?ScriptTextParser->Tokens[1]:"";
@@ -234,9 +243,11 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 		{
 		case ScriptParser::TokenType::e_Variable:
 			GrabDef = false;
-			if (!ScriptTextParser->FindVariable(SecondToken)->IsValid() && SecondToken != "") {
+			if (!ScriptTextParser->FindVariable(SecondToken)->IsValid() && SecondToken != "") 
+			{
 				Comment = "";
-				if (ScriptTextParser->Tokens->Count > 2 && ScriptTextParser->IsComment(ScriptTextParser->Tokens->Count) == 2) {
+				if (ScriptTextParser->Tokens->Count > 2 && ScriptTextParser->IsComment(ScriptTextParser->Tokens->Count) == 2)
+				{
 					Comment = ReadLine->Substring(ReadLine->IndexOf(";") + 1);
 					ScriptTextParser->Tokenize(Comment, false);
 					Comment = (ScriptTextParser->Indices->Count > 0)?Comment->Substring(ScriptTextParser->Indices[0]):Comment;
@@ -277,15 +288,20 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 			break;
 		case ScriptParser::TokenType::e_Begin:
 			GrabDef = false;
-			if (Box->Type == Boxer::BoxType::e_UserFunct) {
-				if (!String::Compare(SecondToken, "function", true)) {
+			if (Box->Type == Boxer::BoxType::e_UserFunct)
+			{
+				if (!String::Compare(SecondToken, "function", true))
+				{
 					String^ ParamList = ReadLine->Substring(ReadLine->IndexOf("{"), ReadLine->IndexOf("}") - ReadLine->IndexOf("{"));
 					ScriptTextParser->Tokenize(ParamList, false);
 					int ParamIdx = 0;
-					for each (String^% Itr in ScriptTextParser->Tokens) {
+					for each (String^% Itr in ScriptTextParser->Tokens)
+					{
 						int VarIdx = 0;
-						for each (ScriptParser::VariableInfo^% ItrEx in ScriptTextParser->Variables) {
-							if (!String::Compare(ItrEx->VarName, Itr, true) && ParamIdx < 10) {
+						for each (ScriptParser::VariableInfo^% ItrEx in ScriptTextParser->Variables)
+						{
+							if (!String::Compare(ItrEx->VarName, Itr, true) && ParamIdx < 10)
+							{
 								Box->FunctBox->Parameters->SetValue(VarIdx, ParamIdx);
 								ParamIdx++;
 							}
@@ -299,11 +315,14 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 			break;
 		case ScriptParser::TokenType::e_SetFunctionValue:
 			GrabDef = false;
-			if (Box->Type == Boxer::BoxType::e_UserFunct) {
+			if (Box->Type == Boxer::BoxType::e_UserFunct)
+			{
 				Box->FunctBox->ReturnVar = -9;						// ambiguous
 				int VarIdx = 0;
-				for each (ScriptParser::VariableInfo^% Itr in ScriptTextParser->Variables) {
-					if (!String::Compare(SecondToken, Itr->VarName, true)) {
+				for each (ScriptParser::VariableInfo^% Itr in ScriptTextParser->Variables) 
+				{
+					if (!String::Compare(SecondToken, Itr->VarName, true))
+					{
 						Box->FunctBox->ReturnVar = VarIdx;
 						break;
 					}
@@ -340,7 +359,8 @@ void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 		String^ Name, ^Desc, ^SH, ^PluginName;
 		int Count = 0, ReturnType = 0, CSCount = 0;
 
-		for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr) {		
+		for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
+		{		
 			Name = gcnew String(Itr->longName);
 			if (!String::Compare(Name, "", true))	continue;
 
@@ -382,22 +402,26 @@ void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 
 void IntelliSenseDatabase::AddToURLMap(String^% CmdName, String^% URL)
 {
-	for each (KeyValuePair<String^, String^>% Itr in URLMap) {
-		if (!String::Compare(CmdName, Itr.Key, true)) {
+	for each (KeyValuePair<String^, String^>% Itr in URLMap)
+	{
+		if (!String::Compare(CmdName, Itr.Key, true))
+		{
 			return;
 		}
 	}
 
 	URLMap->Add(CmdName, URL);
-	DebugPrint("Added " + CmdName + " ; " + URL + " to URLMap");
+	DebugPrint("Bound " + CmdName + " to URL " + URL);
 }
 
 
 String^	IntelliSenseDatabase::GetCommandURL(String^% CmdName)
 {
 	String^ Result = nullptr;
-	for each (KeyValuePair<String^, String^>% Itr in URLMap) {
-		if (!String::Compare(CmdName, Itr.Key, true)) {
+	for each (KeyValuePair<String^, String^>% Itr in URLMap)
+	{
+		if (!String::Compare(CmdName, Itr.Key, true))
+		{
 			Result = Itr.Value;
 			break;
 		}
@@ -423,8 +447,10 @@ String^	IntelliSenseDatabase::SanitizeCommandName(String^% CmdName)
 
 Script^ IntelliSenseDatabase::GetRemoteScript(String^ BaseEditorID, String^ ScriptText)
 {
-	for each (KeyValuePair<String^, Script^>% Itr in RemoteScripts) {
-		if (!String::Compare(BaseEditorID, Itr.Key, true)) {
+	for each (KeyValuePair<String^, Script^>% Itr in RemoteScripts) 
+	{
+		if (!String::Compare(BaseEditorID, Itr.Key, true)) 
+		{
 			return Itr.Value;
 		}
 	}
@@ -438,8 +464,10 @@ bool IntelliSenseDatabase::IsUDF(String^% Name)
 {
 	bool Result = false;
 	
-	for each (UserFunction^% Itr in UserFunctionList) {
-		if (!String::Compare(Name, Itr->Name, true)) {
+	for each (UserFunction^% Itr in UserFunctionList) 
+	{
+		if (!String::Compare(Name, Itr->Name, true)) 
+		{
 			Result = true;
 			break;
 		}
@@ -552,17 +580,23 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 	switch (Op)
 	{
 	case Operation::e_Default:
-		if (Extract->Length >= OPTIONS->FetchSettingAsInt("ThresholdLength") || Force) {
-			for each (IntelliSenseItem^% Itr in VarList) {
-				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr)) {
+		if (Extract->Length >= OPTIONS->FetchSettingAsInt("ThresholdLength") || Force)
+		{
+			for each (IntelliSenseItem^% Itr in VarList)
+			{
+				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
+				{
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 					ListContents->Add(Itr);
 					ItemCount++;
 				}
 			}
 			for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
-				if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) || Itr->GetType() == IntelliSenseItem::ItemType::e_Quest) {
-					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr)) {
+				if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) || 
+					Itr->GetType() == IntelliSenseItem::ItemType::e_Quest)
+				{
+					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr)) 
+					{
 						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 						ListContents->Add(Itr);
 						ItemCount++;
@@ -572,9 +606,12 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 		}
 		break;
 	case Operation::e_Call:
-		for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
-			if (Itr->GetType() == IntelliSenseItem::ItemType::e_UserFunct) {
-				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll) {
+		for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+		{
+			if (Itr->GetType() == IntelliSenseItem::ItemType::e_UserFunct)
+			{
+				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+				{
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 					ListContents->Add(Itr);
 					ItemCount++;
@@ -583,31 +620,42 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 		}
 		break;
 	case Operation::e_Dot:
-		if (InitAll) {
+		if (InitAll)
+		{
 			RemoteScript = Script::NullScript;
 			VariableInfo^ RefVar = GetLocalVar(Extract);
-			if (RefVar != nullptr && RefVar->GetType() == VariableInfo::VariableType::e_Ref) {									
+			if (RefVar != nullptr && RefVar->GetType() == VariableInfo::VariableType::e_Ref)
+			{									
 				IsObjRefr = true;
-			} else if (!String::Compare(Extract, "player", true)) {
+			} 
+			else if (!String::Compare(Extract, "player", true))
+			{
 				IsObjRefr = true;
 			}
-			else {
+			else
+			{
 				CStringWrapper^ CStr = gcnew CStringWrapper(Extract);														// extract = calling ref
 				ScriptData* Data = NativeWrapper::FetchScriptFromForm(CStr->String());
 
-				if (!Data->IsValid()) {
+				if (!Data->IsValid())
+				{
 					LastOperation = Operation::e_Default;
 					break;
-				} else {
+				}
+				else 
+				{
 					RemoteScript = ISDB->GetRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));			// cache form data for subsequent calls
 					IsObjRefr = NativeWrapper::IsFormAnObjRefr(CStr->String());
 				}
 			}
 		}
 
-		for each (IntelliSenseItem^% Itr in RemoteScript->VarList) {
-			if (Itr->GetType() == IntelliSenseItem::ItemType::e_RemoteVar) {
-				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll) {
+		for each (IntelliSenseItem^% Itr in RemoteScript->VarList)
+		{
+			if (Itr->GetType() == IntelliSenseItem::ItemType::e_RemoteVar)
+			{
+				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+				{
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 					ListContents->Add(Itr);
 					ItemCount++;
@@ -615,9 +663,12 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 			}
 		}
 
-		for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
-			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && IsObjRefr) {
-				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll) {
+		for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+		{
+			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && IsObjRefr)
+			{
+				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+				{
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 					ListContents->Add(Itr);
 					ItemCount++;
@@ -626,17 +677,22 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 		}		
 		break;
 	case Operation::e_Assign:
-		for each (IntelliSenseItem^% Itr in VarList) {
-			if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll) {
+		for each (IntelliSenseItem^% Itr in VarList)
+		{
+			if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+			{
 				IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 				ListContents->Add(Itr);
 				ItemCount++;
 			}
 		}
 
-		for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
-			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Quest) {
-				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll) {
+		for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+		{
+			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Quest)
+			{
+				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+				{
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
 					ListContents->Add(Itr);
 					ItemCount++;
@@ -649,7 +705,8 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 
 	if (ItemCount == 1 && !String::Compare(ListContents[0]->GetIdentifier(), Extract, true))	return;		// do not show when enumerable == extract
 
-	if (ItemCount > 0) {
+	if (ItemCount > 0)
+	{
 		IntelliSenseList->Items[0]->Selected = true;
 		Point Loc = ParentEditor->GetCaretLocation();
 		IntelliSenseList->Location = Point(Loc.X + 3, Loc.Y + (OPTIONS->FetchSettingAsInt("FontSize") + 10));
@@ -664,8 +721,10 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 
 VariableInfo^ IntelliSenseThingy::GetLocalVar(String^% Identifier)
 {
-	for each (IntelliSenseItem^% Itr in VarList) {
-		if (!String::Compare(Itr->GetIdentifier(), Identifier, true)) {
+	for each (IntelliSenseItem^% Itr in VarList) 
+	{
+		if (!String::Compare(Itr->GetIdentifier(), Identifier, true))
+		{
 			return dynamic_cast<VariableInfo^>(Itr);
 		}
 	}
@@ -674,7 +733,8 @@ VariableInfo^ IntelliSenseThingy::GetLocalVar(String^% Identifier)
 
 void IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
-	if (IsVisible()) {
+	if (IsVisible())
+	{
 		if (GetSelectedIndex() == -1)
 			return;
 
@@ -707,7 +767,8 @@ void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
 	switch (Direction)
 	{
 	case Direction::e_Down:
-		if (SelectedIndex < (IntelliSenseList->Items->Count - 1))  {
+		if (SelectedIndex < (IntelliSenseList->Items->Count - 1)) 
+		{
 			IntelliSenseList->Items[SelectedIndex]->Selected = false;
 			IntelliSenseList->Items[SelectedIndex + 1]->Selected = true;
 
@@ -716,7 +777,8 @@ void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
 		}
 		break;
 	case Direction::e_Up:
-		if (SelectedIndex > 0) {
+		if (SelectedIndex > 0)
+		{
 			IntelliSenseList->Items[SelectedIndex]->Selected = false;
 			IntelliSenseList->Items[SelectedIndex - 1]->Selected = true;
 
@@ -769,7 +831,8 @@ void IntelliSenseThingy::Cleanup()
 int	IntelliSenseThingy::GetSelectedIndex()
 {
 	int Result = -1;
-	for each (int SelectedIndex in IntelliSenseList->SelectedIndices) {
+	for each (int SelectedIndex in IntelliSenseList->SelectedIndices)
+	{
 		Result = SelectedIndex;
 		break;
 	}	
@@ -783,15 +846,19 @@ bool IntelliSenseThingy::QuickView(String^ TextUnderMouse)
 
 	IntelliSenseItem^ Item = GetLocalVar(TextUnderMouse);
 
-	if (Item == nullptr) {
-		for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
-			if (!String::Compare(Itr->GetIdentifier(), TextUnderMouse, true)) {
+	if (Item == nullptr) 
+	{
+		for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+		{
+			if (!String::Compare(Itr->GetIdentifier(), TextUnderMouse, true)) 
+			{
 				Item = Itr;
 				break;
 			}
 		}
 	}
-	if (Item != nullptr) {
+	if (Item != nullptr) 
+	{
 		Point TipLoc = ParentEditor->GetCaretLocation();
 		TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 8;
 		InfoTip->ToolTipTitle = Item->GetTypeIdentifier();

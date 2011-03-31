@@ -10,6 +10,15 @@ namespace ScriptPreprocessor
 
 using namespace ScriptPreprocessor;
 
+public ref struct ScriptEditorPreprocessorData
+{
+	String^											AppPath;
+	bool											AllowMacroRedefinitions;
+
+	ScriptEditorPreprocessorData(String^% AppPath, bool AllowMacroRedefinitions) :
+				AppPath(AppPath), AllowMacroRedefinitions(AllowMacroRedefinitions) {}
+};
+
 // represents a line of the script text/directive
 public ref class CSEPreprocessorToken
 {
@@ -180,17 +189,19 @@ public ref class Preprocessor
 	Preprocessor();
 	
 	LinkedList<DefineDirective^>^						RegisteredDefineDirectives;
+	ScriptEditorPreprocessorData^						DataBuffer;
 
-	void												ProcessStandardDirectives(StandardOutputError^ ErrorOutput);
+	void												ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput);
 	CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, StringReader^ TextReader, StandardOutputError^ ErrorOutput);
 public:
 	static Preprocessor^%								GetSingleton();
 
+	ScriptEditorPreprocessorData^%						GetInstanceData() { return DataBuffer; }
 	void												RegisterDefineDirective(DefineDirective^ Directive); 
 	DefineDirective^									LookupDefineDirectiveByName(String^% Name);
 	bool												Preprocess(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
 
-	bool												ScriptEditorDelegate(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
+	bool												PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data);
 };
 
 #define PREPROC											Preprocessor::GetSingleton()

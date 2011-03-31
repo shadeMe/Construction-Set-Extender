@@ -1,7 +1,6 @@
 #include "Preprocessor.h"
-#include "ScriptParser.h"
-#include "Globals.h"
-#include "OptionsDialog.h"
+#include "..\ScriptParser.h"
+#include "..\Globals.h"
 
 using namespace ScriptPreprocessor;
 
@@ -149,7 +148,7 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 			Name = LocalParser->Tokens[Index + 1];
 			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);	
 
-			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && OPTIONS->FetchSettingAsInt("AllowRedefinitions") == 0)
+			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && PREPROC->GetInstanceData()->AllowMacroRedefinitions == false)
 				throw gcnew CSEGeneralException("Invalid redefinition.");
 			else if (IsNameValid(Name) == false)
 				throw gcnew CSEGeneralException("Invalid character in name.");
@@ -192,7 +191,7 @@ DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, Stand
 			Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
 			String^ Result = "";
-			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && OPTIONS->FetchSettingAsInt("AllowRedefinitions") == 0)
+			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && PREPROC->GetInstanceData()->AllowMacroRedefinitions == false)
 				throw gcnew CSEGeneralException("Invalid redefinition.");
 			else if (IsNameValid(Name) == false)
 				throw gcnew CSEGeneralException("Invalid character in name.");
@@ -279,7 +278,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 
 			try
 			{
-				StreamReader^ ImportParser = gcnew StreamReader(String::Format("{0}Data\\Scripts\\{1}.txt", Globals::AppPath, Filename));
+				StreamReader^ ImportParser = gcnew StreamReader(String::Format("{0}Data\\Scripts\\{1}.txt", PREPROC->GetInstanceData()->AppPath, Filename));
 				Source = ImportParser->ReadToEnd();
 				ImportParser->Close();
 			} 
@@ -1087,26 +1086,27 @@ bool Preprocessor::Preprocess(String^% Source, String^% Result, StandardOutputEr
 	return OperationResult;
 }
 
-bool Preprocessor::ScriptEditorDelegate(String^% Source, String^% Result, StandardOutputError^ ErrorOutput)
+bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data)
 {
 	bool OperationResult = false;
 
+	DataBuffer = Data;
 	RegisteredDefineDirectives->Clear();
-	ProcessStandardDirectives(ErrorOutput);
+	ProcessStandardDirectives(Data->AppPath, ErrorOutput);
 	OperationResult = Preprocess(Source, Result, ErrorOutput);
 
 	return OperationResult;
 }
 
-void Preprocessor::ProcessStandardDirectives(StandardOutputError^ ErrorOutput)
+void Preprocessor::ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput)
 {
-	String^ Path = Globals::AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
+	String^ FullPath = Path + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
 
-	if (File::Exists(Path))
+	if (File::Exists(FullPath))
 	{
 		try 
 		{
-			StreamReader^ TextParser = gcnew StreamReader(Path);
+			StreamReader^ TextParser = gcnew StreamReader(FullPath);
 			String^ FileContents = TextParser->ReadToEnd();
 			String^ Throwaway = "";
 			Preprocess(FileContents, Throwaway, ErrorOutput);

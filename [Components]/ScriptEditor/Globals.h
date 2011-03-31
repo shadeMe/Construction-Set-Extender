@@ -1,11 +1,15 @@
 #pragma once
 
+#ifndef CSE_SEPREPROC
 #include "[Common]\NativeWrapper.h"
+#endif
 
-public ref class Globals
+ref class Globals
 {
 public:
+#ifndef CSE_SEPREPROC
 	static String^												AppPath = gcnew String(NativeWrapper::GetAppPath());
+#endif
 	static String^												Delimiters = gcnew String("., (){}[]\t\n");
 	static String^												ControlChars = " \t";
 
@@ -36,7 +40,9 @@ public:
 		return Result;
 	}
 
+#ifndef CSE_SEPREPROC
 	static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("CSEScriptEditor.Images");
+#endif
 };
 
 #define SetupControlImage(Identifier)							Identifier##->Name = #Identifier;	\

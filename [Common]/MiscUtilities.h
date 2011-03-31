@@ -2,7 +2,7 @@
 
 #include "Includes.h"
 
-public ref class CStringWrapper
+ref class CStringWrapper
 {
 	IntPtr												P;
 	const char*											CString;
@@ -19,13 +19,13 @@ public:
 void													DebugDump(UInt8 Source, String^% Message);
 void													ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
 
-public ref class CSEGeneralException : public Exception
+ref class CSEGeneralException : public Exception
 {
 public:
 	CSEGeneralException(String^ Message) : Exception(Message) {};
 };
 
-public ref class ImageResourceManager
+ref class ImageResourceManager
 {
 	ResourceManager^					Manager;
 public:

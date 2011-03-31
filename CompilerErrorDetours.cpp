@@ -96,30 +96,30 @@ void __declspec(naked) ParseScriptLineOverride(void)
 // ERROR HANDLERS
 
 																//  f_ConstructLineBuffer
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00502781, 0x00502791, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00502813, 0x005027AD, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x005027D3, 0x00502824, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x005028B5, 0x00502889, 0x8)
+DefineCompilerErrorOverrideHook(0x00502781, 0x00502791, 0xC)
+DefineCompilerErrorOverrideHook(0x00502813, 0x005027AD, 0xC)
+DefineCompilerErrorOverrideHook(0x005027D3, 0x00502824, 0xC)
+DefineCompilerErrorOverrideHook(0x005028B5, 0x00502889, 0x8)
 																// f_ParseScriptToken
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500B44, 0x00500A14, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500B5D, 0x00500A7E, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500B76, 0x00500A8B, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500B8C, 0x00500AAB, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500BBE, 0x00500B11, 0x8)
+DefineCompilerErrorOverrideHook(0x00500B44, 0x00500A14, 0x8)
+DefineCompilerErrorOverrideHook(0x00500B5D, 0x00500A7E, 0x8)
+DefineCompilerErrorOverrideHook(0x00500B76, 0x00500A8B, 0x8)
+DefineCompilerErrorOverrideHook(0x00500B8C, 0x00500AAB, 0xC)
+DefineCompilerErrorOverrideHook(0x00500BBE, 0x00500B11, 0x8)
 
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500BA5, 0x00500B11, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500C09, 0x00500C18, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500C81, 0x00500CB6, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500CA7, 0x00500CB6, 0x8)
+DefineCompilerErrorOverrideHook(0x00500BA5, 0x00500B11, 0x8)
+DefineCompilerErrorOverrideHook(0x00500C09, 0x00500C18, 0xC)
+DefineCompilerErrorOverrideHook(0x00500C81, 0x00500CB6, 0xC)
+DefineCompilerErrorOverrideHook(0x00500CA7, 0x00500CB6, 0x8)
 																// sub_5004C0
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500669, 0x00500676, 0xC)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x0050068F, 0x0050069E, 0xC)
+DefineCompilerErrorOverrideHook(0x00500669, 0x00500676, 0xC)
+DefineCompilerErrorOverrideHook(0x0050068F, 0x0050069E, 0xC)
 																// f_ValidateScriptBlocks
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500262, 0x0050024F, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x0050027D, 0x0050024F, 0x8)
-DEFINE_SHOWCOMPILERERROR_HOOK(0x00500298, 0x0050024F, 0x8)
+DefineCompilerErrorOverrideHook(0x00500262, 0x0050024F, 0x8)
+DefineCompilerErrorOverrideHook(0x0050027D, 0x0050024F, 0x8)
+DefineCompilerErrorOverrideHook(0x00500298, 0x0050024F, 0x8)
 																// f_ScriptBuffer__CheckReferencedObjects
-DEFINE_SHOWCOMPILERERROR_HOOK(0x005001DC, 0x005001C9, 0xC)
+DefineCompilerErrorOverrideHook(0x005001DC, 0x005001C9, 0xC)
 
 
 
@@ -132,28 +132,28 @@ void PatchCompilerErrorDetours()
 	kParseScriptLineOverride.WriteJump();
 
 
-	GET_ERROR_MEMHDLR(0x00502781).WriteJump();
-	GET_ERROR_MEMHDLR(0x00502813).WriteJump();
-	GET_ERROR_MEMHDLR(0x005027D3).WriteJump();
-	GET_ERROR_MEMHDLR(0x005028B5).WriteJump();
+	GetErrorMemHdlr(0x00502781).WriteJump();
+	GetErrorMemHdlr(0x00502813).WriteJump();
+	GetErrorMemHdlr(0x005027D3).WriteJump();
+	GetErrorMemHdlr(0x005028B5).WriteJump();
 															
-	GET_ERROR_MEMHDLR(0x00500B44).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500B5D).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500B76).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500B8C).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500BBE).WriteJump();
+	GetErrorMemHdlr(0x00500B44).WriteJump();
+	GetErrorMemHdlr(0x00500B5D).WriteJump();
+	GetErrorMemHdlr(0x00500B76).WriteJump();
+	GetErrorMemHdlr(0x00500B8C).WriteJump();
+	GetErrorMemHdlr(0x00500BBE).WriteJump();
 
-	GET_ERROR_MEMHDLR(0x00500BA5).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500C09).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500C81).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500CA7).WriteJump();
+	GetErrorMemHdlr(0x00500BA5).WriteJump();
+	GetErrorMemHdlr(0x00500C09).WriteJump();
+	GetErrorMemHdlr(0x00500C81).WriteJump();
+	GetErrorMemHdlr(0x00500CA7).WriteJump();
 														
-	GET_ERROR_MEMHDLR(0x00500669).WriteJump();
-	GET_ERROR_MEMHDLR(0x0050068F).WriteJump();
+	GetErrorMemHdlr(0x00500669).WriteJump();
+	GetErrorMemHdlr(0x0050068F).WriteJump();
 																
-	GET_ERROR_MEMHDLR(0x00500262).WriteJump();
-	GET_ERROR_MEMHDLR(0x0050027D).WriteJump();
-	GET_ERROR_MEMHDLR(0x00500298).WriteJump();
+	GetErrorMemHdlr(0x00500262).WriteJump();
+	GetErrorMemHdlr(0x0050027D).WriteJump();
+	GetErrorMemHdlr(0x00500298).WriteJump();
 															
-	GET_ERROR_MEMHDLR(0x005001DC).WriteJump();
+	GetErrorMemHdlr(0x005001DC).WriteJump();
 }

@@ -12,6 +12,7 @@
 #define DLG_TESCOMBOBOX                 112
 #define DLG_BINDSCRIPT                  114
 #define DLG_COPYPATH                    116
+#define IDR_MENU2                       117
 #define DLG_SCRIPTEDIT                  188
 #define EDIT_TEXTLINE                   1002
 #define BTN_OK                          1003
@@ -74,10 +75,12 @@
 #define MAIN_LAUNCHGAME                 9914
 #define RACE_COPYHAIR                   9915
 #define RACE_COPYEYES                   9916
-#define POPUP_TOGGLEVISIBILITY			9917
-#define POPUP_TOGGLECHILDRENVISIBILITY	9918
-#define POPUP_ADDTOTAG					9919
-#define MAIN_VIEW_TAGBROWSER			9920
+#define POPUP_TOGGLEVISIBILITY          9917
+#define POPUP_TOGGLECHILDRENVISIBILITY  9918
+#define POPUP_ADDTOTAG                  9919
+#define MAIN_VIEW_TAGBROWSER            9920
+#define RENDER_GROUPSELECTION           9921
+#define RENDER_UNGROUPSELECTION         9922
 #define ID_CLEARCONSOLE                 40001
 #define CONSOLE_POPUP                   40002
 #define ID_CONSOLESETTINGS              40003
@@ -89,13 +92,16 @@
 #define ID_CONSOLESETTINGS_HIDECONSOLE  40009
 #define CONSOLEMENU_HIDE                40010
 #define CONSOLEMENU_HIDECONSOLE         40011
+#define ID_ALIGNSELECTION_BYXAXIS       40012
+#define ID_ALIGNSELECTION_BYYAXIS       40013
+#define ID_ALIGNSELECTION_BYZAXIS       40014
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        117
-#define _APS_NEXT_COMMAND_VALUE         40012
+#define _APS_NEXT_RESOURCE_VALUE        118
+#define _APS_NEXT_COMMAND_VALUE         40015
 #define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

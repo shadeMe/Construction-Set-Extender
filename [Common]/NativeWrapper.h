@@ -110,7 +110,7 @@ public:
 	static void											SetINIValue(String^ Section, String^ Key, String^ Value);
 };
 
-public ref class WindowHandleWrapper : public IWin32Window
+ref class WindowHandleWrapper : public IWin32Window
 {
 	IntPtr					_hwnd;
 public:

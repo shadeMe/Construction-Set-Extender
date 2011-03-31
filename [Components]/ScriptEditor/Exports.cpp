@@ -9,7 +9,10 @@ extern "C"
 [STAThread]
 __declspec(dllexport) void InitializeComponents(CommandTableData* Data)
 {	
-	Globals^ Dummy = gcnew Globals();		// makes sure the class' static members get initialized
+	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
+	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ScriptEditor::ResolveMissingAssemblies);
+
+	Globals^ Dummy = gcnew Globals();
 	ScriptEditorManager::GetSingleton();
 	ISDB->ParseCommandTable(Data);
 	DebugPrint("ScriptEditor Components Initialized");

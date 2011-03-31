@@ -10,6 +10,7 @@
 struct ScriptData;
 using namespace DevComponents;
 using namespace GlobalInputMonitor;
+using namespace System::Reflection;
 
 
 namespace ScriptEditor
@@ -17,6 +18,7 @@ namespace ScriptEditor
 	ref class Workspace;
 
 	void													GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E);
+	Assembly^												ResolveMissingAssemblies(Object^ Sender, ResolveEventArgs^ E);
 
 	public ref class TabContainer
 	{

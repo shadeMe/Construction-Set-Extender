@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;CSE_USER"
+				PreprocessorDefinitions="WIN32;_DEBUG"
 				GeneratePreprocessedFile="0"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="4"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\..&quot;;&quot;$(SolutionDir)\..\..\&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;CS_VERSION=0x01020000;CSE_USER;CSE_SCRIPTEDITOR"
+				PreprocessorDefinitions="WIN32;NDEBUG"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -201,6 +201,11 @@
 		<AssemblyReference
 			RelativePath="..\..\[Depends]\GlobalInputMonitor.dll"
 			AssemblyName="GlobalInputMonitor, Version=1.0.0.0, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
+		/>
+		<AssemblyReference
+			RelativePath="g:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\ScriptEditor.Preprocessor.dll"
+			AssemblyName="ScriptEditor.Preprocessor, Version=0.0.0.0, processorArchitecture=x86"
 			MinFrameworkVersion="131072"
 		/>
 	</References>
@@ -445,6 +450,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\Images\script_16.png"
+					>
+				</File>
+				<File
 					RelativePath=".\Images\Script_link.png"
 					>
 				</File>
@@ -473,11 +482,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\Images\warning.png"
+					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
+					RelativePath=".\Images\warning.png"
 					>
 				</File>
 				<File
@@ -563,14 +572,6 @@
 			</File>
 			<File
 				RelativePath=".\PluginParser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Preprocessor.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Preprocessor.h"
 				>
 			</File>
 			<File

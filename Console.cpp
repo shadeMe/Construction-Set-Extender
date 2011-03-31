@@ -63,6 +63,7 @@ void Console::InitializeConsole()
 void Console::Deinitialize()
 {
 	SaveINISettings();
+	fclose(DebugLog);
 	KillTimer(EditHandle, CONSOLE_UPDATETIMER);
 }
 

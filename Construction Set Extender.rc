@@ -317,6 +317,16 @@ BEGIN
     END
 END
 
+IDR_MENU2 MENU 
+BEGIN
+    POPUP "Align Selection"
+    BEGIN
+        MENUITEM "By X Axis",                   ID_ALIGNSELECTION_BYXAXIS
+        MENUITEM "By Y Axis",                   ID_ALIGNSELECTION_BYYAXIS
+        MENUITEM "By Z Axis",                   ID_ALIGNSELECTION_BYZAXIS
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

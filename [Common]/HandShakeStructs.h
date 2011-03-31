@@ -60,7 +60,7 @@ struct ScriptVarIndexData
 	ScriptVarInfo*									Data;
 };
 
-#ifdef CSE_USER
+#ifndef CSE_INTERFACE
 struct CommandInfoCLI
 {
 	const char*										longName;		
@@ -86,7 +86,7 @@ struct CommandTableData
 	const CommandInfo*								CommandTableEnd;
 	UInt32											(* GetCommandReturnType)(const CommandInfo* cmd);
 	const PluginInfo*								(* GetParentPlugin)(const CommandInfo* cmd);
-#elif CSE_USER
+#else
 	struct PluginInfo
 	{
 		UInt32			infoVersion;

@@ -255,6 +255,7 @@ TagBrowser::TagBrowser()
 	FormList->UseCompatibleStateImageBehavior = false;
 	FormList->View = View::Details;
 	FormList->Tag = (int)1;
+	FormList->HideSelection = false;
 	FormList->ItemActivate += gcnew EventHandler(this, &TagBrowser::FormSelectionList_ItemActivate);
 	FormList->ColumnClick += gcnew ColumnClickEventHandler(this, &TagBrowser::FormSelectionList_ColumnClick);
 	FormList->MouseDown += gcnew MouseEventHandler(this, &TagBrowser::FormList_MouseDown);

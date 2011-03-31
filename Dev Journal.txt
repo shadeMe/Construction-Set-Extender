@@ -8,19 +8,14 @@ CSE--->
 > Fully implement GMST reinit
 > Update the model of references
 > Export/import result scripts
-> Fix the water fix (enable water shader INI settings)
 > Fix the f_PlaySoundFile
-> Fix the CS adding water info to a cell even when it has no water
-> Investigate into the mysterious scale inc/dec buttons in the ref. edit dialog
+> Investigate into the mysterious scale inc/dec buttons in the ref. edit dialog/ face edit
 
 > Relative scaling and snap to bounding box
-
-startconversation player, sometopic - Apparently the comma is required for the syntax to be valid, otherwise the topic is never called up. The CS generates no warning/error about this which leads to much frustration wondering why sometimes topics set without the comma never trigger. 
 
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
 # NPC refs update visually when their inventory is changed without plugin reload
 # Option to automatically dump & reload models on cell load without plugin reload
-# Default z-coordinate when one drops pieces in the render window
 # On-the-fly adjustment of zoom sensitivity
 
 * The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.

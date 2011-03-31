@@ -22,6 +22,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UseInfoList", "[Components]
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TagBrowser", "[Components]\TagBrowser\TagBrowser.vcproj", "{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor.Preprocessor", "[Components]\ScriptEditor\Preprocessor\ScriptEditor.Preprocessor.vcproj", "{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -112,6 +114,16 @@ Global
 		{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}.Release|Win32.ActiveCfg = Release|Win32
 		{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}.Release|Win32.Build.0 = Release|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Debug|Win32.Build.0 = Debug|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Release|Any CPU.ActiveCfg = Release|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Release|Win32.ActiveCfg = Release|Win32
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -14,12 +14,8 @@
 const char*						g_AssetSelectorReturnPath = NULL;
 const char*						g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 bool							g_QuickLoadToggle = false;
-HFONT							g_CSDefaultFont = NULL;
 bool							g_BitSwapBuffer = false;
 char							g_NumericIDWarningBuffer[0x10] = {0};
-
-extern FARPROC					g_WindowHandleCallAddr;
-
 
 MemHdlr							kSavePluginMasterEnum				(0x0047ECC6, SavePluginMasterEnumHook, 0, 0);
 NopHdlr							kCheckIsActivePluginAnESM			(0x0040B65E, 2);
@@ -46,7 +42,6 @@ MemHdlr							kQuickLoadPluginLoadHandler			(0x004852E5, QuickLoadPluginLoadHand
 MemHdlr							kMissingMasterOverride				(0x00484FC9, 0x00484E8E, 0, 0);
 MemHdlr							kAssertOverride						(0x004B5670, AssertOverrideHook, 0, 0);
 MemHdlr							kTextureMipMapCheck					(0x0044F49B, (UInt32)0, 0, 0);
-NopHdlr							kAnimGroupNote						(0x004CA21D, 5);
 MemHdlr							kUnnecessaryDialogEdits				(0x004EDFF7, (UInt32)0, 0, 0);
 MemHdlr							kUnnecessaryCellEdits				(0x005349A5, (UInt32)0, 0, 0);
 MemHdlr							kCustomCSWindow						(0x004311E5, CustomCSWindowPatchHook, 0, 0);
@@ -59,7 +54,7 @@ MemHdlr							kObjectListPopulateListViewItems	(0x00413980, ObjectListPopulateLi
 MemHdlr							kCellViewPopulateObjectList			(0x004087C0, CellViewPopulateObjectListHook, 0, 0);
 MemHdlr							kDoorMarkerProperties				(0x00429EA1, DoorMarkerPropertiesHook, 0, 0);
 MemHdlr							kAutoLoadActivePluginOnStartup		(0x0041A26A, AutoLoadActivePluginOnStartupHook, MakeUInt8Array(6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0), 6);
-MemHdlr							kDataHandlerClearDataShadeMeRefDtor	(0x0047AE76, DataHandlerClearDataShadeMeRefDtorHook, 0, 0);
+MemHdlr							kDataHandlerClearData				(0x0047AE76, DataHandlerClearDataHook, 0, 0);
 MemHdlr							kCellObjectListShadeMeRefAppend		(0x00445128, CellObjectListShadeMeRefAppendHook, 0, 0);
 MemHdlr							kDeathToTheCloseOpenDialogsMessage	(0x0041BAA7, (UInt32)0, 0, 0);
 MemHdlr							kTopicInfoCopyProlog				(0x004F0738, 0x004F07C4, 0, 0);
@@ -88,61 +83,15 @@ MemHdlr							kLODLandTextureResolution			(0x00410D08, LODLandTextureResolutionH
 MemHdlr							kDataHandlerSaveFormToFile			(0x00479181, DataHandlerSaveFormToFileHook, 0, 0);
 MemHdlr							kTESFileUpdateHeader				(0x004894D0, TESFileUpdateHeaderHook, 0, 0);
 MemHdlr							kTESObjectREFRGet3DData				(0x00542950, TESObjectREFRGet3DDataHook, 0, 0);
+MemHdlr							kNiWindowRender						(0x00406442, NiWindowRenderHook, 0, 0);
+MemHdlr							kNiDX9RendererRecreate				(0x006D7260, NiDX9RendererRecreateHook, 0, 0);
+MemHdlr							kRenderWindowStats					(0x0042D3F4, RenderWindowStatsHook, 0, 0);
+MemHdlr							kUpdateViewport						(0x0042CE70, UpdateViewportHook, 0, 0);
+MemHdlr							kRenderWindowSelection				(0x0042AE71, RenderWindowSelectionHook, 0, 0);
 
-void __declspec(naked) TestHook(void)
-{
-	static UInt32 RetnAddr = 0x0041261C, CallAddr = 0x00410A90;
-	__asm
-	{
-		mov     dword ptr [esp+20h], 256
-		jmp		[RetnAddr]
-	}
-}
-void __declspec(naked) TestHookEx(void)
-{
-	static UInt32 RetnAddr = 0x0041262D, CallAddr = 0x00410A90;
-	__asm
-	{
-		mov     esi, 256
-		jmp		[RetnAddr]
-	}
-}
-
-void __declspec(naked) TestHook1(void)
-{
-	static UInt32 RetnAddr = 0x00412692, CallAddr = 0x00410A90;
-	__asm
-	{
-		add     dword ptr [esp+18h], 32
-		jmp		[RetnAddr]
-	}
-}
-void __declspec(naked) TestHook2(void)
-{
-	static UInt32 RetnAddr = 0x0041269D, CallAddr = 0x00410A90;
-	__asm
-	{
-		add     edi, 32
-		jmp		[RetnAddr]
-	}
-}
-
-//static float f1 = 384.0, f2 = 2048.0;
 
 bool PatchMiscHooks()
 {
-//	WriteRelJump(0x00412614, (UInt32)TestHook);
-//	WriteRelJump(0x00412628, (UInt32)TestHookEx);
-//
-//	WriteRelJump(0x0041268A, (UInt32)TestHook1);
-//	WriteRelJump(0x00412697, (UInt32)TestHook2);
-//
-//	SafeWrite8(0x00412AB1 + 1, 128);
-//	SafeWrite8(0x0041298B + 1, 128);
-//	SafeWrite8(0x004128B5 + 1, 1);
-//	SafeWrite32(0x005BFCEB + 2, (UInt32)&f1);
-//	SafeWrite32(0x005BFD0B + 2, (UInt32)&f2);
-
 	kLoadPluginsProlog.WriteJump();
 	kLoadPluginsEpilog.WriteJump();
 	kSavePluginCommonDialog.WriteJump();
@@ -180,8 +129,7 @@ bool PatchMiscHooks()
 	kMissingTextureWarning.WriteNop();
 	kResponseEditorMic.WriteNop(); 
 	kTESFormGetUnUsedFormID.WriteNop();
-	kAnimGroupNote.WriteNop();
-	kDataHandlerClearDataShadeMeRefDtor.WriteJump();
+	kDataHandlerClearData.WriteJump();
 	kCellObjectListShadeMeRefAppend.WriteJump();
 	kDeathToTheCloseOpenDialogsMessage.WriteUInt8(0xEB);
 	kTopicInfoCopyProlog.WriteJump();
@@ -208,6 +156,11 @@ bool PatchMiscHooks()
 	kDataHandlerSaveFormToFile.WriteJump();
 	kTESFileUpdateHeader.WriteJump();
 	kTESObjectREFRGet3DData.WriteJump();
+	kNiWindowRender.WriteJump();
+	kNiDX9RendererRecreate.WriteJump();
+	kRenderWindowStats.WriteJump();
+	kUpdateViewport.WriteJump();
+	kRenderWindowSelection.WriteJump();
 
 	PatchCommonDialogCancelHandler(Model);
 	PatchCommonDialogCancelHandler(Animation);
@@ -244,13 +197,20 @@ void PatchMessageHandler(void)
 	SafeWrite32(kVTBL_MessageHandler + 0, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x4, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x8, (UInt32)&MessageHandlerOverride);
-//	SafeWrite32(kVTBL_MessageHandler + 0xC, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x10, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x14, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x18, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x1C, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x20, (UInt32)&MessageHandlerOverride);
 	SafeWrite32(kVTBL_MessageHandler + 0x24, (UInt32)&MessageHandlerOverride);
+
+													// patch spammy subroutines
+	NopHdlr kDataHandlerAutoSave(0x0043083B, 5);
+	NopHdlr	kAnimGroupNote(0x004CA21D, 5);
+
+	SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
+	kDataHandlerAutoSave.WriteNop();
+	kAnimGroupNote.WriteNop();
 }
 
 
@@ -387,11 +347,13 @@ void __stdcall DoExitCSHook(HWND MainWindow)
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
 	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
-	g_INIManager->SaveSettingsToINI();
+
+	RENDERTEXT->Release();
+	CSIOM->Deinitialize();
 
 	CONSOLE->Deinitialize();
-	CSIOM->Deinitialize();
-	
+	g_INIManager->SaveSettingsToINI();
+
 	ExitProcess(0);
 }
 
@@ -454,8 +416,12 @@ void __stdcall DoCSInitHook()
 	HallOfFame::Initialize(true);
 	CONSOLE->InitializeConsole();
 	CONSOLE->LoadINISettings();
+	g_RenderTimeManager.Update();
 
-	(*g_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
+	DebugPrint("Initializing RenderWindowTextPainter");
+	RENDERTEXT->Initialize();
+
+	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Construction Set Extender", 5);
 
 	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
 		LoadStartupPlugin();
@@ -851,11 +817,6 @@ void __declspec(naked) PluginSaveHook(void)
     }
 }
 
-void __stdcall FixDefaultWater(void)
-{
-	(*g_DefaultWater)->texture.ddsPath.Set(g_DefaultWaterTextureStr);
-}
-
 void __declspec(naked) PluginLoadHook(void)
 {
 	static const UInt32			kPluginLoadRetnAddr	=	0x0041BEFF;
@@ -1028,8 +989,12 @@ void __stdcall DestroyShadeMeRef(void)
 	if (Ref)
 		thisVirtualCall(kVTBL_TESObjectREFR, 0x34, Ref);
 }
+void __stdcall ClearRenderSelectionGroupMap(void)
+{
+	g_RenderSelectionGroupManager.Clear();
+}
 
-void __declspec(naked) DataHandlerClearDataShadeMeRefDtorHook(void)
+void __declspec(naked) DataHandlerClearDataHook(void)
 {
 	static const UInt32			kDataHandlerClearDataShadeMeRefDtorRetnAddr = 0x0047AE7B;
 	__asm
@@ -1038,6 +1003,7 @@ void __declspec(naked) DataHandlerClearDataShadeMeRefDtorHook(void)
 		mov     ecx, edi
 		pushad
 		call	DestroyShadeMeRef
+		call	ClearRenderSelectionGroupMap
 		popad
 
 		jmp		[kDataHandlerClearDataShadeMeRefDtorRetnAddr]
@@ -1263,7 +1229,6 @@ void __declspec(naked) DataHandlerConstructSpecialFormsHook(void)
 	__asm
 	{
 		pushad
-		call	FixDefaultWater
 		push	0
 		call	HallOfFame::Initialize
 		popad
@@ -1605,7 +1570,7 @@ void __declspec(naked) LODLandTextureMipMapLevelBHook(void)
 
 void __stdcall DoLODLandTextureResolutionHook(void)
 {
-	LPDIRECT3DDEVICE9 D3DDevice = (LPDIRECT3DDEVICE9)(*((UInt32*)((UInt32)(*g_CSRenderer) + 0x280)));
+	LPDIRECT3DDEVICE9 D3DDevice = (*g_CSRenderer)->device;
 
 	D3DXCreateTexture(D3DDevice, 32, 32, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture32x);
 	D3DXCreateTexture(D3DDevice, 128, 128, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture128x);
@@ -1759,5 +1724,197 @@ void __declspec(naked) TESObjectREFRGet3DDataHook(void)
 		retn
 	}
 }
+
+void __stdcall NiWindowRenderDrawHook(void)
+{
+	g_RenderTimeManager.Update();
+	RENDERTEXT->Render();
+}
+
+void __declspec(naked) NiWindowRenderHook(void)
+{
+	static UInt32 kNiWindowRenderHookCallAddr = 0x0076A3B0;
+	static UInt32 kNiWindowRenderHookRetnAddr = 0x00406447;
+	__asm
+	{
+		call	[kNiWindowRenderHookCallAddr]
+
+		pushad
+		call	NiWindowRenderDrawHook
+		popad
+
+		jmp		[kNiWindowRenderHookRetnAddr]
+	}
+}
+
+void __stdcall DoNiDX9RendererRecreateHook(void)
+{
+	RENDERTEXT->Recreate();
+}
+
+void __declspec(naked) NiDX9RendererRecreateHook(void)
+{
+	static UInt32 kNiDX9RendererRecreateHookRetnAddr = 0x006D7266;
+	__asm
+	{
+		pushad
+		call	DoNiDX9RendererRecreateHook
+		popad
+
+		sub     esp, 0x10
+		push    ebx
+		push    ebp
+		push    esi
+
+		jmp		[kNiDX9RendererRecreateHookRetnAddr]
+	}
+}
+
+
+void __stdcall DoRenderWindowStatsHook(void)
+{
+	if (g_INIManager->GET_INI_INT("DisplaySelectionStats"))
+	{
+		if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+		{
+			PrintToBuffer("%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f", 
+						(*g_TESRenderSelectionPrimary)->SelectionCount,
+						(*g_TESRenderSelectionPrimary)->x,
+						(*g_TESRenderSelectionPrimary)->y,
+						(*g_TESRenderSelectionPrimary)->z); 
+			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_Buffer, 0);
+		}
+		else if ((*g_TESRenderSelectionPrimary)->SelectionCount)
+		{
+			TESObjectREFR* Selection = (*g_TESRenderSelectionPrimary)->RenderSelection->Data;
+			char Buffer[0x50] = {0};
+			sprintf_s(Buffer, 0x50, "");
+
+			BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Selection->baseExtraList, kExtraData_EnableStateParent);
+			if (xData)
+			{
+				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+				sprintf_s(Buffer, 0x50, "Parent: %s [%08X]  Opposite State: %d",
+																((xParent->parent->editorData.editorID.m_dataLen)?(xParent->parent->editorData.editorID.m_data):("")),
+																xParent->parent->refID, (UInt8)xParent->oppositeState);
+			}
+			PrintToBuffer("%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s\n%s",
+							((Selection->editorData.editorID.m_dataLen)?(Selection->editorData.editorID.m_data):("")), Selection->refID,
+							((Selection->baseForm->editorData.editorID.m_dataLen)?(Selection->baseForm->editorData.editorID.m_data):("")), Selection->baseForm->refID,
+							Selection->posX, Selection->posY, Selection->posZ, Selection->rotX, Selection->rotY, Selection->rotZ, Selection->scale,
+							((Selection->flags & TESForm::kFormFlags_Essential)?("P"):("-")),
+							((Selection->flags & TESForm::kFormFlags_InitiallyDisabled)?("D"):("-")),
+							((Selection->flags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
+							Buffer);
+
+			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_Buffer, 0);
+		}
+		else
+			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, NULL, 0);
+	}
+	else
+		RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, NULL, 0);
+}
+
+void __declspec(naked) RenderWindowStatsHook(void)
+{
+	static UInt32 kRenderWindowStatsHookCallAddr = 0x006F25E0;
+	static UInt32 kRenderWindowStatsHookRetnAddr = 0x0042D3F9;
+	__asm
+	{
+		call	[kRenderWindowStatsHookCallAddr]
+
+		pushad
+		call	DoRenderWindowStatsHook
+		popad
+
+		jmp		[kRenderWindowStatsHookRetnAddr]
+	}
+}
+
+bool __stdcall DoUpdateViewportHook(void)
+{
+	if (RENDERTEXT->GetRenderChannelQueueSize(RenderWindowTextPainter::kRenderChannel_2) || g_INIManager->GET_INI_INT("UpdateViewPortAsync"))
+		return true;
+	else
+		return false;		
+}
+
+void __declspec(naked) UpdateViewportHook(void)
+{
+	static UInt32 kUpdateViewportHookRetnAddr = 0x0042EF86;
+	static UInt32 kUpdateViewportHookJumpAddr = 0x0042CE7D;
+	__asm
+	{
+		mov		eax, [g_Flag_RenderWindowUpdateViewPort]
+		mov		eax, [eax]
+		cmp		al, 0
+		jz		DONTUPDATE
+
+		jmp		[kUpdateViewportHookJumpAddr]
+	DONTUPDATE:
+		pushad
+		xor		eax, eax
+		call	DoUpdateViewportHook
+		test	al, al
+		jz		EXIT
+		
+		popad
+		jmp		[kUpdateViewportHookJumpAddr]
+	EXIT:
+		popad
+		jmp		[kUpdateViewportHookRetnAddr]
+	}
+}
+
+
+
+bool __stdcall DoRenderWindowSelectionHook(TESObjectREFR* Ref)
+{
+	bool Result = false;
+
+	TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+	if (CurrentCell == NULL)
+		CurrentCell = (*g_TES)->currentExteriorCell;
+
+	if (CurrentCell)
+	{
+		TESRenderSelection* Selection = g_RenderSelectionGroupManager.GetRefSelectionGroup(Ref, CurrentCell);
+		if (Selection)
+		{
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
+				thisCall(kTESRenderSelection_AddFormToSelection, *g_TESRenderSelectionPrimary, Itr->Data, 1);
+
+			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Selected object selection group", 3);
+			Result = true;
+		}
+	}
+
+	return Result;
+}
+
+void __declspec(naked) RenderWindowSelectionHook(void)
+{
+	static UInt32 kRenderWindowSelectionHookRetnAddr = 0x0042AE76;
+	static UInt32 kRenderWindowSelectionHookJumpAddr = 0x0042AE84;
+	__asm
+	{
+		call	[kTESRenderSelection_ClearSelection]
+		xor		eax, eax
+
+		pushad
+		push	esi
+		call	DoRenderWindowSelectionHook
+		test	al, al
+		jnz		GROUPED
+		popad
+
+		jmp		[kRenderWindowSelectionHookRetnAddr]
+	GROUPED:
+		popad
+		jmp		[kRenderWindowSelectionHookJumpAddr]
+	}
+}
+
 
 

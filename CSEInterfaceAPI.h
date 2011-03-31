@@ -13,7 +13,8 @@ struct CSEInterface
 	enum 
 	{
 		kCSEInterface_Console = 0,
-		kCSEInterface_IntelliSense
+		kCSEInterface_IntelliSense,
+		kCSEInterface_Renderer
 	};
 
 	// Used to initialize CSE's interface objects. Similar to OBSE's QueryInterface.
@@ -35,8 +36,14 @@ struct CSEConsoleInterface
 	// Printed messages will be of the following format: [<Prefix>]\t\t<Message>
 	// Mustn't be called inside a callback.
 	//
-	// Reserved Prefixes: CMD, CSE, SE, CS, BSAV, USE, BE
+	// Reserved Prefixes: CMD, CSE, SE, CS, BSAV, USE, BE, TAG
 	void			(* PrintToConsole)(const char*	Prefix, const char* FormatString, ...);
 	// Registers a handler that gets called whenever a message is printed to the console.
 	void			(* RegisterCallback)(ConsolePrintCallback Handler);
+};
+
+struct CSERendererInterface
+{
+	// Queues a text message for display in the render window
+	void			(* PrintToRenderWindow)(const char* Message, long double DisplayDuration);
 };

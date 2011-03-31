@@ -1,7 +1,9 @@
+#include "ExtenderInternals.h"
 #include "CSEInterfaceManager.h"
 #include "UtilityBox.h"
 #include "[Common]\CLIWrapper.h"
 #include "Console.h"
+
 
 static CSEInterface				s_CSEInterface =
 {
@@ -16,6 +18,10 @@ static CSEIntelliSenseInterface	s_CSEIntelliSenseInterface =
 {
 	CSEInterfaceManager::RegisterCommandURL
 };
+static CSERendererInterface	s_CSERendererInterface =
+{
+	CSEInterfaceManager::PrintToRenderWindow
+};
 
 void* CSEInterfaceManager::InitializeInterface(UInt8 InterfaceType)
 {
@@ -25,6 +31,8 @@ void* CSEInterfaceManager::InitializeInterface(UInt8 InterfaceType)
 		return &s_CSEConsoleInterface;
 	case CSEInterface::kCSEInterface_IntelliSense:
 		return &s_CSEIntelliSenseInterface;
+	case CSEInterface::kCSEInterface_Renderer:
+		return &s_CSERendererInterface;
 	default:
 		return NULL;
 	}
@@ -66,6 +74,11 @@ void CSEInterfaceManager::HandleConsoleCallback(const char *Message, const char 
 CSEInterface* CSEInterfaceManager::GetInterface()
 {
 	return &s_CSEInterface;
+}
+
+void CSEInterfaceManager::PrintToRenderWindow(const char* Message, long double DisplayDuration)
+{
+	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, Message, DisplayDuration);
 }
 
 
