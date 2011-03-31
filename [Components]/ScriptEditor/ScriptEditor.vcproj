@@ -167,7 +167,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL ..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\ScriptEditor.dll&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -482,11 +482,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
+					RelativePath=".\Images\warning.png"
 					>
 				</File>
 				<File
-					RelativePath=".\Images\warning.png"
+					RelativePath="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png"
 					>
 				</File>
 				<File

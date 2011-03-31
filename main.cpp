@@ -65,7 +65,7 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "CSE";
-	info->version = 4;
+	info->version = 5;
 
 	g_AppPath = obse->GetOblivionDirectory();
 	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";	
