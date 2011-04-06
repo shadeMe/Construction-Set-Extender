@@ -2366,8 +2366,9 @@ namespace ScriptEditor
 					Clipboard::Clear();
 
 					String^ CopiedText = TextEditor->GetSelectedText();
-					if (CopiedText != "")
+					if (CopiedText == "")
 						CopiedText = TextEditor->GetTokenAtMouseLocation();
+
 					if (CopiedText != "")
 						Clipboard::SetText(CopiedText->Replace("\n", "\r\n"));						
 				}

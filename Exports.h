@@ -58,7 +58,6 @@ __declspec(dllexport) void TESForm_LoadIntoView(const char* EditorID, const char
 __declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID);
 __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent);
 
-__declspec(dllexport) void TagBrowser_GetObjectWindowSelection(void);
 __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
 
 }

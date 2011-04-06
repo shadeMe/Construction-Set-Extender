@@ -6,6 +6,7 @@
 
 UInt32								g_CompileResultBuffer = 0;				// saves the result of a compile operation so as to allow it to go on unhindered
 UInt32								g_CompileCallerAddr = 0;				// location of the call to Script::Compile
+bool								g_RecompilingScripts = false;			// flag set during a recompile operation
 
 NopHdlr								kRidScriptErrorMessageBox			(0x004FFFEC, 20);
 MemHdlr								kRerouteScriptErrors				(0x004FFF9C, RerouteScriptErrorsHook, 0, 0);
@@ -18,8 +19,12 @@ MemHdlr								kParseScriptLineOverride			(0x00503401, ParseScriptLineOverride, 
 
 void __stdcall DoRerouteScriptErrorsHook(UInt32 Line, const char* Message)
 {
-	if (g_CompileCallerAddr && g_CompileCallerAddr != 0x005035EE)			// don't handle when compiling result scripts
+	if (g_CompileCallerAddr && 
+		g_CompileCallerAddr != 0x005035EE &&			// don't handle when compiling result scripts or recompiling
+		g_RecompilingScripts == false)	
+	{
 		CLIWrapper::ScriptEditor::PassScriptError(Line, Message, EDAL->GetLastContactedEditor());
+	}
 }
 
 void __declspec(naked) RerouteScriptErrorsHook(void)

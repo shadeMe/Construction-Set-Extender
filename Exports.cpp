@@ -5,6 +5,7 @@
 #include "MiscHooks.h"
 #include "resource.h"
 #include "WindowManager.h"
+#include "CompilerErrorDetours.h"
 
 FormData*						g_FormData = new FormData();
 UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();
@@ -65,7 +66,15 @@ __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorI
 	{
 	case 5:			// prevent error messages from accumulating when recompiling scripts
 		EDAL->SetLastContactedEditor(0);
-		break;
+		if (g_RecompilingScripts)
+			MessageBox(*g_HWND_CSParent, "A previous recompile operation is in progress. Please wait until it completes.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+		else
+		{
+			g_RecompilingScripts = true;
+			SendMessage(ScriptEditor, WM_COMMAND, ReturnType[Message], NULL);
+			g_RecompilingScripts = false;
+		}
+		return;
 	default:
 		EDAL->SetLastContactedEditor(TrackedEditorIndex);
 		break;
@@ -667,29 +676,6 @@ __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefD
 	return (!Ref || !Ref->editorData.editorID.m_data)?g_Buffer:Ref->editorData.editorID.m_data;
 }
 
-__declspec(dllexport) void TagBrowser_GetObjectWindowSelection(void)
-{
-	int SelectedItem = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, -1, LVNI_SELECTED);
-
-	while (SelectedItem != -1)
-	{
-		LVITEM SelectedPluginItem;
-
-		SelectedPluginItem.iItem = SelectedItem;
-		SelectedPluginItem.iSubItem = 0;
-		SelectedPluginItem.mask = LVIF_PARAM;
-
-		if (ListView_GetItem(*g_HWND_ObjectWindow_FormList, &SelectedPluginItem) == TRUE)
-		{
-			TESForm* Param = (TESForm*)SelectedPluginItem.lParam;
-			g_FormData->FillFormData(Param);
-			CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
-		}
-
-		SelectedItem = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, SelectedItem, LVNI_SELECTED);
-	}	
-}
-
 __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
 {
 	thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderSelectionPrimary, 1);
@@ -800,8 +786,10 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 	std::vector<TESTopicInfo*> InfoDepends; // so store the objects ptrs and parse them later
 	std::vector<TESQuest*> QuestDepends;
 
-	for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); i != 0; i = i->next) {
-		if (!i || !i->data) {
+	for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); i != 0; i = i->next)
+	{
+		if (!i || !i->data)
+		{
 			DebugPrint("No dependencies found!");
 			break;
 		}
@@ -836,8 +824,10 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 		DebugPrint("Script %s {%08X}:", (*Itr)->editorData.editorID.m_data, (*Itr)->refID);
 		CONSOLE->Indent();
 		
-		if ((*Itr)->info.dataLength > 0) {
-			if (!thisCall(kScript_SaveScript, g_ScriptCompilerUnkObj, (*Itr), 0)) {
+		if ((*Itr)->info.dataLength > 0)
+		{
+			if (!thisCall(kScript_SaveScript, g_ScriptCompilerUnkObj, (*Itr), 0))
+			{
 				DebugPrint("Script failed to compile due to errors!");
 			}
 		}
@@ -859,8 +849,10 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 				if (!l->item)		break;
 
 				QuestStageItem* QuestStage = l->item;
-				if (QuestStage->resultScript.info.dataLength > 0) {
-					if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &QuestStage->resultScript, 0, 0)) {
+				if (QuestStage->resultScript.info.dataLength > 0)
+				{
+					if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &QuestStage->resultScript, 0, 0))
+					{
 						DebugPrint("Result script in stage %d-%d failed to compile due to errors!", j->data->index, QuestStage->index);
 					}
 				}
@@ -885,8 +877,10 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 		DebugPrint("Topic info %08X:", (*Itr)->refID);
 		CONSOLE->Indent();
 		
-		if ((*Itr)->resultScript.info.dataLength > 0) {
-			if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &(*Itr)->resultScript, 0, 0)) {
+		if ((*Itr)->resultScript.info.dataLength > 0)
+		{
+			if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &(*Itr)->resultScript, 0, 0)) 
+			{
 				DebugPrint("Result script failed to compile due to errors!");
 			}
 		}

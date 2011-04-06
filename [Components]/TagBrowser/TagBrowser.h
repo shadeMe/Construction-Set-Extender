@@ -51,7 +51,6 @@ public ref class TagBrowser
 
 	void												FormList_MouseDown(Object^ Sender, MouseEventArgs^ E);
 
-	void												AddObjectSelection_Click(Object^ Sender, EventArgs^ E);
 	void												SaveTags_Click(Object^ Sender, EventArgs^ E);
 	void												LoadTags_Click(Object^ Sender, EventArgs^ E);
 
@@ -75,7 +74,6 @@ public ref class TagBrowser
 		DotNetBar::ElementStyle^								TagTreeElementStyle1;
 		DotNetBar::ElementStyle^								TagTreeElementStyle2;
 
-	Button^													AddObjectSelection;
 	Button^													SaveTags;
 	Button^													LoadTags;
 	ContextMenuStrip^										TagTreeContextMenu;
@@ -170,7 +168,8 @@ public:
 	void												Show(IntPtr Handle)	{ TagBrowserBox->Show(gcnew WindowHandleWrapper(Handle)); }
 	void												Hide()	{ TagBrowserBox->Hide(); }
 	void												AddItemToActiveTag(FormData* Data);
-
+	IntPtr												GetFormListHandle() { return FormList->Handle; }
+	IntPtr												GetWindowHandle() { return TagBrowserBox->Handle; }
 };
 
 #define TAGBRWR											TagBrowser::GetSingleton()

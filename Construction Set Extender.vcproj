@@ -478,18 +478,22 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\CSEInterfaceAPI.h"
+		<Filter
+			Name="Plugin Interface"
 			>
-		</File>
-		<File
-			RelativePath=".\CSEInterfaceManager.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\CSEInterfaceManager.h"
-			>
-		</File>
+			<File
+				RelativePath=".\CSEInterfaceAPI.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CSEInterfaceManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSEInterfaceManager.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\Exports.cpp"
 			>

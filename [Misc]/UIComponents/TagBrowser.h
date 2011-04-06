@@ -49,10 +49,10 @@ namespace UIComponents {
 	private: System::Windows::Forms::ColumnHeader^  FormListHEditorID;
 	private: System::Windows::Forms::ColumnHeader^  FormListHRefID;
 	private: System::Windows::Forms::ColumnHeader^  FormListHType;
-	private: System::Windows::Forms::ListView^  SelectionList;
-	private: System::Windows::Forms::ColumnHeader^  SelectionListHEditorId;
-	private: System::Windows::Forms::ColumnHeader^  SelectionListHRefID;
-	private: System::Windows::Forms::ColumnHeader^  SelectionListHType;
+
+
+
+
 	private: DevComponents::AdvTree::AdvTree^  TagTree;
 
 
@@ -60,37 +60,38 @@ namespace UIComponents {
 	private: DevComponents::DotNetBar::ElementStyle^  TagTreeElementStyle1;
 
 
-	private: System::Windows::Forms::Button^  AddObjectSelection;
-	private: System::Windows::Forms::Button^  PlaceSelection;
 
 
-	private: System::Windows::Forms::Label^  LabelSelectionList;
-	private: System::Windows::Forms::CheckBox^  ClearSelectionOnInstantiation;
-
-	private: System::Windows::Forms::CheckBox^  CustomPos;
-
-	private: System::Windows::Forms::TextBox^  PositionX;
-	private: System::Windows::Forms::TextBox^  PositionZ;
-
-	private: System::Windows::Forms::TextBox^  PositionY;
-	private: System::Windows::Forms::CheckBox^  CustomRot;
-	private: System::Windows::Forms::TextBox^  RotationY;
-	private: System::Windows::Forms::TextBox^  RotationZ;
 
 
-	private: System::Windows::Forms::TextBox^  RotationX;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	private: DevComponents::DotNetBar::ElementStyle^  TagTreeElementStyle2;
-	private: System::Windows::Forms::Button^  ShowSelectionControls;
+
 	private: System::Windows::Forms::ContextMenuStrip^  TagTreeContextMenu;
 	private: System::Windows::Forms::ToolStripMenuItem^  TagTreeContextMenuAdd;
 	private: System::Windows::Forms::ToolStripMenuItem^  TagTreeContextMenuRemove;
 
 	private: System::Windows::Forms::ContextMenuStrip^  FormListContextMenu;
-	private: System::Windows::Forms::ToolStripMenuItem^  FormListContextMenuAdd;
+	private: System::Windows::Forms::ToolStripMenuItem^  FormListContextMenuRemove;
 
 
-	private: System::Windows::Forms::ContextMenuStrip^  SelectionListContextMenu;
-	private: System::Windows::Forms::ToolStripMenuItem^  SelectionListContextMenuRemove;
+
+
+
 	private: System::Windows::Forms::Button^  SaveTags;
 	private: System::Windows::Forms::Button^  LoadTags;
 
@@ -147,13 +148,7 @@ namespace UIComponents {
 			this->FormListHRefID = (gcnew System::Windows::Forms::ColumnHeader());
 			this->FormListHType = (gcnew System::Windows::Forms::ColumnHeader());
 			this->FormListContextMenu = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
-			this->FormListContextMenuAdd = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->SelectionList = (gcnew System::Windows::Forms::ListView());
-			this->SelectionListHEditorId = (gcnew System::Windows::Forms::ColumnHeader());
-			this->SelectionListHRefID = (gcnew System::Windows::Forms::ColumnHeader());
-			this->SelectionListHType = (gcnew System::Windows::Forms::ColumnHeader());
-			this->SelectionListContextMenu = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
-			this->SelectionListContextMenuRemove = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->FormListContextMenuRemove = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->TagTree = (gcnew DevComponents::AdvTree::AdvTree());
 			this->TagTreeContextMenu = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
 			this->TagTreeContextMenuAdd = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -161,23 +156,9 @@ namespace UIComponents {
 			this->TagTreeNodeConnector = (gcnew DevComponents::AdvTree::NodeConnector());
 			this->TagTreeElementStyle2 = (gcnew DevComponents::DotNetBar::ElementStyle());
 			this->TagTreeElementStyle1 = (gcnew DevComponents::DotNetBar::ElementStyle());
-			this->AddObjectSelection = (gcnew System::Windows::Forms::Button());
-			this->PlaceSelection = (gcnew System::Windows::Forms::Button());
-			this->LabelSelectionList = (gcnew System::Windows::Forms::Label());
-			this->ClearSelectionOnInstantiation = (gcnew System::Windows::Forms::CheckBox());
-			this->CustomPos = (gcnew System::Windows::Forms::CheckBox());
-			this->PositionX = (gcnew System::Windows::Forms::TextBox());
-			this->PositionZ = (gcnew System::Windows::Forms::TextBox());
-			this->PositionY = (gcnew System::Windows::Forms::TextBox());
-			this->CustomRot = (gcnew System::Windows::Forms::CheckBox());
-			this->RotationY = (gcnew System::Windows::Forms::TextBox());
-			this->RotationZ = (gcnew System::Windows::Forms::TextBox());
-			this->RotationX = (gcnew System::Windows::Forms::TextBox());
-			this->ShowSelectionControls = (gcnew System::Windows::Forms::Button());
 			this->SaveTags = (gcnew System::Windows::Forms::Button());
 			this->LoadTags = (gcnew System::Windows::Forms::Button());
 			this->FormListContextMenu->SuspendLayout();
-			this->SelectionListContextMenu->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TagTree))->BeginInit();
 			this->TagTreeContextMenu->SuspendLayout();
 			this->SuspendLayout();
@@ -187,7 +168,7 @@ namespace UIComponents {
 			this->SearchBox->Location = System::Drawing::Point(245, 389);
 			this->SearchBox->Multiline = true;
 			this->SearchBox->Name = L"SearchBox";
-			this->SearchBox->Size = System::Drawing::Size(219, 33);
+			this->SearchBox->Size = System::Drawing::Size(384, 33);
 			this->SearchBox->TabIndex = 1;
 			// 
 			// FormList
@@ -220,55 +201,16 @@ namespace UIComponents {
 			// 
 			// FormListContextMenu
 			// 
-			this->FormListContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->FormListContextMenuAdd});
+			this->FormListContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->FormListContextMenuRemove});
 			this->FormListContextMenu->Name = L"FormListContextMenu";
-			this->FormListContextMenu->Size = System::Drawing::Size(165, 26);
+			this->FormListContextMenu->Size = System::Drawing::Size(172, 26);
 			// 
-			// FormListContextMenuAdd
+			// FormListContextMenuRemove
 			// 
-			this->FormListContextMenuAdd->Name = L"FormListContextMenuAdd";
-			this->FormListContextMenuAdd->Size = System::Drawing::Size(164, 22);
-			this->FormListContextMenuAdd->Text = L"Add To Selection";
-			// 
-			// SelectionList
-			// 
-			this->SelectionList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {this->SelectionListHEditorId, 
-				this->SelectionListHRefID, this->SelectionListHType});
-			this->SelectionList->ContextMenuStrip = this->SelectionListContextMenu;
-			this->SelectionList->FullRowSelect = true;
-			this->SelectionList->Location = System::Drawing::Point(692, 42);
-			this->SelectionList->Name = L"SelectionList";
-			this->SelectionList->Size = System::Drawing::Size(350, 236);
-			this->SelectionList->TabIndex = 3;
-			this->SelectionList->UseCompatibleStateImageBehavior = false;
-			this->SelectionList->View = System::Windows::Forms::View::Details;
-			// 
-			// SelectionListHEditorId
-			// 
-			this->SelectionListHEditorId->Text = L"EditorID";
-			this->SelectionListHEditorId->Width = 128;
-			// 
-			// SelectionListHRefID
-			// 
-			this->SelectionListHRefID->Text = L"FormID";
-			this->SelectionListHRefID->Width = 70;
-			// 
-			// SelectionListHType
-			// 
-			this->SelectionListHType->Text = L"Type";
-			this->SelectionListHType->Width = 111;
-			// 
-			// SelectionListContextMenu
-			// 
-			this->SelectionListContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->SelectionListContextMenuRemove});
-			this->SelectionListContextMenu->Name = L"SelectionListContextMenu";
-			this->SelectionListContextMenu->Size = System::Drawing::Size(200, 26);
-			// 
-			// SelectionListContextMenuRemove
-			// 
-			this->SelectionListContextMenuRemove->Name = L"SelectionListContextMenuRemove";
-			this->SelectionListContextMenuRemove->Size = System::Drawing::Size(199, 22);
-			this->SelectionListContextMenuRemove->Text = L"Remove From Selection";
+			this->FormListContextMenuRemove->Name = L"FormListContextMenuRemove";
+			this->FormListContextMenuRemove->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
+			this->FormListContextMenuRemove->Size = System::Drawing::Size(171, 22);
+			this->FormListContextMenuRemove->Text = L"Remove From Tag";
 			// 
 			// TagTree
 			// 
@@ -354,120 +296,6 @@ namespace UIComponents {
 			this->TagTreeElementStyle1->Name = L"TagTreeElementStyle1";
 			this->TagTreeElementStyle1->TextColor = System::Drawing::SystemColors::ControlText;
 			// 
-			// AddObjectSelection
-			// 
-			this->AddObjectSelection->Location = System::Drawing::Point(471, 389);
-			this->AddObjectSelection->Name = L"AddObjectSelection";
-			this->AddObjectSelection->Size = System::Drawing::Size(157, 32);
-			this->AddObjectSelection->TabIndex = 5;
-			this->AddObjectSelection->Text = L"Add Object Window Selection";
-			this->AddObjectSelection->UseVisualStyleBackColor = true;
-			// 
-			// PlaceSelection
-			// 
-			this->PlaceSelection->Location = System::Drawing::Point(692, 387);
-			this->PlaceSelection->Name = L"PlaceSelection";
-			this->PlaceSelection->Size = System::Drawing::Size(350, 32);
-			this->PlaceSelection->TabIndex = 6;
-			this->PlaceSelection->Text = L"Place Selection In Active Cell";
-			this->PlaceSelection->UseVisualStyleBackColor = true;
-			// 
-			// LabelSelectionList
-			// 
-			this->LabelSelectionList->Font = (gcnew System::Drawing::Font(L"Lucida Grande", 14.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->LabelSelectionList->Location = System::Drawing::Point(692, 12);
-			this->LabelSelectionList->Name = L"LabelSelectionList";
-			this->LabelSelectionList->Size = System::Drawing::Size(350, 27);
-			this->LabelSelectionList->TabIndex = 7;
-			this->LabelSelectionList->Text = L"Selection";
-			this->LabelSelectionList->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
-			// 
-			// ClearSelectionOnInstantiation
-			// 
-			this->ClearSelectionOnInstantiation->Location = System::Drawing::Point(692, 354);
-			this->ClearSelectionOnInstantiation->Name = L"ClearSelectionOnInstantiation";
-			this->ClearSelectionOnInstantiation->Size = System::Drawing::Size(350, 32);
-			this->ClearSelectionOnInstantiation->TabIndex = 8;
-			this->ClearSelectionOnInstantiation->Text = L"Clear Selection After Reference Instantiation";
-			this->ClearSelectionOnInstantiation->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
-			this->ClearSelectionOnInstantiation->UseVisualStyleBackColor = true;
-			// 
-			// CustomPos
-			// 
-			this->CustomPos->Location = System::Drawing::Point(692, 284);
-			this->CustomPos->Name = L"CustomPos";
-			this->CustomPos->Size = System::Drawing::Size(131, 32);
-			this->CustomPos->TabIndex = 9;
-			this->CustomPos->Text = L"Use Custom Position";
-			this->CustomPos->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
-			this->CustomPos->UseVisualStyleBackColor = true;
-			// 
-			// PositionX
-			// 
-			this->PositionX->Location = System::Drawing::Point(692, 325);
-			this->PositionX->Name = L"PositionX";
-			this->PositionX->Size = System::Drawing::Size(55, 20);
-			this->PositionX->TabIndex = 10;
-			// 
-			// PositionZ
-			// 
-			this->PositionZ->Location = System::Drawing::Point(804, 325);
-			this->PositionZ->Name = L"PositionZ";
-			this->PositionZ->Size = System::Drawing::Size(55, 20);
-			this->PositionZ->TabIndex = 11;
-			// 
-			// PositionY
-			// 
-			this->PositionY->Location = System::Drawing::Point(748, 325);
-			this->PositionY->Name = L"PositionY";
-			this->PositionY->Size = System::Drawing::Size(55, 20);
-			this->PositionY->TabIndex = 12;
-			// 
-			// CustomRot
-			// 
-			this->CustomRot->Location = System::Drawing::Point(911, 284);
-			this->CustomRot->Name = L"CustomRot";
-			this->CustomRot->Size = System::Drawing::Size(131, 32);
-			this->CustomRot->TabIndex = 13;
-			this->CustomRot->Text = L"Use Custom Rotation";
-			this->CustomRot->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
-			this->CustomRot->UseVisualStyleBackColor = true;
-			// 
-			// RotationY
-			// 
-			this->RotationY->Location = System::Drawing::Point(931, 325);
-			this->RotationY->Name = L"RotationY";
-			this->RotationY->Size = System::Drawing::Size(55, 20);
-			this->RotationY->TabIndex = 16;
-			// 
-			// RotationZ
-			// 
-			this->RotationZ->Location = System::Drawing::Point(987, 325);
-			this->RotationZ->Name = L"RotationZ";
-			this->RotationZ->Size = System::Drawing::Size(55, 20);
-			this->RotationZ->TabIndex = 15;
-			// 
-			// RotationX
-			// 
-			this->RotationX->Location = System::Drawing::Point(875, 325);
-			this->RotationX->Name = L"RotationX";
-			this->RotationX->Size = System::Drawing::Size(55, 20);
-			this->RotationX->TabIndex = 14;
-			// 
-			// ShowSelectionControls
-			// 
-			this->ShowSelectionControls->BackColor = System::Drawing::SystemColors::Control;
-			this->ShowSelectionControls->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 14.25F, System::Drawing::FontStyle::Bold, 
-				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			this->ShowSelectionControls->ForeColor = System::Drawing::Color::Black;
-			this->ShowSelectionControls->Location = System::Drawing::Point(639, 186);
-			this->ShowSelectionControls->Name = L"ShowSelectionControls";
-			this->ShowSelectionControls->Size = System::Drawing::Size(40, 63);
-			this->ShowSelectionControls->TabIndex = 17;
-			this->ShowSelectionControls->Text = L"« »";
-			this->ShowSelectionControls->UseVisualStyleBackColor = false;
-			// 
 			// SaveTags
 			// 
 			this->SaveTags->BackColor = System::Drawing::SystemColors::Control;
@@ -499,24 +327,10 @@ namespace UIComponents {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1054, 434);
+			this->ClientSize = System::Drawing::Size(686, 434);
 			this->Controls->Add(this->LoadTags);
 			this->Controls->Add(this->SaveTags);
-			this->Controls->Add(this->ShowSelectionControls);
-			this->Controls->Add(this->RotationY);
-			this->Controls->Add(this->RotationZ);
-			this->Controls->Add(this->RotationX);
-			this->Controls->Add(this->CustomRot);
-			this->Controls->Add(this->PositionY);
-			this->Controls->Add(this->PositionZ);
-			this->Controls->Add(this->PositionX);
-			this->Controls->Add(this->CustomPos);
-			this->Controls->Add(this->ClearSelectionOnInstantiation);
-			this->Controls->Add(this->LabelSelectionList);
-			this->Controls->Add(this->PlaceSelection);
-			this->Controls->Add(this->AddObjectSelection);
 			this->Controls->Add(this->TagTree);
-			this->Controls->Add(this->SelectionList);
 			this->Controls->Add(this->FormList);
 			this->Controls->Add(this->SearchBox);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle;
@@ -525,7 +339,6 @@ namespace UIComponents {
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Tag Browser";
 			this->FormListContextMenu->ResumeLayout(false);
-			this->SelectionListContextMenu->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TagTree))->EndInit();
 			this->TagTreeContextMenu->ResumeLayout(false);
 			this->ResumeLayout(false);

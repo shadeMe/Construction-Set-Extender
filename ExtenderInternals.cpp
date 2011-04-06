@@ -16,6 +16,8 @@ HINSTANCE							g_DLLInstance = NULL;
 RenderTimeManager					g_RenderTimeManager;
 RenderWindowTextPainter*			RenderWindowTextPainter::Singleton = NULL;
 RenderSelectionGroupManager			g_RenderSelectionGroupManager;
+TESDialogWindowHandleCollection		g_CustomMainWindowChildrenDialogs;
+TESDialogWindowHandleCollection		g_DragDropSupportDialogs;
 
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
@@ -56,6 +58,7 @@ TESSound**							g_FSTSnowSneak = (TESSound**)0x00A110F0;
 BSTextureManager**					g_TextureManager = (BSTextureManager**)0x00A8E760;
 NiDX9Renderer**						g_CSRenderer = (NiDX9Renderer**)0x00A0F87C;
 UInt8*								g_Flag_RenderWindowUpdateViewPort = (UInt8*)0x00A0BC4D;
+UInt32*								g_RenderWindowStateFlags = (UInt32*)0x00A0B058;
 
 TESForm**							g_DoorMarker = (TESForm**)0x00A13470;
 TESForm**							g_NorthMarker = (TESForm**)0x00A13484;
@@ -172,6 +175,8 @@ const UInt32						kTESBipedModelForm_GetIsPlayable = 0x00490290;
 const UInt32						kTESRenderSelection_ClearSelection = 0x00511C20;
 const UInt32						kTESRenderSelection_AddFormToSelection = 0x00512730;
 const UInt32						kTESRenderSelection_Free = 0x00511A50;
+const UInt32						kTESForm_SaveFormRecord = 0x00494950;
+const UInt32						kTESFile_GetIsESM = 0x00485B00;
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
@@ -186,6 +191,7 @@ const UInt32						kTESObjectREFR_ModExtraTimeLeft = 0x0053F620;
 const UInt32						kTESObjectREFR_ModExtraSoul = 0x0053F710;
 const UInt32						kTESObjectREFR_SetExtraEnableStateParent_OppositeState = 0x0053FA80;
 const UInt32						kTESObjectREFR_GetExtraRef3DData = 0x00542950;
+const UInt32						kTESObjectREFR_RemoveExtraTeleport = 0x0053F7A0;
 
 const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its index
 									{
@@ -372,8 +378,8 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Console::General", "0", "Hide the console on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "ConsoleUpdatePeriod", "Console::General", "2000", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
 
-	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "1", "Loads a plugin on CS startup"), (CreateINI == false));
-	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "Plugin.esp", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "0", "Loads a plugin on CS startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "OpenScriptWindowOnStartup", "Extender::General", "0", "Open an empty script editor window on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupScriptEditorID", "Extender::General", "", "EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "ShowNumericEditorIDWarning", "Extender::General", "1", "Displays a warning when editorIDs start with an integer"), (CreateINI == false));
@@ -391,6 +397,13 @@ TESDialogInitParam::TESDialogInitParam(const char* EditorID)
 	Form = GetFormByID(EditorID);
 	TypeID = Form->typeID;
 }
+
+TESDialogInitParam::TESDialogInitParam(UInt32 FormID)
+{
+	Form = TESForm_LookupByFormID(FormID);
+	TypeID = Form->typeID;
+}
+
 
 UInt32 GetDialogTemplate(const char* FormType)
 {
@@ -462,6 +475,15 @@ void SpawnCustomScriptEditor(const char* ScriptEditorID)
 	g_EditorAuxScript = NULL;
 }
 
+void SpawnCustomScriptEditor(UInt32 ScriptFormID)
+{
+	g_EditorAuxScript =  CS_CAST(TESForm_LookupByFormID(ScriptFormID), TESForm, Script);;
+	tagRECT ScriptEditorLoc;
+	GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+	g_EditorAuxScript = NULL;
+}
+
 void LoadFormIntoView(const char* EditorID, const char* FormType)
 {
 	UInt32 Type = GetDialogTemplate(FormType);
@@ -490,6 +512,43 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 void LoadFormIntoView(const char* EditorID, UInt8 FormType)
 {
 	LoadFormIntoView(EditorID, g_FormTypeIdentifier[FormType]);
+}
+
+void LoadFormIntoView(UInt32 FormID, const char* FormType)
+{
+	UInt32 Type = GetDialogTemplate(FormType);
+	TESDialogInitParam InitData(FormID);
+
+	switch (Type)
+	{
+	case 9:					
+		if (TESForm_LookupByFormID(FormID))
+			SpawnCustomScriptEditor(FormID);
+		break;
+	case 10:
+		RemoteLoadRef(FormID);
+		break;
+	case 1:
+	case 2:
+		CreateDialogParamA(*g_TESCS_Instance, 
+							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID), 
+							*g_HWND_CSParent, 
+							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc), 
+							(LPARAM)&InitData);
+		break;
+	}
+}
+
+void LoadFormIntoView(UInt32 FormID, UInt8 FormType)
+{
+	LoadFormIntoView(FormID, g_FormTypeIdentifier[FormType]);
+}
+
+void RemoteLoadRef(UInt32 FormID)
+{
+	TESObjectREFR* Reference = CS_CAST(TESForm_LookupByFormID(FormID), TESForm, TESObjectREFR);
+	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kVTBL_TESObjectREFR, 0x1A0, Reference);
+	thisCall(kTESChildCell_LoadCell, Cell, Cell, Reference);
 }
 
 void RemoteLoadRef(const char* EditorID)
@@ -927,7 +986,7 @@ TESObjectREFR* RenderSelectionGroupManager::GetRefAtSelectionIndex(TESRenderSele
 	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next, Count++)
 	{
 		if (Count == Index)
-			return Itr->Data;
+			return CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 	}
 	return NULL;
 }
@@ -964,7 +1023,7 @@ TESRenderSelection* RenderSelectionGroupManager::GetTrackedSelection(TESObjectCE
 	return Result;
 }
 
-void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* Selection)
+void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* TrackedSelection)
 {
 	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
 	if (SelectionList)
@@ -973,7 +1032,7 @@ void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRende
 
 		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
 		{
-			if (*Itr == Selection)
+			if (*Itr == TrackedSelection)
 			{
 				thisCall(kTESRenderSelection_ClearSelection, *Itr, 0);
 				thisCall(kTESRenderSelection_Free, *Itr);
@@ -1001,7 +1060,7 @@ bool RenderSelectionGroupManager::AddGroup(TESObjectCELL *Cell, TESRenderSelecti
 		bool ExistingGroup = false;
 		for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
 		{
-			if (GetRefSelectionGroup(Itr->Data, Cell))
+			if (GetRefSelectionGroup(CS_CAST(Itr->Data, TESForm, TESObjectREFR), Cell))
 			{
 				ExistingGroup = true;
 				break;
@@ -1043,4 +1102,27 @@ bool RenderSelectionGroupManager::RemoveGroup(TESObjectCELL *Cell, TESRenderSele
 	}
 
 	return Result;
+}
+
+TESDialogWindowHandleCollection::_HandleCollection::iterator TESDialogWindowHandleCollection::FindHandle(HWND Handle)
+{
+	for (_HandleCollection::iterator Itr = WindowHandles.begin(); Itr != WindowHandles.end(); Itr++)
+	{
+		if (*Itr == Handle)
+			return Itr;
+	}
+
+	return WindowHandles.end();
+}
+
+bool TESDialogWindowHandleCollection::RemoveHandle(HWND Handle)
+{
+	_HandleCollection::iterator Match = FindHandle(Handle);
+	if (Match != WindowHandles.end())
+	{
+		WindowHandles.erase(Match);
+		return true;
+	}
+	else
+		return false;
 }

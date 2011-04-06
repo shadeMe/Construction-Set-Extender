@@ -58,13 +58,16 @@ void Console::InitializeConsole()
 
 	ToggleDisplayState();
 	SetTimer(EditHandle, CONSOLE_UPDATETIMER, CONSOLE_UPDATEPERIOD, NULL);
+	g_CustomMainWindowChildrenDialogs.AddHandle(WindowHandle);
 }
 
 void Console::Deinitialize()
 {
 	SaveINISettings();
-	fclose(DebugLog);
+	if (DebugLog) 
+		fclose(DebugLog);
 	KillTimer(EditHandle, CONSOLE_UPDATETIMER);
+	g_CustomMainWindowChildrenDialogs.RemoveHandle(WindowHandle);
 }
 
 bool Console::ToggleDisplayState()

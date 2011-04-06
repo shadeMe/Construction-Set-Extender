@@ -5,12 +5,11 @@ MISC-->
 
 
 CSE--->
+> Topicinfo inititem warnings aren't being shown
 > Fully implement GMST reinit
 > Update the model of references
 > Export/import result scripts
 > Fix the f_PlaySoundFile
-> Investigate into the mysterious scale inc/dec buttons in the ref. edit dialog/ face edit
-
 > Relative scaling and snap to bounding box
 
 # Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
@@ -27,6 +26,9 @@ CSE--->
 
 
 SE---->
+> Fix QQuix's Undo/Redo issue
 > Fix the 'Missing New Tab button' repaint issue
 > Fix the issue with the load tool update scripts option
 > Implement AvalonEdit ( implement Notepad++ like auto highlight selection)
+
+TAG---->

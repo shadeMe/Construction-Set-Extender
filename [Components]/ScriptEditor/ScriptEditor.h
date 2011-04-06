@@ -93,6 +93,7 @@ namespace ScriptEditor
 		Rectangle											GetEditorFormRect();
 		IntPtr												GetEditorFormHandle() { return EditorForm->Handle; }
 		FormWindowState										GetEditorFormWindowState() { return EditorForm->WindowState; }
+		void												SetEditorFormWindowState(FormWindowState State) { EditorForm->WindowState = State; }
 	};
 
 	public ref class Workspace
@@ -324,6 +325,7 @@ namespace ScriptEditor
 		void												ClearCSEMessagesFromMessagePool(void);
 		void												Relocate(TabContainer^ Destination);
 		String^												SerializeCSEBlock(void);
+		void												Focus() { TextEditor->FocusTextArea(); }
 
 		bool												IsValid() { return this != NullWorkspace; }
 	};

@@ -151,7 +151,7 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 
 ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 AllocatedIndex)
 {
-	ScriptEditor::Workspace^ Result = nullptr;
+	ScriptEditor::Workspace^ Result = ScriptEditor::Workspace::NullWorkspace;
 
 	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
 		if (Itr->GetAllocatedIndex() == AllocatedIndex) {
@@ -316,14 +316,15 @@ void ScriptEditorManager::MessageHandler_SendClose(UInt32 AllocatedIndex)
 
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
-	if (Itr->GetParentContainer()->GetEditorFormWindowState() != FormWindowState::Maximized)
-	{
-		NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex, 
+
+	if (Itr->GetParentContainer()->GetEditorFormWindowState() == FormWindowState::Maximized)
+		Itr->GetParentContainer()->SetEditorFormWindowState(FormWindowState::Normal);
+
+	NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex, 
 													Itr->GetParentContainer()->GetEditorFormRect().Top, 
 													Itr->GetParentContainer()->GetEditorFormRect().Left, 
 													Itr->GetParentContainer()->GetEditorFormRect().Width, 
 													Itr->GetParentContainer()->GetEditorFormRect().Height);
-	}
 
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Close);
 }

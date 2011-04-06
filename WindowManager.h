@@ -11,6 +11,8 @@ extern WNDPROC						g_ObjectWndOrgWindowProc;
 extern WNDPROC						g_CellViewWndOrgWindowProc;
 extern WNDPROC						g_ResponseWndOrgWindowProc;
 
+extern WNDPROC						g_TagBrowserOrgWindowProc;
+
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -36,6 +38,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form);
 LRESULT CALLBACK ObjectWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void InitializeWindowManager();
 

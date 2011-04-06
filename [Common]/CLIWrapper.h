@@ -62,10 +62,14 @@ namespace CLIWrapper
 		typedef void							(*_Show)(HWND);
 		typedef void							(*_Hide)(void);
 		typedef void							(*_AddFormToActiveTag)(FormData*);
+		typedef HWND							(*_GetFormDropWindowHandle)();
+		typedef HWND							(*_GetFormDropParentHandle)();
 
 		extern _Show							Show;
 		extern _Hide							Hide;
 		extern _AddFormToActiveTag				AddFormToActiveTag;
+		extern _GetFormDropWindowHandle			GetFormDropWindowHandle;
+		extern _GetFormDropParentHandle			GetFormDropParentHandle;
 	}
 
 

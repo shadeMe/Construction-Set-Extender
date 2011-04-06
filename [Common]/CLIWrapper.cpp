@@ -40,6 +40,8 @@ namespace TagBrowser
 	_Show									Show;
 	_Hide									Hide;
 	_AddFormToActiveTag						AddFormToActiveTag;
+	_GetFormDropWindowHandle				GetFormDropWindowHandle;
+	_GetFormDropParentHandle				GetFormDropParentHandle;
 }
 
 bool CLIWrapper::Import(const OBSEInterface * obse)
@@ -140,10 +142,14 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::TagBrowser::Show = (CLIWrapper::TagBrowser::_Show)GetProcAddress(hMod, "Show");
 	CLIWrapper::TagBrowser::Hide = (CLIWrapper::TagBrowser::_Hide)GetProcAddress(hMod, "Hide");
 	CLIWrapper::TagBrowser::AddFormToActiveTag = (CLIWrapper::TagBrowser::_AddFormToActiveTag)GetProcAddress(hMod, "AddFormToActiveTag");
+	CLIWrapper::TagBrowser::GetFormDropWindowHandle = (CLIWrapper::TagBrowser::_GetFormDropWindowHandle)GetProcAddress(hMod, "GetFormDropWindowHandle");
+	CLIWrapper::TagBrowser::GetFormDropParentHandle = (CLIWrapper::TagBrowser::_GetFormDropParentHandle)GetProcAddress(hMod, "GetFormDropParentHandle");
 
 	if (!CLIWrapper::TagBrowser::Show ||
 		!CLIWrapper::TagBrowser::Hide || 
-		!CLIWrapper::TagBrowser::AddFormToActiveTag)
+		!CLIWrapper::TagBrowser::AddFormToActiveTag ||
+		!CLIWrapper::TagBrowser::GetFormDropWindowHandle ||
+		!CLIWrapper::TagBrowser::GetFormDropParentHandle)
 	{	
 		LogWinAPIErrorMessage(GetLastError());
 		return false;

@@ -22,6 +22,8 @@ WNDPROC						g_ObjectWndOrgWindowProc = NULL;
 WNDPROC						g_CellViewWndOrgWindowProc = NULL;
 WNDPROC						g_ResponseWndOrgWindowProc = NULL;
 
+WNDPROC						g_TagBrowserOrgWindowProc = NULL;
+
 HFONT						g_CSDefaultFont = NULL;
 
 #define PI					3.151592653589793
@@ -36,15 +38,18 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		case LVN_ITEMACTIVATE:				// ID = 1018
 			NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
 			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 0, g_Buffer, sizeof(g_Buffer));
-			std::string EditorID, FormTypeStr(g_Buffer);
+			std::string FormID, FormTypeStr(g_Buffer);
 
 			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 1, g_Buffer, sizeof(g_Buffer));
-			EditorID = g_Buffer;
-			UInt32 PadStart = EditorID.find("'") + 1, PadEnd  = EditorID.find("'", PadStart + 1);
+			FormID = g_Buffer;
+			UInt32 PadStart = FormID.find("(") + 1, PadEnd  = FormID.find(")", PadStart + 1);
 			if (PadStart != std::string::npos && PadEnd != std::string::npos)
 			{
-				EditorID = EditorID.substr(PadStart, PadEnd - PadStart);
-				LoadFormIntoView(EditorID.c_str(), FormTypeStr.c_str());
+				FormID = FormID.substr(PadStart, PadEnd - PadStart);
+				UInt32 FormIDInt = 0;
+				sscanf_s(FormID.c_str(), "%08X", &FormIDInt);
+				if (TESForm_LookupByFormID(FormIDInt))
+					LoadFormIntoView(FormIDInt, FormTypeStr.c_str());
 			}
 			break;
 		}
@@ -109,6 +114,10 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		}
 		break;
 	case WM_DESTROY: 
+		TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;					// required for correct esm handling
+		if (ActiveFile)
+			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_DataDlgOrgWindowProc);
 		break; 
 	}
@@ -415,11 +424,11 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			{
 				if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
 				{
-					TESObjectREFR* AlignRef = (*g_TESRenderSelectionPrimary)->RenderSelection->Data;
+					TESObjectREFR* AlignRef = CS_CAST((*g_TESRenderSelectionPrimary)->RenderSelection->Data, TESForm, TESObjectREFR);
 
 					for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection->Next; Itr && Itr->Data; Itr = Itr->Next)
 					{
-						TESObjectREFR* ThisRef = Itr->Data;
+						TESObjectREFR* ThisRef = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 
 						switch (LOWORD(wParam))
 						{
@@ -1306,6 +1315,28 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return FALSE;
 }
 
+LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case 0x407:			// Form Drag-Drop Notification
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
+		{
+			TESForm* Form = Itr->Data;
+			if (GetDialogTemplate(Form->typeID) == 1)
+			{
+				g_FormData->FillFormData(Form);
+				CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
+			}
+		}
+
+		thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderSelectionPrimary, 0);
+		return TRUE;
+	}
+ 
+	return CallWindowProc(g_TagBrowserOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+}
+
 
 void InitializeWindowManager(void)
 {
@@ -1457,4 +1488,8 @@ void InitializeWindowManager(void)
                              FF_DONTCARE, "MS Shell Dlg");
 
 	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GET_INI_INT("UpdatePeriod"), NULL);
+
+	g_TagBrowserOrgWindowProc = (WNDPROC)SetWindowLong(CLIWrapper::TagBrowser::GetFormDropParentHandle(), GWL_WNDPROC, (LONG)TagBrowserSubClassProc);
+
+	g_DragDropSupportDialogs.AddHandle(CLIWrapper::TagBrowser::GetFormDropWindowHandle());
 }

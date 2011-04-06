@@ -81,8 +81,6 @@ public:
 	static const char*									BatchRefEditor_ChooseParentReference(BatchRefData* Data, IntPtr Parent);
 
 	[DllImport("Construction Set Extender.dll")] 
-	static void											TagBrowser_GetObjectWindowSelection(void);
-	[DllImport("Construction Set Extender.dll")] 
 	static void											TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
 
 	[DllImport("user32.dll")]

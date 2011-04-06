@@ -6,6 +6,7 @@ using namespace MemoryHandler;
 
 extern UInt32	g_CompileResultBuffer;
 extern UInt32	g_CompileCallerAddr;
+extern bool		g_RecompilingScripts;
 
 void PatchCompilerErrorDetours();
 

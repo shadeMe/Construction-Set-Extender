@@ -1,5 +1,4 @@
 #pragma once
-#include "obse/GameData.h"
 #include "Hooks_Common.h"
 
 class TESForm;
@@ -70,7 +69,7 @@ extern MemHdlr					kFormIDListViewSelectItem;// fixes a bug that prevents the co
 extern MemHdlr					kFormIDListViewDuplicateSelection;// increments the item index returned by TESDialog::LookupListViewItemByData when duplicating forms from the popup menu
 extern MemHdlr					kTESRaceCopyHairEyeDataInit;// adds buttons to the face data tab page of the TESRace formIDListView dialog
 extern MemHdlr					kTESRaceCopyHairEyeDataMessageHandler;// handles the WM_COMMAND messages sent by the newly added controls
-extern NopHdlr					kTESDialogSubwindowEnumChildCallback;// patches the TESDialogSubWindow::EnumChildWindowsCallback function to keep it from overwriting the subwindow object's container member
+extern NopHdlr					kTESDialogSubwindowEnumChildCallback;// patches the TESDialogSubWindow::EnumChildWindowsCallback function to keep it from overwriting the subwindow object's container member. (the patch)causes issues with control placement and z-ordering
 extern MemHdlr					kTESObjectREFRDoCopyFrom;// patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source
 extern NopHdlr					kLODLandTextureMipMapLevelA;// patches the LOD texture generator to generate the full mip chain for diffuse maps
 extern MemHdlr					kLODLandTextureMipMapLevelB;// patches the LOD texture generator to generate the full mip chain for normal maps
@@ -83,6 +82,11 @@ extern MemHdlr					kNiDX9RendererRecreate;// used to release any D3D resources
 extern MemHdlr					kRenderWindowStats;// displays the stats of selected refs/other info in the render window
 extern MemHdlr					kUpdateViewport;// updates the render window viewport regardless of user activity
 extern MemHdlr					kRenderWindowSelection;// allows groups of references to be selected at a time
+extern MemHdlr					kDataHandlerSavePluginEpilog;// prevents the esm flag bit from being reset
+extern MemHdlr					kTESFileUpdateHeaderFlagBit;// same as above
+extern MemHdlr					kTESObjectCELLSaveReferencesProlog;// prevents malformed records of deleted refs from being written
+extern MemHdlr					kTESObjectCELLSaveReferencesEpilog;
+extern MemHdlr					kTESDialogGetIsWindowDragDropRecipient;// allows custom windows to receive form drag-drop notifications
 
 bool PatchMiscHooks(void);
 void PatchMessageHandler(void);
@@ -90,7 +94,7 @@ void __stdcall DoCSInitHook();
 void __stdcall DoExitCSHook(HWND MainWindow);
 UInt32 __stdcall IsControlKeyDown(void);
 UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
-UInt32 __stdcall InitPathEditor(int ID, HWND Dialog);
+UInt32 __stdcall InitPathEditor(int ID, const char* ExistingPath, HWND Dialog);
 UInt32 __stdcall InitBSAViewer(UInt32 Filter);
 void __stdcall SendPingBack(UInt16 Message);
 void __stdcall MessageHandlerOverride(const char* Message);
@@ -148,24 +152,11 @@ void NiDX9RendererRecreateHook(void);
 void RenderWindowStatsHook(void);
 void RenderWindowSelectionHook(void);
 void UpdateViewportHook(void);
-
-
-void ModelSelectorCommonDialogHook(void);
-void ModelPostCommonDialogHook(void);
-void ModelCancelCommonDialogHook(void);
-void AnimationSelectorCommonDialogHook(void);
-void AnimationPostCommonDialogHook(void);
-void AnimationCancelCommonDialogHook(void);
-void SoundSelectorCommonDialogHook(void);
-void SoundPostCommonDialogHook(void);
-void SoundCancelCommonDialogHook(void);
-void TextureSelectorCommonDialogHook(void);
-void TexturePostCommonDialogHook(void);
-void TextureCancelCommonDialogHook(void);
-void SPTSelectorCommonDialogHook(void);
-void SPTPostCommonDialogHook(void);
-void SPTCancelCommonDialogHook(void);
-
+void DataHandlerSavePluginEpilogHook(void);
+void TESFileUpdateHeaderFlagBitHook(void);
+void TESObjectCELLSaveReferencesPrologHook(void);
+void TESObjectCELLSaveReferencesEpilogHook(void);
+void TESDialogGetIsWindowDragDropRecipientHook(void);
 
 
 // common dialog patches - adds support for the BSA viewer, path editing, patches cancel/close behaviour
@@ -305,6 +296,7 @@ void __declspec(naked) ##name##SelectorCommonDialogHook(void)  \
 	__asm EDITP: \
 		__asm popad \
 		__asm push		eax \
+		__asm push		0 \
 		__asm mov		eax, [k##name##PathButtonID] \
 		__asm push		eax \
 		__asm call		InitPathEditor \
@@ -337,3 +329,32 @@ void __declspec(naked) ##name##CancelCommonDialogHook(void)  \
 #define PatchCommonDialogCancelHandler(name)							WriteRelJump(k##name##CancelCommonDialogHookAddr, (UInt32)##name##CancelCommonDialogHook);
 #define PatchCommonDialogPrologHandler(name)							WriteRelJump(k##name##SelectorCommonDialogHookAddr, (UInt32)##name##SelectorCommonDialogHook);
 #define PatchCommonDialogEpilogHandler(name)							WriteRelJump(k##name##PostCommonDialogHookAddr, (UInt32)##name##PostCommonDialogHook);
+
+void ModelSelectorCommonDialogHook(void);
+void ModelPostCommonDialogHook(void);
+void ModelCancelCommonDialogHook(void);
+void AnimationSelectorCommonDialogHook(void);
+void AnimationPostCommonDialogHook(void);
+void AnimationCancelCommonDialogHook(void);
+void SoundSelectorCommonDialogHook(void);
+void SoundPostCommonDialogHook(void);
+void SoundCancelCommonDialogHook(void);
+void TextureSelectorCommonDialogHook(void);
+void TexturePostCommonDialogHook(void);
+void TextureCancelCommonDialogHook(void);
+void SPTSelectorCommonDialogHook(void);
+void SPTPostCommonDialogHook(void);
+void SPTCancelCommonDialogHook(void);
+
+// special case DDS and NIF handlers to allow third party forms the use of the asset selector without having to derive from TESTexture/TESModel
+// their code should write the existing path to the buffer passed as the argument to ShowDDS/NIFFileDialog
+extern MemHdlr					kTESDialogShowDDSCommonDialogProlog;
+extern MemHdlr					kTESDialogShowNIFCommonDialogProlog;
+
+extern MemHdlr					kTESDialogShowDDSCommonDialogEpilog;
+extern MemHdlr					kTESDialogShowNIFCommonDialogEpilog;			
+
+void TESDialogShowDDSCommonDialogPrologHook(void);
+void TESDialogShowNIFCommonDialogPrologHook(void);
+void TESDialogShowDDSCommonDialogEpilogHook(void);
+void TESDialogShowNIFCommonDialogEpilogHook(void);

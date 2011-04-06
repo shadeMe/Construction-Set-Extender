@@ -20,8 +20,6 @@ void TagDatabase::AddTag(AdvTree::Node^ ParentTag, String^% Name)
 		ParentTree->Nodes->Add(NewNode);
 
 	Database->Add(NewNode, gcnew List<String^>());
-
-//	ParentTree->SelectNode(NewNode, AdvTree::eTreeAction::Code);
 }
 void TagDatabase::RemoveTag(AdvTree::Node^ Tag)
 {
@@ -104,7 +102,12 @@ bool TagDatabase::GetItemExistsInTag(AdvTree::Node^ Tag, String^% Name)
 }
 bool TagDatabase::GetTagExists(String^% Name)
 {
-	return ParentTree->FindNodeByText(Name, true) != nullptr;
+	for each (KeyValuePair<AdvTree::Node^, List<String^>^>% Itr in Database)
+	{
+		if (!String::Compare(Itr.Key->Text, Name, true))
+			return true;
+	}
+	return false;
 }
 void TagDatabase::Clear(void)
 {
@@ -224,7 +227,6 @@ TagBrowser::TagBrowser()
 	TagTreeNodeConnector = (gcnew DevComponents::AdvTree::NodeConnector());
 	TagTreeElementStyle2 = (gcnew DevComponents::DotNetBar::ElementStyle());
 	TagTreeElementStyle1 = (gcnew DevComponents::DotNetBar::ElementStyle());
-	AddObjectSelection = (gcnew Button());
 	SaveTags = (gcnew Button());
 	LoadTags = (gcnew Button());
 	FormListContextMenu->SuspendLayout();
@@ -237,7 +239,7 @@ TagBrowser::TagBrowser()
 	SearchBox->Location = Point(245, 389);
 //	SearchBox->Multiline = true;
 	SearchBox->Name = L"SearchBox";
-	SearchBox->Size = Size(219, 33);
+	SearchBox->Size = Size(384, 33);
 	SearchBox->TabIndex = 1;
 	SearchBox->TextChanged += gcnew EventHandler(this, &TagBrowser::SearchBox_TextChanged);
 	SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
@@ -372,16 +374,6 @@ TagBrowser::TagBrowser()
 	// 
 	TagTreeElementStyle1->Name = L"TagTreeElementStyle1";
 	TagTreeElementStyle1->TextColor = SystemColors::ControlText;
-	// 
-	// AddObjectSelection
-	// 
-	AddObjectSelection->Location = Point(471, 389);
-	AddObjectSelection->Name = L"AddObjectSelection";
-	AddObjectSelection->Size = Size(157, 32);
-	AddObjectSelection->TabIndex = 5;
-	AddObjectSelection->Text = L"Add Object Window Selection";
-	AddObjectSelection->UseVisualStyleBackColor = true;
-	AddObjectSelection->Click += gcnew EventHandler(this, &TagBrowser::AddObjectSelection_Click);
 	//
 	// SaveTags
 	// 
@@ -415,10 +407,9 @@ TagBrowser::TagBrowser()
 	// 
 	TagBrowserBox->AutoScaleDimensions = SizeF(6, 13);
 	TagBrowserBox->AutoScaleMode = AutoScaleMode::Font;
-	TagBrowserBox->ClientSize = Size(696, 434);
+	TagBrowserBox->ClientSize = Size(686, 434);
 	TagBrowserBox->Controls->Add(LoadTags);
 	TagBrowserBox->Controls->Add(SaveTags);
-	TagBrowserBox->Controls->Add(AddObjectSelection);
 	TagBrowserBox->Controls->Add(TagTree);
 	TagBrowserBox->Controls->Add(FormList);
 	TagBrowserBox->Controls->Add(SearchBox);
@@ -562,10 +553,6 @@ void TagBrowser::TagTree_AfterCellEdit(Object^ Sender, AdvTree::CellEditEventArg
 			E->Cancel = true;
 		}
 	}
-}
-void TagBrowser::AddObjectSelection_Click(Object^ Sender, EventArgs^ E)
-{
-	NativeWrapper::TagBrowser_GetObjectWindowSelection();
 }
 void TagBrowser::SaveTags_Click(Object^ Sender, EventArgs^ E)
 {
@@ -728,7 +715,6 @@ void TagBrowser::AddItemToFormList(FormData* Data)
 	Item->SubItems->Add(TypeIdentifier[(int)Data->TypeID]);
 
 	FormList->Items->Add(Item);
-
 }
 
 

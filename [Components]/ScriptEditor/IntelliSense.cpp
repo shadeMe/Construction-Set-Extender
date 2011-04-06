@@ -797,6 +797,8 @@ void IntelliSenseThingy::UpdateLocalVars()
 void IntelliSenseThingy::PickIdentifier()
 {
 	String^ Result;
+	ParentEditor->Focus();
+
 	if (GetSelectedIndex() != -1) 
 	{
 		Result = ListContents[GetSelectedIndex()]->GetIdentifier();

@@ -17,4 +17,14 @@ __declspec(dllexport) void AddFormToActiveTag(FormData* Data)
 	TAGBRWR->AddItemToActiveTag(Data);
 }
 
+__declspec(dllexport) HWND GetFormDropWindowHandle()
+{
+	return (HWND)TAGBRWR->GetFormListHandle();
+}
+
+__declspec(dllexport) HWND GetFormDropParentHandle()
+{
+	return (HWND)TAGBRWR->GetWindowHandle();
+}
+
 }

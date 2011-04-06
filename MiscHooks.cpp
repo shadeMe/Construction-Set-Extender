@@ -9,12 +9,12 @@
 #include "HallofFame.h"
 #include "CSInterop.h"
 #include "WindowManager.h"
+#include "obse/GameData.h"
 
 
 const char*						g_AssetSelectorReturnPath = NULL;
 const char*						g_DefaultWaterTextureStr = "Water\\dungeonwater01.dds";
 bool							g_QuickLoadToggle = false;
-bool							g_BitSwapBuffer = false;
 char							g_NumericIDWarningBuffer[0x10] = {0};
 
 MemHdlr							kSavePluginMasterEnum				(0x0047ECC6, SavePluginMasterEnumHook, 0, 0);
@@ -88,7 +88,16 @@ MemHdlr							kNiDX9RendererRecreate				(0x006D7260, NiDX9RendererRecreateHook, 
 MemHdlr							kRenderWindowStats					(0x0042D3F4, RenderWindowStatsHook, 0, 0);
 MemHdlr							kUpdateViewport						(0x0042CE70, UpdateViewportHook, 0, 0);
 MemHdlr							kRenderWindowSelection				(0x0042AE71, RenderWindowSelectionHook, 0, 0);
-
+MemHdlr							kDataHandlerSavePluginEpilog		(0x0047F136, DataHandlerSavePluginEpilogHook, 0, 0);
+MemHdlr							kTESFileUpdateHeaderFlagBit			(0x00489570, TESFileUpdateHeaderFlagBitHook, 0, 0);
+MemHdlr							kTESObjectCELLSaveReferencesProlog	(0x00538860, TESObjectCELLSaveReferencesPrologHook, 0, 0); 
+MemHdlr							kTESObjectCELLSaveReferencesEpilog	(0x005389DB, TESObjectCELLSaveReferencesEpilogHook, 0,0);
+MemHdlr							kTESDialogGetIsWindowDragDropRecipient
+																	(0x004433FF, TESDialogGetIsWindowDragDropRecipientHook, 0, 0);
+MemHdlr							kTESDialogShowDDSCommonDialogProlog		(0x004A414B, TESDialogShowDDSCommonDialogPrologHook, 0, 0);
+MemHdlr							kTESDialogShowNIFCommonDialogProlog		(0x0049BDAB, TESDialogShowNIFCommonDialogPrologHook, 0, 0);
+MemHdlr							kTESDialogShowDDSCommonDialogEpilog		(0x00446CDC, TESDialogShowDDSCommonDialogEpilogHook, 0, 0);
+MemHdlr							kTESDialogShowNIFCommonDialogEpilog		(0x00446C94, TESDialogShowNIFCommonDialogEpilogHook, 0, 0);
 
 bool PatchMiscHooks()
 {
@@ -148,7 +157,6 @@ bool PatchMiscHooks()
 	kFormIDListViewDuplicateSelection.WriteJump();
 	kTESRaceCopyHairEyeDataInit.WriteJump();
 	kTESRaceCopyHairEyeDataMessageHandler.WriteJump();
-	kTESDialogSubwindowEnumChildCallback.WriteNop();
 	kTESObjectREFRDoCopyFrom.WriteJump();
 	kLODLandTextureMipMapLevelA.WriteNop();
 	kLODLandTextureMipMapLevelB.WriteJump();
@@ -161,24 +169,34 @@ bool PatchMiscHooks()
 	kRenderWindowStats.WriteJump();
 	kUpdateViewport.WriteJump();
 	kRenderWindowSelection.WriteJump();
+	kDataHandlerSavePluginEpilog.WriteJump();
+	kTESFileUpdateHeaderFlagBit.WriteJump();
+	kTESObjectCELLSaveReferencesProlog.WriteJump();
+	kTESObjectCELLSaveReferencesEpilog.WriteJump();
+	kTESDialogGetIsWindowDragDropRecipient.WriteJump();
 
-	PatchCommonDialogCancelHandler(Model);
+//	PatchCommonDialogCancelHandler(Model);
 	PatchCommonDialogCancelHandler(Animation);
 	PatchCommonDialogCancelHandler(Sound);
-	PatchCommonDialogCancelHandler(Texture);
+//	PatchCommonDialogCancelHandler(Texture);
 	PatchCommonDialogCancelHandler(SPT);
 
-	PatchCommonDialogPrologHandler(Model);
+//	PatchCommonDialogPrologHandler(Model);
 	PatchCommonDialogPrologHandler(Animation);
 	PatchCommonDialogPrologHandler(Sound);
-	PatchCommonDialogPrologHandler(Texture);
+//	PatchCommonDialogPrologHandler(Texture);
 	PatchCommonDialogPrologHandler(SPT);
 
-	PatchCommonDialogEpilogHandler(Model);
+//	PatchCommonDialogEpilogHandler(Model);
 	PatchCommonDialogEpilogHandler(Animation);
 	PatchCommonDialogEpilogHandler(Sound);
-	PatchCommonDialogEpilogHandler(Texture);
+//	PatchCommonDialogEpilogHandler(Texture);
 	PatchCommonDialogEpilogHandler(SPT);
+
+	kTESDialogShowDDSCommonDialogProlog.WriteJump();
+	kTESDialogShowNIFCommonDialogProlog.WriteJump();
+	kTESDialogShowDDSCommonDialogEpilog.WriteJump();
+	kTESDialogShowNIFCommonDialogEpilog.WriteJump();
 
 
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
@@ -207,10 +225,17 @@ void PatchMessageHandler(void)
 													// patch spammy subroutines
 	NopHdlr kDataHandlerAutoSave(0x0043083B, 5);
 	NopHdlr	kAnimGroupNote(0x004CA21D, 5);
+	NopHdlr kTangentSpaceCreation(0x0076989C, 5);
+	NopHdlr	kHeightMapGenA(0x005E0D9D, 5), kHeightMapGenB(0x005E0DB6, 5);
+	NopHdlr kModelLoadError(0x0046C215, 5);
 
 	SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
 	kDataHandlerAutoSave.WriteNop();
 	kAnimGroupNote.WriteNop();
+	kTangentSpaceCreation.WriteNop();
+	kHeightMapGenA.WriteNop();
+	kHeightMapGenB.WriteNop();
+	kModelLoadError.WriteNop();
 }
 
 
@@ -251,12 +276,10 @@ void __declspec(naked) SavePluginCommonDialogHook(void)
 
 void __stdcall DoLoadPluginsPrologHook(void)
 {
-	g_BitSwapBuffer = false;
 	ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
 
 	if (ActiveFile && (ActiveFile->flags & ModEntry::Data::kFlag_IsMaster))
 	{
-		g_BitSwapBuffer = true;
 		ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
 	}
 
@@ -282,17 +305,6 @@ void __declspec(naked) LoadPluginsPrologHook(void)
 
 void __stdcall DoLoadPluginsEpilogHook(void)
 {
-	if (g_BitSwapBuffer)
-	{
-		ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
-
-		if (!ActiveFile || ActiveFile->flags & ModEntry::Data::kFlag_IsMaster)
-			DebugPrint("Assertion Error - LoadPluginEpilog encountered a swapped master"), MessageBeep(MB_ICONHAND);
-		else {
-			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 1);
-		}
-	}
-
 	g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue(g_NumericIDWarningBuffer);
 }
 
@@ -504,9 +516,13 @@ UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 		return e_FetchPath;
 }
 
-UInt32 __stdcall InitPathEditor(int ID, HWND Dialog)
+UInt32 __stdcall InitPathEditor(int ID, const char* ExistingPath, HWND Dialog)
 {
-	GetDlgItemText(Dialog, ID, g_Buffer, sizeof(g_Buffer));
+	if (!ExistingPath)
+		GetDlgItemText(Dialog, ID, g_Buffer, sizeof(g_Buffer));
+	else
+		PrintToBuffer("%s", ExistingPath);
+
 	g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
 
 	if (!g_AssetSelectorReturnPath)
@@ -773,8 +789,7 @@ void __declspec(naked) AssertOverrideHook(void)
 
 bool __stdcall DoCustomCSWindowPatchHook(HWND Window)
 {
-									// enumerate custom windows here
-	if (Window == CONSOLE->GetWindowHandle())
+	if (g_CustomMainWindowChildrenDialogs.GetHandleExists(Window))
 		return false;
 	else
 		return true;
@@ -1476,10 +1491,14 @@ UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Ide
 					GenericNode<TESEyes>* Source = (GenericNode<TESEyes>*)&SelectedRace->eyes;
 					tList<TESEyes>* Destination = &WorkingRace->eyes;
 
-					Destination->RemoveAll();
-
-					for (;Source && Source->data; Source = Source->next, Count++)
-						thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+					for (;Source && Source->data; Source = Source->next)
+					{
+						if (Destination->IndexOf(Source->data) == -1)
+						{
+							thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+							Count++;
+						}
+					}
 
 					sprintf_s(g_Buffer, sizeof(g_Buffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
 					MessageBox(Dialog, g_Buffer, "CSE", MB_OK);
@@ -1489,10 +1508,14 @@ UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Ide
 					GenericNode<TESHair>* Source = (GenericNode<TESHair>*)&SelectedRace->hairs;
 					tList<TESHair>* Destination = &WorkingRace->hairs;
 
-					Destination->RemoveAll();
-
-					for (;Source && Source->data; Source = Source->next, Count++)
-						thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+					for (;Source && Source->data; Source = Source->next)
+					{
+						if (Destination->IndexOf(Source->data) == -1)
+						{
+							thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+							Count++;
+						}
+					}
 
 					sprintf_s(g_Buffer, sizeof(g_Buffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
 					MessageBox(Dialog, g_Buffer, "CSE", MB_OK);
@@ -1548,6 +1571,11 @@ void __declspec(naked) TESObjectREFRDoCopyFromHook(void)
 		call	kExtraDataList_CopyList
 		popad
 
+		pushad
+		mov		ecx, edi
+		call	[kTESObjectREFR_RemoveExtraTeleport]
+		popad
+
 		jmp		[kTESObjectREFRDoCopyFromHookRetnAddr]
 	}
 }
@@ -1601,40 +1629,6 @@ void __declspec(naked) LODLandTextureResolutionHook(void)
 	{
 		call	DoLODLandTextureResolutionHook
 		jmp		[kLODLandTextureResolutionHookRetnAddr]
-	}
-}
-bool __stdcall DoDataHandlerSaveFormToFileHook(TESForm* Form)
-{
-	ModEntry::Data* OverrideFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Form, -1);
-	if (!OverrideFile || OverrideFile == (*g_dataHandler)->unk8B8.activeFile)
-		return false;
-	else
-		return true;
-}
-
-void __declspec(naked) DataHandlerSaveFormToFileHook(void)
-{
-	static UInt32 kDataHandlerSaveFormToFileHookRetnAddr = 0x00479187;
-	static UInt32 kDataHandlerSaveFormToFileHookJumpAddr = 0x0047919E;
-	__asm
-	{
-		test	byte ptr [esi + 0x8], 1
-		jz		FAIL
-	EXIT:
-		jmp		[kDataHandlerSaveFormToFileHookRetnAddr]
-	FAIL:
-		pushad
-		xor		eax, eax
-		push	esi
-		call	DoDataHandlerSaveFormToFileHook
-		test	al, al
-		jnz		FIX
-		popad
-
-		jmp		[kDataHandlerSaveFormToFileHookJumpAddr]
-	FIX:
-		popad
-		jmp		EXIT
 	}
 }
 
@@ -1786,7 +1780,7 @@ void __stdcall DoRenderWindowStatsHook(void)
 		}
 		else if ((*g_TESRenderSelectionPrimary)->SelectionCount)
 		{
-			TESObjectREFR* Selection = (*g_TESRenderSelectionPrimary)->RenderSelection->Data;
+			TESObjectREFR* Selection = CS_CAST((*g_TESRenderSelectionPrimary)->RenderSelection->Data, TESForm, TESObjectREFR);
 			char Buffer[0x50] = {0};
 			sprintf_s(Buffer, 0x50, "");
 
@@ -1916,5 +1910,422 @@ void __declspec(naked) RenderWindowSelectionHook(void)
 	}
 }
 
+void __stdcall DoDataHandlerSavePluginEpilogHook(void)
+{
+	TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
+	ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+}
 
+void __declspec(naked) DataHandlerSavePluginEpilogHook(void)
+{
+	static UInt32 kDataHandlerSavePluginEpilogHookRetnAddr = 0x0047F13B;
+	__asm
+	{
+		call	WriteToStatusBar
 
+		pushad
+		call	DoDataHandlerSavePluginEpilogHook
+		popad
+
+		jmp		[kDataHandlerSavePluginEpilogHookRetnAddr]
+	}
+}
+
+void __stdcall DoTESFileUpdateHeaderFlagBitHook(TESFile* Plugin)
+{
+	TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
+	if (ActiveFile)
+		ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+}
+
+void __declspec(naked) TESFileUpdateHeaderFlagBitHook(void)
+{
+	static UInt32 kTESFileUpdateHeaderFlagBitHookRetnAddr = 0x0048957B;
+	__asm
+	{
+		pushad
+		push	esi
+		call	DoTESFileUpdateHeaderFlagBitHook
+		popad
+		jmp		[kTESFileUpdateHeaderFlagBitHookRetnAddr]
+	}
+}
+
+bool __stdcall DoDataHandlerSaveFormToFileHook(TESForm* Form)
+{
+	ModEntry::Data* OverrideFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Form, -1);
+	if (!OverrideFile || OverrideFile == (*g_dataHandler)->unk8B8.activeFile)
+		return false;
+	else
+		return true;
+}
+
+void __declspec(naked) DataHandlerSaveFormToFileHook(void)
+{
+	static UInt32 kDataHandlerSaveFormToFileHookRetnAddr = 0x00479187;
+	static UInt32 kDataHandlerSaveFormToFileHookJumpAddr = 0x0047919E;
+	__asm
+	{
+		test	byte ptr [esi + 0x8], 1
+		jz		FAIL
+	EXIT:
+		jmp		[kDataHandlerSaveFormToFileHookRetnAddr]	// TESForm::SaveForm
+	FAIL:
+		pushad
+		xor		eax, eax
+		push	esi
+		call	DoDataHandlerSaveFormToFileHook
+		test	al, al
+		jnz		FIX
+		popad
+
+		jmp		[kDataHandlerSaveFormToFileHookJumpAddr]	// TESForm::SaveFormRecord
+	FIX:
+		popad
+		jmp		EXIT
+	}
+}
+
+bool __stdcall DoTESObjectCELLSaveReferencesPrologHook(TESObjectREFR* Reference, TESFile* SaveFile)
+{
+	TESFile* SourceFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
+	TESFile* ActiveFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
+
+	if (SourceFile == ActiveFile && ActiveFile == SaveFile)	
+		return false;
+	else
+		return true;
+}
+
+void __declspec(naked) TESObjectCELLSaveReferencesPrologHook(void)
+{
+	static UInt32 kTESObjectCELLSaveReferencesPrologHookRetnAddr = 0x00538869;
+	static UInt32 kTESObjectCELLSaveReferencesPrologHookJumpAddr = 0x0053886B;
+	__asm
+	{
+		call	[kTESFile_GetIsESM]
+		test	al, al
+		jnz		PASS
+
+		mov		eax, [esp + 0x44]		// TESFile* SaveFile
+		pushad
+		push	eax
+		push	esi
+		call	DoTESObjectCELLSaveReferencesPrologHook
+		test	al, al
+		jnz		FIX
+		popad
+
+		jmp		[kTESObjectCELLSaveReferencesPrologHookRetnAddr]
+	FIX:
+		popad
+	PASS:
+		jmp		[kTESObjectCELLSaveReferencesPrologHookJumpAddr]
+	}
+}
+
+bool __stdcall DoTESObjectCELLSaveReferencesEpilogHook(TESObjectREFR* Reference, TESFile* SaveFile)
+{
+	if ((Reference->flags & TESForm::kFormFlags_Deleted))
+	{
+		TESFile* SourceFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
+		TESFile* ActiveFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
+
+		if ((SourceFile == ActiveFile && ActiveFile == SaveFile) ||
+			(SourceFile == NULL && ActiveFile == NULL))
+		{
+			return false;
+		}
+		else if ((Reference->baseForm->flags & TESForm::kFormFlags_Deleted))
+		{
+			thisVirtualCall(*((UInt32*)Reference), 0x50, Reference, SaveFile);	// call SaveForm to dump an empty record
+			return false;
+		}
+		else
+			return true;
+	}
+	else
+		return true;
+}
+
+void __declspec(naked) TESObjectCELLSaveReferencesEpilogHook(void)
+{
+	static UInt32 kTESObjectCELLSaveReferencesEpilogHookRetnAddr = 0x005389E1;
+	__asm
+	{
+		pushad
+		push	eax
+		push	ecx
+		call	DoTESObjectCELLSaveReferencesEpilogHook
+		test	al, al
+		jz		EXIT
+		popad
+
+		push	eax
+		call	kTESForm_SaveFormRecord
+		jmp		[kTESObjectCELLSaveReferencesEpilogHookRetnAddr]
+EXIT:
+		popad
+		jmp		[kTESObjectCELLSaveReferencesEpilogHookRetnAddr]
+	}
+}
+
+bool __stdcall DoTESDialogGetIsWindowDragDropRecipientHook(HWND Handle)
+{
+	return g_DragDropSupportDialogs.GetHandleExists(Handle);
+}
+
+void __declspec(naked) TESDialogGetIsWindowDragDropRecipientHook(void)
+{
+	static UInt32 kTESDialogGetIsWindowDragDropRecipientHookRetnAddr = 0x00443409;
+	static UInt32 kTESDialogGetIsWindowDragDropRecipientHookJumpAddr = 0x0044341F;
+	__asm
+	{
+		pushad
+		call	SendMessageAddress
+		popad
+
+		call	[g_WindowHandleCallAddr]
+		test	eax, eax
+		jz		FAIL
+
+		jmp		[kTESDialogGetIsWindowDragDropRecipientHookRetnAddr]
+	FAIL:
+		pushad
+		push	edi
+		call	DoTESDialogGetIsWindowDragDropRecipientHook
+		test	al, al
+		jnz		FIX
+		popad
+
+		jmp		[kTESDialogGetIsWindowDragDropRecipientHookJumpAddr]
+	FIX:
+		popad
+		jmp		[kTESDialogGetIsWindowDragDropRecipientHookRetnAddr]
+	}
+}
+
+void __stdcall DoTESDialogShowCommonDialogPrologHook(HWND Dialog, int Identifier, char* Buffer)
+{
+	GetDlgItemText(Dialog, Identifier, Buffer, 0x104);
+}
+
+void __declspec(naked) TESDialogShowDDSCommonDialogPrologHook(void)
+{
+	static UInt32 kTESDialogShowDDSCommonDialogPrologHookRetnAddr = 0x004A4150;
+	static UInt32 kTESDialogShowDDSCommonDialogPrologHookCallAddr = 0x00446CA0;
+	__asm
+	{
+		pushad
+		push	ebp
+		push	[esi + 0x10]
+		push	edi
+		call	DoTESDialogShowCommonDialogPrologHook
+		popad
+
+		call	[kTESDialogShowDDSCommonDialogPrologHookCallAddr]
+		jmp		[kTESDialogShowDDSCommonDialogPrologHookRetnAddr]
+	}
+}
+
+void __declspec(naked) TESDialogShowNIFCommonDialogPrologHook(void)
+{
+	static UInt32 kTESDialogShowNIFCommonDialogPrologHookRetnAddr = 0x0049BDB0;
+	static UInt32 kTESDialogShowNIFCommonDialogPrologHookCallAddr = 0x00446C60;
+	__asm
+	{
+		pushad
+		push	edx
+		push	[edi + 0x20]
+		push	esi
+		call	DoTESDialogShowCommonDialogPrologHook
+		popad
+
+		call	[kTESDialogShowNIFCommonDialogPrologHookCallAddr]
+		jmp		[kTESDialogShowNIFCommonDialogPrologHookRetnAddr]
+	}
+}
+
+void __stdcall DoMemCpy(void* Source, void* Dest, size_t Size)
+{
+	ZeroMemory(Dest, Size);
+	memcpy(Dest, Source, Size);
+}
+
+static char* s_AssetSelectorPathBuffer = new char[0x104];		// flabbergastingly hacky, but that's the price of being a black sheep
+
+void __declspec(naked) TESDialogShowDDSCommonDialogEpilogHook(void)
+{
+	static UInt32 kTESDialogShowDDSCommonDialogEpilogHookRetnAddr = 0x00446CE1;
+	static UInt32 kTESDialogShowDDSCommonDialogEpilogHookCallAddr = 0x00446A30;
+	__asm
+	{
+		mov		eax, [esp]	// parent HWND
+		push	esi
+		mov		esi, ebp 	// path buffer
+
+		pushad  
+		push	eax 
+		call	InitAssetSelectorDlg  
+		cmp		eax, e_Close 
+		jz		CLOSE 
+		cmp		eax, e_FileBrowser  
+		jz		FILEB  
+		cmp		eax, e_BSABrowser 
+		jz		BSAB 
+		cmp		eax, e_EditPath 
+		jz		EDITP 
+		cmp		eax, e_CopyPath 
+		jz		COPYP 
+		popad  
+
+		// clear path
+		xor		eax, eax
+		jmp		EXIT
+	CLOSE: 
+		popad 
+		mov		eax, 1
+		jmp		EXIT
+	FILEB: 
+		push	0x104
+		push	s_AssetSelectorPathBuffer
+		push	esi
+		call	DoMemCpy
+		popad 
+
+		pop		esi
+		call	[kTESDialogShowDDSCommonDialogEpilogHookCallAddr]
+		test	al, al
+		jz		RESETPATH
+		
+		mov		eax, 1
+		jmp		[kTESDialogShowDDSCommonDialogEpilogHookRetnAddr]
+	RESETPATH:
+		push	0x104
+		push	ebp
+		push	s_AssetSelectorPathBuffer
+		call	DoMemCpy
+
+		mov		eax, 1
+		jmp		[kTESDialogShowDDSCommonDialogEpilogHookRetnAddr]
+	BSAB:  
+		popad  
+		push	kTextureSelectorCommonDialogFilterType
+		call	InitBSAViewer 
+		jmp		FETCH
+	EDITP: 
+		popad 
+		push	eax 
+		push	esi 
+		push	0
+		call	InitPathEditor 
+		jmp		FETCH   
+	COPYP: 
+		popad 
+		push	eax 
+		push	kTextureSelectorCommonDialogFilterType
+		call	InitPathCopier 
+		jmp		FETCH
+	FETCH:
+		cmp		eax, e_FetchPath
+		mov		eax, 1
+		jz		FIXPATH
+		jmp		EXIT 	
+	FIXPATH:
+		push	0x104
+		push	esi
+		push	g_AssetSelectorReturnPath
+		call	DoMemCpy
+	EXIT:
+		pop		esi
+		jmp		[kTESDialogShowDDSCommonDialogEpilogHookRetnAddr]
+	}
+}
+
+void __declspec(naked) TESDialogShowNIFCommonDialogEpilogHook(void)
+{
+	static UInt32 kTESDialogShowNIFCommonDialogEpilogHookRetnAddr = 0x00446C99;
+	static UInt32 kTESDialogShowNIFCommonDialogEpilogHookCallAddr = 0x00446A30;
+	__asm
+	{
+		mov		eax, [esp]
+		push	esi
+		mov		esi, [esp + 0x38]
+
+		pushad  
+		push	eax 
+		call	InitAssetSelectorDlg  
+		cmp		eax, e_Close 
+		jz		CLOSE 
+		cmp		eax, e_FileBrowser  
+		jz		FILEB  
+		cmp		eax, e_BSABrowser 
+		jz		BSAB 
+		cmp		eax, e_EditPath 
+		jz		EDITP 
+		cmp		eax, e_CopyPath 
+		jz		COPYP 
+		popad  
+
+		// clear path
+		xor		eax, eax
+		jmp		EXIT
+	CLOSE: 
+		popad 
+		mov		eax, 1
+		jmp		EXIT
+	FILEB: 
+		push	0x104
+		push	s_AssetSelectorPathBuffer
+		push	esi
+		call	DoMemCpy
+		popad 
+
+		pop		esi
+		call	[kTESDialogShowNIFCommonDialogEpilogHookCallAddr] 
+		test	al, al
+		jz		RESETPATH
+
+		mov		eax, 1
+		jmp		[kTESDialogShowNIFCommonDialogEpilogHookRetnAddr]
+	RESETPATH:
+		push	0x104
+		push	[esp + 0x54]
+		push	s_AssetSelectorPathBuffer
+		call	DoMemCpy
+
+		mov		eax, 1
+		jmp		[kTESDialogShowNIFCommonDialogEpilogHookRetnAddr]
+	BSAB:  
+		popad  
+		push	kModelSelectorCommonDialogFilterType
+		call	InitBSAViewer 
+		jmp		FETCH
+	EDITP: 
+		popad 
+		push	eax 
+		push	esi 
+		push	0
+		call	InitPathEditor 
+		jmp		FETCH   
+	COPYP: 
+		popad 
+		push	eax 
+		push	kModelSelectorCommonDialogFilterType
+		call	InitPathCopier 
+		jmp		FETCH
+	FETCH:
+		cmp		eax, e_FetchPath
+		mov		eax, 1
+		jz		FIXPATH
+		jmp		EXIT  	
+	FIXPATH:
+		push	0x104
+		push	esi
+		push	g_AssetSelectorReturnPath
+		call	DoMemCpy
+	EXIT:
+		pop		esi
+		jmp		[kTESDialogShowNIFCommonDialogEpilogHookRetnAddr]
+	}
+}

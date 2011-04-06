@@ -80,6 +80,7 @@ public:
 	UInt32		unk08;					// 08
 
 	TESDialogInitParam(const char* EditorID);
+	TESDialogInitParam(UInt32 FormID);
 };
 
 // 08
@@ -160,7 +161,7 @@ struct TESRenderSelection
 {
 	struct SelectedObjectsEntry
 	{
-		TESObjectREFR*			Data;
+		TESForm*				Data;
 		SelectedObjectsEntry*	Prev;
 		SelectedObjectsEntry*	Next;
 	};
@@ -181,7 +182,7 @@ public:
 	GenericNode<HWND>     controls;		// 00
     HWND                  hDialog;		// 08	handle of parent dialog window
     HINSTANCE             hInstance;	// 0C	module instance of dialog template
-	POINT                 position;		// 10	position of subwindow withing parent dialog
+	POINT                 position;		// 10	position of subwindow within parent dialog
 	HWND                  hContainer;	// 18	handle of container control (e.g. Tab Control)
     HWND                  hSubwindow;	// 1C	handle of subwindow, if created
 };
@@ -349,6 +350,17 @@ enum
 	kTESObjectREFRSpecialFlags_3DInvisible				= 1 << 31,			// bits (only?) used in the runtime to mark modifications
 	kTESObjectREFRSpecialFlags_Children3DInvisible		= 1 << 30,
 };
+
+enum
+{
+	kRenderWindowState_SnapToGrid					= 0x1,
+	kRenderWindowState_SnapToAngle					= 0x2,
+	kRenderWindowState_AllowRenderWindowCellLoads	= 0x4,
+	kRenderWindowState_SkipInitialCellLoad			= 0x10,
+	kRenderWindowState_UseCSDiscAsSource			= 0x20,		// deprecated
+	kRenderWindowState_UseWorld						= 0x40,
+};
+extern UInt32*					g_RenderWindowStateFlags;
 
 enum
 {	
@@ -724,6 +736,8 @@ extern const UInt32			kTESBipedModelForm_GetIsPlayable;
 extern const UInt32			kTESRenderSelection_ClearSelection;
 extern const UInt32			kTESRenderSelection_AddFormToSelection;
 extern const UInt32			kTESRenderSelection_Free;
+extern const UInt32			kTESForm_SaveFormRecord;
+extern const UInt32			kTESFile_GetIsESM;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
@@ -737,6 +751,7 @@ extern const UInt32			kTESObjectREFR_ModExtraTimeLeft;
 extern const UInt32			kTESObjectREFR_ModExtraSoul;
 extern const UInt32			kTESObjectREFR_SetExtraEnableStateParent_OppositeState;
 extern const UInt32			kTESObjectREFR_GetExtraRef3DData;
+extern const UInt32			kTESObjectREFR_RemoveExtraTeleport;
 
 extern const UInt32			kVTBL_TESObjectREFR;
 extern const UInt32			kVTBL_TESForm;
@@ -772,13 +787,17 @@ TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
 UInt32						GetDialogTemplate(const char* FormType);
 UInt32						GetDialogTemplate(UInt8 FormTypeID);
 void						RemoteLoadRef(const char* EditorID);
+void						RemoteLoadRef(UInt32 FormID);
 void						LoadFormIntoView(const char* EditorID, const char* FormType);
 void						LoadFormIntoView(const char* EditorID, UInt8 FormType);
+void						LoadFormIntoView(UInt32 FormID, const char* FormType);
+void						LoadFormIntoView(UInt32 FormID, UInt8 FormType);
 void						LoadStartupPlugin();
 void						InitializeDefaultGMSTMap();
 void						LoadedMasterArchives();
 void						UnloadLoadedCell();
 void						SpawnCustomScriptEditor(const char* ScriptEditorID);
+void						SpawnCustomScriptEditor(UInt32 ScriptFormID);
 
 class FormEnumerationWrapper
 {
@@ -939,8 +958,8 @@ class RenderSelectionGroupManager
 
 	std::vector<TESRenderSelection*>*			GetCellExists(TESObjectCELL* Cell);
 	TESRenderSelection*							AllocateNewSelection(TESRenderSelection* Selection);
-	TESRenderSelection*							GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection);	// returns the tracked copy of the source selection
-	void										UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* Selection);		// pass GetTrackedSelection's result
+	TESRenderSelection*							GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection);			// returns the tracked copy of the source selection
+	void										UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* TrackedSelection);		// pass GetTrackedSelection's result
 public:
 	bool										AddGroup(TESObjectCELL* Cell, TESRenderSelection* Selection);
 	bool										RemoveGroup(TESObjectCELL* Cell, TESRenderSelection* Selection);
@@ -950,3 +969,19 @@ public:
 };
 
 extern RenderSelectionGroupManager		g_RenderSelectionGroupManager;
+
+class TESDialogWindowHandleCollection
+{
+	typedef std::vector<HWND>			_HandleCollection;
+	_HandleCollection					WindowHandles;
+
+	_HandleCollection::iterator			FindHandle(HWND Handle);
+public:
+	void								AddHandle(HWND Handle) { WindowHandles.push_back(Handle); }
+	bool								RemoveHandle(HWND Handle);
+	bool								GetHandleExists(HWND Handle) { return FindHandle(Handle) != WindowHandles.end(); }
+	void								ClearHandles(void) { WindowHandles.clear(); }
+};
+
+extern TESDialogWindowHandleCollection	g_CustomMainWindowChildrenDialogs,		// used to keep them from being closed during a plugin load event
+										g_DragDropSupportDialogs;				// keeps track of custom dialogs/controls that allow form (drag-)dropping
