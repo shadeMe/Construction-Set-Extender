@@ -1,5 +1,6 @@
 #include "CLIWrapper.h"
 #include "Exports.h"
+#include "ExtenderInternals.h"
 
 namespace CLIWrapper
 {

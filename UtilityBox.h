@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <queue>
+#include <stack>
 #include "windows.h"
 #include "windowsx.h"
 #include "atltypes.h"

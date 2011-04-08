@@ -1,6 +1,5 @@
 #include "ExtenderInternals.h"
 #include "WindowManager.h"
-#include "MiscHooks.h"
 #include "[Common]\HandShakeStructs.h"
 #include "[Common]\CLIWrapper.h"
 #include "Console.h"
@@ -9,7 +8,9 @@
 #include <stdio.h>
 #include "CSInterop.h"
 #include "Exports.h"
-#include <stack>
+#include "Hooks\Misc.h"
+#include "Hooks\Dialog.h"
+#include "Hooks\AssetSelector.h"
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -360,6 +361,9 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case MAIN_VIEW_TAGBROWSER:
 			CLIWrapper::TagBrowser::Show(*g_HWND_CSParent);
 			break;
+		case MAIN_DATA_SETWORKSPACE:
+			g_WorkspaceManager.SelectWorkspace(NULL);
+			break;
 		}
 		break;
 	case WM_DESTROY: 
@@ -380,26 +384,39 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case RENDER_BATCHEDIT:	
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, MAIN_WORLD_BATCHEDIT, 0);
 			break;
-		case RENDER_GROUPSELECTION:
-			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+		case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
+		case ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY:
+		case ID_SELECTIONFREEZING_FREEZE:
+		case ID_SELECTIONFREEZING_UNFREEZE:
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
 			{
-				TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
-				if (CurrentCell == NULL)
-					CurrentCell = (*g_TES)->currentExteriorCell;
-
-				if (CurrentCell == NULL)
-					break;
-
-				if (!g_RenderSelectionGroupManager.AddGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+				UInt32 FlagMask = 0;
+				
+				switch (LOWORD(wParam))
 				{
-					MessageBox(hWnd, "Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a pre-existing group",
-								"CSE", MB_OK|MB_ICONEXCLAMATION);
+				case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
+					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_3DInvisible));
+					PrintToBuffer("Selection '%08X's visibility toggled", Ref->refID);
+					break;
+				case ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY:
+					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+					PrintToBuffer("Selection '%08X's children visibility toggled", Ref->refID);
+					break;
+				case ID_SELECTIONFREEZING_FREEZE:
+					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Frozen, true);
+					PrintToBuffer("Selection '%08X' frozen", Ref->refID);
+					break;
+				case ID_SELECTIONFREEZING_UNFREEZE:
+					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Frozen, false);
+					PrintToBuffer("Selection '%08X' thawed", Ref->refID);
+					break;
 				}
-				else
-					RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Created new selection group for current cell", 2);
+				PrintToRender(g_Buffer, 2);
 			}
 			break;
-		case RENDER_UNGROUPSELECTION:
+		case ID_SELECTIONGROUPING_GROUP:
+		case ID_SELECTIONGROUPING_UNGROUP:
 			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
 			{
 				TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
@@ -409,51 +426,63 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				if (CurrentCell == NULL)
 					break;
 
-				if (!g_RenderSelectionGroupManager.RemoveGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+				switch (LOWORD(wParam))
 				{
-					MessageBox(hWnd, "Couldn't remove current selection group.\n\nMake sure the selected objects belong to a pre-existing group",
-								"CSE", MB_OK|MB_ICONEXCLAMATION);
+				case ID_SELECTIONGROUPING_GROUP:
+					if (!g_RenderSelectionGroupManager.AddGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+					{
+						MessageBox(hWnd, "Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a pre-existing group",
+									"CSE", MB_OK|MB_ICONEXCLAMATION);
+					}
+					else
+						RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Created new selection group for current cell", 2);
+					break;
+				case ID_SELECTIONGROUPING_UNGROUP:
+					if (!g_RenderSelectionGroupManager.RemoveGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+					{
+						MessageBox(hWnd, "Couldn't remove current selection group.\n\nMake sure the selected objects belong to a pre-existing group",
+									"CSE", MB_OK|MB_ICONEXCLAMATION);
+					}
+					else
+						RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Removed selection group from current cell", 2);
+					break;
 				}
-				else
-					RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Removed selection group from current cell", 2);
 			}
 			break;
 		case ID_ALIGNSELECTION_BYXAXIS:
 		case ID_ALIGNSELECTION_BYYAXIS:
 		case ID_ALIGNSELECTION_BYZAXIS:
+			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
 			{
-				if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+				TESObjectREFR* AlignRef = CS_CAST((*g_TESRenderSelectionPrimary)->RenderSelection->Data, TESForm, TESObjectREFR);
+
+				for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection->Next; Itr && Itr->Data; Itr = Itr->Next)
 				{
-					TESObjectREFR* AlignRef = CS_CAST((*g_TESRenderSelectionPrimary)->RenderSelection->Data, TESForm, TESObjectREFR);
+					TESObjectREFR* ThisRef = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 
-					for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection->Next; Itr && Itr->Data; Itr = Itr->Next)
+					switch (LOWORD(wParam))
 					{
-						TESObjectREFR* ThisRef = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-
-						switch (LOWORD(wParam))
-						{
-						case ID_ALIGNSELECTION_BYXAXIS:
-							ThisRef->posX = AlignRef->posX;
-							break;
-						case ID_ALIGNSELECTION_BYYAXIS:
-							ThisRef->posY = AlignRef->posY;
-							break;
-						case ID_ALIGNSELECTION_BYZAXIS:
-							ThisRef->posZ = AlignRef->posZ;
-							break;
-						}
-						
-						thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
-						thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
-						thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef);
-						thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
+					case ID_ALIGNSELECTION_BYXAXIS:
+						ThisRef->posX = AlignRef->posX;
+						break;
+					case ID_ALIGNSELECTION_BYYAXIS:
+						ThisRef->posY = AlignRef->posY;
+						break;
+					case ID_ALIGNSELECTION_BYZAXIS:
+						ThisRef->posZ = AlignRef->posZ;
+						break;
 					}
-
-					PrintToBuffer("Selection aligned to %08X", AlignRef->refID);
-					PrintToRender(g_Buffer, 2);
+					
+					thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
+					thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
+					thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef);
+					thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
 				}
-				break;
+
+				PrintToBuffer("Selection aligned to %08X", AlignRef->refID);
+				PrintToRender(g_Buffer, 2);
 			}
+			break;
 		}
 		break; 
 	}
@@ -848,94 +877,92 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 {
 	switch (Identifier)
 	{
-	case POPUP_SETFORMID:
-	{
-		if (Form->refID < 0x800)	break;
-
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
-		LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
-		if (FormIDString)
+		case POPUP_SETFORMID:
 		{
-			UInt32 FormID = 0;
-			sscanf_s(FormIDString, "%08X", &FormID);
-			if (errno == ERANGE || errno == EINVAL)
-			{
-				MessageBox(hWnd, "Bad FormID string - FormIDs should be unsigned 32-bit hex integers (e.g: 00503AB8)", "CSE", MB_OK);
-				break;
-			}
-			else if ((FormID & 0x00FFFFFF) < 0x800)
-			{
-				MessageBox(hWnd, "Invalid FormID - Base should be at least 0x800", "CSE", MB_OK);
-				break;
-			}
+			if (Form->refID < 0x800)	break;
 
-			sprintf_s(g_Buffer, sizeof(g_Buffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
+			sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
+			LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
+			if (FormIDString)
+			{
+				UInt32 FormID = 0;
+				sscanf_s(FormIDString, "%08X", &FormID);
+				if (errno == ERANGE || errno == EINVAL)
+				{
+					MessageBox(hWnd, "Bad FormID string - FormIDs should be unsigned 32-bit hex integers (e.g: 00503AB8)", "CSE", MB_OK);
+					break;
+				}
+				else if ((FormID & 0x00FFFFFF) < 0x800)
+				{
+					MessageBox(hWnd, "Invalid FormID - Base should be at least 0x800", "CSE", MB_OK);
+					break;
+				}
+
+				sprintf_s(g_Buffer, sizeof(g_Buffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
+				if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+				{
+					thisCall(kTESForm_SetFormID, Form, (UInt32)FormID, true);
+					thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
+				}
+			}
+			break;
+		}
+		case POPUP_MARKUNMODIFIED:			 
+			sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
 			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
 			{
-				thisCall(kTESForm_SetFormID, Form, (UInt32)FormID, true);
-				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
-			}
-		}
-		break;
-	}
-	case POPUP_MARKUNMODIFIED:			 
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
-		if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);		
+			}			
+			break;
+		case POPUP_JUMPTOUSEINFOLIST:		
 		{
-			thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);		
-		}			
-		break;
-	case POPUP_JUMPTOUSEINFOLIST:		
-	{
-		const char* EditorID = Form->editorData.editorID.m_data;
+			const char* EditorID = Form->editorData.editorID.m_data;
 
-		if (EditorID)
-			CLIWrapper::UseInfoList::OpenUseInfoBox(EditorID);
-		else
-		{
-			sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
-			CLIWrapper::UseInfoList::OpenUseInfoBox(g_Buffer);
+			if (EditorID)
+				CLIWrapper::UseInfoList::OpenUseInfoBox(EditorID);
+			else
+			{
+				sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
+				CLIWrapper::UseInfoList::OpenUseInfoBox(g_Buffer);
+			}
+			break;
 		}
-		break;
-	}
-	case POPUP_UNDELETE:
-	{
-		PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
-		if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+		case POPUP_UNDELETE:
 		{
-			thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
+			PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
+			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+			{
+				thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
+			}
+			break;
 		}
-		break;
-	}
-	case POPUP_EDITBASEFORM:
-	{
-		TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
-		if (BaseForm && BaseForm->editorData.editorID.m_data)
+		case POPUP_EDITBASEFORM:
 		{
-			LoadFormIntoView(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
+			TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
+			if (BaseForm && BaseForm->editorData.editorID.m_data)
+			{
+				LoadFormIntoView(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
+			}
+			break;
 		}
-		break;
-	}
-	case POPUP_TOGGLEVISIBILITY:
-	{
-		TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-		ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_3DInvisible));
-		UnloadLoadedCell();
-		break;
-	}
-	case POPUP_TOGGLECHILDRENVISIBILITY:
-	{
-		TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-		ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
-		UnloadLoadedCell();
-		break;
-	}
-	case POPUP_ADDTOTAG:
-	{
-		g_FormData->FillFormData(Form);
-		CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
-		break;
-	}
+		case POPUP_ADDTOTAG:
+		{
+			g_FormData->FillFormData(Form);
+			CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
+			break;
+		}
+		case POPUP_TOGGLEVISIBILITY:
+		{
+			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+			ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_3DInvisible));
+			break;
+		}
+		case POPUP_TOGGLECHILDRENVISIBILITY:
+		{
+			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+			ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+			break;
+		}
 	}
 	UpdateWindow(hWnd);
 }
@@ -1358,8 +1385,7 @@ void InitializeWindowManager(void)
 				ItemGameplayGlobalScript,
 				ItemLaunchGame,
 				ItemViewTagBrowser,
-				ItemWorldGroupSelection,
-				ItemWorldUngroupSelection;
+				ItemDataSetWorkspace;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -1456,25 +1482,24 @@ void InitializeWindowManager(void)
 	ItemViewTagBrowser.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewTagBrowser);
 
-	
-	ItemWorldGroupSelection.cbSize = sizeof(MENUITEMINFO);		
-	ItemWorldGroupSelection.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemWorldGroupSelection.wID = RENDER_GROUPSELECTION;
-	ItemWorldGroupSelection.fState = MFS_ENABLED;
-	ItemWorldGroupSelection.dwTypeData = "Group Selection";
-	ItemWorldGroupSelection.cch = 0;
-	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldGroupSelection);
-
-	ItemWorldUngroupSelection.cbSize = sizeof(MENUITEMINFO);		
-	ItemWorldUngroupSelection.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
-	ItemWorldUngroupSelection.wID = RENDER_UNGROUPSELECTION;
-	ItemWorldUngroupSelection.fState = MFS_ENABLED;
-	ItemWorldUngroupSelection.dwTypeData = "Ungroup Selection";
-	ItemWorldUngroupSelection.cch = 0;
-	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldUngroupSelection);
+	ItemDataSetWorkspace.cbSize = sizeof(MENUITEMINFO);		
+	ItemDataSetWorkspace.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemDataSetWorkspace.wID = MAIN_DATA_SETWORKSPACE;
+	ItemDataSetWorkspace.fState = MFS_ENABLED;
+	ItemDataSetWorkspace.dwTypeData = "Set Workspace";
+	ItemDataSetWorkspace.cch = 0;
+	InsertMenuItem(FileMenu, 40003, FALSE, &ItemDataSetWorkspace);
 
 	HMENU AlignMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU2); AlignMenuPopup = GetSubMenu(AlignMenuPopup, 0);
-	InsertMenu(*g_RenderWindowPopup, 293, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)AlignMenuPopup, "Align Selection");
+	HMENU GroupMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU3); GroupMenuPopup = GetSubMenu(GroupMenuPopup, 0);
+	HMENU FreezeMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU4); FreezeMenuPopup = GetSubMenu(FreezeMenuPopup, 0);
+	HMENU VisibilityMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU5); VisibilityMenuPopup = GetSubMenu(VisibilityMenuPopup, 0);
+
+	InsertMenu(*g_RenderWindowPopup, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+	InsertMenu(*g_RenderWindowPopup, -1, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)AlignMenuPopup, "Selection Alignment");
+	InsertMenu(*g_RenderWindowPopup, -1, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)GroupMenuPopup, "Selection Grouping");
+	InsertMenu(*g_RenderWindowPopup, -1, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)FreezeMenuPopup, "Selection Freezing");
+	InsertMenu(*g_RenderWindowPopup, -1, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)VisibilityMenuPopup, "Selection Visibility");
 
 	DrawMenuBar(*g_HWND_CSParent);
 

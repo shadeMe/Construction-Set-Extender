@@ -1,4 +1,4 @@
-#include "Hooks_Common.h"
+#include "Common.h"
 
 FARPROC								g_WindowHandleCallAddr = NULL;			// used to call WndMgmt functions
 
@@ -51,4 +51,9 @@ void __stdcall TrackPopupMenuAddress(void)
 {
 	HMODULE hMod = GetModuleHandle("USER32.DLL");
 	g_WindowHandleCallAddr = GetProcAddress(hMod, "TrackPopupMenu");
+}
+
+UInt32 __stdcall IsControlKeyDown(void)
+{
+	return GetAsyncKeyState(VK_CONTROL);
 }

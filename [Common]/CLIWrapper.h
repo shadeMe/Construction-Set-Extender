@@ -1,6 +1,7 @@
 #pragma once
-#include "SEHooks.h"
 #include "HandShakeStructs.h"
+
+struct OBSEInterface;
 
 namespace CLIWrapper
 {

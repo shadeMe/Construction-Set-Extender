@@ -1,7 +1,8 @@
 #include "ExtenderInternals.h"
 #include "Exports.h"
-#include "MiscHooks.h"
 #include "[Common]\CLIWrapper.h"
+#include "Hooks\ScriptEditor.h"
+#include "Hooks\TESFile.h"
 
 std::string							g_INIPath;
 std::string							g_AppPath;
@@ -18,6 +19,7 @@ RenderWindowTextPainter*			RenderWindowTextPainter::Singleton = NULL;
 RenderSelectionGroupManager			g_RenderSelectionGroupManager;
 TESDialogWindowHandleCollection		g_CustomMainWindowChildrenDialogs;
 TESDialogWindowHandleCollection		g_DragDropSupportDialogs;
+WorkspaceManager					g_WorkspaceManager;
 
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
@@ -59,6 +61,7 @@ BSTextureManager**					g_TextureManager = (BSTextureManager**)0x00A8E760;
 NiDX9Renderer**						g_CSRenderer = (NiDX9Renderer**)0x00A0F87C;
 UInt8*								g_Flag_RenderWindowUpdateViewPort = (UInt8*)0x00A0BC4D;
 UInt32*								g_RenderWindowStateFlags = (UInt32*)0x00A0B058;
+FileFinder**						g_FileFinder = (FileFinder**)0x00A0DE8C;
 
 TESForm**							g_DoorMarker = (TESForm**)0x00A13470;
 TESForm**							g_NorthMarker = (TESForm**)0x00A13484;
@@ -79,6 +82,13 @@ BSRenderedTexture**					g_LODBSTexture128x = (BSRenderedTexture**)0x00A0AAD4;
 BSRenderedTexture**					g_LODBSTexture512x = (BSRenderedTexture**)0x00A0AAE0;
 BSRenderedTexture**					g_LODBSTexture1024x = (BSRenderedTexture**)0x00A0AAE8;
 BSRenderedTexture**					g_LODBSTexture2048x = (BSRenderedTexture**)0x00A0AAE4;
+
+LPDIRECT3DTEXTURE9					g_LODD3DTexture256x = NULL;
+BSRenderedTexture*					g_LODBSTexture256x = NULL;
+LPDIRECT3DTEXTURE9					g_LODD3DTexture4096x = NULL;
+BSRenderedTexture*					g_LODBSTexture4096x = NULL;
+LPDIRECT3DTEXTURE9					g_LODD3DTexture8192x = NULL;
+BSRenderedTexture*					g_LODBSTexture8192x = NULL;
 
 const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
 const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
@@ -131,6 +141,7 @@ const UInt32						kVTBL_TESObjectCLOT = 0x0095482C;
 const UInt32						kVTBL_SpellItem = 0x0095E504;
 const UInt32						kVTBL_Script = 0x0094944C;
 const UInt32						kVTBL_MessageHandler = 0x00940760;
+const UInt32						kVTBL_FileFinder = 0x009389BC;
 
 const UInt32						kTESNPC_Ctor = 0x004D8FF0;
 const UInt32						kTESCreature_Ctor = 0x004CE820;
@@ -177,6 +188,9 @@ const UInt32						kTESRenderSelection_AddFormToSelection = 0x00512730;
 const UInt32						kTESRenderSelection_Free = 0x00511A50;
 const UInt32						kTESForm_SaveFormRecord = 0x00494950;
 const UInt32						kTESFile_GetIsESM = 0x00485B00;
+const UInt32						kTESFile_Dtor = 0x00487E60;
+const UInt32						kDataHandler_PopulateModList = 0x0047E4C0;
+const UInt32						kTESRenderSelection_RemoveFormFromSelection = 0x00512830;
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
@@ -1125,4 +1139,141 @@ bool TESDialogWindowHandleCollection::RemoveHandle(HWND Handle)
 	}
 	else
 		return false;
+}
+
+void WorkspaceManager::Initialize(const char *DefaultDirectory)
+{
+	this->DefaultDirectory = DefaultDirectory;
+	this->CurrentDirectory = DefaultDirectory;
+
+	thisVirtualCall(kVTBL_FileFinder, 0x8, *g_FileFinder, (this->DefaultDirectory + "Data").c_str());	// add the absolute path to the filefinder's search path collection
+}
+
+void WorkspaceManager::ResetLoadedData()
+{
+	kAutoLoadActivePluginOnStartup.WriteJump();
+
+	for (ModEntry* Itr = &(*g_dataHandler)->modList; Itr && Itr->data; Itr = Itr->next)
+	{
+		ToggleFlag(&Itr->data->flags, ModEntry::Data::kFlag_Active, false);
+		ToggleFlag(&Itr->data->flags, ModEntry::Data::kFlag_Loaded, false);
+	}
+
+	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
+
+	kAutoLoadActivePluginOnStartup.WriteBuffer();	
+}
+
+bool WorkspaceManager::SelectWorkspace(const char* Workspace)
+{
+	char WorkspacePath[MAX_PATH] = {0};
+
+	if (Workspace == NULL)
+	{
+		BROWSEINFO WorkspaceInfo;
+		WorkspaceInfo.hwndOwner = *g_HWND_CSParent;
+		WorkspaceInfo.iImage = NULL;
+		WorkspaceInfo.pszDisplayName = WorkspacePath;
+		WorkspaceInfo.lpszTitle = "Select a vaild workspace inside the 'Oblivion' directory";
+		WorkspaceInfo.ulFlags = BIF_NEWDIALOGSTYLE|BIF_RETURNONLYFSDIRS;
+		WorkspaceInfo.pidlRoot = NULL;
+		WorkspaceInfo.lpfn = NULL;
+		WorkspaceInfo.lParam = NULL;
+
+		PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&WorkspaceInfo);
+		if (ReturnPath)
+		{
+			if (!SHGetPathFromIDList(ReturnPath, WorkspacePath)) 
+			{
+				DebugPrint("Couldn't extract workspace path!");
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+		sprintf_s(WorkspacePath, MAX_PATH, "%s", Workspace);
+
+	PrintToBuffer("%s\\", WorkspacePath);
+	sprintf_s(WorkspacePath, MAX_PATH, "%s", g_Buffer);
+
+	if (strstr(WorkspacePath, g_AppPath.c_str()) == WorkspacePath)
+	{
+		if (_stricmp(CurrentDirectory.c_str(), WorkspacePath))
+		{
+			ResetLoadedData();
+			ReloadModList(std::string(CurrentDirectory + "Data\\").c_str(), true, false);
+			SetWorkingDirectory(WorkspacePath);
+			CreateDefaultDirectories(WorkspacePath);
+			ReloadModList("Data\\", false, true);
+
+			PrintToBuffer("Current workspace set to '%s'", WorkspacePath);
+			DebugPrint(g_Buffer);
+			MessageBox(*g_HWND_CSParent, g_Buffer, "CSE", MB_OK|MB_ICONINFORMATION);
+
+			return true;		
+		} 
+		return false;
+	}
+	else
+	{
+		MessageBox(*g_HWND_CSParent, "The new workspace must be inside the 'Oblivion' directory.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+		return false;
+	}
+}
+
+void WorkspaceManager::SetWorkingDirectory(const char *WorkspacePath)
+{
+	// it is not recommended that the SetCurrentDirectory API function be used on multi-threaded applications
+	// but it certaily beats patching a ton of locations in the executable
+	// since we reset most data and background queuing before calling it, it should be relatively safe
+
+	CurrentDirectory = WorkspacePath;
+	SetCurrentDirectory(WorkspacePath);
+}
+
+void WorkspaceManager::CreateDefaultDirectories(const char* WorkspacePath)
+{
+	std::string Buffer(WorkspacePath);
+
+	if ((CreateDirectory(std::string(Buffer + "Data\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Meshes\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Textures\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Textures\\menus\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Textures\\menus\\icons\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Sound\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Sound\\fx\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Sound\\Voice\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Trees\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(CreateDirectory(std::string(Buffer + "Data\\Backup\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS))
+	{
+		DebugPrint("Couldn't create create default directories in workspace '%s'", WorkspacePath);
+		LogWinAPIErrorMessage(GetLastError());
+	}
+}
+
+void WorkspaceManager::ReloadModList(const char* WorkspacePath, bool ClearList, bool LoadESPs)
+{
+	tList<TESFile*>* ModList = (tList<TESFile*>*)&(*g_dataHandler)->modList;
+	if (ClearList)
+	{
+		for (ModEntry* Itr = &(*g_dataHandler)->modList; Itr && Itr->data; Itr = Itr->next)
+		{
+			thisCall(kTESFile_Dtor, Itr->data);
+			FormHeap_Free(Itr->data);
+		}
+		ModList->RemoveAll();
+	}
+
+	if (LoadESPs == false)
+		this->DataHandlerPopulateModList.WriteUInt8(1);
+
+	thisCall(kDataHandler_PopulateModList, *g_dataHandler, WorkspacePath);
+
+	if (LoadESPs == false)
+		this->DataHandlerPopulateModList.WriteUInt8(2);
 }

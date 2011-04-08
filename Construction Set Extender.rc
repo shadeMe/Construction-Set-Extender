@@ -327,6 +327,33 @@ BEGIN
     END
 END
 
+IDR_MENU3 MENU 
+BEGIN
+    POPUP "Selection Grouping"
+    BEGIN
+        MENUITEM "Group",                       ID_SELECTIONGROUPING_GROUP
+        MENUITEM "Ungroup",                     ID_SELECTIONGROUPING_UNGROUP
+    END
+END
+
+IDR_MENU4 MENU 
+BEGIN
+    POPUP "Selection Freezing"
+    BEGIN
+        MENUITEM "Freeze",                      ID_SELECTIONFREEZING_FREEZE
+        MENUITEM "Unfreeze",                    ID_SELECTIONFREEZING_UNFREEZE
+    END
+END
+
+IDR_MENU5 MENU 
+BEGIN
+    POPUP "Selection Visibility"
+    BEGIN
+        MENUITEM "Toggle Visibility",           ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY
+        MENUITEM "Toggle Children Visibility",  ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

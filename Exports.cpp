@@ -1,11 +1,11 @@
 #include "Exports.h"
 #include "ExtenderInternals.h"
-#include "SEHooks.h"
 #include "[Common]\CLIWrapper.h"
-#include "MiscHooks.h"
 #include "resource.h"
 #include "WindowManager.h"
-#include "CompilerErrorDetours.h"
+#include "Hooks\CompilerErrorDetours.h"
+#include "Hooks\Misc.h"
+#include "Hooks\ScriptEditor.h"
 
 FormData*						g_FormData = new FormData();
 UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();

@@ -1,12 +1,18 @@
-#include "ExtenderInternals.h"
-#include "SEHooks.h"
-#include "MiscHooks.h"
 #include "[Common]/CLIWrapper.h"
 #include "[Common]/HandShakeStructs.h"
+#include "ExtenderInternals.h"
 #include "WindowManager.h"
-#include "CSEInterfaceManager.h"
 #include "Console.h"
 #include "CSInterop.h"
+#include "CSEInterfaceManager.h"
+
+#include "Hooks\Dialog.h"
+#include "Hooks\LOD.h"
+#include "Hooks\TESFile.h"
+#include "Hooks\AssetSelector.h"
+#include "Hooks\ScriptEditor.h"
+#include "Hooks\Renderer.h"
+#include "Hooks\Misc.h"
 
 
 PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
@@ -71,7 +77,8 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";	
 
 	g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
-	if (!g_DLLInstance) {
+	if (!g_DLLInstance)
+	{
 		DebugPrint("Couldn't fetch the DLL's handle!");
 		return false;
 	}
@@ -90,10 +97,12 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	g_msgIntfc = (OBSEMessagingInterface*)obse->QueryInterface(kInterface_Messaging);
 	g_commandTableIntfc = (OBSECommandTableInterface*)obse->QueryInterface(kInterface_CommandTable);
 
-	if (!g_msgIntfc || !g_commandTableIntfc) {
+	if (!g_msgIntfc || !g_commandTableIntfc) 
+	{
 		DebugPrint("OBSE Messaging/CommandTable interface not found !");
 		return false;
 	}
+
 	return true;
 }
 
@@ -110,12 +119,16 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 	g_INIManager->SetINIPath(g_INIPath);
 	dynamic_cast<CSEINIManager*>(g_INIManager)->Initialize();
 
-//	WaitUntilDebuggerAttached();
-
 	if (!CLIWrapper::Import(obse))
 		return false;
-	else if (!PatchSEHooks() || !PatchMiscHooks())
-		return false;
+
+	PatchDialogHooks();
+	PatchLODHooks();
+	PatchTESFileHooks();
+	PatchAssetSelectorHooks();
+	PatchScriptEditorHooks();
+	PatchRendererHooks();
+	PatchMiscHooks();
 	
 	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
 	g_CommandTableData.GetCommandReturnType = g_commandTableIntfc->GetReturnType;

@@ -349,6 +349,7 @@ enum
 {
 	kTESObjectREFRSpecialFlags_3DInvisible				= 1 << 31,			// bits (only?) used in the runtime to mark modifications
 	kTESObjectREFRSpecialFlags_Children3DInvisible		= 1 << 30,
+	kTESObjectREFRSpecialFlags_Frozen					= 1 << 29
 };
 
 enum
@@ -564,6 +565,7 @@ enum
 	kDialogTemplate_Preview315					= 315
 };
 
+class FileFinder;
 
 extern const HINSTANCE*			g_TESCS_Instance;
 
@@ -604,6 +606,7 @@ extern TESSound**				g_FSTSnowSneak;
 extern BSTextureManager**		g_TextureManager;
 extern NiDX9Renderer**			g_CSRenderer;
 extern UInt8*					g_Flag_RenderWindowUpdateViewPort;
+extern FileFinder**				g_FileFinder;
 
 extern TESForm**				g_DoorMarker;
 extern TESForm**				g_NorthMarker;
@@ -624,6 +627,13 @@ extern BSRenderedTexture**		g_LODBSTexture128x;
 extern BSRenderedTexture**		g_LODBSTexture512x;
 extern BSRenderedTexture**		g_LODBSTexture1024x;
 extern BSRenderedTexture**		g_LODBSTexture2048x;
+
+extern LPDIRECT3DTEXTURE9		g_LODD3DTexture256x;
+extern BSRenderedTexture*		g_LODBSTexture256x;
+extern LPDIRECT3DTEXTURE9		g_LODD3DTexture4096x;
+extern BSRenderedTexture*		g_LODBSTexture4096x;
+extern LPDIRECT3DTEXTURE9		g_LODD3DTexture8192x;
+extern BSRenderedTexture*		g_LODBSTexture8192x;
 
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
@@ -738,6 +748,9 @@ extern const UInt32			kTESRenderSelection_AddFormToSelection;
 extern const UInt32			kTESRenderSelection_Free;
 extern const UInt32			kTESForm_SaveFormRecord;
 extern const UInt32			kTESFile_GetIsESM;
+extern const UInt32			kTESFile_Dtor;
+extern const UInt32			kDataHandler_PopulateModList;
+extern const UInt32			kTESRenderSelection_RemoveFormFromSelection;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
@@ -768,6 +781,7 @@ extern const UInt32			kVTBL_TESObjectCLOT;
 extern const UInt32			kVTBL_SpellItem;
 extern const UInt32			kVTBL_Script;
 extern const UInt32			kVTBL_MessageHandler;
+extern const UInt32			kVTBL_FileFinder;
 
 extern const UInt32			kTESNPC_Ctor;
 extern const UInt32			kTESCreature_Ctor;
@@ -985,3 +999,26 @@ public:
 
 extern TESDialogWindowHandleCollection	g_CustomMainWindowChildrenDialogs,		// used to keep them from being closed during a plugin load event
 										g_DragDropSupportDialogs;				// keeps track of custom dialogs/controls that allow form (drag-)dropping
+
+class WorkspaceManager
+{
+	std::string							CurrentDirectory;
+	std::string							DefaultDirectory;
+
+	MemoryHandler::MemHdlr				DataHandlerPopulateModList;
+
+	void								SetWorkingDirectory(const char* WorkspacePath);	
+	void								ResetLoadedData(void);
+	void								ReloadModList(const char* WorkspacePath, bool ClearList, bool LoadESPs);
+	void								CreateDefaultDirectories(const char* WorkspacePath);
+public:
+	WorkspaceManager() : DataHandlerPopulateModList(0x0047E708 + 2, (UInt32)0, 0, 0), 
+						CurrentDirectory(g_AppPath),
+						DefaultDirectory(g_AppPath) {}
+						
+
+	void								Initialize(const char* DefaultDirectory);
+	bool								SelectWorkspace(const char* Workspace);	
+};
+
+extern WorkspaceManager					g_WorkspaceManager;

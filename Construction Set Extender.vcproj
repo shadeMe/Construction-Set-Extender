@@ -366,35 +366,75 @@
 			Name="Hooks"
 			>
 			<File
-				RelativePath=".\CompilerErrorDetours.cpp"
+				RelativePath=".\Hooks\AssetSelector.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\CompilerErrorDetours.h"
+				RelativePath=".\Hooks\AssetSelector.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Hooks_Common.cpp"
+				RelativePath=".\Hooks\Common.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Hooks_Common.h"
+				RelativePath=".\Hooks\Common.h"
 				>
 			</File>
 			<File
-				RelativePath=".\MiscHooks.cpp"
+				RelativePath=".\Hooks\CompilerErrorDetours.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\MiscHooks.h"
+				RelativePath=".\Hooks\CompilerErrorDetours.h"
 				>
 			</File>
 			<File
-				RelativePath=".\SEHooks.cpp"
+				RelativePath=".\Hooks\Dialog.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SEHooks.h"
+				RelativePath=".\Hooks\Dialog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\LOD.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\LOD.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\Misc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\Misc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\Renderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\Renderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\ScriptEditor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\ScriptEditor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\TESFile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Hooks\TESFile.h"
 				>
 			</File>
 		</Filter>

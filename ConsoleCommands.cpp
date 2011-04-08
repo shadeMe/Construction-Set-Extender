@@ -1,7 +1,7 @@
 #include "Console.h"
 #include "ExtenderInternals.h"
 #include "ConsoleCommands.h"
-#include "MiscHooks.h"
+#include "Hooks\TESFile.h"
 
 CSEConsoleCommandTable		g_ConsoleCommandTable;
 

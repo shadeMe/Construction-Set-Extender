@@ -19,7 +19,6 @@ CSE--->
 
 * The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
 * Land LOD meshes that aren't such terrible approximations of the real landscape. I remember seeing somewhere that what we get is a 1% representation of the real thing. Could we bump this to 5% or something?
-* The ability to generate landscape LOD textures that are better than the 1024x1024 quality we get now. Something on the quality level of the local maps. Or at the very least higher resolution.
 * Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
 
 > Fix stuff mentioned in http://cs.elderscrolls.com/constwiki/index.php/Landscape_LOD_Tutorial
