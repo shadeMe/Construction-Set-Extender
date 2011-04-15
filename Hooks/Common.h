@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include "../[Common]/CLIWrapper.h"
 #include "../[Common]/HandshakeStructs.h"
 #include "../WindowManager.h"
@@ -11,7 +11,6 @@
 #include "obse/GameData.h"
 
 extern FARPROC		g_WindowHandleCallAddr;
-extern bool			g_PluginPostLoad;
 
 class TESForm;
 class TESObjectCELL;
@@ -19,7 +18,6 @@ class TESWorldSpace;
 struct FormData;
 struct UseListCellItemData;
 class INISetting;
-struct NopData;
 
 using namespace	MemoryHandler;
 

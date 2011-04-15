@@ -21,7 +21,6 @@ TESDialogWindowHandleCollection		g_CustomMainWindowChildrenDialogs;
 TESDialogWindowHandleCollection		g_DragDropSupportDialogs;
 WorkspaceManager					g_WorkspaceManager;
 
-
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
 const DLGPROC						g_UseReport_DlgProc = (DLGPROC)0x00433FE0;
@@ -69,12 +68,12 @@ TESForm**							g_TravelMarker = (TESForm**)0x00A13480;
 TESForm**							g_MapMarker = (TESForm**)0x00A13474;
 TESForm**							g_HorseMarker = (TESForm**)0x00A134A0;
 
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;  
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0; 
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture128x = (LPDIRECT3DTEXTURE9*)0x00A0AABC; 
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture512x = (LPDIRECT3DTEXTURE9*)0x00A0AAC8;  
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0;
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture128x = (LPDIRECT3DTEXTURE9*)0x00A0AABC;
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture512x = (LPDIRECT3DTEXTURE9*)0x00A0AAC8;
 LPDIRECT3DTEXTURE9*					g_LODD3DTexture1024x = (LPDIRECT3DTEXTURE9*)0x00A0AAD0;
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture2048x = (LPDIRECT3DTEXTURE9*)0x00A0AACC; 
+LPDIRECT3DTEXTURE9*					g_LODD3DTexture2048x = (LPDIRECT3DTEXTURE9*)0x00A0AACC;
 
 BSRenderedTexture**					g_LODBSTexture32x = (BSRenderedTexture**)0x00A0AADC;
 BSRenderedTexture**					g_LODBSTexture64x = (BSRenderedTexture**)0x00A0AAD8;
@@ -155,9 +154,9 @@ const UInt32						kTESObjectCLOT_Ctor = 0x00518350;
 const UInt32						kTESQuest_Ctor = 0x004E0500;
 const UInt32						kScript_Ctor = 0x004FCA50;
 const UInt32						kTESRenderSelection_Ctor = 0x00511A20;
+const UInt32						kGameSetting_Ctor = 0x004FA040;
 
-const UInt32						kTESChildCell_LoadCell = 0x00430F40; 
-const UInt32						kTESForm_GetObjectUseList = 0x00496380;		// Node<TESForm> GetObjectUseRefHead(UInt32 unk01 = 0);
+const UInt32						kTESChildCell_LoadCell = 0x00430F40;
 const UInt32						kTESCellUseList_GetUseListRefHead = 0x006E5850;
 const UInt32						kTESObjectCELL_GetParentWorldSpace = 0x00532E50;
 const UInt32						kScript_SaveResultScript = 0x005034E0;
@@ -179,6 +178,8 @@ const UInt32						kGMSTMap_Add = 0x0044F680;
 const UInt32						kBSTextureManager_CreateBSRenderedTexture = 0x00773080;
 const UInt32						kTESForm_GetOverrideFile = 0x00495FE0;
 const UInt32						kTESForm_AddReference = 0x00496430;
+const UInt32						kTESForm_GetFormReferenceList = 0x00496380;
+const UInt32						kTESForm_CleanupFormReferenceList = 0x00496400;
 const UInt32						kTESQuest_SetStartEnabled = 0x004DD7E0;
 const UInt32						kTESQuest_SetAllowedRepeatedStages = 0x004DD7C0;
 const UInt32						kTESObjectCELL_GetIsInterior = 0x00532240;
@@ -191,6 +192,11 @@ const UInt32						kTESFile_GetIsESM = 0x00485B00;
 const UInt32						kTESFile_Dtor = 0x00487E60;
 const UInt32						kDataHandler_PopulateModList = 0x0047E4C0;
 const UInt32						kTESRenderSelection_RemoveFormFromSelection = 0x00512830;
+const UInt32						kLinkedListNode_RemoveNode = 0x00452AE0;
+const UInt32						kLinkedListNode_GetIsDangling = 0x0048E0E0;
+const UInt32						kLinkedListNode_Cleanup = 0x00405DC0;
+const UInt32						kLinkedListNode_GetData = 0x004FC950;
+const UInt32						kTESForm_SetTemporary = 0x004972A0;
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
@@ -280,7 +286,6 @@ const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its inde
 											"TOFT"
 										};
 
-
 TES* TES::GetSingleton()
 {
 	return *g_TES;
@@ -288,7 +293,8 @@ TES* TES::GetSingleton()
 
 EditorAllocator* EditorAllocator::GetSingleton(void)
 {
-	if (!Singleton)	{
+	if (!Singleton)
+	{
 		EditorAllocator::Singleton = new EditorAllocator;
 		Singleton->NextIndex = 1;
 	}
@@ -306,9 +312,11 @@ UInt32 EditorAllocator::TrackNewEditor(HWND EditorDialog)
 }
 
 void EditorAllocator::DeleteTrackedEditor(UInt32 TrackedEditorIndex)
-{					
-	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++) {		
-		if (Itr->second->Index == TrackedEditorIndex) {
+{
+	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
+	{
+		if (Itr->second->Index == TrackedEditorIndex)
+		{
 			delete Itr->second;
 			AllocationMap.erase(Itr);
 			break;
@@ -318,7 +326,8 @@ void EditorAllocator::DeleteTrackedEditor(UInt32 TrackedEditorIndex)
 
 void EditorAllocator::DeleteAllTrackedEditors(void)
 {
-	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++) {	
+	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
+	{
 		delete Itr->second;
 	}
 	AllocationMap.clear();
@@ -326,7 +335,7 @@ void EditorAllocator::DeleteAllTrackedEditors(void)
 
 void EditorAllocator::DestroyVanillaDialogs(void)
 {
-	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++) 
+	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
 		DestroyWindow(Itr->first);
 }
 
@@ -335,7 +344,7 @@ HWND EditorAllocator::GetTrackedREC(HWND TrackedEditorDialog)
 	AlMap::const_iterator Itr = AllocationMap.find(TrackedEditorDialog);
 	if (Itr == AllocationMap.end())
 		return NULL;
-	else 	
+	else
 		return Itr->second->RichEditControl;
 }
 
@@ -344,7 +353,7 @@ HWND EditorAllocator::GetTrackedLBC(HWND TrackedEditorDialog)
 	AlMap::const_iterator Itr = AllocationMap.find(TrackedEditorDialog);
 	if (Itr == AllocationMap.end())
 		return NULL;
-	else 	
+	else
 		return Itr->second->ListBoxControl;
 }
 
@@ -354,14 +363,15 @@ UInt32 EditorAllocator::GetTrackedIndex(HWND TrackedEditorDialog)
 	AlMap::const_iterator Itr = AllocationMap.find(TrackedEditorDialog);
 	if (Itr == AllocationMap.end())
 		return 0;
-	else 	
+	else
 		return Itr->second->Index;
 }
 
 HWND EditorAllocator::GetTrackedDialog(UInt32 TrackedEditorIndex)
 {
 	HWND Result= NULL;
-	for (AlMap::const_iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++) {
+	for (AlMap::const_iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
+	{
 		Result = Itr->first;
 		if (Itr->second->Index == TrackedEditorIndex)
 			break;
@@ -375,14 +385,15 @@ void CSEINIManager::Initialize()
 	std::fstream INIStream(INIFile.c_str(), std::fstream::in);
 	bool CreateINI = false;
 
-	if (INIStream.fail()) {
+	if (INIStream.fail())
+	{
 		_MESSAGE("INI File not found; Creating one...");
 		CreateINI = true;
 	}
 
 	INIStream.close();
 	INIStream.clear();		// only initializing non script editor keys as those are taken care of by its code
-	
+
 	RegisterSetting(new SME::INI::INISetting(this, "Top", "Console::General", "150", "Client Rect Top"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "Left", "Console::General", "150", "Client Rect Left"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "Right", "Console::General", "500", "Client Rect Right"), (CreateINI == false));
@@ -397,7 +408,9 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "OpenScriptWindowOnStartup", "Extender::General", "0", "Open an empty script editor window on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupScriptEditorID", "Extender::General", "", "EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "ShowNumericEditorIDWarning", "Extender::General", "1", "Displays a warning when editorIDs start with an integer"), (CreateINI == false));
-	
+	RegisterSetting(new SME::INI::INISetting(this, "SetWorkspaceOnStartup", "Extender::General", "0", "Sets the working directory to a custom path"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "DefaultWorkspacePath", "Extender::General", "", "Path of the custom workspace directory"), (CreateINI == false));
+
 	RegisterSetting(new SME::INI::INISetting(this, "UpdatePeriod", "Extender::Renderer", "8", "Duration, in milliseconds, between render window updates"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "DisplaySelectionStats", "Extender::Renderer", "1", "Display info on the render window selection"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "UpdateViewPortAsync", "Extender::Renderer", "0", "Allow the render window to be updated in the background"), (CreateINI == false));
@@ -418,6 +431,17 @@ TESDialogInitParam::TESDialogInitParam(UInt32 FormID)
 	TypeID = Form->typeID;
 }
 
+TESFormReferenceData* TESFormReferenceData::FindDataInRefList(GenericNode<TESFormReferenceData>* RefList, TESForm* Form)
+{
+	for (; RefList && RefList->data; RefList = RefList->next)
+	{
+		TESFormReferenceData* Data = RefList->data;
+		if (Data->Form == Form)
+			return Data;
+	}
+
+	return NULL;
+}
 
 UInt32 GetDialogTemplate(const char* FormType)
 {
@@ -459,13 +483,13 @@ UInt32 GetDialogTemplate(const char* FormType)
 			return 1;									// TESDialog
 	else if (!_stricmp(FormType, "Script"))
 			return 9;
-	else if (!_stricmp(FormType, "Reference"))				
+	else if (!_stricmp(FormType, "Reference"))
 			return 10;									// Special Handlers
-	else if (!_stricmp(FormType, "Hair") ||				
-		!_stricmp(FormType, "Eyes") ||					
+	else if (!_stricmp(FormType, "Hair") ||
+		!_stricmp(FormType, "Eyes") ||
 		!_stricmp(FormType, "Race") ||
 		!_stricmp(FormType, "Class") ||
-		!_stricmp(FormType, "Birthsign") ||				
+		!_stricmp(FormType, "Birthsign") ||
 		!_stricmp(FormType, "Climate") ||
 		!_stricmp(FormType, "World Space"))
 			return 2;									// TESDialog ListView
@@ -505,7 +529,7 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 
 	switch (Type)
 	{
-	case 9:					
+	case 9:
 		if (GetFormByID(EditorID))
 			SpawnCustomScriptEditor(EditorID);
 		break;
@@ -514,10 +538,10 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 		break;
 	case 1:
 	case 2:
-		CreateDialogParamA(*g_TESCS_Instance, 
-							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID), 
-							*g_HWND_CSParent, 
-							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc), 
+		CreateDialogParamA(*g_TESCS_Instance,
+							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID),
+							*g_HWND_CSParent,
+							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc),
 							(LPARAM)&InitData);
 		break;
 	}
@@ -535,7 +559,7 @@ void LoadFormIntoView(UInt32 FormID, const char* FormType)
 
 	switch (Type)
 	{
-	case 9:					
+	case 9:
 		if (TESForm_LookupByFormID(FormID))
 			SpawnCustomScriptEditor(FormID);
 		break;
@@ -544,10 +568,10 @@ void LoadFormIntoView(UInt32 FormID, const char* FormType)
 		break;
 	case 1:
 	case 2:
-		CreateDialogParamA(*g_TESCS_Instance, 
-							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID), 
-							*g_HWND_CSParent, 
-							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc), 
+		CreateDialogParamA(*g_TESCS_Instance,
+							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID),
+							*g_HWND_CSParent,
+							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc),
 							(LPARAM)&InitData);
 		break;
 	}
@@ -591,7 +615,7 @@ void LoadStartupPlugin()
 			ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
 		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
-	} 
+	}
 	else if (strlen(PluginName) >= 1)
 	{
 		DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
@@ -606,12 +630,20 @@ void InitializeDefaultGMSTMap()
 	while (Unk01)
 	{
 		const char*	 Name = NULL;
-		GMSTData*	 Data;
+		SettingData* Data;
 
 		thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
 		if (Name)
 		{
-			g_DefaultGMSTMap.insert(std::make_pair<const char*, GMSTData*>(Name, Data));
+			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
+
+			GameSetting* TempSetting = (GameSetting*)FormHeap_Allocate(0x2C);
+			thisCall(kGameSetting_Ctor, TempSetting);
+			thisCall(kTESForm_SetTemporary, TempSetting);
+			TempSetting->SetSettingID(Name);
+			thisVirtualCall(*(UInt32*)TempSetting, 0xB8, TempSetting, SettingForm);
+
+			g_DefaultGMSTMap.insert(std::make_pair<const char*, GameSetting*>(Name, TempSetting));
 		}
 	}
 }
@@ -624,7 +656,7 @@ void LoadedMasterArchives()
 	{
 		std::string FileName(Itr.Get()->cFileName);
 		FileName = FileName.substr(FileName.find_last_of("\\") + 1);
-		
+
 		bool IsLoaded = false;
 		for (GenericNode<Archive>* Itr = (*g_LoadedArchives); Itr; Itr = Itr->next)
 		{
@@ -634,10 +666,10 @@ void LoadedMasterArchives()
 				LoadedFileName = LoadedFileName.substr(LoadedFileName.find_last_of("\\") + 1);
 
 				if (!_stricmp(LoadedFileName.c_str(), FileName.c_str()))
-				{	
+				{
 					IsLoaded = true;
 					break;
-				}	
+				}
 			}
 		}
 
@@ -667,10 +699,9 @@ void UnloadLoadedCell()
 	*g_Flag_CellView_MenuState = CellWndState;
 }
 
-
 void __stdcall FormEnumerationWrapper::ReinitializeFormLists()
 {
-	DeInitializeCSWindows();	
+	DeInitializeCSWindows();
 
 	SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
 	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
@@ -721,7 +752,7 @@ bool __stdcall FormEnumerationWrapper::PerformListViewPrologCheck(UInt32 CallAdd
 	case 0x00442576:
 	case 0x00452409:
 	case 0x00560DC2:
-	case 0x00445E12:	
+	case 0x00445E12:
 	case 0x00445D81:
 	case 0x004F00C3:
 		return 1;
@@ -730,14 +761,13 @@ bool __stdcall FormEnumerationWrapper::PerformListViewPrologCheck(UInt32 CallAdd
 	}
 }
 
-
 void FormEnumerationWrapper::ToggleUnmodifiedFormVisibility()
 {
 	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 	if (GetUnmodifiedFormHiddenState())
 		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_UNCHECKED);
 	else
-		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_CHECKED);		
+		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_CHECKED);
 
 	ReinitializeFormLists();
 }
@@ -747,7 +777,7 @@ void FormEnumerationWrapper::ToggleDeletedFormVisibility()
 	if (GetDeletedFormHiddenState())
 		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_UNCHECKED);
 	else
-		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_CHECKED);		
+		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_CHECKED);
 
 	ReinitializeFormLists();
 }
@@ -759,7 +789,6 @@ void RenderTimeManager::Update(void)
 	ReferenceFrame = FrameBuffer;
 }
 
-
 void __stdcall FormEnumerationWrapper::ResetFormVisibility(void)
 {
 	if (GetUnmodifiedFormHiddenState())
@@ -767,7 +796,6 @@ void __stdcall FormEnumerationWrapper::ResetFormVisibility(void)
 	if (GetDeletedFormHiddenState())
 		ToggleDeletedFormVisibility();
 }
-
 
 void RenderWindowTextPainter::StaticRenderChannel::Render()
 {
@@ -932,7 +960,6 @@ UInt32 RenderWindowTextPainter::GetRenderChannelQueueSize(UInt8 Channel)
 	return 0;
 }
 
-
 std::vector<TESRenderSelection*>* RenderSelectionGroupManager::GetCellExists(TESObjectCELL* Cell)
 {
 	_RenderSelectionGroupMap::iterator Match = SelectionGroupMap.find(Cell);
@@ -1031,7 +1058,7 @@ TESRenderSelection* RenderSelectionGroupManager::GetTrackedSelection(TESObjectCE
 
 				Result = Base;
 			}
-		}		
+		}
 	}
 
 	return Result;
@@ -1041,7 +1068,7 @@ void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRende
 {
 	std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
 	if (SelectionList)
-	{	
+	{
 		std::vector<TESRenderSelection*>::const_iterator EraseItr = SelectionList->end();
 
 		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
@@ -1085,7 +1112,7 @@ bool RenderSelectionGroupManager::AddGroup(TESObjectCELL *Cell, TESRenderSelecti
 		{
 			TESRenderSelection* Group = AllocateNewSelection(Selection);
 			SelectionList->push_back(Group);
-			Result = true;	
+			Result = true;
 		}
 	}
 	else
@@ -1161,7 +1188,7 @@ void WorkspaceManager::ResetLoadedData()
 
 	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 
-	kAutoLoadActivePluginOnStartup.WriteBuffer();	
+	kAutoLoadActivePluginOnStartup.WriteBuffer();
 }
 
 bool WorkspaceManager::SelectWorkspace(const char* Workspace)
@@ -1183,7 +1210,7 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 		PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&WorkspaceInfo);
 		if (ReturnPath)
 		{
-			if (!SHGetPathFromIDList(ReturnPath, WorkspacePath)) 
+			if (!SHGetPathFromIDList(ReturnPath, WorkspacePath))
 			{
 				DebugPrint("Couldn't extract workspace path!");
 				return false;
@@ -1214,8 +1241,8 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 			DebugPrint(g_Buffer);
 			MessageBox(*g_HWND_CSParent, g_Buffer, "CSE", MB_OK|MB_ICONINFORMATION);
 
-			return true;		
-		} 
+			return true;
+		}
 		return false;
 	}
 	else
@@ -1227,9 +1254,9 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 
 void WorkspaceManager::SetWorkingDirectory(const char *WorkspacePath)
 {
-	// it is not recommended that the SetCurrentDirectory API function be used on multi-threaded applications
-	// but it certaily beats patching a ton of locations in the executable
-	// since we reset most data and background queuing before calling it, it should be relatively safe
+	// it is not recommended that the SetCurrentDirectory API function be used in multi-threaded applications
+	// but it certainly beats patching a ton of locations in the executable
+	// since we reset data and background queuing before calling it, it should be relatively safe
 
 	CurrentDirectory = WorkspacePath;
 	SetCurrentDirectory(WorkspacePath);

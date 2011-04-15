@@ -41,7 +41,8 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		g_CommandTableData.CommandTableStart = g_commandTableIntfc->Start();
 		g_CommandTableData.CommandTableEnd = g_commandTableIntfc->End();
 		CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData);
-					
+				
+	//	WaitUntilDebuggerAttached();
 		g_msgIntfc->RegisterListener(g_pluginHandle, NULL, CSEInteropHandler);
 		g_PluginPostLoad = true;
 		break;
@@ -121,6 +122,8 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 
 	if (!CLIWrapper::Import(obse))
 		return false;
+
+//	WaitUntilDebuggerAttached();
 
 	PatchDialogHooks();
 	PatchLODHooks();

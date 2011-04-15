@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include "Common.h"
 
 // hooks that add support for the enhanced asset selector
@@ -190,14 +190,6 @@ void TextureCancelCommonDialogHook(void);
 void SPTSelectorCommonDialogHook(void);
 void SPTPostCommonDialogHook(void);
 void SPTCancelCommonDialogHook(void);
-
-// special case DDS and NIF handlers to allow third party forms the use of the asset selector without having to derive from TESTexture/TESModel
-// their code should write the existing path to the buffer passed as the argument to ShowDDS/NIFFileDialog
-_DeclareMemHdlr(TESDialogShowDDSCommonDialogProlog, "");
-_DeclareMemHdlr(TESDialogShowNIFCommonDialogProlog, "");
-
-_DeclareMemHdlr(TESDialogShowDDSCommonDialogEpilog, "");
-_DeclareMemHdlr(TESDialogShowNIFCommonDialogEpilog, "");
 
 UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
 UInt32 __stdcall InitPathEditor(int ID, const char* ExistingPath, HWND Dialog);

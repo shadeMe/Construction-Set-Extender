@@ -89,7 +89,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL ..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -167,7 +167,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL ..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -193,9 +193,8 @@
 			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
-			RelativePath="DevComponents.DotNetBar2.dll"
+			RelativePath="..\..\[Depends]\DevComponents.DotNetBar2.dll"
 			AssemblyName="DevComponents.DotNetBar2, Version=8.0.0.0, PublicKeyToken=5fd520d36328f741, processorArchitecture=MSIL"
-			CopyLocal="true"
 			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
@@ -204,7 +203,7 @@
 			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
-			RelativePath="g:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\ScriptEditor.Preprocessor.dll"
+			RelativePath="f:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\ScriptEditor.Preprocessor.dll"
 			AssemblyName="ScriptEditor.Preprocessor, Version=0.0.0.0, processorArchitecture=x86"
 			MinFrameworkVersion="131072"
 		/>
@@ -327,6 +326,10 @@
 				</File>
 				<File
 					RelativePath=".\Images\forward.png"
+					>
+				</File>
+				<File
+					RelativePath=".\Images\google.jpg"
 					>
 				</File>
 				<File

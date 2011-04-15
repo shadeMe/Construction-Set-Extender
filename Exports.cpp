@@ -319,7 +319,7 @@ __declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID
 	case Script::eType_Object:
 	{
 		DebugPrint("Source script type = Object Script");
-		for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); i != 0; i = i->next) {
+		for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetFormReferenceList, Form, 0); i != 0; i = i->next) {
 			if (!i || !i->data) {
 				DebugPrint("No Parents found!");
 				break;
@@ -356,7 +356,7 @@ __declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID
 	case Script::eType_Quest:
 	{
 		DebugPrint("Source script type = Quest Script");
-		for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); i != 0; i = i->next) {
+		for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetFormReferenceList, Form, 0); i != 0; i = i->next) {
 			if (!i || !i->data) {
 				DebugPrint("No Parents found!");
 				break;
@@ -578,7 +578,7 @@ __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorI
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)									return;
 
-	for (DataHandler::Node<TESForm>* UseList = (DataHandler::Node<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); UseList; UseList = UseList->next) {
+	for (DataHandler::Node<TESForm>* UseList = (DataHandler::Node<TESForm>*)thisCall(kTESForm_GetFormReferenceList, Form, 0); UseList; UseList = UseList->next) {
 		TESForm* Reference = UseList->data;
 
 		g_FormData->EditorID = Reference->editorData.editorID.m_data;
@@ -786,7 +786,7 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 	std::vector<TESTopicInfo*> InfoDepends; // so store the objects ptrs and parse them later
 	std::vector<TESQuest*> QuestDepends;
 
-	for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetObjectUseList, Form, 0); i != 0; i = i->next)
+	for (GenericNode<TESForm>* i = (GenericNode<TESForm>*)thisCall(kTESForm_GetFormReferenceList, Form, 0); i != 0; i = i->next)
 	{
 		if (!i || !i->data)
 		{

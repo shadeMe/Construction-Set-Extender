@@ -10,7 +10,6 @@ _DefineHookHdlr(LoadPluginsEpilog, 0x004856B2);
 _DefinePatchHdlr(DataDialogPluginDescription, 0x0040CAB6);
 _DefinePatchHdlr(DataDialogPluginAuthor, 0x0040CAFE);
 _DefineHookHdlr(SavePluginCommonDialog, 0x00446D51);
-_DefineHookHdlr(QuickLoadPluginLoadHandlerPrologue, 0x0040D073);
 _DefineHookHdlr(QuickLoadPluginLoadHandler, 0x004852E5);
 _DefineJumpHdlr(MissingMasterOverride, 0x00484FC9, 0x00484E8E);
 _DefinePatchHdlr(DataHandlerPostError, 0x004852F0);
@@ -19,7 +18,7 @@ _DefineHookHdlr(DataHandlerSaveFormToFile, 0x00479181);
 _DefineHookHdlr(TESFileUpdateHeader, 0x004894D0);
 _DefineHookHdlr(DataHandlerSavePluginEpilog, 0x0047F136);
 _DefineHookHdlr(TESFileUpdateHeaderFlagBit, 0x00489570);
-_DefineHookHdlr(TESObjectCELLSaveReferencesProlog, 0x00538860); 
+_DefineHookHdlr(TESObjectCELLSaveReferencesProlog, 0x00538860);
 _DefineHookHdlr(TESObjectCELLSaveReferencesEpilog, 0x005389DB);
 
 void PatchTESFileHooks(void)
@@ -28,10 +27,9 @@ void PatchTESFileHooks(void)
 	_MemoryHandler(LoadPluginsEpilog).WriteJump();
 	_MemoryHandler(SavePluginCommonDialog).WriteJump();
 	_MemoryHandler(SavePluginMasterEnum).WriteJump();
-	_MemoryHandler(QuickLoadPluginLoadHandlerPrologue).WriteJump();
 	_MemoryHandler(QuickLoadPluginLoadHandler).WriteJump();
 	_MemoryHandler(MissingMasterOverride).WriteJump();
-	_MemoryHandler(DataHandlerPostError).WriteUInt8(0xEB);	
+	_MemoryHandler(DataHandlerPostError).WriteUInt8(0xEB);
 	_MemoryHandler(DataDialogPluginDescription).WriteUInt8(0xEB);
 	_MemoryHandler(DataDialogPluginAuthor).WriteUInt8(0xEB);
 	_MemoryHandler(CheckIsActivePluginAnESM).WriteNop();
@@ -67,7 +65,6 @@ _BeginHookHdlrFn(SavePluginCommonDialog)
 		jmp		[_HookHdlrFnVariable(SavePluginCommonDialog, ESMRetn)]
 	}
 }
-
 
 void __stdcall DoLoadPluginsPrologHook(void)
 {
@@ -114,10 +111,9 @@ _BeginHookHdlrFn(LoadPluginsEpilog)
 		popad
 
 		call	[_HookHdlrFnVariable(LoadPluginsEpilog, Call)]
-		jmp		[_HookHdlrFnVariable(LoadPluginsEpilog, Retn)]		
+		jmp		[_HookHdlrFnVariable(LoadPluginsEpilog, Retn)]
 	}
 }
-
 
 bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
 {
@@ -144,29 +140,6 @@ _BeginHookHdlrFn(SavePluginMasterEnum)
 	SKIP:
 		popad
 		jmp		[_HookHdlrFnVariable(SavePluginMasterEnum, RetnFail)]
-	}
-}
-
-void __stdcall DoQuickLoadPluginLoadHandlerPrologueHook(HWND DataDlg)
-{
-	if (IsDlgButtonChecked(DataDlg, DATA_QUICKLOAD) == BST_CHECKED)
-		g_QuickLoadToggle = true;
-	else
-		g_QuickLoadToggle = false;
-}
-
-_BeginHookHdlrFn(QuickLoadPluginLoadHandlerPrologue)
-{
-	_DeclareHookHdlrFnVariable(QuickLoadPluginLoadHandlerPrologue, Call, 0x0040CA30);
-	_DeclareHookHdlrFnVariable(QuickLoadPluginLoadHandlerPrologue, Retn, 0x0040D078);
-	__asm
-	{
-		pushad
-		push	edi
-		call	DoQuickLoadPluginLoadHandlerPrologueHook
-		popad
-		call	[_HookHdlrFnVariable(QuickLoadPluginLoadHandlerPrologue, Call)]
-		jmp		[_HookHdlrFnVariable(QuickLoadPluginLoadHandlerPrologue, Retn)]
 	}
 }
 
@@ -214,7 +187,6 @@ _BeginHookHdlrFn(AutoLoadActivePluginOnStartup)
 	}
 }
 
-
 bool __stdcall DoTESFileUpdateHeaderHook(TESFile* Plugin)
 {
 	PrintToBuffer("%s%s", Plugin->filepath, Plugin->name);
@@ -253,8 +225,6 @@ _BeginHookHdlrFn(TESFileUpdateHeader)
 		jmp		[_HookHdlrFnVariable(TESFileUpdateHeader, Exit)]
 	}
 }
-
-
 
 void __stdcall DoDataHandlerSavePluginEpilogHook(void)
 {
@@ -337,7 +307,7 @@ bool __stdcall DoTESObjectCELLSaveReferencesPrologHook(TESObjectREFR* Reference,
 	TESFile* SourceFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
 	TESFile* ActiveFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
 
-	if (SourceFile == ActiveFile && ActiveFile == SaveFile)	
+	if (SourceFile == ActiveFile && ActiveFile == SaveFile)
 		return false;
 	else
 		return true;
@@ -415,4 +385,3 @@ EXIT:
 		jmp		[_HookHdlrFnVariable(TESObjectCELLSaveReferencesEpilog, Retn)]
 	}
 }
-

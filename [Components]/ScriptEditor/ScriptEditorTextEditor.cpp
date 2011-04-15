@@ -38,7 +38,7 @@ String^ ScriptEditorTextEditor::GetText(void)
 
 UInt32 ScriptEditorTextEditor::GetTextLength(void)
 {
-	return TextField->Text->Length;	
+	return TextField->Text->Length;
 }
 
 void ScriptEditorTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling)
@@ -91,7 +91,6 @@ bool ScriptEditorTextEditor::GetCharIndexInsideCommentSegment(int Index)
 {
 	bool Result = true;
 
-
 	Point Location = TextField->GetPositionFromCharIndex(TextField->SelectionStart);
 	int LineNo = TextField->GetLineFromCharIndex(TextField->SelectionStart);
 
@@ -119,7 +118,7 @@ String^ ScriptEditorTextEditor::GetTokenAtCaretPos()
 
 void ScriptEditorTextEditor::SetTokenAtCaretPos(String^ Replacement)
 {
-	GetTextAtLocation(TextField->SelectionStart - 1, true); 
+	GetTextAtLocation(TextField->SelectionStart - 1, true);
 	TextField->SelectedText	= Replacement;
 }
 
@@ -137,12 +136,12 @@ void ScriptEditorTextEditor::SetCaretPos(int Index)
 {
 	TextField->SelectionLength = 0;
 
-	if (Index > -1)		
+	if (Index > -1)
 		TextField->SelectionStart = Index;
 	else
 		TextField->SelectionStart = 0;
 
-	TextField->ScrollToCaret();	
+	TextField->ScrollToCaret();
 }
 
 void ScriptEditorTextEditor::ScrollToCaret()
@@ -173,11 +172,11 @@ void ScriptEditorTextEditor::LoadFileFromDisk(String^ Path, UInt32 AllocatedInde
 		TextField->LoadFile(Path, RichTextBoxStreamType::PlainText);
 		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 		DebugPrint("Loaded text from " + Path + " to editor " + AllocatedIndex);
-	} 
+	}
 	catch (Exception^ E)
 	{
 		DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
-	}	
+	}
 }
 
 void ScriptEditorTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, UInt32 AllocatedIndex)
@@ -185,7 +184,7 @@ void ScriptEditorTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFil
 	if (PathIncludesFileName == false)
 		Path += "\\" + DefaultName + ".txt";
 
-	try 
+	try
 	{
 		TextField->SaveFile(Path, RichTextBoxStreamType::PlainText);
 		DebugPrint("Dumped editor " + AllocatedIndex + "'s text to " + Path);
@@ -235,7 +234,7 @@ Point ScriptEditorTextEditor::GetLastKnownMouseClickLocation()
 UInt32 ScriptEditorTextEditor::FindReplace(ScriptEditorInterface::FindReplaceOperation Operation, String^ Query, String^ Replacement, ScriptEditorInterface::FindReplaceOutput^ Output)
 {
 	UInt32 Hits = 0;
-	try 
+	try
 	{
 		NativeWrapper::LockWindowUpdate(TextField->Handle);
 		RemoveFindReplaceResultIndicators();
@@ -262,8 +261,8 @@ UInt32 ScriptEditorTextEditor::FindReplace(ScriptEditorInterface::FindReplaceOpe
 			Hits++;
 		}
 
-		MessageBox::Show(String::Format("{0} hits in the current script.", Hits), "Find and Replace - CSE Editor");
-	} 
+//		MessageBox::Show(String::Format("{0} hits in the current script.", Hits), "Find and Replace - CSE Editor");
+	}
 	finally
 	{
 		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
@@ -292,13 +291,13 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 			TextField->SelectionStart = LineStartIdx;
 			TextField->SelectionLength = 0;
 			TextField->SelectedText = ";";
-		}			
+		}
 		else
 		{
 			TextField->SelectionStart = LineStartIdx + LocalParser->Indices[0];
 
 			if (Line->IndexOf(";") == LocalParser->Indices[0])				// is a comment
-			{			
+			{
 				TextField->SelectionLength = 1;
 				TextField->SelectedText = "";
 			}
@@ -317,9 +316,9 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 		if (LineStartIdx < 0)	LineStartIdx = 0;
 		LineEndIdx = LocalParser->GetLineEndIndex(StartIndex + SelLength, TextField->Text);
 		if (LineEndIdx < 0)		LineEndIdx = TextField->Text->Length;
-		
+
 		String^ Lines = TextField->Text->Substring(LineStartIdx, LineEndIdx - LineStartIdx);
-		String^ Result; 
+		String^ Result;
 		String^ ReadLine;
 
 		StringReader^ CommentParser = gcnew StringReader(Lines); ReadLine = CommentParser->ReadLine();
@@ -334,13 +333,12 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 				ReadLine = CommentParser->ReadLine();
 				continue;
 			}
-		
+
 			if (ReadLine->IndexOf(";") == LocalParser->Indices[0] && (!Count || !ToggleType))
 			{
 				Result += ReadLine->Substring(0, LocalParser->Indices[0]);
 				if (!Count)		ToggleType = 0;
 				Result += ReadLine->Substring(ReadLine->IndexOf(";") + 1);
-				
 			}
 			else if (ReadLine->IndexOf(";") != LocalParser->Indices[0] && (!Count || ToggleType))
 			{
@@ -422,7 +420,7 @@ void ScriptEditorTextEditor::UpdateFindReplaceResultLineLimitIndicatorPostions()
 				Itr->Location = Loc;
 				if (!Itr->Visible)
 					Itr->Visible = true;
-			} 
+			}
 			else if (Itr->Visible)
 				Itr->Visible = false;
 		}
@@ -494,15 +492,15 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 			continue;
 		}
 
-		if (!String::Compare(LocalParser->Tokens[0], "begin", true) || 
-			!String::Compare(LocalParser->Tokens[0], "if", true) || 
-			!String::Compare(LocalParser->Tokens[0], "while", true) || 
-			!String::Compare(LocalParser->Tokens[0], "forEach", true)) 
+		if (!String::Compare(LocalParser->Tokens[0], "begin", true) ||
+			!String::Compare(LocalParser->Tokens[0], "if", true) ||
+			!String::Compare(LocalParser->Tokens[0], "while", true) ||
+			!String::Compare(LocalParser->Tokens[0], "forEach", true))
 		{
 			IndentCountBuffer++;
 		}
-		else if	(!String::Compare(LocalParser->Tokens[0], "loop", true) || 
-				!String::Compare(LocalParser->Tokens[0], "endIf", true) || 
+		else if	(!String::Compare(LocalParser->Tokens[0], "loop", true) ||
+				!String::Compare(LocalParser->Tokens[0], "endIf", true) ||
 				!String::Compare(LocalParser->Tokens[0], "end", true))
 		{
 			IndentCountBuffer--;
@@ -511,12 +509,11 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 		LastLine = ReadLine;
 		ReadLine = IndentParser->ReadLine();
 	}
-			
 
 	if (EndIndex + 1 < TextField->Text->Length)
 	{
 		UInt32 EndChar = EndIndex;
-		for (int i = EndIndex; i < TextField->Text->Length; i++) 
+		for (int i = EndIndex; i < TextField->Text->Length; i++)
 		{
 			if (TextField->Text[i] == '\t' || TextField->Text[i] == ' ')
 			{
@@ -535,18 +532,18 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 
 	bool ExdentLastLine = false;
 	if (LastLine != nullptr)					// last line needs to be checked separately for exdents
-	{		
+	{
 		ReadLine = LastLine;
 		LocalParser->Tokenize(ReadLine, false);
 		if (LocalParser->Valid)
 		{
-			if (!String::Compare(LocalParser->Tokens[0], "loop", true) || 
-				!String::Compare(LocalParser->Tokens[0], "endIf", true) || 
+			if (!String::Compare(LocalParser->Tokens[0], "loop", true) ||
+				!String::Compare(LocalParser->Tokens[0], "endIf", true) ||
 				!String::Compare(LocalParser->Tokens[0], "end", true))
 			{
 				ExdentLastLine = true;
 			}
-			else if (!String::Compare(LocalParser->Tokens[0], "elseIf", true) || 
+			else if (!String::Compare(LocalParser->Tokens[0], "elseIf", true) ||
 					!String::Compare(LocalParser->Tokens[0], "else", true))
 			{
 				ExdentLastLine = true;
@@ -554,7 +551,7 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 		}
 		else if (ReadLine->Replace("\t", "")->Length == 0 && CullEmptyLines)
 		{
-			int CaretPos = TextField->SelectionStart - 1, 
+			int CaretPos = TextField->SelectionStart - 1,
 				LineStart = LocalParser->GetLineStartIndex(CaretPos, TextField->Text);
 
 			if (LineStart > -1 && LineStart < CaretPos)
@@ -564,7 +561,6 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 				TextField->SelectedText = "";
 			}
 		}
-
 	}
 
 	if (IndentCountBuffer < 0)
@@ -592,8 +588,8 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 			TextField->SelectionStart = Index + 1;
 			TextField->SelectionLength = 1;
 
-			if (!String::Compare(LocalParser->Tokens[0], "loop", true) || 
-				!String::Compare(LocalParser->Tokens[0], "endIf", true) || 
+			if (!String::Compare(LocalParser->Tokens[0], "loop", true) ||
+				!String::Compare(LocalParser->Tokens[0], "endIf", true) ||
 				!String::Compare(LocalParser->Tokens[0], "end", true))
 			{
 				Exdents = IndentCountBuffer;
@@ -611,7 +607,7 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 
 			TextField->SelectionLength = 0;
 		}
-		finally 
+		finally
 		{
 			NativeWrapper::LockWindowUpdate(IntPtr::Zero);
 		}
@@ -656,12 +652,12 @@ void ScriptEditorTextEditor::PerformAutoIndentationEpilog(void)
 	finally
 	{
 		NativeWrapper::LockWindowUpdate(IntPtr::Zero);
-	}	
+	}
 }
 
 bool ScriptEditorTextEditor::PerformTabIndent(void)
 {
-	int SelStart = TextField->SelectionStart, 
+	int SelStart = TextField->SelectionStart,
 		Operation = 0;
 
 	String^ Source = TextField->SelectedText;
@@ -694,14 +690,14 @@ bool ScriptEditorTextEditor::PerformTabIndent(void)
 	int LineEndIdx = LocalParser->GetLineEndIndex(SelStart, TextField->Text);
 	if (LineEndIdx < 0)		LineEndIdx = TextField->Text->Length;
 
-	if (SelLength) 
+	if (SelLength)
 	{
 		SelStart = TextField->SelectionStart;
 		LineStartIdx = LocalParser->GetLineStartIndex(SelStart - 1, TextField->Text);
 		if (LineStartIdx < 0)	LineStartIdx = 0;
 		LineEndIdx = LocalParser->GetLineEndIndex(SelStart + SelLength, TextField->Text);
 		if (LineEndIdx < 0)		LineEndIdx = TextField->Text->Length;
-		
+
 		String^ Lines = TextField->Text->Substring(LineStartIdx, LineEndIdx - LineStartIdx);
 		StringReader^ TabIndentParser = gcnew StringReader(Lines);
 		String^ ReadLine = TabIndentParser->ReadLine();
@@ -716,7 +712,7 @@ bool ScriptEditorTextEditor::PerformTabIndent(void)
 				ReadLine = TabIndentParser->ReadLine();
 				continue;
 			}
-		
+
 			Char Itr = ReadLine[0];
 			if (Itr != '\n' && Itr != '\r\n')
 			{
@@ -773,7 +769,7 @@ String^ ScriptEditorTextEditor::GetTokenAtIndex(int Index, bool SelectText)
 	if (SubStrStart > SubStrEnd)
 		return "";
 	else
-	{ 
+	{
 		if (SelectText)
 		{
 			TextField->SelectionStart = SubStrStart;
@@ -920,19 +916,19 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 						{
 							IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Call, false, true);
 							SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
-						} 
-						else if (!String::Compare(CommandName, "let", true) || !String::Compare(CommandName, "set", true)) 
+						}
+						else if (!String::Compare(CommandName, "let", true) || !String::Compare(CommandName, "set", true))
 						{
 							IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Assign, false, true);
 							SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 						}
-						else 
+						else
 							IntelliSenseBox->LastOperation = IntelliSenseThingy::Operation::e_Default;
 
 						break;
 					}
 				default:
-					{	
+					{
 						IntelliSenseBox->LastOperation = IntelliSenseThingy::Operation::e_Default;
 						break;
 					}
@@ -945,9 +941,9 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		}
 	}
 
-	switch (E->KeyCode) 
+	switch (E->KeyCode)
 	{
-	case Keys::V:									
+	case Keys::V:
 		if (E->Modifiers == Keys::Control)
 		{
 			try
@@ -959,7 +955,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 				}
 				else
 				{
-					HandleKeyEventForKey(E->KeyCode);	
+					HandleKeyEventForKey(E->KeyCode);
 					E->Handled = true;
 				}
 			}
@@ -973,8 +969,8 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 
 			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 		}
-		break;	
-	case Keys::Q:					
+		break;
+	case Keys::Q:
 		if (E->Modifiers == Keys::Control)
 		{
 			ToggleComment(TextField->SelectionStart);
@@ -991,12 +987,12 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 			if (E->Modifiers == Keys::Shift)
 			{
 				HandleKeyEventForKey(E->KeyCode);
-				E->Handled = true;			
+				E->Handled = true;
 			}
 		}
 		else
 		{
-			if (!IntelliSenseBox->IsVisible())					
+			if (!IntelliSenseBox->IsVisible())
 				IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Default, true, false);
 
 			HandleKeyEventForKey(E->KeyCode);
@@ -1025,11 +1021,11 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 
 			HandleKeyEventForKey(E->KeyCode);
 			E->Handled = true;
-		} 
-		else 
+		}
+		else
 		{
 			if (PerformTabIndent())
-			{	
+			{
 				HandleKeyEventForKey(E->KeyCode);
 				E->Handled = true;
 			}
@@ -1052,7 +1048,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 			HandleKeyEventForKey(E->KeyCode);
 			E->Handled = true;
 		}
-		break;																														
+		break;
 	case Keys::Home:
 		if (!E->Control && !E->Shift)
 		{
@@ -1137,7 +1133,7 @@ void ScriptEditorTextEditor::TextField_MouseDown(Object^ Sender, MouseEventArgs^
 		IntelliSenseBox->LastOperation = IntelliSenseThingy::Operation::e_Default;
 	}
 
-	IntelliSenseBox->HideInfoTip();	
+	IntelliSenseBox->HideInfoTip();
 }
 
 void ScriptEditorTextEditor::TextField_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -1200,4 +1196,3 @@ ScriptEditorTextEditor::ScriptEditorTextEditor(UInt32 LinesToScroll, Font^ Font,
 
 	IntelliSenseBox->Hide();
 }
-

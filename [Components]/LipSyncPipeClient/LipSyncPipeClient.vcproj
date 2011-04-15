@@ -95,7 +95,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -182,7 +182,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>

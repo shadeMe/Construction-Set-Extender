@@ -20,6 +20,7 @@ extern std::fstream					g_DEBUG_LOG;
 extern std::string					g_AppPath;
 extern std::string					g_INIPath;
 extern char							g_Buffer[0x200];
+extern bool							g_PluginPostLoad;
 
 extern OBSEMessagingInterface*		g_msgIntfc;
 extern PluginHandle					g_pluginHandle;
@@ -36,7 +37,7 @@ class EditorAllocator
 		HWND																ListBoxControl;
 		UInt32																Index;
 
-																			SEAlloc(HWND REC, HWND LBC, UInt32 IDX): 
+																			SEAlloc(HWND REC, HWND LBC, UInt32 IDX):
 																			RichEditControl(REC), ListBoxControl(LBC), Index(IDX) {};
 	};
 
@@ -68,14 +69,12 @@ public:
 	void									Initialize();
 };
 
-
-				
 // 0C+?
 class TESDialogInitParam
 {
 public:
 	UInt8		TypeID;					// 00
-	UInt8		Pad01[3];				
+	UInt8		Pad01[3];
 	TESForm*	Form;					// 04
 	UInt32		unk08;					// 08
 
@@ -91,7 +90,7 @@ public:
 	~TESCellUseData();
 
 	TESObjectCELL*		Cell;		// 00
-	UInt32				Count;		// 04	
+	UInt32				Count;		// 04
 };
 
 class TESCellUseList;
@@ -127,6 +126,14 @@ public:
 	// no members
 };
 
+union SettingData
+{
+	int				i;
+	UInt32			u;
+	float			f;
+	char*			s;
+};
+
 // 2C		### partial - look into the common settings class
 class GameSetting
 {
@@ -138,14 +145,10 @@ public:
 	TESFormIDListView		listView;
 
 	//members
-	union								// 24
-	{
-		int					iData;
-		float				fData;
-		const char*			sData;
-	};
-
+	SettingData				Data;		// 24
 	const char*				settingID;	// 28
+
+	void					SetSettingID(const char* ID) { settingID = ID; }
 };
 
 class GameSettingCollection;
@@ -156,7 +159,7 @@ template<typename Type> struct GenericNode
 	GenericNode<Type>	* next;
 };
 
-// 18 
+// 18
 struct TESRenderSelection
 {
 	struct SelectedObjectsEntry
@@ -209,9 +212,9 @@ public:
 	struct ResponseEntry
 	{
 		// 24
-		struct Data 
+		struct Data
 		{
-			enum 
+			enum
 			{
 				kEmotionType_Neutral = 0,
 				kEmotionType_Anger,
@@ -227,12 +230,12 @@ public:
 			UInt32			unk08;						// 08
 			UInt32			unk0C;						// 0C
 			String			responseText;				// 10
-			String			actorNotes;					// 18	
+			String			actorNotes;					// 18
 			UInt32			unk20;						// 20
 		};
 
 		Data*				data;
-		ResponseEntry*		next;		
+		ResponseEntry*		next;
 	};
 
 	 enum
@@ -260,7 +263,7 @@ public:
 	TESTopic*			unk024;			// 24 - always NULL ?
 	ConditionEntry		conditions;		// 28
 	UInt16				unk30;			// 30 - init to -1. used to determine previous info	?
-	UInt16				infotype;		// 32 
+	UInt16				infotype;		// 32
 	UInt8				flags;			// 34
 	UInt8				flagsPad[3];	// 35
 	TopicListEntry		addedTopics;	// 38
@@ -276,13 +279,13 @@ struct ResponseEditorData
 {
 	struct VoiceRecorderData
 	{
-		HWND			recorderDlg;			// 00	
+		HWND			recorderDlg;			// 00
 	};
 
 	const char*				editorTitle;		// 00
 	UInt32					maxResponseLength;	// 04
 	DialogResponse*			selectedResponse;	// 08
-	DialogResponse*			responseLocalCopy;	// 0C	
+	DialogResponse*			responseLocalCopy;	// 0C
 	VoiceRecorderData*		recorderData;		// 10
 	TESTopic*				parentTopic;		// 14
 	TESTopicInfo*			infoLocalCopy;		// 18
@@ -322,14 +325,6 @@ public:
 	LPCRITICAL_SECTION			archiveCS;		// 200
 };
 
-// ### partial
-union GMSTData
-{
-	int				i;
-	UInt32			u;
-	float			f;
-	const char*		s;	
-};
 struct GMSTMap_Key_Comparer
 {
 	bool operator()(const char* Key1, const char* Key2) const {
@@ -337,15 +332,28 @@ struct GMSTMap_Key_Comparer
 	}
 };
 
-typedef std::map<const char*, GMSTData*, GMSTMap_Key_Comparer>		_DefaultGMSTMap;
+typedef std::map<const char*, GameSetting*, GMSTMap_Key_Comparer>		_DefaultGMSTMap;
 extern _DefaultGMSTMap			g_DefaultGMSTMap;
+
+class TESFormReferenceData
+{
+	TESForm*		Form;
+	UInt32			Count;
+public:
+	void			Initialize(TESForm* Form)	{ this->Form = Form; Count = 0; }
+	UInt32			GetReferenceCount() { return Count; }
+	UInt32			IncrementRefCount() { return ++Count; }
+	UInt32			DecrementRefCount() { if (Count-- == 0)	Count = 0; return Count; }
+
+	static TESFormReferenceData* FindDataInRefList(GenericNode<TESFormReferenceData>* RefList, TESForm* Form);
+};
 
 class BSTextureManager;
 class BSRenderedTexture;
 class NiDX9Renderer;
 typedef ModEntry::Data			TESFile;
 
-enum 
+enum
 {
 	kTESObjectREFRSpecialFlags_3DInvisible				= 1 << 31,			// bits (only?) used in the runtime to mark modifications
 	kTESObjectREFRSpecialFlags_Children3DInvisible		= 1 << 30,
@@ -364,7 +372,7 @@ enum
 extern UInt32*					g_RenderWindowStateFlags;
 
 enum
-{	
+{
 	// CS Main Dialogs
 	kDialogTemplate_About						= 100,
 	kDialogTemplate_Temp						= 102,
@@ -388,7 +396,6 @@ enum
 	kDialogTemplate_DistantLODExport			= 317,
 	kDialogTemplate_FilteredDialog				= 3235,
 	kDialogTemplate_CreateLocalMaps				= 3249,
-
 
 	// TESBoundObject/FormEdit Dialogs
 	kDialogTemplate_Weapon						= 135,
@@ -429,7 +436,6 @@ enum
 	kDialogTemplate_EffectShader				= 3253,
 	kDialogTemplate_SigilStone					= 3255,
 
-
 	// TESFormIDListView Dialogs
 	kDialogTemplate_Faction						= 157,
 	kDialogTemplate_Race						= 159,
@@ -444,7 +450,6 @@ enum
 	kDialogTemplate_Hair						= 289,
 	kDialogTemplate_Quest						= 3225,
 	kDialogTemplate_Eyes						= 3228,
-
 
 	// Misc Dialogs
 	kDialogTemplate_StringEdit					= 174,
@@ -471,7 +476,6 @@ enum
 	kDialogTemplate_SelectQuestsEx				= 3236,
 	kDialogTemplate_SoundRecording				= 3241,
 
-
 	// Subwindows
 	kDialogTemplate_AIPackageLocationData		= 240,
 	kDialogTemplate_AIPackageTargetData			= 241,
@@ -494,7 +498,7 @@ enum
 	kDialogTemplate_NPCStatsData				= 288,
 	kDialogTemplate_RegionEditorObjectsExtraData
 												= 309,
-	kDialogTemplate_WeatherGeneral				= 311, 
+	kDialogTemplate_WeatherGeneral				= 311,
 	kDialogTemplate_WeatherPecipitationData		= 312,
 	kDialogTemplate_WeatherSoundData			= 313,
 	kDialogTemplate_HeightMapEditorBrushData	= 3167,			// doubtful
@@ -534,11 +538,10 @@ enum
 	kDialogTemplate_WeatherHDRData				= 3257,
 	kDialogTemplate_ReferenceLeveledCreatureData
 												= 3259,
-	
 
 	// Deprecated
 	kDialogTemplate_SelectModel					= 110,
-	kDialogTemplate_IngredientEx				= 139,	
+	kDialogTemplate_IngredientEx				= 139,
 	kDialogTemplate_AnimGroup					= 155,
 	kDialogTemplate_BodyPart					= 153,
 	kDialogTemplate_FactionRankDisposition		= 158,
@@ -555,7 +558,6 @@ enum
 	kDialogTemplate_TextureUse					= 316,
 	kDialogTemplate_CreatureSoundEx				= 3243,
 	kDialogTemplate_NPCFaceAdvancedDataEx		= 3216,
-
 
 	// Unknown
 	kDialogTemplate_Unk235						= 235,
@@ -614,10 +616,10 @@ extern TESForm**				g_TravelMarker;
 extern TESForm**				g_MapMarker;
 extern TESForm**				g_HorseMarker;
 
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture32x; 
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture64x; 
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture32x;
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture64x;
 extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture128x;
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture512x; 
+extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture512x;
 extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture1024x;
 extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture2048x;
 
@@ -634,7 +636,6 @@ extern LPDIRECT3DTEXTURE9		g_LODD3DTexture4096x;
 extern BSRenderedTexture*		g_LODBSTexture4096x;
 extern LPDIRECT3DTEXTURE9		g_LODD3DTexture8192x;
 extern BSRenderedTexture*		g_LODBSTexture8192x;
-
 
 typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
 extern const _WriteToStatusBar WriteToStatusBar;
@@ -717,7 +718,6 @@ extern const _DataHandler_PlaceTESBoundObjectReference		DataHandler_PlaceTESBoun
 extern const void *			RTTI_TESCellUseList;
 
 extern const UInt32			kTESChildCell_LoadCell;
-extern const UInt32			kTESForm_GetObjectUseList;
 extern const UInt32			kTESCellUseList_GetUseListRefHead;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
 extern const UInt32			kScript_SaveResultScript;
@@ -739,6 +739,13 @@ extern const UInt32			kGMSTMap_Add;	// NiTPointerMap<const char*, GMSTData>
 extern const UInt32			kBSTextureManager_CreateBSRenderedTexture;
 extern const UInt32			kTESForm_GetOverrideFile;
 extern const UInt32			kTESForm_AddReference;
+extern const UInt32			kTESForm_GetFormReferenceList;
+extern const UInt32			kTESForm_CleanupFormReferenceList;
+extern const UInt32			kLinkedListNode_RemoveNode;
+extern const UInt32			kLinkedListNode_GetIsDangling;
+extern const UInt32			kLinkedListNode_Cleanup;
+extern const UInt32			kLinkedListNode_GetData;
+
 extern const UInt32			kTESQuest_SetStartEnabled;
 extern const UInt32			kTESQuest_SetAllowedRepeatedStages;
 extern const UInt32			kTESObjectCELL_GetIsInterior;
@@ -751,6 +758,7 @@ extern const UInt32			kTESFile_GetIsESM;
 extern const UInt32			kTESFile_Dtor;
 extern const UInt32			kDataHandler_PopulateModList;
 extern const UInt32			kTESRenderSelection_RemoveFormFromSelection;
+extern const UInt32			kTESForm_SetTemporary;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
@@ -795,7 +803,7 @@ extern const UInt32			kTESObjectCLOT_Ctor;
 extern const UInt32			kTESQuest_Ctor;
 extern const UInt32			kScript_Ctor;
 extern const UInt32			kTESRenderSelection_Ctor;
-
+extern const UInt32			kGameSetting_Ctor;
 
 TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
 UInt32						GetDialogTemplate(const char* FormType);
@@ -872,8 +880,8 @@ class RenderWindowTextPainter
 			this->DrawArea.bottom = DrawArea->bottom;
 
 			this->Valid = false;
-			if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, FontHeight, FontWidth, FontWeight, 0, FALSE, 
-						DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+			if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, FontHeight, FontWidth, FontWeight, 0, FALSE,
+						DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
 						DEFAULT_PITCH|FF_DONTCARE, (LPCTSTR)FontFace, &Font)))
 			{
 				DebugPrint("Failed to create font for RenderChannelBase!");
@@ -897,13 +905,13 @@ class RenderWindowTextPainter
 	{
 		std::string						TextToRender;
 	public:
-		StaticRenderChannel(INT FontHeight, 
-							INT FontWidth, 
-							UINT FontWeight, 
-							const char* FontFace, 
-							DWORD Color, 
+		StaticRenderChannel(INT FontHeight,
+							INT FontWidth,
+							UINT FontWeight,
+							const char* FontFace,
+							DWORD Color,
 							RECT* DrawArea) : RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea) {}
-		
+
 		virtual void					Render();
 		void							Queue(const char* Text);
 		UInt32							GetQueueSize() { return (TextToRender.length() < 1); }
@@ -923,11 +931,11 @@ class RenderWindowTextPainter
 
 		std::queue<QueueTask*>			DrawQueue;
 	public:
-		DynamicRenderChannel(INT FontHeight, 
-							INT FontWidth, 
-							UINT FontWeight, 
-							const char* FontFace, 
-							DWORD Color, 
+		DynamicRenderChannel(INT FontHeight,
+							INT FontWidth,
+							UINT FontWeight,
+							const char* FontFace,
+							DWORD Color,
 							RECT* DrawArea) : RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea), TimeLeft(0) {}
 
 		virtual void					Render();
@@ -956,7 +964,6 @@ public:
 	void								QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay);
 
 	UInt32								GetRenderChannelQueueSize(UInt8 Channel);
-	
 };
 #define RENDERTEXT								RenderWindowTextPainter::GetSingleton()
 #define PrintToRender(message, duration)		RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, message, duration)
@@ -1007,18 +1014,17 @@ class WorkspaceManager
 
 	MemoryHandler::MemHdlr				DataHandlerPopulateModList;
 
-	void								SetWorkingDirectory(const char* WorkspacePath);	
+	void								SetWorkingDirectory(const char* WorkspacePath);
 	void								ResetLoadedData(void);
 	void								ReloadModList(const char* WorkspacePath, bool ClearList, bool LoadESPs);
 	void								CreateDefaultDirectories(const char* WorkspacePath);
 public:
-	WorkspaceManager() : DataHandlerPopulateModList(0x0047E708 + 2, (UInt32)0, 0, 0), 
+	WorkspaceManager() : DataHandlerPopulateModList(0x0047E708 + 2, (UInt32)0, 0, 0),
 						CurrentDirectory(g_AppPath),
 						DefaultDirectory(g_AppPath) {}
-						
 
 	void								Initialize(const char* DefaultDirectory);
-	bool								SelectWorkspace(const char* Workspace);	
+	bool								SelectWorkspace(const char* Workspace);
 };
 
 extern WorkspaceManager					g_WorkspaceManager;

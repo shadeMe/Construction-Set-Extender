@@ -19,16 +19,16 @@ _DefineHookHdlr(NumericEditorID, 0x00497670);
 _DefineHookHdlr(DataHandlerConstructSpecialForms, 0x00481049);
 _DefineHookHdlr(ResultScriptSaveForm, 0x004FD258);
 _DefineHookHdlr(TESObjectREFRDoCopyFrom, 0x0054763D);
-
+_DefineHookHdlr(TESFormAddReference, 0x0049644B);
+_DefineHookHdlr(TESFormRemoveReference, 0x00496494);
+_DefineHookHdlr(TESFormClearReferenceList, 0x0049641E);
+_DefineHookHdlr(TESFormPopulateUseInfoList, 0x004964F2);
+_DefineHookHdlr(TESFormDelete, 0x00498712);
 
 void PatchMiscHooks(void)
 {
 	_MemoryHandler(ExitCS).WriteJump();
 	_MemoryHandler(CSInit).WriteJump();
-	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
-		PatchMessageHandler();
-	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
-		_MemoryHandler(AssertOverride).WriteJump();
 	_MemoryHandler(PluginSave).WriteJump();
 	_MemoryHandler(PluginLoad).WriteJump();
 	_MemoryHandler(TextureMipMapCheck).WriteUInt8(0xEB);
@@ -41,6 +41,16 @@ void PatchMiscHooks(void)
 	_MemoryHandler(DataHandlerConstructSpecialForms).WriteJump();
 	_MemoryHandler(ResultScriptSaveForm).WriteJump();
 	_MemoryHandler(TESObjectREFRDoCopyFrom).WriteJump();
+	_MemoryHandler(TESFormAddReference).WriteJump();
+	_MemoryHandler(TESFormRemoveReference).WriteJump();
+	_MemoryHandler(TESFormClearReferenceList).WriteJump();
+	_MemoryHandler(TESFormPopulateUseInfoList).WriteJump();
+	_MemoryHandler(TESFormDelete).WriteJump();
+
+	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
+		PatchMessageHandler();
+	if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
+		_MemoryHandler(AssertOverride).WriteJump();
 
 	if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 		DebugPrint("Couldn't create the Backup folder in Data directory");
@@ -48,7 +58,7 @@ void PatchMiscHooks(void)
 	OSVERSIONINFO OSInfo;
 	GetVersionEx(&OSInfo);
 	if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
-		RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");		
+		RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
 }
 
 void PatchMessageHandler(void)
@@ -69,6 +79,7 @@ void PatchMessageHandler(void)
 	NopHdlr kTangentSpaceCreation(0x0076989C, 5);
 	NopHdlr	kHeightMapGenA(0x005E0D9D, 5), kHeightMapGenB(0x005E0DB6, 5);
 	NopHdlr kModelLoadError(0x0046C215, 5);
+	NopHdlr	kLoadTerrainLODQuad(0x005583F1, 5);
 
 	SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
 	kDataHandlerAutoSave.WriteNop();
@@ -77,6 +88,7 @@ void PatchMessageHandler(void)
 	kHeightMapGenA.WriteNop();
 	kHeightMapGenB.WriteNop();
 	kModelLoadError.WriteNop();
+	kLoadTerrainLODQuad.WriteNop();
 }
 
 void __stdcall MessageHandlerOverride(const char* Message)
@@ -111,7 +123,7 @@ _BeginHookHdlrFn(ExitCS)
 
 void __stdcall DoCSInitHook()
 {
-	if (!g_PluginPostLoad) 
+	if (!g_PluginPostLoad)
 		return;
 											// prevents the hook from being called before the full init
 											// perform deferred patching
@@ -119,7 +131,7 @@ void __stdcall DoCSInitHook()
 	kCSInit.WriteBuffer();
 
 	InitializeWindowManager();
-//	InitializeDefaultGMSTMap();
+	InitializeDefaultGMSTMap();
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
 	HallOfFame::Initialize(true);
 	CONSOLE->InitializeConsole();
@@ -146,8 +158,9 @@ void __stdcall DoCSInitHook()
 	LoadedMasterArchives();
 
 	g_WorkspaceManager.Initialize(g_AppPath.c_str());
+	if (g_INIManager->GET_INI_INT("SetWorkspaceOnStartup"))
+		g_WorkspaceManager.SelectWorkspace(g_INIManager->GET_INI_STR("DefaultWorkspacePath"));
 }
-
 
 _BeginHookHdlrFn(CSInit)
 {
@@ -163,7 +176,7 @@ _BeginHookHdlrFn(CSInit)
 
 void __stdcall DoAssertOverrideHook(UInt32 EIP)
 {
-	DebugPrint("\t\tAssert call handled at 0x%08X !", EIP);
+	DebugPrint("\tAssertion handled at 0x%08X", EIP);
 	MessageBeep(MB_ICONHAND);
 }
 
@@ -216,7 +229,6 @@ _BeginHookHdlrFn(PluginLoad)
     }
 }
 
-
 void __stdcall DestroyShadeMeRef(void)
 {
 	TESForm* Ref = GetFormByID("TheShadeMeRef");
@@ -226,6 +238,29 @@ void __stdcall DestroyShadeMeRef(void)
 void __stdcall ClearRenderSelectionGroupMap(void)
 {
 	g_RenderSelectionGroupManager.Clear();
+}
+void __stdcall ClearGMSTCollection(void)
+{
+	void* Unk01 = (void*)thisCall(0x0051F920, (void*)g_GMSTMap);
+	while (Unk01)
+	{
+		const char*	 Name = NULL;
+		SettingData* Data = NULL;
+
+		thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
+		if (Data)
+		{
+			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
+			thisVirtualCall(*(UInt32*)SettingForm, 0x94, SettingForm, 0);
+			_DefaultGMSTMap::iterator Match = g_DefaultGMSTMap.find(Name);
+
+			if (Match != g_DefaultGMSTMap.end())
+			{
+				GameSetting* DefaultGMST = Match->second;
+				thisVirtualCall(*(UInt32*)SettingForm, 0xB8, SettingForm, DefaultGMST);
+			}
+		}
+	}
 }
 
 _BeginHookHdlrFn(DataHandlerClearData)
@@ -238,6 +273,7 @@ _BeginHookHdlrFn(DataHandlerClearData)
 		pushad
 		call	DestroyShadeMeRef
 		call	ClearRenderSelectionGroupMap
+		call	ClearGMSTCollection
 		popad
 
 		jmp		[_HookHdlrFnVariable(DataHandlerClearDataShadeMeRefDtor, Retn)]
@@ -265,9 +301,9 @@ _BeginHookHdlrFn(TopicInfoCopyEpilog)
 
 void __stdcall DoNumericEditorIDHook(const char* EditorID)
 {
-	if (g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->GetValueAsInteger() && 
-		g_PluginPostLoad && 
-		strlen(EditorID) > 0 && 
+	if (g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->GetValueAsInteger() &&
+		g_PluginPostLoad &&
+		strlen(EditorID) > 0 &&
 		isdigit((int)*EditorID))
 	{
 		sprintf_s(g_Buffer, sizeof(g_Buffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
@@ -310,8 +346,6 @@ _BeginHookHdlrFn(DataHandlerConstructSpecialForms)
 	}
 }
 
-
-
 _BeginHookHdlrFn(ResultScriptSaveForm)
 {
 	_DeclareHookHdlrFnVariable(ResultScriptSaveForm, Retn, 0x004FD260);
@@ -349,8 +383,119 @@ _BeginHookHdlrFn(TESObjectREFRDoCopyFrom)
 	}
 }
 
+void __stdcall DoTESFormAddReferenceHook(GenericNode<TESFormReferenceData>* ReferenceList, TESForm* Form)
+{
+	TESFormReferenceData* Data = TESFormReferenceData::FindDataInRefList(ReferenceList, Form);
+	if (Data)
+		Data->IncrementRefCount();
+	else
+	{
+		TESFormReferenceData* NewNode = (TESFormReferenceData*)FormHeap_Allocate(sizeof(TESFormReferenceData));		// nasty, but ought to work
+		NewNode->Initialize(Form);
+		NewNode->IncrementRefCount();
 
+		thisCall(kLinkedListNode_NewNode, ReferenceList, NewNode);
+	}
+}
 
+_BeginHookHdlrFn(TESFormAddReference)
+{
+	_DeclareHookHdlrFnVariable(TESFormAddReference, Retn, 0x00496461);
+	__asm
+	{
+		push	edi
+		push	eax
+		call	DoTESFormAddReferenceHook
+		jmp		[_HookHdlrFnVariable(TESFormAddReference, Retn)]
+	}
+}
 
+void __stdcall DoTESFormRemoveReferenceHook(TESForm* Parent, GenericNode<TESFormReferenceData>* ReferenceList, TESForm* Form)
+{
+	TESFormReferenceData* Data = TESFormReferenceData::FindDataInRefList(ReferenceList, Form);
+	if (Data)
+	{
+		if (Data->DecrementRefCount() == 0)
+		{
+			thisCall(kLinkedListNode_RemoveNode, ReferenceList, Data);
+			FormHeap_Free(Data);
+		}
 
+		if (thisCall(kLinkedListNode_GetIsDangling, ReferenceList))
+			thisCall(kTESForm_CleanupFormReferenceList, Parent);
+	}
+}
 
+_BeginHookHdlrFn(TESFormRemoveReference)
+{
+	_DeclareHookHdlrFnVariable(TESFormRemoveReference, Retn, 0x004964AE);
+	__asm
+	{
+		push	ebx
+		push	esi
+		push	edi
+		call	DoTESFormRemoveReferenceHook
+		jmp		[_HookHdlrFnVariable(TESFormRemoveReference, Retn)]
+	}
+}
+
+void __stdcall DoTESFormClearReferenceListHook(GenericNode<TESFormReferenceData>* ReferenceList)
+{
+	for (GenericNode<TESFormReferenceData>* Itr = ReferenceList; Itr && Itr->data; Itr = Itr->next)
+	{
+		TESFormReferenceData* Data = Itr->data;
+		FormHeap_Free(Data);
+	}
+	thisCall(kLinkedListNode_Cleanup, ReferenceList);
+}
+
+_BeginHookHdlrFn(TESFormClearReferenceList)
+{
+	_DeclareHookHdlrFnVariable(TESFormClearReferenceList, Retn, 0x00496423);
+	__asm
+	{
+		pushad
+		push	ecx
+		call	DoTESFormClearReferenceListHook
+		popad
+
+		jmp		[_HookHdlrFnVariable(TESFormClearReferenceList, Retn)]
+	}
+}
+
+_BeginHookHdlrFn(TESFormPopulateUseInfoList)
+{
+	_DeclareHookHdlrFnVariable(TESFormPopulateUseInfoList, Retn, 0x004964FB);
+	_DeclareHookHdlrFnVariable(TESFormPopulateUseInfoList, Jump, 0x00496509);
+	__asm
+	{
+		call	[kLinkedListNode_GetData]
+		test	eax, eax
+		jz		FAIL
+
+		mov		eax, [eax]
+		test	eax, eax
+		jz		FAIL
+
+		jmp		[_HookHdlrFnVariable(TESFormPopulateUseInfoList, Retn)]
+	FAIL:
+		jmp		[_HookHdlrFnVariable(TESFormPopulateUseInfoList, Jump)]
+	}
+}
+
+_BeginHookHdlrFn(TESFormDelete)
+{
+	_DeclareHookHdlrFnVariable(TESFormDelete, Retn, 0x00498717);
+	_DeclareHookHdlrFnVariable(TESFormDelete, Jump, 0x0049872D);
+	__asm
+	{
+		call	[kLinkedListNode_GetData]
+		cmp		eax, ebx
+		jz		FAIL
+
+		mov		eax, [eax]
+		jmp		[_HookHdlrFnVariable(TESFormDelete, Retn)]
+	FAIL:
+		jmp		[_HookHdlrFnVariable(TESFormDelete, Jump)]
+	}
+}

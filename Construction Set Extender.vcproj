@@ -96,7 +96,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;f:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -183,7 +183,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Installing DLL..."
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;G:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;f:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -459,26 +459,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="CSInterop"
-			>
-			<File
-				RelativePath=".\CSInterop.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CSInterop.h"
-				>
-			</File>
-			<File
-				RelativePath=".\[Common]\CSInteropData.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\[Common]\CSInteropData.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="Utilities"
 			>
 			<File
@@ -531,6 +511,26 @@
 			</File>
 			<File
 				RelativePath=".\CSEInterfaceManager.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="CSInterop"
+			>
+			<File
+				RelativePath=".\CSInterop.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSInterop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\[Common]\CSInteropData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\[Common]\CSInteropData.h"
 				>
 			</File>
 		</Filter>

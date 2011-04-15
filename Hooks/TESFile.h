@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include "Common.h"
 
 // hooks that modify plugin file loading behaviour
@@ -20,6 +20,5 @@ _DeclareMemHdlr(TESFileUpdateHeaderFlagBit, "same as above");
 _DeclareMemHdlr(TESObjectCELLSaveReferencesProlog, "prevents malformed records of deleted refs from being written");
 _DeclareMemHdlr(TESObjectCELLSaveReferencesEpilog, "");
 _DeclareMemHdlr(MissingMasterOverride, "allows the loading of plugins with missing masters");
-_DeclareMemHdlr(QuickLoadPluginLoadHandlerPrologue, "adds support for the quick loading of plugins (only loads the active plugin)");
-_DeclareMemHdlr(QuickLoadPluginLoadHandler, "");
+_DeclareMemHdlr(QuickLoadPluginLoadHandler, "adds support for the quick loading of plugins (only loads the active plugin)");
 _DeclareMemHdlr(AutoLoadActivePluginOnStartup, "temporary hook that allows the automatic loading of plugins on startup");

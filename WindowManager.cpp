@@ -30,7 +30,7 @@ HFONT						g_CSDefaultFont = NULL;
 #define PI					3.151592653589793
 
 LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{ 
+{
 	switch (uMsg)
 	{
 	case WM_NOTIFY:
@@ -55,16 +55,16 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 			break;
 		}
 		break;
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_FindTextOrgWindowProc);
-		break; 
+		break;
 	}
- 
-	return CallWindowProc(g_FindTextOrgWindowProc, hWnd, uMsg, wParam, lParam); 
-} 
+
+	return CallWindowProc(g_FindTextOrgWindowProc, hWnd, uMsg, wParam, lParam);
+}
 
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{ 
+{
 	static ModEntry::Data** s_ActiveTESFile = (ModEntry::Data**)0x00A0AA7C;
 
 	switch (uMsg)
@@ -72,7 +72,10 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case DATA_SETSTARTUPPLUGIN:	
+		case DATA_QUICKLOAD:
+			g_QuickLoadToggle = (IsDlgButtonChecked(hWnd, DATA_QUICKLOAD) == BST_CHECKED);
+			break;
+		case DATA_SETSTARTUPPLUGIN:
 			{
 			HWND PluginList = GetDlgItem(hWnd, 1056);
 			int SelectedItem = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
@@ -106,35 +109,41 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				if (MessageBox(hWnd, "There are open script windows. Are you sure you'd like to proceed?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
 					return FALSE;
 			}
+			else if (*s_ActiveTESFile == NULL && g_QuickLoadToggle)
+			{
+				MessageBox(hWnd, "An active plugin must be set when quick-loading.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+				return FALSE;
+			}
 			else if ((*s_ActiveTESFile) != NULL && !_stricmp((*s_ActiveTESFile)->name, "oblivion.esm"))
 			{
 				if (MessageBox(hWnd, "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world ?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
-					return FALSE;				
+					return FALSE;
 			}
+
 			break;
 		}
 		break;
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;					// required for correct esm handling
 		if (ActiveFile)
 			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_DataDlgOrgWindowProc);
-		break; 
+		break;
 	}
- 
-	return CallWindowProc(g_DataDlgOrgWindowProc, hWnd, uMsg, wParam, lParam); 
-} 
+
+	return CallWindowProc(g_DataDlgOrgWindowProc, hWnd, uMsg, wParam, lParam);
+}
 
 LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{ 
+{
 	switch (uMsg)
 	{
 	case 0x40C:				// save handler
 		if (g_QuickLoadToggle) {
-			if (MessageBox(*g_HWND_CSParent, 
-					"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains master-dependent records.", 
-					"Save Warning", 
+			if (MessageBox(*g_HWND_CSParent,
+					"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains master-dependent records.",
+					"Save Warning",
 					MB_ICONWARNING|MB_YESNO) == IDNO)
 			{
 				return FALSE;
@@ -144,7 +153,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case MAIN_DATA_SAVEAS:		
+		case MAIN_DATA_SAVEAS:
 			if (!(*g_dataHandler)->unk8B8.activeFile)		break;
 
 			*g_WorkingFileFlag = 0;
@@ -173,7 +182,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 			*g_WorkingFileFlag = 1;
 			break;
-		case MAIN_WORLD_BATCHEDIT:				
+		case MAIN_WORLD_BATCHEDIT:
 			{
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
@@ -218,15 +227,15 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					i++;
 					ThisNode = ThisNode->Next();
 				}
-				
+
 				BatchData->CellObjectListHead = RefData;
 				BatchData->ObjectCount = RefCount;
 
-				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData)) 
+				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData))
 				{
 					EnterCriticalSection(g_ExtraListCS);
 
-					for (UInt32 k = 0; k < RefCount; k++) 
+					for (UInt32 k = 0; k < RefCount; k++)
 					{
 						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
 						ThisRefData = &RefData[k];
@@ -244,8 +253,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 							if (BatchData->World3DData.UseScale())	ThisRef->scale = BatchData->World3DData.Scale, Modified = true;
 
-							if (BatchData->Flags.UsePersistent() && 
-								ThisRef->baseForm->typeID != kFormType_NPC && 
+							if (BatchData->Flags.UsePersistent() &&
+								ThisRef->baseForm->typeID != kFormType_NPC &&
 								ThisRef->baseForm->typeID != kFormType_Creature)
 								ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent), Modified = true;
 							if (BatchData->Flags.UseDisabled())		ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Disabled, BatchData->Flags.Disabled), Modified = true;
@@ -263,10 +272,9 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							}
 
 							if (BatchData->Ownership.UseOwnership() &&
-								ThisRef->baseForm->typeID != kFormType_NPC && 
+								ThisRef->baseForm->typeID != kFormType_NPC &&
 								ThisRef->baseForm->typeID != kFormType_Creature)
 							{
-
 								thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, 0);
 								thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, -1);
 								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, 0);
@@ -276,10 +284,10 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 								if (BatchData->Ownership.UseNPCOwner())
 								{
 									thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
-								} 
-								else 
+								}
+								else
 								{
-									thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);								
+									thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);
 								}
 								Modified = true;
 							}
@@ -288,7 +296,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							if (BatchData->Extra.UseHealth())		thisCall(kTESObjectREFR_ModExtraHealth, ThisRef, BatchData->Extra.Health), Modified = true;
 							if (BatchData->Extra.UseTimeLeft())		thisCall(kTESObjectREFR_ModExtraTimeLeft, ThisRef, BatchData->Extra.TimeLeft), Modified = true;
 							if (BatchData->Extra.UseSoulLevel())	thisCall(kTESObjectREFR_ModExtraSoul, ThisRef, BatchData->Extra.SoulLevel), Modified = true;
-							if (BatchData->Extra.UseCount()) 
+							if (BatchData->Extra.UseCount())
 							{
 								switch (ThisRef->baseForm->typeID)
 								{
@@ -310,7 +318,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 										if (Light)
 											if (Light->IsCarriable())
 												thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
-								}							
+								}
 							}
 						}
 
@@ -321,7 +329,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef); // CopyFrom, to update NiNode data
 							thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
 						}
-					}	
+					}
 
 					LeaveCriticalSection(g_ExtraListCS);
 				}
@@ -331,7 +339,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			}
 			break;
 			}
-		case MAIN_VIEW_CONSOLEWINDOW:			
+		case MAIN_VIEW_CONSOLEWINDOW:
 			if (CONSOLE->IsConsoleInitalized()) {
 				HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 				if (CONSOLE->ToggleDisplayState())
@@ -340,13 +348,13 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_UNCHECKED);
 			}
 			break;
-		case MAIN_VIEW_MODIFIEDRECORDS:				
+		case MAIN_VIEW_MODIFIEDRECORDS:
 			FormEnumerationWrapper::ToggleUnmodifiedFormVisibility();
 			break;
-		case MAIN_DATA_CSEPREFERENCES:			
+		case MAIN_DATA_CSEPREFERENCES:
 			g_INIEditGUI->InitializeGUI(g_DLLInstance, *g_HWND_CSParent, g_INIManager);
 			break;
-		case MAIN_VIEW_DELETEDRECORDS:				
+		case MAIN_VIEW_DELETEDRECORDS:
 			FormEnumerationWrapper::ToggleDeletedFormVisibility();
 			break;
 		case MAIN_WORLD_UNLOADCELL:
@@ -366,13 +374,13 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			break;
 		}
 		break;
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_CSMainWndOrgWindowProc);
-		break; 
+		break;
 	}
- 
-	return CallWindowProc(g_CSMainWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
-} 
+
+	return CallWindowProc(g_CSMainWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
+}
 
 LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -381,7 +389,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case RENDER_BATCHEDIT:	
+		case RENDER_BATCHEDIT:
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, MAIN_WORLD_BATCHEDIT, 0);
 			break;
 		case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
@@ -392,7 +400,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			{
 				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 				UInt32 FlagMask = 0;
-				
+
 				switch (LOWORD(wParam))
 				{
 				case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
@@ -472,7 +480,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						ThisRef->posZ = AlignRef->posZ;
 						break;
 					}
-					
+
 					thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
 					thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
 					thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef);
@@ -484,14 +492,11 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			}
 			break;
 		}
-		break; 
+		break;
 	}
- 
-	return CallWindowProc(g_RenderWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+
+	return CallWindowProc(g_RenderWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
-
-
-
 
 BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -598,8 +603,8 @@ HHOOK			g_MouseHookHandle = NULL;
 
 LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-	if (nCode < 0)  // do not process the message 
-		return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam); 
+	if (nCode < 0)  // do not process the message
+		return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam);
 
 	switch (wParam)
 	{
@@ -611,7 +616,7 @@ LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam); 
+	return CallNextHookEx(g_MouseHookHandle, nCode, wParam, lParam);
 }
 
 // ### replace mouse hook with setcapture()
@@ -715,12 +720,12 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		SetWindowPos(GetDlgItem(hWnd, EDIT_CMDBOX), HWND_NOTOPMOST, 0, EditRect.bottom - EditRect.top, WindowRect.right - WindowRect.left - 10, 45, SWP_NOZORDER);
 		break;
 	}
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleWndOrgWindowProc);
-		break; 
+		break;
 	}
 
-	return CallWindowProc(g_ConsoleWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+	return CallWindowProc(g_ConsoleWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -735,7 +740,7 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 			{
 				SendMessage(hWnd, WM_SETREDRAW, FALSE, 0);
 				Edit_SetText(hWnd, (LPCSTR)CONSOLE->GetMessageBuffer());
-				SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);	
+				SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
 				SendMessage(hWnd, WM_SETREDRAW, TRUE, 0);
 			}
 			SetTimer(hWnd, CONSOLE_UPDATETIMER, CONSOLE_UPDATEPERIOD, NULL);
@@ -750,8 +755,8 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 		POINT Point;
 
 		GetClientRect(hWnd, &Rect);
-		Point.x = GET_X_LPARAM(lParam); 
-        Point.y = GET_Y_LPARAM(lParam); 
+		Point.x = GET_X_LPARAM(lParam);
+        Point.y = GET_Y_LPARAM(lParam);
 
 		if (PtInRect((LPRECT) &Rect, Point)) {
 			HMENU Popup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU1);
@@ -759,7 +764,7 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 			if (AlwaysOnTopFlag)	CheckMenuItem(Popup, 1, MF_CHECKED|MF_BYPOSITION);
 			else					CheckMenuItem(Popup, 1, MF_UNCHECKED|MF_BYPOSITION);
 
-			ClientToScreen(hWnd, (LPPOINT) &Point); 
+			ClientToScreen(hWnd, (LPPOINT) &Point);
 
 			switch (TrackPopupMenu(Popup, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, Point.x, Point.y, 0, hWnd, NULL))
 			{
@@ -782,16 +787,16 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				CONSOLE->ToggleDisplayState();
 				break;
 			}
-			DestroyMenu(Popup); 
+			DestroyMenu(Popup);
 		}
 		return FALSE;
 	}
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleEditControlOrgWindowProc);
-		break; 
+		break;
 	}
- 
-	return CallWindowProc(g_ConsoleEditControlOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+
+	return CallWindowProc(g_ConsoleEditControlOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -863,14 +868,14 @@ LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 			}
 		}
 		break;
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleCmdBoxOrgWindowProc);
-		break; 
+		break;
 	case WM_INITDIALOG:
 		return TRUE;
 	}
- 
-	return CallWindowProc(g_ConsoleCmdBoxOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+
+	return CallWindowProc(g_ConsoleCmdBoxOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
@@ -899,7 +904,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 				}
 
 				sprintf_s(g_Buffer, sizeof(g_Buffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
-				if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+				if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES)
 				{
 					thisCall(kTESForm_SetFormID, Form, (UInt32)FormID, true);
 					thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
@@ -907,14 +912,14 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			}
 			break;
 		}
-		case POPUP_MARKUNMODIFIED:			 
+		case POPUP_MARKUNMODIFIED:
 			sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
-			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES)
 			{
-				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);		
-			}			
+				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);
+			}
 			break;
-		case POPUP_JUMPTOUSEINFOLIST:		
+		case POPUP_JUMPTOUSEINFOLIST:
 		{
 			const char* EditorID = Form->editorData.editorID.m_data;
 
@@ -930,7 +935,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		case POPUP_UNDELETE:
 		{
 			PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
-			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES) 
+			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES)
 			{
 				thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
 			}
@@ -974,8 +979,8 @@ LRESULT CALLBACK ObjectWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_COMMAND:
 		break;
 	}
- 
-	return CallWindowProc(g_ObjectWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+
+	return CallWindowProc(g_ObjectWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -987,8 +992,8 @@ LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	case WM_COMMAND:
 		break;
 	}
- 
-	return CallWindowProc(g_CellViewWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+
+	return CallWindowProc(g_CellViewWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1062,12 +1067,12 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		}
 		break;
 	}
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ResponseWndOrgWindowProc);
-		break; 
+		break;
 	}
- 
-	return CallWindowProc(g_ResponseWndOrgWindowProc, hWnd, uMsg, wParam, lParam); 
+
+	return CallWindowProc(g_ResponseWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1209,7 +1214,7 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 				Edit_GetText(EditorIDBox, BaseEditorID, 0x200);
 				if (GetFormByID(BaseEditorID))
-				{		
+				{
 					sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", BaseEditorID);
 					MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONERROR);
 				}
@@ -1256,7 +1261,7 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 						{
 							Edit_GetText(RefIDBox, RefEditorID, 0x200);
 							if (GetFormByID(RefEditorID))
-							{		
+							{
 								sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", RefEditorID);
 								MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONERROR);
 							}
@@ -1277,7 +1282,7 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 									thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Activator);
 									thisCall(kTESForm_SetEditorID, Activator, BaseEditorID);
 
-									static NiVector3 ZeroVector = { 0.0, 0.0, 0.0 };		
+									static NiVector3 ZeroVector = { 0.0, 0.0, 0.0 };
 
 									TESObjectCELL* CurrentInteriorCell = TES::GetSingleton()->currentInteriorCell;	// kludgy, but should do the trick
 									TES::GetSingleton()->currentInteriorCell = CS_CAST(ParentCell, TESForm, TESObjectCELL);
@@ -1360,10 +1365,9 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderSelectionPrimary, 0);
 		return TRUE;
 	}
- 
-	return CallWindowProc(g_TagBrowserOrgWindowProc, hWnd, uMsg, wParam, lParam); 
-}
 
+	return CallWindowProc(g_TagBrowserOrgWindowProc, hWnd, uMsg, wParam, lParam);
+}
 
 void InitializeWindowManager(void)
 {
@@ -1373,11 +1377,11 @@ void InitializeWindowManager(void)
 		  FileMenu = GetSubMenu(MainMenu, 0),
 		  WorldMenu = GetSubMenu(MainMenu, 3);
 
-	MENUITEMINFO ItemGameplayUseInfo, 
-				ItemViewRenderWindow, 
-				ItemDataSaveAs, 
-				ItemWorldBatchEdit, 
-				ItemViewConsole, 
+	MENUITEMINFO ItemGameplayUseInfo,
+				ItemViewRenderWindow,
+				ItemDataSaveAs,
+				ItemWorldBatchEdit,
+				ItemViewConsole,
 				ItemViewModifiedRecords,
 				ItemFileCSEPreferences,
 				ItemViewDeletedRecords,
@@ -1396,94 +1400,91 @@ void InitializeWindowManager(void)
 	ItemViewRenderWindow.fMask = MIIM_ID|MIIM_STATE;		// as the code to handle hiding/showing is already present in the wndproc
 	ItemViewRenderWindow.wID = 40423;						// therefore we simply change it to the one that's expected by the proc
 	ItemViewRenderWindow.fState = MFS_CHECKED;
-	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemViewRenderWindow);	
+	SetMenuItemInfo(ViewMenu, 40198, FALSE, &ItemViewRenderWindow);
 
-	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);		
-	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);
+	ItemDataSaveAs.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemDataSaveAs.wID = MAIN_DATA_SAVEAS;
 	ItemDataSaveAs.fState = MFS_ENABLED;
 	ItemDataSaveAs.dwTypeData = "Save As";
 	ItemDataSaveAs.cch = 7;
 	InsertMenuItem(FileMenu, 40127, FALSE, &ItemDataSaveAs);
 
-	ItemWorldBatchEdit.cbSize = sizeof(MENUITEMINFO);		
-	ItemWorldBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldBatchEdit.cbSize = sizeof(MENUITEMINFO);
+	ItemWorldBatchEdit.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemWorldBatchEdit.wID = MAIN_WORLD_BATCHEDIT;
 	ItemWorldBatchEdit.fState = MFS_ENABLED;
 	ItemWorldBatchEdit.dwTypeData = "Batch Edit References";
 	ItemWorldBatchEdit.cch = 0;
 	InsertMenuItem(WorldMenu, 40194, FALSE, &ItemWorldBatchEdit);
 	InsertMenuItem(*g_RenderWindowPopup, 293, FALSE, &ItemWorldBatchEdit);
-	
-	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+
+	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);
+	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemViewConsole.wID = MAIN_VIEW_CONSOLEWINDOW;
 	ItemViewConsole.fState = MFS_ENABLED|MFS_CHECKED;
 	ItemViewConsole.dwTypeData = "Console Window";
 	ItemViewConsole.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
 
-	ItemViewModifiedRecords.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewModifiedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewModifiedRecords.cbSize = sizeof(MENUITEMINFO);
+	ItemViewModifiedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemViewModifiedRecords.wID = MAIN_VIEW_MODIFIEDRECORDS;
 	ItemViewModifiedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
 	ItemViewModifiedRecords.dwTypeData = "Hide Unmodified Forms";
 	ItemViewModifiedRecords.cch = 0;
 	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewModifiedRecords);
 
-	ItemFileCSEPreferences.cbSize = sizeof(MENUITEMINFO);		
-	ItemFileCSEPreferences.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemFileCSEPreferences.cbSize = sizeof(MENUITEMINFO);
+	ItemFileCSEPreferences.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemFileCSEPreferences.wID = MAIN_DATA_CSEPREFERENCES;
 	ItemFileCSEPreferences.fState = MFS_ENABLED;
 	ItemFileCSEPreferences.dwTypeData = "CSE Preferences";
 	ItemFileCSEPreferences.cch = 0;
 	InsertMenuItem(FileMenu, 40003, FALSE, &ItemFileCSEPreferences);
 
-	
-	ItemViewDeletedRecords.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewDeletedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewDeletedRecords.cbSize = sizeof(MENUITEMINFO);
+	ItemViewDeletedRecords.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemViewDeletedRecords.wID = MAIN_VIEW_DELETEDRECORDS;
 	ItemViewDeletedRecords.fState = MFS_ENABLED|MFS_UNCHECKED;
 	ItemViewDeletedRecords.dwTypeData = "Hide Deleted Forms";
 	ItemViewDeletedRecords.cch = 0;
 	InsertMenuItem(ViewMenu, 40030, FALSE, &ItemViewDeletedRecords);
 
-
-	ItemWorldUnloadCell.cbSize = sizeof(MENUITEMINFO);		
-	ItemWorldUnloadCell.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemWorldUnloadCell.cbSize = sizeof(MENUITEMINFO);
+	ItemWorldUnloadCell.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemWorldUnloadCell.wID = MAIN_WORLD_UNLOADCELL;
 	ItemWorldUnloadCell.fState = MFS_ENABLED;
 	ItemWorldUnloadCell.dwTypeData = "Unload Current Cell";
 	ItemWorldUnloadCell.cch = 0;
 	InsertMenuItem(WorldMenu, 40426, FALSE, &ItemWorldUnloadCell);
 
-
-	ItemGameplayGlobalScript.cbSize = sizeof(MENUITEMINFO);		
-	ItemGameplayGlobalScript.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemGameplayGlobalScript.cbSize = sizeof(MENUITEMINFO);
+	ItemGameplayGlobalScript.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemGameplayGlobalScript.wID = MAIN_GAMEPLAY_GLOBALSCRIPT;
 	ItemGameplayGlobalScript.fState = MFS_ENABLED;
 	ItemGameplayGlobalScript.dwTypeData = "Create Global Script";
 	ItemGameplayGlobalScript.cch = 0;
 	InsertMenuItem(GameplayMenu, 40167, FALSE, &ItemGameplayGlobalScript);
 
-	ItemLaunchGame.cbSize = sizeof(MENUITEMINFO);		
-	ItemLaunchGame.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemLaunchGame.cbSize = sizeof(MENUITEMINFO);
+	ItemLaunchGame.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemLaunchGame.wID = MAIN_LAUNCHGAME;
 	ItemLaunchGame.fState = MFS_ENABLED;
 	ItemLaunchGame.dwTypeData = "Launch Game";
 	ItemLaunchGame.cch = 0;
 	InsertMenuItem(MainMenu, -1, FALSE, &ItemLaunchGame);
 
-	ItemViewTagBrowser.cbSize = sizeof(MENUITEMINFO);		
-	ItemViewTagBrowser.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemViewTagBrowser.cbSize = sizeof(MENUITEMINFO);
+	ItemViewTagBrowser.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemViewTagBrowser.wID = MAIN_VIEW_TAGBROWSER;
 	ItemViewTagBrowser.fState = MFS_ENABLED;
 	ItemViewTagBrowser.dwTypeData = "Tag Browser";
 	ItemViewTagBrowser.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewTagBrowser);
 
-	ItemDataSetWorkspace.cbSize = sizeof(MENUITEMINFO);		
-	ItemDataSetWorkspace.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;	
+	ItemDataSetWorkspace.cbSize = sizeof(MENUITEMINFO);
+	ItemDataSetWorkspace.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
 	ItemDataSetWorkspace.wID = MAIN_DATA_SETWORKSPACE;
 	ItemDataSetWorkspace.fState = MFS_ENABLED;
 	ItemDataSetWorkspace.dwTypeData = "Set Workspace";

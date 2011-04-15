@@ -5,8 +5,10 @@ MISC-->
 
 
 CSE--->
+> Add the root nodes to the idle tree at CS init.
+> Auto-backup plugin on save
+> Check out the assertion at 0x004875A1 (called indirectly from Datahandler::saveplugin_Housekeeping). strangely seems to happen only when IDA's debugger is attached
 > Topicinfo inititem warnings aren't being shown
-> Fully implement GMST reinit
 > Update the model of references
 > Export/import result scripts
 > Fix the f_PlaySoundFile
@@ -29,5 +31,6 @@ SE---->
 > Fix the 'Missing New Tab button' repaint issue
 > Fix the issue with the load tool update scripts option
 > Implement AvalonEdit ( implement Notepad++ like auto highlight selection)
+
 
 TAG---->

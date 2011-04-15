@@ -12,7 +12,6 @@ using namespace DevComponents;
 using namespace GlobalInputMonitor;
 using namespace System::Reflection;
 
-
 namespace ScriptEditor
 {
 	ref class Workspace;
@@ -82,10 +81,10 @@ namespace ScriptEditor
 		Workspace^											LookupWorkspaceByTab(UInt32 TabIndex);
 		void												RemoveTab(DotNetBar::TabItem^ Tab);
 		void												AddTab(DotNetBar::TabItem^ Tab);
-		
+
 		void												AddTabControlBox(DotNetBar::TabControlPanel^ Box);
 		void												RemoveTabControlBox(DotNetBar::TabControlPanel^ Box);
-		
+
 		void												SelectTab(DotNetBar::TabItem^ Tab);
 		void												RedrawContainer() { EditorForm->Invalidate(true); }
 		void												SetWindowTitle(String^ Title) { EditorForm->Text = Title; }
@@ -117,7 +116,7 @@ namespace ScriptEditor
 																e_Indent = 0,
 																e_AnnealCasing
 															};
-		
+
 		DotNetBar::TabItem^									EditorTab;
 		DotNetBar::TabControlPanel^							EditorControlBox;
 
@@ -141,7 +140,7 @@ namespace ScriptEditor
 			ToolStripSplitButton^								ToolBarSaveScript;
 				ToolStripDropDown^									ToolBarSaveScriptDropDown;
 				ToolStripButton^									ToolBarSaveScriptNoCompile;
-				ToolStripButton^									ToolBarSaveScriptAndPlugin;			
+				ToolStripButton^									ToolBarSaveScriptAndPlugin;
 			ToolStripButton^									ToolBarRecompileScripts;
 			ToolStripButton^									ToolBarCompileDependencies;
 			ToolStripButton^									ToolBarDeleteScript;
@@ -155,7 +154,6 @@ namespace ScriptEditor
 				ToolStripButton^									ToolBarScriptTypeContentsObject;
 				ToolStripButton^									ToolBarScriptTypeContentsQuest;
 				ToolStripButton^									ToolBarScriptTypeContentsMagicEffect;
-			
 
 		ToolStrip^											WorkspaceSecondaryToolBar;
 			ToolStripTextBox^									ToolBarCommonTextBox;
@@ -187,7 +185,7 @@ namespace ScriptEditor
 			ToolStripMenuItem^									ContextMenuCopy;
 			ToolStripMenuItem^									ContextMenuPaste;
 			ToolStripMenuItem^									ContextMenuFind;
-			ToolStripMenuItem^									ContextMenuToggleComment;		
+			ToolStripMenuItem^									ContextMenuToggleComment;
 			ToolStripMenuItem^									ContextMenuToggleBookmark;
 			ToolStripMenuItem^									ContextMenuAddMessage;
 			ToolStripMenuItem^									ContextMenuWord;
@@ -196,7 +194,7 @@ namespace ScriptEditor
 			ToolStripMenuItem^									ContextMenuCopyToCTB;
 			ToolStripMenuItem^									ContextMenuDirectLink;
 			ToolStripMenuItem^									ContextMenuJumpToScript;
-
+			ToolStripMenuItem^									ContextMenuGoogleLookup;
 
 		ScriptListDialog^									ScriptListingDialog;
 		TabContainer^										ParentContainer;
@@ -206,11 +204,11 @@ namespace ScriptEditor
 		UInt32												ScriptType;
 		String^												ScriptEditorID;
 
-		void												TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);	
+		void												TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
 		void												TextEditor_ScriptModified(Object^ Sender, ScriptModifiedEventArgs^ E);
 
 		void												MessageList_DoubleClick(Object^ Sender, EventArgs^ E);
-		void												MessageList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);		
+		void												MessageList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 		void												FindList_DoubleClick(Object^ Sender, EventArgs^ E);
 		void												FindList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 		void												BookmarkList_DoubleClick(Object^ Sender, EventArgs^ E);
@@ -219,12 +217,12 @@ namespace ScriptEditor
 		void												VariableIndexList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 			void												VariableIndexEditBox_LostFocus(Object^ Sender, EventArgs^ E);
 			void												VariableIndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
-		
+
 		void												ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarNextScript_Click(Object^ Sender, EventArgs^ E);
-		void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);		
+		void												ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
 			void												ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E);
 			void												ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E);
@@ -251,6 +249,7 @@ namespace ScriptEditor
 			void												ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E);
 			void												ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E);
 			void												ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E);
+			void												ContextMenuGoogleLookup_Click(Object^ Sender, EventArgs^ E);
 
 		void												ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 		void												ToolBarCommonTextBox_LostFocus(Object^ Sender, EventArgs^ E);
@@ -274,7 +273,6 @@ namespace ScriptEditor
 		void												ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
 
-
 		void												EnableControls();
 		void												ClearErrorsItemsFromMessagePool(void);
 
@@ -293,7 +291,7 @@ namespace ScriptEditor
 
 		void												PreprocessorErrorOutputWrapper(String^ Message);
 		void												SanitizeScriptText(SanitizeOperation Operation);
-	public:	
+	public:
 		UInt32												GetAllocatedIndex() { return AllocatedIndex; }
 		bool												GetModifiedStatus() { return TextEditor->GetModifiedStatus(); }
 		void												SetModifiedStatus(bool Modified) { TextEditor->SetModifiedStatus(Modified); }
@@ -329,5 +327,4 @@ namespace ScriptEditor
 
 		bool												IsValid() { return this != NullWorkspace; }
 	};
-
 }

@@ -21,6 +21,11 @@ _DeclareMemHdlr(NumericEditorID, "displays a warning when editorIDs start with a
 _DeclareMemHdlr(DataHandlerConstructSpecialForms, "initializes easter egg forms");
 _DeclareMemHdlr(ResultScriptSaveForm, "prevents a crash that occurs when a result script has local variable declarations");
 _DeclareMemHdlr(TESObjectREFRDoCopyFrom, "patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source");
+_DeclareMemHdlr(TESFormAddReference, "patches the CS form referencing code to take into account mutiple references of a form by another");
+_DeclareMemHdlr(TESFormRemoveReference, "");
+_DeclareMemHdlr(TESFormClearReferenceList, "");
+_DeclareMemHdlr(TESFormPopulateUseInfoList, "");
+_DeclareMemHdlr(TESFormDelete, "");
 
 void PatchMessageHandler(void);
 void __stdcall DoCSInitHook();
