@@ -20,6 +20,10 @@ _DefineHookHdlr(DataHandlerSavePluginEpilog, 0x0047F136);
 _DefineHookHdlr(TESFileUpdateHeaderFlagBit, 0x00489570);
 _DefineHookHdlr(TESObjectCELLSaveReferencesProlog, 0x00538860);
 _DefineHookHdlr(TESObjectCELLSaveReferencesEpilog, 0x005389DB);
+_DefineHookHdlr(DataHandlerSavePluginResetA, 0x0047EBBF);
+_DefineHookHdlr(DataHandlerSavePluginResetB, 0x0047EC09);
+_DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
+_DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
 
 void PatchTESFileHooks(void)
 {
@@ -40,6 +44,10 @@ void PatchTESFileHooks(void)
 	_MemoryHandler(TESFileUpdateHeaderFlagBit).WriteJump();
 	_MemoryHandler(TESObjectCELLSaveReferencesProlog).WriteJump();
 	_MemoryHandler(TESObjectCELLSaveReferencesEpilog).WriteJump();
+	_MemoryHandler(DataHandlerSavePluginResetA).WriteJump();
+	_MemoryHandler(DataHandlerSavePluginResetB).WriteJump();
+	_MemoryHandler(DataHandlerSavePluginResetC).WriteJump();
+	_MemoryHandler(DataHandlerSavePluginOverwriteESM).WriteNop();
 }
 
 bool __stdcall InitTESFileSaveDlg()
@@ -75,9 +83,8 @@ void __stdcall DoLoadPluginsPrologHook(void)
 		ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
 	}
 
-	sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GET_INI_STR("ShowNumericEditorIDWarning"));
-	static const char* Zero = "0";
-	g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue(Zero);
+	sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning"));
+	g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue("0");
 }
 
 _BeginHookHdlrFn(LoadPluginsProlog)
@@ -118,6 +125,8 @@ _BeginHookHdlrFn(LoadPluginsEpilog)
 bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
 {
 	if ((CurrentFile->flags & ModEntry::Data::kFlag_Loaded) == 0)
+		return false;
+	else if ((CurrentFile->flags & ModEntry::Data::kFlag_IsMaster) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters") == 0)
 		return false;
 	else
 		return true;
@@ -380,8 +389,49 @@ _BeginHookHdlrFn(TESObjectCELLSaveReferencesEpilog)
 		push	eax
 		call	kTESForm_SaveFormRecord
 		jmp		[_HookHdlrFnVariable(TESObjectCELLSaveReferencesEpilog, Retn)]
-EXIT:
+	EXIT:
 		popad
 		jmp		[_HookHdlrFnVariable(TESObjectCELLSaveReferencesEpilog, Retn)]
+	}
+}
+
+void __stdcall DoDataHandlerSavePluginResetHook(void)
+{
+	ZeroMemory(*g_TESActivePluginName, 0x104);
+}
+
+_BeginHookHdlrFn(DataHandlerSavePluginResetA)
+{
+	_DeclareHookHdlrFnVariable(DataHandlerSavePluginResetA, Retn, 0x0047F156);
+	__asm
+	{
+		pushad
+		call	DoDataHandlerSavePluginResetHook
+		popad
+		jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetA, Retn)]
+	}
+}
+
+_BeginHookHdlrFn(DataHandlerSavePluginResetB)
+{
+	_DeclareHookHdlrFnVariable(DataHandlerSavePluginResetB, Retn, 0x0047F156);
+	__asm
+	{
+		pushad
+			call	DoDataHandlerSavePluginResetHook
+			popad
+			jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetB, Retn)]
+	}
+}
+
+_BeginHookHdlrFn(DataHandlerSavePluginResetC)
+{
+	_DeclareHookHdlrFnVariable(DataHandlerSavePluginResetC, Retn, 0x0047F156);
+	__asm
+	{
+		pushad
+			call	DoDataHandlerSavePluginResetHook
+			popad
+			jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetC, Retn)]
 	}
 }

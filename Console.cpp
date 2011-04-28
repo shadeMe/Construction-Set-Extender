@@ -4,7 +4,7 @@
 #include "resource.h"
 #include "CSEInterfaceManager.h"
 #include "ConsoleCommands.h"
-
+#include "CSDialogs.h"
 
 Console*					Console::Singleton = NULL;
 
@@ -17,6 +17,7 @@ Console::Console()
 	DebugLog = NULL;
 	UpdateSignalFlag = false;
 
+	DebugLogPath = "";
 	MessageBuffer.reserve(0x3000);
 
 	CSEInterfaceManager::RegisterConsoleCallback((CSEConsoleInterface::ConsolePrintCallback)&ConsoleCommandCallback);
@@ -35,10 +36,11 @@ void Console::InitializeLog(const char* AppPath)
 {
 	if (IsLogInitalized())	return;
 
-	DebugLog = _fsopen((std::string(std::string(AppPath) + "Construction Set Extender.log").c_str()), "w", _SH_DENYWR);
+	DebugLogPath = std::string(AppPath) + "Construction Set Extender.log";
+	DebugLog = _fsopen(DebugLogPath.c_str(), "w", _SH_DENYWR);
 
-	if (!DebugLog) 
-		DebugPrint("Couldn't initialize debug log.");
+	if (!DebugLog)
+		DebugPrint("Couldn't initialize debug log");
 }
 
 void Console::InitializeConsole()
@@ -53,7 +55,7 @@ void Console::InitializeConsole()
 
 	Edit_LimitText(EditHandle, sizeof(int));
 
-	if (g_INIManager->GET_INI_INT("HideOnStartup"))
+	if (g_INIManager->GetINIInt("HideOnStartup"))
 		DisplayState = true;
 
 	ToggleDisplayState();
@@ -64,7 +66,7 @@ void Console::InitializeConsole()
 void Console::Deinitialize()
 {
 	SaveINISettings();
-	if (DebugLog) 
+	if (DebugLog)
 		fclose(DebugLog);
 	KillTimer(EditHandle, CONSOLE_UPDATETIMER);
 	g_CustomMainWindowChildrenDialogs.RemoveHandle(WindowHandle);
@@ -75,7 +77,7 @@ bool Console::ToggleDisplayState()
 	if (IsConsoleInitalized() == 0)	return false;
 
 	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-					
+
 	if (IsHidden())
 	{
 		Edit_SetText(EditHandle, (LPCSTR)MessageBuffer.c_str());
@@ -98,7 +100,7 @@ void Console::LoadINISettings()
 {
 	if (IsConsoleInitalized() == 0)	return;
 
-	int Top = g_INIManager->FetchSetting("Top")->GetValueAsInteger(), 
+	int Top = g_INIManager->FetchSetting("Top")->GetValueAsInteger(),
 		Left = g_INIManager->FetchSetting("Left")->GetValueAsInteger(),
 		Right = g_INIManager->FetchSetting("Right")->GetValueAsInteger(),
 		Bottom = g_INIManager->FetchSetting("Bottom")->GetValueAsInteger();
@@ -155,7 +157,7 @@ void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 	{
 		UpdateSignalFlag = true;
 		CSEInterfaceManager::HandleConsoleCallback(MessageStr, Prefix.c_str());
-	}	
+	}
 
 	if (IsDebuggerPresent())
 		OutputDebugString(Message.c_str());

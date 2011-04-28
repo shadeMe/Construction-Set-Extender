@@ -27,7 +27,6 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-
 LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -40,6 +39,7 @@ LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void InitializeWindowManager();
 

@@ -2,6 +2,7 @@
 #include "[Common]\CSInteropData.h"
 #include "ExtenderInternals.h"
 #include "common/IFileStream.h"
+#include "resource.h"
 
 #define INJECT_TIMEOUT			5000
 
@@ -37,7 +38,7 @@ bool CSInteropManager::CreateNamedPipeServer(char** GUIDOut)
 		char PipeName[0x200] = {0};
 		sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", *GUIDOut);
 
-		InteropPipeHandle = CreateNamedPipe(PipeName, 
+		InteropPipeHandle = CreateNamedPipe(PipeName,
 								PIPE_ACCESS_DUPLEX|FILE_FLAG_FIRST_PIPE_INSTANCE|FILE_FLAG_WRITE_THROUGH|WRITE_OWNER,
 								PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT,
 								1,
@@ -64,7 +65,7 @@ bool CSInteropManager::CreateNamedPipeServer(char** GUIDOut)
 
 void CSInteropManager::Deinitialize()
 {
-	if (InteropPipeHandle == INVALID_HANDLE_VALUE)
+	if (!Loaded)
 		return;
 
 	CSECSInteropData InteropDataOut(CSECSInteropData::kMessageType_Quit);
@@ -161,7 +162,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 {
 	if (Loaded)	return true;
 
-	DebugPrint("Initializing CSInteropManager");
+	DebugPrint("Initializing CSInterop Manager");
 	CONSOLE->Indent();
 
 	char* GUIDStr = 0;
@@ -212,7 +213,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 		CONSOLE->Exdent();
 		return Loaded;
 	}
-	
+
 	if (!Loaded)
 	{
 		DebugPrint("Couldn't load CS 1.0!");
@@ -222,7 +223,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	}
 
 	DoInjectDLL(&CS10ProcInfo);
-		
+
 	if(Loaded)
 	{
 		ResumeThread(CS10ProcInfo.hThread);
@@ -255,7 +256,7 @@ bool CSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPat
 		DebugPrint("Couldn't find source MP3 file '%s'!", MP3Path);
 		return false;
 	}
-	
+
 	std::string DecoderArgs = "lame.exe \"" + g_AppPath + std::string(MP3Path) + "\" \"" + g_AppPath + std::string(WAVPath) + "\" --decode";
 
 	bool Result = CreateProcess(
@@ -305,7 +306,7 @@ bool CSInteropManager::DoGenerateLIPOperation(const char* InputPath, const char*
 
 	DebugPrint("Generating LIP file for '%s'...", MP3Path.c_str());
 	CONSOLE->Indent();
-	
+
 	if (CreateTempWAVFile(MP3Path.c_str(), WAVPath.c_str()))
 	{
 		if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
@@ -337,7 +338,7 @@ bool CSInteropManager::DoGenerateLIPOperation(const char* InputPath, const char*
 				}
 			}
 			PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
-		}		
+		}
 	}
 	else
 	{
@@ -351,7 +352,7 @@ bool CSInteropManager::DoGenerateLIPOperation(const char* InputPath, const char*
 	}
 
 	DestroyWindow(IdleWindow);
-	
+
 	CONSOLE->Exdent();
 	return Result;
 }

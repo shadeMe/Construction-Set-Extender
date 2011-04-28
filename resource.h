@@ -16,27 +16,38 @@
 #define IDR_MENU3                       118
 #define IDR_MENU4                       119
 #define IDR_MENU5                       120
+#define IDR_MENU6                       121
+#define IDD_DIALOG2                     122
+#define DLG_MANAGETOOLS                 122
+#define IDB_BITMAP1                     123
+#define BITMAP_SPLASH                   123
 #define DLG_SCRIPTEDIT                  188
 #define EDIT_TEXTLINE                   1002
 #define BTN_OK                          1003
 #define BTN_CANCEL                      1004
 #define BTN_ESP                         1004
 #define BTN_ESM                         1005
+#define BTN_ADDTOOL                     1005
 #define EDIT_CONSOLE                    1006
+#define BTN_REMOVETOOL                  1006
+#define BTN_MOVEUP                      1007
 #define IDC_EDIT1                       1008
 #define EDIT_CMDBOX                     1008
 #define EDIT_SCRIPT                     1008
-#define XXXXX                           1008
 #define EDIT_QUESTID                    1008
 #define EDIT_EDITORID                   1008
 #define EDIT_PATH                       1008
+#define BTN_MOVEDOWN                    1008
 #define STC_TYPE                        1009
 #define IDC_EDIT2                       1009
 #define EDIT_DELAY                      1009
 #define EDIT_REFEDITORID                1009
+#define EDIT_TITLE                      1009
 #define IDC_RICHEDIT21                  1010
 #define EDIT_QUEST                      1010
 #define EDIT_SCRIPTID                   1010
+#define EDIT_CMDLINE                    1010
+#define EDIT_INITDIR                    1011
 #define IDC_COMBO1                      1012
 #define COMBO_FORMLIST                  1012
 #define BTN_PARENTCELL                  1014
@@ -50,7 +61,9 @@
 #define BTN_STARTMOUSEHOOK              1021
 #define CHECK_OBJECTTOKEN_QUESTITEM     1022
 #define RADIO_OBJECTTOKEN               1023
+#define LISTBOX_TOOLLIST                1023
 #define RADIO_OBJECTREFERENCE           1024
+#define BTN_CLOSE                       1024
 #define CHECK_OBJECTREFERENCE_DISABLED  1025
 #define EDIT_SCTX                       1228
 #define DLG_ASSETSEL                    9800
@@ -85,6 +98,7 @@
 #define RENDER_GROUPSELECTION           9921
 #define RENDER_UNGROUPSELECTION         9922
 #define MAIN_DATA_SETWORKSPACE          9923
+#define MAIN_DATA_SAVEESPMASTERS        9924
 #define ID_CLEARCONSOLE                 40001
 #define CONSOLE_POPUP                   40002
 #define ID_CONSOLESETTINGS              40003
@@ -111,14 +125,17 @@
 #define ID_SELECTIONFREEZING_UNFREEZE   40024
 #define ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY 40025
 #define ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY 40026
+#define ID_TOOLS_MANAGE                 40027
+#define ID_CONSOLESETTINGS_OPENDEBUGLOG 40028
+#define CONSOLEMENU_OPENDEBUGLOG        40029
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        121
-#define _APS_NEXT_COMMAND_VALUE         40027
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_RESOURCE_VALUE        124
+#define _APS_NEXT_COMMAND_VALUE         40030
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

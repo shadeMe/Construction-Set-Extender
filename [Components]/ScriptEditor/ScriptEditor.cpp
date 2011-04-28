@@ -1045,7 +1045,7 @@ namespace ScriptEditor
 			ContextMenuAddMessage->Click += gcnew EventHandler(this, &Workspace::ContextMenuAddMessage_Click);
 			ContextMenuAddMessage->Text = "Add Message";
 			ContextMenuGoogleLookup->Click += gcnew EventHandler(this, &Workspace::ContextMenuGoogleLookup_Click);
-			ContextMenuGoogleLookup->Text = "Lookup on Google";
+			ContextMenuGoogleLookup->Text = "Look up on Google";
 
 			TextEditorContextMenu->Items->Add(ContextMenuCopy);
 			TextEditorContextMenu->Items->Add(ContextMenuPaste);

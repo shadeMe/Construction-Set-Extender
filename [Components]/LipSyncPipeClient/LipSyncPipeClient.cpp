@@ -7,7 +7,7 @@
 using namespace SME::MemoryHandler;
 
 MemHdlr				kCrt0EntryPointInitialization			(0x008AE5C0, (UInt32)0, 0, 0);					// prevents CS windows from being shown
-NopHdlr				kInitializeWindows						(0x0041D571, 5);						
+NopHdlr				kInitializeWindows						(0x0041D571, 5);
 MemHdlr				kShowSplashScreenWindow					(0x0041D3C8, 0x0041D3F6, 0, 0);
 MemHdlr				kMainWindowMessageLoop					(0x0041D5C7, MainWindowMessageLoopHook, 0, 0);	// makes the client wait for a message from the server
 MemHdlr				kMessageHandlerDebugPrint				(0x009302A0, (UInt32)0, 0, 0);
@@ -29,22 +29,18 @@ HANDLE				g_InteropPipeHandle		=	INVALID_HANDLE_VALUE;
 FILE*				g_DebugLog				=	NULL;
 char				g_Buffer[0x200]			=	{0};
 
-
-
 extern "C"
 {
-
 void LipSyncPipeClient_Initialize()
 {
 	kCrt0EntryPointInitialization.WriteUInt8(0);
 	kInitializeWindows.WriteNop();
 	kShowSplashScreenWindow.WriteJump();
-	kMainWindowMessageLoop.WriteJump();	
+	kMainWindowMessageLoop.WriteJump();
 	kMessageHandlerDebugPrint.WriteUInt32((UInt32)&HandleDebugText);
 	kLogOC3AnimFactoryMessagesA.WriteJump();
 	kLogOC3AnimFactoryMessagesB.WriteNop();
 }
-
 }
 
 void DebugPrint(const char* fmt, ...)
@@ -55,7 +51,7 @@ void DebugPrint(const char* fmt, ...)
 	va_start(args, fmt);
 	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
 	va_end(args);
-	
+
 	fputs(g_Buffer, g_DebugLog);
 	fputs("\n", g_DebugLog);
 	fflush(g_DebugLog);
@@ -65,7 +61,7 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 {
 	LPVOID ErrorMsg;
 	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
 		FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
@@ -74,10 +70,9 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 		(LPTSTR) &ErrorMsg,
 		0, NULL );
 
-	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg); 
+	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg);
 	LocalFree(ErrorMsg);
 }
-
 
 void __stdcall HandleDebugText(const char* Message)
 {
@@ -96,7 +91,8 @@ bool GenerateLIPFile(char* FilePath, char* ResponseText)
 	bool Result = false;
 	g_HandleDebugText = true;
 
-	__try {
+	__try
+	{
 		void* LIPResult = GenerateLIPFileWrapper(&FilePath, ResponseText, 1);
 		if (LIPResult)
 		{
@@ -132,9 +128,8 @@ void ConnectToInteropPipe(void)
 							0,
 							NULL);
 
-
 		if (g_InteropPipeHandle != INVALID_HANDLE_VALUE)
-		{				
+		{
 			DWORD HandleState = PIPE_READMODE_MESSAGE|PIPE_WAIT;
 
 			if (!SetNamedPipeHandleState(g_InteropPipeHandle, &HandleState, NULL, NULL))
@@ -147,7 +142,7 @@ void ConnectToInteropPipe(void)
 			else
 				DebugPrint("Lip Sync Pipe Client opened pipe successfully!");
 
-			break;										
+			break;
 		}
 		else if (GetLastError() == ERROR_PIPE_BUSY)
 			continue;
@@ -217,7 +212,7 @@ void __declspec(naked) MainWindowMessageLoopHook(void)
 	__asm
 	{
 		call	ProcessServerMessage
-		
+
 		call	edi
 		mov		esi, eax
 		xor		eax, eax

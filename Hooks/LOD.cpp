@@ -8,8 +8,11 @@ _DefineHookHdlr(LODLandD3DTextureSelection, 0x00410A90);
 _DefineHookHdlr(LODLandBSTextureSelection, 0x00410AE0);
 _DefineHookHdlr(GenerateLODPartialTexture, 0x00412AB1);
 _DefineHookHdlr(GenerateLODFullTexture, 0x0041298B);
+_DefinePatchHdlr(GenerateLODFullTextureFileName, 0x00412241 + 1);
 
 #define LOD_DIFFUSE_MAP_RESOLUTION 256
+
+static const char*				s_LODFullTexturePath = ".\\Data\\Textures\\LandscapeLOD\\Generated\\%i.%02i.%02i.%i.dds";
 
 void PatchLODHooks(void)
 {
@@ -21,6 +24,7 @@ void PatchLODHooks(void)
 	_MemoryHandler(LODLandBSTextureSelection).WriteJump();
 	_MemoryHandler(GenerateLODPartialTexture).WriteJump();
 	_MemoryHandler(GenerateLODFullTexture).WriteJump();
+	_MemoryHandler(GenerateLODFullTextureFileName).WriteUInt32((UInt32)s_LODFullTexturePath);
 }
 
 _BeginHookHdlrFn(LODLandTextureMipMapLevelB)
@@ -34,7 +38,7 @@ _BeginHookHdlrFn(LODLandTextureMipMapLevelB)
 		mov		eax, 8
 		push	eax
 		push    ebx
-		
+
 		jmp		[_HookHdlrFnVariable(LODLandTextureMipMapLevelB, Retn)]
 	}
 }
@@ -141,7 +145,6 @@ _BeginHookHdlrFn(LODLandBSTextureSelection)
 		cmp		eax, 8192
 		jz		FETCH8192
 
-
 		cmp     eax, 0x200
 		jmp		[_HookHdlrFnVariable(LODLandBSTextureSelection, Retn)]
 	FETCH256:
@@ -170,7 +173,6 @@ _BeginHookHdlrFn(GenerateLODPartialTexture)
 		jmp		[_HookHdlrFnVariable(GenerateLODPartialTexture, Retn)]
 	}
 }
-
 
 _BeginHookHdlrFn(GenerateLODFullTexture)
 {

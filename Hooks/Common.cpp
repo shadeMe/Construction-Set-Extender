@@ -52,6 +52,11 @@ void __stdcall TrackPopupMenuAddress(void)
 	HMODULE hMod = GetModuleHandle("USER32.DLL");
 	g_WindowHandleCallAddr = GetProcAddress(hMod, "TrackPopupMenu");
 }
+void __stdcall ShowWindowAddress(void)
+{
+	HMODULE hMod = GetModuleHandle("USER32.DLL");
+	g_WindowHandleCallAddr = GetProcAddress(hMod, "ShowWindow");
+}
 
 UInt32 __stdcall IsControlKeyDown(void)
 {

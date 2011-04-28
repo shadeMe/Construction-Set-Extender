@@ -7,13 +7,14 @@
 #include "Hooks\Misc.h"
 #include "Hooks\ScriptEditor.h"
 
+#include "ScriptEditorAllocator.h"
+#include "CSDialogs.h"
+
 FormData*						g_FormData = new FormData();
 UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();
 
-
 extern "C"
 {
-
 __declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message)
 {
 	DebugPrint(Source, Message);
@@ -45,11 +46,9 @@ __declspec(dllexport) HWND GetRenderWindowHandle(void)
 	return *g_HWND_RenderWindow;
 }
 
-
-
 __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message)
 {
-	static UInt16 ReturnType[8] = 
+	static UInt16 ReturnType[8] =
 	{
 		0x9CDB,		// New
 		0x9CD9,		// Open
@@ -79,10 +78,9 @@ __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorI
 		EDAL->SetLastContactedEditor(TrackedEditorIndex);
 		break;
 	}
-	
+
 	SendMessage(ScriptEditor, WM_COMMAND, ReturnType[Message], NULL);
 }
-
 
 __declspec(dllexport) void ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex, ScriptData* Data)
 {
@@ -97,7 +95,6 @@ __declspec(dllexport) void ScriptEditor_SetWindowParameters(UInt32 TrackedEditor
 	HWND ScriptEditor = EDAL->GetTrackedDialog(TrackedEditorIndex);
 	SetWindowPos(ScriptEditor, HWND_NOTOPMOST, Left, Top, Width, Height, SWP_NOZORDER);
 }
-
 
 __declspec(dllexport) UInt32 ScriptEditor_InstantiateCustomEditor(const char* ScriptID)
 {
@@ -127,7 +124,6 @@ __declspec(dllexport) void ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIn
 		FillScriptDataPackage(g_SetEditorTextCache);
 		CLIWrapper::ScriptEditor::InitializeScript(AllocatedIndex, g_ScriptDataPackage);
 	}
-
 }
 
 __declspec(dllexport) ScriptData* ScriptEditor_GetScriptData()			// retrieves the cached script data
@@ -150,9 +146,6 @@ __declspec(dllexport) const char* ScriptEditor_GetAuxScriptName()
 		return NULL;
 }
 
-
-
-
 __declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID)
 {
 	g_ScriptDataPackage->ParentID = NULL, g_ScriptDataPackage->EditorID = NULL;
@@ -173,11 +166,9 @@ __declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID)
 	Script* FormScript = ScriptableForm->script;
 	if (!FormScript)							return g_ScriptDataPackage;
 
-	FillScriptDataPackage(FormScript);		
+	FillScriptDataPackage(FormScript);
 	return g_ScriptDataPackage;
 }
-
-
 
 __declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID)
 {
@@ -307,7 +298,7 @@ __declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
 	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (!ScriptForm)				return;	
+	if (!ScriptForm)				return;
 
 	DebugPrint("Recompiling dependencies of script %s {%08X}...", ScriptForm->editorData.editorID.m_data, ScriptForm->refID);
 	CONSOLE->Indent();
@@ -337,7 +328,7 @@ __declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID
 				for (GenericNode<TESCellUseData>* CellList = (GenericNode<TESCellUseData>*)thisCall(kTESCellUseList_GetUseListRefHead, UseList); CellList; CellList = CellList->next) {
 					TESCellUseData* Data = CellList->data;
 					if (!Data)		break;
-					
+
 					for (TESObjectCELL::ObjectListEntry* RefList = &Data->Cell->objectList; RefList; RefList = RefList->Next()) {
 						TESObjectREFR* ThisReference = RefList->Info();
 						if (!ThisReference)		break;
@@ -399,7 +390,7 @@ __declspec(dllexport) IntelliSenseUpdateData* ScriptEditor_BeginIntelliSenseData
 		{
 			TestData.FillScriptData(Itr->data);
 			if (TestData.UDF)	ScriptCount++;
-		}	
+		}
 	}
 
 	Data->QuestListHead = new QuestData[QuestCount];
@@ -422,7 +413,7 @@ __declspec(dllexport) IntelliSenseUpdateData* ScriptEditor_BeginIntelliSenseData
 		}
 		QuestCount++;
 	}
-		
+
 	for (DataHandler::Node<Script>* Itr = &(*g_dataHandler)->scripts; Itr; Itr = Itr->next)
 	{
 		if (Itr->data)
@@ -462,7 +453,7 @@ __declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, cons
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
 	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (!ScriptForm)				return;		
+	if (!ScriptForm)				return;
 
 	thisCall(kScript_SetText, ScriptForm, ScriptText);
 }
@@ -472,7 +463,7 @@ __declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Pa
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
 	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (!ScriptForm)				return;		
+	if (!ScriptForm)				return;
 
 	Form = (TESForm*)DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_BINDSCRIPT), Parent, (DLGPROC)BindScriptDlgProc);
 	if (Form)
@@ -499,8 +490,6 @@ __declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Pa
 		}
 	}
 }
-
-
 
 __declspec(dllexport) void UseInfoList_SetFormListItemText()
 {
@@ -568,7 +557,6 @@ __declspec(dllexport) void UseInfoList_SetFormListItemText()
 	WriteStatusBarText(0, "FormList += AnimObjects...");
 	UseInfoList_SetFormListItemText_ParseFormNode(&(*g_dataHandler)->objectAnios);
 
-
 	WriteStatusBarText(0, ""), WriteStatusBarText(1, "");
 	WriteStatusBarText(2, "UseInfoList Populated");
 }
@@ -598,7 +586,7 @@ __declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID)
 	for (GenericNode<TESCellUseData>* CellList = (GenericNode<TESCellUseData>*)thisCall(kTESCellUseList_GetUseListRefHead, UseList); CellList; CellList = CellList->next) {
 		TESCellUseData* Data = CellList->data;
 		if (!Data)		break;
-		
+
 		TESObjectREFR* FirstRef = TESForm_LoadIntoView_GetReference(Data->Cell, Form);
 		TESWorldSpace* WorldSpace = (TESWorldSpace*)thisCall(kTESObjectCELL_GetParentWorldSpace, Data->Cell);
 
@@ -650,7 +638,7 @@ __declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID)
 	case BatchRefData::kListID_Faction:
 		BatchRefEditor_ParseFormNode(&(*g_dataHandler)->factions, ListID);
 		break;
-	}		
+	}
 }
 
 __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent)
@@ -697,7 +685,6 @@ __declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiation
 
 	SendMessage(*g_HWND_RenderWindow, 0x407, NULL, (LPARAM)&Data->InsertionPoint);
 }
-
 }
 
 template <typename tData>
@@ -762,7 +749,7 @@ UInt32 ScriptEditor_CompileDependencies_CheckConditions(ConditionEntry* Entry, T
 	UInt32 ScriptableConditions = 0;
 
 	for (ConditionEntry* j = Entry; j != 0; j = j->next) {
-		if (!j || !j->data)		break;	
+		if (!j || !j->data)		break;
 
 		ConditionEntry::Data* Data = j->data;
 		if (Data->functionIndex == (53 & 0x0FFF) || j->data->functionIndex == (79 & 0x0FFF))			// GetScriptVariable || GetQuestVariable
@@ -772,7 +759,6 @@ UInt32 ScriptEditor_CompileDependencies_CheckConditions(ConditionEntry* Entry, T
 				ScriptableConditions++;
 			}
 		}
-
 	}
 	return ScriptableConditions;
 }
@@ -823,7 +809,7 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 	{
 		DebugPrint("Script %s {%08X}:", (*Itr)->editorData.editorID.m_data, (*Itr)->refID);
 		CONSOLE->Indent();
-		
+
 		if ((*Itr)->info.dataLength > 0)
 		{
 			if (!thisCall(kScript_SaveScript, g_ScriptCompilerUnkObj, (*Itr), 0))
@@ -832,7 +818,7 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 			}
 		}
 
-		CONSOLE->Exdent();		
+		CONSOLE->Exdent();
 	}
 	// quests
 	for (std::vector<TESQuest*>::const_iterator Itr = QuestDepends.begin(); Itr != QuestDepends.end(); Itr++)
@@ -840,11 +826,11 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 		DebugPrint("Quest %s {%08X}:", (*Itr)->editorData.editorID.m_data, (*Itr)->refID);
 		CONSOLE->Indent();
 
-		for (TESQuest::StageEntry* j = &(*Itr)->stageList; j != 0; j = j->next) 
+		for (TESQuest::StageEntry* j = &(*Itr)->stageList; j != 0; j = j->next)
 		{
 			if (!j->data)		break;
 
-			for (TESQuest::StageItemList* l = &j->data->itemList; l != 0; l = l->next) 
+			for (TESQuest::StageItemList* l = &j->data->itemList; l != 0; l = l->next)
 			{
 				if (!l->item)		break;
 
@@ -861,7 +847,7 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 			}
 		}
 
-		for (TESQuest::TargetEntry* j = &(*Itr)->targetList; j != 0; j = j->next) 
+		for (TESQuest::TargetEntry* j = &(*Itr)->targetList; j != 0; j = j->next)
 		{
 			if (!j->data)		break;
 
@@ -869,17 +855,17 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 		}
 
 		thisVirtualCall(kVTBL_TESQuest, 0x104, (*Itr));	// UpdateUsageInfo.
-		CONSOLE->Exdent();	
+		CONSOLE->Exdent();
 	}
 	// topic infos
 	for (std::vector<TESTopicInfo*>::const_iterator Itr = InfoDepends.begin(); Itr != InfoDepends.end(); Itr++)
 	{
 		DebugPrint("Topic info %08X:", (*Itr)->refID);
 		CONSOLE->Indent();
-		
+
 		if ((*Itr)->resultScript.info.dataLength > 0)
 		{
-			if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &(*Itr)->resultScript, 0, 0)) 
+			if (!thisCall(kScript_SaveResultScript, g_ScriptCompilerUnkObj, &(*Itr)->resultScript, 0, 0))
 			{
 				DebugPrint("Result script failed to compile due to errors!");
 			}
@@ -887,7 +873,7 @@ void ScriptEditor_CompileDependencies_ParseObjectUseList(TESForm* Form)
 
 		DebugPrint("Found %d conditions that referenced source script", ScriptEditor_CompileDependencies_CheckConditions(&(*Itr)->conditions, Form));
 		thisVirtualCall(kVTBL_TESTopicInfo, 0x104, (*Itr));	// UpdateUsageInfo
-		CONSOLE->Exdent();	
+		CONSOLE->Exdent();
 	}
 
 	CONSOLE->Exdent();

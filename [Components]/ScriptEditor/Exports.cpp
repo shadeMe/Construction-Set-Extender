@@ -5,17 +5,15 @@
 
 extern "C"
 {
-
 [STAThread]
 __declspec(dllexport) void InitializeComponents(CommandTableData* Data)
-{	
+{
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ScriptEditor::ResolveMissingAssemblies);
 
-	Globals^ Dummy = gcnew Globals();
+//	Globals^ Dummy = gcnew Globals();
 	ScriptEditorManager::GetSingleton();
 	ISDB->ParseCommandTable(Data);
-	DebugPrint("ScriptEditor Components Initialized");
 }
 
 __declspec(dllexport) void AddToURLMap(const char* CmdName, const char* URL)
@@ -47,7 +45,7 @@ __declspec(dllexport) void InitializeScript(UInt32 VanillaHandleIndex, ScriptDat
 	Parameters->ParameterList->Add(Data->FormID);
 
 	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_InitializeScript, Parameters);
-} 
+}
 
 __declspec(dllexport) void SendMessagePingback(UInt32 VanillaHandleIndex, UInt16 Message)
 {
@@ -93,8 +91,6 @@ __declspec(dllexport) void PassScriptError(UInt32 LineNumber, const char* Messag
 	Parameters->ParameterList->Add(LineNumber);
 	Parameters->ParameterList->Add(gcnew String(Message));
 
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AddToCompileErrorPool, Parameters);	
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AddToCompileErrorPool, Parameters);
 }
-
-
 }

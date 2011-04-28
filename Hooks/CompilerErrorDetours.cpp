@@ -1,6 +1,7 @@
 #include "CompilerErrorDetours.h"
 #include "[Common]/CLIWrapper.h"
 #include "ExtenderInternals.h"
+#include "..\ScriptEditorAllocator.h"
 
 #pragma warning (disable : 4005)
 
@@ -14,14 +15,11 @@ MemHdlr								kCompilerPrologReset				(0x00503330, CompilerPrologResetHook, 0, 
 MemHdlr								kCompilerEpilogCheck				(0x0050341F, CompilerEpilogCheckHook, 0, 0);
 MemHdlr								kParseScriptLineOverride			(0x00503401, ParseScriptLineOverride, 0, 0);
 
-
-
-
 void __stdcall DoRerouteScriptErrorsHook(UInt32 Line, const char* Message)
 {
-	if (g_CompileCallerAddr && 
+	if (g_CompileCallerAddr &&
 		g_CompileCallerAddr != 0x005035EE &&			// don't handle when compiling result scripts or recompiling
-		g_RecompilingScripts == false)	
+		g_RecompilingScripts == false)
 	{
 		CLIWrapper::ScriptEditor::PassScriptError(Line, Message, EDAL->GetLastContactedEditor());
 	}
@@ -60,7 +58,6 @@ void __declspec(naked) CompilerEpilogCheckHook(void)
 	}
 }
 
-
 void __declspec(naked) CompilerPrologResetHook(void)
 {
 	static const UInt32			kCompilerPrologResetRetnAddr = 0x00503336;
@@ -71,7 +68,7 @@ void __declspec(naked) CompilerPrologResetHook(void)
 		mov		eax, [esp]
 		sub		eax, 5
 		mov		g_CompileCallerAddr, eax
-	
+
 		push    ebx
 		push    ebp
 		mov     ebp, [esp + 0xC]
@@ -126,8 +123,6 @@ DefineCompilerErrorOverrideHook(0x00500298, 0x0050024F, 0x8)
 																// f_ScriptBuffer__CheckReferencedObjects
 DefineCompilerErrorOverrideHook(0x005001DC, 0x005001C9, 0xC)
 
-
-
 void PatchCompilerErrorDetours()
 {
 	kRidScriptErrorMessageBox.WriteNop();
@@ -136,12 +131,11 @@ void PatchCompilerErrorDetours()
 	kCompilerEpilogCheck.WriteJump();
 	kParseScriptLineOverride.WriteJump();
 
-
 	GetErrorMemHdlr(0x00502781).WriteJump();
 	GetErrorMemHdlr(0x00502813).WriteJump();
 	GetErrorMemHdlr(0x005027D3).WriteJump();
 	GetErrorMemHdlr(0x005028B5).WriteJump();
-															
+
 	GetErrorMemHdlr(0x00500B44).WriteJump();
 	GetErrorMemHdlr(0x00500B5D).WriteJump();
 	GetErrorMemHdlr(0x00500B76).WriteJump();
@@ -152,13 +146,13 @@ void PatchCompilerErrorDetours()
 	GetErrorMemHdlr(0x00500C09).WriteJump();
 	GetErrorMemHdlr(0x00500C81).WriteJump();
 	GetErrorMemHdlr(0x00500CA7).WriteJump();
-														
+
 	GetErrorMemHdlr(0x00500669).WriteJump();
 	GetErrorMemHdlr(0x0050068F).WriteJump();
-																
+
 	GetErrorMemHdlr(0x00500262).WriteJump();
 	GetErrorMemHdlr(0x0050027D).WriteJump();
 	GetErrorMemHdlr(0x00500298).WriteJump();
-															
+
 	GetErrorMemHdlr(0x005001DC).WriteJump();
 }

@@ -349,6 +349,14 @@
 				RelativePath=".\Resource.h"
 				>
 			</File>
+			<Filter
+				Name="Images"
+				>
+				<File
+					RelativePath=".\Splash.bmp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Common"
@@ -499,7 +507,7 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Plugin Interface"
+			Name="Plugin Interop"
 			>
 			<File
 				RelativePath=".\CSEInterfaceAPI.h"
@@ -515,7 +523,7 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="CSInterop"
+			Name="CS Interop"
 			>
 			<File
 				RelativePath=".\CSInterop.cpp"
@@ -531,6 +539,90 @@
 			</File>
 			<File
 				RelativePath=".\[Common]\CSInteropData.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Components"
+			>
+			<File
+				RelativePath=".\ArchiveManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ArchiveManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CSDialogs.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSDialogs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GMSTMap.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GMSTMap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderSelectionGroupManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderSelectionGroupManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderTimeManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderTimeManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderWindowTextPainter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderWindowTextPainter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptEditorAllocator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ScriptEditorAllocator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TESFormReferenceData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TESFormReferenceData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ToolManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ToolManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\WorkspaceManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WorkspaceManager.h"
 				>
 			</File>
 		</Filter>

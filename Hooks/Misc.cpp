@@ -1,9 +1,18 @@
 #include "Misc.h"
 #include "ScriptEditor.h"
+#include "..\CSDialogs.h"
+#include "..\ToolManager.h"
+#include "..\WorkspaceManager.h"
+#include "..\RenderWindowTextPainter.h"
+#include "..\RenderSelectionGroupManager.h"
+#include "..\GMSTMap.h"
+#include "..\ArchiveManager.h"
+#include "..\TESFormReferenceData.h"
+#include "..\RenderTimeManager.h"
 
 char g_NumericIDWarningBuffer[0x10] = {0};
 
-_DefineHookHdlr(ExitCS, 0x00419354);
+_DefineHookHdlr(CSExit, 0x0041936E);
 _DefineHookHdlrWithBuffer(CSInit, 0x00419260)(5, 0xE8, 0xEB, 0xC5, 0x2C, 0), 5);
 _DefineNopHdlr(MissingTextureWarning, 0x0044F3AF, 14);
 _DefineHookHdlr(AssertOverride, 0x004B5670);
@@ -24,10 +33,12 @@ _DefineHookHdlr(TESFormRemoveReference, 0x00496494);
 _DefineHookHdlr(TESFormClearReferenceList, 0x0049641E);
 _DefineHookHdlr(TESFormPopulateUseInfoList, 0x004964F2);
 _DefineHookHdlr(TESFormDelete, 0x00498712);
+_DefinePatchHdlr(TextureSizeCheck, 0x0044F444);
+_DefineHookHdlr(AboutDialog, 0x00441CC5);
 
 void PatchMiscHooks(void)
 {
-	_MemoryHandler(ExitCS).WriteJump();
+	_MemoryHandler(CSExit).WriteJump();
 	_MemoryHandler(CSInit).WriteJump();
 	_MemoryHandler(PluginSave).WriteJump();
 	_MemoryHandler(PluginLoad).WriteJump();
@@ -46,6 +57,8 @@ void PatchMiscHooks(void)
 	_MemoryHandler(TESFormClearReferenceList).WriteJump();
 	_MemoryHandler(TESFormPopulateUseInfoList).WriteJump();
 	_MemoryHandler(TESFormDelete).WriteJump();
+	_MemoryHandler(TextureSizeCheck).WriteUInt8(0xEB);
+	_MemoryHandler(AboutDialog).WriteJump();
 
 	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
 		PatchMessageHandler();
@@ -96,28 +109,34 @@ void __stdcall MessageHandlerOverride(const char* Message)
 	DebugPrint(Console::e_CS, "%s", Message);
 }
 
-void __stdcall DoExitCSHook(HWND MainWindow)
+void __stdcall DoCSExitHook(HWND MainWindow)
 {
 	WritePositionToINI(MainWindow, NULL);
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
 	WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
+	DebugPrint("CS INI Settings Flushed");
 
 	RENDERTEXT->Release();
+	DebugPrint("Render Window Text Painter Released");
 	CSIOM->Deinitialize();
+	DebugPrint("CSInterop Manager Deinitialized");
+	g_ToolManager.WriteToINI(g_INIPath.c_str());
+	DebugPrint("Tool Manager Deinitialized");
 
+	DebugPrint("Deinitializing Console, Flushing CSE INI Settings and Closing the CS!");
 	CONSOLE->Deinitialize();
 	g_INIManager->SaveSettingsToINI();
 
 	ExitProcess(0);
 }
 
-_BeginHookHdlrFn(ExitCS)
+_BeginHookHdlrFn(CSExit)
 {
 	__asm
 	{
 		push    ebx
-		call    DoExitCSHook
+		call    DoCSExitHook
 	}
 }
 
@@ -130,36 +149,71 @@ void __stdcall DoCSInitHook()
 											// remove hook rightaway to keep it from hindering the subclassing that follows
 	kCSInit.WriteBuffer();
 
+	DebugPrint("Initializing Tools");
+	CONSOLE->Indent();
+	g_ToolManager.InitializeToolsMenu();
+	g_ToolManager.ReadFromINI(g_INIPath.c_str());
+	g_ToolManager.ReloadToolsMenu();
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing Window Manager");
+	CONSOLE->Indent();
 	InitializeWindowManager();
-	InitializeDefaultGMSTMap();
-	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
-	HallOfFame::Initialize(true);
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing Console");
+	CONSOLE->Indent();
 	CONSOLE->InitializeConsole();
 	CONSOLE->LoadINISettings();
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing GMST Map");
+	CONSOLE->Indent();
+	InitializeDefaultGMSTMap();
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing Intellisense Database Update Thread");
+	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
+
+	DebugPrint("Initializing Hall of Fame");
+	CONSOLE->Indent();
+	HallOfFame::Initialize(true);
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing Render Window Text Painter");
 	g_RenderTimeManager.Update();
-
-	DebugPrint("Initializing RenderWindowTextPainter");
 	RENDERTEXT->Initialize();
-
 	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Construction Set Extender", 5);
 
-	if (g_INIManager->GET_INI_INT("LoadPluginOnStartup"))
+	DebugPrint("Initializing CS Startup Manager");
+	CONSOLE->Indent();
+	if (g_INIManager->GetINIInt("LoadPluginOnStartup"))
 		LoadStartupPlugin();
 
-	if (g_INIManager->GET_INI_INT("OpenScriptWindowOnStartup"))
+	if (g_INIManager->GetINIInt("OpenScriptWindowOnStartup"))
 	{
-		const char* ScriptID = g_INIManager->GET_INI_STR("StartupScriptEditorID");
+		const char* ScriptID = g_INIManager->GetINIStr("StartupScriptEditorID");
 		if (strcmp(ScriptID, "") && GetFormByID(ScriptID))
 			SpawnCustomScriptEditor(ScriptID);
 		else
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
 	}
 
-	LoadedMasterArchives();
-
+	DebugPrint("Initializing Workspace Manager");
+	CONSOLE->Indent();
 	g_WorkspaceManager.Initialize(g_AppPath.c_str());
-	if (g_INIManager->GET_INI_INT("SetWorkspaceOnStartup"))
-		g_WorkspaceManager.SelectWorkspace(g_INIManager->GET_INI_STR("DefaultWorkspacePath"));
+	if (g_INIManager->GetINIInt("SetWorkspaceOnStartup"))
+		g_WorkspaceManager.SelectWorkspace(g_INIManager->GetINIStr("DefaultWorkspacePath"));
+	CONSOLE->Exdent();
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing Archives");
+	CONSOLE->Indent();
+	InitializeArchives();
+	CONSOLE->Exdent();
+
+	CONSOLE->ExdentAll();
+	DebugPrint("Construction Set Extender Initialized!\r\n");
 }
 
 _BeginHookHdlrFn(CSInit)
@@ -497,5 +551,29 @@ _BeginHookHdlrFn(TESFormDelete)
 		jmp		[_HookHdlrFnVariable(TESFormDelete, Retn)]
 	FAIL:
 		jmp		[_HookHdlrFnVariable(TESFormDelete, Jump)]
+	}
+}
+
+void __stdcall DoAboutDialogHook(HWND Dialog)
+{
+	HWND PictureControl = GetDlgItem(Dialog, 1963);
+	HANDLE Splash = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+	SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)Splash);
+	Static_SetText(GetDlgItem(Dialog, -1), "The Elder Scrolls Construction Set && Construction Set Extender");
+}
+
+_BeginHookHdlrFn(AboutDialog)
+{
+	_DeclareHookHdlrFnVariable(AboutDialog, Retn, 0x00441CCB);
+	__asm
+	{
+		pushad
+		push	esi
+		call	DoAboutDialogHook
+		popad
+
+		call	ShowWindowAddress
+		call	g_WindowHandleCallAddr
+		jmp		[_HookHdlrFnVariable(AboutDialog, Retn)]
 	}
 }

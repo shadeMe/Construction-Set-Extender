@@ -10,6 +10,7 @@ class Console
 	HWND						EditHandle;
 	bool						DisplayState;
 	FILE*						DebugLog;
+	std::string					DebugLogPath;
 	UInt32						IndentLevel;
 	std::string					MessageBuffer;
 	bool						UpdateSignalFlag;
@@ -37,10 +38,11 @@ public:
 	bool						ToggleDisplayState();
 	void						LoadINISettings();
 	void						SaveINISettings();
-	HWND						GetWindowHandle() { return WindowHandle; }	
+	HWND						GetWindowHandle() { return WindowHandle; }
 	void						Deinitialize();
 	const char*					GetMessageBuffer() { return MessageBuffer.c_str(); }
 	bool						GetShouldUpdate() { bool Result = UpdateSignalFlag; UpdateSignalFlag = false; return Result; }
+	const char*					GetDebugLogPath() { return DebugLogPath.c_str(); }
 
 	void						LogMessage(UInt8 Source, const char* Format, va_list Args);
 	void						LogMessage(const char* Prefix,  const char* Format, va_list Args);
@@ -55,5 +57,4 @@ public:
 #define CONSOLECMDBOX_RESETCOMMANDSTACK			9990
 #define CONSOLECMDBOX_CLEARCOMMANDSTACK			9991
 #define CONSOLE_UPDATETIMER						0x9999
-#define CONSOLE_UPDATEPERIOD					g_INIManager->GET_INI_INT("ConsoleUpdatePeriod")
-
+#define CONSOLE_UPDATEPERIOD					g_INIManager->GetINIInt("ConsoleUpdatePeriod")

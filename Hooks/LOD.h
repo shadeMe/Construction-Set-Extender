@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include "Common.h"
 
 // hooks that modify LOD related code
@@ -12,5 +12,4 @@ _DeclareMemHdlr(LODLandD3DTextureSelection, "");
 _DeclareMemHdlr(LODLandBSTextureSelection, "");
 _DeclareMemHdlr(GenerateLODPartialTexture, "");
 _DeclareMemHdlr(GenerateLODFullTexture, "");
-
-
+_DeclareMemHdlr(GenerateLODFullTextureFileName, "corrects the filename used to save generated textures under");

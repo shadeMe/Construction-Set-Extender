@@ -3,6 +3,7 @@
 #include "[Common]\HandShakeStructs.h"
 #include "[Common]\CLIWrapper.h"
 #include "Console.h"
+#include "resource.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,6 +12,13 @@
 #include "Hooks\Misc.h"
 #include "Hooks\Dialog.h"
 #include "Hooks\AssetSelector.h"
+#include "ScriptEditorAllocator.h"
+#include "CSDialogs.h"
+#include "RenderSelectionGroupManager.h"
+#include "RenderTimeManager.h"
+#include "ToolManager.h"
+#include "WorkspaceManager.h"
+#include "RenderWindowTextPainter.h"
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -154,7 +162,11 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		switch (LOWORD(wParam))
 		{
 		case MAIN_DATA_SAVEAS:
-			if (!(*g_dataHandler)->unk8B8.activeFile)		break;
+			if (!(*g_dataHandler)->unk8B8.activeFile)
+			{
+				MessageBox(*g_HWND_CSParent, "An active plugin must be set before using this tool.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+				break;
+			}
 
 			*g_WorkingFileFlag = 0;
 
@@ -170,7 +182,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 				if (SendMessage(*g_HWND_CSParent, 0x40C, NULL, (LPARAM)FileName))
 				{
-					sub_4306F0(false);
+					TESDialog_SetCSWindowTitleModifiedFlag(false);
 				}
 				else
 				{
@@ -372,7 +384,31 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case MAIN_DATA_SETWORKSPACE:
 			g_WorkspaceManager.SelectWorkspace(NULL);
 			break;
+		case ID_TOOLS_MANAGE:
+			DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_MANAGETOOLS), *g_HWND_CSParent, ManageToolsDlgProc);
+			break;
+		case MAIN_DATA_SAVEESPMASTERS:
+			{
+				HMENU FileMenu = GetMenu(*g_HWND_CSParent); FileMenu = GetSubMenu(FileMenu, 0);
+				bool Checked = (GetMenuState(FileMenu, MAIN_DATA_SAVEESPMASTERS, MF_BYCOMMAND)) & MF_CHECKED;
+				if (!Checked)
+				{
+					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters")->SetValue("1");
+					CheckMenuItem(FileMenu, MAIN_DATA_SAVEESPMASTERS, MF_CHECKED);
+				}
+				else
+				{
+					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters")->SetValue("0");
+					CheckMenuItem(FileMenu, MAIN_DATA_SAVEESPMASTERS, MF_UNCHECKED);
+				}
+			}
+
+			break;
 		}
+
+		if (LOWORD(wParam) > ToolMenuIdentifierBase)
+			g_ToolManager.RunTool(LOWORD(wParam));
+
 		break;
 	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_CSMainWndOrgWindowProc);
@@ -785,6 +821,9 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				break;
 			case CONSOLEMENU_HIDECONSOLE:
 				CONSOLE->ToggleDisplayState();
+				break;
+			case CONSOLEMENU_OPENDEBUGLOG:
+				ShellExecute(NULL, "open", (LPSTR)CONSOLE->GetDebugLogPath(), NULL, NULL, SW_SHOW);
 				break;
 			}
 			DestroyMenu(Popup);
@@ -1369,6 +1408,159 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 	return CallWindowProc(g_TagBrowserOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
+#define MANAGETOOLS_CLEAREDITFIELD		99999
+
+BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND ToolList = GetDlgItem(hWnd, LISTBOX_TOOLLIST);
+	HWND TitleBox =  GetDlgItem(hWnd, EDIT_TITLE);
+	HWND CmdLineBox =  GetDlgItem(hWnd, EDIT_CMDLINE);
+	HWND InitDirBox =  GetDlgItem(hWnd, EDIT_INITDIR);
+
+	static ToolManager::Tool* s_ToolBuffer = NULL;
+
+	switch (uMsg)
+	{
+	case MANAGETOOLS_CLEAREDITFIELD:
+		SetWindowText(TitleBox, NULL);
+		SetWindowText(CmdLineBox, NULL);
+		SetWindowText(InitDirBox, NULL);
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case BTN_CLOSE:
+			SendMessage(hWnd, WM_COMMAND, MAKEWPARAM(LISTBOX_TOOLLIST, LBN_SELCHANGE), (LPARAM)ToolList);
+			g_ToolManager.ClearToolList(false);
+			for (int i = 0, j = SendMessage(ToolList, LB_GETCOUNT, NULL, NULL); i < j; i++)
+			{
+				ToolManager::Tool* Tool = (ToolManager::Tool*)SendMessage(ToolList, LB_GETITEMDATA, i, NULL);
+				g_ToolManager.AddTool(Tool);
+			}
+
+			g_ToolManager.ReloadToolsMenu();
+			DebugPrint("Updated Tool List");
+
+			EndDialog(hWnd, 0);
+			return TRUE;
+		case BTN_ADDTOOL:
+			{
+				char TitleBuffer[0x200] = {0}, CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0};
+				GetWindowText(TitleBox, (LPSTR)TitleBuffer, 0x200);
+				GetWindowText(CmdLineBox, (LPSTR)CmdLineBuffer, MAX_PATH);
+				GetWindowText(InitDirBox, (LPSTR)InitDirBuffer, MAX_PATH);
+
+				if ((strlen(TitleBuffer) < 1 || strlen(CmdLineBuffer) < 1 || strlen(InitDirBuffer) < 1) ||
+					(strstr(TitleBuffer, "=") || strstr(CmdLineBuffer, "=") || strstr(InitDirBuffer, "=")) ||
+					(strstr(TitleBuffer, "|") || strstr(CmdLineBuffer, "|") || strstr(InitDirBuffer, "|")))
+				{
+					MessageBox(hWnd, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+					break;
+				}
+
+				ToolManager::Tool* NewTool = g_ToolManager.AddTool(TitleBuffer, CmdLineBuffer, InitDirBuffer);
+				if (NewTool == NULL)
+				{
+					MessageBox(hWnd, "Enter a unique tool title", "CSE", MB_OK|MB_ICONEXCLAMATION);
+					break;
+				}
+
+				int Index = SendMessage(ToolList, LB_INSERTSTRING, -1, (LPARAM)NewTool->GetTitle());
+				SendMessage(ToolList, LB_SETITEMDATA, Index, (LPARAM)NewTool);
+			}
+			break;
+		case BTN_REMOVETOOL:
+			{
+				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
+				if (Index != LB_ERR)
+				{
+					if (SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_Buffer) != LB_ERR)
+					{
+						g_ToolManager.RemoveTool(g_Buffer, true);
+						SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
+						SendMessage(hWnd, MANAGETOOLS_CLEAREDITFIELD, NULL, NULL);
+						SendMessage(ToolList, LB_SETSEL, FALSE, -1);
+					}
+				}
+			}
+			break;
+		case BTN_MOVEDOWN:
+		case BTN_MOVEUP:
+			{
+				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
+				if (Index != LB_ERR)
+				{
+					SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_Buffer);
+					ToolManager::Tool* Tool = (ToolManager::Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
+
+					int NewIndex = 0;
+					if (LOWORD(wParam) == BTN_MOVEDOWN)
+						NewIndex = Index + 1;
+					else
+						NewIndex = Index - 1;
+
+					if (NewIndex < 0)
+						NewIndex = 0;
+					else if (NewIndex == SendMessage(ToolList, LB_GETCOUNT, NULL, NULL))
+						NewIndex--;
+
+					SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
+					SendMessage(ToolList, LB_INSERTSTRING, NewIndex, (LPARAM)g_Buffer);
+					SendMessage(ToolList, LB_SETITEMDATA, NewIndex, (LPARAM)Tool);
+					SendMessage(ToolList, LB_SETSEL, TRUE, NewIndex);
+					SetFocus(ToolList);
+				}
+			}
+			break;
+		case LISTBOX_TOOLLIST:
+			{
+				switch (HIWORD(wParam))
+				{
+				case LBN_SELCHANGE:
+					if (s_ToolBuffer)
+					{
+						char CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0};
+						GetWindowText(CmdLineBox, (LPSTR)CmdLineBuffer, MAX_PATH);
+						GetWindowText(InitDirBox, (LPSTR)InitDirBuffer, MAX_PATH);
+
+						if (strlen(CmdLineBuffer) > 1 && strlen(InitDirBuffer) > 1)
+						{
+							if ((strstr(CmdLineBuffer, "=") || strstr(InitDirBuffer, "=")) ||
+								(strstr(CmdLineBuffer, "|") || strstr(InitDirBuffer, "|")))
+							{
+								MessageBox(hWnd, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+								break;
+							}
+
+							s_ToolBuffer->SetCommandLine(CmdLineBuffer);
+							s_ToolBuffer->SetInitialDir(InitDirBuffer);
+						}
+					}
+
+					int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
+					if (Index != LB_ERR)
+					{
+						ToolManager::Tool* Tool = (ToolManager::Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
+						SetWindowText(TitleBox, (LPSTR)Tool->GetTitle());
+						SetWindowText(CmdLineBox, (LPSTR)Tool->GetCommandLine());
+						SetWindowText(InitDirBox, (LPSTR)Tool->GetInitialDir());
+						s_ToolBuffer = Tool;
+					}
+					else
+						SendMessage(hWnd, MANAGETOOLS_CLEAREDITFIELD, NULL, NULL);
+					break;
+				}
+			}
+			break;
+		}
+		break;
+	case WM_INITDIALOG:
+		g_ToolManager.PopulateListBoxWithTools(ToolList);
+		break;
+	}
+	return FALSE;
+}
+
 void InitializeWindowManager(void)
 {
 	HMENU MainMenu = GetMenu(*g_HWND_CSParent),
@@ -1389,7 +1581,8 @@ void InitializeWindowManager(void)
 				ItemGameplayGlobalScript,
 				ItemLaunchGame,
 				ItemViewTagBrowser,
-				ItemDataSetWorkspace;
+				ItemDataSetWorkspace,
+				ItemFileSaveESPMasters;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -1491,6 +1684,17 @@ void InitializeWindowManager(void)
 	ItemDataSetWorkspace.cch = 0;
 	InsertMenuItem(FileMenu, 40003, FALSE, &ItemDataSetWorkspace);
 
+	ItemFileSaveESPMasters.cbSize = sizeof(MENUITEMINFO);
+	ItemFileSaveESPMasters.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
+	ItemFileSaveESPMasters.wID = MAIN_DATA_SAVEESPMASTERS;
+	if (g_INIManager->GetINIInt("SaveLoadedESPsAsMasters"))
+		ItemFileSaveESPMasters.fState = MFS_ENABLED|MFS_CHECKED;
+	else
+		ItemFileSaveESPMasters.fState = MFS_ENABLED|MFS_UNCHECKED;
+	ItemFileSaveESPMasters.dwTypeData = "Save ESPs as Master Files";
+	ItemFileSaveESPMasters.cch = 0;
+	InsertMenuItem(FileMenu, MAIN_DATA_SAVEAS, FALSE, &ItemFileSaveESPMasters);
+
 	HMENU AlignMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU2); AlignMenuPopup = GetSubMenu(AlignMenuPopup, 0);
 	HMENU GroupMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU3); GroupMenuPopup = GetSubMenu(GroupMenuPopup, 0);
 	HMENU FreezeMenuPopup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU4); FreezeMenuPopup = GetSubMenu(FreezeMenuPopup, 0);
@@ -1513,7 +1717,7 @@ void InitializeWindowManager(void)
                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                              FF_DONTCARE, "MS Shell Dlg");
 
-	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GET_INI_INT("UpdatePeriod"), NULL);
+	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GetINIInt("UpdatePeriod"), NULL);
 
 	g_TagBrowserOrgWindowProc = (WNDPROC)SetWindowLong(CLIWrapper::TagBrowser::GetFormDropParentHandle(), GWL_WNDPROC, (LONG)TagBrowserSubClassProc);
 

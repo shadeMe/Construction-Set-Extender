@@ -1,4 +1,8 @@
 #include "Renderer.h"
+#include "..\RenderSelectionGroupManager.h"
+#include "..\RenderTimeManager.h"
+#include "..\RenderWindowTextPainter.h"
+#include "..\CSDialogs.h"
 
 _DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 _DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
@@ -11,6 +15,8 @@ _DefineHookHdlr(TESRenderControlPerformMove, 0x00425670);
 _DefineHookHdlr(TESRenderControlPerformRotate, 0x00425D6E);
 _DefineHookHdlr(TESRenderControlPerformScale, 0x00424650);
 _DefineHookHdlr(TESRenderControlPerformFall, 0x0042886A);
+_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
+_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 
 void PatchRendererHooks(void)
 {
@@ -25,6 +31,8 @@ void PatchRendererHooks(void)
 	_MemoryHandler(TESRenderControlPerformRotate).WriteJump();
 	_MemoryHandler(TESRenderControlPerformScale).WriteJump();
 	_MemoryHandler(TESRenderControlPerformFall).WriteJump();
+	_MemoryHandler(TESObjectREFRSetupDialog).WriteJump();
+	_MemoryHandler(TESObjectREFRCleanDialog).WriteJump();
 }
 
 _BeginHookHdlrFn(DoorMarkerProperties)
@@ -36,7 +44,7 @@ _BeginHookHdlrFn(DoorMarkerProperties)
 		mov		eax, [esi + 0x8]
 		shr		eax, 0x0E
 		test	al, 1
-		jnz		DOORMARKER	
+		jnz		DOORMARKER
 
 		jmp		[_HookHdlrFnVariable(DoorMarkerProperties, Properties)]
 	TELEPORT:
@@ -55,6 +63,9 @@ _BeginHookHdlrFn(DoorMarkerProperties)
 
 void __stdcall DoTESObjectREFRGet3DDataHook(TESObjectREFR* Object, NiNode* Node)
 {
+	if ((Node->m_flags & kNiNodeSpecialFlags_DontUncull))
+		return;
+
 	ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
 
 	BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Object->baseExtraList, kExtraData_EnableStateParent);
@@ -146,18 +157,17 @@ _BeginHookHdlrFn(NiDX9RendererRecreate)
 	}
 }
 
-
 void __stdcall DoRenderWindowStatsHook(void)
 {
-	if (g_INIManager->GET_INI_INT("DisplaySelectionStats"))
+	if (g_INIManager->GetINIInt("DisplaySelectionStats"))
 	{
 		if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
 		{
-			PrintToBuffer("%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f", 
+			PrintToBuffer("%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f",
 						(*g_TESRenderSelectionPrimary)->SelectionCount,
 						(*g_TESRenderSelectionPrimary)->x,
 						(*g_TESRenderSelectionPrimary)->y,
-						(*g_TESRenderSelectionPrimary)->z); 
+						(*g_TESRenderSelectionPrimary)->z);
 			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_Buffer, 0);
 		}
 		else if ((*g_TESRenderSelectionPrimary)->SelectionCount)
@@ -213,10 +223,10 @@ _BeginHookHdlrFn(RenderWindowStats)
 
 bool __stdcall DoUpdateViewportHook(void)
 {
-	if (RENDERTEXT->GetRenderChannelQueueSize(RenderWindowTextPainter::kRenderChannel_2) || g_INIManager->GET_INI_INT("UpdateViewPortAsync"))
+	if (RENDERTEXT->GetRenderChannelQueueSize(RenderWindowTextPainter::kRenderChannel_2) || g_INIManager->GetINIInt("UpdateViewPortAsync"))
 		return true;
 	else
-		return false;		
+		return false;
 }
 
 _BeginHookHdlrFn(UpdateViewport)
@@ -237,7 +247,7 @@ _BeginHookHdlrFn(UpdateViewport)
 		call	DoUpdateViewportHook
 		test	al, al
 		jz		EXIT
-		
+
 		popad
 		jmp		[_HookHdlrFnVariable(UpdateViewport, Jump)]
 	EXIT:
@@ -245,8 +255,6 @@ _BeginHookHdlrFn(UpdateViewport)
 		jmp		[_HookHdlrFnVariable(UpdateViewport, Retn)]
 	}
 }
-
-
 
 bool __stdcall DoRenderWindowSelectionHook(TESObjectREFR* Ref)
 {
@@ -365,5 +373,48 @@ _BeginHookHdlrFn(TESRenderControlPerformFall)
 
 		call	[_HookHdlrFnVariable(TESRenderControlPerformFall, Call)]
 		jmp		[_HookHdlrFnVariable(TESRenderControlPerformFall, Retn)]
+	}
+}
+
+void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
+{
+	ToggleFlag(&Node->m_flags, kNiNodeSpecialFlags_DontUncull, State);
+}
+
+_BeginHookHdlrFn(TESObjectREFRSetupDialog)
+{
+	_DeclareHookHdlrFnVariable(TESObjectREFRSetupDialog, Retn, 0x00549A05);
+	__asm
+	{
+		mov     eax, [edx + 0x180]
+		mov     ecx, esi
+		call    eax
+
+		pushad
+		push	1
+		push	eax
+		call	DoTESObjectREFREditDialogHook
+		popad
+
+		jmp		[_HookHdlrFnVariable(TESObjectREFRSetupDialog, Retn)]
+	}
+}
+
+_BeginHookHdlrFn(TESObjectREFRCleanDialog)
+{
+	_DeclareHookHdlrFnVariable(TESObjectREFRCleanDialog, Retn, 0x00549B57);
+	__asm
+	{
+		push    edi
+		mov     ecx, ebx
+		call    edx
+
+		pushad
+		push	0
+		push	eax
+		call	DoTESObjectREFREditDialogHook
+		popad
+
+		jmp		[_HookHdlrFnVariable(TESObjectREFRCleanDialog, Retn)]
 	}
 }

@@ -1,12 +1,12 @@
-#pragma once 
+#pragma once
 #include "Common.h"
 
-// hooks that do odd jobs such as fixing bugs and shoveling dung 
+// hooks that do odd jobs such as fixing bugs and shoveling dung
 void PatchMiscHooks(void);
 
 extern char g_NumericIDWarningBuffer[0x10];
 
-_DeclareMemHdlr(ExitCS, "adds fast exit to the CS");
+_DeclareMemHdlr(CSExit, "adds fast exit to the CS");
 _DeclareMemHdlr(CSInit, "adds an one-time only hook to the CS main windows wndproc as an alternative to WinMain()");
 _DeclareMemHdlr(AssertOverride, "fixes crashes from assertion calls in the code and log them to the console/log instead");
 _DeclareMemHdlr(TextureMipMapCheck, "allows the preview of textures with mipmaps");
@@ -26,8 +26,10 @@ _DeclareMemHdlr(TESFormRemoveReference, "");
 _DeclareMemHdlr(TESFormClearReferenceList, "");
 _DeclareMemHdlr(TESFormPopulateUseInfoList, "");
 _DeclareMemHdlr(TESFormDelete, "");
+_DeclareMemHdlr(TextureSizeCheck, "allows the preview of textures of resolution > 512px");
+_DeclareMemHdlr(AboutDialog, "add a mention of CSE");
 
 void PatchMessageHandler(void);
 void __stdcall DoCSInitHook();
-void __stdcall DoExitCSHook(HWND MainWindow);
+void __stdcall DoCSExitHook(HWND MainWindow);
 void __stdcall MessageHandlerOverride(const char* Message);

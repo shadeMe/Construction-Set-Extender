@@ -22,3 +22,7 @@ _DeclareMemHdlr(TESObjectCELLSaveReferencesEpilog, "");
 _DeclareMemHdlr(MissingMasterOverride, "allows the loading of plugins with missing masters");
 _DeclareMemHdlr(QuickLoadPluginLoadHandler, "adds support for the quick loading of plugins (only loads the active plugin)");
 _DeclareMemHdlr(AutoLoadActivePluginOnStartup, "temporary hook that allows the automatic loading of plugins on startup");
+_DeclareMemHdlr(DataHandlerSavePluginResetA, "patches various locations in DataHandler::SavePlugin to prevent a premature exit from disabling the save tool");
+_DeclareMemHdlr(DataHandlerSavePluginResetB, "");
+_DeclareMemHdlr(DataHandlerSavePluginResetC, "");
+_DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");

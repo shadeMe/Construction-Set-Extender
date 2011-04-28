@@ -1,4 +1,5 @@
 #include "Dialog.h"
+#include "..\CSDialogs.h"
 
 bool g_QuickLoadToggle = false;
 
@@ -30,7 +31,6 @@ _DefineHookHdlr(TESRaceCopyHairEyeDataMessageHandler, 0x004E8FE1);
 _DefineNopHdlr(TESDialogSubwindowEnumChildCallback, 0x00404E69, 3);
 _DefineHookHdlr(TESDialogGetIsWindowDragDropRecipient, 0x004433FF);
 
-
 void PatchDialogHooks(void)
 {
 	_MemoryHandler(FindTextInit).WriteJump();
@@ -44,7 +44,7 @@ void PatchDialogHooks(void)
 	_MemoryHandler(TopicResultScriptReset).WriteJump();
 	_MemoryHandler(RaceDescriptionDirtyEdit).WriteUInt8(0xEB);
 	_MemoryHandler(MissingTextureWarning).WriteNop();
-	_MemoryHandler(ResponseEditorMic).WriteNop(); 
+	_MemoryHandler(ResponseEditorMic).WriteNop();
 	_MemoryHandler(CellObjectListShadeMeRefAppend).WriteJump();
 	_MemoryHandler(DeathToTheCloseOpenDialogsMessage).WriteUInt8(0xEB);
 	_MemoryHandler(TESDialogPopupMenu).WriteJump();
@@ -75,7 +75,7 @@ _BeginHookHdlrFn(FindTextInit)
 		call	[g_WindowHandleCallAddr]			// CreateDialogParamA
 
 		pushad
-		push	eax	
+		push	eax
 		call	DoFindTextInitHook
 		popad
 
@@ -99,7 +99,7 @@ void __stdcall DoNPCFaceGenHook(HWND Dialog)
 	SendMessageA(Dialog, WM_COMMAND, 1014, 0);
 }
 
-_BeginHookHdlrFn(NPCFaceGen)     
+_BeginHookHdlrFn(NPCFaceGen)
 {
 	_DeclareHookHdlrFnVariable(NPCFaceGen, Retn, 0x004D76B1);
 	_DeclareHookHdlrFnVariable(NPCFaceGen, Call, 0x0049C230);
@@ -118,23 +118,23 @@ void __stdcall DoDataDlgInitHook(HWND DataDialog)
 	RECT DlgRect;
 	GetClientRect(DataDialog, &DlgRect);
 
-	HWND QuickLoadCheckBox = CreateWindowEx(0, 
-											"BUTTON", 
-											"Quick-Load Plugin", 
+	HWND QuickLoadCheckBox = CreateWindowEx(0,
+											"BUTTON",
+											"Quick-Load Plugin",
 											BS_AUTOCHECKBOX|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-											DlgRect.right - 141, DlgRect.bottom - 82, 142, 15, 
-											DataDialog, 
-											(HMENU)DATA_QUICKLOAD, 
-											GetModuleHandle(NULL), 
+											DlgRect.right - 141, DlgRect.bottom - 82, 142, 15,
+											DataDialog,
+											(HMENU)DATA_QUICKLOAD,
+											GetModuleHandle(NULL),
 											NULL),
-		 StartupPluginBtn = CreateWindowEx(0, 
-											"BUTTON", 
-											"Set As Startup Plugin", 
+		 StartupPluginBtn = CreateWindowEx(0,
+											"BUTTON",
+											"Set As Startup Plugin",
 											WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-											DlgRect.right - 141, DlgRect.bottom - 64, 130, 20, 
-											DataDialog, 
-											(HMENU)DATA_SETSTARTUPPLUGIN, 
-											GetModuleHandle(NULL), 
+											DlgRect.right - 141, DlgRect.bottom - 64, 130, 20,
+											DataDialog,
+											(HMENU)DATA_SETSTARTUPPLUGIN,
+											GetModuleHandle(NULL),
 											NULL);
 
 	CheckDlgButton(DataDialog, DATA_QUICKLOAD, (!g_QuickLoadToggle ? BST_UNCHECKED : BST_CHECKED));
@@ -190,7 +190,6 @@ _BeginHookHdlrFn(CustomCSWindow)
 	FAIL:
 		jmp		[_HookHdlrFnVariable(CustomCSWindow, Retn)]
 	}
-
 }
 
 _BeginHookHdlrFn(AddListViewItem)
@@ -339,7 +338,7 @@ void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 	{
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
 	}
-	
+
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 	if (SelectedForm->IsReference())
 	{
@@ -347,7 +346,6 @@ void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 	}
-	
 }
 
 void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
@@ -383,7 +381,6 @@ void __stdcall RemoveFormListPopupMenuItems(HMENU Menu)
 	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 }
-
 
 _BeginHookHdlrFn(TESDialogPopupMenu)
 {
@@ -441,7 +438,7 @@ _BeginHookHdlrFn(TESDialogPopupMenu)
 void __stdcall DoResponseWindowInitHook(HWND hWnd)
 {
 	g_ResponseWndOrgWindowProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (LONG)ResponseWndSubClassProc);
-	
+
 	ShowWindow(GetDlgItem(hWnd, 2220), SW_HIDE);
 	ShowWindow(GetDlgItem(hWnd, 2221), SW_HIDE);
 	ShowWindow(GetDlgItem(hWnd, 2222), SW_HIDE);
@@ -526,7 +523,7 @@ void __stdcall DoFormIDListViewSaveChangesHookEpilog(HWND Parent)
 _BeginHookHdlrFn(FormIDListViewSaveChanges)
 {
 	_DeclareHookHdlrFnVariable(FormIDListViewSaveChanges, QuestRetn, 0x00449580);
-	_DeclareHookHdlrFnVariable(FormIDListViewSaveChanges, ExitRetn, 0x00448BF0);	
+	_DeclareHookHdlrFnVariable(FormIDListViewSaveChanges, ExitRetn, 0x00448BF0);
 	__asm
 	{
 		push	esi
@@ -584,7 +581,7 @@ _BeginHookHdlrFn(FormIDListViewItemChange)
 void __stdcall DoFormIDListViewSelectItemHook(HWND ListView, int ItemIndex)
 {
 	SetFocus(ListView);
-	ListView_SetItemState(ListView, ItemIndex, LVIS_FOCUSED | LVIS_SELECTED, 0x000F); 
+	ListView_SetItemState(ListView, ItemIndex, LVIS_FOCUSED | LVIS_SELECTED, 0x000F);
 }
 
 _BeginHookHdlrFn(FormIDListViewSelectItem)
@@ -623,28 +620,28 @@ void __stdcall DoTESRaceCopyHairEyeDataInitHook(Subwindow* RaceDialogSubWindow, 
 	{
 		HWND Parent = RaceDialogSubWindow->hDialog;
 
-		HWND CopyHairButton = CreateWindowEx(0, 
-												"BUTTON", 
-												"Copy Hair From Race", 
+		HWND CopyHairButton = CreateWindowEx(0,
+												"BUTTON",
+												"Copy Hair From Race",
 												WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-												RaceDialogSubWindow->position.x + 175 - 42, RaceDialogSubWindow->position.y + 285, 165, 25, 
-												Parent, 
-												(HMENU)RACE_COPYHAIR, 
-												GetModuleHandle(NULL), 
+												RaceDialogSubWindow->position.x + 175 - 42, RaceDialogSubWindow->position.y + 285, 165, 25,
+												Parent,
+												(HMENU)RACE_COPYHAIR,
+												GetModuleHandle(NULL),
 												NULL);
 
-		HWND CopyEyesButton = CreateWindowEx(0, 
-												"BUTTON", 
-												"Copy Eyes From Race", 
+		HWND CopyEyesButton = CreateWindowEx(0,
+												"BUTTON",
+												"Copy Eyes From Race",
 												WS_CHILD|WS_VISIBLE|WS_TABSTOP,
 												RaceDialogSubWindow->position.x + 175 + 130, RaceDialogSubWindow->position.y + 285, 165, 25,
-												Parent, 
-												(HMENU)RACE_COPYEYES, 
-												GetModuleHandle(NULL), 
+												Parent,
+												(HMENU)RACE_COPYEYES,
+												GetModuleHandle(NULL),
 												NULL);
 
 		SendMessage(CopyHairButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
-		SendMessage(CopyEyesButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);	
+		SendMessage(CopyEyesButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 
 		thisCall(kLinkedListNode_NewNode, &RaceDialogSubWindow->controls, CopyHairButton);
 		thisCall(kLinkedListNode_NewNode, &RaceDialogSubWindow->controls, CopyEyesButton);
@@ -732,7 +729,7 @@ _BeginHookHdlrFn(TESRaceCopyHairEyeDataMessageHandler)
 	{
 		movzx	eax, di
 		add		eax, 0FFFFF78Ch
-		cmp		eax, 0x24 
+		cmp		eax, 0x24
 		ja		DEFAULT
 
 		jmp		[_HookHdlrFnVariable(TESRaceCopyHairEyeDataMessageHandler, Retn)]

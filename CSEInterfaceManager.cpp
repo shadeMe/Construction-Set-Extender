@@ -3,7 +3,7 @@
 #include "UtilityBox.h"
 #include "[Common]\CLIWrapper.h"
 #include "Console.h"
-
+#include "RenderWindowTextPainter.h"
 
 static CSEInterface				s_CSEInterface =
 {
@@ -69,7 +69,7 @@ void CSEInterfaceManager::HandleConsoleCallback(const char *Message, const char 
 	for (ConsolePrintCallbackList::const_iterator Itr = s_ConsolePrintCallbackList.begin(); Itr != s_ConsolePrintCallbackList.end(); Itr++)
 	{
 		(*Itr)(Message, Prefix);
-	}	
+	}
 }
 CSEInterface* CSEInterfaceManager::GetInterface()
 {
@@ -80,5 +80,3 @@ void CSEInterfaceManager::PrintToRenderWindow(const char* Message, long double D
 {
 	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, Message, DisplayDuration);
 }
-
-

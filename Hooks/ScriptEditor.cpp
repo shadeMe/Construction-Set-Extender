@@ -1,5 +1,6 @@
 #include "ScriptEditor.h"
 #include "CompilerErrorDetours.h"
+#include "..\ScriptEditorAllocator.h"
 
 struct CommandTableData;
 struct FormData;
@@ -47,14 +48,13 @@ _DefinePatchHdlrWithBuffer(ToggleScriptCompilingNewData, 0x00503450)(8, 0xB8, 1,
 _DefineHookHdlr(MaxScriptSizeOverrideScriptBufferCtor, 0x004FFECB);
 _DefineHookHdlr(MaxScriptSizeOverrideParseScriptLine, 0x005031C6);
 
-
 void PatchScriptEditorHooks(void)
 {
 	_MemoryHandler(LoadRelease).WriteJump();
 
-	_MemoryHandler(ScriptableFormEntryPoint).WriteJump();	
-	_MemoryHandler(ScriptEffectItemEntryPoint).WriteJump();	
-	_MemoryHandler(MainWindowEntryPoint).WriteJump();	
+	_MemoryHandler(ScriptableFormEntryPoint).WriteJump();
+	_MemoryHandler(ScriptEffectItemEntryPoint).WriteJump();
+	_MemoryHandler(MainWindowEntryPoint).WriteJump();
 
 	_MemoryHandler(EditorWindowProc).WriteJump();
 	_MemoryHandler(EditorWindowWParam).WriteJump();
@@ -71,11 +71,11 @@ void PatchScriptEditorHooks(void)
 	_MemoryHandler(MessagingCallbackSave).WriteJump();
 
 	_MemoryHandler(ScriptListOpen).WriteJump();
-	_MemoryHandler(ScriptListDelete).WriteJump();	
+	_MemoryHandler(ScriptListDelete).WriteJump();
 
 	_MemoryHandler(SaveDialogBox).WriteJump();
 	_MemoryHandler(LogRecompileResults).WriteJump();
-		
+
 	_MemoryHandler(RecompileScriptsMessageBoxString).WriteUInt32((UInt32)g_RecompileAllScriptsStr);
 	_MemoryHandler(SaveDialogBoxType).WriteUInt8(3);
 
@@ -84,7 +84,6 @@ void PatchScriptEditorHooks(void)
 
 	PatchCompilerErrorDetours();
 }
-
 
 void FillScriptDataPackage(Script* ScriptForm)
 {
@@ -119,10 +118,10 @@ void __stdcall InstantiateTabContainer(void)
 	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 	g_EditorAuxHWND = NULL;
 }
-	
+
 _BeginHookHdlrFn(MainWindowEntryPoint)
 {
-	_DeclareHookHdlrFnVariable(MainWindowEntryPoint, Retn, 0x0041A610);	
+	_DeclareHookHdlrFnVariable(MainWindowEntryPoint, Retn, 0x0041A610);
     __asm
     {
 		call	InstantiateTabContainer
@@ -130,30 +129,27 @@ _BeginHookHdlrFn(MainWindowEntryPoint)
     }
 }
 
-
-_BeginHookHdlrFn(ScriptableFormEntryPoint)			
+_BeginHookHdlrFn(ScriptableFormEntryPoint)
 {
-	_DeclareHookHdlrFnVariable(ScriptableFormEntryPoint, Retn, 0x004A16C5);	
+	_DeclareHookHdlrFnVariable(ScriptableFormEntryPoint, Retn, 0x004A16C5);
     __asm
     {
 		mov		g_EditorAuxHWND, eax
 		call	InstantiateTabContainer
 		jmp		[_HookHdlrFnVariable(ScriptableFormEntryPoint, Retn)]
     }
-} 
+}
 
-_BeginHookHdlrFn(ScriptEffectItemEntryPoint)			
+_BeginHookHdlrFn(ScriptEffectItemEntryPoint)
 {
-	_DeclareHookHdlrFnVariable(ScriptEffectItemEntryPoint, Retn, 0x0056639F);	
+	_DeclareHookHdlrFnVariable(ScriptEffectItemEntryPoint, Retn, 0x0056639F);
     __asm
     {
 		mov		g_EditorAuxHWND, eax
 		call	InstantiateTabContainer
 		jmp		[_HookHdlrFnVariable(ScriptEffectItemEntryPoint, Retn)]
     }
-} 
-
-
+}
 
 void __stdcall DoLoadReleaseHook(void)
 {
@@ -164,25 +160,23 @@ void __stdcall DoLoadReleaseHook(void)
 
 _BeginHookHdlrFn(LoadRelease)
 {
-	_DeclareHookHdlrFnVariable(LoadRelease, Retn, 0x0040D096);	
+	_DeclareHookHdlrFnVariable(LoadRelease, Retn, 0x0040D096);
     __asm
     {
-		call	EndDialogAddress	
+		call	EndDialogAddress
 		call	[g_WindowHandleCallAddr]				// EndDialog
 
-		pushad	
+		pushad
 		call	DoLoadReleaseHook
 		popad
 
 		jmp		[_HookHdlrFnVariable(LoadRelease, Retn)]
     }
-} 
-
-
+}
 
 _BeginHookHdlrFn(EditorWindowProc)
 {
-	_DeclareHookHdlrFnVariable(EditorWindowProc, Retn, 0x004FE7B2);	
+	_DeclareHookHdlrFnVariable(EditorWindowProc, Retn, 0x004FE7B2);
     __asm
     {
 		mov		[g_ScriptEditorBuffer], edi
@@ -193,11 +187,11 @@ _BeginHookHdlrFn(EditorWindowProc)
 		call	[g_WindowHandleCallAddr]				// GetWindowLongA
 		jmp		[_HookHdlrFnVariable(EditorWindowProc, Retn)]
     }
-} 
+}
 
 _BeginHookHdlrFn(EditorWindowWParam)
 {
-	_DeclareHookHdlrFnVariable(EditorWindowWParam, Retn, 0x004FED08);	
+	_DeclareHookHdlrFnVariable(EditorWindowWParam, Retn, 0x004FED08);
     __asm
     {
 		mov		[g_WParamBuffer], eax
@@ -205,7 +199,7 @@ _BeginHookHdlrFn(EditorWindowWParam)
 	JMPG:
 		jmp		[_HookHdlrFnVariable(EditorWindowWParam, Retn)]
     }
-} 
+}
 
 bool __stdcall DoRecompileScriptsHook(TESForm* Form)
 {
@@ -233,7 +227,7 @@ _BeginHookHdlrFn(RecompileScripts)
 		mov		ebx, eax
 		cmp		[bShouldSkip], 1
 		jz		SKIP
-		jmp		[_HookHdlrFnVariable(RecompileScripts, Retn)]	
+		jmp		[_HookHdlrFnVariable(RecompileScripts, Retn)]
 	SKIP:
 		jmp		[_HookHdlrFnVariable(RecompileScripts, Skip)]
     }
@@ -243,15 +237,15 @@ bool __stdcall DoEditorInitScriptHook(void)
 {
 	if (g_EditorInitScript) {						// custom init script
 		g_SetEditorTextCache = g_EditorInitScript;
-		return true;		
+		return true;
 	} else
 		return false;
 }
 
 _BeginHookHdlrFn(EditorInitScript)
 {
-	_DeclareHookHdlrFnVariable(EditorInitScript, AuxRetn, 0x004FEB28);	
-	_DeclareHookHdlrFnVariable(EditorInitScript, CSERetn, 0x004FEB51);	
+	_DeclareHookHdlrFnVariable(EditorInitScript, AuxRetn, 0x004FEB28);
+	_DeclareHookHdlrFnVariable(EditorInitScript, CSERetn, 0x004FEB51);
 	_DeclareHookHdlrFnVariable(EditorInitScript, Call, 0x004FC1F0);
 	__asm
 	{
@@ -261,7 +255,7 @@ _BeginHookHdlrFn(EditorInitScript)
 		mov		eax, [esi + 0x24]					// HWND cbScriptList
 		test	eax, eax
 		jnz		AUX									// instantiation through aux entry point
-		
+
 		pushad
 		call	DoEditorInitScriptHook
 		test	eax, eax
@@ -283,16 +277,15 @@ _BeginHookHdlrFn(EditorInitScript)
 
 _BeginHookHdlrFn(EditorInitGetAuxScript)
 {
-	_DeclareHookHdlrFnVariable(EditorInitGetAuxScript, Retn, 0x004FEB4E);	
+	_DeclareHookHdlrFnVariable(EditorInitGetAuxScript, Retn, 0x004FEB4E);
 	__asm
 	{
 		mov		g_SetEditorTextCache, ecx
-		mov     eax, [edx + 0x114]     
+		mov     eax, [edx + 0x114]
 
 		jmp		[_HookHdlrFnVariable(EditorInitGetAuxScript, Retn)]
 	}
 }
-
 
 _BeginHookHdlrFn(EditorInitWindowPos)
 {
@@ -308,8 +301,6 @@ _BeginHookHdlrFn(EditorInitWindowPos)
 	}
 }
 
-
-
 void __stdcall SendPingBack(UInt16 Message)
 {
 	UInt32 TrackedIndex = 0;
@@ -323,7 +314,7 @@ void __stdcall SendPingBack(UInt16 Message)
 		TrackedIndex = EDAL->GetTrackedIndex(g_ScriptEditorBuffer);
 		break;
 	}
-	 
+
 	CLIWrapper::ScriptEditor::SendMessagePingback(TrackedIndex, Message);
 }
 
@@ -334,7 +325,7 @@ void __stdcall DoMessagingCallbackCloseHookRelease(HWND Editor)
 
 _BeginHookHdlrFn(MessagingCallbackNewScript)
 {
-	_DeclareHookHdlrFnVariable(MessagingCallbackNewScript, Retn, 0x004FEE0E);	
+	_DeclareHookHdlrFnVariable(MessagingCallbackNewScript, Retn, 0x004FEE0E);
 	__asm
 	{
 		mov		g_SetEditorTextCache, ecx			// cache Script*
@@ -355,14 +346,14 @@ _BeginHookHdlrFn(MessagingCallbackNewScript)
 }
 
 _BeginHookHdlrFn(MessagingCallbackOpenNextScript)
-{			
-	_DeclareHookHdlrFnVariable(MessagingCallbackOpenNextScript, Retn, 0x004FEE75);	
+{
+	_DeclareHookHdlrFnVariable(MessagingCallbackOpenNextScript, Retn, 0x004FEE75);
 	__asm											// ugh!
 	{
 		cmp		[g_WParamBuffer], 0x9D13			// Delete
 		jz		DELEC
 
-		mov		g_SetEditorTextCache, ecx	
+		mov		g_SetEditorTextCache, ecx
 		call	edx
 
 		pushad
@@ -374,7 +365,7 @@ _BeginHookHdlrFn(MessagingCallbackOpenNextScript)
 		jmp		PINGB
 	OPENC:
 		push	1
-	PINGB:											
+	PINGB:
 		call	SendPingBack
 		popad
 		jmp		EXIT
@@ -388,7 +379,7 @@ _BeginHookHdlrFn(MessagingCallbackOpenNextScript)
 
 _BeginHookHdlrFn(MessagingCallbackPreviousScript)
 {
-	_DeclareHookHdlrFnVariable(MessagingCallbackPreviousScript, Retn, 0x004FF2D2);	
+	_DeclareHookHdlrFnVariable(MessagingCallbackPreviousScript, Retn, 0x004FF2D2);
 	__asm
 	{
 		mov		g_SetEditorTextCache, ecx
@@ -396,7 +387,7 @@ _BeginHookHdlrFn(MessagingCallbackPreviousScript)
 
 		pushad
 		push	2
-		call	SendPingBack		
+		call	SendPingBack
 		popad
 
 		mov     byte ptr [esi + 0x14], 0
@@ -406,7 +397,7 @@ _BeginHookHdlrFn(MessagingCallbackPreviousScript)
 
 _BeginHookHdlrFn(MessagingCallbackClose)
 {
-	_DeclareHookHdlrFnVariable(MessagingCallbackClose, Retn, 0x004FED6F);	
+	_DeclareHookHdlrFnVariable(MessagingCallbackClose, Retn, 0x004FED6F);
 	__asm
 	{
 		call	EndDialogAddress
@@ -423,10 +414,10 @@ _BeginHookHdlrFn(MessagingCallbackClose)
 	}
 }
 
-_BeginHookHdlrFn(MessagingCallbackSave)			
+_BeginHookHdlrFn(MessagingCallbackSave)
 {
 	static Script* ScriptToBeCompiled = NULL;
-	_DeclareHookHdlrFnVariable(MessagingCallbackSave, Retn, 0x004FE642);	
+	_DeclareHookHdlrFnVariable(MessagingCallbackSave, Retn, 0x004FE642);
 	_DeclareHookHdlrFnVariable(MessagingCallbackSave, Call, 0x00503450);					// f_PrecompileSub()
     __asm
     {
@@ -448,11 +439,11 @@ _BeginHookHdlrFn(MessagingCallbackSave)
 		popad
 		jmp		[_HookHdlrFnVariable(MessagingCallbackSave, Retn)]
     }
-} 
+}
 
 _BeginHookHdlrFn(ScriptListOpen)
 {
-	_DeclareHookHdlrFnVariable(ScriptListOpen, Retn, 0x004FEE33);	
+	_DeclareHookHdlrFnVariable(ScriptListOpen, Retn, 0x004FEE33);
 	__asm
 	{
 		mov		eax, g_ScriptListResult
@@ -462,7 +453,7 @@ _BeginHookHdlrFn(ScriptListOpen)
 
 _BeginHookHdlrFn(ScriptListDelete)
 {
-	_DeclareHookHdlrFnVariable(ScriptListDelete, Retn, 0x004FF14B);	
+	_DeclareHookHdlrFnVariable(ScriptListDelete, Retn, 0x004FF14B);
 	__asm
 	{
 		mov		ebx, g_ScriptListResult
@@ -470,19 +461,18 @@ _BeginHookHdlrFn(ScriptListDelete)
 	}
 }
 
-
 _BeginHookHdlrFn(SaveDialogBox)
 {
-	_DeclareHookHdlrFnVariable(SaveDialogBox, YesRetn, 0x004FE59D);	
-	_DeclareHookHdlrFnVariable(SaveDialogBox, NoRetn, 0x004FE572);	
-	_DeclareHookHdlrFnVariable(SaveDialogBox, CancelRetn, 0x004FE731);	
+	_DeclareHookHdlrFnVariable(SaveDialogBox, YesRetn, 0x004FE59D);
+	_DeclareHookHdlrFnVariable(SaveDialogBox, NoRetn, 0x004FE572);
+	_DeclareHookHdlrFnVariable(SaveDialogBox, CancelRetn, 0x004FE731);
 	__asm
 	{
 		cmp		eax, 7
 		jz		NO
 		cmp		eax, 2
 		jz		CANCEL
-		
+
 		jmp		[_HookHdlrFnVariable(SaveDialogBox, YesRetn)]
 	NO:
 		jmp		[_HookHdlrFnVariable(SaveDialogBox, NoRetn)]
@@ -552,4 +542,3 @@ _BeginHookHdlrFn(MaxScriptSizeOverrideParseScriptLine)
 		jmp		[_HookHdlrFnVariable(MaxScriptSizeOverrideParseScriptLine, Retn)]
 	}
 }
-

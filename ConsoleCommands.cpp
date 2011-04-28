@@ -2,9 +2,9 @@
 #include "ExtenderInternals.h"
 #include "ConsoleCommands.h"
 #include "Hooks\TESFile.h"
+#include "CSDialogs.h"
 
 CSEConsoleCommandTable		g_ConsoleCommandTable;
-
 
 void ConsoleCommandCallback(const char* Message, const char* Prefix)
 {
@@ -41,7 +41,6 @@ void ConsoleCommandCallback(const char* Message, const char* Prefix)
 	CONSOLE->Exdent();
 }
 
-
 void CSEConsoleCommandTable::AddCommandToTable(CSEConsoleCommandInfo* Command)
 {
 	CommandTable.push_back(Command);
@@ -66,8 +65,6 @@ void CSEConsoleCommandTable::InitializeCommandTable()
 	AddCommandToTable(&kCSECCmd_AutoSave);
 	AddCommandToTable(&kCSECCmd_Exit);
 }
-
-
 
 // COMMANDS
 
@@ -106,11 +103,10 @@ void CSECCmd_LoadPlugin_Handler(CSECCMD_ARGS)
 		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, SetActive);
 		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
-	} 
+	}
 	else
 		DebugPrint("Couldn't load plugin '%s' - It doesn't exist!", PluginName.c_str());
-		
-	
+
 	// epilog
 	kAutoLoadActivePluginOnStartup.WriteBuffer();
 }
@@ -152,7 +148,7 @@ void CSECCmd_AutoSave_Handler(CSECCMD_ARGS)
 
 void CSECCmd_Exit_Handler(CSECCMD_ARGS)
 {
-	SendMessage(*g_HWND_CSParent, WM_CLOSE, 0, 0);	
+	SendMessage(*g_HWND_CSParent, WM_CLOSE, 0, 0);
 }
 
 DEFINE_CSECCMD(88MPH, 0);

@@ -14,22 +14,20 @@
 #include "Hooks\Renderer.h"
 #include "Hooks\Misc.h"
 
-
 PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
 OBSEMessagingInterface*				g_msgIntfc = NULL;
 OBSECommandTableInterface*			g_commandTableIntfc = NULL;
 
 CommandTableData					g_CommandTableData;
 
-
-// PLUGIN INTEROP
-
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
 	if (Msg->type == 'CSEI')
 	{
-		DebugPrint("Dispatching interface to '%s'", Msg->sender);
+		DebugPrint("Dispatching Plugin Interop Interface to '%s'", Msg->sender);
+		CONSOLE->Indent();
 		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEI', CSEInterfaceManager::GetInterface(), 4, Msg->sender);
+		CONSOLE->Exdent();
 	}
 }
 
@@ -38,44 +36,50 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 	switch (Msg->type)
 	{
 	case OBSEMessagingInterface::kMessage_PostLoad:
+		DebugPrint("Initializing ScriptEditor");
+		CONSOLE->Indent();
 		g_CommandTableData.CommandTableStart = g_commandTableIntfc->Start();
 		g_CommandTableData.CommandTableEnd = g_commandTableIntfc->End();
 		CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData);
-				
-	//	WaitUntilDebuggerAttached();
+		CONSOLE->Exdent();
+
 		g_msgIntfc->RegisterListener(g_pluginHandle, NULL, CSEInteropHandler);
 		g_PluginPostLoad = true;
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
 		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll"))
 		{
+			CONSOLE->Indent();
 			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
+			CONSOLE->Exdent();
 		}
 		break;
 	}
 }
 
-
-
-//	HOUSEKEEPING & INIT
-
-extern "C" {
-
+extern "C"
+{
 bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 {
 	if (!obse->isEditor)					// we don't want to screw with the game
 		return false;
 
 	CONSOLE->InitializeLog(g_AppPath.c_str());
-
 	DebugPrint("Construction Set Extender Initializing ...");
+	CONSOLE->Indent();
 
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "CSE";
 	info->version = 5;
 
 	g_AppPath = obse->GetOblivionDirectory();
-	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";	
+	g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
+
+	DebugPrint("Initializing INI Manager");
+	CONSOLE->Indent();
+	g_INIManager->SetINIPath(g_INIPath);
+	g_INIManager->Initialize();
+	CONSOLE->Exdent();
 
 	g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
 	if (!g_DLLInstance)
@@ -84,6 +88,8 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 		return false;
 	}
 
+	DebugPrint("Checking Versions");
+	CONSOLE->Indent();
 	if(obse->obseVersion < OBSE_VERSION_INTEGER)
 	{
 		DebugPrint("OBSE version too old");
@@ -91,40 +97,47 @@ bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	}
 	else if (obse->editorVersion < CS_VERSION_1_2)
 	{
-		DebugPrint("Running CS 1.0. Unsupported !");
+		DebugPrint("Running CS 1.0. Unsupported!");
 		return false;
 	}
+	CONSOLE->Exdent();
 
+	DebugPrint("Initializing OBSE Interfaces");
+	CONSOLE->Indent();
 	g_msgIntfc = (OBSEMessagingInterface*)obse->QueryInterface(kInterface_Messaging);
 	g_commandTableIntfc = (OBSECommandTableInterface*)obse->QueryInterface(kInterface_CommandTable);
 
-	if (!g_msgIntfc || !g_commandTableIntfc) 
+	if (!g_msgIntfc || !g_commandTableIntfc)
 	{
 		DebugPrint("OBSE Messaging/CommandTable interface not found !");
 		return false;
 	}
 
+	g_CommandTableData.GetCommandReturnType = g_commandTableIntfc->GetReturnType;
+	g_CommandTableData.GetParentPlugin = g_commandTableIntfc->GetParentPlugin;
+	CONSOLE->Exdent();
+
 	return true;
 }
-
 
 bool OBSEPlugin_Load(const OBSEInterface * obse)
 {
     INITCOMMONCONTROLSEX icex;
-															 // ensure that the common control DLL is loaded. 
+															 // ensure that the common control DLL is loaded.
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icex.dwICC  = ICC_LISTVIEW_CLASSES;
-    InitCommonControlsEx(&icex); 
-    
-	g_pluginHandle = obse->GetPluginHandle();
-	g_INIManager->SetINIPath(g_INIPath);
-	dynamic_cast<CSEINIManager*>(g_INIManager)->Initialize();
+    InitCommonControlsEx(&icex);
 
+	g_pluginHandle = obse->GetPluginHandle();
+
+	DebugPrint("Loading Component DLLs");
+	CONSOLE->Indent();
 	if (!CLIWrapper::Import(obse))
 		return false;
+	CONSOLE->Exdent();
 
-//	WaitUntilDebuggerAttached();
-
+	DebugPrint("Initializing Hooks");
+	CONSOLE->Indent();
 	PatchDialogHooks();
 	PatchLODHooks();
 	PatchTESFileHooks();
@@ -132,13 +145,11 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 	PatchScriptEditorHooks();
 	PatchRendererHooks();
 	PatchMiscHooks();
-	
-	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
-	g_CommandTableData.GetCommandReturnType = g_commandTableIntfc->GetReturnType;
-	g_CommandTableData.GetParentPlugin = g_commandTableIntfc->GetParentPlugin;
+	CONSOLE->Exdent();
 
-	DebugPrint("CS patched !\n\n");
+	DebugPrint("Initializing OBSE Message Handler");
+	g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
+
 	return true;
 }
-
 };
