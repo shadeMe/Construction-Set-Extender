@@ -15,38 +15,38 @@ UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();
 
 extern "C"
 {
-__declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message)
+__declspec(dllexport) void __stdcall _D_PRINT(UInt8 Source, const char* Message)
 {
 	DebugPrint(Source, Message);
 }
 
-__declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default)
+__declspec(dllexport) const char* __stdcall GetINIString(const char* Section, const char* Key, const char* Default)
 {
 	GetPrivateProfileString(Section, Key, Default, g_Buffer, sizeof(g_Buffer), g_INIPath.c_str());
 	return (const char*)g_Buffer;
 }
 
-__declspec(dllexport) const char* GetAppPath(void){
+__declspec(dllexport) const char* __stdcall GetAppPath(void){
 	return g_AppPath.c_str();
 }
 
-__declspec(dllexport) void WriteStatusBarText(int PanelIndex, const char* Message)
+__declspec(dllexport) void __stdcall WriteStatusBarText(int PanelIndex, const char* Message)
 {
 	if (PanelIndex < 0 || PanelIndex > 2)	PanelIndex = 2;
 	WriteToStatusBar(MAKEWPARAM(PanelIndex, 0), (LPARAM)Message);
 }
 
-__declspec(dllexport) HWND GetCSMainWindowHandle(void)
+__declspec(dllexport) HWND __stdcall GetCSMainWindowHandle(void)
 {
 	return *g_HWND_CSParent;
 }
 
-__declspec(dllexport) HWND GetRenderWindowHandle(void)
+__declspec(dllexport) HWND __stdcall GetRenderWindowHandle(void)
 {
 	return *g_HWND_RenderWindow;
 }
 
-__declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message)
+__declspec(dllexport) void __stdcall ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message)
 {
 	static UInt16 ReturnType[8] =
 	{
@@ -82,7 +82,7 @@ __declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorI
 	SendMessage(ScriptEditor, WM_COMMAND, ReturnType[Message], NULL);
 }
 
-__declspec(dllexport) void ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex, ScriptData* Data)
+__declspec(dllexport) void __stdcall ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex, ScriptData* Data)
 {
 	HWND ScriptEditor = EDAL->GetTrackedDialog(TrackedEditorIndex);
 	SetWindowText(EDAL->GetTrackedREC(ScriptEditor), (LPSTR)Data->Text);
@@ -90,22 +90,24 @@ __declspec(dllexport) void ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex,
 	SendMessage(EDAL->GetTrackedREC(ScriptEditor), EM_SETMODIFY, Data->ModifiedFlag, NULL);
 }
 
-__declspec(dllexport) void ScriptEditor_SetWindowParameters(UInt32 TrackedEditorIndex, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+__declspec(dllexport) void __stdcall ScriptEditor_SetWindowParameters(UInt32 TrackedEditorIndex, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
 	HWND ScriptEditor = EDAL->GetTrackedDialog(TrackedEditorIndex);
 	SetWindowPos(ScriptEditor, HWND_NOTOPMOST, Left, Top, Width, Height, SWP_NOZORDER);
 }
 
-__declspec(dllexport) UInt32 ScriptEditor_InstantiateCustomEditor(const char* ScriptID)
+__declspec(dllexport) UInt32 __stdcall ScriptEditor_InstantiateCustomEditor(const char* ScriptID)
 {
-	if (ScriptID) {
+	if (ScriptID)
+	{
 		TESForm* Form = GetFormByID(ScriptID);
 		if (!Form)									return 0;
 		Script* ScriptForm = CS_CAST(Form, TESForm, Script);
 		if (!ScriptForm)							return 0;
 
 		g_EditorInitScript = ScriptForm;
-	} else
+	}
+	else
 		g_EditorInitScript = NULL;
 
 	HWND CustomEditor = CreateDialogParamA(*g_TESCS_Instance, (LPCSTR)0xBC, NULL, g_ScriptEditor_DlgProc, NULL);
@@ -115,30 +117,28 @@ __declspec(dllexport) UInt32 ScriptEditor_InstantiateCustomEditor(const char* Sc
 	return AllocatedIndex;
 }
 
-__declspec(dllexport) void ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex)
+__declspec(dllexport) void __stdcall ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex)
 {
 	HWND ScriptEditorHandle = EDAL->GetTrackedDialog(AllocatedIndex);
 	ShowWindow(ScriptEditorHandle, SW_HIDE);
 
-	if (IsWindowEnabled(EDAL->GetTrackedREC(ScriptEditorHandle))) {
+	if (IsWindowEnabled(EDAL->GetTrackedREC(ScriptEditorHandle)))
+	{
 		FillScriptDataPackage(g_SetEditorTextCache);
 		CLIWrapper::ScriptEditor::InitializeScript(AllocatedIndex, g_ScriptDataPackage);
 	}
 }
 
-__declspec(dllexport) ScriptData* ScriptEditor_GetScriptData()			// retrieves the cached script data
+__declspec(dllexport) ScriptData* __stdcall ScriptEditor_GetScriptData()			// retrieves the cached script data
 {
-	if (!g_SetEditorTextCache) {
-		g_ScriptDataPackage->Type = 99;									// trouble!
-		return g_ScriptDataPackage;
-	}
+	ASSERT(g_SetEditorTextCache);
 
 	FillScriptDataPackage(g_SetEditorTextCache);
 
 	return g_ScriptDataPackage;
 }
 
-__declspec(dllexport) const char* ScriptEditor_GetAuxScriptName()
+__declspec(dllexport) const char* __stdcall ScriptEditor_GetAuxScriptName()
 {
 	if (g_EditorAuxScript)
 		return g_EditorAuxScript->editorData.editorID.m_data;
@@ -146,7 +146,7 @@ __declspec(dllexport) const char* ScriptEditor_GetAuxScriptName()
 		return NULL;
 }
 
-__declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID)
+__declspec(dllexport) ScriptData* __stdcall FetchScriptFromForm(const char* EditorID)
 {
 	g_ScriptDataPackage->ParentID = NULL, g_ScriptDataPackage->EditorID = NULL;
 
@@ -170,14 +170,14 @@ __declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID)
 	return g_ScriptDataPackage;
 }
 
-__declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID)
+__declspec(dllexport) bool __stdcall IsFormAnObjRefr(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return false;
 	else							return Form->IsReference();
 }
 
-__declspec(dllexport) FormData* LookupFormByEditorID(const char* EditorID)
+__declspec(dllexport) FormData* __stdcall LookupFormByEditorID(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (Form)
@@ -189,7 +189,7 @@ __declspec(dllexport) FormData* LookupFormByEditorID(const char* EditorID)
 		return NULL;
 }
 
-__declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex)
+__declspec(dllexport) void __stdcall ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex)
 {
 	Script* ThisScript = NULL;
 
@@ -205,7 +205,7 @@ __declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIn
 	}
 }
 
-__declspec(dllexport) const char* ScriptEditor_GetScriptListItemText(const char* EditorID)
+__declspec(dllexport) const char* __stdcall ScriptEditor_GetScriptListItemText(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)									return NULL;
@@ -214,7 +214,7 @@ __declspec(dllexport) const char* ScriptEditor_GetScriptListItemText(const char*
 	return ScriptForm->text;
 }
 
-__declspec(dllexport) void ScriptEditor_SetScriptListResult(const char* EditorID)
+__declspec(dllexport) void __stdcall ScriptEditor_SetScriptListResult(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)									return;
@@ -224,7 +224,7 @@ __declspec(dllexport) void ScriptEditor_SetScriptListResult(const char* EditorID
 	g_ScriptListResult = ScriptForm;
 }
 
-__declspec(dllexport) void ScriptEditor_GetUseReportForForm(const char* EditorID)
+__declspec(dllexport) void __stdcall ScriptEditor_GetUseReportForForm(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
@@ -232,7 +232,7 @@ __declspec(dllexport) void ScriptEditor_GetUseReportForForm(const char* EditorID
 	CreateDialogParam(*g_TESCS_Instance, (LPCSTR)0xDC, NULL, g_UseReport_DlgProc, (LPARAM)Form);
 }
 
-__declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID)
+__declspec(dllexport) void __stdcall ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
@@ -267,7 +267,7 @@ __declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedE
 	}
 }
 
-__declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data)
+__declspec(dllexport) bool __stdcall ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return false;
@@ -293,7 +293,7 @@ __declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* Edito
 	return true;
 }
 
-__declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID)
+__declspec(dllexport) void __stdcall ScriptEditor_CompileDependencies(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
@@ -372,7 +372,7 @@ __declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID
 	DebugPrint("Recompile operation completed!");
 }
 
-__declspec(dllexport) IntelliSenseUpdateData* ScriptEditor_BeginIntelliSenseDatabaseUpdate()
+__declspec(dllexport) IntelliSenseUpdateData* __stdcall ScriptEditor_BeginIntelliSenseDatabaseUpdate()
 {
 	IntelliSenseUpdateData* Data = new IntelliSenseUpdateData();
 
@@ -431,24 +431,24 @@ __declspec(dllexport) IntelliSenseUpdateData* ScriptEditor_BeginIntelliSenseData
 	return Data;
 }
 
-__declspec(dllexport) void ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSenseUpdateData* Data)
+__declspec(dllexport) void __stdcall ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSenseUpdateData* Data)
 {
 	delete [] Data->ScriptListHead;
 	delete [] Data->QuestListHead;
 	delete Data;
 }
 
-__declspec(dllexport) void ScriptEditor_ToggleScriptCompiling(bool Enable)
+__declspec(dllexport) void __stdcall ScriptEditor_ToggleScriptCompiling(bool Enable)
 {
 	ToggleScriptCompiling(Enable);
 }
 
-__declspec(dllexport) void ScriptEditor_SaveActivePlugin()
+__declspec(dllexport) void __stdcall ScriptEditor_SaveActivePlugin()
 {
 	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD2, NULL);
 }
 
-__declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText)
+__declspec(dllexport) void __stdcall ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
@@ -458,7 +458,7 @@ __declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, cons
 	thisCall(kScript_SetText, ScriptForm, ScriptText);
 }
 
-__declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Parent)
+__declspec(dllexport) void __stdcall ScriptEditor_BindScript(const char* EditorID, HWND Parent)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)						return;
@@ -491,7 +491,7 @@ __declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Pa
 	}
 }
 
-__declspec(dllexport) void UseInfoList_SetFormListItemText()
+__declspec(dllexport) void __stdcall UseInfoList_SetFormListItemText()
 {
 	// bound objects
 	UInt32 Count = 0, Total = (*g_dataHandler)->boundObjects->boundObjectCount;
@@ -561,7 +561,7 @@ __declspec(dllexport) void UseInfoList_SetFormListItemText()
 	WriteStatusBarText(2, "UseInfoList Populated");
 }
 
-__declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorID)
+__declspec(dllexport) void __stdcall UseInfoList_SetObjectListItemText(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)									return;
@@ -577,7 +577,7 @@ __declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorI
 	}
 }
 
-__declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID)
+__declspec(dllexport) void __stdcall UseInfoList_SetCellListItemText(const char* EditorID)
 {
 	TESForm* Form = GetFormByID(EditorID);
 	if (!Form)									return;
@@ -603,12 +603,12 @@ __declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID)
 	}
 }
 
-__declspec(dllexport) void TESForm_LoadIntoView(const char* EditorID, const char* FormType)
+__declspec(dllexport) void __stdcall TESForm_LoadIntoView(const char* EditorID, const char* FormType)
 {
-	LoadFormIntoView(EditorID, FormType);
+	ShowFormEditDialog(EditorID, FormType);
 }
 
-__declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID)
+__declspec(dllexport) void __stdcall BatchRefEditor_SetFormListItem(UInt8 ListID)
 {
 	switch(ListID)
 	{
@@ -641,18 +641,13 @@ __declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID)
 	}
 }
 
-__declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent)
+__declspec(dllexport) const char* __stdcall BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent)
 {
 	TESObjectREFR* Ref = NULL;
 	while (true)
 	{
-		Ref = ChooseReferenceDlg(Parent);
+		Ref = ShowReferencePickDialog(Parent);
 		if (!Ref)	break;
-		if (!Ref->IsPersistent())
-		{
-			MessageBox(Parent, "The parent needs to be a presistent reference", "Choose Reference", MB_OK|MB_ICONERROR);
-			continue;
-		}
 		break;
 	}
 
@@ -664,7 +659,7 @@ __declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefD
 	return (!Ref || !Ref->editorData.editorID.m_data)?g_Buffer:Ref->editorData.editorID.m_data;
 }
 
-__declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
+__declspec(dllexport) void __stdcall TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
 {
 	thisCall(kTESRenderSelection_ClearSelection, *g_TESRenderSelectionPrimary, 1);
 

@@ -6,7 +6,7 @@ class NativeWrapper
 {
 	[DllImport("Construction Set Extender.dll")] 
 	static void											_D_PRINT(UInt8 Source, const char* Message);
-	[DllImport("Construction Set Extender.dll")] 
+	[DllImport("Construction Set Extender.dll")]
 	static void											WriteStatusBarText(int PanelIndex, const char* Message);
 public:
 	[DllImport("Construction Set Extender.dll")] 

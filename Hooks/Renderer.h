@@ -17,3 +17,4 @@ _DeclareMemHdlr(TESRenderControlPerformScale, "");
 _DeclareMemHdlr(TESRenderControlPerformFall, "");
 _DeclareMemHdlr(TESObjectREFRSetupDialog, "flag temp nodes to prevent them from being unculled unnecessarily");
 _DeclareMemHdlr(TESObjectREFRCleanDialog, "");
+_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");

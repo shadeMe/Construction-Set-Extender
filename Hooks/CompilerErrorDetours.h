@@ -14,6 +14,7 @@ void RerouteScriptErrorsHook(void);
 void CompilerPrologResetHook(void);
 void CompilerEpilogCheckHook(void);
 void ParseScriptLineOverride(void);
+void CheckLineLengthLineCountHook(void);
 
 #define GetErrorMemHdlr(hookaddr)								CompilerErrorOverrideHandler##hookaddr
 #define DefineCompilerErrorOverrideHook(hookaddr, jmpaddr, stackoffset)		\

@@ -15,7 +15,7 @@ public:
 
 	static array<Char>^											TabDelimit = { '\t' };
 	static array<Char>^											PipeDelimit = { '|' };
-	static array<Keys>^											DelimiterKeys = 
+	static array<Keys>^											DelimiterKeys =
 																{
 																	Keys::OemPeriod,
 																	Keys::Oemcomma,
@@ -39,8 +39,32 @@ public:
 		}
 		return Result;
 	}
-
 #ifndef CSE_SEPREPROC
+	static array<System::Windows::Input::Key>^					DelimiterKeysWPF =
+																{
+																	System::Windows::Input::Key::OemPeriod,
+																	System::Windows::Input::Key::OemComma,
+																	System::Windows::Input::Key::Space,
+																	System::Windows::Input::Key::OemOpenBrackets,
+																	System::Windows::Input::Key::OemCloseBrackets,
+																	System::Windows::Input::Key::Tab,
+																	System::Windows::Input::Key::Enter
+																};
+
+	static bool GetIsDelimiterKey(System::Windows::Input::Key KeyCode)
+	{
+		bool Result = false;
+
+		for each (System::Windows::Input::Key Itr in DelimiterKeysWPF)
+		{
+			if (Itr == KeyCode) {
+				Result = true;
+				break;
+			}
+		}
+		return Result;
+	}
+
 	static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("CSEScriptEditor.Images");
 #endif
 };

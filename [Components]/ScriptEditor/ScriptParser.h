@@ -1,18 +1,18 @@
 #pragma once
 
 ref class ScriptParser
-{						
-public:	
-	ref struct												VariableInfo 
+{
+public:
+	ref struct												VariableInfo
 	{
 		String^												VarName;
 		unsigned int										RefCount;
-															
+
 															VariableInfo(String^ Name, unsigned int Count) : VarName(Name), RefCount(Count) {};
 
-		static const VariableInfo^							NullVar = gcnew ScriptParser::VariableInfo("@nullptr", 0);
+		static const VariableInfo^							NullVar = gcnew ScriptParser::VariableInfo("__nullptr", 0);
 
-		bool												IsValid() { return VarName != "@nullptr"; }
+		bool												IsValid() { return VarName != "__nullptr"; }
 	};
 
 	static enum	class									TokenType
@@ -55,7 +55,7 @@ public:
 
 	static array<String^>^								Operators =
 															{
-																":=", "||", "&&", "+=", "-=", "*=" , 
+																":=", "||", "&&", "+=", "-=", "*=" ,
 																"/=", "^=", ":", "::", "==", "!=",
 																">", "<", ">=", "<=", "|", "&", "<<",
 																">>", "+", "-", "*", "/", "%", "^",
@@ -73,11 +73,10 @@ public:
 	String^												ScriptName;
 	bool												Valid;
 
-
 	void												Tokenize(String^ Source, bool AllowNulls);
 	TokenType											GetTokenType(String^% Token);
 	void												Reset();
-	VariableInfo^										FindVariable(String^% Variable);	
+	VariableInfo^										FindVariable(String^% Variable);
 	int													IsComment(int Index);					// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search
 	bool												IsLiteral(String^% Source);				// checks if the passed string in enclosed in quotes
 	bool												HasAlpha(int Index);

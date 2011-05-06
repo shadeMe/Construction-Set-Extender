@@ -1,5 +1,5 @@
 #include "[Common]\NativeWrapper.h"
-#include "ScriptEditorTextEditor.h"
+#include "CSEScriptTextEditor.h"
 #include "ScriptParser.h"
 #include "OptionsDialog.h"
 #include "IntelliSense.h"
@@ -7,13 +7,13 @@
 #include "ScriptEditor.h"
 
 #pragma region Interface Methods
-void ScriptEditorTextEditor::SetFont(Font^ FontObject)
+void CSEScriptTextEditor::SetFont(Font^ FontObject)
 {
 	LineField->Font = FontObject;
 	TextField->Font = FontObject;
 }
 
-void ScriptEditorTextEditor::SetTabCharacterSize(int PixelWidth)
+void CSEScriptTextEditor::SetTabCharacterSize(int PixelWidth)
 {
 	Array^ TabStops = Array::CreateInstance(int::typeid, 32);
 	for (int i = 0; i < 32; i++)
@@ -21,27 +21,27 @@ void ScriptEditorTextEditor::SetTabCharacterSize(int PixelWidth)
 	TextField->SelectionTabs = static_cast<array<int>^>(TabStops);
 }
 
-void ScriptEditorTextEditor::SetContextMenu(ContextMenuStrip^% Strip)
+void CSEScriptTextEditor::SetContextMenu(ContextMenuStrip^% Strip)
 {
 	TextField->ContextMenuStrip = Strip;
 }
 
-void ScriptEditorTextEditor::AddControl(Control^ ControlObject)
+void CSEScriptTextEditor::AddControl(Control^ ControlObject)
 {
 	TextField->Controls->Add(ControlObject);
 }
 
-String^ ScriptEditorTextEditor::GetText(void)
+String^ CSEScriptTextEditor::GetText(void)
 {
 	return TextField->Text;
 }
 
-UInt32 ScriptEditorTextEditor::GetTextLength(void)
+UInt32 CSEScriptTextEditor::GetTextLength(void)
 {
 	return TextField->Text->Length;
 }
 
-void ScriptEditorTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling)
+void CSEScriptTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling)
 {
 	if (PreventTextChangedEventHandling)
 		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
@@ -49,12 +49,12 @@ void ScriptEditorTextEditor::SetText(String^ Text, bool PreventTextChangedEventH
 	TextField->Text = Text;
 }
 
-String^ ScriptEditorTextEditor::GetSelectedText(void)
+String^ CSEScriptTextEditor::GetSelectedText(void)
 {
 	return TextField->SelectedText;
 }
 
-void ScriptEditorTextEditor::SetSelectedText(String^ Text, bool PreventTextChangedEventHandling)
+void CSEScriptTextEditor::SetSelectedText(String^ Text, bool PreventTextChangedEventHandling)
 {
 	if (PreventTextChangedEventHandling)
 		SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
@@ -62,32 +62,32 @@ void ScriptEditorTextEditor::SetSelectedText(String^ Text, bool PreventTextChang
 	TextField->SelectedText = Text;
 }
 
-void ScriptEditorTextEditor::SetSelectionStart(int Index)
+void CSEScriptTextEditor::SetSelectionStart(int Index)
 {
 	TextField->SelectionStart = Index;
 }
 
-void ScriptEditorTextEditor::SetSelectionLength(int Length)
+void CSEScriptTextEditor::SetSelectionLength(int Length)
 {
 	TextField->SelectionLength = Length;
 }
 
-int ScriptEditorTextEditor::GetCharIndexFromPosition(Point Position)
+int CSEScriptTextEditor::GetCharIndexFromPosition(Point Position)
 {
 	return TextField->GetCharIndexFromPosition(Position);
 }
 
-Point ScriptEditorTextEditor::GetPositionFromCharIndex(int Index)
+Point CSEScriptTextEditor::GetPositionFromCharIndex(int Index)
 {
 	return TextField->GetPositionFromCharIndex(Index);
 }
 
-int ScriptEditorTextEditor::GetLineNumberFromCharIndex(int Index)
+int CSEScriptTextEditor::GetLineNumberFromCharIndex(int Index)
 {
 	return TextField->GetLineFromCharIndex(Index);
 }
 
-bool ScriptEditorTextEditor::GetCharIndexInsideCommentSegment(int Index)
+bool CSEScriptTextEditor::GetCharIndexInsideCommentSegment(int Index)
 {
 	bool Result = true;
 
@@ -106,33 +106,33 @@ bool ScriptEditorTextEditor::GetCharIndexInsideCommentSegment(int Index)
 	return Result;
 }
 
-int ScriptEditorTextEditor::GetCurrentLineNumber(void)
+int CSEScriptTextEditor::GetCurrentLineNumber(void)
 {
 	return TextField->GetLineFromCharIndex(TextField->SelectionStart);
 }
 
-String^ ScriptEditorTextEditor::GetTokenAtCaretPos()
+String^ CSEScriptTextEditor::GetTokenAtCaretPos()
 {
 	return GetTextAtLocation(TextField->SelectionStart - 1, false)->Replace("\n", "");
 }
 
-void ScriptEditorTextEditor::SetTokenAtCaretPos(String^ Replacement)
+void CSEScriptTextEditor::SetTokenAtCaretPos(String^ Replacement)
 {
 	GetTextAtLocation(TextField->SelectionStart - 1, true);
 	TextField->SelectedText	= Replacement;
 }
 
-String^ ScriptEditorTextEditor::GetTokenAtMouseLocation()
+String^ CSEScriptTextEditor::GetTokenAtMouseLocation()
 {
 	return GetTextAtLocation(LastKnownMouseClickLocation, false)->Replace("\n", "");
 }
 
-int ScriptEditorTextEditor::GetCaretPos()
+int CSEScriptTextEditor::GetCaretPos()
 {
 	return TextField->SelectionStart;
 }
 
-void ScriptEditorTextEditor::SetCaretPos(int Index)
+void CSEScriptTextEditor::SetCaretPos(int Index)
 {
 	TextField->SelectionLength = 0;
 
@@ -144,27 +144,22 @@ void ScriptEditorTextEditor::SetCaretPos(int Index)
 	TextField->ScrollToCaret();
 }
 
-void ScriptEditorTextEditor::ScrollToCaret()
+void CSEScriptTextEditor::ScrollToCaret()
 {
 	TextField->ScrollToCaret();
 }
 
-IntPtr ScriptEditorTextEditor::GetHandle()
+IntPtr CSEScriptTextEditor::GetHandle()
 {
 	return TextField->Handle;
 }
 
-Rectangle ScriptEditorTextEditor::GetBounds(void)
-{
-	return TextField->Bounds;
-}
-
-void ScriptEditorTextEditor::FocusTextArea()
+void CSEScriptTextEditor::FocusTextArea()
 {
 	TextField->Focus();
 }
 
-void ScriptEditorTextEditor::LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex)
+void CSEScriptTextEditor::LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex)
 {
 	try
 	{
@@ -179,7 +174,7 @@ void ScriptEditorTextEditor::LoadFileFromDisk(String^ Path, UInt32 AllocatedInde
 	}
 }
 
-void ScriptEditorTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, UInt32 AllocatedIndex)
+void CSEScriptTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, UInt32 AllocatedIndex)
 {
 	if (PathIncludesFileName == false)
 		Path += "\\" + DefaultName + ".txt";
@@ -195,12 +190,12 @@ void ScriptEditorTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFil
 	}
 }
 
-bool ScriptEditorTextEditor::GetModifiedStatus()
+bool CSEScriptTextEditor::GetModifiedStatus()
 {
 	return ModifiedFlag;
 }
 
-void ScriptEditorTextEditor::SetModifiedStatus(bool Modified)
+void CSEScriptTextEditor::SetModifiedStatus(bool Modified)
 {
 	ModifiedFlag = Modified;
 
@@ -216,22 +211,22 @@ void ScriptEditorTextEditor::SetModifiedStatus(bool Modified)
 	OnScriptModified(gcnew ScriptModifiedEventArgs(Modified));
 }
 
-bool ScriptEditorTextEditor::GetInitializingStatus()
+bool CSEScriptTextEditor::GetInitializingStatus()
 {
 	return InitializingFlag;
 }
 
-void ScriptEditorTextEditor::SetInitializingStatus(bool Initializing)
+void CSEScriptTextEditor::SetInitializingStatus(bool Initializing)
 {
 	InitializingFlag = Initializing;
 }
 
-Point ScriptEditorTextEditor::GetLastKnownMouseClickLocation()
+Point CSEScriptTextEditor::GetLastKnownMouseClickLocation()
 {
 	return LastKnownMouseClickLocation;
 }
 
-UInt32 ScriptEditorTextEditor::FindReplace(ScriptEditorInterface::FindReplaceOperation Operation, String^ Query, String^ Replacement, ScriptEditorInterface::FindReplaceOutput^ Output)
+UInt32 CSEScriptTextEditor::FindReplace(ScriptTextEditorInterface::FindReplaceOperation Operation, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output)
 {
 	UInt32 Hits = 0;
 	try
@@ -247,7 +242,7 @@ UInt32 ScriptEditorTextEditor::FindReplace(ScriptEditorInterface::FindReplaceOpe
 		{
 			PlaceFindReplaceResultIndicatorAtCharIndex(Position);
 
-			if (Operation == ScriptEditorInterface::FindReplaceOperation::e_Replace)
+			if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
 			{
 				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 				TextField->SelectionStart = Position;
@@ -271,7 +266,7 @@ UInt32 ScriptEditorTextEditor::FindReplace(ScriptEditorInterface::FindReplaceOpe
 	return Hits;
 }
 
-void ScriptEditorTextEditor::ToggleComment(int StartIndex)
+void CSEScriptTextEditor::ToggleComment(int StartIndex)
 {
 	ScriptParser^ LocalParser = gcnew ScriptParser();
 
@@ -364,14 +359,14 @@ void ScriptEditorTextEditor::ToggleComment(int StartIndex)
 	TextField->SelectionLength = 0;
 }
 
-void ScriptEditorTextEditor::UpdateIntelliSenseLocalDatabase(void)
+void CSEScriptTextEditor::UpdateIntelliSenseLocalDatabase(void)
 {
 	IntelliSenseBox->UpdateLocalVars();
 }
 #pragma endregion
 
 #pragma region Methods
-void ScriptEditorTextEditor::ValidateLineLimit()
+void CSEScriptTextEditor::ValidateLineLimit()
 {
 	LineLimitIndicator->Hide();
 
@@ -390,7 +385,7 @@ void ScriptEditorTextEditor::ValidateLineLimit()
 	}
 }
 
-void ScriptEditorTextEditor::PlaceFindReplaceResultIndicatorAtCharIndex(int Index)
+void CSEScriptTextEditor::PlaceFindReplaceResultIndicatorAtCharIndex(int Index)
 {
 	FindReplaceResultIndicators->Add(gcnew PictureBox());
 
@@ -406,7 +401,7 @@ void ScriptEditorTextEditor::PlaceFindReplaceResultIndicatorAtCharIndex(int Inde
 	TextField->Controls->Add(Indicator);
 }
 
-void ScriptEditorTextEditor::UpdateFindReplaceResultLineLimitIndicatorPostions()
+void CSEScriptTextEditor::UpdateFindReplaceResultLineLimitIndicatorPostions()
 {
 	if (FindReplaceResultIndicators != nullptr)
 	{
@@ -434,7 +429,7 @@ void ScriptEditorTextEditor::UpdateFindReplaceResultLineLimitIndicatorPostions()
 	}
 }
 
-void ScriptEditorTextEditor::RemoveFindReplaceResultIndicators()
+void CSEScriptTextEditor::RemoveFindReplaceResultIndicators()
 {
 	for each (PictureBox^% Itr in FindReplaceResultIndicators)
 		Itr->Hide();
@@ -442,7 +437,7 @@ void ScriptEditorTextEditor::RemoveFindReplaceResultIndicators()
 	FindReplaceResultIndicators->Clear();
 }
 
-void ScriptEditorTextEditor::HandleHomeKey()
+void CSEScriptTextEditor::HandleHomeKey()
 {
 	ScriptParser^ LocalParser = gcnew ScriptParser();
 
@@ -468,7 +463,7 @@ void ScriptEditorTextEditor::HandleHomeKey()
 		TextField->SelectionLength = 0;
 }
 
-void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
+void CSEScriptTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 {
 	IndentCountBuffer = 0;
 	if (!OPTIONS->FetchSettingAsInt("AutoIndent"))
@@ -614,7 +609,7 @@ void ScriptEditorTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 	}
 }
 
-void ScriptEditorTextEditor::PerformAutoIndentationEpilog(void)
+void CSEScriptTextEditor::PerformAutoIndentationEpilog(void)
 {
 	if (!IndentCountBuffer)		return;
 
@@ -655,7 +650,7 @@ void ScriptEditorTextEditor::PerformAutoIndentationEpilog(void)
 	}
 }
 
-bool ScriptEditorTextEditor::PerformTabIndent(void)
+bool CSEScriptTextEditor::PerformTabIndent(void)
 {
 	int SelStart = TextField->SelectionStart,
 		Operation = 0;
@@ -743,7 +738,7 @@ bool ScriptEditorTextEditor::PerformTabIndent(void)
 	return true;
 }
 
-String^ ScriptEditorTextEditor::GetTokenAtIndex(int Index, bool SelectText)
+String^ CSEScriptTextEditor::GetTokenAtIndex(int Index, bool SelectText)
 {
 	String^% Source = TextField->Text;
 	int SearchIndex = Source->Length, SubStrStart = 0, SubStrEnd = SearchIndex;
@@ -780,67 +775,67 @@ String^ ScriptEditorTextEditor::GetTokenAtIndex(int Index, bool SelectText)
 	}
 }
 
-String^ ScriptEditorTextEditor::GetTextAtLocation(Point Location, bool SelectText)
+String^ CSEScriptTextEditor::GetTextAtLocation(Point Location, bool SelectText)
 {
 	int Index =	TextField->GetCharIndexFromPosition(Location);
 	return GetTokenAtIndex(Index, SelectText);
 }
 
-String^ ScriptEditorTextEditor::GetTextAtLocation(int Index, bool SelectText)
+String^ CSEScriptTextEditor::GetTextAtLocation(int Index, bool SelectText)
 {
 	return GetTokenAtIndex(Index, SelectText);
 }
 #pragma endregion
 
 #pragma region Events
-void ScriptEditorTextEditor::OnTextChanged(EventArgs^ E)
+void CSEScriptTextEditor::OnTextChanged(EventArgs^ E)
 {
 	TextChanged(this, E);
 }
 
-void ScriptEditorTextEditor::OnVScroll(EventArgs^ E)
+void CSEScriptTextEditor::OnVScroll(EventArgs^ E)
 {
 	VScroll(this, E);
 }
 
-void ScriptEditorTextEditor::OnHScroll(EventArgs^ E)
+void CSEScriptTextEditor::OnHScroll(EventArgs^ E)
 {
 	HScroll(this, E);
 }
 
-void ScriptEditorTextEditor::OnScriptModified(ScriptModifiedEventArgs^ E)
+void CSEScriptTextEditor::OnScriptModified(ScriptModifiedEventArgs^ E)
 {
 	ScriptModified(this, E);
 }
 
-void ScriptEditorTextEditor::OnKeyUp(KeyEventArgs^ E)
+void CSEScriptTextEditor::OnKeyUp(KeyEventArgs^ E)
 {
 	KeyUp(this, E);
 }
 
-void ScriptEditorTextEditor::OnKeyDown(KeyEventArgs^ E)
+void CSEScriptTextEditor::OnKeyDown(KeyEventArgs^ E)
 {
 	KeyDown(this, E);
 }
 
-void ScriptEditorTextEditor::OnKeyPress(KeyPressEventArgs^ E)
+void CSEScriptTextEditor::OnKeyPress(KeyPressEventArgs^ E)
 {
 	KeyPress(this, E);
 }
 
-void ScriptEditorTextEditor::OnMouseDown(MouseEventArgs^ E)
+void CSEScriptTextEditor::OnMouseDown(MouseEventArgs^ E)
 {
 	MouseDown(this, E);
 }
 
-void ScriptEditorTextEditor::OnMouseDoubleClick(MouseEventArgs^ E)
+void CSEScriptTextEditor::OnMouseDoubleClick(MouseEventArgs^ E)
 {
 	MouseDoubleClick(this, E);
 }
 #pragma endregion
 
 #pragma region Event Handlers
-void ScriptEditorTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
+void CSEScriptTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 {
 	if (InitializingFlag)
 	{
@@ -868,26 +863,26 @@ void ScriptEditorTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 	}
 }
 
-void ScriptEditorTextEditor::TextField_Resize(Object^ Sender, EventArgs^ E)
+void CSEScriptTextEditor::TextField_Resize(Object^ Sender, EventArgs^ E)
 {
 	UpdateFindReplaceResultLineLimitIndicatorPostions();
 }
 
-void ScriptEditorTextEditor::TextField_VScroll(Object^ Sender, EventArgs^ E)
+void CSEScriptTextEditor::TextField_VScroll(Object^ Sender, EventArgs^ E)
 {
 	UpdateFindReplaceResultLineLimitIndicatorPostions();
 	IntelliSenseBox->HideInfoTip();
 	OnVScroll(E);
 }
 
-void ScriptEditorTextEditor::TextField_HScroll(Object^ Sender, EventArgs^ E)
+void CSEScriptTextEditor::TextField_HScroll(Object^ Sender, EventArgs^ E)
 {
 	UpdateFindReplaceResultLineLimitIndicatorPostions();
 	IntelliSenseBox->HideInfoTip();
 	OnHScroll(E);
 }
 
-void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
+void CSEScriptTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 {
 	int SelStart = TextField->SelectionStart, SelLength = TextField->SelectionLength;
 
@@ -902,7 +897,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 			{
 				switch (E->KeyCode)
 				{
-				case  Keys::OemPeriod:
+				case Keys::OemPeriod:
 					{
 						IntelliSenseBox->Initialize(IntelliSenseThingy::Operation::e_Dot, false, true);
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
@@ -1068,7 +1063,7 @@ void ScriptEditorTextEditor::TextField_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	OnKeyDown(E);
 }
 
-void ScriptEditorTextEditor::TextField_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
+void CSEScriptTextEditor::TextField_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 {
 	if (E->KeyChar == (Char)KeyToPreventHandling)
 	{
@@ -1084,7 +1079,7 @@ void ScriptEditorTextEditor::TextField_KeyPress(Object^ Sender, KeyPressEventArg
 	}
 }
 
-void ScriptEditorTextEditor::TextField_KeyUp(Object^ Sender, KeyEventArgs^ E)
+void CSEScriptTextEditor::TextField_KeyUp(Object^ Sender, KeyEventArgs^ E)
 {
 	if (E->KeyCode == KeyToPreventHandling)
 	{
@@ -1117,7 +1112,7 @@ void ScriptEditorTextEditor::TextField_KeyUp(Object^ Sender, KeyEventArgs^ E)
 	}
 }
 
-void ScriptEditorTextEditor::TextField_MouseDown(Object^ Sender, MouseEventArgs^ E)
+void CSEScriptTextEditor::TextField_MouseDown(Object^ Sender, MouseEventArgs^ E)
 {
 	LastKnownMouseClickLocation = E->Location;
 
@@ -1136,7 +1131,7 @@ void ScriptEditorTextEditor::TextField_MouseDown(Object^ Sender, MouseEventArgs^
 	IntelliSenseBox->HideInfoTip();
 }
 
-void ScriptEditorTextEditor::TextField_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
+void CSEScriptTextEditor::TextField_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 {
 	if (E->Button == MouseButtons::Left && TextField->Text->Length > 0)
 	{
@@ -1149,7 +1144,7 @@ void ScriptEditorTextEditor::TextField_MouseDoubleClick(Object^ Sender, MouseEve
 	}
 }
 
-void ScriptEditorTextEditor::TextField_LineChanged(Object^ Sender, LineChangedEventArgs^ E)
+void CSEScriptTextEditor::TextField_LineChanged(Object^ Sender, LineChangedEventArgs^ E)
 {
 	IntelliSenseBox->Enabled = true;
 	IntelliSenseBox->LastOperation = IntelliSenseThingy::Operation::e_Default;
@@ -1157,7 +1152,7 @@ void ScriptEditorTextEditor::TextField_LineChanged(Object^ Sender, LineChangedEv
 }
 #pragma endregion
 
-ScriptEditorTextEditor::ScriptEditorTextEditor(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Object^% Parent) : NumberedRichTextBox(LinesToScroll, Font, ForegroundColor, BackgroundColor, HighlightColor)
+CSEScriptTextEditor::CSEScriptTextEditor(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Object^% Parent) : NumberedRichTextBox(LinesToScroll, Font, ForegroundColor, BackgroundColor, HighlightColor)
 {
 	IndentCountBuffer = 0;
 	LineChangeBuffer = 0;
@@ -1179,20 +1174,20 @@ ScriptEditorTextEditor::ScriptEditorTextEditor(UInt32 LinesToScroll, Font^ Font,
 	TextField->Controls->Add(LineLimitIndicator);
 	TextField->Controls->Add(IntelliSenseBox->InternalListView);
 
-	TextField->TextChanged += gcnew EventHandler(this, &ScriptEditorTextEditor::TextField_TextChanged);
-	TextField->Resize += gcnew EventHandler(this, &ScriptEditorTextEditor::TextField_Resize);
+	TextField->TextChanged += gcnew EventHandler(this, &CSEScriptTextEditor::TextField_TextChanged);
+	TextField->Resize += gcnew EventHandler(this, &CSEScriptTextEditor::TextField_Resize);
 
-	TextField->VScroll += gcnew EventHandler(this, &ScriptEditorTextEditor::TextField_VScroll);
-	TextField->HScroll += gcnew EventHandler(this, &ScriptEditorTextEditor::TextField_HScroll);
+	TextField->VScroll += gcnew EventHandler(this, &CSEScriptTextEditor::TextField_VScroll);
+	TextField->HScroll += gcnew EventHandler(this, &CSEScriptTextEditor::TextField_HScroll);
 
-	TextField->KeyUp += gcnew KeyEventHandler(this, &ScriptEditorTextEditor::TextField_KeyUp);
-	TextField->KeyDown += gcnew KeyEventHandler(this, &ScriptEditorTextEditor::TextField_KeyDown);
-	TextField->KeyPress += gcnew KeyPressEventHandler(this, &ScriptEditorTextEditor::TextField_KeyPress);
+	TextField->KeyUp += gcnew KeyEventHandler(this, &CSEScriptTextEditor::TextField_KeyUp);
+	TextField->KeyDown += gcnew KeyEventHandler(this, &CSEScriptTextEditor::TextField_KeyDown);
+	TextField->KeyPress += gcnew KeyPressEventHandler(this, &CSEScriptTextEditor::TextField_KeyPress);
 
-	TextField->MouseDown += gcnew MouseEventHandler(this, &ScriptEditorTextEditor::TextField_MouseDown);
-	TextField->MouseDoubleClick += gcnew MouseEventHandler(this, &ScriptEditorTextEditor::TextField_MouseDoubleClick);
+	TextField->MouseDown += gcnew MouseEventHandler(this, &CSEScriptTextEditor::TextField_MouseDown);
+	TextField->MouseDoubleClick += gcnew MouseEventHandler(this, &CSEScriptTextEditor::TextField_MouseDoubleClick);
 
-	this->LineChanged += gcnew LineChangedEventHandler(this, &ScriptEditorTextEditor::TextField_LineChanged);
+	this->LineChanged += gcnew LineChangedEventHandler(this, &CSEScriptTextEditor::TextField_LineChanged);
 
 	IntelliSenseBox->Hide();
 }

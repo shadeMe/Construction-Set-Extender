@@ -51,6 +51,8 @@ FileFinder**						g_FileFinder = (FileFinder**)0x00A0DE8C;
 ResponseEditorData**				g_ResponseEditorData = (ResponseEditorData**)0x00A10E2C;
 GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
 void*								g_GMSTMap = (void*)0x00A102A4;
+void**								g_IdleFormTree = (void**)0x00A107F8;
+TESRenderUndoStack**				g_TESRenderUndoStack = (TESRenderUndoStack**)0x00A0B124;
 
 TESForm**							g_DoorMarker = (TESForm**)0x00A13470;
 TESForm**							g_NorthMarker = (TESForm**)0x00A13484;
@@ -87,7 +89,7 @@ const _GetComboBoxItemData			GetComboBoxItemData = (_GetComboBoxItemData)0x00403
 const _SelectTESFileCommonDialog	SelectTESFileCommonDialog = (_SelectTESFileCommonDialog)0x00446D40;
 const _TESDialog_SetCSWindowTitleModifiedFlag
 									TESDialog_SetCSWindowTitleModifiedFlag = (_TESDialog_SetCSWindowTitleModifiedFlag)0x004306F0;
-const _ChooseRefWrapper				ChooseRefWrapper = (_ChooseRefWrapper)0x0044D660;	// pass TESObjectREFR__PickComparator as arg3 and 0 as args 2 and 4
+const _DisplayReferencePickDialog	DisplayReferencePickDialog = (_DisplayReferencePickDialog)0x0044D660;	// pass TESObjectREFR__PickComparator as arg3 and 0 as args 2 and 4
 const _InitializeCSWindows			InitializeCSWindows = (_InitializeCSWindows)0x00430980;
 const _DeInitializeCSWindows		DeInitializeCSWindows = (_DeInitializeCSWindows)0x00431220;
 const _AddFormToObjectWindow		AddFormToObjectWindow = (_AddFormToObjectWindow)0x00422470;
@@ -188,6 +190,9 @@ const UInt32						kLinkedListNode_GetIsDangling = 0x0048E0E0;
 const UInt32						kLinkedListNode_Cleanup = 0x00405DC0;
 const UInt32						kLinkedListNode_GetData = 0x004FC950;
 const UInt32						kTESForm_SetTemporary = 0x004972A0;
+const UInt32						kTESIdleFormTree_AddRootNodes = 0x004D4490;
+const UInt32						kTESRenderUndoStack_RecordReference = 0x00432D40;
+const UInt32						kTESObjectREFR_PickComparator = 0x00545B10;
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;
@@ -233,18 +238,20 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Console::General", "0", "Hide the console on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "ConsoleUpdatePeriod", "Console::General", "2000", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
 
-	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "0", "Loads a plugin on CS startup"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "0", "Load a plugin on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "OpenScriptWindowOnStartup", "Extender::General", "0", "Open an empty script editor window on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupScriptEditorID", "Extender::General", "", "EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace"), (CreateINI == false));
-	RegisterSetting(new SME::INI::INISetting(this, "ShowNumericEditorIDWarning", "Extender::General", "1", "Displays a warning when editorIDs start with an integer"), (CreateINI == false));
-	RegisterSetting(new SME::INI::INISetting(this, "SetWorkspaceOnStartup", "Extender::General", "0", "Sets the working directory to a custom path"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "ShowNumericEditorIDWarning", "Extender::General", "1", "Display a warning when editorIDs start with an integer"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "SetWorkspaceOnStartup", "Extender::General", "0", "Set the working directory to a custom path on startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "DefaultWorkspacePath", "Extender::General", "", "Path of the custom workspace directory"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "SaveLoadedESPsAsMasters", "Extender::General", "1", "Save loaded plugin files as the active plugin's master"), (CreateINI == false));
 
 	RegisterSetting(new SME::INI::INISetting(this, "UpdatePeriod", "Extender::Renderer", "8", "Duration, in milliseconds, between render window updates"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "DisplaySelectionStats", "Extender::Renderer", "1", "Display info on the render window selection"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "UpdateViewPortAsync", "Extender::Renderer", "0", "Allow the render window to be updated in the background"), (CreateINI == false));
+
+	RegisterSetting(new SME::INI::INISetting(this, "BackupOnSave", "Extender::VersionControl", "0", "Create a backup copy of the active plugin to the 'Backup' directory in the active workspace before commencing a save operation"), (CreateINI == false));
 
 	if (CreateINI)		SaveSettingsToINI();
 	else				ReadSettingsFromINI();

@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{c5ce4d8d-92c8-4826-ac33-d876b5506351}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{38aff435-0264-4089-b9c3-82ae070d11ca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\Includes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\MiscUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchEditor.h" />
+    <ClInclude Include="Exports.h" />
+    <ClInclude Include="Prefix.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="BatchEditor.cpp" />
+    <ClCompile Include="Exports.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BatchEditor.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

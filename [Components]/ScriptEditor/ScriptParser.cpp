@@ -11,7 +11,7 @@ ScriptParser::ScriptParser()
 	Indices = gcnew List<UInt32>();
 	Delimiters = gcnew List<Char>();
 	CurrentLineNo = 0;
-	ScriptName = nullptr;
+	ScriptName = "";
 	Valid = true;
 	PreviousLineNo = 0;
 }
@@ -166,7 +166,7 @@ ScriptParser::TokenType ScriptParser::GetTokenType(String^% Token)
 
 void ScriptParser::Reset()
 {
-	ScriptName = nullptr;
+	ScriptName = "";
 	Variables->Clear();
 	CurrentLineNo = 0;
 	BlockStack->Clear();

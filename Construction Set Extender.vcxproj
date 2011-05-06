@@ -1,0 +1,247 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D4DDA734-7E93-4581-8F82-32BB738F69FE}</ProjectGuid>
+    <RootNamespace>obse_plugin_example</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v100</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\Microsoft DirectX SDK (March 2009)\Lib\x86;$(LibraryPath);</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ForcedIncludeFiles>obse_common/obse_prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)..\common\[Lib]\R.lib;ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Installing DLL...</Message>
+      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ForcedIncludeFiles>obse_common/obse_prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)..\common\[Lib]\D.lib;ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+    </Link>
+    <PostBuildEvent>
+      <Message>Installing DLL...</Message>
+      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.c">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\obse\obse_editor\EditorAPI.cpp" />
+    <ClCompile Include="..\obse\obse_editor\EditorRTTI.cpp" />
+    <ClCompile Include="..\obse\obse\GameData.cpp" />
+    <ClCompile Include="..\obse\obse\Script.cpp" />
+    <ClCompile Include="..\obse\obse\Utilities.cpp" />
+    <ClCompile Include="[Common]\CLIWrapper.cpp" />
+    <ClCompile Include="[Common]\HandshakeStructs.cpp" />
+    <ClCompile Include="Hooks\AssetSelector.cpp" />
+    <ClCompile Include="Hooks\Common.cpp" />
+    <ClCompile Include="Hooks\CompilerErrorDetours.cpp" />
+    <ClCompile Include="Hooks\Dialog.cpp" />
+    <ClCompile Include="Hooks\LOD.cpp" />
+    <ClCompile Include="Hooks\Misc.cpp" />
+    <ClCompile Include="Hooks\Renderer.cpp" />
+    <ClCompile Include="Hooks\ScriptEditor.cpp" />
+    <ClCompile Include="Hooks\TESFile.cpp" />
+    <ClCompile Include="Console.cpp" />
+    <ClCompile Include="ConsoleCommands.cpp" />
+    <ClCompile Include="..\[Libraries]\INI Manager\INIEditGUI.cpp" />
+    <ClCompile Include="..\[Libraries]\INI Manager\INIManager.cpp" />
+    <ClCompile Include="..\[Libraries]\MemoryHandler\MemoryHandler.cpp" />
+    <ClCompile Include="UtilityBox.cpp" />
+    <ClCompile Include="CSEInterfaceManager.cpp" />
+    <ClCompile Include="CSInterop.cpp" />
+    <ClCompile Include="[Common]\CSInteropData.cpp" />
+    <ClCompile Include="ArchiveManager.cpp" />
+    <ClCompile Include="CSDialogs.cpp" />
+    <ClCompile Include="GMSTMap.cpp" />
+    <ClCompile Include="RenderSelectionGroupManager.cpp" />
+    <ClCompile Include="RenderTimeManager.cpp" />
+    <ClCompile Include="RenderWindowTextPainter.cpp" />
+    <ClCompile Include="ScriptEditorAllocator.cpp" />
+    <ClCompile Include="TESFormReferenceData.cpp" />
+    <ClCompile Include="ToolManager.cpp" />
+    <ClCompile Include="WorkspaceManager.cpp" />
+    <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="ExtenderInternals.cpp" />
+    <ClCompile Include="HallofFame.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="WindowManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\obse\obse_editor\EditorAPI.h" />
+    <ClInclude Include="..\obse\obse_editor\EditorRTTI.h" />
+    <ClInclude Include="..\obse\obse\GameBSExtraData.h" />
+    <ClInclude Include="..\obse\obse\GameData.h" />
+    <ClInclude Include="..\obse\obse\GameExtraData.h" />
+    <ClInclude Include="..\obse\obse\GameForms.h" />
+    <ClInclude Include="..\obse\obse\GameObjects.h" />
+    <ClInclude Include="..\obse\obse\GameTypes.h" />
+    <ClInclude Include="..\obse\obse\NiAPI.h" />
+    <ClInclude Include="..\obse\obse\NiExtraData.h" />
+    <ClInclude Include="..\obse\obse\NiGeometry.h" />
+    <ClInclude Include="..\obse\obse\NiNodes.h" />
+    <ClInclude Include="..\obse\obse\NiObjects.h" />
+    <ClInclude Include="..\obse\obse\NiProperties.h" />
+    <ClInclude Include="..\obse\obse\NiTypes.h" />
+    <ClInclude Include="..\obse\obse\ParamInfos.h" />
+    <ClInclude Include="..\obse\obse\PluginAPI.h" />
+    <ClInclude Include="..\obse\obse\Script.h" />
+    <ClInclude Include="..\obse\obse\Utilities.h" />
+    <ClInclude Include="[Common]\CLIWrapper.h" />
+    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="[Common]\HandShakeStructs.h" />
+    <ClInclude Include="Hooks\AssetSelector.h" />
+    <ClInclude Include="Hooks\Common.h" />
+    <ClInclude Include="Hooks\CompilerErrorDetours.h" />
+    <ClInclude Include="Hooks\Dialog.h" />
+    <ClInclude Include="Hooks\LOD.h" />
+    <ClInclude Include="Hooks\Misc.h" />
+    <ClInclude Include="Hooks\Renderer.h" />
+    <ClInclude Include="Hooks\ScriptEditor.h" />
+    <ClInclude Include="Hooks\TESFile.h" />
+    <ClInclude Include="Console.h" />
+    <ClInclude Include="ConsoleCommands.h" />
+    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI.h" />
+    <ClInclude Include="..\[Libraries]\INI Manager\INIManager.h" />
+    <ClInclude Include="..\[Libraries]\MemoryHandler\MemoryHandler.h" />
+    <ClInclude Include="..\[Libraries]\SME_Prefix.h" />
+    <ClInclude Include="UtilityBox.h" />
+    <ClInclude Include="CSEInterfaceAPI.h" />
+    <ClInclude Include="CSEInterfaceManager.h" />
+    <ClInclude Include="CSInterop.h" />
+    <ClInclude Include="[Common]\CSInteropData.h" />
+    <ClInclude Include="ArchiveManager.h" />
+    <ClInclude Include="CSDialogs.h" />
+    <ClInclude Include="GMSTMap.h" />
+    <ClInclude Include="RenderSelectionGroupManager.h" />
+    <ClInclude Include="RenderTimeManager.h" />
+    <ClInclude Include="RenderWindowTextPainter.h" />
+    <ClInclude Include="ScriptEditorAllocator.h" />
+    <ClInclude Include="TESFormReferenceData.h" />
+    <ClInclude Include="ToolManager.h" />
+    <ClInclude Include="WorkspaceManager.h" />
+    <ClInclude Include="Exports.h" />
+    <ClInclude Include="ExtenderInternals.h" />
+    <ClInclude Include="HallofFame.h" />
+    <ClInclude Include="WindowManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="exports.def" />
+    <None Include="Images\Splash.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Construction Set Extender.rc" />
+    <ResourceCompile Include="..\[Libraries]\INI Manager\INIEditGUI_Res.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

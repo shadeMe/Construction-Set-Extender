@@ -13,6 +13,8 @@
 #include "commctrl.h"
 #include "richedit.h"
 #include "shlobj.h"
+#include "time.h"
+#include "intrin.h"
 #include "common/IDirectoryIterator.h"
 #include "[Libraries]\MemoryHandler\MemoryHandler.h"
 

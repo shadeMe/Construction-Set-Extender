@@ -1,13 +1,12 @@
 To-Do
 =====
-MISC-->
-> Turn off debug when releasing builds
-
-
 CSE--->
-> Add a 'Show all hidden refs in cell' tool
-> Add the root nodes to the idle tree at CS init.
-> Auto-backup plugin on save
+> Make selection alignment undo'able
+> I have another suggestion - on Quest Stages tab, there's a box for Stage indexes. The box size is fine, but perhaps the Index column within the box could be less wide, so that when you create the 41st or 42nd stage (more than fits in the box without needing a scroll bar), it doesn't create a horizontal scroll bar at the bottom when it creates the vertical scroll bar. The column can only contain a number between 0 and 255, so it never needs to be wider than the column header at the top.
+> Make sure the changes to the plugin inteface code (AddToURLMap in particular) works with plugins loaded after CSE
+> Increase the column header size of the Quests dialog
+> Clear quest stage result script text when compiling it (when found empty)
+> A 'Show plugin overrides' tool for forms - Lists overriding files
 > Check out the assertion at 0x004875A1 (called indirectly from Datahandler::saveplugin_Housekeeping). strangely seems to happen only when IDA's debugger is attached
 > Topicinfo inititem warnings aren't being shown
 > Update the model of references
@@ -28,11 +27,10 @@ CSE--->
 
 
 SE---->
-> Move maximized state reset/windowstate writeToINI to receive message close handler
-> Fix QQuix's Undo/Redo issue
+> A failed compile operation must set the modified flag, regardless of its previous state
+> There's a slight X-offset to the position returned by AvalonEditTextEditor::GetPositionFromCharIndex
 > Fix the 'Missing New Tab button' repaint issue
 > Fix the issue with the load tool update scripts option
-> Implement AvalonEdit ( implement Notepad++ like auto highlight selection)
 
 
 TAG---->

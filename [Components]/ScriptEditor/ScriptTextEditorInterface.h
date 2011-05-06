@@ -11,10 +11,9 @@ public:
 	}
 };
 
-
 public delegate void							ScriptModifiedEventHandler(Object^ Sender, ScriptModifiedEventArgs^ E);
 
-public interface class ScriptEditorInterface
+public interface class ScriptTextEditorInterface
 {
 	static enum class							FindReplaceOperation
 												{
@@ -54,7 +53,6 @@ public interface class ScriptEditorInterface
 	void										ScrollToCaret();
 
 	IntPtr										GetHandle();
-	Rectangle									GetBounds(void);
 
 	void										FocusTextArea();
 	void										LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex);
@@ -66,10 +64,18 @@ public interface class ScriptEditorInterface
 	bool										GetInitializingStatus();
 	void										SetInitializingStatus(bool Initializing);
 
-	Point										GetLastKnownMouseClickLocation(void);							
+	Point										GetLastKnownMouseClickLocation(void);
 
 	UInt32										FindReplace(FindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOutput^ Output);
 	void										ToggleComment(int StartIndex);
 	void										UpdateIntelliSenseLocalDatabase(void);
 	void										ClearFindResultIndicators(void);
+
+	Control^									GetContainer();
+	void										ScrollToLine(String^ LineNumber);
+	void										HandleTabSwitchEvent(void);		// called when the workspace's parent tab is selected
+
+	// AvalonEdit specific
+	void										HighlightScriptError(int Line);
+	void										ClearScriptErrorHighlights(void);
 };

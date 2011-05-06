@@ -51,9 +51,7 @@ public ref class OptionsDialog
 	static OptionsDialog^							Singleton = nullptr;
 
 	void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
-	void											CmDlgForeColor_Click(Object^ Sender, EventArgs^ E);
-	void											CmDlgBackColor_Click(Object^ Sender, EventArgs^ E);
-	void											CmDlgHighlightColor_Click(Object^ Sender, EventArgs^ E);
+	void											CmDlgColor_Click(Object^ Sender, EventArgs^ E);
 
 	void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
@@ -78,22 +76,46 @@ public ref class OptionsDialog
 			TabPage^									TabPreprocessor;
 				CheckBox^									AllowRedefinitions;
 			TabPage^									TabAppearance;
-				Button^										CmDlgHighlightColor;
-				Button^										CmDlgBackColor;
-				Button^										CmDlgForeColor;
-				Button^										CmDlgFont;
+				Button^									CmDlgFont;
 				Label^										LabelTabSize;
 				NumericUpDown^								TabSize;
-				Label^										LabelLinesToScroll;
-				NumericUpDown^								LinesToScroll;
+				GroupBox^								GroupBoxSyntaxHighlighting;
+					Button^									CmDlgSyntaxCommentsColor;
+					Button^									CmDlgSyntaxDigitsColor;
+					Button^									CmDlgSyntaxPreprocessorColor;
+					Button^									CmDlgSyntaxScriptBlocksColor;
+					Button^									CmDlgSyntaxDelimitersColor;
+					Button^									CmDlgSyntaxStringsColor;
+					Button^									CmDlgSyntaxKeywordsColor;
+					Label^									LabelPreprocessor;
+					Label^									LabelScriptBlocks;
+					Label^									LabelStrings;
+					Label^									LabelComments;
+					Label^									LabelDigits;
+					Label^									LabelDelimiters;
+					Label^									LabelKeywords;
+
+				Button^								CmDlgCurrentLineHighlightColor;
+				Label^								LabelCurrentLineHighlight;
+				Button^								CmDlgCharLimitHighlightColor;
+				Label^								LabelCharLimitHighlight;
+				Button^								CmDlgErrorHighlightColor;
+				Label^								LabelErrorHighlight;
+				Button^								CmDlgSelectionHighlightColor;
+				Label^								LabelSelectionHighlight;
+				Button^								CmDlgFindResultsHighlightColor;
+				Label^								LabelFindResultsHighlight;
+
+				CheckBox^							Wordwrap;
 			TabPage^									TabSanitize;
 				CheckBox^									IndentLines;
 				CheckBox^									AnnealCasing;
 
-		ColorDialog^  								FCDialog;
-		ColorDialog^  								BCDialog;
-		ColorDialog^  								HCDialog;
 		FontDialog^									FontSelection;
+
+		Dictionary<String^, ColorDialog^>^			ColorDictionary;
+
+		void										RegisterColorSetting(String^ Key, Color Default, Control^ Parent);
 public:	
 	OptionsDialog();
 
@@ -112,7 +134,7 @@ public:
 														e_Highlight
 													};
 
-	Color											GetColor(ColorType Type);
+	Color											GetColor(String^ Key);
 
 	void											Show() { OptionsBox->ShowDialog(); }
 

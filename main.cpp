@@ -36,15 +36,9 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 	switch (Msg->type)
 	{
 	case OBSEMessagingInterface::kMessage_PostLoad:
-		DebugPrint("Initializing ScriptEditor");
-		CONSOLE->Indent();
 		g_CommandTableData.CommandTableStart = g_commandTableIntfc->Start();
 		g_CommandTableData.CommandTableEnd = g_commandTableIntfc->End();
-		CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData);
-		CONSOLE->Exdent();
-
 		g_msgIntfc->RegisterListener(g_pluginHandle, NULL, CSEInteropHandler);
-		g_PluginPostLoad = true;
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
 		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll"))
@@ -53,6 +47,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
 			CONSOLE->Exdent();
 		}
+		g_PluginPostLoad = true;
 		break;
 	}
 }
@@ -129,6 +124,8 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
     InitCommonControlsEx(&icex);
 
 	g_pluginHandle = obse->GetPluginHandle();
+
+//	WaitUntilDebuggerAttached();
 
 	DebugPrint("Loading Component DLLs");
 	CONSOLE->Indent();

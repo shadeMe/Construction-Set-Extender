@@ -13,52 +13,52 @@ extern UseListCellItemData*		g_UseListCellItemData;
 extern "C"
 {
 
-__declspec(dllexport) void _D_PRINT(UInt8 Source, const char* Message);
-__declspec(dllexport) const char* GetINIString(const char* Section, const char* Key, const char* Default);
-__declspec(dllexport) const char* GetAppPath(void);
-__declspec(dllexport) void WriteStatusBarText(int PanelIndex, const char* Message);
-__declspec(dllexport) HWND GetCSMainWindowHandle(void);
-__declspec(dllexport) HWND GetRenderWindowHandle(void);
+__declspec(dllexport) void __stdcall _D_PRINT(UInt8 Source, const char* Message);
+__declspec(dllexport) const char* __stdcall GetINIString(const char* Section, const char* Key, const char* Default);
+__declspec(dllexport) const char* __stdcall GetAppPath(void);
+__declspec(dllexport) void __stdcall WriteStatusBarText(int PanelIndex, const char* Message);
+__declspec(dllexport) HWND __stdcall GetCSMainWindowHandle(void);
+__declspec(dllexport) HWND __stdcall GetRenderWindowHandle(void);
 
-__declspec(dllexport) void ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message);
-__declspec(dllexport) void ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex, ScriptData* Data);
-__declspec(dllexport) void ScriptEditor_SetWindowParameters(UInt32 TrackedEditorIndex, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
-__declspec(dllexport) UInt32 ScriptEditor_InstantiateCustomEditor(const char* ScriptID);
-__declspec(dllexport) void ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex);
-__declspec(dllexport) ScriptData* ScriptEditor_GetScriptData();
-__declspec(dllexport) const char* ScriptEditor_GetAuxScriptName();
+__declspec(dllexport) void __stdcall ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message);
+__declspec(dllexport) void __stdcall ScriptEditor_SetScriptData(UInt32 TrackedEditorIndex, ScriptData* Data);
+__declspec(dllexport) void __stdcall ScriptEditor_SetWindowParameters(UInt32 TrackedEditorIndex, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
+__declspec(dllexport) UInt32 __stdcall ScriptEditor_InstantiateCustomEditor(const char* ScriptID);
+__declspec(dllexport) void __stdcall ScriptEditor_PostProcessEditorInit(UInt32 AllocatedIndex);
+__declspec(dllexport) ScriptData* __stdcall ScriptEditor_GetScriptData();
+__declspec(dllexport) const char* __stdcall ScriptEditor_GetAuxScriptName();
 
-__declspec(dllexport) ScriptData* FetchScriptFromForm(const char* EditorID);
-__declspec(dllexport) bool IsFormAnObjRefr(const char* EditorID);
-__declspec(dllexport) FormData* LookupFormByEditorID(const char* EditorID);	
+__declspec(dllexport) ScriptData* __stdcall FetchScriptFromForm(const char* EditorID);
+__declspec(dllexport) bool __stdcall IsFormAnObjRefr(const char* EditorID);
+__declspec(dllexport) FormData* __stdcall LookupFormByEditorID(const char* EditorID);	
 
-__declspec(dllexport) void ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex);
-__declspec(dllexport) const char* ScriptEditor_GetScriptListItemText(const char* EditorID);
-__declspec(dllexport) void ScriptEditor_SetScriptListResult(const char* EditorID);
+__declspec(dllexport) void __stdcall ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex);
+__declspec(dllexport) const char* __stdcall ScriptEditor_GetScriptListItemText(const char* EditorID);
+__declspec(dllexport) void __stdcall ScriptEditor_SetScriptListResult(const char* EditorID);
 
-__declspec(dllexport) void ScriptEditor_GetUseReportForForm(const char* EditorID);
+__declspec(dllexport) void __stdcall ScriptEditor_GetUseReportForForm(const char* EditorID);
 
-__declspec(dllexport) void ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID);
-__declspec(dllexport) bool ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data);
-__declspec(dllexport) void ScriptEditor_CompileDependencies(const char* EditorID);
+__declspec(dllexport) void __stdcall ScriptEditor_GetScriptVariableIndices(UInt32 TrackedEditorIndex, const char* EditorID);
+__declspec(dllexport) bool __stdcall ScriptEditor_SetScriptVariableIndex(const char* EditorID, ScriptVarIndexData::ScriptVarInfo* Data);
+__declspec(dllexport) void __stdcall ScriptEditor_CompileDependencies(const char* EditorID);
 
-__declspec(dllexport) IntelliSenseUpdateData* ScriptEditor_BeginIntelliSenseDatabaseUpdate();
-__declspec(dllexport) void ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSenseUpdateData* Data);
-__declspec(dllexport) void ScriptEditor_ToggleScriptCompiling(bool Enable);
-__declspec(dllexport) void ScriptEditor_SaveActivePlugin();
-__declspec(dllexport) void ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText);
-__declspec(dllexport) void ScriptEditor_BindScript(const char* EditorID, HWND Parent);
+__declspec(dllexport) IntelliSenseUpdateData* __stdcall ScriptEditor_BeginIntelliSenseDatabaseUpdate();
+__declspec(dllexport) void __stdcall ScriptEditor_EndIntelliSenseDatabaseUpdate(IntelliSenseUpdateData* Data);
+__declspec(dllexport) void __stdcall ScriptEditor_ToggleScriptCompiling(bool Enable);
+__declspec(dllexport) void __stdcall ScriptEditor_SaveActivePlugin();
+__declspec(dllexport) void __stdcall ScriptEditor_SetScriptText(const char* EditorID, const char* ScriptText);
+__declspec(dllexport) void __stdcall ScriptEditor_BindScript(const char* EditorID, HWND Parent);
 
-__declspec(dllexport) void UseInfoList_SetFormListItemText();
-__declspec(dllexport) void UseInfoList_SetObjectListItemText(const char* EditorID);
-__declspec(dllexport) void UseInfoList_SetCellListItemText(const char* EditorID);
+__declspec(dllexport) void __stdcall UseInfoList_SetFormListItemText();
+__declspec(dllexport) void __stdcall UseInfoList_SetObjectListItemText(const char* EditorID);
+__declspec(dllexport) void __stdcall UseInfoList_SetCellListItemText(const char* EditorID);
 
-__declspec(dllexport) void TESForm_LoadIntoView(const char* EditorID, const char* FormType);
+__declspec(dllexport) void __stdcall TESForm_LoadIntoView(const char* EditorID, const char* FormType);
 
-__declspec(dllexport) void BatchRefEditor_SetFormListItem(UInt8 ListID);
-__declspec(dllexport) const char* BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent);
+__declspec(dllexport) void __stdcall BatchRefEditor_SetFormListItem(UInt8 ListID);
+__declspec(dllexport) const char* __stdcall BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent);
 
-__declspec(dllexport) void TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
+__declspec(dllexport) void __stdcall TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
 
 }
 

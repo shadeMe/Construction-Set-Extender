@@ -3,15 +3,16 @@
 #include "IntelliSense.h"
 #include "Globals.h"
 
+
 extern "C"
 {
-[STAThread]
 __declspec(dllexport) void InitializeComponents(CommandTableData* Data)
 {
+	System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
+
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ScriptEditor::ResolveMissingAssemblies);
 
-//	Globals^ Dummy = gcnew Globals();
 	ScriptEditorManager::GetSingleton();
 	ISDB->ParseCommandTable(Data);
 }

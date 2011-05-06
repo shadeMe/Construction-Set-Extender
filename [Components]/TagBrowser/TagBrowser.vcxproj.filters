@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{7dce1fb6-c1f8-49f7-88c4-4840792d28a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{267005c6-d4bc-4bc7-a6da-62f9edaadf01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{9b7afe86-85ff-4cce-bbed-1fa3b75bc4f8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\Includes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\MiscUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Exports.h" />
+    <ClInclude Include="Prefix.h" />
+    <ClInclude Include="TagBrowser.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="TagBrowser.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TagBrowser.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

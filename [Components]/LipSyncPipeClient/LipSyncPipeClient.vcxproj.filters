@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{a9f7af40-6156-49e9-88ae-2717fbed67d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{a87e73ef-b920-47b7-b9bf-1a23413929dc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LipSyncPipeClient.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\[Libraries]\MemoryHandler\MemoryHandler.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\[Libraries]\SME_Prefix.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\CSInteropData.h" />
+    <ClInclude Include="LipSyncPipeClient.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\[Libraries]\MemoryHandler\MemoryHandler.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
+    <ClCompile Include="Dllmain.c" />
+    <ClCompile Include="LipSyncPipeClient.cpp" />
+  </ItemGroup>
+</Project>

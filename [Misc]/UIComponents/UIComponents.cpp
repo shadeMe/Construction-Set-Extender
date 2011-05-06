@@ -1,6 +1,7 @@
 // UIComponents.cpp : main project file.
 
 #include "TagBrowser.h"
+#include "WPFHostTest.h"
 
 using namespace UIComponents;
 
@@ -12,6 +13,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Create the main window and run it
-	Application::Run(gcnew TagBrowser());
+	Application::Run(gcnew WPFHostTest());
 	return 0;
 }

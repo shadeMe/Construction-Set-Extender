@@ -14,6 +14,8 @@ MemHdlr								kRerouteScriptErrors				(0x004FFF9C, RerouteScriptErrorsHook, 0, 
 MemHdlr								kCompilerPrologReset				(0x00503330, CompilerPrologResetHook, 0, 0);
 MemHdlr								kCompilerEpilogCheck				(0x0050341F, CompilerEpilogCheckHook, 0, 0);
 MemHdlr								kParseScriptLineOverride			(0x00503401, ParseScriptLineOverride, 0, 0);
+MemHdlr								kCheckLineLengthLineCount			(0x0050013B, CheckLineLengthLineCountHook, 0, 0);
+NopHdlr								kRidUnknownFunctionCodeMessage		(0x0050310C, 5);
 
 void __stdcall DoRerouteScriptErrorsHook(UInt32 Line, const char* Message)
 {
@@ -95,6 +97,22 @@ void __declspec(naked) ParseScriptLineOverride(void)
 	}
 }
 
+void __declspec(naked) CheckLineLengthLineCountHook(void)
+{
+	static const UInt32			kCheckLineLengthLineCountHookRetnAddr = 0x00500143;
+
+	__asm
+	{
+		mov		eax, [esp + 0x18]
+		add		[eax + 0x1C], 1
+
+		add     dword ptr [esi], 1
+		push    0x200
+
+		jmp		kCheckLineLengthLineCountHookRetnAddr
+	}
+}
+
 // ERROR HANDLERS
 
 																//  f_ConstructLineBuffer
@@ -130,6 +148,8 @@ void PatchCompilerErrorDetours()
 	kCompilerPrologReset.WriteJump();
 	kCompilerEpilogCheck.WriteJump();
 	kParseScriptLineOverride.WriteJump();
+	kCheckLineLengthLineCount.WriteJump();
+	kRidUnknownFunctionCodeMessage.WriteNop();
 
 	GetErrorMemHdlr(0x00502781).WriteJump();
 	GetErrorMemHdlr(0x00502813).WriteJump();

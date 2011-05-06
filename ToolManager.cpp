@@ -101,7 +101,7 @@ void ToolManager::ReadFromINI(const char* INIPath)
 								InitDir(StrBuffer.substr(IndexB + 1));
 
 					AddTool(Title.c_str(), CmdLine.c_str(), InitDir.c_str());
-					DebugPrint("Added Tool '%s' at '%s'", Title.c_str(), CmdLine.c_str());
+					DebugPrint("Added Tool '%s' for '%s'", Title.c_str(), CmdLine.c_str());
 				}
 			}
 		}

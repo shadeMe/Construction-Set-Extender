@@ -1,0 +1,338 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{6b5c677a-b580-4d5a-9fa7-675116f4d714}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{2091f64c-1048-450e-91f9-516e91e2ee98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Images">
+      <UniqueIdentifier>{0525990c-0428-47fe-b5b0-398637d34c93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{8c6b017e-dfea-4c79-be1d-57ff71ad5d1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components">
+      <UniqueIdentifier>{c2b18af5-444f-48b9-8009-bf96da40fbec}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="AuxiliaryTextEditor.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="AvalonEditTextEditor.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="AvalonEditXSHD.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEScriptTextEditor.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSense.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="NumberedRichTextBox.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsDialog.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginParser.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptListDialog.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptParser.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="ScriptEditor.cpp" />
+    <ClCompile Include="ScriptEditorManager.cpp" />
+    <ClCompile Include="AvalonEditComponents.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\Includes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\MiscUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="AuxiliaryTextEditor.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="AvalonEditTextEditor.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="AvalonEditXSHD.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEScriptTextEditor.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSense.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="NumberedRichTextBox.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsDialog.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginParser.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptListDialog.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptParser.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptTextEditorInterface.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Exports.h" />
+    <ClInclude Include="Globals.h" />
+    <ClInclude Include="Prefix.h" />
+    <ClInclude Include="ScriptEditor.h" />
+    <ClInclude Include="ScriptEditorManager.h" />
+    <ClInclude Include="AvalonEditComponents.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ScriptEditor.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\AlignObjectsBottomHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\back.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\BehindTextHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\book_addressHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\BytecodeClass.gif">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\CommentHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\compareversionsHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ConflictHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\CopyFolderHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\CopyHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\DeleteHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\EditCodeHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\EditInformationHS grad.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\EditInformationHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\eps_closedHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\eps_open_largeHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\error.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ErrorCircle-icon.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\Favorite-icon-16x16.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\FindHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\FindNextHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\forward.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\google.jpg">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\GoToNextHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\GoToPrevious.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\HtmlBalanceBracesHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\IndentHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\IndexPointer.jpg">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\info.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\InsertTabControlHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISCommand.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISEmpty.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISLocalVar.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISQuest.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISRemoteVar.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISUserF.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\List_NumberedRTLHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\NavBack.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\NavForward.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\NewCardHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\NewDocumentHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\NoteHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\openfolderHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\OpenSelectedItemHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\OrganizerHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\PasteHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\PreviousPageHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\RadialChartHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SaveAllHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SaveAsWebPageHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SaveFormDesignHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\saveHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\saveTabs.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\script_16.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\Script_link.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SearchWebHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\SESaveNoCompile.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\SLDActive.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\stop.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\update.gif">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\view_list_text.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\warning.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Objects\png_format\WinVista\Warning.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\Warning_16x16.gif">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\WarningHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\WebInsertHyperlinkHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+  </ItemGroup>
+</Project>

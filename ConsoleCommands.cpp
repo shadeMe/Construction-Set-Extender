@@ -131,7 +131,7 @@ void CSECCmd_LoadForm_Handler(CSECCMD_ARGS)
 
 	TESForm* Form = GetFormByID(EditorID.c_str());
 	if (Form)
-		LoadFormIntoView(EditorID.c_str(), Form->typeID);
+		ShowFormEditDialog(EditorID.c_str(), Form->typeID);
 	else
 		DebugPrint("Couldn't load form '%s' into view. Recheck the editorID argument.", EditorID.c_str());
 }

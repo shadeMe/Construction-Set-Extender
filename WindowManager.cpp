@@ -58,7 +58,7 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 				UInt32 FormIDInt = 0;
 				sscanf_s(FormID.c_str(), "%08X", &FormIDInt);
 				if (TESForm_LookupByFormID(FormIDInt))
-					LoadFormIntoView(FormIDInt, FormTypeStr.c_str());
+					ShowFormEditDialog(FormIDInt, FormTypeStr.c_str());
 			}
 			break;
 		}
@@ -199,7 +199,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
 
-			if (ThisCell) {
+			if (ThisCell) 
+			{
 				UInt32 RefCount = 0, i = 0;
 				TESObjectCELL::ObjectListEntry* ThisNode = &ThisCell->objectList;
 				TESObjectREFR* ThisRef = NULL;
@@ -218,7 +219,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				BatchRefData* BatchData = new BatchRefData();
 
 				ThisNode = &ThisCell->objectList;
-				while (ThisNode) {
+				while (ThisNode)
+				{
 					ThisRef = ThisNode->refr;
 					if (!ThisRef)		break;
 					ThisRefData = &RefData[i];
@@ -228,8 +230,10 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRefData->TypeID = ThisRef->baseForm->typeID;
 					ThisRefData->Flags = ThisRef->flags;
 					ThisRefData->Selected = false;
-					for (TESRenderSelection::SelectedObjectsEntry* j = (*g_TESRenderSelectionPrimary)->RenderSelection; j != 0; j = j->Next) {
-						if (j->Data && j->Data == ThisRef) {
+					for (TESRenderSelection::SelectedObjectsEntry* j = (*g_TESRenderSelectionPrimary)->RenderSelection; j != 0; j = j->Next)
+					{
+						if (j->Data && j->Data == ThisRef)
+						{
 							ThisRefData->Selected = true;
 							break;
 						}
@@ -370,7 +374,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			FormEnumerationWrapper::ToggleDeletedFormVisibility();
 			break;
 		case MAIN_WORLD_UNLOADCELL:
-			UnloadLoadedCell();
+			ResetRenderWindow();
 			break;
 		case MAIN_GAMEPLAY_GLOBALSCRIPT:
 			CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_GLOBALSCRIPT), hWnd, (DLGPROC)GlobalScriptDlgProc);
@@ -427,6 +431,24 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		{
 		case RENDER_BATCHEDIT:
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, MAIN_WORLD_BATCHEDIT, 0);
+			break;
+		case ID_SELECTIONVISIBILITY_SHOWALL:
+			{
+				TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+				if (CurrentCell == NULL)
+					CurrentCell = (*g_TES)->currentExteriorCell;
+				if (CurrentCell)
+				{
+					for (TESObjectCELL::ObjectListEntry* Itr = &CurrentCell->objectList; Itr && Itr->refr; Itr = Itr->next)
+					{
+						TESObjectREFR* Ref = Itr->refr;
+						ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, false);
+						ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, false);
+					}
+
+					PrintToRender("Reset visibility flags on the active cell's references", 3);
+				}
+			}
 			break;
 		case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
 		case ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY:
@@ -498,6 +520,8 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case ID_ALIGNSELECTION_BYZAXIS:
 			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
 			{
+		//		thisCall(kTESRenderUndoStack_RecordReference, *g_TESRenderUndoStack, TESRenderUndoStack::kUndoOperation_unk03, (*g_TESRenderSelectionPrimary)->RenderSelection);
+
 				TESObjectREFR* AlignRef = CS_CAST((*g_TESRenderSelectionPrimary)->RenderSelection->Data, TESForm, TESObjectREFR);
 
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection->Next; Itr && Itr->Data; Itr = Itr->Next)
@@ -985,7 +1009,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
 			if (BaseForm && BaseForm->editorData.editorID.m_data)
 			{
-				LoadFormIntoView(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
+				ShowFormEditDialog(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
 			}
 			break;
 		}
@@ -1073,7 +1097,7 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 			SelectFile.lpstrFileTitle = NULL;
 			SelectFile.lpstrInitialDir = NULL;
 			SelectFile.lpstrTitle = "Select an audio file to use as the current response's voice";
-			SelectFile.Flags = OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_HIDEREADONLY;
+			SelectFile.Flags = OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
 
 			if (GetOpenFileName(&SelectFile))
 			{
@@ -1196,7 +1220,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				thisCall(kTESForm_AddReference, QuestScript, Quest);
 
 				MessageBox(hWnd, "Global script created successfully.\n\nIt will now be opened for editing ...", "CSE", MB_OK|MB_ICONINFORMATION);
-				SpawnCustomScriptEditor(ScriptID);
+				InstantitateCustomScriptEditor(ScriptID);
 
 				DestroyWindow(hWnd);
 				return TRUE;
@@ -1394,7 +1418,7 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			TESForm* Form = Itr->Data;
-			if (GetDialogTemplate(Form->typeID) == 1)
+			if (GetFormDialogTemplate(Form->typeID) == 1)
 			{
 				g_FormData->FillFormData(Form);
 				CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
@@ -1509,6 +1533,53 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					SendMessage(ToolList, LB_SETITEMDATA, NewIndex, (LPARAM)Tool);
 					SendMessage(ToolList, LB_SETSEL, TRUE, NewIndex);
 					SetFocus(ToolList);
+				}
+			}
+			break;
+		case BTN_SELECTCMDLINE:
+			{
+				char FilePath[MAX_PATH] = {0};
+
+				OPENFILENAME SelectFile;
+				SelectFile.lStructSize = sizeof(OPENFILENAME);
+				SelectFile.hwndOwner = hWnd;
+				SelectFile.lpstrFilter = "All Files\0*.*\0\0";
+				SelectFile.lpstrCustomFilter = NULL;
+				SelectFile.nFilterIndex = 0;
+				SelectFile.lpstrFile = FilePath;
+				SelectFile.nMaxFile = sizeof(FilePath);
+				SelectFile.lpstrFileTitle = NULL;
+				SelectFile.lpstrInitialDir = NULL;
+				SelectFile.lpstrTitle = "Select a file";
+				SelectFile.Flags = OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_HIDEREADONLY|OFN_NOCHANGEDIR;
+
+				if (GetOpenFileName(&SelectFile))
+				{
+					SetWindowText(CmdLineBox, (LPSTR)FilePath);
+				}
+			}
+			break;
+		case BTN_SELECTINITDIR:
+			{
+				char FolderPath[MAX_PATH] = {0};
+
+				BROWSEINFO FolderInfo;
+				FolderInfo.hwndOwner = hWnd;
+				FolderInfo.iImage = NULL;
+				FolderInfo.pszDisplayName = FolderPath;
+				FolderInfo.lpszTitle = "Select an initial directory for the tool";
+				FolderInfo.ulFlags = BIF_NEWDIALOGSTYLE|BIF_RETURNONLYFSDIRS;
+				FolderInfo.pidlRoot = NULL;
+				FolderInfo.lpfn = NULL;
+				FolderInfo.lParam = NULL;
+
+				PIDLIST_ABSOLUTE ReturnPath = SHBrowseForFolder(&FolderInfo);
+				if (ReturnPath)
+				{
+					if (SHGetPathFromIDList(ReturnPath, FolderPath))
+					{
+						SetWindowText(InitDirBox, (LPSTR)FolderPath);
+					}
 				}
 			}
 			break;

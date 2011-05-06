@@ -1,7 +1,8 @@
 #pragma once
 
 #include "CSEInterfaceAPI.h"
-#include <vector>
+
+extern std::map<const char*, const char*> g_URLMapBuffer;
 
 class CSEInterfaceManager
 {

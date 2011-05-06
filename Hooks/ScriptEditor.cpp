@@ -35,7 +35,7 @@ _DefineHookHdlr(EditorInitWindowPos, 0x004FEB9A);
 _DefineHookHdlr(MessagingCallbackNewScript, 0x004FEDFD);
 _DefineHookHdlr(MessagingCallbackOpenNextScript, 0x004FEE6F);
 _DefineHookHdlr(MessagingCallbackPreviousScript, 0x004FEEDF);
-_DefineHookHdlr(MessagingCallbackClose, 0x004FED69);
+_DefineHookHdlr(MessagingCallbackClose, 0x004FED5E);
 _DefineHookHdlr(MessagingCallbackSave, 0x004FE63D);
 _DefineHookHdlr(ScriptListOpen, 0x004FEE1D);
 _DefineHookHdlr(ScriptListDelete, 0x004FF133);
@@ -91,9 +91,11 @@ void FillScriptDataPackage(Script* ScriptForm)
 	g_ScriptDataPackage->Text = ScriptForm->text;
 	g_ScriptDataPackage->TypeID = kFormType_Script;
 
-	if (ScriptForm->IsObjectScript()) {
+	if (ScriptForm->IsObjectScript())
+	{
 														g_ScriptDataPackage->Type = 0;
-		if (ScriptForm->info.dataLength >= 15) {
+		if (ScriptForm->info.dataLength >= 15)
+		{
 			UInt8* Data = (UInt8*)ScriptForm->data;
 			if (*(Data + 8) == 7)						g_ScriptDataPackage->Type = 9;			// function script
 		}
@@ -397,19 +399,21 @@ _BeginHookHdlrFn(MessagingCallbackPreviousScript)
 
 _BeginHookHdlrFn(MessagingCallbackClose)
 {
-	_DeclareHookHdlrFnVariable(MessagingCallbackClose, Retn, 0x004FED6F);
+	_DeclareHookHdlrFnVariable(MessagingCallbackClose, Retn, 0x004FED63);
 	__asm
 	{
-		call	EndDialogAddress
-		call	[g_WindowHandleCallAddr]
-
 		pushad
 		push	7
 		call	SendPingBack
+		popad
 
+		call	WritePositionToINI
+
+		pushad
 		push	edi
 		call	DoMessagingCallbackCloseHookRelease
 		popad
+
 		jmp		[_HookHdlrFnVariable(MessagingCallbackClose, Retn)]
 	}
 }

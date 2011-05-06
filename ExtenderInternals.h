@@ -185,6 +185,38 @@ struct TESRenderSelection
 	float					unk14;				// 14 init to 0.0
 };
 
+// 8
+struct TESRenderUndoStack
+{
+	enum
+	{
+		kUndoOperation_unk01 = 1,	// used to record ref creation?
+		kUndoOperation_unk02 = 2,	// used to record ref deletion?
+		kUndoOperation_unk03 = 3,	// used to record ref 3D data
+		kUndoOperation_unk04 = 4,	// 4-6 used to record lanscape changes
+		kUndoOperation_unk05 = 5,	
+		kUndoOperation_unk06 = 6	
+	};
+
+	// 50
+	struct Entry
+	{
+		UInt32				selIndex;						// 00 index of the ref in its parent selection
+		UInt32				selCount;						// 04 number of refs in the selection this ref was a part of
+		TESObjectREFR*		refr;							// 08
+		UInt32				operationType;					// 0C
+		float				rotX, rotY, rotZ;				// 10
+		float				posX, posY, posZ;				// 1C
+		float				scale;							// 28
+		UInt32				unk2C[(0x48 - 0x2C) >> 2];		// 2C pathgrid/landscape change related
+		UInt32				unk48;							// 48
+		Entry*				next;							// 4C
+	};
+
+	Entry*					marker;							// 00 initialized in c'tor, used as a buffer?
+	Entry*					first;							// 04
+};
+
 class BSTextureManager;
 class BSRenderedTexture;
 class NiDX9Renderer;
@@ -236,6 +268,8 @@ extern FileFinder**				g_FileFinder;
 extern ResponseEditorData**		g_ResponseEditorData;
 extern GameSettingCollection*	g_GMSTCollection;
 extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>*
+extern void**					g_IdleFormTree;		// BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>*
+extern TESRenderUndoStack**		g_TESRenderUndoStack;
 
 extern TESForm**				g_DoorMarker;
 extern TESForm**				g_NorthMarker;
@@ -285,8 +319,8 @@ extern const _SelectTESFileCommonDialog SelectTESFileCommonDialog;
 typedef void			(__cdecl *_TESDialog_SetCSWindowTitleModifiedFlag)(bool unk01);
 extern const _TESDialog_SetCSWindowTitleModifiedFlag TESDialog_SetCSWindowTitleModifiedFlag;
 
-typedef TESObjectREFR* (__cdecl *_ChooseRefWrapper)(HWND Parent, UInt32 unk01, UInt32 unk02, UInt32 unk03);
-extern const _ChooseRefWrapper	ChooseRefWrapper;
+typedef TESObjectREFR* (__cdecl *_DisplayReferencePickDialog)(HWND Parent, UInt32 unk01, UInt32 unk02, UInt32 unk03);
+extern const _DisplayReferencePickDialog	DisplayReferencePickDialog;
 
 typedef void*			(__cdecl *_InitializeCSWindows)();
 extern const _InitializeCSWindows		InitializeCSWindows;
@@ -372,7 +406,7 @@ extern const UInt32			kLinkedListNode_RemoveNode;
 extern const UInt32			kLinkedListNode_GetIsDangling;
 extern const UInt32			kLinkedListNode_Cleanup;
 extern const UInt32			kLinkedListNode_GetData;
-
+extern const UInt32			kTESIdleFormTree_AddRootNodes;
 extern const UInt32			kTESQuest_SetStartEnabled;
 extern const UInt32			kTESQuest_SetAllowedRepeatedStages;
 extern const UInt32			kTESObjectCELL_GetIsInterior;
@@ -386,6 +420,8 @@ extern const UInt32			kTESFile_Dtor;
 extern const UInt32			kDataHandler_PopulateModList;
 extern const UInt32			kTESRenderSelection_RemoveFormFromSelection;
 extern const UInt32			kTESForm_SetTemporary;
+extern const UInt32			kTESRenderUndoStack_RecordReference;
+extern const UInt32			kTESObjectREFR_PickComparator;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;

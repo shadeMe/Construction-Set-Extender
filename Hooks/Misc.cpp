@@ -9,6 +9,9 @@
 #include "..\ArchiveManager.h"
 #include "..\TESFormReferenceData.h"
 #include "..\RenderTimeManager.h"
+#include "..\CSEInterfaceManager.h"
+
+extern CommandTableData	g_CommandTableData;
 
 char g_NumericIDWarningBuffer[0x10] = {0};
 
@@ -35,6 +38,7 @@ _DefineHookHdlr(TESFormPopulateUseInfoList, 0x004964F2);
 _DefineHookHdlr(TESFormDelete, 0x00498712);
 _DefinePatchHdlr(TextureSizeCheck, 0x0044F444);
 _DefineHookHdlr(AboutDialog, 0x00441CC5);
+_DefineHookHdlr(DataHandlerPlaceTESObjectLIGH, 0x005116C7);
 
 void PatchMiscHooks(void)
 {
@@ -59,6 +63,7 @@ void PatchMiscHooks(void)
 	_MemoryHandler(TESFormDelete).WriteJump();
 	_MemoryHandler(TextureSizeCheck).WriteUInt8(0xEB);
 	_MemoryHandler(AboutDialog).WriteJump();
+	_MemoryHandler(DataHandlerPlaceTESObjectLIGH).WriteJump();
 
 	if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
 		PatchMessageHandler();
@@ -111,6 +116,7 @@ void __stdcall MessageHandlerOverride(const char* Message)
 
 void __stdcall DoCSExitHook(HWND MainWindow)
 {
+	CONSOLE->Pad(2);
 	WritePositionToINI(MainWindow, NULL);
 	WritePositionToINI(*g_HWND_CellView, "Cell View");
 	WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
@@ -149,6 +155,16 @@ void __stdcall DoCSInitHook()
 											// remove hook rightaway to keep it from hindering the subclassing that follows
 	kCSInit.WriteBuffer();
 
+	DebugPrint("Initializing ScriptEditor");
+	CONSOLE->Indent();
+	CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData);
+	CONSOLE->Indent();
+	for (std::map<const char*, const char*>::const_iterator Itr = g_URLMapBuffer.begin(); Itr != g_URLMapBuffer.end(); Itr++)
+		CLIWrapper::ScriptEditor::AddToURLMap(Itr->first, Itr->second);
+	g_URLMapBuffer.clear();
+	CONSOLE->Exdent();
+	CONSOLE->Exdent();
+
 	DebugPrint("Initializing Tools");
 	CONSOLE->Indent();
 	g_ToolManager.InitializeToolsMenu();
@@ -185,26 +201,21 @@ void __stdcall DoCSInitHook()
 	RENDERTEXT->Initialize();
 	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Construction Set Extender", 5);
 
-	DebugPrint("Initializing CS Startup Manager");
-	CONSOLE->Indent();
-	if (g_INIManager->GetINIInt("LoadPluginOnStartup"))
-		LoadStartupPlugin();
-
-	if (g_INIManager->GetINIInt("OpenScriptWindowOnStartup"))
-	{
-		const char* ScriptID = g_INIManager->GetINIStr("StartupScriptEditorID");
-		if (strcmp(ScriptID, "") && GetFormByID(ScriptID))
-			SpawnCustomScriptEditor(ScriptID);
-		else
-			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
-	}
-
 	DebugPrint("Initializing Workspace Manager");
 	CONSOLE->Indent();
 	g_WorkspaceManager.Initialize(g_AppPath.c_str());
-	if (g_INIManager->GetINIInt("SetWorkspaceOnStartup"))
-		g_WorkspaceManager.SelectWorkspace(g_INIManager->GetINIStr("DefaultWorkspacePath"));
 	CONSOLE->Exdent();
+
+	DebugPrint("Initializing CS Startup Manager");
+	CONSOLE->Indent();
+	CSStartupManager::LoadStartupWorkspace();
+	CSStartupManager::LoadStartupPlugin();
+	CSStartupManager::LoadStartupScript();
+	CONSOLE->Exdent();
+
+	DebugPrint("Initializing IdleAnim Tree");
+	CONSOLE->Indent();
+	thisCall(kTESIdleFormTree_AddRootNodes, *g_IdleFormTree);
 	CONSOLE->Exdent();
 
 	DebugPrint("Initializing Archives");
@@ -213,7 +224,8 @@ void __stdcall DoCSInitHook()
 	CONSOLE->Exdent();
 
 	CONSOLE->ExdentAll();
-	DebugPrint("Construction Set Extender Initialized!\r\n");
+	DebugPrint("Construction Set Extender Initialized!");
+	CONSOLE->Pad(2);
 }
 
 _BeginHookHdlrFn(CSInit)
@@ -230,7 +242,10 @@ _BeginHookHdlrFn(CSInit)
 
 void __stdcall DoAssertOverrideHook(UInt32 EIP)
 {
-	DebugPrint("\tAssertion handled at 0x%08X", EIP);
+	CONSOLE->Indent();
+	DebugPrint("Assertion handled at 0x%08X", EIP);
+	CONSOLE->Exdent();
+
 	MessageBeep(MB_ICONHAND);
 }
 
@@ -559,7 +574,7 @@ void __stdcall DoAboutDialogHook(HWND Dialog)
 	HWND PictureControl = GetDlgItem(Dialog, 1963);
 	HANDLE Splash = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
 	SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)Splash);
-	Static_SetText(GetDlgItem(Dialog, -1), "The Elder Scrolls Construction Set && Construction Set Extender");
+	Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV | Construction Set Extender");
 }
 
 _BeginHookHdlrFn(AboutDialog)
@@ -575,5 +590,21 @@ _BeginHookHdlrFn(AboutDialog)
 		call	ShowWindowAddress
 		call	g_WindowHandleCallAddr
 		jmp		[_HookHdlrFnVariable(AboutDialog, Retn)]
+	}
+}
+
+_BeginHookHdlrFn(DataHandlerPlaceTESObjectLIGH)
+{
+	_DeclareHookHdlrFnVariable(DataHandlerPlaceTESObjectLIGH, Retn, 0x005116CF);
+	_DeclareHookHdlrFnVariable(DataHandlerPlaceTESObjectLIGH, Jump, 0x00511749);
+	__asm
+	{
+		test	esi, esi
+		jz		FIX
+		mov     eax, [esi]
+		mov     edx, [eax + 0x1A0]
+		jmp		[_HookHdlrFnVariable(DataHandlerPlaceTESObjectLIGH, Retn)]
+	FIX:
+		jmp		[_HookHdlrFnVariable(DataHandlerPlaceTESObjectLIGH, Jump)]
 	}
 }

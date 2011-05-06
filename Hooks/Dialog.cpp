@@ -334,7 +334,7 @@ void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
-	if (GetDialogTemplate(SelectedForm->typeID) == 1 && SelectedForm->IsReference() == 0)
+	if (GetFormDialogTemplate(SelectedForm->typeID) == 1 && SelectedForm->IsReference() == 0)
 	{
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
 	}

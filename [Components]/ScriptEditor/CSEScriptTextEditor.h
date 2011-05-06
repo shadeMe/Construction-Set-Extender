@@ -1,11 +1,10 @@
 #pragma once
 #include "NumberedRichTextBox.h"
-#include "ScriptEditorInterface.h"
-
+#include "ScriptTextEditorInterface.h"
 
 ref class IntelliSenseThingy;
 
-public ref class ScriptEditorTextEditor : public NumberedRichTextBox, public ScriptEditorInterface
+public ref class CSEScriptTextEditor : public NumberedRichTextBox, public ScriptTextEditorInterface
 {
 public:
 	event EventHandler^							TextChanged;
@@ -79,7 +78,7 @@ protected:
 	String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
 	String^										GetTextAtLocation(int Index, bool SelectText);
 
-	void										SetPreventTextChangedFlag(PreventTextChangeFlagState State) { PreventTextChangedEventFlag = State; }	
+	void										SetPreventTextChangedFlag(PreventTextChangeFlagState State) { PreventTextChangedEventFlag = State; }
 	void										HandleKeyEventForKey(Keys Key) { KeyToPreventHandling = Key; }
 public:
 	// interface methods
@@ -114,7 +113,6 @@ public:
 	virtual void								ScrollToCaret();
 
 	virtual IntPtr								GetHandle();
-	virtual Rectangle							GetBounds(void);
 
 	virtual void								FocusTextArea();
 	virtual void								LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex);
@@ -126,12 +124,19 @@ public:
 	virtual bool								GetInitializingStatus();
 	virtual void								SetInitializingStatus(bool Initializing);
 
-	virtual Point								GetLastKnownMouseClickLocation(void);							
+	virtual Point								GetLastKnownMouseClickLocation(void);
 
-	virtual UInt32								FindReplace(ScriptEditorInterface::FindReplaceOperation Operation, String^ Query, String^ Replacement, ScriptEditorInterface::FindReplaceOutput^ Output);
+	virtual UInt32								FindReplace(ScriptTextEditorInterface::FindReplaceOperation Operation, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output);
 	virtual void								ToggleComment(int StartIndex);
 	virtual void								UpdateIntelliSenseLocalDatabase(void);
 	virtual void								ClearFindResultIndicators(void) { RemoveFindReplaceResultIndicators(); }
 
-	ScriptEditorTextEditor(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Object^% Parent);
+	virtual Control^							GetContainer() { return NumberedRichTextBox::GetContainer(); }
+	virtual void								ScrollToLine(String^ LineNumber) { JumpToLine(LineNumber); }
+	virtual void								HandleTabSwitchEvent() { return; }
+
+	virtual void								HighlightScriptError(int Line) { return; }
+	virtual void								ClearScriptErrorHighlights(void) { return; }
+
+	CSEScriptTextEditor(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Object^% Parent);
 };

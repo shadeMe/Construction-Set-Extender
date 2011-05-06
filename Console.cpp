@@ -19,6 +19,7 @@ Console::Console()
 
 	DebugLogPath = "";
 	MessageBuffer.reserve(0x3000);
+	ZeroMemory(Buffer, sizeof(Buffer));
 
 	CSEInterfaceManager::RegisterConsoleCallback((CSEConsoleInterface::ConsolePrintCallback)&ConsoleCommandCallback);
 	g_ConsoleCommandTable.InitializeCommandTable();
@@ -133,8 +134,9 @@ void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 	if (MessageBuffer.length() > 16000)
 		MessageBuffer.clear();
 
-	std::string Message = "[";
-	Message += std::string(Prefix) + "]\t";
+	std::string Message = "";
+	if (Prefix != "")
+		Message += "[" + std::string(Prefix) + "]\t";
 
 	for (int i = 0; i < IndentLevel; i++)
 		Message += "\t";
@@ -165,7 +167,7 @@ void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 
 void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 {
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
+	vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 
 	std::string Prefix;
 	switch (Source)
@@ -192,14 +194,14 @@ void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
 		Prefix += "TAG";
 		break;
 	}
-	PrintMessage(Prefix, g_Buffer);
+	PrintMessage(Prefix, Buffer);
 }
 
 void Console::LogMessage(const char* Prefix, const char* Format, va_list Args)
 {
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), Format, Args);
+	vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 
-	PrintMessage(std::string(Prefix), g_Buffer);
+	PrintMessage(std::string(Prefix), Buffer);
 }
 
 void Console::LogMessage(const char* Prefix, const char* MessageStr)
@@ -226,4 +228,10 @@ UInt32 Console::Exdent()
 {
 	if (IndentLevel > 0)		--IndentLevel;
 	return IndentLevel;
+}
+
+void Console::Pad(UInt32 PaddingCount)
+{
+	for (int i = 0; i < PaddingCount; i++)
+		LogMessage("", "\r\n");
 }

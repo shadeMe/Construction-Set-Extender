@@ -24,6 +24,7 @@ _DefineHookHdlr(DataHandlerSavePluginResetA, 0x0047EBBF);
 _DefineHookHdlr(DataHandlerSavePluginResetB, 0x0047EC09);
 _DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
 _DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
+_DefineHookHdlr(DataHandlerSavePluginProlog, 0x0047EC8D);
 
 void PatchTESFileHooks(void)
 {
@@ -48,6 +49,7 @@ void PatchTESFileHooks(void)
 	_MemoryHandler(DataHandlerSavePluginResetB).WriteJump();
 	_MemoryHandler(DataHandlerSavePluginResetC).WriteJump();
 	_MemoryHandler(DataHandlerSavePluginOverwriteESM).WriteNop();
+	_MemoryHandler(DataHandlerSavePluginProlog).WriteJump();
 }
 
 bool __stdcall InitTESFileSaveDlg()
@@ -418,9 +420,9 @@ _BeginHookHdlrFn(DataHandlerSavePluginResetB)
 	__asm
 	{
 		pushad
-			call	DoDataHandlerSavePluginResetHook
-			popad
-			jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetB, Retn)]
+		call	DoDataHandlerSavePluginResetHook
+		popad
+		jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetB, Retn)]
 	}
 }
 
@@ -430,8 +432,42 @@ _BeginHookHdlrFn(DataHandlerSavePluginResetC)
 	__asm
 	{
 		pushad
-			call	DoDataHandlerSavePluginResetHook
-			popad
-			jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetC, Retn)]
+		call	DoDataHandlerSavePluginResetHook
+		popad
+		jmp		[_HookHdlrFnVariable(DataHandlerSavePluginResetC, Retn)]
+	}
+}
+
+void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
+{
+	if (g_INIManager->GetINIInt("BackupOnSave") == 0)
+		return;
+
+	char TimeString[0x200] = {0}, ExistingPath[MAX_PATH] = {0};
+	__time32_t TimeData;
+	tm LocalTime;
+	_time32(&TimeData);
+	_localtime32_s(&LocalTime, &TimeData);
+
+	strftime(TimeString, sizeof(TimeString), "%m-%d-%Y %H-%M-%S", &LocalTime);
+	std::string Name(SaveFile->name), Extension(Name.substr(Name.find_last_of(".") + 1, 3));
+	Name = Name.substr(0, Name.find_last_of("."));
+
+	PrintToBuffer("Data\\Backup\\%s - [%s].%s", Name.c_str(), TimeString, Extension.c_str());
+	sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filepath, SaveFile->name);
+	CopyFile(ExistingPath, g_Buffer, FALSE);
+	DebugPrint("Saved active file backup to '%s'", g_Buffer);
+}
+
+_BeginHookHdlrFn(DataHandlerSavePluginProlog)
+{
+	_DeclareHookHdlrFnVariable(DataHandlerSavePluginProlog, Retn, 0x0047EC92);
+	__asm
+	{
+		pushad
+		push	ebx
+		call	DoDataHandlerSavePluginPrologHook
+		popad
+		jmp		[_HookHdlrFnVariable(DataHandlerSavePluginProlog, Retn)]
 	}
 }

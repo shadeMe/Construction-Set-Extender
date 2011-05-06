@@ -5,13 +5,13 @@
 #ifndef CSE_INTERFACE
 
 #using <mscorlib.dll>
-using namespace System;
-using namespace System::ComponentModel;
-using namespace System::Diagnostics;
-
 #using <System.DLL>
 #using <System.Drawing.DLL>
 #using <System.Windows.Forms.DLL>
+
+using namespace System;
+using namespace System::ComponentModel;
+using namespace System::Diagnostics;
 
 using namespace System::IO;
 using namespace System::Drawing;

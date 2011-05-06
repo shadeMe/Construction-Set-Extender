@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{2ddc63fc-525f-4322-a79d-b33af0683d5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c9af0472-8cc5-442d-be3e-318ca0fc1c27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Images">
+      <UniqueIdentifier>{af79df12-93b4-42ef-8b54-509ae5b1e39f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{138783f3-f9c2-4fee-a16a-3a08eaa591e5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\Includes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\MiscUtilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\NativeWrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="BSAReader.h" />
+    <ClInclude Include="BSAViewer.h" />
+    <ClInclude Include="Exports.h" />
+    <ClInclude Include="Prefix.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="BSAReader.cpp" />
+    <ClCompile Include="BSAViewer.cpp" />
+    <ClCompile Include="Exports.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BSAViewer.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\CHAT.A.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\DEFRAG.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - DLL.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - MOVIE.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - PICTURE.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - SOUND.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FOLDER.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\openfolderHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\PageUpHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ViewThumbnailsHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+  </ItemGroup>
+</Project>

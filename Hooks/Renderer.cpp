@@ -4,6 +4,8 @@
 #include "..\RenderWindowTextPainter.h"
 #include "..\CSDialogs.h"
 
+#define PI					3.151592653589793
+
 _DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 _DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
 _DefineHookHdlr(NiWindowRender, 0x00406442);
@@ -17,6 +19,7 @@ _DefineHookHdlr(TESRenderControlPerformScale, 0x00424650);
 _DefineHookHdlr(TESRenderControlPerformFall, 0x0042886A);
 _DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 _DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
+_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
 
 void PatchRendererHooks(void)
 {
@@ -33,6 +36,7 @@ void PatchRendererHooks(void)
 	_MemoryHandler(TESRenderControlPerformFall).WriteJump();
 	_MemoryHandler(TESObjectREFRSetupDialog).WriteJump();
 	_MemoryHandler(TESObjectREFRCleanDialog).WriteJump();
+	_MemoryHandler(TESRenderControlPerformFallVoid).WriteJump();
 }
 
 _BeginHookHdlrFn(DoorMarkerProperties)
@@ -187,7 +191,11 @@ void __stdcall DoRenderWindowStatsHook(void)
 			PrintToBuffer("%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
 							((Selection->editorData.editorID.m_dataLen)?(Selection->editorData.editorID.m_data):("")), Selection->refID,
 							((Selection->baseForm->editorData.editorID.m_dataLen)?(Selection->baseForm->editorData.editorID.m_data):("")), Selection->baseForm->refID,
-							Selection->posX, Selection->posY, Selection->posZ, Selection->rotX, Selection->rotY, Selection->rotZ, Selection->scale,
+							Selection->posX, Selection->posY, Selection->posZ, 
+							Selection->rotX * 180 / PI, 
+							Selection->rotY * 180 / PI, 
+							Selection->rotZ * 180 / PI, 
+							Selection->scale,
 							((Selection->flags & TESForm::kFormFlags_Essential)?("P"):("-")),
 							((Selection->flags & TESForm::kFormFlags_InitiallyDisabled)?("D"):("-")),
 							((Selection->flags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
@@ -416,5 +424,23 @@ _BeginHookHdlrFn(TESObjectREFRCleanDialog)
 		popad
 
 		jmp		[_HookHdlrFnVariable(TESObjectREFRCleanDialog, Retn)]
+	}
+}
+
+_BeginHookHdlrFn(TESRenderControlPerformFallVoid)
+{
+	_DeclareHookHdlrFnVariable(TESRenderControlPerformFallVoid, Retn, 0x004270C9);
+	_DeclareHookHdlrFnVariable(TESRenderControlPerformFallVoid, Jump, 0x00427193);
+	__asm
+	{
+		test	eax, eax
+		jz		FIX
+
+		mov		edx, [eax + 0x8]
+		mov		[esp + 0x3C], edx
+		
+		jmp		[_HookHdlrFnVariable(TESRenderControlPerformFallVoid, Retn)]
+	FIX:
+		jmp		[_HookHdlrFnVariable(TESRenderControlPerformFallVoid, Jump)]
 	}
 }

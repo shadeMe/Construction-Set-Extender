@@ -50,6 +50,9 @@
 #define EDIT_INITDIR                    1011
 #define IDC_COMBO1                      1012
 #define COMBO_FORMLIST                  1012
+#define BTN_SELECTCMDLINE               1012
+#define BTN_SELECTCMDLINE2              1013
+#define BTN_SELECTINITDIR               1013
 #define BTN_PARENTCELL                  1014
 #define RADIO_EXISTFORM                 1016
 #define RADIO_NEWFORM                   1017
@@ -128,13 +131,14 @@
 #define ID_TOOLS_MANAGE                 40027
 #define ID_CONSOLESETTINGS_OPENDEBUGLOG 40028
 #define CONSOLEMENU_OPENDEBUGLOG        40029
+#define ID_SELECTIONVISIBILITY_SHOWALL  40030
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        124
-#define _APS_NEXT_COMMAND_VALUE         40030
+#define _APS_NEXT_COMMAND_VALUE         40031
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

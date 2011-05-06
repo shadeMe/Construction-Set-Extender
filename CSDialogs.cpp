@@ -1,4 +1,5 @@
 #include "CSDialogs.h"
+#include "WorkspaceManager.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
 
@@ -90,7 +91,7 @@ TESDialogInitParam::TESDialogInitParam(UInt32 FormID)
 	TypeID = Form->typeID;
 }
 
-UInt32 GetDialogTemplate(const char* FormType)
+UInt32 GetFormDialogTemplate(const char* FormType)
 {
 	if (!_stricmp(FormType, "Activator") ||
 		!_stricmp(FormType, "Apparatus") ||
@@ -127,7 +128,7 @@ UInt32 GetDialogTemplate(const char* FormType)
 		!_stricmp(FormType, "Subspace") ||
 		!_stricmp(FormType, "EffectShader") ||
 		!_stricmp(FormType, "SigilStone"))
-			return 1;									// TESDialog
+			return 1;									// FormEdit Dialogs
 	else if (!_stricmp(FormType, "Script"))
 			return 9;
 	else if (!_stricmp(FormType, "Reference"))
@@ -139,19 +140,19 @@ UInt32 GetDialogTemplate(const char* FormType)
 		!_stricmp(FormType, "Birthsign") ||
 		!_stricmp(FormType, "Climate") ||
 		!_stricmp(FormType, "World Space"))
-			return 2;									// TESDialog ListView
+			return 2;									// FormIDListView Dialogs
 	else
 			return 0;
 }
 
-UInt32 GetDialogTemplate(UInt8 FormTypeID)
+UInt32 GetFormDialogTemplate(UInt8 FormTypeID)
 {
 	const char* FormType = g_FormTypeIdentifier[FormTypeID];
 
-	return GetDialogTemplate(FormType);
+	return GetFormDialogTemplate(FormType);
 }
 
-void SpawnCustomScriptEditor(const char* ScriptEditorID)
+void InstantitateCustomScriptEditor(const char* ScriptEditorID)
 {
 	g_EditorAuxScript =  CS_CAST(GetFormByID(ScriptEditorID), TESForm, Script);;
 	tagRECT ScriptEditorLoc;
@@ -160,28 +161,26 @@ void SpawnCustomScriptEditor(const char* ScriptEditorID)
 	g_EditorAuxScript = NULL;
 }
 
-void SpawnCustomScriptEditor(UInt32 ScriptFormID)
+void InstantitateCustomScriptEditor(UInt32 ScriptFormID)
 {
-	g_EditorAuxScript =  CS_CAST(TESForm_LookupByFormID(ScriptFormID), TESForm, Script);;
-	tagRECT ScriptEditorLoc;
-	GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
-	g_EditorAuxScript = NULL;
+	TESForm* Script = TESForm_LookupByFormID(ScriptFormID);
+	if (Script && Script->editorData.editorID.m_data)
+		InstantitateCustomScriptEditor(Script->editorData.editorID.m_data);
 }
 
-void LoadFormIntoView(const char* EditorID, const char* FormType)
+void ShowFormEditDialog(const char* EditorID, const char* FormType)
 {
-	UInt32 Type = GetDialogTemplate(FormType);
+	UInt32 Type = GetFormDialogTemplate(FormType);
 	TESDialogInitParam InitData(EditorID);
 
 	switch (Type)
 	{
 	case 9:
 		if (GetFormByID(EditorID))
-			SpawnCustomScriptEditor(EditorID);
+			InstantitateCustomScriptEditor(EditorID);
 		break;
 	case 10:
-		RemoteLoadRef(EditorID);
+		LoadReferenceParentCell(EditorID);
 		break;
 	case 1:
 	case 2:
@@ -194,84 +193,87 @@ void LoadFormIntoView(const char* EditorID, const char* FormType)
 	}
 }
 
-void LoadFormIntoView(const char* EditorID, UInt8 FormType)
+void ShowFormEditDialog(const char* EditorID, UInt8 FormType)
 {
-	LoadFormIntoView(EditorID, g_FormTypeIdentifier[FormType]);
+	ShowFormEditDialog(EditorID, g_FormTypeIdentifier[FormType]);
 }
 
-void LoadFormIntoView(UInt32 FormID, const char* FormType)
+void ShowFormEditDialog(UInt32 FormID, const char* FormType)
 {
-	UInt32 Type = GetDialogTemplate(FormType);
-	TESDialogInitParam InitData(FormID);
-
-	switch (Type)
-	{
-	case 9:
-		if (TESForm_LookupByFormID(FormID))
-			SpawnCustomScriptEditor(FormID);
-		break;
-	case 10:
-		RemoteLoadRef(FormID);
-		break;
-	case 1:
-	case 2:
-		CreateDialogParamA(*g_TESCS_Instance,
-							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID),
-							*g_HWND_CSParent,
-							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc),
-							(LPARAM)&InitData);
-		break;
-	}
+	TESForm* Form = TESForm_LookupByFormID(FormID);
+	if (Form && Form->editorData.editorID.m_data)
+		ShowFormEditDialog(Form->editorData.editorID.m_data, FormType);
 }
 
-void LoadFormIntoView(UInt32 FormID, UInt8 FormType)
+void ShowFormEditDialog(UInt32 FormID, UInt8 FormType)
 {
-	LoadFormIntoView(FormID, g_FormTypeIdentifier[FormType]);
+	ShowFormEditDialog(FormID, g_FormTypeIdentifier[FormType]);
 }
 
-void RemoteLoadRef(UInt32 FormID)
+void LoadReferenceParentCell(UInt32 FormID)
 {
 	TESObjectREFR* Reference = CS_CAST(TESForm_LookupByFormID(FormID), TESForm, TESObjectREFR);
 	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kVTBL_TESObjectREFR, 0x1A0, Reference);
 	thisCall(kTESChildCell_LoadCell, Cell, Cell, Reference);
 }
 
-void RemoteLoadRef(const char* EditorID)
+void LoadReferenceParentCell(const char* EditorID)
 {
 	TESObjectREFR* Reference = CS_CAST(GetFormByID(EditorID), TESForm, TESObjectREFR);
 	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kVTBL_TESObjectREFR, 0x1A0, Reference);
 	thisCall(kTESChildCell_LoadCell, Cell, Cell, Reference);
 }
 
-TESObjectREFR* ChooseReferenceDlg(HWND Parent)
+TESObjectREFR* ShowReferencePickDialog(HWND Parent)
 {
-	return ChooseRefWrapper(Parent, 0, 0x00545B10, 0);
+	return DisplayReferencePickDialog(Parent, 0, kTESObjectREFR_PickComparator, 0);
 }
 
-void LoadStartupPlugin()
+void CSStartupManager::LoadStartupPlugin()
 {
-	kAutoLoadActivePluginOnStartup.WriteJump();
-
-	const char* PluginName = g_INIManager->GetINIStr("StartupPluginName");
-	const ModEntry* TESFile = (*g_dataHandler)->LookupModByName(PluginName);
-	if (TESFile)
+	if (g_INIManager->GetINIInt("LoadPluginOnStartup"))
 	{
-		DebugPrint("Loading plugin '%s' on startup...", PluginName);
+		kAutoLoadActivePluginOnStartup.WriteJump();
 
-		if (_stricmp(PluginName, "Oblivion.esm"))
-			ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
-		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
-		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
-	}
-	else if (strlen(PluginName) >= 1)
-	{
-		DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
-	}
+		const char* PluginName = g_INIManager->GetINIStr("StartupPluginName");
+		const ModEntry* TESFile = (*g_dataHandler)->LookupModByName(PluginName);
+		if (TESFile)
+		{
+			DebugPrint("Loading plugin '%s' on startup...", PluginName);
 
-	kAutoLoadActivePluginOnStartup.WriteBuffer();
+			if (_stricmp(PluginName, "Oblivion.esm"))
+				ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
+			ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
+		}
+		else if (strlen(PluginName) >= 1)
+		{
+			DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
+		}
+
+		kAutoLoadActivePluginOnStartup.WriteBuffer();
+	}
 }
 
-void UnloadLoadedCell()
+void CSStartupManager::LoadStartupScript()
+{
+	if (g_INIManager->GetINIInt("OpenScriptWindowOnStartup"))
+	{
+		const char* ScriptID = g_INIManager->GetINIStr("StartupScriptEditorID");
+		if (strcmp(ScriptID, "") && GetFormByID(ScriptID))
+			InstantitateCustomScriptEditor(ScriptID);
+		else
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
+	}
+}
+
+void CSStartupManager::LoadStartupWorkspace()
+{
+	if (g_INIManager->GetINIInt("SetWorkspaceOnStartup"))
+		g_WorkspaceManager.SelectWorkspace(g_INIManager->GetINIStr("DefaultWorkspacePath"));
+}
+
+void ResetRenderWindow()
 {
 	UInt8 ObjWndState = *g_Flag_ObjectWindow_MenuState, CellWndState = *g_Flag_CellView_MenuState;
 

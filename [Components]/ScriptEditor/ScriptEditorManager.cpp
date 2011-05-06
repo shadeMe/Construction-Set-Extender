@@ -13,7 +13,8 @@ ScriptEditorManager::ScriptEditorManager()
 
 ScriptEditorManager^% ScriptEditorManager::GetSingleton()
 {
-	if (Singleton == nullptr) {
+	if (Singleton == nullptr)
+	{
 		Singleton = gcnew ScriptEditorManager();
 		DebugPrint("Initialized ScriptEditorManager");
 	}
@@ -22,7 +23,8 @@ ScriptEditorManager^% ScriptEditorManager::GetSingleton()
 
 void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op, ScriptEditorManager::OperationParams^ Parameters)
 {
-	try {
+	try 
+	{
 		UInt16 NoOfParams = Parameters->ParameterList->Count, ParamsRequired = ParamCount[(int)Op];
 
 		if (NoOfParams < ParamsRequired)
@@ -148,7 +150,6 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 	}
 }
 
-
 ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^ Result = ScriptEditor::Workspace::NullWorkspace;
@@ -193,11 +194,11 @@ void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspac
 		return;
 	}
 
-	InitializeScript(CSEEditor->GetAllocatedIndex(), 
-						gcnew String((const char*)g_ScriptDataPackage->Text), 
-						g_ScriptDataPackage->Type, 
-						gcnew String((const char*)g_ScriptDataPackage->EditorID), 
-						(UInt32)g_ScriptDataPackage->ByteCode, 
+	InitializeScript(CSEEditor->GetAllocatedIndex(),
+						gcnew String((const char*)g_ScriptDataPackage->Text),
+						g_ScriptDataPackage->Type,
+						gcnew String((const char*)g_ScriptDataPackage->EditorID),
+						(UInt32)g_ScriptDataPackage->ByteCode,
 						g_ScriptDataPackage->Length,
 						g_ScriptDataPackage->FormID);
 }
@@ -206,10 +207,10 @@ void ScriptEditorManager::AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt
 {
 	DebugPrint(String::Format("Allocated a new tab container"));
 	TabContainerAllocationMap->AddLast(gcnew ScriptEditor::TabContainer(PosX, PosY, Width, Height));
-	ScriptEditor::TabContainer::LastUsedBounds.X = PosX; 
-	ScriptEditor::TabContainer::LastUsedBounds.Y = PosY; 
-	ScriptEditor::TabContainer::LastUsedBounds.Width = Width; 
-	ScriptEditor::TabContainer::LastUsedBounds.Height = Height; 
+	ScriptEditor::TabContainer::LastUsedBounds.X = PosX;
+	ScriptEditor::TabContainer::LastUsedBounds.Y = PosY;
+	ScriptEditor::TabContainer::LastUsedBounds.Width = Width;
+	ScriptEditor::TabContainer::LastUsedBounds.Height = Height;
 }
 
 void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID)
@@ -219,21 +220,18 @@ void ScriptEditorManager::InitializeScript(UInt32 AllocatedIndex, String^ Script
 	Itr->InitializeScript(ScriptText, ScriptType, ScriptName, Data, DataLength, FormID);
 }
 
-
-
 void ScriptEditorManager::MessageHandler_SendNew(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
-	
+
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_New);
-
 }
 void ScriptEditorManager::MessageHandler_SendOpen(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
-		
+
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Open);
@@ -241,7 +239,7 @@ void ScriptEditorManager::MessageHandler_SendOpen(UInt32 AllocatedIndex)
 void ScriptEditorManager::MessageHandler_SendPrevious(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
-		
+
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Previous);
@@ -249,7 +247,7 @@ void ScriptEditorManager::MessageHandler_SendPrevious(UInt32 AllocatedIndex)
 void ScriptEditorManager::MessageHandler_SendNext(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
-		
+
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Next);
@@ -260,7 +258,7 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 	Itr->ClearCSEMessagesFromMessagePool();
 
 	String^ PreprocessedScriptResult = "";
-	
+
 	switch (Operation)
 	{
 	case SaveWorkspaceOpType::e_SaveAndCompile:
@@ -297,7 +295,7 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 void ScriptEditorManager::MessageHandler_SendRecompile(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
-		
+
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Recompile);
@@ -305,7 +303,7 @@ void ScriptEditorManager::MessageHandler_SendRecompile(UInt32 AllocatedIndex)
 void ScriptEditorManager::MessageHandler_SendDelete(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
-		
+
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Delete);
@@ -317,19 +315,8 @@ void ScriptEditorManager::MessageHandler_SendClose(UInt32 AllocatedIndex)
 	String^ PreprocessedScriptResult = "";
 	MoveScriptDataToVanillaEditor(Itr, PreprocessedScriptResult);
 
-	if (Itr->GetParentContainer()->GetEditorFormWindowState() == FormWindowState::Maximized)
-		Itr->GetParentContainer()->SetEditorFormWindowState(FormWindowState::Normal);
-
-	NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex, 
-													Itr->GetParentContainer()->GetEditorFormRect().Top, 
-													Itr->GetParentContainer()->GetEditorFormRect().Left, 
-													Itr->GetParentContainer()->GetEditorFormRect().Width, 
-													Itr->GetParentContainer()->GetEditorFormRect().Height);
-
 	NativeWrapper::ScriptEditor_MessagingInterface(AllocatedIndex, (UInt16)SendReceiveMessageType::e_Close);
 }
-
-
 
 void ScriptEditorManager::MessageHandler_ReceiveNew(UInt32 AllocatedIndex)
 {
@@ -371,6 +358,11 @@ void ScriptEditorManager::MessageHandler_ReceiveSave(UInt32 AllocatedIndex)
 void ScriptEditorManager::MessageHandler_ReceiveClose(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
+	NativeWrapper::ScriptEditor_SetWindowParameters(AllocatedIndex,
+													Itr->GetParentContainer()->GetEditorFormRect().Top,
+													Itr->GetParentContainer()->GetEditorFormRect().Left,
+													Itr->GetParentContainer()->GetEditorFormRect().Width,
+													Itr->GetParentContainer()->GetEditorFormRect().Height);
 
 	DebugPrint(String::Format("Released allocated workspace at index {0}", AllocatedIndex));
 	Itr->Destroy();
@@ -379,17 +371,13 @@ void ScriptEditorManager::MessageHandler_ReceiveClose(UInt32 AllocatedIndex)
 
 void ScriptEditorManager::MessageHandler_ReceiveLoadRelease()
 {
-	for each (ScriptEditor::TabContainer^% Itr in TabContainerAllocationMap) {
+	for each (ScriptEditor::TabContainer^% Itr in TabContainerAllocationMap)
 		Itr->FlagDestruction(true);
-	}
-	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
+	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap)
 		Itr->Destroy();
-	}
 
 	WorkspaceAllocationMap->Clear();
 	TabContainerAllocationMap->Clear();
-
-	DebugPrint("Released all allocated editors");
 }
 void ScriptEditorManager::MessageHandler_ReceivePostPluginLoad()
 {
@@ -400,15 +388,12 @@ void ScriptEditorManager::MessageHandler_ReceivePostPluginSave()
 	ISDB->ForceUpdateDatabase();
 }
 
-
-
 void ScriptEditorManager::SetScriptSelectItemData(UInt32 AllocatedIndex, String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
 	Itr->AddItemToScriptListDialog(ScriptName, FormID, Type, Flags);
 }
-
 
 void ScriptEditorManager::SetVariableListItemData(UInt32 AllocatedIndex, String^% Name, UInt32 Type, UInt32 Index)
 {
@@ -439,7 +424,7 @@ void ScriptEditorManager::TabTearOpHandler(TabTearOpType Operation, ScriptEditor
 			AllocateNewTabContainer(MousePos.X, MousePos.Y, ScriptEditor::TabContainer::LastUsedBounds.Width, ScriptEditor::TabContainer::LastUsedBounds.Height);
 			Container = TabContainerAllocationMap->Last->Value;
 			TabTearOpHandler(TabTearOpType::e_RelocateToContainer, Workspace, Container, MousePos);
-			MessageHandler_ReceiveClose((dynamic_cast<ScriptEditor::Workspace^>(Container->LookupWorkspaceByTab(1)))->GetAllocatedIndex());	
+			MessageHandler_ReceiveClose((dynamic_cast<ScriptEditor::Workspace^>(Container->LookupWorkspaceByTab(1)))->GetAllocatedIndex());
 			DebugPrint("Moved workspace " + Workspace->GetAllocatedIndex().ToString() + " to a new tab container");
 			break;
 		}

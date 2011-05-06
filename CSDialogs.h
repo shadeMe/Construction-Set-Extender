@@ -34,7 +34,7 @@ struct ResponseEditorData
 {
 	struct VoiceRecorderData
 	{
-		HWND			recorderDlg;			// 00
+		HWND				recorderDlg;		// 00
 	};
 
 	const char*				editorTitle;		// 00
@@ -101,20 +101,26 @@ public:
 extern TESDialogWindowHandleCollection	g_CustomMainWindowChildrenDialogs,		// used to keep them from being closed during a plugin load event
 										g_DragDropSupportDialogs;				// keeps track of custom dialogs/controls that allow form (drag-)dropping
 
-// ### clean this ugly mess up
-TESObjectREFR*				ChooseReferenceDlg(HWND Parent);
-UInt32						GetDialogTemplate(const char* FormType);
-UInt32						GetDialogTemplate(UInt8 FormTypeID);
-void						RemoteLoadRef(const char* EditorID);
-void						RemoteLoadRef(UInt32 FormID);
-void						LoadFormIntoView(const char* EditorID, const char* FormType);
-void						LoadFormIntoView(const char* EditorID, UInt8 FormType);
-void						LoadFormIntoView(UInt32 FormID, const char* FormType);
-void						LoadFormIntoView(UInt32 FormID, UInt8 FormType);
-void						LoadStartupPlugin();
-void						UnloadLoadedCell();
-void						SpawnCustomScriptEditor(const char* ScriptEditorID);
-void						SpawnCustomScriptEditor(UInt32 ScriptFormID);
+TESObjectREFR*				ShowReferencePickDialog(HWND Parent);
+UInt32						GetFormDialogTemplate(const char* FormType);
+UInt32						GetFormDialogTemplate(UInt8 FormTypeID);
+void						LoadReferenceParentCell(const char* EditorID);
+void						LoadReferenceParentCell(UInt32 FormID);
+void						ShowFormEditDialog(const char* EditorID, const char* FormType);
+void						ShowFormEditDialog(const char* EditorID, UInt8 FormType);
+void						ShowFormEditDialog(UInt32 FormID, const char* FormType);
+void						ShowFormEditDialog(UInt32 FormID, UInt8 FormType);
+void						ResetRenderWindow();
+void						InstantitateCustomScriptEditor(const char* ScriptEditorID);
+void						InstantitateCustomScriptEditor(UInt32 ScriptFormID);
+
+class CSStartupManager
+{
+public:
+	static void				LoadStartupPlugin();
+	static void				LoadStartupScript();
+	static void				LoadStartupWorkspace();
+};
 
 enum
 {

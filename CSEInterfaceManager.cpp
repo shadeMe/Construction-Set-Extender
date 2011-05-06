@@ -5,6 +5,8 @@
 #include "Console.h"
 #include "RenderWindowTextPainter.h"
 
+std::map<const char*, const char*>		g_URLMapBuffer;
+
 static CSEInterface				s_CSEInterface =
 {
 	CSEInterfaceManager::InitializeInterface
@@ -61,7 +63,7 @@ void CSEInterfaceManager::RegisterConsoleCallback(CSEConsoleInterface::ConsolePr
 
 void CSEInterfaceManager::RegisterCommandURL(const char *CommandName, const char *URL)
 {
-	CLIWrapper::ScriptEditor::AddToURLMap(CommandName, URL);
+	g_URLMapBuffer.insert(std::make_pair(CommandName, URL));
 }
 
 void CSEInterfaceManager::HandleConsoleCallback(const char *Message, const char *Prefix)

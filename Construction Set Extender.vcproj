@@ -353,7 +353,7 @@
 				Name="Images"
 				>
 				<File
-					RelativePath=".\Splash.bmp"
+					RelativePath=".\Images\Splash.bmp"
 					>
 				</File>
 			</Filter>

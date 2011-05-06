@@ -1,28 +1,28 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Construction Set Extender", "Construction Set Extender.vcproj", "{D4DDA734-7E93-4581-8F82-32BB738F69FE}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "+Common", "..\common\common.vcproj", "{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}"
-EndProject
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{754B623C-5C4E-4EC4-9AAC-28BED9F83C8B}"
 	ProjectSection(SolutionItems) = preProject
 		Dev Journal.txt = Dev Journal.txt
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchEditor", "[Components]\BatchEditor\BatchEditor.vcproj", "{F215DC0C-0A95-477D-A336-1A5080AE04AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Construction Set Extender", "Construction Set Extender.vcxproj", "{D4DDA734-7E93-4581-8F82-32BB738F69FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BSAViewer", "[Components]\BSAViewer\BSAViewer.vcproj", "{41E73AFC-9E62-4535-BC6C-C4FD9956128E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchEditor", "[Components]\BatchEditor\BatchEditor.vcxproj", "{F215DC0C-0A95-477D-A336-1A5080AE04AD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LipSyncPipeClient", "[Components]\LipSyncPipeClient\LipSyncPipeClient.vcproj", "{7DDE7310-A0DE-409C-8E55-629788E95FE3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BSAViewer", "[Components]\BSAViewer\BSAViewer.vcxproj", "{41E73AFC-9E62-4535-BC6C-C4FD9956128E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor", "[Components]\ScriptEditor\ScriptEditor.vcproj", "{AA53012B-2307-47FE-B637-4A828BA77A24}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LipSyncPipeClient", "[Components]\LipSyncPipeClient\LipSyncPipeClient.vcxproj", "{7DDE7310-A0DE-409C-8E55-629788E95FE3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UseInfoList", "[Components]\UseInfoList\UseInfoList.vcproj", "{294A2A89-2979-4C16-AE16-595C50A44F11}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor", "[Components]\ScriptEditor\ScriptEditor.vcxproj", "{AA53012B-2307-47FE-B637-4A828BA77A24}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TagBrowser", "[Components]\TagBrowser\TagBrowser.vcproj", "{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UseInfoList", "[Components]\UseInfoList\UseInfoList.vcxproj", "{294A2A89-2979-4C16-AE16-595C50A44F11}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor.Preprocessor", "[Components]\ScriptEditor\Preprocessor\ScriptEditor.Preprocessor.vcproj", "{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TagBrowser", "[Components]\TagBrowser\TagBrowser.vcxproj", "{58343CA8-BAD7-4625-BF76-F58EE59EDF8D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor.Preprocessor", "[Components]\ScriptEditor\Preprocessor\ScriptEditor.Preprocessor.vcxproj", "{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F44EA0E4-BB0C-4DFB-B489-D9F55A060E60}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,16 +44,6 @@ Global
 		{D4DDA734-7E93-4581-8F82-32BB738F69FE}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{D4DDA734-7E93-4581-8F82-32BB738F69FE}.Release|Win32.ActiveCfg = Release|Win32
 		{D4DDA734-7E93-4581-8F82-32BB738F69FE}.Release|Win32.Build.0 = Release|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Debug|Win32.ActiveCfg = Debug|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Debug|Win32.Build.0 = Debug|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Release|Any CPU.ActiveCfg = Release|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Release|Win32.ActiveCfg = Release|Win32
-		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}.Release|Win32.Build.0 = Release|Win32
 		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{F215DC0C-0A95-477D-A336-1A5080AE04AD}.Debug|Mixed Platforms.Build.0 = Debug|Win32

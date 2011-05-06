@@ -105,21 +105,41 @@ void BoundControl::SetValue(String^ Value)
 	case ControlType::e_ColorDialog:
 		{
 			ColorDialog^ Control = dynamic_cast<ColorDialog^>(INIDialog);
-			switch (Property)							// the component channels must be parsed in the same order as below for correct init.
+			switch (Property)
 			{
 			case ValueType::e_Color_R:
-				Control->Color = Color::FromArgb(255, Numeric, 0, 0);
+				Control->Color = Color::FromArgb(255, Numeric, Control->Color.G, Control->Color.B);
 				break;
 			case ValueType::e_Color_G:
-				Control->Color = Color::FromArgb(255, Control->Color.R, Numeric, 0);
+				Control->Color = Color::FromArgb(255, Control->Color.R, Numeric, Control->Color.B);
 				break;
 			case ValueType::e_Color_B:
 				Control->Color = Color::FromArgb(255, Control->Color.R, Control->Color.G, Numeric);
 				break;
 			}
+
+			Button^ Parent = dynamic_cast<Button^>(Control->Tag);
+			if (Parent != nullptr)
+				Parent->BackColor = Control->Color;
 			break;
 		}
 	}	
+}
+
+void OptionsDialog::RegisterColorSetting(String^ Key, Color Default, Control^ Parent)
+{
+	ColorDialog^ Dialog = gcnew ColorDialog();
+	Dialog->AnyColor = true;
+	Dialog->Color = Default;
+	Dialog->Tag = Parent;
+
+	Parent->Tag = Dialog;
+
+	INIMap->Add(gcnew INISetting(Key + "R", "ScriptEditor::Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
+	INIMap->Add(gcnew INISetting(Key + "G", "ScriptEditor::Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
+	INIMap->Add(gcnew INISetting(Key + "B", "ScriptEditor::Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+
+	ColorDictionary->Add(Key, Dialog);
 }
 
 void OptionsDialog::PopulateINIMap()
@@ -129,20 +149,22 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("FontSize", "ScriptEditor::Appearance", "10"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
 	INIMap->Add(gcnew INISetting("FontStyle", "ScriptEditor::Appearance", "0"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Style));
 
-	INIMap->Add(gcnew INISetting("ForeColorR", "ScriptEditor::Appearance", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("ForeColorG", "ScriptEditor::Appearance", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("ForeColorB", "ScriptEditor::Appearance", "0"), gcnew BoundControl(FCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	RegisterColorSetting("SyntaxCommentsColor", Color::DarkBlue, CmDlgSyntaxCommentsColor);
+	RegisterColorSetting("SyntaxDigitsColor", Color::DarkGoldenrod, CmDlgSyntaxDigitsColor);
+	RegisterColorSetting("SyntaxPreprocessorColor", Color::DarkBlue, CmDlgSyntaxPreprocessorColor);
+	RegisterColorSetting("SyntaxScriptBlocksColor", Color::Red, CmDlgSyntaxScriptBlocksColor);
+	RegisterColorSetting("SyntaxDelimitersColor", Color::DarkMagenta, CmDlgSyntaxDelimitersColor);
+	RegisterColorSetting("SyntaxStringsColor", Color::Firebrick, CmDlgSyntaxStringsColor);
+	RegisterColorSetting("SyntaxKeywordsColor", Color::RoyalBlue, CmDlgSyntaxKeywordsColor);
 
-	INIMap->Add(gcnew INISetting("BackColorR", "ScriptEditor::Appearance", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("BackColorG", "ScriptEditor::Appearance", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("BackColorB", "ScriptEditor::Appearance", "255"), gcnew BoundControl(BCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	RegisterColorSetting("CurrentLineHighlightColor", Color::DodgerBlue, CmDlgCurrentLineHighlightColor);
+	RegisterColorSetting("CharLimitHighlightColor", Color::IndianRed, CmDlgCharLimitHighlightColor);
+	RegisterColorSetting("ErrorHighlightColor", Color::Red, CmDlgErrorHighlightColor);
+	RegisterColorSetting("SelectionHighlightColor", Color::Gold, CmDlgSelectionHighlightColor);
+	RegisterColorSetting("FindResultsHighlightColor", Color::Gold, CmDlgFindResultsHighlightColor);
 
-	INIMap->Add(gcnew INISetting("HiliteColorR", "ScriptEditor::Appearance", "158"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	INIMap->Add(gcnew INISetting("HiliteColorG", "ScriptEditor::Appearance", "195"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	INIMap->Add(gcnew INISetting("HiliteColorB", "ScriptEditor::Appearance", "200"), gcnew BoundControl(HCDialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
-	
 	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::Appearance", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-	INIMap->Add(gcnew INISetting("LinesToScroll", "ScriptEditor::Appearance", "6"), gcnew BoundControl(LinesToScroll, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+	INIMap->Add(gcnew INISetting("WordWrap", "ScriptEditor::Appearance", "0"), gcnew BoundControl(Wordwrap, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// General
 	INIMap->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "ScriptEditor::General", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -165,29 +187,28 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("AnnealCasing", "ScriptEditor::Sanitize", "1"), gcnew BoundControl(AnnealCasing, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("IndentLines", "ScriptEditor::Sanitize", "1"), gcnew BoundControl(IndentLines, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
-//	DebugPrint("Populated INI Map");
 }
 
 void OptionsDialog::LoadINI()
 {
-	for each (KeyValuePair<INISetting^, BoundControl^>% Itr in INIMap) {
+	for each (KeyValuePair<INISetting^, BoundControl^>% Itr in INIMap)
+	{
 		INISetting^ INI = Itr.Key;
 		BoundControl^ Control = Itr.Value;
 
 		Control->SetValue(INIWrapper::GetINIValue(INI->Section, INI->Key, INI->DefaultValue));
 	}
-//	DebugPrint("Loaded settings from INI");
 }
 
 void OptionsDialog::SaveINI()
 {
-	for each (KeyValuePair<INISetting^, BoundControl^>% Itr in INIMap) {
+	for each (KeyValuePair<INISetting^, BoundControl^>% Itr in INIMap)
+	{
 		INISetting^ INI = Itr.Key;
 		BoundControl^ Control = Itr.Value;
 
 		INIWrapper::SetINIValue(INI->Section, INI->Key, Control->GetValue());
 	}
-//	DebugPrint("Saved settings to INI");
 }
 
 BoundControl^ OptionsDialog::FetchSetting(String^ Key)
@@ -208,9 +229,11 @@ int OptionsDialog::FetchSettingAsInt(String^ Key)
 	{
 		String^ Value = Control->GetValue();
 		int Result = 1;
-		try {
+		try
+		{
 			Result = float::Parse(Value);
-		} catch (Exception^ E)
+		} 
+		catch (Exception^ E)
 		{
 			DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: " + E->Message);
 		}
@@ -237,7 +260,8 @@ String^ OptionsDialog::FetchSettingAsString(String^ Key)
 
 OptionsDialog^% OptionsDialog::GetSingleton()
 {
-	if (Singleton == nullptr) {
+	if (Singleton == nullptr)
+	{
 		Singleton = gcnew OptionsDialog();
 	}
 	return Singleton;
@@ -245,55 +269,12 @@ OptionsDialog^% OptionsDialog::GetSingleton()
 
 OptionsDialog::OptionsDialog()
 {
-	CmDlgHighlightColor = (gcnew Button());
-	CmDlgBackColor = (gcnew Button());
-	CmDlgForeColor = (gcnew Button());
-	CmDlgFont = (gcnew Button());
 	FontSelection = gcnew FontDialog();
-	FCDialog = gcnew ColorDialog();
-	BCDialog = gcnew ColorDialog();
-	HCDialog = gcnew ColorDialog();
-	
-	CmDlgForeColor->Location = System::Drawing::Point(95, 19);
-	CmDlgForeColor->Name = L"FCButton";
-	CmDlgForeColor->Size = System::Drawing::Size(83, 29);
-	CmDlgForeColor->TabIndex = 1;
-	CmDlgForeColor->Text = L"Fore Color";
-	CmDlgForeColor->UseVisualStyleBackColor = true;
-	CmDlgForeColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgForeColor_Click);
-
-	CmDlgFont->Location = System::Drawing::Point(6, 19);
-	CmDlgFont->Name = L"FontButton";
-	CmDlgFont->Size = System::Drawing::Size(83, 29);
-	CmDlgFont->TabIndex = 0;
-	CmDlgFont->Text = L"Font";
-	CmDlgFont->UseVisualStyleBackColor = true;
-	CmDlgFont->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgFont_Click);
-
 	FontSelection->AllowScriptChange = false;
 	FontSelection->AllowVerticalFonts = false;
 	FontSelection->ShowEffects = false;
-	FCDialog->AnyColor = true;
-	BCDialog->AnyColor = true;
-	HCDialog->AnyColor = true;
 
-	CmDlgHighlightColor->Location = System::Drawing::Point(379, 19);
-	CmDlgHighlightColor->Name = L"HCButton";
-	CmDlgHighlightColor->Size = System::Drawing::Size(103, 29);
-	CmDlgHighlightColor->TabIndex = 4;
-	CmDlgHighlightColor->Text = L"Highlight Color";
-	CmDlgHighlightColor->UseVisualStyleBackColor = true;
-	CmDlgHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgHighlightColor_Click);
-
-	CmDlgBackColor->Location = System::Drawing::Point(184, 19);
-	CmDlgBackColor->Name = L"BCButton";
-	CmDlgBackColor->Size = System::Drawing::Size(83, 29);
-	CmDlgBackColor->TabIndex = 5;
-	CmDlgBackColor->Text = L"Back Color";
-	CmDlgBackColor->UseVisualStyleBackColor = true;
-	CmDlgBackColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgBackColor_Click);
-
-
+	OptionsBox = gcnew Form();
 	AllowRedefinitions = (gcnew CheckBox());
 	LabelISThreshold = (gcnew Label());
 	ThresholdLength = (gcnew NumericUpDown());
@@ -304,31 +285,57 @@ OptionsDialog::OptionsDialog()
 	TabSize = (gcnew NumericUpDown());
 	SaveLastKnownPos = (gcnew CheckBox());
 	AutoIndent = (gcnew CheckBox());
+	CmDlgFont = (gcnew Button());
 	TabContainer = (gcnew TabControl());
 	TabGeneral = (gcnew TabPage());
-	TabIntelliSense = (gcnew TabPage());
-	TabPreprocessor = (gcnew TabPage());
-	TabAppearance = (gcnew TabPage());
-	SuppressRefCountForQuestScripts = (gcnew CheckBox());
 	LoadScriptUpdateExistingScripts = (gcnew CheckBox());
+	SuppressRefCountForQuestScripts = (gcnew CheckBox());
+	TabIntelliSense = (gcnew TabPage());
+	UseQuickView = (gcnew CheckBox());
 	LabelISDBUpdatePeriod = (gcnew Label());
 	DatabaseUpdateInterval = (gcnew NumericUpDown());
-	LabelLinesToScroll = (gcnew Label());
-	LinesToScroll = (gcnew NumericUpDown());
-	UseQuickView = (gcnew CheckBox());
+	TabPreprocessor = (gcnew TabPage());
+	TabAppearance = (gcnew TabPage());
 	TabSanitize = (gcnew TabPage());
-	AnnealCasing = (gcnew CheckBox());
 	IndentLines = (gcnew CheckBox());
+	AnnealCasing = (gcnew CheckBox());
+	GroupBoxSyntaxHighlighting = (gcnew GroupBox());
+	LabelKeywords = (gcnew Label());
+	LabelDelimiters = (gcnew Label());
+	LabelDigits = (gcnew Label());
+	LabelComments = (gcnew Label());
+	LabelStrings = (gcnew Label());
+	LabelScriptBlocks = (gcnew Label());
+	LabelPreprocessor = (gcnew Label());
+	CmDlgSyntaxCommentsColor = gcnew Button();
+	CmDlgSyntaxKeywordsColor = (gcnew Button());
+	CmDlgSyntaxStringsColor = (gcnew Button());
+	CmDlgSyntaxDelimitersColor = (gcnew Button());
+	CmDlgSyntaxScriptBlocksColor = (gcnew Button());
+	CmDlgSyntaxPreprocessorColor = (gcnew Button());
+	CmDlgSyntaxDigitsColor = (gcnew Button());
+	Wordwrap = (gcnew CheckBox());
+	CmDlgSelectionHighlightColor = (gcnew Button());
+	LabelSelectionHighlight = (gcnew Label());
+	CmDlgErrorHighlightColor = (gcnew Button());
+	LabelErrorHighlight = (gcnew Label());
+	CmDlgCharLimitHighlightColor = (gcnew Button());
+	LabelCharLimitHighlight = (gcnew Label());
+	CmDlgCurrentLineHighlightColor = (gcnew Button());
+	LabelCurrentLineHighlight = (gcnew Label());
+	CmDlgFindResultsHighlightColor = (gcnew Button());
+	LabelFindResultsHighlight = (gcnew Label());
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TabSize))->BeginInit();
 	TabContainer->SuspendLayout();
 	TabGeneral->SuspendLayout();
 	TabIntelliSense->SuspendLayout();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(DatabaseUpdateInterval))->BeginInit();
 	TabPreprocessor->SuspendLayout();
 	TabAppearance->SuspendLayout();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(DatabaseUpdateInterval))->BeginInit();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(LinesToScroll))->BeginInit();
 	TabSanitize->SuspendLayout();
+	GroupBoxSyntaxHighlighting->SuspendLayout();
+	OptionsBox->SuspendLayout();
 	// 
 	// AllowRedefinitions
 	// 
@@ -390,18 +397,17 @@ OptionsDialog::OptionsDialog()
 	// 
 	// LabelTabSize
 	// 
-	LabelTabSize->AutoSize = true;
-	LabelTabSize->Location = System::Drawing::Point(160, 55);
+	LabelTabSize->Location = System::Drawing::Point(286, 194);
 	LabelTabSize->Name = L"LabelTabSize";
-	LabelTabSize->Size = System::Drawing::Size(103, 18);
+	LabelTabSize->Size = System::Drawing::Size(131, 25);
 	LabelTabSize->TabIndex = 3;
-	LabelTabSize->Text = L"Tab Size\n( In Pixels )";
+	LabelTabSize->Text = L"Tab Size (Characters)";
 	// 
 	// TabSize
 	// 
-	TabSize->Location = System::Drawing::Point(269, 53);
+	TabSize->Location = System::Drawing::Point(289, 217);
 	TabSize->Name = L"TabSize";
-	TabSize->Size = System::Drawing::Size(103, 20);
+	TabSize->Size = System::Drawing::Size(128, 20);
 	TabSize->TabIndex = 2;
 	// 
 	// SaveLastKnownPos
@@ -424,41 +430,15 @@ OptionsDialog::OptionsDialog()
 	AutoIndent->Text = L"Auto-Indent Script Lines";
 	AutoIndent->UseVisualStyleBackColor = true;
 	// 
-	// CmDlgHighlightColor
-	// 
-	CmDlgHighlightColor->Location = System::Drawing::Point(21, 153);
-	CmDlgHighlightColor->Name = L"CmDlgHighlightColor";
-	CmDlgHighlightColor->Size = System::Drawing::Size(111, 34);
-	CmDlgHighlightColor->TabIndex = 3;
-	CmDlgHighlightColor->Text = L"Line Highlight Color";
-	CmDlgHighlightColor->UseVisualStyleBackColor = true;
-	// 
-	// CmDlgBackColor
-	// 
-	CmDlgBackColor->Location = System::Drawing::Point(21, 103);
-	CmDlgBackColor->Name = L"CmDlgBackColor";
-	CmDlgBackColor->Size = System::Drawing::Size(111, 34);
-	CmDlgBackColor->TabIndex = 2;
-	CmDlgBackColor->Text = L"Background Color";
-	CmDlgBackColor->UseVisualStyleBackColor = true;
-	// 
-	// CmDlgForeColor
-	// 
-	CmDlgForeColor->Location = System::Drawing::Point(21, 203);
-	CmDlgForeColor->Name = L"CmDlgForeColor";
-	CmDlgForeColor->Size = System::Drawing::Size(111, 34);
-	CmDlgForeColor->TabIndex = 1;
-	CmDlgForeColor->Text = L"Foreground Color";
-	CmDlgForeColor->UseVisualStyleBackColor = true;
-	// 
 	// CmDlgFont
 	// 
-	CmDlgFont->Location = System::Drawing::Point(21, 53);
+	CmDlgFont->Location = System::Drawing::Point(342, 249);
 	CmDlgFont->Name = L"CmDlgFont";
-	CmDlgFont->Size = System::Drawing::Size(111, 34);
+	CmDlgFont->Size = System::Drawing::Size(75, 24);
 	CmDlgFont->TabIndex = 0;
 	CmDlgFont->Text = L"Editor Font";
 	CmDlgFont->UseVisualStyleBackColor = true;
+	CmDlgFont->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgFont_Click);
 	// 
 	// TabContainer
 	// 
@@ -492,6 +472,26 @@ OptionsDialog::OptionsDialog()
 	TabGeneral->Text = L"General";
 	TabGeneral->UseVisualStyleBackColor = true;
 	// 
+	// LoadScriptUpdateExistingScripts
+	// 
+	LoadScriptUpdateExistingScripts->AutoSize = true;
+	LoadScriptUpdateExistingScripts->Location = System::Drawing::Point(22, 115);
+	LoadScriptUpdateExistingScripts->Name = L"LoadScriptUpdateExistingScripts";
+	LoadScriptUpdateExistingScripts->Size = System::Drawing::Size(236, 17);
+	LoadScriptUpdateExistingScripts->TabIndex = 13;
+	LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
+	LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
+	// 
+	// SuppressRefCountForQuestScripts
+	// 
+	SuppressRefCountForQuestScripts->AutoSize = true;
+	SuppressRefCountForQuestScripts->Location = System::Drawing::Point(22, 227);
+	SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
+	SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
+	SuppressRefCountForQuestScripts->TabIndex = 12;
+	SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
+	SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
+	// 
 	// TabIntelliSense
 	// 
 	TabIntelliSense->Controls->Add(UseQuickView);
@@ -507,54 +507,15 @@ OptionsDialog::OptionsDialog()
 	TabIntelliSense->Text = L"IntelliSense";
 	TabIntelliSense->UseVisualStyleBackColor = true;
 	// 
-	// TabPreprocessor
+	// UseQuickView
 	// 
-	TabPreprocessor->Controls->Add(AllowRedefinitions);
-	TabPreprocessor->Location = System::Drawing::Point(4, 22);
-	TabPreprocessor->Name = L"TabPreprocessor";
-	TabPreprocessor->Padding = Padding(3);
-	TabPreprocessor->Size = System::Drawing::Size(423, 290);
-	TabPreprocessor->TabIndex = 2;
-	TabPreprocessor->Text = L"Preprocessor";
-	TabPreprocessor->UseVisualStyleBackColor = true;
-	// 
-	// TabAppearance
-	// 
-	TabAppearance->Controls->Add(LabelLinesToScroll);
-	TabAppearance->Controls->Add(LinesToScroll);
-	TabAppearance->Controls->Add(CmDlgFont);
-	TabAppearance->Controls->Add(CmDlgBackColor);
-	TabAppearance->Controls->Add(CmDlgHighlightColor);
-	TabAppearance->Controls->Add(CmDlgForeColor);
-	TabAppearance->Controls->Add(LabelTabSize);
-	TabAppearance->Controls->Add(TabSize);
-	TabAppearance->Location = System::Drawing::Point(4, 22);
-	TabAppearance->Name = L"TabAppearance";
-	TabAppearance->Padding = Padding(3);
-	TabAppearance->Size = System::Drawing::Size(423, 290);
-	TabAppearance->TabIndex = 3;
-	TabAppearance->Text = L"Appearance";
-	TabAppearance->UseVisualStyleBackColor = true;
-	// 
-	// SuppressRefCountForQuestScripts
-	// 
-	SuppressRefCountForQuestScripts->AutoSize = true;
-	SuppressRefCountForQuestScripts->Location = System::Drawing::Point(22, 227);
-	SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
-	SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
-	SuppressRefCountForQuestScripts->TabIndex = 12;
-	SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
-	SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
-	// 
-	// LoadScriptUpdateExistingScripts
-	// 
-	LoadScriptUpdateExistingScripts->AutoSize = true;
-	LoadScriptUpdateExistingScripts->Location = System::Drawing::Point(22, 115);
-	LoadScriptUpdateExistingScripts->Name = L"LoadScriptUpdateExistingScripts";
-	LoadScriptUpdateExistingScripts->Size = System::Drawing::Size(236, 17);
-	LoadScriptUpdateExistingScripts->TabIndex = 13;
-	LoadScriptUpdateExistingScripts->Text = L"\'Load Multiple Scripts\' Tool Updates Existing Scripts";
-	LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
+	UseQuickView->AutoSize = true;
+	UseQuickView->Location = System::Drawing::Point(231, 69);
+	UseQuickView->Name = L"UseQuickView";
+	UseQuickView->Size = System::Drawing::Size(89, 17);
+	UseQuickView->TabIndex = 6;
+	UseQuickView->Text = L"Quick-View™";
+	UseQuickView->UseVisualStyleBackColor = true;
 	// 
 	// LabelISDBUpdatePeriod
 	// 
@@ -574,35 +535,43 @@ OptionsDialog::OptionsDialog()
 	DatabaseUpdateInterval->Size = System::Drawing::Size(148, 20);
 	DatabaseUpdateInterval->TabIndex = 2;
 	DatabaseUpdateInterval->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+
 	// 
-	// LabelLinesToScroll
+	// TabPreprocessor
 	// 
-	LabelLinesToScroll->AutoSize = true;
-	LabelLinesToScroll->Location = System::Drawing::Point(160, 94);
-	LabelLinesToScroll->Name = L"LabelLinesToScroll";
-	LabelLinesToScroll->Size = System::Drawing::Size(98, 26);
-	LabelLinesToScroll->TabIndex = 5;
-	LabelLinesToScroll->Text = L"Lines To Scroll\r\nWith Mouse Wheel";
+	TabPreprocessor->Controls->Add(AllowRedefinitions);
+	TabPreprocessor->Location = System::Drawing::Point(4, 22);
+	TabPreprocessor->Name = L"TabPreprocessor";
+	TabPreprocessor->Padding = Padding(3);
+	TabPreprocessor->Size = System::Drawing::Size(423, 290);
+	TabPreprocessor->TabIndex = 2;
+	TabPreprocessor->Text = L"Preprocessor";
+	TabPreprocessor->UseVisualStyleBackColor = true;
 	// 
-	// LinesToScroll
+	// TabAppearance
 	// 
-	LinesToScroll->Location = System::Drawing::Point(269, 100);
-	LinesToScroll->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {15, 0, 0, 0});
-	LinesToScroll->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
-	LinesToScroll->Name = L"LinesToScroll";
-	LinesToScroll->Size = System::Drawing::Size(103, 20);
-	LinesToScroll->TabIndex = 4;
-	LinesToScroll->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
-	// 
-	// UseQuickView
-	// 
-	UseQuickView->AutoSize = true;
-	UseQuickView->Location = System::Drawing::Point(231, 69);
-	UseQuickView->Name = L"UseQuickView";
-	UseQuickView->Size = System::Drawing::Size(89, 17);
-	UseQuickView->TabIndex = 6;
-	UseQuickView->Text = L"Quick-View™";
-	UseQuickView->UseVisualStyleBackColor = true;
+	TabAppearance->Controls->Add(CmDlgFindResultsHighlightColor);
+	TabAppearance->Controls->Add(LabelFindResultsHighlight);
+	TabAppearance->Controls->Add(CmDlgCurrentLineHighlightColor);
+	TabAppearance->Controls->Add(LabelCurrentLineHighlight);
+	TabAppearance->Controls->Add(CmDlgCharLimitHighlightColor);
+	TabAppearance->Controls->Add(LabelCharLimitHighlight);
+	TabAppearance->Controls->Add(CmDlgErrorHighlightColor);
+	TabAppearance->Controls->Add(LabelErrorHighlight);
+	TabAppearance->Controls->Add(CmDlgSelectionHighlightColor);
+	TabAppearance->Controls->Add(Wordwrap);
+	TabAppearance->Controls->Add(LabelSelectionHighlight);
+	TabAppearance->Controls->Add(GroupBoxSyntaxHighlighting);
+	TabAppearance->Controls->Add(CmDlgFont);
+	TabAppearance->Controls->Add(LabelTabSize);
+	TabAppearance->Controls->Add(TabSize);
+	TabAppearance->Location = System::Drawing::Point(4, 22);
+	TabAppearance->Name = L"TabAppearance";
+	TabAppearance->Padding = Padding(3);
+	TabAppearance->Size = System::Drawing::Size(423, 290);
+	TabAppearance->TabIndex = 3;
+	TabAppearance->Text = L"Appearance";
+	TabAppearance->UseVisualStyleBackColor = true;
 	// 
 	// TabSanitize
 	// 
@@ -616,16 +585,6 @@ OptionsDialog::OptionsDialog()
 	TabSanitize->Text = L"Sanitize";
 	TabSanitize->UseVisualStyleBackColor = true;
 	// 
-	// AnnealCasing
-	// 
-	AnnealCasing->AutoSize = true;
-	AnnealCasing->Location = System::Drawing::Point(128, 109);
-	AnnealCasing->Name = L"AnnealCasing";
-	AnnealCasing->Size = System::Drawing::Size(205, 17);
-	AnnealCasing->TabIndex = 11;
-	AnnealCasing->Text = L"Anneal Script Command Name Casing";
-	AnnealCasing->UseVisualStyleBackColor = true;
-	// 
 	// IndentLines
 	// 
 	IndentLines->AutoSize = true;
@@ -636,20 +595,275 @@ OptionsDialog::OptionsDialog()
 	IndentLines->Text = L"Indent Script Lines";
 	IndentLines->UseVisualStyleBackColor = true;
 	// 
+	// AnnealCasing
+	// 
+	AnnealCasing->AutoSize = true;
+	AnnealCasing->Location = System::Drawing::Point(128, 109);
+	AnnealCasing->Name = L"AnnealCasing";
+	AnnealCasing->Size = System::Drawing::Size(205, 17);
+	AnnealCasing->TabIndex = 11;
+	AnnealCasing->Text = L"Anneal Script Command Name Casing";
+	AnnealCasing->UseVisualStyleBackColor = true;
+	// 
+	// GroupBoxSyntaxHighlighting
+	// 
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxCommentsColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxDigitsColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxPreprocessorColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxScriptBlocksColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxDelimitersColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxStringsColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxKeywordsColor);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelPreprocessor);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelScriptBlocks);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelStrings);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelComments);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelDigits);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelDelimiters);
+	GroupBoxSyntaxHighlighting->Controls->Add(LabelKeywords);
+	GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
+	GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";
+	GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(203, 281);
+	GroupBoxSyntaxHighlighting->TabIndex = 4;
+	GroupBoxSyntaxHighlighting->TabStop = false;
+	GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
+	// 
+	// LabelKeywords
+	// 
+	LabelKeywords->Location = System::Drawing::Point(6, 22);
+	LabelKeywords->Name = L"LabelKeywords";
+	LabelKeywords->Size = System::Drawing::Size(78, 20);
+	LabelKeywords->TabIndex = 5;
+	LabelKeywords->Text = L"Keywords";
+	// 
+	// LabelDelimiters
+	// 
+	LabelDelimiters->Location = System::Drawing::Point(6, 150);
+	LabelDelimiters->Name = L"LabelDelimiters";
+	LabelDelimiters->Size = System::Drawing::Size(78, 20);
+	LabelDelimiters->TabIndex = 6;
+	LabelDelimiters->Text = L"Delimiters";
+	// 
+	// LabelDigits
+	// 
+	LabelDigits->Location = System::Drawing::Point(6, 54);
+	LabelDigits->Name = L"LabelDigits";
+	LabelDigits->Size = System::Drawing::Size(78, 20);
+	LabelDigits->TabIndex = 7;
+	LabelDigits->Text = L"Digits";
+	// 
+	// LabelComments
+	// 
+	LabelComments->Location = System::Drawing::Point(6, 215);
+	LabelComments->Name = L"LabelComments";
+	LabelComments->Size = System::Drawing::Size(78, 20);
+	LabelComments->TabIndex = 8;
+	LabelComments->Text = L"Comments";
+	// 
+	// LabelStrings
+	// 
+	LabelStrings->Location = System::Drawing::Point(6, 182);
+	LabelStrings->Name = L"LabelStrings";
+	LabelStrings->Size = System::Drawing::Size(78, 20);
+	LabelStrings->TabIndex = 9;
+	LabelStrings->Text = L"String Literals";
+	// 
+	// LabelScriptBlocks
+	// 
+	LabelScriptBlocks->Location = System::Drawing::Point(6, 118);
+	LabelScriptBlocks->Name = L"LabelScriptBlocks";
+	LabelScriptBlocks->Size = System::Drawing::Size(78, 20);
+	LabelScriptBlocks->TabIndex = 10;
+	LabelScriptBlocks->Text = L"Script Blocks";
+	// 
+	// LabelPreprocessor
+	// 
+	LabelPreprocessor->Location = System::Drawing::Point(6, 86);
+	LabelPreprocessor->Name = L"LabelPreprocessor";
+	LabelPreprocessor->Size = System::Drawing::Size(78, 20);
+	LabelPreprocessor->TabIndex = 11;
+	LabelPreprocessor->Text = L"Preprocessor";
+	// 
+	// CmDlgSyntaxCommentsColor
+	// 
+	CmDlgSyntaxCommentsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+	CmDlgSyntaxCommentsColor->Location = System::Drawing::Point(117, 211);
+	CmDlgSyntaxCommentsColor->Name = L"CmDlgSyntaxCommentsColor";
+	CmDlgSyntaxCommentsColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxCommentsColor->TabIndex = 18;
+	CmDlgSyntaxCommentsColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxCommentsColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// CmDlgSyntaxKeywordsColor
+	// 
+	CmDlgSyntaxKeywordsColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSyntaxKeywordsColor->Location = System::Drawing::Point(117, 18);
+	CmDlgSyntaxKeywordsColor->Name = L"CmDlgSyntaxKeywordsColor";
+	CmDlgSyntaxKeywordsColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxKeywordsColor->TabIndex = 12;
+	CmDlgSyntaxKeywordsColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxKeywordsColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// CmDlgSyntaxStringsColor
+	// 
+	CmDlgSyntaxStringsColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSyntaxStringsColor->Location = System::Drawing::Point(117, 178);
+	CmDlgSyntaxStringsColor->Name = L"CmDlgSyntaxStringsColor";
+	CmDlgSyntaxStringsColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxStringsColor->TabIndex = 13;
+	CmDlgSyntaxStringsColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxStringsColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// CmDlgSyntaxDelimitersColor
+	// 
+	CmDlgSyntaxDelimitersColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSyntaxDelimitersColor->Location = System::Drawing::Point(117, 146);
+	CmDlgSyntaxDelimitersColor->Name = L"CmDlgSyntaxDelimitersColor";
+	CmDlgSyntaxDelimitersColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxDelimitersColor->TabIndex = 14;
+	CmDlgSyntaxDelimitersColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxDelimitersColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// CmDlgSyntaxScriptBlocksColor
+	// 
+	CmDlgSyntaxScriptBlocksColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSyntaxScriptBlocksColor->Location = System::Drawing::Point(117, 112);
+	CmDlgSyntaxScriptBlocksColor->Name = L"CmDlgSyntaxScriptBlocksColor";
+	CmDlgSyntaxScriptBlocksColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxScriptBlocksColor->TabIndex = 15;
+	CmDlgSyntaxScriptBlocksColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxScriptBlocksColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// CmDlgSyntaxPreprocessorColor
+	// 
+	CmDlgSyntaxPreprocessorColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSyntaxPreprocessorColor->Location = System::Drawing::Point(117, 82);
+	CmDlgSyntaxPreprocessorColor->Name = L"CmDlgSyntaxPreprocessorColor";
+	CmDlgSyntaxPreprocessorColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxPreprocessorColor->TabIndex = 16;
+	CmDlgSyntaxPreprocessorColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxPreprocessorColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// CmDlgSyntaxDigitsColor
+	// 
+	CmDlgSyntaxDigitsColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSyntaxDigitsColor->Location = System::Drawing::Point(117, 50);
+	CmDlgSyntaxDigitsColor->Name = L"CmDlgSyntaxDigitsColor";
+	CmDlgSyntaxDigitsColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSyntaxDigitsColor->TabIndex = 17;
+	CmDlgSyntaxDigitsColor->UseVisualStyleBackColor = true;
+	CmDlgSyntaxDigitsColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// Wordwrap
+	// 
+	Wordwrap->AutoSize = true;
+	Wordwrap->Location = System::Drawing::Point(255, 254);
+	Wordwrap->Name = L"Wordwrap";
+	Wordwrap->Size = System::Drawing::Size(81, 17);
+	Wordwrap->TabIndex = 5;
+	Wordwrap->Text = L"Word-Wrap";
+	Wordwrap->UseVisualStyleBackColor = true;
+	// 
+	// CmDlgSelectionHighlightColor
+	// 
+	CmDlgSelectionHighlightColor->FlatStyle = FlatStyle::Flat;
+	CmDlgSelectionHighlightColor->Location = System::Drawing::Point(369, 21);
+	CmDlgSelectionHighlightColor->Name = L"CmDlgSelectionHighlightColor";
+	CmDlgSelectionHighlightColor->Size = System::Drawing::Size(34, 21);
+	CmDlgSelectionHighlightColor->TabIndex = 19;
+	CmDlgSelectionHighlightColor->UseVisualStyleBackColor = true;
+	CmDlgSelectionHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// LabelSelectionHighlight
+	// 
+	LabelSelectionHighlight->Location = System::Drawing::Point(228, 25);
+	LabelSelectionHighlight->Name = L"LabelSelectionHighlight";
+	LabelSelectionHighlight->Size = System::Drawing::Size(108, 20);
+	LabelSelectionHighlight->TabIndex = 18;
+	LabelSelectionHighlight->Text = L"Selection Highlight";
+	// 
+	// CmDlgErrorHighlightColor
+	// 
+	CmDlgErrorHighlightColor->FlatStyle = FlatStyle::Flat;
+	CmDlgErrorHighlightColor->Location = System::Drawing::Point(369, 114);
+	CmDlgErrorHighlightColor->Name = L"CmDlgErrorHighlightColor";
+	CmDlgErrorHighlightColor->Size = System::Drawing::Size(34, 21);
+	CmDlgErrorHighlightColor->TabIndex = 21;
+	CmDlgErrorHighlightColor->UseVisualStyleBackColor = true;
+	CmDlgErrorHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// LabelErrorHighlight
+	// 
+	LabelErrorHighlight->Location = System::Drawing::Point(228, 122);
+	LabelErrorHighlight->Name = L"LabelErrorHighlight";
+	LabelErrorHighlight->Size = System::Drawing::Size(108, 20);
+	LabelErrorHighlight->TabIndex = 20;
+	LabelErrorHighlight->Text = L"Error Highlight";
+	// 
+	// CmDlgCharLimitColor
+	// 
+	CmDlgCharLimitHighlightColor->FlatStyle = FlatStyle::Flat;
+	CmDlgCharLimitHighlightColor->Location = System::Drawing::Point(369, 83);
+	CmDlgCharLimitHighlightColor->Name = L"CmDlgCharLimitColor";
+	CmDlgCharLimitHighlightColor->Size = System::Drawing::Size(34, 21);
+	CmDlgCharLimitHighlightColor->TabIndex = 23;
+	CmDlgCharLimitHighlightColor->UseVisualStyleBackColor = true;
+	CmDlgCharLimitHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// LabelCharLimitHighlight
+	// 
+	LabelCharLimitHighlight->Location = System::Drawing::Point(228, 83);
+	LabelCharLimitHighlight->Name = L"LabelCharLimitHighlight";
+	LabelCharLimitHighlight->Size = System::Drawing::Size(108, 30);
+	LabelCharLimitHighlight->TabIndex = 22;
+	LabelCharLimitHighlight->Text = L"Character Limit Highlight";
+	// 
+	// CmDlgCurrentLineHighlightColor
+	// 
+	CmDlgCurrentLineHighlightColor->FlatStyle = FlatStyle::Flat;
+	CmDlgCurrentLineHighlightColor->Location = System::Drawing::Point(369, 52);
+	CmDlgCurrentLineHighlightColor->Name = L"CmDlgCurrentLineHighlightColor";
+	CmDlgCurrentLineHighlightColor->Size = System::Drawing::Size(34, 21);
+	CmDlgCurrentLineHighlightColor->TabIndex = 25;
+	CmDlgCurrentLineHighlightColor->UseVisualStyleBackColor = true;
+	CmDlgCurrentLineHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// LabelCurrentLineHighlight
+	// 
+	LabelCurrentLineHighlight->Location = System::Drawing::Point(228, 54);
+	LabelCurrentLineHighlight->Name = L"LabelCurrentLineHighlight";
+	LabelCurrentLineHighlight->Size = System::Drawing::Size(108, 30);
+	LabelCurrentLineHighlight->TabIndex = 24;
+	LabelCurrentLineHighlight->Text = L"Current Line Highlight";
+	// 
+	// CmDlgFindResultsHighlightColor
+	// 
+	CmDlgFindResultsHighlightColor->FlatStyle = FlatStyle::Flat;
+	CmDlgFindResultsHighlightColor->Location = System::Drawing::Point(369, 145);
+	CmDlgFindResultsHighlightColor->Name = L"CmDlgFindResultsHighlightColor";
+	CmDlgFindResultsHighlightColor->Size = System::Drawing::Size(34, 21);
+	CmDlgFindResultsHighlightColor->TabIndex = 27;
+	CmDlgFindResultsHighlightColor->UseVisualStyleBackColor = true;
+	CmDlgFindResultsHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgColor_Click);
+	// 
+	// LabelFindResultsHighlight
+	// 
+	LabelFindResultsHighlight->Location = System::Drawing::Point(228, 151);
+	LabelFindResultsHighlight->Name = L"LabelFindResultsHighlight";
+	LabelFindResultsHighlight->Size = System::Drawing::Size(108, 33);
+	LabelFindResultsHighlight->TabIndex = 26;
+	LabelFindResultsHighlight->Text = L"Find Results Highlight";
+	// 
 	// OptionsDialog
 	// 
-	OptionsBox = gcnew Form();
 	OptionsBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 	OptionsBox->AutoScaleMode = AutoScaleMode::Font;
 	OptionsBox->ClientSize = System::Drawing::Size(456, 337);
 	OptionsBox->Controls->Add(TabContainer);
 	OptionsBox->FormBorderStyle = FormBorderStyle::FixedDialog;
-	OptionsBox->MaximizeBox = false;
-	OptionsBox->MinimizeBox = false;
+	OptionsBox->Name = L"OptionsDialog";
 	OptionsBox->StartPosition = FormStartPosition::CenterScreen;
 	OptionsBox->Text = L"Preferences";
-	OptionsBox->Closing += gcnew CancelEventHandler(this, &OptionsDialog::OptionsBox_Cancel);
-
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TabSize))->EndInit();
 	TabContainer->ResumeLayout(false);
@@ -657,15 +871,19 @@ OptionsDialog::OptionsDialog()
 	TabGeneral->PerformLayout();
 	TabIntelliSense->ResumeLayout(false);
 	TabIntelliSense->PerformLayout();
+	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(DatabaseUpdateInterval))->EndInit();
 	TabPreprocessor->ResumeLayout(false);
 	TabAppearance->ResumeLayout(false);
 	TabAppearance->PerformLayout();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(DatabaseUpdateInterval))->EndInit();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(LinesToScroll))->EndInit();
 	TabSanitize->ResumeLayout(false);
 	TabSanitize->PerformLayout();
+	GroupBoxSyntaxHighlighting->ResumeLayout(false);
+	OptionsBox->ResumeLayout(false);
+	OptionsBox->Closing += gcnew CancelEventHandler(this, &OptionsDialog::OptionsBox_Cancel);
+
 
 	INIMap = gcnew Dictionary<INISetting^, BoundControl^>();
+	ColorDictionary = gcnew Dictionary<String^, ColorDialog^>();
 
 	OptionsBox->Hide();
 	PopulateINIMap();
@@ -678,21 +896,21 @@ void OptionsDialog::CmDlgFont_Click(Object^ Sender, EventArgs^ E)
 	FontSelection->ShowDialog();
 }
 
-void OptionsDialog::CmDlgForeColor_Click(Object^ Sender, EventArgs^ E)
+void OptionsDialog::CmDlgColor_Click(Object^ Sender, EventArgs^ E)
 {
-	FCDialog->ShowDialog();
+	Button^ ThisButton = dynamic_cast<Button^>(Sender);
+
+	if (ThisButton != nullptr)
+	{
+		ColorDialog^ Dialog = dynamic_cast<ColorDialog^>(ThisButton->Tag);
+		if (Dialog != nullptr)
+		{
+			Dialog->ShowDialog();
+			ThisButton->BackColor = Dialog->Color;
+		}
+	}
 }
 
-void OptionsDialog::CmDlgBackColor_Click(Object^ Sender, EventArgs^ E)
-{
-	BCDialog->ShowDialog();
-}
-
-
-void OptionsDialog::CmDlgHighlightColor_Click(Object^ Sender, EventArgs^ E)
-{
-	HCDialog->ShowDialog();
-}
 
 void OptionsDialog::OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
@@ -700,17 +918,14 @@ void OptionsDialog::OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 }
 
 
-Color OptionsDialog::GetColor(OptionsDialog::ColorType Type)
+Color OptionsDialog::GetColor(String^ Key)
 {
-	switch (Type)
+	for each (KeyValuePair<String^, ColorDialog^>% Itr in ColorDictionary)
 	{
-	case OptionsDialog::ColorType::e_Foreground:
-		return FCDialog->Color;
-	case OptionsDialog::ColorType::e_Background:
-		return BCDialog->Color;
-	case OptionsDialog::ColorType::e_Highlight:
-		return HCDialog->Color;
-	default:
-		return Color::Black;
+		if (!String::Compare(Itr.Key, Key, true))
+		{
+			return Itr.Value->Color;
+		}
 	}
+	return Color::GhostWhite;
 }

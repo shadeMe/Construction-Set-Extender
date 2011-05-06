@@ -11,10 +11,9 @@ ref class IntelliSenseThingy;
 ref class Script;
 struct CommandTableData;
 
-
 public ref struct Boxer
 {
-	IntelliSenseThingy^									ISBox;						
+	IntelliSenseThingy^									ISBox;
 	Script^												ScptBox;
 	UserFunction^										FunctBox;
 
@@ -24,7 +23,7 @@ public ref struct Boxer
 															e_Script,
 															e_SyntaxBox
 														};
-	
+
 	BoxType												Type;
 
 	Boxer(IntelliSenseThingy^ Obj) : ISBox(Obj), Type(BoxType::e_SyntaxBox) {};
@@ -32,7 +31,7 @@ public ref struct Boxer
 	Boxer(UserFunction^ Obj) : FunctBox(Obj), Type(BoxType::e_UserFunct) {};
 };
 
-public ref class IntelliSenseDatabase								
+public ref class IntelliSenseDatabase
 {
 	static IntelliSenseDatabase^						Singleton = nullptr;
 
@@ -42,10 +41,9 @@ public ref class IntelliSenseDatabase
 	{
 		LinkedList<UserFunction^>^						UDFList;
 		LinkedList<IntelliSenseItem^>^					Enumerables;
-	
+
 		ParsedUpdateData() : UDFList(gcnew LinkedList<UserFunction^>()), Enumerables(gcnew LinkedList<IntelliSenseItem^>()) {}
 	};
-
 
 	Timers::Timer^										DatabaseUpdateTimer;
 	BackgroundWorker^									DatabaseUpdateThread;
@@ -70,7 +68,6 @@ public:
 	void												ParseCommandTable(CommandTableData* Data);
 
 	static IntelliSenseDatabase^%						GetSingleton();
-
 
 	static void											ParseScript(String^% SourceText, Boxer^ Box);
 	void												AddToURLMap(String^% CmdName, String^% URL);
@@ -120,10 +117,15 @@ protected:
 	ItemType											Type;
 };
 
-
-
 public ref class CommandInfo : public IntelliSenseItem
 {
+public:
+	static enum class									SourceType
+														{
+															e_Vanilla = 0,
+															e_OBSE
+														};
+private:
 	static array<String^>^								TypeIdentifier =
 															{
 																"Numeric",
@@ -149,18 +151,21 @@ public ref class CommandInfo : public IntelliSenseItem
 	UInt16												ParamCount;
 	bool												RequiresParent;
 	UInt16												ReturnType;
-public:		
-	CommandInfo(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType) : 
+	SourceType											Source;
+public:
+	CommandInfo(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, SourceType Source) :
 	IntelliSenseItem(String::Format("{0}{1}\n{2} parameter(s)\nReturn Type: {3}\n\n{4}{5}", Name, (Shorthand == "None")?"":("\t[ " + Shorthand + " ]"), NoOfParams.ToString(), CommandInfo::TypeIdentifier[(int)ReturnType], Desc, (RequiresParent)?"\n\nRequires a calling reference":""), ItemType::e_Cmd),
-										 Name(Name), 
-										 Description(Desc), 
-										 Shorthand(Shorthand), 
+										 Name(Name),
+										 Description(Desc),
+										 Shorthand(Shorthand),
 										 ParamCount(NoOfParams),
 										 RequiresParent(RequiresParent),
-										 ReturnType(ReturnType)		{};
+										 ReturnType(ReturnType),
+										 Source(Source)	{};
 
 	virtual String^%									GetIdentifier() override { return Name; }
 	bool												GetRequiresParent() { return RequiresParent; }
+	SourceType											GetSource() { return Source; }
 };
 
 public ref class VariableInfo : public IntelliSenseItem
@@ -185,13 +190,13 @@ public:
 private:
 	String^												Name;
 	VariableType										Type;
-	String^												Comment;	
+	String^												Comment;
 public:
-	VariableInfo(String^% Name, String^% Comment, VariableType Type, ItemType Scope) : 
-	IntelliSenseItem(String::Format("{0} [{1}]{2}{3}", Name, VariableInfo::TypeIdentifier[(int)Type], (Comment != "")?"\n\n":"", Comment), Scope), 
-										 Name(Name), 
-										 Type(Type), 
-										 Comment(Comment) {};											
+	VariableInfo(String^% Name, String^% Comment, VariableType Type, ItemType Scope) :
+	IntelliSenseItem(String::Format("{0} [{1}]{2}{3}", Name, VariableInfo::TypeIdentifier[(int)Type], (Comment != "")?"\n\n":"", Comment), Scope),
+										 Name(Name),
+										 Type(Type),
+										 Comment(Comment) {};
 
 	virtual String^%									GetIdentifier() override { return Name; }
 	String^%											GetComment() { return Comment; }
@@ -199,7 +204,6 @@ public:
 	String^%											GetName() { return Name; }
 	VariableType										GetType() { return Type; }
 };
-
 
 public ref class Script
 {
@@ -219,7 +223,7 @@ public:
 	String^%											GetScriptName() { return Name; }
 };
 
-public ref class Quest : public IntelliSenseItem 
+public ref class Quest : public IntelliSenseItem
 {
 	String^												Name;
 	String^												ScriptName;
@@ -242,7 +246,7 @@ public:
 	virtual String^										Describe() override;
 };
 
-public ref class UserFunctionDelegate : public IntelliSenseItem	
+public ref class UserFunctionDelegate : public IntelliSenseItem
 {
 	UserFunction^										Parent;
 public:
@@ -278,6 +282,7 @@ public:
 	void												MoveIndex(Direction Direction);
 	void												UpdateLocalVars();
 	bool												QuickView(String^ TextUnderMouse);
+	bool												QuickView(String^ TextUnderMouse, Point MouseLocation);
 
 	property Operation									LastOperation;
 	property bool										Enabled;
@@ -293,6 +298,7 @@ private:
 
 	int													GetSelectedIndex();
 	VariableInfo^										GetLocalVar(String^% Identifier);
+	bool												ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc);
 
 	ScriptEditor::Workspace^							ParentEditor;
 	Script^												RemoteScript;

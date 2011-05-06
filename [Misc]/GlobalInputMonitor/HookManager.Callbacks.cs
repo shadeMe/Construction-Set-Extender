@@ -222,8 +222,7 @@ namespace GlobalInputMonitor
                 s_MouseHookHandle = SetWindowsHookEx(
                     WH_MOUSE_LL,
                     s_MouseDelegate,
-                    Marshal.GetHINSTANCE(
-                        Assembly.GetExecutingAssembly().GetModules()[0]),
+                    IntPtr.Zero,
                     0);
                 //If SetWindowsHookEx fails.
                 if (s_MouseHookHandle == 0)
@@ -387,8 +386,7 @@ namespace GlobalInputMonitor
                 s_KeyboardHookHandle = SetWindowsHookEx(
                     WH_KEYBOARD_LL,
                     s_KeyboardDelegate,
-                    Marshal.GetHINSTANCE(
-                        Assembly.GetExecutingAssembly().GetModules()[0]),
+                    IntPtr.Zero,
                     0);
                 //If SetWindowsHookEx fails.
                 if (s_KeyboardHookHandle == 0)

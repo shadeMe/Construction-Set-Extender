@@ -26,3 +26,4 @@ _DeclareMemHdlr(DataHandlerSavePluginResetA, "patches various locations in DataH
 _DeclareMemHdlr(DataHandlerSavePluginResetB, "");
 _DeclareMemHdlr(DataHandlerSavePluginResetC, "");
 _DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");
+_DeclareMemHdlr(DataHandlerSavePluginProlog, "allows the creation of backups");

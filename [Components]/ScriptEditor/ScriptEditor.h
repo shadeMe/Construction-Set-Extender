@@ -4,7 +4,7 @@
 #include "OptionsDialog.h"
 #include "ScriptListDialog.h"
 
-#include "ScriptEditorTextEditor.h"
+#include "AvalonEditTextEditor.h"
 #include "AuxiliaryTextEditor.h"
 
 struct ScriptData;
@@ -121,7 +121,7 @@ namespace ScriptEditor
 		DotNetBar::TabControlPanel^							EditorControlBox;
 
 		SplitContainer^										WorkspaceSplitter;
-			ScriptEditorTextEditor^								TextEditor;
+			AvalonEditTextEditor^								TextEditor;
 			ScriptOffsetViewer^									OffsetViewer;
 			SimpleTextViewer^									PreprocessedTextViewer;
 
@@ -203,6 +203,7 @@ namespace ScriptEditor
 		bool												DestructionFlag;
 		UInt32												ScriptType;
 		String^												ScriptEditorID;
+		bool												HandlingKeyDownEvent;
 
 		void												TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
 		void												TextEditor_ScriptModified(Object^ Sender, ScriptModifiedEventArgs^ E);
@@ -277,7 +278,7 @@ namespace ScriptEditor
 		void												ClearErrorsItemsFromMessagePool(void);
 
 		void												FindReplaceOutput(String^ Line, String^ Text);
-		void												FindReplaceWrapper(ScriptEditorInterface::FindReplaceOperation Operation);
+		void												FindReplaceWrapper(ScriptTextEditorInterface::FindReplaceOperation Operation);
 
 		void												ToggleBookmark(int CaretPos);
 		void												SetScriptType(UInt16 ScriptType);
@@ -324,6 +325,7 @@ namespace ScriptEditor
 		void												Relocate(TabContainer^ Destination);
 		String^												SerializeCSEBlock(void);
 		void												Focus() { TextEditor->FocusTextArea(); }
+		void												HandleWorkspaceFocus() { TextEditor->HandleTabSwitchEvent(); }
 
 		bool												IsValid() { return this != NullWorkspace; }
 	};

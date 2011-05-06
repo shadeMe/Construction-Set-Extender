@@ -1,0 +1,334 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="OBSE">
+      <UniqueIdentifier>{ebc1f18f-877b-4955-8a28-1001c43d5570}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{3b815dbd-d8cf-4937-a2d4-34bbcb238638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{a64f4266-378a-47b1-be47-766c21b45028}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Images">
+      <UniqueIdentifier>{e62d4749-16e2-4149-b016-1cfa2470bde2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{f4474007-3606-490a-945e-5c57880074f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hooks">
+      <UniqueIdentifier>{d8a0ecb9-e056-469e-aac0-e8eb485e99fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Console">
+      <UniqueIdentifier>{d2d48159-6f0f-439e-9fc3-7588fc0aefc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{3edbf06c-1b58-4831-b92a-b8d339d4a486}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin Interop">
+      <UniqueIdentifier>{00cd23b4-f1db-45de-b955-f317f461fc4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CS Interop">
+      <UniqueIdentifier>{e5000435-032f-47a5-9604-560b2ad3caf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components">
+      <UniqueIdentifier>{38df1a7a-ab76-44e1-b352-1c9aa39613d7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.c">
+      <Filter>OBSE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\obse\obse_editor\EditorAPI.cpp">
+      <Filter>OBSE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\obse\obse_editor\EditorRTTI.cpp">
+      <Filter>OBSE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\obse\obse\GameData.cpp">
+      <Filter>OBSE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\obse\obse\Script.cpp">
+      <Filter>OBSE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\obse\obse\Utilities.cpp">
+      <Filter>OBSE</Filter>
+    </ClCompile>
+    <ClCompile Include="[Common]\CLIWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="[Common]\HandshakeStructs.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\AssetSelector.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Common.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\CompilerErrorDetours.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Dialog.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\LOD.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Misc.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Renderer.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\ScriptEditor.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\TESFile.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Console.cpp">
+      <Filter>Console</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleCommands.cpp">
+      <Filter>Console</Filter>
+    </ClCompile>
+    <ClCompile Include="..\[Libraries]\INI Manager\INIEditGUI.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\[Libraries]\INI Manager\INIManager.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\[Libraries]\MemoryHandler\MemoryHandler.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="UtilityBox.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEInterfaceManager.cpp">
+      <Filter>Plugin Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="CSInterop.cpp">
+      <Filter>CS Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="[Common]\CSInteropData.cpp">
+      <Filter>CS Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="ArchiveManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSDialogs.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="GMSTMap.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderSelectionGroupManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderTimeManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowTextPainter.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorAllocator.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="TESFormReferenceData.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ToolManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="ExtenderInternals.cpp" />
+    <ClCompile Include="HallofFame.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="WindowManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\obse\obse_editor\EditorAPI.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse_editor\EditorRTTI.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\GameBSExtraData.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\GameData.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\GameExtraData.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\GameForms.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\GameObjects.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\GameTypes.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiAPI.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiExtraData.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiGeometry.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiNodes.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiObjects.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiProperties.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\NiTypes.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\ParamInfos.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\PluginAPI.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\Script.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\obse\obse\Utilities.h">
+      <Filter>OBSE</Filter>
+    </ClInclude>
+    <ClInclude Include="[Common]\CLIWrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="[Common]\HandShakeStructs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\AssetSelector.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Common.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\CompilerErrorDetours.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Dialog.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\LOD.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Misc.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Renderer.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\ScriptEditor.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\TESFile.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Console.h">
+      <Filter>Console</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleCommands.h">
+      <Filter>Console</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\INI Manager\INIManager.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\MemoryHandler\MemoryHandler.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\SME_Prefix.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="UtilityBox.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEInterfaceAPI.h">
+      <Filter>Plugin Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEInterfaceManager.h">
+      <Filter>Plugin Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="CSInterop.h">
+      <Filter>CS Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="[Common]\CSInteropData.h">
+      <Filter>CS Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="ArchiveManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSDialogs.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="GMSTMap.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderSelectionGroupManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderTimeManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowTextPainter.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorAllocator.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="TESFormReferenceData.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Exports.h" />
+    <ClInclude Include="ExtenderInternals.h" />
+    <ClInclude Include="HallofFame.h" />
+    <ClInclude Include="WindowManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="exports.def">
+      <Filter>OBSE</Filter>
+    </None>
+    <None Include="Images\Splash.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Construction Set Extender.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\[Libraries]\INI Manager\INIEditGUI_Res.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

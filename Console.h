@@ -14,6 +14,7 @@ class Console
 	UInt32						IndentLevel;
 	std::string					MessageBuffer;
 	bool						UpdateSignalFlag;
+	char						Buffer[0x200];
 
 	void						PrintMessage(std::string& Prefix, const char* MessageStr);
 public:
@@ -51,6 +52,7 @@ public:
 	UInt32						Exdent();
 	void						ExdentAll() { IndentLevel = 0; }
 	void						Clear();
+	void						Pad(UInt32 PaddingCount);
 };
 
 #define CONSOLE									Console::GetSingleton()

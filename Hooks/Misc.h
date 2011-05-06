@@ -28,6 +28,7 @@ _DeclareMemHdlr(TESFormPopulateUseInfoList, "");
 _DeclareMemHdlr(TESFormDelete, "");
 _DeclareMemHdlr(TextureSizeCheck, "allows the preview of textures of resolution > 512px");
 _DeclareMemHdlr(AboutDialog, "add a mention of CSE");
+_DeclareMemHdlr(DataHandlerPlaceTESObjectLIGH, "fixes a CTD that occurs on the first reference placement of a light object");
 
 void PatchMessageHandler(void);
 void __stdcall DoCSInitHook();

@@ -41,14 +41,14 @@ namespace UIComponents {
 				delete components;
 			}
 		}
-	private: System::Windows::Forms::Button^  CmDlgHighlightColor;
+
 	protected: 
 
 
 
 
-	private: System::Windows::Forms::Button^  CmDlgBackColor;
-	private: System::Windows::Forms::Button^  CmDlgForeColor;
+
+
 	protected: 
 
 
@@ -108,13 +108,55 @@ namespace UIComponents {
 	private: System::Windows::Forms::NumericUpDown^  DatabaseUpdateInterval;
 
 
-	private: System::Windows::Forms::Label^  LabelLinesToScroll;
-	private: System::Windows::Forms::NumericUpDown^  LinesToScroll;
+
+
 	private: System::Windows::Forms::CheckBox^  UseQuickView;
 	private: System::Windows::Forms::TabPage^  TabSanitize;
 	private: System::Windows::Forms::CheckBox^  IndentLines;
 
 	private: System::Windows::Forms::CheckBox^  AnnealCasing;
+	private: System::Windows::Forms::GroupBox^  GroupBoxSyntaxHighlighting;
+	private: System::Windows::Forms::Button^  CmDlgSyntaxDigitsColor;
+
+	private: System::Windows::Forms::Button^  CmDlgSyntaxPreprocessorColor;
+
+	private: System::Windows::Forms::Button^  CmDlgSyntaxScriptBlocksColor;
+
+	private: System::Windows::Forms::Button^  CmDlgSyntaxDelimitersColor;
+
+	private: System::Windows::Forms::Button^  CmDlgSyntaxStringsColor;
+private: System::Windows::Forms::Button^  CmDlgSyntaxKeywordsColor;
+
+
+
+
+
+
+
+	private: System::Windows::Forms::Label^  LabelPreprocessor;
+	private: System::Windows::Forms::Label^  LabelScriptBlocks;
+	private: System::Windows::Forms::Label^  LabelStrings;
+
+	private: System::Windows::Forms::Label^  LabelDigits;
+	private: System::Windows::Forms::Label^  LabelDelimiters;
+	private: System::Windows::Forms::Label^  LabelKeywords;
+private: System::Windows::Forms::Button^  CmDlgCurrentLineHighlightColor;
+private: System::Windows::Forms::Label^  LabelCurrentLineHighlight;
+
+private: System::Windows::Forms::Button^  CmDlgCharLimitColor;
+private: System::Windows::Forms::Label^  LabelCharLimitHighlight;
+private: System::Windows::Forms::Button^  CmDlgErrorHighlightColor;
+
+private: System::Windows::Forms::Label^  LabelErrorHighlight;
+
+private: System::Windows::Forms::Button^  CmDlgSelectionHighlightColor;
+private: System::Windows::Forms::CheckBox^  Wordwrap;
+private: System::Windows::Forms::Label^  LabelSelectionHighlight;
+private: System::Windows::Forms::Button^  CmDlgFindResultsHighlightColor;
+private: System::Windows::Forms::Label^  LabelFindResultsHighlight;
+private: System::Windows::Forms::Button^  CmDlgSyntaxCommentsColor;
+private: System::Windows::Forms::Label^  LabelComments;
+
 
 
 
@@ -161,34 +203,55 @@ namespace UIComponents {
 			this->TabSize = (gcnew System::Windows::Forms::NumericUpDown());
 			this->SaveLastKnownPos = (gcnew System::Windows::Forms::CheckBox());
 			this->AutoIndent = (gcnew System::Windows::Forms::CheckBox());
-			this->CmDlgHighlightColor = (gcnew System::Windows::Forms::Button());
-			this->CmDlgBackColor = (gcnew System::Windows::Forms::Button());
-			this->CmDlgForeColor = (gcnew System::Windows::Forms::Button());
 			this->CmDlgFont = (gcnew System::Windows::Forms::Button());
 			this->TabContainer = (gcnew System::Windows::Forms::TabControl());
 			this->TabGeneral = (gcnew System::Windows::Forms::TabPage());
-			this->TabIntelliSense = (gcnew System::Windows::Forms::TabPage());
-			this->TabPreprocessor = (gcnew System::Windows::Forms::TabPage());
-			this->TabAppearance = (gcnew System::Windows::Forms::TabPage());
-			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->LoadScriptUpdateExistingScripts = (gcnew System::Windows::Forms::CheckBox());
+			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
+			this->TabIntelliSense = (gcnew System::Windows::Forms::TabPage());
+			this->UseQuickView = (gcnew System::Windows::Forms::CheckBox());
 			this->LabelISDBUpdatePeriod = (gcnew System::Windows::Forms::Label());
 			this->DatabaseUpdateInterval = (gcnew System::Windows::Forms::NumericUpDown());
-			this->LabelLinesToScroll = (gcnew System::Windows::Forms::Label());
-			this->LinesToScroll = (gcnew System::Windows::Forms::NumericUpDown());
-			this->UseQuickView = (gcnew System::Windows::Forms::CheckBox());
+			this->TabPreprocessor = (gcnew System::Windows::Forms::TabPage());
+			this->TabAppearance = (gcnew System::Windows::Forms::TabPage());
+			this->CmDlgFindResultsHighlightColor = (gcnew System::Windows::Forms::Button());
+			this->LabelFindResultsHighlight = (gcnew System::Windows::Forms::Label());
+			this->CmDlgCurrentLineHighlightColor = (gcnew System::Windows::Forms::Button());
+			this->LabelCurrentLineHighlight = (gcnew System::Windows::Forms::Label());
+			this->CmDlgCharLimitColor = (gcnew System::Windows::Forms::Button());
+			this->LabelCharLimitHighlight = (gcnew System::Windows::Forms::Label());
+			this->CmDlgErrorHighlightColor = (gcnew System::Windows::Forms::Button());
+			this->LabelErrorHighlight = (gcnew System::Windows::Forms::Label());
+			this->CmDlgSelectionHighlightColor = (gcnew System::Windows::Forms::Button());
+			this->Wordwrap = (gcnew System::Windows::Forms::CheckBox());
+			this->LabelSelectionHighlight = (gcnew System::Windows::Forms::Label());
+			this->GroupBoxSyntaxHighlighting = (gcnew System::Windows::Forms::GroupBox());
+			this->CmDlgSyntaxCommentsColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgSyntaxDigitsColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgSyntaxPreprocessorColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgSyntaxScriptBlocksColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgSyntaxDelimitersColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgSyntaxStringsColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgSyntaxKeywordsColor = (gcnew System::Windows::Forms::Button());
+			this->LabelPreprocessor = (gcnew System::Windows::Forms::Label());
+			this->LabelScriptBlocks = (gcnew System::Windows::Forms::Label());
+			this->LabelStrings = (gcnew System::Windows::Forms::Label());
+			this->LabelComments = (gcnew System::Windows::Forms::Label());
+			this->LabelDigits = (gcnew System::Windows::Forms::Label());
+			this->LabelDelimiters = (gcnew System::Windows::Forms::Label());
+			this->LabelKeywords = (gcnew System::Windows::Forms::Label());
 			this->TabSanitize = (gcnew System::Windows::Forms::TabPage());
-			this->AnnealCasing = (gcnew System::Windows::Forms::CheckBox());
 			this->IndentLines = (gcnew System::Windows::Forms::CheckBox());
+			this->AnnealCasing = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
 			this->TabGeneral->SuspendLayout();
 			this->TabIntelliSense->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->DatabaseUpdateInterval))->BeginInit();
 			this->TabPreprocessor->SuspendLayout();
 			this->TabAppearance->SuspendLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->DatabaseUpdateInterval))->BeginInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LinesToScroll))->BeginInit();
+			this->GroupBoxSyntaxHighlighting->SuspendLayout();
 			this->TabSanitize->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -252,18 +315,18 @@ namespace UIComponents {
 			// 
 			// LabelTabSize
 			// 
-			this->LabelTabSize->Location = System::Drawing::Point(160, 55);
+			this->LabelTabSize->Location = System::Drawing::Point(286, 194);
 			this->LabelTabSize->Name = L"LabelTabSize";
-			this->LabelTabSize->Size = System::Drawing::Size(103, 18);
+			this->LabelTabSize->Size = System::Drawing::Size(131, 20);
 			this->LabelTabSize->TabIndex = 3;
-			this->LabelTabSize->Text = L"Tab Size ( In Pixels )";
+			this->LabelTabSize->Text = L"Tab Size ( In Characters )";
 			this->LabelTabSize->Click += gcnew System::EventHandler(this, &OptionsDialog::label2_Click);
 			// 
 			// TabSize
 			// 
-			this->TabSize->Location = System::Drawing::Point(269, 53);
+			this->TabSize->Location = System::Drawing::Point(289, 217);
 			this->TabSize->Name = L"TabSize";
-			this->TabSize->Size = System::Drawing::Size(103, 20);
+			this->TabSize->Size = System::Drawing::Size(128, 20);
 			this->TabSize->TabIndex = 2;
 			// 
 			// SaveLastKnownPos
@@ -287,38 +350,11 @@ namespace UIComponents {
 			this->AutoIndent->Text = L"Auto-Indent Script Lines";
 			this->AutoIndent->UseVisualStyleBackColor = true;
 			// 
-			// CmDlgHighlightColor
-			// 
-			this->CmDlgHighlightColor->Location = System::Drawing::Point(21, 153);
-			this->CmDlgHighlightColor->Name = L"CmDlgHighlightColor";
-			this->CmDlgHighlightColor->Size = System::Drawing::Size(111, 34);
-			this->CmDlgHighlightColor->TabIndex = 3;
-			this->CmDlgHighlightColor->Text = L"Line Highlight Color";
-			this->CmDlgHighlightColor->UseVisualStyleBackColor = true;
-			// 
-			// CmDlgBackColor
-			// 
-			this->CmDlgBackColor->Location = System::Drawing::Point(21, 103);
-			this->CmDlgBackColor->Name = L"CmDlgBackColor";
-			this->CmDlgBackColor->Size = System::Drawing::Size(111, 34);
-			this->CmDlgBackColor->TabIndex = 2;
-			this->CmDlgBackColor->Text = L"Background Color";
-			this->CmDlgBackColor->UseVisualStyleBackColor = true;
-			// 
-			// CmDlgForeColor
-			// 
-			this->CmDlgForeColor->Location = System::Drawing::Point(21, 203);
-			this->CmDlgForeColor->Name = L"CmDlgForeColor";
-			this->CmDlgForeColor->Size = System::Drawing::Size(111, 34);
-			this->CmDlgForeColor->TabIndex = 1;
-			this->CmDlgForeColor->Text = L"Foreground Color";
-			this->CmDlgForeColor->UseVisualStyleBackColor = true;
-			// 
 			// CmDlgFont
 			// 
-			this->CmDlgFont->Location = System::Drawing::Point(21, 53);
+			this->CmDlgFont->Location = System::Drawing::Point(342, 249);
 			this->CmDlgFont->Name = L"CmDlgFont";
-			this->CmDlgFont->Size = System::Drawing::Size(111, 34);
+			this->CmDlgFont->Size = System::Drawing::Size(75, 24);
 			this->CmDlgFont->TabIndex = 0;
 			this->CmDlgFont->Text = L"Editor Font";
 			this->CmDlgFont->UseVisualStyleBackColor = true;
@@ -356,6 +392,26 @@ namespace UIComponents {
 			this->TabGeneral->Text = L"General";
 			this->TabGeneral->UseVisualStyleBackColor = true;
 			// 
+			// LoadScriptUpdateExistingScripts
+			// 
+			this->LoadScriptUpdateExistingScripts->AutoSize = true;
+			this->LoadScriptUpdateExistingScripts->Location = System::Drawing::Point(22, 115);
+			this->LoadScriptUpdateExistingScripts->Name = L"LoadScriptUpdateExistingScripts";
+			this->LoadScriptUpdateExistingScripts->Size = System::Drawing::Size(236, 17);
+			this->LoadScriptUpdateExistingScripts->TabIndex = 13;
+			this->LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
+			this->LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
+			// 
+			// SuppressRefCountForQuestScripts
+			// 
+			this->SuppressRefCountForQuestScripts->AutoSize = true;
+			this->SuppressRefCountForQuestScripts->Location = System::Drawing::Point(22, 227);
+			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
+			this->SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
+			this->SuppressRefCountForQuestScripts->TabIndex = 12;
+			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
+			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
+			// 
 			// TabIntelliSense
 			// 
 			this->TabIntelliSense->Controls->Add(this->UseQuickView);
@@ -371,55 +427,15 @@ namespace UIComponents {
 			this->TabIntelliSense->Text = L"IntelliSense";
 			this->TabIntelliSense->UseVisualStyleBackColor = true;
 			// 
-			// TabPreprocessor
+			// UseQuickView
 			// 
-			this->TabPreprocessor->Controls->Add(this->AllowRedefinitions);
-			this->TabPreprocessor->Location = System::Drawing::Point(4, 22);
-			this->TabPreprocessor->Name = L"TabPreprocessor";
-			this->TabPreprocessor->Padding = System::Windows::Forms::Padding(3);
-			this->TabPreprocessor->Size = System::Drawing::Size(423, 290);
-			this->TabPreprocessor->TabIndex = 2;
-			this->TabPreprocessor->Text = L"Preprocessor";
-			this->TabPreprocessor->UseVisualStyleBackColor = true;
-			// 
-			// TabAppearance
-			// 
-			this->TabAppearance->Controls->Add(this->LabelLinesToScroll);
-			this->TabAppearance->Controls->Add(this->LinesToScroll);
-			this->TabAppearance->Controls->Add(this->CmDlgFont);
-			this->TabAppearance->Controls->Add(this->CmDlgBackColor);
-			this->TabAppearance->Controls->Add(this->CmDlgHighlightColor);
-			this->TabAppearance->Controls->Add(this->CmDlgForeColor);
-			this->TabAppearance->Controls->Add(this->LabelTabSize);
-			this->TabAppearance->Controls->Add(this->TabSize);
-			this->TabAppearance->Location = System::Drawing::Point(4, 22);
-			this->TabAppearance->Name = L"TabAppearance";
-			this->TabAppearance->Padding = System::Windows::Forms::Padding(3);
-			this->TabAppearance->Size = System::Drawing::Size(423, 290);
-			this->TabAppearance->TabIndex = 3;
-			this->TabAppearance->Text = L"Appearance";
-			this->TabAppearance->UseVisualStyleBackColor = true;
-			this->TabAppearance->Click += gcnew System::EventHandler(this, &OptionsDialog::TabAppearance_Click);
-			// 
-			// SuppressRefCountForQuestScripts
-			// 
-			this->SuppressRefCountForQuestScripts->AutoSize = true;
-			this->SuppressRefCountForQuestScripts->Location = System::Drawing::Point(22, 227);
-			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
-			this->SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
-			this->SuppressRefCountForQuestScripts->TabIndex = 12;
-			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
-			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
-			// 
-			// LoadScriptUpdateExistingScripts
-			// 
-			this->LoadScriptUpdateExistingScripts->AutoSize = true;
-			this->LoadScriptUpdateExistingScripts->Location = System::Drawing::Point(22, 115);
-			this->LoadScriptUpdateExistingScripts->Name = L"LoadScriptUpdateExistingScripts";
-			this->LoadScriptUpdateExistingScripts->Size = System::Drawing::Size(236, 17);
-			this->LoadScriptUpdateExistingScripts->TabIndex = 13;
-			this->LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
-			this->LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
+			this->UseQuickView->AutoSize = true;
+			this->UseQuickView->Location = System::Drawing::Point(231, 69);
+			this->UseQuickView->Name = L"UseQuickView";
+			this->UseQuickView->Size = System::Drawing::Size(89, 17);
+			this->UseQuickView->TabIndex = 6;
+			this->UseQuickView->Text = L"Quick-View™";
+			this->UseQuickView->UseVisualStyleBackColor = true;
 			// 
 			// LabelISDBUpdatePeriod
 			// 
@@ -441,34 +457,280 @@ namespace UIComponents {
 			this->DatabaseUpdateInterval->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
 			this->DatabaseUpdateInterval->ValueChanged += gcnew System::EventHandler(this, &OptionsDialog::ISDBUpdateInterval_ValueChanged);
 			// 
-			// LabelLinesToScroll
+			// TabPreprocessor
 			// 
-			this->LabelLinesToScroll->AutoSize = true;
-			this->LabelLinesToScroll->Location = System::Drawing::Point(160, 94);
-			this->LabelLinesToScroll->Name = L"LabelLinesToScroll";
-			this->LabelLinesToScroll->Size = System::Drawing::Size(98, 26);
-			this->LabelLinesToScroll->TabIndex = 5;
-			this->LabelLinesToScroll->Text = L"Lines To Scroll\r\nWith Mouse Wheel";
+			this->TabPreprocessor->Controls->Add(this->AllowRedefinitions);
+			this->TabPreprocessor->Location = System::Drawing::Point(4, 22);
+			this->TabPreprocessor->Name = L"TabPreprocessor";
+			this->TabPreprocessor->Padding = System::Windows::Forms::Padding(3);
+			this->TabPreprocessor->Size = System::Drawing::Size(423, 290);
+			this->TabPreprocessor->TabIndex = 2;
+			this->TabPreprocessor->Text = L"Preprocessor";
+			this->TabPreprocessor->UseVisualStyleBackColor = true;
 			// 
-			// LinesToScroll
+			// TabAppearance
 			// 
-			this->LinesToScroll->Location = System::Drawing::Point(269, 100);
-			this->LinesToScroll->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {15, 0, 0, 0});
-			this->LinesToScroll->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
-			this->LinesToScroll->Name = L"LinesToScroll";
-			this->LinesToScroll->Size = System::Drawing::Size(103, 20);
-			this->LinesToScroll->TabIndex = 4;
-			this->LinesToScroll->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+			this->TabAppearance->Controls->Add(this->CmDlgFindResultsHighlightColor);
+			this->TabAppearance->Controls->Add(this->LabelFindResultsHighlight);
+			this->TabAppearance->Controls->Add(this->CmDlgCurrentLineHighlightColor);
+			this->TabAppearance->Controls->Add(this->LabelCurrentLineHighlight);
+			this->TabAppearance->Controls->Add(this->CmDlgCharLimitColor);
+			this->TabAppearance->Controls->Add(this->LabelCharLimitHighlight);
+			this->TabAppearance->Controls->Add(this->CmDlgErrorHighlightColor);
+			this->TabAppearance->Controls->Add(this->LabelErrorHighlight);
+			this->TabAppearance->Controls->Add(this->CmDlgSelectionHighlightColor);
+			this->TabAppearance->Controls->Add(this->Wordwrap);
+			this->TabAppearance->Controls->Add(this->LabelSelectionHighlight);
+			this->TabAppearance->Controls->Add(this->GroupBoxSyntaxHighlighting);
+			this->TabAppearance->Controls->Add(this->CmDlgFont);
+			this->TabAppearance->Controls->Add(this->LabelTabSize);
+			this->TabAppearance->Controls->Add(this->TabSize);
+			this->TabAppearance->Location = System::Drawing::Point(4, 22);
+			this->TabAppearance->Name = L"TabAppearance";
+			this->TabAppearance->Padding = System::Windows::Forms::Padding(3);
+			this->TabAppearance->Size = System::Drawing::Size(423, 290);
+			this->TabAppearance->TabIndex = 3;
+			this->TabAppearance->Text = L"Appearance";
+			this->TabAppearance->UseVisualStyleBackColor = true;
+			this->TabAppearance->Click += gcnew System::EventHandler(this, &OptionsDialog::TabAppearance_Click);
 			// 
-			// UseQuickView
+			// CmDlgFindResultsHighlightColor
 			// 
-			this->UseQuickView->AutoSize = true;
-			this->UseQuickView->Location = System::Drawing::Point(231, 69);
-			this->UseQuickView->Name = L"UseQuickView";
-			this->UseQuickView->Size = System::Drawing::Size(89, 17);
-			this->UseQuickView->TabIndex = 6;
-			this->UseQuickView->Text = L"Quick-View™";
-			this->UseQuickView->UseVisualStyleBackColor = true;
+			this->CmDlgFindResultsHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgFindResultsHighlightColor->Location = System::Drawing::Point(369, 145);
+			this->CmDlgFindResultsHighlightColor->Name = L"CmDlgFindResultsHighlightColor";
+			this->CmDlgFindResultsHighlightColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgFindResultsHighlightColor->TabIndex = 27;
+			this->CmDlgFindResultsHighlightColor->UseVisualStyleBackColor = true;
+			// 
+			// LabelFindResultsHighlight
+			// 
+			this->LabelFindResultsHighlight->Location = System::Drawing::Point(228, 151);
+			this->LabelFindResultsHighlight->Name = L"LabelFindResultsHighlight";
+			this->LabelFindResultsHighlight->Size = System::Drawing::Size(108, 33);
+			this->LabelFindResultsHighlight->TabIndex = 26;
+			this->LabelFindResultsHighlight->Text = L"Find Results Highlight";
+			// 
+			// CmDlgCurrentLineHighlightColor
+			// 
+			this->CmDlgCurrentLineHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgCurrentLineHighlightColor->Location = System::Drawing::Point(369, 52);
+			this->CmDlgCurrentLineHighlightColor->Name = L"CmDlgCurrentLineHighlightColor";
+			this->CmDlgCurrentLineHighlightColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgCurrentLineHighlightColor->TabIndex = 25;
+			this->CmDlgCurrentLineHighlightColor->UseVisualStyleBackColor = true;
+			// 
+			// LabelCurrentLineHighlight
+			// 
+			this->LabelCurrentLineHighlight->Location = System::Drawing::Point(228, 54);
+			this->LabelCurrentLineHighlight->Name = L"LabelCurrentLineHighlight";
+			this->LabelCurrentLineHighlight->Size = System::Drawing::Size(108, 20);
+			this->LabelCurrentLineHighlight->TabIndex = 24;
+			this->LabelCurrentLineHighlight->Text = L"Current Line Highlight";
+			// 
+			// CmDlgCharLimitColor
+			// 
+			this->CmDlgCharLimitColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgCharLimitColor->Location = System::Drawing::Point(369, 83);
+			this->CmDlgCharLimitColor->Name = L"CmDlgCharLimitColor";
+			this->CmDlgCharLimitColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgCharLimitColor->TabIndex = 23;
+			this->CmDlgCharLimitColor->UseVisualStyleBackColor = true;
+			// 
+			// LabelCharLimitHighlight
+			// 
+			this->LabelCharLimitHighlight->Location = System::Drawing::Point(228, 83);
+			this->LabelCharLimitHighlight->Name = L"LabelCharLimitHighlight";
+			this->LabelCharLimitHighlight->Size = System::Drawing::Size(108, 30);
+			this->LabelCharLimitHighlight->TabIndex = 22;
+			this->LabelCharLimitHighlight->Text = L"Character Limit Highlight";
+			// 
+			// CmDlgErrorHighlightColor
+			// 
+			this->CmDlgErrorHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgErrorHighlightColor->Location = System::Drawing::Point(369, 114);
+			this->CmDlgErrorHighlightColor->Name = L"CmDlgErrorHighlightColor";
+			this->CmDlgErrorHighlightColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgErrorHighlightColor->TabIndex = 21;
+			this->CmDlgErrorHighlightColor->UseVisualStyleBackColor = true;
+			this->CmDlgErrorHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgErrorHighlightColor_Click);
+			// 
+			// LabelErrorHighlight
+			// 
+			this->LabelErrorHighlight->Location = System::Drawing::Point(228, 122);
+			this->LabelErrorHighlight->Name = L"LabelErrorHighlight";
+			this->LabelErrorHighlight->Size = System::Drawing::Size(108, 20);
+			this->LabelErrorHighlight->TabIndex = 20;
+			this->LabelErrorHighlight->Text = L"Error Highlight";
+			// 
+			// CmDlgSelectionHighlightColor
+			// 
+			this->CmDlgSelectionHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSelectionHighlightColor->Location = System::Drawing::Point(369, 21);
+			this->CmDlgSelectionHighlightColor->Name = L"CmDlgSelectionHighlightColor";
+			this->CmDlgSelectionHighlightColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSelectionHighlightColor->TabIndex = 19;
+			this->CmDlgSelectionHighlightColor->UseVisualStyleBackColor = true;
+			// 
+			// Wordwrap
+			// 
+			this->Wordwrap->AutoSize = true;
+			this->Wordwrap->Location = System::Drawing::Point(255, 254);
+			this->Wordwrap->Name = L"Wordwrap";
+			this->Wordwrap->Size = System::Drawing::Size(81, 17);
+			this->Wordwrap->TabIndex = 5;
+			this->Wordwrap->Text = L"Word-Wrap";
+			this->Wordwrap->UseVisualStyleBackColor = true;
+			// 
+			// LabelSelectionHighlight
+			// 
+			this->LabelSelectionHighlight->Location = System::Drawing::Point(228, 25);
+			this->LabelSelectionHighlight->Name = L"LabelSelectionHighlight";
+			this->LabelSelectionHighlight->Size = System::Drawing::Size(108, 20);
+			this->LabelSelectionHighlight->TabIndex = 18;
+			this->LabelSelectionHighlight->Text = L"Selection Highlight";
+			// 
+			// GroupBoxSyntaxHighlighting
+			// 
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxCommentsColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxDigitsColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxPreprocessorColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxScriptBlocksColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxDelimitersColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxStringsColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxKeywordsColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelPreprocessor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelScriptBlocks);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelStrings);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelComments);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelDigits);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelDelimiters);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelKeywords);
+			this->GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
+			this->GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";
+			this->GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(203, 281);
+			this->GroupBoxSyntaxHighlighting->TabIndex = 4;
+			this->GroupBoxSyntaxHighlighting->TabStop = false;
+			this->GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
+			// 
+			// CmDlgSyntaxCommentsColor
+			// 
+			this->CmDlgSyntaxCommentsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxCommentsColor->Location = System::Drawing::Point(117, 211);
+			this->CmDlgSyntaxCommentsColor->Name = L"CmDlgSyntaxCommentsColor";
+			this->CmDlgSyntaxCommentsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxCommentsColor->TabIndex = 18;
+			this->CmDlgSyntaxCommentsColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgSyntaxDigitsColor
+			// 
+			this->CmDlgSyntaxDigitsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxDigitsColor->Location = System::Drawing::Point(117, 50);
+			this->CmDlgSyntaxDigitsColor->Name = L"CmDlgSyntaxDigitsColor";
+			this->CmDlgSyntaxDigitsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxDigitsColor->TabIndex = 17;
+			this->CmDlgSyntaxDigitsColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgSyntaxPreprocessorColor
+			// 
+			this->CmDlgSyntaxPreprocessorColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxPreprocessorColor->Location = System::Drawing::Point(117, 82);
+			this->CmDlgSyntaxPreprocessorColor->Name = L"CmDlgSyntaxPreprocessorColor";
+			this->CmDlgSyntaxPreprocessorColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxPreprocessorColor->TabIndex = 16;
+			this->CmDlgSyntaxPreprocessorColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgSyntaxScriptBlocksColor
+			// 
+			this->CmDlgSyntaxScriptBlocksColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxScriptBlocksColor->Location = System::Drawing::Point(117, 113);
+			this->CmDlgSyntaxScriptBlocksColor->Name = L"CmDlgSyntaxScriptBlocksColor";
+			this->CmDlgSyntaxScriptBlocksColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxScriptBlocksColor->TabIndex = 15;
+			this->CmDlgSyntaxScriptBlocksColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgSyntaxDelimitersColor
+			// 
+			this->CmDlgSyntaxDelimitersColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxDelimitersColor->Location = System::Drawing::Point(117, 146);
+			this->CmDlgSyntaxDelimitersColor->Name = L"CmDlgSyntaxDelimitersColor";
+			this->CmDlgSyntaxDelimitersColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxDelimitersColor->TabIndex = 14;
+			this->CmDlgSyntaxDelimitersColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgSyntaxStringsColor
+			// 
+			this->CmDlgSyntaxStringsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxStringsColor->Location = System::Drawing::Point(117, 178);
+			this->CmDlgSyntaxStringsColor->Name = L"CmDlgSyntaxStringsColor";
+			this->CmDlgSyntaxStringsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxStringsColor->TabIndex = 13;
+			this->CmDlgSyntaxStringsColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgSyntaxKeywordsColor
+			// 
+			this->CmDlgSyntaxKeywordsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxKeywordsColor->Location = System::Drawing::Point(117, 18);
+			this->CmDlgSyntaxKeywordsColor->Name = L"CmDlgSyntaxKeywordsColor";
+			this->CmDlgSyntaxKeywordsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxKeywordsColor->TabIndex = 12;
+			this->CmDlgSyntaxKeywordsColor->UseVisualStyleBackColor = true;
+			// 
+			// LabelPreprocessor
+			// 
+			this->LabelPreprocessor->Location = System::Drawing::Point(6, 86);
+			this->LabelPreprocessor->Name = L"LabelPreprocessor";
+			this->LabelPreprocessor->Size = System::Drawing::Size(78, 20);
+			this->LabelPreprocessor->TabIndex = 11;
+			this->LabelPreprocessor->Text = L"Preprocessor";
+			// 
+			// LabelScriptBlocks
+			// 
+			this->LabelScriptBlocks->Location = System::Drawing::Point(6, 119);
+			this->LabelScriptBlocks->Name = L"LabelScriptBlocks";
+			this->LabelScriptBlocks->Size = System::Drawing::Size(78, 20);
+			this->LabelScriptBlocks->TabIndex = 10;
+			this->LabelScriptBlocks->Text = L"Script Blocks";
+			// 
+			// LabelStrings
+			// 
+			this->LabelStrings->Location = System::Drawing::Point(6, 182);
+			this->LabelStrings->Name = L"LabelStrings";
+			this->LabelStrings->Size = System::Drawing::Size(78, 20);
+			this->LabelStrings->TabIndex = 9;
+			this->LabelStrings->Text = L"String Literals";
+			// 
+			// LabelComments
+			// 
+			this->LabelComments->Location = System::Drawing::Point(6, 215);
+			this->LabelComments->Name = L"LabelComments";
+			this->LabelComments->Size = System::Drawing::Size(78, 20);
+			this->LabelComments->TabIndex = 8;
+			this->LabelComments->Text = L"Comments";
+			// 
+			// LabelDigits
+			// 
+			this->LabelDigits->Location = System::Drawing::Point(6, 54);
+			this->LabelDigits->Name = L"LabelDigits";
+			this->LabelDigits->Size = System::Drawing::Size(78, 20);
+			this->LabelDigits->TabIndex = 7;
+			this->LabelDigits->Text = L"Digits";
+			// 
+			// LabelDelimiters
+			// 
+			this->LabelDelimiters->Location = System::Drawing::Point(6, 150);
+			this->LabelDelimiters->Name = L"LabelDelimiters";
+			this->LabelDelimiters->Size = System::Drawing::Size(78, 20);
+			this->LabelDelimiters->TabIndex = 6;
+			this->LabelDelimiters->Text = L"Delimiters";
+			// 
+			// LabelKeywords
+			// 
+			this->LabelKeywords->Location = System::Drawing::Point(6, 22);
+			this->LabelKeywords->Name = L"LabelKeywords";
+			this->LabelKeywords->Size = System::Drawing::Size(78, 20);
+			this->LabelKeywords->TabIndex = 5;
+			this->LabelKeywords->Text = L"Keywords";
 			// 
 			// TabSanitize
 			// 
@@ -482,16 +744,6 @@ namespace UIComponents {
 			this->TabSanitize->Text = L"Sanitize";
 			this->TabSanitize->UseVisualStyleBackColor = true;
 			// 
-			// AnnealCasing
-			// 
-			this->AnnealCasing->AutoSize = true;
-			this->AnnealCasing->Location = System::Drawing::Point(128, 109);
-			this->AnnealCasing->Name = L"AnnealCasing";
-			this->AnnealCasing->Size = System::Drawing::Size(205, 17);
-			this->AnnealCasing->TabIndex = 11;
-			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
-			this->AnnealCasing->UseVisualStyleBackColor = true;
-			// 
 			// IndentLines
 			// 
 			this->IndentLines->AutoSize = true;
@@ -501,6 +753,16 @@ namespace UIComponents {
 			this->IndentLines->TabIndex = 12;
 			this->IndentLines->Text = L"Indent Script Lines";
 			this->IndentLines->UseVisualStyleBackColor = true;
+			// 
+			// AnnealCasing
+			// 
+			this->AnnealCasing->AutoSize = true;
+			this->AnnealCasing->Location = System::Drawing::Point(128, 109);
+			this->AnnealCasing->Name = L"AnnealCasing";
+			this->AnnealCasing->Size = System::Drawing::Size(205, 17);
+			this->AnnealCasing->TabIndex = 11;
+			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
+			this->AnnealCasing->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 
@@ -519,11 +781,11 @@ namespace UIComponents {
 			this->TabGeneral->PerformLayout();
 			this->TabIntelliSense->ResumeLayout(false);
 			this->TabIntelliSense->PerformLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->DatabaseUpdateInterval))->EndInit();
 			this->TabPreprocessor->ResumeLayout(false);
 			this->TabAppearance->ResumeLayout(false);
 			this->TabAppearance->PerformLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->DatabaseUpdateInterval))->EndInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LinesToScroll))->EndInit();
+			this->GroupBoxSyntaxHighlighting->ResumeLayout(false);
 			this->TabSanitize->ResumeLayout(false);
 			this->TabSanitize->PerformLayout();
 			this->ResumeLayout(false);
@@ -541,6 +803,8 @@ private: System::Void TabAppearance_Click(System::Object^  sender, System::Event
 private: System::Void caretpos_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 		 }
 private: System::Void ISDBUpdateInterval_ValueChanged(System::Object^  sender, System::EventArgs^  e) {
+		 }
+private: System::Void CmDlgErrorHighlightColor_Click(System::Object^  sender, System::EventArgs^  e) {
 		 }
 };
 }

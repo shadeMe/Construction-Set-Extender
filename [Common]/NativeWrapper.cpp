@@ -12,7 +12,8 @@ String^ INIWrapper::GetINIValue(String^ Section, String^ Key, String^ Default)
 	CStringWrapper^ CSection = gcnew CStringWrapper(Section),
 					^CKey = gcnew CStringWrapper(Key),
 					^CDefault = gcnew CStringWrapper(Default);
-	return gcnew String(GetINIString(CSection->String(), CKey->String(), CDefault->String()));
+	const char* INIValue = GetINIString(CSection->String(), CKey->String(), CDefault->String());
+	return gcnew String(INIValue);
 }
 
 void INIWrapper::SetINIValue(String^ Section, String^ Key, String^ Value)
