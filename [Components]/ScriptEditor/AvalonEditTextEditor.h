@@ -3,6 +3,7 @@
 #include "ScriptTextEditorInterface.h"
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
+#include "IntelliSense.h"
 
 using namespace ICSharpCode;
 using namespace System::Windows::Forms::Integration;
@@ -12,7 +13,6 @@ using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
 using namespace AvalonEditComponents;
 
-ref class IntelliSenseThingy;
 
 public ref class AvalonEditTextEditor : public ScriptTextEditorInterface
 {
@@ -41,6 +41,7 @@ protected:
 	System::Windows::Input::Key					KeyToPreventHandling;
 	IntelliSenseThingy^							IntelliSenseBox;
 	Point										LastKnownMouseClickLocation;
+	System::Windows::Input::Key					LastKeyThatWentDown;
 
 	virtual void								OnScriptModified(ScriptModifiedEventArgs^ E);
 	virtual void								OnKeyDown(KeyEventArgs^ E);
@@ -57,6 +58,7 @@ protected:
 	void										TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 
 	void										TextField_SelectionChanged(Object^ Sender, EventArgs^ E);
+	void										TextField_LostFocus(Object^ Sender, System::Windows::RoutedEventArgs^ E);
 
 	String^										GetTokenAtIndex(int Index, bool SelectText);
 	String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
@@ -69,6 +71,7 @@ protected:
 	void										GotoLine(int Line);						// line numbers start at 1
 
 	void										RefreshUI() { TextField->TextArea->TextView->Redraw(); }
+	UInt32										PerformReplaceOnSegment(ScriptTextEditorInterface::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output);
 public:
 	// interface methods
 	virtual void								SetFont(Font^ FontObject);
@@ -123,6 +126,8 @@ public:
 	virtual Control^							GetContainer() { return Container; }
 	virtual void								ScrollToLine(String^ LineNumber);
 	virtual void								HandleTabSwitchEvent(void);
+	virtual void								Destroy() { IntelliSenseBox->Destroy(); }
+	virtual Point								PointToScreen(Point Location);
 
 	virtual void								HighlightScriptError(int Line);
 	virtual void								ClearScriptErrorHighlights(void);

@@ -14,7 +14,9 @@ namespace HallOfFame
 			thisCall(Itr.Ctor, Itr.Form);
 			thisCall(kTESForm_SetFormID, Itr.Form, FormID, 1);
 			thisCall(kTESForm_SetEditorID, Itr.Form, Itr.EditorID);
-			if (!_stricmp("lilith", Itr.EditorID))
+
+			if (!_stricmp("lilith", Itr.EditorID) ||
+				!_stricmp("greenwarden", Itr.EditorID))
 			{
 				TESNPC* NPC = (TESNPC*)Itr.Form;
 				ToggleFlag(&NPC->actorBaseData.flags, TESActorBaseData::kFlag_IsFemale, true);
@@ -29,6 +31,7 @@ namespace HallOfFame
 			TESFullName* Name = CS_CAST(Itr.Form, TESForm, TESFullName);
 			if (Name)
 				Name->name.Set(Itr.Name);
+
 			thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Itr.Form);
 			thisVirtualCall(Itr.VTBL, 0x94, Itr.Form, 0);
 

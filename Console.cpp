@@ -116,17 +116,17 @@ void Console::SaveINISettings()
 	tagRECT WindowRect;
 	GetWindowRect(WindowHandle, &WindowRect);
 
-	_itoa_s(WindowRect.top, g_Buffer, sizeof(g_Buffer), 10);
-	g_INIManager->FetchSetting("Top")->SetValue(g_Buffer);
+	_itoa_s(WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
+	g_INIManager->FetchSetting("Top")->SetValue(g_TextBuffer);
 
-	_itoa_s(WindowRect.left, g_Buffer, sizeof(g_Buffer), 10);
-	g_INIManager->FetchSetting("Left")->SetValue(g_Buffer);
+	_itoa_s(WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
+	g_INIManager->FetchSetting("Left")->SetValue(g_TextBuffer);
 
-	_itoa_s(WindowRect.right - WindowRect.left, g_Buffer, sizeof(g_Buffer), 10);
-	g_INIManager->FetchSetting("Right")->SetValue(g_Buffer);
+	_itoa_s(WindowRect.right - WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
+	g_INIManager->FetchSetting("Right")->SetValue(g_TextBuffer);
 
-	_itoa_s(WindowRect.bottom - WindowRect.top, g_Buffer, sizeof(g_Buffer), 10);
-	g_INIManager->FetchSetting("Bottom")->SetValue(g_Buffer);
+	_itoa_s(WindowRect.bottom - WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
+	g_INIManager->FetchSetting("Bottom")->SetValue(g_TextBuffer);
 }
 
 void Console::PrintMessage(std::string& Prefix, const char* MessageStr)

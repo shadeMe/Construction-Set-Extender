@@ -311,6 +311,7 @@ namespace ScriptEditor
 		bool												GetIsTabStripParent(DotNetBar::TabStrip^ Strip) { return Strip->Tabs->IndexOf(EditorTab) != -1; }
 		void												PerformCompileAndSave() { ToolBarSaveScript_Click(nullptr, nullptr); }
 		String^												GetCurrentToken() { return TextEditor->GetTokenAtCaretPos(); }
+		Point												GetScreenPoint(Point Location) { return TextEditor->PointToScreen(Location); }
 		Point												GetCaretLocation() { return TextEditor->GetPositionFromCharIndex(TextEditor->GetCaretPos()); }
 		IntPtr												GetControlBoxHandle() { return EditorControlBox->Handle; }
 		IntPtr												GetEditorBoxHandle() { return TextEditor->GetHandle(); }

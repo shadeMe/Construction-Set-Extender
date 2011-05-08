@@ -121,7 +121,7 @@ bool OBSEPlugin_Load(const OBSEInterface * obse)
 															 // ensure that the common control DLL is loaded.
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icex.dwICC  = ICC_LISTVIEW_CLASSES;
-    InitCommonControlsEx(&icex);
+	InitCommonControlsEx(&icex);
 
 	g_pluginHandle = obse->GetPluginHandle();
 

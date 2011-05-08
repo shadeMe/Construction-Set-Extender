@@ -30,3 +30,21 @@ void ScriptData::FillScriptData(Script* Form)
 		}
 	}
 }
+
+void VariableData::FillVariableData(const char* VariableName)
+{
+	if (*VariableName == 's' || *VariableName == 'S')
+		Type = kType_String;
+	else if (*VariableName == 'i' || *VariableName == 'u')
+		Type = kType_Int;
+	else
+		Type = kType_Float;
+}
+
+void VariableData::FillVariableData(TESGlobal* Global)
+{
+	if (Global->type == TESGlobal::kType_Float)
+		Type = kType_Float;
+	else
+		Type = kType_Int;
+}

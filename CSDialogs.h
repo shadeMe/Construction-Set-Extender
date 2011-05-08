@@ -1,17 +1,16 @@
 #pragma once
 #include "ExtenderInternals.h"
 
-// 0C+?
-class TESDialogInitParam
+// 0C
+class FormEditParam
 {
 public:
-	UInt8		TypeID;					// 00
-	UInt8		Pad01[3];
-	TESForm*	Form;					// 04
-	UInt32		unk08;					// 08
+	UInt8		typeID;					// 00
+	UInt8		pad01[3];
+	TESForm*	form;					// 04
 
-	TESDialogInitParam(const char* EditorID);
-	TESDialogInitParam(UInt32 FormID);
+	FormEditParam(const char* EditorID);
+	FormEditParam(UInt32 FormID);
 };
 
 // 20
@@ -47,6 +46,21 @@ struct ResponseEditorData
 	TESTopicInfo*			selectedInfo;		// 1C
 	TESQuest*				selectedQuest;		// 20
 	GenericNode<TESRace*>	voicedRaces;		// 24
+};
+
+// 12C
+struct ScriptEditorData
+{
+	RECT					editorBounds;				// 00
+	Script*					currentScript;				// 10
+	UInt8					newScript;					// 14	set to 1 when a new script is created, used to remove the new script when it's discarded 
+	UInt8					pad14[3];					// 15
+	HMENU					editorMenu;					// 18
+	HWND					editorStatusBar;			// 1C
+	HWND					editorToolBar;				// 20
+	HWND					scriptableFormList;			// 24	handle to the TESScriptableForm combo box, passed as the lParam during init
+	char*					findTextQuery;				// 28
+	UInt32					unk2C[(0x12C - 0x2C) >> 2];	// 2C	never initialized, the size is probably a typo (intended size 0x2C) made by the tool coder
 };
 
 enum

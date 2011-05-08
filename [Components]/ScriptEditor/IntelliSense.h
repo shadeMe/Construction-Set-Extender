@@ -1,5 +1,4 @@
 #pragma once
-#include "ScriptEditor.h"
 
 using namespace System::ComponentModel;
 
@@ -21,12 +20,12 @@ public ref struct Boxer
 														{
 															e_UserFunct = 0,
 															e_Script,
-															e_SyntaxBox
+															e_IntelliSenseThingy
 														};
 
 	BoxType												Type;
 
-	Boxer(IntelliSenseThingy^ Obj) : ISBox(Obj), Type(BoxType::e_SyntaxBox) {};
+	Boxer(IntelliSenseThingy^ Obj) : ISBox(Obj), Type(BoxType::e_IntelliSenseThingy) {};
 	Boxer(Script^ Obj) : ScptBox(Obj), Type(BoxType::e_Script) {};
 	Boxer(UserFunction^ Obj) : FunctBox(Obj), Type(BoxType::e_UserFunct) {};
 };
@@ -91,7 +90,9 @@ public ref class IntelliSenseItem								// enumerable in the syntax box
 																"Local Variable",
 																"Remote Variable",
 																"User Function",
-																"Quest"
+																"Quest",
+																"Global Variable",
+																"Game Setting"
 															};
 public:
 	static enum class									ItemType
@@ -101,7 +102,9 @@ public:
 																e_LocalVar,
 																e_RemoteVar,
 																e_UserFunct,
-																e_Quest
+																e_Quest,
+																e_GlobalVar,
+																e_GMST
 															};
 
 	String^%											Describe() { return Description; }
@@ -176,8 +179,8 @@ public:
 																"Integer",
 																"Float",
 																"Reference",
-																"String Variable",
-																"Array Variable"
+																"String",
+																"Array"
 															};
 	static enum class									VariableType
 															{
@@ -255,6 +258,24 @@ public:
 	virtual String^%									GetIdentifier() override { return Parent->Name; }
 };
 
+public ref class NonActivatingImmovableForm : public Form
+{
+protected:
+	property bool										ShowWithoutActivation
+	{
+		virtual bool									get() override { return true; }
+	}
+
+	virtual void										WndProc(Message% m) override;
+
+	bool												AllowMove;
+public:
+	void												ShowAtLocation(Drawing::Point Position, IntPtr ParentHandle);
+	void												SetSize(Drawing::Size WindowSize);
+
+	NonActivatingImmovableForm() : AllowMove(false), Form() {}
+};
+
 public ref class IntelliSenseThingy
 {
 public:
@@ -276,13 +297,14 @@ public:
 	void												Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll);
 	void												Hide();
 
-	IntelliSenseThingy(ScriptEditor::Workspace^% Parent);
+	IntelliSenseThingy(Object^% Parent);
 	void												PickIdentifier();
 	bool												IsVisible()	{ return IntelliSenseList->Visible; }
 	void												MoveIndex(Direction Direction);
 	void												UpdateLocalVars();
 	bool												QuickView(String^ TextUnderMouse);
 	bool												QuickView(String^ TextUnderMouse, Point MouseLocation);
+	void												Destroy() { Destroying= true; IntelliSenseBox->Close(); }
 
 	property Operation									LastOperation;
 	property bool										Enabled;
@@ -292,6 +314,7 @@ private:
 	void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 	void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
+	void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 	static ToolTip^										InfoTip = gcnew ToolTip();
 	static ImageList^									Icons = gcnew ImageList();
@@ -300,12 +323,14 @@ private:
 	VariableInfo^										GetLocalVar(String^% Identifier);
 	bool												ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc);
 
-	ScriptEditor::Workspace^							ParentEditor;
+	Object^												ParentEditor;													// declared as an Object^ to work around a cyclic dependency
 	Script^												RemoteScript;
 	bool												IsObjRefr;
+	bool												Destroying;
 
 	List<IntelliSenseItem^>^							ListContents;													// handles of the list's items
 	ListView^											IntelliSenseList;
+	NonActivatingImmovableForm^							IntelliSenseBox;
 public:
 	void												HideInfoTip() { InfoTip->Hide(Control::FromHandle(IntelliSenseList->Parent->Handle)); }
 

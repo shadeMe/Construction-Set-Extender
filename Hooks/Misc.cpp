@@ -375,8 +375,8 @@ void __stdcall DoNumericEditorIDHook(const char* EditorID)
 		strlen(EditorID) > 0 &&
 		isdigit((int)*EditorID))
 	{
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
-		MessageBox(*g_HWND_CSParent, g_Buffer, "CSE", MB_OK|MB_ICONWARNING);
+		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
+		MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONWARNING);
 	}
 }
 

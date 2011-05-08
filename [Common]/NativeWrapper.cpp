@@ -1,6 +1,15 @@
 #include "MiscUtilities.h"
 #include "NativeWrapper.h"
 
+void NativeWrapper::ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle)
+{
+	ShowWindow(Window->Handle, SW_SHOWNOACTIVATE);
+	if (ParentHandle != IntPtr::Zero)
+		SetWindowPos(Window->Handle, ParentHandle.ToInt32(), Window->Left, Window->Top, Window->Width, Window->Height, SWP_NOACTIVATE);
+	else
+		SetWindowPos(Window->Handle, 0, Window->Left, Window->Top, Window->Width, Window->Height, SWP_NOACTIVATE);
+}
+
 void NativeWrapper::PrintToCSStatusBar(int PanelIndex, String^ Message)
 {
 	CStringWrapper^ CStr = gcnew CStringWrapper(Message);

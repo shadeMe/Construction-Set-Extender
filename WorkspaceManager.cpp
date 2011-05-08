@@ -60,7 +60,7 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 		sprintf_s(WorkspacePath, MAX_PATH, "%s", Workspace);
 
 	PrintToBuffer("%s\\", WorkspacePath);
-	sprintf_s(WorkspacePath, MAX_PATH, "%s", g_Buffer);
+	sprintf_s(WorkspacePath, MAX_PATH, "%s", g_TextBuffer);
 
 	if (strstr(WorkspacePath, g_AppPath.c_str()) == WorkspacePath)
 	{
@@ -73,8 +73,8 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 			ReloadModList("Data\\", false, true);
 
 			PrintToBuffer("Current workspace set to '%s'", WorkspacePath);
-			DebugPrint(g_Buffer);
-			MessageBox(*g_HWND_CSParent, g_Buffer, "CSE", MB_OK|MB_ICONINFORMATION);
+			DebugPrint(g_TextBuffer);
+			MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONINFORMATION);
 
 			return true;
 		}

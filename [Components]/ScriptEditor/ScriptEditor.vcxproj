@@ -163,7 +163,6 @@
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
     <ClCompile Include="AvalonEditXSHD.cpp" />
-    <ClCompile Include="CSEScriptTextEditor.cpp" />
     <ClCompile Include="IntelliSense.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
     <ClCompile Include="OptionsDialog.cpp" />
@@ -185,7 +184,6 @@
     <ClInclude Include="AuxiliaryTextEditor.h" />
     <ClInclude Include="AvalonEditTextEditor.h" />
     <ClInclude Include="AvalonEditXSHD.h" />
-    <ClInclude Include="CSEScriptTextEditor.h" />
     <ClInclude Include="IntelliSense.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="OptionsDialog.h" />
@@ -212,6 +210,7 @@
     <None Include="Images\back.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\BehindTextHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\book_addressHS.png" />
+    <None Include="Images\bindScript.png" />
     <None Include="Images\BytecodeClass.gif" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\CommentHS.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\compareversionsHS.png" />
@@ -240,6 +239,8 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\InsertTabControlHS.png" />
     <None Include="Images\ISCommand.png" />
     <None Include="Images\ISEmpty.png" />
+    <None Include="Images\ISGlobalVar.png" />
+    <None Include="Images\ISGMST.png" />
     <None Include="Images\ISLocalVar.png" />
     <None Include="Images\ISQuest.png" />
     <None Include="Images\ISRemoteVar.png" />

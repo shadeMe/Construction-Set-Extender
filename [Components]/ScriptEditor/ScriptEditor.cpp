@@ -576,7 +576,10 @@ namespace ScriptEditor
 
 		Rectangle TabContainer::GetEditorFormRect()
 		{
-			return EditorForm->RestoreBounds;
+			if (GetEditorFormWindowState() == FormWindowState::Normal)
+				return EditorForm->Bounds;
+			else
+				return EditorForm->RestoreBounds;
 		}
 
 		Workspace^ TabContainer::LookupWorkspaceByTab(UInt32 TabIndex)
@@ -1878,6 +1881,7 @@ namespace ScriptEditor
 			void Workspace::Destroy()
 			{
 				DestructionFlag = true;
+				TextEditor->Destroy();
 				ScriptListingDialog->Destroy();
 				EditorControlBox->Controls->Clear();
 				ParentContainer->RemoveTab(EditorTab);

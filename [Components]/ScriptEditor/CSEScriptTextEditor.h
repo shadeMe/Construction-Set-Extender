@@ -134,6 +134,8 @@ public:
 	virtual Control^							GetContainer() { return NumberedRichTextBox::GetContainer(); }
 	virtual void								ScrollToLine(String^ LineNumber) { JumpToLine(LineNumber); }
 	virtual void								HandleTabSwitchEvent() { return; }
+	virtual void								Destroy() { return; }
+	virtual Point								PointToScreen(Point Location) { return TextField->PointToScreen(Location); }
 
 	virtual void								HighlightScriptError(int Line) { return; }
 	virtual void								ClearScriptErrorHighlights(void) { return; }

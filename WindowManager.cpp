@@ -46,11 +46,11 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 		{
 		case LVN_ITEMACTIVATE:				// ID = 1018
 			NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
-			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 0, g_Buffer, sizeof(g_Buffer));
-			std::string FormID, FormTypeStr(g_Buffer);
+			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 0, g_TextBuffer, sizeof(g_TextBuffer));
+			std::string FormID, FormTypeStr(g_TextBuffer);
 
-			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 1, g_Buffer, sizeof(g_Buffer));
-			FormID = g_Buffer;
+			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 1, g_TextBuffer, sizeof(g_TextBuffer));
+			FormID = g_TextBuffer;
 			UInt32 PadStart = FormID.find("(") + 1, PadEnd  = FormID.find(")", PadStart + 1);
 			if (PadStart != std::string::npos && PadEnd != std::string::npos)
 			{
@@ -95,15 +95,15 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				SelectedPluginItem.iItem = SelectedItem;
 				SelectedPluginItem.iSubItem = 0;
 				SelectedPluginItem.mask = LVIF_TEXT;
-				SelectedPluginItem.pszText = g_Buffer;
-				SelectedPluginItem.cchTextMax = sizeof(g_Buffer);
+				SelectedPluginItem.pszText = g_TextBuffer;
+				SelectedPluginItem.cchTextMax = sizeof(g_TextBuffer);
 
 				if (ListView_GetItem(PluginList, &SelectedPluginItem) == TRUE)
 				{
-					g_INIManager->FetchSetting("StartupPluginName")->SetValue(g_Buffer);
+					g_INIManager->FetchSetting("StartupPluginName")->SetValue(g_TextBuffer);
 
 					char Buffer[0x200];
-					sprintf_s(Buffer, 0x200, "Startup plugin set to '%s'.", g_Buffer);
+					sprintf_s(Buffer, 0x200, "Startup plugin set to '%s'.", g_TextBuffer);
 
 					MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 					DebugPrint(Buffer);
@@ -478,7 +478,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					PrintToBuffer("Selection '%08X' thawed", Ref->refID);
 					break;
 				}
-				PrintToRender(g_Buffer, 2);
+				PrintToRender(g_TextBuffer, 2);
 			}
 			break;
 		case ID_SELECTIONGROUPING_GROUP:
@@ -548,7 +548,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				}
 
 				PrintToBuffer("Selection aligned to %08X", AlignRef->refID);
-				PrintToRender(g_Buffer, 2);
+				PrintToRender(g_TextBuffer, 2);
 			}
 			break;
 		}
@@ -596,8 +596,8 @@ BOOL CALLBACK TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		switch (LOWORD(wParam))
 		{
 		case BTN_OK:
-			GetDlgItemText(hWnd, EDIT_TEXTLINE, g_Buffer, sizeof(g_Buffer));
-			EndDialog(hWnd, (INT_PTR)g_Buffer);
+			GetDlgItemText(hWnd, EDIT_TEXTLINE, g_TextBuffer, sizeof(g_TextBuffer));
+			EndDialog(hWnd, (INT_PTR)g_TextBuffer);
 			return TRUE;
 		case BTN_CANCEL:
 			EndDialog(hWnd, NULL);
@@ -701,8 +701,8 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			HWND Window = WindowFromPoint(Data->pt);
 			if (Window)
 			{
-				GetWindowText(Window, g_Buffer, sizeof(g_Buffer));
-				Edit_SetText(GetDlgItem(hWnd, EDIT_PATH), g_Buffer);
+				GetWindowText(Window, g_TextBuffer, sizeof(g_TextBuffer));
+				Edit_SetText(GetDlgItem(hWnd, EDIT_PATH), g_TextBuffer);
 			}
 		}
 		break;
@@ -740,19 +740,19 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			switch ((int)GetWindowLong(hWnd, GWL_USERDATA))
 			{
 			case e_SPT:
-				sprintf_s(g_Buffer, sizeof(g_Buffer), "\\%s", Buffer);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "\\%s", Buffer);
 				break;
 			case e_KF:
-				if (strlen(g_Buffer) > 27)
+				if (strlen(g_TextBuffer) > 27)
 				{
 					std::string Temp(Buffer); Temp = Temp.substr(26);
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "%s", Temp.c_str());
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s", Temp.c_str());
 				}
 				break;
 			default:
-				sprintf_s(g_Buffer, sizeof(g_Buffer), "%s", Buffer);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s", Buffer);
 			}
-			EndDialog(hWnd, (INT_PTR)g_Buffer);
+			EndDialog(hWnd, (INT_PTR)g_TextBuffer);
 			return TRUE;
 		}
 		case BTN_CANCEL:
@@ -949,8 +949,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		{
 			if (Form->refID < 0x800)	break;
 
-			sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
-			LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
+			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->refID);
+			LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
 			if (FormIDString)
 			{
 				UInt32 FormID = 0;
@@ -966,8 +966,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 					break;
 				}
 
-				sprintf_s(g_Buffer, sizeof(g_Buffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
-				if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES)
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
+				if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) == IDYES)
 				{
 					thisCall(kTESForm_SetFormID, Form, (UInt32)FormID, true);
 					thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
@@ -976,8 +976,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			break;
 		}
 		case POPUP_MARKUNMODIFIED:
-			sprintf_s(g_Buffer, sizeof(g_Buffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
-			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES)
+			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
+			if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) == IDYES)
 			{
 				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);
 			}
@@ -990,15 +990,15 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 				CLIWrapper::UseInfoList::OpenUseInfoBox(EditorID);
 			else
 			{
-				sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Form->refID);
-				CLIWrapper::UseInfoList::OpenUseInfoBox(g_Buffer);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->refID);
+				CLIWrapper::UseInfoList::OpenUseInfoBox(g_TextBuffer);
 			}
 			break;
 		}
 		case POPUP_UNDELETE:
 		{
 			PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
-			if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) == IDYES)
+			if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) == IDYES)
 			{
 				thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
 			}
@@ -1029,6 +1029,17 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		{
 			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
 			ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+			break;
+		}
+		case POPUP_SHOWOVERRIDES:
+		{
+			std::string Buffer = PrintToBuffer("Override list for form '%08X':\n\n", Form->refID);
+			for (TESForm::ModReferenceList* Itr = &Form->modRefList; Itr && Itr->data; Itr = Itr->next)
+			{
+				TESFile* File = (TESFile*)Itr->data;
+				Buffer += PrintToBuffer("\t%s\n", File->name);
+			}
+			MessageBox(*g_HWND_CSParent, Buffer.c_str(), "CSE", MB_OK|MB_ICONINFORMATION);
 			break;
 		}
 	}
@@ -1104,7 +1115,7 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 				std::string Destination(g_AppPath + "\\" + std::string(VoicePath));
 				if (!CopyFile(FilePath, Destination.c_str(), TRUE))
 				{
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "Couldn't copy external file '%s' to '%s'!\n\nCheck the console for more information.", FilePath, Destination.c_str());
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Couldn't copy external file '%s' to '%s'!\n\nCheck the console for more information.", FilePath, Destination.c_str());
 					LogWinAPIErrorMessage(GetLastError());
 				}
 				else
@@ -1164,14 +1175,14 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				{
 					if (Form->typeID == kFormType_Quest)
 					{
-						sprintf_s(g_Buffer, sizeof(g_Buffer), "Quest '%s' already exists. Do you want to replace its script with a newly created one ?", QuestID);
-						if (MessageBox(hWnd, g_Buffer, "CSE", MB_YESNO) != IDYES)
+						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Quest '%s' already exists. Do you want to replace its script with a newly created one ?", QuestID);
+						if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) != IDYES)
 							return TRUE;
 					}
 					else
 					{
-						sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", QuestID);
-						MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", QuestID);
+						MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 
@@ -1192,8 +1203,8 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				Form = GetFormByID(ScriptID);
 				if (Form)
 				{
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", ScriptID);
-					MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", ScriptID);
+					MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 					return TRUE;
 				}
 				else
@@ -1205,8 +1216,8 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					thisCall(kDataHandler_SortScripts, (*g_dataHandler));
 					QuestScript->info.type = Script::eType_Quest;
 
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tlet fQuestDelayTime := %s\n\nend", ScriptID, Delay);
-					thisCall(kScript_SetText, QuestScript, g_Buffer);
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tlet fQuestDelayTime := %s\n\nend", ScriptID, Delay);
+					thisCall(kScript_SetText, QuestScript, g_TextBuffer);
 					thisCall(kTESForm_SetEditorID, QuestScript, ScriptID);
 				}
 
@@ -1251,8 +1262,8 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), hWnd, (DLGPROC)TESComboBoxDlgProc, (LPARAM)kFormType_Cell);
 			if (Selection)
 			{
-				sprintf_s(g_Buffer, sizeof(g_Buffer), "%s (%08X)", Selection->editorData.editorID.m_data, Selection->refID);
-				SetWindowText(SelParentCellBtn, (LPCSTR)g_Buffer);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s (%08X)", Selection->editorData.editorID.m_data, Selection->refID);
+				SetWindowText(SelParentCellBtn, (LPCSTR)g_TextBuffer);
 				SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)Selection);
 			}
 			break;
@@ -1278,8 +1289,8 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				Edit_GetText(EditorIDBox, BaseEditorID, 0x200);
 				if (GetFormByID(BaseEditorID))
 				{
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", BaseEditorID);
-					MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONERROR);
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", BaseEditorID);
+					MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONERROR);
 				}
 				else
 				{
@@ -1325,8 +1336,8 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 							Edit_GetText(RefIDBox, RefEditorID, 0x200);
 							if (GetFormByID(RefEditorID))
 							{
-								sprintf_s(g_Buffer, sizeof(g_Buffer), "EditorID '%s' is already in use.", RefEditorID);
-								MessageBox(hWnd, g_Buffer, "CSE", MB_OK|MB_ICONERROR);
+								sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", RefEditorID);
+								MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONERROR);
 							}
 							else
 							{
@@ -1498,9 +1509,9 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
 				if (Index != LB_ERR)
 				{
-					if (SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_Buffer) != LB_ERR)
+					if (SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_TextBuffer) != LB_ERR)
 					{
-						g_ToolManager.RemoveTool(g_Buffer, true);
+						g_ToolManager.RemoveTool(g_TextBuffer, true);
 						SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
 						SendMessage(hWnd, MANAGETOOLS_CLEAREDITFIELD, NULL, NULL);
 						SendMessage(ToolList, LB_SETSEL, FALSE, -1);
@@ -1514,7 +1525,7 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
 				if (Index != LB_ERR)
 				{
-					SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_Buffer);
+					SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_TextBuffer);
 					ToolManager::Tool* Tool = (ToolManager::Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
 
 					int NewIndex = 0;
@@ -1529,7 +1540,7 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						NewIndex--;
 
 					SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
-					SendMessage(ToolList, LB_INSERTSTRING, NewIndex, (LPARAM)g_Buffer);
+					SendMessage(ToolList, LB_INSERTSTRING, NewIndex, (LPARAM)g_TextBuffer);
 					SendMessage(ToolList, LB_SETITEMDATA, NewIndex, (LPARAM)Tool);
 					SendMessage(ToolList, LB_SETSEL, TRUE, NewIndex);
 					SetFocus(ToolList);

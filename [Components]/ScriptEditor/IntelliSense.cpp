@@ -2,6 +2,7 @@
 #include "[Common]\NativeWrapper.h"
 #include "Globals.h"
 #include "ScriptParser.h"
+#include "ScriptEditor.h"
 #include "PluginParser.h"
 #include "[Common]\HandShakeStructs.h"
 
@@ -123,6 +124,31 @@ IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::DoUpdateDatabase()
 		Data->Enumerables->AddLast(gcnew Quest(gcnew String(Itr->EditorID), gcnew String(Itr->FullName), gcnew String(Itr->ScriptName)));
 	}
 
+	for (GlobalData* Itr = DataHandlerData->GlobalListHead; Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount; ++Itr)
+	{
+		if (!Itr->IsValid())		continue;
+
+		if (Itr->Type == GlobalData::kType_Int)
+			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Int, IntelliSenseItem::ItemType::e_GlobalVar));
+		else if (Itr->Type == GlobalData::kType_Float)
+			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Float, IntelliSenseItem::ItemType::e_GlobalVar));
+		else
+			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GlobalVar));
+	}
+
+	for (GMSTData* Itr = DataHandlerData->GMSTListHead; Itr != DataHandlerData->GMSTListHead + DataHandlerData->GMSTCount; ++Itr)
+	{
+		if (!Itr->IsValid())		continue;
+
+		if (Itr->Type == GlobalData::kType_Int)
+			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Int, IntelliSenseItem::ItemType::e_GMST));
+		else if (Itr->Type == GlobalData::kType_Float)
+			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Float, IntelliSenseItem::ItemType::e_GMST));
+		else
+			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GMST));
+	}
+
+
 	for each (IntelliSenseItem^ Itr in Enumerables)
 	{
 		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
@@ -208,7 +234,7 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 	case Boxer::BoxType::e_Script:
 		Box->ScptBox->VarList->Clear();
 		break;
-	case Boxer::BoxType::e_SyntaxBox:
+	case Boxer::BoxType::e_IntelliSenseThingy:
 		Box->ISBox->VarList->Clear();
 		LocalVars = true;
 		break;
@@ -267,7 +293,7 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 				case Boxer::BoxType::e_Script:
 					Box->ScptBox->VarList->Add(gcnew VariableInfo(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::ItemType::e_LocalVar):(IntelliSenseItem::ItemType::e_RemoteVar)));
 					break;
-				case Boxer::BoxType::e_SyntaxBox:
+				case Boxer::BoxType::e_IntelliSenseThingy:
 					Box->ISBox->VarList->Add(gcnew VariableInfo(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::ItemType::e_LocalVar):(IntelliSenseItem::ItemType::e_RemoteVar)));
 					break;
 				case Boxer::BoxType::e_UserFunct:
@@ -513,12 +539,64 @@ void IntelliSenseDatabase::InitializeDatabaseUpdateTimer()
 	DatabaseTimerInitialized = true;
 }
 
+void NonActivatingImmovableForm::SetSize(Drawing::Size WindowSize)
+{
+	MaximumSize = Drawing::Size(640, 480);
+	MinimumSize = Drawing::Size(640, 480);
+
+	ClientSize = WindowSize;
+
+	WindowSize.Height += 3;
+	MaximumSize = WindowSize;
+	MinimumSize = WindowSize;
+}
+
+void NonActivatingImmovableForm::ShowAtLocation(Drawing::Point Position, IntPtr ParentHandle)
+{
+	AllowMove = true;
+
+	SetDesktopLocation(Position.X, Position.Y);
+
+	if (ParentHandle != IntPtr::Zero)
+		Show(gcnew WindowHandleWrapper(ParentHandle));
+
+	NativeWrapper::ShowNonActivatingWindow(this, IntPtr::Zero);
+
+	AllowMove = false;
+}
+
+void NonActivatingImmovableForm::WndProc(Message% m)
+{
+    const int WM_SYSCOMMAND = 0x0112;
+    const int SC_MOVE = 0xF010;
+	const int WM_MOVE = 0x003;
+	const int WM_MOVING = 0x0216;
+
+    switch(m.Msg)
+    {
+	case WM_MOVE:
+	case WM_MOVING:
+		if (!AllowMove)
+			return;
+		break;
+	case WM_SYSCOMMAND:
+		int Command = m.WParam.ToInt32() & 0xfff0;
+		if (Command == SC_MOVE && !AllowMove)
+			return;
+		break;
+    }
+
+	Form::WndProc(m);
+}
+
 // INTELLISENSE THINGY
 
-IntelliSenseThingy::IntelliSenseThingy(ScriptEditor::Workspace^% Parent)
+IntelliSenseThingy::IntelliSenseThingy(Object^% Parent)
 {
+	IntelliSenseBox = gcnew NonActivatingImmovableForm();
 	VarList = gcnew List<IntelliSenseItem^>();
 	ListContents = gcnew List<IntelliSenseItem^>();
+	IntelliSenseList = gcnew ListView();
 
 	if (Icons->Images->Count == 0)
 	{
@@ -529,12 +607,19 @@ IntelliSenseThingy::IntelliSenseThingy(ScriptEditor::Workspace^% Parent)
 		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemRemoteVar"));
 		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemUDF"));
 		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemQuest"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGlobalVar"));
+		Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));	
 	}
 
-	IntelliSenseList = gcnew ListView();
+	IntelliSenseBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
+	IntelliSenseBox->ShowInTaskbar = false;
+	IntelliSenseBox->ShowIcon = false;
+	IntelliSenseBox->ControlBox = false;
+	IntelliSenseBox->Controls->Add(IntelliSenseList);
+	IntelliSenseBox->Closing += gcnew CancelEventHandler(this, &IntelliSenseThingy::IntelliSenseBox_Cancel);
+
 	IntelliSenseList->View = View::Details;
-	IntelliSenseList->BorderStyle = BorderStyle::FixedSingle;
-	IntelliSenseList->AutoSize = false;
+	IntelliSenseList->Dock = DockStyle::Fill;
 	IntelliSenseList->MultiSelect = false;
 	IntelliSenseList->SmallImageList = Icons;
 	IntelliSenseList->SelectedIndexChanged += gcnew EventHandler(this, &IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged);
@@ -550,7 +635,6 @@ IntelliSenseThingy::IntelliSenseThingy(ScriptEditor::Workspace^% Parent)
 	IntelliSenseList->Sorting = SortOrder::None;
 	IntelliSenseList->Columns->Add("IntelliSense Object", 200);
 	IntelliSenseList->HeaderStyle = ColumnHeaderStyle::None;
-	IntelliSenseList->Size = ::Size(220, 105);
 	IntelliSenseList->HideSelection = false;
 
 	InfoTip->AutoPopDelay = 5000;
@@ -561,6 +645,7 @@ IntelliSenseThingy::IntelliSenseThingy(ScriptEditor::Workspace^% Parent)
 	Enabled = true;
 	ParentEditor = Parent;
 	LastOperation = Operation::e_Default;
+	Destroying = false;
 }
 
 void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll)
@@ -570,8 +655,9 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 	UInt32 ItemCount = 0;
 	Cleanup();
 
-	IntelliSenseList->Size = ::Size(220, 144);
 	IntelliSenseList->BeginUpdate();
+
+	ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
 	String^ Extract = ParentEditor->GetCurrentToken();
 
@@ -589,9 +675,12 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 					ItemCount++;
 				}
 			}
-			for each (IntelliSenseItem^% Itr in ISDB->Enumerables) {
+			for each (IntelliSenseItem^% Itr in ISDB->Enumerables) 
+			{
 				if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) ||
-					Itr->GetType() == IntelliSenseItem::ItemType::e_Quest)
+					Itr->GetType() == IntelliSenseItem::ItemType::e_Quest || 
+					Itr->GetType() == IntelliSenseItem::ItemType::e_GlobalVar ||
+					Itr->GetType() == IntelliSenseItem::ItemType::e_GMST)
 				{
 					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 					{
@@ -687,7 +776,8 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 
 		for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
 		{
-			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Quest)
+			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Quest ||
+				Itr->GetType() == IntelliSenseItem::ItemType::e_GlobalVar)
 			{
 				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
 				{
@@ -699,6 +789,7 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 		}
 		break;
 	}
+
 	IntelliSenseList->EndUpdate();
 
 	if (ItemCount == 1 && !String::Compare(ListContents[0]->GetIdentifier(), Extract, true))	return;		// do not show when enumerable == extract
@@ -706,14 +797,19 @@ void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force
 	if (ItemCount > 0)
 	{
 		Point Loc = ParentEditor->GetCaretLocation();
-		IntelliSenseList->Location = Point(Loc.X + 3, Loc.Y + (OPTIONS->FetchSettingAsInt("FontSize") + 10));
+		Loc.X += 3; Loc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5;
 
-		if (ItemCount < 8)			IntelliSenseList->Size = ::Size(220, 144 - ((8 - ItemCount) * 18));
+		if (ItemCount > 8)
+			ItemCount = 8;
 
-		IntelliSenseList->Show();
-		IntelliSenseList->BringToFront();
+		Size DisplaySize = ::Size(240, 155 - ((8 - ItemCount) * 18));
+		IntelliSenseBox->SetSize(DisplaySize);
+		IntelliSenseBox->ShowAtLocation(ParentEditor->GetScreenPoint(Loc), ParentEditor->GetControlBoxHandle());
+
 		IntelliSenseList->Items[0]->Selected = true;
+		ParentEditor->Focus();
 	}
+
 	LastOperation = Op;
 }
 
@@ -731,14 +827,18 @@ VariableInfo^ IntelliSenseThingy::GetLocalVar(String^% Identifier)
 
 void IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
+	ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
+
 	if (IsVisible())
 	{
 		if (GetSelectedIndex() == -1)
 			return;
 
-		Point TipLoc = Point(IntelliSenseList->Location.X + 225, IntelliSenseList->Location.Y + 28);
+		Point Loc = ParentEditor->GetCaretLocation();
+		Loc.X += 9 + 250; Loc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5 + 28;
+
 		InfoTip->ToolTipTitle = ListContents[GetSelectedIndex()]->GetTypeIdentifier();
-		InfoTip->Show(ListContents[GetSelectedIndex()]->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), TipLoc);
+		InfoTip->Show(ListContents[GetSelectedIndex()]->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), Loc);
 	}
 }
 
@@ -754,6 +854,12 @@ void IntelliSenseThingy::IntelliSenseList_MouseDoubleClick(Object^ Sender, Mouse
 		return;
 
 	PickIdentifier();
+}
+
+void IntelliSenseThingy::IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E)
+{
+	if (!Destroying)
+		E->Cancel = true;
 }
 
 void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
@@ -788,11 +894,15 @@ void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
 
 void IntelliSenseThingy::UpdateLocalVars()
 {
+	ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
+
 	IntelliSenseDatabase::ParseScript(const_cast<String^>(ParentEditor->GetScriptText()), gcnew Boxer(this));
 }
 
 void IntelliSenseThingy::PickIdentifier()
 {
+	ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
+
 	String^ Result;
 	ParentEditor->Focus();
 
@@ -816,7 +926,7 @@ void IntelliSenseThingy::PickIdentifier()
 
 void IntelliSenseThingy::Hide()
 {
-	IntelliSenseList->Hide();
+	IntelliSenseBox->Hide();
 	InfoTip->Hide(Control::FromHandle(IntelliSenseList->Parent->Handle));
 }
 
@@ -842,6 +952,8 @@ bool IntelliSenseThingy::ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc)
 {
 	if (OPTIONS->FetchSettingAsInt("UseQuickView") == 0)
 		return false;
+
+	ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
 	IntelliSenseItem^ Item = GetLocalVar(TextUnderMouse);
 
@@ -869,6 +981,8 @@ bool IntelliSenseThingy::ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc)
 
 bool IntelliSenseThingy::QuickView(String^ TextUnderMouse)
 {
+	ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
+
 	return ShowQuickInfoTip(TextUnderMouse, ParentEditor->GetCaretLocation());
 }
 

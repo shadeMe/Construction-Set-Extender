@@ -571,7 +571,8 @@ void CSEScriptTextEditor::PerformAutoIndentationProlog(bool CullEmptyLines)
 
 			for (int i = SelStart; i > Index; --i)
 			{
-				if (TextField->Text[i] == '\n') {
+				if (TextField->Text[i] == '\n')
+				{
 					Index = i;
 					break;
 				}

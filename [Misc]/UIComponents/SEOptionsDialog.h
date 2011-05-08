@@ -156,6 +156,9 @@ private: System::Windows::Forms::Button^  CmDlgFindResultsHighlightColor;
 private: System::Windows::Forms::Label^  LabelFindResultsHighlight;
 private: System::Windows::Forms::Button^  CmDlgSyntaxCommentsColor;
 private: System::Windows::Forms::Label^  LabelComments;
+private: System::Windows::Forms::CheckBox^  CutCopyEntireLine;
+private: System::Windows::Forms::CheckBox^  ShowSpaces;
+private: System::Windows::Forms::CheckBox^  ShowTabs;
 
 
 
@@ -243,6 +246,9 @@ private: System::Windows::Forms::Label^  LabelComments;
 			this->TabSanitize = (gcnew System::Windows::Forms::TabPage());
 			this->IndentLines = (gcnew System::Windows::Forms::CheckBox());
 			this->AnnealCasing = (gcnew System::Windows::Forms::CheckBox());
+			this->ShowTabs = (gcnew System::Windows::Forms::CheckBox());
+			this->ShowSpaces = (gcnew System::Windows::Forms::CheckBox());
+			this->CutCopyEntireLine = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -315,16 +321,16 @@ private: System::Windows::Forms::Label^  LabelComments;
 			// 
 			// LabelTabSize
 			// 
-			this->LabelTabSize->Location = System::Drawing::Point(286, 194);
+			this->LabelTabSize->Location = System::Drawing::Point(228, 194);
 			this->LabelTabSize->Name = L"LabelTabSize";
-			this->LabelTabSize->Size = System::Drawing::Size(131, 20);
+			this->LabelTabSize->Size = System::Drawing::Size(58, 20);
 			this->LabelTabSize->TabIndex = 3;
-			this->LabelTabSize->Text = L"Tab Size ( In Characters )";
+			this->LabelTabSize->Text = L"Tab Size";
 			this->LabelTabSize->Click += gcnew System::EventHandler(this, &OptionsDialog::label2_Click);
 			// 
 			// TabSize
 			// 
-			this->TabSize->Location = System::Drawing::Point(289, 217);
+			this->TabSize->Location = System::Drawing::Point(289, 192);
 			this->TabSize->Name = L"TabSize";
 			this->TabSize->Size = System::Drawing::Size(128, 20);
 			this->TabSize->TabIndex = 2;
@@ -352,7 +358,7 @@ private: System::Windows::Forms::Label^  LabelComments;
 			// 
 			// CmDlgFont
 			// 
-			this->CmDlgFont->Location = System::Drawing::Point(342, 249);
+			this->CmDlgFont->Location = System::Drawing::Point(342, 218);
 			this->CmDlgFont->Name = L"CmDlgFont";
 			this->CmDlgFont->Size = System::Drawing::Size(75, 24);
 			this->CmDlgFont->TabIndex = 0;
@@ -377,6 +383,7 @@ private: System::Windows::Forms::Label^  LabelComments;
 			// 
 			// TabGeneral
 			// 
+			this->TabGeneral->Controls->Add(this->CutCopyEntireLine);
 			this->TabGeneral->Controls->Add(this->LoadScriptUpdateExistingScripts);
 			this->TabGeneral->Controls->Add(this->DestroyOnLastTabClose);
 			this->TabGeneral->Controls->Add(this->SuppressRefCountForQuestScripts);
@@ -470,6 +477,8 @@ private: System::Windows::Forms::Label^  LabelComments;
 			// 
 			// TabAppearance
 			// 
+			this->TabAppearance->Controls->Add(this->ShowSpaces);
+			this->TabAppearance->Controls->Add(this->ShowTabs);
 			this->TabAppearance->Controls->Add(this->CmDlgFindResultsHighlightColor);
 			this->TabAppearance->Controls->Add(this->LabelFindResultsHighlight);
 			this->TabAppearance->Controls->Add(this->CmDlgCurrentLineHighlightColor);
@@ -575,7 +584,7 @@ private: System::Windows::Forms::Label^  LabelComments;
 			// Wordwrap
 			// 
 			this->Wordwrap->AutoSize = true;
-			this->Wordwrap->Location = System::Drawing::Point(255, 254);
+			this->Wordwrap->Location = System::Drawing::Point(231, 221);
 			this->Wordwrap->Name = L"Wordwrap";
 			this->Wordwrap->Size = System::Drawing::Size(81, 17);
 			this->Wordwrap->TabIndex = 5;
@@ -763,6 +772,36 @@ private: System::Windows::Forms::Label^  LabelComments;
 			this->AnnealCasing->TabIndex = 11;
 			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
+			// 
+			// ShowTabs
+			// 
+			this->ShowTabs->AutoSize = true;
+			this->ShowTabs->Location = System::Drawing::Point(231, 244);
+			this->ShowTabs->Name = L"ShowTabs";
+			this->ShowTabs->Size = System::Drawing::Size(80, 17);
+			this->ShowTabs->TabIndex = 28;
+			this->ShowTabs->Text = L"Show Tabs";
+			this->ShowTabs->UseVisualStyleBackColor = true;
+			// 
+			// ShowSpaces
+			// 
+			this->ShowSpaces->AutoSize = true;
+			this->ShowSpaces->Location = System::Drawing::Point(231, 267);
+			this->ShowSpaces->Name = L"ShowSpaces";
+			this->ShowSpaces->Size = System::Drawing::Size(92, 17);
+			this->ShowSpaces->TabIndex = 29;
+			this->ShowSpaces->Text = L"Show Spaces";
+			this->ShowSpaces->UseVisualStyleBackColor = true;
+			// 
+			// CutCopyEntireLine
+			// 
+			this->CutCopyEntireLine->AutoSize = true;
+			this->CutCopyEntireLine->Location = System::Drawing::Point(22, 138);
+			this->CutCopyEntireLine->Name = L"CutCopyEntireLine";
+			this->CutCopyEntireLine->Size = System::Drawing::Size(242, 17);
+			this->CutCopyEntireLine->TabIndex = 29;
+			this->CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection\'s Empty";
+			this->CutCopyEntireLine->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 

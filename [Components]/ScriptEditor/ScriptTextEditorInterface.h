@@ -74,6 +74,8 @@ public interface class ScriptTextEditorInterface
 	Control^									GetContainer();
 	void										ScrollToLine(String^ LineNumber);
 	void										HandleTabSwitchEvent(void);		// called when the workspace's parent tab is selected
+	void										Destroy();
+	Point										PointToScreen(Point Location);
 
 	// AvalonEdit specific
 	void										HighlightScriptError(int Line);

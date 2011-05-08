@@ -6,7 +6,6 @@ CSE--->
 > Make sure the changes to the plugin inteface code (AddToURLMap in particular) works with plugins loaded after CSE
 > Increase the column header size of the Quests dialog
 > Clear quest stage result script text when compiling it (when found empty)
-> A 'Show plugin overrides' tool for forms - Lists overriding files
 > Check out the assertion at 0x004875A1 (called indirectly from Datahandler::saveplugin_Housekeeping). strangely seems to happen only when IDA's debugger is attached
 > Topicinfo inititem warnings aren't being shown
 > Update the model of references

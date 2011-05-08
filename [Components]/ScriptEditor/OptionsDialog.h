@@ -67,6 +67,7 @@ public ref class OptionsDialog
 				CheckBox^										DestroyOnLastTabClose;
 				CheckBox^										SuppressRefCountForQuestScripts;
 				CheckBox^										LoadScriptUpdateExistingScripts;
+				CheckBox^										CutCopyEntireLine;
 			TabPage^									TabIntelliSense;
 				Label^										LabelISThreshold;
 				NumericUpDown^								ThresholdLength;
@@ -107,6 +108,8 @@ public ref class OptionsDialog
 				Label^								LabelFindResultsHighlight;
 
 				CheckBox^							Wordwrap;
+				CheckBox^							ShowTabs;
+				CheckBox^							ShowSpaces;
 			TabPage^									TabSanitize;
 				CheckBox^									IndentLines;
 				CheckBox^									AnnealCasing;

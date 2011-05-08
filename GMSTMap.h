@@ -9,6 +9,9 @@ union SettingData
 	char*			s;
 };
 
+struct VariableData;
+typedef VariableData GMSTData;
+
 // 2C		### partial - look into the common settings class
 class GameSetting
 {
@@ -37,3 +40,5 @@ typedef std::map<const char*, GameSetting*, GMSTMap_Key_Comparer>		_DefaultGMSTM
 extern _DefaultGMSTMap			g_DefaultGMSTMap;
 
 void						InitializeDefaultGMSTMap();
+UInt32						CountGMSTForms();
+void						InitializeHandShakeGMSTData(GMSTData* HandShakeData);

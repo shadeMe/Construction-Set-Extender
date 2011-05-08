@@ -79,16 +79,16 @@ const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its inde
 											"TOFT"
 										};
 
-TESDialogInitParam::TESDialogInitParam(const char* EditorID)
+FormEditParam::FormEditParam(const char* EditorID)
 {
-	Form = GetFormByID(EditorID);
-	TypeID = Form->typeID;
+	form = GetFormByID(EditorID);
+	typeID = form->typeID;
 }
 
-TESDialogInitParam::TESDialogInitParam(UInt32 FormID)
+FormEditParam::FormEditParam(UInt32 FormID)
 {
-	Form = TESForm_LookupByFormID(FormID);
-	TypeID = Form->typeID;
+	form = TESForm_LookupByFormID(FormID);
+	typeID = form->typeID;
 }
 
 UInt32 GetFormDialogTemplate(const char* FormType)
@@ -171,7 +171,7 @@ void InstantitateCustomScriptEditor(UInt32 ScriptFormID)
 void ShowFormEditDialog(const char* EditorID, const char* FormType)
 {
 	UInt32 Type = GetFormDialogTemplate(FormType);
-	TESDialogInitParam InitData(EditorID);
+	FormEditParam InitData(EditorID);
 
 	switch (Type)
 	{
@@ -185,7 +185,7 @@ void ShowFormEditDialog(const char* EditorID, const char* FormType)
 	case 1:
 	case 2:
 		CreateDialogParamA(*g_TESCS_Instance,
-							(LPCSTR)GetTESDialogTemplateForType(InitData.TypeID),
+							(LPCSTR)GetTESDialogTemplateForType(InitData.typeID),
 							*g_HWND_CSParent,
 							((Type == 1) ? g_TESDialog_DlgProc : g_TESDialogListView_DlgProc),
 							(LPARAM)&InitData);

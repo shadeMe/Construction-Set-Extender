@@ -9,6 +9,7 @@
 
 #include "ScriptEditorAllocator.h"
 #include "CSDialogs.h"
+#include "GMSTMap.h"
 
 FormData*						g_FormData = new FormData();
 UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();
@@ -22,8 +23,8 @@ __declspec(dllexport) void __stdcall _D_PRINT(UInt8 Source, const char* Message)
 
 __declspec(dllexport) const char* __stdcall GetINIString(const char* Section, const char* Key, const char* Default)
 {
-	GetPrivateProfileString(Section, Key, Default, g_Buffer, sizeof(g_Buffer), g_INIPath.c_str());
-	return (const char*)g_Buffer;
+	GetPrivateProfileString(Section, Key, Default, g_TextBuffer, sizeof(g_TextBuffer), g_INIPath.c_str());
+	return (const char*)g_TextBuffer;
 }
 
 __declspec(dllexport) const char* __stdcall GetAppPath(void){
@@ -376,12 +377,10 @@ __declspec(dllexport) IntelliSenseUpdateData* __stdcall ScriptEditor_BeginIntell
 {
 	IntelliSenseUpdateData* Data = new IntelliSenseUpdateData();
 
-	UInt32 QuestCount = 0, ScriptCount = 0;
-	for (DataHandler::Node<TESQuest>* Itr = &(*g_dataHandler)->quests; Itr; Itr = Itr->next)
-	{
-		if (Itr->data)
-			QuestCount++;
-	}
+	UInt32 QuestCount = thisCall(kLinkedListNode_CountNodes, &(*g_dataHandler)->quests),
+			ScriptCount = 0,
+			GlobalCount = thisCall(kLinkedListNode_CountNodes, &(*g_dataHandler)->globals),
+			GMSTCount = CountGMSTForms();
 
 	ScriptData TestData;
 	for (DataHandler::Node<Script>* Itr = &(*g_dataHandler)->scripts; Itr; Itr = Itr->next)
@@ -393,12 +392,17 @@ __declspec(dllexport) IntelliSenseUpdateData* __stdcall ScriptEditor_BeginIntell
 		}
 	}
 
+
 	Data->QuestListHead = new QuestData[QuestCount];
 	Data->QuestCount = QuestCount;
 	Data->ScriptListHead = new ScriptData[ScriptCount];
 	Data->ScriptCount = ScriptCount;
+	Data->GlobalListHead = new GlobalData[GlobalCount];
+	Data->GlobalCount = GlobalCount;
+	Data->GMSTListHead = new GMSTData[GMSTCount];
+	Data->GMSTCount = GMSTCount;
 
-	QuestCount = 0, ScriptCount = 0;
+	QuestCount = 0, ScriptCount = 0, GlobalCount = 0, GMSTCount = 0;
 	for (DataHandler::Node<TESQuest>* Itr = &(*g_dataHandler)->quests; Itr; Itr = Itr->next)
 	{
 		if (Itr->data)
@@ -428,6 +432,18 @@ __declspec(dllexport) IntelliSenseUpdateData* __stdcall ScriptEditor_BeginIntell
 		}
 	}
 
+	for (DataHandler::Node<TESGlobal>* Itr = &(*g_dataHandler)->globals; Itr; Itr = Itr->next)
+	{
+		if (Itr->data)
+		{
+			Data->GlobalListHead[GlobalCount].FillFormData(Itr->data);
+			Data->GlobalListHead[GlobalCount].FillVariableData(Itr->data);
+			GlobalCount++;
+		}
+	}
+
+	InitializeHandShakeGMSTData(Data->GMSTListHead);
+
 	return Data;
 }
 
@@ -435,6 +451,8 @@ __declspec(dllexport) void __stdcall ScriptEditor_EndIntelliSenseDatabaseUpdate(
 {
 	delete [] Data->ScriptListHead;
 	delete [] Data->QuestListHead;
+	delete [] Data->GlobalListHead;
+	delete [] Data->GMSTListHead;
 	delete Data;
 }
 
@@ -485,8 +503,8 @@ __declspec(dllexport) void __stdcall ScriptEditor_BindScript(const char* EditorI
 			thisCall(kTESForm_AddReference, ScriptForm, Form);
 			thisVirtualCall(*((UInt32*)Form), 0x94, Form, 1);		// SetFromActiveFile
 
-			sprintf_s(g_Buffer, sizeof(g_Buffer), "Script '%s' bound to form '%s'", ScriptForm->editorData.editorID.m_data, Form->editorData.editorID.m_data);
-			MessageBox(Parent, g_Buffer, "CSE", MB_OK|MB_ICONINFORMATION);
+			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Script '%s' bound to form '%s'", ScriptForm->editorData.editorID.m_data, Form->editorData.editorID.m_data);
+			MessageBox(Parent, g_TextBuffer, "CSE", MB_OK|MB_ICONINFORMATION);
 		}
 	}
 }
@@ -504,8 +522,8 @@ __declspec(dllexport) void __stdcall UseInfoList_SetFormListItemText()
 		CLIWrapper::UseInfoList::SetFormListItemData(g_FormData);
 		Count++;
 
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "[%d/%d]", Count, Total);
-		WriteStatusBarText(1, g_Buffer);
+		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "[%d/%d]", Count, Total);
+		WriteStatusBarText(1, g_TextBuffer);
 		WriteStatusBarText(2, g_FormData->EditorID);
 	}
 
@@ -653,10 +671,10 @@ __declspec(dllexport) const char* __stdcall BatchRefEditor_ChooseParentReference
 
 	Data->EnableParent.Parent = Ref;
 	if (Ref)
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "%08X", Ref->refID);
+		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Ref->refID);
 	else
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "NONE");
-	return (!Ref || !Ref->editorData.editorID.m_data)?g_Buffer:Ref->editorData.editorID.m_data;
+		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "NONE");
+	return (!Ref || !Ref->editorData.editorID.m_data)?g_TextBuffer:Ref->editorData.editorID.m_data;
 }
 
 __declspec(dllexport) void __stdcall TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data)
@@ -698,8 +716,8 @@ void UseInfoList_SetFormListItemText_ParseFormNode(DataHandler::Node<tData>* Thi
 		ThisNode = ThisNode->next;
 		Count++;
 
-		sprintf_s(g_Buffer, sizeof(g_Buffer), "[%d]", Count);
-		WriteStatusBarText(1, g_Buffer);
+		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "[%d]", Count);
+		WriteStatusBarText(1, g_TextBuffer);
 	}
 }
 

@@ -102,6 +102,7 @@
 #define RENDER_UNGROUPSELECTION         9922
 #define MAIN_DATA_SETWORKSPACE          9923
 #define MAIN_DATA_SAVEESPMASTERS        9924
+#define POPUP_SHOWOVERRIDES				9925
 #define ID_CLEARCONSOLE                 40001
 #define CONSOLE_POPUP                   40002
 #define ID_CONSOLESETTINGS              40003
@@ -132,6 +133,7 @@
 #define ID_CONSOLESETTINGS_OPENDEBUGLOG 40028
 #define CONSOLEMENU_OPENDEBUGLOG        40029
 #define ID_SELECTIONVISIBILITY_SHOWALL  40030
+
 
 // Next default values for new objects
 // 

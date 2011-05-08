@@ -165,6 +165,8 @@ void OptionsDialog::PopulateINIMap()
 
 	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::Appearance", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 	INIMap->Add(gcnew INISetting("WordWrap", "ScriptEditor::Appearance", "0"), gcnew BoundControl(Wordwrap, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("ShowTabs", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("ShowSpaces", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// General
 	INIMap->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "ScriptEditor::General", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -174,6 +176,7 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("UseCSParent", "ScriptEditor::General", "0"), gcnew BoundControl(UseCSParent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("DestroyOnLastTabClose", "ScriptEditor::General", "1"), gcnew BoundControl(DestroyOnLastTabClose, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	INIMap->Add(gcnew INISetting("LoadScriptUpdateExistingScripts", "ScriptEditor::General", "0"), gcnew BoundControl(LoadScriptUpdateExistingScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("CutCopyEntireLine", "ScriptEditor::General", "0"), gcnew BoundControl(CutCopyEntireLine, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// IntelliSense
 	INIMap->Add(gcnew INISetting("ThresholdLength", "ScriptEditor::IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
@@ -325,6 +328,11 @@ OptionsDialog::OptionsDialog()
 	LabelCurrentLineHighlight = (gcnew Label());
 	CmDlgFindResultsHighlightColor = (gcnew Button());
 	LabelFindResultsHighlight = (gcnew Label());
+	ShowTabs = (gcnew CheckBox());
+	ShowSpaces = (gcnew CheckBox());
+	CutCopyEntireLine = (gcnew CheckBox());
+
+
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->BeginInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TabSize))->BeginInit();
 	TabContainer->SuspendLayout();
@@ -397,15 +405,15 @@ OptionsDialog::OptionsDialog()
 	// 
 	// LabelTabSize
 	// 
-	LabelTabSize->Location = System::Drawing::Point(286, 194);
+	LabelTabSize->Location = System::Drawing::Point(228, 194);
 	LabelTabSize->Name = L"LabelTabSize";
-	LabelTabSize->Size = System::Drawing::Size(131, 25);
+	LabelTabSize->Size = System::Drawing::Size(58, 20);
 	LabelTabSize->TabIndex = 3;
-	LabelTabSize->Text = L"Tab Size (Characters)";
+	LabelTabSize->Text = L"Tab Size";
 	// 
 	// TabSize
 	// 
-	TabSize->Location = System::Drawing::Point(289, 217);
+	TabSize->Location = System::Drawing::Point(289, 192);
 	TabSize->Name = L"TabSize";
 	TabSize->Size = System::Drawing::Size(128, 20);
 	TabSize->TabIndex = 2;
@@ -432,7 +440,7 @@ OptionsDialog::OptionsDialog()
 	// 
 	// CmDlgFont
 	// 
-	CmDlgFont->Location = System::Drawing::Point(342, 249);
+	CmDlgFont->Location = System::Drawing::Point(342, 218);
 	CmDlgFont->Name = L"CmDlgFont";
 	CmDlgFont->Size = System::Drawing::Size(75, 24);
 	CmDlgFont->TabIndex = 0;
@@ -457,6 +465,7 @@ OptionsDialog::OptionsDialog()
 	// 
 	// TabGeneral
 	// 
+	TabGeneral->Controls->Add(CutCopyEntireLine);
 	TabGeneral->Controls->Add(LoadScriptUpdateExistingScripts);
 	TabGeneral->Controls->Add(DestroyOnLastTabClose);
 	TabGeneral->Controls->Add(SuppressRefCountForQuestScripts);
@@ -550,6 +559,8 @@ OptionsDialog::OptionsDialog()
 	// 
 	// TabAppearance
 	// 
+	TabAppearance->Controls->Add(ShowTabs);
+	TabAppearance->Controls->Add(ShowSpaces);
 	TabAppearance->Controls->Add(CmDlgFindResultsHighlightColor);
 	TabAppearance->Controls->Add(LabelFindResultsHighlight);
 	TabAppearance->Controls->Add(CmDlgCurrentLineHighlightColor);
@@ -757,7 +768,7 @@ OptionsDialog::OptionsDialog()
 	// Wordwrap
 	// 
 	Wordwrap->AutoSize = true;
-	Wordwrap->Location = System::Drawing::Point(255, 254);
+	Wordwrap->Location = System::Drawing::Point(231, 221);
 	Wordwrap->Name = L"Wordwrap";
 	Wordwrap->Size = System::Drawing::Size(81, 17);
 	Wordwrap->TabIndex = 5;
@@ -853,6 +864,37 @@ OptionsDialog::OptionsDialog()
 	LabelFindResultsHighlight->Size = System::Drawing::Size(108, 33);
 	LabelFindResultsHighlight->TabIndex = 26;
 	LabelFindResultsHighlight->Text = L"Find Results Highlight";
+	// 
+	// ShowTabs
+	// 
+	ShowTabs->AutoSize = true;
+	ShowTabs->Location = System::Drawing::Point(231, 244);
+	ShowTabs->Name = L"ShowTabs";
+	ShowTabs->Size = System::Drawing::Size(80, 17);
+	ShowTabs->TabIndex = 28;
+	ShowTabs->Text = L"Show Tabs";
+	ShowTabs->UseVisualStyleBackColor = true;
+	// 
+	// ShowSpaces
+	// 
+	ShowSpaces->AutoSize = true;
+	ShowSpaces->Location = System::Drawing::Point(231, 267);
+	ShowSpaces->Name = L"ShowSpaces";
+	ShowSpaces->Size = System::Drawing::Size(92, 17);
+	ShowSpaces->TabIndex = 29;
+	ShowSpaces->Text = L"Show Spaces";
+	ShowSpaces->UseVisualStyleBackColor = true;
+	// 
+	// CutCopyEntireLine
+	// 
+	CutCopyEntireLine->AutoSize = true;
+	CutCopyEntireLine->Location = System::Drawing::Point(22, 138);
+	CutCopyEntireLine->Name = L"CutCopyEntireLine";
+	CutCopyEntireLine->Size = System::Drawing::Size(242, 17);
+	CutCopyEntireLine->TabIndex = 29;
+	CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection\'s Empty";
+	CutCopyEntireLine->UseVisualStyleBackColor = true;
+
 	// 
 	// OptionsDialog
 	// 

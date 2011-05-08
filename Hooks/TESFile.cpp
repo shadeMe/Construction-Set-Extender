@@ -201,12 +201,12 @@ _BeginHookHdlrFn(AutoLoadActivePluginOnStartup)
 bool __stdcall DoTESFileUpdateHeaderHook(TESFile* Plugin)
 {
 	PrintToBuffer("%s%s", Plugin->filepath, Plugin->name);
-	HANDLE TempFile = CreateFile(g_Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE TempFile = CreateFile(g_TextBuffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (TempFile == INVALID_HANDLE_VALUE)
 	{
 		LogWinAPIErrorMessage(GetLastError());
 		PrintToBuffer("Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->name);
-		MessageBox(NULL, g_Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+		MessageBox(NULL, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 		return false;
 	}
 	else
@@ -455,8 +455,8 @@ void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
 
 	PrintToBuffer("Data\\Backup\\%s - [%s].%s", Name.c_str(), TimeString, Extension.c_str());
 	sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filepath, SaveFile->name);
-	CopyFile(ExistingPath, g_Buffer, FALSE);
-	DebugPrint("Saved active file backup to '%s'", g_Buffer);
+	CopyFile(ExistingPath, g_TextBuffer, FALSE);
+	DebugPrint("Saved active file backup to '%s'", g_TextBuffer);
 }
 
 _BeginHookHdlrFn(DataHandlerSavePluginProlog)

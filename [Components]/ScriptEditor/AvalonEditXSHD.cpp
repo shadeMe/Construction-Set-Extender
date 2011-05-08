@@ -1,5 +1,6 @@
 #include "AvalonEditXSHD.h"
 #include "IntelliSense.h"
+#include "Globals.h"
 
 using namespace System::Xml;
 using namespace ICSharpCode;

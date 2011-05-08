@@ -154,8 +154,10 @@ ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 Alloc
 {
 	ScriptEditor::Workspace^ Result = ScriptEditor::Workspace::NullWorkspace;
 
-	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) {
-		if (Itr->GetAllocatedIndex() == AllocatedIndex) {
+	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) 
+	{
+		if (Itr->GetAllocatedIndex() == AllocatedIndex) 
+		{
 			Result = Itr;
 			break;
 		}

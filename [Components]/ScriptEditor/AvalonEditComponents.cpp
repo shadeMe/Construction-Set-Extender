@@ -3,7 +3,7 @@
 
 namespace AvalonEditComponents
 {
-	void AvalonEditSelectionColorizer::PerformColorization(VisualLineElement^ Element)
+	void AvalonEditSelectionColorizingTransformer::PerformColorization(VisualLineElement^ Element)
 	{
 		Color Buffer = OPTIONS->GetColor("SelectionHighlightColor");
 		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
@@ -12,7 +12,7 @@ namespace AvalonEditComponents
 		Element->TextRunProperties->SetBackgroundBrush(Brush);
 	}
 
-	void AvalonEditSelectionColorizer::ColorizeLine(DocumentLine^ line)
+	void AvalonEditSelectionColorizingTransformer::ColorizeLine(DocumentLine^ line)
 	{
 		TextDocument^ CurrentDocument = CurrentContext->Document;
 		Selection^ CurrentSelection = this->ParentEditor->TextArea->Selection;
@@ -28,7 +28,7 @@ namespace AvalonEditComponents
 				while ((Index = CurrentLine->IndexOf(SelectionText, Start)) != -1)
 				{
 					int EndIndex = Index + SelectionText->Length;
-					Action<VisualLineElement^>^ Operation = gcnew Action<VisualLineElement^>(this, &AvalonEditSelectionColorizer::PerformColorization);
+					Action<VisualLineElement^>^ Operation = gcnew Action<VisualLineElement^>(this, &AvalonEditSelectionColorizingTransformer::PerformColorization);
 
 					ChangeLinePart(line->Offset + Index, line->Offset + EndIndex, Operation);
 					Start = Index + 1;
@@ -37,7 +37,7 @@ namespace AvalonEditComponents
 		}
 	}
 
-	void AvalonEditLineLimitColorizer::PerformColorization(VisualLineElement^ Element)
+	void AvalonEditLineLimitColorizingTransformer::PerformColorization(VisualLineElement^ Element)
 	{
 		Color Buffer = OPTIONS->GetColor("CharLimitHighlightColor");
 		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
@@ -46,21 +46,21 @@ namespace AvalonEditComponents
 		Element->TextRunProperties->SetBackgroundBrush(Brush);
 	}
 
-	void AvalonEditLineLimitColorizer::ColorizeLine(DocumentLine^ line)
+	void AvalonEditLineLimitColorizingTransformer::ColorizeLine(DocumentLine^ line)
 	{
 		TextDocument^ CurrentDocument = CurrentContext->Document;
 
 		String^ CurrentLine = CurrentDocument->GetText(line);
 		if (CurrentDocument->GetText(line)->Length > 512)
 		{
-			Action<VisualLineElement^>^ Operation = gcnew Action<VisualLineElement^>(this, &AvalonEditLineLimitColorizer::PerformColorization);
+			Action<VisualLineElement^>^ Operation = gcnew Action<VisualLineElement^>(this, &AvalonEditLineLimitColorizingTransformer::PerformColorization);
 			ChangeLinePart(line->Offset, line->EndOffset, Operation);
 		}
 	}
 
 
 
-	void AvalonEditLineBackgroundColorizer::RenderBackground( TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine )
+	void AvalonEditLineBackgroundColorizer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine )
 	{
 		Destination->EnsureVisualLines();
 		TextSegment^ Segment = gcnew TextSegment();

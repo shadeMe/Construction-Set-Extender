@@ -59,11 +59,11 @@ UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 UInt32 __stdcall InitPathEditor(int ID, const char* ExistingPath, HWND Dialog)
 {
 	if (!ExistingPath)
-		GetDlgItemText(Dialog, ID, g_Buffer, sizeof(g_Buffer));
+		GetDlgItemText(Dialog, ID, g_TextBuffer, sizeof(g_TextBuffer));
 	else
 		PrintToBuffer("%s", ExistingPath);
 
-	g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_Buffer);
+	g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
 
 	if (!g_AssetSelectorReturnPath)
 		return 0;

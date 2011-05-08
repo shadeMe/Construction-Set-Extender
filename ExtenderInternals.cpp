@@ -8,7 +8,7 @@ bool								g_PluginPostLoad = false;
 SME::INI::INIManager*				g_INIManager = new CSEINIManager();
 SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();
 
-char								g_Buffer[0x200] = {0};
+char								g_TextBuffer[0x200] = {0};
 HINSTANCE							g_DLLInstance = NULL;
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
@@ -193,6 +193,7 @@ const UInt32						kTESForm_SetTemporary = 0x004972A0;
 const UInt32						kTESIdleFormTree_AddRootNodes = 0x004D4490;
 const UInt32						kTESRenderUndoStack_RecordReference = 0x00432D40;
 const UInt32						kTESObjectREFR_PickComparator = 0x00545B10;
+const UInt32						kLinkedListNode_CountNodes = 0x0047DC40;
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;

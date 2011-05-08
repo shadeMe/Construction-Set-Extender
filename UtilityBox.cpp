@@ -48,10 +48,10 @@ const char* PrintToBuffer(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
+	vsprintf_s(g_TextBuffer, sizeof(g_TextBuffer), fmt, args);
 	va_end(args);
 
-	return g_Buffer;
+	return g_TextBuffer;
 }
 
 // modified to use plugin debugging tools

@@ -22,8 +22,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TagBrowser", "[Components]\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor.Preprocessor", "[Components]\ScriptEditor\Preprocessor\ScriptEditor.Preprocessor.vcxproj", "{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F44EA0E4-BB0C-4DFB-B489-D9F55A060E60}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

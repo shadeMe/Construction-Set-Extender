@@ -18,7 +18,7 @@ namespace HallOfFame
 		const char*		Name;
 	};
 
-	const UInt32			ListSize = 15;
+	const UInt32			ListSize = 16;
 	const Entry				Entries[ListSize] =
 	{	
 		{ "shadeMe",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Likes Andrea Corr" },
@@ -35,7 +35,8 @@ namespace HallOfFame
 		{ "Vacuity",					kTESObjectCONT_Ctor,	0xBC,	kVTBL_TESObjectCONT, NULL,	"                " },
 		{ "SenChan",					kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Is A Year Older Now" },
 		{ "lilith",						kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"Likes Tea. Black. Like Me" },
-		{ "daemondarque",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"His Majestry The CTD" }
+		{ "daemondarque",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"His Majestry The CTD" },
+		{ "greenwarden",				kTESNPC_Ctor,			0x230,	kVTBL_TESNPC, NULL,			"The Wise Old Woman of Putney" }
 	};
 
 	void __stdcall				Initialize(bool ResetCSWindows);

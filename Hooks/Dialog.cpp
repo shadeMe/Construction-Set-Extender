@@ -308,8 +308,8 @@ _BeginHookHdlrFn(CellViewPopulateObjectList)
 void __stdcall AppendShadeMeRefToComboBox(HWND hWnd)
 {
 	TESForm* Ref = GetFormByID("TheShadeMeRef");
-	sprintf_s(g_Buffer, sizeof(g_Buffer), "'shadeMe' 'TheShadeMeRef'");
-	TESDialog_AddComboBoxItem(hWnd, g_Buffer, (LPARAM)Ref, 1);
+	sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "'shadeMe' 'TheShadeMeRef'");
+	TESDialog_AddComboBoxItem(hWnd, g_TextBuffer, (LPARAM)Ref, 1);
 }
 
 _BeginHookHdlrFn(CellObjectListShadeMeRefAppend)
@@ -334,6 +334,8 @@ void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
 	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
+	InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SHOWOVERRIDES, "Show Override List");
+	
 	if (GetFormDialogTemplate(SelectedForm->typeID) == 1 && SelectedForm->IsReference() == 0)
 	{
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
@@ -360,6 +362,7 @@ void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* Selec
 	case POPUP_TOGGLEVISIBILITY:
 	case POPUP_TOGGLECHILDRENVISIBILITY:
 	case POPUP_ADDTOTAG:
+	case POPUP_SHOWOVERRIDES:
 		EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 		break;
 	default:
@@ -378,6 +381,7 @@ void __stdcall RemoveFormListPopupMenuItems(HMENU Menu)
 	DeleteMenu(Menu, POPUP_TOGGLEVISIBILITY, MF_BYCOMMAND);
 	DeleteMenu(Menu, POPUP_TOGGLECHILDRENVISIBILITY, MF_BYCOMMAND);
 	DeleteMenu(Menu, POPUP_ADDTOTAG, MF_BYCOMMAND);
+	DeleteMenu(Menu, POPUP_SHOWOVERRIDES, MF_BYCOMMAND);
 	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 	DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 }
@@ -693,8 +697,8 @@ UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Ide
 						}
 					}
 
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
-					MessageBox(Dialog, g_Buffer, "CSE", MB_OK);
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
+					MessageBox(Dialog, g_TextBuffer, "CSE", MB_OK);
 				}
 				else if (Identifier == RACE_COPYHAIR)
 				{
@@ -710,8 +714,8 @@ UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Ide
 						}
 					}
 
-					sprintf_s(g_Buffer, sizeof(g_Buffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
-					MessageBox(Dialog, g_Buffer, "CSE", MB_OK);
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
+					MessageBox(Dialog, g_TextBuffer, "CSE", MB_OK);
 				}
 			}
 		}

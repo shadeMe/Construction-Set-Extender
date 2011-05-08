@@ -27,7 +27,7 @@ static const UInt32	kCreateLIPFile = 0x004ABE10;
 HANDLE				g_InteropPipeHandle		=	INVALID_HANDLE_VALUE;
 
 FILE*				g_DebugLog				=	NULL;
-char				g_Buffer[0x200]			=	{0};
+char				g_TextBuffer[0x200]			=	{0};
 
 extern "C"
 {
@@ -49,10 +49,10 @@ void DebugPrint(const char* fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
-	vsprintf_s(g_Buffer, sizeof(g_Buffer), fmt, args);
+	vsprintf_s(g_TextBuffer, sizeof(g_TextBuffer), fmt, args);
 	va_end(args);
 
-	fputs(g_Buffer, g_DebugLog);
+	fputs(g_TextBuffer, g_DebugLog);
 	fputs("\n", g_DebugLog);
 	fflush(g_DebugLog);
 }

@@ -10,14 +10,14 @@ class Script;
 class TESForm;
 struct ScriptVarIndexData;
 
-HWND								g_ScriptEditorBuffer = NULL;			// handle to the editor dialog being processed by the WndProc
+HWND								g_ScriptEditorBuffer = NULL;			// handle to the editor dialog last processed by the WndProc
 Script*								g_EditorInitScript	=	NULL;			// must point to valid Script object to be used. needs to be reset right after dialog instantiation
 Script*								g_SetEditorTextCache = NULL;			// stores the script object from the last call of f_Script::SetEditorText
-UInt32								g_WParamBuffer		=	0;				// WParam processed by the WndProc
+UInt32								g_WParamBuffer		=	0;				// WParam last processed by the WndProc
 ScriptData*							g_ScriptDataPackage = new ScriptData();
 const char*							g_RecompileAllScriptsStr = "Are you sure you want to recompile every script in the active plugin?";
 Script*								g_ScriptListResult = NULL;				// used by our script list hook, to set the selected script form
-const void*							g_ExpressionBuffer = new char[0x400];
+const void*							g_ExpressionBuffer = new char[0x500];
 Script*								g_EditorAuxScript = NULL;
 HWND								g_EditorAuxHWND = NULL;
 UInt32								g_MaxScriptDataSize = 0x8000;
@@ -237,7 +237,8 @@ _BeginHookHdlrFn(RecompileScripts)
 
 bool __stdcall DoEditorInitScriptHook(void)
 {
-	if (g_EditorInitScript) {						// custom init script
+	if (g_EditorInitScript) 
+	{								// custom init script
 		g_SetEditorTextCache = g_EditorInitScript;
 		return true;
 	} else
@@ -539,9 +540,9 @@ _BeginHookHdlrFn(MaxScriptSizeOverrideParseScriptLine)
 	_DeclareHookHdlrFnVariable(MaxScriptSizeOverrideParseScriptLine, Retn, 0x005031D9);
 	__asm
 	{
-		mov     eax, [edi+24h]
-		mov     ecx, [esi+40Ch]
-		lea     edx, [eax+ecx+0Ah]
+		mov     eax, [edi + 0x24]
+		mov     ecx, [esi + 0x40C]
+		lea     edx, [eax + ecx + 0x0A]
 		cmp     edx, g_MaxScriptDataSize
 		jmp		[_HookHdlrFnVariable(MaxScriptSizeOverrideParseScriptLine, Retn)]
 	}

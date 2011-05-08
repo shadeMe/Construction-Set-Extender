@@ -1,7 +1,7 @@
 #include "AvalonEditTextEditor.h"
 #include "ScriptParser.h"
-#include "IntelliSense.h"
 #include "Globals.h"
+#include "OptionsDialog.h"
 
 
 #pragma region Interface Methods
@@ -206,6 +206,7 @@ void AvalonEditTextEditor::SetModifiedStatus(bool Modified)
 	{
 	case true:
 		ClearFindResultIndicators();
+		ErrorColorizer->ClearLines();
 		break;
 	case false:
 		break;
@@ -234,25 +235,25 @@ UInt32 AvalonEditTextEditor::FindReplace(ScriptTextEditorInterface::FindReplaceO
 	UInt32 Hits = 0;
 	ClearFindResultIndicators();
 
-	for each (DocumentLine^ Line in TextField->Document->Lines)
+	AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
+	if (TextSelection->IsEmpty)
 	{
-		String^ CurrentLine = TextField->Document->GetText(Line);
+		for each (DocumentLine^ Line in TextField->Document->Lines)
+			Hits += PerformReplaceOnSegment(Operation, Line, Query, Replacement, Output);
+	}
+	else
+	{
+		AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
 
-		int Index = 0, Start = 0;
-		while ((Index = CurrentLine->IndexOf(Query, Start)) != -1)
+		for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
 		{
-			Hits++;
-			int EndIndex = Index + Query->Length;
+			FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
+			LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
 
-			if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
-			{
-				TextField->Document->Replace(Line->Offset + Index, Query->Length, Replacement);
-			}
-
-			Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
-			Start = Index + 1;
+			for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+				Hits += PerformReplaceOnSegment(Operation, Itr, Query, Replacement, Output);
 		}
-	}	
+	}
 
 	if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
 		FindReplaceColorizer->SetMatch(Replacement);
@@ -268,6 +269,8 @@ UInt32 AvalonEditTextEditor::FindReplace(ScriptTextEditorInterface::FindReplaceO
 
 void AvalonEditTextEditor::ToggleComment(int StartIndex)
 {
+	SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+
 	AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 	if (TextSelection->IsEmpty)
 	{
@@ -305,44 +308,46 @@ void AvalonEditTextEditor::ToggleComment(int StartIndex)
 		{
 			FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
 			LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
-		}
 
-		for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
-		{
-			int FirstOffset = -1;
-			for (int i = Itr->Offset; i < TextField->Text->Length && i <= Itr->EndOffset; i++)
+			for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
 			{
-				char FirstChar = TextField->TextArea->Document->GetCharAt(i);
-				if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
-					AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
+				int FirstOffset = -1;
+				for (int i = Itr->Offset; i < TextField->Text->Length && i <= Itr->EndOffset; i++)
 				{
-					FirstOffset = i;
-					break;
+					char FirstChar = TextField->TextArea->Document->GetCharAt(i);
+					if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
+						AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
+					{
+						FirstOffset = i;
+						break;
+					}
 				}
+
+				if (FirstOffset != -1)
+				{
+					char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
+					if (FirstChar == ';' && (!Count || !ToggleType))
+					{
+						if (!Count)		ToggleType = 0;
+
+						AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
+						TextField->TextArea->Document->Replace(Line->Offset, 1, "");
+					}
+					else if (FirstChar != ';' && (!Count || ToggleType))
+					{
+						if (!Count)		ToggleType = 1;
+
+						AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
+						TextField->TextArea->Document->Insert(Line->Offset, ";");
+					}
+				}
+
+				Count++;
 			}
-
-			if (FirstOffset != -1)
-			{
-				char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
-				if (FirstChar == ';' && (!Count || !ToggleType))
-				{
-					if (!Count)		ToggleType = 0;
-
-					AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-					TextField->TextArea->Document->Replace(Line->Offset, 1, "");
-				}
-				else if (FirstChar != ';' && (!Count || ToggleType))
-				{
-					if (!Count)		ToggleType = 1;
-
-					AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-					TextField->TextArea->Document->Insert(Line->Offset, ";");
-				}
-			}
-
-			Count++;
 		}
 	}
+
+	SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 }
 
 void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
@@ -379,9 +384,36 @@ void AvalonEditTextEditor::ClearScriptErrorHighlights(void)
 	ErrorColorizer->ClearLines();
 	RefreshUI();
 }
+
+Point AvalonEditTextEditor::PointToScreen(Point Location)
+{
+	return Container->PointToScreen(Location);
+}
 #pragma endregion
 
 #pragma region Methods
+UInt32 AvalonEditTextEditor::PerformReplaceOnSegment(ScriptTextEditorInterface::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output)
+{
+	UInt32 Hits = 0;
+	String^ CurrentLine = TextField->Document->GetText(Line);
+
+	int Index = 0, Start = 0;
+	while ((Index = CurrentLine->IndexOf(Query, Start)) != -1)
+	{
+		Hits++;
+		int EndIndex = Index + Query->Length;
+
+		if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
+		{
+			TextField->Document->Replace(Line->Offset + Index, Query->Length, Replacement);
+		}
+
+		Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
+		Start = Index + 1;
+	}
+	return Hits;
+}
+
 String^ AvalonEditTextEditor::GetTokenAtIndex(int Index, bool SelectText)
 {
 	String^% Source = TextField->Text;
@@ -463,10 +495,11 @@ void AvalonEditTextEditor::HandleTextChangeEvent()
 		{
 			if (TextField->SelectionStart - 1 >= 0 && !GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
 			{
-				IntelliSenseBox->Initialize(IntelliSenseBox->LastOperation, false, false);
+				if (LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "")
+					IntelliSenseBox->Initialize(IntelliSenseBox->LastOperation, false, false);
+				else
+					IntelliSenseBox->Hide();
 			}
-
-			// Validate line limit here?
 		}
 	}
 }
@@ -505,6 +538,8 @@ void AvalonEditTextEditor::TextField_CaretPositionChanged(Object^ Sender, EventA
 
 void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 {
+	LastKeyThatWentDown = E->Key;
+
 	int SelStart = TextField->SelectionStart, SelLength = TextField->SelectionLength;
 
 	if (Globals::GetIsDelimiterKey(E->Key))
@@ -710,6 +745,11 @@ void AvalonEditTextEditor::TextField_SelectionChanged(Object^ Sender, EventArgs^
 {
 	RefreshUI();
 }
+
+void AvalonEditTextEditor::TextField_LostFocus( Object^ Sender, System::Windows::RoutedEventArgs^ E )
+{
+
+}
 #pragma endregion
 
 AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
@@ -724,31 +764,38 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	ModifiedFlag = false;
 	PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
 	KeyToPreventHandling = System::Windows::Input::Key::None;
+	LastKeyThatWentDown = System::Windows::Input::Key::None;
 
-	IntelliSenseBox = gcnew IntelliSenseThingy(dynamic_cast<ScriptEditor::Workspace^>(Parent));
+	IntelliSenseBox = gcnew IntelliSenseThingy(Parent);
 	LastKnownMouseClickLocation = Point(0, 0);
 
 	Container->Dock = DockStyle::Fill;
 	Container->BorderStyle = BorderStyle::Fixed3D;
 	Container->Controls->Add(WPFHost);
-	Container->Controls->Add(IntelliSenseBox->InternalListView);
 
 	WPFHost->Dock = DockStyle::Fill;
 	WPFHost->Child = TextField;
 
+	TextField->Options->AllowScrollBelowDocument = false;
+	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->EnableEmailHyperlinks = false;
 	TextField->Options->EnableHyperlinks = true;
 	TextField->Options->RequireControlModifierForHyperlinkClick = true;
 	TextField->ShowLineNumbers = true;
 	TextField->WordWrap = OPTIONS->FetchSettingAsInt("WordWrap");
+	TextField->Options->CutCopyWholeLine = OPTIONS->FetchSettingAsInt("CutCopyEntireLine");
+	TextField->Options->ShowSpaces = OPTIONS->FetchSettingAsInt("ShowSpaces");
+	TextField->Options->ShowTabs = OPTIONS->FetchSettingAsInt("ShowTabs");
 
 	InitializeSyntaxHighlightingManager();
+
 	TextField->SyntaxHighlighting = AvalonEdit::Highlighting::HighlightingManager::Instance->GetDefinition("ObScript");
 
 	TextField->TextChanged += gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
 	TextField->TextArea->Caret->PositionChanged += gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
 	TextField->TextArea->SelectionChanged += gcnew EventHandler(this, &AvalonEditTextEditor::TextField_SelectionChanged);
+	TextField->LostFocus += gcnew System::Windows::RoutedEventHandler(this, &AvalonEditTextEditor::TextField_LostFocus);
 
 	TextField->PreviewKeyUp += gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyUp);
 	TextField->PreviewKeyDown += gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyDown);

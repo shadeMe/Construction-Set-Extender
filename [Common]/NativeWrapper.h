@@ -2,6 +2,10 @@
 #include "Includes.h"
 #include "HandShakeStructs.h"
 
+const int SW_SHOWNOACTIVATE = 4;
+const int HWND_TOPMOST = -1;
+const UInt32 SWP_NOACTIVATE = 0x0010;
+
 class NativeWrapper
 {
 	[DllImport("Construction Set Extender.dll")] 
@@ -89,9 +93,15 @@ public:
 	static IntPtr										WindowFromPoint(Point Point);
 	[DllImport("user32.dll")]
 	static IntPtr										GetParent(IntPtr Handle);
+	[DllImport("user32.dll")]
+	static bool											SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int X, int Y, int cx, int cy, UInt32 uFlags); 
+	[DllImport("user32.dll")]
+	static bool											ShowWindow(IntPtr hWnd, int nCmdShow);
 
 	static void											PrintToCSStatusBar(int PanelIndex, String^ Message);
 	friend void											DebugDump(UInt8 Source, String^% Message);
+
+	static void											ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);
 };
 
 class INIWrapper

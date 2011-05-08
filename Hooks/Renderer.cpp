@@ -172,7 +172,7 @@ void __stdcall DoRenderWindowStatsHook(void)
 						(*g_TESRenderSelectionPrimary)->x,
 						(*g_TESRenderSelectionPrimary)->y,
 						(*g_TESRenderSelectionPrimary)->z);
-			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_Buffer, 0);
+			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
 		}
 		else if ((*g_TESRenderSelectionPrimary)->SelectionCount)
 		{
@@ -204,7 +204,7 @@ void __stdcall DoRenderWindowStatsHook(void)
 							((Selection->flags & kTESObjectREFRSpecialFlags_Frozen)?("F"):("-")),
 							Buffer);
 
-			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_Buffer, 0);
+			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
 		}
 		else
 			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, NULL, 0);

@@ -36,9 +36,6 @@
     <ClCompile Include="AvalonEditXSHD.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="CSEScriptTextEditor.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="IntelliSense.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -90,9 +87,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditXSHD.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEScriptTextEditor.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="IntelliSense.h">
@@ -332,6 +326,15 @@
       <Filter>Resources\Images</Filter>
     </None>
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\WebInsertHyperlinkHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\bindScript.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISGlobalVar.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ISGMST.png">
       <Filter>Resources\Images</Filter>
     </None>
   </ItemGroup>

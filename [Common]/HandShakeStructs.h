@@ -5,6 +5,7 @@ class TESForm;
 class Script;
 struct CommandInfo;
 struct PluginInfo;
+class TESGlobal;
 #endif
 
 struct FormData
@@ -39,6 +40,24 @@ struct QuestData : public FormData
 	const char*										ScriptName;
 };
 
+struct VariableData : public FormData
+{
+	enum
+	{
+		kType_Int = 0,
+		kType_Float,
+		kType_String
+	};
+
+	UInt8											Type;
+#ifdef CSE_INTERFACE
+	void											FillVariableData(const char* VariableName);
+	void											FillVariableData(TESGlobal* Global);
+#endif
+};
+typedef VariableData GlobalData;
+typedef VariableData GMSTData;
+
 struct IntelliSenseUpdateData
 {
 	ScriptData*										ScriptListHead;
@@ -46,6 +65,12 @@ struct IntelliSenseUpdateData
 
 	QuestData*										QuestListHead;
 	UInt32											QuestCount;
+
+	GlobalData*										GlobalListHead;
+	UInt32											GlobalCount;
+
+	GMSTData*										GMSTListHead;
+	UInt32											GMSTCount;
 };
 
 struct ScriptVarIndexData

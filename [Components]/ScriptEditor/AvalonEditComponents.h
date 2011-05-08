@@ -11,32 +11,32 @@ ref class AvalonEditTextEditor;
 
 namespace AvalonEditComponents
 {
-	public ref class AvalonEditLineColorizer abstract : public AvalonEdit::Rendering::DocumentColorizingTransformer
+	public ref class AvalonEditLineColorizingTransformer abstract : public AvalonEdit::Rendering::DocumentColorizingTransformer
 	{
 	protected:
 		AvalonEdit::TextEditor^						ParentEditor;
 		virtual void								PerformColorization(VisualLineElement^ Element) = 0;
 	public:
-		AvalonEditLineColorizer(AvalonEdit::TextEditor^% Parent) : DocumentColorizingTransformer(), ParentEditor(Parent) {}
+		AvalonEditLineColorizingTransformer(AvalonEdit::TextEditor^% Parent) : DocumentColorizingTransformer(), ParentEditor(Parent) {}
 	};
 
 	// deprecated in favor of BackgroundColorizers
-	public ref class AvalonEditSelectionColorizer : public AvalonEditLineColorizer
+	public ref class AvalonEditSelectionColorizingTransformer : public AvalonEditLineColorizingTransformer
 	{
 	protected:
 		virtual void								PerformColorization(VisualLineElement^ Element) override;
 		virtual void								ColorizeLine(DocumentLine^ line) override;
 	public:
-		AvalonEditSelectionColorizer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizer(Parent) {}
+		AvalonEditSelectionColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
 	};
 
-	public ref class AvalonEditLineLimitColorizer : public AvalonEditLineColorizer
+	public ref class AvalonEditLineLimitColorizingTransformer : public AvalonEditLineColorizingTransformer
 	{
 	protected:
 		virtual void								PerformColorization(VisualLineElement^ Element) override;
 		virtual void								ColorizeLine(DocumentLine^ line) override;
 	public:
-		AvalonEditLineLimitColorizer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizer(Parent) {}
+		AvalonEditLineLimitColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
 	};
 
 

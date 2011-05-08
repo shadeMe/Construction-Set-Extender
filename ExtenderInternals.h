@@ -18,7 +18,7 @@
 
 extern std::string					g_AppPath;
 extern std::string					g_INIPath;
-extern char							g_Buffer[0x200];
+extern char							g_TextBuffer[0x200];
 extern bool							g_PluginPostLoad;
 
 extern OBSEMessagingInterface*		g_msgIntfc;
@@ -193,7 +193,7 @@ struct TESRenderUndoStack
 		kUndoOperation_unk01 = 1,	// used to record ref creation?
 		kUndoOperation_unk02 = 2,	// used to record ref deletion?
 		kUndoOperation_unk03 = 3,	// used to record ref 3D data
-		kUndoOperation_unk04 = 4,	// 4-6 used to record lanscape changes
+		kUndoOperation_unk04 = 4,	// 4-6 used to record landscape changes
 		kUndoOperation_unk05 = 5,	
 		kUndoOperation_unk06 = 6	
 	};
@@ -267,7 +267,7 @@ extern UInt8*					g_Flag_RenderWindowUpdateViewPort;
 extern FileFinder**				g_FileFinder;
 extern ResponseEditorData**		g_ResponseEditorData;
 extern GameSettingCollection*	g_GMSTCollection;
-extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>*
+extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>
 extern void**					g_IdleFormTree;		// BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>*
 extern TESRenderUndoStack**		g_TESRenderUndoStack;
 
@@ -422,6 +422,7 @@ extern const UInt32			kTESRenderSelection_RemoveFormFromSelection;
 extern const UInt32			kTESForm_SetTemporary;
 extern const UInt32			kTESRenderUndoStack_RecordReference;
 extern const UInt32			kTESObjectREFR_PickComparator;
+extern const UInt32			kLinkedListNode_CountNodes;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
