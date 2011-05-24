@@ -178,7 +178,7 @@ namespace AvalonEditXSHD
 		ColorDefinitions->AddLast(CommentColor);
 		ColorDefinitions->AddLast(PreprocessorColor);
 
-		XSHDRuleset^ CommentMarkerRuleset = gcnew XSHDRuleset("CommentPreprocessorMarker");			// pass Color::GhostWhite as fore/back colors to have them ignored
+		XSHDRuleset^ CommentMarkerRuleset = gcnew XSHDRuleset("CommentPreprocessorMarker");			
 		XSHDKeywords^ CommentMarkerKeywords = gcnew XSHDKeywords(PreprocessorColor, Color::GhostWhite, Color::GhostWhite, true);
 
 		CommentMarkerKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
@@ -427,7 +427,7 @@ namespace AvalonEditXSHD
 		CompleteDefinition += "</RuleSet>" + Environment::NewLine;
 		CompleteDefinition += "</SyntaxDefinition>";
 
-#if _DEBUG
+#if 0
 		StreamWriter^ XSHDWriter = gcnew StreamWriter(Globals::AppPath + "XSHD-CSE.txt");
 		XSHDWriter->Write(CompleteDefinition);
 		XSHDWriter->Close();

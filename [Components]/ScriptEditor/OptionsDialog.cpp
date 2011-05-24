@@ -63,9 +63,12 @@ void BoundControl::SetValue(String^ Value)
 {
 	float Numeric = 0;
 
-	try {	
+	try
+	{	
 		Numeric = float::Parse(Value);
-	} catch (...) {	
+	} 
+	catch (...) 
+	{	
 		Numeric = 0;
 		if (Property != ValueType::e_Font_FontFamily_Name)
 			DebugPrint(String::Format("Couldn't parse INI value of type {0}", (int)Property), true);
@@ -88,13 +91,13 @@ void BoundControl::SetValue(String^ Value)
 	case ControlType::e_FontDialog:
 		{
 			FontDialog^ Control = dynamic_cast<FontDialog^>(INIDialog);
-			switch (Property)							// the font name INI key should be parsed before size for correct init.
+			switch (Property)
 			{
 			case ValueType::e_Font_FontFamily_Name:	
-				Control->Font = gcnew Font(Value, 10, FontStyle::Regular);
+				Control->Font = gcnew Font(Value, Control->Font->Size, Control->Font->Style);
 				break;
 			case ValueType::e_Font_Size:
-				Control->Font = gcnew Font(Control->Font->FontFamily->Name, Numeric, FontStyle::Regular);
+				Control->Font = gcnew Font(Control->Font->FontFamily->Name, Numeric,  Control->Font->Style);
 				break;
 			case ValueType::e_Font_Style:
 				Control->Font = gcnew Font(Control->Font->FontFamily->Name, Control->Font->Size, (FontStyle)(int)Numeric);
@@ -149,6 +152,11 @@ void OptionsDialog::PopulateINIMap()
 	INIMap->Add(gcnew INISetting("FontSize", "ScriptEditor::Appearance", "10"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
 	INIMap->Add(gcnew INISetting("FontStyle", "ScriptEditor::Appearance", "0"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Style));
 
+	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::Appearance", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+	INIMap->Add(gcnew INISetting("WordWrap", "ScriptEditor::Appearance", "0"), gcnew BoundControl(WordWrap, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("ShowTabs", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("ShowSpaces", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+
 	RegisterColorSetting("SyntaxCommentsColor", Color::DarkBlue, CmDlgSyntaxCommentsColor);
 	RegisterColorSetting("SyntaxDigitsColor", Color::DarkGoldenrod, CmDlgSyntaxDigitsColor);
 	RegisterColorSetting("SyntaxPreprocessorColor", Color::DarkBlue, CmDlgSyntaxPreprocessorColor);
@@ -162,11 +170,6 @@ void OptionsDialog::PopulateINIMap()
 	RegisterColorSetting("ErrorHighlightColor", Color::Red, CmDlgErrorHighlightColor);
 	RegisterColorSetting("SelectionHighlightColor", Color::Gold, CmDlgSelectionHighlightColor);
 	RegisterColorSetting("FindResultsHighlightColor", Color::Gold, CmDlgFindResultsHighlightColor);
-
-	INIMap->Add(gcnew INISetting("TabSize", "ScriptEditor::Appearance", "0"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-	INIMap->Add(gcnew INISetting("WordWrap", "ScriptEditor::Appearance", "0"), gcnew BoundControl(Wordwrap, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("ShowTabs", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-	INIMap->Add(gcnew INISetting("ShowSpaces", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// General
 	INIMap->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "ScriptEditor::General", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -317,7 +320,7 @@ OptionsDialog::OptionsDialog()
 	CmDlgSyntaxScriptBlocksColor = (gcnew Button());
 	CmDlgSyntaxPreprocessorColor = (gcnew Button());
 	CmDlgSyntaxDigitsColor = (gcnew Button());
-	Wordwrap = (gcnew CheckBox());
+	WordWrap = (gcnew CheckBox());
 	CmDlgSelectionHighlightColor = (gcnew Button());
 	LabelSelectionHighlight = (gcnew Label());
 	CmDlgErrorHighlightColor = (gcnew Button());
@@ -570,7 +573,7 @@ OptionsDialog::OptionsDialog()
 	TabAppearance->Controls->Add(CmDlgErrorHighlightColor);
 	TabAppearance->Controls->Add(LabelErrorHighlight);
 	TabAppearance->Controls->Add(CmDlgSelectionHighlightColor);
-	TabAppearance->Controls->Add(Wordwrap);
+	TabAppearance->Controls->Add(WordWrap);
 	TabAppearance->Controls->Add(LabelSelectionHighlight);
 	TabAppearance->Controls->Add(GroupBoxSyntaxHighlighting);
 	TabAppearance->Controls->Add(CmDlgFont);
@@ -767,13 +770,13 @@ OptionsDialog::OptionsDialog()
 	// 
 	// Wordwrap
 	// 
-	Wordwrap->AutoSize = true;
-	Wordwrap->Location = System::Drawing::Point(231, 221);
-	Wordwrap->Name = L"Wordwrap";
-	Wordwrap->Size = System::Drawing::Size(81, 17);
-	Wordwrap->TabIndex = 5;
-	Wordwrap->Text = L"Word-Wrap";
-	Wordwrap->UseVisualStyleBackColor = true;
+	WordWrap->AutoSize = true;
+	WordWrap->Location = System::Drawing::Point(231, 221);
+	WordWrap->Name = L"Wordwrap";
+	WordWrap->Size = System::Drawing::Size(81, 17);
+	WordWrap->TabIndex = 5;
+	WordWrap->Text = L"Word-Wrap";
+	WordWrap->UseVisualStyleBackColor = true;
 	// 
 	// CmDlgSelectionHighlightColor
 	// 
@@ -952,7 +955,6 @@ void OptionsDialog::CmDlgColor_Click(Object^ Sender, EventArgs^ E)
 		}
 	}
 }
-
 
 void OptionsDialog::OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {

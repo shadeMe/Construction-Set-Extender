@@ -73,7 +73,7 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	SearchBox->TextChanged += gcnew EventHandler(this, &ScriptListDialog::SearchBox_TextChanged);
 	SearchBox->KeyDown += gcnew KeyEventHandler(this, &ScriptListDialog::SearchBox_KeyDown);
 
-	SelectBox->Font = gcnew Font("Consolas", 7.5);
+	SelectBox->Font = gcnew Font("Segoe UI", 10);
 	SelectBox->Location = Point(261, 409);
 	SelectBox->Text = "Select Script(s)";
 	SelectBox->Size = Size(114, 30);
@@ -114,7 +114,8 @@ void ScriptListDialog::Show(Operation Op)
 		if (!SEMGR->GetAllocatedWorkspace(ParentIndex)->GetIsCurrentScriptNew())
 			SearchBox->Text = CurrentScript;
 	}
-	else {
+	else 
+	{
 		ScriptList->Enabled = false;
 		SearchBox->Enabled = false;
 	}
@@ -200,7 +201,6 @@ void ScriptListDialog::GetUseReport()
 
 void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
-//	bool Destroy = SEMGR->GetAllocatedWorkspace(ParentIndex)->Destroying;
 	Close();
 }
 
@@ -232,10 +232,12 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		ScriptBox->Close();
 		break;
 	case Keys::Back:
-		if (SearchBox->Text->Length >= 1) {
+		if (SearchBox->Text->Length >= 1) 
+		{
 			SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
 			ScriptList->Focus();
 		}
+
 		E->Handled = true;
 		break;
 	}
@@ -261,10 +263,13 @@ void ScriptListDialog::ScriptList_ItemActivate(Object^ Sender, EventArgs^ E)
 
 void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 {
-	if (E->Column != LastSortColumn) {
+	if (E->Column != LastSortColumn) 
+	{
 		LastSortColumn = E->Column;
 		ScriptList->Sorting = SortOrder::Descending;
-	} else {
+	} 
+	else
+	{
 		if (ScriptList->Sorting == SortOrder::Ascending)
 			ScriptList->Sorting = SortOrder::Descending;
 		else
@@ -290,13 +295,16 @@ void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventAr
 
 void ScriptListDialog::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 {
-	if (SearchBox->Text != "") {
+	if (SearchBox->Text != "") 
+	{
 		ListViewItem^% Result = ScriptList->FindItemWithText(SearchBox->Text, true, 0);
-		if (Result != nullptr) {
+		if (Result != nullptr)
+		{
 			Result->Selected = true;
 			ScriptList->TopItem = Result; 
 		}
-		else {
+		else
+		{
 			Result = GetListViewSelectedItem(ScriptList);
 			if (Result != nullptr)		Result->Selected = false;
 			PreviewBox->Text = "";

@@ -14,9 +14,10 @@ public ref struct ScriptEditorPreprocessorData
 {
 	String^											AppPath;
 	bool											AllowMacroRedefinitions;
+	UInt8											NoOfPasses;
 
-	ScriptEditorPreprocessorData(String^% AppPath, bool AllowMacroRedefinitions) :
-				AppPath(AppPath), AllowMacroRedefinitions(AllowMacroRedefinitions) {}
+	ScriptEditorPreprocessorData(String^% AppPath, bool AllowMacroRedefinitions, UInt8 NoOfPasses) :
+				AppPath(AppPath), AllowMacroRedefinitions(AllowMacroRedefinitions), NoOfPasses(NoOfPasses) {}
 };
 
 // represents a line of the script text/directive
@@ -88,13 +89,26 @@ public ref class DefineDirective : public CSEPreprocessorDirective
 
 	bool												IsNameValid(String^% Name);
 public:
+	static enum class									AccessoryOperatorType
+														{
+															e_None = 0,
+															e_Stringize
+														};
+	static array<String^>^								AccessoryOperatorIdentifier = 
+														{
+															"",
+															"#"
+														};
+
 	DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);						// used for single line definitions
 	DefineDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 	String^												GetName() { return Name; }
-	String^												GetValue(String^% Prefix);
+	String^												GetValue(String^% Prefix, AccessoryOperatorType ActiveOperator);
 	void												SetValue(String^% Value) { this->Value = Value; }
 	DefineDirective^									CreateCopy();
+	
+	static AccessoryOperatorType						GetAccessoryOperatorFromToken(String^% Token);
 
 	virtual	String^										GetToken() override;
 };

@@ -1,6 +1,8 @@
 #pragma once
 #include "ExtenderInternals.h"
 
+extern const char*					g_FormTypeIdentifier[];
+
 // 0C
 class FormEditParam
 {
@@ -59,8 +61,7 @@ struct ScriptEditorData
 	HWND					editorStatusBar;			// 1C
 	HWND					editorToolBar;				// 20
 	HWND					scriptableFormList;			// 24	handle to the TESScriptableForm combo box, passed as the lParam during init
-	char*					findTextQuery;				// 28
-	UInt32					unk2C[(0x12C - 0x2C) >> 2];	// 2C	never initialized, the size is probably a typo (intended size 0x2C) made by the tool coder
+	char					findTextQuery[0x104];		// 28
 };
 
 enum
@@ -281,7 +282,7 @@ enum
 	kDialogTemplate_PreferencesMisc				= 3212,
 	kDialogTemplate_RegionEditorLandscapeData	= 3214,
 	kDialogTemplate_ActorAnimationData			= 3215,
-	kDialogTemplate_NPCFaceData					= 3217,
+	kDialogTemplate_NPCFaceData					= 3216,
 	kDialogTemplate_ActorBlankEx				= 3219,			// spell list ?
 	kDialogTemplate_RegionEditorGrassData		= 3220,
 	kDialogTemplate_PreferencesShader			= 3221,
@@ -322,7 +323,7 @@ enum
 	kDialogTemplate_MemoryUsage					= 304,
 	kDialogTemplate_TextureUse					= 316,
 	kDialogTemplate_CreatureSoundEx				= 3243,
-	kDialogTemplate_NPCFaceAdvancedDataEx		= 3216,
+	kDialogTemplate_NPCFaceAdvancedDataEx		= 3217,
 
 	// Unknown
 	kDialogTemplate_Unk235						= 235,

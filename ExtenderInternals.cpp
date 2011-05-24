@@ -11,12 +11,15 @@ SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();
 char								g_TextBuffer[0x200] = {0};
 HINSTANCE							g_DLLInstance = NULL;
 
+TES**								g_TES = (TES**)0x00A0ABB0;
+DataHandler**						g_dataHandler = (DataHandler **)0x00A0E064;
+
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
-const DLGPROC						g_UseReport_DlgProc = (DLGPROC)0x00433FE0;
-const DLGPROC						g_TESDialog_DlgProc = (DLGPROC)0x00447580;
-const DLGPROC						g_TESDialogListView_DlgProc = (DLGPROC)0x00448820;
-const DLGPROC						g_ChooseReference_DlgProc = (DLGPROC)0x0044D470;
+const DLGPROC						g_FormUseReport_DlgProc = (DLGPROC)0x00433FE0;
+const DLGPROC						g_TESDialogFormEdit_DlgProc = (DLGPROC)0x00447580;
+const DLGPROC						g_TESDialogFormIDListView_DlgProc = (DLGPROC)0x00448820;
+const DLGPROC						g_TESDialogSelectReference_DlgProc = (DLGPROC)0x0044D470;
 
 HWND*								g_HWND_RenderWindow = (HWND*)0x00A0AF28;
 HWND*								g_HWND_ObjectWindow = (HWND*)0x00A0AF44;
@@ -81,28 +84,39 @@ BSRenderedTexture*					g_LODBSTexture4096x = NULL;
 LPDIRECT3DTEXTURE9					g_LODD3DTexture8192x = NULL;
 BSRenderedTexture*					g_LODBSTexture8192x = NULL;
 
-const _WriteToStatusBar				WriteToStatusBar = (_WriteToStatusBar)0x00431310;
-const _WritePositionToINI			WritePositionToINI = (_WritePositionToINI)0x00417510;
-const _GetPositionFromINI			GetPositionFromINI = (_GetPositionFromINI)0x004176D0;
-const _GetTESDialogTemplateForType	GetTESDialogTemplateForType = (_GetTESDialogTemplateForType)0x00442050;
-const _GetComboBoxItemData			GetComboBoxItemData = (_GetComboBoxItemData)0x00403690;
-const _SelectTESFileCommonDialog	SelectTESFileCommonDialog = (_SelectTESFileCommonDialog)0x00446D40;
+const _FormHeap_Allocate			FormHeap_Allocate = (_FormHeap_Allocate)0x00401E80;
+const _FormHeap_Free				FormHeap_Free = (_FormHeap_Free)0x00401EA0;
+const _Oblivion_DynamicCast			Oblivion_DynamicCast = (_Oblivion_DynamicCast)0x0088DC0C;
+const _TESDialog_WriteToStatusBar	TESDialog_WriteToStatusBar = (_TESDialog_WriteToStatusBar)0x00431310;
+const _TESDialog_WritePositionToINI	TESDialog_WritePositionToINI = (_TESDialog_WritePositionToINI)0x00417510;
+const _TESDialog_GetPositionFromINI	TESDialog_GetPositionFromINI = (_TESDialog_GetPositionFromINI)0x004176D0;
+const _TESDialog_GetDialogTemplateForFormType
+									TESDialog_GetDialogTemplateForFormType = (_TESDialog_GetDialogTemplateForFormType)0x00442050;
+const _TESDialog_GetComboBoxSelectedItemData
+									TESDialog_GetComboBoxSelectedItemData = (_TESDialog_GetComboBoxSelectedItemData)0x00403690;
+const _TESDialog_SelectTESFileCommonDialog	
+									TESDialog_SelectTESFileCommonDialog = (_TESDialog_SelectTESFileCommonDialog)0x00446D40;
 const _TESDialog_SetCSWindowTitleModifiedFlag
 									TESDialog_SetCSWindowTitleModifiedFlag = (_TESDialog_SetCSWindowTitleModifiedFlag)0x004306F0;
-const _DisplayReferencePickDialog	DisplayReferencePickDialog = (_DisplayReferencePickDialog)0x0044D660;	// pass TESObjectREFR__PickComparator as arg3 and 0 as args 2 and 4
-const _InitializeCSWindows			InitializeCSWindows = (_InitializeCSWindows)0x00430980;
-const _DeInitializeCSWindows		DeInitializeCSWindows = (_DeInitializeCSWindows)0x00431220;
-const _AddFormToObjectWindow		AddFormToObjectWindow = (_AddFormToObjectWindow)0x00422470;
+const _TESDialog_ShowSelectReferenceDialog
+									TESDialog_ShowSelectReferenceDialog = (_TESDialog_ShowSelectReferenceDialog)0x0044D660;	// pass TESObjectREFR__PickComparator as arg3 and 0 as args 2 and 4
+const _TESDialog_InitializeCSWindows
+									TESDialog_InitializeCSWindows = (_TESDialog_InitializeCSWindows)0x00430980;
+const _TESDialog_DeinitializeCSWindows		
+									TESDialog_DeinitializeCSWindows = (_TESDialog_DeinitializeCSWindows)0x00431220;
+const _TESDialog_AddFormToObjectWindow
+									TESDialog_AddFormToObjectWindow = (_TESDialog_AddFormToObjectWindow)0x00422470;
 const _InitializeDefaultPlayerSpell	InitializeDefaultPlayerSpell = (_InitializeDefaultPlayerSpell)0x0056FD90;
 const _ConstructEffectSetting		ConstructEffectSetting = (_ConstructEffectSetting)0x0056AC40;
 const _TESDialog_AddComboBoxItem	TESDialog_AddComboBoxItem = (_TESDialog_AddComboBoxItem)0x00403540;
 const _BSPrintF						BSPrintF = (_BSPrintF)0x004053F0;
-const _ShowCompilerError			ShowCompilerErrorEx = (_ShowCompilerError)0x004FFF40;
+const _ShowCompilerError			ShowCompilerError = (_ShowCompilerError)0x004FFF40;
 const _AutoSavePlugin				AutoSavePlugin = (_AutoSavePlugin)0x004307C0;
 const _CreateArchive				CreateArchive = (_CreateArchive)0x004665C0;
 const _TESDialog_GetListViewSelectedItemLParam
 									TESDialog_GetListViewSelectedItemLParam = (_TESDialog_GetListViewSelectedItemLParam)0x00403C40;
 const _TESForm_LookupByFormID		TESForm_LookupByFormID = (_TESForm_LookupByFormID)0x00495EF0;
+const _TESForm_LookupByEditorID		TESForm_LookupByEditorID = (_TESForm_LookupByEditorID)0x00495F20;
 const _TESDialog_GetDialogExtraParam
 									TESDialog_GetDialogExtraParam = (_TESDialog_GetDialogExtraParam)0x004429D0;
 const _TESDialog_ComboBoxPopulateWithRaces
@@ -164,7 +178,7 @@ const UInt32						kExtraDataList_InitItem = 0x0045D740;
 const UInt32						kScript_SetText = 0x004FC6C0;
 const UInt32						kDataHandler_SortScripts = 0x0047BA30;
 const UInt32						kTESScriptableForm_SetScript = 0x004A1830;
-const UInt32						kBSString_Set = 0x004051E0;
+const UInt32						kBSStringT_Set = 0x004051E0;
 const UInt32						kExtraDataList_CopyListForReference = 0x004603D0;
 const UInt32						kExtraDataList_CopyList = 0x00460380;
 const UInt32						kGMSTMap_Add = 0x0044F680;
@@ -194,6 +208,7 @@ const UInt32						kTESIdleFormTree_AddRootNodes = 0x004D4490;
 const UInt32						kTESRenderUndoStack_RecordReference = 0x00432D40;
 const UInt32						kTESObjectREFR_PickComparator = 0x00545B10;
 const UInt32						kLinkedListNode_CountNodes = 0x0047DC40;
+const UInt32						kDataHandler_CreateForm = 0x004793F0;	// pass typeID as arg0
 
 const UInt32						kBaseExtraList_GetExtraDataByType = 0x0045B1B0;
 const UInt32						kBaseExtraList_ModExtraEnableStateParent = 0x0045CAA0;

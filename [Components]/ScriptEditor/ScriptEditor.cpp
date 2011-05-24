@@ -27,7 +27,8 @@ namespace ScriptEditor
 			if (SEMGR->TornWorkspace != nullptr)
 			{
 				IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
-				if (Wnd == IntPtr::Zero) {
+				if (Wnd == IntPtr::Zero)
+				{
 					ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 					Parameters->VanillaHandleIndex = 0;
 					Parameters->ParameterList->Add(ScriptEditorManager::TabTearOpType::e_NewContainer);
@@ -120,6 +121,8 @@ namespace ScriptEditor
 		{
 			Application::EnableVisualStyles();
 			EditorForm = gcnew Form();
+			EditorForm->SuspendLayout();
+
 			EditorForm->FormBorderStyle = ::FormBorderStyle::Sizable;
 			EditorForm->Closing += gcnew CancelEventHandler(this, &TabContainer::EditorForm_Cancel);
 			EditorForm->KeyDown += gcnew KeyEventHandler(this, &TabContainer::EditorForm_KeyDown);
@@ -201,6 +204,8 @@ namespace ScriptEditor
 			ForwardStack = gcnew Stack<UInt32>();
 			RemovingTab = false;
 
+			EditorForm->ResumeLayout();
+
 			const char* EditorID = NativeWrapper::ScriptEditor_GetAuxScriptName();
 			if (EditorID)			CreateNewTab(gcnew String(EditorID));
 			else					CreateNewTab(nullptr);
@@ -266,7 +271,6 @@ namespace ScriptEditor
 		void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
 		{
 			RemovingTab = true;
-	//		ScriptStrip->Refresh();
 
 			if (ScriptStrip->Tabs->Count == 1)
 			{
@@ -284,6 +288,8 @@ namespace ScriptEditor
 
 		UInt32 TabContainer::CreateNewTab(String^ ScriptName)
 		{
+			EditorForm->SuspendLayout();
+
 			UInt32 AllocatedIndex = 0;
 			if (ScriptName != nullptr)
 			{
@@ -293,7 +299,8 @@ namespace ScriptEditor
 			else
 				AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(0);
 
-			if (!AllocatedIndex) {
+			if (!AllocatedIndex) 
+			{
 				DebugPrint("Fatal error occured when allocating a custom editor! Instantiating an empty workspace...", true);
 				AllocatedIndex = NativeWrapper::ScriptEditor_InstantiateCustomEditor(0);
 			}
@@ -306,6 +313,9 @@ namespace ScriptEditor
 
 			NativeWrapper::ScriptEditor_PostProcessEditorInit(AllocatedIndex);
 			SEMGR->GetAllocatedWorkspace(AllocatedIndex)->MakeActiveInParentContainer();
+
+			EditorForm->ResumeLayout();
+
 			return AllocatedIndex;
 		}
 
@@ -347,13 +357,17 @@ namespace ScriptEditor
 							String^ ScriptName = ((FileContents->Split('\n', 1))[0]->Split(' '))[1];
 							CStringWrapper^ CEID = gcnew CStringWrapper(ScriptName);
 							if (NativeWrapper::LookupFormByEditorID(CEID->String()))
+							{
 								AllocatedIndex = CreateNewTab(ScriptName);
+								SEMGR->GetAllocatedWorkspace(AllocatedIndex)->LoadFileFromDisk(FilePath);
+								break;
+							}
 							else
 								AllocatedIndex = CreateNewTab(nullptr);
 						}
 						catch (Exception^ E)
 						{
-							DebugPrint("Couldn't read from file " + FilePath + " for script updating!\n\tException: " + E->Message);
+							DebugPrint("Couldn't read script name from file " + FilePath + " for script updating!\n\tException: " + E->Message);
 							AllocatedIndex = CreateNewTab(nullptr);
 						}
 					}
@@ -381,18 +395,23 @@ namespace ScriptEditor
 			UInt32 Count = 0;
 			DotNetBar::TabItem^ OpenedWorkspace = nullptr;
 
-			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
+			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs)
+			{
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 
-				if (Editor != nullptr && !String::Compare(const_cast<String^>(Editor->GetScriptID()), ScriptName, true)) {
+				if (Editor != nullptr && !String::Compare(const_cast<String^>(Editor->GetScriptID()), ScriptName, true))
+				{
 					Count++;
 					OpenedWorkspace = Itr;
 				}
 			}
 
-			if (Count == 1) {
+			if (Count == 1) 
+			{
 				ScriptStrip->SelectedTab = OpenedWorkspace;
-			} else {
+			}
+			else
+			{
 				CreateNewTab(ScriptName);
 			}
 			BackStack->Push(AllocatedIndex);
@@ -415,9 +434,12 @@ namespace ScriptEditor
 			}
 
 			Workspace^ Itr = SEMGR->GetAllocatedWorkspace(JumpIndex);
-			if (Itr->IsValid() == 0) {
+			if (Itr->IsValid() == 0) 
+			{
 				NavigateStack(AllocatedIndex, Direction);
-			} else {
+			}
+			else
+			{
 				switch (Direction)
 				{
 				case NavigationDirection::e_Back:
@@ -442,25 +464,34 @@ namespace ScriptEditor
 			switch (E->KeyCode)
 			{
 			case Keys::T:
-				if (E->Modifiers == Keys::Control) {
+				if (E->Modifiers == Keys::Control)
+				{
 					CreateNewTab(nullptr);
 				}
 				break;
 			case Keys::Tab:
 				if (ScriptStrip->Tabs->Count < 2)	break;
 
-				if (E->Control == true && E->Shift == false) {
-					if (ScriptStrip->SelectedTabIndex == ScriptStrip->Tabs->Count - 1) {
+				if (E->Control == true && E->Shift == false)
+				{
+					if (ScriptStrip->SelectedTabIndex == ScriptStrip->Tabs->Count - 1)
+					{
 						ScriptStrip->SelectedTab = ScriptStrip->Tabs[1];
-					} else {
+					} 
+					else
+					{
 						ScriptStrip->SelectNextTab();
 					}
 					E->Handled = true;
 				}
-				else if (E->Control == true && E->Shift == true) {
-					if (ScriptStrip->SelectedTabIndex == 1) {
+				else if (E->Control == true && E->Shift == true)
+				{
+					if (ScriptStrip->SelectedTabIndex == 1)
+					{
 						ScriptStrip->SelectedTab = ScriptStrip->Tabs[ScriptStrip->Tabs->Count - 1];
-					} else {
+					} 
+					else
+					{
 						ScriptStrip->SelectPreviousTab();
 					}
 					E->Handled = true;
@@ -471,7 +502,8 @@ namespace ScriptEditor
 
 		DotNetBar::TabItem^ TabContainer::GetMouseOverTab()
 		{
-			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
+			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs)
+			{
 				if (Itr->IsMouseOver)	return Itr;
 			}
 			return nullptr;
@@ -504,7 +536,8 @@ namespace ScriptEditor
 			{
 			case MouseButtons::Left:
 			{
-				if (SEMGR->TornWorkspace != nullptr) {
+				if (SEMGR->TornWorkspace != nullptr)
+				{
 					DebugPrint("A previous tab tearing operation did not complete successfully!");
 					SEMGR->TornWorkspace = nullptr;
 				}
@@ -531,11 +564,10 @@ namespace ScriptEditor
 
 		void TabContainer::SaveAllTabs()
 		{
-			Workspace^ Editor;
-
-			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
+			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs)
+			{
 				if (Itr == NewTabButton)	continue;
-				Editor = dynamic_cast<Workspace^>(Itr->Tag);
+				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 				Editor->PerformCompileAndSave();
 			}
 		}
@@ -545,7 +577,8 @@ namespace ScriptEditor
 			array<DotNetBar::TabItem^, 1>^ Tabs = gcnew array<DotNetBar::TabItem^, 1>(ScriptStrip->Tabs->Count);
 			ScriptStrip->Tabs->CopyTo(Tabs, 0);
 
-			for each (DotNetBar::TabItem^ Itr in Tabs) {
+			for each (DotNetBar::TabItem^ Itr in Tabs) 
+			{
 				if (Itr == NewTabButton)	continue;
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 
@@ -554,13 +587,12 @@ namespace ScriptEditor
 				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Close);
 				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 			}
-
-			EditorForm->Invalidate(true);
 		}
 
 		void TabContainer::DumpAllTabs(String^ FolderPath)
 		{
-			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) {
+			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) 
+			{
 				if (Itr == NewTabButton)	continue;
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 				if (Editor->GetIsCurrentScriptNew())	continue;
@@ -594,6 +626,7 @@ namespace ScriptEditor
 		{
 			ScriptStrip->Tabs->Add(Tab);
 		}
+
 		void TabContainer::RemoveTab(DotNetBar::TabItem^ Tab)
 		{
 			ScriptStrip->Tabs->Remove(Tab);
@@ -614,7 +647,6 @@ namespace ScriptEditor
 			ScriptStrip->SelectedTab = Tab;
 			ScriptStrip->TabStrip->EnsureVisible(Tab);
 		}
-
 	#pragma endregion
 
 	#pragma region Workspace
@@ -796,10 +828,9 @@ namespace ScriptEditor
 			ToolBarCommonTextBox->LostFocus += gcnew EventHandler(this, &Workspace::ToolBarCommonTextBox_LostFocus);
 			ToolBarCommonTextBox->KeyDown += gcnew KeyEventHandler(this, &Workspace::ToolBarCommonTextBox_KeyDown);
 			ToolBarCommonTextBox->Tag = "";
-
-			Padding CommonTextBoxPad = Padding(0);
-			CommonTextBoxPad.Left = 78;
-			ToolBarCommonTextBox->Padding = CommonTextBoxPad;
+			ToolBarCommonTextBox->Padding = SecondaryButtonPad;
+			ToolBarCommonTextBox->ForeColor = Color::Black;
+			ToolBarCommonTextBox->BackColor = Color::FromArgb(255, 215, 235, 255);
 
 			ToolStripSeparator^ ToolBarSeparatorA = gcnew ToolStripSeparator();
 			ToolStripSeparator^ ToolBarSeparatorB = gcnew ToolStripSeparator();
@@ -824,7 +855,6 @@ namespace ScriptEditor
 
 			ToolBarEditMenu->Text = "Edit";
 			ToolBarEditMenu->DropDown = ToolBarEditMenuContents;
-			ToolBarEditMenu->Margin = SecondaryButtonPad;
 
 			ToolBarScriptTypeContentsObject->Text = "Object                  ";
 			ToolBarScriptTypeContentsObject->ToolTipText = "Object";
@@ -1024,8 +1054,8 @@ namespace ScriptEditor
 
 			WorkspaceSecondaryToolBar->GripStyle = ToolStripGripStyle::Hidden;
 			WorkspaceSecondaryToolBar->Dock = DockStyle::Top;
-			WorkspaceSecondaryToolBar->Items->Add(ToolBarCommonTextBox);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarEditMenu);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarCommonTextBox);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarMessageList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarFindList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBookmarkList);
@@ -1444,14 +1474,17 @@ namespace ScriptEditor
 				String^ ReadLine = StringParser->ReadLine();
 				int CaretPos = -1;
 
-				while (ReadLine != nullptr) {
+				while (ReadLine != nullptr)
+				{
 					TextParser->Tokenize(ReadLine, false);
-					if (!TextParser->Valid) {
+					if (!TextParser->Valid)
+					{
 						ReadLine = StringParser->ReadLine();
 						continue;
 					}
 
-					if (!TextParser->HasToken(";<CSECaretPos>")) {
+					if (!TextParser->HasToken(";<CSECaretPos>"))
+					{
 						try { CaretPos = int::Parse(TextParser->Tokens[1]); } catch (...) { CaretPos = -1; }
 						break;
 					}
@@ -1478,7 +1511,8 @@ namespace ScriptEditor
 				while (ReadLine != nullptr)
 				{
 					TextParser->Tokenize(ReadLine, false);
-					if (!TextParser->Valid) {
+					if (!TextParser->Valid)
+					{
 						ReadLine = StringParser->ReadLine();
 						continue;
 					}
@@ -1486,7 +1520,14 @@ namespace ScriptEditor
 					if (!TextParser->HasToken(";<CSEBookmark>"))
 					{
 						array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split(Globals::TabDelimit);
-						try { LineNo = int::Parse(Splits[1]); } catch (...) { LineNo = 1; }
+						try
+						{
+							LineNo = int::Parse(Splits[1]);
+						} 
+						catch (...)
+						{
+							LineNo = 1; 
+						}
 
 						ListViewItem^ Item = gcnew ListViewItem(LineNo.ToString());
 						Item->SubItems->Add(Splits[2]);
@@ -1901,7 +1942,8 @@ namespace ScriptEditor
 			{
 				bool Result = Preprocessor::GetSingleton()->PreprocessScript(TextEditor->GetText(),
 														PreprocessorResult,
-														gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper), gcnew ScriptEditorPreprocessorData(Globals::AppPath, OPTIONS->FetchSettingAsInt("AllowRedefinitions")));
+														gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper),
+														gcnew ScriptEditorPreprocessorData(Globals::AppPath, OPTIONS->FetchSettingAsInt("AllowRedefinitions"), 1));		// OPTIONS->FetchSettingAsInt("NoOfPasses")
 				return Result;
 			}
 			void Workspace::AddMessageToPool(MessageType Type, int Line, String^ Message)
@@ -2027,7 +2069,8 @@ namespace ScriptEditor
 
 			void Workspace::MessageList_DoubleClick(Object^ Sender, EventArgs^ E)
 			{
-				if (GetListViewSelectedItem(MessageList) != nullptr) {
+				if (GetListViewSelectedItem(MessageList) != nullptr)
+				{
 					if (GetListViewSelectedItem(MessageList)->ImageIndex == (int)MessageType::e_Message)
 						MessageList->Items->Remove(GetListViewSelectedItem(MessageList));
 					else
@@ -2036,10 +2079,13 @@ namespace ScriptEditor
 			}
 			void Workspace::MessageList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 			{
-				if (E->Column != (int)MessageList->Tag) {
+				if (E->Column != (int)MessageList->Tag)
+				{
 					MessageList->Tag = E->Column;
 					MessageList->Sorting = SortOrder::Ascending;
-				} else {
+				} 
+				else
+				{
 					if (MessageList->Sorting == SortOrder::Ascending)
 						MessageList->Sorting = SortOrder::Descending;
 					else
@@ -2064,16 +2110,20 @@ namespace ScriptEditor
 			}
 			void Workspace::FindList_DoubleClick(Object^ Sender, EventArgs^ E)
 			{
-				if (GetListViewSelectedItem(FindList) != nullptr) {
+				if (GetListViewSelectedItem(FindList) != nullptr) 
+				{
 					TextEditor->ScrollToLine(GetListViewSelectedItem(FindList)->SubItems[0]->Text);
 				}
 			}
 			void Workspace::FindList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 			{
-				if (E->Column != (int)FindList->Tag) {
+				if (E->Column != (int)FindList->Tag)
+				{
 					FindList->Tag = E->Column;
 					FindList->Sorting = SortOrder::Ascending;
-				} else {
+				}
+				else 
+				{
 					if (FindList->Sorting == SortOrder::Ascending)
 						FindList->Sorting = SortOrder::Descending;
 					else
@@ -2095,16 +2145,20 @@ namespace ScriptEditor
 			}
 			void Workspace::BookmarkList_DoubleClick(Object^ Sender, EventArgs^ E)
 			{
-				if (GetListViewSelectedItem(BookmarkList) != nullptr) {
+				if (GetListViewSelectedItem(BookmarkList) != nullptr) 
+				{
 					TextEditor->ScrollToLine(GetListViewSelectedItem(BookmarkList)->SubItems[0]->Text);
 				}
 			}
 			void Workspace::BookmarkList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 			{
-				if (E->Column != (int)BookmarkList->Tag) {
+				if (E->Column != (int)BookmarkList->Tag)
+				{
 					BookmarkList->Tag = E->Column;
 					BookmarkList->Sorting = SortOrder::Ascending;
-				} else {
+				}
+				else
+				{
 					if (BookmarkList->Sorting == SortOrder::Ascending)
 						BookmarkList->Sorting = SortOrder::Descending;
 					else
@@ -2126,15 +2180,19 @@ namespace ScriptEditor
 			}
 			void Workspace::VariableIndexList_DoubleClick(Object^ Sender, EventArgs^ E)
 			{
-				if (GetListViewSelectedItem(VariableIndexList) != nullptr) {
+				if (GetListViewSelectedItem(VariableIndexList) != nullptr) 
+				{
 					ListViewItem^ Item = GetListViewSelectedItem(VariableIndexList);
 					Rectangle Bounds = Item->SubItems[2]->Bounds;
-					if (Bounds.Width > 35) {
+					if (Bounds.Width > 35)
+					{
 						VariableIndexEditBox->SetBounds(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, BoundsSpecified::All);
 						VariableIndexEditBox->Show();
 						VariableIndexEditBox->BringToFront();
 						VariableIndexEditBox->Focus();
-					} else {
+					}
+					else
+					{
 						MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents", "CSE Script Editor",
 										MessageBoxButtons::OK, MessageBoxIcon::Information);
 					}
@@ -2142,10 +2200,13 @@ namespace ScriptEditor
 			}
 			void Workspace::VariableIndexList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 			{
-				if (E->Column != (int)VariableIndexList->Tag) {
+				if (E->Column != (int)VariableIndexList->Tag) 
+				{
 					VariableIndexList->Tag = E->Column;
 					VariableIndexList->Sorting = SortOrder::Ascending;
-				} else {
+				} 
+				else
+				{
 					if (VariableIndexList->Sorting == SortOrder::Ascending)
 						VariableIndexList->Sorting = SortOrder::Descending;
 					else
@@ -2170,15 +2231,19 @@ namespace ScriptEditor
 				VariableIndexEditBox->Hide();
 
 				UInt32 Index = 0;
-				try {
+				try
+				{
 					Index = UInt32::Parse(VariableIndexEditBox->Text);
-				} catch (...) {
+				} 
+				catch (...) 
+				{
 					VariableIndexEditBox->Text = "";
 					return;
 				}
 
 				VariableIndexEditBox->Text = "";
-				if (GetListViewSelectedItem(VariableIndexList) != nullptr) {
+				if (GetListViewSelectedItem(VariableIndexList) != nullptr) 
+				{
 					ListViewItem^ Item = GetListViewSelectedItem(VariableIndexList);
 					Item->SubItems[2]->Text = Index.ToString();
 					Item->Tag = (int)1;
@@ -2456,7 +2521,10 @@ namespace ScriptEditor
 			}
 			void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
 			{
-				try { Process::Start(dynamic_cast<String^>(ContextMenuDirectLink->Tag)); }
+				try
+				{
+					Process::Start(dynamic_cast<String^>(ContextMenuDirectLink->Tag));
+				}
 				catch (Exception^ E)
 				{
 					DebugPrint("Exception raised while opening internet page.\n\tException: " + E->Message);
@@ -2535,13 +2603,15 @@ namespace ScriptEditor
 				else if (VariableIndexList->Visible)
 					ToolBarGetVarIndices->PerformClick();
 
-				if (!MessageList->Visible) {
+				if (!MessageList->Visible)
+				{
 					MessageList->Show();
 					MessageList->BringToFront();
 					ToolBarMessageList->Checked = true;
 					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 				}
-				else {
+				else
+				{
 					MessageList->Hide();
 					ToolBarMessageList->Checked = false;
 					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
@@ -2580,13 +2650,15 @@ namespace ScriptEditor
 				else if (VariableIndexList->Visible)
 					ToolBarGetVarIndices->PerformClick();
 
-				if (!BookmarkList->Visible) {
+				if (!BookmarkList->Visible)
+				{
 					BookmarkList->Show();
 					BookmarkList->BringToFront();
 					ToolBarBookmarkList->Checked = true;
 					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
 				}
-				else {
+				else 
+				{
 					BookmarkList->Hide();
 					ToolBarBookmarkList->Checked = false;
 					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
@@ -2601,7 +2673,8 @@ namespace ScriptEditor
 				SaveManager->FileName = EditorTab->Text;
 				SaveManager->RestoreDirectory = true;
 
-				if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0) {
+				if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0) 
+				{
 					SaveScriptToDisk(SaveManager->FileName, true);
 				}
 			}
@@ -2613,7 +2686,8 @@ namespace ScriptEditor
 				SaveManager->ShowNewFolderButton = true;
 				SaveManager->SelectedPath = Globals::AppPath + "\\Data\\Scripts";
 
-				if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0) {
+				if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0) 
+				{
 					ParentContainer->DumpAllTabs(SaveManager->SelectedPath);
 					DebugPrint("Dumped all open scripts to " + SaveManager->SelectedPath);
 				}
@@ -2626,7 +2700,8 @@ namespace ScriptEditor
 				LoadManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
 				LoadManager->RestoreDirectory = true;
 
-				if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0) {
+				if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0)
+				{
 					LoadFileFromDisk(LoadManager->FileName);
 				}
 			}
@@ -2639,11 +2714,11 @@ namespace ScriptEditor
 				LoadManager->Multiselect = true;
 				LoadManager->RestoreDirectory = true;
 
-				if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0) {
+				if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0)
+				{
 					for each (String^ Itr in LoadManager->FileNames)
 					{
 						ParentContainer->LoadToTab(Itr);
-						DebugPrint("Loaded text from " + Itr + " into a new workspace");
 					}
 				}
 			}
@@ -2691,18 +2766,24 @@ namespace ScriptEditor
 				ScriptVarIndexData::ScriptVarInfo Data;
 				CStringWrapper^ CScriptName = gcnew CStringWrapper(ScriptEditorID);
 
-				for each (ListViewItem^ Itr in VariableIndexList->Items) {
+				for each (ListViewItem^ Itr in VariableIndexList->Items)
+				{
 					try
 					{
-						if (Itr->Tag != nullptr) {
+						if (Itr->Tag != nullptr) 
+						{
 							CStringWrapper^ CEID = gcnew CStringWrapper(Itr->Text);
 							UInt32 Index = 0;
 
-							try {
+							try
+							{
 								Index = UInt32::Parse(Itr->SubItems[2]->Text);
-							} catch (Exception^ E) {
+							} 
+							catch (Exception^ E)
+							{
 								throw gcnew CSEGeneralException("Couldn't parse index of variable  '" + Itr->Text + "' in script '" + EditorTab->Text + "'\n\tError Message: " + E->Message);
 							}
+
 							Data.Index = Index;
 							if		(!String::Compare(Itr->SubItems[1]->Text, "Integer", true))			Data.Type = 1;
 							else if (!String::Compare(Itr->SubItems[1]->Text, "Float", true))			Data.Type = 0;

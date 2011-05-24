@@ -2,7 +2,7 @@
 
 #include "CSEInterfaceAPI.h"
 
-extern std::map<const char*, const char*> g_URLMapBuffer;
+extern std::map<std::string, std::string> g_URLMapBuffer;
 
 class CSEInterfaceManager
 {

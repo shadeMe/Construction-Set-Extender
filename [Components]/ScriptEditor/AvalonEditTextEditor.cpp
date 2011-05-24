@@ -476,6 +476,10 @@ void AvalonEditTextEditor::GotoLine(int Line)
 		TextField->Select(TextField->Document->GetLineByNumber(Line)->Offset, TextField->Document->GetLineByNumber(Line)->Length);
 		ScrollToCaret();
 	}
+	else
+	{
+		MessageBox::Show("Invalid line number/offset", "Goto Line - CSE Editor");
+	}
 }
 
 void AvalonEditTextEditor::HandleTextChangeEvent()
@@ -534,6 +538,11 @@ void AvalonEditTextEditor::TextField_CaretPositionChanged(Object^ Sender, EventA
 		LineBuffer = TextField->TextArea->Caret->Line;
 		RefreshUI();
 	}
+}
+
+void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E)
+{
+	;//
 }
 
 void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
@@ -660,6 +669,14 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 		if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 		break;
+	case System::Windows::Input::Key::PageUp:
+	case System::Windows::Input::Key::PageDown:
+		if (IntelliSenseBox->IsVisible())
+		{
+			HandleKeyEventForKey(E->Key);
+			E->Handled = true;
+		}
+		break;
 	}
 
 	Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
@@ -710,12 +727,15 @@ void AvalonEditTextEditor::TextField_MouseWheel(Object^ Sender, System::Windows:
 {
 	if (IntelliSenseBox->IsVisible())
 	{
-		IntelliSenseBox->Hide();
-		IntelliSenseBox->Enabled = false;
-		IntelliSenseBox->LastOperation = IntelliSenseThingy::Operation::e_Default;
-	}
+		if (E->Delta < 0)
+			IntelliSenseBox->MoveIndex(IntelliSenseThingy::Direction::e_Down);
+		else
+			IntelliSenseBox->MoveIndex(IntelliSenseThingy::Direction::e_Up);
 
-	IntelliSenseBox->HideInfoTip();
+		E->Handled = true;
+	}
+	else
+		IntelliSenseBox->HideInfoTip();
 }
 
 void AvalonEditTextEditor::TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
@@ -746,9 +766,9 @@ void AvalonEditTextEditor::TextField_SelectionChanged(Object^ Sender, EventArgs^
 	RefreshUI();
 }
 
-void AvalonEditTextEditor::TextField_LostFocus( Object^ Sender, System::Windows::RoutedEventArgs^ E )
+void AvalonEditTextEditor::TextField_LostFocus(Object^ Sender, System::Windows::RoutedEventArgs^ E)
 {
-
+	;//
 }
 #pragma endregion
 
@@ -759,6 +779,11 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	TextField = gcnew AvalonEdit::TextEditor();
 	ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField, KnownLayer::Background);
 	FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField, KnownLayer::Background);
+	VerticalScroll = gcnew VScrollBar();
+	HorizontalScroll = gcnew HScrollBar();
+
+	VerticalScroll->Dock = DockStyle::Right;
+	HorizontalScroll->Dock = DockStyle::Bottom;
 
 	InitializingFlag = false;
 	ModifiedFlag = false;
@@ -772,12 +797,12 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	Container->Dock = DockStyle::Fill;
 	Container->BorderStyle = BorderStyle::Fixed3D;
 	Container->Controls->Add(WPFHost);
+//	Container->Controls->Add(VerticalScroll);
+//	Container->Controls->Add(HorizontalScroll);
 
 	WPFHost->Dock = DockStyle::Fill;
 	WPFHost->Child = TextField;
 
-	TextField->Options->AllowScrollBelowDocument = false;
-	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->EnableEmailHyperlinks = false;
 	TextField->Options->EnableHyperlinks = true;
@@ -796,6 +821,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	TextField->TextArea->Caret->PositionChanged += gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
 	TextField->TextArea->SelectionChanged += gcnew EventHandler(this, &AvalonEditTextEditor::TextField_SelectionChanged);
 	TextField->LostFocus += gcnew System::Windows::RoutedEventHandler(this, &AvalonEditTextEditor::TextField_LostFocus);
+	TextField->TextArea->TextView->ScrollOffsetChanged += gcnew EventHandler(this, &AvalonEditTextEditor::TextField_ScrollOffsetChanged);
 
 	TextField->PreviewKeyUp += gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyUp);
 	TextField->PreviewKeyDown += gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyDown);

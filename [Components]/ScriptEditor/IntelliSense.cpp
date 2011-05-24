@@ -136,23 +136,13 @@ IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::DoUpdateDatabase()
 			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GlobalVar));
 	}
 
-	for (GMSTData* Itr = DataHandlerData->GMSTListHead; Itr != DataHandlerData->GMSTListHead + DataHandlerData->GMSTCount; ++Itr)
-	{
-		if (!Itr->IsValid())		continue;
-
-		if (Itr->Type == GlobalData::kType_Int)
-			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Int, IntelliSenseItem::ItemType::e_GMST));
-		else if (Itr->Type == GlobalData::kType_Float)
-			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Float, IntelliSenseItem::ItemType::e_GMST));
-		else
-			Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GMST));
-	}
-
-
 	for each (IntelliSenseItem^ Itr in Enumerables)
 	{
-		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
+		if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd ||
+			Itr->GetType() == IntelliSenseItem::ItemType::e_GMST)
+		{
 			Data->Enumerables->AddLast(Itr);
+		}
 	}
 
 	for each (UserFunction^% Itr in Data->UDFList)
@@ -373,60 +363,70 @@ void IntelliSenseDatabase::ParseScript(String^% SourceText, Boxer^ Box)
 
 void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
 {
-	try
+	String^ Name, ^Desc, ^SH, ^PluginName;
+	int Count = 0, ReturnType = 0, CSCount = 0;
+	CommandInfo::SourceType Source;
+
+	for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
 	{
-		String^ Name, ^Desc, ^SH, ^PluginName;
-		int Count = 0, ReturnType = 0, CSCount = 0;
-		CommandInfo::SourceType Source;
+		Name = gcnew String(Itr->longName);
+		if (!String::Compare(Name, "", true))	continue;
 
-		for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
+		const CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
+
+		if (CSCount < 370)
 		{
-			Name = gcnew String(Itr->longName);
-			if (!String::Compare(Name, "", true))	continue;
+			Desc = "[CS] ";				// 369 vanilla commands
+			Source = CommandInfo::SourceType::e_Vanilla;
+		}
+		else if (Info)
+		{
+			PluginName = gcnew String(Info->name);
+			if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))			PluginName = "MenuQue";
+			else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))		PluginName = "Pluggy";
 
-			const CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
-
-			if (CSCount < 370)
-			{
-				Desc = "[CS] ";				// 369 vanilla commands
-				Source = CommandInfo::SourceType::e_Vanilla;
-			}
-			else if (Info)
-			{
-				PluginName = gcnew String(Info->name);
-				if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))			PluginName = "MenuQue";
-				else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))		PluginName = "Pluggy";
-
-																				Desc = "[" + PluginName + " v" + Info->version + "] ";
-																				Source = CommandInfo::SourceType::e_OBSE;
-			}
-			else
-			{
-																				Desc = "[OBSE] ";
-																				Source = CommandInfo::SourceType::e_OBSE;
-			}
-
-			if (!String::Compare(gcnew String(Itr->helpText), "", true))		Desc += "No description";
-			else																Desc += gcnew String(Itr->helpText);
-
-			if (!String::Compare(gcnew String(Itr->shortName), "", true))		SH = "None";
-			else																SH = gcnew String(Itr->shortName);
-
-			ReturnType = Data->GetCommandReturnType(Itr);
-			if (ReturnType == 6)												ReturnType = 0;
-
-			Enumerables->AddLast(gcnew CommandInfo(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType, Source));
-
-			CSCount++;
-			Count++;
+																			Desc = "[" + PluginName + " v" + Info->version + "] ";
+																			Source = CommandInfo::SourceType::e_OBSE;
+		}
+		else
+		{
+																			Desc = "[OBSE] ";
+																			Source = CommandInfo::SourceType::e_OBSE;
 		}
 
-		DebugPrint(String::Format("\tSuccessfully parsed {0} commands!", Count));
+		if (!String::Compare(gcnew String(Itr->helpText), "", true))		Desc += "No description";
+		else																Desc += gcnew String(Itr->helpText);
+
+		if (!String::Compare(gcnew String(Itr->shortName), "", true))		SH = "None";
+		else																SH = gcnew String(Itr->shortName);
+
+		ReturnType = Data->GetCommandReturnType(Itr);
+		if (ReturnType == 6)												ReturnType = 0;
+
+		Enumerables->AddLast(gcnew CommandInfo(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType, Source));
+
+		CSCount++;
+		Count++;
 	}
-	catch (Exception^ E)
+
+	DebugPrint(String::Format("\tIntelliSense: Parsed {0} Commands", Count));
+}
+
+void IntelliSenseDatabase::ParseGMSTCollection(IntelliSenseUpdateData* GMSTCollection)
+{
+	for (GMSTData* Itr = GMSTCollection->GMSTListHead; Itr != GMSTCollection->GMSTListHead + GMSTCollection->GMSTCount; ++Itr)
 	{
-		DebugPrint("Exception raised!\n\tMessage: " + E->Message, true);
+		if (!Itr->IsValid())		continue;
+
+		if (Itr->Type == GlobalData::kType_Int)
+			Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Int, IntelliSenseItem::ItemType::e_GMST));
+		else if (Itr->Type == GlobalData::kType_Float)
+			Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Float, IntelliSenseItem::ItemType::e_GMST));
+		else
+			Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GMST));
 	}
+
+	DebugPrint(String::Format("\tIntelliSense: Parsed {0} Game Settings", GMSTCollection->GMSTCount));
 }
 
 void IntelliSenseDatabase::AddToURLMap(String^% CmdName, String^% URL)
@@ -434,13 +434,11 @@ void IntelliSenseDatabase::AddToURLMap(String^% CmdName, String^% URL)
 	for each (KeyValuePair<String^, String^>% Itr in URLMap)
 	{
 		if (!String::Compare(CmdName, Itr.Key, true))
-		{
 			return;
-		}
 	}
 
 	URLMap->Add(CmdName, URL);
-	DebugPrint("Bound " + CmdName + " to URL " + URL);
+	DebugPrint("IntelliSense: Bound Developer URL '" + URL + "' to Command '" + CmdName + "'");
 }
 
 String^	IntelliSenseDatabase::GetCommandURL(String^% CmdName)
@@ -483,7 +481,7 @@ Script^ IntelliSenseDatabase::GetRemoteScript(String^ BaseEditorID, String^ Scri
 		}
 	}
 
-	DebugPrint("Caching scriptable object " + BaseEditorID + "'s script");
+	DebugPrint("IntelliSense: Cached Object " + BaseEditorID + "'s Script");
 	RemoteScripts->Add(BaseEditorID, gcnew Script(ScriptText));
 	return GetRemoteScript(BaseEditorID, nullptr);
 }
@@ -970,7 +968,7 @@ bool IntelliSenseThingy::ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc)
 	}
 	if (Item != nullptr)
 	{
-		TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 8;
+		TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5;
 		InfoTip->ToolTipTitle = Item->GetTypeIdentifier();
 		InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->GetEditorBoxHandle()), TipLoc, 8000);
 		return true;

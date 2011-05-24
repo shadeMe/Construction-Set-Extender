@@ -2,7 +2,7 @@
 #pragma warning(disable : 4800; disable : 4005)
 
 #include "UtilityBox.h"
-#include "obse_editor/EditorAPI.h"
+#include "obse/obse_editor/EditorRTTI.h"
 #include "obse/GameData.h"
 #include "obse/Script.h"
 #include "obse/PluginAPI.h"
@@ -229,12 +229,15 @@ class Archive;
 struct ResponseEditorData;
 class GameSettingCollection;
 
+extern DataHandler**			g_dataHandler;
+extern TES**					g_TES;
+
 extern const HINSTANCE*			g_TESCS_Instance;
 
 extern const DLGPROC			g_ScriptEditor_DlgProc;
-extern const DLGPROC			g_UseReport_DlgProc;
-extern const DLGPROC			g_TESDialog_DlgProc;
-extern const DLGPROC			g_TESDialogListView_DlgProc;
+extern const DLGPROC			g_FormUseReport_DlgProc;
+extern const DLGPROC			g_TESDialogFormEdit_DlgProc;
+extern const DLGPROC			g_TESDialogFormIDListView_DlgProc;
 
 extern HWND*					g_HWND_RenderWindow;
 extern HWND*					g_HWND_ObjectWindow;
@@ -298,53 +301,62 @@ extern BSRenderedTexture*		g_LODBSTexture4096x;
 extern LPDIRECT3DTEXTURE9		g_LODD3DTexture8192x;
 extern BSRenderedTexture*		g_LODBSTexture8192x;
 
-typedef LRESULT (__cdecl *_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
-extern const _WriteToStatusBar WriteToStatusBar;
+typedef void*			(* _FormHeap_Allocate)(UInt32 Size);
+extern const _FormHeap_Allocate FormHeap_Allocate;
 
-typedef UInt32			(__cdecl *_WritePositionToINI)(HWND Handle, CHAR* ClassName);
-extern const _WritePositionToINI WritePositionToINI;
+typedef void			(* _FormHeap_Free)(void * Pointer);
+extern const _FormHeap_Free FormHeap_Free;
 
-typedef bool			(__cdecl *_GetPositionFromINI)(const char* WindowName, tagRECT* Rect);
-extern const _GetPositionFromINI GetPositionFromINI;
+typedef void *			(__cdecl * _Oblivion_DynamicCast)(void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4);
+extern const _Oblivion_DynamicCast Oblivion_DynamicCast;
 
-typedef UInt32			(__cdecl *_GetTESDialogTemplateForType)(UInt8 FormTypeID);
-extern const _GetTESDialogTemplateForType GetTESDialogTemplateForType;
+typedef LRESULT			(__cdecl *_TESDialog_WriteToStatusBar)(WPARAM wParam, LPARAM lParam);
+extern const _TESDialog_WriteToStatusBar TESDialog_WriteToStatusBar;
 
-typedef void*			(__cdecl *_GetComboBoxItemData)(HWND ComboBox);
-extern const _GetComboBoxItemData GetComboBoxItemData;
+typedef UInt32			(__cdecl *_TESDialog_WritePositionToINI)(HWND Handle, CHAR* ClassName);
+extern const _TESDialog_WritePositionToINI TESDialog_WritePositionToINI;
 
-typedef bool			(__cdecl *_SelectTESFileCommonDialog)(HWND Parent, const char* SaveDir, bool SaveAsESM, char* Buffer, size_t Size);
-extern const _SelectTESFileCommonDialog SelectTESFileCommonDialog;
+typedef bool			(__cdecl *_TESDialog_GetPositionFromINI)(const char* WindowName, tagRECT* Rect);
+extern const _TESDialog_GetPositionFromINI TESDialog_GetPositionFromINI;
+
+typedef UInt32			(__cdecl *_TESDialog_GetDialogTemplateForFormType)(UInt8 FormTypeID);
+extern const _TESDialog_GetDialogTemplateForFormType TESDialog_GetDialogTemplateForFormType;
+
+typedef void*			(__cdecl *_TESDialog_GetComboBoxSelectedItemData)(HWND ComboBox);
+extern const _TESDialog_GetComboBoxSelectedItemData TESDialog_GetComboBoxSelectedItemData;
+
+typedef bool			(__cdecl *_TESDialog_SelectTESFileCommonDialog)(HWND Parent, const char* SaveDir, bool SaveAsESM, char* Buffer, size_t Size);
+extern const _TESDialog_SelectTESFileCommonDialog TESDialog_SelectTESFileCommonDialog;
 
 typedef void			(__cdecl *_TESDialog_SetCSWindowTitleModifiedFlag)(bool unk01);
 extern const _TESDialog_SetCSWindowTitleModifiedFlag TESDialog_SetCSWindowTitleModifiedFlag;
 
-typedef TESObjectREFR* (__cdecl *_DisplayReferencePickDialog)(HWND Parent, UInt32 unk01, UInt32 unk02, UInt32 unk03);
-extern const _DisplayReferencePickDialog	DisplayReferencePickDialog;
+typedef TESObjectREFR* (__cdecl *_TESDialog_ShowSelectReferenceDialog)(HWND Parent, UInt32 unk01, UInt32 unk02, UInt32 unk03);
+extern const _TESDialog_ShowSelectReferenceDialog	TESDialog_ShowSelectReferenceDialog;
 
-typedef void*			(__cdecl *_InitializeCSWindows)();
-extern const _InitializeCSWindows		InitializeCSWindows;
+typedef void*			(__cdecl *_TESDialog_InitializeCSWindows)();
+extern const _TESDialog_InitializeCSWindows		TESDialog_InitializeCSWindows;
 
-typedef void			(__cdecl *_DeInitializeCSWindows)();
-extern const _DeInitializeCSWindows		DeInitializeCSWindows;
+typedef void			(__cdecl *_TESDialog_DeinitializeCSWindows)();
+extern const _TESDialog_DeinitializeCSWindows		TESDialog_DeinitializeCSWindows;
 
-typedef void			(__cdecl *_AddFormToObjectWindow)(TESForm* Form);
-extern const _AddFormToObjectWindow		AddFormToObjectWindow;
+typedef void			(__cdecl *_TESDialog_AddFormToObjectWindow)(TESForm* Form);
+extern const _TESDialog_AddFormToObjectWindow		TESDialog_AddFormToObjectWindow;
 
 typedef SpellItem*		(__stdcall *_InitializeDefaultPlayerSpell)(void* Throwaway);
 extern const _InitializeDefaultPlayerSpell		InitializeDefaultPlayerSpell;
 
-typedef void (__cdecl *_ConstructEffectSetting)(int EffectID, const char *EffectName, int School, float BaseCost, int MGEFParamA, int Flags, int ResistAV, int NoOfCounterEffects, ...);
+typedef void			(__cdecl *_ConstructEffectSetting)(int EffectID, const char *EffectName, int School, float BaseCost, int MGEFParamA, int Flags, int ResistAV, int NoOfCounterEffects, ...);
 extern const _ConstructEffectSetting	ConstructEffectSetting;
 
-typedef void (__cdecl *_TESDialog_AddComboBoxItem)(HWND hWnd, const char* Text, LPARAM unk3, UInt8 unk4);
+typedef void			(__cdecl *_TESDialog_AddComboBoxItem)(HWND hWnd, const char* Text, LPARAM unk3, UInt8 unk4);
 extern const _TESDialog_AddComboBoxItem TESDialog_AddComboBoxItem;
 
 typedef void			(__cdecl *_BSPrintF)(const char* format, ...);
 extern const _BSPrintF		BSPrintF;
 
 typedef void			(__cdecl *_ShowCompilerError)(ScriptBuffer* Buffer, const char* format, ...);
-extern const _ShowCompilerError		ShowCompilerErrorEx;
+extern const _ShowCompilerError		ShowCompilerError;
 
 typedef void			(__cdecl *_AutoSavePlugin)(void);
 extern const _AutoSavePlugin		AutoSavePlugin;
@@ -355,13 +367,16 @@ extern const _CreateArchive			CreateArchive;
 typedef void*			(__cdecl *_TESDialog_GetListViewSelectedItemLParam)(HWND ListView);
 extern const _TESDialog_GetListViewSelectedItemLParam			TESDialog_GetListViewSelectedItemLParam;
 
-typedef TESForm*			(__cdecl *_TESForm_LookupByFormID)(UInt32 FormID);
+typedef TESForm*		(__cdecl *_TESForm_LookupByFormID)(UInt32 FormID);
 extern const _TESForm_LookupByFormID			TESForm_LookupByFormID;
 
-typedef TESForm*			(__cdecl *_TESDialog_GetDialogExtraParam)(HWND Dialog);
+typedef TESForm*		(__cdecl *_TESForm_LookupByEditorID)(const char* EditorID);
+extern const _TESForm_LookupByEditorID			TESForm_LookupByEditorID;
+
+typedef TESForm*		(__cdecl *_TESDialog_GetDialogExtraParam)(HWND Dialog);
 extern const _TESDialog_GetDialogExtraParam		TESDialog_GetDialogExtraParam;
 
-typedef TESForm*			(__cdecl *_TESDialog_GetDialogExtraLocalCopy)(HWND Dialog);
+typedef TESForm*		(__cdecl *_TESDialog_GetDialogExtraLocalCopy)(HWND Dialog);
 extern const _TESDialog_GetDialogExtraLocalCopy		TESDialog_GetDialogExtraLocalCopy;
 
 typedef void			(__cdecl *_TESDialog_ComboBoxPopulateWithRaces)(HWND ComboBox, bool NoneEntry);
@@ -373,7 +388,7 @@ extern const _TESDialog_ComboBoxPopulateWithForms		TESDialog_ComboBoxPopulateWit
 typedef void*			(__cdecl *_TESDialog_GetSelectedItemData)(HWND ComboBox);
 extern const _TESDialog_GetSelectedItemData		TESDialog_GetSelectedItemData;
 
-typedef TESObjectREFR*			(__stdcall *_DataHandler_PlaceTESBoundObjectReference)(TESBoundObject* BaseForm, NiVector3* Position, NiVector3* Rotation, float unk03);
+typedef TESObjectREFR*	(__stdcall *_DataHandler_PlaceTESBoundObjectReference)(TESBoundObject* BaseForm, NiVector3* Position, NiVector3* Rotation, float unk03);
 extern const _DataHandler_PlaceTESBoundObjectReference		DataHandler_PlaceTESBoundObjectReference;
 
 extern const void *			RTTI_TESCellUseList;
@@ -393,7 +408,7 @@ extern const UInt32			kExtraDataList_InitItem;
 extern const UInt32			kScript_SetText;
 extern const UInt32			kDataHandler_SortScripts;
 extern const UInt32			kTESScriptableForm_SetScript;
-extern const UInt32			kBSString_Set;
+extern const UInt32			kBSStringT_Set;
 extern const UInt32			kExtraDataList_CopyListForReference;
 extern const UInt32			kExtraDataList_CopyList;
 extern const UInt32			kGMSTMap_Add;	// NiTPointerMap<const char*, GMSTData>
@@ -423,6 +438,7 @@ extern const UInt32			kTESForm_SetTemporary;
 extern const UInt32			kTESRenderUndoStack_RecordReference;
 extern const UInt32			kTESObjectREFR_PickComparator;
 extern const UInt32			kLinkedListNode_CountNodes;
+extern const UInt32			kDataHandler_CreateForm;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;

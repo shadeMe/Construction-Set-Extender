@@ -4,7 +4,7 @@
 
 extern "C"{
 
-__declspec(dllexport) void InitializeComponents(CommandTableData* Data);
+__declspec(dllexport) void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);
 __declspec(dllexport) void AddToURLMap(const char* CmdName, const char* URL);
 
 __declspec(dllexport) void AllocateNewEditor(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);

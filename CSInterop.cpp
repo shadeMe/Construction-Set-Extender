@@ -257,7 +257,7 @@ bool CSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPat
 		return false;
 	}
 
-	std::string DecoderArgs = "lame.exe \"" + g_AppPath + std::string(MP3Path) + "\" \"" + g_AppPath + std::string(WAVPath) + "\" --decode";
+	std::string DecoderArgs = g_AppPath + "lame.exe \"" + g_AppPath + std::string(MP3Path) + "\" \"" + g_AppPath + std::string(WAVPath) + "\" --decode";
 
 	bool Result = CreateProcess(
 		NULL,

@@ -4,6 +4,8 @@
 #include "Hooks\TESFile.h"
 #include "CSDialogs.h"
 
+using namespace Hooks;
+
 CSEConsoleCommandTable		g_ConsoleCommandTable;
 
 void ConsoleCommandCallback(const char* Message, const char* Prefix)
@@ -129,7 +131,7 @@ void CSECCmd_LoadForm_Handler(CSECCMD_ARGS)
 		}
 	}
 
-	TESForm* Form = GetFormByID(EditorID.c_str());
+	TESForm* Form = TESForm_LookupByEditorID(EditorID.c_str());
 	if (Form)
 		ShowFormEditDialog(EditorID.c_str(), Form->typeID);
 	else

@@ -52,8 +52,6 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
 	
 	TextField->MouseDown += gcnew MouseEventHandler(this, &NumberedRichTextBox::TextField_MouseDownAndUp);
 	TextField->MouseUp += gcnew MouseEventHandler(this, &NumberedRichTextBox::TextField_MouseDownAndUp);
-//	TextField->KeyDown += gcnew KeyEventHandler(this, &NumberedRichTextBox::TextField_KeyDownAndUp);
-//	TextField->KeyPress += gcnew KeyPressEventHandler(this, &NumberedRichTextBox::TextField_KeyPress);
 	TextField->KeyUp += gcnew KeyEventHandler(this, &NumberedRichTextBox::TextField_KeyDownAndUp);
 	
 	this->LineChanged += gcnew LineChangedEventHandler(this, &NumberedRichTextBox::NumberedRichTextBox_LineChanged);

@@ -1,9 +1,9 @@
 #pragma once
 #include "ExtenderInternals.h"
 
-class EditorAllocator
+class ScriptEditorAllocator
 {
-	static EditorAllocator*													Singleton;
+	static ScriptEditorAllocator*													Singleton;
 
 	struct SEAlloc
 	{
@@ -20,7 +20,7 @@ class EditorAllocator
 	UInt32																	NextIndex;
 	UInt32																	LastContactedEditor;
 public:
-	static EditorAllocator*													GetSingleton(void);
+	static ScriptEditorAllocator*													GetSingleton(void);
 	UInt32																	TrackNewEditor(HWND EditorDialog);
 	void																	DeleteTrackedEditor(UInt32 TrackedEditorIndex);
 	void																	DeleteAllTrackedEditors(void);
@@ -35,4 +35,4 @@ public:
 	void																	SetLastContactedEditor(UInt32 TrackedEditorIndex) { LastContactedEditor = TrackedEditorIndex; }
 };
 
-#define EDAL																EditorAllocator::GetSingleton()
+#define EDAL																ScriptEditorAllocator::GetSingleton()

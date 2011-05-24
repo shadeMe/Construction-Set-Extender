@@ -9,6 +9,7 @@ ref class UserFunction;
 ref class IntelliSenseThingy;
 ref class Script;
 struct CommandTableData;
+struct IntelliSenseUpdateData;
 
 public ref struct Boxer
 {
@@ -65,6 +66,7 @@ public:
 	LinkedList<IntelliSenseItem^>^						Enumerables;
 
 	void												ParseCommandTable(CommandTableData* Data);
+	void ParseGMSTCollection(IntelliSenseUpdateData* GMSTCollection);
 
 	static IntelliSenseDatabase^%						GetSingleton();
 

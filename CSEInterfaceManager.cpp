@@ -5,7 +5,7 @@
 #include "Console.h"
 #include "RenderWindowTextPainter.h"
 
-std::map<const char*, const char*>		g_URLMapBuffer;
+std::map<std::string, std::string>		g_URLMapBuffer;
 
 static CSEInterface				s_CSEInterface =
 {

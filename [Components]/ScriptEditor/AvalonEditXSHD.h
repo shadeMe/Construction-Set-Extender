@@ -1,5 +1,6 @@
 #pragma once
 
+// in retrospect, directly using AvalonEdit's XSHD interfaces would have taken less effort
 namespace AvalonEditXSHD
 {
 	ref class XSHDColor;
@@ -235,7 +236,7 @@ namespace AvalonEditXSHD
 			e_VanillaCommands,
 			e_OBSECommands
 		};
-
+										// pass Color::GhostWhite as fore/back colors to have them ignored
 		void							CreateRuleset(Rulesets Ruleset, Color Foreground, Color Background, bool Bold);
 		void							CreateCommentPreprocessorRuleset(Color Foreground, Color Background, bool Bold, Color PreprocessorForeground);
 

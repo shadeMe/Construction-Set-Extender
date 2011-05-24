@@ -34,21 +34,18 @@
     <Filter Include="Components">
       <UniqueIdentifier>{38df1a7a-ab76-44e1-b352-1c9aa39613d7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EditorAPI">
+      <UniqueIdentifier>{1123d9ac-df61-4a93-9bec-1ca6d5a32bdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EditorAPI\Forms">
+      <UniqueIdentifier>{e1a88872-fa63-43c0-a11a-c771bc250ebe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.c">
-      <Filter>OBSE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\obse\obse_editor\EditorAPI.cpp">
-      <Filter>OBSE</Filter>
-    </ClCompile>
     <ClCompile Include="..\obse\obse_editor\EditorRTTI.cpp">
       <Filter>OBSE</Filter>
     </ClCompile>
     <ClCompile Include="..\obse\obse\GameData.cpp">
-      <Filter>OBSE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\obse\obse\Script.cpp">
       <Filter>OBSE</Filter>
     </ClCompile>
     <ClCompile Include="..\obse\obse\Utilities.cpp">
@@ -149,11 +146,14 @@
     <ClCompile Include="HallofFame.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="WindowManager.cpp" />
+    <ClCompile Include="Hooks\VersionControl.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="ChangeLogManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\obse\obse_editor\EditorAPI.h">
-      <Filter>OBSE</Filter>
-    </ClInclude>
     <ClInclude Include="..\obse\obse_editor\EditorRTTI.h">
       <Filter>OBSE</Filter>
     </ClInclude>
@@ -194,9 +194,6 @@
       <Filter>OBSE</Filter>
     </ClInclude>
     <ClInclude Include="..\obse\obse\NiTypes.h">
-      <Filter>OBSE</Filter>
-    </ClInclude>
-    <ClInclude Include="..\obse\obse\ParamInfos.h">
       <Filter>OBSE</Filter>
     </ClInclude>
     <ClInclude Include="..\obse\obse\PluginAPI.h">
@@ -314,6 +311,180 @@
     <ClInclude Include="ExtenderInternals.h" />
     <ClInclude Include="HallofFame.h" />
     <ClInclude Include="WindowManager.h" />
+    <ClInclude Include="Hooks\VersionControl.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="ChangeLogManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\Core.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\BaseFormComponent.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESForm.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObject.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\ExtraData.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\ExtraDataList.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESActorBase.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\ActorValues.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\Setting.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\GameSetting.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESClass.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESGlobal.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectCELL.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectREFR.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESFaction.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESHair.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESEyes.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESRace.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESSound.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESSkill.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\EffectSetting.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\Magic.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\Script.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESLandTexture.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\EffectItem.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\MagicItem.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\MagicItemForm.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\MagicItemObject.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\BirthSign.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectACTI.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectAPPA.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectARMO.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectBOOK.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectCLOT.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectCONT.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectDOOR.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectLIGH.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectMISC.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectSTAT.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESGrass.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectTREE.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESFlora.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESFurniture.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectWEAP.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESAmmo.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESNPC.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\FaceGen.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESCreature.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\BSStringT.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESLevCreature.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESSoulGem.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESKey.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESSubSpace.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESSigilStone.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESLevItem.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESWeather.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def">

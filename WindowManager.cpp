@@ -4,7 +4,6 @@
 #include "[Common]\CLIWrapper.h"
 #include "Console.h"
 #include "resource.h"
-#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "CSInterop.h"
@@ -19,6 +18,9 @@
 #include "ToolManager.h"
 #include "WorkspaceManager.h"
 #include "RenderWindowTextPainter.h"
+#include "ChangeLogManager.h"
+
+using namespace Hooks;
 
 WNDPROC						g_FindTextOrgWindowProc = NULL;
 WNDPROC						g_DataDlgOrgWindowProc = NULL;
@@ -171,7 +173,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			*g_WorkingFileFlag = 0;
 
 			char FileName[0x104];
-			if (SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->sData, 0, FileName, 0x104))
+			if (TESDialog_SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->sData, 0, FileName, 0x104))
 			{
 				ModEntry::Data* SaveAsBuffer = (*g_dataHandler)->unk8B8.activeFile;
 
@@ -818,7 +820,8 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 		Point.x = GET_X_LPARAM(lParam);
         Point.y = GET_Y_LPARAM(lParam);
 
-		if (PtInRect((LPRECT) &Rect, Point)) {
+		if (PtInRect((LPRECT) &Rect, Point))
+		{
 			HMENU Popup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU1);
 			Popup = GetSubMenu(Popup, 0);
 			if (AlwaysOnTopFlag)	CheckMenuItem(Popup, 1, MF_CHECKED|MF_BYPOSITION);
@@ -848,6 +851,9 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				break;
 			case CONSOLEMENU_OPENDEBUGLOG:
 				ShellExecute(NULL, "open", (LPSTR)CONSOLE->GetDebugLogPath(), NULL, NULL, SW_SHOW);
+				break;
+			case CONSOLEMENU_OPENCHANGELOG:
+				VersionControl::CHANGELOG->OpenSessionLog();
 				break;
 			}
 			DestroyMenu(Popup);
@@ -1039,7 +1045,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 				TESFile* File = (TESFile*)Itr->data;
 				Buffer += PrintToBuffer("\t%s\n", File->name);
 			}
-			MessageBox(*g_HWND_CSParent, Buffer.c_str(), "CSE", MB_OK|MB_ICONINFORMATION);
+			MessageBox(hWnd, Buffer.c_str(), "CSE", MB_OK|MB_ICONINFORMATION);
 			break;
 		}
 	}
@@ -1170,7 +1176,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				TESQuest* Quest = NULL;
 				Script* QuestScript = NULL;
 
-				Form = GetFormByID(QuestID);
+				Form = TESForm_LookupByEditorID(QuestID);
 				if (Form)
 				{
 					if (Form->typeID == kFormType_Quest)
@@ -1200,7 +1206,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				if (strlen(ScriptID) < 1)
 					sprintf_s(ScriptID, sizeof(ScriptID), "%sScript", QuestID);
 
-				Form = GetFormByID(ScriptID);
+				Form = TESForm_LookupByEditorID(ScriptID);
 				if (Form)
 				{
 					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", ScriptID);
@@ -1287,7 +1293,7 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				char RefEditorID[0x200] = {0};
 
 				Edit_GetText(EditorIDBox, BaseEditorID, 0x200);
-				if (GetFormByID(BaseEditorID))
+				if (TESForm_LookupByEditorID(BaseEditorID))
 				{
 					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", BaseEditorID);
 					MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONERROR);
@@ -1334,7 +1340,7 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 						else
 						{
 							Edit_GetText(RefIDBox, RefEditorID, 0x200);
-							if (GetFormByID(RefEditorID))
+							if (TESForm_LookupByEditorID(RefEditorID))
 							{
 								sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", RefEditorID);
 								MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONERROR);

@@ -10,8 +10,6 @@
 #include "../Exports.h"
 #include "obse/GameData.h"
 
-extern FARPROC		g_WindowHandleCallAddr;
-
 class TESForm;
 class TESObjectCELL;
 class TESWorldSpace;
@@ -19,18 +17,25 @@ struct FormData;
 struct UseListCellItemData;
 class INISetting;
 
-using namespace	MemoryHandler;
+#pragma warning(disable:4005)
 
-void __stdcall GetWindowTextAddress(void);
-void __stdcall CreateDialogParamAddress(void);
-void __stdcall EndDialogAddress(void);
-void __stdcall EnableWindowAddress(void);
-void __stdcall GetWindowLongAddress(void);
-void __stdcall CreateWindowExAddress(void);
-void __stdcall SetWindowTextAddress(void);
-void __stdcall SendDlgItemMessageAddress(void);
-void __stdcall SendMessageAddress(void);
-void __stdcall TrackPopupMenuAddress(void);
-void __stdcall ShowWindowAddress(void);
+namespace Hooks
+{
+	extern FARPROC		g_WindowHandleCallAddr;
 
-UInt32 __stdcall IsControlKeyDown(void);
+	using namespace	MemoryHandler;
+
+	void __stdcall GetWindowTextAddress(void);
+	void __stdcall CreateDialogParamAddress(void);
+	void __stdcall EndDialogAddress(void);
+	void __stdcall EnableWindowAddress(void);
+	void __stdcall GetWindowLongAddress(void);
+	void __stdcall CreateWindowExAddress(void);
+	void __stdcall SetWindowTextAddress(void);
+	void __stdcall SendDlgItemMessageAddress(void);
+	void __stdcall SendMessageAddress(void);
+	void __stdcall TrackPopupMenuAddress(void);
+	void __stdcall ShowWindowAddress(void);
+
+	UInt32 __stdcall IsControlKeyDown(void);
+}

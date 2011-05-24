@@ -11,7 +11,7 @@ namespace CLIWrapper
 		typedef void							(*_InitializeScript)(UInt32, ScriptData*);
 		typedef void							(*_SendMessagePingback)(UInt32, UInt16);
 
-		typedef void							(*_InitializeComponents)(CommandTableData*);
+		typedef void							(*_InitializeComponents)(CommandTableData*, IntelliSenseUpdateData*);
 		typedef void							(*_AddToURLMap)(const char*, const char*);
 		typedef void							(*_SetScriptListItemData)(UInt32, ScriptData*);
 

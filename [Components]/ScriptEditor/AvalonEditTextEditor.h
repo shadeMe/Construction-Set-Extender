@@ -31,6 +31,8 @@ protected:
 	Panel^										Container;
 	ElementHost^								WPFHost;
 	AvalonEdit::TextEditor^						TextField;
+	VScrollBar^									VerticalScroll;
+	HScrollBar^									HorizontalScroll;
 
 	AvalonEditScriptErrorBGColorizer^			ErrorColorizer;
 	AvalonEditFindReplaceBGColorizer^			FindReplaceColorizer;
@@ -48,6 +50,7 @@ protected:
 
 	void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
 	void										TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
+	void										TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E);
 
 	void										TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
 	void										TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);

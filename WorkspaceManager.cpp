@@ -1,6 +1,8 @@
 #include "WorkspaceManager.h"
 #include "Hooks\TESFile.h"
 
+using namespace Hooks;
+
 WorkspaceManager					g_WorkspaceManager;
 
 void WorkspaceManager::Initialize(const char *DefaultDirectory)

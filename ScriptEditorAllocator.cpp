@@ -1,18 +1,18 @@
 #include "ScriptEditorAllocator.h"
 
-EditorAllocator*					EditorAllocator::Singleton = NULL;
+ScriptEditorAllocator*					ScriptEditorAllocator::Singleton = NULL;
 
-EditorAllocator* EditorAllocator::GetSingleton(void)
+ScriptEditorAllocator* ScriptEditorAllocator::GetSingleton(void)
 {
 	if (!Singleton)
 	{
-		EditorAllocator::Singleton = new EditorAllocator;
+		ScriptEditorAllocator::Singleton = new ScriptEditorAllocator;
 		Singleton->NextIndex = 1;
 	}
 	return Singleton;
 }
 
-UInt32 EditorAllocator::TrackNewEditor(HWND EditorDialog)
+UInt32 ScriptEditorAllocator::TrackNewEditor(HWND EditorDialog)
 {
 	UInt32 Result = NextIndex++;
 	AllocationMap.insert(std::make_pair<HWND, SEAlloc*>(EditorDialog, new SEAlloc(GetDlgItem(EditorDialog, 1166), GetDlgItem(EditorDialog, 2259), Result)));
@@ -22,7 +22,7 @@ UInt32 EditorAllocator::TrackNewEditor(HWND EditorDialog)
 	return Result;
 }
 
-void EditorAllocator::DeleteTrackedEditor(UInt32 TrackedEditorIndex)
+void ScriptEditorAllocator::DeleteTrackedEditor(UInt32 TrackedEditorIndex)
 {
 	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
 	{
@@ -35,7 +35,7 @@ void EditorAllocator::DeleteTrackedEditor(UInt32 TrackedEditorIndex)
 	}
 }
 
-void EditorAllocator::DeleteAllTrackedEditors(void)
+void ScriptEditorAllocator::DeleteAllTrackedEditors(void)
 {
 	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
 	{
@@ -44,13 +44,13 @@ void EditorAllocator::DeleteAllTrackedEditors(void)
 	AllocationMap.clear();
 }
 
-void EditorAllocator::DestroyVanillaDialogs(void)
+void ScriptEditorAllocator::DestroyVanillaDialogs(void)
 {
 	for (AlMap::iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)
 		DestroyWindow(Itr->first);
 }
 
-HWND EditorAllocator::GetTrackedREC(HWND TrackedEditorDialog)
+HWND ScriptEditorAllocator::GetTrackedREC(HWND TrackedEditorDialog)
 {
 	AlMap::const_iterator Itr = AllocationMap.find(TrackedEditorDialog);
 	if (Itr == AllocationMap.end())
@@ -59,7 +59,7 @@ HWND EditorAllocator::GetTrackedREC(HWND TrackedEditorDialog)
 		return Itr->second->RichEditControl;
 }
 
-HWND EditorAllocator::GetTrackedLBC(HWND TrackedEditorDialog)
+HWND ScriptEditorAllocator::GetTrackedLBC(HWND TrackedEditorDialog)
 {
 	AlMap::const_iterator Itr = AllocationMap.find(TrackedEditorDialog);
 	if (Itr == AllocationMap.end())
@@ -68,7 +68,7 @@ HWND EditorAllocator::GetTrackedLBC(HWND TrackedEditorDialog)
 		return Itr->second->ListBoxControl;
 }
 
-UInt32 EditorAllocator::GetTrackedIndex(HWND TrackedEditorDialog)
+UInt32 ScriptEditorAllocator::GetTrackedIndex(HWND TrackedEditorDialog)
 {
 	UInt32 Result = 0;
 	AlMap::const_iterator Itr = AllocationMap.find(TrackedEditorDialog);
@@ -78,7 +78,7 @@ UInt32 EditorAllocator::GetTrackedIndex(HWND TrackedEditorDialog)
 		return Itr->second->Index;
 }
 
-HWND EditorAllocator::GetTrackedDialog(UInt32 TrackedEditorIndex)
+HWND ScriptEditorAllocator::GetTrackedDialog(UInt32 TrackedEditorIndex)
 {
 	HWND Result= NULL;
 	for (AlMap::const_iterator Itr = AllocationMap.begin(); Itr != AllocationMap.end(); Itr++)

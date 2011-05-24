@@ -20,10 +20,22 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 		
 		for each (String^% Itr in LocalParser->Tokens)
 		{
-			DefineDirective^ Macro = PreprocessorInstance->LookupDefineDirectiveByName(Itr);
+			String^ TokenBuffer = Itr;
+
+			DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(Itr);
+			switch (DefineOperator)
+			{
+			case DefineDirective::AccessoryOperatorType::e_None:
+				break;
+			default:
+				TokenBuffer = Itr->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
+				break;
+			}
+
+			DefineDirective^ Macro = PreprocessorInstance->LookupDefineDirectiveByName(TokenBuffer);
 
 			if (Macro != nullptr && LocalParser->IsComment(TokenIndex) == -1)
-				ExpandedToken += Macro->GetValue(Prefix);
+				ExpandedToken += Macro->GetValue(Prefix, DefineOperator);
 			else
 				ExpandedToken += Itr;
 			
@@ -144,7 +156,7 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 				throw gcnew CSEGeneralException("No value specified.");			
 			}
 
-			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + "define");
+			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Define]);
 			Name = LocalParser->Tokens[Index + 1];
 			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);	
 
@@ -186,7 +198,7 @@ DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, Stand
 				throw gcnew CSEGeneralException("No name specified.");		
 			}
 
-			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + "define");
+			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_Define]);
 			Name = LocalParser->Tokens[Index + 1];
 			Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
@@ -215,25 +227,55 @@ DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, Stand
 	}
 }
 
-String^ DefineDirective::GetValue(String^% Prefix)
+String^ DefineDirective::GetValue(String^% Prefix, DefineDirective::AccessoryOperatorType ActiveOperator)
 {
+	String^ Result = "";
+
 	if (Encoding == EncodingType::e_MultiLine)
 	{
 		StringReader^ TextReader = gcnew StringReader(this->Value);
-		String^ Result = "\n" + TextReader->ReadLine();
+		Result += "\n" + TextReader->ReadLine();
 
 		for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 			Result += "\n" + Prefix + ReadLine;
 
-		return Result->Substring(1);
+		Result = Result->Substring(1);
 	}
 	else
-		return this->Value;
+		Result += this->Value;
+
+	switch (ActiveOperator)
+	{
+	case AccessoryOperatorType::e_Stringize:
+		Result = "\"" + Result + "\"";
+		break;
+	}
+
+	return Result;
 }
 
 DefineDirective^ DefineDirective::CreateCopy()
 {
 	return dynamic_cast<DefineDirective^>(this->MemberwiseClone());
+}
+
+DefineDirective::AccessoryOperatorType	DefineDirective::GetAccessoryOperatorFromToken(String^% Token)
+{
+	AccessoryOperatorType ActiveOperator = AccessoryOperatorType::e_None;
+
+	UInt32 Index = 0;
+	for each (String^% Itr in DefineDirective::AccessoryOperatorIdentifier)
+	{
+		if (Token->IndexOf(Itr) == 0 && Index != (UInt32)ActiveOperator)
+		{
+			ActiveOperator = (AccessoryOperatorType)Index;
+			break;
+		}
+
+		Index++;
+	}
+
+	return ActiveOperator;
 }
 
 String^ DefineDirective::GetToken()
@@ -271,7 +313,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 				throw gcnew CSEGeneralException("No value specified.");		
 			}
 
-			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + "import");
+			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Import]);
 			Filename = LocalParser->Tokens[Index + 1]->Replace("\"", "");
 			String^ Source = "";
 			String^ Result = "";
@@ -283,7 +325,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 				ImportParser->Close();
 			} 
 			catch (Exception^ E) {
-				throw gcnew CSEGeneralException("Couldn't read from import script - " + E->Message);
+				throw gcnew CSEGeneralException("Couldn't read from IMPORT script - " + E->Message);
 			}
 	
 			if (!PreprocessorInstance->Preprocess(Source, Result, ErrorOutput))
@@ -342,7 +384,7 @@ void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutp
 		catch (...) { throw gcnew CSEGeneralException("Invalid value assigned to " + Name); }
 		PreviousValue = CurrentValue;
 		
-		String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + "define " + Name + " " + ValueString;
+		String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Define] + " " + Name + " " + ValueString;
 		ComponentDefineDirectives->AddLast(gcnew DefineDirective(DefineToken, ErrorOutput, PreprocessorInstance));
 	}	
 }
@@ -369,7 +411,7 @@ EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Pr
 				throw gcnew CSEGeneralException("No value specified.");			
 			}
 
-			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + "enum");
+			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Enum]);
 			String^ Value;
 
 			Name = LocalParser->Tokens[Index + 1];
@@ -409,7 +451,7 @@ EnumDirective::EnumDirective(String^ Token, StringReader^% TextReader, StandardO
 				throw gcnew CSEGeneralException("No name specified.");	
 			}
 
-			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + "enum");
+			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_Enum]);
 
 			Name = LocalParser->Tokens[Index + 1];
 			Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
@@ -481,8 +523,8 @@ void IfDirective::ProcessOperands(String^% LHSSource, String^% RHSSource, String
 	DefineDirective^ LHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(LHSSource);
 	DefineDirective^ RHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(RHSSource);
 
-	LHSResult = ((LHSDirective)?(LHSDirective->GetValue(gcnew String(""))):LHSSource);
-	RHSResult = ((RHSDirective)?(RHSDirective->GetValue(gcnew String(""))):RHSSource);
+	LHSResult = ((LHSDirective)?(LHSDirective->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::e_None)):LHSSource);
+	RHSResult = ((RHSDirective)?(RHSDirective->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::e_None)):RHSSource);
 }
 
 bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
@@ -723,7 +765,7 @@ bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Resu
 
 	try
 	{
-		String^ InfixExpression = Source; // Source->Substring(1, Source->Length - 2);
+		String^ InfixExpression = Source;
 		String^ PostFixExpression = "";
 		Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
 
@@ -902,7 +944,7 @@ IfDirective::IfDirective(String^ Token, StringReader^% TextReader, StandardOutpu
 				throw gcnew CSEGeneralException("No condition specified.");	
 			}
 
-			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + "if");
+			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_If]);
 			String^ ConditionString = Token->Substring(LocalParser->Indices[Index] + 4);
 			Block = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
@@ -961,7 +1003,7 @@ void Preprocessor::RegisterDefineDirective(DefineDirective^ Directive)
 	DefineDirective^ ExistingDirective = LookupDefineDirectiveByName(Directive->GetName());
 
 	if (ExistingDirective != nullptr)
-		ExistingDirective->SetValue(Directive->GetValue(gcnew String("")));
+		ExistingDirective->SetValue(Directive->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::e_None));
 	else
 		RegisteredDefineDirectives->AddLast(Directive->CreateCopy());
 }
@@ -978,26 +1020,26 @@ DefineDirective^ Preprocessor::LookupDefineDirectiveByName(String^% Name)
 
 CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, StringReader^ TextReader, StandardOutputError^ ErrorOutput)
 {
-	if (!String::Compare(Identifier, "define", true))
+	if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define], true))
 	{
 		if (Encoding == CSEPreprocessorDirective::EncodingType::e_SingleLine)
 			return gcnew DefineDirective(Token, ErrorOutput, this);
 		else if (Encoding == CSEPreprocessorDirective::EncodingType::e_MultiLine)
 			return gcnew DefineDirective(Token, TextReader, ErrorOutput, this);
 	}
-	else if (!String::Compare(Identifier, "import", true))
+	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import], true))
 	{
 		if (Encoding == CSEPreprocessorDirective::EncodingType::e_SingleLine)
 			return gcnew ImportDirective(Token, ErrorOutput, this);
 	}
-	else if (!String::Compare(Identifier, "enum", true))
+	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum], true))
 	{
 		if (Encoding == CSEPreprocessorDirective::EncodingType::e_SingleLine)
 			return gcnew EnumDirective(Token, ErrorOutput, this);
 		else if (Encoding == CSEPreprocessorDirective::EncodingType::e_MultiLine)
 			return gcnew EnumDirective(Token, TextReader, ErrorOutput, this);
 	}
-	else if (!String::Compare(Identifier, "if", true))
+	else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If], true))
 	{
 		if (Encoding == CSEPreprocessorDirective::EncodingType::e_MultiLine)
 			return gcnew IfDirective(Token, TextReader, ErrorOutput, this);
@@ -1091,9 +1133,26 @@ bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOu
 	bool OperationResult = false;
 
 	DataBuffer = Data;
-	RegisteredDefineDirectives->Clear();
-	ProcessStandardDirectives(Data->AppPath, ErrorOutput);
-	OperationResult = Preprocess(Source, Result, ErrorOutput);
+
+	String^ SourceBuffer = gcnew String(Source);
+	String^ ResultBuffer = "";
+
+	for (int i = 0; i < Data->NoOfPasses; i++)
+	{
+		RegisteredDefineDirectives->Clear();
+		ProcessStandardDirectives(Data->AppPath, ErrorOutput);
+		OperationResult = Preprocess(SourceBuffer, ResultBuffer, ErrorOutput);
+		if (!OperationResult)
+		{
+			ErrorOutput("Preprocessing failed in pass " + i.ToString());
+			break;
+		}
+
+		SourceBuffer = ResultBuffer;
+		ResultBuffer = "";
+	}
+	if (OperationResult)
+		Result = SourceBuffer;
 
 	return OperationResult;
 }

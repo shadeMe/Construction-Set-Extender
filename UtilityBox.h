@@ -15,6 +15,7 @@
 #include "shlobj.h"
 #include "time.h"
 #include "intrin.h"
+#include <errno.h>
 #include "common/IDirectoryIterator.h"
 #include "[Libraries]\MemoryHandler\MemoryHandler.h"
 

@@ -6,7 +6,7 @@
 
 extern "C"
 {
-__declspec(dllexport) void InitializeComponents(CommandTableData* Data)
+__declspec(dllexport) void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData)
 {
 	System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
 
@@ -15,6 +15,7 @@ __declspec(dllexport) void InitializeComponents(CommandTableData* Data)
 
 	ScriptEditorManager::GetSingleton();
 	ISDB->ParseCommandTable(Data);
+	ISDB->ParseGMSTCollection(GMSTData);
 }
 
 __declspec(dllexport) void AddToURLMap(const char* CmdName, const char* URL)

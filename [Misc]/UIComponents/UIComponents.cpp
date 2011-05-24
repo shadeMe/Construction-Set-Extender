@@ -2,6 +2,7 @@
 
 #include "TagBrowser.h"
 #include "WPFHostTest.h"
+#include "SEOptionsDialog.h"
 
 using namespace UIComponents;
 
@@ -13,6 +14,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Create the main window and run it
-	Application::Run(gcnew WPFHostTest());
+	Application::Run(gcnew OptionsDialog());
 	return 0;
 }

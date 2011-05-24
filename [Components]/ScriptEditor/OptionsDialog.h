@@ -107,7 +107,7 @@ public ref class OptionsDialog
 				Button^								CmDlgFindResultsHighlightColor;
 				Label^								LabelFindResultsHighlight;
 
-				CheckBox^							Wordwrap;
+				CheckBox^							WordWrap;
 				CheckBox^							ShowTabs;
 				CheckBox^							ShowSpaces;
 			TabPage^									TabSanitize;

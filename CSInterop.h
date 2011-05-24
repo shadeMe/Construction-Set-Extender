@@ -2,8 +2,6 @@
 #include <string>
 #include "Rpc.h"
 
-#pragma comment(lib, "Rpcrt4.lib")
-
 // loader derived from OBSE's code. well, duplicated.
 
 class CSInteropManager

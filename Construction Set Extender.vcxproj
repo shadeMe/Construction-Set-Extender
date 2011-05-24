@@ -22,11 +22,13 @@
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v100</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -68,6 +70,7 @@
       <DebugInformationFormat>
       </DebugInformationFormat>
       <ForcedIncludeFiles>obse_common/obse_prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(SolutionDir)..\common\[Lib]\R.lib;ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -127,17 +130,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.c">
-      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </ForcedIncludeFiles>
-      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </ForcedIncludeFiles>
-    </ClCompile>
-    <ClCompile Include="..\obse\obse_editor\EditorAPI.cpp" />
     <ClCompile Include="..\obse\obse_editor\EditorRTTI.cpp" />
     <ClCompile Include="..\obse\obse\GameData.cpp" />
-    <ClCompile Include="..\obse\obse\Script.cpp" />
     <ClCompile Include="..\obse\obse\Utilities.cpp" />
+    <ClCompile Include="Hooks\VersionControl.cpp" />
+    <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="[Common]\CLIWrapper.cpp" />
     <ClCompile Include="[Common]\HandshakeStructs.cpp" />
     <ClCompile Include="Hooks\AssetSelector.cpp" />
@@ -175,7 +172,6 @@
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\obse\obse_editor\EditorAPI.h" />
     <ClInclude Include="..\obse\obse_editor\EditorRTTI.h" />
     <ClInclude Include="..\obse\obse\GameBSExtraData.h" />
     <ClInclude Include="..\obse\obse\GameData.h" />
@@ -190,10 +186,67 @@
     <ClInclude Include="..\obse\obse\NiObjects.h" />
     <ClInclude Include="..\obse\obse\NiProperties.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
-    <ClInclude Include="..\obse\obse\ParamInfos.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
     <ClInclude Include="..\obse\obse\Script.h" />
     <ClInclude Include="..\obse\obse\Utilities.h" />
+    <ClInclude Include="EditorAPI\ActorValues.h" />
+    <ClInclude Include="EditorAPI\BaseFormComponent.h" />
+    <ClInclude Include="EditorAPI\BirthSign.h" />
+    <ClInclude Include="EditorAPI\BSStringT.h" />
+    <ClInclude Include="EditorAPI\Core.h" />
+    <ClInclude Include="EditorAPI\EffectItem.h" />
+    <ClInclude Include="EditorAPI\EffectSetting.h" />
+    <ClInclude Include="EditorAPI\ExtraData.h" />
+    <ClInclude Include="EditorAPI\ExtraDataList.h" />
+    <ClInclude Include="EditorAPI\FaceGen.h" />
+    <ClInclude Include="EditorAPI\GameSetting.h" />
+    <ClInclude Include="EditorAPI\Magic.h" />
+    <ClInclude Include="EditorAPI\MagicItem.h" />
+    <ClInclude Include="EditorAPI\MagicItemForm.h" />
+    <ClInclude Include="EditorAPI\MagicItemObject.h" />
+    <ClInclude Include="EditorAPI\Script.h" />
+    <ClInclude Include="EditorAPI\Setting.h" />
+    <ClInclude Include="EditorAPI\TESActorBase.h" />
+    <ClInclude Include="EditorAPI\TESAmmo.h" />
+    <ClInclude Include="EditorAPI\TESClass.h" />
+    <ClInclude Include="EditorAPI\TESCreature.h" />
+    <ClInclude Include="EditorAPI\TESEyes.h" />
+    <ClInclude Include="EditorAPI\TESFaction.h" />
+    <ClInclude Include="EditorAPI\TESFlora.h" />
+    <ClInclude Include="EditorAPI\TESForm.h" />
+    <ClInclude Include="EditorAPI\TESFurniture.h" />
+    <ClInclude Include="EditorAPI\TESGlobal.h" />
+    <ClInclude Include="EditorAPI\TESGrass.h" />
+    <ClInclude Include="EditorAPI\TESHair.h" />
+    <ClInclude Include="EditorAPI\TESKey.h" />
+    <ClInclude Include="EditorAPI\TESLandTexture.h" />
+    <ClInclude Include="EditorAPI\TESLevCreature.h" />
+    <ClInclude Include="EditorAPI\TESLevItem.h" />
+    <ClInclude Include="EditorAPI\TESNPC.h" />
+    <ClInclude Include="EditorAPI\TESObject.h" />
+    <ClInclude Include="EditorAPI\TESObjectACTI.h" />
+    <ClInclude Include="EditorAPI\TESObjectAPPA.h" />
+    <ClInclude Include="EditorAPI\TESObjectARMO.h" />
+    <ClInclude Include="EditorAPI\TESObjectBOOK.h" />
+    <ClInclude Include="EditorAPI\TESObjectCELL.h" />
+    <ClInclude Include="EditorAPI\TESObjectCLOT.h" />
+    <ClInclude Include="EditorAPI\TESObjectCONT.h" />
+    <ClInclude Include="EditorAPI\TESObjectDOOR.h" />
+    <ClInclude Include="EditorAPI\TESObjectLIGH.h" />
+    <ClInclude Include="EditorAPI\TESObjectMISC.h" />
+    <ClInclude Include="EditorAPI\TESObjectREFR.h" />
+    <ClInclude Include="EditorAPI\TESObjectSTAT.h" />
+    <ClInclude Include="EditorAPI\TESObjectTREE.h" />
+    <ClInclude Include="EditorAPI\TESObjectWEAP.h" />
+    <ClInclude Include="EditorAPI\TESRace.h" />
+    <ClInclude Include="EditorAPI\TESSigilStone.h" />
+    <ClInclude Include="EditorAPI\TESSkill.h" />
+    <ClInclude Include="EditorAPI\TESSoulGem.h" />
+    <ClInclude Include="EditorAPI\TESSound.h" />
+    <ClInclude Include="EditorAPI\TESSubSpace.h" />
+    <ClInclude Include="EditorAPI\TESWeather.h" />
+    <ClInclude Include="Hooks\VersionControl.h" />
+    <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
     <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h" />
     <ClInclude Include="Resource.h" />
