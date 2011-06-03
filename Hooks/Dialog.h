@@ -37,4 +37,5 @@ namespace Hooks
 	_DeclareMemHdlr(TESDialogGetIsWindowDragDropRecipient, "allows custom windows to receive form drag-drop notifications");
 	_DeclareNopHdlr(MissingTextureWarning, "removes the ostentatious warning");
 	_DeclareMemHdlr(AboutDialog, "add a mention of CSE");
+	_DeclareNopHdlr(TESQuestStageResultScript, "fixes a bug that prevented quest stage result scripts from being compiled when their text was empty");
 }

@@ -103,17 +103,18 @@ void WorkspaceManager::CreateDefaultDirectories(const char* WorkspacePath)
 {
 	std::string Buffer(WorkspacePath);
 
-	if ((CreateDirectory(std::string(Buffer + "Data\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Meshes\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Textures\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Textures\\menus\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Textures\\menus\\icons\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Sound\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Sound\\fx\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Sound\\Voice\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Trees\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(CreateDirectory(std::string(Buffer + "Data\\Backup\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS))
+	if ((!CreateDirectory(std::string(Buffer + "Data\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Meshes\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Textures\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Textures\\menus\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Textures\\menus\\icons\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Sound\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Sound\\fx\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Sound\\Voice\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Trees\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Standard Preprocessor Directives\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Backup\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS))
 	{
 		DebugPrint("Couldn't create create default directories in workspace '%s'", WorkspacePath);
 		LogWinAPIErrorMessage(GetLastError());

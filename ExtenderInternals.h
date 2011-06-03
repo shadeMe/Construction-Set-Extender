@@ -18,6 +18,7 @@
 
 extern std::string					g_AppPath;
 extern std::string					g_INIPath;
+extern std::string					g_DLLPath;
 extern char							g_TextBuffer[0x200];
 extern bool							g_PluginPostLoad;
 

@@ -2,7 +2,7 @@
 #pragma warning(disable : 4800 4244 4390 4018 4570)
 
 
-#ifndef CSE_INTERFACE
+#ifndef CSE
 
 #using <mscorlib.dll>
 #using <System.DLL>

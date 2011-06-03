@@ -75,7 +75,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
-      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -102,7 +102,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
-      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -111,6 +111,9 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="ScriptEditor.Preprocessor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>F:\TES 4 Oblivion\Data\OBSE\Plugins\CSE\ScriptEditor.Preprocessor.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsFormsIntegration">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -134,11 +137,6 @@
     </Reference>
     <Reference Include="GlobalInputMonitor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\[Depends]\GlobalInputMonitor.dll</HintPath>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-    <Reference Include="ScriptEditor.Preprocessor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>f:\TES 4 Oblivion\Data\OBSE\Plugins\ComponentDLLs\CSE\ScriptEditor.Preprocessor.dll</HintPath>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
@@ -166,7 +164,6 @@
     <ClCompile Include="IntelliSense.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
     <ClCompile Include="OptionsDialog.cpp" />
-    <ClCompile Include="PluginParser.cpp" />
     <ClCompile Include="ScriptListDialog.cpp" />
     <ClCompile Include="ScriptParser.cpp" />
     <ClCompile Include="Exports.cpp" />
@@ -187,7 +184,6 @@
     <ClInclude Include="IntelliSense.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="OptionsDialog.h" />
-    <ClInclude Include="PluginParser.h" />
     <ClInclude Include="ScriptListDialog.h" />
     <ClInclude Include="ScriptParser.h" />
     <ClInclude Include="ScriptTextEditorInterface.h" />

@@ -37,5 +37,7 @@ namespace EditorAPI
 		/*44*/ float				scale;
 		/*48*/ TESObjectCELL*		parentCell;
 		/*4C*/ ExtraDataList		extraData;
+
+// ### add Update3D as a method
 	};
 }

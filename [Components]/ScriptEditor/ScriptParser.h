@@ -10,9 +10,9 @@ public:
 
 															VariableInfo(String^ Name, unsigned int Count) : VarName(Name), RefCount(Count) {};
 
-		static const VariableInfo^							NullVar = gcnew ScriptParser::VariableInfo("__nullptr", 0);
-
 		bool												IsValid() { return VarName != "__nullptr"; }
+
+		static const VariableInfo^							NullVar = gcnew ScriptParser::VariableInfo("__nullptr", 0);
 	};
 
 	static enum	class									TokenType

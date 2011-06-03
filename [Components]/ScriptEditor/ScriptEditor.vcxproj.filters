@@ -45,9 +45,6 @@
     <ClCompile Include="OptionsDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="PluginParser.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptListDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -96,9 +93,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="OptionsDialog.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="PluginParser.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="ScriptListDialog.h">

@@ -28,24 +28,24 @@ namespace Hooks
 
 	void PatchVersionControlHooks(void)
 	{
-		_MemoryHandler(DataHandlerLoadPluginsWrapper).WriteJump();
-		_MemoryHandler(DataHandlerSavePluginProlog).WriteJump();
-		_MemoryHandler(TESFormSetFromActivePlugin).WriteJump();
-		_MemoryHandler(TESFormSetDeleted).WriteJump();
-		_MemoryHandler(TESFormSetFormID).WriteJump();
-		_MemoryHandler(TESFormSetEditorID).WriteJump();
-		_MemoryHandler(TESDialogFormEditNewForm).WriteJump();
-		_MemoryHandler(ObjectWindowDragDropNewForm).WriteJump();
-		_MemoryHandler(TESDialogFormIDListViewNewForm).WriteJump();
-		_MemoryHandler(TESDialogCreateNewForm).WriteJump();
-		_MemoryHandler(TESFormClone).WriteJump();
-		_MemoryHandler(TESObjectCELLDuplicate).WriteJump();
-		_MemoryHandler(TESObjectREFRDuplicate).WriteJump();
-		_MemoryHandler(TESTopicCreate).WriteJump();
-		_MemoryHandler(TESTopicInfoCreate).WriteJump();
-		_MemoryHandler(TESIdleFormCreateSibling).WriteJump();
-		_MemoryHandler(TESIdleFormCreateChild).WriteJump();
-		_MemoryHandler(TESDialogFormEditCopyForm).WriteJump();
+		_MemHdlr(DataHandlerLoadPluginsWrapper).WriteJump();
+		_MemHdlr(DataHandlerSavePluginProlog).WriteJump();
+		_MemHdlr(TESFormSetFromActivePlugin).WriteJump();
+		_MemHdlr(TESFormSetDeleted).WriteJump();
+		_MemHdlr(TESFormSetFormID).WriteJump();
+		_MemHdlr(TESFormSetEditorID).WriteJump();
+		_MemHdlr(TESDialogFormEditNewForm).WriteJump();
+		_MemHdlr(ObjectWindowDragDropNewForm).WriteJump();
+		_MemHdlr(TESDialogFormIDListViewNewForm).WriteJump();
+		_MemHdlr(TESDialogCreateNewForm).WriteJump();
+		_MemHdlr(TESFormClone).WriteJump();
+		_MemHdlr(TESObjectCELLDuplicate).WriteJump();
+		_MemHdlr(TESObjectREFRDuplicate).WriteJump();
+		_MemHdlr(TESTopicCreate).WriteJump();
+		_MemHdlr(TESTopicInfoCreate).WriteJump();
+		_MemHdlr(TESIdleFormCreateSibling).WriteJump();
+		_MemHdlr(TESIdleFormCreateChild).WriteJump();
+		_MemHdlr(TESDialogFormEditCopyForm).WriteJump();
 	}
 
 	void __stdcall DoDataHandlerLoadPluginsWrapperHook()

@@ -4,6 +4,7 @@
 
 std::string							g_INIPath;
 std::string							g_AppPath;
+std::string							g_DLLPath;
 bool								g_PluginPostLoad = false;
 SME::INI::INIManager*				g_INIManager = new CSEINIManager();
 SME::INI::INIEditGUI*				g_INIEditGUI = new SME::INI::INIEditGUI();

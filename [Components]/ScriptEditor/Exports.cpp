@@ -3,6 +3,7 @@
 #include "IntelliSense.h"
 #include "Globals.h"
 
+using namespace IntelliSense;
 
 extern "C"
 {

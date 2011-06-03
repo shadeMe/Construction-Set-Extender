@@ -5,6 +5,7 @@
 #include "Console.h"
 #include "RenderWindowTextPainter.h"
 
+
 std::map<std::string, std::string>		g_URLMapBuffer;
 
 static CSEInterface				s_CSEInterface =
@@ -24,6 +25,14 @@ static CSERendererInterface	s_CSERendererInterface =
 {
 	CSEInterfaceManager::PrintToRenderWindow
 };
+static CSEScriptInterface s_CSEScriptInterface = 
+{
+	 CSEInterfaceManager::RegisterScriptCommand,
+	 CSAutomationScript::CSASCommand::ExtractCommandArgs,
+	 CSAutomationScript::Array::AllocateArray,
+	 CSAutomationScript::Array::AllocateArray,
+	 CSAutomationScript::Array::ReleaseArray
+};
 
 void* CSEInterfaceManager::InitializeInterface(UInt8 InterfaceType)
 {
@@ -35,6 +44,8 @@ void* CSEInterfaceManager::InitializeInterface(UInt8 InterfaceType)
 		return &s_CSEIntelliSenseInterface;
 	case CSEInterface::kCSEInterface_Renderer:
 		return &s_CSERendererInterface;
+	case CSEInterface::kCSEInterface_Script:
+		return &s_CSEScriptInterface;
 	default:
 		return NULL;
 	}
@@ -81,4 +92,9 @@ CSEInterface* CSEInterfaceManager::GetInterface()
 void CSEInterfaceManager::PrintToRenderWindow(const char* Message, long double DisplayDuration)
 {
 	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, Message, DisplayDuration);
+}
+
+bool CSEInterfaceManager::RegisterScriptCommand(CSAutomationScript::CSASCommandInfo* CommandInfo)
+{
+	return CSAutomationScript::g_CSASCommandTable.RegisterCommand(CommandInfo);
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CSEInterfaceAPI.h"
+#include "CSAS\Array.h"
+#include "CSAS\ScriptCommands.h"
 
 extern std::map<std::string, std::string> g_URLMapBuffer;
 
@@ -15,6 +17,7 @@ public:
 	static void						PrintToConsole(const char*	Prefix, const char* FormatString, ...);
 	static void						RegisterConsoleCallback(CSEConsoleInterface::ConsolePrintCallback Handler);
 	static void						PrintToRenderWindow(const char* Message, long double DisplayDuration);
+	static bool						RegisterScriptCommand(CSAutomationScript::CSASCommandInfo* CommandInfo);
 
 	typedef std::vector<CSEConsoleInterface::ConsolePrintCallback> ConsolePrintCallbackList;
 };

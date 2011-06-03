@@ -159,6 +159,8 @@ private: System::Windows::Forms::Label^  LabelComments;
 private: System::Windows::Forms::CheckBox^  CutCopyEntireLine;
 private: System::Windows::Forms::CheckBox^  ShowSpaces;
 private: System::Windows::Forms::CheckBox^  ShowTabs;
+private: System::Windows::Forms::Label^  LabelNoOfPasses;
+private: System::Windows::Forms::NumericUpDown^  NoOfPasses;
 
 
 
@@ -209,6 +211,7 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->CmDlgFont = (gcnew System::Windows::Forms::Button());
 			this->TabContainer = (gcnew System::Windows::Forms::TabControl());
 			this->TabGeneral = (gcnew System::Windows::Forms::TabPage());
+			this->CutCopyEntireLine = (gcnew System::Windows::Forms::CheckBox());
 			this->LoadScriptUpdateExistingScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->TabIntelliSense = (gcnew System::Windows::Forms::TabPage());
@@ -217,6 +220,8 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->DatabaseUpdateInterval = (gcnew System::Windows::Forms::NumericUpDown());
 			this->TabPreprocessor = (gcnew System::Windows::Forms::TabPage());
 			this->TabAppearance = (gcnew System::Windows::Forms::TabPage());
+			this->ShowSpaces = (gcnew System::Windows::Forms::CheckBox());
+			this->ShowTabs = (gcnew System::Windows::Forms::CheckBox());
 			this->CmDlgFindResultsHighlightColor = (gcnew System::Windows::Forms::Button());
 			this->LabelFindResultsHighlight = (gcnew System::Windows::Forms::Label());
 			this->CmDlgCurrentLineHighlightColor = (gcnew System::Windows::Forms::Button());
@@ -246,9 +251,8 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->TabSanitize = (gcnew System::Windows::Forms::TabPage());
 			this->IndentLines = (gcnew System::Windows::Forms::CheckBox());
 			this->AnnealCasing = (gcnew System::Windows::Forms::CheckBox());
-			this->ShowTabs = (gcnew System::Windows::Forms::CheckBox());
-			this->ShowSpaces = (gcnew System::Windows::Forms::CheckBox());
-			this->CutCopyEntireLine = (gcnew System::Windows::Forms::CheckBox());
+			this->LabelNoOfPasses = (gcnew System::Windows::Forms::Label());
+			this->NoOfPasses = (gcnew System::Windows::Forms::NumericUpDown());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -259,13 +263,14 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->TabAppearance->SuspendLayout();
 			this->GroupBoxSyntaxHighlighting->SuspendLayout();
 			this->TabSanitize->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->NoOfPasses))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// AllowRedefinitions
 			// 
-			this->AllowRedefinitions->Location = System::Drawing::Point(147, 120);
+			this->AllowRedefinitions->Location = System::Drawing::Point(125, 79);
 			this->AllowRedefinitions->Name = L"AllowRedefinitions";
-			this->AllowRedefinitions->Size = System::Drawing::Size(168, 51);
+			this->AllowRedefinitions->Size = System::Drawing::Size(154, 23);
 			this->AllowRedefinitions->TabIndex = 9;
 			this->AllowRedefinitions->Text = L"Allow Macro Redefinitions";
 			this->AllowRedefinitions->UseVisualStyleBackColor = true;
@@ -399,6 +404,16 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->TabGeneral->Text = L"General";
 			this->TabGeneral->UseVisualStyleBackColor = true;
 			// 
+			// CutCopyEntireLine
+			// 
+			this->CutCopyEntireLine->AutoSize = true;
+			this->CutCopyEntireLine->Location = System::Drawing::Point(22, 138);
+			this->CutCopyEntireLine->Name = L"CutCopyEntireLine";
+			this->CutCopyEntireLine->Size = System::Drawing::Size(242, 17);
+			this->CutCopyEntireLine->TabIndex = 29;
+			this->CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection\'s Empty";
+			this->CutCopyEntireLine->UseVisualStyleBackColor = true;
+			// 
 			// LoadScriptUpdateExistingScripts
 			// 
 			this->LoadScriptUpdateExistingScripts->AutoSize = true;
@@ -466,6 +481,8 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			// 
 			// TabPreprocessor
 			// 
+			this->TabPreprocessor->Controls->Add(this->LabelNoOfPasses);
+			this->TabPreprocessor->Controls->Add(this->NoOfPasses);
 			this->TabPreprocessor->Controls->Add(this->AllowRedefinitions);
 			this->TabPreprocessor->Location = System::Drawing::Point(4, 22);
 			this->TabPreprocessor->Name = L"TabPreprocessor";
@@ -502,6 +519,26 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->TabAppearance->Text = L"Appearance";
 			this->TabAppearance->UseVisualStyleBackColor = true;
 			this->TabAppearance->Click += gcnew System::EventHandler(this, &OptionsDialog::TabAppearance_Click);
+			// 
+			// ShowSpaces
+			// 
+			this->ShowSpaces->AutoSize = true;
+			this->ShowSpaces->Location = System::Drawing::Point(231, 267);
+			this->ShowSpaces->Name = L"ShowSpaces";
+			this->ShowSpaces->Size = System::Drawing::Size(92, 17);
+			this->ShowSpaces->TabIndex = 29;
+			this->ShowSpaces->Text = L"Show Spaces";
+			this->ShowSpaces->UseVisualStyleBackColor = true;
+			// 
+			// ShowTabs
+			// 
+			this->ShowTabs->AutoSize = true;
+			this->ShowTabs->Location = System::Drawing::Point(231, 244);
+			this->ShowTabs->Name = L"ShowTabs";
+			this->ShowTabs->Size = System::Drawing::Size(80, 17);
+			this->ShowTabs->TabIndex = 28;
+			this->ShowTabs->Text = L"Show Tabs";
+			this->ShowTabs->UseVisualStyleBackColor = true;
 			// 
 			// CmDlgFindResultsHighlightColor
 			// 
@@ -773,35 +810,20 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
 			// 
-			// ShowTabs
+			// LabelNoOfPasses
 			// 
-			this->ShowTabs->AutoSize = true;
-			this->ShowTabs->Location = System::Drawing::Point(231, 244);
-			this->ShowTabs->Name = L"ShowTabs";
-			this->ShowTabs->Size = System::Drawing::Size(80, 17);
-			this->ShowTabs->TabIndex = 28;
-			this->ShowTabs->Text = L"Show Tabs";
-			this->ShowTabs->UseVisualStyleBackColor = true;
+			this->LabelNoOfPasses->Location = System::Drawing::Point(125, 133);
+			this->LabelNoOfPasses->Name = L"LabelNoOfPasses";
+			this->LabelNoOfPasses->Size = System::Drawing::Size(157, 20);
+			this->LabelNoOfPasses->TabIndex = 11;
+			this->LabelNoOfPasses->Text = L"Number of Passes";
 			// 
-			// ShowSpaces
+			// NoOfPasses
 			// 
-			this->ShowSpaces->AutoSize = true;
-			this->ShowSpaces->Location = System::Drawing::Point(231, 267);
-			this->ShowSpaces->Name = L"ShowSpaces";
-			this->ShowSpaces->Size = System::Drawing::Size(92, 17);
-			this->ShowSpaces->TabIndex = 29;
-			this->ShowSpaces->Text = L"Show Spaces";
-			this->ShowSpaces->UseVisualStyleBackColor = true;
-			// 
-			// CutCopyEntireLine
-			// 
-			this->CutCopyEntireLine->AutoSize = true;
-			this->CutCopyEntireLine->Location = System::Drawing::Point(22, 138);
-			this->CutCopyEntireLine->Name = L"CutCopyEntireLine";
-			this->CutCopyEntireLine->Size = System::Drawing::Size(242, 17);
-			this->CutCopyEntireLine->TabIndex = 29;
-			this->CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection\'s Empty";
-			this->CutCopyEntireLine->UseVisualStyleBackColor = true;
+			this->NoOfPasses->Location = System::Drawing::Point(125, 156);
+			this->NoOfPasses->Name = L"NoOfPasses";
+			this->NoOfPasses->Size = System::Drawing::Size(154, 20);
+			this->NoOfPasses->TabIndex = 10;
 			// 
 			// OptionsDialog
 			// 
@@ -827,6 +849,7 @@ private: System::Windows::Forms::CheckBox^  ShowTabs;
 			this->GroupBoxSyntaxHighlighting->ResumeLayout(false);
 			this->TabSanitize->ResumeLayout(false);
 			this->TabSanitize->PerformLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->NoOfPasses))->EndInit();
 			this->ResumeLayout(false);
 
 		}

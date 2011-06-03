@@ -1,7 +1,7 @@
 #pragma once
 
 class TESForm;
-#ifdef CSE_INTERFACE
+#ifdef CSE
 class Script;
 struct CommandInfo;
 struct PluginInfo;
@@ -29,7 +29,7 @@ struct ScriptData : public FormData
 	UInt32											Length;
 	const char*										ParentID;
 	bool											UDF;
-#ifdef CSE_INTERFACE
+#ifdef CSE
 	void											FillScriptData(Script* Form);
 #endif
 };
@@ -50,7 +50,7 @@ struct VariableData : public FormData
 	};
 
 	UInt8											Type;
-#ifdef CSE_INTERFACE
+#ifdef CSE
 	void											FillVariableData(const char* VariableName);
 	void											FillVariableData(TESGlobal* Global);
 #endif
@@ -85,7 +85,7 @@ struct ScriptVarIndexData
 	ScriptVarInfo*									Data;
 };
 
-#ifndef CSE_INTERFACE
+#ifndef CSE
 struct CommandInfoCLI
 {
 	const char*										longName;		
@@ -106,7 +106,7 @@ struct CommandInfoCLI
 
 struct CommandTableData
 {
-#ifdef CSE_INTERFACE
+#ifdef CSE
 	const CommandInfo*								CommandTableStart;
 	const CommandInfo*								CommandTableEnd;
 	UInt32											(* GetCommandReturnType)(const CommandInfo* cmd);
@@ -278,7 +278,7 @@ struct BatchRefData
 
 struct TagBrowserInstantiationData
 {
-#ifdef CSE_INTERFACE
+#ifdef CSE
 	POINT											InsertionPoint;
 #else
 	Point											InsertionPoint;

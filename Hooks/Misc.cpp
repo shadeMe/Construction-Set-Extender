@@ -11,6 +11,7 @@
 #include "..\RenderTimeManager.h"
 #include "..\CSEInterfaceManager.h"
 #include "..\ChangeLogManager.h"
+#include "CSAS\ScriptCommands.h"
 
 extern CommandTableData	g_CommandTableData;
 
@@ -44,34 +45,34 @@ namespace Hooks
 
 	void PatchMiscHooks(void)
 	{
-		_MemoryHandler(CSExit).WriteJump();
-		_MemoryHandler(CSInit).WriteJump();
-		_MemoryHandler(PluginSave).WriteJump();
-		_MemoryHandler(PluginLoad).WriteJump();
-		_MemoryHandler(TextureMipMapCheck).WriteUInt8(0xEB);
-		_MemoryHandler(UnnecessaryCellEdits).WriteUInt8(0xEB);
-		_MemoryHandler(UnnecessaryDialogEdits).WriteUInt8(0xEB);
-		_MemoryHandler(DataHandlerClearData).WriteJump();
-		_MemoryHandler(TopicInfoCopyProlog).WriteJump();
-		_MemoryHandler(TopicInfoCopyEpilog).WriteJump();
-		_MemoryHandler(NumericEditorID).WriteJump();
-		_MemoryHandler(DataHandlerConstructSpecialForms).WriteJump();
-		_MemoryHandler(ResultScriptSaveForm).WriteJump();
-		_MemoryHandler(TESObjectREFRDoCopyFrom).WriteJump();
-		_MemoryHandler(TESFormAddReference).WriteJump();
-		_MemoryHandler(TESFormRemoveReference).WriteJump();
-		_MemoryHandler(TESFormClearReferenceList).WriteJump();
-		_MemoryHandler(TESFormPopulateUseInfoList).WriteJump();
-		_MemoryHandler(TESFormDelete).WriteJump();
-		_MemoryHandler(TextureSizeCheck).WriteUInt8(0xEB);
-		_MemoryHandler(DataHandlerPlaceTESObjectLIGH).WriteJump();
+		_MemHdlr(CSExit).WriteJump();
+		_MemHdlr(CSInit).WriteJump();
+		_MemHdlr(PluginSave).WriteJump();
+		_MemHdlr(PluginLoad).WriteJump();
+		_MemHdlr(TextureMipMapCheck).WriteUInt8(0xEB);
+		_MemHdlr(UnnecessaryCellEdits).WriteUInt8(0xEB);
+		_MemHdlr(UnnecessaryDialogEdits).WriteUInt8(0xEB);
+		_MemHdlr(DataHandlerClearData).WriteJump();
+		_MemHdlr(TopicInfoCopyProlog).WriteJump();
+		_MemHdlr(TopicInfoCopyEpilog).WriteJump();
+		_MemHdlr(NumericEditorID).WriteJump();
+		_MemHdlr(DataHandlerConstructSpecialForms).WriteJump();
+		_MemHdlr(ResultScriptSaveForm).WriteJump();
+		_MemHdlr(TESObjectREFRDoCopyFrom).WriteJump();
+		_MemHdlr(TESFormAddReference).WriteJump();
+		_MemHdlr(TESFormRemoveReference).WriteJump();
+		_MemHdlr(TESFormClearReferenceList).WriteJump();
+		_MemHdlr(TESFormPopulateUseInfoList).WriteJump();
+		_MemHdlr(TESFormDelete).WriteJump();
+		_MemHdlr(TextureSizeCheck).WriteUInt8(0xEB);
+		_MemHdlr(DataHandlerPlaceTESObjectLIGH).WriteJump();
 
 		if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
 			PatchMessageHandler();
 		if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
-			_MemoryHandler(AssertOverride).WriteJump();
+			_MemHdlr(AssertOverride).WriteJump();
 
-		if (CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+		if (!CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 			DebugPrint("Couldn't create the Backup folder in Data directory");
 
 		OSVERSIONINFO OSInfo;
@@ -173,6 +174,7 @@ namespace Hooks
 		CONSOLE->Indent();
 		for (std::map<std::string, std::string>::const_iterator Itr = g_URLMapBuffer.begin(); Itr != g_URLMapBuffer.end(); Itr++)
 			CLIWrapper::ScriptEditor::AddToURLMap(Itr->first.c_str(), Itr->second.c_str());
+		DebugPrint("IntelliSense: Bound %d developer URLs", g_URLMapBuffer.size());
 		g_URLMapBuffer.clear();
 		CONSOLE->Exdent();
 
@@ -194,6 +196,11 @@ namespace Hooks
 		CONSOLE->Indent();
 		CONSOLE->InitializeConsole();
 		CONSOLE->LoadINISettings();
+		CONSOLE->Exdent();
+
+		DebugPrint("Initializing CSAS");
+		CONSOLE->Indent();
+		CSAutomationScript::CommandTable::InitializeCommandTable();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing GMST Map");

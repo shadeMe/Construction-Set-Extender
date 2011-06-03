@@ -19,6 +19,7 @@
 #include "WorkspaceManager.h"
 #include "RenderWindowTextPainter.h"
 #include "ChangeLogManager.h"
+#include "WindowEdgeSnapper.h"
 
 using namespace Hooks;
 
@@ -36,6 +37,8 @@ WNDPROC						g_ResponseWndOrgWindowProc = NULL;
 WNDPROC						g_TagBrowserOrgWindowProc = NULL;
 
 HFONT						g_CSDefaultFont = NULL;
+
+CSnapWindow					g_WindowEdgeSnapper;
 
 #define PI					3.151592653589793
 
@@ -149,6 +152,10 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+    case WM_MOVING:
+        return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
+    case WM_ENTERSIZEMOVE:
+        return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 	case 0x40C:				// save handler
 		if (g_QuickLoadToggle) {
 			if (MessageBox(*g_HWND_CSParent,
@@ -310,9 +317,9 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 								Modified = true;
 							}
 
-							if (BatchData->Extra.UseCharge())		thisCall(kTESObjectREFR_ModExtraCharge, ThisRef, BatchData->Extra.Charge), Modified = true;
-							if (BatchData->Extra.UseHealth())		thisCall(kTESObjectREFR_ModExtraHealth, ThisRef, BatchData->Extra.Health), Modified = true;
-							if (BatchData->Extra.UseTimeLeft())		thisCall(kTESObjectREFR_ModExtraTimeLeft, ThisRef, BatchData->Extra.TimeLeft), Modified = true;
+							if (BatchData->Extra.UseCharge())		thisCall(kTESObjectREFR_ModExtraCharge, ThisRef, (float)BatchData->Extra.Charge), Modified = true;
+							if (BatchData->Extra.UseHealth())		thisCall(kTESObjectREFR_ModExtraHealth, ThisRef, (float)BatchData->Extra.Health), Modified = true;
+							if (BatchData->Extra.UseTimeLeft())		thisCall(kTESObjectREFR_ModExtraTimeLeft, ThisRef, (float)BatchData->Extra.TimeLeft), Modified = true;
 							if (BatchData->Extra.UseSoulLevel())	thisCall(kTESObjectREFR_ModExtraSoul, ThisRef, BatchData->Extra.SoulLevel), Modified = true;
 							if (BatchData->Extra.UseCount())
 							{
@@ -342,10 +349,9 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 						if (Modified)
 						{
-							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
-							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
-							thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef); // CopyFrom, to update NiNode data
-							thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
+							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);		// UpdateUsageInfo
+							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);		// SetFromActiveFile
+							TESObjectREFR_Update3D(ThisRef);
 						}
 					}
 
@@ -428,6 +434,10 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+    case WM_MOVING:
+        return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
+    case WM_ENTERSIZEMOVE:
+        return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
@@ -545,8 +555,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 					thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
 					thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
-					thisVirtualCall(*((UInt32*)ThisRef), 0xB8, ThisRef, ThisRef);
-					thisVirtualCall(*((UInt32*)ThisRef), 0x17C, ThisRef, thisCall(kTESObjectREFR_GetExtraRef3DData, ThisRef));
+					TESObjectREFR_Update3D(ThisRef);
 				}
 
 				PrintToBuffer("Selection aligned to %08X", AlignRef->refID);
@@ -773,6 +782,10 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 {
 	switch (uMsg)
 	{
+    case WM_MOVING:
+        return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
+    case WM_ENTERSIZEMOVE:
+        return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 	case WM_SIZE:
 	{
 		tagRECT WindowRect, EditRect;
@@ -784,6 +797,14 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 	case WM_DESTROY:
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleWndOrgWindowProc);
+		break;
+	case WM_INITDIALOG:
+		HFONT EditFont = CreateFont(20, 0, 0, 0,
+                             FW_BOLD, FALSE, FALSE, FALSE,
+                             ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+                             CLIP_DEFAULT_PRECIS, 5,		// CLEARTYPE_QUALITY
+                             FF_DONTCARE, "Consolas");
+		SendMessage(GetDlgItem(hWnd, EDIT_CMDBOX), WM_SETFONT, (WPARAM)EditFont, (LPARAM)TRUE);
 		break;
 	}
 
@@ -1021,8 +1042,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		}
 		case POPUP_ADDTOTAG:
 		{
-			g_FormData->FillFormData(Form);
-			CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
+			g_FormDataInteropPackage->FillFormData(Form);
+			CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormDataInteropPackage);
 			break;
 		}
 		case POPUP_TOGGLEVISIBILITY:
@@ -1056,6 +1077,10 @@ LRESULT CALLBACK ObjectWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+    case WM_MOVING:
+        return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
+    case WM_ENTERSIZEMOVE:
+        return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 	case WM_COMMAND:
 		break;
 	}
@@ -1069,6 +1094,10 @@ LRESULT CALLBACK CellViewWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 
 	switch (uMsg)
 	{
+    case WM_MOVING:
+        return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
+    case WM_ENTERSIZEMOVE:
+        return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 	case WM_COMMAND:
 		break;
 	}
@@ -1437,8 +1466,8 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 			TESForm* Form = Itr->Data;
 			if (GetFormDialogTemplate(Form->typeID) == 1)
 			{
-				g_FormData->FillFormData(Form);
-				CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormData);
+				g_FormDataInteropPackage->FillFormData(Form);
+				CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormDataInteropPackage);
 			}
 		}
 
@@ -1798,11 +1827,13 @@ void InitializeWindowManager(void)
 
 	g_RenderWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_RenderWindow, GWL_WNDPROC, (LONG)RenderWndSubClassProc);
 	g_CSMainWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CSParent, GWL_WNDPROC, (LONG)CSMainWndSubClassProc);
+	g_CellViewWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_CellView, GWL_WNDPROC, (LONG)CellViewWndSubClassProc);
+	g_ObjectWndOrgWindowProc = (WNDPROC)SetWindowLong(*g_HWND_ObjectWindow, GWL_WNDPROC, (LONG)ObjectWndSubClassProc);
 
 	g_CSDefaultFont = CreateFont(12, 5.5, 0, 0,
                              FW_THIN, FALSE, FALSE, FALSE,
                              ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                             CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                             CLIP_DEFAULT_PRECIS, 5,	// CLEARTYPE_QUALITY
                              FF_DONTCARE, "MS Shell Dlg");
 
 	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GetINIInt("UpdatePeriod"), NULL);

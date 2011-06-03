@@ -16,7 +16,7 @@ namespace Hooks
 	Script*								g_EditorInitScript	=	NULL;			// must point to valid Script object to be used. needs to be reset right after dialog instantiation
 	Script*								g_SetEditorTextCache = NULL;			// stores the script object from the last call of f_Script::SetEditorText
 	UInt32								g_WParamBuffer		=	0;				// WParam last processed by the WndProc
-	ScriptData*							g_ScriptDataPackage = new ScriptData();
+	ScriptData*							g_ScriptDataInteropPackage = new ScriptData();
 	const char*							g_RecompileAllScriptsStr = "Are you sure you want to recompile every script in the active plugin?";
 	Script*								g_ScriptListResult = NULL;				// used by our script list hook, to set the selected script form
 	const void*							g_ExpressionBuffer = new char[0x500];
@@ -52,64 +52,64 @@ namespace Hooks
 
 	void PatchScriptEditorHooks(void)
 	{
-		_MemoryHandler(LoadRelease).WriteJump();
+		_MemHdlr(LoadRelease).WriteJump();
 
-		_MemoryHandler(ScriptableFormEntryPoint).WriteJump();
-		_MemoryHandler(ScriptEffectItemEntryPoint).WriteJump();
-		_MemoryHandler(MainWindowEntryPoint).WriteJump();
+		_MemHdlr(ScriptableFormEntryPoint).WriteJump();
+		_MemHdlr(ScriptEffectItemEntryPoint).WriteJump();
+		_MemHdlr(MainWindowEntryPoint).WriteJump();
 
-		_MemoryHandler(EditorWindowProc).WriteJump();
-		_MemoryHandler(EditorWindowWParam).WriteJump();
+		_MemHdlr(EditorWindowProc).WriteJump();
+		_MemHdlr(EditorWindowWParam).WriteJump();
 
-		_MemoryHandler(RecompileScripts).WriteJump();
-		_MemoryHandler(EditorInitScript).WriteJump();
-		_MemoryHandler(EditorInitGetAuxScript).WriteJump();
-		_MemoryHandler(EditorInitWindowPos).WriteJump();
+		_MemHdlr(RecompileScripts).WriteJump();
+		_MemHdlr(EditorInitScript).WriteJump();
+		_MemHdlr(EditorInitGetAuxScript).WriteJump();
+		_MemHdlr(EditorInitWindowPos).WriteJump();
 
-		_MemoryHandler(MessagingCallbackNewScript).WriteJump();
-		_MemoryHandler(MessagingCallbackPreviousScript).WriteJump();
-		_MemoryHandler(MessagingCallbackOpenNextScript).WriteJump();
-		_MemoryHandler(MessagingCallbackClose).WriteJump();
-		_MemoryHandler(MessagingCallbackSave).WriteJump();
+		_MemHdlr(MessagingCallbackNewScript).WriteJump();
+		_MemHdlr(MessagingCallbackPreviousScript).WriteJump();
+		_MemHdlr(MessagingCallbackOpenNextScript).WriteJump();
+		_MemHdlr(MessagingCallbackClose).WriteJump();
+		_MemHdlr(MessagingCallbackSave).WriteJump();
 
-		_MemoryHandler(ScriptListOpen).WriteJump();
-		_MemoryHandler(ScriptListDelete).WriteJump();
+		_MemHdlr(ScriptListOpen).WriteJump();
+		_MemHdlr(ScriptListDelete).WriteJump();
 
-		_MemoryHandler(SaveDialogBox).WriteJump();
-		_MemoryHandler(LogRecompileResults).WriteJump();
+		_MemHdlr(SaveDialogBox).WriteJump();
+		_MemHdlr(LogRecompileResults).WriteJump();
 
-		_MemoryHandler(RecompileScriptsMessageBoxString).WriteUInt32((UInt32)g_RecompileAllScriptsStr);
-		_MemoryHandler(SaveDialogBoxType).WriteUInt8(3);
+		_MemHdlr(RecompileScriptsMessageBoxString).WriteUInt32((UInt32)g_RecompileAllScriptsStr);
+		_MemHdlr(SaveDialogBoxType).WriteUInt8(3);
 
-		_MemoryHandler(MaxScriptSizeOverrideScriptBufferCtor).WriteJump();
-		_MemoryHandler(MaxScriptSizeOverrideParseScriptLine).WriteJump();
+		_MemHdlr(MaxScriptSizeOverrideScriptBufferCtor).WriteJump();
+		_MemHdlr(MaxScriptSizeOverrideParseScriptLine).WriteJump();
 
 		PatchCompilerErrorDetours();
 	}
 
 	void FillScriptDataPackage(Script* ScriptForm)
 	{
-		g_ScriptDataPackage->EditorID = ScriptForm->editorData.editorID.m_data;
-		g_ScriptDataPackage->Text = ScriptForm->text;
-		g_ScriptDataPackage->TypeID = kFormType_Script;
+		g_ScriptDataInteropPackage->EditorID = ScriptForm->editorData.editorID.m_data;
+		g_ScriptDataInteropPackage->Text = ScriptForm->text;
+		g_ScriptDataInteropPackage->TypeID = kFormType_Script;
 
 		if (ScriptForm->IsObjectScript())
 		{
-															g_ScriptDataPackage->Type = 0;
+															g_ScriptDataInteropPackage->Type = 0;
 			if (ScriptForm->info.dataLength >= 15)
 			{
 				UInt8* Data = (UInt8*)ScriptForm->data;
-				if (*(Data + 8) == 7)						g_ScriptDataPackage->Type = 9;			// function script
+				if (*(Data + 8) == 7)						g_ScriptDataInteropPackage->Type = 9;			// function script
 			}
 		}
-		else if (ScriptForm->IsQuestScript())				g_ScriptDataPackage->Type = 1;
-		else 												g_ScriptDataPackage->Type = 2;
+		else if (ScriptForm->IsQuestScript())				g_ScriptDataInteropPackage->Type = 1;
+		else 												g_ScriptDataInteropPackage->Type = 2;
 
-		g_ScriptDataPackage->ByteCode = ScriptForm->data;
-		g_ScriptDataPackage->Length = ScriptForm->info.dataLength;
-		g_ScriptDataPackage->FormID = ScriptForm->refID;
+		g_ScriptDataInteropPackage->ByteCode = ScriptForm->data;
+		g_ScriptDataInteropPackage->Length = ScriptForm->info.dataLength;
+		g_ScriptDataInteropPackage->FormID = ScriptForm->refID;
 
-		g_ScriptDataPackage->Flags = ScriptForm->flags;
+		g_ScriptDataInteropPackage->Flags = ScriptForm->flags;
 	}
 
 	void __stdcall InstantiateTabContainer(void)
@@ -273,13 +273,13 @@ namespace Hooks
 			pushad
 			call	DoEditorInitScriptHook
 			test	eax, eax
-			jnz		CSE
+			jnz		CUSTOM
 
 			popad
 			jmp		[_hhGetVar(CSERetn)]				// instantiation through the main window
 		AUX:
 			jmp		[_hhGetVar(AuxRetn)]
-		CSE:
+		CUSTOM:
 			popad
 			mov		ecx, g_EditorInitScript
 			mov     [esi + 0x10], ecx					// copy our script to vanilla editor's userdata struct
@@ -535,9 +535,9 @@ namespace Hooks
 	void ToggleScriptCompiling(bool Enable)
 	{
 		if (!Enable)
-			_MemoryHandler(ToggleScriptCompilingNewData).WriteBuffer();
+			_MemHdlr(ToggleScriptCompilingNewData).WriteBuffer();
 		else
-			_MemoryHandler(ToggleScriptCompilingOriginalData).WriteBuffer();
+			_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
 	}
 
 	#define _hhName		MaxScriptSizeOverrideScriptBufferCtor

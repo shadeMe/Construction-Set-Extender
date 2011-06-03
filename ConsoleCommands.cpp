@@ -3,6 +3,7 @@
 #include "ConsoleCommands.h"
 #include "Hooks\TESFile.h"
 #include "CSDialogs.h"
+#include "CSAS\ScriptRunner.h"
 
 using namespace Hooks;
 
@@ -66,6 +67,7 @@ void CSEConsoleCommandTable::InitializeCommandTable()
 	AddCommandToTable(&kCSECCmd_SavePlugin);
 	AddCommandToTable(&kCSECCmd_AutoSave);
 	AddCommandToTable(&kCSECCmd_Exit);
+	AddCommandToTable(&kCSECCmd_RunScript);
 }
 
 // COMMANDS
@@ -153,9 +155,32 @@ void CSECCmd_Exit_Handler(CSECCMD_ARGS)
 	SendMessage(*g_HWND_CSParent, WM_CLOSE, 0, 0);
 }
 
+void CSECCmd_RunScript_Handler(CSECCMD_ARGS)
+{
+	Tokenizer ArgParser(Args, " ,");
+	std::string CurrentArg;
+
+	std::string ScriptName;
+
+	for (int i = 1; i <= ParamCount; i++)
+	{
+		ArgParser.NextToken(CurrentArg);
+		switch (i)
+		{
+		case 1:
+			ScriptName = CurrentArg;
+			break;
+		}
+	}
+
+	bool Throwaway = false;
+	SCRIPTRUNNER->RunScript(ScriptName, NULL, mup::Value(0), &Throwaway);
+}
+
 DEFINE_CSECCMD(88MPH, 0);
 DEFINE_CSECCMD(LoadPlugin, 2);
 DEFINE_CSECCMD(LoadForm, 1);
 DEFINE_CSECCMD(SavePlugin, 0);
 DEFINE_CSECCMD(AutoSave, 0);
 DEFINE_CSECCMD(Exit, 0);
+DEFINE_CSECCMD(RunScript, 1);

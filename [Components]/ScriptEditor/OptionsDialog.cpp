@@ -183,11 +183,12 @@ void OptionsDialog::PopulateINIMap()
 
 	// IntelliSense
 	INIMap->Add(gcnew INISetting("ThresholdLength", "ScriptEditor::IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-	INIMap->Add(gcnew INISetting("DatabaseUpdateInterval", "ScriptEditor::IntelliSense", "10"), gcnew BoundControl(DatabaseUpdateInterval, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+	INIMap->Add(gcnew INISetting("DatabaseUpdateInterval", "ScriptEditor::IntelliSense", "5"), gcnew BoundControl(DatabaseUpdateInterval, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 	INIMap->Add(gcnew INISetting("UseQuickView", "ScriptEditor::IntelliSense", "1"), gcnew BoundControl(UseQuickView, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	// Preprocessor
 	INIMap->Add(gcnew INISetting("AllowRedefinitions", "ScriptEditor::Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	INIMap->Add(gcnew INISetting("NoOfPasses", "ScriptEditor::Preprocessor", "1"), gcnew BoundControl(NoOfPasses, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 	
 	// Sanitize
 	INIMap->Add(gcnew INISetting("AnnealCasing", "ScriptEditor::Sanitize", "1"), gcnew BoundControl(AnnealCasing, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -241,7 +242,7 @@ int OptionsDialog::FetchSettingAsInt(String^ Key)
 		} 
 		catch (Exception^ E)
 		{
-			DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: " + E->Message);
+			DebugPrint("Couldn't fetch INI setting '" + Key + "' value. Bad Format.\n\tException: " + E->Message);
 		}
 		return Result;
 	}
@@ -259,7 +260,7 @@ String^ OptionsDialog::FetchSettingAsString(String^ Key)
 		return Control->GetValue();
 	else
 	{
-		DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: Key desn't exist.");
+		DebugPrint("Couldn't fetch INI setting '" + Key + "' value.\n\tException: Key doesn't exist.");
 		return "";
 	}
 }
@@ -334,6 +335,8 @@ OptionsDialog::OptionsDialog()
 	ShowTabs = (gcnew CheckBox());
 	ShowSpaces = (gcnew CheckBox());
 	CutCopyEntireLine = (gcnew CheckBox());
+	LabelNoOfPasses = gcnew Label();
+	NoOfPasses = gcnew NumericUpDown();
 
 
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->BeginInit();
@@ -350,9 +353,9 @@ OptionsDialog::OptionsDialog()
 	// 
 	// AllowRedefinitions
 	// 
-	AllowRedefinitions->Location = System::Drawing::Point(147, 120);
+	AllowRedefinitions->Location = System::Drawing::Point(125, 79);
 	AllowRedefinitions->Name = L"AllowRedefinitions";
-	AllowRedefinitions->Size = System::Drawing::Size(168, 51);
+	AllowRedefinitions->Size = System::Drawing::Size(154, 23);
 	AllowRedefinitions->TabIndex = 9;
 	AllowRedefinitions->Text = L"Allow Macro Redefinitions";
 	AllowRedefinitions->UseVisualStyleBackColor = true;
@@ -552,6 +555,8 @@ OptionsDialog::OptionsDialog()
 	// TabPreprocessor
 	// 
 	TabPreprocessor->Controls->Add(AllowRedefinitions);
+	TabPreprocessor->Controls->Add(LabelNoOfPasses);
+	TabPreprocessor->Controls->Add(NoOfPasses);
 	TabPreprocessor->Location = System::Drawing::Point(4, 22);
 	TabPreprocessor->Name = L"TabPreprocessor";
 	TabPreprocessor->Padding = Padding(3);
@@ -897,6 +902,21 @@ OptionsDialog::OptionsDialog()
 	CutCopyEntireLine->TabIndex = 29;
 	CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection\'s Empty";
 	CutCopyEntireLine->UseVisualStyleBackColor = true;
+	// 
+	// LabelNoOfPasses
+	// 
+	LabelNoOfPasses->Location = System::Drawing::Point(125, 133);
+	LabelNoOfPasses->Name = L"LabelNoOfPasses";
+	LabelNoOfPasses->Size = System::Drawing::Size(157, 20);
+	LabelNoOfPasses->TabIndex = 11;
+	LabelNoOfPasses->Text = L"Number of Passes";
+	// 
+	// NoOfPasses
+	// 
+	NoOfPasses->Location = System::Drawing::Point(125, 156);
+	NoOfPasses->Name = L"NoOfPasses";
+	NoOfPasses->Size = System::Drawing::Size(154, 20);
+	NoOfPasses->TabIndex = 10;
 
 	// 
 	// OptionsDialog

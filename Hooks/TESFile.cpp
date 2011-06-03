@@ -31,27 +31,27 @@ namespace Hooks
 
 	void PatchTESFileHooks(void)
 	{
-		_MemoryHandler(LoadPluginsProlog).WriteJump();
-		_MemoryHandler(LoadPluginsEpilog).WriteJump();
-		_MemoryHandler(SavePluginCommonDialog).WriteJump();
-		_MemoryHandler(SavePluginMasterEnum).WriteJump();
-		_MemoryHandler(QuickLoadPluginLoadHandler).WriteJump();
-		_MemoryHandler(MissingMasterOverride).WriteJump();
-		_MemoryHandler(DataHandlerPostError).WriteUInt8(0xEB);
-		_MemoryHandler(DataDialogPluginDescription).WriteUInt8(0xEB);
-		_MemoryHandler(DataDialogPluginAuthor).WriteUInt8(0xEB);
-		_MemoryHandler(CheckIsActivePluginAnESM).WriteNop();
-		_MemoryHandler(TESFormGetUnUsedFormID).WriteNop();
-		_MemoryHandler(DataHandlerSaveFormToFile).WriteJump();
-		_MemoryHandler(TESFileUpdateHeader).WriteJump();
-		_MemoryHandler(DataHandlerSavePluginEpilog).WriteJump();
-		_MemoryHandler(TESFileUpdateHeaderFlagBit).WriteJump();
-		_MemoryHandler(TESObjectCELLSaveReferencesProlog).WriteJump();
-		_MemoryHandler(TESObjectCELLSaveReferencesEpilog).WriteJump();
-		_MemoryHandler(DataHandlerSavePluginResetA).WriteJump();
-		_MemoryHandler(DataHandlerSavePluginResetB).WriteJump();
-		_MemoryHandler(DataHandlerSavePluginResetC).WriteJump();
-		_MemoryHandler(DataHandlerSavePluginOverwriteESM).WriteNop();
+		_MemHdlr(LoadPluginsProlog).WriteJump();
+		_MemHdlr(LoadPluginsEpilog).WriteJump();
+		_MemHdlr(SavePluginCommonDialog).WriteJump();
+		_MemHdlr(SavePluginMasterEnum).WriteJump();
+		_MemHdlr(QuickLoadPluginLoadHandler).WriteJump();
+		_MemHdlr(MissingMasterOverride).WriteJump();
+		_MemHdlr(DataHandlerPostError).WriteUInt8(0xEB);
+		_MemHdlr(DataDialogPluginDescription).WriteUInt8(0xEB);
+		_MemHdlr(DataDialogPluginAuthor).WriteUInt8(0xEB);
+		_MemHdlr(CheckIsActivePluginAnESM).WriteNop();
+		_MemHdlr(TESFormGetUnUsedFormID).WriteNop();
+		_MemHdlr(DataHandlerSaveFormToFile).WriteJump();
+		_MemHdlr(TESFileUpdateHeader).WriteJump();
+		_MemHdlr(DataHandlerSavePluginEpilog).WriteJump();
+		_MemHdlr(TESFileUpdateHeaderFlagBit).WriteJump();
+		_MemHdlr(TESObjectCELLSaveReferencesProlog).WriteJump();
+		_MemHdlr(TESObjectCELLSaveReferencesEpilog).WriteJump();
+		_MemHdlr(DataHandlerSavePluginResetA).WriteJump();
+		_MemHdlr(DataHandlerSavePluginResetB).WriteJump();
+		_MemHdlr(DataHandlerSavePluginResetC).WriteJump();
+		_MemHdlr(DataHandlerSavePluginOverwriteESM).WriteNop();
 	}
 
 	bool __stdcall InitTESFileSaveDlg()

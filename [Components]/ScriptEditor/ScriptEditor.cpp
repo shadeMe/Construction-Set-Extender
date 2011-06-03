@@ -7,6 +7,7 @@
 #include "[Common]\NativeWrapper.h"
 
 #using "Microsoft.VisualBasic.dll"
+using namespace IntelliSense;
 
 namespace ScriptEditor
 {
@@ -107,7 +108,7 @@ namespace ScriptEditor
 		{
 			if (AssmbName->FullName->Substring(0, AssmbName->FullName->IndexOf(",")) == E->Name->Substring(0, E->Name->IndexOf(",")))
 			{
-				TempPath = Globals::AppPath + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\" + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
+				TempPath = Globals::AppPath + "Data\\OBSE\\Plugins\\CSE\\" + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
 				PreprocAssembly = Assembly::LoadFrom(TempPath);
 				return PreprocAssembly;
 			}
@@ -145,8 +146,8 @@ namespace ScriptEditor
 			ScriptStrip->CloseButtonVisible = false;
 			ScriptStrip->Dock = DockStyle::Fill;
 			ScriptStrip->Location = Point(0, 0);
-			ScriptStrip->Font = gcnew Font("Segoe UI", 7.75F, FontStyle::Regular);
-			ScriptStrip->SelectedTabFont = gcnew Font("Segoe UI", 7.75F, FontStyle::Italic);
+			ScriptStrip->Font = gcnew Font("Segoe UI", 8, FontStyle::Regular);
+			ScriptStrip->SelectedTabFont = gcnew Font("Segoe UI", 8, FontStyle::Regular);
 			ScriptStrip->TabLayoutType = DotNetBar::eTabLayoutType::FixedWithNavigationBox;
 			ScriptStrip->TabItemClose += gcnew DotNetBar::TabStrip::UserActionEventHandler(this, &TabContainer::ScriptStrip_TabItemClose);
 			ScriptStrip->SelectedTabChanged += gcnew DotNetBar::TabStrip::SelectedTabChangedEventHandler(this, &TabContainer::ScriptStrip_SelectedTabChanged);
@@ -262,10 +263,17 @@ namespace ScriptEditor
 				return;
 			}
 
-			Workspace^ Itr = dynamic_cast<Workspace^>(ScriptStrip->SelectedTab->Tag);
-			EditorForm->Text = Itr->GetScriptDescription() + " - CSE Editor";
+			Workspace^ OldWorkspace = dynamic_cast<Workspace^>(E->OldTab->Tag);
+			Workspace^ NewWorkspace = dynamic_cast<Workspace^>(E->NewTab->Tag);
+
+			if (OldWorkspace != nullptr && !OldWorkspace->GetIsFirstRun())
+				OldWorkspace->DisableControls();
+			if (!NewWorkspace->GetIsFirstRun())
+				NewWorkspace->EnableControls();
+
+			EditorForm->Text = NewWorkspace->GetScriptDescription() + " - CSE Editor";
 			EditorForm->Focus();
-			Itr->HandleWorkspaceFocus();
+			NewWorkspace->HandleWorkspaceFocus();
 		}
 
 		void TabContainer::ScriptStrip_TabRemoved(Object^ Sender, EventArgs^ E)
@@ -497,6 +505,14 @@ namespace ScriptEditor
 					E->Handled = true;
 				}
 				break;
+			case Keys::O:									// Open script
+			case Keys::Left:								// Previous script
+			case Keys::Right:								// Next script
+			case Keys::N:									// New script
+				Workspace^ Itr = dynamic_cast<Workspace^>(ScriptStrip->SelectedTab->Tag);
+				if (Itr != nullptr && Itr->GetIsFirstRun())
+					Itr->TunnelKeyDownEvent(E);
+				break;
 			}
 		}
 
@@ -594,8 +610,11 @@ namespace ScriptEditor
 			for each (DotNetBar::TabItem^ Itr in ScriptStrip->Tabs) 
 			{
 				if (Itr == NewTabButton)	continue;
+
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
-				if (Editor->GetIsCurrentScriptNew())	continue;
+
+				if (Editor->GetIsCurrentScriptNew() || Editor->GetIsFirstRun())	
+					continue;
 
 				Editor->SaveScriptToDisk(FolderPath, false);
 			}
@@ -617,7 +636,7 @@ namespace ScriptEditor
 		Workspace^ TabContainer::LookupWorkspaceByTab(UInt32 TabIndex)
 		{
 			if (TabIndex >= ScriptStrip->Tabs->Count)
-				return Workspace::NullWorkspace;
+				return nullptr;
 			else
 				return dynamic_cast<Workspace^>(ScriptStrip->Tabs[TabIndex]->Tag);
 		}
@@ -786,7 +805,8 @@ namespace ScriptEditor
 			EditorControlBox->TabItem = EditorTab;
 
 			EditorTab->AttachedControl = EditorControlBox;
-			EditorTab->Text = "New Workspace";
+			EditorTab->Tooltip = "New Workspace";
+			EditorTab->Text = EditorTab->Tooltip;
 			EditorTab->Tag = this;
 
 			Padding PrimaryButtonPad = Padding(0);
@@ -1251,13 +1271,13 @@ namespace ScriptEditor
 			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height; }
 			catch (...){}
 
-			WorkspaceSplitter->Enabled = false;
+			DisableControls();
 			ToolBarUpdateVarIndices->Enabled = false;
 
 			AllocatedIndex = Index;
 			DestructionFlag = false;
 			ScriptType = 0;
-			ScriptEditorID = "";
+			ScriptEditorID = FIRSTRUNSCRIPTID;
 			HandlingKeyDownEvent = false;
 
 			SetModifiedStatus(false);
@@ -1269,9 +1289,17 @@ namespace ScriptEditor
 		}
 
 		#pragma region Methods
+			void Workspace::DisableControls()
+			{
+				WorkspaceSplitter->Panel1->Enabled = false;
+				WorkspaceSplitter->Panel2->Enabled = false;
+				TextEditor->SetEnabledState(false);
+			}
 			void Workspace::EnableControls()
 			{
-				WorkspaceSplitter->Enabled = true;
+				WorkspaceSplitter->Panel1->Enabled = true;
+				WorkspaceSplitter->Panel2->Enabled = true;
+				TextEditor->SetEnabledState(true);
 			}
 			void Workspace::ClearErrorsItemsFromMessagePool(void)
 			{
@@ -1380,7 +1408,6 @@ namespace ScriptEditor
 				if (Block != "")
 				{
 					Result += "\n;<CSEBlock>\n";
-			//		Result += ";<CSEStatutoryWarning> This script may contain preprocessor directives parsed by the CSE Script Editor. Refrain from modifying it in the vanilla editor. </CSEStatutoryWarning>\n";
 					Result += Block;
 					Result += ";</CSEBlock>";
 				}
@@ -1472,7 +1499,7 @@ namespace ScriptEditor
 				ScriptParser^ TextParser = gcnew ScriptParser();
 				StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
 				String^ ReadLine = StringParser->ReadLine();
-				int CaretPos = -1;
+				int CaretPos = 0;
 
 				while (ReadLine != nullptr)
 				{
@@ -1492,11 +1519,8 @@ namespace ScriptEditor
 					ReadLine = StringParser->ReadLine();
 				}
 
-				if (CaretPos > -1)
-				{
-					TextEditor->SetCaretPos(CaretPos);
-					TextEditor->ScrollToCaret();
-				}
+				TextEditor->SetCaretPos(CaretPos);
+				TextEditor->ScrollToCaret();
 			}
 			void Workspace::DeserializeBookmarks(String^% ExtractedBlock)
 			{
@@ -1666,7 +1690,7 @@ namespace ScriptEditor
 
 			void Workspace::InitializeScript(String^ ScriptText, UInt16 ScriptType, String^ ScriptName, UInt32 Data, UInt32 DataLength, UInt32 FormID)
 			{
-				if (ScriptName != "New Script")
+				if (ScriptName != NEWSCRIPTID)
 					TextEditor->SetInitializingStatus(true);
 
 				TextEditor->ClearScriptErrorHighlights();
@@ -1682,8 +1706,9 @@ namespace ScriptEditor
 				DeserializeMessages(CSEBlock);
 
 				ScriptEditorID = ScriptName;
-				EditorTab->Text = ScriptName + " [" + FormID.ToString("X8") + "]";
-				ParentContainer->SetWindowTitle(EditorTab->Text + " - CSE Editor");
+				EditorTab->Tooltip = ScriptName + " [" + FormID.ToString("X8") + "]";
+				EditorTab->Text = ScriptName;
+				ParentContainer->SetWindowTitle(EditorTab->Tooltip + " - CSE Editor");
 				SetScriptType(ScriptType);
 
 				EnableControls();
@@ -1709,8 +1734,9 @@ namespace ScriptEditor
 				}
 
 				ScriptEditorID = gcnew String(Package->EditorID);
-				EditorTab->Text = ScriptEditorID + " [" + Package->FormID.ToString("X8") + "]";
-				ParentContainer->SetWindowTitle(EditorTab->Text + " - CSE Editor");
+				EditorTab->Tooltip = ScriptEditorID + " [" + Package->FormID.ToString("X8") + "]";
+				EditorTab->Text = ScriptEditorID;
+				ParentContainer->SetWindowTitle(EditorTab->Tooltip + " - CSE Editor");
 
 				SetModifiedStatus(false);
 
@@ -1844,11 +1870,16 @@ namespace ScriptEditor
 							ScriptTextParser->BlockStack->Pop();
 						break;
 					case ScriptParser::TokenType::e_If:
+						if (ScriptTextParser->GetCurrentTokenCount() < 2 || ScriptTextParser->Tokens[1][0] == ';')
+							AddMessageToPool(MessageType::e_Error, ScriptTextParser->CurrentLineNo, "Invalid condition."), Result = false;
+						
 						ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_If);
 						break;
 					case ScriptParser::TokenType::e_ElseIf:
 						if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
 							AddMessageToPool(MessageType::e_Error, ScriptTextParser->CurrentLineNo, "Invalid block structure. Command 'ElseIf' has no matching 'If'."), Result = false;
+						else if (ScriptTextParser->GetCurrentTokenCount() < 2 || ScriptTextParser->Tokens[1][0] == ';')
+							AddMessageToPool(MessageType::e_Error, ScriptTextParser->CurrentLineNo, "Invalid condition."), Result = false;
 						break;
 					case ScriptParser::TokenType::e_Else:
 						if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
@@ -1943,7 +1974,8 @@ namespace ScriptEditor
 				bool Result = Preprocessor::GetSingleton()->PreprocessScript(TextEditor->GetText(),
 														PreprocessorResult,
 														gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper),
-														gcnew ScriptEditorPreprocessorData(Globals::AppPath, OPTIONS->FetchSettingAsInt("AllowRedefinitions"), 1));		// OPTIONS->FetchSettingAsInt("NoOfPasses")
+														gcnew ScriptEditorPreprocessorData(Globals::AppPath, OPTIONS->FetchSettingAsInt("AllowRedefinitions"),
+														OPTIONS->FetchSettingAsInt("NoOfPasses")));
 				return Result;
 			}
 			void Workspace::AddMessageToPool(MessageType Type, int Line, String^ Message)
@@ -1987,6 +2019,10 @@ namespace ScriptEditor
 				Destination->AddTab(EditorTab);
 				Destination->AddTabControlBox(EditorControlBox);
 			}
+			void Workspace::HandleWorkspaceFocus()
+			{
+				TextEditor->HandleTabSwitchEvent();
+			}
 		#pragma endregion
 
 		#pragma region Event Handlers
@@ -1994,7 +2030,7 @@ namespace ScriptEditor
 			{
 				HandlingKeyDownEvent = true;
 
-				switch (E->KeyCode)
+				switch (E->KeyCode)								// ### REM TabContainer::EditorForm_KeyDown refers to some keys directly
 				{
 				case Keys::O:									// Open script
 					if (E->Modifiers == Keys::Control)
@@ -2051,7 +2087,7 @@ namespace ScriptEditor
 						ToolBarCommonTextBox->Focus();
 					}
 					break;
-				case Keys::T:									// Goto Offset
+				case Keys::E:									// Goto Offset
 					if (E->Modifiers == Keys::Control)
 					{
 						ToolBarCommonTextBox->Tag = "Goto Offset";
@@ -2059,6 +2095,9 @@ namespace ScriptEditor
 					}
 					break;
 				}
+
+				if (!GetIsFirstRun()) // container tunnels down key events only during first run, as this event won't trigger when the workspace is disabled
+					ParentContainer->TunnelKeyDownEvent(E);
 
 				HandlingKeyDownEvent = false;
 			}
@@ -2323,7 +2362,7 @@ namespace ScriptEditor
 			}
 			void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
 			{
-				if (GetIsCurrentScriptNew())
+				if (GetIsCurrentScriptNew() || GetIsFirstRun())
 				{
 					MessageBox::Show("You may only perform this operation on an existing script.", "CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
 					return;
@@ -2355,7 +2394,7 @@ namespace ScriptEditor
 			}
 			void Workspace::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
 			{
-				if (ScriptEditorID != "" && !GetIsCurrentScriptNew())
+				if (!GetIsCurrentScriptNew() && !GetIsFirstRun())
 				{
 					CStringWrapper^ CEID = gcnew CStringWrapper(ScriptEditorID);
 					NativeWrapper::ScriptEditor_CompileDependencies(CEID->String());
@@ -2861,7 +2900,7 @@ namespace ScriptEditor
 
 			void Workspace::ToolBarBindScript_Click(Object^ Sender, EventArgs^ E)
 			{
-				if (GetIsCurrentScriptNew())
+				if (GetIsCurrentScriptNew() || GetIsFirstRun())
 				{
 					MessageBox::Show("You may only perform this operation on an existing script.", "Message - CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
 					return;

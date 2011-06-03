@@ -40,3 +40,4 @@ extern CSEConsoleCommandInfo	kCSECCmd_LoadForm;
 extern CSEConsoleCommandInfo	kCSECCmd_SavePlugin;
 extern CSEConsoleCommandInfo	kCSECCmd_AutoSave;
 extern CSEConsoleCommandInfo	kCSECCmd_Exit;
+extern CSEConsoleCommandInfo	kCSECCmd_RunScript;

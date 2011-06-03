@@ -48,7 +48,7 @@ namespace TagBrowser
 bool CLIWrapper::Import(const OBSEInterface * obse)
 {
 	SetErrorMode(0);
-	HMODULE hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\ScriptEditor.dll").c_str());
+	HMODULE hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\ScriptEditor.dll").c_str());
 	if (hMod == NULL) {
 		DebugPrint("Couldn't load ScriptEditor.dll");
 		LogWinAPIErrorMessage(GetLastError());
@@ -80,7 +80,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\UseInfoList.dll").c_str());
+	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\UseInfoList.dll").c_str());
 	if (hMod == NULL) {
 		DebugPrint("Couldn't load UseInfoList.dll");
 		LogWinAPIErrorMessage(GetLastError());
@@ -101,7 +101,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BSAViewer.dll").c_str());
+	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\BSAViewer.dll").c_str());
 	if (hMod == NULL) {
 		DebugPrint("Couldn't load BSAViewer.dll");
 		LogWinAPIErrorMessage(GetLastError());
@@ -116,7 +116,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\BatchEditor.dll").c_str());
+	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\BatchEditor.dll").c_str());
 	if (hMod == NULL) {
 		DebugPrint("Couldn't load BatchEditor.dll");
 		LogWinAPIErrorMessage(GetLastError());
@@ -133,7 +133,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		return false;
 	}
 
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\TagBrowser.dll").c_str());
+	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\TagBrowser.dll").c_str());
 	if (hMod == NULL) {
 		DebugPrint("Couldn't load TagBrowser.dll");
 		LogWinAPIErrorMessage(GetLastError());

@@ -33,36 +33,38 @@ namespace Hooks
 	_DefineNopHdlr(TESDialogSubwindowEnumChildCallback, 0x00404E69, 3);
 	_DefineHookHdlr(TESDialogGetIsWindowDragDropRecipient, 0x004433FF);
 	_DefineHookHdlr(AboutDialog, 0x00441CC5);
+	_DefineNopHdlr(TESQuestStageResultScript, 0x004E234D, 2);
 
 	void PatchDialogHooks(void)
 	{
-		_MemoryHandler(FindTextInit).WriteJump();
-		_MemoryHandler(UseInfoListInit).WriteJump();
-		_MemoryHandler(DataDlgInit).WriteJump();
-		_MemoryHandler(NPCFaceGen).WriteJump();
-		_MemoryHandler(CustomCSWindow).WriteJump();
-		_MemoryHandler(AddListViewItem).WriteJump();
-		_MemoryHandler(ObjectListPopulateListViewItems).WriteJump();
-		_MemoryHandler(CellViewPopulateObjectList).WriteJump();
-		_MemoryHandler(TopicResultScriptReset).WriteJump();
-		_MemoryHandler(RaceDescriptionDirtyEdit).WriteUInt8(0xEB);
-		_MemoryHandler(MissingTextureWarning).WriteNop();
-		_MemoryHandler(ResponseEditorMic).WriteNop();
-		_MemoryHandler(CellObjectListShadeMeRefAppend).WriteJump();
-		_MemoryHandler(DeathToTheCloseOpenDialogsMessage).WriteUInt8(0xEB);
-		_MemoryHandler(TESDialogPopupMenu).WriteJump();
-		_MemoryHandler(ResponseWindowLipButtonPatch).WriteJump();
-		_MemoryHandler(ResponseWindowInit).WriteJump();
-		_MemoryHandler(DataDlgZOrder).WriteJump();
-		_MemoryHandler(FormIDListViewInit).WriteJump();
-		_MemoryHandler(FormIDListViewSaveChanges).WriteJump();
-		_MemoryHandler(FormIDListViewItemChange).WriteJump();
-		_MemoryHandler(FormIDListViewSelectItem).WriteJump();
-		_MemoryHandler(FormIDListViewDuplicateSelection).WriteJump();
-		_MemoryHandler(TESRaceCopyHairEyeDataInit).WriteJump();
-		_MemoryHandler(TESRaceCopyHairEyeDataMessageHandler).WriteJump();
-		_MemoryHandler(TESDialogGetIsWindowDragDropRecipient).WriteJump();
-		_MemoryHandler(AboutDialog).WriteJump();
+		_MemHdlr(FindTextInit).WriteJump();
+		_MemHdlr(UseInfoListInit).WriteJump();
+		_MemHdlr(DataDlgInit).WriteJump();
+		_MemHdlr(NPCFaceGen).WriteJump();
+		_MemHdlr(CustomCSWindow).WriteJump();
+		_MemHdlr(AddListViewItem).WriteJump();
+		_MemHdlr(ObjectListPopulateListViewItems).WriteJump();
+		_MemHdlr(CellViewPopulateObjectList).WriteJump();
+		_MemHdlr(TopicResultScriptReset).WriteJump();
+		_MemHdlr(RaceDescriptionDirtyEdit).WriteUInt8(0xEB);
+		_MemHdlr(MissingTextureWarning).WriteNop();
+		_MemHdlr(ResponseEditorMic).WriteNop();
+		_MemHdlr(CellObjectListShadeMeRefAppend).WriteJump();
+		_MemHdlr(DeathToTheCloseOpenDialogsMessage).WriteUInt8(0xEB);
+		_MemHdlr(TESDialogPopupMenu).WriteJump();
+		_MemHdlr(ResponseWindowLipButtonPatch).WriteJump();
+		_MemHdlr(ResponseWindowInit).WriteJump();
+		_MemHdlr(DataDlgZOrder).WriteJump();
+		_MemHdlr(FormIDListViewInit).WriteJump();
+		_MemHdlr(FormIDListViewSaveChanges).WriteJump();
+		_MemHdlr(FormIDListViewItemChange).WriteJump();
+		_MemHdlr(FormIDListViewSelectItem).WriteJump();
+		_MemHdlr(FormIDListViewDuplicateSelection).WriteJump();
+		_MemHdlr(TESRaceCopyHairEyeDataInit).WriteJump();
+		_MemHdlr(TESRaceCopyHairEyeDataMessageHandler).WriteJump();
+		_MemHdlr(TESDialogGetIsWindowDragDropRecipient).WriteJump();
+		_MemHdlr(AboutDialog).WriteJump();
+		_MemHdlr(TESQuestStageResultScript).WriteNop();
 	}
 
 	void __stdcall DoFindTextInitHook(HWND FindTextDialog)
@@ -823,6 +825,27 @@ namespace Hooks
 		HWND PictureControl = GetDlgItem(Dialog, 1963);
 		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)Splash);
 		Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV | Construction Set Extender");
+
+		DWORD FileVersionHandle = 0,
+			  FileVersionSize = GetFileVersionInfoSize(g_DLLPath.c_str(), &FileVersionHandle);
+
+		if (FileVersionSize)
+		{
+			char* Buffer = new char[FileVersionSize];
+			char VersionString[0x100] = {0};
+			void* VersionStringPtr = NULL;
+
+			GetFileVersionInfo(g_DLLPath.c_str(), FileVersionHandle, FileVersionSize, Buffer);
+			VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
+			sprintf_s(VersionString, sizeof(VersionString), "Version %s", VersionStringPtr);
+
+			std::string ReplacedString(VersionString);
+			std::replace(ReplacedString.begin(), ReplacedString.end(), ',', '.');
+
+			SetDlgItemText(Dialog, 1580, (LPCSTR)ReplacedString.c_str());
+
+			delete [] Buffer;
+		}
 	}
 
 	#define _hhName		AboutDialog

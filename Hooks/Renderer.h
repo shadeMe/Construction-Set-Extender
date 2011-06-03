@@ -3,6 +3,8 @@
 
 namespace Hooks
 {
+	extern TESForm*				g_TESObjectREFRUpdate3DBuffer;
+
 	// hooks that do stuff to the renderer and the render window
 	void PatchRendererHooks(void);
 
@@ -20,4 +22,6 @@ namespace Hooks
 	_DeclareMemHdlr(TESObjectREFRSetupDialog, "flag temp nodes to prevent them from being unculled unnecessarily");
 	_DeclareMemHdlr(TESObjectREFRCleanDialog, "");
 	_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");
+	_DeclareMemHdlr(TESObjectREFRUpdate3D, "temporary hook that allows the updating of ref nodes on demand");
+	_DeclareMemHdlr(ForceShowTESObjectREFRDialog, "prevents reference properties dialogs from being moved behind the render window");
 }

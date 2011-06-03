@@ -5,6 +5,10 @@
 #include "ScriptListDialog.h"
 #include "IntelliSense.h"
 
+using namespace IntelliSense;
+
+ScriptData*							g_ScriptDataInteropPackage = new ScriptData();
+
 ScriptEditorManager::ScriptEditorManager()
 {
 	WorkspaceAllocationMap = gcnew LinkedList<ScriptEditor::Workspace^>();
@@ -145,14 +149,15 @@ void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op
 			break;
 		}
 	}
-	catch (Exception^ E) {
+	catch (Exception^ E)
+	{
 		DebugPrint("ScriptEditorManager couldn't complete operation '" + TypeIdentifier[(int)Op] + "'\n\tException: " + E->Message, true);
 	}
 }
 
 ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 AllocatedIndex)
 {
-	ScriptEditor::Workspace^ Result = ScriptEditor::Workspace::NullWorkspace;
+	ScriptEditor::Workspace^ Result = nullptr;
 
 	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) 
 	{
@@ -170,10 +175,10 @@ bool ScriptEditorManager::MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^
 	if (CSEEditor->PreprocessScriptText(PreprocessedScriptResult))
 	{
 		CStringWrapper^ CScriptText = gcnew CStringWrapper(PreprocessedScriptResult);
-		g_ScriptDataPackage->Text = CScriptText->String();
-		g_ScriptDataPackage->Type = CSEEditor->GetScriptType();
-		g_ScriptDataPackage->ModifiedFlag = CSEEditor->GetModifiedStatus();
-		NativeWrapper::ScriptEditor_SetScriptData(CSEEditor->GetAllocatedIndex(), g_ScriptDataPackage);
+		g_ScriptDataInteropPackage->Text = CScriptText->String();
+		g_ScriptDataInteropPackage->Type = CSEEditor->GetScriptType();
+		g_ScriptDataInteropPackage->ModifiedFlag = CSEEditor->GetModifiedStatus();
+		NativeWrapper::ScriptEditor_SetScriptData(CSEEditor->GetAllocatedIndex(), g_ScriptDataInteropPackage);
 		return true;
 	}
 	else
@@ -184,12 +189,12 @@ bool ScriptEditorManager::MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^
 
 void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspace^% CSEEditor)
 {
-	g_ScriptDataPackage = NativeWrapper::ScriptEditor_GetScriptData();
+	g_ScriptDataInteropPackage = NativeWrapper::ScriptEditor_GetScriptData();
 
-	switch (g_ScriptDataPackage->Type)
+	switch (g_ScriptDataInteropPackage->Type)
 	{
 	case 9:									// Function script
-		g_ScriptDataPackage->Type = 0;
+		g_ScriptDataInteropPackage->Type = 0;
 		break;
 	case 99:
 		DebugPrint("Couldn't fetch script data from the vanilla editor!", true);
@@ -197,12 +202,12 @@ void ScriptEditorManager::MoveScriptDataFromVanillaEditor(ScriptEditor::Workspac
 	}
 
 	InitializeScript(CSEEditor->GetAllocatedIndex(),
-						gcnew String((const char*)g_ScriptDataPackage->Text),
-						g_ScriptDataPackage->Type,
-						gcnew String((const char*)g_ScriptDataPackage->EditorID),
-						(UInt32)g_ScriptDataPackage->ByteCode,
-						g_ScriptDataPackage->Length,
-						g_ScriptDataPackage->FormID);
+						gcnew String((const char*)g_ScriptDataInteropPackage->Text),
+						g_ScriptDataInteropPackage->Type,
+						gcnew String((const char*)g_ScriptDataInteropPackage->EditorID),
+						(UInt32)g_ScriptDataInteropPackage->ByteCode,
+						g_ScriptDataInteropPackage->Length,
+						g_ScriptDataInteropPackage->FormID);
 }
 
 void ScriptEditorManager::AllocateNewTabContainer(UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height)
@@ -258,6 +263,7 @@ void ScriptEditorManager::MessageHandler_SendSave(UInt32 AllocatedIndex, SaveWor
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 	Itr->ClearCSEMessagesFromMessagePool();
+	Itr->SetModifiedStatus(true);
 
 	String^ PreprocessedScriptResult = "";
 
@@ -324,7 +330,7 @@ void ScriptEditorManager::MessageHandler_ReceiveNew(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
-	InitializeScript(AllocatedIndex, "", (UInt16)ScriptParser::ScriptType::e_Object, "New Script", 0, 0, 0);
+	InitializeScript(AllocatedIndex, "", (UInt16)ScriptParser::ScriptType::e_Object, NEWSCRIPTID, 0, 0, 0);
 	Itr->SetModifiedStatus(true);
 }
 void ScriptEditorManager::MessageHandler_ReceiveOpen(UInt32 AllocatedIndex)
@@ -350,12 +356,12 @@ void ScriptEditorManager::MessageHandler_ReceiveSave(UInt32 AllocatedIndex)
 {
 	ScriptEditor::Workspace^% Itr = GetAllocatedWorkspace(AllocatedIndex);
 
-	g_ScriptDataPackage = NativeWrapper::ScriptEditor_GetScriptData();
-	Itr->UpdateScriptFromDataPackage(g_ScriptDataPackage);
+	g_ScriptDataInteropPackage = NativeWrapper::ScriptEditor_GetScriptData();
+	Itr->UpdateScriptFromDataPackage(g_ScriptDataInteropPackage);
 
 	String^ OriginalText = Itr->GetScriptText() + Itr->SerializeCSEBlock();
 	CStringWrapper^ ScriptText = gcnew CStringWrapper(OriginalText->Replace("\n", "\r\n"));
-	NativeWrapper::ScriptEditor_SetScriptText(g_ScriptDataPackage->EditorID, ScriptText->String());
+	NativeWrapper::ScriptEditor_SetScriptText(g_ScriptDataInteropPackage->EditorID, ScriptText->String());
 }
 void ScriptEditorManager::MessageHandler_ReceiveClose(UInt32 AllocatedIndex)
 {

@@ -1,4 +1,4 @@
-#ifndef  CSE_INTERFACE
+#ifndef  CSE
 #error interface only code included in user
 #endif
 

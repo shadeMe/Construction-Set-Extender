@@ -8,7 +8,7 @@ namespace Hooks
 	void FillScriptDataPackage(Script* ScriptForm);
 
 	extern Script* g_EditorInitScript;
-	extern ScriptData* g_ScriptDataPackage;
+	extern ScriptData* g_ScriptDataInteropPackage;
 	extern Script* g_SetEditorTextCache;
 	extern Script* g_ScriptListResult;
 	extern Script* g_EditorAuxScript;

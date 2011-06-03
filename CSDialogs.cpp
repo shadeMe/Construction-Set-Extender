@@ -2,6 +2,7 @@
 #include "WorkspaceManager.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
+#include "Hooks\Renderer.h"
 
 using namespace Hooks;
 
@@ -294,6 +295,15 @@ void ResetRenderWindow()
 
 	*g_Flag_ObjectWindow_MenuState = ObjWndState;
 	*g_Flag_CellView_MenuState = CellWndState;
+}
+
+void TESObjectREFR_Update3D(TESObjectREFR* Ref)
+{
+	kTESObjectREFRUpdate3D.WriteJump();
+	g_TESObjectREFRUpdate3DBuffer = Ref;
+	thisVirtualCall(kVTBL_TESObjectREFR, 0x11C, Ref, NULL);		// TESObjectREFR::DeinitializeDialog
+	g_TESObjectREFRUpdate3DBuffer = NULL;
+	kTESObjectREFRUpdate3D.WriteBuffer();
 }
 
 void __stdcall FormEnumerationWrapper::ReinitializeFormLists()

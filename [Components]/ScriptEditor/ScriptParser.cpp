@@ -70,8 +70,10 @@ ScriptParser::VariableInfo^ ScriptParser::FindVariable(String^% Variable)
 {
 	VariableInfo^ Result = const_cast<VariableInfo^>(VariableInfo::NullVar);
 
-	for each (VariableInfo^% Itr in Variables) {
-		if (!String::Compare(Itr->VarName, Variable, true)) {
+	for each (VariableInfo^% Itr in Variables)
+	{
+		if (!String::Compare(Itr->VarName, Variable, true))
+		{
 			Result = Itr;
 			break;
 		}
@@ -103,7 +105,8 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 	LastPos = StartPos;
 
 	String^ TokenString = Source->Substring(StartPos), ^%DelimiterStr = Globals::Delimiters, ^Token, ^Delimiter;
-	while (TokenString->IndexOfAny(DelimiterStr->ToCharArray()) != -1) {
+	while (TokenString->IndexOfAny(DelimiterStr->ToCharArray()) != -1)
+	{
 		int Idx = TokenString->IndexOfAny(DelimiterStr->ToCharArray());
 		if (TokenString[0] == '\"')
 		{
@@ -116,7 +119,11 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 		Token = TokenString->Substring(0, Idx), Delimiter = TokenString->Substring(Idx, 1);
 
 		TokenString = TokenString->Remove(0, Idx + 1);
-		if (Token == "" && !AllowNulls)		continue;
+		if (Token == "" && !AllowNulls)
+		{
+			LastPos++;
+			continue;
+		}
 
 		Tokens->Add(Token);
 		Indices->Add(LastPos);

@@ -226,22 +226,23 @@ namespace AvalonEditXSHD
 		bool							Initialized;
 	public:
 		static enum class				Rulesets
-		{
-			e_Digit = 0,
-			e_Delimiter,
-			e_String,
-			e_Keywords,
-			e_BlockTypes,
+											{
+												e_Digit = 0,
+												e_Delimiter,
+												e_String,
+												e_Keywords,
+												e_BlockTypes,
 
-			e_VanillaCommands,
-			e_OBSECommands
-		};
+												e_VanillaCommands,
+												e_OBSECommands
+											};
 										// pass Color::GhostWhite as fore/back colors to have them ignored
 		void							CreateRuleset(Rulesets Ruleset, Color Foreground, Color Background, bool Bold);
 		void							CreateCommentPreprocessorRuleset(Color Foreground, Color Background, bool Bold, Color PreprocessorForeground);
 
 		void							RegisterDefinitions(String^ DefinitionName);
 		bool							GetInitialized() { return Initialized; }
+		void							Reset() { CommentMarkerRuleset = ""; ColorDefinitions->Clear(); Definitions->Clear(); Initialized = false; }
 
 		AvalonEditXSHDManager() : Definitions(gcnew LinkedList<String^>()), ColorDefinitions(gcnew LinkedList<XSHDColor^>()), CommentMarkerRuleset(nullptr), Initialized(false) {}
 	};

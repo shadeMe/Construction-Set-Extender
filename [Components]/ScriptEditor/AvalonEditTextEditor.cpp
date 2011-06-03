@@ -3,6 +3,10 @@
 #include "Globals.h"
 #include "OptionsDialog.h"
 
+using namespace IntelliSense;
+using namespace ICSharpCode::AvalonEdit::Rendering;
+using namespace ICSharpCode::AvalonEdit::Document;
+using namespace ICSharpCode::AvalonEdit::Editing;
 
 #pragma region Interface Methods
 void AvalonEditTextEditor::SetFont(Font^ FontObject)
@@ -389,6 +393,11 @@ Point AvalonEditTextEditor::PointToScreen(Point Location)
 {
 	return Container->PointToScreen(Location);
 }
+
+void AvalonEditTextEditor::SetEnabledState(bool State)
+{
+	WPFHost->Enabled = State;
+}
 #pragma endregion
 
 #pragma region Methods
@@ -507,6 +516,25 @@ void AvalonEditTextEditor::HandleTextChangeEvent()
 		}
 	}
 }
+
+void AvalonEditTextEditor::StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E)
+{
+	IsMiddleMouseScrolling = true;
+
+	ScrollStartPoint = E->GetPosition(TextField);
+
+	TextField->Cursor = (TextField->ExtentWidth > TextField->ViewportWidth) || (TextField->ExtentHeight > TextField->ViewportHeight) ? System::Windows::Input::Cursors::ScrollAll : System::Windows::Input::Cursors::IBeam;
+	TextField->CaptureMouse();
+	MiddleMouseScrollTimer->Start();
+}
+
+void AvalonEditTextEditor::StopMiddleMouseScroll()
+{
+	TextField->Cursor = System::Windows::Input::Cursors::IBeam;
+	TextField->ReleaseMouseCapture();
+	MiddleMouseScrollTimer->Stop();
+	IsMiddleMouseScrolling = false;
+}
 #pragma endregion
 
 #pragma region Events
@@ -548,6 +576,11 @@ void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventAr
 void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 {
 	LastKeyThatWentDown = E->Key;
+
+	if (IsMiddleMouseScrolling)
+	{
+		StopMiddleMouseScroll();
+	}
 
 	int SelStart = TextField->SelectionStart, SelLength = TextField->SelectionLength;
 
@@ -770,6 +803,48 @@ void AvalonEditTextEditor::TextField_LostFocus(Object^ Sender, System::Windows::
 {
 	;//
 }
+
+void AvalonEditTextEditor::TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
+{
+	static double SlowScrollFactor = 20;
+
+	if (TextField->IsMouseCaptured)
+	{
+		System::Windows::Point CurrentPosition = E->GetPosition(TextField);
+
+		System::Windows::Vector Delta = CurrentPosition - ScrollStartPoint;
+		Delta.Y /= SlowScrollFactor;
+		Delta.X /= SlowScrollFactor;
+
+		CurrentScrollOffset = Delta;
+	}
+}
+
+void AvalonEditTextEditor::TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
+{
+	if (!IsMiddleMouseScrolling && E->ChangedButton ==  System::Windows::Input::MouseButton::Middle)
+	{
+		StartMiddleMouseScroll(E);
+	}
+	else if (IsMiddleMouseScrolling)
+	{
+		StopMiddleMouseScroll();
+	}
+
+}
+
+void AvalonEditTextEditor::ScrollTimer_Tick(Object^ Sender, EventArgs^ E)
+{
+	static double AccelerateScrollFactor = 0.0456;
+
+	if (IsMiddleMouseScrolling)
+	{
+		TextField->ScrollToVerticalOffset(TextField->VerticalOffset + CurrentScrollOffset.Y);
+		TextField->ScrollToHorizontalOffset(TextField->HorizontalOffset + CurrentScrollOffset.X);
+
+		CurrentScrollOffset += CurrentScrollOffset * AccelerateScrollFactor;
+	}
+}
 #pragma endregion
 
 AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
@@ -779,17 +854,17 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	TextField = gcnew AvalonEdit::TextEditor();
 	ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField, KnownLayer::Background);
 	FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField, KnownLayer::Background);
-	VerticalScroll = gcnew VScrollBar();
-	HorizontalScroll = gcnew HScrollBar();
-
-	VerticalScroll->Dock = DockStyle::Right;
-	HorizontalScroll->Dock = DockStyle::Bottom;
+	MiddleMouseScrollTimer = gcnew Timer();
 
 	InitializingFlag = false;
 	ModifiedFlag = false;
 	PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
 	KeyToPreventHandling = System::Windows::Input::Key::None;
 	LastKeyThatWentDown = System::Windows::Input::Key::None;
+	IsMiddleMouseScrolling = false;
+
+	MiddleMouseScrollTimer->Interval = 16;
+	MiddleMouseScrollTimer->Tick += gcnew EventHandler(this, &AvalonEditTextEditor::ScrollTimer_Tick);
 
 	IntelliSenseBox = gcnew IntelliSenseThingy(Parent);
 	LastKnownMouseClickLocation = Point(0, 0);
@@ -797,12 +872,9 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	Container->Dock = DockStyle::Fill;
 	Container->BorderStyle = BorderStyle::Fixed3D;
 	Container->Controls->Add(WPFHost);
-//	Container->Controls->Add(VerticalScroll);
-//	Container->Controls->Add(HorizontalScroll);
 
-	WPFHost->Dock = DockStyle::Fill;
-	WPFHost->Child = TextField;
-
+	TextField->HorizontalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
+	TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->EnableEmailHyperlinks = false;
 	TextField->Options->EnableHyperlinks = true;
@@ -813,7 +885,7 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	TextField->Options->ShowSpaces = OPTIONS->FetchSettingAsInt("ShowSpaces");
 	TextField->Options->ShowTabs = OPTIONS->FetchSettingAsInt("ShowTabs");
 
-	InitializeSyntaxHighlightingManager();
+	InitializeSyntaxHighlightingManager(false);
 
 	TextField->SyntaxHighlighting = AvalonEdit::Highlighting::HighlightingManager::Instance->GetDefinition("ObScript");
 
@@ -831,6 +903,9 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	TextField->PreviewMouseHover += gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseHover);
 	TextField->PreviewMouseHoverStopped += gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseHoverStopped);
 
+	TextField->PreviewMouseMove += gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollMove);
+	TextField->PreviewMouseDown += gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollDown);
+
 	TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer);
 	TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer);
 	TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditSelectionBGColorizer(TextField, KnownLayer::Background));
@@ -839,14 +914,18 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 
 	TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
 
+	WPFHost->Dock = DockStyle::Fill;
+	WPFHost->Child = TextField;
+
 	SetFont(Font);
-	IntelliSenseBox->Hide();
 }
 
-void AvalonEditTextEditor::InitializeSyntaxHighlightingManager(void)
+void AvalonEditTextEditor::InitializeSyntaxHighlightingManager(bool Reset)
 {
-	if (SyntaxHighlightingManager->GetInitialized())
+	if (SyntaxHighlightingManager->GetInitialized() && !Reset)
 		return;
+	else
+		SyntaxHighlightingManager->Reset();
 
 	SyntaxHighlightingManager->CreateCommentPreprocessorRuleset(OPTIONS->GetColor("SyntaxCommentsColor"), Color::GhostWhite, true, OPTIONS->GetColor("SyntaxPreprocessorColor"));
 	SyntaxHighlightingManager->CreateRuleset(AvalonEditXSHDManager::Rulesets::e_Keywords, OPTIONS->GetColor("SyntaxKeywordsColor"), Color::GhostWhite, true);

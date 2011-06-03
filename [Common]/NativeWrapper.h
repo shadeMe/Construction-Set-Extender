@@ -97,6 +97,8 @@ public:
 	static bool											SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int X, int Y, int cx, int cy, UInt32 uFlags); 
 	[DllImport("user32.dll")]
 	static bool											ShowWindow(IntPtr hWnd, int nCmdShow);
+	[DllImport("user32.dll")]
+	static IntPtr										SendMessageA(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 
 	static void											PrintToCSStatusBar(int PanelIndex, String^ Message);
 	friend void											DebugDump(UInt8 Source, String^% Message);

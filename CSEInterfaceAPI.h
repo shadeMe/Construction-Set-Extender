@@ -1,5 +1,12 @@
 #pragma once
 
+#ifdef CSE
+	#include "CSAS\ScriptCommandInfo.h"
+	#include "CSAS\Array.h"
+#endif
+
+using namespace CSAutomationScript;
+
 /********** CSE Interface API ****************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the 
 *	object will be dispatched to plugins that pass an arbitrary message of type 
@@ -14,7 +21,8 @@ struct CSEInterface
 	{
 		kCSEInterface_Console = 0,
 		kCSEInterface_IntelliSense,
-		kCSEInterface_Renderer
+		kCSEInterface_Renderer,
+		kCSEInterface_Script
 	};
 
 	// Used to initialize CSE's interface objects. Similar to OBSE's QueryInterface.
@@ -46,4 +54,20 @@ struct CSERendererInterface
 {
 	// Queues a text message for display in the render window
 	void			(* PrintToRenderWindow)(const char* Message, long double DisplayDuration);
+};
+
+struct CSEScriptInterface
+{
+	// Registers a CSAS script command. Returns false if registration fails (in case of command name/alias conflicts)
+	bool			(* RegisterCommand)(CSASCommandInfo* CommandInfo);
+
+	// convenience function similar to OBSE's ExtractArgs/Ex
+	// string data buffers passed to the function are expected to be large enough to hold their arguments
+	bool			(* ExtractCommandArgs)(CSASDataElement* ArgArray, CSASParamInfo* Parameters, UInt32 NoOfParams, ...);
+
+	// array helper functions
+	// not to be used directly, other than for initializing the global instances of the fn ptrs
+	Array*			(* ArrayInterface_AllocateNewArray)(CSASDataElement* Element, UInt32 Size);
+	Array*			(* ArrayInterface_CopyNewArray)(Array* Source);
+	void			(* ArrayInterface_ReleaseArray)(Array* Source);
 };

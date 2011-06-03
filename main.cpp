@@ -1,4 +1,5 @@
 #pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Version.lib")
 
 #include "[Common]/CLIWrapper.h"
 #include "[Common]/HandShakeStructs.h"
@@ -44,7 +45,7 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		g_msgIntfc->RegisterListener(g_pluginHandle, NULL, CSEInteropHandler);
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
-		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\LipSyncPipeClient.dll"))
+		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\CSE\\LipSyncPipeClient.dll"))
 		{
 			CONSOLE->Indent();
 			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
@@ -72,6 +73,7 @@ extern "C"
 
 		g_AppPath = obse->GetOblivionDirectory();
 		g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
+		g_DLLPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll";
 
 		DebugPrint("Initializing INI Manager");
 		CONSOLE->Indent();
@@ -79,7 +81,7 @@ extern "C"
 		g_INIManager->Initialize();
 		CONSOLE->Exdent();
 
-		g_DLLInstance = (HINSTANCE)GetModuleHandle(std::string(g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll").c_str());
+		g_DLLInstance = (HINSTANCE)GetModuleHandle(g_DLLPath.c_str());
 		if (!g_DLLInstance)
 		{
 			DebugPrint("Couldn't fetch the DLL's handle!");
@@ -95,7 +97,15 @@ extern "C"
 		}
 		else if (obse->editorVersion < CS_VERSION_1_2)
 		{
-			DebugPrint("Running CS 1.0. Unsupported!");
+			DebugPrint("CSE requires CS v1.2 to run");
+			return false;
+		}
+
+		OSVERSIONINFO OSInfo;
+		GetVersionEx(&OSInfo);
+		if (OSInfo.dwMajorVersion < 5)
+		{
+			DebugPrint("CSE requires Windows XP or greater to run");
 			return false;
 		}
 		CONSOLE->Exdent();
@@ -107,7 +117,7 @@ extern "C"
 
 		if (!g_msgIntfc || !g_commandTableIntfc)
 		{
-			DebugPrint("OBSE Messaging/CommandTable interface not found !");
+			DebugPrint("OBSE Messaging/CommandTable interface not found");
 			return false;
 		}
 
@@ -127,8 +137,6 @@ extern "C"
 		InitCommonControlsEx(&icex);
 
 		g_pluginHandle = obse->GetPluginHandle();
-
-	//	WaitUntilDebuggerAttached();
 
 		DebugPrint("Loading Component DLLs");
 		CONSOLE->Indent();
@@ -154,12 +162,18 @@ extern "C"
 	}
 };
 
-// dummy entry point
+// (mostly)dummy entry point
 BOOL WINAPI DllMain(
         HANDLE  hDllHandle,
         DWORD   dwReason,
         LPVOID  lpreserved
         )
 {
+	switch (dwReason)
+	{
+	case DLL_PROCESS_ATTACH:
+	//	WaitUntilDebuggerAttached();
+		break;
+	}
 	return TRUE;
 }

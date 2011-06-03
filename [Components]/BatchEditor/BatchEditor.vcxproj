@@ -73,7 +73,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -97,7 +97,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing Dll...</Message>
-      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\ComponentDLLs\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

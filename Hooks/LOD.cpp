@@ -18,15 +18,15 @@ namespace Hooks
 
 	void PatchLODHooks(void)
 	{
-		_MemoryHandler(LODLandTextureMipMapLevelA).WriteNop();
-		_MemoryHandler(LODLandTextureMipMapLevelB).WriteJump();
-		_MemoryHandler(LODLandTextureAllocation).WriteJump();
-		_MemoryHandler(LODLandTextureDestruction).WriteJump();
-		_MemoryHandler(LODLandD3DTextureSelection).WriteJump();
-		_MemoryHandler(LODLandBSTextureSelection).WriteJump();
-		_MemoryHandler(GenerateLODPartialTexture).WriteJump();
-		_MemoryHandler(GenerateLODFullTexture).WriteJump();
-		_MemoryHandler(GenerateLODFullTextureFileName).WriteUInt32((UInt32)s_LODFullTexturePath);
+		_MemHdlr(LODLandTextureMipMapLevelA).WriteNop();
+		_MemHdlr(LODLandTextureMipMapLevelB).WriteJump();
+		_MemHdlr(LODLandTextureAllocation).WriteJump();
+		_MemHdlr(LODLandTextureDestruction).WriteJump();
+		_MemHdlr(LODLandD3DTextureSelection).WriteJump();
+		_MemHdlr(LODLandBSTextureSelection).WriteJump();
+		_MemHdlr(GenerateLODPartialTexture).WriteJump();
+		_MemHdlr(GenerateLODFullTexture).WriteJump();
+		_MemHdlr(GenerateLODFullTextureFileName).WriteUInt32((UInt32)s_LODFullTexturePath);
 	}
 
 	#define _hhName		LODLandTextureMipMapLevelB

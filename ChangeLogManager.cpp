@@ -186,6 +186,7 @@ namespace VersionControl
 		while (LogStack.size())
 		{
 			LogStack.top()->Delete();
+			delete LogStack.top();
 			LogStack.pop();
 		}
 

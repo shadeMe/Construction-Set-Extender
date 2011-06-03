@@ -4,8 +4,8 @@
 #include "[Common]\HandShakeStructs.h"
 
 class DataHandler;
-extern FormData*				g_FormData;
-extern UseListCellItemData*		g_UseListCellItemData;
+extern FormData*				g_FormDataInteropPackage;
+extern UseListCellItemData*		g_UseListCellItemDataInteropPackage;
 
 // would be more aesthetically pleasing if this were rearranged into different interfaces but meh
 // CSE's gonna be the only user

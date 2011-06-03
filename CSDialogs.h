@@ -129,6 +129,8 @@ void						ResetRenderWindow();
 void						InstantitateCustomScriptEditor(const char* ScriptEditorID);
 void						InstantitateCustomScriptEditor(UInt32 ScriptFormID);
 
+void						TESObjectREFR_Update3D(TESObjectREFR* Ref);
+
 class CSStartupManager
 {
 public:

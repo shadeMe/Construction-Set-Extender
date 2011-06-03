@@ -14,8 +14,8 @@
 
 using namespace Hooks;
 
-FormData*						g_FormData = new FormData();
-UseListCellItemData*			g_UseListCellItemData = new UseListCellItemData();
+FormData*						g_FormDataInteropPackage = new FormData();
+UseListCellItemData*			g_UseListCellItemDataInteropPackage = new UseListCellItemData();
 
 template <typename tData>
 void UseInfoList_SetFormListItemText_ParseFormNode(DataHandler::Node<tData>* ThisNode);
@@ -141,7 +141,7 @@ extern "C"
 		if (IsWindowEnabled(EDAL->GetTrackedREC(ScriptEditorHandle)))
 		{
 			FillScriptDataPackage(g_SetEditorTextCache);
-			CLIWrapper::ScriptEditor::InitializeScript(AllocatedIndex, g_ScriptDataPackage);
+			CLIWrapper::ScriptEditor::InitializeScript(AllocatedIndex, g_ScriptDataInteropPackage);
 		}
 	}
 
@@ -151,7 +151,7 @@ extern "C"
 
 		FillScriptDataPackage(g_SetEditorTextCache);
 
-		return g_ScriptDataPackage;
+		return g_ScriptDataInteropPackage;
 	}
 
 	__declspec(dllexport) const char* __stdcall ScriptEditor_GetAuxScriptName()
@@ -164,11 +164,11 @@ extern "C"
 
 	__declspec(dllexport) ScriptData* __stdcall FetchScriptFromForm(const char* EditorID)
 	{
-		g_ScriptDataPackage->ParentID = NULL, g_ScriptDataPackage->EditorID = NULL;
+		g_ScriptDataInteropPackage->ParentID = NULL, g_ScriptDataInteropPackage->EditorID = NULL;
 
 		TESForm* Form = TESForm_LookupByEditorID(EditorID);
 
-		if (!Form)									return g_ScriptDataPackage;
+		if (!Form)									return g_ScriptDataInteropPackage;
 
 		if (Form->IsReference())
 		{
@@ -176,15 +176,15 @@ extern "C"
 			if (Ref)	Form = Ref->baseForm;
 		}
 
-		g_ScriptDataPackage->ParentID = Form->editorData.editorID.m_data;				// EditorID of the script's parent form
+		g_ScriptDataInteropPackage->ParentID = Form->editorData.editorID.m_data;				// EditorID of the script's parent form
 
 		TESScriptableForm* ScriptableForm = CS_CAST(Form, TESForm, TESScriptableForm);
-		if (!ScriptableForm)						return g_ScriptDataPackage;
+		if (!ScriptableForm)						return g_ScriptDataInteropPackage;
 		Script* FormScript = ScriptableForm->script;
-		if (!FormScript)							return g_ScriptDataPackage;
+		if (!FormScript)							return g_ScriptDataInteropPackage;
 
 		FillScriptDataPackage(FormScript);
-		return g_ScriptDataPackage;
+		return g_ScriptDataInteropPackage;
 	}
 
 	__declspec(dllexport) bool __stdcall IsFormAnObjRefr(const char* EditorID)
@@ -199,8 +199,8 @@ extern "C"
 		TESForm* Form = TESForm_LookupByEditorID(EditorID);
 		if (Form)
 		{
-			g_FormData->FillFormData(Form);
-			return g_FormData;
+			g_FormDataInteropPackage->FillFormData(Form);
+			return g_FormDataInteropPackage;
 		}
 		else
 			return NULL;
@@ -218,7 +218,7 @@ extern "C"
 
 			FillScriptDataPackage(ThisScript);
 
-			CLIWrapper::ScriptEditor::SetScriptListItemData(TrackedEditorIndex, g_ScriptDataPackage);
+			CLIWrapper::ScriptEditor::SetScriptListItemData(TrackedEditorIndex, g_ScriptDataInteropPackage);
 		}
 	}
 
@@ -533,15 +533,15 @@ extern "C"
 		WriteStatusBarText(0, "FormList += BoundObjects...");
 
 		for (TESBoundObject* Itr = (*g_dataHandler)->boundObjects->last; Itr; Itr = Itr->next) {
-			g_FormData->EditorID = Itr->editorData.editorID.m_data;
-			g_FormData->FormID = Itr->refID;
-			g_FormData->TypeID = Itr->typeID;
-			CLIWrapper::UseInfoList::SetFormListItemData(g_FormData);
+			g_FormDataInteropPackage->EditorID = Itr->editorData.editorID.m_data;
+			g_FormDataInteropPackage->FormID = Itr->refID;
+			g_FormDataInteropPackage->TypeID = Itr->typeID;
+			CLIWrapper::UseInfoList::SetFormListItemData(g_FormDataInteropPackage);
 			Count++;
 
 			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "[%d/%d]", Count, Total);
 			WriteStatusBarText(1, g_TextBuffer);
-			WriteStatusBarText(2, g_FormData->EditorID);
+			WriteStatusBarText(2, g_FormDataInteropPackage->EditorID);
 		}
 
 		// everything else.
@@ -604,11 +604,11 @@ extern "C"
 		for (GenericNode<TESFormReferenceData>* UseList = (GenericNode<TESFormReferenceData>*)thisCall(kTESForm_GetFormReferenceList, Form, 0); UseList; UseList = UseList->next) {
 			TESForm* Reference = UseList->data->GetForm();
 
-			g_FormData->EditorID = Reference->editorData.editorID.m_data;
-			g_FormData->FormID = Reference->refID;
-			g_FormData->TypeID = Reference->typeID;
+			g_FormDataInteropPackage->EditorID = Reference->editorData.editorID.m_data;
+			g_FormDataInteropPackage->FormID = Reference->refID;
+			g_FormDataInteropPackage->TypeID = Reference->typeID;
 
-			CLIWrapper::UseInfoList::SetUseListObjectItemData(g_FormData);
+			CLIWrapper::UseInfoList::SetUseListObjectItemData(g_FormDataInteropPackage);
 		}
 	}
 
@@ -625,16 +625,16 @@ extern "C"
 			TESObjectREFR* FirstRef = TESForm_LoadIntoView_GetReference(Data->Cell, Form);
 			TESWorldSpace* WorldSpace = (TESWorldSpace*)thisCall(kTESObjectCELL_GetParentWorldSpace, Data->Cell);
 
-			g_UseListCellItemData->EditorID = Data->Cell->editorData.editorID.m_data;
-			g_UseListCellItemData->FormID = Data->Cell->refID;
-			g_UseListCellItemData->Flags = Data->Cell->flags0 & TESObjectCELL::kFlags0_Interior;
-			g_UseListCellItemData->WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorData.editorID.m_data);
-			g_UseListCellItemData->RefEditorID = ((!FirstRef || !FirstRef->editorData.editorID.m_data)?"<Unnamed>":FirstRef->editorData.editorID.m_data);
-			g_UseListCellItemData->XCoord = Data->Cell->coords->x;
-			g_UseListCellItemData->YCoord = Data->Cell->coords->y;
-			g_UseListCellItemData->UseCount = Data->Count;
+			g_UseListCellItemDataInteropPackage->EditorID = Data->Cell->editorData.editorID.m_data;
+			g_UseListCellItemDataInteropPackage->FormID = Data->Cell->refID;
+			g_UseListCellItemDataInteropPackage->Flags = Data->Cell->flags0 & TESObjectCELL::kFlags0_Interior;
+			g_UseListCellItemDataInteropPackage->WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorData.editorID.m_data);
+			g_UseListCellItemDataInteropPackage->RefEditorID = ((!FirstRef || !FirstRef->editorData.editorID.m_data)?"<Unnamed>":FirstRef->editorData.editorID.m_data);
+			g_UseListCellItemDataInteropPackage->XCoord = Data->Cell->coords->x;
+			g_UseListCellItemDataInteropPackage->YCoord = Data->Cell->coords->y;
+			g_UseListCellItemDataInteropPackage->UseCount = Data->Count;
 
-			CLIWrapper::UseInfoList::SetUseListCellItemData(g_UseListCellItemData);
+			CLIWrapper::UseInfoList::SetUseListCellItemData(g_UseListCellItemDataInteropPackage);
 		}
 	}
 
@@ -726,11 +726,11 @@ void UseInfoList_SetFormListItemText_ParseFormNode(DataHandler::Node<tData>* Thi
 		tData* ThisObject = ThisNode->data;
 		if (!ThisObject)		break;
 
-		g_FormData->EditorID = ThisObject->editorData.editorID.m_data;
-		g_FormData->FormID = ThisObject->refID;
-		g_FormData->TypeID = ThisObject->typeID;
+		g_FormDataInteropPackage->EditorID = ThisObject->editorData.editorID.m_data;
+		g_FormDataInteropPackage->FormID = ThisObject->refID;
+		g_FormDataInteropPackage->TypeID = ThisObject->typeID;
 
-		CLIWrapper::UseInfoList::SetFormListItemData(g_FormData);
+		CLIWrapper::UseInfoList::SetFormListItemData(g_FormDataInteropPackage);
 		ThisNode = ThisNode->next;
 		Count++;
 

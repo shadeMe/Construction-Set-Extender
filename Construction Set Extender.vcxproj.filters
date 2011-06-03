@@ -40,6 +40,18 @@
     <Filter Include="EditorAPI\Forms">
       <UniqueIdentifier>{e1a88872-fa63-43c0-a11a-c771bc250ebe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CSAS">
+      <UniqueIdentifier>{a5fab9ab-9075-48e2-9dbf-9fd670a10585}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CSAS\muParser">
+      <UniqueIdentifier>{ec7e90f9-9431-466e-a4f4-ce6e190cb719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CSAS\Commands">
+      <UniqueIdentifier>{9a109c79-3ba7-4faa-9ca8-15781d237f90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CSAS\Types">
+      <UniqueIdentifier>{18895107-186f-4eea-8c37-745b39c96b28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\obse\obse_editor\EditorRTTI.cpp">
@@ -151,6 +163,123 @@
     </ClCompile>
     <ClCompile Include="ChangeLogManager.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpError.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCmplx.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCommon.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncNonCmplx.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncStr.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpICallback.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIfThenElse.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIOprt.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIPackage.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIToken.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValReader.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValue.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinAssign.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinCommon.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtCmplx.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtNonCmplx.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOverload.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCmplx.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCommon.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageNonCmplx.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageStr.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageUnit.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParser.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParserBase.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpRPN.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpTokenReader.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValReader.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValue.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValueCache.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpVariable.cpp">
+      <Filter>CSAS\muParser</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptParser.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptVariables.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptRunner.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptData.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptCommandInfo.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptCommands.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\ScriptTypes.cpp">
+      <Filter>CSAS</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\Array.cpp">
+      <Filter>CSAS\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\Commands\Commands_General.cpp">
+      <Filter>CSAS\Commands</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -484,6 +613,144 @@
     </ClInclude>
     <ClInclude Include="EditorAPI\TESWeather.h">
       <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptParser.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptRunner.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpDefines.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpError.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCmplx.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCommon.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncNonCmplx.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncStr.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFwdDecl.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpICallback.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIfThenElse.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIOprt.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIPackage.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIToken.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValReader.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValue.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinAssign.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinCommon.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtCmplx.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtNonCmplx.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOverload.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCmplx.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCommon.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageNonCmplx.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageStr.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageUnit.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParser.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParserBase.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpRPN.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpStack.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpTokenReader.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpTypes.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValReader.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValue.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValueCache.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpVariable.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\suSortPred.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\utGeneric.h">
+      <Filter>CSAS\muParser</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptVariables.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptData.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptCommands.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptCommandInfo.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\ScriptTypes.h">
+      <Filter>CSAS</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\Array.h">
+      <Filter>CSAS\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\Commands\Commands_General.h">
+      <Filter>CSAS\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowEdgeSnapper.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

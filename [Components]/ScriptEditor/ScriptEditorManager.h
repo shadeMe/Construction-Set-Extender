@@ -1,7 +1,6 @@
 #pragma once
 #include "ScriptEditor.h"
 
-struct ScriptData;
 using namespace DevComponents;
 
 public ref class ScriptEditorManager
@@ -134,5 +133,3 @@ public:
 };
 
 #define SEMGR											ScriptEditorManager::GetSingleton()
-
-extern ScriptData*										g_ScriptDataPackage;

@@ -12,6 +12,9 @@ using namespace DevComponents;
 using namespace GlobalInputMonitor;
 using namespace System::Reflection;
 
+#define NEWSCRIPTID					"New Script"
+#define FIRSTRUNSCRIPTID			"New Workspace"
+
 namespace ScriptEditor
 {
 	ref class Workspace;
@@ -93,6 +96,9 @@ namespace ScriptEditor
 		IntPtr												GetEditorFormHandle() { return EditorForm->Handle; }
 		FormWindowState										GetEditorFormWindowState() { return EditorForm->WindowState; }
 		void												SetEditorFormWindowState(FormWindowState State) { EditorForm->WindowState = State; }
+
+		void												TunnelKeyDownEvent(KeyEventArgs^ E) { EditorForm_KeyDown(EditorForm, E); }
+															// workaround for the ElementHost's greed when it comes to consuming key events
 	};
 
 	public ref class Workspace
@@ -107,15 +113,15 @@ namespace ScriptEditor
 																e_CSEMessage
 															};
 		Workspace(UInt32 Index, TabContainer^ Parent);
-
-		static Workspace^									NullWorkspace = gcnew Workspace(0);
 	private:
+		static Workspace^									NullWorkspace = gcnew Workspace(0);
+
 		static ImageList^									MessageIcon = gcnew ImageList();
 		static enum class									SanitizeOperation
-															{
-																e_Indent = 0,
-																e_AnnealCasing
-															};
+																{
+																	e_Indent = 0,
+																	e_AnnealCasing
+																};
 
 		DotNetBar::TabItem^									EditorTab;
 		DotNetBar::TabControlPanel^							EditorControlBox;
@@ -274,7 +280,6 @@ namespace ScriptEditor
 		void												ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
 
-		void												EnableControls();
 		void												ClearErrorsItemsFromMessagePool(void);
 
 		void												FindReplaceOutput(String^ Line, String^ Text);
@@ -293,6 +298,8 @@ namespace ScriptEditor
 		void												PreprocessorErrorOutputWrapper(String^ Message);
 		void												SanitizeScriptText(SanitizeOperation Operation);
 	public:
+		void												DisableControls();
+		void												EnableControls();
 		UInt32												GetAllocatedIndex() { return AllocatedIndex; }
 		bool												GetModifiedStatus() { return TextEditor->GetModifiedStatus(); }
 		void												SetModifiedStatus(bool Modified) { TextEditor->SetModifiedStatus(Modified); }
@@ -301,9 +308,9 @@ namespace ScriptEditor
 		void												UpdateScriptFromDataPackage(ScriptData* Package);
 		void												AddItemToScriptListDialog(String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags);
 		void												AddItemToVariableIndexList(String^% Name, UInt32 Type, UInt32 Index);
-		String^												GetScriptDescription() { return EditorTab->Text; }
+		String^												GetScriptDescription() { return EditorTab->Tooltip; }
 		const String^										GetScriptID() { return ScriptEditorID; }
-		bool												GetIsCurrentScriptNew(void) { return ScriptEditorID == "New Script"; }
+		bool												GetIsCurrentScriptNew(void) { return ScriptEditorID == NEWSCRIPTID; }
 		void												ShowScriptListBox(ScriptListDialog::Operation Op) { ScriptListingDialog->Show(Op); }
 		void												LoadFileFromDisk(String^ Path);
 		void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);
@@ -326,7 +333,9 @@ namespace ScriptEditor
 		void												Relocate(TabContainer^ Destination);
 		String^												SerializeCSEBlock(void);
 		void												Focus() { TextEditor->FocusTextArea(); }
-		void												HandleWorkspaceFocus() { TextEditor->HandleTabSwitchEvent(); }
+		void												HandleWorkspaceFocus();
+		bool												GetIsFirstRun() { return ScriptEditorID == FIRSTRUNSCRIPTID;  }		// returns true until a script's loaded/created into the workspace
+		void												TunnelKeyDownEvent(KeyEventArgs^ E) { TextEditor_KeyDown(TextEditor, E); }	
 
 		bool												IsValid() { return this != NullWorkspace; }
 	};

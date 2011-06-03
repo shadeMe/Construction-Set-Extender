@@ -47,7 +47,6 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -55,12 +54,17 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\Microsoft DirectX SDK (March 2009)\Lib\x86;$(LibraryPath);</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\shadeMe\Documents\Visual Studio 2010\Projects\muParserX\parser;$(IncludePath)</IncludePath>
+    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\shadeMe\Documents\Visual Studio 2010\Projects\muParserX\parser;$(SourcePath)</SourcePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\shadeMe\Documents\Visual Studio 2010\Projects\muParserX\parser;$(IncludePath)</IncludePath>
+    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\shadeMe\Documents\Visual Studio 2010\Projects\muParserX\parser;$(SourcePath)</SourcePath>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;MUP_VAR_ASSIGN_TYPECHECK;MUP_CASEINSENSITIVE_DEFMAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -84,16 +88,17 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;MUP_VAR_ASSIGN_TYPECHECK;MUP_CASEINSENSITIVE_DEFMAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
@@ -123,16 +128,57 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <SuppressStartupBanner>false</SuppressStartupBanner>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "f:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpError.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCmplx.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCommon.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncNonCmplx.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncStr.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpICallback.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIfThenElse.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIOprt.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIPackage.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIToken.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValReader.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValue.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinAssign.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinCommon.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtCmplx.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtNonCmplx.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOverload.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCmplx.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCommon.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageNonCmplx.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageStr.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageUnit.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParser.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParserBase.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpRPN.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpTokenReader.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValReader.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValue.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValueCache.cpp" />
+    <ClCompile Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpVariable.cpp" />
     <ClCompile Include="..\obse\obse_editor\EditorRTTI.cpp" />
     <ClCompile Include="..\obse\obse\GameData.cpp" />
     <ClCompile Include="..\obse\obse\Utilities.cpp" />
+    <ClCompile Include="CSAS\Array.cpp" />
+    <ClCompile Include="CSAS\Commands\Commands_General.cpp" />
+    <ClCompile Include="CSAS\ScriptCommandInfo.cpp" />
+    <ClCompile Include="CSAS\ScriptCommands.cpp" />
+    <ClCompile Include="CSAS\ScriptData.cpp" />
+    <ClCompile Include="CSAS\ScriptParser.cpp" />
+    <ClCompile Include="CSAS\ScriptRunner.cpp" />
+    <ClCompile Include="CSAS\ScriptTypes.cpp" />
+    <ClCompile Include="CSAS\ScriptVariables.cpp" />
     <ClCompile Include="Hooks\VersionControl.cpp" />
     <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="[Common]\CLIWrapper.cpp" />
@@ -172,6 +218,42 @@
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpDefines.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpError.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCmplx.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncCommon.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncNonCmplx.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFuncStr.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpFwdDecl.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpICallback.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIfThenElse.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIOprt.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIPackage.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIToken.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValReader.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpIValue.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinAssign.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtBinCommon.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtCmplx.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOprtNonCmplx.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpOverload.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCmplx.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageCommon.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageNonCmplx.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageStr.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpPackageUnit.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParser.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpParserBase.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpRPN.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpStack.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpTokenReader.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpTypes.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValReader.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValue.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpValueCache.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\mpVariable.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\suSortPred.h" />
+    <ClInclude Include="..\..\..\..\..\Documents\Visual Studio 2010\Projects\muParserX\parser\utGeneric.h" />
     <ClInclude Include="..\obse\obse_editor\EditorRTTI.h" />
     <ClInclude Include="..\obse\obse\GameBSExtraData.h" />
     <ClInclude Include="..\obse\obse\GameData.h" />
@@ -189,6 +271,15 @@
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
     <ClInclude Include="..\obse\obse\Script.h" />
     <ClInclude Include="..\obse\obse\Utilities.h" />
+    <ClInclude Include="CSAS\Array.h" />
+    <ClInclude Include="CSAS\Commands\Commands_General.h" />
+    <ClInclude Include="CSAS\ScriptCommandInfo.h" />
+    <ClInclude Include="CSAS\ScriptCommands.h" />
+    <ClInclude Include="CSAS\ScriptData.h" />
+    <ClInclude Include="CSAS\ScriptParser.h" />
+    <ClInclude Include="CSAS\ScriptRunner.h" />
+    <ClInclude Include="CSAS\ScriptTypes.h" />
+    <ClInclude Include="CSAS\ScriptVariables.h" />
     <ClInclude Include="EditorAPI\ActorValues.h" />
     <ClInclude Include="EditorAPI\BaseFormComponent.h" />
     <ClInclude Include="EditorAPI\BirthSign.h" />
@@ -247,6 +338,7 @@
     <ClInclude Include="EditorAPI\TESWeather.h" />
     <ClInclude Include="Hooks\VersionControl.h" />
     <ClInclude Include="ChangeLogManager.h" />
+    <ClInclude Include="WindowEdgeSnapper.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
     <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h" />
     <ClInclude Include="Resource.h" />

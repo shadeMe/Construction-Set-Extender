@@ -4,6 +4,7 @@
 
 using namespace System::Xml;
 using namespace ICSharpCode;
+using namespace IntelliSense;
 
 namespace AvalonEditXSHD
 {

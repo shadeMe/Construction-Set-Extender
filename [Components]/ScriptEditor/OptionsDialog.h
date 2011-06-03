@@ -76,6 +76,8 @@ public ref class OptionsDialog
 				CheckBox^									UseQuickView;
 			TabPage^									TabPreprocessor;
 				CheckBox^									AllowRedefinitions;
+				Label^										LabelNoOfPasses;
+				NumericUpDown^								NoOfPasses;
 			TabPage^									TabAppearance;
 				Button^									CmDlgFont;
 				Label^										LabelTabSize;

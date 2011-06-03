@@ -2,7 +2,8 @@
 
 #include "[Common]\HandShakeStructs.h"
 
-extern "C"{
+extern "C"
+{
 
 __declspec(dllexport) void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);
 __declspec(dllexport) void AddToURLMap(const char* CmdName, const char* URL);

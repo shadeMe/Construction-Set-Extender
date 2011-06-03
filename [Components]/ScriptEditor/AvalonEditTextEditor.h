@@ -8,11 +8,7 @@
 using namespace ICSharpCode;
 using namespace System::Windows::Forms::Integration;
 using namespace AvalonEditXSHD;
-using namespace ICSharpCode::AvalonEdit::Rendering;
-using namespace ICSharpCode::AvalonEdit::Document;
-using namespace ICSharpCode::AvalonEdit::Editing;
 using namespace AvalonEditComponents;
-
 
 public ref class AvalonEditTextEditor : public ScriptTextEditorInterface
 {
@@ -22,17 +18,15 @@ public:
 	event KeyEventHandler^						KeyDown;
 protected:
 	static enum class							PreventTextChangeFlagState
-												{
-													e_Disabled = 0,
-													e_AutoReset,
-													e_ManualReset
-												};
+													{
+														e_Disabled = 0,
+														e_AutoReset,
+														e_ManualReset
+													};
 
 	Panel^										Container;
 	ElementHost^								WPFHost;
 	AvalonEdit::TextEditor^						TextField;
-	VScrollBar^									VerticalScroll;
-	HScrollBar^									HorizontalScroll;
 
 	AvalonEditScriptErrorBGColorizer^			ErrorColorizer;
 	AvalonEditFindReplaceBGColorizer^			FindReplaceColorizer;
@@ -41,9 +35,14 @@ protected:
 	bool										ModifiedFlag;
 	PreventTextChangeFlagState					PreventTextChangedEventFlag;
 	System::Windows::Input::Key					KeyToPreventHandling;
-	IntelliSenseThingy^							IntelliSenseBox;
+	IntelliSense::IntelliSenseThingy^			IntelliSenseBox;
 	Point										LastKnownMouseClickLocation;
 	System::Windows::Input::Key					LastKeyThatWentDown;
+
+	System::Windows::Point						ScrollStartPoint;
+	System::Windows::Vector						CurrentScrollOffset;
+	bool										IsMiddleMouseScrolling;
+	Timer^										MiddleMouseScrollTimer;
 
 	virtual void								OnScriptModified(ScriptModifiedEventArgs^ E);
 	virtual void								OnKeyDown(KeyEventArgs^ E);
@@ -63,6 +62,11 @@ protected:
 	void										TextField_SelectionChanged(Object^ Sender, EventArgs^ E);
 	void										TextField_LostFocus(Object^ Sender, System::Windows::RoutedEventArgs^ E);
 
+	void										TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+	void										TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
+
+	void										ScrollTimer_Tick(Object^ Sender, EventArgs^ E);
+
 	String^										GetTokenAtIndex(int Index, bool SelectText);
 	String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
 	String^										GetTextAtLocation(int Index, bool SelectText);
@@ -75,6 +79,8 @@ protected:
 
 	void										RefreshUI() { TextField->TextArea->TextView->Redraw(); }
 	UInt32										PerformReplaceOnSegment(ScriptTextEditorInterface::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output);
+	void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
+	void										StopMiddleMouseScroll();
 public:
 	// interface methods
 	virtual void								SetFont(Font^ FontObject);
@@ -134,8 +140,9 @@ public:
 
 	virtual void								HighlightScriptError(int Line);
 	virtual void								ClearScriptErrorHighlights(void);
+	virtual void								SetEnabledState(bool State);
 
 	AvalonEditTextEditor(Font^ Font, Object^% Parent);
 
-	static void									InitializeSyntaxHighlightingManager(void);
+	static void									InitializeSyntaxHighlightingManager(bool Reset);
 };

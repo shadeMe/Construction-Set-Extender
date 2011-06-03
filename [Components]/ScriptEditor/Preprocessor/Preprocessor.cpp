@@ -320,7 +320,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 
 			try
 			{
-				StreamReader^ ImportParser = gcnew StreamReader(String::Format("{0}Data\\Scripts\\{1}.txt", PREPROC->GetInstanceData()->AppPath, Filename));
+				StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\{1}.txt", Filename));
 				Source = ImportParser->ReadToEnd();
 				ImportParser->Close();
 			} 
@@ -520,11 +520,31 @@ bool IfDirective::ParseAsInt(String^% Source, int% Result)
 
 void IfDirective::ProcessOperands(String^% LHSSource, String^% RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^% PreprocessorInstance)
 {
-	DefineDirective^ LHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(LHSSource);
-	DefineDirective^ RHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(RHSSource);
+	String^ OperandBuffer = LHSSource;
+	DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
+	switch (DefineOperator)
+	{
+	case DefineDirective::AccessoryOperatorType::e_None:
+		break;
+	default:
+		OperandBuffer = OperandBuffer->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
+		break;
+	}
+	DefineDirective^ LHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(OperandBuffer);
+	LHSResult = ((LHSDirective)?(LHSDirective->GetValue(gcnew String(""), DefineOperator)):LHSSource);
 
-	LHSResult = ((LHSDirective)?(LHSDirective->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::e_None)):LHSSource);
-	RHSResult = ((RHSDirective)?(RHSDirective->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::e_None)):RHSSource);
+	OperandBuffer = RHSSource;
+	DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
+	switch (DefineOperator)
+	{
+	case DefineDirective::AccessoryOperatorType::e_None:
+		break;
+	default:
+		OperandBuffer = OperandBuffer->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
+		break;
+	}
+	DefineDirective^ RHSDirective = PreprocessorInstance->LookupDefineDirectiveByName(OperandBuffer);
+	RHSResult = ((RHSDirective)?(RHSDirective->GetValue(gcnew String(""), DefineOperator)):RHSSource);
 }
 
 bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
@@ -877,7 +897,6 @@ bool IfDirective::CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOu
 				for (UInt32 Index = 0; Index < LocalParser->Tokens->Count; Index++)
 				{
 					String^ Token = LocalParser->Tokens[Index];
-					DefineDirective^ CurrentDirective = PreprocessorInstance->LookupDefineDirectiveByName(Token);
 					Operator^ CurrentOperator = LookupOperatorByIdentifier(Token);
 					
 					if (CurrentOperator)
@@ -1159,23 +1178,31 @@ bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOu
 
 void Preprocessor::ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput)
 {
-	String^ FullPath = Path + "Data\\OBSE\\Plugins\\ComponentDLLs\\CSE\\STDPreprocDefs.txt";
+	String^ FolderPath = "Data\\Scripts\\Standard Preprocessor Directives\\";
 
-	if (File::Exists(FullPath))
+	if (Directory::Exists(FolderPath))
 	{
-		try 
+		DirectoryInfo^ PreprocessorDir = gcnew DirectoryInfo(FolderPath);
+
+		for each (FileInfo^ Itr in PreprocessorDir->GetFiles())
 		{
-			StreamReader^ TextParser = gcnew StreamReader(FullPath);
-			String^ FileContents = TextParser->ReadToEnd();
-			String^ Throwaway = "";
-			Preprocess(FileContents, Throwaway, ErrorOutput);
-			TextParser->Close();		
-		}
-		catch (Exception^ E) 
-		{
-			DebugPrint("Couldn't read from standard define directives file!\n\tException: " + E->Message);
+			if (Itr->Extension == ".txt")
+			{
+				try 
+				{
+					StreamReader^ TextParser = gcnew StreamReader(Itr->FullName);
+					String^ FileContents = TextParser->ReadToEnd();
+					String^ Throwaway = "";
+					Preprocess(FileContents, Throwaway, ErrorOutput);
+					TextParser->Close();		
+				}
+				catch (Exception^ E) 
+				{
+					DebugPrint("Couldn't read from standard preprocessor directives file '" + Itr->Name + "'!\n\tException: " + E->Message);
+				}
+			}
 		}
 	} 
 	else
-		DebugPrint("Standard define directives file not found!");
+		DebugPrint("Standard preprocessor directives folder not found!");
 }

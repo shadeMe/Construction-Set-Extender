@@ -76,6 +76,7 @@ public interface class ScriptTextEditorInterface
 	void										HandleTabSwitchEvent(void);		// called when the workspace's parent tab is selected
 	void										Destroy();
 	Point										PointToScreen(Point Location);
+	void										SetEnabledState(bool State);
 
 	// AvalonEdit specific
 	void										HighlightScriptError(int Line);
