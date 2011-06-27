@@ -1,5 +1,4 @@
 #pragma once
-#include "ExtenderInternals.h"
 
 // 280		### partial
 class Archive

@@ -86,7 +86,7 @@ struct ScriptVarIndexData
 };
 
 #ifndef CSE
-struct CommandInfoCLI
+struct ObScriptCommandInfo
 {
 	const char*										longName;		
 	const char*										shortName;	
@@ -111,6 +111,7 @@ struct CommandTableData
 	const CommandInfo*								CommandTableEnd;
 	UInt32											(* GetCommandReturnType)(const CommandInfo* cmd);
 	const PluginInfo*								(* GetParentPlugin)(const CommandInfo* cmd);
+	UInt32											(* GetRequiredOBSEVersion)(const CommandInfo* cmd);
 #else
 	struct PluginInfo
 	{
@@ -119,10 +120,11 @@ struct CommandTableData
 		UInt32			version;
 	};
 
-	const CommandInfoCLI*							CommandTableStart;
-	const CommandInfoCLI*							CommandTableEnd;
-	UInt32											(* GetCommandReturnType)(const CommandInfoCLI* cmd);
-	const PluginInfo*								(* GetParentPlugin)(const CommandInfoCLI* cmd);
+	const ObScriptCommandInfo*						CommandTableStart;
+	const ObScriptCommandInfo*						CommandTableEnd;
+	UInt32											(* GetCommandReturnType)(const ObScriptCommandInfo* cmd);
+	const PluginInfo*								(* GetParentPlugin)(const ObScriptCommandInfo* cmd);
+	UInt32											(* GetRequiredOBSEVersion)(const ObScriptCommandInfo* cmd);
 #endif
 
 	void											DumpData();

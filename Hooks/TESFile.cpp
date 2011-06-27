@@ -16,7 +16,7 @@ namespace Hooks
 	_DefineHookHdlr(QuickLoadPluginLoadHandler, 0x004852E5);
 	_DefineJumpHdlr(MissingMasterOverride, 0x00484FC9, 0x00484E8E);
 	_DefinePatchHdlr(DataHandlerPostError, 0x004852F0);
-	_DefineHookHdlrWithBuffer(AutoLoadActivePluginOnStartup, 0x0041A26A)(6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0), 6);
+	_DefineHookHdlrWithBuffer(AutoLoadActivePluginOnStartup, 0x0041A26A, 6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0);
 	_DefineHookHdlr(DataHandlerSaveFormToFile, 0x00479181);
 	_DefineHookHdlr(TESFileUpdateHeader, 0x004894D0);
 	_DefineHookHdlr(DataHandlerSavePluginEpilog, 0x0047F136);
@@ -81,11 +81,11 @@ namespace Hooks
 
 	void __stdcall DoLoadPluginsPrologHook(void)
 	{
-		ModEntry::Data* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
+		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;
 
-		if (ActiveFile && (ActiveFile->flags & ModEntry::Data::kFlag_IsMaster))
+		if (ActiveFile && (ActiveFile->fileFlags & TESFile::kFileFlag_Master))
 		{
-			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+			ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 		}
 
 		sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning"));
@@ -129,11 +129,11 @@ namespace Hooks
 		}
 	}
 
-	bool __stdcall DoSavePluginMasterEnumHook(ModEntry::Data* CurrentFile)
+	bool __stdcall DoSavePluginMasterEnumHook(TESFile* CurrentFile)
 	{
-		if ((CurrentFile->flags & ModEntry::Data::kFlag_Loaded) == 0)
+		if ((CurrentFile->fileFlags & TESFile::kFileFlag_Loaded) == 0)
 			return false;
-		else if ((CurrentFile->flags & ModEntry::Data::kFlag_IsMaster) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters") == 0)
+		else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters") == 0)
 			return false;
 		else
 			return true;
@@ -160,9 +160,9 @@ namespace Hooks
 		}
 	}
 
-	bool __stdcall DoQuickLoadPluginLoadHandlerHook(ModEntry::Data* CurrentFile)
+	bool __stdcall DoQuickLoadPluginLoadHandlerHook(TESFile* CurrentFile)
 	{
-		return _stricmp(CurrentFile->name, (*g_dataHandler)->unk8B8.activeFile->name);
+		return _stricmp(CurrentFile->fileName, (*g_TESDataHandler)->activeFile->fileName);
 	}
 
 	#define _hhName		QuickLoadPluginLoadHandler
@@ -208,12 +208,12 @@ namespace Hooks
 
 	bool __stdcall DoTESFileUpdateHeaderHook(TESFile* Plugin)
 	{
-		PrintToBuffer("%s%s", Plugin->filepath, Plugin->name);
+		PrintToBuffer("%s%s", Plugin->filePath, Plugin->fileName);
 		HANDLE TempFile = CreateFile(g_TextBuffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (TempFile == INVALID_HANDLE_VALUE)
 		{
 			LogWinAPIErrorMessage(GetLastError());
-			PrintToBuffer("Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->name);
+			PrintToBuffer("Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->fileName);
 			MessageBox(NULL, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 			return false;
 		}
@@ -248,8 +248,8 @@ namespace Hooks
 
 	void __stdcall DoDataHandlerSavePluginEpilogHook(void)
 	{
-		TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
-		ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;
+		ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 	}
 
 	#define _hhName		DataHandlerSavePluginEpilog
@@ -270,9 +270,9 @@ namespace Hooks
 
 	void __stdcall DoTESFileUpdateHeaderFlagBitHook(TESFile* Plugin)
 	{
-		TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;
+		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;
 		if (ActiveFile)
-			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+			ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 	}
 
 	#define _hhName		TESFileUpdateHeaderFlagBit
@@ -289,10 +289,10 @@ namespace Hooks
 		}
 	}
 
-	bool __stdcall DoDataHandlerSaveFormToFileHook(::TESForm* Form)
+	bool __stdcall DoDataHandlerSaveFormToFileHook(TESForm* Form)
 	{
-		ModEntry::Data* OverrideFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Form, -1);
-		if (!OverrideFile || OverrideFile == (*g_dataHandler)->unk8B8.activeFile)
+		TESFile* OverrideFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Form, -1);
+		if (!OverrideFile || OverrideFile == (*g_TESDataHandler)->activeFile)
 			return false;
 		else
 			return true;
@@ -327,8 +327,8 @@ namespace Hooks
 
 	bool __stdcall DoTESObjectCELLSaveReferencesPrologHook(TESObjectREFR* Reference, TESFile* SaveFile)
 	{
-		TESFile* SourceFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
-		TESFile* ActiveFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
+		TESFile* SourceFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
+		TESFile* ActiveFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
 
 		if (SourceFile == ActiveFile && ActiveFile == SaveFile)
 			return false;
@@ -366,17 +366,17 @@ namespace Hooks
 
 	bool __stdcall DoTESObjectCELLSaveReferencesEpilogHook(TESObjectREFR* Reference, TESFile* SaveFile)
 	{
-		if ((Reference->flags & ::TESForm::kFormFlags_Deleted))
+		if ((Reference->formFlags & TESForm::kFormFlags_Deleted))
 		{
-			TESFile* SourceFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
-			TESFile* ActiveFile = (ModEntry::Data*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
+			TESFile* SourceFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
+			TESFile* ActiveFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
 
 			if ((SourceFile == ActiveFile && ActiveFile == SaveFile) ||
 				(SourceFile == NULL && ActiveFile == NULL))
 			{
 				return false;
 			}
-			else if ((Reference->baseForm->flags & ::TESForm::kFormFlags_Deleted))
+			else if ((Reference->baseForm->formFlags & TESForm::kFormFlags_Deleted))
 			{
 				thisVirtualCall(*((UInt32*)Reference), 0x50, Reference, SaveFile);	// call SaveForm to dump an empty record
 				return false;

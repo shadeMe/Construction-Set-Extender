@@ -65,7 +65,6 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer = (CLIWrapper::ScriptEditor::_InitializeDatabaseUpdateTimer)GetProcAddress(hMod, "InitializeDatabaseUpdateTimer");
 	CLIWrapper::ScriptEditor::PassScriptError = (CLIWrapper::ScriptEditor::_PassScriptError)GetProcAddress(hMod, "PassScriptError");
 
-
 	if (!CLIWrapper::ScriptEditor::AddToURLMap || 
 		!CLIWrapper::ScriptEditor::AllocateNewEditor || 
 		!CLIWrapper::ScriptEditor::InitializeComponents ||

@@ -1,10 +1,10 @@
 #include "ScriptCommands.h"
 #include "Array.h"
 #include "ScriptRunner.h"
-#include <exception>
 #include "..\ExtenderInternals.h"
 
 #include "Commands\Commands_General.h"
+#include "Commands\Commands_Form.h"
 
 namespace CSAutomationScript
 {
@@ -62,11 +62,13 @@ namespace CSAutomationScript
 		// register special commands/operators
 		Parser->DefineFun(new ReturnCommand());
 		Parser->DefineFun(new CallCommand());
+		Parser->DefineFun(new BreakCommand());
+		Parser->DefineFun(new ContinueCommand());
+		Parser->DefineFun(new GetSecondsPassedCommand());
+
 		Parser->DefineInfixOprt(new OprtCastToRef());
 		Parser->DefineInfixOprt(new OprtCastToStr("(str)"));
 		Parser->DefineInfixOprt(new OprtCastToStr("$"));
-		Parser->DefineFun(new BreakCommand());
-		Parser->DefineFun(new ContinueCommand());
 		Parser->DefineOprt(new OprtBAndSymb());
 		Parser->DefineOprt(new OprtBOrSymb());
 	}
@@ -74,6 +76,7 @@ namespace CSAutomationScript
 	void CommandTable::InitializeCommandTable()
 	{
 		RegisterGeneralCommands();
+		RegisterFormCommands();
 	}
 
 	void CSASCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
@@ -108,13 +111,13 @@ namespace CSAutomationScript
 						if (a_pArg[i]->IsScalar() == false)
 							throw std::exception(PrintToBuffer("Non-reference type argument %d passed to command %s", i, CommandData->Name));
 
-						Arguments[i].SetForm((TESForm*)((int)a_pArg[i]->GetFloat()));
+						Arguments[i].SetForm(TESForm_LookupByFormID((UInt32)((int)a_pArg[i]->GetFloat())));
 						break;
 					}
 				}
 			}
 
-			if (CommandData->Handler(Arguments, &Result))
+			if (CommandData->Handler(Arguments, &Result, CommandData->Parameters, CommandData->NoOfParams))
 			{
 				switch (CommandData->ReturnType)
 				{
@@ -125,9 +128,9 @@ namespace CSAutomationScript
 					*ret = std::string(Result.GetString());
 					break;
 				case CSASDataElement::kParamType_Reference:
-					*ret = (int)Result.GetForm();
+					*ret = (int)Result.GetForm()->formID;
 					break;
-				case CSASDataElement::kParamType_Array:				// ### check if this fails an array retn'ing command tries to assign the retnval to a variable
+				case CSASDataElement::kParamType_Array:
 					Result.GetArray()->ConvertToMUPArray(*ret);
 					break;
 				}
@@ -167,7 +170,7 @@ namespace CSAutomationScript
 			CSASParamInfo* CurrentParam = &Parameters[i];
 			CSASDataElement* CurrentArg = &ArgArray[i];
 
-			ASSERT(CurrentArg->GetType() == CurrentParam->ParamType);
+			assert(CurrentArg->GetType() == CurrentParam->ParamType);
 
 			switch (CurrentParam->ParamType)
 			{
@@ -190,7 +193,7 @@ namespace CSAutomationScript
 					break;
 				}
 			default:
-				HALT("Unexpected param type");
+				assert(0);		// Unexpected param type
 				break;
 			}
 		}
@@ -203,7 +206,10 @@ namespace CSAutomationScript
 	void ReturnCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
 	{
 		ScriptContext* ExecutingScript = SCRIPTRUNNER->GetExecutingContext();
-		ASSERT(ExecutingScript && ExecutingScript->GetExecutionState());
+		assert(ExecutingScript && ExecutingScript->GetExecutionState() == ScriptContext::kExecutionState_Default);
+
+		if (ExecutingScript->GetIsLoopExecuting())
+			throw std::exception("Return command called inside a loop context");
 
 		if (a_iArgc == 1)
 		{
@@ -225,7 +231,7 @@ namespace CSAutomationScript
 		else if (a_iArgc)
 			throw std::exception("Too many arguments passed to Return command");
 
-		ExecutingScript->SetExecutionState(false);
+		ExecutingScript->SetExecutionState(ScriptContext::kExecutionState_Break);
 	}
 
 	const mup::char_type* ReturnCommand::GetDesc() const
@@ -244,26 +250,16 @@ namespace CSAutomationScript
 		
 		if (ArgCount < 1)
 			throw std::exception("Too few arguments passed to Call command");
-		else if (ArgCount > 1 + 1 + MAX_BEGIN_BLOCK_PARAMS)		// script name, retn var ID
+		else if (ArgCount > 1 + MAX_BEGIN_BLOCK_PARAMS)		// arg1 = script name
 			throw std::exception("Too many arguments passed to Call command");
 
 		std::string ScriptName = a_pArg[0]->GetString();
-		std::string ReturnVariableName = "";
-		ScriptVariable* ReturnVariable = NULL;
-
-		if (ArgCount > 1)
-		{
-			ReturnVariableName = a_pArg[1]->GetString();
-			ReturnVariable = SCRIPTRUNNER->GetExecutingContext()->LookupVariableByName(ReturnVariableName);
-			if (!ReturnVariable)
-				throw std::exception("Invalid return variable ID passed to Call command");
-		}
 
 		ParameterList Parameters;
 		mup::Value ReturnValueBuffer;
 		bool HasReturnedValue = false;
 
-		for (int i = 2; i < ArgCount; i++)
+		for (int i = 1; i < ArgCount; i++)
 		{
 			mup::IValue* ArgVal = &(*a_pArg[i]);
 			mup::Value Param;
@@ -283,17 +279,13 @@ namespace CSAutomationScript
 
 		bool Result = SCRIPTRUNNER->RunScript(ScriptName, (Parameters.size() ? &Parameters : NULL), ReturnValueBuffer, &HasReturnedValue);
 
-		if (HasReturnedValue && ReturnVariable)
-		{
-			ReturnVariable->SetValue(ReturnValueBuffer);
-		}
-
-		*ret = (int)Result;
+		if (HasReturnedValue)
+			*ret = ReturnValueBuffer;
 	}
 
 	const mup::char_type* CallCommand::GetDesc() const
 	{
-		return "Invokes a function call. Returns true if the call succeeded.";
+		return "Invokes a function call.";
 	}
 
 	mup::IToken* CallCommand::Clone() const
@@ -308,9 +300,8 @@ namespace CSAutomationScript
 		case 'f':  
 		case 'i': 
 		case 'b':  
-				*ret = (mup::int_type)a_pArg[0]->GetFloat();
-				break;
-
+			*ret = (mup::int_type)a_pArg[0]->GetFloat();
+			break;
 		default:
 			{
 			mup::ErrorContext err;
@@ -371,10 +362,10 @@ namespace CSAutomationScript
 	void BreakCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
 	{
 		ScriptContext* ExecutingScript = SCRIPTRUNNER->GetExecutingContext();
-		ASSERT(ExecutingScript);
+		assert(ExecutingScript);
 
 		ExecutingScript->SetExecutingLoopState(LoopBlock::kState_Break);
-		ExecutingScript->SetExecutionState(false);
+		ExecutingScript->SetExecutionState(ScriptContext::kExecutionState_Break);
 
 		*ret = (int)false;
 	}
@@ -392,10 +383,10 @@ namespace CSAutomationScript
 	void ContinueCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
 	{
 		ScriptContext* ExecutingScript = SCRIPTRUNNER->GetExecutingContext();
-		ASSERT(ExecutingScript);
+		assert(ExecutingScript);
 
 		ExecutingScript->SetExecutingLoopState(LoopBlock::kState_Continue);
-		ExecutingScript->SetExecutionState(false);
+		ExecutingScript->SetExecutionState(ScriptContext::kExecutionState_Break);
 
 		*ret = (int)false;
 	}
@@ -409,4 +400,27 @@ namespace CSAutomationScript
 	{
 		return new ContinueCommand(*this);
 	}
+
+	void GetSecondsPassedCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
+	{
+		if (!GLOBALSCRIPTMANAGER->GetInExecutionLoop())
+			throw std::exception("GetSecondsPassed command called in a non-global script");
+
+		*ret = (float)GLOBALSCRIPTMANAGER->GetSecondsPassed();
+	}
+
+	const mup::char_type* GetSecondsPassedCommand::GetDesc() const
+	{
+		return "Returns the amount of time passed since the last execution of the calling script. Only applicable to global scripts.";
+	}
+
+	mup::IToken* GetSecondsPassedCommand::Clone() const
+	{
+		return new GetSecondsPassedCommand(*this);
+	}
+
+	CSASParamInfo kParams_OneForm[1] =
+	{
+		{ "Form", CSASDataElement::kParamType_Reference }
+	};
 }

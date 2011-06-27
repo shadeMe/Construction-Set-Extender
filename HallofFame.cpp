@@ -19,20 +19,19 @@ namespace HallOfFame
 				!_stricmp("greenwarden", Itr.EditorID))
 			{
 				TESNPC* NPC = (TESNPC*)Itr.Form;
-				ToggleFlag(&NPC->actorBaseData.flags, TESActorBaseData::kFlag_IsFemale, true);
+				ToggleFlag<UInt32>(&NPC->actorFlags, TESActorBaseData::kNPCFlag_Female, true);
 			}
 			else if (!_stricmp("DragoonWraith", Itr.EditorID))
 			{
 				TESObjectWEAP* Weapon = (TESObjectWEAP*)Itr.Form;
-				UInt32 Type = (UInt32)Weapon + 0xDC;
-				*(UInt32*)Type = TESObjectWEAP::kType_Staff;
+				Weapon->weaponType = TESObjectWEAP::kWeaponType_Staff;
 			}
 
 			TESFullName* Name = CS_CAST(Itr.Form, TESForm, TESFullName);
 			if (Name)
-//				Name->name.Set(Itr.Name);		### FIX
+				Name->name.Set(Itr.Name);
 
-			thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Itr.Form);
+			thisCall(kDataHandler_AddBoundObject, (*g_TESDataHandler)->objects, Itr.Form);
 			thisVirtualCall(Itr.VTBL, 0x94, Itr.Form, 0);
 
 			FormID++;
@@ -40,22 +39,21 @@ namespace HallOfFame
 
 		void* Throwaway = NULL;
 		SpellItem* Spell = InitializeDefaultPlayerSpell(Throwaway);
-	//	BSStringT* FullNamePtr = (BSStringT*)((UInt32)Spell + 0x28);		### FIX
-	//	FullNamePtr->Set("Deadliest Smiley Alive");
+		BSStringT* FullNamePtr = (BSStringT*)((UInt32)Spell + 0x28);
+		FullNamePtr->Set("Deadliest Smiley Alive");
 		thisCall(kTESForm_SetFormID, Spell, FormID, 1);
 		thisCall(kTESForm_SetEditorID, Spell, "kyoma");
 		thisVirtualCall(kVTBL_SpellItem, 0x94, Spell, 0);
-		thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->spellitems, Spell);
-
+		thisCall(kLinkedListNode_NewNode, &(*g_TESDataHandler)->spellItems, Spell);
 
 		// temporarily "killing" the dataHandler to prevent the TESForm ctor from assigning formIDs
-		void* DataHandlerInstance = *g_dataHandler;
-		*g_dataHandler = NULL;
+		void* DataHandlerInstance = *g_TESDataHandler;
+		*g_TESDataHandler = NULL;
 		ConstructEffectSetting('HSRJ', "The Constant Physicist", 4, 0.0, 0, 0x170, -1, 1, 'LPSD');
-		*g_dataHandler = (DataHandler*)DataHandlerInstance;
+		*g_TESDataHandler = (TESDataHandler*)DataHandlerInstance;
 
 		TESObjectREFR* shadeMeRef = (TESObjectREFR*)FormHeap_Allocate(0x60);
-		thisCall(kTESObjectREFR_Ctor, shadeMeRef);
+		thisCall(kCtor_TESObjectREFR, shadeMeRef);
 		thisCall(kTESObjectREFR_SetBaseForm, shadeMeRef, TESForm_LookupByEditorID("shadeMe"));
 		thisCall(kTESForm_SetFormID, shadeMeRef, 0x99, 1);
 		thisCall(kTESForm_SetEditorID, shadeMeRef, "TheShadeMeRef");

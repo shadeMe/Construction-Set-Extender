@@ -359,7 +359,7 @@ namespace IntelliSense
 		int Count = 0, ReturnType = 0, CSCount = 0;
 		CommandInfo::SourceType Source;
 
-		for (const CommandInfoCLI* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
+		for (const ObScriptCommandInfo* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
 		{
 			Name = gcnew String(Itr->longName);
 			if (!String::Compare(Name, "", true))	continue;
@@ -382,7 +382,8 @@ namespace IntelliSense
 			}
 			else
 			{
-				Desc = "[OBSE] ";
+				UInt32 OBSEVersion = Data->GetRequiredOBSEVersion(Itr);
+				Desc = "[OBSE v" + OBSEVersion + "] ";
 				Source = CommandInfo::SourceType::e_OBSE;
 			}
 
@@ -829,6 +830,7 @@ namespace IntelliSense
 			Loc.X += 9 + 250; Loc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5 + 28;
 
 			InfoTip->ToolTipTitle = ListContents[GetSelectedIndex()]->GetTypeIdentifier();
+			InfoTip->Hide(Control::FromHandle(ParentEditor->GetEditorBoxHandle()));
 			InfoTip->Show(ListContents[GetSelectedIndex()]->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), Loc);
 		}
 	}

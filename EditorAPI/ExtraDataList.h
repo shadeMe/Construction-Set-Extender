@@ -2,8 +2,10 @@
 #include "obse\GameTypes.h"
 #include "obse\Utilities.h"
 
+#include "ExtraData.h"
+
 //	EditorAPI: ExtraDataList class and its derivatives.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
     ExtraData is Bethesda's tool for attaching arbitrary information to other classes.
@@ -11,25 +13,22 @@
     ExtraDataList seems to be targeted specifically to forms (?)
 */
 
-namespace EditorAPI
+// 14
+class BaseExtraList
 {
-	class	BSExtraData;
+public:
+	// members
+	//     /*00*/ void**			vtbl          
+	/*04*/ BSExtraData*				extraList;				// LL of extra data nodes
+	/*08*/ UInt8					extraTypes[0x0C];		// if a bit is set, then the extralist should contain that extradata
+															// bits are numbered starting from the lsb
 
-	// 14
-	class BaseExtraList
-	{
-	public:
-		// members
-		//     /*00*/ void**			vtbl          
-		/*04*/ BSExtraData*				extraList;				// LL of extra data nodes
-		/*08*/ UInt8					extraTypes[0x0C];		// if a bit is set, then the extralist should contain that extradata
-																// bits are numbered starting from the lsb
-	};
+	virtual void					UnkVFn00();
+};
 
-	// 14
-	class ExtraDataList : public BaseExtraList
-	{
-	public:
-		// no additional members
-	};
-}
+// 14
+class ExtraDataList : public BaseExtraList
+{
+public:
+	// no additional members
+};

@@ -28,14 +28,16 @@ namespace Hooks
 	_DeclareMemHdlr(DataDlgZOrder, "prevents the data dlg from staying ontop of all other windows");
 	_DeclareMemHdlr(FormIDListViewInit, "changes the text of the OK and CANCEL buttons");
 	_DeclareMemHdlr(FormIDListViewSaveChanges, "prevents the OK button from closing the list view dialog");
-	_DeclareMemHdlr(FormIDListViewItemChange, "displays a confirmation message before comitting changes made to the active item when switching to another");
+	_DeclareMemHdlr(FormIDListViewItemChange, "displays a confirmation message before committing changes made to the active item when switching to another");
 	_DeclareMemHdlr(FormIDListViewSelectItem, "fixes a bug that prevents the correct selection of newly created list view items");
 	_DeclareMemHdlr(FormIDListViewDuplicateSelection, "increments the item index returned by TESDialog::LookupListViewItemByData when duplicating forms from the popup menu");
 	_DeclareMemHdlr(TESRaceCopyHairEyeDataInit, "adds buttons to the face data tab page of the TESRace formIDListView dialog");
 	_DeclareMemHdlr(TESRaceCopyHairEyeDataMessageHandler, "handles the WM_COMMAND messages sent by the newly added controls");
-	_DeclareNopHdlr(TESDialogSubwindowEnumChildCallback, "patches the TESDialogSubWindow::EnumChildWindowsCallback function to keep it from overwriting the subwindow object's container member. (the patch)causes issues with control placement and z-ordering");
 	_DeclareMemHdlr(TESDialogGetIsWindowDragDropRecipient, "allows custom windows to receive form drag-drop notifications");
 	_DeclareNopHdlr(MissingTextureWarning, "removes the ostentatious warning");
 	_DeclareMemHdlr(AboutDialog, "add a mention of CSE");
 	_DeclareNopHdlr(TESQuestStageResultScript, "fixes a bug that prevented quest stage result scripts from being compiled when their text was empty");
+	_DeclareMemHdlr(TESNPCUpdatePreviewControl, "fixes a bug that prevented NPC models from being updated correctly after an item was removed from their inventory");
+	_DeclareMemHdlr(TESParametersFillAndInitSelectionComboBoxOwners, "allows factions to be passed as arguments to condition commands that take ownership parameters");
+	_DeclareMemHdlr(SearchReplaceDialog, "patches the search and replace dialog to stay open after a replace operation");
 }

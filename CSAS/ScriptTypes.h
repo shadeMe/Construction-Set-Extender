@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 
 #ifndef CSE
 	namespace CSAutomationScript
@@ -32,7 +33,7 @@ namespace CSAutomationScript
 		{
 			kParamType_Invalid = 0,
 			kParamType_Numeric,
-			kParamType_Reference,
+			kParamType_Reference,						// stored as formIDs in script variables
 			kParamType_String,
 			kParamType_Array							// return type only
 		};
@@ -48,15 +49,15 @@ namespace CSAutomationScript
 		UInt32							Type;
 
 		virtual void					Reset();
+		void							Copy(const CSASDataElement& Source);
 
-		CSASDataElement(const CSASDataElement& rhs);
 		CSASDataElement& operator=(const CSASDataElement& rhs);
 	public:
 		UInt8							GetType() const { return Type; }
-		TESForm*						GetForm() const { ASSERT(Type == kParamType_Reference); return RefData; }
-		double							GetNumber() const { ASSERT(Type == kParamType_Numeric); return NumericData; }
-		const char*						GetString() const { ASSERT(Type == kParamType_String); return StringData; }
-		Array*							GetArray() const { ASSERT(Type == kParamType_Array); return ArrayData; }
+		TESForm*						GetForm() const { assert(Type == kParamType_Reference); return RefData; }
+		double							GetNumber() const { assert(Type == kParamType_Numeric); return NumericData; }
+		const char*						GetString() const { assert(Type == kParamType_String); return StringData; }
+		Array*							GetArray() const { assert(Type == kParamType_Array); return ArrayData; }
 
 		void							SetForm(TESForm* Data);
 		void							SetNumber(double Data);
@@ -71,6 +72,8 @@ namespace CSAutomationScript
 		CSASDataElement(TESForm* Form) : RefData(Form), Type(kParamType_Reference) {}
 		CSASDataElement(Array* Array) { SetArray(Array); }
 		CSASDataElement(CSASDataElement* Elements, UInt32 Size) { SetArray(Elements, Size); }
+
+		CSASDataElement(const CSASDataElement& rhs);
 
 		virtual ~CSASDataElement() { Reset(); }
 

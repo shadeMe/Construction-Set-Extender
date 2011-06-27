@@ -5,22 +5,19 @@
 #include "TESObjectACTI.h"
 
 //	EditorAPI: TESFlora class.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /* 
 	...
 */
 
-namespace EditorAPI
+// A4
+class TESFlora : public TESProduceForm, public TESObjectACTI
 {
-	// A4
-	class TESFlora : public TESProduceForm, public TESObjectACTI
-	{
-	public:
-		// members
-		//     /*00*/ TESProduceForm
-		//     /*0C*/ TESObjectACTI
-		
-		// no additional members
-	};
-}
+public:
+	// members
+	//     /*00*/ TESProduceForm
+	//     /*0C*/ TESObjectACTI
+	
+	// no additional members
+};

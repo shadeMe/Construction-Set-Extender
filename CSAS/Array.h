@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include "ScriptTypes.h"
 #include "mpValue.h"
 
@@ -29,7 +28,6 @@ namespace CSAutomationScript
 
 	class ArrayIterator;
 
-	// no reference counting or anything fancy like that as we aren't looking for real-time performance
 	class Array
 	{
 		static UInt32						GlobalInstanceCount;

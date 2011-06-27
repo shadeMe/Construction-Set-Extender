@@ -6,23 +6,20 @@
 #include "EffectItem.h"
 
 //	EditorAPI: TESSigilStone class.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /* 
 	...
 */
 
-namespace EditorAPI
+// 1A0
+class TESSigilStone : public TESObjectMISC, public TESUsesForm, public EffectItemList
 {
-	// 1A0
-	class TESSigilStone : public TESObjectMISC, public TESUsesForm, public EffectItemList
-	{
-	public:
-		// members
-		//     /*00*/ TESObjectMISC
-		//     /*BC*/ TESUsesForm
-		//     /*C4*/ EffectItemList
+public:
+	// members
+	//     /*00*/ TESObjectMISC
+	//     /*BC*/ TESUsesForm
+	//     /*C4*/ EffectItemList
 
-		// no additional members
-	};
-}
+	// no additional members
+};

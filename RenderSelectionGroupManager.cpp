@@ -1,4 +1,5 @@
 #include "RenderSelectionGroupManager.h"
+#include "CSDialogs.h"
 
 RenderSelectionGroupManager			g_RenderSelectionGroupManager;
 
@@ -53,12 +54,10 @@ void RenderSelectionGroupManager::Clear()
 TESRenderSelection* RenderSelectionGroupManager::AllocateNewSelection(TESRenderSelection* Selection)
 {
 	TESRenderSelection* Group = (TESRenderSelection*)FormHeap_Allocate(0x18);
-	thisCall(kTESRenderSelection_Ctor, Group);
+	thisCall(kCtor_TESRenderSelection, Group);
 
 	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
 		thisCall(kTESRenderSelection_AddFormToSelection, Group, Itr->Data, 0);
-
-//	DebugPrint("Allocated Selection %08X", (UInt32)Group);
 
 	return Group;
 }
@@ -120,8 +119,6 @@ void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRende
 				thisCall(kTESRenderSelection_ClearSelection, *Itr, 0);
 				thisCall(kTESRenderSelection_Free, *Itr);
 				FormHeap_Free(*Itr);
-
-//				DebugPrint("Freed Selection %08X", (UInt32)*Itr);
 
 				EraseItr = Itr;
 				break;

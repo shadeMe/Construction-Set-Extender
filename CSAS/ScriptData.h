@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
 #include "mpValue.h"
 #include "mpParser.h"
 #include "Array.h"
@@ -20,6 +17,7 @@ namespace CSAutomationScript
 		std::string								Text;
 		bool									Valid;
 		UInt8									Type;
+		mup::ParserX							CodeParser;				// child class c'tor initialize user-defined data
 
 		virtual void							Release();
 	public:
@@ -34,7 +32,7 @@ namespace CSAutomationScript
 			kType_ForEachBlock
 		};
 
-		ExecutableCode()
+		ExecutableCode() : CodeParser(mup::pckALL_NON_COMPLEX)
 		{
 			GlobalInstanceCount++;
 		}
@@ -44,7 +42,7 @@ namespace CSAutomationScript
 			Release();
 		}
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser) = 0;	// return false to stop execution
+		virtual bool							Execute(ScriptRunner* Executor) = 0;	// return false to stop execution
 
 		bool									IsVaid() const { return Valid; }
 		
@@ -62,38 +60,38 @@ namespace CSAutomationScript
 
 		bool									GetIsTokenInMask(UInt32 Mask, ScriptParser::TokenType Token);
 		void									GetCodeSubString(ContentMap& BlockText, UInt32 StartLine, UInt32 EndLine, std::string& CodeOut, bool ClearBuffer);
-		ExecutableCode*							GenerateGenericCodeFromContent(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine);
-		bool									RunCode(ScriptRunner* Executor, mup::ParserX* Parser);
+		ExecutableCode*							GenerateGenericCodeFromContent(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine, mup::ParserX* PrimaryParser);
+		bool									RunCode(ScriptRunner* Executor);
 
 		virtual void							Release();
 		virtual bool							LocateJumpBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, ContentMap& BlockCodeOut);
-		virtual void							InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask);
+		virtual void							InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, mup::ParserX* PrimaryParser);
 	public:
 		virtual ~CodeBlock()
 		{
 			Release();
 		}
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser) = 0;
+		virtual bool							Execute(ScriptRunner* Executor) = 0;
 	};
 
 	class ControlBlock : public CodeBlock
 	{
-	protected:	
-		mup::ParserX*							ConditionParser;
+	protected:
+		std::string								ConditionExpression;
 
-		virtual std::string						GetConditionExpression();
+		virtual std::string&					GetConditionExpression();
 
 		virtual void							Release();
-		virtual bool							EvaluateCondition(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							EvaluateCondition(ScriptRunner* Executor);
 	public:	
-		ControlBlock() : ConditionParser(ConditionParser = new mup::ParserX(mup::pckALL_NON_COMPLEX)) {}
+		ControlBlock() : ConditionExpression("") {}
 		virtual ~ControlBlock()
 		{
 			Release();
 		}
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser) = 0;
+		virtual bool							Execute(ScriptRunner* Executor) = 0;
 	};
 
 	class LoopBlock : public ControlBlock
@@ -118,25 +116,25 @@ namespace CSAutomationScript
 			;//
 		}
 
-		void									Continue() { State = kState_Continue; }
-		void									Break() { State = kState_Break; }
+		void									Break() { this->State = kState_Break; }
+		void									Continue() { this->State = kState_Continue; }
 	};
 
 	// derivatives
 	class LineOfCode : public ExecutableCode
 	{
 	public:
-		LineOfCode(std::string& Source, UInt32 LineNumber);
+		LineOfCode(std::string& Source, UInt32 LineNumber, mup::ParserX* PrimaryParser);
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							Execute(ScriptRunner* Executor);
 	};
 
 	class BeginBlock : public CodeBlock
 	{
 	public:
-		BeginBlock(std::string& Source, UInt32 StartLineNumber);
+		BeginBlock(std::string& Source, UInt32 StartLineNumber, mup::ParserX* PrimaryParser);
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							Execute(ScriptRunner* Executor);
 	};
 
 	class ElseBlock;
@@ -150,54 +148,55 @@ namespace CSAutomationScript
 		ElseBlock*								Else;
 		ElseIfBlockList							ElseIfs;
 
-		bool									EvaluateElseIfBlocks(ScriptRunner* Executor, mup::ParserX* Parser, bool* Failed);
+		bool									EvaluateElseIfBlocks(ScriptRunner* Executor, bool* Failed);
 
 		virtual void							Release();
-		virtual void							InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask);
+		virtual void							InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, mup::ParserX* PrimaryParser);
 	public:
-		IfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut);	// BlockEndOut = the block epilog declaration line
+		IfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);	// BlockEndOut = the block epilog declaration line
 		virtual ~IfBlock()
 		{
 			Release();
 		}
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							Execute(ScriptRunner* Executor);
 	};
 
 	class ElseIfBlock : public ControlBlock
 	{
 	public:
-		ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut);
+		ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							Execute(ScriptRunner* Executor);
 
-		bool									PreEvaluateCondition(ScriptRunner* Executor, mup::ParserX* Parser) { return EvaluateCondition(Executor, Parser); }
+		bool									PreEvaluateCondition(ScriptRunner* Executor) { return EvaluateCondition(Executor); }
 	};
 
 	class ElseBlock : public CodeBlock
 	{
 	public:
-		ElseBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut);
+		ElseBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							Execute(ScriptRunner* Executor);
 	};
 
 	class WhileBlock : public LoopBlock
 	{
 	public:
-		WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut);
+		WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual bool							Execute(ScriptRunner* Executor);
 	};	
 
 	class ForEachBlock : public LoopBlock
 	{
 	protected:
 		std::string								BufferVarID;
-		std::string								Expression;
-	public:
-		ForEachBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut);
 
-		virtual bool							Execute(ScriptRunner* Executor, mup::ParserX* Parser);
+		virtual std::string&					GetConditionExpression();
+	public:
+		ForEachBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
+
+		virtual bool							Execute(ScriptRunner* Executor);
 	};	
 }

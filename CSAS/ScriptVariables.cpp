@@ -2,6 +2,11 @@
 
 namespace CSAutomationScript
 {
+	ScriptVariable::ScriptVariable(const ScriptVariable& rhs)
+	{
+		Name = rhs.Name;
+		Value = rhs.Value;
+	}
 
 	const mup::Value& ScriptVariable::GetValue() const
 	{
@@ -21,7 +26,6 @@ namespace CSAutomationScript
 		case 'i':
 			return CSASDataElement::kParamType_Reference;
 		case 'f':
-		case 'c':
 			return CSASDataElement::kParamType_Numeric;
 		case 'a':
 			return CSASDataElement::kParamType_Array;

@@ -4,7 +4,7 @@
 
 
 //	EditorAPI: BSStringT class.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /* 
     Basic dynamically-sizeable string class.
@@ -19,21 +19,21 @@
 class BSStringT
 {
 protected:
-    // members
-    /*00*/ char*       m_data;
-    /*04*/ SInt16      m_dataLen; 
-    /*06*/ SInt16      m_bufLen;
+	// members
+	/*00*/ char*       m_data;
+	/*04*/ SInt16      m_dataLen; 
+	/*06*/ SInt16      m_bufLen;
 public:
-    // methods
-    bool		Set(const char* string, SInt16 size = 0)   // size determines allocated storage? 0 to allocate automatically
+	// methods
+	bool		Set(const char* string, SInt16 size = 0)   // size determines allocated storage? 0 to allocate automatically
 	{
 		return SME::MemoryHandler::thisCall(0x004051E0, this, string, size);
 	}
-    void		Clear()
+	void		Clear()
 	{
 		SME::MemoryHandler::thisCall(0x004053D0, this);
 	}
-    SInt16		Size() const
+	SInt16		Size() const
 	{
 		return SME::MemoryHandler::thisCall(0x0040BAD0, this);
 	}
@@ -45,7 +45,4 @@ public:
 			return strcmp(m_data, string);
 	}
 	const char*  c_str() const                          {return m_data;}
-
-    // operator overloads
-    inline		operator() const char* const            {return m_data;}
 };

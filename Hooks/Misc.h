@@ -5,6 +5,7 @@ namespace Hooks
 {
 	// hooks that do odd jobs such as fixing bugs and shoveling dung
 	void PatchMiscHooks(void);
+	void PathEntryPointHooks(void);
 
 	extern char g_NumericIDWarningBuffer[0x10];
 
@@ -30,6 +31,9 @@ namespace Hooks
 	_DeclareMemHdlr(TESFormDelete, "");
 	_DeclareMemHdlr(TextureSizeCheck, "allows the preview of textures of resolution > 512px");
 	_DeclareMemHdlr(DataHandlerPlaceTESObjectLIGH, "fixes a CTD that occurs on the first reference placement of a light object");
+	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapA, "fixes a CTD that sometime occurs for unknown reasons");
+	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapB, "");
+	_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registy entries at startup");
 
 	void PatchMessageHandler(void);
 	void __stdcall DoCSInitHook();

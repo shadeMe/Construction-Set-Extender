@@ -8,7 +8,6 @@
 #include "../WindowManager.h"
 #include "../ExtenderInternals.h"
 #include "../Exports.h"
-#include "obse/GameData.h"
 
 class TESForm;
 class TESObjectCELL;
@@ -36,6 +35,7 @@ namespace Hooks
 	void __stdcall SendMessageAddress(void);
 	void __stdcall TrackPopupMenuAddress(void);
 	void __stdcall ShowWindowAddress(void);
+	void __stdcall MessageBoxAddress(void);
 
 	UInt32 __stdcall IsControlKeyDown(void);
 }

@@ -1,8 +1,7 @@
-#include "CSInteropData.h"
-#include "windows.h"
-
 #pragma warning(disable:4800)
 
+#include "CSInteropData.h"
+#include <Windows.h>
 
 bool PerformPipeOperation(HANDLE PipeHandle, int Operation, CSECSInteropData* Buffer, DWORD* BytesReadWrittenBuf)
 {

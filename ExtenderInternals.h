@@ -1,20 +1,16 @@
 #pragma once
-#pragma warning(disable : 4800; disable : 4005)
+#pragma warning(disable : 4800 4005)
 
-#include "UtilityBox.h"
-#include "obse/obse_editor/EditorRTTI.h"
-#include "obse/GameData.h"
-#include "obse/Script.h"
-#include "obse/PluginAPI.h"
-#include "obse/GameObjects.h"
-#include "obse/NiNodes.h"
-#include "obse/NiObjects.h"
-#include "obse/NiRenderer.h"
-#include "Console.h"
-#include <D3dx9tex.h>
-
+#include "[Libraries]\MemoryHandler\MemoryHandler.h"
 #include "[Libraries]\INI Manager\INIManager.h"
 #include "[Libraries]\INI Manager\INIEditGUI.h"
+
+#include "EditorAPI\TESEditorAPI.h"
+#include "obse\PluginAPI.h"
+#include "obse\NiNodes.h"
+#include "obse\NiObjects.h"
+#include "obse\NiRenderer.h"
+#include "Console.h"
 
 extern std::string					g_AppPath;
 extern std::string					g_INIPath;
@@ -28,200 +24,28 @@ extern HINSTANCE					g_DLLInstance;
 extern SME::INI::INIManager*		g_INIManager;
 extern SME::INI::INIEditGUI*		g_INIEditGUI;
 
+using namespace SME;
 using namespace SME::MemoryHandler;
 
-class CSEINIManager : public SME::INI::INIManager
+class CSEINIManager : public INI::INIManager
 {
 public:
 	void									Initialize();
 };
 
-// 08
-class TESCellUseData
-{
-public:
-	TESCellUseData();
-	~TESCellUseData();
-
-	TESObjectCELL*		Cell;		// 00
-	UInt32				Count;		// 04
-};
-
-class TESCellUseList;
-
-// 08		### partial
-class INISetting
-{
-public:
-	INISetting();
-	~INISetting();
-
-	union							// 00
-	{
-		int			iData;
-		UInt32		uData;
-		float		fData;
-		char*		sData;
-	};
-
-	const char*		Name;			// 04
-};
-
-// 24
-class TESFormIDListView
-{
-public:
-	TESFormIDListView();
-	~TESFormIDListView();
-
-	// bases
-	TESForm					Form;
-
-	// no members
-};
-
+// simple LL template
 template<typename Type> struct GenericNode
 {
 	Type				* data;
 	GenericNode<Type>	* next;
 };
 
-// A0
-class TESTopicInfo : public TESForm
-{
-public:
-	TESTopicInfo();
-	~TESTopicInfo();
-
-	struct TopicListEntry
-	{
-		TESTopic*			data;
-		TopicListEntry*		next;
-	};
-
-	struct LinkedTopics
-	{
-		TopicListEntry		topicsLinkedFrom;
-		TopicListEntry		topicsLinkedTo;		// doubles as choices for appropriate infotype
-	};
-
-	struct ResponseEntry
-	{
-		// 24
-		struct Data
-		{
-			enum
-			{
-				kEmotionType_Neutral = 0,
-				kEmotionType_Anger,
-				kEmotionType_Disgust,
-				kEmotionType_Fear,
-				kEmotionType_Sad,
-				kEmotionType_Happy,
-				kEmotionType_Surprise,
-			};
-
-			UInt32			emotionType;				// 00
-			UInt32			emotionValue;				// 04
-			UInt32			unk08;						// 08
-			UInt32			unk0C;						// 0C
-			String			responseText;				// 10
-			String			actorNotes;					// 18
-			UInt32			unk20;						// 20
-		};
-
-		Data*				data;
-		ResponseEntry*		next;
-	};
-
-	 enum
-	 {
-		kInfoType_Topic = 0,
-		kInfoType_Conversation,
-		kInfoType_Combat,
-		kInfoType_Persuasion,
-		kInfoType_Detection,
-		kInfoType_Service,
-		kInfoType_Miscellaneous
-	 };
-
-	 enum
-	 {
-		kFlags_Goodbye = 0x0001,
-		kFlags_Random = 0x0002,
-		kFlags_SayOnce = 0x0004,
-		kFlags_Unk008 = 0x0008,
-		kFlags_InfoRefusal = 0x0010,
-		kFlags_RandomEnd = 0x0020,
-		kFlags_RunforRumors = 0x0040
-	 };
-
-	TESTopic*			unk024;			// 24 - always NULL ?
-	ConditionEntry		conditions;		// 28
-	UInt16				unk30;			// 30 - init to -1. used to determine previous info	?
-	UInt16				infotype;		// 32
-	UInt8				flags;			// 34
-	UInt8				flagsPad[3];	// 35
-	TopicListEntry		addedTopics;	// 38
-	LinkedTopics*		linkedTopics;	// 40
-	ResponseEntry		responses;		// 44
-	Script				resultScript;	// 4C
-};
-
-typedef TESTopicInfo::ResponseEntry::Data DialogResponse;
-
-// 18
-struct TESRenderSelection
-{
-	struct SelectedObjectsEntry
-	{
-		TESForm*				Data;
-		SelectedObjectsEntry*	Prev;
-		SelectedObjectsEntry*	Next;
-	};
-
-	SelectedObjectsEntry*	RenderSelection;	// 00
-	UInt32					SelectionCount;		// 04
-	float					x, y, z;			// 08 sum of position vectors of selected refr's
-	float					unk14;				// 14 init to 0.0
-};
-
-// 8
-struct TESRenderUndoStack
-{
-	enum
-	{
-		kUndoOperation_unk01 = 1,	// used to record ref creation?
-		kUndoOperation_unk02 = 2,	// used to record ref deletion?
-		kUndoOperation_unk03 = 3,	// used to record ref 3D data
-		kUndoOperation_unk04 = 4,	// 4-6 used to record landscape changes
-		kUndoOperation_unk05 = 5,	
-		kUndoOperation_unk06 = 6	
-	};
-
-	// 50
-	struct Entry
-	{
-		UInt32				selIndex;						// 00 index of the ref in its parent selection
-		UInt32				selCount;						// 04 number of refs in the selection this ref was a part of
-		TESObjectREFR*		refr;							// 08
-		UInt32				operationType;					// 0C
-		float				rotX, rotY, rotZ;				// 10
-		float				posX, posY, posZ;				// 1C
-		float				scale;							// 28
-		UInt32				unk2C[(0x48 - 0x2C) >> 2];		// 2C pathgrid/landscape change related
-		UInt32				unk48;							// 48
-		Entry*				next;							// 4C
-	};
-
-	Entry*					marker;							// 00 initialized in c'tor, used as a buffer?
-	Entry*					first;							// 04
-};
+class ElapsedTimeCounter;
+extern ElapsedTimeCounter		g_RenderWindowTimeManager;
 
 class BSTextureManager;
 class BSRenderedTexture;
 class NiDX9Renderer;
-typedef ModEntry::Data			TESFile;
 
 extern UInt32*					g_RenderWindowStateFlags;
 
@@ -229,8 +53,13 @@ class FileFinder;
 class Archive;
 struct ResponseEditorData;
 class GameSettingCollection;
+class TESPathGridPoint;
+class TESPathGrid;
+class TESWaterForm;
+struct TESRenderUndoStack;
+struct TESRenderSelection;
 
-extern DataHandler**			g_dataHandler;
+extern TESDataHandler**			g_TESDataHandler;
 extern TES**					g_TES;
 
 extern const HINSTANCE*			g_TESCS_Instance;
@@ -251,10 +80,10 @@ extern HWND*					g_HWND_MainToolbar;
 extern HWND*					g_HWND_QuestWindow;
 
 extern TBBUTTON*				g_MainToolbarButtonArray;
-extern INISetting*				g_LocalMasterPath;
+extern Setting*					g_LocalMasterPath;
 extern char**					g_TESActivePluginName;
-extern UInt8*					g_WorkingFileFlag;
-extern UInt8*					g_ActiveChangesFlag;
+extern UInt8*					g_TESCSAllowAutoSaveFlag;
+extern UInt8*					g_TESCSExittingCSFlag;
 extern GenericNode<Archive>**	g_LoadedArchives;
 extern TESWaterForm**			g_DefaultWater;
 extern TESRenderSelection**		g_TESRenderSelectionPrimary;
@@ -267,13 +96,26 @@ extern CRITICAL_SECTION*		g_ExtraListCS;
 extern TESSound**				g_FSTSnowSneak;
 extern BSTextureManager**		g_TextureManager;
 extern NiDX9Renderer**			g_CSRenderer;
-extern UInt8*					g_Flag_RenderWindowUpdateViewPort;
+extern UInt8*					g_RenderWindowUpdateViewPort;
 extern FileFinder**				g_FileFinder;
 extern ResponseEditorData**		g_ResponseEditorData;
 extern GameSettingCollection*	g_GMSTCollection;
 extern void*					g_GMSTMap;			// BSTCaseInsensitiveMap<GMSTData*>
 extern void**					g_IdleFormTree;		// BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>*
 extern TESRenderUndoStack**		g_TESRenderUndoStack;
+extern TESObjectREFR**			g_TESPreviewControlRef;
+
+extern float*					g_RenderWindowRefMovementSpeed;
+extern float*					g_RenderWindowSnapGridDistance;
+extern float*					g_RenderWindowRefRotationSpeed;
+extern float*					g_RenderWindowSnapAngle;
+extern float*					g_RenderWindowCameraRotationSpeed;
+extern float*					g_RenderWindowCameraZoomSpeed;
+extern float*					g_RenderWindowCameraPanSpeed;
+
+extern UInt8*					g_RenderWindowPathGridEditModeFlag;
+extern GenericNode<TESPathGridPoint>*
+								g_RenderWindowSelectedPathGridPoints;
 
 extern TESForm**				g_DoorMarker;
 extern TESForm**				g_NorthMarker;
@@ -392,14 +234,14 @@ extern const _TESDialog_GetSelectedItemData		TESDialog_GetSelectedItemData;
 typedef TESObjectREFR*	(__stdcall *_DataHandler_PlaceTESBoundObjectReference)(TESBoundObject* BaseForm, NiVector3* Position, NiVector3* Rotation, float unk03);
 extern const _DataHandler_PlaceTESBoundObjectReference		DataHandler_PlaceTESBoundObjectReference;
 
-extern const void *			RTTI_TESCellUseList;
+
 
 extern const UInt32			kTESChildCell_LoadCell;
 extern const UInt32			kTESCellUseList_GetUseListRefHead;
 extern const UInt32			kTESObjectCELL_GetParentWorldSpace;
 extern const UInt32			kScript_SaveResultScript;
 extern const UInt32			kScript_SaveScript;
-extern const UInt32			kLinkedListNode_NewNode;		// some BSTSimpleList template initialization
+extern const UInt32			kLinkedListNode_NewNode;		// some BSSimpleListT template initialization
 extern const UInt32			kDataHandler_AddBoundObject;
 extern const UInt32			kTESForm_SetFormID;
 extern const UInt32			kTESForm_SetEditorID;
@@ -440,6 +282,8 @@ extern const UInt32			kTESRenderUndoStack_RecordReference;
 extern const UInt32			kTESObjectREFR_PickComparator;
 extern const UInt32			kLinkedListNode_CountNodes;
 extern const UInt32			kDataHandler_CreateForm;
+extern const UInt32			kNiTPointerMap_LookupByKey;
+extern const UInt32			kNiTPointerMap_Remove;
 
 extern const UInt32			kBaseExtraList_GetExtraDataByType;
 extern const UInt32			kBaseExtraList_ModExtraEnableStateParent;
@@ -472,18 +316,31 @@ extern const UInt32			kVTBL_Script;
 extern const UInt32			kVTBL_MessageHandler;
 extern const UInt32			kVTBL_FileFinder;
 
-extern const UInt32			kTESNPC_Ctor;
-extern const UInt32			kTESCreature_Ctor;
-extern const UInt32			kTESFurniture_Ctor;
-extern const UInt32			kTESObjectACTI_Ctor;
-extern const UInt32			kTESObjectMISC_Ctor;
-extern const UInt32			kTESObjectWEAP_Ctor;
-extern const UInt32			kTESObjectCONT_Ctor;
-extern const UInt32			kTESObjectREFR_Ctor;
-extern const UInt32			kTESObjectCLOT_Ctor;
-extern const UInt32			kTESQuest_Ctor;
-extern const UInt32			kScript_Ctor;
-extern const UInt32			kTESRenderSelection_Ctor;
-extern const UInt32			kGameSetting_Ctor;
+extern const UInt32			kCtor_TESNPC;
+extern const UInt32			kCtor_TESCreature;
+extern const UInt32			kCtor_TESFurniture;
+extern const UInt32			kCtor_TESObjectACTI;
+extern const UInt32			kCtor_TESObjectMISC;
+extern const UInt32			kCtor_TESObjectWEAP;
+extern const UInt32			kCtor_TESObjectCONT;
+extern const UInt32			kCtor_TESObjectREFR;
+extern const UInt32			kCtor_TESObjectCLOT;
+extern const UInt32			kCtor_TESQuest;
+extern const UInt32			kCtor_Script;
+extern const UInt32			kCtor_TESRenderSelection;
+extern const UInt32			kCtor_GameSetting;
 
-#define GetVTBL(obj)		*((UInt32*)obj)
+#define GetVTBL(obj)										*((UInt32*)obj)
+#define CS_CAST(obj, from, to)								(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
+
+void WaitUntilDebuggerAttached();
+const char* PrintToBuffer(const char* fmt, ...);
+
+template <typename T>
+void __stdcall ToggleFlag(T* Flag, UInt32 Mask, bool State)
+{
+	if (State)
+		*Flag |= Mask;
+	else
+		*Flag &= ~Mask;
+}

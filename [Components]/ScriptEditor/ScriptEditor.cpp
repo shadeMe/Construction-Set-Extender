@@ -5,8 +5,8 @@
 #include "[Common]\HandShakeStructs.h"
 #include "[Common]\ListViewUtilities.h"
 #include "[Common]\NativeWrapper.h"
+#include "[Common]\CustomInputBox.h"
 
-#using "Microsoft.VisualBasic.dll"
 using namespace IntelliSense;
 
 namespace ScriptEditor
@@ -1325,25 +1325,23 @@ namespace ScriptEditor
 			void Workspace::FindReplaceWrapper(ScriptTextEditorInterface::FindReplaceOperation Operation)
 			{
 				String^ SearchString = ToolBarCommonTextBox->Text;
-				String^ ReplaceString = "qqq";
-
-				if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
-				{
-					ReplaceString = Microsoft::VisualBasic::Interaction::InputBox("Enter replace string",
-									"Find and Replace - CSE Editor",
-									"",
-									SystemInformation::PrimaryMonitorSize.Width / 2,
-									SystemInformation::PrimaryMonitorSize.Height / 2);
-				}
+				String^ ReplaceString = "";
 
 				if (SearchString == "")
 				{
 					MessageBox::Show("Enter a valid search string.", "Find and Replace - CSE Editor");
 					return;
 				}
-				else if (ReplaceString->Length == 0)
-					return;
 
+				if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
+				{
+					InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Replacement String", "Find and Replace - CSE Editor");
+					if (Result->ReturnCode == DialogResult::Cancel)
+						return;
+					else
+						ReplaceString = Result->Text;
+				}
+				
 				FindList->Items->Clear();
 				UInt32 Hits = TextEditor->FindReplace(Operation,
 											SearchString,
@@ -1366,13 +1364,12 @@ namespace ScriptEditor
 					Count++;
 				}
 
-				String^ BookmarkDesc = Microsoft::VisualBasic::Interaction::InputBox("Enter a description for the bookmark",
-										"Place Bookmark",
-										"",
-										SystemInformation::PrimaryMonitorSize.Width / 2,
-										SystemInformation::PrimaryMonitorSize.Height / 2);
-
-				if (BookmarkDesc == "")		return;
+				String^ BookmarkDesc = "";
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter A Description For The Bookmark", "Place Bookmark - CSE Editor");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+				else
+					BookmarkDesc = Result->Text;
 
 				ListViewItem^ Item = gcnew ListViewItem(LineNo.ToString());
 				Item->SubItems->Add(BookmarkDesc);
@@ -2538,11 +2535,14 @@ namespace ScriptEditor
 			}
 			void Workspace::ContextMenuAddMessage_Click(Object^ Sender, EventArgs^ E)
 			{
-				String^ Message = Microsoft::VisualBasic::Interaction::InputBox("Enter the message string",
-																				"Add Message", "",
-																				SystemInformation::PrimaryMonitorSize.Width / 2,
-																				SystemInformation::PrimaryMonitorSize.Height / 2);
-				if (Message == "")		return;
+				String^ Message = "";
+
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter The Message String", "Add Message - CSE Editor");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+				else
+					Message = Result->Text;
+
 				AddMessageToPool(MessageType::e_Message, -1, Message);
 			}
 			void Workspace::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)

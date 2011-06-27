@@ -1,9 +1,7 @@
 #include "ExtenderInternals.h"
 #include "CSEInterfaceManager.h"
-#include "UtilityBox.h"
-#include "[Common]\CLIWrapper.h"
-#include "Console.h"
 #include "RenderWindowTextPainter.h"
+#include "[Common]\CLIWrapper.h"
 
 
 std::map<std::string, std::string>		g_URLMapBuffer;

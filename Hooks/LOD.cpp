@@ -27,6 +27,7 @@ namespace Hooks
 		_MemHdlr(GenerateLODPartialTexture).WriteJump();
 		_MemHdlr(GenerateLODFullTexture).WriteJump();
 		_MemHdlr(GenerateLODFullTextureFileName).WriteUInt32((UInt32)s_LODFullTexturePath);
+//		SafeWrite32(0x004119A5 + 1, (UInt32)0x0092DDC0);
 	}
 
 	#define _hhName		LODLandTextureMipMapLevelB

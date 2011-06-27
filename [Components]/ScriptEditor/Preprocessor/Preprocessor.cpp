@@ -320,7 +320,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 
 			try
 			{
-				StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\{1}.txt", Filename));
+				StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\Preprocessor\\{1}.txt", Filename));
 				Source = ImportParser->ReadToEnd();
 				ImportParser->Close();
 			} 
@@ -1178,7 +1178,7 @@ bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOu
 
 void Preprocessor::ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput)
 {
-	String^ FolderPath = "Data\\Scripts\\Standard Preprocessor Directives\\";
+	String^ FolderPath = "Data\\Scripts\\Preprocessor\\STD\\";
 
 	if (Directory::Exists(FolderPath))
 	{

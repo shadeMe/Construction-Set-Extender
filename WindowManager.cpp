@@ -4,22 +4,22 @@
 #include "[Common]\CLIWrapper.h"
 #include "Console.h"
 #include "resource.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "CSInterop.h"
 #include "Exports.h"
 #include "Hooks\Misc.h"
 #include "Hooks\Dialog.h"
 #include "Hooks\AssetSelector.h"
+#include "Hooks\Renderer.h"
 #include "ScriptEditorAllocator.h"
 #include "CSDialogs.h"
 #include "RenderSelectionGroupManager.h"
-#include "RenderTimeManager.h"
+#include "ElapsedTimeCounter.h"
 #include "ToolManager.h"
 #include "WorkspaceManager.h"
 #include "RenderWindowTextPainter.h"
 #include "ChangeLogManager.h"
 #include "WindowEdgeSnapper.h"
+#include "CSAS\ScriptRunner.h"
 
 using namespace Hooks;
 
@@ -49,7 +49,7 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code)
 		{
-		case LVN_ITEMACTIVATE:				// ID = 1018
+		case LVN_ITEMACTIVATE:
 			NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
 			ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 0, g_TextBuffer, sizeof(g_TextBuffer));
 			std::string FormID, FormTypeStr(g_TextBuffer);
@@ -78,7 +78,7 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 
 LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static ModEntry::Data** s_ActiveTESFile = (ModEntry::Data**)0x00A0AA7C;
+	static TESFile** s_ActiveTESFile = (TESFile**)0x00A0AA7C;
 
 	switch (uMsg)
 	{
@@ -127,7 +127,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				MessageBox(hWnd, "An active plugin must be set when quick-loading.", "CSE", MB_OK|MB_ICONEXCLAMATION);
 				return FALSE;
 			}
-			else if ((*s_ActiveTESFile) != NULL && !_stricmp((*s_ActiveTESFile)->name, "oblivion.esm"))
+			else if ((*s_ActiveTESFile) != NULL && !_stricmp((*s_ActiveTESFile)->fileName, "oblivion.esm"))
 			{
 				if (MessageBox(hWnd, "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world ?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
 					return FALSE;
@@ -137,9 +137,9 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		}
 		break;
 	case WM_DESTROY:
-		TESFile* ActiveFile = (*g_dataHandler)->unk8B8.activeFile;					// required for correct esm handling
+		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;					// required for correct esm handling
 		if (ActiveFile)
-			ToggleFlag(&ActiveFile->flags, ModEntry::Data::kFlag_IsMaster, 0);
+			ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_DataDlgOrgWindowProc);
 		break;
@@ -152,12 +152,25 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+ 	case WM_TIMER:
+		switch (wParam)		// need to handle this right here as the main window proc doesn't check the timer ID when processing the WM_TIMER message
+		{
+		case 2:				// autosave timer
+			if (*g_TESCSAllowAutoSaveFlag && *g_TESCSExittingCSFlag == 0)
+				AutoSavePlugin();
+			break;
+		case GLOBALSCRIPT_EXECUTION_TIMER:
+			GLOBALSCRIPTMANAGER->ExecuteScripts();
+			break;
+		}
+		return TRUE;
     case WM_MOVING:
         return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
     case WM_ENTERSIZEMOVE:
         return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 	case 0x40C:				// save handler
-		if (g_QuickLoadToggle) {
+		if (g_QuickLoadToggle)
+		{
 			if (MessageBox(*g_HWND_CSParent,
 					"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains master-dependent records.",
 					"Save Warning",
@@ -171,23 +184,23 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		switch (LOWORD(wParam))
 		{
 		case MAIN_DATA_SAVEAS:
-			if (!(*g_dataHandler)->unk8B8.activeFile)
+			if (!(*g_TESDataHandler)->activeFile)
 			{
 				MessageBox(*g_HWND_CSParent, "An active plugin must be set before using this tool.", "CSE", MB_OK|MB_ICONEXCLAMATION);
 				break;
 			}
 
-			*g_WorkingFileFlag = 0;
+			*g_TESCSAllowAutoSaveFlag = 0;
 
 			char FileName[0x104];
-			if (TESDialog_SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->sData, 0, FileName, 0x104))
+			if (TESDialog_SelectTESFileCommonDialog(hWnd, g_LocalMasterPath->value.s, 0, FileName, 0x104))
 			{
-				ModEntry::Data* SaveAsBuffer = (*g_dataHandler)->unk8B8.activeFile;
+				TESFile* SaveAsBuffer = (*g_TESDataHandler)->activeFile;
 
-				ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Active, false);
-				ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Loaded, false);
+				ToggleFlag<UInt32>(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Active, false);
+				ToggleFlag<UInt32>(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Loaded, false);
 
-				(*g_dataHandler)->unk8B8.activeFile = NULL;
+				(*g_TESDataHandler)->activeFile = NULL;
 
 				if (SendMessage(*g_HWND_CSParent, 0x40C, NULL, (LPARAM)FileName))
 				{
@@ -195,50 +208,39 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				}
 				else
 				{
-					(*g_dataHandler)->unk8B8.activeFile = SaveAsBuffer;
-					ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Active, true);
-					ToggleFlag(&SaveAsBuffer->flags, ModEntry::Data::kFlag_Loaded, true);
+					(*g_TESDataHandler)->activeFile = SaveAsBuffer;
+					ToggleFlag<UInt32>(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Active, true);
+					ToggleFlag<UInt32>(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Loaded, true);
 				}
 			}
 
-			*g_WorkingFileFlag = 1;
+			*g_TESCSAllowAutoSaveFlag = 1;
 			break;
 		case MAIN_WORLD_BATCHEDIT:
 			{
-			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
+			TESObjectCELL*	ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)	ThisCell = (*g_TES)->currentExteriorCell;
 
 			if (ThisCell) 
 			{
-				UInt32 RefCount = 0, i = 0;
-				TESObjectCELL::ObjectListEntry* ThisNode = &ThisCell->objectList;
-				TESObjectREFR* ThisRef = NULL;
-
-				while (ThisNode) {
-					ThisRef = ThisNode->refr;
-					if (!ThisRef)		break;
-
-					RefCount++;
-					ThisNode = ThisNode->Next();
-				}
+				UInt32 RefCount = ThisCell->objectList.Count(), i = 0;
 
 				if (RefCount < 2)	break;
 
-				CellObjectData* RefData = new CellObjectData[RefCount], *ThisRefData = NULL;
+				CellObjectData* RefData = new CellObjectData[RefCount];
 				BatchRefData* BatchData = new BatchRefData();
 
-				ThisNode = &ThisCell->objectList;
-				while (ThisNode)
+				for (TESObjectCELL::ObjectREFRList::Iterator Itr = ThisCell->objectList.Begin(); !Itr.End(); ++Itr, ++i)
 				{
-					ThisRef = ThisNode->refr;
-					if (!ThisRef)		break;
-					ThisRefData = &RefData[i];
+					TESObjectREFR* ThisRef = Itr.Get();
+					CellObjectData* ThisRefData = &RefData[i];
 
-					ThisRefData->EditorID = (!ThisRef->editorData.editorID.m_data)?ThisRef->baseForm->editorData.editorID.m_data:ThisRef->editorData.editorID.m_data;
-					ThisRefData->FormID = ThisRef->refID;
-					ThisRefData->TypeID = ThisRef->baseForm->typeID;
-					ThisRefData->Flags = ThisRef->flags;
+					ThisRefData->EditorID = (!ThisRef->editorID.c_str())?ThisRef->baseForm->editorID.c_str():ThisRef->editorID.c_str();
+					ThisRefData->FormID = ThisRef->formID;
+					ThisRefData->TypeID = ThisRef->baseForm->formType;
+					ThisRefData->Flags = ThisRef->formFlags;
 					ThisRefData->Selected = false;
+
 					for (TESRenderSelection::SelectedObjectsEntry* j = (*g_TESRenderSelectionPrimary)->RenderSelection; j != 0; j = j->Next)
 					{
 						if (j->Data && j->Data == ThisRef)
@@ -248,9 +250,6 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						}
 					}
 					ThisRefData->ParentForm = ThisRef;
-
-					i++;
-					ThisNode = ThisNode->Next();
 				}
 
 				BatchData->CellObjectListHead = RefData;
@@ -262,57 +261,62 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 					for (UInt32 k = 0; k < RefCount; k++)
 					{
-						ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
-						ThisRefData = &RefData[k];
+						TESObjectREFR* ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
+						CellObjectData* ThisRefData = &RefData[k];
 						bool Modified = false;
 
 						if (ThisRefData->Selected)
 						{
-							if (BatchData->World3DData.UsePosX())	ThisRef->posX = BatchData->World3DData.PosX, Modified = true;
-							if (BatchData->World3DData.UsePosY())	ThisRef->posY = BatchData->World3DData.PosY, Modified = true;
-							if (BatchData->World3DData.UsePosZ())	ThisRef->posZ = BatchData->World3DData.PosZ, Modified = true;
+							if (BatchData->World3DData.UsePosX())	ThisRef->position.x = BatchData->World3DData.PosX, Modified = true;
+							if (BatchData->World3DData.UsePosY())	ThisRef->position.y = BatchData->World3DData.PosY, Modified = true;
+							if (BatchData->World3DData.UsePosZ())	ThisRef->position.z = BatchData->World3DData.PosZ, Modified = true;
 
-							if (BatchData->World3DData.UseRotX())	ThisRef->rotX = BatchData->World3DData.RotX * PI / 180, Modified = true;
-							if (BatchData->World3DData.UseRotY())	ThisRef->rotY = BatchData->World3DData.RotY * PI / 180, Modified = true;
-							if (BatchData->World3DData.UseRotZ())	ThisRef->rotZ = BatchData->World3DData.RotZ * PI / 180, Modified = true;
+							if (BatchData->World3DData.UseRotX())	ThisRef->rotation.x = BatchData->World3DData.RotX * PI / 180, Modified = true;
+							if (BatchData->World3DData.UseRotY())	ThisRef->rotation.y = BatchData->World3DData.RotY * PI / 180, Modified = true;
+							if (BatchData->World3DData.UseRotZ())	ThisRef->rotation.z = BatchData->World3DData.RotZ * PI / 180, Modified = true;
 
 							if (BatchData->World3DData.UseScale())	ThisRef->scale = BatchData->World3DData.Scale, Modified = true;
 
 							if (BatchData->Flags.UsePersistent() &&
-								ThisRef->baseForm->typeID != kFormType_NPC &&
-								ThisRef->baseForm->typeID != kFormType_Creature)
-								ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Persistent, BatchData->Flags.Persistent), Modified = true;
-							if (BatchData->Flags.UseDisabled())		ToggleFlag(&ThisRef->flags, TESObjectREFR::kFlags_Disabled, BatchData->Flags.Disabled), Modified = true;
-							if (BatchData->Flags.UseVWD())			ToggleFlag(&ThisRef->flags, TESForm::kFormFlags_VisibleWhenDistant, BatchData->Flags.VWD), Modified = true;
+								ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
+								ThisRef->baseForm->formType != TESForm::kFormType_Creature)
+							{
+								ToggleFlag<UInt32>(&ThisRef->formFlags, TESForm::kFormFlags_QuestItem, BatchData->Flags.Persistent), Modified = true;
+							}
+
+							if (BatchData->Flags.UseDisabled())	
+								ToggleFlag<UInt32>(&ThisRef->formFlags, TESForm::kFormFlags_Disabled, BatchData->Flags.Disabled), Modified = true;
+							if (BatchData->Flags.UseVWD())
+								ToggleFlag<UInt32>(&ThisRef->formFlags, TESForm::kFormFlags_VisibleWhenDistant, BatchData->Flags.VWD), Modified = true;
 
 							if (BatchData->EnableParent.UseEnableParent())
 							{
 								TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
 								if (Parent != ThisRef)
 								{
-									thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->baseExtraList, Parent);
+									thisCall(kBaseExtraList_ModExtraEnableStateParent, &ThisRef->extraData, Parent);
 									thisCall(kTESObjectREFR_SetExtraEnableStateParent_OppositeState, ThisRef, BatchData->EnableParent.OppositeState);
 									Modified = true;
 								}
 							}
 
 							if (BatchData->Ownership.UseOwnership() &&
-								ThisRef->baseForm->typeID != kFormType_NPC &&
-								ThisRef->baseForm->typeID != kFormType_Creature)
+								ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
+								ThisRef->baseForm->formType != TESForm::kFormType_Creature)
 							{
-								thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, 0);
-								thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, -1);
-								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, 0);
+								thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->extraData, 0);
+								thisCall(kBaseExtraList_ModExtraRank, &ThisRef->extraData, -1);
+								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->extraData, 0);
 
 								TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
-								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->baseExtraList, Owner);
+								thisCall(kBaseExtraList_ModExtraOwnership, &ThisRef->extraData, Owner);
 								if (BatchData->Ownership.UseNPCOwner())
 								{
-									thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->baseExtraList, (TESGlobal*)BatchData->Ownership.Global);
+									thisCall(kBaseExtraList_ModExtraGlobal, &ThisRef->extraData, (TESGlobal*)BatchData->Ownership.Global);
 								}
 								else
 								{
-									thisCall(kBaseExtraList_ModExtraRank, &ThisRef->baseExtraList, BatchData->Ownership.Rank);
+									thisCall(kBaseExtraList_ModExtraRank, &ThisRef->extraData, BatchData->Ownership.Rank);
 								}
 								Modified = true;
 							}
@@ -323,26 +327,26 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 							if (BatchData->Extra.UseSoulLevel())	thisCall(kTESObjectREFR_ModExtraSoul, ThisRef, BatchData->Extra.SoulLevel), Modified = true;
 							if (BatchData->Extra.UseCount())
 							{
-								switch (ThisRef->baseForm->typeID)
+								switch (ThisRef->baseForm->formType)
 								{
-									case kFormType_Apparatus:
-									case kFormType_Armor:
-									case kFormType_Book:
-									case kFormType_Clothing:
-									case kFormType_Ingredient:
-									case kFormType_Misc:
-									case kFormType_Weapon:
-									case kFormType_Ammo:
-									case kFormType_SoulGem:
-									case kFormType_Key:
-									case kFormType_AlchemyItem:
-									case kFormType_SigilStone:
-										thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
-									case kFormType_Light:
+									case TESForm::kFormType_Apparatus:
+									case TESForm::kFormType_Armor:
+									case TESForm::kFormType_Book:
+									case TESForm::kFormType_Clothing:
+									case TESForm::kFormType_Ingredient:
+									case TESForm::kFormType_Misc:
+									case TESForm::kFormType_Weapon:
+									case TESForm::kFormType_Ammo:
+									case TESForm::kFormType_SoulGem:
+									case TESForm::kFormType_Key:
+									case TESForm::kFormType_AlchemyItem:
+									case TESForm::kFormType_SigilStone:
+										thisCall(kBaseExtraList_ModExtraCount, &ThisRef->extraData, BatchData->Extra.Count), Modified = true;
+									case TESForm::kFormType_Light:
 										TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
 										if (Light)
 											if (Light->IsCarriable())
-												thisCall(kBaseExtraList_ModExtraCount, &ThisRef->baseExtraList, BatchData->Extra.Count), Modified = true;
+												thisCall(kBaseExtraList_ModExtraCount, &ThisRef->extraData, BatchData->Extra.Count), Modified = true;
 								}
 							}
 						}
@@ -351,7 +355,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						{
 							thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);		// UpdateUsageInfo
 							thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);		// SetFromActiveFile
-							TESObjectREFR_Update3D(ThisRef);
+							ThisRef->Update3D();
 						}
 					}
 
@@ -364,7 +368,8 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			break;
 			}
 		case MAIN_VIEW_CONSOLEWINDOW:
-			if (CONSOLE->IsConsoleInitalized()) {
+			if (CONSOLE->IsConsoleInitalized())
+			{
 				HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
 				if (CONSOLE->ToggleDisplayState())
 					CheckMenuItem(ViewMenu, MAIN_VIEW_CONSOLEWINDOW, MF_CHECKED);
@@ -416,6 +421,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			}
 
 			break;
+		case ID_CSAS_GLOBALDATA:
+			GLOBALSCRIPTMANAGER->ShowGlobalVariableDialog();
+			break;
+		case ID_CSAS_RELOADGLOBALSCRIPTS:
+			GLOBALSCRIPTMANAGER->ReloadScripts();
+			break;
 		}
 
 		if (LOWORD(wParam) > ToolMenuIdentifierBase)
@@ -434,6 +445,70 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case 0x52:		// R
+			if (*g_RenderWindowPathGridEditModeFlag)
+			{
+				if (GetAsyncKeyState(VK_CONTROL))
+				{
+					for (GenericNode<TESPathGridPoint>* Itr = g_RenderWindowSelectedPathGridPoints; Itr && Itr->data; Itr = Itr->next)
+					{
+						TESPathGridPoint* Point = Itr->data;		// ### fix this once the class has been fully exposed
+						
+						TESObjectREFR* LinkedRef = *(TESObjectREFR**)((UInt32)Point + 0x20);
+						TESPathGrid* ParentGrid = *(TESPathGrid**)((UInt32)Point + 0x24);
+						NiTMapBase<TESObjectREFR*, tList<TESPathGridPoint>*>* LinkedRefMap = (NiTMapBase<TESObjectREFR*, tList<TESPathGridPoint>*>*)((UInt32)ParentGrid + 0x40);
+						
+						if (LinkedRef)
+						{
+							tList<TESPathGridPoint>* LinkedNodes = NULL;
+							if (thisCall(kNiTPointerMap_LookupByKey, LinkedRefMap, LinkedRef, &LinkedNodes))
+							{
+								thisCall(kLinkedListNode_RemoveNode, LinkedNodes, Point);
+								if (LinkedNodes->Count() == 0)
+								{
+									thisCall(kNiTPointerMap_Remove, LinkedRefMap, LinkedRef);
+									FormHeap_Free(LinkedNodes);
+								}
+
+								*((UInt32*)((UInt32)Point + 0x20)) = NULL;
+							}
+						}
+					}
+					
+					SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);		// reinitialize render window
+					SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+					return TRUE;
+				}
+				else
+				{
+					for (GenericNode<TESPathGridPoint>* Itr = g_RenderWindowSelectedPathGridPoints; Itr && Itr->data; Itr = Itr->next)
+					{
+						TESObjectREFR* LinkedRef = *(TESObjectREFR**)((UInt32)Itr->data + 0x20);
+						if (LinkedRef)
+						{
+							MessageBox(*g_HWND_RenderWindow, "One or more of the selected path grid points is already linked to a reference.\n\nThey cannot not be linked to a different reference until they are unlinked first.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+							break;
+						}
+					}
+				}
+			}
+			break;
+		case 0x51:		// Q
+			if (GetAsyncKeyState(VK_CONTROL))
+			{
+				if (g_RenderWindowAltMovementSettings)
+					PrintToRender("Using vanilla movement settings", 3);
+				else
+					PrintToRender("Using alternate movement settings", 3);
+
+				g_RenderWindowAltMovementSettings = (g_RenderWindowAltMovementSettings == false);
+				return TRUE;
+			}
+		}
+		break;
     case WM_MOVING:
         return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
     case WM_ENTERSIZEMOVE:
@@ -451,11 +526,14 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					CurrentCell = (*g_TES)->currentExteriorCell;
 				if (CurrentCell)
 				{
-					for (TESObjectCELL::ObjectListEntry* Itr = &CurrentCell->objectList; Itr && Itr->refr; Itr = Itr->next)
+					for (TESObjectCELL::ObjectREFRList::Iterator Itr = CurrentCell->objectList.Begin(); !Itr.End(); ++Itr)
 					{
-						TESObjectREFR* Ref = Itr->refr;
-						ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, false);
-						ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, false);
+						TESObjectREFR* Ref = Itr.Get();
+						if (!Ref)
+							break;
+
+						ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_3DInvisible, false);
+						ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_Children3DInvisible, false);
 					}
 
 					PrintToRender("Reset visibility flags on the active cell's references", 3);
@@ -474,20 +552,20 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				switch (LOWORD(wParam))
 				{
 				case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
-					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_3DInvisible));
-					PrintToBuffer("Selection '%08X's visibility toggled", Ref->refID);
+					ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->formFlags & kTESObjectREFRSpecialFlags_3DInvisible));
+					PrintToBuffer("Selection '%08X's visibility toggled", Ref->formID);
 					break;
 				case ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY:
-					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
-					PrintToBuffer("Selection '%08X's children visibility toggled", Ref->refID);
+					ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+					PrintToBuffer("Selection '%08X's children visibility toggled", Ref->formID);
 					break;
 				case ID_SELECTIONFREEZING_FREEZE:
-					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Frozen, true);
-					PrintToBuffer("Selection '%08X' frozen", Ref->refID);
+					ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, true);
+					PrintToBuffer("Selection '%08X' frozen", Ref->formID);
 					break;
 				case ID_SELECTIONFREEZING_UNFREEZE:
-					ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Frozen, false);
-					PrintToBuffer("Selection '%08X' thawed", Ref->refID);
+					ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, false);
+					PrintToBuffer("Selection '%08X' thawed", Ref->formID);
 					break;
 				}
 				PrintToRender(g_TextBuffer, 2);
@@ -543,22 +621,22 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					switch (LOWORD(wParam))
 					{
 					case ID_ALIGNSELECTION_BYXAXIS:
-						ThisRef->posX = AlignRef->posX;
+						ThisRef->position.x = AlignRef->position.x;
 						break;
 					case ID_ALIGNSELECTION_BYYAXIS:
-						ThisRef->posY = AlignRef->posY;
+						ThisRef->position.y = AlignRef->position.y;
 						break;
 					case ID_ALIGNSELECTION_BYZAXIS:
-						ThisRef->posZ = AlignRef->posZ;
+						ThisRef->position.z = AlignRef->position.z;
 						break;
 					}
 
 					thisVirtualCall(*((UInt32*)ThisRef), 0x104, ThisRef);	// UpdateUsageInfo
 					thisVirtualCall(*((UInt32*)ThisRef), 0x94, ThisRef, 1);	// SetFromActiveFile
-					TESObjectREFR_Update3D(ThisRef);
+					ThisRef->Update3D();
 				}
 
-				PrintToBuffer("Selection aligned to %08X", AlignRef->refID);
+				PrintToBuffer("Selection aligned to %08X", AlignRef->formID);
 				PrintToRender(g_TextBuffer, 2);
 			}
 			break;
@@ -826,7 +904,6 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
 				SendMessage(hWnd, WM_SETREDRAW, TRUE, 0);
 			}
-			SetTimer(hWnd, CONSOLE_UPDATETIMER, CONSOLE_UPDATEPERIOD, NULL);
 			break;
 		}
 		return TRUE;
@@ -974,9 +1051,9 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 	{
 		case POPUP_SETFORMID:
 		{
-			if (Form->refID < 0x800)	break;
+			if (Form->formID < 0x800)	break;
 
-			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->refID);
+			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->formID);
 			LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
 			if (FormIDString)
 			{
@@ -993,7 +1070,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 					break;
 				}
 
-				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->refID, FormID);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->formID, FormID);
 				if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) == IDYES)
 				{
 					thisCall(kTESForm_SetFormID, Form, (UInt32)FormID, true);
@@ -1003,7 +1080,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			break;
 		}
 		case POPUP_MARKUNMODIFIED:
-			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorData.editorID.m_data, Form->refID);
+			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorID.c_str(), Form->formID);
 			if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) == IDYES)
 			{
 				thisVirtualCall(*((UInt32*)Form), 0x94, Form, 0);
@@ -1011,20 +1088,20 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			break;
 		case POPUP_JUMPTOUSEINFOLIST:
 		{
-			const char* EditorID = Form->editorData.editorID.m_data;
+			const char* EditorID = Form->editorID.c_str();
 
 			if (EditorID)
 				CLIWrapper::UseInfoList::OpenUseInfoBox(EditorID);
 			else
 			{
-				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->refID);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->formID);
 				CLIWrapper::UseInfoList::OpenUseInfoBox(g_TextBuffer);
 			}
 			break;
 		}
 		case POPUP_UNDELETE:
 		{
-			PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorData.editorID.m_data, Form->refID);
+			PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorID.c_str(), Form->formID);
 			if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) == IDYES)
 			{
 				thisVirtualCall(*((UInt32*)Form), 0x90, Form, 0);		// SetDeleted
@@ -1034,9 +1111,9 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		case POPUP_EDITBASEFORM:
 		{
 			TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
-			if (BaseForm && BaseForm->editorData.editorID.m_data)
+			if (BaseForm && BaseForm->editorID.c_str())
 			{
-				ShowFormEditDialog(BaseForm->editorData.editorID.m_data, BaseForm->typeID);
+				ShowFormEditDialog(BaseForm->editorID.c_str(), BaseForm->formType);
 			}
 			break;
 		}
@@ -1049,22 +1126,25 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		case POPUP_TOGGLEVISIBILITY:
 		{
 			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-			ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_3DInvisible));
+			ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->formFlags & kTESObjectREFRSpecialFlags_3DInvisible));
 			break;
 		}
 		case POPUP_TOGGLECHILDRENVISIBILITY:
 		{
 			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-			ToggleFlag(&Ref->flags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->flags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+			ToggleFlag<UInt32>(&Ref->formFlags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible));
 			break;
 		}
 		case POPUP_SHOWOVERRIDES:
 		{
-			std::string Buffer = PrintToBuffer("Override list for form '%08X':\n\n", Form->refID);
-			for (TESForm::ModReferenceList* Itr = &Form->modRefList; Itr && Itr->data; Itr = Itr->next)
+			std::string Buffer = PrintToBuffer("Override list for form '%08X':\n\n", Form->formID);
+			for (TESForm::OverrideFileListT::Iterator Itr = Form->fileList.Begin(); !Itr.End(); ++Itr)
 			{
-				TESFile* File = (TESFile*)Itr->data;
-				Buffer += PrintToBuffer("\t%s\n", File->name);
+				TESFile* File = Itr.Get();
+				if (!File)
+					break;
+
+				Buffer += PrintToBuffer("\t%s\n", File->fileName);
 			}
 			MessageBox(hWnd, Buffer.c_str(), "CSE", MB_OK|MB_ICONINFORMATION);
 			break;
@@ -1165,7 +1245,7 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 			std::string Path(VoicePath);
 			Path = Path.substr(0, Path.find_last_of("."));
 
-			if (!CSIOM->DoGenerateLIPOperation(Path.c_str(), (*g_ResponseEditorData)->responseLocalCopy->responseText.m_data))
+			if (!CSIOM->DoGenerateLIPOperation(Path.c_str(), (*g_ResponseEditorData)->responseLocalCopy->responseText.c_str()))
 			{
 				MessageBox(hWnd, "Couldn't generate LIP file for the selected voice.\n\nCheck the console for more information.", "CSE", MB_OK);
 			}
@@ -1208,7 +1288,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				Form = TESForm_LookupByEditorID(QuestID);
 				if (Form)
 				{
-					if (Form->typeID == kFormType_Quest)
+					if (Form->formType == TESForm::kFormType_Quest)
 					{
 						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Quest '%s' already exists. Do you want to replace its script with a newly created one ?", QuestID);
 						if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) != IDYES)
@@ -1226,9 +1306,9 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				else
 				{
 					Quest = (TESQuest*)FormHeap_Allocate(0x74);
-					thisCall(kTESQuest_Ctor, Quest);
+					thisCall(kCtor_TESQuest, Quest);
 					thisVirtualCall(kVTBL_TESQuest, 0x94, Quest);
-					thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->quests, Quest);
+					thisCall(kLinkedListNode_NewNode, &(*g_TESDataHandler)->quests, Quest);
 					thisCall(kTESForm_SetEditorID, Quest, QuestID);
 				}
 
@@ -1245,18 +1325,18 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				else
 				{
 					QuestScript = (Script*)FormHeap_Allocate(0x54);
-					thisCall(kScript_Ctor, QuestScript);
+					thisCall(kCtor_Script, QuestScript);
 					thisVirtualCall(kVTBL_Script, 0x94, QuestScript);
-					thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->scripts, QuestScript);
-					thisCall(kDataHandler_SortScripts, (*g_dataHandler));
-					QuestScript->info.type = Script::eType_Quest;
+					thisCall(kLinkedListNode_NewNode, &(*g_TESDataHandler)->scripts, QuestScript);
+					thisCall(kDataHandler_SortScripts, (*g_TESDataHandler));
+					QuestScript->info.type = Script::kScriptType_Quest;
 
 					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tlet fQuestDelayTime := %s\n\nend", ScriptID, Delay);
 					thisCall(kScript_SetText, QuestScript, g_TextBuffer);
 					thisCall(kTESForm_SetEditorID, QuestScript, ScriptID);
 				}
 
-				Quest->scriptable.script = QuestScript;
+				Quest->script = QuestScript;
 
 				thisVirtualCall(kVTBL_TESQuest, 0x70, Quest);
 				thisVirtualCall(kVTBL_Script, 0x70, QuestScript);
@@ -1294,10 +1374,10 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		{
 		case BTN_PARENTCELL:
 		{
-			TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), hWnd, (DLGPROC)TESComboBoxDlgProc, (LPARAM)kFormType_Cell);
+			TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), hWnd, (DLGPROC)TESComboBoxDlgProc, (LPARAM)TESForm::kFormType_Cell);
 			if (Selection)
 			{
-				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s (%08X)", Selection->editorData.editorID.m_data, Selection->refID);
+				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s (%08X)", Selection->editorID.c_str(), Selection->formID);
 				SetWindowText(SelParentCellBtn, (LPCSTR)g_TextBuffer);
 				SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)Selection);
 			}
@@ -1335,9 +1415,9 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 						bool RepeatedStagesFlag = IsDlgButtonChecked(hWnd, CHECK_QUEST_REPEATEDSTAGES);
 
 						TESQuest* Quest = (TESQuest*)FormHeap_Allocate(0x74);
-						thisCall(kTESQuest_Ctor, Quest);
+						thisCall(kCtor_TESQuest, Quest);
 						thisVirtualCall(kVTBL_TESQuest, 0x94, Quest);
-						thisCall(kLinkedListNode_NewNode, &(*g_dataHandler)->quests, Quest);
+						thisCall(kLinkedListNode_NewNode, &(*g_TESDataHandler)->quests, Quest);
 						thisCall(kTESForm_SetEditorID, Quest, BaseEditorID);
 
 						thisCall(kTESQuest_SetStartEnabled, Quest, StartGameEnabledFlag);
@@ -1354,13 +1434,13 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 							bool QuestItem = IsDlgButtonChecked(hWnd, CHECK_OBJECTTOKEN_QUESTITEM);
 
 							TESObjectCLOT* Token = (TESObjectCLOT*)FormHeap_Allocate(0x158);
-							thisCall(kTESObjectCLOT_Ctor, Token);
+							thisCall(kCtor_TESObjectCLOT, Token);
 							thisVirtualCall(kVTBL_TESObjectCLOT, 0x94, Token);
-							thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Token);
+							thisCall(kDataHandler_AddBoundObject, (*g_TESDataHandler)->objects, Token);
 							thisCall(kTESForm_SetEditorID, Token, BaseEditorID);
 
-							ToggleFlag((UInt16*)((UInt32)Token + 0x96), 1 << TESBipedModelForm::kFlags_NotPlayable, true);
-							ToggleFlag(&Token->flags, TESForm::kFormFlags_Essential, QuestItem);
+							ToggleFlag<UInt8>(&Token->bipedModelFlags, TESBipedModelForm::kBipedModelFlags_NotPlayable, true);
+							ToggleFlag<UInt32>(&Token->formFlags, TESForm::kFormFlags_QuestItem, QuestItem);
 
 							FormEnumerationWrapper::ReinitializeFormLists();
 							EndDialog(hWnd, (INT_PTR)Token);
@@ -1386,20 +1466,20 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 								else
 								{
 									TESObjectACTI* Activator = (TESObjectACTI*)FormHeap_Allocate(0x98);
-									thisCall(kTESObjectACTI_Ctor, Activator);
+									thisCall(kCtor_TESObjectACTI, Activator);
 									thisVirtualCall(kVTBL_TESObjectACTI, 0x94, Activator);
-									thisCall(kDataHandler_AddBoundObject, (*g_dataHandler)->boundObjects, Activator);
+									thisCall(kDataHandler_AddBoundObject, (*g_TESDataHandler)->objects, Activator);
 									thisCall(kTESForm_SetEditorID, Activator, BaseEditorID);
 
 									static NiVector3 ZeroVector = { 0.0, 0.0, 0.0 };
 
-									TESObjectCELL* CurrentInteriorCell = TES::GetSingleton()->currentInteriorCell;	// kludgy, but should do the trick
-									TES::GetSingleton()->currentInteriorCell = CS_CAST(ParentCell, TESForm, TESObjectCELL);
+									TESObjectCELL* CurrentInteriorCell = (*g_TES)->currentInteriorCell;	// kludgy, but should do the trick
+									(*g_TES)->currentInteriorCell = CS_CAST(ParentCell, TESForm, TESObjectCELL);
 									TESObjectREFR* Ref = DataHandler_PlaceTESBoundObjectReference(Activator, &ZeroVector, &ZeroVector, 1);
-									TES::GetSingleton()->currentInteriorCell = CurrentInteriorCell;
+									(*g_TES)->currentInteriorCell = CurrentInteriorCell;
 
-									ToggleFlag(&Ref->flags, TESForm::kFormFlags_InitiallyDisabled, InitiallyDisabled);
-									ToggleFlag(&Ref->flags, TESForm::kFormFlags_QuestItem, true);
+									ToggleFlag(&Ref->formFlags, TESForm::kFormFlags_Disabled, InitiallyDisabled);
+									ToggleFlag(&Ref->formFlags, TESForm::kFormFlags_QuestItem, true);
 
 									thisCall(kTESForm_SetEditorID, Ref, RefEditorID);
 
@@ -1424,26 +1504,26 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		Edit_SetText(EditorIDBox, "Base Form EditorID");
 		Edit_SetText(RefIDBox, "Ref EditorID");
 
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Activator, true, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Apparatus, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Armor, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Book, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Clothing, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Container, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Door, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Ingredient, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Light, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Misc, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Furniture, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Weapon, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Ammo, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_NPC, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Creature, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_SoulGem, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Key, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_AlchemyItem, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_SigilStone, false, false);
-		TESDialog_ComboBoxPopulateWithForms(ExistFormList, kFormType_Quest, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Activator, true, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Apparatus, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Armor, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Book, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Clothing, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Container, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Door, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Ingredient, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Light, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Misc, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Furniture, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Weapon, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Ammo, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_NPC, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Creature, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_SoulGem, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Key, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_AlchemyItem, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_SigilStone, false, false);
+		TESDialog_ComboBoxPopulateWithForms(ExistFormList, TESForm::kFormType_Quest, false, false);
 
 		CheckDlgButton(hWnd, RADIO_EXISTFORM, BST_CHECKED);
 		CheckDlgButton(hWnd, RADIO_QUEST, BST_CHECKED);
@@ -1464,7 +1544,7 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			TESForm* Form = Itr->Data;
-			if (GetFormDialogTemplate(Form->typeID) == 1)
+			if (GetFormDialogTemplate(Form->formType) == 1)
 			{
 				g_FormDataInteropPackage->FillFormData(Form);
 				CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormDataInteropPackage);
@@ -1487,8 +1567,6 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	HWND CmdLineBox =  GetDlgItem(hWnd, EDIT_CMDLINE);
 	HWND InitDirBox =  GetDlgItem(hWnd, EDIT_INITDIR);
 
-	static ToolManager::Tool* s_ToolBuffer = NULL;
-
 	switch (uMsg)
 	{
 	case MANAGETOOLS_CLEAREDITFIELD:
@@ -1500,7 +1578,6 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		switch (LOWORD(wParam))
 		{
 		case BTN_CLOSE:
-			SendMessage(hWnd, WM_COMMAND, MAKEWPARAM(LISTBOX_TOOLLIST, LBN_SELCHANGE), (LPARAM)ToolList);
 			g_ToolManager.ClearToolList(false);
 			for (int i = 0, j = SendMessage(ToolList, LB_GETCOUNT, NULL, NULL); i < j; i++)
 			{
@@ -1629,31 +1706,37 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				}
 			}
 			break;
+		case BTN_APPLY:
+			{
+				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
+				if (Index != LB_ERR)
+				{
+					ToolManager::Tool* Tool = (ToolManager::Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
+					char CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0};
+					GetWindowText(CmdLineBox, (LPSTR)CmdLineBuffer, MAX_PATH);
+					GetWindowText(InitDirBox, (LPSTR)InitDirBuffer, MAX_PATH);
+
+					if (strlen(CmdLineBuffer) > 0 && strlen(InitDirBuffer) > 0)
+					{
+						if ((strstr(CmdLineBuffer, "=") || strstr(InitDirBuffer, "=")) ||
+							(strstr(CmdLineBuffer, "|") || strstr(InitDirBuffer, "|")))
+						{
+							MessageBox(hWnd, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+							break;
+						}
+
+						Tool->SetCommandLine(CmdLineBuffer);
+						Tool->SetInitialDir(InitDirBuffer);
+					}
+				}
+
+			}
+			break;
 		case LISTBOX_TOOLLIST:
 			{
 				switch (HIWORD(wParam))
 				{
 				case LBN_SELCHANGE:
-					if (s_ToolBuffer)
-					{
-						char CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0};
-						GetWindowText(CmdLineBox, (LPSTR)CmdLineBuffer, MAX_PATH);
-						GetWindowText(InitDirBox, (LPSTR)InitDirBuffer, MAX_PATH);
-
-						if (strlen(CmdLineBuffer) > 1 && strlen(InitDirBuffer) > 1)
-						{
-							if ((strstr(CmdLineBuffer, "=") || strstr(InitDirBuffer, "=")) ||
-								(strstr(CmdLineBuffer, "|") || strstr(InitDirBuffer, "|")))
-							{
-								MessageBox(hWnd, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.", "CSE", MB_OK|MB_ICONEXCLAMATION);
-								break;
-							}
-
-							s_ToolBuffer->SetCommandLine(CmdLineBuffer);
-							s_ToolBuffer->SetInitialDir(InitDirBuffer);
-						}
-					}
-
 					int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
 					if (Index != LB_ERR)
 					{
@@ -1661,7 +1744,6 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						SetWindowText(TitleBox, (LPSTR)Tool->GetTitle());
 						SetWindowText(CmdLineBox, (LPSTR)Tool->GetCommandLine());
 						SetWindowText(InitDirBox, (LPSTR)Tool->GetInitialDir());
-						s_ToolBuffer = Tool;
 					}
 					else
 						SendMessage(hWnd, MANAGETOOLS_CLEAREDITFIELD, NULL, NULL);
@@ -1673,6 +1755,152 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 	case WM_INITDIALOG:
 		g_ToolManager.PopulateListBoxWithTools(ToolList);
+		break;
+	}
+	return FALSE;
+}
+
+#define CSASGLOBALS_CLEAREDITFIELD		99999
+
+BOOL CALLBACK CSASGlobalsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND GlobaList = GetDlgItem(hWnd, LISTBOX_GLOBALLIST);
+	HWND NameBox =  GetDlgItem(hWnd, EDIT_NAME);
+	HWND ValueBox =  GetDlgItem(hWnd, EDIT_VALUE);
+
+	switch (uMsg)
+	{
+	case CSASGLOBALS_CLEAREDITFIELD:
+		SetWindowText(NameBox, NULL);
+		SetWindowText(ValueBox, NULL);
+		break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case BTN_CLOSE:
+			EndDialog(hWnd, 0);
+			return TRUE;
+		case BTN_ADDGLOBALSTR:
+		case BTN_ADDGLOBALNUM:
+			{
+				char NameBuffer[0x200] = {0}, ValueBuffer[0x200] = {0};
+				GetWindowText(NameBox, (LPSTR)NameBuffer, 0x200);
+				GetWindowText(ValueBox, (LPSTR)ValueBuffer, 0x200);
+
+				if ((strlen(NameBuffer) < 1 || strlen(ValueBuffer) < 1) ||
+					(strstr(NameBuffer, "=") || strstr(ValueBuffer, "=")) ||
+					(strstr(NameBuffer, "|") || strstr(ValueBuffer, "|")))
+				{
+					MessageBox(hWnd, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+					break;
+				}
+
+				CSAutomationScript::ScriptVariable* NewGlobal = NULL;
+				switch (LOWORD(wParam))
+				{
+				case BTN_ADDGLOBALSTR:
+					NewGlobal = GLOBALSCRIPTMANAGER->AddGlobalVariable(NameBuffer, ValueBuffer);
+					break;
+				case BTN_ADDGLOBALNUM:
+					NewGlobal = GLOBALSCRIPTMANAGER->AddGlobalVariable(NameBuffer, atof(ValueBuffer));
+					break;
+				}
+
+				if (NewGlobal == NULL)
+				{
+					MessageBox(hWnd, "Enter a unique variable name", "CSE", MB_OK|MB_ICONEXCLAMATION);
+					break;
+				}
+
+				int Index = SendMessage(GlobaList, LB_INSERTSTRING, -1, (LPARAM)NewGlobal->GetName());
+				SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)NewGlobal);
+			}
+			break;
+		case BTN_REMOVE:
+			{
+				int Index = SendMessage(GlobaList, LB_GETCURSEL, NULL, NULL);
+				if (Index != LB_ERR)
+				{
+					if (SendMessage(GlobaList, LB_GETTEXT, Index, (LPARAM)g_TextBuffer) != LB_ERR)
+					{
+						GLOBALSCRIPTMANAGER->RemoveGlobalVariable(g_TextBuffer, true);
+						SendMessage(GlobaList, LB_DELETESTRING, Index, NULL);
+						SendMessage(hWnd, CSASGLOBALS_CLEAREDITFIELD, NULL, NULL);
+						SendMessage(GlobaList, LB_SETSEL, FALSE, -1);
+					}
+				}
+			}
+			break;
+		case BTN_APPLYCHANGES:
+			{
+				int Index = SendMessage(GlobaList, LB_GETCURSEL, NULL, NULL);
+				if (Index != LB_ERR)
+				{
+					CSAutomationScript::ScriptVariable* Global = (CSAutomationScript::ScriptVariable*)SendMessage(GlobaList, LB_GETITEMDATA, Index, NULL);
+					char ValueBuffer[0x200] = {0};
+					GetWindowText(ValueBox, (LPSTR)ValueBuffer, 0x200);
+
+					if (strlen(ValueBuffer) > 0)
+					{
+						if (strstr(ValueBuffer, "=") || strstr(ValueBuffer, "|"))
+						{
+							MessageBox(hWnd, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.", "CSE", MB_OK|MB_ICONEXCLAMATION);
+							break;
+						}
+
+						switch (Global->GetDataType())
+						{
+						case CSAutomationScript::CSASDataElement::kParamType_Numeric:
+						case CSAutomationScript::CSASDataElement::kParamType_Reference:
+							Global->SetValue(mup::Value(atof(ValueBuffer)));
+							break;
+						case CSAutomationScript::CSASDataElement::kParamType_String:
+							Global->SetValue(mup::Value(ValueBuffer));
+							break;
+						default:
+							assert(0);
+							break;
+						}
+					}
+				}
+
+			}
+			break;
+		case LISTBOX_GLOBALLIST:
+			{
+				switch (HIWORD(wParam))
+				{
+				case LBN_SELCHANGE:
+					int Index = SendMessage(GlobaList, LB_GETCURSEL, NULL, NULL);
+					if (Index != LB_ERR)
+					{
+						CSAutomationScript::ScriptVariable* Global = (CSAutomationScript::ScriptVariable*)SendMessage(GlobaList, LB_GETITEMDATA, Index, NULL);
+						SetWindowText(NameBox, (LPSTR)Global->GetName());
+
+						switch (Global->GetDataType())
+						{
+						case CSAutomationScript::CSASDataElement::kParamType_Numeric:
+						case CSAutomationScript::CSASDataElement::kParamType_Reference:
+							SetWindowText(ValueBox, (LPSTR)PrintToBuffer("%0.6f", Global->GetValue().GetFloat() * 1.0));
+							break;
+						case CSAutomationScript::CSASDataElement::kParamType_String:
+							SetWindowText(ValueBox, (LPSTR)Global->GetValue().GetString().c_str());
+							break;
+						default:
+							assert(0);
+							break;
+						}
+					}
+					else
+						SendMessage(hWnd, CSASGLOBALS_CLEAREDITFIELD, NULL, NULL);
+					break;
+				}
+			}
+			break;
+		}
+		break;
+	case WM_INITDIALOG:
+		GLOBALSCRIPTMANAGER->PopulateListBoxWithGlobalVariables(GlobaList);
 		break;
 	}
 	return FALSE;

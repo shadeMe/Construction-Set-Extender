@@ -1,6 +1,6 @@
+#include "ExtenderInternals.h"
 #include "CompilerErrorDetours.h"
 #include "[Common]/CLIWrapper.h"
-#include "ExtenderInternals.h"
 #include "..\ScriptEditorAllocator.h"
 
 #pragma warning (disable : 4005)

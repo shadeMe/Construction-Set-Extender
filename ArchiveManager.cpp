@@ -1,3 +1,4 @@
+#include "ExtenderInternals.h"
 #include "ArchiveManager.h"
 
 void InitializeArchives()

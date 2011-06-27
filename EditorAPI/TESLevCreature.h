@@ -5,22 +5,19 @@
 #include "TESObject.h"
 
 //	EditorAPI: TESLevCreature class.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /* 
 	...
 */
 
-namespace EditorAPI
+// 78
+class TESLevCreature : public TESBoundObject, public TESLeveledList, public TESScriptableForm
 {
-	// 78
-	class TESLevCreature : public TESBoundObject, public TESLeveledList, public TESScriptableForm
-	{
-	public:
-		// members
-		//     /*00*/ TESBoundObject
-		//     /*58*/ TESLeveledList
-		//	   /*68*/ TESScriptableForm
-		/*74*/ TESActorBase*				templateForm;
-	};
-}
+public:
+	// members
+	//     /*00*/ TESBoundObject
+	//     /*58*/ TESLeveledList
+	//	   /*68*/ TESScriptableForm
+	/*74*/ TESActorBase*				templateForm;
+};

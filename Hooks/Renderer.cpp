@@ -1,14 +1,17 @@
 #include "Renderer.h"
 #include "..\RenderSelectionGroupManager.h"
-#include "..\RenderTimeManager.h"
+#include "..\ElapsedTimeCounter.h"
 #include "..\RenderWindowTextPainter.h"
 #include "..\CSDialogs.h"
+
+#pragma warning(disable: 4410)		// illegal operand size; fild instruction
 
 namespace Hooks
 {
 	#define PI					3.151592653589793
 
 	TESForm*					g_TESObjectREFRUpdate3DBuffer = NULL;
+	bool						g_RenderWindowAltMovementSettings = false;
 
 	_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 	_DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
@@ -24,8 +27,20 @@ namespace Hooks
 	_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 	_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 	_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
-	_DefineHookHdlrWithBuffer(TESObjectREFRUpdate3D, 0x00549AC5)(5, 0x56, 0x8B, 0x74, 0x24, 0x34), 5);
+	_DefineHookHdlrWithBuffer(TESObjectREFRUpdate3D, 0x00549AC5, 5, 0x56, 0x8B, 0x74, 0x24, 0x34);
 	_DefineHookHdlr(ForceShowTESObjectREFRDialog, 0x00429EE3);
+	_DefineHookHdlr(TESRenderControlAltSnapGrid, 0x00425A34);
+	_DefineHookHdlr(TESRenderControlAltRefMovementSpeedA, 0x00425737);
+	_DefineHookHdlr(TESRenderControlAltRefMovementSpeedB, 0x0042BE80);
+	_DefineHookHdlr(TESRenderControlAltRefMovementSpeedC, 0x0042D0AD);
+	_DefineHookHdlr(TESRenderControlAltRefRotationSpeed, 0x00425DBB);
+	_DefineHookHdlr(TESRenderControlAltRefSnapAngle, 0x00425DC7);
+	_DefineHookHdlr(TESRenderControlAltCamRotationSpeed, 0x0042CCAB);
+	_DefineHookHdlr(TESRenderControlAltCamZoomSpeedA, 0x0042CCE0);
+	_DefineHookHdlr(TESRenderControlAltCamZoomSpeedB, 0x0042CDAF);
+	_DefineHookHdlr(TESRenderControlAltCamPanSpeedA, 0x0042CD26);
+	_DefineHookHdlr(TESRenderControlAltCamPanSpeedB, 0x0042CD71);
+	_DefineHookHdlr(TESRenderControlRedrawGrid, 0x004283F7);
 
 	void PatchRendererHooks(void)
 	{
@@ -44,6 +59,18 @@ namespace Hooks
 		_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
 		_MemHdlr(TESRenderControlPerformFallVoid).WriteJump();
 		_MemHdlr(ForceShowTESObjectREFRDialog).WriteJump();
+		_MemHdlr(TESRenderControlAltSnapGrid).WriteJump();
+		_MemHdlr(TESRenderControlAltRefMovementSpeedA).WriteJump();
+		_MemHdlr(TESRenderControlAltRefMovementSpeedB).WriteJump();
+		_MemHdlr(TESRenderControlAltRefMovementSpeedC).WriteJump();
+		_MemHdlr(TESRenderControlAltRefRotationSpeed).WriteJump();
+		_MemHdlr(TESRenderControlAltRefSnapAngle).WriteJump();
+		_MemHdlr(TESRenderControlAltCamRotationSpeed).WriteJump();
+		_MemHdlr(TESRenderControlAltCamZoomSpeedA).WriteJump();
+		_MemHdlr(TESRenderControlAltCamZoomSpeedB).WriteJump();
+		_MemHdlr(TESRenderControlAltCamPanSpeedA).WriteJump();
+		_MemHdlr(TESRenderControlAltCamPanSpeedB).WriteJump();
+		_MemHdlr(TESRenderControlRedrawGrid).WriteJump();
 	}
 
 	#define _hhName		DoorMarkerProperties
@@ -78,18 +105,18 @@ namespace Hooks
 		if ((Node->m_flags & kNiNodeSpecialFlags_DontUncull))
 			return;
 
-		ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
+		ToggleFlag<UInt16>(&Node->m_flags, NiNode::kFlag_AppCulled, false);
 
-		BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Object->baseExtraList, kExtraData_EnableStateParent);
+		BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Object->extraData, BSExtraData::kExtra_EnableStateParent);
 		if (xData)
 		{
 			ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-			if ((xParent->parent->flags & kTESObjectREFRSpecialFlags_Children3DInvisible))
-				ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+			if ((xParent->parent->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible))
+				ToggleFlag<UInt16>(&Node->m_flags, NiNode::kFlag_AppCulled, true);
 		}
 
-		if ((Object->flags & kTESObjectREFRSpecialFlags_3DInvisible))
-			ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+		if ((Object->formFlags & kTESObjectREFRSpecialFlags_3DInvisible))
+			ToggleFlag<UInt16>(&Node->m_flags, NiNode::kFlag_AppCulled, true);
 	}
 
 	#define _hhName		TESObjectREFRGet3DData
@@ -127,7 +154,7 @@ namespace Hooks
 
 	void __stdcall NiWindowRenderDrawHook(void)
 	{
-		g_RenderTimeManager.Update();
+		g_RenderWindowTimeManager.Update();
 		RENDERTEXT->Render();
 	}
 
@@ -191,28 +218,28 @@ namespace Hooks
 				char Buffer[0x50] = {0};
 				sprintf_s(Buffer, 0x50, "");
 
-				BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Selection->baseExtraList, kExtraData_EnableStateParent);
+				BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Selection->extraData, BSExtraData::kExtra_EnableStateParent);
 				if (xData)
 				{
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 					sprintf_s(Buffer, 0x50, "Parent: %s [%08X]  Opposite State: %d",
-																	((xParent->parent->editorData.editorID.m_dataLen)?(xParent->parent->editorData.editorID.m_data):("")),
-																	xParent->parent->refID, (UInt8)xParent->oppositeState);
+																	((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
+																	xParent->parent->formID, (UInt8)xParent->oppositeState);
 				}
 				PrintToBuffer("%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
-								((Selection->editorData.editorID.m_dataLen)?(Selection->editorData.editorID.m_data):("")), Selection->refID,
-								((Selection->baseForm->editorData.editorID.m_dataLen)?(Selection->baseForm->editorData.editorID.m_data):("")), Selection->baseForm->refID,
-								Selection->posX, Selection->posY, Selection->posZ, 
-								Selection->rotX * 180 / PI, 
-								Selection->rotY * 180 / PI, 
-								Selection->rotZ * 180 / PI, 
+								((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
+								((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
+								Selection->position.x, Selection->position.y, Selection->position.z, 
+								Selection->rotation.x * 180 / PI, 
+								Selection->rotation.x * 180 / PI, 
+								Selection->rotation.x * 180 / PI, 
 								Selection->scale,
-								((Selection->flags & ::TESForm::kFormFlags_Essential)?("P"):("-")),
-								((Selection->flags & ::TESForm::kFormFlags_InitiallyDisabled)?("D"):("-")),
-								((Selection->flags & ::TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
-								((Selection->flags & kTESObjectREFRSpecialFlags_3DInvisible)?("I"):("-")),
-								((Selection->flags & kTESObjectREFRSpecialFlags_Children3DInvisible)?("CI"):("-")),
-								((Selection->flags & kTESObjectREFRSpecialFlags_Frozen)?("F"):("-")),
+								((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
+								((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
+								((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
+								((Selection->formFlags & kTESObjectREFRSpecialFlags_3DInvisible)?("I"):("-")),
+								((Selection->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible)?("CI"):("-")),
+								((Selection->formFlags & kTESObjectREFRSpecialFlags_Frozen)?("F"):("-")),
 								Buffer);
 
 				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
@@ -256,7 +283,7 @@ namespace Hooks
 		_hhSetVar(Jump, 0x0042CE7D);
 		__asm
 		{
-			mov		eax, [g_Flag_RenderWindowUpdateViewPort]
+			mov		eax, [g_RenderWindowUpdateViewPort]
 			mov		eax, [eax]
 			cmp		al, 0
 			jz		DONTUPDATE
@@ -281,7 +308,7 @@ namespace Hooks
 	{
 		bool Result = false;
 
-		::TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+		TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
 		if (CurrentCell == NULL)
 			CurrentCell = (*g_TES)->currentExteriorCell;
 
@@ -327,14 +354,14 @@ namespace Hooks
 
 	void __stdcall TESRenderControlProcessFrozenRefs(void)
 	{
-		std::vector<::TESForm*> FrozenRefs;
+		std::vector<TESForm*> FrozenRefs;
 		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
 		{
-			if ((Itr->Data->flags & kTESObjectREFRSpecialFlags_Frozen))
+			if ((Itr->Data->formFlags & kTESObjectREFRSpecialFlags_Frozen))
 				FrozenRefs.push_back(Itr->Data);
 		}
 
-		for (std::vector<::TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
+		for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
 			thisCall(kTESRenderSelection_RemoveFormFromSelection, *g_TESRenderSelectionPrimary, *Itr, 1);
 	}
 
@@ -404,7 +431,7 @@ namespace Hooks
 
 	void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 	{
-		ToggleFlag(&Node->m_flags, kNiNodeSpecialFlags_DontUncull, State);
+		ToggleFlag<UInt16>(&Node->m_flags, kNiNodeSpecialFlags_DontUncull, State);
 	}
 
 	#define _hhName		TESObjectREFRSetupDialog
@@ -500,4 +527,217 @@ namespace Hooks
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
+
+	static float s_MovementSettingBuffer = 0.0;
+
+	void __stdcall InitializeCurrentRenderWindowMovementSetting(const char* SettingName)
+	{
+		if (g_RenderWindowAltMovementSettings)
+			s_MovementSettingBuffer = g_INIManager->GetINIFlt((std::string("Alt" + std::string(SettingName)).c_str()));
+		else
+		{
+			if (!_stricmp(SettingName, "RefMovementSpeed"))
+				s_MovementSettingBuffer = *g_RenderWindowRefMovementSpeed;
+			else if (!_stricmp(SettingName, "RefSnapGrid"))
+				s_MovementSettingBuffer = *g_RenderWindowSnapGridDistance;
+			else if (!_stricmp(SettingName, "RefRotationSpeed"))
+				s_MovementSettingBuffer = *g_RenderWindowRefRotationSpeed;
+			else if (!_stricmp(SettingName, "RefSnapAngle"))
+				s_MovementSettingBuffer = *g_RenderWindowSnapAngle;
+			else if (!_stricmp(SettingName, "CamRotationSpeed"))
+				s_MovementSettingBuffer = *g_RenderWindowCameraRotationSpeed;
+			else if (!_stricmp(SettingName, "CamZoomSpeed"))
+				s_MovementSettingBuffer = *g_RenderWindowCameraZoomSpeed;
+			else if (!_stricmp(SettingName, "CamPanSpeed"))
+				s_MovementSettingBuffer = *g_RenderWindowCameraPanSpeed;
+			else
+				s_MovementSettingBuffer = 0.0;
+		}
+	}
+
+	#define _hhName		TESRenderControlAltSnapGrid
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00425A3E);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("RefSnapGrid");
+		__asm	popad
+		__asm
+		{
+			fild	s_MovementSettingBuffer
+			fstp	dword ptr [esp + 0x20]
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+	
+	#define _hhName		TESRenderControlAltRefMovementSpeedA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00425741);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("RefMovementSpeed");
+		__asm	popad
+		__asm
+		{
+			fmul	s_MovementSettingBuffer
+			lea		ecx, [esp + 0x28]
+			
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltRefMovementSpeedB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042BE85);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("RefMovementSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+			
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltRefMovementSpeedC
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042D0B2);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("RefMovementSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+			
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltRefRotationSpeed
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00425DC5);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("RefRotationSpeed");
+		__asm	popad
+		__asm
+		{
+			fmul	s_MovementSettingBuffer
+			fstp	dword ptr [esp + 0x14]
+						
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltRefSnapAngle
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00425DCD);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("RefSnapAngle");
+		__asm	popad
+		__asm
+		{
+			fild	s_MovementSettingBuffer
+			
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltCamRotationSpeed
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042CCB0);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("CamRotationSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+						
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltCamZoomSpeedA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042CCE5);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("CamZoomSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+						
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltCamZoomSpeedB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042CDB4);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("CamZoomSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+						
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltCamPanSpeedA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042CD2B);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("CamPanSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+						
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlAltCamPanSpeedB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042CD76);
+		__asm	pushad
+		InitializeCurrentRenderWindowMovementSetting("CamPanSpeed");
+		__asm	popad
+		__asm
+		{
+			lea		ecx, s_MovementSettingBuffer
+						
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESRenderControlRedrawGrid
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042EF88);
+
+		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+
+		SetActiveWindow(*g_HWND_CSParent);
+		SetActiveWindow(*g_HWND_RenderWindow);
+		__asm
+		{
+			mov		eax, 1
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+	
 }

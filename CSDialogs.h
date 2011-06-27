@@ -3,6 +3,55 @@
 
 extern const char*					g_FormTypeIdentifier[];
 
+// 18
+struct TESRenderSelection
+{
+	struct SelectedObjectsEntry
+	{
+		TESForm*				Data;
+		SelectedObjectsEntry*	Prev;
+		SelectedObjectsEntry*	Next;
+	};
+
+	SelectedObjectsEntry*	RenderSelection;	// 00
+	UInt32					SelectionCount;		// 04
+	float					x, y, z;			// 08 sum of position vectors of selected refr's
+	float					unk14;				// 14 init to 0.0
+};
+
+// 8
+struct TESRenderUndoStack
+{
+	enum
+	{
+		kUndoOperation_unk01 = 1,	// used to record ref creation?
+		kUndoOperation_unk02 = 2,	// used to record ref deletion?
+		kUndoOperation_unk03 = 3,	// used to record ref 3D data
+		kUndoOperation_unk04 = 4,	// 4-6 used to record landscape changes
+		kUndoOperation_unk05 = 5,	
+		kUndoOperation_unk06 = 6	
+	};
+
+	// 50
+	struct Entry
+	{
+		UInt32				selIndex;						// 00 index of the ref in its parent selection
+		UInt32				selCount;						// 04 number of refs in the selection this ref was a part of
+		TESObjectREFR*		refr;							// 08
+		UInt32				operationType;					// 0C
+		float				rotX, rotY, rotZ;				// 10
+		float				posX, posY, posZ;				// 1C
+		float				scale;							// 28
+		UInt32				unk2C[(0x48 - 0x2C) >> 2];		// 2C pathgrid/landscape change related
+		UInt32				unk48;							// 48
+		Entry*				next;							// 4C
+	};
+
+	Entry*					marker;							// 00 initialized in c'tor, used as a buffer?
+	Entry*					first;							// 04
+};
+
+
 // 0C
 class FormEditParam
 {
@@ -128,8 +177,6 @@ void						ShowFormEditDialog(UInt32 FormID, UInt8 FormType);
 void						ResetRenderWindow();
 void						InstantitateCustomScriptEditor(const char* ScriptEditorID);
 void						InstantitateCustomScriptEditor(UInt32 ScriptFormID);
-
-void						TESObjectREFR_Update3D(TESObjectREFR* Ref);
 
 class CSStartupManager
 {

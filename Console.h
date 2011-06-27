@@ -60,3 +60,7 @@ public:
 #define CONSOLECMDBOX_CLEARCOMMANDSTACK			9991
 #define CONSOLE_UPDATETIMER						0x9999
 #define CONSOLE_UPDATEPERIOD					g_INIManager->GetINIInt("ConsoleUpdatePeriod")
+
+void DebugPrint(const char* fmt, ...);
+void DebugPrint(UInt8 source, const char* fmt, ...);
+void LogWinAPIErrorMessage(DWORD ErrorID);

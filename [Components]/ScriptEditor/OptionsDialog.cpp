@@ -929,6 +929,8 @@ OptionsDialog::OptionsDialog()
 	OptionsBox->Name = L"OptionsDialog";
 	OptionsBox->StartPosition = FormStartPosition::CenterScreen;
 	OptionsBox->Text = L"Preferences";
+	OptionsBox->MaximizeBox = false;
+	OptionsBox->MinimizeBox = false;
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->EndInit();
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TabSize))->EndInit();
 	TabContainer->ResumeLayout(false);

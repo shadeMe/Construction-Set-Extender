@@ -9,7 +9,7 @@ void InitializeDefaultGMSTMap()
 	while (Unk01)
 	{
 		const char*	 Name = NULL;
-		SettingData* Data;
+		Setting* Data;
 
 		thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
 		if (Name)
@@ -17,9 +17,9 @@ void InitializeDefaultGMSTMap()
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
 
 			GameSetting* TempSetting = (GameSetting*)FormHeap_Allocate(0x2C);
-			thisCall(kGameSetting_Ctor, TempSetting);
+			thisCall(kCtor_GameSetting, TempSetting);
 			thisCall(kTESForm_SetTemporary, TempSetting);
-			TempSetting->SetSettingID(Name);
+			TempSetting->name = Name;
 			thisVirtualCall(*(UInt32*)TempSetting, 0xB8, TempSetting, SettingForm);
 
 			g_DefaultGMSTMap.insert(std::make_pair<const char*, GameSetting*>(Name, TempSetting));
@@ -35,7 +35,7 @@ UInt32 CountGMSTForms()
 	while (Unk01)
 	{
 		const char*	 Name = NULL;
-		SettingData* Data;
+		Setting* Data;
 
 		thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
 		if (Name)
@@ -52,7 +52,7 @@ void InitializeHandShakeGMSTData(GMSTData* HandShakeData)
 	while (Unk01)
 	{
 		const char*	 Name = NULL;
-		SettingData* Data;
+		Setting* Data;
 
 		thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
 		if (Name)

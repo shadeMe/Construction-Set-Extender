@@ -1,9 +1,5 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <algorithm>
-
 namespace CSAutomationScript
 {
 	class ScriptParser

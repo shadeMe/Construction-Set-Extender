@@ -30,10 +30,12 @@ namespace Hooks
 	_DefineHookHdlr(FormIDListViewDuplicateSelection, 0x004492AE);
 	_DefineHookHdlr(TESRaceCopyHairEyeDataInit, 0x004E9735);
 	_DefineHookHdlr(TESRaceCopyHairEyeDataMessageHandler, 0x004E8FE1);
-	_DefineNopHdlr(TESDialogSubwindowEnumChildCallback, 0x00404E69, 3);
 	_DefineHookHdlr(TESDialogGetIsWindowDragDropRecipient, 0x004433FF);
 	_DefineHookHdlr(AboutDialog, 0x00441CC5);
 	_DefineNopHdlr(TESQuestStageResultScript, 0x004E234D, 2);
+	_DefineHookHdlr(TESNPCUpdatePreviewControl, 0x0048AB73);
+	_DefineHookHdlr(TESParametersFillAndInitSelectionComboBoxOwners, 0x0045942F);
+	_DefineHookHdlr(SearchReplaceDialog, 0x004448FD);
 
 	void PatchDialogHooks(void)
 	{
@@ -65,6 +67,9 @@ namespace Hooks
 		_MemHdlr(TESDialogGetIsWindowDragDropRecipient).WriteJump();
 		_MemHdlr(AboutDialog).WriteJump();
 		_MemHdlr(TESQuestStageResultScript).WriteNop();
+		_MemHdlr(TESNPCUpdatePreviewControl).WriteJump();
+		_MemHdlr(TESParametersFillAndInitSelectionComboBoxOwners).WriteJump();
+		_MemHdlr(SearchReplaceDialog).WriteJump();
 	}
 
 	void __stdcall DoFindTextInitHook(HWND FindTextDialog)
@@ -322,7 +327,7 @@ namespace Hooks
 
 	void __stdcall AppendShadeMeRefToComboBox(HWND hWnd)
 	{
-		::TESForm* Ref = TESForm_LookupByEditorID("TheShadeMeRef");
+		TESForm* Ref = TESForm_LookupByEditorID("TheShadeMeRef");
 		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "'shadeMe' 'TheShadeMeRef'");
 		TESDialog_AddComboBoxItem(hWnd, g_TextBuffer, (LPARAM)Ref, 1);
 	}
@@ -343,7 +348,7 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall InsertFormListPopupMenuItems(HMENU Menu, ::TESForm* SelectedForm)
+	void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 	{
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SETFORMID, "Set FormID");
@@ -352,7 +357,7 @@ namespace Hooks
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SHOWOVERRIDES, "Show Override List");
 	
-		if (GetFormDialogTemplate(SelectedForm->typeID) == 1 && SelectedForm->IsReference() == 0)
+		if (GetFormDialogTemplate(SelectedForm->formType) == 1 && SelectedForm->IsReference() == 0)
 		{
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
 		}
@@ -366,7 +371,7 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, ::TESForm* SelectedObject)
+	void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
 	{
 		switch (MenuIdentifier)
 		{
@@ -525,8 +530,8 @@ namespace Hooks
 	{
 		if (IsWindowEnabled(GetDlgItem(Parent, 1)))
 		{
-			::TESForm* LocalCopy = TESDialog_GetDialogExtraLocalCopy(Parent);
-			::TESForm* WorkingCopy = TESDialog_GetDialogExtraParam(Parent);
+			TESForm* LocalCopy = TESDialog_GetDialogExtraLocalCopy(Parent);
+			TESForm* WorkingCopy = TESDialog_GetDialogExtraParam(Parent);
 
 			if (WorkingCopy)
 			{
@@ -699,7 +704,7 @@ namespace Hooks
 		{
 		case RACE_COPYEYES:
 		case RACE_COPYHAIR:
-			::TESForm* Selection = (::TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), Dialog, (DLGPROC)TESComboBoxDlgProc, (LPARAM)kFormType_Race);
+			TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), Dialog, (DLGPROC)TESComboBoxDlgProc, (LPARAM)TESForm::kFormType_Race);
 			if (Selection)
 			{
 				TESRace* SelectedRace = CS_CAST(Selection, TESForm, TESRace);
@@ -709,8 +714,8 @@ namespace Hooks
 					int Count = 0;
 					if (Identifier == RACE_COPYEYES)
 					{
-						GenericNode<TESEyes>* Source = (GenericNode<TESEyes>*)&SelectedRace->eyes;
-						tList<TESEyes>* Destination = &WorkingRace->eyes;
+						GenericNode<TESEyes>* Source = (GenericNode<TESEyes>*)&SelectedRace->eyeList;
+						tList<TESEyes>* Destination = &WorkingRace->eyeList;
 
 						for (;Source && Source->data; Source = Source->next)
 						{
@@ -721,13 +726,13 @@ namespace Hooks
 							}
 						}
 
-						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
+						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorID.c_str());
 						MessageBox(Dialog, g_TextBuffer, "CSE", MB_OK);
 					}
 					else if (Identifier == RACE_COPYHAIR)
 					{
-						GenericNode<TESHair>* Source = (GenericNode<TESHair>*)&SelectedRace->hairs;
-						tList<TESHair>* Destination = &WorkingRace->hairs;
+						GenericNode<TESHair>* Source = (GenericNode<TESHair>*)&SelectedRace->hairList;
+						tList<TESHair>* Destination = &WorkingRace->hairList;
 
 						for (;Source && Source->data; Source = Source->next)
 						{
@@ -738,7 +743,7 @@ namespace Hooks
 							}
 						}
 
-						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorData.editorID.m_data);
+						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorID.c_str());
 						MessageBox(Dialog, g_TextBuffer, "CSE", MB_OK);
 					}
 				}
@@ -757,7 +762,7 @@ namespace Hooks
 		__asm
 		{
 			movzx	eax, di
-			add		eax, 0FFFFF78Ch
+			add		eax, 0x0FFFFF78C
 			cmp		eax, 0x24
 			ja		DEFAULT
 
@@ -861,6 +866,86 @@ namespace Hooks
 
 			call	ShowWindowAddress
 			call	g_WindowHandleCallAddr
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESNPCUpdatePreviewControlHook(TESObjectREFR* ExistingTempRef, TESForm* BaseForm)
+	{
+		if (ExistingTempRef)
+		{
+			thisVirtualCall(GetVTBL(ExistingTempRef), 0x34, ExistingTempRef, 1);
+		}
+
+		TESObjectREFR* NewRef = (TESObjectREFR*)FormHeap_Allocate(0x60);
+		thisCall(kCtor_TESObjectREFR, NewRef);
+		thisCall(kTESForm_SetTemporary, NewRef);
+		thisCall(kTESObjectREFR_SetBaseForm, NewRef, BaseForm);
+		*g_TESPreviewControlRef = NewRef;
+	}
+
+	#define _hhName		TESNPCUpdatePreviewControl
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0048ABC3);
+		__asm
+		{
+			mov		esi, [edi + 0x10]
+			pushad
+			push	ebx
+			push	esi
+			call	DoTESNPCUpdatePreviewControlHook
+			popad
+
+			mov		esi, [g_TESPreviewControlRef]
+			mov		esi, [esi]
+			mov		[edi + 0x10], esi
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESParametersFillAndInitSelectionComboBoxOwners
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00459437);
+		__asm
+		{
+			call	TESDialog_ComboBoxPopulateWithForms
+			add		esp, 0x10
+
+			movzx	eax, word ptr [ebp + 0]				// get parameterID
+			lea		eax, [eax + eax * 4]
+			mov		eax, 0x9F3624[eax * 8]
+			mov		eax, [eax + edi + 4]
+			
+			cmp		eax, 0x24							// check if parameterID == kParamType_Owner
+			jz		FIX
+
+			jmp		[_hhGetVar(Retn)]
+		FIX:
+			push	0
+			push	0
+			push	0x6
+			push	esi
+			call	TESDialog_ComboBoxPopulateWithForms
+			add		esp, 0x10
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		SearchReplaceDialog
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0044490A);
+		__asm
+		{
+			pushad
+			call	MessageBoxAddress
+			popad
+
+			call	[g_WindowHandleCallAddr]
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

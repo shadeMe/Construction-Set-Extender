@@ -48,7 +48,7 @@ namespace CSAutomationScript
 				Insert(SourceElement);
 			}
 			else
-				ASSERT(0);
+				assert(0);
 		}
 	}
 

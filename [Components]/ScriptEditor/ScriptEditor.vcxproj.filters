@@ -16,6 +16,9 @@
     <Filter Include="Components">
       <UniqueIdentifier>{c2b18af5-444f-48b9-8009-bf96da40fbec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{0bc09888-f771-470d-a4a7-6d4055720405}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
@@ -111,6 +114,9 @@
     <ClInclude Include="ScriptEditorManager.h" />
     <ClInclude Include="AvalonEditComponents.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\CustomInputBox.h">
+      <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

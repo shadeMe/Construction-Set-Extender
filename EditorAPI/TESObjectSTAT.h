@@ -5,22 +5,19 @@
 #include "TESObject.h"
 
 //	EditorAPI: TESObjectSTAT class.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /* 
 	...
 */
 
-namespace EditorAPI
+// 7C
+class TESObjectSTAT : public TESBoundObject, public TESModel
 {
-	// 7C
-	class TESObjectSTAT : public TESBoundObject, public TESModel
-	{
-	public:
-		// members
-		//     /*00*/ TESBoundObject
-		//     /*58*/ TESModel
-		
-		// no additional members
-	};
-}
+public:
+	// members
+	//     /*00*/ TESBoundObject
+	//     /*58*/ TESModel
+	
+	// no additional members
+};

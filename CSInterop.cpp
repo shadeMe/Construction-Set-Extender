@@ -1,8 +1,7 @@
-#include "CSInterop.h"
-#include "[Common]\CSInteropData.h"
 #include "ExtenderInternals.h"
-#include "common/IFileStream.h"
+#include "CSInterop.h"
 #include "resource.h"
+#include "[Common]\CSInteropData.h"
 
 #define INJECT_TIMEOUT			5000
 
@@ -162,13 +161,9 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 {
 	if (Loaded)	return true;
 
-	DebugPrint("Initializing CSInterop Manager");
-	CONSOLE->Indent();
-
 	char* GUIDStr = 0;
 	if (!CreateNamedPipeServer(&GUIDStr))
 	{
-		CONSOLE->Exdent();
 		return false;
 	}
 
@@ -188,7 +183,6 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	{
 		DebugPrint("Couldn't find DLL (%s)!", this->DLLPath.c_str());
 		RpcStringFree((RPC_CSTR*)&GUIDStr);
-		CONSOLE->Exdent();
 		return false;
 	}
 
@@ -210,7 +204,6 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	{
 		// in theory we could figure out how to UAC-prompt for this process and then run CreateProcess again, but I have no way to test code for that
 		DebugPrint("Vista has decided that launching the CS 1.0 requires UAC privilege elevation. There is no good reason for this to happen, but to fix it, right-click on obse_loader.exe, go to Properties, pick the Compatibility tab, then turn on \"Run this program as an administrator\".");
-		CONSOLE->Exdent();
 		return Loaded;
 	}
 
@@ -218,7 +211,6 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	{
 		DebugPrint("Couldn't load CS 1.0!");
 		LogWinAPIErrorMessage(GetLastError());
-		CONSOLE->Exdent();
 		return Loaded;
 	}
 
@@ -239,7 +231,6 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	CloseHandle(CS10ProcInfo.hProcess);
 	CloseHandle(CS10ProcInfo.hThread);
 
-	CONSOLE->Exdent();
 	return Loaded;
 }
 

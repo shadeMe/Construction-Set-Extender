@@ -1,22 +1,20 @@
 #pragma once
 #include "ExtenderInternals.h"
 
-class RenderTimeManager
+class ElapsedTimeCounter
 {
 	LARGE_INTEGER				ReferenceFrame;
 	LARGE_INTEGER				FrameBuffer;
 	LARGE_INTEGER				TimerFrequency;
-	long double					TimePassed;					// in seconds
+	long double					TimePassed;					// in ms
 public:
 
-	RenderTimeManager()
+	ElapsedTimeCounter()
 	{
 		QueryPerformanceCounter(&ReferenceFrame);
 		QueryPerformanceFrequency(&TimerFrequency);
 	}
 
 	void								Update(void);
-	long double							GetTimePassedSinceLastFrame(void) { return TimePassed; }
+	long double							GetTimePassedSinceLastUpdate(void) const { return TimePassed; }
 };
-
-extern RenderTimeManager		g_RenderTimeManager;

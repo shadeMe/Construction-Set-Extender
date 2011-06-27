@@ -21,6 +21,8 @@
 #define DLG_MANAGETOOLS                 122
 #define IDB_BITMAP1                     123
 #define BITMAP_SPLASH                   123
+#define IDR_MENU7                       124
+#define DLG_CSASGLOBALS                 125
 #define DLG_SCRIPTEDIT                  188
 #define EDIT_TEXTLINE                   1002
 #define BTN_OK                          1003
@@ -38,11 +40,13 @@
 #define EDIT_EDITORID                   1008
 #define EDIT_PATH                       1008
 #define BTN_MOVEDOWN                    1008
+#define EDIT_NAME                       1008
 #define STC_TYPE                        1009
 #define IDC_EDIT2                       1009
 #define EDIT_DELAY                      1009
 #define EDIT_REFEDITORID                1009
 #define EDIT_TITLE                      1009
+#define EDIT_VALUE                      1009
 #define IDC_RICHEDIT21                  1010
 #define EDIT_QUEST                      1010
 #define EDIT_SCRIPTID                   1010
@@ -62,12 +66,19 @@
 #define RADIO_OBJECT                    1021
 #define IDC_BUTTON1                     1021
 #define BTN_STARTMOUSEHOOK              1021
+#define BTN_ADDGLOBALNUM                1021
+#define BTN_APPLY                       1021
 #define CHECK_OBJECTTOKEN_QUESTITEM     1022
+#define BTN_ADDGLOBALSTR                1022
 #define RADIO_OBJECTTOKEN               1023
 #define LISTBOX_TOOLLIST                1023
+#define BTN_REMOVE                      1023
 #define RADIO_OBJECTREFERENCE           1024
 #define BTN_CLOSE                       1024
 #define CHECK_OBJECTREFERENCE_DISABLED  1025
+#define LISTBOX_GLOBALLIST              1025
+#define BTN_REMOVE2                     1027
+#define BTN_APPLYCHANGES                1027
 #define EDIT_SCTX                       1228
 #define DLG_ASSETSEL                    9800
 #define BTN_FILEB                       9801
@@ -135,14 +146,16 @@
 #define ID_SELECTIONVISIBILITY_SHOWALL  40030
 #define ID_CONSOLESETTINGS_OPENCHANGELOG 40031
 #define CONSOLEMENU_OPENCHANGELOG       40032
+#define ID_CSAS_GLOBALDATA              40033
+#define ID_CSAS_RELOADGLOBALSCRIPTS     40034
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        124
-#define _APS_NEXT_COMMAND_VALUE         40033
-#define _APS_NEXT_CONTROL_VALUE         1025
+#define _APS_NEXT_RESOURCE_VALUE        126
+#define _APS_NEXT_COMMAND_VALUE         40035
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

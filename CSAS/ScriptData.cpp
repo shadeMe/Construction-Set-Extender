@@ -29,7 +29,7 @@ namespace CSAutomationScript
 		}
 	}
 
-	ExecutableCode* CodeBlock::GenerateGenericCodeFromContent(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine)
+	ExecutableCode* CodeBlock::GenerateGenericCodeFromContent(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine, mup::ParserX* PrimaryParser)
 	{
 		UInt32 LineOutBuffer = 0;
 		std::string& CurrentLine = BlockText.at(LineNumber);
@@ -45,7 +45,7 @@ namespace CSAutomationScript
 			case ScriptParser::kTokenType_Return:
 			case ScriptParser::kTokenType_Continue:
 			case ScriptParser::kTokenType_Break:
-				Code = new LineOfCode(CurrentLine, LineNumber);
+				Code = new LineOfCode(CurrentLine, LineNumber, PrimaryParser);
 				LineOutBuffer = LineNumber;
 				break;
 			case ScriptParser::kTokenType_Loop:
@@ -62,19 +62,19 @@ namespace CSAutomationScript
 				switch (Tokenizer->GetFirstTokenType())
 				{
 				case ScriptParser::kTokenType_While:
-					Code = new WhileBlock(Buffer, LineNumber, &LineOutBuffer);
+					Code = new WhileBlock(Buffer, LineNumber, &LineOutBuffer, PrimaryParser);
 					break;
 				case ScriptParser::kTokenType_ForEach:
-					Code = new ForEachBlock(Buffer, LineNumber, &LineOutBuffer);
+					Code = new ForEachBlock(Buffer, LineNumber, &LineOutBuffer, PrimaryParser);
 					break;
 				case ScriptParser::kTokenType_If:
-					Code = new IfBlock(Buffer, LineNumber, &LineOutBuffer);
+					Code = new IfBlock(Buffer, LineNumber, &LineOutBuffer, PrimaryParser);
 					break;
 				case ScriptParser::kTokenType_Else:
-					Code = new ElseBlock(Buffer, LineNumber, &LineOutBuffer);
+					Code = new ElseBlock(Buffer, LineNumber, &LineOutBuffer, PrimaryParser);
 					break;
 				case ScriptParser::kTokenType_ElseIf:
-					Code = new ElseIfBlock(Buffer, LineNumber, &LineOutBuffer);
+					Code = new ElseIfBlock(Buffer, LineNumber, &LineOutBuffer, PrimaryParser);
 					break;
 				}
 				break;
@@ -96,11 +96,11 @@ namespace CSAutomationScript
 		return NULL;
 	}
 
-	bool CodeBlock::RunCode(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool CodeBlock::RunCode(ScriptRunner* Executor)
 	{
 		for (ExecutableBlockCode::iterator Itr = LinesOfCode.begin(); Itr != LinesOfCode.end(); Itr++)
 		{
-			if ((*Itr)->Execute(Executor, Parser) == false)
+			if ((*Itr)->Execute(Executor) == false)
 				return false;
 		}
 
@@ -136,7 +136,7 @@ namespace CSAutomationScript
 			{
 				ScriptParser::TokenType FirstToken = Tokenizer.GetFirstTokenType();
 
-				ASSERT(!(GetIsTokenInMask(AuxPrologTokenMask, FirstToken) && GetIsTokenInMask(EpilogTokenMask, FirstToken)));
+				assert(!(GetIsTokenInMask(AuxPrologTokenMask, FirstToken) && GetIsTokenInMask(EpilogTokenMask, FirstToken)));
 
 				if (!GotProlog && PrologToken == FirstToken)
 				{
@@ -180,7 +180,7 @@ namespace CSAutomationScript
 		return Result;
 	}
 
-	void CodeBlock::InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask)
+	void CodeBlock::InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, mup::ParserX* PrimaryParser)
 	{
 		this->Valid = true;
 
@@ -195,7 +195,7 @@ namespace CSAutomationScript
 			for (int i = this->LineNumber + 1; i < this->EndLineNumber; i++)
 			{
 				bool EmptyLine = false;
-				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine);
+				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
 				
 				if (!EmptyLine)
 				{
@@ -220,34 +220,31 @@ namespace CSAutomationScript
 		BlockText.clear();
 	}
 
-	std::string ControlBlock::GetConditionExpression()
+	std::string& ControlBlock::GetConditionExpression()
 	{
-		ScriptParser Tokenizer;
-		std::string Result = "";
-
-		if (Tokenizer.Tokenize(this->Text, false))
+		if (ConditionExpression == "")
 		{
-			Result = this->Text.substr(Tokenizer.Indices[0] + Tokenizer.Tokens[0].length());		// everything following the first token
+			ScriptParser Tokenizer;
+			std::string Buffer;
+
+			if (Tokenizer.Tokenize(this->Text, false))
+			{
+				Buffer = this->Text.substr(Tokenizer.Indices[0] + Tokenizer.Tokens[0].length());		// everything following the first token
+				Tokenizer.Sanitize(Buffer, ConditionExpression, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments);
+			}
 		}
 
-		return Result;
+		return ConditionExpression;
 	}
 
 	void ControlBlock::Release()
 	{
-		delete ConditionParser;
+		;//
 	}
 
-	bool ControlBlock::EvaluateCondition(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool ControlBlock::EvaluateCondition(ScriptRunner* Executor)
 	{
-		std::string Condition;
-		ScriptParser Tokenizer;
-
-		*ConditionParser = *Parser;
-		Tokenizer.Sanitize(GetConditionExpression(), Condition, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments);
-		ConditionParser->SetExpr(Condition);
-		mup::Value Result = ConditionParser->Eval();
-		return Result.GetFloat();
+		return CodeParser.Eval().GetFloat();
 	}
 
 	void LoopBlock::BeginLoopExecution(ScriptRunner* Executor)
@@ -257,33 +254,37 @@ namespace CSAutomationScript
 
 	void LoopBlock::EndLoopExecution(ScriptRunner* Executor)
 	{
-		ASSERT(Executor->GetExecutingContext()->PopLoop() == this);
+		assert(Executor->GetExecutingContext()->PopLoop() == this);
+		State = kState_Default;
 	}
 
-	LineOfCode::LineOfCode(std::string& Source, UInt32 LineNumber)
+	LineOfCode::LineOfCode(std::string& Source, UInt32 LineNumber, mup::ParserX* PrimaryParser)
 	{
 		ScriptParser Tokenizer;
-
 		Tokenizer.Sanitize(Source, this->Text, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
+
 		this->LineNumber = LineNumber;
 		this->Valid = true;
 		this->Type = kType_LineOfCode;
+
+		CodeParser = *PrimaryParser;
+		CodeParser.SetExpr(this->Text);
 	}
 
-	bool LineOfCode::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool LineOfCode::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute code at %d - Line was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
 		try
 		{
-			Parser->SetExpr(this->Text);
-			Parser->Eval();									// no result
+			CodeParser.Eval();									// no result
 
-			if (!Executor->GetExecutingContext()->GetExecutionState())
+			if (Executor->GetExecutingContext()->GetExecutionState() == ScriptContext::kExecutionState_Break)
 			{
 				return false;
 			}
@@ -293,47 +294,52 @@ namespace CSAutomationScript
 		catch (mup::ParserError& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.GetMsg().c_str());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (std::exception& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.what());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (...)
 		{
 			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 
 		return false;
 	}
 
-	BeginBlock::BeginBlock(std::string& Source, UInt32 StartLineNumber)
+	BeginBlock::BeginBlock(std::string& Source, UInt32 StartLineNumber, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_BeginBlock;
 		InitializeCodeBlock(Source, StartLineNumber,
 							ScriptParser::kTokenType_Begin,
 							ScriptParser::kTokenType_Begin,
-							ScriptParser::kTokenType_End);
+							ScriptParser::kTokenType_End,
+							PrimaryParser);
 	}
 
-	bool BeginBlock::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool BeginBlock::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute BEGIN at %d - Block was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
-		return RunCode(Executor, Parser);
+		return RunCode(Executor);
 	}
 
-	bool IfBlock::EvaluateElseIfBlocks(ScriptRunner* Executor, mup::ParserX* Parser, bool* Failed)
+	bool IfBlock::EvaluateElseIfBlocks(ScriptRunner* Executor, bool* Failed)
 	{
 		for (ElseIfBlockList::iterator Itr = ElseIfs.begin(); Itr != ElseIfs.end(); Itr++)
 		{
-			if ((*Itr)->PreEvaluateCondition(Executor, Parser))
+			if ((*Itr)->PreEvaluateCondition(Executor))
 			{
 				*Failed = false;
-				return (*Itr)->Execute(Executor, Parser);
+				return (*Itr)->Execute(Executor);
 			}
 		}
 
@@ -351,7 +357,7 @@ namespace CSAutomationScript
 		}
 	}
 
-	void IfBlock::InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask)
+	void IfBlock::InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, mup::ParserX* PrimaryParser)
 	{
 		this->Valid = true;
 		this->Else = NULL;
@@ -367,7 +373,7 @@ namespace CSAutomationScript
 			for (int i = this->LineNumber + 1; i < this->EndLineNumber; i++)
 			{
 				bool EmptyLine = false;
-				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine);
+				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
 				
 				if (!EmptyLine)
 				{
@@ -414,35 +420,41 @@ namespace CSAutomationScript
 		BlockText.clear();
 	}
 
-	IfBlock::IfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut)
+	IfBlock::IfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_IfBlock;
 		InitializeCodeBlock(Source, StartLineNumber,
 							ScriptParser::kTokenType_If,
 							ScriptParser::kTokenType_If,
-							ScriptParser::kTokenType_EndIf);
+							ScriptParser::kTokenType_EndIf,
+							PrimaryParser);
+
+		CodeParser = *PrimaryParser;
+		CodeParser.SetExpr(GetConditionExpression());
+
 		*BlockEndOut = this->EndLineNumber;
 	}
 
-	bool IfBlock::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool IfBlock::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute IF at %d - Block was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
 		try
 		{
-			if (EvaluateCondition(Executor, Parser))
-				return RunCode(Executor, Parser);
+			if (EvaluateCondition(Executor))
+				return RunCode(Executor);
 
-			bool ElseIfFailed = false, ElseIfResult = EvaluateElseIfBlocks(Executor, Parser, &ElseIfFailed);
+			bool ElseIfFailed = false, ElseIfResult = EvaluateElseIfBlocks(Executor, &ElseIfFailed);
 
 			if (ElseIfFailed)
 			{
 				if (Else)
-					return Else->Execute(Executor, Parser);
+					return Else->Execute(Executor);
 			}
 			else
 				return ElseIfResult;
@@ -452,96 +464,118 @@ namespace CSAutomationScript
 		catch (mup::ParserError& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.GetMsg().c_str());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (std::exception& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.what());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (...)
 		{
 			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 
 		return false;
 	}
 
-	ElseIfBlock::ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut)
+	ElseIfBlock::ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_ElseIfBlock;
 		InitializeCodeBlock(Source, StartLineNumber, 
 							ScriptParser::kTokenType_ElseIf,
 							ScriptParser::kTokenType_If,
-							ScriptParser::kTokenType_ElseIf|ScriptParser::kTokenType_Else|ScriptParser::kTokenType_EndIf);
+							ScriptParser::kTokenType_ElseIf|ScriptParser::kTokenType_Else|ScriptParser::kTokenType_EndIf,
+							PrimaryParser);
+
+		CodeParser = *PrimaryParser;
+		CodeParser.SetExpr(GetConditionExpression());
+
 		*BlockEndOut = this->EndLineNumber - 1;	// one less than the actual end line, in order to not skip else/elseIf tokens that act as the epilog declarant
 	}
 
-	bool ElseIfBlock::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool ElseIfBlock::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute ELSEIF at %d - Block was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
 		try
 		{
-			if (EvaluateCondition(Executor,	Parser))
-				return RunCode(Executor, Parser);
+			if (EvaluateCondition(Executor))
+				return RunCode(Executor);
 			else
 				return true;
 		}
 		catch (mup::ParserError& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.GetMsg().c_str());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (std::exception& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.what());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (...)
 		{
 			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 
 		return false;
 	}
 
-	ElseBlock::ElseBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut)
+	ElseBlock::ElseBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_ElseBlock;
 		InitializeCodeBlock(Source, StartLineNumber,
 							ScriptParser::kTokenType_Else,
 							ScriptParser::kTokenType_If,
-							ScriptParser::kTokenType_EndIf);
+							ScriptParser::kTokenType_EndIf,
+							PrimaryParser);
+
+		CodeParser = *PrimaryParser;
 		*BlockEndOut = this->EndLineNumber;
 	}
 
-	bool ElseBlock::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool ElseBlock::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute ELSE at %d - Block was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
-		return RunCode(Executor, Parser);
+		return RunCode(Executor);
 	}
 
-	WhileBlock::WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut)
+	WhileBlock::WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_WhileBlock;
 		InitializeCodeBlock(Source, StartLineNumber,
 							ScriptParser::kTokenType_While,
 							ScriptParser::kTokenType_ForEach,
-							ScriptParser::kTokenType_Loop);
+							ScriptParser::kTokenType_Loop,
+							PrimaryParser);
+
+		CodeParser = *PrimaryParser;
+		CodeParser.SetExpr(GetConditionExpression());
+
 		*BlockEndOut = this->EndLineNumber;
 	}
 
-	bool WhileBlock::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool WhileBlock::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute WHILE at %d - Block was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
@@ -549,20 +583,20 @@ namespace CSAutomationScript
 		{
 			BeginLoopExecution(Executor);
 
-			while (EvaluateCondition(Executor, Parser))
+			while (EvaluateCondition(Executor))
 			{
-				if (!RunCode(Executor, Parser))
+				if (!RunCode(Executor))
 				{
 					if (State == kState_Continue)
 					{
 						State = kState_Default;
-						Executor->GetExecutingContext()->SetExecutionState(true);
+						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
 						continue;
 					}
 					else if (State = kState_Break)
 					{
 						State = kState_Default;
-						Executor->GetExecutingContext()->SetExecutionState(true);
+						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
 						break;
 					}
 					else
@@ -579,47 +613,62 @@ namespace CSAutomationScript
 		catch (mup::ParserError& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.GetMsg().c_str());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (std::exception& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.what());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (...)
 		{
 			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);	
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 
 		EndLoopExecution(Executor);
 		return false;
 	}
 
-	ForEachBlock::ForEachBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut)
+	std::string& ForEachBlock::GetConditionExpression()
+	{
+		if (ConditionExpression == "")
+		{
+			ScriptParser Tokenizer;
+			std::string Buffer;
+
+			if (Tokenizer.Tokenize(this->Text, false))
+			{
+				BufferVarID = Tokenizer.Tokens[1];		// second token
+				Buffer = this->Text.substr(Tokenizer.Indices[2] + Tokenizer.Tokens[2].length() + 1);	// everything past the thrid token (<-)
+				Tokenizer.Sanitize(Buffer, ConditionExpression, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments);
+			}
+		}
+
+		return ConditionExpression;
+	}
+
+	ForEachBlock::ForEachBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_ForEachBlock;
 		InitializeCodeBlock(Source, StartLineNumber,
 							ScriptParser::kTokenType_ForEach,
 							ScriptParser::kTokenType_While,
-							ScriptParser::kTokenType_Loop);
+							ScriptParser::kTokenType_Loop,
+							PrimaryParser);
 
-		BufferVarID = "";
-		Expression = "";
-
-		ScriptParser Tokenizer;
-
-		if (Tokenizer.Tokenize(this->Text, false))
-		{
-			BufferVarID = Tokenizer.Tokens[1];		// second token
-			Expression = this->Text.substr(Tokenizer.Indices[2] + Tokenizer.Tokens[2].length() + 1);	// everything past the thrid token (<-)
-		}
+		CodeParser = *PrimaryParser;
+		CodeParser.SetExpr(GetConditionExpression());
 
 		*BlockEndOut = this->EndLineNumber;
 	}
 
-	bool ForEachBlock::Execute(ScriptRunner* Executor, mup::ParserX* Parser)
+	bool ForEachBlock::Execute(ScriptRunner* Executor)
 	{
 		if (!Valid)
 		{
 			DebugPrint("Couldn't execute FOREACH at %d - Block was not correctly initialized", this->LineNumber);
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 			return false;
 		}
 
@@ -627,7 +676,7 @@ namespace CSAutomationScript
 		{
 			BeginLoopExecution(Executor);
 
-			if (BufferVarID == "" || Expression == "")
+			if (BufferVarID == "" || ConditionExpression == "")
 				throw std::exception("Invalid FOREACH expression");
 
 			ScriptVariable* BufferVar = Executor->GetExecutingContext()->LookupVariableByName(BufferVarID);
@@ -635,33 +684,27 @@ namespace CSAutomationScript
 				throw std::exception("Invalid buffer variable");
 
 			mup::Value& Buffer = const_cast<mup::Value&>(BufferVar->GetValue());
-
-			*ConditionParser = *Parser;
-			ConditionParser->SetExpr(Expression);
-			
-			mup::Value ExpressionArray = ConditionParser->Eval();
+		
+			mup::Value ExpressionArray = CodeParser.Eval();
 			if (!ExpressionArray.IsArray())
 				throw std::exception("Non-array value returned by FOREACH expression");
 
 			for (mup::array_type::const_iterator Itr = ExpressionArray.GetArray().begin(); Itr != ExpressionArray.GetArray().end(); Itr++)
 			{
-				if (Itr->IsArray())
-					throw std::exception("Nested arrays returned by FOREACH expression");
-
 				Buffer = *Itr;
 
-				if (!RunCode(Executor, Parser))
+				if (!RunCode(Executor))
 				{
 					if (State == kState_Continue)
 					{
 						State = kState_Default;
-						Executor->GetExecutingContext()->SetExecutionState(true);
+						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
 						continue;
 					}
 					else if (State = kState_Break)
 					{
 						State = kState_Default;
-						Executor->GetExecutingContext()->SetExecutionState(true);
+						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
 						break;
 					}
 					else
@@ -678,14 +721,17 @@ namespace CSAutomationScript
 		catch (mup::ParserError& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.GetMsg().c_str());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (std::exception& Exception)
 		{
 			DebugPrint("Couldn't execute code at %d - Exception: %s", this->LineNumber, Exception.what());
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 		catch (...)
 		{
 			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);	
+			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 
 		EndLoopExecution(Executor);

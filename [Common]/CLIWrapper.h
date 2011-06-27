@@ -17,7 +17,8 @@ namespace CLIWrapper
 
 		typedef void							(*_SetVariableListItemData)(UInt32, ScriptVarIndexData::ScriptVarInfo*);
 		typedef void							(*_InitializeDatabaseUpdateTimer)();
-		typedef void							(*_PassScriptError)(UInt32 LineNumber, const char* Message, UInt32 EditorIndex);
+		typedef void							(*_PassScriptError)(UInt32 LineNumber, const char*, UInt32);
+
 
 		extern _AllocateNewEditor				AllocateNewEditor;
 		extern _InitializeScript				InitializeScript;

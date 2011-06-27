@@ -45,12 +45,6 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 		g_msgIntfc->RegisterListener(g_pluginHandle, NULL, CSEInteropHandler);
 		break;
 	case OBSEMessagingInterface::kMessage_PostPostLoad:
-		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\CSE\\LipSyncPipeClient.dll"))
-		{
-			CONSOLE->Indent();
-			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
-			CONSOLE->Exdent();
-		}
 		g_PluginPostLoad = true;
 		break;
 	}
@@ -123,6 +117,7 @@ extern "C"
 
 		g_CommandTableData.GetCommandReturnType = g_commandTableIntfc->GetReturnType;
 		g_CommandTableData.GetParentPlugin = g_commandTableIntfc->GetParentPlugin;
+		g_CommandTableData.GetRequiredOBSEVersion = g_commandTableIntfc->GetRequiredOBSEVersion;
 		CONSOLE->Exdent();
 
 		return true;
@@ -133,7 +128,7 @@ extern "C"
 		INITCOMMONCONTROLSEX icex;
 																 // ensure that the common control DLL is loaded.
 		icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-		icex.dwICC  = ICC_LISTVIEW_CLASSES;
+		icex.dwICC  = /*ICC_STANDARD_CLASSES*/0x4000|ICC_BAR_CLASSES|ICC_COOL_CLASSES|ICC_LISTVIEW_CLASSES|ICC_NATIVEFNTCTL_CLASS|ICC_PROGRESS_CLASS|ICC_TAB_CLASSES|ICC_TREEVIEW_CLASSES|ICC_UPDOWN_CLASS|ICC_USEREX_CLASSES|ICC_WIN95_CLASSES;
 		InitCommonControlsEx(&icex);
 
 		g_pluginHandle = obse->GetPluginHandle();
@@ -146,6 +141,7 @@ extern "C"
 
 		DebugPrint("Initializing Hooks");
 		CONSOLE->Indent();
+		Hooks::PathEntryPointHooks();
 		Hooks::PatchDialogHooks();
 		Hooks::PatchLODHooks();
 		Hooks::PatchTESFileHooks();
@@ -162,7 +158,7 @@ extern "C"
 	}
 };
 
-// (mostly)dummy entry point
+// (mostly) dummy entry point
 BOOL WINAPI DllMain(
         HANDLE  hDllHandle,
         DWORD   dwReason,
@@ -172,7 +168,7 @@ BOOL WINAPI DllMain(
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-	//	WaitUntilDebuggerAttached();
+//		WaitUntilDebuggerAttached();
 		break;
 	}
 	return TRUE;

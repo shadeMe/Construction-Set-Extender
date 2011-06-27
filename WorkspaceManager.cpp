@@ -17,10 +17,13 @@ void WorkspaceManager::ResetLoadedData()
 {
 	kAutoLoadActivePluginOnStartup.WriteJump();
 
-	for (ModEntry* Itr = &(*g_dataHandler)->modList; Itr && Itr->data; Itr = Itr->next)
+	for (tList<TESFile>::Iterator Itr = (*g_TESDataHandler)->fileList.Begin(); !Itr.End(); ++Itr)
 	{
-		ToggleFlag(&Itr->data->flags, ModEntry::Data::kFlag_Active, false);
-		ToggleFlag(&Itr->data->flags, ModEntry::Data::kFlag_Loaded, false);
+		if (!Itr.Get())
+			break;
+
+		ToggleFlag<UInt32>(&Itr.Get()->fileFlags, TESFile::kFileFlag_Active, false);
+		ToggleFlag<UInt32>(&Itr.Get()->fileFlags, TESFile::kFileFlag_Loaded, false);
 	}
 
 	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
@@ -113,7 +116,10 @@ void WorkspaceManager::CreateDefaultDirectories(const char* WorkspacePath)
 		(!CreateDirectory(std::string(Buffer + "Data\\Sound\\Voice\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Trees\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Standard Preprocessor Directives\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Preprocessor\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Preprocessor\\STD\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\CSAS\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\CSAS\\Global Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Backup\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS))
 	{
 		DebugPrint("Couldn't create create default directories in workspace '%s'", WorkspacePath);
@@ -123,13 +129,16 @@ void WorkspaceManager::CreateDefaultDirectories(const char* WorkspacePath)
 
 void WorkspaceManager::ReloadModList(const char* WorkspacePath, bool ClearList, bool LoadESPs)
 {
-	tList<TESFile*>* ModList = (tList<TESFile*>*)&(*g_dataHandler)->modList;
+	tList<TESFile>* ModList = &(*g_TESDataHandler)->fileList;
 	if (ClearList)
 	{
-		for (ModEntry* Itr = &(*g_dataHandler)->modList; Itr && Itr->data; Itr = Itr->next)
+		for (tList<TESFile>::Iterator Itr = (*g_TESDataHandler)->fileList.Begin(); !Itr.End(); ++Itr)
 		{
-			thisCall(kTESFile_Dtor, Itr->data);
-			FormHeap_Free(Itr->data);
+			if (!Itr.Get())
+				break;
+
+			thisCall(kTESFile_Dtor, Itr.Get());
+			FormHeap_Free(Itr.Get());
 		}
 		ModList->RemoveAll();
 	}
@@ -137,7 +146,7 @@ void WorkspaceManager::ReloadModList(const char* WorkspacePath, bool ClearList, 
 	if (LoadESPs == false)
 		this->DataHandlerPopulateModList.WriteUInt8(1);
 
-	thisCall(kDataHandler_PopulateModList, *g_dataHandler, WorkspacePath);
+	thisCall(kDataHandler_PopulateModList, *g_TESDataHandler, WorkspacePath);
 
 	if (LoadESPs == false)
 		this->DataHandlerPopulateModList.WriteUInt8(2);

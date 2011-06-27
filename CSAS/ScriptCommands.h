@@ -5,8 +5,6 @@
 #include "mpIOprt.h"
 #include "mpOprtBinCommon.h"
 #include "ScriptCommandInfo.h"
-#include <vector>
-#include <fstream>
 
 namespace CSAutomationScript
 {
@@ -103,9 +101,21 @@ namespace CSAutomationScript
 		virtual mup::IToken*				Clone() const;
 	};
 
+	class GetSecondsPassedCommand : public mup::ICallback
+	{
+	public:
+		GetSecondsPassedCommand() : ICallback(mup::cmFUNC, "getsecondspassed", "f:v") {}
+
+		virtual void						Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc);
+		virtual const mup::char_type*		GetDesc() const;
+		virtual mup::IToken*				Clone() const;
+	};
+
 	using namespace mup;
 	MUP_BINARY_OPERATOR(OprtBAndSymb, _T("&&"), _T("b:bb"),  bool_type, _T("less than"), 1, oaLEFT, a&&b)
 	MUP_BINARY_OPERATOR(OprtBOrSymb,  _T("||"),  _T("b:bb"),  bool_type, _T("less than"), 1, oaLEFT, a||b)
+
+	extern CSASParamInfo kParams_OneForm[1];
 }
 
-#define EXTRACT_CSASARGS(commandname, noofparams, ...)						CSASCommand::ExtractCommandArgs(ArgArray, kParams_ ##commandname##, noofparams, ##__VA_ARGS__)
+#define EXTRACT_CSASARGS(...)						CSASCommand::ExtractCommandArgs(ArgArray, ParamInfo, NoOfParams, ##__VA_ARGS__)

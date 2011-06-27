@@ -19,7 +19,6 @@ public:
 	static IntPtr										GetCSMainWindowHandle(void);
 	[DllImport("Construction Set Extender.dll")] 
 	static IntPtr										GetRenderWindowHandle(void);
-	
 
 	[DllImport("Construction Set Extender.dll")] 
 	static ScriptData*									FetchScriptFromForm(const char* EditorID);
@@ -27,6 +26,9 @@ public:
 	static bool											IsFormAnObjRefr(const char* EditorID);
 	[DllImport("Construction Set Extender.dll")] 
 	static FormData*									LookupFormByEditorID(const char* EditorID);	
+	[DllImport("Construction Set Extender.dll")] 
+	static void											TESForm_LoadIntoView(const char* EditorID, const char* FormType);
+
 
 	[DllImport("Construction Set Extender.dll")] 
 	static void											ScriptEditor_MessagingInterface(UInt32 TrackedEditorIndex, UInt16 Message);
@@ -77,15 +79,14 @@ public:
 	static void											UseInfoList_SetCellListItemText(const char* EditorID);
 
 	[DllImport("Construction Set Extender.dll")] 
-	static void											TESForm_LoadIntoView(const char* EditorID, const char* FormType);
-
-	[DllImport("Construction Set Extender.dll")] 
 	static void											BatchRefEditor_SetFormListItem(UInt8 ListID);
 	[DllImport("Construction Set Extender.dll")] 
 	static const char*									BatchRefEditor_ChooseParentReference(BatchRefData* Data, IntPtr Parent);
 
 	[DllImport("Construction Set Extender.dll")] 
 	static void											TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
+
+
 
 	[DllImport("user32.dll")]
 	static bool											LockWindowUpdate(IntPtr hWndLock);

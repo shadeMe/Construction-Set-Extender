@@ -1,11 +1,7 @@
 #pragma once
 
-#include "UtilityBox.h"
-
 namespace Hooks
 {
-	using namespace MemoryHandler;
-
 	extern UInt32	g_CompileResultBuffer;
 	extern UInt32	g_CompileCallerAddr;
 	extern bool		g_RecompilingScripts;

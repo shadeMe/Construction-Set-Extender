@@ -71,39 +71,24 @@ void ToolManager::ClearToolList(bool ReleaseTools)
 
 void ToolManager::ReadFromINI(const char* INIPath)
 {
-	char Buffer[0x500] = {0};
+	char SectionBuffer[0x8000] = {0};
 
 	ClearToolList(true);
 
-	std::fstream INIStream(INIPath, std::ios_base::in);
-	if (!INIStream.fail())
+	GetPrivateProfileSection(INIToolsSection, SectionBuffer, sizeof(SectionBuffer), INIPath);
+
+	for (const char* Itr = SectionBuffer; *Itr != '\0'; Itr += strlen(Itr) + 1)
 	{
-		bool Parsing = false;
-		while (INIStream.eof() == false)
+		std::string StrBuffer(Itr);
+		size_t IndexA = StrBuffer.find_first_of("="), IndexB = StrBuffer.find_first_of("|");
+		if (IndexA != std::string::npos && IndexB != std::string::npos)
 		{
-			INIStream.getline(Buffer, sizeof(Buffer));
+			std::string Title(StrBuffer.substr(0, IndexA)),
+						CmdLine(StrBuffer.substr(IndexA + 1, IndexB - IndexA - 1)),
+						InitDir(StrBuffer.substr(IndexB + 1));
 
-			if (!Parsing && !_stricmp(Buffer, (std::string("[" + std::string(INIToolsSection) + "]")).c_str()))
-			{
-				Parsing = true;
-				continue;
-			}
-			else if (Parsing && strlen(Buffer) < 2)
-				break;
-			else if (Parsing)
-			{
-				std::string StrBuffer(Buffer);
-				size_t IndexA = StrBuffer.find_first_of("="), IndexB = StrBuffer.find_first_of("|");
-				if (IndexA != std::string::npos && IndexB != std::string::npos)
-				{
-					std::string Title(StrBuffer.substr(0, IndexA)),
-								CmdLine(StrBuffer.substr(IndexA + 1, IndexB - IndexA - 1)),
-								InitDir(StrBuffer.substr(IndexB + 1));
-
-					AddTool(Title.c_str(), CmdLine.c_str(), InitDir.c_str());
-					DebugPrint("Added Tool '%s' at '%s'", Title.c_str(), CmdLine.c_str());
-				}
-			}
+			AddTool(Title.c_str(), CmdLine.c_str(), InitDir.c_str());
+			DebugPrint("Added Tool '%s' at '%s'", Title.c_str(), CmdLine.c_str());
 		}
 	}
 }

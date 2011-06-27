@@ -1,5 +1,5 @@
 #include "RenderWindowTextPainter.h"
-#include "RenderTimeManager.h"
+#include "ElapsedTimeCounter.h"
 
 RenderWindowTextPainter*			RenderWindowTextPainter::Singleton = NULL;
 
@@ -36,7 +36,7 @@ void RenderWindowTextPainter::DynamicRenderChannel::Render()
 	if (CurrentTask->RemainingTime > 0)
 	{
 		Font->DrawTextA(NULL, CurrentTask->Text.c_str(), -1, &DrawArea, 0, Color);
-		CurrentTask->RemainingTime -= g_RenderTimeManager.GetTimePassedSinceLastFrame();
+		CurrentTask->RemainingTime -= g_RenderWindowTimeManager.GetTimePassedSinceLastUpdate() / 1000.0;
 	}
 	else
 	{
@@ -51,7 +51,7 @@ void RenderWindowTextPainter::DynamicRenderChannel::Queue(const char* Text, long
 		return;
 
 	if (GetQueueSize() == 0)
-		g_RenderTimeManager.Update();
+		g_RenderWindowTimeManager.Update();
 
 	if (Text && SecondsToDisplay > 0)
 		DrawQueue.push(new QueueTask(Text, SecondsToDisplay));
@@ -114,6 +114,9 @@ bool RenderWindowTextPainter::Initialize()
 
 void RenderWindowTextPainter::Release()
 {
+	if (!RenderChannel1 || !RenderChannel2)
+		return;
+
 	RenderChannel1->Release();
 	RenderChannel2->Release();
 
@@ -121,8 +124,6 @@ void RenderWindowTextPainter::Release()
 	delete RenderChannel2;
 
 	Valid = false;
-
-//	DebugPrint("RenderWindowTextPainter released");
 }
 
 void RenderWindowTextPainter::Render()

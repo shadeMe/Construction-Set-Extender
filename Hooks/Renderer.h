@@ -4,6 +4,7 @@
 namespace Hooks
 {
 	extern TESForm*				g_TESObjectREFRUpdate3DBuffer;
+	extern bool					g_RenderWindowAltMovementSettings;
 
 	// hooks that do stuff to the renderer and the render window
 	void PatchRendererHooks(void);
@@ -24,4 +25,16 @@ namespace Hooks
 	_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");
 	_DeclareMemHdlr(TESObjectREFRUpdate3D, "temporary hook that allows the updating of ref nodes on demand");
 	_DeclareMemHdlr(ForceShowTESObjectREFRDialog, "prevents reference properties dialogs from being moved behind the render window");
+	_DeclareMemHdlr(TESRenderControlAltSnapGrid, "allows two different camera/ref movement settings to be toggled during runtime");
+	_DeclareMemHdlr(TESRenderControlAltRefMovementSpeedA, "");
+	_DeclareMemHdlr(TESRenderControlAltRefMovementSpeedB, "");
+	_DeclareMemHdlr(TESRenderControlAltRefMovementSpeedC, "");
+	_DeclareMemHdlr(TESRenderControlAltRefRotationSpeed, "");
+	_DeclareMemHdlr(TESRenderControlAltRefSnapAngle, "");
+	_DeclareMemHdlr(TESRenderControlAltCamRotationSpeed, "");
+	_DeclareMemHdlr(TESRenderControlAltCamZoomSpeedA, "");
+	_DeclareMemHdlr(TESRenderControlAltCamZoomSpeedB, "");
+	_DeclareMemHdlr(TESRenderControlAltCamPanSpeedA, "");
+	_DeclareMemHdlr(TESRenderControlAltCamPanSpeedB, "");
+	_DeclareMemHdlr(TESRenderControlRedrawGrid, "fixes a bug that invalidates the viewport after linking a path grid point");
 }

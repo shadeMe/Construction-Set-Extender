@@ -1,33 +1,8 @@
 #pragma once
 #include "ExtenderInternals.h"
 
-union SettingData
-{
-	int				i;
-	UInt32			u;
-	float			f;
-	char*			s;
-};
-
 struct VariableData;
 typedef VariableData GMSTData;
-
-// 2C		### partial - look into the common settings class
-class GameSetting
-{
-public:
-	GameSetting();
-	~GameSetting();
-
-	// bases
-	TESFormIDListView		listView;
-
-	//members
-	SettingData				Data;		// 24
-	const char*				settingID;	// 28
-
-	void					SetSettingID(const char* ID) { settingID = ID; }
-};
 
 struct GMSTMap_Key_Comparer
 {

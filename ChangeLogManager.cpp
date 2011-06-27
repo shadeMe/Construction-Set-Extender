@@ -1,6 +1,6 @@
 #include "ChangeLogManager.h"
 #include "Hooks\VersionControl.h"
-#include "Rpc.h"
+
 #include "CSDialogs.h"
 
 namespace VersionControl
@@ -10,7 +10,10 @@ namespace VersionControl
 
 	ChangeLog::ChangeLog(const char* Path, const char* FileName)
 	{
-		FilePath = std::string(Path) + "\\" + std::string(FileName) + ".log";
+		char Buffer[0x100] = {0};
+		sprintf_s(Buffer, sizeof(Buffer), "%s-%08X", FileName, MersenneTwister::genrand_int32());		// add a random suffix to make sure files aren't overwritten due to lousy time resolution
+
+		FilePath = std::string(Path) + "\\" + std::string(Buffer) + ".log";
 		Log = _fsopen(FilePath.c_str(), "w", _SH_DENYNO);
 
 		if (!Log)
@@ -169,7 +172,7 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
-		SessionLog = new ChangeLog(g_AppPath.c_str(), "CSE Change Log");
+		SessionLog = new ChangeLog(GetCurrentTempDirectory(), "CSE Change Log");
 		this->PushNewActiveLog();
 
 		WriteChangeToLogs("CS Session Started", true);
@@ -183,23 +186,22 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
+		Pad(1);
+		WriteChangeToLogs("CS Session Ended", true);
+
 		while (LogStack.size())
 		{
 			LogStack.top()->Delete();
 			delete LogStack.top();
 			LogStack.pop();
 		}
+		SessionLog->Delete();
 
 		if (!RemoveDirectory(GetCurrentTempDirectory()))
 		{
 			DebugPrint("Couldn't remove temp change log files");
 			LogWinAPIErrorMessage(GetLastError());
-		}
-
-		Pad(1);
-		WriteChangeToLogs("CS Session Ended", true);
-
-		SessionLog->Finalize();
+		}	
 	}
 
 	void ChangeLogManager::PushNewActiveLog()
@@ -234,7 +236,7 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
-		ASSERT(Base->typeID == New->typeID);
+		assert(Base->formType == New->formType);
 
 		char Buffer[0x400] = {0};
 
@@ -246,7 +248,7 @@ namespace VersionControl
 
 	void ChangeLogManager::RecordFormChange(TESForm* Form, UInt8 ChangeType, UInt32 Value)
 	{
-		sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "[%s] Form (%08X)\t\t'%s': ", g_FormTypeIdentifier[Form->typeID], Form->refID, Form->editorData.editorID.m_data);
+		sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "[%s] Form (%08X)\t\t'%s': ", g_FormTypeIdentifier[Form->formType], Form->formID, Form->editorID.c_str());
 		std::string Buffer(s_TextBuffer);
 
 		switch (ChangeType)
@@ -284,19 +286,20 @@ namespace VersionControl
 	{
 		__time32_t TimeData;
 		tm LocalTime;
+		char Buffer[0x100] = {0};
+
 		_time32(&TimeData);
 		_localtime32_s(&LocalTime, &TimeData);
-
 		strftime(Out, Size, "%m--%d--%Y %H-%M-%S", &LocalTime);
 		return Out;
 	}
 
 	void HandlePluginSave(TESFile* SaveFile)
 	{
-		if (!_stricmp(SaveFile->filepath, "Data\\Backup\\"))		// skip autosaves
+		if (!_stricmp(SaveFile->filePath, "Data\\Backup\\"))		// skip autosaves
 			return;
 
-		CHANGELOG->RecordChange("Active plugin %s saved", SaveFile->name);
+		CHANGELOG->RecordChange("Active plugin %s saved", SaveFile->fileName);
 		CHANGELOG->Pad(1);
 
 		if (g_INIManager->GetINIInt("BackupOnSave"))
@@ -304,11 +307,11 @@ namespace VersionControl
 			char TimeString[0x100] = {0}, ExistingPath[MAX_PATH] = {0}, NewPath[MAX_PATH] = {0};
 			GetTimeString(TimeString, sizeof(TimeString));
 
-			std::string Name(SaveFile->name), Extension(Name.substr(Name.find_last_of(".") + 1, 3));
+			std::string Name(SaveFile->fileName), Extension(Name.substr(Name.find_last_of(".") + 1, 3));
 			Name = Name.substr(0, Name.find_last_of("."));
 
 			sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s - [%s].%s", Name.c_str(), TimeString, Extension.c_str());
-			sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filepath, SaveFile->name);
+			sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filePath, SaveFile->fileName);
 			if (CopyFile(ExistingPath, NewPath, FALSE))
 				DebugPrint("Saved active file backup to '%s'", NewPath);
 			else
@@ -325,8 +328,8 @@ namespace VersionControl
 
 	void HandlePluginLoad(void)
 	{
-		if ((*g_dataHandler)->unk8B8.activeFile)
-			CHANGELOG->RecordChange("Plugins reloaded; Active = %s", (*g_dataHandler)->unk8B8.activeFile->name);
+		if ((*g_TESDataHandler)->activeFile)
+			CHANGELOG->RecordChange("Plugins reloaded; Active = %s", (*g_TESDataHandler)->activeFile->fileName);
 		else
 			CHANGELOG->RecordChange("Plugins reloaded; No Active file");
 

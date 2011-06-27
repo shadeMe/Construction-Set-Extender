@@ -1,9 +1,12 @@
 #pragma once
 
-#ifdef CSE
-	#include "CSAS\ScriptCommandInfo.h"
-	#include "CSAS\Array.h"
-#endif
+namespace CSAutomationScript
+{
+	class CSASCommandInfo;
+	struct CSASParamInfo;
+	class CSASDataElement;
+	class Array;
+}
 
 using namespace CSAutomationScript;
 

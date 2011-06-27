@@ -1,34 +1,32 @@
 To-Do
 =====
-MISC-->
+MISC	---->
 > Credits:	T800G, for the window snapper code
 			Ingo Berg, for muParserX
 
-CSE--->
+CSE		---->
+> Test the recompile dependencies tool(s)
+> Call command results must be cast appropriately before assignment
+> Update muParserX to 1.10
 > Fix the code in HallOFFame and Exports that was disabled for build error reasons
-> Show Data dialog on startup, as opposed to loading a plugin (either) (use CSAS)
-> Modify the change log manager to support session logs for multiple concurrent cs sessions
+> Show Data dialog on startup, as opposed to loading a plugin (either) (use CSAS?)
 > Use a tab delimited format for the change logs
 > Make selection alignment undo'able
 > Check out the assertion at 0x004875A1 (called indirectly from Datahandler::saveplugin_Housekeeping). strangely seems to happen only when IDA's debugger is attached
 > Topicinfo inititem warnings aren't being shown
 > Export/import result scripts
-> Fix the f_PlaySoundFile
+> Fix PlaySoundFile()
 > Relative scaling and snap to bounding box
-
-# Allow selecting a faction for the IsCellOwner test in an AI pack's conditions. The function accepts factions in scripts, and the game will honor it if you use TES4Edit to force one in, but you can't use the CS to simply set one.
-# NPC refs update visually when their inventory is changed without plugin reload
-# Option to automatically dump & reload models on cell load without plugin reload
 
 * The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
 * Land LOD meshes that aren't such terrible approximations of the real landscape. I remember seeing somewhere that what we get is a 1% representation of the real thing. Could we bump this to 5% or something?
 * Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
 
-SE---->
+SE		---->
 > The Previous script shortcut messes with control focus
 > There's a slight X-offset to the position returned by AvalonEditTextEditor::GetPositionFromCharIndex
 > Fix the 'Missing New Tab button' repaint issue
 
 
-TAG---->
+TAG		---->
 > Add support for all drop locations

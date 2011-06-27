@@ -34,21 +34,39 @@ namespace CSAutomationScript
 		Type = kParamType_Invalid;
 	}
 
-	CSASDataElement::CSASDataElement(CSASDataElement* Data)
+	void CSASDataElement::Copy(const CSASDataElement& Source)
 	{
-		switch (Data->Type)
+		switch (Source.Type)
 		{
 		case kParamType_Invalid:
 			break;
 		case kParamType_String:
-			SetString(Data->GetString());
+			SetString(Source.GetString());
 			break;
 		case kParamType_Array:
-			SetArray(Data->GetArray());
+			SetArray(Source.GetArray());
+			break;
+		case kParamType_Reference:
+			SetForm(Source.GetForm());
 			break;
 		default:
-			SetNumber(Data->GetNumber());
+			SetNumber(Source.GetNumber());
+			break;
 		}
+	}
+
+	CSASDataElement::CSASDataElement(CSASDataElement* Data)
+	{
+		this->Type = kParamType_Invalid;
+
+		Copy(*Data);
+	}
+
+	CSASDataElement::CSASDataElement(const CSASDataElement& rhs)
+	{
+		this->Type = kParamType_Invalid;
+
+		Copy(rhs);
 	}
 
 	void CSASDataElement::SetForm(TESForm* Data)
@@ -72,6 +90,8 @@ namespace CSAutomationScript
 		Reset();
 
 		Type = kParamType_String;
+		if (!Data)
+			Data = "";
 
 		UInt32 Size = Data ? strlen(Data) : 0;
 		char* Result = (char*)FormHeap_Allocate(Size + 1);

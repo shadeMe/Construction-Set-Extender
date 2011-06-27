@@ -92,9 +92,9 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoTESFormChangeHook(::TESForm* Form, UInt8 ChangeType, UInt32 Value)
+	void __stdcall DoTESFormChangeHook(TESForm* Form, UInt8 ChangeType, UInt32 Value)
 	{
-		if ((Form->flags & ::TESForm::kFormFlags_Temporary) == 0 && g_PluginLoadOperationInProgress == false)
+		if ((Form->formFlags & TESForm::kFormFlags_Temporary) == 0 && g_PluginLoadOperationInProgress == false)
 		{
 			VersionControl::CHANGELOG->RecordFormChange(Form, ChangeType, Value);
 		}
@@ -190,7 +190,7 @@ namespace Hooks
 
 	void __stdcall DoDataHandlerCreateFormHook(TESForm* Form)
 	{
-		VersionControl::CHANGELOG->RecordChange("[%s] Form (%08X) created",  g_FormTypeIdentifier[Form->typeID], Form->refID);
+		VersionControl::CHANGELOG->RecordChange("[%s] Form (%08X) created",  g_FormTypeIdentifier[Form->formType], Form->formID);
 	}
 
 	#define _hhName		TESDialogFormEditNewForm

@@ -6,21 +6,18 @@
 #include "Setting.h"
 
 //	EditorAPI: GameSetting class.
-//	Many class definitions are directly copied from the COEF API; Credit to JRoush for his comprehensive decoding
+//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /* 
     GameSetting is the class for all generic variables used in the game mechanics, e.g. "fActorLuckSkillMult"
     GameSetting derives from TESForm in the CS
 */
 
-namespace EditorAPI
+// 2C
+class GameSetting : public TESFormIDListView, public Setting
 {
-	// 2C
-	class GameSetting : public TESFormIDListView, public Setting
-	{
-	public:
-		// members
-		//     /*00*/ TESForm
-		//     /*24*/ Setting
-	};
-}
+public:
+	// members
+	//     /*00*/ TESForm
+	//     /*24*/ Setting
+};

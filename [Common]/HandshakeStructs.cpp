@@ -7,21 +7,21 @@
 
 void FormData::FillFormData(TESForm* Form)
 {
-	EditorID = Form->editorData.editorID.m_data;
-	FormID = Form->refID;
-	TypeID = Form->typeID;
-	Flags = Form->flags;
+	EditorID = Form->editorID.c_str();
+	FormID = Form->formID;
+	TypeID = Form->formType;
+	Flags = Form->formFlags;
 	ParentForm = Form;
 }
 
 void ScriptData::FillScriptData(Script* Form)
 {
 	Text = Form->text;
-	Type = Form->Type();
+	Type = Form->info.type;
 	ByteCode = Form->data;
 	Length = Form->info.dataLength;
 	UDF = false;
-	if (Form->Type() == Script::eType_Object && Form->info.dataLength >= 15)
+	if (Form->info.type == Script::kScriptType_Object && Form->info.dataLength >= 15)
 	{
 		UInt8* data = (UInt8*)Form->data;
 		if (*(data + 8) == 7)
@@ -43,7 +43,7 @@ void VariableData::FillVariableData(const char* VariableName)
 
 void VariableData::FillVariableData(TESGlobal* Global)
 {
-	if (Global->type == TESGlobal::kType_Float)
+	if (Global->globalType == TESGlobal::kGlobalType_Float)
 		Type = kType_Float;
 	else
 		Type = kType_Int;

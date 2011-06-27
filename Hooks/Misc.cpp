@@ -8,10 +8,10 @@
 #include "..\GMSTMap.h"
 #include "..\ArchiveManager.h"
 #include "..\TESFormReferenceData.h"
-#include "..\RenderTimeManager.h"
+#include "..\ElapsedTimeCounter.h"
 #include "..\CSEInterfaceManager.h"
 #include "..\ChangeLogManager.h"
-#include "CSAS\ScriptCommands.h"
+#include "CSAS\ScriptRunner.h"
 
 extern CommandTableData	g_CommandTableData;
 
@@ -20,7 +20,7 @@ namespace Hooks
 	char g_NumericIDWarningBuffer[0x10] = {0};
 
 	_DefineHookHdlr(CSExit, 0x0041936E);
-	_DefineHookHdlrWithBuffer(CSInit, 0x00419260)(5, 0xE8, 0xEB, 0xC5, 0x2C, 0), 5);
+	_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0);
 	_DefineNopHdlr(MissingTextureWarning, 0x0044F3AF, 14);
 	_DefineHookHdlr(AssertOverride, 0x004B5670);
 	_DefinePatchHdlr(TextureMipMapCheck, 0x0044F49B);
@@ -42,6 +42,9 @@ namespace Hooks
 	_DefineHookHdlr(TESFormDelete, 0x00498712);
 	_DefinePatchHdlr(TextureSizeCheck, 0x0044F444);
 	_DefineHookHdlr(DataHandlerPlaceTESObjectLIGH, 0x005116C7);
+	_DefineHookHdlr(TESWorldSpaceDestroyCellMapA, 0x00560753);
+	_DefineHookHdlr(TESWorldSpaceDestroyCellMapB, 0x0079CA33);
+	_DefineJumpHdlr(CSRegistryEntries, 0x00406820, 0x00406AF4);
 
 	void PatchMiscHooks(void)
 	{
@@ -66,6 +69,8 @@ namespace Hooks
 		_MemHdlr(TESFormDelete).WriteJump();
 		_MemHdlr(TextureSizeCheck).WriteUInt8(0xEB);
 		_MemHdlr(DataHandlerPlaceTESObjectLIGH).WriteJump();
+		_MemHdlr(TESWorldSpaceDestroyCellMapA).WriteJump();
+		_MemHdlr(TESWorldSpaceDestroyCellMapB).WriteJump();
 
 		if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
 			PatchMessageHandler();
@@ -79,6 +84,11 @@ namespace Hooks
 		GetVersionEx(&OSInfo);
 		if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
 			RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
+	}
+
+	void PathEntryPointHooks(void)
+	{
+		_MemHdlr(CSRegistryEntries).WriteJump();
 	}
 
 	void PatchMessageHandler(void)
@@ -134,6 +144,9 @@ namespace Hooks
 		g_ToolManager.WriteToINI(g_INIPath.c_str());
 		DebugPrint("Tool Manager Deinitialized");
 
+		CSAutomationScript::DeitializeCSASEngine();
+		DebugPrint("CSAS Deinitialized");
+
 		DebugPrint("Deinitializing Console, Flushing CSE INI Settings and Closing the CS!");
 		CONSOLE->Deinitialize();
 		g_INIManager->SaveSettingsToINI();
@@ -155,10 +168,26 @@ namespace Hooks
 	{
 		if (!g_PluginPostLoad)
 			return;
+		else if (!*g_HWND_CSParent || !*g_HWND_ObjectWindow || !*g_HWND_CellView || !*g_HWND_RenderWindow)
+			return;
 												// prevents the hook from being called before the full init
 												// perform deferred patching
 												// remove hook rightaway to keep it from hindering the subclassing that follows
-		kCSInit.WriteBuffer();
+		_MemHdlr(CSInit).WriteBuffer();
+
+		MersenneTwister::init_genrand(GetTickCount());
+
+		DebugPrint("Initializing CSInterop Manager");
+		CONSOLE->Indent();
+		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\CSE\\LipSyncPipeClient.dll"))	
+			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
+		CONSOLE->Exdent();
+
+		DebugPrint("Initializing Hall of Fame");
+		CONSOLE->Indent();
+		if (!TESForm_LookupByEditorID("TheShadeMeRef"))		// with the new injection method, DataHandler::ConstructSpecialForms gets called before the deferred init routine is called
+			HallOfFame::Initialize(true);					// we make sure we don't reallocated the hall of fame forms by performing a sanity check
+		CONSOLE->Exdent();
 
 		DebugPrint("Initializing ScriptEditor");
 		CONSOLE->Indent();
@@ -180,11 +209,24 @@ namespace Hooks
 
 		CONSOLE->Exdent();
 
+		DebugPrint("Initializing Intellisense Database Update Thread");
+		CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
+
+		DebugPrint("Initializing CSAS");
+		CONSOLE->Indent();
+		CSAutomationScript::InitializeCSASEngine();
+		CONSOLE->Exdent();
+
 		DebugPrint("Initializing Tools");
 		CONSOLE->Indent();
 		g_ToolManager.InitializeToolsMenu();
 		g_ToolManager.ReadFromINI(g_INIPath.c_str());
 		g_ToolManager.ReloadToolsMenu();
+		CONSOLE->Exdent();
+
+		DebugPrint("Initializing Workspace Manager");
+		CONSOLE->Indent();
+		g_WorkspaceManager.Initialize(g_AppPath.c_str());
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Window Manager");
@@ -198,39 +240,9 @@ namespace Hooks
 		CONSOLE->LoadINISettings();
 		CONSOLE->Exdent();
 
-		DebugPrint("Initializing CSAS");
-		CONSOLE->Indent();
-		CSAutomationScript::CommandTable::InitializeCommandTable();
-		CONSOLE->Exdent();
-
 		DebugPrint("Initializing GMST Map");
 		CONSOLE->Indent();
 		InitializeDefaultGMSTMap();
-		CONSOLE->Exdent();
-
-		DebugPrint("Initializing Intellisense Database Update Thread");
-		CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
-
-		DebugPrint("Initializing Hall of Fame");
-		CONSOLE->Indent();
-		HallOfFame::Initialize(true);
-		CONSOLE->Exdent();
-
-		DebugPrint("Initializing Render Window Text Painter");
-		g_RenderTimeManager.Update();
-		RENDERTEXT->Initialize();
-		RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Construction Set Extender", 5);
-
-		DebugPrint("Initializing Workspace Manager");
-		CONSOLE->Indent();
-		g_WorkspaceManager.Initialize(g_AppPath.c_str());
-		CONSOLE->Exdent();
-
-		DebugPrint("Initializing CS Startup Manager");
-		CONSOLE->Indent();
-		CSStartupManager::LoadStartupWorkspace();
-		CSStartupManager::LoadStartupPlugin();
-		CSStartupManager::LoadStartupScript();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing IdleAnim Tree");
@@ -243,9 +255,22 @@ namespace Hooks
 		InitializeArchives();
 		CONSOLE->Exdent();
 
+		DebugPrint("Initializing Render Window Text Painter");
+		CONSOLE->Indent();
+		g_RenderWindowTimeManager.Update();
+		RENDERTEXT->Initialize();
+		CONSOLE->Exdent();
+
 		DebugPrint("Initializing Change Log Manager");
 		CONSOLE->Indent();
 		VersionControl::CHANGELOG->Initialize();
+		CONSOLE->Exdent();
+
+		DebugPrint("Initializing CS Startup Manager");
+		CONSOLE->Indent();
+		CSStartupManager::LoadStartupWorkspace();
+		CSStartupManager::LoadStartupPlugin();
+		CSStartupManager::LoadStartupScript();
 		CONSOLE->Exdent();
 
 		CONSOLE->ExdentAll();
@@ -343,7 +368,7 @@ namespace Hooks
 		while (Unk01)
 		{
 			const char*	 Name = NULL;
-			SettingData* Data = NULL;
+			Setting* Data = NULL;
 
 			thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
 			if (Data)
@@ -399,13 +424,13 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoNumericEditorIDHook(::TESForm* Form, const char* EditorID)
+	void __stdcall DoNumericEditorIDHook(TESForm* Form, const char* EditorID)
 	{
 		if (g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->GetValueAsInteger() &&
 			g_PluginPostLoad &&
 			strlen(EditorID) > 0 &&
 			isdigit((int)*EditorID) &&
-			(Form->flags & ::TESForm::kFormFlags_Temporary) == 0)
+			(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 		{
 			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
 			MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONWARNING);
@@ -489,14 +514,14 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoTESFormAddReferenceHook(GenericNode<TESFormReferenceData>* ReferenceList, ::TESForm* Form)
+	void __stdcall DoTESFormAddReferenceHook(GenericNode<TESFormReferenceData>* ReferenceList, TESForm* Form)
 	{
 		TESFormReferenceData* Data = TESFormReferenceData::FindDataInRefList(ReferenceList, Form);
 		if (Data)
 			Data->IncrementRefCount();
 		else
 		{
-			TESFormReferenceData* NewNode = (TESFormReferenceData*)FormHeap_Allocate(sizeof(TESFormReferenceData));		// nasty, but ought to work
+			TESFormReferenceData* NewNode = (TESFormReferenceData*)FormHeap_Allocate(sizeof(TESFormReferenceData));
 			NewNode->Initialize(Form);
 			NewNode->IncrementRefCount();
 
@@ -517,7 +542,7 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoTESFormRemoveReferenceHook(TESForm* Parent, GenericNode<TESFormReferenceData>* ReferenceList, ::TESForm* Form)
+	void __stdcall DoTESFormRemoveReferenceHook(TESForm* Parent, GenericNode<TESFormReferenceData>* ReferenceList, TESForm* Form)
 	{
 		TESFormReferenceData* Data = TESFormReferenceData::FindDataInRefList(ReferenceList, Form);
 		if (Data)
@@ -624,6 +649,41 @@ namespace Hooks
 			mov     edx, [eax + 0x1A0]
 			jmp		[_hhGetVar(Retn)]
 		FIX:
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	#define _hhName	TESWorldSpaceDestroyCellMapA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00560703);
+		__asm
+		{
+			mov		eax, [esi + eax * 4]
+			cmp		eax, 0x10000
+			jle		FIX
+			jmp		[_hhGetVar(Retn)]
+		FIX:
+			xor		eax, eax
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName	TESWorldSpaceDestroyCellMapB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0079CA38);
+		_hhSetVar(Jump, 0x0079CA5A);
+		__asm
+		{
+			mov     edi, [ecx + ebx * 4]
+			cmp		edi, 0x10000
+			jle		FIX
+
+			mov		edx, [edi]
+			jmp		[_hhGetVar(Retn)]
+		FIX:
+			xor		edi, edi
 			jmp		[_hhGetVar(Jump)]
 		}
 	}

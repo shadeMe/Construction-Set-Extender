@@ -45,8 +45,8 @@ namespace Hooks
 	_DefineHookHdlr(LogRecompileResults, 0x004FF07E);
 	_DefinePatchHdlr(RecompileScriptsMessageBoxString, 0x004FEF3F);
 	_DefinePatchHdlr(SaveDialogBoxType, 0x004FE558);
-	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingOriginalData, 0x00503450)(8, 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64), 8);
-	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingNewData, 0x00503450)(8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0), 8);
+	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingOriginalData, 0x00503450, 8, 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64);
+	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingNewData, 0x00503450, 8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0);
 	_DefineHookHdlr(MaxScriptSizeOverrideScriptBufferCtor, 0x004FFECB);
 	_DefineHookHdlr(MaxScriptSizeOverrideParseScriptLine, 0x005031C6);
 
@@ -89,9 +89,9 @@ namespace Hooks
 
 	void FillScriptDataPackage(Script* ScriptForm)
 	{
-		g_ScriptDataInteropPackage->EditorID = ScriptForm->editorData.editorID.m_data;
+		g_ScriptDataInteropPackage->EditorID = ScriptForm->editorID.c_str();
 		g_ScriptDataInteropPackage->Text = ScriptForm->text;
-		g_ScriptDataInteropPackage->TypeID = kFormType_Script;
+		g_ScriptDataInteropPackage->TypeID = TESForm::kFormType_Script;
 
 		if (ScriptForm->IsObjectScript())
 		{
@@ -107,9 +107,9 @@ namespace Hooks
 
 		g_ScriptDataInteropPackage->ByteCode = ScriptForm->data;
 		g_ScriptDataInteropPackage->Length = ScriptForm->info.dataLength;
-		g_ScriptDataInteropPackage->FormID = ScriptForm->refID;
+		g_ScriptDataInteropPackage->FormID = ScriptForm->formID;
 
-		g_ScriptDataInteropPackage->Flags = ScriptForm->flags;
+		g_ScriptDataInteropPackage->Flags = ScriptForm->formFlags;
 	}
 
 	void __stdcall InstantiateTabContainer(void)
@@ -211,9 +211,9 @@ namespace Hooks
 		}
 	}
 
-	bool __stdcall DoRecompileScriptsHook(::TESForm* Form)
+	bool __stdcall DoRecompileScriptsHook(TESForm* Form)
 	{
-		if (Form->flags & TESForm::kFormFlags_FromActiveFile)
+		if (Form->formFlags & TESForm::kFormFlags_FromActiveFile)
 			return false;										// don't skip, script is from the active plugin
 		else
 			return true;										// skip
@@ -510,7 +510,7 @@ namespace Hooks
 
 	void __stdcall DoLogRecompileResultsHook(Script* Arg)
 	{
-		DebugPrint(Console::e_CS, "Script '%s' failed to recompile due to compile errors.", Arg->editorData.editorID.m_data);
+		DebugPrint(Console::e_CS, "Script '%s' failed to recompile due to compile errors.", Arg->editorID.c_str());
 	}
 
 	#define _hhName		LogRecompileResults

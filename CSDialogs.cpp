@@ -2,7 +2,6 @@
 #include "WorkspaceManager.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
-#include "Hooks\Renderer.h"
 
 using namespace Hooks;
 
@@ -86,13 +85,13 @@ const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its inde
 FormEditParam::FormEditParam(const char* EditorID)
 {
 	form = TESForm_LookupByEditorID(EditorID);
-	typeID = form->typeID;
+	typeID = form->formType;
 }
 
 FormEditParam::FormEditParam(UInt32 FormID)
 {
 	form = TESForm_LookupByFormID(FormID);
-	typeID = form->typeID;
+	typeID = form->formType;
 }
 
 UInt32 GetFormDialogTemplate(const char* FormType)
@@ -168,8 +167,8 @@ void InstantitateCustomScriptEditor(const char* ScriptEditorID)
 void InstantitateCustomScriptEditor(UInt32 ScriptFormID)
 {
 	TESForm* Script = TESForm_LookupByFormID(ScriptFormID);
-	if (Script && Script->editorData.editorID.m_data)
-		InstantitateCustomScriptEditor(Script->editorData.editorID.m_data);
+	if (Script && Script->editorID.c_str())
+		InstantitateCustomScriptEditor(Script->editorID.c_str());
 }
 
 void ShowFormEditDialog(const char* EditorID, const char* FormType)
@@ -205,8 +204,8 @@ void ShowFormEditDialog(const char* EditorID, UInt8 FormType)
 void ShowFormEditDialog(UInt32 FormID, const char* FormType)
 {
 	TESForm* Form = TESForm_LookupByFormID(FormID);
-	if (Form && Form->editorData.editorID.m_data)
-		ShowFormEditDialog(Form->editorData.editorID.m_data, FormType);
+	if (Form && Form->editorID.c_str())
+		ShowFormEditDialog(Form->editorID.c_str(), FormType);
 }
 
 void ShowFormEditDialog(UInt32 FormID, UInt8 FormType)
@@ -240,16 +239,19 @@ void CSStartupManager::LoadStartupPlugin()
 		kAutoLoadActivePluginOnStartup.WriteJump();
 
 		const char* PluginName = g_INIManager->GetINIStr("StartupPluginName");
-		const ModEntry* TESFile = (*g_dataHandler)->LookupModByName(PluginName);
-		if (TESFile)
+		TESFile* File = (*g_TESDataHandler)->LookupModByName(PluginName);
+
+		if (File)
 		{
 			DebugPrint("Loading plugin '%s' on startup...", PluginName);
-
 			CONSOLE->Indent();
+
 			if (_stricmp(PluginName, "Oblivion.esm"))
-				ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, true);
-			ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
+				ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Active, true);
+
+			ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
+
 			CONSOLE->Exdent();
 		}
 		else if (strlen(PluginName) >= 1)
@@ -297,15 +299,6 @@ void ResetRenderWindow()
 	*g_Flag_CellView_MenuState = CellWndState;
 }
 
-void TESObjectREFR_Update3D(TESObjectREFR* Ref)
-{
-	kTESObjectREFRUpdate3D.WriteJump();
-	g_TESObjectREFRUpdate3DBuffer = Ref;
-	thisVirtualCall(kVTBL_TESObjectREFR, 0x11C, Ref, NULL);		// TESObjectREFR::DeinitializeDialog
-	g_TESObjectREFRUpdate3DBuffer = NULL;
-	kTESObjectREFRUpdate3D.WriteBuffer();
-}
-
 void __stdcall FormEnumerationWrapper::ReinitializeFormLists()
 {
 	TESDialog_DeinitializeCSWindows();
@@ -336,9 +329,9 @@ bool FormEnumerationWrapper::GetDeletedFormHiddenState()
 
 bool __stdcall FormEnumerationWrapper::GetShouldEnumerateForm(TESForm* Form)
 {
-	if (GetUnmodifiedFormHiddenState() && (Form->flags & TESForm::kFormFlags_FromActiveFile) == 0)
+	if (GetUnmodifiedFormHiddenState() && (Form->formFlags & TESForm::kFormFlags_FromActiveFile) == 0)
 		return false;		// skip addition
-	else if (GetDeletedFormHiddenState() && (Form->flags & TESForm::kFormFlags_Deleted))
+	else if (GetDeletedFormHiddenState() && (Form->formFlags & TESForm::kFormFlags_Deleted))
 		return false;
 	else
 		return true;

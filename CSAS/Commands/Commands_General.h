@@ -9,4 +9,5 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(PrintToConsole);
 	DECLARE_CSASCOMMAND(FormatNumber);
 	DECLARE_CSASCOMMAND(TypeOf);
+
 }

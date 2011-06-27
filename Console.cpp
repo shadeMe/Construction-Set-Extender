@@ -161,8 +161,8 @@ void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 		CSEInterfaceManager::HandleConsoleCallback(MessageStr, Prefix.c_str());
 	}
 
-	if (IsDebuggerPresent())
-		OutputDebugString(Message.c_str());
+//	if (IsDebuggerPresent())
+//		OutputDebugString(Message.c_str());
 }
 
 void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
@@ -234,4 +234,37 @@ void Console::Pad(UInt32 PaddingCount)
 {
 	for (int i = 0; i < PaddingCount; i++)
 		LogMessage("", "\r\n");
+}
+
+void LogWinAPIErrorMessage(DWORD ErrorID)
+{
+	LPVOID ErrorMsg;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		ErrorID,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &ErrorMsg,
+		0, NULL );
+
+	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg); 
+	LocalFree(ErrorMsg);
+}
+
+void DebugPrint(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	CONSOLE->LogMessage(Console::e_CSE, fmt, args);
+	va_end(args);
+}
+
+void DebugPrint(UInt8 source, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	CONSOLE->LogMessage(source, fmt, args);
+	va_end(args);
 }

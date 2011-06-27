@@ -3,7 +3,7 @@
 #include "ExtenderInternals.h"
 #include "[Common]\HandShakeStructs.h"
 
-class DataHandler;
+class TESDataHandler;
 extern FormData*				g_FormDataInteropPackage;
 extern UseListCellItemData*		g_UseListCellItemDataInteropPackage;
 

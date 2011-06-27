@@ -101,11 +101,12 @@ void CSECCmd_LoadPlugin_Handler(CSECCMD_ARGS)
 	// prolog
 	kAutoLoadActivePluginOnStartup.WriteJump();
 
-	const ModEntry* TESFile = (*g_dataHandler)->LookupModByName(PluginName.c_str());
-	if (TESFile)
+	TESFile* File = (*g_TESDataHandler)->LookupModByName(PluginName.c_str());
+
+	if (File)
 	{
-		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Active, SetActive);
-		ToggleFlag(&TESFile->data->flags, ModEntry::Data::kFlag_Loaded, true);
+		ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Active, SetActive);
+		ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 	}
 	else
@@ -135,7 +136,7 @@ void CSECCmd_LoadForm_Handler(CSECCMD_ARGS)
 
 	TESForm* Form = TESForm_LookupByEditorID(EditorID.c_str());
 	if (Form)
-		ShowFormEditDialog(EditorID.c_str(), Form->typeID);
+		ShowFormEditDialog(EditorID.c_str(), Form->formType);
 	else
 		DebugPrint("Couldn't load form '%s' into view. Recheck the editorID argument.", EditorID.c_str());
 }
@@ -174,6 +175,7 @@ void CSECCmd_RunScript_Handler(CSECCMD_ARGS)
 	}
 
 	bool Throwaway = false;
+	DebugPrint("Executing script '%s'", ScriptName.c_str());
 	SCRIPTRUNNER->RunScript(ScriptName, NULL, mup::Value(0), &Throwaway);
 }
 
