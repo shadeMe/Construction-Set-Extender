@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 
@@ -24,6 +22,7 @@ class	NiNode;
 class	NiLines;
 class	NiAVObject;
 class	ExtraDataList;
+class	Subwindow;
 
 // 0C
 class BSExtraData
@@ -52,7 +51,7 @@ public:
 	};
 
 	enum ExtraDataTypes
-	{        
+	{
 		//Unknown                           = 0x00,
 		//Unknown                           = 0x01,
 		kExtra_Havok                        = 0x02,
@@ -150,14 +149,37 @@ public:
 	};
 
 	// members
-	//     /*00*/ void**			vtbl          
+	//     /*00*/ void**			vtbl
 	/*04*/ UInt8					extraType;   // set by constructor for each derived class
 	/*05*/ UInt8					extraPad05[3];
 	/*08*/ BSExtraData*				extraNext;
 
 	// methods
-	virtual void					UnkVFn00();
+	virtual void					VFn00();
 };
+STATIC_ASSERT(sizeof(BSExtraData) == 0x0C);
+
+// 14
+class DialogExtraSubWindow : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ Subwindow*			subWindow;
+	/*10*/ int					templateID;
+};
+STATIC_ASSERT(sizeof(DialogExtraSubWindow) == 0x14);
+
+// 14
+class DialogExtraWorkingData : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ void*				sourceObject;
+	/*10*/ void*				localCopy;
+};
+STATIC_ASSERT(sizeof(DialogExtraWorkingData) == 0x14);
 
 // cell and position where the current package was started?
 // 20
@@ -170,6 +192,7 @@ public:
 	/*10*/ Vector3				position;
 	/*1C*/ UInt32				pad1C;
 };
+STATIC_ASSERT(sizeof(ExtraPackageStartLocation) == 0x20);
 
 // current package
 // 1C
@@ -183,6 +206,7 @@ public:
 	/*14*/ UInt32				unk14;
 	/*18*/ UInt32				unk18;
 };
+STATIC_ASSERT(sizeof(ExtraPackage) == 0x1C);
 
 // 10
 class ExtraHealth : public BSExtraData
@@ -192,6 +216,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ float				health;
 };
+STATIC_ASSERT(sizeof(ExtraHealth) == 0x10);
 
 // 10
 class ExtraUses : public BSExtraData
@@ -201,6 +226,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ UInt32				uses;
 };
+STATIC_ASSERT(sizeof(ExtraUses) == 0x10);
 
 // 10
 class ExtraCharge : public BSExtraData
@@ -210,6 +236,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ float				charge;
 };
+STATIC_ASSERT(sizeof(ExtraCharge) == 0x10);
 
 // 10
 class ExtraSoul: public BSExtraData
@@ -220,6 +247,7 @@ public:
 	/*0C*/ UInt8				soul;
 	/*0D*/ UInt8				pad0D[3];
 };
+STATIC_ASSERT(sizeof(ExtraSoul) == 0x10);
 
 // used by torches, etc (implies one light per object?)
 // 10
@@ -237,6 +265,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ ExtraLightData*		data;
 };
+STATIC_ASSERT(sizeof(ExtraLight) == 0x10);
 
 // 10
 class ExtraPoison : public BSExtraData
@@ -246,6 +275,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ AlchemyItem*			poison;
 };
+STATIC_ASSERT(sizeof(ExtraPoison) == 0x10);
 
 // 10
 class ExtraMerchantContainer : public BSExtraData
@@ -255,6 +285,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESObjectREFR*		containerRef;
 };
+STATIC_ASSERT(sizeof(ExtraMerchantContainer) == 0x10);
 
 // 10
 class ExtraWaterHeight : public BSExtraData
@@ -264,6 +295,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ float				waterHeight;
 };
+STATIC_ASSERT(sizeof(ExtraWaterHeight) == 0x10);
 
 // 10
 class ExtraTravelHorse : public BSExtraData
@@ -273,6 +305,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESObjectREFR*		horseRef;		// Horse
 };
+STATIC_ASSERT(sizeof(ExtraTravelHorse) == 0x10);
 
 // 10
 class ExtraLock : public BSExtraData
@@ -300,6 +333,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ ExtraLockData*		data;
 };
+STATIC_ASSERT(sizeof(ExtraLock) == 0x10);
 
 // 10
 class ExtraOwnership : public BSExtraData
@@ -309,6 +343,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESForm*				owner;	// either TESFaction* or TESNPC*
 };
+STATIC_ASSERT(sizeof(ExtraOwnership) == 0x10);
 
 //ownership data, stored separately from ExtraOwnership
 // 10
@@ -319,16 +354,18 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ UInt32				rank;
 };
+STATIC_ASSERT(sizeof(ExtraRank) == 0x10);
 
 //ownership data, stored separately from ExtraOwnership
 // 10
 class ExtraGlobal : public BSExtraData
-{								
+{
 public:
 	// members
 	//     /*00*/ BSExtraData
 	/*0C*/ TESGlobal*			globalVar;
 };
+STATIC_ASSERT(sizeof(ExtraGlobal) == 0x10);
 
 // 10
 class ExtraTeleport : public BSExtraData
@@ -349,6 +386,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ ExtraTeleportData*	data;
 };
+STATIC_ASSERT(sizeof(ExtraTeleport) == 0x10);
 
 // 10
 class ExtraRandomTeleportMarker : public BSExtraData
@@ -358,6 +396,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESObjectREFR *		teleportRef;
 };
+STATIC_ASSERT(sizeof(ExtraRandomTeleportMarker) == 0x10);
 
 // 10
 class ExtraCellClimate : public BSExtraData
@@ -367,6 +406,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESClimate*			climate;
 };
+STATIC_ASSERT(sizeof(ExtraCellClimate) == 0x10);
 
 // 10
 class ExtraScale : public BSExtraData
@@ -376,6 +416,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ float				scale;
 };
+STATIC_ASSERT(sizeof(ExtraScale) == 0x10);
 
 // 10
 class ExtraRegionList : public BSExtraData
@@ -385,6 +426,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESRegionList*		regionList;
 };
+STATIC_ASSERT(sizeof(ExtraRegionList) == 0x10);
 
 // 10
 class ExtraPersistentCell : public BSExtraData
@@ -394,6 +436,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESObjectCELL*		cell;
 };
+STATIC_ASSERT(sizeof(ExtraPersistentCell) == 0x10);
 
 // 10
 class ExtraCellMusicType : public BSExtraData
@@ -411,6 +454,7 @@ public:
 	/*0C*/ UInt8				musicType;
 	/*0D*/ UInt8				pad0D[3];
 };
+STATIC_ASSERT(sizeof(ExtraCellMusicType) == 0x10);
 
 // 14
 class ExtraEnableStateParent : public BSExtraData
@@ -422,6 +466,7 @@ public:
 	/*10*/ UInt8				oppositeState;		// is 1 if enable state set to opposite of parent's
 	/*11*/ UInt8				pad11[3];
 };
+STATIC_ASSERT(sizeof(ExtraEnableStateParent) == 0x14);
 
 // 10
 class ExtraCount : public BSExtraData
@@ -432,6 +477,7 @@ public:
 	/*0C*/ SInt16				count;
 	/*0D*/ UInt8				pad0D[2];
 };
+STATIC_ASSERT(sizeof(ExtraCount) == 0x10);
 
 // 10
 class ExtraMapMarker : public BSExtraData
@@ -443,7 +489,7 @@ public:
 		kMapMarkerFlag_CanTravel		=	/*01*/ 0x2
 	};
 
-	enum 
+	enum
 	{
 		kMapMarkerType_Invalid			= 0x0,
 		kMapMarkerType_Camp,
@@ -472,6 +518,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ ExtraMapMarkerData*	data;
 };
+STATIC_ASSERT(sizeof(ExtraMapMarker) == 0x10);
 
 // 18
 class ExtraDistantData : public BSExtraData
@@ -481,6 +528,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ Vector3		unk0C;		// components init to 0.97
 };
+STATIC_ASSERT(sizeof(ExtraDistantData) == 0x18);
 
 // 10
 class ExtraRagDollData : public BSExtraData
@@ -497,6 +545,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ ExtraRagDollDataData*	data;
 };
+STATIC_ASSERT(sizeof(ExtraRagDollData) == 0x10);
 
 // 10
 class ExtraCellWaterType : public BSExtraData
@@ -506,6 +555,7 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ TESWaterForm*	waterType;
 };
+STATIC_ASSERT(sizeof(ExtraCellWaterType) == 0x10);
 
 // 14
 class ExtraEditorRef3DData : public BSExtraData
@@ -516,6 +566,7 @@ public:
 	/*0C*/ NiNode*			niNode;
 	/*10*/ NiLines*			selectionBox;	// present when selected in editor
 };
+STATIC_ASSERT(sizeof(ExtraEditorRef3DData) == 0x14);
 
 // 10
 class ExtraTimeLeft : public BSExtraData
@@ -525,15 +576,16 @@ public:
 	//     /*00*/ BSExtraData
 	/*0C*/ float			time;
 };
+STATIC_ASSERT(sizeof(ExtraTimeLeft) == 0x10);
 
 // 10
 class ContainerExtraData
 {
-public:  
+public:
 	class EntryExtraData;
-	typedef tList<EntryExtraData> EntryDataListT;  
+	typedef tList<EntryExtraData> EntryDataListT;
 
-	// members        
+	// members
 	/*00*/ EntryDataListT*			entryDataList;  // initialized to empty list by constructor
 	/*04*/ TESObjectREFR*			owner;          // for actors, this doubles as a pointer to parent ref
 	/*08*/ float					encumberance;	// cached total weight of contents (includes perks), -1 if needs to be recalculated
@@ -545,18 +597,20 @@ public:
 	public:
 		typedef tList<ExtraDataList> FormDataTableT;
 
-		// members        
-		/*00*/ FormDataTableT*		formDataTable;    // initialized to empty list by constructor
-		/*04*/ SInt32				count;  // cumulative with count in base container
+		// members
+		/*00*/ FormDataTableT*		formDataTable;		// initialized to empty list by constructor
+		/*04*/ SInt32				count;				// cumulative with count in base container
 		/*08*/ TESForm*				form;
 	};
 };
+STATIC_ASSERT(sizeof(ContainerExtraData) == 0x10);
 
 // 10
 class ExtraContainerChanges : public BSExtraData
 {
 public:
 	// members
-	//     /*00*/ BSExtraData          
+	//     /*00*/ BSExtraData
 	/*0C*/ ContainerExtraData*		data;
-}; 
+};
+STATIC_ASSERT(sizeof(ExtraContainerChanges) == 0x10);

@@ -3,7 +3,6 @@
 #endif
 
 #include "HandShakeStructs.h"
-#include "ExtenderInternals.h"
 
 void FormData::FillFormData(TESForm* Form)
 {

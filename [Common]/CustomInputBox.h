@@ -64,20 +64,20 @@ namespace InputBoxes
 				this->btnCancel = (gcnew System::Windows::Forms::Button());
 				this->txtInput = (gcnew System::Windows::Forms::TextBox());
 				this->SuspendLayout();
-				// 
+				//
 				// lblPrompt
-				// 
-				this->lblPrompt->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
-					| System::Windows::Forms::AnchorStyles::Left) 
+				//
+				this->lblPrompt->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom)
+					| System::Windows::Forms::AnchorStyles::Left)
 					| System::Windows::Forms::AnchorStyles::Right));
 				this->lblPrompt->Location = System::Drawing::Point(13, 9);
 				this->lblPrompt->Margin = System::Windows::Forms::Padding(4, 0, 4, 0);
 				this->lblPrompt->Name = L"lblPrompt";
 				this->lblPrompt->Size = System::Drawing::Size(362, 84);
 				this->lblPrompt->TabIndex = 0;
-				// 
+				//
 				// btnOK
-				// 
+				//
 				this->btnOK->DialogResult = System::Windows::Forms::DialogResult::OK;
 				this->btnOK->Location = System::Drawing::Point(388, 12);
 				this->btnOK->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
@@ -87,9 +87,9 @@ namespace InputBoxes
 				this->btnOK->Text = L"OK";
 				this->btnOK->UseVisualStyleBackColor = true;
 				this->btnOK->Click += gcnew System::EventHandler(this, &InputBox::btnOK_Click);
-				// 
+				//
 				// btnCancel
-				// 
+				//
 				this->btnCancel->DialogResult = System::Windows::Forms::DialogResult::Cancel;
 				this->btnCancel->Location = System::Drawing::Point(388, 42);
 				this->btnCancel->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
@@ -99,17 +99,17 @@ namespace InputBoxes
 				this->btnCancel->Text = L"Cancel";
 				this->btnCancel->UseVisualStyleBackColor = true;
 				this->btnCancel->Click += gcnew System::EventHandler(this, &InputBox::btnCancel_Click);
-				// 
+				//
 				// txtInput
-				// 
+				//
 				this->txtInput->Location = System::Drawing::Point(13, 96);
 				this->txtInput->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
 				this->txtInput->Name = L"txtInput";
 				this->txtInput->Size = System::Drawing::Size(452, 20);
 				this->txtInput->TabIndex = 3;
-				// 
+				//
 				// InputBox
-				// 
+				//
 				this->ControlBox = false;
 				this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
@@ -124,7 +124,6 @@ namespace InputBoxes
 				this->Load += gcnew System::EventHandler(this, &InputBox::InputBox_Load);
 				this->ResumeLayout(false);
 				this->PerformLayout();
-
 			}
 		#pragma endregion
 		#pragma region Private function, InputBox Form move and change size
@@ -162,12 +161,12 @@ namespace InputBoxes
 				if (n == 0)
 					n = 1;
 
-				Drawing::Point Txt = txtInput->Location; 
+				Drawing::Point Txt = txtInput->Location;
 				Txt.Y = Txt.Y + (n*4);
-				txtInput->Location = Txt; 
-				Drawing::Size form = Size; 
+				txtInput->Location = Txt;
+				Drawing::Size form = Size;
 				form.Height = form.Height + (n*4);
-				Size = form; 
+				Size = form;
 
 				txtInput->SelectionStart = 0;
 				txtInput->SelectionLength = txtInput->Text->Length;

@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="DDS" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -509,6 +509,21 @@
         XO8aXHMM4xoEAZhFJcrqAf1axaEB3gnc9bgGQQB+pKk0mTVClhnu6pvr6eBxjGkQBGAWlSSVUpeVfiG8
         x7epf6z9Tck3Jn6nEPHlc10fBAHYOJUith+PhARm/8jH965EnvrmsF5Hvayt/lA8BkEAHYQioAgoAoqA
         IqAIKAKKgCKgCJSEwP/c5LOFJHtYzAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="StatusBarCurrentLocation" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6
+        JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAACXBIWXMAAAsSAAALEgHS3X78AAABpUlE
+        QVQ4T62TP0tCYRTGJewz+G80EKeoj3AFwclArikOmjhkQ4WLS4X1ASywxeQmQUUu2lSCmFLOKl5yqdEK
+        BGuS0Ms9T++9VBgqKDYceP+c53fO+/IcDQDNLDGTWCmsAm5ubqVKpUKiKFK1WqNyuUyFQoFyuWs6v7ik
+        dPqMTk5SFI/HKRqNUjAYIofDwaTfgJ3dPblWr6PTeYckSej3++h2u2zfQevlBcpdqVRCMplEKBQCz/PQ
+        6XTyL8BkMpljsQNqNBqqSJaVO6DHQK9vb3hsNpHP55FIJOByuaDX68E0S4OAeXawsLm9hfv7B7TbbbWT
+        zse7Ki4Wi0ilUvB6vcQqE8tdZjH3C1AW7ECFrIc3SKnWarXw9PyM4t0dEsfH8Pl8MBgMf8R/AIMQ3u2W
+        BUGghigim80iEonAaDQOiYcAAxDz6qpHUj5OEE5hs9mUNy/+tD3om7E+4Hl37yqTQSy2D7vdTuPMNhbg
+        8Xh7h4dHCATWYLVapwf4/YFeOLwBjuOg1WpV04yKsR04nSufHGeDxWJRAKpppgJMOmD/M0yTVhuV9wXk
+        NLkwtVUtXgAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="TBOpen" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">

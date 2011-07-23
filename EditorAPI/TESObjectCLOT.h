@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESObject.h"
 
 //	EditorAPI: TESObjectCLOT class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -23,6 +21,6 @@ public:
 	//	   /*80*/ TESValueForm
 	//	   /*88*/ TESWeightForm
 	//	   /*90*/ TESBipedModelForm
-	
+
 	// no additional members
 };

@@ -1,8 +1,6 @@
-#include "ExtenderInternals.h"
 #include "CSEInterfaceManager.h"
 #include "RenderWindowTextPainter.h"
 #include "[Common]\CLIWrapper.h"
-
 
 std::map<std::string, std::string>		g_URLMapBuffer;
 
@@ -23,7 +21,7 @@ static CSERendererInterface	s_CSERendererInterface =
 {
 	CSEInterfaceManager::PrintToRenderWindow
 };
-static CSEScriptInterface s_CSEScriptInterface = 
+static CSEScriptInterface s_CSEScriptInterface =
 {
 	 CSEInterfaceManager::RegisterScriptCommand,
 	 CSAutomationScript::CSASCommand::ExtractCommandArgs,
@@ -94,5 +92,5 @@ void CSEInterfaceManager::PrintToRenderWindow(const char* Message, long double D
 
 bool CSEInterfaceManager::RegisterScriptCommand(CSAutomationScript::CSASCommandInfo* CommandInfo)
 {
-	return CSAutomationScript::g_CSASCommandTable.RegisterCommand(CommandInfo);
+	return CSAutomationScript::g_CSASCommandTable.RegisterCommand(CommandInfo, "[Plugin Functions]");
 }

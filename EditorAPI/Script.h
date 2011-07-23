@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 
 //	EditorAPI: Script class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -77,6 +75,9 @@ public:
 	bool								IsObjectScript() const {return info.type == kScriptType_Object; }
 	bool								IsQuestScript() const { return info.type == kScriptType_Quest; }
 	bool								IsMagicScript() const { return info.type == kScriptType_Magic; }
+
+	bool								Compile(bool AsResultScript = false);
+	void								SetText(const char* Text);
 };
 
 enum ScriptCompileErrors
@@ -98,7 +99,7 @@ struct ScriptLineBuffer
 	/*40C*/ UInt32				dataOffset;
 	/*410*/ UInt32				cmdOpcode;			// opcode of command being parsed
 	/*414*/ UInt32				callingRefIndex;	// index of the ref var corresponding to the calling ref, zero if cmd not invoked with dot syntax
-	/*418*/ UInt32				errorFlag;			
+	/*418*/ UInt32				errorFlag;
 };
 
 // 58? Nothing initialized beyond 0x50
@@ -108,9 +109,9 @@ struct ScriptBuffer
 
 	// members
 	/*00*/ char*						scriptText;
-	/*04*/ UInt32						textOffset;			
+	/*04*/ UInt32						textOffset;
 	/*08*/ UInt32						unk8;				// set when script is compiled in-game (from the console)?
-	/*0C*/ BSStringT					scriptName;			
+	/*0C*/ BSStringT					scriptName;
 	/*14*/ UInt32						errorFlag;			// set to ScritpLineBuffer::errorFlag
 	/*18*/ UInt16						unk18;
 	/*1A*/ UInt16						unk1A;
@@ -120,12 +121,21 @@ struct ScriptBuffer
 	/*28*/ UInt32						unk28;
 	/*2C*/ UInt32						numRefs;
 	/*30*/ UInt32						lastDataOffset;		// set to this->dataOffset after each successful call to ScriptCompiler::WriteByteCode
-	/*34*/ UInt32						varCount;			
-	/*38*/ UInt8						scriptType;			
+	/*34*/ UInt32						varCount;
+	/*38*/ UInt8						scriptType;
 	/*39*/ UInt8						unk39;				// initialized to script->unk35
 	/*3A*/ UInt8						pad3A[2];
 	/*3C*/ Script::VariableListT		vars;
 	/*44*/ Script::RefVariableListT		refVars;
 	/*4C*/ UInt32						unk04C;				// num lines?
-	/*50*/ ScriptLineBufferListT		lines;				
+	/*50*/ ScriptLineBufferListT		lines;
+};
+
+class TESScriptCompiler
+{
+	typedef void						(__cdecl *_ShowMessage)(ScriptBuffer* Buffer, const char* Format, ...);
+public:
+	// methods
+	static _ShowMessage					ShowMessage;
+	static void							ToggleScriptCompilation(bool State);
 };

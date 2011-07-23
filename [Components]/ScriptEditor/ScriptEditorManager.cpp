@@ -27,7 +27,7 @@ ScriptEditorManager^% ScriptEditorManager::GetSingleton()
 
 void ScriptEditorManager::PerformOperation(ScriptEditorManager::OperationType Op, ScriptEditorManager::OperationParams^ Parameters)
 {
-	try 
+	try
 	{
 		UInt16 NoOfParams = Parameters->ParameterList->Count, ParamsRequired = ParamCount[(int)Op];
 
@@ -159,9 +159,9 @@ ScriptEditor::Workspace^ ScriptEditorManager::GetAllocatedWorkspace(UInt32 Alloc
 {
 	ScriptEditor::Workspace^ Result = nullptr;
 
-	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap) 
+	for each (ScriptEditor::Workspace^% Itr in WorkspaceAllocationMap)
 	{
-		if (Itr->GetAllocatedIndex() == AllocatedIndex) 
+		if (Itr->GetAllocatedIndex() == AllocatedIndex)
 		{
 			Result = Itr;
 			break;
@@ -176,7 +176,7 @@ bool ScriptEditorManager::MoveScriptDataToVanillaEditor(ScriptEditor::Workspace^
 	{
 		CStringWrapper^ CScriptText = gcnew CStringWrapper(PreprocessedScriptResult);
 		g_ScriptDataInteropPackage->Text = CScriptText->String();
-		g_ScriptDataInteropPackage->Type = CSEEditor->GetScriptType();
+		g_ScriptDataInteropPackage->Type = (UInt16)CSEEditor->GetScriptType();
 		g_ScriptDataInteropPackage->ModifiedFlag = CSEEditor->GetModifiedStatus();
 		NativeWrapper::ScriptEditor_SetScriptData(CSEEditor->GetAllocatedIndex(), g_ScriptDataInteropPackage);
 		return true;

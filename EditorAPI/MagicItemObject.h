@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "BaseFormComponent.h"
 #include "MagicItem.h"
@@ -9,11 +7,10 @@
 //	EditorAPI: MagicItemObject class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
-	MagicItemObject is an abstract form component for objects with 'castable' effects that can be 
+/*
+	MagicItemObject is an abstract form component for objects with 'castable' effects that can be
     placed as references, i.e. Potions & Ingredients.
 */
-
 
 // 140
 class MagicItemObject : public TESBoundObject, public MagicItem
@@ -24,6 +21,7 @@ public:
 	//     /*024/058*/ MagicItem.TESFullName
 	//     /*030/064*/ MagicItem.EffectItemList
 };
+STATIC_ASSERT(sizeof(MagicItemObject) == 0x140);
 
 // 198
 class IngredientItem : public MagicItemObject, public TESModel, public TESIcon, public TESScriptableForm, public TESWeightForm
@@ -47,6 +45,7 @@ public:
 	/*194*/ UInt8            ingrFlags;
 	/*195*/ UInt8            ingrPad7D[3];		// saved & loaded, but not initialized
 };
+STATIC_ASSERT(sizeof(IngredientItem) == 0x198);
 
 // 198
 class AlchemyItem : public MagicItemObject, public TESModel, public TESIcon, public TESScriptableForm, public TESWeightForm
@@ -68,5 +67,6 @@ public:
 	//     /*070/188*/ TESWeightForm
 	/*190*/ SInt32           baseCost;			// base magicka cost / gold cost for non-autocalc
 	/*194*/ UInt8            alchFlags;
-	/*195*/ UInt8            alchPad7D[3];		// saved & loaded, but not initialized    
+	/*195*/ UInt8            alchPad7D[3];		// saved & loaded, but not initialized
 };
+STATIC_ASSERT(sizeof(AlchemyItem) == 0x198);

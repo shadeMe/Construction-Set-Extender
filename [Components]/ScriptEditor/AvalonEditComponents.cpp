@@ -58,8 +58,6 @@ namespace AvalonEditComponents
 		}
 	}
 
-
-
 	void AvalonEditLineBackgroundColorizer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine )
 	{
 		Destination->EnsureVisualLines();
@@ -71,24 +69,21 @@ namespace AvalonEditComponents
 		{
 			if (ColorEntireLine)
 			{
-				DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background), 
+				DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
 												 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
 												Windows::Rect(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height)), 2, 2);
 			}
 			else
 			{
-				DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background), 
+				DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
 												 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
 												Windows::Rect(R.Location, Windows::Size(R.Width, R.Height)), 2, 2);
 			}
-
 		}
 	}
 
-
-
 	void AvalonEditCurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-	{ 
+	{
 		if (ParentEditor->TextArea->Selection->IsEmpty)
 		{
 			DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
@@ -119,7 +114,7 @@ namespace AvalonEditComponents
 	}
 
 	void AvalonEditScriptErrorBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-	{ 
+	{
 		for (int i = 1; i <= ParentEditor->LineCount; i++)
 		{
 			if (GetLineInError(i))
@@ -132,7 +127,7 @@ namespace AvalonEditComponents
 	}
 
 	void AvalonEditSelectionBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-	{ 
+	{
 		TextDocument^ CurrentDocument = ParentEditor->Document;
 		Selection^ CurrentSelection = ParentEditor->TextArea->Selection;
 
@@ -160,7 +155,7 @@ namespace AvalonEditComponents
 	}
 
 	void AvalonEditLineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-	{ 
+	{
 		Color Buffer = OPTIONS->GetColor("CharLimitHighlightColor");
 
 		for each (DocumentLine^ Line in ParentEditor->Document->Lines)
@@ -175,7 +170,7 @@ namespace AvalonEditComponents
 	}
 
 	void AvalonEditFindReplaceBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-	{ 
+	{
 		TextDocument^ CurrentDocument = ParentEditor->Document;
 
 		if (MatchString != "")
@@ -264,13 +259,13 @@ namespace AvalonEditComponents
 				}
 			}
 		}
-		
+
 		IndentCount = IndentParser->BlockStack->Count - 1;
 
 		if (CullEmptyLines)
 		{
 			IndentParser->Tokenize(document->GetText(line->PreviousLine), false);
-			if (!IndentParser->Valid && document->GetText(line->PreviousLine)->Replace("\t", "")->Length == 0)		
+			if (!IndentParser->Valid && document->GetText(line->PreviousLine)->Replace("\t", "")->Length == 0)
 			{
 				AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, line->PreviousLine);
 				document->Replace(Leading, "");

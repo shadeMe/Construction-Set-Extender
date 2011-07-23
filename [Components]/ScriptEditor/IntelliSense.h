@@ -279,17 +279,17 @@ namespace IntelliSense
 	{
 	public:
 		static enum class									Operation
-		{
-			e_Default = 0,
-			e_Call,
-			e_Dot,
-			e_Assign
-		};
+															{
+																e_Default = 0,
+																e_Call,
+																e_Dot,
+																e_Assign
+															};
 		static enum	class									Direction
-		{
-			e_Up = 0,
-			e_Down
-		};
+															{
+																e_Up = 0,
+																e_Down
+															};
 
 		void												Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll);
 		void												Hide();
@@ -301,7 +301,7 @@ namespace IntelliSense
 		void												UpdateLocalVars();
 		bool												QuickView(String^ TextUnderMouse);
 		bool												QuickView(String^ TextUnderMouse, Point MouseLocation);
-		void												Destroy() { Destroying= true; IntelliSenseBox->Close(); }			
+		void												Destroy() { Destroying= true; IntelliSenseBox->Close(); }
 
 		property Operation									LastOperation;
 		property bool										Enabled;
@@ -316,9 +316,10 @@ namespace IntelliSense
 		static ToolTip^										InfoTip = gcnew ToolTip();
 		static ImageList^									Icons = gcnew ImageList();
 
-		int													GetSelectedIndex();
+		int													GetIntelliSenseListSelectedIndex();
 		VariableInfo^										GetLocalVar(String^% Identifier);
 		bool												ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc);
+		void												ShowInfoTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
 
 		Object^												ParentEditor;		// declared as an Object^ to work around a cyclic dependency
 		Script^												RemoteScript;
@@ -328,12 +329,12 @@ namespace IntelliSense
 		List<IntelliSenseItem^>^							ListContents;		// handles of the list's items
 		ListView^											IntelliSenseList;
 		NonActivatingImmovableForm^							IntelliSenseBox;
-		List<IntelliSenseItem^>^							LocalVarList;													
+		List<IntelliSenseItem^>^							LocalVarList;
 	public:
-		void												HideInfoTip() { InfoTip->Hide(Control::FromHandle(IntelliSenseList->Parent->Handle)); }
+		void												HideInfoTip();
 
 		void												AddLocalVariable(VariableInfo^ Variable) { LocalVarList->Add(Variable); }
-		void												ClearLocalVariableList() { LocalVarList->Clear(); }		
+		void												ClearLocalVariableList() { LocalVarList->Clear(); }
 	};
 
 	public ref struct Boxer

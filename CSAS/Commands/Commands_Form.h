@@ -6,12 +6,6 @@ namespace CSAutomationScript
 {
 	void		RegisterFormCommands();
 
-	DECLARE_CSASCOMMAND(GetFormByEditorID);
-	DECLARE_CSASCOMMAND(GetFormByFormID);
-
-	DECLARE_CSASCOMMAND(GetEditorID);
-	DECLARE_CSASCOMMAND(GetFormType);
-
 	DECLARE_CSASCOMMAND(GetBFCFullName);
 	DECLARE_CSASCOMMAND(GetBFCDescription);
 	DECLARE_CSASCOMMAND(GetBFCTexturePath);
@@ -29,8 +23,7 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(GetBFCLeveledListEntries);
 	DECLARE_CSASCOMMAND(GetBFCLeveledListChanceNone);
 	DECLARE_CSASCOMMAND(GetBFCContainerEntries);
-	DECLARE_CSASCOMMAND(GetBFCActorBaseDataNPCFlags);
-	DECLARE_CSASCOMMAND(GetBFCActorBaseDataCreatureFlags);
+	DECLARE_CSASCOMMAND(GetBFCActorBaseDataFlags);
 	DECLARE_CSASCOMMAND(GetBFCActorBaseDataFactionList);
 	DECLARE_CSASCOMMAND(GetBFCActorBaseDataMagicka);
 	DECLARE_CSASCOMMAND(GetBFCActorBaseDataFatigue);
@@ -51,7 +44,6 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(GetBFCBipedModelFemaleGroundModelPath);
 	DECLARE_CSASCOMMAND(GetBFCBipedModelMaleIconPath);
 	DECLARE_CSASCOMMAND(GetBFCBipedModelFemaleIconPath);
-	DECLARE_CSASCOMMAND(GetBFCBipedModelMaleBipedModelPath);
 	DECLARE_CSASCOMMAND(GetBFCEnchantableFormEnchantment);
 	DECLARE_CSASCOMMAND(GetBFCEnchantableFormType);
 	DECLARE_CSASCOMMAND(GetBFCProduceFormIngredient);
@@ -72,8 +64,7 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(SetBFCAttackDamage);
 	DECLARE_CSASCOMMAND(SetBFCAttribute);
 	DECLARE_CSASCOMMAND(SetBFCLeveledListChanceNone);
-	DECLARE_CSASCOMMAND(SetBFCActorBaseDataNPCFlags);
-	DECLARE_CSASCOMMAND(SetBFCActorBaseDataCreatureFlags);
+	DECLARE_CSASCOMMAND(SetBFCActorBaseDataFlags);
 	DECLARE_CSASCOMMAND(SetBFCActorBaseDataMagicka);
 	DECLARE_CSASCOMMAND(SetBFCActorBaseDataFatigue);
 	DECLARE_CSASCOMMAND(SetBFCActorBaseDataBarterGold);
@@ -91,9 +82,7 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(SetBFCBipedModelFemaleGroundModelPath);
 	DECLARE_CSASCOMMAND(SetBFCBipedModelMaleIconPath);
 	DECLARE_CSASCOMMAND(SetBFCBipedModelFemaleIconPath);
-	DECLARE_CSASCOMMAND(SetBFCBipedModelMaleBipedModelPath);
 	DECLARE_CSASCOMMAND(SetBFCEnchantableFormEnchantment);
-	DECLARE_CSASCOMMAND(SetBFCEnchantableFormType);
 	DECLARE_CSASCOMMAND(SetBFCProduceFormIngredient);
 	DECLARE_CSASCOMMAND(SetBFCProduceFormChance);
 }

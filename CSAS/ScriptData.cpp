@@ -1,5 +1,4 @@
 #include "ScriptRunner.h"
-#include "..\ExtenderInternals.h"
 
 namespace CSAutomationScript
 {
@@ -33,7 +32,7 @@ namespace CSAutomationScript
 	{
 		UInt32 LineOutBuffer = 0;
 		std::string& CurrentLine = BlockText.at(LineNumber);
-				
+
 		if (Tokenizer->Tokenize(CurrentLine, false))
 		{
 			ExecutableCode* Code = NULL;
@@ -131,7 +130,7 @@ namespace CSAutomationScript
 		{
 			ZeroMemory(Buffer, sizeof(Buffer));
 			InputStream.getline(Buffer, sizeof(Buffer));
-			
+
 			if (Tokenizer.Tokenize(Buffer, false))
 			{
 				ScriptParser::TokenType FirstToken = Tokenizer.GetFirstTokenType();
@@ -196,7 +195,7 @@ namespace CSAutomationScript
 			{
 				bool EmptyLine = false;
 				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
-				
+
 				if (!EmptyLine)
 				{
 					if (GeneratedCode)
@@ -374,7 +373,7 @@ namespace CSAutomationScript
 			{
 				bool EmptyLine = false;
 				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
-				
+
 				if (!EmptyLine)
 				{
 					if (GeneratedCode)
@@ -413,7 +412,7 @@ namespace CSAutomationScript
 						this->Valid = false;
 						break;
 					}
-				}				
+				}
 			}
 		}
 
@@ -483,7 +482,7 @@ namespace CSAutomationScript
 	ElseIfBlock::ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_ElseIfBlock;
-		InitializeCodeBlock(Source, StartLineNumber, 
+		InitializeCodeBlock(Source, StartLineNumber,
 							ScriptParser::kTokenType_ElseIf,
 							ScriptParser::kTokenType_If,
 							ScriptParser::kTokenType_ElseIf|ScriptParser::kTokenType_Else|ScriptParser::kTokenType_EndIf,
@@ -622,7 +621,7 @@ namespace CSAutomationScript
 		}
 		catch (...)
 		{
-			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);	
+			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);
 			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 
@@ -640,7 +639,7 @@ namespace CSAutomationScript
 			if (Tokenizer.Tokenize(this->Text, false))
 			{
 				BufferVarID = Tokenizer.Tokens[1];		// second token
-				Buffer = this->Text.substr(Tokenizer.Indices[2] + Tokenizer.Tokens[2].length() + 1);	// everything past the thrid token (<-)
+				Buffer = this->Text.substr(Tokenizer.Indices[2] + Tokenizer.Tokens[2].length() + 1);	// everything past the third token (<-)
 				Tokenizer.Sanitize(Buffer, ConditionExpression, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments);
 			}
 		}
@@ -684,7 +683,7 @@ namespace CSAutomationScript
 				throw std::exception("Invalid buffer variable");
 
 			mup::Value& Buffer = const_cast<mup::Value&>(BufferVar->GetValue());
-		
+
 			mup::Value ExpressionArray = CodeParser.Eval();
 			if (!ExpressionArray.IsArray())
 				throw std::exception("Non-array value returned by FOREACH expression");
@@ -730,7 +729,7 @@ namespace CSAutomationScript
 		}
 		catch (...)
 		{
-			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);	
+			DebugPrint("Couldn't execute code at %d - Unknown exception", this->LineNumber);
 			Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Terminate);
 		}
 

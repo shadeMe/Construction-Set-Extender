@@ -19,11 +19,9 @@ namespace CLIWrapper
 		typedef void							(*_InitializeDatabaseUpdateTimer)();
 		typedef void							(*_PassScriptError)(UInt32 LineNumber, const char*, UInt32);
 
-
 		extern _AllocateNewEditor				AllocateNewEditor;
 		extern _InitializeScript				InitializeScript;
 		extern _SendMessagePingback				SendMessagePingback;
-
 
 		extern _InitializeComponents			InitializeComponents;
 		extern _AddToURLMap						AddToURLMap;
@@ -63,7 +61,7 @@ namespace CLIWrapper
 	{
 		typedef void							(*_Show)(HWND);
 		typedef void							(*_Hide)(void);
-		typedef void							(*_AddFormToActiveTag)(FormData*);
+		typedef bool							(*_AddFormToActiveTag)(FormData*);
 		typedef HWND							(*_GetFormDropWindowHandle)();
 		typedef HWND							(*_GetFormDropParentHandle)();
 
@@ -73,7 +71,6 @@ namespace CLIWrapper
 		extern _GetFormDropWindowHandle			GetFormDropWindowHandle;
 		extern _GetFormDropParentHandle			GetFormDropParentHandle;
 	}
-
 
 	bool										Import(const OBSEInterface * obse);
 }

@@ -16,5 +16,4 @@ extern "C"
 	__declspec(dllexport) void SetVariableListItemData(UInt32 VanillaHandleIndex, ScriptVarIndexData::ScriptVarInfo* Data);
 	__declspec(dllexport) void InitializeDatabaseUpdateTimer();
 	__declspec(dllexport) void PassScriptError(UInt32 LineNumber, const char* Message, UInt32 EditorIndex);
-
 }

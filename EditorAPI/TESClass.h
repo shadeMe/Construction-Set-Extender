@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 #include "ActorValues.h"
@@ -8,7 +6,7 @@
 //	EditorAPI: TESClass class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     ...
 */
 
@@ -24,8 +22,8 @@ public:
 
 	enum BuySellOtherFlags
 	{
-		kBuySellOtherFlags_Weapons		 = /*00*/ 0x00000001,   
-		kBuySellOtherFlags_Armor		 = /*01*/ 0x00000002, 
+		kBuySellOtherFlags_Weapons		 = /*00*/ 0x00000001,
+		kBuySellOtherFlags_Armor		 = /*01*/ 0x00000002,
 		kBuySellOtherFlags_Clothing		 = /*02*/ 0x00000004,
 		kBuySellOtherFlags_Books         = /*03*/ 0x00000008,
 		kBuySellOtherFlags_Ingredients   = /*04*/ 0x00000010,
@@ -34,7 +32,7 @@ public:
 		kBuySellOtherFlags_Lights        = /*07*/ 0x00000080,
 		kBuySellOtherFlags_Apparatus     = /*08*/ 0x00000100,
 		kBuySellOtherFlags_Unk09         = /*09*/ 0x00000200,
-		kBuySellOtherFlags_Misc          = /*0A*/ 0x00000400, 
+		kBuySellOtherFlags_Misc          = /*0A*/ 0x00000400,
 		kBuySellOtherFlags_Spells        = /*0B*/ 0x00000800,
 		kBuySellOtherFlags_MagicItems    = /*0C*/ 0x00001000,
 		kBuySellOtherFlags_Potions       = /*0D*/ 0x00002000,

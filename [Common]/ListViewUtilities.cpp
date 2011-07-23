@@ -8,7 +8,6 @@ ListViewItem^ GetListViewSelectedItem(ListView^% Source)
 	return Result;
 }
 
-
 int CSEListViewStringSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;
@@ -23,12 +22,12 @@ int CSEListViewIntSorter::Compare(Object^ X, Object^ Y)
 	try
 	{
 		if (Hex)
-			Result = Int32::Parse(	((ListViewItem^)X)->SubItems[_Column]->Text, 
-									Globalization::NumberStyles::HexNumber) - 
-					Int32::Parse(	((ListViewItem^)Y)->SubItems[_Column]->Text, 
+			Result = Int32::Parse(	((ListViewItem^)X)->SubItems[_Column]->Text,
+									Globalization::NumberStyles::HexNumber) -
+					Int32::Parse(	((ListViewItem^)Y)->SubItems[_Column]->Text,
 									Globalization::NumberStyles::HexNumber);
 		else
-			Result = Int32::Parse(((ListViewItem^)X)->SubItems[_Column]->Text) - 
+			Result = Int32::Parse(((ListViewItem^)X)->SubItems[_Column]->Text) -
 					Int32::Parse(((ListViewItem^)Y)->SubItems[_Column]->Text);
 	}
 	catch (...) {}

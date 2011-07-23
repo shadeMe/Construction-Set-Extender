@@ -5,7 +5,7 @@ namespace Hooks
 {
 	// hooks that do odd jobs such as fixing bugs and shoveling dung
 	void PatchMiscHooks(void);
-	void PathEntryPointHooks(void);
+	void PatchEntryPointHooks(void);
 
 	extern char g_NumericIDWarningBuffer[0x10];
 
@@ -14,7 +14,7 @@ namespace Hooks
 	_DeclareMemHdlr(AssertOverride, "fixes crashes from assertion calls in the code and log them to the console/log instead");
 	_DeclareMemHdlr(TextureMipMapCheck, "allows the preview of textures with mipmaps");
 	_DeclareMemHdlr(UnnecessaryDialogEdits, "prevents unnecessary dialog edits in active plugins should its master have a DIAL record");
-	_DeclareMemHdlr(UnnecessaryCellEdits, "prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record ### Figure out what the function's doing");
+	_DeclareMemHdlr(UnnecessaryCellEdits, "prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record");
 	_DeclareMemHdlr(PluginSave, "provides a callback post-plugin load/save");
 	_DeclareMemHdlr(PluginLoad, "");
 	_DeclareMemHdlr(DataHandlerClearData, "event hook to perform various cleanup operations");
@@ -34,6 +34,15 @@ namespace Hooks
 	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapA, "fixes a CTD that sometime occurs for unknown reasons");
 	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapB, "");
 	_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registy entries at startup");
+	_DeclareMemHdlr(AchievementAddTopic, "various hooks that unlock achievements");
+	_DeclareMemHdlr(AchievementDeleteShadeMe, "");
+	_DeclareMemHdlr(AchievementModifyShadeMe, "");
+	_DeclareMemHdlr(AchievementCloneHallOfFameForms, "");
+	_DeclareMemHdlr(AchievementPluginDescription, "");
+	_DeclareMemHdlr(AchievementBuildRoads, "");
+	_DeclareMemHdlr(AchievementDialogResponseCreation, "");
+	_DeclareMemHdlr(TESDialogBuildSubwindowDiagnostics, "adds a diagnostic message to TESDialog::BuildSubwindow()");
+	_DeclareMemHdlr(ExtraTeleportInitItem, "patches the function to take into account refs without base forms (happens when quick-loading plugins)");
 
 	void PatchMessageHandler(void);
 	void __stdcall DoCSInitHook();

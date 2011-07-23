@@ -4,7 +4,7 @@
 #ifndef CSE
 	namespace CSAutomationScript
 	{
-	// use the CSEScriptInterface to initialize the following global fn ptrs
+		// use the CSEScriptInterface to initialize the following global fn ptrs
 		#pragma region Internal Use Only
 			typedef Array*							(* _CSASArrayInterface_AllocateNewArray)(CSASDataElement* Element, UInt32 Size);
 			typedef Array*							(* _CSASArrayInterface_CopyNewArray)(Array* Source);
@@ -25,9 +25,7 @@ namespace CSAutomationScript
 
 	class CSASDataElement
 	{
-#ifdef CSE
 		static UInt32					GlobalInstanceCount;
-#endif
 	public:
 		enum
 		{
@@ -35,7 +33,9 @@ namespace CSAutomationScript
 			kParamType_Numeric,
 			kParamType_Reference,						// stored as formIDs in script variables
 			kParamType_String,
-			kParamType_Array							// return type only
+			kParamType_Array,							// return type only
+			kParamType_Multi,							// param/return type only
+			kParamType__MAX
 		};
 	protected:
 		union
@@ -65,7 +65,7 @@ namespace CSAutomationScript
 		void							SetArray(Array* Data);
 		void							SetArray(CSASDataElement* Elements, UInt32 Size);
 
-		CSASDataElement() : Type(kParamType_Invalid) {}
+		CSASDataElement() : NumericData(0), Type(kParamType_Invalid) {}
 		CSASDataElement(CSASDataElement* Data);
 		CSASDataElement(double Num) : NumericData(Num), Type(kParamType_Numeric) {}
 		CSASDataElement(const char* Str) { SetString(Str); }
@@ -77,8 +77,6 @@ namespace CSAutomationScript
 
 		virtual ~CSASDataElement() { Reset(); }
 
-#ifdef CSE
 		static UInt32					GetGlobalInstanceCount() { return GlobalInstanceCount; }
-#endif
 	};
 }

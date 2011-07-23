@@ -1,10 +1,8 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
+
 #include "obse\NiNodes.h"
 
 #include "TESObjectCELL.h"
-
 
 //	EditorAPI: TESWorldSpace class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -39,12 +37,12 @@ public:
 	};
 
 	// members
-	//     /*00*/ TESFormIDListView           
+	//     /*00*/ TESFormIDListView
 	//     /*24*/ TESFullName
 	//     /*30*/ TESTexture
 	/*48*/ NiTMapBase<int, TESObjectCELL*>*				cellMap;	// key is coordinates of cell: (x << 16 + y)
 	/*4C*/ UInt32										unk4C;
-	/*50*/ UInt32										unk50;		// padding? never initialized
+	/*50*/ UInt32										unk50;		// never initialized? NULL checked by the heightmap editor when generating LOD geometry
 	/*54*/ UInt8										unk54;
 	/*55*/ UInt8										unk55[3];
 	/*58*/ NiTMapBase<int, TESTerrainLODQuadRoot*>		terrainLODQuadMap;
@@ -71,6 +69,6 @@ public:
 	/*AC*/ float										unkAC;
 	/*B0*/ float										unkB0;
 	/*B4*/ NiTMapBase<UInt32, bool>						unkB4;
-	/*C4*/ UInt32										unkC4;	
+	/*C4*/ UInt32										unkC4;
 	/*C8*/ UInt32										unkC8;		// init to 7, something to do with the player base form?
 };

@@ -6,7 +6,7 @@
 bool PerformPipeOperation(HANDLE PipeHandle, int Operation, CSECSInteropData* Buffer, DWORD* BytesReadWrittenBuf)
 {
 	bool PipeOperation = false;
-	
+
 	if (PipeHandle != INVALID_HANDLE_VALUE)
 	{
 		switch (Operation)
@@ -16,16 +16,16 @@ bool PerformPipeOperation(HANDLE PipeHandle, int Operation, CSECSInteropData* Bu
 									Buffer,
 									sizeof(CSECSInteropData),
 									BytesReadWrittenBuf,
-									NULL);				
+									NULL);
 			break;
 		case kPipeOperation_Write:
 			PipeOperation = WriteFile(PipeHandle,
 									Buffer,
 									sizeof(CSECSInteropData),
 									BytesReadWrittenBuf,
-									NULL);	
+									NULL);
 			break;
-		}											
+		}
 	}
 
 	return PipeOperation;

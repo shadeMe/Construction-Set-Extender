@@ -14,7 +14,7 @@ struct FormData
 	UInt32											FormID;
 	UInt8											TypeID;
 	UInt32											Flags;
-	TESForm*										ParentForm;	
+	TESForm*										ParentForm;
 
 	virtual bool									IsValid() { return (EditorID) ? true : false; }
 	void											FillFormData(TESForm* Form);
@@ -88,17 +88,17 @@ struct ScriptVarIndexData
 #ifndef CSE
 struct ObScriptCommandInfo
 {
-	const char*										longName;		
-	const char*										shortName;	
-	UInt32											opcode;			
-	const char* 									helpText;		
-	UInt16											needsParent;	
-	UInt16											numParams;		
-	void*											params;			
+	const char*										longName;
+	const char*										shortName;
+	UInt32											opcode;
+	const char* 									helpText;
+	UInt16											needsParent;
+	UInt16											numParams;
+	void*											params;
 
-	void*											HandlerA;		
-	void*											HandlerB;		
-	void*											HandlerC;		
+	void*											HandlerA;
+	void*											HandlerB;
+	void*											HandlerC;
 
 	UInt32											flags;
 };
@@ -200,7 +200,7 @@ struct BatchRefData
 			kFlag_UseDisabled = 1 << 2
 		};
 		UInt32										Flags;
-		
+
 		bool UsePersistent() { return (Flags & kFlag_UsePersistent) ? true : false; }
 		bool UseVWD() { return (Flags & kFlag_UseVWD) ? true : false; }
 		bool UseDisabled() { return (Flags & kFlag_UseDisabled) ? true : false; }
@@ -232,7 +232,7 @@ struct BatchRefData
 			kFlag_UseSoulLevel= 1 << 4
 		};
 		UInt32										Flags;
-		
+
 		bool UseHealth() { return (Flags & kFlag_UseHealth) ? true : false; }
 		bool UseTimeLeft() { return (Flags & kFlag_UseTimeLeft) ? true : false; }
 		bool UseCount() { return (Flags & kFlag_UseCount) ? true : false; }
@@ -250,7 +250,7 @@ struct BatchRefData
 			kFlag_UseEnableParent = 1 << 0
 		};
 		UInt32										Flags;
-		
+
 		bool UseEnableParent() { return (Flags & kFlag_UseEnableParent) ? true : false; }
 	};
 

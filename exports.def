@@ -1,4 +1,0 @@
-LIBRARY	"Construction Set Extender"
-EXPORTS
-OBSEPlugin_Query
-OBSEPlugin_Load

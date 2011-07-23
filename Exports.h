@@ -1,9 +1,5 @@
 #pragma once
 
-#include "ExtenderInternals.h"
-#include "[Common]\HandShakeStructs.h"
-
-class TESDataHandler;
 extern FormData*				g_FormDataInteropPackage;
 extern UseListCellItemData*		g_UseListCellItemDataInteropPackage;
 
@@ -12,7 +8,6 @@ extern UseListCellItemData*		g_UseListCellItemDataInteropPackage;
 
 extern "C"
 {
-
 	__declspec(dllexport) void __stdcall _D_PRINT(UInt8 Source, const char* Message);
 	__declspec(dllexport) const char* __stdcall GetINIString(const char* Section, const char* Key, const char* Default);
 	__declspec(dllexport) const char* __stdcall GetAppPath(void);
@@ -30,7 +25,7 @@ extern "C"
 
 	__declspec(dllexport) ScriptData* __stdcall FetchScriptFromForm(const char* EditorID);
 	__declspec(dllexport) bool __stdcall IsFormAnObjRefr(const char* EditorID);
-	__declspec(dllexport) FormData* __stdcall LookupFormByEditorID(const char* EditorID);	
+	__declspec(dllexport) FormData* __stdcall LookupFormByEditorID(const char* EditorID);
 
 	__declspec(dllexport) void __stdcall ScriptEditor_GetScriptListData(UInt32 TrackedEditorIndex);
 	__declspec(dllexport) const char* __stdcall ScriptEditor_GetScriptListItemText(const char* EditorID);
@@ -59,5 +54,4 @@ extern "C"
 	__declspec(dllexport) const char* __stdcall BatchRefEditor_ChooseParentReference(BatchRefData* Data, HWND Parent);
 
 	__declspec(dllexport) void __stdcall TagBrowser_InstantiateObjects(TagBrowserInstantiationData* Data);
-
 }

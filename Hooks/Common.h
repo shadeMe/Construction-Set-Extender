@@ -6,7 +6,6 @@
 #include "../HallofFame.h"
 #include "../CSInterop.h"
 #include "../WindowManager.h"
-#include "../ExtenderInternals.h"
 #include "../Exports.h"
 
 class TESForm;
@@ -36,6 +35,7 @@ namespace Hooks
 	void __stdcall TrackPopupMenuAddress(void);
 	void __stdcall ShowWindowAddress(void);
 	void __stdcall MessageBoxAddress(void);
+	void __stdcall GetClientRectAddress(void);
 
 	UInt32 __stdcall IsControlKeyDown(void);
 }

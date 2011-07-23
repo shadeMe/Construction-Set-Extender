@@ -39,8 +39,6 @@ namespace AvalonEditComponents
 		AvalonEditLineLimitColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
 	};
 
-
-
 	public ref class AvalonEditLineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 	{
 	protected:
@@ -80,7 +78,6 @@ namespace AvalonEditComponents
 		void										AddLine(int Line);
 		void										ClearLines(void);
 	};
-
 
 	public ref class AvalonEditSelectionBGColorizer : public AvalonEditLineBackgroundColorizer
 	{

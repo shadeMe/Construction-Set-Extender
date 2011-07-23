@@ -1,7 +1,7 @@
 // Precompiled header
-//	>> Include headers with static code
+//	>> Include headers with stable code
 //	!! Recompile header after modifications
-//	
+//
 #pragma once
 // 4018 - signed/unsigned mismatch
 // 4244 - loss of data by assignment
@@ -10,8 +10,12 @@
 // 4288 - disable warning for crap microsoft extension screwing up the scope of variables defined in for loops
 // 4311 - pointer truncation
 // 4312 - pointer extension
-#pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311)
+#pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311 4800 4005)
 
+#pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Version.lib")
+#pragma comment(lib, "Advapi32.lib")
+#pragma comment(lib, "Dbghelp.lib")
 
 // WIN32
 #define _WIN32_WINNT	0x0500
@@ -23,6 +27,7 @@
 #include <richedit.h>
 #include <shlobj.h>
 #include <Rpc.h>
+#include <Dbghelp.h>
 
 // CRT
 #include <time.h>
@@ -61,6 +66,8 @@
 #include <D3dx9tex.h>
 
 // OBSE
+#include "obse_common/obse_version.h"
+
 #include "common/ITypes.h"
 #include "common/IErrors.h"
 #include "common/IDynamicCreate.h"
@@ -69,4 +76,46 @@
 #include "common/IDirectoryIterator.h"
 #include "common/IFileStream.h"
 
-#include "obse_common/obse_version.h"
+#include "obse\PluginAPI.h"
+#include "obse\GameTypes.h"
+#include "obse\Utilities.h"
+
+// SME
+#include "[Libraries]\MemoryHandler\MemoryHandler.h"
+#include "[Libraries]\INI Manager\INIManager.h"
+#include "[Libraries]\INI Manager\INIEditGUI.h"
+
+using namespace SME;
+using namespace MemoryHandler;
+
+// CSE
+#include "Console.h"
+#include "[Common]\HandShakeStructs.h"
+#include "[Common]\CLIWrapper.h"
+
+extern std::string					g_APPPath;
+extern std::string					g_INIPath;
+extern std::string					g_DLLPath;
+extern char							g_TextBuffer[0x200];
+extern bool							g_PluginPostLoad;
+
+extern OBSEMessagingInterface*		g_msgIntfc;
+extern PluginHandle					g_pluginHandle;
+extern HINSTANCE					g_DLLInstance;
+extern SME::INI::INIManager*		g_INIManager;
+extern SME::INI::INIEditGUI*		g_INIEditGUI;
+extern OBSECommandTableInterface*	g_commandTableIntfc;
+extern CommandTableData				g_CommandTableData;
+
+class CSEINIManager : public INI::INIManager
+{
+public:
+	void							Initialize();
+};
+
+void				WaitUntilDebuggerAttached();
+const char*			PrintToBuffer(const char* fmt, ...);
+
+void				ToggleFlag(UInt8* Flag, UInt32 Mask, bool State);
+void				ToggleFlag(UInt16* Flag, UInt32 Mask, bool State);
+void				ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);

@@ -52,9 +52,12 @@ namespace ScriptEditor
 		DotNetBar::TabControl^								ScriptStrip;
 		DotNetBar::TabItem^									NewTabButton;
 		bool												DestructionFlag;
+		bool												InitializedFlag;
 
 		void												EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);
 		void												EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E);
+		void												EditorForm_SizeChanged(Object^ Sender, EventArgs^ E);
+		void												EditorForm_PositionChanged(Object^ Sender, EventArgs^ E);
 
 		void												ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::TabStripActionEventArgs^ E);
 		void												ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::TabStripTabChangedEventArgs^ E);
@@ -111,6 +114,12 @@ namespace ScriptEditor
 																e_Error,
 																e_Message,
 																e_CSEMessage
+															};
+		static enum class									ScriptType
+															{
+																e_Object	= 0,
+																e_Quest,
+																e_MagicEffect
 															};
 		Workspace(UInt32 Index, TabContainer^ Parent);
 	private:
@@ -207,8 +216,8 @@ namespace ScriptEditor
 
 		UInt32												AllocatedIndex;
 		bool												DestructionFlag;
-		UInt32												ScriptType;
-		String^												ScriptEditorID;
+		ScriptType											CurrentScriptType;
+		String^												CurrentScriptEditorID;
 		bool												HandlingKeyDownEvent;
 
 		void												TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
@@ -286,7 +295,7 @@ namespace ScriptEditor
 		void												FindReplaceWrapper(ScriptTextEditorInterface::FindReplaceOperation Operation);
 
 		void												ToggleBookmark(int CaretPos);
-		void												SetScriptType(UInt16 ScriptType);
+		void												SetScriptType(ScriptType Type);
 		void												SerializeCaretPos(String^% Result);
 		void												SerializeBookmarks(String^% Result);
 		void												SerializeMessages(String^% Result);
@@ -309,8 +318,8 @@ namespace ScriptEditor
 		void												AddItemToScriptListDialog(String^% ScriptName, UInt32 FormID, UInt16 Type, UInt32 Flags);
 		void												AddItemToVariableIndexList(String^% Name, UInt32 Type, UInt32 Index);
 		String^												GetScriptDescription() { return EditorTab->Tooltip; }
-		const String^										GetScriptID() { return ScriptEditorID; }
-		bool												GetIsCurrentScriptNew(void) { return ScriptEditorID == NEWSCRIPTID; }
+		const String^										GetScriptID() { return CurrentScriptEditorID; }
+		bool												GetIsCurrentScriptNew(void) { return CurrentScriptEditorID == NEWSCRIPTID; }
 		void												ShowScriptListBox(ScriptListDialog::Operation Op) { ScriptListingDialog->Show(Op); }
 		void												LoadFileFromDisk(String^ Path);
 		void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);
@@ -326,7 +335,7 @@ namespace ScriptEditor
 		void												SetCurrentToken(String^% Replacement) { TextEditor->SetTokenAtCaretPos(Replacement); }
 		bool												ValidateScript(String^% PreprocessedScriptText);
 		void												Destroy();
-		UInt16												GetScriptType();
+		ScriptType											GetScriptType();
 		bool												PreprocessScriptText(String^% PreprocessorResult);
 		void												AddMessageToPool(MessageType Type, int Line, String^ Message);
 		void												ClearCSEMessagesFromMessagePool(void);
@@ -334,8 +343,9 @@ namespace ScriptEditor
 		String^												SerializeCSEBlock(void);
 		void												Focus() { TextEditor->FocusTextArea(); }
 		void												HandleWorkspaceFocus();
-		bool												GetIsFirstRun() { return ScriptEditorID == FIRSTRUNSCRIPTID;  }		// returns true until a script's loaded/created into the workspace
-		void												TunnelKeyDownEvent(KeyEventArgs^ E) { TextEditor_KeyDown(TextEditor, E); }	
+		bool												GetIsFirstRun() { return CurrentScriptEditorID == FIRSTRUNSCRIPTID;  }		// returns true until a script's loaded/created into the workspace
+		void												TunnelKeyDownEvent(KeyEventArgs^ E) { TextEditor_KeyDown(TextEditor, E); }
+		void												HandlePositionSizeChange() { TextEditor->HandleContainerPositionSizeChangedEvent(); }
 
 		bool												IsValid() { return this != NullWorkspace; }
 	};

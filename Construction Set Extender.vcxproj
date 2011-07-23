@@ -64,23 +64,25 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;MUP_VAR_ASSIGN_TYPECHECK;MUP_CASEINSENSITIVE_DEFMAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <ForcedIncludeFiles>StdAfx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>StdAfx.h;$(SolutionDir)EditorAPI\TESEditorAPI.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <MinimalRebuild>false</MinimalRebuild>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <StringPooling>true</StringPooling>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -97,7 +99,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;MUP_VAR_ASSIGN_TYPECHECK;MUP_CASEINSENSITIVE_DEFMAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
@@ -107,7 +109,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>false</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ForcedIncludeFiles>StdAfx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>StdAfx.h;$(SolutionDir)EditorAPI\TESEditorAPI.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -119,7 +121,8 @@
       <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -154,7 +157,6 @@
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOverload.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCommon.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.cpp" />
@@ -163,11 +165,13 @@
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpParser.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpParserBase.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpRPN.cpp" />
+    <ClCompile Include="..\[Libraries]\muParserX\parser\mpScriptTokens.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpTokenReader.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpValReader.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpValue.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpValueCache.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpVariable.cpp" />
+    <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="CSAS\Array.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_Form.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_General.cpp" />
@@ -178,10 +182,26 @@
     <ClCompile Include="CSAS\ScriptRunner.cpp" />
     <ClCompile Include="CSAS\ScriptTypes.cpp" />
     <ClCompile Include="CSAS\ScriptVariables.cpp" />
+    <ClCompile Include="EditorAPI\Archive.cpp" />
+    <ClCompile Include="EditorAPI\BaseFormComponent.cpp" />
+    <ClCompile Include="EditorAPI\BSFile.cpp" />
     <ClCompile Include="EditorAPI\Core.cpp" />
+    <ClCompile Include="EditorAPI\EffectItem.cpp" />
+    <ClCompile Include="EditorAPI\ExtraDataList.cpp" />
+    <ClCompile Include="EditorAPI\GameSetting.cpp" />
+    <ClCompile Include="EditorAPI\MagicItemForm.cpp" />
     <ClCompile Include="EditorAPI\RTTI.cpp" />
     <ClCompile Include="EditorAPI\Script.cpp" />
+    <ClCompile Include="EditorAPI\SettingCollection.cpp" />
+    <ClCompile Include="EditorAPI\TESDialog.cpp" />
+    <ClCompile Include="EditorAPI\TESForm.cpp" />
+    <ClCompile Include="EditorAPI\TESIdleForm.cpp" />
+    <ClCompile Include="EditorAPI\TESObject.cpp" />
+    <ClCompile Include="EditorAPI\TESObjectCELL.cpp" />
     <ClCompile Include="EditorAPI\TESObjectREFR.cpp" />
+    <ClCompile Include="EditorAPI\TESQuest.cpp" />
+    <ClCompile Include="EditorAPI\TESRenderControl.cpp" />
+    <ClCompile Include="EditorAPI\TESSound.cpp" />
     <ClCompile Include="Hooks\VersionControl.cpp" />
     <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="StdAfx.cpp" />
@@ -204,18 +224,14 @@
     <ClCompile Include="CSEInterfaceManager.cpp" />
     <ClCompile Include="CSInterop.cpp" />
     <ClCompile Include="[Common]\CSInteropData.cpp" />
-    <ClCompile Include="ArchiveManager.cpp" />
     <ClCompile Include="CSDialogs.cpp" />
-    <ClCompile Include="GMSTMap.cpp" />
     <ClCompile Include="RenderSelectionGroupManager.cpp" />
     <ClCompile Include="ElapsedTimeCounter.cpp" />
     <ClCompile Include="RenderWindowTextPainter.cpp" />
     <ClCompile Include="ScriptEditorAllocator.cpp" />
-    <ClCompile Include="TESFormReferenceData.cpp" />
     <ClCompile Include="ToolManager.cpp" />
     <ClCompile Include="WorkspaceManager.cpp" />
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="ExtenderInternals.cpp" />
     <ClCompile Include="HallofFame.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="WindowManager.cpp" />
@@ -242,6 +258,7 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIfThenElse.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIOprt.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIPackage.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIPrecedence.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIToken.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValReader.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValue.h" />
@@ -249,7 +266,6 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOverload.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCommon.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.h" />
@@ -258,6 +274,7 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpParser.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpParserBase.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpRPN.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpScriptTokens.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpStack.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpTokenReader.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpTypes.h" />
@@ -267,6 +284,7 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpVariable.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\suSortPred.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\utGeneric.h" />
+    <ClInclude Include="Achievements.h" />
     <ClInclude Include="CSAS\Array.h" />
     <ClInclude Include="CSAS\Commands\Commands_General.h" />
     <ClInclude Include="CSAS\Commands\Commands_Form.h" />
@@ -278,13 +296,18 @@
     <ClInclude Include="CSAS\ScriptTypes.h" />
     <ClInclude Include="CSAS\ScriptVariables.h" />
     <ClInclude Include="EditorAPI\ActorValues.h" />
+    <ClInclude Include="EditorAPI\Archive.h" />
     <ClInclude Include="EditorAPI\BaseFormComponent.h" />
     <ClInclude Include="EditorAPI\BirthSign.h" />
+    <ClInclude Include="EditorAPI\BSFile.h" />
     <ClInclude Include="EditorAPI\BSStringT.h" />
     <ClInclude Include="EditorAPI\Core.h" />
+    <ClInclude Include="EditorAPI\NiTypes.h" />
     <ClInclude Include="EditorAPI\RTTI.h" />
+    <ClInclude Include="EditorAPI\SettingCollection.h" />
     <ClInclude Include="EditorAPI\TESClimate.h" />
     <ClInclude Include="EditorAPI\TESCombatStyle.h" />
+    <ClInclude Include="EditorAPI\TESDialog.h" />
     <ClInclude Include="EditorAPI\TESEditorAPI.h" />
     <ClInclude Include="EditorAPI\EffectItem.h" />
     <ClInclude Include="EditorAPI\EffectSetting.h" />
@@ -312,6 +335,7 @@
     <ClInclude Include="EditorAPI\TESGlobal.h" />
     <ClInclude Include="EditorAPI\TESGrass.h" />
     <ClInclude Include="EditorAPI\TESHair.h" />
+    <ClInclude Include="EditorAPI\TESIdleForm.h" />
     <ClInclude Include="EditorAPI\TESKey.h" />
     <ClInclude Include="EditorAPI\TESLandTexture.h" />
     <ClInclude Include="EditorAPI\TESLevCreature.h" />
@@ -337,6 +361,7 @@
     <ClInclude Include="EditorAPI\TESPackage.h" />
     <ClInclude Include="EditorAPI\TESQuest.h" />
     <ClInclude Include="EditorAPI\TESRace.h" />
+    <ClInclude Include="EditorAPI\TESRenderControl.h" />
     <ClInclude Include="EditorAPI\TESSigilStone.h" />
     <ClInclude Include="EditorAPI\TESSkill.h" />
     <ClInclude Include="EditorAPI\TESSoulGem.h" />
@@ -374,23 +399,19 @@
     <ClInclude Include="CSEInterfaceManager.h" />
     <ClInclude Include="CSInterop.h" />
     <ClInclude Include="[Common]\CSInteropData.h" />
-    <ClInclude Include="ArchiveManager.h" />
     <ClInclude Include="CSDialogs.h" />
-    <ClInclude Include="GMSTMap.h" />
     <ClInclude Include="RenderSelectionGroupManager.h" />
     <ClInclude Include="ElapsedTimeCounter.h" />
     <ClInclude Include="RenderWindowTextPainter.h" />
     <ClInclude Include="ScriptEditorAllocator.h" />
-    <ClInclude Include="TESFormReferenceData.h" />
     <ClInclude Include="ToolManager.h" />
     <ClInclude Include="WorkspaceManager.h" />
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="ExtenderInternals.h" />
     <ClInclude Include="HallofFame.h" />
     <ClInclude Include="WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="exports.def" />
+    <None Include="Images\Achievement.bmp" />
     <None Include="Images\Splash.bmp" />
   </ItemGroup>
   <ItemGroup>

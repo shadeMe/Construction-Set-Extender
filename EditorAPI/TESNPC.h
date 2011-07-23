@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESActorBase.h"
 #include "FaceGen.h"
@@ -9,7 +7,7 @@
 //	EditorAPI: TESNPC class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 

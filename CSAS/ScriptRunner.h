@@ -54,7 +54,7 @@ namespace CSAutomationScript
 			kExecutionState_Break,				// break execution without error; set by the return, break and continue commands
 			kExecutionState_Terminate			// break execution with error
 		};
-		
+
 		bool									Execute(ScriptRunner* Executor, mup::Value& ReturnValue, bool* HasReturnValue);
 
 		void									SetReturnValue(mup::IValue& Value);
@@ -68,7 +68,7 @@ namespace CSAutomationScript
 		LoopBlock*								PopLoop();
 		void									SetExecutingLoopState(UInt8 State);
 		bool									GetIsLoopExecuting() const { return LoopStack.size() != 0; }
-		
+
 		bool									IsValid() const { return Valid; }
 	};
 
@@ -115,18 +115,18 @@ namespace CSAutomationScript
 		void									DeinitializeScriptCache();
 		void									InitializeScriptCache();
 
-		void									InitializeVariableCache(const char* INIPath);		// read from INI
-		void									DeinitializeVariableCache(const char* INIPath);		// write to INI
+		void									InitializeGlobalVariableCache(const char* INIPath);		// read from INI
+		void									DeinitializeGlobalVariableCache(const char* INIPath);		// write to INI
 
 		void									AddGlobalVariable(ScriptVariable* Data);
 		void									ClearGlobalVariables(bool ReleaseVariables);
 		VariableList::iterator					GetGlobalVariableExists(const char* Name);
 		void									FillGlobalVariableCacheFromBuffer();
-	public:
-		static GlobalScriptManager*				GetSingleton();
 
 		void									InitializeGlobalTimer();
 		void									DeinitializeGlobalTimer();
+	public:
+		static GlobalScriptManager*				GetSingleton();
 
 		bool									GetInExecutionLoop() const { return InExecutionLoop; }
 		long double								GetSecondsPassed() const;

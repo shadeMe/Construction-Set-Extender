@@ -83,30 +83,29 @@ public ref class BSAViewer
 	BSAViewer();
 
 	void										BSABox_Cancel(Object^ Sender, CancelEventArgs^ E);
-    void 										BSABox_Resize(Object^ Sender, EventArgs^ E);
     void 										ContentList_ItemActivate(Object^ Sender, EventArgs^ E);
 	void 										ToolBarOpenArchive_Click(Object^ Sender, EventArgs^ E);
     void 										ToolBarUp_Click(Object^ Sender, EventArgs^ E);
     void 										ToolBarView_Click(Object^ Sender, EventArgs^ E);
 
-
 	Form^										BSABox;
-	ListView^									ContentList;
-	TextBox^									LocationBox;
-	OpenFileDialog^								OpenDialog;
-	ToolStrip^									ToolBar;
-		ToolStripSeparator^							SeparatorA;
-		ToolStripButton^							ToolBarOpenArchive;
-		ToolStripButton^							ToolBarUp;
-		ToolStripButton^							ToolBarView;
-		ToolStripLabel^								ToolBarArchiveName;
+		ListView^									ContentList;
+		TextBox^									LocationBox;
+		OpenFileDialog^								OpenDialog;
+		ToolStrip^									ToolBar;
+			ToolStripSeparator^							SeparatorA;
+			ToolStripButton^							ToolBarOpenArchive;
+			ToolStripButton^							ToolBarUp;
+			ToolStripButton^							ToolBarView;
+			ToolStripLabel^								ToolBarArchiveName;
+		StatusStrip^								StatusBar;
+			ToolStripLabel^								CurrentLocation;
 
 	ImageList^									LargeIcons;
 	ImageList^									SmallIcons;
 	String^										Filter;
 	String^										ReturnPath;
 	FolderObject^								WorkingDirectory;
-
 
 	FolderObject^ 								GetFolderInDirectory(FolderObject^% WorkingDirectory, String^% FolderName);
 	void 										OpenArchive(String^% Path);

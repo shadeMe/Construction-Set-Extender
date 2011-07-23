@@ -1,70 +1,87 @@
 #include "HallofFame.h"
 
+using namespace SME::MemoryHandler;
+
 namespace HallOfFame
 {
+	#define		TableSize		16
+	HallOfFameEntry	Entries[TableSize] =
+	{
+		{ "shadeMe",					TESForm::kFormType_NPC,			NULL,	"Likes Andrea Corr" },
+		{ "ScruggsywuggsyTheFerret",	TESForm::kFormType_Creature,	NULL,	"Cthulu-like Being" },
+		{ "ianpat",						TESForm::kFormType_NPC,			NULL,	"The Overlord" },
+		{ "behippo",					TESForm::kFormType_Creature,	NULL,	"Despises Peppermint" },
+		{ "Cipscis",					TESForm::kFormType_NPC,			NULL,	"ACRONYM" },
+		{ "haama",						TESForm::kFormType_Furniture,	NULL,	"Think Tank. Not Literally" },
+		{ "Waruddar",					TESForm::kFormType_NPC,			NULL,	"He-Whose-Name-I-Could-Never-Spell-Right" },
+		{ "Corepc",						TESForm::kFormType_Misc,		NULL,	"Has Finally Changed His Avatar." },
+		{ "DragoonWraith",				TESForm::kFormType_Weapon,		NULL,	"The Mighty ARSE" },
+		{ "PacificMorrowind",			TESForm::kFormType_NPC,			NULL,	"The Jack" },
+		{ "tejon",						TESForm::kFormType_Creature,	NULL,	"Goblin Tinkerer" },
+		{ "Vacuity",					TESForm::kFormType_Container,	NULL,	"                " },
+		{ "SenChan",					TESForm::kFormType_NPC,			NULL,	"Is A Year Older Now" },
+		{ "lilith",						TESForm::kFormType_NPC,			NULL,	"Likes Tea. Black. Like Me" },
+		{ "daemondarque",				TESForm::kFormType_NPC,			NULL,	"His Majestry The CTD" },
+		{ "greenwarden",				TESForm::kFormType_NPC,			NULL,	"The Wise Old Woman of Putney" }
+	};
 
 	void __stdcall Initialize(bool ResetCSWindows)
 	{
 		UInt32 FormID = kBaseFormID;
-		for (int i = 0; i < ListSize; i++)
+		for (int i = 0; i < TableSize; i++)
 		{
-			Entry Itr = Entries[i];
+			HallOfFameEntry& Itr = Entries[i];
 
-			Itr.Form = FormHeap_Allocate(Itr.Size);
-			thisCall(Itr.Ctor, Itr.Form);
-			thisCall(kTESForm_SetFormID, Itr.Form, FormID, 1);
-			thisCall(kTESForm_SetEditorID, Itr.Form, Itr.EditorID);
+			Itr.Form = TESForm::CreateInstance(Itr.FormType);
+			Itr.Form->SetFormID(FormID);
+			Itr.Form->SetEditorID(Itr.EditorID);
 
 			if (!_stricmp("lilith", Itr.EditorID) ||
 				!_stricmp("greenwarden", Itr.EditorID))
 			{
-				TESNPC* NPC = (TESNPC*)Itr.Form;
-				ToggleFlag<UInt32>(&NPC->actorFlags, TESActorBaseData::kNPCFlag_Female, true);
+				TESNPC* NPC = CS_CAST(Itr.Form, TESForm, TESNPC);
+				ToggleFlag(&NPC->actorFlags, TESActorBaseData::kNPCFlag_Female, true);
 			}
 			else if (!_stricmp("DragoonWraith", Itr.EditorID))
 			{
-				TESObjectWEAP* Weapon = (TESObjectWEAP*)Itr.Form;
+				TESObjectWEAP* Weapon = CS_CAST(Itr.Form, TESForm, TESObjectWEAP);
 				Weapon->weaponType = TESObjectWEAP::kWeaponType_Staff;
 			}
 
 			TESFullName* Name = CS_CAST(Itr.Form, TESForm, TESFullName);
-			if (Name)
-				Name->name.Set(Itr.Name);
+			if (Name)			Name->name.Set(Itr.Name);
 
-			thisCall(kDataHandler_AddBoundObject, (*g_TESDataHandler)->objects, Itr.Form);
-			thisVirtualCall(Itr.VTBL, 0x94, Itr.Form, 0);
+			_DATAHANDLER->AddTESObject(CS_CAST(Itr.Form, TESForm, TESObject));
+			Itr.Form->SetFromActiveFile(false);
 
 			FormID++;
 		}
 
 		void* Throwaway = NULL;
-		SpellItem* Spell = InitializeDefaultPlayerSpell(Throwaway);
-		BSStringT* FullNamePtr = (BSStringT*)((UInt32)Spell + 0x28);
-		FullNamePtr->Set("Deadliest Smiley Alive");
-		thisCall(kTESForm_SetFormID, Spell, FormID, 1);
-		thisCall(kTESForm_SetEditorID, Spell, "kyoma");
-		thisVirtualCall(kVTBL_SpellItem, 0x94, Spell, 0);
-		thisCall(kLinkedListNode_NewNode, &(*g_TESDataHandler)->spellItems, Spell);
+		SpellItem* Spell = SpellItem::InitializeDefaultPlayerSpell(Throwaway);
+		Spell->name.Set("Deadliest Smiley Alive");
+		Spell->SetFormID(FormID);
+		Spell->SetEditorID("kyoma");
+		Spell->SetFromActiveFile(false);
+		_DATAHANDLER->spellItems.AddAt(Spell, eListEnd);
 
 		// temporarily "killing" the dataHandler to prevent the TESForm ctor from assigning formIDs
 		void* DataHandlerInstance = *g_TESDataHandler;
-		*g_TESDataHandler = NULL;
-		ConstructEffectSetting('HSRJ', "The Constant Physicist", 4, 0.0, 0, 0x170, -1, 1, 'LPSD');
-		*g_TESDataHandler = (TESDataHandler*)DataHandlerInstance;
+		_DATAHANDLER = NULL;
+		EffectItem::CreateEffectSetting('HSRJ', "The Constant Physicist", 4, 0.0, 0, 0x170, -1, 1, 'LPSD');
+		_DATAHANDLER = (TESDataHandler*)DataHandlerInstance;
 
-		TESObjectREFR* shadeMeRef = (TESObjectREFR*)FormHeap_Allocate(0x60);
-		thisCall(kCtor_TESObjectREFR, shadeMeRef);
-		thisCall(kTESObjectREFR_SetBaseForm, shadeMeRef, TESForm_LookupByEditorID("shadeMe"));
-		thisCall(kTESForm_SetFormID, shadeMeRef, 0x99, 1);
-		thisCall(kTESForm_SetEditorID, shadeMeRef, "TheShadeMeRef");
-		thisVirtualCall(kVTBL_TESObjectREFR, 0x94, shadeMeRef, 0);
-		thisCall(kTESObjectREFR_SetFlagPersistent, shadeMeRef, 1);
+		TESObjectREFR* shadeMeRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
+		shadeMeRef->SetBaseForm(TESForm::LookupByEditorID("shadeMe"));
+		shadeMeRef->SetFormID(0x99);
+		shadeMeRef->SetEditorID("TheShadeMeRef");
+		shadeMeRef->SetFromActiveFile(false);
+		shadeMeRef->SetPersistent(true);
 
 		if (ResetCSWindows)
 		{
-			TESDialog_DeinitializeCSWindows();
-			TESDialog_InitializeCSWindows();
+			TESDialog::DeinitializeCSWindows();
+			TESDialog::InitializeCSWindows();
 		}
 	}
-
 }

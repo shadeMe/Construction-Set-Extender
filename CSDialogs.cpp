@@ -81,19 +81,6 @@ const char*							g_FormTypeIdentifier[] =			// uses TESForm::typeID as its inde
 											"TOFT"
 										};
 
-
-FormEditParam::FormEditParam(const char* EditorID)
-{
-	form = TESForm_LookupByEditorID(EditorID);
-	typeID = form->formType;
-}
-
-FormEditParam::FormEditParam(UInt32 FormID)
-{
-	form = TESForm_LookupByFormID(FormID);
-	typeID = form->formType;
-}
-
 UInt32 GetFormDialogTemplate(const char* FormType)
 {
 	if (!_stricmp(FormType, "Activator") ||
@@ -157,21 +144,21 @@ UInt32 GetFormDialogTemplate(UInt8 FormTypeID)
 
 void InstantitateCustomScriptEditor(const char* ScriptEditorID)
 {
-	g_EditorAuxScript =  CS_CAST(TESForm_LookupByEditorID(ScriptEditorID), TESForm, Script);;
+	g_EditorAuxScript =  CS_CAST(TESForm::LookupByEditorID(ScriptEditorID), TESForm, Script);;
 	tagRECT ScriptEditorLoc;
-	TESDialog_GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+	TESDialog::GetPositionFromINI("Script Edit", &ScriptEditorLoc);
 	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 	g_EditorAuxScript = NULL;
 }
 
 void InstantitateCustomScriptEditor(UInt32 ScriptFormID)
 {
-	TESForm* Script = TESForm_LookupByFormID(ScriptFormID);
+	TESForm* Script = TESForm::LookupByFormID(ScriptFormID);
 	if (Script && Script->editorID.c_str())
 		InstantitateCustomScriptEditor(Script->editorID.c_str());
 }
 
-void ShowFormEditDialog(const char* EditorID, const char* FormType)
+HWND ShowFormEditDialog(const char* EditorID, const char* FormType)
 {
 	UInt32 Type = GetFormDialogTemplate(FormType);
 	FormEditParam InitData(EditorID);
@@ -179,7 +166,7 @@ void ShowFormEditDialog(const char* EditorID, const char* FormType)
 	switch (Type)
 	{
 	case 9:
-		if (TESForm_LookupByEditorID(EditorID))
+		if (TESForm::LookupByEditorID(EditorID))
 			InstantitateCustomScriptEditor(EditorID);
 		break;
 	case 10:
@@ -187,49 +174,51 @@ void ShowFormEditDialog(const char* EditorID, const char* FormType)
 		break;
 	case 1:
 	case 2:
-		CreateDialogParamA(*g_TESCS_Instance,
-							(LPCSTR)TESDialog_GetDialogTemplateForFormType(InitData.typeID),
+		return CreateDialogParamA(*g_TESCS_Instance,
+							(LPCSTR)TESDialog::GetDialogTemplateForFormType(InitData.typeID),
 							*g_HWND_CSParent,
 							((Type == 1) ? g_TESDialogFormEdit_DlgProc : g_TESDialogFormIDListView_DlgProc),
 							(LPARAM)&InitData);
 		break;
 	}
+
+	return NULL;
 }
 
-void ShowFormEditDialog(const char* EditorID, UInt8 FormType)
+HWND ShowFormEditDialog(const char* EditorID, UInt8 FormType)
 {
-	ShowFormEditDialog(EditorID, g_FormTypeIdentifier[FormType]);
+	return ShowFormEditDialog(EditorID, g_FormTypeIdentifier[FormType]);
 }
 
-void ShowFormEditDialog(UInt32 FormID, const char* FormType)
+HWND ShowFormEditDialog(UInt32 FormID, const char* FormType)
 {
-	TESForm* Form = TESForm_LookupByFormID(FormID);
+	TESForm* Form = TESForm::LookupByFormID(FormID);
 	if (Form && Form->editorID.c_str())
-		ShowFormEditDialog(Form->editorID.c_str(), FormType);
+		return ShowFormEditDialog(Form->editorID.c_str(), FormType);
+
+	return NULL;
 }
 
-void ShowFormEditDialog(UInt32 FormID, UInt8 FormType)
+HWND ShowFormEditDialog(UInt32 FormID, UInt8 FormType)
 {
-	ShowFormEditDialog(FormID, g_FormTypeIdentifier[FormType]);
+	return ShowFormEditDialog(FormID, g_FormTypeIdentifier[FormType]);
 }
 
 void LoadReferenceParentCell(UInt32 FormID)
 {
-	TESObjectREFR* Reference = CS_CAST(TESForm_LookupByFormID(FormID), TESForm, TESObjectREFR);
-	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kVTBL_TESObjectREFR, 0x1A0, Reference);
-	thisCall(kTESChildCell_LoadCell, Cell, Cell, Reference);
+	TESObjectREFR* Reference = CS_CAST(TESForm::LookupByFormID(FormID), TESForm, TESObjectREFR);
+	_TES->LoadCellIntoViewPort(Reference->GetPosition(), Reference);
 }
 
 void LoadReferenceParentCell(const char* EditorID)
 {
-	TESObjectREFR* Reference = CS_CAST(TESForm_LookupByEditorID(EditorID), TESForm, TESObjectREFR);
-	TESChildCell* Cell = (TESChildCell*)thisVirtualCall(kVTBL_TESObjectREFR, 0x1A0, Reference);
-	thisCall(kTESChildCell_LoadCell, Cell, Cell, Reference);
+	TESObjectREFR* Reference = CS_CAST(TESForm::LookupByEditorID(EditorID), TESForm, TESObjectREFR);
+	_TES->LoadCellIntoViewPort(Reference->GetPosition(), Reference);
 }
 
 TESObjectREFR* ShowReferencePickDialog(HWND Parent)
 {
-	return TESDialog_ShowSelectReferenceDialog(Parent, 0, kTESObjectREFR_PickComparator, 0);
+	return TESDialog::ShowSelectReferenceDialog(Parent, NULL);
 }
 
 void CSStartupManager::LoadStartupPlugin()
@@ -239,7 +228,7 @@ void CSStartupManager::LoadStartupPlugin()
 		kAutoLoadActivePluginOnStartup.WriteJump();
 
 		const char* PluginName = g_INIManager->GetINIStr("StartupPluginName");
-		TESFile* File = (*g_TESDataHandler)->LookupModByName(PluginName);
+		TESFile* File = _DATAHANDLER->LookupPluginByName(PluginName);
 
 		if (File)
 		{
@@ -247,9 +236,9 @@ void CSStartupManager::LoadStartupPlugin()
 			CONSOLE->Indent();
 
 			if (_stricmp(PluginName, "Oblivion.esm"))
-				ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Active, true);
+				ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Active, true);
 
-			ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
+			ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 
 			CONSOLE->Exdent();
@@ -268,7 +257,7 @@ void CSStartupManager::LoadStartupScript()
 	if (g_INIManager->GetINIInt("OpenScriptWindowOnStartup"))
 	{
 		const char* ScriptID = g_INIManager->GetINIStr("StartupScriptEditorID");
-		if (strcmp(ScriptID, "") && TESForm_LookupByEditorID(ScriptID))
+		if (strcmp(ScriptID, "") && TESForm::LookupByEditorID(ScriptID))
 			InstantitateCustomScriptEditor(ScriptID);
 		else
 			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CE1, 0);
@@ -292,8 +281,8 @@ void ResetRenderWindow()
 	SendMessage(*g_HWND_RenderWindow, 0x419, 5, 0);
 	InvalidateRect(*g_HWND_RenderWindow, 0, 1);
 
-	TESDialog_DeinitializeCSWindows();
-	TESDialog_InitializeCSWindows();
+	TESDialog::DeinitializeCSWindows();
+	TESDialog::InitializeCSWindows();
 
 	*g_Flag_ObjectWindow_MenuState = ObjWndState;
 	*g_Flag_CellView_MenuState = CellWndState;
@@ -301,12 +290,12 @@ void ResetRenderWindow()
 
 void __stdcall FormEnumerationWrapper::ReinitializeFormLists()
 {
-	TESDialog_DeinitializeCSWindows();
+	TESDialog::DeinitializeCSWindows();
 
 	SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
 	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
 
-	TESDialog_InitializeCSWindows();
+	TESDialog::InitializeCSWindows();
 	InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
 	SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
 }

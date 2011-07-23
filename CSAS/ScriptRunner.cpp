@@ -1,5 +1,4 @@
 #include "ScriptRunner.h"
-#include "..\ExtenderInternals.h"
 #include "ScriptCommands.h"
 #include "resource.h"
 #include "..\WindowManager.h"
@@ -174,7 +173,7 @@ namespace CSAutomationScript
 							}
 							else
 								NewVar->SetValue(mup::Value(atof(InitializationValue.c_str())));
-						}						
+						}
 					}
 
 					break;
@@ -191,11 +190,11 @@ namespace CSAutomationScript
 					}
 					else
 					{
+						for (ScriptParser::TokenList::iterator Itr = ++(Tokenizer.Tokens.begin()); Itr != Tokenizer.Tokens.end(); Itr++)
+							ParameterIDs.push_back(*Itr);
+
 						if (PassedParameters)
 						{
-							for (ScriptParser::TokenList::iterator Itr = ++(Tokenizer.Tokens.begin()); Itr != Tokenizer.Tokens.end(); Itr++)
-								ParameterIDs.push_back(*Itr);
-
 							if (ParameterIDs.size() > MAX_BEGIN_BLOCK_PARAMS)
 							{
 								DebugPrint("Line %d: Too many parameters for Begin block", CurrentLine);
@@ -217,6 +216,11 @@ namespace CSAutomationScript
 									}
 								}
 							}
+						}
+						else if (ParameterIDs.size())
+						{
+							DebugPrint("Line %d: Incorrect number of parameters passed to Begin block - Received %d, expected %d", CurrentLine, 0, ParameterIDs.size());
+							Result = false;
 						}
 
 						MainBlockLine = CurrentLine;
@@ -400,7 +404,7 @@ namespace CSAutomationScript
 
 		ReturnValue = this->ReturnValue;
 
-		if (this->HasReturnValue)		
+		if (this->HasReturnValue)
 			*HasReturnValue = true;
 
 		assert(LoopStack.size() == 0);
@@ -448,7 +452,6 @@ namespace CSAutomationScript
 			break;
 		}
 	}
-
 
 	ScriptRunner*			ScriptRunner::Singleton = NULL;
 
@@ -588,7 +591,7 @@ namespace CSAutomationScript
 		if (Initialized)
 			return;
 
-		InitializeVariableCache(g_INIPath.c_str());
+		InitializeGlobalVariableCache(g_INIPath.c_str());
 		InitializeScriptCache();
 		InitializeGlobalTimer();
 		TimeCounter.Update();
@@ -600,7 +603,7 @@ namespace CSAutomationScript
 	{
 		DeinitializeGlobalTimer();
 		DeinitializeScriptCache();
-		DeinitializeVariableCache(g_INIPath.c_str());
+		DeinitializeGlobalVariableCache(g_INIPath.c_str());
 
 		Initialized = false;
 	}
@@ -612,7 +615,7 @@ namespace CSAutomationScript
 		InExecutionLoop = true;
 
 		bool HasReturnedValue = false;
-				
+
 		for (GlobalScriptCacheList::iterator Itr = GlobalScriptCache.begin(); Itr != GlobalScriptCache.end();)
 		{
 			ScriptContext* GlobalScript = *Itr;
@@ -651,7 +654,7 @@ namespace CSAutomationScript
 		MessageBox(*g_HWND_CSParent, "Global Scripts Reinitialized", "CSE", MB_OK|MB_ICONINFORMATION);
 	}
 
-	void GlobalScriptManager::InitializeVariableCache(const char* INIPath)
+	void GlobalScriptManager::InitializeGlobalVariableCache(const char* INIPath)
 	{
 		char SectionBuffer[0x8000] = {0};
 
@@ -676,12 +679,12 @@ namespace CSAutomationScript
 
 				DebugPrint("Global Variable: %s = %s", Name.c_str(), Value.c_str());
 			}
-		}	
+		}
 
 		FillGlobalVariableCacheFromBuffer();
 	}
 
-	void GlobalScriptManager::DeinitializeVariableCache(const char* INIPath)
+	void GlobalScriptManager::DeinitializeGlobalVariableCache(const char* INIPath)
 	{
 		WritePrivateProfileSection(INICSASGlobalsSection, NULL, INIPath);
 		for (VariableList::iterator Itr = GlobalVariableBuffer.begin(); Itr != GlobalVariableBuffer.end(); Itr++)
@@ -690,8 +693,8 @@ namespace CSAutomationScript
 			{
 			case CSASDataElement::kParamType_Reference:
 			case CSASDataElement::kParamType_Numeric:
-				WritePrivateProfileString(INICSASGlobalsSection, 
-										(*Itr)->GetName(), 
+				WritePrivateProfileString(INICSASGlobalsSection,
+										(*Itr)->GetName(),
 										(std::string("n|" + std::string(PrintToBuffer("%0.6f", (*Itr)->GetValue().GetFloat() * 1.0)))).c_str(),
 										INIPath);
 				break;
@@ -713,9 +716,13 @@ namespace CSAutomationScript
 
 	void GlobalScriptManager::PopulateListBoxWithGlobalVariables(HWND ListBox)
 	{
+		char Buffer[0x100] = {0};
+
 		for (VariableList::const_iterator Itr = GlobalVariableBuffer.begin(); Itr != GlobalVariableBuffer.end(); Itr++)
 		{
-			int Index = SendMessage(ListBox, LB_INSERTSTRING, -1, (LPARAM)(*Itr)->GetName());
+			sprintf_s(Buffer, sizeof(Buffer), "%s [%s]", (*Itr)->GetName(),
+					(((*Itr)->GetDataType() <  CSAutomationScript::CSASDataElement::kParamType_String)?"i":"s"));
+			int Index = SendMessage(ListBox, LB_INSERTSTRING, -1, (LPARAM)Buffer);
 			SendMessage(ListBox, LB_SETITEMDATA, Index, (LPARAM)*Itr);
 		}
 	}
@@ -820,7 +827,6 @@ namespace CSAutomationScript
 			Parser->DefineVar((*Itr)->GetName(), mup::Variable(&((mup::Value&)(*Itr)->GetValue())));
 		}
 	}
-
 
 	void InitializeCSASEngine()
 	{

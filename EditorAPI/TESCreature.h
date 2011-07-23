@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESActorBase.h"
 
 //	EditorAPI: TESCreature class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -57,7 +55,7 @@ public:
 	/*20*/ SoundListT*				deathSounds;
 	/*24*/ SoundListT*				weaponSounds;
 
-	virtual void					UnkVFn00();
+	virtual void					VFn00();
 };
 
 // 18C
@@ -93,7 +91,7 @@ public:
 	/*13A*/ UInt8							magicSkill;
 	/*13B*/ UInt8							stealthSkill;
 	/*13C*/ UInt16							soulLevel;
-	/*13E*/ UInt8							attackReach;							
+	/*13E*/ UInt8							attackReach;
 	/*13F*/ UInt8							pad13F;
 	/*140*/	float							turningSpeed;
 	/*144*/ float							footWeight;

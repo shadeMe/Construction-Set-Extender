@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "BaseFormComponent.h"
 
 //	EditorAPI: TESForm class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     TESForm is the base class for all object 'types' (or 'Base forms') in the game.
     It provides a common, very sophisticated interface for Serialization, Revision Control,
     Inter-form references, and editing (in the CS).
@@ -24,11 +22,33 @@
 class   TESFile;
 class   RecordInfo;
 class   TESObjectREFR;
+class	TESForm;
+class	FormCrossReferenceData;
+
+typedef tList<FormCrossReferenceData>  FormCrossReferenceListT;
+
+// replaces the vanilla cross-reference data to add reference counting
+class FormCrossReferenceData
+{
+	TESForm*		Form;
+	UInt32			Count;
+public:
+	void			Initialize(TESForm* Form)	{ this->Form = Form; Count = 0; }
+	UInt32			GetReferenceCount() const	{ return Count; }
+	UInt32			IncrementRefCount()			{ return ++Count; }
+	UInt32			DecrementRefCount()			{ if (Count-- == 0)	Count = 0; return Count; }
+	TESForm*		GetForm() const				{ return Form; }
+
+	
+	static FormCrossReferenceData*		CreateInstance(TESForm* Reference, bool IncrementRefCount = true);
+	void								DeleteInstance();
+	static FormCrossReferenceData*		FindDataInRefList(FormCrossReferenceListT* RefList, TESForm* Form);
+};
 
 // Used by the built-in revision-control in the CS, which seems to be disabled in the public version
 // This struct is public (not a subclass of TESForm) because it is also used by TESFile
 // 04
-struct TrackingData 
+struct TrackingData
 {
 	UInt16  date;               // 00 low byte is day of month, high byte is number of months with 1 = Jan. 2003 (Decembers are a little weird)
 	UInt8   lastUser;           // 02 userID that last had this form checked out
@@ -39,7 +59,7 @@ struct TrackingData
 class TESForm : public BaseFormComponent
 {
 public:
-	typedef tList<TESForm>  FormReferenceList;  // for reference tracking in the CS
+	typedef tList<TESForm>  VanillaFormCrossReferenceList;  // for reference tracking in the CS
 
 	enum FormType
 	{
@@ -135,7 +155,7 @@ public:
 		kFormFlags_Compressed           = /*12*/ 0x00040000,   // (records)
 		kFormFlags_CantWait             = /*13*/ 0x00080000,   // (TESObjectCELL/TESWorldSpace)
 		kFormFlags_IgnoresFriendlyHits  = /*14*/ 0x00100000,
-	}; 
+	};
 
 	// 0C
 	struct FormTypeInfo
@@ -149,36 +169,61 @@ public:
 
 	// members
 	//     /*00*/ void**            vtbl;
-	/*04*/ UInt8					formType; 
-	/*05*/ UInt8					formPad05[3]; 
-	/*08*/ UInt32					formFlags; 
-	/*0C*/ UInt32					formID; 
-	/*10*/ BSStringT				editorID; 
-	/*18*/ TrackingData				trackingData; 
+	/*04*/ UInt8					formType;
+	/*05*/ UInt8					formPad05[3];
+	/*08*/ UInt32					formFlags;
+	/*0C*/ UInt32					formID;
+	/*10*/ BSStringT				editorID;
+	/*18*/ TrackingData				trackingData;
 	/*1C*/ OverrideFileListT		fileList; // list of TESFiles that override this form
 
 	// methods
 	bool							IsReference() const {  return formType >= kFormType_REFR && formType <= kFormType_ACRE; }
+	bool							SetEditorID(const char* EditorID);
+	TESFile*						GetOverrideFile(int Index);
+	void							MarkAsTemporary();
+	void							SetFormID(UInt32 FormID, bool Unk02 = true);	// arg2=true to reserve formid from datahandler ?
+
+	void							AddCrossReference(TESForm* Form);
+	void							RemoveCrossReference(TESForm* Form);
+	FormCrossReferenceListT*		GetCrossReferenceList(bool CreateNew = true);
+	void							CleanupCrossReferenceList();
+
+	bool							UpdateUsageInfo();
+	void							SetFromActiveFile(bool State);
+	void							SetDeleted(bool State);
+	bool							CopyFrom(TESForm* Form);
+	bool							CompareTo(TESForm* Form);
+	void							Link();
+	bool							SaveForm(TESFile* File);
+
+	static TESForm*					CreateInstance(UInt8 TypeID);
+	void							DeleteInstance(bool ReleaseMemory = true);
+
+	static TESForm*					LookupByFormID(UInt32 FormID);
+	static TESForm*					LookupByEditorID(const char* EditorID);
 };
+STATIC_ASSERT(sizeof(TESForm) == 0x24);
 
 /*
 	This class is apprently used to centralize code for certain types of dialog windows in the CS.
-	It does not appear in the RTTI structure of the game code. 
-*/  
+	It does not appear in the RTTI structure of the game code.
+*/
 // 24
 class TESFormIDListView : public TESForm
 {
 public:
 	// no additional members
 };
+STATIC_ASSERT(sizeof(TESFormIDListView) == 0x24);
 
 /*
 	TESMemContextForm is a parent class for TESObjectCELL and TESObjectREFR.  It has no members and is not polymorphic,
 	so it probably has only static methods & data.  It may have something to do with the 'Memory Useage' debugging code
-	used by Bethesda, and it is possible that it has no use at all in the released game. 
+	used by Bethesda, and it is possible that it has no use at all in the released game.
 */
 // 00
-class TESMemContextForm 
+class TESMemContextForm
 {
 	// no members
 };

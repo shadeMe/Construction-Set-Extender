@@ -1,5 +1,5 @@
 #include "Console.h"
-#include "ExtenderInternals.h"
+
 #include "WindowManager.h"
 #include "resource.h"
 #include "CSEInterfaceManager.h"
@@ -160,9 +160,6 @@ void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
 		UpdateSignalFlag = true;
 		CSEInterfaceManager::HandleConsoleCallback(MessageStr, Prefix.c_str());
 	}
-
-//	if (IsDebuggerPresent())
-//		OutputDebugString(Message.c_str());
 }
 
 void Console::LogMessage(UInt8 Source, const char* Format, va_list Args)
@@ -240,7 +237,7 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 {
 	LPVOID ErrorMsg;
 	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
 		FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL,
@@ -249,7 +246,7 @@ void LogWinAPIErrorMessage(DWORD ErrorID)
 		(LPTSTR) &ErrorMsg,
 		0, NULL );
 
-	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg); 
+	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg);
 	LocalFree(ErrorMsg);
 }
 

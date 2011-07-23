@@ -1,12 +1,9 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
-
 
 //	EditorAPI: FaceGen class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	Container class for facegen related data.
 */
 
@@ -16,8 +13,8 @@ struct FaceGenFaceData18
 	/*00*/ UInt32			unk00;
 	/*04*/ UInt32			unk04;	// init to 1
 	/*08*/ UInt32			unk08;	// seen uninitialized
-	/*0C*/ void*			unk0C;	
-	/*10*/ void*			unk10;	
+	/*0C*/ void*			unk0C;
+	/*10*/ void*			unk10;
 	/*14*/ void*			unk14;
 };
 

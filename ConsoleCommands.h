@@ -9,10 +9,9 @@ struct CSEConsoleCommandInfo
 	const char*					CommandName;
 	UInt32						ParamCount;
 	CSEConsoleCommandHandler	Handler;
-
 };
 
-#define CSECCMD_ARGS	UInt32 ParamCount, const char* Args	
+#define CSECCMD_ARGS	UInt32 ParamCount, const char* Args
 #define DEFINE_CSECCMD(name, paramcount)	\
 	CSEConsoleCommandInfo kCSECCmd_## name = {	\
 	# name,										\
@@ -31,7 +30,6 @@ public:
 	CSEConsoleCommandInfo*				GetCommandByName(const char* CommandName);
 };
 
-
 extern CSEConsoleCommandTable	g_ConsoleCommandTable;
 
 extern CSEConsoleCommandInfo	kCSECCmd_88MPH;
@@ -41,3 +39,4 @@ extern CSEConsoleCommandInfo	kCSECCmd_SavePlugin;
 extern CSEConsoleCommandInfo	kCSECCmd_AutoSave;
 extern CSEConsoleCommandInfo	kCSECCmd_Exit;
 extern CSEConsoleCommandInfo	kCSECCmd_RunScript;
+extern CSEConsoleCommandInfo	kCSECCmd_DumpDocs;

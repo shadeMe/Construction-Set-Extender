@@ -13,7 +13,6 @@ namespace Hooks
 	extern Script* g_ScriptListResult;
 	extern Script* g_EditorAuxScript;
 
-
 	_DeclareMemHdlr(MainWindowEntryPoint, "patches the various entry points to spawn our editor");
 	_DeclareMemHdlr(ScriptableFormEntryPoint, "");
 	_DeclareMemHdlr(ScriptEffectItemEntryPoint, "");
@@ -41,5 +40,4 @@ namespace Hooks
 	_DeclareMemHdlr(MaxScriptSizeOverrideParseScriptLine, "");
 
 	void __stdcall SendPingBack(UInt16 Message);
-	void ToggleScriptCompiling(bool Enable);
 }

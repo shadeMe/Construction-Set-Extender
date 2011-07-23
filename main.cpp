@@ -1,11 +1,4 @@
-#pragma comment(lib, "Rpcrt4.lib")
-#pragma comment(lib, "Version.lib")
-
-#include "[Common]/CLIWrapper.h"
-#include "[Common]/HandShakeStructs.h"
-#include "ExtenderInternals.h"
 #include "WindowManager.h"
-#include "Console.h"
 #include "CSInterop.h"
 #include "CSEInterfaceManager.h"
 
@@ -16,13 +9,6 @@
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\Renderer.h"
 #include "Hooks\Misc.h"
-#include "Hooks\VersionControl.h"
-
-PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
-OBSEMessagingInterface*				g_msgIntfc = NULL;
-OBSECommandTableInterface*			g_commandTableIntfc = NULL;
-
-CommandTableData					g_CommandTableData;
 
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
@@ -52,22 +38,22 @@ void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
 
 extern "C"
 {
-	bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
+	__declspec(dllexport) bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
 	{
-		if (!obse->isEditor)					// we don't want to screw with the game
-			return false;
-
-		CONSOLE->InitializeLog(g_AppPath.c_str());
-		DebugPrint("Construction Set Extender Initializing ...");
-		CONSOLE->Indent();
-
 		info->infoVersion = PluginInfo::kInfoVersion;
 		info->name = "CSE";
 		info->version = 5;
 
-		g_AppPath = obse->GetOblivionDirectory();
-		g_INIPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
-		g_DLLPath = g_AppPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll";
+		if (!obse->isEditor)					// we don't want to screw with the game
+			return false;
+
+		CONSOLE->InitializeLog(g_APPPath.c_str());
+		DebugPrint("Construction Set Extender Initializing ...");
+		CONSOLE->Indent();
+
+		g_APPPath = obse->GetOblivionDirectory();
+		g_INIPath = g_APPPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
+		g_DLLPath = g_APPPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll";
 
 		DebugPrint("Initializing INI Manager");
 		CONSOLE->Indent();
@@ -123,12 +109,12 @@ extern "C"
 		return true;
 	}
 
-	bool OBSEPlugin_Load(const OBSEInterface * obse)
+	__declspec(dllexport) bool OBSEPlugin_Load(const OBSEInterface * obse)
 	{
 		INITCOMMONCONTROLSEX icex;
 																 // ensure that the common control DLL is loaded.
 		icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-		icex.dwICC  = /*ICC_STANDARD_CLASSES*/0x4000|ICC_BAR_CLASSES|ICC_COOL_CLASSES|ICC_LISTVIEW_CLASSES|ICC_NATIVEFNTCTL_CLASS|ICC_PROGRESS_CLASS|ICC_TAB_CLASSES|ICC_TREEVIEW_CLASSES|ICC_UPDOWN_CLASS|ICC_USEREX_CLASSES|ICC_WIN95_CLASSES;
+		icex.dwICC  = ICC_LISTVIEW_CLASSES;
 		InitCommonControlsEx(&icex);
 
 		g_pluginHandle = obse->GetPluginHandle();
@@ -141,14 +127,14 @@ extern "C"
 
 		DebugPrint("Initializing Hooks");
 		CONSOLE->Indent();
-		Hooks::PathEntryPointHooks();
-		Hooks::PatchDialogHooks();
-		Hooks::PatchLODHooks();
-		Hooks::PatchTESFileHooks();
-		Hooks::PatchAssetSelectorHooks();
-		Hooks::PatchScriptEditorHooks();
-		Hooks::PatchRendererHooks();
-		Hooks::PatchMiscHooks();	
+ 		Hooks::PatchEntryPointHooks();
+ 		Hooks::PatchDialogHooks();
+ 		Hooks::PatchLODHooks();
+ 		Hooks::PatchTESFileHooks();
+ 		Hooks::PatchAssetSelectorHooks();
+ 		Hooks::PatchScriptEditorHooks();
+ 		Hooks::PatchRendererHooks();
+ 		Hooks::PatchMiscHooks();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing OBSE Message Handler");

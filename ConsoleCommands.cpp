@@ -1,9 +1,11 @@
 #include "Console.h"
-#include "ExtenderInternals.h"
+
 #include "ConsoleCommands.h"
 #include "Hooks\TESFile.h"
 #include "CSDialogs.h"
 #include "CSAS\ScriptRunner.h"
+#include "CSAS\ScriptCommands.h"
+#include "Achievements.h"
 
 using namespace Hooks;
 
@@ -15,27 +17,32 @@ void ConsoleCommandCallback(const char* Message, const char* Prefix)
 
 	if (!_stricmp(Prefix, "CMD"))
 	{
-		Tokenizer MessageToken(Message, " ,");
-		std::string OperatingToken, Args = "";
-
-		if (MessageToken.NextToken(OperatingToken) != -1)
+		if (!_stricmp(Message, "wubble"))
+			Achievements::UnlockAchievement(Achievements::kAchievement_EruditeModder);
+		else
 		{
-			CSEConsoleCommandInfo* Command = g_ConsoleCommandTable.GetCommandByName(OperatingToken.c_str());
-			if (Command)
+			Tokenizer MessageToken(Message, " ,");
+			std::string OperatingToken, Args = "";
+
+			if (MessageToken.NextToken(OperatingToken) != -1)
 			{
-				UInt32 ArgCount = 0;
-				UInt32 Offset = MessageToken.NextToken(OperatingToken);
-				MessageToken.PrevToken(OperatingToken);
+				CSEConsoleCommandInfo* Command = g_ConsoleCommandTable.GetCommandByName(OperatingToken.c_str());
+				if (Command)
+				{
+					UInt32 ArgCount = 0;
+					UInt32 Offset = MessageToken.NextToken(OperatingToken);
+					MessageToken.PrevToken(OperatingToken);
 
-				while (MessageToken.NextToken(OperatingToken) != -1)
-					ArgCount++;
+					while (MessageToken.NextToken(OperatingToken) != -1)
+						ArgCount++;
 
-				if (ArgCount < Command->ParamCount)
-					DebugPrint("Too few arguments passed to console command '%s'. Expected %d.", Command->CommandName, Command->ParamCount);
-				else {
-					if (Command->ParamCount)
-						Args = (std::string(Message)).substr(Offset, strlen(Message));
-					Command->Handler(Command->ParamCount, Args.c_str());
+					if (ArgCount < Command->ParamCount)
+						DebugPrint("Too few arguments passed to console command '%s'. Expected %d.", Command->CommandName, Command->ParamCount);
+					else {
+						if (Command->ParamCount)
+							Args = (std::string(Message)).substr(Offset, strlen(Message));
+						Command->Handler(Command->ParamCount, Args.c_str());
+					}
 				}
 			}
 		}
@@ -68,6 +75,7 @@ void CSEConsoleCommandTable::InitializeCommandTable()
 	AddCommandToTable(&kCSECCmd_AutoSave);
 	AddCommandToTable(&kCSECCmd_Exit);
 	AddCommandToTable(&kCSECCmd_RunScript);
+	AddCommandToTable(&kCSECCmd_DumpDocs);
 }
 
 // COMMANDS
@@ -101,12 +109,12 @@ void CSECCmd_LoadPlugin_Handler(CSECCMD_ARGS)
 	// prolog
 	kAutoLoadActivePluginOnStartup.WriteJump();
 
-	TESFile* File = (*g_TESDataHandler)->LookupModByName(PluginName.c_str());
+	TESFile* File = _DATAHANDLER->LookupPluginByName(PluginName.c_str());
 
 	if (File)
 	{
-		ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Active, SetActive);
-		ToggleFlag<UInt32>(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
+		ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Active, SetActive);
+		ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 	}
 	else
@@ -134,9 +142,11 @@ void CSECCmd_LoadForm_Handler(CSECCMD_ARGS)
 		}
 	}
 
-	TESForm* Form = TESForm_LookupByEditorID(EditorID.c_str());
+	TESForm* Form = TESForm::LookupByEditorID(EditorID.c_str());
 	if (Form)
+	{
 		ShowFormEditDialog(EditorID.c_str(), Form->formType);
+	}
 	else
 		DebugPrint("Couldn't load form '%s' into view. Recheck the editorID argument.", EditorID.c_str());
 }
@@ -148,7 +158,7 @@ void CSECCmd_SavePlugin_Handler(CSECCMD_ARGS)
 
 void CSECCmd_AutoSave_Handler(CSECCMD_ARGS)
 {
-	AutoSavePlugin();
+	TESDialog::AutoSave();
 }
 
 void CSECCmd_Exit_Handler(CSECCMD_ARGS)
@@ -177,6 +187,13 @@ void CSECCmd_RunScript_Handler(CSECCMD_ARGS)
 	bool Throwaway = false;
 	DebugPrint("Executing script '%s'", ScriptName.c_str());
 	SCRIPTRUNNER->RunScript(ScriptName, NULL, mup::Value(0), &Throwaway);
+
+	Achievements::UnlockAchievement(Achievements::kAchievement_Automaton);
+}
+
+void CSECCmd_DumpDocs_Handler(CSECCMD_ARGS)
+{
+	CSAutomationScript::g_CSASCommandTable.DumpDocumentation();
 }
 
 DEFINE_CSECCMD(88MPH, 0);
@@ -186,3 +203,4 @@ DEFINE_CSECCMD(SavePlugin, 0);
 DEFINE_CSECCMD(AutoSave, 0);
 DEFINE_CSECCMD(Exit, 0);
 DEFINE_CSECCMD(RunScript, 1);
+DEFINE_CSECCMD(DumpDocs, 0);

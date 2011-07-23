@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 
 //	EditorAPI: TESLandTexture class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -20,7 +18,7 @@ public:
 	enum HavokMaterialType
 	{
 		kHavokMaterialType_Stone					= 0x0,
-		kHavokMaterialType_Cloth,	
+		kHavokMaterialType_Cloth,
 		kHavokMaterialType_Dirt,
 		kHavokMaterialType_Glass,
 		kHavokMaterialType_Grass,
@@ -64,7 +62,7 @@ public:
 	/*42*/ UInt8						restitution;
 	/*43*/ UInt8						specularExponent;
 	/*44*/ PotentialGrassListT			potentialGrassList;
-	/*4C*/ UInt32						unk4C;					// could be a tList, ctor initializes it as if it were
+	/*4C*/ UInt32						unk4C;					// could be a linked list, ctor initializes it as if it were
 	/*50*/ UInt32						unk50;
 	/*54*/ UInt32						unk54;					// init to 0
 };

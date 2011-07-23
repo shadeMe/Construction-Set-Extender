@@ -2,6 +2,7 @@
 
 // types
 #include "BSStringT.h"
+#include "NiTypes.h"
 
 // API
 #include "RTTI.h"
@@ -72,3 +73,8 @@
 #include "TESObjectANIO.h"
 #include "TESPackage.h"
 #include "TESWaterForm.h"
+#include "Archive.h"
+#include "TESRenderControl.h"
+#include "TESDialog.h"
+#include "TESIdleForm.h"
+#include "SettingCollection.h"

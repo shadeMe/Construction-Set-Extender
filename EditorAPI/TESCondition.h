@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 
 //	EditorAPI: TESCondition class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     ..
 */
 
@@ -30,5 +28,6 @@ public:
 	/*10*/ Param				param2;
 	/*14*/ UInt32				unk14;
 };
+STATIC_ASSERT(sizeof(TESCondition) == 0x18);
 
 typedef tList<TESCondition>		ConditionListT;

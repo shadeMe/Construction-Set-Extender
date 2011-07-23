@@ -1,19 +1,16 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
-
 
 //	EditorAPI: ActorValues.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
-    'ActorValues' is a generic container class used to group the various global data and functions related 
+/*
+    'ActorValues' is a generic container class used to group the various global data and functions related
     to actor values.
 */
 
 class ActorValues
 {
-public:    
+public:
 	// ActorValues - enumeration
 	enum ActorValueCodes
 	{
@@ -40,7 +37,7 @@ public:
 		kActorVal_Blunt                 = 0x10,
 		kActorVal_HandToHand,
 		kActorVal_HeavyArmor,
-		kActorVal_Alchemy,            
+		kActorVal_Alchemy,
 		kActorVal_Alteration,
 		kActorVal_Conjuration           = 0x15,
 		kActorVal_Destruction,
@@ -102,7 +99,7 @@ public:
 		//
 		kActorVal__MAX                  = 0x48, // 0x48, 0xFF, and 0xFFFFFFFF are all used to indicate
 		kActorVal__NONE                 = 0xFF, // 'invalid' or 'no av'.  This can cause confusion (and bugs)
-		kActorVal__UBOUND               = 0xFFFFFFFF, // used with EffectSetting::ResistAV 
+		kActorVal__UBOUND               = 0xFFFFFFFF, // used with EffectSetting::ResistAV
 	};
 
 	// ActorValues - groups
@@ -116,7 +113,7 @@ public:
 		kAVGroup_Virtue             = 0x4,  // 0x25 - 0x27 (for player only?)
 		kAVGroup_Misc               = 0x5,  // 0x28 - 0x29  not sure of name or purpose
 		kAVGroup_Combat             = 0x6,  // 0x2A - ????  not sure of name or purpose
-		kAVGroup__MAX               = 0x7,  
+		kAVGroup__MAX               = 0x7,
 	};
 
 	// ActorValues - modifiers
@@ -128,8 +125,8 @@ public:
 	};
 
 	// Skill mastery levels
-	enum SkillMasteryLevels 
-	{   
+	enum SkillMasteryLevels
+	{
 		kMastery_Novice         = 0x0,
 		kMastery_Apprentice     = 0x1,
 		kMastery_Journeyman     = 0x2,

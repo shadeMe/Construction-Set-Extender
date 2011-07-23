@@ -27,7 +27,6 @@ namespace Hooks
 		_MemHdlr(GenerateLODPartialTexture).WriteJump();
 		_MemHdlr(GenerateLODFullTexture).WriteJump();
 		_MemHdlr(GenerateLODFullTextureFileName).WriteUInt32((UInt32)s_LODFullTexturePath);
-//		SafeWrite32(0x004119A5 + 1, (UInt32)0x0092DDC0);
 	}
 
 	#define _hhName		LODLandTextureMipMapLevelB
@@ -59,21 +58,21 @@ namespace Hooks
 		D3DXCreateTexture(D3DDevice, 64, 64, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture64x);
 		D3DXCreateTexture(D3DDevice, 1024, 1024, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture1024x);
 
-		*g_LODBSTexture32x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 32, 21, 0, 0);
-		*g_LODBSTexture128x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 128, 21, 0, 0);
-		*g_LODBSTexture512x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 512, 21, 0, 0);
-		*g_LODBSTexture2048x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 2048, 21, 0, 0);
+		*g_LODBSTexture32x = _TEXMGR->CreateTexture(*g_CSRenderer, 32, 21, 0, 0);
+		*g_LODBSTexture128x = _TEXMGR->CreateTexture(*g_CSRenderer, 128, 21, 0, 0);
+		*g_LODBSTexture512x = _TEXMGR->CreateTexture(*g_CSRenderer, 512, 21, 0, 0);
+		*g_LODBSTexture2048x = _TEXMGR->CreateTexture(*g_CSRenderer, 2048, 21, 0, 0);
 
-		*g_LODBSTexture64x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 64, 21, 0, 0);
-		*g_LODBSTexture1024x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 1024, 21, 0, 0);
+		*g_LODBSTexture64x = _TEXMGR->CreateTexture(*g_CSRenderer, 64, 21, 0, 0);
+		*g_LODBSTexture1024x = _TEXMGR->CreateTexture(*g_CSRenderer, 1024, 21, 0, 0);
 
 		D3DXCreateTexture(D3DDevice, 256, 256, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture256x);
 		D3DXCreateTexture(D3DDevice, 4096, 4096, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture4096x);
 		D3DXCreateTexture(D3DDevice, 8192, 8192, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture8192x);
 
-		g_LODBSTexture256x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 256, 21, 0, 0);
-		g_LODBSTexture4096x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 4096, 21, 0, 0);
-		g_LODBSTexture8192x = (BSRenderedTexture*)thisCall(kBSTextureManager_CreateBSRenderedTexture, *g_TextureManager, *g_CSRenderer, 8192, 21, 0, 0);
+		g_LODBSTexture256x = _TEXMGR->CreateTexture(*g_CSRenderer, 256, 21, 0, 0);
+		g_LODBSTexture4096x = _TEXMGR->CreateTexture(*g_CSRenderer, 4096, 21, 0, 0);
+		g_LODBSTexture8192x = _TEXMGR->CreateTexture(*g_CSRenderer, 8192, 21, 0, 0);
 	}
 
 	#define _hhName		LODLandTextureAllocation

@@ -101,7 +101,6 @@ protected:
 			CheckBox^						UseSoulLevel;
 			CheckBox^						UseCharge;
 
-
 	BatchRefData*						BatchData;
 
 	void								ObjectList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
@@ -111,7 +110,7 @@ protected:
 	void								PopulateObjectList(BatchRefData* Data);
 	void								PopulateFormLists();
 	virtual bool						ScrubData() override;
-	
+
 	float								GetFloatFromString(String^ Text);
 	int									GetIntFromString(String^ Text);
 	UInt32								GetUIntFromString(String^ Text);

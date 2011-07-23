@@ -28,7 +28,7 @@ namespace VersionControl
 	void ChangeLog::WriteChange(const char* Message, bool StampTime, bool Flush)
 	{
 		if (Log)
-		{	
+		{
 			if (StampTime)
 			{
 				fputs(GetTimeString(Buffer, sizeof(Buffer)), Log);
@@ -201,7 +201,7 @@ namespace VersionControl
 		{
 			DebugPrint("Couldn't remove temp change log files");
 			LogWinAPIErrorMessage(GetLastError());
-		}	
+		}
 	}
 
 	void ChangeLogManager::PushNewActiveLog()
@@ -210,7 +210,7 @@ namespace VersionControl
 			return;
 
 		char Buffer[0x100] = {0};
-		
+
 		if (LogStack.size())
 			LogStack.top()->Finalize();
 		LogStack.push(new ChangeLog(GetCurrentTempDirectory(), GetTimeString(Buffer, sizeof(Buffer))));
@@ -276,12 +276,12 @@ namespace VersionControl
 		for (int i = 0; i < Size; i++)
 			WriteChangeToLogs("\n", false);
 	}
-	
+
 	void ChangeLogManager::OpenSessionLog()
 	{
 		SessionLog->OpenForViewing();
 	}
-	
+
 	const char* GetTimeString(char* Out, size_t Size)
 	{
 		__time32_t TimeData;
@@ -328,8 +328,8 @@ namespace VersionControl
 
 	void HandlePluginLoad(void)
 	{
-		if ((*g_TESDataHandler)->activeFile)
-			CHANGELOG->RecordChange("Plugins reloaded; Active = %s", (*g_TESDataHandler)->activeFile->fileName);
+		if (_DATAHANDLER->activeFile)
+			CHANGELOG->RecordChange("Plugins reloaded; Active = %s", _DATAHANDLER->activeFile->fileName);
 		else
 			CHANGELOG->RecordChange("Plugins reloaded; No Active file");
 

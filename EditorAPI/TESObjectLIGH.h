@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESObject.h"
 
 //	EditorAPI: TESObjectLIGH class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -45,7 +43,7 @@ public:
 	/*CC*/ float					fallOffExponent;
 	/*D0*/ float					FOV;
 	/*D4*/ float					fade;
-	/*D8*/ TESSound*				loopSound;	
+	/*D8*/ TESSound*				loopSound;
 
 	// methods
 	bool							IsCarriable() const { return (lightFlags & kLightFlags_CanCarry) ? true : false; }

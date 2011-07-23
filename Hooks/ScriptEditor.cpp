@@ -41,10 +41,10 @@ namespace Hooks
 	_DefineHookHdlr(MessagingCallbackSave, 0x004FE63D);
 	_DefineHookHdlr(ScriptListOpen, 0x004FEE1D);
 	_DefineHookHdlr(ScriptListDelete, 0x004FF133);
+	_DefineHookHdlr(SaveDialogBoxType, 0x004FE557);
 	_DefineHookHdlr(SaveDialogBox, 0x004FE56D);
 	_DefineHookHdlr(LogRecompileResults, 0x004FF07E);
 	_DefinePatchHdlr(RecompileScriptsMessageBoxString, 0x004FEF3F);
-	_DefinePatchHdlr(SaveDialogBoxType, 0x004FE558);
 	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingOriginalData, 0x00503450, 8, 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64);
 	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingNewData, 0x00503450, 8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0);
 	_DefineHookHdlr(MaxScriptSizeOverrideScriptBufferCtor, 0x004FFECB);
@@ -79,7 +79,7 @@ namespace Hooks
 		_MemHdlr(LogRecompileResults).WriteJump();
 
 		_MemHdlr(RecompileScriptsMessageBoxString).WriteUInt32((UInt32)g_RecompileAllScriptsStr);
-		_MemHdlr(SaveDialogBoxType).WriteUInt8(3);
+		_MemHdlr(SaveDialogBoxType).WriteJump();
 
 		_MemHdlr(MaxScriptSizeOverrideScriptBufferCtor).WriteJump();
 		_MemHdlr(MaxScriptSizeOverrideParseScriptLine).WriteJump();
@@ -114,11 +114,11 @@ namespace Hooks
 
 	void __stdcall InstantiateTabContainer(void)
 	{
-		if (g_EditorAuxHWND)		g_EditorAuxScript = (Script*)TESDialog_GetComboBoxSelectedItemData(GetDlgItem(g_EditorAuxHWND, 1226));
+		if (g_EditorAuxHWND)		g_EditorAuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(g_EditorAuxHWND, 1226));
 		else						g_EditorAuxScript = NULL;
 
 		tagRECT ScriptEditorLoc;
-		TESDialog_GetPositionFromINI("Script Edit", &ScriptEditorLoc);
+		TESDialog::GetPositionFromINI("Script Edit", &ScriptEditorLoc);
 		CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 		g_EditorAuxHWND = NULL;
 	}
@@ -246,7 +246,7 @@ namespace Hooks
 
 	bool __stdcall DoEditorInitScriptHook(void)
 	{
-		if (g_EditorInitScript) 
+		if (g_EditorInitScript)
 		{								// custom init script
 			g_SetEditorTextCache = g_EditorInitScript;
 			return true;
@@ -418,6 +418,7 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x004FED63);
+		_hhSetVar(Call, 0x00417510);					// TESDialog_WritePositionToINI
 		__asm
 		{
 			pushad
@@ -425,7 +426,7 @@ namespace Hooks
 			call	SendPingBack
 			popad
 
-			call	TESDialog_WritePositionToINI
+			call	[_hhGetVar(Call)]
 
 			pushad
 			push	edi
@@ -486,6 +487,19 @@ namespace Hooks
 		}
 	}
 
+	#define _hhName		SaveDialogBoxType
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004FE55E);
+		_hhSetVar(Offset, 0x00949954);
+		__asm
+		{
+			push	MB_YESNOCANCEL|MB_ICONEXCLAMATION|MB_TOPMOST|MB_SETFOREGROUND
+			push	[_hhGetVar(Offset)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
 	#define _hhName		SaveDialogBox
 	_hhBegin()
 	{
@@ -532,14 +546,6 @@ namespace Hooks
 		}
 	}
 
-	void ToggleScriptCompiling(bool Enable)
-	{
-		if (!Enable)
-			_MemHdlr(ToggleScriptCompilingNewData).WriteBuffer();
-		else
-			_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
-	}
-
 	#define _hhName		MaxScriptSizeOverrideScriptBufferCtor
 	_hhBegin()
 	{
@@ -572,4 +578,3 @@ namespace Hooks
 		}
 	}
 }
-

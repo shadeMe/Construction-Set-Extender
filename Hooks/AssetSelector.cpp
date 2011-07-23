@@ -36,19 +36,19 @@ namespace Hooks
 		switch (Filter)
 		{
 		case e_NIF:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "nif");
+			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "nif");
 			break;
 		case e_KF:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "kf");
+			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "kf");
 			break;
 		case e_WAV:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "wav");
+			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "wav");
 			break;
 		case e_DDS:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "dds");
+			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "dds");
 			break;
 		case e_SPT:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_AppPath.c_str(), "spt");
+			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "spt");
 			break;
 		}
 
@@ -109,6 +109,7 @@ namespace Hooks
 	}
 	void __declspec(naked) AnimationPostCommonDialogHook(void)
 	{
+		_hhSetVar(Call, 0x004051E0);
 		__asm
 		{
 			mov		ebx, eax
@@ -118,7 +119,7 @@ namespace Hooks
 			push    eax
 			lea     ecx, [ebp - 0x14]
 			mov     byte ptr [ebp - 0x4], 1
-			call    kBSStringT_Set
+			call    [_hhGetVar(Call)]
 
 			cmp		ebx, e_FetchPath
 			jz		SELECT

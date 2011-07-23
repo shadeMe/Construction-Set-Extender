@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 #include "Script.h"
@@ -9,7 +7,7 @@
 //	EditorAPI: TESQuest class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -33,7 +31,7 @@ public:
 			/*00*/ UInt8			flags;
 			/*01*/ UInt8			pad01[3];
 			/*04*/ ConditionListT	conditions;
-			/*0C*/ Script			resultScript;		// marked as temporary by the ctor
+			/*0C*/ Script			resultScript;		// marked as temporary by the ctor (why?)
 			/*60*/ BSStringT		logEntry;
 		};
 		typedef tList<QuestStageItem>	StageItemListT;
@@ -44,7 +42,7 @@ public:
 		/*04*/ StageItemListT	stageItemList;
 	};
 	typedef tList<StageData>	StageListT;
-	
+
 	// 10
 	struct TargetData
 	{
@@ -80,4 +78,8 @@ public:
 	/*60*/ TargetListT			targetList;
 	/*68*/ ConditionListT		conditions;
 	/*70*/ UInt32				unk70;			// seen pointer to a struct {Script*, ...}
+
+	// method
+	void						SetStartGameEnabledFlag(bool State);
+	void						SetAllowedRepeatedStagesFlag(bool State);
 };

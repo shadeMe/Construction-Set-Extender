@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESObject.h"
 
 //	EditorAPI: TESSound class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -39,4 +37,8 @@ public:
 	/*6E*/ UInt16					startEndTimes;		// high byte - start time; low byte - end time
 														// hour		= 3 * time / 32
 														// minutes	= fractional(hour) * 60
+
+	// methods
+	static void						PlaySoundFile(const char* Path);
+	static void						DeinitializeSoundSampler();		// deinitializes the CS sound file sampler
 };

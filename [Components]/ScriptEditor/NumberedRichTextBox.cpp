@@ -35,7 +35,7 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
     Splitter->SplitterDistance = 40;
     Splitter->SplitterWidth = 1;
 	Splitter->BorderStyle = BorderStyle::None;
-	
+
 	TextField->LinesToScroll = LinesToScroll;
 	TextField->Dock = DockStyle::Fill;
 	TextField->Multiline = true;
@@ -49,11 +49,11 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
 	TextField->Resize += gcnew EventHandler(this, &NumberedRichTextBox::UpdateLineNumbers_EventHandler);
 	TextField->VScroll += gcnew EventHandler(this, &NumberedRichTextBox::UpdateLineNumbers_EventHandler);
 	TextField->HScroll += gcnew EventHandler(this, &NumberedRichTextBox::UpdateLineNumbers_EventHandler);
-	
+
 	TextField->MouseDown += gcnew MouseEventHandler(this, &NumberedRichTextBox::TextField_MouseDownAndUp);
 	TextField->MouseUp += gcnew MouseEventHandler(this, &NumberedRichTextBox::TextField_MouseDownAndUp);
 	TextField->KeyUp += gcnew KeyEventHandler(this, &NumberedRichTextBox::TextField_KeyDownAndUp);
-	
+
 	this->LineChanged += gcnew LineChangedEventHandler(this, &NumberedRichTextBox::NumberedRichTextBox_LineChanged);
 
 	LineField->Multiline = true;
@@ -93,7 +93,6 @@ void NumberedRichTextBox::OnLineChanged(LineChangedEventArgs^ E)
 	LineChanged(this, E);
 }
 
-
 void NumberedRichTextBox::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 {
 	ValidateLineChange();
@@ -122,10 +121,10 @@ void NumberedRichTextBox::NumberedRichTextBox_LineChanged(Object^ Sender, LineCh
 void NumberedRichTextBox::LineField_MouseDown(Object^ Sender, MouseEventArgs^ E)
 {
 	TextField->Focus();
-	int LineNo = 0, SelStart = LineField->SelectionStart; 
+	int LineNo = 0, SelStart = LineField->SelectionStart;
 
-	try 
-	{ 
+	try
+	{
 		if (SelStart != -1 &&
 			LineField->GetLineFromCharIndex(SelStart) < LineField->Lines->Length && LineField->Lines->Length > 0)
 		{
@@ -184,7 +183,7 @@ void NumberedRichTextBox::HighlightLineNumbers(void)
 		Font^ BoldStyle = gcnew Font(LineField->Font->FontFamily, LineField->Font->Size, FontStyle::Bold);
 
 		CurrentLine = TextField->GetLineFromCharIndex(TextField->SelectionStart) + 1;
-		if (SelectLineNumberInLineField(CurrentLine) != -1) 
+		if (SelectLineNumberInLineField(CurrentLine) != -1)
 		{
 			LineField->SelectionColor = HighlightColor;
 			LineField->SelectionFont = BoldStyle;
@@ -199,7 +198,7 @@ int NumberedRichTextBox::SelectLineNumberInLineField(UInt32 Line)
 
 void NumberedRichTextBox::GotoLine(int Line)
 {
-	if (Line > TextField->Lines->Length || !Line) 
+	if (Line > TextField->Lines->Length || !Line)
 	{
 		MessageBox::Show("Invalid line number/offset", "Goto Line - CSE Editor");
 	}
@@ -221,8 +220,6 @@ void NumberedRichTextBox::JumpToLine(String^ Line)
 	GotoLine(LineNo);
 }
 
-
-
 OffsetRichTextBox::OffsetRichTextBox(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor) : NumberedRichTextBox(LinesToScroll, Font, ForegroundColor, BackgroundColor, HighlightColor)
 {
 	OffsetFlag = false;
@@ -240,11 +237,11 @@ UInt16 OffsetRichTextBox::LookupOffsetByIndex(UInt32 Index)
 void OffsetRichTextBox::JumpToLine(String^ Line)
 {
 	int LineNo = 0;
-	try 
-	{ 
+	try
+	{
 		if (!OffsetFlag)
-			LineNo = Int32::Parse(Line); 
-		else 
+			LineNo = Int32::Parse(Line);
+		else
 		{
 			UInt16 Offset = UInt16::Parse(Line, System::Globalization::NumberStyles::HexNumber);
 			LineNo = GetIndexOfOffset(Offset) + 1;
@@ -257,7 +254,7 @@ void OffsetRichTextBox::JumpToLine(String^ Line)
 int OffsetRichTextBox::GetIndexOfOffset(UInt16 Offset)
 {
 	int Result = -1, Count = 0;
-	
+
 	for each (UInt16 Itr in LineOffsets)
 	{
 		if (Itr == Offset)
@@ -275,10 +272,10 @@ int OffsetRichTextBox::GetIndexOfOffset(UInt16 Offset)
 void OffsetRichTextBox::LineField_MouseDown(Object^ Sender, MouseEventArgs^ E)
 {
 	TextField->Focus();
-	int LineNo = 0, SelStart = LineField->SelectionStart; 
+	int LineNo = 0, SelStart = LineField->SelectionStart;
 
-	try 
-	{ 
+	try
+	{
 		if (SelStart != -1 &&
 			LineField->GetLineFromCharIndex(SelStart) < LineField->Lines->Length && LineField->Lines->Length > 0)
 		{
@@ -302,7 +299,7 @@ void OffsetRichTextBox::LineField_MouseDown(Object^ Sender, MouseEventArgs^ E)
 	catch (...)
 	{
 		return;
-	}		
+	}
 }
 
 void OffsetRichTextBox::DrawLineNumbers(void)
@@ -321,11 +318,11 @@ void OffsetRichTextBox::DrawLineNumbers(void)
 		{
 			if (OffsetFlag)
 			{
-				try 
+				try
 				{
 					UInt32 Offset = LookupOffsetByIndex(i - 1);
 					LineField->Text += ((Offset == 0xFFFF)? "":Offset.ToString("X4")) + "\n";
-				} 
+				}
 				catch (...)	{}
 			}
 			else
@@ -342,7 +339,7 @@ void OffsetRichTextBox::HighlightLineNumbers(void)
 		Font^ BoldStyle = gcnew Font(LineField->Font->FontFamily, LineField->Font->Size, FontStyle::Bold);
 
 		CurrentLine = TextField->GetLineFromCharIndex(TextField->SelectionStart) + 1;
-		if (SelectLineNumberInLineField(CurrentLine) != -1) 
+		if (SelectLineNumberInLineField(CurrentLine) != -1)
 		{
 			LineField->SelectionColor = HighlightColor;
 			LineField->SelectionFont = BoldStyle;
@@ -354,14 +351,14 @@ int OffsetRichTextBox::SelectLineNumberInLineField(UInt32 Line)
 {
 	if (OffsetFlag && Line - 1 < TextField->Lines->Length)
 	{
-		try 
+		try
 		{
 			UInt32 Offset = LookupOffsetByIndex(Line - 1);
 			if (Offset != 0xFFFF)
 				return LineField->Find(Offset.ToString("X4"), 0, RichTextBoxFinds::WholeWord);
-		} 
+		}
 		catch (...) {}
-	} 
+	}
 	else
 		return LineField->Find(Line.ToString(), 0, LineField->Text->Length, RichTextBoxFinds::WholeWord);
 
@@ -402,6 +399,6 @@ bool OffsetRichTextBox::CalculateLineOffsetsForTextField(UInt32 Data, UInt32 Len
 	catch (...)		// exceptions raised when bytecode size doesn't correspond to text length
 	{				// can't be predicted as scripts can be saved without being compiled
 		Result = false;
-	}	
+	}
 	return Result;
 }

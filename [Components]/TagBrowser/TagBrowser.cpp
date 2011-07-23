@@ -56,10 +56,9 @@ bool TagDatabase::TagItem(AdvTree::Node^ Tag, FormData* Data)
 	}
 	else
 	{
-		MessageBox::Show("Item '"+ gcnew String(Data->EditorID) + "' has already been tagged with '" + Tag->Text + "'.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);	
+		MessageBox::Show("Item '"+ gcnew String(Data->EditorID) + "' has already been tagged with '" + Tag->Text + "'.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 		return false;
 	}
-
 }
 bool TagDatabase::TagItem(String^% TagName, FormData* Data)
 {
@@ -83,7 +82,7 @@ void TagDatabase::UntagItem(AdvTree::Node^ Tag, String^% Name)
 		}
 
 		if (Index != -1)
-			TagItems->RemoveAt(Index);	
+			TagItems->RemoveAt(Index);
 	}
 }
 bool TagDatabase::GetItemExistsInTag(AdvTree::Node^ Tag, String^% Name)
@@ -97,7 +96,7 @@ bool TagDatabase::GetItemExistsInTag(AdvTree::Node^ Tag, String^% Name)
 				return true;
 		}
 	}
-	
+
 	return false;
 }
 bool TagDatabase::GetTagExists(String^% Name)
@@ -114,7 +113,7 @@ void TagDatabase::Clear(void)
 	for each (KeyValuePair<AdvTree::Node^, List<String^>^>% Itr in Database)
 		Itr.Value->Clear();
 
-	Database->Clear();	
+	Database->Clear();
 }
 String^ TagDatabase::SerializeDatabase(void)
 {
@@ -135,7 +134,7 @@ String^ TagDatabase::SerializeDatabase(void)
 		SerializedData += "\n";
 	}
 
-	return SerializedData;	
+	return SerializedData;
 }
 bool TagDatabase::DeserializeDatabase(String^ SerializedData)
 {
@@ -233,9 +232,9 @@ TagBrowser::TagBrowser()
 	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TagTree))->BeginInit();
 	TagTreeContextMenu->SuspendLayout();
 	TagBrowserBox->SuspendLayout();
-	// 
+	//
 	// SearchBox
-	// 
+	//
 	SearchBox->Location = Point(245, 389);
 //	SearchBox->Multiline = true;
 	SearchBox->Name = L"SearchBox";
@@ -243,10 +242,10 @@ TagBrowser::TagBrowser()
 	SearchBox->TabIndex = 1;
 	SearchBox->TextChanged += gcnew EventHandler(this, &TagBrowser::SearchBox_TextChanged);
 	SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
-	// 
+	//
 	// FormList
-	// 
-	FormList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {FormListHEditorID, 
+	//
+	FormList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {FormListHEditorID,
 		FormListHRefID, FormListHType});
 	FormList->ContextMenuStrip = FormListContextMenu;
 	FormList->FullRowSelect = true;
@@ -262,24 +261,24 @@ TagBrowser::TagBrowser()
 	FormList->ColumnClick += gcnew ColumnClickEventHandler(this, &TagBrowser::FormSelectionList_ColumnClick);
 	FormList->MouseDown += gcnew MouseEventHandler(this, &TagBrowser::FormList_MouseDown);
 //	FormList->MouseUp += gcnew MouseEventHandler(this, &TagBrowser::FormList_MouseUp);
-	// 
+	//
 	// FormListHEditorID
-	// 
+	//
 	FormListHEditorID->Text = L"EditorID";
 	FormListHEditorID->Width = 198;
-	// 
+	//
 	// FormListHRefID
-	// 
+	//
 	FormListHRefID->Text = L"FormID";
 	FormListHRefID->Width = 70;
-	// 
+	//
 	// FormListHType
-	// 
+	//
 	FormListHType->Text = L"Type";
 	FormListHType->Width = 111;
-	// 
+	//
 	// FormListContextMenu
-	// 
+	//
 	FormListContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(1) {FormListContextMenuRemove});
 	FormListContextMenu->Name = L"FormListContextMenu";
 	FormListContextMenu->Size = Size(165, 26);
@@ -288,9 +287,9 @@ TagBrowser::TagBrowser()
 	FormListContextMenuRemove->Size = Size(164, 22);
 	FormListContextMenuRemove->Text = L"Remove From Tag";
 	FormListContextMenuRemove->Click += gcnew EventHandler(this, &TagBrowser::FormListContextMenuRemove_Click);
-	// 
+	//
 	// TagTree
-	// 
+	//
 	TagTree->AccessibleRole = AccessibleRole::Outline;
 	TagTree->AllowDrop = true;
 	TagTree->BackColor = SystemColors::Window;
@@ -318,38 +317,38 @@ TagBrowser::TagBrowser()
 	TagTree->Text = L"Tags";
 	TagTree->NodeClick += gcnew AdvTree::TreeNodeMouseEventHandler(this, &TagBrowser::TagTree_NodeClick);
 	TagTree->AfterCellEdit += gcnew AdvTree::CellEditEventHandler(this, &TagBrowser::TagTree_AfterCellEdit);
-	
-	// 
+
+	//
 	// TagTreeContextMenu
-	// 
-	TagTreeContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(2) {TagTreeContextMenuAdd, 
+	//
+	TagTreeContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(2) {TagTreeContextMenuAdd,
 		TagTreeContextMenuRemove});
 	TagTreeContextMenu->Name = L"TagTreeContextMenu";
 	TagTreeContextMenu->Size = Size(141, 48);
-	// 
+	//
 	// TagTreeContextMenuAdd
-	// 
+	//
 	TagTreeContextMenuAdd->Name = L"TagTreeContextMenuAdd";
 	TagTreeContextMenuAdd->Size = Size(140, 22);
 	TagTreeContextMenuAdd->Text = L"Add Tag";
 	TagTreeContextMenuAdd->Click += gcnew EventHandler(this, &TagBrowser::TagTreeContextMenuAdd_Click);
-	// 
+	//
 	// TagTreeContextMenuRemove
-	// 
+	//
 	TagTreeContextMenuRemove->Name = L"TagTreeContextMenuRemove";
 	TagTreeContextMenuRemove->Size = Size(140, 22);
 	TagTreeContextMenuRemove->Text = L"Remove Tag";
 	TagTreeContextMenuRemove->Click += gcnew EventHandler(this, &TagBrowser::TagTreeContextMenuRemove_Click);
-	// 
+	//
 	// TagTreeNodeConnector
-	// 
+	//
 	TagTreeNodeConnector->DashStyle = Drawing2D::DashStyle::Dot;
 	TagTreeNodeConnector->LineColor = SystemColors::ControlText;
-	// 
+	//
 	// TagTreeElementStyle2
-	// 
+	//
 	TagTreeElementStyle2->BackColor = Color::White;
-	TagTreeElementStyle2->BackColor2 = Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(228)), 
+	TagTreeElementStyle2->BackColor2 = Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(228)),
 		static_cast<System::Int32>(static_cast<System::Byte>(228)), static_cast<System::Int32>(static_cast<System::Byte>(240)));
 	TagTreeElementStyle2->BackColorGradientAngle = 90;
 	TagTreeElementStyle2->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::Solid;
@@ -369,16 +368,16 @@ TagBrowser::TagBrowser()
 	TagTreeElementStyle2->PaddingRight = 1;
 	TagTreeElementStyle2->PaddingTop = 1;
 	TagTreeElementStyle2->TextColor = Color::Black;
-	// 
+	//
 	// TagTreeElementStyle1
-	// 
+	//
 	TagTreeElementStyle1->Name = L"TagTreeElementStyle1";
 	TagTreeElementStyle1->TextColor = SystemColors::ControlText;
 	//
 	// SaveTags
-	// 
+	//
 	SaveTags->BackColor = System::Drawing::SystemColors::Control;
-	SaveTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+	SaveTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 		static_cast<System::Byte>(0)));
 	SaveTags->ForeColor = System::Drawing::Color::Black;
 	SaveTags->Location = System::Drawing::Point(639, 363);
@@ -388,11 +387,11 @@ TagBrowser::TagBrowser()
 	SaveTags->Text = L"Save";
 	SaveTags->UseVisualStyleBackColor = false;
 	SaveTags->Click += gcnew EventHandler(this, &TagBrowser::SaveTags_Click);
-	// 
+	//
 	// LoadTags
-	// 
+	//
 	LoadTags->BackColor = System::Drawing::SystemColors::Control;
-	LoadTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+	LoadTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 		static_cast<System::Byte>(0)));
 	LoadTags->ForeColor = System::Drawing::Color::Black;
 	LoadTags->Location = System::Drawing::Point(639, 392);
@@ -402,9 +401,9 @@ TagBrowser::TagBrowser()
 	LoadTags->Text = L"Load";
 	LoadTags->UseVisualStyleBackColor = false;
 	LoadTags->Click += gcnew EventHandler(this, &TagBrowser::LoadTags_Click);
-	// 
+	//
 	// TagBrowser
-	// 
+	//
 	TagBrowserBox->AutoScaleDimensions = SizeF(6, 13);
 	TagBrowserBox->AutoScaleMode = AutoScaleMode::Font;
 	TagBrowserBox->ClientSize = Size(686, 434);
@@ -428,28 +427,29 @@ TagBrowser::TagBrowser()
 
 	TagBrowserBox->Hide();
 
-	Database = gcnew TagDatabase(TagTree); 
+	Database = gcnew TagDatabase(TagTree);
 	MouseDragInProgress = false;
 	GlobalMouseHook_MouseUpHandler = gcnew MouseEventHandler(this, &TagBrowser::GlobalInputMonitor_MouseUp);
 }
 
 void TagBrowser::GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
 {
+	HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
+
 	switch (E->Button)
 	{
 	case MouseButtons::Right:
 		if (MouseDragInProgress)
 		{
 			DebugPrint("PlaceObject Operation interrupted by right mouse button");
-			HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
-			MouseDragInProgress = false;	
 		}
 		break;
 	case MouseButtons::Left:
+		HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
 		if (MouseDragInProgress)
 		{
-			IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
-			if (Wnd == NativeWrapper::GetRenderWindowHandle())
+			IntPtr Window = NativeWrapper::WindowFromPoint(E->Location);
+			if (Window != GetFormListHandle() && Window != GetWindowHandle())
 			{
 				TagBrowserInstantiationData InteropData;
 				FormData* Data = InteropData.FormListHead = new FormData[FormList->SelectedItems->Count];
@@ -464,16 +464,16 @@ void TagBrowser::GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
 				}
 
 				NativeWrapper::TagBrowser_InstantiateObjects(&InteropData);
-				delete [] Data;			
+				delete [] Data;
 			}
 		}
 		else
 			DebugPrint("Global PlaceObject hook called out of turn! Expecting an unresolved operation.");
 
-		HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
-		MouseDragInProgress = false;	
 		break;
 	}
+
+	MouseDragInProgress = false;
 }
 
 void TagBrowser::TagBrowserBox_Cancel(Object^ Sender, CancelEventArgs^ E)
@@ -565,7 +565,7 @@ void TagBrowser::SaveTags_Click(Object^ Sender, EventArgs^ E)
 	if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
 	{
 		String^ SerializedData = Database->SerializeDatabase();
-		try 
+		try
 		{
 			StreamWriter^ TextParser = gcnew StreamWriter(SaveManager->FileName);
 			TextParser->Write(SerializedData);
@@ -576,8 +576,8 @@ void TagBrowser::SaveTags_Click(Object^ Sender, EventArgs^ E)
 			MessageBox::Show("Errors were encountered while saving tag database '" + SaveManager->FileName + "'.\n\nError logged to the console.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			DebugPrint("Couldn't read from tag database " + SaveManager->FileName + "!\n\tException: " + E->Message);
 		}
-		
-		MessageBox::Show("Database saved to '" + SaveManager->FileName + "' successfully.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Information);		
+
+		MessageBox::Show("Database saved to '" + SaveManager->FileName + "' successfully.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Information);
 	}
 }
 void TagBrowser::LoadTags_Click(Object^ Sender, EventArgs^ E)
@@ -590,7 +590,7 @@ void TagBrowser::LoadTags_Click(Object^ Sender, EventArgs^ E)
 
 	if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0)
 	{
-		try 
+		try
 		{
 			StreamReader^ TextParser = gcnew StreamReader(LoadManager->FileName);
 			String^ FileContents = TextParser->ReadToEnd();
@@ -599,7 +599,7 @@ void TagBrowser::LoadTags_Click(Object^ Sender, EventArgs^ E)
 			if (!Database->DeserializeDatabase(FileContents))
 				throw gcnew CSEGeneralException("Database suffers inconsistencies.");
 		}
-		catch (Exception^ E) 
+		catch (Exception^ E)
 		{
 			MessageBox::Show("Errors were encountered while parsing tag database '" + LoadManager->FileName + "'.\n\nError logged to the console.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			DebugPrint("Couldn't read from tag database " + LoadManager->FileName + "!\n\tException: " + E->Message);
@@ -616,9 +616,9 @@ void TagBrowser::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 		if (Result != nullptr)
 		{
 			Result->Selected = true;
-			FormList->TopItem = Result; 
+			FormList->TopItem = Result;
 		}
-		else 
+		else
 		{
 			Result = GetListViewSelectedItem(FormList);
 			if (Result != nullptr)
@@ -629,13 +629,13 @@ void TagBrowser::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 void TagBrowser::TagTreeContextMenuAdd_Click(Object^ Sender, EventArgs^ E)
 {
 	String^ Name = "Name";
-	
-	Name = Microsoft::VisualBasic::Interaction::InputBox("Enter a name used to identify the new tag", 
-						"Tag Browser", 
-						"", 
+
+	Name = Microsoft::VisualBasic::Interaction::InputBox("Enter a name used to identify the new tag",
+						"Tag Browser",
+						"",
 						SystemInformation::PrimaryMonitorSize.Width / 2,
 						SystemInformation::PrimaryMonitorSize.Height / 2);
-	
+
 	if (Name->Length == 0)
 		return;
 	else if (Database->GetTagExists(Name))
@@ -655,7 +655,7 @@ void TagBrowser::TagTreeContextMenuRemove_Click(Object^ Sender, EventArgs^ E)
 	{
 		if (SelectedNode->Nodes->Count > 0)
 		{
-			if (MessageBox::Show("Are you sure ? This operation will remove all child tags.", "Tag Browser", 
+			if (MessageBox::Show("Are you sure ? This operation will remove all child tags.", "Tag Browser",
 				MessageBoxButtons::YesNo, MessageBoxIcon::Exclamation) != DialogResult::Yes)
 			{
 				return;
@@ -675,8 +675,8 @@ void TagBrowser::FormListContextMenuRemove_Click(Object^ Sender, EventArgs^ E)
 
 	FormList->BeginUpdate();
 	for (ListViewItem^ Item = GetListViewSelectedItem(FormList); Item != nullptr; Item = GetListViewSelectedItem(FormList))
-		FormList->Items->Remove(Item);		
-	FormList->EndUpdate();	
+		FormList->Items->Remove(Item);
+	FormList->EndUpdate();
 }
 
 void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
@@ -717,17 +717,19 @@ void TagBrowser::AddItemToFormList(FormData* Data)
 	FormList->Items->Add(Item);
 }
 
-
-void TagBrowser::AddItemToActiveTag(FormData* Data)
+bool TagBrowser::AddItemToActiveTag(FormData* Data)
 {
 	AdvTree::Node^ SelectedNode = TagTree->SelectedNode;
 	if (SelectedNode != nullptr)
 	{
 		if (Database->TagItem(SelectedNode, Data))
+		{
 			AddItemToFormList(Data);
+			return true;
+		}
 	}
 	else
-		MessageBox::Show("No tag selected.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);		
+		MessageBox::Show("No tag selected.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+
+	return false;
 }
-
-

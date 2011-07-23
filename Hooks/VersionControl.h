@@ -25,4 +25,3 @@ namespace Hooks
 	_DeclareMemHdlr(TESIdleFormCreateChild, "");
 	_DeclareMemHdlr(TESDialogFormEditCopyForm, "records changes made to a form on closing a form edit dialog");
 }
-

@@ -64,7 +64,7 @@ namespace CSAutomationScript
 		void								ConvertToMUPArray(mup::IValue& ArrayOut);
 
 		static Array*						AllocateArray(CSASDataElement* Element, UInt32 Size);
-		static Array*						AllocateArray(Array* Source);				
+		static Array*						AllocateArray(Array* Source);
 		static void							ReleaseArray(Array* Source);
 
 		static UInt32						GetGlobalInstanceCount() { return GlobalInstanceCount; }

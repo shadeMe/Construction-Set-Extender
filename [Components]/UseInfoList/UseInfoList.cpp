@@ -34,7 +34,7 @@ UseInfoList::UseInfoList()
 	SearchBox = (gcnew TextBox());
 	FilterLabel = (gcnew Button());
 
-	FormList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->FormListCType, this->FormListCEditorID, 
+	FormList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->FormListCType, this->FormListCEditorID,
 		FormListCFormID});
 	FormList->Location = System::Drawing::Point(12, 12);
 	FormList->Name = L"FormList";
@@ -61,7 +61,7 @@ UseInfoList::UseInfoList()
 	FormListCFormID->Text = L"Form ID";
 	FormListCFormID->Width = 121;
 
-	UseListObject->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->UseListObjectCType, 
+	UseListObject->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->UseListObjectCType,
 		UseListObjectCEditorID, this->UseListObjectCFormID});
 	UseListObject->Location = System::Drawing::Point(6, 19);
 	UseListObject->Name = L"UseListObject";
@@ -97,7 +97,7 @@ UseInfoList::UseInfoList()
 	UseListCellGroup->TabStop = false;
 	UseListCellGroup->Text = L"Used in these cells";
 
-	UseListCell->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(6) {this->UseListCellCWorldEditorID, 
+	UseListCell->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(6) {this->UseListCellCWorldEditorID,
 		UseListCellCCellFormID, this->UseListCellCCellEditorID, this->UseListCellCCellGrid, UseListCellCFirstRef, this->UseListCellCUseCount});
 	UseListCell->Location = System::Drawing::Point(6, 19);
 	UseListCell->Name = L"UseListCell";
@@ -187,12 +187,11 @@ void UseInfoList::UseInfoListBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		E->Handled = true;
 		break;
 	}
-	
 }
 
 void UseInfoList::UseInfoListBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 {
-	if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) || 
+	if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) ||
 		(E->KeyChar > 0x60 && E->KeyChar < 0x7B))
 	{
 		SearchBox->Text += E->KeyChar.ToString();
@@ -200,8 +199,6 @@ void UseInfoList::UseInfoListBox_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 		E->Handled = true;
 	}
 }
-
-
 
 void UseInfoList::ClearLists()
 {
@@ -249,7 +246,6 @@ void UseInfoList::PopulateUseLists(const char* EditorID)
 	NativeWrapper::UseInfoList_SetCellListItemText(EditorID);
 	UseListCell->EndUpdate();
 }
-
 
 void UseInfoList::FormList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
@@ -306,7 +302,7 @@ void UseInfoList::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 		ListViewItem^% Result = FormList->FindItemWithText(SearchBox->Text, true, 0);
 		if (Result != nullptr) {
 			Result->Selected = true;
-			FormList->TopItem = Result; 
+			FormList->TopItem = Result;
 		}
 		else {
 			Result = GetListViewSelectedItem(FormList);

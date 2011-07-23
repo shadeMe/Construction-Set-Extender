@@ -23,7 +23,12 @@
 #define BITMAP_SPLASH                   123
 #define IDR_MENU7                       124
 #define DLG_CSASGLOBALS                 125
+#define DLG_ACHIEVEMENTUNLOCKED         126
+#define BITMAP_ADORINGFAN               127
+#define DLG_EDITRESULTSCRIPT            128
+#define IDR_MENU8                       129
 #define DLG_SCRIPTEDIT                  188
+#define EDIT_DESC                       1000
 #define EDIT_TEXTLINE                   1002
 #define BTN_OK                          1003
 #define BTN_CANCEL                      1004
@@ -51,6 +56,7 @@
 #define EDIT_QUEST                      1010
 #define EDIT_SCRIPTID                   1010
 #define EDIT_CMDLINE                    1010
+#define EDIT_SCRIPTTEXT                 1010
 #define EDIT_INITDIR                    1011
 #define IDC_COMBO1                      1012
 #define COMBO_FORMLIST                  1012
@@ -68,6 +74,7 @@
 #define BTN_STARTMOUSEHOOK              1021
 #define BTN_ADDGLOBALNUM                1021
 #define BTN_APPLY                       1021
+#define BTN_COMPILE                     1021
 #define CHECK_OBJECTTOKEN_QUESTITEM     1022
 #define BTN_ADDGLOBALSTR                1022
 #define RADIO_OBJECTTOKEN               1023
@@ -77,8 +84,11 @@
 #define BTN_CLOSE                       1024
 #define CHECK_OBJECTREFERENCE_DISABLED  1025
 #define LISTBOX_GLOBALLIST              1025
-#define BTN_REMOVE2                     1027
 #define BTN_APPLYCHANGES                1027
+#define LBL_TITLE                       1029
+#define LBL_DESC                        1030
+#define PICT_IMG                        1031
+#define BTN_SAVE                        1033
 #define EDIT_SCTX                       1228
 #define DLG_ASSETSEL                    9800
 #define BTN_FILEB                       9801
@@ -86,34 +96,6 @@
 #define BTN_EDITPATH                    9803
 #define BTN_CLEARPATH                   9804
 #define BTN_COPYPATH                    9805
-#define DATA_QUICKLOAD                  9900
-#define MAIN_DATA_SAVEAS                9901
-#define MAIN_WORLD_BATCHEDIT            9902
-#define RENDER_BATCHEDIT                9902
-#define MAIN_VIEW_CONSOLEWINDOW         9903
-#define MAIN_VIEW_MODIFIEDRECORDS       9904
-#define MAIN_DATA_CSEPREFERENCES        9905
-#define MAIN_VIEW_DELETEDRECORDS        9906
-#define DATA_SETSTARTUPPLUGIN           9906
-#define POPUP_SETFORMID                 9907
-#define POPUP_MARKUNMODIFIED            9908
-#define POPUP_JUMPTOUSEINFOLIST         9909
-#define POPUP_UNDELETE                  9910
-#define MAIN_WORLD_UNLOADCELL           9911
-#define MAIN_GAMEPLAY_GLOBALSCRIPT      9912
-#define POPUP_EDITBASEFORM              9913
-#define MAIN_LAUNCHGAME                 9914
-#define RACE_COPYHAIR                   9915
-#define RACE_COPYEYES                   9916
-#define POPUP_TOGGLEVISIBILITY          9917
-#define POPUP_TOGGLECHILDRENVISIBILITY  9918
-#define POPUP_ADDTOTAG                  9919
-#define MAIN_VIEW_TAGBROWSER            9920
-#define RENDER_GROUPSELECTION           9921
-#define RENDER_UNGROUPSELECTION         9922
-#define MAIN_DATA_SETWORKSPACE          9923
-#define MAIN_DATA_SAVEESPMASTERS        9924
-#define POPUP_SHOWOVERRIDES             9925
 #define ID_CLEARCONSOLE                 40001
 #define CONSOLE_POPUP                   40002
 #define ID_CONSOLESETTINGS              40003
@@ -148,14 +130,16 @@
 #define CONSOLEMENU_OPENCHANGELOG       40032
 #define ID_CSAS_GLOBALDATA              40033
 #define ID_CSAS_RELOADGLOBALSCRIPTS     40034
+#define ID_SAVEOPTIONS_SAVELOADEDESP    40035
+#define ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS 40036
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        126
-#define _APS_NEXT_COMMAND_VALUE         40035
-#define _APS_NEXT_CONTROL_VALUE         1029
+#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_COMMAND_VALUE         40037
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

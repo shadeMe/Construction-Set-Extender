@@ -2,7 +2,6 @@
 #include "Globals.h"
 #include "[Common]\NativeWrapper.h"
 
-
 ScriptParser::ScriptParser()
 {
 	Variables = gcnew LinkedList<VariableInfo^>();
@@ -90,9 +89,9 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 	Delimiters->Clear();
 	Indices->Clear();
 
-	for each (Char Itr in Source) 
+	for each (Char Itr in Source)
 	{
-		if (Globals::ControlChars->IndexOf(Itr) == -1) 
+		if (Globals::ControlChars->IndexOf(Itr) == -1)
 		{
 			StartPos = Source->IndexOf(Itr);
 			break;
@@ -305,18 +304,6 @@ bool ScriptParser::IsOperator(String^% Source)
 	return false;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)
 {
     UInt32 LoByte = (Byte)Data->GetValue((int)CurrentOffset++),
@@ -371,7 +358,7 @@ UInt32 ByteCodeParser::GetOffsetForLine(String^% Line, Array^% Data, UInt32% Cur
 		ByteCodeParser::Read16(Data, CurrentOffset);
 		return CurrentOffset - 4;
 	case 0x1E:				// return
-		ByteCodeParser::Read16(Data, CurrentOffset);			 
+		ByteCodeParser::Read16(Data, CurrentOffset);
 		return CurrentOffset - 4;
 	case 0x17:				 // else
 		ByteCodeParser::Read16(Data, CurrentOffset);

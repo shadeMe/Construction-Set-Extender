@@ -17,7 +17,7 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 		LocalParser->Tokenize(Token, true);
 		String^ Prefix = ExpandedToken += Token->Substring(0, LocalParser->Indices[0]);		// gives us the controlchars to prepend
 		int TokenIndex = 0;
-		
+
 		for each (String^% Itr in LocalParser->Tokens)
 		{
 			String^ TokenBuffer = Itr;
@@ -38,7 +38,7 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 				ExpandedToken += Macro->GetValue(Prefix, DefineOperator);
 			else
 				ExpandedToken += Itr;
-			
+
 			if (LocalParser->Delimiters[TokenIndex] != '\n')
 				ExpandedToken += LocalParser->Delimiters[TokenIndex];
 
@@ -54,7 +54,6 @@ CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ E
 	}
 }
 
-
 String^ CSEPreprocessorDirective::GetMultilineValue(StringReader^% TextReader, String^% SliceStart, String^% SliceEnd)
 {
 	String^ Result = "";
@@ -66,7 +65,7 @@ String^ CSEPreprocessorDirective::GetMultilineValue(StringReader^% TextReader, S
 	{
 		LocalParser->Tokenize(ReadLine, false);
 		if (LocalParser->Valid)
-		{		
+		{
 			int FirstTokenIndex = LocalParser->Indices[0];
 			if (ReadLine->Length >= FirstTokenIndex + 2)
 			{
@@ -99,7 +98,7 @@ String^ CSEPreprocessorDirective::GetMultilineValue(StringReader^% TextReader, S
 
 		ReadLine = TextReader->ReadLine();
 	}
-	
+
 	if (SliceStartFound == false || SliceEndFound == false)
 		throw gcnew CSEGeneralException("Couldn't extract multiline value.");
 
@@ -110,7 +109,7 @@ String^ CSEPreprocessorDirective::ObfuscateToCompiler(String^% Token)
 {
 	String^ Result = "";
 	StringReader^ TextReader = gcnew StringReader(Token);
-	
+
 	for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 	{
 		Result += "\n" + ";" + ReadLine;
@@ -153,12 +152,12 @@ DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput
 			case 1:
 				throw gcnew CSEGeneralException("No name specified.");
 			case 2:
-				throw gcnew CSEGeneralException("No value specified.");			
+				throw gcnew CSEGeneralException("No value specified.");
 			}
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Define]);
 			Name = LocalParser->Tokens[Index + 1];
-			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);	
+			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);
 
 			if (PreprocessorInstance->LookupDefineDirectiveByName(Name) != nullptr && PREPROC->GetInstanceData()->AllowMacroRedefinitions == false)
 				throw gcnew CSEGeneralException("Invalid redefinition.");
@@ -195,7 +194,7 @@ DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, Stand
 			switch (LocalParser->GetCurrentTokenCount())
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No name specified.");		
+				throw gcnew CSEGeneralException("No name specified.");
 			}
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_Define]);
@@ -310,7 +309,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 			switch (LocalParser->GetCurrentTokenCount())
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No value specified.");		
+				throw gcnew CSEGeneralException("No value specified.");
 			}
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Import]);
@@ -323,11 +322,11 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 				StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\Preprocessor\\{1}.txt", Filename));
 				Source = ImportParser->ReadToEnd();
 				ImportParser->Close();
-			} 
+			}
 			catch (Exception^ E) {
 				throw gcnew CSEGeneralException("Couldn't read from IMPORT script - " + E->Message);
 			}
-	
+
 			if (!PreprocessorInstance->Preprocess(Source, Result, ErrorOutput))
 				throw gcnew CSEGeneralException("Errors encountered while processing IMPORT script");
 			else
@@ -344,7 +343,7 @@ ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput
 		ImportSegment = "INVALID";
 		ErrorOutput("Failed to parse IMPORT directive in '" + Token + "' - " + E->Message);
 		ErrorFlag = true;
-	}	
+	}
 }
 
 String^ ImportDirective::GetToken()
@@ -369,12 +368,12 @@ void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutp
 		int Operator = Itr->IndexOf("=");
 		float CurrentValue = 0;
 
-		if (Operator != -1) 
+		if (Operator != -1)
 		{
 			Name = Itr->Substring(0, Operator);
 			ValueString = Itr->Substring(Operator + 1);
 		}
-		else 
+		else
 		{
 			Name = Itr;
 			ValueString = (((!PreviousValue)?-1:PreviousValue) + 1).ToString();
@@ -383,10 +382,10 @@ void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutp
 		try			{ CurrentValue = float::Parse(ValueString); }
 		catch (...) { throw gcnew CSEGeneralException("Invalid value assigned to " + Name); }
 		PreviousValue = CurrentValue;
-		
+
 		String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Define] + " " + Name + " " + ValueString;
 		ComponentDefineDirectives->AddLast(gcnew DefineDirective(DefineToken, ErrorOutput, PreprocessorInstance));
-	}	
+	}
 }
 
 EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
@@ -408,14 +407,14 @@ EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Pr
 			case 1:
 				throw gcnew CSEGeneralException("No name specified.");
 			case 2:
-				throw gcnew CSEGeneralException("No value specified.");			
+				throw gcnew CSEGeneralException("No value specified.");
 			}
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Enum]);
 			String^ Value;
 
 			Name = LocalParser->Tokens[Index + 1];
-			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1)->Replace("}", "")->Replace("{", "");	
+			Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1)->Replace("}", "")->Replace("{", "");
 
 			ParseComponentDefineDirectives(Value, ErrorOutput, PreprocessorInstance);
 		}
@@ -448,7 +447,7 @@ EnumDirective::EnumDirective(String^ Token, StringReader^% TextReader, StandardO
 			switch (LocalParser->GetCurrentTokenCount())
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No name specified.");	
+				throw gcnew CSEGeneralException("No name specified.");
 			}
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_Enum]);
@@ -571,7 +570,7 @@ bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOu
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate == operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate == operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -599,7 +598,7 @@ bool IfDirective::LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, Sta
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate <= operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate <= operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -627,7 +626,7 @@ bool IfDirective::GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, 
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate >= operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate >= operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -657,7 +656,7 @@ bool IfDirective::LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOu
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate < operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate < operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -687,7 +686,7 @@ bool IfDirective::GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, Standar
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate > operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate > operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -717,7 +716,7 @@ bool IfDirective::NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOu
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate != operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate != operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -745,7 +744,7 @@ bool IfDirective::LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, Standard
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate && operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate && operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -773,7 +772,7 @@ bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardO
 	}
 	catch (Exception^ E)
 	{
-		ErrorOutput("Couldn't evaluate || operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message); 
+		ErrorOutput("Couldn't evaluate || operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 		Result = false;
 	}
 	return Result;
@@ -781,7 +780,7 @@ bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardO
 
 bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Result, StandardOutputError^ ErrorOutput)
 {
-	bool OperationResult = false;				// uses the shunting-yard algorithm 
+	bool OperationResult = false;				// uses the shunting-yard algorithm
 
 	try
 	{
@@ -817,7 +816,7 @@ bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Resu
 						ExpressionStack->Push(Token);
 					}
 					else										// if not an operator, then a macro name
-						PostFixExpression += " " + Token;			
+						PostFixExpression += " " + Token;
 				}
 
 				if (Delimiter == '(')
@@ -825,7 +824,7 @@ bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Resu
 				else if (Delimiter == ')')
 				{
 					bool FoundSibling = false;
-					
+
 					while (ExpressionStack->Count)
 					{
 						String^ TopExpression = ExpressionStack->Peek();
@@ -871,17 +870,16 @@ bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Resu
 	catch (Exception^ E)
 	{
 		OperationResult = false;
-		ErrorOutput("Infix to postfix converter failed to parse expression '" + Source + "' - " + E->Message); 
+		ErrorOutput("Infix to postfix converter failed to parse expression '" + Source + "' - " + E->Message);
 	}
 
 	return OperationResult;
 }
 
-
 bool IfDirective::CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 {
 	bool Result = false;
-	
+
 	try
 	{
 		String^ PostFixExpression = "";
@@ -898,7 +896,7 @@ bool IfDirective::CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOu
 				{
 					String^ Token = LocalParser->Tokens[Index];
 					Operator^ CurrentOperator = LookupOperatorByIdentifier(Token);
-					
+
 					if (CurrentOperator)
 					{
 						if (ExpressionStack->Count < CurrentOperator->GetOperandCount())
@@ -929,7 +927,6 @@ bool IfDirective::CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOu
 				}
 				else
 					throw gcnew CSEGeneralException("Too many operands.");
-
 			}
 		}
 		else
@@ -960,7 +957,7 @@ IfDirective::IfDirective(String^ Token, StringReader^% TextReader, StandardOutpu
 			switch (LocalParser->GetCurrentTokenCount())
 			{
 			case 1:
-				throw gcnew CSEGeneralException("No condition specified.");	
+				throw gcnew CSEGeneralException("No condition specified.");
 			}
 
 			int Index = LocalParser->HasToken(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_If]);
@@ -988,7 +985,7 @@ IfDirective::IfDirective(String^ Token, StringReader^% TextReader, StandardOutpu
 		ValidationResult = false;
 		ErrorOutput("Failed to parse IF directive in '" + Token + "' - " + E->Message);
 		ErrorFlag = true;
-	}	
+	}
 }
 
 String^ IfDirective::GetToken()
@@ -1002,7 +999,6 @@ String^ IfDirective::GetToken()
 		return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Block) + "\n" + SliceEnd + ";}";
 }
 
-
 Preprocessor::Preprocessor()
 {
 	RegisteredDefineDirectives = gcnew LinkedList<DefineDirective^>();
@@ -1015,7 +1011,6 @@ Preprocessor^% Preprocessor::GetSingleton()
 	}
 	return Singleton;
 }
-
 
 void Preprocessor::RegisterDefineDirective(DefineDirective^ Directive)
 {
@@ -1118,7 +1113,6 @@ bool Preprocessor::Preprocess(String^% Source, String^% Result, StandardOutputEr
 					ThisToken = gcnew CSEPreprocessorToken(ReadLine, ErrorOutput, this);
 			}
 
-
 			if (ThisToken != nullptr)
 				TokenList->AddLast(ThisToken);
 		}
@@ -1188,21 +1182,21 @@ void Preprocessor::ProcessStandardDirectives(String^ Path, StandardOutputError^ 
 		{
 			if (Itr->Extension == ".txt")
 			{
-				try 
+				try
 				{
 					StreamReader^ TextParser = gcnew StreamReader(Itr->FullName);
 					String^ FileContents = TextParser->ReadToEnd();
 					String^ Throwaway = "";
 					Preprocess(FileContents, Throwaway, ErrorOutput);
-					TextParser->Close();		
+					TextParser->Close();
 				}
-				catch (Exception^ E) 
+				catch (Exception^ E)
 				{
 					DebugPrint("Couldn't read from standard preprocessor directives file '" + Itr->Name + "'!\n\tException: " + E->Message);
 				}
 			}
 		}
-	} 
+	}
 	else
 		DebugPrint("Standard preprocessor directives folder not found!");
 }

@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 #include "Magic.h"
@@ -8,7 +6,7 @@
 //	EditorAPI: EffectSetting class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     EffectSetting, aka 'Magic Effect'.  This class stores relatvent global data for each of the 'named'
     magic effects (e.g. 'Fire Damage') in Oblivion, including 3D effects, icon, base cost, etc.
 
@@ -18,11 +16,10 @@
     preset formids.
 */
 
-
 class   TESObjectLIGH;
 class   TESEffectShader;
 class   TESSound;
-class   EffectSetting;  
+class   EffectSetting;
 
 // CC
 class EffectSetting : public TESFormIDListView, public TESModel, public TESDescription, public TESFullName, public TESIcon
@@ -30,7 +27,7 @@ class EffectSetting : public TESFormIDListView, public TESModel, public TESDescr
 public:
 	enum EffectSettingFlags
 	{   //                                      # Can be overriden in a vanilla mod file (other overrides are discarded by EffectSetting.Load())
-		//                                        + Displayed in CS with a checkbox  
+		//                                        + Displayed in CS with a checkbox
 		kMgefFlag__Overridable          = /*    #   */ 0x0FC03C00, // bitmask of overridable flags
 		kMgefFlag_Hostile               = /* 00   + */ 0x00000001,
 		kMgefFlag_Recovers              = /* 01   + */ 0x00000002, // used for some effect types - changes are reversed when removed
@@ -57,7 +54,7 @@ public:
 																	// Can technically be overriden, but is immediately forced to zero during the
 																	// EffectSetting.Load() routine. Set for any spell, or only one pc can cast?
 																	// List of effects player knows is apparently stored as mgefCodes in savegame
-		kMgefFlag_Disabled              = /* 16 #   */ 0x00400000, // No default effects have this.  many (all?) of the methods in EffectItemList 
+		kMgefFlag_Disabled              = /* 16 #   */ 0x00400000, // No default effects have this.  many (all?) of the methods in EffectItemList
 																	// that loop over the effect items ignore effects with this flag.
 																	// Spells with an effect with this flag are apparently uncastable.
 		kMgefFlag_UnknownO              = /* 17 #   */ 0x00800000, // POSN,DISE - these effects have *only* this bit set, perhaps a flag for 'meta' effects?
@@ -79,12 +76,12 @@ public:
 	typedef bool (*FilterFunc)(const EffectSetting& effect, void* filterParam);
 
 	// members
-	//     /*00*/ TESForm           
+	//     /*00*/ TESForm
 	//     /*24*/ TESModel
 	//     /*48*/ TESDescription
-	//     /*58*/ TESFullName 
-	//     /*64*/ TESIcon    
-	/*7C*/ FilterFunc         filterFunc; // not saved. called if present on a template effect during Filter(), 
+	//     /*58*/ TESFullName
+	//     /*64*/ TESIcon
+	/*7C*/ FilterFunc         filterFunc; // not saved. called if present on a template effect during Filter(),
 										// using target effect & filterParam as args.
 	/*80*/ void*              filterParam; // not saved. passed to filterFunc if it's called during Filter()
 	/*84*/ UInt32             mgefFlags;

@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 
 //	EditorAPI: TESWaterForm class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -19,5 +17,5 @@ public:
 	//     /*00*/ TESForm
 	//     /*24*/ TESAttackDamageForm
 	//     /*2C*/ TESTexture
-	/*44*/ 
+	/*44*/
 };

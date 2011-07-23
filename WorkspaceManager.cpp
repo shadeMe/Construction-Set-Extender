@@ -1,5 +1,6 @@
 #include "WorkspaceManager.h"
 #include "Hooks\TESFile.h"
+#include "Achievements.h"
 
 using namespace Hooks;
 
@@ -10,20 +11,22 @@ void WorkspaceManager::Initialize(const char *DefaultDirectory)
 	this->DefaultDirectory = DefaultDirectory;
 	this->CurrentDirectory = DefaultDirectory;
 
-	thisVirtualCall(kVTBL_FileFinder, 0x8, *g_FileFinder, (this->DefaultDirectory + "Data").c_str());	// add the absolute path to the filefinder's search path collection
+	_FILEFINDER->AddSearchPath((this->DefaultDirectory + "Data").c_str());		// add the absolute path to the filefinder's search path collection
+
+	CreateDefaultDirectories(DefaultDirectory);
 }
 
 void WorkspaceManager::ResetLoadedData()
 {
 	kAutoLoadActivePluginOnStartup.WriteJump();
 
-	for (tList<TESFile>::Iterator Itr = (*g_TESDataHandler)->fileList.Begin(); !Itr.End(); ++Itr)
+	for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); !Itr.End(); ++Itr)
 	{
 		if (!Itr.Get())
 			break;
 
-		ToggleFlag<UInt32>(&Itr.Get()->fileFlags, TESFile::kFileFlag_Active, false);
-		ToggleFlag<UInt32>(&Itr.Get()->fileFlags, TESFile::kFileFlag_Loaded, false);
+		ToggleFlag(&Itr.Get()->fileFlags, TESFile::kFileFlag_Active, false);
+		ToggleFlag(&Itr.Get()->fileFlags, TESFile::kFileFlag_Loaded, false);
 	}
 
 	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
@@ -37,7 +40,7 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 
 	if (Workspace == NULL)
 	{
-		BROWSEINFO WorkspaceInfo;
+		BROWSEINFO WorkspaceInfo = {0};
 		WorkspaceInfo.hwndOwner = *g_HWND_CSParent;
 		WorkspaceInfo.iImage = NULL;
 		WorkspaceInfo.pszDisplayName = WorkspacePath;
@@ -67,7 +70,7 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 	PrintToBuffer("%s\\", WorkspacePath);
 	sprintf_s(WorkspacePath, MAX_PATH, "%s", g_TextBuffer);
 
-	if (strstr(WorkspacePath, g_AppPath.c_str()) == WorkspacePath)
+	if (strstr(WorkspacePath, g_APPPath.c_str()) == WorkspacePath)
 	{
 		if (_stricmp(CurrentDirectory.c_str(), WorkspacePath))
 		{
@@ -81,6 +84,7 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 			DebugPrint(g_TextBuffer);
 			MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONINFORMATION);
 
+			Achievements::UnlockAchievement(Achievements::kAchievement_Compartmentalizer);
 			return true;
 		}
 		return false;
@@ -122,31 +126,20 @@ void WorkspaceManager::CreateDefaultDirectories(const char* WorkspacePath)
 		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\CSAS\\Global Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Backup\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS))
 	{
-		DebugPrint("Couldn't create create default directories in workspace '%s'", WorkspacePath);
+		DebugPrint("Couldn't create create all default directories in workspace '%s'", WorkspacePath);
 		LogWinAPIErrorMessage(GetLastError());
 	}
 }
 
 void WorkspaceManager::ReloadModList(const char* WorkspacePath, bool ClearList, bool LoadESPs)
 {
-	tList<TESFile>* ModList = &(*g_TESDataHandler)->fileList;
 	if (ClearList)
-	{
-		for (tList<TESFile>::Iterator Itr = (*g_TESDataHandler)->fileList.Begin(); !Itr.End(); ++Itr)
-		{
-			if (!Itr.Get())
-				break;
-
-			thisCall(kTESFile_Dtor, Itr.Get());
-			FormHeap_Free(Itr.Get());
-		}
-		ModList->RemoveAll();
-	}
+		_DATAHANDLER->ClearPluginArray();
 
 	if (LoadESPs == false)
 		this->DataHandlerPopulateModList.WriteUInt8(1);
 
-	thisCall(kDataHandler_PopulateModList, *g_TESDataHandler, WorkspacePath);
+	_DATAHANDLER->PopulatePluginArray(WorkspacePath);
 
 	if (LoadESPs == false)
 		this->DataHandlerPopulateModList.WriteUInt8(2);

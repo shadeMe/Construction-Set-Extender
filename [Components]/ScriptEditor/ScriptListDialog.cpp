@@ -4,17 +4,16 @@
 #include "ScriptEditorManager.h"
 #include "[Common]\ListViewUtilities.h"
 
-
 ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 {
 	ParentIndex = AllocatedIndex;
-	ScriptBox = gcnew Form();								
+	ScriptBox = gcnew Form();
 	PreviewBox = gcnew TextBox();
 	ScriptList = gcnew ListView();
 	ScriptListCFlags = gcnew ColumnHeader();
 	ScriptListCScriptName = gcnew ColumnHeader();
 	ScriptListCFormID = gcnew ColumnHeader();
-	ScriptListCScriptType= gcnew ColumnHeader();	
+	ScriptListCScriptType= gcnew ColumnHeader();
 	SelectBox = gcnew Button();
 	SearchBox = gcnew TextBox();
 
@@ -34,7 +33,7 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	PreviewBox->Size = Size(357, 427);
 
 	ScriptList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(4) {ScriptListCFlags,
-																		 ScriptListCScriptName, 
+																		 ScriptListCScriptName,
 																		 ScriptListCFormID,
 																		 ScriptListCScriptType});
 	ScriptList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
@@ -108,13 +107,13 @@ void ScriptListDialog::Show(Operation Op)
 	NativeWrapper::ScriptEditor_GetScriptListData(ParentIndex);
 	ScriptList->EndUpdate();
 
-	if (ScriptList->Items->Count > 0) 
+	if (ScriptList->Items->Count > 0)
 	{
 		String^ CurrentScript = const_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->GetScriptID());
 		if (!SEMGR->GetAllocatedWorkspace(ParentIndex)->GetIsCurrentScriptNew())
 			SearchBox->Text = CurrentScript;
 	}
-	else 
+	else
 	{
 		ScriptList->Enabled = false;
 		SearchBox->Enabled = false;
@@ -140,7 +139,7 @@ void ScriptListDialog::AddScript(String^% ScriptName, String^% FormID, String^% 
 	NewScript->SubItems->Add(ScriptName);
 	NewScript->SubItems->Add(FormID);
 	NewScript->SubItems->Add(ScriptType);
-	
+
 	if (Flags & 0x00000020)
 		NewScript->ImageIndex = (int)Icon::e_Deleted;
 	else if (Flags & 0x00000002)
@@ -156,7 +155,7 @@ void ScriptListDialog::SelectScript()
 	bool PerformedOpOnActiveTab = false;
 
 	for (UInt32 i = 0; i < ScriptList->SelectedItems->Count; i++)
-	{	
+	{
 		ListViewItem^ Itr = ScriptList->SelectedItems[i];
 
 		if (!PerformedOpOnActiveTab)
@@ -177,7 +176,7 @@ void ScriptListDialog::SelectScript()
 				break;
 			}
 
-			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);		
+			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
 			PerformedOpOnActiveTab = true;
 		}
 		else
@@ -196,9 +195,6 @@ void ScriptListDialog::GetUseReport()
 	NativeWrapper::ScriptEditor_GetUseReportForForm(CEID->String());
 }
 
-
-
-
 void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
 	Close();
@@ -208,7 +204,6 @@ void ScriptListDialog::SelectBox_Click(Object^ Sender, EventArgs^ E)
 {
 	SelectScript();
 }
-
 
 void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
@@ -232,7 +227,7 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		ScriptBox->Close();
 		break;
 	case Keys::Back:
-		if (SearchBox->Text->Length >= 1) 
+		if (SearchBox->Text->Length >= 1)
 		{
 			SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
 			ScriptList->Focus();
@@ -241,12 +236,11 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		E->Handled = true;
 		break;
 	}
-	
 }
 
 void ScriptListDialog::ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 {
-	if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) || 
+	if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) ||
 		(E->KeyChar > 0x60 && E->KeyChar < 0x7B))
 	{
 		SearchBox->Text += E->KeyChar.ToString();
@@ -255,7 +249,6 @@ void ScriptListDialog::ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
 	}
 }
 
-
 void ScriptListDialog::ScriptList_ItemActivate(Object^ Sender, EventArgs^ E)
 {
 	SelectScript();
@@ -263,11 +256,11 @@ void ScriptListDialog::ScriptList_ItemActivate(Object^ Sender, EventArgs^ E)
 
 void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 {
-	if (E->Column != LastSortColumn) 
+	if (E->Column != LastSortColumn)
 	{
 		LastSortColumn = E->Column;
 		ScriptList->Sorting = SortOrder::Descending;
-	} 
+	}
 	else
 	{
 		if (ScriptList->Sorting == SortOrder::Ascending)
@@ -295,13 +288,13 @@ void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventAr
 
 void ScriptListDialog::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 {
-	if (SearchBox->Text != "") 
+	if (SearchBox->Text != "")
 	{
 		ListViewItem^% Result = ScriptList->FindItemWithText(SearchBox->Text, true, 0);
 		if (Result != nullptr)
 		{
 			Result->Selected = true;
-			ScriptList->TopItem = Result; 
+			ScriptList->TopItem = Result;
 		}
 		else
 		{

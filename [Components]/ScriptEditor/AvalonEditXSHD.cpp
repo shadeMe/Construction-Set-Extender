@@ -181,7 +181,7 @@ namespace AvalonEditXSHD
 		ColorDefinitions->AddLast(PreprocessorColor);
 		ColorDefinitions->AddLast(ReminderColor);
 
-		XSHDRuleset^ CommentMarkerRuleset = gcnew XSHDRuleset("CommentPreprocessorMarker");			
+		XSHDRuleset^ CommentMarkerRuleset = gcnew XSHDRuleset("CommentPreprocessorMarker");
 		XSHDKeywords^ CommentMarkerPreprocessorKeywords = gcnew XSHDKeywords(PreprocessorColor, Color::GhostWhite, Color::GhostWhite, true);
 		XSHDKeywords^ CommentMarkerReminderKeywords = gcnew XSHDKeywords(ReminderColor, Color::GhostWhite, Color::GhostWhite, true);
 

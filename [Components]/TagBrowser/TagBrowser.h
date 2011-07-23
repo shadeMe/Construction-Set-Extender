@@ -21,18 +21,16 @@ public:
 
 	bool												TagItem(AdvTree::Node^ Tag, FormData* Data);
 	void												UntagItem(AdvTree::Node^ Tag, String^% Name);
-	
+
 	bool												GetItemExistsInTag(AdvTree::Node^ Tag, String^% Name);
 	bool												GetTagExists(String^% Name);
 
-	void												Clear(void);	
+	void												Clear(void);
 	String^												SerializeDatabase(void);
 	bool												DeserializeDatabase(String^ SerializedData);
 
 	bool												GetItemsForTag(AdvTree::Node^ Tag, List<String^>^% Destination) { return Database->TryGetValue(Tag, Destination); }
 };
-
-
 
 public ref class TagBrowser
 {
@@ -84,7 +82,6 @@ public ref class TagBrowser
 
 	TagDatabase^											Database;
 	bool													MouseDragInProgress;
-	
 
 	static array<String^>^								TypeIdentifier =			// uses TESForm::typeID as its index
 																{
@@ -159,7 +156,6 @@ public ref class TagBrowser
 																	"TOFT"
 																};
 
-
 	void												UpdateFormListForTag(AdvTree::Node^ Tag);
 	void												AddItemToFormList(FormData* Data);
 public:
@@ -167,7 +163,7 @@ public:
 
 	void												Show(IntPtr Handle)	{ TagBrowserBox->Show(gcnew WindowHandleWrapper(Handle)); }
 	void												Hide()	{ TagBrowserBox->Hide(); }
-	void												AddItemToActiveTag(FormData* Data);
+	bool												AddItemToActiveTag(FormData* Data);
 	IntPtr												GetFormListHandle() { return FormList->Handle; }
 	IntPtr												GetWindowHandle() { return TagBrowserBox->Handle; }
 };

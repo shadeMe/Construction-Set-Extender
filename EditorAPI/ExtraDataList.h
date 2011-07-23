@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "ExtraData.h"
 
@@ -13,22 +11,41 @@
     ExtraDataList seems to be targeted specifically to forms (?)
 */
 
+class	TESForm;
+class	TESObjectREFR;
+class	TESGlobal;
+
 // 14
 class BaseExtraList
 {
 public:
 	// members
-	//     /*00*/ void**			vtbl          
+	//     /*00*/ void**			vtbl
 	/*04*/ BSExtraData*				extraList;				// LL of extra data nodes
 	/*08*/ UInt8					extraTypes[0x0C];		// if a bit is set, then the extralist should contain that extradata
 															// bits are numbered starting from the lsb
 
-	virtual void					UnkVFn00();
+	virtual void					VFn00();
 };
+STATIC_ASSERT(sizeof(BaseExtraList) == 0x14);
 
 // 14
 class ExtraDataList : public BaseExtraList
 {
 public:
 	// no additional members
+
+	// methods
+	void							Link(TESForm* LinkedForm);
+	void							CopyList(ExtraDataList* Source);
+	BSExtraData*					GetExtraDataByType(UInt8 Type);
+
+	void							ModExtraEnableStateParent(TESObjectREFR* Parent);
+	void							ModExtraOwnership(TESForm* Owner);
+	void							ModExtraGlobal(TESGlobal* Global);
+	void							ModExtraRank(int Rank);
+	void							ModExtraCount(UInt32 Count);
 };
+STATIC_ASSERT(sizeof(ExtraDataList) == 0x14);
+
+extern CRITICAL_SECTION*		g_ExtraListCS;

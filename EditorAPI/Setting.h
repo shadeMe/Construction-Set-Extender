@@ -1,7 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
-
 
 //	EditorAPI: Setting class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -15,7 +12,7 @@ class Setting
 {
 public:
 
-	enum SettingTypes 
+	enum SettingTypes
 	{
 		kSetting_Bool           = 0x0,  // 'b' size 1
 		kSetting_Char           = 0x1,  // 'c' size 1
@@ -53,3 +50,4 @@ public:
 	/*00*/ SettingValue			value;
 	/*04*/ const char*			name;   // must begin with one of the type characters
 };
+STATIC_ASSERT(sizeof(Setting) == 0x8);

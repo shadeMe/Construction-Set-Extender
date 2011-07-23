@@ -48,24 +48,24 @@ namespace Log
 		e_TAG
 	};
 
-	namespace ScriptEditor 
+	namespace ScriptEditor
 	{
-		void DebugPrint(String^ Message, bool Achtung = false);	
+		void DebugPrint(String^ Message, bool Achtung = false);
 	}
 	namespace UseInfoList
 	{
-		void DebugPrint(String^ Message, bool Achtung = false);	
+		void DebugPrint(String^ Message, bool Achtung = false);
 	}
 	namespace BatchEditor
 	{
-		void DebugPrint(String^ Message, bool Achtung = false);	
+		void DebugPrint(String^ Message, bool Achtung = false);
 	}
 	namespace BSAViewer
 	{
-		void DebugPrint(String^ Message, bool Achtung = false);	
+		void DebugPrint(String^ Message, bool Achtung = false);
 	}
 	namespace TagBrowser
 	{
-		void DebugPrint(String^ Message, bool Achtung = false);			
+		void DebugPrint(String^ Message, bool Achtung = false);
 	}
 }

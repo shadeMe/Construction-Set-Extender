@@ -21,7 +21,7 @@ class CSInteropManager
 public:
 	static CSInteropManager*		GetSingleton();
 
-	bool							Initialize(const char* DLLPath);
+	bool							Initialize();
 	void							Deinitialize();
 
 	bool							DoGenerateLIPOperation(const char* InputPath, const char* ResponseText);

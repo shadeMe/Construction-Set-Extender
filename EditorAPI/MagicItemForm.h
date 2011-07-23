@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 #include "MagicItem.h"
@@ -8,8 +6,8 @@
 //	EditorAPI: MagicItemForm class and derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
-	MagicItemForm is an abstract form component for objects with 'castable' effects that cannot be 
+/*
+	MagicItemForm is an abstract form component for objects with 'castable' effects that cannot be
     placed as references, i.e. Spells & Enchantments.
 */
 
@@ -22,6 +20,7 @@ public:
 	//     /*018/024*/ MagicItem.TESFullName
 	//     /*024/030*/ MagicItem.EffectItemList
 };
+STATIC_ASSERT(sizeof(MagicItemForm) == 0x10C);
 
 // 11C
 class EnchantmentItem : public MagicItemForm
@@ -42,10 +41,12 @@ public:
 	/*118*/ UInt8            enchFlags;
 	/*119*/ UInt8            enchPad041[3];		// saved & loaded, but not initialized
 };
+STATIC_ASSERT(sizeof(EnchantmentItem) == 0x11C);
 
 // 11C
 class SpellItem : public MagicItemForm
 {
+	typedef SpellItem*		(__stdcall *_InitializeDefaultPlayerSpell)(void* Throwaway);
 public:
 	enum SpellFlags
 	{
@@ -68,4 +69,8 @@ public:
 	/*114*/ UInt32           masteryLevel;			// for non-autocalc
 	/*118*/ UInt8            spellFlags;
 	/*119*/ UInt8            spellPad041[3];		// saved & loaded, but not initialized
+
+	// methods
+	static _InitializeDefaultPlayerSpell		InitializeDefaultPlayerSpell;
 };
+STATIC_ASSERT(sizeof(SpellItem) == 0x11C);

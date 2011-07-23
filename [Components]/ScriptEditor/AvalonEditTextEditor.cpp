@@ -262,7 +262,7 @@ UInt32 AvalonEditTextEditor::FindReplace(ScriptTextEditorInterface::FindReplaceO
 	if (Operation == ScriptTextEditorInterface::FindReplaceOperation::e_Replace)
 		FindReplaceColorizer->SetMatch(Replacement);
 	else
-		FindReplaceColorizer->SetMatch(Query);	
+		FindReplaceColorizer->SetMatch(Query);
 
 	SetSelectionLength(0);
 
@@ -397,6 +397,11 @@ Point AvalonEditTextEditor::PointToScreen(Point Location)
 void AvalonEditTextEditor::SetEnabledState(bool State)
 {
 	WPFHost->Enabled = State;
+}
+
+void AvalonEditTextEditor::HandleContainerPositionSizeChangedEvent(void)
+{
+	IntelliSenseBox->Hide();
 }
 #pragma endregion
 
@@ -830,7 +835,6 @@ void AvalonEditTextEditor::TextField_MiddleMouseScrollDown(Object^ Sender, Syste
 	{
 		StopMiddleMouseScroll();
 	}
-
 }
 
 void AvalonEditTextEditor::ScrollTimer_Tick(Object^ Sender, EventArgs^ E)
@@ -873,8 +877,8 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	Container->BorderStyle = BorderStyle::Fixed3D;
 	Container->Controls->Add(WPFHost);
 
-	TextField->HorizontalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
-	TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
+ 	TextField->HorizontalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
+ 	TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 	TextField->Options->AllowScrollBelowDocument = false;
 	TextField->Options->EnableEmailHyperlinks = false;
 	TextField->Options->EnableHyperlinks = true;

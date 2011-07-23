@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "BSStringT.h"
 
 //	EditorAPI: BaseFormComponent class and its derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     BaseFormComponents define the various 'components' that true TESForm classes can inherit,
     e.g. Name, Texture, Model, Weight, etc.  The root of the hierarchy is the BaseFormComponent
     class, which exposes a common interface for Comparison, Copying, Serialization, etc.
@@ -37,7 +35,6 @@ class	IngredientItem;
 class	TESRace;
 class	TESLevItem;
 
-
 // 04
 class BaseFormComponent
 {
@@ -47,15 +44,17 @@ public:
 
 	virtual void				Dtor(void);
 };
+STATIC_ASSERT(sizeof(BaseFormComponent) == 0x4);
 
 // 0C
 class TESFullName : public BaseFormComponent
 {
-public: 
+public:
 	// members
 	//     /00*/ void**         vtbl;
 	/*04*/ BSStringT			name;
 };
+STATIC_ASSERT(sizeof(TESFullName) == 0xC);
 
 // 10
 class TESDescription : public BaseFormComponent
@@ -63,14 +62,15 @@ class TESDescription : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**			vtbl;
-	/*04*/ BSStringT				description; 
+	/*04*/ BSStringT				description;
 	/*0C*/ UInt32					descDialogItem;		// Dialog Control ID for description control
 };
+STATIC_ASSERT(sizeof(TESDescription) == 0x10);
 
 // 18
 class TESTexture : public BaseFormComponent
 {
-public: 
+public:
 	// members
 	//     /*00*/ void**         vtbl;
 	/*04*/ BSStringT			texturePath;
@@ -78,6 +78,7 @@ public:
 	/*10*/ UInt32				texturePathDlgItem;		// Dialog Control ID for texture path control
 	/*14*/ UInt32				textureImageDlgItem;	// Dialog Control ID for texture image control
 };
+STATIC_ASSERT(sizeof(TESTexture) == 0x18);
 
 // 18
 class TESIcon : public TESTexture
@@ -85,6 +86,7 @@ class TESIcon : public TESTexture
 public:
 	// no additional members
 };
+STATIC_ASSERT(sizeof(TESIcon) == 0x18);
 
 // 18
 class TESIconTree : public TESIcon
@@ -92,6 +94,7 @@ class TESIconTree : public TESIcon
 public:
 	// no additional members
 };
+STATIC_ASSERT(sizeof(TESIconTree) == 0x18);
 
 // 24
 class TESModel : public BaseFormComponent
@@ -101,11 +104,12 @@ public:
 
 	// members
 	//     /*00*/ void**            vtbl;
-	/*04*/ BSStringT				modelPath;  
-	/*0C*/ float					modelBound;  
+	/*04*/ BSStringT				modelPath;
+	/*0C*/ float					modelBound;
 	/*10*/ ModelHashList			modelHashList;		// texture hash list ?
 	/*20*/ UInt32					modelPathDlgItem;	// Dialog Control ID for model path
 };
+STATIC_ASSERT(sizeof(TESModel) == 0x24);
 
 // 24
 class TESModelTree : public TESModel
@@ -113,6 +117,15 @@ class TESModelTree : public TESModel
 public:
 	// no additional members
 };
+STATIC_ASSERT(sizeof(TESModelTree) == 0x24);
+
+// 24
+class TESModelAnim : public TESModel
+{
+public:
+	// no additional members
+};
+STATIC_ASSERT(sizeof(TESModelAnim) == 0x24);
 
 // 0C
 class TESScriptableForm : public BaseFormComponent
@@ -124,6 +137,7 @@ public:
 	/*08*/ bool					scriptLinked;		// set once formid has been resolved into a Script*
 	/*09*/ UInt8				scriptPad09[3];
 };
+STATIC_ASSERT(sizeof(TESScriptableForm) == 0xC);
 
 // 08
 class TESUsesForm : public BaseFormComponent
@@ -134,15 +148,17 @@ public:
 	/*04*/ UInt8				uses;
 	/*05*/ UInt8				usesPad05[3];
 };
+STATIC_ASSERT(sizeof(TESUsesForm) == 0x8);
 
 // 08
 class TESValueForm : public BaseFormComponent
 {
-public:    
+public:
 	// members
 	//     /*00*/ void**		vtbl;
 	/*04*/ SInt32				goldValue;
 };
+STATIC_ASSERT(sizeof(TESValueForm) == 0x8);
 
 // 08
 class TESHealthForm : public BaseFormComponent
@@ -152,6 +168,7 @@ public:
 	//     /*00*/ void**		vtbl;
 	/*04*/ UInt32				health;
 };
+STATIC_ASSERT(sizeof(TESHealthForm) == 0x8);
 
 // 08
 class TESWeightForm : public BaseFormComponent
@@ -161,6 +178,7 @@ public:
 	//     /*00*/ void**		vtbl;
 	/*04*/ float				weight;
 };
+STATIC_ASSERT(sizeof(TESWeightForm) == 0x8);
 
 // 08
 class TESQualityForm : public BaseFormComponent
@@ -170,6 +188,7 @@ public:
 	//     /*00*/ void**		vtbl;
 	/*04*/ float				quality;
 };
+STATIC_ASSERT(sizeof(TESQualityForm) == 0x8);
 
 // 08
 class TESAttackDamageForm : public BaseFormComponent
@@ -180,6 +199,7 @@ public:
 	/*04*/ UInt16				damage;
 	/*06*/ UInt16				damagePad06;
 };
+STATIC_ASSERT(sizeof(TESAttackDamageForm) == 0x8);
 
 // 0C
 class TESAttributes : public BaseFormComponent
@@ -202,6 +222,7 @@ public:
 	//     /*00*/ void**		vtbl;
 	/*04*/ UInt8				attributes[8];
 };
+STATIC_ASSERT(sizeof(TESAttributes) == 0xC);
 
 // 14
 class TESSpellList : public BaseFormComponent
@@ -215,13 +236,12 @@ public:
 	/*04*/ SpellListT			spells;
 	/*0C*/ LevSpellListT		leveledSpells;
 };
-
-#pragma once
+STATIC_ASSERT(sizeof(TESSpellList) == 0x14);
 
 // 10
 class TESLeveledList : public BaseFormComponent
 {
-public: 
+public:
 	enum LeveledListFlags
 	{
 		kLevListFlag_CalcAllLevels      = 0x01, // ignores max level difference, effective level is no greate than highest level in list
@@ -242,10 +262,11 @@ public:
 	// members
 	//     /*00*/ void**		vtbl;
 	/*04*/ LevListT				levList;    // list is sorted by level
-	/*0C*/ UInt8				chanceNone;	
+	/*0C*/ UInt8				chanceNone;
 	/*0D*/ UInt8				levListFlags;
 	/*0E*/ UInt16				padLevList0E;
 };
+STATIC_ASSERT(sizeof(TESLeveledList) == 0x10);
 
 // 10
 class TESContainer : public BaseFormComponent
@@ -271,6 +292,7 @@ public:
 	/*05*/ UInt8				pad05[3];
 	/*08*/ ContentListT			contents;
 };
+STATIC_ASSERT(sizeof(TESContainer) == 0x10);
 
 // 14
 class TESAnimation : public BaseFormComponent
@@ -282,8 +304,9 @@ public:
 	// members
 	//     /*00*/ void**            vtbl;
 	/*04*/ KFModelListT				kfModelList; // temporary list of animation models used during dialog editing
-	/*0C*/ AnimationListT			animations; // animation names, dynamically allocated 
+	/*0C*/ AnimationListT			animations; // animation names, dynamically allocated
 };
+STATIC_ASSERT(sizeof(TESAnimation) == 0x14);
 
 // 20
 class TESActorBaseData : public BaseFormComponent
@@ -339,7 +362,7 @@ public:
 
 	// members
 	//     /*00*/ void**        vtbl;
-	/*04*/ UInt32				actorFlags; 
+	/*04*/ UInt32				actorFlags;
 	/*08*/ UInt16				magicka;		// init to 50
 	/*0A*/ UInt16				fatigue;		// init to 50
 	/*0C*/ UInt16				barterGold;
@@ -347,8 +370,9 @@ public:
 	/*10*/ UInt16				minLevel;		// if PCLevelOffset
 	/*12*/ UInt16				maxLevel;		// if PCLevelOffset
 	/*14*/ TESLevItem*			deathItem;
-	/*18*/ FactionListT			factionList; 
+	/*18*/ FactionListT			factionList;
 };
+STATIC_ASSERT(sizeof(TESActorBaseData) == 0x20);
 
 // 18
 class TESAIForm : public BaseFormComponent
@@ -359,7 +383,7 @@ public:
 		kAIStat_Aggression      = 0,
 		kAIStat_Confidence      = 1,
 		kAIStat_Energy          = 2,
-		kAIStat_Responsibility  = 3,    
+		kAIStat_Responsibility  = 3,
 		kAIStat__MAX,
 	};
 
@@ -392,6 +416,7 @@ public:
 	/*0E*/ UInt8				pad0E[2];
 	/*10*/ PackageListT			packages;
 };
+STATIC_ASSERT(sizeof(TESAIForm) == 0x18);
 
 // 10
 class TESReactionForm : public BaseFormComponent
@@ -408,10 +433,11 @@ public:
 
 	// members
 	//     /*00*/ void**			vtbl;
-	/*04*/ ReactionListT			reactionList; 
+	/*04*/ ReactionListT			reactionList;
 	/*0C*/ UInt8					unk0C;			// intialized to 6
 	/*0D*/ UInt8					unk0D[2];
 };
+STATIC_ASSERT(sizeof(TESReactionForm) == 0x10);
 
 // 0C
 class TESSoundFile : public BaseFormComponent
@@ -419,8 +445,9 @@ class TESSoundFile : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**			vtbl;
-	/*04*/ BSStringT				soundFilePath; 
+	/*04*/ BSStringT				soundFilePath;
 };
+STATIC_ASSERT(sizeof(TESSoundFile) == 0xC);
 
 // C8
 class TESBipedModelForm : public BaseFormComponent
@@ -472,6 +499,7 @@ public:
 	/*98*/ TESIcon					maleIcon;
 	/*B0*/ TESIcon					femaleIcon;
 };
+STATIC_ASSERT(sizeof(TESBipedModelForm) == 0xC8);
 
 // 10
 class TESEnchantableForm : public BaseFormComponent
@@ -484,6 +512,7 @@ public:
 	/*0A*/ UInt16					pad0A;
 	/*0C*/ UInt32					enchantmentType;		// init by derived class's InitializeAllComponents() fn, to values from EnchantmentItem::EnchantmentType
 };
+STATIC_ASSERT(sizeof(TESEnchantableForm) == 0x10);
 
 // 0C
 class TESProduceForm : public BaseFormComponent
@@ -497,6 +526,7 @@ public:
 	/*0A*/ UInt8					fallHarvestChance;
 	/*0B*/ UInt8					winterHarvestChance;
 };
+STATIC_ASSERT(sizeof(TESProduceForm) == 0xC);
 
 // 08
 class TESRaceForm : public BaseFormComponent
@@ -506,6 +536,7 @@ public:
 	//     /*00*/ void**		vtbl;
 	/*04*/ TESRace*				race;
 };
+STATIC_ASSERT(sizeof(TESRaceForm) == 0x8);
 
 // 14
 class TESModelList : public BaseFormComponent
@@ -519,6 +550,7 @@ public:
 	/*0C*/ UInt32					unk0C;				// init to 0
 	/*10*/ UInt32					unk10;				// init to 0
 };
+STATIC_ASSERT(sizeof(TESModelList) == 0x14);
 
 // misc. utility components. not derived from BaseFormComponent
 

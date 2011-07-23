@@ -21,7 +21,7 @@ public:
 	virtual void										UpdateLineNumbers(void);
 
 	event LineChangedEventHandler^						LineChanged;
-protected:					
+protected:
 	ref class SimpleScrollRTB : public RichTextBox				// a richtextbox implementation that disables smooth scrolling
 	{
 	public:
@@ -43,7 +43,7 @@ protected:
 
 	void												NumberedRichTextBox_LineChanged(Object^ Sender, LineChangedEventArgs^ E);
 
-	SplitContainer^										Splitter;	
+	SplitContainer^										Splitter;
 	RichTextBox^										LineField;
 	SimpleScrollRTB^									TextField;
 

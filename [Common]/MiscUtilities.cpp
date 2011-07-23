@@ -43,9 +43,9 @@ void ImageResourceManager::SetupImageForToolStripButton(ToolStripButton^ Control
 
 namespace Log
 {
-	namespace ScriptEditor 
+	namespace ScriptEditor
 	{
-		void DebugPrint(String^ Message, bool Achtung)	
+		void DebugPrint(String^ Message, bool Achtung)
 		{
 			if (Achtung) {
 				Media::SystemSounds::Hand->Play();
@@ -55,7 +55,7 @@ namespace Log
 	}
 	namespace UseInfoList
 	{
-		void DebugPrint(String^ Message, bool Achtung)	
+		void DebugPrint(String^ Message, bool Achtung)
 		{
 			if (Achtung) {
 				Media::SystemSounds::Hand->Play();
@@ -65,7 +65,7 @@ namespace Log
 	}
 	namespace BatchEditor
 	{
-		void DebugPrint(String^ Message, bool Achtung)	
+		void DebugPrint(String^ Message, bool Achtung)
 		{
 			if (Achtung) {
 				Media::SystemSounds::Hand->Play();
@@ -75,7 +75,7 @@ namespace Log
 	}
 	namespace BSAViewer
 	{
-		void DebugPrint(String^ Message, bool Achtung)	
+		void DebugPrint(String^ Message, bool Achtung)
 		{
 			if (Achtung) {
 				Media::SystemSounds::Hand->Play();
@@ -85,7 +85,7 @@ namespace Log
 	}
 	namespace TagBrowser
 	{
-		void DebugPrint(String^ Message, bool Achtung)	
+		void DebugPrint(String^ Message, bool Achtung)
 		{
 			if (Achtung) {
 				Media::SystemSounds::Hand->Play();

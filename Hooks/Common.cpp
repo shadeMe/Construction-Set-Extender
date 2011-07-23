@@ -64,7 +64,11 @@ namespace Hooks
 		HMODULE hMod = GetModuleHandle("USER32.DLL");
 		g_WindowHandleCallAddr = GetProcAddress(hMod, "MessageBoxA");
 	}
-	
+	void __stdcall GetClientRectAddress(void)
+	{
+		HMODULE hMod = GetModuleHandle("USER32.DLL");
+		g_WindowHandleCallAddr = GetProcAddress(hMod, "GetClientRect");
+	}
 
 	UInt32 __stdcall IsControlKeyDown(void)
 	{

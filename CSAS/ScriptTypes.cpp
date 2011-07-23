@@ -2,7 +2,6 @@
 
 // ugly, but seems to be the only easy way to isolate the code
 #ifdef CSE
-	#include "..\ExtenderInternals.h"
 	#include "Array.h"
 #else
 // include headers that declare FormHeap_Free and FormHeap_Allocate
@@ -101,7 +100,7 @@ namespace CSAutomationScript
 			strcpy_s(Result, Size + 1, Data);
 		}
 
-		StringData = Result;		
+		StringData = Result;
 	}
 
 	void CSASDataElement::SetArray(CSASDataElement* Elements, UInt32 Size)

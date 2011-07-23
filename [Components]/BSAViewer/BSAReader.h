@@ -11,7 +11,7 @@ public:
 	UInt32										Offset;
 	bool										Compressed;
 
-	BSAFileInfo(String^% FolderName, UInt32 Size, UInt32 Offset, bool Compressed) : 
+	BSAFileInfo(String^% FolderName, UInt32 Size, UInt32 Offset, bool Compressed) :
 					FolderName(FolderName), Size(Size), Offset(Offset), Compressed(Compressed) {}
 
 	String^										GetRelativePath() { return FolderName + "\\" + FileName; }

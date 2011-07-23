@@ -72,7 +72,6 @@ namespace Hooks
 		}
 	}
 
-
 	void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
 	{
 		VersionControl::HandlePluginSave(SaveFile);
@@ -197,9 +196,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x00447B7F);
+		_hhSetVar(Call, 0x004793F0);
 		__asm
 		{
-			call	[kDataHandler_CreateForm]
+			call	[_hhGetVar(Call)]
 			pushad
 			push	eax
 			call	DoDataHandlerCreateFormHook
@@ -212,9 +212,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x00421CFE);
+		_hhSetVar(Call, 0x004793F0);
 		__asm
 		{
-			call	[kDataHandler_CreateForm]
+			call	[_hhGetVar(Call)]
 			pushad
 			push	eax
 			call	DoDataHandlerCreateFormHook
@@ -227,9 +228,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x0044941C);
+		_hhSetVar(Call, 0x004793F0);
 		__asm
 		{
-			call	[kDataHandler_CreateForm]
+			call	[_hhGetVar(Call)]
 			pushad
 			push	eax
 			call	DoDataHandlerCreateFormHook
@@ -242,9 +244,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x00413E48);
+		_hhSetVar(Call, 0x004793F0);
 		__asm
 		{
-			call	[kDataHandler_CreateForm]
+			call	[_hhGetVar(Call)]
 			pushad
 			push	eax
 			call	DoDataHandlerCreateFormHook
@@ -257,9 +260,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x00498042);
+		_hhSetVar(Call, 0x004793F0);
 		__asm
 		{
-			call	[kDataHandler_CreateForm]
+			call	[_hhGetVar(Call)]
 			pushad
 			push	eax
 			call	DoDataHandlerCreateFormHook

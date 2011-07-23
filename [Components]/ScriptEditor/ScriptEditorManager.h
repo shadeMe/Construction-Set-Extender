@@ -62,11 +62,11 @@ public:
 																"Add Compiler Error To Message Pool"
 															};
 
-	static array<UInt16>^								ParamCount = 
-															{ 
+	static array<UInt16>^								ParamCount =
+															{
 																4,
-																5, 
-																1, 
+																5,
+																1,
 																1,
 																3,
 																3,
@@ -98,7 +98,6 @@ private:
 	void												MessageHandler_SendRecompile(UInt32 AllocatedIndex);
 	void												MessageHandler_SendDelete(UInt32 AllocatedIndex);
 	void												MessageHandler_SendClose(UInt32 AllocatedIndex);
-
 
 	void												MessageHandler_ReceiveNew(UInt32 AllocatedIndex);
 	void												MessageHandler_ReceiveOpen(UInt32 AllocatedIndex);

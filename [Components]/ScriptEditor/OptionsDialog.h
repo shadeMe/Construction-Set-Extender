@@ -1,6 +1,6 @@
 #pragma once
 
-public ref class INISetting 
+public ref class INISetting
 {
 public:
 	String^											Key;
@@ -10,7 +10,7 @@ public:
 	INISetting(String^ Key, String^ Section, String^ DefaultValue) : Key(Key), Section(Section), DefaultValue(DefaultValue) {}
 };
 
-public ref class BoundControl 
+public ref class BoundControl
 {
 public:
 	static enum class								ControlType
@@ -42,9 +42,7 @@ public:
 
 	String^											GetValue();
 	void											SetValue(String^ Value);
-
 };
-
 
 public ref class OptionsDialog
 {
@@ -79,24 +77,24 @@ public ref class OptionsDialog
 				Label^										LabelNoOfPasses;
 				NumericUpDown^								NoOfPasses;
 			TabPage^									TabAppearance;
-				Button^									CmDlgFont;
+				Button^										CmDlgFont;
 				Label^										LabelTabSize;
 				NumericUpDown^								TabSize;
-				GroupBox^								GroupBoxSyntaxHighlighting;
-					Button^									CmDlgSyntaxCommentsColor;
-					Button^									CmDlgSyntaxDigitsColor;
-					Button^									CmDlgSyntaxPreprocessorColor;
-					Button^									CmDlgSyntaxScriptBlocksColor;
-					Button^									CmDlgSyntaxDelimitersColor;
-					Button^									CmDlgSyntaxStringsColor;
-					Button^									CmDlgSyntaxKeywordsColor;
-					Label^									LabelPreprocessor;
-					Label^									LabelScriptBlocks;
-					Label^									LabelStrings;
-					Label^									LabelComments;
-					Label^									LabelDigits;
-					Label^									LabelDelimiters;
-					Label^									LabelKeywords;
+				GroupBox^									GroupBoxSyntaxHighlighting;
+					Button^										CmDlgSyntaxCommentsColor;
+					Button^										CmDlgSyntaxDigitsColor;
+					Button^										CmDlgSyntaxPreprocessorColor;
+					Button^										CmDlgSyntaxScriptBlocksColor;
+					Button^										CmDlgSyntaxDelimitersColor;
+					Button^										CmDlgSyntaxStringsColor;
+					Button^										CmDlgSyntaxKeywordsColor;
+					Label^										LabelPreprocessor;
+					Label^										LabelScriptBlocks;
+					Label^										LabelStrings;
+					Label^										LabelComments;
+					Label^										LabelDigits;
+					Label^										LabelDelimiters;
+					Label^										LabelKeywords;
 
 				Button^								CmDlgCurrentLineHighlightColor;
 				Label^								LabelCurrentLineHighlight;
@@ -121,7 +119,7 @@ public ref class OptionsDialog
 		Dictionary<String^, ColorDialog^>^			ColorDictionary;
 
 		void										RegisterColorSetting(String^ Key, Color Default, Control^ Parent);
-public:	
+public:
 	OptionsDialog();
 
 	void											LoadINI();

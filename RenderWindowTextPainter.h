@@ -1,5 +1,4 @@
 #pragma once
-#include "ExtenderInternals.h"
 
 class RenderWindowTextPainter
 {

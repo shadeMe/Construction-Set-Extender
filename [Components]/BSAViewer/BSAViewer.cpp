@@ -6,8 +6,9 @@ String^ FileSystemObject::GetPath(bool WithRoot)
 {
 	String^ Path;
 	FolderObject^ ParentObject = Parent;
-	
-	while (ParentObject != FSONULL && ParentObject != BSAViewer::Root) {
+
+	while (ParentObject != FSONULL && ParentObject != BSAViewer::Root)
+	{
 		if (!WithRoot && ParentObject->Parent == BSAViewer::Root)	break;
 
 		Path = "\\" + ParentObject->Name + Path;
@@ -27,7 +28,7 @@ BSAViewer::BSAViewer()
 	BSABox = gcnew Form();
 	LargeIcons = gcnew ImageList();
 	SmallIcons = gcnew ImageList();
-	LocationBox = gcnew TextBox();
+	StatusBar = gcnew StatusStrip();
 	OpenDialog = gcnew OpenFileDialog();
 	ToolBar = gcnew ToolStrip();
 	SeparatorA = gcnew ToolStripSeparator();
@@ -35,6 +36,7 @@ BSAViewer::BSAViewer()
 	ToolBarUp = gcnew ToolStripButton();
 	ToolBarView = gcnew ToolStripButton();
 	ToolBarArchiveName = gcnew ToolStripLabel();
+	CurrentLocation = gcnew ToolStripLabel();
 
 	LargeIcons->ImageSize = Size(48, 48);
 	LargeIcons->ColorDepth = ColorDepth::Depth32Bit;
@@ -59,8 +61,9 @@ BSAViewer::BSAViewer()
 	ToolBar->Items->Add(ToolBarView);
 	ToolBar->Items->Add(ToolBarArchiveName);
 
-	SeparatorA->Size = Size(6, 0x19);	
+	SeparatorA->Size = Size(6, 0x19);
 
+	ContentList->Dock = DockStyle::Fill;
 	ContentList->Location = System::Drawing::Point(0, 0x1a);
 	ContentList->Size = System::Drawing::Size(0x278, 0x13f);
 	ContentList->UseCompatibleStateImageBehavior = false;
@@ -73,11 +76,12 @@ BSAViewer::BSAViewer()
 	ContentList->HideSelection = false;
 	ContentList->ItemActivate += gcnew EventHandler(this, &BSAViewer::ContentList_ItemActivate);
 
-	LocationBox->Location = Point(0, 0x158);
-	LocationBox->ReadOnly = true;
-	LocationBox->Dock = DockStyle::Bottom;
-	LocationBox->Font = gcnew Font("Consolas", 14.25f, FontStyle::Regular);
-	LocationBox->Size = Size(0x278, 30);
+	StatusBar->Dock = DockStyle::Bottom;
+	StatusBar->Items->Add(CurrentLocation);
+
+	CurrentLocation->AutoSize = true;
+	CurrentLocation->Image = gcnew Bitmap(dynamic_cast<Image^>(ImageResources->GetObject("StatusBarCurrentLocation")));
+	CurrentLocation->Text = "";
 
 	ToolBarOpenArchive->Image = gcnew Bitmap(dynamic_cast<Image^>(ImageResources->GetObject("TBOpen")));
 	ToolBarOpenArchive->AutoSize = true;
@@ -94,11 +98,10 @@ BSAViewer::BSAViewer()
 	ToolBarView->AutoSize = true;
 	ToolBarView->ToolTipText = "Change View";
 	ToolBarView->Click += gcnew EventHandler(this, &BSAViewer::ToolBarView_Click);
-	
+
 	ToolBarArchiveName->AutoSize = true;
 	ToolBarArchiveName->Text = "";
 	ToolBarArchiveName->Alignment = ToolStripItemAlignment::Right;
-
 
 	BSABox = gcnew Form();
 	BSABox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -106,14 +109,13 @@ BSAViewer::BSAViewer()
 	BSABox->ClientSize = System::Drawing::Size(632, 371);
 	BSABox->Controls->Add(ContentList);
 	BSABox->Controls->Add(ToolBar);
-	BSABox->Controls->Add(LocationBox);
+	BSABox->Controls->Add(StatusBar);
 	BSABox->FormBorderStyle = FormBorderStyle::Sizable;
 	BSABox->MaximizeBox = false;
 	BSABox->MinimizeBox = false;
 	BSABox->StartPosition = FormStartPosition::CenterScreen;
 	BSABox->Text = L"BSA Browser";
 	BSABox->Closing += gcnew CancelEventHandler(this, &BSAViewer::BSABox_Cancel);
-	BSABox->Resize += gcnew EventHandler(this, &BSAViewer::BSABox_Resize);
 	BSABox->Hide();
 
 	LargeIcons->Images->Add(gcnew Bitmap(dynamic_cast<Image^>(ImageResources->GetObject("FOLDER"))));
@@ -139,7 +141,8 @@ BSAViewer::BSAViewer()
 
 BSAViewer^% BSAViewer::GetSingleton()
 {
-	if (Singleton == nullptr) {
+	if (Singleton == nullptr)
+	{
 		Singleton = gcnew BSAViewer();
 	}
 	return Singleton;
@@ -148,8 +151,10 @@ BSAViewer^% BSAViewer::GetSingleton()
 FolderObject^ BSAViewer::GetFolderInDirectory(FolderObject^% WorkingDirectory, String^% FolderName)
 {
 	UInt32 Count = 0;
-	for each (FileSystemObject^% Itr in WorkingDirectory->SubItems) {
-		if (Itr->ObjectType == FileSystemObject::_ObjectType::e_Folder && !String::Compare(Itr->Name, FolderName)) {
+	for each (FileSystemObject^% Itr in WorkingDirectory->SubItems)
+	{
+		if (Itr->ObjectType == FileSystemObject::_ObjectType::e_Folder && !String::Compare(Itr->Name, FolderName))
+		{
 			return dynamic_cast<FolderObject^>(WorkingDirectory->SubItems[Count]);
 		}
 		Count++;
@@ -161,18 +166,24 @@ void BSAViewer::ParseBSAFilePath(String^% Path)
 {
 	array<String^>^ Splits = Path->Split((gcnew String("\\"))->ToCharArray());
 	FolderObject^ WorkingDirectory = Root;
-	
+
 	UInt32 Count = 0, Tokens = Splits->Length - 1;
 	if (String::Compare(Splits[Tokens]->Substring(Splits[Tokens]->IndexOf(".") + 1), Filter))		return;
 
-	for each (String^% Itr in Splits) {
-		if (Count == Tokens) {							// last token = filename
+	for each (String^% Itr in Splits)
+	{
+		if (Count == Tokens)
+		{							// last token = filename
 			WorkingDirectory->SubItems->Add(gcnew FileObject(Itr, WorkingDirectory));
-		} else {
-			if (GetFolderInDirectory(WorkingDirectory, Itr) == FSONULL) {
+		}
+		else
+		{
+			if (GetFolderInDirectory(WorkingDirectory, Itr) == FSONULL)
+			{
 				WorkingDirectory->SubItems->Add(gcnew FolderObject(Itr, WorkingDirectory));
 				WorkingDirectory = dynamic_cast<FolderObject^>(WorkingDirectory->SubItems[WorkingDirectory->SubItems->Count - 1]);
-			} else
+			}
+			else
 				WorkingDirectory = GetFolderInDirectory(WorkingDirectory, Itr);
 		}
 		Count++;
@@ -183,9 +194,11 @@ void BSAViewer::PopulateContentList(FolderObject^% WorkingDirectory)
 {
 	ContentList->BeginUpdate();
 	ContentList->Clear();
-	for each (FileSystemObject^ Itr in WorkingDirectory->SubItems) {
+	for each (FileSystemObject^ Itr in WorkingDirectory->SubItems)
+	{
 		UInt32 ImageIndex = 0;
-		if (Itr->ObjectType != FileSystemObject::_ObjectType::e_Folder) {
+		if (Itr->ObjectType != FileSystemObject::_ObjectType::e_Folder)
+		{
 			ImageIndex = (int)(dynamic_cast<FileObject^>(Itr))->FileType + 1;
 		}
 
@@ -196,8 +209,8 @@ void BSAViewer::PopulateContentList(FolderObject^% WorkingDirectory)
 	ContentList->EndUpdate();
 
 	ToolBarUp->Enabled = true;
-	if (WorkingDirectory != Root)		LocationBox->Text = WorkingDirectory->GetPathWithName(true);
-	else								LocationBox->Text = "root";
+	if (WorkingDirectory != Root)		CurrentLocation->Text = WorkingDirectory->GetPathWithName(true);
+	else								CurrentLocation->Text = "root";
 
 	this->WorkingDirectory = WorkingDirectory;
 
@@ -217,7 +230,7 @@ void BSAViewer::Cleanup()
 	ContentList->Clear();
 	BSAR->CloseArchive();
 	Root->SubItems->Clear();
-    LocationBox->Text = "";
+    CurrentLocation->Text = "";
     WorkingDirectory = FSONULL;
 }
 
@@ -228,7 +241,8 @@ const char* BSAViewer::InitializeViewer(String^% DefaultDirectory, String^% Filt
 	ToolBarArchiveName->Text = "";
 	BSABox->ShowDialog();
 
-	if (ReturnPath != "__NULL")	{
+	if (ReturnPath != "__NULL")
+	{
 		CStringWrapper^ CPath = gcnew CStringWrapper(ReturnPath);
 		return CPath->String();
 	}
@@ -239,7 +253,8 @@ void BSAViewer::OpenArchive(String^% Path)
 {
 	if (!BSAR->OpenArchive(Path))	return;
 
-	for each (BSAFileInfo^% Itr in BSAR->GetFiles()) {
+	for each (BSAFileInfo^% Itr in BSAR->GetFiles())
+	{
 		ParseBSAFilePath(Itr->GetRelativePath());
 	}
 
@@ -249,22 +264,24 @@ void BSAViewer::OpenArchive(String^% Path)
 
 void BSAViewer::SanitizeReturnPath()
 {
-	if (ReturnPath != "__NULL") {
-		if (Filter == "kf") {
-			ReturnPath = ReturnPath->Substring(26);
+	if (ReturnPath != "__NULL")
+	{
+		if (Filter == "kf")
+		{
+			int Offset = ReturnPath->IndexOf("IdleAnims\\", StringComparison::CurrentCultureIgnoreCase);
+			if (Offset != -1)
+				ReturnPath = ReturnPath->Substring(Offset + 9);
 		}
-		else if (Filter == "dds" && ReturnPath->IndexOf("menus\\icons\\", StringComparison::CurrentCultureIgnoreCase) == 0) {
+		else if (Filter == "dds" && ReturnPath->IndexOf("menus\\icons\\", StringComparison::CurrentCultureIgnoreCase) == 0)
+		{
 			ReturnPath = ReturnPath->Substring(12);
 		}
-		else if (Filter == "spt") {
+		else if (Filter == "spt")
+		{
 			ReturnPath = "\\" + ReturnPath;
 		}
 	}
 }
-
-
-
-
 
 void BSAViewer::BSABox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
@@ -273,21 +290,18 @@ void BSAViewer::BSABox_Cancel(Object^ Sender, CancelEventArgs^ E)
 	Close();
 }
 
-void BSAViewer::BSABox_Resize(Object^ Sender, EventArgs^ E)
-{
-    ContentList->Size = Size(BSABox->Width - 10, BSABox->Height - 0x50);
-    ContentList->Location = Point(0, 0x19);
-}
-
 void BSAViewer::ContentList_ItemActivate(Object^ Sender, EventArgs^ E)
 {
 	ListViewItem^ Item = GetListViewSelectedItem(ContentList);
 	if (Item == nullptr)					return;
 
 	FileSystemObject^ FSO = dynamic_cast<FileSystemObject^>(Item->Tag);
-	if (FSO->ObjectType == FileSystemObject::_ObjectType::e_Folder) {
+	if (FSO->ObjectType == FileSystemObject::_ObjectType::e_Folder)
+	{
 		PopulateContentList(dynamic_cast<FolderObject^>(FSO));
-	} else {
+	}
+	else
+	{
 		ReturnPath = (dynamic_cast<FileObject^>(FSO))->GetPathWithName(false);
 		SanitizeReturnPath();
 		Close();
@@ -304,7 +318,8 @@ void BSAViewer::ToolBarUp_Click(Object^ Sender, EventArgs^ E)
 {
 	if (WorkingDirectory == FSONULL)	return;
 
-	if (WorkingDirectory->Parent != FSONULL) {
+	if (WorkingDirectory->Parent != FSONULL)
+	{
 		PopulateContentList(dynamic_cast<FolderObject^>(WorkingDirectory->Parent));
 	}
 
@@ -313,11 +328,11 @@ void BSAViewer::ToolBarUp_Click(Object^ Sender, EventArgs^ E)
 
 void BSAViewer::ToolBarOpenArchive_Click(Object^ Sender, EventArgs^ E)
 {
-	if (OpenDialog->ShowDialog() == DialogResult::OK && OpenDialog->FileName->Length > 0) {
+	if (OpenDialog->ShowDialog() == DialogResult::OK && OpenDialog->FileName->Length > 0)
+	{
 		Cleanup();
 		OpenArchive(OpenDialog->FileName);
 		FileInfo^ FI = gcnew FileInfo(OpenDialog->FileName);
 		ToolBarArchiveName->Text = FI->Name;
 	}
 }
-

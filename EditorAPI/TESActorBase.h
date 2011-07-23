@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESObject.h"
 #include "BaseFormComponent.h"
@@ -32,3 +30,4 @@ public:
 	//     /*0E8*/ TESModel
 	//     /*10C*/ TESScriptableForm
 };
+STATIC_ASSERT(sizeof(TESActorBase) == 0x118);

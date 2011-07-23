@@ -86,16 +86,17 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>
-      </DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ForcedIncludeFiles>$(ProjectDir)Prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
@@ -148,6 +149,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\Filter2HS.png" />
     <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\CHAT.A.png" />
     <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\DEFRAG.png" />
     <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - DLL.png" />

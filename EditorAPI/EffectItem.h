@@ -1,6 +1,4 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 #include "Magic.h"
@@ -9,7 +7,7 @@
 //	EditorAPI: EffectItem class and co.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	EffectItem - data for individual effects on magic items.  Stores effect setting & override values + additional data
 */
 
@@ -21,9 +19,9 @@ class   Script;
 // 34
 class EffectItem
 {
+	typedef void (__cdecl *_CreateEffectSetting)(int EffectID, const char *EffectName, int School, float BaseCost, int MGEFParamA, int Flags, int ResistAV, int NoOfCounterEffects, ...);
 public:
-
-	/// 18
+	// 18
 	class ScriptEffectInfo
 	{
 	public:
@@ -35,6 +33,7 @@ public:
 		/*14*/ bool           hostile;
 		/*15*/ UInt8          pad15[3];
 	};
+	STATIC_ASSERT(sizeof(ScriptEffectInfo) == 0x18);
 
 	// members
 	// NOTE: setting these directly can break invariants assumed by game code (that 'effect' is a valid pointer, etc.)
@@ -53,7 +52,11 @@ public:
 	/*28*/ SInt32             origBaseMagicka; // pre-editing base magicka cost
 	/*2C*/ SInt32             origItemMagicka; // pre-editing base magicka cost of magic item
 	/*30*/ UInt32             origItemMastery; // pre-editing mastery of magic item (not used by vanilla dialog)
+
+	// methods
+	static _CreateEffectSetting			CreateEffectSetting;
 };
+STATIC_ASSERT(sizeof(EffectItem) == 0x34);
 
 // Actually derived from BSSimpleList<EffectItem*>, as defined in COEF
 // DC
@@ -63,10 +66,11 @@ public:
 	typedef tList<EffectItem> EffectItemListT;
 
 	// members
-	//     /*00*/ void**				vtbl;    
+	//     /*00*/ void**				vtbl;
 	/*04*/ EffectItemListT				firstEffect;
 	/*0C*/ UInt32						hostileCount; // includes 'ignored' effects, so technically broken, but no vanilla effects are ignored
 	/*10*/ EffectSetting				filterEffect; // used as a filter for allowable magic effects
 
-	virtual void						UnkVFn00();
+	virtual void						VFn00();
 };
+STATIC_ASSERT(sizeof(EffectItemList) == 0xDC);

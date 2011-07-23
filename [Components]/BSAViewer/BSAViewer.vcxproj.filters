@@ -93,5 +93,8 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ViewThumbnailsHS.png">
       <Filter>Resources\Images</Filter>
     </None>
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\Filter2HS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
   </ItemGroup>
 </Project>

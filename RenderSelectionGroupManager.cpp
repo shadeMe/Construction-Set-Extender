@@ -21,7 +21,7 @@ TESRenderSelection* RenderSelectionGroupManager::GetRefSelectionGroup(TESObjectR
 	{
 		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
 		{
-			for (TESRenderSelection::SelectedObjectsEntry* ItrEx = (*Itr)->RenderSelection; ItrEx && ItrEx->Data; ItrEx = ItrEx->Next)
+			for (TESRenderSelection::SelectedObjectsEntry* ItrEx = (*Itr)->selectionList; ItrEx && ItrEx->Data; ItrEx = ItrEx->Next)
 			{
 				if (ItrEx->Data == Ref)
 				{
@@ -40,11 +40,7 @@ void RenderSelectionGroupManager::Clear()
 	for (_RenderSelectionGroupMap::iterator Itr = SelectionGroupMap.begin(); Itr != SelectionGroupMap.end(); Itr++)
 	{
 		for (std::vector<TESRenderSelection*>::iterator ItrEx = Itr->second.begin(); ItrEx != Itr->second.end(); ItrEx++)
-		{
-			thisCall(kTESRenderSelection_ClearSelection, *ItrEx, 0);
-			thisCall(kTESRenderSelection_Free, *ItrEx);
-			FormHeap_Free(*ItrEx);
-		}
+			(*ItrEx)->DeleteInstance();
 
 		Itr->second.clear();
 	}
@@ -53,11 +49,10 @@ void RenderSelectionGroupManager::Clear()
 
 TESRenderSelection* RenderSelectionGroupManager::AllocateNewSelection(TESRenderSelection* Selection)
 {
-	TESRenderSelection* Group = (TESRenderSelection*)FormHeap_Allocate(0x18);
-	thisCall(kCtor_TESRenderSelection, Group);
+	TESRenderSelection* Group = TESRenderSelection::CreateInstance();
 
-	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
-		thisCall(kTESRenderSelection_AddFormToSelection, Group, Itr->Data, 0);
+	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		Group->AddToSelection(Itr->Data, false);
 
 	return Group;
 }
@@ -65,7 +60,7 @@ TESRenderSelection* RenderSelectionGroupManager::AllocateNewSelection(TESRenderS
 TESObjectREFR* RenderSelectionGroupManager::GetRefAtSelectionIndex(TESRenderSelection* Selection, UInt32 Index)
 {
 	UInt32 Count = 0;
-	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next, Count++)
+	for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next, Count++)
 	{
 		if (Count == Index)
 			return CS_CAST(Itr->Data, TESForm, TESObjectREFR);
@@ -83,10 +78,10 @@ TESRenderSelection* RenderSelectionGroupManager::GetTrackedSelection(TESObjectCE
 		for (std::vector<TESRenderSelection*>::iterator Itr = SelectionList->begin(); Itr != SelectionList->end(); Itr++)
 		{
 			TESRenderSelection* Base = *Itr;
-			if (Base->SelectionCount == Selection->SelectionCount)
+			if (Base->selectionCount == Selection->selectionCount)
 			{
 				bool Mismatch = false;
-				for (int i = 0; i < Selection->SelectionCount; i++)
+				for (int i = 0; i < Selection->selectionCount; i++)
 				{
 					if (GetRefAtSelectionIndex(Selection, i) != GetRefAtSelectionIndex(Base, i))
 					{
@@ -116,10 +111,7 @@ void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRende
 		{
 			if (*Itr == TrackedSelection)
 			{
-				thisCall(kTESRenderSelection_ClearSelection, *Itr, 0);
-				thisCall(kTESRenderSelection_Free, *Itr);
-				FormHeap_Free(*Itr);
-
+				(*Itr)->DeleteInstance();
 				EraseItr = Itr;
 				break;
 			}
@@ -138,7 +130,7 @@ bool RenderSelectionGroupManager::AddGroup(TESObjectCELL *Cell, TESRenderSelecti
 	if (SelectionList)
 	{
 		bool ExistingGroup = false;
-		for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			if (GetRefSelectionGroup(CS_CAST(Itr->Data, TESForm, TESObjectREFR), Cell))
 			{

@@ -1,9 +1,9 @@
-#pragma once 
+#pragma once
 #include "Common.h"
 
 namespace Hooks
 {
-	// hooks that modify how CS dialogs behave and add interfaces for new functionality
+	// hooks that modify how CS dialogs behave and add interfaces for new tools
 	void PatchDialogHooks(void);
 
 	extern bool g_QuickLoadToggle;
@@ -40,4 +40,16 @@ namespace Hooks
 	_DeclareMemHdlr(TESNPCUpdatePreviewControl, "fixes a bug that prevented NPC models from being updated correctly after an item was removed from their inventory");
 	_DeclareMemHdlr(TESParametersFillAndInitSelectionComboBoxOwners, "allows factions to be passed as arguments to condition commands that take ownership parameters");
 	_DeclareMemHdlr(SearchReplaceDialog, "patches the search and replace dialog to stay open after a replace operation");
+	_DeclareMemHdlr(ObjectWindowPopulateFormListInvalidate, "invalidates the formList before items are added to it to increase performance");
+	_DeclareMemHdlr(ObjectWindowResize, "patches the object window wnd proc's resize handler to account for the filter controls");
+	_DeclareMemHdlr(ObjectWindowPopulateFormListFilter, "adds support for the newly added filter tool in the object window");
+	_DeclareMemHdlr(LandscapeTextureUseDlg, "allows the subclassing of the landscape texture use dialog");
+	_DeclareMemHdlr(BuildResultScriptEditButton, "creates the edit result script button for the dialog editor and the quest stage dlg");
+	_DeclareMemHdlr(DialogEditorCommandMessageCallback, "handles messages sent by the edit result script button");
+	_DeclareMemHdlr(TESQuestCommandMessageCallback, "");
+	_DeclareMemHdlr(CellViewWindowResizeFix, "fixes a bug that kept eating at the cell view's list view control heights after each reinit");
+	_DeclareMemHdlr(CellViewWindowResizeA, "patches the cell view window wnd proc's resize handler to account for the new controls");
+	_DeclareMemHdlr(CellViewWindowResizeB, "");
+	_DeclareMemHdlr(CellViewWindowPopulateObjectListFilter, "adds support for the newly added filter tool in the cell view window");
+	_DeclareMemHdlr(TESSoundPlayFile, "patches the sound file sampler code to play files found in archives");
 }

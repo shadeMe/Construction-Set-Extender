@@ -40,7 +40,7 @@ public:
 															e_SingleLine,
 															e_MultiLine
 														};
-	static array<Char>^									EncodingIdentifier = 
+	static array<Char>^									EncodingIdentifier =
 														{
 															'~',
 															'#',
@@ -55,7 +55,7 @@ public:
 															e_Enum,
 															e_If
 														};
-	static array<String^>^								DirectiveIdentifier = 
+	static array<String^>^								DirectiveIdentifier =
 														{
 															"Invalid",
 															"Define",
@@ -75,12 +75,11 @@ protected:
 	String^												ObfuscateToCompiler(String^% Token);
 public:
 	CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::e_Invalid), Encoding(EncodingType::e_Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
-	
+
 	EncodingType										GetEncodingType() { return Encoding; }
 	DirectiveType										GetDirectiveType()	{ return Type; }
 	bool												GetErrorFlag() { return ErrorFlag; }
 };
-
 
 public ref class DefineDirective : public CSEPreprocessorDirective
 {
@@ -94,7 +93,7 @@ public:
 															e_None = 0,
 															e_Stringize
 														};
-	static array<String^>^								AccessoryOperatorIdentifier = 
+	static array<String^>^								AccessoryOperatorIdentifier =
 														{
 															"",
 															"#"
@@ -107,7 +106,7 @@ public:
 	String^												GetValue(String^% Prefix, AccessoryOperatorType ActiveOperator);
 	void												SetValue(String^% Value) { this->Value = Value; }
 	DefineDirective^									CreateCopy();
-	
+
 	static AccessoryOperatorType						GetAccessoryOperatorFromToken(String^% Token);
 
 	virtual	String^										GetToken() override;
@@ -157,7 +156,7 @@ public ref class IfDirective : public CSEPreprocessorDirective
 		bool											Evaluate(String^% LHS, String^% RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance) { return EvaluationHandler(LHS, RHS, ErrorOutput, PreprocessorInstance); }
 	};
 
-	static bool											ParseAsInt(String^% Source, int% Result);	
+	static bool											ParseAsInt(String^% Source, int% Result);
 	static void											ProcessOperands(String^% LHSSource, String^% RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^% PreprocessorInstance);
 
 	static bool											EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
@@ -201,7 +200,7 @@ public ref class Preprocessor
 {
 	static Preprocessor^								Singleton = nullptr;
 	Preprocessor();
-	
+
 	LinkedList<DefineDirective^>^						RegisteredDefineDirectives;
 	ScriptEditorPreprocessorData^						DataBuffer;
 
@@ -211,7 +210,7 @@ public:
 	static Preprocessor^%								GetSingleton();
 
 	ScriptEditorPreprocessorData^%						GetInstanceData() { return DataBuffer; }
-	void												RegisterDefineDirective(DefineDirective^ Directive); 
+	void												RegisterDefineDirective(DefineDirective^ Directive);
 	DefineDirective^									LookupDefineDirectiveByName(String^% Name);
 	bool												Preprocess(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
 

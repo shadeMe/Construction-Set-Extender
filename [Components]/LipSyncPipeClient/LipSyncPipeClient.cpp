@@ -97,7 +97,7 @@ bool GenerateLIPFile(char* FilePath, char* ResponseText)
 		if (LIPResult)
 		{
 			ReplaceSourceFileExtensionWithLIP(&FilePath);
-			Result = (UInt16)thisCall(kCreateLIPFile, LIPResult, &FilePath);
+			Result = thisCall<UInt16>(kCreateLIPFile, LIPResult, &FilePath);
 		}
 	}
 	__except(EXCEPTION_EXECUTE_HANDLER)

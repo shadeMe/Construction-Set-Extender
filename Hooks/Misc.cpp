@@ -5,12 +5,10 @@
 #include "..\WorkspaceManager.h"
 #include "..\RenderWindowTextPainter.h"
 #include "..\RenderSelectionGroupManager.h"
-#include "..\GMSTMap.h"
-#include "..\ArchiveManager.h"
-#include "..\TESFormReferenceData.h"
 #include "..\ElapsedTimeCounter.h"
 #include "..\CSEInterfaceManager.h"
 #include "..\ChangeLogManager.h"
+#include "..\Achievements.h"
 #include "CSAS\ScriptRunner.h"
 
 extern CommandTableData	g_CommandTableData;
@@ -19,8 +17,8 @@ namespace Hooks
 {
 	char g_NumericIDWarningBuffer[0x10] = {0};
 
-	_DefineHookHdlr(CSExit, 0x0041936E);
 	_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0);
+	_DefineHookHdlr(CSExit, 0x0041936E);
 	_DefineNopHdlr(MissingTextureWarning, 0x0044F3AF, 14);
 	_DefineHookHdlr(AssertOverride, 0x004B5670);
 	_DefinePatchHdlr(TextureMipMapCheck, 0x0044F49B);
@@ -45,16 +43,26 @@ namespace Hooks
 	_DefineHookHdlr(TESWorldSpaceDestroyCellMapA, 0x00560753);
 	_DefineHookHdlr(TESWorldSpaceDestroyCellMapB, 0x0079CA33);
 	_DefineJumpHdlr(CSRegistryEntries, 0x00406820, 0x00406AF4);
+	_DefineHookHdlr(AchievementAddTopic, 0x004F2ED4);
+	_DefineHookHdlr(AchievementDeleteShadeMe, 0x004986B4);
+	_DefineHookHdlr(AchievementModifyShadeMe, 0x00497BEA);
+	_DefineHookHdlr(AchievementCloneHallOfFameForms, 0x00413E4F);
+	_DefineHookHdlr(AchievementPluginDescription, 0x0040CD20);
+	_DefineHookHdlr(AchievementBuildRoads, 0x00563CFF);
+	_DefineHookHdlr(AchievementDialogResponseCreation, 0x004F2CC3);
+	_DefineHookHdlr(TESDialogBuildSubwindowDiagnostics, 0x00404F2A);
+	_DefineHookHdlr(ExtraTeleportInitItem, 0x00462702);
 
 	void PatchMiscHooks(void)
 	{
-		_MemHdlr(CSExit).WriteJump();
 		_MemHdlr(CSInit).WriteJump();
+		_MemHdlr(CSExit).WriteJump();
 		_MemHdlr(PluginSave).WriteJump();
 		_MemHdlr(PluginLoad).WriteJump();
 		_MemHdlr(TextureMipMapCheck).WriteUInt8(0xEB);
 		_MemHdlr(UnnecessaryCellEdits).WriteUInt8(0xEB);
 		_MemHdlr(UnnecessaryDialogEdits).WriteUInt8(0xEB);
+		_MemHdlr(AssertOverride).WriteJump();
 		_MemHdlr(DataHandlerClearData).WriteJump();
 		_MemHdlr(TopicInfoCopyProlog).WriteJump();
 		_MemHdlr(TopicInfoCopyEpilog).WriteJump();
@@ -71,37 +79,45 @@ namespace Hooks
 		_MemHdlr(DataHandlerPlaceTESObjectLIGH).WriteJump();
 		_MemHdlr(TESWorldSpaceDestroyCellMapA).WriteJump();
 		_MemHdlr(TESWorldSpaceDestroyCellMapB).WriteJump();
+		_MemHdlr(AchievementAddTopic).WriteJump();
+		_MemHdlr(AchievementDeleteShadeMe).WriteJump();
+		_MemHdlr(AchievementModifyShadeMe).WriteJump();
+		_MemHdlr(AchievementCloneHallOfFameForms).WriteJump();
+		_MemHdlr(AchievementPluginDescription).WriteJump();
+		_MemHdlr(AchievementBuildRoads).WriteJump();
+		_MemHdlr(AchievementDialogResponseCreation).WriteJump();
+		_MemHdlr(TESDialogBuildSubwindowDiagnostics).WriteJump();
+		_MemHdlr(ExtraTeleportInitItem).WriteJump();
 
-		if (g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
-			PatchMessageHandler();
-		if (g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
-			_MemHdlr(AssertOverride).WriteJump();
-
-		if (!CreateDirectory(std::string(g_AppPath + "Data\\Backup").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
-			DebugPrint("Couldn't create the Backup folder in Data directory");
+		PatchMessageHandler();
 
 		OSVERSIONINFO OSInfo;
 		GetVersionEx(&OSInfo);
-		if (OSInfo.dwMajorVersion >= 6)		// if running on Windows Vista/7, fix the listview selection sound
+		if (OSInfo.dwMajorVersion >= 6)		// if running Windows Vista/7, fix the listview selection sound
 			RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
 	}
 
-	void PathEntryPointHooks(void)
+	void PatchEntryPointHooks(void)
 	{
 		_MemHdlr(CSRegistryEntries).WriteJump();
 	}
 
 	void PatchMessageHandler(void)
 	{
-		SafeWrite32(kVTBL_MessageHandler + 0, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x4, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x8, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x10, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x14, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x18, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x1C, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x20, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(kVTBL_MessageHandler + 0x24, (UInt32)&MessageHandlerOverride);
+		static UInt32 s_MessageHandlerVTBL = 0x00940760;
+
+		if (!g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
+			return;
+
+		SafeWrite32(s_MessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x4, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x8, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x10, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x14, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x18, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x1C, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x20, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(s_MessageHandlerVTBL + 0x24, (UInt32)&MessageHandlerOverride);
 
 														// patch spammy subroutines
 		NopHdlr kDataHandlerAutoSave(0x0043083B, 5);
@@ -110,6 +126,8 @@ namespace Hooks
 		NopHdlr	kHeightMapGenA(0x005E0D9D, 5), kHeightMapGenB(0x005E0DB6, 5);
 		NopHdlr kModelLoadError(0x0046C215, 5);
 		NopHdlr	kLoadTerrainLODQuad(0x005583F1, 5);
+		NopHdlr	kFaceGenControlFreeformA(0x0044B2EA, 5), kFaceGenControlFreeFormB(0x0044B348, 5);
+		NopHdlr kFaceGenControlStoringUndoA(0x004DD652, 5), kFaceGenControlStoringUndoB(0x004E8EC8, 5);
 
 		SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
 		kDataHandlerAutoSave.WriteNop();
@@ -119,6 +137,10 @@ namespace Hooks
 		kHeightMapGenB.WriteNop();
 		kModelLoadError.WriteNop();
 		kLoadTerrainLODQuad.WriteNop();
+		kFaceGenControlFreeformA.WriteNop();
+		kFaceGenControlFreeFormB.WriteNop();
+		kFaceGenControlStoringUndoA.WriteNop();
+		kFaceGenControlStoringUndoB.WriteNop();
 	}
 
 	void __stdcall MessageHandlerOverride(const char* Message)
@@ -129,10 +151,10 @@ namespace Hooks
 	void __stdcall DoCSExitHook(HWND MainWindow)
 	{
 		CONSOLE->Pad(2);
-		TESDialog_WritePositionToINI(MainWindow, NULL);
-		TESDialog_WritePositionToINI(*g_HWND_CellView, "Cell View");
-		TESDialog_WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
-		TESDialog_WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
+		TESDialog::WritePositionToINI(MainWindow, NULL);
+		TESDialog::WritePositionToINI(*g_HWND_CellView, "Cell View");
+		TESDialog::WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
+		TESDialog::WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
 		DebugPrint("CS INI Settings Flushed");
 
 		VersionControl::CHANGELOG->Deinitialize();
@@ -143,13 +165,13 @@ namespace Hooks
 		DebugPrint("CSInterop Manager Deinitialized");
 		g_ToolManager.WriteToINI(g_INIPath.c_str());
 		DebugPrint("Tool Manager Deinitialized");
-
 		CSAutomationScript::DeitializeCSASEngine();
 		DebugPrint("CSAS Deinitialized");
 
-		DebugPrint("Deinitializing Console, Flushing CSE INI Settings and Closing the CS!");
+		DebugPrint("Deinitializing Console, Flushing CSE INI settings and Closing the CS!");
 		CONSOLE->Deinitialize();
 		g_INIManager->SaveSettingsToINI();
+		g_INIManager->Deinitialize();
 
 		ExitProcess(0);
 	}
@@ -164,38 +186,100 @@ namespace Hooks
 		}
 	}
 
+	static LPTOP_LEVEL_EXCEPTION_FILTER s_TopLevelExceptionFilter = NULL;
+
+	bool CreateCSEMiniDump( _EXCEPTION_POINTERS *ExceptionInfo)
+	{
+		HANDLE DumpFile = CreateFile(PrintToBuffer("%sCSECrashDump.dmp", g_APPPath.c_str()),
+									GENERIC_READ|GENERIC_WRITE,
+									0,
+									NULL,
+									CREATE_ALWAYS,
+									FILE_ATTRIBUTE_NORMAL,
+									NULL);
+
+		if (DumpFile == INVALID_HANDLE_VALUE)
+			return false;
+
+		MINIDUMP_EXCEPTION_INFORMATION mdei;
+
+		mdei.ThreadId           = GetCurrentThreadId();
+		mdei.ExceptionPointers  = ExceptionInfo;
+		mdei.ClientPointers     = FALSE;
+
+		MINIDUMP_TYPE mdt       = (MINIDUMP_TYPE)(MiniDumpNormal|MiniDumpWithIndirectlyReferencedMemory|MiniDumpScanMemory);
+
+		BOOL rv = MiniDumpWriteDump(GetCurrentProcess(),
+									GetCurrentProcessId(),
+									DumpFile,
+									mdt, (ExceptionInfo != 0) ? &mdei : 0, 0, 0 );
+
+		if( !rv )
+			return false;
+		else
+			DebugPrint("Minidump saved to %s", g_TextBuffer);
+
+		CloseHandle(DumpFile);
+		return true;
+	}
+
+	LONG WINAPI CSEUnhandledExceptionFilter(__in  struct _EXCEPTION_POINTERS *ExceptionInfo)
+	{
+		CONSOLE->Pad(2);
+		DebugPrint("The CS crashed, dammit!");
+		CONSOLE->Indent();
+		Achievements::UnlockAchievement(Achievements::kAchievement_Saboteur);
+
+		if (!CreateCSEMiniDump(ExceptionInfo))
+		{
+			DebugPrint("Couldn't create a memory dump!");
+			LogWinAPIErrorMessage(GetLastError());
+		}
+
+		if (s_TopLevelExceptionFilter)
+			return s_TopLevelExceptionFilter(ExceptionInfo);
+		else
+		{
+			DebugPrint("Couldn't find a top level exception filter!");
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+	}
+
 	void __stdcall DoCSInitHook()
 	{
-		if (!g_PluginPostLoad)
+		if (!g_PluginPostLoad)					// prevents the hook from being called before the full init
 			return;
 		else if (!*g_HWND_CSParent || !*g_HWND_ObjectWindow || !*g_HWND_CellView || !*g_HWND_RenderWindow)
 			return;
-												// prevents the hook from being called before the full init
-												// perform deferred patching
-												// remove hook rightaway to keep it from hindering the subclassing that follows
-		_MemHdlr(CSInit).WriteBuffer();
+
+		_MemHdlr(CSInit).WriteBuffer();			// removed rightaway to keep it from hindering the subclassing that follows
 
 		MersenneTwister::init_genrand(GetTickCount());
 
 		DebugPrint("Initializing CSInterop Manager");
 		CONSOLE->Indent();
-		if (!CSIOM->Initialize("Data\\OBSE\\Plugins\\CSE\\LipSyncPipeClient.dll"))	
+		if (!CSIOM->Initialize())
 			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
+		CONSOLE->Exdent();
+
+		DebugPrint("Initializing Achievements");
+		CONSOLE->Indent();
+		Achievements::Initialize();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Hall of Fame");
 		CONSOLE->Indent();
-		if (!TESForm_LookupByEditorID("TheShadeMeRef"))		// with the new injection method, DataHandler::ConstructSpecialForms gets called before the deferred init routine is called
-			HallOfFame::Initialize(true);					// we make sure we don't reallocated the hall of fame forms by performing a sanity check
+		if (!TESForm::LookupByEditorID("TheShadeMeRef"))	// with the new injection method, DataHandler::ConstructSpecialForms gets called before the deferred init routine
+			HallOfFame::Initialize(true);					// we make sure we don't reallocate the hall of fame forms by performing a sanity check
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing ScriptEditor");
 		CONSOLE->Indent();
 
 		IntelliSenseUpdateData* GMSTCollectionData = new IntelliSenseUpdateData();
-		GMSTCollectionData->GMSTCount = CountGMSTForms();
+		GMSTCollectionData->GMSTCount = g_GMSTCollection->GetGMSTCount();
 		GMSTCollectionData->GMSTListHead = new GMSTData[GMSTCollectionData->GMSTCount];
-		InitializeHandShakeGMSTData(GMSTCollectionData->GMSTListHead);
+		g_GMSTCollection->SerializeGMSTDataForHandShake(GMSTCollectionData->GMSTListHead);
 		CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData, GMSTCollectionData);
 		delete [] GMSTCollectionData->GMSTListHead;
 		delete GMSTCollectionData;
@@ -208,6 +292,15 @@ namespace Hooks
 		CONSOLE->Exdent();
 
 		CONSOLE->Exdent();
+
+		UInt32 CommandCount = 0;
+		for (const CommandInfo* Itr = g_CommandTableData.CommandTableStart; Itr < g_CommandTableData.CommandTableEnd; ++Itr)
+		{
+			if (!_stricmp(Itr->longName, ""))
+				continue;
+
+			CommandCount++;
+		}
 
 		DebugPrint("Initializing Intellisense Database Update Thread");
 		CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
@@ -226,7 +319,7 @@ namespace Hooks
 
 		DebugPrint("Initializing Workspace Manager");
 		CONSOLE->Indent();
-		g_WorkspaceManager.Initialize(g_AppPath.c_str());
+		g_WorkspaceManager.Initialize(g_APPPath.c_str());
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Window Manager");
@@ -240,19 +333,19 @@ namespace Hooks
 		CONSOLE->LoadINISettings();
 		CONSOLE->Exdent();
 
-		DebugPrint("Initializing GMST Map");
+		DebugPrint("Initializing GMST Default Copy");
 		CONSOLE->Indent();
-		InitializeDefaultGMSTMap();
+		g_GMSTCollection->CreateDefaultCopy();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing IdleAnim Tree");
 		CONSOLE->Indent();
-		thisCall(kTESIdleFormTree_AddRootNodes, *g_IdleFormTree);
+		TESIdleForm::InitializeIdleFormTreeRootNodes();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Archives");
 		CONSOLE->Indent();
-		InitializeArchives();
+		ArchiveManager::LoadSkippedArchives((std::string(g_APPPath + "Data\\")).c_str());
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Render Window Text Painter");
@@ -276,6 +369,14 @@ namespace Hooks
 		CONSOLE->ExdentAll();
 		DebugPrint("Construction Set Extender Initialized!");
 		CONSOLE->Pad(2);
+
+		Achievements::UnlockAchievement(Achievements::kAchievement_TheWiseOne);
+		if (!g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
+			Achievements::UnlockAchievement(Achievements::kAchievement_FlyingBlind);
+		if (CommandCount >= Achievements::kMaxScriptCommandCount)
+			Achievements::UnlockAchievement(Achievements::kAchievement_Commandant);
+
+		s_TopLevelExceptionFilter = SetUnhandledExceptionFilter(CSEUnhandledExceptionFilter);
 	}
 
 	#define _hhName	CSInit
@@ -293,6 +394,11 @@ namespace Hooks
 
 	void __stdcall DoAssertOverrideHook(UInt32 EIP)
 	{
+		Achievements::UnlockAchievement(Achievements::kAchievement_WTF);
+
+		if (!g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
+			return;
+
 		CONSOLE->Indent();
 		DebugPrint("Assertion handled at 0x%08X", EIP);
 		CONSOLE->Exdent();
@@ -338,9 +444,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x0041BEFF);
+		_hhSetVar(Call, 0x00430980);
 		__asm
 		{
-			call	TESDialog_InitializeCSWindows
+			call	[_hhGetVar(Call)]
 
 			pushad
 			push	9
@@ -354,9 +461,9 @@ namespace Hooks
 
 	void __stdcall DestroyShadeMeRef(void)
 	{
-		TESForm* Ref = TESForm_LookupByEditorID("TheShadeMeRef");
+		TESForm* Ref = TESForm::LookupByEditorID("TheShadeMeRef");
 		if (Ref)
-			thisVirtualCall(kVTBL_TESObjectREFR, 0x34, Ref);
+			Ref->DeleteInstance();
 	}
 	void __stdcall ClearRenderSelectionGroupMap(void)
 	{
@@ -364,26 +471,7 @@ namespace Hooks
 	}
 	void __stdcall ClearGMSTCollection(void)
 	{
-		void* Unk01 = (void*)thisCall(0x0051F920, (void*)g_GMSTMap);
-		while (Unk01)
-		{
-			const char*	 Name = NULL;
-			Setting* Data = NULL;
-
-			thisCall(0x005E0F90, (void*)g_GMSTMap, &Unk01, &Name, &Data);
-			if (Data)
-			{
-				GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
-				thisVirtualCall(*(UInt32*)SettingForm, 0x94, SettingForm, 0);
-				_DefaultGMSTMap::iterator Match = g_DefaultGMSTMap.find(Name);
-
-				if (Match != g_DefaultGMSTMap.end())
-				{
-					GameSetting* DefaultGMST = Match->second;
-					thisVirtualCall(*(UInt32*)SettingForm, 0xB8, SettingForm, DefaultGMST);
-				}
-			}
-		}
+		g_GMSTCollection->ResetCollection();
 	}
 
 	#define _hhName	DataHandlerClearData
@@ -432,7 +520,7 @@ namespace Hooks
 			isdigit((int)*EditorID) &&
 			(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 		{
-			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
+			PrintToBuffer("The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
 			MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONWARNING);
 		}
 	}
@@ -497,35 +585,34 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x00547668);
+		_hhSetVar(Call1, 0x00460380);
+		_hhSetVar(Call2, 0x0053F7A0);
 		__asm
 		{
 			pushad
 			push	ebx
 			mov		ecx, ebp
-			call	kExtraDataList_CopyList
+			call	[_hhGetVar(Call1)]		// ExtraDataList_CopyList
 			popad
 
 			pushad
 			mov		ecx, edi
-			call	[kTESObjectREFR_RemoveExtraTeleport]
+			call	[_hhGetVar(Call2)]		// TESObjectREFR::RemoveExtraTeleport
 			popad
 
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
 
-	void __stdcall DoTESFormAddReferenceHook(GenericNode<TESFormReferenceData>* ReferenceList, TESForm* Form)
+	void __stdcall DoTESFormAddReferenceHook(FormCrossReferenceListT* ReferenceList, TESForm* Form)
 	{
-		TESFormReferenceData* Data = TESFormReferenceData::FindDataInRefList(ReferenceList, Form);
+		FormCrossReferenceData* Data = FormCrossReferenceData::FindDataInRefList(ReferenceList, Form);
 		if (Data)
 			Data->IncrementRefCount();
 		else
 		{
-			TESFormReferenceData* NewNode = (TESFormReferenceData*)FormHeap_Allocate(sizeof(TESFormReferenceData));
-			NewNode->Initialize(Form);
-			NewNode->IncrementRefCount();
-
-			thisCall(kLinkedListNode_NewNode, ReferenceList, NewNode);
+			FormCrossReferenceData* NewNode = FormCrossReferenceData::CreateInstance(Form);
+			ReferenceList->AddAt(NewNode, eListEnd);
 		}
 	}
 
@@ -542,19 +629,19 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoTESFormRemoveReferenceHook(TESForm* Parent, GenericNode<TESFormReferenceData>* ReferenceList, TESForm* Form)
+	void __stdcall DoTESFormRemoveReferenceHook(TESForm* Parent, tList<FormCrossReferenceData>* ReferenceList, TESForm* Form)
 	{
-		TESFormReferenceData* Data = TESFormReferenceData::FindDataInRefList(ReferenceList, Form);
+		FormCrossReferenceData* Data = FormCrossReferenceData::FindDataInRefList(ReferenceList, Form);
 		if (Data)
 		{
 			if (Data->DecrementRefCount() == 0)
 			{
-				thisCall(kLinkedListNode_RemoveNode, ReferenceList, Data);
-				FormHeap_Free(Data);
+				ReferenceList->Remove(Data);
+				Data->DeleteInstance();
 			}
 
-			if (thisCall(kLinkedListNode_GetIsDangling, ReferenceList))
-				thisCall(kTESForm_CleanupFormReferenceList, Parent);
+			if (ReferenceList->IsEmpty())
+				Parent->CleanupCrossReferenceList();
 		}
 	}
 
@@ -572,14 +659,14 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoTESFormClearReferenceListHook(GenericNode<TESFormReferenceData>* ReferenceList)
+	void __stdcall DoTESFormClearReferenceListHook(FormCrossReferenceListT* ReferenceList)
 	{
-		for (GenericNode<TESFormReferenceData>* Itr = ReferenceList; Itr && Itr->data; Itr = Itr->next)
+		for (FormCrossReferenceListT::Iterator Itr = ReferenceList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
-			TESFormReferenceData* Data = Itr->data;
-			FormHeap_Free(Data);
+			FormCrossReferenceData* Data = Itr.Get();
+			Data->DeleteInstance();
 		}
-		thisCall(kLinkedListNode_Cleanup, ReferenceList);
+		ReferenceList->RemoveAll();
 	}
 
 	#define _hhName	TESFormClearReferenceList
@@ -602,9 +689,10 @@ namespace Hooks
 	{
 		_hhSetVar(Retn, 0x004964FB);
 		_hhSetVar(Jump, 0x00496509);
+		_hhSetVar(Call, 0x004FC950);
 		__asm
 		{
-			call	[kLinkedListNode_GetData]
+			call	[_hhGetVar(Call)]
 			test	eax, eax
 			jz		FAIL
 
@@ -623,9 +711,10 @@ namespace Hooks
 	{
 		_hhSetVar(Retn, 0x00498717);
 		_hhSetVar(Jump, 0x0049872D);
+		_hhSetVar(Call, 0x004FC950);
 		__asm
 		{
-			call	[kLinkedListNode_GetData]
+			call	[_hhGetVar(Call)]
 			cmp		eax, ebx
 			jz		FAIL
 
@@ -687,5 +776,222 @@ namespace Hooks
 			jmp		[_hhGetVar(Jump)]
 		}
 	}
-}
 
+	#define _hhName	AchievementAddTopic
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004F2ED9);
+		_hhSetVar(Call, 0x004F5D20);
+		__asm
+		{
+			pushad
+			push	13		// Achievements::kAchievement_CardinalSin
+			call	Achievements::UnlockAchievement
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	bool __stdcall CheckIsFormShadeMe(TESForm* Form)
+	{
+		TESForm* shadeMe = TESForm::LookupByEditorID("shadeMe");
+		if (Form == shadeMe)
+			return true;
+		else
+			return false;
+	}
+
+	#define _hhName	AchievementDeleteShadeMe
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004986B9);
+		_hhSetVar(Call, 0x00401EA0);
+		__asm
+		{
+			pushad
+			push	esi
+			call	CheckIsFormShadeMe
+			test	al, al
+			jz		EXIT
+
+			push	6		// Achievements::kAchievement_AntiChrist
+			call	Achievements::UnlockAchievement
+		EXIT:
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName	AchievementModifyShadeMe
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00497BEF);
+		__asm
+		{
+			pushad
+			push	esi
+			call	CheckIsFormShadeMe
+			test	al, al
+			jz		EXIT
+
+			push	4		// Achievements::kAchievement_Heretic
+			call	Achievements::UnlockAchievement
+		EXIT:
+			popad
+
+			mov     eax, [esi + 0x8]
+			mov     ecx, eax
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	bool __stdcall DoAchievementCloneHallOfFameForms(TESForm* Form)
+	{
+		if (Form->formID >= HallOfFame::kBaseFormID && Form->formID < 0x800)
+			return true;
+		else
+			return false;
+	}
+
+	#define _hhName	AchievementCloneHallOfFameForms
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00413E54);
+		_hhSetVar(Call, 0x004793F0);
+		__asm
+		{
+			pushad
+			push	edi
+			call	DoAchievementCloneHallOfFameForms
+			test	al, al
+			jz		EXIT
+
+			push	8		// Achievements::kAchievement_MadScientist
+			call	Achievements::UnlockAchievement
+		EXIT:
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoAchievementPluginDescriptionHook(TESFile* File)
+	{
+		std::stringstream DescriptionStream(File->description.c_str(), std::ios::in);
+		char Buffer[0x200] = {0};
+
+		while (DescriptionStream.eof() == false)
+		{
+			ZeroMemory(Buffer, sizeof(Buffer));
+			DescriptionStream.getline(Buffer, sizeof(Buffer));
+
+			std::string Line(Buffer);
+			MakeLower(Line);
+			if (Line.find("version:") != -1 ||
+				Line.find("version :") != -1 ||
+				Line.find("version-") != -1 ||
+				Line.find("version -") != -1 ||
+				Line.find("version=") != -1 ||
+				Line.find("version =") != -1)
+			{
+				Achievements::UnlockAchievement(Achievements::kAchievement_Pedantic);
+				break;
+			}
+		}
+	}
+
+	#define _hhName	AchievementPluginDescription
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0040CD25);
+		_hhSetVar(Call, 0x004894B0);
+		__asm
+		{
+			pushad
+			push	ecx
+			call	DoAchievementPluginDescriptionHook
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName	AchievementBuildRoads
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00563D04);
+		__asm
+		{
+			pushad
+			push	18		// Achievements::kAchievement_RoadBuilder
+			call	Achievements::UnlockAchievement
+			popad
+
+			call	WriteStatusBarText
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName	AchievementDialogResponseCreation
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004F2CC8);
+		_hhSetVar(Call, 0x004EA510);
+		__asm
+		{
+			pushad
+			push	19		// Achievements::kAchievement_Loquacious
+			call	Achievements::UnlockAchievement
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void _stdcall DoTESDialogBuildSubwindowDiagnosticsHook(void)
+	{
+		MessageBox(*g_HWND_CSParent, "TESDialog::BuildSubwindow() failed!\n\nError deatils logged to the console.", "CSE", MB_TOPMOST|MB_OK|MB_ICONERROR);
+		DebugPrint("TESDialog::BuildSubwindow() returned 0");
+		LogWinAPIErrorMessage(GetLastError());
+	}
+
+	#define _hhName	TESDialogBuildSubwindowDiagnostics
+	_hhBegin()
+	{
+		__asm
+		{
+			call	DoTESDialogBuildSubwindowDiagnosticsHook
+			xor		al, al
+			pop		esi
+			retn
+		}
+	}
+
+	#define _hhName	ExtraTeleportInitItem
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0046270E);
+		_hhSetVar(Jump, 0x004626F2);
+		__asm
+		{
+			mov     ecx, [esi]
+			mov     edx, [ecx]
+			mov     eax, [edx + 0x19C]
+			call    eax
+
+			test	eax, eax
+			jz		SKIP
+
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+}

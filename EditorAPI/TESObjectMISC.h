@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESObject.h"
 
 //	EditorAPI: TESObjectMISC class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -23,6 +21,6 @@ public:
 	//	   /*A0*/ TESScriptableForm
 	//	   /*AC*/ TESValueForm
 	//	   /*B4*/ TESWeightForm
-	
+
 	// no additional members
 };

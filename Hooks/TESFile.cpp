@@ -27,7 +27,7 @@ namespace Hooks
 	_DefineHookHdlr(DataHandlerSavePluginResetB, 0x0047EC09);
 	_DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
 	_DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
-
+	_DefineHookHdlr(DataHandlerSavePluginRetainTimeStamps, 0x0041BB12);
 
 	void PatchTESFileHooks(void)
 	{
@@ -52,6 +52,7 @@ namespace Hooks
 		_MemHdlr(DataHandlerSavePluginResetB).WriteJump();
 		_MemHdlr(DataHandlerSavePluginResetC).WriteJump();
 		_MemHdlr(DataHandlerSavePluginOverwriteESM).WriteNop();
+		_MemHdlr(DataHandlerSavePluginRetainTimeStamps).WriteJump();
 	}
 
 	bool __stdcall InitTESFileSaveDlg()
@@ -81,11 +82,11 @@ namespace Hooks
 
 	void __stdcall DoLoadPluginsPrologHook(void)
 	{
-		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;
+		TESFile* ActiveFile = _DATAHANDLER->activeFile;
 
 		if (ActiveFile && (ActiveFile->fileFlags & TESFile::kFileFlag_Master))
 		{
-			ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
+			ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 		}
 
 		sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning"));
@@ -162,7 +163,7 @@ namespace Hooks
 
 	bool __stdcall DoQuickLoadPluginLoadHandlerHook(TESFile* CurrentFile)
 	{
-		return _stricmp(CurrentFile->fileName, (*g_TESDataHandler)->activeFile->fileName);
+		return _stricmp(CurrentFile->fileName, _DATAHANDLER->activeFile->fileName);
 	}
 
 	#define _hhName		QuickLoadPluginLoadHandler
@@ -248,17 +249,18 @@ namespace Hooks
 
 	void __stdcall DoDataHandlerSavePluginEpilogHook(void)
 	{
-		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;
-		ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
+		TESFile* ActiveFile = _DATAHANDLER->activeFile;
+		ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 	}
 
 	#define _hhName		DataHandlerSavePluginEpilog
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x0047F13B);
+		_hhSetVar(Call, 0x00431310);
 		__asm
 		{
-			call	TESDialog_WriteToStatusBar
+			call	[_hhGetVar(Call)]
 
 			pushad
 			call	DoDataHandlerSavePluginEpilogHook
@@ -270,9 +272,9 @@ namespace Hooks
 
 	void __stdcall DoTESFileUpdateHeaderFlagBitHook(TESFile* Plugin)
 	{
-		TESFile* ActiveFile = (*g_TESDataHandler)->activeFile;
+		TESFile* ActiveFile = _DATAHANDLER->activeFile;
 		if (ActiveFile)
-			ToggleFlag<UInt32>(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
+			ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 	}
 
 	#define _hhName		TESFileUpdateHeaderFlagBit
@@ -291,8 +293,8 @@ namespace Hooks
 
 	bool __stdcall DoDataHandlerSaveFormToFileHook(TESForm* Form)
 	{
-		TESFile* OverrideFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Form, -1);
-		if (!OverrideFile || OverrideFile == (*g_TESDataHandler)->activeFile)
+		TESFile* OverrideFile = Form->GetOverrideFile(-1);
+		if (!OverrideFile || OverrideFile == _DATAHANDLER->activeFile)
 			return false;
 		else
 			return true;
@@ -327,8 +329,8 @@ namespace Hooks
 
 	bool __stdcall DoTESObjectCELLSaveReferencesPrologHook(TESObjectREFR* Reference, TESFile* SaveFile)
 	{
-		TESFile* SourceFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
-		TESFile* ActiveFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
+		TESFile* SourceFile = Reference->GetOverrideFile(0);
+		TESFile* ActiveFile = Reference->GetOverrideFile(-1);
 
 		if (SourceFile == ActiveFile && ActiveFile == SaveFile)
 			return false;
@@ -341,9 +343,10 @@ namespace Hooks
 	{
 		_hhSetVar(Retn, 0x00538869);
 		_hhSetVar(Jump, 0x0053886B);
+		_hhSetVar(Call, 0x00485B00);
 		__asm
 		{
-			call	[kTESFile_GetIsESM]
+			call	[_hhGetVar(Call)]		// TESFile_GetIsESM
 			test	al, al
 			jnz		PASS
 
@@ -368,8 +371,8 @@ namespace Hooks
 	{
 		if ((Reference->formFlags & TESForm::kFormFlags_Deleted))
 		{
-			TESFile* SourceFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, 0);
-			TESFile* ActiveFile = (TESFile*)thisCall(kTESForm_GetOverrideFile, Reference, -1);
+			TESFile* SourceFile = Reference->GetOverrideFile(0);
+			TESFile* ActiveFile = Reference->GetOverrideFile(-1);
 
 			if ((SourceFile == ActiveFile && ActiveFile == SaveFile) ||
 				(SourceFile == NULL && ActiveFile == NULL))
@@ -378,7 +381,7 @@ namespace Hooks
 			}
 			else if ((Reference->baseForm->formFlags & TESForm::kFormFlags_Deleted))
 			{
-				thisVirtualCall(*((UInt32*)Reference), 0x50, Reference, SaveFile);	// call SaveForm to dump an empty record
+				Reference->SaveForm(SaveFile);		// call SaveForm to dump an empty record
 				return false;
 			}
 			else
@@ -392,6 +395,7 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x005389E1);
+		_hhSetVar(Call, 0x00494950);
 		__asm
 		{
 			pushad
@@ -403,7 +407,7 @@ namespace Hooks
 			popad
 
 			push	eax
-			call	kTESForm_SaveFormRecord
+			call	[_hhGetVar(Call)]		// TESForm_SaveFormRecord
 			jmp		[_hhGetVar(Retn)]
 		EXIT:
 			popad
@@ -451,6 +455,59 @@ namespace Hooks
 			pushad
 			call	DoDataHandlerSavePluginResetHook
 			popad
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoDataHandlerSavePluginRetainTimeStampsHook(bool State)
+	{
+		static FILETIME s_SavedTimestamp = {0};
+
+		TESFile* ActiveFile = _DATAHANDLER->activeFile;
+		if (!ActiveFile)
+			return;
+		else if (!g_INIManager->GetINIInt("PreventTimeStampChanges"))
+			return;
+
+		HANDLE SaveFile = CreateFile(PrintToBuffer("%s\\%s", ActiveFile->filePath, ActiveFile->fileName), GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL); // will only work with files in the current workspace
+		if (SaveFile == INVALID_HANDLE_VALUE)
+			return;
+
+		if (State)
+		{
+			ZeroMemory(&s_SavedTimestamp, sizeof(FILETIME));
+			GetFileTime(SaveFile, NULL, NULL, &s_SavedTimestamp);
+		}
+		else
+		{
+			if (s_SavedTimestamp.dwHighDateTime || s_SavedTimestamp.dwLowDateTime)
+			{
+				SetFileTime(SaveFile, NULL, NULL, &s_SavedTimestamp);
+			}
+		}
+
+		CloseHandle(SaveFile);
+	}
+
+	#define	_hhName		DataHandlerSavePluginRetainTimeStamps
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0041BB17);
+		_hhSetVar(Call, 0x0047E9B0);
+		__asm
+		{
+			pushad
+			push	1		// save
+			call	DoDataHandlerSavePluginRetainTimeStampsHook
+			popad
+
+			call	[_hhGetVar(Call)]
+
+			pushad
+			push	0		// restore
+			call	DoDataHandlerSavePluginRetainTimeStampsHook
+			popad
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

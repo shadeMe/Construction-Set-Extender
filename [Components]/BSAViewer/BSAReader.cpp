@@ -53,7 +53,7 @@ bool BSAReader::OpenArchive(String^% Path)
 		if (InUse) {
 			MessageBox::Show("BSAReader already in use. Please close any open archives before continuing.");
 			return false;
-		} else 
+		} else
 			InUse = true;
 
 		FileInfo^ FI = gcnew FileInfo(Path);
@@ -92,7 +92,6 @@ bool BSAReader::OpenArchive(String^% Path)
 				 Files->Add(gcnew BSAFileInfo(Folder, Size, Stream->ReadUInt32(), FileCompressed));
 				 Count++;
 			}
-
 		}
 
 		Char C;

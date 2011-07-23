@@ -141,6 +141,7 @@ public:
 	virtual void								HighlightScriptError(int Line);
 	virtual void								ClearScriptErrorHighlights(void);
 	virtual void								SetEnabledState(bool State);
+	virtual void								HandleContainerPositionSizeChangedEvent(void);
 
 	AvalonEditTextEditor(Font^ Font, Object^% Parent);
 

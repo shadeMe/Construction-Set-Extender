@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESForm.h"
 
 //	EditorAPI: TESWeather class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -20,5 +18,5 @@ public:
 	/*24*/ TESTexture			upperLayer;
 	/*3C*/ TESTexture			lowerLayer;
 	/*54*/ TESModel				precipitationMesh;
-	/*78*/ 
+	/*78*/
 };

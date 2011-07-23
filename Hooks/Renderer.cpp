@@ -105,23 +105,24 @@ namespace Hooks
 		if ((Node->m_flags & kNiNodeSpecialFlags_DontUncull))
 			return;
 
-		ToggleFlag<UInt16>(&Node->m_flags, NiNode::kFlag_AppCulled, false);
+		ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
 
-		BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Object->extraData, BSExtraData::kExtra_EnableStateParent);
+		BSExtraData* xData = Object->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 		if (xData)
 		{
 			ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 			if ((xParent->parent->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible))
-				ToggleFlag<UInt16>(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+				ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
 		}
 
 		if ((Object->formFlags & kTESObjectREFRSpecialFlags_3DInvisible))
-			ToggleFlag<UInt16>(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+			ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
 	}
 
 	#define _hhName		TESObjectREFRGet3DData
 	_hhBegin()
 	{
+		_hhSetVar(Call, 0x0045B1B0);
 		__asm
 		{
 			push	esi
@@ -129,7 +130,7 @@ namespace Hooks
 			push	0x56
 			add		ecx, 0x4C
 			xor		esi, esi
-			call	[kBaseExtraList_GetExtraDataByType]
+			call	[_hhGetVar(Call)]
 			test	eax, eax
 			jz		NO3DDATA
 
@@ -203,22 +204,22 @@ namespace Hooks
 	{
 		if (g_INIManager->GetINIInt("DisplaySelectionStats"))
 		{
-			if ((*g_TESRenderSelectionPrimary)->SelectionCount > 1)
+			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
 			{
 				PrintToBuffer("%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f",
-							(*g_TESRenderSelectionPrimary)->SelectionCount,
-							(*g_TESRenderSelectionPrimary)->x,
-							(*g_TESRenderSelectionPrimary)->y,
-							(*g_TESRenderSelectionPrimary)->z);
+							(*g_TESRenderSelectionPrimary)->selectionCount,
+							(*g_TESRenderSelectionPrimary)->selectionPositionVectorSum.x,
+							(*g_TESRenderSelectionPrimary)->selectionPositionVectorSum.y,
+							(*g_TESRenderSelectionPrimary)->selectionPositionVectorSum.z);
 				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
 			}
-			else if ((*g_TESRenderSelectionPrimary)->SelectionCount)
+			else if ((*g_TESRenderSelectionPrimary)->selectionCount)
 			{
-				TESObjectREFR* Selection = CS_CAST((*g_TESRenderSelectionPrimary)->RenderSelection->Data, TESForm, TESObjectREFR);
+				TESObjectREFR* Selection = CS_CAST((*g_TESRenderSelectionPrimary)->selectionList->Data, TESForm, TESObjectREFR);
 				char Buffer[0x50] = {0};
 				sprintf_s(Buffer, 0x50, "");
 
-				BSExtraData* xData = (BSExtraData*)thisCall(kBaseExtraList_GetExtraDataByType, &Selection->extraData, BSExtraData::kExtra_EnableStateParent);
+				BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 				if (xData)
 				{
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
@@ -229,10 +230,10 @@ namespace Hooks
 				PrintToBuffer("%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
 								((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
 								((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
-								Selection->position.x, Selection->position.y, Selection->position.z, 
-								Selection->rotation.x * 180 / PI, 
-								Selection->rotation.x * 180 / PI, 
-								Selection->rotation.x * 180 / PI, 
+								Selection->position.x, Selection->position.y, Selection->position.z,
+								Selection->rotation.x * 180 / PI,
+								Selection->rotation.x * 180 / PI,
+								Selection->rotation.x * 180 / PI,
 								Selection->scale,
 								((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
 								((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
@@ -283,7 +284,7 @@ namespace Hooks
 		_hhSetVar(Jump, 0x0042CE7D);
 		__asm
 		{
-			mov		eax, [g_RenderWindowUpdateViewPort]
+			mov		eax, [g_RenderWindowUpdateViewPortFlag]
 			mov		eax, [eax]
 			cmp		al, 0
 			jz		DONTUPDATE
@@ -317,8 +318,8 @@ namespace Hooks
 			TESRenderSelection* Selection = g_RenderSelectionGroupManager.GetRefSelectionGroup(Ref, CurrentCell);
 			if (Selection)
 			{
-				for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
-					thisCall(kTESRenderSelection_AddFormToSelection, *g_TESRenderSelectionPrimary, Itr->Data, 1);
+				for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+					(*g_TESRenderSelectionPrimary)->AddToSelection(Itr->Data, true);
 
 				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Selected object selection group", 3);
 				Result = true;
@@ -333,9 +334,10 @@ namespace Hooks
 	{
 		_hhSetVar(Retn, 0x0042AE76);
 		_hhSetVar(Jump, 0x0042AE84);
+		_hhSetVar(Call, 0x00511C20);
 		__asm
 		{
-			call	[kTESRenderSelection_ClearSelection]
+			call	[_hhGetVar(Call)]
 			xor		eax, eax
 
 			pushad
@@ -355,14 +357,14 @@ namespace Hooks
 	void __stdcall TESRenderControlProcessFrozenRefs(void)
 	{
 		std::vector<TESForm*> FrozenRefs;
-		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->RenderSelection; Itr && Itr->Data; Itr = Itr->Next)
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			if ((Itr->Data->formFlags & kTESObjectREFRSpecialFlags_Frozen))
 				FrozenRefs.push_back(Itr->Data);
 		}
 
 		for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
-			thisCall(kTESRenderSelection_RemoveFormFromSelection, *g_TESRenderSelectionPrimary, *Itr, 1);
+			(*g_TESRenderSelectionPrimary)->AddToSelection(*Itr, true);
 	}
 
 	#define _hhName		TESRenderControlPerformMove
@@ -431,7 +433,7 @@ namespace Hooks
 
 	void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 	{
-		ToggleFlag<UInt16>(&Node->m_flags, kNiNodeSpecialFlags_DontUncull, State);
+		ToggleFlag(&Node->m_flags, kNiNodeSpecialFlags_DontUncull, State);
 	}
 
 	#define _hhName		TESObjectREFRSetupDialog
@@ -486,7 +488,7 @@ namespace Hooks
 
 			mov		edx, [eax + 0x8]
 			mov		[esp + 0x3C], edx
-		
+
 			jmp		[_hhGetVar(Retn)]
 		FIX:
 			jmp		[_hhGetVar(Jump)]
@@ -570,7 +572,7 @@ namespace Hooks
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
-	
+
 	#define _hhName		TESRenderControlAltRefMovementSpeedA
 	_hhBegin()
 	{
@@ -582,7 +584,7 @@ namespace Hooks
 		{
 			fmul	s_MovementSettingBuffer
 			lea		ecx, [esp + 0x28]
-			
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -597,7 +599,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-			
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -612,7 +614,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-			
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -628,7 +630,7 @@ namespace Hooks
 		{
 			fmul	s_MovementSettingBuffer
 			fstp	dword ptr [esp + 0x14]
-						
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -643,7 +645,7 @@ namespace Hooks
 		__asm
 		{
 			fild	s_MovementSettingBuffer
-			
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -658,7 +660,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-						
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -673,7 +675,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-						
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -688,7 +690,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-						
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -703,7 +705,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-						
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -718,7 +720,7 @@ namespace Hooks
 		__asm
 		{
 			lea		ecx, s_MovementSettingBuffer
-						
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -739,5 +741,4 @@ namespace Hooks
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
-	
 }

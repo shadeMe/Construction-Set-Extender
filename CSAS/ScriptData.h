@@ -45,7 +45,7 @@ namespace CSAutomationScript
 		virtual bool							Execute(ScriptRunner* Executor) = 0;	// return false to stop execution
 
 		bool									IsVaid() const { return Valid; }
-		
+
 		static UInt32							GetGlobalInstanceCount() { return GlobalInstanceCount; }
 	};
 
@@ -84,7 +84,7 @@ namespace CSAutomationScript
 
 		virtual void							Release();
 		virtual bool							EvaluateCondition(ScriptRunner* Executor);
-	public:	
+	public:
 		ControlBlock() : ConditionExpression("") {}
 		virtual ~ControlBlock()
 		{
@@ -186,7 +186,7 @@ namespace CSAutomationScript
 		WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
 
 		virtual bool							Execute(ScriptRunner* Executor);
-	};	
+	};
 
 	class ForEachBlock : public LoopBlock
 	{
@@ -198,5 +198,5 @@ namespace CSAutomationScript
 		ForEachBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
 
 		virtual bool							Execute(ScriptRunner* Executor);
-	};	
+	};
 }

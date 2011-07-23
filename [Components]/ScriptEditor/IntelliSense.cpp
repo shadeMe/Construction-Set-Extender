@@ -328,7 +328,7 @@ namespace IntelliSense
 					{
 						if (!String::Compare(SecondToken, Itr->VarName, true))
 						{
-							(dynamic_cast<UserFunction^>(Box->SourceScript))->SetReturnVariable(VarIdx);	
+							(dynamic_cast<UserFunction^>(Box->SourceScript))->SetReturnVariable(VarIdx);
 							break;
 						}
 						VarIdx++;
@@ -598,7 +598,7 @@ namespace IntelliSense
 			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemUDF"));
 			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemQuest"));
 			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGlobalVar"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));	
+			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));
 		}
 
 		IntelliSenseBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
@@ -637,7 +637,24 @@ namespace IntelliSense
 		LastOperation = Operation::e_Default;
 		Destroying = false;
 
+		IntelliSenseBox->SetSize(Size(0, 0));
+		IntelliSenseBox->ShowAtLocation(Point(0,0), IntelliSenseBox->Handle);
 		IntelliSenseBox->Hide();
+	}
+
+	void IntelliSenseThingy::ShowInfoTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
+	{
+		HideInfoTip();
+
+		InfoTip->Tag = ParentHandle;
+		InfoTip->ToolTipTitle = Title;
+		InfoTip->Show(Message, Control::FromHandle(ParentHandle), Location, Duration);
+	}
+
+	void IntelliSenseThingy::HideInfoTip()
+	{
+		if (InfoTip->Tag != nullptr)
+			InfoTip->Hide(Control::FromHandle((IntPtr)InfoTip->Tag));
 	}
 
 	void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll)
@@ -667,10 +684,10 @@ namespace IntelliSense
 						ItemCount++;
 					}
 				}
-				for each (IntelliSenseItem^% Itr in ISDB->Enumerables) 
+				for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
 				{
 					if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) ||
-						Itr->GetType() == IntelliSenseItem::ItemType::e_Quest || 
+						Itr->GetType() == IntelliSenseItem::ItemType::e_Quest ||
 						Itr->GetType() == IntelliSenseItem::ItemType::e_GlobalVar ||
 						Itr->GetType() == IntelliSenseItem::ItemType::e_GMST)
 					{
@@ -794,12 +811,12 @@ namespace IntelliSense
 			if (ItemCount > 8)
 				ItemCount = 8;
 
-			Size DisplaySize = ::Size(240, 155 - ((8 - ItemCount) * 18));
+			Size DisplaySize = ::Size(240, 158 - ((8 - ItemCount) * 18));
 			IntelliSenseBox->SetSize(DisplaySize);
 			IntelliSenseBox->ShowAtLocation(ParentEditor->GetScreenPoint(Loc), ParentEditor->GetControlBoxHandle());
 
-			IntelliSenseList->Items[0]->Selected = true;
 			ParentEditor->Focus();
+			IntelliSenseList->Items[0]->Selected = true;
 		}
 
 		LastOperation = Op;
@@ -823,27 +840,36 @@ namespace IntelliSense
 
 		if (IsVisible())
 		{
-			if (GetSelectedIndex() == -1)
+			if (GetIntelliSenseListSelectedIndex() == -1)
 				return;
 
-			Point Loc = ParentEditor->GetCaretLocation();
-			Loc.X += 9 + 250; Loc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5 + 28;
+			Point Loc = Point(IntelliSenseList->Size.Width + 17, 0);
 
-			InfoTip->ToolTipTitle = ListContents[GetSelectedIndex()]->GetTypeIdentifier();
-			InfoTip->Hide(Control::FromHandle(ParentEditor->GetEditorBoxHandle()));
-			InfoTip->Show(ListContents[GetSelectedIndex()]->Describe(), Control::FromHandle(ParentEditor->GetControlBoxHandle()), Loc);
+			ShowInfoTip(ListContents[GetIntelliSenseListSelectedIndex()]->GetTypeIdentifier(),
+						ListContents[GetIntelliSenseListSelectedIndex()]->Describe(),
+						Loc,
+						IntelliSenseBox->Handle,
+						15000);
 		}
 	}
 
 	void IntelliSenseThingy::IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	{
-		if (E->KeyCode == Keys::Escape)
+		switch (E->KeyCode)
+		{
+		case Keys::Escape:
 			Hide();
+			break;
+		case Keys::Tab:
+		case Keys::Enter:
+			PickIdentifier();
+			break;
+		}
 	}
 
 	void IntelliSenseThingy::IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 	{
-		if (GetSelectedIndex() == -1)
+		if (GetIntelliSenseListSelectedIndex() == -1)
 			return;
 
 		PickIdentifier();
@@ -857,7 +883,7 @@ namespace IntelliSense
 
 	void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
 	{
-		int SelectedIndex = GetSelectedIndex();
+		int SelectedIndex = GetIntelliSenseListSelectedIndex();
 		if (SelectedIndex == -1)		return;
 
 		switch (Direction)
@@ -899,12 +925,13 @@ namespace IntelliSense
 		String^ Result;
 		ParentEditor->Focus();
 
-		if (GetSelectedIndex() != -1)
+		if (GetIntelliSenseListSelectedIndex() != -1)
 		{
-			Result = ListContents[GetSelectedIndex()]->GetIdentifier();
+			Result = ListContents[GetIntelliSenseListSelectedIndex()]->GetIdentifier();
 			Cleanup();
-			Hide();
 		}
+		else
+			return;
 
 		try
 		{
@@ -920,17 +947,17 @@ namespace IntelliSense
 	void IntelliSenseThingy::Hide()
 	{
 		IntelliSenseBox->Hide();
-		InfoTip->Hide(Control::FromHandle((dynamic_cast<ScriptEditor::Workspace^>(ParentEditor))->GetEditorBoxHandle()));
+		HideInfoTip();
 	}
 
 	void IntelliSenseThingy::Cleanup()
 	{
-		Hide();
 		IntelliSenseList->Items->Clear();
 		ListContents->Clear();
+		Hide();
 	}
 
-	int	IntelliSenseThingy::GetSelectedIndex()
+	int	IntelliSenseThingy::GetIntelliSenseListSelectedIndex()
 	{
 		int Result = -1;
 		for each (int SelectedIndex in IntelliSenseList->SelectedIndices)
@@ -963,9 +990,11 @@ namespace IntelliSense
 		if (Item != nullptr)
 		{
 			TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5;
-			InfoTip->ToolTipTitle = Item->GetTypeIdentifier();
-			InfoTip->Hide(Control::FromHandle(ParentEditor->GetEditorBoxHandle()));
-			InfoTip->Show(Item->Describe(), Control::FromHandle(ParentEditor->GetEditorBoxHandle()), TipLoc, 8000);
+			ShowInfoTip(Item->GetTypeIdentifier(),
+						Item->Describe(),
+						TipLoc,
+						ParentEditor->GetEditorBoxHandle(),
+						8000);
 			return true;
 		}
 		else

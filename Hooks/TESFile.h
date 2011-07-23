@@ -3,10 +3,10 @@
 
 namespace Hooks
 {
-	// hooks that modify plugin file loading behaviour
+	// hooks that modify how the CS handles plugin files
 	void PatchTESFileHooks(void);
 
-	_DeclareMemHdlr(SavePluginMasterEnum, "allows esps to be enumerated while filling the file header and provides support for the save as tool");
+	_DeclareMemHdlr(SavePluginMasterEnum, "allows esps to be enumerated while filling the file header");
 	_DeclareNopHdlr(CheckIsActivePluginAnESM, "allows master files to be set as active plugins");
 	_DeclareNopHdlr(TESFormGetUnUsedFormID, "");
 	_DeclareMemHdlr(LoadPluginsProlog, "");
@@ -18,7 +18,7 @@ namespace Hooks
 	_DeclareMemHdlr(DataHandlerSaveFormToFile, "allows records in esp masters to be overridden with deleted records");
 	_DeclareMemHdlr(TESFileUpdateHeader, "prevents TESFile::UpdateHeader from continuing for locked files");
 	_DeclareMemHdlr(DataHandlerSavePluginEpilog, "prevents the esm flag bit from being reset");
-	_DeclareMemHdlr(TESFileUpdateHeaderFlagBit, "same as above");
+	_DeclareMemHdlr(TESFileUpdateHeaderFlagBit, "");
 	_DeclareMemHdlr(TESObjectCELLSaveReferencesProlog, "prevents malformed records of deleted refs from being written");
 	_DeclareMemHdlr(TESObjectCELLSaveReferencesEpilog, "");
 	_DeclareMemHdlr(MissingMasterOverride, "allows the loading of plugins with missing masters");
@@ -29,4 +29,5 @@ namespace Hooks
 	_DeclareMemHdlr(DataHandlerSavePluginResetC, "");
 	_DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");
 	_DeclareMemHdlr(DataHandlerSavePluginProlog, "allows the creation of backups");
+	_DeclareMemHdlr(DataHandlerSavePluginRetainTimeStamps, "allows the retention of plugin timestamps during save operations");
 }

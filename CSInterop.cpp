@@ -1,4 +1,3 @@
-#include "ExtenderInternals.h"
 #include "CSInterop.h"
 #include "resource.h"
 #include "[Common]\CSInteropData.h"
@@ -17,7 +16,7 @@ CSInteropManager* CSInteropManager::GetSingleton()
 CSInteropManager::CSInteropManager()
 {
 	Loaded = false;
-	DLLPath = g_AppPath;
+	DLLPath = g_APPPath;
 	InteropPipeHandle = INVALID_HANDLE_VALUE;
 
 	ZeroMemory(&CS10ProcInfo, sizeof(PROCESS_INFORMATION));
@@ -26,8 +25,6 @@ CSInteropManager::CSInteropManager()
 
 bool CSInteropManager::CreateNamedPipeServer(char** GUIDOut)
 {
-//	WaitUntilDebuggerAttached();
-
 	RPC_STATUS GUIDReturn = UuidCreate(&PipeGUID),
 			   GUIDStrReturn = UuidToString(&PipeGUID, (RPC_CSTR*)GUIDOut);
 
@@ -157,7 +154,7 @@ void CSInteropManager::DoInjectDLL(PROCESS_INFORMATION * info)
 	}
 }
 
-bool CSInteropManager::Initialize(const char *DLLPath)
+bool CSInteropManager::Initialize()
 {
 	if (Loaded)	return true;
 
@@ -172,7 +169,7 @@ bool CSInteropManager::Initialize(const char *DLLPath)
 	startupInfo.cb = sizeof(startupInfo);
 
 	const char	* procName = "TESConstructionSetOld.exe";
-	this->DLLPath += DLLPath;
+	this->DLLPath += "Data\\OBSE\\Plugins\\CSE\\LipSyncPipeClient.dll";
 
 //	DebugPrint("Dll = %s", this->DLLPath.c_str());
 
@@ -248,7 +245,7 @@ bool CSInteropManager::CreateTempWAVFile(const char* MP3Path, const char* WAVPat
 		return false;
 	}
 
-	std::string DecoderArgs = g_AppPath + "lame.exe \"" + g_AppPath + std::string(MP3Path) + "\" \"" + g_AppPath + std::string(WAVPath) + "\" --decode";
+	std::string DecoderArgs = g_APPPath + "lame.exe \"" + g_APPPath + std::string(MP3Path) + "\" \"" + g_APPPath + std::string(WAVPath) + "\" --decode";
 
 	bool Result = CreateProcess(
 		NULL,
@@ -326,9 +323,15 @@ bool CSInteropManager::DoGenerateLIPOperation(const char* InputPath, const char*
 				{
 					DebugPrint("GenerateLIP Operation idle loop encountered an error!");
 					LogWinAPIErrorMessage(GetLastError());
+					break;
 				}
 			}
 			PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter);
+		}
+		else
+		{
+			DebugPrint("Couldn't communicate with CS v1.0!");
+			LogWinAPIErrorMessage(GetLastError());
 		}
 	}
 	else
@@ -336,7 +339,7 @@ bool CSInteropManager::DoGenerateLIPOperation(const char* InputPath, const char*
 		DebugPrint("Couldn't create temporary WAV file for LIP generation!");
 	}
 
-	if (!DeleteFile((std::string(g_AppPath + WAVPath)).c_str()) && GetLastError() != ERROR_FILE_NOT_FOUND)
+	if (!DeleteFile((std::string(g_APPPath + WAVPath)).c_str()) && GetLastError() != ERROR_FILE_NOT_FOUND)
 	{
 		DebugPrint("Couldn't delete temporary WAV file '%s'.");
 		LogWinAPIErrorMessage(GetLastError());

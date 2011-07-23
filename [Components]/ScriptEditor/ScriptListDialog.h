@@ -32,14 +32,12 @@ private:
 	void												SelectScript();
 	void												Close();
 
-
 	UInt32												ParentIndex;
 	Operation											CurrentOp;
 
 	static ImageList^									FlagIcons = gcnew ImageList();
 
-
-	Form^												ScriptBox;								
+	Form^												ScriptBox;
 	TextBox^											PreviewBox;
 	ListView^											ScriptList;
 		ColumnHeader^										ScriptListCFlags;

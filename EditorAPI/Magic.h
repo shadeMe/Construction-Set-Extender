@@ -1,14 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
-
 
 //	EditorAPI: Magic.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
-    'Magic' is a generic container class used to group the various global data and functions related 
-    to the magic system.  As such, it has only static members and methods.  It may actually exist as 
+/*
+    'Magic' is a generic container class used to group the various global data and functions related
+    to the magic system.  As such, it has only static members and methods.  It may actually exist as
     a class in Bethesdah's source, or a namespace, etc., but it left no trace in the assembly.
 
     Some of this data may actually belong as static data in a more specific class.  However, it (mostly)
@@ -34,7 +31,7 @@ public:
 		kSchool_Mysticism       = 0x4,
 		kSchool_Restoration     = 0x5,
 		kSchool__MAX            = 0x6,  // used as an 'Invalid' or 'None' value
-	};   
+	};
 
 	// magic types - these correspond to (perhaps are precisely) the type codes of magic items
 	enum MagicTypes

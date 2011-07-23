@@ -1,16 +1,13 @@
 #include "CLIWrapper.h"
 #include "Exports.h"
-#include "ExtenderInternals.h"
 
 namespace CLIWrapper
 {
-
 namespace ScriptEditor
 {
 	_AllocateNewEditor						AllocateNewEditor;
 	_InitializeScript						InitializeScript;
 	_SendMessagePingback					SendMessagePingback;
-
 
 	_InitializeComponents					InitializeComponents;
 	_AddToURLMap							AddToURLMap;
@@ -65,8 +62,8 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer = (CLIWrapper::ScriptEditor::_InitializeDatabaseUpdateTimer)GetProcAddress(hMod, "InitializeDatabaseUpdateTimer");
 	CLIWrapper::ScriptEditor::PassScriptError = (CLIWrapper::ScriptEditor::_PassScriptError)GetProcAddress(hMod, "PassScriptError");
 
-	if (!CLIWrapper::ScriptEditor::AddToURLMap || 
-		!CLIWrapper::ScriptEditor::AllocateNewEditor || 
+	if (!CLIWrapper::ScriptEditor::AddToURLMap ||
+		!CLIWrapper::ScriptEditor::AllocateNewEditor ||
 		!CLIWrapper::ScriptEditor::InitializeComponents ||
 		!CLIWrapper::ScriptEditor::InitializeScript ||
 		!CLIWrapper::ScriptEditor::SendMessagePingback ||
@@ -74,7 +71,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 		!CLIWrapper::ScriptEditor::SetVariableListItemData ||
 		!CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer ||
 		!CLIWrapper::ScriptEditor::PassScriptError)
-	{	
+	{
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -91,11 +88,11 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::UseInfoList::SetUseListObjectItemData = (CLIWrapper::UseInfoList::_SetUseListObjectItemData)GetProcAddress(hMod, "SetUseListObjectItemData");
 	CLIWrapper::UseInfoList::SetUseListCellItemData = (CLIWrapper::UseInfoList::_SetUseListCellItemData)GetProcAddress(hMod, "SetUseListCellItemData");
 
-	if (!CLIWrapper::UseInfoList::OpenUseInfoBox || 
+	if (!CLIWrapper::UseInfoList::OpenUseInfoBox ||
 		!CLIWrapper::UseInfoList::SetFormListItemData ||
-		!CLIWrapper::UseInfoList::SetUseListObjectItemData || 
+		!CLIWrapper::UseInfoList::SetUseListObjectItemData ||
 		!CLIWrapper::UseInfoList::SetUseListCellItemData)
-	{	
+	{
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -110,7 +107,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::BSAViewer::InitializeViewer = (CLIWrapper::BSAViewer::_InitializeViewer)GetProcAddress(hMod, "InitializeViewer");
 
 	if (!CLIWrapper::BSAViewer::InitializeViewer)
-	{	
+	{
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -127,7 +124,7 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 
 	if (!CLIWrapper::BatchEditor::InitializeRefBatchEditor ||
 		!CLIWrapper::BatchEditor::AddFormListItem)
-	{	
+	{
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
@@ -146,19 +143,15 @@ bool CLIWrapper::Import(const OBSEInterface * obse)
 	CLIWrapper::TagBrowser::GetFormDropParentHandle = (CLIWrapper::TagBrowser::_GetFormDropParentHandle)GetProcAddress(hMod, "GetFormDropParentHandle");
 
 	if (!CLIWrapper::TagBrowser::Show ||
-		!CLIWrapper::TagBrowser::Hide || 
+		!CLIWrapper::TagBrowser::Hide ||
 		!CLIWrapper::TagBrowser::AddFormToActiveTag ||
 		!CLIWrapper::TagBrowser::GetFormDropWindowHandle ||
 		!CLIWrapper::TagBrowser::GetFormDropParentHandle)
-	{	
+	{
 		LogWinAPIErrorMessage(GetLastError());
 		return false;
 	}
 
-
-
-
 	return true;
 }
-
 }

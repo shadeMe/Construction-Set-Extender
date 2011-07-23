@@ -1,13 +1,11 @@
 #pragma once
-#include "obse\GameTypes.h"
-#include "obse\Utilities.h"
 
 #include "TESObject.h"
 
 //	EditorAPI: TESGrass class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
 	...
 */
 
@@ -39,7 +37,7 @@ public:
 	//     /*00*/ TESBoundObject
 	//     /*58*/ TESModel
 	/*7C*/ UInt8						density;			// init to 30
-	/*7D*/ UInt8						minSlope;				
+	/*7D*/ UInt8						minSlope;
 	/*7E*/ UInt8						maxSlope;			// init to 90
 	/*7F*/ UInt8						pad7F;
 	/*80*/ UInt16						distanceFromWater;

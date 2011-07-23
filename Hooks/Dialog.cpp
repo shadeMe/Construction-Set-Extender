@@ -1,5 +1,7 @@
 #include "Dialog.h"
 #include "..\CSDialogs.h"
+#include "..\Achievements.h"
+#include "..\WindowManager.h"
 
 namespace Hooks
 {
@@ -33,9 +35,21 @@ namespace Hooks
 	_DefineHookHdlr(TESDialogGetIsWindowDragDropRecipient, 0x004433FF);
 	_DefineHookHdlr(AboutDialog, 0x00441CC5);
 	_DefineNopHdlr(TESQuestStageResultScript, 0x004E234D, 2);
-	_DefineHookHdlr(TESNPCUpdatePreviewControl, 0x0048AB73);
+	_DefineHookHdlr(TESNPCUpdatePreviewControl, 0x0048C598);
 	_DefineHookHdlr(TESParametersFillAndInitSelectionComboBoxOwners, 0x0045942F);
 	_DefineHookHdlr(SearchReplaceDialog, 0x004448FD);
+	_DefineHookHdlr(ObjectWindowPopulateFormListInvalidate, 0x00421EE1);
+	_DefineHookHdlr(ObjectWindowResize, 0x004204C2);
+	_DefineHookHdlr(ObjectWindowPopulateFormListFilter, 0x00414D7C);
+	_DefineHookHdlr(LandscapeTextureUseDlg, 0x004138D9);
+	_DefineHookHdlr(BuildResultScriptEditButton, 0x004DED70);
+	_DefineHookHdlr(DialogEditorCommandMessageCallback, 0x004F1DCD);
+	_DefineHookHdlr(TESQuestCommandMessageCallback, 0x004E286A);
+	_DefineHookHdlr(CellViewWindowResizeFix, 0x00409813);
+	_DefineHookHdlr(CellViewWindowResizeA, 0x004096DA);
+	_DefineHookHdlr(CellViewWindowResizeB, 0x0040972E);
+	_DefineHookHdlr(CellViewWindowPopulateObjectListFilter, 0x00409054);
+	_DefineHookHdlr(TESSoundPlayFile, 0x005047B0);
 
 	void PatchDialogHooks(void)
 	{
@@ -70,6 +84,18 @@ namespace Hooks
 		_MemHdlr(TESNPCUpdatePreviewControl).WriteJump();
 		_MemHdlr(TESParametersFillAndInitSelectionComboBoxOwners).WriteJump();
 		_MemHdlr(SearchReplaceDialog).WriteJump();
+		_MemHdlr(ObjectWindowPopulateFormListInvalidate).WriteJump();
+		_MemHdlr(ObjectWindowResize).WriteJump();
+		_MemHdlr(ObjectWindowPopulateFormListFilter).WriteJump();
+		_MemHdlr(LandscapeTextureUseDlg).WriteJump();
+		_MemHdlr(BuildResultScriptEditButton).WriteJump();
+		_MemHdlr(DialogEditorCommandMessageCallback).WriteJump();
+		_MemHdlr(TESQuestCommandMessageCallback).WriteJump();
+		_MemHdlr(CellViewWindowResizeFix).WriteJump();
+		_MemHdlr(CellViewWindowResizeA).WriteJump();
+		_MemHdlr(CellViewWindowResizeB).WriteJump();
+		_MemHdlr(CellViewWindowPopulateObjectListFilter).WriteJump();
+		_MemHdlr(TESSoundPlayFile).WriteJump();
 	}
 
 	void __stdcall DoFindTextInitHook(HWND FindTextDialog)
@@ -327,9 +353,9 @@ namespace Hooks
 
 	void __stdcall AppendShadeMeRefToComboBox(HWND hWnd)
 	{
-		TESForm* Ref = TESForm_LookupByEditorID("TheShadeMeRef");
+		TESForm* Ref = TESForm::LookupByEditorID("TheShadeMeRef");
 		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "'shadeMe' 'TheShadeMeRef'");
-		TESDialog_AddComboBoxItem(hWnd, g_TextBuffer, (LPARAM)Ref, 1);
+		TESComboBox::AddItem(hWnd, g_TextBuffer, Ref, 1);
 	}
 
 	#define _hhName		CellObjectListShadeMeRefAppend
@@ -343,7 +369,7 @@ namespace Hooks
 			call	AppendShadeMeRefToComboBox
 			popad
 
-			call	TESDialog_AddComboBoxItem
+			call	TESComboBox::AddItem
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -356,7 +382,7 @@ namespace Hooks
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SHOWOVERRIDES, "Show Override List");
-	
+
 		if (GetFormDialogTemplate(SelectedForm->formType) == 1 && SelectedForm->IsReference() == 0)
 		{
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
@@ -526,22 +552,30 @@ namespace Hooks
 		return Parent != *g_HWND_QuestWindow;
 	}
 
+	void __stdcall DoFormIDListViewSaveChangesEffectSettingHook(TESForm* Form)
+	{
+		if (Form->formType == TESForm::kFormType_EffectSetting)
+			Achievements::UnlockAchievement(Achievements::kAchievement_Magister);
+	}
+
 	void __stdcall DoFormIDListViewSaveChangesHookEpilog(HWND Parent)
 	{
 		if (IsWindowEnabled(GetDlgItem(Parent, 1)))
 		{
-			TESForm* LocalCopy = TESDialog_GetDialogExtraLocalCopy(Parent);
-			TESForm* WorkingCopy = TESDialog_GetDialogExtraParam(Parent);
+			TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(Parent);
+			TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(Parent);
 
 			if (WorkingCopy)
 			{
-				thisVirtualCall(*((UInt32*)LocalCopy), 0x118, LocalCopy, Parent);						// GetDataFromDialog
-				if (thisVirtualCall(*((UInt32*)WorkingCopy), 0xBC, WorkingCopy, LocalCopy))				// CompareTo
+				thisVirtualCall<UInt32>(0x118, LocalCopy, Parent);		// GetDataFromDialog
+				if (WorkingCopy->CompareTo(LocalCopy))
 				{
-					if (thisVirtualCall(*((UInt32*)WorkingCopy), 0x104, WorkingCopy, LocalCopy))		// UpdateUsageInfo
+					if (WorkingCopy->UpdateUsageInfo())
 					{
-						thisVirtualCall(*((UInt32*)WorkingCopy), 0x94, LocalCopy, 1);					// SetFromActiveFile
-						thisVirtualCall(*((UInt32*)WorkingCopy), 0xB8, WorkingCopy, LocalCopy);			// CopyFrom
+						WorkingCopy->SetFromActiveFile(true);
+						WorkingCopy->CopyFrom(LocalCopy);
+
+						DoFormIDListViewSaveChangesEffectSettingHook(WorkingCopy);
 					}
 				}
 			}
@@ -556,7 +590,7 @@ namespace Hooks
 		__asm
 		{
 			push	esi
-			call	TESDialog_GetDialogExtraParam
+			call	TESDialog::GetDialogExtraParam
 
 			pushad
 			push	esi
@@ -594,6 +628,9 @@ namespace Hooks
 			call	DoFormIDListViewItemChangeHook
 			cmp		eax, IDYES
 			jnz		REVERT
+
+			push	edi
+			call	DoFormIDListViewSaveChangesEffectSettingHook
 			popad
 
 			mov		eax, [edi]
@@ -675,8 +712,8 @@ namespace Hooks
 			SendMessage(CopyHairButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 			SendMessage(CopyEyesButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
 
-			thisCall(kLinkedListNode_NewNode, &RaceDialogSubWindow->controls, CopyHairButton);
-			thisCall(kLinkedListNode_NewNode, &RaceDialogSubWindow->controls, CopyEyesButton);
+			RaceDialogSubWindow->controls.AddAt((HWND*)CopyHairButton, eListEnd);
+			RaceDialogSubWindow->controls.AddAt((HWND*)CopyEyesButton, eListEnd);
 		}
 	}
 
@@ -714,14 +751,14 @@ namespace Hooks
 					int Count = 0;
 					if (Identifier == RACE_COPYEYES)
 					{
-						GenericNode<TESEyes>* Source = (GenericNode<TESEyes>*)&SelectedRace->eyeList;
+						tList<TESEyes>* Source = &SelectedRace->eyeList;
 						tList<TESEyes>* Destination = &WorkingRace->eyeList;
 
-						for (;Source && Source->data; Source = Source->next)
+						for (tList<TESEyes>::Iterator Itr = Source->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 						{
-							if (Destination->IndexOf(Source->data) == -1)
+							if (Destination->IndexOf(Itr.Get()) == -1)
 							{
-								thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+								Destination->AddAt(Itr.Get(), eListEnd);
 								Count++;
 							}
 						}
@@ -731,14 +768,14 @@ namespace Hooks
 					}
 					else if (Identifier == RACE_COPYHAIR)
 					{
-						GenericNode<TESHair>* Source = (GenericNode<TESHair>*)&SelectedRace->hairList;
+						tList<TESHair>* Source = &SelectedRace->hairList;
 						tList<TESHair>* Destination = &WorkingRace->hairList;
 
-						for (;Source && Source->data; Source = Source->next)
+						for (tList<TESHair>::Iterator Itr = Source->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 						{
-							if (Destination->IndexOf(Source->data) == -1)
+							if (Destination->IndexOf(Itr.Get()) == -1)
 							{
-								thisCall(kLinkedListNode_NewNode, Destination, Source->data);
+								Destination->AddAt(Itr.Get(), eListEnd);
 								Count++;
 							}
 						}
@@ -825,10 +862,10 @@ namespace Hooks
 
 	void __stdcall DoAboutDialogHook(HWND Dialog)
 	{
-		static HANDLE Splash = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+		static HANDLE s_Splash = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
 
 		HWND PictureControl = GetDlgItem(Dialog, 1963);
-		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)Splash);
+		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)s_Splash);
 		Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV | Construction Set Extender");
 
 		DWORD FileVersionHandle = 0,
@@ -870,37 +907,33 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoTESNPCUpdatePreviewControlHook(TESObjectREFR* ExistingTempRef, TESForm* BaseForm)
+	void __stdcall DoTESNPCUpdatePreviewControlHook(HWND Dialog)
 	{
-		if (ExistingTempRef)
+		BSExtraData* xData = TESDialog::GetDialogExtraByType(Dialog, 6);
+		if (xData)
 		{
-			thisVirtualCall(GetVTBL(ExistingTempRef), 0x34, ExistingTempRef, 1);
-		}
+			DialogExtraWorkingData* xWorkingData = CS_CAST(xData, BSExtraData, DialogExtraWorkingData);
+			TESForm* ExistingTempRef = (TESForm*)xWorkingData->localCopy;
+			if (ExistingTempRef)
+				ExistingTempRef->DeleteInstance();
 
-		TESObjectREFR* NewRef = (TESObjectREFR*)FormHeap_Allocate(0x60);
-		thisCall(kCtor_TESObjectREFR, NewRef);
-		thisCall(kTESForm_SetTemporary, NewRef);
-		thisCall(kTESObjectREFR_SetBaseForm, NewRef, BaseForm);
-		*g_TESPreviewControlRef = NewRef;
+			xWorkingData->localCopy = NULL;
+		}
 	}
 
 	#define _hhName		TESNPCUpdatePreviewControl
 	_hhBegin()
 	{
-		_hhSetVar(Retn, 0x0048ABC3);
+		_hhSetVar(Call, 0x0048AAC0);
+		_hhSetVar(Retn, 0x0048C59D);
 		__asm
 		{
-			mov		esi, [edi + 0x10]
 			pushad
-			push	ebx
 			push	esi
 			call	DoTESNPCUpdatePreviewControlHook
 			popad
 
-			mov		esi, [g_TESPreviewControlRef]
-			mov		esi, [esi]
-			mov		[edi + 0x10], esi
-
+			call	[_hhGetVar(Call)]
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -911,14 +944,14 @@ namespace Hooks
 		_hhSetVar(Retn, 0x00459437);
 		__asm
 		{
-			call	TESDialog_ComboBoxPopulateWithForms
+			call	TESComboBox::PopulateWithForms
 			add		esp, 0x10
 
 			movzx	eax, word ptr [ebp + 0]				// get parameterID
 			lea		eax, [eax + eax * 4]
 			mov		eax, 0x9F3624[eax * 8]
 			mov		eax, [eax + edi + 4]
-			
+
 			cmp		eax, 0x24							// check if parameterID == kParamType_Owner
 			jz		FIX
 
@@ -928,7 +961,7 @@ namespace Hooks
 			push	0
 			push	0x6
 			push	esi
-			call	TESDialog_ComboBoxPopulateWithForms
+			call	TESComboBox::PopulateWithForms
 			add		esp, 0x10
 
 			jmp		[_hhGetVar(Retn)]
@@ -946,6 +979,457 @@ namespace Hooks
 			popad
 
 			call	[g_WindowHandleCallAddr]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoObjectWindowPopulateFormListInvalidateHook(bool RedrawState)
+	{
+		if (!RedrawState)
+			SendMessage(*g_HWND_ObjectWindow_FormList, WM_SETREDRAW, FALSE, NULL);
+		else
+		{
+			SendMessage(*g_HWND_ObjectWindow_FormList, WM_SETREDRAW, TRUE, NULL);
+			RedrawWindow(*g_HWND_ObjectWindow_FormList, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+		}
+	}
+
+	#define _hhName		ObjectWindowPopulateFormListInvalidate
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00421EE6);
+		_hhSetVar(Call, 0x00414C90);
+		__asm
+		{
+			pushad
+			push	0
+			call	DoObjectWindowPopulateFormListInvalidateHook
+			popad
+
+			call	[_hhGetVar(Call)]
+
+			pushad
+			push	1
+			call	DoObjectWindowPopulateFormListInvalidateHook
+			popad
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		ObjectWindowResize
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004204CB);
+		__asm
+		{
+			sub		esi, g_ObjectWindowTreePosOffset.y
+			push	esi
+			push	eax
+			push	g_ObjectWindowTreePosOffset.y
+			push	g_ObjectWindowTreePosOffset.x
+			push	ecx
+			call	edi
+			add		esi, g_ObjectWindowTreePosOffset.y
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	bool __stdcall FilterFormList(TESForm* Form, UInt8 ParentWindowID)
+	{
+		std::string FilterString;
+
+		if (ParentWindowID == 1)
+			FilterString = g_ObjectWindowFilterStr;
+		else if (ParentWindowID == 2)
+			FilterString = g_CellViewWindowFilterStr;
+
+		if (!Form->editorID.c_str())
+		{
+			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+			if (Ref)
+				Form = Ref->baseForm;
+		}
+
+		if (FilterString == "")
+			return true;
+		else if (Form && Form->editorID.c_str())
+		{
+			std::string LowerCase(Form->editorID.c_str()); MakeLower(LowerCase);
+			if (LowerCase.find(FilterString) != std::string::npos)
+				return true;
+			else
+				return false;
+		}
+		else
+			return false;
+	}
+
+	#define _hhName		ObjectWindowPopulateFormListFilter
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00414D81);
+		_hhSetVar(Jump, 0x00414D8C);
+		__asm
+		{
+			pushad
+			push	1		// object window filter string
+			push	edi
+			call	FilterFormList
+			test	al, al
+			jz		SKIP
+			popad
+
+			push	edi
+			mov		edi, [esp + 0x1C]
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			popad
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	void __stdcall DoLandscapeTextureUseDlgHook(HWND Handle)
+	{
+		g_LandscapeTextureUseOrgWindowProc = (WNDPROC)SetWindowLong(Handle, GWL_WNDPROC, (LONG)LandscapeTextureUseSubClassProc);
+	}
+
+	#define _hhName		LandscapeTextureUseDlg
+	_hhBegin()
+	{
+		__asm
+		{
+			push    eax
+			push    0x13C
+			push    ecx
+
+			pushad
+			call	CreateDialogParamAddress
+			popad
+
+			call	[g_WindowHandleCallAddr]
+			push	eax
+			call	DoLandscapeTextureUseDlgHook
+			retn
+		}
+	}
+
+	void __stdcall DoBuildResultScriptEditButtonHook(HWND Dialog, int Template)
+	{
+		BSExtraData* xExtra = TESDialog::GetDialogExtraByType(Dialog, BSExtraData::kDialogExtra_SubWindow);
+		DialogExtraSubWindow* xSubwindow = CS_CAST(xExtra, BSExtraData, DialogExtraSubWindow);
+
+		if (xSubwindow)
+		{
+			Subwindow* DialogSubwindow = xSubwindow->subWindow;
+			HWND EditResultScriptButton =  NULL;
+			POINT ButtonPosition = DialogSubwindow->position;
+
+			if (Template == 1)		// quest stage
+			{
+				ButtonPosition.x += 532 + 50;
+				ButtonPosition.y += 136;
+			}
+			else if (Template > 2)	// dialog editor
+			{
+				ButtonPosition.x += 190 + 50;
+				ButtonPosition.y += 360;
+			}
+			else
+				return;
+
+			EditResultScriptButton =  CreateWindowEx(0,
+													"BUTTON",
+													"...",
+													WS_CHILD|WS_VISIBLE|WS_TABSTOP,
+													ButtonPosition.x, ButtonPosition.y, 23, 15,
+													Dialog,
+													(HMENU)QUEST_EDITRESULTSCRIPT,
+													GetModuleHandle(NULL),
+													NULL);
+
+			SendMessage(EditResultScriptButton, WM_SETFONT, (WPARAM)g_CSDefaultFont, TRUE);
+			DialogSubwindow->controls.AddAt((HWND*)EditResultScriptButton, eListEnd);
+		}
+	}
+
+	#define _hhName		BuildResultScriptEditButton
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004DED77);
+		__asm
+		{
+			mov     eax, [esp + 0x8]
+			mov		ecx, [esp + 0x4]
+
+			pushad
+			push	eax
+			push	ecx
+			call	DoBuildResultScriptEditButtonHook
+			popad
+
+			cmp     eax, 9
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall HandleEditResultScriptMessages(HWND Dialog, int Identifier)
+	{
+		switch (Identifier)
+		{
+		case QUEST_EDITRESULTSCRIPT:
+			if (IsWindowEnabled(GetDlgItem(Dialog, 1444)))
+			{
+				if (DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_EDITRESULTSCRIPT), Dialog, EditResultScriptDlgProc, (LPARAM)Dialog))
+					SendMessage(Dialog, WM_COMMAND, 1591, NULL);		// compile result script
+			}
+			break;
+		}
+	}
+
+	#define _hhName		DialogEditorCommandMessageCallback
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004F1DD7);
+		__asm
+		{
+			movzx   esi, cx
+			mov     eax, esi
+
+			pushad
+			push	eax
+			push	edi
+			call	HandleEditResultScriptMessages
+			popad
+
+			cmp     eax, 0x66C
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESQuestCommandMessageCallback
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004E2874);
+		__asm
+		{
+			mov     ecx, [esp + 0x0B4]
+			movzx   eax, cx
+
+			pushad
+			push	eax
+			push	esi
+			call	HandleEditResultScriptMessages
+			popad
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	UInt32 __stdcall DoCellViewWindowResizeFixHook()
+	{
+		return GetWindowLong(*g_HWND_CellView_ObjectList, GWL_STYLE);
+	}
+
+	#define _hhName		CellViewWindowResizeFix
+	_hhBegin()
+	{
+		static bool s_DoOnce = false;
+
+		_hhSetVar(Retn, 0x0040981F);
+		_hhSetVar(Jump, 0x00409C13);
+		__asm
+		{
+			mov		al, s_DoOnce
+			test	al, al
+			jnz		SKIP
+
+			mov		s_DoOnce, 1
+			push	0x00A0AA38
+			push	esi
+			pushad
+			call	GetClientRectAddress
+			popad
+			call	g_WindowHandleCallAddr
+
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			call	DoCellViewWindowResizeFixHook
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	#define _hhName		CellViewWindowResizeA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004096FA);
+		__asm
+		{
+			sub		eax, g_CellViewWindowObjListPosOffset.y
+			push    eax
+			mov		eax, [g_CellViewObjListBounds]
+			mov     eax, [eax + 4]			// top
+			add		eax, g_CellViewWindowObjListPosOffset.y
+			lea     edx, [esi + ecx]
+			mov		ecx, [g_CellViewObjListBounds]
+			mov     ecx, [ecx]				// left
+			push    edx
+			push	eax
+			mov     eax, g_HWND_CellView_ObjectList
+			mov		eax, [eax]
+			lea     edx, [esi + ecx]
+			push    edx
+			push    0
+			push    eax
+			push    edi
+			call    ebx
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoCellViewWindowResizeBHook(void)
+	{
+		HWND CellNameStatic = GetDlgItem(*g_HWND_CellView, 1163);
+		HWND FilterEditBox = GetDlgItem(*g_HWND_CellView, OBJCELL_FILTEREDIT);
+		HWND FilterLabel = GetDlgItem(*g_HWND_CellView, OBJCELL_FILTERLBL);
+		HWND XCoordLbl = GetDlgItem(*g_HWND_CellView, CELLVIEW_XLBL);
+		HWND YCoordLbl = GetDlgItem(*g_HWND_CellView, CELLVIEW_YLBL);
+		HWND XCoordEditBox = GetDlgItem(*g_HWND_CellView, CELLVIEW_XEDIT);
+		HWND YCoordEditBox = GetDlgItem(*g_HWND_CellView, CELLVIEW_YEDIT);
+		HWND GoButton = GetDlgItem(*g_HWND_CellView, CELLVIEW_GOBTN);
+
+		RECT CellNameBounds = {0}, ObjListBounds = {0};
+		GetClientRect(CellNameStatic, &CellNameBounds);
+		GetClientRect(*g_HWND_CellView_ObjectList, &ObjListBounds);
+
+		MoveWindow(FilterLabel,
+			CellNameBounds.right * 1.5,
+			CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+			25,
+			20,
+			TRUE);
+		MoveWindow(FilterEditBox,
+				CellNameBounds.right * 1.5 + 30 ,
+				CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+				(ObjListBounds.right - ObjListBounds.left) / 2 - 32,
+				20,
+				TRUE);
+
+		MoveWindow(XCoordLbl,
+				CellNameBounds.right,
+				CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+				10,
+				20,
+				TRUE);
+		MoveWindow(XCoordEditBox,
+				CellNameBounds.right + 15,
+				CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+				30,
+				20,
+				TRUE);
+		MoveWindow(YCoordLbl,
+				CellNameBounds.right + 15 + 35,
+				CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+				10,
+				20,
+				TRUE);
+		MoveWindow(YCoordEditBox,
+				CellNameBounds.right + 15 + 35 + 15,
+				CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+				30,
+				20,
+				TRUE);
+
+		MoveWindow(GoButton,
+				CellNameBounds.right + 15 + 35 + 15 + 42,
+				CellNameBounds.bottom + g_CellViewWindowObjListPosOffset.y * 1.5,
+				35,
+				20,
+				TRUE);
+	}
+
+	#define _hhName		CellViewWindowResizeB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00409734);
+		__asm
+		{
+			push    eax
+			push    edi
+			call    ebx
+			push    1
+
+			pushad
+			call	DoCellViewWindowResizeBHook
+			popad
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		CellViewWindowPopulateObjectListFilter
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00409059);
+		_hhSetVar(Call, 0x004087C0);
+		__asm
+		{
+			pushad
+			push	2		// cell view window filter string
+			push	eax
+			call	FilterFormList
+			test	al, al
+			jz		SKIP
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			popad
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	static char s_SoundSamplerTempPath[MAX_PATH] = {0};
+
+	void __stdcall DoTESSoundPlayFileHook(const char* FilePath)
+	{
+		TESSound::DeinitializeSoundSampler();
+		ZeroMemory(s_SoundSamplerTempPath, sizeof(s_SoundSamplerTempPath));
+		DeleteFile("tempsf");
+
+		if (GetFileAttributes(FilePath) != INVALID_FILE_ATTRIBUTES)
+			return;
+
+		if (ArchiveManager::ExtractArchiveFile(FilePath, "tempsf"))
+		{
+			sprintf_s(s_SoundSamplerTempPath, sizeof(s_SoundSamplerTempPath), "tempsf");
+		}
+	}
+
+	#define _hhName		TESSoundPlayFile
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x005047B6);
+		__asm
+		{
+			mov		eax, [esp + 4]
+
+			pushad
+			push	eax
+			call	DoTESSoundPlayFileHook
+			popad
+
+			lea		eax, s_SoundSamplerTempPath
+			mov		al, [eax]
+			test	al, al
+			jz		EXIT
+
+			lea		eax, s_SoundSamplerTempPath
+			mov		[esp + 4], eax
+		EXIT:
+			sub		esp, 0x310
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

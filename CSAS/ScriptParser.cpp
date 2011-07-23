@@ -58,7 +58,7 @@ namespace CSAutomationScript
 					Tokens.push_back(Token);
 					Indices.push_back(LastPos);
 					Delimiters.push_back(Delimiter[0]);
-					LastPos += Token.length() + 1;		
+					LastPos += Token.length() + 1;
 				}
 				else
 				{
@@ -117,7 +117,7 @@ namespace CSAutomationScript
 		else if (!_stricmp(Token.c_str(), "scn") || !_stricmp(Token.c_str(), "scriptname"))
 			Result = kTokenType_ScriptName;
 		else if (!_stricmp(Token.c_str(), "continue"))
-			Result = kTokenType_Continue;	
+			Result = kTokenType_Continue;
 		else if (!_stricmp(Token.c_str(), "break"))
 			Result = kTokenType_Break;
 
@@ -127,7 +127,7 @@ namespace CSAutomationScript
 	void ScriptParser::Sanitize(std::string& In, std::string& Out, UInt32 OperationMask)
 	{
 		Out.clear();
-		
+
 		if (Tokenize(In, false))
 		{
 			if ((OperationMask & kSanitizeOps_StripLeadingWhitespace))
@@ -145,5 +145,4 @@ namespace CSAutomationScript
 			}
 		}
 	}
-
 }

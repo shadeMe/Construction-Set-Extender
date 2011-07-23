@@ -1,4 +1,7 @@
 #include "Script.h"
+#include "Hooks\ScriptEditor.h"
+
+TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
 
 Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)
 {
@@ -28,4 +31,25 @@ Script::RefVariable* Script::LookupRefVariableByIndex(UInt32 Index)
 	}
 
 	return NULL;
+}
+
+bool Script::Compile(bool AsResultScript)
+{
+	if (AsResultScript)
+		return thisCall<bool>(0x005034E0, 0x00A0B128, this, 0, 0);
+	else
+		return thisCall<bool>(0x00503450, 0x00A0B128, this, 0);
+}
+
+void Script::SetText(const char* Text)
+{
+	thisCall<UInt32>(0x004FC6C0, this, Text);
+}
+
+void TESScriptCompiler::ToggleScriptCompilation( bool State )
+{
+	if (!State)
+		Hooks::_MemHdlr(ToggleScriptCompilingNewData).WriteBuffer();
+	else
+		Hooks::_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
 }

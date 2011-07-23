@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ExtenderInternals.h"
-
 namespace VersionControl
 {
 	class ChangeLog

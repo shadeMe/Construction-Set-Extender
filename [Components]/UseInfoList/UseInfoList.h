@@ -47,7 +47,6 @@ public ref class UseInfoList
 	Button^												FilterLabel;
 	Form^												UseInfoListBox;
 
-
 	void												ClearLists();
 	void												Close();
 
