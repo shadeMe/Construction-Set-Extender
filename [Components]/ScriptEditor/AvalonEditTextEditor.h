@@ -10,9 +10,13 @@ using namespace System::Windows::Forms::Integration;
 using namespace AvalonEditXSHD;
 using namespace AvalonEditComponents;
 
-public ref class AvalonEditTextEditor : public ScriptTextEditorInterface
+typedef System::Windows::Media::Imaging::RenderTargetBitmap RTBitmap;
+
+public ref class AvalonEditTextEditor : public IScriptTextEditor
 {
 	static AvalonEditXSHDManager^				SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
+
+	static void									InitializeSyntaxHighlightingManager(bool Reset);
 public:
 	event ScriptModifiedEventHandler^			ScriptModified;
 	event KeyEventHandler^						KeyDown;
@@ -26,16 +30,20 @@ protected:
 
 	Panel^										Container;
 	ElementHost^								WPFHost;
+	System::Windows::Controls::DockPanel^		TextFieldPanel;
 	AvalonEdit::TextEditor^						TextField;
+	System::Windows::Shapes::Rectangle^			AnimationPrimitive;
 
 	AvalonEditScriptErrorBGColorizer^			ErrorColorizer;
 	AvalonEditFindReplaceBGColorizer^			FindReplaceColorizer;
+	AvalonEdit::Folding::FoldingManager^		CodeFoldingManager;
+	AvalonEditObScriptCodeFoldingStrategy^		CodeFoldingStrategy;
 
 	bool										InitializingFlag;
 	bool										ModifiedFlag;
 	PreventTextChangeFlagState					PreventTextChangedEventFlag;
 	System::Windows::Input::Key					KeyToPreventHandling;
-	IntelliSense::IntelliSenseThingy^			IntelliSenseBox;
+	IntelliSense::IntelliSenseInterface^		IntelliSenseBox;
 	Point										LastKnownMouseClickLocation;
 	System::Windows::Input::Key					LastKeyThatWentDown;
 
@@ -43,6 +51,17 @@ protected:
 	System::Windows::Vector						CurrentScrollOffset;
 	bool										IsMiddleMouseScrolling;
 	Timer^										MiddleMouseScrollTimer;
+
+	bool										IsFocused;
+	Timer^										FoldingTimer;
+
+	Timer^										ScrollBarSyncTimer;
+	VScrollBar^									ExternalVerticalScrollBar;
+	HScrollBar^									ExternalHorizontalScrollBar;
+	bool										SynchronizingExternalScrollBars;
+	bool										SynchronizingInternalScrollBars;
+
+	bool										SetTextAnimating;
 
 	virtual void								OnScriptModified(ScriptModifiedEventArgs^ E);
 	virtual void								OnKeyDown(KeyEventArgs^ E);
@@ -65,11 +84,17 @@ protected:
 	void										TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 	void										TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 
-	void										ScrollTimer_Tick(Object^ Sender, EventArgs^ E);
+	void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
+	void										FoldingTimer_Tick(Object^ Sender, EventArgs^ E);
+	void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
 
-	String^										GetTokenAtIndex(int Index, bool SelectText);
+	void										ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
+	void										SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
+
+	String^										GetTokenAtIndex(int Index, bool SelectText, int% StartIndexOut, int% EndIndexOut);
 	String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
 	String^										GetTextAtLocation(int Index, bool SelectText);
+	array<String^>^								GetTextAtLocation(int Index);							// gets three of the closest tokens surrounding the offset
 
 	void										SetPreventTextChangedFlag(PreventTextChangeFlagState State) { PreventTextChangedEventFlag = State; }
 	void										HandleKeyEventForKey(System::Windows::Input::Key Key) { KeyToPreventHandling = Key; }
@@ -78,10 +103,24 @@ protected:
 	void										GotoLine(int Line);						// line numbers start at 1
 
 	void										RefreshUI() { TextField->TextArea->TextView->Redraw(); }
-	UInt32										PerformReplaceOnSegment(ScriptTextEditorInterface::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output);
+	UInt32										PerformReplaceOnSegment(IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
 	void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 	void										StopMiddleMouseScroll();
+
+	void										UpdateCodeFoldings();
+	void										SynchronizeExternalScrollBars();
+
+	RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
+
+	void										Destroy();
+
+	static double								SetTextFadeAnimationDuration = 0.09;		// in seconds
 public:
+	~AvalonEditTextEditor()
+	{
+		Destroy();
+	}
+
 	// interface methods
 	virtual void								SetFont(Font^ FontObject);
 	virtual void								SetTabCharacterSize(int PixelWidth);	// AvalonEdit uses character lengths
@@ -92,6 +131,7 @@ public:
 	virtual String^								GetText(void);
 	virtual UInt32								GetTextLength(void);
 	virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling);
+	virtual void								InsertText(String^ Text, int Index);
 
 	virtual String^								GetSelectedText(void);
 	virtual void								SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
@@ -108,6 +148,7 @@ public:
 	virtual String^								GetTokenAtCaretPos();
 	virtual void								SetTokenAtCaretPos(String^ Replacement);
 	virtual String^								GetTokenAtMouseLocation();
+	virtual array<String^>^						GetTokensAtMouseLocation();		// gets three of the closest tokens surrounding the mouse loc
 
 	virtual int									GetCaretPos();
 	virtual void								SetCaretPos(int Index);
@@ -127,23 +168,22 @@ public:
 
 	virtual Point								GetLastKnownMouseClickLocation(void);
 
-	virtual UInt32								FindReplace(ScriptTextEditorInterface::FindReplaceOperation Operation, String^ Query, String^ Replacement, ScriptTextEditorInterface::FindReplaceOutput^ Output);
+	virtual UInt32								FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
 	virtual void								ToggleComment(int StartIndex);
 	virtual void								UpdateIntelliSenseLocalDatabase(void);
 	virtual void								ClearFindResultIndicators(void);
 
 	virtual Control^							GetContainer() { return Container; }
 	virtual void								ScrollToLine(String^ LineNumber);
-	virtual void								HandleTabSwitchEvent(void);
-	virtual void								Destroy() { IntelliSenseBox->Destroy(); }
 	virtual Point								PointToScreen(Point Location);
 
 	virtual void								HighlightScriptError(int Line);
 	virtual void								ClearScriptErrorHighlights(void);
 	virtual void								SetEnabledState(bool State);
-	virtual void								HandleContainerPositionSizeChangedEvent(void);
+
+	virtual void								OnGotFocus(void);
+	virtual void								OnLostFocus(void);
+	virtual void								OnPositionSizeChange(void);
 
 	AvalonEditTextEditor(Font^ Font, Object^% Parent);
-
-	static void									InitializeSyntaxHighlightingManager(bool Reset);
 };

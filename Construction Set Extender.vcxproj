@@ -58,7 +58,7 @@
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\muParserX\parser;$(SourcePath)</SourcePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\muParserX\parser;$(IncludePath)</IncludePath>
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\muParserX\parser;$(SourcePath)</SourcePath>
-    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -90,6 +90,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
@@ -185,6 +186,7 @@
     <ClCompile Include="EditorAPI\Archive.cpp" />
     <ClCompile Include="EditorAPI\BaseFormComponent.cpp" />
     <ClCompile Include="EditorAPI\BSFile.cpp" />
+    <ClCompile Include="EditorAPI\BSStringT.cpp" />
     <ClCompile Include="EditorAPI\Core.cpp" />
     <ClCompile Include="EditorAPI\EffectItem.cpp" />
     <ClCompile Include="EditorAPI\ExtraDataList.cpp" />
@@ -193,6 +195,7 @@
     <ClCompile Include="EditorAPI\RTTI.cpp" />
     <ClCompile Include="EditorAPI\Script.cpp" />
     <ClCompile Include="EditorAPI\SettingCollection.cpp" />
+    <ClCompile Include="EditorAPI\TESConditionItem.cpp" />
     <ClCompile Include="EditorAPI\TESDialog.cpp" />
     <ClCompile Include="EditorAPI\TESForm.cpp" />
     <ClCompile Include="EditorAPI\TESIdleForm.cpp" />
@@ -228,7 +231,6 @@
     <ClCompile Include="RenderSelectionGroupManager.cpp" />
     <ClCompile Include="ElapsedTimeCounter.cpp" />
     <ClCompile Include="RenderWindowTextPainter.cpp" />
-    <ClCompile Include="ScriptEditorAllocator.cpp" />
     <ClCompile Include="ToolManager.cpp" />
     <ClCompile Include="WorkspaceManager.cpp" />
     <ClCompile Include="Exports.cpp" />
@@ -324,7 +326,7 @@
     <ClInclude Include="EditorAPI\TESActorBase.h" />
     <ClInclude Include="EditorAPI\TESAmmo.h" />
     <ClInclude Include="EditorAPI\TESClass.h" />
-    <ClInclude Include="EditorAPI\TESCondition.h" />
+    <ClInclude Include="EditorAPI\TESConditionItem.h" />
     <ClInclude Include="EditorAPI\TESCreature.h" />
     <ClInclude Include="EditorAPI\TESEffectShader.h" />
     <ClInclude Include="EditorAPI\TESEyes.h" />
@@ -379,6 +381,7 @@
     <ClInclude Include="[Common]\CLIWrapper.h" />
     <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="[Common]\HandShakeStructs.h" />
     <ClInclude Include="Hooks\AssetSelector.h" />
     <ClInclude Include="Hooks\Common.h" />
@@ -403,7 +406,6 @@
     <ClInclude Include="RenderSelectionGroupManager.h" />
     <ClInclude Include="ElapsedTimeCounter.h" />
     <ClInclude Include="RenderWindowTextPainter.h" />
-    <ClInclude Include="ScriptEditorAllocator.h" />
     <ClInclude Include="ToolManager.h" />
     <ClInclude Include="WorkspaceManager.h" />
     <ClInclude Include="Exports.h" />

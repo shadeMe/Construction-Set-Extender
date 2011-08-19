@@ -8,14 +8,12 @@ ref class Globals
 {
 public:
 #ifndef CSE_SEPREPROC
-	static String^												AppPath = gcnew String(NativeWrapper::GetAppPath());
+	static String^												AppPath = gcnew String(g_CSEInterface->CSEEditorAPI.GetAppPath());
 #endif
-	static String^												Delimiters = gcnew String("., (){}[]\t\n");
-	static String^												ControlChars = " \t";
+	static String^												ScriptTextDelimiters = gcnew String("., (){}[]\t\n");
+	static String^												ScriptTextControlChars = " \t";
 
-	static array<Char>^											TabDelimit = { '\t' };
-	static array<Char>^											PipeDelimit = { '|' };
-	static array<Keys>^											DelimiterKeys =
+	static array<Keys>^											ScriptTextDelimiterKeys =
 																{
 																	Keys::OemPeriod,
 																	Keys::Oemcomma,
@@ -30,7 +28,7 @@ public:
 	{
 		bool Result = false;
 
-		for each (Keys Itr in DelimiterKeys)
+		for each (Keys Itr in ScriptTextDelimiterKeys)
 		{
 			if (Itr == KeyCode) {
 				Result = true;
@@ -40,7 +38,7 @@ public:
 		return Result;
 	}
 #ifndef CSE_SEPREPROC
-	static array<System::Windows::Input::Key>^					DelimiterKeysWPF =
+	static array<System::Windows::Input::Key>^					ScriptTextDelimiterKeysWPF =
 																{
 																	System::Windows::Input::Key::OemPeriod,
 																	System::Windows::Input::Key::OemComma,
@@ -55,7 +53,7 @@ public:
 	{
 		bool Result = false;
 
-		for each (System::Windows::Input::Key Itr in DelimiterKeysWPF)
+		for each (System::Windows::Input::Key Itr in ScriptTextDelimiterKeysWPF)
 		{
 			if (Itr == KeyCode) {
 				Result = true;

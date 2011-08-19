@@ -1,157 +1,82 @@
 #include "CLIWrapper.h"
-#include "Exports.h"
 
 namespace CLIWrapper
 {
-namespace ScriptEditor
-{
-	_AllocateNewEditor						AllocateNewEditor;
-	_InitializeScript						InitializeScript;
-	_SendMessagePingback					SendMessagePingback;
-
-	_InitializeComponents					InitializeComponents;
-	_AddToURLMap							AddToURLMap;
-	_SetScriptListItemData					SetScriptListItemData;
-
-	_SetVariableListItemData				SetVariableListItemData;
-	_InitializeDatabaseUpdateTimer			InitializeDatabaseUpdateTimer;
-	_PassScriptError						PassScriptError;
-}
-namespace UseInfoList
-{
-	_OpenUseInfoBox							OpenUseInfoBox;
-	_SetFormListItemData					SetFormListItemData;
-	_SetUseListObjectItemData				SetUseListObjectItemData;
-	_SetUseListCellItemData					SetUseListCellItemData;
-}
-namespace BSAViewer
-{
-	_InitializeViewer						InitializeViewer;
-}
-namespace BatchEditor
-{
-	_InitializeRefBatchEditor				InitializeRefBatchEditor;
-	_AddFormListItem						AddFormListItem;
-}
-namespace TagBrowser
-{
-	_Show									Show;
-	_Hide									Hide;
-	_AddFormToActiveTag						AddFormToActiveTag;
-	_GetFormDropWindowHandle				GetFormDropWindowHandle;
-	_GetFormDropParentHandle				GetFormDropParentHandle;
-}
-
-bool CLIWrapper::Import(const OBSEInterface * obse)
-{
-	SetErrorMode(0);
-	HMODULE hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\ScriptEditor.dll").c_str());
-	if (hMod == NULL) {
-		DebugPrint("Couldn't load ScriptEditor.dll");
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
-
-	CLIWrapper::ScriptEditor::AllocateNewEditor = (CLIWrapper::ScriptEditor::_AllocateNewEditor)GetProcAddress(hMod, "AllocateNewEditor");
-	CLIWrapper::ScriptEditor::InitializeScript = (CLIWrapper::ScriptEditor::_InitializeScript)GetProcAddress(hMod, "InitializeScript");
-	CLIWrapper::ScriptEditor::SendMessagePingback = (CLIWrapper::ScriptEditor::_SendMessagePingback)GetProcAddress(hMod, "SendMessagePingback");
-	CLIWrapper::ScriptEditor::InitializeComponents = (CLIWrapper::ScriptEditor::_InitializeComponents)GetProcAddress(hMod, "InitializeComponents");
-	CLIWrapper::ScriptEditor::AddToURLMap = (CLIWrapper::ScriptEditor::_AddToURLMap)GetProcAddress(hMod, "AddToURLMap");
-	CLIWrapper::ScriptEditor::SetScriptListItemData = (CLIWrapper::ScriptEditor::_SetScriptListItemData)GetProcAddress(hMod, "SetScriptListItemData");
-	CLIWrapper::ScriptEditor::SetVariableListItemData = (CLIWrapper::ScriptEditor::_SetVariableListItemData)GetProcAddress(hMod, "SetVariableListItemData");
-	CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer = (CLIWrapper::ScriptEditor::_InitializeDatabaseUpdateTimer)GetProcAddress(hMod, "InitializeDatabaseUpdateTimer");
-	CLIWrapper::ScriptEditor::PassScriptError = (CLIWrapper::ScriptEditor::_PassScriptError)GetProcAddress(hMod, "PassScriptError");
-
-	if (!CLIWrapper::ScriptEditor::AddToURLMap ||
-		!CLIWrapper::ScriptEditor::AllocateNewEditor ||
-		!CLIWrapper::ScriptEditor::InitializeComponents ||
-		!CLIWrapper::ScriptEditor::InitializeScript ||
-		!CLIWrapper::ScriptEditor::SendMessagePingback ||
-		!CLIWrapper::ScriptEditor::SetScriptListItemData ||
-		!CLIWrapper::ScriptEditor::SetVariableListItemData ||
-		!CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer ||
-		!CLIWrapper::ScriptEditor::PassScriptError)
+	namespace Interfaces
 	{
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
+		ComponentDLLInterface::ScriptEditorInterface*			SE = NULL;
+		ComponentDLLInterface::UseInfoListInterface*			USE = NULL;
+		ComponentDLLInterface::BSAViewerInterface*				BSA = NULL;
+		ComponentDLLInterface::BatchEditorInterface*			BE = NULL;
+		ComponentDLLInterface::TagBrowserInterface*				TAG = NULL;
 	}
 
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\UseInfoList.dll").c_str());
-	if (hMod == NULL) {
-		DebugPrint("Couldn't load UseInfoList.dll");
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
+	ComponentDLLInterface::QueryInterface SEQueryInterfaceProc = NULL;
+	ComponentDLLInterface::QueryInterface USEQueryInterfaceProc = NULL;
+	ComponentDLLInterface::QueryInterface BSAQueryInterfaceProc = NULL;
+	ComponentDLLInterface::QueryInterface BEQueryInterfaceProc = NULL;
+	ComponentDLLInterface::QueryInterface TAGQueryInterfaceProc = NULL;
 
-	CLIWrapper::UseInfoList::OpenUseInfoBox = (CLIWrapper::UseInfoList::_OpenUseInfoBox)GetProcAddress(hMod, "OpenUseInfoBox");
-	CLIWrapper::UseInfoList::SetFormListItemData = (CLIWrapper::UseInfoList::_SetFormListItemData)GetProcAddress(hMod, "SetFormListItemData");
-	CLIWrapper::UseInfoList::SetUseListObjectItemData = (CLIWrapper::UseInfoList::_SetUseListObjectItemData)GetProcAddress(hMod, "SetUseListObjectItemData");
-	CLIWrapper::UseInfoList::SetUseListCellItemData = (CLIWrapper::UseInfoList::_SetUseListCellItemData)GetProcAddress(hMod, "SetUseListCellItemData");
-
-	if (!CLIWrapper::UseInfoList::OpenUseInfoBox ||
-		!CLIWrapper::UseInfoList::SetFormListItemData ||
-		!CLIWrapper::UseInfoList::SetUseListObjectItemData ||
-		!CLIWrapper::UseInfoList::SetUseListCellItemData)
+	bool CLIWrapper::ImportInterfaces(const OBSEInterface * obse)
 	{
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
+		SetErrorMode(0);
+		std::string DLLName = "";
+		void** Interface = NULL;
+
+		for (int i = 0; i < 5; i++)
+		{
+			switch (i)
+			{
+			case 0:
+				DLLName = "ScriptEditor.dll";
+				Interface = (void**)&SEQueryInterfaceProc;
+				break;
+			case 1:
+				DLLName = "UseInfoList.dll";
+				Interface = (void**)&USEQueryInterfaceProc;
+				break;
+			case 2:
+				DLLName = "BSAViewer.dll";
+				Interface = (void**)&BSAQueryInterfaceProc;
+				break;
+			case 3:
+				DLLName = "BatchEditor.dll";
+				Interface = (void**)&BEQueryInterfaceProc;
+				break;
+			case 4:
+				DLLName = "TagBrowser.dll";
+				Interface = (void**)&TAGQueryInterfaceProc;
+				break;
+			}
+
+			HMODULE hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\" + DLLName).c_str());
+			if (hMod == NULL)
+			{
+				DebugPrint("Couldn't load %s", DLLName.c_str());
+				LogWinAPIErrorMessage(GetLastError());
+				return false;
+			}
+
+			ComponentDLLInterface::QueryInterface ExportedProc = (ComponentDLLInterface::QueryInterface)GetProcAddress(hMod, "QueryInterface");
+			if (!ExportedProc)
+			{
+				DebugPrint("Couldn't import interface from %s", DLLName.c_str());
+				LogWinAPIErrorMessage(GetLastError());
+				return false;
+			}
+
+			*Interface = ExportedProc;
+		}
+
+		return true;
 	}
 
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\BSAViewer.dll").c_str());
-	if (hMod == NULL) {
-		DebugPrint("Couldn't load BSAViewer.dll");
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
-
-	CLIWrapper::BSAViewer::InitializeViewer = (CLIWrapper::BSAViewer::_InitializeViewer)GetProcAddress(hMod, "InitializeViewer");
-
-	if (!CLIWrapper::BSAViewer::InitializeViewer)
+	void QueryInterfaces( void )
 	{
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
+		Interfaces::SE = (ComponentDLLInterface::ScriptEditorInterface*)SEQueryInterfaceProc();
+		Interfaces::USE = (ComponentDLLInterface::UseInfoListInterface*)USEQueryInterfaceProc();
+		Interfaces::BSA = (ComponentDLLInterface::BSAViewerInterface*)BSAQueryInterfaceProc();
+		Interfaces::BE = (ComponentDLLInterface::BatchEditorInterface*)BEQueryInterfaceProc();
+		Interfaces::TAG = (ComponentDLLInterface::TagBrowserInterface*)TAGQueryInterfaceProc();
 	}
-
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\BatchEditor.dll").c_str());
-	if (hMod == NULL) {
-		DebugPrint("Couldn't load BatchEditor.dll");
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
-
-	CLIWrapper::BatchEditor::InitializeRefBatchEditor = (CLIWrapper::BatchEditor::_InitializeRefBatchEditor)GetProcAddress(hMod, "InitializeRefBatchEditor");
-	CLIWrapper::BatchEditor::AddFormListItem = (CLIWrapper::BatchEditor::_AddFormListItem)GetProcAddress(hMod, "AddFormListItem");
-
-	if (!CLIWrapper::BatchEditor::InitializeRefBatchEditor ||
-		!CLIWrapper::BatchEditor::AddFormListItem)
-	{
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
-
-	hMod = LoadLibrary(std::string(std::string(obse->GetOblivionDirectory()) + "Data\\OBSE\\Plugins\\CSE\\TagBrowser.dll").c_str());
-	if (hMod == NULL) {
-		DebugPrint("Couldn't load TagBrowser.dll");
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
-
-	CLIWrapper::TagBrowser::Show = (CLIWrapper::TagBrowser::_Show)GetProcAddress(hMod, "Show");
-	CLIWrapper::TagBrowser::Hide = (CLIWrapper::TagBrowser::_Hide)GetProcAddress(hMod, "Hide");
-	CLIWrapper::TagBrowser::AddFormToActiveTag = (CLIWrapper::TagBrowser::_AddFormToActiveTag)GetProcAddress(hMod, "AddFormToActiveTag");
-	CLIWrapper::TagBrowser::GetFormDropWindowHandle = (CLIWrapper::TagBrowser::_GetFormDropWindowHandle)GetProcAddress(hMod, "GetFormDropWindowHandle");
-	CLIWrapper::TagBrowser::GetFormDropParentHandle = (CLIWrapper::TagBrowser::_GetFormDropParentHandle)GetProcAddress(hMod, "GetFormDropParentHandle");
-
-	if (!CLIWrapper::TagBrowser::Show ||
-		!CLIWrapper::TagBrowser::Hide ||
-		!CLIWrapper::TagBrowser::AddFormToActiveTag ||
-		!CLIWrapper::TagBrowser::GetFormDropWindowHandle ||
-		!CLIWrapper::TagBrowser::GetFormDropParentHandle)
-	{
-		LogWinAPIErrorMessage(GetLastError());
-		return false;
-	}
-
-	return true;
-}
 }

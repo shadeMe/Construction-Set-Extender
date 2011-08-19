@@ -34,7 +34,7 @@ bool ScriptOffsetViewer::Show()
 {
 	if (InitializationState == false)
 	{
-		MessageBox::Show("Offset Viewer was not initialized successfully!\n\nCheck the script and recompile it before trying again.", "CSE Editor", MessageBoxButtons::OK, MessageBoxIcon::Error);
+		MessageBox::Show("Offset Viewer was not initialized successfully!\n\nCheck the script and recompile it before trying again.", "CSE Script Editor", MessageBoxButtons::OK, MessageBoxIcon::Error);
 		return false;
 	}
 

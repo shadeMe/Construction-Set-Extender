@@ -22,25 +22,13 @@ protected:
 	/*06*/ SInt16      m_bufLen;
 public:
 	// methods
-	bool		Set(const char* string, SInt16 size = 0)   // size determines allocated storage? 0 to allocate automatically
-	{
-		return thisCall<bool>(0x004051E0, this, string, size);
-	}
-	void		Clear()
-	{
-		thisCall<UInt32>(0x004053D0, this);
-	}
-	SInt16		Size() const
-	{
-		return thisCall<SInt16>(0x0040BAD0, this);
-	}
-	SInt16		Compare(const char* string, bool ignoreCase = true)
-	{
-		if (ignoreCase)
-			return _stricmp(m_data, string);
-		else
-			return strcmp(m_data, string);
-	}
-	const char*  c_str() const                          {return m_data;}
+	bool							Set(const char* string, SInt16 size = 0);   // size determines allocated storage? 0 to allocate automatically
+	void							Clear();
+	SInt16							Size() const;
+	SInt16							Compare(const char* string, bool ignoreCase = true);
+	const char*						c_str() const                  { return m_data; }
+
+	static BSStringT*				CreateInstance(const char* String);
+	void							DeleteInstance(bool ReleaseMemory = true);
 };
 STATIC_ASSERT(sizeof(BSStringT) == 0x08);

@@ -4,7 +4,7 @@
 #include "..\RenderWindowTextPainter.h"
 #include "..\CSDialogs.h"
 
-#pragma warning(disable: 4410)		// illegal operand size; fild instruction
+#pragma warning(disable: 4410)		// illegal operand size for the fild instruction
 
 namespace Hooks
 {
@@ -41,6 +41,8 @@ namespace Hooks
 	_DefineHookHdlr(TESRenderControlAltCamPanSpeedA, 0x0042CD26);
 	_DefineHookHdlr(TESRenderControlAltCamPanSpeedB, 0x0042CD71);
 	_DefineHookHdlr(TESRenderControlRedrawGrid, 0x004283F7);
+	_DefineHookHdlr(TESPreviewControlCallWndProc, 0x0044D700);
+	_DefineHookHdlr(ActivateRenderWindowPostLandTextureChange, 0x0042B4E5);
 
 	void PatchRendererHooks(void)
 	{
@@ -71,6 +73,8 @@ namespace Hooks
 		_MemHdlr(TESRenderControlAltCamPanSpeedA).WriteJump();
 		_MemHdlr(TESRenderControlAltCamPanSpeedB).WriteJump();
 		_MemHdlr(TESRenderControlRedrawGrid).WriteJump();
+		_MemHdlr(TESPreviewControlCallWndProc).WriteJump();
+		_MemHdlr(ActivateRenderWindowPostLandTextureChange).WriteJump();
 	}
 
 	#define _hhName		DoorMarkerProperties
@@ -738,6 +742,55 @@ namespace Hooks
 		__asm
 		{
 			mov		eax, 1
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	UInt32 __stdcall DoTESPreviewControlCallWndProcHook(void* OrgWindowProc, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		if (OrgWindowProc)
+			return CallWindowProc((WNDPROC)OrgWindowProc, hWnd, uMsg, wParam, lParam);
+		else
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	#define _hhName		TESPreviewControlCallWndProc
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0044D70E);
+		__asm
+		{
+			push    ebx
+			push    ebp
+			push    edi
+			push    esi
+			push	eax
+			call	DoTESPreviewControlCallWndProcHook
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoActivateRenderWindowPostLandTextureChangeHook(void)
+	{
+		SetForegroundWindow(*g_HWND_RenderWindow);
+	}
+
+	#define _hhName		ActivateRenderWindowPostLandTextureChange
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042B4EB);
+		__asm
+		{
+			pushad
+			call	SendMessageAddress
+			popad
+
+			call	g_WindowHandleCallAddr
+			pushad
+			call	DoActivateRenderWindowPostLandTextureChangeHook
+			popad
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

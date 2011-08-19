@@ -19,6 +19,9 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{0bc09888-f771-470d-a4a7-6d4055720405}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{1426fe20-b175-44e5-83f7-ba6aa8abc8e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
@@ -45,9 +48,6 @@
     <ClCompile Include="NumberedRichTextBox.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="OptionsDialog.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptListDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -58,6 +58,12 @@
     <ClCompile Include="ScriptEditor.cpp" />
     <ClCompile Include="ScriptEditorManager.cpp" />
     <ClCompile Include="AvalonEditComponents.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="RefactorTools.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptEditorPreferences.cpp">
       <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,9 +101,6 @@
     <ClInclude Include="NumberedRichTextBox.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="OptionsDialog.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="ScriptListDialog.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -117,6 +120,15 @@
     </ClInclude>
     <ClInclude Include="..\..\[Common]\CustomInputBox.h">
       <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="RefactorTools.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptEditorPreferences.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
+      <Filter>Interop</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -356,6 +368,48 @@
       <Filter>Resources\Images</Filter>
     </None>
     <None Include="Images\Wizard.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ModifiedFlag.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\UnmodifiedFlag.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ModifiedFlagEx.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\UnmodifiedFlagEx.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\saveHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\noSaveHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="ModifiedFlagOn.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\addVar.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\documentScript.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\createUDF.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\refactor.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\renameVars.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\ModifiedFlagOn.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\109_AllAnnotations_Error_16x16_72.png">
       <Filter>Resources\Images</Filter>
     </None>
   </ItemGroup>

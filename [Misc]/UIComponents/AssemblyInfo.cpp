@@ -1,3 +1,4 @@
+#include "stdafx.h"
 
 using namespace System;
 using namespace System::Reflection;
@@ -15,7 +16,7 @@ using namespace System::Security::Permissions;
 [assembly:AssemblyConfigurationAttribute("")];
 [assembly:AssemblyCompanyAttribute("Microsoft")];
 [assembly:AssemblyProductAttribute("UIComponents")];
-[assembly:AssemblyCopyrightAttribute("Copyright (c) Microsoft 2010")];
+[assembly:AssemblyCopyrightAttribute("Copyright (c) Microsoft 2011")];
 [assembly:AssemblyTrademarkAttribute("")];
 [assembly:AssemblyCultureAttribute("")];
 

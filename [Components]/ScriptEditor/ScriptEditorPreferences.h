@@ -44,28 +44,28 @@ public:
 	void											SetValue(String^ Value);
 };
 
-public ref class OptionsDialog
+public ref class ScriptEditorPreferences
 {
-	static OptionsDialog^							Singleton = nullptr;
+	static ScriptEditorPreferences^					Singleton = nullptr;
 
 	void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
 	void											CmDlgColor_Click(Object^ Sender, EventArgs^ E);
 
 	void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
-	Dictionary<INISetting^, BoundControl^>^			INIMap;
+	Dictionary<INISetting^, BoundControl^>^		SettingCollection;
 
-	Form^										OptionsBox;
+	AnimatedForm^								OptionsBox;
 		TabControl^									TabContainer;
-			TabPage^										TabGeneral;
-				CheckBox^										AutoIndent;
-				CheckBox^										SaveLastKnownPos;
-				CheckBox^										RecompileVarIdx;
-				CheckBox^										UseCSParent;
-				CheckBox^										DestroyOnLastTabClose;
-				CheckBox^										SuppressRefCountForQuestScripts;
-				CheckBox^										LoadScriptUpdateExistingScripts;
-				CheckBox^										CutCopyEntireLine;
+			TabPage^									TabGeneral;
+				CheckBox^									AutoIndent;
+				CheckBox^									SaveLastKnownPos;
+				CheckBox^									RecompileVarIdx;
+				CheckBox^									UseCSParent;
+				CheckBox^									DestroyOnLastTabClose;
+				CheckBox^									SuppressRefCountForQuestScripts;
+				CheckBox^									LoadScriptUpdateExistingScripts;
+				CheckBox^									CutCopyEntireLine;
 			TabPage^									TabIntelliSense;
 				Label^										LabelISThreshold;
 				NumericUpDown^								ThresholdLength;
@@ -95,53 +95,48 @@ public ref class OptionsDialog
 					Label^										LabelDigits;
 					Label^										LabelDelimiters;
 					Label^										LabelKeywords;
+				Button^										CmDlgCurrentLineHighlightColor;
+				Label^										LabelCurrentLineHighlight;
+				Button^										CmDlgCharLimitHighlightColor;
+				Label^										LabelCharLimitHighlight;
+				Button^										CmDlgErrorHighlightColor;
+				Label^										LabelErrorHighlight;
+				Button^										CmDlgSelectionHighlightColor;
+				Label^										LabelSelectionHighlight;
+				Button^										CmDlgFindResultsHighlightColor;
+				Label^										LabelFindResultsHighlight;
 
-				Button^								CmDlgCurrentLineHighlightColor;
-				Label^								LabelCurrentLineHighlight;
-				Button^								CmDlgCharLimitHighlightColor;
-				Label^								LabelCharLimitHighlight;
-				Button^								CmDlgErrorHighlightColor;
-				Label^								LabelErrorHighlight;
-				Button^								CmDlgSelectionHighlightColor;
-				Label^								LabelSelectionHighlight;
-				Button^								CmDlgFindResultsHighlightColor;
-				Label^								LabelFindResultsHighlight;
-
-				CheckBox^							WordWrap;
-				CheckBox^							ShowTabs;
-				CheckBox^							ShowSpaces;
+				CheckBox^									WordWrap;
+				CheckBox^									ShowTabs;
+				CheckBox^									ShowSpaces;
+				CheckBox^									CodeFolding;
+				CheckBox^									TabsOnTop;
 			TabPage^									TabSanitize;
 				CheckBox^									IndentLines;
 				CheckBox^									AnnealCasing;
 
 		FontDialog^									FontSelection;
 
-		Dictionary<String^, ColorDialog^>^			ColorDictionary;
+		Dictionary<String^, ColorDialog^>^			ColorDatabase;
+		bool										Closing;
 
 		void										RegisterColorSetting(String^ Key, Color Default, Control^ Parent);
 public:
-	OptionsDialog();
+	ScriptEditorPreferences();
 
 	void											LoadINI();
 	void											SaveINI();
-	void											PopulateINIMap();
+	void											InitializeSettings();
 
 	BoundControl^									FetchSetting(String^ Key);
 	int												FetchSettingAsInt(String^ Key);
 	String^											FetchSettingAsString(String^ Key);
 
-	static enum class								ColorType
-													{
-														e_Foreground = 0,
-														e_Background,
-														e_Highlight
-													};
+	Color											LookupColorByKey(String^ Key);
 
-	Color											GetColor(String^ Key);
+	void											Show();
 
-	void											Show() { OptionsBox->ShowDialog(); }
-
-	static OptionsDialog^%							GetSingleton();
+	static ScriptEditorPreferences^%				GetSingleton();
 };
 
-#define OPTIONS										OptionsDialog::GetSingleton()
+#define OPTIONS										ScriptEditorPreferences::GetSingleton()

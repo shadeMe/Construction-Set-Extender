@@ -28,6 +28,7 @@ namespace Hooks
 	_DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
 	_DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
 	_DefineHookHdlr(DataHandlerSavePluginRetainTimeStamps, 0x0041BB12);
+	_DefineJumpHdlr(TESObjectLANDLoadForm, 0x0052A826, 0x0052A82F);
 
 	void PatchTESFileHooks(void)
 	{
@@ -53,6 +54,7 @@ namespace Hooks
 		_MemHdlr(DataHandlerSavePluginResetC).WriteJump();
 		_MemHdlr(DataHandlerSavePluginOverwriteESM).WriteNop();
 		_MemHdlr(DataHandlerSavePluginRetainTimeStamps).WriteJump();
+		_MemHdlr(TESObjectLANDLoadForm).WriteJump();
 	}
 
 	bool __stdcall InitTESFileSaveDlg()

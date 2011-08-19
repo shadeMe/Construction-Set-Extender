@@ -128,11 +128,7 @@ public ref class UseInfoList
 public:
 	static UseInfoList^%								GetSingleton(void);
 
-	void												Open(const char* InitForm);
-
-	void												AddFormListItem(String^% EditorID, String^% FormID, UInt32 Type);
-	void												AddObjectListItem(String^% EditorID, String^% FormID, UInt32 Type);
-	void												AddCellListItem(String^% RefID, String^% WorldEditorID, String^% CellFormID, String^% CellEditorID, String^% CellGrid, UInt32 UseCount);
+	void												Open(const char* FilterString);
 };
 
 #define USELST											UseInfoList::GetSingleton()

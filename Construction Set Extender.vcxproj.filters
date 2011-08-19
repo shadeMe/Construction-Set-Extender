@@ -25,12 +25,6 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{3edbf06c-1b58-4831-b92a-b8d339d4a486}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Plugin Interop">
-      <UniqueIdentifier>{00cd23b4-f1db-45de-b955-f317f461fc4e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CS Interop">
-      <UniqueIdentifier>{e5000435-032f-47a5-9604-560b2ad3caf8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Components">
       <UniqueIdentifier>{38df1a7a-ab76-44e1-b352-1c9aa39613d7}</UniqueIdentifier>
     </Filter>
@@ -54,6 +48,18 @@
     </Filter>
     <Filter Include="CSAS\muParserX">
       <UniqueIdentifier>{ec7e90f9-9431-466e-a4f4-ce6e190cb719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{5dcd7610-9727-4251-985b-7c6159ab54e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interop\Plugin">
+      <UniqueIdentifier>{00cd23b4-f1db-45de-b955-f317f461fc4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interop\CS 1.0">
+      <UniqueIdentifier>{e5000435-032f-47a5-9604-560b2ad3caf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interop\Component DLL">
+      <UniqueIdentifier>{8bc03154-4d74-40ad-aea1-5542706114b5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -109,13 +115,13 @@
       <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="CSEInterfaceManager.cpp">
-      <Filter>Plugin Interop</Filter>
+      <Filter>Interop\Plugin</Filter>
     </ClCompile>
     <ClCompile Include="CSInterop.cpp">
-      <Filter>CS Interop</Filter>
+      <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
     <ClCompile Include="[Common]\CSInteropData.cpp">
-      <Filter>CS Interop</Filter>
+      <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
     <ClCompile Include="CSDialogs.cpp">
       <Filter>Components</Filter>
@@ -126,9 +132,6 @@
     <ClCompile Include="RenderWindowTextPainter.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptEditorAllocator.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="ToolManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -137,7 +140,6 @@
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="WindowManager.cpp" />
     <ClCompile Include="Hooks\VersionControl.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
@@ -336,6 +338,15 @@
     <ClCompile Include="EditorAPI\SettingCollection.cpp">
       <Filter>EditorAPI</Filter>
     </ClCompile>
+    <ClCompile Include="WindowManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\TESConditionItem.cpp">
+      <Filter>EditorAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\BSStringT.cpp">
+      <Filter>EditorAPI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\GameTypes.h">
@@ -426,16 +437,16 @@
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="CSEInterfaceAPI.h">
-      <Filter>Plugin Interop</Filter>
+      <Filter>Interop\Plugin</Filter>
     </ClInclude>
     <ClInclude Include="CSEInterfaceManager.h">
-      <Filter>Plugin Interop</Filter>
+      <Filter>Interop\Plugin</Filter>
     </ClInclude>
     <ClInclude Include="CSInterop.h">
-      <Filter>CS Interop</Filter>
+      <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
     <ClInclude Include="[Common]\CSInteropData.h">
-      <Filter>CS Interop</Filter>
+      <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
     <ClInclude Include="CSDialogs.h">
       <Filter>Components</Filter>
@@ -446,9 +457,6 @@
     <ClInclude Include="RenderWindowTextPainter.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="ScriptEditorAllocator.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="ToolManager.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -456,7 +464,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="WindowManager.h" />
     <ClInclude Include="Hooks\VersionControl.h">
       <Filter>Hooks</Filter>
     </ClInclude>
@@ -667,9 +674,6 @@
     <ClInclude Include="CSAS\Commands\Commands_Form.h">
       <Filter>CSAS\Commands</Filter>
     </ClInclude>
-    <ClInclude Include="EditorAPI\TESCondition.h">
-      <Filter>EditorAPI</Filter>
-    </ClInclude>
     <ClInclude Include="EditorAPI\TESEditorAPI.h">
       <Filter>EditorAPI</Filter>
     </ClInclude>
@@ -848,6 +852,15 @@
       <Filter>EditorAPI\Forms</Filter>
     </ClInclude>
     <ClInclude Include="EditorAPI\SettingCollection.h">
+      <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="[Common]\ComponentDLLInterface.h">
+      <Filter>Interop\Component DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESConditionItem.h">
       <Filter>EditorAPI</Filter>
     </ClInclude>
   </ItemGroup>

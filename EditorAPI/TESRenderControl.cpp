@@ -48,5 +48,5 @@ void TESRenderSelection::DeleteInstance()
 
 void TESRenderUndoStack::RecordReference( UInt32 Operation, TESRenderSelection* Selection )
 {
-	thisCall<UInt32>(0x00432D40, this, Operation, Selection);
+	thisCall<UInt32>(0x00432D40, this, Operation, Selection->selectionList);
 }

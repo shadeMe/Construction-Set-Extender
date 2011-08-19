@@ -6,7 +6,6 @@
 #include "Hooks\Dialog.h"
 #include "Hooks\AssetSelector.h"
 #include "Hooks\Renderer.h"
-#include "ScriptEditorAllocator.h"
 #include "CSDialogs.h"
 #include "RenderSelectionGroupManager.h"
 #include "ElapsedTimeCounter.h"
@@ -115,7 +114,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		{
 		case LVN_COLUMNCLICK:
 			break;				// can't use this unless the dlg proc's code is patched to not refer to the file list's itesm by their index,
-								// which is far too much work for something this trivial
+								// which is far too much work for meh
 
 			NMLISTVIEW* ListView = (NMLISTVIEW*)lParam;
 			if (PluginList == ListView->hdr.hwndFrom)
@@ -169,7 +168,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			break;
 			}
 		case 1:		// OK btn
-			if (EDAL->GetTrackedEditorCount())
+			if (CLIWrapper::Interfaces::SE->GetOpenEditorCount())
 			{
 				if (MessageBox(hWnd, "There are open script windows. Are you sure you'd like to proceed?", "CSE", MB_YESNO|MB_ICONWARNING) == IDNO)
 					return FALSE;
@@ -293,13 +292,13 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 				if (RefCount < 2)	break;
 
-				CellObjectData* RefData = new CellObjectData[RefCount];
-				BatchRefData* BatchData = new BatchRefData();
+				ComponentDLLInterface::CellObjectData* RefData = new ComponentDLLInterface::CellObjectData[RefCount];
+				ComponentDLLInterface::BatchRefData* BatchData = new ComponentDLLInterface::BatchRefData();
 
 				for (TESObjectCELL::ObjectREFRList::Iterator Itr = ThisCell->objectList.Begin(); !Itr.End(); ++Itr, ++i)
 				{
 					TESObjectREFR* ThisRef = Itr.Get();
-					CellObjectData* ThisRefData = &RefData[i];
+					ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
 
 					ThisRefData->EditorID = (!ThisRef->editorID.c_str())?ThisRef->baseForm->editorID.c_str():ThisRef->editorID.c_str();
 					ThisRefData->FormID = ThisRef->formID;
@@ -321,14 +320,14 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				BatchData->CellObjectListHead = RefData;
 				BatchData->ObjectCount = RefCount;
 
-				if (CLIWrapper::BatchEditor::InitializeRefBatchEditor(BatchData))
+				if (CLIWrapper::Interfaces::BE->ShowBatchRefEditorDialog(BatchData))
 				{
 					EnterCriticalSection(g_ExtraListCS);
 
 					for (UInt32 k = 0; k < RefCount; k++)
 					{
 						TESObjectREFR* ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
-						CellObjectData* ThisRefData = &RefData[k];
+						ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[k];
 						bool Modified = false;
 
 						if (ThisRefData->Selected)
@@ -429,7 +428,6 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 				}
 
-				delete [] RefData;
 				delete BatchData;
 			}
 			break;
@@ -469,7 +467,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_VIEW_TAGBROWSER:
-			CLIWrapper::TagBrowser::Show(*g_HWND_CSParent);
+			CLIWrapper::Interfaces::TAG->ShowTagBrowserDialog(*g_HWND_CSParent);
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_DATA_SETWORKSPACE:
@@ -586,7 +584,10 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 						if (LinkedRef)
 						{
 							MessageBox(*g_HWND_RenderWindow, "One or more of the selected path grid points is already linked to a reference.\n\nThey cannot not be linked to a different reference until they are unlinked first.", "CSE", MB_OK|MB_ICONEXCLAMATION);
-							break;
+
+							SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+							SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+							return TRUE;
 						}
 					}
 				}
@@ -710,7 +711,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case ID_ALIGNSELECTION_BYZAXIS:
 			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
 			{
-		//		thisCall(kTESRenderUndoStack_RecordReference, *g_TESRenderUndoStack, TESRenderUndoStack::kUndoOperation_unk03, (*g_TESRenderSelectionPrimary)->RenderSelection);
+//				(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, (*g_TESRenderSelectionPrimary));
 
 				TESObjectREFR* AlignRef = CS_CAST((*g_TESRenderSelectionPrimary)->selectionList->Data, TESForm, TESObjectREFR);
 
@@ -752,6 +753,13 @@ BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	switch (uMsg)
 	{
+	case WM_GETMINMAXINFO:
+		{
+			MINMAXINFO* SizeInfo = (MINMAXINFO*)lParam;
+			SizeInfo->ptMaxTrackSize.x = SizeInfo->ptMinTrackSize.x = 194;
+			SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 213;
+			break;
+		}
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
@@ -769,6 +777,9 @@ BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			return TRUE;
 		case BTN_CLEARPATH:
 			EndDialog(hWnd, e_ClearPath);
+			return TRUE;
+		case BTN_EXTRACTFILE:
+			EndDialog(hWnd, e_ExtractPath);
 			return TRUE;
 		case BTN_CANCEL:
 			EndDialog(hWnd, e_Close);
@@ -1153,11 +1164,11 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			const char* EditorID = Form->editorID.c_str();
 
 			if (EditorID)
-				CLIWrapper::UseInfoList::OpenUseInfoBox(EditorID);
+				CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(EditorID);
 			else
 			{
 				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->formID);
-				CLIWrapper::UseInfoList::OpenUseInfoBox(g_TextBuffer);
+				CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(g_TextBuffer);
 			}
 			break;
 		}
@@ -1181,8 +1192,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		}
 		case POPUP_ADDTOTAG:
 		{
-			g_FormDataInteropPackage->FillFormData(Form);
-			CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormDataInteropPackage);
+			ComponentDLLInterface::FormData Data(Form);
+			CLIWrapper::Interfaces::TAG->AddFormToActiveTag(&Data);
 			break;
 		}
 		case POPUP_TOGGLEVISIBILITY:
@@ -1830,8 +1841,8 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			TESForm* Form = Itr->Data;
-			g_FormDataInteropPackage->FillFormData(Form);
-			if (!CLIWrapper::TagBrowser::AddFormToActiveTag(g_FormDataInteropPackage))
+			ComponentDLLInterface::FormData Data(Form);
+			if (!CLIWrapper::Interfaces::TAG->AddFormToActiveTag(&Data))
 				break;
 		}
 
@@ -2229,6 +2240,7 @@ LRESULT CALLBACK LandscapeTextureUseSubClassProc(HWND hWnd, UINT uMsg, WPARAM wP
 			{
 				*g_ActiveLandscapeEditTexture = CS_CAST(Texture, TESForm, TESLandTexture);
 				SendMessage(*g_HWND_LandscapeEdit, 0x41A, NULL, NULL);			// select the new texture in the landscape edit dialog
+				SetForegroundWindow(*g_HWND_RenderWindow);
 				PrintToRender("Active landscape texture changed", 3);
 			}
 			break;
@@ -2436,6 +2448,7 @@ void InitializeWindowManager(void)
 	DeleteMenu(EditMenu, 40101, MF_BYCOMMAND);
 	DeleteMenu(EditMenu, 40192, MF_BYCOMMAND);
 	DeleteMenu(EditMenu, 40193, MF_BYCOMMAND);
+	DeleteMenu(ViewMenu, 40028, MF_BYCOMMAND);
 
 	DrawMenuBar(*g_HWND_CSParent);
 
@@ -2451,8 +2464,8 @@ void InitializeWindowManager(void)
                              FF_DONTCARE, "MS Shell Dlg");
 
 	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GetINIInt("UpdatePeriod"), NULL);
-	g_TagBrowserOrgWindowProc = (WNDPROC)SetWindowLong(CLIWrapper::TagBrowser::GetFormDropParentHandle(), GWL_WNDPROC, (LONG)TagBrowserSubClassProc);
-	g_DragDropSupportDialogs.AddHandle(CLIWrapper::TagBrowser::GetFormDropWindowHandle());
+	g_TagBrowserOrgWindowProc = (WNDPROC)SetWindowLong(CLIWrapper::Interfaces::TAG->GetFormDropParentHandle(), GWL_WNDPROC, (LONG)TagBrowserSubClassProc);
+	g_DragDropSupportDialogs.AddHandle(CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
 
 	// make sure new controls, if any, are added to the main windows
 	TESDialog::DeinitializeCSWindows();

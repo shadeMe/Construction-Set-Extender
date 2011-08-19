@@ -46,6 +46,11 @@ void Script::SetText(const char* Text)
 	thisCall<UInt32>(0x004FC6C0, this, Text);
 }
 
+UInt32 Script::GetScriptableFormUseCount( void )
+{
+	return thisCall<UInt32>(0x004FC190, this);
+}
+
 void TESScriptCompiler::ToggleScriptCompilation( bool State )
 {
 	if (!State)

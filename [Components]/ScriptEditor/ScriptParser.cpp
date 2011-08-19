@@ -4,18 +4,15 @@
 
 ScriptParser::ScriptParser()
 {
-	Variables = gcnew LinkedList<VariableInfo^>();
+	Variables = gcnew LinkedList<VariableRefCountData^>();
 	BlockStack = gcnew Stack<BlockType>();
 	Tokens = gcnew List<String^>();
 	Indices = gcnew List<UInt32>();
 	Delimiters = gcnew List<Char>();
-	CurrentLineNo = 0;
-	ScriptName = "";
 	Valid = true;
-	PreviousLineNo = 0;
 }
 
-bool ScriptParser::IsPlayer(String^% Source)
+bool ScriptParser::GetIsPlayerToken(String^% Source)
 {
 	bool Result = false;
 
@@ -25,7 +22,7 @@ bool ScriptParser::IsPlayer(String^% Source)
 	return Result;
 }
 
-bool ScriptParser::IsLiteral(String^% Source)
+bool ScriptParser::GetIsStringLiteral(String^% Source)
 {
 	bool Result = false;
 
@@ -35,43 +32,33 @@ bool ScriptParser::IsLiteral(String^% Source)
 	return Result;
 }
 
-int ScriptParser::IsComment(int Index)
+int ScriptParser::GetCommentTokenIndex( int BookendTokenIndex )
 {
 	int Pos = 0;
 	int Result = -1;
 
-	for each (String^% Itr in Tokens) {
-		if (Pos == Index)	break;
-		if (Itr->IndexOf(";") != -1) {
+	for each (String^% Itr in Tokens)
+	{
+		if (Pos == BookendTokenIndex)
+			break;
+		if (Itr->IndexOf(";") != -1)
+		{
 			Result = Pos;
 			break;
 		}
+
 		++Pos;
 	}
 	return Result;
 }
 
-bool ScriptParser::HasAlpha(int Index)
+ScriptParser::VariableRefCountData^ ScriptParser::LookupVariableByName(String^% Variable)
 {
-	int Pos = 0;
-	bool Result = false;
+	VariableRefCountData^ Result = nullptr;
 
-	for each (Char Itr in Tokens[Index]) {
-		if (Char::IsLetter(Itr)) {
-			Result = true;
-			break;
-		}
-	}
-	return Result;
-}
-
-ScriptParser::VariableInfo^ ScriptParser::FindVariable(String^% Variable)
-{
-	VariableInfo^ Result = const_cast<VariableInfo^>(VariableInfo::NullVar);
-
-	for each (VariableInfo^% Itr in Variables)
+	for each (VariableRefCountData^% Itr in Variables)
 	{
-		if (!String::Compare(Itr->VarName, Variable, true))
+		if (!String::Compare(Itr->Name, Variable, true))
 		{
 			Result = Itr;
 			break;
@@ -80,18 +67,21 @@ ScriptParser::VariableInfo^ ScriptParser::FindVariable(String^% Variable)
 	return Result;
 }
 
-void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
+void ScriptParser::Tokenize( String^ Source, bool CollectEmptyTokens )
 {
-	Source += "\n";							// appended as we're only using the ReadLine/Lines method, which strips out the newline char
+	if (Source->Length && Source[Source->Length - 1] != '\n')
+		Source += "\n";
+
 	Valid = false;
 	int StartPos = -1, LastPos = -1;
+
 	Tokens->Clear();
 	Delimiters->Clear();
 	Indices->Clear();
 
 	for each (Char Itr in Source)
 	{
-		if (Globals::ControlChars->IndexOf(Itr) == -1)
+		if (Globals::ScriptTextControlChars->IndexOf(Itr) == -1)
 		{
 			StartPos = Source->IndexOf(Itr);
 			break;
@@ -103,7 +93,7 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 
 	LastPos = StartPos;
 
-	String^ TokenString = Source->Substring(StartPos), ^%DelimiterStr = Globals::Delimiters, ^Token, ^Delimiter;
+	String^ TokenString = Source->Substring(StartPos), ^%DelimiterStr = Globals::ScriptTextDelimiters, ^Token, ^Delimiter;
 	while (TokenString->IndexOfAny(DelimiterStr->ToCharArray()) != -1)
 	{
 		int Idx = TokenString->IndexOfAny(DelimiterStr->ToCharArray());
@@ -118,7 +108,7 @@ void ScriptParser::Tokenize(String^ Source, bool AllowNulls)
 		Token = TokenString->Substring(0, Idx), Delimiter = TokenString->Substring(Idx, 1);
 
 		TokenString = TokenString->Remove(0, Idx + 1);
-		if (Token == "" && !AllowNulls)
+		if (Token == "" && !CollectEmptyTokens)
 		{
 			LastPos++;
 			continue;
@@ -142,7 +132,7 @@ ScriptParser::TokenType ScriptParser::GetTokenType(String^% Token)
 		Result = TokenType::e_ScriptName;
 	else if (!String::Compare(Token, "ref", true) || !String::Compare(Token, "int", true) || !String::Compare(Token, "reference", true) || !String::Compare(Token, "short", true) || !String::Compare(Token, "long", true) || !String::Compare(Token, "float", true) || !String::Compare(Token, "string_var", true) || !String::Compare(Token, "array_var", true))
 		Result = TokenType::e_Variable;
-	else if (!String::Compare(Token, ";", true))
+	else if (Token[0] == ';')
 		Result = TokenType::e_Comment;
 	else if (!String::Compare(Token, "begin", true))
 		Result = TokenType::e_Begin;
@@ -172,18 +162,15 @@ ScriptParser::TokenType ScriptParser::GetTokenType(String^% Token)
 
 void ScriptParser::Reset()
 {
-	ScriptName = "";
 	Variables->Clear();
-	CurrentLineNo = 0;
 	BlockStack->Clear();
 	Tokens->Clear();
 	Delimiters->Clear();
 	Indices->Clear();
 	Valid = true;
-	PreviousLineNo = 0;
 }
 
-bool ScriptParser::IsValidBlock(String^% Source, ScriptParser::ScriptType EditorScriptType)
+bool ScriptParser::GetIsBlockValidForScriptType(String^% Source, ScriptParser::ScriptType EditorScriptType)
 {
 	if (Source->Length < 1)
 		return false;
@@ -219,28 +206,35 @@ bool ScriptParser::IsValidBlock(String^% Source, ScriptParser::ScriptType Editor
 	return Result;
 }
 
-int ScriptParser::HasToken(String^ Source)
+int ScriptParser::GetTokenIndex(String^ Source)
 {
 	int Result = -1, Count = 0;
 
-	for each (String^% Itr in Tokens) {
-		if (!String::Compare(Itr, Source, true)) {
+	for each (String^% Itr in Tokens)
+	{
+		if (!String::Compare(Itr, Source, true))
+		{
 			Result = Count;
 			break;
 		}
+
 		++Count;
 	}
 	return Result;
 }
 
-bool ScriptParser::HasStringGotIllegalChar(String^% Source, String^ Includes, String^ Excludes)
+bool ScriptParser::GetContainsIllegalChar(String^% Source, String^ Includes, String^ Excludes)
 {
 	bool Result = false;
 
-	if (Source->IndexOfAny(Includes->ToCharArray()) != -1)	Result = true;
-	else {
-		for each (Char Itr in Source) {
-			if (Char::IsSymbol(Itr) && Excludes->IndexOf(Itr) == -1) {
+	if (Source->IndexOfAny(Includes->ToCharArray()) != -1)
+		Result = true;
+	else
+	{
+		for each (Char Itr in Source)
+		{
+			if (Char::IsSymbol(Itr) && Excludes->IndexOf(Itr) == -1)
+			{
 				Result = true;
 				break;
 			}
@@ -253,36 +247,44 @@ bool ScriptParser::HasStringGotIllegalChar(String^% Source, String^ Includes, St
 int ScriptParser::GetLineStartIndex(UInt32 StartPosition, String^% Source)
 {
 	int Result = -1;
-	for (int i = StartPosition; i > 0; i--) {
-		if (Source[i] == '\n' || Source[i] == '\r\n') {
+	for (int i = StartPosition; i > 0; i--)
+	{
+		if (Source[i] == '\n' || Source[i] == '\r\n')
+		{
 			Result = i + 1;
 			break;
 		}
 	}
+
 	return Result;
 }
 int ScriptParser::GetLineEndIndex(UInt32 StartPosition, String^% Source)
 {
 	int Result = -1;
-	for (int i = StartPosition; i < Source->Length; i++) {
-		if (Source[i] == '\n' || Source[i] == '\r\n') {
+	for (int i = StartPosition; i < Source->Length; i++)
+	{
+		if (Source[i] == '\n' || Source[i] == '\r\n')
+		{
 			Result = i;
 			break;
 		}
 	}
+
 	return Result;
 }
 UInt32 ScriptParser::GetTrailingTabCount(UInt32 StartPosition, String^% Source, String^ CharactersToSkip)
 {
 	UInt32 Result = 0;
-	for (int i = StartPosition; i < Source->Length; i++) {
+	for (int i = StartPosition; i < Source->Length; i++)
+	{
 		if (Source[i] == '\t')
 			Result += 1;
 		else if (CharactersToSkip != nullptr)
 		{
 			array<Char>^ SkipArray = CharactersToSkip->ToCharArray();
 
-			for each (Char Itr in SkipArray) {
+			for each (Char Itr in SkipArray)
+			{
 				if (Itr == Source[i])
 					continue;
 			}
@@ -291,17 +293,49 @@ UInt32 ScriptParser::GetTrailingTabCount(UInt32 StartPosition, String^% Source, 
 		else
 			break;
 	}
+
 	return Result;
 }
 
-bool ScriptParser::IsOperator(String^% Source)
+bool ScriptParser::GetIsTokenOperator(String^% Source)
 {
 	for each(String^% Itr in Operators)
 	{
 		if (!String::Compare(Source, Itr))
 			return true;
 	}
+
 	return false;
+}
+
+int ScriptParser::GetTokenAtOffset( int Offset )
+{
+	int ExtractOffset = -1;
+
+	for (int i = 0; i < GetCurrentTokenCount(); i++)
+	{
+		if (i + 1 < GetCurrentTokenCount())
+		{
+			int LineOffsetA = Indices[i], LineOffsetB = Indices[i + 1];
+			if (Offset >= LineOffsetA && Offset < LineOffsetB)
+			{
+				ExtractOffset = i;
+				break;
+			}
+		}
+		else if (Offset < Indices[i])
+			ExtractOffset = i;
+	}
+
+	return ExtractOffset;
+}
+
+bool ScriptParser::CompareBlockStack( ScriptParser::BlockType Block )
+{
+	if (BlockStack->Count)
+		return BlockStack->Peek() == Block;
+	else
+		return false;
 }
 
 UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)
@@ -317,13 +351,15 @@ bool ByteCodeParser::LineHasData(String^% Line)
 	if (Extract == "")		return false;
 
 	int Idx = 0;
-	for each (char Itr in Extract) {
+	for each (char Itr in Extract)
+	{
 		if (Itr != '\t' && Itr != ' ')	break;
 		Idx++;
 	}
 
 	Extract = Extract->Substring(Idx)->Split('\t', '\r', '\n', ' ')[0];
-	if (Extract == "")		return false;
+	if (Extract == "")
+		return false;
 
 	if (!String::Compare(Extract, "ref", true) ||
 		!String::Compare(Extract, "reference", true) ||
@@ -333,8 +369,9 @@ bool ByteCodeParser::LineHasData(String^% Line)
 		!String::Compare(Extract, "short", true) ||
 		!String::Compare(Extract, "float", true) ||
 		!String::Compare(Extract, "int", true))
-
+	{
 		return false;
+	}
 	else
 		return true;
 }

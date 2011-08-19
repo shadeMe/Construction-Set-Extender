@@ -1,37 +1,34 @@
-#include "Exports.h"
+#include "[Common]\ComponentDLLInterface.h"
 #include "UseInfoList.h"
+
+using namespace ComponentDLLInterface;
+
+extern ComponentDLLInterface::UseInfoListInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void OpenUseInfoBox(const char* InitForm)
+	__declspec(dllexport) void* QueryInterface(void)
 	{
-		try
-		{
-			System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
-		}
-		catch (Exception^ E)
-		{
-			DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
-		}
-
-		USELST->Open(InitForm);
-	}
-
-	__declspec(dllexport) void SetFormListItemData(FormData* Data)
-	{
-		if (!Data->IsValid())		return;
-		USELST->AddFormListItem(gcnew String(Data->EditorID), Data->FormID.ToString("X8"), Data->TypeID);
-	}
-
-	__declspec(dllexport) void SetUseListObjectItemData(FormData* Data)
-	{
-		if (!Data->IsValid())		return;
-		USELST->AddObjectListItem(gcnew String(Data->EditorID), Data->FormID.ToString("X8"), Data->TypeID);
-	}
-
-	__declspec(dllexport) void SetUseListCellItemData(UseListCellItemData* Data)
-	{
-		if (!Data->IsValid())		return;
-		USELST->AddCellListItem(gcnew String(Data->RefEditorID), gcnew String(Data->WorldEditorID), Data->FormID.ToString("X8"), gcnew String(Data->EditorID), ((!Data->Flags)?String::Format("{0}, {1}", Data->XCoord, Data->YCoord):"Interior"), Data->UseCount);
+		return &g_InteropInterface;
 	}
 }
+
+void ShowUseInfoListDialog(const char* FilterString)
+{
+	try
+	{
+		System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
+	}
+
+	USELST->Open(FilterString);
+}
+
+ComponentDLLInterface::UseInfoListInterface g_InteropInterface =
+{
+	DeleteManagedHeapPointer,
+	ShowUseInfoListDialog
+};

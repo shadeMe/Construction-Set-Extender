@@ -5,7 +5,8 @@
 
 UseInfoList^% UseInfoList::GetSingleton()
 {
-	if (Singleton == nullptr) {
+	if (Singleton == nullptr)
+	{
 		Singleton = gcnew UseInfoList();
 	}
 	return Singleton;
@@ -180,10 +181,12 @@ void UseInfoList::UseInfoListBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	switch (E->KeyCode)
 	{
 	case Keys::Back:
-		if (SearchBox->Text->Length >= 1) {
+		if (SearchBox->Text->Length >= 1)
+		{
 			SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
 			FormList->Focus();
 		}
+
 		E->Handled = true;
 		break;
 	}
@@ -212,47 +215,98 @@ void UseInfoList::Close()
 	UseInfoListBox->Hide();
 }
 
-void UseInfoList::Open(const char* InitForm)
+void UseInfoList::Open(const char* FilterString)
 {
-	if (UseInfoListBox->Visible) {
+	if (UseInfoListBox->Visible)
+	{
 		UseInfoListBox->Focus();
-	} else {
+	}
+	else
+	{
 		ClearLists();
 		PopulateFormList();
 		UseInfoListBox->Show();
 		UseInfoListBox->Focus();
 	}
 
-	if (InitForm)
-		SearchBox->Text = gcnew String(InitForm);
+	if (FilterString)
+		SearchBox->Text = gcnew String(FilterString);
 }
 
 void UseInfoList::PopulateFormList()
 {
 	FormList->Items->Clear();
 	FormList->BeginUpdate();
-	NativeWrapper::UseInfoList_SetFormListItemText();
+
+	ComponentDLLInterface::UseInfoListFormData* Data = g_CSEInterface->UseInfoList.GetLoadedForms();
+	if (Data)
+	{
+		for (int i = 0; i < Data->FormCount; i++)
+		{
+			ComponentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
+
+			ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)ThisForm->TypeID]);
+			Item->SubItems->Add(gcnew String(ThisForm->EditorID));
+			Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
+
+			FormList->Items->Add(Item);
+		}
+	}
+	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 	FormList->EndUpdate();
 }
 
 void UseInfoList::PopulateUseLists(const char* EditorID)
 {
 	ClearLists();
+
 	UseListObject->BeginUpdate();
-	NativeWrapper::UseInfoList_SetObjectListItemText(EditorID);
+	ComponentDLLInterface::UseInfoListCrossRefData* Data = g_CSEInterface->UseInfoList.GetCrossRefDataForForm(EditorID);
+	if (Data)
+	{
+		for (int i = 0; i < Data->FormCount; i++)
+		{
+			ComponentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
+
+			ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)ThisForm->TypeID]);
+			Item->SubItems->Add(gcnew String(ThisForm->EditorID));
+			Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
+
+			UseListObject->Items->Add(Item);
+		}
+	}
+	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 	UseListObject->EndUpdate();
 
 	UseListCell->BeginUpdate();
-	NativeWrapper::UseInfoList_SetCellListItemText(EditorID);
+	ComponentDLLInterface::UseInfoListCellItemListData* DataEx = g_CSEInterface->UseInfoList.GetCellRefDataForForm(EditorID);
+	if (Data)
+	{
+		for (int i = 0; i < DataEx->UseInfoListCellItemListCount; i++)
+		{
+			ComponentDLLInterface::UseInfoListCellItemData* ThisForm = &DataEx->UseInfoListCellItemListHead[i];
+
+			ListViewItem^ Item = gcnew ListViewItem(gcnew String(ThisForm->WorldEditorID));
+			Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
+			Item->SubItems->Add(gcnew String(ThisForm->EditorID));
+			Item->SubItems->Add(((!ThisForm->Flags)?String::Format("{0}, {1}", ThisForm->XCoord, ThisForm->YCoord):"Interior"));
+			Item->SubItems->Add(gcnew String(ThisForm->RefEditorID));
+			Item->SubItems->Add(ThisForm->UseCount.ToString());
+
+			UseListCell->Items->Add(Item);
+		}
+	}
+	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 	UseListCell->EndUpdate();
 }
 
 void UseInfoList::FormList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
-	if (GetListViewSelectedItem(FormList) == nullptr)		return;
+	if (GetListViewSelectedItem(FormList) == nullptr)
+		return;
 
-	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
-	PopulateUseLists(CEID->String());
+	CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
+	PopulateUseLists(CEID.c_str());
 }
 
 void UseInfoList::FormList_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -267,15 +321,18 @@ void UseInfoList::FormList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 
 void UseInfoList::FormList_MouseUp(Object^ Sender, MouseEventArgs^ E)
 {
-//	if (!SearchBox->Focused)	SearchBox->Focus();
+	;//
 }
 
 void UseInfoList::FormList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 {
-	if (E->Column != LastSortColumn) {
+	if (E->Column != LastSortColumn)
+	{
 		LastSortColumn = E->Column;
 		FormList->Sorting = SortOrder::Ascending;
-	} else {
+	}
+	else
+	{
 		if (FormList->Sorting == SortOrder::Ascending)
 			FormList->Sorting = SortOrder::Descending;
 		else
@@ -298,15 +355,20 @@ void UseInfoList::FormList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 
 void UseInfoList::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 {
-	if (SearchBox->Text != "") {
+	if (SearchBox->Text != "")
+	{
 		ListViewItem^% Result = FormList->FindItemWithText(SearchBox->Text, true, 0);
-		if (Result != nullptr) {
+
+		if (Result != nullptr)
+		{
 			Result->Selected = true;
 			FormList->TopItem = Result;
 		}
-		else {
+		else
+		{
 			Result = GetListViewSelectedItem(FormList);
-			if (Result != nullptr)		Result->Selected = false;
+			if (Result != nullptr)
+				Result->Selected = false;
 		}
 	}
 }
@@ -316,60 +378,36 @@ void UseInfoList::SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	UseInfoList::FormList_KeyDown(nullptr, E);
 }
 
-void UseInfoList::AddFormListItem(String^% EditorID, String^% FormID, UInt32 Type)
-{
-	ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)Type]);
-	Item->SubItems->Add(EditorID);
-	Item->SubItems->Add(FormID);
-
-	FormList->Items->Add(Item);
-}
-
-void UseInfoList::AddObjectListItem(String^% EditorID, String^% FormID, UInt32 Type)
-{
-	ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)Type]);
-	Item->SubItems->Add(EditorID);
-	Item->SubItems->Add(FormID);
-
-	UseListObject->Items->Add(Item);
-}
-
-void UseInfoList::AddCellListItem(String^% RefID, String^% WorldEditorID, String^% CellFormID, String^% CellEditorID, String^% CellGrid, UInt32 UseCount)
-{
-	ListViewItem^ Item = gcnew ListViewItem(WorldEditorID);
-	Item->SubItems->Add(CellFormID);
-	Item->SubItems->Add(CellEditorID);
-	Item->SubItems->Add(CellGrid);
-	Item->SubItems->Add(RefID);
-	Item->SubItems->Add(UseCount.ToString());
-
-	UseListCell->Items->Add(Item);
-}
-
 void UseInfoList::FormList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 {
-	if (GetListViewSelectedItem(FormList) == nullptr)		return;
+	if (GetListViewSelectedItem(FormList) == nullptr)
+		return;
 
-	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(FormList)->SubItems[1]->Text),
-					^CType = gcnew CStringWrapper(GetListViewSelectedItem(FormList)->SubItems[0]->Text);
-	NativeWrapper::TESForm_LoadIntoView(CEID->String(), CType->String());
+	CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text),
+			CType(GetListViewSelectedItem(FormList)->SubItems[0]->Text);
+
+	g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str(), CType.c_str());
 }
 
 void UseInfoList::UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 {
-	if (GetListViewSelectedItem(UseListObject) == nullptr)		return;
+	if (GetListViewSelectedItem(UseListObject) == nullptr)
+		return;
 
-	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text),
-					^CType = gcnew CStringWrapper(GetListViewSelectedItem(UseListObject)->SubItems[0]->Text);
-	NativeWrapper::TESForm_LoadIntoView(CEID->String(), CType->String());
+	CString CEID(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text),
+			CType(GetListViewSelectedItem(UseListObject)->SubItems[0]->Text);
+
+	g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str(), CType.c_str());
 }
 
 void UseInfoList::UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 {
-	if (GetListViewSelectedItem(UseListCell) == nullptr)		return;
+	if (GetListViewSelectedItem(UseListCell) == nullptr)
+		return;
 
-	if (GetListViewSelectedItem(UseListCell)->SubItems[4]->Text != "<Unnamed>") {
-		CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text);
-		NativeWrapper::TESForm_LoadIntoView(CEID->String(), "Reference");
+	if (GetListViewSelectedItem(UseListCell)->SubItems[4]->Text != "<Unnamed>")
+	{
+		CString CEID(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text);
+		g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str(), "Reference");
 	}
 }

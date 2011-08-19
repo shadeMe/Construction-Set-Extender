@@ -103,6 +103,7 @@ namespace Hooks
 		e_EditPath,
 		e_ClearPath,
 		e_CopyPath,
+		e_ExtractPath,
 		e_FetchPath = 0x32
 	};
 
@@ -124,6 +125,8 @@ namespace Hooks
 			__asm jz		EDITP \
 			__asm cmp		eax, e_CopyPath \
 			__asm jz		COPYP \
+			__asm cmp		eax, e_ExtractPath \
+			__asm jz		EXTRACTP \
 			__asm popad  \
 			__asm mov		eax, e_ClearPath \
 			__asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
@@ -154,8 +157,20 @@ namespace Hooks
 			__asm push		k##name##SelectorCommonDialogFilterType	\
 			__asm call		InitPathCopier \
 			__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
+		__asm EXTRACTP: \
+			__asm popad \
+			__asm push		eax \
+			__asm mov		eax, [esp + 0x8]	\
+			__asm push		eax	\
+			__asm mov		eax, [k##name##PathButtonID] \
+			__asm push		eax \
+			__asm push		k##name##SelectorCommonDialogFilterType	\
+			__asm call		InitAssetExtractor \
+			__asm mov		eax, e_Close \
+			__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
 		}  \
 	}
+
 	#define DefineCommonDialogCancelHandler(name)  \
 	void __declspec(naked) ##name##CancelCommonDialogHook(void)  \
 	{  \

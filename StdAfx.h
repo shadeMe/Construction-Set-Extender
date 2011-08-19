@@ -12,11 +12,6 @@
 // 4312 - pointer extension
 #pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311 4800 4005)
 
-#pragma comment(lib, "Rpcrt4.lib")
-#pragma comment(lib, "Version.lib")
-#pragma comment(lib, "Advapi32.lib")
-#pragma comment(lib, "Dbghelp.lib")
-
 // WIN32
 #define _WIN32_WINNT	0x0500
 #include <winsock2.h>
@@ -28,6 +23,7 @@
 #include <shlobj.h>
 #include <Rpc.h>
 #include <Dbghelp.h>
+#include <uxtheme.h>
 
 // CRT
 #include <time.h>
@@ -90,22 +86,21 @@ using namespace MemoryHandler;
 
 // CSE
 #include "Console.h"
-#include "[Common]\HandShakeStructs.h"
 #include "[Common]\CLIWrapper.h"
 
-extern std::string					g_APPPath;
-extern std::string					g_INIPath;
-extern std::string					g_DLLPath;
-extern char							g_TextBuffer[0x200];
-extern bool							g_PluginPostLoad;
+extern std::string									g_APPPath;
+extern std::string									g_INIPath;
+extern std::string									g_DLLPath;
+extern char											g_TextBuffer[0x800];
+extern bool											g_PluginPostLoad;
 
-extern OBSEMessagingInterface*		g_msgIntfc;
-extern PluginHandle					g_pluginHandle;
-extern HINSTANCE					g_DLLInstance;
-extern SME::INI::INIManager*		g_INIManager;
-extern SME::INI::INIEditGUI*		g_INIEditGUI;
-extern OBSECommandTableInterface*	g_commandTableIntfc;
-extern CommandTableData				g_CommandTableData;
+extern OBSEMessagingInterface*						g_msgIntfc;
+extern PluginHandle									g_pluginHandle;
+extern HINSTANCE									g_DLLInstance;
+extern SME::INI::INIManager*						g_INIManager;
+extern SME::INI::INIEditGUI*						g_INIEditGUI;
+extern OBSECommandTableInterface*					g_commandTableIntfc;
+extern ComponentDLLInterface::CommandTableData		g_CommandTableData;
 
 class CSEINIManager : public INI::INIManager
 {

@@ -33,16 +33,15 @@ class FormCrossReferenceData
 	TESForm*		Form;
 	UInt32			Count;
 public:
-	void			Initialize(TESForm* Form)	{ this->Form = Form; Count = 0; }
-	UInt32			GetReferenceCount() const	{ return Count; }
-	UInt32			IncrementRefCount()			{ return ++Count; }
-	UInt32			DecrementRefCount()			{ if (Count-- == 0)	Count = 0; return Count; }
-	TESForm*		GetForm() const				{ return Form; }
+	void			Initialize(TESForm* Form);
+	UInt32			GetReferenceCount() const;
+	UInt32			IncrementRefCount();
+	UInt32			DecrementRefCount();
+	TESForm*		GetForm() const;
 
-	
 	static FormCrossReferenceData*		CreateInstance(TESForm* Reference, bool IncrementRefCount = true);
 	void								DeleteInstance();
-	static FormCrossReferenceData*		FindDataInRefList(FormCrossReferenceListT* RefList, TESForm* Form);
+	static FormCrossReferenceData*		LookupFormInCrossReferenceList(FormCrossReferenceListT* CrossReferenceList, TESForm* CrossReferencedForm);
 };
 
 // Used by the built-in revision-control in the CS, which seems to be disabled in the public version
@@ -137,7 +136,6 @@ public:
 
 	enum FormFlags
 	{
-		kFormFlags__SavedInRecord              = 0x000A8EE0,    // flag bits copied to record during serialization
 		kFormFlags_FromMaster           = /*00*/ 0x00000001,   // form is from an esm file
 		kFormFlags_FromActiveFile       = /*01*/ 0x00000002,   // form is overriden by active mod or save file
 		//kFormFlags_Loaded             = /*02*/ 0x00000004,   // ?? (from OBSE ModEntry defininition)

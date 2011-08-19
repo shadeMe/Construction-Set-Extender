@@ -117,12 +117,12 @@ namespace UIComponents {
 			// 
 			this->PreviewBox->Font = (gcnew System::Drawing::Font(L"Consolas", 9, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->PreviewBox->Location = System::Drawing::Point(375, 12);
+			this->PreviewBox->Location = System::Drawing::Point(462, 12);
 			this->PreviewBox->Multiline = true;
 			this->PreviewBox->Name = L"PreviewBox";
 			this->PreviewBox->ReadOnly = true;
 			this->PreviewBox->ScrollBars = System::Windows::Forms::ScrollBars::Both;
-			this->PreviewBox->Size = System::Drawing::Size(357, 427);
+			this->PreviewBox->Size = System::Drawing::Size(444, 520);
 			this->PreviewBox->TabIndex = 0;
 			// 
 			// ScriptList
@@ -134,7 +134,7 @@ namespace UIComponents {
 				static_cast<System::Byte>(0)));
 			this->ScriptList->Location = System::Drawing::Point(12, 12);
 			this->ScriptList->Name = L"ScriptList";
-			this->ScriptList->Size = System::Drawing::Size(357, 391);
+			this->ScriptList->Size = System::Drawing::Size(444, 485);
 			this->ScriptList->TabIndex = 1;
 			this->ScriptList->UseCompatibleStateImageBehavior = false;
 			this->ScriptList->View = System::Windows::Forms::View::Details;
@@ -158,18 +158,18 @@ namespace UIComponents {
 			// 
 			this->SearchBox->Font = (gcnew System::Drawing::Font(L"Consolas", 14.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->SearchBox->Location = System::Drawing::Point(13, 409);
+			this->SearchBox->Location = System::Drawing::Point(12, 503);
 			this->SearchBox->MaxLength = 512;
 			this->SearchBox->Name = L"SearchBox";
-			this->SearchBox->Size = System::Drawing::Size(242, 30);
+			this->SearchBox->Size = System::Drawing::Size(312, 30);
 			this->SearchBox->TabIndex = 2;
 			// 
 			// button1
 			// 
 			this->button1->Enabled = false;
-			this->button1->Location = System::Drawing::Point(261, 409);
+			this->button1->Location = System::Drawing::Point(330, 503);
 			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(107, 29);
+			this->button1->Size = System::Drawing::Size(126, 29);
 			this->button1->TabIndex = 3;
 			this->button1->Text = L"Filter";
 			this->button1->UseVisualStyleBackColor = true;
@@ -178,7 +178,7 @@ namespace UIComponents {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(742, 447);
+			this->ClientSize = System::Drawing::Size(916, 541);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->SearchBox);
 			this->Controls->Add(this->ScriptList);

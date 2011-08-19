@@ -5,7 +5,8 @@
 
 namespace Hooks
 {
-	bool g_QuickLoadToggle = false;
+	bool		g_QuickLoadToggle = false;
+	HANDLE		g_CSESplashImage = NULL;
 
 	_DefineNopHdlr(ResponseEditorMic, 0x00407F3D, 5);
 	_DefineHookHdlr(FindTextInit, 0x00419A42);
@@ -50,6 +51,10 @@ namespace Hooks
 	_DefineHookHdlr(CellViewWindowResizeB, 0x0040972E);
 	_DefineHookHdlr(CellViewWindowPopulateObjectListFilter, 0x00409054);
 	_DefineHookHdlr(TESSoundPlayFile, 0x005047B0);
+	_DefineHookHdlr(FormEditDialogTitle, 0x00447877);
+	_DefineHookHdlr(FindTextFormEnumerationA, 0x00444211);
+	_DefineHookHdlr(FindTextFormEnumerationB, 0x0044417B);
+	_DefineHookHdlr(FindTextFormEnumerationC, 0x00444430);
 
 	void PatchDialogHooks(void)
 	{
@@ -96,6 +101,10 @@ namespace Hooks
 		_MemHdlr(CellViewWindowResizeB).WriteJump();
 		_MemHdlr(CellViewWindowPopulateObjectListFilter).WriteJump();
 		_MemHdlr(TESSoundPlayFile).WriteJump();
+		_MemHdlr(FormEditDialogTitle).WriteJump();
+		_MemHdlr(FindTextFormEnumerationA).WriteJump();
+		_MemHdlr(FindTextFormEnumerationB).WriteJump();
+		_MemHdlr(FindTextFormEnumerationC).WriteJump();
 	}
 
 	void __stdcall DoFindTextInitHook(HWND FindTextDialog)
@@ -125,10 +134,11 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x00419848);
+		_asm	pushad
+		CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(NULL);
 		__asm
 		{
-			push	0
-			call	CLIWrapper::UseInfoList::OpenUseInfoBox
+			popad
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -862,10 +872,11 @@ namespace Hooks
 
 	void __stdcall DoAboutDialogHook(HWND Dialog)
 	{
-		static HANDLE s_Splash = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+		if (g_CSESplashImage == NULL)
+			g_CSESplashImage = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
 
 		HWND PictureControl = GetDlgItem(Dialog, 1963);
-		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)s_Splash);
+		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)g_CSESplashImage);
 		Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV | Construction Set Extender");
 
 		DWORD FileVersionHandle = 0,
@@ -1431,6 +1442,108 @@ namespace Hooks
 		EXIT:
 			sub		esp, 0x310
 			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoFormEditDialogTitleHook(HWND Dialog, TESForm* Form)
+	{
+		if (Form && Form->editorID.c_str())
+		{
+			char BufferA[0x200] = {0}, BufferB[0x200] = {0};
+			GetWindowText(Dialog, BufferA, sizeof(BufferA));
+			sprintf_s(BufferB, sizeof(BufferB), "%s [%s]", BufferA, Form->editorID.c_str());
+			SetWindowText(Dialog, BufferB);
+		}
+	}
+
+	#define _hhName		FormEditDialogTitle
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0044788B);
+		__asm
+		{
+			mov     ecx, [ebx + 4]
+
+			pushad
+			push	ecx
+			push	edi
+			call	DoFormEditDialogTitleHook
+			popad
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		FindTextFormEnumerationA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00444217);
+		_hhSetVar(Jump, 0x00444237);
+		__asm
+		{
+			mov		[esp + 0x14], edi
+			mov		ecx, esi
+			pushad
+			push	eax
+			call	FormEnumerationWrapper::GetShouldEnumerateForm
+			test	al, al
+			jz		SKIP
+
+			popad
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			popad
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	#define _hhName		FindTextFormEnumerationB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00444184);
+		_hhSetVar(Jump, 0x004441A1);
+		__asm
+		{
+			mov     [esp + 0x34], ebp
+			mov     ecx, edi
+
+			pushad
+			push	eax
+			call	FormEnumerationWrapper::GetShouldEnumerateForm
+			test	al, al
+			jz		SKIP
+
+			popad
+			add     ebp, 1
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			popad
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	#define _hhName		FindTextFormEnumerationC
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00444439);
+		_hhSetVar(Jump, 0x00444456);
+		__asm
+		{
+			mov     [esp + 0x38], ebp
+			mov     ecx, ebx
+
+			pushad
+			push	eax
+			call	FormEnumerationWrapper::GetShouldEnumerateForm
+			test	al, al
+			jz		SKIP
+
+			popad
+			add     ebp, 1
+			jmp		[_hhGetVar(Retn)]
+		SKIP:
+			popad
+			jmp		[_hhGetVar(Jump)]
 		}
 	}
 }

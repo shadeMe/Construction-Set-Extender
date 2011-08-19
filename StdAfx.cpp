@@ -1,19 +1,24 @@
 // Precompiled Header Compilation Unit
-
 /*#include "StdAfx.h"		>> Force Included */
 
-std::string							g_INIPath;
-std::string							g_APPPath;
-std::string							g_DLLPath;
-bool								g_PluginPostLoad = false;
-INI::INIManager*					g_INIManager = new CSEINIManager();
-INI::INIEditGUI*					g_INIEditGUI = new INI::INIEditGUI();
-char								g_TextBuffer[0x200] = {0};
-HINSTANCE							g_DLLInstance = NULL;
-PluginHandle						g_pluginHandle = kPluginHandle_Invalid;
-OBSEMessagingInterface*				g_msgIntfc = NULL;
-OBSECommandTableInterface*			g_commandTableIntfc = NULL;
-CommandTableData					g_CommandTableData;
+#pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Version.lib")
+#pragma comment(lib, "Advapi32.lib")
+#pragma comment(lib, "Dbghelp.lib")
+#pragma comment(lib, "UxTheme.lib")
+
+std::string										g_INIPath;
+std::string										g_APPPath;
+std::string										g_DLLPath;
+bool											g_PluginPostLoad = false;
+INI::INIManager*								g_INIManager = new CSEINIManager();
+INI::INIEditGUI*								g_INIEditGUI = new INI::INIEditGUI();
+char											g_TextBuffer[0x800] = {0};
+HINSTANCE										g_DLLInstance = NULL;
+PluginHandle									g_pluginHandle = kPluginHandle_Invalid;
+OBSEMessagingInterface*							g_msgIntfc = NULL;
+OBSECommandTableInterface*						g_commandTableIntfc = NULL;
+ComponentDLLInterface::CommandTableData			g_CommandTableData;
 
 void CSEINIManager::Initialize()
 {

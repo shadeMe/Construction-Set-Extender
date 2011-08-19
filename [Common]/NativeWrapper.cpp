@@ -1,6 +1,8 @@
 #include "MiscUtilities.h"
 #include "NativeWrapper.h"
 
+ComponentDLLInterface::CSEInterface*		g_CSEInterface = (ComponentDLLInterface::CSEInterface*)NativeWrapper::QueryInterface();
+
 void NativeWrapper::ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle)
 {
 	ShowWindow(Window->Handle, SW_SHOWNOACTIVATE);
@@ -10,23 +12,8 @@ void NativeWrapper::ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle
 		SetWindowPos(Window->Handle, 0, Window->Left, Window->Top, Window->Width, Window->Height, SWP_NOACTIVATE);
 }
 
-void NativeWrapper::PrintToCSStatusBar(int PanelIndex, String^ Message)
+void NativeWrapper::WriteToMainWindowStatusBar(int PanelIndex, String^ Message)
 {
-	CStringWrapper^ CStr = gcnew CStringWrapper(Message);
-	WriteStatusBarText(PanelIndex, CStr->String());
-}
-
-String^ INIWrapper::GetINIValue(String^ Section, String^ Key, String^ Default)
-{
-	CStringWrapper^ CSection = gcnew CStringWrapper(Section),
-					^CKey = gcnew CStringWrapper(Key),
-					^CDefault = gcnew CStringWrapper(Default);
-	const char* INIValue = GetINIString(CSection->String(), CKey->String(), CDefault->String());
-	return gcnew String(INIValue);
-}
-
-void INIWrapper::SetINIValue(String^ Section, String^ Key, String^ Value)
-{
-	String^ INIPath = gcnew String(NativeWrapper::GetAppPath()) + gcnew String("Data\\OBSE\\Plugins\\Construction Set Extender.ini");
-	INIWrapper::WritePrivateProfileString(Section, Key, Value, INIPath);
+	CString CStr(Message);
+	g_CSEInterface->CSEEditorAPI.WriteToStatusBar(PanelIndex, CStr.c_str());
 }

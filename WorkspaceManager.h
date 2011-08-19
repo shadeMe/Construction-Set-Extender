@@ -18,6 +18,7 @@ public:
 
 	void								Initialize(const char* DefaultDirectory);
 	bool								SelectWorkspace(const char* Workspace);
+	const char*							GetWorkingDirectory(void) const { return CurrentDirectory.c_str(); }
 };
 
 extern WorkspaceManager					g_WorkspaceManager;

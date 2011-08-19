@@ -30,4 +30,5 @@ namespace Hooks
 	_DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");
 	_DeclareMemHdlr(DataHandlerSavePluginProlog, "allows the creation of backups");
 	_DeclareMemHdlr(DataHandlerSavePluginRetainTimeStamps, "allows the retention of plugin timestamps during save operations");
+	_DeclareMemHdlr(TESObjectLANDLoadForm, "patches the routine to defer the initialization of grass data until the cell is actually loaded into the render window");
 }

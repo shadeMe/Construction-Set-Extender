@@ -144,11 +144,12 @@ UInt32 GetFormDialogTemplate(UInt8 FormTypeID)
 
 void InstantitateCustomScriptEditor(const char* ScriptEditorID)
 {
-	g_EditorAuxScript =  CS_CAST(TESForm::LookupByEditorID(ScriptEditorID), TESForm, Script);;
+	Script* AuxScript = CS_CAST(TESForm::LookupByEditorID(ScriptEditorID), TESForm, Script);
 	tagRECT ScriptEditorLoc;
+	ComponentDLLInterface::ScriptData* Data = new ComponentDLLInterface::ScriptData(AuxScript);
+
 	TESDialog::GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-	CLIWrapper::ScriptEditor::AllocateNewEditor(ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
-	g_EditorAuxScript = NULL;
+	CLIWrapper::Interfaces::SE->InstantiateEditor(Data, ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 }
 
 void InstantitateCustomScriptEditor(UInt32 ScriptFormID)
@@ -379,9 +380,9 @@ void __stdcall FormEnumerationWrapper::ResetFormVisibility(void)
 		ToggleDeletedFormVisibility();
 }
 
-TESDialogWindowHandleCollection::_HandleCollection::iterator TESDialogWindowHandleCollection::FindHandle(HWND Handle)
+TESDialogWindowHandleCollection::HandleCollectionT::iterator TESDialogWindowHandleCollection::FindHandle(HWND Handle)
 {
-	for (_HandleCollection::iterator Itr = WindowHandles.begin(); Itr != WindowHandles.end(); Itr++)
+	for (HandleCollectionT::iterator Itr = WindowHandles.begin(); Itr != WindowHandles.end(); Itr++)
 	{
 		if (*Itr == Handle)
 			return Itr;
@@ -392,7 +393,7 @@ TESDialogWindowHandleCollection::_HandleCollection::iterator TESDialogWindowHand
 
 bool TESDialogWindowHandleCollection::RemoveHandle(HWND Handle)
 {
-	_HandleCollection::iterator Match = FindHandle(Handle);
+	HandleCollectionT::iterator Match = FindHandle(Handle);
 	if (Match != WindowHandles.end())
 	{
 		WindowHandles.erase(Match);

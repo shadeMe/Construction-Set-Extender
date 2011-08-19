@@ -10,6 +10,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{9b7afe86-85ff-4cce-bbed-1fa3b75bc4f8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{ae2585e9-b4fd-4bcb-971f-6ee5c339df76}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -33,6 +36,9 @@
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="TagBrowser.h" />
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
@@ -43,6 +49,9 @@
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="TagBrowser.cpp" />
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TagBrowser.rc">

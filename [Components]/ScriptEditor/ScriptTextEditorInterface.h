@@ -13,13 +13,14 @@ public:
 
 public delegate void							ScriptModifiedEventHandler(Object^ Sender, ScriptModifiedEventArgs^ E);
 
-public interface class ScriptTextEditorInterface
+public interface class IScriptTextEditor
 {
 	static enum class							FindReplaceOperation
 												{
 													e_Find = 0,
 													e_Replace
 												};
+
 	delegate void								FindReplaceOutput(String^ Line, String^ Text);
 
 	void										SetFont(Font^ FontObject);
@@ -31,6 +32,7 @@ public interface class ScriptTextEditorInterface
 	String^										GetText(void);
 	UInt32										GetTextLength(void);
 	void										SetText(String^ Text, bool PreventTextChangedEventHandling);
+	void										InsertText(String^ Text, int Index);		// performs bounds check
 
 	String^										GetSelectedText(void);
 	void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
@@ -47,6 +49,7 @@ public interface class ScriptTextEditorInterface
 	String^										GetTokenAtCaretPos();
 	void										SetTokenAtCaretPos(String^ Replacement);
 	String^										GetTokenAtMouseLocation();
+	array<String^>^								GetTokensAtMouseLocation();		// gets three of the closest tokens surrounding the mouse loc
 
 	int											GetCaretPos();
 	void										SetCaretPos(int Index);
@@ -73,11 +76,13 @@ public interface class ScriptTextEditorInterface
 
 	Control^									GetContainer();
 	void										ScrollToLine(String^ LineNumber);
-	void										HandleTabSwitchEvent(void);						// called when the workspace's parent tab is selected
-	void										Destroy();
 	Point										PointToScreen(Point Location);
 	void										SetEnabledState(bool State);
-	void										HandleContainerPositionSizeChangedEvent(void);	// called when the workspace's container's position or size changes
+
+	// Events
+	void										OnGotFocus(void);					// called when the workspace's is brought to focus
+	void										OnLostFocus(void);					// the opposite of the above
+	void										OnPositionSizeChange(void);			// called when the workspace's container's position or size changes
 
 	// AvalonEdit specific
 	void										HighlightScriptError(int Line);

@@ -1,19 +1,18 @@
 #pragma once
-
 #include "Includes.h"
 
-ref class CStringWrapper
+ref class CString
 {
 	IntPtr												P;
-	const char*											CString;
 
 	void												Free() { Marshal::FreeHGlobal(P); }
 public:
-	CStringWrapper(String^% Source);
-	~CStringWrapper()									{ this->!CStringWrapper(); }
-	!CStringWrapper()									{ this->Free(); }
+	CString(String^% Source);
 
-	const char*											String() { return CString; }
+	~CString()											{ this->!CString(); }
+	!CString()											{ this->Free(); }
+
+	const char*											c_str() { return static_cast<char*>(P.ToPointer()); }
 };
 
 void													DebugDump(UInt8 Source, String^% Message);
@@ -33,6 +32,61 @@ public:
 
 	Image^								CreateImageFromResource(String^ ResourceIdentifier);
 	void								SetupImageForToolStripButton(ToolStripButton^ Control);
+};
+
+ref class CSEControlDisposer
+{
+public:
+	CSEControlDisposer(Control^% Source);
+};
+
+ref class WindowHandleWrapper : public IWin32Window
+{
+	IntPtr					_hwnd;
+public:
+	WindowHandleWrapper(IntPtr Handle) : _hwnd(Handle) {}
+
+    property IntPtr Handle
+    {
+        virtual IntPtr get()
+        {
+            return _hwnd;
+        }
+    };
+};
+
+void									DeleteManagedHeapPointer(void* Pointer, bool IsArray);
+void									CopyStringToCharBuffer(String^% Source, char* Buffer, UInt32 Size);
+
+ref class AnimatedForm : public System::Windows::Forms::Form
+{
+protected:
+	static enum class									FadeOperationType
+																{
+																	e_None = 0,
+																	e_FadeIn,
+																	e_FadeOut
+																};
+
+	FadeOperationType					FadeOperation;
+	Timer^								FadeTimer;
+	double								FadeDuration;
+	bool								CloseOnFadeOut;
+
+	static double						FadeAnimationFactor = 0.60;
+
+	void								FadeTimer_Tick(Object^ Sender, EventArgs^ E);
+public:
+	AnimatedForm(double FadeDuration);
+	~AnimatedForm()
+	{
+		FadeTimer->Stop();
+	}
+
+	void										Show();
+	System::Windows::Forms::DialogResult		ShowDialog();
+	void										Hide();
+	void										Close();
 };
 
 namespace Log

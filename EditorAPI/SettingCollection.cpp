@@ -1,6 +1,7 @@
 #include "SettingCollection.h"
 
 GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
+const char*							g_CSINIPath = (const char*)0x00A0ABB8;
 
 struct GMSTMap_Key_Comparer
 {
@@ -78,7 +79,7 @@ UInt32 GameSettingCollection::GetGMSTCount()
 	return Count;
 }
 
-void GameSettingCollection::SerializeGMSTDataForHandShake(GMSTData* HandShakeData)
+void GameSettingCollection::SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData)
 {
 	UInt32 Index = 0;
 	void* Unk01 = thisCall<void*>(0x0051F920, &settingMap);

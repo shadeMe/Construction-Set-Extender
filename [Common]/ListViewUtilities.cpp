@@ -8,6 +8,14 @@ ListViewItem^ GetListViewSelectedItem(ListView^% Source)
 	return Result;
 }
 
+int GetListViewSelectedItemIndex( ListView^% Source )
+{
+	int Result = -1;
+	if (Source->SelectedItems->Count)
+		Result = Source->SelectedIndices[0];
+	return Result;
+}
+
 int CSEListViewStringSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;

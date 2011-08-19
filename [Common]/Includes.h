@@ -21,6 +21,7 @@ using namespace System::Resources;
 using namespace System::Reflection;
 using namespace cli;
 using namespace System::Runtime::InteropServices;
+using namespace System::ComponentModel;
 
 typedef unsigned char		UInt8;
 

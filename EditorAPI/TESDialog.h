@@ -365,3 +365,4 @@ extern ResponseEditorData**		g_ResponseEditorData;
 extern RECT*					g_CellViewObjListBounds;
 extern RECT*					g_CellViewCellNameStaticBounds;
 extern RECT*					g_CellViewDlgBounds;
+extern UInt16*					g_TESFormIDListViewFormIDColumnWidth;

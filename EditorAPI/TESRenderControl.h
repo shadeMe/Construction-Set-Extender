@@ -59,10 +59,10 @@ public:
 		/*08*/ TESObjectREFR*		refr;
 		/*0C*/ UInt32				operationType;
 		/*10*/ Vector3				rotation;
-		/*1C*/ float				position;
+		/*1C*/ Vector3				position;
 		/*28*/ float				scale;
 		/*2C*/ UInt32				unk2C[(0x48 - 0x2C) >> 2];		// pathgrid/landscape change related
-		/*48*/ UInt32				unk48;
+		/*48*/ UndoData*			previous;
 		/*4C*/ UndoData*			next;
 	};
 

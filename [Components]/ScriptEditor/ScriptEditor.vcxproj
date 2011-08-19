@@ -102,6 +102,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
@@ -109,14 +110,16 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar2" />
     <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.7070, Culture=neutral, PublicKeyToken=9cc39be672370310">
-      <HintPath>..\..\[Depends]\AvalonEdit\4.0\ICSharpCode.AvalonEdit.dll</HintPath>
+      <HintPath>..\..\[Depends]\ICSharpCode.AvalonEdit.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="ScriptEditor.Preprocessor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>F:\TES 4 Oblivion\Data\OBSE\Plugins\CSE\ScriptEditor.Preprocessor.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -130,11 +133,6 @@
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
     <Reference Include="System.Drawing">
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-    <Reference Include="DevComponents.DotNetBar2, Version=8.0.0.0, Culture=neutral, PublicKeyToken=5fd520d36328f741">
-      <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
@@ -166,7 +164,8 @@
     <ClCompile Include="AvalonEditXSHD.cpp" />
     <ClCompile Include="IntelliSense.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
-    <ClCompile Include="OptionsDialog.cpp" />
+    <ClCompile Include="ScriptEditorPreferences.cpp" />
+    <ClCompile Include="RefactorTools.cpp" />
     <ClCompile Include="ScriptListDialog.cpp" />
     <ClCompile Include="ScriptParser.cpp" />
     <ClCompile Include="Exports.cpp" />
@@ -174,9 +173,11 @@
     <ClCompile Include="ScriptEditorManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="AvalonEditComponents.h" />
+    <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\Includes.h" />
@@ -187,7 +188,7 @@
     <ClInclude Include="AvalonEditXSHD.h" />
     <ClInclude Include="IntelliSense.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
-    <ClInclude Include="OptionsDialog.h" />
+    <ClInclude Include="ScriptEditorPreferences.h" />
     <ClInclude Include="ScriptListDialog.h" />
     <ClInclude Include="ScriptParser.h" />
     <ClInclude Include="ScriptTextEditorInterface.h" />
@@ -210,6 +211,8 @@
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\FontHS.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\PageNumber.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\AlignObjectsBottomHS.png" />
+    <None Include="Images\109_AllAnnotations_Error_16x16_72.png" />
+    <None Include="Images\addVar.png" />
     <None Include="Images\back.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\BehindTextHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\book_addressHS.png" />
@@ -224,8 +227,10 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\EditCodeHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\EditInformationHS grad.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\EditInformationHS.png" />
+    <None Include="Images\createUDF.png" />
     <None Include="Images\Cube.png" />
     <None Include="Images\Discuss.png" />
+    <None Include="Images\documentScript.png" />
     <None Include="Images\EditDocument.png" />
     <None Include="Images\eps_closedHS.png" />
     <None Include="Images\eps_open_largeHS.png" />
@@ -252,6 +257,9 @@
     <None Include="Images\ISRemoteVar.png" />
     <None Include="Images\ISUserF.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\List_NumberedRTLHS.png" />
+    <None Include="Images\ModifiedFlag.png" />
+    <None Include="Images\ModifiedFlagEx.png" />
+    <None Include="Images\ModifiedFlagOn.png" />
     <None Include="Images\NavBack.png" />
     <None Include="Images\NavForward.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\NewCardHS.png" />
@@ -267,6 +275,10 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SaveAsWebPageHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SaveFormDesignHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\saveHS.png" />
+    <None Include="Images\noSaveHS.png" />
+    <None Include="Images\refactor.png" />
+    <None Include="Images\renameVars.png" />
+    <None Include="Images\saveHS.png" />
     <None Include="Images\saveTabs.png" />
     <None Include="Images\script_16.png" />
     <None Include="Images\Script_link.png" />
@@ -274,6 +286,8 @@
     <None Include="Images\SESaveNoCompile.png" />
     <None Include="Images\SLDActive.png" />
     <None Include="Images\stop.png" />
+    <None Include="Images\UnmodifiedFlag.png" />
+    <None Include="Images\UnmodifiedFlagEx.png" />
     <None Include="Images\update.gif" />
     <None Include="Images\view_list_text.png" />
     <None Include="Images\warning.png" />
@@ -282,6 +296,7 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\WarningHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\WebInsertHyperlinkHS.png" />
     <None Include="Images\Wizard.png" />
+    <None Include="ModifiedFlagOn.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

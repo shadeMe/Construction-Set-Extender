@@ -4,7 +4,7 @@ using namespace SME::MemoryHandler;
 
 namespace HallOfFame
 {
-	#define		TableSize		16
+	#define		TableSize		17
 	HallOfFameEntry	Entries[TableSize] =
 	{
 		{ "shadeMe",					TESForm::kFormType_NPC,			NULL,	"Likes Andrea Corr" },
@@ -22,7 +22,8 @@ namespace HallOfFame
 		{ "SenChan",					TESForm::kFormType_NPC,			NULL,	"Is A Year Older Now" },
 		{ "lilith",						TESForm::kFormType_NPC,			NULL,	"Likes Tea. Black. Like Me" },
 		{ "daemondarque",				TESForm::kFormType_NPC,			NULL,	"His Majestry The CTD" },
-		{ "greenwarden",				TESForm::kFormType_NPC,			NULL,	"The Wise Old Woman of Putney" }
+		{ "greenwarden",				TESForm::kFormType_NPC,			NULL,	"The Wise Old Woman of Putney" },
+		{ "AndalayBay",					TESForm::kFormType_Door,		NULL,	"Utters The Name Of The Scottish Play Without Flinching" }
 	};
 
 	void __stdcall Initialize(bool ResetCSWindows)

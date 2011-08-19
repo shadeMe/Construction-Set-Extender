@@ -11,40 +11,54 @@
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="UIComponents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SEScriptList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SEOptions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BEReference.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TagBrowser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UIComponents.cpp">
+    <ClCompile Include="UseInfoList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WPFHostTest.cpp">
+    <ClCompile Include="SERefactorUDF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SERefactorDocumentScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BE_Reference.h">
+    <ClInclude Include="BEReference.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="SEScriptList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SEOpenDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SEOptionsDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="SEOptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TagBrowser.h">
@@ -53,15 +67,18 @@
     <ClInclude Include="UseInfoList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WPFHostTest.h">
+    <ClInclude Include="SERefactorUDF.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.ico">
+    <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
-    </None>
-    <None Include="ReadMe.txt" />
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SERefactorDocumentScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -69,19 +86,22 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BE_Reference.resx">
+    <EmbeddedResource Include="BEReference.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
-    <EmbeddedResource Include="SEOpenDialog.resX">
+    <EmbeddedResource Include="SEOptions.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
-    <EmbeddedResource Include="SEOptionsDialog.resx">
+    <EmbeddedResource Include="SEScriptList.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="UseInfoList.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SERefactorUDF.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>

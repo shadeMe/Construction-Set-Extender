@@ -1,9 +1,5 @@
 #pragma once
-
-using namespace System::ComponentModel;
-
-struct CommandTableData;
-struct IntelliSenseUpdateData;
+#include "[Common]\HandShakeStructs.h"
 
 namespace IntelliSense
 {
@@ -11,7 +7,7 @@ namespace IntelliSense
 	ref class CommandInfo;
 	ref class VariableInfo;
 	ref class UserFunction;
-	ref class IntelliSenseThingy;
+	ref class IntelliSenseInterface;
 	ref class Script;
 	ref struct Boxer;
 
@@ -29,18 +25,19 @@ namespace IntelliSense
 			ParsedUpdateData() : UDFList(gcnew LinkedList<UserFunction^>()), Enumerables(gcnew LinkedList<IntelliSenseItem^>()) {}
 		};
 
-		Timers::Timer^										DatabaseUpdateTimer;
-		BackgroundWorker^									DatabaseUpdateThread;
-		ParsedUpdateData^									DoUpdateDatabase();
-		void												PostUpdateDatabase(ParsedUpdateData^ Data);
+		ParsedUpdateData^									InitializeDatabaseUpdate();
+		void												FinalizeDatabaseUpdate(ParsedUpdateData^ Data);
 
 		void												DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E);
 		void												DatabaseUpdateThread_DoWork(Object^ Sender, DoWorkEventArgs^ E);
 		void												DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E);
 
+		Timers::Timer^										DatabaseUpdateTimer;
+		BackgroundWorker^									DatabaseUpdateThread;
+
 		LinkedList<UserFunction^>^							UserFunctionList;
-		Dictionary<String^, String^>^						URLMap;
-		Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID, value = scriptID
+		Dictionary<String^, String^>^						DeveloperURLMap;
+		Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
 
 		bool												ForceUpdateFlag;
 		UInt32												UpdateThreadTimerInterval;	// in minutes
@@ -49,25 +46,30 @@ namespace IntelliSense
 	public:
 		LinkedList<IntelliSenseItem^>^						Enumerables;
 
-		void												ParseCommandTable(CommandTableData* Data);
-		void ParseGMSTCollection(IntelliSenseUpdateData* GMSTCollection);
+		void												InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);
+		void												InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
 
 		static IntelliSenseDatabase^%						GetSingleton();
-
 		static void											ParseScript(String^% SourceText, Boxer^ Box);
-		void												AddToURLMap(String^% CmdName, String^% URL);
-		String^												GetCommandURL(String^% CmdName);
-		String^												SanitizeCommandName(String^% CmdName);
-		Script^												GetRemoteScript(String^ BaseEditorID, String^ ScriptText);
-		bool												IsUDF(String^% Name);
-		bool												IsCommand(String^% Name);
+
+		void												RegisterDeveloperURL(String^% CmdName, String^% URL);
+		String^												LookupDeveloperURLByCommand(String^% CmdName);
+
+		String^												SanitizeCommandIdentifier(String^% CmdName);
+
+		Script^												CacheRemoteScript(String^ BaseEditorID, String^ ScriptText);	// returns the cached script
+		IntelliSenseItem^									LookupRemoteScriptVariable(String^ BaseEditorID, String^ Variable);
+
+		bool												GetIsIdentifierUserFunction(String^% Name);
+		bool												GetIsIdentifierScriptCommand(String^% Name);
+
 		void												ForceUpdateDatabase();
-		void												InitializeDatabaseUpdateTimer();
+		void												InitializeDatabaseUpdateThread();
 	};
 
 	#define ISDB											IntelliSenseDatabase::GetSingleton()
 
-	public ref class IntelliSenseItem								// enumerable in the syntax box
+	public ref class IntelliSenseItem						// enumerable in the intellisense interface
 	{
 		static array<String^>^								TypeIdentifier =
 																{
@@ -93,13 +95,13 @@ namespace IntelliSense
 																	e_GMST
 																};
 
-		String^%											Describe() { return Description; }
+		String^												Describe() { return Description; }
 
 		IntelliSenseItem(String^ Desc, ItemType Type) : Description(Desc), Type(Type) {};
 
-		virtual String^%									GetIdentifier() { return Name; }
-		ItemType%											GetType() { return Type; }
-		String^%											GetTypeIdentifier() { return TypeIdentifier[(int)Type]; }
+		virtual String^										GetIdentifier() { return Name; }
+		ItemType											GetType() { return Type; }
+		String^												GetTypeIdentifier() { return TypeIdentifier[(int)Type]; }
 	protected:
 		String^												Description;
 		String^												Name;
@@ -152,7 +154,7 @@ namespace IntelliSense
 			  ReturnType(ReturnType),
 			  Source(Source)	{};
 
-		  virtual String^%									GetIdentifier() override { return Name; }
+		  virtual String^									GetIdentifier() override { return Name; }
 		  bool												GetRequiresParent() { return RequiresParent; }
 		  SourceType										GetSource() { return Source; }
 	};
@@ -187,22 +189,22 @@ namespace IntelliSense
 			  Type(Type),
 			  Comment(Comment) {};
 
-		  virtual String^%									GetIdentifier() override { return Name; }
-		  String^%											GetComment() { return Comment; }
+		  virtual String^									GetIdentifier() override { return Name; }
+		  String^											GetComment() { return Comment; }
 		  String^											GetTypeIdentifier() { return TypeIdentifier[(int)Type]; }
-		  String^%											GetName() { return Name; }
+		  String^											GetName() { return Name; }
 		  VariableType										GetVariableType() { return Type; }
 	};
 
 	public ref class Script
 	{
 	public:
-		typedef List<VariableInfo^>							_VarList;
+		typedef List<VariableInfo^>							VarListT;
 	protected:
 		Script();
 		Script(String^% ScriptText, String^% Name);
 
-		_VarList^											VarList;
+		VarListT^											VarList;
 		String^												Name;
 		String^												Description;
 	public:
@@ -211,7 +213,7 @@ namespace IntelliSense
 		Script(String^% ScriptText);
 
 		virtual String^										Describe();
-		String^%											GetIdentifier() { return Name; }
+		String^												GetIdentifier() { return Name; }
 
 		void												SetName(String^ Name) { this->Name = Name; }
 		void												SetDescription(String^ Description) { this->Description = Description; }
@@ -231,7 +233,7 @@ namespace IntelliSense
 		  IntelliSenseItem((gcnew String(EditorID + ((Desc != "")?"\n":"") + Desc + ((ScrName != "")?"\n\nQuest Script: ":"") + ScrName)), IntelliSenseItem::ItemType::e_Quest),
 			  Name(EditorID), ScriptName(ScrName) {}
 
-		  virtual String^%									GetIdentifier() override { return Name; }
+		  virtual String^									GetIdentifier() override { return Name; }
 	};
 
 	public ref class UserFunction : public Script
@@ -254,10 +256,10 @@ namespace IntelliSense
 	public:
 		UserFunctionDelegate(UserFunction^% Parent) : Parent(Parent), IntelliSenseItem(Parent->Describe(), ItemType::e_UserFunct) {}
 
-		virtual String^%									GetIdentifier() override { return Parent->GetIdentifier(); }
+		virtual String^										GetIdentifier() override { return Parent->GetIdentifier(); }
 	};
 
-	public ref class NonActivatingImmovableForm : public Form
+	public ref class NonActivatingImmovableAnimatedForm : public Form
 	{
 	protected:
 		property bool										ShowWithoutActivation
@@ -267,17 +269,69 @@ namespace IntelliSense
 
 		virtual void										WndProc(Message% m) override;
 
-		bool												AllowMove;
-	public:
-		void												ShowAtLocation(Drawing::Point Position, IntPtr ParentHandle);
-		void												SetSize(Drawing::Size WindowSize);
+		static enum class									FadeOperationType
+																{
+																	e_None = 0,
+																	e_FadeIn,
+																	e_FadeOut
+																};
 
-		NonActivatingImmovableForm() : AllowMove(false), Form() {}
+		bool												AllowMove;
+		FadeOperationType									FadeOperation;
+		Timer^												FadeTimer;
+
+		void												FadeTimer_Tick(Object^ Sender, EventArgs^ E);
+
+		void												Destroy();
+	public:
+		~NonActivatingImmovableAnimatedForm()
+		{
+			Destroy();
+		}
+
+		void												SetSize(Drawing::Size WindowSize);
+		void												ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
+		void												HideForm(bool Animate);
+
+		NonActivatingImmovableAnimatedForm();
 	};
 
-	public ref class IntelliSenseThingy
+	public ref class IntelliSenseInterface
 	{
+	private:
+		void												Destroy();
+		void												CleanupInterface();
+
+		void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
+		void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
+		void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
+		void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+
+		static ToolTip^										InfoToolTip = gcnew ToolTip();
+		static ImageList^									IntelliSenseItemIcons = gcnew ImageList();
+
+		VariableInfo^										LookupLocalVariableByIdentifier(String^% Identifier);
+		bool												ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point TipLoc);
+
+		void												DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
+
+		Object^												ParentEditor;				// ScriptEditor::Workspace^
+		bool												Destroying;
+		bool												CallingObjectIsRef;
+		Script^												RemoteScript;
+
+		List<IntelliSenseItem^>^							CurrentListContents;		// handles of the list's items
+		List<IntelliSenseItem^>^							LocalVariableDatabase;
+
+		ListView^											IntelliSenseList;
+		NonActivatingImmovableAnimatedForm^					IntelliSenseBox;
 	public:
+		IntelliSenseInterface(Object^% Parent);
+		~IntelliSenseInterface()
+		{
+			Destroy();
+		}
+
 		static enum class									Operation
 															{
 																e_Default = 0,
@@ -285,73 +339,50 @@ namespace IntelliSense
 																e_Dot,
 																e_Assign
 															};
-		static enum	class									Direction
+
+		static enum	class									MoveDirection
 															{
 																e_Up = 0,
 																e_Down
 															};
 
-		void												Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll);
-		void												Hide();
-
-		IntelliSenseThingy(Object^% Parent);
-		void												PickIdentifier();
-		bool												IsVisible()	{ return IntelliSenseList->Visible; }
-		void												MoveIndex(Direction Direction);
-		void												UpdateLocalVars();
-		bool												QuickView(String^ TextUnderMouse);
-		bool												QuickView(String^ TextUnderMouse, Point MouseLocation);
-		void												Destroy() { Destroying= true; IntelliSenseBox->Close(); }
-
 		property Operation									LastOperation;
 		property bool										Enabled;
-	private:
-		void												Cleanup();
+		property bool										Visible
+		{
+			virtual bool get() { return IntelliSenseBox->Visible; }
+		}
 
-		void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
-		void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
-		void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
-		void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+		void												ShowInterface(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
+		void												HideInterface();
 
-		static ToolTip^										InfoTip = gcnew ToolTip();
-		static ImageList^									Icons = gcnew ImageList();
+		void												PickSelection();
+		void												ChangeCurrentSelection(MoveDirection Direction);
+		void												UpdateLocalVariableDatabase();
+		bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken);
+		bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point MouseLocation);
 
-		int													GetIntelliSenseListSelectedIndex();
-		VariableInfo^										GetLocalVar(String^% Identifier);
-		bool												ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc);
-		void												ShowInfoTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
+		void												HideInfoToolTip();
 
-		Object^												ParentEditor;		// declared as an Object^ to work around a cyclic dependency
-		Script^												RemoteScript;
-		bool												IsObjRefr;
-		bool												Destroying;
-
-		List<IntelliSenseItem^>^							ListContents;		// handles of the list's items
-		ListView^											IntelliSenseList;
-		NonActivatingImmovableForm^							IntelliSenseBox;
-		List<IntelliSenseItem^>^							LocalVarList;
-	public:
-		void												HideInfoTip();
-
-		void												AddLocalVariable(VariableInfo^ Variable) { LocalVarList->Add(Variable); }
-		void												ClearLocalVariableList() { LocalVarList->Clear(); }
+		void												AddLocalVariableToDatabase(VariableInfo^ Variable) { LocalVariableDatabase->Add(Variable); }
+		void												ClearLocalVariableDatabase() { LocalVariableDatabase->Clear(); }
 	};
 
 	public ref struct Boxer
 	{
-		IntelliSenseThingy^									SourceIntelliSenseThingy;
+		IntelliSenseInterface^								SourceIntelliSenseInterface;
 		Script^												SourceScript;
 
 		static enum class									BoxType
-		{
-			e_UserFunction = 0,
-			e_Script,
-			e_IntelliSenseThingy
-		};
+															{
+																e_UserFunction = 0,
+																e_Script,
+																e_IntelliSenseInterface
+															};
 
 		BoxType												Type;
 
-		Boxer(IntelliSenseThingy^ Obj) : SourceIntelliSenseThingy(Obj), Type(BoxType::e_IntelliSenseThingy) {};
+		Boxer(IntelliSenseInterface^ Obj) : SourceIntelliSenseInterface(Obj), Type(BoxType::e_IntelliSenseInterface) {};
 		Boxer(Script^ Obj) : SourceScript(Obj), Type(BoxType::e_Script) {};
 		Boxer(UserFunction^ Obj) : SourceScript(Obj), Type(BoxType::e_UserFunction) {};
 	};

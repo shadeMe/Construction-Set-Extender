@@ -101,13 +101,13 @@ protected:
 			CheckBox^						UseSoulLevel;
 			CheckBox^						UseCharge;
 
-	BatchRefData*						BatchData;
+	ComponentDLLInterface::BatchRefData*	BatchData;
 
 	void								ObjectList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 	void								SetParent_Click(Object^ Sender, EventArgs^ E);
 
 	virtual void						Cleanup() override;
-	void								PopulateObjectList(BatchRefData* Data);
+	void								PopulateObjectList(ComponentDLLInterface::BatchRefData* Data);
 	void								PopulateFormLists();
 	virtual bool						ScrubData() override;
 
@@ -191,9 +191,7 @@ protected:
 public:
 	static RefBatchEditor^%				GetSingleton();
 
-	bool								InitializeBatchEditor(BatchRefData* Data);
-	ComboBox^%							GetFormList(UInt8 ListID);
-	void								AddToFormList(FormData* Data, UInt8 ListID);
+	bool								InitializeBatchEditor(ComponentDLLInterface::BatchRefData* Data);
 };
 
 #define REFBE							RefBatchEditor::GetSingleton()

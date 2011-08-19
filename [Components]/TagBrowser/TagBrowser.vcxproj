@@ -97,6 +97,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
@@ -104,6 +105,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="DevComponents.DotNetBar2" />
     <Reference Include="System">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -116,11 +118,6 @@
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
-    <Reference Include="DevComponents.DotNetBar2, Version=8.0.0.0, Culture=neutral, PublicKeyToken=5fd520d36328f741">
-      <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
     <Reference Include="GlobalInputMonitor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\[Depends]\GlobalInputMonitor.dll</HintPath>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
@@ -128,6 +125,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\Includes.h" />
     <ClInclude Include="..\..\[Common]\ListViewUtilities.h" />
@@ -141,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp" />
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="TagBrowser.cpp" />
   </ItemGroup>

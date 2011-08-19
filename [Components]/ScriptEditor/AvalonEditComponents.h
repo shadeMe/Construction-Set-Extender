@@ -39,6 +39,7 @@ namespace AvalonEditComponents
 		AvalonEditLineLimitColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
 	};
 
+	// background colorizers
 	public ref class AvalonEditLineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 	{
 	protected:
@@ -112,12 +113,35 @@ namespace AvalonEditComponents
 
 		bool										TrimTrailingWhitespace;
 		bool										CullEmptyLines;
-
-		bool										CompareCurrentControlBlock(ScriptParser::BlockType Block);
 	public:
 		virtual void								IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line);
 		virtual void								IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine);
 
 		AvalonEditObScriptIndentStrategy(bool TrimTrailingWhitespace, bool CullEmptyLines) : IndentParser(gcnew ScriptParser()), TrimTrailingWhitespace(TrimTrailingWhitespace), CullEmptyLines(CullEmptyLines) {}
+	};
+
+	public ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::AbstractFoldingStrategy
+	{
+		ref class FoldingSorter : public IComparer<AvalonEdit::Folding::NewFolding^>
+		{
+		public:
+			virtual int								Compare(AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y);
+		};
+
+		ScriptParser^								FoldingParser;
+		FoldingSorter^								Sorter;
+	public:
+		virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;
+
+		AvalonEditObScriptCodeFoldingStrategy() : AvalonEdit::Folding::AbstractFoldingStrategy(), FoldingParser(gcnew ScriptParser()), Sorter(gcnew FoldingSorter()) {}
+	};
+
+	public ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
+	{
+	public:
+		property Object^							Tag;
+
+		TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior) :
+				DoubleAnimation(fromValue, toValue, duration, fillBehavior) {}
 	};
 }

@@ -3,6 +3,7 @@
 #include "Includes.h"
 
 ListViewItem^											GetListViewSelectedItem(ListView^% Source);
+int														GetListViewSelectedItemIndex(ListView^% Source);
 
 ref class												CSEListViewSorter
 {

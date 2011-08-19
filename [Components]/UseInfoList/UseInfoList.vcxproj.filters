@@ -10,6 +10,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{cb348db2-021e-47af-95d4-d3fe24eb2415}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{2895d666-61e9-46a8-92f2-4a715824554f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -33,6 +36,9 @@
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="UseInfoList.h" />
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
@@ -43,6 +49,9 @@
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="UseInfoList.cpp" />
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UseInfoList.rc">

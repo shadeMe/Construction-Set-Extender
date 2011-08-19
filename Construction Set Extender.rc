@@ -25,24 +25,25 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
 END
 
 #endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -83,6 +84,7 @@ BEGIN
     END
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // DESIGNINFO
@@ -94,9 +96,9 @@ BEGIN
     DLG_ASSETSEL, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 107
+        RIGHTMARGIN, 108
         TOPMARGIN, 7
-        BOTTOMMARGIN, 94
+        BOTTOMMARGIN, 113
     END
 
     DLG_TEXTEDIT, DIALOG
@@ -119,10 +121,6 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 265
         BOTTOMMARGIN, 246
-    END
-
-    DLG_SCRIPTEDIT, DIALOG
-    BEGIN
     END
 
     DLG_IDLE, DIALOG
@@ -199,23 +197,24 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-DLG_ASSETSEL DIALOGEX 0, 0, 116, 101
-STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-EXSTYLE WS_EX_CLIENTEDGE
-CAPTION "Asset Selector"
+DLG_ASSETSEL DIALOGEX 0, 0, 117, 120
+STYLE DS_SYSMODAL | DS_SETFONT | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CLIENTEDGE
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "Select Asset On Disk",BTN_FILEB,7,7,100,13,WS_GROUP
-    PUSHBUTTON      "Select Asset In Archive",BTN_BSAB,7,20,100,13,WS_GROUP
-    PUSHBUTTON      "Edit Asset Path",BTN_EDITPATH,7,34,100,13,WS_GROUP
-    PUSHBUTTON      "Clear Asset Path",BTN_CLEARPATH,7,66,100,13,WS_GROUP
-    PUSHBUTTON      "Cancel",BTN_CANCEL,37,83,41,11,WS_GROUP
-    PUSHBUTTON      "Copy Asset Path",BTN_COPYPATH,7,47,100,13,WS_GROUP
+    DEFPUSHBUTTON   "Select Asset On Disk",BTN_FILEB,7,7,101,13,WS_GROUP
+    PUSHBUTTON      "Select Asset In Archive",BTN_BSAB,7,20,101,13,WS_GROUP
+    PUSHBUTTON      "Edit Asset Path",BTN_EDITPATH,7,34,101,13,WS_GROUP
+    PUSHBUTTON      "Clear Asset Path",BTN_CLEARPATH,7,66,101,13,WS_GROUP
+    PUSHBUTTON      "Cancel",BTN_CANCEL,37,102,41,11,WS_GROUP
+    PUSHBUTTON      "Copy Asset Path",BTN_COPYPATH,7,47,101,13,WS_GROUP
+    PUSHBUTTON      "Extract Asset From Archive",BTN_EXTRACTFILE,7,79,101,13
 END
 
 DLG_TEXTEDIT DIALOGEX 0, 0, 264, 39
@@ -245,17 +244,6 @@ FONT 8, "Lucida Console", 400, 0, 0x0
 BEGIN
     EDITTEXT        EDIT_CONSOLE,0,0,265,230,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     EDITTEXT        EDIT_CMDBOX,0,229,265,17,ES_AUTOHSCROLL | ES_WANTRETURN,WS_EX_STATICEDGE
-END
-
-DLG_SCRIPTEDIT DIALOGEX 0, 0, 307, 230
-STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
-EXSTYLE WS_EX_TOOLWINDOW
-CAPTION "Script Edit"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
-BEGIN
-    COMBOBOX        2259,210,3,96,97,CBS_DROPDOWNLIST | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
-    RTEXT           "Script Type",STC_TYPE,156,4,48,10
-    CONTROL         "",EDIT_SCTX,"RichEdit20A",ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_DISABLED | WS_BORDER | WS_VSCROLL | WS_HSCROLL,0,18,306,200
 END
 
 DLG_IDLE DIALOGEX 0, 0, 106, 33
@@ -393,6 +381,7 @@ BEGIN
     CONTROL         "",EDIT_SCRIPTTEXT,"RichEdit20A",ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL | ES_WANTRETURN | WS_BORDER | WS_VSCROLL | WS_HSCROLL,7,7,302,139
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
@@ -478,6 +467,7 @@ BEGIN
     END
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog Info
@@ -486,36 +476,37 @@ END
 DLG_TESCOMBOBOX DLGINIT
 BEGIN
     COMBO_FORMLIST, 0x403, 2, 0
-0x0041,
+0x0041, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0042,
+0x0042, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0043,
+0x0043, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0044,
+0x0044, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0045,
+0x0045, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0046,
+0x0046, 
     0
 END
 
 DLG_BINDSCRIPT DLGINIT
 BEGIN
     COMBO_FORMLIST, 0x403, 2, 0
-0x0041,
+0x0041, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0042,
+0x0042, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0043,
+0x0043, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0044,
+0x0044, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0045,
+0x0045, 
     COMBO_FORMLIST, 0x403, 2, 0
-0x0046,
+0x0046, 
     0
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -527,11 +518,15 @@ BITMAP_ADORINGFAN       BITMAP                  "Images\\Achievement.bmp"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
+
+
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
 
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+

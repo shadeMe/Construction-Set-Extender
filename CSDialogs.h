@@ -18,10 +18,10 @@ public:
 
 class TESDialogWindowHandleCollection
 {
-	typedef std::vector<HWND>			_HandleCollection;
-	_HandleCollection					WindowHandles;
+	typedef std::vector<HWND>			HandleCollectionT;
+	HandleCollectionT					WindowHandles;
 
-	_HandleCollection::iterator			FindHandle(HWND Handle);
+	HandleCollectionT::iterator			FindHandle(HWND Handle);
 public:
 	void								AddHandle(HWND Handle) { WindowHandles.push_back(Handle); }
 	bool								RemoveHandle(HWND Handle);

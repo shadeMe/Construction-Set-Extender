@@ -3,16 +3,12 @@
 ref class ScriptParser
 {
 public:
-	ref struct												VariableInfo
+	ref struct											VariableRefCountData
 	{
-		String^												VarName;
-		unsigned int										RefCount;
+		String^											Name;
+		unsigned int									RefCount;
 
-															VariableInfo(String^ Name, unsigned int Count) : VarName(Name), RefCount(Count) {};
-
-		bool												IsValid() { return VarName != "__nullptr"; }
-
-		static const VariableInfo^							NullVar = gcnew ScriptParser::VariableInfo("__nullptr", 0);
+		VariableRefCountData(String^ Name, unsigned int Count) : Name(Name), RefCount(Count) {};
 	};
 
 	static enum	class									TokenType
@@ -38,7 +34,8 @@ public:
 																e_Invalid	= 0,
 																e_ScriptBlock,
 																e_Loop,
-																e_If
+																e_If,
+																e_IfElse
 															};
 	static enum	class									ScriptBlock
 															{
@@ -52,6 +49,14 @@ public:
 																e_Quest,
 																e_MagicEffect
 															};
+	static enum class									VariableType
+															{
+																e_Integer = 0,
+																e_Float,
+																e_Ref,
+																e_String,
+																e_Array
+															};
 
 	static array<String^>^								Operators =
 															{
@@ -62,36 +67,33 @@ public:
 																"$", "#", "*", "!", "->", "<-"
 															};
 
-	LinkedList<VariableInfo^>^							Variables;
+	LinkedList<VariableRefCountData^>^							Variables;
 	Stack<BlockType>^									BlockStack;
 	List<String^>^										Tokens;
-	List<UInt32>^										Indices;								// the position of each token relative to its parent line
+	List<UInt32>^										Indices;											// the position of each token relative to its parent line
 	List<Char>^											Delimiters;
-
-	unsigned int										CurrentLineNo;
-	unsigned int										PreviousLineNo;
-	String^												ScriptName;
 	bool												Valid;
 
-	void												Tokenize(String^ Source, bool AllowNulls);
+	ScriptParser();
+
+	void												Tokenize(String^ Source, bool CollectEmptyTokens);
 	TokenType											GetTokenType(String^% Token);
 	void												Reset();
-	VariableInfo^										FindVariable(String^% Variable);
-	int													IsComment(int Index);					// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search
-	bool												IsLiteral(String^% Source);				// checks if the passed string in enclosed in quotes
-	bool												HasAlpha(int Index);
-	bool												IsPlayer(String^% Source);
-	bool												IsValidBlock(String^% Source, ScriptType EditorScriptType);
-	int													HasToken(String^ Source);				// returns the token index
-	bool												HasStringGotIllegalChar(String^% Source, String^ Includes, String^ Excludes);
+	VariableRefCountData^										LookupVariableByName(String^% Variable);
+	int													GetCommentTokenIndex(int BookendTokenIndex);		// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search
+	UInt32												GetCurrentTokenCount() { return Tokens->Count; }
+	int													GetTokenAtOffset(int Offset);						// returns the index of the token that takes up the passed offset
 
+	bool												GetIsStringLiteral(String^% Source);				// checks if the passed string in enclosed in quotes
+	bool												GetIsPlayerToken(String^% Source);
+	bool												GetIsBlockValidForScriptType(String^% Source, ScriptType EditorScriptType);
+	int													GetTokenIndex(String^ Source);						// returns the token index corresponding to the first match
+	bool												GetContainsIllegalChar(String^% Source, String^ Includes, String^ Excludes);
 	int													GetLineStartIndex(UInt32 StartPosition, String^% Source);
 	int													GetLineEndIndex(UInt32 StartPosition, String^% Source);
 	UInt32												GetTrailingTabCount(UInt32 StartPosition, String^% Source, String^ CharactersToSkip);
-	bool												IsOperator(String^% Source);
-	UInt32												GetCurrentTokenCount() { return Tokens->Count; }
-
-	ScriptParser();
+	bool												GetIsTokenOperator(String^% Source);
+	bool												CompareBlockStack(ScriptParser::BlockType Block);	// returns true if the top of the stack is of the passed block type
 };
 
 class ByteCodeParser

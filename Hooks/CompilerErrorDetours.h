@@ -3,8 +3,18 @@
 namespace Hooks
 {
 	extern UInt32	g_CompileResultBuffer;
-	extern UInt32	g_CompileCallerAddr;
 	extern bool		g_PreventScriptCompileErrorRerouting;
+
+	struct CompilerErrorData
+	{
+		UInt32				Line;
+		std::string			Message;
+
+		CompilerErrorData(UInt32 Line, const char* Message) : Line(Line), Message(Message) {}
+	};
+
+	typedef std::vector<CompilerErrorData>	CompilerErrorListT;
+	extern CompilerErrorListT		g_CompilerErrorListBuffer;
 
 	void PatchCompilerErrorDetours();
 

@@ -234,7 +234,7 @@ void BSAViewer::Cleanup()
     WorkingDirectory = FSONULL;
 }
 
-const char* BSAViewer::InitializeViewer(String^% DefaultDirectory, String^% Filter)
+String^ BSAViewer::InitializeViewer(String^% DefaultDirectory, String^% Filter)
 {
 	this->Filter = Filter;
 	OpenDialog->InitialDirectory = DefaultDirectory + "Data";
@@ -242,11 +242,9 @@ const char* BSAViewer::InitializeViewer(String^% DefaultDirectory, String^% Filt
 	BSABox->ShowDialog();
 
 	if (ReturnPath != "__NULL")
-	{
-		CStringWrapper^ CPath = gcnew CStringWrapper(ReturnPath);
-		return CPath->String();
-	}
-	return 0;
+		return ReturnPath;
+	else
+		return "";
 }
 
 void BSAViewer::OpenArchive(String^% Path)

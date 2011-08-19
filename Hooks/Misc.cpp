@@ -1,5 +1,5 @@
 #include "Misc.h"
-#include "ScriptEditor.h"
+#include "Dialog.h"
 #include "..\CSDialogs.h"
 #include "..\ToolManager.h"
 #include "..\WorkspaceManager.h"
@@ -10,8 +10,6 @@
 #include "..\ChangeLogManager.h"
 #include "..\Achievements.h"
 #include "CSAS\ScriptRunner.h"
-
-extern CommandTableData	g_CommandTableData;
 
 namespace Hooks
 {
@@ -52,6 +50,7 @@ namespace Hooks
 	_DefineHookHdlr(AchievementDialogResponseCreation, 0x004F2CC3);
 	_DefineHookHdlr(TESDialogBuildSubwindowDiagnostics, 0x00404F2A);
 	_DefineHookHdlr(ExtraTeleportInitItem, 0x00462702);
+	_DefineHookHdlr(NewSplashImage, 0x00441D73);
 
 	void PatchMiscHooks(void)
 	{
@@ -100,6 +99,7 @@ namespace Hooks
 	void PatchEntryPointHooks(void)
 	{
 		_MemHdlr(CSRegistryEntries).WriteJump();
+		_MemHdlr(NewSplashImage).WriteJump();
 	}
 
 	void PatchMessageHandler(void)
@@ -128,6 +128,9 @@ namespace Hooks
 		NopHdlr	kLoadTerrainLODQuad(0x005583F1, 5);
 		NopHdlr	kFaceGenControlFreeformA(0x0044B2EA, 5), kFaceGenControlFreeFormB(0x0044B348, 5);
 		NopHdlr kFaceGenControlStoringUndoA(0x004DD652, 5), kFaceGenControlStoringUndoB(0x004E8EC8, 5);
+		NopHdlr kDataHandlerConstructObjectA(0x004838D2, 5), kDataHandlerConstructObjectB(0x00483C89, 5), kDataHandlerConstructObjectC(0x00483D53, 5),
+				kDataHandlerConstructObjectD(0x0048403C, 5), kDataHandlerConstructObjectE(0x00484137, 5);
+		NopHdlr kDataHandlerLoadPlugins(0x0048557F, 5);
 
 		SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
 		kDataHandlerAutoSave.WriteNop();
@@ -141,6 +144,12 @@ namespace Hooks
 		kFaceGenControlFreeFormB.WriteNop();
 		kFaceGenControlStoringUndoA.WriteNop();
 		kFaceGenControlStoringUndoB.WriteNop();
+		kDataHandlerConstructObjectA.WriteNop();
+		kDataHandlerConstructObjectB.WriteNop();
+		kDataHandlerConstructObjectC.WriteNop();
+		kDataHandlerConstructObjectD.WriteNop();
+		kDataHandlerConstructObjectE.WriteNop();
+		kDataHandlerLoadPlugins.WriteNop();
 	}
 
 	void __stdcall MessageHandlerOverride(const char* Message)
@@ -256,6 +265,11 @@ namespace Hooks
 
 		MersenneTwister::init_genrand(GetTickCount());
 
+		DebugPrint("Initializing Component DLL Interfaces");
+		CONSOLE->Indent();
+		CLIWrapper::QueryInterfaces();
+		CONSOLE->Exdent();
+
 		DebugPrint("Initializing CSInterop Manager");
 		CONSOLE->Indent();
 		if (!CSIOM->Initialize())
@@ -276,17 +290,16 @@ namespace Hooks
 		DebugPrint("Initializing ScriptEditor");
 		CONSOLE->Indent();
 
-		IntelliSenseUpdateData* GMSTCollectionData = new IntelliSenseUpdateData();
+		ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollectionData = new ComponentDLLInterface::IntelliSenseUpdateData();
 		GMSTCollectionData->GMSTCount = g_GMSTCollection->GetGMSTCount();
-		GMSTCollectionData->GMSTListHead = new GMSTData[GMSTCollectionData->GMSTCount];
+		GMSTCollectionData->GMSTListHead = new ComponentDLLInterface::GMSTData[GMSTCollectionData->GMSTCount];
 		g_GMSTCollection->SerializeGMSTDataForHandShake(GMSTCollectionData->GMSTListHead);
-		CLIWrapper::ScriptEditor::InitializeComponents(&g_CommandTableData, GMSTCollectionData);
-		delete [] GMSTCollectionData->GMSTListHead;
+		CLIWrapper::Interfaces::SE->InitializeComponents(&g_CommandTableData, GMSTCollectionData);
 		delete GMSTCollectionData;
 
 		CONSOLE->Indent();
 		for (std::map<std::string, std::string>::const_iterator Itr = g_URLMapBuffer.begin(); Itr != g_URLMapBuffer.end(); Itr++)
-			CLIWrapper::ScriptEditor::AddToURLMap(Itr->first.c_str(), Itr->second.c_str());
+			CLIWrapper::Interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
 		DebugPrint("IntelliSense: Bound %d developer URLs", g_URLMapBuffer.size());
 		g_URLMapBuffer.clear();
 		CONSOLE->Exdent();
@@ -298,12 +311,11 @@ namespace Hooks
 		{
 			if (!_stricmp(Itr->longName, ""))
 				continue;
-
 			CommandCount++;
 		}
 
 		DebugPrint("Initializing Intellisense Database Update Thread");
-		CLIWrapper::ScriptEditor::InitializeDatabaseUpdateTimer();
+		CLIWrapper::Interfaces::SE->InitializeIntelliSenseDatabaseUpdateThread();
 
 		DebugPrint("Initializing CSAS");
 		CONSOLE->Indent();
@@ -343,7 +355,7 @@ namespace Hooks
 		TESIdleForm::InitializeIdleFormTreeRootNodes();
 		CONSOLE->Exdent();
 
-		DebugPrint("Initializing Archives");
+		DebugPrint("Initializing Archive Manager");
 		CONSOLE->Indent();
 		ArchiveManager::LoadSkippedArchives((std::string(g_APPPath + "Data\\")).c_str());
 		CONSOLE->Exdent();
@@ -400,7 +412,7 @@ namespace Hooks
 			return;
 
 		CONSOLE->Indent();
-		DebugPrint("Assertion handled at 0x%08X", EIP);
+		DebugPrint("ASSERT: 0x%08X", EIP);
 		CONSOLE->Exdent();
 
 		MessageBeep(MB_ICONHAND);
@@ -433,8 +445,10 @@ namespace Hooks
 			call	SetWindowTextAddress
 			call	[g_WindowHandleCallAddr]				// SetWindowTextA
 			pushad
-			push	10
-			call	SendPingBack
+		}
+		CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+		__asm
+		{
 			popad
 			jmp		[_hhGetVar(Retn)]
 		}
@@ -448,13 +462,13 @@ namespace Hooks
 		__asm
 		{
 			call	[_hhGetVar(Call)]
-
 			pushad
-			push	9
-			call	SendPingBack
-			call	FormEnumerationWrapper::ResetFormVisibility
+		}
+		CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+		FormEnumerationWrapper::ResetFormVisibility();
+		__asm
+		{
 			popad
-
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -606,7 +620,7 @@ namespace Hooks
 
 	void __stdcall DoTESFormAddReferenceHook(FormCrossReferenceListT* ReferenceList, TESForm* Form)
 	{
-		FormCrossReferenceData* Data = FormCrossReferenceData::FindDataInRefList(ReferenceList, Form);
+		FormCrossReferenceData* Data = FormCrossReferenceData::LookupFormInCrossReferenceList(ReferenceList, Form);
 		if (Data)
 			Data->IncrementRefCount();
 		else
@@ -631,17 +645,18 @@ namespace Hooks
 
 	void __stdcall DoTESFormRemoveReferenceHook(TESForm* Parent, tList<FormCrossReferenceData>* ReferenceList, TESForm* Form)
 	{
-		FormCrossReferenceData* Data = FormCrossReferenceData::FindDataInRefList(ReferenceList, Form);
+		FormCrossReferenceData* Data = FormCrossReferenceData::LookupFormInCrossReferenceList(ReferenceList, Form);
 		if (Data)
 		{
 			if (Data->DecrementRefCount() == 0)
 			{
-				ReferenceList->Remove(Data);
+		//		ReferenceList->Remove(Data);			### possible bug in tList::Remove, corrupts the state somehow. investigate
+				thisCall<UInt32>(0x00452AE0, ReferenceList, Data);
 				Data->DeleteInstance();
 			}
 
-			if (ReferenceList->IsEmpty())
-				Parent->CleanupCrossReferenceList();
+ 			if (ReferenceList->IsEmpty())
+ 				Parent->CleanupCrossReferenceList();
 		}
 	}
 
@@ -666,6 +681,7 @@ namespace Hooks
 			FormCrossReferenceData* Data = Itr.Get();
 			Data->DeleteInstance();
 		}
+
 		ReferenceList->RemoveAll();
 	}
 
@@ -933,7 +949,7 @@ namespace Hooks
 			call	Achievements::UnlockAchievement
 			popad
 
-			call	WriteStatusBarText
+			call	TESDialog::WriteToStatusBar
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -992,6 +1008,32 @@ namespace Hooks
 			jmp		[_hhGetVar(Retn)]
 		SKIP:
 			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	void __stdcall DoNewSplashImageHook(HWND Dialog)
+	{
+		if (g_CSESplashImage == NULL)
+			g_CSESplashImage = LoadImage(g_DLLInstance, MAKEINTRESOURCE(BITMAP_SPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+
+		HWND PictureControl = GetDlgItem(Dialog, 1962);
+		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)g_CSESplashImage);
+	}
+
+	#define _hhName	NewSplashImage
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00441D79);
+		__asm
+		{
+			pushad
+			call	ShowWindowAddress
+			push	esi
+			call	DoNewSplashImageHook
+			popad
+
+			call	g_WindowHandleCallAddr
+			jmp		[_hhGetVar(Retn)]
 		}
 	}
 }

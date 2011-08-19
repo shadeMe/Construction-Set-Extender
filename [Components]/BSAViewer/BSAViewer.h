@@ -118,6 +118,6 @@ public:
 	static BSAViewer^%							GetSingleton();
 	static FolderObject^						Root = nullptr;
 
-	const char* 								InitializeViewer(String^% DefaultDirectory, String^% Filter);
+	String^ 									InitializeViewer(String^% DefaultDirectory, String^% Filter);
 };
 #define BSAV									BSAViewer::GetSingleton()

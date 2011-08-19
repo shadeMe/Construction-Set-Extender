@@ -1,37 +1,58 @@
-#include "Exports.h"
+#include "[Common]\ComponentDLLInterface.h"
 #include "TagBrowser.h"
+
+using namespace ComponentDLLInterface;
+
+extern ComponentDLLInterface::TagBrowserInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void Show(HWND Handle)
+	__declspec(dllexport) void* QueryInterface(void)
 	{
-		try
-		{
-			System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
-		}
-		catch (Exception^ E)
-		{
-			DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
-		}
-
-		TAGBRWR->Show(IntPtr(Handle));
-	}
-	__declspec(dllexport) void Hide(void)
-	{
-		TAGBRWR->Hide();
-	}
-	__declspec(dllexport) bool AddFormToActiveTag(FormData* Data)
-	{
-		return TAGBRWR->AddItemToActiveTag(Data);
-	}
-
-	__declspec(dllexport) HWND GetFormDropWindowHandle()
-	{
-		return (HWND)TAGBRWR->GetFormListHandle();
-	}
-
-	__declspec(dllexport) HWND GetFormDropParentHandle()
-	{
-		return (HWND)TAGBRWR->GetWindowHandle();
+		return &g_InteropInterface;
 	}
 }
+
+void ShowTagBrowserDialog(HWND Parent)
+{
+	try
+	{
+		System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
+	}
+
+	TAGBRWR->Show(IntPtr(Parent));
+}
+
+void HideTagBrowserDialog(void)
+{
+	TAGBRWR->Hide();
+}
+
+bool AddFormToActiveTag(ComponentDLLInterface::FormData* Data)
+{
+	return TAGBRWR->AddItemToActiveTag(Data);
+}
+
+HWND GetFormDropWindowHandle()
+{
+	return (HWND)TAGBRWR->GetFormListHandle();
+}
+
+HWND GetFormDropParentHandle()
+{
+	return (HWND)TAGBRWR->GetWindowHandle();
+}
+
+ComponentDLLInterface::TagBrowserInterface g_InteropInterface =
+{
+	DeleteManagedHeapPointer,
+	ShowTagBrowserDialog,
+	HideTagBrowserDialog,
+	AddFormToActiveTag,
+	GetFormDropWindowHandle,
+	GetFormDropParentHandle
+};

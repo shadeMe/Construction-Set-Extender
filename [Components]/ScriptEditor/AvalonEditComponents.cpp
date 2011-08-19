@@ -1,11 +1,11 @@
 #include "AvalonEditComponents.h"
-#include "OptionsDialog.h"
+#include "ScriptEditorPreferences.h"
 
 namespace AvalonEditComponents
 {
 	void AvalonEditSelectionColorizingTransformer::PerformColorization(VisualLineElement^ Element)
 	{
-		Color Buffer = OPTIONS->GetColor("SelectionHighlightColor");
+		Color Buffer = OPTIONS->LookupColorByKey("SelectionHighlightColor");
 		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
 		Brush->Opacity = 0.5;
 
@@ -39,7 +39,7 @@ namespace AvalonEditComponents
 
 	void AvalonEditLineLimitColorizingTransformer::PerformColorization(VisualLineElement^ Element)
 	{
-		Color Buffer = OPTIONS->GetColor("CharLimitHighlightColor");
+		Color Buffer = OPTIONS->LookupColorByKey("CharLimitHighlightColor");
 		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
 		Brush->Opacity = 0.4;
 
@@ -87,7 +87,7 @@ namespace AvalonEditComponents
 		if (ParentEditor->TextArea->Selection->IsEmpty)
 		{
 			DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
-			Color Buffer = OPTIONS->GetColor("CurrentLineHighlightColor");
+			Color Buffer = OPTIONS->LookupColorByKey("CurrentLineHighlightColor");
 			RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
 		}
 	}
@@ -120,7 +120,7 @@ namespace AvalonEditComponents
 			if (GetLineInError(i))
 			{
 				DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(i);
-				Color Buffer = OPTIONS->GetColor("ErrorHighlightColor");
+				Color Buffer = OPTIONS->LookupColorByKey("ErrorHighlightColor");
 				RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
 			}
 		}
@@ -136,7 +136,7 @@ namespace AvalonEditComponents
 			String^ SelectionText = CurrentSelection->GetText(CurrentDocument)->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
 			if (SelectionText->Length > 4)
 			{
-				Color Buffer = OPTIONS->GetColor("SelectionHighlightColor");
+				Color Buffer = OPTIONS->LookupColorByKey("SelectionHighlightColor");
 
 				for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 				{
@@ -156,7 +156,7 @@ namespace AvalonEditComponents
 
 	void AvalonEditLineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 	{
-		Color Buffer = OPTIONS->GetColor("CharLimitHighlightColor");
+		Color Buffer = OPTIONS->LookupColorByKey("CharLimitHighlightColor");
 
 		for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 		{
@@ -175,7 +175,7 @@ namespace AvalonEditComponents
 
 		if (MatchString != "")
 		{
-			Color Buffer = OPTIONS->GetColor("FindResultsHighlightColor");
+			Color Buffer = OPTIONS->LookupColorByKey("FindResultsHighlightColor");
 
 			for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 			{
@@ -190,14 +190,6 @@ namespace AvalonEditComponents
 				}
 			}
 		}
-	}
-
-	bool AvalonEditObScriptIndentStrategy::CompareCurrentControlBlock(ScriptParser::BlockType Block)
-	{
-		if (IndentParser->BlockStack->Count)
-			return IndentParser->BlockStack->Peek() == Block;
-		else
-			return false;
 	}
 
 	void AvalonEditObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
@@ -224,27 +216,27 @@ namespace AvalonEditComponents
 			if (!IndentParser->Valid)
 				continue;
 
-			if (!String::Compare(IndentParser->Tokens[0], "begin", true) && CompareCurrentControlBlock(ScriptParser::BlockType::e_Invalid))
+			if (!String::Compare(IndentParser->Tokens[0], "begin", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
 				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
-			else if (!String::Compare(IndentParser->Tokens[0], "if", true) && !CompareCurrentControlBlock(ScriptParser::BlockType::e_Invalid))
+			else if (!String::Compare(IndentParser->Tokens[0], "if", true) && !IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
 				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_If);
-			else if (!String::Compare(IndentParser->Tokens[0], "foreach", true) && !CompareCurrentControlBlock(ScriptParser::BlockType::e_Invalid))
+			else if (!String::Compare(IndentParser->Tokens[0], "foreach", true) && !IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
 				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-			else if (!String::Compare(IndentParser->Tokens[0], "while", true) && !CompareCurrentControlBlock(ScriptParser::BlockType::e_Invalid))
+			else if (!String::Compare(IndentParser->Tokens[0], "while", true) && !IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
 				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-			else if	(!String::Compare(IndentParser->Tokens[0], "loop", true) && CompareCurrentControlBlock(ScriptParser::BlockType::e_Loop))
+			else if	(!String::Compare(IndentParser->Tokens[0], "loop", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
 			{
 				IndentParser->BlockStack->Pop();
 				if (Line->NextLine->LineNumber == line->LineNumber)
 					ExdentLastLine = true;
 			}
-			else if (!String::Compare(IndentParser->Tokens[0], "endIf", true) && CompareCurrentControlBlock(ScriptParser::BlockType::e_If))
+			else if (!String::Compare(IndentParser->Tokens[0], "endIf", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If))
 			{
 				IndentParser->BlockStack->Pop();
 				if (Line->NextLine->LineNumber == line->LineNumber)
 					ExdentLastLine = true;
 			}
-			else if (!String::Compare(IndentParser->Tokens[0], "end", true) && CompareCurrentControlBlock(ScriptParser::BlockType::e_ScriptBlock))
+			else if (!String::Compare(IndentParser->Tokens[0], "end", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
 			{
 				IndentParser->BlockStack->Pop();
 				if (Line->NextLine->LineNumber == line->LineNumber)
@@ -252,7 +244,7 @@ namespace AvalonEditComponents
 			}
 			else if (!String::Compare(IndentParser->Tokens[0], "elseIf", true) || !String::Compare(IndentParser->Tokens[0], "else", true))
 			{
-				if (CompareCurrentControlBlock(ScriptParser::BlockType::e_If) && Line->NextLine->LineNumber == line->LineNumber)
+				if (IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If) && Line->NextLine->LineNumber == line->LineNumber)
 				{
 					ExdentLastLine = true;
 					SemiExdentLastLine = true;
@@ -302,5 +294,83 @@ namespace AvalonEditComponents
 		AvalonEdit::Document::ISegment^ Indentation = AvalonEdit::Document::TextUtilities::GetWhitespaceAfter(document, line->Offset);
 		document->Replace(Indentation, IndentString);
 		document->Replace(AvalonEdit::Document::TextUtilities::GetWhitespaceBefore(document, line->Offset), "");
+	}
+
+	int AvalonEditObScriptCodeFoldingStrategy::FoldingSorter::Compare( AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y )
+	{
+		return X->StartOffset.CompareTo(Y->StartOffset);
+	}
+
+	IEnumerable<AvalonEdit::Folding::NewFolding^>^ AvalonEditObScriptCodeFoldingStrategy::CreateNewFoldings( AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset )
+	{
+		firstErrorOffset = -1;
+		FoldingParser->Reset();
+		FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
+
+		List<AvalonEdit::Folding::NewFolding^>^ Foldings = gcnew List<AvalonEdit::Folding::NewFolding^>();
+		Stack<int>^ StartOffsets = gcnew Stack<int>();
+
+		try			// yeah, ugly
+		{
+			for each (AvalonEdit::Document::DocumentLine^ Line in document->Lines)
+			{
+				FoldingParser->Tokenize(document->GetText(Line), false);
+
+				if (!FoldingParser->Valid)
+					continue;
+
+				if (!String::Compare(FoldingParser->Tokens[0], "begin", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock), StartOffsets->Push(Line->NextLine->Offset);
+				else if (!String::Compare(FoldingParser->Tokens[0], "if", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_If), StartOffsets->Push(Line->NextLine->Offset);
+				else if (!String::Compare(FoldingParser->Tokens[0], "foreach", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop), StartOffsets->Push(Line->NextLine->Offset);
+				else if (!String::Compare(FoldingParser->Tokens[0], "while", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop), StartOffsets->Push(Line->NextLine->Offset);
+				else if	(!String::Compare(FoldingParser->Tokens[0], "loop", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
+				{
+					FoldingParser->BlockStack->Pop();
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+				}
+				else if (!String::Compare(FoldingParser->Tokens[0], "endIf", true) &&
+						(FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_If) ||
+						FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse)))
+				{
+					FoldingParser->BlockStack->Pop();
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+				}
+				else if (!String::Compare(FoldingParser->Tokens[0], "end", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
+				{
+					FoldingParser->BlockStack->Pop();
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+				}
+				else if ((!String::Compare(FoldingParser->Tokens[0], "elseIf", true) || !String::Compare(FoldingParser->Tokens[0], "else", true)) &&
+						(FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_If) ||
+						FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse)))
+				{
+					if (FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse))
+					{
+						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+						StartOffsets->Push(Line->NextLine->Offset);
+					}
+					else
+					{
+						FoldingParser->BlockStack->Pop();		// pop IF
+						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+						FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_IfElse);
+						StartOffsets->Push(Line->NextLine->Offset);
+					}
+				}
+			}
+		}
+		catch (...)
+		{
+			if (StartOffsets->Count)
+				firstErrorOffset = StartOffsets->Pop();
+		}
+
+		if (Foldings->Count)
+			Foldings->Sort(Sorter);
+		return Foldings;
 	}
 }

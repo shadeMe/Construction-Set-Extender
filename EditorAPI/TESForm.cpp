@@ -1,12 +1,12 @@
 #include "TESForm.h"
 #include "Core.h"
 
-FormCrossReferenceData* FormCrossReferenceData::FindDataInRefList(FormCrossReferenceListT* RefList, TESForm* Form)
+FormCrossReferenceData* FormCrossReferenceData::LookupFormInCrossReferenceList( FormCrossReferenceListT* CrossReferenceList, TESForm* CrossReferencedForm )
 {
-	for (FormCrossReferenceListT::Iterator Itr = RefList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+	for (FormCrossReferenceListT::Iterator Itr = CrossReferenceList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
 		FormCrossReferenceData* Data = Itr.Get();
-		if (Data->Form == Form)
+		if (Data->Form == CrossReferencedForm)
 			return Data;
 	}
 
@@ -24,6 +24,34 @@ FormCrossReferenceData* FormCrossReferenceData::CreateInstance(TESForm* Referenc
 void FormCrossReferenceData::DeleteInstance()
 {
 	FormHeap_Free(this);
+}
+
+void FormCrossReferenceData::Initialize( TESForm* Form )
+{
+	this->Form = Form; Count = 0;
+}
+
+UInt32 FormCrossReferenceData::GetReferenceCount() const
+{
+	return Count;
+}
+
+UInt32 FormCrossReferenceData::IncrementRefCount()
+{
+	return ++Count;
+}
+
+UInt32 FormCrossReferenceData::DecrementRefCount()
+{
+	if (Count-- == 0)
+		Count = 0;
+
+	return Count;
+}
+
+TESForm* FormCrossReferenceData::GetForm() const
+{
+	return Form;
 }
 
 bool TESForm::SetEditorID(const char* EditorID)

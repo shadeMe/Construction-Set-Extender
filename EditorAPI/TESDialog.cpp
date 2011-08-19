@@ -31,6 +31,7 @@ ResponseEditorData**				g_ResponseEditorData = (ResponseEditorData**)0x00A10E2C;
 RECT*								g_CellViewObjListBounds = (RECT*)0x00A0AA04;
 RECT*								g_CellViewCellNameStaticBounds = (RECT*)0x00A0A9F0;
 RECT*								g_CellViewDlgBounds = (RECT*)0x00A0AA38;
+UInt16*								g_TESFormIDListViewFormIDColumnWidth = (UInt16*)0x009EA32A;
 
 FormEditParam::FormEditParam(const char* EditorID)
 {

@@ -37,4 +37,6 @@ namespace Hooks
 	_DeclareMemHdlr(TESRenderControlAltCamPanSpeedA, "");
 	_DeclareMemHdlr(TESRenderControlAltCamPanSpeedB, "");
 	_DeclareMemHdlr(TESRenderControlRedrawGrid, "fixes a bug that invalidates the viewport after linking a path grid point");
+	_DeclareMemHdlr(TESPreviewControlCallWndProc, "fixes a bug that causes a CTD when preview controls are themed");
+	_DeclareMemHdlr(ActivateRenderWindowPostLandTextureChange, "resets control focus to the render window after the active landscape texture has been changed");
 }

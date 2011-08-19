@@ -43,6 +43,7 @@ namespace Hooks
 	_DeclareMemHdlr(AchievementDialogResponseCreation, "");
 	_DeclareMemHdlr(TESDialogBuildSubwindowDiagnostics, "adds a diagnostic message to TESDialog::BuildSubwindow()");
 	_DeclareMemHdlr(ExtraTeleportInitItem, "patches the function to take into account refs without base forms (happens when quick-loading plugins)");
+	_DeclareMemHdlr(NewSplashImage, "replaces the default splash image with a new one");
 
 	void PatchMessageHandler(void);
 	void __stdcall DoCSInitHook();

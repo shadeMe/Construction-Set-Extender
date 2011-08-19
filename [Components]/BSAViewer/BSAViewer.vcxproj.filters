@@ -13,6 +13,9 @@
     <Filter Include="Wrappers">
       <UniqueIdentifier>{138783f3-f9c2-4fee-a16a-3a08eaa591e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{e668f968-4eea-4155-bb3e-b49bc904cd49}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -37,6 +40,9 @@
     <ClInclude Include="BSAViewer.h" />
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
@@ -48,6 +54,9 @@
     <ClCompile Include="BSAReader.cpp" />
     <ClCompile Include="BSAViewer.cpp" />
     <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BSAViewer.rc">

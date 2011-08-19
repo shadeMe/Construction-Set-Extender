@@ -95,7 +95,7 @@ void TESDataHandler::PopulatePluginArray(const char* WorkingDirectory)
 
 void TESDataHandler::AddTESObject(TESObject* Object)
 {
-	this->objects.AddObject(Object);
+	this->objects->AddObject(Object);
 }
 
 TESObjectREFR* TESDataHandler::PlaceObjectRef( TESObject* BaseObject, Vector3* Position, Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef )

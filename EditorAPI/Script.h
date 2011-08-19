@@ -78,6 +78,7 @@ public:
 
 	bool								Compile(bool AsResultScript = false);
 	void								SetText(const char* Text);
+	UInt32								GetScriptableFormUseCount(void);
 };
 
 enum ScriptCompileErrors
@@ -112,11 +113,11 @@ struct ScriptBuffer
 	/*04*/ UInt32						textOffset;
 	/*08*/ UInt32						unk8;				// set when script is compiled in-game (from the console)?
 	/*0C*/ BSStringT					scriptName;
-	/*14*/ UInt32						errorFlag;			// set to ScritpLineBuffer::errorFlag
+	/*14*/ UInt32						errorFlag;			// set to ScriptLineBuffer::errorFlag
 	/*18*/ UInt16						unk18;
 	/*1A*/ UInt16						unk1A;
 	/*1C*/ UInt32						curLineNumber;
-	/*20*/ UInt8*						scriptData;			// pointer to 0x4000-byte array
+	/*20*/ UInt8*						scriptData;			// pointer to the bytecode array
 	/*24*/ UInt32						dataOffset;
 	/*28*/ UInt32						unk28;
 	/*2C*/ UInt32						numRefs;
@@ -127,7 +128,7 @@ struct ScriptBuffer
 	/*3A*/ UInt8						pad3A[2];
 	/*3C*/ Script::VariableListT		vars;
 	/*44*/ Script::RefVariableListT		refVars;
-	/*4C*/ UInt32						unk04C;				// num lines?
+	/*4C*/ UInt32						unk04C;				// no of lines?
 	/*50*/ ScriptLineBufferListT		lines;
 };
 

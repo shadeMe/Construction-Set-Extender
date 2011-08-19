@@ -12,14 +12,14 @@ public ref class TagDatabase
 	AdvTree::AdvTree^									ParentTree;
 
 	void												AddTagNodeToDatabase(AdvTree::Node^ Tag);
-	bool												TagItem(String^% TagName, FormData* Data);
+	bool												TagItem(String^% TagName, ComponentDLLInterface::FormData* Data);
 public:
 	TagDatabase(AdvTree::AdvTree^ Tree);
 
 	void												AddTag(AdvTree::Node^ ParentTag, String^% Name);
 	void												RemoveTag(AdvTree::Node^ Tag);
 
-	bool												TagItem(AdvTree::Node^ Tag, FormData* Data);
+	bool												TagItem(AdvTree::Node^ Tag, ComponentDLLInterface::FormData* Data);
 	void												UntagItem(AdvTree::Node^ Tag, String^% Name);
 
 	bool												GetItemExistsInTag(AdvTree::Node^ Tag, String^% Name);
@@ -157,13 +157,13 @@ public ref class TagBrowser
 																};
 
 	void												UpdateFormListForTag(AdvTree::Node^ Tag);
-	void												AddItemToFormList(FormData* Data);
+	void												AddItemToFormList(ComponentDLLInterface::FormData* Data);
 public:
 	static TagBrowser^%									GetSingleton();
 
 	void												Show(IntPtr Handle)	{ TagBrowserBox->Show(gcnew WindowHandleWrapper(Handle)); }
 	void												Hide()	{ TagBrowserBox->Hide(); }
-	bool												AddItemToActiveTag(FormData* Data);
+	bool												AddItemToActiveTag(ComponentDLLInterface::FormData* Data);
 	IntPtr												GetFormListHandle() { return FormList->Handle; }
 	IntPtr												GetWindowHandle() { return TagBrowserBox->Handle; }
 };

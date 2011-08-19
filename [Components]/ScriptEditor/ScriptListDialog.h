@@ -1,4 +1,5 @@
 #pragma once
+#include "[Common]\HandShakeStructs.h"
 
 public ref class ScriptListDialog
 {
@@ -10,12 +11,14 @@ public:
 																e_Delete
 															};
 
-	static enum class									Icon
+	static enum class									FlagIcons
 															{
 																e_Deleted = 0,
 																e_Active
 															};
 private:
+	static Size											LastKnownSize = Size(0, 0);
+
 	void												ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 	void												ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 	void												ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
@@ -34,10 +37,12 @@ private:
 
 	UInt32												ParentIndex;
 	Operation											CurrentOp;
+	ComponentDLLInterface::ScriptListData*				ScriptListCache;
+	ComponentDLLInterface::ScriptData*					FirstSelectionCache;
 
-	static ImageList^									FlagIcons = gcnew ImageList();
+	static ImageList^									ScriptFlagIcons = gcnew ImageList();
 
-	Form^												ScriptBox;
+	AnimatedForm^										ScriptBox;
 	TextBox^											PreviewBox;
 	ListView^											ScriptList;
 		ColumnHeader^										ScriptListCFlags;
@@ -46,10 +51,16 @@ private:
 		ColumnHeader^										ScriptListCScriptType;
 	TextBox^											SearchBox;
 	Button^												SelectBox;
-public:
-	ScriptListDialog(UInt32 AllocatedIndex);
 
-	void												Show(Operation Op);
-	void												AddScript(String^% ScriptName, String^% FormID, String^% ScriptType, UInt32 Flags);
-	void												Destroy() { ScriptBox->Close(); }
+	bool												Closing;
+
+	void												Destroy();
+public:
+	ScriptListDialog(UInt32 ParentIndex);
+	~ScriptListDialog()
+	{
+		Destroy();
+	}
+
+	ComponentDLLInterface::ScriptData*					Show(Operation Op, String^ FilterString);
 };

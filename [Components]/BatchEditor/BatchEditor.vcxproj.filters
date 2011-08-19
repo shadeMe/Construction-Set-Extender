@@ -11,6 +11,9 @@
     <Filter Include="Wrappers">
       <UniqueIdentifier>{38aff435-0264-4089-b9c3-82ae070d11ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interop">
+      <UniqueIdentifier>{583822fe-9284-482b-8f72-a6fb4f8bfff7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
@@ -34,6 +37,9 @@
     <ClInclude Include="BatchEditor.h" />
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
+    <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
+      <Filter>Interop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">
@@ -44,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="BatchEditor.cpp" />
     <ClCompile Include="Exports.cpp" />
+    <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BatchEditor.rc">

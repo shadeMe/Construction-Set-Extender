@@ -6,7 +6,7 @@
 
 // API
 #include "RTTI.h"
-#include "TESCondition.h"
+#include "TESConditionItem.h"
 #include "ActorValues.h"
 #include "BaseFormComponent.h"
 #include "BirthSign.h"

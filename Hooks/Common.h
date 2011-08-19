@@ -11,8 +11,6 @@
 class TESForm;
 class TESObjectCELL;
 class TESWorldSpace;
-struct FormData;
-struct UseListCellItemData;
 class INISetting;
 
 #pragma warning(disable:4005)

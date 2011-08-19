@@ -55,6 +55,14 @@ namespace InputBoxes
 				System::Windows::Forms::Button^     btnCancel;
 				System::Windows::Forms::TextBox^    txtInput;
 				System::ComponentModel::Container^  components;
+
+				void								txtInput_KeyUp(Object^ Sender, KeyEventArgs^ E)
+				{
+					if (E->KeyCode == Keys::Enter)
+					{
+						btnOK->PerformClick();
+					}
+				}
 		#pragma endregion
 		#pragma region Windows Form Designer generated code
 			void InitializeComponent(void)
@@ -107,6 +115,7 @@ namespace InputBoxes
 				this->txtInput->Name = L"txtInput";
 				this->txtInput->Size = System::Drawing::Size(452, 20);
 				this->txtInput->TabIndex = 3;
+				this->txtInput->KeyUp += gcnew KeyEventHandler(this, &InputBox::txtInput_KeyUp);
 				//
 				// InputBox
 				//
@@ -146,7 +155,10 @@ namespace InputBoxes
 					Location = Point(_xPos, _yPos);
 				}
 				else
+				{
 					StartPosition = FormStartPosition::CenterScreen;
+					this->CenterToScreen();
+				}
 
 				String^ PrompText = lblPrompt->Text;
 

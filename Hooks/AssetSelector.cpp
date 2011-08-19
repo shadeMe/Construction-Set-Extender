@@ -1,8 +1,9 @@
 #include "AssetSelector.h"
+#include "WorkspaceManager.h"
 
 namespace Hooks
 {
-	const char* g_AssetSelectorReturnPath = NULL;
+	char g_AssetSelectorReturnPath[0x200] = {0};
 
 	void PatchAssetSelectorHooks(void)
 	{
@@ -33,26 +34,28 @@ namespace Hooks
 
 	UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 	{
+		char Buffer[0x200] = {0};
+
 		switch (Filter)
 		{
 		case e_NIF:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "nif");
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "nif", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
 			break;
 		case e_KF:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "kf");
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "kf", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
 			break;
 		case e_WAV:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "wav");
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "wav", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
 			break;
 		case e_DDS:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "dds");
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "dds", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
 			break;
 		case e_SPT:
-			g_AssetSelectorReturnPath = CLIWrapper::BSAViewer::InitializeViewer(g_APPPath.c_str(), "spt");
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "spt", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
 			break;
 		}
 
-		if (!g_AssetSelectorReturnPath)
+		if (!strlen(g_AssetSelectorReturnPath))
 			return 0;
 		else
 			return e_FetchPath;
@@ -65,26 +68,78 @@ namespace Hooks
 		else
 			PrintToBuffer("%s", ExistingPath);
 
-		g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
+		const char* ReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
 
-		if (!g_AssetSelectorReturnPath)
+		if (!ReturnPath ||!strlen(ReturnPath))
 			return 0;
 		else
+		{
+			sprintf_s(g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath), "%s", ReturnPath);
 			return e_FetchPath;
+		}
 	}
 
 	UInt32 __stdcall InitPathCopier(UInt32 Filter, HWND Dialog)
 	{
-		g_AssetSelectorReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_COPYPATH), Dialog, (DLGPROC)CopyPathDlgProc, (LPARAM)Filter);
-		if (!g_AssetSelectorReturnPath)
+		const char* ReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_COPYPATH), Dialog, (DLGPROC)CopyPathDlgProc, (LPARAM)Filter);
+
+		if (!ReturnPath || !strlen(ReturnPath))
 			return 0;
 		else
+		{
+			sprintf_s(g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath), "%s", ReturnPath);
 			return e_FetchPath;
+		}
 	}
 
 	UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog)
 	{
 		return DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_ASSETSEL), Dialog, (DLGPROC)AssetSelectorDlgProc);
+	}
+
+	void __stdcall InitAssetExtractor(UInt32 Filter, UInt32 PathID, const char* DefaultLookupDir, HWND Dialog)
+	{
+		char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
+
+		GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
+		sprintf_s(FullPathBuffer, sizeof(FullPathBuffer), "%s%s", DefaultLookupDir, RelativePathBuffer);
+
+		if (GetFileAttributes(FullPathBuffer) != INVALID_FILE_ATTRIBUTES)
+		{
+			if (MessageBox(Dialog,
+							"A file of the same name already exists in the Data directory. This operation will overwrite it.\n\nContinue?",
+							"CSE", MB_ICONEXCLAMATION|MB_YESNO) == IDNO)
+			{
+				return;
+			}
+		}
+
+		std::string DirPath(g_WorkspaceManager.GetWorkingDirectory()); DirPath += FullPathBuffer;
+		if (DirPath.rfind("\\") != -1)
+			DirPath = DirPath.substr(0, DirPath.rfind("\\") + 1);
+
+		if (ArchiveManager::ExtractArchiveFile(FullPathBuffer, "tempaf") &&
+			(SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) == ERROR_SUCCESS || GetLastError() == ERROR_FILE_EXISTS || GetLastError() == ERROR_ALREADY_EXISTS) &&
+			CopyFile("tempaf", FullPathBuffer, FALSE))
+		{
+			DebugPrint("Extracted archived file '%s'", FullPathBuffer);
+			if (MessageBox(Dialog,
+						"Successfully extracted archived file! Would you like to open it ?",
+						"CSE", MB_ICONINFORMATION|MB_YESNO) == IDNO)
+			{
+				return;
+			}
+
+			ShellExecute(NULL, "open", (LPSTR)FullPathBuffer, NULL, NULL, SW_SHOW);
+		}
+		else
+		{
+			MessageBox(Dialog,
+						"Couldn't extract/copy file. Possible reasons: File not found in loaded archives, couldn't create intermediate path, insufficient permissions or an internal error.",
+						"CSE", MB_ICONERROR|MB_OK);
+			DebugPrint("Couldn't extract/copy archived file '%s'", FullPathBuffer);
+			LogWinAPIErrorMessage(GetLastError());
+		}
 	}
 
 	DefineCommonDialogPrologHandler(Model)
@@ -103,7 +158,7 @@ namespace Hooks
 			lea		eax, [esp + 0x14]
 			jmp     [kModelPostCommonDialogRetnAddr]
 		SELECT:
-			mov		eax, g_AssetSelectorReturnPath
+			lea		eax, g_AssetSelectorReturnPath
 			jmp     [kModelPostCommonDialogRetnAddr]
 		}
 	}
@@ -127,7 +182,7 @@ namespace Hooks
 			lea		edx, [ebp]
 			jmp		POST
 		SELECT:
-			mov		edx, g_AssetSelectorReturnPath
+			lea		edx, g_AssetSelectorReturnPath
 		POST:
 			push	edx
 			lea		ecx, [esp + 0x24]
@@ -145,7 +200,7 @@ namespace Hooks
 			push	ecx
 			jmp     [kSoundPostCommonDialogRetnAddr]
 		SELECT:
-			mov		ecx, g_AssetSelectorReturnPath
+			lea		ecx, g_AssetSelectorReturnPath
 			push	ecx
 			jmp     [kSoundPostCommonDialogRetnAddr]
 		}
@@ -160,7 +215,7 @@ namespace Hooks
 			lea		eax, [ebp]
 			jmp		POST
 		SELECT:
-			mov		eax, g_AssetSelectorReturnPath
+			lea		eax, g_AssetSelectorReturnPath
 		POST:
 			push	eax
 			lea		ecx, [ebp - 0x14]
@@ -177,7 +232,7 @@ namespace Hooks
 			lea		ecx, [esp + 0x14]
 			jmp     [kSPTPostCommonDialogRetnAddr]
 		SELECT:
-			mov		ecx, g_AssetSelectorReturnPath
+			lea		ecx, g_AssetSelectorReturnPath
 			jmp     [kSPTPostCommonDialogRetnAddr]
 		}
 	}

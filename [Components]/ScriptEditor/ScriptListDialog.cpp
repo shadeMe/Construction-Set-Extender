@@ -4,10 +4,11 @@
 #include "ScriptEditorManager.h"
 #include "[Common]\ListViewUtilities.h"
 
-ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
+ScriptListDialog::ScriptListDialog(UInt32 ParentIndex)
 {
-	ParentIndex = AllocatedIndex;
-	ScriptBox = gcnew Form();
+	this->ParentIndex = ParentIndex;
+
+	ScriptBox = gcnew AnimatedForm(0.20);
 	PreviewBox = gcnew TextBox();
 	ScriptList = gcnew ListView();
 	ScriptListCFlags = gcnew ColumnHeader();
@@ -17,28 +18,29 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	SelectBox = gcnew Button();
 	SearchBox = gcnew TextBox();
 
-	if (!FlagIcons->Images->Count)
+	if (!ScriptFlagIcons->Images->Count)
 	{
-		FlagIcons->TransparentColor = Color::White;
-		FlagIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagDeleted"));
-		FlagIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagActive"));
+		ScriptFlagIcons->TransparentColor = Color::White;
+		ScriptFlagIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagDeleted"));
+		ScriptFlagIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagActive"));
 	}
 
 	PreviewBox->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
-	PreviewBox->Location = Point(375, 12);
+	PreviewBox->Location = System::Drawing::Point(462, 12);
 	PreviewBox->Multiline = true;
 	PreviewBox->ReadOnly = true;
 	PreviewBox->ScrollBars = ScrollBars::Both;
 	PreviewBox->WordWrap = false;
-	PreviewBox->Size = Size(357, 427);
+	PreviewBox->Size = System::Drawing::Size(444, 520);
+	PreviewBox->Anchor = AnchorStyles::Top|AnchorStyles::Right|AnchorStyles::Bottom;
 
 	ScriptList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(4) {ScriptListCFlags,
 																		 ScriptListCScriptName,
 																		 ScriptListCFormID,
 																		 ScriptListCScriptType});
 	ScriptList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
-	ScriptList->Location = Point(12, 12);
-	ScriptList->Size = Size(357, 391);
+	ScriptList->Location = System::Drawing::Point(12, 12);
+	ScriptList->Size = System::Drawing::Size(444, 485);
 	ScriptList->UseCompatibleStateImageBehavior = false;
 	ScriptList->View = View::Details;
 	ScriptList->AutoSize = false;
@@ -51,7 +53,8 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptList->CheckBoxes = false;
 	ScriptList->FullRowSelect = true;
 	ScriptList->HideSelection = false;
-	ScriptList->SmallImageList = FlagIcons;
+	ScriptList->SmallImageList = ScriptFlagIcons;
+	ScriptList->Anchor = AnchorStyles::Top|AnchorStyles::Left|AnchorStyles::Bottom;
 
 	ScriptListCFlags->Text = "";
 	ScriptListCFlags->Width = 20;
@@ -66,24 +69,28 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptListCScriptType->Width = 87;
 
 	SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
-	SearchBox->Location = Point(13, 409);
+	SearchBox->Location = System::Drawing::Point(12, 503);
 	SearchBox->MaxLength = 512;
-	SearchBox->Size = Size(242, 30);
+	SearchBox->Size = System::Drawing::Size(312, 30);
 	SearchBox->TextChanged += gcnew EventHandler(this, &ScriptListDialog::SearchBox_TextChanged);
 	SearchBox->KeyDown += gcnew KeyEventHandler(this, &ScriptListDialog::SearchBox_KeyDown);
+	SearchBox->Anchor = AnchorStyles::Left|AnchorStyles::Bottom;
 
 	SelectBox->Font = gcnew Font("Segoe UI", 10);
-	SelectBox->Location = Point(261, 409);
+	SelectBox->Location = System::Drawing::Point(330, 503);
 	SelectBox->Text = "Select Script(s)";
-	SelectBox->Size = Size(114, 30);
+	SelectBox->Size = System::Drawing::Size(126, 29);
 	SelectBox->Click += gcnew EventHandler(this, &ScriptListDialog::SelectBox_Click);
+	SelectBox->Anchor = AnchorStyles::Left|AnchorStyles::Bottom;
 
-	ScriptBox->ClientSize = Size(744, 451);
+	ScriptBox->ClientSize = System::Drawing::Size(916, 541);
+	ScriptBox->MinimumSize = System::Drawing::Size(935, 320);
+	ScriptBox->MaximumSize = System::Drawing::Size(935, 2000);
 	ScriptBox->Controls->Add(ScriptList);
 	ScriptBox->Controls->Add(PreviewBox);
 	ScriptBox->Controls->Add(SelectBox);
 	ScriptBox->Controls->Add(SearchBox);
-	ScriptBox->FormBorderStyle = FormBorderStyle::FixedToolWindow;
+	ScriptBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
 	ScriptBox->StartPosition = FormStartPosition::CenterScreen;
 	ScriptBox->MaximizeBox = false;
 	ScriptBox->MinimizeBox = false;
@@ -97,21 +104,56 @@ ScriptListDialog::ScriptListDialog(UInt32 AllocatedIndex)
 	ScriptList->ListViewItemSorter = gcnew CSEListViewImgSorter(LastSortColumn, ScriptList->Sorting);
 }
 
-void ScriptListDialog::Show(Operation Op)
+ComponentDLLInterface::ScriptData* ScriptListDialog::Show(Operation Op, String^ FilterString)
 {
 	CurrentOp = Op;
 	if (Op == Operation::e_Open)
 		ScriptList->MultiSelect = true;
 
 	ScriptList->BeginUpdate();
-	NativeWrapper::ScriptEditor_GetScriptListData(ParentIndex);
+
+	ComponentDLLInterface::ScriptListData* Data = ScriptListCache = g_CSEInterface->ScriptEditor.GetScriptList();
+	if (Data)
+	{
+		for (int i = 0; i < Data->ScriptCount; i++)
+		{
+			ComponentDLLInterface::ScriptData* ThisScript = &Data->ScriptListHead[i];
+
+			ListViewItem^ NewScript = gcnew ListViewItem("");
+			NewScript->SubItems->Add(gcnew String(ThisScript->EditorID));
+			NewScript->SubItems->Add(ThisScript->FormID.ToString("X8"));
+			if (ThisScript->UDF)
+				NewScript->SubItems->Add("Function");
+			else
+			{
+				switch (ThisScript->Type)
+				{
+				case ScriptEditor::Workspace::ScriptType::e_Object:
+					NewScript->SubItems->Add("Object");
+					break;
+				case ScriptEditor::Workspace::ScriptType::e_Quest:
+					NewScript->SubItems->Add("Quest");
+					break;
+				case ScriptEditor::Workspace::ScriptType::e_MagicEffect:
+					NewScript->SubItems->Add("Magic Effect");
+					break;
+				}
+			}
+
+			if (ThisScript->Flags & 0x20)
+				NewScript->ImageIndex = (int)FlagIcons::e_Deleted;
+			else if (ThisScript->Flags & 0x2)
+				NewScript->ImageIndex = (int)FlagIcons::e_Active;
+
+			NewScript->Tag = (UInt32)ThisScript;
+			ScriptList->Items->Add(NewScript);
+		}
+	}
 	ScriptList->EndUpdate();
 
 	if (ScriptList->Items->Count > 0)
 	{
-		String^ CurrentScript = const_cast<String^>(SEMGR->GetAllocatedWorkspace(ParentIndex)->GetScriptID());
-		if (!SEMGR->GetAllocatedWorkspace(ParentIndex)->GetIsCurrentScriptNew())
-			SearchBox->Text = CurrentScript;
+		SearchBox->Text = FilterString;
 	}
 	else
 	{
@@ -119,8 +161,17 @@ void ScriptListDialog::Show(Operation Op)
 		SearchBox->Enabled = false;
 	}
 
-	ScriptBox->ShowDialog();
+	FirstSelectionCache = 0;
+
 	SearchBox->Focus();
+
+	if (LastKnownSize.Width)
+		ScriptBox->ClientSize = LastKnownSize;
+
+	Closing = false;
+	ScriptBox->ShowDialog();
+
+	return FirstSelectionCache;
 }
 
 void ScriptListDialog::Close()
@@ -131,73 +182,50 @@ void ScriptListDialog::Close()
 	PreviewBox->Text = "";
 	SearchBox->Text = "";
 	ScriptList->MultiSelect = false;
-}
-
-void ScriptListDialog::AddScript(String^% ScriptName, String^% FormID, String^% ScriptType, UInt32 Flags)
-{
-	ListViewItem^ NewScript = gcnew ListViewItem("");
-	NewScript->SubItems->Add(ScriptName);
-	NewScript->SubItems->Add(FormID);
-	NewScript->SubItems->Add(ScriptType);
-
-	if (Flags & 0x00000020)
-		NewScript->ImageIndex = (int)Icon::e_Deleted;
-	else if (Flags & 0x00000002)
-		NewScript->ImageIndex = (int)Icon::e_Active;
-
-	ScriptList->Items->Add(NewScript);
+	g_CSEInterface->DeleteNativeHeapPointer(ScriptListCache, false);
+	ScriptListCache = 0;
+	LastKnownSize = ScriptBox->ClientSize;
 }
 
 void ScriptListDialog::SelectScript()
 {
-	if (GetListViewSelectedItem(ScriptList) == nullptr)		return;
-
-	bool PerformedOpOnActiveTab = false;
+	if (GetListViewSelectedItem(ScriptList) == nullptr)
+		return;
 
 	for (UInt32 i = 0; i < ScriptList->SelectedItems->Count; i++)
 	{
 		ListViewItem^ Itr = ScriptList->SelectedItems[i];
+		ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)Itr->Tag);
 
-		if (!PerformedOpOnActiveTab)
-		{
-			CStringWrapper^ CEID = gcnew CStringWrapper(Itr->SubItems[1]->Text);
-			NativeWrapper::ScriptEditor_SetScriptListResult(CEID->String());
-
-			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-			Parameters->VanillaHandleIndex = ParentIndex;
-
-			switch (CurrentOp)
-			{
-			case Operation::e_Open:
-				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Open);
-				break;
-			case Operation::e_Delete:
-				Parameters->ParameterList->Add(ScriptEditorManager::SendReceiveMessageType::e_Delete);
-				break;
-			}
-
-			SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_SendMessage, Parameters);
-			PerformedOpOnActiveTab = true;
-		}
+		if (!i)
+			FirstSelectionCache = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
 		else
-		{
-			SEMGR->GetAllocatedWorkspace(ParentIndex)->GetParentContainer()->CreateNewTab(Itr->SubItems[1]->Text);
-		}
+			SEMGR->GetAllocatedWorkspace(ParentIndex)->GetParentContainer()->InstantiateNewWorkspace(Data);
 	}
+
+	Closing = true;
 	ScriptBox->Close();
 }
 
 void ScriptListDialog::GetUseReport()
 {
-	if (GetListViewSelectedItem(ScriptList) == nullptr)		return;
+	if (GetListViewSelectedItem(ScriptList) == nullptr)
+		return;
 
-	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
-	NativeWrapper::ScriptEditor_GetUseReportForForm(CEID->String());
+	CString CEID(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
+	g_CSEInterface->CSEEditorAPI.ShowUseReportDialog(CEID.c_str());
 }
 
 void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 {
 	Close();
+
+	if (Closing == false)
+	{
+		E->Cancel = true;
+		Closing = true;
+		ScriptBox->Close();
+	}
 }
 
 void ScriptListDialog::SelectBox_Click(Object^ Sender, EventArgs^ E)
@@ -207,10 +235,13 @@ void ScriptListDialog::SelectBox_Click(Object^ Sender, EventArgs^ E)
 
 void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 {
-	if (GetListViewSelectedItem(ScriptList) == nullptr)		return;
+	if (GetListViewSelectedItem(ScriptList) == nullptr)
+		return;
 
-	CStringWrapper^ CEID = gcnew CStringWrapper(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
-	PreviewBox->Text = gcnew String(NativeWrapper::ScriptEditor_GetScriptListItemText(CEID->String()));
+	ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)GetListViewSelectedItem(ScriptList)->Tag);
+	String^ ScriptText = gcnew String(Data->Text);
+
+	PreviewBox->Text = ScriptText->Replace("\n", "\r\n");
 }
 
 void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -224,6 +255,7 @@ void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		GetUseReport();
 		break;
 	case Keys::Escape:
+		Closing = true;
 		ScriptBox->Close();
 		break;
 	case Keys::Back:
@@ -299,7 +331,8 @@ void ScriptListDialog::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
 		else
 		{
 			Result = GetListViewSelectedItem(ScriptList);
-			if (Result != nullptr)		Result->Selected = false;
+			if (Result != nullptr)
+				Result->Selected = false;
 			PreviewBox->Text = "";
 		}
 	}
@@ -312,5 +345,12 @@ void ScriptListDialog::SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	case Keys::Back:
 		return;
 	}
+
 	ScriptListDialog::ScriptList_KeyDown(nullptr, E);
+}
+
+void ScriptListDialog::Destroy()
+{
+	Close();
+	delete ScriptBox;
 }

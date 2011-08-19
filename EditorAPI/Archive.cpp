@@ -60,6 +60,8 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 				if (AppendFilePath)
 					FileOut += "\\" + ArchiveFilePath;
 
+				DeleteFile(FileOut.c_str());		// delete file as BSFile::Ctor doesn't create it anew
+
 				BSFile* TempFile = BSFile::CreateInstance(FileOut.c_str(), NiFile::kFileMode_WriteOnly, FileSize);
 				assert(TempFile);
 

@@ -1,8 +1,7 @@
 // UIComponents.cpp : main project file.
 
-#include "TagBrowser.h"
-#include "WPFHostTest.h"
-#include "SEOptionsDialog.h"
+#include "stdafx.h"
+#include "Form1.h"
 
 using namespace UIComponents;
 
@@ -14,6 +13,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Create the main window and run it
-	Application::Run(gcnew OptionsDialog());
+	Application::Run(gcnew Form1());
 	return 0;
 }

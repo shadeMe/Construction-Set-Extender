@@ -1,9 +1,12 @@
 #include "BatchEditor.h"
 #include "[Common]\ListViewUtilities.h"
 
+using namespace ComponentDLLInterface;
+
 void BatchEditor::ApplyButton_Click(Object^ Sender, EventArgs^ E)
 {
-	if (ScrubData())	Close(DialogResult::OK);
+	if (ScrubData())
+		Close(DialogResult::OK);
 }
 void BatchEditor::CancelButton_Click(Object^ Sender, EventArgs^ E)
 {
@@ -19,7 +22,8 @@ void BatchEditor::Close(DialogResult Result)
 
 RefBatchEditor^% RefBatchEditor::GetSingleton()
 {
-	if (Singleton == nullptr) {
+	if (Singleton == nullptr)
+	{
 		Singleton = gcnew RefBatchEditor();
 	}
 	return Singleton;
@@ -845,10 +849,13 @@ void RefBatchEditor::Cleanup()
 
 	SetParent->Text = "Set Parent to NONE";
 
-	for each (TabPage^ Tab in DataBox->TabPages) {
-		for each (Control^ Itr in Tab->Controls) {
+	for each (TabPage^ Tab in DataBox->TabPages)
+	{
+		for each (Control^ Itr in Tab->Controls)
+		{
 			GroupBox^ Box = dynamic_cast<GroupBox^>(Itr);
-			if (Box != nullptr) {
+			if (Box != nullptr)
+			{
 				SanitizeControls(Box);
 			}
 		}
@@ -858,13 +865,16 @@ void RefBatchEditor::Cleanup()
 
 void RefBatchEditor::SanitizeControls(Control^ Container)
 {
-	for each (Control^ Itr in Container->Controls) {
+	for each (Control^ Itr in Container->Controls)
+	{
 		TextBox^ TB = dynamic_cast<TextBox^>(Itr);
-		if (TB != nullptr) {
+		if (TB != nullptr)
+		{
 			TB->Text = "";
 		}
 		CheckBox^ CB = dynamic_cast<CheckBox^>(Itr);
-		if (CB != nullptr) {
+		if (CB != nullptr)
+		{
 			CB->Checked = false;
 		}
 	}
@@ -874,8 +884,10 @@ void RefBatchEditor::PopulateObjectList(BatchRefData* Data)
 {
 	ObjectList->BeginUpdate();
 
-	for (CellObjectData* Itr = Data->CellObjectListHead; Itr != Data->CellObjectListHead + Data->ObjectCount; ++Itr) {
-		if (!Itr->IsValid())		continue;
+	for (CellObjectData* Itr = Data->CellObjectListHead; Itr != Data->CellObjectListHead + Data->ObjectCount; ++Itr)
+	{
+		if (!Itr->IsValid())
+			continue;
 
 		ListViewItem^ NewItem = gcnew ListViewItem(gcnew String(Itr->EditorID));
 		NewItem->SubItems->Add(Itr->FormID.ToString("X8"));
@@ -893,30 +905,45 @@ void RefBatchEditor::PopulateObjectList(BatchRefData* Data)
 
 void RefBatchEditor::PopulateFormLists()
 {
+	ComboBox^ FormList = nullptr;
+
+	BatchRefOwnerFormData* Data = g_CSEInterface->BatchRefEditor.GetOwnershipData();
 	NPCList->BeginUpdate();
-	NativeWrapper::BatchRefEditor_SetFormListItem(BatchRefData::kListID_NPC);
-	NPCList->EndUpdate();
-
 	GlobalList->BeginUpdate();
-	NativeWrapper::BatchRefEditor_SetFormListItem(BatchRefData::kListID_Global);
-	GlobalList->EndUpdate();
-
 	FactionList->BeginUpdate();
-	NativeWrapper::BatchRefEditor_SetFormListItem(BatchRefData::kListID_Faction);
-	FactionList->EndUpdate();
-}
 
-ComboBox^% RefBatchEditor::GetFormList(UInt8 ListID)
-{
-	switch(ListID)
+	for (int i = 0; i < Data->FormCount; i++)
 	{
-	case BatchRefData::kListID_NPC:
-		return NPCList;
-	case BatchRefData::kListID_Global:
-		return GlobalList;
-	default:
-		return FactionList;
+		FormData* ThisForm = &Data->FormListHead[i];
+		switch (ThisForm->TypeID)
+		{
+		case 0x23:	// NPC
+			FormList = NPCList;
+			break;
+		case 0x04:	// TESGlobal
+			FormList = GlobalList;
+			break;
+		case 0x6:	// TESFaction
+			FormList = FactionList;
+			break;
+		}
+
+		List<UInt32>^ PtrList = dynamic_cast < List<UInt32>^ >(FormList->Tag);
+		if (i == 0)
+		{
+			FormList->Items->Add("NONE");
+			PtrList->Add((UInt32)0);
+		}
+
+		FormList->Items->Add(gcnew String(ThisForm->EditorID));
+		PtrList->Add((UInt32)ThisForm->ParentForm);
 	}
+
+	NPCList->EndUpdate();
+	GlobalList->EndUpdate();
+	FactionList->EndUpdate();
+
+	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 }
 
 bool RefBatchEditor::InitializeBatchEditor(BatchRefData* Data)
@@ -935,7 +962,9 @@ float RefBatchEditor::GetFloatFromString(String^ Text)
 	try
 	{
 		return float::Parse(Text);
-	} catch (...) {
+	}
+	catch (...)
+	{
 		throw gcnew CSEGeneralException("Invalid numeric data entered in one of the fields.");
 		return 0;
 	}
@@ -945,7 +974,9 @@ int RefBatchEditor::GetIntFromString(String^ Text)
 	try
 	{
 		return int::Parse(Text);
-	} catch (...) {
+	}
+	catch (...)
+	{
 		throw gcnew CSEGeneralException("Invalid numeric data entered in one of the fields.");
 		return 0;
 	}
@@ -955,7 +986,9 @@ UInt32 RefBatchEditor::GetUIntFromString(String^ Text)
 	try
 	{
 		return UInt32::Parse(Text);
-	} catch (...) {
+	}
+	catch (...)
+	{
 		throw gcnew CSEGeneralException("Invalid numeric data entered in one of the fields.");
 		return 0;
 	}
@@ -963,7 +996,8 @@ UInt32 RefBatchEditor::GetUIntFromString(String^ Text)
 
 bool RefBatchEditor::ScrubData()
 {
-	for each (ListViewItem^ Itr in ObjectList->Items) {
+	for each (ListViewItem^ Itr in ObjectList->Items)
+	{
 		CellObjectData* Tag = (CellObjectData*)((UInt32)Itr->Tag);
 
 		if (Itr->Checked)			Tag->Selected = true;
@@ -995,7 +1029,8 @@ bool RefBatchEditor::ScrubData()
 	ToggleFlag(&BatchData->Extra.Flags, BatchRefData::_Extra::kFlag_UseSoulLevel, UseSoulLevel->Checked);
 
 	// fetch data
-	try {
+	try
+	{
 		if (BatchData->World3DData.UsePosX())			BatchData->World3DData.PosX = GetFloatFromString(PosX->Text);
 		if (BatchData->World3DData.UsePosY())			BatchData->World3DData.PosY = GetFloatFromString(PosY->Text);
 		if (BatchData->World3DData.UsePosZ())			BatchData->World3DData.PosZ = GetFloatFromString(PosZ->Text);
@@ -1012,24 +1047,35 @@ bool RefBatchEditor::ScrubData()
 
 		BatchData->EnableParent.OppositeState = OppositeState->Checked;
 
-		if (BatchData->Ownership.UseOwnership()) {
+		if (BatchData->Ownership.UseOwnership())
+		{
 			List<UInt32>^ PtrList = nullptr;
 
-			if (BatchData->Ownership.UseNPCOwner()) {
+			if (BatchData->Ownership.UseNPCOwner())
+			{
 				PtrList = dynamic_cast<List<UInt32>^>(NPCList->Tag);
-				if (NPCList->SelectedIndex == -1)	BatchData->Ownership.Owner = 0;
-				else	BatchData->Ownership.Owner = (void*)PtrList[NPCList->SelectedIndex];
+				if (NPCList->SelectedIndex == -1)
+					BatchData->Ownership.Owner = 0;
+				else
+					BatchData->Ownership.Owner = (void*)PtrList[NPCList->SelectedIndex];
 
 				PtrList = dynamic_cast<List<UInt32>^>(GlobalList->Tag);
-				if (GlobalList->SelectedIndex == -1)	BatchData->Ownership.Global = 0;
-				else	BatchData->Ownership.Global = (void*)PtrList[GlobalList->SelectedIndex];
-			} else {
+				if (GlobalList->SelectedIndex == -1)
+					BatchData->Ownership.Global = 0;
+				else
+					BatchData->Ownership.Global = (void*)PtrList[GlobalList->SelectedIndex];
+			}
+			else
+			{
 				PtrList = dynamic_cast<List<UInt32>^>(FactionList->Tag);
-				if (FactionList->SelectedIndex == -1)	BatchData->Ownership.Owner = 0;
-				else	BatchData->Ownership.Owner = (void*)PtrList[FactionList->SelectedIndex];
+				if (FactionList->SelectedIndex == -1)
+					BatchData->Ownership.Owner = 0;
+				else
+					BatchData->Ownership.Owner = (void*)PtrList[FactionList->SelectedIndex];
 
 				BatchData->Ownership.Rank = GetIntFromString(Rank->Text);
-				if (BatchData->Ownership.Rank < -1)	BatchData->Ownership.Rank = -1;
+				if (BatchData->Ownership.Rank < -1)
+					BatchData->Ownership.Rank = -1;
 			}
 		}
 
@@ -1037,11 +1083,16 @@ bool RefBatchEditor::ScrubData()
 		if (BatchData->Extra.UseCount())		BatchData->Extra.Count = GetIntFromString(Count->Text);
 		if (BatchData->Extra.UseHealth())		BatchData->Extra.Health = GetFloatFromString(Health->Text);
 		if (BatchData->Extra.UseTimeLeft())		BatchData->Extra.TimeLeft = GetFloatFromString(TimeLeft->Text);
-		if (BatchData->Extra.UseSoulLevel()) {
-			if (SoulLevel->SelectedIndex == -1)	BatchData->Extra.SoulLevel = BatchData->Extra.kSoul_None;
-			else	BatchData->Extra.SoulLevel = SoulLevel->SelectedIndex;
+		if (BatchData->Extra.UseSoulLevel())
+		{
+			if (SoulLevel->SelectedIndex == -1)
+				BatchData->Extra.SoulLevel = BatchData->Extra.kSoul_None;
+			else
+				BatchData->Extra.SoulLevel = SoulLevel->SelectedIndex;
 		}
-	} catch (CSEGeneralException^ E) {
+	}
+	catch (Exception^ E)
+	{
 		MessageBox::Show(E->Message, "Batch Editor", MessageBoxButtons::OK, MessageBoxIcon::Error);
 		return false;
 	}
@@ -1049,21 +1100,15 @@ bool RefBatchEditor::ScrubData()
 	return true;
 }
 
-void RefBatchEditor::AddToFormList(FormData* Data, UInt8 ListID)
-{
-	ComboBox^% FormList = GetFormList(ListID);
-	List<UInt32>^ PtrList = dynamic_cast < List<UInt32>^ >(FormList->Tag);
-
-	FormList->Items->Add(gcnew String(Data->EditorID));
-	PtrList->Add((UInt32)Data->ParentForm);
-}
-
 void RefBatchEditor::ObjectList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
 {
-	if (E->Column != (int)ObjectList->Tag) {
+	if (E->Column != (int)ObjectList->Tag)
+	{
 		ObjectList->Tag = E->Column;
 		ObjectList->Sorting = SortOrder::Descending;
-	} else {
+	}
+	else
+	{
 		if (ObjectList->Sorting == SortOrder::Ascending)
 			ObjectList->Sorting = SortOrder::Descending;
 		else
@@ -1086,5 +1131,19 @@ void RefBatchEditor::ObjectList_ColumnClick(Object^ Sender, ColumnClickEventArgs
 
 void RefBatchEditor::SetParent_Click(Object^ Sender, EventArgs^ E)
 {
-	SetParent->Text = "Set Parent to " + gcnew String(NativeWrapper::BatchRefEditor_ChooseParentReference(BatchData, BatchEditBox->Handle));
+	ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.ShowPickReferenceDialog((HWND)BatchEditBox->Handle);
+	BatchData->EnableParent.Parent = 0;
+
+	if (Data)
+	{
+		BatchData->EnableParent.Parent = Data->ParentForm;
+		if (Data->EditorID)
+			SetParent->Text = "Set Parent to " + gcnew String(Data->EditorID);
+		else
+			SetParent->Text = "Set Parent to " + Data->FormID.ToString("X8");
+	}
+	else
+		SetParent->Text = "Set Parent to NONE";
+
+	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 }

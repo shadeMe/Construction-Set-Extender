@@ -1,9 +1,10 @@
-#include "Intellisense.h"
-#include "[Common]\NativeWrapper.h"
+#include "IntelliSense.h"
 #include "Globals.h"
 #include "ScriptParser.h"
 #include "ScriptEditor.h"
+#include "[Common]\NativeWrapper.h"
 #include "[Common]\HandShakeStructs.h"
+#include "[Common]\ListViewUtilities.h"
 
 namespace IntelliSense
 {
@@ -20,7 +21,7 @@ namespace IntelliSense
 
 	Script::Script(String^% ScriptText, String^% Name)
 	{
-		VarList = gcnew _VarList();
+		VarList = gcnew VarListT();
 		IntelliSenseDatabase::ParseScript(ScriptText, gcnew Boxer(this));
 		this->Name = Name;
 	}
@@ -86,7 +87,7 @@ namespace IntelliSense
 	{
 		Enumerables = gcnew LinkedList<IntelliSenseItem^>();
 		UserFunctionList = gcnew LinkedList<UserFunction^>();
-		URLMap = gcnew Dictionary<String^, String^>();
+		DeveloperURLMap = gcnew Dictionary<String^, String^>();
 		RemoteScripts = gcnew Dictionary<String^, Script^>();
 
 		DatabaseUpdateThread = gcnew BackgroundWorker();
@@ -103,33 +104,33 @@ namespace IntelliSense
 		DebugPrint("Initialized IntelliSense");
 	}
 
-	IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::DoUpdateDatabase()
+	IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::InitializeDatabaseUpdate()
 	{
 		ParsedUpdateData^ Data = gcnew ParsedUpdateData();
 
-		IntelliSenseUpdateData* DataHandlerData = NativeWrapper::ScriptEditor_BeginIntelliSenseDatabaseUpdate();
+		ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = g_CSEInterface->ScriptEditor.GetIntelliSenseUpdateData();
 
-		for (ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr)
+		for (ComponentDLLInterface::ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr)
 		{
 			if (!Itr->IsValid())		continue;
 
 			Data->UDFList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
 		}
 
-		for (QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr)
+		for (ComponentDLLInterface::QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr)
 		{
 			if (!Itr->IsValid())		continue;
 
 			Data->Enumerables->AddLast(gcnew Quest(gcnew String(Itr->EditorID), gcnew String(Itr->FullName), gcnew String(Itr->ScriptName)));
 		}
 
-		for (GlobalData* Itr = DataHandlerData->GlobalListHead; Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount; ++Itr)
+		for (ComponentDLLInterface::GlobalData* Itr = DataHandlerData->GlobalListHead; Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount; ++Itr)
 		{
 			if (!Itr->IsValid())		continue;
 
-			if (Itr->Type == GlobalData::kType_Int)
+			if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
 				Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Int, IntelliSenseItem::ItemType::e_GlobalVar));
-			else if (Itr->Type == GlobalData::kType_Float)
+			else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 				Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Float, IntelliSenseItem::ItemType::e_GlobalVar));
 			else
 				Data->Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GlobalVar));
@@ -149,12 +150,11 @@ namespace IntelliSense
 			Data->Enumerables->AddLast(gcnew UserFunctionDelegate(Itr));
 		}
 
-		NativeWrapper::ScriptEditor_EndIntelliSenseDatabaseUpdate(DataHandlerData);
-
+		g_CSEInterface->DeleteNativeHeapPointer(DataHandlerData, false);
 		return Data;
 	}
 
-	void IntelliSenseDatabase::PostUpdateDatabase(ParsedUpdateData^ Data)
+	void IntelliSenseDatabase::FinalizeDatabaseUpdate(ParsedUpdateData^ Data)
 	{
 		UserFunctionList->Clear();
 		Enumerables->Clear();
@@ -163,7 +163,7 @@ namespace IntelliSense
 		UserFunctionList = Data->UDFList;
 		Enumerables = Data->Enumerables;
 
-		NativeWrapper::PrintToCSStatusBar(2, "IntelliSense database updated");
+		NativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense database updated");
 	}
 
 	void IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E)
@@ -179,7 +179,7 @@ namespace IntelliSense
 
 	void IntelliSenseDatabase::DatabaseUpdateThread_DoWork(Object^ Sender, DoWorkEventArgs^ E)
 	{
-		E->Result = DoUpdateDatabase();
+		E->Result = InitializeDatabaseUpdate();
 	}
 
 	void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E)
@@ -192,12 +192,12 @@ namespace IntelliSense
 			DebugPrint("Something seriously went wrong when parsing the datahandler!", true);
 		else
 		{
-			PostUpdateDatabase(dynamic_cast<ParsedUpdateData^>(E->Result));
+			FinalizeDatabaseUpdate(dynamic_cast<ParsedUpdateData^>(E->Result));
 		}
 
 		if (E->Result == nullptr)
 		{
-			NativeWrapper::PrintToCSStatusBar(2, "Error encountered while updating IntelliSense database !");
+			NativeWrapper::WriteToMainWindowStatusBar(2, "Error encountered while updating IntelliSense database !");
 		}
 	}
 
@@ -206,7 +206,7 @@ namespace IntelliSense
 		if (!DatabaseUpdateThread->IsBusy)
 		{
 			DatabaseUpdateThread->RunWorkerAsync();
-			NativeWrapper::PrintToCSStatusBar(2, "Updating IntelliSense database ...");
+			NativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense database ...");
 		}
 	}
 
@@ -224,8 +224,8 @@ namespace IntelliSense
 		case Boxer::BoxType::e_UserFunction:
 			Box->SourceScript->ClearVariableList();
 			break;
-		case Boxer::BoxType::e_IntelliSenseThingy:
-			Box->SourceIntelliSenseThingy->ClearLocalVariableList();
+		case Boxer::BoxType::e_IntelliSenseInterface:
+			Box->SourceIntelliSenseInterface->ClearLocalVariableDatabase();
 			LocalVars = true;
 			break;
 		}
@@ -251,17 +251,17 @@ namespace IntelliSense
 			{
 			case ScriptParser::TokenType::e_Variable:
 				GrabDef = false;
-				if (!ScriptTextParser->FindVariable(SecondToken)->IsValid() && SecondToken != "")
+				if (ScriptTextParser->LookupVariableByName(SecondToken) == nullptr && SecondToken != "")
 				{
 					Comment = "";
-					if (ScriptTextParser->Tokens->Count > 2 && ScriptTextParser->IsComment(ScriptTextParser->Tokens->Count) == 2)
+					if (ScriptTextParser->Tokens->Count > 2 && ScriptTextParser->GetCommentTokenIndex(ScriptTextParser->Tokens->Count) == 2)
 					{
 						Comment = ReadLine->Substring(ReadLine->IndexOf(";") + 1);
 						ScriptTextParser->Tokenize(Comment, false);
 						Comment = (ScriptTextParser->Indices->Count > 0)?Comment->Substring(ScriptTextParser->Indices[0]):Comment;
 					}
 
-					ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableInfo(SecondToken, 0));
+					ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
 					VariableInfo::VariableType DataType;
 
 					if (!String::Compare(FirstToken, "ref", true) || !String::Compare(FirstToken, "reference", true))
@@ -281,8 +281,8 @@ namespace IntelliSense
 					case Boxer::BoxType::e_Script:
 						Box->SourceScript->AddVariable(gcnew VariableInfo(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::ItemType::e_LocalVar):(IntelliSenseItem::ItemType::e_RemoteVar)));
 						break;
-					case Boxer::BoxType::e_IntelliSenseThingy:
-						Box->SourceIntelliSenseThingy->AddLocalVariable(gcnew VariableInfo(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::ItemType::e_LocalVar):(IntelliSenseItem::ItemType::e_RemoteVar)));
+					case Boxer::BoxType::e_IntelliSenseInterface:
+						Box->SourceIntelliSenseInterface->AddLocalVariableToDatabase(gcnew VariableInfo(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::ItemType::e_LocalVar):(IntelliSenseItem::ItemType::e_RemoteVar)));
 						break;
 					}
 				}
@@ -303,9 +303,9 @@ namespace IntelliSense
 						for each (String^% Itr in ScriptTextParser->Tokens)
 						{
 							int VarIdx = 0;
-							for each (ScriptParser::VariableInfo^% ItrEx in ScriptTextParser->Variables)
+							for each (ScriptParser::VariableRefCountData^% ItrEx in ScriptTextParser->Variables)
 							{
-								if (!String::Compare(ItrEx->VarName, Itr, true) && ParamIdx < 10)
+								if (!String::Compare(ItrEx->Name, Itr, true) && ParamIdx < 10)
 								{
 									(dynamic_cast<UserFunction^>(Box->SourceScript))->AddParameter(VarIdx, ParamIdx);
 									ParamIdx++;
@@ -324,9 +324,9 @@ namespace IntelliSense
 				{
 					(dynamic_cast<UserFunction^>(Box->SourceScript))->SetReturnVariable(-9);						// ambiguous
 					int VarIdx = 0;
-					for each (ScriptParser::VariableInfo^% Itr in ScriptTextParser->Variables)
+					for each (ScriptParser::VariableRefCountData^% Itr in ScriptTextParser->Variables)
 					{
-						if (!String::Compare(SecondToken, Itr->VarName, true))
+						if (!String::Compare(SecondToken, Itr->Name, true))
 						{
 							(dynamic_cast<UserFunction^>(Box->SourceScript))->SetReturnVariable(VarIdx);
 							break;
@@ -353,18 +353,18 @@ namespace IntelliSense
 		}
 	}
 
-	void IntelliSenseDatabase::ParseCommandTable(CommandTableData* Data)
+	void IntelliSenseDatabase::InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data)
 	{
 		String^ Name, ^Desc, ^SH, ^PluginName;
 		int Count = 0, ReturnType = 0, CSCount = 0;
 		CommandInfo::SourceType Source;
 
-		for (const ObScriptCommandInfo* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
+		for (const ComponentDLLInterface::ObScriptCommandInfo* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
 		{
 			Name = gcnew String(Itr->longName);
 			if (!String::Compare(Name, "", true))	continue;
 
-			const CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
+			const ComponentDLLInterface::CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
 
 			if (CSCount < 370)
 			{
@@ -405,15 +405,17 @@ namespace IntelliSense
 		DebugPrint(String::Format("\tIntelliSense: Parsed {0} Commands", Count));
 	}
 
-	void IntelliSenseDatabase::ParseGMSTCollection(IntelliSenseUpdateData* GMSTCollection)
+	void IntelliSenseDatabase::InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection)
 	{
-		for (GMSTData* Itr = GMSTCollection->GMSTListHead; Itr != GMSTCollection->GMSTListHead + GMSTCollection->GMSTCount; ++Itr)
+		for (int i = 0; i < GMSTCollection->GMSTCount; i++)
 		{
-			if (!Itr->IsValid())		continue;
+			ComponentDLLInterface::GMSTData* Itr = &GMSTCollection->GMSTListHead[i];
+			if (!Itr->IsValid())
+				continue;
 
-			if (Itr->Type == GlobalData::kType_Int)
+			if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
 				Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Int, IntelliSenseItem::ItemType::e_GMST));
-			else if (Itr->Type == GlobalData::kType_Float)
+			else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 				Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_Float, IntelliSenseItem::ItemType::e_GMST));
 			else
 				Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GMST));
@@ -422,21 +424,21 @@ namespace IntelliSense
 		DebugPrint(String::Format("\tIntelliSense: Parsed {0} Game Settings", GMSTCollection->GMSTCount));
 	}
 
-	void IntelliSenseDatabase::AddToURLMap(String^% CmdName, String^% URL)
+	void IntelliSenseDatabase::RegisterDeveloperURL(String^% CmdName, String^% URL)
 	{
-		for each (KeyValuePair<String^, String^>% Itr in URLMap)
+		for each (KeyValuePair<String^, String^>% Itr in DeveloperURLMap)
 		{
 			if (!String::Compare(CmdName, Itr.Key, true))
 				return;
 		}
 
-		URLMap->Add(CmdName, URL);
+		DeveloperURLMap->Add(CmdName, URL);
 	}
 
-	String^	IntelliSenseDatabase::GetCommandURL(String^% CmdName)
+	String^	IntelliSenseDatabase::LookupDeveloperURLByCommand(String^% CmdName)
 	{
 		String^ Result = nullptr;
-		for each (KeyValuePair<String^, String^>% Itr in URLMap)
+		for each (KeyValuePair<String^, String^>% Itr in DeveloperURLMap)
 		{
 			if (!String::Compare(CmdName, Itr.Key, true))
 			{
@@ -447,7 +449,7 @@ namespace IntelliSense
 		return Result;
 	}
 
-	String^	IntelliSenseDatabase::SanitizeCommandName(String^% CmdName)
+	String^	IntelliSenseDatabase::SanitizeCommandIdentifier(String^% CmdName)
 	{
 		for each (IntelliSenseItem^% Itr in Enumerables)
 		{
@@ -463,7 +465,7 @@ namespace IntelliSense
 		return CmdName;
 	}
 
-	Script^ IntelliSenseDatabase::GetRemoteScript(String^ BaseEditorID, String^ ScriptText)
+	Script^ IntelliSenseDatabase::CacheRemoteScript(String^ BaseEditorID, String^ ScriptText)
 	{
 		for each (KeyValuePair<String^, Script^>% Itr in RemoteScripts)
 		{
@@ -473,12 +475,11 @@ namespace IntelliSense
 			}
 		}
 
-		DebugPrint("IntelliSense: Cached Object " + BaseEditorID + "'s Script");
 		RemoteScripts->Add(BaseEditorID, gcnew Script(ScriptText));
-		return GetRemoteScript(BaseEditorID, nullptr);
+		return CacheRemoteScript(BaseEditorID, nullptr);
 	}
 
-	bool IntelliSenseDatabase::IsUDF(String^% Name)
+	bool IntelliSenseDatabase::GetIsIdentifierUserFunction(String^% Name)
 	{
 		bool Result = false;
 
@@ -494,7 +495,7 @@ namespace IntelliSense
 		return Result;
 	}
 
-	bool IntelliSenseDatabase::IsCommand(String^% Name)
+	bool IntelliSenseDatabase::GetIsIdentifierScriptCommand(String^% Name)
 	{
 		bool Result = false;
 
@@ -519,21 +520,58 @@ namespace IntelliSense
 		DatabaseUpdateTimer->Interval = 500;
 	}
 
-	void IntelliSenseDatabase::InitializeDatabaseUpdateTimer()
+	void IntelliSenseDatabase::InitializeDatabaseUpdateThread()
 	{
 		static bool DatabaseTimerInitialized = false;
-		if (DatabaseTimerInitialized)	return;
+		if (DatabaseTimerInitialized)
+			return;
 
 		UpdateThreadTimerInterval = OPTIONS->FetchSettingAsInt("DatabaseUpdateInterval");
 		DatabaseUpdateTimer->Start();
 		DatabaseTimerInitialized = true;
 	}
 
-	void NonActivatingImmovableForm::SetSize(Drawing::Size WindowSize)
+	IntelliSenseItem^ IntelliSenseDatabase::LookupRemoteScriptVariable( String^ BaseEditorID, String^ Variable )
 	{
-		MaximumSize = Drawing::Size(640, 480);
-		MinimumSize = Drawing::Size(640, 480);
+		for each (KeyValuePair<String^, Script^>% Itr in RemoteScripts)
+		{
+			if (!String::Compare(BaseEditorID, Itr.Key, true))
+			{
+				Script^ RemoteScript = Itr.Value;
+				for (Script::VarListT::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
+				{
+					if (RemoteVarItr->Current->GetType() == IntelliSenseItem::ItemType::e_RemoteVar)
+					{
+						if (!String::Compare(RemoteVarItr->Current->GetIdentifier(), Variable, true))
+						{
+							return RemoteVarItr->Current;
+						}
+					}
+				}
+			}
+		}
 
+		return nullptr;
+	}
+
+	void NonActivatingImmovableAnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
+	{
+		if (FadeOperation == FadeOperationType::e_FadeIn)
+			this->Opacity += FadeTimer->Interval / (0.6 * 0.15 * 1000);
+		else
+			this->Opacity -= FadeTimer->Interval / (0.6 * 0.15 * 1000);
+
+		if (this->Opacity >= 1.0 || this->Opacity <= 0.0)
+		{
+			FadeTimer->Stop();
+
+			if (FadeOperation == FadeOperationType::e_FadeOut)
+				this->Hide();
+		}
+	}
+
+	void NonActivatingImmovableAnimatedForm::SetSize(Drawing::Size WindowSize)
+	{
 		ClientSize = WindowSize;
 
 		WindowSize.Height += 3;
@@ -541,21 +579,32 @@ namespace IntelliSense
 		MinimumSize = WindowSize;
 	}
 
-	void NonActivatingImmovableForm::ShowAtLocation(Drawing::Point Position, IntPtr ParentHandle)
+	void NonActivatingImmovableAnimatedForm::ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate)
 	{
 		AllowMove = true;
 
 		SetDesktopLocation(Position.X, Position.Y);
+		if (this->Visible == false)
+		{
+			if (Animate)
+				this->Opacity = 0.0;
 
-		if (ParentHandle != IntPtr::Zero)
-			Show(gcnew WindowHandleWrapper(ParentHandle));
+			if (ParentHandle != IntPtr::Zero)
+				Show(gcnew WindowHandleWrapper(ParentHandle));
+			else
+				Show();
 
-		NativeWrapper::ShowNonActivatingWindow(this, IntPtr::Zero);
+			if (Animate)
+			{
+				FadeOperation = FadeOperationType::e_FadeIn;
+				FadeTimer->Start();
+			}
+		}
 
 		AllowMove = false;
 	}
 
-	void NonActivatingImmovableForm::WndProc(Message% m)
+	void NonActivatingImmovableAnimatedForm::WndProc(Message% m)
 	{
 		const int WM_SYSCOMMAND = 0x0112;
 		const int SC_MOVE = 0xF010;
@@ -579,26 +628,56 @@ namespace IntelliSense
 		Form::WndProc(m);
 	}
 
-	// INTELLISENSE THINGY
-
-	IntelliSenseThingy::IntelliSenseThingy(Object^% Parent)
+	NonActivatingImmovableAnimatedForm::NonActivatingImmovableAnimatedForm() : Form()
 	{
-		IntelliSenseBox = gcnew NonActivatingImmovableForm();
-		LocalVarList = gcnew List<IntelliSenseItem^>();
-		ListContents = gcnew List<IntelliSenseItem^>();
+		AllowMove = false;
+		FadeOperation = FadeOperationType::e_None;
+
+		FadeTimer = gcnew Timer();
+		FadeTimer->Interval = 10;
+		FadeTimer->Tick += gcnew EventHandler(this, &NonActivatingImmovableAnimatedForm::FadeTimer_Tick);
+		FadeTimer->Stop();
+	}
+
+	void NonActivatingImmovableAnimatedForm::HideForm(bool Animate)
+	{
+		if (this->Visible)
+		{
+			if (Animate)
+			{
+				FadeOperation = FadeOperationType::e_FadeOut;
+				this->Opacity = 1.0;
+				FadeTimer->Start();
+			}
+			else
+				this->Hide();
+		}
+	}
+
+	void NonActivatingImmovableAnimatedForm::Destroy()
+	{
+		FadeTimer->Stop();
+		this->Close();
+	}
+
+	IntelliSenseInterface::IntelliSenseInterface(Object^% Parent)
+	{
+		IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
+		LocalVariableDatabase = gcnew List<IntelliSenseItem^>();
+		CurrentListContents = gcnew List<IntelliSenseItem^>();
 		IntelliSenseList = gcnew ListView();
 
-		if (Icons->Images->Count == 0)
+		if (IntelliSenseItemIcons->Images->Count == 0)
 		{
-			Icons->TransparentColor = Color::White;
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemEmpty"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemCommand"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemLocalVar"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemRemoteVar"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemUDF"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemQuest"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGlobalVar"));
-			Icons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));
+			IntelliSenseItemIcons->TransparentColor = Color::White;
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemEmpty"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemCommand"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemLocalVar"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemRemoteVar"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemUDF"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemQuest"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGlobalVar"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));
 		}
 
 		IntelliSenseBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
@@ -606,15 +685,15 @@ namespace IntelliSense
 		IntelliSenseBox->ShowIcon = false;
 		IntelliSenseBox->ControlBox = false;
 		IntelliSenseBox->Controls->Add(IntelliSenseList);
-		IntelliSenseBox->Closing += gcnew CancelEventHandler(this, &IntelliSenseThingy::IntelliSenseBox_Cancel);
+		IntelliSenseBox->Closing += gcnew CancelEventHandler(this, &IntelliSenseInterface::IntelliSenseBox_Cancel);
 
 		IntelliSenseList->View = View::Details;
 		IntelliSenseList->Dock = DockStyle::Fill;
 		IntelliSenseList->MultiSelect = false;
-		IntelliSenseList->SmallImageList = Icons;
-		IntelliSenseList->SelectedIndexChanged += gcnew EventHandler(this, &IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged);
-		IntelliSenseList->KeyDown += gcnew KeyEventHandler(this, &IntelliSenseThingy::IntelliSenseList_KeyDown);
-		IntelliSenseList->MouseDoubleClick += gcnew MouseEventHandler(this, &IntelliSenseThingy::IntelliSenseList_MouseDoubleClick);
+		IntelliSenseList->SmallImageList = IntelliSenseItemIcons;
+		IntelliSenseList->SelectedIndexChanged += gcnew EventHandler(this, &IntelliSenseInterface::IntelliSenseList_SelectedIndexChanged);
+		IntelliSenseList->KeyDown += gcnew KeyEventHandler(this, &IntelliSenseInterface::IntelliSenseList_KeyDown);
+		IntelliSenseList->MouseDoubleClick += gcnew MouseEventHandler(this, &IntelliSenseInterface::IntelliSenseList_MouseDoubleClick);
 		IntelliSenseList->Location = Point(0, 0);
 		IntelliSenseList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
 		IntelliSenseList->LabelEdit = false;
@@ -627,10 +706,10 @@ namespace IntelliSense
 		IntelliSenseList->HeaderStyle = ColumnHeaderStyle::None;
 		IntelliSenseList->HideSelection = false;
 
-		InfoTip->AutoPopDelay = 5000;
-		InfoTip->InitialDelay = 1000;
-		InfoTip->ReshowDelay = 500;
-		InfoTip->ToolTipIcon = ToolTipIcon::Info;
+		InfoToolTip->AutoPopDelay = 5000;
+		InfoToolTip->InitialDelay = 1000;
+		InfoToolTip->ReshowDelay = 500;
+		InfoToolTip->ToolTipIcon = ToolTipIcon::Info;
 
 		Enabled = true;
 		ParentEditor = Parent;
@@ -638,49 +717,63 @@ namespace IntelliSense
 		Destroying = false;
 
 		IntelliSenseBox->SetSize(Size(0, 0));
-		IntelliSenseBox->ShowAtLocation(Point(0,0), IntelliSenseBox->Handle);
+		IntelliSenseBox->ShowForm(Point(0,0), IntelliSenseBox->Handle, false);
 		IntelliSenseBox->Hide();
+
+		RemoteScript = Script::NullScript;
+		CallingObjectIsRef = false;
 	}
 
-	void IntelliSenseThingy::ShowInfoTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
+	void IntelliSenseInterface::DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
 	{
-		HideInfoTip();
+		HideInfoToolTip();
 
-		InfoTip->Tag = ParentHandle;
-		InfoTip->ToolTipTitle = Title;
-		InfoTip->Show(Message, Control::FromHandle(ParentHandle), Location, Duration);
+		InfoToolTip->Tag = ParentHandle;
+		InfoToolTip->ToolTipTitle = Title;
+		InfoToolTip->Show(Message, Control::FromHandle(ParentHandle), Location, Duration);
 	}
 
-	void IntelliSenseThingy::HideInfoTip()
+	void IntelliSenseInterface::HideInfoToolTip()
 	{
-		if (InfoTip->Tag != nullptr)
-			InfoTip->Hide(Control::FromHandle((IntPtr)InfoTip->Tag));
+		try		// to account for disposed controls
+		{
+			if (InfoToolTip->Tag != nullptr && Control::FromHandle((IntPtr)InfoToolTip->Tag) != nullptr)
+				InfoToolTip->Hide(Control::FromHandle((IntPtr)InfoToolTip->Tag));
+			else
+				InfoToolTip->Tag = nullptr;
+		}
+		catch (...)
+		{
+			InfoToolTip->Tag = nullptr;
+		}
 	}
 
-	void IntelliSenseThingy::Initialize(IntelliSenseThingy::Operation Op, bool Force, bool InitAll)
+	void IntelliSenseInterface::ShowInterface( IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems )
 	{
-		if (!Enabled && !Force)		return;
+		if (!Enabled && !ForceDisplay)
+			return;
 
 		UInt32 ItemCount = 0;
-		Cleanup();
 
 		IntelliSenseList->BeginUpdate();
+
+		CleanupInterface();
 
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
 		String^ Extract = ParentEditor->GetCurrentToken();
 
-		switch (Op)
+		switch (DisplayOperation)
 		{
 		case Operation::e_Default:
-			if (Extract->Length >= OPTIONS->FetchSettingAsInt("ThresholdLength") || Force)
+			if (Extract->Length >= OPTIONS->FetchSettingAsInt("ThresholdLength") || ForceDisplay)
 			{
-				for each (IntelliSenseItem^% Itr in LocalVarList)
+				for each (IntelliSenseItem^% Itr in LocalVariableDatabase)
 				{
 					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 					{
 						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
-						ListContents->Add(Itr);
+						CurrentListContents->Add(Itr);
 						ItemCount++;
 					}
 				}
@@ -694,7 +787,7 @@ namespace IntelliSense
 						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 						{
 							IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
-							ListContents->Add(Itr);
+							CurrentListContents->Add(Itr);
 							ItemCount++;
 						}
 					}
@@ -706,54 +799,58 @@ namespace IntelliSense
 			{
 				if (Itr->GetType() == IntelliSenseItem::ItemType::e_UserFunct)
 				{
-					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 					{
 						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
-						ListContents->Add(Itr);
+						CurrentListContents->Add(Itr);
 						ItemCount++;
 					}
 				}
 			}
 			break;
 		case Operation::e_Dot:
-			if (InitAll)
+			if (ShowAllItems)
 			{
-				RemoteScript = Script::NullScript;
-				VariableInfo^ RefVar = GetLocalVar(Extract);
+				VariableInfo^ RefVar = LookupLocalVariableByIdentifier(Extract);
 				if (RefVar != nullptr && RefVar->GetVariableType() == VariableInfo::VariableType::e_Ref)
 				{
-					IsObjRefr = true;
+					CallingObjectIsRef = true;
 				}
 				else if (!String::Compare(Extract, "player", true))
 				{
-					IsObjRefr = true;
+					CallingObjectIsRef = true;
 				}
 				else
 				{
-					CStringWrapper^ CStr = gcnew CStringWrapper(Extract);														// extract = calling ref
-					ScriptData* Data = NativeWrapper::FetchScriptFromForm(CStr->String());
-
-					if (!Data->IsValid())
+					CString CStr(Extract);						// extract = calling ref
+					ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+					if (Data && !Data->IsValid())
 					{
 						LastOperation = Operation::e_Default;
 						break;
 					}
+					else if (Data)
+					{
+						RemoteScript = ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));			// cache form data for subsequent calls
+						CallingObjectIsRef = g_CSEInterface->CSEEditorAPI.GetIsFormReference(CStr.c_str());
+					}
 					else
 					{
-						RemoteScript = ISDB->GetRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));			// cache form data for subsequent calls
-						IsObjRefr = NativeWrapper::IsFormAnObjRefr(CStr->String());
+						CallingObjectIsRef = false;
+						RemoteScript = Script::NullScript;
 					}
+					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 
-			for (Script::_VarList::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
+			for (Script::VarListT::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
 			{
 				if (RemoteVarItr->Current->GetType() == IntelliSenseItem::ItemType::e_RemoteVar)
 				{
-					if (RemoteVarItr->Current->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+					if (RemoteVarItr->Current->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 					{
 						IntelliSenseList->Items->Add(gcnew ListViewItem(RemoteVarItr->Current->GetIdentifier(), (int)RemoteVarItr->Current->GetType()));
-						ListContents->Add(RemoteVarItr->Current);
+						CurrentListContents->Add(RemoteVarItr->Current);
 						ItemCount++;
 					}
 				}
@@ -761,24 +858,24 @@ namespace IntelliSense
 
 			for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
 			{
-				if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && IsObjRefr)
+				if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && CallingObjectIsRef)
 				{
-					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 					{
 						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
-						ListContents->Add(Itr);
+						CurrentListContents->Add(Itr);
 						ItemCount++;
 					}
 				}
 			}
 			break;
 		case Operation::e_Assign:
-			for each (IntelliSenseItem^% Itr in LocalVarList)
+			for each (IntelliSenseItem^% Itr in LocalVariableDatabase)
 			{
-				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 				{
 					IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
-					ListContents->Add(Itr);
+					CurrentListContents->Add(Itr);
 					ItemCount++;
 				}
 			}
@@ -788,10 +885,10 @@ namespace IntelliSense
 				if (Itr->GetType() == IntelliSenseItem::ItemType::e_Quest ||
 					Itr->GetType() == IntelliSenseItem::ItemType::e_GlobalVar)
 				{
-					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || InitAll)
+					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 					{
 						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetType()));
-						ListContents->Add(Itr);
+						CurrentListContents->Add(Itr);
 						ItemCount++;
 					}
 				}
@@ -801,7 +898,8 @@ namespace IntelliSense
 
 		IntelliSenseList->EndUpdate();
 
-		if (ItemCount == 1 && !String::Compare(ListContents[0]->GetIdentifier(), Extract, true))	return;		// do not show when enumerable == extract
+		if (ItemCount == 1 && !String::Compare(CurrentListContents[0]->GetIdentifier(), Extract, true))
+			return;		// do not show when enumerable == extract
 
 		if (ItemCount > 0)
 		{
@@ -813,18 +911,20 @@ namespace IntelliSense
 
 			Size DisplaySize = ::Size(240, 158 - ((8 - ItemCount) * 18));
 			IntelliSenseBox->SetSize(DisplaySize);
-			IntelliSenseBox->ShowAtLocation(ParentEditor->GetScreenPoint(Loc), ParentEditor->GetControlBoxHandle());
+			IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Loc), ParentEditor->GetControlBoxHandle(), !IntelliSenseBox->Visible);
 
 			ParentEditor->Focus();
 			IntelliSenseList->Items[0]->Selected = true;
 		}
+		else
+			HideInterface();
 
-		LastOperation = Op;
+		LastOperation = DisplayOperation;
 	}
 
-	VariableInfo^ IntelliSenseThingy::GetLocalVar(String^% Identifier)
+	VariableInfo^ IntelliSenseInterface::LookupLocalVariableByIdentifier(String^% Identifier)
 	{
-		for each (IntelliSenseItem^% Itr in LocalVarList)
+		for each (IntelliSenseItem^% Itr in LocalVariableDatabase)
 		{
 			if (!String::Compare(Itr->GetIdentifier(), Identifier, true))
 			{
@@ -834,61 +934,61 @@ namespace IntelliSense
 		return nullptr;
 	}
 
-	void IntelliSenseThingy::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
+	void IntelliSenseInterface::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 	{
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
-		if (IsVisible())
+		if (Visible)
 		{
-			if (GetIntelliSenseListSelectedIndex() == -1)
+			if (GetListViewSelectedItemIndex(IntelliSenseList) == -1)
 				return;
 
 			Point Loc = Point(IntelliSenseList->Size.Width + 17, 0);
 
-			ShowInfoTip(ListContents[GetIntelliSenseListSelectedIndex()]->GetTypeIdentifier(),
-						ListContents[GetIntelliSenseListSelectedIndex()]->Describe(),
+			DisplayInfoToolTip(CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->GetTypeIdentifier(),
+						CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->Describe(),
 						Loc,
 						IntelliSenseBox->Handle,
 						15000);
 		}
 	}
 
-	void IntelliSenseThingy::IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E)
+	void IntelliSenseInterface::IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E)
 	{
 		switch (E->KeyCode)
 		{
 		case Keys::Escape:
-			Hide();
+			HideInterface();
 			break;
 		case Keys::Tab:
 		case Keys::Enter:
-			PickIdentifier();
+			PickSelection();
 			break;
 		}
 	}
 
-	void IntelliSenseThingy::IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
+	void IntelliSenseInterface::IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 	{
-		if (GetIntelliSenseListSelectedIndex() == -1)
+		if (GetListViewSelectedItemIndex(IntelliSenseList) == -1)
 			return;
 
-		PickIdentifier();
+		PickSelection();
 	}
 
-	void IntelliSenseThingy::IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E)
+	void IntelliSenseInterface::IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 	{
 		if (!Destroying)
 			E->Cancel = true;
 	}
 
-	void IntelliSenseThingy::MoveIndex(IntelliSenseThingy::Direction Direction)
+	void IntelliSenseInterface::ChangeCurrentSelection(IntelliSenseInterface::MoveDirection Direction)
 	{
-		int SelectedIndex = GetIntelliSenseListSelectedIndex();
+		int SelectedIndex = GetListViewSelectedItemIndex(IntelliSenseList);
 		if (SelectedIndex == -1)		return;
 
 		switch (Direction)
 		{
-		case Direction::e_Down:
+		case MoveDirection::e_Down:
 			if (SelectedIndex < (IntelliSenseList->Items->Count - 1))
 			{
 				IntelliSenseList->Items[SelectedIndex]->Selected = false;
@@ -898,7 +998,7 @@ namespace IntelliSense
 					IntelliSenseList->TopItem = IntelliSenseList->Items[IntelliSenseList->TopItem->Index + 1];
 			}
 			break;
-		case Direction::e_Up:
+		case MoveDirection::e_Up:
 			if (SelectedIndex > 0)
 			{
 				IntelliSenseList->Items[SelectedIndex]->Selected = false;
@@ -911,24 +1011,25 @@ namespace IntelliSense
 		}
 	}
 
-	void IntelliSenseThingy::UpdateLocalVars()
+	void IntelliSenseInterface::UpdateLocalVariableDatabase()
 	{
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
-		IntelliSenseDatabase::ParseScript(const_cast<String^>(ParentEditor->GetScriptText()), gcnew Boxer(this));
+		IntelliSenseDatabase::ParseScript(ParentEditor->GetScriptText(), gcnew Boxer(this));
 	}
 
-	void IntelliSenseThingy::PickIdentifier()
+	void IntelliSenseInterface::PickSelection()
 	{
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
 		String^ Result;
 		ParentEditor->Focus();
 
-		if (GetIntelliSenseListSelectedIndex() != -1)
+		if (GetListViewSelectedItemIndex(IntelliSenseList) != -1)
 		{
-			Result = ListContents[GetIntelliSenseListSelectedIndex()]->GetIdentifier();
-			Cleanup();
+			Result = CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->GetIdentifier();
+			CleanupInterface();
+			HideInterface();
 		}
 		else
 			return;
@@ -944,43 +1045,39 @@ namespace IntelliSense
 		}
 	}
 
-	void IntelliSenseThingy::Hide()
+	void IntelliSenseInterface::HideInterface()
 	{
-		IntelliSenseBox->Hide();
-		HideInfoTip();
+		IntelliSenseBox->HideForm(true);
+		HideInfoToolTip();
 	}
 
-	void IntelliSenseThingy::Cleanup()
+	void IntelliSenseInterface::CleanupInterface()
 	{
 		IntelliSenseList->Items->Clear();
-		ListContents->Clear();
-		Hide();
+		CurrentListContents->Clear();
 	}
 
-	int	IntelliSenseThingy::GetIntelliSenseListSelectedIndex()
-	{
-		int Result = -1;
-		for each (int SelectedIndex in IntelliSenseList->SelectedIndices)
-		{
-			Result = SelectedIndex;
-			break;
-		}
-		return Result;
-	}
-
-	bool IntelliSenseThingy::ShowQuickInfoTip(String^ TextUnderMouse, Point TipLoc)
+	bool IntelliSenseInterface::ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point TipLoc)
 	{
 		if (OPTIONS->FetchSettingAsInt("UseQuickView") == 0)
 			return false;
 
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
-		IntelliSenseItem^ Item = GetLocalVar(TextUnderMouse);
+		CString CStr(ParentToken);
+		ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+		if (Data && Data->IsValid())
+			ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
 
+		g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+		IntelliSenseItem^ Item = ISDB->LookupRemoteScriptVariable(ParentToken, MainToken);
+
+		if (Item == nullptr)
+			Item = LookupLocalVariableByIdentifier(MainToken);
 		if (Item == nullptr)
 		{
 			for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
 			{
-				if (!String::Compare(Itr->GetIdentifier(), TextUnderMouse, true))
+				if (!String::Compare(Itr->GetIdentifier(), MainToken, true))
 				{
 					Item = Itr;
 					break;
@@ -990,7 +1087,7 @@ namespace IntelliSense
 		if (Item != nullptr)
 		{
 			TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5;
-			ShowInfoTip(Item->GetTypeIdentifier(),
+			DisplayInfoToolTip(Item->GetTypeIdentifier(),
 						Item->Describe(),
 						TipLoc,
 						ParentEditor->GetEditorBoxHandle(),
@@ -1001,15 +1098,21 @@ namespace IntelliSense
 			return false;
 	}
 
-	bool IntelliSenseThingy::QuickView(String^ TextUnderMouse)
+	bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken)
 	{
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
-		return ShowQuickInfoTip(TextUnderMouse, ParentEditor->GetCaretLocation());
+		return ShowQuickInfoTip(MainToken, ParentToken, ParentEditor->GetCaretLocation());
 	}
 
-	bool IntelliSenseThingy::QuickView(String^ TextUnderMouse, Point MouseLocation)
+	bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point MouseLocation)
 	{
-		return ShowQuickInfoTip(TextUnderMouse, MouseLocation);
+		return ShowQuickInfoTip(MainToken, ParentToken, MouseLocation);
+	}
+
+	void IntelliSenseInterface::Destroy()
+	{
+		Destroying = true;
+		delete IntelliSenseBox;
 	}
 }

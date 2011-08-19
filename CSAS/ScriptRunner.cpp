@@ -463,11 +463,6 @@ namespace CSAutomationScript
 		return Singleton;
 	}
 
-	ScriptRunner::ScriptRunner()
-	{
-		;//
-	}
-
 	bool ScriptRunner::ExecuteContext(ScriptContext* Script, mup::Value& ReturnValue, bool* HasReturnValue)
 	{
 		if (ExecutingContexts.size() >= MAX_RECURSE_DEPTH)
@@ -625,7 +620,7 @@ namespace CSAutomationScript
 
 			if (GlobalScript->GetExecutionState() == ScriptContext::kExecutionState_Terminate)
 			{
-				DebugPrint("Fatal error encounted when executing global script '%s' - Removing it from the queue", GlobalScript->ScriptName.c_str());
+				DebugPrint("Fatal error encounted while executing global script '%s' - Removing it from the queue", GlobalScript->ScriptName.c_str());
 
 				delete *Itr;
 				Itr = GlobalScriptCache.erase(Itr);

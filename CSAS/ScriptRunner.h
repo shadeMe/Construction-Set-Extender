@@ -80,8 +80,6 @@ namespace CSAutomationScript
 	{
 		static ScriptRunner*					Singleton;
 
-		ScriptRunner();
-
 		std::stack<ScriptContext*>				ExecutingContexts;
 
 		bool									ExecuteContext(ScriptContext* Script, mup::Value& ReturnValue, bool* HasReturnValue);

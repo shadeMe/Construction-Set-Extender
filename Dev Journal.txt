@@ -1,18 +1,23 @@
 To-Do
 =====
+
+IMMEDIATE  >>
+
+
+
+NOTE	---->
+> Don't forget to correct NiObjectNET's def when updating OBSE source files
+
 MISC	---->
 > Credits:	T800G, for the window snapper code
 			Ingo Berg, for muParserX (and for the great tech. support)
 
 CSE		----> 
-> Fix the csas doc param details data
-> Don't forget to correct NiObjectNET's def when updating OBSE source files
-> Show Data dialog on startup, as opposed to loading a plugin (either) (use CSAS?)
+> Implement taskbar icons and minimize buttons
+> Increase formID column's size
 > Use a tab delimited format for the change logs
 > Make selection alignment undo'able
-> Check out the assertion at 0x004875A1 (called indirectly from Datahandler::saveplugin_Housekeeping). strangely seems to happen only when IDA's debugger is attached
 > Topicinfo inititem warnings aren't being shown
-> Export/import result scripts
 > Relative scaling and snap to bounding box
 
 * The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
@@ -30,6 +35,4 @@ CSE		---->
 > Load cell functions
 
 SE		---->
-> The Previous script shortcut messes with control focus
 > There's a slight X-offset to the position returned by AvalonEditTextEditor::GetPositionFromCharIndex
-> Fix the 'Missing New Tab button' repaint issue

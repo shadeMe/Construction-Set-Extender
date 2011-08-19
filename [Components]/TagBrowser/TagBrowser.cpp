@@ -44,7 +44,7 @@ void TagDatabase::RemoveTag(AdvTree::Node^ Tag)
 	ParentTree->DeselectNode(nullptr, AdvTree::eTreeAction::Code);
 	ParentTree->EndUpdate();
 }
-bool TagDatabase::TagItem(AdvTree::Node^ Tag, FormData* Data)
+bool TagDatabase::TagItem(AdvTree::Node^ Tag, ComponentDLLInterface::FormData* Data)
 {
 	if (GetItemExistsInTag(Tag,  gcnew String(Data->EditorID)) == false)
 	{
@@ -60,7 +60,7 @@ bool TagDatabase::TagItem(AdvTree::Node^ Tag, FormData* Data)
 		return false;
 	}
 }
-bool TagDatabase::TagItem(String^% TagName, FormData* Data)
+bool TagDatabase::TagItem(String^% TagName, ComponentDLLInterface::FormData* Data)
 {
 	AdvTree::Node^ Tag = ParentTree->FindNodeByText(TagName);
 	return TagItem(Tag, Data);
@@ -168,7 +168,7 @@ bool TagDatabase::DeserializeDatabase(String^ SerializedData)
 				String^ Token = Tokens[i];
 				if (Token != "")
 				{
-					FormData* Data = NativeWrapper::LookupFormByEditorID((gcnew CStringWrapper(Token))->String());
+					ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(Token)).c_str());
 					if (Data)
 						TagItem(Tag, Data);
 					else
@@ -176,6 +176,7 @@ bool TagDatabase::DeserializeDatabase(String^ SerializedData)
 						BadItems = true;
 						DebugPrint("Couldn't find form '" + Token + "'");
 					}
+					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 		}
@@ -451,8 +452,8 @@ void TagBrowser::GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
 			IntPtr Window = NativeWrapper::WindowFromPoint(E->Location);
 			if (Window != GetFormListHandle() && Window != GetWindowHandle())
 			{
-				TagBrowserInstantiationData InteropData;
-				FormData* Data = InteropData.FormListHead = new FormData[FormList->SelectedItems->Count];
+				ComponentDLLInterface::TagBrowserInstantiationData InteropData;
+				ComponentDLLInterface::FormData* Data = InteropData.FormListHead = new ComponentDLLInterface::FormData[FormList->SelectedItems->Count];
 				InteropData.FormCount = FormList->SelectedItems->Count;
 				InteropData.InsertionPoint = E->Location;
 
@@ -463,8 +464,7 @@ void TagBrowser::GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
 					Index++;
 				}
 
-				NativeWrapper::TagBrowser_InstantiateObjects(&InteropData);
-				delete [] Data;
+				g_CSEInterface->TagBrowser.InstantiateObjects(&InteropData);
 			}
 		}
 		else
@@ -497,7 +497,7 @@ void TagBrowser::FormSelectionList_ItemActivate(Object^ Sender, EventArgs^ E)
 	ListViewItem^ Selected = GetListViewSelectedItem(List);
 	if (Selected != nullptr)
 	{
-		NativeWrapper::TESForm_LoadIntoView((gcnew CStringWrapper(Selected->Text))->String(), (gcnew CStringWrapper(Selected->SubItems[2]->Text))->String());
+		g_CSEInterface->CSEEditorAPI.LoadFormForEdit((CString(Selected->Text)).c_str(), (CString(Selected->SubItems[2]->Text)).c_str());
 	}
 }
 void TagBrowser::FormSelectionList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -690,7 +690,7 @@ void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
 		bool BadItems = false;
 		for each (String^% Itr in TagItems)
 		{
-			FormData* Data = NativeWrapper::LookupFormByEditorID((gcnew CStringWrapper(Itr))->String());
+			ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(Itr)).c_str());
 			if (Data)
 			{
 				AddItemToFormList(Data);
@@ -700,6 +700,7 @@ void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
 				BadItems = true;
 				DebugPrint("Couldn't find form '" + Itr + "'");
 			}
+			g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 		}
 
 		FormList->EndUpdate();
@@ -708,7 +709,7 @@ void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
 			MessageBox::Show("Some forms were found missing while populating the tag list.\n\nDetails logged to the console.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 	}
 }
-void TagBrowser::AddItemToFormList(FormData* Data)
+void TagBrowser::AddItemToFormList(ComponentDLLInterface::FormData* Data)
 {
 	ListViewItem^ Item = gcnew ListViewItem(gcnew String(Data->EditorID));
 	Item->SubItems->Add(Data->FormID.ToString("X8"));
@@ -717,7 +718,7 @@ void TagBrowser::AddItemToFormList(FormData* Data)
 	FormList->Items->Add(Item);
 }
 
-bool TagBrowser::AddItemToActiveTag(FormData* Data)
+bool TagBrowser::AddItemToActiveTag(ComponentDLLInterface::FormData* Data)
 {
 	AdvTree::Node^ SelectedNode = TagTree->SelectedNode;
 	if (SelectedNode != nullptr)

@@ -1,19 +1,32 @@
-#include "Exports.h"
+#include "[Common]\ComponentDLLInterface.h"
 #include "BSAViewer.h"
+
+extern ComponentDLLInterface::BSAViewerInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) const char* InitializeViewer(const char* AppPath, const char* Filter)
+	__declspec(dllexport) void* QueryInterface(void)
 	{
-		try
-		{
-			System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
-		}
-		catch (Exception^ E)
-		{
-			DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
-		}
-
-		return BSAV->InitializeViewer(gcnew String(AppPath), gcnew String(Filter));
+		return &g_InteropInterface;
 	}
 }
+
+void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize)
+{
+	try
+	{
+		System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
+	}
+
+	CopyStringToCharBuffer(BSAV->InitializeViewer(gcnew String(WorkingDir), gcnew String(ExtensionFilter)), ReturnPathOut, BufferSize);
+}
+
+ComponentDLLInterface::BSAViewerInterface g_InteropInterface =
+{
+	DeleteManagedHeapPointer,
+	ShowBSAViewerDialog
+};

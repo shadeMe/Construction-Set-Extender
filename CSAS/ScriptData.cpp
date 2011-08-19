@@ -141,7 +141,8 @@ namespace CSAutomationScript
 				{
 					GotProlog = true;
 
-					Tokenizer.Sanitize(std::string(Buffer), this->Text, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
+					Tokenizer.Sanitize(std::string(Buffer),
+						this->Text, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
 					this->LineNumber = BeginLine = LineCounter;
 
 					LineCounter++;

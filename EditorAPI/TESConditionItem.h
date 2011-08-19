@@ -2,15 +2,18 @@
 
 #include "TESForm.h"
 
-//	EditorAPI: TESCondition class.
+//	EditorAPI: TESConditionItem class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
     ..
 */
 
+class	TESConditionItem;
+typedef tList<TESConditionItem>		ConditionListT;
+
 // 18
-class TESCondition
+class TESConditionItem
 {
 public:
 	union Param
@@ -27,7 +30,8 @@ public:
 	/*0C*/ Param				param1;
 	/*10*/ Param				param2;
 	/*14*/ UInt32				unk14;
-};
-STATIC_ASSERT(sizeof(TESCondition) == 0x18);
 
-typedef tList<TESCondition>		ConditionListT;
+	// methods
+	static UInt32				GetScriptableFormConditionCount(ConditionListT* ConditionList, TESForm* FormToCompare);
+};
+STATIC_ASSERT(sizeof(TESConditionItem) == 0x18);

@@ -200,7 +200,7 @@ void NumberedRichTextBox::GotoLine(int Line)
 {
 	if (Line > TextField->Lines->Length || !Line)
 	{
-		MessageBox::Show("Invalid line number/offset", "Goto Line - CSE Editor");
+		MessageBox::Show("Invalid line number/offset", "Goto Line - CSE Script Editor");
 	}
 	else
 	{

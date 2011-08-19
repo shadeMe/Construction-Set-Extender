@@ -6,7 +6,8 @@ namespace Hooks
 	// hooks that modify how CS dialogs behave and add interfaces for new tools
 	void PatchDialogHooks(void);
 
-	extern bool g_QuickLoadToggle;
+	extern bool		g_QuickLoadToggle;
+	extern HANDLE	g_CSESplashImage;
 
 	_DeclareNopHdlr(ResponseEditorMic, "nops out the call to the delinquent sound struct initializer sub, fixing a crash");
 	_DeclareMemHdlr(FindTextInit, "hooks the find text window for subclassing");
@@ -52,4 +53,8 @@ namespace Hooks
 	_DeclareMemHdlr(CellViewWindowResizeB, "");
 	_DeclareMemHdlr(CellViewWindowPopulateObjectListFilter, "adds support for the newly added filter tool in the cell view window");
 	_DeclareMemHdlr(TESSoundPlayFile, "patches the sound file sampler code to play files found in archives");
+	_DeclareMemHdlr(FormEditDialogTitle, "appends form editorIDs to the title bar of form edit dialogs");
+	_DeclareMemHdlr(FindTextFormEnumerationA, "patches the find text dialog to account for the new 'Hide XXX records' tools");
+	_DeclareMemHdlr(FindTextFormEnumerationB, "");
+	_DeclareMemHdlr(FindTextFormEnumerationC, "");
 }

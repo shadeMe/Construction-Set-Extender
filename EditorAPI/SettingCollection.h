@@ -2,11 +2,12 @@
 
 #include "TESForm.h"
 #include "Setting.h"
+#include "[Common]\HandShakeStructs.h"
 
 //	EditorAPI: GameSetting class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     SettingCollection is an abstract interface for managing settings from a common source (file, registery, etc.)
     INISettingCollection and it's descendents manage settings from the assorted INI files
     RegSettingCollection managed windows registry values.
@@ -103,7 +104,8 @@ public:
 	void					CreateDefaultCopy();	// creates a copy of the collection
 	void					ResetCollection();		// resets the collection with data from the default copy
 	UInt32					GetGMSTCount();
-	void					SerializeGMSTDataForHandShake(GMSTData* HandShakeData); 
+	void					SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData);
 };
 
 extern GameSettingCollection*	g_GMSTCollection;
+extern const char*				g_CSINIPath;

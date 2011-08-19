@@ -290,8 +290,6 @@ namespace AvalonEditXSHD
 				XSHDColor^ HighlightColor = gcnew XSHDColor("CommandColor", Foreground, Background, Bold);
 				XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(HighlightColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
-				HighlightKeywords->AddWord(gcnew XSHDWord("begin"));
-				HighlightKeywords->AddWord(gcnew XSHDWord("end"));
 				HighlightKeywords->AddWord(gcnew XSHDWord("int"));
 				HighlightKeywords->AddWord(gcnew XSHDWord("short"));
 				HighlightKeywords->AddWord(gcnew XSHDWord("long"));
@@ -338,6 +336,8 @@ namespace AvalonEditXSHD
 				XSHDColor^ HighlightColor = gcnew XSHDColor("BlockColor", Foreground, Background, Bold);
 				XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(HighlightColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
+				HighlightKeywords->AddWord(gcnew XSHDWord("begin"));
+				HighlightKeywords->AddWord(gcnew XSHDWord("end"));
 				HighlightKeywords->AddWord(gcnew XSHDWord("GameMode"));
 				HighlightKeywords->AddWord(gcnew XSHDWord("MenuMode"));
 				HighlightKeywords->AddWord(gcnew XSHDWord("OnActivate"));

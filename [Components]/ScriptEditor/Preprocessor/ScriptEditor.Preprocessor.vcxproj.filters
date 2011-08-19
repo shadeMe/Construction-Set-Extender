@@ -7,6 +7,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{35853150-4b8f-4186-ae2f-0c704b9fdd15}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Wrappers">
+      <UniqueIdentifier>{6e7a50cd-cbac-4dfa-9ae6-242b39476354}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\[Common]\Includes.h">
@@ -19,15 +22,21 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="..\Globals.h" />
-    <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="..\ScriptParser.h" />
+    <ClInclude Include="..\..\..\[Common]\NativeWrapper.h">
+      <Filter>Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptPreprocessor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\[Common]\MiscUtilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Preprocessor.cpp" />
     <ClCompile Include="..\ScriptParser.cpp" />
+    <ClCompile Include="..\..\..\[Common]\NativeWrapper.cpp">
+      <Filter>Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptPreprocessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScriptEditor.Preprocessor.rc">
