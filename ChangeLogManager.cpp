@@ -1,8 +1,6 @@
 #include "ChangeLogManager.h"
 #include "Hooks\VersionControl.h"
 
-#include "CSDialogs.h"
-
 namespace VersionControl
 {
 	static char				s_TextBuffer[0x200] = {0};
@@ -248,7 +246,7 @@ namespace VersionControl
 
 	void ChangeLogManager::RecordFormChange(TESForm* Form, UInt8 ChangeType, UInt32 Value)
 	{
-		sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "[%s] Form (%08X)\t\t'%s': ", g_FormTypeIdentifier[Form->formType], Form->formID, Form->editorID.c_str());
+		sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "[%s] Form (%08X)\t\t'%s': ", Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
 		std::string Buffer(s_TextBuffer);
 
 		switch (ChangeType)
@@ -302,7 +300,7 @@ namespace VersionControl
 		CHANGELOG->RecordChange("Active plugin %s saved", SaveFile->fileName);
 		CHANGELOG->Pad(1);
 
-		if (g_INIManager->GetINIInt("BackupOnSave"))
+		if (g_INIManager->GetINIInt("BackupOnSave", "Extender::VersionControl"))
 		{
 			char TimeString[0x100] = {0}, ExistingPath[MAX_PATH] = {0}, NewPath[MAX_PATH] = {0};
 			GetTimeString(TimeString, sizeof(TimeString));

@@ -112,7 +112,7 @@ ComponentDLLInterface::ScriptData* ScriptListDialog::Show(Operation Op, String^ 
 
 	ScriptList->BeginUpdate();
 
-	ComponentDLLInterface::ScriptListData* Data = ScriptListCache = g_CSEInterface->ScriptEditor.GetScriptList();
+	ComponentDLLInterface::ScriptListData* Data = ScriptListCache = NativeWrapper::g_CSEInterface->ScriptEditor.GetScriptList();
 	if (Data)
 	{
 		for (int i = 0; i < Data->ScriptCount; i++)
@@ -182,7 +182,7 @@ void ScriptListDialog::Close()
 	PreviewBox->Text = "";
 	SearchBox->Text = "";
 	ScriptList->MultiSelect = false;
-	g_CSEInterface->DeleteNativeHeapPointer(ScriptListCache, false);
+	NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(ScriptListCache, false);
 	ScriptListCache = 0;
 	LastKnownSize = ScriptBox->ClientSize;
 }
@@ -198,9 +198,12 @@ void ScriptListDialog::SelectScript()
 		ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)Itr->Tag);
 
 		if (!i)
-			FirstSelectionCache = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
+			FirstSelectionCache = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
 		else
-			SEMGR->GetAllocatedWorkspace(ParentIndex)->GetParentContainer()->InstantiateNewWorkspace(Data);
+		{
+			ComponentDLLInterface::ScriptData* NewData = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
+			SEMGR->GetAllocatedWorkspace(ParentIndex)->GetParentContainer()->InstantiateNewWorkspace(NewData);
+		}
 	}
 
 	Closing = true;
@@ -213,7 +216,7 @@ void ScriptListDialog::GetUseReport()
 		return;
 
 	CString CEID(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
-	g_CSEInterface->CSEEditorAPI.ShowUseReportDialog(CEID.c_str());
+	NativeWrapper::g_CSEInterface->CSEEditorAPI.ShowUseReportDialog(CEID.c_str());
 }
 
 void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)

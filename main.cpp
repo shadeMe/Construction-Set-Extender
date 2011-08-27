@@ -10,6 +10,8 @@
 #include "Hooks\Renderer.h"
 #include "Hooks\Misc.h"
 
+#define	CSE_VERSION					MAKE_OBLIVION_VERSION(5, 1, 820)
+
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
 	if (Msg->type == 'CSEI')
@@ -42,24 +44,14 @@ extern "C"
 	{
 		info->infoVersion = PluginInfo::kInfoVersion;
 		info->name = "CSE";
-		info->version = 5;
+		info->version = CSE_VERSION;
 
 		if (!obse->isEditor)					// we don't want to screw with the game
 			return false;
 
-		CONSOLE->InitializeLog(g_APPPath.c_str());
-		DebugPrint("Construction Set Extender Initializing ...");
-		CONSOLE->Indent();
-
 		g_APPPath = obse->GetOblivionDirectory();
 		g_INIPath = g_APPPath + "Data\\OBSE\\Plugins\\Construction Set Extender.ini";
 		g_DLLPath = g_APPPath + "Data\\OBSE\\Plugins\\Construction Set Extender.dll";
-
-		DebugPrint("Initializing INI Manager");
-		CONSOLE->Indent();
-		g_INIManager->SetINIPath(g_INIPath);
-		g_INIManager->Initialize();
-		CONSOLE->Exdent();
 
 		g_DLLInstance = (HINSTANCE)GetModuleHandle(g_DLLPath.c_str());
 		if (!g_DLLInstance)
@@ -67,6 +59,16 @@ extern "C"
 			DebugPrint("Couldn't fetch the DLL's handle!");
 			return false;
 		}
+
+		CONSOLE->InitializeLog(g_APPPath.c_str());
+		DebugPrint("Construction Set Extender v%d.%d.%d {%08X} Initializing ...", (CSE_VERSION >> 24) & 0xFF, (CSE_VERSION >> 16) & 0xFF, CSE_VERSION & 0xFFFF, CSE_VERSION);
+		CONSOLE->Indent();
+
+		DebugPrint("Initializing INI Manager");
+		CONSOLE->Indent();
+		g_INIManager->SetINIPath(g_INIPath);
+		g_INIManager->Initialize();
+		CONSOLE->Exdent();
 
 		DebugPrint("Checking Versions");
 		CONSOLE->Indent();
@@ -112,16 +114,15 @@ extern "C"
 	__declspec(dllexport) bool OBSEPlugin_Load(const OBSEInterface * obse)
 	{
 		INITCOMMONCONTROLSEX icex;
-																 // ensure that the common control DLL is loaded.
 		icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
 		icex.dwICC  = ICC_LISTVIEW_CLASSES;
-		InitCommonControlsEx(&icex);
+		InitCommonControlsEx(&icex);			// ensure that the common control DLL is loaded.
 
 		g_pluginHandle = obse->GetPluginHandle();
 
 		DebugPrint("Loading Component DLLs");
 		CONSOLE->Indent();
-		if (!CLIWrapper::Import(obse))
+		if (!CLIWrapper::ImportInterfaces(obse))
 			return false;
 		CONSOLE->Exdent();
 
@@ -144,12 +145,7 @@ extern "C"
 	}
 };
 
-// (mostly) dummy entry point
-BOOL WINAPI DllMain(
-        HANDLE  hDllHandle,
-        DWORD   dwReason,
-        LPVOID  lpreserved
-        )
+BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
 	switch (dwReason)
 	{
@@ -157,5 +153,6 @@ BOOL WINAPI DllMain(
 //		WaitUntilDebuggerAttached();
 		break;
 	}
+
 	return TRUE;
 }

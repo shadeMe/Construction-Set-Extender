@@ -3,15 +3,16 @@
 GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
 const char*							g_CSINIPath = (const char*)0x00A0ABB8;
 
-struct GMSTMap_Key_Comparer
+struct DefaultGMSTMapKeyComparer
 {
-	bool operator()(const char* Key1, const char* Key2) const {
+	bool operator()(const char* Key1, const char* Key2) const
+	{
 		return _stricmp(Key1, Key2) < 0;
 	}
 };
 
-typedef std::map<const char*, GameSetting*, GMSTMap_Key_Comparer>		_DefaultGMSTMap;
-_DefaultGMSTMap						g_DefaultGMSTMap;
+typedef std::map<const char*, GameSetting*, DefaultGMSTMapKeyComparer>		DefaultGMSTMapT;
+DefaultGMSTMapT						g_DefaultGMSTMap;
 
 void GameSettingCollection::CreateDefaultCopy()
 {
@@ -50,7 +51,7 @@ void GameSettingCollection::ResetCollection()
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
 			SettingForm->SetFromActiveFile(false);
 
-			_DefaultGMSTMap::iterator Match = g_DefaultGMSTMap.find(Name);
+			DefaultGMSTMapT::iterator Match = g_DefaultGMSTMap.find(Name);
 
 			if (Match != g_DefaultGMSTMap.end())
 			{

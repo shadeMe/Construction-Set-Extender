@@ -177,7 +177,7 @@ namespace Refactoring
 			}
 		}
 
-		ComponentDLLInterface::ScriptVarListData* Data = g_CSEInterface->ScriptEditor.GetScriptVarList((CString(ScriptEditorID)).c_str());
+		ComponentDLLInterface::ScriptVarListData* Data = NativeWrapper::g_CSEInterface->ScriptEditor.GetScriptVarList((CString(ScriptEditorID)).c_str());
 		if (Data)
 		{
 			for (int i = 0; i < Data->ScriptVarListCount; i++)
@@ -189,7 +189,7 @@ namespace Refactoring
 				ElementList->Items->Add(Item);
 			}
 		}
-		g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 
 		this->Hide();
 		this->ShowDialog();

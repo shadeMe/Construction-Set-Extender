@@ -1,7 +1,6 @@
 #include "VersionControl.h"
 #include "TESFile.h"
 #include "..\ChangeLogManager.h"
-#include "..\CSDialogs.h"
 
 namespace Hooks
 {
@@ -75,6 +74,7 @@ namespace Hooks
 	void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
 	{
 		VersionControl::HandlePluginSave(SaveFile);
+		g_LoadingSavingPlugins = true;
 	}
 
 	#define _hhName		DataHandlerSavePluginProlog
@@ -189,7 +189,7 @@ namespace Hooks
 
 	void __stdcall DoDataHandlerCreateFormHook(TESForm* Form)
 	{
-		VersionControl::CHANGELOG->RecordChange("[%s] Form (%08X) created",  g_FormTypeIdentifier[Form->formType], Form->formID);
+		VersionControl::CHANGELOG->RecordChange("[%s] Form (%08X) created",  Form->GetTypeIDString(), Form->formID);
 	}
 
 	#define _hhName		TESDialogFormEditNewForm

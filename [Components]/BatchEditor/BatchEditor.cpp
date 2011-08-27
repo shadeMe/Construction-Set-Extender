@@ -907,7 +907,7 @@ void RefBatchEditor::PopulateFormLists()
 {
 	ComboBox^ FormList = nullptr;
 
-	BatchRefOwnerFormData* Data = g_CSEInterface->BatchRefEditor.GetOwnershipData();
+	BatchRefOwnerFormData* Data = NativeWrapper::g_CSEInterface->BatchRefEditor.GetOwnershipData();
 	NPCList->BeginUpdate();
 	GlobalList->BeginUpdate();
 	FactionList->BeginUpdate();
@@ -943,7 +943,7 @@ void RefBatchEditor::PopulateFormLists()
 	GlobalList->EndUpdate();
 	FactionList->EndUpdate();
 
-	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+	NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 }
 
 bool RefBatchEditor::InitializeBatchEditor(BatchRefData* Data)
@@ -1131,7 +1131,7 @@ void RefBatchEditor::ObjectList_ColumnClick(Object^ Sender, ColumnClickEventArgs
 
 void RefBatchEditor::SetParent_Click(Object^ Sender, EventArgs^ E)
 {
-	ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.ShowPickReferenceDialog((HWND)BatchEditBox->Handle);
+	ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.ShowPickReferenceDialog((HWND)BatchEditBox->Handle);
 	BatchData->EnableParent.Parent = 0;
 
 	if (Data)
@@ -1145,5 +1145,5 @@ void RefBatchEditor::SetParent_Click(Object^ Sender, EventArgs^ E)
 	else
 		SetParent->Text = "Set Parent to NONE";
 
-	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+	NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 }

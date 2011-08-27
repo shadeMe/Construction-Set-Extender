@@ -35,16 +35,7 @@ namespace Hooks
 		if (ScriptListComboBox)
 			AuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(ScriptListComboBox, 1226));
 
-		tagRECT ScriptEditorLoc;
-		TESDialog::GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-
-		ComponentDLLInterface::ScriptData* Data = NULL;
-		if (AuxScript)
-		{
-			Data = new ComponentDLLInterface::ScriptData(AuxScript);
-		}
-
-		CLIWrapper::Interfaces::SE->InstantiateEditor(Data, ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+		TESDialog::ShowScriptEditorDialog(AuxScript);
 	}
 
 	#define _hhName		MainWindowEntryPoint

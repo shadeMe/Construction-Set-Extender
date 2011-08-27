@@ -8,7 +8,7 @@ ref class Globals
 {
 public:
 #ifndef CSE_SEPREPROC
-	static String^												AppPath = gcnew String(g_CSEInterface->CSEEditorAPI.GetAppPath());
+	static String^												AppPath = gcnew String(NativeWrapper::g_CSEInterface->CSEEditorAPI.GetAppPath());
 #endif
 	static String^												ScriptTextDelimiters = gcnew String("., (){}[]\t\n");
 	static String^												ScriptTextControlChars = " \t";

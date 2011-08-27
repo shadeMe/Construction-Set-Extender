@@ -50,8 +50,6 @@ namespace CSAutomationScript
 
 		virtual void					Reset();
 		void							Copy(const CSASDataElement& Source);
-
-		CSASDataElement& operator=(const CSASDataElement& rhs);
 	public:
 		UInt8							GetType() const { return Type; }
 		TESForm*						GetForm() const { assert(Type == kParamType_Reference); return RefData; }
@@ -74,6 +72,7 @@ namespace CSAutomationScript
 		CSASDataElement(CSASDataElement* Elements, UInt32 Size) { SetArray(Elements, Size); }
 
 		CSASDataElement(const CSASDataElement& rhs);
+		CSASDataElement& operator=(const CSASDataElement& rhs);
 
 		virtual ~CSASDataElement() { Reset(); }
 

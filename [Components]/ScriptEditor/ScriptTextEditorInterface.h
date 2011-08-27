@@ -72,7 +72,6 @@ public interface class IScriptTextEditor
 	UInt32										FindReplace(FindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOutput^ Output);
 	void										ToggleComment(int StartIndex);
 	void										UpdateIntelliSenseLocalDatabase(void);
-	void										ClearFindResultIndicators(void);
 
 	Control^									GetContainer();
 	void										ScrollToLine(String^ LineNumber);

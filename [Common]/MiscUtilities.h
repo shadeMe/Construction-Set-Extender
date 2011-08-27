@@ -84,9 +84,47 @@ public:
 	}
 
 	void										Show();
+	void										Show(IWin32Window^ Parent);
 	System::Windows::Forms::DialogResult		ShowDialog();
 	void										Hide();
 	void										Close();
+};
+
+ref class NonActivatingImmovableAnimatedForm : public Form
+{
+protected:
+	property bool										ShowWithoutActivation
+	{
+		virtual bool									get() override { return true; }
+	}
+
+	virtual void										WndProc(Message% m) override;
+
+	static enum class									FadeOperationType
+															{
+																e_None = 0,
+																e_FadeIn,
+																e_FadeOut
+															};
+
+	bool												AllowMove;
+	FadeOperationType									FadeOperation;
+	Timer^												FadeTimer;
+
+	void												FadeTimer_Tick(Object^ Sender, EventArgs^ E);
+
+	void												Destroy();
+public:
+	~NonActivatingImmovableAnimatedForm()
+	{
+		Destroy();
+	}
+
+	void												SetSize(Drawing::Size WindowSize);
+	void												ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
+	void												HideForm(bool Animate);
+
+	NonActivatingImmovableAnimatedForm();
 };
 
 namespace Log

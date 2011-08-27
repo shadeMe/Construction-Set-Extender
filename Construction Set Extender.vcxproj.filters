@@ -123,9 +123,6 @@
     <ClCompile Include="[Common]\CSInteropData.cpp">
       <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
-    <ClCompile Include="CSDialogs.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="RenderSelectionGroupManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -190,9 +187,6 @@
     </ClCompile>
     <ClCompile Include="EditorAPI\TESObjectREFR.cpp">
       <Filter>EditorAPI\Forms</Filter>
-    </ClCompile>
-    <ClCompile Include="StdAfx.cpp">
-      <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="Achievements.cpp">
       <Filter>Extras</Filter>
@@ -347,6 +341,13 @@
     <ClCompile Include="EditorAPI\BSStringT.cpp">
       <Filter>EditorAPI</Filter>
     </ClCompile>
+    <ClCompile Include="StdAfx.cpp" />
+    <ClCompile Include="CSAS\Commands\Commands_Reference.cpp">
+      <Filter>CSAS\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\TESPathGrid.cpp">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\GameTypes.h">
@@ -447,9 +448,6 @@
     </ClInclude>
     <ClInclude Include="[Common]\CSInteropData.h">
       <Filter>Interop\CS 1.0</Filter>
-    </ClInclude>
-    <ClInclude Include="CSDialogs.h">
-      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="RenderSelectionGroupManager.h">
       <Filter>Components</Filter>
@@ -713,9 +711,6 @@
     <ClInclude Include="EditorAPI\TESEffectShader.h">
       <Filter>EditorAPI\Forms</Filter>
     </ClInclude>
-    <ClInclude Include="StdAfx.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="Achievements.h">
       <Filter>Extras</Filter>
     </ClInclude>
@@ -862,6 +857,13 @@
     </ClInclude>
     <ClInclude Include="EditorAPI\TESConditionItem.h">
       <Filter>EditorAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="CSAS\Commands\Commands_Reference.h">
+      <Filter>CSAS\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESPathGrid.h">
+      <Filter>EditorAPI\Forms</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

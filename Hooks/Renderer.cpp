@@ -2,7 +2,6 @@
 #include "..\RenderSelectionGroupManager.h"
 #include "..\ElapsedTimeCounter.h"
 #include "..\RenderWindowTextPainter.h"
-#include "..\CSDialogs.h"
 
 #pragma warning(disable: 4410)		// illegal operand size for the fild instruction
 
@@ -206,7 +205,7 @@ namespace Hooks
 
 	void __stdcall DoRenderWindowStatsHook(void)
 	{
-		if (g_INIManager->GetINIInt("DisplaySelectionStats"))
+		if (g_INIManager->GetINIInt("DisplaySelectionStats", "Extender::Renderer"))
 		{
 			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
 			{
@@ -275,7 +274,7 @@ namespace Hooks
 
 	bool __stdcall DoUpdateViewportHook(void)
 	{
-		if (RENDERTEXT->GetRenderChannelQueueSize(RenderWindowTextPainter::kRenderChannel_2) || g_INIManager->GetINIInt("UpdateViewPortAsync"))
+		if (RENDERTEXT->GetRenderChannelQueueSize(RenderWindowTextPainter::kRenderChannel_2) || g_INIManager->GetINIInt("UpdateViewPortAsync", "Extender::Renderer"))
 			return true;
 		else
 			return false;
@@ -539,7 +538,7 @@ namespace Hooks
 	void __stdcall InitializeCurrentRenderWindowMovementSetting(const char* SettingName)
 	{
 		if (g_RenderWindowAltMovementSettings)
-			s_MovementSettingBuffer = g_INIManager->GetINIFlt((std::string("Alt" + std::string(SettingName)).c_str()));
+			s_MovementSettingBuffer = g_INIManager->GetINIFlt((std::string("Alt" + std::string(SettingName)).c_str()), "Extender::Renderer");
 		else
 		{
 			if (!_stricmp(SettingName, "RefMovementSpeed"))

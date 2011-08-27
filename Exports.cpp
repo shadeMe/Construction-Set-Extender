@@ -5,7 +5,7 @@
 #include "Hooks\CompilerErrorDetours.h"
 #include "Hooks\Misc.h"
 #include "Hooks\ScriptEditor.h"
-#include "CSDialogs.h"
+#include "Hooks\TESFile.h"
 
 using namespace Hooks;
 using namespace ComponentDLLInterface;
@@ -122,9 +122,24 @@ bool GetIsFormReference(const char* EditorID)
 	return Result;
 }
 
-void LoadFormForEdit(const char* EditorID, const char* FormType)
+void LoadFormForEdit(const char* EditorID)
 {
-	ShowFormEditDialog(EditorID, FormType);
+	TESForm* Form = TESForm::LookupByEditorID(EditorID);
+	if (Form)
+	{
+		switch (Form->formType)
+		{
+		case TESForm::kFormType_Script:
+			TESDialog::ShowScriptEditorDialog(Form);
+			break;
+		case TESForm::kFormType_REFR:
+			_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+			break;
+		default:
+			TESDialog::ShowFormEditDialog(Form);
+			break;
+		}
+	}
 }
 
 FormData* ShowPickReferenceDialog(HWND Parent)
@@ -630,7 +645,8 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 
 	UInt32 QuestCount = _DATAHANDLER->quests.Count(),
 			ScriptCount = 0,
-			GlobalCount = _DATAHANDLER->globals.Count();
+			GlobalCount = _DATAHANDLER->globals.Count(),
+			EditorIDFormCount = 0;
 
 	ScriptData TestData;
 	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
@@ -639,14 +655,34 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		if (TestData.UDF)	ScriptCount++;
 	}
 
+	void* Unk01 = thisCall<void*>(0x0051F920, g_FormEditorIDMap);
+	while (Unk01)
+	{
+		const char*	 EditorID = NULL;
+		TESForm* Form = NULL;
+
+		thisCall<UInt32>(0x005E0F90, g_FormEditorIDMap, &Unk01, &EditorID, &Form);
+		if (EditorID)
+		{
+			if (Form->formType != TESForm::kFormType_GMST &&
+				Form->formType != TESForm::kFormType_Global &&
+				Form->formType != TESForm::kFormType_Quest)
+			{
+				EditorIDFormCount++;
+			}
+		}
+	}
+
 	Data->QuestListHead = new QuestData[QuestCount];
 	Data->QuestCount = QuestCount;
 	Data->ScriptListHead = new ScriptData[ScriptCount];
 	Data->ScriptCount = ScriptCount;
 	Data->GlobalListHead = new GlobalData[GlobalCount];
 	Data->GlobalCount = GlobalCount;
+	Data->EditorIDListHead = new FormData[EditorIDFormCount];
+	Data->EditorIDCount = EditorIDFormCount;
 
-	QuestCount = 0, ScriptCount = 0, GlobalCount = 0;
+	QuestCount = 0, ScriptCount = 0, GlobalCount = 0, EditorIDFormCount = 0;
 	for (tList<TESQuest>::Iterator Itr = _DATAHANDLER->quests.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
 		Data->QuestListHead[QuestCount].FillFormData(Itr.Get());
@@ -666,11 +702,31 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 			ScriptCount++;
 		}
 	}
+
 	for (tList<TESGlobal>::Iterator Itr = _DATAHANDLER->globals.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
 		Data->GlobalListHead[GlobalCount].FillFormData(Itr.Get());
 		Data->GlobalListHead[GlobalCount].FillVariableData(Itr.Get());
 		GlobalCount++;
+	}
+
+	Unk01 = thisCall<void*>(0x0051F920, g_FormEditorIDMap);
+	while (Unk01)
+	{
+		const char*	 EditorID = NULL;
+		TESForm* Form = NULL;
+
+		thisCall<UInt32>(0x005E0F90, g_FormEditorIDMap, &Unk01, &EditorID, &Form);
+		if (EditorID)
+		{
+			if (Form->formType != TESForm::kFormType_GMST &&
+				Form->formType != TESForm::kFormType_Global &&
+				Form->formType != TESForm::kFormType_Quest)
+			{
+				Data->EditorIDListHead[EditorIDFormCount].FillFormData(Form);
+				EditorIDFormCount++;
+			}
+		}
 	}
 
 	return Data;
@@ -748,6 +804,11 @@ void UpdateScriptVarNames(const char* EditorID, ComponentDLLInterface::ScriptVar
 			ScriptForm->SetFromActiveFile(true);
 		}
 	}
+}
+
+bool CanUpdateIntelliSenseDatabase(void)
+{
+	return g_LoadingSavingPlugins == false;
 }
 #pragma endregion
 /**** END SCRIPTEDITOR SUBINTERFACE ****/
@@ -1023,6 +1084,7 @@ ComponentDLLInterface::CSEInterface g_InteropInterface =
 		BindScript,
 		SetScriptText,
 		UpdateScriptVarNames,
+		CanUpdateIntelliSenseDatabase,
 	},
 	{
 		GetLoadedForms,

@@ -138,7 +138,6 @@ public:
 	{
 		kFormFlags_FromMaster           = /*00*/ 0x00000001,   // form is from an esm file
 		kFormFlags_FromActiveFile       = /*01*/ 0x00000002,   // form is overriden by active mod or save file
-		//kFormFlags_Loaded             = /*02*/ 0x00000004,   // ?? (from OBSE ModEntry defininition)
 		kFormFlags_Linked               = /*03*/ 0x00000008,   // set after formids have been resolved into TESForm*
 		kFormFlags_Deleted              = /*05*/ 0x00000020,   // set on deletion, not saved in CS or savegame
 		kFormFlags_BorderRegion         = /*06*/ 0x00000040,   // ?? (from TES4Edit)
@@ -194,6 +193,7 @@ public:
 	bool							CompareTo(TESForm* Form);
 	void							Link();
 	bool							SaveForm(TESFile* File);
+	const char*						GetTypeIDString(void);
 
 	static TESForm*					CreateInstance(UInt8 TypeID);
 	void							DeleteInstance(bool ReleaseMemory = true);
@@ -225,3 +225,5 @@ class TESMemContextForm
 {
 	// no members
 };
+
+extern NiTMapBase<const char*, TESForm*>*		g_FormEditorIDMap;	// actually a BSTCaseInsensitiveStringMap<TESForm*>

@@ -1,5 +1,4 @@
 #include "RenderSelectionGroupManager.h"
-#include "CSDialogs.h"
 
 RenderSelectionGroupManager			g_RenderSelectionGroupManager;
 

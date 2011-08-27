@@ -77,4 +77,5 @@
 #include "TESRenderControl.h"
 #include "TESDialog.h"
 #include "TESIdleForm.h"
+#include "TESPathGrid.h"
 #include "SettingCollection.h"

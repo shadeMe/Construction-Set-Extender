@@ -319,7 +319,7 @@ namespace ScriptEditor
 		void												ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
 
-		bool												PerformScriptHouseKeeping(void);
+		bool												PerformHouseKeeping(void);
 
 		void												AddMessageToMessagePool(MessageType Type, int Line, String^ Message);
 		void												ClearErrorsItemsFromMessagePool(void);

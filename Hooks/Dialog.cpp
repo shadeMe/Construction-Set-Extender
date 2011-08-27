@@ -1,5 +1,4 @@
 #include "Dialog.h"
-#include "..\CSDialogs.h"
 #include "..\Achievements.h"
 #include "..\WindowManager.h"
 
@@ -393,7 +392,7 @@ namespace Hooks
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SHOWOVERRIDES, "Show Override List");
 
-		if (GetFormDialogTemplate(SelectedForm->formType) == 1 && SelectedForm->IsReference() == 0)
+		if (TESDialog::GetIsFormEditDialogCompatible(SelectedForm))
 		{
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
 		}

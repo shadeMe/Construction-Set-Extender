@@ -6,7 +6,6 @@
 #include "Hooks\Dialog.h"
 #include "Hooks\AssetSelector.h"
 #include "Hooks\Renderer.h"
-#include "CSDialogs.h"
 #include "RenderSelectionGroupManager.h"
 #include "ElapsedTimeCounter.h"
 #include "ToolManager.h"
@@ -35,7 +34,8 @@ WNDPROC						g_LandscapeTextureUseOrgWindowProc = NULL;
 HFONT						g_CSDefaultFont = NULL;
 const POINT					g_ObjectWindowTreePosOffset = { 0, 24 };
 const POINT					g_CellViewWindowObjListPosOffset = { 0, 12 };
-std::string					g_ObjectWindowFilterStr = "", g_CellViewWindowFilterStr = "";
+std::string					g_ObjectWindowFilterStr = "";
+std::string					g_CellViewWindowFilterStr = "";
 
 CSnapWindow					g_WindowEdgeSnapper;
 
@@ -63,8 +63,23 @@ LRESULT CALLBACK FindTextDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 				FormID = FormID.substr(PadStart, PadEnd - PadStart);
 				UInt32 FormIDInt = 0;
 				sscanf_s(FormID.c_str(), "%08X", &FormIDInt);
-				if (TESForm::LookupByFormID(FormIDInt))
-					ShowFormEditDialog(FormIDInt, FormTypeStr.c_str());
+				TESForm* Form = TESForm::LookupByFormID(FormIDInt);
+
+				if (Form)
+				{
+					switch (Form->formType)
+					{
+					case TESForm::kFormType_Script:
+						TESDialog::ShowScriptEditorDialog(Form);
+						break;
+					case TESForm::kFormType_REFR:
+						_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+						break;
+					default:
+						TESDialog::ShowFormEditDialog(Form);
+						break;
+					}
+				}
 			}
 			break;
 		}
@@ -154,7 +169,7 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 				if (ListView_GetItem(PluginList, &SelectedPluginItem) == TRUE)
 				{
-					g_INIManager->FetchSetting("StartupPluginName")->SetValue(g_TextBuffer);
+					g_INIManager->FetchSetting("StartupPluginName", "Extender::General")->SetValue(g_TextBuffer);
 
 					char Buffer[0x200];
 					sprintf_s(Buffer, 0x200, "Startup plugin set to '%s'.", g_TextBuffer);
@@ -267,7 +282,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 				if (SendMessage(*g_HWND_CSParent, 0x40C, NULL, (LPARAM)FileName))
 				{
-					TESDialog::SetCSWindowTitleModifiedFlag(false);
+					TESDialog::SetMainWindowTitleModified(false);
 				}
 				else
 				{
@@ -454,7 +469,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_WORLD_UNLOADCELL:
-			ResetRenderWindow();
+			TESDialog::ResetRenderWindow();
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_GAMEPLAY_GLOBALSCRIPT:
@@ -484,12 +499,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				bool Checked = (GetMenuState(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_BYCOMMAND)) & MF_CHECKED;
 				if (!Checked)
 				{
-					g_INIManager->FetchSetting("PreventTimeStampChanges")->SetValue("1");
+					g_INIManager->FetchSetting("PreventTimeStampChanges", "Extender::General")->SetValue("1");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_CHECKED);
 				}
 				else
 				{
-					g_INIManager->FetchSetting("PreventTimeStampChanges")->SetValue("0");
+					g_INIManager->FetchSetting("PreventTimeStampChanges", "Extender::General")->SetValue("0");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_UNCHECKED);
 				}
 			}
@@ -501,12 +516,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				bool Checked = (GetMenuState(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_BYCOMMAND)) & MF_CHECKED;
 				if (!Checked)
 				{
-					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters")->SetValue("1");
+					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters", "Extender::General")->SetValue("1");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_CHECKED);
 				}
 				else
 				{
-					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters")->SetValue("0");
+					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters", "Extender::General")->SetValue("0");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_UNCHECKED);
 				}
 			}
@@ -547,27 +562,9 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				{
 					for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 					{
-						TESPathGridPoint* Point = Itr.Get();		// ### fix this once the class has been fully exposed
+						TESPathGridPoint* Point = Itr.Get();
 
-						TESObjectREFR* LinkedRef = *(TESObjectREFR**)((UInt32)Point + 0x20);
-						TESPathGrid* ParentGrid = *(TESPathGrid**)((UInt32)Point + 0x24);
-						NiTMapBase<TESObjectREFR*, tList<TESPathGridPoint>*>* LinkedRefMap = (NiTMapBase<TESObjectREFR*, tList<TESPathGridPoint>*>*)((UInt32)ParentGrid + 0x40);
-
-						if (LinkedRef)
-						{
-							tList<TESPathGridPoint>* LinkedNodes = NULL;
-							if (thisCall<UInt32>(0x004ADB90, LinkedRefMap, LinkedRef, &LinkedNodes))	// NiTPointerMap_LookupByKey
-							{
-								LinkedNodes->Remove(Point);
-								if (LinkedNodes->Count() == 0)
-								{
-									thisCall<UInt32>(0x004BCBD0, LinkedRefMap, LinkedRef);				// NiTPointerMap_Remove
-									FormHeap_Free(LinkedNodes);
-								}
-
-								*((UInt32*)((UInt32)Point + 0x20)) = NULL;
-							}
-						}
+						Point->UnlinkFromReference();
 					}
 
 					SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);		// reinitialize render window
@@ -580,8 +577,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				{
 					for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 					{
-						TESObjectREFR* LinkedRef = *(TESObjectREFR**)((UInt32)Itr.Get() + 0x20);
-						if (LinkedRef)
+						if (Itr.Get()->linkedRef)
 						{
 							MessageBox(*g_HWND_RenderWindow, "One or more of the selected path grid points is already linked to a reference.\n\nThey cannot not be linked to a different reference until they are unlinked first.", "CSE", MB_OK|MB_ICONEXCLAMATION);
 
@@ -756,8 +752,8 @@ BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_GETMINMAXINFO:
 		{
 			MINMAXINFO* SizeInfo = (MINMAXINFO*)lParam;
-			SizeInfo->ptMaxTrackSize.x = SizeInfo->ptMinTrackSize.x = 194;
-			SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 213;
+			SizeInfo->ptMaxTrackSize.x = SizeInfo->ptMinTrackSize.x = 188;
+			SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 220;
 			break;
 		}
 	case WM_COMMAND:
@@ -946,7 +942,7 @@ LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		GetWindowRect(hWnd, &WindowRect);
 		MoveWindow(GetDlgItem(hWnd, EDIT_CONSOLE), 0, 0, WindowRect.right - WindowRect.left - 15, WindowRect.bottom - WindowRect.top - 65, TRUE);
 		GetWindowRect(GetDlgItem(hWnd, EDIT_CONSOLE), &EditRect);
-		SetWindowPos(GetDlgItem(hWnd, EDIT_CMDBOX), HWND_NOTOPMOST, 0, EditRect.bottom - EditRect.top, WindowRect.right - WindowRect.left - 10, 45, SWP_NOZORDER);
+		SetWindowPos(GetDlgItem(hWnd, EDIT_CMDBOX), HWND_NOTOPMOST, 0, EditRect.bottom - EditRect.top, WindowRect.right - WindowRect.left - 18, 31, SWP_NOZORDER);
 		break;
 	}
 	case WM_DESTROY:
@@ -1134,7 +1130,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 				sscanf_s(FormIDString, "%08X", &FormID);
 				if (errno == ERANGE || errno == EINVAL)
 				{
-					MessageBox(hWnd, "Bad FormID string - FormIDs should be unsigned 32-bit hex integers (e.g: 00503AB8)", "CSE", MB_OK);
+					MessageBox(hWnd, "Bad FormID string - FormIDs should be unsigned 32-bit hexadecimal integers (e.g: 00503AB8)", "CSE", MB_OK);
 					break;
 				}
 				else if ((FormID & 0x00FFFFFF) < 0x800)
@@ -1184,10 +1180,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		case POPUP_EDITBASEFORM:
 		{
 			TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
-			if (BaseForm && BaseForm->editorID.c_str())
-			{
-				ShowFormEditDialog(BaseForm->editorID.c_str(), BaseForm->formType);
-			}
+			if (BaseForm)
+				TESDialog::ShowFormEditDialog(BaseForm);
 			break;
 		}
 		case POPUP_ADDTOTAG:
@@ -1223,6 +1217,7 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			break;
 		}
 	}
+
 	UpdateWindow(hWnd);
 	Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 }
@@ -1650,8 +1645,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				QuestScript->AddCrossReference(Quest);
 
 				MessageBox(hWnd, "Global script created successfully.\n\nIt will now be opened for editing ...", "CSE", MB_OK|MB_ICONINFORMATION);
-				InstantitateCustomScriptEditor(ScriptID);
-
+				TESDialog::ShowScriptEditorDialog(TESForm::LookupByEditorID(ScriptID));
 				DestroyWindow(hWnd);
 				return TRUE;
 			}
@@ -2420,9 +2414,9 @@ void InitializeWindowManager(void)
 
 	HMENU SaveOptionsMenu = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU8); SaveOptionsMenu = GetSubMenu(SaveOptionsMenu, 0);
 	InsertMenu(FileMenu, 40127, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)SaveOptionsMenu, "Save Options");
-	if (g_INIManager->GetINIInt("SaveLoadedESPsAsMasters"))
+	if (g_INIManager->GetINIInt("SaveLoadedESPsAsMasters", "Extender::General"))
 		CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_CHECKED);
-	if (g_INIManager->GetINIInt("PreventTimeStampChanges"))
+	if (g_INIManager->GetINIInt("PreventTimeStampChanges", "Extender::General"))
 		CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_CHECKED);
 
 	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);
@@ -2463,7 +2457,7 @@ void InitializeWindowManager(void)
                              CLIP_DEFAULT_PRECIS, 5,	// CLEARTYPE_QUALITY
                              FF_DONTCARE, "MS Shell Dlg");
 
-	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GetINIInt("UpdatePeriod"), NULL);
+	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GetINIInt("UpdatePeriod", "Extender::Renderer"), NULL);
 	g_TagBrowserOrgWindowProc = (WNDPROC)SetWindowLong(CLIWrapper::Interfaces::TAG->GetFormDropParentHandle(), GWL_WNDPROC, (LONG)TagBrowserSubClassProc);
 	g_DragDropSupportDialogs.AddHandle(CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
 

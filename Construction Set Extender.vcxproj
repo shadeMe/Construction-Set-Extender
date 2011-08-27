@@ -176,6 +176,7 @@
     <ClCompile Include="CSAS\Array.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_Form.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_General.cpp" />
+    <ClCompile Include="CSAS\Commands\Commands_Reference.cpp" />
     <ClCompile Include="CSAS\ScriptCommandInfo.cpp" />
     <ClCompile Include="CSAS\ScriptCommands.cpp" />
     <ClCompile Include="CSAS\ScriptData.cpp" />
@@ -202,6 +203,7 @@
     <ClCompile Include="EditorAPI\TESObject.cpp" />
     <ClCompile Include="EditorAPI\TESObjectCELL.cpp" />
     <ClCompile Include="EditorAPI\TESObjectREFR.cpp" />
+    <ClCompile Include="EditorAPI\TESPathGrid.cpp" />
     <ClCompile Include="EditorAPI\TESQuest.cpp" />
     <ClCompile Include="EditorAPI\TESRenderControl.cpp" />
     <ClCompile Include="EditorAPI\TESSound.cpp" />
@@ -227,7 +229,6 @@
     <ClCompile Include="CSEInterfaceManager.cpp" />
     <ClCompile Include="CSInterop.cpp" />
     <ClCompile Include="[Common]\CSInteropData.cpp" />
-    <ClCompile Include="CSDialogs.cpp" />
     <ClCompile Include="RenderSelectionGroupManager.cpp" />
     <ClCompile Include="ElapsedTimeCounter.cpp" />
     <ClCompile Include="RenderWindowTextPainter.cpp" />
@@ -290,6 +291,7 @@
     <ClInclude Include="CSAS\Array.h" />
     <ClInclude Include="CSAS\Commands\Commands_General.h" />
     <ClInclude Include="CSAS\Commands\Commands_Form.h" />
+    <ClInclude Include="CSAS\Commands\Commands_Reference.h" />
     <ClInclude Include="CSAS\ScriptCommandInfo.h" />
     <ClInclude Include="CSAS\ScriptCommands.h" />
     <ClInclude Include="CSAS\ScriptData.h" />
@@ -361,6 +363,7 @@
     <ClInclude Include="EditorAPI\TESObjectTREE.h" />
     <ClInclude Include="EditorAPI\TESObjectWEAP.h" />
     <ClInclude Include="EditorAPI\TESPackage.h" />
+    <ClInclude Include="EditorAPI\TESPathGrid.h" />
     <ClInclude Include="EditorAPI\TESQuest.h" />
     <ClInclude Include="EditorAPI\TESRace.h" />
     <ClInclude Include="EditorAPI\TESRenderControl.h" />
@@ -402,7 +405,6 @@
     <ClInclude Include="CSEInterfaceManager.h" />
     <ClInclude Include="CSInterop.h" />
     <ClInclude Include="[Common]\CSInteropData.h" />
-    <ClInclude Include="CSDialogs.h" />
     <ClInclude Include="RenderSelectionGroupManager.h" />
     <ClInclude Include="ElapsedTimeCounter.h" />
     <ClInclude Include="RenderWindowTextPainter.h" />

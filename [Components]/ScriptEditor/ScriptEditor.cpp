@@ -119,7 +119,7 @@ namespace ScriptEditor
 
 			if (!ScriptModifiedIcons->Images->Count)
 			{
-				ScriptModifiedIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOff"));		// unmodified
+				ScriptModifiedIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOff"));	// unmodified
 				ScriptModifiedIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOn"));		// modified
 				ScriptModifiedIcons->ImageSize = Size(12, 12);
 				ScriptModifiedIcons->TransparentColor = Color::White;
@@ -130,7 +130,7 @@ namespace ScriptEditor
 			EditorTabStrip->Dock = DockStyle::Fill;
 			EditorTabStrip->Location = Point(0, 0);
 			EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Top;
-			EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLineFit;
+			EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
 			EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Far;
 			EditorTabStrip->Font = gcnew Font("Segoe UI", 10, FontStyle::Regular);
 			EditorTabStrip->TabFont = gcnew Font("Segoe UI", 9, FontStyle::Bold);
@@ -158,6 +158,8 @@ namespace ScriptEditor
 			EditorTabStrip->ImageList = ScriptModifiedIcons;
 			EditorTabStrip->ReorderTabsEnabled = true;
 			EditorTabStrip->TabStyle = DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
+			EditorTabStrip->TabStripColor->OuterBorder = Color::FromArgb(255, 59, 59, 59);
+			EditorTabStrip->TabStripColor->InnerBorder = Color::FromArgb(255, 59, 59, 59);
 
 			EditorTabStrip->TabStrip->Tag = this;
 
@@ -165,7 +167,7 @@ namespace ScriptEditor
 			NewTabButton->Image = Globals::ScriptEditorImageResourceManager->CreateImageFromResource("NewTabButton");
 			NewTabButton->ButtonStyle = DotNetBar::eButtonStyle::Default;
 			NewTabButton->Style = DotNetBar::eDotNetBarStyle::Office2007;
-			NewTabButton->ColorTable = DotNetBar::eButtonColor::BlueOrb;
+			NewTabButton->ColorTable = DotNetBar::eButtonColor::Office2007WithBackground;
 			NewTabButton->Text = "New Tab";
 			NewTabButton->Tooltip = "New Tab";
 			NewTabButton->Click += gcnew EventHandler(this, &TabContainer::NewTabButton_Click);
@@ -188,7 +190,7 @@ namespace ScriptEditor
 			if (OPTIONS->FetchSettingAsInt("UseCSParent"))
 			{
 				EditorForm->ShowInTaskbar = false;
-				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)g_CSEInterface->CSEEditorAPI.GetCSMainWindowHandle()));
+				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)NativeWrapper::g_CSEInterface->CSEEditorAPI.GetCSMainWindowHandle()));
 			}
 			else
 			{
@@ -202,8 +204,10 @@ namespace ScriptEditor
 			ForwardJumpStack = gcnew Stack<UInt32>();
 
 			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
-			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(Color::FromArgb(255, 48, 59, 61),
-																													Color::FromArgb(255, 61, 76, 106));
+// 			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(Color::FromArgb(255, 48, 59, 61),
+// 																													Color::FromArgb(255, 61, 76, 106));
+			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(Color::FromArgb(255, 59, 59, 59),
+																													Color::FromArgb(255, 70, 70, 70));
 
 			EditorTabStrip->ResumeLayout();
 			EditorForm->ResumeLayout();
@@ -233,9 +237,9 @@ namespace ScriptEditor
 				}
 			}
 
-			DestructionFlag = true;
+			FlagDestruction(true);
 			CloseAllOpenWorkspaces();
-			DestructionFlag = false;
+			FlagDestruction(false);
 		}
 
 		void TabContainer::EditorForm_PositionChanged(Object^ Sender, EventArgs^ E)
@@ -260,7 +264,7 @@ namespace ScriptEditor
 
 		void TabContainer::ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabItemCloseEventArgs^ E)
 		{
-			Workspace^ Itr = dynamic_cast<Workspace^>(GetMouseOverTab()->Tag);		// clicking on the close button doesn't change the active tab
+			Workspace^ Itr = dynamic_cast<Workspace^>(E->Tab->Tag);		// clicking on the close button doesn't change the active tab
 
 			E->Cancel = true;
 
@@ -360,7 +364,7 @@ namespace ScriptEditor
 
 							String^ ScriptName = ((FileContents->Split('\n', 1))[0]->Split(' '))[1];
 							CString CEID(ScriptName);
-							ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
+							ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
 							if (Data)
 								NewWorkspace = InstantiateNewWorkspace(Data);
 							else
@@ -368,8 +372,6 @@ namespace ScriptEditor
 								NewWorkspace = InstantiateNewWorkspace(0);
 								NewWorkspace->NewScript();
 							}
-
-							g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 						}
 						catch (Exception^ E)
 						{
@@ -423,13 +425,11 @@ namespace ScriptEditor
 			else
 			{
 				CString CEID(ScriptName);
-				ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
 				if (Data)
 					InstantiateNewWorkspace(Data);
 				else
 					InstantiateNewWorkspace(0);
-
-				g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 			}
 
 			BackJumpStack->Push(AllocatedIndex);
@@ -442,11 +442,15 @@ namespace ScriptEditor
 			switch (Direction)
 			{
 			case NavigationDirection::e_Back:
-				if (BackJumpStack->Count < 1)		return;
+				if (BackJumpStack->Count < 1)
+					return;
+
 				JumpIndex = BackJumpStack->Pop();
 				break;
 			case NavigationDirection::e_Forward:
-				if (ForwardJumpStack->Count < 1)	return;
+				if (ForwardJumpStack->Count < 1)
+					return;
+
 				JumpIndex = ForwardJumpStack->Pop();
 				break;
 			}
@@ -490,8 +494,10 @@ namespace ScriptEditor
 			case Keys::Right:								// Next script
 			case Keys::N:									// New script
 				Workspace^ Itr = dynamic_cast<Workspace^>(EditorTabStrip->SelectedTab->Tag);
+
 				if (Itr != nullptr)
 					Itr->TunnelKeyDownEvent(E);
+
 				break;
 			}
 		}
@@ -795,7 +801,7 @@ namespace ScriptEditor
 			SetupControlImage(ContextMenuDirectLink);
 			SetupControlImage(ContextMenuJumpToScript);
 			SetupControlImage(ContextMenuGoogleLookup);
-//			SetupControlImage(ContextMenuRefactorMenu);
+			SetupControlImage(ContextMenuRefactorMenu);
 			SetupControlImage(ContextMenuRefactorAddVariable);
 			SetupControlImage(ContextMenuRefactorDocumentScript);
 			SetupControlImage(ContextMenuRefactorCreateUDFImplementation);
@@ -1356,7 +1362,7 @@ namespace ScriptEditor
 			else
 				CurrentScript = 0;
 
-			g_CSEInterface->DeleteNativeHeapPointer(InitScript, false);
+			NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(InitScript, false);
 		}
 
 		#pragma region Methods
@@ -1591,6 +1597,11 @@ namespace ScriptEditor
 
 					ReadLine = StringParser->ReadLine();
 				}
+
+				if (CaretPos >= TextEditor->GetTextLength())
+					CaretPos = TextEditor->GetTextLength() - 1;
+				else if (CaretPos < 0)
+					CaretPos = 0;
 
 				TextEditor->SetCaretPos(CaretPos);
 				TextEditor->ScrollToCaret();
@@ -1973,7 +1984,7 @@ namespace ScriptEditor
 				if (!Result)
 					AddMessageToMessagePool(MessageType::e_Warning, -1, "Compilation of script '" + ScriptName + "' halted - Couldn't recover from previous errors.");
 
-				ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(ScriptName)).c_str());
+				ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(ScriptName)).c_str());
 				if (Data && String::Compare(CurrentScriptEditorID, ScriptName, true) != 0)
 				{
 					if (MessageBox::Show("Script name '" + ScriptName + "' is already used by another form. Proceeding with compilation will modify the script's editorID.\n\nDo you want to proceed?",
@@ -1984,7 +1995,7 @@ namespace ScriptEditor
 						Result = false;
 					}
 				}
-				g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 
 				if (MessageList->Items->Count && MessageList->Visible == false)
 					ToolBarMessageList->PerformClick();
@@ -2088,7 +2099,7 @@ namespace ScriptEditor
 				else
 					TextEditor->OnLostFocus();
 			}
-			bool Workspace::PerformScriptHouseKeeping()
+			bool Workspace::PerformHouseKeeping()
 			{
 				if (GetModifiedStatus())
 				{
@@ -2101,7 +2112,7 @@ namespace ScriptEditor
 					{
 						if (NewScriptFlag)
 						{
-							g_CSEInterface->ScriptEditor.DestroyScriptInstance(CurrentScript);
+							NativeWrapper::g_CSEInterface->ScriptEditor.DestroyScriptInstance(CurrentScript);
 							CurrentScript = 0;
 						}
 
@@ -2114,11 +2125,11 @@ namespace ScriptEditor
 			}
 			void Workspace::NewScript()
 			{
-				if (PerformScriptHouseKeeping())
+				if (PerformHouseKeeping())
 				{
-					ComponentDLLInterface::ScriptData* Data = g_CSEInterface->ScriptEditor.CreateNewScript();
+					ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->ScriptEditor.CreateNewScript();
 					UpdateEnvironment(Data, true);
-					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 
 					NewScriptFlag = true;
 					SetModifiedStatus(true);
@@ -2127,11 +2138,11 @@ namespace ScriptEditor
 			void Workspace::OpenScript()
 			{
 				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Open, CurrentScriptEditorID);
-				if (Data && PerformScriptHouseKeeping())
+				if (Data && PerformHouseKeeping())
 				{
 					UpdateEnvironment(Data, true);
 				}
-				g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 			}
 			bool Workspace::SaveScript(SaveScriptOperation Operation)
 			{
@@ -2144,8 +2155,8 @@ namespace ScriptEditor
 					{
 						if (Operation == SaveScriptOperation::e_SaveButDontCompile)
 						{
-							g_CSEInterface->ScriptEditor.ToggleScriptCompilation(false);
-							AddMessageToMessagePool(MessageType::e_CSEMessage, -1, "This is an uncompiled script. Expect weird behavior during runtime execution");
+							NativeWrapper::g_CSEInterface->ScriptEditor.ToggleScriptCompilation(false);
+							AddMessageToMessagePool(MessageType::e_CSEMessage, -1, "This is an uncompiled script. Expect weird behavior during runtime execution.");
 						}
 
 						ComponentDLLInterface::ScriptCompileData CompileData;
@@ -2155,13 +2166,13 @@ namespace ScriptEditor
 						CompileData.Script.Type = (int)GetScriptType();
 						CompileData.Script.ParentForm = (TESForm*)CurrentScript;
 
-						if (g_CSEInterface->ScriptEditor.CompileScript(&CompileData))
+						if (NativeWrapper::g_CSEInterface->ScriptEditor.CompileScript(&CompileData))
 						{
 							UpdateEnvironment(&CompileData.Script, false);
 
 							String^ OriginalText = GetScriptText() + SerializeCSEBlock();
 							CString OrgScriptText(OriginalText);
-							g_CSEInterface->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
+							NativeWrapper::g_CSEInterface->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
 							Result = true;
 						}
 						else
@@ -2173,13 +2184,13 @@ namespace ScriptEditor
 														gcnew String(CompileData.CompileErrorData.ErrorListHead[i].Message));
 							}
 
-							g_CSEInterface->DeleteNativeHeapPointer(CompileData.CompileErrorData.ErrorListHead, true);
+							NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(CompileData.CompileErrorData.ErrorListHead, true);
 						}
 
 						if (Operation == SaveScriptOperation::e_SaveButDontCompile)
-							g_CSEInterface->ScriptEditor.ToggleScriptCompilation(true);
+							NativeWrapper::g_CSEInterface->ScriptEditor.ToggleScriptCompilation(true);
 						else if (Operation == SaveScriptOperation::e_SaveActivePluginToo)
-							g_CSEInterface->CSEEditorAPI.SaveActivePlugin();
+							NativeWrapper::g_CSEInterface->CSEEditorAPI.SaveActivePlugin();
 					}
 					else
 						Result = true;
@@ -2189,14 +2200,14 @@ namespace ScriptEditor
 			}
 			void Workspace::DeleteScript()
 			{
-				if (PerformScriptHouseKeeping())
+				if (PerformHouseKeeping())
 				{
 					ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Delete, CurrentScriptEditorID);
 					if (Data)
 					{
-						g_CSEInterface->ScriptEditor.DeleteScript(Data->EditorID);
+						NativeWrapper::g_CSEInterface->ScriptEditor.DeleteScript(Data->EditorID);
 					}
-					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 			void Workspace::RecompileScripts()
@@ -2205,7 +2216,7 @@ namespace ScriptEditor
 															"CSE Script Editor",
 															MessageBoxButtons::YesNo, MessageBoxIcon::Exclamation) == DialogResult::Yes)
 				{
-					g_CSEInterface->ScriptEditor.RecompileScripts();
+					NativeWrapper::g_CSEInterface->ScriptEditor.RecompileScripts();
 					MessageBox::Show("All active scripts recompiled. Results have been logged to the console.",
 															"CSE Script Editor",
 															MessageBoxButtons::OK, MessageBoxIcon::Information);
@@ -2213,34 +2224,34 @@ namespace ScriptEditor
 			}
 			void Workspace::PreviousScript()
 			{
-				if (PerformScriptHouseKeeping())
+				if (PerformHouseKeeping())
 				{
-					ComponentDLLInterface::ScriptData* Data = g_CSEInterface->ScriptEditor.GetPreviousScriptInList(CurrentScript);
+					ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->ScriptEditor.GetPreviousScriptInList(CurrentScript);
 					if (Data)
 					{
 						UpdateEnvironment(Data, true);
 					}
-					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 			void Workspace::NextScript()
 			{
-				if (PerformScriptHouseKeeping())
+				if (PerformHouseKeeping())
 				{
-					ComponentDLLInterface::ScriptData* Data = g_CSEInterface->ScriptEditor.GetNextScriptInList(CurrentScript);
+					ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->ScriptEditor.GetNextScriptInList(CurrentScript);
 					if (Data)
 					{
 						UpdateEnvironment(Data, true);
 					}
-					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 			void Workspace::CloseScript()
 			{
-				if (PerformScriptHouseKeeping())
+				if (PerformHouseKeeping())
 				{
 					Rectangle Bounds = GetParentContainer()->GetEditorFormRect();
-					g_CSEInterface->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
+					NativeWrapper::g_CSEInterface->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 
 					ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 					Parameters->ParameterList->Add(this);
@@ -2599,7 +2610,7 @@ namespace ScriptEditor
 				if (!GetIsCurrentScriptNew() && !GetIsFirstRun())
 				{
 					CString CEID(CurrentScriptEditorID);
-					g_CSEInterface->ScriptEditor.CompileDependencies(CEID.c_str());
+					NativeWrapper::g_CSEInterface->ScriptEditor.CompileDependencies(CEID.c_str());
 					MessageBox::Show("Operation complete! Script variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
 									"CSE Script Editor", MessageBoxButtons::OK, MessageBoxIcon::Information);
 				}
@@ -2671,7 +2682,7 @@ namespace ScriptEditor
 				ContextMenuJumpToScript->Visible = true;
 
 				CString CTUM(MidToken);
-				ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CTUM.c_str());
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CTUM.c_str());
 				if (Data && Data->IsValid())
 				{
 					switch (Data->Type)
@@ -2694,7 +2705,7 @@ namespace ScriptEditor
 				else
 					ContextMenuJumpToScript->Visible = false;
 
-				g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 
 				ContextMenuRefactorCreateUDFImplementation->Visible = false;
 				if (!String::Compare(Tokens[0], "call", true) &&
@@ -2776,7 +2787,11 @@ namespace ScriptEditor
 			}
 			void Workspace::ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E)
 			{
-				ToolBarCommonTextBox->Text = TextEditor->GetTokenAtMouseLocation();
+				String^ Text = TextEditor->GetSelectedText();
+				if (Text == "")
+					Text = TextEditor->GetTokenAtMouseLocation();
+
+				ToolBarCommonTextBox->Text = Text;
 				ToolBarCommonTextBox->Focus();
 			}
 			void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
@@ -2819,18 +2834,18 @@ namespace ScriptEditor
 				for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 				{
 					TextParser->Tokenize(ReadLine, false);
-					InsertOffset += ReadLine->Length + 1;
 
 					if (!TextParser->Valid)
 					{
+						InsertOffset += ReadLine->Length + 1;
 						continue;
 					}
 
-					bool ExitLoop = false;
+					bool ExitLoop = false, SaveOffset = false;
 					switch (TextParser->GetTokenType(TextParser->Tokens[0]))
 					{
 					case ScriptParser::TokenType::e_Variable:
-						LastVarOffset = InsertOffset;
+						SaveOffset = true;
 						break;
 					case ScriptParser::TokenType::e_Comment:
 					case ScriptParser::TokenType::e_ScriptName:
@@ -2842,6 +2857,10 @@ namespace ScriptEditor
 
 					if (ExitLoop)
 						break;
+
+					InsertOffset += ReadLine->Length + 1;
+					if (SaveOffset)
+						LastVarOffset = InsertOffset;
 				}
 
 				if (LastVarOffset)
@@ -3050,7 +3069,7 @@ namespace ScriptEditor
 						}
 
 						CString CEID(CurrentScriptEditorID);
-						g_CSEInterface->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), &RenameData);
+						NativeWrapper::g_CSEInterface->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), &RenameData);
 
 						MessageBox::Show("Variables have been renamed. Scripts referencing them (current script included) will have to be manually updated with the new identifiers.",
 										"CSE Script Editor",
@@ -3139,7 +3158,7 @@ namespace ScriptEditor
 					MessageList->Show();
 					MessageList->BringToFront();
 					ToolBarMessageList->Checked = true;
-					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
+					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
 				}
 				else
 				{
@@ -3162,12 +3181,11 @@ namespace ScriptEditor
 					FindList->Show();
 					FindList->BringToFront();
 					ToolBarFindList->Checked = true;
-					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
+					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
 				}
 				else
 				{
 					FindList->Hide();
-					TextEditor->ClearFindResultIndicators();
 					ToolBarFindList->Checked = false;
 					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
 				}
@@ -3186,7 +3204,7 @@ namespace ScriptEditor
 					BookmarkList->Show();
 					BookmarkList->BringToFront();
 					ToolBarBookmarkList->Checked = true;
-					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
+					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
 				}
 				else
 				{
@@ -3271,7 +3289,7 @@ namespace ScriptEditor
 							ToolBarBookmarkList->PerformClick();
 
 						VariableIndexList->Items->Clear();
-						ComponentDLLInterface::ScriptVarListData* Data = g_CSEInterface->ScriptEditor.GetScriptVarList((CString(CurrentScriptEditorID)).c_str());
+						ComponentDLLInterface::ScriptVarListData* Data = NativeWrapper::g_CSEInterface->ScriptEditor.GetScriptVarList((CString(CurrentScriptEditorID)).c_str());
 						if (Data)
 						{
 							for (int i = 0; i < Data->ScriptVarListCount; i++)
@@ -3297,7 +3315,7 @@ namespace ScriptEditor
 								VariableIndexList->Items->Add(Item);
 							}
 						}
-						g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+						NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 
 						VariableIndexList->Show();
 						VariableIndexList->BringToFront();
@@ -3305,7 +3323,7 @@ namespace ScriptEditor
 						if (VariableIndexList->Items->Count)
 							ToolBarUpdateVarIndices->Enabled = true;
 
-						WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 2;
+						WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
 						ToolBarGetVarIndices->Checked = true;
 					}
 				}
@@ -3357,7 +3375,7 @@ namespace ScriptEditor
 					}
 				}
 
-				if (!g_CSEInterface->ScriptEditor.UpdateScriptVarIndices(CScriptName.c_str(), &Data))
+				if (!NativeWrapper::g_CSEInterface->ScriptEditor.UpdateScriptVarIndices(CScriptName.c_str(), &Data))
 					DebugPrint("Couldn't successfully update all variable indices of script '" + CurrentScriptEditorID + "'");
 				else
 				{
@@ -3434,7 +3452,7 @@ namespace ScriptEditor
 				}
 				else
 				{
-					g_CSEInterface->ScriptEditor.BindScript((CString(CurrentScriptEditorID)).c_str(), (HWND)GetParentContainer()->GetEditorFormHandle());
+					NativeWrapper::g_CSEInterface->ScriptEditor.BindScript((CString(CurrentScriptEditorID)).c_str(), (HWND)GetParentContainer()->GetEditorFormHandle());
 				}
 			}
 		#pragma endregion

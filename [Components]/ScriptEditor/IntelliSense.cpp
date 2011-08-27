@@ -74,6 +74,108 @@ namespace IntelliSense
 		return Description;
 	}
 
+	String^ EditorIDForm::GetFormTypeIdentifier()
+	{
+		static const char* s_FormTypeIdentifier[] =
+										{
+												"None",
+												"TES4",
+												"Group",
+												"GMST",
+												"Global",
+												"Class",
+												"Faction",
+												"Hair",
+												"Eyes",
+												"Race",
+												"Sound",
+												"Skill",
+												"Effect",
+												"Script",
+												"Land Texture",
+												"Enchantment",
+												"Spell",
+												"BirthSign",
+												"Activator",
+												"Apparatus",
+												"Armor",
+												"Book",
+												"Clothing",
+												"Container",
+												"Door",
+												"Ingredient",
+												"Light",
+												"Misc Item",
+												"Static",
+												"Grass",
+												"Tree",
+												"Flora",
+												"Furniture",
+												"Weapon",
+												"Ammo",
+												"NPC",
+												"Creature",
+												"Leveled Creature",
+												"SoulGem",
+												"Key",
+												"Alchemy Item",
+												"SubSpace",
+												"Sigil Stone",
+												"Leveled Item",
+												"SNDG",
+												"Weather",
+												"Climate",
+												"Region",
+												"Cell",
+												"Reference",
+												"Reference",			// ACHR
+												"Reference",			// ACRE
+												"PathGrid",
+												"World Space",
+												"Land",
+												"TLOD",
+												"Road",
+												"Dialog",
+												"Dialog Info",
+												"Quest",
+												"Idle",
+												"AI Package",
+												"Combat Style",
+												"Load Screen",
+												"Leveled Spell",
+												"Anim Object",
+												"Water Type",
+												"Effect Shader",
+												"TOFT"
+											};
+
+		if (FormType >= 0x45)
+			return "Unknown";
+		else
+			return gcnew String(s_FormTypeIdentifier[FormType]);
+	}
+
+	EditorIDForm::EditorIDForm( ComponentDLLInterface::FormData* Data ) : IntelliSenseItem()
+	{
+		this->Type = IntelliSenseItem::ItemType::e_Form;
+
+		FormType = Data->TypeID;
+		FormID = Data->FormID;
+		Name = gcnew String(Data->EditorID);
+		Flags = Data->Flags;
+
+		String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::e_FromMaster)?"\tFrom Master File\n":"") +
+			((Flags & (UInt32)FormFlags::e_FromActiveFile)?"\tFrom Active File\n":"") +
+			((Flags & (UInt32)FormFlags::e_Deleted)?"\tDeleted\n":"") +
+			((Flags & (UInt32)FormFlags::e_TurnOffFire)?"\tTurn Off Fire\n":"") +
+			((Flags & (UInt32)FormFlags::e_QuestItem)?(FormType == 0x31?"\tPersistent\n":"\tQuest Item\n"):"") +
+			((Flags & (UInt32)FormFlags::e_Disabled)?"\tInitially Disabled\n":"") +
+			((Flags & (UInt32)FormFlags::e_VisibleWhenDistant)?"\tVisible When Distant\n":"");
+
+		this->Description = Name + "\n\nType: " + GetFormTypeIdentifier() + "\nFormID: " + FormID.ToString("X8") +
+							(FlagDescription->Length?"\nFlags:\n" + FlagDescription:"");
+	}
+
 	IntelliSenseDatabase^% IntelliSenseDatabase::GetSingleton()
 	{
 		if (Singleton == nullptr)
@@ -95,7 +197,7 @@ namespace IntelliSense
 		DatabaseUpdateThread->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted);
 
 		UpdateThreadTimerInterval = 10;
-		DatabaseUpdateTimer = gcnew Timers::Timer(UpdateThreadTimerInterval * 60 * 1000);	// init to 10 earth minutes
+		DatabaseUpdateTimer = gcnew Timers::Timer(UpdateThreadTimerInterval * 60 * 1000);	// init to 10 minutes
 		DatabaseUpdateTimer->Elapsed += gcnew Timers::ElapsedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed);
 		DatabaseUpdateTimer->AutoReset = true;
 		DatabaseUpdateTimer->SynchronizingObject = nullptr;
@@ -106,9 +208,12 @@ namespace IntelliSense
 
 	IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::InitializeDatabaseUpdate()
 	{
+		System::Diagnostics::Stopwatch^ Profiler = gcnew System::Diagnostics::Stopwatch();
+		Profiler->Start();
+
 		ParsedUpdateData^ Data = gcnew ParsedUpdateData();
 
-		ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = g_CSEInterface->ScriptEditor.GetIntelliSenseUpdateData();
+		ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = NativeWrapper::g_CSEInterface->ScriptEditor.GetIntelliSenseUpdateData();
 
 		for (ComponentDLLInterface::ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr)
 		{
@@ -150,7 +255,16 @@ namespace IntelliSense
 			Data->Enumerables->AddLast(gcnew UserFunctionDelegate(Itr));
 		}
 
-		g_CSEInterface->DeleteNativeHeapPointer(DataHandlerData, false);
+		for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead; Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount; ++Itr)
+		{
+			if (!Itr->IsValid())		continue;
+
+			Data->Enumerables->AddLast(gcnew EditorIDForm(Itr));
+		}
+
+		NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(DataHandlerData, false);
+
+		Profiler->Stop();
 		return Data;
 	}
 
@@ -185,11 +299,11 @@ namespace IntelliSense
 	void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E)
 	{
 		if (E->Error != nullptr)
-			DebugPrint("The ISDatabaseUpdate thread raised an exception!\n\tException: " + E->Error->Message, true);
+			DebugPrint("ISDatabaseUpdate thread raised an exception!\n\tException: " + E->Error->Message, true);
 		else if (E->Cancelled)
 			DebugPrint("Huh?! ISDatabaseUpdate thread was cancelled", true);
 		else if (E->Result == nullptr)
-			DebugPrint("Something seriously went wrong when parsing the datahandler!", true);
+			DebugPrint("Something seriously went wrong when updating the IntelliSense database!", true);
 		else
 		{
 			FinalizeDatabaseUpdate(dynamic_cast<ParsedUpdateData^>(E->Result));
@@ -203,7 +317,7 @@ namespace IntelliSense
 
 	void IntelliSenseDatabase::UpdateDatabase()
 	{
-		if (!DatabaseUpdateThread->IsBusy)
+		if (!DatabaseUpdateThread->IsBusy && NativeWrapper::g_CSEInterface->ScriptEditor.CanUpdateIntelliSenseDatabase())
 		{
 			DatabaseUpdateThread->RunWorkerAsync();
 			NativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense database ...");
@@ -554,112 +668,6 @@ namespace IntelliSense
 		return nullptr;
 	}
 
-	void NonActivatingImmovableAnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
-	{
-		if (FadeOperation == FadeOperationType::e_FadeIn)
-			this->Opacity += FadeTimer->Interval / (0.6 * 0.15 * 1000);
-		else
-			this->Opacity -= FadeTimer->Interval / (0.6 * 0.15 * 1000);
-
-		if (this->Opacity >= 1.0 || this->Opacity <= 0.0)
-		{
-			FadeTimer->Stop();
-
-			if (FadeOperation == FadeOperationType::e_FadeOut)
-				this->Hide();
-		}
-	}
-
-	void NonActivatingImmovableAnimatedForm::SetSize(Drawing::Size WindowSize)
-	{
-		ClientSize = WindowSize;
-
-		WindowSize.Height += 3;
-		MaximumSize = WindowSize;
-		MinimumSize = WindowSize;
-	}
-
-	void NonActivatingImmovableAnimatedForm::ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate)
-	{
-		AllowMove = true;
-
-		SetDesktopLocation(Position.X, Position.Y);
-		if (this->Visible == false)
-		{
-			if (Animate)
-				this->Opacity = 0.0;
-
-			if (ParentHandle != IntPtr::Zero)
-				Show(gcnew WindowHandleWrapper(ParentHandle));
-			else
-				Show();
-
-			if (Animate)
-			{
-				FadeOperation = FadeOperationType::e_FadeIn;
-				FadeTimer->Start();
-			}
-		}
-
-		AllowMove = false;
-	}
-
-	void NonActivatingImmovableAnimatedForm::WndProc(Message% m)
-	{
-		const int WM_SYSCOMMAND = 0x0112;
-		const int SC_MOVE = 0xF010;
-		const int WM_MOVE = 0x003;
-		const int WM_MOVING = 0x0216;
-
-		switch(m.Msg)
-		{
-		case WM_MOVE:
-		case WM_MOVING:
-			if (!AllowMove)
-				return;
-			break;
-		case WM_SYSCOMMAND:
-			int Command = m.WParam.ToInt32() & 0xfff0;
-			if (Command == SC_MOVE && !AllowMove)
-				return;
-			break;
-		}
-
-		Form::WndProc(m);
-	}
-
-	NonActivatingImmovableAnimatedForm::NonActivatingImmovableAnimatedForm() : Form()
-	{
-		AllowMove = false;
-		FadeOperation = FadeOperationType::e_None;
-
-		FadeTimer = gcnew Timer();
-		FadeTimer->Interval = 10;
-		FadeTimer->Tick += gcnew EventHandler(this, &NonActivatingImmovableAnimatedForm::FadeTimer_Tick);
-		FadeTimer->Stop();
-	}
-
-	void NonActivatingImmovableAnimatedForm::HideForm(bool Animate)
-	{
-		if (this->Visible)
-		{
-			if (Animate)
-			{
-				FadeOperation = FadeOperationType::e_FadeOut;
-				this->Opacity = 1.0;
-				FadeTimer->Start();
-			}
-			else
-				this->Hide();
-		}
-	}
-
-	void NonActivatingImmovableAnimatedForm::Destroy()
-	{
-		FadeTimer->Stop();
-		this->Close();
-	}
-
 	IntelliSenseInterface::IntelliSenseInterface(Object^% Parent)
 	{
 		IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
@@ -678,6 +686,7 @@ namespace IntelliSense
 			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemQuest"));
 			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGlobalVar"));
 			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));
+			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemForm"));
 		}
 
 		IntelliSenseBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
@@ -709,7 +718,7 @@ namespace IntelliSense
 		InfoToolTip->AutoPopDelay = 5000;
 		InfoToolTip->InitialDelay = 1000;
 		InfoToolTip->ReshowDelay = 500;
-		InfoToolTip->ToolTipIcon = ToolTipIcon::Info;
+		InfoToolTip->ToolTipIcon = ToolTipIcon::None;
 
 		Enabled = true;
 		ParentEditor = Parent;
@@ -782,7 +791,8 @@ namespace IntelliSense
 					if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) ||
 						Itr->GetType() == IntelliSenseItem::ItemType::e_Quest ||
 						Itr->GetType() == IntelliSenseItem::ItemType::e_GlobalVar ||
-						Itr->GetType() == IntelliSenseItem::ItemType::e_GMST)
+						Itr->GetType() == IntelliSenseItem::ItemType::e_GMST ||
+						Itr->GetType() == IntelliSenseItem::ItemType::e_Form)
 					{
 						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 						{
@@ -823,7 +833,7 @@ namespace IntelliSense
 				else
 				{
 					CString CStr(Extract);						// extract = calling ref
-					ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+					ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 					if (Data && !Data->IsValid())
 					{
 						LastOperation = Operation::e_Default;
@@ -832,14 +842,14 @@ namespace IntelliSense
 					else if (Data)
 					{
 						RemoteScript = ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));			// cache form data for subsequent calls
-						CallingObjectIsRef = g_CSEInterface->CSEEditorAPI.GetIsFormReference(CStr.c_str());
+						CallingObjectIsRef = NativeWrapper::g_CSEInterface->CSEEditorAPI.GetIsFormReference(CStr.c_str());
 					}
 					else
 					{
 						CallingObjectIsRef = false;
 						RemoteScript = Script::NullScript;
 					}
-					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 
@@ -984,7 +994,8 @@ namespace IntelliSense
 	void IntelliSenseInterface::ChangeCurrentSelection(IntelliSenseInterface::MoveDirection Direction)
 	{
 		int SelectedIndex = GetListViewSelectedItemIndex(IntelliSenseList);
-		if (SelectedIndex == -1)		return;
+		if (SelectedIndex == -1)
+			return;
 
 		switch (Direction)
 		{
@@ -1064,11 +1075,14 @@ namespace IntelliSense
 
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 		CString CStr(ParentToken);
-		ComponentDLLInterface::ScriptData* Data = g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+		ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 		if (Data && Data->IsValid())
+		{
+			ParentToken = "" + gcnew String(Data->ParentID);
 			ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
+		}
 
-		g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 		IntelliSenseItem^ Item = ISDB->LookupRemoteScriptVariable(ParentToken, MainToken);
 
 		if (Item == nullptr)

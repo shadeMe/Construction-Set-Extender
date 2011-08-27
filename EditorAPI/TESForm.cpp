@@ -1,6 +1,8 @@
 #include "TESForm.h"
 #include "Core.h"
 
+NiTMapBase<const char*, TESForm*>*		g_FormEditorIDMap = (NiTMapBase<const char*, TESForm*>*)0x009EE18C;
+
 FormCrossReferenceData* FormCrossReferenceData::LookupFormInCrossReferenceList( FormCrossReferenceListT* CrossReferenceList, TESForm* CrossReferencedForm )
 {
 	for (FormCrossReferenceListT::Iterator Itr = CrossReferenceList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
@@ -147,4 +149,9 @@ TESForm* TESForm::LookupByFormID(UInt32 FormID)
 TESForm* TESForm::LookupByEditorID(const char* EditorID)
 {
 	return cdeclCall<TESForm*>(0x00495F20, EditorID);
+}
+
+const char* TESForm::GetTypeIDString( void )
+{
+	return cdeclCall<const char*>(0x004AC1B0, this->formType);
 }

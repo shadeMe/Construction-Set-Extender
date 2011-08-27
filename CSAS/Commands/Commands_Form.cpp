@@ -23,21 +23,18 @@ namespace CSAutomationScript
 		REGISTER_CSASCOMMAND(GetBFCLeveledListEntries, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCLeveledListChanceNone, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCContainerEntries, "Base Form Component Functions");
-		REGISTER_CSASCOMMAND(GetBFCActorBaseDataFlags, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCActorBaseDataFactionList, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCActorBaseDataMagicka, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCActorBaseDataFatigue, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCActorBaseDataBarterGold, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCActorBaseDataLevel, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCAIFormAIStats, "Base Form Component Functions");
-		REGISTER_CSASCOMMAND(GetBFCAIFormAIServiceFlags, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCAIFormAITrainingSkill, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCAIFormAITrainingLevel, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCAIFormAIPackageList, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCReactionFormReactionEntries, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCSoundFilePath, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCBipedModelSlotMask, "Base Form Component Functions");
-		REGISTER_CSASCOMMAND(GetBFCBipedModelFlags, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCBipedModelMaleBipedModelPath, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCBipedModelFemaleBipedModelPath, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(GetBFCBipedModelMaleGroundModelPath, "Base Form Component Functions");
@@ -64,18 +61,15 @@ namespace CSAutomationScript
 		REGISTER_CSASCOMMAND(SetBFCAttackDamage, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCAttribute, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCLeveledListChanceNone, "Base Form Component Functions");
-		REGISTER_CSASCOMMAND(SetBFCActorBaseDataFlags, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCActorBaseDataMagicka, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCActorBaseDataFatigue, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCActorBaseDataBarterGold, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCActorBaseDataLevel, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCAIFormAIStats, "Base Form Component Functions");
-		REGISTER_CSASCOMMAND(SetBFCAIFormAIServiceFlags, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCAIFormAITrainingSkill, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCAIFormAITrainingLevel, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCSoundFilePath, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCBipedModelSlotMask, "Base Form Component Functions");
-		REGISTER_CSASCOMMAND(SetBFCBipedModelFlags, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCBipedModelMaleBipedModelPath, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCBipedModelFemaleBipedModelPath, "Base Form Component Functions");
 		REGISTER_CSASCOMMAND(SetBFCBipedModelMaleGroundModelPath, "Base Form Component Functions");
@@ -451,25 +445,6 @@ namespace CSAutomationScript
 	}
 	DEFINE_CSASCOMMAND_PARAM(GetBFCContainerEntries, "Returns the container component of the passed form as an array of arrays. Subitems are of the following structure: Inventory Item, Count", CSASDataElement::kParamType_Array, kParams_OneForm, 1);
 
-	BEGIN_CSASCOMMAND_HANDLER(GetBFCActorBaseDataFlags)
-	{
-		TESForm* Form = NULL;
-
-		if (!EXTRACT_CSASARGS(&Form))
-			return false;
-		else if (!Form)
-			return false;
-
-		TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
-		if (Component)
-			Result->SetNumber(Component->actorFlags);
-		else
-			return false;
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(GetBFCActorBaseDataFlags, "Returns the 'flags' attribute of actor basedata component of the passed form", CSASDataElement::kParamType_Numeric, kParams_OneForm, 1);
-
 	BEGIN_CSASCOMMAND_HANDLER(GetBFCActorBaseDataFactionList)
 	{
 		TESForm* Form = NULL;
@@ -610,25 +585,6 @@ namespace CSAutomationScript
 	}
 	DEFINE_CSASCOMMAND_PARAM(GetBFCAIFormAIStats, "Returns the 'aistats' attributes of AI component of the passed form as an array with the following structure: Agression, Confidence, Energy, Responsibility", CSASDataElement::kParamType_Array, kParams_OneForm, 1);
 
-	BEGIN_CSASCOMMAND_HANDLER(GetBFCAIFormAIServiceFlags)
-	{
-		TESForm* Form = NULL;
-
-		if (!EXTRACT_CSASARGS(&Form))
-			return false;
-		else if (!Form)
-			return false;
-
-		TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
-		if (Component)
-			Result->SetNumber(Component->serviceFlags);
-		else
-			return false;
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(GetBFCAIFormAIServiceFlags, "Returns the 'service flags' attribute of AI component of the passed form", CSASDataElement::kParamType_Numeric, kParams_OneForm, 1);
-
 	BEGIN_CSASCOMMAND_HANDLER(GetBFCAIFormAITrainingSkill)
 	{
 		TESForm* Form = NULL;
@@ -762,25 +718,6 @@ namespace CSAutomationScript
 		return true;
 	}
 	DEFINE_CSASCOMMAND_PARAM(GetBFCBipedModelSlotMask, "Returns the 'slot mask' attribute of biped model component of the passed form", CSASDataElement::kParamType_Numeric, kParams_OneForm, 1);
-
-	BEGIN_CSASCOMMAND_HANDLER(GetBFCBipedModelFlags)
-	{
-		TESForm* Form = NULL;
-
-		if (!EXTRACT_CSASARGS(&Form))
-			return false;
-		else if (!Form)
-			return false;
-
-		TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
-		if (Component)
-			Result->SetNumber(Component->bipedModelFlags);
-		else
-			return false;
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(GetBFCBipedModelFlags, "Returns the 'flags' attribute of biped model component of the passed form", CSASDataElement::kParamType_Numeric, kParams_OneForm, 1);
 
 	BEGIN_CSASCOMMAND_HANDLER(GetBFCBipedModelMaleBipedModelPath)
 	{
@@ -1331,28 +1268,6 @@ namespace CSAutomationScript
 	}
 	DEFINE_CSASCOMMAND_PARAM(SetBFCLeveledListChanceNone, "Sets the passed form's leveled list component's 'chance none' attribute", CSASDataElement::kParamType_Invalid, kParams_FormNumber, 2);
 
-	BEGIN_CSASCOMMAND_HANDLER(SetBFCActorBaseDataFlags)
-	{
-		TESForm* Form = NULL;
-		double Buffer = 0;
-
-		if (!EXTRACT_CSASARGS(&Form, &Buffer))
-			return false;
-		else if (!Form)
-			return false;
-
-		TESActorBaseData* Component = CS_CAST(Form, TESForm, TESActorBaseData);
-		if (Component)
-		{
-			Component->actorFlags = Buffer;
-		}
-		else
-			return false;
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(SetBFCActorBaseDataFlags, "Sets the passed form's actor basedata component's 'flags' attribute", CSASDataElement::kParamType_Invalid, kParams_FormNumber, 2);
-
 	BEGIN_CSASCOMMAND_HANDLER(SetBFCActorBaseDataMagicka)
 	{
 		TESForm* Form = NULL;
@@ -1474,28 +1389,6 @@ namespace CSAutomationScript
 	}
 	DEFINE_CSASCOMMAND_PARAM(SetBFCAIFormAIStats, "Sets the passed form's AI component's 'stats' attribute", CSASDataElement::kParamType_Invalid, kParams_SetBFCAIFormAIStats, 3);
 
-	BEGIN_CSASCOMMAND_HANDLER(SetBFCAIFormAIServiceFlags)
-	{
-		TESForm* Form = NULL;
-		double Buffer = 0;
-
-		if (!EXTRACT_CSASARGS(&Form, &Buffer))
-			return false;
-		else if (!Form)
-			return false;
-
-		TESAIForm* Component = CS_CAST(Form, TESForm, TESAIForm);
-		if (Component)
-		{
-			Component->serviceFlags = Buffer;
-		}
-		else
-			return false;
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(SetBFCAIFormAIServiceFlags, "Sets the passed form's AI component's 'service flags' attribute", CSASDataElement::kParamType_Invalid, kParams_FormNumber, 2);
-
 	BEGIN_CSASCOMMAND_PARAMINFO(SetBFCAIFormAITrainingSkill, 3)
 	{
 		{ "Form", CSASDataElement::kParamType_Reference },
@@ -1592,28 +1485,6 @@ namespace CSAutomationScript
 		return true;
 	}
 	DEFINE_CSASCOMMAND_PARAM(SetBFCBipedModelSlotMask, "Sets the passed form's biped model component's 'slot mask' attribute", CSASDataElement::kParamType_Invalid, kParams_FormNumber, 2);
-
-	BEGIN_CSASCOMMAND_HANDLER(SetBFCBipedModelFlags)
-	{
-		TESForm* Form = NULL;
-		double Buffer = 0;
-
-		if (!EXTRACT_CSASARGS(&Form, &Buffer))
-			return false;
-		else if (!Form)
-			return false;
-
-		TESBipedModelForm* Component = CS_CAST(Form, TESForm, TESBipedModelForm);
-		if (Component)
-		{
-			Component->bipedModelFlags = Buffer;
-		}
-		else
-			return false;
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(SetBFCBipedModelFlags, "Sets the passed form's biped model component's 'flags' attribute", CSASDataElement::kParamType_Invalid, kParams_FormNumber, 2);
 
 	BEGIN_CSASCOMMAND_HANDLER(SetBFCBipedModelMaleBipedModelPath)
 	{

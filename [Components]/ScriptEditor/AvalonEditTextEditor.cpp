@@ -186,6 +186,8 @@ int AvalonEditTextEditor::GetCaretPos()
 void AvalonEditTextEditor::SetCaretPos(int Index)
 {
 	TextField->SelectionLength = 0;
+	if (Index > GetTextLength())
+		Index = GetTextLength() - 1;
 
 	if (Index > -1)
 		TextField->TextArea->Caret->Offset = Index;
@@ -403,11 +405,6 @@ void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
 	IntelliSenseBox->UpdateLocalVariableDatabase();
 }
 
-void AvalonEditTextEditor::ClearFindResultIndicators()
-{
-	FindReplaceColorizer->SetMatch("");
-}
-
 void AvalonEditTextEditor::ScrollToLine(String^ LineNumber)
 {
 	int LineNo = 0;
@@ -474,6 +471,8 @@ void AvalonEditTextEditor::Destroy()
 
 	WPFHost->Child = nullptr;
 
+	delete TextFieldPanel;
+	delete AnimationPrimitive;
 	delete TextField;
 	delete IntelliSenseBox;
 	delete MiddleMouseScrollTimer;
@@ -496,11 +495,15 @@ UInt32 AvalonEditTextEditor::PerformReplaceOnSegment(IScriptTextEditor::FindRepl
 		if (Operation == IScriptTextEditor::FindReplaceOperation::e_Replace)
 		{
 			TextField->Document->Replace(Line->Offset + Index, Query->Length, Replacement);
+			CurrentLine = TextField->Document->GetText(Line);
+			Start = Index + Replacement->Length;
 		}
-
-		Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
 		Start = Index + 1;
 	}
+
+	if (Hits)
+		Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
+
 	return Hits;
 }
 
@@ -691,6 +694,67 @@ RTBitmap^ AvalonEditTextEditor::RenderFrameworkElement( System::Windows::Framewo
 
 	return Bitmap;
 }
+
+void AvalonEditTextEditor::ClearFindResultIndicators()
+{
+	FindReplaceColorizer->SetMatch("");
+}
+
+void AvalonEditTextEditor::MoveTextSegment( AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction )
+{
+	int StartOffset = Segment->Offset, EndOffset = Segment->EndOffset;
+	AvalonEdit::Document::DocumentLine^ PreviousLine = nullptr;
+	AvalonEdit::Document::DocumentLine^ NextLine = nullptr;
+
+	if (StartOffset - 1 >= 0)
+		PreviousLine = TextField->Document->GetLineByOffset(StartOffset - 1);
+	if (EndOffset + 1 < GetTextLength())
+		NextLine = TextField->Document->GetLineByOffset(EndOffset + 1);
+
+	String^ SegmentText = TextField->Document->GetText(Segment);
+
+	switch (Direction)
+	{
+	case MoveSegmentDirection::e_Up:
+		if (PreviousLine != nullptr)
+		{
+			String^ PreviousText = TextField->Document->GetText(PreviousLine);
+			int InsertOffset = PreviousLine->Offset;
+
+			TextField->Document->Remove(PreviousLine);
+			if (Segment->EndOffset + 1 >= GetTextLength())
+				TextField->Document->Remove(Segment->Offset, Segment->Length);
+			else
+				TextField->Document->Remove(Segment->Offset, Segment->Length + 1);
+
+			TextField->Document->Insert(InsertOffset, SegmentText + "\n" + PreviousText);
+
+			SetCaretPos(InsertOffset);
+		}
+		break;
+	case MoveSegmentDirection::e_Down:
+		if (NextLine != nullptr)
+		{
+			String^ NextText = TextField->Document->GetText(NextLine);
+			int InsertOffset = NextLine->EndOffset - Segment->Length - NextLine->Length;
+			String^ InsertText = NextText + "\n" + SegmentText;
+
+			if (NextLine->EndOffset + 1 >= GetTextLength())
+				TextField->Document->Remove(NextLine->Offset, NextLine->Length);
+			else
+				TextField->Document->Remove(NextLine->Offset, NextLine->Length + 1);
+			TextField->Document->Remove(Segment);
+
+			if (InsertOffset - 1 > 0)
+				InsertOffset--;
+
+			TextField->Document->Insert(InsertOffset, InsertText);
+
+			SetCaretPos(InsertOffset + InsertText->Length);
+		}
+		break;
+	}
+}
 #pragma endregion
 
 #pragma region Events
@@ -822,6 +886,9 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 			HandleKeyEventForKey(E->Key);
 			E->Handled = true;
 		}
+
+		ClearFindResultIndicators();
+		RefreshUI();
 		break;
 	case System::Windows::Input::Key::Tab:
 		if (IntelliSenseBox->Visible)
@@ -844,11 +911,31 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 			HandleKeyEventForKey(E->Key);
 			E->Handled = true;
 		}
+		else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+		{
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+			AvalonEdit::Document::ISegment^ Segment = TextField->Document->GetLineByOffset(GetCaretPos());
+			MoveTextSegment(Segment, MoveSegmentDirection::e_Up);
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+
+			HandleKeyEventForKey(E->Key);
+			E->Handled = true;
+		}
 		break;
 	case System::Windows::Input::Key::Down:
 		if (IntelliSenseBox->Visible)
 		{
 			IntelliSenseBox->ChangeCurrentSelection(IntelliSenseInterface::MoveDirection::e_Down);
+
+			HandleKeyEventForKey(E->Key);
+			E->Handled = true;
+		}
+		else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+		{
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+			AvalonEdit::Document::ISegment^ Segment = TextField->Document->GetLineByOffset(GetCaretPos());
+			MoveTextSegment(Segment, MoveSegmentDirection::e_Down);
+			SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 
 			HandleKeyEventForKey(E->Key);
 			E->Handled = true;
@@ -990,7 +1077,7 @@ void AvalonEditTextEditor::TextField_MiddleMouseScrollDown(Object^ Sender, Syste
 
 void AvalonEditTextEditor::MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E)
 {
-	static double AccelerateScrollFactor = 0.0456;
+	static double AccelerateScrollFactor = 0.000456;
 
 	if (IsMiddleMouseScrolling)
 	{
@@ -1118,7 +1205,8 @@ AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, Object^% Parent)
 	TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditLineLimitBGColorizer(TextField, KnownLayer::Background));
 	TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditCurrentLineBGColorizer(TextField, KnownLayer::Background));
 
-	TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
+	if (OPTIONS->FetchSettingAsInt("AutoIndent"))
+		TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
 
 	AnimationPrimitive->Name = "AnimationPrimitive";
 
@@ -1191,6 +1279,4 @@ void AvalonEditTextEditor::InitializeSyntaxHighlightingManager(bool Reset)
 	SyntaxHighlightingManager->CreateRuleset(AvalonEditXSHDManager::Rulesets::e_String, OPTIONS->LookupColorByKey("SyntaxStringsColor"), Color::GhostWhite, true);
 
 	SyntaxHighlightingManager->RegisterDefinitions("ObScript");
-
-	DebugPrint("Initialized syntax highlighting definitions");
 }

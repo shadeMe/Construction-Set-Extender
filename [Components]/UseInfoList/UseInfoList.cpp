@@ -238,7 +238,7 @@ void UseInfoList::PopulateFormList()
 	FormList->Items->Clear();
 	FormList->BeginUpdate();
 
-	ComponentDLLInterface::UseInfoListFormData* Data = g_CSEInterface->UseInfoList.GetLoadedForms();
+	ComponentDLLInterface::UseInfoListFormData* Data = NativeWrapper::g_CSEInterface->UseInfoList.GetLoadedForms();
 	if (Data)
 	{
 		for (int i = 0; i < Data->FormCount; i++)
@@ -252,7 +252,7 @@ void UseInfoList::PopulateFormList()
 			FormList->Items->Add(Item);
 		}
 	}
-	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+	NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 	FormList->EndUpdate();
 }
 
@@ -261,7 +261,7 @@ void UseInfoList::PopulateUseLists(const char* EditorID)
 	ClearLists();
 
 	UseListObject->BeginUpdate();
-	ComponentDLLInterface::UseInfoListCrossRefData* Data = g_CSEInterface->UseInfoList.GetCrossRefDataForForm(EditorID);
+	ComponentDLLInterface::UseInfoListCrossRefData* Data = NativeWrapper::g_CSEInterface->UseInfoList.GetCrossRefDataForForm(EditorID);
 	if (Data)
 	{
 		for (int i = 0; i < Data->FormCount; i++)
@@ -275,11 +275,11 @@ void UseInfoList::PopulateUseLists(const char* EditorID)
 			UseListObject->Items->Add(Item);
 		}
 	}
-	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+	NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 	UseListObject->EndUpdate();
 
 	UseListCell->BeginUpdate();
-	ComponentDLLInterface::UseInfoListCellItemListData* DataEx = g_CSEInterface->UseInfoList.GetCellRefDataForForm(EditorID);
+	ComponentDLLInterface::UseInfoListCellItemListData* DataEx = NativeWrapper::g_CSEInterface->UseInfoList.GetCellRefDataForForm(EditorID);
 	if (Data)
 	{
 		for (int i = 0; i < DataEx->UseInfoListCellItemListCount; i++)
@@ -296,7 +296,7 @@ void UseInfoList::PopulateUseLists(const char* EditorID)
 			UseListCell->Items->Add(Item);
 		}
 	}
-	g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+	NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 	UseListCell->EndUpdate();
 }
 
@@ -383,10 +383,9 @@ void UseInfoList::FormList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
 	if (GetListViewSelectedItem(FormList) == nullptr)
 		return;
 
-	CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text),
-			CType(GetListViewSelectedItem(FormList)->SubItems[0]->Text);
+	CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
 
-	g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str(), CType.c_str());
+	NativeWrapper::g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str());
 }
 
 void UseInfoList::UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -394,10 +393,9 @@ void UseInfoList::UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^
 	if (GetListViewSelectedItem(UseListObject) == nullptr)
 		return;
 
-	CString CEID(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text),
-			CType(GetListViewSelectedItem(UseListObject)->SubItems[0]->Text);
+	CString CEID(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text);
 
-	g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str(), CType.c_str());
+	NativeWrapper::g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str());
 }
 
 void UseInfoList::UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -408,6 +406,6 @@ void UseInfoList::UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E
 	if (GetListViewSelectedItem(UseListCell)->SubItems[4]->Text != "<Unnamed>")
 	{
 		CString CEID(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text);
-		g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str(), "Reference");
+		NativeWrapper::g_CSEInterface->CSEEditorAPI.LoadFormForEdit(CEID.c_str());
 	}
 }

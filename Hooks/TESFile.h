@@ -6,6 +6,8 @@ namespace Hooks
 	// hooks that modify how the CS handles plugin files
 	void PatchTESFileHooks(void);
 
+	extern bool		g_LoadingSavingPlugins;
+
 	_DeclareMemHdlr(SavePluginMasterEnum, "allows esps to be enumerated while filling the file header");
 	_DeclareNopHdlr(CheckIsActivePluginAnESM, "allows master files to be set as active plugins");
 	_DeclareNopHdlr(TESFormGetUnUsedFormID, "");
@@ -28,7 +30,6 @@ namespace Hooks
 	_DeclareMemHdlr(DataHandlerSavePluginResetB, "");
 	_DeclareMemHdlr(DataHandlerSavePluginResetC, "");
 	_DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");
-	_DeclareMemHdlr(DataHandlerSavePluginProlog, "allows the creation of backups");
 	_DeclareMemHdlr(DataHandlerSavePluginRetainTimeStamps, "allows the retention of plugin timestamps during save operations");
 	_DeclareMemHdlr(TESObjectLANDLoadForm, "patches the routine to defer the initialization of grass data until the cell is actually loaded into the render window");
 }

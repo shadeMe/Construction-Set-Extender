@@ -132,6 +132,9 @@ namespace ComponentDLLInterface
 		GMSTData*										GMSTListHead;
 		UInt32											GMSTCount;
 
+		FormData*										EditorIDListHead;
+		UInt32											EditorIDCount;
+
 		IntelliSenseUpdateData()
 		{
 			ScriptListHead = 0;
@@ -145,6 +148,9 @@ namespace ComponentDLLInterface
 
 			GMSTListHead = 0;
 			GMSTCount = 0;
+
+			EditorIDListHead = 0;
+			EditorIDCount = 0;
 		}
 
 		~IntelliSenseUpdateData()
@@ -153,6 +159,7 @@ namespace ComponentDLLInterface
 			delete [] QuestListHead;
 			delete [] GlobalListHead;
 			delete [] GMSTListHead;
+			delete [] EditorIDListHead;
 		}
 	};
 

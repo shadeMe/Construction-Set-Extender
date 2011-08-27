@@ -11,8 +11,10 @@ NOTE	---->
 MISC	---->
 > Credits:	T800G, for the window snapper code
 			Ingo Berg, for muParserX (and for the great tech. support)
+> Ctrl + Up/Down script editor shortcut
 
 CSE		----> 
+> Undo/redo pathgrid actions
 > Implement taskbar icons and minimize buttons
 > Increase formID column's size
 > Use a tab delimited format for the change logs
@@ -25,14 +27,9 @@ CSE		---->
 * Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
 
 --! CSAS Function Requests:
-> Functions for reference creation and placement.
-> Cell walking functions.
-> Form walking functions.
 > Input functions.
-> Render window selection
 > INI functions
-> Camera control functions.
-> Load cell functions
+
 
 SE		---->
 > There's a slight X-offset to the position returned by AvalonEditTextEditor::GetPositionFromCharIndex

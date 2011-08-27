@@ -1,8 +1,6 @@
 #include "Console.h"
-
 #include "ConsoleCommands.h"
 #include "Hooks\TESFile.h"
-#include "CSDialogs.h"
 #include "CSAS\ScriptRunner.h"
 #include "CSAS\ScriptCommands.h"
 #include "Achievements.h"
@@ -145,10 +143,10 @@ void CSECCmd_LoadForm_Handler(CSECCMD_ARGS)
 	TESForm* Form = TESForm::LookupByEditorID(EditorID.c_str());
 	if (Form)
 	{
-		ShowFormEditDialog(EditorID.c_str(), Form->formType);
+		TESDialog::ShowFormEditDialog(Form);
 	}
 	else
-		DebugPrint("Couldn't load form '%s' into view. Recheck the editorID argument.", EditorID.c_str());
+		DebugPrint("Couldn't load form '%s' for editing. Recheck the editorID argument.", EditorID.c_str());
 }
 
 void CSECCmd_SavePlugin_Handler(CSECCMD_ARGS)

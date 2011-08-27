@@ -139,8 +139,8 @@ void ScriptEditorPreferences::RegisterColorSetting(String^ Key, Color Default, C
 	Parent->Tag = Dialog;
 
 	SettingCollection->Add(gcnew INISetting(Key + "R", "ScriptEditor::Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-	SettingCollection->Add(gcnew INISetting(Key + "G", "ScriptEditor::Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-	SettingCollection->Add(gcnew INISetting(Key + "B", "ScriptEditor::Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+	SettingCollection->Add(gcnew INISetting(Key + "G", "ScriptEditor::Appearance", Default.G.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
+	SettingCollection->Add(gcnew INISetting(Key + "B", "ScriptEditor::Appearance", Default.B.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
 
 	ColorDatabase->Add(Key, Dialog);
 }
@@ -159,7 +159,7 @@ void ScriptEditorPreferences::InitializeSettings()
 	SettingCollection->Add(gcnew INISetting("CodeFolding", "ScriptEditor::Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	SettingCollection->Add(gcnew INISetting("TabsOnTop", "ScriptEditor::Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
-	RegisterColorSetting("SyntaxCommentsColor", Color::DarkBlue, CmDlgSyntaxCommentsColor);
+	RegisterColorSetting("SyntaxCommentsColor", Color::Green, CmDlgSyntaxCommentsColor);
 	RegisterColorSetting("SyntaxDigitsColor", Color::DarkGoldenrod, CmDlgSyntaxDigitsColor);
 	RegisterColorSetting("SyntaxPreprocessorColor", Color::DarkBlue, CmDlgSyntaxPreprocessorColor);
 	RegisterColorSetting("SyntaxScriptBlocksColor", Color::Red, CmDlgSyntaxScriptBlocksColor);
@@ -205,7 +205,7 @@ void ScriptEditorPreferences::LoadINI()
 		BoundControl^ Control = Itr.Value;
 
 		char Buffer[0x200] = {0};
-		g_CSEInterface->CSEEditorAPI.ReadFromINI((CString(INI->Key)).c_str(),
+		NativeWrapper::g_CSEInterface->CSEEditorAPI.ReadFromINI((CString(INI->Key)).c_str(),
 												(CString(INI->Section)).c_str(),
 												(CString(INI->DefaultValue)).c_str(), Buffer, sizeof(Buffer));
 
@@ -220,7 +220,7 @@ void ScriptEditorPreferences::SaveINI()
 		INISetting^ INI = Itr.Key;
 		BoundControl^ Control = Itr.Value;
 
-		g_CSEInterface->CSEEditorAPI.WriteToINI((CString(INI->Key)).c_str(),
+		NativeWrapper::g_CSEInterface->CSEEditorAPI.WriteToINI((CString(INI->Key)).c_str(),
 												(CString(INI->Section)).c_str(),
 												(CString(Control->GetValue())).c_str());
 	}
@@ -289,7 +289,7 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	FontSelection->AllowVerticalFonts = false;
 	FontSelection->ShowEffects = false;
 
-	OptionsBox = gcnew AnimatedForm(0.25);
+	OptionsBox = gcnew AnimatedForm(0.15);
 	AllowRedefinitions = (gcnew CheckBox());
 	LabelISThreshold = (gcnew Label());
 	ThresholdLength = (gcnew NumericUpDown());

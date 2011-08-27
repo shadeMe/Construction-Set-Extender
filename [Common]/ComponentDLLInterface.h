@@ -12,11 +12,11 @@ namespace ComponentDLLInterface
 	// main function exported by all the dlls
 	typedef void*									(* QueryInterface)(void);
 
-	// all returned pointers are dynamic - the caller must release them after use
+	// all returned pointers are expected to be released by the caller
 	class CSEInterface
 	{
 	public:
-		class _CSEEditorAPI
+		class ICSEEditorAPI
 		{
 		public:
 			void									(* DebugPrint)(UInt8 Source, const char* Message);
@@ -29,7 +29,7 @@ namespace ComponentDLLInterface
 			ScriptData*								(* LookupScriptableFormByEditorID)(const char* EditorID);
 			bool									(* GetIsFormReference)(const char* EditorID);
 
-			void									(* LoadFormForEdit)(const char* EditorID, const char* FormType);
+			void									(* LoadFormForEdit)(const char* EditorID);
 			FormData*								(* ShowPickReferenceDialog)(HWND Parent);
 			void									(* ShowUseReportDialog)(const char* EditorID);
 
@@ -39,7 +39,7 @@ namespace ComponentDLLInterface
 			void									(* WriteToINI)(const char* Setting, const char* Section, const char* Value);
 		};
 
-		class _ScriptEditor
+		class IScriptEditor
 		{
 		public:
 			ScriptData*								(* CreateNewScript)(void);
@@ -60,9 +60,10 @@ namespace ComponentDLLInterface
 			void									(* BindScript)(const char* EditorID, HWND Parent);
 			void									(* SetScriptText)(void* CurrentScript, const char* ScriptText);
 			void									(* UpdateScriptVarNames)(const char* EditorID, ScriptVarRenameData* Data);
+			bool									(* CanUpdateIntelliSenseDatabase)(void);
 		};
 
-		class _UseInfoList
+		class IUseInfoList
 		{
 		public:
 			UseInfoListFormData*					(* GetLoadedForms)(void);
@@ -70,13 +71,13 @@ namespace ComponentDLLInterface
 			UseInfoListCellItemListData*			(* GetCellRefDataForForm)(const char* EditorID);
 		};
 
-		class _BatchRefEditor
+		class IBatchRefEditor
 		{
 		public:
 			BatchRefOwnerFormData*					(* GetOwnershipData)(void);		// typeID check performed by the caller
 		};
 
-		class _TagBrowser
+		class ITagBrowser
 		{
 		public:
 			void									(* InstantiateObjects)(TagBrowserInstantiationData* Data);
@@ -84,11 +85,11 @@ namespace ComponentDLLInterface
 
 		void										(* DeleteNativeHeapPointer)(void* Pointer, bool IsArray);
 
-		_CSEEditorAPI								CSEEditorAPI;
-		_ScriptEditor								ScriptEditor;
-		_UseInfoList								UseInfoList;
-		_BatchRefEditor								BatchRefEditor;
-		_TagBrowser									TagBrowser;
+		ICSEEditorAPI								CSEEditorAPI;
+		IScriptEditor								ScriptEditor;
+		IUseInfoList								UseInfoList;
+		IBatchRefEditor								BatchRefEditor;
+		ITagBrowser									TagBrowser;
 	};
 
 	class ScriptEditorInterface

@@ -68,6 +68,14 @@ namespace CSAutomationScript
 		Copy(rhs);
 	}
 
+	CSASDataElement& CSASDataElement::operator=(const CSASDataElement& rhs)
+	{
+		Reset();
+		Copy(rhs);
+
+		return *this;
+	}
+
 	void CSASDataElement::SetForm(TESForm* Data)
 	{
 		Reset();

@@ -54,7 +54,7 @@ public:
 		/*00*/ UInt32					unk00;
 		/*04*/ UInt32					refCount;			// number of reference variables
 		/*08*/ UInt32					dataLength;
-		/*0C*/ UInt32					varCount;			// number of variables
+		/*0C*/ UInt32					lastVarIdx;
 		/*10*/ UInt32					type;
 	};
 
@@ -78,6 +78,7 @@ public:
 
 	bool								Compile(bool AsResultScript = false);
 	void								SetText(const char* Text);
+
 	UInt32								GetScriptableFormUseCount(void);
 };
 
@@ -114,7 +115,8 @@ struct ScriptBuffer
 	/*08*/ UInt32						unk8;				// set when script is compiled in-game (from the console)?
 	/*0C*/ BSStringT					scriptName;
 	/*14*/ UInt32						errorFlag;			// set to ScriptLineBuffer::errorFlag
-	/*18*/ UInt16						unk18;
+	/*18*/ UInt8						resultScript;		// set to 1 when compiling result scripts, used to skip certain syntax checks
+	/*19*/ UInt8						pad19;
 	/*1A*/ UInt16						unk1A;
 	/*1C*/ UInt32						curLineNumber;
 	/*20*/ UInt8*						scriptData;			// pointer to the bytecode array
@@ -122,13 +124,13 @@ struct ScriptBuffer
 	/*28*/ UInt32						unk28;
 	/*2C*/ UInt32						numRefs;
 	/*30*/ UInt32						lastDataOffset;		// set to this->dataOffset after each successful call to ScriptCompiler::WriteByteCode
-	/*34*/ UInt32						varCount;
+	/*34*/ UInt32						lastVarIdx;
 	/*38*/ UInt8						scriptType;
 	/*39*/ UInt8						unk39;				// initialized to script->unk35
 	/*3A*/ UInt8						pad3A[2];
 	/*3C*/ Script::VariableListT		vars;
 	/*44*/ Script::RefVariableListT		refVars;
-	/*4C*/ UInt32						unk04C;				// no of lines?
+	/*4C*/ Script*						parentScript;
 	/*50*/ ScriptLineBufferListT		lines;
 };
 

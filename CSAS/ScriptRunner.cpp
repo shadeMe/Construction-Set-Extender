@@ -565,7 +565,7 @@ namespace CSAutomationScript
 
 	void GlobalScriptManager::InitializeGlobalTimer()
 	{
-		SetTimer(*g_HWND_CSParent, GLOBALSCRIPT_EXECUTION_TIMER, g_INIManager->GetINIInt("GlobalScriptExecutionPeriod"), NULL);
+		SetTimer(*g_HWND_CSParent, GLOBALSCRIPT_EXECUTION_TIMER, g_INIManager->GetINIInt("GlobalScriptExecutionPeriod", "Extender::CSAS"), NULL);
 	}
 
 	GlobalScriptManager* GlobalScriptManager::GetSingleton()

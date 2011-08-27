@@ -5,6 +5,8 @@
 
 namespace Hooks
 {
+	bool g_LoadingSavingPlugins = false;
+
 	_DefineHookHdlr(SavePluginMasterEnum, 0x0047ECC6);
 	_DefineNopHdlr(CheckIsActivePluginAnESM, 0x0040B65E, 2);
 	_DefineNopHdlr(TESFormGetUnUsedFormID, 0x00486C08, 2);
@@ -82,6 +84,8 @@ namespace Hooks
 		}
 	}
 
+	static HWND				s_LoadIdleWindow = NULL;
+
 	void __stdcall DoLoadPluginsPrologHook(void)
 	{
 		TESFile* ActiveFile = _DATAHANDLER->activeFile;
@@ -91,8 +95,13 @@ namespace Hooks
 			ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 		}
 
-		sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning"));
-		g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue("0");
+		sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning", "Extender::General"));
+		g_INIManager->FetchSetting("ShowNumericEditorIDWarning", "Extender::General")->SetValue("0");
+
+		s_LoadIdleWindow = CreateDialogParam(g_DLLInstance, MAKEINTRESOURCE(DLG_IDLE), *g_HWND_CSParent, NULL, NULL);
+		Static_SetText(GetDlgItem(s_LoadIdleWindow, -1), "Loading Plugins\nPlease Wait");
+
+		g_LoadingSavingPlugins = true;
 	}
 
 	#define _hhName		LoadPluginsProlog
@@ -113,7 +122,10 @@ namespace Hooks
 
 	void __stdcall DoLoadPluginsEpilogHook(void)
 	{
-		g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->SetValue(g_NumericIDWarningBuffer);
+		g_INIManager->FetchSetting("ShowNumericEditorIDWarning", "Extender::General")->SetValue(g_NumericIDWarningBuffer);
+		DestroyWindow(s_LoadIdleWindow);
+
+		g_LoadingSavingPlugins = false;
 	}
 
 	#define _hhName		LoadPluginsEpilog
@@ -136,7 +148,7 @@ namespace Hooks
 	{
 		if ((CurrentFile->fileFlags & TESFile::kFileFlag_Loaded) == 0)
 			return false;
-		else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters") == 0)
+		else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters", "Extender::General") == 0)
 			return false;
 		else
 			return true;
@@ -253,6 +265,7 @@ namespace Hooks
 	{
 		TESFile* ActiveFile = _DATAHANDLER->activeFile;
 		ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
+		g_LoadingSavingPlugins = false;
 	}
 
 	#define _hhName		DataHandlerSavePluginEpilog
@@ -468,7 +481,7 @@ namespace Hooks
 		TESFile* ActiveFile = _DATAHANDLER->activeFile;
 		if (!ActiveFile)
 			return;
-		else if (!g_INIManager->GetINIInt("PreventTimeStampChanges"))
+		else if (!g_INIManager->GetINIInt("PreventTimeStampChanges", "Extender::General"))
 			return;
 
 		HANDLE SaveFile = CreateFile(PrintToBuffer("%s\\%s", ActiveFile->filePath, ActiveFile->fileName), GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL); // will only work with files in the current workspace

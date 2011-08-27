@@ -28,6 +28,12 @@ protected:
 														e_ManualReset
 													};
 
+	static enum class							MoveSegmentDirection
+													{
+														e_Up = 0,
+														e_Down
+													};
+
 	Panel^										Container;
 	ElementHost^								WPFHost;
 	System::Windows::Controls::DockPanel^		TextFieldPanel;
@@ -110,11 +116,13 @@ protected:
 	void										UpdateCodeFoldings();
 	void										SynchronizeExternalScrollBars();
 
-	RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
+	void										MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction);
 
+	RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
+	void										ClearFindResultIndicators(void);
 	void										Destroy();
 
-	static double								SetTextFadeAnimationDuration = 0.09;		// in seconds
+	static double								SetTextFadeAnimationDuration = 0.1;		// in seconds
 public:
 	~AvalonEditTextEditor()
 	{
@@ -171,7 +179,6 @@ public:
 	virtual UInt32								FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
 	virtual void								ToggleComment(int StartIndex);
 	virtual void								UpdateIntelliSenseLocalDatabase(void);
-	virtual void								ClearFindResultIndicators(void);
 
 	virtual Control^							GetContainer() { return Container; }
 	virtual void								ScrollToLine(String^ LineNumber);

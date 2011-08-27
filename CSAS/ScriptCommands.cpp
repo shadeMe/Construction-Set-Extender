@@ -4,6 +4,7 @@
 
 #include "Commands\Commands_General.h"
 #include "Commands\Commands_Form.h"
+#include "Commands\Commands_Reference.h"
 
 namespace CSAutomationScript
 {
@@ -228,13 +229,9 @@ namespace CSAutomationScript
 			DumpParamInfoDetails(DocStream, "Variable Value Type", "<ul><li>0: Invalid</li><li>1: Numeric</li><li>2: Reference</li><li>3: String</li><li>4: Array</li></ul>");
 			DumpParamInfoDetails(DocStream, "Variable Value Type", "<ul><li>0: Invalid</li><li>1: Numeric</li><li>2: Reference</li><li>3: String</li><li>4: Array</li></ul>");
 			DumpParamInfoDetails(DocStream, "Attribute ID", "<ul><li>0: Strength</li><li>1: Intelligence</li><li>2: Willpower</li><li>3: Agility</li><li>4: Speed</li><li>5: Endurance</li><li>6: Personality</li><li>7: Luck</li></ul>");
-			DumpParamInfoDetails(DocStream, "NPC Flags", "<ul style=\"font-family: monospace;\"><li>Female&nbsp; &nbsp; &nbsp; 1&nbsp; &nbsp; 0x00000001</li><li>Essential&nbsp; &nbsp; 2&nbsp; &nbsp; 0x00000002</li><li>Respawn&nbsp; &nbsp; &nbsp; 8&nbsp; &nbsp; 0x00000008</li><li>AutoCalcStats&nbsp; 16&nbsp; &nbsp; 0x00000010</li><li>PCLevelOffset&nbsp; 128&nbsp; &nbsp; 0x00000080</li><li>NoLowProc&nbsp; &nbsp; 512&nbsp; &nbsp; 0x00000200</li><li>NoRumors&nbsp; &nbsp; 8192&nbsp; 0x00002000</li><li>Summonable&nbsp; &nbsp; 16384&nbsp; 0x00004000</li><li>NoPersuasion&nbsp; 32768&nbsp; 0x00008000</li><li>CanCorpseCheck&nbsp; 1048576&nbsp; 0x00100000</li></ul>");
-			DumpParamInfoDetails(DocStream, "Creature Flags", "<ul style=\"font-family: monospace;\"><li>Biped&nbsp; &nbsp; &nbsp; &nbsp; 1&nbsp; &nbsp; 0x00000001</li><li>Essential&nbsp; &nbsp; &nbsp; 2&nbsp; &nbsp; 0x00000002</li><li>WeaponAndShield&nbsp; &nbsp; 4&nbsp; &nbsp; 0x00000004</li><li>Respawn&nbsp; &nbsp; &nbsp; &nbsp; 8&nbsp; &nbsp; 0x00000008</li><li>Swims&nbsp; &nbsp; &nbsp; &nbsp; 16&nbsp; &nbsp; 0x00000010</li><li>Flies&nbsp; &nbsp; &nbsp; &nbsp; 32&nbsp; &nbsp; 0x00000020</li><li>Walks&nbsp; &nbsp; &nbsp; &nbsp; 64&nbsp; &nbsp; 0x00000040</li><li>PCLevelOffset&nbsp; &nbsp; 128&nbsp; &nbsp; 0x00000080</li><li>HasSounds&nbsp; &nbsp; &nbsp; 256&nbsp; &nbsp; 0x00000100</li><li>NoLowProc&nbsp; &nbsp; &nbsp; 512&nbsp; &nbsp; 0x00000200</li><li>NoBloodParticle&nbsp; &nbsp; 2048&nbsp; 0x00000800</li><li>NoBloodTexture&nbsp; &nbsp; 4096&nbsp; 0x00001000</li><li>NoRumors&nbsp; &nbsp; &nbsp; 8192&nbsp; 0x00002000</li><li>Summonable&nbsp; &nbsp; &nbsp; 16384&nbsp; 0x00004000</li><li>NoHead&nbsp; &nbsp; &nbsp; &nbsp; 32768&nbsp; 0x00008000</li><li>NoRightArm&nbsp; &nbsp; &nbsp; 65536&nbsp; 0x00010000</li><li>NoLeftArm&nbsp; &nbsp; &nbsp; 131072&nbsp; 0x00020000</li><li>NoCombatInWater&nbsp; &nbsp; 262144&nbsp; 0x00040000</li><li>NoShadow&nbsp; &nbsp; &nbsp; 524288&nbsp; 0x00080000</li><li>NoCorpseCheck&nbsp; &nbsp; 1048576&nbsp; 0x00100000</li></ul>");
 // 			DumpParamInfoDetails("AI Stat ID");
-// 			DumpParamInfoDetails("AI Service Flags");
 // 			DumpParamInfoDetails("Skill ID");
 // 			DumpParamInfoDetails("Biped Model Slot Mask");
-// 			DumpParamInfoDetails("Biped Model Flags");
 // 			DumpParamInfoDetails("Harvest Season ID");
 
 			AppendToStream(DocStream, "\n\n\n\n");
@@ -283,6 +280,7 @@ namespace CSAutomationScript
 
 		RegisterGeneralCommands();
 		RegisterFormCommands();
+		RegisterReferenceCommands();
 	}
 
 	void CSASCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)

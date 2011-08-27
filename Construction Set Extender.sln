@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{754B623C-5C4E-4EC4-9AAC-28BED9F83C8B}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\..\Documents\Visual Studio 2010\Projects\SharpDev\AvalonEdit Documentation.chm = ..\..\..\..\..\Documents\Visual Studio 2010\Projects\SharpDev\AvalonEdit Documentation.chm
 		Dev Journal.txt = Dev Journal.txt
 	EndProjectSection
 EndProject

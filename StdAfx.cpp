@@ -42,7 +42,7 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "LogCSWarnings", "Extender::Console", "1", "Log CS Warnings to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "LogAssertions", "Extender::Console", "1", "Log CS Assertions to the Console"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Extender::Console", "0", "Hide the console on CS startup"), (CreateINI == false));
-	RegisterSetting(new SME::INI::INISetting(this, "ConsoleUpdatePeriod", "Extender::Console", "2000", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "UpdatePeriod", "Extender::Console", "2000", "Duration, in milliseconds, between console window updates"), (CreateINI == false));
 
 	RegisterSetting(new SME::INI::INISetting(this, "LoadPluginOnStartup", "Extender::General", "0", "Load a plugin on CS startup"), (CreateINI == false));
 	RegisterSetting(new SME::INI::INISetting(this, "StartupPluginName", "Extender::General", "", "Name of the plugin, with extension, that is to be loaded on startup"), (CreateINI == false));

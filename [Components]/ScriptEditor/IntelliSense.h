@@ -80,7 +80,8 @@ namespace IntelliSense
 																	"User Function",
 																	"Quest",
 																	"Global Variable",
-																	"Game Setting"
+																	"Game Setting",
+																	"Object"
 																};
 	public:
 		static enum class									ItemType
@@ -92,19 +93,20 @@ namespace IntelliSense
 																	e_UserFunct,
 																	e_Quest,
 																	e_GlobalVar,
-																	e_GMST
+																	e_GMST,
+																	e_Form
 																};
 
 		String^												Describe() { return Description; }
 
 		IntelliSenseItem(String^ Desc, ItemType Type) : Description(Desc), Type(Type) {};
+		IntelliSenseItem() : Description(""), Type(ItemType::e_Invalid) {}
 
-		virtual String^										GetIdentifier() { return Name; }
+		virtual String^										GetIdentifier() = 0;
 		ItemType											GetType() { return Type; }
 		String^												GetTypeIdentifier() { return TypeIdentifier[(int)Type]; }
 	protected:
 		String^												Description;
-		String^												Name;
 		ItemType											Type;
 	};
 
@@ -137,7 +139,7 @@ namespace IntelliSense
 																};
 
 		String^												Name;
-		String^												Description;
+		String^												CmdDescription;
 		String^												Shorthand;
 		UInt16												ParamCount;
 		bool												RequiresParent;
@@ -147,7 +149,7 @@ namespace IntelliSense
 		CommandInfo(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, SourceType Source) :
 		  IntelliSenseItem(String::Format("{0}{1}\n{2} parameter(s)\nReturn Type: {3}\n\n{4}{5}", Name, (Shorthand == "None")?"":("\t[ " + Shorthand + " ]"), NoOfParams.ToString(), CommandInfo::TypeIdentifier[(int)ReturnType], Desc, (RequiresParent)?"\n\nRequires a calling reference":""), ItemType::e_Cmd),
 			  Name(Name),
-			  Description(Desc),
+			  CmdDescription(Desc),
 			  Shorthand(Shorthand),
 			  ParamCount(NoOfParams),
 			  RequiresParent(RequiresParent),
@@ -180,20 +182,20 @@ namespace IntelliSense
 																};
 	private:
 		String^												Name;
-		VariableType										Type;
+		VariableType										VarType;
 		String^												Comment;
 	public:
 		VariableInfo(String^% Name, String^% Comment, VariableType Type, ItemType Scope) :
 		  IntelliSenseItem(String::Format("{0} [{1}]{2}{3}", Name, VariableInfo::TypeIdentifier[(int)Type], (Comment != "")?"\n\n":"", Comment), Scope),
 			  Name(Name),
-			  Type(Type),
+			  VarType(Type),
 			  Comment(Comment) {};
 
 		  virtual String^									GetIdentifier() override { return Name; }
 		  String^											GetComment() { return Comment; }
 		  String^											GetTypeIdentifier() { return TypeIdentifier[(int)Type]; }
 		  String^											GetName() { return Name; }
-		  VariableType										GetVariableType() { return Type; }
+		  VariableType										GetVariableType() { return VarType; }
 	};
 
 	public ref class Script
@@ -254,46 +256,37 @@ namespace IntelliSense
 	{
 		UserFunction^										Parent;
 	public:
-		UserFunctionDelegate(UserFunction^% Parent) : Parent(Parent), IntelliSenseItem(Parent->Describe(), ItemType::e_UserFunct) {}
+		UserFunctionDelegate(UserFunction^% Parent) : IntelliSenseItem(Parent->Describe(), ItemType::e_UserFunct), Parent(Parent) {}
 
 		virtual String^										GetIdentifier() override { return Parent->GetIdentifier(); }
 	};
 
-	public ref class NonActivatingImmovableAnimatedForm : public Form
+	public ref class EditorIDForm : public IntelliSenseItem
 	{
 	protected:
-		property bool										ShowWithoutActivation
-		{
-			virtual bool									get() override { return true; }
-		}
-
-		virtual void										WndProc(Message% m) override;
-
-		static enum class									FadeOperationType
+		static enum class									FormFlags
 																{
-																	e_None = 0,
-																	e_FadeIn,
-																	e_FadeOut
+																	e_FromMaster           = /*00*/ 0x00000001,
+																	e_FromActiveFile       = /*01*/ 0x00000002,
+																	e_Deleted              = /*05*/ 0x00000020,
+																	e_TurnOffFire          = /*07*/ 0x00000080,
+																	e_QuestItem            = /*0A*/ 0x00000400,
+																	e_Disabled             = /*0B*/ 0x00000800,
+																	e_Ignored              = /*0C*/ 0x00001000,
+																	e_Temporary            = /*0E*/ 0x00004000,
+																	e_VisibleWhenDistant   = /*0F*/ 0x00008000,
 																};
 
-		bool												AllowMove;
-		FadeOperationType									FadeOperation;
-		Timer^												FadeTimer;
+		String^												Name;
+		UInt32												FormType;
+		UInt32												FormID;
+		UInt32												Flags;
 
-		void												FadeTimer_Tick(Object^ Sender, EventArgs^ E);
-
-		void												Destroy();
+		String^												GetFormTypeIdentifier();
 	public:
-		~NonActivatingImmovableAnimatedForm()
-		{
-			Destroy();
-		}
+		EditorIDForm(ComponentDLLInterface::FormData* Data);
 
-		void												SetSize(Drawing::Size WindowSize);
-		void												ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
-		void												HideForm(bool Animate);
-
-		NonActivatingImmovableAnimatedForm();
+		virtual String^										GetIdentifier() override { return Name; }
 	};
 
 	public ref class IntelliSenseInterface
@@ -307,8 +300,8 @@ namespace IntelliSense
 		void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
 		void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
-		static ToolTip^										InfoToolTip = gcnew ToolTip();
 		static ImageList^									IntelliSenseItemIcons = gcnew ImageList();
+		static ToolTip^										InfoToolTip = gcnew ToolTip();
 
 		VariableInfo^										LookupLocalVariableByIdentifier(String^% Identifier);
 		bool												ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point TipLoc);

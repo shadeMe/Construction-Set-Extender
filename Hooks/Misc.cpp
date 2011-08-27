@@ -1,6 +1,5 @@
 #include "Misc.h"
 #include "Dialog.h"
-#include "..\CSDialogs.h"
 #include "..\ToolManager.h"
 #include "..\WorkspaceManager.h"
 #include "..\RenderWindowTextPainter.h"
@@ -106,7 +105,7 @@ namespace Hooks
 	{
 		static UInt32 s_MessageHandlerVTBL = 0x00940760;
 
-		if (!g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
+		if (!g_INIManager->FetchSetting("LogCSWarnings", "Extender::Console")->GetValueAsInteger())
 			return;
 
 		SafeWrite32(s_MessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
@@ -130,7 +129,7 @@ namespace Hooks
 		NopHdlr kFaceGenControlStoringUndoA(0x004DD652, 5), kFaceGenControlStoringUndoB(0x004E8EC8, 5);
 		NopHdlr kDataHandlerConstructObjectA(0x004838D2, 5), kDataHandlerConstructObjectB(0x00483C89, 5), kDataHandlerConstructObjectC(0x00483D53, 5),
 				kDataHandlerConstructObjectD(0x0048403C, 5), kDataHandlerConstructObjectE(0x00484137, 5);
-		NopHdlr kDataHandlerLoadPlugins(0x0048557F, 5);
+		NopHdlr kDataHandlerLoadPluginsA(0x0048557F, 5), kDataHandlerLoadPluginsB(0x00484BDE, 5);
 
 		SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
 		kDataHandlerAutoSave.WriteNop();
@@ -149,7 +148,8 @@ namespace Hooks
 		kDataHandlerConstructObjectC.WriteNop();
 		kDataHandlerConstructObjectD.WriteNop();
 		kDataHandlerConstructObjectE.WriteNop();
-		kDataHandlerLoadPlugins.WriteNop();
+		kDataHandlerLoadPluginsA.WriteNop();
+		kDataHandlerLoadPluginsB.WriteNop();
 	}
 
 	void __stdcall MessageHandlerOverride(const char* Message)
@@ -383,7 +383,7 @@ namespace Hooks
 		CONSOLE->Pad(2);
 
 		Achievements::UnlockAchievement(Achievements::kAchievement_TheWiseOne);
-		if (!g_INIManager->FetchSetting("LogCSWarnings")->GetValueAsInteger())
+		if (!g_INIManager->FetchSetting("LogCSWarnings", "Extender::Console")->GetValueAsInteger())
 			Achievements::UnlockAchievement(Achievements::kAchievement_FlyingBlind);
 		if (CommandCount >= Achievements::kMaxScriptCommandCount)
 			Achievements::UnlockAchievement(Achievements::kAchievement_Commandant);
@@ -408,7 +408,7 @@ namespace Hooks
 	{
 		Achievements::UnlockAchievement(Achievements::kAchievement_WTF);
 
-		if (!g_INIManager->FetchSetting("LogAssertions")->GetValueAsInteger())
+		if (!g_INIManager->FetchSetting("LogAssertions", "Extender::Console")->GetValueAsInteger())
 			return;
 
 		CONSOLE->Indent();
@@ -528,7 +528,7 @@ namespace Hooks
 
 	void __stdcall DoNumericEditorIDHook(TESForm* Form, const char* EditorID)
 	{
-		if (g_INIManager->FetchSetting("ShowNumericEditorIDWarning")->GetValueAsInteger() &&
+		if (g_INIManager->FetchSetting("ShowNumericEditorIDWarning", "Extender::General")->GetValueAsInteger() &&
 			g_PluginPostLoad &&
 			strlen(EditorID) > 0 &&
 			isdigit((int)*EditorID) &&

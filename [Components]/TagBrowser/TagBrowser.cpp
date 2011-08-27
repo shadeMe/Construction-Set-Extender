@@ -168,7 +168,7 @@ bool TagDatabase::DeserializeDatabase(String^ SerializedData)
 				String^ Token = Tokens[i];
 				if (Token != "")
 				{
-					ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(Token)).c_str());
+					ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(Token)).c_str());
 					if (Data)
 						TagItem(Tag, Data);
 					else
@@ -176,7 +176,7 @@ bool TagDatabase::DeserializeDatabase(String^ SerializedData)
 						BadItems = true;
 						DebugPrint("Couldn't find form '" + Token + "'");
 					}
-					g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 				}
 			}
 		}
@@ -464,7 +464,7 @@ void TagBrowser::GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E)
 					Index++;
 				}
 
-				g_CSEInterface->TagBrowser.InstantiateObjects(&InteropData);
+				NativeWrapper::g_CSEInterface->TagBrowser.InstantiateObjects(&InteropData);
 			}
 		}
 		else
@@ -497,7 +497,7 @@ void TagBrowser::FormSelectionList_ItemActivate(Object^ Sender, EventArgs^ E)
 	ListViewItem^ Selected = GetListViewSelectedItem(List);
 	if (Selected != nullptr)
 	{
-		g_CSEInterface->CSEEditorAPI.LoadFormForEdit((CString(Selected->Text)).c_str(), (CString(Selected->SubItems[2]->Text)).c_str());
+		NativeWrapper::g_CSEInterface->CSEEditorAPI.LoadFormForEdit((CString(Selected->Text)).c_str());
 	}
 }
 void TagBrowser::FormSelectionList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -690,7 +690,7 @@ void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
 		bool BadItems = false;
 		for each (String^% Itr in TagItems)
 		{
-			ComponentDLLInterface::FormData* Data = g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(Itr)).c_str());
+			ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterface->CSEEditorAPI.LookupFormByEditorID((CString(Itr)).c_str());
 			if (Data)
 			{
 				AddItemToFormList(Data);
@@ -700,7 +700,7 @@ void TagBrowser::UpdateFormListForTag(AdvTree::Node^ Tag)
 				BadItems = true;
 				DebugPrint("Couldn't find form '" + Itr + "'");
 			}
-			g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+			NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
 		}
 
 		FormList->EndUpdate();

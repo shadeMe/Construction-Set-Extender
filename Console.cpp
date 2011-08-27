@@ -1,10 +1,8 @@
 #include "Console.h"
-
 #include "WindowManager.h"
 #include "resource.h"
 #include "CSEInterfaceManager.h"
 #include "ConsoleCommands.h"
-#include "CSDialogs.h"
 
 Console*					Console::Singleton = NULL;
 
@@ -56,11 +54,11 @@ void Console::InitializeConsole()
 
 	Edit_LimitText(EditHandle, sizeof(int));
 
-	if (g_INIManager->GetINIInt("HideOnStartup"))
+	if (g_INIManager->GetINIInt("HideOnStartup", "Extender::Console"))
 		DisplayState = true;
 
 	ToggleDisplayState();
-	SetTimer(EditHandle, CONSOLE_UPDATETIMER, CONSOLE_UPDATEPERIOD, NULL);
+	SetTimer(EditHandle, CONSOLE_UPDATETIMER, g_INIManager->GetINIInt("UpdatePeriod", "Extender::Console"), NULL);
 	g_CustomMainWindowChildrenDialogs.AddHandle(WindowHandle);
 }
 
@@ -69,6 +67,7 @@ void Console::Deinitialize()
 	SaveINISettings();
 	if (DebugLog)
 		fclose(DebugLog);
+
 	KillTimer(EditHandle, CONSOLE_UPDATETIMER);
 	g_CustomMainWindowChildrenDialogs.RemoveHandle(WindowHandle);
 }
@@ -101,10 +100,10 @@ void Console::LoadINISettings()
 {
 	if (IsConsoleInitalized() == 0)	return;
 
-	int Top = g_INIManager->FetchSetting("Top")->GetValueAsInteger(),
-		Left = g_INIManager->FetchSetting("Left")->GetValueAsInteger(),
-		Right = g_INIManager->FetchSetting("Right")->GetValueAsInteger(),
-		Bottom = g_INIManager->FetchSetting("Bottom")->GetValueAsInteger();
+	int Top = g_INIManager->FetchSetting("Top", "Extender::Console")->GetValueAsInteger(),
+		Left = g_INIManager->FetchSetting("Left", "Extender::Console")->GetValueAsInteger(),
+		Right = g_INIManager->FetchSetting("Right", "Extender::Console")->GetValueAsInteger(),
+		Bottom = g_INIManager->FetchSetting("Bottom", "Extender::Console")->GetValueAsInteger();
 
 	SetWindowPos(WindowHandle, HWND_NOTOPMOST, Left, Top, Right, Bottom, NULL);
 }
@@ -117,16 +116,16 @@ void Console::SaveINISettings()
 	GetWindowRect(WindowHandle, &WindowRect);
 
 	_itoa_s(WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Top")->SetValue(g_TextBuffer);
+	g_INIManager->FetchSetting("Top", "Extender::Console")->SetValue(g_TextBuffer);
 
 	_itoa_s(WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Left")->SetValue(g_TextBuffer);
+	g_INIManager->FetchSetting("Left", "Extender::Console")->SetValue(g_TextBuffer);
 
 	_itoa_s(WindowRect.right - WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Right")->SetValue(g_TextBuffer);
+	g_INIManager->FetchSetting("Right", "Extender::Console")->SetValue(g_TextBuffer);
 
 	_itoa_s(WindowRect.bottom - WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Bottom")->SetValue(g_TextBuffer);
+	g_INIManager->FetchSetting("Bottom", "Extender::Console")->SetValue(g_TextBuffer);
 }
 
 void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
