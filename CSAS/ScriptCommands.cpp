@@ -5,6 +5,7 @@
 #include "Commands\Commands_General.h"
 #include "Commands\Commands_Form.h"
 #include "Commands\Commands_Reference.h"
+#include "Commands\Commands_String.h"
 
 namespace CSAutomationScript
 {
@@ -281,6 +282,7 @@ namespace CSAutomationScript
 		RegisterGeneralCommands();
 		RegisterFormCommands();
 		RegisterReferenceCommands();
+		RegisterStringCommands();
 	}
 
 	void CSASCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)

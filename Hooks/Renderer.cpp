@@ -2,8 +2,9 @@
 #include "..\RenderSelectionGroupManager.h"
 #include "..\ElapsedTimeCounter.h"
 #include "..\RenderWindowTextPainter.h"
+#include "PathGridUndoManager.h"
 
-#pragma warning(disable: 4410)		// illegal operand size for the fild instruction
+#pragma warning (disable : 4410)
 
 namespace Hooks
 {
@@ -42,6 +43,17 @@ namespace Hooks
 	_DefineHookHdlr(TESRenderControlRedrawGrid, 0x004283F7);
 	_DefineHookHdlr(TESPreviewControlCallWndProc, 0x0044D700);
 	_DefineHookHdlr(ActivateRenderWindowPostLandTextureChange, 0x0042B4E5);
+	_DefineHookHdlr(TESPathGridRecordOperationMoveA, 0x0042A62D);
+	_DefineHookHdlr(TESPathGridRecordOperationMoveB, 0x0042BE6D);
+	_DefineHookHdlr(TESPathGridRecordOperationLink, 0x0042A829);
+	_DefineHookHdlr(TESPathGridRecordOperationFlag, 0x0042A714);
+	_DefineHookHdlr(TESPathGridRecordOperationRef, 0x00428367);
+	_DefineHookHdlr(TESPathGridDeletePoint, 0x004291C6);
+	_DefineHookHdlr(TESPathGridToggleEditMode, 0x00550660);
+	_DefineHookHdlr(TESPathGridCreateNewLinkedPoint, 0x0042B37B);
+	_DefineHookHdlr(TESPathGridPerformFall, 0x00428612);
+	_DefineHookHdlr(TESPathGridShowMultipleSelectionRing, 0x0042FC7C);
+	_DefinePatchHdlr(TESPathGridDtor, 0x00550B81);
 
 	void PatchRendererHooks(void)
 	{
@@ -74,6 +86,17 @@ namespace Hooks
 		_MemHdlr(TESRenderControlRedrawGrid).WriteJump();
 		_MemHdlr(TESPreviewControlCallWndProc).WriteJump();
 		_MemHdlr(ActivateRenderWindowPostLandTextureChange).WriteJump();
+		_MemHdlr(TESPathGridRecordOperationMoveA).WriteJump();
+		_MemHdlr(TESPathGridRecordOperationMoveB).WriteJump();
+		_MemHdlr(TESPathGridRecordOperationLink).WriteJump();
+		_MemHdlr(TESPathGridRecordOperationFlag).WriteJump();
+		_MemHdlr(TESPathGridRecordOperationRef).WriteJump();
+		_MemHdlr(TESPathGridDeletePoint).WriteJump();
+		_MemHdlr(TESPathGridToggleEditMode).WriteJump();
+		_MemHdlr(TESPathGridCreateNewLinkedPoint).WriteJump();
+		_MemHdlr(TESPathGridPerformFall).WriteJump();
+		_MemHdlr(TESPathGridShowMultipleSelectionRing).WriteJump();
+		_MemHdlr(TESPathGridDtor).WriteUInt8(0xEB);
 	}
 
 	#define _hhName		DoorMarkerProperties
@@ -209,11 +232,7 @@ namespace Hooks
 		{
 			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
 			{
-				PrintToBuffer("%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f",
-							(*g_TESRenderSelectionPrimary)->selectionCount,
-							(*g_TESRenderSelectionPrimary)->selectionPositionVectorSum.x,
-							(*g_TESRenderSelectionPrimary)->selectionPositionVectorSum.y,
-							(*g_TESRenderSelectionPrimary)->selectionPositionVectorSum.z);
+				PrintToBuffer("%d Objects Selected", (*g_TESRenderSelectionPrimary)->selectionCount);
 				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
 			}
 			else if ((*g_TESRenderSelectionPrimary)->selectionCount)
@@ -230,13 +249,14 @@ namespace Hooks
 																	((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
 																	xParent->parent->formID, (UInt8)xParent->oppositeState);
 				}
+
 				PrintToBuffer("%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
 								((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
 								((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
 								Selection->position.x, Selection->position.y, Selection->position.z,
-								Selection->rotation.x * 180 / PI,
-								Selection->rotation.x * 180 / PI,
-								Selection->rotation.x * 180 / PI,
+								Selection->rotation.x * 180.0 / PI,
+								Selection->rotation.y * 180.0 / PI,
+								Selection->rotation.z * 180.0 / PI,
 								Selection->scale,
 								((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
 								((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
@@ -367,7 +387,7 @@ namespace Hooks
 		}
 
 		for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
-			(*g_TESRenderSelectionPrimary)->AddToSelection(*Itr, true);
+			(*g_TESRenderSelectionPrimary)->RemoveFromSelection(*Itr, true);
 	}
 
 	#define _hhName		TESRenderControlPerformMove
@@ -625,14 +645,17 @@ namespace Hooks
 	#define _hhName		TESRenderControlAltRefRotationSpeed
 	_hhBegin()
 	{
-		_hhSetVar(Retn, 0x00425DC5);
+		_hhSetVar(Retn, 0x00425DC1);
 		__asm	pushad
 		InitializeCurrentRenderWindowMovementSetting("RefRotationSpeed");
 		__asm	popad
 		__asm
 		{
 			fmul	s_MovementSettingBuffer
-			fstp	dword ptr [esp + 0x14]
+
+			mov		eax, [g_RenderWindowStateFlags]
+			mov		eax, [eax]
+			test	eax, 0x2
 
 			jmp		[_hhGetVar(Retn)]
 		}
@@ -732,14 +755,13 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x0042EF88);
-
-		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
-		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
-
+		_asm	pushad
+		TESDialog::RedrawRenderWindow();
 		SetActiveWindow(*g_HWND_CSParent);
 		SetActiveWindow(*g_HWND_RenderWindow);
 		__asm
 		{
+			popad
 			mov		eax, 1
 			jmp		[_hhGetVar(Retn)]
 		}
@@ -790,6 +812,202 @@ namespace Hooks
 			call	DoActivateRenderWindowPostLandTextureChangeHook
 			popad
 
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	static bool s_PathGridMoveStart = false;
+
+	#define _hhName		TESPathGridRecordOperationMoveA
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x0054D600);
+		_hhSetVar(Retn, 0x0042A632);
+		__asm
+		{
+			mov		s_PathGridMoveStart, 1
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESPathGridRecordOperation(void)
+	{
+		g_PathGridUndoManager.ResetRedoStack();
+
+		if (g_RenderWindowSelectedPathGridPoints->Count())
+			g_PathGridUndoManager.RecordOperation(PathGridUndoManager::kOperation_DataChange, g_RenderWindowSelectedPathGridPoints);
+	}
+
+	void __stdcall DoTESPathGridRecordOperationMoveBHook(void)
+	{
+		if (s_PathGridMoveStart)
+		{
+			s_PathGridMoveStart = false;
+			DoTESPathGridRecordOperation();
+		}
+	}
+
+	#define _hhName		TESPathGridRecordOperationMoveB
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x004FC950);
+		_hhSetVar(Retn, 0x0042BE72);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridRecordOperationMoveBHook
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESPathGridRecordOperationLink
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x00405DA0);
+		_hhSetVar(Retn, 0x0042A82E);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridRecordOperation
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESPathGridRecordOperationFlag
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x005557A0);
+		_hhSetVar(Retn, 0x0042A719);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridRecordOperation
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESPathGridRecordOperationRef
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x00405DA0);
+		_hhSetVar(Retn, 0x0042836C);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridRecordOperation
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESPathGridDeletePointHook(void)
+	{
+		g_PathGridUndoManager.ResetRedoStack();
+		g_PathGridUndoManager.HandlePathGridPointDeletion(g_RenderWindowSelectedPathGridPoints);
+
+		if (g_RenderWindowSelectedPathGridPoints->Count())
+			g_PathGridUndoManager.RecordOperation(PathGridUndoManager::kOperation_PointDeletion, g_RenderWindowSelectedPathGridPoints);
+	}
+
+	#define _hhName		TESPathGridDeletePoint
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x0048E0E0);
+		_hhSetVar(Retn, 0x004291CB);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridDeletePointHook
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESPathGridToggleEditModeHook(void)
+	{
+		g_PathGridUndoManager.ResetRedoStack();
+		g_PathGridUndoManager.ResetUndoStack();
+	}
+
+	#define _hhName		TESPathGridToggleEditMode
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x0054C560);
+		_hhSetVar(Retn, 0x00550665);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridToggleEditModeHook
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESPathGridCreateNewLinkedPointHook(void)
+	{
+		g_PathGridUndoManager.ResetRedoStack();
+
+		if (g_RenderWindowSelectedPathGridPoints->Count())
+			g_PathGridUndoManager.RecordOperation(PathGridUndoManager::kOperation_PointCreation, g_RenderWindowSelectedPathGridPoints);
+	}
+
+	#define _hhName		TESPathGridCreateNewLinkedPoint
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x004E3900);
+		_hhSetVar(Retn, 0x0042B380);
+		__asm
+		{
+			call	[_hhGetVar(Call)]
+			pushad
+			call	DoTESPathGridCreateNewLinkedPointHook
+			popad
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESPathGridShowMultipleSelectionRingHook(TESPathGridPoint* Point)
+	{
+		Point->ShowSelectionRing();
+	}
+
+	#define _hhName		TESPathGridShowMultipleSelectionRing
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x004E3900);
+		_hhSetVar(Retn, 0x0042FC81);
+		__asm
+		{
+			pushad
+			push	esi
+			call	DoTESPathGridShowMultipleSelectionRingHook
+			popad
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESPathGridPerformFall
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x0048E0E0);
+		_hhSetVar(Retn, 0x00428617);
+		__asm
+		{
+			pushad
+			call	DoTESPathGridRecordOperation
+			popad
+			call	[_hhGetVar(Call)]
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

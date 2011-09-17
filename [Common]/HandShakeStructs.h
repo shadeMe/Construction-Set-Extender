@@ -57,10 +57,11 @@ namespace ComponentDLLInterface
 		UInt32											Length;
 		const char*										ParentID;
 		bool											UDF;
+		bool											Compiled;
 
 		void											FillScriptData(Script* Form);
 
-		ScriptData() : FormData(), Text(0), Type(0), ModifiedFlag(0), ByteCode(0), Length(0), ParentID(0), UDF(false) {}
+		ScriptData() : FormData(), Text(0), Type(0), ModifiedFlag(0), ByteCode(0), Length(0), ParentID(0), UDF(false), Compiled(false) {}
 		ScriptData(Script* Parent)
 		{
 			FillScriptData(Parent);

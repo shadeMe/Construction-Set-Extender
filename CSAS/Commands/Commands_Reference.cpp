@@ -225,7 +225,7 @@ namespace CSAutomationScript
 		else
 			Reference->position.z = Value;
 
-		Reference->Update3D();
+		Reference->UpdateNiNode();
 		return true;
 	}
 	DEFINE_CSASCOMMAND(SetRefPosition, "Sets the position of the reference in the given axis.", CSASDataElement::kParamType_Invalid, 3);
@@ -258,7 +258,7 @@ namespace CSAutomationScript
 		else
 			Reference->position.z = Value * PI / 180;
 
-		Reference->Update3D();
+		Reference->UpdateNiNode();
 		return true;
 	}
 	DEFINE_CSASCOMMAND(SetRefRotation, "Sets the rotation of the reference in the given axis.", CSASDataElement::kParamType_Invalid, 3);
@@ -279,7 +279,7 @@ namespace CSAutomationScript
 
 		Reference->scale = Value;
 
-		Reference->Update3D();
+		Reference->UpdateNiNode();
 		return true;
 	}
 	DEFINE_CSASCOMMAND_PARAM(SetRefScale, "Sets the scale of the reference.", CSASDataElement::kParamType_Invalid, kParams_FormNumber, 2);

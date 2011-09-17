@@ -41,10 +41,9 @@ struct CSEConsoleInterface
 {
 	typedef void	(* ConsolePrintCallback)(const char* Message, const char* Prefix);
 
-	// Prints a message to the console. Prefix can be an abbreviated string of any kind.
-	// Printed messages will be of the following format: [<Prefix>]\t\t<Message>
-	// Mustn't be called inside a callback.
-	//
+	// Prints a message to the console in the following format: [<Prefix>]\t\t<Message>
+	// Mustn't be called inside a print callback.
+
 	// Reserved Prefixes: CMD, CSE, SE, CS, BSAV, USE, BE, TAG
 	void			(* PrintToConsole)(const char*	Prefix, const char* FormatString, ...);
 	// Registers a handler that gets called whenever a message is printed to the console.
@@ -67,7 +66,7 @@ struct CSEScriptInterface
 	bool			(* ExtractCommandArgs)(CSAutomationScript::CSASDataElement* ArgArray, CSAutomationScript::CSASParamInfo* Parameters, UInt32 NoOfParams, ...);
 
 	// array helper functions
-	// not to be used directly, other than for initializing the global instances of the fn ptrs
+	// not to be used directly, except for initializing the global instances of the fn ptrs
 	CSAutomationScript::Array*			(* ArrayInterface_AllocateNewArray)(CSAutomationScript::CSASDataElement* Element, UInt32 Size);
 	CSAutomationScript::Array*			(* ArrayInterface_CopyNewArray)(CSAutomationScript::Array* Source);
 	void								(* ArrayInterface_ReleaseArray)(CSAutomationScript::Array* Source);

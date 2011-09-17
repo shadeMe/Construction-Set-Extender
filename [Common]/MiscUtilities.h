@@ -76,11 +76,13 @@ protected:
 	static double						FadeAnimationFactor = 0.60;
 
 	void								FadeTimer_Tick(Object^ Sender, EventArgs^ E);
+
+	void								Destroy();
 public:
 	AnimatedForm(double FadeDuration);
-	~AnimatedForm()
+	virtual ~AnimatedForm()
 	{
-		FadeTimer->Stop();
+		Destroy();
 	}
 
 	void										Show();
@@ -115,7 +117,7 @@ protected:
 
 	void												Destroy();
 public:
-	~NonActivatingImmovableAnimatedForm()
+	virtual ~NonActivatingImmovableAnimatedForm()
 	{
 		Destroy();
 	}

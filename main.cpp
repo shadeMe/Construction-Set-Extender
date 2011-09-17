@@ -10,7 +10,7 @@
 #include "Hooks\Renderer.h"
 #include "Hooks\Misc.h"
 
-#define	CSE_VERSION					MAKE_OBLIVION_VERSION(5, 1, 820)
+#define	CSE_VERSION					MAKE_OBLIVION_VERSION(6, 0, 910)
 
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {
@@ -61,7 +61,7 @@ extern "C"
 		}
 
 		CONSOLE->InitializeLog(g_APPPath.c_str());
-		DebugPrint("Construction Set Extender v%d.%d.%d {%08X} Initializing ...", (CSE_VERSION >> 24) & 0xFF, (CSE_VERSION >> 16) & 0xFF, CSE_VERSION & 0xFFFF, CSE_VERSION);
+		DebugPrint("Construction Set Extender v%d.%d.%d {%d} Initializing ...", (CSE_VERSION >> 24) & 0xFF, (CSE_VERSION >> 16) & 0xFF, CSE_VERSION & 0xFFFF, CSE_VERSION);
 		CONSOLE->Indent();
 
 		DebugPrint("Initializing INI Manager");

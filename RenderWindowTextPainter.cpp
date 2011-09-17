@@ -3,6 +3,26 @@
 
 RenderWindowTextPainter*			RenderWindowTextPainter::Singleton = NULL;
 
+RenderWindowTextPainter::RenderChannelBase::RenderChannelBase( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, DWORD Color, RECT* DrawArea )
+{
+	this->Color = Color;
+
+	this->DrawArea.left = DrawArea->left;
+	this->DrawArea.right = DrawArea->right;
+	this->DrawArea.top = DrawArea->top;
+	this->DrawArea.bottom = DrawArea->bottom;
+
+	this->Valid = false;
+	if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, FontHeight, FontWidth, FontWeight, 0, FALSE,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
+		DEFAULT_PITCH|FF_DONTCARE, (LPCTSTR)FontFace, &Font)))
+	{
+		DebugPrint("Failed to create font for RenderChannelBase!");
+		return;
+	}
+	this->Valid = true;
+}
+
 void RenderWindowTextPainter::StaticRenderChannel::Render()
 {
 	if (Valid == false)
@@ -91,24 +111,21 @@ bool RenderWindowTextPainter::Initialize()
 	if (Valid)
 		return true;
 
-	CONSOLE->Indent();
-
 	RECT DrawRect;
 	DrawRect.left = 3;
 	DrawRect.top = 3;
 	DrawRect.right = 1280;
 	DrawRect.bottom = 600;
-	RenderChannel1 = new StaticRenderChannel(12, 7, FW_THIN, "Lucida Console", D3DCOLOR_ARGB(220, 189, 237, 99), &DrawRect);
+	RenderChannel1 = new StaticRenderChannel(20, 0, FW_MEDIUM, "Consolas", D3DCOLOR_ARGB(220, 189, 237, 99), &DrawRect);
 
 	DrawRect.top += 350;
-	RenderChannel2 = new DynamicRenderChannel(12, 7, FW_THIN, "Lucida Console", D3DCOLOR_ARGB(255, 190, 35, 47), &DrawRect);
+	RenderChannel2 = new DynamicRenderChannel(20, 0, FW_MEDIUM, "Consolas", D3DCOLOR_ARGB(220, 190, 35, 47), &DrawRect);
 
 	if (RenderChannel1->GetIsValid() == false || RenderChannel2->GetIsValid() == false)
 		Valid = false;
 	else
 		Valid = true;
 
-	CONSOLE->Exdent();
 	return Valid;
 }
 
@@ -165,4 +182,10 @@ UInt32 RenderWindowTextPainter::GetRenderChannelQueueSize(UInt8 Channel)
 	}
 
 	return 0;
+}
+
+bool RenderWindowTextPainter::Recreate()
+{
+	Release();
+	return Initialize();
 }

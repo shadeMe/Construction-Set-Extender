@@ -23,11 +23,12 @@ public:
 		kPointFlags_Preferred	= /*00*/ 0x1
 	};
 
+	// members
 	/*00*/ UInt32				unk00;
 	/*04*/ Vector3				position;	// strangely, the preferred flag is set in the 3rd member (position.z)
 	/*10*/ PathGridPointListT	linkedPoints;
 	/*18*/ NiNode*				pointNiNode;
-	/*1C*/ UInt8				unk1C;		// set to 1 after its ninode is generated, 0 when linking/unlinking/deleting points?
+	/*1C*/ UInt8				selected;
 	/*1D*/ UInt8				pad1D[3];
 	/*20*/ TESObjectREFR*		linkedRef;
 	/*24*/ TESPathGrid*			parentGrid;
@@ -36,8 +37,16 @@ public:
 	void						LinkPoint(TESPathGridPoint* Point);
 	void						UnlinkPoint(TESPathGridPoint* Point);
 	bool						GetIsPointLinked(TESPathGridPoint* Point);
+	void						UnlinkAllPoints(void);
+	void						GenerateNiNode(UInt32 Unk01 = 1);
+	void						ShowSelectionRing(void);
+	void						HideSelectionRing(void);
 
+	void						LinkToReference(TESObjectREFR* Ref);
 	void						UnlinkFromReference(void);
+
+	static TESPathGridPoint*	CreateInstance(void);
+	void						DeleteInstance(void);
 };
 
 // 50
@@ -59,9 +68,23 @@ public:
 	//     /*24*/ TESChildCell
 	/*28*/ NiNode*												gridNiNode;
 	/*2C*/ TESObjectCELL*										parentCell;
-	/*30*/ NiTArray<TESPathGridPoint*>							gridPoints;
+	/*30*/ NiTArray<TESPathGridPoint*>*							gridPoints;
 	/*34*/ ExternalEdgeListT									externalEdgeList;
 	/*3C*/ UInt16												gridPointCount;
 	/*3E*/ UInt8												pad3E[2];
 	/*40*/ NiTMapBase<TESObjectREFR*, PathGridPointListT*>		linkedGridPoints;
+
+	// methods
+	void														AddPoint(TESPathGridPoint* Point);
+	void														RemovePoint(TESPathGridPoint* Point);
+	SInt32														HasPoint(TESPathGridPoint* Point);		// returns the index of the passed point in the point array. -1 when not found
+
+	void														SetParentCell(TESObjectCELL* Cell);
+
+	void														LinkPointToReference(TESPathGridPoint* Point, TESObjectREFR* Ref);
+	void														UnlinkPointFromReference(TESPathGridPoint* Point, TESObjectREFR* Ref);
+	void														CleanupLinkedReferences(void);
+
+	void														GenerateNiNode(void);
+	void														UpdateNiNode(void);
 };

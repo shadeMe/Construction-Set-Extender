@@ -1,12 +1,10 @@
 #pragma once
+#include "WindowEdgeSnapper.h"
 
 extern WNDPROC						g_FindTextOrgWindowProc;
 extern WNDPROC						g_DataDlgOrgWindowProc;
 extern WNDPROC						g_CSMainWndOrgWindowProc;
 extern WNDPROC						g_RenderWndOrgWindowProc;
-extern WNDPROC						g_ConsoleWndOrgWindowProc;
-extern WNDPROC						g_ConsoleEditControlOrgWindowProc;
-extern WNDPROC						g_ConsoleCmdBoxOrgWindowProc;
 extern WNDPROC						g_ObjectWndOrgWindowProc;
 extern WNDPROC						g_CellViewWndOrgWindowProc;
 extern WNDPROC						g_ResponseWndOrgWindowProc;
@@ -27,9 +25,6 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form);
@@ -52,6 +47,7 @@ extern const POINT				g_ObjectWindowTreePosOffset;
 extern const POINT				g_CellViewWindowObjListPosOffset;
 extern std::string				g_ObjectWindowFilterStr;
 extern std::string				g_CellViewWindowFilterStr;
+extern CSnapWindow				g_WindowEdgeSnapper;
 
 // custom control IDs
 #define DATA_QUICKLOAD                  9900

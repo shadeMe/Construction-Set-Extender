@@ -1,11 +1,11 @@
 #include "HallofFame.h"
 
-using namespace SME::MemoryHandler;
-
 namespace HallOfFame
 {
-	#define		TableSize		17
-	HallOfFameEntry	Entries[TableSize] =
+	#define HallOfFameTableSize		17
+	UInt32	TableSize = HallOfFameTableSize;
+
+	HallOfFameEntry	Entries[HallOfFameTableSize] =
 	{
 		{ "shadeMe",					TESForm::kFormType_NPC,			NULL,	"Likes Andrea Corr" },
 		{ "ScruggsywuggsyTheFerret",	TESForm::kFormType_Creature,	NULL,	"Cthulu-like Being" },
@@ -50,7 +50,8 @@ namespace HallOfFame
 			}
 
 			TESFullName* Name = CS_CAST(Itr.Form, TESForm, TESFullName);
-			if (Name)			Name->name.Set(Itr.Name);
+			if (Name)
+				Name->name.Set(Itr.Name);
 
 			_DATAHANDLER->AddTESObject(CS_CAST(Itr.Form, TESForm, TESObject));
 			Itr.Form->SetFromActiveFile(false);

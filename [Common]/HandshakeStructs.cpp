@@ -28,6 +28,8 @@ namespace ComponentDLLInterface
 				UDF = true;
 			}
 		}
+
+		Compiled = Form->compileResult;
 	}
 
 	void VariableData::FillVariableData(const char* VariableName)

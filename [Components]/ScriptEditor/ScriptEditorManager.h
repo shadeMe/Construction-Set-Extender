@@ -68,6 +68,7 @@ public:
 	property ScriptEditor::Workspace^					TornWorkspace;
 
 	static ScriptEditorManager^%						GetSingleton();
+
 	Object^												PerformOperation(OperationType Op, OperationParams^ Parameters);
 	ScriptEditor::Workspace^							GetAllocatedWorkspace(UInt32 AllocatedIndex);
 	UInt32												GetOpenEditorCount(void) { return AllocatedWorkspaces->Count; }

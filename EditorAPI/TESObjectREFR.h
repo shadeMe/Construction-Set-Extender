@@ -31,7 +31,7 @@ public:
 	/*4C*/ ExtraDataList		extraData;
 
 	// methods
-	void						Update3D();								// refreshes the render window 3D data
+	void						UpdateNiNode();
 	Vector3*					GetPosition() {	return &position; }
 	bool						SetBaseForm(TESForm* BaseForm);
 	void						SetPersistent(bool Persistent);

@@ -13,13 +13,9 @@ MISC	---->
 			Ingo Berg, for muParserX (and for the great tech. support)
 > Ctrl + Up/Down script editor shortcut
 
-CSE		----> 
-> Undo/redo pathgrid actions
-> Implement taskbar icons and minimize buttons
+CSE		---->
 > Increase formID column's size
 > Use a tab delimited format for the change logs
-> Make selection alignment undo'able
-> Topicinfo inititem warnings aren't being shown
 > Relative scaling and snap to bounding box
 
 * The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
@@ -32,4 +28,3 @@ CSE		---->
 
 
 SE		---->
-> There's a slight X-offset to the position returned by AvalonEditTextEditor::GetPositionFromCharIndex

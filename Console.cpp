@@ -1,10 +1,18 @@
 #include "Console.h"
-#include "WindowManager.h"
 #include "resource.h"
 #include "CSEInterfaceManager.h"
 #include "ConsoleCommands.h"
+#include "WindowManager.h"
+#include "ChangeLogManager.h"
 
 Console*					Console::Singleton = NULL;
+WNDPROC						g_ConsoleWndOrgWindowProc = NULL;
+WNDPROC						g_ConsoleEditControlOrgWindowProc = NULL;
+WNDPROC						g_ConsoleCmdBoxOrgWindowProc = NULL;
+
+LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 Console::Console()
 {
@@ -58,8 +66,20 @@ void Console::InitializeConsole()
 		DisplayState = true;
 
 	ToggleDisplayState();
+	LoadINISettings();
+
 	SetTimer(EditHandle, CONSOLE_UPDATETIMER, g_INIManager->GetINIInt("UpdatePeriod", "Extender::Console"), NULL);
 	g_CustomMainWindowChildrenDialogs.AddHandle(WindowHandle);
+
+	HMENU ViewMenu = GetMenu(*g_HWND_CSParent); ViewMenu = GetSubMenu(ViewMenu, 2);
+	MENUITEMINFO ItemViewConsole;
+	ItemViewConsole.cbSize = sizeof(MENUITEMINFO);
+	ItemViewConsole.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
+	ItemViewConsole.wID = MAIN_VIEW_CONSOLEWINDOW;
+	ItemViewConsole.fState = MFS_ENABLED|MFS_CHECKED;
+	ItemViewConsole.dwTypeData = "Console Window";
+	ItemViewConsole.cch = 0;
+	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
 }
 
 void Console::Deinitialize()
@@ -263,4 +283,191 @@ void DebugPrint(UInt8 source, const char* fmt, ...)
 	va_start(args, fmt);
 	CONSOLE->LogMessage(source, fmt, args);
 	va_end(args);
+}
+
+LRESULT CALLBACK ConsoleDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+    case WM_MOVING:
+        return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
+    case WM_ENTERSIZEMOVE:
+        return g_WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
+	case WM_SIZE:
+	{
+		tagRECT WindowRect, EditRect;
+		GetWindowRect(hWnd, &WindowRect);
+		MoveWindow(GetDlgItem(hWnd, EDIT_CONSOLE), 0, 0, WindowRect.right - WindowRect.left - 15, WindowRect.bottom - WindowRect.top - 65, TRUE);
+		GetWindowRect(GetDlgItem(hWnd, EDIT_CONSOLE), &EditRect);
+		SetWindowPos(GetDlgItem(hWnd, EDIT_CMDBOX), HWND_NOTOPMOST, 0, EditRect.bottom - EditRect.top, WindowRect.right - WindowRect.left - 18, 31, SWP_NOZORDER);
+		break;
+	}
+	case WM_DESTROY:
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleWndOrgWindowProc);
+		break;
+	case WM_INITDIALOG:
+		HFONT EditFont = CreateFont(20, 0, 0, 0,
+                             FW_BOLD, FALSE, FALSE, FALSE,
+                             ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+                             CLIP_DEFAULT_PRECIS, 5,		// CLEARTYPE_QUALITY
+                             FF_DONTCARE, "Consolas");
+		SendMessage(GetDlgItem(hWnd, EDIT_CMDBOX), WM_SETFONT, (WPARAM)EditFont, (LPARAM)TRUE);
+		break;
+	}
+
+	return CallWindowProc(g_ConsoleWndOrgWindowProc, hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_TIMER:
+		switch (wParam)
+		{
+		case CONSOLE_UPDATETIMER:
+			if (CONSOLE->GetShouldUpdate())
+			{
+				SendMessage(hWnd, WM_SETREDRAW, FALSE, 0);
+				Edit_SetText(hWnd, (LPCSTR)CONSOLE->GetMessageBuffer());
+				SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, (LPARAM)NULL);
+				SendMessage(hWnd, WM_SETREDRAW, TRUE, 0);
+			}
+			break;
+		}
+		return TRUE;
+	case WM_RBUTTONUP:
+	{
+		static bool AlwaysOnTopFlag = false;
+
+		RECT Rect;
+		POINT Point;
+
+		GetClientRect(hWnd, &Rect);
+		Point.x = GET_X_LPARAM(lParam);
+        Point.y = GET_Y_LPARAM(lParam);
+
+		if (PtInRect((LPRECT) &Rect, Point))
+		{
+			HMENU Popup = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU1); Popup = GetSubMenu(Popup, 0);
+
+			if (AlwaysOnTopFlag)
+				CheckMenuItem(Popup, 1, MF_CHECKED|MF_BYPOSITION);
+			else
+				CheckMenuItem(Popup, 1, MF_UNCHECKED|MF_BYPOSITION);
+
+			ClientToScreen(hWnd, (LPPOINT) &Point);
+
+			switch (TrackPopupMenu(Popup, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RETURNCMD, Point.x, Point.y, 0, hWnd, NULL))
+			{
+			case CONSOLEMENU_CLEARCONSOLE:
+				CONSOLE->Clear();
+				break;
+			case CONSOLEMENU_ALWAYSONTOP:
+				if (AlwaysOnTopFlag)
+				{
+					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_NOTOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+					AlwaysOnTopFlag = false;
+				}
+				else
+				{
+					SetWindowPos(CONSOLE->GetWindowHandle(), HWND_TOPMOST, 0, 1, 1, 1, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+					AlwaysOnTopFlag = true;
+				}
+				break;
+			case CONSOLEMENU_HIDECONSOLE:
+				CONSOLE->ToggleDisplayState();
+				break;
+			case CONSOLEMENU_OPENDEBUGLOG:
+				ShellExecute(NULL, "open", (LPSTR)CONSOLE->GetDebugLogPath(), NULL, NULL, SW_SHOW);
+				break;
+			case CONSOLEMENU_OPENCHANGELOG:
+				VersionControl::CHANGELOG->OpenSessionLog();
+				break;
+			}
+			DestroyMenu(Popup);
+		}
+		return FALSE;
+	}
+	case WM_DESTROY:
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleEditControlOrgWindowProc);
+		break;
+	}
+
+	return CallWindowProc(g_ConsoleEditControlOrgWindowProc, hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK ConsoleCmdBoxSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static std::stack<std::string> CommandStack, AlternateCommandStack;
+
+	switch (uMsg)
+	{
+	case CONSOLECMDBOX_RESETCOMMANDSTACK:
+		while (AlternateCommandStack.empty() == false)
+		{
+			CommandStack.push(AlternateCommandStack.top());
+			AlternateCommandStack.pop();
+		}
+		return TRUE;
+	case CONSOLECMDBOX_CLEARCOMMANDSTACK:
+		while (AlternateCommandStack.empty() == false)
+			AlternateCommandStack.pop();
+		while (CommandStack.empty() == false)
+			CommandStack.pop();
+		return TRUE;
+	case WM_CHAR:
+		if (wParam == VK_RETURN)
+			return TRUE;
+		break;
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_RETURN:
+			{
+				char Buffer[0x200];
+				Edit_GetText(hWnd, Buffer, sizeof(Buffer));
+				if (strlen(Buffer) > 2)
+				{
+					CONSOLE->LogMessage("CMD", Buffer);
+					SendMessage(hWnd, CONSOLECMDBOX_RESETCOMMANDSTACK, NULL, NULL);
+					CommandStack.push(Buffer);
+				}
+				Edit_SetText(hWnd, NULL);
+				return TRUE;
+			}
+		case VK_UP:
+			{
+				Edit_SetText(hWnd, NULL);
+				if (CommandStack.empty() == false)
+				{
+					std::string Command(CommandStack.top());
+					Edit_SetText(hWnd, Command.c_str());
+					CommandStack.pop();
+					AlternateCommandStack.push(Command);
+				}
+				return TRUE;
+			}
+		case VK_DOWN:
+			{
+				Edit_SetText(hWnd, NULL);
+				if (AlternateCommandStack.empty() == false)
+				{
+					std::string Command(AlternateCommandStack.top());
+					Edit_SetText(hWnd, Command.c_str());
+					AlternateCommandStack.pop();
+					CommandStack.push(Command);
+				}
+				return TRUE;
+			}
+		}
+		break;
+	case WM_DESTROY:
+		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)g_ConsoleCmdBoxOrgWindowProc);
+		break;
+	case WM_INITDIALOG:
+		return TRUE;
+	}
+
+	return CallWindowProc(g_ConsoleCmdBoxOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }

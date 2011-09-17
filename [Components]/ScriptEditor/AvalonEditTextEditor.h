@@ -106,7 +106,7 @@ protected:
 	void										HandleKeyEventForKey(System::Windows::Input::Key Key) { KeyToPreventHandling = Key; }
 
 	void										HandleTextChangeEvent();
-	void										GotoLine(int Line);						// line numbers start at 1
+	void										GotoLine(int Line);										// line numbers start at 1
 
 	void										RefreshUI() { TextField->TextArea->TextView->Redraw(); }
 	UInt32										PerformReplaceOnSegment(IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
@@ -122,7 +122,7 @@ protected:
 	void										ClearFindResultIndicators(void);
 	void										Destroy();
 
-	static double								SetTextFadeAnimationDuration = 0.1;		// in seconds
+	static double								SetTextFadeAnimationDuration = 0.17;		// in seconds
 public:
 	~AvalonEditTextEditor()
 	{
@@ -191,6 +191,9 @@ public:
 	virtual void								OnGotFocus(void);
 	virtual void								OnLostFocus(void);
 	virtual void								OnPositionSizeChange(void);
+
+	virtual void								BeginUpdate(void);
+	virtual void								EndUpdate(void);
 
 	AvalonEditTextEditor(Font^ Font, Object^% Parent);
 };

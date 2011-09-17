@@ -1,6 +1,6 @@
 #include "ExtraDataList.h"
 
-CRITICAL_SECTION*					g_ExtraListCS = (CRITICAL_SECTION*)0x00A0DA80;
+CRITICAL_SECTION*					g_ExtraDataListMutex = (CRITICAL_SECTION*)0x00A0DA80;
 
 void ExtraDataList::Link(TESForm* LinkedForm)
 {

@@ -25,3 +25,8 @@ TESObjectREFR* TESObjectCELL::LookupRefByBaseForm( TESForm* BaseForm, bool HasEd
 
 	return NULL;
 }
+
+void TESObjectCELL::SetPathGrid( TESPathGrid* PathGrid )
+{
+	thisCall<void>(0x00532C20, this, PathGrid);
+}

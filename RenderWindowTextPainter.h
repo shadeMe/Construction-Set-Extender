@@ -15,25 +15,7 @@ class RenderWindowTextPainter
 
 		bool							Valid;
 
-		RenderChannelBase(INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, DWORD Color, RECT* DrawArea)
-		{
-			this->Color = Color;
-
-			this->DrawArea.left = DrawArea->left;
-			this->DrawArea.right = DrawArea->right;
-			this->DrawArea.top = DrawArea->top;
-			this->DrawArea.bottom = DrawArea->bottom;
-
-			this->Valid = false;
-			if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, FontHeight, FontWidth, FontWeight, 0, FALSE,
-						DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
-						DEFAULT_PITCH|FF_DONTCARE, (LPCTSTR)FontFace, &Font)))
-			{
-				DebugPrint("Failed to create font for RenderChannelBase!");
-				return;
-			}
-			this->Valid = true;
-		}
+		RenderChannelBase(INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, DWORD Color, RECT* DrawArea);
 	public:
 		virtual void					Render() = 0;
 		virtual void					Release()
@@ -103,7 +85,7 @@ public:
 	static RenderWindowTextPainter*		GetSingleton(void);
 
 	bool								Initialize();			// must be called during init
-	bool								Recreate() { Release(); return Initialize(); }
+	bool								Recreate();
 	void								Render();
 	void								Release();
 	void								QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay);

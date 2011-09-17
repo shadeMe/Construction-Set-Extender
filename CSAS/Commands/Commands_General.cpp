@@ -14,6 +14,9 @@ namespace CSAutomationScript
 		REGISTER_CSASCOMMAND(GetFormByFormID, "General Functions");
 		REGISTER_CSASCOMMAND(GetEditorID, "General Functions");
 		REGISTER_CSASCOMMAND(GetFormType, "General Functions");
+
+		REGISTER_CSASCOMMAND(SetEditorID, "General Functions");
+		REGISTER_CSASCOMMAND(SetFormID, "General Functions");
 	}
 
 	BEGIN_CSASCOMMAND_PARAMINFO(PrintToConsole, 1)
@@ -139,4 +142,48 @@ namespace CSAutomationScript
 		return true;
 	}
 	DEFINE_CSASCOMMAND_PARAM(GetFormType, "Returns the typeID of the passed form", CSASDataElement::kParamType_Numeric, kParams_OneForm, 1);
+
+	BEGIN_CSASCOMMAND_PARAMINFO(SetEditorID, 2)
+	{
+		{ "Form", CSASDataElement::kParamType_Reference },
+		{ "EditorID", CSASDataElement::kParamType_String }
+	};
+	BEGIN_CSASCOMMAND_HANDLER(SetEditorID)
+	{
+		TESForm* Form = NULL;
+		char Buffer[0x400] = {0};
+
+		if (!EXTRACT_CSASARGS(&Form, &Buffer))
+			return false;
+		else if (!Form)
+			return false;
+
+		if (Buffer)
+			Result->SetNumber(Form->SetEditorID(Buffer));
+
+		return true;
+	}
+	DEFINE_CSASCOMMAND(SetEditorID, "Sets the form's editorID and returns true if succesful", CSASDataElement::kParamType_Numeric, 2);
+
+	BEGIN_CSASCOMMAND_PARAMINFO(SetFormID, 2)
+	{
+		{ "Form", CSASDataElement::kParamType_Reference },
+		{ "FormID", CSASDataElement::kParamType_Numeric }
+	};
+	BEGIN_CSASCOMMAND_HANDLER(SetFormID)
+	{
+		TESForm* Form = NULL;
+		double FormID = 0;
+
+		if (!EXTRACT_CSASARGS(&Form, &FormID))
+			return false;
+		else if (!Form)
+			return false;
+
+		if (FormID && Form->formID != FormID)
+			Form->SetFormID(FormID);
+
+		return true;
+	}
+	DEFINE_CSASCOMMAND(SetFormID, "Sets the form's formID", CSASDataElement::kParamType_Invalid, 2);
 }

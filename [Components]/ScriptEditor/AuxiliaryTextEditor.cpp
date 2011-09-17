@@ -1,9 +1,9 @@
 #include "AuxiliaryTextEditor.h"
 #include "NumberedRichTextBox.h"
 
-ScriptOffsetViewer::ScriptOffsetViewer(Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
+ScriptOffsetViewer::ScriptOffsetViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
 {
-	Viewer = gcnew OffsetRichTextBox(6, Font, ForegroundColor, BackgroundColor, HighlightColor);
+	Viewer = gcnew OffsetRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size + 2, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
 	InitializationState = false;
 
 	Viewer->OffsetFlag = true;
@@ -34,7 +34,7 @@ bool ScriptOffsetViewer::Show()
 {
 	if (InitializationState == false)
 	{
-		MessageBox::Show("Offset Viewer was not initialized successfully!\n\nCheck the script and recompile it before trying again.", "CSE Script Editor", MessageBoxButtons::OK, MessageBoxIcon::Error);
+		MessageBox::Show("Offset Viewer was not initialized successfully!\n\nPlease recompile the current script.", "CSE Script Editor", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 		return false;
 	}
 
@@ -43,9 +43,14 @@ bool ScriptOffsetViewer::Show()
 	return true;
 }
 
-SimpleTextViewer::SimpleTextViewer(Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
+void ScriptOffsetViewer::Reset( void )
 {
-	Viewer = gcnew NumberedRichTextBox(6, Font, ForegroundColor, BackgroundColor, HighlightColor);
+	InitializationState = false;
+}
+
+SimpleTextViewer::SimpleTextViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
+{
+	Viewer = gcnew NumberedRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size + 2, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
 
 	Viewer->GetTextField()->ReadOnly = true;
 	Viewer->GetTextField()->Enabled = true;

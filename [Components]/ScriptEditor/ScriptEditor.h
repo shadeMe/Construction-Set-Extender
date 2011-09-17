@@ -20,7 +20,7 @@ namespace ScriptEditor
 {
 	ref class Workspace;
 
-	void													GlobalInputMonitor_MouseUp(Object^ Sender, MouseEventArgs^ E);
+	void													TabTearEventHandler(Object^ Sender, MouseEventArgs^ E);
 
 	public ref class TabContainer
 	{
@@ -36,10 +36,12 @@ namespace ScriptEditor
 																	e_New = 0,
 																	e_Open,
 																	e_LoadNew,
-																	e_NewText
+																	e_NewText,
+																	e_Find,
+																	e_Replace
 																};
 
-		static MouseEventHandler^							GlobalMouseHook_MouseUpHandler = gcnew MouseEventHandler(&GlobalInputMonitor_MouseUp);
+		static MouseEventHandler^							TabTearEventHandlerWrapper = gcnew MouseEventHandler(&TabTearEventHandler);
 		static Rectangle									LastUsedBounds = Rectangle(100, 100, 100, 100);
 	private:
 		Stack<UInt32>^										BackJumpStack;
@@ -81,7 +83,7 @@ namespace ScriptEditor
 		Workspace^											InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript);
 		void												NavigateJumpStack(UInt32 AllocatedIndex, NavigationDirection Direction);
 		void												JumpToWorkspace(UInt32 AllocatedIndex, String^% ScriptName);
-		void												PerformRemoteTabOperation(RemoteOperation Operation, Object^ Arbitrary);
+		void												PerformRemoteTabOperation(RemoteOperation Operation, Object^ ArbitraryA, Object^ ArbitraryB);
 		void												SaveAllOpenWorkspaces();
 		void												CloseAllOpenWorkspaces();
 
@@ -117,8 +119,8 @@ namespace ScriptEditor
 																{
 																	e_Warning	= 0,
 																	e_Error,
-																	e_Message,
-																	e_CSEMessage
+																	e_RegularMessage,
+																	e_EditorMessage
 																};
 
 		static enum class									ScriptType
@@ -187,8 +189,12 @@ namespace ScriptEditor
 			ToolStripTextBox^									ToolBarCommonTextBox;
 			ToolStripDropDownButton^							ToolBarEditMenu;
 				ToolStripDropDown^									ToolBarEditMenuContents;
-				ToolStripButton^									ToolBarEditMenuContentsFind;
-				ToolStripButton^									ToolBarEditMenuContentsReplace;
+				ToolStripSplitButton^									ToolBarEditMenuContentsFind;
+					ToolStripDropDown^										ToolBarEditMenuContentsFindContents;
+					ToolStripButton^										ToolBarEditMenuContentsFindContentsInTabs;
+				ToolStripSplitButton^									ToolBarEditMenuContentsReplace;
+					ToolStripDropDown^										ToolBarEditMenuContentsReplaceContents;
+					ToolStripButton^										ToolBarEditMenuContentsReplaceContentsInTabs;
 				ToolStripButton^									ToolBarEditMenuContentsGotoLine;
 				ToolStripButton^									ToolBarEditMenuContentsGotoOffset;
 			ToolStripButton^									ToolBarMessageList;
@@ -206,7 +212,6 @@ namespace ScriptEditor
 			ToolStripButton^									ToolBarShowPreprocessedText;
 			ToolStripButton^									ToolBarSanitizeScriptText;
 			ToolStripButton^									ToolBarBindScript;
-
 			ToolStripProgressBar^								ToolBarByteCodeSize;
 
 		ContextMenuStrip^									TextEditorContextMenu;
@@ -301,7 +306,9 @@ namespace ScriptEditor
 		void												ToolBarCommonTextBox_LostFocus(Object^ Sender, EventArgs^ E);
 
 		void												ToolBarEditMenuContentsFind_Click(Object^ Sender, EventArgs^ E);
+			void												ToolBarEditMenuContentsFindContentsInTabs_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarEditMenuContentsReplace_Click(Object^ Sender, EventArgs^ E);
+			void												ToolBarEditMenuContentsReplaceContentsInTabs_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E);
 
@@ -326,10 +333,7 @@ namespace ScriptEditor
 		void												ClearCSEMessagesFromMessagePool(void);
 
 		void												FindReplaceOutput(String^ Line, String^ Text);
-		void												FindReplaceWrapper(IScriptTextEditor::FindReplaceOperation Operation);
-
 		void												ToggleBookmark(int CaretPos);
-
 		void												SetScriptType(ScriptType Type);
 
 		String^												SerializeCSEBlock(void);
@@ -344,7 +348,7 @@ namespace ScriptEditor
 		bool												ValidateScript(String^% PreprocessedScriptText);
 		bool												PreprocessScriptText(String^% PreprocessorResult);
 		void												PreprocessorErrorOutputWrapper(String^ Message);
-		void												SanitizeScriptText(SanitizeOperation Operation);
+		String^												SanitizeScriptText(SanitizeOperation Operation, String^ ScriptText);
 		void												UpdateEnvironment(ComponentDLLInterface::ScriptData* Data, bool Initializing);
 		void												Destroy();
 	public:
@@ -353,7 +357,6 @@ namespace ScriptEditor
 			Destroy();
 		}
 
-		// workspace actions
 		void												NewScript();
 		void												OpenScript();
 		bool												SaveScript(SaveScriptOperation Operation);
@@ -369,10 +372,10 @@ namespace ScriptEditor
 		UInt32												GetAllocatedIndex() { return AllocatedIndex; }
 		bool												GetModifiedStatus() { return TextEditor->GetModifiedStatus(); }
 		void												SetModifiedStatus(bool Modified) { TextEditor->SetModifiedStatus(Modified); }
-		TabContainer^%										GetParentContainer() { return ParentContainer; }
+		TabContainer^										GetParentContainer() { return ParentContainer; }
 		String^												GetScriptDescription() { return EditorTab->Tooltip; }
 		String^												GetScriptID() { return CurrentScriptEditorID; }
-		bool												GetIsFirstRun() { return CurrentScriptEditorID == FIRSTRUNSCRIPTID;  }		// returns true until a script's loaded/created into the workspace
+		bool												GetIsUninitialized() { return CurrentScriptEditorID == FIRSTRUNSCRIPTID;  }		// returns true until a script's loaded/created into the workspace
 		bool												GetIsCurrentScriptNew(void) { return CurrentScriptEditorID == NEWSCRIPTID; }
 		bool												GetIsTabStripParent(DotNetBar::SuperTabStrip^ TabStrip) { return TabStrip->Tabs->IndexOf(EditorTab) != -1; }
 
@@ -398,5 +401,7 @@ namespace ScriptEditor
 
 		void												LoadFileFromDisk(String^ Path);
 		void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);
+
+		void												PerformFindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement);
 	};
 }

@@ -78,6 +78,9 @@ public interface class IScriptTextEditor
 	Point										PointToScreen(Point Location);
 	void										SetEnabledState(bool State);
 
+	void										BeginUpdate(void);
+	void										EndUpdate(void);
+
 	// Events
 	void										OnGotFocus(void);					// called when the workspace's is brought to focus
 	void										OnLostFocus(void);					// the opposite of the above

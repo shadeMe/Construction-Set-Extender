@@ -255,7 +255,6 @@ void AvalonEditTextEditor::SetModifiedStatus(bool Modified)
 	switch (Modified)
 	{
 	case true:
-		ClearFindResultIndicators();
 		ErrorColorizer->ClearLines();
 		break;
 	case false:
@@ -284,6 +283,7 @@ UInt32 AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation
 {
 	UInt32 Hits = 0;
 	ClearFindResultIndicators();
+	BeginUpdate();
 
 	AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 	if (TextSelection->IsEmpty)
@@ -311,8 +311,8 @@ UInt32 AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation
 		FindReplaceColorizer->SetMatch(Query);
 
 	SetSelectionLength(0);
-
 	RefreshUI();
+	EndUpdate();
 
 	return Hits;
 }
@@ -320,6 +320,7 @@ UInt32 AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation
 void AvalonEditTextEditor::ToggleComment(int StartIndex)
 {
 	SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+	BeginUpdate();
 
 	AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 	if (TextSelection->IsEmpty)
@@ -397,6 +398,7 @@ void AvalonEditTextEditor::ToggleComment(int StartIndex)
 		}
 	}
 
+	EndUpdate();
 	SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 }
 
@@ -455,6 +457,16 @@ void AvalonEditTextEditor::OnPositionSizeChange(void)
 {
 	IntelliSenseBox->HideInterface();
 }
+
+void AvalonEditTextEditor::BeginUpdate( void )
+{
+	TextField->Document->BeginUpdate();
+}
+
+void AvalonEditTextEditor::EndUpdate( void )
+{
+	TextField->Document->EndUpdate();
+}
 #pragma endregion
 
 #pragma region Methods
@@ -474,11 +486,9 @@ void AvalonEditTextEditor::Destroy()
 	delete TextFieldPanel;
 	delete AnimationPrimitive;
 	delete TextField;
-	delete IntelliSenseBox;
-	delete MiddleMouseScrollTimer;
-	delete FoldingTimer;
-	delete WPFHost;
-	delete Container;
+ 	delete IntelliSenseBox;
+ 	delete MiddleMouseScrollTimer;
+ 	delete FoldingTimer;
 }
 
 UInt32 AvalonEditTextEditor::PerformReplaceOnSegment(IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output)
@@ -698,6 +708,7 @@ RTBitmap^ AvalonEditTextEditor::RenderFrameworkElement( System::Windows::Framewo
 void AvalonEditTextEditor::ClearFindResultIndicators()
 {
 	FindReplaceColorizer->SetMatch("");
+	RefreshUI();
 }
 
 void AvalonEditTextEditor::MoveTextSegment( AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction )
@@ -745,7 +756,7 @@ void AvalonEditTextEditor::MoveTextSegment( AvalonEdit::Document::ISegment^ Segm
 				TextField->Document->Remove(NextLine->Offset, NextLine->Length + 1);
 			TextField->Document->Remove(Segment);
 
-			if (InsertOffset - 1 > 0)
+			if (InsertOffset - 1 >= 0)
 				InsertOffset--;
 
 			TextField->Document->Insert(InsertOffset, InsertText);
@@ -888,7 +899,6 @@ void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::In
 		}
 
 		ClearFindResultIndicators();
-		RefreshUI();
 		break;
 	case System::Windows::Input::Key::Tab:
 		if (IntelliSenseBox->Visible)
@@ -1049,7 +1059,7 @@ void AvalonEditTextEditor::TextField_LostFocus(Object^ Sender, System::Windows::
 
 void AvalonEditTextEditor::TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 {
-	static double SlowScrollFactor = 20;
+	static double SlowScrollFactor = 15;
 
 	if (TextField->IsMouseCaptured)
 	{

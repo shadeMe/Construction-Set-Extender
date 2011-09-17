@@ -1,7 +1,7 @@
 #include "TESObjectREFR.h"
 #include "..\Hooks\Renderer.h"
 
-void TESObjectREFR::Update3D()
+void TESObjectREFR::UpdateNiNode()
 {
 	Hooks::kTESObjectREFRUpdate3D.WriteJump();
 

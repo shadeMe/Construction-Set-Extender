@@ -48,4 +48,4 @@ public:
 };
 STATIC_ASSERT(sizeof(ExtraDataList) == 0x14);
 
-extern CRITICAL_SECTION*		g_ExtraListCS;
+extern CRITICAL_SECTION*		g_ExtraDataListMutex;

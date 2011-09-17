@@ -34,13 +34,13 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
     Splitter->IsSplitterFixed = true;
     Splitter->SplitterDistance = 40;
     Splitter->SplitterWidth = 1;
-	Splitter->BorderStyle = BorderStyle::None;
+	Splitter->BorderStyle = BorderStyle::FixedSingle;
 
 	TextField->LinesToScroll = LinesToScroll;
 	TextField->Dock = DockStyle::Fill;
 	TextField->Multiline = true;
 	TextField->WordWrap = false;
-	TextField->BorderStyle = BorderStyle::Fixed3D;
+	TextField->BorderStyle = BorderStyle::None;
 	TextField->AutoWordSelection = true;
 	TextField->Font = Font;
 
@@ -62,7 +62,7 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
 	LineField->Cursor = Cursors::Default;
     LineField->Text = "";
 	LineField->ScrollBars = RichTextBoxScrollBars::None;
-	LineField->BorderStyle = BorderStyle::Fixed3D;
+	LineField->BorderStyle = BorderStyle::None;
 	LineField->BackColor = BackgroundColor;
 	LineField->ForeColor = ForegroundColor;
 	LineField->MouseDown += gcnew MouseEventHandler(this, &NumberedRichTextBox::LineField_MouseDown);
@@ -73,6 +73,7 @@ NumberedRichTextBox::NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color
 
 	Splitter->Panel1->Controls->Add(LineField);
 	Splitter->Panel1->BorderStyle = BorderStyle::None;
+	Splitter->Panel2->BorderStyle = BorderStyle::None;
 	Splitter->Panel2->Controls->Add(TextField);
 
 	LineChangeBuffer = 0;

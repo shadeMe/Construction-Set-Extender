@@ -39,4 +39,15 @@ namespace Hooks
 	_DeclareMemHdlr(TESRenderControlRedrawGrid, "fixes a bug that invalidates the viewport after linking a path grid point");
 	_DeclareMemHdlr(TESPreviewControlCallWndProc, "fixes a bug that causes a CTD when preview controls are themed");
 	_DeclareMemHdlr(ActivateRenderWindowPostLandTextureChange, "resets control focus to the render window after the active landscape texture has been changed");
+	_DeclareMemHdlr(TESPathGridRecordOperationMoveA, "adds support for the path grid editor undo manager");
+	_DeclareMemHdlr(TESPathGridRecordOperationMoveB, "");
+	_DeclareMemHdlr(TESPathGridRecordOperationLink, "");
+	_DeclareMemHdlr(TESPathGridRecordOperationFlag, "");
+	_DeclareMemHdlr(TESPathGridRecordOperationRef, "");
+	_DeclareMemHdlr(TESPathGridDeletePoint, "");
+	_DeclareMemHdlr(TESPathGridToggleEditMode, "");
+	_DeclareMemHdlr(TESPathGridCreateNewLinkedPoint, "");
+	_DeclareMemHdlr(TESPathGridPerformFall, "");
+	_DeclareMemHdlr(TESPathGridShowMultipleSelectionRing, "fixes a bug that basically prevents selection rings from showing on path grid points selected using the rubber band scope");
+	_DeclareMemHdlr(TESPathGridDtor, "fixes a bug that caused a CTD when a path grid point was created after every loaded pathgrid was destroyed");
 }

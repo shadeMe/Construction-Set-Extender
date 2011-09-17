@@ -348,6 +348,12 @@
     <ClCompile Include="EditorAPI\TESPathGrid.cpp">
       <Filter>EditorAPI\Forms</Filter>
     </ClCompile>
+    <ClCompile Include="PathGridUndoManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSAS\Commands\Commands_String.cpp">
+      <Filter>CSAS\Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\GameTypes.h">
@@ -864,6 +870,12 @@
     </ClInclude>
     <ClInclude Include="EditorAPI\TESPathGrid.h">
       <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="PathGridUndoManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSAS\Commands\Commands_String.h">
+      <Filter>CSAS\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -3,6 +3,7 @@
 #include "WorkspaceManager.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
+#include "PathGridUndoManager.h"
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
@@ -214,6 +215,21 @@ bool TESDialog::GetIsFormEditDialogCompatible( TESForm* Form )
 		return true;
 	default:
 		return false;
+	}
+}
+
+void TESDialog::RedrawRenderWindow()
+{
+	if (*g_RenderWindowPathGridEditModeFlag)
+	{
+		g_PathGridUndoManager.SetCanReset(false);
+		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+		g_PathGridUndoManager.SetCanReset(true);
+	}
+	else
+	{
+		*g_RenderWindowUpdateViewPortFlag = 1;
 	}
 }
 

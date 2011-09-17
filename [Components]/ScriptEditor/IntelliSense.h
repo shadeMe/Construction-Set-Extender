@@ -77,7 +77,7 @@ namespace IntelliSense
 																	"Command",
 																	"Local Variable",
 																	"Remote Variable",
-																	"User Function",
+																	"User Defined Function",
 																	"Quest",
 																	"Global Variable",
 																	"Game Setting",

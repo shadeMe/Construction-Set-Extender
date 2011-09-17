@@ -7,8 +7,6 @@ namespace Hooks
 	void PatchMiscHooks(void);
 	void PatchEntryPointHooks(void);
 
-	extern char g_NumericIDWarningBuffer[0x10];
-
 	_DeclareMemHdlr(CSExit, "adds fast exit to the CS");
 	_DeclareMemHdlr(CSInit, "adds an one-time only hook to the CS main windows wndproc as an alternative to WinMain()");
 	_DeclareMemHdlr(AssertOverride, "fixes crashes from assertion calls in the code and log them to the console/log instead");

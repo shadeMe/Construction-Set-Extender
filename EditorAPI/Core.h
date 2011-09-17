@@ -187,6 +187,8 @@ public:
 	/*41C*/ TESFile*             unkFile41C; // file this object was cloned from. used for local copies of network files?
 
 	// methods
+	bool						IsActive(void);
+
 	static TESFile*				CreateInstance(const char* WorkingDirectory, const char* FileName, UInt8 OpenMode = NiFile::kFileMode_ReadOnly);
 	void						DeleteInstance(bool ReleaseMemory = true);
 };

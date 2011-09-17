@@ -12,8 +12,6 @@
 
 namespace Hooks
 {
-	char g_NumericIDWarningBuffer[0x10] = {0};
-
 	_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0);
 	_DefineHookHdlr(CSExit, 0x0041936E);
 	_DefineNopHdlr(MissingTextureWarning, 0x0044F3AF, 14);
@@ -270,6 +268,11 @@ namespace Hooks
 		CLIWrapper::QueryInterfaces();
 		CONSOLE->Exdent();
 
+		DebugPrint("Initializing Console");
+		CONSOLE->Indent();
+		CONSOLE->InitializeConsole();
+		CONSOLE->Exdent();
+
 		DebugPrint("Initializing CSInterop Manager");
 		CONSOLE->Indent();
 		if (!CSIOM->Initialize())
@@ -300,7 +303,7 @@ namespace Hooks
 		CONSOLE->Indent();
 		for (std::map<std::string, std::string>::const_iterator Itr = g_URLMapBuffer.begin(); Itr != g_URLMapBuffer.end(); Itr++)
 			CLIWrapper::Interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
-		DebugPrint("IntelliSense: Bound %d developer URLs", g_URLMapBuffer.size());
+		DebugPrint(Console::e_SE, "IntelliSense: Bound %d developer URLs", g_URLMapBuffer.size());
 		g_URLMapBuffer.clear();
 		CONSOLE->Exdent();
 
@@ -337,12 +340,6 @@ namespace Hooks
 		DebugPrint("Initializing Window Manager");
 		CONSOLE->Indent();
 		InitializeWindowManager();
-		CONSOLE->Exdent();
-
-		DebugPrint("Initializing Console");
-		CONSOLE->Indent();
-		CONSOLE->InitializeConsole();
-		CONSOLE->LoadINISettings();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing GMST Default Copy");
@@ -473,18 +470,13 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DestroyShadeMeRef(void)
+	void __stdcall DoDataHandlerClearDataHook(void)
 	{
-		TESForm* Ref = TESForm::LookupByEditorID("TheShadeMeRef");
-		if (Ref)
-			Ref->DeleteInstance();
-	}
-	void __stdcall ClearRenderSelectionGroupMap(void)
-	{
+		TESForm* shadeMeRef = TESForm::LookupByEditorID("TheShadeMeRef");
+		if (shadeMeRef)
+			shadeMeRef->DeleteInstance();
+
 		g_RenderSelectionGroupManager.Clear();
-	}
-	void __stdcall ClearGMSTCollection(void)
-	{
 		g_GMSTCollection->ResetCollection();
 	}
 
@@ -497,9 +489,7 @@ namespace Hooks
 			lea     edi, [ebx+44h]
 			mov     ecx, edi
 			pushad
-			call	DestroyShadeMeRef
-			call	ClearRenderSelectionGroupMap
-			call	ClearGMSTCollection
+			call	DoDataHandlerClearDataHook
 			popad
 
 			jmp		[_hhGetVar(Retn)]
@@ -606,7 +596,7 @@ namespace Hooks
 			pushad
 			push	ebx
 			mov		ecx, ebp
-			call	[_hhGetVar(Call1)]		// ExtraDataList_CopyList
+			call	[_hhGetVar(Call1)]		// ExtraDataList::CopyList
 			popad
 
 			pushad
@@ -867,7 +857,7 @@ namespace Hooks
 
 	bool __stdcall DoAchievementCloneHallOfFameForms(TESForm* Form)
 	{
-		if (Form->formID >= HallOfFame::kBaseFormID && Form->formID < 0x800)
+		if (Form->formID >= HallOfFame::kBaseFormID && Form->formID <= HallOfFame::TableSize)
 			return true;
 		else
 			return false;
@@ -906,8 +896,7 @@ namespace Hooks
 			ZeroMemory(Buffer, sizeof(Buffer));
 			DescriptionStream.getline(Buffer, sizeof(Buffer));
 
-			std::string Line(Buffer);
-			MakeLower(Line);
+			std::string Line(Buffer); MakeLower(Line);
 			if (Line.find("version:") != -1 ||
 				Line.find("version :") != -1 ||
 				Line.find("version-") != -1 ||
@@ -976,6 +965,7 @@ namespace Hooks
 		MessageBox(*g_HWND_CSParent, "TESDialog::BuildSubwindow() failed!\n\nError deatils logged to the console.", "CSE", MB_TOPMOST|MB_OK|MB_ICONERROR);
 		DebugPrint("TESDialog::BuildSubwindow() returned 0");
 		LogWinAPIErrorMessage(GetLastError());
+		MessageBeep(MB_ICONHAND);
 	}
 
 	#define _hhName	TESDialogBuildSubwindowDiagnostics

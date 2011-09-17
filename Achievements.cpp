@@ -4,8 +4,8 @@
 
 namespace Achievements
 {
-	const UInt32		kMaxCSSessionLength = 5;	// in hours
-	const UInt32		kMaxNewToolsSampleCount = 20;
+	const UInt32		kMaxCSSessionLength = 6;	// in hours
+	const UInt32		kMaxNewToolsSampleCount = 50;
 	const UInt32		kMaxScriptCommandCount = 2400;
 	const UInt32		kMaxTopicInfosSaved = 100;
 	const UInt32		kHalfWayUnlockCount = 14;
@@ -22,15 +22,15 @@ namespace Achievements
 	Achievement		Entries[TableSize] =
 	{
 		{ "The Wise One",			"Installed the Construction Set Extender",														kAchievement_TheWiseOne,			false },
-		{ "Cheat",					"Managed to complete a 5 hour long CS session without any CTDs",								kAchievement_Cheat,					false },
+		{ "Cheat",					"Managed to complete a 6 hour long CS session without any CTDs",								kAchievement_Cheat,					false },
 		{ "Fearless",				"Set Oblivion.esm as the active file and hit the 'OK' button",									kAchievement_Fearless,				false },
 		{ "Automaton",				"Executed a CS Automation Script",																kAchievement_Automaton,				false },
 		{ "Heretic",				"Defiled the awesomeness of our lord shadeMe",													kAchievement_Heretic,				false },
 		{ "Power User",				"Sampled much of the new tools CSE adds",														kAchievement_PowerUser,				false },
 		{ "Anti-Christ",			"Attempted to remove our lord shadeMe from this plane of existence",							kAchievement_AntiChrist,			false },
 		{ "Lazy Bum",				"Launched the game from the main menu",															kAchievement_LazyBum,				false },
-		{ "Mad Scientist",			"Cloned one of the sixteen Divines",															kAchievement_MadScientist,			false },
-		{ "Soprono",				"Successfully generated a lip synch file",														kAchievement_Soprano,				false },
+		{ "Mad Scientist",			"Cloned one of the seventeen Divines",															kAchievement_MadScientist,			false },
+		{ "Soprano",				"Successfully generated a lip synch file",														kAchievement_Soprano,				false },
 		{ "WTF!",					"Managed to trigger an assertion in the editor code",											kAchievement_WTF,					false },
 		{ "Flying Blind",			"Disabled editor warning logging",																kAchievement_FlyingBlind,			false },
 		{ "Pedantic",				"Saved version information to a plugin's description",											kAchievement_Pedantic,				false },

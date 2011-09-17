@@ -148,6 +148,11 @@ void AnimatedForm::Close()
 	FadeTimer->Start();
 }
 
+void AnimatedForm::Destroy()
+{
+	FadeTimer->Stop();
+}
+
 void NonActivatingImmovableAnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
 {
 	if (FadeOperation == FadeOperationType::e_FadeIn)
@@ -251,7 +256,6 @@ void NonActivatingImmovableAnimatedForm::HideForm(bool Animate)
 void NonActivatingImmovableAnimatedForm::Destroy()
 {
 	FadeTimer->Stop();
-	this->Close();
 }
 
 namespace Log

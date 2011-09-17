@@ -213,6 +213,7 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\AlignObjectsBottomHS.png" />
     <None Include="Images\109_AllAnnotations_Error_16x16_72.png" />
     <None Include="Images\addVar.png" />
+    <None Include="Images\Back (2).png" />
     <None Include="Images\back.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\BehindTextHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\book_addressHS.png" />
@@ -239,6 +240,8 @@
     <None Include="Images\Favorite-icon-16x16.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\FindHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\FindNextHS.png" />
+    <None Include="Images\Find_VS.png" />
+    <None Include="Images\forward (2).png" />
     <None Include="Images\forward.png" />
     <None Include="Images\google.jpg" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\GoToNextHS.png" />
@@ -283,6 +286,7 @@
     <None Include="Images\script_16.png" />
     <None Include="Images\Script_link.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SearchWebHS.png" />
+    <None Include="Images\SendInstantMessage.png" />
     <None Include="Images\SESaveNoCompile.png" />
     <None Include="Images\SLDActive.png" />
     <None Include="Images\stop.png" />

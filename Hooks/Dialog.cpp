@@ -163,7 +163,6 @@ namespace Hooks
 
 	void __stdcall DoDataDlgInitHook(HWND DataDialog)
 	{
-		// create new controls
 		RECT DlgRect;
 		GetClientRect(DataDialog, &DlgRect);
 
@@ -391,15 +390,10 @@ namespace Hooks
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_UNDELETE, "Undelete");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_SHOWOVERRIDES, "Show Override List");
-
-		if (TESDialog::GetIsFormEditDialogCompatible(SelectedForm))
-		{
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
-		}
-
-		InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+		InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_ADDTOTAG, "Add to Active Tag");
 		if (SelectedForm->IsReference())
 		{
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_EDITBASEFORM, "Edit Base Form");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
@@ -755,7 +749,7 @@ namespace Hooks
 			{
 				TESRace* SelectedRace = CS_CAST(Selection, TESForm, TESRace);
 
-				if (WorkingRace)
+				if (WorkingRace && WorkingRace != SelectedRace)
 				{
 					int Count = 0;
 					if (Identifier == RACE_COPYEYES)
@@ -876,7 +870,7 @@ namespace Hooks
 
 		HWND PictureControl = GetDlgItem(Dialog, 1963);
 		SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)g_CSESplashImage);
-		Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV | Construction Set Extender");
+		Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV    +=    Construction Set Extender");
 
 		DWORD FileVersionHandle = 0,
 			  FileVersionSize = GetFileVersionInfoSize(g_DLLPath.c_str(), &FileVersionHandle);

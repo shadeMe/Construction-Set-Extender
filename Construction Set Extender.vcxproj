@@ -177,6 +177,7 @@
     <ClCompile Include="CSAS\Commands\Commands_Form.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_General.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_Reference.cpp" />
+    <ClCompile Include="CSAS\Commands\Commands_String.cpp" />
     <ClCompile Include="CSAS\ScriptCommandInfo.cpp" />
     <ClCompile Include="CSAS\ScriptCommands.cpp" />
     <ClCompile Include="CSAS\ScriptData.cpp" />
@@ -209,6 +210,7 @@
     <ClCompile Include="EditorAPI\TESSound.cpp" />
     <ClCompile Include="Hooks\VersionControl.cpp" />
     <ClCompile Include="ChangeLogManager.cpp" />
+    <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="StdAfx.cpp" />
     <ClCompile Include="[Common]\CLIWrapper.cpp" />
     <ClCompile Include="[Common]\HandshakeStructs.cpp" />
@@ -292,6 +294,7 @@
     <ClInclude Include="CSAS\Commands\Commands_General.h" />
     <ClInclude Include="CSAS\Commands\Commands_Form.h" />
     <ClInclude Include="CSAS\Commands\Commands_Reference.h" />
+    <ClInclude Include="CSAS\Commands\Commands_String.h" />
     <ClInclude Include="CSAS\ScriptCommandInfo.h" />
     <ClInclude Include="CSAS\ScriptCommands.h" />
     <ClInclude Include="CSAS\ScriptData.h" />
@@ -379,6 +382,7 @@
     <ClInclude Include="EditorAPI\TESWorldSpace.h" />
     <ClInclude Include="Hooks\VersionControl.h" />
     <ClInclude Include="ChangeLogManager.h" />
+    <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="WindowEdgeSnapper.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />

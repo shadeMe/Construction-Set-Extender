@@ -12,7 +12,6 @@
     At the moment, these classes are defined for convenience, to group code related to the CS interface in one place.
 
     TESDialogs store a BaseExtraDataList for DialogExtra*** objects in their window 'user param' (e.g. GetWindowLong(-0x15))
-    See CSDialogs/DialogExtraData.h for definitions.
 
     There seems to be a strong distinction between dialogs that edit forms and those that edit simpler component objects or
     provide services like import/export or text searching.  Some members are only for dialogs that edit forms, and some are
@@ -322,6 +321,7 @@ public:
 	static HWND								ShowFormEditDialog(TESForm* Form);
 	static void								ShowScriptEditorDialog(TESForm* InitScript);
 	static void								ResetRenderWindow();
+	static void								RedrawRenderWindow();
 };
 
 class TESComboBox

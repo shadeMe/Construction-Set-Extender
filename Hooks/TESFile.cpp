@@ -30,7 +30,6 @@ namespace Hooks
 	_DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
 	_DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
 	_DefineHookHdlr(DataHandlerSavePluginRetainTimeStamps, 0x0041BB12);
-	_DefineJumpHdlr(TESObjectLANDLoadForm, 0x0052A826, 0x0052A82F);
 
 	void PatchTESFileHooks(void)
 	{
@@ -56,7 +55,6 @@ namespace Hooks
 		_MemHdlr(DataHandlerSavePluginResetC).WriteJump();
 		_MemHdlr(DataHandlerSavePluginOverwriteESM).WriteNop();
 		_MemHdlr(DataHandlerSavePluginRetainTimeStamps).WriteJump();
-		_MemHdlr(TESObjectLANDLoadForm).WriteJump();
 	}
 
 	bool __stdcall InitTESFileSaveDlg()
@@ -85,6 +83,7 @@ namespace Hooks
 	}
 
 	static HWND				s_LoadIdleWindow = NULL;
+	static char				s_NumericIDWarningBuffer[0x10] = {0};
 
 	void __stdcall DoLoadPluginsPrologHook(void)
 	{
@@ -95,7 +94,7 @@ namespace Hooks
 			ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
 		}
 
-		sprintf_s(g_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning", "Extender::General"));
+		sprintf_s(s_NumericIDWarningBuffer, 0x10, "%s", g_INIManager->GetINIStr("ShowNumericEditorIDWarning", "Extender::General"));
 		g_INIManager->FetchSetting("ShowNumericEditorIDWarning", "Extender::General")->SetValue("0");
 
 		s_LoadIdleWindow = CreateDialogParam(g_DLLInstance, MAKEINTRESOURCE(DLG_IDLE), *g_HWND_CSParent, NULL, NULL);
@@ -122,7 +121,7 @@ namespace Hooks
 
 	void __stdcall DoLoadPluginsEpilogHook(void)
 	{
-		g_INIManager->FetchSetting("ShowNumericEditorIDWarning", "Extender::General")->SetValue(g_NumericIDWarningBuffer);
+		g_INIManager->FetchSetting("ShowNumericEditorIDWarning", "Extender::General")->SetValue(s_NumericIDWarningBuffer);
 		DestroyWindow(s_LoadIdleWindow);
 
 		g_LoadingSavingPlugins = false;

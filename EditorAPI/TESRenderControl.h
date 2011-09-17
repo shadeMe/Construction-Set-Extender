@@ -61,7 +61,7 @@ public:
 		/*10*/ Vector3				rotation;
 		/*1C*/ Vector3				position;
 		/*28*/ float				scale;
-		/*2C*/ UInt32				unk2C[(0x48 - 0x2C) >> 2];		// pathgrid/landscape change related
+		/*2C*/ UInt32				unk2C[(0x48 - 0x2C) >> 2];		// landscape change related
 		/*48*/ UndoData*			previous;
 		/*4C*/ UndoData*			next;
 	};
@@ -88,6 +88,21 @@ enum
 };
 
 extern UInt32*					g_RenderWindowStateFlags;
+extern UInt8*					g_RenderWindowUpdateViewPortFlag;
+extern TESLandTexture**			g_ActiveLandscapeEditTexture;
+extern float*					g_RenderWindowRefMovementSpeed;
+extern float*					g_RenderWindowSnapGridDistance;
+extern float*					g_RenderWindowRefRotationSpeed;
+extern float*					g_RenderWindowSnapAngle;
+extern float*					g_RenderWindowCameraRotationSpeed;
+extern float*					g_RenderWindowCameraZoomSpeed;
+extern float*					g_RenderWindowCameraPanSpeed;
+
+class TESPathGridPoint;
+class TESPathGrid;
+
+extern UInt8*					g_RenderWindowPathGridEditModeFlag;
+extern tList<TESPathGridPoint>*	g_RenderWindowSelectedPathGridPoints;
 
 // CSE specific stuff
 enum
@@ -104,19 +119,3 @@ enum
 
 class ElapsedTimeCounter;
 extern ElapsedTimeCounter		g_RenderWindowTimeManager;
-
-extern UInt8*					g_RenderWindowUpdateViewPortFlag;
-extern TESLandTexture**			g_ActiveLandscapeEditTexture;
-extern float*					g_RenderWindowRefMovementSpeed;
-extern float*					g_RenderWindowSnapGridDistance;
-extern float*					g_RenderWindowRefRotationSpeed;
-extern float*					g_RenderWindowSnapAngle;
-extern float*					g_RenderWindowCameraRotationSpeed;
-extern float*					g_RenderWindowCameraZoomSpeed;
-extern float*					g_RenderWindowCameraPanSpeed;
-
-class TESPathGridPoint;
-class TESPathGrid;
-
-extern UInt8*					g_RenderWindowPathGridEditModeFlag;
-extern tList<TESPathGridPoint>*	g_RenderWindowSelectedPathGridPoints;

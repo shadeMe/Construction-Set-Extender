@@ -58,6 +58,11 @@ void TESFile::DeleteInstance(bool ReleaseMemory)
 		FormHeap_Free(this);
 }
 
+bool TESFile::IsActive( void )
+{
+	return thisCall<bool>(0x00485BA0, this);
+}
+
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 {
 	for (tList<TESFile>::Iterator Itr = fileList.Begin(); !Itr.End(); ++Itr)

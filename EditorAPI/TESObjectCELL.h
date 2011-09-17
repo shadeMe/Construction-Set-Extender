@@ -82,6 +82,7 @@ public:
 	TESWorldSpace*				GetParentWorldSpace();
 	bool						GetIsInterior();
 	TESObjectREFR*				LookupRefByBaseForm(TESForm* BaseForm, bool HasEditorID = false);		// returns the first ref satisfying the conditions
+	void						SetPathGrid(TESPathGrid* PathGrid);
 };
 
 // 04

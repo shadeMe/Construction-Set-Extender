@@ -16,7 +16,7 @@ namespace CSAutomationScript
 			GetArray()->ConvertToMUPArray(ValueOut);
 			break;
 		case kParamType_Reference:
-			ValueOut = (int)RefData;
+			ValueOut = (int)RefData->formID;
 			break;
 		case kParamType_Numeric:
 			ValueOut = NumericData;

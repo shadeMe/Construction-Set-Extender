@@ -79,4 +79,6 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(SetBFCEnchantableFormEnchantment);
 	DECLARE_CSASCOMMAND(SetBFCProduceFormIngredient);
 	DECLARE_CSASCOMMAND(SetBFCProduceFormChance);
+
+	DECLARE_CSASCOMMAND(GetDataHandlerFormList);
 }
