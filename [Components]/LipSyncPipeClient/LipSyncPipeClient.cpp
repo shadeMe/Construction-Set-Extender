@@ -27,7 +27,7 @@ static const UInt32	kCreateLIPFile = 0x004ABE10;
 HANDLE				g_InteropPipeHandle		=	INVALID_HANDLE_VALUE;
 
 FILE*				g_DebugLog				=	NULL;
-char				g_TextBuffer[0x200]			=	{0};
+char				g_TextBuffer[0x200]		=	{0};
 
 extern "C"
 {

@@ -89,6 +89,8 @@
 #define DLG_CSASGLOBALS                 5125
 #define DLG_ACHIEVEMENTUNLOCKED         5126
 #define DLG_EDITRESULTSCRIPT            5128
+#define IDD_DIALOG3                     6000
+#define DLG_AUXVIEWPORT                 6000
 #define DLG_ASSETSEL                    9800
 #define BTN_FILEB                       9801
 #define BTN_BSAB                        9802
@@ -137,7 +139,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        6000
+#define _APS_NEXT_RESOURCE_VALUE        6001
 #define _APS_NEXT_COMMAND_VALUE         42001
 #define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101

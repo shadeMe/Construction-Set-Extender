@@ -201,7 +201,7 @@ void NumberedRichTextBox::GotoLine(int Line)
 {
 	if (Line > TextField->Lines->Length || !Line)
 	{
-		MessageBox::Show("Invalid line number/offset", "Goto Line - CSE Script Editor");
+		MessageBox::Show("Invalid line number/offset", SCRIPTEDITOR_TITLE);
 	}
 	else
 	{
@@ -219,6 +219,12 @@ void NumberedRichTextBox::JumpToLine(String^ Line)
 	try { LineNo = Int32::Parse(Line); } catch (...) { return; }
 
 	GotoLine(LineNo);
+}
+
+void NumberedRichTextBox::SetFont( Font^ NewFont )
+{
+	TextField->Font = NewFont;
+	LineField->Font = NewFont;
 }
 
 OffsetRichTextBox::OffsetRichTextBox(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor) : NumberedRichTextBox(LinesToScroll, Font, ForegroundColor, BackgroundColor, HighlightColor)

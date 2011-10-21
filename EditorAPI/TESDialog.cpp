@@ -230,6 +230,7 @@ void TESDialog::RedrawRenderWindow()
 	else
 	{
 		*g_RenderWindowUpdateViewPortFlag = 1;
+		SendMessage(*g_HWND_RenderWindow, WM_TIMER, 1, NULL);
 	}
 }
 
@@ -253,6 +254,16 @@ void* TESListView::GetSelectedItemData( HWND hWnd )
 	return cdeclCall<void*>(0x00403C40, hWnd);
 }
 
+void* TESListView::GetItemData( HWND hWnd, int Index )
+{
+	return cdeclCall<void*>(0x00403A30, hWnd, Index);
+}
+
+void TESListView::SetSelectedItem( HWND hWnd, int Index )
+{
+	cdeclCall<void>(0x00403B10, hWnd, Index);
+}
+
 void CSStartupManager::LoadStartupPlugin()
 {
 	if (g_INIManager->GetINIInt("LoadPluginOnStartup", "Extender::General"))
@@ -264,7 +275,7 @@ void CSStartupManager::LoadStartupPlugin()
 
 		if (File)
 		{
-			DebugPrint("Loading plugin '%s' on startup...", PluginName);
+			DebugPrint("Loading plugin '%s'", PluginName);
 			CONSOLE->Indent();
 
 			if (_stricmp(PluginName, "Oblivion.esm"))
@@ -310,8 +321,6 @@ void __stdcall FormEnumerationWrapper::ReinitializeFormLists()
 	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
 
 	TESDialog::InitializeCSWindows();
-	InvalidateRect(*g_HWND_ObjectWindow_FormList, NULL, TRUE);
-	SendMessage(*g_HWND_ObjectWindow_FormList, 0x41A, 0, 0);
 }
 
 bool FormEnumerationWrapper::GetUnmodifiedFormHiddenState()	// returns true when hidden

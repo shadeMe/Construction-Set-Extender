@@ -67,7 +67,7 @@ public:
 																"$", "#", "*", "!", "->", "<-"
 															};
 
-	LinkedList<VariableRefCountData^>^							Variables;
+	LinkedList<VariableRefCountData^>^					Variables;
 	Stack<BlockType>^									BlockStack;
 	List<String^>^										Tokens;
 	List<UInt32>^										Indices;											// the position of each token relative to its parent line
@@ -79,7 +79,7 @@ public:
 	void												Tokenize(String^ Source, bool CollectEmptyTokens);
 	TokenType											GetTokenType(String^% Token);
 	void												Reset();
-	VariableRefCountData^										LookupVariableByName(String^% Variable);
+	VariableRefCountData^								LookupVariableByName(String^% Variable);
 	int													GetCommentTokenIndex(int BookendTokenIndex);		// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search
 	UInt32												GetCurrentTokenCount() { return Tokens->Count; }
 	int													GetTokenAtOffset(int Offset);						// returns the index of the token that takes up the passed offset

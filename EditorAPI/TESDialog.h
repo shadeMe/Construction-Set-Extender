@@ -338,7 +338,9 @@ class TESListView
 {
 public:
 	// methods
+	static void								SetSelectedItem(HWND hWnd, int Index);
 	static void*							GetSelectedItemData(HWND hWnd);
+	static void*							GetItemData(HWND hWnd, int Index);
 };
 
 extern const HINSTANCE*			g_TESCS_Instance;

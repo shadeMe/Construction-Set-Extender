@@ -271,7 +271,7 @@ namespace CSAutomationScript
 		Parser->DefineOprt(new OprtBOrSymb());
 	}
 
-	void CommandTable::InitializeCommandTable()
+	void CommandTable::Initialize()
 	{
 		REGISTER_CSASCOMMAND(Return, "General Functions");
 		REGISTER_CSASCOMMAND(Call, "General Functions");
@@ -283,6 +283,8 @@ namespace CSAutomationScript
 		RegisterFormCommands();
 		RegisterReferenceCommands();
 		RegisterStringCommands();
+
+		DebugPrint("Registered %d commands", CommandList.size());
 	}
 
 	void CSASCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)

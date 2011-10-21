@@ -5,6 +5,7 @@
 
 class	TESForm;
 class	TESObjectREFR;
+class	NiWindow;
 
 // also used to record selections made in the object/formIdListView windows
 // 18
@@ -76,6 +77,23 @@ public:
 STATIC_ASSERT(sizeof(TESRenderUndoStack) == 0x08);
 
 extern TESRenderUndoStack**		g_TESRenderUndoStack;
+
+// 0C
+class TESRenderComponents
+{
+public:
+	// members
+	/*00*/ NiWindow*					niWindow;
+	/*04*/ NiNode*						primaryCameraParentNode;
+	/*08*/ NiCamera*					primaryCamera;
+
+	// methods
+	void								RenderNode(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL);
+};
+STATIC_ASSERT(sizeof(TESRenderComponents) == 0x0C);
+
+extern TESRenderComponents**	g_TESRenderComponents;
+#define _RENDERCMPT				(*g_TESRenderComponents)
 
 enum
 {

@@ -9,6 +9,7 @@
 #include "..\ChangeLogManager.h"
 #include "..\Achievements.h"
 #include "CSAS\ScriptRunner.h"
+#include "AuxiliaryViewport.h"
 
 namespace Hooks
 {
@@ -85,7 +86,7 @@ namespace Hooks
 		_MemHdlr(TESDialogBuildSubwindowDiagnostics).WriteJump();
 		_MemHdlr(ExtraTeleportInitItem).WriteJump();
 
-		PatchMessageHandler();
+		PatchMessageHanders();
 
 		OSVERSIONINFO OSInfo;
 		GetVersionEx(&OSInfo);
@@ -99,7 +100,7 @@ namespace Hooks
 		_MemHdlr(NewSplashImage).WriteJump();
 	}
 
-	void PatchMessageHandler(void)
+	void PatchMessageHanders(void)
 	{
 		static UInt32 s_MessageHandlerVTBL = 0x00940760;
 
@@ -162,18 +163,37 @@ namespace Hooks
 		TESDialog::WritePositionToINI(*g_HWND_CellView, "Cell View");
 		TESDialog::WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
 		TESDialog::WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
-		DebugPrint("CS INI Settings Flushed");
+		DebugPrint("Flushed CS INI Settings");
 
+		DebugPrint("Deinitializing Change Log Manager");
+		CONSOLE->Indent();
 		VersionControl::CHANGELOG->Deinitialize();
-		DebugPrint("Change Log Manager Deinitialized");
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Render Window Text Painter");
+		CONSOLE->Indent();
 		RENDERTEXT->Release();
-		DebugPrint("Render Window Text Painter Released");
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Auxiliary Viewport");
+		CONSOLE->Indent();
+		AUXVIEWPORT->Deinitialize();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing CSInterop Manager");
+		CONSOLE->Indent();
 		CSIOM->Deinitialize();
-		DebugPrint("CSInterop Manager Deinitialized");
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Tool Manager");
+		CONSOLE->Indent();
 		g_ToolManager.WriteToINI(g_INIPath.c_str());
-		DebugPrint("Tool Manager Deinitialized");
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing CSAS Engine");
+		CONSOLE->Indent();
 		CSAutomationScript::DeitializeCSASEngine();
-		DebugPrint("CSAS Deinitialized");
+		CONSOLE->Exdent();
 
 		DebugPrint("Deinitializing Console, Flushing CSE INI settings and Closing the CS!");
 		CONSOLE->Deinitialize();
@@ -273,6 +293,11 @@ namespace Hooks
 		CONSOLE->InitializeConsole();
 		CONSOLE->Exdent();
 
+		DebugPrint("Initializing Auxiliary Viewport");
+		CONSOLE->Indent();
+		AUXVIEWPORT->Initialize();
+		CONSOLE->Exdent();
+
 		DebugPrint("Initializing CSInterop Manager");
 		CONSOLE->Indent();
 		if (!CSIOM->Initialize())
@@ -303,8 +328,11 @@ namespace Hooks
 		CONSOLE->Indent();
 		for (std::map<std::string, std::string>::const_iterator Itr = g_URLMapBuffer.begin(); Itr != g_URLMapBuffer.end(); Itr++)
 			CLIWrapper::Interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
-		DebugPrint(Console::e_SE, "IntelliSense: Bound %d developer URLs", g_URLMapBuffer.size());
+		DebugPrint(Console::e_SE, "Bound %d developer URLs", g_URLMapBuffer.size());
 		g_URLMapBuffer.clear();
+
+		CLIWrapper::Interfaces::SE->InitializeIntelliSenseDatabaseUpdateThread();
+		DebugPrint(Console::e_SE, "Initialized Database Update Thread");
 		CONSOLE->Exdent();
 
 		CONSOLE->Exdent();
@@ -317,10 +345,7 @@ namespace Hooks
 			CommandCount++;
 		}
 
-		DebugPrint("Initializing Intellisense Database Update Thread");
-		CLIWrapper::Interfaces::SE->InitializeIntelliSenseDatabaseUpdateThread();
-
-		DebugPrint("Initializing CSAS");
+		DebugPrint("Initializing CSAS Engine");
 		CONSOLE->Indent();
 		CSAutomationScript::InitializeCSASEngine();
 		CONSOLE->Exdent();
@@ -439,8 +464,8 @@ namespace Hooks
 		_hhSetVar(Retn, 0x0041BBD3);
 		__asm
 		{
-			call	SetWindowTextAddress
-			call	[g_WindowHandleCallAddr]				// SetWindowTextA
+			call	IATCacheSetWindowTextAddress
+			call	[g_TempIATProcBuffer]				// SetWindowTextA
 			pushad
 		}
 		CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
@@ -640,7 +665,7 @@ namespace Hooks
 		{
 			if (Data->DecrementRefCount() == 0)
 			{
-		//		ReferenceList->Remove(Data);			### possible bug in tList::Remove, corrupts the state somehow. investigate
+		//		ReferenceList->Remove(Data);		//	### possible bug in tList::Remove, corrupts the state somehow. investigate
 				thisCall<UInt32>(0x00452AE0, ReferenceList, Data);
 				Data->DeleteInstance();
 			}
@@ -803,6 +828,7 @@ namespace Hooks
 	bool __stdcall CheckIsFormShadeMe(TESForm* Form)
 	{
 		TESForm* shadeMe = TESForm::LookupByEditorID("shadeMe");
+
 		if (Form == shadeMe)
 			return true;
 		else
@@ -888,6 +914,9 @@ namespace Hooks
 
 	void __stdcall DoAchievementPluginDescriptionHook(TESFile* File)
 	{
+		if (File->description.c_str() == NULL)
+			return;
+
 		std::stringstream DescriptionStream(File->description.c_str(), std::ios::in);
 		char Buffer[0x200] = {0};
 
@@ -1017,12 +1046,12 @@ namespace Hooks
 		__asm
 		{
 			pushad
-			call	ShowWindowAddress
+			call	IATCacheShowWindowAddress
 			push	esi
 			call	DoNewSplashImageHook
 			popad
 
-			call	g_WindowHandleCallAddr
+			call	g_TempIATProcBuffer
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

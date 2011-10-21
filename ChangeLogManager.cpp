@@ -162,6 +162,7 @@ namespace VersionControl
 
 		if (LogStack.size())
 			LogStack.top()->WriteChange(Message, StampTime, true);
+
 		SessionLog->WriteChange(Message, StampTime, true);
 	}
 
@@ -193,6 +194,7 @@ namespace VersionControl
 			delete LogStack.top();
 			LogStack.pop();
 		}
+
 		SessionLog->Delete();
 
 		if (!RemoveDirectory(GetCurrentTempDirectory()))
@@ -211,6 +213,7 @@ namespace VersionControl
 
 		if (LogStack.size())
 			LogStack.top()->Finalize();
+
 		LogStack.push(new ChangeLog(GetCurrentTempDirectory(), GetTimeString(Buffer, sizeof(Buffer))));
 	}
 
@@ -310,6 +313,7 @@ namespace VersionControl
 
 			sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s - [%s].%s", Name.c_str(), TimeString, Extension.c_str());
 			sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filePath, SaveFile->fileName);
+
 			if (CopyFile(ExistingPath, NewPath, FALSE))
 				DebugPrint("Saved active file backup to '%s'", NewPath);
 			else
@@ -332,7 +336,6 @@ namespace VersionControl
 			CHANGELOG->RecordChange("Plugins reloaded; No Active file");
 
 		CHANGELOG->Pad(1);
-
 		CHANGELOG->PushNewActiveLog();
 	}
 }

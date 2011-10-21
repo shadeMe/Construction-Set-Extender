@@ -1,4 +1,6 @@
 #include "Core.h"
+#include "Hooks\Renderer.h"
+#include "AuxiliaryViewport.h"
 
 TES**								g_TES = (TES**)0x00A0ABB0;
 TESDataHandler**					g_TESDataHandler = (TESDataHandler **)0x00A0E064;
@@ -143,4 +145,22 @@ NiBinaryStream* FileFinder::GetFileStream(const char* Path, bool WriteAccess, UI
 BSRenderedTexture* BSTextureManager::CreateTexture( NiRenderer* Renderer, UInt32 Size, UInt32 Flags, UInt32 Unk04 /*= 0*/, UInt32 Unk05 /*= 0*/ )
 {
 	return thisCall<BSRenderedTexture*>(0x00773080, this, Renderer, Size, Flags, Unk04, Unk05);
+}
+
+LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 Height)
+{
+	LPDIRECT3DTEXTURE9 D3DTexture = NULL, Result = NULL;
+	if (Width == 0)
+		Width = this->renderedTexture->unk030->width;
+	if (Height == 0)
+		Height = this->renderedTexture->unk030->height;
+
+	D3DXCreateTexture(_RENDERER->device, Width, Height, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &D3DTexture);
+	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteJump();
+	Result = cdeclCall<LPDIRECT3DTEXTURE9>(0x004113E0, this->renderedTexture, 0, 0, Width, D3DTexture, 0, 1, NULL);
+	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteBuffer();
+	D3DTexture->Release();
+	D3DTexture = NULL;
+
+	return Result;
 }

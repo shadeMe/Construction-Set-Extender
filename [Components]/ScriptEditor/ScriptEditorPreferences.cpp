@@ -158,6 +158,7 @@ void ScriptEditorPreferences::InitializeSettings()
 	SettingCollection->Add(gcnew INISetting("ShowSpaces", "ScriptEditor::Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	SettingCollection->Add(gcnew INISetting("CodeFolding", "ScriptEditor::Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 	SettingCollection->Add(gcnew INISetting("TabsOnTop", "ScriptEditor::Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	SettingCollection->Add(gcnew INISetting("BoldFacedHighlighting", "ScriptEditor::Appearance", "0"), gcnew BoundControl(BoldFacedHighlighting, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 	RegisterColorSetting("SyntaxCommentsColor", Color::Green, CmDlgSyntaxCommentsColor);
 	RegisterColorSetting("SyntaxDigitsColor", Color::DarkGoldenrod, CmDlgSyntaxDigitsColor);
@@ -187,6 +188,7 @@ void ScriptEditorPreferences::InitializeSettings()
 	SettingCollection->Add(gcnew INISetting("ThresholdLength", "ScriptEditor::IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 	SettingCollection->Add(gcnew INISetting("DatabaseUpdateInterval", "ScriptEditor::IntelliSense", "5"), gcnew BoundControl(DatabaseUpdateInterval, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 	SettingCollection->Add(gcnew INISetting("UseQuickView", "ScriptEditor::IntelliSense", "1"), gcnew BoundControl(UseQuickView, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+	SettingCollection->Add(gcnew INISetting("MaxVisibleItems", "ScriptEditor::IntelliSense", "5"), gcnew BoundControl(MaxVisibleItems, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 
 	// Preprocessor
 	SettingCollection->Add(gcnew INISetting("AllowRedefinitions", "ScriptEditor::Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -224,6 +226,8 @@ void ScriptEditorPreferences::SaveINI()
 												(CString(INI->Section)).c_str(),
 												(CString(Control->GetValue())).c_str());
 	}
+
+	OnPreferencesSaved(gcnew EventArgs());
 }
 
 BoundControl^ ScriptEditorPreferences::FetchSetting(String^ Key)
@@ -347,13 +351,13 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	NoOfPasses = gcnew NumericUpDown();
 	CodeFolding = gcnew CheckBox();
 	TabsOnTop = gcnew CheckBox();
+	LabelMaxVisibleItems = gcnew Label();
+	MaxVisibleItems = gcnew NumericUpDown();
+	BoldFacedHighlighting = gcnew CheckBox();
 
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->BeginInit();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TabSize))->BeginInit();
 	TabContainer->SuspendLayout();
 	TabGeneral->SuspendLayout();
 	TabIntelliSense->SuspendLayout();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(DatabaseUpdateInterval))->BeginInit();
 	TabPreprocessor->SuspendLayout();
 	TabAppearance->SuspendLayout();
 	TabSanitize->SuspendLayout();
@@ -519,6 +523,8 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	//
 	// TabIntelliSense
 	//
+	TabIntelliSense->Controls->Add(LabelMaxVisibleItems);
+	TabIntelliSense->Controls->Add(MaxVisibleItems);
 	TabIntelliSense->Controls->Add(UseQuickView);
 	TabIntelliSense->Controls->Add(LabelISDBUpdatePeriod);
 	TabIntelliSense->Controls->Add(DatabaseUpdateInterval);
@@ -596,6 +602,7 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	TabAppearance->Controls->Add(TabSize);
 	TabAppearance->Controls->Add(CodeFolding);
 	TabAppearance->Controls->Add(TabsOnTop);
+	TabAppearance->Controls->Add(BoldFacedHighlighting);
 	TabAppearance->Location = System::Drawing::Point(4, 22);
 	TabAppearance->Name = L"TabAppearance";
 	TabAppearance->Padding = Padding(3);
@@ -652,9 +659,9 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	GroupBoxSyntaxHighlighting->Controls->Add(LabelDigits);
 	GroupBoxSyntaxHighlighting->Controls->Add(LabelDelimiters);
 	GroupBoxSyntaxHighlighting->Controls->Add(LabelKeywords);
-	this->GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
-	this->GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";
-	this->GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(155, 247);
+	GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
+	GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";
+	GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(155, 247);
 	GroupBoxSyntaxHighlighting->TabIndex = 4;
 	GroupBoxSyntaxHighlighting->TabStop = false;
 	GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
@@ -950,6 +957,35 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	this->TabsOnTop->Text = L"Tabs On Top";
 	this->TabsOnTop->UseVisualStyleBackColor = true;
 	//
+	// LabelMaxVisibleItems
+	//
+	this->LabelMaxVisibleItems->AutoSize = true;
+	this->LabelMaxVisibleItems->Location = System::Drawing::Point(228, 152);
+	this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
+	this->LabelMaxVisibleItems->Size = System::Drawing::Size(112, 13);
+	this->LabelMaxVisibleItems->TabIndex = 8;
+	this->LabelMaxVisibleItems->Text = L"Maximum Visible Items";
+	//
+	// MaxVisibleItems
+	//
+	this->MaxVisibleItems->Location = System::Drawing::Point(231, 201);
+	this->MaxVisibleItems->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {20, 0, 0, 0});
+	this->MaxVisibleItems->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+	this->MaxVisibleItems->Name = L"MaxVisibleItems";
+	this->MaxVisibleItems->Size = System::Drawing::Size(148, 20);
+	this->MaxVisibleItems->TabIndex = 7;
+	this->MaxVisibleItems->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+	//
+	// BoldFacedHighlighting
+	//
+	this->BoldFacedHighlighting->AutoSize = true;
+	this->BoldFacedHighlighting->Location = System::Drawing::Point(176, 194);
+	this->BoldFacedHighlighting->Name = L"BoldFacedHighlighting";
+	this->BoldFacedHighlighting->Size = System::Drawing::Size(138, 17);
+	this->BoldFacedHighlighting->TabIndex = 32;
+	this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
+	this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
+	//
 	// ScriptEditorPreferences
 	//
 	OptionsBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -962,14 +998,11 @@ ScriptEditorPreferences::ScriptEditorPreferences()
 	OptionsBox->Text = L"Preferences";
 	OptionsBox->MaximizeBox = false;
 	OptionsBox->MinimizeBox = false;
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(ThresholdLength))->EndInit();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(TabSize))->EndInit();
 	TabContainer->ResumeLayout(false);
 	TabGeneral->ResumeLayout(false);
 	TabGeneral->PerformLayout();
 	TabIntelliSense->ResumeLayout(false);
 	TabIntelliSense->PerformLayout();
-	(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(DatabaseUpdateInterval))->EndInit();
 	TabPreprocessor->ResumeLayout(false);
 	TabAppearance->ResumeLayout(false);
 	TabAppearance->PerformLayout();
@@ -1036,4 +1069,9 @@ void ScriptEditorPreferences::Show()
 {
 	Closing = false;
 	OptionsBox->ShowDialog();
+}
+
+void ScriptEditorPreferences::OnPreferencesSaved( EventArgs^ E )
+{
+	PreferencesSaved(this, E);
 }

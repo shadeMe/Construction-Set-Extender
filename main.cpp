@@ -10,7 +10,7 @@
 #include "Hooks\Renderer.h"
 #include "Hooks\Misc.h"
 
-#define	CSE_VERSION					MAKE_OBLIVION_VERSION(6, 0, 910)
+#define	CSE_VERSION					MAKE_OBLIVION_VERSION(6, 0, 1021)
 
 void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 {

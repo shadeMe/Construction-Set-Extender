@@ -115,13 +115,13 @@ namespace Refactoring
 
 		if (Selection != nullptr)
 		{
-			InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Parameter Name", "Create UDF Implementation - CSE Script Editor");
+			InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Parameter Name", "Create UDF Implementation");
 			if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 				return;
 			else
 				Selection->Text = Result->Text;
 
-			Result = InputBoxes::InputBox::Show("Enter Parameter Type", "Create UDF Implementation - CSE Script Editor");
+			Result = InputBoxes::InputBox::Show("Enter Parameter Type", "Create UDF Implementation");
 			if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 				return;
 			else
@@ -293,7 +293,7 @@ namespace Refactoring
 			}
 			else
 			{
-				MessageBox::Show("Please expand the second column sufficiently to allow the editing of its contents", "CSE Script Editor",
+				MessageBox::Show("Please expand the second column sufficiently to allow the editing of its contents", SCRIPTEDITOR_TITLE,
 								MessageBoxButtons::OK, MessageBoxIcon::Information);
 			}
 		}

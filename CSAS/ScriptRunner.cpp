@@ -606,11 +606,9 @@ namespace CSAutomationScript
 	void GlobalScriptManager::ExecuteScripts()
 	{
 		assert(!SCRIPTRUNNER->GetExecutingContext());
-
 		InExecutionLoop = true;
 
 		bool HasReturnedValue = false;
-
 		for (GlobalScriptCacheList::iterator Itr = GlobalScriptCache.begin(); Itr != GlobalScriptCache.end();)
 		{
 			ScriptContext* GlobalScript = *Itr;
@@ -632,7 +630,6 @@ namespace CSAutomationScript
 		}
 
 		TimeCounter.Update();
-
 		InExecutionLoop = false;
 	}
 
@@ -802,12 +799,11 @@ namespace CSAutomationScript
 	{
 		for (VariableList::iterator Itr = GlobalVariableCache.begin(); Itr != GlobalVariableCache.end(); Itr++)
 			delete *Itr;
+
 		GlobalVariableCache.clear();
 
 		for (VariableList::iterator Itr = GlobalVariableBuffer.begin(); Itr != GlobalVariableBuffer.end(); Itr++)
-		{
 			GlobalVariableCache.push_back(new ScriptVariable(*(*Itr)));
-		}
 	}
 
 	void GlobalScriptManager::ShowGlobalVariableDialog()
@@ -818,15 +814,15 @@ namespace CSAutomationScript
 	void GlobalScriptManager::RegisterGlobalVariablesWithParser(mup::ParserX* Parser)
 	{
 		for (VariableList::iterator Itr = GlobalVariableCache.begin(); Itr != GlobalVariableCache.end(); Itr++)
-		{
 			Parser->DefineVar((*Itr)->GetName(), mup::Variable(&((mup::Value&)(*Itr)->GetValue())));
-		}
 	}
 
 	void InitializeCSASEngine()
 	{
 		DebugPrint("Initializing Command Table");
-		g_CSASCommandTable.InitializeCommandTable();
+		CONSOLE->Indent();
+		g_CSASCommandTable.Initialize();
+		CONSOLE->Exdent();
 
 		HMENU CSASMenu = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU7); CSASMenu = GetSubMenu(CSASMenu, 0);
 		HMENU MainMenu = GetMenu(*g_HWND_CSParent);

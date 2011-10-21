@@ -9,7 +9,8 @@ Archive* ArchiveManager::LoadArchive( const char* ArchiveName, UInt16 Unk02, UIn
 
 void ArchiveManager::LoadSkippedArchives(const char* ArchiveDirectory)
 {
-	if (*g_LoadedBSAArchives == 0)		return;
+	if (*g_LoadedBSAArchives == 0)
+		return;
 
 	for (IDirectoryIterator Itr(ArchiveDirectory, "*.bsa"); !Itr.Done(); Itr.Next())
 	{
@@ -32,7 +33,7 @@ void ArchiveManager::LoadSkippedArchives(const char* ArchiveDirectory)
 		if (IsLoaded == false)
 		{
 			LoadArchive(FileName.c_str(), 0, 0);
-			DebugPrint("BSA Archive %s loaded", FileName.c_str());
+			DebugPrint("Loaded %s", FileName.c_str());
 		}
 	}
 }

@@ -24,6 +24,7 @@ class   EffectSetting;
 // CC
 class EffectSetting : public TESFormIDListView, public TESModel, public TESDescription, public TESFullName, public TESIcon
 {
+	typedef void (__cdecl *_CreateInstance)(int EffectID, const char *EffectName, int School, float BaseCost, int MGEFParamA, int Flags, int ResistAV, int NoOfCounterEffects, ...);
 public:
 	enum EffectSettingFlags
 	{   //                                      # Can be overriden in a vanilla mod file (other overrides are discarded by EffectSetting.Load())
@@ -103,4 +104,7 @@ public:
 	/*C0*/ float              barterFactor;
 	/*C4*/ UInt32             mgefCode; // in CS, editor ID is initialized to this re-interpreted as a 4-character string
 	/*C8*/ UInt32*            counterArray; // counters stored as dynamic array[numCounters] of effect codes
+
+	// methods
+	static _CreateInstance		CreateInstance;
 };

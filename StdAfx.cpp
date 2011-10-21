@@ -6,6 +6,7 @@
 #pragma comment(lib, "Advapi32.lib")
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "UxTheme.lib")
+#pragma comment(lib, "d3d9.lib")
 
 std::string										g_INIPath;
 std::string										g_APPPath;
@@ -69,6 +70,12 @@ void CSEINIManager::Initialize()
 	RegisterSetting(new SME::INI::INISetting(this, "BackupOnSave", "Extender::VersionControl", "0", "Create a backup copy of the active plugin to the 'Backup' directory in the active workspace before commencing a save operation"), (CreateINI == false));
 
 	RegisterSetting(new SME::INI::INISetting(this, "GlobalScriptExecutionPeriod", "Extender::CSAS", "10", "Duration, in milliseconds, between global script execution operations"), (CreateINI == false));
+
+	RegisterSetting(new SME::INI::INISetting(this, "Top", "Extender::AuxViewport", "150", "Client Rect Top"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "Left", "Extender::AuxViewport", "150", "Client Rect Left"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "Right", "Extender::AuxViewport", "500", "Client Rect Right"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "Bottom", "Extender::AuxViewport", "350", "Client Rect Bottom"), (CreateINI == false));
+	RegisterSetting(new SME::INI::INISetting(this, "HideOnStartup", "Extender::AuxViewport", "0", "Hide the viewport on CS startup"), (CreateINI == false));
 
 	if (CreateINI)		SaveSettingsToINI();
 	else				ReadSettingsFromINI();

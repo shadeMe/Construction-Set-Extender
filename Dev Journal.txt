@@ -8,10 +8,11 @@ IMMEDIATE  >>
 NOTE	---->
 > Don't forget to correct NiObjectNET's def when updating OBSE source files
 
+
 MISC	---->
 > Credits:	T800G, for the window snapper code
 			Ingo Berg, for muParserX (and for the great tech. support)
-> Ctrl + Up/Down script editor shortcut
+
 
 CSE		---->
 > Increase formID column's size
@@ -28,3 +29,4 @@ CSE		---->
 
 
 SE		---->
+> A code snippets manager, integrated into IntelliSense

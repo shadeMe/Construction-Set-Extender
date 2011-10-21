@@ -155,6 +155,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp" />
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp" />
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp" />
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="ScriptEditorManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h" />
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
@@ -180,7 +182,7 @@
     <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
-    <ClInclude Include="..\..\[Common]\Includes.h" />
+    <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
     <ClInclude Include="..\..\[Common]\ListViewUtilities.h" />
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
     <ClInclude Include="AuxiliaryTextEditor.h" />
@@ -213,6 +215,8 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\AlignObjectsBottomHS.png" />
     <None Include="Images\109_AllAnnotations_Error_16x16_72.png" />
     <None Include="Images\addVar.png" />
+    <None Include="Images\arrow-back-grey-thick.png" />
+    <None Include="Images\arrow-next-grey-thick.png" />
     <None Include="Images\Back (2).png" />
     <None Include="Images\back.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\BehindTextHS.png" />
@@ -279,6 +283,7 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SaveFormDesignHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\saveHS.png" />
     <None Include="Images\noSaveHS.png" />
+    <None Include="Images\OptionsHS.png" />
     <None Include="Images\refactor.png" />
     <None Include="Images\renameVars.png" />
     <None Include="Images\saveHS.png" />
@@ -288,6 +293,7 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\SearchWebHS.png" />
     <None Include="Images\SendInstantMessage.png" />
     <None Include="Images\SESaveNoCompile.png" />
+    <None Include="Images\settings1.png" />
     <None Include="Images\SLDActive.png" />
     <None Include="Images\stop.png" />
     <None Include="Images\UnmodifiedFlag.png" />
@@ -305,4 +311,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="ScriptEditor.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

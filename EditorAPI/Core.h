@@ -271,6 +271,20 @@ public:
 		/*04*/ UInt32	unk4;	// size?
 	};
 
+	// 20
+	struct WaterPlaneData
+	{
+		/*00*/ UInt32				unk00;					// seen NULL
+		/*04*/ NiNode*				waterNode;
+		/*08*/ NiTriShape**			waterPlaneArray;
+		/*0C*/ void*				unk0C;
+		/*10*/ NiSourceTexture*		unk10;					// current water texture?
+		/*14*/ TESObjectCELL*		currentCell;
+		/*18*/ UInt32				unk18;
+		/*1C*/ UInt8				flags;
+		/*1D*/ UInt8				pad1D[3];
+	};
+
 	// members
 	///*00*/ void**					vtbl;					// oddly, vtbl pointer is NULL in global TES object though c'tor initializes it...
 	/*04*/ GridDistantArray*		gridDistantArray;
@@ -286,15 +300,15 @@ public:
 	/*2C*/ UInt32					unk2C;					// same as unk24?
 	/*30*/ TESObjectCELL*			currentExteriorCell;	// set to NULL when the player's in an interior
 	/*34*/ TESObjectCELL*			currentInteriorCell;	// set to NULL when the player's in an exterior
-	/*38*/ void*					unk38;
-	/*3C*/ TESObjectCELL**			cellArray;
+	/*38*/ TESObjectCELL**			interiorCellBufferArray;
+	/*3C*/ TESObjectCELL**			exteriorCellBufferArray;
 	/*40*/ UInt32					unk40;
 	/*44*/ UInt32					unk44;
 	/*48*/ UInt32					unk48;					// seen caching unk20 in editor
 	/*4C*/ UInt32					unk4C;					// seen caching unk24 in editor
 	/*50*/ UInt32					unk50;
 	/*54*/ WaterSurfaceManager*		waterSurfaceManager;
-	/*58*/ void*					unk58;
+	/*58*/ WaterPlaneData*			waterNodeData;
 	/*5C*/ Sky*						sky;
 	/*60*/ UInt32					unk60;
 	/*64*/ UInt32					unk64;
@@ -344,6 +358,27 @@ extern FileFinder**				g_FileFinder;
 #define _FILEFINDER				(*g_FileFinder)
 
 extern NiDX9Renderer**			g_CSRenderer;
+#define _RENDERER				(*g_CSRenderer)
+
+class NiRenderTargetGroup;
+
+// 24
+class BSRenderedTexture : public NiRefObject
+{
+public:
+	// members
+	///*00*/ NiRefObject
+	/*08*/ NiRenderTargetGroup*		renderTargets;
+	/*0C*/ UInt32					unk0C;
+	/*10*/ UInt32					unk10;
+	/*14*/ UInt32					unk14;
+	/*18*/ UInt32					unk18;
+	/*1C*/ UInt32					unk1C;
+	/*20*/ NiRenderedTexture*		renderedTexture;
+
+	// methods
+	LPDIRECT3DTEXTURE9				ConvertToD3DTexture(UInt32 Width = 0, UInt32 Height = 0);
+};
 
 // 48
 class BSTextureManager

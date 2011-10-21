@@ -97,12 +97,14 @@ RenderWindowTextPainter::RenderWindowTextPainter()
 	RenderChannel1 = NULL;
 	RenderChannel2 = NULL;
 	Valid = false;
+	SkipFrame = false;
 }
 
 RenderWindowTextPainter* RenderWindowTextPainter::GetSingleton(void)
 {
 	if (Singleton == NULL)
 		Singleton = new RenderWindowTextPainter();
+
 	return Singleton;
 }
 
@@ -147,6 +149,11 @@ void RenderWindowTextPainter::Render()
 {
 	if (Valid == false)
 		return;
+	else if (SkipFrame)
+	{
+		SkipFrame = false;
+		return;
+	}
 
 	RenderChannel1->Render();
 	RenderChannel2->Render();

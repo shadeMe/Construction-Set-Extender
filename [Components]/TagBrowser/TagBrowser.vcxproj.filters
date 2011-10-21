@@ -39,6 +39,9 @@
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
       <Filter>Interop</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\[Common]\IncludesCLR.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\ListViewUtilities.cpp">

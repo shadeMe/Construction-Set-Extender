@@ -354,6 +354,12 @@
     <ClCompile Include="CSAS\Commands\Commands_String.cpp">
       <Filter>CSAS\Commands</Filter>
     </ClCompile>
+    <ClCompile Include="EditorAPI\EffectSetting.cpp">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClCompile>
+    <ClCompile Include="AuxiliaryViewport.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\GameTypes.h">
@@ -490,9 +496,6 @@
       <Filter>EditorAPI</Filter>
     </ClInclude>
     <ClInclude Include="EditorAPI\ExtraDataList.h">
-      <Filter>EditorAPI</Filter>
-    </ClInclude>
-    <ClInclude Include="EditorAPI\TESActorBase.h">
       <Filter>EditorAPI</Filter>
     </ClInclude>
     <ClInclude Include="EditorAPI\ActorValues.h">
@@ -876,6 +879,12 @@
     </ClInclude>
     <ClInclude Include="CSAS\Commands\Commands_String.h">
       <Filter>CSAS\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESActorBase.h">
+      <Filter>EditorAPI\Forms</Filter>
+    </ClInclude>
+    <ClInclude Include="AuxiliaryViewport.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

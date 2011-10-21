@@ -32,7 +32,7 @@ public interface class IScriptTextEditor
 	String^										GetText(void);
 	UInt32										GetTextLength(void);
 	void										SetText(String^ Text, bool PreventTextChangedEventHandling);
-	void										InsertText(String^ Text, int Index);		// performs bounds check
+	void										InsertText(String^ Text, int Index);			// performs bounds check
 
 	String^										GetSelectedText(void);
 	void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
@@ -42,6 +42,7 @@ public interface class IScriptTextEditor
 
 	int											GetCharIndexFromPosition(Point Position);
 	Point										GetPositionFromCharIndex(int Index);
+	Point										GetAbsolutePositionFromCharIndex(int Index);
 	int											GetLineNumberFromCharIndex(int Index);
 	bool										GetCharIndexInsideCommentSegment(int Index);
 	int											GetCurrentLineNumber(void);
@@ -49,7 +50,7 @@ public interface class IScriptTextEditor
 	String^										GetTokenAtCaretPos();
 	void										SetTokenAtCaretPos(String^ Replacement);
 	String^										GetTokenAtMouseLocation();
-	array<String^>^								GetTokensAtMouseLocation();		// gets three of the closest tokens surrounding the mouse loc
+	array<String^>^								GetTokensAtMouseLocation();						// gets three of the closest tokens surrounding the mouse loc
 
 	int											GetCaretPos();
 	void										SetCaretPos(int Index);

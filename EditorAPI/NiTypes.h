@@ -1,7 +1,9 @@
 #pragma once
+#include "obse\NiNodes.h"
 
 //	EditorAPI: Misc. NetImmerse classes.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
+//
 
 /*
     NiBinaryStream: generalized platform-independent binary i/o
@@ -64,3 +66,17 @@ public:
     /*24*/ bool          m_bGood;				// true if file is open
 };
 STATIC_ASSERT(sizeof(NiFile) == 0x28);
+
+class	Ni2DBuffer;
+
+// 14
+class NiDX92DBufferData : public NiRefObject
+{
+public:
+	// members
+    //     /*00*/ NiRefObject
+	/*08*/ Ni2DBuffer*			parentData;
+	/*0C*/ IDirect3DSurface9*	surface;
+	/*10*/ void*				surfaceData;	// 0x44 bytes long.
+};
+STATIC_ASSERT(sizeof(NiDX92DBufferData) == 0x14);

@@ -3,6 +3,7 @@
 #include "..\ElapsedTimeCounter.h"
 #include "..\RenderWindowTextPainter.h"
 #include "PathGridUndoManager.h"
+#include "AuxiliaryViewport.h"
 
 #pragma warning (disable : 4410)
 
@@ -12,6 +13,7 @@ namespace Hooks
 
 	TESForm*					g_TESObjectREFRUpdate3DBuffer = NULL;
 	bool						g_RenderWindowAltMovementSettings = false;
+	float						g_MaxLandscapeEditBrushRadius = 25.0f;
 
 	_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 	_DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
@@ -49,11 +51,18 @@ namespace Hooks
 	_DefineHookHdlr(TESPathGridRecordOperationFlag, 0x0042A714);
 	_DefineHookHdlr(TESPathGridRecordOperationRef, 0x00428367);
 	_DefineHookHdlr(TESPathGridDeletePoint, 0x004291C6);
+	_DefineHookHdlr(TESPathGridPointDtor, 0x00556190);
 	_DefineHookHdlr(TESPathGridToggleEditMode, 0x00550660);
 	_DefineHookHdlr(TESPathGridCreateNewLinkedPoint, 0x0042B37B);
 	_DefineHookHdlr(TESPathGridPerformFall, 0x00428612);
 	_DefineHookHdlr(TESPathGridShowMultipleSelectionRing, 0x0042FC7C);
 	_DefinePatchHdlr(TESPathGridDtor, 0x00550B81);
+	_DefineHookHdlr(InitialCellLoadCameraPosition, 0x0040A8AE);
+	_DefinePatchHdlr(LandscapeEditBrushRadius, 0x0041F2EE + 2);
+	_DefineHookHdlrWithBuffer(ConvertNiRenderedTexToD3DBaseTex, 0x00411616, 5, 0x85, 0xC0, 0x75, 0x2E, 0x8B);
+	_DefineHookHdlr(DuplicateReferences, 0x0042EC2E);
+	_DefinePatchHdlrWithBuffer(NiDX9RendererPresent, 0x006D5C9D, 2, 0xFF, 0xD0);
+	_DefineHookHdlr(RenderToAuxiliaryViewport, 0x0042D405);
 
 	void PatchRendererHooks(void)
 	{
@@ -92,11 +101,16 @@ namespace Hooks
 		_MemHdlr(TESPathGridRecordOperationFlag).WriteJump();
 		_MemHdlr(TESPathGridRecordOperationRef).WriteJump();
 		_MemHdlr(TESPathGridDeletePoint).WriteJump();
+		_MemHdlr(TESPathGridPointDtor).WriteJump();
 		_MemHdlr(TESPathGridToggleEditMode).WriteJump();
 		_MemHdlr(TESPathGridCreateNewLinkedPoint).WriteJump();
 		_MemHdlr(TESPathGridPerformFall).WriteJump();
 		_MemHdlr(TESPathGridShowMultipleSelectionRing).WriteJump();
 		_MemHdlr(TESPathGridDtor).WriteUInt8(0xEB);
+		_MemHdlr(InitialCellLoadCameraPosition).WriteJump();
+		_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&g_MaxLandscapeEditBrushRadius);
+		_MemHdlr(DuplicateReferences).WriteJump();
+		_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
 	}
 
 	#define _hhName		DoorMarkerProperties
@@ -181,7 +195,6 @@ namespace Hooks
 
 	void __stdcall NiWindowRenderDrawHook(void)
 	{
-		g_RenderWindowTimeManager.Update();
 		RENDERTEXT->Render();
 	}
 
@@ -534,7 +547,7 @@ namespace Hooks
 
 	void __stdcall DoForceShowTESObjectREFRDialogHook(HWND PropertiesDialog)
 	{
-		SendMessage(*g_HWND_RenderWindow, WM_TIMER, (WPARAM)1, NULL);	// update viewport
+		TESDialog::RedrawRenderWindow();
 		SetWindowPos(PropertiesDialog, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
 	}
 
@@ -804,10 +817,10 @@ namespace Hooks
 		__asm
 		{
 			pushad
-			call	SendMessageAddress
+			call	IATCacheSendMessageAddress
 			popad
 
-			call	g_WindowHandleCallAddr
+			call	g_TempIATProcBuffer
 			pushad
 			call	DoActivateRenderWindowPostLandTextureChangeHook
 			popad
@@ -932,6 +945,44 @@ namespace Hooks
 		}
 	}
 
+	void __stdcall DoTESPathGridPointDtorHook(TESPathGridPoint* Point)
+	{
+		PathGridPointListT* DeletionList = (PathGridPointListT*)PathGridPointListT::Create(&FormHeap_Allocate);
+		DeletionList->AddAt(Point, eListEnd);
+		g_PathGridUndoManager.HandlePathGridPointDeletion(DeletionList);
+		DeletionList->RemoveAll();
+		FormHeap_Free(DeletionList);
+	}
+
+	#define _hhName		TESPathGridPointDtor
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00556197);
+		__asm
+		{
+			mov		eax, [esp]
+			sub		eax, 5
+			cmp		eax, 0x0054E5A3
+			jnz		CULL
+
+			mov		eax, [esp + 0x18]
+			sub		eax, 5
+			cmp		eax, 0x00429200		// don't handle deletion if called from the render window wnd proc, as we already do that in the previous hook
+			jz		SKIP
+		CULL:
+			pushad
+			push	ecx
+			call	DoTESPathGridPointDtorHook
+			popad
+		SKIP:
+			push    ebx
+			push    esi
+			mov     esi, ecx
+			lea     ecx, [esi + 0x10]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
 	void __stdcall DoTESPathGridToggleEditModeHook(void)
 	{
 		g_PathGridUndoManager.ResetRedoStack();
@@ -1008,6 +1059,131 @@ namespace Hooks
 			call	DoTESPathGridRecordOperation
 			popad
 			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoInitialCellLoadCameraPositionHook(void)
+	{
+		static long double s_Offset = -1;
+		if (s_Offset < 0.0)
+		{
+			s_Offset = 0.0;
+			SafeWrite32(0x0042E69B + 2, (UInt32)&s_Offset);
+		}
+
+		SendMessage(*g_HWND_RenderWindow, 0x40D, NULL, (LPARAM)&Vector3(0.0, 0.0, 0.0));
+	}
+
+	#define _hhName		InitialCellLoadCameraPosition
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x00532240);
+		_hhSetVar(Retn, 0x0040A8B7);
+		_hhSetVar(Jump, 0x0040A8D8);
+		__asm
+		{
+			call	[_hhGetVar(Call)]
+			test	al, al
+			jnz		FIX
+
+			jmp		[_hhGetVar(Retn)]
+		FIX:
+			call	DoInitialCellLoadCameraPositionHook
+			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	#define _hhName		ConvertNiRenderedTexToD3DBaseTex
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004116A5);
+		__asm
+		{
+			push	esi		// store IDirect3DBaseTexture9*
+
+			mov     esi, [esp + 0x30]
+			lea     eax, [esi + 4]
+			push    eax
+			pushad
+			call	IATCacheInterlockedDecrementAddress
+			popad
+			call	g_TempIATProcBuffer
+			test    eax, eax
+			jnz     EXIT
+			mov     edx, [esi]
+			mov     eax, [edx]
+			push    1
+			mov     ecx, esi
+			call    eax
+		EXIT:
+			pop		esi		// restore
+			mov		eax, esi
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoDuplicateReferencesHook(void)
+	{
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		{
+			TESObjectREFR* Reference = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+			Reference->position.z += 10.0f;
+			Reference->UpdateNiNode();
+		}
+	}
+
+	#define _hhName		DuplicateReferences
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042EC6C);
+		__asm
+		{
+			pushad
+			call	DoDuplicateReferencesHook
+			popad
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoRenderToAuxiliaryViewportHook(void)
+	{
+		if (AUXVIEWPORT->IsHidden())
+			return;
+
+		if (AUXVIEWPORT->IsFrozen() == false)
+			AUXVIEWPORT->SyncViewportCamera(_RENDERCMPT->primaryCamera);
+		else
+		{
+			RENDERTEXT->SkipNextFrame();
+			_MemHdlr(NiDX9RendererPresent).WriteUInt16(0x9090);
+			_RENDERCMPT->RenderNode(AUXVIEWPORT->GetViewportCamera());
+			_MemHdlr(NiDX9RendererPresent).WriteBuffer();
+		}
+
+		_RENDERER->device->Present(NULL, NULL, AUXVIEWPORT->GetWindow(), NULL);
+	}
+
+	#define _hhName		RenderToAuxiliaryViewport
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0042D415);
+		__asm
+		{
+			pushad
+			call	DoRenderToAuxiliaryViewportHook
+			popad
+
+			mov     ecx, [eax]
+			mov     edx, [ecx]
+			mov     eax, [eax+8]
+			mov     edx, [edx]
+			push    0
+			push    0
+			push	eax
+			call	edx
+
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

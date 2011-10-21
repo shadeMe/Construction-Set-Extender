@@ -17,7 +17,7 @@ namespace Hooks
 	_DeclareMemHdlr(DataDlgInit, "hooks the data window for subclassing");
 	_DeclareMemHdlr(CustomCSWindow, "keeps custom child windows of the CS main window from being closed on plugin load");
 	_DeclareMemHdlr(RaceDescriptionDirtyEdit, "prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.");
-	_DeclareMemHdlr(AddListViewItem, "patches various routines to check for the 'Hide UnModified Forms' flag before populating controls with forms");
+	_DeclareMemHdlr(AddListViewItem, "patches various routines to check for the 'Hide UnModified/Deleted Forms' flag before populating controls with forms");
 	_DeclareMemHdlr(AddComboBoxItem, "");
 	_DeclareMemHdlr(ObjectListPopulateListViewItems, "");
 	_DeclareMemHdlr(CellViewPopulateObjectList, "");
@@ -26,7 +26,7 @@ namespace Hooks
 	_DeclareMemHdlr(TESDialogPopupMenu, "hooks popup menu instantiation for new menu items");
 	_DeclareMemHdlr(ResponseWindowLipButtonPatch, "adds suport for the 'fixed' lipsync tool");
 	_DeclareMemHdlr(ResponseWindowInit, "hooks the response editor dialog for subclassing");
-	_DeclareMemHdlr(DataDlgZOrder, "prevents the data dlg from staying ontop of all other windows");
+	_DeclareMemHdlr(DataDlgZOrder, "prevents the data dlg from staying on top of all other windows");
 	_DeclareMemHdlr(FormIDListViewInit, "changes the text of the OK and CANCEL buttons");
 	_DeclareMemHdlr(FormIDListViewSaveChanges, "prevents the OK button from closing the list view dialog");
 	_DeclareMemHdlr(FormIDListViewItemChange, "displays a confirmation message before committing changes made to the active item when switching to another");
@@ -36,7 +36,7 @@ namespace Hooks
 	_DeclareMemHdlr(TESRaceCopyHairEyeDataMessageHandler, "handles the WM_COMMAND messages sent by the newly added controls");
 	_DeclareMemHdlr(TESDialogGetIsWindowDragDropRecipient, "allows custom windows to receive form drag-drop notifications");
 	_DeclareNopHdlr(MissingTextureWarning, "removes the ostentatious warning");
-	_DeclareMemHdlr(AboutDialog, "add a mention of CSE");
+	_DeclareMemHdlr(AboutDialog, "adds a mention of CSE");
 	_DeclareNopHdlr(TESQuestStageResultScript, "fixes a bug that prevented quest stage result scripts from being compiled when their text was empty");
 	_DeclareMemHdlr(TESNPCUpdatePreviewControl, "fixes a bug that prevented NPC models from being updated correctly after an item was removed from their inventory");
 	_DeclareMemHdlr(TESParametersFillAndInitSelectionComboBoxOwners, "allows factions to be passed as arguments to condition commands that take ownership parameters");
@@ -48,7 +48,7 @@ namespace Hooks
 	_DeclareMemHdlr(BuildResultScriptEditButton, "creates the edit result script button for the dialog editor and the quest stage dlg");
 	_DeclareMemHdlr(DialogEditorCommandMessageCallback, "handles messages sent by the edit result script button");
 	_DeclareMemHdlr(TESQuestCommandMessageCallback, "");
-	_DeclareMemHdlr(CellViewWindowResizeFix, "fixes a bug that kept eating at the cell view's list view control heights after each reinit");
+	_DeclareMemHdlr(CellViewWindowResizeFix, "fixes a bug that kept eating the cell view's list view control heights after each reinit");
 	_DeclareMemHdlr(CellViewWindowResizeA, "patches the cell view window wnd proc's resize handler to account for the new controls");
 	_DeclareMemHdlr(CellViewWindowResizeB, "");
 	_DeclareMemHdlr(CellViewWindowPopulateObjectListFilter, "adds support for the newly added filter tool in the cell view window");
@@ -57,4 +57,8 @@ namespace Hooks
 	_DeclareMemHdlr(FindTextFormEnumerationA, "patches the find text dialog to account for the new 'Hide XXX records' tools");
 	_DeclareMemHdlr(FindTextFormEnumerationB, "");
 	_DeclareMemHdlr(FindTextFormEnumerationC, "");
+	_DeclareMemHdlr(TESQuestRemoveStageData, "adds a workaround for a bug that causes a CTD when deleting quest stages in the theme-enabled EXE");
+	_DeclareMemHdlr(HideCSMainDialogsA, "hides the main cs windows instead of minimizing them");
+	_DeclareMemHdlr(HideCSMainDialogsB, "");
+	_DeclareMemHdlr(HideCSMainDialogsC, "");
 }

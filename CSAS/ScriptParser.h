@@ -42,7 +42,10 @@ namespace CSAutomationScript
 			kSanitizeOps_StripComments				= 1 << 2
 		};
 
-		~ScriptParser() { Reset(); }
+		~ScriptParser()
+		{
+			Reset();
+		}
 
 		bool											Tokenize(std::string Source, bool CollectEmptyTokens);		// skips comments
 		TokenType										GetTokenType(std::string& Token);

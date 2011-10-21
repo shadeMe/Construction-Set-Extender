@@ -29,7 +29,7 @@ namespace Hooks
 	_DeclareMemHdlr(TESFormDelete, "");
 	_DeclareMemHdlr(TextureSizeCheck, "allows the preview of textures of resolution > 512px");
 	_DeclareMemHdlr(DataHandlerPlaceTESObjectLIGH, "fixes a CTD that occurs on the first reference placement of a light object");
-	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapA, "fixes a CTD that sometime occurs for unknown reasons");
+	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapA, "fixes an extremely mysterious CTD");
 	_DeclareMemHdlr(TESWorldSpaceDestroyCellMapB, "");
 	_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registy entries at startup");
 	_DeclareMemHdlr(AchievementAddTopic, "various hooks that unlock achievements");
@@ -39,11 +39,11 @@ namespace Hooks
 	_DeclareMemHdlr(AchievementPluginDescription, "");
 	_DeclareMemHdlr(AchievementBuildRoads, "");
 	_DeclareMemHdlr(AchievementDialogResponseCreation, "");
-	_DeclareMemHdlr(TESDialogBuildSubwindowDiagnostics, "adds a diagnostic message to TESDialog::BuildSubwindow()");
+	_DeclareMemHdlr(TESDialogBuildSubwindowDiagnostics, "adds a diagnostic message to TESDialog::BuildSubwindow");
 	_DeclareMemHdlr(ExtraTeleportInitItem, "patches the function to take into account refs without base forms (happens when quick-loading plugins)");
 	_DeclareMemHdlr(NewSplashImage, "replaces the default splash image with a new one");
 
-	void PatchMessageHandler(void);
+	void PatchMessageHanders(void);
 	void __stdcall DoCSInitHook();
 	void __stdcall DoCSExitHook(HWND MainWindow);
 	void __stdcall MessageHandlerOverride(const char* Message);

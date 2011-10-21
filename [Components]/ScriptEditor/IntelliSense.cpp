@@ -59,7 +59,8 @@ namespace IntelliSense
 		while (ParamIdx < 10)
 		{
 			int VarIdx = (int)Parameters->GetValue(ParamIdx);
-			if (VarIdx == -1)	break;
+			if (VarIdx == -1)
+				break;
 
 			String^% Comment = VarList[VarIdx]->GetComment(), ^% Name = VarList[VarIdx]->GetName();
 			Scratch += "\n\t" + ((Comment == "")?Name:Comment) + " [" + VarList[VarIdx]->GetTypeIdentifier() + "]";
@@ -164,13 +165,13 @@ namespace IntelliSense
 		Name = gcnew String(Data->EditorID);
 		Flags = Data->Flags;
 
-		String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::e_FromMaster)?"\tFrom Master File\n":"") +
-			((Flags & (UInt32)FormFlags::e_FromActiveFile)?"\tFrom Active File\n":"") +
-			((Flags & (UInt32)FormFlags::e_Deleted)?"\tDeleted\n":"") +
-			((Flags & (UInt32)FormFlags::e_TurnOffFire)?"\tTurn Off Fire\n":"") +
-			((Flags & (UInt32)FormFlags::e_QuestItem)?(FormType == 0x31?"\tPersistent\n":"\tQuest Item\n"):"") +
-			((Flags & (UInt32)FormFlags::e_Disabled)?"\tInitially Disabled\n":"") +
-			((Flags & (UInt32)FormFlags::e_VisibleWhenDistant)?"\tVisible When Distant\n":"");
+		String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::e_FromMaster)?"   From Master File\n":"") +
+			((Flags & (UInt32)FormFlags::e_FromActiveFile)?"   From Active File\n":"") +
+			((Flags & (UInt32)FormFlags::e_Deleted)?"   Deleted\n":"") +
+			((Flags & (UInt32)FormFlags::e_TurnOffFire)?"   Turn Off Fire\n":"") +
+			((Flags & (UInt32)FormFlags::e_QuestItem)?(FormType == 0x31?"   Persistent\n":"   Quest Item\n"):"") +
+			((Flags & (UInt32)FormFlags::e_Disabled)?"   Initially Disabled\n":"") +
+			((Flags & (UInt32)FormFlags::e_VisibleWhenDistant)?"   Visible When Distant\n":"");
 
 		this->Description = Name + "\n\nType: " + GetFormTypeIdentifier() + "\nFormID: " + FormID.ToString("X8") +
 							(FlagDescription->Length?"\nFlags:\n" + FlagDescription:"");
@@ -187,6 +188,8 @@ namespace IntelliSense
 
 	IntelliSenseDatabase::IntelliSenseDatabase()
 	{
+		DebugPrint("Initializing IntelliSense");
+
 		Enumerables = gcnew LinkedList<IntelliSenseItem^>();
 		UserFunctionList = gcnew LinkedList<UserFunction^>();
 		DeveloperURLMap = gcnew Dictionary<String^, String^>();
@@ -202,8 +205,6 @@ namespace IntelliSense
 		DatabaseUpdateTimer->AutoReset = true;
 		DatabaseUpdateTimer->SynchronizingObject = nullptr;
 		ForceUpdateFlag = false;
-
-		DebugPrint("Initialized IntelliSense");
 	}
 
 	IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::InitializeDatabaseUpdate()
@@ -301,7 +302,7 @@ namespace IntelliSense
 		if (E->Error != nullptr)
 			DebugPrint("ISDatabaseUpdate thread raised an exception!\n\tException: " + E->Error->Message, true);
 		else if (E->Cancelled)
-			DebugPrint("Huh?! ISDatabaseUpdate thread was cancelled", true);
+			DebugPrint("Huh?! ISDatabaseUpdate thread was canceled", true);
 		else if (E->Result == nullptr)
 			DebugPrint("Something seriously went wrong when updating the IntelliSense database!", true);
 		else
@@ -476,7 +477,8 @@ namespace IntelliSense
 		for (const ComponentDLLInterface::ObScriptCommandInfo* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
 		{
 			Name = gcnew String(Itr->longName);
-			if (!String::Compare(Name, "", true))	continue;
+			if (!String::Compare(Name, "", true))
+				continue;
 
 			const ComponentDLLInterface::CommandTableData::PluginInfo* Info = Data->GetParentPlugin(Itr);
 
@@ -488,8 +490,10 @@ namespace IntelliSense
 			else if (Info)
 			{
 				PluginName = gcnew String(Info->name);
-				if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))			PluginName = "MenuQue";
-				else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))		PluginName = "Pluggy";
+				if (!String::Compare(PluginName, "OBSE_Kyoma_MenuQue", true))
+					PluginName = "MenuQue";
+				else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))
+					PluginName = "Pluggy";
 
 				Desc = "[" + PluginName + " v" + Info->version + "] ";
 				Source = CommandInfo::SourceType::e_OBSE;
@@ -501,14 +505,19 @@ namespace IntelliSense
 				Source = CommandInfo::SourceType::e_OBSE;
 			}
 
-			if (!String::Compare(gcnew String(Itr->helpText), "", true))		Desc += "No description";
-			else																Desc += gcnew String(Itr->helpText);
+			if (!String::Compare(gcnew String(Itr->helpText), "", true))
+				Desc += "No description";
+			else
+				Desc += gcnew String(Itr->helpText);
 
-			if (!String::Compare(gcnew String(Itr->shortName), "", true))		SH = "None";
-			else																SH = gcnew String(Itr->shortName);
+			if (!String::Compare(gcnew String(Itr->shortName), "", true))
+				SH = "None";
+			else
+				SH = gcnew String(Itr->shortName);
 
 			ReturnType = Data->GetCommandReturnType(Itr);
-			if (ReturnType == 6)												ReturnType = 0;
+			if (ReturnType == 6)
+				ReturnType = 0;
 
 			Enumerables->AddLast(gcnew CommandInfo(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType, Source));
 
@@ -516,7 +525,7 @@ namespace IntelliSense
 			Count++;
 		}
 
-		DebugPrint(String::Format("\tIntelliSense: Parsed {0} Commands", Count));
+		DebugPrint(String::Format("\tParsed {0} Commands", Count));
 	}
 
 	void IntelliSenseDatabase::InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection)
@@ -535,7 +544,7 @@ namespace IntelliSense
 				Enumerables->AddLast(gcnew VariableInfo(gcnew String(Itr->EditorID), gcnew String(""), VariableInfo::VariableType::e_String, IntelliSenseItem::ItemType::e_GMST));
 		}
 
-		DebugPrint(String::Format("\tIntelliSense: Parsed {0} Game Settings", GMSTCollection->GMSTCount));
+		DebugPrint(String::Format("\tParsed {0} Game Settings", GMSTCollection->GMSTCount));
 	}
 
 	void IntelliSenseDatabase::RegisterDeveloperURL(String^% CmdName, String^% URL)
@@ -565,7 +574,7 @@ namespace IntelliSense
 
 	String^	IntelliSenseDatabase::SanitizeCommandIdentifier(String^% CmdName)
 	{
-		for each (IntelliSenseItem^% Itr in Enumerables)
+		for each (IntelliSenseItem^ Itr in Enumerables)
 		{
 			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
 			{
@@ -597,7 +606,7 @@ namespace IntelliSense
 	{
 		bool Result = false;
 
-		for each (UserFunction^% Itr in UserFunctionList)
+		for each (UserFunction^ Itr in UserFunctionList)
 		{
 			if (!String::Compare(Name, Itr->GetIdentifier(), true))
 			{
@@ -613,7 +622,7 @@ namespace IntelliSense
 	{
 		bool Result = false;
 
-		for each (IntelliSenseItem^% Itr in Enumerables)
+		for each (IntelliSenseItem^ Itr in Enumerables)
 		{
 			if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd)
 			{
@@ -640,7 +649,7 @@ namespace IntelliSense
 		if (DatabaseTimerInitialized)
 			return;
 
-		UpdateThreadTimerInterval = OPTIONS->FetchSettingAsInt("DatabaseUpdateInterval");
+		UpdateThreadTimerInterval = PREFERENCES->FetchSettingAsInt("DatabaseUpdateInterval");
 		DatabaseUpdateTimer->Start();
 		DatabaseTimerInitialized = true;
 	}
@@ -668,7 +677,7 @@ namespace IntelliSense
 		return nullptr;
 	}
 
-	IntelliSenseInterface::IntelliSenseInterface(Object^% Parent)
+	IntelliSenseInterface::IntelliSenseInterface(Object^% ParentWorkspace)
 	{
 		IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
 		LocalVariableDatabase = gcnew List<IntelliSenseItem^>();
@@ -678,6 +687,7 @@ namespace IntelliSense
 		if (IntelliSenseItemIcons->Images->Count == 0)
 		{
 			IntelliSenseItemIcons->TransparentColor = Color::White;
+
 			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemEmpty"));
 			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemCommand"));
 			IntelliSenseItemIcons->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemLocalVar"));
@@ -704,26 +714,26 @@ namespace IntelliSense
 		IntelliSenseList->KeyDown += gcnew KeyEventHandler(this, &IntelliSenseInterface::IntelliSenseList_KeyDown);
 		IntelliSenseList->MouseDoubleClick += gcnew MouseEventHandler(this, &IntelliSenseInterface::IntelliSenseList_MouseDoubleClick);
 		IntelliSenseList->Location = Point(0, 0);
-		IntelliSenseList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
+		IntelliSenseList->Font = gcnew Font("Lucida Grande", 9, FontStyle::Regular);
 		IntelliSenseList->LabelEdit = false;
-		IntelliSenseList->AllowColumnReorder = false;
 		IntelliSenseList->CheckBoxes = false;
 		IntelliSenseList->FullRowSelect = true;
 		IntelliSenseList->GridLines = false;
 		IntelliSenseList->Sorting = SortOrder::None;
-		IntelliSenseList->Columns->Add("IntelliSense Object", 200);
 		IntelliSenseList->HeaderStyle = ColumnHeaderStyle::None;
 		IntelliSenseList->HideSelection = false;
+		IntelliSenseList->Columns->Add("IntelliSense Object", 203);
 
-		InfoToolTip->AutoPopDelay = 5000;
-		InfoToolTip->InitialDelay = 1000;
-		InfoToolTip->ReshowDelay = 500;
+		InfoToolTip->AutoPopDelay = 500;
+		InfoToolTip->InitialDelay = 500;
+		InfoToolTip->ReshowDelay = 0;
 		InfoToolTip->ToolTipIcon = ToolTipIcon::None;
 
 		Enabled = true;
-		ParentEditor = Parent;
+		ParentEditor = ParentWorkspace;
 		LastOperation = Operation::e_Default;
 		Destroying = false;
+		MaximumVisibleItemCount = 10;
 
 		IntelliSenseBox->SetSize(Size(0, 0));
 		IntelliSenseBox->ShowForm(Point(0,0), IntelliSenseBox->Handle, false);
@@ -735,8 +745,6 @@ namespace IntelliSense
 
 	void IntelliSenseInterface::DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
 	{
-		HideInfoToolTip();
-
 		InfoToolTip->Tag = ParentHandle;
 		InfoToolTip->ToolTipTitle = Title;
 		InfoToolTip->Show(Message, Control::FromHandle(ParentHandle), Location, Duration);
@@ -763,21 +771,19 @@ namespace IntelliSense
 			return;
 
 		UInt32 ItemCount = 0;
-
 		IntelliSenseList->BeginUpdate();
 
 		CleanupInterface();
 
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
-
 		String^ Extract = ParentEditor->GetCurrentToken();
 
 		switch (DisplayOperation)
 		{
 		case Operation::e_Default:
-			if (Extract->Length >= OPTIONS->FetchSettingAsInt("ThresholdLength") || ForceDisplay)
+			if (Extract->Length >= PREFERENCES->FetchSettingAsInt("ThresholdLength") || ForceDisplay)
 			{
-				for each (IntelliSenseItem^% Itr in LocalVariableDatabase)
+				for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 				{
 					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 					{
@@ -786,7 +792,8 @@ namespace IntelliSense
 						ItemCount++;
 					}
 				}
-				for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+
+				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 				{
 					if ((Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && !dynamic_cast<CommandInfo^>(Itr)->GetRequiresParent()) ||
 						Itr->GetType() == IntelliSenseItem::ItemType::e_Quest ||
@@ -803,9 +810,10 @@ namespace IntelliSense
 					}
 				}
 			}
+
 			break;
 		case Operation::e_Call:
-			for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+			for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 			{
 				if (Itr->GetType() == IntelliSenseItem::ItemType::e_UserFunct)
 				{
@@ -817,6 +825,7 @@ namespace IntelliSense
 					}
 				}
 			}
+
 			break;
 		case Operation::e_Dot:
 			if (ShowAllItems)
@@ -826,7 +835,7 @@ namespace IntelliSense
 				{
 					CallingObjectIsRef = true;
 				}
-				else if (!String::Compare(Extract, "player", true))
+				else if (!String::Compare(Extract, "player", true) || !String::Compare(Extract, "playerref", true))
 				{
 					CallingObjectIsRef = true;
 				}
@@ -841,7 +850,7 @@ namespace IntelliSense
 					}
 					else if (Data)
 					{
-						RemoteScript = ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));			// cache form data for subsequent calls
+						RemoteScript = ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
 						CallingObjectIsRef = NativeWrapper::g_CSEInterface->CSEEditorAPI.GetIsFormReference(CStr.c_str());
 					}
 					else
@@ -866,7 +875,7 @@ namespace IntelliSense
 				}
 			}
 
-			for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+			for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 			{
 				if (Itr->GetType() == IntelliSenseItem::ItemType::e_Cmd && CallingObjectIsRef)
 				{
@@ -878,9 +887,10 @@ namespace IntelliSense
 					}
 				}
 			}
+
 			break;
 		case Operation::e_Assign:
-			for each (IntelliSenseItem^% Itr in LocalVariableDatabase)
+			for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 			{
 				if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 				{
@@ -890,7 +900,7 @@ namespace IntelliSense
 				}
 			}
 
-			for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+			for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 			{
 				if (Itr->GetType() == IntelliSenseItem::ItemType::e_Quest ||
 					Itr->GetType() == IntelliSenseItem::ItemType::e_GlobalVar)
@@ -903,44 +913,47 @@ namespace IntelliSense
 					}
 				}
 			}
+
 			break;
 		}
 
 		IntelliSenseList->EndUpdate();
 
 		if (ItemCount == 1 && !String::Compare(CurrentListContents[0]->GetIdentifier(), Extract, true))
-			return;		// do not show when enumerable == extract
-
-		if (ItemCount > 0)
 		{
-			Point Loc = ParentEditor->GetCaretLocation();
-			Loc.X += 3; Loc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5;
+			HideInterface();		// do not show when enumerable == extract
+		}
+		else if (ItemCount > 0)
+		{
+			Point Location = ParentEditor->GetCaretLocation(true);
+			Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize") + 3;
 
-			if (ItemCount > 8)
-				ItemCount = 8;
+			if (ItemCount > MaximumVisibleItemCount)
+				ItemCount = MaximumVisibleItemCount;
 
-			Size DisplaySize = ::Size(240, 158 - ((8 - ItemCount) * 18));
+			Size DisplaySize = Size(240, (MaximumVisibleItemCount * 19) + 17 - ((MaximumVisibleItemCount - ItemCount) * 19));
 			IntelliSenseBox->SetSize(DisplaySize);
-			IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Loc), ParentEditor->GetControlBoxHandle(), !IntelliSenseBox->Visible);
+			IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), !IntelliSenseBox->Visible);
 
 			ParentEditor->Focus();
 			IntelliSenseList->Items[0]->Selected = true;
 		}
 		else
+		{
 			HideInterface();
+		}
 
 		LastOperation = DisplayOperation;
 	}
 
 	VariableInfo^ IntelliSenseInterface::LookupLocalVariableByIdentifier(String^% Identifier)
 	{
-		for each (IntelliSenseItem^% Itr in LocalVariableDatabase)
+		for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 		{
 			if (!String::Compare(Itr->GetIdentifier(), Identifier, true))
-			{
 				return dynamic_cast<VariableInfo^>(Itr);
-			}
 		}
+
 		return nullptr;
 	}
 
@@ -953,11 +966,11 @@ namespace IntelliSense
 			if (GetListViewSelectedItemIndex(IntelliSenseList) == -1)
 				return;
 
-			Point Loc = Point(IntelliSenseList->Size.Width + 17, 0);
+			Point Location = Point(IntelliSenseList->Size.Width + 17, 0);
 
 			DisplayInfoToolTip(CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->GetTypeIdentifier(),
 						CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->Describe(),
-						Loc,
+						Location,
 						IntelliSenseBox->Handle,
 						15000);
 		}
@@ -1008,6 +1021,7 @@ namespace IntelliSense
 				if (IntelliSenseList->TopItem->Index < IntelliSenseList->Items->Count - 1)
 					IntelliSenseList->TopItem = IntelliSenseList->Items[IntelliSenseList->TopItem->Index + 1];
 			}
+
 			break;
 		case MoveDirection::e_Up:
 			if (SelectedIndex > 0)
@@ -1018,6 +1032,7 @@ namespace IntelliSense
 				if (IntelliSenseList->TopItem->Index > 0 )
 					IntelliSenseList->TopItem = IntelliSenseList->Items[IntelliSenseList->TopItem->Index - 1];
 			}
+
 			break;
 		}
 	}
@@ -1045,21 +1060,16 @@ namespace IntelliSense
 		else
 			return;
 
-		try
-		{
-			NativeWrapper::LockWindowUpdate(ParentEditor->GetEditorBoxHandle());
-			ParentEditor->SetCurrentToken(Result);
-		}
-		finally
-		{
-			NativeWrapper::LockWindowUpdate(IntPtr::Zero);
-		}
+		ParentEditor->SetCurrentToken(Result);
 	}
 
 	void IntelliSenseInterface::HideInterface()
 	{
-		IntelliSenseBox->HideForm(true);
-		HideInfoToolTip();
+		if (Visible)
+		{
+			IntelliSenseBox->HideForm(true);
+			HideInfoToolTip();
+		}
 	}
 
 	void IntelliSenseInterface::CleanupInterface()
@@ -1068,9 +1078,9 @@ namespace IntelliSense
 		CurrentListContents->Clear();
 	}
 
-	bool IntelliSenseInterface::ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point TipLoc)
+	bool IntelliSenseInterface::ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location)
 	{
-		if (OPTIONS->FetchSettingAsInt("UseQuickView") == 0)
+		if (PREFERENCES->FetchSettingAsInt("UseQuickView") == 0)
 			return false;
 
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
@@ -1081,15 +1091,16 @@ namespace IntelliSense
 			ParentToken = "" + gcnew String(Data->ParentID);
 			ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
 		}
-
 		NativeWrapper::g_CSEInterface->DeleteNativeHeapPointer(Data, false);
+
 		IntelliSenseItem^ Item = ISDB->LookupRemoteScriptVariable(ParentToken, MainToken);
 
 		if (Item == nullptr)
 			Item = LookupLocalVariableByIdentifier(MainToken);
+
 		if (Item == nullptr)
 		{
-			for each (IntelliSenseItem^% Itr in ISDB->Enumerables)
+			for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 			{
 				if (!String::Compare(Itr->GetIdentifier(), MainToken, true))
 				{
@@ -1098,14 +1109,16 @@ namespace IntelliSense
 				}
 			}
 		}
+
 		if (Item != nullptr)
 		{
-			TipLoc.Y += OPTIONS->FetchSettingAsInt("FontSize") + 5;
+			Location.Y += PREFERENCES->FetchSettingAsInt("FontSize");
 			DisplayInfoToolTip(Item->GetTypeIdentifier(),
 						Item->Describe(),
-						TipLoc,
+						Location,
 						ParentEditor->GetEditorBoxHandle(),
 						8000);
+
 			return true;
 		}
 		else
@@ -1116,7 +1129,7 @@ namespace IntelliSense
 	{
 		ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(this->ParentEditor);
 
-		return ShowQuickInfoTip(MainToken, ParentToken, ParentEditor->GetCaretLocation());
+		return ShowQuickInfoTip(MainToken, ParentToken, ParentEditor->GetCaretLocation(true));
 	}
 
 	bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point MouseLocation)

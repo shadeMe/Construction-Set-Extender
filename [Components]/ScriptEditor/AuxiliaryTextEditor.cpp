@@ -3,7 +3,7 @@
 
 ScriptOffsetViewer::ScriptOffsetViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
 {
-	Viewer = gcnew OffsetRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size + 2, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
+	Viewer = gcnew OffsetRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size - 3, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
 	InitializationState = false;
 
 	Viewer->OffsetFlag = true;
@@ -34,7 +34,7 @@ bool ScriptOffsetViewer::Show()
 {
 	if (InitializationState == false)
 	{
-		MessageBox::Show("Offset Viewer was not initialized successfully!\n\nPlease recompile the current script.", "CSE Script Editor", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+		MessageBox::Show("Offset Viewer was not initialized successfully!\n\nPlease recompile the current script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 		return false;
 	}
 
@@ -48,9 +48,14 @@ void ScriptOffsetViewer::Reset( void )
 	InitializationState = false;
 }
 
+void ScriptOffsetViewer::SetFont( Font^ NewFont )
+{
+	Viewer->SetFont(gcnew Font(NewFont->FontFamily, NewFont->Size - 3, FontStyle::Regular));
+}
+
 SimpleTextViewer::SimpleTextViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
 {
-	Viewer = gcnew NumberedRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size + 2, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
+	Viewer = gcnew NumberedRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size - 3, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
 
 	Viewer->GetTextField()->ReadOnly = true;
 	Viewer->GetTextField()->Enabled = true;
@@ -70,4 +75,9 @@ void SimpleTextViewer::Show(String^% Text)
 
 	Viewer->GetContainer()->BringToFront();
 	Viewer->GetContainer()->Show();
+}
+
+void SimpleTextViewer::SetFont( Font^ NewFont )
+{
+	Viewer->SetFont(gcnew Font(NewFont->FontFamily, NewFont->Size - 3, FontStyle::Regular));
 }

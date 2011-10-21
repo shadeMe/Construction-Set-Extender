@@ -66,6 +66,9 @@
     <ClCompile Include="ScriptEditorPreferences.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -75,9 +78,6 @@
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Common]\Includes.h">
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
@@ -129,6 +129,12 @@
     </ClInclude>
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
       <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\IncludesCLR.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -418,7 +424,23 @@
     <None Include="Images\forward (2).png">
       <Filter>Resources\Images</Filter>
     </None>
-    <None Include="Images\Find_VS.png" />
-    <None Include="Images\SendInstantMessage.png" />
+    <None Include="Images\Find_VS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\SendInstantMessage.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\arrow-back-grey-thick.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\arrow-next-grey-thick.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\OptionsHS.png">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\settings1.png">
+      <Filter>Resources\Images</Filter>
+    </None>
   </ItemGroup>
 </Project>

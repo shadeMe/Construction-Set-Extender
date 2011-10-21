@@ -17,23 +17,24 @@ class INISetting;
 
 namespace Hooks
 {
-	extern FARPROC		g_WindowHandleCallAddr;
+	extern FARPROC		g_TempIATProcBuffer;
 
 	using namespace	MemoryHandler;
 
-	void __stdcall GetWindowTextAddress(void);
-	void __stdcall CreateDialogParamAddress(void);
-	void __stdcall EndDialogAddress(void);
-	void __stdcall EnableWindowAddress(void);
-	void __stdcall GetWindowLongAddress(void);
-	void __stdcall CreateWindowExAddress(void);
-	void __stdcall SetWindowTextAddress(void);
-	void __stdcall SendDlgItemMessageAddress(void);
-	void __stdcall SendMessageAddress(void);
-	void __stdcall TrackPopupMenuAddress(void);
-	void __stdcall ShowWindowAddress(void);
-	void __stdcall MessageBoxAddress(void);
-	void __stdcall GetClientRectAddress(void);
+	void __stdcall IATCacheGetWindowTextAddress(void);
+	void __stdcall IATCacheCreateDialogParamAddress(void);
+	void __stdcall IATCacheEndDialogAddress(void);
+	void __stdcall IATCacheEnableWindowAddress(void);
+	void __stdcall IATCacheGetWindowLongAddress(void);
+	void __stdcall IATCacheCreateWindowExAddress(void);
+	void __stdcall IATCacheSetWindowTextAddress(void);
+	void __stdcall IATCacheSendDlgItemMessageAddress(void);
+	void __stdcall IATCacheSendMessageAddress(void);
+	void __stdcall IATCacheTrackPopupMenuAddress(void);
+	void __stdcall IATCacheShowWindowAddress(void);
+	void __stdcall IATCacheMessageBoxAddress(void);
+	void __stdcall IATCacheGetClientRectAddress(void);
+	void __stdcall IATCacheInterlockedDecrementAddress(void);
 
 	UInt32 __stdcall IsControlKeyDown(void);
 }

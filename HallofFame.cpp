@@ -70,7 +70,7 @@ namespace HallOfFame
 		// temporarily "killing" the dataHandler to prevent the TESForm ctor from assigning formIDs
 		void* DataHandlerInstance = *g_TESDataHandler;
 		_DATAHANDLER = NULL;
-		EffectItem::CreateEffectSetting('HSRJ', "The Constant Physicist", 4, 0.0, 0, 0x170, -1, 1, 'LPSD');
+		EffectSetting::CreateInstance('HSRJ', "The Constant Physicist", 4, 0.0, 0, 0x170, -1, 1, 'LPSD');
 		_DATAHANDLER = (TESDataHandler*)DataHandlerInstance;
 
 		TESObjectREFR* shadeMeRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);

@@ -12,6 +12,7 @@ namespace CSAutomationScript
 		REGISTER_CSASCOMMAND(StringFind, "String Functions");
 		REGISTER_CSASCOMMAND(StringInsert, "String Functions");
 		REGISTER_CSASCOMMAND(StringSubStr, "String Functions");
+		REGISTER_CSASCOMMAND(StringIsNumber, "String Functions");
 	}
 
 	BEGIN_CSASCOMMAND_HANDLER(StringLength)
@@ -26,7 +27,7 @@ namespace CSAutomationScript
 
 		return true;
 	}
-	DEFINE_CSASCOMMAND_PARAM(StringLength, "Rreturns the number of characters in a string", CSASDataElement::kParamType_Numeric, kParams_OneString, 1);
+	DEFINE_CSASCOMMAND_PARAM(StringLength, "Returns the number of characters in a string", CSASDataElement::kParamType_Numeric, kParams_OneString, 1);
 
 	BEGIN_CSASCOMMAND_PARAMINFO(StringCompare, 3)
 	{
@@ -160,4 +161,30 @@ namespace CSAutomationScript
 		return true;
 	}
 	DEFINE_CSASCOMMAND(StringSubStr, "Returns a substring of the source source string, starting at the specified position", CSASDataElement::kParamType_String, 3);
+
+	BEGIN_CSASCOMMAND_HANDLER(StringIsNumber)
+	{
+		char Buffer[0x4000] = {0};
+
+		if (!EXTRACT_CSASARGS(&Buffer))
+			return false;
+
+		if (Buffer)
+		{
+			std::string STLBuffer(Buffer);
+			Result->SetNumber(1);
+
+			for (std::string::iterator Itr = STLBuffer.begin(); Itr != STLBuffer.end(); Itr++)
+			{
+				if (isdigit(*Itr) == 0 || isxdigit(*Itr) == 0)
+				{
+					Result->SetNumber(0);
+					break;
+				}
+			}
+		}
+
+		return true;
+	}
+	DEFINE_CSASCOMMAND_PARAM(StringIsNumber, "Returns true if the passed string is a number", CSASDataElement::kParamType_Numeric, kParams_OneString, 1);
 }

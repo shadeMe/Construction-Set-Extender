@@ -1,5 +1,5 @@
 #pragma once
-#include "Includes.h"
+#include "IncludesCLR.h"
 #include "ComponentDLLInterface.h"
 
 const int SW_SHOWNOACTIVATE = 4;

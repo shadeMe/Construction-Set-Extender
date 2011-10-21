@@ -5,7 +5,7 @@ namespace AvalonEditComponents
 {
 	void AvalonEditSelectionColorizingTransformer::PerformColorization(VisualLineElement^ Element)
 	{
-		Color Buffer = OPTIONS->LookupColorByKey("SelectionHighlightColor");
+		Color Buffer = PREFERENCES->LookupColorByKey("SelectionHighlightColor");
 		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
 		Brush->Opacity = 0.5;
 
@@ -39,7 +39,7 @@ namespace AvalonEditComponents
 
 	void AvalonEditLineLimitColorizingTransformer::PerformColorization(VisualLineElement^ Element)
 	{
-		Color Buffer = OPTIONS->LookupColorByKey("CharLimitHighlightColor");
+		Color Buffer = PREFERENCES->LookupColorByKey("CharLimitHighlightColor");
 		Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
 		Brush->Opacity = 0.4;
 
@@ -87,7 +87,7 @@ namespace AvalonEditComponents
 		if (ParentEditor->TextArea->Selection->IsEmpty)
 		{
 			DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
-			Color Buffer = OPTIONS->LookupColorByKey("CurrentLineHighlightColor");
+			Color Buffer = PREFERENCES->LookupColorByKey("CurrentLineHighlightColor");
 			RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
 		}
 	}
@@ -120,7 +120,7 @@ namespace AvalonEditComponents
 			if (GetLineInError(i))
 			{
 				DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(i);
-				Color Buffer = OPTIONS->LookupColorByKey("ErrorHighlightColor");
+				Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
 				RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
 			}
 		}
@@ -136,7 +136,7 @@ namespace AvalonEditComponents
 			String^ SelectionText = CurrentSelection->GetText(CurrentDocument)->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
 			if (SelectionText->Length > 4)
 			{
-				Color Buffer = OPTIONS->LookupColorByKey("SelectionHighlightColor");
+				Color Buffer = PREFERENCES->LookupColorByKey("SelectionHighlightColor");
 
 				for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 				{
@@ -156,7 +156,7 @@ namespace AvalonEditComponents
 
 	void AvalonEditLineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 	{
-		Color Buffer = OPTIONS->LookupColorByKey("CharLimitHighlightColor");
+		Color Buffer = PREFERENCES->LookupColorByKey("CharLimitHighlightColor");
 
 		for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 		{
@@ -175,7 +175,7 @@ namespace AvalonEditComponents
 
 		if (MatchString != "")
 		{
-			Color Buffer = OPTIONS->LookupColorByKey("FindResultsHighlightColor");
+			Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
 
 			for each (DocumentLine^ Line in ParentEditor->Document->Lines)
 			{
@@ -320,29 +320,41 @@ namespace AvalonEditComponents
 					continue;
 
 				if (!String::Compare(FoldingParser->Tokens[0], "begin", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
-					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock), StartOffsets->Push(Line->NextLine->Offset);
+				{
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
+					StartOffsets->Push(Line->EndOffset);
+				}
 				else if (!String::Compare(FoldingParser->Tokens[0], "if", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
-					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_If), StartOffsets->Push(Line->NextLine->Offset);
+				{
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_If);
+					StartOffsets->Push(Line->EndOffset);
+				}
 				else if (!String::Compare(FoldingParser->Tokens[0], "foreach", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
-					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop), StartOffsets->Push(Line->NextLine->Offset);
+				{
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
+					StartOffsets->Push(Line->EndOffset);
+				}
 				else if (!String::Compare(FoldingParser->Tokens[0], "while", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
-					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop), StartOffsets->Push(Line->NextLine->Offset);
+				{
+					FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
+					StartOffsets->Push(Line->EndOffset);
+				}
 				else if	(!String::Compare(FoldingParser->Tokens[0], "loop", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
 				{
 					FoldingParser->BlockStack->Pop();
-					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->EndOffset));
 				}
 				else if (!String::Compare(FoldingParser->Tokens[0], "endIf", true) &&
 						(FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_If) ||
 						FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse)))
 				{
 					FoldingParser->BlockStack->Pop();
-					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->EndOffset));
 				}
 				else if (!String::Compare(FoldingParser->Tokens[0], "end", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
 				{
 					FoldingParser->BlockStack->Pop();
-					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
+					Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->EndOffset));
 				}
 				else if ((!String::Compare(FoldingParser->Tokens[0], "elseIf", true) || !String::Compare(FoldingParser->Tokens[0], "else", true)) &&
 						(FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_If) ||
@@ -351,14 +363,14 @@ namespace AvalonEditComponents
 					if (FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse))
 					{
 						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
-						StartOffsets->Push(Line->NextLine->Offset);
+						StartOffsets->Push(Line->EndOffset);
 					}
 					else
 					{
 						FoldingParser->BlockStack->Pop();		// pop IF
 						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->PreviousLine->EndOffset));
 						FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_IfElse);
-						StartOffsets->Push(Line->NextLine->Offset);
+						StartOffsets->Push(Line->EndOffset);
 					}
 				}
 			}
@@ -371,6 +383,65 @@ namespace AvalonEditComponents
 
 		if (Foldings->Count)
 			Foldings->Sort(Sorter);
+
 		return Foldings;
+	}
+
+	void AvalonEditBraceHighlightingBGColorizer::Draw( TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext )
+	{
+		if (DoHighlight == false || (OpenBraceOffset == -1 && CloseBraceOffset == -1))
+			return;
+
+		Color ValidBraceColor = Color::LightSlateGray;
+		Color InvalidBraceColor = Color::MediumVioletRed;
+
+		BackgroundGeometryBuilder^ Builder = gcnew BackgroundGeometryBuilder();
+
+		Builder->CornerRadius = 1;
+		Builder->AlignToMiddleOfPixels = true;
+
+		if (OpenBraceOffset != -1)
+		{
+			TextSegment^ OpenBraceSeg = gcnew TextSegment();
+			OpenBraceSeg->StartOffset = OpenBraceOffset;
+			OpenBraceSeg->Length = 1;
+			Builder->AddSegment(textView, OpenBraceSeg);
+			Builder->CloseFigure();						 // prevent connecting the two segments
+		}
+
+		if (CloseBraceOffset != -1)
+		{
+			TextSegment^ CloseBraceSeg = gcnew TextSegment();
+			CloseBraceSeg->StartOffset = CloseBraceOffset;
+			CloseBraceSeg->Length = 1;
+			Builder->AddSegment(textView, CloseBraceSeg);
+		}
+
+		System::Windows::Media::Geometry^ HighlightGeometry = Builder->CreateGeometry();
+		if (HighlightGeometry != nullptr)
+		{
+			if (OpenBraceOffset == -1 || CloseBraceOffset == -1)
+			{
+				drawingContext->DrawGeometry( gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125, InvalidBraceColor.R, InvalidBraceColor.G, InvalidBraceColor.B)),
+											gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0), HighlightGeometry);
+			}
+			else
+			{
+				drawingContext->DrawGeometry( gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125, ValidBraceColor.R, ValidBraceColor.G, ValidBraceColor.B)),
+											gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0), HighlightGeometry);
+			}
+		}
+	}
+
+	void AvalonEditBraceHighlightingBGColorizer::SetHighlight( int OpenBraceOffset, int CloseBraceOffset )
+	{
+		this->OpenBraceOffset = OpenBraceOffset;
+		this->CloseBraceOffset = CloseBraceOffset;
+		this->DoHighlight = true;
+	}
+
+	void AvalonEditBraceHighlightingBGColorizer::ClearHighlight( void )
+	{
+		this->DoHighlight = false;
 	}
 }

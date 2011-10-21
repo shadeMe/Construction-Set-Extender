@@ -15,6 +15,7 @@
 #include "Achievements.h"
 #include "CSAS\ScriptRunner.h"
 #include "PathGridUndoManager.h"
+#include "AuxiliaryViewport.h"
 
 using namespace Hooks;
 
@@ -486,6 +487,16 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case ID_CSAS_RELOADGLOBALSCRIPTS:
 			GLOBALSCRIPTMANAGER->ReloadScripts();
 			break;
+		case MAIN_VIEW_AUXVIEWPORT:
+			if (AUXVIEWPORT->IsInitialized())
+			{
+				HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
+				if (AUXVIEWPORT->ToggleDisplayState())
+					CheckMenuItem(ViewMenu, MAIN_VIEW_AUXVIEWPORT, MF_CHECKED);
+				else
+					CheckMenuItem(ViewMenu, MAIN_VIEW_AUXVIEWPORT, MF_UNCHECKED);
+			}
+			break;
 		}
 
 		if (LOWORD(wParam) > ToolMenuIdentifierBase)
@@ -504,6 +515,14 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
+	case WM_TIMER:
+		switch (wParam)
+		{
+		case 1:
+			g_RenderWindowTimeManager.Update();
+			break;
+		}
+		break;
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
@@ -563,6 +582,15 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 				g_RenderWindowAltMovementSettings = (g_RenderWindowAltMovementSettings == false);
 				Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
+				return TRUE;
+			}
+			else if (GetAsyncKeyState(VK_SHIFT) && AUXVIEWPORT->IsHidden() == false)
+			{
+				if (AUXVIEWPORT->ToggleFrozenState())
+					PrintToRender("Froze auxiliary viewport camera", 3);
+				else
+					PrintToRender("Released auxiliary viewport camera", 3);
+
 				return TRUE;
 			}
 		}
@@ -1427,7 +1455,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					_DATAHANDLER->SortScripts();
 					QuestScript->info.type = Script::kScriptType_Quest;
 
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tlet fQuestDelayTime := %s\n\nend", ScriptID, Delay);
+					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tset fQuestDelayTime to %s\n\nend", ScriptID, Delay);
 					QuestScript->SetText(g_TextBuffer);
 					QuestScript->SetEditorID(ScriptID);
 				}
@@ -1441,7 +1469,6 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				QuestScript->UpdateUsageInfo();
 				QuestScript->AddCrossReference(Quest);
 
-				MessageBox(hWnd, "Global script created successfully.\n\nIt will now be opened for editing ...", "CSE", MB_OK|MB_ICONINFORMATION);
 				TESDialog::ShowScriptEditorDialog(TESForm::LookupByEditorID(ScriptID));
 				DestroyWindow(hWnd);
 				return TRUE;
@@ -2114,8 +2141,7 @@ void InitializeWindowManager(void)
 				ItemWorldUnloadCell,
 				ItemGameplayGlobalScript,
 				ItemLaunchGame,
-				ItemViewTagBrowser,
-				ItemDataSetWorkspace;
+				ItemViewTagBrowser;
 	ItemGameplayUseInfo.cbSize = sizeof(MENUITEMINFO);
 	ItemGameplayUseInfo.fMask = MIIM_STRING;
 	ItemGameplayUseInfo.dwTypeData = "Use Info Listings";
@@ -2192,14 +2218,6 @@ void InitializeWindowManager(void)
 	ItemViewTagBrowser.dwTypeData = "Tag Browser";
 	ItemViewTagBrowser.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewTagBrowser);
-
-	ItemDataSetWorkspace.cbSize = sizeof(MENUITEMINFO);
-	ItemDataSetWorkspace.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
-	ItemDataSetWorkspace.wID = MAIN_DATA_SETWORKSPACE;
-	ItemDataSetWorkspace.fState = MFS_ENABLED;
-	ItemDataSetWorkspace.dwTypeData = "Set Workspace";
-	ItemDataSetWorkspace.cch = 0;
-	InsertMenuItem(FileMenu, 40003, FALSE, &ItemDataSetWorkspace);
 
 	HMENU SaveOptionsMenu = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU8); SaveOptionsMenu = GetSubMenu(SaveOptionsMenu, 0);
 	InsertMenu(FileMenu, 40127, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)SaveOptionsMenu, "Save Options");

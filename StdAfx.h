@@ -59,7 +59,9 @@
 #include <functional>
 
 // DIRECTX
-#include <D3dx9tex.h>
+#include <d3dx9tex.h>
+#include <d3d9.h>
+#include <d3dx9.h>
 
 // OBSE
 #include "obse_common/obse_version.h"
@@ -85,8 +87,8 @@ using namespace SME;
 using namespace MemoryHandler;
 
 // CSE
-#include "Console.h"
 #include "[Common]\CLIWrapper.h"
+#include "Console.h"
 
 extern std::string									g_APPPath;
 extern std::string									g_INIPath;
@@ -114,3 +116,6 @@ const char*			PrintToBuffer(const char* fmt, ...);
 void				ToggleFlag(UInt8* Flag, UInt32 Mask, bool State);
 void				ToggleFlag(UInt16* Flag, UInt32 Mask, bool State);
 void				ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);
+
+#define				PROJECTSHORTHAND		"CSE"
+#define				PROJECTNAME				"Construction Set Extender"

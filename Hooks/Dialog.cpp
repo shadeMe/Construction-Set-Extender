@@ -54,6 +54,10 @@ namespace Hooks
 	_DefineHookHdlr(FindTextFormEnumerationA, 0x00444211);
 	_DefineHookHdlr(FindTextFormEnumerationB, 0x0044417B);
 	_DefineHookHdlr(FindTextFormEnumerationC, 0x00444430);
+	_DefineHookHdlr(TESQuestRemoveStageData, 0x004E2D16);
+	_DefinePatchHdlr(HideCSMainDialogsA, 0x00419F62 + 1);
+	_DefinePatchHdlr(HideCSMainDialogsB, 0x00419EE3 + 1);
+	_DefinePatchHdlr(HideCSMainDialogsC, 0x0041B166 + 1);
 
 	void PatchDialogHooks(void)
 	{
@@ -104,6 +108,10 @@ namespace Hooks
 		_MemHdlr(FindTextFormEnumerationA).WriteJump();
 		_MemHdlr(FindTextFormEnumerationB).WriteJump();
 		_MemHdlr(FindTextFormEnumerationC).WriteJump();
+		_MemHdlr(TESQuestRemoveStageData).WriteJump();
+		_MemHdlr(HideCSMainDialogsA).WriteUInt8(SW_HIDE);
+		_MemHdlr(HideCSMainDialogsB).WriteUInt8(SW_HIDE);
+		_MemHdlr(HideCSMainDialogsC).WriteUInt8(SW_HIDE);
 	}
 
 	void __stdcall DoFindTextInitHook(HWND FindTextDialog)
@@ -117,8 +125,8 @@ namespace Hooks
 		_hhSetVar(Retn, 0x00419A48);
 		__asm
 		{
-			call	CreateDialogParamAddress
-			call	[g_WindowHandleCallAddr]			// CreateDialogParamA
+			call	IATCacheCreateDialogParamAddress
+			call	[g_TempIATProcBuffer]			// CreateDialogParamA
 
 			pushad
 			push	eax
@@ -444,7 +452,7 @@ namespace Hooks
 		__asm
 		{
 			pushad
-			call	TrackPopupMenuAddress
+			call	IATCacheTrackPopupMenuAddress
 			popad
 
 			mov		eax, [esp + 0x18]
@@ -469,7 +477,7 @@ namespace Hooks
 
 			push	0x102
 			push	esi
-			call	g_WindowHandleCallAddr
+			call	g_TempIATProcBuffer
 
 			pushad
 			push	esi
@@ -484,7 +492,7 @@ namespace Hooks
 		SKIP:
 			push	2
 			push	esi
-			call	g_WindowHandleCallAddr
+			call	g_TempIATProcBuffer
 
 			jmp		[_hhGetVar(Retn)]
 		}
@@ -840,10 +848,10 @@ namespace Hooks
 		__asm
 		{
 			pushad
-			call	SendMessageAddress
+			call	IATCacheSendMessageAddress
 			popad
 
-			call	[g_WindowHandleCallAddr]
+			call	[g_TempIATProcBuffer]
 			test	eax, eax
 			jz		FAIL
 
@@ -905,8 +913,8 @@ namespace Hooks
 			call	DoAboutDialogHook
 			popad
 
-			call	ShowWindowAddress
-			call	g_WindowHandleCallAddr
+			call	IATCacheShowWindowAddress
+			call	g_TempIATProcBuffer
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -979,10 +987,10 @@ namespace Hooks
 		__asm
 		{
 			pushad
-			call	MessageBoxAddress
+			call	IATCacheMessageBoxAddress
 			popad
 
-			call	[g_WindowHandleCallAddr]
+			call	[g_TempIATProcBuffer]
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -1108,10 +1116,10 @@ namespace Hooks
 			push    ecx
 
 			pushad
-			call	CreateDialogParamAddress
+			call	IATCacheCreateDialogParamAddress
 			popad
 
-			call	[g_WindowHandleCallAddr]
+			call	[g_TempIATProcBuffer]
 			push	eax
 			call	DoLandscapeTextureUseDlgHook
 			retn
@@ -1252,9 +1260,9 @@ namespace Hooks
 			push	0x00A0AA38
 			push	esi
 			pushad
-			call	GetClientRectAddress
+			call	IATCacheGetClientRectAddress
 			popad
-			call	g_WindowHandleCallAddr
+			call	g_TempIATProcBuffer
 
 			jmp		[_hhGetVar(Retn)]
 		SKIP:
@@ -1537,6 +1545,39 @@ namespace Hooks
 		SKIP:
 			popad
 			jmp		[_hhGetVar(Jump)]
+		}
+	}
+
+	void __stdcall DoTESQuestRemoveStageDataHook(HWND Dialog, TESQuest::StageData* Stage)
+	{
+		HWND StageItemListView = GetDlgItem(Dialog, 2173);
+		UInt32 StageItemCount = ListView_GetItemCount(StageItemListView);
+		DialogExtraQuestStageData* xStageData = CS_CAST(TESDialog::GetDialogExtraByType(Dialog, BSExtraData::kDialogExtra_QuestStageData), BSExtraData, DialogExtraQuestStageData);
+
+		for (int i = StageItemCount; i > -1; i--)
+		{
+			TESListView::SetSelectedItem(StageItemListView, 0);
+			SendMessage(StageItemListView, WM_KEYDOWN, (WPARAM)VK_DELETE, NULL);
+		}
+
+		xStageData->selectedStageItem = NULL;
+	}
+
+	#define _hhName		TESQuestRemoveStageData
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004E2D1B);
+		_hhSetVar(Call, 0x004DDE10);
+		__asm
+		{
+			pushad
+			push	eax
+			push	esi
+			call	DoTESQuestRemoveStageDataHook
+			popad
+
+			call	[_hhGetVar(Call)]
+			jmp		[_hhGetVar(Retn)]
 		}
 	}
 }

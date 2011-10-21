@@ -5,6 +5,8 @@ namespace AvalonEditXSHD
 {
 	ref class XSHDColor;
 
+	typedef ICSharpCode::AvalonEdit::Highlighting::IHighlightingDefinition		AvalonEditHighlightingDefinition;
+
 	// base interfaces
 	public ref class IXSHDElement
 	{
@@ -220,30 +222,30 @@ namespace AvalonEditXSHD
 	// definition manager
 	public ref class AvalonEditXSHDManager
 	{
-		String^							CommentMarkerRuleset;
-		LinkedList<XSHDColor^>^			ColorDefinitions;
-		LinkedList<String^>^			Definitions;
-		bool							Initialized;
+	protected:
+		String^													CommentMarkerRuleset;
+		LinkedList<XSHDColor^>^									SerializedColors;
+		LinkedList<String^>^									SerializedRulesets;
+
+		virtual List<String^>^									GetKeyWordList(void);
+		virtual List<String^>^									GetBlockTypeList(void);
 	public:
-		static enum class				Rulesets
-											{
-												e_Digit = 0,
-												e_Delimiter,
-												e_String,
-												e_Keywords,
-												e_BlockTypes,
+		static enum class										Rulesets
+																	{
+																		e_Digit = 0,
+																		e_Delimiter,
+																		e_String,
+																		e_Keywords,
+																		e_BlockTypes,
+																		e_CommentAndPreprocessor
+																	};
 
-												e_VanillaCommands,
-												e_OBSECommands
-											};
-										// pass Color::GhostWhite as fore/back colors to have them ignored
-		void							CreateRuleset(Rulesets Ruleset, Color Foreground, Color Background, bool Bold);
-		void							CreateCommentPreprocessorRuleset(Color Foreground, Color Background, bool Bold, Color PreprocessorForeground);
+																// pass Color::GhostWhite as fore/back colors to have them ignored
+		void													CreateSerializedHighlightingData(Rulesets Ruleset, Color Foreground, Color Background, Color Arbitrary, bool Bold);
 
-		void							RegisterDefinitions(String^ DefinitionName);
-		bool							GetInitialized() { return Initialized; }
-		void							Reset() { CommentMarkerRuleset = ""; ColorDefinitions->Clear(); Definitions->Clear(); Initialized = false; }
+		AvalonEditHighlightingDefinition^						CreateDefinitionFromSerializedData(String^ DefinitionName);
+		void													PurgeSerializedHighlightingDataCache();
 
-		AvalonEditXSHDManager() : Definitions(gcnew LinkedList<String^>()), ColorDefinitions(gcnew LinkedList<XSHDColor^>()), CommentMarkerRuleset(nullptr), Initialized(false) {}
+		AvalonEditXSHDManager() : SerializedRulesets(gcnew LinkedList<String^>()), SerializedColors(gcnew LinkedList<XSHDColor^>()), CommentMarkerRuleset(nullptr) {}
 	};
 }

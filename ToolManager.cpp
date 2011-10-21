@@ -1,14 +1,12 @@
 #include "ToolManager.h"
-#include "resource.h"
+#include "Resource.h"
 
 ToolManager							g_ToolManager;
 
 void ToolManager::Tool::Run() const
 {
 	DWORD Result = (DWORD)ShellExecute(NULL, "open", this->CommandLine.c_str(), NULL, this->InitialDir.c_str(), SW_SHOW);
-	if (Result > 32)
-		DebugPrint("Executed Tool '%s'", this->Title.c_str());
-	else
+	if (Result <= 32)
 	{
 		DebugPrint("Couldn't Execute Tool '%s'", this->Title.c_str());
 		LogWinAPIErrorMessage(Result);

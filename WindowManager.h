@@ -86,3 +86,4 @@ extern CSnapWindow				g_WindowEdgeSnapper;
 #define CELLVIEW_XEDIT					9931
 #define CELLVIEW_YEDIT					9932
 #define CELLVIEW_GOBTN					9933
+#define MAIN_VIEW_AUXVIEWPORT	        9934

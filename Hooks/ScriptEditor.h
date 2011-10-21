@@ -14,4 +14,5 @@ namespace Hooks
 	_DeclareMemHdlr(ToggleScriptCompilingNewData, "");
 	_DeclareMemHdlr(MaxScriptSizeOverrideScriptBufferCtor, "sounds obvious enough");
 	_DeclareMemHdlr(MaxScriptSizeOverrideParseScriptLine, "");
+	_DeclareMemHdlr(InitializeScriptLineBufferLFLineEnds, "patches the code to indentify LF line ends in addition to those with CRLF");
 }

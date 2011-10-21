@@ -144,4 +144,19 @@ namespace AvalonEditComponents
 		TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior) :
 				DoubleAnimation(fromValue, toValue, duration, fillBehavior) {}
 	};
+
+	public ref class AvalonEditBraceHighlightingBGColorizer : public AvalonEditLineBackgroundColorizer
+	{
+		int											OpenBraceOffset;
+		int											CloseBraceOffset;
+		bool										DoHighlight;
+	public:
+		virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
+
+		AvalonEditBraceHighlightingBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) :
+							AvalonEditLineBackgroundColorizer(Parent, RenderLayer), OpenBraceOffset(-1), CloseBraceOffset(-1), DoHighlight(false) {}
+
+		void										SetHighlight(int OpenBraceOffset, int CloseBraceOffset);
+		void										ClearHighlight(void);
+	};
 }

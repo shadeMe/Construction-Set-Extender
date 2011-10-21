@@ -17,6 +17,7 @@ float*								g_RenderWindowCameraZoomSpeed = (float*)0x00A0B088;
 float*								g_RenderWindowCameraPanSpeed = (float*)0x00A0B090;
 UInt8*								g_RenderWindowPathGridEditModeFlag = (UInt8*)0x00A0BC5C;
 tList<TESPathGridPoint>*			g_RenderWindowSelectedPathGridPoints = (tList<TESPathGridPoint>*)0x00A0AF68;
+TESRenderComponents**				g_TESRenderComponents = (TESRenderComponents**)0x00A0BACC;
 
 void TESRenderSelection::AddToSelection( TESForm* Form, bool AddSelectionBox )
 {
@@ -49,4 +50,12 @@ void TESRenderSelection::DeleteInstance()
 void TESRenderUndoStack::RecordReference( UInt32 Operation, TESRenderSelection* Selection )
 {
 	thisCall<UInt32>(0x00432D40, this, Operation, Selection->selectionList);
+}
+
+void TESRenderComponents::RenderNode( NiCamera* Camera /*= NULL*/, NiNode* NodeToRender /*= NULL*/, BSRenderedTexture* RenderToTexture /*= NULL*/ )
+{
+	if (Camera == NULL)
+		Camera = primaryCamera;
+
+	thisVirtualCall<void>(0x0, niWindow, Camera, NodeToRender, RenderToTexture);
 }

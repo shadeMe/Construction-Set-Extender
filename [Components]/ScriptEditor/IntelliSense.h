@@ -1,5 +1,6 @@
 #pragma once
 #include "[Common]\HandShakeStructs.h"
+#include "[Common]\AuxiliaryWindowsForm.h"
 
 namespace IntelliSense
 {
@@ -304,7 +305,7 @@ namespace IntelliSense
 		static ToolTip^										InfoToolTip = gcnew ToolTip();
 
 		VariableInfo^										LookupLocalVariableByIdentifier(String^% Identifier);
-		bool												ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point TipLoc);
+		bool												ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location);
 
 		void												DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
 
@@ -313,13 +314,13 @@ namespace IntelliSense
 		bool												CallingObjectIsRef;
 		Script^												RemoteScript;
 
-		List<IntelliSenseItem^>^							CurrentListContents;		// handles of the list's items
+		List<IntelliSenseItem^>^							CurrentListContents;
 		List<IntelliSenseItem^>^							LocalVariableDatabase;
 
 		ListView^											IntelliSenseList;
 		NonActivatingImmovableAnimatedForm^					IntelliSenseBox;
 	public:
-		IntelliSenseInterface(Object^% Parent);
+		IntelliSenseInterface(Object^% ParentWorkspace);
 		~IntelliSenseInterface()
 		{
 			Destroy();
@@ -345,6 +346,7 @@ namespace IntelliSense
 		{
 			virtual bool get() { return IntelliSenseBox->Visible; }
 		}
+		property UInt32										MaximumVisibleItemCount;
 
 		void												ShowInterface(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
 		void												HideInterface();

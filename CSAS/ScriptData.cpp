@@ -9,12 +9,12 @@ namespace CSAutomationScript
 		GlobalInstanceCount--;
 	}
 
-	bool CodeBlock::GetIsTokenInMask(UInt32 Mask, ScriptParser::TokenType Token)
+	bool CodeBlock::GetTokenInMask(UInt32 Mask, ScriptParser::TokenType Token)
 	{
 		return (Mask & (int)Token);
 	}
 
-	void CodeBlock::GetCodeSubString(ContentMap& BlockText, UInt32 StartLine, UInt32 EndLine, std::string& CodeOut, bool ClearBuffer)
+	void CodeBlock::ExtractCodeText(ContentMap& BlockText, UInt32 StartLine, UInt32 EndLine, std::string& CodeOut, bool ClearBuffer)
 	{
 		if (EndLine < StartLine)
 			return;
@@ -28,7 +28,7 @@ namespace CSAutomationScript
 		}
 	}
 
-	ExecutableCode* CodeBlock::GenerateGenericCodeFromContent(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine, mup::ParserX* PrimaryParser)
+	ExecutableCode* CodeBlock::GenerateCodeFromText(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine, mup::ParserX* PrimaryParser)
 	{
 		UInt32 LineOutBuffer = 0;
 		std::string& CurrentLine = BlockText.at(LineNumber);
@@ -57,7 +57,7 @@ namespace CSAutomationScript
 			case ScriptParser::kTokenType_If:
 			case ScriptParser::kTokenType_ElseIf:
 			case ScriptParser::kTokenType_Else:
-				GetCodeSubString(BlockText, LineNumber, this->EndLineNumber, Buffer, true);
+				ExtractCodeText(BlockText, LineNumber, this->EndLineNumber, Buffer, true);
 				switch (Tokenizer->GetFirstTokenType())
 				{
 				case ScriptParser::kTokenType_While:
@@ -135,25 +135,26 @@ namespace CSAutomationScript
 			{
 				ScriptParser::TokenType FirstToken = Tokenizer.GetFirstTokenType();
 
-				assert(!(GetIsTokenInMask(AuxPrologTokenMask, FirstToken) && GetIsTokenInMask(EpilogTokenMask, FirstToken)));
+				assert(!(GetTokenInMask(AuxPrologTokenMask, FirstToken) && GetTokenInMask(EpilogTokenMask, FirstToken)));
 
 				if (!GotProlog && PrologToken == FirstToken)
 				{
 					GotProlog = true;
 
 					Tokenizer.Sanitize(std::string(Buffer),
-						this->Text, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
+										this->Text,
+										ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
 					this->LineNumber = BeginLine = LineCounter;
 
 					LineCounter++;
 					continue;
 				}										// special cased for ElseIfBlock
-				else if (GetIsTokenInMask(AuxPrologTokenMask, FirstToken) && !GetIsTokenInMask(EpilogTokenMask, FirstToken))
+				else if (GetTokenInMask(AuxPrologTokenMask, FirstToken) && !GetTokenInMask(EpilogTokenMask, FirstToken))
 				{
 					ExtraBlockCount++;
 				}
 
-				if (GetIsTokenInMask(EpilogTokenMask, FirstToken))
+				if (GetTokenInMask(EpilogTokenMask, FirstToken))
 				{
 					if (!GotEpilog && !ExtraBlockCount)
 					{
@@ -195,7 +196,7 @@ namespace CSAutomationScript
 			for (int i = this->LineNumber + 1; i < this->EndLineNumber; i++)
 			{
 				bool EmptyLine = false;
-				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
+				ExecutableCode* GeneratedCode = GenerateCodeFromText(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
 
 				if (!EmptyLine)
 				{
@@ -261,7 +262,9 @@ namespace CSAutomationScript
 	LineOfCode::LineOfCode(std::string& Source, UInt32 LineNumber, mup::ParserX* PrimaryParser)
 	{
 		ScriptParser Tokenizer;
-		Tokenizer.Sanitize(Source, this->Text, ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
+		Tokenizer.Sanitize(Source,
+							this->Text,
+							ScriptParser::kSanitizeOps_StripTabCharacters|ScriptParser::kSanitizeOps_StripComments|ScriptParser::kSanitizeOps_StripLeadingWhitespace);
 
 		this->LineNumber = LineNumber;
 		this->Valid = true;
@@ -373,7 +376,7 @@ namespace CSAutomationScript
 			for (int i = this->LineNumber + 1; i < this->EndLineNumber; i++)
 			{
 				bool EmptyLine = false;
-				ExecutableCode* GeneratedCode = GenerateGenericCodeFromContent(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
+				ExecutableCode* GeneratedCode = GenerateCodeFromText(&Tokenizer, BlockText, Buffer, i, &LineOut, &EmptyLine, PrimaryParser);
 
 				if (!EmptyLine)
 				{

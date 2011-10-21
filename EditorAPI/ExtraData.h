@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TESForm.h"
+#include "TESQuest.h"
 
 //	EditorAPI: ExtraData class and its derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -180,6 +181,20 @@ public:
 	/*10*/ void*				localCopy;
 };
 STATIC_ASSERT(sizeof(DialogExtraWorkingData) == 0x14);
+
+// 20
+class DialogExtraQuestStageData : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ TESQuest::StageData*						selectedStage;
+	/*10*/ TESQuest::StageData::QuestStageItem*		selectedStageItem;
+	/*14*/ UInt32									unk14;
+	/*18*/ Subwindow*								conditionItemsSubwindow;
+	/*1C*/ SInt32									unk1C;
+};
+STATIC_ASSERT(sizeof(DialogExtraQuestStageData) == 0x20);
 
 // cell and position where the current package was started?
 // 20

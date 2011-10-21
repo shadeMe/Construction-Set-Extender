@@ -12,4 +12,5 @@ namespace CSAutomationScript
 	DECLARE_CSASCOMMAND(StringFind);
 	DECLARE_CSASCOMMAND(StringInsert);
 	DECLARE_CSASCOMMAND(StringSubStr);
+	DECLARE_CSASCOMMAND(StringIsNumber);
 }

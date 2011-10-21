@@ -14,6 +14,7 @@ public:
 	void									Hide(void);
 	void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 	void									Reset(void);
+	void									SetFont(Font^ NewFont);
 };
 
 public ref class SimpleTextViewer
@@ -25,4 +26,5 @@ public:
 	void									Show(String^% Text);
 	void									Hide(void);
 	void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
+	void									SetFont(Font^ NewFont);
 };

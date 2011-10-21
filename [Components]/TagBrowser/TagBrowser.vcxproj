@@ -128,6 +128,7 @@
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
     <ClInclude Include="..\..\[Common]\Includes.h" />
+    <ClInclude Include="..\..\[Common]\IncludesCLR.h" />
     <ClInclude Include="..\..\[Common]\ListViewUtilities.h" />
     <ClInclude Include="..\..\[Common]\MiscUtilities.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
@@ -149,4 +150,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="TagBrowser.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

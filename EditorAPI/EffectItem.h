@@ -19,7 +19,6 @@ class   Script;
 // 34
 class EffectItem
 {
-	typedef void (__cdecl *_CreateEffectSetting)(int EffectID, const char *EffectName, int School, float BaseCost, int MGEFParamA, int Flags, int ResistAV, int NoOfCounterEffects, ...);
 public:
 	// 18
 	class ScriptEffectInfo
@@ -52,9 +51,6 @@ public:
 	/*28*/ SInt32             origBaseMagicka; // pre-editing base magicka cost
 	/*2C*/ SInt32             origItemMagicka; // pre-editing base magicka cost of magic item
 	/*30*/ UInt32             origItemMastery; // pre-editing mastery of magic item (not used by vanilla dialog)
-
-	// methods
-	static _CreateEffectSetting			CreateEffectSetting;
 };
 STATIC_ASSERT(sizeof(EffectItem) == 0x34);
 

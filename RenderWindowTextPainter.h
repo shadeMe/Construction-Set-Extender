@@ -24,6 +24,7 @@ class RenderWindowTextPainter
 				return;
 
 			Font->Release();
+			Font = NULL;
 		}
 		bool							GetIsValid() { return Valid; }
 	};
@@ -74,6 +75,7 @@ class RenderWindowTextPainter
 	StaticRenderChannel*					RenderChannel1;
 	DynamicRenderChannel*					RenderChannel2;
 	bool									Valid;
+	bool									SkipFrame;
 public:
 
 	enum
@@ -89,6 +91,7 @@ public:
 	void								Render();
 	void								Release();
 	void								QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay);
+	void								SkipNextFrame() { SkipFrame = true; }
 
 	UInt32								GetRenderChannelQueueSize(UInt8 Channel);
 };

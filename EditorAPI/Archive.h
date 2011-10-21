@@ -144,7 +144,6 @@ class ArchiveManager
 {
 	static Archive*				LoadArchive(const char* ArchiveName, UInt16 Unk02 = 0, UInt8 Unk03 = 0);
 public:
-
 	// methods
 	static void					LoadSkippedArchives(const char* ArchiveDirectory);
 	static bool					ExtractArchiveFile(const char* InPath, const char* OutPath, bool AppendFilePath = false);

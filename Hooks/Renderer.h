@@ -12,7 +12,7 @@ namespace Hooks
 	_DeclareMemHdlr(DoorMarkerProperties, "allows the displaying of reference properties for door markers");
 	_DeclareMemHdlr(TESObjectREFRGet3DData, "selectively culls reference nodes depending on the presence of various visibility flags");
 	_DeclareMemHdlr(NiWindowRender, "allows various obscenities to be written to the render window");
-	_DeclareMemHdlr(NiDX9RendererRecreate, "used to release any D3D resources");
+	_DeclareMemHdlr(NiDX9RendererRecreate, "used to release any renderer owned D3D resources");
 	_DeclareMemHdlr(RenderWindowStats, "displays the stats of selected refs/other info in the render window");
 	_DeclareMemHdlr(UpdateViewport, "updates the render window viewport regardless of user activity");
 	_DeclareMemHdlr(RenderWindowSelection, "allows groups of references to be selected at a time");
@@ -45,9 +45,16 @@ namespace Hooks
 	_DeclareMemHdlr(TESPathGridRecordOperationFlag, "");
 	_DeclareMemHdlr(TESPathGridRecordOperationRef, "");
 	_DeclareMemHdlr(TESPathGridDeletePoint, "");
+	_DeclareMemHdlr(TESPathGridPointDtor, "");
 	_DeclareMemHdlr(TESPathGridToggleEditMode, "");
 	_DeclareMemHdlr(TESPathGridCreateNewLinkedPoint, "");
 	_DeclareMemHdlr(TESPathGridPerformFall, "");
 	_DeclareMemHdlr(TESPathGridShowMultipleSelectionRing, "fixes a bug that basically prevents selection rings from showing on path grid points selected using the rubber band scope");
 	_DeclareMemHdlr(TESPathGridDtor, "fixes a bug that caused a CTD when a path grid point was created after every loaded pathgrid was destroyed");
+	_DeclareMemHdlr(InitialCellLoadCameraPosition, "moves the camera to the origin on loading an interior cell into the viewport");
+	_DeclareMemHdlr(LandscapeEditBrushRadius, "increases the upper limit placed on the landscape edit brush radius");
+	_DeclareMemHdlr(ConvertNiRenderedTexToD3DBaseTex, "temporary hook that adds the ability to convert NiAPI rendered textures to D3D equivalents");
+	_DeclareMemHdlr(DuplicateReferences, "changes the render window selection to the newly created references after duplication");
+	_DeclareMemHdlr(NiDX9RendererPresent, "temporary hook that prevents the renderer from presenting its render targets");
+	_DeclareMemHdlr(RenderToAuxiliaryViewport, "allows the scenegraph to be rendered to the auxiliary viewport window");
 }

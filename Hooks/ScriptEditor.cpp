@@ -14,17 +14,17 @@ namespace Hooks
 	_DefinePatchHdlrWithBuffer(ToggleScriptCompilingNewData, 0x00503450, 8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0);
 	_DefineHookHdlr(MaxScriptSizeOverrideScriptBufferCtor, 0x004FFECB);
 	_DefineHookHdlr(MaxScriptSizeOverrideParseScriptLine, 0x005031C6);
+	_DefineHookHdlr(InitializeScriptLineBufferLFLineEnds, 0x0050006A);
 
 	void PatchScriptEditorHooks(void)
 	{
 		_MemHdlr(LoadRelease).WriteJump();
-
 		_MemHdlr(ScriptableFormEntryPoint).WriteJump();
 		_MemHdlr(ScriptEffectItemEntryPoint).WriteJump();
 		_MemHdlr(MainWindowEntryPoint).WriteJump();
-
 		_MemHdlr(MaxScriptSizeOverrideScriptBufferCtor).WriteJump();
 		_MemHdlr(MaxScriptSizeOverrideParseScriptLine).WriteJump();
+		_MemHdlr(InitializeScriptLineBufferLFLineEnds).WriteJump();
 
 		PatchCompilerErrorDetours();
 	}
@@ -85,8 +85,8 @@ namespace Hooks
 		_hhSetVar(Retn, 0x0040D096);
 		__asm
 		{
-			call	EndDialogAddress
-			call	[g_WindowHandleCallAddr]
+			call	IATCacheEndDialogAddress
+			call	[g_TempIATProcBuffer]
 
 			pushad
 			call	DoLoadReleaseHook
@@ -125,6 +125,26 @@ namespace Hooks
 			lea     edx, [eax + ecx + 0x0A]
 			cmp     edx, g_MaxScriptDataSize
 			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		InitializeScriptLineBufferLFLineEnds
+		_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0050006F);
+		_hhSetVar(JumpCR, 0x005000D1);
+		_hhSetVar(JumpLF, 0x005000D5);
+		__asm
+		{
+			cmp     bl, 0x0D	// check for '\r'
+			jz      JUMPCRLF
+			cmp		bl, 0x0A	// check for '\n'
+			jz		JUMPLF
+			jmp		[_hhGetVar(Retn)]
+		JUMPCRLF:
+			jmp		[_hhGetVar(JumpCR)]
+		JUMPLF:
+			jmp		[_hhGetVar(JumpLF)]
 		}
 	}
 }

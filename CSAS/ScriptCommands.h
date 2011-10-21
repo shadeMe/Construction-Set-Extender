@@ -29,7 +29,7 @@ namespace CSAutomationScript
 		void											DumpDocumentation();
 
 		void											RegisterWithParser(mup::ParserX* Parser);
-		static void										InitializeCommandTable();
+		void											Initialize();
 	};
 
 	extern CommandTable									g_CSASCommandTable;

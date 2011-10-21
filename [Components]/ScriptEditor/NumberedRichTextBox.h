@@ -67,6 +67,7 @@ public:
 	NumberedRichTextBox(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor);
 
 	virtual void										JumpToLine(String^ Line);
+	virtual void										SetFont(Font^ NewFont);
 };
 
 public ref class OffsetRichTextBox : public NumberedRichTextBox

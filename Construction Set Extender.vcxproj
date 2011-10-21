@@ -173,6 +173,7 @@
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpValueCache.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpVariable.cpp" />
     <ClCompile Include="Achievements.cpp" />
+    <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="CSAS\Array.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_Form.cpp" />
     <ClCompile Include="CSAS\Commands\Commands_General.cpp" />
@@ -191,6 +192,7 @@
     <ClCompile Include="EditorAPI\BSStringT.cpp" />
     <ClCompile Include="EditorAPI\Core.cpp" />
     <ClCompile Include="EditorAPI\EffectItem.cpp" />
+    <ClCompile Include="EditorAPI\EffectSetting.cpp" />
     <ClCompile Include="EditorAPI\ExtraDataList.cpp" />
     <ClCompile Include="EditorAPI\GameSetting.cpp" />
     <ClCompile Include="EditorAPI\MagicItemForm.cpp" />
@@ -290,6 +292,7 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\suSortPred.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\utGeneric.h" />
     <ClInclude Include="Achievements.h" />
+    <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="CSAS\Array.h" />
     <ClInclude Include="CSAS\Commands\Commands_General.h" />
     <ClInclude Include="CSAS\Commands\Commands_Form.h" />
@@ -439,4 +442,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="Construction Set Extender.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

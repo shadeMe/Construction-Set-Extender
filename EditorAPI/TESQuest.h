@@ -40,6 +40,9 @@ public:
 		/*01*/ UInt8			unk01;
 		/*02*/ UInt8			pad02[2];
 		/*04*/ StageItemListT	stageItemList;
+
+		// methods
+		void					RemoveStageItem(QuestStageItem* Item);
 	};
 	typedef tList<StageData>	StageListT;
 

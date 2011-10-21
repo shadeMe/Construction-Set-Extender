@@ -1,4 +1,5 @@
 #pragma once
+#include "[Common]\AuxiliaryWindowsForm.h"
 
 public ref class INISetting
 {
@@ -31,7 +32,7 @@ public:
 															e_Color_G,
 															e_Color_B
 														};
-private:
+protected:
 	Control^										INIControl;
 	CommonDialog^									INIDialog;
 	ControlType										BoundType;
@@ -46,6 +47,7 @@ public:
 
 public ref class ScriptEditorPreferences
 {
+protected:
 	static ScriptEditorPreferences^					Singleton = nullptr;
 
 	void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
@@ -72,6 +74,8 @@ public ref class ScriptEditorPreferences
 				Label^										LabelISDBUpdatePeriod;
 				NumericUpDown^								DatabaseUpdateInterval;
 				CheckBox^									UseQuickView;
+				Label^										LabelMaxVisibleItems;
+				NumericUpDown^								MaxVisibleItems;
 			TabPage^									TabPreprocessor;
 				CheckBox^									AllowRedefinitions;
 				Label^										LabelNoOfPasses;
@@ -111,6 +115,7 @@ public ref class ScriptEditorPreferences
 				CheckBox^									ShowSpaces;
 				CheckBox^									CodeFolding;
 				CheckBox^									TabsOnTop;
+				CheckBox^									BoldFacedHighlighting;
 			TabPage^									TabSanitize;
 				CheckBox^									IndentLines;
 				CheckBox^									AnnealCasing;
@@ -121,8 +126,11 @@ public ref class ScriptEditorPreferences
 		bool										Closing;
 
 		void										RegisterColorSetting(String^ Key, Color Default, Control^ Parent);
+		virtual void								OnPreferencesSaved(EventArgs^ E);
 public:
 	ScriptEditorPreferences();
+
+	event EventHandler^								PreferencesSaved;
 
 	void											LoadINI();
 	void											SaveINI();
@@ -139,4 +147,4 @@ public:
 	static ScriptEditorPreferences^%				GetSingleton();
 };
 
-#define OPTIONS										ScriptEditorPreferences::GetSingleton()
+#define PREFERENCES										ScriptEditorPreferences::GetSingleton()

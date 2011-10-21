@@ -10,13 +10,11 @@ using namespace System::Windows::Forms::Integration;
 using namespace AvalonEditXSHD;
 using namespace AvalonEditComponents;
 
-typedef System::Windows::Media::Imaging::RenderTargetBitmap RTBitmap;
+typedef System::Windows::Media::Imaging::RenderTargetBitmap		RTBitmap;
 
 public ref class AvalonEditTextEditor : public IScriptTextEditor
 {
 	static AvalonEditXSHDManager^				SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
-
-	static void									InitializeSyntaxHighlightingManager(bool Reset);
 public:
 	event ScriptModifiedEventHandler^			ScriptModified;
 	event KeyEventHandler^						KeyDown;
@@ -44,6 +42,7 @@ protected:
 	AvalonEditFindReplaceBGColorizer^			FindReplaceColorizer;
 	AvalonEdit::Folding::FoldingManager^		CodeFoldingManager;
 	AvalonEditObScriptCodeFoldingStrategy^		CodeFoldingStrategy;
+	AvalonEditBraceHighlightingBGColorizer^		BraceColorizer;
 
 	bool										InitializingFlag;
 	bool										ModifiedFlag;
@@ -68,6 +67,9 @@ protected:
 	bool										SynchronizingInternalScrollBars;
 
 	bool										SetTextAnimating;
+	Object^										ParentWorkspace;
+
+	Timer^										LocalVarsDatabaseUpdateTimer;
 
 	virtual void								OnScriptModified(ScriptModifiedEventArgs^ E);
 	virtual void								OnKeyDown(KeyEventArgs^ E);
@@ -93,9 +95,11 @@ protected:
 	void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
 	void										FoldingTimer_Tick(Object^ Sender, EventArgs^ E);
 	void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
+	void										LocalVarsDatabaseUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
 
 	void										ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
 	void										SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
+	void										ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
 	String^										GetTokenAtIndex(int Index, bool SelectText, int% StartIndexOut, int% EndIndexOut);
 	String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
@@ -108,7 +112,8 @@ protected:
 	void										HandleTextChangeEvent();
 	void										GotoLine(int Line);										// line numbers start at 1
 
-	void										RefreshUI() { TextField->TextArea->TextView->Redraw(); }
+	void										RefreshBGColorizerLayer();
+	void										RefreshTextView();
 	UInt32										PerformReplaceOnSegment(IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
 	void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 	void										StopMiddleMouseScroll();
@@ -120,9 +125,12 @@ protected:
 
 	RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
 	void										ClearFindResultIndicators(void);
+	void										SearchBracesForHighlighting(int CaretPos);
+	AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(void);
 	void										Destroy();
 
-	static double								SetTextFadeAnimationDuration = 0.17;		// in seconds
+	static double								SetTextFadeAnimationDuration = 0.2;		// in seconds
+
 public:
 	~AvalonEditTextEditor()
 	{
@@ -149,6 +157,7 @@ public:
 
 	virtual int									GetCharIndexFromPosition(Point Position);
 	virtual Point								GetPositionFromCharIndex(int Index);
+	virtual Point								GetAbsolutePositionFromCharIndex(int Index);
 	virtual int									GetLineNumberFromCharIndex(int Index);
 	virtual bool								GetCharIndexInsideCommentSegment(int Index);
 	virtual int									GetCurrentLineNumber(void);
@@ -156,7 +165,7 @@ public:
 	virtual String^								GetTokenAtCaretPos();
 	virtual void								SetTokenAtCaretPos(String^ Replacement);
 	virtual String^								GetTokenAtMouseLocation();
-	virtual array<String^>^						GetTokensAtMouseLocation();		// gets three of the closest tokens surrounding the mouse loc
+	virtual array<String^>^						GetTokensAtMouseLocation();
 
 	virtual int									GetCaretPos();
 	virtual void								SetCaretPos(int Index);
@@ -195,5 +204,5 @@ public:
 	virtual void								BeginUpdate(void);
 	virtual void								EndUpdate(void);
 
-	AvalonEditTextEditor(Font^ Font, Object^% Parent);
+	AvalonEditTextEditor(Font^ Font, Object^ Parent);
 };

@@ -165,12 +165,12 @@ void SaveActivePlugin(void)
 
 void ReadFromINI(const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size)
 {
-	GetPrivateProfileString(Section, Setting, Default, OutBuffer, Size, g_INIManager->GetINIPath());
+	g_INIManager->DirectReadFromINI(Setting, Section, Default, OutBuffer, Size);
 }
 
 void WriteToINI(const char* Setting, const char* Section, const char* Value)
 {
-	WritePrivateProfileString(Section, Setting, Value, g_INIManager->GetINIPath());
+	g_INIManager->DirectWriteToINI(Setting, Section, Value);
 }
 #pragma endregion
 /**** END CSEEDITORAPI SUBINTERFACE ****/
@@ -197,8 +197,8 @@ bool CompileScript(ScriptCompileData* Data)
 		MessageBox(*g_HWND_CSParent,
 					PrintToBuffer("Script %s {%08X} has been deleted and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID),
 					"CSE Script Editor",
-					MB_YESNO|MB_ICONEXCLAMATION|MB_TOPMOST|MB_SETFOREGROUND);
-		Data->CompileResult = true;
+					MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST|MB_SETFOREGROUND);
+		Data->CompileResult = false;
 	}
 	else
 	{
@@ -562,7 +562,6 @@ void CompileCrossReferencedForms(TESForm* Form)
 	}
 
 	CONSOLE->Exdent();
-	DebugPrint("Operation complete!");
 }
 
 void CompileDependencies(const char* EditorID)
@@ -581,7 +580,7 @@ void CompileDependencies(const char* EditorID)
 	{
 	case Script::kScriptType_Object:
 	{
-		DebugPrint("Source script type = Object Script");
+		DebugPrint("Script type = Object");
 		for (FormCrossReferenceListT::Iterator Itr = Form->GetCrossReferenceList()->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			TESForm* Parent = Itr.Get()->GetForm();
@@ -589,7 +588,7 @@ void CompileDependencies(const char* EditorID)
 
 			if (ValidParent)
 			{
-				DebugPrint("Scriptable Form EDID = %s ; TYPE = %d", Parent->editorID.c_str(), Parent->formType);
+				DebugPrint("Scriptable Form %s ; Type = %d:", Parent->editorID.c_str(), Parent->formType);
 				DebugPrint("Parsing cell use list...");
 				CONSOLE->Indent();
 
@@ -617,13 +616,13 @@ void CompileDependencies(const char* EditorID)
 	}
 	case Script::kScriptType_Quest:
 	{
-		DebugPrint("Source script type = Quest Script");
+		DebugPrint("Script type = Quest");
 		for (FormCrossReferenceListT::Iterator Itr = Form->GetCrossReferenceList()->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			TESForm* Parent = Itr.Get()->GetForm();
 			if (Parent->formType == TESForm::kFormType_Quest)
 			{
-				DebugPrint("Quest EDID = %s", Parent->editorID.c_str());
+				DebugPrint("Quest %s:", Parent->editorID.c_str());
 				CompileCrossReferencedForms(Parent);
 			}
 		}

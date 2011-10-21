@@ -8,6 +8,7 @@
 
 #include "AvalonEditTextEditor.h"
 #include "AuxiliaryTextEditor.h"
+#include "[Common]\AuxiliaryWindowsForm.h"
 
 using namespace DevComponents;
 using namespace DevComponents::DotNetBar::Events;
@@ -43,7 +44,7 @@ namespace ScriptEditor
 
 		static MouseEventHandler^							TabTearEventHandlerWrapper = gcnew MouseEventHandler(&TabTearEventHandler);
 		static Rectangle									LastUsedBounds = Rectangle(100, 100, 100, 100);
-	private:
+	protected:
 		Stack<UInt32>^										BackJumpStack;
 		Stack<UInt32>^										ForwardJumpStack;
 
@@ -72,6 +73,8 @@ namespace ScriptEditor
 		void												NewTabButton_Click(Object^ Sender, EventArgs^ E);
 		void												SortTabsButton_Click(Object^ Sender, EventArgs^ E);
 
+		void												ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+
 		void												Destroy();
 	public:
 		TabContainer(ComponentDLLInterface::ScriptData* InitScript, UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);
@@ -99,10 +102,14 @@ namespace ScriptEditor
 		void												RemoveTabControlBox(DotNetBar::SuperTabControlPanel^ Box);
 
 		void												SelectTab(DotNetBar::SuperTabItem^ Tab);
+		void												SelectTab(Keys Index);
+		void												SelectTab(int Index);
 		void												SelectNextTab();
 		void												SelectPreviousTab();
 		void												Redraw() { EditorForm->Invalidate(true); }
 		void												SetWindowTitle(String^ Title) { EditorForm->Text = Title; }
+		void												DisableControls(void);
+		void												EnableControls(void);
 
 		Rectangle											GetEditorFormRect();
 		IntPtr												GetEditorFormHandle() { return EditorForm->Handle; }
@@ -138,7 +145,7 @@ namespace ScriptEditor
 																};
 
 		Workspace(UInt32 Index, TabContainer^ Parent, ComponentDLLInterface::ScriptData* InitScript);
-	private:
+	protected:
 		static ImageList^									MessageListIcons = gcnew ImageList();
 
 		static enum class									SanitizeOperation
@@ -326,11 +333,13 @@ namespace ScriptEditor
 		void												ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
 		void												ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
 
+		void												ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+
 		bool												PerformHouseKeeping(void);
 
 		void												AddMessageToMessagePool(MessageType Type, int Line, String^ Message);
-		void												ClearErrorsItemsFromMessagePool(void);
-		void												ClearCSEMessagesFromMessagePool(void);
+		void												ClearErrorMessagesFromMessagePool(void);
+		void												ClearEditorMessagesFromMessagePool(void);
 
 		void												FindReplaceOutput(String^ Line, String^ Text);
 		void												ToggleBookmark(int CaretPos);
@@ -381,7 +390,7 @@ namespace ScriptEditor
 
 		String^												GetCurrentToken() { return TextEditor->GetTokenAtCaretPos(); }
 		Point												GetScreenPoint(Point Location) { return TextEditor->PointToScreen(Location); }
-		Point												GetCaretLocation() { return TextEditor->GetPositionFromCharIndex(TextEditor->GetCaretPos()); }
+		Point												GetCaretLocation(bool AbsoluteValue);
 
 		IntPtr												GetControlBoxHandle() { return EditorControlBox->Handle; }
 		IntPtr												GetEditorBoxHandle() { return TextEditor->GetHandle(); }

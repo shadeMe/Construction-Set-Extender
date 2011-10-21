@@ -21,9 +21,6 @@
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Common]\Includes.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\ListViewUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -42,6 +39,9 @@
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="..\..\[Common]\ComponentDLLInterface.h">
       <Filter>Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Common]\IncludesCLR.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

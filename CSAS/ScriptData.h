@@ -58,9 +58,9 @@ namespace CSAutomationScript
 		UInt32									EndLineNumber;							// line the declares the end of the block, i.e., end, endIf, etc
 		ExecutableBlockCode						LinesOfCode;
 
-		bool									GetIsTokenInMask(UInt32 Mask, ScriptParser::TokenType Token);
-		void									GetCodeSubString(ContentMap& BlockText, UInt32 StartLine, UInt32 EndLine, std::string& CodeOut, bool ClearBuffer);
-		ExecutableCode*							GenerateGenericCodeFromContent(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine, mup::ParserX* PrimaryParser);
+		bool									GetTokenInMask(UInt32 Mask, ScriptParser::TokenType Token);
+		void									ExtractCodeText(ContentMap& BlockText, UInt32 StartLine, UInt32 EndLine, std::string& CodeOut, bool ClearBuffer);
+		ExecutableCode*							GenerateCodeFromText(ScriptParser* Tokenizer, ContentMap& BlockText, std::string& Buffer, UInt32 LineNumber, UInt32* LineOut, bool* EmptyLine, mup::ParserX* PrimaryParser);
 		bool									RunCode(ScriptRunner* Executor);
 
 		virtual void							Release();

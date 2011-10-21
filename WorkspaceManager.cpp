@@ -14,6 +14,16 @@ void WorkspaceManager::Initialize(const char *DefaultDirectory)
 	_FILEFINDER->AddSearchPath((this->DefaultDirectory + "Data").c_str());		// add the absolute path to the filefinder's search path collection
 
 	CreateDefaultDirectories(DefaultDirectory);
+
+	HMENU FileMenu = GetMenu(*g_HWND_CSParent); FileMenu = GetSubMenu(FileMenu, 0);
+	MENUITEMINFO ItemDataSetWorkspace;
+	ItemDataSetWorkspace.cbSize = sizeof(MENUITEMINFO);
+	ItemDataSetWorkspace.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING;
+	ItemDataSetWorkspace.wID = MAIN_DATA_SETWORKSPACE;
+	ItemDataSetWorkspace.fState = MFS_ENABLED;
+	ItemDataSetWorkspace.dwTypeData = "Set Workspace";
+	ItemDataSetWorkspace.cch = 0;
+	InsertMenuItem(FileMenu, 40003, FALSE, &ItemDataSetWorkspace);
 }
 
 void WorkspaceManager::ResetLoadedData()

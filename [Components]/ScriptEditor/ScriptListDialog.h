@@ -1,5 +1,6 @@
 #pragma once
 #include "[Common]\HandShakeStructs.h"
+#include "[Common]\AuxiliaryWindowsForm.h"
 
 public ref class ScriptListDialog
 {

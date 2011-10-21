@@ -221,12 +221,6 @@ void PathGridUndoManager::WalkUndoStack( UndoProxyStackT* Stack, UndoProxyStackT
 					TESPathGridPoint* Parent = Itr.Get()->Parent;
 					Itr.Get()->Undo(this);
 
-					PathGridPointListT* DeletionList = (PathGridPointListT*)PathGridPointListT::Create(&FormHeap_Allocate);
-					DeletionList->AddAt(Parent, eListEnd);
-					HandlePathGridPointDeletion(DeletionList);
-					DeletionList->RemoveAll();
-					FormHeap_Free(DeletionList);
-
 					delete Itr.Get();
 					break;
 				}
