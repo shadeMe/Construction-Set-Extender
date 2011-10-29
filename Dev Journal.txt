@@ -15,12 +15,9 @@ MISC	---->
 
 
 CSE		---->
-> Increase formID column's size
 > Use a tab delimited format for the change logs
 > Relative scaling and snap to bounding box
 
-* The ability to generate more than one distant land LOD per sitting. Currently, you can do one that comes out reasonably well. All subsequent attempts I've ever seen result in a random jumble of useless triangles in the mesh.
-* Land LOD meshes that aren't such terrible approximations of the real landscape. I remember seeing somewhere that what we get is a 1% representation of the real thing. Could we bump this to 5% or something?
 * Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
 
 --! CSAS Function Requests:
@@ -30,3 +27,6 @@ CSE		---->
 
 SE		---->
 > A code snippets manager, integrated into IntelliSense
+> New find/replace window, with options: Case Sensitive, Whole Word matches, Perform in all open tabs, Count Matches
+> New goto line/offset window
+> Find replace colorizer takes segments instead of performing the search op again

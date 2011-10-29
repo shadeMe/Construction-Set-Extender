@@ -22,6 +22,15 @@
     <Filter Include="Interop">
       <UniqueIdentifier>{1426fe20-b175-44e5-83f7-ba6aa8abc8e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\IntelliSense">
+      <UniqueIdentifier>{2e85eed8-5f29-4e81-baee-d6674aa94e59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\TextEditors">
+      <UniqueIdentifier>{bd189d1f-2e31-4f33-bab0-36d3abdaf0d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\TextEditors\AvalonEditor">
+      <UniqueIdentifier>{6996c544-3d88-418b-8970-822abf06a6de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
@@ -33,21 +42,6 @@
     <ClCompile Include="..\..\[Common]\MiscUtilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="AuxiliaryTextEditor.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="AvalonEditTextEditor.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="AvalonEditXSHD.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="IntelliSense.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="NumberedRichTextBox.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="ScriptListDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -57,9 +51,6 @@
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptEditor.cpp" />
     <ClCompile Include="ScriptEditorManager.cpp" />
-    <ClCompile Include="AvalonEditComponents.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="RefactorTools.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -68,6 +59,30 @@
     </ClCompile>
     <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSense\IntelliSenseInterface.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSense\IntelliSenseItem.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSense\IntelliSenseDatabase.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="AvalonEditComponents.cpp">
+      <Filter>Components\TextEditors\AvalonEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="AvalonEditTextEditor.cpp">
+      <Filter>Components\TextEditors\AvalonEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="AvalonEditXSHD.cpp">
+      <Filter>Components\TextEditors\AvalonEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="AuxiliaryTextEditor.cpp">
+      <Filter>Components\TextEditors</Filter>
+    </ClCompile>
+    <ClCompile Include="NumberedRichTextBox.cpp">
+      <Filter>Components\TextEditors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -86,28 +101,10 @@
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="AuxiliaryTextEditor.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="AvalonEditTextEditor.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="AvalonEditXSHD.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="IntelliSense.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="NumberedRichTextBox.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="ScriptListDialog.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="ScriptParser.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptTextEditorInterface.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
@@ -115,9 +112,6 @@
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="ScriptEditor.h" />
     <ClInclude Include="ScriptEditorManager.h" />
-    <ClInclude Include="AvalonEditComponents.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\CustomInputBox.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -135,6 +129,33 @@
     </ClInclude>
     <ClInclude Include="..\..\[Common]\IncludesCLR.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSense\IntelliSenseInterface.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSense\IntelliSenseItem.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSense\IntelliSenseDatabase.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="AvalonEditXSHD.h">
+      <Filter>Components\TextEditors\AvalonEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="AvalonEditComponents.h">
+      <Filter>Components\TextEditors\AvalonEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="AvalonEditTextEditor.h">
+      <Filter>Components\TextEditors\AvalonEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="NumberedRichTextBox.h">
+      <Filter>Components\TextEditors</Filter>
+    </ClInclude>
+    <ClInclude Include="AuxiliaryTextEditor.h">
+      <Filter>Components\TextEditors</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptTextEditorInterface.h">
+      <Filter>Components\TextEditors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

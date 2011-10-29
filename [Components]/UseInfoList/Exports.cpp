@@ -2,6 +2,7 @@
 #include "UseInfoList.h"
 
 using namespace ComponentDLLInterface;
+using namespace ConstructionSetExtender;
 
 extern ComponentDLLInterface::UseInfoListInterface g_InteropInterface;
 

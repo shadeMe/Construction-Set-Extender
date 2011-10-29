@@ -24,3 +24,4 @@ using namespace System::ComponentModel;
 typedef unsigned char		UInt8;
 
 #define		SCRIPTEDITOR_TITLE			"CSE Script Editor"
+#define		COMPONENTDLLFOLDER			"Data\\OBSE\\Plugins\\CSE\\"

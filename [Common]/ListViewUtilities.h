@@ -5,40 +5,40 @@
 ListViewItem^											GetListViewSelectedItem(ListView^% Source);
 int														GetListViewSelectedItemIndex(ListView^% Source);
 
-ref class												CSEListViewSorter
+ref class ListViewGenericSorter abstract
 {
 protected:
 	int													_Column;
 	SortOrder											_Order;
 public:
-	CSEListViewSorter() : _Column(0), _Order(SortOrder::Ascending) {}
-	CSEListViewSorter(int Index, SortOrder Order) : _Column(Index), _Order(Order) {}
+	ListViewGenericSorter() : _Column(0), _Order(SortOrder::Ascending) {}
+	ListViewGenericSorter(int Index, SortOrder Order) : _Column(Index), _Order(Order) {}
 };
 
-ref class CSEListViewStringSorter : public CSEListViewSorter, public System::Collections::IComparer
+ref class ListViewStringSorter : public ListViewGenericSorter, public System::Collections::IComparer
 {
 public:
-	CSEListViewStringSorter() : CSEListViewSorter() {}
-	CSEListViewStringSorter(int Index, SortOrder Order) : CSEListViewSorter(Index, Order) {}
+	ListViewStringSorter() : ListViewGenericSorter() {}
+	ListViewStringSorter(int Index, SortOrder Order) : ListViewGenericSorter(Index, Order) {}
 
 	virtual int											Compare(Object^ X, Object^ Y);
 };
 
-ref class CSEListViewIntSorter : public CSEListViewSorter, public System::Collections::IComparer
+ref class ListViewIntSorter : public ListViewGenericSorter, public System::Collections::IComparer
 {
 	bool												Hex;
 public:
-	CSEListViewIntSorter() : CSEListViewSorter(), Hex(false) {}
-	CSEListViewIntSorter(int Index, SortOrder Order, bool Hex) : CSEListViewSorter(Index, Order), Hex(Hex) {}
+	ListViewIntSorter() : ListViewGenericSorter(), Hex(false) {}
+	ListViewIntSorter(int Index, SortOrder Order, bool Hex) : ListViewGenericSorter(Index, Order), Hex(Hex) {}
 
 	virtual int											Compare(Object^ X, Object^ Y);
 };
 
-ref class CSEListViewImgSorter : public CSEListViewSorter, public System::Collections::IComparer
+ref class ListViewImgSorter : public ListViewGenericSorter, public System::Collections::IComparer
 {
 public:
-	CSEListViewImgSorter() : CSEListViewSorter() {}
-	CSEListViewImgSorter(int Index, SortOrder Order) : CSEListViewSorter(Index, Order) {}
+	ListViewImgSorter() : ListViewGenericSorter() {}
+	ListViewImgSorter(int Index, SortOrder Order) : ListViewGenericSorter(Index, Order) {}
 
 	virtual int											Compare(Object^ X, Object^ Y);
 };

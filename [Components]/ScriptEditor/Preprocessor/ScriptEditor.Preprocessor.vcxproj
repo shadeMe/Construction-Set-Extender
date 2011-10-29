@@ -104,6 +104,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -116,13 +118,13 @@
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\[Common]\Includes.h" />
     <ClInclude Include="..\..\..\[Common]\MiscUtilities.h" />
     <ClInclude Include="..\..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="..\Globals.h" />
     <ClInclude Include="ScriptPreprocessor.h" />
     <ClInclude Include="..\ScriptParser.h" />
   </ItemGroup>

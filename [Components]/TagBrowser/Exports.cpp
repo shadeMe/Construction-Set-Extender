@@ -2,6 +2,7 @@
 #include "TagBrowser.h"
 
 using namespace ComponentDLLInterface;
+using namespace ConstructionSetExtender;
 
 extern ComponentDLLInterface::TagBrowserInterface g_InteropInterface;
 

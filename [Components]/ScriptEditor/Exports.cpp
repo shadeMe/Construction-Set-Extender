@@ -1,12 +1,14 @@
 #include "[Common]\ComponentDLLInterface.h"
 #include "ScriptEditorManager.h"
 #include "Exports.h"
-#include "IntelliSense.h"
+#include "IntelliSense\IntelliSenseDatabase.h"
 #include "Globals.h"
 
 using namespace ComponentDLLInterface;
-using namespace IntelliSense;
 using namespace System::Reflection;
+using namespace ConstructionSetExtender;
+using namespace ConstructionSetExtender::IntelliSense;
+using namespace ConstructionSetExtender::ScriptEditor;
 
 extern ComponentDLLInterface::ScriptEditorInterface g_InteropInterface;
 
@@ -29,7 +31,7 @@ Assembly^ ResolvePreprocessorAssemblyLoad(Object^ Sender, ResolveEventArgs^ E)
 	{
 		if (AssmbName->FullName->Substring(0, AssmbName->FullName->IndexOf(",")) == E->Name->Substring(0, E->Name->IndexOf(",")))
 		{
-			TempPath = Globals::AppPath + "Data\\OBSE\\Plugins\\CSE\\" + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
+			TempPath = Globals::AppPath + COMPONENTDLLFOLDER + E->Name->Substring(0, E->Name->IndexOf(",")) + ".dll";
 			PreprocAssembly = Assembly::LoadFrom(TempPath);
 			return PreprocAssembly;
 		}
@@ -71,7 +73,7 @@ void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UIn
 	Parameters->ParameterList->Add(Width);
 	Parameters->ParameterList->Add(Height);
 
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateTabContainer, Parameters);
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspaceContainer, Parameters);
 }
 
 void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL)

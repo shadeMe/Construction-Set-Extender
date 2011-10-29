@@ -31,7 +31,7 @@ public:
 		e_TAG
 	};
 
-	void						InitializeConsole();
+	void						InitializeConsoleWindow();
 	void						InitializeLog(const char* AppPath);
 	bool						IsHidden() { return DisplayState == 0; }
 	bool						IsConsoleInitalized() { return WindowHandle != 0; }

@@ -279,7 +279,7 @@ namespace Hooks
 		else if (!*g_HWND_CSParent || !*g_HWND_ObjectWindow || !*g_HWND_CellView || !*g_HWND_RenderWindow)
 			return;
 
-		_MemHdlr(CSInit).WriteBuffer();			// removed rightaway to keep it from hindering the subclassing that follows
+		_MemHdlr(CSInit).WriteBuffer();			// removed right away to keep it from hindering the subclassing that follows
 
 		MersenneTwister::init_genrand(GetTickCount());
 
@@ -290,7 +290,7 @@ namespace Hooks
 
 		DebugPrint("Initializing Console");
 		CONSOLE->Indent();
-		CONSOLE->InitializeConsole();
+		CONSOLE->InitializeConsoleWindow();
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Auxiliary Viewport");
@@ -301,7 +301,7 @@ namespace Hooks
 		DebugPrint("Initializing CSInterop Manager");
 		CONSOLE->Indent();
 		if (!CSIOM->Initialize())
-			DebugPrint("CSInterop Manager failed to initialize successfully! LIP service will be unavailable during this session");
+			DebugPrint("CSInterop Manager failed to initialize successfully! Lip service will be unavailable during this session");
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Achievements");

@@ -40,3 +40,4 @@ extern CSEConsoleCommandInfo	kCSECCmd_AutoSave;
 extern CSEConsoleCommandInfo	kCSECCmd_Exit;
 extern CSEConsoleCommandInfo	kCSECCmd_RunScript;
 extern CSEConsoleCommandInfo	kCSECCmd_DumpDocs;
+extern CSEConsoleCommandInfo	kCSECCmd_DBMP;

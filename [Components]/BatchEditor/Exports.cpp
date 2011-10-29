@@ -2,6 +2,7 @@
 #include "BatchEditor.h"
 
 using namespace ComponentDLLInterface;
+using namespace ConstructionSetExtender;
 
 extern ComponentDLLInterface::BatchEditorInterface g_InteropInterface;
 

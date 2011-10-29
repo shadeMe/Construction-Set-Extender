@@ -10,7 +10,7 @@
 using namespace Hooks;
 using namespace ComponentDLLInterface;
 
-extern ComponentDLLInterface::CSEInterface g_InteropInterface;
+extern ComponentDLLInterface::CSEInterfaceTable g_InteropInterface;
 
 extern "C"
 {
@@ -28,8 +28,8 @@ void DeleteNativeHeapPointer( void* Pointer, bool IsArray )
 		delete Pointer;
 }
 
-/**** BEGIN CSEEDITORAPI SUBINTERFACE ****/
-#pragma region CSEEditorAPI
+/**** BEGIN EDITORAPI SUBINTERFACE ****/
+#pragma region EditorAPI
 void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 {
 	DebugPrint(Source, Message);
@@ -173,7 +173,7 @@ void WriteToINI(const char* Setting, const char* Section, const char* Value)
 	g_INIManager->DirectWriteToINI(Setting, Section, Value);
 }
 #pragma endregion
-/**** END CSEEDITORAPI SUBINTERFACE ****/
+/**** END EDITORAPI SUBINTERFACE ****/
 
 /**** BEGIN SCRIPTEDITOR SUBINTERFACE ****/
 #pragma region ScriptEditor
@@ -1046,7 +1046,7 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 #pragma endregion
 /**** END TAGBROWSER SUBINTERFACE ****/
 
-ComponentDLLInterface::CSEInterface g_InteropInterface =
+ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 {
 	DeleteNativeHeapPointer,
 	{

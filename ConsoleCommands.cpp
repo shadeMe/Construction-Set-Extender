@@ -4,6 +4,8 @@
 #include "CSAS\ScriptRunner.h"
 #include "CSAS\ScriptCommands.h"
 #include "Achievements.h"
+#include "WindowManager.h"
+#include "Resource.h"
 
 using namespace Hooks;
 
@@ -74,6 +76,7 @@ void CSEConsoleCommandTable::InitializeCommandTable()
 	AddCommandToTable(&kCSECCmd_Exit);
 	AddCommandToTable(&kCSECCmd_RunScript);
 	AddCommandToTable(&kCSECCmd_DumpDocs);
+	AddCommandToTable(&kCSECCmd_DBMP);
 }
 
 // COMMANDS
@@ -189,6 +192,29 @@ void CSECCmd_RunScript_Handler(CSECCMD_ARGS)
 	Achievements::UnlockAchievement(Achievements::kAchievement_Automaton);
 }
 
+void CSECCmd_DBMP_Handler(CSECCMD_ARGS)
+{
+	Tokenizer ArgParser(Args, " ,");
+	std::string CurrentArg;
+
+	std::string Handle;
+
+	for (int i = 1; i <= ParamCount; i++)
+	{
+		ArgParser.NextToken(CurrentArg);
+		switch (i)
+		{
+		case 1:
+			Handle = CurrentArg;
+			break;
+		}
+	}
+
+	UInt32 BMPHandle = 0;
+	sscanf_s(Handle.c_str(), "%08X", &BMPHandle);
+	DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_DEBUGBMP), NULL, DebugViewBMPDlgProc, (LPARAM)BMPHandle);
+}
+
 void CSECCmd_DumpDocs_Handler(CSECCMD_ARGS)
 {
 	CSAutomationScript::g_CSASCommandTable.DumpDocumentation();
@@ -202,3 +228,4 @@ DEFINE_CSECCMD(AutoSave, 0);
 DEFINE_CSECCMD(Exit, 0);
 DEFINE_CSECCMD(RunScript, 1);
 DEFINE_CSECCMD(DumpDocs, 0);
+DEFINE_CSECCMD(DBMP, 1);

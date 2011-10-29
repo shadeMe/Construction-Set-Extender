@@ -1,150 +1,164 @@
 #pragma once
 #include "[Common]\AuxiliaryWindowsForm.h"
 
-public ref class INISetting
+namespace ConstructionSetExtender
 {
-public:
-	String^											Key;
-	String^											Section;
-	String^											DefaultValue;
+	namespace Preferences
+	{
+		public ref class INISetting
+		{
+		public:
+			String^											Key;
+			String^											Section;
+			String^											DefaultValue;
 
-	INISetting(String^ Key, String^ Section, String^ DefaultValue) : Key(Key), Section(Section), DefaultValue(DefaultValue) {}
-};
+			INISetting(String^ Key, String^ Section, String^ DefaultValue) : Key(Key), Section("ScriptEditor::" + Section), DefaultValue(DefaultValue) {}
+		};
 
-public ref class BoundControl
-{
-public:
-	static enum class								ControlType
-														{
-															e_Checkbox = 0,
-															e_NumericUpDown,
-															e_FontDialog,
-															e_ColorDialog
-														};
-	static enum class								ValueType
-														{
-															e_Checked = 0,
-															e_Value,
-															e_Font_FontFamily_Name,
-															e_Font_Size,
-															e_Font_Style,
-															e_Color_R,
-															e_Color_G,
-															e_Color_B
-														};
-protected:
-	Control^										INIControl;
-	CommonDialog^									INIDialog;
-	ControlType										BoundType;
-	ValueType										Property;
-public:
-	BoundControl(Control^ Ctrl, ControlType CtrlType, ValueType ValType) : INIControl(Ctrl), INIDialog(nullptr), BoundType(CtrlType), Property(ValType) {}			// for controls derived from Windows::Forms::Control
-	BoundControl(CommonDialog^ Ctrl, ControlType CtrlType, ValueType ValType) : INIControl(nullptr), INIDialog(Ctrl), BoundType(CtrlType), Property(ValType) {}		// for controls derived from Windows::Forms::CommonDialog
+		public ref class BoundControl
+		{
+		public:
+			static enum class								ControlType
+			{
+				e_Checkbox = 0,
+				e_NumericUpDown,
+				e_FontDialog,
+				e_ColorDialog
+			};
+			static enum class								ValueType
+			{
+				e_Checked = 0,
+				e_Value,
+				e_Font_FontFamily_Name,
+				e_Font_Size,
+				e_Font_Style,
+				e_Color_R,
+				e_Color_G,
+				e_Color_B
+			};
+		protected:
+			Control^										INIControl;
+			CommonDialog^									INIDialog;
+			ControlType										BoundType;
+			ValueType										Property;
+		public:
+			BoundControl(Control^ Ctrl, ControlType CtrlType, ValueType ValType) : INIControl(Ctrl), INIDialog(nullptr), BoundType(CtrlType), Property(ValType) {}			// for controls derived from Windows::Forms::Control
+			BoundControl(CommonDialog^ Ctrl, ControlType CtrlType, ValueType ValType) : INIControl(nullptr), INIDialog(Ctrl), BoundType(CtrlType), Property(ValType) {}		// for controls derived from Windows::Forms::CommonDialog
 
-	String^											GetValue();
-	void											SetValue(String^ Value);
-};
+			String^											GetValue();
+			void											SetValue(String^ Value);
+		};
 
-public ref class ScriptEditorPreferences
-{
-protected:
-	static ScriptEditorPreferences^					Singleton = nullptr;
+		public ref class ScriptEditorPreferences
+		{
+		protected:
+			static ScriptEditorPreferences^					Singleton = nullptr;
 
-	void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
-	void											CmDlgColor_Click(Object^ Sender, EventArgs^ E);
+			void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
+			void											CmDlgColor_Click(Object^ Sender, EventArgs^ E);
 
-	void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+			void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
-	Dictionary<INISetting^, BoundControl^>^		SettingCollection;
+			Dictionary<INISetting^, BoundControl^>^		SettingCollection;
 
-	AnimatedForm^								OptionsBox;
-		TabControl^									TabContainer;
+			AnimatedForm^								OptionsBox;
+			TabControl^									TabBox;
 			TabPage^									TabGeneral;
-				CheckBox^									AutoIndent;
-				CheckBox^									SaveLastKnownPos;
-				CheckBox^									RecompileVarIdx;
-				CheckBox^									UseCSParent;
-				CheckBox^									DestroyOnLastTabClose;
-				CheckBox^									SuppressRefCountForQuestScripts;
-				CheckBox^									LoadScriptUpdateExistingScripts;
-				CheckBox^									CutCopyEntireLine;
+			CheckBox^									AutoIndent;
+			CheckBox^									SaveLastKnownPos;
+			CheckBox^									RecompileVarIdx;
+			CheckBox^									UseCSParent;
+			CheckBox^									DestroyOnLastTabClose;
+			CheckBox^									SuppressRefCountForQuestScripts;
+			CheckBox^									LoadScriptUpdateExistingScripts;
+			CheckBox^									CutCopyEntireLine;
 			TabPage^									TabIntelliSense;
-				Label^										LabelISThreshold;
-				NumericUpDown^								ThresholdLength;
-				Label^										LabelISDBUpdatePeriod;
-				NumericUpDown^								DatabaseUpdateInterval;
-				CheckBox^									UseQuickView;
-				Label^										LabelMaxVisibleItems;
-				NumericUpDown^								MaxVisibleItems;
+			Label^										LabelISThreshold;
+			NumericUpDown^								ThresholdLength;
+			Label^										LabelISDBUpdatePeriod;
+			NumericUpDown^								DatabaseUpdateInterval;
+			CheckBox^									UseQuickView;
+			Label^										LabelMaxVisibleItems;
+			NumericUpDown^								MaxVisibleItems;
+			CheckBox^									NoFocusUI;
 			TabPage^									TabPreprocessor;
-				CheckBox^									AllowRedefinitions;
-				Label^										LabelNoOfPasses;
-				NumericUpDown^								NoOfPasses;
+			CheckBox^									AllowRedefinitions;
+			Label^										LabelNoOfPasses;
+			NumericUpDown^								NoOfPasses;
 			TabPage^									TabAppearance;
-				Button^										CmDlgFont;
-				Label^										LabelTabSize;
-				NumericUpDown^								TabSize;
-				GroupBox^									GroupBoxSyntaxHighlighting;
-					Button^										CmDlgSyntaxCommentsColor;
-					Button^										CmDlgSyntaxDigitsColor;
-					Button^										CmDlgSyntaxPreprocessorColor;
-					Button^										CmDlgSyntaxScriptBlocksColor;
-					Button^										CmDlgSyntaxDelimitersColor;
-					Button^										CmDlgSyntaxStringsColor;
-					Button^										CmDlgSyntaxKeywordsColor;
-					Label^										LabelPreprocessor;
-					Label^										LabelScriptBlocks;
-					Label^										LabelStrings;
-					Label^										LabelComments;
-					Label^										LabelDigits;
-					Label^										LabelDelimiters;
-					Label^										LabelKeywords;
-				Button^										CmDlgCurrentLineHighlightColor;
-				Label^										LabelCurrentLineHighlight;
-				Button^										CmDlgCharLimitHighlightColor;
-				Label^										LabelCharLimitHighlight;
-				Button^										CmDlgErrorHighlightColor;
-				Label^										LabelErrorHighlight;
-				Button^										CmDlgSelectionHighlightColor;
-				Label^										LabelSelectionHighlight;
-				Button^										CmDlgFindResultsHighlightColor;
-				Label^										LabelFindResultsHighlight;
-
-				CheckBox^									WordWrap;
-				CheckBox^									ShowTabs;
-				CheckBox^									ShowSpaces;
-				CheckBox^									CodeFolding;
-				CheckBox^									TabsOnTop;
-				CheckBox^									BoldFacedHighlighting;
+			Button^										CmDlgFont;
+			Label^										LabelTabSize;
+			NumericUpDown^								TabSize;
+			GroupBox^									GroupBoxSyntaxHighlighting;
+			Button^										CmDlgSyntaxCommentsColor;
+			Button^										CmDlgSyntaxDigitsColor;
+			Button^										CmDlgSyntaxPreprocessorColor;
+			Button^										CmDlgSyntaxScriptBlocksColor;
+			Button^										CmDlgSyntaxDelimitersColor;
+			Button^										CmDlgSyntaxStringsColor;
+			Button^										CmDlgSyntaxKeywordsColor;
+			Label^										LabelPreprocessor;
+			Label^										LabelScriptBlocks;
+			Label^										LabelStrings;
+			Label^										LabelComments;
+			Label^										LabelDigits;
+			Label^										LabelDelimiters;
+			Label^										LabelKeywords;
+			Button^										CmDlgCurrentLineHighlightColor;
+			Label^										LabelCurrentLineHighlight;
+			Button^										CmDlgCharLimitHighlightColor;
+			Label^										LabelCharLimitHighlight;
+			Button^										CmDlgErrorHighlightColor;
+			Label^										LabelErrorHighlight;
+			Button^										CmDlgSelectionHighlightColor;
+			Label^										LabelSelectionHighlight;
+			Button^										CmDlgFindResultsHighlightColor;
+			Label^										LabelFindResultsHighlight;
+			CheckBox^									WordWrap;
+			CheckBox^									ShowTabs;
+			CheckBox^									ShowSpaces;
+			CheckBox^									CodeFolding;
+			CheckBox^									TabsOnTop;
+			CheckBox^									BoldFacedHighlighting;
 			TabPage^									TabSanitize;
-				CheckBox^									IndentLines;
-				CheckBox^									AnnealCasing;
+			CheckBox^									IndentLines;
+			CheckBox^									AnnealCasing;
+			CheckBox^									EvalifyIfs;
+			CheckBox^									CompilerOverrideBlocks;
 
-		FontDialog^									FontSelection;
+			// hidden controls, for settings that aren't displayed in the preferences window
 
-		Dictionary<String^, ColorDialog^>^			ColorDatabase;
-		bool										Closing;
+			// Find/Replace
+			CheckBox^									CaseSensitive;
+			CheckBox^									MatchWholeWord;
 
-		void										RegisterColorSetting(String^ Key, Color Default, Control^ Parent);
-		virtual void								OnPreferencesSaved(EventArgs^ E);
-public:
-	ScriptEditorPreferences();
+			FontDialog^									FontSelection;
 
-	event EventHandler^								PreferencesSaved;
+			Dictionary<String^, ColorDialog^>^			ColorDatabase;
+			bool										Closing;
 
-	void											LoadINI();
-	void											SaveINI();
-	void											InitializeSettings();
+			void										RegisterColorSetting(String^ Key, Color Default, Control^ Parent);
+			virtual void								OnPreferencesSaved(EventArgs^ E);
+			void										InitializeSettings();
+		public:
+			ScriptEditorPreferences();
 
-	BoundControl^									FetchSetting(String^ Key);
-	int												FetchSettingAsInt(String^ Key);
-	String^											FetchSettingAsString(String^ Key);
+			event EventHandler^							PreferencesSaved;
 
-	Color											LookupColorByKey(String^ Key);
+			void										LoadINI();
+			void										SaveINI();
 
-	void											Show();
+			BoundControl^								FetchSetting(String^ Key, String^ Section);
+			int											FetchSettingAsInt(String^ Key, String^ Section);
+			String^										FetchSettingAsString(String^ Key, String^ Section);
 
-	static ScriptEditorPreferences^%				GetSingleton();
-};
+			Color										LookupColorByKey(String^ Key);
 
-#define PREFERENCES										ScriptEditorPreferences::GetSingleton()
+			void										Show();
+
+			static ScriptEditorPreferences^%			GetSingleton();
+		};
+
+#define PREFERENCES									Preferences::ScriptEditorPreferences::GetSingleton()
+	}
+}

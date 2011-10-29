@@ -13,16 +13,16 @@ namespace ComponentDLLInterface
 	typedef void*									(* QueryInterface)(void);
 
 	// all returned pointers are expected to be released by the caller
-	class CSEInterface
+	class CSEInterfaceTable
 	{
 	public:
-		class ICSEEditorAPI
+		class IEditorAPI
 		{
 		public:
 			void									(* DebugPrint)(UInt8 Source, const char* Message);
 			void									(* WriteToStatusBar)(int PanelIndex, const char* Message);
 			const char*								(* GetAppPath)(void);
-			HWND									(* GetCSMainWindowHandle)(void);
+			HWND									(* GetMainWindowHandle)(void);
 			HWND									(* GetRenderWindowHandle)(void);
 
 			FormData*								(* LookupFormByEditorID)(const char* EditorID);
@@ -85,7 +85,7 @@ namespace ComponentDLLInterface
 
 		void										(* DeleteNativeHeapPointer)(void* Pointer, bool IsArray);
 
-		ICSEEditorAPI								CSEEditorAPI;
+		IEditorAPI									EditorAPI;
 		IScriptEditor								ScriptEditor;
 		IUseInfoList								UseInfoList;
 		IBatchRefEditor								BatchRefEditor;

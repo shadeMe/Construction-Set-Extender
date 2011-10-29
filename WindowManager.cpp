@@ -2122,6 +2122,20 @@ BOOL CALLBACK EditResultScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	return FALSE;
 }
 
+BOOL CALLBACK DebugViewBMPDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_CLOSE:
+		EndDialog(hWnd, 0);
+		return TRUE;
+	case WM_INITDIALOG:
+		SendMessage(GetDlgItem(hWnd, -1), STM_SETIMAGE, IMAGE_BITMAP, lParam);
+		break;
+	}
+	return FALSE;
+}
+
 void InitializeWindowManager(void)
 {
 	HMENU MainMenu = GetMenu(*g_HWND_CSParent),

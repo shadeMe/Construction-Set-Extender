@@ -120,6 +120,9 @@ private: System::Windows::Forms::CheckBox^  TabsOnTop;
 	private: System::Windows::Forms::Label^  LabelMaxVisibleItems;
 	private: System::Windows::Forms::NumericUpDown^  MaxVisibleItems;
 private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
+private: System::Windows::Forms::CheckBox^  EvalifyIfs;
+private: System::Windows::Forms::CheckBox^  CompilerOverrideBlocks;
+private: System::Windows::Forms::CheckBox^  NoFocusUI;
 
 	protected:
 
@@ -153,6 +156,7 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->LoadScriptUpdateExistingScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->TabIntelliSense = (gcnew System::Windows::Forms::TabPage());
+			this->NoFocusUI = (gcnew System::Windows::Forms::CheckBox());
 			this->LabelMaxVisibleItems = (gcnew System::Windows::Forms::Label());
 			this->MaxVisibleItems = (gcnew System::Windows::Forms::NumericUpDown());
 			this->UseQuickView = (gcnew System::Windows::Forms::CheckBox());
@@ -162,6 +166,7 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->LabelNoOfPasses = (gcnew System::Windows::Forms::Label());
 			this->NoOfPasses = (gcnew System::Windows::Forms::NumericUpDown());
 			this->TabAppearance = (gcnew System::Windows::Forms::TabPage());
+			this->BoldFacedHighlighting = (gcnew System::Windows::Forms::CheckBox());
 			this->TabsOnTop = (gcnew System::Windows::Forms::CheckBox());
 			this->CodeFolding = (gcnew System::Windows::Forms::CheckBox());
 			this->ShowSpaces = (gcnew System::Windows::Forms::CheckBox());
@@ -193,9 +198,10 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->LabelDelimiters = (gcnew System::Windows::Forms::Label());
 			this->LabelKeywords = (gcnew System::Windows::Forms::Label());
 			this->TabSanitize = (gcnew System::Windows::Forms::TabPage());
+			this->EvalifyIfs = (gcnew System::Windows::Forms::CheckBox());
+			this->CompilerOverrideBlocks = (gcnew System::Windows::Forms::CheckBox());
 			this->IndentLines = (gcnew System::Windows::Forms::CheckBox());
 			this->AnnealCasing = (gcnew System::Windows::Forms::CheckBox());
-			this->BoldFacedHighlighting = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -221,12 +227,11 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			// 
 			// LabelISThreshold
 			// 
-			this->LabelISThreshold->AutoSize = true;
-			this->LabelISThreshold->Location = System::Drawing::Point(30, 69);
+			this->LabelISThreshold->Location = System::Drawing::Point(30, 51);
 			this->LabelISThreshold->Name = L"LabelISThreshold";
-			this->LabelISThreshold->Size = System::Drawing::Size(148, 13);
+			this->LabelISThreshold->Size = System::Drawing::Size(148, 31);
 			this->LabelISThreshold->TabIndex = 1;
-			this->LabelISThreshold->Text = L"IntelliSense Pop-up Threshold";
+			this->LabelISThreshold->Text = L"IntelliSense Interface Pop-up Threshold";
 			// 
 			// ThresholdLength
 			// 
@@ -243,9 +248,9 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->DestroyOnLastTabClose->AutoSize = true;
 			this->DestroyOnLastTabClose->Location = System::Drawing::Point(22, 92);
 			this->DestroyOnLastTabClose->Name = L"DestroyOnLastTabClose";
-			this->DestroyOnLastTabClose->Size = System::Drawing::Size(152, 17);
+			this->DestroyOnLastTabClose->Size = System::Drawing::Size(181, 17);
 			this->DestroyOnLastTabClose->TabIndex = 11;
-			this->DestroyOnLastTabClose->Text = L"Close Editor With Last Tab";
+			this->DestroyOnLastTabClose->Text = L"Close Editor With Last Open Tab";
 			this->DestroyOnLastTabClose->UseVisualStyleBackColor = true;
 			// 
 			// UseCSParent
@@ -354,9 +359,9 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->CutCopyEntireLine->AutoSize = true;
 			this->CutCopyEntireLine->Location = System::Drawing::Point(22, 138);
 			this->CutCopyEntireLine->Name = L"CutCopyEntireLine";
-			this->CutCopyEntireLine->Size = System::Drawing::Size(242, 17);
+			this->CutCopyEntireLine->Size = System::Drawing::Size(246, 17);
 			this->CutCopyEntireLine->TabIndex = 29;
-			this->CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection\'s Empty";
+			this->CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection Is Empty";
 			this->CutCopyEntireLine->UseVisualStyleBackColor = true;
 			// 
 			// LoadScriptUpdateExistingScripts
@@ -381,6 +386,7 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			// 
 			// TabIntelliSense
 			// 
+			this->TabIntelliSense->Controls->Add(this->NoFocusUI);
 			this->TabIntelliSense->Controls->Add(this->LabelMaxVisibleItems);
 			this->TabIntelliSense->Controls->Add(this->MaxVisibleItems);
 			this->TabIntelliSense->Controls->Add(this->UseQuickView);
@@ -396,14 +402,22 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->TabIntelliSense->Text = L"IntelliSense";
 			this->TabIntelliSense->UseVisualStyleBackColor = true;
 			// 
+			// NoFocusUI
+			// 
+			this->NoFocusUI->Location = System::Drawing::Point(231, 78);
+			this->NoFocusUI->Name = L"NoFocusUI";
+			this->NoFocusUI->Size = System::Drawing::Size(167, 46);
+			this->NoFocusUI->TabIndex = 9;
+			this->NoFocusUI->Text = L"Prevent IntelliSense Interface From Acquiring Focus";
+			this->NoFocusUI->UseVisualStyleBackColor = true;
+			// 
 			// LabelMaxVisibleItems
 			// 
-			this->LabelMaxVisibleItems->AutoSize = true;
 			this->LabelMaxVisibleItems->Location = System::Drawing::Point(228, 152);
 			this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
-			this->LabelMaxVisibleItems->Size = System::Drawing::Size(112, 13);
+			this->LabelMaxVisibleItems->Size = System::Drawing::Size(170, 46);
 			this->LabelMaxVisibleItems->TabIndex = 8;
-			this->LabelMaxVisibleItems->Text = L"Maximum Visible Items";
+			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Items Visible In IntelliSense Interface";
 			// 
 			// MaxVisibleItems
 			// 
@@ -418,21 +432,20 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			// UseQuickView
 			// 
 			this->UseQuickView->AutoSize = true;
-			this->UseQuickView->Location = System::Drawing::Point(231, 69);
+			this->UseQuickView->Location = System::Drawing::Point(231, 51);
 			this->UseQuickView->Name = L"UseQuickView";
-			this->UseQuickView->Size = System::Drawing::Size(89, 17);
+			this->UseQuickView->Size = System::Drawing::Size(86, 17);
 			this->UseQuickView->TabIndex = 6;
-			this->UseQuickView->Text = L"Quick-View™";
+			this->UseQuickView->Text = L"QuickView™";
 			this->UseQuickView->UseVisualStyleBackColor = true;
 			// 
 			// LabelISDBUpdatePeriod
 			// 
-			this->LabelISDBUpdatePeriod->AutoSize = true;
 			this->LabelISDBUpdatePeriod->Location = System::Drawing::Point(30, 152);
 			this->LabelISDBUpdatePeriod->Name = L"LabelISDBUpdatePeriod";
-			this->LabelISDBUpdatePeriod->Size = System::Drawing::Size(181, 26);
+			this->LabelISDBUpdatePeriod->Size = System::Drawing::Size(148, 46);
 			this->LabelISDBUpdatePeriod->TabIndex = 3;
-			this->LabelISDBUpdatePeriod->Text = L"IntelliSense Database Update Period\r\n(In Earth Minutes)";
+			this->LabelISDBUpdatePeriod->Text = L"IntelliSense Database Update Period (In Earth Minutes)";
 			// 
 			// DatabaseUpdateInterval
 			// 
@@ -503,6 +516,16 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->TabAppearance->Text = L"Appearance";
 			this->TabAppearance->UseVisualStyleBackColor = true;
 			this->TabAppearance->Click += gcnew System::EventHandler(this, &OptionsDialog::TabAppearance_Click);
+			// 
+			// BoldFacedHighlighting
+			// 
+			this->BoldFacedHighlighting->AutoSize = true;
+			this->BoldFacedHighlighting->Location = System::Drawing::Point(176, 194);
+			this->BoldFacedHighlighting->Name = L"BoldFacedHighlighting";
+			this->BoldFacedHighlighting->Size = System::Drawing::Size(138, 17);
+			this->BoldFacedHighlighting->TabIndex = 32;
+			this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
+			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
 			// 
 			// TabsOnTop
 			// 
@@ -784,6 +807,8 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			// 
 			// TabSanitize
 			// 
+			this->TabSanitize->Controls->Add(this->EvalifyIfs);
+			this->TabSanitize->Controls->Add(this->CompilerOverrideBlocks);
 			this->TabSanitize->Controls->Add(this->IndentLines);
 			this->TabSanitize->Controls->Add(this->AnnealCasing);
 			this->TabSanitize->Location = System::Drawing::Point(4, 22);
@@ -794,10 +819,30 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			this->TabSanitize->Text = L"Sanitize";
 			this->TabSanitize->UseVisualStyleBackColor = true;
 			// 
+			// EvalifyIfs
+			// 
+			this->EvalifyIfs->AutoSize = true;
+			this->EvalifyIfs->Location = System::Drawing::Point(109, 156);
+			this->EvalifyIfs->Name = L"EvalifyIfs";
+			this->EvalifyIfs->Size = System::Drawing::Size(155, 17);
+			this->EvalifyIfs->TabIndex = 14;
+			this->EvalifyIfs->Text = L"Eval\'ify If/ElseIf Statements";
+			this->EvalifyIfs->UseVisualStyleBackColor = true;
+			// 
+			// CompilerOverrideBlocks
+			// 
+			this->CompilerOverrideBlocks->AutoSize = true;
+			this->CompilerOverrideBlocks->Location = System::Drawing::Point(109, 195);
+			this->CompilerOverrideBlocks->Name = L"CompilerOverrideBlocks";
+			this->CompilerOverrideBlocks->Size = System::Drawing::Size(219, 17);
+			this->CompilerOverrideBlocks->TabIndex = 13;
+			this->CompilerOverrideBlocks->Text = L"Apply Compiler Override To Script Blocks";
+			this->CompilerOverrideBlocks->UseVisualStyleBackColor = true;
+			// 
 			// IndentLines
 			// 
 			this->IndentLines->AutoSize = true;
-			this->IndentLines->Location = System::Drawing::Point(128, 164);
+			this->IndentLines->Location = System::Drawing::Point(109, 117);
 			this->IndentLines->Name = L"IndentLines";
 			this->IndentLines->Size = System::Drawing::Size(114, 17);
 			this->IndentLines->TabIndex = 12;
@@ -807,22 +852,12 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 			// AnnealCasing
 			// 
 			this->AnnealCasing->AutoSize = true;
-			this->AnnealCasing->Location = System::Drawing::Point(128, 109);
+			this->AnnealCasing->Location = System::Drawing::Point(109, 78);
 			this->AnnealCasing->Name = L"AnnealCasing";
 			this->AnnealCasing->Size = System::Drawing::Size(205, 17);
 			this->AnnealCasing->TabIndex = 11;
 			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
-			// 
-			// BoldFacedHighlighting
-			// 
-			this->BoldFacedHighlighting->AutoSize = true;
-			this->BoldFacedHighlighting->Location = System::Drawing::Point(176, 194);
-			this->BoldFacedHighlighting->Name = L"BoldFacedHighlighting";
-			this->BoldFacedHighlighting->Size = System::Drawing::Size(138, 17);
-			this->BoldFacedHighlighting->TabIndex = 32;
-			this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
-			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 

@@ -3,6 +3,8 @@
 
 extern ComponentDLLInterface::BSAViewerInterface g_InteropInterface;
 
+using namespace ConstructionSetExtender;
+
 extern "C"
 {
 	__declspec(dllexport) void* QueryInterface(void)

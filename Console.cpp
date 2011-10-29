@@ -50,7 +50,7 @@ void Console::InitializeLog(const char* AppPath)
 		DebugPrint("Couldn't initialize debug log");
 }
 
-void Console::InitializeConsole()
+void Console::InitializeConsoleWindow()
 {
 	if (IsConsoleInitalized())	return;
 

@@ -2,4 +2,4 @@
 #include "[Common]\IncludesCLR.h"
 #include "[Common]\MiscUtilities.h"
 
-using namespace Log::UseInfoList;
+using namespace ConstructionSetExtender::Log::UseInfoList;

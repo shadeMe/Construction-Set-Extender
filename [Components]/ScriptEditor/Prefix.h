@@ -2,4 +2,4 @@
 #include "[Common]\IncludesCLR.h"
 #include "[Common]\MiscUtilities.h"
 
-using namespace Log::ScriptEditor;
+using namespace ConstructionSetExtender::Log::ScriptEditor;

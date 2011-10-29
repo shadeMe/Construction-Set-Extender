@@ -163,7 +163,9 @@
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
     <ClCompile Include="AvalonEditXSHD.cpp" />
-    <ClCompile Include="IntelliSense.cpp" />
+    <ClCompile Include="IntelliSense\IntelliSenseDatabase.cpp" />
+    <ClCompile Include="IntelliSense\IntelliSenseInterface.cpp" />
+    <ClCompile Include="IntelliSense\IntelliSenseItem.cpp" />
     <ClCompile Include="NumberedRichTextBox.cpp" />
     <ClCompile Include="ScriptEditorPreferences.cpp" />
     <ClCompile Include="RefactorTools.cpp" />
@@ -179,6 +181,9 @@
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="AvalonEditComponents.h" />
+    <ClInclude Include="IntelliSense\IntelliSenseDatabase.h" />
+    <ClInclude Include="IntelliSense\IntelliSenseInterface.h" />
+    <ClInclude Include="IntelliSense\IntelliSenseItem.h" />
     <ClInclude Include="RefactorTools.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h" />
@@ -188,7 +193,6 @@
     <ClInclude Include="AuxiliaryTextEditor.h" />
     <ClInclude Include="AvalonEditTextEditor.h" />
     <ClInclude Include="AvalonEditXSHD.h" />
-    <ClInclude Include="IntelliSense.h" />
     <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="ScriptEditorPreferences.h" />
     <ClInclude Include="ScriptListDialog.h" />

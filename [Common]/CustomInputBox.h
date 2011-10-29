@@ -127,7 +127,7 @@ namespace InputBoxes
 				this->Controls->Add(this->btnCancel);
 				this->Controls->Add(this->btnOK);
 				this->Controls->Add(this->lblPrompt);
-				this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedDialog;
+				this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedToolWindow;
 				this->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
 				this->Name = L"InputBox";
 				this->Load += gcnew System::EventHandler(this, &InputBox::InputBox_Load);

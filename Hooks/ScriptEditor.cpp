@@ -29,7 +29,7 @@ namespace Hooks
 		PatchCompilerErrorDetours();
 	}
 
-	void __stdcall InstantiateTabContainer(HWND ScriptListComboBox)
+	void __stdcall InstantiateScriptEditor(HWND ScriptListComboBox)
 	{
 		Script* AuxScript = NULL;
 		if (ScriptListComboBox)
@@ -45,7 +45,7 @@ namespace Hooks
 		__asm
 		{
 			push	0
-			call	InstantiateTabContainer
+			call	InstantiateScriptEditor
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -57,7 +57,7 @@ namespace Hooks
 		__asm
 		{
 			push	eax
-			call	InstantiateTabContainer
+			call	InstantiateScriptEditor
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
@@ -69,7 +69,7 @@ namespace Hooks
 		__asm
 		{
 			push	eax
-			call	InstantiateTabContainer
+			call	InstantiateScriptEditor
 			jmp		[_hhGetVar(Retn)]
 		}
 	}

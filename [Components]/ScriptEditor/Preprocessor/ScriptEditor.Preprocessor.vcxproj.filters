@@ -21,7 +21,6 @@
     <ClInclude Include="Resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="..\Globals.h" />
     <ClInclude Include="..\ScriptParser.h" />
     <ClInclude Include="..\..\..\[Common]\NativeWrapper.h">
       <Filter>Wrappers</Filter>

@@ -1,4 +1,5 @@
 #include "CLIWrapper.h"
+#include <MSCorEE.h>
 
 namespace CLIWrapper
 {
@@ -19,6 +20,15 @@ namespace CLIWrapper
 
 	bool CLIWrapper::ImportInterfaces(const OBSEInterface * obse)
 	{
+		HMODULE MsCoreEDLL = LoadLibrary("MSCOREE.DLL");	// force load the CLR with server mode GC enabled (helps with debugging memory profiling)
+		if (MsCoreEDLL)
+		{
+			void* CLRInterface = NULL;
+			HRESULT  ( __stdcall *CorBindToRuntimeExProc)(LPCWSTR, LPCWSTR, DWORD, REFCLSID, REFIID, LPVOID FAR *) = (HRESULT  ( __stdcall *)(LPCWSTR, LPCWSTR, DWORD, REFCLSID, REFIID, LPVOID FAR*))GetProcAddress(MsCoreEDLL, "CorBindToRuntimeEx");
+			if (CorBindToRuntimeExProc)
+				CorBindToRuntimeExProc(L"v4.0.30319", NULL, STARTUP_SERVER_GC, CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost, &CLRInterface);
+		}
+
 		SetErrorMode(0);
 		std::string DLLName = "";
 		void** Interface = NULL;

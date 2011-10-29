@@ -16,7 +16,7 @@ int GetListViewSelectedItemIndex( ListView^% Source )
 	return Result;
 }
 
-int CSEListViewStringSorter::Compare(Object^ X, Object^ Y)
+int ListViewStringSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;
 	Result = String::Compare(((ListViewItem^)X)->SubItems[_Column]->Text, ((ListViewItem^)Y)->SubItems[_Column]->Text, true);
@@ -24,7 +24,7 @@ int CSEListViewStringSorter::Compare(Object^ X, Object^ Y)
 	return Result;
 }
 
-int CSEListViewIntSorter::Compare(Object^ X, Object^ Y)
+int ListViewIntSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;
 	try
@@ -44,11 +44,12 @@ int CSEListViewIntSorter::Compare(Object^ X, Object^ Y)
 	return Result;
 }
 
-int CSEListViewImgSorter::Compare(Object^ X, Object^ Y)
+int ListViewImgSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;
 	Result = ((ListViewItem^)X)->ImageIndex - ((ListViewItem^)Y)->ImageIndex;
 
-	if (_Order == SortOrder::Descending)	Result *= -1;
+	if (_Order == SortOrder::Descending)
+		Result *= -1;
 	return Result;
 }
