@@ -52,10 +52,10 @@ namespace CSAutomationScript
 		void							Copy(const CSASDataElement& Source);
 	public:
 		UInt8							GetType() const { return Type; }
-		TESForm*						GetForm() const { assert(Type == kParamType_Reference); return RefData; }
-		double							GetNumber() const { assert(Type == kParamType_Numeric); return NumericData; }
-		const char*						GetString() const { assert(Type == kParamType_String); return StringData; }
-		Array*							GetArray() const { assert(Type == kParamType_Array); return ArrayData; }
+		TESForm*						GetForm() const { assertR(Type == kParamType_Reference); return RefData; }
+		double							GetNumber() const { assertR(Type == kParamType_Numeric); return NumericData; }
+		const char*						GetString() const { assertR(Type == kParamType_String); return StringData; }
+		Array*							GetArray() const { assertR(Type == kParamType_Array); return ArrayData; }
 
 		void							SetForm(TESForm* Data);
 		void							SetNumber(double Data);

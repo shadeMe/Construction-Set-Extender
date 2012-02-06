@@ -6,7 +6,7 @@ namespace ConstructionSetExtender
 {
 	namespace TextEditors
 	{
-		public ref class ScriptOffsetViewer
+		ref class ScriptOffsetViewer
 		{
 			OffsetRichTextBox^						Viewer;
 			bool									InitializationState;
@@ -23,9 +23,10 @@ namespace ConstructionSetExtender
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 			void									Reset(void);
 			void									SetFont(Font^ NewFont);
+			UInt16									GetLastOffset();
 		};
 
-		public ref class SimpleTextViewer
+		ref class SimpleTextViewer
 		{
 			NumberedRichTextBox^					Viewer;
 		public:

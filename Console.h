@@ -14,7 +14,7 @@ class Console
 	UInt32						IndentLevel;
 	std::string					MessageBuffer;
 	bool						UpdateSignalFlag;
-	char						Buffer[0x200];
+	char						Buffer[0x512];
 
 	void						PrintMessage(std::string& Prefix, const char* MessageStr);
 public:
@@ -43,7 +43,7 @@ public:
 	void						Deinitialize();
 	const char*					GetMessageBuffer() { return MessageBuffer.c_str(); }
 	bool						GetShouldUpdate() { bool Result = UpdateSignalFlag; UpdateSignalFlag = false; return Result; }
-	const char*					GetDebugLogPath() { return DebugLogPath.c_str(); }
+	void						OpenDebugLog();
 
 	void						LogMessage(UInt8 Source, const char* Format, va_list Args);
 	void						LogMessage(const char* Prefix,  const char* Format, va_list Args);
@@ -58,7 +58,7 @@ public:
 #define CONSOLE									Console::GetSingleton()
 #define CONSOLECMDBOX_RESETCOMMANDSTACK			9990
 #define CONSOLECMDBOX_CLEARCOMMANDSTACK			9991
-#define CONSOLE_UPDATETIMER						0x9999
+#define CONSOLE_UPDATETIMER						0x6999
 
 void DebugPrint(const char* fmt, ...);
 void DebugPrint(UInt8 source, const char* fmt, ...);

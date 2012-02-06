@@ -16,15 +16,6 @@ extern "C"
 
 bool ShowBatchRefEditorDialog(BatchRefData* Data)
 {
-	try
-	{
-		System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
-	}
-
 	return REFBE->InitializeBatchEditor(Data);
 }
 

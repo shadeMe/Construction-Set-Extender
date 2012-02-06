@@ -43,7 +43,7 @@ namespace Achievements
 		kAchievement_Commandant,
 		kAchievement_Compartmentalizer,
 		kAchievement_EruditeModder,
-		kAchievement_RoadBuilder,
+		kAchievement_BobTheBuilder,
 		kAchievement_Loquacious,
 		kAchievement_Saboteur,
 

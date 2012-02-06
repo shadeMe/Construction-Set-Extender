@@ -1,89 +1,43 @@
-#include "LipSyncPipeClient.h"
-#include "windows.h"
-#include "[Common]\CSInteropData.h"
-#include "[Libraries]\MemoryHandler\MemoryHandler.h"
 #include <fstream>
-
-using namespace SME::MemoryHandler;
-
-MemHdlr				kCrt0EntryPointInitialization			(0x008AE5C0, (UInt32)0, 0, 0);					// prevents CS windows from being shown
-NopHdlr				kInitializeWindows						(0x0041D571, 5);
-MemHdlr				kShowSplashScreenWindow					(0x0041D3C8, 0x0041D3F6, 0, 0);
-MemHdlr				kMainWindowMessageLoop					(0x0041D5C7, MainWindowMessageLoopHook, 0, 0);	// makes the client wait for a message from the server
-MemHdlr				kMessageHandlerDebugPrint				(0x009302A0, (UInt32)0, 0, 0);
-MemHdlr				kLogOC3AnimFactoryMessagesA				(0x0087FDB9, LogOC3AnimFactoryMessagesHook, 0, 0);
-NopHdlr				kLogOC3AnimFactoryMessagesB				(0x0087FD8F, 2);
+#include "Windows.h"
+#include "LipSyncPipeClient.h"
+#include "[Common]\CSInteropData.h"
 
 bool				g_HandleDebugText		=	false;
-
-typedef void*	(__cdecl *_GenerateLIPFileWrapper)(char** Path, const char* ResponseText, UInt8 unk3);
-const _GenerateLIPFileWrapper		GenerateLIPFileWrapper = (_GenerateLIPFileWrapper)0x00406010;
-
-typedef UInt16	(__cdecl *_ReplaceSourceFileExtensionWithLIP)(char** SourcePath);
-const _ReplaceSourceFileExtensionWithLIP	ReplaceSourceFileExtensionWithLIP = (_ReplaceSourceFileExtensionWithLIP)0x004ABE20;
-
-static const UInt32	kCreateLIPFile = 0x004ABE10;
-
 HANDLE				g_InteropPipeHandle		=	INVALID_HANDLE_VALUE;
-
 FILE*				g_DebugLog				=	NULL;
-char				g_TextBuffer[0x200]		=	{0};
 
-extern "C"
+_DefinePatchHdlr(Crt0EntryPointInitialization, 0x008AE5C0);
+_DefineNopHdlr(InitializeWindows, 0x0041D571, 5);
+_DefineJumpHdlr(ShowSplashScreenWindow, 0x0041D3C8, 0x0041D3F6);
+_DefineHookHdlr(MainWindowMessageLoop, 0x0041D5C7);
+_DefinePatchHdlr(MessageHandlerDebugPrint, 0x009302A0);
+_DefineHookHdlr(LogOC3AnimFactoryMessagesA, 0x0087FDB9);
+_DefineNopHdlr(LogOC3AnimFactoryMessagesB, 0x0087FD8F, 2);
+_DefinePatchHdlr(AllowMultipleEditors, 0x0041CD97);
+
+
+BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
-void LipSyncPipeClient_Initialize()
-{
-	kCrt0EntryPointInitialization.WriteUInt8(0);
-	kInitializeWindows.WriteNop();
-	kShowSplashScreenWindow.WriteJump();
-	kMainWindowMessageLoop.WriteJump();
-	kMessageHandlerDebugPrint.WriteUInt32((UInt32)&HandleDebugText);
-	kLogOC3AnimFactoryMessagesA.WriteJump();
-	kLogOC3AnimFactoryMessagesB.WriteNop();
-}
-}
+	switch (dwReason)
+	{
+	case DLL_PROCESS_ATTACH:
+		_MemHdlr(Crt0EntryPointInitialization).WriteUInt8(0x0);
+		_MemHdlr(InitializeWindows).WriteNop();
+		_MemHdlr(ShowSplashScreenWindow).WriteJump();
+		_MemHdlr(MainWindowMessageLoop).WriteJump();
+		_MemHdlr(MessageHandlerDebugPrint).WriteUInt32((UInt32)&HandleDebugText);
+		_MemHdlr(LogOC3AnimFactoryMessagesA).WriteJump();
+		_MemHdlr(LogOC3AnimFactoryMessagesB).WriteNop();
+		_MemHdlr(AllowMultipleEditors).WriteUInt8(0xEB);
 
-void DebugPrint(const char* fmt, ...)
-{
-	if (!g_DebugLog)	return;
+		g_DebugLog = _fsopen("LipSyncPipeClient.log", "w", _SH_DENYWR);
+		break;
+	case DLL_PROCESS_DETACH:
+		break;
+	}
 
-	va_list args;
-	va_start(args, fmt);
-	vsprintf_s(g_TextBuffer, sizeof(g_TextBuffer), fmt, args);
-	va_end(args);
-
-	fputs(g_TextBuffer, g_DebugLog);
-	fputs("\n", g_DebugLog);
-	fflush(g_DebugLog);
-}
-
-void LogWinAPIErrorMessage(DWORD ErrorID)
-{
-	LPVOID ErrorMsg;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER |
-		FORMAT_MESSAGE_FROM_SYSTEM |
-		FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
-		ErrorID,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR) &ErrorMsg,
-		0, NULL );
-
-	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg);
-	LocalFree(ErrorMsg);
-}
-
-void __stdcall HandleDebugText(const char* Message)
-{
-	if (!g_HandleDebugText)	return;
-
-	CSECSInteropData InteropDataOut(CSECSInteropData::kMessageType_DebugPrint);
-	DWORD BytesReadWriteBuffer = 0;
-
-	sprintf_s(InteropDataOut.StringBufferA, sizeof (InteropDataOut.StringBufferA), "%s", Message);
-
-	PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &BytesReadWriteBuffer);
+	return TRUE;
 }
 
 bool GenerateLIPFile(char* FilePath, char* ResponseText)
@@ -93,11 +47,11 @@ bool GenerateLIPFile(char* FilePath, char* ResponseText)
 
 	__try
 	{
-		void* LIPResult = GenerateLIPFileWrapper(&FilePath, ResponseText, 1);
+		void* LIPResult = cdeclCall<void*>(0x00406010, &FilePath, ResponseText, 1);
 		if (LIPResult)
 		{
-			ReplaceSourceFileExtensionWithLIP(&FilePath);
-			Result = thisCall<UInt16>(kCreateLIPFile, LIPResult, &FilePath);
+			cdeclCall<void>(0x004ABE20, &FilePath);
+			Result = thisCall<UInt16>(0x004ABE10, LIPResult, &FilePath);
 		}
 	}
 	__except(EXCEPTION_EXECUTE_HANDLER)
@@ -121,12 +75,12 @@ void ConnectToInteropPipe(void)
 	while (1)
 	{
 		g_InteropPipeHandle = CreateFile(PipeName,
-							GENERIC_READ|GENERIC_WRITE,
-							0,
-							NULL,
-							OPEN_EXISTING,
-							0,
-							NULL);
+			GENERIC_READ|GENERIC_WRITE,
+			0,
+			NULL,
+			OPEN_EXISTING,
+			0,
+			NULL);
 
 		if (g_InteropPipeHandle != INVALID_HANDLE_VALUE)
 		{
@@ -162,8 +116,6 @@ void __stdcall ProcessServerMessage(void)
 
 	if (g_InteropPipeHandle == INVALID_HANDLE_VALUE)
 	{
-		g_DebugLog = _fsopen("LipSyncPipeClient.log", "w", _SH_DENYWR);
-
 		ConnectToInteropPipe();
 		PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataIn, &BytesReadWriteBuffer);
 	}
@@ -177,7 +129,12 @@ void __stdcall ProcessServerMessage(void)
 			case CSECSInteropData::kMessageType_Quit:
 				DebugPrint("Lip Sync Pipe Client received a Quit message!");
 
-				if (g_InteropPipeHandle != INVALID_HANDLE_VALUE)			CloseHandle(g_InteropPipeHandle);
+				if (g_DebugLog)
+				{
+					fflush(g_DebugLog);
+					fclose(g_DebugLog);
+				}
+				CloseHandle(g_InteropPipeHandle);
 				ExitProcess(0);
 				break;
 			case CSECSInteropData::kMessageType_GenerateLIP:
@@ -195,6 +152,12 @@ void __stdcall ProcessServerMessage(void)
 		else if (GetLastError() == ERROR_BROKEN_PIPE)
 		{
 			DebugPrint("Interop pipe has ended unexpectedly - Terminating!");
+
+			if (g_DebugLog)
+			{
+				fflush(g_DebugLog);
+				fclose(g_DebugLog);
+			}
 			CloseHandle(g_InteropPipeHandle);
 			ExitProcess(0);
 		}
@@ -206,24 +169,33 @@ void __stdcall ProcessServerMessage(void)
 	}
 }
 
-void __declspec(naked) MainWindowMessageLoopHook(void)
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
+#define _hhName		MainWindowMessageLoop
+_hhBegin()
 {
-	static UInt32	kMainWindowMessageLoopHookRetnAddr = 0x0041D5CD;
+	_hhSetVar(Retn, 0x0041D5CD);
 	__asm
 	{
+		pushad
 		call	ProcessServerMessage
+		popad
 
 		call	edi
 		mov		esi, eax
 		xor		eax, eax
-		jmp		[kMainWindowMessageLoopHookRetnAddr]
+		jmp		[_hhGetVar(Retn)]
 	}
 }
 
-void __declspec(naked) LogOC3AnimFactoryMessagesHook(void)
+
+#define _hhName		LogOC3AnimFactoryMessagesA
+_hhBegin()
 {
-	static UInt32	kLogOC3AnimFactoryMessagesHookRetnAddr = 0x0087FDBE;
-	static UInt32	kLogOC3AnimFactoryMessagesHookCallAddr = 0x008731E0;
+	_hhSetVar(Retn, 0x0087FDBE);
+	_hhSetVar(Call, 0x008731E0);
 	__asm
 	{
 		pushad
@@ -231,7 +203,56 @@ void __declspec(naked) LogOC3AnimFactoryMessagesHook(void)
 		call	HandleDebugText
 		popad
 
-		call	[kLogOC3AnimFactoryMessagesHookCallAddr]
-		jmp		[kLogOC3AnimFactoryMessagesHookRetnAddr]
+		call	[_hhGetVar(Call)]
+		jmp		[_hhGetVar(Retn)]
 	}
+}
+
+#pragma warning(pop)
+#pragma optimize("", on)
+
+void __stdcall HandleDebugText(const char* Message)
+{
+	if (!g_HandleDebugText)
+		return;
+
+	CSECSInteropData InteropDataOut(CSECSInteropData::kMessageType_DebugPrint);
+	DWORD BytesReadWriteBuffer = 0;
+
+	sprintf_s(InteropDataOut.StringBufferA, sizeof (InteropDataOut.StringBufferA), "%s", Message);
+	PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &BytesReadWriteBuffer);
+}
+
+void DebugPrint(const char* fmt, ...)
+{
+	if (!g_DebugLog)
+		return;
+
+	char Buffer[0x500] = {0};
+
+	va_list args;
+	va_start(args, fmt);
+	vsprintf_s(Buffer, sizeof(Buffer), fmt, args);
+	va_end(args);
+
+	fputs(Buffer, g_DebugLog);
+	fputs("\n", g_DebugLog);
+	fflush(g_DebugLog);
+}
+
+void LogWinAPIErrorMessage(DWORD ErrorID)
+{
+	LPVOID ErrorMsg;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		ErrorID,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &ErrorMsg,
+		0, NULL );
+
+	DebugPrint("\tError Message: %s", (LPSTR)ErrorMsg);
+	LocalFree(ErrorMsg);
 }

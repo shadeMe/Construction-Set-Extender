@@ -84,6 +84,12 @@
     <ClCompile Include="NumberedRichTextBox.cpp">
       <Filter>Components\TextEditors</Filter>
     </ClCompile>
+    <ClCompile Include="FindReplaceDialog.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SnippetManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -156,6 +162,12 @@
     </ClInclude>
     <ClInclude Include="ScriptTextEditorInterface.h">
       <Filter>Components\TextEditors</Filter>
+    </ClInclude>
+    <ClInclude Include="FindReplaceDialog.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SnippetManager.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,8 +2,6 @@
 #include "Hooks\TESFile.h"
 #include "Achievements.h"
 
-using namespace Hooks;
-
 WorkspaceManager					g_WorkspaceManager;
 
 void WorkspaceManager::Initialize(const char *DefaultDirectory)
@@ -28,7 +26,7 @@ void WorkspaceManager::Initialize(const char *DefaultDirectory)
 
 void WorkspaceManager::ResetLoadedData()
 {
-	kAutoLoadActivePluginOnStartup.WriteJump();
+	Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteJump();
 
 	for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); !Itr.End(); ++Itr)
 	{
@@ -41,7 +39,7 @@ void WorkspaceManager::ResetLoadedData()
 
 	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 
-	kAutoLoadActivePluginOnStartup.WriteBuffer();
+	Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteBuffer();
 }
 
 bool WorkspaceManager::SelectWorkspace(const char* Workspace)
@@ -77,8 +75,7 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 	else
 		sprintf_s(WorkspacePath, MAX_PATH, "%s", Workspace);
 
-	PrintToBuffer("%s\\", WorkspacePath);
-	sprintf_s(WorkspacePath, MAX_PATH, "%s", g_TextBuffer);
+	strcat_s(WorkspacePath, MAX_PATH, "\\");
 
 	if (strstr(WorkspacePath, g_APPPath.c_str()) == WorkspacePath)
 	{
@@ -90,9 +87,10 @@ bool WorkspaceManager::SelectWorkspace(const char* Workspace)
 			CreateDefaultDirectories(WorkspacePath);
 			ReloadModList("Data\\", false, true);
 
-			PrintToBuffer("Current workspace set to '%s'", WorkspacePath);
-			DebugPrint(g_TextBuffer);
-			MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONINFORMATION);
+			char Buffer[0x200] = {0};
+			FORMAT_STR(Buffer, "Current workspace set to '%s'", WorkspacePath);
+			MessageBox(*g_HWND_CSParent, Buffer, "CSE", MB_OK|MB_ICONINFORMATION);
+			DebugPrint(Buffer);
 
 			Achievements::UnlockAchievement(Achievements::kAchievement_Compartmentalizer);
 			return true;
@@ -134,6 +132,8 @@ void WorkspaceManager::CreateDefaultDirectories(const char* WorkspacePath)
 		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Preprocessor\\STD\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\CSAS\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\CSAS\\Global Scripts\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Snippets\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+		(!CreateDirectory(std::string(Buffer + "Data\\Scripts\\Auto-Recovery Cache\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
 		(!CreateDirectory(std::string(Buffer + "Data\\Backup\\").c_str(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS))
 	{
 		DebugPrint("Couldn't create create all default directories in workspace '%s'", WorkspacePath);

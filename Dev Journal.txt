@@ -4,29 +4,47 @@ To-Do
 IMMEDIATE  >>
 
 
-
 NOTE	---->
-> Don't forget to correct NiObjectNET's def when updating OBSE source files
+> Include empty versions of the newly added default directories in the mod package
+> Mention the changes made to the LOD INI settings to get all objects to render to the LOD diffuse maps
+> The current mode of com apartment state setting isn't compatible with the old injection method. See if you can convince Ian to let you bundle the new loader if OBSE isn't updated by then
 
 
 MISC	---->
 > Credits:	T800G, for the window snapper code
 			Ingo Berg, for muParserX (and for the great tech. support)
+			JRoush, for allowing the use of COEF's code
 
 
 CSE		---->
-> Use a tab delimited format for the change logs
-> Relative scaling and snap to bounding box
+> Go into Cell View. Right click on any interior cell->Edit. The Cell dialog comes up. If you click in any of the cell names on the left, they all gain a "*" and thus become dirt.
+> Prevent control redrawing whereever possible; TESDialog::BuildSubwindow, WM_INITDIALOG in FormEdit/FormIDListView
+> Context Menu on TESBoundObjects -> Preview
+> Wrap all editorAPI instance data for easier portability
+> Partial black tex hasn't been fixed yet, generator still seems to crash after hitting a mem limit (around 850MB)
+	< THen again, might not be a mem issue. Try reducing the size of the textures
+> Batch LIP generator tool (the CS' output works fine with Skyrim too!)
+> Toggle visibility/reveal needs to update the ninodes after unculling
+> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
+> Double right click on a form list combo box (TESComboBox) opens it for editing
+> Fixe undo manger ctd at 0x00431F68; (special marker gets freed)
+> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released
+> Main window positions not working well with 2nd mon; main window states aren't correctly inited by the InitializeWindows hook
+> Look into Konption's kf CTD; add a skeleton/kf/model tester tool that wraps the various 3d init subs in SEH
+> [AFTER 6.0] Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
+> [AFTER 6.0] Investigate if f_TESObjectREFR::SetExtraEditorMoveDataPosition/Rotation needs to be called in the batch editor code; Yup, look into 0x005478A0
+> [AFTER 6.0] Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
+> [AFTER 6.0] Add a color overlay to objects under the selection rubber band
 
-* Fix the bug that causes black squares on the LOD texture if you switch to a different window. Annoying.
-
---! CSAS Function Requests:
+--! [AFTER 6.0] CSAS Function Requests:
 > Input functions.
 > INI functions
 
 
 SE		---->
-> A code snippets manager, integrated into IntelliSense
-> New find/replace window, with options: Case Sensitive, Whole Word matches, Perform in all open tabs, Count Matches
-> New goto line/offset window
-> Find replace colorizer takes segments instead of performing the search op again
+> Workspace deallocs sometimes go unnoticed by the manager, leading it to think there are active instances
+> [AFTER 6.0] A code snippets manager, integrated into IntelliSense
+
+
+USE		---->
+> Export all data to CSV

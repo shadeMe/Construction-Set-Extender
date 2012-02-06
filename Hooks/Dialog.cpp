@@ -2,6 +2,10 @@
 #include "..\Achievements.h"
 #include "..\WindowManager.h"
 
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
 namespace Hooks
 {
 	bool		g_QuickLoadToggle = false;
@@ -34,7 +38,7 @@ namespace Hooks
 	_DefineHookHdlr(TESRaceCopyHairEyeDataMessageHandler, 0x004E8FE1);
 	_DefineHookHdlr(TESDialogGetIsWindowDragDropRecipient, 0x004433FF);
 	_DefineHookHdlr(AboutDialog, 0x00441CC5);
-	_DefineNopHdlr(TESQuestStageResultScript, 0x004E234D, 2);
+	_DefineHookHdlr(TESQuestStageResultScript, 0x004E238D);
 	_DefineHookHdlr(TESNPCUpdatePreviewControl, 0x0048C598);
 	_DefineHookHdlr(TESParametersFillAndInitSelectionComboBoxOwners, 0x0045942F);
 	_DefineHookHdlr(SearchReplaceDialog, 0x004448FD);
@@ -58,9 +62,51 @@ namespace Hooks
 	_DefinePatchHdlr(HideCSMainDialogsA, 0x00419F62 + 1);
 	_DefinePatchHdlr(HideCSMainDialogsB, 0x00419EE3 + 1);
 	_DefinePatchHdlr(HideCSMainDialogsC, 0x0041B166 + 1);
+	_DefineHookHdlr(HideCSMainDialogsStartup, 0x0041CF40);
+	_DefineHookHdlr(ReleaseModelessDialogsA, 0x00405BBB);
+	_DefineHookHdlr(ReleaseModelessDialogsB, 0x00405AEF);
+	_DefineHookHdlr(ReleaseModelessDialogsC, 0x00447CAD);
+	_DefineHookHdlr(ReleaseModelessDialogsD, 0x00447935);
+	_DefineHookHdlr(ReleaseModelessDialogsE, 0x004476A0);
+
+	void* ssanimRef = NULL;
+	void* __stdcall doTestqqq(TESObjectREFR* Ref)
+	{
+		ssanimRef = NULL;
+
+		__try
+		{
+			ssanimRef = thisCall<NiNode*>(0x0054AF30, Ref);
+		}
+		__except(EXCEPTION_EXECUTE_HANDLER)
+		{
+			;//
+		}
+
+		return ssanimRef;
+	}
+	#define _hhName		TESTQQQ
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0048AC13);
+		__asm
+		{
+			pushad
+			push	ecx
+			call	doTestqqq
+			popad
+
+			mov     eax, ssanimRef
+			retn
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+	_DefineHookHdlr(TESTQQQ, 0x0048AC07);
 
 	void PatchDialogHooks(void)
 	{
+	//	SafeWrite32(0x0095899C, (UInt32)&TESTQQQHook);
+	//	_MemHdlr(TESTQQQ).WriteJump();
 		_MemHdlr(FindTextInit).WriteJump();
 		_MemHdlr(UseInfoListInit).WriteJump();
 		_MemHdlr(DataDlgInit).WriteJump();
@@ -88,7 +134,7 @@ namespace Hooks
 		_MemHdlr(TESRaceCopyHairEyeDataMessageHandler).WriteJump();
 		_MemHdlr(TESDialogGetIsWindowDragDropRecipient).WriteJump();
 		_MemHdlr(AboutDialog).WriteJump();
-		_MemHdlr(TESQuestStageResultScript).WriteNop();
+		_MemHdlr(TESQuestStageResultScript).WriteJump();
 		_MemHdlr(TESNPCUpdatePreviewControl).WriteJump();
 		_MemHdlr(TESParametersFillAndInitSelectionComboBoxOwners).WriteJump();
 		_MemHdlr(SearchReplaceDialog).WriteJump();
@@ -112,6 +158,30 @@ namespace Hooks
 		_MemHdlr(HideCSMainDialogsA).WriteUInt8(SW_HIDE);
 		_MemHdlr(HideCSMainDialogsB).WriteUInt8(SW_HIDE);
 		_MemHdlr(HideCSMainDialogsC).WriteUInt8(SW_HIDE);
+		_MemHdlr(HideCSMainDialogsStartup).WriteJump();
+		_MemHdlr(ReleaseModelessDialogsA).WriteJump();
+		_MemHdlr(ReleaseModelessDialogsB).WriteJump();
+		_MemHdlr(ReleaseModelessDialogsC).WriteJump();
+		_MemHdlr(ReleaseModelessDialogsD).WriteJump();
+		_MemHdlr(ReleaseModelessDialogsE).WriteJump();
+
+		for (int i = 0; i < 14; i++)
+		{
+			static const UInt32 kTESDialogBuildSubwindowCallSites[14] =
+			{
+				0x00423A02, 0x00451538, 0x004CDF3A, 0x004DC5C2, 0x004DEA4A, 0x004E0B7B,
+				0x004E12C3, 0x004E3313, 0x004E3A23, 0x004E9716, 0x004EEA03, 0x0053A3ED,
+				0x0054C158, 0x0055D246
+			};
+
+			_DefineCallHdlr(InvalidateSubwindowBuilding, kTESDialogBuildSubwindowCallSites[i], TESDialogBuildSubwindowDetour);
+			_MemHdlr(InvalidateSubwindowBuilding).WriteCall();
+		}
+
+		OSVERSIONINFO OSInfo;
+		GetVersionEx(&OSInfo);
+		if (OSInfo.dwMajorVersion >= 6)		// if running Windows Vista/7, fix the listview selection sound
+			RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
 	}
 
 	void __stdcall DoFindTextInitHook(HWND FindTextDialog)
@@ -369,9 +439,7 @@ namespace Hooks
 
 	void __stdcall AppendShadeMeRefToComboBox(HWND hWnd)
 	{
-		TESForm* Ref = TESForm::LookupByEditorID("TheShadeMeRef");
-		sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "'shadeMe' 'TheShadeMeRef'");
-		TESComboBox::AddItem(hWnd, g_TextBuffer, Ref, 1);
+		TESComboBox::AddItem(hWnd, "'shadeMe' 'TheShadeMeRef'", TESForm::LookupByEditorID("TheShadeMeRef"), true);
 	}
 
 	#define _hhName		CellObjectListShadeMeRefAppend
@@ -748,6 +816,8 @@ namespace Hooks
 
 	UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Identifier, TESRace* WorkingRace)
 	{
+		char Buffer[0x200] = {0};
+
 		switch (Identifier)
 		{
 		case RACE_COPYEYES:
@@ -774,8 +844,8 @@ namespace Hooks
 							}
 						}
 
-						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorID.c_str());
-						MessageBox(Dialog, g_TextBuffer, "CSE", MB_OK);
+						FORMAT_STR(Buffer, "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorID.c_str());
+						MessageBox(Dialog, Buffer, "CSE", MB_OK);
 					}
 					else if (Identifier == RACE_COPYHAIR)
 					{
@@ -791,8 +861,8 @@ namespace Hooks
 							}
 						}
 
-						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorID.c_str());
-						MessageBox(Dialog, g_TextBuffer, "CSE", MB_OK);
+						FORMAT_STR(Buffer, "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorID.c_str());
+						MessageBox(Dialog, Buffer, "CSE", MB_OK);
 					}
 				}
 			}
@@ -916,6 +986,21 @@ namespace Hooks
 			call	IATCacheShowWindowAddress
 			call	g_TempIATProcBuffer
 			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		TESQuestStageResultScript
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004E2393);
+		_hhSetVar(Jump, 0x004E234F);
+		__asm
+		{
+			cmp     dword ptr [esi + 0x44], 0
+			jnz		GETSCRIPTTEXT
+			jmp		[_hhGetVar(Retn)]
+		GETSCRIPTTEXT:
+			jmp		[_hhGetVar(Jump)]
 		}
 	}
 
@@ -1580,4 +1665,118 @@ namespace Hooks
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
+
+	void __stdcall DoHideCSMainDialogsStartupHook(void)
+	{
+		if (g_INIManager->GetINIInt("RenderWindowState", "Extender::Dialogs") == 0)
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 40423, NULL);
+
+		if (g_INIManager->GetINIInt("ObjectWindowState", "Extender::Dialogs") == 0)
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 40199, NULL);
+
+		if (g_INIManager->GetINIInt("CellWindowState", "Extender::Dialogs") == 0)
+			SendMessage(*g_HWND_CSParent, WM_COMMAND, 40200, NULL);
+	}
+
+	#define _hhName		HideCSMainDialogsStartup
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0041CF45);
+		_hhSetVar(Call, 0x00417FE0);
+		__asm
+		{
+			call	[_hhGetVar(Call)]
+			pushad
+			call	DoHideCSMainDialogsStartupHook
+			popad
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall ProperReleaseModelessDialogs(HWND Dialog, INT_PTR ResultReturn)
+	{
+		if (IsWindowEnabled(GetParent(Dialog)) == FALSE)
+			EndDialog(Dialog, ResultReturn);		// modal dialog
+		else
+			DestroyWindow(Dialog);
+	}
+
+	#define _hhName		ReleaseModelessDialogsA
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00405BC4);
+		__asm
+		{
+			push	1
+			push	edx
+			call	ProperReleaseModelessDialogs
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		ReleaseModelessDialogsB
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00405AF8);
+		__asm
+		{
+			push	1
+			push	ecx
+			call	ProperReleaseModelessDialogs
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		ReleaseModelessDialogsC
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00447CC2);
+		__asm
+		{
+			push	esi
+			push	edi
+			call	ProperReleaseModelessDialogs
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		ReleaseModelessDialogsD
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x0044794B);
+		__asm
+		{
+			push	0
+			push	edi
+			call	ProperReleaseModelessDialogs
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		ReleaseModelessDialogsE
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x004476A7);
+		__asm
+		{
+			push	0
+			push	edi
+			call	ProperReleaseModelessDialogs
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	UInt8 __cdecl TESDialogBuildSubwindowDetour( UInt16 TemplateID, Subwindow* DialogSubwindow )
+	{
+		HWND ParentDialog = DialogSubwindow->hDialog;
+		SendMessage(ParentDialog, WM_SETREDRAW, FALSE, NULL);
+		UInt8 Result = cdeclCall<UInt8>(0x00404EC0, TemplateID, DialogSubwindow);
+		SendMessage(ParentDialog, WM_SETREDRAW, TRUE, NULL);
+		RedrawWindow(ParentDialog, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+		return Result;
+	}
+
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

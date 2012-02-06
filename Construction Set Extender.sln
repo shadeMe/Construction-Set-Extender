@@ -16,6 +16,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LipSyncPipeClient", "[Components]\LipSyncPipeClient\LipSyncPipeClient.vcxproj", "{7DDE7310-A0DE-409C-8E55-629788E95FE3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor", "[Components]\ScriptEditor\ScriptEditor.vcxproj", "{AA53012B-2307-47FE-B637-4A828BA77A24}"
+	ProjectSection(ProjectDependencies) = postProject
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D} = {67DD2FF6-AFF7-4C49-80AE-72B47982563D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UseInfoList", "[Components]\UseInfoList\UseInfoList.vcxproj", "{294A2A89-2979-4C16-AE16-595C50A44F11}"
 EndProject
@@ -24,8 +27,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor.Preprocessor", "[Components]\ScriptEditor\Preprocessor\ScriptEditor.Preprocessor.vcxproj", "{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "[Common]", "..\Common\common.vcxproj", "{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{971FE121-CDFB-42F2-9920-60B2E91A0540}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -132,9 +133,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UpdateAssemblyVersion = True
-		BuildVersion_UpdateFileVersion = True
-		BuildVersion_BuildVersioningStyle = None.None.MonthAndDayStamp.TimeStamp
 		BuildVersion_UseGlobalSettings = False
+		BuildVersion_BuildVersioningStyle = None.None.MonthAndDayStamp.TimeStamp
+		BuildVersion_UpdateFileVersion = True
+		BuildVersion_UpdateAssemblyVersion = True
 	EndGlobalSection
 EndGlobal

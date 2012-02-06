@@ -48,7 +48,7 @@ namespace CSAutomationScript
 				Insert(SourceElement);
 			}
 			else
-				assert(0);
+				assertR(0);
 		}
 	}
 
@@ -135,7 +135,7 @@ namespace CSAutomationScript
 		for (int i = 0; i < Size(); i++)
 		{
 			ArrayElement* ThisElement = Elements[i];
-			ThisElement->GetAsMUPValue(dynamic_cast<mup::Value&>(Buffer[i]));
+			ThisElement->GetAsMUPValue(dynamic_cast<mup::Value&>(Buffer.At(i, 0)));
 		}
 
 		ArrayOut = Buffer;

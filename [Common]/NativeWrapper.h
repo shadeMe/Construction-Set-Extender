@@ -4,10 +4,6 @@
 
 namespace ConstructionSetExtender
 {
-	const int SW_SHOWNOACTIVATE = 4;
-	const int HWND_TOPMOST = -1;
-	const UInt32 SWP_NOACTIVATE = 0x0010;
-
 	namespace NativeWrapper
 	{
 		[DllImport("Construction Set Extender.dll")]

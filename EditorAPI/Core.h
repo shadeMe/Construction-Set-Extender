@@ -7,7 +7,6 @@
 
 #include "TESForm.h"
 #include "TESSkill.h"
-#include "NiTypes.h"
 
 //	EditorAPI: Core classes.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -55,144 +54,16 @@ class   ContainerExtraData;
 class	TESNPC;
 class	GridDistantArray;
 class	GridCellArray;
-struct	WaterSurfaceManager;		// non-polymorphic; arbitrarily named
 class	Sky;
 class	BSTextureManager;
 class	BSRenderedTexture;
 class	NiDX9Renderer;
 class	Setting;
+class	NiBinaryStream;
+class	NiFile;
 
-void*	FormHeap_Allocate(UInt32 Size);
-void	FormHeap_Free(void* Ptr);
 void*	Oblivion_DynamicCast(void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4);
-
 #define CS_CAST(obj, from, to)								(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
-
-// 08
-class ChunkInfo
-{
-public:
-	/*00*/ UInt32    chunkType;		// e.g. 'GRUP', 'GLOB', etc.
-	/*04*/ UInt32    chunkLength;	// size from end of chunk header (NOTE: chunkLength field is a UInt16 for non-record chunks on disk)
-};
-
-// 14
-class RecordInfo : public ChunkInfo
-{
-public:
-	enum RecordFlags
-	{
-		kRecordFlags__FormFlags                = 0x000A8EE0, // flag bits copied from forms for form records
-		kRecordFlags__FileFlags                = 0xFF000091, // flag bits copied from files for TES4 records
-		kRecordFlags_Ignored            = /*0C*/ 0x00001000, // record is ignored during loading
-		kRecordFlags_Compressed         = /*12*/ 0x00040000, // record data is compressed using ZLib.  Note that group records cannot be compressed
-	};
-
-	//     /*00*/ ChunkInfo
-	/*08*/ UInt32        recordFlags;
-	/*0C*/ UInt32        recordID;
-	/*10*/ TrackingData  trackingData;
-};
-
-// 420
-class TESFile
-{
-public:
-	static const UInt32 kMAX_PATH = 260;			// i.e. windows constant MAX_PATH
-
-	enum FileFlags
-	{
-		kFileFlag__SavedInRecord       = 0xFF000091, // flag bits copied from TES4 record
-		kFileFlag_Master        = /*00*/ 0x00000001, // set for master files (as indicated by bit in TES4 record flags)
-		kFileFlag_Open          = /*01*/ 0x00000002, // set in OpenBSFile()
-		kFileFlag_Loaded        = /*02*/ 0x00000004, // flags file for loading, set before file is actually loaded
-		kFileFlag_Active        = /*03*/ 0x00000008, // set for the currently active file
-	};
-
-	enum FileErrorStates
-	{
-		kFileState_None         = 0x0,
-		kFileState_Unk2         = 0x2, // set in OpenBSFile
-		kFileState_Unk9         = 0x9, // set in OpenBSFile
-		kFileState_WriteError   = 0xA,
-		kFileState_UnkC         = 0xC, // set in OpenBSFile
-	};
-
-	struct FileHeaderInfo
-	{
-		/*00*/ float         fileVersion;
-		/*04*/ UInt32        numRecords; // number of record blocks in file
-		/*08*/ UInt32        nextFormID; // inluding file index in highest byte
-	};
-
-	// compared against size in findData of masters to check if they have changed since last edit
-	struct MasterFileData
-	{
-		/*00*/ DWORD nFileSizeHigh;
-		/*04*/ DWORD nFileSizeLow;
-	};
-	typedef tList<MasterFileData> MasterDataList;
-	typedef tList<const char> MasterNameList;
-
-	// 18
-	class GroupInfo : public RecordInfo
-	{
-		//     /*00*/ RecordInfo		// for group records, the size includes the 14 bytes of the header
-		/*14*/ UInt32        recordOffset;   // used internally to track header offsets of all open groups
-	};
-	typedef tList<GroupInfo> GroupList;
-
-	// members
-	/*000*/ UInt32               errorState;
-	/*004*/ UInt32               unkFile004;
-	/*008*/ UInt32               unkFile008;
-	/*00C*/ BSFile*              unkFile00C; // temp file for backups?
-	/*010*/ BSFile*              bsFile; // used for actual read from / write to disk operations
-	/*014*/ UInt32               unkFile014;
-	/*018*/ UInt32               unkFile018;
-	/*01C*/ char                 fileName[kMAX_PATH];
-	/*120*/ char                 filePath[kMAX_PATH]; // relative to "Oblivion\"
-	/*224*/ void*                unkFile224; // simple object, no destructor
-	/*228*/ UInt32               unkFile228; // init to 0x2800
-	/*22C*/ UInt32               unkFile22C;
-	/*230*/ UInt32               unkFile230;
-	/*234*/ UInt32               unkFile234;
-	/*238*/ UInt32               unkFile238;
-	/*23C*/ RecordInfo           currentRecord;
-	/*250*/ ChunkInfo            currentChunk;
-	/*258*/ UInt32               fileSize; // same as FileSizeLow in find data
-	/*25C*/ UInt32               currentRecordOffset; // offset of current record in file
-	/*260*/ UInt32               currentChunkOffset; // offset of current chunk in record
-	/*264*/ UInt32               fetchedChunkDataSize; // number of bytes read in last GetChunkData() call
-	/*268*/ GroupInfo            unkFile268; // used when saving empty form records, e.g. for deleted forms
-	/*280*/ UInt32               unkFile280; // used when saving empty form records, e.g. for deleted forms
-	/*284*/ GroupList            openGroups; // stack of open group records, from lowest level to highest
-	/*28C*/ bool                 headerRead; // set after header has been successfully parsed
-	/*28D*/ UInt8                padFile28D[3];
-	/*290*/ WIN32_FIND_DATA      findData;
-	/*3D0*/ FileHeaderInfo       fileHeader;
-	/*3DC*/ UInt32               fileFlags;
-	/*3E0*/ MasterNameList       masterNames;
-	/*3E8*/ MasterDataList       masterData;
-	/*3F0*/ UInt32               masterCount;
-	/*3F4*/ TESFile**            masterFiles; // pointer to TESFile*[parentCount] of currently loaded masters
-	/*3F8*/ UInt32               unkFile3F8;
-	/*3FC*/ UInt32               unkFile3FC;
-	/*400*/ UInt8                fileIndex; // index of this file in load order (or 0xFF if not loaded)
-	/*401*/ UInt8                padFile401[3];
-	/*404*/ BSStringT			 authorName;
-	/*40C*/ BSStringT			 description;
-	/*414*/ void*                currentRecordDCBuffer; // buffer for decompressed record data
-	/*418*/ UInt32               currentRecordDCLength; // length of decompressed record data
-	/*41C*/ TESFile*             unkFile41C; // file this object was cloned from. used for local copies of network files?
-
-	// methods
-	bool						IsActive(void);
-
-	static TESFile*				CreateInstance(const char* WorkingDirectory, const char* FileName, UInt8 OpenMode = NiFile::kFileMode_ReadOnly);
-	void						DeleteInstance(bool ReleaseMemory = true);
-};
-STATIC_ASSERT(sizeof(TESFile) == 0x420);
 
 // 1220
 class TESDataHandler
@@ -226,7 +97,7 @@ public:
 	/*00BC*/ TESRegionList*							regionList;
 	/*00C0*/ NiTLargeArray<TESObjectCELL*>			cellArray;
 	/*00D8*/ TESSkill								skills[0x15];
-	/*0DF8*/ tList<void*>							unk8B8;     // general garbage list for unsupported form types?
+	/*0DF8*/ tList<void*>							unk8B8;     // general garbage list for unsupported form types?, new EffectSettings added here
 	/*0E00*/ UInt32									nextFormID; // next available formID?
 	/*0E04*/ TESFile*								activeFile;
 	/*0E08*/ tList<TESFile>							fileList;   // all files in Oblivion\Data\ directory
@@ -260,6 +131,52 @@ STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 extern TESDataHandler**			g_TESDataHandler;
 #define _DATAHANDLER			(*g_TESDataHandler)
 
+/*
+// 04
+class GridArray
+{
+public:
+	// members
+	/// *00* / void**					vtbl;	
+
+	virtual void				VFn00(void) = 0;
+};
+STATIC_ASSERT(sizeof(GridArray) == 0x4);
+
+// 020
+class GridCellArray : public GridArray
+{
+public:
+	// size?
+	struct CellInfo
+	{
+		UInt32		unk00;
+		NiNode		* niNode;
+		// ...
+	};
+
+	// 04
+	struct GridEntry
+	{
+		TESObjectCELL	* cell;
+		CellInfo		* info;
+	};
+
+	// void **		vtbl
+	UInt32			worldX;		// 04 worldspace x coordinate of cell at center of grid (player's cell)
+	UInt32			worldY;		// 08 worldspace y
+	UInt32			size;		// 0C grid is size^2, size = uGridsToLoad
+	GridEntry		* grid;		// 10 dynamically alloc'ed array of GridEntry[size^2]
+	float			posX;		// 14 4096*worldX (exterior cells are 4096 square units)
+	float			posY;		// 18 4096*worldY
+	UInt32			unk1C;		// 1C seen 0
+	UInt32			unk20;		// 20 seen 1
+	UInt32			unk24;		// 24 seem 0
+
+	GridEntry* GetGridEntry(UInt32 x, UInt32 y);	// x and y range from 0 to (size-1)
+};
+STATIC_ASSERT(sizeof(GridCellArray) == 0x20);*/
+
 // AC
 class TES
 {
@@ -271,10 +188,17 @@ public:
 		/*04*/ UInt32	unk4;	// size?
 	};
 
+	// 30
+	struct	WaterSurfaceManager
+	{
+		UInt32						unk00;
+	};
+
 	// 20
 	struct WaterPlaneData
 	{
-		/*00*/ UInt32				unk00;					// seen NULL
+		/*00*/ UInt8				unk00;					// seen 0
+		/*01*/ UInt8				pad01[3];
 		/*04*/ NiNode*				waterNode;
 		/*08*/ NiTriShape**			waterPlaneArray;
 		/*0C*/ void*				unk0C;
@@ -316,8 +240,10 @@ public:
 	/*6C*/ float					unk6C;
 	/*70*/ float					unk70;
 	/*74*/ TESWorldSpace*			currentWorldSpace;
-	/*78*/ UInt32					unk78[5];
-	/*7C*/ tList<Unk8C>				list8C;
+	/*78*/ tList<void>				unk78;
+	/*80*/ tList<void>				unk80;
+	/*88*/ UInt32					unk88;
+	/*8C*/ tList<Unk8C>				list8C;
 	/*94*/ NiSourceTexture*			bloodDecals[3];			// blood.dds, lichblood.dds, whillothewispblood.dds
 	/*A0*/ tList<void*>				listA0;					// data is some struct containing NiNode*
 	/*A8*/ UInt32					unkA8;
@@ -378,6 +304,19 @@ public:
 
 	// methods
 	LPDIRECT3DTEXTURE9				ConvertToD3DTexture(UInt32 Width = 0, UInt32 Height = 0);
+	void							DeleteInstance(bool ReleaseMemory = 0);
+};
+
+class BSFileEntry;
+
+// 10
+class BSTexturePalette : public NiRefObject
+{
+public:
+	// members
+	///*00*/ NiRefObject
+	/*08*/ CSE_GlobalClasses::NiTPointerMap<BSFileEntry*, NiPointer<NiTexture>>*		archivedTextures;
+	/*0C*/ CSE_GlobalClasses::NiTStringPointerMap<NiPointer<NiTexture>>*				looseTextures;
 };
 
 // 48
@@ -421,9 +360,11 @@ extern BSRenderedTexture**		g_LODBSTexture2048x;
 
 extern LPDIRECT3DTEXTURE9		g_LODD3DTexture256x;
 extern BSRenderedTexture*		g_LODBSTexture256x;
+extern LPDIRECT3DTEXTURE9		g_LODD3DTexture384x;
+extern BSRenderedTexture*		g_LODBSTexture384x;
 extern LPDIRECT3DTEXTURE9		g_LODD3DTexture4096x;
 extern BSRenderedTexture*		g_LODBSTexture4096x;
-extern LPDIRECT3DTEXTURE9		g_LODD3DTexture8192x;
-extern BSRenderedTexture*		g_LODBSTexture8192x;
+extern LPDIRECT3DTEXTURE9		g_LODD3DTexture6144x;
+extern BSRenderedTexture*		g_LODBSTexture6144x;
 
 extern Setting*					g_INILocalMasterPath;

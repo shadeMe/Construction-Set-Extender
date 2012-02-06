@@ -47,7 +47,9 @@ void Console::InitializeLog(const char* AppPath)
 	DebugLog = _fsopen(DebugLogPath.c_str(), "w", _SH_DENYWR);
 
 	if (!DebugLog)
+	{
 		DebugPrint("Couldn't initialize debug log");
+	}
 }
 
 void Console::InitializeConsoleWindow()
@@ -59,14 +61,7 @@ void Console::InitializeConsoleWindow()
 	g_ConsoleEditControlOrgWindowProc = (WNDPROC)SetWindowLong(EditHandle, GWL_WNDPROC, (LONG)ConsoleEditControlSubClassProc);
 	g_ConsoleCmdBoxOrgWindowProc = (WNDPROC)SetWindowLong(GetDlgItem(WindowHandle, EDIT_CMDBOX), GWL_WNDPROC, (LONG)ConsoleCmdBoxSubClassProc);
 	SendDlgItemMessage(WindowHandle, EDIT_CMDBOX, WM_INITDIALOG, NULL, NULL);
-
 	Edit_LimitText(EditHandle, sizeof(int));
-
-	if (g_INIManager->GetINIInt("HideOnStartup", "Extender::Console"))
-		DisplayState = true;
-
-	ToggleDisplayState();
-	LoadINISettings();
 
 	SetTimer(EditHandle, CONSOLE_UPDATETIMER, g_INIManager->GetINIInt("UpdatePeriod", "Extender::Console"), NULL);
 	g_CustomMainWindowChildrenDialogs.AddHandle(WindowHandle);
@@ -80,6 +75,12 @@ void Console::InitializeConsoleWindow()
 	ItemViewConsole.dwTypeData = "Console Window";
 	ItemViewConsole.cch = 0;
 	InsertMenuItem(ViewMenu, 40455, FALSE, &ItemViewConsole);
+
+	if (!g_INIManager->GetINIInt("Visible", "Extender::Console"))
+		DisplayState = true;
+
+	ToggleDisplayState();
+	LoadINISettings();
 }
 
 void Console::Deinitialize()
@@ -90,6 +91,7 @@ void Console::Deinitialize()
 
 	KillTimer(EditHandle, CONSOLE_UPDATETIMER);
 	g_CustomMainWindowChildrenDialogs.RemoveHandle(WindowHandle);
+	DestroyWindow(WindowHandle);
 }
 
 bool Console::ToggleDisplayState()
@@ -135,17 +137,25 @@ void Console::SaveINISettings()
 	tagRECT WindowRect;
 	GetWindowRect(WindowHandle, &WindowRect);
 
-	_itoa_s(WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Top", "Extender::Console")->SetValue(g_TextBuffer);
+	char Buffer[0x200] = {0};
+	_itoa_s(WindowRect.top, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Top", "Extender::Console")->SetValue(Buffer);
 
-	_itoa_s(WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Left", "Extender::Console")->SetValue(g_TextBuffer);
+	_itoa_s(WindowRect.left, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Left", "Extender::Console")->SetValue(Buffer);
 
-	_itoa_s(WindowRect.right - WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Right", "Extender::Console")->SetValue(g_TextBuffer);
+	_itoa_s(WindowRect.right - WindowRect.left, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Right", "Extender::Console")->SetValue(Buffer);
 
-	_itoa_s(WindowRect.bottom - WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Bottom", "Extender::Console")->SetValue(g_TextBuffer);
+	_itoa_s(WindowRect.bottom - WindowRect.top, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Bottom", "Extender::Console")->SetValue(Buffer);
+
+	g_INIManager->FetchSetting("Visible", "Extender::Console")->SetValue((DisplayState == true)?"1":"0");
+}
+
+void Console::OpenDebugLog(void) 
+{
+	ShellExecute(NULL, "open", (LPSTR)DebugLogPath.c_str(), NULL, NULL, SW_SHOW);
 }
 
 void Console::PrintMessage(std::string& Prefix, const char* MessageStr)
@@ -379,7 +389,7 @@ LRESULT CALLBACK ConsoleEditControlSubClassProc(HWND hWnd, UINT uMsg, WPARAM wPa
 				CONSOLE->ToggleDisplayState();
 				break;
 			case CONSOLEMENU_OPENDEBUGLOG:
-				ShellExecute(NULL, "open", (LPSTR)CONSOLE->GetDebugLogPath(), NULL, NULL, SW_SHOW);
+				CONSOLE->OpenDebugLog();
 				break;
 			case CONSOLEMENU_OPENCHANGELOG:
 				VersionControl::CHANGELOG->OpenSessionLog();

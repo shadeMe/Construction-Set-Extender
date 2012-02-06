@@ -62,9 +62,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;NDEBUG;CS_VERSION=0x01020000;OBLIVION_VERSION=0x010201A0;CSE;RELEASE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -72,10 +71,13 @@
       <WarningLevel>Level3</WarningLevel>
       <ForcedIncludeFiles>StdAfx.h;$(SolutionDir)EditorAPI\TESEditorAPI.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <MinimalRebuild>false</MinimalRebuild>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <StringPooling>true</StringPooling>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -100,7 +102,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;RELEASE_BUILD=0x0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
@@ -117,6 +119,8 @@
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <StringPooling>true</StringPooling>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -145,6 +149,7 @@
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpError.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncCommon.cpp" />
+    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncMatrix.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncNonCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncStr.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpICallback.cpp" />
@@ -157,9 +162,12 @@
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinAssign.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.cpp" />
+    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtIndex.cpp" />
+    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtMatrix.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCommon.cpp" />
+    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageMatrix.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageStr.cpp" />
     <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageUnit.cpp" />
@@ -189,18 +197,21 @@
     <ClCompile Include="EditorAPI\Archive.cpp" />
     <ClCompile Include="EditorAPI\BaseFormComponent.cpp" />
     <ClCompile Include="EditorAPI\BSFile.cpp" />
-    <ClCompile Include="EditorAPI\BSStringT.cpp" />
+    <ClCompile Include="EditorAPI\BSString.cpp" />
     <ClCompile Include="EditorAPI\Core.cpp" />
     <ClCompile Include="EditorAPI\EffectItem.cpp" />
     <ClCompile Include="EditorAPI\EffectSetting.cpp" />
     <ClCompile Include="EditorAPI\ExtraDataList.cpp" />
     <ClCompile Include="EditorAPI\GameSetting.cpp" />
     <ClCompile Include="EditorAPI\MagicItemForm.cpp" />
+    <ClCompile Include="EditorAPI\MemoryHeap.cpp" />
+    <ClCompile Include="EditorAPI\NiClasses.cpp" />
     <ClCompile Include="EditorAPI\RTTI.cpp" />
     <ClCompile Include="EditorAPI\Script.cpp" />
     <ClCompile Include="EditorAPI\SettingCollection.cpp" />
     <ClCompile Include="EditorAPI\TESConditionItem.cpp" />
     <ClCompile Include="EditorAPI\TESDialog.cpp" />
+    <ClCompile Include="EditorAPI\TESFile-API.cpp" />
     <ClCompile Include="EditorAPI\TESForm.cpp" />
     <ClCompile Include="EditorAPI\TESIdleForm.cpp" />
     <ClCompile Include="EditorAPI\TESObject.cpp" />
@@ -213,7 +224,9 @@
     <ClCompile Include="Hooks\VersionControl.cpp" />
     <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="PathGridUndoManager.cpp" />
-    <ClCompile Include="StdAfx.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="[Common]\CLIWrapper.cpp" />
     <ClCompile Include="[Common]\HandshakeStructs.cpp" />
     <ClCompile Include="Hooks\AssetSelector.cpp" />
@@ -245,12 +258,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\GameTypes.h" />
-    <ClInclude Include="..\obse\obse\NiAPI.h" />
+    <ClInclude Include="..\OBSE\obse\HavokBase.h" />
+    <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
+    <ClInclude Include="..\OBSE\obse\HavokCollision.h" />
+    <ClInclude Include="..\OBSE\obse\HavokDynamics.h" />
+    <ClInclude Include="..\OBSE\obse\HavokReflection.h" />
+    <ClInclude Include="..\OBSE\obse\HavokTypes.h" />
+    <ClInclude Include="..\OBSE\obse\NiCollision.h" />
+    <ClInclude Include="..\OBSE\obse\NiControllers.h" />
     <ClInclude Include="..\obse\obse\NiExtraData.h" />
     <ClInclude Include="..\obse\obse\NiGeometry.h" />
+    <ClInclude Include="..\OBSE\obse\NiHavok.h" />
+    <ClInclude Include="..\OBSE\obse\NiHavokCharacters.h" />
+    <ClInclude Include="..\OBSE\obse\NiHavokConstraints.h" />
+    <ClInclude Include="..\OBSE\obse\NiHavokObjects.h" />
+    <ClInclude Include="..\OBSE\obse\NiHavokShapes.h" />
     <ClInclude Include="..\obse\obse\NiNodes.h" />
     <ClInclude Include="..\obse\obse\NiObjects.h" />
     <ClInclude Include="..\obse\obse\NiProperties.h" />
+    <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
     <ClInclude Include="..\obse\obse\Utilities.h" />
@@ -258,6 +284,7 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpError.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncCommon.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncMatrix.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncNonCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncStr.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpFwdDecl.h" />
@@ -269,12 +296,17 @@
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIToken.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValReader.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValue.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpMatrix.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpMatrixError.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinAssign.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtIndex.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtMatrix.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCommon.h" />
+    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageMatrix.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageStr.h" />
     <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageUnit.h" />
@@ -310,9 +342,11 @@
     <ClInclude Include="EditorAPI\BaseFormComponent.h" />
     <ClInclude Include="EditorAPI\BirthSign.h" />
     <ClInclude Include="EditorAPI\BSFile.h" />
-    <ClInclude Include="EditorAPI\BSStringT.h" />
+    <ClInclude Include="EditorAPI\BSString.h" />
+    <ClInclude Include="EditorAPI\BSTCaseInsensitiveStringMap.h" />
     <ClInclude Include="EditorAPI\Core.h" />
-    <ClInclude Include="EditorAPI\NiTypes.h" />
+    <ClInclude Include="EditorAPI\MemoryHeap.h" />
+    <ClInclude Include="EditorAPI\NiClasses.h" />
     <ClInclude Include="EditorAPI\RTTI.h" />
     <ClInclude Include="EditorAPI\SettingCollection.h" />
     <ClInclude Include="EditorAPI\TESClimate.h" />
@@ -339,6 +373,7 @@
     <ClInclude Include="EditorAPI\TESEffectShader.h" />
     <ClInclude Include="EditorAPI\TESEyes.h" />
     <ClInclude Include="EditorAPI\TESFaction.h" />
+    <ClInclude Include="EditorAPI\TESFile.h" />
     <ClInclude Include="EditorAPI\TESFlora.h" />
     <ClInclude Include="EditorAPI\TESForm.h" />
     <ClInclude Include="EditorAPI\TESFurniture.h" />
@@ -387,6 +422,7 @@
     <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="VersionInfo.h" />
     <ClInclude Include="WindowEdgeSnapper.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
     <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h" />
@@ -422,6 +458,7 @@
     <ClInclude Include="WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="EditorAPI\NiTMap.h" />
     <None Include="Images\Achievement.bmp" />
     <None Include="Images\Splash.bmp" />
   </ItemGroup>

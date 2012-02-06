@@ -190,6 +190,7 @@ void CSECCmd_RunScript_Handler(CSECCMD_ARGS)
 	SCRIPTRUNNER->RunScript(ScriptName, NULL, mup::Value(0), &Throwaway);
 
 	Achievements::UnlockAchievement(Achievements::kAchievement_Automaton);
+	Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 }
 
 void CSECCmd_DBMP_Handler(CSECCMD_ARGS)

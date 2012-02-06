@@ -16,12 +16,9 @@ namespace ConstructionSetExtender
 
 			typedef System::Windows::Media::Imaging::RenderTargetBitmap		RTBitmap;
 
-			public ref class AvalonEditTextEditor : public IScriptTextEditor
+			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
 				static AvalonEditXSHDManager^						SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
-			public:
-				event ScriptModifiedEventHandler^					ScriptModified;
-				event KeyEventHandler^								KeyDown;
 			protected:
 				static enum class									PreventTextChangeFlagState
 				{
@@ -75,6 +72,7 @@ namespace ConstructionSetExtender
 				UInt32												ParentWorkspaceIndex;
 
 				Timer^												LocalVarsDatabaseUpdateTimer;
+				bool												TextFieldInUpdateFlag;
 
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
@@ -140,7 +138,7 @@ namespace ConstructionSetExtender
 
 				void										RefreshBGColorizerLayer();
 				void										RefreshTextView();
-				UInt32										PerformReplaceOnSegment(IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
+				int											PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser, IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options);
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
@@ -163,6 +161,10 @@ namespace ConstructionSetExtender
 					Destroy();
 				}
 
+				// interface events
+				virtual event ScriptModifiedEventHandler^	ScriptModified;
+				virtual event KeyEventHandler^				KeyDown;
+
 				// interface methods
 				virtual void								SetFont(Font^ FontObject);
 				virtual void								SetTabCharacterSize(int PixelWidth);	// AvalonEdit uses character lengths
@@ -172,8 +174,8 @@ namespace ConstructionSetExtender
 
 				virtual String^								GetText(void);
 				virtual UInt32								GetTextLength(void);
-				virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling);
-				virtual void								InsertText(String^ Text, int Index);
+				virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
+				virtual void								InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);
 
 				virtual String^								GetSelectedText(void);
 				virtual void								SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
@@ -200,8 +202,8 @@ namespace ConstructionSetExtender
 				virtual IntPtr								GetHandle();
 
 				virtual void								FocusTextArea();
-				virtual void								LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex);
-				virtual void								SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, UInt32 AllocatedIndex);
+				virtual void								LoadFileFromDisk(String^ Path);
+				virtual void								SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName);
 
 				virtual bool								GetModifiedStatus();
 				virtual void								SetModifiedStatus(bool Modified);
@@ -211,7 +213,7 @@ namespace ConstructionSetExtender
 
 				virtual Point								GetLastKnownMouseClickLocation(void);
 
-				virtual UInt32								FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output);
+				virtual int									FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options);
 				virtual void								ToggleComment(int StartIndex);
 				virtual void								UpdateIntelliSenseLocalDatabase(void);
 

@@ -1,148 +1,8 @@
 #include "AuxiliaryViewport.h"
 #include "Resource.h"
 #include "WindowManager.h"
-
-/*
-#define SafeRelease(x)	if (x) { x->Release(); x=NULL; }
-#define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ | D3DFVF_TEX1)
-struct D3DVERTEX
-{
-	float X, Y, Z;
-	float U, V;		// tex coords
-};
-
-void AuxiliaryViewport::RenderTextureOnDisk( const char* Path )
-{
-	D3DDevice->BeginScene();
-
-	LPDIRECT3DTEXTURE9 TextureFile;
-	if (SUCCEEDED(D3DXCreateTextureFromFile(D3DDevice, (LPCSTR)Path, &TextureFile)))
-	{
-		D3DDevice->SetTexture(0, TextureFile);
-		D3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-		SafeRelease(TextureFile);
-	}
-
-	D3DDevice->EndScene();
-	D3DDevice->Present(NULL, NULL, NULL, NULL);
-}
-
-bool AuxiliaryViewport::Recreate()
-{
-	Release();
-
-	tagRECT WindowRect;
-	GetClientRect(WindowHandle, &WindowRect);
-	float Width = WindowRect.right - WindowRect.left, Height = WindowRect.bottom - WindowRect.top;
-	if (Width <= 0.0 || Height <= 0.0)
-		return false;
-
-	D3DObject = Direct3DCreate9(D3D_SDK_VERSION);
-	if (D3DObject == NULL)
-	{
-		DebugPrint("Couldn't initialize DirectX for auxiliary viewport");
-		return false;
-	}
-
-	D3DPRESENT_PARAMETERS DXParams;
-	ZeroMemory(&DXParams, sizeof(D3DPRESENT_PARAMETERS));
-	DXParams.Windowed = true;
-	DXParams.BackBufferWidth = 0;
-	DXParams.BackBufferHeight = 0;
-	DXParams.BackBufferFormat = D3DFMT_UNKNOWN;
-	DXParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	DXParams.hDeviceWindow = WindowHandle;
-
-	if (FAILED(D3DObject->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, WindowHandle, D3DCREATE_HARDWARE_VERTEXPROCESSING, &DXParams, &D3DDevice)))
-	{
-		DebugPrint("Couldn't create D3D device for auxiliary viewport");
-		return false;
-	}
-
-	for (int i = 0; i < 8; i++)
-	{
-		D3DDevice->SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		D3DDevice->SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		D3DDevice->SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC);
-		D3DDevice->SetSamplerState(i, D3DSAMP_MAXANISOTROPY, 16);
-	}
-
-	D3DDevice->SetRenderState(D3DRS_AMBIENT, RGB(255,255,255));
-	D3DDevice->SetRenderState(D3DRS_LIGHTING, false);
-	D3DDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-
-	D3DDevice->SetFVF(D3DFVF_CUSTOMVERTEX);
-
-	D3DVERTEX WindowQuad[] =
-	{
-		{ -1,	+1,		1,		0 + (1.0f / Width) * 0.5,		0 + (1.0f / Height) * 0.5 },
-		{ -1,	-1,		1,		0 + (1.0f / Width) * 0.5,		1 + (1.0f / Height) * 0.5 },
-		{ +1,	+1,		1,		1 + (1.0f / Width) * 0.5,		0 + (1.0f / Height) * 0.5 },
-		{ +1,	-1,		1,		1 + (1.0f / Width) * 0.5,		1 + (1.0f /  Height) * 0.5 }
-	};
-
-	if (FAILED(D3DDevice->CreateVertexBuffer(4 * sizeof(D3DVERTEX), D3DUSAGE_WRITEONLY, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &VertexBuffer, 0)))
-	{
-		DebugPrint("Couldn't create vertex buffers for auxiliary viewport");
-		return false;
-	}
-
-	void* VertexData = NULL;
-	VertexBuffer->Lock(0, sizeof(VertexData), &VertexData, 0);
-	CopyMemory(VertexData, WindowQuad, sizeof(WindowQuad));
-	VertexBuffer->Unlock();
-
-	if (FAILED(D3DDevice->SetStreamSource(0, VertexBuffer, 0, sizeof(D3DVERTEX))))
-	{
-		DebugPrint("Couldn't set device stream source for auxiliary viewport");
-		return false;
-	}
-
-	return true;
-}
-
-void AuxiliaryViewport::Release()
-{
-	SafeRelease(VertexBuffer);
-	SafeRelease(D3DDevice)
-	SafeRelease(D3DObject);
-}
-
-void AuxiliaryViewport::RenderTextureInMemory( LPDIRECT3DTEXTURE9 Texture, bool TakeOwnership, bool ReleaseAfterUse )
-{
-	LPDIRECT3DTEXTURE9 TextureToRender = NULL;
-	if (TakeOwnership)
-	{
-		LPD3DXBUFFER TextureBuffer = NULL;
-		if (FAILED(D3DXCreateBuffer(0x500000, &TextureBuffer)) ||
-			FAILED(D3DXSaveTextureToFileInMemory(&TextureBuffer, D3DXIFF_DDS, Texture, NULL)) ||
-			FAILED(D3DXCreateTextureFromFileInMemory(AUXVIEWPORT->GetDevice(), TextureBuffer->GetBufferPointer(), TextureBuffer->GetBufferSize(), &TextureToRender)))
-		{
-			DebugPrint("Couldn't create temporary buffer for rendered texture copy");
-		}
-
-		SafeRelease(TextureBuffer);
-
-		if (ReleaseAfterUse)
-			SafeRelease(Texture);
-	}
-	else
-		TextureToRender = Texture;
-
-	if (TextureToRender == NULL)
-		return;
-
-	D3DDevice->BeginScene();
-
-	D3DDevice->SetTexture(0, TextureToRender);
-	D3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-
-	if (ReleaseAfterUse)
-		SafeRelease(TextureToRender);
-
-	D3DDevice->EndScene();
-	D3DDevice->Present(NULL, NULL, NULL, NULL);
-}*/
+#include "RenderWindowTextPainter.h"
+#include "Hooks\Renderer.h"
 
 AuxiliaryViewport*		AuxiliaryViewport::Singleton = NULL;
 
@@ -241,11 +101,7 @@ AuxiliaryViewport::AuxiliaryViewport()
 	ViewportCamera->m_uiRefCount++;
 	Frozen = false;
 
-// 	D3DObject = NULL;
-// 	D3DDevice = NULL;
-// 	VertexBuffer = NULL;
-
-	if (g_INIManager->GetINIInt("HideOnStartup", "Extender::AuxViewport"))
+	if (!g_INIManager->GetINIInt("Visible", "Extender::AuxViewport"))
 		DisplayState = true;
 
 	HMENU ViewMenu = GetMenu(*g_HWND_CSParent); ViewMenu = GetSubMenu(ViewMenu, 2);
@@ -280,17 +136,20 @@ void AuxiliaryViewport::SaveINISettings()
 	tagRECT WindowRect;
 	GetWindowRect(WindowHandle, &WindowRect);
 
-	_itoa_s(WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Top", "Extender::AuxViewport")->SetValue(g_TextBuffer);
+	char Buffer[0x200] = {0};
+	_itoa_s(WindowRect.top, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Top", "Extender::AuxViewport")->SetValue(Buffer);
 
-	_itoa_s(WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Left", "Extender::AuxViewport")->SetValue(g_TextBuffer);
+	_itoa_s(WindowRect.left, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Left", "Extender::AuxViewport")->SetValue(Buffer);
 
-	_itoa_s(WindowRect.right - WindowRect.left, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Right", "Extender::AuxViewport")->SetValue(g_TextBuffer);
+	_itoa_s(WindowRect.right - WindowRect.left, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Right", "Extender::AuxViewport")->SetValue(Buffer);
 
-	_itoa_s(WindowRect.bottom - WindowRect.top, g_TextBuffer, sizeof(g_TextBuffer), 10);
-	g_INIManager->FetchSetting("Bottom", "Extender::AuxViewport")->SetValue(g_TextBuffer);
+	_itoa_s(WindowRect.bottom - WindowRect.top, Buffer, sizeof(Buffer), 10);
+	g_INIManager->FetchSetting("Bottom", "Extender::AuxViewport")->SetValue(Buffer);
+
+	g_INIManager->FetchSetting("Visible", "Extender::AuxViewport")->SetValue((DisplayState == true)?"1":"0");
 }
 
 bool AuxiliaryViewport::ToggleDisplayState()
@@ -324,18 +183,11 @@ void AuxiliaryViewport::Initialize()
 
 	g_CustomMainWindowChildrenDialogs.AddHandle(WindowHandle);
 
-// 	if (Recreate() == false)
-// 	{
-// 		DebugPrint("Failed to initialize auxiliary viewport correctly");
-// 		Valid = false;
-// 	}
-
 	ClearScreen();
 }
 
 void AuxiliaryViewport::Deinitialize()
 {
-//	Release();
 	SaveINISettings();
 
 	g_CustomMainWindowChildrenDialogs.RemoveHandle(WindowHandle);
@@ -369,4 +221,23 @@ bool AuxiliaryViewport::ToggleFrozenState()
 		Frozen = true;
 
 	return Frozen;
+}
+
+void AuxiliaryViewport::Draw( NiNode* NodeToRender, NiCamera* Camera )
+{
+	Hooks::_MemHdlr(NiDX9RendererPresent).WriteUInt16(0x9090);
+	if (Camera == NULL)
+		Camera = ViewportCamera;
+
+	RENDERTEXT->SetEnabled(false);
+	_RENDERCMPT->RenderNode(Camera, NodeToRender);
+	RENDERTEXT->SetEnabled(true);
+	Hooks::_MemHdlr(NiDX9RendererPresent).WriteBuffer();
+
+	DrawBackBuffer();
+}
+
+void AuxiliaryViewport::DrawBackBuffer( void )
+{
+	_RENDERER->device->Present(NULL, NULL, WindowHandle, NULL);
 }

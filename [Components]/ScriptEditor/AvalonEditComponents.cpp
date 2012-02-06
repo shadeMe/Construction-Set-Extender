@@ -147,7 +147,7 @@ namespace ConstructionSetExtender
 							String^ CurrentLine = ParentEditor->Document->GetText(Line);
 
 							int Index = 0, Start = 0;
-							while ((Index = CurrentLine->IndexOf(SelectionText, Start)) != -1)
+							while ((Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
 							{
 								int EndIndex = Index + SelectionText->Length;
 								RenderBackground(textView, drawingContext, Line->Offset + Index, Line->Offset + EndIndex, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, false);
@@ -175,25 +175,31 @@ namespace ConstructionSetExtender
 
 			void AvalonEditFindReplaceBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
-				TextDocument^ CurrentDocument = ParentEditor->Document;
+				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
+				List<Segment>^ SegmentBuffer = gcnew List<Segment>();
 
-				if (MatchString != "")
+				for each (Segment Itr in HighlightSegments)
 				{
-					Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
-
-					for each (DocumentLine^ Line in ParentEditor->Document->Lines)
+					try
 					{
-						String^ CurrentLine = ParentEditor->Document->GetText(Line);
-
-						int Index = 0, Start = 0;
-						while ((Index = CurrentLine->IndexOf(MatchString, Start)) != -1)
-						{
-							int EndIndex = Index + MatchString->Length;
-							RenderBackground(textView, drawingContext, Line->Offset + Index, Line->Offset + EndIndex, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, false);
-							Start = Index + 1;
-						}
-					}
+						RenderBackground(textView, drawingContext, Itr.Offset, Itr.Offset + Itr.Length, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, false);
+						SegmentBuffer->Add(Segment(Itr));
+					} catch (...) {}
 				}
+
+				HighlightSegments->Clear();
+				for each (Segment Itr in SegmentBuffer)
+					AddSegment(Itr.Offset, Itr.Length);
+			}
+
+			void AvalonEditFindReplaceBGColorizer::AddSegment( int Offset, int Length )
+			{
+				HighlightSegments->Add(Segment(Offset, Length));
+			}
+
+			void AvalonEditFindReplaceBGColorizer::ClearSegments()
+			{
+				HighlightSegments->Clear();
 			}
 
 			void AvalonEditObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)

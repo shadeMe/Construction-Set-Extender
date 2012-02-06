@@ -7,13 +7,15 @@
 // 4244 - loss of data by assignment
 // 4267 - possible loss of data (truncation)
 // 4305 - truncation by assignment
-// 4288 - disable warning for crap microsoft extension screwing up the scope of variables defined in for loops
+// 4288 - disable warning for crap Microsoft extension screwing up the scope of variables defined in for loops
 // 4311 - pointer truncation
 // 4312 - pointer extension
-#pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311 4800 4005)
+#pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311 4800)
+
+#define _WIN32_WINNT	0x0501
+#define DPSAPI_VERSION	1
 
 // WIN32
-#define _WIN32_WINNT	0x0500
 #include <winsock2.h>
 #include <windows.h>
 #include <windowsx.h>
@@ -24,12 +26,18 @@
 #include <Rpc.h>
 #include <Dbghelp.h>
 #include <uxtheme.h>
+#include <Objbase.h>
+#include <Psapi.h>
+
+// .NET INTEROP
+#include <MSCorEE.h>
 
 // CRT
 #include <time.h>
 #include <intrin.h>
 #include <errno.h>
-#include <assert.h>
+#include <crtdefs.h>
+#include <malloc.h>
 
 // STL
 #include <cstdlib>
@@ -59,9 +67,10 @@
 #include <functional>
 
 // DIRECTX
-#include <d3dx9tex.h>
 #include <d3d9.h>
+#include <d3d9types.h>
 #include <d3dx9.h>
+#include <d3dx9tex.h>
 
 // OBSE
 #include "obse_common/obse_version.h"
@@ -93,7 +102,6 @@ using namespace MemoryHandler;
 extern std::string									g_APPPath;
 extern std::string									g_INIPath;
 extern std::string									g_DLLPath;
-extern char											g_TextBuffer[0x800];
 extern bool											g_PluginPostLoad;
 
 extern OBSEMessagingInterface*						g_msgIntfc;
@@ -111,11 +119,20 @@ public:
 };
 
 void				WaitUntilDebuggerAttached();
-const char*			PrintToBuffer(const char* fmt, ...);
-
 void				ToggleFlag(UInt8* Flag, UInt32 Mask, bool State);
 void				ToggleFlag(UInt16* Flag, UInt32 Mask, bool State);
 void				ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);
 
-#define				PROJECTSHORTHAND		"CSE"
-#define				PROJECTNAME				"Construction Set Extender"
+#define	PROJECTSHORTHAND			"CSE"
+#define	PROJECTNAME					"Construction Set Extender"
+
+#define SAFERELEASE_D3D(X)			if (X)	{ X->Release(); X = NULL; }
+#define FORMAT_STR(Buffer, ...)		sprintf_s(Buffer, sizeof(Buffer), ##__VA_ARGS__)
+/*** workaround to allow expression evaluation in release builds ***/
+#undef assertR		
+extern "C"
+{
+	_CRTIMP void __cdecl _wassert(_In_z_ const wchar_t * _Message, _In_z_ const wchar_t *_File, _In_ unsigned _Line);
+}
+#define assertR(_Expression) (void)( (!!(_Expression)) || (_wassert(_CRT_WIDE(#_Expression), _CRT_WIDE(__FILE__), __LINE__), 0) )
+/*** workaround to allow expression evaluation in release builds ***/

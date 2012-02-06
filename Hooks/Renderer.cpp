@@ -4,8 +4,14 @@
 #include "..\RenderWindowTextPainter.h"
 #include "PathGridUndoManager.h"
 #include "AuxiliaryViewport.h"
+#include "LOD.h"
 
-#pragma warning (disable : 4410)
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+#pragma warning (disable: 4410)
+
+StaticRenderChannel*			g_TXTChannelSelectionInfo = NULL;
 
 namespace Hooks
 {
@@ -15,13 +21,15 @@ namespace Hooks
 	bool						g_RenderWindowAltMovementSettings = false;
 	float						g_MaxLandscapeEditBrushRadius = 25.0f;
 
+
 	_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 	_DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
 	_DefineHookHdlr(NiWindowRender, 0x00406442);
-	_DefineHookHdlr(NiDX9RendererRecreate, 0x006D7260);
-	_DefineHookHdlr(RenderWindowStats, 0x0042D3F4);
+	_DefineHookHdlr(NiDX9RendererRecreateA, 0x006D79E8);
+	_DefineHookHdlr(NiDX9RendererRecreateB, 0x006D7A0D);
+	_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
 	_DefineHookHdlr(UpdateViewport, 0x0042CE70);
-	_DefineHookHdlr(RenderWindowSelection, 0x0042AE71);
+	_DefineHookHdlr(RenderWindowAddToSelection, 0x0042AE71);
 	_DefineHookHdlr(TESRenderControlPerformMove, 0x00425670);
 	_DefineHookHdlr(TESRenderControlPerformRotate, 0x00425D6E);
 	_DefineHookHdlr(TESRenderControlPerformScale, 0x00424650);
@@ -63,16 +71,19 @@ namespace Hooks
 	_DefineHookHdlr(DuplicateReferences, 0x0042EC2E);
 	_DefinePatchHdlrWithBuffer(NiDX9RendererPresent, 0x006D5C9D, 2, 0xFF, 0xD0);
 	_DefineHookHdlr(RenderToAuxiliaryViewport, 0x0042D405);
+	_DefineHookHdlr(ActivateRenderWindowPostCellSwitch, 0x0042CFFC);
+	_DefineHookHdlr(TESRenderControlPerformRelativeScale, 0x00424700);
 
 	void PatchRendererHooks(void)
 	{
 		_MemHdlr(DoorMarkerProperties).WriteJump();
 		_MemHdlr(TESObjectREFRGet3DData).WriteJump();
 		_MemHdlr(NiWindowRender).WriteJump();
-		_MemHdlr(NiDX9RendererRecreate).WriteJump();
-		_MemHdlr(RenderWindowStats).WriteJump();
+		_MemHdlr(NiDX9RendererRecreateA).WriteJump();
+		_MemHdlr(NiDX9RendererRecreateB).WriteJump();
+		_MemHdlr(NiDX9RendererRecreateC).WriteJump();
 		_MemHdlr(UpdateViewport).WriteJump();
-		_MemHdlr(RenderWindowSelection).WriteJump();
+		_MemHdlr(RenderWindowAddToSelection).WriteJump();
 		_MemHdlr(TESRenderControlPerformMove).WriteJump();
 		_MemHdlr(TESRenderControlPerformRotate).WriteJump();
 		_MemHdlr(TESRenderControlPerformScale).WriteJump();
@@ -111,8 +122,63 @@ namespace Hooks
 		_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&g_MaxLandscapeEditBrushRadius);
 		_MemHdlr(DuplicateReferences).WriteJump();
 		_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
+		_MemHdlr(ActivateRenderWindowPostCellSwitch).WriteJump();
+		_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
 	}
+	
+	bool TXTChannelStaticHandler_RenderSelectionInfo( std::string& RenderedText )
+	{
+		if (g_INIManager->GetINIInt("DisplaySelectionStats", "Extender::Renderer") == 0 ||
+			_RENDERSEL->selectionCount == 0)
+		{
+			return false;
+		}
 
+		char Buffer[0x500] = {0};
+
+		if (_RENDERSEL->selectionCount > 1)
+		{
+			FORMAT_STR(Buffer, "%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f",
+				_RENDERSEL->selectionCount,
+				_RENDERSEL->selectionPositionVectorSum.x,
+				_RENDERSEL->selectionPositionVectorSum.y,
+				_RENDERSEL->selectionPositionVectorSum.z);
+
+		}
+		else
+		{
+			TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
+			BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+			char xBuffer[0x50] = {0};
+			if (xData)
+			{
+				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+				FORMAT_STR(xBuffer, "Parent: %s [%08X]  Opposite State: %d",
+					((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
+					xParent->parent->formID, (UInt8)xParent->oppositeState);
+			}
+
+			FORMAT_STR(Buffer, "%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
+				((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
+				((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
+				Selection->position.x, Selection->position.y, Selection->position.z,
+				Selection->rotation.x * 180.0 / PI,
+				Selection->rotation.y * 180.0 / PI,
+				Selection->rotation.z * 180.0 / PI,
+				Selection->scale,
+				((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
+				((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
+				((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
+				((Selection->formFlags & kTESObjectREFRSpecialFlags_3DInvisible)?("I"):("-")),
+				((Selection->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible)?("CI"):("-")),
+				((Selection->formFlags & kTESObjectREFRSpecialFlags_Frozen)?("F"):("-")),
+				xBuffer);
+		}
+
+		RenderedText = Buffer;
+		return true;
+	}
+	
 	#define _hhName		DoorMarkerProperties
 	_hhBegin()
 	{
@@ -215,100 +281,84 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoNiDX9RendererRecreateHook(void)
+	void __stdcall DoNiDX9RendererRecreateHook(bool State)
 	{
-		RENDERTEXT->Recreate();
+		RENDERTEXT->Release(State);
 	}
 
-	#define _hhName		NiDX9RendererRecreate
+	#define _hhName		NiDX9RendererRecreateA
 	_hhBegin()
 	{
-		_hhSetVar(Retn, 0x006D7266);
+		_hhSetVar(Retn, 0x006D79ED);
+		_hhSetVar(Call, 0x006D7260);
 		__asm
 		{
 			pushad
+			push	0
 			call	DoNiDX9RendererRecreateHook
 			popad
 
-			sub     esp, 0x10
-			push    ebx
-			push    ebp
-			push    esi
+			call	[_hhGetVar(Call)]
 
+			pushad
+			push	1
+			call	DoNiDX9RendererRecreateHook
+			popad
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
 
-	void __stdcall DoRenderWindowStatsHook(void)
-	{
-		if (g_INIManager->GetINIInt("DisplaySelectionStats", "Extender::Renderer"))
-		{
-			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
-			{
-				PrintToBuffer("%d Objects Selected", (*g_TESRenderSelectionPrimary)->selectionCount);
-				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
-			}
-			else if ((*g_TESRenderSelectionPrimary)->selectionCount)
-			{
-				TESObjectREFR* Selection = CS_CAST((*g_TESRenderSelectionPrimary)->selectionList->Data, TESForm, TESObjectREFR);
-				char Buffer[0x50] = {0};
-				sprintf_s(Buffer, 0x50, "");
-
-				BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				if (xData)
-				{
-					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-					sprintf_s(Buffer, 0x50, "Parent: %s [%08X]  Opposite State: %d",
-																	((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
-																	xParent->parent->formID, (UInt8)xParent->oppositeState);
-				}
-
-				PrintToBuffer("%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
-								((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
-								((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
-								Selection->position.x, Selection->position.y, Selection->position.z,
-								Selection->rotation.x * 180.0 / PI,
-								Selection->rotation.y * 180.0 / PI,
-								Selection->rotation.z * 180.0 / PI,
-								Selection->scale,
-								((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
-								((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
-								((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
-								((Selection->formFlags & kTESObjectREFRSpecialFlags_3DInvisible)?("I"):("-")),
-								((Selection->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible)?("CI"):("-")),
-								((Selection->formFlags & kTESObjectREFRSpecialFlags_Frozen)?("F"):("-")),
-								Buffer);
-
-				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, g_TextBuffer, 0);
-			}
-			else
-				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, NULL, 0);
-		}
-		else
-			RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_1, NULL, 0);
-	}
-
-	#define _hhName		RenderWindowStats
+	#define _hhName		NiDX9RendererRecreateB
 	_hhBegin()
 	{
-		_hhSetVar(Call, 0x006F25E0);
-		_hhSetVar(Retn, 0x0042D3F9);
+		_hhSetVar(Retn, 0x006D7A12);
+		_hhSetVar(Call, 0x006D7260);
 		__asm
 		{
+			pushad
+			push	0
+			call	DoNiDX9RendererRecreateHook
+			popad
+
 			call	[_hhGetVar(Call)]
 
 			pushad
-			call	DoRenderWindowStatsHook
+			push	1
+			call	DoNiDX9RendererRecreateHook
+			popad
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	#define _hhName		NiDX9RendererRecreateC
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x006D7CFF);
+		_hhSetVar(Call, 0x006D7260);
+		__asm
+		{
+			pushad
+			push	0
+			call	DoNiDX9RendererRecreateHook
 			popad
 
+			call	[_hhGetVar(Call)]
+
+			pushad
+			push	1
+			call	DoNiDX9RendererRecreateHook
+			popad
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
 
 	bool __stdcall DoUpdateViewportHook(void)
 	{
-		if (RENDERTEXT->GetRenderChannelQueueSize(RenderWindowTextPainter::kRenderChannel_2) || g_INIManager->GetINIInt("UpdateViewPortAsync", "Extender::Renderer"))
+		if (RENDERTEXT->GetHasActiveTasks() ||
+			g_INIManager->GetINIInt("UpdateViewPortAsync", "Extender::Renderer"))
+		{
 			return true;
+		}
 		else
 			return false;
 	}
@@ -355,9 +405,8 @@ namespace Hooks
 			if (Selection)
 			{
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-					(*g_TESRenderSelectionPrimary)->AddToSelection(Itr->Data, true);
+					_RENDERSEL->AddToSelection(Itr->Data, true);
 
-				RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Selected object selection group", 3);
 				Result = true;
 			}
 		}
@@ -365,7 +414,7 @@ namespace Hooks
 		return Result;
 	}
 
-	#define _hhName		RenderWindowSelection
+	#define _hhName		RenderWindowAddToSelection
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x0042AE76);
@@ -393,14 +442,14 @@ namespace Hooks
 	void __stdcall TESRenderControlProcessFrozenRefs(void)
 	{
 		std::vector<TESForm*> FrozenRefs;
-		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			if ((Itr->Data->formFlags & kTESObjectREFRSpecialFlags_Frozen))
 				FrozenRefs.push_back(Itr->Data);
 		}
 
 		for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
-			(*g_TESRenderSelectionPrimary)->RemoveFromSelection(*Itr, true);
+			_RENDERSEL->RemoveFromSelection(*Itr, true);
 	}
 
 	#define _hhName		TESRenderControlPerformMove
@@ -805,9 +854,10 @@ namespace Hooks
 		}
 	}
 
-	void __stdcall DoActivateRenderWindowPostLandTextureChangeHook(void)
+	void __stdcall ActivateRenderWindow(void)
 	{
-		SetForegroundWindow(*g_HWND_RenderWindow);
+		if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_NotInUse)
+			SetForegroundWindow(*g_HWND_RenderWindow);
 	}
 
 	#define _hhName		ActivateRenderWindowPostLandTextureChange
@@ -822,7 +872,7 @@ namespace Hooks
 
 			call	g_TempIATProcBuffer
 			pushad
-			call	DoActivateRenderWindowPostLandTextureChangeHook
+			call	ActivateRenderWindow
 			popad
 
 			jmp		[_hhGetVar(Retn)]
@@ -1065,14 +1115,7 @@ namespace Hooks
 
 	void __stdcall DoInitialCellLoadCameraPositionHook(void)
 	{
-		static long double s_Offset = -1;
-		if (s_Offset < 0.0)
-		{
-			s_Offset = 0.0;
-			SafeWrite32(0x0042E69B + 2, (UInt32)&s_Offset);
-		}
-
-		SendMessage(*g_HWND_RenderWindow, 0x40D, NULL, (LPARAM)&Vector3(0.0, 0.0, 0.0));
+		SendMessage(*g_HWND_RenderWindow, 0x40D, NULL, (LPARAM)&Vector3(0.0, 0.0, -8192.0));
 	}
 
 	#define _hhName		InitialCellLoadCameraPosition
@@ -1125,7 +1168,7 @@ namespace Hooks
 
 	void __stdcall DoDuplicateReferencesHook(void)
 	{
-		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			TESObjectREFR* Reference = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 			Reference->position.z += 10.0f;
@@ -1153,16 +1196,12 @@ namespace Hooks
 			return;
 
 		if (AUXVIEWPORT->IsFrozen() == false)
-			AUXVIEWPORT->SyncViewportCamera(_RENDERCMPT->primaryCamera);
-		else
 		{
-			RENDERTEXT->SkipNextFrame();
-			_MemHdlr(NiDX9RendererPresent).WriteUInt16(0x9090);
-			_RENDERCMPT->RenderNode(AUXVIEWPORT->GetViewportCamera());
-			_MemHdlr(NiDX9RendererPresent).WriteBuffer();
+			AUXVIEWPORT->SyncViewportCamera(_RENDERCMPT->primaryCamera);
+			AUXVIEWPORT->DrawBackBuffer();
 		}
-
-		_RENDERER->device->Present(NULL, NULL, AUXVIEWPORT->GetWindow(), NULL);
+		else
+			AUXVIEWPORT->Draw(NULL, NULL);
 	}
 
 	#define _hhName		RenderToAuxiliaryViewport
@@ -1187,4 +1226,66 @@ namespace Hooks
 			jmp		[_hhGetVar(Retn)]
 		}
 	}
+
+	#define _hhName		ActivateRenderWindowPostCellSwitch
+	_hhBegin()
+	{
+		_hhSetVar(Call, 0x00409170);
+		_hhSetVar(Retn, 0x0042D001);
+		__asm
+		{
+			call	[_hhGetVar(Call)]
+			pushad
+			call	ActivateRenderWindow
+			popad
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
+
+	void __stdcall DoTESRenderControlPerformRelativeScaleHook(TESObjectREFR* Ref, float Scale, bool Relative)
+	{
+		if (Relative == false)
+			Ref->SetScale(Scale);
+		else
+		{
+			if (Scale > 10.0f)
+				Scale = 10.0;
+			else if (Scale < 0.01)
+				Scale = 0.01;
+
+			Vector3 PositionOffset(_RENDERSEL->selectionPositionVectorSum.x - Ref->position.x,
+								_RENDERSEL->selectionPositionVectorSum.y - Ref->position.y,
+								_RENDERSEL->selectionPositionVectorSum.z - Ref->position.z);
+
+			float ScaleFactor = (Ref->scale - Scale)/Ref->scale;
+
+			Ref->scale = Scale;
+			Ref->position.x += PositionOffset.x * ScaleFactor;
+			Ref->position.y += PositionOffset.y * ScaleFactor;
+			Ref->position.z += PositionOffset.z * ScaleFactor;
+			Ref->UpdateNiNode();
+		}
+	}
+
+	#define _hhName		TESRenderControlPerformRelativeScale
+	_hhBegin()
+	{
+		_hhSetVar(Retn, 0x00424807);
+		__asm
+		{
+			pop		ecx
+			pushad
+			movzx	eax, bl
+			push	eax
+			push	ecx
+			push	esi
+			call	DoTESRenderControlPerformRelativeScaleHook
+			popad
+
+			jmp		[_hhGetVar(Retn)]
+		}
+	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

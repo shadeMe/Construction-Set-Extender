@@ -24,45 +24,20 @@ BSRenderedTexture**					g_LODBSTexture2048x = (BSRenderedTexture**)0x00A0AAE4;
 
 LPDIRECT3DTEXTURE9					g_LODD3DTexture256x = NULL;
 BSRenderedTexture*					g_LODBSTexture256x = NULL;
+LPDIRECT3DTEXTURE9					g_LODD3DTexture384x = NULL;
+BSRenderedTexture*					g_LODBSTexture384x = NULL;
 LPDIRECT3DTEXTURE9					g_LODD3DTexture4096x = NULL;
 BSRenderedTexture*					g_LODBSTexture4096x = NULL;
-LPDIRECT3DTEXTURE9					g_LODD3DTexture8192x = NULL;
-BSRenderedTexture*					g_LODBSTexture8192x = NULL;
+LPDIRECT3DTEXTURE9					g_LODD3DTexture6144x = NULL;
+BSRenderedTexture*					g_LODBSTexture6144x = NULL;
 
 Setting*							g_INILocalMasterPath = (Setting*)0x009ED710;
 
-void* FormHeap_Allocate( UInt32 Size )
-{
-	return cdeclCall<void*>(0x00401E80, Size);
-}
 
-void FormHeap_Free( void* Ptr )
-{
-	cdeclCall<UInt32>(0x00401EA0, Ptr);
-}
 
 void* Oblivion_DynamicCast( void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4 )
 {
 	return cdeclCall<void*>(0x0088DC0C, SrcObj, Arg1, FromType, ToType, Arg4);
-}
-
-TESFile* TESFile::CreateInstance(const char* WorkingDirectory, const char* FileName,  UInt8 OpenMode)
-{
-	TESFile* NewInstance = (TESFile*)FormHeap_Allocate(sizeof(TESFile));
-	thisCall<UInt32>(0x00489590, NewInstance, WorkingDirectory, FileName, OpenMode);
-	return NewInstance;
-}
-
-void TESFile::DeleteInstance(bool ReleaseMemory)
-{
-	thisCall<UInt32>(0x00487E60, this);
-	if (ReleaseMemory)
-		FormHeap_Free(this);
-}
-
-bool TESFile::IsActive( void )
-{
-	return thisCall<bool>(0x00485BA0, this);
 }
 
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
@@ -163,4 +138,9 @@ LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 H
 	D3DTexture = NULL;
 
 	return Result;
+}
+
+void BSRenderedTexture::DeleteInstance( bool ReleaseMemory /*= 0*/ )
+{
+	thisVirtualCall<void>(0x0, this, ReleaseMemory);
 }

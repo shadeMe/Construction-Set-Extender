@@ -3,10 +3,10 @@
 
 #include "Globals.h"
 #include "ScriptParser.h"
+#include "ScriptTextEditorInterface.h"
 #include "ScriptEditorPreferences.h"
 #include "ScriptListDialog.h"
-
-#include "AvalonEditTextEditor.h"
+#include "FindReplaceDialog.h"
 #include "AuxiliaryTextEditor.h"
 #include "[Common]\AuxiliaryWindowsForm.h"
 
@@ -18,6 +18,8 @@ namespace ConstructionSetExtender
 {
 #define NEWSCRIPTID					"New Script"
 #define FIRSTRUNSCRIPTID			"New Workspace"
+#define SCRIPTSFOLDERPATH			"Data\\Scripts\\"
+#define AUTORECOVERYCACHEPATH		"Data\\Scripts\\Auto-Recovery Cache\\"
 
 	namespace ScriptEditor
 	{
@@ -25,7 +27,7 @@ namespace ConstructionSetExtender
 
 		void													WorkspaceTearingEventHandler(Object^ Sender, MouseEventArgs^ E);
 
-		public ref class WorkspaceContainer
+		ref class WorkspaceContainer
 		{
 		public:
 			static enum class									JumpStackNavigationDirection
@@ -36,12 +38,11 @@ namespace ConstructionSetExtender
 
 			static enum class									RemoteWorkspaceOperation
 			{
-				e_New = 0,
-				e_Open,
-				e_LoadNew,
-				e_NewText,
-				e_Find,
-				e_Replace
+				e_CreateNewWorkspaceAndScript = 0,
+				e_CreateNewWorkspaceAndSelectScript,
+				e_LoadFileIntoNewWorkspace,
+				e_CreateNewWorkspaceAndScriptAndSetText,
+				e_FindReplaceInOpenWorkspaces
 			};
 
 			static MouseEventHandler^							WorkspaceTearingEventDelegate = gcnew MouseEventHandler(&WorkspaceTearingEventHandler);
@@ -102,7 +103,7 @@ namespace ConstructionSetExtender
 			virtual Workspace^									InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript);
 			void												NavigateJumpStack(UInt32 AllocatedIndex, JumpStackNavigationDirection Direction);
 			void												JumpToWorkspace(UInt32 AllocatedIndex, String^% ScriptName);
-			virtual void										PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation Operation, Object^ ArbitraryA, Object^ ArbitraryB);
+			virtual void										PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation Operation, List<Object^>^ Parameters);
 			void												SaveAllOpenWorkspaces();
 			void												CloseAllOpenWorkspaces();
 
@@ -126,19 +127,19 @@ namespace ConstructionSetExtender
 			void												DisableControls(void);
 			void												EnableControls(void);
 
-			Rectangle											GetEditorFormRect();
-			IntPtr												GetEditorFormHandle() { return EditorForm->Handle; }
-			FormWindowState										GetEditorFormWindowState() { return EditorForm->WindowState; }
-			void												SetEditorFormWindowState(FormWindowState State) { EditorForm->WindowState = State; }
-			void												SetEditorFormCursor(Cursor^ NewCursor);
+			Rectangle											GetBounds();
+			IntPtr												GetHandle() { return EditorForm->Handle; }
+			FormWindowState										GetWindowState() { return EditorForm->WindowState; }
+			void												SetWindowState(FormWindowState State) { EditorForm->WindowState = State; }
+			void												SetCursor(Cursor^ NewCursor);
 
 			UInt32												GetTabCount() { return EditorTabStrip->Tabs->Count; }
 		};
 
-		public ref class Workspace
+		ref class Workspace
 		{
 		public:
-			static enum class									MessageType
+			static enum class									MessageListItemType
 			{
 				e_Warning	= 0,
 				e_Error,
@@ -153,7 +154,7 @@ namespace ConstructionSetExtender
 				e_MagicEffect = 0x100
 			};
 
-			static enum class									SaveScriptOperation
+			static enum class									ScriptSaveOperation
 			{
 				e_SaveAndCompile = 0,
 				e_SaveButDontCompile,
@@ -174,7 +175,7 @@ namespace ConstructionSetExtender
 			DotNetBar::SuperTabControlPanel^					WorkspaceControlBox;
 
 			SplitContainer^										WorkspaceSplitter;
-			TextEditors::AvalonEditor::AvalonEditTextEditor^	TextEditor;
+			TextEditors::IScriptTextEditor^						TextEditor;
 			TextEditors::ScriptOffsetViewer^					OffsetViewer;
 			TextEditors::SimpleTextViewer^						PreprocessedTextViewer;
 
@@ -209,15 +210,10 @@ namespace ConstructionSetExtender
 			ToolStripButton^									ToolBarScriptTypeContentsMagicEffect;
 
 			ToolStrip^											WorkspaceSecondaryToolBar;
-			ToolStripTextBox^									ToolBarCommonTextBox;
 			ToolStripDropDownButton^							ToolBarEditMenu;
 			ToolStripDropDown^									ToolBarEditMenuContents;
-			ToolStripSplitButton^								ToolBarEditMenuContentsFind;
-			ToolStripDropDown^									ToolBarEditMenuContentsFindContents;
-			ToolStripButton^									ToolBarEditMenuContentsFindContentsInTabs;
-			ToolStripSplitButton^								ToolBarEditMenuContentsReplace;
-			ToolStripDropDown^									ToolBarEditMenuContentsReplaceContents;
-			ToolStripButton^									ToolBarEditMenuContentsReplaceContentsInTabs;
+			ToolStripButton^									ToolBarEditMenuContentsFind;
+			ToolStripButton^									ToolBarEditMenuContentsReplace;
 			ToolStripButton^									ToolBarEditMenuContentsGotoLine;
 			ToolStripButton^									ToolBarEditMenuContentsGotoOffset;
 			ToolStripButton^									ToolBarMessageList;
@@ -247,7 +243,6 @@ namespace ConstructionSetExtender
 			ToolStripMenuItem^									ContextMenuWord;
 			ToolStripMenuItem^									ContextMenuWikiLookup;
 			ToolStripMenuItem^									ContextMenuOBSEDocLookup;
-			ToolStripMenuItem^									ContextMenuCopyToCTB;
 			ToolStripMenuItem^									ContextMenuDirectLink;
 			ToolStripMenuItem^									ContextMenuJumpToScript;
 			ToolStripMenuItem^									ContextMenuGoogleLookup;
@@ -263,7 +258,9 @@ namespace ConstructionSetExtender
 			ToolStripMenuItem^									ContextMenuRefactorRenameVariables;
 
 			ScriptListDialog^									ScriptListBox;
+			FindReplaceDialog^									FindReplaceBox;
 			WorkspaceContainer^									ParentContainer;
+			Timer^												AutoSaveTimer;
 
 			UInt32												WorkspaceHandleIndex;
 			bool												DestructionFlag;
@@ -311,7 +308,6 @@ namespace ConstructionSetExtender
 			EventHandler^										ContextMenuAddMessageClickHandler;
 			EventHandler^										ContextMenuWikiLookupClickHandler;
 			EventHandler^										ContextMenuOBSEDocLookupClickHandler;
-			EventHandler^										ContextMenuCopyToCTBClickHandler;
 			EventHandler^										ContextMenuDirectLinkClickHandler;
 			EventHandler^										ContextMenuJumpToScriptClickHandler;
 			EventHandler^										ContextMenuGoogleLookupClickHandler;
@@ -319,12 +315,7 @@ namespace ConstructionSetExtender
 			EventHandler^										ContextMenuRefactorDocumentScriptClickHandler;
 			EventHandler^										ContextMenuRefactorCreateUDFImplementationClickHandler;
 			EventHandler^										ContextMenuRefactorRenameVariablesClickHandler;
-			KeyEventHandler^									ToolBarCommonTextBoxKeyDownHandler;
-			EventHandler^										ToolBarCommonTextBoxLostFocusHandler;
-			EventHandler^										ToolBarEditMenuContentsFindClickHandler;
-			EventHandler^										ToolBarEditMenuContentsFindContentsInTabsClickHandler;
-			EventHandler^										ToolBarEditMenuContentsReplaceClickHandler;
-			EventHandler^										ToolBarEditMenuContentsReplaceContentsInTabsClickHandler;
+			EventHandler^										ToolBarEditMenuContentsFindReplaceClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoLineClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoOffsetClickHandler;
 			EventHandler^										ToolBarMessageListClickHandler;
@@ -341,6 +332,7 @@ namespace ConstructionSetExtender
 			EventHandler^										ToolBarSanitizeScriptTextClickHandler;
 			EventHandler^										ToolBarBindScriptClickHandler;
 			EventHandler^										ScriptEditorPreferencesSavedHandler;
+			EventHandler^										AutoSaveTimerTickHandler;
 
 			virtual void										TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			virtual void										TextEditor_ScriptModified(Object^ Sender, TextEditors::ScriptModifiedEventArgs^ E);
@@ -384,7 +376,6 @@ namespace ConstructionSetExtender
 			virtual void                                        ContextMenuAddMessage_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E);
-			virtual void                                        ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuGoogleLookup_Click(Object^ Sender, EventArgs^ E);
@@ -394,13 +385,7 @@ namespace ConstructionSetExtender
 			virtual void                                        ContextMenuRefactorCreateUDFImplementation_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuRefactorRenameVariables_Click(Object^ Sender, EventArgs^ E);
 
-			virtual void                                        ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
-			virtual void                                        ToolBarCommonTextBox_LostFocus(Object^ Sender, EventArgs^ E);
-
-			virtual void                                        ToolBarEditMenuContentsFind_Click(Object^ Sender, EventArgs^ E);
-			virtual void                                        ToolBarEditMenuContentsFindContentsInTabs_Click(Object^ Sender, EventArgs^ E);
-			virtual void                                        ToolBarEditMenuContentsReplace_Click(Object^ Sender, EventArgs^ E);
-			virtual void                                        ToolBarEditMenuContentsReplaceContentsInTabs_Click(Object^ Sender, EventArgs^ E);
+			virtual void                                        ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E);
 
@@ -419,16 +404,19 @@ namespace ConstructionSetExtender
 			virtual void                                        ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
 
 			virtual void                                        ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+			virtual void										AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
 
 			virtual bool										PerformHouseKeeping(void);
 
-			virtual void                                        AddMessageToMessagePool(MessageType Type, int Line, String^ Message);
+			virtual void                                        AddMessageToMessagePool(MessageListItemType Type, int Line, String^ Message);
 			virtual void                                        ClearErrorMessagesFromMessagePool(void);
 			virtual void                                        ClearEditorMessagesFromMessagePool(void);
 
 			virtual void                                        FindReplaceOutput(String^ Line, String^ Text);
 			virtual void                                        ToggleBookmark(int CaretPos);
 			virtual void                                        SetScriptType(ScriptType Type);
+
+			virtual void										InsertVariable(String^ VariableName, ScriptParser::VariableType VariableType);
 
 			virtual String^										SerializeCSEBlock(void);
 			virtual void                                        SerializeCaretPos(String^% Result);
@@ -453,7 +441,7 @@ namespace ConstructionSetExtender
 
 			virtual void                                        NewScript();
 			virtual void                                        OpenScript();
-			virtual bool										SaveScript(SaveScriptOperation Operation);
+			virtual bool										SaveScript(ScriptSaveOperation Operation);
 			virtual void                                        DeleteScript();
 			virtual void                                        RecompileScripts();
 			virtual void                                        PreviousScript();
@@ -470,7 +458,7 @@ namespace ConstructionSetExtender
 			String^												GetScriptDescription() { return WorkspaceTabItem->Tooltip; }
 			String^												GetScriptID() { return CurrentScriptEditorID; }
 			bool												GetIsUninitialized() { return CurrentScriptEditorID == FIRSTRUNSCRIPTID;  }		// returns true until a script's loaded/created into the workspace
-			bool												GetIsCurrentScriptNew(void) { return CurrentScriptEditorID == NEWSCRIPTID; }
+			bool												GetIsScriptNew(void) { return CurrentScriptEditorID == NEWSCRIPTID; }
 			bool												GetIsTabStripParent(DotNetBar::SuperTabStrip^ TabStrip) { return TabStrip->Tabs->IndexOf(WorkspaceTabItem) != -1; }
 
 			String^												GetCurrentToken() { return TextEditor->GetTokenAtCaretPos(); }
@@ -482,7 +470,7 @@ namespace ConstructionSetExtender
 			String^												GetScriptText() { return TextEditor->GetText(); }
 			ScriptType											GetScriptType();
 
-			void												SetScriptText(String^% Text) { TextEditor->SetText(Text, false); }
+			void												SetScriptText(String^% Text, bool ResetUndoStack) { TextEditor->SetText(Text, false, ResetUndoStack); }
 			void												SetCurrentToken(String^% Replacement) { TextEditor->SetTokenAtCaretPos(Replacement); }
 
 			void												BringToFront() { ParentContainer->SelectTab(WorkspaceTabItem); }
@@ -496,7 +484,7 @@ namespace ConstructionSetExtender
 			void												LoadFileFromDisk(String^ Path);
 			void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);
 
-			void												PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement);
+			int													PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options);
 		};
 	}
 }

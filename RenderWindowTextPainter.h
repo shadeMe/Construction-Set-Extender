@@ -1,100 +1,147 @@
 #pragma once
+#include "ElapsedTimeCounter.h"
+
+class RenderWindowTextPainter;
+
+class RenderChannelBase
+{
+protected:
+	struct Parameters
+	{
+		INT								FontHeight;
+		INT								FontWidth;
+		UINT							FontWeight;
+		char							FontFace[0x100];
+		D3DCOLOR						Color;
+		RECT							DrawArea;
+		UInt32							DrawAreaFlags;
+		DWORD							DrawFormat;
+
+		Parameters(INT FontHeight,
+			INT FontWidth,
+			UINT FontWeight,
+			const char* FontFace,
+			D3DCOLOR Color,
+			RECT* DrawArea,
+			DWORD DrawFormat,
+			UInt32 DrawAreaFlags);
+	};
+
+	LPD3DXFONT						Font;
+	RECT							RenderArea;
+	bool							Valid;
+	Parameters						InputParams;
+
+	RenderChannelBase(INT FontHeight,
+		INT FontWidth,
+		UINT FontWeight,
+		const char* FontFace,
+		D3DCOLOR Color,
+		RECT* DrawArea,
+		DWORD DrawFormat,
+		UInt32 DrawAreaFlags = 0);
+
+	virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite) = 0;
+	virtual bool					Create();
+	virtual void					Release();
+	bool							GetIsValid() const;
+
+	friend class					RenderWindowTextPainter;
+public:
+	enum
+	{
+		kDrawAreaFlags_RightAligned		= 1 << 0,
+		kDrawAreaFlags_BottomAligned	= 1 << 1,
+	};
+
+	virtual ~RenderChannelBase();
+};
+
+class StaticRenderChannel : public RenderChannelBase
+{
+public:
+	typedef bool					(* RenderHandler)(std::string& RenderedText);		// return false to skip rendering
+protected:
+	std::string						RenderText;
+	RenderHandler					RenderCallback;
+
+	virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite);
+
+	friend class					RenderWindowTextPainter;
+public:
+	StaticRenderChannel(INT FontHeight,
+		INT FontWidth,
+		UINT FontWeight,
+		const char* FontFace,
+		D3DCOLOR Color,
+		RECT* DrawArea,
+		DWORD DrawFormat,
+		UInt32 DrawAreaFlags = 0,
+		RenderHandler RenderCallback = NULL);
+
+	virtual ~StaticRenderChannel();
+};
+
+class DynamicRenderChannel : public RenderChannelBase
+{
+protected:
+	struct QueueTask
+	{
+		std::string					Text;
+		float						RemainingTime;
+
+		QueueTask(const char* Text, float SecondsToDisplay);
+	};
+
+	std::queue<QueueTask*>			RenderQueue;
+
+	virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite);		// parameter's long double* - TimePassedSinceLastUpdate
+	virtual void					Release();
+
+	friend class					RenderWindowTextPainter;
+public:
+	DynamicRenderChannel(INT FontHeight,
+		INT FontWidth,
+		UINT FontWeight,
+		const char* FontFace,
+		D3DCOLOR Color,
+		RECT* DrawArea,
+		DWORD DrawFormat,
+		UInt32 DrawAreaFlags = 0);
+
+	virtual ~DynamicRenderChannel();
+
+	bool							Queue(float SecondsToDisplay, const char* Format, ...);
+	UInt32							GetQueueSize() const;
+};
 
 class RenderWindowTextPainter
 {
-	static RenderWindowTextPainter*		Singleton;
+	static RenderWindowTextPainter*			Singleton;
 
 	RenderWindowTextPainter();
 
-	class RenderChannelBase
-	{
-	protected:
-		LPD3DXFONT						Font;
-		D3DCOLOR						Color;
-		RECT							DrawArea;
+	typedef std::vector<RenderChannelBase*>	RenderChannelListT;
+	RenderChannelListT						RegisteredChannels;
+	ElapsedTimeCounter						RenderWindowTimeCounter;
+	LPD3DXSPRITE							RenderToSprite;
+	bool									Enabled;
 
-		bool							Valid;
-
-		RenderChannelBase(INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, DWORD Color, RECT* DrawArea);
-	public:
-		virtual void					Render() = 0;
-		virtual void					Release()
-		{
-			if (Valid == false)
-				return;
-
-			Font->Release();
-			Font = NULL;
-		}
-		bool							GetIsValid() { return Valid; }
-	};
-
-	class StaticRenderChannel : public RenderChannelBase
-	{
-		std::string						TextToRender;
-	public:
-		StaticRenderChannel(INT FontHeight,
-							INT FontWidth,
-							UINT FontWeight,
-							const char* FontFace,
-							DWORD Color,
-							RECT* DrawArea) : RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea) {}
-
-		virtual void					Render();
-		void							Queue(const char* Text);
-		UInt32							GetQueueSize() { return (TextToRender.length() < 1); }
-	};
-
-	class DynamicRenderChannel : public RenderChannelBase
-	{
-		long double						TimeLeft;
-
-		struct QueueTask
-		{
-			std::string					Text;
-			long double					RemainingTime;
-
-			QueueTask(const char* Text, long double SecondsToDisplay) :  Text(Text), RemainingTime(SecondsToDisplay) {}
-		};
-
-		std::queue<QueueTask*>			DrawQueue;
-	public:
-		DynamicRenderChannel(INT FontHeight,
-							INT FontWidth,
-							UINT FontWeight,
-							const char* FontFace,
-							DWORD Color,
-							RECT* DrawArea) : RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea), TimeLeft(0) {}
-
-		virtual void					Render();
-		virtual void					Release();
-		void							Queue(const char* Text, long double SecondsToDisplay);
-		UInt32							GetQueueSize() { return DrawQueue.size(); }
-	};
-
-	StaticRenderChannel*					RenderChannel1;
-	DynamicRenderChannel*					RenderChannel2;
-	bool									Valid;
-	bool									SkipFrame;
+	bool									LookupRenderChannel(RenderChannelBase* Channel, RenderChannelListT::iterator& MatchIterator);
+	bool									ReleaseSprite(bool Recreate = true);
 public:
+	static RenderWindowTextPainter*			GetSingleton(void);
 
-	enum
-	{
-		kRenderChannel_1 = 0,			// static
-		kRenderChannel_2				// dynamic
-	};
+	void									Render();
+	bool									Release(bool Recreate = true);
+	bool									RegisterRenderChannel(RenderChannelBase* Channel);		// must be allocated on the heap, painter takes ownership of the pointer, returns true if successful
+	bool									UnregisterRenderChannel(RenderChannelBase* Channel);	// releases the registered channel, returns true if successful
 
-	static RenderWindowTextPainter*		GetSingleton(void);
-
-	bool								Initialize();			// must be called during init
-	bool								Recreate();
-	void								Render();
-	void								Release();
-	void								QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay);
-	void								SkipNextFrame() { SkipFrame = true; }
-
-	UInt32								GetRenderChannelQueueSize(UInt8 Channel);
+	void									SetEnabled(bool State);
+	bool									GetEnabled(void) const;
+	bool									GetHasActiveTasks(void) const;
+	
+	void									Deinitialize();
 };
 
-#define RENDERTEXT								RenderWindowTextPainter::GetSingleton()
-#define PrintToRender(message, duration)		RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, message, duration)
+#define RENDERTEXT							RenderWindowTextPainter::GetSingleton()

@@ -9,36 +9,19 @@ namespace ConstructionSetExtender
 		ref class UserFunction;
 		ref struct IntelliSenseParseScriptData;
 
-		public ref class IntelliSenseDatabase
+		ref class IntelliSenseDatabase
 		{
 		protected:
 			static IntelliSenseDatabase^						Singleton = nullptr;
 
 			IntelliSenseDatabase();
 
-			ref struct ParsedUpdateData
-			{
-				LinkedList<UserFunction^>^						UDFList;
-				LinkedList<IntelliSenseItem^>^					Enumerables;
+			virtual void										DatabaseUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
 
-				ParsedUpdateData() : UDFList(gcnew LinkedList<UserFunction^>()), Enumerables(gcnew LinkedList<IntelliSenseItem^>()) {}
-			};
-
-			virtual ParsedUpdateData^							InitializeDatabaseUpdate();
-			virtual void										FinalizeDatabaseUpdate(ParsedUpdateData^ Data);
-
-			virtual void										DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E);
-			virtual void										DatabaseUpdateThread_DoWork(Object^ Sender, DoWorkEventArgs^ E);
-			virtual void										DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E);
-
-			Timers::Timer^										DatabaseUpdateTimer;
-			BackgroundWorker^									DatabaseUpdateThread;
-
+			Timer^												DatabaseUpdateTimer;
 			LinkedList<UserFunction^>^							UserFunctionList;
 			Dictionary<String^, String^>^						DeveloperURLMap;
 			Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
-
-			bool												ForceUpdateFlag;
 			UInt32												UpdateThreadTimerInterval;	// in minutes
 
 			void												UpdateDatabase();
@@ -63,7 +46,6 @@ namespace ConstructionSetExtender
 			bool												GetIsIdentifierScriptCommand(String^% Name);
 
 			void												ForceUpdateDatabase();
-			void												InitializeDatabaseUpdateThread();
 		};
 
 #define ISDB											IntelliSenseDatabase::GetSingleton()

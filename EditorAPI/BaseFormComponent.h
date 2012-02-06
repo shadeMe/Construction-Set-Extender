@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BSStringT.h"
+#include "BSString.h"
 
 //	EditorAPI: BaseFormComponent class and its derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -52,7 +52,7 @@ class TESFullName : public BaseFormComponent
 public:
 	// members
 	//     /00*/ void**         vtbl;
-	/*04*/ BSStringT			name;
+	/*04*/ BSString			name;
 };
 STATIC_ASSERT(sizeof(TESFullName) == 0xC);
 
@@ -62,7 +62,7 @@ class TESDescription : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**			vtbl;
-	/*04*/ BSStringT				description;
+	/*04*/ BSString				description;
 	/*0C*/ UInt32					descDialogItem;		// Dialog Control ID for description control
 };
 STATIC_ASSERT(sizeof(TESDescription) == 0x10);
@@ -73,7 +73,7 @@ class TESTexture : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**         vtbl;
-	/*04*/ BSStringT			texturePath;
+	/*04*/ BSString			texturePath;
 	/*0C*/ UInt32				unkTexture0C;			// cached image? struct {UInt32 unkA; UInt32 unkB; void* privateObj;}
 	/*10*/ UInt32				texturePathDlgItem;		// Dialog Control ID for texture path control
 	/*14*/ UInt32				textureImageDlgItem;	// Dialog Control ID for texture image control
@@ -104,7 +104,7 @@ public:
 
 	// members
 	//     /*00*/ void**            vtbl;
-	/*04*/ BSStringT				modelPath;
+	/*04*/ BSString					modelPath;
 	/*0C*/ float					modelBound;
 	/*10*/ ModelHashList			modelHashList;		// texture hash list ?
 	/*20*/ UInt32					modelPathDlgItem;	// Dialog Control ID for model path
@@ -445,7 +445,7 @@ class TESSoundFile : public BaseFormComponent
 public:
 	// members
 	//     /*00*/ void**			vtbl;
-	/*04*/ BSStringT				soundFilePath;
+	/*04*/ BSString				soundFilePath;
 };
 STATIC_ASSERT(sizeof(TESSoundFile) == 0xC);
 

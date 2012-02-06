@@ -2,7 +2,7 @@
 
 namespace ConstructionSetExtender
 {
-	public ref class AnimatedForm : public System::Windows::Forms::Form
+	ref class AnimatedForm : public System::Windows::Forms::Form
 	{
 	protected:
 		static enum class					FadeOperationType
@@ -17,8 +17,7 @@ namespace ConstructionSetExtender
 		double								FadeDuration;
 		bool								CloseOnFadeOut;
 		EventHandler^						FadeTimerTickHandler;
-
-		static double						FadeAnimationFactor = 0.60;
+		double								RemainingTime;
 
 		void								FadeTimer_Tick(Object^ Sender, EventArgs^ E);
 
@@ -38,7 +37,7 @@ namespace ConstructionSetExtender
 		void										ForceClose();
 	};
 
-	public ref class NonActivatingImmovableAnimatedForm : public Form
+	ref class NonActivatingImmovableAnimatedForm : public Form
 	{
 	protected:
 		property bool										ShowWithoutActivation

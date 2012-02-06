@@ -25,6 +25,8 @@ HWND*								g_HWND_LandscapeEdit = (HWND*)0x00A0AF54;
 HWND*								g_HWND_CellView_ObjectList = (HWND*)0x00A0AA00;
 HWND*								g_HWND_CellView_CellList = (HWND*)0x00A0AA34;
 
+HMENU*								g_HMENU_MainMenu = (HMENU*)0x00A0B630;
+
 char**								g_TESActivePluginName = (char**)0x00A0AF00;
 UInt8*								g_TESCSAllowAutoSaveFlag = (UInt8*)0x00A0B628;
 UInt8*								g_TESCSExittingCSFlag = (UInt8*)0x00A0B63C;
@@ -68,9 +70,9 @@ bool TESDialog::GetPositionFromINI( const char* WindowClassName, LPRECT OutRect 
 	return cdeclCall<bool>(0x004176D0, WindowClassName, OutRect);
 }
 
-LRESULT TESDialog::WriteToStatusBar( WPARAM wParam, LPARAM lParam )
+LRESULT TESDialog::WriteToStatusBar( int PanelIndex, const char* Message )
 {
-	return cdeclCall<UInt32>(0x00431310, wParam, lParam);
+	return cdeclCall<UInt32>(0x00431310, PanelIndex, Message);
 }
 
 void TESDialog::InitializeCSWindows()
@@ -230,8 +232,12 @@ void TESDialog::RedrawRenderWindow()
 	else
 	{
 		*g_RenderWindowUpdateViewPortFlag = 1;
-		SendMessage(*g_HWND_RenderWindow, WM_TIMER, 1, NULL);
 	}
+}
+
+HWND TESDialog::ShowUseReportDialog( TESForm* Form )
+{
+	return CreateDialogParam(*g_TESCS_Instance, (LPCSTR)TESDialog::kDialogTemplate_UseReport, NULL, g_FormUseReport_DlgProc, (LPARAM)Form);
 }
 
 void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
@@ -266,11 +272,11 @@ void TESListView::SetSelectedItem( HWND hWnd, int Index )
 
 void CSStartupManager::LoadStartupPlugin()
 {
-	if (g_INIManager->GetINIInt("LoadPluginOnStartup", "Extender::General"))
+	if (g_INIManager->GetINIInt("LoadPlugin", "Extender::Startup"))
 	{
 		Hooks::kAutoLoadActivePluginOnStartup.WriteJump();
 
-		const char* PluginName = g_INIManager->GetINIStr("StartupPluginName", "Extender::General");
+		const char* PluginName = g_INIManager->GetINIStr("PluginName", "Extender::Startup");
 		TESFile* File = _DATAHANDLER->LookupPluginByName(PluginName);
 
 		if (File)
@@ -288,7 +294,7 @@ void CSStartupManager::LoadStartupPlugin()
 		}
 		else if (strlen(PluginName) >= 1)
 		{
-			DebugPrint("Couldn't load plugin '%s' on startup - It doesn't exist!", PluginName);
+			DebugPrint("Non-existent startup plugin '%s'", PluginName);
 		}
 
 		Hooks::kAutoLoadActivePluginOnStartup.WriteBuffer();
@@ -297,9 +303,9 @@ void CSStartupManager::LoadStartupPlugin()
 
 void CSStartupManager::LoadStartupScript()
 {
-	if (g_INIManager->GetINIInt("OpenScriptWindowOnStartup", "Extender::General"))
+	if (g_INIManager->GetINIInt("OpenScriptWindow", "Extender::Startup"))
 	{
-		const char* ScriptID = g_INIManager->GetINIStr("StartupScriptEditorID", "Extender::General");
+		const char* ScriptID = g_INIManager->GetINIStr("ScriptEditorID", "Extender::Startup");
 		if (strcmp(ScriptID, ""))
 			TESDialog::ShowScriptEditorDialog(TESForm::LookupByEditorID(ScriptID));
 		else
@@ -309,8 +315,8 @@ void CSStartupManager::LoadStartupScript()
 
 void CSStartupManager::LoadStartupWorkspace()
 {
-	if (g_INIManager->GetINIInt("SetWorkspaceOnStartup", "Extender::General"))
-		g_WorkspaceManager.SelectWorkspace(g_INIManager->GetINIStr("DefaultWorkspacePath", "Extender::General"));
+	if (g_INIManager->GetINIInt("SetWorkspace", "Extender::Startup"))
+		g_WorkspaceManager.SelectWorkspace(g_INIManager->GetINIStr("WorkspacePath", "Extender::Startup"));
 }
 
 void __stdcall FormEnumerationWrapper::ReinitializeFormLists()

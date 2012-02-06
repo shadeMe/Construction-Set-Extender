@@ -17,6 +17,7 @@ namespace CSAutomationScript
 
 		REGISTER_CSASCOMMAND(SetEditorID, "General Functions");
 		REGISTER_CSASCOMMAND(SetFormID, "General Functions");
+		REGISTER_CSASCOMMAND(MarkAsModified, "General Functions");
 	}
 
 	BEGIN_CSASCOMMAND_PARAMINFO(PrintToConsole, 1)
@@ -35,26 +36,30 @@ namespace CSAutomationScript
 	}
 	DEFINE_CSASCOMMAND_ALIAS(PrintToConsole, "printC", "Prints a message to the CSE console window", CSASDataElement::kParamType_Invalid, 1);
 
-	BEGIN_CSASCOMMAND_PARAMINFO(FormatNumber, 2)
+	BEGIN_CSASCOMMAND_PARAMINFO(FormatNumber, 3)
 	{
 		{ "Format String", CSASDataElement::kParamType_String },
-		{ "Number", CSASDataElement::kParamType_Numeric }
+		{ "Number", CSASDataElement::kParamType_Numeric },
+		{ "Interpret As Unsigned Integer", CSASDataElement::kParamType_Numeric }
 	};
 	BEGIN_CSASCOMMAND_HANDLER(FormatNumber)
 	{
 		char Buffer[0x200] = {0},
 			 OutBuffer[0x32] = {0};
-		double Number = 0.0;
+		double Number = 0.0, InterpretAsUInt32 = 0.0;
 
-		if (!EXTRACT_CSASARGS(&Buffer, &Number))
+		if (!EXTRACT_CSASARGS(&Buffer, &Number, &InterpretAsUInt32))
 			return false;
 
-		sprintf_s(OutBuffer, sizeof(OutBuffer), Buffer, Number);
+		if (InterpretAsUInt32 > 0.0 || InterpretAsUInt32 < 0.0)
+			sprintf_s(OutBuffer, sizeof(OutBuffer), Buffer, (UInt32)Number);
+		else
+			sprintf_s(OutBuffer, sizeof(OutBuffer), Buffer, Number);
 
 		Result->SetString(OutBuffer);
 		return true;
 	}
-	DEFINE_CSASCOMMAND_ALIAS(FormatNumber, "fmtNum", "Formats a numeric value as a string", CSASDataElement::kParamType_String, 2);
+	DEFINE_CSASCOMMAND_ALIAS(FormatNumber, "fmtNum", "Formats a numeric value as a string", CSASDataElement::kParamType_String, 3);
 
 	BEGIN_CSASCOMMAND_PARAMINFO(TypeOf, 1)
 	{
@@ -68,7 +73,7 @@ namespace CSAutomationScript
 			return false;
 
 		ScriptContext* CallingContext = SCRIPTRUNNER->GetExecutingContext();
-		assert(CallingContext);
+		assertR(CallingContext);
 
 		ScriptVariable* Variable = CallingContext->LookupVariableByName(Buffer);
 		if (!Variable)
@@ -186,4 +191,25 @@ namespace CSAutomationScript
 		return true;
 	}
 	DEFINE_CSASCOMMAND(SetFormID, "Sets the form's formID", CSASDataElement::kParamType_Invalid, 2);
+
+	BEGIN_CSASCOMMAND_PARAMINFO(MarkAsModified, 2)
+	{
+		{ "Form", CSASDataElement::kParamType_Reference },
+		{ "Modified Flag", CSASDataElement::kParamType_Numeric }
+	};
+	BEGIN_CSASCOMMAND_HANDLER(MarkAsModified)
+	{
+		TESForm* Form = NULL;
+		double State = 0;
+
+		if (!EXTRACT_CSASARGS(&Form, &State))
+			return false;
+		else if (!Form)
+			return false;
+
+		Form->SetFromActiveFile(State);
+
+		return true;
+	}
+	DEFINE_CSASCOMMAND(MarkAsModified, "Sets the 'Modified' flag on a form", CSASDataElement::kParamType_Invalid, 2);
 }

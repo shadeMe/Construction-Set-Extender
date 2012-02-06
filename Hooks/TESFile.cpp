@@ -3,6 +3,10 @@
 #include "Dialog.h"
 #include "..\ChangeLogManager.h"
 
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
 namespace Hooks
 {
 	bool g_LoadingSavingPlugins = false;
@@ -147,7 +151,7 @@ namespace Hooks
 	{
 		if ((CurrentFile->fileFlags & TESFile::kFileFlag_Loaded) == 0)
 			return false;
-		else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters", "Extender::General") == 0)
+		else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && g_INIManager->GetINIInt("SaveLoadedESPsAsMasters", "Extender::Plugins") == 0)
 			return false;
 		else
 			return true;
@@ -222,13 +226,15 @@ namespace Hooks
 
 	bool __stdcall DoTESFileUpdateHeaderHook(TESFile* Plugin)
 	{
-		PrintToBuffer("%s%s", Plugin->filePath, Plugin->fileName);
-		HANDLE TempFile = CreateFile(g_TextBuffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", Plugin->filePath, Plugin->fileName);
+
+		HANDLE TempFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (TempFile == INVALID_HANDLE_VALUE)
 		{
 			LogWinAPIErrorMessage(GetLastError());
-			PrintToBuffer("Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->fileName);
-			MessageBox(NULL, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+			FORMAT_STR(Buffer, "Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->fileName);
+			MessageBox(NULL, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 			return false;
 		}
 		else
@@ -242,9 +248,10 @@ namespace Hooks
 	_hhBegin()
 	{
 		_hhSetVar(Retn, 0x004894D6);
-		_hhSetVar(Exit, 0x0048957B);
+		_hhSetVar(Exit, 0x00489570);
 		__asm
 		{
+			MOV_LARGEFS0_EAX
 			pushad
 			xor		eax, eax
 			push	ecx
@@ -297,6 +304,7 @@ namespace Hooks
 		_hhSetVar(Retn, 0x0048957B);
 		__asm
 		{
+			MOV_LARGEFS0_ECX
 			pushad
 			push	esi
 			call	DoTESFileUpdateHeaderFlagBitHook
@@ -480,10 +488,12 @@ namespace Hooks
 		TESFile* ActiveFile = _DATAHANDLER->activeFile;
 		if (!ActiveFile)
 			return;
-		else if (!g_INIManager->GetINIInt("PreventTimeStampChanges", "Extender::General"))
+		else if (!g_INIManager->GetINIInt("PreventTimeStampChanges", "Extender::Plugins"))
 			return;
 
-		HANDLE SaveFile = CreateFile(PrintToBuffer("%s\\%s", ActiveFile->filePath, ActiveFile->fileName), GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL); // will only work with files in the current workspace
+		char Buffer[0x200] = {0};					// will only work with files in the current workspace
+		FORMAT_STR(Buffer, "%s\\%s", ActiveFile->filePath, ActiveFile->fileName);
+		HANDLE SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL);
 		if (SaveFile == INVALID_HANDLE_VALUE)
 			return;
 
@@ -526,3 +536,6 @@ namespace Hooks
 		}
 	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

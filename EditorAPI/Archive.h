@@ -54,38 +54,38 @@ class BSArchiveHeader
 public:
 	enum
 	{
-		kArchiveFlags_HasDirNames	=	/*00*/ 0x001,	// always set
-		kArchiveFlags_HasFileNames	=	/*01*/ 0x002,	// always set
-		kArchiveFlags_Compressed	=	/*02*/ 0x004,
-		kArchiveFlags_Unk03	=			/*02*/ 0x008,	// retain directory string table?
-		kArchiveFlags_Unk04	=			/*04*/ 0x010,	// retain filename string table?
-		kArchiveFlags_Unk05	=			/*05*/ 0x020,	// retain filename offset table?
-		kArchiveFlags_Unk07	=			/*07*/ 0x080
+		kHeaderFlags_HasDirNames	=	/*00*/ 0x001,	// always set
+		kHeaderFlags_HasFileNames	=	/*01*/ 0x002,	// always set
+		kHeaderFlags_Compressed		=	/*02*/ 0x004,
+		kHeaderFlags_Unk03			=	/*03*/ 0x008,	// retain directory string table?
+		kHeaderFlags_Unk04			=	/*04*/ 0x010,	// retain filename string table?
+		kHeaderFlags_Unk05			=	/*05*/ 0x020,	// retain filename offset table?
+		kHeaderFlags_Unk07			=	/*07*/ 0x080
 	};
 
 	enum
 	{
-		kFileFlags_HasNIF			=	/*00*/ 0x001,
+		kFileFlags_HasNIF			=	/*00*/ 0x001,	// includes KF
 		kFileFlags_HasDDS			=	/*01*/ 0x002,
 		kFileFlags_HasXML			=	/*02*/ 0x004,
 		kFileFlags_HasWAV			=	/*03*/ 0x008,
 		kFileFlags_HasMP3			=	/*04*/ 0x010,
-		kFileFlags_HasTXT			=	/*05*/ 0x020,	// includes HTML, BAT and SCC
+		kFileFlags_HasTXT			=	/*05*/ 0x020,	// includes HTML, BAT, SCC, PSO, VSO, VSH, PSH, (H)LSL
 		kFileFlags_HasSPT			=	/*06*/ 0x040,
 		kFileFlags_HasFNT			=	/*07*/ 0x080,	// includes TEX
-		kFileFlags_HasCTL			=	/*08*/ 0x100
+		kFileFlags_HasCTL			=	/*08*/ 0x100	
 	};
 
+	// members
 	/*00*/ UInt32					id;					// init to 'BSA'
 	/*04*/ UInt32					archiveVersion;		// init to 0x67
 	/*08*/ UInt32					headerSize;			// init to 0x24
 	/*0C*/ UInt32					headerFlags;
-	/*10*/ UInt32					fileFlags;
+	/*10*/ UInt32					dirCount;
 	/*14*/ UInt32					fileCount;
 	/*18*/ UInt32					dirNamesLength;
 	/*1C*/ UInt32					fileNamesLength;
-	/*20*/ UInt16					dirCount;
-	/*22*/ UInt8					pad22[2];
+	/*20*/ UInt32					fileFlags;
 };
 STATIC_ASSERT(sizeof(BSArchiveHeader) == 0x24);
 
@@ -107,7 +107,8 @@ public:
 	enum
 	{
 		kArchiveFlags_Unidentified		=	/*00*/ 0x001,		// set when the header ID != 'BSA' || archiveVersion != 0x67
-		kArchiveFlags_Unk03				=	/*03*/ 0x008,		// don't initialize archive? set when ctor arg4 == 0
+		kArchiveFlags_Unk02				=	/*01*/ 0x002,		// if set, the archive is released after its last open file is closed
+		kArchiveFlags_Unk03				=	/*03*/ 0x008,		// don't load contents, set when ctor arg4 != 0 and BSFile's open
 		kArchiveFlags_HasDirectoryTable	=	/*04*/ 0x010,
 		kArchiveFlags_HasFileNameTable	=	/*05*/ 0x020
 	};
@@ -117,8 +118,7 @@ public:
 	//     /*154*/ BSArchiveHeader
 	/*178*/ void*				contentBuffer;
 	/*17C*/ UInt32				unk17C;
-	/*180*/ UInt32				unk180;						// timestamp of some sort
-	/*184*/ UInt32				unk184;						// timestamp of some sort
+	/*180*/ __time64_t			lastModifiedTimeStamp;
 	/*188*/ UInt32				unk188;
 	/*18C*/ SInt32				unk18C;						// init to -1
 	/*190*/ SInt32				unk19C;						// init to -1
@@ -128,8 +128,8 @@ public:
 	/*19C*/ UInt32*				directoryNameLengthTable;	// array of string lengths
 	/*1A0*/ char**				fileNameTable;
 	/*1A4*/ void**				fileOffsetTable;			// corresponding to the entries in fileNameTable, each offset points to the entry's buffer
-	/*1A8*/ UInt32				unk1A8;
-	/*1AC*/ UInt8				unk1AC;
+	/*1A8*/ volatile LONG		openFiles;					// number of active child ArchiveFile/CompressedArchiveFile instances
+	/*1AC*/ UInt8				releaseFlag;				// set by Archive::CheckDelete, call d'tor if set
 	/*1AD*/ UInt8				pad1AD[3];
 	/*1B0*/ UInt8				unk1B0[0x50];
 	/*200*/ CRITICAL_SECTION	criticalSection;

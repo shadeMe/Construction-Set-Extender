@@ -26,6 +26,8 @@ namespace ConstructionSetExtender
 		void												SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
 		void												SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
+		void												ExportDataButton_Click(Object^ Sender, EventArgs^ E);
+
 		int													LastSortColumn;
 
 		ListView^  											FormList;
@@ -46,7 +48,7 @@ namespace ConstructionSetExtender
 		ColumnHeader^										UseListCellCFirstRef;
 		ColumnHeader^										UseListCellCUseCount;
 		TextBox^											SearchBox;
-		Button^												FilterLabel;
+		Button^												ExportDataButton;
 		Form^												UseInfoListBox;
 
 		void												ClearLists();
@@ -54,6 +56,7 @@ namespace ConstructionSetExtender
 
 		void												PopulateFormList();
 		void												PopulateUseLists(const char* EditorID);
+		void												ExportListData(void);
 
 		static array<String^>^								TypeIdentifier =			// uses TESForm::typeID as its index
 		{

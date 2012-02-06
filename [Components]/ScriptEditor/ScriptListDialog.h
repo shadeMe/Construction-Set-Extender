@@ -6,7 +6,7 @@ namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
-		public ref class ScriptListDialog
+		ref class ScriptListDialog
 		{
 		public:
 			static enum class									Operation
@@ -35,9 +35,9 @@ namespace ConstructionSetExtender
 			void												SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
 			void												SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
-			virtual void										GetUseReport();
-			void												SelectScript();
-			void												Close();
+			virtual void										ShowUseReportForSelection();
+			void												PerformOperationOnSelection();
+			void												CleanupDialog();
 
 			UInt32												ParentWorkspaceIndex;
 			Operation											CurrentOperation;

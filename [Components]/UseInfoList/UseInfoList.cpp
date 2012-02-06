@@ -35,7 +35,7 @@ namespace ConstructionSetExtender
 		UseListCellCUseCount = (gcnew ColumnHeader());
 		UseListCellCFirstRef = (gcnew ColumnHeader());
 		SearchBox = (gcnew TextBox());
-		FilterLabel = (gcnew Button());
+		ExportDataButton = (gcnew Button());
 
 		FormList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->FormListCType, this->FormListCEditorID,
 			FormListCFormID});
@@ -141,20 +141,19 @@ namespace ConstructionSetExtender
 		SearchBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::SearchBox_KeyDown);
 		SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
 
-		FilterLabel->Enabled = false;
-		FilterLabel->Location = System::Drawing::Point(253, 419);
-		FilterLabel->Name = L"FilterLabel";
-		FilterLabel->Size = System::Drawing::Size(98, 29);
-		FilterLabel->TabIndex = 5;
-		FilterLabel->Text = L"[Filter]";
-		FilterLabel->UseVisualStyleBackColor = true;
-		FilterLabel->Font = gcnew Font("Consolas", 8);
+		ExportDataButton->Enabled = true;
+		ExportDataButton->Location = System::Drawing::Point(253, 419);
+		ExportDataButton->Size = System::Drawing::Size(98, 29);
+		ExportDataButton->TabIndex = 5;
+		ExportDataButton->Text = L"Export To CSV";
+		ExportDataButton->UseVisualStyleBackColor = true;
+		ExportDataButton->Click += gcnew EventHandler(this, &UseInfoList::ExportDataButton_Click);
 
 		UseInfoListBox = gcnew Form();
 		UseInfoListBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 		UseInfoListBox->AutoScaleMode = AutoScaleMode::Font;
 		UseInfoListBox->ClientSize = System::Drawing::Size(744, 461);
-		UseInfoListBox->Controls->Add(FilterLabel);
+		UseInfoListBox->Controls->Add(ExportDataButton);
 		UseInfoListBox->Controls->Add(SearchBox);
 		UseInfoListBox->Controls->Add(UseListCellGroup);
 		UseInfoListBox->Controls->Add(FormList);
@@ -411,4 +410,15 @@ namespace ConstructionSetExtender
 			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEdit(CEID.c_str());
 		}
 	}
+
+	void UseInfoList::ExportDataButton_Click( Object^ Sender, EventArgs^ E )
+	{
+		ExportListData();
+	}
+
+	void UseInfoList::ExportListData( void )
+	{
+
+	}
+
 }

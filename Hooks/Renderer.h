@@ -3,8 +3,8 @@
 
 namespace Hooks
 {
-	extern TESForm*				g_TESObjectREFRUpdate3DBuffer;
-	extern bool					g_RenderWindowAltMovementSettings;
+	extern TESForm*								g_TESObjectREFRUpdate3DBuffer;
+	extern bool									g_RenderWindowAltMovementSettings;	
 
 	// hooks that do stuff to the renderer and the render window
 	void PatchRendererHooks(void);
@@ -12,10 +12,11 @@ namespace Hooks
 	_DeclareMemHdlr(DoorMarkerProperties, "allows the displaying of reference properties for door markers");
 	_DeclareMemHdlr(TESObjectREFRGet3DData, "selectively culls reference nodes depending on the presence of various visibility flags");
 	_DeclareMemHdlr(NiWindowRender, "allows various obscenities to be written to the render window");
-	_DeclareMemHdlr(NiDX9RendererRecreate, "used to release any renderer owned D3D resources");
-	_DeclareMemHdlr(RenderWindowStats, "displays the stats of selected refs/other info in the render window");
+	_DeclareMemHdlr(NiDX9RendererRecreateA, "used to release any renderer owned D3D resources");
+	_DeclareMemHdlr(NiDX9RendererRecreateB, "");
+	_DeclareMemHdlr(NiDX9RendererRecreateC, "");
 	_DeclareMemHdlr(UpdateViewport, "updates the render window viewport regardless of user activity");
-	_DeclareMemHdlr(RenderWindowSelection, "allows groups of references to be selected at a time");
+	_DeclareMemHdlr(RenderWindowAddToSelection, "allows groups of references to be selected at a time");
 	_DeclareMemHdlr(TESRenderControlPerformMove, "allows the freezing of references in the render window");
 	_DeclareMemHdlr(TESRenderControlPerformRotate, "");
 	_DeclareMemHdlr(TESRenderControlPerformScale, "");
@@ -57,4 +58,8 @@ namespace Hooks
 	_DeclareMemHdlr(DuplicateReferences, "changes the render window selection to the newly created references after duplication");
 	_DeclareMemHdlr(NiDX9RendererPresent, "temporary hook that prevents the renderer from presenting its render targets");
 	_DeclareMemHdlr(RenderToAuxiliaryViewport, "allows the scenegraph to be rendered to the auxiliary viewport window");
+	_DeclareMemHdlr(ActivateRenderWindowPostCellSwitch, "resets control focus to the render window after switching between exterior cells");
+	_DeclareMemHdlr(TESRenderControlPerformRelativeScale, "allows the selection group to be scaled relative to their nominal center");
+
+	bool TXTChannelStaticHandler_RenderSelectionInfo(std::string& RenderedText);
 }

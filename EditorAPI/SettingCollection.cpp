@@ -16,13 +16,12 @@ DefaultGMSTMapT						g_DefaultGMSTMap;
 
 void GameSettingCollection::CreateDefaultCopy()
 {
-	void* Unk01 = thisCall<void*>(0x0051F920, &settingMap);
-	while (Unk01)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
-		const char*	 Name = NULL;
-		Setting* Data;
+		const char* Name = NULL;
+		Setting* Data = NULL;
 
-		thisCall<UInt32>(0x005E0F90, &settingMap, &Unk01, &Name, &Data);
+		settingMap.GetNext(Itr, Name, Data);
 		if (Name)
 		{
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
@@ -39,13 +38,12 @@ void GameSettingCollection::CreateDefaultCopy()
 
 void GameSettingCollection::ResetCollection()
 {
-	void* Unk01 = thisCall<void*>(0x0051F920, &settingMap);
-	while (Unk01)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
-		const char*	 Name = NULL;
+		const char* Name = NULL;
 		Setting* Data = NULL;
 
-		thisCall<UInt32>(0x005E0F90, &settingMap, &Unk01, &Name, &Data);
+		settingMap.GetNext(Itr, Name, Data);
 		if (Data)
 		{
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
@@ -64,32 +62,18 @@ void GameSettingCollection::ResetCollection()
 
 UInt32 GameSettingCollection::GetGMSTCount()
 {
-	UInt32 Count = 0;
-
-	void* Unk01 = thisCall<void*>(0x0051F920, &settingMap);
-	while (Unk01)
-	{
-		const char*	 Name = NULL;
-		Setting* Data;
-
-		thisCall<UInt32>(0x005E0F90, &settingMap, &Unk01, &Name, &Data);
-		if (Name)
-			Count++;
-	}
-
-	return Count;
+	return settingMap.GetCount();
 }
 
 void GameSettingCollection::SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData)
 {
 	UInt32 Index = 0;
-	void* Unk01 = thisCall<void*>(0x0051F920, &settingMap);
-	while (Unk01)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
-		const char*	 Name = NULL;
-		Setting* Data;
+		const char* Name = NULL;
+		Setting* Data = NULL;
 
-		thisCall<UInt32>(0x005E0F90, &settingMap, &Unk01, &Name, &Data);
+		settingMap.GetNext(Itr, Name, Data);
 		if (Name)
 		{
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);

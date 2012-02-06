@@ -37,6 +37,16 @@ public:
 		kCellFlags_BehaveLikeExterior   = /*07*/ 0x80,
 	};
 
+	enum CellProcessLevels
+	{
+		kCellProcessLevel_None      = 0x0,  // default value, no associated NiNode or Havok objects
+		kCellProcessLevel_Removing  = 0x1,  // set while nodes and havok objects are being destroyed
+		kCellProcessLevel_Building  = 0x2,  // set while nodes and havok objects are being created
+		kCellProcessLevel_Loaded    = 0x3,  // loaded cells that are not processed
+		kCellProcessLevel_Active    = 0x6,  // current interior cell, or exterior cells within fixed radius of current exterior cell
+		kCellProcessLevel__MAX      = 0x7
+	};
+
 	// 8
 	struct CellCoordinates // what is the actual type for this?
 	{
@@ -68,9 +78,9 @@ public:
 	//     /*00*/ TESForm
 	//     /*24*/ TESFullName
 	//     /*30*/ TESMemContextForm - empty, no members
-	/*30*/ UInt8				cellFlags24;
-	/*31*/ UInt8				cellFlags25;
-	/*32*/ UInt8				cellFlags26;
+	/*30*/ UInt8				cellFlags;
+	/*31*/ UInt8				cellProcessFlags;
+	/*32*/ UInt8				unk32;
 	/*33*/ UInt8				pad27;
 	/*34*/ ExtraDataList		extraData;
 	/*48*/ CellData				cellData;

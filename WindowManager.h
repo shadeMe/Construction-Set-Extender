@@ -23,8 +23,6 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 BOOL CALLBACK TESComboBoxDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-LRESULT CALLBACK CopyPathMouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
-
 BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form);
@@ -40,6 +38,7 @@ BOOL CALLBACK AchievementUnlockedDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 LRESULT CALLBACK LandscapeTextureUseSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK EditResultScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DebugViewBMPDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+bool TXTChannelStaticHandler_RAMUsage(std::string& RenderedText);
 
 void InitializeWindowManager();
 
@@ -49,6 +48,13 @@ extern const POINT				g_CellViewWindowObjListPosOffset;
 extern std::string				g_ObjectWindowFilterStr;
 extern std::string				g_CellViewWindowFilterStr;
 extern CSnapWindow				g_WindowEdgeSnapper;
+
+template <typename T>
+struct InitDialogMessageParamT
+{
+	char						Buffer[0x400];
+	T							ExtraData;					
+};
 
 // custom control IDs
 #define DATA_QUICKLOAD                  9900
@@ -88,3 +94,4 @@ extern CSnapWindow				g_WindowEdgeSnapper;
 #define CELLVIEW_YEDIT					9932
 #define CELLVIEW_GOBTN					9933
 #define MAIN_VIEW_AUXVIEWPORT	        9934
+#define PERFCOUNTER_TIMER				9935

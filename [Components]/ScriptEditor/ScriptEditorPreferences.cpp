@@ -206,8 +206,13 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("CompilerOverrideBlocks", "Sanitize", "0"), gcnew BoundControl(CompilerOverrideBlocks, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 			// Find/Replace
-			SettingCollection->Add(gcnew INISetting("CaseSensitive", "FindReplace", "0"), gcnew BoundControl(CaseSensitive, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("MatchWholeWord", "FindReplace", "0"), gcnew BoundControl(CaseSensitive, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("CaseInsensitive", "FindReplace", "0"), gcnew BoundControl(CaseInsensitive, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("MatchWholeWord", "FindReplace", "0"), gcnew BoundControl(MatchWholeWord, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("UseRegEx", "FindReplace", "0"), gcnew BoundControl(UseRegEx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+
+			// Backup
+			SettingCollection->Add(gcnew INISetting("UseAutoRecovery", "Backup", "1"), gcnew BoundControl(UseAutoRecovery, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("AutoRecoverySavePeriod", "Backup", "5"), gcnew BoundControl(AutoRecoverySavePeriod, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 		}
 
 		void ScriptEditorPreferences::LoadINI()
@@ -304,7 +309,7 @@ namespace ConstructionSetExtender
 			FontSelection->AllowVerticalFonts = false;
 			FontSelection->ShowEffects = false;
 
-			OptionsBox = gcnew AnimatedForm(0.15);
+			OptionsBox = gcnew AnimatedForm(0.35);
 			AllowRedefinitions = (gcnew CheckBox());
 			LabelISThreshold = (gcnew Label());
 			ThresholdLength = (gcnew NumericUpDown());
@@ -368,9 +373,13 @@ namespace ConstructionSetExtender
 			EvalifyIfs = gcnew CheckBox();
 			CompilerOverrideBlocks = gcnew CheckBox();
 			NoFocusUI = gcnew CheckBox();
-			CaseSensitive = gcnew CheckBox();
+			CaseInsensitive = gcnew CheckBox();
 			MatchWholeWord = gcnew CheckBox();
-
+			UseRegEx = gcnew CheckBox();
+			TabBackup = (gcnew TabPage());
+			UseAutoRecovery = gcnew CheckBox();
+			LabelAutoRecoveryInterval = gcnew Label();
+			AutoRecoverySavePeriod = gcnew NumericUpDown();
 			//
 			// Hidden Controls
 			//
@@ -378,8 +387,9 @@ namespace ConstructionSetExtender
 			//
 			// Find/Replace
 			//
-			CaseSensitive->Checked = false;
+			CaseInsensitive->Checked = false;
 			MatchWholeWord->Checked = false;
+			UseRegEx->Checked = false;
 
 			TabBox->SuspendLayout();
 			TabGeneral->SuspendLayout();
@@ -387,6 +397,7 @@ namespace ConstructionSetExtender
 			TabPreprocessor->SuspendLayout();
 			TabAppearance->SuspendLayout();
 			TabSanitize->SuspendLayout();
+			TabBackup->SuspendLayout();
 			GroupBoxSyntaxHighlighting->SuspendLayout();
 			OptionsBox->SuspendLayout();
 			//
@@ -482,6 +493,7 @@ namespace ConstructionSetExtender
 			TabBox->Controls->Add(TabPreprocessor);
 			TabBox->Controls->Add(TabAppearance);
 			TabBox->Controls->Add(TabSanitize);
+			TabBox->Controls->Add(TabBackup);
 			TabBox->HotTrack = true;
 			TabBox->Location = System::Drawing::Point(12, 12);
 			TabBox->Multiline = true;
@@ -1040,6 +1052,46 @@ namespace ConstructionSetExtender
 			this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
 			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
 			//
+			// TabBackup
+			//
+			this->TabBackup->Controls->Add(this->LabelAutoRecoveryInterval);
+			this->TabBackup->Controls->Add(this->AutoRecoverySavePeriod);
+			this->TabBackup->Controls->Add(this->UseAutoRecovery);
+			this->TabBackup->Location = System::Drawing::Point(4, 22);
+			this->TabBackup->Name = L"TabBackup";
+			this->TabBackup->Padding = System::Windows::Forms::Padding(3);
+			this->TabBackup->Size = System::Drawing::Size(423, 290);
+			this->TabBackup->TabIndex = 5;
+			this->TabBackup->Text = L"Backup";
+			this->TabBackup->UseVisualStyleBackColor = true;
+			//
+			// LabelAutoRecoveryInterval
+			//
+			this->LabelAutoRecoveryInterval->Location = System::Drawing::Point(133, 139);
+			this->LabelAutoRecoveryInterval->Name = L"LabelAutoRecoveryInterval";
+			this->LabelAutoRecoveryInterval->Size = System::Drawing::Size(157, 34);
+			this->LabelAutoRecoveryInterval->TabIndex = 14;
+			this->LabelAutoRecoveryInterval->Text = L"Auto-Recovery Save Period (In Earth Minutes)";
+			//
+			// AutoRecoverySavePeriod
+			//
+			this->AutoRecoverySavePeriod->Location = System::Drawing::Point(133, 176);
+			this->AutoRecoverySavePeriod->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {60, 0, 0, 0});
+			this->AutoRecoverySavePeriod->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
+			this->AutoRecoverySavePeriod->Name = L"AutoRecoverySavePeriod";
+			this->AutoRecoverySavePeriod->Size = System::Drawing::Size(154, 20);
+			this->AutoRecoverySavePeriod->TabIndex = 13;
+			this->AutoRecoverySavePeriod->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
+			//
+			// UseAutoRecovery
+			//
+			this->UseAutoRecovery->Location = System::Drawing::Point(133, 95);
+			this->UseAutoRecovery->Name = L"UseAutoRecovery";
+			this->UseAutoRecovery->Size = System::Drawing::Size(154, 23);
+			this->UseAutoRecovery->TabIndex = 12;
+			this->UseAutoRecovery->Text = L"Use Auto-Recovery";
+			this->UseAutoRecovery->UseVisualStyleBackColor = true;
+			//
 			// ScriptEditorPreferences
 			//
 			OptionsBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -1062,6 +1114,8 @@ namespace ConstructionSetExtender
 			TabAppearance->PerformLayout();
 			TabSanitize->ResumeLayout(false);
 			TabSanitize->PerformLayout();
+			TabBackup->ResumeLayout(false);
+			TabBackup->PerformLayout();
 			GroupBoxSyntaxHighlighting->ResumeLayout(false);
 			OptionsBox->ResumeLayout(false);
 			OptionsBox->Closing += gcnew CancelEventHandler(this, &ScriptEditorPreferences::OptionsBox_Cancel);

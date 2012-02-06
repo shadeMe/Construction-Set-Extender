@@ -32,7 +32,7 @@ public:
 			/*01*/ UInt8			pad01[3];
 			/*04*/ ConditionListT	conditions;
 			/*0C*/ Script			resultScript;		// marked as temporary by the ctor (why?)
-			/*60*/ BSStringT		logEntry;
+			/*60*/ BSString		logEntry;
 		};
 		typedef tList<QuestStageItem>	StageItemListT;
 

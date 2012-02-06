@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
-		public ref class ScriptEditorManager
+		ref class ScriptEditorManager
 		{
 		public:
 			static enum class									OperationType

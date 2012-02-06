@@ -2,6 +2,7 @@
 
 #include "TESForm.h"
 #include "Setting.h"
+#include "BSTCaseInsensitiveStringMap.h"
 #include "[Common]\HandShakeStructs.h"
 
 //	EditorAPI: GameSetting class.
@@ -84,7 +85,7 @@ public:
 class SettingCollectionMap : public SettingCollection   // actually SettingCollectionMap<Setting*>
 {
 public:
-    typedef NiTMapBase<const char*, Setting*>	SettingMapT;		// actually BSTCaseInsensitiveStringMap<Setting*>
+	typedef CSE_GlobalClasses::BSTCaseInsensitiveStringMap<Setting*>	SettingMapT;
 
     // members
     //     /*000*/ SettingCollection

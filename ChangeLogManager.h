@@ -29,7 +29,7 @@ namespace VersionControl
 
 		ChangeLogManager();
 
-		const char*					GetCurrentTempDirectory();
+		const char*					GetCurrentTempDirectory(char* OutBuffer, UInt32 BufferSize);
 		void						WriteChangeToLogs(const char* Message, bool StampTime);
 	public:
 		static ChangeLogManager*	GetSingleton();

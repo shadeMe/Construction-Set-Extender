@@ -1,6 +1,10 @@
 #include "ScriptEditor.h"
 #include "CompilerErrorDetours.h"
 
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
 namespace Hooks
 {
 	const void*							g_ExpressionBuffer = new char[0x500];
@@ -148,3 +152,6 @@ namespace Hooks
 		}
 	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

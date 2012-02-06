@@ -6,6 +6,7 @@ namespace Hooks
 	// hooks that do odd jobs such as fixing bugs and shoveling dung
 	void PatchMiscHooks(void);
 	void PatchEntryPointHooks(void);
+	void PatchMessageHanders(void);
 
 	_DeclareMemHdlr(CSExit, "adds fast exit to the CS");
 	_DeclareMemHdlr(CSInit, "adds an one-time only hook to the CS main windows wndproc as an alternative to WinMain()");
@@ -39,12 +40,7 @@ namespace Hooks
 	_DeclareMemHdlr(AchievementPluginDescription, "");
 	_DeclareMemHdlr(AchievementBuildRoads, "");
 	_DeclareMemHdlr(AchievementDialogResponseCreation, "");
-	_DeclareMemHdlr(TESDialogBuildSubwindowDiagnostics, "adds a diagnostic message to TESDialog::BuildSubwindow");
 	_DeclareMemHdlr(ExtraTeleportInitItem, "patches the function to take into account refs without base forms (happens when quick-loading plugins)");
 	_DeclareMemHdlr(NewSplashImage, "replaces the default splash image with a new one");
-
-	void PatchMessageHanders(void);
-	void __stdcall DoCSInitHook();
-	void __stdcall DoCSExitHook(HWND MainWindow);
-	void __stdcall MessageHandlerOverride(const char* Message);
+	_DeclareMemHdlr(AllowMultipleEditors, "allows multiple editor instances to be created regardless of the INI setting");
 }

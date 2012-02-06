@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseFormComponent.h"
+#include "BSTCaseInsensitiveStringMap.h"
 
 //	EditorAPI: TESForm class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -14,7 +15,7 @@
     A Form may point to other forms through it's fields; these are it's "Form", or "Component" references.
     These list of other forms that point to this one are it's "Cross" references.
     The exception is if this form is a base for a placed TESObjectREFR - refs that point to this form are it's "Object" references.
-    The notation is admittedly akward, a result of choosing names before a clear picture of the system emerged.
+    The notation is admittedly awkward, a result of choosing names before a clear picture of the system emerged.
     Form and Cross references are tracked individually through a global table.  Object refs are not tracked individually, but
     every instance of TESBoundObject does maintain a cell-by-cell count.
 */
@@ -170,7 +171,7 @@ public:
 	/*05*/ UInt8					formPad05[3];
 	/*08*/ UInt32					formFlags;
 	/*0C*/ UInt32					formID;
-	/*10*/ BSStringT				editorID;
+	/*10*/ BSString				editorID;
 	/*18*/ TrackingData				trackingData;
 	/*1C*/ OverrideFileListT		fileList; // list of TESFiles that override this form
 
@@ -217,7 +218,7 @@ STATIC_ASSERT(sizeof(TESFormIDListView) == 0x24);
 
 /*
 	TESMemContextForm is a parent class for TESObjectCELL and TESObjectREFR.  It has no members and is not polymorphic,
-	so it probably has only static methods & data.  It may have something to do with the 'Memory Useage' debugging code
+	so it probably has only static methods & data.  It may have something to do with the 'Memory Usage' debugging code
 	used by Bethesda, and it is possible that it has no use at all in the released game.
 */
 // 00
@@ -226,4 +227,4 @@ class TESMemContextForm
 	// no members
 };
 
-extern NiTMapBase<const char*, TESForm*>*		g_FormEditorIDMap;	// actually a BSTCaseInsensitiveStringMap<TESForm*>
+extern CSE_GlobalClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_FormEditorIDMap;

@@ -56,3 +56,13 @@ void TESObjectREFR::RemoveExtraTeleport( void )
 {
 	thisCall<UInt32>(0x0053F7A0, this);
 }
+
+NiNode* TESObjectREFR::GenerateNiNode()
+{
+	return thisVirtualCall<NiNode*>(0x178, this);
+}
+
+void TESObjectREFR::SetScale( float Scale )
+{
+	thisCall<void>(0x00542420, this, Scale);
+}

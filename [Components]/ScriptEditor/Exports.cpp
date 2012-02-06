@@ -42,25 +42,11 @@ Assembly^ ResolvePreprocessorAssemblyLoad(Object^ Sender, ResolveEventArgs^ E)
 
 void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData)
 {
-	try
-	{
-		System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
-	}
-
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
 
 	ISDB->InitializeCommandTableDatabase(Data);
 	ISDB->InitializeGMSTDatabase(GMSTData);
-}
-
-void InitializeIntelliSenseDatabaseUpdateThread(void)
-{
-	ISDB->InitializeDatabaseUpdateThread();
 }
 
 void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
@@ -97,14 +83,27 @@ UInt32 GetOpenEditorCount(void)
 	return SEMGR->GetOpenEditorCount();
 }
 
+void CleanupAutoRecoveryCache(void)
+{
+	try
+	{
+		for each (String^ Path in System::IO::Directory::GetFiles(AUTORECOVERYCACHEPATH))
+			System::IO::File::Delete(Path);
+	}
+	catch (Exception^ E)
+	{
+		DebugPrint("Couldn't purge auto-recovery cache!\n\tException: " + E->Message, true);
+	}
+}
+
 ComponentDLLInterface::ScriptEditorInterface g_InteropInterface =
 {
 	DeleteManagedHeapPointer,
 	InitializeComponents,
-	InitializeIntelliSenseDatabaseUpdateThread,
 	InstantiateEditor,
 	AddScriptCommandDeveloperURL,
 	CloseAllOpenEditors,
 	UpdateIntelliSenseDatabase,
 	GetOpenEditorCount,
+	CleanupAutoRecoveryCache,
 };

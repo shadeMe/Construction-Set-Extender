@@ -88,10 +88,12 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="BEReference.cpp" />
+    <ClCompile Include="SEFindReplace.cpp" />
     <ClCompile Include="SEOptions.cpp" />
     <ClCompile Include="SERefactorDocumentScript.cpp" />
     <ClCompile Include="SERefactorUDF.cpp" />
     <ClCompile Include="SEScriptList.cpp" />
+    <ClCompile Include="SESnippetManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -105,6 +107,9 @@
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SEFindReplace.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="SEOptions.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -115,6 +120,9 @@
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="SEScriptList.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="SESnippetManager.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
@@ -132,6 +140,9 @@
     <EmbeddedResource Include="BEReference.resx">
       <DependentUpon>BEReference.h</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SEFindReplace.resx">
+      <DependentUpon>SEFindReplace.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SEOptions.resx">
       <DependentUpon>SEOptions.h</DependentUpon>
     </EmbeddedResource>
@@ -143,6 +154,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SEScriptList.resx">
       <DependentUpon>SEScriptList.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SESnippetManager.resx">
+      <DependentUpon>SESnippetManager.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <DependentUpon>TagBrowser.h</DependentUpon>

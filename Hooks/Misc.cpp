@@ -1,5 +1,6 @@
 #include "Misc.h"
 #include "Dialog.h"
+#include "Renderer.h"
 #include "..\ToolManager.h"
 #include "..\WorkspaceManager.h"
 #include "..\RenderWindowTextPainter.h"
@@ -11,9 +12,17 @@
 #include "CSAS\ScriptRunner.h"
 #include "AuxiliaryViewport.h"
 
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
+extern StaticRenderChannel*			g_TXTChannelSelectionInfo;
+extern StaticRenderChannel*			g_TXTChannelRAMUsage;
+extern DynamicRenderChannel*		g_TXTChannelNotifications;
+
 namespace Hooks
 {
-	_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0);
+	_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0x0);
 	_DefineHookHdlr(CSExit, 0x0041936E);
 	_DefineNopHdlr(MissingTextureWarning, 0x0044F3AF, 14);
 	_DefineHookHdlr(AssertOverride, 0x004B5670);
@@ -46,9 +55,9 @@ namespace Hooks
 	_DefineHookHdlr(AchievementPluginDescription, 0x0040CD20);
 	_DefineHookHdlr(AchievementBuildRoads, 0x00563CFF);
 	_DefineHookHdlr(AchievementDialogResponseCreation, 0x004F2CC3);
-	_DefineHookHdlr(TESDialogBuildSubwindowDiagnostics, 0x00404F2A);
 	_DefineHookHdlr(ExtraTeleportInitItem, 0x00462702);
 	_DefineHookHdlr(NewSplashImage, 0x00441D73);
+	_DefinePatchHdlr(AllowMultipleEditors, 0x0041C7E1);
 
 	void PatchMiscHooks(void)
 	{
@@ -83,72 +92,14 @@ namespace Hooks
 		_MemHdlr(AchievementPluginDescription).WriteJump();
 		_MemHdlr(AchievementBuildRoads).WriteJump();
 		_MemHdlr(AchievementDialogResponseCreation).WriteJump();
-		_MemHdlr(TESDialogBuildSubwindowDiagnostics).WriteJump();
 		_MemHdlr(ExtraTeleportInitItem).WriteJump();
-
-		PatchMessageHanders();
-
-		OSVERSIONINFO OSInfo;
-		GetVersionEx(&OSInfo);
-		if (OSInfo.dwMajorVersion >= 6)		// if running Windows Vista/7, fix the listview selection sound
-			RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
 	}
 
 	void PatchEntryPointHooks(void)
 	{
 		_MemHdlr(CSRegistryEntries).WriteJump();
 		_MemHdlr(NewSplashImage).WriteJump();
-	}
-
-	void PatchMessageHanders(void)
-	{
-		static UInt32 s_MessageHandlerVTBL = 0x00940760;
-
-		if (!g_INIManager->FetchSetting("LogCSWarnings", "Extender::Console")->GetValueAsInteger())
-			return;
-
-		SafeWrite32(s_MessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x4, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x8, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x10, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x14, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x18, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x1C, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x20, (UInt32)&MessageHandlerOverride);
-		SafeWrite32(s_MessageHandlerVTBL + 0x24, (UInt32)&MessageHandlerOverride);
-
-														// patch spammy subroutines
-		NopHdlr kDataHandlerAutoSave(0x0043083B, 5);
-		NopHdlr	kAnimGroupNote(0x004CA21D, 5);
-		NopHdlr kTangentSpaceCreation(0x0076989C, 5);
-		NopHdlr	kHeightMapGenA(0x005E0D9D, 5), kHeightMapGenB(0x005E0DB6, 5);
-		NopHdlr kModelLoadError(0x0046C215, 5);
-		NopHdlr	kLoadTerrainLODQuad(0x005583F1, 5);
-		NopHdlr	kFaceGenControlFreeformA(0x0044B2EA, 5), kFaceGenControlFreeFormB(0x0044B348, 5);
-		NopHdlr kFaceGenControlStoringUndoA(0x004DD652, 5), kFaceGenControlStoringUndoB(0x004E8EC8, 5);
-		NopHdlr kDataHandlerConstructObjectA(0x004838D2, 5), kDataHandlerConstructObjectB(0x00483C89, 5), kDataHandlerConstructObjectC(0x00483D53, 5),
-				kDataHandlerConstructObjectD(0x0048403C, 5), kDataHandlerConstructObjectE(0x00484137, 5);
-		NopHdlr kDataHandlerLoadPluginsA(0x0048557F, 5), kDataHandlerLoadPluginsB(0x00484BDE, 5);
-
-		SafeWrite8(0x00468597, 0xEB);					//		FileFinder::LogMessage
-		kDataHandlerAutoSave.WriteNop();
-		kAnimGroupNote.WriteNop();
-		kTangentSpaceCreation.WriteNop();
-		kHeightMapGenA.WriteNop();
-		kHeightMapGenB.WriteNop();
-		kModelLoadError.WriteNop();
-		kLoadTerrainLODQuad.WriteNop();
-		kFaceGenControlFreeformA.WriteNop();
-		kFaceGenControlFreeFormB.WriteNop();
-		kFaceGenControlStoringUndoA.WriteNop();
-		kFaceGenControlStoringUndoB.WriteNop();
-		kDataHandlerConstructObjectA.WriteNop();
-		kDataHandlerConstructObjectB.WriteNop();
-		kDataHandlerConstructObjectC.WriteNop();
-		kDataHandlerConstructObjectD.WriteNop();
-		kDataHandlerConstructObjectE.WriteNop();
-		kDataHandlerLoadPluginsA.WriteNop();
-		kDataHandlerLoadPluginsB.WriteNop();
+		_MemHdlr(AllowMultipleEditors).WriteUInt8(0xEB);
 	}
 
 	void __stdcall MessageHandlerOverride(const char* Message)
@@ -156,68 +107,88 @@ namespace Hooks
 		DebugPrint(Console::e_CS, "%s", Message);
 	}
 
-	void __stdcall DoCSExitHook(HWND MainWindow)
+	void PatchMessageHanders(void)
 	{
-		CONSOLE->Pad(2);
-		TESDialog::WritePositionToINI(MainWindow, NULL);
-		TESDialog::WritePositionToINI(*g_HWND_CellView, "Cell View");
-		TESDialog::WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
-		TESDialog::WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
-		DebugPrint("Flushed CS INI Settings");
+		// patch spammed output function calls to improve performance
+		_DefinePatchHdlr(FileFinderLogMessage, 0x00468597);
+		_DefineNopHdlr(DataHandlerAutoSave, 0x0043083B, 5);
+		_DefineNopHdlr(AnimGroupNote, 0x004CA21D, 5);
+		_DefineNopHdlr(TangentSpaceCreation, 0x0076989C, 5);
+		_DefineNopHdlr(HeightMapGenA, 0x005E0D9D, 5);
+		_DefineNopHdlr(HeightMapGenB, 0x005E0DB6, 5);
+		_DefineNopHdlr(ModelLoadError, 0x0046C215, 5);
+		_DefineNopHdlr(LoadTerrainLODQuad, 0x005583F1, 5);
+		_DefineNopHdlr(FaceGenControlFreeformA, 0x0044B2EA, 5);
+		_DefineNopHdlr(FaceGenControlFreeFormB, 0x0044B348, 5);
+		_DefineNopHdlr(FaceGenControlStoringUndoA, 0x004DD652, 5);
+		_DefineNopHdlr(FaceGenControlStoringUndoB, 0x004E8EC8, 5);
+		_DefineNopHdlr(DataHandlerConstructObjectA, 0x004838D2, 5);
+		_DefineNopHdlr(DataHandlerConstructObjectB, 0x00483C89, 5);
+		_DefineNopHdlr(DataHandlerConstructObjectC, 0x00483D53, 5);
+		_DefineNopHdlr(DataHandlerConstructObjectD, 0x0048403C, 5);
+		_DefineNopHdlr(DataHandlerConstructObjectE, 0x00484137, 5);
+		_DefineNopHdlr(DataHandlerLoadPluginsA, 0x0048557F, 5);
+		_DefineNopHdlr(DataHandlerLoadPluginsB, 0x00484BDE, 5);
+		_DefineNopHdlr(SpeedTreeMultiBound, 0x00596617, 5);
+		_DefineNopHdlr(BackgroundLoaderRefs, 0x0046D3B6, 5);
+		_DefineNopHdlr(TESLoadCellCrapA, 0x0052B75A, 5);
+		_DefineNopHdlr(TESLoadCellCrapB, 0x00477647, 5);
+		_DefineNopHdlr(TESPathGridGenerateNiNode, 0x0054ED59, 5);
+		_DefineNopHdlr(TESWorldspaceBuildRoadsA, 0x00563C09, 5);
+		_DefineNopHdlr(TESWorldspaceBuildRoadsB, 0x00563C71, 5);
 
-		DebugPrint("Deinitializing Change Log Manager");
-		CONSOLE->Indent();
-		VersionControl::CHANGELOG->Deinitialize();
-		CONSOLE->Exdent();
+		_MemHdlr(FileFinderLogMessage).WriteUInt8(0xEB);
+		_MemHdlr(DataHandlerAutoSave).WriteNop();
+		_MemHdlr(AnimGroupNote).WriteNop();
+		_MemHdlr(TangentSpaceCreation).WriteNop();
+		_MemHdlr(HeightMapGenA).WriteNop();
+		_MemHdlr(HeightMapGenB).WriteNop();
+		_MemHdlr(ModelLoadError).WriteNop();
+		_MemHdlr(LoadTerrainLODQuad).WriteNop();
+		_MemHdlr(FaceGenControlFreeformA).WriteNop();
+		_MemHdlr(FaceGenControlFreeFormB).WriteNop();
+		_MemHdlr(FaceGenControlStoringUndoA).WriteNop();
+		_MemHdlr(FaceGenControlStoringUndoB).WriteNop();
+		_MemHdlr(DataHandlerConstructObjectA).WriteNop();
+		_MemHdlr(DataHandlerConstructObjectB).WriteNop();
+		_MemHdlr(DataHandlerConstructObjectC).WriteNop();
+		_MemHdlr(DataHandlerConstructObjectD).WriteNop();
+		_MemHdlr(DataHandlerConstructObjectE).WriteNop();
+		_MemHdlr(DataHandlerLoadPluginsA).WriteNop();
+		_MemHdlr(DataHandlerLoadPluginsB).WriteNop();
+		_MemHdlr(SpeedTreeMultiBound).WriteNop();
+		_MemHdlr(BackgroundLoaderRefs).WriteNop();
+		_MemHdlr(TESLoadCellCrapA).WriteNop();
+		_MemHdlr(TESLoadCellCrapB).WriteNop();
+		_MemHdlr(TESPathGridGenerateNiNode).WriteNop();
+		_MemHdlr(TESWorldspaceBuildRoadsA).WriteNop();
+		_MemHdlr(TESWorldspaceBuildRoadsB).WriteNop();
 
-		DebugPrint("Deinitializing Render Window Text Painter");
-		CONSOLE->Indent();
-		RENDERTEXT->Release();
-		CONSOLE->Exdent();
 
-		DebugPrint("Deinitializing Auxiliary Viewport");
-		CONSOLE->Indent();
-		AUXVIEWPORT->Deinitialize();
-		CONSOLE->Exdent();
+		if (!g_INIManager->FetchSetting("LogCSWarnings", "Extender::Console")->GetValueAsInteger())
+			return;
 
-		DebugPrint("Deinitializing CSInterop Manager");
-		CONSOLE->Indent();
-		CSIOM->Deinitialize();
-		CONSOLE->Exdent();
+		const UInt32 kMessageHandlerVTBL = 0x00940760;
 
-		DebugPrint("Deinitializing Tool Manager");
-		CONSOLE->Indent();
-		g_ToolManager.WriteToINI(g_INIPath.c_str());
-		CONSOLE->Exdent();
-
-		DebugPrint("Deinitializing CSAS Engine");
-		CONSOLE->Indent();
-		CSAutomationScript::DeitializeCSASEngine();
-		CONSOLE->Exdent();
-
-		DebugPrint("Deinitializing Console, Flushing CSE INI settings and Closing the CS!");
-		CONSOLE->Deinitialize();
-		g_INIManager->SaveSettingsToINI();
-		g_INIManager->Deinitialize();
-
-		ExitProcess(0);
-	}
-
-	#define _hhName	CSExit
-	_hhBegin()
-	{
-		__asm
-		{
-			push    ebx
-			call    DoCSExitHook
-		}
+		SafeWrite32(kMessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x4, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x8, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x10, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x14, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x18, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x1C, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x20, (UInt32)&MessageHandlerOverride);
+		SafeWrite32(kMessageHandlerVTBL + 0x24, (UInt32)&MessageHandlerOverride);
 	}
 
 	static LPTOP_LEVEL_EXCEPTION_FILTER s_TopLevelExceptionFilter = NULL;
 
 	bool CreateCSEMiniDump( _EXCEPTION_POINTERS *ExceptionInfo)
 	{
-		HANDLE DumpFile = CreateFile(PrintToBuffer("%sCSECrashDump.dmp", g_APPPath.c_str()),
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%sCSECrashDump.dmp", g_APPPath.c_str());
+
+		HANDLE DumpFile = CreateFile(Buffer,
 									GENERIC_READ|GENERIC_WRITE,
 									0,
 									NULL,
@@ -244,7 +215,7 @@ namespace Hooks
 		if( !rv )
 			return false;
 		else
-			DebugPrint("Minidump saved to %s", g_TextBuffer);
+			DebugPrint("Minidump saved to %s", Buffer);
 
 		CloseHandle(DumpFile);
 		return true;
@@ -263,13 +234,12 @@ namespace Hooks
 			LogWinAPIErrorMessage(GetLastError());
 		}
 
+		CONSOLE->OpenDebugLog();
+
 		if (s_TopLevelExceptionFilter)
 			return s_TopLevelExceptionFilter(ExceptionInfo);
 		else
-		{
-			DebugPrint("Couldn't find a top level exception filter!");
 			return EXCEPTION_CONTINUE_EXECUTION;
-		}
 	}
 
 	void __stdcall DoCSInitHook()
@@ -330,9 +300,6 @@ namespace Hooks
 			CLIWrapper::Interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
 		DebugPrint(Console::e_SE, "Bound %d developer URLs", g_URLMapBuffer.size());
 		g_URLMapBuffer.clear();
-
-		CLIWrapper::Interfaces::SE->InitializeIntelliSenseDatabaseUpdateThread();
-		DebugPrint(Console::e_SE, "Initialized Database Update Thread");
 		CONSOLE->Exdent();
 
 		CONSOLE->Exdent();
@@ -384,8 +351,41 @@ namespace Hooks
 
 		DebugPrint("Initializing Render Window Text Painter");
 		CONSOLE->Indent();
-		g_RenderWindowTimeManager.Update();
-		RENDERTEXT->Initialize();
+		RECT DrawRect;
+
+		DrawRect.left = 3;
+		DrawRect.top = 3;
+		DrawRect.right = 800;
+		DrawRect.bottom = 600;
+		g_TXTChannelSelectionInfo = new StaticRenderChannel(20, 0, FW_MEDIUM, "Consolas",
+															D3DCOLOR_ARGB(220, 189, 237, 99),
+															&DrawRect,
+															DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
+															0,
+															&TXTChannelStaticHandler_RenderSelectionInfo);
+		DrawRect.left = -173;
+		DrawRect.top = 3;
+		DrawRect.right = 173;
+		DrawRect.bottom = 100;
+		g_TXTChannelRAMUsage = new StaticRenderChannel(20, 0, FW_MEDIUM, "Consolas",
+														D3DCOLOR_ARGB(230, 230, 230, 0),
+														&DrawRect,
+														DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
+														RenderChannelBase::kDrawAreaFlags_RightAligned,
+														&TXTChannelStaticHandler_RAMUsage);
+		DrawRect.left = 3;
+		DrawRect.top = -150;
+		DrawRect.right = 800;
+		DrawRect.bottom = 200;
+		g_TXTChannelNotifications = new DynamicRenderChannel(20, 0, FW_MEDIUM, "Consolas",
+														D3DCOLOR_ARGB(230, 230, 230, 0),
+														&DrawRect,
+														DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
+														RenderChannelBase::kDrawAreaFlags_BottomAligned);
+
+		RENDERTEXT->RegisterRenderChannel(g_TXTChannelSelectionInfo);
+		RENDERTEXT->RegisterRenderChannel(g_TXTChannelRAMUsage);
+		RENDERTEXT->RegisterRenderChannel(g_TXTChannelNotifications);
 		CONSOLE->Exdent();
 
 		DebugPrint("Initializing Change Log Manager");
@@ -426,6 +426,72 @@ namespace Hooks
 		}
 	}
 
+	void __stdcall DoCSExitHook(HWND MainWindow)
+	{
+		CONSOLE->Pad(2);
+		TESDialog::WritePositionToINI(MainWindow, NULL);
+		TESDialog::WritePositionToINI(*g_HWND_CellView, "Cell View");
+		TESDialog::WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
+		TESDialog::WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
+		g_INIManager->GetINI("RenderWindowState", "Extender::Dialogs")->SetValue((GetMenuState(*g_HMENU_MainMenu, 40423, MF_BYCOMMAND) & MF_CHECKED)?"1":"0");
+		g_INIManager->GetINI("ObjectWindowState", "Extender::Dialogs")->SetValue((GetMenuState(*g_HMENU_MainMenu, 40199, MF_BYCOMMAND) & MF_CHECKED)?"1":"0");
+		g_INIManager->GetINI("CellWindowState", "Extender::Dialogs")->SetValue((GetMenuState(*g_HMENU_MainMenu, 40200, MF_BYCOMMAND) & MF_CHECKED)?"1":"0");
+		DebugPrint("Flushed CS INI Settings");
+
+		DebugPrint("Deinitializing Script Editor");
+		CONSOLE->Indent();
+		CLIWrapper::Interfaces::SE->CleanupAutoRecoveryCache();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Change Log Manager");
+		CONSOLE->Indent();
+		VersionControl::CHANGELOG->Deinitialize();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Render Window Text Painter");
+		CONSOLE->Indent();
+		RENDERTEXT->Deinitialize();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Auxiliary Viewport");
+		CONSOLE->Indent();
+		AUXVIEWPORT->Deinitialize();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing CSInterop Manager");
+		CONSOLE->Indent();
+		CSIOM->Deinitialize();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Tool Manager");
+		CONSOLE->Indent();
+		g_ToolManager.WriteToINI(g_INIPath.c_str());
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing CSAS Engine");
+		CONSOLE->Indent();
+		CSAutomationScript::DeitializeCSASEngine();
+		CONSOLE->Exdent();
+
+		DebugPrint("Deinitializing Console, Flushing CSE INI settings and Closing the CS!");
+		CONSOLE->Deinitialize();
+		g_INIManager->SaveSettingsToINI();
+		g_INIManager->Deinitialize();
+
+		CoUninitialize();
+		ExitProcess(0);
+	}
+
+	#define _hhName	CSExit
+	_hhBegin()
+	{
+		__asm
+		{
+			push    ebx
+			call    DoCSExitHook
+		}
+	}
+
 	void __stdcall DoAssertOverrideHook(UInt32 EIP)
 	{
 		Achievements::UnlockAchievement(Achievements::kAchievement_WTF);
@@ -434,7 +500,7 @@ namespace Hooks
 			return;
 
 		CONSOLE->Indent();
-		DebugPrint("ASSERT: 0x%08X", EIP);
+		DebugPrint("ASSERTION FAILED: 0x%08X", EIP);
 		CONSOLE->Exdent();
 
 		MessageBeep(MB_ICONHAND);
@@ -549,8 +615,9 @@ namespace Hooks
 			isdigit((int)*EditorID) &&
 			(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 		{
-			PrintToBuffer("The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
-			MessageBox(*g_HWND_CSParent, g_TextBuffer, "CSE", MB_OK|MB_ICONWARNING);
+			char Buffer[0x200] = {0};
+			FORMAT_STR(Buffer, "The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
+			MessageBox(*g_HWND_CSParent, Buffer, "CSE", MB_OK|MB_ICONWARNING);
 		}
 	}
 
@@ -989,26 +1056,6 @@ namespace Hooks
 		}
 	}
 
-	void _stdcall DoTESDialogBuildSubwindowDiagnosticsHook(void)
-	{
-		MessageBox(*g_HWND_CSParent, "TESDialog::BuildSubwindow() failed!\n\nError deatils logged to the console.", "CSE", MB_TOPMOST|MB_OK|MB_ICONERROR);
-		DebugPrint("TESDialog::BuildSubwindow() returned 0");
-		LogWinAPIErrorMessage(GetLastError());
-		MessageBeep(MB_ICONHAND);
-	}
-
-	#define _hhName	TESDialogBuildSubwindowDiagnostics
-	_hhBegin()
-	{
-		__asm
-		{
-			call	DoTESDialogBuildSubwindowDiagnosticsHook
-			xor		al, al
-			pop		esi
-			retn
-		}
-	}
-
 	#define _hhName	ExtraTeleportInitItem
 	_hhBegin()
 	{
@@ -1056,3 +1103,6 @@ namespace Hooks
 		}
 	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

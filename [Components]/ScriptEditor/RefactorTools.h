@@ -6,7 +6,7 @@ namespace ConstructionSetExtender
 	{
 		namespace Refactoring
 		{
-			public ref class CreateUDFImplementationData
+			ref class CreateUDFImplementationData
 			{
 			public:
 				ref struct ParameterData
@@ -22,7 +22,7 @@ namespace ConstructionSetExtender
 				CreateUDFImplementationData() : ParameterList(gcnew List<ParameterData^>()) {}
 			};
 
-			public ref class CreateUDFImplementationDialog : public System::Windows::Forms::Form
+			ref class CreateUDFImplementationDialog : public System::Windows::Forms::Form
 			{
 				System::ComponentModel::Container^		components;
 
@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 				}
 			};
 
-			public ref class EditScriptComponentData
+			ref class EditScriptComponentData
 			{
 			public:
 				ref struct ScriptComponent
@@ -68,7 +68,7 @@ namespace ConstructionSetExtender
 				bool								LookupEditDataByName(String^ ElementName, String^% OutEditData);
 			};
 
-			public ref class EditScriptComponentDialog : public System::Windows::Forms::Form
+			ref class EditScriptComponentDialog : public System::Windows::Forms::Form
 			{
 				System::ComponentModel::Container^		components;
 

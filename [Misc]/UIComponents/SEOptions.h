@@ -123,6 +123,11 @@ private: System::Windows::Forms::CheckBox^  BoldFacedHighlighting;
 private: System::Windows::Forms::CheckBox^  EvalifyIfs;
 private: System::Windows::Forms::CheckBox^  CompilerOverrideBlocks;
 private: System::Windows::Forms::CheckBox^  NoFocusUI;
+private: System::Windows::Forms::TabPage^  TabBackup;
+private: System::Windows::Forms::Label^  LabelAutoRecoveryInterval;
+
+private: System::Windows::Forms::NumericUpDown^  AutoRecoverySavePeriod;
+private: System::Windows::Forms::CheckBox^  UseAutoRecovery;
 
 	protected:
 
@@ -202,6 +207,10 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			this->CompilerOverrideBlocks = (gcnew System::Windows::Forms::CheckBox());
 			this->IndentLines = (gcnew System::Windows::Forms::CheckBox());
 			this->AnnealCasing = (gcnew System::Windows::Forms::CheckBox());
+			this->TabBackup = (gcnew System::Windows::Forms::TabPage());
+			this->LabelAutoRecoveryInterval = (gcnew System::Windows::Forms::Label());
+			this->AutoRecoverySavePeriod = (gcnew System::Windows::Forms::NumericUpDown());
+			this->UseAutoRecovery = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -214,11 +223,13 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			this->TabAppearance->SuspendLayout();
 			this->GroupBoxSyntaxHighlighting->SuspendLayout();
 			this->TabSanitize->SuspendLayout();
+			this->TabBackup->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// AllowRedefinitions
 			// 
-			this->AllowRedefinitions->Location = System::Drawing::Point(125, 79);
+			this->AllowRedefinitions->Location = System::Drawing::Point(133, 97);
 			this->AllowRedefinitions->Name = L"AllowRedefinitions";
 			this->AllowRedefinitions->Size = System::Drawing::Size(154, 23);
 			this->AllowRedefinitions->TabIndex = 9;
@@ -328,6 +339,7 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			this->TabContainer->Controls->Add(this->TabPreprocessor);
 			this->TabContainer->Controls->Add(this->TabAppearance);
 			this->TabContainer->Controls->Add(this->TabSanitize);
+			this->TabContainer->Controls->Add(this->TabBackup);
 			this->TabContainer->HotTrack = true;
 			this->TabContainer->Location = System::Drawing::Point(12, 12);
 			this->TabContainer->Multiline = true;
@@ -473,7 +485,7 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			// 
 			// LabelNoOfPasses
 			// 
-			this->LabelNoOfPasses->Location = System::Drawing::Point(125, 133);
+			this->LabelNoOfPasses->Location = System::Drawing::Point(133, 151);
 			this->LabelNoOfPasses->Name = L"LabelNoOfPasses";
 			this->LabelNoOfPasses->Size = System::Drawing::Size(157, 20);
 			this->LabelNoOfPasses->TabIndex = 11;
@@ -481,7 +493,7 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			// 
 			// NoOfPasses
 			// 
-			this->NoOfPasses->Location = System::Drawing::Point(125, 156);
+			this->NoOfPasses->Location = System::Drawing::Point(133, 174);
 			this->NoOfPasses->Name = L"NoOfPasses";
 			this->NoOfPasses->Size = System::Drawing::Size(154, 20);
 			this->NoOfPasses->TabIndex = 10;
@@ -859,6 +871,46 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
 			// 
+			// TabBackup
+			// 
+			this->TabBackup->Controls->Add(this->LabelAutoRecoveryInterval);
+			this->TabBackup->Controls->Add(this->AutoRecoverySavePeriod);
+			this->TabBackup->Controls->Add(this->UseAutoRecovery);
+			this->TabBackup->Location = System::Drawing::Point(4, 22);
+			this->TabBackup->Name = L"TabBackup";
+			this->TabBackup->Padding = System::Windows::Forms::Padding(3);
+			this->TabBackup->Size = System::Drawing::Size(423, 290);
+			this->TabBackup->TabIndex = 5;
+			this->TabBackup->Text = L"Backup";
+			this->TabBackup->UseVisualStyleBackColor = true;
+			// 
+			// LabelAutoRecoveryInterval
+			// 
+			this->LabelAutoRecoveryInterval->Location = System::Drawing::Point(133, 139);
+			this->LabelAutoRecoveryInterval->Name = L"LabelAutoRecoveryInterval";
+			this->LabelAutoRecoveryInterval->Size = System::Drawing::Size(157, 34);
+			this->LabelAutoRecoveryInterval->TabIndex = 14;
+			this->LabelAutoRecoveryInterval->Text = L"Auto-Recovery Save Period (In Earth Minutes)";
+			// 
+			// AutoRecoverySavePeriod
+			// 
+			this->AutoRecoverySavePeriod->Location = System::Drawing::Point(133, 176);
+			this->AutoRecoverySavePeriod->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {60, 0, 0, 0});
+			this->AutoRecoverySavePeriod->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
+			this->AutoRecoverySavePeriod->Name = L"AutoRecoverySavePeriod";
+			this->AutoRecoverySavePeriod->Size = System::Drawing::Size(154, 20);
+			this->AutoRecoverySavePeriod->TabIndex = 13;
+			this->AutoRecoverySavePeriod->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
+			// 
+			// UseAutoRecovery
+			// 
+			this->UseAutoRecovery->Location = System::Drawing::Point(133, 95);
+			this->UseAutoRecovery->Name = L"UseAutoRecovery";
+			this->UseAutoRecovery->Size = System::Drawing::Size(154, 23);
+			this->UseAutoRecovery->TabIndex = 12;
+			this->UseAutoRecovery->Text = L"Use Auto-Recovery";
+			this->UseAutoRecovery->UseVisualStyleBackColor = true;
+			// 
 			// OptionsDialog
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -885,6 +937,8 @@ private: System::Windows::Forms::CheckBox^  NoFocusUI;
 			this->GroupBoxSyntaxHighlighting->ResumeLayout(false);
 			this->TabSanitize->ResumeLayout(false);
 			this->TabSanitize->PerformLayout();
+			this->TabBackup->ResumeLayout(false);
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->EndInit();
 			this->ResumeLayout(false);
 
 		}

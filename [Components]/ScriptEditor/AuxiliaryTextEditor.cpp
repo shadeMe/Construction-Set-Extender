@@ -57,6 +57,14 @@ namespace ConstructionSetExtender
 			Viewer->SetFont(gcnew Font(NewFont->FontFamily, NewFont->Size - 3, FontStyle::Regular));
 		}
 
+		UInt16 ScriptOffsetViewer::GetLastOffset()
+		{
+			if (InitializationState == false)
+				return 0;
+			else
+				return Viewer->GetLastOffset();
+		}
+
 		SimpleTextViewer::SimpleTextViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
 		{
 			Viewer = gcnew NumberedRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size - 3, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);

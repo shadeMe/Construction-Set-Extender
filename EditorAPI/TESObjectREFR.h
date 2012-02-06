@@ -32,9 +32,11 @@ public:
 
 	// methods
 	void						UpdateNiNode();
+	NiNode*						GenerateNiNode();
 	Vector3*					GetPosition() {	return &position; }
 	bool						SetBaseForm(TESForm* BaseForm);
 	void						SetPersistent(bool Persistent);
+	void						SetScale(float Scale);
 
 	void						ModExtraHealth(float Health);
 	void						ModExtraCharge(float Charge);

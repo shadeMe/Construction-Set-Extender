@@ -4,7 +4,7 @@ namespace ConstructionSetExtender
 {
 	namespace TextEditors
 	{
-		public ref class LineChangedEventArgs : public EventArgs
+		ref class LineChangedEventArgs : public EventArgs
 		{
 		public:
 			property UInt32								CurrentLine;
@@ -17,9 +17,9 @@ namespace ConstructionSetExtender
 			}
 		};
 
-		public delegate void									LineChangedEventHandler(Object^ Sender, LineChangedEventArgs^ E);
+		delegate void											LineChangedEventHandler(Object^ Sender, LineChangedEventArgs^ E);
 
-		public ref class NumberedRichTextBox
+		ref class NumberedRichTextBox
 		{
 		public:
 			virtual void										UpdateLineNumbers(void);
@@ -101,7 +101,7 @@ namespace ConstructionSetExtender
 			virtual void										SetFont(Font^ NewFont);
 		};
 
-		public ref class OffsetRichTextBox : public NumberedRichTextBox
+		ref class OffsetRichTextBox : public NumberedRichTextBox
 		{
 		protected:
 			virtual void										LineField_MouseDown(Object^ Sender, MouseEventArgs^ E) override;
@@ -127,6 +127,7 @@ namespace ConstructionSetExtender
 
 			bool												CalculateLineOffsetsForTextField(UInt32 Data, UInt32 Length);
 			virtual void										JumpToLine(String^ Line) override;
+			UInt16												GetLastOffset(void);
 
 			OffsetRichTextBox(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor);
 		};

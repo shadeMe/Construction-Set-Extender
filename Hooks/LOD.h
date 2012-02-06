@@ -6,6 +6,14 @@ namespace Hooks
 	// hooks that modify LOD related code
 	void PatchLODHooks(void);
 
+	extern UInt8		g_LODDiffuseMapGeneratorState;
+	enum : UInt8
+	{
+		kLODDiffuseMapGeneratorState_NotInUse = 0,
+		kLODDiffuseMapGeneratorState_Partials,
+		kLODDiffuseMapGeneratorState_FullMap,
+	};
+
 	_DeclareNopHdlr(LODLandTextureMipMapLevelA, "patches the LOD texture generator to generate the full mip chain for diffuse maps");
 	_DeclareMemHdlr(LODLandTextureMipMapLevelB, "patches the LOD texture generator to generate the full mip chain for normal maps");
 	_DeclareMemHdlr(LODLandTextureAllocation, "increases the resolution of lod landscape diffuse maps");
@@ -15,4 +23,15 @@ namespace Hooks
 	_DeclareMemHdlr(GenerateLODPartialTexture, "");
 	_DeclareMemHdlr(GenerateLODFullTexture, "");
 	_DeclareMemHdlr(GenerateLODFullTextureFileName, "corrects the filename used to save generated textures under");
+	_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardA, "prevents the GenerateLODDiffuseMaps() function from being called recursively");
+	_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardB, "ugly kludge. I repeat - fucking ugly kludge, these are");
+	_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardC, "");
+	_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardD, "");
+	_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardE, "");
+	_DeclareMemHdlr(LODTextureGenNotificationPrologA, "adds a progress dialog for the generation process");
+	_DeclareMemHdlr(LODTextureGenNotificationPrologB, "");
+	_DeclareMemHdlr(LODTextureGenNotificationEpilog, "");
+	_DeclareMemHdlr(LODTextureGenNotificationUpdate, "");
+	_DeclareMemHdlr(LODTextureGenBlackTextureFix, "fixes the bug that caused half of the texture to not be rendered");
+	_DeclareMemHdlr(LODTextureGenBlackTexturePartialFix, "for the partial textures, this");
 }

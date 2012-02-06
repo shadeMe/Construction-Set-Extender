@@ -19,7 +19,7 @@ namespace InputBoxes
 
 	/* START THE COMMENT HERE TO DESIGN THE FORM */
 	#pragma region InputBox return result
-		public ref class InputBoxResult
+		ref class InputBoxResult
 		{
 			public: DialogResult ReturnCode;
 			public: String^ Text;
@@ -27,7 +27,7 @@ namespace InputBoxes
 	#pragma endregion
 	/* STOP THE COMMENT HERE TO DESIGN THE FORM */
 
-	public ref class InputBox : public System::Windows::Forms::Form
+	ref class InputBox : public System::Windows::Forms::Form
 	{
 		#pragma region Private Variables
 			private:

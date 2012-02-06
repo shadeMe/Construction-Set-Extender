@@ -98,7 +98,6 @@ namespace ComponentDLLInterface
 		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
 
 		void										(* InitializeComponents)(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);
-		void										(* InitializeIntelliSenseDatabaseUpdateThread)(void);
 
 		void										(* InstantiateEditor)(ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 		void										(* AddScriptCommandDeveloperURL)(const char* ScriptCommandName, const char* URL);
@@ -106,6 +105,7 @@ namespace ComponentDLLInterface
 		void										(* CloseAllOpenEditors)(void);
 		void										(* UpdateIntelliSenseDatabase)(void);
 		UInt32										(* GetOpenEditorCount)(void);
+		void										(* CleanupAutoRecoveryCache)(void);
 	};
 
 	class UseInfoListInterface

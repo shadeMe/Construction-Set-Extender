@@ -1,7 +1,7 @@
 #include "TESForm.h"
 #include "Core.h"
 
-NiTMapBase<const char*, TESForm*>*		g_FormEditorIDMap = (NiTMapBase<const char*, TESForm*>*)0x009EE18C;
+CSE_GlobalClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_FormEditorIDMap = (CSE_GlobalClasses::BSTCaseInsensitiveStringMap<TESForm*>*)0x009EE18C;
 
 FormCrossReferenceData* FormCrossReferenceData::LookupFormInCrossReferenceList( FormCrossReferenceListT* CrossReferenceList, TESForm* CrossReferencedForm )
 {

@@ -3,13 +3,12 @@
 
 namespace VersionControl
 {
-	static char				s_TextBuffer[0x200] = {0};
 	ChangeLogManager*		ChangeLogManager::Singleton = NULL;
 
 	ChangeLog::ChangeLog(const char* Path, const char* FileName)
 	{
 		char Buffer[0x100] = {0};
-		sprintf_s(Buffer, sizeof(Buffer), "%s-%08X", FileName, MersenneTwister::genrand_int32());		// add a random suffix to make sure files aren't overwritten due to lousy time resolution
+		sprintf_s(Buffer, sizeof(Buffer), "%s-%08X", FileName, MersenneTwister::genrand_int32());		// add a random suffix to make sure files aren't overwritten due to lousy timer resolution
 
 		FilePath = std::string(Path) + "\\" + std::string(Buffer) + ".log";
 		Log = _fsopen(FilePath.c_str(), "w", _SH_DENYNO);
@@ -30,7 +29,7 @@ namespace VersionControl
 			if (StampTime)
 			{
 				fputs(GetTimeString(Buffer, sizeof(Buffer)), Log);
-				fputs("\t\t", Log);
+				fputs("\t", Log);
 			}
 
 			fputs(Message, Log);
@@ -50,7 +49,6 @@ namespace VersionControl
 
 		if (CopyFile(FilePath.c_str(), DestinationPath, Overwrite))
 		{
-	//		DebugPrint("Change log '%s' copied to '%s", FilePath.c_str(), DestinationPath);
 			return true;
 		}
 		else
@@ -138,8 +136,9 @@ namespace VersionControl
 			else
 			{
 				DebugPrint("User Session Temp Path = %s", TempPath);
+				char Buffer[MAX_PATH] = {0};
 
-				if (!CreateDirectory(GetCurrentTempDirectory(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+				if (!CreateDirectory(GetCurrentTempDirectory(Buffer, sizeof(Buffer)), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 				{
 					DebugPrint("Couldn't create temp log directory");
 					LogWinAPIErrorMessage(GetLastError());
@@ -149,10 +148,10 @@ namespace VersionControl
 		}
 	}
 
-	const char* ChangeLogManager::GetCurrentTempDirectory()
+	const char* ChangeLogManager::GetCurrentTempDirectory( char* OutBuffer, UInt32 BufferSize )
 	{
-		sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "%s\\%s\\", TempPath, GUIDString);
-		return s_TextBuffer;
+		sprintf_s(OutBuffer, BufferSize, "%s\\%s\\", TempPath, GUIDString);
+		return OutBuffer;
 	}
 
 	void ChangeLogManager::WriteChangeToLogs(const char* Message, bool StampTime)
@@ -171,7 +170,9 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
-		SessionLog = new ChangeLog(GetCurrentTempDirectory(), "CSE Change Log");
+		char Buffer[MAX_PATH] = {0};
+
+		SessionLog = new ChangeLog(GetCurrentTempDirectory(Buffer, sizeof(Buffer)), "CSE Change Log");
 		this->PushNewActiveLog();
 
 		WriteChangeToLogs("CS Session Started", true);
@@ -196,8 +197,11 @@ namespace VersionControl
 		}
 
 		SessionLog->Delete();
+		delete SessionLog;
 
-		if (!RemoveDirectory(GetCurrentTempDirectory()))
+		char Buffer[MAX_PATH] = {0};
+
+		if (!RemoveDirectory(GetCurrentTempDirectory(Buffer, sizeof(Buffer))))
 		{
 			DebugPrint("Couldn't remove temp change log files");
 			LogWinAPIErrorMessage(GetLastError());
@@ -209,12 +213,12 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
-		char Buffer[0x100] = {0};
+		char Buffer[MAX_PATH] = {0}, TimeString[0x100] = {0};
 
 		if (LogStack.size())
 			LogStack.top()->Finalize();
 
-		LogStack.push(new ChangeLog(GetCurrentTempDirectory(), GetTimeString(Buffer, sizeof(Buffer))));
+		LogStack.push(new ChangeLog(GetCurrentTempDirectory(Buffer, sizeof(Buffer)), GetTimeString(TimeString, sizeof(TimeString))));
 	}
 
 	void ChangeLogManager::RecordChange(const char* Format, ...)
@@ -222,7 +226,7 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
-		char Buffer[0x200] = {0};
+		char Buffer[0x4000] = {0};
 
 		va_list Args;
 		va_start(Args, Format);
@@ -237,39 +241,41 @@ namespace VersionControl
 		if (!Initialized)
 			return;
 
-		assert(Base->formType == New->formType);
+		assertR(Base->formType == New->formType);
 
-		char Buffer[0x400] = {0};
+		char Buffer[0x4000] = {0};
 
 		// compare baseformcomponents first
-		// follow that with the actual comparision of disjoint members
+		// follow that with the actual comparison of disjoint members
 
 		WriteChangeToLogs(Buffer, true);
 	}
 
 	void ChangeLogManager::RecordFormChange(TESForm* Form, UInt8 ChangeType, UInt32 Value)
 	{
-		sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "[%s] Form (%08X)\t\t'%s': ", Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
-		std::string Buffer(s_TextBuffer);
+		char Buffer[0x512] = {0};
+
+		sprintf_s(Buffer, sizeof(Buffer), "%s\t[%08X]\t%s\t", Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
+		std::string STLBuffer(Buffer);
 
 		switch (ChangeType)
 		{
 		case kFormChange_SetActive:
-			sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "Set Modified Flag = %d", Value);
+			sprintf_s(Buffer, sizeof(Buffer), "Modified: %d", Value);
 			break;
 		case kFormChange_SetDeleted:
-			sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "Set Deleted Flag = %d", Value);
+			sprintf_s(Buffer, sizeof(Buffer), "Deleted: %d", Value);
 			break;
 		case kFormChange_SetFormID:
-			sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "Set FormID = %08X", Value);
+			sprintf_s(Buffer, sizeof(Buffer), "FormID: %08X", Value);
 			break;
 		case kFormChange_SetEditorID:
-			sprintf_s(s_TextBuffer, sizeof(s_TextBuffer), "Set EditorID = %s", (const char*)Value);
+			sprintf_s(Buffer, sizeof(Buffer), "EditorID: %s", (const char*)Value);
 			break;
 		}
 
-		Buffer += s_TextBuffer;
-		WriteChangeToLogs(Buffer.c_str(), true);
+		STLBuffer += Buffer;
+		WriteChangeToLogs(STLBuffer.c_str(), true);
 	}
 
 	void ChangeLogManager::Pad(UInt32 Size)
@@ -287,7 +293,6 @@ namespace VersionControl
 	{
 		__time32_t TimeData;
 		tm LocalTime;
-		char Buffer[0x100] = {0};
 
 		_time32(&TimeData);
 		_localtime32_s(&LocalTime, &TimeData);
@@ -322,7 +327,9 @@ namespace VersionControl
 				LogWinAPIErrorMessage(GetLastError());
 			}
 
-			CHANGELOG->CopyActiveLog(PrintToBuffer("Data\\Backup\\%s - [%s].log", Name.c_str(), TimeString));
+			char Buffer[0x200] = {0};
+			FORMAT_STR(Buffer, "Data\\Backup\\%s - [%s].log", Name.c_str(), TimeString);
+			CHANGELOG->CopyActiveLog(Buffer);
 		}
 
 		CHANGELOG->PushNewActiveLog();

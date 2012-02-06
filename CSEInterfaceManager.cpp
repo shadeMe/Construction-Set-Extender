@@ -1,8 +1,9 @@
+#include "[Common]\CLIWrapper.h"
 #include "CSEInterfaceManager.h"
 #include "RenderWindowTextPainter.h"
-#include "[Common]\CLIWrapper.h"
 
 std::map<std::string, std::string>		g_URLMapBuffer;
+extern DynamicRenderChannel*			g_TXTChannelNotifications;
 
 static CSEInterface				s_CSEInterface =
 {
@@ -87,7 +88,7 @@ CSEInterface* CSEInterfaceManager::GetInterface()
 
 void CSEInterfaceManager::PrintToRenderWindow(const char* Message, long double DisplayDuration)
 {
-	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, Message, DisplayDuration);
+	g_TXTChannelNotifications->Queue(DisplayDuration, Message);
 }
 
 bool CSEInterfaceManager::RegisterScriptCommand(CSAutomationScript::CSASCommandInfo* CommandInfo)

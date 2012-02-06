@@ -185,7 +185,7 @@ namespace ConstructionSetExtender
 			return FirstSelectionCache;
 		}
 
-		void ScriptListDialog::Close()
+		void ScriptListDialog::CleanupDialog()
 		{
 			ScriptList->Items->Clear();
 			ScriptList->Enabled = true;
@@ -198,7 +198,7 @@ namespace ConstructionSetExtender
 			LastKnownSize = ScriptBox->ClientSize;
 		}
 
-		void ScriptListDialog::SelectScript()
+		void ScriptListDialog::PerformOperationOnSelection()
 		{
 			if (GetListViewSelectedItem(ScriptList) == nullptr)
 				return;
@@ -221,7 +221,7 @@ namespace ConstructionSetExtender
 			ScriptBox->Close();
 		}
 
-		void ScriptListDialog::GetUseReport()
+		void ScriptListDialog::ShowUseReportForSelection()
 		{
 			if (GetListViewSelectedItem(ScriptList) == nullptr)
 				return;
@@ -232,7 +232,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
-			Close();
+			CleanupDialog();
 
 			if (Closing == false)
 			{
@@ -244,7 +244,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::SelectBox_Click(Object^ Sender, EventArgs^ E)
 		{
-			SelectScript();
+			PerformOperationOnSelection();
 		}
 
 		void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
@@ -263,10 +263,10 @@ namespace ConstructionSetExtender
 			switch (E->KeyCode)
 			{
 			case Keys::Enter:
-				SelectScript();
+				PerformOperationOnSelection();
 				break;
 			case Keys::F1:
-				GetUseReport();
+				ShowUseReportForSelection();
 				break;
 			case Keys::Escape:
 				Closing = true;
@@ -297,7 +297,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::ScriptList_ItemActivate(Object^ Sender, EventArgs^ E)
 		{
-			SelectScript();
+			PerformOperationOnSelection();
 		}
 
 		void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -336,18 +336,14 @@ namespace ConstructionSetExtender
 		{
 			if (SearchBox->Text != "")
 			{
-				ListViewItem^% Result = ScriptList->FindItemWithText(SearchBox->Text, true, 0);
+				for each (ListViewItem^ Itr in ScriptList->SelectedItems)
+					Itr->Selected = false;
+
+				ListViewItem^ Result = ScriptList->FindItemWithText(SearchBox->Text, true, 0);
 				if (Result != nullptr)
 				{
 					Result->Selected = true;
 					ScriptList->TopItem = Result;
-				}
-				else
-				{
-					Result = GetListViewSelectedItem(ScriptList);
-					if (Result != nullptr)
-						Result->Selected = false;
-					PreviewBox->Text = "";
 				}
 			}
 		}
@@ -375,7 +371,7 @@ namespace ConstructionSetExtender
 			SelectBox->Click -= SelectBoxClickHandler;
 			ScriptBox->Closing -= ScriptBoxCancelHandler;
 
-			Close();
+			CleanupDialog();
 			for each (Image^ Itr in ScriptList->SmallImageList->Images)
 				delete Itr;
 			ScriptList->SmallImageList->Images->Clear();

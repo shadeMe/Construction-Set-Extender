@@ -18,7 +18,6 @@ namespace ConstructionSetExtender
 
 			IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
 			LocalVariableDatabase = gcnew List<IntelliSenseItem^>();
-			CurrentListContents = gcnew List<IntelliSenseItem^>();
 			IntelliSenseList = gcnew ListView();
 
 			IntelliSenseListSelectedIndexChangedHandler = gcnew EventHandler(this, &IntelliSenseInterface::IntelliSenseList_SelectedIndexChanged);
@@ -56,7 +55,9 @@ namespace ConstructionSetExtender
 			IntelliSenseList->HeaderStyle = ColumnHeaderStyle::None;
 			IntelliSenseList->HideSelection = false;
 			IntelliSenseList->Columns->Add("IntelliSense Object", 203);
-
+			IntelliSenseList->Sorting = SortOrder::Ascending;
+			IntelliSenseList->ListViewItemSorter = gcnew ListViewStringSorter(0, IntelliSenseList->Sorting);
+			
 			InfoToolTip->AutoPopDelay = 500;
 			InfoToolTip->InitialDelay = 500;
 			InfoToolTip->ReshowDelay = 0;
@@ -122,8 +123,9 @@ namespace ConstructionSetExtender
 					{
 						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 						{
-							IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType()));
-							CurrentListContents->Add(Itr);
+							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
+							Item->Tag = Itr;
+							IntelliSenseList->Items->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -138,8 +140,9 @@ namespace ConstructionSetExtender
 						{
 							if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
 							{
-								IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType()));
-								CurrentListContents->Add(Itr);
+								ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
+								Item->Tag = Itr;
+								IntelliSenseList->Items->Add(Item);
 								ItemCount++;
 							}
 						}
@@ -154,8 +157,9 @@ namespace ConstructionSetExtender
 					{
 						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 						{
-							IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType()));
-							CurrentListContents->Add(Itr);
+							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
+							Item->Tag = Itr;
+							IntelliSenseList->Items->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -203,8 +207,9 @@ namespace ConstructionSetExtender
 					{
 						if (RemoteVarItr->Current->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 						{
-							IntelliSenseList->Items->Add(gcnew ListViewItem(RemoteVarItr->Current->GetIdentifier(), (int)RemoteVarItr->Current->GetIntelliSenseItemType()));
-							CurrentListContents->Add(RemoteVarItr->Current);
+							ListViewItem^ Item = gcnew ListViewItem(RemoteVarItr->Current->GetIdentifier(), (int)RemoteVarItr->Current->GetIntelliSenseItemType());
+							Item->Tag = RemoteVarItr->Current;
+							IntelliSenseList->Items->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -216,8 +221,9 @@ namespace ConstructionSetExtender
 					{
 						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 						{
-							IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType()));
-							CurrentListContents->Add(Itr);
+							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
+							Item->Tag = Itr;
+							IntelliSenseList->Items->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -229,8 +235,9 @@ namespace ConstructionSetExtender
 				{
 					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 					{
-						IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType()));
-						CurrentListContents->Add(Itr);
+						ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
+						Item->Tag = Itr;
+						IntelliSenseList->Items->Add(Item);
 						ItemCount++;
 					}
 				}
@@ -242,8 +249,9 @@ namespace ConstructionSetExtender
 					{
 						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
 						{
-							IntelliSenseList->Items->Add(gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType()));
-							CurrentListContents->Add(Itr);
+							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
+							Item->Tag = Itr;
+							IntelliSenseList->Items->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -254,7 +262,7 @@ namespace ConstructionSetExtender
 
 			IntelliSenseList->EndUpdate();
 
-			if (ItemCount == 1 && !String::Compare(CurrentListContents[0]->GetIdentifier(), Extract, true))
+			if (ItemCount == 1 && !String::Compare((dynamic_cast<IntelliSenseItem^>(IntelliSenseList->Items[0]->Tag))->GetIdentifier(), Extract, true))
 			{
 				HideInterface();		// do not show when enumerable == extract
 			}
@@ -265,6 +273,8 @@ namespace ConstructionSetExtender
 
 				if (ItemCount > MaximumVisibleItemCount)
 					ItemCount = MaximumVisibleItemCount;
+
+				IntelliSenseList->Sort();
 
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * 19) + 17 - ((MaximumVisibleItemCount - ItemCount) * 19));
 				IntelliSenseBox->SetSize(DisplaySize);
@@ -303,8 +313,8 @@ namespace ConstructionSetExtender
 
 				Point Location = Point(IntelliSenseList->Size.Width + 17, 0);
 
-				DisplayInfoToolTip(CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->GetIntelliSenseItemTypeID(),
-									CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->Describe(),
+				DisplayInfoToolTip((dynamic_cast<IntelliSenseItem^>(GetListViewSelectedItem(IntelliSenseList)->Tag))->GetIntelliSenseItemTypeID(),
+									(dynamic_cast<IntelliSenseItem^>(GetListViewSelectedItem(IntelliSenseList)->Tag))->Describe(),
 									Location,
 									IntelliSenseBox->Handle,
 									15000);
@@ -390,7 +400,7 @@ namespace ConstructionSetExtender
 
 			if (GetListViewSelectedItemIndex(IntelliSenseList) != -1)
 			{
-				Result = CurrentListContents[GetListViewSelectedItemIndex(IntelliSenseList)]->GetIdentifier();
+				Result = (dynamic_cast<IntelliSenseItem^>(GetListViewSelectedItem(IntelliSenseList)->Tag))->GetIdentifier();
 				CleanupInterface();
 				HideInterface();
 			}
@@ -412,7 +422,6 @@ namespace ConstructionSetExtender
 		void IntelliSenseInterface::CleanupInterface()
 		{
 			IntelliSenseList->Items->Clear();
-			CurrentListContents->Clear();
 		}
 
 		bool IntelliSenseInterface::ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location)
@@ -487,6 +496,7 @@ namespace ConstructionSetExtender
 
 			for each (Image^ Itr in IntelliSenseList->SmallImageList->Images)
 				delete Itr;
+
 			IntelliSenseList->SmallImageList->Images->Clear();
 			IntelliSenseList->SmallImageList = nullptr;
 			CleanupInterface();

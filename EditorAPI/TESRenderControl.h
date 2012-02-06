@@ -30,6 +30,7 @@ public:
 	void								AddToSelection(TESForm* Form, bool AddSelectionBox = false);
 	void								RemoveFromSelection(TESForm* Form, bool RemoveSelectionBox = false);
 	void								ClearSelection(bool RemoveSelectionBox = false);
+	void								CalculatePositionVectorSum(void);
 
 	static TESRenderSelection*			CreateInstance();
 	void								DeleteInstance();
@@ -37,6 +38,7 @@ public:
 STATIC_ASSERT(sizeof(TESRenderSelection) == 0x18);
 
 extern TESRenderSelection**		g_TESRenderSelectionPrimary;
+#define _RENDERSEL				(*g_TESRenderSelectionPrimary)
 
 // 08
 class TESRenderUndoStack
@@ -78,6 +80,32 @@ STATIC_ASSERT(sizeof(TESRenderUndoStack) == 0x08);
 
 extern TESRenderUndoStack**		g_TESRenderUndoStack;
 
+// 4
+class Renderer
+{
+public:
+	// members
+	//*00*/ void**					vtbl;
+	 
+	// abstract base class
+	virtual void					Render(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL) = 0;
+};
+STATIC_ASSERT(sizeof(Renderer) == 0x04);
+
+// 14
+class NiWindow : public Renderer
+{
+public:
+	typedef tList<NiPointer<NiCamera>>		RenderCameraListT;
+
+	// members
+	//     /*00*/ Renderer
+	/*04*/ NiNode*					sceneRootNode;			// smart pointer
+	/*08*/ UInt32					renderedFrameCount;		// incremented in Render()
+	/*0C*/ RenderCameraListT		attachedCameras;
+};
+STATIC_ASSERT(sizeof(NiWindow) == 0x14);
+
 // 0C
 class TESRenderComponents
 {
@@ -100,6 +128,7 @@ enum
 	kRenderWindowState_SnapToGrid					= 0x1,
 	kRenderWindowState_SnapToAngle					= 0x2,
 	kRenderWindowState_AllowRenderWindowCellLoads	= 0x4,
+	kRenderWindowState_ShowMarkers					= 0x8,
 	kRenderWindowState_SkipInitialCellLoad			= 0x10,
 	kRenderWindowState_UseCSDiscAsSource			= 0x20,		// deprecated
 	kRenderWindowState_UseWorld						= 0x40,
@@ -121,6 +150,7 @@ class TESPathGrid;
 
 extern UInt8*					g_RenderWindowPathGridEditModeFlag;
 extern tList<TESPathGridPoint>*	g_RenderWindowSelectedPathGridPoints;
+extern TESObjectCELL**			g_RenderWindowCurrentlyLoadedCell;
 
 // CSE specific stuff
 enum
@@ -134,6 +164,3 @@ enum
 {
 	kNiNodeSpecialFlags_DontUncull						= 1 << 15
 };
-
-class ElapsedTimeCounter;
-extern ElapsedTimeCounter		g_RenderWindowTimeManager;

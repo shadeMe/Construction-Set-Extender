@@ -31,7 +31,6 @@
       <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
-    <ClCompile Include="Dllmain.c" />
     <ClCompile Include="LipSyncPipeClient.cpp" />
   </ItemGroup>
 </Project>

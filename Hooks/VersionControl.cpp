@@ -2,6 +2,10 @@
 #include "TESFile.h"
 #include "..\ChangeLogManager.h"
 
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
 namespace Hooks
 {
 	bool g_PluginLoadOperationInProgress = false;
@@ -189,7 +193,7 @@ namespace Hooks
 
 	void __stdcall DoDataHandlerCreateFormHook(TESForm* Form)
 	{
-		VersionControl::CHANGELOG->RecordChange("[%s] Form (%08X) created",  Form->GetTypeIDString(), Form->formID);
+		VersionControl::CHANGELOG->RecordChange("%s\t[%08X]\t%s\tInstantiated",  Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
 	}
 
 	#define _hhName		TESDialogFormEditNewForm
@@ -390,3 +394,6 @@ namespace Hooks
 		}
 	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

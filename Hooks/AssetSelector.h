@@ -149,6 +149,7 @@ namespace Hooks
 			__asm push		0 \
 			__asm mov		eax, [k##name##PathButtonID] \
 			__asm push		eax \
+			__asm push		k##name##SelectorCommonDialogFilterType	\
 			__asm call		InitPathEditor \
 			__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
 		__asm COPYP: \
@@ -207,8 +208,4 @@ namespace Hooks
 	void SPTSelectorCommonDialogHook(void);
 	void SPTPostCommonDialogHook(void);
 	void SPTCancelCommonDialogHook(void);
-
-	UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog);
-	UInt32 __stdcall InitPathEditor(int ID, const char* ExistingPath, HWND Dialog);
-	UInt32 __stdcall InitBSAViewer(UInt32 Filter);
 }

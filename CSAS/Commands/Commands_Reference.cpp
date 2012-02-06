@@ -373,7 +373,7 @@ namespace CSAutomationScript
 	BEGIN_CSASCOMMAND_HANDLER(GetCurrentRenderWindowSelection)
 	{
 		std::vector<CSASDataElement> ArrayData;
-		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 			if (Ref)

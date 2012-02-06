@@ -15,15 +15,6 @@ extern "C"
 
 void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize)
 {
-	try
-	{
-		System::Threading::Thread::CurrentThread->SetApartmentState(System::Threading::ApartmentState::STA);
-	}
-	catch (Exception^ E)
-	{
-		DebugPrint("Couldn't set thread apartment state to STA\n\tException: " + E->Message);
-	}
-
 	CopyStringToCharBuffer(BSAV->InitializeViewer(gcnew String(WorkingDir), gcnew String(ExtensionFilter)), ReturnPathOut, BufferSize);
 }
 

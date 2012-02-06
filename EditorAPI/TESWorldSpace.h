@@ -41,7 +41,7 @@ public:
 	//     /*24*/ TESFullName
 	//     /*30*/ TESTexture
 	/*48*/ NiTMapBase<int, TESObjectCELL*>*				cellMap;	// key is coordinates of cell: (x << 16 + y)
-	/*4C*/ UInt32										unk4C;
+	/*4C*/ TESObjectCELL*								unk4C;
 	/*50*/ UInt32										unk50;		// never initialized? NULL checked by the heightmap editor when generating LOD geometry
 	/*54*/ UInt8										unk54;
 	/*55*/ UInt8										unk55[3];

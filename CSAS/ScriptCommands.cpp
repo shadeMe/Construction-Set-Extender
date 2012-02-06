@@ -11,7 +11,7 @@ namespace CSAutomationScript
 {
 	CommandTable				g_CSASCommandTable;
 
-	// register commmand infos to the command table (for documentation purposes)
+	// register command infos to the command table (for documentation purposes)
 	BEGIN_CSASCOMMAND_PARAMINFO(Call, 1)
 	{
 		{ "Script Name", CSASDataElement::kParamType_String }
@@ -300,24 +300,34 @@ namespace CSAutomationScript
 				for (int i = 0; i < a_iArgc; i++)
 				{
 					CSASParamInfo* CurrentParam = &CommandData->Parameters[i];
+					char Buffer[0x200] = {0};
 
 					switch (CurrentParam->ParamType)
 					{
 					case CSASDataElement::kParamType_Numeric:
 						if (a_pArg[i]->IsScalar() == false)
-							throw std::exception(PrintToBuffer("Non-scalar argument %d passed to command %s", i, CommandData->Name));
+						{
+							FORMAT_STR(Buffer, "Non-scalar argument %d passed to command %s", i, CommandData->Name);
+							throw std::exception(Buffer);
+						}
 
 						Arguments[i].SetNumber(a_pArg[i]->GetFloat());
 						break;
 					case CSASDataElement::kParamType_String:
 						if (a_pArg[i]->IsString() == false)
-							throw std::exception(PrintToBuffer("Non-string argument %d passed to command %s", i, CommandData->Name));
+						{
+							FORMAT_STR(Buffer, "Non-string argument %d passed to command %s", i, CommandData->Name);
+							throw std::exception(Buffer);
+						}
 
 						Arguments[i].SetString(a_pArg[i]->GetString().c_str());
 						break;
 					case CSASDataElement::kParamType_Reference:
 						if (a_pArg[i]->IsScalar() == false)
-							throw std::exception(PrintToBuffer("Non-reference type argument %d passed to command %s", i, CommandData->Name));
+						{
+							FORMAT_STR(Buffer, "Non-reference type argument %d passed to command %s", i, CommandData->Name);
+							throw std::exception(Buffer);
+						}
 
 						Arguments[i].SetForm(TESForm::LookupByFormID((UInt32)((int)a_pArg[i]->GetFloat())));
 						break;
@@ -336,7 +346,10 @@ namespace CSAutomationScript
 					*ret = std::string(Result.GetString());
 					break;
 				case CSASDataElement::kParamType_Reference:
-					*ret = (int)Result.GetForm()->formID;
+					if (Result.GetForm() == NULL)
+						*ret = (int)0;
+					else
+						*ret = (int)Result.GetForm()->formID;
 					break;
 				case CSASDataElement::kParamType_Array:
 					Result.GetArray()->ConvertToMUPArray(*ret);
@@ -383,7 +396,7 @@ namespace CSAutomationScript
 			CSASParamInfo* CurrentParam = &Parameters[i];
 			CSASDataElement* CurrentArg = &ArgArray[i];
 
-			assert(CurrentArg->GetType() == CurrentParam->ParamType);
+			assertR(CurrentArg->GetType() == CurrentParam->ParamType);
 
 			switch (CurrentParam->ParamType)
 			{
@@ -406,7 +419,7 @@ namespace CSAutomationScript
 					break;
 				}
 			default:
-				assert(0);		// Unexpected param type
+				assertR(0);		// Unexpected param type
 				break;
 			}
 		}
@@ -419,14 +432,14 @@ namespace CSAutomationScript
 	void ReturnCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
 	{
 		ScriptContext* ExecutingScript = SCRIPTRUNNER->GetExecutingContext();
-		assert(ExecutingScript && ExecutingScript->GetExecutionState() == ScriptContext::kExecutionState_Default);
+		assertR(ExecutingScript && ExecutingScript->GetExecutionState() == ScriptContext::kExecutionState_Default);
 
 		if (ExecutingScript->GetIsLoopExecuting())
 			throw std::exception("Return command called inside a loop context");
 
 		if (a_iArgc == 1)
 		{
-			if (a_pArg[0]->IsArray())
+			if (a_pArg[0]->IsMatrix())
 				throw std::exception("Array passed to Return command");
 
 			mup::IValue* ArgVal = &(*a_pArg[0]);
@@ -578,7 +591,7 @@ namespace CSAutomationScript
 	void BreakCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
 	{
 		ScriptContext* ExecutingScript = SCRIPTRUNNER->GetExecutingContext();
-		assert(ExecutingScript);
+		assertR(ExecutingScript);
 
 		ExecutingScript->SetExecutingLoopState(LoopBlock::kState_Break);
 		ExecutingScript->SetExecutionState(ScriptContext::kExecutionState_Break);
@@ -599,7 +612,7 @@ namespace CSAutomationScript
 	void ContinueCommand::Eval(mup::ptr_val_type &ret, const mup::ptr_val_type *a_pArg, int a_iArgc)
 	{
 		ScriptContext* ExecutingScript = SCRIPTRUNNER->GetExecutingContext();
-		assert(ExecutingScript);
+		assertR(ExecutingScript);
 
 		ExecutingScript->SetExecutingLoopState(LoopBlock::kState_Continue);
 		ExecutingScript->SetExecutionState(ScriptContext::kExecutionState_Break);

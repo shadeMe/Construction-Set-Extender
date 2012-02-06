@@ -5,10 +5,12 @@ namespace ConstructionSetExtender
 {
 	void AnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
 	{
+		RemainingTime -= FadeTimer->Interval / 1000.0;
+
 		if (FadeOperation == FadeOperationType::e_FadeIn)
-			this->Opacity += FadeTimer->Interval / (FadeAnimationFactor * FadeDuration * 1000);
+			this->Opacity += FadeTimer->Interval / (RemainingTime * 1000.0);
 		else
-			this->Opacity -= FadeTimer->Interval / (FadeAnimationFactor * FadeDuration * 1000);
+			this->Opacity -= FadeTimer->Interval / (RemainingTime * 1000.0);
 
 		if (this->Opacity >= 1.0 || this->Opacity <= 0.0)
 		{
@@ -27,6 +29,7 @@ namespace ConstructionSetExtender
 	void AnimatedForm::Show()
 	{
 		this->Opacity = 0.0;
+		RemainingTime = FadeDuration;
 		Form::Show();
 
 		FadeOperation = FadeOperationType::e_FadeIn;
@@ -36,6 +39,7 @@ namespace ConstructionSetExtender
 	void AnimatedForm::Show( IWin32Window^ Parent )
 	{
 		this->Opacity = 0.0;
+		RemainingTime = FadeDuration;
 		Form::Show(Parent);
 
 		FadeOperation = FadeOperationType::e_FadeIn;
@@ -45,6 +49,7 @@ namespace ConstructionSetExtender
 	System::Windows::Forms::DialogResult AnimatedForm::ShowDialog()
 	{
 		this->Opacity = 0.0;
+		RemainingTime = FadeDuration;
 
 		FadeOperation = FadeOperationType::e_FadeIn;
 		FadeTimer->Start();
@@ -59,6 +64,7 @@ namespace ConstructionSetExtender
 			FadeOperation = FadeOperationType::e_FadeOut;
 			this->Opacity = 1.0;
 			FadeTimer->Start();
+			RemainingTime = FadeDuration;
 		}
 	}
 
@@ -67,6 +73,7 @@ namespace ConstructionSetExtender
 		this->FadeDuration = FadeDuration;
 		FadeOperation = FadeOperationType::e_None;
 		CloseOnFadeOut = false;
+		RemainingTime = 0.0;
 
 		FadeTimer = gcnew Timer();
 		FadeTimerTickHandler = gcnew EventHandler(this, &AnimatedForm::FadeTimer_Tick);
@@ -80,6 +87,7 @@ namespace ConstructionSetExtender
 		CloseOnFadeOut = true;
 		FadeOperation = FadeOperationType::e_FadeOut;
 		this->Opacity = 1.0;
+		RemainingTime = FadeDuration;
 		FadeTimer->Start();
 	}
 
@@ -131,11 +139,15 @@ namespace ConstructionSetExtender
 				this->Opacity = 0.0;
 
 			if (ParentHandle != IntPtr::Zero)
+			{
 				Show(gcnew WindowHandleWrapper(ParentHandle));
+			}
 			else
+			{
 				Show();
+			}
 
-			BringToFront();
+	//		BringToFront();
 
 			if (Animate)
 			{

@@ -13,13 +13,10 @@ class TESObjectCELL;
 class TESWorldSpace;
 class INISetting;
 
-#pragma warning(disable:4005)
-
+using namespace	MemoryHandler;
 namespace Hooks
 {
 	extern FARPROC		g_TempIATProcBuffer;
-
-	using namespace	MemoryHandler;
 
 	void __stdcall IATCacheGetWindowTextAddress(void);
 	void __stdcall IATCacheCreateDialogParamAddress(void);
@@ -37,4 +34,19 @@ namespace Hooks
 	void __stdcall IATCacheInterlockedDecrementAddress(void);
 
 	UInt32 __stdcall IsControlKeyDown(void);
+
+#define MOV_LARGEFS0_EAX		__asm _emit 0x64 \
+								__asm _emit 0x0A3 \
+								__asm _emit 0 \
+								__asm _emit 0 \
+								__asm _emit 0 \
+								__asm _emit 0
+
+#define MOV_LARGEFS0_ECX		__asm _emit 0x64 \
+								__asm _emit 0x89 \
+								__asm _emit 0x0D \
+								__asm _emit 0 \
+								__asm _emit 0 \
+								__asm _emit 0 \
+								__asm _emit 0
 }

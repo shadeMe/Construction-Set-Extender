@@ -109,11 +109,12 @@ namespace CSAutomationScript
 
 		bool									InExecutionLoop;
 		bool									Initialized;
+		bool									ExecutionState;
 
 		void									DeinitializeScriptCache();
 		void									InitializeScriptCache();
 
-		void									InitializeGlobalVariableCache(const char* INIPath);		// read from INI
+		void									InitializeGlobalVariableCache(const char* INIPath);			// read from INI
 		void									DeinitializeGlobalVariableCache(const char* INIPath);		// write to INI
 
 		void									AddGlobalVariable(ScriptVariable* Data);
@@ -128,6 +129,8 @@ namespace CSAutomationScript
 
 		bool									GetInExecutionLoop() const { return InExecutionLoop; }
 		long double								GetSecondsPassed() const;
+		bool									GetExecutionState() const { return ExecutionState; }
+		void									SetExecutionState(bool State);
 
 		void									Initialize();
 		void									Deinitialize();

@@ -10,12 +10,12 @@
 #include "ElapsedTimeCounter.h"
 #include "ToolManager.h"
 #include "WorkspaceManager.h"
-#include "RenderWindowTextPainter.h"
 #include "ChangeLogManager.h"
 #include "Achievements.h"
 #include "CSAS\ScriptRunner.h"
 #include "PathGridUndoManager.h"
 #include "AuxiliaryViewport.h"
+#include "RenderWindowTextPainter.h"
 
 using namespace Hooks;
 
@@ -36,6 +36,8 @@ std::string					g_ObjectWindowFilterStr = "";
 std::string					g_CellViewWindowFilterStr = "";
 
 CSnapWindow					g_WindowEdgeSnapper;
+StaticRenderChannel*		g_TXTChannelRAMUsage = NULL;
+DynamicRenderChannel*		g_TXTChannelNotifications = NULL;
 
 #define PI					3.151592653589793
 
@@ -111,23 +113,21 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			if (SelectedItem != -1)
 			{
 				LVITEM SelectedPluginItem;
+				char PluginNameBuffer[0x200] = {0};
 
 				SelectedPluginItem.iItem = SelectedItem;
 				SelectedPluginItem.iSubItem = 0;
 				SelectedPluginItem.mask = LVIF_TEXT;
-				SelectedPluginItem.pszText = g_TextBuffer;
-				SelectedPluginItem.cchTextMax = sizeof(g_TextBuffer);
+				SelectedPluginItem.pszText = PluginNameBuffer;
+				SelectedPluginItem.cchTextMax = sizeof(PluginNameBuffer);
 
 				if (ListView_GetItem(PluginList, &SelectedPluginItem) == TRUE)
 				{
-					g_INIManager->FetchSetting("StartupPluginName", "Extender::General")->SetValue(g_TextBuffer);
+					g_INIManager->FetchSetting("PluginName", "Extender::Startup")->SetValue(PluginNameBuffer);
 
 					char Buffer[0x200];
-					sprintf_s(Buffer, 0x200, "Startup plugin set to '%s'.", g_TextBuffer);
-
+					FORMAT_STR(Buffer, "Startup plugin set to '%s'.", PluginNameBuffer);
 					MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
-					DebugPrint(Buffer);
-
 					Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 				}
 			}
@@ -167,32 +167,54 @@ LRESULT CALLBACK DataDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 	return CallWindowProc(g_DataDlgOrgWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
+static UInt32			s_PerformanceRAMUsageCounter = 0;
+
+bool TXTChannelStaticHandler_RAMUsage(std::string& RenderedText)
+{
+	char Buffer[0x50] = {0};
+	FORMAT_STR(Buffer, "RAM Usage: %d MB", s_PerformanceRAMUsageCounter);
+	RenderedText = Buffer;
+	return true;
+}
+
 LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
  	case WM_TIMER:
+		switch (wParam)		// need to handle this right here as the main window proc doesn't check the timer ID when processing the WM_TIMER message
 		{
-			switch (wParam)		// need to handle this right here as the main window proc doesn't check the timer ID when processing the WM_TIMER message
-			{
-			case 2:				// autosave timer
-				if (*g_TESCSAllowAutoSaveFlag && *g_TESCSExittingCSFlag == 0)
-					TESDialog::AutoSave();
-				break;
-			case GLOBALSCRIPT_EXECUTION_TIMER:
-				GLOBALSCRIPTMANAGER->ExecuteScripts();
-				break;
-			}
+		case 2:				// autosave timer
+			if (*g_TESCSAllowAutoSaveFlag && *g_TESCSExittingCSFlag == 0)
+				TESDialog::AutoSave();
 
+							// low priority stuff handled here as this timer has a relatively large update period
 			if (!Achievements::GetAchievementUnlocked(Achievements::kAchievement_Cheat))
 			{
 				UInt32 TimeElapsed = GetTickCount() - Achievements::g_TickCount;
 				if (TimeElapsed / (3600.0 * 1000.0) >= Achievements::kMaxCSSessionLength)
 					Achievements::UnlockAchievement(Achievements::kAchievement_Cheat);
 			}
-
-			return TRUE;
+			break;
+		case GLOBALSCRIPT_EXECUTION_TIMER:
+			GLOBALSCRIPTMANAGER->ExecuteScripts();
+			break;
+		case PERFCOUNTER_TIMER:
+			{
+				PROCESS_MEMORY_COUNTERS_EX MemCounter = {0};
+				if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
+				{
+					UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
+					if (CurrentRAMCounter != s_PerformanceRAMUsageCounter)
+					{
+						s_PerformanceRAMUsageCounter = CurrentRAMCounter;
+						TESDialog::RedrawRenderWindow();
+					}
+				}
+				break;
+			}
 		}
+		return TRUE;
     case WM_MOVING:
         return g_WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
     case WM_ENTERSIZEMOVE:
@@ -251,7 +273,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			{
 			TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 			if (!ThisCell)
-				ThisCell = (*g_TES)->currentExteriorCell;
+				ThisCell = *g_RenderWindowCurrentlyLoadedCell;
 
 			if (ThisCell)
 			{
@@ -274,7 +296,7 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRefData->Flags = ThisRef->formFlags;
 					ThisRefData->Selected = false;
 
-					for (TESRenderSelection::SelectedObjectsEntry* j = (*g_TESRenderSelectionPrimary)->selectionList; j != 0; j = j->Next)
+					for (TESRenderSelection::SelectedObjectsEntry* j = _RENDERSEL->selectionList; j != 0; j = j->Next)
 					{
 						if (j->Data && j->Data == ThisRef)
 						{
@@ -426,13 +448,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_GAMEPLAY_GLOBALSCRIPT:
-			CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_GLOBALSCRIPT), hWnd, (DLGPROC)GlobalScriptDlgProc);
+			CreateDialog(g_DLLInstance, MAKEINTRESOURCE(DLG_GLOBALSCRIPT), hWnd, (DLGPROC)GlobalScriptDlgProc);			
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_LAUNCHGAME:
 			ShellExecute(NULL, "open", (LPSTR)(std::string(g_APPPath + "obse_loader.exe")).c_str(), NULL, NULL, SW_SHOW);
 			Achievements::UnlockAchievement(Achievements::kAchievement_LazyBum);
-			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case MAIN_VIEW_TAGBROWSER:
 			CLIWrapper::Interfaces::TAG->ShowTagBrowserDialog(*g_HWND_CSParent);
@@ -452,12 +473,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				bool Checked = (GetMenuState(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_BYCOMMAND)) & MF_CHECKED;
 				if (!Checked)
 				{
-					g_INIManager->FetchSetting("PreventTimeStampChanges", "Extender::General")->SetValue("1");
+					g_INIManager->FetchSetting("PreventTimeStampChanges", "Extender::Plugins")->SetValue("1");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_CHECKED);
 				}
 				else
 				{
-					g_INIManager->FetchSetting("PreventTimeStampChanges", "Extender::General")->SetValue("0");
+					g_INIManager->FetchSetting("PreventTimeStampChanges", "Extender::Plugins")->SetValue("0");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_UNCHECKED);
 				}
 			}
@@ -469,12 +490,12 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				bool Checked = (GetMenuState(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_BYCOMMAND)) & MF_CHECKED;
 				if (!Checked)
 				{
-					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters", "Extender::General")->SetValue("1");
+					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters", "Extender::Plugins")->SetValue("1");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_CHECKED);
 				}
 				else
 				{
-					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters", "Extender::General")->SetValue("0");
+					g_INIManager->FetchSetting("SaveLoadedESPsAsMasters", "Extender::Plugins")->SetValue("0");
 					CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_UNCHECKED);
 				}
 			}
@@ -482,10 +503,32 @@ LRESULT CALLBACK CSMainWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			return FALSE;
 		case ID_CSAS_GLOBALDATA:
 			GLOBALSCRIPTMANAGER->ShowGlobalVariableDialog();
-			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case ID_CSAS_RELOADGLOBALSCRIPTS:
 			GLOBALSCRIPTMANAGER->ReloadScripts();
+			break;
+		case ID_CSAS_EXECUTEGLOBALSCRIPTS:
+			{
+				MENUITEMINFO CSASMenuData = {0};
+				CSASMenuData.cbSize = sizeof(MENUITEMINFO);
+				CSASMenuData.fMask = MIIM_SUBMENU;
+				HMENU CSASMenu = GetMenu(*g_HWND_CSParent); CSASMenu = GetSubMenu(CSASMenu, 7);
+
+				bool Checked = (GetMenuState(CSASMenu, ID_CSAS_EXECUTEGLOBALSCRIPTS, MF_BYCOMMAND)) & MF_CHECKED;
+				GLOBALSCRIPTMANAGER->SetExecutionState(Checked == false);
+
+				if (Checked)
+				{
+					DebugPrint("CSAS Global Script execution halted");
+					CheckMenuItem(CSASMenu, ID_CSAS_EXECUTEGLOBALSCRIPTS, MF_UNCHECKED);
+				}
+				else
+				{
+					DebugPrint("CSAS Global Script execution started");
+					CheckMenuItem(CSASMenu, ID_CSAS_EXECUTEGLOBALSCRIPTS, MF_CHECKED);
+				}
+
+			}
 			break;
 		case MAIN_VIEW_AUXVIEWPORT:
 			if (AUXVIEWPORT->IsInitialized())
@@ -516,26 +559,29 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 	switch (uMsg)
 	{
 	case WM_TIMER:
-		switch (wParam)
-		{
-		case 1:
-			g_RenderWindowTimeManager.Update();
-			break;
-		}
 		break;
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
+		case VK_F1:		// F1
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			{
+				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+				TESDialog::ShowUseReportDialog(Ref);
+			}
+			return TRUE;
 		case 0x5A:		// Z
 			if (*g_RenderWindowPathGridEditModeFlag && GetAsyncKeyState(VK_CONTROL))
 			{
 				g_PathGridUndoManager.PerformUndo();
-			}
+				return TRUE;
+			}	
 			break;
 		case 0x59:		// Y
 			if (*g_RenderWindowPathGridEditModeFlag && GetAsyncKeyState(VK_CONTROL))
 			{
 				g_PathGridUndoManager.PerformRedo();
+				return TRUE;
 			}
 			break;
 		case 0x52:		// R
@@ -576,9 +622,9 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			if (GetAsyncKeyState(VK_CONTROL))
 			{
 				if (g_RenderWindowAltMovementSettings)
-					PrintToRender("Using vanilla movement settings", 3);
+					g_TXTChannelNotifications->Queue(3, "Using vanilla movement settings");
 				else
-					PrintToRender("Using alternate movement settings", 3);
+					g_TXTChannelNotifications->Queue(3, "Using alternate movement settings");
 
 				g_RenderWindowAltMovementSettings = (g_RenderWindowAltMovementSettings == false);
 				Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
@@ -587,9 +633,9 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			else if (GetAsyncKeyState(VK_SHIFT) && AUXVIEWPORT->IsHidden() == false)
 			{
 				if (AUXVIEWPORT->ToggleFrozenState())
-					PrintToRender("Froze auxiliary viewport camera", 3);
+					g_TXTChannelNotifications->Queue(3, "Froze auxiliary viewport camera");
 				else
-					PrintToRender("Released auxiliary viewport camera", 3);
+					g_TXTChannelNotifications->Queue(3, "Released auxiliary viewport camera");
 
 				return TRUE;
 			}
@@ -635,10 +681,10 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					switch (LOWORD(wParam))
 					{
 					case ID_SELECTIONVISIBILITY_SHOWALL:
-						PrintToRender("Reset visibility flags on the active cell's references", 3);
+						g_TXTChannelNotifications->Queue(3, "Reset visibility flags on the active cell's references");
 						break;
 					case ID_SELECTIONFREEZING_THAWALLINCELL:
-						PrintToRender("Thawed all of the active cell's references", 3);
+						g_TXTChannelNotifications->Queue(3, "Thawed all of the active cell's references");
 						break;
 					}
 				}
@@ -649,37 +695,38 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY:
 		case ID_SELECTIONFREEZING_FREEZE:
 		case ID_SELECTIONFREEZING_UNFREEZE:
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 			{
 				TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 				UInt32 FlagMask = 0;
+				char Buffer[0x100] = {0};
 
 				switch (LOWORD(wParam))
 				{
 				case ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY:
 					ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_3DInvisible, !(Ref->formFlags & kTESObjectREFRSpecialFlags_3DInvisible));
-					PrintToBuffer("Selection '%08X's visibility toggled", Ref->formID);
+					FORMAT_STR(Buffer, "Selection '%08X's visibility toggled", Ref->formID);
 					break;
 				case ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY:
 					ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Children3DInvisible, !(Ref->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible));
-					PrintToBuffer("Selection '%08X's children visibility toggled", Ref->formID);
+					FORMAT_STR(Buffer, "Selection '%08X's children visibility toggled", Ref->formID);
 					break;
 				case ID_SELECTIONFREEZING_FREEZE:
 					ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, true);
-					PrintToBuffer("Selection '%08X' frozen", Ref->formID);
+					FORMAT_STR(Buffer, "Selection '%08X' frozen", Ref->formID);
 					break;
 				case ID_SELECTIONFREEZING_UNFREEZE:
 					ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, false);
-					PrintToBuffer("Selection '%08X' thawed", Ref->formID);
+					FORMAT_STR(Buffer, "Selection '%08X' thawed", Ref->formID);
 					break;
 				}
-				PrintToRender(g_TextBuffer, 2);
+				g_TXTChannelNotifications->Queue(2, Buffer);
 			}
 			Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			break;
 		case ID_SELECTIONGROUPING_GROUP:
 		case ID_SELECTIONGROUPING_UNGROUP:
-			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
+			if (_RENDERSEL->selectionCount > 1)
 			{
 				TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
 				if (CurrentCell == NULL)
@@ -693,20 +740,20 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 				case ID_SELECTIONGROUPING_GROUP:
 					if (!g_RenderSelectionGroupManager.AddGroup(CurrentCell, *g_TESRenderSelectionPrimary))
 					{
-						MessageBox(hWnd, "Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a pre-existing group",
+						MessageBox(hWnd, "Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a preexisting group",
 									"CSE", MB_OK|MB_ICONEXCLAMATION);
 					}
 					else
-						RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Created new selection group for current cell", 2);
+						g_TXTChannelNotifications->Queue(2, "Created new selection group for current cell");
 					break;
 				case ID_SELECTIONGROUPING_UNGROUP:
 					if (!g_RenderSelectionGroupManager.RemoveGroup(CurrentCell, *g_TESRenderSelectionPrimary))
 					{
-						MessageBox(hWnd, "Couldn't remove current selection group.\n\nMake sure the selected objects belong to a pre-existing group",
+						MessageBox(hWnd, "Couldn't remove current selection group.\n\nMake sure the selected objects belong to a preexisting group",
 									"CSE", MB_OK|MB_ICONEXCLAMATION);
 					}
 					else
-						RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, "Removed selection group from current cell", 2);
+						g_TXTChannelNotifications->Queue(2, "Removed selection group from current cell");
 					break;
 				}
 				Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
@@ -715,14 +762,14 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		case ID_ALIGNSELECTION_BYXAXIS:
 		case ID_ALIGNSELECTION_BYYAXIS:
 		case ID_ALIGNSELECTION_BYZAXIS:
-			if ((*g_TESRenderSelectionPrimary)->selectionCount > 1)
+			if (_RENDERSEL->selectionCount > 1)
 			{
 				(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, (*g_TESRenderSelectionPrimary));
 				(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, (*g_TESRenderSelectionPrimary));
 
-				TESObjectREFR* AlignRef = CS_CAST((*g_TESRenderSelectionPrimary)->selectionList->Data, TESForm, TESObjectREFR);
+				TESObjectREFR* AlignRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 
-				for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList->Next; Itr && Itr->Data; Itr = Itr->Next)
+				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList->Next; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* ThisRef = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 
@@ -744,8 +791,7 @@ LRESULT CALLBACK RenderWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 					ThisRef->UpdateNiNode();
 				}
 
-				PrintToBuffer("Selection aligned to %08X", AlignRef->formID);
-				PrintToRender(g_TextBuffer, 2);
+				g_TXTChannelNotifications->Queue(2, "Selection aligned to %08X", AlignRef->formID);
 				Achievements::UnlockAchievement(Achievements::kAchievement_PowerUser);
 			}
 			break;
@@ -801,19 +847,23 @@ BOOL CALLBACK TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg)
 	{
 	case WM_COMMAND:
-		switch (LOWORD(wParam))
 		{
-		case BTN_OK:
-			GetDlgItemText(hWnd, EDIT_TEXTLINE, g_TextBuffer, sizeof(g_TextBuffer));
-			EndDialog(hWnd, (INT_PTR)g_TextBuffer);
-			return TRUE;
-		case BTN_CANCEL:
-			EndDialog(hWnd, NULL);
-			return TRUE;
+			InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLong(hWnd, GWL_USERDATA);
+			switch (LOWORD(wParam))
+			{
+			case BTN_OK:
+				GetDlgItemText(hWnd, EDIT_TEXTLINE, InitParam->Buffer, sizeof(InitParam->Buffer));
+				EndDialog(hWnd, 1);
+				return TRUE;
+			case BTN_CANCEL:
+				EndDialog(hWnd, NULL);
+				return TRUE;
+			}
 		}
 		break;
 	case WM_INITDIALOG:
-		SetDlgItemText(hWnd, EDIT_TEXTLINE, (LPSTR)lParam);
+		SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+		SetDlgItemText(hWnd, EDIT_TEXTLINE, ((InitDialogMessageParamT<UInt32>*)lParam)->Buffer);
 		break;
 	}
 	return FALSE;
@@ -889,8 +939,9 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			HWND Window = WindowFromPoint(Location);
 			if (Window)
 			{
-				GetWindowText(Window, g_TextBuffer, sizeof(g_TextBuffer));
-				Edit_SetText(GetDlgItem(hWnd, EDIT_PATH), g_TextBuffer);
+				char Buffer[0x200] = {0};
+				GetWindowText(Window, Buffer, sizeof(Buffer));
+				Edit_SetText(GetDlgItem(hWnd, EDIT_PATH), Buffer);
 			}
 			else
 				Edit_SetText(GetDlgItem(hWnd, EDIT_PATH), NULL);
@@ -905,26 +956,29 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case BTN_OK:
 			{
 				char Buffer[0x200] = {0};
-
 				GetDlgItemText(hWnd, EDIT_PATH, Buffer, sizeof(Buffer));
-				switch ((int)GetWindowLong(hWnd, GWL_USERDATA))
+				InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLong(hWnd, GWL_USERDATA);
+
+				switch (InitParam->ExtraData)
 				{
 				case e_SPT:
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "\\%s", Buffer);
+					FORMAT_STR(InitParam->Buffer, "\\%s", Buffer);
 					break;
 				case e_KF:
 					{
-						std::string Buffer(g_TextBuffer);
-						int Offset = Buffer.find("IdleAnims\\");
+						std::string STLBuffer(Buffer);
+						int Offset = STLBuffer.find("IdleAnims\\");
 						if (Offset != -1)
-							Buffer = Buffer.substr(Offset + 9);
-						PrintToBuffer("%s", Buffer.c_str());
+							STLBuffer = STLBuffer.substr(Offset + 9);
+
+						FORMAT_STR(InitParam->Buffer, "%s", STLBuffer.c_str());
 					}
 					break;
 				default:
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s", Buffer);
+					FORMAT_STR(InitParam->Buffer, "%s", Buffer);
 				}
-				EndDialog(hWnd, (INT_PTR)g_TextBuffer);
+
+				EndDialog(hWnd, 1);
 				return TRUE;
 			}
 		case BTN_CANCEL:
@@ -941,18 +995,20 @@ BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 {
+	char Buffer[0x200] = {0};
+
 	switch (Identifier)
 	{
 		case POPUP_SETFORMID:
 		{
-			if (Form->formID < 0x800)	break;
+			if (Form->formID < 0x800)
+				break;
 
-			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->formID);
-			LPSTR FormIDString = (LPSTR)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
-			if (FormIDString)
+			FORMAT_STR(Buffer, "%08X", Form->formID);
+			if (DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), hWnd, (DLGPROC)TextEditDlgProc, (LPARAM)Buffer))
 			{
 				UInt32 FormID = 0;
-				sscanf_s(FormIDString, "%08X", &FormID);
+				sscanf_s(Buffer, "%08X", &FormID);
 				if (errno == ERANGE || errno == EINVAL)
 				{
 					MessageBox(hWnd, "Bad FormID string - FormIDs should be unsigned 32-bit hexadecimal integers (e.g: 00503AB8)", "CSE", MB_OK|MB_ICONEXCLAMATION);
@@ -964,8 +1020,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 					break;
 				}
 
-				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->formID, FormID);
-				if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO|MB_ICONINFORMATION) == IDYES)
+				FORMAT_STR(Buffer, "Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.", Form->formID, FormID);
+				if (MessageBox(hWnd, Buffer, "CSE", MB_YESNO|MB_ICONINFORMATION) == IDYES)
 				{
 					Form->SetFormID(FormID);
 					Form->SetFromActiveFile(true);
@@ -974,8 +1030,8 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 			break;
 		}
 		case POPUP_MARKUNMODIFIED:
-			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorID.c_str(), Form->formID);
-			if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO|MB_ICONINFORMATION) == IDYES)
+			FORMAT_STR(Buffer, "Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.", Form->editorID.c_str(), Form->formID);
+			if (MessageBox(hWnd, Buffer, "CSE", MB_YESNO|MB_ICONINFORMATION) == IDYES)
 			{
 				Form->SetFromActiveFile(false);
 			}
@@ -988,15 +1044,15 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 				CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(EditorID);
 			else
 			{
-				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%08X", Form->formID);
-				CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(g_TextBuffer);
+				FORMAT_STR(Buffer, "%08X", Form->formID);
+				CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(Buffer);
 			}
 			break;
 		}
 		case POPUP_UNDELETE:
 		{
-			PrintToBuffer("Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorID.c_str(), Form->formID);
-			if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO|MB_ICONINFORMATION) == IDYES)
+			FORMAT_STR(Buffer, "Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.", Form->editorID.c_str(), Form->formID);
+			if (MessageBox(hWnd, Buffer, "CSE", MB_YESNO|MB_ICONINFORMATION) == IDYES)
 			{
 				Form->SetDeleted(false);
 			}
@@ -1029,16 +1085,18 @@ void EvaluatePopupMenuItems(HWND hWnd, int Identifier, TESForm* Form)
 		}
 		case POPUP_SHOWOVERRIDES:
 		{
-			std::string Buffer = PrintToBuffer("Override list for form '%08X':\n\n", Form->formID);
+			FORMAT_STR(Buffer, "Override list for form '%08X':\n\n", Form->formID);
+			std::string STLBuffer(Buffer);
 			for (TESForm::OverrideFileListT::Iterator Itr = Form->fileList.Begin(); !Itr.End(); ++Itr)
 			{
 				TESFile* File = Itr.Get();
 				if (!File)
 					break;
 
-				Buffer += PrintToBuffer("\t%s\n", File->fileName);
+				FORMAT_STR(Buffer, "\t%s\n", File->fileName);
+				STLBuffer += Buffer;
 			}
-			MessageBox(hWnd, Buffer.c_str(), "CSE", MB_OK|MB_ICONINFORMATION);
+			MessageBox(hWnd, STLBuffer.c_str(), "CSE", MB_OK|MB_ICONINFORMATION);
 			break;
 		}
 	}
@@ -1349,8 +1407,9 @@ LRESULT CALLBACK ResponseWndSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 
 				if (!CopyFile(FilePath, Destination.c_str(), FALSE))
 				{
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Couldn't copy external file '%s' to '%s'!\n\nCheck the console for more information.", FilePath, Destination.c_str());
-					MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+					char Buffer[0x200] = {0};
+					FORMAT_STR(Buffer, "Couldn't copy external file '%s' to '%s'!\n\nCheck the console for more information.", FilePath, Destination.c_str());
+					MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 					LogWinAPIErrorMessage(GetLastError());
 				}
 				else
@@ -1402,6 +1461,7 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				char QuestID[0x200] = {0};
 				char ScriptID[0x200] = {0};
 				char Delay[8] = {0};
+				char Buffer[0x200] = {0};
 
 				GetDlgItemText(hWnd, EDIT_QUESTID, QuestID, sizeof(QuestID));
 				GetDlgItemText(hWnd, EDIT_SCRIPTID, ScriptID, sizeof(ScriptID));
@@ -1416,14 +1476,14 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				{
 					if (Form->formType == TESForm::kFormType_Quest)
 					{
-						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Quest '%s' already exists. Do you want to replace its script with a newly created one ?", QuestID);
-						if (MessageBox(hWnd, g_TextBuffer, "CSE", MB_YESNO) != IDYES)
+						FORMAT_STR(Buffer, "Quest '%s' already exists. Do you want to replace its script with a newly created one ?", QuestID);
+						if (MessageBox(hWnd, Buffer, "CSE", MB_YESNO) != IDYES)
 							return TRUE;
 					}
 					else
 					{
-						sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", QuestID);
-						MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+						FORMAT_STR(Buffer, "EditorID '%s' is already in use.", QuestID);
+						MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 
@@ -1438,13 +1498,13 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				}
 
 				if (strlen(ScriptID) < 1)
-					sprintf_s(ScriptID, sizeof(ScriptID), "%sScript", QuestID);
+					FORMAT_STR(ScriptID, "%sScript", QuestID);
 
 				Form = TESForm::LookupByEditorID(ScriptID);
 				if (Form)
 				{
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", ScriptID);
-					MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
+					FORMAT_STR(Buffer, "EditorID '%s' is already in use.", ScriptID);
+					MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONEXCLAMATION);
 					return TRUE;
 				}
 				else
@@ -1455,8 +1515,8 @@ LRESULT CALLBACK GlobalScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					_DATAHANDLER->SortScripts();
 					QuestScript->info.type = Script::kScriptType_Quest;
 
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tset fQuestDelayTime to %s\n\nend", ScriptID, Delay);
-					QuestScript->SetText(g_TextBuffer);
+					FORMAT_STR(Buffer, "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tset fQuestDelayTime to %s\n\nend", ScriptID, Delay);
+					QuestScript->SetText(Buffer);
 					QuestScript->SetEditorID(ScriptID);
 				}
 
@@ -1499,8 +1559,9 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			TESForm* Selection = (TESForm*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TESCOMBOBOX), hWnd, (DLGPROC)TESComboBoxDlgProc, (LPARAM)TESForm::kFormType_Cell);
 			if (Selection)
 			{
-				sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "%s (%08X)", Selection->editorID.c_str(), Selection->formID);
-				SetWindowText(SelParentCellBtn, (LPCSTR)g_TextBuffer);
+				char Buffer[0x200] = {0};
+				FORMAT_STR(Buffer, "%s (%08X)", Selection->editorID.c_str(), Selection->formID);
+				SetWindowText(SelParentCellBtn, (LPCSTR)Buffer);
 				SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)Selection);
 			}
 			break;
@@ -1522,12 +1583,13 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			{
 				char BaseEditorID[0x200] = {0};
 				char RefEditorID[0x200] = {0};
+				char Buffer[0x200] = {0};
 
 				Edit_GetText(EditorIDBox, BaseEditorID, 0x200);
 				if (TESForm::LookupByEditorID(BaseEditorID))
 				{
-					sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", BaseEditorID);
-					MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONERROR);
+					FORMAT_STR(Buffer, "EditorID '%s' is already in use.", BaseEditorID);
+					MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONERROR);
 				}
 				else
 				{
@@ -1570,8 +1632,8 @@ BOOL CALLBACK BindScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 							Edit_GetText(RefIDBox, RefEditorID, 0x200);
 							if (TESForm::LookupByEditorID(RefEditorID))
 							{
-								sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "EditorID '%s' is already in use.", RefEditorID);
-								MessageBox(hWnd, g_TextBuffer, "CSE", MB_OK|MB_ICONERROR);
+								FORMAT_STR(Buffer, "EditorID '%s' is already in use.", RefEditorID);
+								MessageBox(hWnd, Buffer, "CSE", MB_OK|MB_ICONERROR);
 							}
 							else
 							{
@@ -1656,7 +1718,7 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 	switch (uMsg)
 	{
 	case 0x407:			// Form Drag-Drop Notification
-		for (TESRenderSelection::SelectedObjectsEntry* Itr = (*g_TESRenderSelectionPrimary)->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+		for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 		{
 			TESForm* Form = Itr->Data;
 			ComponentDLLInterface::FormData Data(Form);
@@ -1664,7 +1726,7 @@ LRESULT CALLBACK TagBrowserSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 				break;
 		}
 
-		(*g_TESRenderSelectionPrimary)->ClearSelection();
+		_RENDERSEL->ClearSelection();
 		return TRUE;
 	}
 
@@ -1679,6 +1741,7 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	HWND TitleBox =  GetDlgItem(hWnd, EDIT_TITLE);
 	HWND CmdLineBox =  GetDlgItem(hWnd, EDIT_CMDLINE);
 	HWND InitDirBox =  GetDlgItem(hWnd, EDIT_INITDIR);
+	char Buffer[0x200] = {0};
 
 	switch (uMsg)
 	{
@@ -1734,9 +1797,9 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
 				if (Index != LB_ERR)
 				{
-					if (SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_TextBuffer) != LB_ERR)
+					if (SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)Buffer) != LB_ERR)
 					{
-						g_ToolManager.RemoveTool(g_TextBuffer, true);
+						g_ToolManager.RemoveTool(Buffer, true);
 						SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
 						SendMessage(hWnd, MANAGETOOLS_CLEAREDITFIELD, NULL, NULL);
 						SendMessage(ToolList, LB_SETSEL, FALSE, -1);
@@ -1750,7 +1813,7 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
 				if (Index != LB_ERR)
 				{
-					SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)g_TextBuffer);
+					SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)Buffer);
 					ToolManager::Tool* Tool = (ToolManager::Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
 
 					int NewIndex = 0;
@@ -1766,7 +1829,7 @@ BOOL CALLBACK ManageToolsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 					SendMessage(ToolList, LB_SETSEL, FALSE, Index);
 					SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
-					SendMessage(ToolList, LB_INSERTSTRING, NewIndex, (LPARAM)g_TextBuffer);
+					SendMessage(ToolList, LB_INSERTSTRING, NewIndex, (LPARAM)Buffer);
 					SendMessage(ToolList, LB_SETITEMDATA, NewIndex, (LPARAM)Tool);
 					SendMessage(ToolList, LB_SETSEL, TRUE, NewIndex);
 					SetFocus(ToolList);
@@ -1971,7 +2034,7 @@ BOOL CALLBACK CSASGlobalsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 							Global->SetValue(mup::Value(ValueBuffer));
 							break;
 						default:
-							assert(0);
+							assertR(0);
 							break;
 						}
 					}
@@ -1988,18 +2051,20 @@ BOOL CALLBACK CSASGlobalsDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					{
 						CSAutomationScript::ScriptVariable* Global = (CSAutomationScript::ScriptVariable*)SendMessage(GlobaList, LB_GETITEMDATA, Index, NULL);
 						SetWindowText(NameBox, (LPSTR)Global->GetName());
+						char Buffer[0x200] = {0};
 
 						switch (Global->GetDataType())
 						{
 						case CSAutomationScript::CSASDataElement::kParamType_Numeric:
 						case CSAutomationScript::CSASDataElement::kParamType_Reference:
-							SetWindowText(ValueBox, (LPSTR)PrintToBuffer("%0.6f", Global->GetValue().GetFloat() * 1.0));
+							FORMAT_STR(Buffer, "%0.6f", Global->GetValue().GetFloat() * 1.0);
+							SetWindowText(ValueBox, (LPSTR)Buffer);
 							break;
 						case CSAutomationScript::CSASDataElement::kParamType_String:
 							SetWindowText(ValueBox, (LPSTR)Global->GetValue().GetString().c_str());
 							break;
 						default:
-							assert(0);
+							assertR(0);
 							break;
 						}
 					}
@@ -2060,7 +2125,7 @@ LRESULT CALLBACK LandscapeTextureUseSubClassProc(HWND hWnd, UINT uMsg, WPARAM wP
 				*g_ActiveLandscapeEditTexture = CS_CAST(Texture, TESForm, TESLandTexture);
 				SendMessage(*g_HWND_LandscapeEdit, 0x41A, NULL, NULL);			// select the new texture in the landscape edit dialog
 				SetForegroundWindow(*g_HWND_RenderWindow);
-				PrintToRender("Active landscape texture changed", 3);
+				g_TXTChannelNotifications->Queue(3, "Active landscape texture changed");
 			}
 			break;
 		}
@@ -2092,7 +2157,7 @@ BOOL CALLBACK EditResultScriptDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			SetDlgItemText(Parent, 1444, (LPSTR)Buffer);
 
 			if (LOWORD(wParam) == BTN_COMPILE)
-				EndDialog(hWnd, (INT_PTR)1);
+				EndDialog(hWnd, 1);
 			else
 				EndDialog(hWnd, NULL);
 
@@ -2235,9 +2300,9 @@ void InitializeWindowManager(void)
 
 	HMENU SaveOptionsMenu = LoadMenu(g_DLLInstance, (LPSTR)IDR_MENU8); SaveOptionsMenu = GetSubMenu(SaveOptionsMenu, 0);
 	InsertMenu(FileMenu, 40127, MF_BYCOMMAND|MF_POPUP|MF_STRING, (UINT_PTR)SaveOptionsMenu, "Save Options");
-	if (g_INIManager->GetINIInt("SaveLoadedESPsAsMasters", "Extender::General"))
+	if (g_INIManager->GetINIInt("SaveLoadedESPsAsMasters", "Extender::Plugins"))
 		CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_SAVELOADEDESP, MF_CHECKED);
-	if (g_INIManager->GetINIInt("PreventTimeStampChanges", "Extender::General"))
+	if (g_INIManager->GetINIInt("PreventTimeStampChanges", "Extender::Plugins"))
 		CheckMenuItem(SaveOptionsMenu, ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS, MF_CHECKED);
 
 	ItemDataSaveAs.cbSize = sizeof(MENUITEMINFO);
@@ -2281,6 +2346,8 @@ void InitializeWindowManager(void)
 	SetTimer(*g_HWND_RenderWindow, 1, g_INIManager->GetINIInt("UpdatePeriod", "Extender::Renderer"), NULL);
 	g_TagBrowserOrgWindowProc = (WNDPROC)SetWindowLong(CLIWrapper::Interfaces::TAG->GetFormDropParentHandle(), GWL_WNDPROC, (LONG)TagBrowserSubClassProc);
 	g_DragDropSupportDialogs.AddHandle(CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
+
+	SetTimer(*g_HWND_CSParent, PERFCOUNTER_TIMER, 1000, NULL);
 
 	// make sure new controls, if any, are added to the main windows
 	TESDialog::DeinitializeCSWindows();

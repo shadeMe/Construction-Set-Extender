@@ -27,133 +27,112 @@ namespace ConstructionSetExtender
 			DeveloperURLMap = gcnew Dictionary<String^, String^>();
 			RemoteScripts = gcnew Dictionary<String^, Script^>();
 
-			DatabaseUpdateThread = gcnew BackgroundWorker();
-			DatabaseUpdateThread->DoWork += gcnew DoWorkEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_DoWork);
-			DatabaseUpdateThread->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted);
+			UpdateThreadTimerInterval = PREFERENCES->FetchSettingAsInt("DatabaseUpdateInterval", "IntelliSense");
 
-			UpdateThreadTimerInterval = 10;
-			DatabaseUpdateTimer = gcnew Timers::Timer(UpdateThreadTimerInterval * 60 * 1000);	// init to 10 minutes
-			DatabaseUpdateTimer->Elapsed += gcnew Timers::ElapsedEventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed);
-			DatabaseUpdateTimer->AutoReset = true;
-			DatabaseUpdateTimer->SynchronizingObject = nullptr;
-			ForceUpdateFlag = false;
+			DatabaseUpdateTimer = gcnew Timer();
+			DatabaseUpdateTimer->Tick += gcnew EventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_Tick);
+			DatabaseUpdateTimer->Interval = UpdateThreadTimerInterval * 60 * 1000;
+
+			DatabaseUpdateTimer->Start();
 		}
 
-		IntelliSenseDatabase::ParsedUpdateData^ IntelliSenseDatabase::InitializeDatabaseUpdate()
+		void IntelliSenseDatabase::DatabaseUpdateTimer_Tick(Object^ Sender, EventArgs^ E)
 		{
-			System::Diagnostics::Stopwatch^ Profiler = gcnew System::Diagnostics::Stopwatch();
-			Profiler->Start();
-
-			ParsedUpdateData^ Data = gcnew ParsedUpdateData();
-
-			ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetIntelliSenseUpdateData();
-
-			for (ComponentDLLInterface::ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr)
-			{
-				if (!Itr->IsValid())		continue;
-
-				Data->UDFList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
-			}
-
-			for (ComponentDLLInterface::QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr)
-			{
-				if (!Itr->IsValid())		continue;
-
-				Data->Enumerables->AddLast(gcnew IntelliSenseItemQuest(gcnew String(Itr->EditorID), gcnew String(Itr->FullName), gcnew String(Itr->ScriptName)));
-			}
-
-			for (ComponentDLLInterface::GlobalData* Itr = DataHandlerData->GlobalListHead; Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount; ++Itr)
-			{
-				if (!Itr->IsValid())		continue;
-
-				if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
-					Data->Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Int, IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
-				else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
-					Data->Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
-				else
-					Data->Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
-			}
-
-			for each (IntelliSenseItem^ Itr in Enumerables)
-			{
-				if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
-					Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST)
-				{
-					Data->Enumerables->AddLast(Itr);
-				}
-			}
-
-			for each (UserFunction^% Itr in Data->UDFList)
-			{
-				Data->Enumerables->AddLast(gcnew IntelliSenseItemUserFunction(Itr));
-			}
-
-			for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead; Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount; ++Itr)
-			{
-				if (!Itr->IsValid())		continue;
-
-				Data->Enumerables->AddLast(gcnew IntelliSenseItemEditorIDForm(Itr));
-			}
-
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(DataHandlerData, false);
-
-			Profiler->Stop();
-			return Data;
-		}
-
-		void IntelliSenseDatabase::FinalizeDatabaseUpdate(ParsedUpdateData^ Data)
-		{
-			UserFunctionList->Clear();
-			Enumerables->Clear();
-			RemoteScripts->Clear();
-
-			UserFunctionList = Data->UDFList;
-			Enumerables = Data->Enumerables;
-
-			NativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense database updated");
-		}
-
-		void IntelliSenseDatabase::DatabaseUpdateTimer_OnTimed(Object^ Sender, Timers::ElapsedEventArgs^ E)
-		{
-			if (ForceUpdateFlag)
-			{
-				DatabaseUpdateTimer->Interval = UpdateThreadTimerInterval * 60 * 1000;
-				ForceUpdateFlag = false;
-			}
-
 			UpdateDatabase();
-		}
-
-		void IntelliSenseDatabase::DatabaseUpdateThread_DoWork(Object^ Sender, DoWorkEventArgs^ E)
-		{
-			E->Result = InitializeDatabaseUpdate();
-		}
-
-		void IntelliSenseDatabase::DatabaseUpdateThread_RunWorkerCompleted(Object^ Sender, RunWorkerCompletedEventArgs^ E)
-		{
-			if (E->Error != nullptr)
-				DebugPrint("ISDatabaseUpdate thread raised an exception!\n\tException: " + E->Error->Message, true);
-			else if (E->Cancelled)
-				DebugPrint("Huh?! ISDatabaseUpdate thread was canceled", true);
-			else if (E->Result == nullptr)
-				DebugPrint("Something seriously went wrong when updating the IntelliSense database!", true);
-			else
-			{
-				FinalizeDatabaseUpdate(dynamic_cast<ParsedUpdateData^>(E->Result));
-			}
-
-			if (E->Result == nullptr)
-			{
-				NativeWrapper::WriteToMainWindowStatusBar(2, "Error encountered while updating IntelliSense database !");
-			}
 		}
 
 		void IntelliSenseDatabase::UpdateDatabase()
 		{
-			if (!DatabaseUpdateThread->IsBusy && NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CanUpdateIntelliSenseDatabase())
+			if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CanUpdateIntelliSenseDatabase())
 			{
-				DatabaseUpdateThread->RunWorkerAsync();
-				NativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense database ...");
+				System::Diagnostics::Stopwatch^ Profiler = gcnew System::Diagnostics::Stopwatch();
+				Profiler->Start();
+
+				try
+				{
+					NativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense DB...");
+
+					LinkedList<UserFunction^>^ ParsedUDFList = gcnew LinkedList<UserFunction^>();
+					LinkedList<IntelliSenseItem^>^ ParsedEnumerables = gcnew LinkedList<IntelliSenseItem^>();
+					ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetIntelliSenseUpdateData();
+
+					for (ComponentDLLInterface::ScriptData* Itr = DataHandlerData->ScriptListHead; Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount; ++Itr)
+					{
+						if (!Itr->IsValid())
+							continue;
+
+						ParsedUDFList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
+					}
+					for (ComponentDLLInterface::QuestData* Itr = DataHandlerData->QuestListHead; Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount; ++Itr)
+					{
+						if (!Itr->IsValid())
+							continue;
+
+						ParsedEnumerables->AddLast(gcnew IntelliSenseItemQuest(gcnew String(Itr->EditorID), gcnew String(Itr->FullName), gcnew String(Itr->ScriptName)));
+					}
+
+					for (ComponentDLLInterface::GlobalData* Itr = DataHandlerData->GlobalListHead; Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount; ++Itr)
+					{
+						if (!Itr->IsValid())
+							continue;
+
+						if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
+							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Int, IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
+						else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
+							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
+						else
+							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
+					}
+
+					for each (IntelliSenseItem^ Itr in Enumerables)
+					{
+						if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
+							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST)
+						{
+							ParsedEnumerables->AddLast(Itr);
+						}
+					}
+
+					for each (UserFunction^ Itr in ParsedUDFList)
+					{
+						ParsedEnumerables->AddLast(gcnew IntelliSenseItemUserFunction(Itr));
+					}
+
+					for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead; Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount; ++Itr)
+					{
+						if (!Itr->IsValid())
+							continue;
+
+						ParsedEnumerables->AddLast(gcnew IntelliSenseItemEditorIDForm(Itr));
+					}
+					
+					UserFunctionList->Clear();
+					Enumerables->Clear();
+					RemoteScripts->Clear();
+
+					delete UserFunctionList;
+					delete Enumerables;
+
+					UserFunctionList = ParsedUDFList;
+					Enumerables = ParsedEnumerables;
+
+					NativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB updated.");
+					NativeWrapper::WriteToMainWindowStatusBar(3, "[" +
+									Profiler->ElapsedMilliseconds.ToString() + "ms | " +
+									DataHandlerData->ScriptCount + " UDFs | " +
+									DataHandlerData->QuestCount + " Quests | " + 
+									DataHandlerData->GlobalCount + " Globals | " +
+									DataHandlerData->EditorIDCount + " Forms" +
+									"]");		
+					NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(DataHandlerData, false);		
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Couldn't update IntelliSense DB!\n\tException: " + E->Message, true);
+					NativeWrapper::WriteToMainWindowStatusBar(2, "Error encountered while updating IntelliSense DB!");
+				}
+
+				Profiler->Stop();
 			}
 		}
 
@@ -471,19 +450,8 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseDatabase::ForceUpdateDatabase()
 		{
-			ForceUpdateFlag = true;
-			DatabaseUpdateTimer->Interval = 500;
-		}
-
-		void IntelliSenseDatabase::InitializeDatabaseUpdateThread()
-		{
-			static bool DatabaseTimerInitialized = false;
-			if (DatabaseTimerInitialized)
-				return;
-
-			UpdateThreadTimerInterval = PREFERENCES->FetchSettingAsInt("DatabaseUpdateInterval", "IntelliSense");
 			DatabaseUpdateTimer->Start();
-			DatabaseTimerInitialized = true;
+			UpdateDatabase();
 		}
 
 		IntelliSenseItem^ IntelliSenseDatabase::LookupRemoteScriptVariable( String^ BaseEditorID, String^ Variable )

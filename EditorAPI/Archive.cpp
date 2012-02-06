@@ -64,7 +64,7 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 				DeleteFile(FileOut.c_str());		// delete file as BSFile::Ctor doesn't create it anew
 
 				BSFile* TempFile = BSFile::CreateInstance(FileOut.c_str(), NiFile::kFileMode_WriteOnly, FileSize);
-				assert(TempFile);
+				assertR(TempFile);
 
 				void* Buffer = FormHeap_Allocate(FileSize);
 				ZeroMemory(Buffer, FileSize);

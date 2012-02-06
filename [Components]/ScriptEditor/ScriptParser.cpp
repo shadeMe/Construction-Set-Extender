@@ -11,6 +11,22 @@ namespace ConstructionSetExtender
 		Indices = gcnew List<UInt32>();
 		Delimiters = gcnew List<Char>();
 		Valid = true;
+
+		ReferenceDelimiters = gcnew String(ScriptTextDelimiters);
+		ReferenceControlChars = gcnew String(ScriptTextControlChars);
+	}
+
+	ScriptParser::ScriptParser( String^ ReferenceDelimiters, String^ ReferenceControlChars )
+	{
+		Variables = gcnew LinkedList<VariableRefCountData^>();
+		BlockStack = gcnew Stack<BlockType>();
+		Tokens = gcnew List<String^>();
+		Indices = gcnew List<UInt32>();
+		Delimiters = gcnew List<Char>();
+		Valid = true;
+
+		this->ReferenceDelimiters = gcnew String(ReferenceDelimiters);
+		this->ReferenceControlChars = gcnew String(ReferenceControlChars);
 	}
 
 	bool ScriptParser::GetIsPlayerToken(String^% Source)
@@ -82,7 +98,7 @@ namespace ConstructionSetExtender
 
 		for each (Char Itr in Source)
 		{
-			if (ScriptTextControlChars->IndexOf(Itr) == -1)
+			if (ReferenceControlChars->IndexOf(Itr) == -1)
 			{
 				StartPos = Source->IndexOf(Itr);
 				break;
@@ -94,10 +110,10 @@ namespace ConstructionSetExtender
 
 		LastPos = StartPos;
 
-		String^ TokenString = Source->Substring(StartPos), ^%DelimiterStr = ScriptTextDelimiters, ^Token, ^Delimiter;
-		while (TokenString->IndexOfAny(DelimiterStr->ToCharArray()) != -1)
+		String^ TokenString = Source->Substring(StartPos), ^Token, ^Delimiter;
+		while (TokenString->IndexOfAny(ReferenceDelimiters->ToCharArray()) != -1)
 		{
-			int Idx = TokenString->IndexOfAny(DelimiterStr->ToCharArray());
+			int Idx = TokenString->IndexOfAny(ReferenceDelimiters->ToCharArray());
 			if (TokenString[0] == '\"')
 			{
 				if (TokenString->IndexOf('\"', 1) != -1)

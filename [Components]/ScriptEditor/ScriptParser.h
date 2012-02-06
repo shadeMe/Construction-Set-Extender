@@ -103,8 +103,11 @@ namespace ConstructionSetExtender
 		List<UInt32>^										Indices;											// the position of each token relative to its parent line
 		List<Char>^											Delimiters;
 		bool												Valid;
+		String^												ReferenceDelimiters;
+		String^												ReferenceControlChars;
 
 		ScriptParser();
+		ScriptParser(String^ ReferenceDelimiters, String^ ReferenceControlChars);
 		virtual ~ScriptParser()
 		{
 			Reset();

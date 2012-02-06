@@ -135,7 +135,7 @@ namespace CSAutomationScript
 			{
 				ScriptParser::TokenType FirstToken = Tokenizer.GetFirstTokenType();
 
-				assert(!(GetTokenInMask(AuxPrologTokenMask, FirstToken) && GetTokenInMask(EpilogTokenMask, FirstToken)));
+				assertR(!(GetTokenInMask(AuxPrologTokenMask, FirstToken) && GetTokenInMask(EpilogTokenMask, FirstToken)));
 
 				if (!GotProlog && PrologToken == FirstToken)
 				{
@@ -255,7 +255,7 @@ namespace CSAutomationScript
 
 	void LoopBlock::EndLoopExecution(ScriptRunner* Executor)
 	{
-		assert(Executor->GetExecutingContext()->PopLoop() == this);
+		assertR(Executor->GetExecutingContext()->PopLoop() == this);
 		State = kState_Default;
 	}
 
@@ -495,7 +495,7 @@ namespace CSAutomationScript
 		CodeParser = *PrimaryParser;
 		CodeParser.SetExpr(GetConditionExpression());
 
-		*BlockEndOut = this->EndLineNumber - 1;	// one less than the actual end line, in order to not skip else/elseIf tokens that act as the epilog declarant
+		*BlockEndOut = this->EndLineNumber - 1;	// one less than the actual end line, in order to not skip else/elseIf tokens that act as the epilog declarator
 	}
 
 	bool ElseIfBlock::Execute(ScriptRunner* Executor)
@@ -596,7 +596,7 @@ namespace CSAutomationScript
 						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
 						continue;
 					}
-					else if (State = kState_Break)
+					else if (State == kState_Break)
 					{
 						State = kState_Default;
 						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
@@ -689,12 +689,12 @@ namespace CSAutomationScript
 			mup::Value& Buffer = const_cast<mup::Value&>(BufferVar->GetValue());
 
 			mup::Value ExpressionArray = CodeParser.Eval();
-			if (!ExpressionArray.IsArray())
+			if (!ExpressionArray.IsMatrix())
 				throw std::exception("Non-array value returned by FOREACH expression");
 
-			for (mup::array_type::const_iterator Itr = ExpressionArray.GetArray().begin(); Itr != ExpressionArray.GetArray().end(); Itr++)
+			for (int i = 0; i < ExpressionArray.GetRows(); i++)
 			{
-				Buffer = *Itr;
+				Buffer = ExpressionArray.At(i, 0);
 
 				if (!RunCode(Executor))
 				{
@@ -704,7 +704,7 @@ namespace CSAutomationScript
 						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);
 						continue;
 					}
-					else if (State = kState_Break)
+					else if (State == kState_Break)
 					{
 						State = kState_Default;
 						Executor->GetExecutingContext()->SetExecutionState(ScriptContext::kExecutionState_Default);

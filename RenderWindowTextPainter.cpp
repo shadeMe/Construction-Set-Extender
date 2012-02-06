@@ -1,103 +1,202 @@
 #include "RenderWindowTextPainter.h"
-#include "ElapsedTimeCounter.h"
 
 RenderWindowTextPainter*			RenderWindowTextPainter::Singleton = NULL;
 
-RenderWindowTextPainter::RenderChannelBase::RenderChannelBase( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, DWORD Color, RECT* DrawArea )
+RenderChannelBase::Parameters::Parameters( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags )
 {
+	this->FontHeight = FontHeight;
+	this->FontWidth = FontWidth;
+	this->FontWeight = FontWeight;
 	this->Color = Color;
+	this->DrawAreaFlags = DrawAreaFlags;
+	this->DrawFormat = DrawFormat;
 
-	this->DrawArea.left = DrawArea->left;
-	this->DrawArea.right = DrawArea->right;
-	this->DrawArea.top = DrawArea->top;
-	this->DrawArea.bottom = DrawArea->bottom;
+	sprintf_s(this->FontFace, sizeof(this->FontFace), "%s", FontFace);
+	memcpy(&this->DrawArea, DrawArea, sizeof(RECT));
+}
 
-	this->Valid = false;
-	if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, FontHeight, FontWidth, FontWeight, 0, FALSE,
+RenderChannelBase::RenderChannelBase( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags )
+	: Font(NULL), Valid(false), InputParams(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags)
+{
+	Create();
+}
+
+bool RenderChannelBase::Create()
+{
+	Valid = false;
+
+	memcpy(&RenderArea, &InputParams.DrawArea, sizeof(RECT));
+	if (InputParams.DrawAreaFlags)
+	{
+		tagRECT RenderWindowBounds;
+		GetClientRect(*g_HWND_RenderWindow, &RenderWindowBounds);
+		UInt32 RenderWindowWidth = RenderWindowBounds.right,
+				RenderWindowHeight = RenderWindowBounds.bottom;
+
+		if ((InputParams.DrawAreaFlags & kDrawAreaFlags_RightAligned))
+		{
+			RenderArea.left =  RenderWindowWidth + InputParams.DrawArea.left;
+			RenderArea.right =  RenderWindowWidth;
+		}
+
+		if ((InputParams.DrawAreaFlags & kDrawAreaFlags_BottomAligned))
+		{
+			RenderArea.top = RenderWindowHeight + InputParams.DrawArea.top;
+			RenderArea.bottom = RenderWindowHeight;
+		}
+	}
+
+	if (FAILED(D3DXCreateFont((*g_CSRenderer)->device, InputParams.FontHeight, InputParams.FontWidth, InputParams.FontWeight, 0, FALSE,
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		DEFAULT_PITCH|FF_DONTCARE, (LPCTSTR)FontFace, &Font)))
+		DEFAULT_PITCH|FF_DONTCARE, (LPCTSTR)InputParams.FontFace, &Font)))
 	{
-		DebugPrint("Failed to create font for RenderChannelBase!");
-		return;
+		DebugPrint("Failed to create font for RenderChannelBase %08X!", this);
 	}
-	this->Valid = true;
+	else 
+		Valid = true;
+
+	return Valid;
 }
 
-void RenderWindowTextPainter::StaticRenderChannel::Render()
+void RenderChannelBase::Release()
+{
+	SAFERELEASE_D3D(Font);
+	Valid = false;
+}
+
+bool RenderChannelBase::GetIsValid() const
+{
+	return Valid;
+}
+
+RenderChannelBase::~RenderChannelBase()
+{
+	Release();
+}
+
+StaticRenderChannel::StaticRenderChannel( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= 0*/, RenderHandler RenderCallback )
+	: RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags), RenderText(""), RenderCallback(RenderCallback)
+{
+	;//
+}
+
+StaticRenderChannel::~StaticRenderChannel()
+{
+	;//
+}
+
+void StaticRenderChannel::Render(void* Parameter, LPD3DXSPRITE RenderToSprite)
+{
+	if (Valid == false || RenderCallback == NULL)
+		return;
+
+	RenderText.clear();
+	if (RenderCallback(RenderText) == false)
+		return;
+
+	Font->DrawTextA(RenderToSprite, RenderText.c_str(), -1, &RenderArea, InputParams.DrawFormat, InputParams.Color);
+}
+
+DynamicRenderChannel::QueueTask::QueueTask( const char* Text, float SecondsToDisplay )
+	: Text(Text), RemainingTime(SecondsToDisplay)
+{
+	;//
+}
+
+DynamicRenderChannel::DynamicRenderChannel( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= 0*/ )
+	: RenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags), RenderQueue()
+{
+	;//
+}
+
+DynamicRenderChannel::~DynamicRenderChannel()
+{
+	Release();
+}
+
+void DynamicRenderChannel::Render(void* Parameter, LPD3DXSPRITE RenderToSprite)
 {
 	if (Valid == false)
 		return;
-	else if (TextToRender.length() < 1)
+	else if (RenderQueue.size() < 1 || Parameter == NULL)
 		return;
 
-	Font->DrawTextA(NULL, TextToRender.c_str(), -1, &DrawArea, 0, Color);
-}
+	long double TimePassed = *((long double*)Parameter);
+	QueueTask* CurrentTask = RenderQueue.front();
 
-void RenderWindowTextPainter::StaticRenderChannel::Queue(const char* Text)
-{
-	if (Valid == false)
-		return;
-
-	if (Text)
-		TextToRender = Text;
-	else
-		TextToRender.clear();
-}
-
-void RenderWindowTextPainter::DynamicRenderChannel::Render()
-{
-	if (Valid == false)
-		return;
-	else if (DrawQueue.size() < 1)
-		return;
-
-	QueueTask* CurrentTask = DrawQueue.front();
-
-	if (CurrentTask->RemainingTime > 0)
+	if (CurrentTask->RemainingTime > 0.0)
 	{
-		Font->DrawTextA(NULL, CurrentTask->Text.c_str(), -1, &DrawArea, 0, Color);
-		CurrentTask->RemainingTime -= g_RenderWindowTimeManager.GetTimePassedSinceLastUpdate() / 1000.0;
+		Font->DrawTextA(RenderToSprite, CurrentTask->Text.c_str(), -1, &RenderArea, InputParams.DrawFormat, InputParams.Color);
+		CurrentTask->RemainingTime -= TimePassed / 1000.0;
 	}
 	else
 	{
 		delete CurrentTask;
-		DrawQueue.pop();
+		RenderQueue.pop();
 	}
 }
 
-void RenderWindowTextPainter::DynamicRenderChannel::Queue(const char* Text, long double SecondsToDisplay)
+void DynamicRenderChannel::Release()
 {
 	if (Valid == false)
 		return;
 
-	if (GetQueueSize() == 0)
-		g_RenderWindowTimeManager.Update();
-
-	if (Text && SecondsToDisplay > 0)
-		DrawQueue.push(new QueueTask(Text, SecondsToDisplay));
-}
-
-void RenderWindowTextPainter::DynamicRenderChannel::Release()
-{
-	if (Valid == false)
-		return;
-
-	while (DrawQueue.size())
+	while (RenderQueue.size())
 	{
-		QueueTask* CurrentTask = DrawQueue.front();
+		QueueTask* CurrentTask = RenderQueue.front();
 		delete CurrentTask;
-		DrawQueue.pop();
+		RenderQueue.pop();
 	}
 
 	RenderChannelBase::Release();
 }
 
-RenderWindowTextPainter::RenderWindowTextPainter()
+bool DynamicRenderChannel::Queue( float SecondsToDisplay, const char* Format, ... )
 {
-	RenderChannel1 = NULL;
-	RenderChannel2 = NULL;
-	Valid = false;
-	SkipFrame = false;
+	if (Valid == false || Format == NULL)
+		return false;
+	
+	char Buffer[0x200] = {0};
+	va_list Args;
+	va_start(Args, Format);
+	vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
+	va_end(Args);
+
+	if (strlen(Buffer) && SecondsToDisplay > 0)
+		RenderQueue.push(new QueueTask(Buffer, SecondsToDisplay));
+	else
+		return false;
+
+	return true;
+}
+
+UInt32 DynamicRenderChannel::GetQueueSize() const
+{
+	return RenderQueue.size();
+}
+
+RenderWindowTextPainter::RenderWindowTextPainter()
+	: RegisteredChannels(), RenderWindowTimeCounter(), RenderToSprite(NULL), Enabled(true)
+{
+	ReleaseSprite(true);
+	RenderWindowTimeCounter.Update();
+}
+
+bool RenderWindowTextPainter::LookupRenderChannel( RenderChannelBase* Channel, RenderChannelListT::iterator& MatchIterator )
+{
+	bool Result = false;
+
+	for (RenderChannelListT::iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
+	{
+		if (*Itr == Channel)
+		{
+			MatchIterator = Itr;
+			Result = true;
+			break;
+		}
+	}
+
+	return Result;
 }
 
 RenderWindowTextPainter* RenderWindowTextPainter::GetSingleton(void)
@@ -108,91 +207,106 @@ RenderWindowTextPainter* RenderWindowTextPainter::GetSingleton(void)
 	return Singleton;
 }
 
-bool RenderWindowTextPainter::Initialize()
-{
-	if (Valid)
-		return true;
-
-	RECT DrawRect;
-	DrawRect.left = 3;
-	DrawRect.top = 3;
-	DrawRect.right = 1280;
-	DrawRect.bottom = 600;
-	RenderChannel1 = new StaticRenderChannel(20, 0, FW_MEDIUM, "Consolas", D3DCOLOR_ARGB(220, 189, 237, 99), &DrawRect);
-
-	DrawRect.top += 350;
-	RenderChannel2 = new DynamicRenderChannel(20, 0, FW_MEDIUM, "Consolas", D3DCOLOR_ARGB(220, 190, 35, 47), &DrawRect);
-
-	if (RenderChannel1->GetIsValid() == false || RenderChannel2->GetIsValid() == false)
-		Valid = false;
-	else
-		Valid = true;
-
-	return Valid;
-}
-
-void RenderWindowTextPainter::Release()
-{
-	if (!RenderChannel1 || !RenderChannel2)
-		return;
-
-	RenderChannel1->Release();
-	RenderChannel2->Release();
-
-	delete RenderChannel1;
-	delete RenderChannel2;
-
-	Valid = false;
-}
-
 void RenderWindowTextPainter::Render()
 {
-	if (Valid == false)
-		return;
-	else if (SkipFrame)
-	{
-		SkipFrame = false;
-		return;
-	}
+	RenderWindowTimeCounter.Update();
 
-	RenderChannel1->Render();
-	RenderChannel2->Render();
-}
-
-void RenderWindowTextPainter::QueueDrawTask(UInt8 Channel, const char* Text, long double SecondsToDisplay)
-{
-	if (Valid == false)
+	if (Enabled == false || RenderToSprite == NULL)
 		return;
 
-	switch (Channel)
-	{
-	case kRenderChannel_1:
-		RenderChannel1->Queue(Text);
-		break;
-	case kRenderChannel_2:
-		RenderChannel2->Queue(Text, SecondsToDisplay);
-		break;
-	}
+	long double TimePassed = RenderWindowTimeCounter.GetTimePassedSinceLastUpdate();
+
+	RenderToSprite->Begin(D3DXSPRITE_ALPHABLEND|D3DXSPRITE_SORT_TEXTURE);
+	for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
+		(*Itr)->Render(&TimePassed, RenderToSprite);
+	RenderToSprite->End();
 }
 
-UInt32 RenderWindowTextPainter::GetRenderChannelQueueSize(UInt8 Channel)
+bool RenderWindowTextPainter::Release( bool Recreate )
 {
-	if (Valid == false)
-		return 0;
+	bool Result = ReleaseSprite(Recreate);
 
-	switch (Channel)
+	for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 	{
-	case kRenderChannel_1:
-		return RenderChannel1->GetQueueSize();
-	case kRenderChannel_2:
-		return RenderChannel2->GetQueueSize();
+		(*Itr)->Release();
+
+		if (Recreate)
+		{
+			if ((*Itr)->Create() == false)
+				Result = false;
+		}
 	}
 
-	return 0;
+	return Result;
 }
 
-bool RenderWindowTextPainter::Recreate()
+bool RenderWindowTextPainter::RegisterRenderChannel( RenderChannelBase* Channel )
 {
-	Release();
-	return Initialize();
+	RenderChannelListT::iterator Match;
+	if (LookupRenderChannel(Channel, Match) == false)
+	{
+		RegisteredChannels.push_back(Channel);
+		return true;
+	}
+	else
+		return false;
+}
+
+bool RenderWindowTextPainter::UnregisterRenderChannel( RenderChannelBase* Channel )
+{
+	RenderChannelListT::iterator Match;
+	if (LookupRenderChannel(Channel, Match))
+	{
+		delete Channel;
+		RegisteredChannels.erase(Match);
+		return true;
+	}
+	else
+		return false;
+}
+
+void RenderWindowTextPainter::SetEnabled( bool State )
+{
+	Enabled = State;
+}
+
+bool RenderWindowTextPainter::GetEnabled( void ) const
+{
+	return Enabled;
+}
+
+bool RenderWindowTextPainter::GetHasActiveTasks( void ) const
+{
+	for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
+	{
+		DynamicRenderChannel* Dynamic = dynamic_cast<DynamicRenderChannel*>(*Itr);
+		if (Dynamic && Dynamic->GetQueueSize())
+			return true;
+	}
+
+	return false;
+}
+
+void RenderWindowTextPainter::Deinitialize()
+{
+	for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
+		delete *Itr;
+
+	RegisteredChannels.clear();
+}
+
+bool RenderWindowTextPainter::ReleaseSprite( bool Recreate /*= true*/ )
+{
+	bool Result = true;
+	SAFERELEASE_D3D(RenderToSprite);
+
+	if (Recreate)
+	{
+		if (FAILED(D3DXCreateSprite(_RENDERER->device, &RenderToSprite)))
+		{
+			DebugPrint("Failed to create sprite for RenderTextWindowPainter");
+			Result = false;
+		}
+	}
+	return Result;
 }

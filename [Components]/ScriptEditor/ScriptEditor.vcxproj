@@ -20,7 +20,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>true</CLRSupport>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -81,7 +81,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -92,6 +92,11 @@
       <ForcedIncludeFiles>$(ProjectDir)Prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <ShowIncludes>false</ShowIncludes>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <AdditionalDependencies>
@@ -163,6 +168,7 @@
     <ClCompile Include="AvalonEditComponents.cpp" />
     <ClCompile Include="AvalonEditTextEditor.cpp" />
     <ClCompile Include="AvalonEditXSHD.cpp" />
+    <ClCompile Include="FindReplaceDialog.cpp" />
     <ClCompile Include="IntelliSense\IntelliSenseDatabase.cpp" />
     <ClCompile Include="IntelliSense\IntelliSenseInterface.cpp" />
     <ClCompile Include="IntelliSense\IntelliSenseItem.cpp" />
@@ -174,6 +180,7 @@
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptEditor.cpp" />
     <ClCompile Include="ScriptEditorManager.cpp" />
+    <ClCompile Include="SnippetManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h" />
@@ -181,6 +188,7 @@
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="AvalonEditComponents.h" />
+    <ClInclude Include="FindReplaceDialog.h" />
     <ClInclude Include="IntelliSense\IntelliSenseDatabase.h" />
     <ClInclude Include="IntelliSense\IntelliSenseInterface.h" />
     <ClInclude Include="IntelliSense\IntelliSenseItem.h" />
@@ -203,6 +211,7 @@
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="ScriptEditor.h" />
     <ClInclude Include="ScriptEditorManager.h" />
+    <ClInclude Include="SnippetManager.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images.resx">

@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "VersionInfo.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -51,8 +52,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,1,0,0
- PRODUCTVERSION 5,1,0,0
+ FILEVERSION CSE_VERSION_INTEGER,CSE_VERSION_INTEGER_MINOR,CSE_VERSION_INTEGER_BETA,0
+ PRODUCTVERSION CSE_VERSION_INTEGER,CSE_VERSION_INTEGER_MINOR,CSE_VERSION_INTEGER_BETA,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,12 +71,12 @@ BEGIN
             VALUE "Comments", "A plugin for the Oblivion Script Extender"
             VALUE "CompanyName", "Imitation Camel"
             VALUE "FileDescription", "Construction Set Extender Dynamic Link Library"
-            VALUE "FileVersion", "5, 1, 0, 0"
+            VALUE "FileVersion", CSE_VERSION_VERSTRING
             VALUE "InternalName", "Construction Set Extender"
             VALUE "LegalCopyright", "Copyright (C) 2010"
             VALUE "OriginalFilename", "Construction Set Extender.dll"
             VALUE "ProductName", "Construction Set Extender Dynamic Link Library"
-            VALUE "ProductVersion", "5, 1, 0, 0"
+            VALUE "ProductVersion", CSE_VERSION_VERSTRING
         END
     END
     BLOCK "VarFileInfo"
@@ -483,6 +484,7 @@ BEGIN
     BEGIN
         MENUITEM "Manage Global Data",          ID_CSAS_GLOBALDATA
         MENUITEM SEPARATOR
+        MENUITEM "Execute Global Scripts",      ID_CSAS_EXECUTEGLOBALSCRIPTS
         MENUITEM "Reload Global Scripts and Data", ID_CSAS_RELOADGLOBALSCRIPTS
     END
 END

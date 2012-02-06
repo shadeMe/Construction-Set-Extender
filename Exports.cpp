@@ -42,10 +42,10 @@ const char* GetAppPath(void)
 
 void WriteToStatusBar(int PanelIndex, const char* Message)
 {
-	if (PanelIndex < 0 || PanelIndex > 2)
-		PanelIndex = 2;
+	if (PanelIndex < 0 || PanelIndex > 3)
+		PanelIndex = 3;
 
-	TESDialog::WriteToStatusBar(MAKEWPARAM(PanelIndex, 0), (LPARAM)Message);
+	TESDialog::WriteToStatusBar(MAKEWPARAM(PanelIndex, 0), Message);
 }
 
 HWND GetCSMainWindowHandle(void)
@@ -155,7 +155,7 @@ void ShowUseReportDialog(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
 	if (Form)
-		CreateDialogParam(*g_TESCS_Instance, (LPCSTR)TESDialog::kDialogTemplate_UseReport, NULL, g_FormUseReport_DlgProc, (LPARAM)Form);
+		TESDialog::ShowUseReportDialog(Form);
 }
 
 void SaveActivePlugin(void)
@@ -191,18 +191,20 @@ ScriptData* CreateNewScript(void)
 bool CompileScript(ScriptCompileData* Data)
 {
 	Script* ScriptForm = CS_CAST(Data->Script.ParentForm, TESForm, Script);
+	char Buffer[0x200] = {0};
 
 	if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted))
 	{
+		FORMAT_STR(Buffer, "Script %s {%08X} has been deleted and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
 		MessageBox(*g_HWND_CSParent,
-					PrintToBuffer("Script %s {%08X} has been deleted and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID),
+					Buffer,
 					"CSE Script Editor",
 					MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST|MB_SETFOREGROUND);
 		Data->CompileResult = false;
 	}
 	else
 	{
-		BSStringT* OldText = BSStringT::CreateInstance(ScriptForm->text);
+		BSString* OldText = BSString::CreateInstance(ScriptForm->text);
 
 		ScriptForm->info.type = Data->Script.Type;
 		ScriptForm->UpdateUsageInfo();
@@ -339,10 +341,16 @@ void DestroyScriptInstance(void* CurrentScript)
 
 void SaveEditorBoundsToINI(UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
-	WritePrivateProfileString("General", "Script Edit X", PrintToBuffer("%d", Left), g_CSINIPath);
-	WritePrivateProfileString("General", "Script Edit Y", PrintToBuffer("%d", Top), g_CSINIPath);
-	WritePrivateProfileString("General", "Script Edit W", PrintToBuffer("%d", Width), g_CSINIPath);
-	WritePrivateProfileString("General", "Script Edit H", PrintToBuffer("%d", Height), g_CSINIPath);
+	char Buffer[0x200] = {0};
+
+	FORMAT_STR(Buffer, "%d", Left);
+	WritePrivateProfileString("General", "Script Edit X", Buffer, g_CSINIPath);
+	FORMAT_STR(Buffer, "%d", Top);
+	WritePrivateProfileString("General", "Script Edit Y", Buffer, g_CSINIPath);
+	FORMAT_STR(Buffer, "%d", Width);
+	WritePrivateProfileString("General", "Script Edit W", Buffer, g_CSINIPath);
+	FORMAT_STR(Buffer, "%d", Height);
+	WritePrivateProfileString("General", "Script Edit H", Buffer, g_CSINIPath);
 }
 
 ScriptListData* GetScriptList(void)
@@ -654,13 +662,12 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		if (TestData.UDF)	ScriptCount++;
 	}
 
-	void* Unk01 = thisCall<void*>(0x0051F920, g_FormEditorIDMap);
-	while (Unk01)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = g_FormEditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
 
-		thisCall<UInt32>(0x005E0F90, g_FormEditorIDMap, &Unk01, &EditorID, &Form);
+		g_FormEditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
@@ -709,13 +716,12 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		GlobalCount++;
 	}
 
-	Unk01 = thisCall<void*>(0x0051F920, g_FormEditorIDMap);
-	while (Unk01)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = g_FormEditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
 
-		thisCall<UInt32>(0x005E0F90, g_FormEditorIDMap, &Unk01, &EditorID, &Form);
+		g_FormEditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
@@ -759,8 +765,9 @@ void BindScript(const char* EditorID, HWND Parent)
 			ScriptForm->AddCrossReference(Form);
 			Form->SetFromActiveFile(true);
 
-			sprintf_s(g_TextBuffer, sizeof(g_TextBuffer), "Script '%s' bound to form '%s'", ScriptForm->editorID.c_str(), Form->editorID.c_str());
-			MessageBox(Parent, g_TextBuffer, "CSE Script Editor", MB_OK|MB_ICONINFORMATION);
+			char Buffer[0x200] = {0};
+			FORMAT_STR(Buffer, "Script '%s' bound to form '%s'", ScriptForm->editorID.c_str(), Form->editorID.c_str());
+			MessageBox(Parent, Buffer, "CSE Script Editor", MB_OK|MB_ICONINFORMATION);
 		}
 	}
 }
@@ -829,6 +836,8 @@ UseInfoListFormData* GetLoadedForms(void)
 {
 	UseInfoListFormData* Result = new UseInfoListFormData();
 
+	TESDialog::WriteToStatusBar(2, "Initializing Use Info List...");
+
 	UInt32 TotalFormCount = _DATAHANDLER->objects->objectCount;
 	TotalFormCount += _DATAHANDLER->packages.Count();
 	TotalFormCount += _DATAHANDLER->worldSpaces.Count();
@@ -889,6 +898,7 @@ UseInfoListFormData* GetLoadedForms(void)
 	AddLinkedListContentsToFormList(&_DATAHANDLER->effectShaders, (FormListData*)Result, Index);
 	AddLinkedListContentsToFormList(&_DATAHANDLER->objectAnios, (FormListData*)Result, Index);
 
+	TESDialog::WriteToStatusBar(2, "Use Info List Initialized.");
 	return Result;
 }
 
@@ -941,7 +951,7 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 
 					Result->UseInfoListCellItemListHead[i].EditorID = Data->cell->editorID.c_str();
 					Result->UseInfoListCellItemListHead[i].FormID = Data->cell->formID;
-					Result->UseInfoListCellItemListHead[i].Flags = Data->cell->cellFlags24 & TESObjectCELL::kCellFlags_Interior;
+					Result->UseInfoListCellItemListHead[i].Flags = Data->cell->cellFlags & TESObjectCELL::kCellFlags_Interior;
 					Result->UseInfoListCellItemListHead[i].WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorID.c_str());
 					Result->UseInfoListCellItemListHead[i].RefEditorID = ((!FirstRef || !FirstRef->editorID.c_str())?"<Unnamed>":FirstRef->editorID.c_str());
 					Result->UseInfoListCellItemListHead[i].XCoord = Data->cell->cellData.coords->x;
@@ -1019,7 +1029,7 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 
 		if (ValidRecipient)
 		{
-			(*g_TESRenderSelectionPrimary)->ClearSelection(true);
+			_RENDERSEL->ClearSelection(true);
 
 			for (int i = 0; i < Data->FormCount; i++)
 			{
@@ -1032,7 +1042,7 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 					DebugPrint(Console::e_TAG, "Couldn't find form '%08X'!", FormID);
 					continue;
 				}
-				(*g_TESRenderSelectionPrimary)->AddToSelection(Form);
+				_RENDERSEL->AddToSelection(Form);
 			}
 
 			HWND Parent = GetParent(Window);

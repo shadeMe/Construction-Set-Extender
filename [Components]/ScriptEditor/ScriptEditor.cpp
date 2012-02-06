@@ -1,7 +1,8 @@
 #include "ScriptEditor.h"
 #include "ScriptEditorManager.h"
-#include "IntelliSense\IntelliSenseDatabase.h"
 #include "RefactorTools.h"
+#include "AvalonEditTextEditor.h"
+#include "IntelliSense\IntelliSenseDatabase.h"
 
 #include "[Common]\HandShakeStructs.h"
 #include "[Common]\ListViewUtilities.h"
@@ -120,7 +121,7 @@ namespace ConstructionSetExtender
 			SortTabsButtonClickHandler = gcnew EventHandler(this, &WorkspaceContainer::SortTabsButton_Click);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &WorkspaceContainer::ScriptEditorPreferences_Saved);
 
-			EditorForm = gcnew AnimatedForm(0.25);
+			EditorForm = gcnew AnimatedForm(0.10);
 			EditorForm->SuspendLayout();
 
 			EditorForm->FormBorderStyle = FormBorderStyle::Sizable;
@@ -341,27 +342,25 @@ namespace ConstructionSetExtender
 			return NewWorkspace;
 		}
 
-		void WorkspaceContainer::PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation Operation, Object^ ArbitraryA, Object^ ArbitraryB)
+		void WorkspaceContainer::PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation Operation, List<Object^>^ Parameters)
 		{
-			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-
 			switch (Operation)
 			{
-			case RemoteWorkspaceOperation::e_New:
+			case RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScript:
 				{
 					Workspace^ NewWorkspace = InstantiateNewWorkspace(0);
 					NewWorkspace->NewScript();
 					break;
 				}
-			case RemoteWorkspaceOperation::e_Open:
+			case RemoteWorkspaceOperation::e_CreateNewWorkspaceAndSelectScript:
 				{
 					Workspace^ NewWorkspace = InstantiateNewWorkspace(0);
 					NewWorkspace->OpenScript();
 					break;
 				}
-			case RemoteWorkspaceOperation::e_LoadNew:
+			case RemoteWorkspaceOperation::e_LoadFileIntoNewWorkspace:
 				{
-					String^ FilePath = dynamic_cast<String^>(ArbitraryA);
+					String^ FilePath = dynamic_cast<String^>(Parameters[0]);
 					Workspace^ NewWorkspace = nullptr;
 
 					if (PREFERENCES->FetchSettingAsInt("LoadScriptUpdateExistingScripts", "General") == 0)
@@ -399,30 +398,24 @@ namespace ConstructionSetExtender
 					NewWorkspace->LoadFileFromDisk(FilePath);
 					break;
 				}
-			case RemoteWorkspaceOperation::e_NewText:
+			case RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScriptAndSetText:
 				{
 					Workspace^ NewWorkspace = InstantiateNewWorkspace(0);
 					NewWorkspace->NewScript();
-					NewWorkspace->SetScriptText(dynamic_cast<String^>(ArbitraryA));
+					NewWorkspace->SetScriptText(dynamic_cast<String^>(Parameters[0]), true);
 					break;
 				}
-			case RemoteWorkspaceOperation::e_Find:
-			case RemoteWorkspaceOperation::e_Replace:
+			case RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces:
 				{
 					for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
 					{
 						Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 						if (Editor != nullptr)
 						{
-							switch (Operation)
-							{
-							case RemoteWorkspaceOperation::e_Find:
-								Editor->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Find, dynamic_cast<String^>(ArbitraryA), "");
-								break;
-							case RemoteWorkspaceOperation::e_Replace:
-								Editor->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Replace, dynamic_cast<String^>(ArbitraryA), dynamic_cast<String^>(ArbitraryB));
-								break;
-							}
+							Editor->PerformFindReplace((TextEditors::IScriptTextEditor::FindReplaceOperation)((int)Parameters[0]),
+														dynamic_cast<String^>(Parameters[1]),
+														dynamic_cast<String^>(Parameters[2]),
+														(UInt32)(Parameters[3]));
 						}
 					}
 					break;
@@ -610,7 +603,7 @@ namespace ConstructionSetExtender
 			for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
 			{
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
-				Editor->SaveScript(Workspace::SaveScriptOperation::e_SaveAndCompile);
+				Editor->SaveScript(Workspace::ScriptSaveOperation::e_SaveAndCompile);
 			}
 		}
 
@@ -632,7 +625,7 @@ namespace ConstructionSetExtender
 			{
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
 
-				if (Editor->GetIsCurrentScriptNew() || Editor->GetIsUninitialized())
+				if (Editor->GetIsScriptNew() || Editor->GetIsUninitialized())
 					continue;
 
 				Editor->SaveScriptToDisk(FolderPath, false);
@@ -641,12 +634,14 @@ namespace ConstructionSetExtender
 
 		void WorkspaceContainer::LoadFileIntoNewWorkspace(String^ FileName)
 		{
-			PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation::e_LoadNew, FileName, nullptr);
+			List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
+			RemoteOpParameters->Add(FileName);
+			PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation::e_LoadFileIntoNewWorkspace, RemoteOpParameters);
 		}
 
-		Rectangle WorkspaceContainer::GetEditorFormRect()
+		Rectangle WorkspaceContainer::GetBounds()
 		{
-			if (GetEditorFormWindowState() == FormWindowState::Normal)
+			if (GetWindowState() == FormWindowState::Normal)
 				return EditorForm->Bounds;
 			else
 				return EditorForm->RestoreBounds;
@@ -802,7 +797,7 @@ namespace ConstructionSetExtender
 			Redraw();
 		}
 
-		void WorkspaceContainer::SetEditorFormCursor( Cursor^ NewCursor )
+		void WorkspaceContainer::SetCursor( Cursor^ NewCursor )
 		{
 			EditorForm->Cursor = NewCursor;
 		}
@@ -853,15 +848,10 @@ namespace ConstructionSetExtender
 			ToolBarScriptTypeContentsMagicEffect = gcnew ToolStripButton();
 
 			WorkspaceSecondaryToolBar = gcnew ToolStrip();
-			ToolBarCommonTextBox = gcnew ToolStripTextBox();
 			ToolBarEditMenu = gcnew ToolStripDropDownButton();
 			ToolBarEditMenuContents = gcnew ToolStripDropDown();
-			ToolBarEditMenuContentsFind = gcnew ToolStripSplitButton();
-			ToolBarEditMenuContentsFindContents = gcnew ToolStripDropDown();
-			ToolBarEditMenuContentsFindContentsInTabs = gcnew ToolStripButton();
-			ToolBarEditMenuContentsReplace = gcnew ToolStripSplitButton();
-			ToolBarEditMenuContentsReplaceContents = gcnew ToolStripDropDown();
-			ToolBarEditMenuContentsReplaceContentsInTabs = gcnew ToolStripButton();
+			ToolBarEditMenuContentsFind = gcnew ToolStripButton();
+			ToolBarEditMenuContentsReplace = gcnew ToolStripButton();
 			ToolBarEditMenuContentsGotoLine = gcnew ToolStripButton();
 			ToolBarEditMenuContentsGotoOffset = gcnew ToolStripButton();
 			ToolBarMessageList = gcnew ToolStripButton();
@@ -891,7 +881,6 @@ namespace ConstructionSetExtender
 			ContextMenuWord = gcnew ToolStripMenuItem();
 			ContextMenuWikiLookup = gcnew ToolStripMenuItem();
 			ContextMenuOBSEDocLookup = gcnew ToolStripMenuItem();
-			ContextMenuCopyToCTB = gcnew ToolStripMenuItem();
 			ContextMenuDirectLink = gcnew ToolStripMenuItem();
 			ContextMenuJumpToScript = gcnew ToolStripMenuItem();
 			ContextMenuGoogleLookup = gcnew ToolStripMenuItem();
@@ -906,7 +895,24 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorCreateUDFImplementation = gcnew ToolStripMenuItem();
 			ContextMenuRefactorRenameVariables = gcnew ToolStripMenuItem();
 
-			ScriptListBox = gcnew ScriptListDialog(Index);
+			ScriptListBox = gcnew ScriptListDialog(WorkspaceHandleIndex);
+			FindReplaceBox = gcnew FindReplaceDialog(WorkspaceHandleIndex);
+
+			AutoSaveTimer = gcnew Timer();
+			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
+
+			Color ForeColor = Color::Black;
+			Color BackColor = Color::White;
+			Color HighlightColor = Color::Maroon;
+			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+
+			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(CustomFont, WorkspaceHandleIndex);
+			OffsetViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
+			PreprocessedTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
+
+			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
+			if (TabSize)
+				TextEditor->SetTabCharacterSize(TabSize);
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -955,7 +961,6 @@ namespace ConstructionSetExtender
 			SetupControlImage(ContextMenuAddMessage);
 			SetupControlImage(ContextMenuWikiLookup);
 			SetupControlImage(ContextMenuOBSEDocLookup);
-			SetupControlImage(ContextMenuCopyToCTB);
 			SetupControlImage(ContextMenuDirectLink);
 			SetupControlImage(ContextMenuJumpToScript);
 			SetupControlImage(ContextMenuGoogleLookup);
@@ -1003,7 +1008,6 @@ namespace ConstructionSetExtender
 			ContextMenuAddMessageClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuAddMessage_Click);
 			ContextMenuWikiLookupClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuWikiLookup_Click);
 			ContextMenuOBSEDocLookupClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuOBSEDocLookup_Click);
-			ContextMenuCopyToCTBClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuCopyToCTB_Click);
 			ContextMenuDirectLinkClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuDirectLink_Click);
 			ContextMenuJumpToScriptClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuJumpToScript_Click);
 			ContextMenuGoogleLookupClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuGoogleLookup_Click);
@@ -1011,12 +1015,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorDocumentScriptClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorDocumentScript_Click);
 			ContextMenuRefactorCreateUDFImplementationClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorCreateUDFImplementation_Click);
 			ContextMenuRefactorRenameVariablesClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorRenameVariables_Click);
-			ToolBarCommonTextBoxKeyDownHandler = gcnew KeyEventHandler(this, &Workspace::ToolBarCommonTextBox_KeyDown);
-			ToolBarCommonTextBoxLostFocusHandler = gcnew EventHandler(this, &Workspace::ToolBarCommonTextBox_LostFocus);
-			ToolBarEditMenuContentsFindClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsFind_Click);
-			ToolBarEditMenuContentsFindContentsInTabsClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsFindContentsInTabs_Click);
-			ToolBarEditMenuContentsReplaceClickHandler= gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsReplace_Click);
-			ToolBarEditMenuContentsReplaceContentsInTabsClickHandler= gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsReplaceContentsInTabs_Click);
+			ToolBarEditMenuContentsFindReplaceClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsFindReplace_Click);
 			ToolBarEditMenuContentsGotoLineClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsGotoLine_Click);
 			ToolBarEditMenuContentsGotoOffsetClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsGotoOffset_Click);
 			ToolBarMessageListClickHandler = gcnew EventHandler(this, &Workspace::ToolBarMessageList_Click);
@@ -1033,6 +1032,7 @@ namespace ConstructionSetExtender
 			ToolBarSanitizeScriptTextClickHandler = gcnew EventHandler(this, &Workspace::ToolBarSanitizeScriptText_Click);
 			ToolBarBindScriptClickHandler = gcnew EventHandler(this, &Workspace::ToolBarBindScript_Click);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &Workspace::ScriptEditorPreferences_Saved);
+			AutoSaveTimerTickHandler = gcnew EventHandler(this, &Workspace::AutoSaveTimer_Tick);
 
 			WorkspaceControlBox->Dock = DockStyle::Fill;
 			WorkspaceControlBox->Location = Point(0, 26);
@@ -1044,28 +1044,11 @@ namespace ConstructionSetExtender
 			WorkspaceTabItem->Text = " " + WorkspaceTabItem->Tooltip;
 			WorkspaceTabItem->Tag = this;
 
-			Padding PrimaryButtonPad = Padding(0);
-			PrimaryButtonPad.Right = 10;
-			Padding SecondaryButtonPad = Padding(0);
-			SecondaryButtonPad.Right = 30;
+			Padding ToolBarButtonPaddingLarge = Padding(16, 0, 16, 0);
+			Padding ToolBarButtonPaddingRegular = Padding(10, 0, 10, 0);
 
 			ToolStripStatusLabel^ ToolBarSpacerA = gcnew ToolStripStatusLabel();
 			ToolBarSpacerA->Spring = true;
-			ToolStripStatusLabel^ ToolBarSpacerB = gcnew ToolStripStatusLabel();
-			ToolBarSpacerB->Spring = true;
-
-			Color ForeColor = Color::Black;
-			Color BackColor = Color::White;
-			Color HighlightColor = Color::Maroon;
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
-
-			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(CustomFont, WorkspaceHandleIndex);
-			OffsetViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
-			PreprocessedTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
-
-			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
-			if (TabSize)
-				TextEditor->SetTabCharacterSize(TabSize);
 
 			WorkspaceSplitter->Dock = DockStyle::Fill;
 			WorkspaceSplitter->SplitterWidth = 2;
@@ -1073,197 +1056,65 @@ namespace ConstructionSetExtender
 
 			WorkspaceMainToolBar->GripStyle = ToolStripGripStyle::Hidden;
 
-			Padding CTBPadding = Padding(0);
-			CTBPadding.Right = 0;
-
-			ToolBarCommonTextBox->MaxLength = 500;
-			ToolBarCommonTextBox->Width = 300;
-			ToolBarCommonTextBox->AutoSize = false;
-			ToolBarCommonTextBox->Tag = "";
-			ToolBarCommonTextBox->Padding = CTBPadding;
-			ToolBarCommonTextBox->ForeColor = Color::Black;
-			ToolBarCommonTextBox->BackColor = Color::FromArgb(255, 215, 235, 255);
-
-			ToolBarEditMenuContentsFind->Text = "Find          ";
-			ToolBarEditMenuContentsFind->ToolTipText = "Enter your search string in the adjacent textbox.";
-			ToolBarEditMenuContentsFind->DropDown = ToolBarEditMenuContentsFindContents;
-			ToolBarEditMenuContentsFindContents->Items->Add(ToolBarEditMenuContentsFindContentsInTabs);
-
-			ToolBarEditMenuContentsFindContentsInTabs->Text = "Find In Tabs";
-			ToolBarEditMenuContentsFindContentsInTabs->ToolTipText = "Enter your search string in the adjacent textbox.";
-
-			ToolBarEditMenuContentsReplace->Text = "Replace    ";
-			ToolBarEditMenuContentsReplace->ToolTipText = "Enter your search string in the adjacent textbox and the replacement string in the messagebox that pops up.";
-			ToolBarEditMenuContentsReplace->DropDown = ToolBarEditMenuContentsReplaceContents;
-			ToolBarEditMenuContentsReplaceContents->Items->Add(ToolBarEditMenuContentsReplaceContentsInTabs);
-
-			ToolBarEditMenuContentsReplaceContentsInTabs->Text = "Replace In Tabs";
-			ToolBarEditMenuContentsReplaceContentsInTabs->ToolTipText = "Enter your search string in the adjacent textbox.";
-
-			ToolBarEditMenuContentsGotoLine->Text = "Goto Line     ";
-			ToolBarEditMenuContentsGotoLine->ToolTipText = "Enter the line number to jump to in the adjacent textbox.";
-
-			ToolBarEditMenuContentsGotoOffset->Text = "Goto Offset ";
-			ToolBarEditMenuContentsGotoOffset->ToolTipText = "Enter the offset to jump to in the adjacent textbox, without the hex specifier.";
-
-			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsFind);
-			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsReplace);
-			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsGotoLine);
-			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsGotoOffset);
-
-			ToolBarEditMenu->Text = "Edit";
-			ToolBarEditMenu->DropDown = ToolBarEditMenuContents;
-			ToolBarEditMenu->Padding = Padding(0);
-
-			ToolBarScriptTypeContentsObject->Text = "Object                   ";
-			ToolBarScriptTypeContentsObject->ToolTipText = "Object";
-			ToolBarScriptTypeContentsQuest->Text = "Quest                    ";
-			ToolBarScriptTypeContentsQuest->ToolTipText = "Quest";
-			ToolBarScriptTypeContentsMagicEffect->Text = "Magic Effect         ";
-			ToolBarScriptTypeContentsMagicEffect->ToolTipText = "Magic Effect";
-
-			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsObject);
-			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsQuest);
-			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsMagicEffect);
-
-			ToolBarScriptType->ImageTransparentColor = Color::White;
-			ToolBarScriptType->DropDown = ToolBarScriptTypeContents;
-
-			Padding TypePad = Padding(0), MessageListPad = Padding(0);
-			TypePad.Left = 100;
-			TypePad.Right = 50;
-			MessageListPad.Left = 5;
-			MessageListPad.Right = PrimaryButtonPad.Right;
-
-			ToolBarScriptType->Margin = TypePad;
-
-			ToolBarMessageList->ToolTipText = "Message List";
-			ToolBarMessageList->AutoSize = true;
-			ToolBarMessageList->Margin = MessageListPad;
-
-			ToolBarFindList->ToolTipText = "Find/Replace Results";
-			ToolBarFindList->AutoSize = true;
-			ToolBarFindList->Margin = PrimaryButtonPad;
-
-			ToolBarBookmarkList->ToolTipText = "Bookmarks";
-			ToolBarBookmarkList->AutoSize = true;
-			ToolBarBookmarkList->Margin = SecondaryButtonPad;
-
-			ToolBarDumpScript->ToolTipText = "Dump Script";
-			ToolBarDumpScript->AutoSize = true;
-			ToolBarDumpScript->Margin = PrimaryButtonPad;
-
-			ToolBarDumpAllScripts->ToolTipText = "Dump All Tabs";
-			ToolBarDumpAllScripts->Text = "Dump All Tabs";
-			ToolBarDumpAllScripts->AutoSize = true;
-
-			ToolBarDumpScriptDropDown->Items->Add(ToolBarDumpAllScripts);
-			ToolBarDumpScript->DropDown = ToolBarDumpScriptDropDown;
-
-			ToolBarLoadScript->ToolTipText = "Load Script";
-			ToolBarLoadScript->AutoSize = true;
-			ToolBarLoadScript->Margin = SecondaryButtonPad;
-
-			ToolBarLoadScriptsToTabs->Text = "Load Multiple Scripts Into Tabs";
-			ToolBarLoadScriptsToTabs->ToolTipText = "Load Multiple Scripts Into Tabs";
-			ToolBarLoadScriptsToTabs->AutoSize = true;
-
-			ToolBarLoadScriptDropDown->Items->Add(ToolBarLoadScriptsToTabs);
-			ToolBarLoadScript->DropDown = ToolBarLoadScriptDropDown;
-
-			ToolBarOptions->ToolTipText = "Preferences";
-			ToolBarOptions->Alignment = ToolStripItemAlignment::Right;
-
 			ToolBarNewScript->ToolTipText = "New Script";
 			ToolBarNewScript->AutoSize = true;
-			ToolBarNewScript->Margin = SecondaryButtonPad;
+			ToolBarNewScript->Margin = Padding(0, 0, ToolBarButtonPaddingLarge.Right, 0);
 
 			ToolBarOpenScript->ToolTipText = "Open Script";
 			ToolBarOpenScript->AutoSize = true;
-			ToolBarOpenScript->Margin = SecondaryButtonPad;
-
-			ToolBarPreviousScript->ToolTipText = "Previous Script";
-			ToolBarPreviousScript->AutoSize = true;
-			ToolBarPreviousScript->Margin = PrimaryButtonPad;
-
-			ToolBarNextScript->ToolTipText = "Next Script";
-			ToolBarNextScript->AutoSize = true;
-			ToolBarNextScript->Margin = SecondaryButtonPad;
+			ToolBarOpenScript->Margin = ToolBarButtonPaddingLarge;
 
 			ToolBarSaveScript->ToolTipText = "Save And Compile Script";
 			ToolBarSaveScript->AutoSize = true;
-			ToolBarSaveScript->Margin = SecondaryButtonPad;
-
+			ToolBarSaveScript->Margin = ToolBarButtonPaddingLarge;
 			ToolBarSaveScriptNoCompile->ToolTipText = "Save But Do Not Compile Script";
 			ToolBarSaveScriptNoCompile->Text = "Save But Do Not Compile Script";
 			ToolBarSaveScriptNoCompile->AutoSize = true;
-
 			ToolBarSaveScriptAndPlugin->Text = "Save Script And Active Plugin";
 			ToolBarSaveScriptAndPlugin->ToolTipText = "Save Script And Active Plugin";
 			ToolBarSaveScriptAndPlugin->AutoSize = true;
-
 			ToolBarSaveScriptDropDown->Items->Add(ToolBarSaveScriptNoCompile);
 			ToolBarSaveScriptDropDown->Items->Add(ToolBarSaveScriptAndPlugin);
 			ToolBarSaveScript->DropDown = ToolBarSaveScriptDropDown;
 
+			ToolBarPreviousScript->ToolTipText = "Previous Script";
+			ToolBarPreviousScript->AutoSize = true;
+			ToolBarPreviousScript->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
+
+			ToolBarNextScript->ToolTipText = "Next Script";
+			ToolBarNextScript->AutoSize = true;
+			ToolBarNextScript->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
+
 			ToolBarRecompileScripts->ToolTipText = "Recompile Active Scripts";
 			ToolBarRecompileScripts->AutoSize = true;
-			ToolBarRecompileScripts->Margin = SecondaryButtonPad;
+			ToolBarRecompileScripts->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
+
+			ToolBarCompileDependencies->ToolTipText = "Recompile Script Dependencies";
+			ToolBarCompileDependencies->AutoSize = true;
+			ToolBarCompileDependencies->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
 
 			ToolBarDeleteScript->ToolTipText = "Delete Script";
 			ToolBarDeleteScript->AutoSize = true;
-			ToolBarDeleteScript->Margin = PrimaryButtonPad;
+			ToolBarDeleteScript->Margin = ToolBarButtonPaddingLarge;
 
-			ToolBarShowOffsets->ToolTipText = "Toggle Offset Viewer";
-			ToolBarShowOffsets->AutoSize = true;
-			ToolBarShowOffsets->Margin = PrimaryButtonPad;
-
-			ToolBarShowPreprocessedText->ToolTipText = "Toggle Preprocessed Text Viewer";
-			ToolBarShowPreprocessedText->AutoSize = true;
-			ToolBarShowPreprocessedText->Margin = SecondaryButtonPad;
-
-			ToolBarSanitizeScriptText->ToolTipText = "Sanitize Script Text";
-			ToolBarSanitizeScriptText->AutoSize = true;
-			ToolBarSanitizeScriptText->Margin = PrimaryButtonPad;
-
-			ToolBarBindScript->ToolTipText = "Bind Script";
-			ToolBarBindScript->AutoSize = true;
-			ToolBarBindScript->Margin = SecondaryButtonPad;
+			ToolBarSaveAll->ToolTipText = "Save All Open Scripts";
+			ToolBarSaveAll->AutoSize = true;
+			ToolBarSaveAll->Margin = ToolBarButtonPaddingLarge;
+			ToolBarSaveAll->Alignment = ToolStripItemAlignment::Right;
 
 			ToolBarNavigationBack->ToolTipText = "Navigate Back";
 			ToolBarNavigationBack->AutoSize = true;
-			ToolBarNavigationBack->Margin = PrimaryButtonPad;
+			ToolBarNavigationBack->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
 			ToolBarNavigationBack->Alignment = ToolStripItemAlignment::Right;
 
 			ToolBarNavigationForward->ToolTipText = "Navigate Forward";
 			ToolBarNavigationForward->AutoSize = true;
-			ToolBarNavigationForward->Margin = SecondaryButtonPad;
+			ToolBarNavigationForward->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
 			ToolBarNavigationForward->Alignment = ToolStripItemAlignment::Right;
 
-			ToolBarByteCodeSize->Minimum = 0;
-			ToolBarByteCodeSize->Maximum = 0x8000;
-			ToolBarByteCodeSize->AutoSize = false;
-			ToolBarByteCodeSize->Size = Size(125, 14);
-			ToolBarByteCodeSize->ToolTipText = "Compiled Script Size";
-			ToolBarByteCodeSize->Alignment = ToolStripItemAlignment::Right;
-			ToolBarByteCodeSize->Margin = Padding(10, 0, 10, 0);
-
-			ToolBarGetVarIndices->ToolTipText = "Fetch Variable Indices";
-			ToolBarGetVarIndices->AutoSize = true;
-			ToolBarGetVarIndices->Margin = PrimaryButtonPad;
-
-			ToolBarUpdateVarIndices->ToolTipText = "Update Variable Indices";
-			ToolBarUpdateVarIndices->AutoSize = true;
-			ToolBarUpdateVarIndices->Margin = SecondaryButtonPad;
-
-			ToolBarSaveAll->ToolTipText = "Save All Open Scripts";
-			ToolBarSaveAll->AutoSize = true;
-			ToolBarSaveAll->Margin = SecondaryButtonPad;
-			ToolBarSaveAll->Alignment = ToolStripItemAlignment::Right;
-
-			ToolBarCompileDependencies->ToolTipText = "(Re)Compile Script Dependencies";
-			ToolBarCompileDependencies->AutoSize = true;
-			ToolBarCompileDependencies->Margin = SecondaryButtonPad;
+			ToolBarOptions->ToolTipText = "Preferences";
+			ToolBarOptions->Alignment = ToolStripItemAlignment::Right;
+			ToolBarOptions->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, 0, 0);
 
 			WorkspaceMainToolBar->Dock = DockStyle::Top;
 			WorkspaceMainToolBar->Items->Add(ToolBarNewScript);
@@ -1274,7 +1125,6 @@ namespace ConstructionSetExtender
 			WorkspaceMainToolBar->Items->Add(ToolBarRecompileScripts);
 			WorkspaceMainToolBar->Items->Add(ToolBarCompileDependencies);
 			WorkspaceMainToolBar->Items->Add(ToolBarDeleteScript);
-			WorkspaceMainToolBar->Items->Add(ToolBarScriptType);
 			WorkspaceMainToolBar->Items->Add(ToolBarSpacerA);
 			WorkspaceMainToolBar->Items->Add(ToolBarOptions);
 			WorkspaceMainToolBar->Items->Add(ToolBarNavigationForward);
@@ -1282,11 +1132,96 @@ namespace ConstructionSetExtender
 			WorkspaceMainToolBar->Items->Add(ToolBarSaveAll);
 			WorkspaceMainToolBar->ShowItemToolTips = true;
 
+			ToolBarMessageList->ToolTipText = "Messages";
+			ToolBarMessageList->AutoSize = true;
+			ToolBarMessageList->Margin = Padding(0, 0, ToolBarButtonPaddingRegular.Right, 0);
+
+			ToolBarFindList->ToolTipText = "Find/Replace Results";
+			ToolBarFindList->AutoSize = true;
+			ToolBarFindList->Margin = ToolBarButtonPaddingRegular;
+
+			ToolBarBookmarkList->ToolTipText = "Bookmarks";
+			ToolBarBookmarkList->AutoSize = true;
+			ToolBarBookmarkList->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
+
+			ToolBarDumpScript->ToolTipText = "Dump Script";
+			ToolBarDumpScript->AutoSize = true;
+			ToolBarDumpScript->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
+			ToolBarDumpAllScripts->ToolTipText = "Dump All Tabs";
+			ToolBarDumpAllScripts->Text = "Dump All Tabs";
+			ToolBarDumpAllScripts->AutoSize = true;
+			ToolBarDumpScriptDropDown->Items->Add(ToolBarDumpAllScripts);
+			ToolBarDumpScript->DropDown = ToolBarDumpScriptDropDown;
+
+			ToolBarLoadScript->ToolTipText = "Load Script";
+			ToolBarLoadScript->AutoSize = true;
+			ToolBarLoadScript->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
+			ToolBarLoadScriptsToTabs->Text = "Load Multiple Scripts Into Tabs";
+			ToolBarLoadScriptsToTabs->ToolTipText = "Load Multiple Scripts Into Tabs";
+			ToolBarLoadScriptsToTabs->AutoSize = true;
+			ToolBarLoadScriptDropDown->Items->Add(ToolBarLoadScriptsToTabs);
+			ToolBarLoadScript->DropDown = ToolBarLoadScriptDropDown;
+
+			ToolBarGetVarIndices->ToolTipText = "Fetch Variable Indices";
+			ToolBarGetVarIndices->AutoSize = true;
+			ToolBarGetVarIndices->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
+
+			ToolBarUpdateVarIndices->ToolTipText = "Update Variable Indices";
+			ToolBarUpdateVarIndices->AutoSize = true;
+			ToolBarUpdateVarIndices->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
+
+			ToolBarShowOffsets->ToolTipText = "Toggle Offset Viewer";
+			ToolBarShowOffsets->AutoSize = true;
+			ToolBarShowOffsets->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
+
+			ToolBarShowPreprocessedText->ToolTipText = "Toggle Preprocessed Text Viewer";
+			ToolBarShowPreprocessedText->AutoSize = true;
+			ToolBarShowPreprocessedText->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
+
+			ToolBarSanitizeScriptText->ToolTipText = "Sanitize Script Text";
+			ToolBarSanitizeScriptText->AutoSize = true;
+			ToolBarSanitizeScriptText->Margin = ToolBarButtonPaddingLarge;
+
+			ToolBarBindScript->ToolTipText = "Bind Script";
+			ToolBarBindScript->AutoSize = true;
+			ToolBarBindScript->Margin = ToolBarButtonPaddingLarge;
+
+			ToolBarByteCodeSize->Minimum = 0;
+			ToolBarByteCodeSize->Maximum = 0x8000;
+			ToolBarByteCodeSize->AutoSize = false;
+			ToolBarByteCodeSize->Size = Size(125, 14);
+			ToolBarByteCodeSize->ToolTipText = "Compiled Script Size";
+			ToolBarByteCodeSize->Alignment = ToolStripItemAlignment::Left;
+			ToolBarByteCodeSize->Margin = Padding(8, 0, 8, 0);
+
+			ToolBarScriptTypeContentsObject->Text =					"Object                   ";
+			ToolBarScriptTypeContentsObject->ToolTipText =			"Object";
+			ToolBarScriptTypeContentsQuest->Text =					"Quest                    ";
+			ToolBarScriptTypeContentsQuest->ToolTipText =			"Quest";
+			ToolBarScriptTypeContentsMagicEffect->Text =			"Magic Effect        ";
+			ToolBarScriptTypeContentsMagicEffect->ToolTipText =		"Magic Effect";
+			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsObject);
+			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsQuest);
+			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsMagicEffect);
+			ToolBarScriptType->ImageTransparentColor = Color::White;
+			ToolBarScriptType->DropDown = ToolBarScriptTypeContents;
+			ToolBarScriptType->Alignment = ToolStripItemAlignment::Right;
+
+			ToolBarEditMenuContentsFind->Text =			"Find";
+			ToolBarEditMenuContentsReplace->Text =		"Replace";
+			ToolBarEditMenuContentsGotoLine->Text =		"Goto Line";
+			ToolBarEditMenuContentsGotoOffset->Text =	"Goto Offset";
+			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsFind);
+			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsReplace);
+			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsGotoLine);
+			ToolBarEditMenuContents->Items->Add(ToolBarEditMenuContentsGotoOffset);
+			ToolBarEditMenu->Text = "Edit";
+			ToolBarEditMenu->DropDown = ToolBarEditMenuContents;
+			ToolBarEditMenu->Padding = Padding(0);
+			ToolBarEditMenu->Alignment = ToolStripItemAlignment::Right;
+
 			WorkspaceSecondaryToolBar->GripStyle = ToolStripGripStyle::Hidden;
 			WorkspaceSecondaryToolBar->Dock = DockStyle::Bottom;
-			WorkspaceSecondaryToolBar->Items->Add(ToolBarEditMenu);
-			WorkspaceSecondaryToolBar->Items->Add(ToolBarCommonTextBox);
-			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarMessageList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarFindList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBookmarkList);
@@ -1298,7 +1233,11 @@ namespace ConstructionSetExtender
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarShowPreprocessedText);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarSanitizeScriptText);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBindScript);
+			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarByteCodeSize);
+			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarEditMenu);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarScriptType);
 			WorkspaceSecondaryToolBar->ShowItemToolTips = true;
 
 			ContextMenuCopy->Text = "Copy";
@@ -1306,7 +1245,6 @@ namespace ConstructionSetExtender
 			ContextMenuWord->Enabled = false;
 			ContextMenuWikiLookup->Text = "Look up on the Wiki";
 			ContextMenuOBSEDocLookup->Text = "Look up on the OBSE Doc";
-			ContextMenuCopyToCTB->Text = "Copy to Edit Box";
 			ContextMenuFind->Text = "Find";
 			ContextMenuToggleComment->Text = "Toggle Comment";
 			ContextMenuToggleBookmark->Text = "Toggle Bookmark";
@@ -1330,23 +1268,16 @@ namespace ConstructionSetExtender
 
 			ContextMenuRefactorAddVariableInt->Text = "Integer";
 			ContextMenuRefactorAddVariableInt->Tag = ScriptParser::VariableType::e_Integer;
-
 			ContextMenuRefactorAddVariableFloat->Text = "Float";
 			ContextMenuRefactorAddVariableFloat->Tag = ScriptParser::VariableType::e_Float;
-
 			ContextMenuRefactorAddVariableRef->Text = "Reference";
 			ContextMenuRefactorAddVariableRef->Tag = ScriptParser::VariableType::e_Ref;
-
 			ContextMenuRefactorAddVariableString->Text = "String";
 			ContextMenuRefactorAddVariableString->Tag = ScriptParser::VariableType::e_String;
-
 			ContextMenuRefactorAddVariableArray->Text = "Array";
 			ContextMenuRefactorAddVariableArray->Tag = ScriptParser::VariableType::e_Array;
-
 			ContextMenuRefactorDocumentScript->Text = "Document Script";
-
 			ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
-
 			ContextMenuRefactorRenameVariables->Text = "Rename Variables";
 
 			TextEditorContextMenu->Items->Add(ContextMenuRefactorMenu);
@@ -1358,7 +1289,6 @@ namespace ConstructionSetExtender
 			TextEditorContextMenu->Items->Add(ContextMenuAddMessage);
 			TextEditorContextMenu->Items->Add(gcnew ToolStripSeparator());
 			TextEditorContextMenu->Items->Add(ContextMenuWord);
-			TextEditorContextMenu->Items->Add(ContextMenuCopyToCTB);
 			TextEditorContextMenu->Items->Add(ContextMenuWikiLookup);
 			TextEditorContextMenu->Items->Add(ContextMenuOBSEDocLookup);
 			TextEditorContextMenu->Items->Add(ContextMenuGoogleLookup);
@@ -1487,17 +1417,13 @@ namespace ConstructionSetExtender
  			Parent->AddTab(WorkspaceTabItem);
  			Parent->AddTabControlBox(WorkspaceControlBox);
 
-			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height; }
+			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height; }
 			catch (...) {}
 
 			TextEditor->KeyDown += TextEditorKeyDownHandler;
 			TextEditor->ScriptModified += TextEditorScriptModifiedHandler;
-			ToolBarCommonTextBox->LostFocus += ToolBarCommonTextBoxLostFocusHandler;
-			ToolBarCommonTextBox->KeyDown += ToolBarCommonTextBoxKeyDownHandler;
-			ToolBarEditMenuContentsFind->ButtonClick += ToolBarEditMenuContentsFindClickHandler;
-			ToolBarEditMenuContentsFindContentsInTabs->Click += ToolBarEditMenuContentsFindContentsInTabsClickHandler;
-			ToolBarEditMenuContentsReplace->ButtonClick += ToolBarEditMenuContentsReplaceClickHandler;
-			ToolBarEditMenuContentsReplaceContentsInTabs->Click += ToolBarEditMenuContentsReplaceContentsInTabsClickHandler;
+			ToolBarEditMenuContentsFind->Click += ToolBarEditMenuContentsFindReplaceClickHandler;
+			ToolBarEditMenuContentsReplace->Click += ToolBarEditMenuContentsFindReplaceClickHandler;
 			ToolBarEditMenuContentsGotoLine->Click += ToolBarEditMenuContentsGotoLineClickHandler;
 			ToolBarEditMenuContentsGotoOffset->Click += ToolBarEditMenuContentsGotoOffsetClickHandler;
 			ToolBarScriptTypeContentsObject->Click += ToolBarScriptTypeContentsObjectClickHandler;
@@ -1534,7 +1460,6 @@ namespace ConstructionSetExtender
 			ContextMenuPaste->Click += ContextMenuPasteClickHandler;
 			ContextMenuWikiLookup->Click += ContextMenuWikiLookupClickHandler;
 			ContextMenuOBSEDocLookup->Click += ContextMenuOBSEDocLookupClickHandler;
-			ContextMenuCopyToCTB->Click += ContextMenuCopyToCTBClickHandler;
 			ContextMenuFind->Click += ContextMenuFindClickHandler;
 			ContextMenuToggleComment->Click += ContextMenuToggleCommentClickHandler;
 			ContextMenuToggleBookmark->Click += ContextMenuToggleBookmarkClickHandler;
@@ -1562,7 +1487,9 @@ namespace ConstructionSetExtender
 			VariableIndexEditBox->LostFocus += VariableIndexEditBoxLostFocusHandler;
 			VariableIndexEditBox->KeyDown += VariableIndexEditBoxKeyDownHandler;
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+			AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
 
+			AutoSaveTimer->Start();
 			DisableControls();
 			ToolBarUpdateVarIndices->Enabled = false;
 			TextEditor->SetContextMenu(TextEditorContextMenu);
@@ -1597,7 +1524,7 @@ namespace ConstructionSetExtender
 
 			for each (ListViewItem^ Itr in MessageList->Items)
 			{
-				if (Itr->ImageIndex < (int)MessageType::e_RegularMessage)
+				if (Itr->ImageIndex < (int)MessageListItemType::e_RegularMessage)
 					InvalidItems->AddLast(Itr);
 			}
 
@@ -1612,16 +1539,18 @@ namespace ConstructionSetExtender
 			Item->SubItems->Add(Text);
 			FindList->Items->Add(Item);
 		}
-		void Workspace::PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement)
+		int Workspace::PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
 		{
 			FindList->Items->Clear();
-			UInt32 Hits = TextEditor->FindReplace(Operation,
+			int Hits = TextEditor->FindReplace(Operation,
 				Query,
 				Replacement,
-				gcnew TextEditors::IScriptTextEditor::FindReplaceOutput(this, &ScriptEditor::Workspace::FindReplaceOutput));
+				gcnew TextEditors::IScriptTextEditor::FindReplaceOutput(this, &ScriptEditor::Workspace::FindReplaceOutput), Options);
 
 			if (Hits > 0 && FindList->Visible == false)
 				ToolBarFindList->PerformClick();
+
+			return Hits;
 		}
 		void Workspace::ToggleBookmark(int CaretPos)
 		{
@@ -1670,6 +1599,76 @@ namespace ConstructionSetExtender
 
 			CurrentScriptType = Type;
 		}
+
+		void Workspace::InsertVariable( String^ VariableName, ScriptParser::VariableType VariableType )
+		{
+			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
+			ScriptParser^ TextParser = gcnew ScriptParser();
+			StringReader^ TextReader = gcnew StringReader(ScriptText);
+			int LastVarOffset = 0, InsertOffset = 0;
+
+			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
+			{
+				TextParser->Tokenize(ReadLine, false);
+
+				if (!TextParser->Valid)
+				{
+					InsertOffset += ReadLine->Length + 1;
+					continue;
+				}
+
+				bool ExitLoop = false, SaveOffset = false;
+				switch (TextParser->GetTokenType(TextParser->Tokens[0]))
+				{
+				case ScriptParser::TokenType::e_Variable:
+					SaveOffset = true;
+					break;
+				case ScriptParser::TokenType::e_Comment:
+				case ScriptParser::TokenType::e_ScriptName:
+					break;
+				default:
+					ExitLoop = true;
+					break;
+				}
+
+				if (ExitLoop)
+					break;
+
+				InsertOffset += ReadLine->Length + 1;
+				if (SaveOffset)
+					LastVarOffset = InsertOffset;
+			}
+
+			if (LastVarOffset)
+				InsertOffset = LastVarOffset;
+
+			String^ VarText = "";
+			if (InsertOffset > ScriptText->Length)
+				VarText += "\n";
+
+			switch (VariableType)
+			{
+			case ScriptParser::VariableType::e_Integer:
+				VarText += "int " + VariableName;
+				break;
+			case ScriptParser::VariableType::e_Float:
+				VarText += "float " + VariableName;
+				break;
+			case ScriptParser::VariableType::e_Ref:
+				VarText += "ref " + VariableName;
+				break;
+			case ScriptParser::VariableType::e_String:
+				VarText += "string_var " + VariableName;
+				break;
+			case ScriptParser::VariableType::e_Array:
+				VarText += "array_var " + VariableName;
+				break;
+			}
+			VarText += "\n";
+
+			TextEditor->InsertText(VarText, InsertOffset, true);
+		}
+
 		String^ Workspace::SerializeCSEBlock(void)
 		{
 			String^ Block = "";
@@ -1709,13 +1708,13 @@ namespace ConstructionSetExtender
 		{
 			for each (ListViewItem^ Itr in MessageList->Items)
 			{
-				if (Itr->ImageIndex > (int)MessageType::e_Error)
-					switch ((MessageType)Itr->ImageIndex)
+				if (Itr->ImageIndex > (int)MessageListItemType::e_Error)
+					switch ((MessageListItemType)Itr->ImageIndex)
 				{
-					case MessageType::e_EditorMessage:
+					case MessageListItemType::e_EditorMessage:
 						Result += ";<CSEMessageEditor> " + Itr->SubItems[2]->Text + " </CSEMessageEditor>\n";
 						break;
-					case MessageType::e_RegularMessage:
+					case MessageListItemType::e_RegularMessage:
 						Result += ";<CSEMessageRegular> " + Itr->SubItems[2]->Text + " </CSEMessageRegular>\n";
 						break;
 				}
@@ -1860,12 +1859,12 @@ namespace ConstructionSetExtender
 				if (!TextParser->GetTokenIndex(";<CSEMessageEditor>"))
 				{
 					Message = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEMessageEditor>", "");
-					AddMessageToMessagePool(MessageType::e_EditorMessage, -1, Message);
+					AddMessageToMessagePool(MessageListItemType::e_EditorMessage, -1, Message);
 				}
 				else if (!TextParser->GetTokenIndex(";<CSEMessageRegular>"))
 				{
 					Message = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEMessageRegular>", "");
-					AddMessageToMessagePool(MessageType::e_RegularMessage, -1, Message);
+					AddMessageToMessagePool(MessageListItemType::e_RegularMessage, -1, Message);
 				}
 
 				ReadLine = StringParser->ReadLine();
@@ -1873,7 +1872,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::PreprocessorErrorOutputWrapper(String^ Message)
 		{
-			AddMessageToMessagePool(MessageType::e_Error, -1, Message);
+			AddMessageToMessagePool(MessageListItemType::e_Error, -1, Message);
 		}
 		String^ Workspace::SanitizeScriptText(SanitizeOperation Operation, String^ ScriptText)
 		{
@@ -2054,7 +2053,7 @@ namespace ConstructionSetExtender
 
 				String^ CSEBlock = "";
 				String^ DeserializedText = DeserializeCSEBlock(ScriptText, CSEBlock);
-				TextEditor->SetText(DeserializedText, false);
+				TextEditor->SetText(DeserializedText, false, true);
 
 				DeserializeCaretPos(CSEBlock);
 				DeserializeBookmarks(CSEBlock);
@@ -2066,7 +2065,7 @@ namespace ConstructionSetExtender
 			CurrentScriptEditorID = ScriptName;
 			WorkspaceTabItem->Tooltip = ScriptName + " [" + FormID.ToString("X8") + "]";
 			WorkspaceTabItem->Text = " " + ScriptName;
-			ParentContainer->SetWindowTitle(WorkspaceTabItem->Tooltip + " - " + SCRIPTEDITOR_TITLE);
+			ParentContainer->SetWindowTitle(GetScriptDescription() + " - " + SCRIPTEDITOR_TITLE);
 			SetScriptType((Workspace::ScriptType)ScriptType);
 
 			SetModifiedStatus(false);
@@ -2081,14 +2080,39 @@ namespace ConstructionSetExtender
 				OffsetViewer->Reset();
 
 			TextEditor->UpdateIntelliSenseLocalDatabase();
+
+			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && Initializing)
+			{
+				String^ CachePath = AUTORECOVERYCACHEPATH + GetScriptDescription() + ".txt";
+				if (System::IO::File::Exists(CachePath))
+				{
+					try
+					{
+						System::DateTime LastWriteTime = System::IO::File::GetLastWriteTime(CachePath);
+						if (MessageBox::Show("An auto-recovery cache for the script '" + GetScriptDescription() + "' was found, dated " + LastWriteTime.ToShortDateString() +  " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
+							SCRIPTEDITOR_TITLE,
+							MessageBoxButtons::YesNo,
+							MessageBoxIcon::Information) == DialogResult::Yes)
+						{
+							LoadFileFromDisk(CachePath);
+						}
+
+						System::IO::File::Delete(CachePath);
+					}
+					catch (Exception^ E)
+					{
+						DebugPrint("Couldn't access auto-recovery cache '" + GetScriptDescription() + "'!\n\tException: " + E->Message);
+					}
+				}
+			}
 		}
 		void Workspace::LoadFileFromDisk(String^ Path)
 		{
-			TextEditor->LoadFileFromDisk(Path, WorkspaceHandleIndex);
+			TextEditor->LoadFileFromDisk(Path);
 		}
 		void Workspace::SaveScriptToDisk(String^ Path, bool PathIncludesFileName)
 		{
-			TextEditor->SaveScriptToDisk(Path, PathIncludesFileName, WorkspaceTabItem->Tooltip, WorkspaceHandleIndex);
+			TextEditor->SaveScriptToDisk(Path, PathIncludesFileName, GetScriptDescription());
 		}
 		bool Workspace::ValidateScript(String^% PreprocessedScriptText)
 		{
@@ -2125,35 +2149,35 @@ namespace ConstructionSetExtender
 				{
 				case ScriptParser::TokenType::e_ScriptName:
 					if (ScriptTextParser->GetContainsIllegalChar(SecondToken, "_", ""))
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Identifier '" + SecondToken + "' contains an invalid character."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Identifier '" + SecondToken + "' contains an invalid character."), Result = false;
 					if (ScriptName == "")
 						ScriptName = SecondToken;
 					else
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Redeclaration of script name."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of script name."), Result = false;
 					break;
 				case ScriptParser::TokenType::e_Variable:
 					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_Invalid)
 					{
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Variable '" + SecondToken + "' declared inside a script block.");
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Variable '" + SecondToken + "' declared inside a script block.");
 						Result = false;
 					}
 					if (ScriptTextParser->LookupVariableByName(SecondToken) != nullptr)
-						AddMessageToMessagePool(MessageType::e_Warning, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
 					else
 						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
 					break;
 				case ScriptParser::TokenType::e_Begin:
 					if (!ScriptTextParser->GetIsBlockValidForScriptType(SecondToken, (ScriptParser::ScriptType)ScriptType))
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid script block '" + SecondToken + "' for script type."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid script block '" + SecondToken + "' for script type."), Result = false;
 					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
 					break;
 				case ScriptParser::TokenType::e_End:
 					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_ScriptBlock)
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid block structure. Command 'End' has no matching 'Begin'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'End' has no matching 'Begin'."), Result = false;
 					else
 						ScriptTextParser->BlockStack->Pop();
 					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageType::e_Warning, CurrentLineNo, "Command 'End' has an otiose expression following it.");
+						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'End' has an otiose expression following it.");
 					break;
 				case ScriptParser::TokenType::e_While:
 					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
@@ -2163,39 +2187,39 @@ namespace ConstructionSetExtender
 					break;
 				case ScriptParser::TokenType::e_Loop:
 					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_Loop)
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid block structure. Command 'Loop' has no matching 'While' or 'ForEach'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'Loop' has no matching 'While' or 'ForEach'."), Result = false;
 					else
 						ScriptTextParser->BlockStack->Pop();
 					break;
 				case ScriptParser::TokenType::e_If:
 					if (ScriptTextParser->GetCurrentTokenCount() < 2 || ScriptTextParser->Tokens[1][0] == ';')
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid condition."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid condition."), Result = false;
 
 					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_If);
 					break;
 				case ScriptParser::TokenType::e_ElseIf:
 					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid block structure. Command 'ElseIf' has no matching 'If'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'ElseIf' has no matching 'If'."), Result = false;
 					else if (ScriptTextParser->GetCurrentTokenCount() < 2 || ScriptTextParser->Tokens[1][0] == ';')
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid condition."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid condition."), Result = false;
 					break;
 				case ScriptParser::TokenType::e_Else:
 					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid block structure. Command 'Else' has no matching 'If'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'Else' has no matching 'If'."), Result = false;
 					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageType::e_Warning, CurrentLineNo, "Command 'Else' has an otiose expression following it.");
+						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'Else' has an otiose expression following it.");
 					break;
 				case ScriptParser::TokenType::e_EndIf:
 					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
-						AddMessageToMessagePool(MessageType::e_Error, CurrentLineNo, "Invalid block structure. Command 'EndIf' has no matching 'If'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'EndIf' has no matching 'If'."), Result = false;
 					else
 						ScriptTextParser->BlockStack->Pop();
 					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageType::e_Warning, CurrentLineNo, "Command 'EndIf' has an otiose expression following it.");
+						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'EndIf' has an otiose expression following it.");
 					break;
 				case ScriptParser::TokenType::e_Return:
 					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageType::e_Warning, CurrentLineNo, "Command 'Return' has an otiose expression following it.");
+						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'Return' has an otiose expression following it.");
 					break;
 				}
 				// increment variable ref count
@@ -2224,7 +2248,7 @@ namespace ConstructionSetExtender
 				if (Itr->RefCount == 0)
 				{
 					if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest || PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "General") == 0)
-						AddMessageToMessagePool(MessageType::e_Warning, 1, "Variable '" + Itr->Name + "' unreferenced in local context.");
+						AddMessageToMessagePool(MessageListItemType::e_Warning, 1, "Variable '" + Itr->Name + "' unreferenced in local context.");
 				}
 
 				bool InvalidVarName = false;
@@ -2237,13 +2261,13 @@ namespace ConstructionSetExtender
 
 				if (InvalidVarName)
 				{
-					AddMessageToMessagePool(MessageType::e_Error, 1, "Variable '" + Itr->Name + "' has an all-numeric identifier.");
+					AddMessageToMessagePool(MessageListItemType::e_Error, 1, "Variable '" + Itr->Name + "' has an all-numeric identifier.");
 					Result = false;
 				}
 			}
 
 			if (!Result)
-				AddMessageToMessagePool(MessageType::e_Warning, -1, "Compilation of script '" + ScriptName + "' halted - Couldn't recover from previous errors.");
+				AddMessageToMessagePool(MessageListItemType::e_Warning, -1, "Compilation of script '" + ScriptName + "' halted - Couldn't recover from previous errors.");
 
 			ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(ScriptName)).c_str());
 			if (Data && String::Compare(CurrentScriptEditorID, ScriptName, true) != 0)
@@ -2266,14 +2290,12 @@ namespace ConstructionSetExtender
 		void Workspace::Destroy()
 		{
 			DestructionFlag = true;
+			AutoSaveTimer->Stop();
+
 			TextEditor->KeyDown -= TextEditorKeyDownHandler;
 			TextEditor->ScriptModified -= TextEditorScriptModifiedHandler;
-			ToolBarCommonTextBox->LostFocus -= ToolBarCommonTextBoxLostFocusHandler;
-			ToolBarCommonTextBox->KeyDown -= ToolBarCommonTextBoxKeyDownHandler;
-			ToolBarEditMenuContentsFind->ButtonClick -= ToolBarEditMenuContentsFindClickHandler;
-			ToolBarEditMenuContentsFindContentsInTabs->Click -= ToolBarEditMenuContentsFindContentsInTabsClickHandler;
-			ToolBarEditMenuContentsReplace->ButtonClick -= ToolBarEditMenuContentsReplaceClickHandler;
-			ToolBarEditMenuContentsReplaceContentsInTabs->Click -= ToolBarEditMenuContentsReplaceContentsInTabsClickHandler;
+			ToolBarEditMenuContentsFind->Click -= ToolBarEditMenuContentsFindReplaceClickHandler;
+			ToolBarEditMenuContentsReplace->Click -= ToolBarEditMenuContentsFindReplaceClickHandler;
 			ToolBarEditMenuContentsGotoLine->Click -= ToolBarEditMenuContentsGotoLineClickHandler;
 			ToolBarEditMenuContentsGotoOffset->Click -= ToolBarEditMenuContentsGotoOffsetClickHandler;
 			ToolBarScriptTypeContentsObject->Click -= ToolBarScriptTypeContentsObjectClickHandler;
@@ -2310,7 +2332,6 @@ namespace ConstructionSetExtender
 			ContextMenuPaste->Click -= ContextMenuPasteClickHandler;
 			ContextMenuWikiLookup->Click -= ContextMenuWikiLookupClickHandler;
 			ContextMenuOBSEDocLookup->Click -= ContextMenuOBSEDocLookupClickHandler;
-			ContextMenuCopyToCTB->Click -= ContextMenuCopyToCTBClickHandler;
 			ContextMenuFind->Click -= ContextMenuFindClickHandler;
 			ContextMenuToggleComment->Click -= ContextMenuToggleCommentClickHandler;
 			ContextMenuToggleBookmark->Click -= ContextMenuToggleBookmarkClickHandler;
@@ -2338,6 +2359,7 @@ namespace ConstructionSetExtender
 			VariableIndexEditBox->LostFocus -= VariableIndexEditBoxLostFocusHandler;
 			VariableIndexEditBox->KeyDown -= VariableIndexEditBoxKeyDownHandler;
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
 			for each (Image^ Itr in MessageList->SmallImageList->Images)
 				delete Itr;
@@ -2405,7 +2427,6 @@ namespace ConstructionSetExtender
 			DisposeControlImage(ContextMenuAddMessage);
 			DisposeControlImage(ContextMenuWikiLookup);
 			DisposeControlImage(ContextMenuOBSEDocLookup);
-			DisposeControlImage(ContextMenuCopyToCTB);
 			DisposeControlImage(ContextMenuDirectLink);
 			DisposeControlImage(ContextMenuJumpToScript);
 			DisposeControlImage(ContextMenuGoogleLookup);
@@ -2449,15 +2470,10 @@ namespace ConstructionSetExtender
 			delete ToolBarScriptTypeContentsMagicEffect;
 
 			delete WorkspaceSecondaryToolBar;
-			delete ToolBarCommonTextBox;
 			delete ToolBarEditMenu;
 			delete ToolBarEditMenuContents;
 			delete ToolBarEditMenuContentsFind;
-			delete ToolBarEditMenuContentsFindContents;
-			delete ToolBarEditMenuContentsFindContentsInTabs;
 			delete ToolBarEditMenuContentsReplace;
-			delete ToolBarEditMenuContentsReplaceContents;
-			delete ToolBarEditMenuContentsReplaceContentsInTabs;
 			delete ToolBarEditMenuContentsGotoLine;
 			delete ToolBarEditMenuContentsGotoOffset;
 			delete ToolBarMessageList;
@@ -2487,7 +2503,6 @@ namespace ConstructionSetExtender
 			delete ContextMenuWord;
 			delete ContextMenuWikiLookup;
 			delete ContextMenuOBSEDocLookup;
-			delete ContextMenuCopyToCTB;
 			delete ContextMenuDirectLink;
 			delete ContextMenuJumpToScript;
 			delete ContextMenuGoogleLookup;
@@ -2501,6 +2516,7 @@ namespace ConstructionSetExtender
 			delete ContextMenuRefactorDocumentScript;
 			delete ContextMenuRefactorCreateUDFImplementation;
 			delete ContextMenuRefactorRenameVariables;
+			delete AutoSaveTimer;
 
 			ParentContainer->Redraw();
 			ParentContainer = nullptr;
@@ -2530,7 +2546,7 @@ namespace ConstructionSetExtender
 				PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 			return Result;
 		}
-		void Workspace::AddMessageToMessagePool(MessageType Type, int Line, String^ Message)
+		void Workspace::AddMessageToMessagePool(MessageListItemType Type, int Line, String^ Message)
 		{
 			ListViewItem^ Item = gcnew ListViewItem(" ", (int)Type);
 			if (Line != -1)
@@ -2538,14 +2554,14 @@ namespace ConstructionSetExtender
 			else
 				Item->SubItems->Add("");
 			Item->SubItems->Add(Message);
-			if (Type == MessageType::e_RegularMessage)
+			if (Type == MessageListItemType::e_RegularMessage)
 				Item->ToolTipText = "Double click to remove message";
 
 			MessageList->Items->Add(Item);
 			if (MessageList->Visible == false)
 				ToolBarMessageList->PerformClick();
 
-			if (Type == MessageType::e_Error)
+			if (Type == MessageListItemType::e_Error)
 				TextEditor->HighlightScriptError(Line);
 		}
 		void Workspace::ClearEditorMessagesFromMessagePool(void)
@@ -2554,7 +2570,7 @@ namespace ConstructionSetExtender
 
 			for each (ListViewItem^ Itr in MessageList->Items)
 			{
-				if (Itr->ImageIndex == (int)MessageType::e_EditorMessage)
+				if (Itr->ImageIndex == (int)MessageListItemType::e_EditorMessage)
 					InvalidItems->AddLast(Itr);
 			}
 
@@ -2580,9 +2596,14 @@ namespace ConstructionSetExtender
 		void Workspace::HandleFocus( bool GotFocus )
 		{
 			if (GotFocus)
+			{
 				TextEditor->OnGotFocus();
+			}
 			else
+			{
+				FindReplaceBox->Hide();
 				TextEditor->OnLostFocus();
+			}
 		}
 		bool Workspace::PerformHouseKeeping()
 		{
@@ -2592,7 +2613,7 @@ namespace ConstructionSetExtender
 					SCRIPTEDITOR_TITLE,
 					MessageBoxButtons::YesNoCancel, MessageBoxIcon::Exclamation);
 				if (Result == DialogResult::Yes)
-					return SaveScript(SaveScriptOperation::e_SaveAndCompile);
+					return SaveScript(ScriptSaveOperation::e_SaveAndCompile);
 				else if (Result == DialogResult::No)
 				{
 					if (NewScriptFlag)
@@ -2630,7 +2651,7 @@ namespace ConstructionSetExtender
 			}
 			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
 		}
-		bool Workspace::SaveScript(SaveScriptOperation Operation)
+		bool Workspace::SaveScript(ScriptSaveOperation Operation)
 		{
 			bool Result = false;
 			String^ PreprocessedScriptResult = "";
@@ -2641,10 +2662,10 @@ namespace ConstructionSetExtender
 				{
 					ClearEditorMessagesFromMessagePool();
 
-					if (Operation == SaveScriptOperation::e_SaveButDontCompile)
+					if (Operation == ScriptSaveOperation::e_SaveButDontCompile)
 					{
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-						AddMessageToMessagePool(MessageType::e_EditorMessage, -1, "This is an uncompiled script. Expect weird behavior during runtime execution.");
+						AddMessageToMessagePool(MessageListItemType::e_EditorMessage, -1, "This is an uncompiled script. Expect weird behavior during runtime execution.");
 					}
 
 					ComponentDLLInterface::ScriptCompileData CompileData;
@@ -2667,7 +2688,7 @@ namespace ConstructionSetExtender
 					{
 						for (int i = 0; i < CompileData.CompileErrorData.Count; i++)
 						{
-							AddMessageToMessagePool(MessageType::e_Error,
+							AddMessageToMessagePool(MessageListItemType::e_Error,
 								CompileData.CompileErrorData.ErrorListHead[i].Line,
 								gcnew String(CompileData.CompileErrorData.ErrorListHead[i].Message));
 						}
@@ -2675,13 +2696,22 @@ namespace ConstructionSetExtender
 						NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(CompileData.CompileErrorData.ErrorListHead, true);
 					}
 
-					if (Operation == SaveScriptOperation::e_SaveButDontCompile)
+					if (Operation == ScriptSaveOperation::e_SaveButDontCompile)
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
-					else if (Operation == SaveScriptOperation::e_SaveActivePluginToo)
+					else if (Operation == ScriptSaveOperation::e_SaveActivePluginToo)
 						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
 				}
 				else
 					Result = true;
+			}
+
+			if (Result)
+			{
+				try			// delete the script's autorecovery cache, if any
+				{
+					System::IO::File::Delete(AUTORECOVERYCACHEPATH + GetScriptDescription() + ".txt");
+				}
+				catch (...) {}
 			}
 
 			return Result;
@@ -2738,7 +2768,7 @@ namespace ConstructionSetExtender
 		{
 			if (PerformHouseKeeping())
 			{
-				Rectangle Bounds = GetParentContainer()->GetEditorFormRect();
+				Rectangle Bounds = GetParentContainer()->GetBounds();
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 
 				ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
@@ -2779,7 +2809,7 @@ namespace ConstructionSetExtender
 				break;
 			case Keys::S:									// Save script
 				if (E->Modifiers == Keys::Control)
-					SaveScript(SaveScriptOperation::e_SaveAndCompile);
+					SaveScript(ScriptSaveOperation::e_SaveAndCompile);
 				else if (E->Control && E->Shift)
 					ParentContainer->SaveAllOpenWorkspaces();
 				break;
@@ -2810,31 +2840,22 @@ namespace ConstructionSetExtender
 					ContextMenuToggleBookmark->PerformClick();
 				break;
 			case Keys::F:									// Find
-				if (E->Modifiers == Keys::Control)
-				{
-					ToolBarCommonTextBox->Tag = "Find";
-					ToolBarCommonTextBox->Focus();
-				}
-				break;
 			case Keys::H:									// Replace
 				if (E->Modifiers == Keys::Control)
 				{
-					ToolBarCommonTextBox->Tag = "Replace";
-					ToolBarCommonTextBox->Focus();
+					ToolBarEditMenuContentsFind->PerformClick();
 				}
 				break;
 			case Keys::G:									// Goto Line
 				if (E->Modifiers == Keys::Control)
 				{
-					ToolBarCommonTextBox->Tag = "Goto Line";
-					ToolBarCommonTextBox->Focus();
+					ToolBarEditMenuContentsGotoLine->PerformClick();
 				}
 				break;
 			case Keys::E:									// Goto Offset
 				if (E->Modifiers == Keys::Control)
 				{
-					ToolBarCommonTextBox->Tag = "Goto Offset";
-					ToolBarCommonTextBox->Focus();
+					ToolBarEditMenuContentsGotoOffset->PerformClick();
 				}
 				break;
 			case Keys::F4:
@@ -2869,7 +2890,7 @@ namespace ConstructionSetExtender
 		{
 			if (GetListViewSelectedItem(MessageList) != nullptr)
 			{
-				if (GetListViewSelectedItem(MessageList)->ImageIndex == (int)MessageType::e_RegularMessage)
+				if (GetListViewSelectedItem(MessageList)->ImageIndex == (int)MessageListItemType::e_RegularMessage)
 					MessageList->Items->Remove(GetListViewSelectedItem(MessageList));
 				else
 					TextEditor->ScrollToLine(GetListViewSelectedItem(MessageList)->SubItems[1]->Text);
@@ -3068,15 +3089,15 @@ namespace ConstructionSetExtender
 				switch (Control::ModifierKeys)
 				{
 				case Keys::Control:
-					ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_New, nullptr, nullptr);
+					ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScript, nullptr);
 					break;
 				case Keys::Shift:
 					Parameters->EditorHandleIndex = 0;
 					Parameters->ParameterList->Add((UInt32)0);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().X);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().Y);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().Width);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetEditorFormRect().Height);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().X);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().Y);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().Width);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().Height);
 
 					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspaceContainer, Parameters);
 					break;
@@ -3089,7 +3110,7 @@ namespace ConstructionSetExtender
 		void Workspace::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (Control::ModifierKeys == Keys::Control && !HandlingKeyDownEvent)
-				ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_Open, nullptr, nullptr);
+				ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndSelectScript, nullptr);
 			else
 				OpenScript();
 		}
@@ -3103,21 +3124,21 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
 		{
-			SaveScript(SaveScriptOperation::e_SaveAndCompile);
+			SaveScript(ScriptSaveOperation::e_SaveAndCompile);
 		}
 		void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (GetIsCurrentScriptNew() || GetIsUninitialized())
+			if (GetIsScriptNew() || GetIsUninitialized())
 			{
 				MessageBox::Show("You may only perform this operation on an existing script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				return;
 			}
 
-			SaveScript(SaveScriptOperation::e_SaveButDontCompile);
+			SaveScript(ScriptSaveOperation::e_SaveButDontCompile);
 		}
 		void Workspace::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
 		{
-			SaveScript(SaveScriptOperation::e_SaveActivePluginToo);
+			SaveScript(ScriptSaveOperation::e_SaveActivePluginToo);
 		}
 		void Workspace::ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3125,7 +3146,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (!GetIsCurrentScriptNew() && !GetIsUninitialized())
+			if (!GetIsScriptNew() && !GetIsUninitialized())
 			{
 				CString CEID(CurrentScriptEditorID);
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CEID.c_str());
@@ -3267,11 +3288,10 @@ namespace ConstructionSetExtender
 		void Workspace::ContextMenuFind_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (TextEditor->GetSelectedText() != "")
-				ToolBarCommonTextBox->Text = TextEditor->GetSelectedText();
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false);
 			else
-				ToolBarCommonTextBox->Text = TextEditor->GetTokenAtMouseLocation();
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtMouseLocation(), false);
 
-			ToolBarEditMenuContentsFind->PerformButtonClick();
 		}
 		void Workspace::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3291,7 +3311,7 @@ namespace ConstructionSetExtender
 			else
 				Message = Result->Text;
 
-			AddMessageToMessagePool(MessageType::e_RegularMessage, -1, Message);
+			AddMessageToMessagePool(MessageListItemType::e_RegularMessage, -1, Message);
 		}
 		void Workspace::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3300,15 +3320,6 @@ namespace ConstructionSetExtender
 		void Workspace::ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E)
 		{
 			Process::Start("http://obse.silverlock.org/obse_command_doc.html#" + TextEditor->GetTokenAtMouseLocation());
-		}
-		void Workspace::ContextMenuCopyToCTB_Click(Object^ Sender, EventArgs^ E)
-		{
-			String^ Text = TextEditor->GetSelectedText();
-			if (Text == "")
-				Text = TextEditor->GetTokenAtMouseLocation();
-
-			ToolBarCommonTextBox->Text = Text;
-			ToolBarCommonTextBox->Focus();
 		}
 		void Workspace::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3343,70 +3354,7 @@ namespace ConstructionSetExtender
 			else
 				VarName = Result->Text;
 
-			ScriptParser^ TextParser = gcnew ScriptParser();
-			StringReader^ TextReader = gcnew StringReader(ScriptText);
-			int LastVarOffset = 0, InsertOffset = 0;
-
-			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
-			{
-				TextParser->Tokenize(ReadLine, false);
-
-				if (!TextParser->Valid)
-				{
-					InsertOffset += ReadLine->Length + 1;
-					continue;
-				}
-
-				bool ExitLoop = false, SaveOffset = false;
-				switch (TextParser->GetTokenType(TextParser->Tokens[0]))
-				{
-				case ScriptParser::TokenType::e_Variable:
-					SaveOffset = true;
-					break;
-				case ScriptParser::TokenType::e_Comment:
-				case ScriptParser::TokenType::e_ScriptName:
-					break;
-				default:
-					ExitLoop = true;
-					break;
-				}
-
-				if (ExitLoop)
-					break;
-
-				InsertOffset += ReadLine->Length + 1;
-				if (SaveOffset)
-					LastVarOffset = InsertOffset;
-			}
-
-			if (LastVarOffset)
-				InsertOffset = LastVarOffset;
-
-			String^ VarText = "";
-			if (InsertOffset > ScriptText->Length)
-				VarText += "\n";
-
-			switch (VarType)
-			{
-			case ScriptParser::VariableType::e_Integer:
-				VarText += "int " + VarName;
-				break;
-			case ScriptParser::VariableType::e_Float:
-				VarText += "float " + VarName;
-				break;
-			case ScriptParser::VariableType::e_Ref:
-				VarText += "ref " + VarName;
-				break;
-			case ScriptParser::VariableType::e_String:
-				VarText += "string_var " + VarName;
-				break;
-			case ScriptParser::VariableType::e_Array:
-				VarText += "array_var " + VarName;
-				break;
-			}
-			VarText += "\n";
-
-			TextEditor->InsertText(VarText, InsertOffset);
+			InsertVariable(VarName, VarType);
 		}
 		void Workspace::ContextMenuRefactorDocumentScript_Click( Object^ Sender, EventArgs^ E )
 		{
@@ -3417,7 +3365,7 @@ namespace ConstructionSetExtender
 				return;
 			}
 
-			Refactoring::EditScriptComponentDialog DocumentScriptData(GetParentContainer()->GetEditorFormHandle(),
+			Refactoring::EditScriptComponentDialog DocumentScriptData(GetParentContainer()->GetHandle(),
 				CurrentScriptEditorID,
 				Refactoring::EditScriptComponentDialog::OperationType::e_DocumentScript,
 				"Script Description");
@@ -3510,17 +3458,14 @@ namespace ConstructionSetExtender
 				if (!SkippedDescription)
 					DocumentedScript = "scn " + ScriptName + "\n\n" + FixedDescription + "\n";
 
-				TextEditor->SetSelectionStart(0);
-				TextEditor->SetSelectionLength(TextEditor->GetTextLength());
-				TextEditor->SetSelectedText(DocumentedScript->Substring(0, DocumentedScript->Length - 1), false);
-				TextEditor->SetSelectionLength(0);
+				TextEditor->SetText(DocumentedScript->Substring(0, DocumentedScript->Length - 1), false, false);
 			}
 		}
 		void Workspace::ContextMenuRefactorCreateUDFImplementation_Click( Object^ Sender, EventArgs^ E )
 		{
 			String^ UDFName = dynamic_cast<String^>(ContextMenuRefactorCreateUDFImplementation->Tag);
 
-			Refactoring::CreateUDFImplementationDialog UDFData(GetParentContainer()->GetEditorFormHandle());
+			Refactoring::CreateUDFImplementationDialog UDFData(GetParentContainer()->GetHandle());
 
 			if (UDFData.HasResult)
 			{
@@ -3537,7 +3482,9 @@ namespace ConstructionSetExtender
 
 				UDFScriptText += "begin function " + ParamList + "\n\nend\n";
 
-				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_NewText, UDFScriptText, nullptr);
+				List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
+				RemoteOpParameters->Add(UDFScriptText);
+				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScriptAndSetText, RemoteOpParameters);
 			}
 		}
 		void Workspace::ContextMenuRefactorRenameVariables_Click( Object^ Sender, EventArgs^ E )
@@ -3549,7 +3496,7 @@ namespace ConstructionSetExtender
 				return;
 			}
 
-			Refactoring::EditScriptComponentDialog RenameVariablesData(GetParentContainer()->GetEditorFormHandle(),
+			Refactoring::EditScriptComponentDialog RenameVariablesData(GetParentContainer()->GetHandle(),
 				CurrentScriptEditorID,
 				Refactoring::EditScriptComponentDialog::OperationType::e_RenameVariables,
 				"");
@@ -3601,115 +3548,41 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void Workspace::ToolBarCommonTextBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
+		void Workspace::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
 		{
-			switch (E->KeyCode)
-			{
-			case Keys::Enter:
-				if (ToolBarCommonTextBox->Tag->ToString() != "")
-				{
-					if	(ToolBarCommonTextBox->Tag->ToString() == "Find")
-						ToolBarEditMenuContentsFind->PerformButtonClick();
-					else if (ToolBarCommonTextBox->Tag->ToString() == "Replace")
-						ToolBarEditMenuContentsReplace->PerformButtonClick();
-					else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Line")
-						ToolBarEditMenuContentsGotoLine->PerformClick();
-					else if (ToolBarCommonTextBox->Tag->ToString() == "Goto Offset")
-						ToolBarEditMenuContentsGotoOffset->PerformClick();
-				}
-
-				E->Handled = true;
-				break;
-			}
-		}
-		void Workspace::ToolBarCommonTextBox_LostFocus(Object^ Sender, EventArgs^ E)
-		{
-			ToolBarCommonTextBox->Tag = "";
-		}
-
-		void Workspace::ToolBarEditMenuContentsFind_Click(Object^ Sender, EventArgs^ E)
-		{
-			if ( ToolBarCommonTextBox->Text != "")
-			{
-				PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Find, ToolBarCommonTextBox->Text, "");
-			}
+			if (TextEditor->GetSelectedText() != "")
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false);
 			else
-			{
-				MessageBox::Show("Enter a valid search string.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
-				return;
-			}
-		}
-		void Workspace::ToolBarEditMenuContentsFindContentsInTabs_Click( Object^ Sender, EventArgs^ E )
-		{
-			if (ToolBarCommonTextBox->Text != "")
-			{
-				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_Find, ToolBarCommonTextBox->Text, "");
-			}
-			else
-			{
-				MessageBox::Show("Enter a valid search string.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
-				return;
-			}
-		}
-		void Workspace::ToolBarEditMenuContentsReplace_Click(Object^ Sender, EventArgs^ E)
-		{
-			if (ToolBarCommonTextBox->Text != "")
-			{
-				String^ ReplaceString = "";
-				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Replacement String", "Find and Replace");
-				if (Result->ReturnCode == DialogResult::Cancel)
-					return;
-				else
-					ReplaceString = Result->Text;
-
-				PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Replace, ToolBarCommonTextBox->Text, ReplaceString);
-			}
-			else
-			{
-				MessageBox::Show("Enter a valid search string.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
-				return;
-			}
-		}
-		void Workspace::ToolBarEditMenuContentsReplaceContentsInTabs_Click( Object^ Sender, EventArgs^ E )
-		{
-			if (ToolBarCommonTextBox->Text != "")
-			{
-				String^ ReplaceString = "";
-				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Replacement String", "Find and Replace");
-				if (Result->ReturnCode == DialogResult::Cancel)
-					return;
-				else
-					ReplaceString = Result->Text;
-
-				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_Replace, ToolBarCommonTextBox->Text, ReplaceString);
-			}
-			else
-			{
-				MessageBox::Show("Enter a valid search string.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
-				return;
-			}
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtCaretPos(), false);
 		}
 		void Workspace::ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (ToolBarCommonTextBox->Text != "")
+			if (ToolBarShowOffsets->Checked)
+				MessageBox::Show("This operation can only be performed in the text editor and the preprocessed text viewer", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+			else
 			{
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Line Number (1 - " + TextEditor->GetTotalLineCount() + ")", "Go To Line");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+
 				if (ToolBarShowPreprocessedText->Checked)
-					PreprocessedTextViewer->JumpToLine(ToolBarCommonTextBox->Text);
-				else if (ToolBarShowOffsets->Checked)
-					MessageBox::Show("This operation can only be performed in the text editor and the preprocesed text viewer", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+					PreprocessedTextViewer->JumpToLine(Result->Text);
 				else
-					TextEditor->ScrollToLine(ToolBarCommonTextBox->Text);
+					TextEditor->ScrollToLine(Result->Text);
 			}
 		}
 		void Workspace::ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (ToolBarCommonTextBox->Text != "")
+			if (ToolBarShowOffsets->Checked)
 			{
-				if (ToolBarShowOffsets->Checked)
-					OffsetViewer->JumpToLine(ToolBarCommonTextBox->Text);
-				else
-					MessageBox::Show("This operation can only be performed in the offset viewer", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Offset (0000 - " + OffsetViewer->GetLastOffset().ToString("X4") + ")", "Go To Offset");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+
+				OffsetViewer->JumpToLine(Result->Text);
 			}
+			else
+				MessageBox::Show("This operation can only be performed in the offset viewer", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 		}
 
 		void Workspace::ToolBarMessageList_Click(Object^ Sender, EventArgs^ E)
@@ -3726,13 +3599,13 @@ namespace ConstructionSetExtender
 				MessageList->Show();
 				MessageList->BringToFront();
 				ToolBarMessageList->Checked = true;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
 			}
 			else
 			{
 				MessageList->Hide();
 				ToolBarMessageList->Checked = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
 		}
 		void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
@@ -3749,13 +3622,13 @@ namespace ConstructionSetExtender
 				FindList->Show();
 				FindList->BringToFront();
 				ToolBarFindList->Checked = true;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
 			}
 			else
 			{
 				FindList->Hide();
 				ToolBarFindList->Checked = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
 		}
 		void Workspace::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
@@ -3772,13 +3645,13 @@ namespace ConstructionSetExtender
 				BookmarkList->Show();
 				BookmarkList->BringToFront();
 				ToolBarBookmarkList->Checked = true;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
 			}
 			else
 			{
 				BookmarkList->Hide();
 				ToolBarBookmarkList->Checked = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
 		}
 		void Workspace::ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E)
@@ -3787,7 +3660,7 @@ namespace ConstructionSetExtender
 
 			SaveManager->DefaultExt = "*.txt";
 			SaveManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
-			SaveManager->FileName = WorkspaceTabItem->Tooltip;
+			SaveManager->FileName = GetScriptDescription();
 			SaveManager->RestoreDirectory = true;
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
@@ -3801,7 +3674,7 @@ namespace ConstructionSetExtender
 
 			SaveManager->Description = "All open scripts in this window will be dumped to the selected folder.";
 			SaveManager->ShowNewFolderButton = true;
-			SaveManager->SelectedPath = Globals::AppPath + "\\Data\\Scripts";
+			SaveManager->SelectedPath = SCRIPTSFOLDERPATH;
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0)
 			{
@@ -3891,7 +3764,7 @@ namespace ConstructionSetExtender
 					if (VariableIndexList->Items->Count)
 						ToolBarUpdateVarIndices->Enabled = true;
 
-					WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height / 1.5;
+					WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
 					ToolBarGetVarIndices->Checked = true;
 				}
 			}
@@ -3901,7 +3774,7 @@ namespace ConstructionSetExtender
 
 				ToolBarGetVarIndices->Checked = false;
 				ToolBarUpdateVarIndices->Enabled = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetEditorFormRect().Height;
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
 		}
 		void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
@@ -3996,8 +3869,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E)
 		{
-			ParentContainer->SetEditorFormCursor(Cursors::WaitCursor);
-			TextEditor->BeginUpdate();
+			ParentContainer->SetCursor(Cursors::WaitCursor);
 
 			String^ SanitizedText = TextEditor->GetText();
 
@@ -4013,32 +3885,29 @@ namespace ConstructionSetExtender
 			if (PREFERENCES->FetchSettingAsInt("IndentLines", "Sanitize"))
 				SanitizedText = SanitizeScriptText(SanitizeOperation::e_Indent, SanitizedText);
 
-			TextEditor->SetSelectionStart(0);
-			TextEditor->SetSelectionLength(TextEditor->GetTextLength());
-			TextEditor->SetSelectedText(SanitizedText, false);
-			TextEditor->SetSelectionLength(0);
+			TextEditor->SetText(SanitizedText, false, false);
 
-			TextEditor->EndUpdate();
-			ParentContainer->SetEditorFormCursor(Cursors::Default);
+			ParentContainer->SetCursor(Cursors::Default);
 		}
 
 		void Workspace::ToolBarBindScript_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (GetIsCurrentScriptNew() || GetIsUninitialized())
+			if (GetIsScriptNew() || GetIsUninitialized())
 			{
 				MessageBox::Show("You may only perform this operation on an existing script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				return;
 			}
 			else
 			{
-				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.BindScript((CString(CurrentScriptEditorID)).c_str(), (HWND)GetParentContainer()->GetEditorFormHandle());
+				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.BindScript((CString(CurrentScriptEditorID)).c_str(), (HWND)GetParentContainer()->GetHandle());
 			}
 		}
 
 		void Workspace::ScriptEditorPreferences_Saved( Object^ Sender, EventArgs^ E )
 		{
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			AutoSaveTimer->Stop();
 
+			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 			TextEditor->SetFont(CustomFont);
 			OffsetViewer->SetFont(CustomFont);
 			PreprocessedTextViewer->SetFont(CustomFont);
@@ -4048,6 +3917,19 @@ namespace ConstructionSetExtender
 				TabSize = 4;
 
 			TextEditor->SetTabCharacterSize(TabSize);
+			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
+			AutoSaveTimer->Start();
+		}
+
+		void Workspace::AutoSaveTimer_Tick( Object^ Sender, EventArgs^ E )
+		{
+			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup"))
+			{
+				if (GetIsUninitialized() == false && GetIsScriptNew() == false && TextEditor->GetModifiedStatus() == true)
+				{
+					SaveScriptToDisk(AUTORECOVERYCACHEPATH, false);
+				}
+			}
 		}
 #pragma endregion
 #pragma endregion

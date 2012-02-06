@@ -1,6 +1,6 @@
 #pragma once
 
-//	EditorAPI: BSStringT class.
+//	EditorAPI: BSString class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
@@ -13,7 +13,7 @@
 */
 
 // 08
-class BSStringT
+class BSString
 {
 protected:
 	// members
@@ -28,7 +28,7 @@ public:
 	SInt16							Compare(const char* string, bool ignoreCase = true);
 	const char*						c_str() const                  { return m_data; }
 
-	static BSStringT*				CreateInstance(const char* String);
+	static BSString*				CreateInstance(const char* String);
 	void							DeleteInstance(bool ReleaseMemory = true);
 };
-STATIC_ASSERT(sizeof(BSStringT) == 0x08);
+STATIC_ASSERT(sizeof(BSString) == 0x08);

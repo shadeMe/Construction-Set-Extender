@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 	{
 		ref class IntelliSenseInterface;
 
-		public ref class IntelliSenseItem
+		ref class IntelliSenseItem
 		{
 			static array<String^>^								IntelliSenseItemTypeID =
 			{
@@ -47,7 +47,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItemType								Type;
 		};
 
-		public ref class IntelliSenseItemScriptCommand : public IntelliSenseItem
+		ref class IntelliSenseItemScriptCommand : public IntelliSenseItem
 		{
 		public:
 			static enum class									IntelliSenseCommandItemSourceType
@@ -90,7 +90,7 @@ namespace ConstructionSetExtender
 			IntelliSenseCommandItemSourceType					GetSource();
 		};
 
-		public ref class IntelliSenseItemVariable : public IntelliSenseItem
+		ref class IntelliSenseItemVariable : public IntelliSenseItem
 		{
 		public:
 			static array<String^>^								IntelliSenseItemVariableDataTypeID =
@@ -123,7 +123,7 @@ namespace ConstructionSetExtender
 			String^												GetDataTypeID();
 		};
 
-		public ref class IntelliSenseItemQuest : public IntelliSenseItem
+		ref class IntelliSenseItemQuest : public IntelliSenseItem
 		{
 		protected:
 			String^												Name;
@@ -134,7 +134,7 @@ namespace ConstructionSetExtender
 			virtual String^										GetIdentifier() override;
 		};
 
-		public ref class Script
+		ref class Script
 		{
 		public:
 			typedef List<IntelliSenseItemVariable^>				VarListT;
@@ -161,7 +161,7 @@ namespace ConstructionSetExtender
 			List<IntelliSenseItemVariable^>::Enumerator^		GetVariableListEnumerator();
 		};
 
-		public ref class UserFunction : public Script
+		ref class UserFunction : public Script
 		{
 		protected:
 			Array^												Parameters;			// indices of the parameters in VarList
@@ -175,7 +175,7 @@ namespace ConstructionSetExtender
 			void												SetReturnVariable(int VariableIndex);
 		};
 
-		public ref class IntelliSenseItemUserFunction : public IntelliSenseItem
+		ref class IntelliSenseItemUserFunction : public IntelliSenseItem
 		{
 			UserFunction^										Parent;
 		public:
@@ -184,7 +184,7 @@ namespace ConstructionSetExtender
 			virtual String^										GetIdentifier() override;
 		};
 
-		public ref class IntelliSenseItemEditorIDForm : public IntelliSenseItem
+		ref class IntelliSenseItemEditorIDForm : public IntelliSenseItem
 		{
 		protected:
 			static enum class									FormFlags
@@ -212,7 +212,7 @@ namespace ConstructionSetExtender
 			virtual String^										GetIdentifier() override;
 		};
 
-		public ref struct IntelliSenseParseScriptData
+		ref struct IntelliSenseParseScriptData
 		{
 			IntelliSenseInterface^								SourceIntelliSenseInterface;
 			Script^												SourceScript;

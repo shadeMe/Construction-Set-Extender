@@ -15,7 +15,7 @@ namespace ConstructionSetExtender
 		{
 			ref class AvalonEditTextEditor;
 
-			public ref class AvalonEditLineColorizingTransformer abstract : public AvalonEdit::Rendering::DocumentColorizingTransformer
+			ref class AvalonEditLineColorizingTransformer abstract : public AvalonEdit::Rendering::DocumentColorizingTransformer
 			{
 			protected:
 				AvalonEdit::TextEditor^						ParentEditor;
@@ -29,7 +29,7 @@ namespace ConstructionSetExtender
 			};
 
 			// deprecated in favor of BackgroundColorizers
-			public ref class AvalonEditSelectionColorizingTransformer : public AvalonEditLineColorizingTransformer
+			ref class AvalonEditSelectionColorizingTransformer : public AvalonEditLineColorizingTransformer
 			{
 			protected:
 				virtual void								PerformColorization(VisualLineElement^ Element) override;
@@ -38,7 +38,7 @@ namespace ConstructionSetExtender
 				AvalonEditSelectionColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
 			};
 
-			public ref class AvalonEditLineLimitColorizingTransformer : public AvalonEditLineColorizingTransformer
+			ref class AvalonEditLineLimitColorizingTransformer : public AvalonEditLineColorizingTransformer
 			{
 			protected:
 				virtual void								PerformColorization(VisualLineElement^ Element) override;
@@ -48,7 +48,7 @@ namespace ConstructionSetExtender
 			};
 
 			// background colorizers
-			public ref class AvalonEditLineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
+			ref class AvalonEditLineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 			{
 			protected:
 				AvalonEdit::TextEditor^						ParentEditor;
@@ -71,7 +71,7 @@ namespace ConstructionSetExtender
 				AvalonEditLineBackgroundColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : ParentEditor(Parent), RenderLayer(RenderLayer) {}
 			};
 
-			public ref class AvalonEditCurrentLineBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class AvalonEditCurrentLineBGColorizer : public AvalonEditLineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
@@ -79,7 +79,7 @@ namespace ConstructionSetExtender
 				AvalonEditCurrentLineBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer) {}
 			};
 
-			public ref class AvalonEditScriptErrorBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class AvalonEditScriptErrorBGColorizer : public AvalonEditLineBackgroundColorizer
 			{
 				List<int>^									ErrorLines;
 
@@ -98,7 +98,7 @@ namespace ConstructionSetExtender
 				void										ClearLines(void);
 			};
 
-			public ref class AvalonEditSelectionBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class AvalonEditSelectionBGColorizer : public AvalonEditLineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
@@ -106,7 +106,7 @@ namespace ConstructionSetExtender
 				AvalonEditSelectionBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer) {}
 			};
 
-			public ref class AvalonEditLineLimitBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class AvalonEditLineLimitBGColorizer : public AvalonEditLineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
@@ -114,18 +114,32 @@ namespace ConstructionSetExtender
 				AvalonEditLineLimitBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer) {}
 			};
 
-			public ref class AvalonEditFindReplaceBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class AvalonEditFindReplaceBGColorizer : public AvalonEditLineBackgroundColorizer
 			{
-				String^										MatchString;
+				value struct Segment
+				{
+					int										Offset;
+					int										Length;
+
+					Segment(int Offset, int Length) : Offset(Offset), Length(Length) {}
+				};
+
+				List<Segment>^								HighlightSegments;
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditFindReplaceBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer), MatchString("") {}
+				AvalonEditFindReplaceBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer), HighlightSegments(gcnew List<Segment>()) {}
 
-				void										SetMatch(String^ Match) { MatchString = Match; }
+				void										AddSegment(int Offset, int Length);
+				void										ClearSegments();
+
+				virtual ~AvalonEditFindReplaceBGColorizer()
+				{
+					ClearSegments();
+				}
 			};
 
-			public ref class AvalonEditObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
+			ref class AvalonEditObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
 			{
 				ScriptParser^								IndentParser;
 
@@ -144,7 +158,7 @@ namespace ConstructionSetExtender
 				AvalonEditObScriptIndentStrategy(bool TrimTrailingWhitespace, bool CullEmptyLines) : IndentParser(gcnew ScriptParser()), TrimTrailingWhitespace(TrimTrailingWhitespace), CullEmptyLines(CullEmptyLines) {}
 			};
 
-			public ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::AbstractFoldingStrategy
+			ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::AbstractFoldingStrategy
 			{
 				ref class FoldingSorter : public IComparer<AvalonEdit::Folding::NewFolding^>
 				{
@@ -167,7 +181,7 @@ namespace ConstructionSetExtender
 				AvalonEditObScriptCodeFoldingStrategy() : AvalonEdit::Folding::AbstractFoldingStrategy(), FoldingParser(gcnew ScriptParser()), Sorter(gcnew FoldingSorter()) {}
 			};
 
-			public ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
+			ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
 			{
 			public:
 				property Object^							Tag;
@@ -176,7 +190,7 @@ namespace ConstructionSetExtender
 				DoubleAnimation(fromValue, toValue, duration, fillBehavior) {}
 			};
 
-			public ref class AvalonEditBraceHighlightingBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class AvalonEditBraceHighlightingBGColorizer : public AvalonEditLineBackgroundColorizer
 			{
 				int											OpenBraceOffset;
 				int											CloseBraceOffset;

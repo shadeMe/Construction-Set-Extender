@@ -4,7 +4,7 @@ namespace ConstructionSetExtender
 {
 	namespace TextEditors
 	{
-		public ref class ScriptModifiedEventArgs : public EventArgs
+		ref class ScriptModifiedEventArgs : public EventArgs
 		{
 		public:
 			property bool								ModifiedStatus;
@@ -15,18 +15,31 @@ namespace ConstructionSetExtender
 			}
 		};
 
-		public delegate void							ScriptModifiedEventHandler(Object^ Sender, ScriptModifiedEventArgs^ E);
+		delegate void									ScriptModifiedEventHandler(Object^ Sender, ScriptModifiedEventArgs^ E);
 
-		public interface class IScriptTextEditor
+		interface class IScriptTextEditor
 		{
 			static enum class							FindReplaceOperation
 			{
 				e_Find = 0,
-				e_Replace
+				e_Replace,
+				e_CountMatches
 			};
+			static enum class							FindReplaceOptions
+			{
+				e_InSelection		=		1 << 0,
+				e_MatchWholeWord	=		1 << 1,
+				e_CaseInsensitive	=		1 << 2,
+				e_RegEx				=		1 << 3
+			};
+
+			// events
+			event ScriptModifiedEventHandler^			ScriptModified;
+			event KeyEventHandler^						KeyDown;
 
 			delegate void								FindReplaceOutput(String^ Line, String^ Text);
 
+			// methods
 			void										SetFont(Font^ FontObject);
 			void										SetTabCharacterSize(int PixelWidth);
 			void										SetContextMenu(ContextMenuStrip^% Strip);
@@ -35,8 +48,8 @@ namespace ConstructionSetExtender
 
 			String^										GetText(void);
 			UInt32										GetTextLength(void);
-			void										SetText(String^ Text, bool PreventTextChangedEventHandling);
-			void										InsertText(String^ Text, int Index);			// performs bounds check
+			void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
+			void										InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);			// performs bounds check
 
 			String^										GetSelectedText(void);
 			void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
@@ -63,8 +76,8 @@ namespace ConstructionSetExtender
 			IntPtr										GetHandle();
 
 			void										FocusTextArea();
-			void										LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex);
-			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, UInt32 AllocatedIndex);
+			void										LoadFileFromDisk(String^ Path);
+			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName);
 
 			bool										GetModifiedStatus();
 			void										SetModifiedStatus(bool Modified);
@@ -74,7 +87,7 @@ namespace ConstructionSetExtender
 
 			Point										GetLastKnownMouseClickLocation(void);
 
-			UInt32										FindReplace(FindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOutput^ Output);
+			int											FindReplace(FindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOutput^ Output, UInt32 Options);		// returns the number of matches, -1 if an error was encountered
 			void										ToggleComment(int StartIndex);
 			void										UpdateIntelliSenseLocalDatabase(void);
 

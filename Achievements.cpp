@@ -5,7 +5,7 @@
 namespace Achievements
 {
 	const UInt32		kMaxCSSessionLength = 6;	// in hours
-	const UInt32		kMaxNewToolsSampleCount = 50;
+	const UInt32		kMaxNewToolsSampleCount = 125;
 	const UInt32		kMaxScriptCommandCount = 2400;
 	const UInt32		kMaxTopicInfosSaved = 100;
 	const UInt32		kHalfWayUnlockCount = 14;
@@ -25,21 +25,21 @@ namespace Achievements
 		{ "Cheat",					"Managed to complete a 6 hour long CS session without any CTDs",								kAchievement_Cheat,					false },
 		{ "Fearless",				"Set Oblivion.esm as the active file and hit the 'OK' button",									kAchievement_Fearless,				false },
 		{ "Automaton",				"Executed a CS Automation Script",																kAchievement_Automaton,				false },
-		{ "Heretic",				"Defiled the awesomeness of our lord shadeMe",													kAchievement_Heretic,				false },
+		{ "Heretic",				"Defiled the awesomeness of our Lord shadeMe!",													kAchievement_Heretic,				false },
 		{ "Power User",				"Sampled much of the new tools CSE adds",														kAchievement_PowerUser,				false },
-		{ "Anti-Christ",			"Attempted to remove our lord shadeMe from this plane of existence",							kAchievement_AntiChrist,			false },
+		{ "Anti-Christ",			"Attempted to remove our Lord shadeMe from this plane of existence!",							kAchievement_AntiChrist,			false },
 		{ "Lazy Bum",				"Launched the game from the main menu",															kAchievement_LazyBum,				false },
-		{ "Mad Scientist",			"Cloned one of the seventeen Divines",															kAchievement_MadScientist,			false },
+		{ "Mad Scientist",			"Cloned one of the New Age Divines",															kAchievement_MadScientist,			false },
 		{ "Soprano",				"Successfully generated a lip synch file",														kAchievement_Soprano,				false },
 		{ "WTF!",					"Managed to trigger an assertion in the editor code",											kAchievement_WTF,					false },
 		{ "Flying Blind",			"Disabled editor warning logging",																kAchievement_FlyingBlind,			false },
 		{ "Pedantic",				"Saved version information to a plugin's description",											kAchievement_Pedantic,				false },
 		{ "Cardinal Sin",			"Used the Added Topics list when adding new dialog topics to responses",						kAchievement_CardinalSin,			false },
 		{ "Magister",				"Modified a magic effect",																		kAchievement_Magister,				false },
-		{ "Commadant",				"Over 2400 script commands registered",															kAchievement_Commandant,			false },
+		{ "Commandant",				"Over 2400 script commands registered",															kAchievement_Commandant,			false },
 		{ "CompartmentalizeR",		"Used an editor workspace other than the default",												kAchievement_Compartmentalizer,		false },
 		{ "Erudite Modder",			"Remembered to read CSE's documentation at least once",											kAchievement_EruditeModder,			false },
-		{ "Road Builder",			"Layed roads for a worldspace",																	kAchievement_RoadBuilder,			false },
+		{ "Bob The Builder",		"Laid roads for a worldspace",																	kAchievement_BobTheBuilder,			false },
 		{ "Loquacious",				"Over 100 dialog responses created in a single CS session",										kAchievement_Loquacious,			false },
 		{ "Saboteur",				"Managed to crash the extended CS!",															kAchievement_Saboteur,				false },
 
@@ -111,7 +111,16 @@ namespace Achievements
 				UnlockedCount++;
 		}
 
-		DebugPrint("Achievements Unlocked: %d/%d", UnlockedCount, TableSize);
+		DebugPrint("Unlocked Achievements: %d/%d", UnlockedCount, TableSize);
+		CONSOLE->Indent();
+		for (int i = 0; i < TableSize; i++)
+		{
+			Achievement& Itr = Entries[i];
+
+			if (Itr.Unlocked)
+				DebugPrint(Itr.Name);
+		}
+		CONSOLE->Exdent();
 	}
 
 	void __stdcall UnlockAchievement(UInt32 ID)
@@ -153,7 +162,7 @@ namespace Achievements
 			if (!(AchievementMask & (1 << kAchievement_HalfWayUnlocked)))
 			{
 				AchievementMask |= 1 << kAchievement_HalfWayUnlocked;
-				MessageBox(*g_HWND_CSParent, "Congratulations!\n\nYou've unlocked more than half of editor's achievements! You may now ask shadeMe to induct you into the CSE Hall of Fame!", "CSE", MB_OK|MB_ICONEXCLAMATION);
+				MessageBox(*g_HWND_CSParent, "Congratulations!\n\nYou've unlocked more than half of editor's achievements! You may now beseech shadeMe to induct you into the CSE Hall of Fame!", "CSE", MB_OK|MB_ICONEXCLAMATION);
 			}
 		}
 

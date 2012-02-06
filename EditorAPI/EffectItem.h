@@ -27,7 +27,7 @@ public:
 		// members
 		/*00*/ UInt32         scriptFormID;
 		/*04*/ UInt32         school;
-		/*08*/ BSStringT      name;
+		/*08*/ BSString      name;
 		/*10*/ UInt32         fxMgefCode; // effect setting from which FX are taken
 		/*14*/ bool           hostile;
 		/*15*/ UInt8          pad15[3];

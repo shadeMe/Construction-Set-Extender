@@ -1,7 +1,9 @@
-#pragma warning (disable : 4005)
-
 #include "CompilerErrorDetours.h"
 #include "[Common]/CLIWrapper.h"
+
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
 
 namespace Hooks
 {
@@ -208,3 +210,6 @@ namespace Hooks
 		}
 	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

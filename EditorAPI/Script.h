@@ -16,7 +16,7 @@ public:
 	// 10
 	struct RefVariable
 	{
-		/*00*/ BSStringT			name;			// name of the reference variable/editorID of the referenced object (extracted directly from script text)
+		/*00*/ BSString			name;			// name of the reference variable/editorID of the referenced object (extracted directly from script text)
 		/*08*/ TESForm*				form;			// referenced object, in case of explict references
 		/*0C*/ UInt32				variableIndex;	// variable index of the reference variable, if any
 	};
@@ -37,7 +37,7 @@ public:
 		/*10*/ UInt8					type;
 		/*11*/ UInt8					pad11;
 		/*14*/ UInt32					unk14;
-		/*18*/ BSStringT				name;
+		/*18*/ BSString				name;
 	};
 	typedef tList<VariableInfo> VariableListT;
 
@@ -113,7 +113,7 @@ struct ScriptBuffer
 	/*00*/ char*						scriptText;
 	/*04*/ UInt32						textOffset;
 	/*08*/ UInt32						unk8;				// set when script is compiled in-game (from the console)?
-	/*0C*/ BSStringT					scriptName;
+	/*0C*/ BSString					scriptName;
 	/*14*/ UInt32						errorFlag;			// set to ScriptLineBuffer::errorFlag
 	/*18*/ UInt8						resultScript;		// set to 1 when compiling result scripts, used to skip certain syntax checks
 	/*19*/ UInt8						pad19;

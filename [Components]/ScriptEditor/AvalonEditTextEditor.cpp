@@ -6,6 +6,7 @@
 using namespace ICSharpCode::AvalonEdit::Rendering;
 using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
+using namespace System::Text::RegularExpressions;
 
 namespace ConstructionSetExtender
 {
@@ -15,7 +16,7 @@ namespace ConstructionSetExtender
 	{
 		namespace AvalonEditor
 		{
-			public ref class BracketSearchData
+			ref class BracketSearchData
 			{
 				Char									Symbol;
 				int										StartOffset;
@@ -117,14 +118,22 @@ namespace ConstructionSetExtender
 				return TextField->Text->Length;
 			}
 
-			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling)
+			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack)
 			{
 				if (PreventTextChangedEventHandling)
 					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 
 				if (SetTextAnimating)
 				{
-					TextField->Text = Text;
+					if (ResetUndoStack)
+						TextField->Text = Text;
+					else
+					{
+						SetSelectionStart(0);
+						SetSelectionLength(GetTextLength());
+						SetSelectedText(Text, false);
+						SetSelectionLength(0);
+					}
 					UpdateCodeFoldings();
 				}
 				else
@@ -152,15 +161,26 @@ namespace ConstructionSetExtender
 					FadeOutStoryBoard->SetTargetProperty(FadeOutAnimation, gcnew System::Windows::PropertyPath(AnimationPrimitive->OpacityProperty));
 					FadeOutStoryBoard->Begin(TextFieldPanel);
 
-					TextField->Text = Text;
+					if (ResetUndoStack)
+						TextField->Text = Text;
+					else
+					{
+						SetSelectionStart(0);
+						SetSelectionLength(GetTextLength());
+						SetSelectedText(Text, false);
+						SetSelectionLength(0);
+					}
 					UpdateCodeFoldings();
 				}
 			}
 
-			void AvalonEditTextEditor::InsertText( String^ Text, int Index )
+			void AvalonEditTextEditor::InsertText( String^ Text, int Index, bool PreventTextChangedEventHandling )
 			{
 				if (Index > GetTextLength())
 					Index = GetTextLength();
+
+				if (PreventTextChangedEventHandling)
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 
 				TextField->Document->Insert(Index, Text);
 			}
@@ -299,14 +319,16 @@ namespace ConstructionSetExtender
 				TextField->Focus();
 			}
 
-			void AvalonEditTextEditor::LoadFileFromDisk(String^ Path, UInt32 AllocatedIndex)
+			void AvalonEditTextEditor::LoadFileFromDisk(String^ Path)
 			{
 				try
 				{
 					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
-					TextField->Load(Path);
+					StreamReader^ Reader = gcnew StreamReader(Path);
+					String^ FileText = Reader->ReadToEnd();
+					SetText(FileText, false, false);
+					Reader->Close();
 					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
-					DebugPrint("Loaded text from " + Path + " to editor " + AllocatedIndex);
 				}
 				catch (Exception^ E)
 				{
@@ -314,7 +336,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, UInt32 AllocatedIndex)
+			void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName)
 			{
 				if (PathIncludesFileName == false)
 					Path += "\\" + DefaultName + ".txt";
@@ -322,7 +344,6 @@ namespace ConstructionSetExtender
 				try
 				{
 					TextField->Save(Path);
-					DebugPrint("Dumped editor " + AllocatedIndex + "'s text to " + Path);
 				}
 				catch (Exception^ E)
 				{
@@ -343,6 +364,8 @@ namespace ConstructionSetExtender
 				{
 				case true:
 					ErrorColorizer->ClearLines();
+					if (TextFieldInUpdateFlag == false)
+						ClearFindResultIndicators();
 					break;
 				case false:
 					break;
@@ -366,40 +389,91 @@ namespace ConstructionSetExtender
 				return LastKnownMouseClickLocation;
 			}
 
-			UInt32 AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output)
+			int AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options)
 			{
-				UInt32 Hits = 0;
-				ClearFindResultIndicators();
-				BeginUpdate();
+				int Hits = 0;
 
-				AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
-				if (TextSelection->IsEmpty)
+				if (Operation != IScriptTextEditor::FindReplaceOperation::e_CountMatches)
 				{
-					for each (DocumentLine^ Line in TextField->Document->Lines)
-						Hits += PerformReplaceOnSegment(Operation, Line, Query, Replacement, Output);
+					ClearFindResultIndicators();
+					BeginUpdate();
 				}
-				else
+
+				try
 				{
-					AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
+					String^ Pattern = "";
 
-					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_RegEx))
+						Pattern = Query;
+					else
 					{
-						FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
-						LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
+						Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
+						if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_MatchWholeWord))
+							Pattern = "\\b" + Pattern + "\\b";
+					}
 
-						for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
-							Hits += PerformReplaceOnSegment(Operation, Itr, Query, Replacement, Output);
+					System::Text::RegularExpressions::Regex^ Parser = nullptr;
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_CaseInsensitive))
+						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern, System::Text::RegularExpressions::RegexOptions::IgnoreCase|System::Text::RegularExpressions::RegexOptions::Singleline);
+					else
+						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern, System::Text::RegularExpressions::RegexOptions::Singleline);
+
+					AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_InSelection))
+					{
+						if (TextSelection->IsEmpty == false)
+						{
+							AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
+
+							for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
+							{
+								FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
+								LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
+
+								for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+								{
+									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Output, Options);
+									Hits += Matches;
+									if (Matches == -1)
+									{
+										Hits = -1;
+										break;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						for each (DocumentLine^ Line in TextField->Document->Lines)
+						{
+							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Output, Options);
+							Hits += Matches;
+							if (Matches == -1)
+							{
+								Hits = -1;
+								break;
+							}
+						}
 					}
 				}
+				catch (Exception^ E)
+				{
+					Hits = -1;
+					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
+				}
 
-				if (Operation == IScriptTextEditor::FindReplaceOperation::e_Replace)
-					FindReplaceColorizer->SetMatch(Replacement);
-				else
-					FindReplaceColorizer->SetMatch(Query);
+				if (Operation != IScriptTextEditor::FindReplaceOperation::e_CountMatches)
+				{
+					SetSelectionLength(0);
+					RefreshBGColorizerLayer();
+					EndUpdate();
+				}
 
-				SetSelectionLength(0);
-				RefreshBGColorizerLayer();
-				EndUpdate();
+				if (Hits == -1)
+				{
+					MessageBox::Show("An error was encountered while performing the find/replace operation. Please recheck your search and/or replacement strings.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+				}
 
 				return Hits;
 			}
@@ -547,12 +621,14 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::BeginUpdate( void )
 			{
+				TextFieldInUpdateFlag = true;
 				TextField->Document->BeginUpdate();
 			}
 
 			void AvalonEditTextEditor::EndUpdate( void )
 			{
 				TextField->Document->EndUpdate();
+				TextFieldInUpdateFlag = false;
 			}
 
 			UInt32 AvalonEditTextEditor::GetTotalLineCount( void )
@@ -632,24 +708,52 @@ namespace ConstructionSetExtender
 				BraceColorizer = nullptr;
 			}
 
-			UInt32 AvalonEditTextEditor::PerformReplaceOnSegment(IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output)
+			int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser, IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options)
 			{
-				UInt32 Hits = 0;
+				int Hits = 0, SearchStartOffset = 0;
 				String^ CurrentLine = TextField->Document->GetText(Line);
 
-				int Index = 0, Start = 0;
-				while ((Index = CurrentLine->IndexOf(Query, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
+				try
 				{
-					Hits++;
-					int EndIndex = Index + Query->Length;
-
-					if (Operation == IScriptTextEditor::FindReplaceOperation::e_Replace)
+					while (true)
 					{
-						TextField->Document->Replace(Line->Offset + Index, Query->Length, Replacement);
-						CurrentLine = TextField->Document->GetText(Line);
-						Start = Index + Replacement->Length;
+						System::Text::RegularExpressions::MatchCollection^ PatternMatches = ExpressionParser->Matches(CurrentLine, SearchStartOffset);
+
+						if (PatternMatches->Count)
+						{
+							bool Restart = false;
+
+							for each (System::Text::RegularExpressions::Match^ Itr in PatternMatches)
+							{
+								int Offset = Line->Offset + Itr->Index, Length = Itr->Length;
+								Hits++;
+
+								if (Operation == IScriptTextEditor::FindReplaceOperation::e_Replace)
+								{
+									TextField->Document->Replace(Offset, Length, Replacement);
+									CurrentLine = TextField->Document->GetText(Line);
+									FindReplaceColorizer->AddSegment(Offset, Replacement->Length);
+									SearchStartOffset = Itr->Index + Replacement->Length;
+									Restart = true;
+									break;
+								}
+								else if (Operation == IScriptTextEditor::FindReplaceOperation::e_Find)
+								{
+									FindReplaceColorizer->AddSegment(Offset, Length);
+								}
+							}
+
+							if (Restart == false)
+								break;
+						}
+						else
+							break;
 					}
-					Start = Index + 1;
+				}
+				catch (Exception^ E)
+				{
+					Hits = -1;
+					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
 				}
 
 				if (Hits)
@@ -736,7 +840,7 @@ namespace ConstructionSetExtender
 				}
 				else
 				{
-					MessageBox::Show("Invalid line number/offset", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+					MessageBox::Show("Invalid line number", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				}
 			}
 
@@ -858,7 +962,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ClearFindResultIndicators()
 			{
-				FindReplaceColorizer->SetMatch("");
+				FindReplaceColorizer->ClearSegments();
 				RefreshBGColorizerLayer();
 			}
 
@@ -1091,6 +1195,8 @@ namespace ConstructionSetExtender
 			{
 				if (SynchronizingInternalScrollBars == false)
 					SynchronizeExternalScrollBars();
+
+				IntelliSenseBox->HideInterface();
 			}
 
 			void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
@@ -1600,6 +1706,8 @@ namespace ConstructionSetExtender
 
 				LocalVarsDatabaseUpdateTimer->Interval = 5000;
 				LocalVarsDatabaseUpdateTimer->Start();
+
+				TextFieldInUpdateFlag = false;
 
 				Container->Dock = DockStyle::Fill;
 				Container->BorderStyle = BorderStyle::FixedSingle;

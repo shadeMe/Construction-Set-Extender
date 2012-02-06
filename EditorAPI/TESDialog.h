@@ -97,6 +97,23 @@ public:
 };
 STATIC_ASSERT(sizeof(ScriptEditorData) == 0x12C);
 
+// 14
+class ObjectWindowTreeEntryInfo
+{
+public:
+	typedef tList<TESForm> FormListT;
+
+	// members
+	/*00*/ UInt8         formType;           // form type for this tree entry
+	/*01*/ UInt8         pad01[3];
+	/*04*/ UInt32        columnCount;        // number of columns in listview
+	/*08*/ UInt32        selectedIndex;      // index of currently selected item in listview (??)
+	/*0C*/ FormListT     formList;
+
+	static const UInt32		kTreeEntryCount = 0x24; // size of static tree entry arrays
+};
+STATIC_ASSERT(sizeof(ObjectWindowTreeEntryInfo) == 0x14);
+
 // only required methods exposed in the API
 class TESDialog
 {
@@ -301,7 +318,7 @@ public:
 	static UInt32							WritePositionToINI(HWND Handle, const char* WindowClassName);
 	static bool								GetPositionFromINI(const char* WindowClassName, LPRECT OutRect);
 
-	static LRESULT							WriteToStatusBar(WPARAM wParam, LPARAM lParam);
+	static LRESULT							WriteToStatusBar(int PanelIndex, const char* Message);
 
 	static void								InitializeCSWindows();
 	static void								DeinitializeCSWindows();
@@ -320,6 +337,7 @@ public:
 	static bool								SelectTESFileCommonDialog(HWND Parent, const char* SaveDir, bool SaveAsESM, char* FileNameOut, size_t OutSize);
 	static HWND								ShowFormEditDialog(TESForm* Form);
 	static void								ShowScriptEditorDialog(TESForm* InitScript);
+	static HWND								ShowUseReportDialog(TESForm* Form);
 	static void								ResetRenderWindow();
 	static void								RedrawRenderWindow();
 };
@@ -362,6 +380,8 @@ extern HWND*					g_HWND_QuestWindow;
 extern HWND*					g_HWND_LandscapeEdit;
 extern HWND*					g_HWND_CellView_ObjectList;
 extern HWND*					g_HWND_CellView_CellList;
+
+extern HMENU*					g_HMENU_MainMenu;
 
 extern char**					g_TESActivePluginName;
 extern UInt8*					g_TESCSAllowAutoSaveFlag;

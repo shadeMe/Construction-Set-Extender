@@ -12,7 +12,7 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemVariable;
 		ref class Script;
 
-		public ref class IntelliSenseInterface
+		ref class IntelliSenseInterface
 		{
 		protected:
 			void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
@@ -32,7 +32,6 @@ namespace ConstructionSetExtender
 			bool												CallingObjectIsRef;
 			Script^												RemoteScript;
 
-			List<IntelliSenseItem^>^							CurrentListContents;
 			List<IntelliSenseItem^>^							LocalVariableDatabase;
 
 			ListView^											IntelliSenseList;
@@ -80,7 +79,7 @@ namespace ConstructionSetExtender
 			}
 
 			virtual void										ShowInterface(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
-			void												HideInterface();
+			virtual void										HideInterface();
 
 			void												PickSelection();
 			void												ChangeCurrentSelection(MoveDirection Direction);

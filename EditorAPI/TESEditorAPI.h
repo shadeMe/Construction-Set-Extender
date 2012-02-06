@@ -1,11 +1,15 @@
 #pragma once
 
+#include "MemoryHeap.h"
+
 // types
-#include "BSStringT.h"
-#include "NiTypes.h"
+#include "BSString.h"
+#include "NiTMap.h"
 
 // API
 #include "RTTI.h"
+#include "NiClasses.h"
+#include "TESFile.h"
 #include "TESConditionItem.h"
 #include "ActorValues.h"
 #include "BaseFormComponent.h"
@@ -79,3 +83,7 @@
 #include "TESIdleForm.h"
 #include "TESPathGrid.h"
 #include "SettingCollection.h"
+
+// NiAPI
+#include "NiGeometry.h"
+#include "NiRenderer.h"

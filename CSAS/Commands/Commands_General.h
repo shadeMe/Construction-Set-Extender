@@ -17,4 +17,5 @@ namespace CSAutomationScript
 
 	DECLARE_CSASCOMMAND(SetEditorID);
 	DECLARE_CSASCOMMAND(SetFormID);
+	DECLARE_CSASCOMMAND(MarkAsModified);
 }

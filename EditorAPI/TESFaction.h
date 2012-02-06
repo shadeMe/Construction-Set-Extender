@@ -23,8 +23,8 @@ public:
 	// 28
 	struct RankData
 	{
-		BSStringT			maleRank;
-		BSStringT			femaleRank;
+		BSString			maleRank;
+		BSString			femaleRank;
 		TESTexture			insignia;
 	};
 	typedef tList<RankData> RankDataListT;

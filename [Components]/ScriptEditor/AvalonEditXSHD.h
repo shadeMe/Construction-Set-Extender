@@ -12,7 +12,7 @@ namespace ConstructionSetExtender
 			typedef ICSharpCode::AvalonEdit::Highlighting::IHighlightingDefinition		AvalonEditHighlightingDefinition;
 
 			// base interfaces
-			public ref class IXSHDElement
+			ref class IXSHDElement
 			{
 			public:
 				virtual String^				Serialize() = 0;
@@ -41,7 +41,7 @@ namespace ConstructionSetExtender
 			};
 
 			// elements
-			public ref class XSHDColor : public IXSHDElement, public IXSHDPropertyName, public IXSHDPropertyColor, public IXSHDPropertyFontWeight
+			ref class XSHDColor : public IXSHDElement, public IXSHDPropertyName, public IXSHDPropertyColor, public IXSHDPropertyFontWeight
 			{
 				String^					_Name;
 				Color					_Foreground;
@@ -76,7 +76,7 @@ namespace ConstructionSetExtender
 				  }
 			};
 
-			public ref class XSHDWord : public IXSHDElement, public IXSHDPropertyValue
+			ref class XSHDWord : public IXSHDElement, public IXSHDPropertyValue
 			{
 				String^					_Value;
 			public:
@@ -91,7 +91,7 @@ namespace ConstructionSetExtender
 				}
 			};
 
-			public ref class XSHDKeywords : public IXSHDElement, public IXSHDPropertyColor, public IXSHDPropertyFontWeight
+			ref class XSHDKeywords : public IXSHDElement, public IXSHDPropertyColor, public IXSHDPropertyFontWeight
 			{
 				XSHDColor^						NamedColor;
 				LinkedList<XSHDWord^>^			Words;
@@ -123,7 +123,7 @@ namespace ConstructionSetExtender
 				}
 			};
 
-			public ref class XSHDBegin : public IXSHDElement, public IXSHDPropertyValue
+			ref class XSHDBegin : public IXSHDElement, public IXSHDPropertyValue
 			{
 				XSHDColor^					NamedColor;
 
@@ -140,7 +140,7 @@ namespace ConstructionSetExtender
 				}
 			};
 
-			public ref class XSHDEnd : public IXSHDElement, public IXSHDPropertyValue
+			ref class XSHDEnd : public IXSHDElement, public IXSHDPropertyValue
 			{
 				String^						_Value;
 			public:
@@ -157,7 +157,7 @@ namespace ConstructionSetExtender
 
 			ref class XSHDRuleset;
 
-			public ref class XSHDSpan : public IXSHDElement
+			ref class XSHDSpan : public IXSHDElement
 			{
 				XSHDColor^						NamedColor;
 				XSHDRuleset^					Ruleset;
@@ -172,7 +172,7 @@ namespace ConstructionSetExtender
 				void							AddChild(IXSHDElement^ Child);
 			};
 
-			public ref class XSHDRuleset : public IXSHDElement, public IXSHDPropertyName
+			ref class XSHDRuleset : public IXSHDElement, public IXSHDPropertyName
 			{
 				LinkedList<IXSHDElement^>^		Children;
 
@@ -191,7 +191,7 @@ namespace ConstructionSetExtender
 				}
 			};
 
-			public ref class XSHDRule : public IXSHDElement, public IXSHDPropertyValue
+			ref class XSHDRule : public IXSHDElement, public IXSHDPropertyValue
 			{
 				XSHDColor^					NamedColor;
 
@@ -208,7 +208,7 @@ namespace ConstructionSetExtender
 				}
 			};
 
-			public ref class XSHDArbitrary : public IXSHDElement, public IXSHDPropertyValue
+			ref class XSHDArbitrary : public IXSHDElement, public IXSHDPropertyValue
 			{
 				String^						_Value;
 			public:
@@ -224,7 +224,7 @@ namespace ConstructionSetExtender
 			};
 
 			// definition manager
-			public ref class AvalonEditXSHDManager
+			ref class AvalonEditXSHDManager
 			{
 			protected:
 				String^													CommentMarkerRuleset;

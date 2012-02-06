@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 {
 	namespace Preferences
 	{
-		public ref class INISetting
+		ref class INISetting
 		{
 		public:
 			String^											Key;
@@ -15,7 +15,7 @@ namespace ConstructionSetExtender
 			INISetting(String^ Key, String^ Section, String^ DefaultValue) : Key(Key), Section("ScriptEditor::" + Section), DefaultValue(DefaultValue) {}
 		};
 
-		public ref class BoundControl
+		ref class BoundControl
 		{
 		public:
 			static enum class								ControlType
@@ -49,7 +49,7 @@ namespace ConstructionSetExtender
 			void											SetValue(String^ Value);
 		};
 
-		public ref class ScriptEditorPreferences
+		ref class ScriptEditorPreferences
 		{
 		protected:
 			static ScriptEditorPreferences^					Singleton = nullptr;
@@ -125,12 +125,17 @@ namespace ConstructionSetExtender
 			CheckBox^									AnnealCasing;
 			CheckBox^									EvalifyIfs;
 			CheckBox^									CompilerOverrideBlocks;
+			TabPage^									TabBackup;
+			Label^										LabelAutoRecoveryInterval;
+			CheckBox^									UseAutoRecovery;
+			NumericUpDown^								AutoRecoverySavePeriod;
 
 			// hidden controls, for settings that aren't displayed in the preferences window
 
 			// Find/Replace
-			CheckBox^									CaseSensitive;
+			CheckBox^									CaseInsensitive;
 			CheckBox^									MatchWholeWord;
+			CheckBox^									UseRegEx;
 
 			FontDialog^									FontSelection;
 

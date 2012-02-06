@@ -37,7 +37,7 @@ namespace Hooks
 	_DeclareMemHdlr(TESDialogGetIsWindowDragDropRecipient, "allows custom windows to receive form drag-drop notifications");
 	_DeclareNopHdlr(MissingTextureWarning, "removes the ostentatious warning");
 	_DeclareMemHdlr(AboutDialog, "adds a mention of CSE");
-	_DeclareNopHdlr(TESQuestStageResultScript, "fixes a bug that prevented quest stage result scripts from being compiled when their text was empty");
+	_DeclareMemHdlr(TESQuestStageResultScript, "fixes a bug that prevented quest stage result scripts from being compiled when their text was empty");
 	_DeclareMemHdlr(TESNPCUpdatePreviewControl, "fixes a bug that prevented NPC models from being updated correctly after an item was removed from their inventory");
 	_DeclareMemHdlr(TESParametersFillAndInitSelectionComboBoxOwners, "allows factions to be passed as arguments to condition commands that take ownership parameters");
 	_DeclareMemHdlr(SearchReplaceDialog, "patches the search and replace dialog to stay open after a replace operation");
@@ -61,4 +61,13 @@ namespace Hooks
 	_DeclareMemHdlr(HideCSMainDialogsA, "hides the main cs windows instead of minimizing them");
 	_DeclareMemHdlr(HideCSMainDialogsB, "");
 	_DeclareMemHdlr(HideCSMainDialogsC, "");
+	_DeclareMemHdlr(HideCSMainDialogsStartup, "preserves the window state of the main windows b'ween sessions");
+	_DeclareMemHdlr(ReleaseModelessDialogsA, "fixes a long standing bug in the TES editor code (Todd-Code, I'm told) that improperly destroys modeless dialogs; DistantLOD Export");
+	_DeclareMemHdlr(ReleaseModelessDialogsB, "DistantLOD Export");
+	_DeclareMemHdlr(ReleaseModelessDialogsC, "TESForm Common");
+	_DeclareMemHdlr(ReleaseModelessDialogsD, "");
+	_DeclareMemHdlr(ReleaseModelessDialogsE, "");
+	_DeclareMemHdlr(InvalidateSubwindowBuilding, "invalidates the parent window during subwindow construction to improve performance");
+
+	UInt8 __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 }

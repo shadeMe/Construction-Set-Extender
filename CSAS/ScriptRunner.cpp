@@ -394,9 +394,7 @@ namespace CSAutomationScript
 #if SCRIPT_PROFILING
 		g_ScriptProfileCounter.Update();
 #endif
-
 		MainScriptBlock->Execute(Executor);
-
 #if SCRIPT_PROFILING
 		g_ScriptProfileCounter.Update();
 		DebugPrint("Execution Time = %0.05f ms", g_ScriptProfileCounter.GetTimePassedSinceLastUpdate());
@@ -407,7 +405,7 @@ namespace CSAutomationScript
 		if (this->HasReturnValue)
 			*HasReturnValue = true;
 
-		assert(LoopStack.size() == 0);
+		assertR(LoopStack.size() == 0);
 
 		CONSOLE->Exdent();
 		return true;
@@ -431,7 +429,7 @@ namespace CSAutomationScript
 
 	LoopBlock* ScriptContext::PopLoop()
 	{
-		assert(LoopStack.size());
+		assertR(LoopStack.size());
 
 		LoopBlock* Result = LoopStack.top();
 		LoopStack.pop();
@@ -440,7 +438,7 @@ namespace CSAutomationScript
 
 	void ScriptContext::SetExecutingLoopState(UInt8 State)
 	{
-		assert(LoopStack.size());
+		assertR(LoopStack.size());
 
 		switch (State)
 		{
@@ -522,6 +520,7 @@ namespace CSAutomationScript
 	{
 		Initialized = false;
 		InExecutionLoop = false;
+		ExecutionState = true;
 	}
 
 	void GlobalScriptManager::DeinitializeScriptCache()
@@ -546,7 +545,7 @@ namespace CSAutomationScript
 				ScriptContext* NewGlobalScript = new ScriptContext(InputStream, NULL);
 				if (NewGlobalScript->IsValid())
 				{
-					DebugPrint("Initialized Global Script '%s'", NewGlobalScript->ScriptName.c_str());
+					DebugPrint("Global Script: '%s'", NewGlobalScript->ScriptName.c_str());
 					GlobalScriptCache.push_back(NewGlobalScript);
 				}
 				else
@@ -591,6 +590,7 @@ namespace CSAutomationScript
 		InitializeGlobalTimer();
 		TimeCounter.Update();
 
+		ExecutionState = g_INIManager->GetINIInt("ExecuteGlobalScripts", "Extender::CSAS");
 		Initialized = true;
 	}
 
@@ -600,12 +600,17 @@ namespace CSAutomationScript
 		DeinitializeScriptCache();
 		DeinitializeGlobalVariableCache(g_INIPath.c_str());
 
+		g_INIManager->GetINI("ExecuteGlobalScripts", "Extender::CSAS")->SetValue((ExecutionState)?"1":"0");
 		Initialized = false;
 	}
 
 	void GlobalScriptManager::ExecuteScripts()
 	{
-		assert(!SCRIPTRUNNER->GetExecutingContext());
+		if (SCRIPTRUNNER->GetExecutingContext())
+			return;			// the message pump will continue to call the manager even if a regular script call encounters an assertion
+		else if (ExecutionState == false || InExecutionLoop)
+			return;
+
 		InExecutionLoop = true;
 
 		bool HasReturnedValue = false;
@@ -618,7 +623,7 @@ namespace CSAutomationScript
 
 			if (GlobalScript->GetExecutionState() == ScriptContext::kExecutionState_Terminate)
 			{
-				DebugPrint("Fatal error encounted while executing global script '%s' - Removing it from the queue", GlobalScript->ScriptName.c_str());
+				DebugPrint("Fatal error encountered while executing global script '%s' - Removing it from the queue", GlobalScript->ScriptName.c_str());
 
 				delete *Itr;
 				Itr = GlobalScriptCache.erase(Itr);
@@ -679,15 +684,18 @@ namespace CSAutomationScript
 	void GlobalScriptManager::DeinitializeGlobalVariableCache(const char* INIPath)
 	{
 		WritePrivateProfileSection(INICSASGlobalsSection, NULL, INIPath);
+		char Buffer[0x200] = {0};
+
 		for (VariableList::iterator Itr = GlobalVariableBuffer.begin(); Itr != GlobalVariableBuffer.end(); Itr++)
 		{
 			switch ((*Itr)->GetDataType())
 			{
 			case CSASDataElement::kParamType_Reference:
 			case CSASDataElement::kParamType_Numeric:
+				FORMAT_STR(Buffer, "%0.6f", (*Itr)->GetValue().GetFloat() * 1.0);
 				WritePrivateProfileString(INICSASGlobalsSection,
 										(*Itr)->GetName(),
-										(std::string("n|" + std::string(PrintToBuffer("%0.6f", (*Itr)->GetValue().GetFloat() * 1.0)))).c_str(),
+										(std::string("n|" + std::string(Buffer))).c_str(),
 										INIPath);
 				break;
 			case CSASDataElement::kParamType_String:
@@ -697,7 +705,7 @@ namespace CSAutomationScript
 										INIPath);
 				break;
 			default:
-				assert(0);
+				assertR(0);
 				break;
 			}
 		}
@@ -817,6 +825,11 @@ namespace CSAutomationScript
 			Parser->DefineVar((*Itr)->GetName(), mup::Variable(&((mup::Value&)(*Itr)->GetValue())));
 	}
 
+	void GlobalScriptManager::SetExecutionState( bool State )
+	{
+		ExecutionState = State;
+	}
+
 	void InitializeCSASEngine()
 	{
 		DebugPrint("Initializing Command Table");
@@ -833,6 +846,8 @@ namespace CSAutomationScript
 		DebugPrint("Initializing Global Manager");
 		CONSOLE->Indent();
 		GLOBALSCRIPTMANAGER->Initialize();
+		if (GLOBALSCRIPTMANAGER->GetExecutionState())
+			CheckMenuItem(CSASMenu, ID_CSAS_EXECUTEGLOBALSCRIPTS, MF_CHECKED);
 		CONSOLE->Exdent();
 	}
 

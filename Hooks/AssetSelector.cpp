@@ -1,9 +1,13 @@
 #include "AssetSelector.h"
 #include "WorkspaceManager.h"
 
+#pragma warning(push)
+#pragma optimize("", off)
+#pragma warning(disable: 4005 4748)
+
 namespace Hooks
 {
-	char g_AssetSelectorReturnPath[0x200] = {0};
+	static char s_AssetSelectorReturnPath[0x200] = {0};
 
 	void PatchAssetSelectorHooks(void)
 	{
@@ -39,55 +43,82 @@ namespace Hooks
 		switch (Filter)
 		{
 		case e_NIF:
-			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "nif", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "nif", Buffer, sizeof(Buffer));
 			break;
 		case e_KF:
-			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "kf", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "kf", Buffer, sizeof(Buffer));
 			break;
 		case e_WAV:
-			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "wav", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "wav", Buffer, sizeof(Buffer));
 			break;
 		case e_DDS:
-			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "dds", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "dds", Buffer, sizeof(Buffer));
 			break;
 		case e_SPT:
-			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "spt", g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath));
+			CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(g_APPPath.c_str(), "spt", Buffer, sizeof(Buffer));
 			break;
 		}
 
-		if (!strlen(g_AssetSelectorReturnPath))
-			return 0;
-		else
-			return e_FetchPath;
-	}
-
-	UInt32 __stdcall InitPathEditor(int ID, const char* ExistingPath, HWND Dialog)
-	{
-		if (!ExistingPath)
-			GetDlgItemText(Dialog, ID, g_TextBuffer, sizeof(g_TextBuffer));
-		else
-			PrintToBuffer("%s", ExistingPath);
-
-		const char* ReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)g_TextBuffer);
-
-		if (!ReturnPath ||!strlen(ReturnPath))
+		if (!strlen(Buffer))
 			return 0;
 		else
 		{
-			sprintf_s(g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath), "%s", ReturnPath);
+			FORMAT_STR(s_AssetSelectorReturnPath, "%s", Buffer);
+			return e_FetchPath;
+		}
+	}
+
+	UInt32 __stdcall InitPathEditor(UInt32 Filter, int ID, const char* ExistingPath, HWND Dialog)
+	{
+		InitDialogMessageParamT<UInt32> PathEditorParam = { {0}, 0 };
+
+		if (!ExistingPath)
+			GetDlgItemText(Dialog, ID, PathEditorParam.Buffer, sizeof(PathEditorParam.Buffer));
+		else
+			FORMAT_STR(PathEditorParam.Buffer, "%s", ExistingPath);
+
+		if (!DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_TEXTEDIT), Dialog, (DLGPROC)TextEditDlgProc, (LPARAM)&PathEditorParam) ||
+			strlen(PathEditorParam.Buffer) < 2)
+		{
+			return 0;
+		}
+		else
+		{
+			switch (Filter)
+			{
+			case e_SPT:
+				FORMAT_STR(s_AssetSelectorReturnPath, "\\%s", PathEditorParam.Buffer);
+				break;
+			case e_KF:
+				{
+					std::string STLBuffer(PathEditorParam.Buffer);
+					int Offset = STLBuffer.find("IdleAnims\\");
+					if (Offset != -1)
+						STLBuffer = STLBuffer.substr(Offset + 9);
+
+					FORMAT_STR(s_AssetSelectorReturnPath, "\\%s", STLBuffer.c_str());
+				}
+				break;
+			default:
+				FORMAT_STR(s_AssetSelectorReturnPath, "%s", PathEditorParam.Buffer);
+			}
+
 			return e_FetchPath;
 		}
 	}
 
 	UInt32 __stdcall InitPathCopier(UInt32 Filter, HWND Dialog)
 	{
-		const char* ReturnPath = (const char*)DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_COPYPATH), Dialog, (DLGPROC)CopyPathDlgProc, (LPARAM)Filter);
+		InitDialogMessageParamT<UInt32> PathCopierParam = { {0}, Filter };
 
-		if (!ReturnPath || !strlen(ReturnPath))
+		if (!DialogBoxParam(g_DLLInstance, MAKEINTRESOURCE(DLG_COPYPATH), Dialog, (DLGPROC)CopyPathDlgProc, (LPARAM)&PathCopierParam) ||
+			!strlen(PathCopierParam.Buffer))
+		{
 			return 0;
+		}
 		else
 		{
-			sprintf_s(g_AssetSelectorReturnPath, sizeof(g_AssetSelectorReturnPath), "%s", ReturnPath);
+			FORMAT_STR(s_AssetSelectorReturnPath, "%s", PathCopierParam.Buffer);
 			return e_FetchPath;
 		}
 	}
@@ -102,7 +133,7 @@ namespace Hooks
 		char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
 
 		GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
-		sprintf_s(FullPathBuffer, sizeof(FullPathBuffer), "%s%s", DefaultLookupDir, RelativePathBuffer);
+		FORMAT_STR(FullPathBuffer, "%s%s", DefaultLookupDir, RelativePathBuffer);
 
 		if (GetFileAttributes(FullPathBuffer) != INVALID_FILE_ATTRIBUTES)
 		{
@@ -158,7 +189,7 @@ namespace Hooks
 			lea		eax, [esp + 0x14]
 			jmp     [kModelPostCommonDialogRetnAddr]
 		SELECT:
-			lea		eax, g_AssetSelectorReturnPath
+			lea		eax, s_AssetSelectorReturnPath
 			jmp     [kModelPostCommonDialogRetnAddr]
 		}
 	}
@@ -182,7 +213,7 @@ namespace Hooks
 			lea		edx, [ebp]
 			jmp		POST
 		SELECT:
-			lea		edx, g_AssetSelectorReturnPath
+			lea		edx, s_AssetSelectorReturnPath
 		POST:
 			push	edx
 			lea		ecx, [esp + 0x24]
@@ -200,7 +231,7 @@ namespace Hooks
 			push	ecx
 			jmp     [kSoundPostCommonDialogRetnAddr]
 		SELECT:
-			lea		ecx, g_AssetSelectorReturnPath
+			lea		ecx, s_AssetSelectorReturnPath
 			push	ecx
 			jmp     [kSoundPostCommonDialogRetnAddr]
 		}
@@ -215,7 +246,7 @@ namespace Hooks
 			lea		eax, [ebp]
 			jmp		POST
 		SELECT:
-			lea		eax, g_AssetSelectorReturnPath
+			lea		eax, s_AssetSelectorReturnPath
 		POST:
 			push	eax
 			lea		ecx, [ebp - 0x14]
@@ -232,8 +263,11 @@ namespace Hooks
 			lea		ecx, [esp + 0x14]
 			jmp     [kSPTPostCommonDialogRetnAddr]
 		SELECT:
-			lea		ecx, g_AssetSelectorReturnPath
+			lea		ecx, s_AssetSelectorReturnPath
 			jmp     [kSPTPostCommonDialogRetnAddr]
 		}
 	}
 }
+
+#pragma warning(pop)
+#pragma optimize("", on)

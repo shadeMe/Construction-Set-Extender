@@ -209,7 +209,7 @@ namespace ConstructionSetExtender
 		{
 			if (Line > TextField->Lines->Length || !Line)
 			{
-				MessageBox::Show("Invalid line number/offset", SCRIPTEDITOR_TITLE);
+				MessageBox::Show("Invalid line number/offset.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 			}
 			else
 			{
@@ -269,16 +269,22 @@ namespace ConstructionSetExtender
 		int OffsetRichTextBox::GetIndexOfOffset(UInt16 Offset)
 		{
 			int Result = -1, Count = 0;
+			UInt16 Buffer = 0;
 
 			for each (UInt16 Itr in LineOffsets)
 			{
-				if (Itr == Offset)
+				if (Itr != 0xFFFF && (Itr == Offset || (Offset > Buffer && Offset < Itr)))
 				{
+					if (Offset > Buffer && Offset < Itr)
+						Count -= 1;
+
 					Result = Count;
 					break;
 				}
 				else
 					Count++;
+
+				Buffer = Itr;
 			}
 
 			return Result;
@@ -424,6 +430,19 @@ namespace ConstructionSetExtender
 				ByteCode->Clear(ByteCode, 0, Length);
 
 			return Result;
+		}
+
+		UInt16 OffsetRichTextBox::GetLastOffset(void)
+		{
+			UInt16 Offset = 0;
+
+			for each (UInt16 Itr in LineOffsets)
+			{
+				if (Itr != 0xFFFF)
+					Offset = Itr;
+			}
+
+			return Offset;
 		}
 	}
 }

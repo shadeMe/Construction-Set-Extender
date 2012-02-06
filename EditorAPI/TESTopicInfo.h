@@ -45,8 +45,8 @@ public:
 		/*04*/ UInt32			emotionValue;
 		/*08*/ UInt32			unk08;
 		/*0C*/ UInt32			unk0C;
-		/*10*/ BSStringT		responseText;
-		/*18*/ BSStringT		actorNotes;
+		/*10*/ BSString		responseText;
+		/*18*/ BSString		actorNotes;
 		/*20*/ UInt32			unk20;
 	};
 	typedef tList<ResponseData> ResponseListT;

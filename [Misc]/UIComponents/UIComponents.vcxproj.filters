@@ -50,6 +50,12 @@
     <ClCompile Include="SERefactorDocumentScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SEFindReplace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SESnippetManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BEReference.h">
@@ -79,6 +85,12 @@
     <ClInclude Include="SERefactorDocumentScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SEFindReplace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SESnippetManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -102,6 +114,12 @@
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="SERefactorUDF.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SERefactorDocumentScript.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEFindReplace.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>
