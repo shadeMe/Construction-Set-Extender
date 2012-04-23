@@ -1,0 +1,595 @@
+#include "BGSEEMain.h"
+#include "BGSEEConsole.h"
+#include "DetectSIMD.h"
+#include "SME Sundries\INIEditGUI_Res.h"
+
+namespace BGSEditorExtender
+{
+	BGSEEDaemon::BGSEEDaemon() : InitCallbacks(), DeinitCallbacks()
+	{
+		;//
+	}
+
+	void BGSEEDaemon::WaitForDebugger(void)
+	{
+		BGSEECONSOLE->Indent();
+		BGSEECONSOLE_MESSAGE("Waiting For Debugger...");
+
+		while (!IsDebuggerPresent())
+			Sleep(5000);
+
+		BGSEECONSOLE_MESSAGE("Debugger Attached!");
+		BGSEECONSOLE->Exdent();
+	}
+
+	void BGSEEDaemon::RegisterInitCallback( UInt8 CallbackType, BoolRFunctorBase* Callback )
+	{
+		SME_ASSERT(CallbackType < 3 && Callback);
+		InitCallbacks[CallbackType].push_back(Callback);
+	}
+
+	void BGSEEDaemon::RegisterDeinitCallback( BoolRFunctorBase* Callback )
+	{
+		SME_ASSERT(Callback);
+		DeinitCallbacks.push_back(Callback);
+	}
+
+	bool BGSEEDaemon::ExecuteInitCallbacks( UInt8 CallbackType )
+	{
+		SME_ASSERT(CallbackType < 3);
+
+		for (DaemonCallbackListT::const_iterator Itr = InitCallbacks[CallbackType].begin(); Itr != InitCallbacks[CallbackType].end(); Itr++)
+		{
+			if ((*Itr)->operator()() == false)
+				return false;
+		}
+
+		return true;
+	}
+
+	bool BGSEEDaemon::ExecuteDeinitCallbacks( void )
+	{
+		for (DaemonCallbackListT::const_iterator Itr = DeinitCallbacks.begin(); Itr != DeinitCallbacks.end(); Itr++)
+			(*Itr)->operator()();
+
+		return true;
+	}
+
+	BGSEEDaemon::~BGSEEDaemon()
+	{
+		ReleaseCallbacks(InitCallbacks[0]);
+		ReleaseCallbacks(InitCallbacks[1]);
+		ReleaseCallbacks(InitCallbacks[2]);
+		ReleaseCallbacks(DeinitCallbacks);
+	}
+
+	void BGSEEDaemon::ReleaseCallbacks( DaemonCallbackListT& CallbackList )
+	{
+		for (DaemonCallbackListT::const_iterator Itr = CallbackList.begin(); Itr != CallbackList.end(); Itr++)
+			delete (*Itr);
+
+		CallbackList.clear();
+	}
+
+	const char*		BGSEEMain::BGSEEINIManager::kSectionPrefix = "BGSEE::";
+
+	BGSEEINIManagerSetterFunctor::BGSEEINIManagerSetterFunctor( SME::INI::INIManager* Parent ) :
+			ParentManager(Parent)
+	{
+		SME_ASSERT(ParentManager);
+	}
+
+	void BGSEEINIManagerSetterFunctor::operator()( const char* Key, const char* Section, const char* Value )
+	{
+		ParentManager->FetchSetting(Key, Section)->SetValue(Value);
+	}
+
+	void BGSEEINIManagerSetterFunctor::operator()( const char* Section, const char* Value )
+	{
+		ParentManager->DirectWrite(Section, Value);
+	}
+
+	BGSEEINIManagerGetterFunctor::BGSEEINIManagerGetterFunctor( SME::INI::INIManager* Parent ) :
+			ParentManager(Parent)
+	{
+		SME_ASSERT(ParentManager);
+	}
+
+	const char* BGSEEINIManagerGetterFunctor::operator()( const char* Key, const char* Section )
+	{
+		return ParentManager->FetchSetting(Key, Section)->GetValueAsString();
+	}
+
+	int BGSEEINIManagerGetterFunctor::operator()( const char* Section, char* OutBuffer, UInt32 Size )
+	{
+		return ParentManager->DirectRead(Section, OutBuffer, Size);
+	}
+
+	BGSEEMain::BGSEEINIManager::BGSEEINIManager() : GUI()
+	{
+		;//
+	}
+
+	BGSEEMain::BGSEEINIManager::~BGSEEINIManager()
+	{
+		;//
+	}
+
+	bool BGSEEMain::BGSEEINIManager::RegisterSetting( const char* Key, const char* Section, const char* DefaultValue, const char* Description )
+	{
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+
+		return SME::INI::INIManager::RegisterSetting(Key, Buffer, DefaultValue, Description);
+	}
+
+	SME::INI::INISetting* BGSEEMain::BGSEEINIManager::FetchSetting( const char* Key, const char* Section )
+	{
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+
+		return SME::INI::INIManager::FetchSetting(Key, Buffer);
+	}
+
+	void BGSEEMain::BGSEEINIManager::Initialize(const char* INIPath, void* Paramenter)
+	{
+		INIFilePath = INIPath;
+
+		BGSEECONSOLE_MESSAGE("INI Path: %s", INIFilePath.c_str());
+		std::fstream INIStream(INIFilePath.c_str(), std::fstream::in);
+		bool CreateINI = false;
+
+		if (INIStream.fail())
+		{
+			BGSEECONSOLE_MESSAGE("INI File not found; Creating one...");
+			CreateINI = true;
+		}
+
+		INIStream.close();
+		INIStream.clear();
+
+		char Buffer[0x200] = {0};
+		SettingFactoryListT* FactoryList = (SettingFactoryListT*)Paramenter;
+
+		for (SettingFactoryListT::const_iterator Itr = FactoryList->begin(); Itr != FactoryList->end(); Itr++)
+		{
+			for (int i = 0; i < (*Itr)->SettingCount; i++)
+			{
+				BGSEEINIManagerSettingFactory::SettingData* Current = &(*Itr)->SettingArray[i];
+				RegisterSetting(Current->Key, (*Itr)->Section, Current->DefaultValue, Current->Description);
+			}
+		}
+
+		if (CreateINI)
+		{
+			Save();
+		}
+	}
+
+	void BGSEEMain::BGSEEINIManager::ShowGUI( HINSTANCE ResourceInstance, HWND Parent )
+	{
+		GUI.ParentManager = this;
+		GUI.ParentInstance = ResourceInstance;
+
+		BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(DLG_INIGUI), Parent, SME::INI::INIEditGUIDlgProc, (LPARAM)&GUI);
+	}
+
+	int BGSEEMain::BGSEEINIManager::DirectRead( const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size )
+	{
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+
+		return SME::INI::INIManager::DirectRead(Setting, Buffer, Default, OutBuffer, Size);
+	}
+
+	int BGSEEMain::BGSEEINIManager::DirectRead( const char* Section, char* OutBuffer, UInt32 Size )
+	{
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+
+		return SME::INI::INIManager::DirectRead(Buffer, OutBuffer, Size);
+	}
+
+	bool BGSEEMain::BGSEEINIManager::DirectWrite( const char* Setting, const char* Section, const char* Value )
+	{
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+
+		return SME::INI::INIManager::DirectWrite(Setting, Buffer, Value);
+	}
+
+	bool BGSEEMain::BGSEEINIManager::DirectWrite( const char* Section, const char* Value )
+	{
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+
+		return SME::INI::INIManager::DirectWrite(Buffer, Value);
+	}
+
+	BGSEEMain::DefaultInitCallback::DefaultInitCallback() : BoolRFunctorBase(), INISettingFactory()
+	{
+		LongName = NULL;
+		APPPath = NULL;
+		INIPath = NULL;
+		INISettingsManager = NULL;
+		ExtenderVersion = 0x0;
+		ModuleHandle = 0x0;
+		EditorSupportedVersion = EditorCurrentVersion = 0x0;
+		SEMinVersion = SECurrentVersion = 0x0;
+		DotNETFrameworkVersionString = "v4.0.30319";
+		EnableCLRMemoryProfiling = false;
+		WaitForDebuggerOnStartup = false;
+	}
+
+	bool BGSEEMain::DefaultInitCallback::operator()()
+	{
+		BGSEECONSOLE_MESSAGE("%s v%d.%d.%d {%08X} Initializing ...",
+			LongName,
+			(ExtenderVersion >> 24) & 0xFF,
+			(ExtenderVersion >> 16) & 0xFF,
+			(ExtenderVersion >> 4) & 0xFFF,
+			ExtenderVersion);
+		BGSEECONSOLE->Indent();
+
+		if (WaitForDebuggerOnStartup)
+		{
+			BGSEEDaemon::WaitForDebugger();
+		}
+
+		if (!ModuleHandle)
+		{
+			BGSEECONSOLE_MESSAGE("Couldn't fetch module handle");
+			return false;
+		}
+
+		BGSEECONSOLE_MESSAGE("Checking Versions and Dependencies");
+		BGSEECONSOLE->Indent();
+		simd_init();
+		if (!HASSSE2)
+		{
+			BGSEECONSOLE_MESSAGE("Processor doesn't support SSE2 SIMD instructions");
+			return false;
+		}
+
+		OSVERSIONINFO OSInfo = {0};
+		OSInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&OSInfo);
+		if (OSInfo.dwMajorVersion < 5)
+		{
+			BGSEECONSOLE_MESSAGE("OS version too old - Windows XP or greater required");
+			return false;
+		}
+
+		char NativeProgramFilesFolder[MAX_PATH] = {0};
+		ExpandEnvironmentStrings("%ProgramW6432%", NativeProgramFilesFolder, ARRAYSIZE(NativeProgramFilesFolder));
+		const char* ProgFilesSubstring = strstr(APPPath, NativeProgramFilesFolder);
+
+		if (ProgFilesSubstring != NULL && ProgFilesSubstring == APPPath && OSInfo.dwMajorVersion > 5)
+		{
+			BGSEECONSOLE_MESSAGE("Editor/game is installed to the Program Files directory - An unprotected directory like 'C:\\Games\\' is recommended");
+			return false;
+		}
+		else if (IsUserAnAdmin() == FALSE)
+		{
+			BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges");
+			return false;
+		}
+
+		if(SECurrentVersion < SEMinVersion)
+		{
+			BGSEECONSOLE_MESSAGE("Script Extender version too old - v%d.%d.%d or greater required", (SEMinVersion >> 24) & 0xFF,
+																								(SEMinVersion >> 16) & 0xFF,
+																								(SEMinVersion >> 4) & 0xFFF);
+			return false;
+		}
+		else if (EditorCurrentVersion < EditorSupportedVersion)
+		{
+			BGSEECONSOLE_MESSAGE("Editor version too old - v%d.%d.%d required", (EditorSupportedVersion >> 24) & 0xFF,
+																			(EditorSupportedVersion >> 16) & 0xFF,
+																			(EditorSupportedVersion >> 4) & 0xFFF);
+			return false;
+		}
+
+		HKEY MSVCRedist = NULL;
+		bool HasMSVCRedist = false;
+		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\VisualStudio\\10.0\\VC\\VCRedist\\x86", NULL, KEY_ALL_ACCESS, &MSVCRedist) == ERROR_SUCCESS)
+		{
+			UInt32 Type = 0, Size = 4, Value = 0;
+			if (RegQueryValueEx(MSVCRedist, "Installed", NULL, &Type, (LPBYTE)&Value, &Size) == ERROR_SUCCESS &&
+				Value)
+			{
+				HasMSVCRedist = true;
+			}
+		}
+
+		if (HasMSVCRedist == false)
+		{
+			BGSEECONSOLE_MESSAGE("Visual C++ 2010 x86/x64 Runtime Libraries not installed");
+			return false;
+		}
+		else if (LoadLibrary("d3dx9_41.dll") == NULL)
+		{
+			BGSEECONSOLE_MESSAGE("DirectX v9.0c Runtime Libraries not installed");
+			return false;
+		}
+
+		bool HasDotNet = false;
+		HMODULE MsCoreEDLL = LoadLibrary("MSCOREE.DLL");
+		if (MsCoreEDLL)
+		{
+			void* CLRInterface = NULL;
+			if (GetProcAddress(MsCoreEDLL, "GetCORVersion"))
+			{
+				HRESULT  ( __stdcall *CorBindToRuntimeHostProc)(LPCWSTR, LPCWSTR, LPCWSTR, void*, DWORD, REFCLSID, REFIID, LPVOID FAR *) =
+					(HRESULT  ( __stdcall *)(LPCWSTR, LPCWSTR, LPCWSTR, void*, DWORD, REFCLSID, REFIID, LPVOID FAR *))GetProcAddress(MsCoreEDLL, "CorBindToRuntimeHost");
+
+				if (CorBindToRuntimeHostProc)
+				{
+					DWORD StartupFlags = STARTUP_LOADER_OPTIMIZATION_MASK|STARTUP_LOADER_OPTIMIZATION_SINGLE_DOMAIN;
+					if (EnableCLRMemoryProfiling)
+						StartupFlags |= STARTUP_SERVER_GC;	// for memory profiling, concurrent GC limits the ability of profilers
+					else
+						StartupFlags |= STARTUP_CONCURRENT_GC;
+
+					std::wstring VersionString(SME::StringHelpers::FormatWideString(DotNETFrameworkVersionString)), ConfigName(SME::StringHelpers::FormatWideString("%s.config", LongName));
+					if (SUCCEEDED(CorBindToRuntimeHostProc(VersionString.c_str(),
+														NULL,
+														ConfigName.c_str(),
+														0,
+														StartupFlags,
+														CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost,
+														&CLRInterface)))
+					{
+						HasDotNet = true;
+					}
+				}
+			}
+
+			FreeLibrary(MsCoreEDLL);
+		}
+
+		if (HasDotNet == false)
+		{
+			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed - v%s (Full and Client Profile) or greater required", DotNETFrameworkVersionString);
+			return false;
+		}
+
+		HRESULT COMLibInitState = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		if (COMLibInitState != S_OK)				// ensure the main thread's COM apartment state is set to STA so that common controls work correctly
+		{
+			BGSEECONSOLE_MESSAGE("COM apartment state couldn't be set to STA - Result = %d", COMLibInitState);
+			return false;
+		}
+
+		INITCOMMONCONTROLSEX icex = {0};
+		icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+		icex.dwICC  = ICC_LISTVIEW_CLASSES;
+		if (InitCommonControlsEx(&icex) == FALSE)				// ensure that the common control DLL is loaded
+		{
+			BGSEECONSOLE_MESSAGE("Couldn't initialize common controls");
+			return false;
+		}
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Initializing INI Manager");
+		BGSEECONSOLE->Indent();
+		INISettingsManager->Initialize(INIPath, (void*)&INISettingFactory);
+		BGSEECONSOLE->Exdent();
+
+TODO("Add crashrpt support")
+
+		return true;
+	}
+
+	BGSEEMain::DefaultInitCallback::~DefaultInitCallback()
+	{
+		INISettingFactory.clear();
+	}
+
+	BGSEEMain::DefaultDeinitCallback::DefaultDeinitCallback( BGSEEMain* Parent ) : BoolRFunctorBase()
+	{
+		ParentInstance = Parent;
+	}
+
+	BGSEEMain::DefaultDeinitCallback::~DefaultDeinitCallback()
+	{
+		;//
+	}
+
+	bool BGSEEMain::DefaultDeinitCallback::operator()()
+	{
+		CoUninitialize();
+		return true;
+	}
+
+	BGSEEMain*			BGSEEMain::Singleton = NULL;
+
+	static const char*	kXSEShortName[] =					// key = ParentEditorID
+	{
+		"xSE",
+		"OBSE",
+		"SKSE"
+	};
+
+	static const char*	kParentEditorLongName[] =
+	{
+		"BGSEditor",
+		"TESConstructionSet",
+		"CreationKit"
+	};
+
+	static const char*	kParentEditorShortName[] =
+	{
+		"BGSE",
+		"CS",
+		"CK"
+	};
+
+	BGSEEMain::~BGSEEMain()
+	{
+		Singleton = NULL;
+		ExtenderDaemon->RegisterDeinitCallback(new DefaultDeinitCallback(const_cast<BGSEEMain*>(this)));
+
+		BGSEECONSOLE_MESSAGE("Deinitializing %s ...", ExtenderLongName.c_str());
+		BGSEECONSOLE->Indent();
+		ExtenderDaemon->ExecuteDeinitCallbacks();
+		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE_MESSAGE("%s Deinitialized!", ExtenderLongName.c_str());
+
+		SAFEDELETE(ExtenderConsole);
+		SAFEDELETE(ExtenderDaemon);
+		SAFEDELETE(ExtenderINIManager);
+
+		ExitProcess(0);
+	}
+
+	BGSEEMain::BGSEEMain()
+	{
+		ExtenderLongName = "<shadeMe's Awesome Extender #26942385.98979>";
+		FORMAT_STR(ExtenderShortName, "SMAE");
+		ExtenderVersion = 0x57ADE00E;
+		ExtenderModuleHandle = NULL;
+
+		ParentEditorID = kExtenderParentEditor_Unknown;
+		ParentEditorName = "Editor";
+		ParentEditorSupportedVersion = 0x00000000;
+		GameDirectoryPath = "NiBollocksNode";
+		ExtenderDLLPath = "SMAE.dll";
+		ExtenderINIPath = "SMAE.ini";
+
+		ScriptExtenderPluginHandle = 0xFFFFFFFF;
+		ScriptExtenderCurrentVersion = 0x0;
+
+		ExtenderINIManager = NULL;
+		ExtenderConsole = NULL;
+		ExtenderDaemon = NULL;
+
+		Initialized = false;
+	}
+
+	BGSEEMain* BGSEEMain::GetSingleton()
+	{
+		if (Singleton == NULL)
+			Singleton = new BGSEEMain();
+
+		return Singleton;
+	}
+
+	bool BGSEEMain::Initialize( const char* LongName, const char* ShortName, UInt32 Version,
+								UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion, const char* APPPath,
+								UInt32 SEPluginHandle, UInt32 SEMinimumVersion,
+								UInt32 SECurrentVersion, SettingFactoryListT& INISettingFactoryList,
+								const char* DotNETFrameworkVersion,	bool CLRMemoryProfiling, bool WaitForDebugger )
+	{
+		if (Initialized)
+			return false;
+
+		SME_ASSERT(LongName && ShortName &&	APPPath && EditorID != kExtenderParentEditor_Unknown &&
+				EditorID < kExtenderParentEditor__MAX && SEPluginHandle != 0xFFFFFFFF && DotNETFrameworkVersion);
+
+		ExtenderLongName = LongName;
+		FORMAT_STR(ExtenderShortName, "%s", ShortName);
+		ExtenderVersion = Version;
+
+		ParentEditorID = EditorID;
+		ParentEditorName = kParentEditorLongName[(int)EditorID];
+		ParentEditorSupportedVersion = EditorSupportedVersion;
+
+		GameDirectoryPath = APPPath;
+		ExtenderDLLPath = std::string(APPPath) + "Data\\" + std::string(kXSEShortName[(int)EditorID]) + "\\Plugins\\" + ExtenderLongName + ".dll";
+		ExtenderINIPath = std::string(APPPath) + "Data\\" + std::string(kXSEShortName[(int)EditorID]) + "\\Plugins\\" + ExtenderLongName + ".ini";
+
+		ScriptExtenderPluginHandle = SEPluginHandle;
+		ScriptExtenderCurrentVersion = SECurrentVersion;
+
+		ExtenderModuleHandle = (HINSTANCE)GetModuleHandle();
+
+		ExtenderINIManager = new BGSEEINIManager();
+		ExtenderConsole = new BGSEEConsole((std::string(APPPath + std::string(LongName) + ".log")).c_str(), ExtenderINIManager, ExtenderINIManager);
+		ExtenderDaemon = new BGSEEDaemon();
+
+		DefaultInitCallback* InitCallback = new DefaultInitCallback();
+		InitCallback->LongName = ExtenderLongName.c_str();
+		InitCallback->APPPath = GameDirectoryPath.c_str();
+		InitCallback->INIPath = ExtenderINIPath.c_str();
+		InitCallback->INISettingsManager = ExtenderINIManager;
+		InitCallback->INISettingFactory = INISettingFactoryList;
+		InitCallback->ExtenderVersion = ExtenderVersion;
+		InitCallback->ModuleHandle = ExtenderModuleHandle;
+		InitCallback->EditorSupportedVersion = EditorSupportedVersion;
+		InitCallback->EditorCurrentVersion = EditorCurrentVersion;
+		InitCallback->SEMinVersion = SEMinimumVersion;
+		InitCallback->SECurrentVersion = SECurrentVersion;
+		InitCallback->DotNETFrameworkVersionString = DotNETFrameworkVersion;
+		InitCallback->EnableCLRMemoryProfiling = CLRMemoryProfiling;
+		InitCallback->WaitForDebuggerOnStartup = WaitForDebugger;
+		ExtenderDaemon->RegisterInitCallback(BGSEEDaemon::kInitCallback_Query, InitCallback);
+
+		Initialized = true;
+		return Initialized;
+	}
+
+	const char* BGSEEMain::ExtenderGetLongName( void ) const
+	{
+		return ExtenderLongName.c_str();
+	}
+
+	const char* BGSEEMain::ExtenderGetShortName( void ) const
+	{
+		return ExtenderShortName;
+	}
+
+	UInt32 BGSEEMain::ExtenderGetVersion( void ) const
+	{
+		return ExtenderVersion;
+	}
+
+	HINSTANCE BGSEEMain::GetModuleHandle( void ) const
+	{
+		return ExtenderModuleHandle;
+	}
+
+	const char* BGSEEMain::GetAPPPath( void ) const
+	{
+		return GameDirectoryPath.c_str();
+	}
+
+	const char* BGSEEMain::GetDLLPath( void ) const
+	{
+		return ExtenderDLLPath.c_str();
+	}
+
+	const char* BGSEEMain::GetINIPath( void ) const
+	{
+		return ExtenderINIPath.c_str();
+	}
+
+	BGSEEConsole* BGSEEMain::Console( void ) const
+	{
+		SME_ASSERT(ExtenderConsole);
+		return ExtenderConsole;
+	}
+
+	BGSEEDaemon* BGSEEMain::Daemon( void ) const
+	{
+		SME_ASSERT(ExtenderDaemon);
+		return ExtenderDaemon;
+	}
+
+	const char* BGSEEMain::ParentEditorGetLongName( void ) const
+	{
+		SME_ASSERT(ParentEditorID);
+		return kParentEditorLongName[ParentEditorID];
+	}
+
+	const char* BGSEEMain::ParentEditorGetShortName( void ) const
+	{
+		SME_ASSERT(ParentEditorID);
+		return kParentEditorShortName[ParentEditorID];
+	}
+
+	UInt32 BGSEEMain::ParentEditorGetVersion( void ) const
+	{
+		return ParentEditorSupportedVersion;
+	}
+}

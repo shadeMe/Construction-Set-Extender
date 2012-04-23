@@ -1,0 +1,384 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c14ea559-08c8-46ab-804b-8d39a847a479}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{da4d2155-20df-412a-a388-bb11fdc43676}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{bd215ac1-7919-49cd-8c12-b4928c1b80b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEMain">
+      <UniqueIdentifier>{66ba7473-6a56-4a56-9f5e-4d8a444d8ed2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEConsole">
+      <UniqueIdentifier>{fb579dc1-4ce3-411f-9a02-deba9a01b698}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEUIManager">
+      <UniqueIdentifier>{5d1266e5-6767-4373-8297-3ef3691c2789}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEERenderWindowPainter">
+      <UniqueIdentifier>{5369600c-3dea-4a7a-ae5f-d6b418820f85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEWorkspaceManager">
+      <UniqueIdentifier>{81615d77-8ee4-459c-a110-3dff2d7c829d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEToolBox">
+      <UniqueIdentifier>{a0946a31-577d-4520-b20a-1527c8673308}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEScript">
+      <UniqueIdentifier>{18caafc4-0c2a-40be-ae8c-18df1cae3184}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEScript\CodaScriptExpressionParser">
+      <UniqueIdentifier>{e5d54a12-44f9-418e-a344-b1680baf6813}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEScript\CodaScriptExpressionParser\MUP">
+      <UniqueIdentifier>{c7428aa6-2e00-4288-9b89-61534d8c846a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base">
+      <UniqueIdentifier>{f4afc994-3bde-4095-8c4c-025658f5c872}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation">
+      <UniqueIdentifier>{6b11a226-da20-4518-95a8-843843bf0cd9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BGSEEMain.h">
+      <Filter>Modules\BGSEEMain</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="BGSEEConsole.h">
+      <Filter>Modules\BGSEEConsole</Filter>
+    </ClInclude>
+    <ClInclude Include="DetectSIMD.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEUIManager.h">
+      <Filter>Modules\BGSEEUIManager</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEditorExtenderBase_Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\Functors.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\INIEditGUI.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\INIManager.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\MemoryHandler.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\SME_Prefix.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\StringHelpers.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\INIEditGUI_Res.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\MersenneTwister.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\UIHelpers.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SME Sundries\MiscGunk.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEERenderWindowPainter.h">
+      <Filter>Modules\BGSEERenderWindowPainter</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEWorkspaceManager.h">
+      <Filter>Modules\BGSEEWorkspaceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEToolBox.h">
+      <Filter>Modules\BGSEEToolBox</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\CodaDataTypes.h">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\CodaInterpreter.h">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\CodaVM.h">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpDefines.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpError.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpFuncCommon.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpFuncNonCmplx.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpFuncStr.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpFwdDecl.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpICallback.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIfThenElse.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIOprt.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIPackage.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIPrecedence.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIToken.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIValReader.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpIValue.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpMatrix.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpMatrixError.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpOprtBinAssign.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpOprtBinCommon.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpOprtIndex.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpOprtNonCmplx.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpPackageCommon.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpPackageMatrix.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpPackageNonCmplx.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpPackageStr.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpPackageUnit.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpRPN.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpScriptTokens.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpStack.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpTokenReader.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpTypes.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpValReader.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpValueCache.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\mpVariable.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\suSortPred.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Base\utGeneric.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPExpressionParser.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPValue.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPArrayDataType.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BGSEEMain.cpp">
+      <Filter>Modules\BGSEEMain</Filter>
+    </ClCompile>
+    <ClCompile Include="StdAfx.cpp" />
+    <ClCompile Include="BGSEEConsole.cpp">
+      <Filter>Modules\BGSEEConsole</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEUIManager.cpp">
+      <Filter>Modules\BGSEEUIManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\Functors.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\INIEditGUI.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\INIManager.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\MemoryHandler.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\StringHelpers.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\MersenneTwister.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\UIHelpers.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SME Sundries\MiscGunk.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEERenderWindowPainter.cpp">
+      <Filter>Modules\BGSEERenderWindowPainter</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEWorkspaceManager.cpp">
+      <Filter>Modules\BGSEEWorkspaceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEToolBox.cpp">
+      <Filter>Modules\BGSEEToolBox</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\CodaDataTypes.cpp">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\CodaInterpreter.cpp">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\CodaVM.cpp">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpError.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpFuncCommon.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpFuncNonCmplx.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpFuncStr.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpICallback.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpIfThenElse.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpIOprt.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpIPackage.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpIToken.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpIValReader.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpIValue.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpOprtBinAssign.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpOprtBinCommon.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpOprtIndex.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpOprtNonCmplx.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpPackageCommon.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpPackageMatrix.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpPackageNonCmplx.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpPackageStr.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpPackageUnit.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpRPN.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpScriptTokens.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpTokenReader.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpValReader.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpValueCache.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Base\mpVariable.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPExpressionParser.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPValue.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPArrayDataType.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BGSEditorExtenderBase.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\SME Sundries\INIEditGUI_Res.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BGSEEScript\CodaIntrinsics.inl">
+      <Filter>Modules\BGSEEScript</Filter>
+    </None>
+    <None Include="BGSEEScript\CodaForwardDecls.inl">
+      <Filter>Modules\BGSEEScript</Filter>
+    </None>
+  </ItemGroup>
+</Project>
