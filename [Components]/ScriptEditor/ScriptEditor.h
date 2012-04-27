@@ -96,7 +96,7 @@ namespace ConstructionSetExtender
 			WorkspaceContainer(ComponentDLLInterface::ScriptData* InitScript, UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);
 			virtual ~WorkspaceContainer()
 			{
-				Destroy();
+				WorkspaceContainer::Destroy();
 			}
 
 			void												FlagDestruction(bool Destroying) { this->DestructionFlag = Destroying; }
@@ -436,7 +436,7 @@ namespace ConstructionSetExtender
 		public:
 			virtual ~Workspace()
 			{
-				Destroy();
+				Workspace::Destroy();
 			}
 
 			virtual void                                        NewScript();

@@ -111,7 +111,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
-      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "G:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -121,9 +121,6 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="ScriptEditor.Preprocessor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>F:\TES 4 Oblivion\Data\OBSE\Plugins\CSE\ScriptEditor.Preprocessor.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
@@ -320,6 +317,11 @@
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\WebInsertHyperlinkHS.png" />
     <None Include="Images\Wizard.png" />
     <None Include="ModifiedFlagOn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Preprocessor\ScriptEditor.Preprocessor.vcxproj">
+      <Project>{67dd2ff6-aff7-4c49-80ae-72b47982563d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -53,12 +53,13 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\Microsoft DirectX SDK (March 2009)\Lib\x86;$(LibraryPath);</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\muParserX\parser;$(IncludePath)</IncludePath>
-    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\muParserX\parser;$(SourcePath)</SourcePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\muParserX\parser;$(IncludePath)</IncludePath>
-    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\muParserX\parser;$(SourcePath)</SourcePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\Debug\;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(IncludePath)</IncludePath>
+    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(SourcePath)</SourcePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(IncludePath)</IncludePath>
+    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(SourcePath)</SourcePath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EnableManagedIncrementalBuild>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\Release\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -80,7 +81,7 @@
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;BGSEditorExtenderBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
@@ -123,7 +124,7 @@
       </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;BGSEditorExtenderBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>
@@ -146,40 +147,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\obse\obse\Utilities.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpError.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncCommon.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncMatrix.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncNonCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncStr.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpICallback.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIfThenElse.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIOprt.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIPackage.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIToken.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIValReader.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIValue.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinAssign.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtIndex.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtMatrix.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCommon.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageMatrix.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageStr.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageUnit.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpParser.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpParserBase.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpRPN.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpScriptTokens.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpTokenReader.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpValReader.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpValue.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpValueCache.cpp" />
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpVariable.cpp" />
     <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="CSAS\Array.cpp" />
@@ -257,7 +224,6 @@
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\obse\obse\GameTypes.h" />
     <ClInclude Include="..\OBSE\obse\HavokBase.h" />
     <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
     <ClInclude Include="..\OBSE\obse\HavokCollision.h" />
@@ -280,49 +246,6 @@
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
     <ClInclude Include="..\obse\obse\Utilities.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpDefines.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpError.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncCommon.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncMatrix.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncNonCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncStr.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFwdDecl.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpICallback.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIfThenElse.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIOprt.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIPackage.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIPrecedence.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIToken.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValReader.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValue.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpMatrix.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpMatrixError.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinAssign.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtIndex.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtMatrix.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCommon.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageMatrix.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageStr.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageUnit.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpParser.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpParserBase.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpRPN.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpScriptTokens.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpStack.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpTokenReader.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpTypes.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpValReader.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpValue.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpValueCache.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpVariable.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\suSortPred.h" />
-    <ClInclude Include="..\[Libraries]\muParserX\parser\utGeneric.h" />
     <ClInclude Include="Achievements.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="CSAS\Array.h" />
@@ -465,16 +388,6 @@
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc" />
     <ResourceCompile Include="..\[Libraries]\INI Manager\INIEditGUI_Res.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\common\common.vcxproj">
-      <Project>{20c6411c-596f-4b85-be4e-8bc91f59d8a6}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

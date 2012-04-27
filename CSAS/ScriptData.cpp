@@ -9,6 +9,26 @@ namespace CSAutomationScript
 		GlobalInstanceCount--;
 	}
 
+	ExecutableCode::ExecutableCode() : CodeParser(mup::pckALL_NON_COMPLEX)
+	{
+		GlobalInstanceCount++;
+	}
+
+	ExecutableCode::~ExecutableCode()
+	{
+		ExecutableCode::Release();
+	}
+
+	bool ExecutableCode::IsVaid() const
+	{
+		return Valid;
+	}
+
+	UInt32 ExecutableCode::GetGlobalInstanceCount()
+	{
+		return GlobalInstanceCount;
+	}
+
 	bool CodeBlock::GetTokenInMask(UInt32 Mask, ScriptParser::TokenType Token)
 	{
 		return (Mask & (int)Token);
@@ -221,6 +241,11 @@ namespace CSAutomationScript
 		BlockText.clear();
 	}
 
+	CodeBlock::~CodeBlock()
+	{
+		CodeBlock::Release();
+	}
+
 	std::string& ControlBlock::GetConditionExpression()
 	{
 		if (ConditionExpression == "")
@@ -248,6 +273,16 @@ namespace CSAutomationScript
 		return CodeParser.Eval().GetFloat();
 	}
 
+	ControlBlock::ControlBlock() : ConditionExpression("")
+	{
+		;//
+	}
+
+	ControlBlock::~ControlBlock()
+	{
+		ControlBlock::Release();
+	}
+
 	void LoopBlock::BeginLoopExecution(ScriptRunner* Executor)
 	{
 		Executor->GetExecutingContext()->PushLoop(this);
@@ -257,6 +292,26 @@ namespace CSAutomationScript
 	{
 		assertR(Executor->GetExecutingContext()->PopLoop() == this);
 		State = kState_Default;
+	}
+
+	LoopBlock::~LoopBlock()
+	{
+		;//
+	}
+
+	LoopBlock::LoopBlock() : State(kState_Default)
+	{
+		;//
+	}
+
+	void LoopBlock::Break()
+	{
+		this->State = kState_Break;
+	}
+
+	void LoopBlock::Continue()
+	{
+		this->State = kState_Continue;
 	}
 
 	LineOfCode::LineOfCode(std::string& Source, UInt32 LineNumber, mup::ParserX* PrimaryParser)
@@ -313,6 +368,11 @@ namespace CSAutomationScript
 		return false;
 	}
 
+	LineOfCode::~LineOfCode()
+	{
+		;//
+	}
+
 	BeginBlock::BeginBlock(std::string& Source, UInt32 StartLineNumber, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_BeginBlock;
@@ -333,6 +393,11 @@ namespace CSAutomationScript
 		}
 
 		return RunCode(Executor);
+	}
+
+	BeginBlock::~BeginBlock()
+	{
+		;//
 	}
 
 	bool IfBlock::EvaluateElseIfBlocks(ScriptRunner* Executor, bool* Failed)
@@ -483,6 +548,11 @@ namespace CSAutomationScript
 		return false;
 	}
 
+	IfBlock::~IfBlock()
+	{
+		IfBlock::Release();
+	}
+
 	ElseIfBlock::ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_ElseIfBlock;
@@ -533,6 +603,16 @@ namespace CSAutomationScript
 		return false;
 	}
 
+	ElseIfBlock::~ElseIfBlock()
+	{
+		;//
+	}
+
+	bool ElseIfBlock::PreEvaluateCondition( ScriptRunner* Executor )
+	{
+		return EvaluateCondition(Executor);
+	}
+
 	ElseBlock::ElseBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
 	{
 		this->Type = kType_ElseBlock;
@@ -556,6 +636,11 @@ namespace CSAutomationScript
 		}
 
 		return RunCode(Executor);
+	}
+
+	ElseBlock::~ElseBlock()
+	{
+		;//
 	}
 
 	WhileBlock::WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser)
@@ -631,6 +716,11 @@ namespace CSAutomationScript
 
 		EndLoopExecution(Executor);
 		return false;
+	}
+
+	WhileBlock::~WhileBlock()
+	{
+		;//
 	}
 
 	std::string& ForEachBlock::GetConditionExpression()
@@ -740,4 +830,10 @@ namespace CSAutomationScript
 		EndLoopExecution(Executor);
 		return false;
 	}
+
+	ForEachBlock::~ForEachBlock()
+	{
+		;//
+	}
+
 }

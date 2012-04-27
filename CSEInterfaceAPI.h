@@ -56,6 +56,7 @@ struct CSERendererInterface
 	void			(* PrintToRenderWindow)(const char* Message, long double DisplayDuration);
 };
 
+/* ### move this to the new api interface
 struct CSEScriptInterface
 {
 	// Registers a CSAS script command. Returns false if registration fails
@@ -70,4 +71,4 @@ struct CSEScriptInterface
 	CSAutomationScript::Array*			(* ArrayInterface_AllocateNewArray)(CSAutomationScript::CSASDataElement* Element, UInt32 Size);
 	CSAutomationScript::Array*			(* ArrayInterface_CopyNewArray)(CSAutomationScript::Array* Source);
 	void								(* ArrayInterface_ReleaseArray)(CSAutomationScript::Array* Source);
-};
+};*/

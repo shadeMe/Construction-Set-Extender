@@ -32,21 +32,13 @@ namespace CSAutomationScript
 			kType_ForEachBlock
 		};
 
-		ExecutableCode() : CodeParser(mup::pckALL_NON_COMPLEX)
-		{
-			GlobalInstanceCount++;
-		}
-
-		virtual ~ExecutableCode()
-		{
-			Release();
-		}
+		ExecutableCode();
+		virtual ~ExecutableCode();
 
 		virtual bool							Execute(ScriptRunner* Executor) = 0;	// return false to stop execution
+		bool									IsVaid() const;
 
-		bool									IsVaid() const { return Valid; }
-
-		static UInt32							GetGlobalInstanceCount() { return GlobalInstanceCount; }
+		static UInt32							GetGlobalInstanceCount();
 	};
 
 	class CodeBlock : public ExecutableCode
@@ -67,10 +59,7 @@ namespace CSAutomationScript
 		virtual bool							LocateJumpBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, ContentMap& BlockCodeOut);
 		virtual void							InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, mup::ParserX* PrimaryParser);
 	public:
-		virtual ~CodeBlock()
-		{
-			Release();
-		}
+		virtual ~CodeBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor) = 0;
 	};
@@ -85,11 +74,8 @@ namespace CSAutomationScript
 		virtual void							Release();
 		virtual bool							EvaluateCondition(ScriptRunner* Executor);
 	public:
-		ControlBlock() : ConditionExpression("") {}
-		virtual ~ControlBlock()
-		{
-			Release();
-		}
+		ControlBlock();
+		virtual ~ControlBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor) = 0;
 	};
@@ -109,15 +95,11 @@ namespace CSAutomationScript
 			kState_Continue
 		};
 
-		LoopBlock() : State(kState_Default) {}
+		LoopBlock();
+		virtual ~LoopBlock();
 
-		virtual ~LoopBlock()
-		{
-			;//
-		}
-
-		void									Break() { this->State = kState_Break; }
-		void									Continue() { this->State = kState_Continue; }
+		void									Break();
+		void									Continue();
 	};
 
 	// derivatives
@@ -125,6 +107,7 @@ namespace CSAutomationScript
 	{
 	public:
 		LineOfCode(std::string& Source, UInt32 LineNumber, mup::ParserX* PrimaryParser);
+		virtual ~LineOfCode();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 	};
@@ -133,6 +116,7 @@ namespace CSAutomationScript
 	{
 	public:
 		BeginBlock(std::string& Source, UInt32 StartLineNumber, mup::ParserX* PrimaryParser);
+		virtual ~BeginBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 	};
@@ -154,10 +138,7 @@ namespace CSAutomationScript
 		virtual void							InitializeCodeBlock(std::string& Source, UInt32 StartLineNumber, CmdToken PrologToken, UInt32 AuxPrologTokenMask, UInt32 EpilogTokenMask, mup::ParserX* PrimaryParser);
 	public:
 		IfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);	// BlockEndOut = the block epilog declaration line
-		virtual ~IfBlock()
-		{
-			Release();
-		}
+		virtual ~IfBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 	};
@@ -166,16 +147,18 @@ namespace CSAutomationScript
 	{
 	public:
 		ElseIfBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
+		virtual ~ElseIfBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 
-		bool									PreEvaluateCondition(ScriptRunner* Executor) { return EvaluateCondition(Executor); }
+		bool									PreEvaluateCondition(ScriptRunner* Executor);
 	};
 
 	class ElseBlock : public CodeBlock
 	{
 	public:
 		ElseBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
+		virtual ~ElseBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 	};
@@ -184,6 +167,7 @@ namespace CSAutomationScript
 	{
 	public:
 		WhileBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
+		virtual ~WhileBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 	};
@@ -196,6 +180,7 @@ namespace CSAutomationScript
 		virtual std::string&					GetConditionExpression();
 	public:
 		ForEachBlock(std::string& Source, UInt32 StartLineNumber, UInt32* BlockEndOut, mup::ParserX* PrimaryParser);
+		virtual ~ForEachBlock();
 
 		virtual bool							Execute(ScriptRunner* Executor);
 	};

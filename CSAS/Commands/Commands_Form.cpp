@@ -327,7 +327,7 @@ namespace CSAutomationScript
 			for (int i = 0; i < 8; i++)
 				ArrayData[i].SetNumber(Component->attributes[i]);
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, 8);
 		}
 		else
 			return false;
@@ -352,7 +352,7 @@ namespace CSAutomationScript
 			for (int i = 0; i < Component->spells.Count(); i++)
 				ArrayData[i].SetForm(Component->spells.GetNthItem(i));
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->spells.Count());
 			delete [] ArrayData;
 		}
 		else
@@ -383,10 +383,10 @@ namespace CSAutomationScript
 				SubArrayData1[1].SetNumber(Component->levList.GetNthItem(i)->level);
 				SubArrayData1[2].SetNumber(Component->levList.GetNthItem(i)->count);
 
-				ArrayData[i].SetArray(SubArrayData1, sizeof(SubArrayData1));
+				ArrayData[i].SetArray(SubArrayData1, 3);
 			}
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->levList.Count());
 			delete [] ArrayData;
 		}
 		else
@@ -434,10 +434,10 @@ namespace CSAutomationScript
 				SubArrayData1[0].SetForm(Component->contents.GetNthItem(i)->form);
 				SubArrayData1[1].SetNumber(Component->contents.GetNthItem(i)->count);
 
-				ArrayData[i].SetArray(SubArrayData1, sizeof(SubArrayData1));
+				ArrayData[i].SetArray(SubArrayData1, 2);
 			}
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->contents.Count());
 			delete [] ArrayData;
 		}
 		else
@@ -466,10 +466,10 @@ namespace CSAutomationScript
 				SubArrayData1[0].SetForm(Component->factionList.GetNthItem(i)->faction);
 				SubArrayData1[1].SetNumber(Component->factionList.GetNthItem(i)->rank);
 
-				ArrayData[i].SetArray(SubArrayData1, sizeof(SubArrayData1));
+				ArrayData[i].SetArray(SubArrayData1, 2);
 			}
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->factionList.Count());
 			delete [] ArrayData;
 		}
 		else
@@ -553,7 +553,7 @@ namespace CSAutomationScript
 			ArrayData[1].SetNumber(Component->minLevel);
 			ArrayData[2].SetNumber(Component->maxLevel);
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, 3);
 		}
 		else
 			return false;
@@ -578,7 +578,7 @@ namespace CSAutomationScript
 			for (int i = 0; i < TESAIForm::kAIStat__MAX; i++)
 				ArrayData[i].SetNumber(Component->aiStats[i]);
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, 4);
 		}
 		else
 			return false;
@@ -641,7 +641,7 @@ namespace CSAutomationScript
 			for (int i = 0; i < Component->packages.Count(); i++)
 				ArrayData[i].SetForm(Component->packages.GetNthItem(i));
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->packages.Count());
 			delete [] ArrayData;
 		}
 		else
@@ -670,10 +670,10 @@ namespace CSAutomationScript
 				SubArrayData1[0].SetForm(Component->reactionList.GetNthItem(i)->target);
 				SubArrayData1[1].SetNumber(Component->reactionList.GetNthItem(i)->reaction);
 
-				ArrayData[i].SetArray(SubArrayData1, sizeof(SubArrayData1));
+				ArrayData[i].SetArray(SubArrayData1, 2);
 			}
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->reactionList.Count());
 			delete [] ArrayData;
 		}
 		else
@@ -910,7 +910,7 @@ namespace CSAutomationScript
 			ArrayData[2].SetNumber(Component->fallHarvestChance);
 			ArrayData[3].SetNumber(Component->winterHarvestChance);
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, 4);
 		}
 		else
 			return false;
@@ -935,7 +935,7 @@ namespace CSAutomationScript
 			for (int i = 0; i < Component->modelList.Count(); i++)
 				ArrayData[i].SetString(Component->modelList.GetNthItem(i));
 
-			Result->SetArray(ArrayData, sizeof(ArrayData));
+			Result->SetArray(ArrayData, Component->modelList.Count());
 			delete [] ArrayData;
 		}
 		else

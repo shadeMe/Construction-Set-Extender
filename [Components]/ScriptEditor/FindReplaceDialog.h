@@ -54,7 +54,7 @@ namespace ConstructionSetExtender
 			FindReplaceDialog(UInt32 ParentWorkspaceIndex);
 			virtual ~FindReplaceDialog()
 			{
-				Destroy();
+				FindReplaceDialog::Destroy();
 			}
 
 			void										Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection);

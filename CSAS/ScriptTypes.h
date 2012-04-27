@@ -4,6 +4,7 @@
 #ifndef CSE
 	namespace CSAutomationScript
 	{
+#error replace this crap with a functor based allocator
 		// use the CSEScriptInterface to initialize the following global fn ptrs
 		#pragma region Internal Use Only
 			typedef Array*							(* _CSASArrayInterface_AllocateNewArray)(CSASDataElement* Element, UInt32 Size);
@@ -74,7 +75,7 @@ namespace CSAutomationScript
 		CSASDataElement(const CSASDataElement& rhs);
 		CSASDataElement& operator=(const CSASDataElement& rhs);
 
-		virtual ~CSASDataElement() { Reset(); }
+		virtual ~CSASDataElement() { CSASDataElement::Reset(); }
 
 		static UInt32					GetGlobalInstanceCount() { return GlobalInstanceCount; }
 	};

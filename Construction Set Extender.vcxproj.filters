@@ -58,9 +58,6 @@
     <Filter Include="Interop\Component DLL">
       <UniqueIdentifier>{8bc03154-4d74-40ad-aea1-5542706114b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CSAS\muParserX">
-      <UniqueIdentifier>{6805359e-2ce9-4124-8033-653d6821e5b8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="EditorAPI\Forms\Magic">
       <UniqueIdentifier>{1bdc4fe4-9ce4-44e4-bde0-f3054aa32ede}</UniqueIdentifier>
     </Filter>
@@ -243,108 +240,6 @@
     <ClCompile Include="AuxiliaryViewport.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpError.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncCmplx.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncCommon.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncMatrix.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncNonCmplx.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpFuncStr.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpICallback.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIfThenElse.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIOprt.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIPackage.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIToken.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIValReader.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpIValue.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinAssign.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtIndex.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtMatrix.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageCommon.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageMatrix.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageStr.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpPackageUnit.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpParser.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpParserBase.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpRPN.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpScriptTokens.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpTokenReader.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpValReader.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpValue.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpValueCache.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\muParserX\parser\mpVariable.cpp">
-      <Filter>CSAS\muParserX</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\Core.cpp">
       <Filter>EditorAPI\System\Core</Filter>
     </ClCompile>
@@ -428,9 +323,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\obse\obse\GameTypes.h">
-      <Filter>OBSE</Filter>
-    </ClInclude>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
       <Filter>OBSE</Filter>
     </ClInclude>
@@ -606,135 +498,6 @@
     </ClInclude>
     <ClInclude Include="AuxiliaryViewport.h">
       <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpDefines.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpError.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncCmplx.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncCommon.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncMatrix.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncNonCmplx.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFuncStr.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpFwdDecl.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpICallback.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIfThenElse.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIOprt.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIPackage.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIPrecedence.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIToken.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValReader.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpIValue.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpMatrix.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpMatrixError.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinAssign.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtBinCommon.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtCmplx.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtIndex.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtMatrix.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpOprtNonCmplx.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCmplx.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageCommon.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageMatrix.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageNonCmplx.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageStr.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpPackageUnit.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpParser.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpParserBase.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpRPN.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpScriptTokens.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpStack.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpTokenReader.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpTypes.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpValReader.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpValue.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpValueCache.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\mpVariable.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\suSortPred.h">
-      <Filter>CSAS\muParserX</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\muParserX\parser\utGeneric.h">
-      <Filter>CSAS\muParserX</Filter>
     </ClInclude>
     <ClInclude Include="VersionInfo.h" />
     <ClInclude Include="EditorAPI\Core.h">

@@ -158,7 +158,7 @@ namespace ConstructionSetExtender
 			public:
 				virtual ~AvalonEditTextEditor()
 				{
-					Destroy();
+					AvalonEditTextEditor::Destroy();
 				}
 
 				// interface events

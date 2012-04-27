@@ -137,7 +137,7 @@ namespace CSAutomationScript
 	}
 	DEFINE_CSASCOMMAND(StringInsert, "Inserts a substring into a string at the specified position", CSASDataElement::kParamType_String, 3);
 
-	BEGIN_CSASCOMMAND_PARAMINFO(StringSubStr, 4)
+	BEGIN_CSASCOMMAND_PARAMINFO(StringSubStr, 3)
 	{
 		{ "Source String", CSASDataElement::kParamType_String },
 		{ "Start Index", CSASDataElement::kParamType_Numeric },

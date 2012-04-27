@@ -71,7 +71,7 @@ bool RenderChannelBase::GetIsValid() const
 
 RenderChannelBase::~RenderChannelBase()
 {
-	Release();
+	RenderChannelBase::Release();
 }
 
 StaticRenderChannel::StaticRenderChannel( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= 0*/, RenderHandler RenderCallback )
@@ -111,7 +111,7 @@ DynamicRenderChannel::DynamicRenderChannel( INT FontHeight, INT FontWidth, UINT 
 
 DynamicRenderChannel::~DynamicRenderChannel()
 {
-	Release();
+	DynamicRenderChannel::Release();
 }
 
 void DynamicRenderChannel::Render(void* Parameter, LPD3DXSPRITE RenderToSprite)

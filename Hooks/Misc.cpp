@@ -244,10 +244,10 @@ namespace Hooks
 
 	void __stdcall DoCSInitHook()
 	{
-		if (!g_PluginPostLoad)					// prevents the hook from being called before the full init
+		if (!g_PluginPostLoad)					// ### this check not necessary with the new injection method
 			return;
 		else if (!*g_HWND_CSParent || !*g_HWND_ObjectWindow || !*g_HWND_CellView || !*g_HWND_RenderWindow)
-			return;
+			return;								// prevents the hook from being called before the full init
 
 		_MemHdlr(CSInit).WriteBuffer();			// removed right away to keep it from hindering the subclassing that follows
 

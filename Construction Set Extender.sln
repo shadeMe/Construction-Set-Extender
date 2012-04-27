@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{754B623C-5C4E-4EC4-9AAC-28BED9F83C8B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Misc]", "[Misc]", "{754B623C-5C4E-4EC4-9AAC-28BED9F83C8B}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\..\..\..\Documents\Visual Studio 2010\Projects\SharpDev\AvalonEdit Documentation.chm = ..\..\..\..\..\Documents\Visual Studio 2010\Projects\SharpDev\AvalonEdit Documentation.chm
 		Dev Journal.txt = Dev Journal.txt
@@ -16,9 +16,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LipSyncPipeClient", "[Components]\LipSyncPipeClient\LipSyncPipeClient.vcxproj", "{7DDE7310-A0DE-409C-8E55-629788E95FE3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor", "[Components]\ScriptEditor\ScriptEditor.vcxproj", "{AA53012B-2307-47FE-B637-4A828BA77A24}"
-	ProjectSection(ProjectDependencies) = postProject
-		{67DD2FF6-AFF7-4C49-80AE-72B47982563D} = {67DD2FF6-AFF7-4C49-80AE-72B47982563D}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UseInfoList", "[Components]\UseInfoList\UseInfoList.vcxproj", "{294A2A89-2979-4C16-AE16-595C50A44F11}"
 EndProject
@@ -27,6 +24,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScriptEditor.Preprocessor", "[Components]\ScriptEditor\Preprocessor\ScriptEditor.Preprocessor.vcxproj", "{67DD2FF6-AFF7-4C49-80AE-72B47982563D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "[Common]", "..\Common\common.vcxproj", "{20C6411C-596F-4B85-BE4E-8BC91F59D8A6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Depends]", "[Depends]", "{971FE121-CDFB-42F2-9920-60B2E91A0540}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{C82E8D51-4BB3-430F-BF67-8921BEAC4375}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ScriptEditor", "ScriptEditor", "{75FAA4AC-29BF-4AB4-B967-1328EE49A186}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +134,17 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{20C6411C-596F-4B85-BE4E-8BC91F59D8A6} = {971FE121-CDFB-42F2-9920-60B2E91A0540}
+		{F215DC0C-0A95-477D-A336-1A5080AE04AD} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
+		{41E73AFC-9E62-4535-BC6C-C4FD9956128E} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
+		{7DDE7310-A0DE-409C-8E55-629788E95FE3} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
+		{294A2A89-2979-4C16-AE16-595C50A44F11} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
+		{58343CA8-BAD7-4625-BF76-F58EE59EDF8D} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
+		{75FAA4AC-29BF-4AB4-B967-1328EE49A186} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
+		{AA53012B-2307-47FE-B637-4A828BA77A24} = {75FAA4AC-29BF-4AB4-B967-1328EE49A186}
+		{67DD2FF6-AFF7-4C49-80AE-72B47982563D} = {75FAA4AC-29BF-4AB4-B967-1328EE49A186}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		BuildVersion_UseGlobalSettings = False

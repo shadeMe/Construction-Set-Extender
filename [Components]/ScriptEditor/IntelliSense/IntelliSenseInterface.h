@@ -48,7 +48,7 @@ namespace ConstructionSetExtender
 			IntelliSenseInterface(UInt32 ParentWorkspaceIndex);
 			virtual ~IntelliSenseInterface()
 			{
-				Destroy();
+				IntelliSenseInterface::Destroy();
 			}
 
 			static enum class									Operation

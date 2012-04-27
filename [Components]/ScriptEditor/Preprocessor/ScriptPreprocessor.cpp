@@ -325,7 +325,7 @@ namespace ConstructionSetExtender
 
 				try
 				{
-					StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\Preprocessor\\{1}.txt", Filename));
+					StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\Preprocessor\\{0}.txt", Filename));
 					Source = ImportParser->ReadToEnd();
 					ImportParser->Close();
 				}

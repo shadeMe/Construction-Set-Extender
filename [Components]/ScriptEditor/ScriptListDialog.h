@@ -70,7 +70,7 @@ namespace ConstructionSetExtender
 			ScriptListDialog(UInt32 ParentWorkspaceIndex);
 			virtual ~ScriptListDialog()
 			{
-				Destroy();
+				ScriptListDialog::Destroy();
 			}
 
 			virtual ComponentDLLInterface::ScriptData*			Show(Operation Op, String^ FilterString);
