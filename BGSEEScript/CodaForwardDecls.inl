@@ -18,6 +18,7 @@ namespace BGSEditorExtender
 		class ICodaScriptDataStoreOwner;
 		class ICodaScriptParseTree;
 		class ICodaScriptCommandHandlerHelper;
+		class ICodaScriptExpressionByteCode;
 
 		class CodaScriptVM;
 		class CodaScriptExecutive;
@@ -28,7 +29,7 @@ namespace BGSEditorExtender
 		class CodaScriptBackingStore;
 		class CodaScriptBackgrounder;
 		class CodaScriptGlobalDataStore;
-		class CodaScriptFunctionRegistrar;
+		class CodaScriptCommandRegistrar;
 
 		class CodaScriptExpression;
 		class CodaScriptBEGINBlock;
@@ -56,9 +57,7 @@ namespace BGSEditorExtender
 		typedef std::stack<ICodaScriptLoopBlock*>						CodaScriptLoopBlockStackT;
 		typedef std::stack<CodaScriptExecutionContext*>					CodaScriptExecutionContextStackT;
 		typedef std::stack<ICodaScriptExecutableCode*>					CodaScriptExecutableCodeStackT;
-		typedef boost::shared_ptr<ICodaScriptArrayDataType>				CodaScriptSharedHandleArrayT;
-		typedef boost::shared_ptr<ICodaScriptDataStoreOwner>			CodaScriptScopedHandleDataStoreOwnerT;
 		typedef SME::MiscGunk::ElapsedTimeCounter						CodaScriptElapsedTimeCounterT;
-		typedef std::list<CodaScriptFunctionRegistrar*>					CodaScriptRegistrarListT;
+		typedef std::list<CodaScriptCommandRegistrar*>					CodaScriptRegistrarListT;
 	}
 }

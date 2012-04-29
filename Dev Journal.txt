@@ -1,7 +1,6 @@
 To-Do
 =====
 IMMEDIATE  >>
-> Make sure there are no virtual fn calls in ctors/dtors
 > Fix all destroyMenu calls made with submenu handles (DON'T CREATE A CONTAINER SUBMENU FOR MENU RESORUCES)
 
 NOTE	---->
@@ -11,6 +10,9 @@ NOTE	---->
 > Modifying the codascript global datastore during runtime will reset the state of backgrounded scripts
 
 
+> The client will have to patch TESDialog::Subwindow to replace the org res instance handle in the subwindow object with the new one
+
+
 MISC	---->
 > Credits:	T800G, for the window snapper code
 	Ingo Berg, for muParserX (and for the great tech. support)
@@ -18,12 +20,9 @@ MISC	---->
 
 
 BGSEEBase		---->
-> Reimplement the GetSecondsPassed command - Each execution context stores a counter that gets queried/modified by the command
 > Redesign the plugin interop API such that all coda commands are stored in a pool before being registered to the VM
-> Optional timestamps for console output
 > Double right click on a form list combo box (TESComboBox) opens it for editing
 > Update the plugin interface without breaking backward compatibility
-> Move all Achivement related code to the client
 > Replace CRT based assertion macro with a slightly more sophisticated one
 > See if the aux viewport code can be moved into the lib
 > A system to hotswap dialog layouts from custom resource files

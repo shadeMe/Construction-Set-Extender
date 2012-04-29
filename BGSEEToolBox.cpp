@@ -267,6 +267,8 @@ namespace BGSEditorExtender
 
 	BGSEEToolBox::Tool* BGSEEToolBox::AddTool( const char* Title, const char* CmdLine, const char* InitDir )
 	{
+		SME_ASSERT(Initialized);
+
 		ToolListT::iterator Match;
 		if (LookupToolByTitle(Title, Match))
 			return NULL;
@@ -278,6 +280,8 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::AddTool( BGSEEToolBox::Tool* Tool )
 	{
+		SME_ASSERT(Initialized);
+
 		ToolListT::iterator Match;
 		if (LookupToolByTitle(Tool->Title.c_str(), Match))
 			return;
@@ -287,6 +291,8 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::RemoveTool( const char* Title, bool ReleaseMemory /*= false*/ )
 	{
+		SME_ASSERT(Initialized);
+
 		ToolListT::iterator Match;
 		if (LookupToolByTitle(Title, Match) == false)
 			return;
@@ -299,6 +305,8 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::RemoveTool( BGSEEToolBox::Tool* Tool, bool ReleaseMemory /*= false*/ )
 	{
+		SME_ASSERT(Initialized);
+
 		ToolListT::iterator Match;
 		if (LookupToolByTitle(Tool->Title.c_str(), Match) == false)
 			return;
@@ -311,6 +319,8 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::ClearTools( bool ReleaseMemory /*= true*/ )
 	{
+		SME_ASSERT(Initialized);
+
 		if (ReleaseMemory)
 		{
 			for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
@@ -361,6 +371,8 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::EnumerateToolsInListBox( HWND ListBox )
 	{
+		SME_ASSERT(Initialized);
+
 		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			int Index = SendMessage(ListBox, LB_INSERTSTRING, -1, (LPARAM)(*Itr)->Title.c_str());
@@ -370,6 +382,8 @@ namespace BGSEditorExtender
 
 	bool BGSEEToolBox::LookupToolByTitle( const char* Title, ToolListT::iterator& Match )
 	{
+		SME_ASSERT(Initialized);
+
 		bool Result = false;
 
 		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
@@ -393,6 +407,8 @@ namespace BGSEditorExtender
 		SAFEDELETE(INIGetter);
 		SAFEDELETE(INISetter);
 		ClearTools(true);
+
+		Initialized = false;
 	}
 
 	BGSEEToolBox* BGSEEToolBox::GetSingleton()
@@ -426,6 +442,8 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::ShowToolListMenu( HINSTANCE ResourceInstance, HWND Parent, LPARAM Coords )
 	{
+		SME_ASSERT(Initialized);
+
 		RECT Rect;
 		POINT Point;
 

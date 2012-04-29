@@ -19,6 +19,7 @@ namespace BGSEditorExtender
 		// it is not recommended that the SetCurrentDirectory API function be used in multi-threaded applications
 		// but it certainly beats patching a ton of locations in the executable
 		// since we reset data and background queuing before calling it, it should be relatively safe
+		// heck! even Beth calls the function in their code xD
 
 		CurrentDirectory = WorkspacePath;
 		SetCurrentDirectory(WorkspacePath);
@@ -46,6 +47,8 @@ namespace BGSEditorExtender
 		DefaultDirectories.clear();
 		SAFEDELETE(WorkspaceResetter);
 		SAFEDELETE(WorkspacePluginReloader);
+
+		Initialized = false;
 	}
 
 	BGSEEWorkspaceManager* BGSEEWorkspaceManager::GetSingleton()
@@ -72,10 +75,10 @@ namespace BGSEditorExtender
 		this->WorkspaceResetter = Resetter;
 		this->WorkspacePluginReloader = Reloader;
 
-		DefaultDirectories.push_back("Data\\BGSEE\\");
 		for (int i = 0; i < DefaultDirectoryData->Count; i++)
 			DefaultDirectories.push_back(DefaultDirectoryData->DirectoryPaths[i]);
 
+		DefaultDirectories.push_back(BGSEEResourceLocation::kBasePath);
 		CreateDefaultDirectories(DefaultDirectory);
 
 		Initialized = true;
@@ -84,8 +87,7 @@ namespace BGSEditorExtender
 
 	bool BGSEEWorkspaceManager::SelectCurrentWorkspace( const char* DefaultWorkspacePath )
 	{
-		if (Initialized == false)
-			return false;
+		SME_ASSERT(Initialized);
 
 		char WorkspacePath[MAX_PATH] = {0};
 
@@ -145,6 +147,8 @@ namespace BGSEditorExtender
 
 	const char* BGSEEWorkspaceManager::GetCurrentWorkspace( void ) const
 	{
+		SME_ASSERT(Initialized);
+
 		return CurrentDirectory.c_str();
 	}
 

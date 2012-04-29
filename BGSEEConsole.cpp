@@ -358,9 +358,13 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	BGSEEConsole::DefaultDebugLogContext::DefaultDebugLogContext( const char* DebugLogPath ) :
-				BGSEEConsole::MessageLogContext("", DebugLogPath), PrintCallbacks()
+	BGSEEConsole::DefaultDebugLogContext::DefaultDebugLogContext( BGSEEConsole* Parent, const char* DebugLogPath ) :
+		BGSEEConsole::MessageLogContext("", DebugLogPath),
+		Parent(Parent),
+		PrintCallbacks()
 	{
+		SME_ASSERT(Parent);
+
 		DebugLog = _fsopen(DebugLogPath, "w", _SH_DENYWR);
 		IndentLevel = 0;
 		ExecutingCallbacks = false;
@@ -369,6 +373,13 @@ namespace BGSEditorExtender
 	void BGSEEConsole::DefaultDebugLogContext::Print( const char* Prefix, const char* Message )
 	{
 		std::string Addend;
+
+		if (atoi(Parent->INISettingGetter(Parent->kConsoleSpecificINISettings[BGSEEConsole::kConsoleSpecificINISetting_LogTimestamps].Key, Parent->kINISection)))
+		{
+			char Buffer[0x32] = {0};
+			SME::MiscGunk::GetTimeString(Buffer, sizeof(Buffer), "%H:%M:%S");
+			Addend += "[" + std::string(Buffer) + "] ";
+		}
 
 		if (strlen(Prefix))
 			Addend += "[" + std::string(Prefix) + "]\t";
@@ -697,18 +708,19 @@ namespace BGSEditorExtender
 		SecondaryContexts.clear();
 	}
 
-	const BGSEEINIManagerSettingFactory::SettingData		BGSEEConsole::kConsoleSpecificINISettings[3] =
+	const BGSEEINIManagerSettingFactory::SettingData		BGSEEConsole::kConsoleSpecificINISettings[4] =
 	{
 		{ "UpdatePeriod",		"1000",		"Duration, in milliseconds, between message log updates" },
-		{ "LogWarnings",		"1",		"Log Editor Warnings" },
-		{ "LogAssertions",		"1",		"Log Editor Assertions" }
+		{ "LogWarnings",		"1",		"Log editor warnings" },
+		{ "LogAssertions",		"1",		"Log editor assertions" },
+		{ "LogTimestamps",		"0",		"Add timestamps to messages" },
 	};
 
 	BGSEEConsole::BGSEEConsole( const char* LogPath, BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter ) :
 			BGSEEGenericModelessDialog(), INISettingGetter(Getter), INISettingSetter(Setter)
 	{
 		OwnerThreadID = GetCurrentThreadId();
-		PrimaryContext = new DefaultDebugLogContext(LogPath);
+		PrimaryContext = new DefaultDebugLogContext(this, LogPath);
 		ActiveContext = PrimaryContext;
 
 		DialogTemplateID = IDD_BGSEE_CONSOLE;
@@ -882,5 +894,31 @@ namespace BGSEditorExtender
 	void BGSEEConsole::UnregisterConsoleCommand( BGSEEConsoleCommandInfo* Command )
 	{
 		CommandTable.RemoveCommand(Command);
+	}
+
+	const char* BGSEEConsole::GetLogPath( void ) const
+	{
+		SME_ASSERT(PrimaryContext);
+		return PrimaryContext->LogPath.c_str();
+	}
+
+	BGSEEINIManagerSettingFactory* BGSEEConsole::GetINIFactory( void )
+	{
+		static BGSEEINIManagerSettingFactory kFactory(kINISection);
+		if (kFactory.Settings.size() == 0)
+		{
+			kFactory.Settings.push_back(&kDefaultINISettings[kDefaultINISetting_Top]);
+			kFactory.Settings.push_back(&kDefaultINISettings[kDefaultINISetting_Left]);
+			kFactory.Settings.push_back(&kDefaultINISettings[kDefaultINISetting_Right]);
+			kFactory.Settings.push_back(&kDefaultINISettings[kDefaultINISetting_Bottom]);
+			kFactory.Settings.push_back(&kDefaultINISettings[kDefaultINISetting_Visible]);
+
+			kFactory.Settings.push_back(&kConsoleSpecificINISettings[kConsoleSpecificINISetting_UpdatePeriod]);
+			kFactory.Settings.push_back(&kConsoleSpecificINISettings[kConsoleSpecificINISetting_LogWarnings]);
+			kFactory.Settings.push_back(&kConsoleSpecificINISettings[kConsoleSpecificINISetting_LogAssertions]);
+			kFactory.Settings.push_back(&kConsoleSpecificINISettings[kConsoleSpecificINISetting_LogTimestamps]);
+		}
+
+		return &kFactory;
 	}
 }

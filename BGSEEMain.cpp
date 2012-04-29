@@ -1,11 +1,16 @@
 #include "BGSEEMain.h"
 #include "BGSEEConsole.h"
 #include "DetectSIMD.h"
+#include "BGSEEScript\CodaVM.h"
 #include "SME Sundries\INIEditGUI_Res.h"
+
+#include <CrashRpt.h>
 
 namespace BGSEditorExtender
 {
-	BGSEEDaemon::BGSEEDaemon() : InitCallbacks(), DeinitCallbacks()
+	BGSEEDaemon::BGSEEDaemon() :
+		InitCallbacks(),
+		DeinitCallbacks()
 	{
 		;//
 	}
@@ -153,9 +158,9 @@ namespace BGSEditorExtender
 
 		for (SettingFactoryListT::const_iterator Itr = FactoryList->begin(); Itr != FactoryList->end(); Itr++)
 		{
-			for (int i = 0; i < (*Itr)->SettingCount; i++)
+			for (BGSEEINIManagerSettingFactory::SettingListT::const_iterator ItrX = (*Itr)->Settings.begin(); ItrX != (*Itr)->Settings.end(); ItrX++)
 			{
-				BGSEEINIManagerSettingFactory::SettingData* Current = &(*Itr)->SettingArray[i];
+				const BGSEEINIManagerSettingFactory::SettingData* Current = *ItrX;
 				RegisterSetting(Current->Key, (*Itr)->Section, Current->DefaultValue, Current->Description);
 			}
 		}
@@ -282,32 +287,15 @@ namespace BGSEditorExtender
 																								(SEMinVersion >> 4) & 0xFFF);
 			return false;
 		}
-		else if (EditorCurrentVersion < EditorSupportedVersion)
+		else if (EditorCurrentVersion != EditorSupportedVersion)
 		{
-			BGSEECONSOLE_MESSAGE("Editor version too old - v%d.%d.%d required", (EditorSupportedVersion >> 24) & 0xFF,
+			BGSEECONSOLE_MESSAGE("Editor version mismatch - v%d.%d.%d required", (EditorSupportedVersion >> 24) & 0xFF,
 																			(EditorSupportedVersion >> 16) & 0xFF,
 																			(EditorSupportedVersion >> 4) & 0xFFF);
 			return false;
 		}
 
-		HKEY MSVCRedist = NULL;
-		bool HasMSVCRedist = false;
-		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\VisualStudio\\10.0\\VC\\VCRedist\\x86", NULL, KEY_ALL_ACCESS, &MSVCRedist) == ERROR_SUCCESS)
-		{
-			UInt32 Type = 0, Size = 4, Value = 0;
-			if (RegQueryValueEx(MSVCRedist, "Installed", NULL, &Type, (LPBYTE)&Value, &Size) == ERROR_SUCCESS &&
-				Value)
-			{
-				HasMSVCRedist = true;
-			}
-		}
-
-		if (HasMSVCRedist == false)
-		{
-			BGSEECONSOLE_MESSAGE("Visual C++ 2010 x86/x64 Runtime Libraries not installed");
-			return false;
-		}
-		else if (LoadLibrary("d3dx9_41.dll") == NULL)
+		if (LoadLibrary("d3dx9_41.dll") == NULL)
 		{
 			BGSEECONSOLE_MESSAGE("DirectX v9.0c Runtime Libraries not installed");
 			return false;
@@ -350,7 +338,7 @@ namespace BGSEditorExtender
 
 		if (HasDotNet == false)
 		{
-			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed - v%s (Full and Client Profile) or greater required", DotNETFrameworkVersionString);
+			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed - v%s (Full/Client Profile) or greater required", DotNETFrameworkVersionString);
 			return false;
 		}
 
@@ -373,10 +361,12 @@ namespace BGSEditorExtender
 
 		BGSEECONSOLE_MESSAGE("Initializing INI Manager");
 		BGSEECONSOLE->Indent();
-		INISettingsManager->Initialize(INIPath, (void*)&INISettingFactory);
-		BGSEECONSOLE->Exdent();
 
-TODO("Add crashrpt support")
+		INISettingFactory.push_back(BGSEEConsole::GetINIFactory());
+		INISettingFactory.push_back(BGSEEScript::CodaScriptBackgrounder::GetINIFactory());
+		INISettingsManager->Initialize(INIPath, (void*)&INISettingFactory);
+
+		BGSEECONSOLE->Exdent();
 
 		return true;
 	}
@@ -386,7 +376,8 @@ TODO("Add crashrpt support")
 		INISettingFactory.clear();
 	}
 
-	BGSEEMain::DefaultDeinitCallback::DefaultDeinitCallback( BGSEEMain* Parent ) : BoolRFunctorBase()
+	BGSEEMain::DefaultDeinitCallback::DefaultDeinitCallback( BGSEEMain* Parent ) :
+		BoolRFunctorBase()
 	{
 		ParentInstance = Parent;
 	}
@@ -440,6 +431,7 @@ TODO("Add crashrpt support")
 		SAFEDELETE(ExtenderDaemon);
 		SAFEDELETE(ExtenderINIManager);
 
+		crUninstall();
 		ExitProcess(0);
 	}
 
@@ -487,6 +479,8 @@ TODO("Add crashrpt support")
 		SME_ASSERT(LongName && ShortName &&	APPPath && EditorID != kExtenderParentEditor_Unknown &&
 				EditorID < kExtenderParentEditor__MAX && SEPluginHandle != 0xFFFFFFFF && DotNETFrameworkVersion);
 
+		Initialized = true;
+
 		ExtenderLongName = LongName;
 		FORMAT_STR(ExtenderShortName, "%s", ShortName);
 		ExtenderVersion = Version;
@@ -525,71 +519,142 @@ TODO("Add crashrpt support")
 		InitCallback->WaitForDebuggerOnStartup = WaitForDebugger;
 		ExtenderDaemon->RegisterInitCallback(BGSEEDaemon::kInitCallback_Query, InitCallback);
 
-		Initialized = true;
+		CR_INSTALL_INFO CrashRptData = {0};
+		CrashRptData.cb = sizeof(CR_INSTALL_INFO);
+		CrashRptData.pszAppName = NULL;
+		CrashRptData.pszAppVersion = NULL;
+		CrashRptData.pszEmailSubject = NULL;
+		CrashRptData.pszEmailTo = NULL;
+		CrashRptData.pszUrl = NULL;
+		CrashRptData.pfnCrashCallback = BGSEEMain::CrashCallback;
+		CrashRptData.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
+		CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT;
+		CrashRptData.dwFlags |= CR_INST_STORE_ZIP_ARCHIVES;
+		CrashRptData.pszPrivacyPolicyURL = NULL;
+		CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
+		CrashRptData.pszErrorReportSaveDir = "\\BGSEE Crash Reports\\";
+
+		if (crInstall(&CrashRptData))
+		{
+			TCHAR Buffer[0x200] = {0};
+			crGetLastErrorMsg(Buffer, sizeof(Buffer));
+			BGSEECONSOLE_MESSAGE("Failed to initialize CrashRpt! Error Message: %s", Buffer);
+		}
+		else
+		{
+			crAddFile2(Console()->GetLogPath(),
+				NULL, "BGSEE Debug Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+
+			crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + ".log")).c_str(),
+				NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+
+			crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_editor.log")).c_str(),
+				NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+
+			crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_loader.log")).c_str(),
+				NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+
+			crAddFile2((std::string(GameDirectoryPath + "\\" + std::string(kXSEShortName[(int)EditorID]) + "_steam_loader.log")).c_str(),
+				NULL, "Script Extender Log", CR_AF_MISSING_FILE_OK | CR_AF_MAKE_FILE_COPY);
+
+			crAddScreenshot2(CR_AS_PROCESS_WINDOWS, NULL);
+		}
+
+		TODO("nop calls to SetUnhandledExceptionFilter in the client code")
+
 		return Initialized;
 	}
 
 	const char* BGSEEMain::ExtenderGetLongName( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ExtenderLongName.c_str();
 	}
 
 	const char* BGSEEMain::ExtenderGetShortName( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ExtenderShortName;
 	}
 
 	UInt32 BGSEEMain::ExtenderGetVersion( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ExtenderVersion;
 	}
 
 	HINSTANCE BGSEEMain::GetModuleHandle( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ExtenderModuleHandle;
 	}
 
 	const char* BGSEEMain::GetAPPPath( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return GameDirectoryPath.c_str();
 	}
 
 	const char* BGSEEMain::GetDLLPath( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ExtenderDLLPath.c_str();
 	}
 
 	const char* BGSEEMain::GetINIPath( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ExtenderINIPath.c_str();
 	}
 
 	BGSEEConsole* BGSEEMain::Console( void ) const
 	{
-		SME_ASSERT(ExtenderConsole);
+		SME_ASSERT(Initialized && ExtenderConsole);
 		return ExtenderConsole;
 	}
 
 	BGSEEDaemon* BGSEEMain::Daemon( void ) const
 	{
-		SME_ASSERT(ExtenderDaemon);
+		SME_ASSERT(Initialized && ExtenderDaemon);
 		return ExtenderDaemon;
 	}
 
 	const char* BGSEEMain::ParentEditorGetLongName( void ) const
 	{
-		SME_ASSERT(ParentEditorID);
+		SME_ASSERT(Initialized && ParentEditorID);
 		return kParentEditorLongName[ParentEditorID];
 	}
 
 	const char* BGSEEMain::ParentEditorGetShortName( void ) const
 	{
-		SME_ASSERT(ParentEditorID);
+		SME_ASSERT(Initialized && ParentEditorID);
 		return kParentEditorShortName[ParentEditorID];
 	}
 
 	UInt32 BGSEEMain::ParentEditorGetVersion( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return ParentEditorSupportedVersion;
+	}
+
+	BOOL CALLBACK BGSEEMain::CrashCallback( LPVOID lpvState )
+	{
+		// panic and toss grenades around
+
+		SAFEDELETE(BGSEEMAIN->ExtenderConsole);			// flush the log file
+		return TRUE;
+	}
+
+	BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
+	{
+		switch (dwReason)
+		{
+		case DLL_PROCESS_ATTACH:
+			break;
+		case DLL_PROCESS_DETACH:
+			break;
+		}
+
+		return TRUE;
 	}
 }

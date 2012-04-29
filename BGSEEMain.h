@@ -1,7 +1,7 @@
 #pragma once
 
 // BGSEEMain - Global singleton that manages all of the basic extender-specific data
-// BGSEEDaemon - Handles basic services like initialization, shutdown and crash reporting
+// BGSEEDaemon - Handles basic services like plugin initialization and shutdown
 
 namespace BGSEditorExtender
 {
@@ -67,9 +67,17 @@ namespace BGSEditorExtender
 			const char*				Description;
 		};
 
-		const char*					Section;
-		SettingData*				SettingArray;
-		UInt32						SettingCount;
+		typedef std::list<const SettingData*>	SettingListT;
+
+		const char*			Section;
+		SettingListT		Settings;
+
+		BGSEEINIManagerSettingFactory(const char* Section) :
+			Section(Section),
+			Settings()
+		{
+			;//
+		}
 	};
 	typedef std::list<BGSEEINIManagerSettingFactory*>		SettingFactoryListT;
 
@@ -124,6 +132,8 @@ namespace BGSEditorExtender
 			virtual bool			operator()();
 		};
 
+		static BOOL CALLBACK					CrashCallback(LPVOID lpvState);
+
 		class DefaultDeinitCallback : public BoolRFunctorBase
 		{
 			BGSEEMain*				ParentInstance;
@@ -134,6 +144,7 @@ namespace BGSEditorExtender
 			virtual bool			operator()();
 		};
 
+		friend class DefaultInitCallback;
 		friend class DefaultDeinitCallback;
 	protected:
 		BGSEEMain();
@@ -212,15 +223,4 @@ namespace BGSEditorExtender
 #undef BGSEEMAIN_EXTENDERSHORTNAME
 }
 
-BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
-{
-	switch (dwReason)
-	{
-	case DLL_PROCESS_ATTACH:
-		break;
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-
-	return TRUE;
-}
+BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved);

@@ -30,15 +30,14 @@ namespace BGSEditorExtender
 		protected:
 			DataType														Type;
 		public:
-			ICodaScriptDataStore()
-				: Type(kDataType_Invalid)
+			ICodaScriptDataStore() :
+				Type(kDataType_Invalid)
 			{
 				;//
 			}
 
 			virtual ~ICodaScriptDataStore() = 0
 			{
-				;//
 			}
 
 			DataType														GetType() const
@@ -56,6 +55,9 @@ namespace BGSEditorExtender
 			virtual void													SetArray(ICodaScriptDataStore* Data) = 0;
 
 			virtual ICodaScriptDataStore&									operator=(const ICodaScriptDataStore& rhs) = 0;
+			virtual ICodaScriptDataStore&									operator=(CodaScriptNumericDataTypeT Num) = 0;
+			virtual ICodaScriptDataStore&									operator=(CodaScriptStringParameterTypeT Str) = 0;
+			virtual ICodaScriptDataStore&									operator=(CodaScriptReferenceDataTypeT Form) = 0;
 		};
 
 		class ICodaScriptDataStoreOwner
@@ -94,9 +96,10 @@ namespace BGSEditorExtender
 
 			virtual const char*					GetDescription(void) = 0;
 			virtual const char*					GetDocumentation(void) = 0;		// can contain HTML markup
-			virtual void						GetParameterData(int& OutParameterCount,
-																ParameterInfo** OutParameterInfoArray,
-																UInt8& OutResultType) = 0;
+			virtual int							GetParameterData(int* OutParameterCount = NULL,
+																ParameterInfo** OutParameterInfoArray = NULL,
+																UInt8* OutResultType = NULL) = 0;
+																				// returns parameter count
 																				// parameter count must be -1 for variadic functions
 
 			virtual bool						Execute(ICodaScriptDataStore* Arguments,
@@ -104,13 +107,11 @@ namespace BGSEditorExtender
 														ParameterInfo* ParameterData,
 														int ArgumentCount,
 														ICodaScriptCommandHandlerHelper* Utilities,
-														CodaScriptVM* VirtualMachine,
-														CodaScriptExecutionContext* ScriptContext,
-														ICodaScriptSyntaxTreeEvaluator* ExecutionAgent) = 0;
+														ICodaScriptSyntaxTreeEvaluator* ExecutionAgent,
+														ICodaScriptExpressionByteCode* ByteCode) = 0;
 																				// return false to skip result validation
 		};
 
-		TODO("implementation tracks array allocations, releases unused instances and checks for leaks on returning from the handler")
 		class ICodaScriptCommandHandlerHelper
 		{
 		public:
@@ -124,13 +125,18 @@ namespace BGSEditorExtender
 			virtual bool						ArrayPushback(ICodaScriptDataStore* AllocatedArray, CodaScriptStringParameterTypeT Data) = 0;
 			virtual bool						ArrayPushback(ICodaScriptDataStore* AllocatedArray, CodaScriptReferenceDataTypeT Data) = 0;
 			virtual bool						ArrayPushback(ICodaScriptDataStore* AllocatedArray, ICodaScriptDataStore* ArrayData) = 0;
+			virtual bool						ArrayAt(ICodaScriptDataStore* AllocatedArray, UInt32 Index, ICodaScriptDataStore** OutBuffer) = 0;
+			virtual bool						ArrayErase(ICodaScriptDataStore* AllocatedArray, UInt32 Index) = 0;
+			virtual void						ArrayClear(ICodaScriptDataStore* AllocatedArray) = 0;
+			virtual UInt32						ArraySize(ICodaScriptDataStore* AllocatedArray) = 0;
 
 			virtual bool						ExtractArguments(ICodaScriptDataStore* Arguments,
 																ICodaScriptCommand::ParameterInfo* ParameterData,
 																UInt32 ArgumentCount,
 																...) = 0;
-																				// pass CodaScriptStringParameterTypeT pointers for string arguments
-																				// variadic functions must manually extract their arguments
+																// pass CodaScriptStringParameterTypeT pointers for string arguments
+																// ICodaScriptDataStore pointers for arrays and multitype args
+																// variadic functions must manually extract their arguments
 		};
 
 		template<typename T>

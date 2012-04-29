@@ -60,9 +60,9 @@ void PackageStr::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->AddValueReader(new StrValReader());
 
   // Functions
-  pParser->DefineFun(new FunStrLen());
-  pParser->DefineFun(new FunStrToDbl());
-  pParser->DefineFun(new FunStrToUpper());
+//  pParser->DefineFun(new FunStrLen());
+//  pParser->DefineFun(new FunStrToDbl());
+//  pParser->DefineFun(new FunStrToUpper());
 
   // Operators
   pParser->DefineOprt(new OprtStrAdd);

@@ -12,7 +12,7 @@ namespace BGSEditorExtender
 		const CodaScriptSourceCodeT				CodaScriptTokenizer::kCommentDelimiter = ";";
 		const CodaScriptSourceCodeT				CodaScriptTokenizer::kValidDelimiters = kCommentDelimiter + kWhitespace + ".,(){}[]\n";
 		const UInt32							CodaScriptTokenizer::kCodaKeywordCount = 15 + 1;
-		CodaScriptSourceCodeT					CodaScriptTokenizer::kCodaKeywordArray[kCodaKeywordCount] =
+		const CodaScriptSourceCodeT				CodaScriptTokenizer::kCodaKeywordArray[kCodaKeywordCount] =
 		{
 			"<UNKNOWN>",
 			"VAR",
@@ -27,7 +27,7 @@ namespace BGSEditorExtender
 			"ENDIF",
 			"RETURN",
 			"CALL",
-			"CODA",				// syntax: CODA(<ScriptName>, <PollingInterval:optional>)
+			"CODA",								// syntax: CODA(<ScriptName> [, PollingInterval])
 			"CONTINUE",
 			"BREAK",
 		};
@@ -172,6 +172,17 @@ namespace BGSEditorExtender
 				return GetKeywordType(Tokens[0]);
 			else
 				return kTokenType_Invalid;
+		}
+
+		const CodaScriptSourceCodeT& CodaScriptTokenizer::GetKeywordName( CodaScriptKeywordT Keyword )
+		{
+			for (int i = 1; i < kCodaKeywordCount; i++)
+			{
+				if (1 << i == Keyword)
+					return kCodaKeywordArray[i];
+			}
+
+			return kCodaKeywordArray[0];
 		}
 
 		ICodaScriptExpressionByteCode::ICodaScriptExpressionByteCode( ICodaScriptExecutableCode* SourceCode ) :
@@ -1107,7 +1118,6 @@ namespace BGSEditorExtender
 							switch (FirstKeyword)
 							{
 							case CodaScriptTokenizer::kTokenType_Return:
-								TODO("Remember to unwind the loop stack in the command handler")
 								break;
 							case CodaScriptTokenizer::kTokenType_Break:
 							case CodaScriptTokenizer::kTokenType_Continue:
@@ -1196,13 +1206,19 @@ namespace BGSEditorExtender
 			if (Agent->GetState() == CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Terminate)
 				ExecuteResult = false;
 
-			if (Agent->GetResult())
+			if (Agent->GetResult() && Result)
 			{
 				ReturnedResult = true;
 				*Result = *Agent->GetResult();
 			}
 
 			return ExecuteResult;
+		}
+
+		long double CodaScriptExecutionContext::GetSecondsPassed( void )
+		{
+			ElapsedTimeCounter.Update();
+			return ElapsedTimeCounter.GetTimePassed() / 1000.0;
 		}
 
 		CodaScriptSyntaxTreeCompileVisitor::CodaScriptSyntaxTreeCompileVisitor( CodaScriptVM* VM,
@@ -1228,15 +1244,15 @@ namespace BGSEditorExtender
 #define CODASCRIPT_COMPILERERROR_CATCHER									\
 			catch (CodaScriptException& E)									\
 			{																\
-				VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.Get());		\
+				BGSEECONSOLE_MESSAGE("Compiler Error - %s", E.Get());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.what());		\
+				BGSEECONSOLE_MESSAGE("Compiler Error - %s", E.what());		\
 			}																\
 			catch (...)														\
 			{																\
-				VirtualMachine->MsgHdlr()->LogMsg("Unknown Compiler Error");				\
+				BGSEECONSOLE_MESSAGE("Unknown Compiler Error");				\
 			}																\
 			ScriptContext->Validity =										\
 			CodaScriptExecutionContext::kValidity_Egregious;				\
@@ -1332,7 +1348,7 @@ namespace BGSEditorExtender
 			return ErrorString;
 		}
 
-		void CodaScriptSyntaxTreeExecuteVisitor::SetResult( CodaScriptBackingStore Value )
+		void CodaScriptSyntaxTreeExecuteVisitor::SetResult( const CodaScriptBackingStore& Value )
 		{
 			SME_ASSERT(Result == NULL);
 
@@ -1398,18 +1414,18 @@ namespace BGSEditorExtender
 #define CODASCRIPT_EXECUTEHNDLR_EPILOG										\
 				return;														\
 			}
-#define CODASCRIPT_EXECUTEERROR_CATCHER									\
+#define CODASCRIPT_EXECUTEERROR_CATCHER										\
 			catch (CodaScriptException& E)									\
 			{																\
-				VirtualMachine->MsgHdlr()->LogMsg("Evaluate Error - %s", E.Get());		\
+				BGSEECONSOLE_MESSAGE("Evaluate Error - %s", E.Get());		\
 			}																\
 			catch (std::exception& E)										\
 			{																\
-				VirtualMachine->MsgHdlr()->LogMsg("Evaluate Error - %s", E.what());		\
+				BGSEECONSOLE_MESSAGE("Evaluate Error - %s", E.what());		\
 			}																\
 			catch (...)														\
 			{																\
-				VirtualMachine->MsgHdlr()->LogMsg("Unknown Evaluate Error");				\
+				BGSEECONSOLE_MESSAGE("Unknown Evaluate Error");				\
 			}																\
 			SetState(kExecutionState_Terminate);							\
 			ScriptContext->Validity =										\
@@ -1480,10 +1496,13 @@ namespace BGSEditorExtender
 
 				if (ExecutionState == kExecutionState_Terminate)
 					break;
-				else if (ExecutionState == kExecutionState_Break)
+				else if (ExecutionState == kExecutionState_Break && Result == NULL)
 					ExecutionState = kExecutionState_Default;
 
 				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
+					break;
+
+				if (Result)			// return was called, so break
 					break;
 			}
 
@@ -1522,10 +1541,13 @@ namespace BGSEditorExtender
 
 				if (ExecutionState == kExecutionState_Terminate)
 					break;
-				else if (ExecutionState == kExecutionState_Break)
+				else if (ExecutionState == kExecutionState_Break && Result == NULL)
 					ExecutionState = kExecutionState_Default;
 
 				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
+					break;
+
+				if (Result)			// return was called, so break
 					break;
 			}
 
@@ -1537,6 +1559,193 @@ namespace BGSEditorExtender
 		void CodaScriptSyntaxTreeExecuteVisitor::Visit( ICodaScriptParseTree* Node )
 		{
 			;//
+		}
+
+		CodaScriptCommandHandlerUtilities::CodaScriptCommandHandlerUtilities() :
+			ICodaScriptObject(),
+			ICodaScriptCommandHandlerHelper(),
+			AllocatedWrappers()
+		{
+			;//
+		}
+
+		CodaScriptCommandHandlerUtilities::~CodaScriptCommandHandlerUtilities()
+		{
+			AllocatedWrappers.clear();
+		}
+
+		CodaScriptBackingStore* CodaScriptCommandHandlerUtilities::CreateWrapper( CodaScriptSharedHandleArrayT Array )
+		{
+			CodaScriptBackingStore* Result = new CodaScriptBackingStore(Array);
+
+			CodaScriptScopedHandleDataStoreT Wrapper(Result);
+			AllocatedWrappers.push_back(Wrapper);
+			return Result;
+		}
+
+		CodaScriptBackingStore* CodaScriptCommandHandlerUtilities::CreateWrapper( CodaScriptBackingStore* Source )
+		{
+			CodaScriptBackingStore* Result = NULL;
+			if (Source)
+				Result = new CodaScriptBackingStore(Source);
+			else
+				Result = new CodaScriptBackingStore(0.0);
+
+			CodaScriptScopedHandleDataStoreT Wrapper(Result);
+			AllocatedWrappers.push_back(Wrapper);
+			return Result;
+		}
+
+		ICodaScriptDataStore* CodaScriptCommandHandlerUtilities::ArrayAllocate( UInt32 InitialSize /*= 0*/ )
+		{
+			CodaScriptSharedHandleArrayT NewArray = CodaScriptObjectFactory::BuildArray(CodaScriptObjectFactory::kFactoryType_MUP, InitialSize);
+
+			return CreateWrapper(NewArray);
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ArrayPushback( ICodaScriptDataStore* AllocatedArray, CodaScriptNumericDataTypeT Data )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			return Wrapper->GetArray()->Insert(Data);
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ArrayPushback( ICodaScriptDataStore* AllocatedArray, CodaScriptStringParameterTypeT Data )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			return Wrapper->GetArray()->Insert(Data);
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ArrayPushback( ICodaScriptDataStore* AllocatedArray, CodaScriptReferenceDataTypeT Data )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			return Wrapper->GetArray()->Insert(Data);
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ArrayPushback( ICodaScriptDataStore* AllocatedArray, ICodaScriptDataStore* ArrayData )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			CodaScriptBackingStore* DataWrapper = dynamic_cast<CodaScriptBackingStore*>(ArrayData);
+
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+			SME_ASSERT(DataWrapper && DataWrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			return Wrapper->GetArray()->Insert(DataWrapper->GetArray());
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ArrayAt( ICodaScriptDataStore* AllocatedArray, UInt32 Index, ICodaScriptDataStore** OutBuffer )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			SME_ASSERT(OutBuffer);
+			CodaScriptBackingStore* BufferWrapper = CreateWrapper(NULL);
+			if (Wrapper->GetArray()->At(Index, *BufferWrapper))
+			{
+				*OutBuffer = BufferWrapper;
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ArrayErase( ICodaScriptDataStore* AllocatedArray, UInt32 Index )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			return Wrapper->GetArray()->Erase(Index);
+		}
+
+		void CodaScriptCommandHandlerUtilities::ArrayClear( ICodaScriptDataStore* AllocatedArray )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			Wrapper->GetArray()->Clear();
+		}
+
+		UInt32 CodaScriptCommandHandlerUtilities::ArraySize( ICodaScriptDataStore* AllocatedArray )
+		{
+			CodaScriptBackingStore* Wrapper = dynamic_cast<CodaScriptBackingStore*>(AllocatedArray);
+			SME_ASSERT(Wrapper && Wrapper->GetType() == ICodaScriptDataStore::kDataType_Array);
+
+			return Wrapper->GetArray()->Size();
+		}
+
+		bool CodaScriptCommandHandlerUtilities::ExtractArguments( ICodaScriptDataStore* Arguments,
+																ICodaScriptCommand::ParameterInfo* ParameterData,
+																UInt32 ArgumentCount, ... )
+		{
+			bool Result = true;
+
+			va_list Args;
+			va_start(Args, ArgumentCount);
+
+			for (int i = 0; i < ArgumentCount; i++)
+			{
+				ICodaScriptCommand::ParameterInfo* CurrentParam = &ParameterData[i];
+				ICodaScriptDataStore* CurrentArg = &Arguments[i];
+
+				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type && CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
+
+				switch (CurrentParam->Type)
+				{
+				case ICodaScriptDataStore::kDataType_Numeric:
+					{
+						CodaScriptNumericDataTypeT* Out = va_arg(Args, CodaScriptNumericDataTypeT*);
+						*Out = CurrentArg->GetNumber();
+					}
+
+					break;
+				case ICodaScriptDataStore::kDataType_String:
+					{
+						CodaScriptStringParameterTypeT* Out = va_arg(Args, CodaScriptStringParameterTypeT*);
+						*Out = CurrentArg->GetString();
+					}
+
+					break;
+				case ICodaScriptDataStore::kDataType_Reference:
+					{
+						CodaScriptReferenceDataTypeT* Out = va_arg(Args, CodaScriptReferenceDataTypeT*);
+						*Out = CurrentArg->GetFormID();
+					}
+
+					break;
+				case ICodaScriptDataStore::kDataType_Array:
+					{
+						ICodaScriptDataStore** Out = va_arg(Args, ICodaScriptDataStore**);
+						CodaScriptBackingStore* ArrayStore = dynamic_cast<CodaScriptBackingStore*>(CurrentArg);
+						SME_ASSERT(ArrayStore);
+
+						*Out = CreateWrapper(ArrayStore->GetArray());
+					}
+
+					break;
+				case ICodaScriptCommand::ParameterInfo::kType_Multi:
+					{
+						ICodaScriptDataStore** Out = va_arg(Args, ICodaScriptDataStore**);
+						CodaScriptBackingStore* Store = dynamic_cast<CodaScriptBackingStore*>(CurrentArg);
+						SME_ASSERT(Store);
+
+						*Out = CreateWrapper(Store);
+					}
+
+					break;
+				default:
+					Result = false;
+					break;
+				}
+			}
+
+			va_end(Args);
+
+			return Result;
 		}
 	}
 }

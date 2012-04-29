@@ -27,18 +27,19 @@ namespace BGSEditorExtender
 	class BGSEEConsole : public BGSEEGenericModelessDialog
 	{
 	public:
-		typedef void				(*BGSEEConsolePrintCallback)(const char* Prefix, const char* Message);
+		typedef void				(* BGSEEConsolePrintCallback)(const char* Prefix, const char* Message);
 	protected:
 		static LRESULT CALLBACK		BaseDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		static LRESULT CALLBACK		MessageLogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK		CommandLineSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-		static const BGSEEINIManagerSettingFactory::SettingData		kConsoleSpecificINISettings[3];
+		static const BGSEEINIManagerSettingFactory::SettingData		kConsoleSpecificINISettings[4];
 		enum
 		{
 			kConsoleSpecificINISetting_UpdatePeriod = 0,
 			kConsoleSpecificINISetting_LogWarnings,
 			kConsoleSpecificINISetting_LogAssertions,
+			kConsoleSpecificINISetting_LogTimestamps,
 		};
 
 		static const char*											kCommandLinePrefix;
@@ -81,17 +82,18 @@ namespace BGSEditorExtender
 		protected:
 			typedef std::list<BGSEEConsolePrintCallback>	PrintCallbackListT;
 
+			friend class			BGSEEConsole;
+
+			BGSEEConsole*			Parent;
 			FILE*					DebugLog;
 			UInt32					IndentLevel;
 			PrintCallbackListT		PrintCallbacks;
 			bool					ExecutingCallbacks;
 
-			friend class			BGSEEConsole;
-
 			void					ExecutePrintCallbacks(const char* Prefix, const char* Message);
 			bool					LookupPrintCallback(BGSEEConsolePrintCallback Callback, PrintCallbackListT::iterator& Match);
 		public:
-			DefaultDebugLogContext(const char* DebugLogPath);
+			DefaultDebugLogContext(BGSEEConsole* Parent, const char* DebugLogPath);
 			virtual ~DefaultDebugLogContext();
 
 			virtual void			Print(const char* Prefix, const char* Message);
@@ -125,6 +127,7 @@ namespace BGSEditorExtender
 
 		typedef std::list<MessageLogContext*>	ContextListT;
 		typedef std::stack<std::string>			CommandHistoryStackT;
+		friend class							DefaultDebugLogContext;
 
 		DWORD									OwnerThreadID;
 		MessageLogContext*						ActiveContext;
@@ -173,5 +176,9 @@ namespace BGSEditorExtender
 
 		bool						RegisterConsoleCommand(BGSEEConsoleCommandInfo* Command);
 		void						UnregisterConsoleCommand(BGSEEConsoleCommandInfo* Command);
+
+		const char*					GetLogPath(void) const;
+
+		static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
 	};
 }

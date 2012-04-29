@@ -31,12 +31,17 @@
     <ClInclude Include="..\SME Sundries\SME_Prefix.h" />
     <ClInclude Include="..\SME Sundries\StringHelpers.h" />
     <ClInclude Include="..\SME Sundries\UIHelpers.h" />
+    <ClInclude Include="BGSEEAchievements.h" />
     <ClInclude Include="BGSEEConsole.h" />
+    <ClInclude Include="BGSEEHallOfFame.h" />
     <ClInclude Include="BGSEEMain.h" />
     <ClInclude Include="BGSEERenderWindowPainter.h" />
     <ClInclude Include="BGSEEScript\CodaDataTypes.h" />
     <ClInclude Include="BGSEEScript\CodaInterpreter.h" />
     <ClInclude Include="BGSEEScript\CodaVM.h" />
+    <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-Array.h" />
+    <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-General.h" />
+    <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-String.h" />
     <ClInclude Include="BGSEEScript\MUP Base\mpDefines.h" />
     <ClInclude Include="BGSEEScript\MUP Base\mpError.h" />
     <ClInclude Include="BGSEEScript\MUP Base\mpFuncCommon.h" />
@@ -74,6 +79,7 @@
     <ClInclude Include="BGSEEScript\MUP Base\utGeneric.h" />
     <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPArrayDataType.h" />
     <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPExpressionParser.h" />
+    <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPScriptCommand.h" />
     <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPValue.h" />
     <ClInclude Include="BGSEEToolBox.h" />
     <ClInclude Include="BGSEEUIManager.h" />
@@ -91,12 +97,18 @@
     <ClCompile Include="..\SME Sundries\MersenneTwister.cpp" />
     <ClCompile Include="..\SME Sundries\StringHelpers.cpp" />
     <ClCompile Include="..\SME Sundries\UIHelpers.cpp" />
+    <ClCompile Include="BGSEEAchievements.cpp" />
     <ClCompile Include="BGSEEConsole.cpp" />
+    <ClCompile Include="BGSEEHallOfFame.cpp" />
     <ClCompile Include="BGSEEMain.cpp" />
     <ClCompile Include="BGSEERenderWindowPainter.cpp" />
     <ClCompile Include="BGSEEScript\CodaDataTypes.cpp" />
     <ClCompile Include="BGSEEScript\CodaInterpreter.cpp" />
     <ClCompile Include="BGSEEScript\CodaVM.cpp" />
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommand.cpp" />
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommands-Array.cpp" />
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommands-General.cpp" />
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommands-String.cpp" />
     <ClCompile Include="BGSEEScript\MUP Base\mpError.cpp" />
     <ClCompile Include="BGSEEScript\MUP Base\mpFuncCommon.cpp" />
     <ClCompile Include="BGSEEScript\MUP Base\mpFuncNonCmplx.cpp" />
@@ -125,6 +137,7 @@
     <ClCompile Include="BGSEEScript\MUP Base\mpVariable.cpp" />
     <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPArrayDataType.cpp" />
     <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPExpressionParser.cpp" />
+    <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPScriptCommand.cpp" />
     <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPValue.cpp" />
     <ClCompile Include="BGSEEToolBox.cpp" />
     <ClCompile Include="BGSEEUIManager.cpp" />
@@ -140,6 +153,7 @@
   <ItemGroup>
     <None Include="BGSEEScript\CodaForwardDecls.inl" />
     <None Include="BGSEEScript\CodaIntrinsics.inl" />
+    <None Include="BGSEEScript\Commands\CodaScriptCommand.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{414EDF4A-5930-416A-B382-216B445539DB}</ProjectGuid>
@@ -174,13 +188,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;$(IncludePath)</IncludePath>
-    <LibraryPath>..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
-    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;$(IncludePath)</IncludePath>
-    <LibraryPath>..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -202,6 +216,9 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -229,6 +246,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <Lib>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

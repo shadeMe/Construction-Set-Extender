@@ -20,6 +20,7 @@ namespace BGSEditorExtender
 				template<typename ElementT> bool						AddElement(ElementT Element, int Index);
 			public:
 				CodaScriptMUPArrayDataType();
+				CodaScriptMUPArrayDataType(UInt32 Size);
 				CodaScriptMUPArrayDataType(CodaScriptMUPArrayDataType* Source);
 				CodaScriptMUPArrayDataType(CodaScriptBackingStore* Elements, UInt32 Size);
 				~CodaScriptMUPArrayDataType();

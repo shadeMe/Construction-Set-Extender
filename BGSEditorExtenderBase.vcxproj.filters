@@ -43,6 +43,15 @@
     <Filter Include="Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation">
       <UniqueIdentifier>{6b11a226-da20-4518-95a8-843843bf0cd9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules\BGSEEScript\Commands">
+      <UniqueIdentifier>{c9aa8d7f-5f11-44e2-8714-2aacea57bb63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEExtras">
+      <UniqueIdentifier>{29a3d805-a1c3-4562-aeb4-913921c50d03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Images">
+      <UniqueIdentifier>{b7b24d34-2b33-42a2-a3ac-e11129d2a46b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BGSEEMain.h">
@@ -223,6 +232,24 @@
     <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPArrayDataType.h">
       <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
     </ClInclude>
+    <ClInclude Include="BGSEEScript\MUP Implementation\CodaMUPScriptCommand.h">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-General.h">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-String.h">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-Array.h">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEAchievements.h">
+      <Filter>Modules\BGSEEExtras</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEHallOfFame.h">
+      <Filter>Modules\BGSEEExtras</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
@@ -364,6 +391,27 @@
     <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPArrayDataType.cpp">
       <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
     </ClCompile>
+    <ClCompile Include="BGSEEScript\MUP Implementation\CodaMUPScriptCommand.cpp">
+      <Filter>Modules\BGSEEScript\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommands-General.cpp">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommands-String.cpp">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommands-Array.cpp">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEScript\Commands\CodaScriptCommand.cpp">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEAchievements.cpp">
+      <Filter>Modules\BGSEEExtras</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEHallOfFame.cpp">
+      <Filter>Modules\BGSEEExtras</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BGSEditorExtenderBase.rc">
@@ -379,6 +427,9 @@
     </None>
     <None Include="BGSEEScript\CodaForwardDecls.inl">
       <Filter>Modules\BGSEEScript</Filter>
+    </None>
+    <None Include="BGSEEScript\Commands\CodaScriptCommand.h">
+      <Filter>Modules\BGSEEScript\Commands</Filter>
     </None>
   </ItemGroup>
 </Project>

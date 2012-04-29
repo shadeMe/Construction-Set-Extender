@@ -52,8 +52,6 @@ namespace BGSEditorExtender
 	// Always relative to kBasePath
 	class BGSEEResourceLocation
 	{
-		static const std::string			kBasePath;
-
 		std::string							RelativePath;
 
 		bool								CheckPath(void);
@@ -68,5 +66,7 @@ namespace BGSEditorExtender
 
 		std::string							GetFullPath() const;			// returns BasePath + RelativePath
 		std::string							GetRelativePath() const;		// return RelativePath
+
+		static const std::string			kBasePath;
 	};
 }

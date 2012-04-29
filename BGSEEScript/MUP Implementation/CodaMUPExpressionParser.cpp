@@ -9,6 +9,7 @@
 #include "mpPackageNonCmplx.h"
 #include "mpPackageCommon.h"
 #include "mpPackageMatrix.h"
+#include "CodaMUPScriptCommand.h"
 
 namespace BGSEditorExtender
 {
@@ -658,7 +659,10 @@ namespace BGSEditorExtender
 
 			void CodaScriptMUPExpressionParser::RegisterCommand( ICodaScriptCommand* Command )
 			{
-				TODO("Implement this");
+				DefineFun(new CodaScriptMUPScriptCommand(Command));
+
+				if (Command->GetAlias())
+					DefineFun(new CodaScriptMUPScriptCommand(Command, true));
 			}
 
 			void CodaScriptMUPExpressionParser::RegisterConstant( const char* Name, CodaScriptBackingStore& Value )
@@ -875,6 +879,16 @@ namespace BGSEditorExtender
 			string_type CodaScriptMUPExpressionParser::GetVersion() const
 			{
 				return MUP_PARSER_VERSION;
+			}
+
+			inline CodaScriptMUPParserByteCode* CodaScriptMUPExpressionParser::GetByteCode( void )
+			{
+				return m_pByteCode;
+			}
+
+			inline ICodaScriptSyntaxTreeEvaluator* CodaScriptMUPExpressionParser::GetEvaluationAgent( void )
+			{
+				return m_pEvalAgent;
 			}
 		}
 	}

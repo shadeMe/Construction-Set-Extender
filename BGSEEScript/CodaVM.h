@@ -1,7 +1,8 @@
 #pragma once
 #include "BGSEEMain.h"
+#include "BGSEEConsole.h"
 #include "BGSEEWorkspaceManager.h"
-#include "CodaIntrinsics.inl"
+#include "CodaDataTypes.h"
 
 namespace BGSEditorExtender
 {
@@ -32,7 +33,7 @@ namespace BGSEditorExtender
 			void										Dump(std::string OutPath);
 		};
 
-		class CodaScriptFunctionRegistrar : public ICodaScriptObject
+		class CodaScriptCommandRegistrar : public ICodaScriptObject
 		{
 			friend class CodaScriptCommandRegistry;
 		protected:
@@ -41,8 +42,8 @@ namespace BGSEditorExtender
 			CommandListT								Commands;
 			std::string									Category;
 		public:
-			CodaScriptFunctionRegistrar(const char* Category);
-			~CodaScriptFunctionRegistrar();
+			CodaScriptCommandRegistrar(const char* Category);
+			~CodaScriptCommandRegistrar();
 
 			void										Add(ICodaScriptCommand* Command);
 		};
@@ -130,6 +131,8 @@ namespace BGSEditorExtender
 			bool										GetState(void) const;
 
 			void										Rebuild(void);		// renews the cache
+
+			static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
 		};
 
 		class CodaScriptGlobalDataStore : public ICodaScriptObject
@@ -168,6 +171,11 @@ namespace BGSEditorExtender
 		{
 			friend class								CodaScriptBackgrounder;
 			friend class								CodaScriptGlobalDataStore;
+
+			static BGSEEConsoleCommandInfo				kRunScriptConsoleCommandData;
+			static void									RunScriptConsoleCommandHandler(UInt32 ParamCount, const char* Args);
+			static BGSEEConsoleCommandInfo				kDumpCodaDocsConsoleCommandData;
+			static void									DumpCodaDocsConsoleCommandHandler(UInt32 ParamCount, const char* Args);
 
 			static CodaScriptVM*						Singleton;
 
@@ -224,7 +232,7 @@ namespace BGSEditorExtender
 
 			static ICodaScriptExpressionParser*			BuildExpressionParser(UInt8 Type);
 			static ICodaScriptDataStoreOwner*			BuildDataStoreOwner(UInt8 Type);
-			static ICodaScriptArrayDataType*			BuildArray(UInt8 Type);
+			static CodaScriptSharedHandleArrayT			BuildArray(UInt8 Type, UInt32 InitialSize = 0);
 		};
 	}
 }

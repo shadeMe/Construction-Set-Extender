@@ -5,6 +5,12 @@ namespace BGSEditorExtender
 {
 	namespace BGSEEScript
 	{
+		// boost declarations are here to prevent adding unnecessary global dependencies
+		typedef boost::shared_ptr<ICodaScriptArrayDataType>				CodaScriptSharedHandleArrayT;
+		typedef boost::shared_ptr<ICodaScriptDataStoreOwner>			CodaScriptScopedHandleDataStoreOwnerT;
+		typedef boost::shared_ptr<ICodaScriptDataStore>					CodaScriptScopedHandleDataStoreT;
+		typedef boost::shared_array<ICodaScriptDataStore>				CodaScriptScopedHandleDataStoreArrayT;
+
 		class CodaScriptBackingStore : public ICodaScriptObject, public ICodaScriptDataStore
 		{
 			static int												GIC;
@@ -21,15 +27,16 @@ namespace BGSEditorExtender
 			void													Copy(const CodaScriptBackingStore& Source);
 		public:
 			CodaScriptBackingStore();
-			CodaScriptBackingStore(CodaScriptBackingStore* Data);
-			CodaScriptBackingStore(CodaScriptNumericDataTypeT Num);
-			CodaScriptBackingStore(CodaScriptStringParameterTypeT Str);
-			CodaScriptBackingStore(CodaScriptReferenceDataTypeT Form);
-			CodaScriptBackingStore(CodaScriptSharedHandleArrayT Array);
+			explicit CodaScriptBackingStore(CodaScriptBackingStore* Data);
+			explicit CodaScriptBackingStore(CodaScriptNumericDataTypeT Num);
+			explicit CodaScriptBackingStore(CodaScriptStringParameterTypeT Str);
+			explicit CodaScriptBackingStore(CodaScriptReferenceDataTypeT Form);
+			explicit CodaScriptBackingStore(CodaScriptSharedHandleArrayT Array);
 			virtual ~CodaScriptBackingStore();
 
-			CodaScriptBackingStore(const CodaScriptBackingStore& rhs);
+			explicit CodaScriptBackingStore(const CodaScriptBackingStore& rhs);
 			CodaScriptBackingStore& operator=(const CodaScriptBackingStore& rhs);
+
 			CodaScriptBackingStore& operator+=(const CodaScriptBackingStore &rhs);
 			CodaScriptBackingStore& operator-=(const CodaScriptBackingStore &rhs);
 			CodaScriptBackingStore& operator*=(const CodaScriptBackingStore &rhs);
@@ -46,6 +53,9 @@ namespace BGSEditorExtender
 			void													SetArray(CodaScriptSharedHandleArrayT Data);
 
 			virtual ICodaScriptDataStore&							operator=(const ICodaScriptDataStore& rhs);
+			virtual ICodaScriptDataStore&							operator=(CodaScriptNumericDataTypeT Num);
+			virtual ICodaScriptDataStore&							operator=(CodaScriptStringParameterTypeT Str);
+			virtual ICodaScriptDataStore&							operator=(CodaScriptReferenceDataTypeT Form);
 		};
 
 		class ICodaScriptArrayDataType

@@ -1,12 +1,300 @@
 #include "BGSEEUIManager.h"
+#include "BGSEEConsole.h"
 #include "BGSEditorExtenderBase_Resource.h"
 
 namespace BGSEditorExtender
 {
-	BGSEEUIManager*						BGSEEUIManager::Singleton = NULL;
-	SME::UIHelpers::CSnapWindow			BGSEEUIManager::WindowEdgeSnapper;
+	INT_PTR BGSEEWindowSubclasser::SubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+	{
+		INT_PTR Result = FALSE;
 
-	BGSEEUIManager::WindowHandleCollection::HandleCollectionT::iterator BGSEEUIManager::WindowHandleCollection::Find( HWND Handle )
+		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		{
+			Result = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, Return);
+		}
+
+		return Result;
+	}
+
+	LRESULT CALLBACK BGSEEWindowSubclasser::MainWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	{
+		BGSEEWindowSubclasser* Instance = (BGSEEWindowSubclasser*)GetWindowLong(hWnd, GWL_USERDATA);
+		bool CallbackReturn = false;
+		LRESULT CallbackResult = FALSE;
+
+		for (SubclassProcListT::iterator Itr = Instance->MainWindowSubclasses.begin(); Itr != Instance->MainWindowSubclasses.end(); Itr++)
+		{
+			CallbackResult = (*Itr)(hWnd, uMsg, wParam, lParam, CallbackReturn);
+		}
+
+		if (CallbackReturn && uMsg != WM_DESTROY)
+			return CallbackResult;
+		else
+			return Instance->EditorMainWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	INT_PTR CALLBACK BGSEEWindowSubclasser::DialogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	{
+		bool SkipCallback = false;
+		INT_PTR DlgProcResult = FALSE;
+		SubclassUserData* UserData = (SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+		BGSEEWindowSubclasser* Instance = UserData->Instance;
+
+		switch (uMsg)
+		{
+		case WM_INITDIALOG:
+			{
+				SetWindowLong(hWnd, DWL_USER, (LONG)lParam);
+				UserData = (SubclassUserData*)lParam;
+				Instance = UserData->Instance;
+
+				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, UserData->InitParam);
+				UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, SkipCallback);
+				return DlgProcResult;
+			}
+
+			break;
+		case WM_DESTROY:
+			{
+				UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, SkipCallback);
+				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+
+				delete UserData;
+				return DlgProcResult;
+			}
+
+			break;
+		}
+
+		bool CallbackReturn = false;
+		if (SkipCallback == false)
+		{
+			INT_PTR CallbackResult = UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
+			if (CallbackReturn)
+				return CallbackResult;
+		}
+
+		return UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+	}
+
+	bool BGSEEWindowSubclasser::GetShouldSubclass( UInt32 TemplateID,
+												LPARAM InitParam,
+												DLGPROC OriginalProc,
+												DLGPROC& OutSubclassProc,
+												SubclassUserData** OutSubclassUserData )
+	{
+		SME_ASSERT(OutSubclassUserData);
+
+		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
+		if (Match != DialogSubclasses.end())
+		{
+			OutSubclassProc = DialogSubclassProc;
+			(*OutSubclassUserData) = new SubclassUserData();
+			(*OutSubclassUserData)->Instance = this;
+			(*OutSubclassUserData)->Data = &Match->second;
+			(*OutSubclassUserData)->Data->Original = OriginalProc;
+			(*OutSubclassUserData)->InitParam = InitParam;
+
+			return true;
+		}
+		else
+			return false;
+	}
+
+	void BGSEEWindowSubclasser::PreSubclassMainWindow( HWND MainWindow )
+	{
+		EditorMainWindow = MainWindow;
+
+		SetWindowLong(EditorMainWindow, GWL_USERDATA, (LONG)this);
+		EditorMainWindowProc = (WNDPROC)SetWindowLong(EditorMainWindow, GWL_WNDPROC, (LONG)MainWindowSubclassProc);
+
+		SME_ASSERT(EditorMainWindow && EditorMainWindowProc);
+	}
+
+	BGSEEWindowSubclasser::BGSEEWindowSubclasser() :
+		EditorMainWindow(NULL),
+		EditorMainWindowProc(NULL),
+		MainWindowSubclasses(),
+		DialogSubclasses()
+	{
+		;//
+	}
+
+	BGSEEWindowSubclasser::~BGSEEWindowSubclasser()
+	{
+		MainWindowSubclasses.clear();
+		DialogSubclasses.clear();
+	}
+
+	bool BGSEEWindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc )
+	{
+		for (SubclassProcListT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
+		{
+			if ((*Itr) == Proc)
+				return false;
+		}
+
+		MainWindowSubclasses.push_back(Proc);
+		return true;
+	}
+
+	bool BGSEEWindowSubclasser::UnregisterMainWindowSubclass( SubclassProc Proc )
+	{
+		for (SubclassProcListT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
+		{
+			if ((*Itr) == Proc)
+			{
+				MainWindowSubclasses.erase(Itr);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool BGSEEWindowSubclasser::RegisterDialogSubclass( UInt32 TemplateID, SubclassProc Proc )
+	{
+		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
+		if (Match != DialogSubclasses.end())
+		{
+			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			{
+				if ((*Itr) == Proc)
+					return false;
+			}
+
+			Match->second.Subclasses.push_back(Proc);
+		}
+		else
+		{
+			DialogSubclasses.insert(std::make_pair<UInt32, SubclassData>(TemplateID, SubclassData()));
+			DialogSubclasses[TemplateID].Subclasses.push_back(Proc);
+		}
+
+		return true;
+	}
+
+	bool BGSEEWindowSubclasser::UnregisterDialogSubclass( UInt32 TemplateID, SubclassProc Proc )
+	{
+		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
+		if (Match != DialogSubclasses.end())
+		{
+			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			{
+				if ((*Itr) == Proc)
+				{
+					MainWindowSubclasses.erase(Itr);
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	void BGSEEResourceTemplateHotSwapper::PopulateTemplateMap( void )
+	{
+		for (IDirectoryIterator Itr(SourceDepot().c_str(), "*.dll"); !Itr.Done(); Itr.Next())
+		{
+			std::string FileName = Itr.Get()->cFileName;
+			std::string FullPath = SourceDepot()+ FileName;
+
+			HINSTANCE Module = (HINSTANCE)LoadLibraryEx(FullPath.c_str(), NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE|LOAD_LIBRARY_AS_DATAFILE);
+			if (Module == NULL)
+			{
+				BGSEECONSOLE_ERROR("BGSEEResourceTemplateHotSwapper::PopulateTemplateMap - Failed to load resource library '%s'!", FileName.c_str());
+				continue;
+			}
+
+			int Index = FileName.rfind("."), TemplateID = 0;
+			SME_ASSERT(Index != -1);
+
+			TemplateID = atoi((FileName.substr(0, Index)).c_str());
+			SME_ASSERT(TemplateMap.count(TemplateID) == 0);
+
+			TemplateMap[TemplateID] = Module;
+		}
+	}
+
+	void BGSEEResourceTemplateHotSwapper::ReleaseTemplateMap( void )
+	{
+		for (TemplateResourceInstanceMapT::iterator Itr = TemplateMap.begin(); Itr != TemplateMap.end(); Itr++)
+		{
+			if (FreeLibrary(Itr->second) == NULL)
+				BGSEECONSOLE_ERROR("BGSEEResourceTemplateHotSwapper::ReleaseTemplateMap - Failed to release resource library for template %d", Itr->first);
+		}
+
+		TemplateMap.clear();
+	}
+
+	HINSTANCE BGSEEResourceTemplateHotSwapper::GetAlternateResourceInstance( UInt32 TemplateID )
+	{
+		TemplateResourceInstanceMapT::iterator Match = TemplateMap.find(TemplateID);
+
+		if (Match != TemplateMap.end())
+			return Match->second;
+		else
+			return NULL;
+	}
+
+	BGSEEResourceTemplateHotSwapper::BGSEEResourceTemplateHotSwapper( std::string SourcePath ) :
+		SourceDepot(SourcePath),
+		TemplateMap()
+	{
+		;//
+	}
+
+	BGSEEResourceTemplateHotSwapper::~BGSEEResourceTemplateHotSwapper()
+	{
+		;//
+	}
+
+	const std::string					BGSEEDialogTemplateHotSwapper::kDefaultLoc = "Dialog Templates";
+
+	BGSEEDialogTemplateHotSwapper::BGSEEDialogTemplateHotSwapper() :
+		BGSEEResourceTemplateHotSwapper(kDefaultLoc)
+	{
+		PopulateTemplateMap();
+	}
+
+	BGSEEDialogTemplateHotSwapper::~BGSEEDialogTemplateHotSwapper()
+	{
+		ReleaseTemplateMap();
+	}
+
+	BGSEEMenuTemplateHotSwapper::BGSEEMenuTemplateHotSwapper() :
+		BGSEEResourceTemplateHotSwapper("")
+	{
+		;//
+	}
+
+	BGSEEMenuTemplateHotSwapper::~BGSEEMenuTemplateHotSwapper()
+	{
+		;//
+	}
+
+	bool BGSEEMenuTemplateHotSwapper::RegisterTemplateReplacer( UInt32 TemplateID, HINSTANCE Replacer )
+	{
+		if (TemplateMap.count(TemplateID))
+			return false;
+		else
+			TemplateMap[TemplateID] = Replacer;
+
+		return true;
+	}
+
+	bool BGSEEMenuTemplateHotSwapper::UnregisterTemplateReplacer( UInt32 TemplateID )
+	{
+		if (TemplateMap.count(TemplateID))
+		{
+			TemplateMap.erase(TemplateMap.find(TemplateID));
+			return true;
+		}
+		else
+			return false;
+	}
+
+	BGSEEWindowHandleCollection::HandleCollectionT::iterator BGSEEWindowHandleCollection::Find( HWND Handle )
 	{
 		for (HandleCollectionT::iterator Itr = HandleList.begin(); Itr != HandleList.end(); Itr++)
 		{
@@ -17,7 +305,7 @@ namespace BGSEditorExtender
 		return HandleList.end();
 	}
 
-	bool BGSEEUIManager::WindowHandleCollection::Add( HWND Handle )
+	bool BGSEEWindowHandleCollection::Add( HWND Handle )
 	{
 		if (GetExists(Handle) == false)
 		{
@@ -28,7 +316,7 @@ namespace BGSEditorExtender
 			return false;
 	}
 
-	bool BGSEEUIManager::WindowHandleCollection::Remove( HWND Handle )
+	bool BGSEEWindowHandleCollection::Remove( HWND Handle )
 	{
 		HandleCollectionT::iterator Match = Find(Handle);
 		if (Match != HandleList.end())
@@ -40,20 +328,242 @@ namespace BGSEditorExtender
 			return false;
 	}
 
-	bool BGSEEUIManager::WindowHandleCollection::GetExists( HWND Handle )
+	bool BGSEEWindowHandleCollection::GetExists( HWND Handle )
 	{
 		return Find(Handle) != HandleList.end();
 	}
 
-	void BGSEEUIManager::WindowHandleCollection::Clear( void )
+	void BGSEEWindowHandleCollection::Clear( void )
 	{
 		HandleList.clear();
 	}
 
-	BGSEEUIManager::BGSEEUIManager() :
-		HandleCollections()
+	BGSEEWindowHandleCollection::BGSEEWindowHandleCollection() :
+		HandleList()
 	{
-		Initialized = false;
+		;//
+	}
+
+	BGSEEWindowHandleCollection::~BGSEEWindowHandleCollection()
+	{
+		Clear();
+	}
+
+	BGSEEUIManager*						BGSEEUIManager::Singleton = NULL;
+
+	SME::UIHelpers::CSnapWindow			BGSEEUIManager::WindowEdgeSnapper;
+
+	BGSEEUIManager::IATPatchData::IATPatchData() :
+		DLL(NULL),
+		Import(NULL),
+		Location(NULL),
+		OriginalFunction(NULL),
+		CallbackFunction(NULL),
+		Replaced(false)
+	{
+		;//
+	}
+
+	void BGSEEUIManager::IATPatchData::Replace( void )
+	{
+		if (Replaced)
+			return;
+
+		SME::MemoryHandler::SafeWrite32((UInt32)Location, (UInt32)CallbackFunction);
+		Replaced = true;
+	}
+
+	void BGSEEUIManager::IATPatchData::Reset( void )
+	{
+		if (Replaced == false)
+			return;
+
+		SME::MemoryHandler::SafeWrite32((UInt32)Location, (UInt32)OriginalFunction);
+		Replaced = true;
+	}
+
+	HWND CALLBACK BGSEEUIManager::CallbackCreateWindowExA( DWORD dwExStyle,
+														LPCSTR lpClassName,
+														LPCSTR lpWindowName,
+														DWORD dwStyle,
+														int X, int Y,
+														int nWidth, int nHeight,
+														HWND hWndParent,
+														HMENU hMenu,
+														HINSTANCE hInstance,
+														LPVOID lpParam )
+	{
+		SME_ASSERT(BGSEEUI->Initialized);
+
+		bool EditorWindow = false;
+		if (!_stricmp(lpClassName, BGSEEUI->EditorWindowClassName.c_str()))
+		{
+			EditorWindow = true;
+
+			if (BGSEEUI->EditorMainMenuReplacement)
+				hMenu = BGSEEUI->EditorMainMenuReplacement;
+		}
+
+		HWND Result = ((_CallbackCreateWindowExA)(BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
+						(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+
+		if (EditorWindow)
+		{
+			BGSEEUI->EditorWindowHandle = new HWNDGetter(Result);
+			BGSEEUI->EditorResourceInstance = new HINSTANCEGetter(hInstance);
+			BGSEEUI->Subclasser->PreSubclassMainWindow(Result);
+			BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].Reset();
+		}
+
+		return Result;
+	}
+
+	HMENU CALLBACK BGSEEUIManager::CallbackLoadMenuA( HINSTANCE hInstance, LPCSTR lpMenuName )
+	{
+		SME_ASSERT(BGSEEUI->MenuHotSwapper);
+
+		HINSTANCE Alternate = BGSEEUI->MenuHotSwapper->GetAlternateResourceInstance((UInt32)lpMenuName);
+		if (Alternate)
+			hInstance = Alternate;
+
+		return ((_CallbackLoadMenuA)(BGSEEUI->PatchDepot[kIATPatch_LoadMenu].OriginalFunction))(hInstance, lpMenuName);
+	}
+
+	HWND CALLBACK BGSEEUIManager::CallbackCreateDialogParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
+	{
+		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
+
+		DLGPROC Replacement = NULL;
+		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
+		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
+
+		if (Alternate)
+			hInstance = Alternate;
+
+		if (BGSEEUI->Subclasser->GetShouldSubclass((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
+		{
+			lpDialogFunc = Replacement;
+			dwInitParam = (LPARAM)UserData;
+		}
+
+		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+
+		BGSEEUI->StyleDialogBox(Result);
+
+		return Result;
+	}
+
+	INT_PTR CALLBACK BGSEEUIManager::CallbackDialogBoxParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
+	{
+		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
+
+		DLGPROC Replacement = NULL;
+		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
+		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
+
+		if (Alternate)
+			hInstance = Alternate;
+
+		if (BGSEEUI->Subclasser->GetShouldSubclass((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
+		{
+			lpDialogFunc = Replacement;
+			dwInitParam = (LPARAM)UserData;
+		}
+
+		return ((_CallbackDialogBoxParamA)(BGSEEUI->PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
+										(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+	}
+
+	void BGSEEUIManager::PatchIAT( UInt8 PatchType, void* Callback )
+	{
+		const char* DLLName = "USER32.DLL";
+		const char* ImportName = NULL;
+
+		SME_ASSERT(PatchType < kIATPatch__MAX);
+
+		switch (PatchType)
+		{
+		case kIATPatch_LoadMenu:
+			ImportName = "LoadMenuA";
+			break;
+		case kIATPatch_CreateDialogParam:
+			ImportName = "CreateDialogParamA";
+			break;
+		case kIATPatch_DialogBoxParam:
+			ImportName = "DialogBoxParamA";
+			break;
+		case kIATPatch_CreateWindowEx:
+			ImportName = "CreateWindowExA";
+			break;
+		}
+
+		IATPatchData* Patch = &PatchDepot[PatchType];
+		Patch->DLL = DLLName;
+		Patch->Import = ImportName;
+		Patch->Location = NULL;
+
+		HMODULE Base = GetModuleHandle(NULL);
+		IMAGE_DOS_HEADER* DOSHeader = (IMAGE_DOS_HEADER*)Base;
+		IMAGE_NT_HEADERS* NTHeader = (IMAGE_NT_HEADERS*)(Base + DOSHeader->e_lfanew);
+
+		IMAGE_IMPORT_DESCRIPTOR* IAT = (IMAGE_IMPORT_DESCRIPTOR*)(Base + NTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+
+		for(; IAT->Characteristics && Patch->Location == NULL; ++IAT)
+		{
+			if(!_stricmp(DLLName, (const char*)(Base + IAT->Name)))
+			{
+				IMAGE_THUNK_DATA* ThunkData = (IMAGE_THUNK_DATA*)(Base + IAT->OriginalFirstThunk);
+				UInt32* DLLIAT = (UInt32*)(Base + IAT->FirstThunk);
+
+				for(; ThunkData->u1.Ordinal; ++ThunkData, ++DLLIAT)
+				{
+					if(!IMAGE_SNAP_BY_ORDINAL(ThunkData->u1.Ordinal))
+					{
+						IMAGE_IMPORT_BY_NAME* ImportInfo = (IMAGE_IMPORT_BY_NAME*)(Base + ThunkData->u1.AddressOfData);
+
+						if(!_stricmp((char *)ImportInfo->Name, ImportName))
+						{
+							Patch->Location = DLLIAT;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		SME_ASSERT(Patch->Location);
+
+		Patch->OriginalFunction = *((void**)Patch->Location);
+		Patch->CallbackFunction = Callback;
+		Patch->Replaced = false;
+
+		Patch->Replace();
+	}
+
+	void BGSEEUIManager::StyleDialogBox( HWND Dialog )
+	{
+		LONG OldStyle = GetWindowLong(Dialog, GWL_STYLE);
+		LONG NewStyle = OldStyle | WS_EX_APPWINDOW;
+
+		SetWindowLong(Dialog, GWL_STYLE, NewStyle);
+		SetWindowTheme(Dialog, L"Explorer", NULL);
+
+		SetWindowPos(Dialog, 0, 0, 0, 0, 0, SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_DRAWFRAME);
+	}
+
+	BGSEEUIManager::BGSEEUIManager() :
+		OwnerThreadID(0),
+		EditorWindowClassName(""),
+		EditorWindowHandle(NULL),
+		EditorResourceInstance(NULL),
+		EditorMainMenuReplacement(NULL),
+		Subclasser(NULL),
+		DialogHotSwapper(NULL),
+		MenuHotSwapper(NULL),
+		Initialized(false)
+	{
+		OwnerThreadID = GetCurrentThreadId();
 	}
 
 	BGSEEUIManager::~BGSEEUIManager()
@@ -63,7 +573,16 @@ namespace BGSEditorExtender
 		for (int i = 0; i < kHandleCollection__MAX; i++)
 			HandleCollections[i].Clear();
 
+		for (int i = 0; i < kIATPatch__MAX; i++)
+			PatchDepot[i].Reset();
+
+		SAFEDELETE(Subclasser);
+		SAFEDELETE(DialogHotSwapper);
+		SAFEDELETE(MenuHotSwapper);
 		SAFEDELETE(EditorWindowHandle);
+		SAFEDELETE(EditorResourceInstance);
+
+		Initialized = false;
 	}
 
 	BGSEEUIManager* BGSEEUIManager::GetSingleton()
@@ -74,25 +593,26 @@ namespace BGSEditorExtender
 		return Singleton;
 	}
 
-	bool BGSEEUIManager::Initialize( HWND MainWindowHandle )
+	bool BGSEEUIManager::Initialize( const char* MainWindowClassName, HMENU MainMenuHandle )
 	{
 		if (Initialized)
 			return false;
 
-		SME_ASSERT(MainWindowHandle);
 		Initialized = true;
 
-		SAFEDELETE(EditorWindowHandle);
-		EditorWindowHandle = new HWNDGetter(MainWindowHandle);
+		EditorWindowClassName = MainWindowClassName;
+		EditorMainMenuReplacement = MainMenuHandle;
+		Subclasser = new BGSEEWindowSubclasser();
+		DialogHotSwapper = new BGSEEDialogTemplateHotSwapper();
+		MenuHotSwapper = new BGSEEMenuTemplateHotSwapper();
 
 		return Initialized;
 	}
 
-	BGSEEUIManager::WindowHandleCollection* BGSEEUIManager::GetWindowHandleCollection( UInt8 ID ) const
+	BGSEEWindowHandleCollection* BGSEEUIManager::GetWindowHandleCollection( UInt8 ID )
 	{
 		SME_ASSERT(ID < kHandleCollection__MAX);
-
-		return const_cast<WindowHandleCollection*>(&HandleCollections[ID]);
+		return &HandleCollections[ID];
 	}
 
 	HWND BGSEEUIManager::GetMainWindow( void ) const
@@ -198,6 +718,38 @@ namespace BGSEditorExtender
 		va_end(Args);
 
 		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), MB_OK|MB_ICONERROR);
+	}
+
+	HWND BGSEEUIManager::ModelessDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/ )
+	{
+		SME_ASSERT(Initialized);
+		return ((_CallbackCreateDialogParamA)(PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+											(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+	}
+
+	INT_PTR BGSEEUIManager::ModalDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/ )
+	{
+		SME_ASSERT(Initialized);
+		return ((_CallbackDialogBoxParamA)(PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
+											(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+	}
+
+	BGSEEWindowSubclasser* BGSEEUIManager::GetSubclasser( void )
+	{
+		SME_ASSERT(Subclasser);
+		return Subclasser;
+	}
+
+	BGSEEDialogTemplateHotSwapper* BGSEEUIManager::GetDialogHotSwapper( void )
+	{
+		SME_ASSERT(DialogHotSwapper);
+		return DialogHotSwapper;
+	}
+
+	BGSEEMenuTemplateHotSwapper* BGSEEUIManager::GetMenuHotSwapper( void )
+	{
+		SME_ASSERT(MenuHotSwapper);
+		return MenuHotSwapper;
 	}
 
 	const BGSEEINIManagerSettingFactory::SettingData		BGSEEGenericModelessDialog::kDefaultINISettings[5] =

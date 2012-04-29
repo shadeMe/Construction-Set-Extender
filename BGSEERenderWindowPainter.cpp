@@ -197,6 +197,8 @@ namespace BGSEditorExtender
 		RegisteredChannels.clear();
 		SAFEDELETE(D3DDevice);
 		SAFEDELETE(D3DWindow);
+
+		Initialized = false;
 	}
 
 	bool BGSEERenderWindowPainter::Initialize( HWND RenderWindowHandle, LPDIRECT3DDEVICE9 RendererD3DDevice )
@@ -281,6 +283,8 @@ namespace BGSEditorExtender
 
 	bool BGSEERenderWindowPainter::HandleD3DDeviceReset( UInt8 Operation )
 	{
+		SME_ASSERT(Initialized);
+
 		bool Result = true;
 
 		switch (Operation)
@@ -313,6 +317,7 @@ namespace BGSEditorExtender
 
 	bool BGSEERenderWindowPainter::RegisterRenderChannel( BGSEERenderChannelBase* Channel )
 	{
+		SME_ASSERT(Initialized);
 		RenderChannelListT::iterator Match;
 		if (LookupRenderChannel(Channel, Match) == false)
 		{
@@ -325,6 +330,7 @@ namespace BGSEditorExtender
 
 	void BGSEERenderWindowPainter::UnregisterRenderChannel( BGSEERenderChannelBase* Channel )
 	{
+		SME_ASSERT(Initialized);
 		RenderChannelListT::iterator Match;
 		if (LookupRenderChannel(Channel, Match))
 		{
@@ -335,16 +341,19 @@ namespace BGSEditorExtender
 
 	void BGSEERenderWindowPainter::SetEnabled( bool State )
 	{
+		SME_ASSERT(Initialized);
 		Enabled = State;
 	}
 
 	bool BGSEERenderWindowPainter::GetEnabled( void ) const
 	{
+		SME_ASSERT(Initialized);
 		return Enabled;
 	}
 
 	bool BGSEERenderWindowPainter::GetHasActiveTasks( void ) const
 	{
+		SME_ASSERT(Initialized);
 		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 		{
 			BGSEEDynamicRenderChannel* Dynamic = dynamic_cast<BGSEEDynamicRenderChannel*>(*Itr);

@@ -1,12 +1,15 @@
 #include "CodaVM.h"
 #include "CodaInterpreter.h"
-#include "BGSEEConsole.h"
 #include "BGSEEUIManager.h"
 #include "BGSEditorExtenderBase_Resource.h"
 
 #include "MUP Implementation\CodaMUPArrayDataType.h"
 #include "MUP Implementation\CodaMUPExpressionParser.h"
 #include "MUP Implementation\CodaMUPValue.h"
+
+#include "Commands\CodaScriptCommands-General.h"
+#include "Commands\CodaScriptCommands-String.h"
+#include "Commands\CodaScriptCommands-Array.h"
 
 namespace BGSEditorExtender
 {
@@ -83,7 +86,7 @@ namespace BGSEditorExtender
 
 			for (CommandTableMapT::iterator Itr = Registry.begin(); Itr != Registry.end(); Itr++)
 			{
-				if ((!UseAlias && Itr->second->GetName() && !_stricmp(Name, Itr->second->GetName())) ||
+				if ((UseAlias == false && Itr->second->GetName() && !_stricmp(Name, Itr->second->GetName())) ||
 					(UseAlias && Itr->second->GetAlias() && !_stricmp(Name, Itr->second->GetAlias())))
 				{
 					return Itr->second;
@@ -114,9 +117,9 @@ namespace BGSEditorExtender
 		{
 			for (CodaScriptRegistrarListT::const_iterator Itr = Registrars.begin(); Itr != Registrars.end(); Itr++)
 			{
-				CodaScriptFunctionRegistrar* Current = *Itr;
+				CodaScriptCommandRegistrar* Current = *Itr;
 
-				for (CodaScriptFunctionRegistrar::CommandListT::const_iterator ItrEx = Current->Commands.begin();
+				for (CodaScriptCommandRegistrar::CommandListT::const_iterator ItrEx = Current->Commands.begin();
 																			ItrEx != Current->Commands.end();
 																			ItrEx++)
 				{
@@ -127,8 +130,7 @@ namespace BGSEditorExtender
 
 		void CodaScriptCommandRegistry::Dump( std::string OutPath )
 		{
-			const char* Header = "<?xml version=\"1.0\" encoding=\"utf-8\"?><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\n<head>\n\n\t<meta content=\"text/html; charset=UTF-8\" http-equiv=\"content-type\" />\n\n\t<style type=\"text/css\">\n\n\t/* body */ \n\n\tbody {\n\n\t\n\n\tpadding: 10%%;\n\n\t}\n\n\t/* headings */\n\n\th1 {\n\n\t\n\n\tfont-size: 150%%;\n\n\t\n\n\tfont-weight: normal;\n\n\t}\n\n\th2 {\n\n\t\n\n\tfont-size: 130%%;\n\n\t\n\n\tfont-weight: normal;\n\n\t\n\n\tmargin-top: 40px;\n\n\t}\n\n\th3 {\n\n\t\n\n\tfont-size: 110%%;\n\n\t\n\n\tfont-weight: normal;\n\n\t\n\n\tmargin-top: 30px;\n\n\t\n\n\tcolor: #000099;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\th4 {\n\n\t\n\n\tfont-size: 100%%;\n\n\t\n\n\tfont-weight: bold;\n\n\t\n\n\tmargin-bottom: 0px;\n\n\t}\n\n\th5 {\n\n\t\n\n\tfont-size: 100%%;\n\n\t\n\n\tfont-weight: bold;\n\n\t\n\n\tmargin-bottom: 0px;\n\n\t\n\n\tcolor: #000099;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* tables */\n\n\ttable {\n\n\t\n\n\tborder: 1px solid black;\n\n\t\n\n\tmargin: 20px 0px 20px 0px;\n\n\t}\n\n\tcaption {\n\n\t\n\n\ttext-align: left;\n\n\t\n\n\tmargin-bottom: 10px;\n\n\t}\n\n\ttd, th {\n\n\t\n\n\tpadding: 5px;\n\n\t}\n\n\ttr.alt {\n\n\t\n\n\tcolor: black;\n\n\t\n\n\tbackground-color: #dedede;\n\n\t}\n\n\tcode.alt {\n\n\t\n\n\tcolor: 770000;\n\n\t\n\n\tbackground-color: #dedede;\n\n\t}\n\n\ttable.functionIndex td{\n\n\t\n\n\tpadding: 0px 30px 0px 5px;\n\n\t}\n\n\t/* lists */\n\n\tul {\n\n\t\n\n\tlist-style-type: none;\n\n\t}\n\n\t/* box highlighting */\n\n\t.boxhl {\n\n\t\n\n\tborder: 1px dotted black;\n\n\t\n\n\tpadding: 8px;\n\n\t\n\n\tcolor: #000000;\n\n\t\n\n\tbackground-color: #eeeeff;\n\n\t}\n\n\t/* box hl for calling conventions */\n\n\t.code {\n\n\t\n\n\tborder: 1px solid black;\n\n\t\n\n\tpadding: 20px;\n\n\t\n\n\tfont-family: monospace;\n\n\t\n\n\tcolor: #770000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* code box */\n\n\tpre {\n\n\t\n\n\tcolor: #770000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* code syntax */\n\n\tcode.s {\n\n\t\n\n\tmargin-left: 40px;\n\n\t\n\n\tfont-weight: normal;\n\n\t\n\n\tcolor: #770000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* code syntax in descriptive text */\n\n\tcode {\n\n\t\n\n\tcolor: #000000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* optional parameters */\n\n\tspan.op {\n\n\t\n\n\tfont-style: italic;\n\n\t\n\n\tcolor: #666666;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* message box examples */\n\n\tpre.msgbox {\n\n\t\n\n\tcolor: #777700;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t\n\n\tfont-family: serif;\n\n\t}\n\n\t/* indentation and text alignment */\n\n\t.ind {\n\n\t\n\n\tmargin-left: 40px;\n\n\t}\n\n\t.c {\n\n\t\n\n\ttext-align: center;\n\n\t}\n\n\t.l {\n\n\t\n\n\ttext-align: left;\n\n\t}\n\n\t/* links */\n\n\t.f {\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:link.f{\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:visited.f {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:focus.f {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:hover.f {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:active.f {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #ff0000;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:link.cf{\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:visited.cf {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:focus.cf {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:hover.cf {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:active.cf {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #ff0000;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:link img {\n\n\t\n\n\tborder-style: none;\n\n\t}\n\n\ta:visited img {\n\n\t\n\n\tborder-style: none;\n\n\t}\n\n\t</style>\n\n\n\n\t<title>CSE Construction Set Automation Script Command Documentation</title>\n\n\n\n\t<meta name=\"keywords\" content=\"CSE, CSAS, construction, set, extender, automation, script, oblivion, mod, modding\" />\n\n\n\n</head>\n<body>\n\n";
-			const char* Footer = "<p><a href=\"http://validator.w3.org/check?uri=referer\"><img src=\"http://www.w3.org/Icons/valid-xhtml10\" alt=\"Valid XHTML 1.0 Strict\" height=\"31\" width=\"88\" /></a></p></body>";
+			const char* Header = "<?xml version=\"1.0\" encoding=\"utf-8\"?><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n\n<head>\n\n\t<meta content=\"text/html; charset=UTF-8\" http-equiv=\"content-type\" />\n\n\t<style type=\"text/css\">\n\n\t/* body */ \n\n\tbody {\n\n\t\n\n\tpadding: 10%%;\n\n\t}\n\n\t/* headings */\n\n\th1 {\n\n\t\n\n\tfont-size: 150%%;\n\n\t\n\n\tfont-weight: normal;\n\n\t}\n\n\th2 {\n\n\t\n\n\tfont-size: 130%%;\n\n\t\n\n\tfont-weight: normal;\n\n\t\n\n\tmargin-top: 40px;\n\n\t}\n\n\th3 {\n\n\t\n\n\tfont-size: 110%%;\n\n\t\n\n\tfont-weight: normal;\n\n\t\n\n\tmargin-top: 30px;\n\n\t\n\n\tcolor: #000099;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\th4 {\n\n\t\n\n\tfont-size: 100%%;\n\n\t\n\n\tfont-weight: bold;\n\n\t\n\n\tmargin-bottom: 0px;\n\n\t}\n\n\th5 {\n\n\t\n\n\tfont-size: 100%%;\n\n\t\n\n\tfont-weight: bold;\n\n\t\n\n\tmargin-bottom: 0px;\n\n\t\n\n\tcolor: #000099;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* tables */\n\n\ttable {\n\n\t\n\n\tborder: 1px solid black;\n\n\t\n\n\tmargin: 20px 0px 20px 0px;\n\n\t}\n\n\tcaption {\n\n\t\n\n\ttext-align: left;\n\n\t\n\n\tmargin-bottom: 10px;\n\n\t}\n\n\ttd, th {\n\n\t\n\n\tpadding: 5px;\n\n\t}\n\n\ttr.alt {\n\n\t\n\n\tcolor: black;\n\n\t\n\n\tbackground-color: #dedede;\n\n\t}\n\n\tcode.alt {\n\n\t\n\n\tcolor: 770000;\n\n\t\n\n\tbackground-color: #dedede;\n\n\t}\n\n\ttable.functionIndex td{\n\n\t\n\n\tpadding: 0px 30px 0px 5px;\n\n\t}\n\n\t/* lists */\n\n\tul {\n\n\t\n\n\tlist-style-type: none;\n\n\t}\n\n\t/* box highlighting */\n\n\t.boxhl {\n\n\t\n\n\tborder: 1px dotted black;\n\n\t\n\n\tpadding: 8px;\n\n\t\n\n\tcolor: #000000;\n\n\t\n\n\tbackground-color: #eeeeff;\n\n\t}\n\n\t/* box hl for calling conventions */\n\n\t.code {\n\n\t\n\n\tborder: 1px solid black;\n\n\t\n\n\tpadding: 20px;\n\n\t\n\n\tfont-family: monospace;\n\n\t\n\n\tcolor: #770000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* code box */\n\n\tpre {\n\n\t\n\n\tcolor: #770000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* code syntax */\n\n\tcode.s {\n\n\t\n\n\tmargin-left: 40px;\n\n\t\n\n\tfont-weight: normal;\n\n\t\n\n\tcolor: #770000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* code syntax in descriptive text */\n\n\tcode {\n\n\t\n\n\tcolor: #000000;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* optional parameters */\n\n\tspan.op {\n\n\t\n\n\tfont-style: italic;\n\n\t\n\n\tcolor: #666666;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t}\n\n\t/* message box examples */\n\n\tpre.msgbox {\n\n\t\n\n\tcolor: #777700;\n\n\t\n\n\tbackground-color: #ffffff;\n\n\t\n\n\tfont-family: serif;\n\n\t}\n\n\t/* indentation and text alignment */\n\n\t.ind {\n\n\t\n\n\tmargin-left: 40px;\n\n\t}\n\n\t.c {\n\n\t\n\n\ttext-align: center;\n\n\t}\n\n\t.l {\n\n\t\n\n\ttext-align: left;\n\n\t}\n\n\t/* links */\n\n\t.f {\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:link.f{\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:visited.f {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:focus.f {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:hover.f {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:active.f {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #ff0000;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:link.cf{\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:visited.cf {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #3333cc;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:focus.cf {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:hover.cf {\n\n\t\n\n\ttext-decoration: underline;\n\n\t\n\n\tcolor: #0000ff;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:active.cf {\n\n\t\n\n\ttext-decoration: none;\n\n\t\n\n\tcolor: #ff0000;\n\n\t\n\n\tbackground-color: white;\n\n\t}\n\n\ta:link img {\n\n\t\n\n\tborder-style: none;\n\n\t}\n\n\ta:visited img {\n\n\t\n\n\tborder-style: none;\n\n\t}\n\n\t</style>\n\n\n\n\t<title>Coda Script Command Documentation</title>\n\n\n\n\t<meta name=\"keywords\" content=\"BGSEE, BGSEditorExtender, Coda, Script, CodaScript, construction, set, creation, kit, extender, tes, fallout, oblivion, skyrim, mod, modding, plugin, script extender, OBSE, SKSE\" />\n\n\n\n</head>\n<body>\n\n";
 
 			std::fstream DocStream("coda_command_doc.html", std::ios::out);
 
@@ -183,7 +185,7 @@ namespace BGSEditorExtender
 						int ParameterCount = 0;
 						ICodaScriptCommand::ParameterInfo* ParameterData = NULL;
 						UInt8 ResultType = ICodaScriptDataStore::kDataType_Invalid;
-						Command->GetParameterData(ParameterCount, &ParameterData, ResultType);
+						Command->GetParameterData(&ParameterCount, &ParameterData, &ResultType);
 
 						AppendToStream(DocStream,
 							"<p><a id=\"%s\" class=\"f\" href=\"%s%s_(Coda)\">%s</a>",
@@ -206,8 +208,7 @@ namespace BGSEditorExtender
 							ICodaScriptCommand::ParameterInfo* Current = &ParameterData[i];
 							std::string Name = SanitizeLinkableString(Current->Name);
 
-							AppendToStream(DocStream, " <a href=\"#ParamInfo_%s\">%s</a>:%s",
-								Name.c_str(),
+							AppendToStream(DocStream, " %s:%s",
 								Name.c_str(),
 								StringifyParameterType(Current->Type));
 						}
@@ -225,15 +226,13 @@ namespace BGSEditorExtender
 					}
 				}
 
-				AppendToStream(DocStream, "\n\n\n\n");
-				AppendToStream(DocStream, Footer);
 				DocStream.close();
 			}
 
 			ShellExecute(NULL, "open", (LPSTR)"coda_command_doc.html", NULL, NULL, SW_SHOW);
 		}
 
-		CodaScriptFunctionRegistrar::CodaScriptFunctionRegistrar( const char* Category ) :
+		CodaScriptCommandRegistrar::CodaScriptCommandRegistrar( const char* Category ) :
 			ICodaScriptObject(),
 			Commands(),
 			Category(Category)
@@ -241,12 +240,12 @@ namespace BGSEditorExtender
 			;//
 		}
 
-		CodaScriptFunctionRegistrar::~CodaScriptFunctionRegistrar()
+		CodaScriptCommandRegistrar::~CodaScriptCommandRegistrar()
 		{
 			Commands.clear();
 		}
 
-		inline void CodaScriptFunctionRegistrar::Add( ICodaScriptCommand* Command )
+		inline void CodaScriptCommandRegistrar::Add( ICodaScriptCommand* Command )
 		{
 			Commands.push_back(Command);
 		}
@@ -536,6 +535,18 @@ namespace BGSEditorExtender
 		{
 			ResetTimer(true);
 			ResetCache(true);
+		}
+
+		BGSEEINIManagerSettingFactory* CodaScriptBackgrounder::GetINIFactory( void )
+		{
+			static BGSEEINIManagerSettingFactory kFactory(kINISection);
+			if (kFactory.Settings.size() == 0)
+			{
+				kFactory.Settings.push_back(&kINISettings[kBackgrounderINISetting_Enabled]);
+				kFactory.Settings.push_back(&kINISettings[kBackgrounderINISetting_UpdatePeriod]);
+			}
+
+			return &kFactory;
 		}
 
 		const char*			CodaScriptGlobalDataStore::kINISection	= "CodaGlobalDataStore";
@@ -931,8 +942,51 @@ namespace BGSEditorExtender
 			return Cache;
 		}
 
-		const std::string		CodaScriptVM::kSourceExtension	= ".coda";
-		CodaScriptVM*			CodaScriptVM::Singleton			= NULL;
+		const std::string										CodaScriptVM::kSourceExtension	= ".coda";
+		CodaScriptVM*											CodaScriptVM::Singleton			= NULL;
+		BGSEditorExtender::BGSEEConsoleCommandInfo				CodaScriptVM::kRunScriptConsoleCommandData =
+		{
+			"RunScript",
+			1,
+			CodaScriptVM::RunScriptConsoleCommandHandler
+		};
+		BGSEditorExtender::BGSEEConsoleCommandInfo				CodaScriptVM::kDumpCodaDocsConsoleCommandData =
+		{
+			"DumpCodaDocs",
+			0,
+			CodaScriptVM::DumpCodaDocsConsoleCommandHandler
+		};
+
+		void CodaScriptVM::RunScriptConsoleCommandHandler(UInt32 ParamCount, const char* Args)
+		{
+			SME::StringHelpers::Tokenizer ArgParser(Args, " ,");
+			std::string CurrentArg;
+
+			std::string ScriptName;
+
+			for (int i = 1; i <= ParamCount; i++)
+			{
+				ArgParser.NextToken(CurrentArg);
+				switch (i)
+				{
+				case 1:
+					ScriptName = CurrentArg;
+					break;
+				}
+			}
+
+			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
+
+			bool ThrowAway = false;
+			CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway);
+
+			TODO("Handle some achievements here")
+		}
+
+		void CodaScriptVM::DumpCodaDocsConsoleCommandHandler(UInt32 ParamCount, const char* Args)
+		{
+			CODAVM->CommandRegistry->Dump("coda_command_doc.html");
+		}
 
 		CodaScriptVM::CodaScriptVM() :
 			ICodaScriptObject(),
@@ -964,6 +1018,8 @@ namespace BGSEditorExtender
 			SAFEDELETE(ExpressionParser);
 			SAFEDELETE(MessageHandler);
 
+			TODO("perform leak check here")
+
 			Initialized = false;
 		}
 
@@ -992,8 +1048,16 @@ namespace BGSEditorExtender
 			GlobalStore = new CodaScriptGlobalDataStore(INIGetter, INISetter);
 			ExpressionParser = CodaScriptObjectFactory::BuildExpressionParser(CodaScriptObjectFactory::kFactoryType_MUP);
 
+			// register built-in commands first
+			ScriptCommands.push_front(Commands::Array::GetRegistrar());
+			ScriptCommands.push_front(Commands::String::GetRegistrar());
+			ScriptCommands.push_front(Commands::General::GetRegistrar());
+
 			CommandRegistry->RegisterCommands(ScriptCommands);
 			CommandRegistry->InitializeExpressionParser(ExpressionParser);
+
+			// register console command
+			BGSEECONSOLE->RegisterConsoleCommand(&kRunScriptConsoleCommandData);
 
 			Initialized = true;
 
@@ -1005,6 +1069,8 @@ namespace BGSEditorExtender
 									CodaScriptBackingStore* Result,
 									bool& ReturnedResult )
 		{
+			SME_ASSERT(Initialized);
+
 			BGSEEResourceLocation Path(BaseDirectory.GetRelativePath() + ScriptName + CodaScriptVM::kSourceExtension);
 			std::fstream InputStream(Path().c_str(), std::iostream::in);
 
@@ -1030,21 +1096,29 @@ namespace BGSEditorExtender
 
 		inline void CodaScriptVM::ShowGlobalStoreEditDialog( HINSTANCE ResourceInstance, HWND Parent )
 		{
+			SME_ASSERT(Initialized);
+
 			GlobalStore->ShowEditDialog(ResourceInstance, Parent);
 		}
 
 		inline CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )
 		{
+			SME_ASSERT(Initialized);
+
 			return GlobalStore->Lookup(Name);
 		}
 
 		inline CodaScriptVariableListT& CodaScriptVM::GetGlobals( void ) const
 		{
+			SME_ASSERT(Initialized);
+
 			return GlobalStore->GetCache();
 		}
 
 		inline CodaScriptMessageHandler* CodaScriptVM::MsgHdlr( void )
 		{
+			SME_ASSERT(Initialized);
+
 			return MessageHandler;
 		}
 
@@ -1070,14 +1144,17 @@ namespace BGSEditorExtender
 			}
 		}
 
-		inline ICodaScriptArrayDataType* CodaScriptObjectFactory::BuildArray( UInt8 Type )
+		inline CodaScriptSharedHandleArrayT CodaScriptObjectFactory::BuildArray( UInt8 Type, UInt32 InitialSize )
 		{
 			switch (Type)
 			{
 			case CodaScriptObjectFactory::kFactoryType_MUP:
-				return new mup::CodaScriptMUPArrayDataType();
+				{
+					CodaScriptSharedHandleArrayT Array(new mup::CodaScriptMUPArrayDataType(InitialSize));
+					return Array;
+				}
 			default:
-				return NULL;
+				return CodaScriptSharedHandleArrayT();
 			}
 		}
 	}

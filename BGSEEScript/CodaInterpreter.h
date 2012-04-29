@@ -49,17 +49,19 @@ namespace BGSEditorExtender
 			bool											Tokenize(CodaScriptSourceCodeT Source, bool CollectEmptyTokens = false);		// returns true if at least one token was parsed, skips comments
 			void											ResetState(void);
 
-			CodaScriptKeywordT								GetKeywordType(CodaScriptSourceCodeT& Token);
 			UInt32											GetParsedTokenCount() const;
 			CodaScriptKeywordT								GetFirstTokenKeywordType();
 
 			void											Sanitize(CodaScriptSourceCodeT& In, CodaScriptSourceCodeT& Out, UInt32 OperationMask);
+
+			static CodaScriptKeywordT						GetKeywordType(CodaScriptSourceCodeT& Token);
+			static const CodaScriptSourceCodeT&				GetKeywordName(CodaScriptKeywordT Keyword);
 		private:
 			static const CodaScriptSourceCodeT				kWhitespace;
 			static const CodaScriptSourceCodeT				kValidDelimiters;
 			static const CodaScriptSourceCodeT				kCommentDelimiter;
 			static const UInt32								kCodaKeywordCount;
-			static CodaScriptSourceCodeT					kCodaKeywordArray[];
+			static const CodaScriptSourceCodeT				kCodaKeywordArray[];
 		};
 
 		class ICodaScriptExpressionByteCode
@@ -352,8 +354,6 @@ namespace BGSEditorExtender
 			friend class ICodaScriptSyntaxTreeEvaluator;
 			friend class CodaScriptSyntaxTreeCompileVisitor;
 			friend class CodaScriptSyntaxTreeExecuteVisitor;
-
-			static const UInt32								kMaxParameters;
 		protected:
 			enum
 			{
@@ -389,6 +389,10 @@ namespace BGSEditorExtender
 																CodaScriptBackingStore* Result,
 																bool& ReturnedResult);
 															// returns false if an unexpected exception was thrown
+
+			long double										GetSecondsPassed(void);
+
+			static const UInt32								kMaxParameters;
 		};
 
 		class CodaScriptSyntaxTreeCompileVisitor : public ICodaScriptObject, public ICodaScriptSyntaxTreeEvaluator
@@ -438,7 +442,7 @@ namespace BGSEditorExtender
 
 			ICodaScriptLoopBlock*							GetCurrentLoop(void) const;
 
-			void											SetResult(CodaScriptBackingStore Value);
+			void											SetResult(const CodaScriptBackingStore& Value);
 			CodaScriptBackingStore*							GetResult(void) const;
 
 			virtual void									Visit(ICodaScriptParseTree* Node);
@@ -460,6 +464,34 @@ namespace BGSEditorExtender
 			virtual ~CodaScriptException();
 
 			virtual const char*								Get() const;
+		};
+
+		class CodaScriptCommandHandlerUtilities : public ICodaScriptObject, public ICodaScriptCommandHandlerHelper
+		{
+		protected:
+			typedef std::list<CodaScriptScopedHandleDataStoreT>		DataStoreAllocationTableT;
+
+			DataStoreAllocationTableT							AllocatedWrappers;
+
+			CodaScriptBackingStore*								CreateWrapper(CodaScriptSharedHandleArrayT Array);
+			CodaScriptBackingStore*								CreateWrapper(CodaScriptBackingStore* Source);
+		public:
+			CodaScriptCommandHandlerUtilities();
+			virtual ~CodaScriptCommandHandlerUtilities();
+
+			virtual ICodaScriptDataStore*						ArrayAllocate(UInt32 InitialSize = 0);
+			virtual bool										ArrayPushback(ICodaScriptDataStore* AllocatedArray, CodaScriptNumericDataTypeT Data);
+			virtual bool										ArrayPushback(ICodaScriptDataStore* AllocatedArray, CodaScriptStringParameterTypeT Data);
+			virtual	bool										ArrayPushback(ICodaScriptDataStore* AllocatedArray, CodaScriptReferenceDataTypeT Data);
+			virtual bool										ArrayPushback(ICodaScriptDataStore* AllocatedArray, ICodaScriptDataStore* ArrayData);
+			virtual bool										ArrayAt(ICodaScriptDataStore* AllocatedArray, UInt32 Index, ICodaScriptDataStore** OutBuffer);
+			virtual bool										ArrayErase(ICodaScriptDataStore* AllocatedArray, UInt32 Index);
+			virtual void										ArrayClear(ICodaScriptDataStore* AllocatedArray);
+			virtual UInt32										ArraySize(ICodaScriptDataStore* AllocatedArray);
+
+			virtual bool										ExtractArguments(ICodaScriptDataStore* Arguments,
+																				ICodaScriptCommand::ParameterInfo* ParameterData,
+																				UInt32 ArgumentCount, ...);
 		};
 	}
 }

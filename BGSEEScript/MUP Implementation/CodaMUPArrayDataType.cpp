@@ -77,6 +77,14 @@ namespace BGSEditorExtender
 				Copy(rhs);
 			}
 
+			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType( UInt32 Size ) :
+				ICodaScriptObject(),
+				ICodaScriptArrayDataType(),
+				DataStore(Size)
+			{
+				GIC++;
+			}
+
 			CodaScriptMUPArrayDataType& CodaScriptMUPArrayDataType::operator=( const CodaScriptMUPArrayDataType& rhs )
 			{
 				Copy(rhs);

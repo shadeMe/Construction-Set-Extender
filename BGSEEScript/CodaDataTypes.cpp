@@ -186,6 +186,24 @@ namespace BGSEditorExtender
 			return *this;
 		}
 
+		ICodaScriptDataStore& CodaScriptBackingStore::operator=( CodaScriptNumericDataTypeT Num )
+		{
+			SetNumber(Num);
+			return *this;
+		}
+
+		ICodaScriptDataStore& CodaScriptBackingStore::operator=( CodaScriptStringParameterTypeT Str )
+		{
+			SetString(Str);
+			return *this;
+		}
+
+		ICodaScriptDataStore& CodaScriptBackingStore::operator=( CodaScriptReferenceDataTypeT Form )
+		{
+			SetFormID(Form);
+			return *this;
+		}
+
 		CodaScriptBackingStore& CodaScriptBackingStore::operator+=( const CodaScriptBackingStore &rhs )
 		{
 			if (Type == rhs.Type)

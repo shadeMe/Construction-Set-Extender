@@ -65,6 +65,9 @@
 #include <numeric>
 #include <functional>
 
+// RPC
+#include <Rpc.h>
+
 // DIRECTX
 #include <d3d9.h>
 #include <d3d9types.h>
@@ -73,7 +76,9 @@
 
 // BOOST
 #include <boost\scoped_ptr.hpp>
+#include <boost\scoped_array.hpp>
 #include <boost\shared_ptr.hpp>
+#include <boost\shared_array.hpp>
 #include <boost\intrusive_ptr.hpp>
 #include <boost\weak_ptr.hpp>
 
@@ -95,5 +100,4 @@
 #include "SME Sundries\UIHelpers.h"
 #include "SME Sundries\MiscGunk.h"
 
-using namespace SME::MemoryHandler;
 using namespace SME::Functors;

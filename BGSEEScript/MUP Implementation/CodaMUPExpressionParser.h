@@ -107,6 +107,9 @@ namespace BGSEditorExtender
 				void											DefineOprtChars(const char_type *a_szCharset);
 				void											DefineInfixOprtChars(const char_type *a_szCharset);
 
+				CodaScriptMUPParserByteCode*					GetByteCode(void);
+				ICodaScriptSyntaxTreeEvaluator*					GetEvaluationAgent(void);
+
 				virtual void									RegisterCommand(ICodaScriptCommand* Command);
 				virtual void									RegisterConstant(const char* Name, CodaScriptBackingStore& Value);
 
