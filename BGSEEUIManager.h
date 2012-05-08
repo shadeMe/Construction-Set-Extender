@@ -12,23 +12,28 @@ namespace BGSEditorExtender
 	public:
 		typedef LRESULT							(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		typedef std::list<SubclassProc>			SubclassProcListT;
-	private:
+
 		struct SubclassData
 		{
+			HWND								Handle;
 			DLGPROC								Original;
 			SubclassProcListT					Subclasses;
 
+			SubclassData();
+
 			INT_PTR								ProcessSubclasses(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		};
-
-		typedef std::map<UInt32, SubclassData>	DialogSubclassMapT;			// key = templateID
 
 		struct SubclassUserData
 		{
 			BGSEEWindowSubclasser*				Instance;
 			SubclassData*						Data;
 			LPARAM								InitParam;
+			LPARAM								ExtraData;
+			bool								Initialized;
 		};
+	private:
+		typedef std::map<UInt32, SubclassData>	DialogSubclassMapT;			// key = templateID
 
 		static LRESULT CALLBACK					MainWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static INT_PTR CALLBACK					DialogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -54,6 +59,8 @@ namespace BGSEditorExtender
 
 		bool									RegisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc);
 		bool									UnregisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc);
+
+		bool									GetHasDialogSubclass(UInt32 TemplateID);
 	};
 
 	class BGSEEResourceTemplateHotSwapper
@@ -67,10 +74,11 @@ namespace BGSEditorExtender
 
 		void									PopulateTemplateMap(void);
 		void									ReleaseTemplateMap(void);
-		virtual HINSTANCE						GetAlternateResourceInstance(UInt32 TemplateID);		// returns NULL if there isn't one
 	public:
 		BGSEEResourceTemplateHotSwapper(std::string SourcePath);
 		virtual ~BGSEEResourceTemplateHotSwapper() = 0;
+
+		virtual HINSTANCE						GetAlternateResourceInstance(UInt32 TemplateID);		// returns NULL if there isn't one
 	};
 
 	class BGSEEDialogTemplateHotSwapper : public BGSEEResourceTemplateHotSwapper
@@ -105,6 +113,39 @@ namespace BGSEditorExtender
 		bool									Remove(HWND Handle);
 		bool									GetExists(HWND Handle);
 		void									Clear(void);
+	};
+
+	class BGSEEWindowStyler
+	{
+		friend class BGSEEUIManager;
+	public:
+		struct StyleData
+		{
+			LONG		Regular;
+			UInt8		RegularOp;
+			LONG		Extended;
+			UInt8		ExtendedOp;
+
+			enum
+			{
+				kOperation_None		= 0,
+				kOperation_OR,
+				kOperation_AND,
+				kOperation_Replace
+			};
+		};
+	private:
+		typedef std::map<UInt32, StyleData>		TemplateStyleMapT;
+
+		TemplateStyleMapT						StyleListings;
+
+		bool									StyleWindow(HWND Window, UInt32 Template);
+	public:
+		BGSEEWindowStyler();
+		~BGSEEWindowStyler();
+
+		bool									RegisterStyle(UInt32 TemplateID, StyleData& Data);
+		bool									UnregisterStyle(UInt32 TemplateID);
 	};
 
 	class BGSEEUIManager
@@ -168,6 +209,8 @@ namespace BGSEditorExtender
 																		DLGPROC lpDialogFunc,
 																		LPARAM dwInitParam);
 
+		static BOOL CALLBACK					EnumThreadWindowsCallback(HWND hwnd, LPARAM lParam);
+
 		enum
 		{
 			kIATPatch_CreateWindowEx		= 0,		// one-time hook to grab the editor's UI stuffings
@@ -189,12 +232,12 @@ namespace BGSEditorExtender
 		BGSEEWindowSubclasser*					Subclasser;
 		BGSEEDialogTemplateHotSwapper*			DialogHotSwapper;
 		BGSEEMenuTemplateHotSwapper*			MenuHotSwapper;
+		BGSEEWindowStyler*						WindowStyler;
 		BGSEEWindowHandleCollection				HandleCollections[kHandleCollection__MAX];
 
 		bool									Initialized;
 
 		void									PatchIAT(UInt8 PatchType, void* Callback);		// CALLBACK call convention
-		void									StyleDialogBox(HWND Dialog);
 	public:
 		virtual ~BGSEEUIManager();
 
@@ -214,21 +257,24 @@ namespace BGSEditorExtender
 		int										MsgBoxE(const char* Format, ...);
 
 		HWND									ModelessDialog(HINSTANCE hInstance,
-																LPSTR lpTemplateName,
-																HWND hWndParent,
-																DLGPROC lpDialogFunc,
-																LPARAM dwInitParam = NULL);
+															LPSTR lpTemplateName,
+															HWND hWndParent,
+															DLGPROC lpDialogFunc,
+															LPARAM dwInitParam = NULL,
+															bool Override = false);
 		INT_PTR									ModalDialog(HINSTANCE hInstance,
 															LPSTR lpTemplateName,
 															HWND hWndParent,
 															DLGPROC lpDialogFunc,
-															LPARAM dwInitParam = NULL);
+															LPARAM dwInitParam = NULL,
+															bool Override = false);
 
 		HWND									GetMainWindow(void) const;
 		BGSEEWindowHandleCollection*			GetWindowHandleCollection(UInt8 ID);
 		BGSEEWindowSubclasser*					GetSubclasser(void);
 		BGSEEDialogTemplateHotSwapper*			GetDialogHotSwapper(void);
 		BGSEEMenuTemplateHotSwapper*			GetMenuHotSwapper(void);
+		BGSEEWindowStyler*						GetWindowStyler(void);
 	};
 #define BGSEEUI									BGSEditorExtender::BGSEEUIManager::GetSingleton()
 
@@ -252,11 +298,13 @@ namespace BGSEditorExtender
 		{
 			BGSEEGenericModelessDialog*		Instance;
 			LPARAM							UserData;
+			bool							Initialized;
 		};
 
 		HWND							DialogHandle;
 		HWND							ParentHandle;
-		HMENU							ContextMenuHandle;
+		HMENU							ContextMenuHandle;				// all menu items must be a part of a sub-menu at index 0
+		HMENU							ContextMenuParentHandle;		// handle of the base menu
 		HINSTANCE						ResourceInstance;
 		UInt32							DialogTemplateID;
 		UInt32							DialogContextMenuID;

@@ -10,11 +10,18 @@ namespace BGSEditorExtender
 		{
 			friend class BGSEEAchievementManager;
 		protected:
+			enum
+			{
+				kState_Locked	= 0,
+				kState_Unlocked,
+				kState_Triggered		// can be used to initiate deferred unlocking
+			};
+
 			UUID						BaseID;
 			std::string					BaseIDString;
 			const char*					Name;
 			const char*					Description;
-			bool						Unlocked;
+			UInt8						State;
 			UInt32						IconID;
 
 										// called by the manager before unlocking the achievement, return false to remain locked
@@ -31,6 +38,7 @@ namespace BGSEditorExtender
 		class BGSEEAchievementManager
 		{
 			friend class BGSEEAchivement;
+
 			static INT_PTR CALLBACK						NotificationDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 			struct NotificationUserData
@@ -60,10 +68,14 @@ namespace BGSEditorExtender
 
 			static BGSEEAchievementManager*				GetSingleton(void);
 
+														// takes ownership of achievement instances
 			bool										Initialize(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementListT& Achievements);
-			void										Unlock(BGSEEAchievement* Achievement);
+
+			void										Unlock(BGSEEAchievement* Achievement, bool ForceUnlock = false, bool TriggerOnly = false);
+			UInt32										GetTotalAchievements(void) const;
+			UInt32										GetUnlockedAchievements(void) const;
 		};
 
-#define BGSEEACHIEVEMENTS								BGSEEAchievementManager::GetSingleton()
+#define BGSEEACHIEVEMENTS								BGSEditorExtender::Extras::BGSEEAchievementManager::GetSingleton()
 	}
 }

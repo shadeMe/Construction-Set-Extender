@@ -172,8 +172,6 @@ namespace BGSEditorExtender
 			friend class								CodaScriptBackgrounder;
 			friend class								CodaScriptGlobalDataStore;
 
-			static BGSEEConsoleCommandInfo				kRunScriptConsoleCommandData;
-			static void									RunScriptConsoleCommandHandler(UInt32 ParamCount, const char* Args);
 			static BGSEEConsoleCommandInfo				kDumpCodaDocsConsoleCommandData;
 			static void									DumpCodaDocsConsoleCommandHandler(UInt32 ParamCount, const char* Args);
 
@@ -213,10 +211,13 @@ namespace BGSEditorExtender
 			CodaScriptVariable*							GetGlobal(const char* Name);
 			CodaScriptVariableListT&					GetGlobals(void) const;
 
+			bool										GetBackgrounderState(void) const;
+			bool										ToggleBackgrounderState(void);
+
 			CodaScriptMessageHandler*					MsgHdlr(void);
 		};
-#define CODAVM											CodaScriptVM::GetSingleton()
-#define CODAVM_ENABLEPROFILER							0
+#define CODAVM											BGSEditorExtender::BGSEEScript::CodaScriptVM::GetSingleton()
+#define CODAVM_ENABLEPROFILER							1
 
 		class CodaScriptObjectFactory
 		{

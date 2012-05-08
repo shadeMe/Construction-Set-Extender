@@ -115,15 +115,15 @@ namespace BGSEditorExtender
 				MoveWindow(GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG),
 							0,
 							0,
-							DialogRect.right - 15,
-							DialogRect.bottom - 65,
+							DialogRect.right,
+							DialogRect.bottom - 35,
 							TRUE);
 
 				MoveWindow(GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE),
 							0,
-							MessageLogRect.bottom,
-							DialogRect.right - 18,
-							31,
+							MessageLogRect.bottom + 22,
+							DialogRect.right,
+							DialogRect.bottom - MessageLogRect.bottom - 22,
 							TRUE);
 			}
 
@@ -137,7 +137,7 @@ namespace BGSEditorExtender
 			break;
 		case WM_INITDIALOG:
 			{
-				HFONT CommandLineFont = CreateFont(20,
+				HFONT CommandLineFont = CreateFont(24,
 													0,
 													0,
 													0,
@@ -179,7 +179,10 @@ namespace BGSEditorExtender
 				int LogLength = GetWindowTextLength(hWnd);
 
 				if (LogLength > kMessageLogCharLimit)
+				{
 					Edit_SetText(hWnd, NULL);
+					Instance->GetActiveContext()->ClearBuffer();
+				}
 
 				switch (Instance->GetActiveContext()->GetState())
 				{
@@ -188,10 +191,8 @@ namespace BGSEditorExtender
 					break;
 				case MessageLogContext::kState_Update:
 					{
-						Edit_SetSel(hWnd, LogLength, LogLength);
-						Edit_ReplaceSel(hWnd, Instance->GetActiveContext()->GetBuffer());
+						Edit_SetText(hWnd, Instance->GetActiveContext()->GetBuffer());
 						SendMessage(hWnd, WM_VSCROLL, SB_BOTTOM, NULL);
-						Instance->GetActiveContext()->ClearBuffer();
 					}
 
 					break;
@@ -204,13 +205,14 @@ namespace BGSEditorExtender
 			}
 
 			return FALSE;
-		case WM_KILLFOCUS:
-			return FALSE;		// prevents the caret from being released? if so, probably gonna leak handles
+		case WM_CONTEXTMENU:
+			return SendMessage(GetAncestor(hWnd, GA_PARENT), uMsg, wParam, lParam);
 		case WM_DESTROY:
 			break;
 		}
 
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+		WNDPROC Original = (WNDPROC)GetWindowLong(hWnd, GWL_USERDATA);
+		return CallWindowProc(Original, hWnd, uMsg, wParam, lParam);
 	}
 
 	LRESULT CALLBACK BGSEEConsole::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -265,35 +267,38 @@ namespace BGSEditorExtender
 					Edit_SetText(hWnd, NULL);
 				}
 
-				break;
+				return TRUE;
 			case VK_UP:
 				if (Instance->CommandLineHistory.empty() == false)
 				{
-					std::string& Command(Instance->CommandLineHistory.top());
+					std::string Command(Instance->CommandLineHistory.top());
 					Edit_SetText(hWnd, Command.c_str());
 					Edit_SetSel(hWnd, -1, -1);
 					Instance->CommandLineHistory.pop();
 					Instance->CommandLineHistoryAuxiliary.push(Command);
 				}
 
-				break;
+				return TRUE;
 			case VK_DOWN:
 				if (Instance->CommandLineHistoryAuxiliary.empty() == false)
 				{
-					std::string& Command(Instance->CommandLineHistoryAuxiliary.top());
+					std::string Command(Instance->CommandLineHistoryAuxiliary.top());
 					Edit_SetText(hWnd, Command.c_str());
 					Edit_SetSel(hWnd, -1, -1);
 					Instance->CommandLineHistoryAuxiliary.pop();
 					Instance->CommandLineHistory.push(Command);
 				}
+
+				return TRUE;
 			}
 
-			return TRUE;
+			break;
 		case WM_DESTROY:
 			break;
 		}
 
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+		WNDPROC Original = (WNDPROC)GetWindowLong(hWnd, GWL_USERDATA);
+		return CallWindowProc(Original, hWnd, uMsg, wParam, lParam);
 	}
 
 	void BGSEEConsole::MessageLogContext::SetState( UInt8 NewState )
@@ -311,9 +316,8 @@ namespace BGSEditorExtender
 
 	void BGSEEConsole::MessageLogContext::Print( const char* Message )
 	{
-		std::string Buffer(Message); Buffer += "\n";
-
-		std::replace(Buffer.begin(), Buffer.end(), (char)'\n', (char)'\r\n');
+		std::string Buffer(Message);
+		Buffer += "\r\n";
 		BackBuffer += Buffer;
 
 		SetState(kState_Update);
@@ -374,11 +378,12 @@ namespace BGSEditorExtender
 	{
 		std::string Addend;
 
-		if (atoi(Parent->INISettingGetter(Parent->kConsoleSpecificINISettings[BGSEEConsole::kConsoleSpecificINISetting_LogTimestamps].Key, Parent->kINISection)))
+		if (atoi(Parent->INISettingGetter(Parent->kConsoleSpecificINISettings[BGSEEConsole::kConsoleSpecificINISetting_LogTimestamps].Key, Parent->kINISection)) &&
+			strlen(Prefix))
 		{
 			char Buffer[0x32] = {0};
 			SME::MiscGunk::GetTimeString(Buffer, sizeof(Buffer), "%H:%M:%S");
-			Addend += "[" + std::string(Buffer) + "] ";
+			Addend += "{" + std::string(Buffer) + "} ";
 		}
 
 		if (strlen(Prefix))
@@ -387,18 +392,17 @@ namespace BGSEditorExtender
 		for (int i = 0; i < IndentLevel; i++)
 			Addend += "\t";
 
-		Addend += std::string(Message) + "\r\n";
+		Addend += std::string(Message) + "\n";
 		std::replace(Addend.begin(), Addend.end(), (char)'\r\n', (char)'\n');
 
 		if (DebugLog)
 		{
 			fputs(Addend.c_str(), DebugLog);
-			fputs("\n", DebugLog);
 			fflush(DebugLog);
 		}
 
 		std::replace(Addend.begin(), Addend.end(), (char)'\n', (char)'\r\n');
-		BackBuffer += Addend;
+		BackBuffer += Addend + "\r\n";
 
 		SetState(kState_Update);
 
@@ -608,11 +612,7 @@ namespace BGSEditorExtender
 		if (ActiveContext == Context)
 			return;
 
-		char Buffer[0x8000] = {0};
-		Edit_GetText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), Buffer, sizeof(Buffer));
-
 		std::string ContextBuffer(ActiveContext->GetBuffer());
-		ContextBuffer += Buffer;
 
 		ActiveContext->BackBuffer = ContextBuffer;
 		ActiveContext->SetState(MessageLogContext::kState_Default);
@@ -661,6 +661,8 @@ namespace BGSEditorExtender
 					Command->ExecuteHandler(Command->ParamCount, Args.c_str());
 				}
 			}
+			else
+				LogMsg(BGSEEMAIN->ExtenderGetShortName(), "Unknown command '%s'", CurrentToken.c_str());
 		}
 
 		Exdent();
@@ -742,6 +744,14 @@ namespace BGSEditorExtender
 
 		INISaveUIState(&INISettingSetter, kINISection);
 		KillTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER);
+
+		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
+					GWL_WNDPROC,
+					GetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA));
+
+		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
+					GWL_WNDPROC,
+					GetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
 	}
 
 	void BGSEEConsole::InitializeUI( HWND Parent, HINSTANCE Resource )
@@ -750,14 +760,21 @@ namespace BGSEditorExtender
 		ResourceInstance = Resource;
 
 		Create(NULL, false);
-		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_WNDPROC, (LONG)BGSEEConsole::MessageLogSubclassProc);
-		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_WNDPROC, (LONG)BGSEEConsole::CommandLineSubclassProc);
+		LONG OrgWndProc = SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_WNDPROC, (LONG)BGSEEConsole::MessageLogSubclassProc);
+		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA, OrgWndProc);
+
+		OrgWndProc = SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_WNDPROC, (LONG)BGSEEConsole::CommandLineSubclassProc);
+		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA, OrgWndProc);
+
 		Edit_LimitText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), sizeof(int));
 
 		SetTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
 				IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER,
 				atoi(INISettingGetter(kConsoleSpecificINISettings[kConsoleSpecificINISetting_UpdatePeriod].Key, kINISection)),
 				NULL);
+
+		INILoadUIState(&INISettingGetter, kINISection);
+		SendMessage(DialogHandle, WM_SIZE, NULL, NULL);
 	}
 
 	void BGSEEConsole::LogMsg( std::string Prefix, const char* Format, ... )
@@ -883,6 +900,9 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
+		std::string Addend(Buffer);
+		Addend += "\r\n";
+
 		((MessageLogContext*)Context)->Print(Buffer);
 	}
 
@@ -920,5 +940,15 @@ namespace BGSEditorExtender
 		}
 
 		return &kFactory;
+	}
+
+	bool BGSEEConsole::GetLogsWarnings( void )
+	{
+		return atoi(INISettingGetter(kConsoleSpecificINISettings[kConsoleSpecificINISetting_LogWarnings].Key, kINISection)) != 0;
+	}
+
+	void BGSEEConsole::OpenDebugLog( void )
+	{
+		PrimaryContext->OpenLog();
 	}
 }

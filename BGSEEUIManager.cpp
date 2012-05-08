@@ -4,13 +4,30 @@
 
 namespace BGSEditorExtender
 {
+#define WM_SUBCLASSER_RELEASE		((WM_USER) + 0x100)
+
+	BGSEEWindowSubclasser::SubclassData::SubclassData() :
+		Handle(NULL),
+		Original(NULL),
+		Subclasses()
+	{
+		;//
+	}
+
 	INT_PTR BGSEEWindowSubclasser::SubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
 	{
 		INT_PTR Result = FALSE;
+		bool ReturnMark = Return;
 
 		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
 		{
-			Result = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, Return);
+			INT_PTR CurrentResult = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark);
+
+			if (ReturnMark && Return == false)
+			{
+				Result = CurrentResult;
+				Return = true;
+			}
 		}
 
 		return Result;
@@ -21,6 +38,14 @@ namespace BGSEditorExtender
 		BGSEEWindowSubclasser* Instance = (BGSEEWindowSubclasser*)GetWindowLong(hWnd, GWL_USERDATA);
 		bool CallbackReturn = false;
 		LRESULT CallbackResult = FALSE;
+
+		if (uMsg == WM_SUBCLASSER_RELEASE)
+		{
+			SME_ASSERT(Instance);
+
+			SetWindowLong(hWnd, GWL_WNDPROC, (LONG)Instance->EditorMainWindowProc);
+			return TRUE;
+		}
 
 		for (SubclassProcListT::iterator Itr = Instance->MainWindowSubclasses.begin(); Itr != Instance->MainWindowSubclasses.end(); Itr++)
 		{
@@ -38,15 +63,17 @@ namespace BGSEditorExtender
 		bool SkipCallback = false;
 		INT_PTR DlgProcResult = FALSE;
 		SubclassUserData* UserData = (SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
-		BGSEEWindowSubclasser* Instance = UserData->Instance;
 
 		switch (uMsg)
 		{
 		case WM_INITDIALOG:
 			{
-				SetWindowLong(hWnd, DWL_USER, (LONG)lParam);
-				UserData = (SubclassUserData*)lParam;
-				Instance = UserData->Instance;
+				if (lParam)
+				{
+					SetWindowLong(hWnd, DWL_USER, (LONG)lParam);
+					UserData = (SubclassUserData*)lParam;
+					UserData->Initialized = true;
+				}
 
 				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, UserData->InitParam);
 				UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, SkipCallback);
@@ -54,10 +81,15 @@ namespace BGSEditorExtender
 			}
 
 			break;
+		case WM_SUBCLASSER_RELEASE:
 		case WM_DESTROY:
 			{
-				UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, SkipCallback);
-				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, SkipCallback);
+				if (uMsg != WM_SUBCLASSER_RELEASE)
+					DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+
+				SetWindowLong(hWnd, DWL_USER, NULL);
+				SetWindowLong(hWnd, GWL_WNDPROC, (LONG)UserData->Data->Original);
 
 				delete UserData;
 				return DlgProcResult;
@@ -66,15 +98,19 @@ namespace BGSEditorExtender
 			break;
 		}
 
-		bool CallbackReturn = false;
-		if (SkipCallback == false)
+		if (SkipCallback == false && UserData && UserData->Initialized)
 		{
+			bool CallbackReturn = false;
 			INT_PTR CallbackResult = UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
+
 			if (CallbackReturn)
 				return CallbackResult;
 		}
 
-		return UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+		if (UserData)
+			return UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+		else
+			return DlgProcResult;
 	}
 
 	bool BGSEEWindowSubclasser::GetShouldSubclass( UInt32 TemplateID,
@@ -122,7 +158,15 @@ namespace BGSEditorExtender
 
 	BGSEEWindowSubclasser::~BGSEEWindowSubclasser()
 	{
+		SendMessage(EditorMainWindow, WM_SUBCLASSER_RELEASE, NULL, NULL);
 		MainWindowSubclasses.clear();
+
+		for (DialogSubclassMapT::iterator Itr = DialogSubclasses.begin(); Itr != DialogSubclasses.end(); Itr++)
+		{
+			if (Itr->second.Handle)
+				SendMessage(Itr->second.Handle, WM_SUBCLASSER_RELEASE, NULL, NULL);
+		}
+
 		DialogSubclasses.clear();
 	}
 
@@ -192,17 +236,26 @@ namespace BGSEditorExtender
 		return false;
 	}
 
+	bool BGSEEWindowSubclasser::GetHasDialogSubclass( UInt32 TemplateID )
+	{
+		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
+		if (Match != DialogSubclasses.end())
+			return true;
+		else
+			return false;
+	}
+
 	void BGSEEResourceTemplateHotSwapper::PopulateTemplateMap( void )
 	{
 		for (IDirectoryIterator Itr(SourceDepot().c_str(), "*.dll"); !Itr.Done(); Itr.Next())
 		{
 			std::string FileName = Itr.Get()->cFileName;
-			std::string FullPath = SourceDepot()+ FileName;
+			std::string FullPath = SourceDepot() + "\\" + FileName;
 
 			HINSTANCE Module = (HINSTANCE)LoadLibraryEx(FullPath.c_str(), NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE|LOAD_LIBRARY_AS_DATAFILE);
 			if (Module == NULL)
 			{
-				BGSEECONSOLE_ERROR("BGSEEResourceTemplateHotSwapper::PopulateTemplateMap - Failed to load resource library '%s'!", FileName.c_str());
+				BGSEECONSOLE_ERROR("BGSEEResourceTemplateHotSwapper::PopulateTemplateMap - Failed to load resource library '%s'!", FullPath.c_str());
 				continue;
 			}
 
@@ -349,8 +402,101 @@ namespace BGSEditorExtender
 		Clear();
 	}
 
-	BGSEEUIManager*						BGSEEUIManager::Singleton = NULL;
+	bool BGSEEWindowStyler::StyleWindow( HWND Window, UInt32 Template )
+	{
+		TemplateStyleMapT::iterator Match = StyleListings.find(Template);
 
+		if (Match != StyleListings.end())
+		{
+			LONG WindowRegular = GetWindowLong(Window, GWL_STYLE);
+			LONG WindowExtended = GetWindowLong(Window, GWL_EXSTYLE);
+
+			switch (Match->second.RegularOp)
+			{
+			case StyleData::kOperation_OR:
+				WindowRegular |= Match->second.Regular;
+				break;
+			case StyleData::kOperation_AND:
+				WindowRegular &= ~Match->second.Regular;
+				break;
+			case StyleData::kOperation_Replace:
+				WindowRegular = Match->second.Regular;
+				break;
+			}
+
+			switch (Match->second.ExtendedOp)
+			{
+			case StyleData::kOperation_OR:
+				WindowExtended |= Match->second.Extended;
+				break;
+			case StyleData::kOperation_AND:
+				WindowExtended &= ~Match->second.Extended;
+				break;
+			case StyleData::kOperation_Replace:
+				WindowExtended = Match->second.Extended;
+				break;
+			}
+
+			bool PerformOperation = Match->second.RegularOp != StyleData::kOperation_None || Match->second.ExtendedOp != StyleData::kOperation_None;
+
+			if (PerformOperation)
+			{
+				ShowWindow(Window, SW_HIDE);
+			}
+
+			if (Match->second.RegularOp != StyleData::kOperation_None)
+				SetWindowLong(Window, GWL_STYLE, WindowRegular);
+
+			if (Match->second.ExtendedOp != StyleData::kOperation_None)
+				SetWindowLong(Window, GWL_EXSTYLE, WindowExtended);
+
+			if (PerformOperation)
+			{
+				SetWindowTheme(Window, L"Explorer", NULL);
+
+				SetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_DRAWFRAME|SWP_SHOWWINDOW);
+				InvalidateRect(Window, NULL, TRUE);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	BGSEEWindowStyler::BGSEEWindowStyler() :
+		StyleListings()
+	{
+		;//
+	}
+
+	BGSEEWindowStyler::~BGSEEWindowStyler()
+	{
+		StyleListings.clear();
+	}
+
+	bool BGSEEWindowStyler::RegisterStyle( UInt32 TemplateID, StyleData& Data )
+	{
+		if (StyleListings.count(TemplateID))
+			return false;
+		else
+			StyleListings[TemplateID] = Data;
+
+		return true;
+	}
+
+	bool BGSEEWindowStyler::UnregisterStyle( UInt32 TemplateID )
+	{
+		if (StyleListings.count(TemplateID))
+		{
+			StyleListings.erase(StyleListings.find(TemplateID));
+			return true;
+		}
+		else
+			return false;
+	}
+
+	BGSEEUIManager*						BGSEEUIManager::Singleton = NULL;
 	SME::UIHelpers::CSnapWindow			BGSEEUIManager::WindowEdgeSnapper;
 
 	BGSEEUIManager::IATPatchData::IATPatchData() :
@@ -404,8 +550,8 @@ namespace BGSEditorExtender
 				hMenu = BGSEEUI->EditorMainMenuReplacement;
 		}
 
-		HWND Result = ((_CallbackCreateWindowExA)(BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
-						(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+ 		HWND Result = ((_CallbackCreateWindowExA)(BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
+ 						(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 
 		if (EditorWindow)
 		{
@@ -422,6 +568,9 @@ namespace BGSEditorExtender
 	{
 		SME_ASSERT(BGSEEUI->MenuHotSwapper);
 
+		if (hInstance != BGSEEUI->EditorResourceInstance->operator()())
+			return ((_CallbackLoadMenuA)(BGSEEUI->PatchDepot[kIATPatch_LoadMenu].OriginalFunction))(hInstance, lpMenuName);
+
 		HINSTANCE Alternate = BGSEEUI->MenuHotSwapper->GetAlternateResourceInstance((UInt32)lpMenuName);
 		if (Alternate)
 			hInstance = Alternate;
@@ -432,6 +581,7 @@ namespace BGSEditorExtender
 	HWND CALLBACK BGSEEUIManager::CallbackCreateDialogParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
 	{
 		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
+		SME_ASSERT(hInstance == BGSEEUI->EditorResourceInstance->operator()());		// calls to IAT functions inside the extender are routed through its own IAT
 
 		DLGPROC Replacement = NULL;
 		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
@@ -446,10 +596,15 @@ namespace BGSEditorExtender
 			dwInitParam = (LPARAM)UserData;
 		}
 
-		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
-												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+ 		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+ 												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 
-		BGSEEUI->StyleDialogBox(Result);
+		if (UserData)
+		{
+			UserData->Data->Handle = Result;
+		}
+
+		BGSEEUI->WindowStyler->StyleWindow(Result, (UInt32)lpTemplateName);
 
 		return Result;
 	}
@@ -457,6 +612,7 @@ namespace BGSEditorExtender
 	INT_PTR CALLBACK BGSEEUIManager::CallbackDialogBoxParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
 	{
 		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
+		SME_ASSERT(hInstance == BGSEEUI->EditorResourceInstance->operator()());
 
 		DLGPROC Replacement = NULL;
 		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
@@ -471,8 +627,18 @@ namespace BGSEditorExtender
 			dwInitParam = (LPARAM)UserData;
 		}
 
-		return ((_CallbackDialogBoxParamA)(BGSEEUI->PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
-										(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+ 		return ((_CallbackDialogBoxParamA)(BGSEEUI->PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
+ 										(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+	}
+
+	BOOL CALLBACK BGSEEUIManager::EnumThreadWindowsCallback( HWND hwnd, LPARAM lParam )
+	{
+		if (lParam)
+			EnableWindow(hwnd, TRUE);
+		else
+			EnableWindow(hwnd, FALSE);
+
+		return TRUE;
 	}
 
 	void BGSEEUIManager::PatchIAT( UInt8 PatchType, void* Callback )
@@ -503,7 +669,7 @@ namespace BGSEditorExtender
 		Patch->Import = ImportName;
 		Patch->Location = NULL;
 
-		HMODULE Base = GetModuleHandle(NULL);
+		UInt8* Base = (UInt8*)GetModuleHandle(NULL);
 		IMAGE_DOS_HEADER* DOSHeader = (IMAGE_DOS_HEADER*)Base;
 		IMAGE_NT_HEADERS* NTHeader = (IMAGE_NT_HEADERS*)(Base + DOSHeader->e_lfanew);
 
@@ -541,17 +707,6 @@ namespace BGSEditorExtender
 		Patch->Replace();
 	}
 
-	void BGSEEUIManager::StyleDialogBox( HWND Dialog )
-	{
-		LONG OldStyle = GetWindowLong(Dialog, GWL_STYLE);
-		LONG NewStyle = OldStyle | WS_EX_APPWINDOW;
-
-		SetWindowLong(Dialog, GWL_STYLE, NewStyle);
-		SetWindowTheme(Dialog, L"Explorer", NULL);
-
-		SetWindowPos(Dialog, 0, 0, 0, 0, 0, SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_DRAWFRAME);
-	}
-
 	BGSEEUIManager::BGSEEUIManager() :
 		OwnerThreadID(0),
 		EditorWindowClassName(""),
@@ -561,6 +716,7 @@ namespace BGSEditorExtender
 		Subclasser(NULL),
 		DialogHotSwapper(NULL),
 		MenuHotSwapper(NULL),
+		WindowStyler(NULL),
 		Initialized(false)
 	{
 		OwnerThreadID = GetCurrentThreadId();
@@ -568,8 +724,6 @@ namespace BGSEditorExtender
 
 	BGSEEUIManager::~BGSEEUIManager()
 	{
-		Singleton = NULL;
-
 		for (int i = 0; i < kHandleCollection__MAX; i++)
 			HandleCollections[i].Clear();
 
@@ -581,8 +735,11 @@ namespace BGSEditorExtender
 		SAFEDELETE(MenuHotSwapper);
 		SAFEDELETE(EditorWindowHandle);
 		SAFEDELETE(EditorResourceInstance);
+		SAFEDELETE(WindowStyler);
 
 		Initialized = false;
+
+		Singleton = NULL;
 	}
 
 	BGSEEUIManager* BGSEEUIManager::GetSingleton()
@@ -605,6 +762,12 @@ namespace BGSEditorExtender
 		Subclasser = new BGSEEWindowSubclasser();
 		DialogHotSwapper = new BGSEEDialogTemplateHotSwapper();
 		MenuHotSwapper = new BGSEEMenuTemplateHotSwapper();
+		WindowStyler = new BGSEEWindowStyler();
+
+		PatchIAT(kIATPatch_CreateWindowEx, CallbackCreateWindowExA);
+		PatchIAT(kIATPatch_CreateDialogParam, CallbackCreateDialogParamA);
+		PatchIAT(kIATPatch_DialogBoxParam, CallbackDialogBoxParamA);
+		PatchIAT(kIATPatch_LoadMenu, CallbackLoadMenuA);
 
 		return Initialized;
 	}
@@ -720,18 +883,38 @@ namespace BGSEditorExtender
 		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), MB_OK|MB_ICONERROR);
 	}
 
-	HWND BGSEEUIManager::ModelessDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/ )
+	HWND BGSEEUIManager::ModelessDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/, bool Override )
 	{
 		SME_ASSERT(Initialized);
-		return ((_CallbackCreateDialogParamA)(PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
-											(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+
+		if (Override)
+			return CallbackCreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		else
+		{
+			return ((_CallbackCreateDialogParamA)(PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		}
 	}
 
-	INT_PTR BGSEEUIManager::ModalDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/ )
+	INT_PTR BGSEEUIManager::ModalDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/, bool Override )
 	{
 		SME_ASSERT(Initialized);
-		return ((_CallbackDialogBoxParamA)(PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
-											(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+
+		EnumThreadWindows(OwnerThreadID, EnumThreadWindowsCallback, 0);
+
+		INT_PTR Result = NULL;
+
+		if (Override)
+			Result = CallbackDialogBoxParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		else
+		{
+			Result = ((_CallbackDialogBoxParamA)(PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
+												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		}
+
+		EnumThreadWindows(OwnerThreadID, EnumThreadWindowsCallback, 1);
+
+		return Result;
 	}
 
 	BGSEEWindowSubclasser* BGSEEUIManager::GetSubclasser( void )
@@ -752,6 +935,13 @@ namespace BGSEditorExtender
 		return MenuHotSwapper;
 	}
 
+	BGSEEWindowStyler* BGSEEUIManager::GetWindowStyler( void )
+	{
+		SME_ASSERT(Initialized);
+
+		return WindowStyler;
+	}
+
 	const BGSEEINIManagerSettingFactory::SettingData		BGSEEGenericModelessDialog::kDefaultINISettings[5] =
 	{
 		{ "Top",		"150",		"Dialog Rect Top" },
@@ -768,7 +958,10 @@ namespace BGSEditorExtender
 		bool SkipDefaultProc = false;
 		LRESULT DlgProcResult = FALSE;
 		DlgUserData* UserData = (DlgUserData*)GetWindowLong(hWnd, GWL_USERDATA);
-		BGSEEGenericModelessDialog* Instance = UserData->Instance;
+		BGSEEGenericModelessDialog* Instance = NULL;
+
+		if (UserData)
+			 Instance = UserData->Instance;
 
 		switch (uMsg)
 		{
@@ -776,9 +969,9 @@ namespace BGSEditorExtender
 			if (wParam == (WPARAM)Instance->ContextMenuHandle)
 			{
 				if (Instance->GetTopmost())
-					CheckMenuItem(Instance->ContextMenuHandle, IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP, MF_CHECKED|MF_BYPOSITION);
+					CheckMenuItem(Instance->ContextMenuHandle, IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP, MF_CHECKED);
 				else
-					CheckMenuItem(Instance->ContextMenuHandle, IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP, MF_UNCHECKED|MF_BYPOSITION);
+					CheckMenuItem(Instance->ContextMenuHandle, IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP, MF_UNCHECKED);
 
 				DlgProcResult = FALSE;
 				SkipCallbackResult = true;
@@ -807,6 +1000,7 @@ namespace BGSEditorExtender
 				GetClientRect(hWnd, &Rect);
 				Point.x = GET_X_LPARAM(lParam);
 				Point.y = GET_Y_LPARAM(lParam);
+				ScreenToClient(hWnd, &Point);
 
 				if (PtInRect((LPRECT) &Rect, Point))
 				{
@@ -883,16 +1077,20 @@ namespace BGSEditorExtender
 			SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
 			UserData = (DlgUserData*)lParam;
 			Instance = UserData->Instance;
+			UserData->Initialized = true;
 			break;
 		case WM_DESTROY:
 			Instance->CallbackDlgProc(hWnd, uMsg, wParam, lParam, SkipCallback);
 			SkipCallback = true;
 			delete UserData;
+			UserData = NULL;
+
+			SetWindowLong(hWnd, GWL_USERDATA, NULL);
 			break;
 		}
 
 		bool CallbackReturn = false;
-		if (SkipCallback == false)
+		if (SkipCallback == false && UserData && UserData->Initialized)
 		{
 			LRESULT CallbackResult = Instance->CallbackDlgProc(hWnd, uMsg, wParam, lParam, CallbackReturn);
 			if (SkipDefaultProc == false && SkipCallbackResult == false && CallbackReturn)
@@ -939,7 +1137,7 @@ namespace BGSEditorExtender
 		if (State)
 			ShowWindow(DialogHandle, SW_SHOWNA);
 		else
-			ShowWindow(DialogHandle, SW_SHOWNA);
+			ShowWindow(DialogHandle, SW_HIDE);
 
 		Visible = State;
 		return Visible;
@@ -966,6 +1164,7 @@ namespace BGSEditorExtender
 
 		DialogHandle = NULL;
 		ContextMenuHandle = NULL;
+		ContextMenuParentHandle = NULL;
 		ParentHandle = Parent;
 		ResourceInstance = Resource;
 		DialogTemplateID = DialogTemplate;
@@ -985,6 +1184,7 @@ namespace BGSEditorExtender
 	{
 		DialogHandle = NULL;
 		ContextMenuHandle = NULL;
+		ContextMenuParentHandle = NULL;
 		ParentHandle = NULL;
 		ResourceInstance = NULL;
 		DialogTemplateID = NULL;
@@ -998,26 +1198,28 @@ namespace BGSEditorExtender
 
 	BGSEEGenericModelessDialog::~BGSEEGenericModelessDialog()
 	{
-		if (DialogHandle == NULL || ContextMenuHandle == NULL)
+		if (DialogHandle == NULL || ContextMenuParentHandle == NULL)
 			return;
 
 		BGSEEUI->GetWindowHandleCollection(BGSEEUIManager::kHandleCollection_MainWindowChildren)->Remove(DialogHandle);
 
-		DestroyMenu(ContextMenuHandle);
+		DestroyMenu(ContextMenuParentHandle);
 		DestroyWindow(DialogHandle);
 	}
 
 	void BGSEEGenericModelessDialog::Create( LPARAM InitParam, bool Hide )
 	{
-		if (DialogHandle || ContextMenuHandle || CallbackDlgProc == NULL)
+		if (DialogHandle || ContextMenuParentHandle || CallbackDlgProc == NULL)
 			return;
 
 		DlgUserData* UserData = new DlgUserData();
 		UserData->Instance = const_cast<BGSEEGenericModelessDialog*>(this);
 		UserData->UserData = InitParam;
 		DialogHandle = BGSEEUI->ModelessDialog(ResourceInstance, MAKEINTRESOURCE(DialogTemplateID), ParentHandle, (DLGPROC)DefaultDlgProc, (LPARAM)UserData);
-		ContextMenuHandle = LoadMenu(ResourceInstance, (LPSTR)DialogContextMenuID);
-		SME_ASSERT(DialogHandle && ContextMenuHandle);
+		ContextMenuParentHandle = LoadMenu(ResourceInstance, (LPSTR)DialogContextMenuID);
+		ContextMenuHandle = GetSubMenu(ContextMenuParentHandle, 0);
+
+		SME_ASSERT(DialogHandle && ContextMenuParentHandle && ContextMenuHandle);
 
 		BGSEEUI->GetWindowHandleCollection(BGSEEUIManager::kHandleCollection_MainWindowChildren)->Add(DialogHandle);
 		SetVisibility((!Hide));

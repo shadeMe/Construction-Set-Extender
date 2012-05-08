@@ -38,6 +38,7 @@ namespace BGSEditorExtender
 
 			virtual ~ICodaScriptDataStore() = 0
 			{
+				;//
 			}
 
 			DataType														GetType() const

@@ -163,5 +163,5 @@ namespace BGSEditorExtender
 		LPDIRECT3DDEVICE9						GetD3DDevice(void) const;
 	};
 
-#define BGSEERWPAINTER							BGSEERenderWindowPainter::GetSingleton()
+#define BGSEERWPAINTER							BGSEditorExtender::BGSEERenderWindowPainter::GetSingleton()
 }

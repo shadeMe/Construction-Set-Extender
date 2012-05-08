@@ -1,16 +1,11 @@
 To-Do
 =====
 IMMEDIATE  >>
-> Fix all destroyMenu calls made with submenu handles (DON'T CREATE A CONTAINER SUBMENU FOR MENU RESORUCES)
+
 
 NOTE	---->
-> Bundle muParserX's license with the source and binaries
 > !!IMPORTANT!! Users of the lib need to link the runtime libs as a DLL to prevent inconsistencies across CRT states
 > SAVE DEBUG SYMBOLS FOR EACH PUBLIC RELEASE
-> Modifying the codascript global datastore during runtime will reset the state of backgrounded scripts
-
-
-> The client will have to patch TESDialog::Subwindow to replace the org res instance handle in the subwindow object with the new one
 
 
 MISC	---->
@@ -20,16 +15,7 @@ MISC	---->
 
 
 BGSEEBase		---->
-> Redesign the plugin interop API such that all coda commands are stored in a pool before being registered to the VM
-> Double right click on a form list combo box (TESComboBox) opens it for editing
-> Update the plugin interface without breaking backward compatibility
-> Replace CRT based assertion macro with a slightly more sophisticated one
-> See if the aux viewport code can be moved into the lib
-> A system to hotswap dialog layouts from custom resource files
-> Look into the WS_EX_APPWINDOW style and its use to put owner windows in the task switcher
-> Check if you can internally call SetWindowTheme to dynamically theme controls
 
 
 --! CodaScript Function Requests:
-> Input functions.
-> INI functions
+> Input functions

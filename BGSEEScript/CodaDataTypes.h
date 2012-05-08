@@ -13,6 +13,8 @@ namespace BGSEditorExtender
 
 		class CodaScriptBackingStore : public ICodaScriptObject, public ICodaScriptDataStore
 		{
+			friend class CodaScriptVM;
+
 			static int												GIC;
 		protected:
 			union
@@ -78,6 +80,8 @@ namespace BGSEditorExtender
 
 		class CodaScriptVariable : public ICodaScriptObject
 		{
+			friend class CodaScriptVM;
+
 			static int												GIC;
 
 			CodaScriptVariable(const CodaScriptVariable& rhs);

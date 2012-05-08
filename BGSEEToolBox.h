@@ -44,8 +44,8 @@ namespace BGSEditorExtender
 		typedef std::list<Tool*>			ToolListT;
 
 		ToolListT							RegisteredTools;
-		BGSEEINIManagerGetterFunctor*		INIGetter;
-		BGSEEINIManagerSetterFunctor*		INISetter;
+		BGSEEINIManagerGetterFunctor		INIGetter;
+		BGSEEINIManagerSetterFunctor		INISetter;
 		bool								Initialized;
 
 		void								EnumerateToolsInListBox(HWND ListBox);
@@ -54,11 +54,11 @@ namespace BGSEditorExtender
 		~BGSEEToolBox();
 
 		static BGSEEToolBox*				GetSingleton();
-		bool								Initialize(BGSEEINIManagerGetterFunctor* Getter, BGSEEINIManagerSetterFunctor* Setter, bool LoadFromINI = true);	// takes ownership of the pointers
+		bool								Initialize(BGSEEINIManagerGetterFunctor& Getter, BGSEEINIManagerSetterFunctor& Setter, bool LoadFromINI = true);
 
 		void								ShowGUI(HINSTANCE ResourceInstance, HWND Parent);
-		void								ShowToolListMenu(HINSTANCE ResourceInstance, HWND Parent, LPARAM Coords);
+		void								ShowToolListMenu(HINSTANCE ResourceInstance, HWND Parent, POINT* Coords = NULL);
 	};
 
-#define BGSEETOOLBOX						BGSEEToolBox::GetSingleton()
+#define BGSEETOOLBOX						BGSEditorExtender::BGSEEToolBox::GetSingleton()
 }

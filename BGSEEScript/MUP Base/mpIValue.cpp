@@ -420,19 +420,11 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
     if (this==&ref)
       return *this;
 
-    switch(ref.GetType())
-    {
-    case 'i':
-    case 'f':
-    case 'c': return *this = cmplx_type(ref.GetFloat(), ref.GetImag());
-    case 's': return *this = ref.GetString();
-    case 'm': return *this = ref.GetArray();
-    case 'b': return *this = ref.GetBool();
-    case 'v':
-      throw ParserError(_T("Assignment from void type is not possible"));
+	CodaScriptMUPValue* ThisVal = this->AsValue();
+	CodaScriptBackingStore* ThatStore = ref.GetStore();
 
-    default:
-      throw ParserError(_T("Internal error: unexpected data type identifier in IValue& operator=(const IValue &ref)"));
-    }
+	SME_ASSERT(ThisVal && ThatStore);
+	*ThisVal = *ThatStore;
+	return *this;
   }
 } } }

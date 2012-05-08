@@ -11,7 +11,7 @@ namespace BGSEditorExtender
 			BaseIDString(GUID),
 			Name(Title),
 			Description(Desc),
-			Unlocked(false),
+			State(kState_Locked),
 			IconID(IconID)
 		{
 			SME_ASSERT(Name && Desc && GUID);
@@ -34,7 +34,7 @@ namespace BGSEditorExtender
 
 		bool BGSEEAchievement::GetUnlocked( void ) const
 		{
-			return Unlocked;
+			return State == kState_Unlocked;
 		}
 
 		BGSEEAchievementManager*			BGSEEAchievementManager::Singleton = NULL;
@@ -50,22 +50,22 @@ namespace BGSEditorExtender
 
 		void BGSEEAchievementManager::SaveAchievementState( BGSEEAchievement* Achievement )
 		{
-			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->Unlocked);
+			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->State);
 		}
 
 		void BGSEEAchievementManager::LoadAchievementState( BGSEEAchievement* Achievement )
 		{
-			UInt32 UnlockedState = 0;
+			UInt32 State = 0;
 
-			if (GetRegValue(Achievement->BaseIDString.c_str(), &UnlockedState))
+			if (GetRegValue(Achievement->BaseIDString.c_str(), &State))
 			{
-				if (UnlockedState)
-					Achievement->Unlocked = true;
+				if (State)
+					Achievement->State = State;
 			}
 			else
 			{
 				SetRegValue(Achievement->BaseIDString.c_str(), 0);
-				Achievement->Unlocked = false;
+				Achievement->State = BGSEEAchievement::kState_Locked;
 			}
 		}
 
@@ -99,10 +99,13 @@ namespace BGSEditorExtender
 
 		BGSEEAchievementManager::~BGSEEAchievementManager()
 		{
-			Singleton = NULL;
+			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+				delete *Itr;
 
 			AchievementDepot.clear();
 			Initialized = false;
+
+			Singleton = NULL;
 		}
 
 		BGSEEAchievementManager* BGSEEAchievementManager::GetSingleton( void )
@@ -136,15 +139,20 @@ namespace BGSEditorExtender
 			{
 				LoadAchievementState(*Itr);
 
-				if ((*Itr)->Unlocked)
+				if ((*Itr)->GetUnlocked())
 					UnlockedCount++;
+				else if ((*Itr)->State == BGSEEAchievement::kState_Triggered)
+				{
+					Unlock(*Itr, true);
+					UnlockedCount++;
+				}
 			}
 
 			BGSEECONSOLE_MESSAGE("Unlocked Achievements: %d/%d", UnlockedCount, AchievementDepot.size());
 			BGSEECONSOLE->Indent();
 			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
-				if ((*Itr)->Unlocked)
+				if ((*Itr)->GetUnlocked())
 					BGSEECONSOLE_MESSAGE((*Itr)->Name);
 			}
 			BGSEECONSOLE->Exdent();
@@ -152,28 +160,34 @@ namespace BGSEditorExtender
 			return Initialized;
 		}
 
-		void BGSEEAchievementManager::Unlock( BGSEEAchievement* Achievement )
+		void BGSEEAchievementManager::Unlock( BGSEEAchievement* Achievement, bool ForceUnlock, bool TriggerOnly )
 		{
-			if (Initialized == false)
+			if (Initialized == false || Achievement->GetUnlocked())
 				return;
 
-			if (Achievement->Unlocked || Achievement->UnlockCallback(this) == false)
-				return;
+			Achievement->State = BGSEEAchievement::kState_Triggered;
 
-			Achievement->Unlocked = true;
+			if (TriggerOnly == false)
+			{
+				if (ForceUnlock == false && Achievement->UnlockCallback(this) == false)
+					return;
+
+				Achievement->State = BGSEEAchievement::kState_Unlocked;
+
+				BGSEECONSOLE_MESSAGE("New Achievement Unlocked: %s", Achievement->Name);
+
+				NotificationUserData* UserData = new NotificationUserData();
+				UserData->Instance = this;
+				UserData->Achievement = Achievement;
+
+				BGSEEUI->ModelessDialog(ResourceInstance,
+					MAKEINTRESOURCE(IDD_BGSEE_ACHIEVEMENTUNLOCKED),
+					NULL,
+					NotificationDlgProc,
+					(LPARAM)UserData);
+			}
+
 			SaveAchievementState(Achievement);
-
-			BGSEECONSOLE_MESSAGE("New Achievement Unlocked: %s", Achievement->Name);
-
-			NotificationUserData* UserData = new NotificationUserData();
-			UserData->Instance = this;
-			UserData->Achievement = Achievement;
-
-			BGSEEUI->ModalDialog(ResourceInstance,
-								MAKEINTRESOURCE(IDD_BGSEE_ACHIEVEMENTUNLOCKED),
-								NULL,
-								NotificationDlgProc,
-								(LPARAM)UserData);
 		}
 
 #define TIMERID_VISIBLE			8500
@@ -181,8 +195,14 @@ namespace BGSEditorExtender
 		INT_PTR CALLBACK BGSEEAchievementManager::NotificationDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
 			NotificationUserData* UserData = (NotificationUserData*)GetWindowLong(hWnd, GWL_USERDATA);
-			BGSEEAchievementManager* Instance = UserData->Instance;
-			BGSEEAchievement* Unlocked = UserData->Achievement;
+			BGSEEAchievementManager* Instance = NULL;
+			BGSEEAchievement* UnlockedAchievement = NULL;
+
+			if (UserData)
+			{
+				Instance = UserData->Instance;
+				UnlockedAchievement = UserData->Achievement;
+			}
 
 			switch (uMsg)
 			{
@@ -190,7 +210,7 @@ namespace BGSEditorExtender
 				switch (wParam)
 				{
 				case TIMERID_VISIBLE:
-					SendMessage(hWnd, WM_CLOSE, NULL, NULL);
+		//			SendMessage(hWnd, WM_CLOSE, NULL, NULL);
 					break;
 				}
 
@@ -204,7 +224,7 @@ namespace BGSEditorExtender
 				return (INT_PTR)UserData->BGBrush;
 			case WM_CTLCOLORSTATIC:
 				if (GetDlgItem(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE) == (HWND)lParam)
-					SetTextColor((HDC)wParam, RGB(109, 142, 64));
+					SetTextColor((HDC)wParam, RGB(113, 185, 223));
 				else
 					SetTextColor((HDC)wParam, RGB(255, 255, 255));
 
@@ -215,26 +235,66 @@ namespace BGSEditorExtender
 					SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
 					UserData = (NotificationUserData*)lParam;
 					Instance = UserData->Instance;
-					Unlocked = UserData->Achievement;
+					UnlockedAchievement = UserData->Achievement;
 
 					UserData->BGBrush = CreateSolidBrush(RGB(46, 48, 54));
-					UserData->Icon = LoadImage(Instance->ResourceInstance, MAKEINTRESOURCE(Unlocked->IconID), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+					if (UnlockedAchievement->IconID)
+						UserData->Icon = LoadImage(Instance->ResourceInstance, MAKEINTRESOURCE(UnlockedAchievement->IconID), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
+					else
+						UserData->Icon = LoadImage(Instance->ResourceInstance, MAKEINTRESOURCE(IDB_BGSEE_GENERIC), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
 
-					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE, Unlocked->Name);
-					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, Unlocked->Description);
+					HFONT TitleFont = CreateFont(28,
+												0,
+												0,
+												0,
+												FW_BOLD,
+												FALSE,
+												FALSE,
+												FALSE,
+												ANSI_CHARSET,
+												OUT_DEFAULT_PRECIS,
+												CLIP_DEFAULT_PRECIS,
+												CLEARTYPE_QUALITY,
+												FF_DONTCARE,
+												"Segoe UI Semibold");
+
+					HFONT JingleFont = CreateFont(18,
+												0,
+												0,
+												0,
+												FW_REGULAR,
+												FALSE,
+												FALSE,
+												FALSE,
+												ANSI_CHARSET,
+												OUT_DEFAULT_PRECIS,
+												CLIP_DEFAULT_PRECIS,
+												CLEARTYPE_QUALITY,
+												FF_DONTCARE,
+												"Segoe UI Semibold");
+
+					SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE, WM_SETFONT, (WPARAM)TitleFont, (LPARAM)TRUE);
+					SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, WM_SETFONT, (WPARAM)JingleFont, (LPARAM)TRUE);
+					SendDlgItemMessage(hWnd, 1, WM_SETFONT, (WPARAM)JingleFont, (LPARAM)TRUE);
+
+					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE, UnlockedAchievement->Name);
+					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, UnlockedAchievement->Description);
 					SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_ICON, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)UserData->Icon);
 
-					SetTimer(hWnd, TIMERID_VISIBLE, 5500, NULL);
-					AnimateWindow(hWnd, 150, AW_BLEND);
+					SetTimer(hWnd, TIMERID_VISIBLE, 6500, NULL);
+					AnimateWindow(hWnd, 155, AW_BLEND);
 				}
 
 				break;
 			case WM_CLOSE:
-				AnimateWindow(hWnd, 150, AW_HIDE|AW_BLEND);
+				AnimateWindow(hWnd, 100, AW_HIDE|AW_BLEND);
 				DestroyWindow(hWnd);
 				break;
 			case WM_DESTROY:
 				{
+					DeleteObject((HFONT)SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE, WM_GETFONT, NULL, NULL));
+					DeleteObject((HFONT)SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, WM_GETFONT, NULL, NULL));
+
 					DeleteObject(UserData->Icon);
 					DeleteObject(UserData->BGBrush);
 
@@ -246,6 +306,24 @@ namespace BGSEditorExtender
 			}
 
 			return FALSE;
+		}
+
+		UInt32 BGSEEAchievementManager::GetTotalAchievements( void ) const
+		{
+			return AchievementDepot.size();
+		}
+
+		UInt32 BGSEEAchievementManager::GetUnlockedAchievements( void ) const
+		{
+			UInt32 Result = 0;
+
+			for (ExtenderAchievementListT::const_iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			{
+				if ((*Itr)->GetUnlocked())
+					Result++;
+			}
+
+			return Result;
 		}
 	}
 }

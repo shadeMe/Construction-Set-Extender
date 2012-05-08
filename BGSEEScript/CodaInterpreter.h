@@ -254,6 +254,8 @@ namespace BGSEditorExtender
 				void									Reset(void);
 			};
 		protected:
+			static const UInt32						kRecursionOverrunLimit;
+
 			UInt8									State;
 
 			void									BeginLooping(CodaScriptSyntaxTreeExecuteVisitor* Context);

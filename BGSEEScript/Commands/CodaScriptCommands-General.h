@@ -11,17 +11,16 @@ namespace BGSEditorExtender
 			{
 				CodaScriptCommandRegistrarDecl;
 
-				CodaScriptCommandPrototype(Return,
+				CodaScriptVariadicCommandPrototype(Return,
 					0,
 					"Stops the execution of the calling script and optionally returns a value.",
 					"Example:<p><code class=\"s\">Return(45 + 12.4 * 0.1)</code></p>",
-					1,
 					ICodaScriptDataStore::kDataType_Invalid);
 
 				CodaScriptVariadicCommandPrototype(Call,
 					0,
-					"Invokes a function call. Should be followed by a list of arguments matching the types expected by the function, if any. Returns whatever value is returned by the function, zero if the call fails for any reason or doesn't return a value.",
-					"Example:<p><code class=\"s\">refVar = (ref)Call(\"UDFScript\", \"arg1\", 23.43, refVar)</code></p>",
+					"Invokes a function call. Should be followed by the function script's name and a list of arguments matching the types expected by it, if any. Returns the result of the caller function, or zero if the call fails or if the function doesn't return a value.",
+					"Example:<p><code class=\"s\">refVar = (ref)Call(\"CustomFunctionScript\", \"arg1\", 23.43, refVar)</code></p>",
 					ICodaScriptCommand::ParameterInfo::kType_Multi);
 
 				CodaScriptSimpleCommandPrototype(Break,
@@ -45,7 +44,7 @@ namespace BGSEditorExtender
 				CodaScriptCommandPrototype(FormatNumber,
 					"FmtNum",
 					"Formats a numeric value as a string.",
-					0,
+					"Refer to <a href=\"http://msdn.microsoft.com/en-us/library/56e442dc(v=VS.100).aspx\">article</a> for format specification info.",
 					3,
 					ICodaScriptDataStore::kDataType_String);
 

@@ -18,7 +18,7 @@ namespace BGSEditorExtender
 				;//
 			}
 
-			inline CodaScriptMUPScriptCommand::~CodaScriptMUPScriptCommand()
+			CodaScriptMUPScriptCommand::~CodaScriptMUPScriptCommand()
 			{
 				Parent = NULL;
 			}
@@ -30,15 +30,13 @@ namespace BGSEditorExtender
 
 				SME_ASSERT(ExecutionAgent && ByteCode);
 
-				CodaScriptScopedHandleDataStoreArrayT WrappedArgs;
+				CodaScriptMutableDataArrayT WrappedArgs;
 				ICodaScriptCommand::ParameterInfo* ParamArray = NULL;
 				UInt8 ReturnType = ICodaScriptDataStore::kDataType_Invalid;
 				int ParamCount = Parent->GetParameterData(&ParamCount, &ParamArray, &ReturnType);
 
 				if (argc)
 				{
-					WrappedArgs = CodaScriptScopedHandleDataStoreArrayT(new CodaScriptBackingStore[argc]);
-
 					if (ParamCount != -1 && ParamArray == NULL)
 						throw CodaScriptException(ByteCode->GetSource(),
 												"Non-variadic command '%s' has no parameter data",
@@ -64,19 +62,20 @@ namespace BGSEditorExtender
 															CurrentArg->GetType());
 							}
 
-							SME_ASSERT(CurrentParam->Type != ICodaScriptDataStore::kDataType_Invalid &&
-									CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
+							SME_ASSERT(CurrentParam->Type != ICodaScriptDataStore::kDataType_Invalid && CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
 						}
 
-						WrappedArgs[i] = *CurrentArg;
+						WrappedArgs.push_back(*CurrentArg);
 					}
 				}
+				else
+					WrappedArgs.push_back(CodaScriptBackingStore(0.0));
 
 				CodaScriptBackingStore ResultStore;
 				CodaScriptCommandHandlerUtilities HandlerHelper;
 
 				*ret = 0.0;
-				bool ExecuteResult = Parent->Execute(WrappedArgs.get(),
+				bool ExecuteResult = Parent->Execute(&WrappedArgs[0],
 													&ResultStore,
 													ParamArray,
 													argc,
@@ -102,7 +101,7 @@ namespace BGSEditorExtender
 						*ret = ResultStore.GetNumber();
 						break;
 					case ICodaScriptDataStore::kDataType_String:
-						*ret = ResultStore.GetString();
+						*ret = string_type(ResultStore.GetString());
 						break;
 					case ICodaScriptDataStore::kDataType_Reference:
 						*ret = (int_type)ResultStore.GetFormID();

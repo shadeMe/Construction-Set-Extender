@@ -9,6 +9,8 @@ namespace BGSEditorExtender
 	{
 		namespace mup
 		{
+			int			CodaScriptMUPValue::GIC = 0;
+
 			CodaScriptMUPValue::CodaScriptMUPValue(char_type cType) :
 				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
@@ -19,8 +21,11 @@ namespace BGSEditorExtender
 				m_DataStore(0.0),
 				m_StringBuffer(new string_type())
 			{
+				GIC++;
+
 				switch (cType)
 				{
+				case 'v':
 				case 'i':
 				case 'f':
 					break;
@@ -43,7 +48,7 @@ namespace BGSEditorExtender
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
-				;//
+				GIC++;
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( string_type val ) :
@@ -56,7 +61,7 @@ namespace BGSEditorExtender
 				m_DataStore(val.c_str()),
 				m_StringBuffer(new string_type(val))
 			{
-				;//
+				GIC++;
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( const char_type *val ) :
@@ -69,7 +74,7 @@ namespace BGSEditorExtender
 				m_DataStore(val),
 				m_StringBuffer(new string_type(val))
 			{
-				;//
+				GIC++;
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( const CodaScriptMUPValue &a_Val ) :
@@ -81,6 +86,8 @@ namespace BGSEditorExtender
 				m_DataStore(),
 				m_StringBuffer(new string_type())
 			{
+				GIC++;
+
 				Assign(a_Val);
 			}
 
@@ -92,6 +99,8 @@ namespace BGSEditorExtender
 				m_DataStore(),
 				m_StringBuffer(new string_type())
 			{
+				GIC++;
+
 				switch (a_Val.GetType())
 				{
 				case 'i':
@@ -119,6 +128,8 @@ namespace BGSEditorExtender
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
+				GIC++;
+
 				if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_String)
 				{
 					m_cType = 's';
@@ -138,6 +149,8 @@ namespace BGSEditorExtender
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
+				GIC++;
+
 				if (m_DataStore.GetType() == ICodaScriptDataStore::kDataType_String)
 				{
 					m_cType = 's';
@@ -157,7 +170,7 @@ namespace BGSEditorExtender
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
-				;//
+				GIC++;
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( CodaScriptSharedHandleArrayT val ) :
@@ -170,7 +183,7 @@ namespace BGSEditorExtender
 				m_DataStore(val),
 				m_StringBuffer(new string_type())
 			{
-				;//
+				GIC++;
 			}
 
 			CodaScriptMUPValue& CodaScriptMUPValue::operator=( const CodaScriptMUPValue &a_Val )
@@ -181,7 +194,8 @@ namespace BGSEditorExtender
 
 			CodaScriptMUPValue::~CodaScriptMUPValue()
 			{
-				;//
+				GIC--;
+				SME_ASSERT(GIC >= 0);
 			}
 
 			IValue& CodaScriptMUPValue::At( int nRow, int nCol /*= 0*/ )
@@ -272,7 +286,10 @@ namespace BGSEditorExtender
 
 			IValue& CodaScriptMUPValue::operator=( const cmplx_type &val )
 			{
-				SME_ASSERT(m_cType == 'c');
+				m_DataStore.SetNumber(val.real());
+
+				m_cType = 'f';
+				m_iFlags = flNONE;
 				return *this;
 			}
 
@@ -294,6 +311,8 @@ namespace BGSEditorExtender
 
 				if (m_cType == 's')
 					*m_StringBuffer = m_DataStore.GetString();
+
+				return *this;
 			}
 
 			IValue& CodaScriptMUPValue::operator+=( const IValue &val )
@@ -369,9 +388,7 @@ namespace BGSEditorExtender
 					}
 					else
 					{
-						stringstream_type ss;
-						ss << *this;
-						err.Ident = ss.str();
+						err.Ident = "CodaScriptMUPValue";
 					}
 
 					throw ParserError(err);
@@ -393,9 +410,7 @@ namespace BGSEditorExtender
 					}
 					else
 					{
-						stringstream_type ss;
-						ss << *this;
-						err.Ident = ss.str();
+						err.Ident = "CodaScriptMUPValue";
 					}
 
 					throw ParserError(err);
@@ -442,8 +457,7 @@ namespace BGSEditorExtender
 
 			float_type CodaScriptMUPValue::GetImag() const
 			{
-				SME_ASSERT(m_cType == 'c');
-				return 0;
+				return 0.0;
 			}
 
 			bool CodaScriptMUPValue::GetBool() const

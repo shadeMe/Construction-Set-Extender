@@ -22,14 +22,14 @@ namespace BGSEditorExtender
 			"FOREACH",
 			"LOOP",
 			"IF",
-			"ELSEIF"
+			"ELSEIF",
 			"ELSE",
 			"ENDIF",
 			"RETURN",
 			"CALL",
 			"CODA",								// syntax: CODA(<ScriptName> [, PollingInterval])
 			"CONTINUE",
-			"BREAK",
+			"BREAK"
 		};
 
 		CodaScriptTokenizer::CodaScriptTokenizer() :
@@ -196,6 +196,11 @@ namespace BGSEditorExtender
 			return Source;
 		}
 
+		ICodaScriptExpressionByteCode::~ICodaScriptExpressionByteCode()
+		{
+			;//
+		}
+
 		ICodaScriptExpressionParser::~ICodaScriptExpressionParser()
 		{
 			;//
@@ -280,17 +285,17 @@ namespace BGSEditorExtender
 			Detach(false);
 		}
 
-		inline bool ICodaScriptSyntaxTreeNode::GetIsRoot( void ) const
+		bool ICodaScriptSyntaxTreeNode::GetIsRoot( void ) const
 		{
 			return (Parent == NULL);
 		}
 
-		inline bool ICodaScriptSyntaxTreeNode::GetIsLeaf( void ) const
+		bool ICodaScriptSyntaxTreeNode::GetIsLeaf( void ) const
 		{
 			return (Children.size() == 0);
 		}
 
-		inline void ICodaScriptSyntaxTreeNode::Traverse( ICodaScriptSyntaxTreeVisitor* Visitor )
+		void ICodaScriptSyntaxTreeNode::Traverse( ICodaScriptSyntaxTreeVisitor* Visitor )
 		{
 			for (CodaScriptSyntaxTreeNodeListT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
 				(*Itr)->Accept(Visitor);
@@ -368,7 +373,7 @@ namespace BGSEditorExtender
 			;//
 		}
 
-		inline void ICodaScriptParseTree::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
+		void ICodaScriptParseTree::Accept( ICodaScriptSyntaxTreeVisitor* Visitor )
 		{
 			SME_ASSERT(Visitor);
 			this->Traverse(Visitor);
@@ -454,6 +459,8 @@ namespace BGSEditorExtender
 			return Condition;
 		}
 
+		const UInt32			ICodaScriptLoopBlock::kRecursionOverrunLimit = 0xFFFFF;
+
 		void ICodaScriptLoopBlock::BeginLooping( CodaScriptSyntaxTreeExecuteVisitor* Context )
 		{
 			SME_ASSERT(Context);
@@ -479,7 +486,7 @@ namespace BGSEditorExtender
 			State = kLoopState_Default;
 		}
 
-		inline void ICodaScriptLoopBlock::Break()
+		void ICodaScriptLoopBlock::Break()
 		{
 			State = kLoopState_Break;
 		}
@@ -753,6 +760,8 @@ namespace BGSEditorExtender
 		{
 			for (CodaScriptVariableListT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
 				delete *Itr;
+
+			Variables.clear();
 		}
 
 		CodaScriptExecutionContext::CodaScriptExecutionContext( CodaScriptVM* VirtualMachine,
@@ -772,7 +781,7 @@ namespace BGSEditorExtender
 			SME_ASSERT(VirtualMachine && ExpressionParser);
 
 			char Buffer[0x512] = {0};
-			UInt32 CurrentLine = 0;
+			UInt32 CurrentLine = 1;
 			bool Result = true;
 			CodaScriptSimpleInstanceCounter<ICodaScriptExecutableCode> CodeInstanceCounter;
 
@@ -805,9 +814,15 @@ namespace BGSEditorExtender
 								if (Tokenizer.GetParsedTokenCount() >= 3)
 								{
 									CodaScriptSourceCodeT ThirdToken(Tokenizer.Tokens[2]);
-									double DeclaredInteraval = atof(ThirdToken.c_str());
-									if (DeclaredInteraval > 0)
-										this->PollingInterval = DeclaredInteraval;
+									if (ThirdToken.length() >= 3)
+									{
+										ThirdToken.erase(0, 1);
+										ThirdToken.erase(ThirdToken.end() - 1);
+
+										double DeclaredInteraval = atof(ThirdToken.c_str());
+										if (DeclaredInteraval > 0)
+											this->PollingInterval = DeclaredInteraval;
+									}
 								}
 							}
 							else
@@ -821,6 +836,9 @@ namespace BGSEditorExtender
 							VirtualMachine->MsgHdlr()->LogMsg("Line %d: Scripts should start with a script name declaration", CurrentLine);
 							Result = false;
 						}
+
+						CurrentLine++;
+						continue;
 					}
 
 					CodaScriptKeywordT FirstKeyword = Tokenizer.GetFirstTokenKeywordType();
@@ -861,10 +879,10 @@ namespace BGSEditorExtender
 									InitializationValue.erase(InitializationValue.begin());
 									InitializationValue.erase(InitializationValue.begin() + InitializationValue.length() - 1);
 
-									NewVar->GetStoreOwner()->GetDataStore()->SetString(InitializationValue.c_str());
+									*NewVar->GetStoreOwner() = CodaScriptBackingStore(InitializationValue.c_str());
 								}
 								else
-									NewVar->GetStoreOwner()->GetDataStore()->SetNumber(atof(InitializationValue.c_str()));
+									*NewVar->GetStoreOwner() = CodaScriptBackingStore(atof(InitializationValue.c_str()));
 							}
 						}
 
@@ -906,7 +924,7 @@ namespace BGSEditorExtender
 										CodaScriptVariable* ParamVar = GetVariable(ParameterIDs[i]);
 										if (ParamVar)
 										{
-											*ParamVar->GetStoreOwner()->GetDataStore() = Parameters->at(i);
+											*ParamVar->GetStoreOwner() = Parameters->at(i);
 										}
 										else
 										{
@@ -1105,11 +1123,19 @@ namespace BGSEditorExtender
 						}
 						else
 						{
+							UInt32 StackTop = BlockStack.top();
+
 							if (CodeStack.size())
+							{
 								CodeStack.pop();
+								if (StackTop != CodaScriptTokenizer::kTokenType_If)			// pop once again to remove the underlying IF block
+									CodeStack.pop();
+							}
 
 							if (BlockStack.size())
+							{
 								BlockStack.pop();
+							}
 						}
 
 						break;
@@ -1167,14 +1193,23 @@ namespace BGSEditorExtender
 				SME_ASSERT(BlockStack.size() == 1 && BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid);
 				SME_ASSERT(CodeStack.size() == 1 && CodeStack.top() == NULL);
 
-				BoundParser->RegisterVariables(this, VirtualMachine->GetGlobals());		// registers global variables first
-				BoundParser->RegisterVariables(this, this->Variables);					// then the local vars
+				try
+				{
+					BoundParser->RegisterVariables(this, VirtualMachine->GetGlobals());		// registers global variables first
+					BoundParser->RegisterVariables(this, this->Variables);					// then the local vars
 
-				// compile source to bytecode
-				BGSEECONSOLE->Indent();
-				CodaScriptSyntaxTreeCompileVisitor Visitor(VirtualMachine, this, BoundParser);
-				this->Accept(&Visitor);
-				BGSEECONSOLE->Exdent();
+					// compile source to bytecode
+					BGSEECONSOLE->Indent();
+					CodaScriptSyntaxTreeCompileVisitor Visitor(VirtualMachine, this, BoundParser);
+					this->Validity = kValidity_Good;
+					this->Accept(&Visitor);
+					BGSEECONSOLE->Exdent();
+				}
+				catch (CodaScriptException& E)
+				{
+					VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.Get());
+					this->Validity = kValidity_Egregious;
+				}
 			}
 		}
 
@@ -1187,7 +1222,7 @@ namespace BGSEditorExtender
 			Validity = kValidity_Unknown;
 		}
 
-		inline bool CodaScriptExecutionContext::GetIsValid( void ) const
+		bool CodaScriptExecutionContext::GetIsValid( void ) const
 		{
 			return (Validity == kValidity_Good);
 		}
@@ -1275,7 +1310,7 @@ namespace BGSEditorExtender
 			ParserAgent->Compile(this, Node, &Node->ByteCode);
 
 			if (Node->BranchELSE)
-				Node->Accept(this);
+				Node->BranchELSE->Accept(this);
 
 			for (CodaScriptIFBlock::ElseIfBlockListT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
 				(*Itr)->Accept(this);
@@ -1335,7 +1370,10 @@ namespace BGSEditorExtender
 			vsprintf_s(Buffer, sizeof(Buffer), Message, Args);
 			va_end(Args);
 
-			sprintf_s(ErrorString, sizeof(ErrorString), "L[%d] T[%s] - %s", Source->GetLine(), Source->GetTypeString(), Buffer);
+			if (Source)
+				sprintf_s(ErrorString, sizeof(ErrorString), "L[%d] T[%s] - %s", Source->GetLine(), Source->GetTypeString(), Buffer);
+			else
+				sprintf_s(ErrorString, sizeof(ErrorString), "%s", Buffer);
 		}
 
 		CodaScriptException::~CodaScriptException()
@@ -1380,12 +1418,12 @@ namespace BGSEditorExtender
 			}
 		}
 
-		inline UInt8 CodaScriptSyntaxTreeExecuteVisitor::GetState( void ) const
+		UInt8 CodaScriptSyntaxTreeExecuteVisitor::GetState( void ) const
 		{
 			return ExecutionState;
 		}
 
-		inline void CodaScriptSyntaxTreeExecuteVisitor::SetState( UInt8 State )
+		void CodaScriptSyntaxTreeExecuteVisitor::SetState( UInt8 State )
 		{
 			ExecutionState = State;
 		}
@@ -1489,9 +1527,14 @@ namespace BGSEditorExtender
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
 			ICodaScriptLoopBlock::LoopStackOperator Operator(Node, this);
+			UInt32 IterationCounter = 0;
 
 			while (Node->EvaluateCondition(this))
 			{
+				IterationCounter++;
+				if (IterationCounter >= ICodaScriptLoopBlock::kRecursionOverrunLimit)
+					throw CodaScriptException(Node, "Loop recursion overrun - When will it ennnnnnd?!");
+
 				Node->Traverse(this);
 
 				if (ExecutionState == kExecutionState_Terminate)
@@ -1687,12 +1730,17 @@ namespace BGSEditorExtender
 			va_list Args;
 			va_start(Args, ArgumentCount);
 
+			// need to cast to the correct type as we're basically performing pointer arithmetic
+			CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
+			SME_ASSERT(ArgumentStore && ParameterData);
+
 			for (int i = 0; i < ArgumentCount; i++)
 			{
 				ICodaScriptCommand::ParameterInfo* CurrentParam = &ParameterData[i];
-				ICodaScriptDataStore* CurrentArg = &Arguments[i];
+				CodaScriptBackingStore* CurrentArg = &ArgumentStore[i];
 
-				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type && CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
+				SME_ASSERT(CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
+				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type || CurrentParam->Type == ICodaScriptCommand::ParameterInfo::kType_Multi);
 
 				switch (CurrentParam->Type)
 				{
@@ -1720,20 +1768,14 @@ namespace BGSEditorExtender
 				case ICodaScriptDataStore::kDataType_Array:
 					{
 						ICodaScriptDataStore** Out = va_arg(Args, ICodaScriptDataStore**);
-						CodaScriptBackingStore* ArrayStore = dynamic_cast<CodaScriptBackingStore*>(CurrentArg);
-						SME_ASSERT(ArrayStore);
-
-						*Out = CreateWrapper(ArrayStore->GetArray());
+						*Out = CreateWrapper(CurrentArg->GetArray());
 					}
 
 					break;
 				case ICodaScriptCommand::ParameterInfo::kType_Multi:
 					{
 						ICodaScriptDataStore** Out = va_arg(Args, ICodaScriptDataStore**);
-						CodaScriptBackingStore* Store = dynamic_cast<CodaScriptBackingStore*>(CurrentArg);
-						SME_ASSERT(Store);
-
-						*Out = CreateWrapper(Store);
+						*Out = CreateWrapper(CurrentArg);
 					}
 
 					break;

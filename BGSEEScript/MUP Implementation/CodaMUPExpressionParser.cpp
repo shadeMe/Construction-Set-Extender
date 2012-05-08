@@ -82,12 +82,12 @@ namespace BGSEditorExtender
 
 			void CodaScriptMUPExpressionParser::Error( EErrorCodes a_iErrc, int a_iPos /*= -1*/, const IToken *a_pTok /*= 0*/ ) const
 			{
-				SME_ASSERT(m_pByteCode && m_pByteCode->Tokenizer.get());
-
 				ErrorContext err;
 				err.Errc = a_iErrc;
 				err.Pos = a_iPos;
-				err.Expr = m_pByteCode->Tokenizer->GetExpr();
+				if (m_pByteCode)
+					err.Expr = string_type(m_pByteCode->Tokenizer->GetExpr());
+
 				err.Ident = (a_pTok) ? a_pTok->GetIdent() : _T("");
 				throw ParserError(err);
 			}
@@ -536,7 +536,7 @@ namespace BGSEditorExtender
 				m_pByteCode(NULL),
 				m_pEvalAgent(NULL)
 			{
-				DefineNameChars(_T("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+				DefineNameChars(_T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"));
 				DefineOprtChars(_T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*^/?<>=#!$%&|~'_µ{}"));
 				DefineInfixOprtChars(_T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()/+-*^?<>=#!$%&|~'_"));
 			}
@@ -579,6 +579,12 @@ namespace BGSEditorExtender
 			{
 				CheckName(a_sName, ValidNameChars());
 				m_valConst[a_sName] = ptr_tok_type( a_Val.Clone() );
+			}
+
+			void CodaScriptMUPExpressionParser::DefineOprt( IOprtBin *a_pCallback )
+			{
+				a_pCallback->SetParent(this);
+				m_OprtDef.insert(make_pair(a_pCallback->GetIdent(), ptr_tok_type(a_pCallback)));
 			}
 
 			void CodaScriptMUPExpressionParser::DefinePostfixOprt( IOprtPostfix *a_pCallback )
@@ -684,14 +690,22 @@ namespace BGSEditorExtender
 					CodaScriptMUPValue* Bound = dynamic_cast<CodaScriptMUPValue*>(Var->GetStoreOwner());
 					SME_ASSERT(Bound);
 
-					CheckName(string_type(Var->GetName()), ValidNameChars());
+					try
+					{
+						CheckName(string_type(Var->GetName()), ValidNameChars());
+					}
+					catch (ParserError& E)
+					{
+						throw CodaScriptException(NULL, "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
+					}
+
 					m_CSVarDef[ParentContext][Var->GetName()] = ptr_tok_type(new Variable(Bound));
 				}
 			}
 
 			void CodaScriptMUPExpressionParser::UnregisterVariables( CodaScriptExecutionContext* ParentContext )
 			{
-				SME_ASSERT(ParentContext && m_pEvalAgent == NULL);
+				SME_ASSERT(ParentContext);
 
 				ContextSpecificVariableMapT::const_iterator Match = m_CSVarDef.find(ParentContext);
 				if (Match != m_CSVarDef.end())
@@ -702,13 +716,12 @@ namespace BGSEditorExtender
 														ICodaScriptExecutableCode* SourceCode,
 														ICodaScriptExpressionByteCode** OutByteCode )
 			{
-				SME_ASSERT(m_pByteCode == NULL && m_pEvalAgent == NULL);
 				SME_ASSERT(SourceCode && OutByteCode && EvaluationAgent->GetContext() && EvaluationAgent->GetVM());
 
 				try
 				{
-					utils::scoped_setter<ICodaScriptSyntaxTreeEvaluator*>	GuardEvalData(m_pEvalAgent, EvaluationAgent);
-					utils::scoped_setter<CodaScriptMUPParserByteCode*>		GuardByteCode(m_pByteCode, new CodaScriptMUPParserByteCode(this, SourceCode));
+					SME::MiscGunk::ScopedSetter<ICodaScriptSyntaxTreeEvaluator*>	GuardEvalData(m_pEvalAgent, EvaluationAgent);
+					SME::MiscGunk::ScopedSetter<CodaScriptMUPParserByteCode*>		GuardByteCode(m_pByteCode, new CodaScriptMUPParserByteCode(this, SourceCode));
 					*OutByteCode = NULL;
 
 					try									// ugly, but meh
@@ -738,7 +751,7 @@ namespace BGSEditorExtender
 				}
 				catch (ParserError& E)
 				{
-					throw CodaScriptException(SourceCode, "P[%d] %s", E.GetPos(), E.GetMsg());
+					throw CodaScriptException(SourceCode, "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
 				}
 			}
 
@@ -748,14 +761,14 @@ namespace BGSEditorExtender
 			{
 				CodaScriptMUPParserByteCode* CompiledByteCode = dynamic_cast<CodaScriptMUPParserByteCode*>(ByteCode);
 
-				SME_ASSERT(m_pByteCode == NULL && m_pEvalAgent == NULL);
+				// m_pByteCode/m_pEvalAgent can be valid in here if the execution stack depth is > 1
 				SME_ASSERT(ByteCode && EvaluationAgent->GetContext() && EvaluationAgent->GetVM());
 				SME_ASSERT(CompiledByteCode && CompiledByteCode->Tokenizer.get());
 
 				try
 				{
-					utils::scoped_setter<ICodaScriptSyntaxTreeEvaluator*>		GuardEvalData(m_pEvalAgent, EvaluationAgent);
-					utils::scoped_setter<CodaScriptMUPParserByteCode*>			GuardByteCode(m_pByteCode, CompiledByteCode);
+					SME::MiscGunk::ScopedSetter<ICodaScriptSyntaxTreeEvaluator*>		GuardEvalData(m_pEvalAgent, EvaluationAgent);
+					SME::MiscGunk::ScopedSetter<CodaScriptMUPParserByteCode*>			GuardByteCode(m_pByteCode, CompiledByteCode);
 
 					ptr_val_type *pStack = &m_pByteCode->StackBuffer[0];
 					const ptr_tok_type *pRPN = &(m_pByteCode->RPNStack.GetData()[0]);
@@ -865,14 +878,13 @@ namespace BGSEditorExtender
 
 					if (Result)
 					{
-						CodaScriptMUPValue* ResVal = pStack[m_pByteCode->FinalResultIndex]->AsValue();
-						SME_ASSERT(ResVal);
-						*Result = *(ResVal->GetStore());
+						SME_ASSERT(m_pByteCode->FinalResultIndex != -1);
+						*Result = *pStack[m_pByteCode->FinalResultIndex]->GetStore();
 					}
 				}
 				catch (ParserError& E)
 				{
-					throw CodaScriptException(CompiledByteCode->GetSource(), "P[%d] %s", E.GetPos(), E.GetMsg());
+					throw CodaScriptException(CompiledByteCode->GetSource(), "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
 				}
 			}
 
@@ -881,12 +893,12 @@ namespace BGSEditorExtender
 				return MUP_PARSER_VERSION;
 			}
 
-			inline CodaScriptMUPParserByteCode* CodaScriptMUPExpressionParser::GetByteCode( void )
+			CodaScriptMUPParserByteCode* CodaScriptMUPExpressionParser::GetByteCode( void )
 			{
 				return m_pByteCode;
 			}
 
-			inline ICodaScriptSyntaxTreeEvaluator* CodaScriptMUPExpressionParser::GetEvaluationAgent( void )
+			ICodaScriptSyntaxTreeEvaluator* CodaScriptMUPExpressionParser::GetEvaluationAgent( void )
 			{
 				return m_pEvalAgent;
 			}

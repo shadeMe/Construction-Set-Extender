@@ -6,7 +6,7 @@ namespace BGSEditorExtender
 	{
 		int		CodaScriptBackingStore::GIC = 0;
 
-		inline void CodaScriptBackingStore::Reset( void )
+		void CodaScriptBackingStore::Reset( void )
 		{
 			switch (Type)
 			{
@@ -18,9 +18,9 @@ namespace BGSEditorExtender
 			Type = kDataType_Invalid;
 		}
 
-		inline void CodaScriptBackingStore::Copy( const CodaScriptBackingStore& Source )
+		void CodaScriptBackingStore::Copy( const CodaScriptBackingStore& Source )
 		{
-			switch (Type)
+			switch (Source.Type)
 			{
 			case kDataType_Invalid:
 				break;
@@ -39,45 +39,45 @@ namespace BGSEditorExtender
 			}
 		}
 
-		inline CodaScriptReferenceDataTypeT CodaScriptBackingStore::GetFormID() const
+		CodaScriptReferenceDataTypeT CodaScriptBackingStore::GetFormID() const
 		{
 			SME_ASSERT(Type == kDataType_Reference);
 			return RefData;
 		}
 
-		inline CodaScriptNumericDataTypeT CodaScriptBackingStore::GetNumber() const
+		CodaScriptNumericDataTypeT CodaScriptBackingStore::GetNumber() const
 		{
 			SME_ASSERT(Type == kDataType_Numeric);
 			return NumericData;
 		}
 
-		inline CodaScriptStringParameterTypeT CodaScriptBackingStore::GetString() const
+		CodaScriptStringParameterTypeT CodaScriptBackingStore::GetString() const
 		{
 			SME_ASSERT(Type == kDataType_String);
 			return StringData;
 		}
 
-		inline CodaScriptSharedHandleArrayT CodaScriptBackingStore::GetArray() const
+		CodaScriptSharedHandleArrayT CodaScriptBackingStore::GetArray() const
 		{
 			SME_ASSERT(Type == kDataType_Array);
 			return ArrayData;
 		}
 
-		inline void CodaScriptBackingStore::SetFormID( CodaScriptReferenceDataTypeT Data )
+		void CodaScriptBackingStore::SetFormID( CodaScriptReferenceDataTypeT Data )
 		{
 			Reset();
 			Type = kDataType_Reference;
 			RefData = Data;
 		}
 
-		inline void CodaScriptBackingStore::SetNumber( CodaScriptNumericDataTypeT Data )
+		void CodaScriptBackingStore::SetNumber( CodaScriptNumericDataTypeT Data )
 		{
 			Reset();
 			Type = kDataType_Numeric;
 			NumericData = Data;
 		}
 
-		inline void CodaScriptBackingStore::SetString( CodaScriptStringParameterTypeT Data )
+		void CodaScriptBackingStore::SetString( CodaScriptStringParameterTypeT Data )
 		{
 			Reset();
 			Type = kDataType_String;
@@ -93,7 +93,7 @@ namespace BGSEditorExtender
 				strcpy_s(StringData, Size + 1, Data);
 		}
 
-		inline void CodaScriptBackingStore::SetArray( ICodaScriptDataStore* Data )
+		void CodaScriptBackingStore::SetArray( ICodaScriptDataStore* Data )
 		{
 			CodaScriptBackingStore* RHS = dynamic_cast<CodaScriptBackingStore*>(Data);
 			SME_ASSERT(RHS && RHS->Type == kDataType_Array);
@@ -103,7 +103,7 @@ namespace BGSEditorExtender
 			ArrayData = RHS->ArrayData;
 		}
 
-		inline void CodaScriptBackingStore::SetArray( CodaScriptSharedHandleArrayT Data )
+		void CodaScriptBackingStore::SetArray( CodaScriptSharedHandleArrayT Data )
 		{
 			Reset();
 			Type = kDataType_Array;

@@ -31,7 +31,14 @@ namespace BGSEditorExtender
 
 				CodaScriptCommandHandler(ArrayCreate)
 				{
-					*Result = *Utilities->ArrayAllocate();
+					CodaScriptNumericDataTypeT Size = 0;
+
+					CodaScriptCommandExtractArgs(&Size);
+
+					if (Size < 5)
+						Size = 5;
+
+					*Result = *Utilities->ArrayAllocate(Size);
 					return true;
 				}
 

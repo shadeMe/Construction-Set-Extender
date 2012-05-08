@@ -13,11 +13,7 @@ namespace BGSEditorExtender
 			virtual void					operator()(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs) = 0;
 		};
 
-		struct DefaultDirectoryDescriptor
-		{
-			const char**					DirectoryPaths;		// relative to the root game directory
-			UInt32							Count;
-		};
+		typedef std::list<std::string>		DefaultDirectoryListT;
 	private:
 		static BGSEEWorkspaceManager*		Singleton;
 
@@ -43,11 +39,13 @@ namespace BGSEditorExtender
 		bool								Initialize(const char* DefaultDirectory,
 													VoidRFunctorBase* Resetter,
 													ReloadPluginsFunctor* Reloader,
-													const DefaultDirectoryDescriptor* DefaultDirectoryData);	// manager takes ownership of the functors
+													DefaultDirectoryListT& DefaultDirectoryData);	// manager takes ownership of the functors
 
 		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = NULL);
 		const char*							GetCurrentWorkspace(void) const;
 	};
+
+#define BGSEEWORKSPACE						BGSEditorExtender::BGSEEWorkspaceManager::GetSingleton()
 
 	// Always relative to kBasePath
 	class BGSEEResourceLocation

@@ -42,13 +42,13 @@ namespace BGSEditorExtender
 
 	BGSEEWorkspaceManager::~BGSEEWorkspaceManager()
 	{
-		Singleton = NULL;
-
 		DefaultDirectories.clear();
 		SAFEDELETE(WorkspaceResetter);
 		SAFEDELETE(WorkspacePluginReloader);
 
 		Initialized = false;
+
+		Singleton = NULL;
 	}
 
 	BGSEEWorkspaceManager* BGSEEWorkspaceManager::GetSingleton()
@@ -62,23 +62,21 @@ namespace BGSEditorExtender
 	bool BGSEEWorkspaceManager::Initialize( const char* DefaultDirectory,
 											VoidRFunctorBase* Resetter,
 											ReloadPluginsFunctor* Reloader,
-											const DefaultDirectoryDescriptor* DefaultDirectoryData )
+											DefaultDirectoryListT& DefaultDirectoryData )
 	{
 		if (Initialized)
 			return false;
 
-		SME_ASSERT(DefaultDirectory && Resetter && Reloader && DefaultDirectoryData);
-		SME_ASSERT(DefaultDirectoryData->Count > 1);
+		SME_ASSERT(DefaultDirectory && Resetter && Reloader && DefaultDirectoryData.size() > 1);
 
 		this->DefaultDirectory = DefaultDirectory;
 		this->CurrentDirectory = DefaultDirectory;
 		this->WorkspaceResetter = Resetter;
 		this->WorkspacePluginReloader = Reloader;
 
-		for (int i = 0; i < DefaultDirectoryData->Count; i++)
-			DefaultDirectories.push_back(DefaultDirectoryData->DirectoryPaths[i]);
+		for (DefaultDirectoryListT::iterator Itr = DefaultDirectoryData.begin(); Itr != DefaultDirectoryData.end(); Itr++)
+			DefaultDirectories.push_back(*Itr);
 
-		DefaultDirectories.push_back(BGSEEResourceLocation::kBasePath);
 		CreateDefaultDirectories(DefaultDirectory);
 
 		Initialized = true;

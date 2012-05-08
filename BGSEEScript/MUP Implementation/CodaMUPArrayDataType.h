@@ -10,6 +10,8 @@ namespace BGSEditorExtender
 		{
 			class CodaScriptMUPArrayDataType : public ICodaScriptObject, public ICodaScriptArrayDataType
 			{
+				friend class CodaScriptVM;
+
 				static int												GIC;
 			protected:
 				typedef std::vector<CodaScriptMUPValue>					MutableElementArrayT;

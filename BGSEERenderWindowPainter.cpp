@@ -177,19 +177,19 @@ namespace BGSEditorExtender
 		return TaskQueue.size();
 	}
 
+	BGSEERenderWindowPainter* BGSEERenderWindowPainter::Singleton = NULL;
+
 	BGSEERenderWindowPainter::BGSEERenderWindowPainter()
 	{
 		OutputSprite = NULL;
 		D3DDevice = NULL;
 		D3DWindow = NULL;
-		Enabled = false;
+		Enabled = true;
 		Initialized = false;
 	}
 
 	BGSEERenderWindowPainter::~BGSEERenderWindowPainter()
 	{
-		Singleton = NULL;
-
 		ReleaseD3D();
 		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 			delete *Itr;
@@ -199,6 +199,8 @@ namespace BGSEditorExtender
 		SAFEDELETE(D3DWindow);
 
 		Initialized = false;
+
+		Singleton = NULL;
 	}
 
 	bool BGSEERenderWindowPainter::Initialize( HWND RenderWindowHandle, LPDIRECT3DDEVICE9 RendererD3DDevice )
@@ -264,7 +266,8 @@ namespace BGSEditorExtender
 
 	void BGSEERenderWindowPainter::Render()
 	{
-		SME_ASSERT(Initialized);
+		if (Initialized == false)
+			return;
 
 		TimeCounter.Update();
 
@@ -283,7 +286,8 @@ namespace BGSEditorExtender
 
 	bool BGSEERenderWindowPainter::HandleD3DDeviceReset( UInt8 Operation )
 	{
-		SME_ASSERT(Initialized);
+		if (Initialized == false)
+			return false;
 
 		bool Result = true;
 
@@ -341,19 +345,25 @@ namespace BGSEditorExtender
 
 	void BGSEERenderWindowPainter::SetEnabled( bool State )
 	{
-		SME_ASSERT(Initialized);
+		if (Initialized == false)
+			return;
+
 		Enabled = State;
 	}
 
 	bool BGSEERenderWindowPainter::GetEnabled( void ) const
 	{
-		SME_ASSERT(Initialized);
+		if (Initialized == false)
+			return false;
+
 		return Enabled;
 	}
 
 	bool BGSEERenderWindowPainter::GetHasActiveTasks( void ) const
 	{
-		SME_ASSERT(Initialized);
+		if (Initialized == false)
+			return false;
+
 		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 		{
 			BGSEEDynamicRenderChannel* Dynamic = dynamic_cast<BGSEEDynamicRenderChannel*>(*Itr);

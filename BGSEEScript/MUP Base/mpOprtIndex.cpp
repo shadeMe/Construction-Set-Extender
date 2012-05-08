@@ -57,11 +57,12 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   {
     try
     {
-      // The index is -1, thats the actual variable reference
+      /*// The index is -1, thats the actual variable reference
       if (a_iArgc!=a_pArg[-1]->GetDim())
       {
         throw ParserError(ErrorContext(ecINDEX_DIMENSION, -1, GetIdent()));
       }
+shadeMe: what this is I don't even...*/
 
       switch(a_iArgc)
       {

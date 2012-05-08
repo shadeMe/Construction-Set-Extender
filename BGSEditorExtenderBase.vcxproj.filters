@@ -431,5 +431,8 @@
     <None Include="BGSEEScript\Commands\CodaScriptCommand.h">
       <Filter>Modules\BGSEEScript\Commands</Filter>
     </None>
+    <None Include="[Resources]\generic.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
   </ItemGroup>
 </Project>

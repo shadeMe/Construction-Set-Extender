@@ -396,11 +396,20 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   {
 	  CodaScriptBackingStore* Store = a_pArg[0]->GetStore();
 	  SME_ASSERT(Store);
+	  char Buffer[0x512] = {0};
 
 	  switch(Store->GetType())
 	  {
+	  case ICodaScriptDataStore::kDataType_Numeric:
+		  sprintf_s(Buffer, sizeof(Buffer), "%0.6f", Store->GetNumber());
+		  *ret = string_type(Buffer);
+		  break;
+	  case ICodaScriptDataStore::kDataType_Reference:
+		  sprintf_s(Buffer, sizeof(Buffer), "%08X", Store->GetFormID());
+		  *ret = string_type(Buffer);
+		  break;
 	  case ICodaScriptDataStore::kDataType_String:
-		  *ret = Store->GetString();
+		  *ret = string_type(Store->GetString());
 		  break;
 	  default:
 		  {

@@ -11,10 +11,12 @@ namespace BGSEditorExtender
 			{
 				CodaScriptCommandRegistrarDecl;
 
-				CodaScriptSimpleCommandPrototype(ArrayCreate,
+				CodaScriptParametricCommandPrototype(ArrayCreate,
 					"ArCreate",
-					"Creates an empty array",
+					"Creates an empty array with the passed size",
 					0,
+					1,
+					OneNumber,
 					ICodaScriptDataStore::kDataType_Array);
 
 				CodaScriptCommandPrototype(ArrayInsert,

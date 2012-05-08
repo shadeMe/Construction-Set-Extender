@@ -19,11 +19,6 @@ namespace BGSEditorExtender
 				CodaScriptCommandPrototypeDef(FormatNumber);
 				CodaScriptCommandPrototypeDef(PrintToConsole);
 
-				CodaScriptCommandParamData(Return, 1)
-				{
-					{ "Expression",						ParameterInfo::kType_Multi }
-				};
-
 				CodaScriptCommandParamData(FormatNumber, 3)
 				{
 					{ "Format String",					ICodaScriptDataStore::kDataType_String	},
@@ -33,14 +28,23 @@ namespace BGSEditorExtender
 
 				CodaScriptCommandHandler(Return)
 				{
+					if (ArgumentCount > 1)
+						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Return command");
+
 					CodaScriptSyntaxTreeExecuteVisitor* Agent = dynamic_cast<CodaScriptSyntaxTreeExecuteVisitor*>(ExecutionAgent);
-					ICodaScriptDataStore* Parameter = NULL;
 
-					CodaScriptCommandExtractArgs(&Parameter);
+					SME_ASSERT(Agent);
 
-					SME_ASSERT(Agent && Parameter);
+					if (ArgumentCount)
+					{
+						CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
+						SME_ASSERT(ArgumentStore);
 
-					Agent->SetResult(*dynamic_cast<CodaScriptBackingStore*>(Parameter));
+						Agent->SetResult(ArgumentStore[0]);
+					}
+					else
+						Agent->SetResult(CodaScriptBackingStore(0.0));
+
 					Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Break);
 
 					return true;
@@ -54,6 +58,8 @@ namespace BGSEditorExtender
 						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Call command - Maximum allowed = %d", CodaScriptExecutionContext::kMaxParameters);
 
 					const char* ScriptName = Arguments[0].GetString();
+					CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
+					SME_ASSERT(ArgumentStore);
 
 					CodaScriptBackingStore CallResult(0.0);
 					bool ReturnedResult = false;
@@ -61,11 +67,12 @@ namespace BGSEditorExtender
 					CodaScriptMutableDataArrayT PassedParameters;
 					for (int i = 1; i < ArgumentCount; i++)
 					{
-						CodaScriptBackingStore* Store = dynamic_cast<CodaScriptBackingStore*>(&Arguments[i]);
+						const CodaScriptBackingStore* Store = dynamic_cast<const CodaScriptBackingStore*>(&ArgumentStore[i]);
 						PassedParameters.push_back(*Store);
 					}
 
 					bool ExecuteResult = CODAVM->RunScript(ScriptName, (PassedParameters.size() ? &PassedParameters : NULL), &CallResult, ReturnedResult);
+
 					if (ExecuteResult && ReturnedResult)
 						*Result = CallResult;
 					else
@@ -115,7 +122,7 @@ namespace BGSEditorExtender
 
 					CodaScriptCommandExtractArgs(&FormatString, &Number, &InterpretAsUInt32);
 
-					char OutBuffer[0x32] = {0};
+					char OutBuffer[0x50] = {0};
 
 					if (InterpretAsUInt32)
 						sprintf_s(OutBuffer, sizeof(OutBuffer), FormatString, (UInt32)Number);

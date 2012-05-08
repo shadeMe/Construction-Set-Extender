@@ -28,12 +28,16 @@ namespace BGSEditorExtender
 
 		BGSEEHallOfFameManager::~BGSEEHallOfFameManager()
 		{
-			Singleton = NULL;
-
 			for (ExtenderHOFEntryListT::iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
+			{
 				(*Itr)->Deinitialize();
+				delete *Itr;
+			}
+			Inductees.clear();
 
 			Initialized = false;
+
+			Singleton = NULL;
 		}
 
 		BGSEEHallOfFameManager* BGSEEHallOfFameManager::GetSingleton( void )
@@ -44,7 +48,7 @@ namespace BGSEditorExtender
 			return Singleton;
 		}
 
-		bool BGSEEHallOfFameManager::Initialize( UInt32 StartingFormID, ExtenderHOFEntryListT& Entries )
+		bool BGSEEHallOfFameManager::Initialize( ExtenderHOFEntryListT& Entries, UInt32 StartingFormID  )
 		{
 			if (Initialized)
 				return false;
@@ -62,6 +66,22 @@ namespace BGSEditorExtender
 			}
 
 			return Initialized;
+		}
+
+		UInt32 BGSEEHallOfFameManager::GetBaseFormID( void ) const
+		{
+			return BaseFormID;
+		}
+
+		bool BGSEEHallOfFameManager::GetIsInductee( UInt32 FormID )
+		{
+			for (ExtenderHOFEntryListT::iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
+			{
+				if ((*Itr)->GetFormID() == FormID)
+					return true;
+			}
+
+			return false;
 		}
 	}
 }

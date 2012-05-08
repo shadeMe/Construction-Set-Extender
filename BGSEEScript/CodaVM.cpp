@@ -82,14 +82,15 @@ namespace BGSEditorExtender
 
 		ICodaScriptCommand* CodaScriptCommandRegistry::LookupCommand( const char* Name, bool UseAlias /*= false*/ )
 		{
-			SME_ASSERT(Name);
-
-			for (CommandTableMapT::iterator Itr = Registry.begin(); Itr != Registry.end(); Itr++)
+			if (Name)
 			{
-				if ((UseAlias == false && Itr->second->GetName() && !_stricmp(Name, Itr->second->GetName())) ||
-					(UseAlias && Itr->second->GetAlias() && !_stricmp(Name, Itr->second->GetAlias())))
+				for (CommandTableMapT::iterator Itr = Registry.begin(); Itr != Registry.end(); Itr++)
 				{
-					return Itr->second;
+					if ((UseAlias == false && Itr->second->GetName() && !_stricmp(Name, Itr->second->GetName())) ||
+						(UseAlias && Itr->second->GetAlias() && !_stricmp(Name, Itr->second->GetAlias())))
+					{
+						return Itr->second;
+					}
 				}
 			}
 
@@ -142,7 +143,7 @@ namespace BGSEditorExtender
 							"<h1>%s Coda Command Documentation</h1><p><a href=\"%sCategory:%s\">%s</a> - Follow the links throughout this documentation to gain access to additional information on the official Wiki. Users are encouraged to add to the wiki.<br />",
 							BGSEEMAIN->ExtenderGetShortName(),
 							BaseWikiURL.c_str(),
-							SanitizeLinkableString(BGSEEMAIN->ExtenderGetLongName()),
+							BGSEEMAIN->ExtenderGetLongName(),
 							BGSEEMAIN->ExtenderGetLongName());
 				AppendToStream(DocStream, "\n\n\n\n");
 
@@ -245,7 +246,7 @@ namespace BGSEditorExtender
 			Commands.clear();
 		}
 
-		inline void CodaScriptCommandRegistrar::Add( ICodaScriptCommand* Command )
+		void CodaScriptCommandRegistrar::Add( ICodaScriptCommand* Command )
 		{
 			Commands.push_back(Command);
 		}
@@ -292,14 +293,14 @@ namespace BGSEditorExtender
 			;//
 		}
 
-		inline void CodaScriptMessageHandler::Suspend( void )
+		void CodaScriptMessageHandler::Suspend( void )
 		{
 			SME_ASSERT(State == true);
 
 			State = false;
 		}
 
-		inline void CodaScriptMessageHandler::Resume( void )
+		void CodaScriptMessageHandler::Resume( void )
 		{
 			SME_ASSERT(State == false);
 
@@ -361,13 +362,13 @@ namespace BGSEditorExtender
 
 #if CODAVM_ENABLEPROFILER == 1
 			double ElapsedTime = Profiler.EndProfiling() * 1.0;
-			MessageHandler->LogMsg("Profiler: %s [%.4f]", Context->ScriptName, ElapsedTime);
+			MessageHandler->LogMsg("Profiler: %s [%.4f ms]", Context->ScriptName.c_str(), ElapsedTime);
 #endif
 
 			return ExecuteResult;
 		}
 
-		inline CodaScriptExecutionContext* CodaScriptExecutive::GetExecutingContext( void )
+		CodaScriptExecutionContext* CodaScriptExecutive::GetExecutingContext( void )
 		{
 			if (ExecutionStack.size())
 				return ExecutionStack.top();
@@ -385,9 +386,10 @@ namespace BGSEditorExtender
 
 		VOID CALLBACK CodaScriptBackgrounder::CallbackProc( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
-			SME_ASSERT(CODAVM->Backgrounder && CODAVM->Backgrounder->TimerID == idEvent);
-
-			CODAVM->Backgrounder->Execute(CODAVM->Executive);
+			if (CODAVM->Backgrounder && CODAVM->Backgrounder->TimerID == idEvent)
+			{
+				CODAVM->Backgrounder->Execute(CODAVM->Executive);
+			}
 		}
 
 		void CodaScriptBackgrounder::ResetCache( bool Renew /*= false*/ )
@@ -403,17 +405,18 @@ namespace BGSEditorExtender
 			{
 				for (IDirectoryIterator Itr(SourceDepot().c_str(), (std::string("*" + CodaScriptVM::kSourceExtension)).c_str()); !Itr.Done(); Itr.Next())
 				{
-					std::string FullPath = SourceDepot().c_str() + std::string(Itr.Get()->cFileName);
+					std::string FullPath = SourceDepot() + "\\" + std::string(Itr.Get()->cFileName);
 					std::fstream InputStream(FullPath.c_str(), std::ios::in);
 
 					if (InputStream.fail() == false)
 					{
 						BGSEECONSOLE_MESSAGE("Script: %s", Itr.Get()->cFileName);
 						BGSEECONSOLE->Indent();
+
 						CodaScriptExecutionContext* BackgroundScript = CODAVM->CreateExecutionContext(InputStream, NULL);
 						if (BackgroundScript->GetIsValid())
 						{
-							BGSEECONSOLE_MESSAGE("Success: %s [%.3f s]", BackgroundScript->ScriptName.c_str(), BackgroundScript->PollingInterval);
+							BGSEECONSOLE_MESSAGE("Success: %s [%.6f s]", BackgroundScript->ScriptName.c_str(), BackgroundScript->PollingInterval);
 							BackgroundCache.push_back(BackgroundScript);
 						}
 						else
@@ -498,8 +501,6 @@ namespace BGSEditorExtender
 			INISettingSetter(Setter)
 		{
 			State = atoi(INISettingGetter(kINISettings[kBackgrounderINISetting_Enabled].Key, kINISection));
-
-			Rebuild();
 		}
 
 		CodaScriptBackgrounder::~CodaScriptBackgrounder()
@@ -512,29 +513,32 @@ namespace BGSEditorExtender
 			INISettingSetter(kINISettings[kBackgrounderINISetting_Enabled].Key, kINISection, (State ? "1" : "0"));
 		}
 
-		inline void CodaScriptBackgrounder::Suspend( void )
+		void CodaScriptBackgrounder::Suspend( void )
 		{
 			SME_ASSERT(Backgrounding == false);
 
 			State = false;
 		}
 
-		inline void CodaScriptBackgrounder::Resume( void )
+		void CodaScriptBackgrounder::Resume( void )
 		{
 			SME_ASSERT(Backgrounding == false);
 
 			State = true;
 		}
 
-		inline bool CodaScriptBackgrounder::GetState( void ) const
+		bool CodaScriptBackgrounder::GetState( void ) const
 		{
 			return State;
 		}
 
 		void CodaScriptBackgrounder::Rebuild( void )
 		{
+			BGSEECONSOLE_MESSAGE("Backgrounder:");
+			BGSEECONSOLE->Indent();
 			ResetTimer(true);
 			ResetCache(true);
+			BGSEECONSOLE->Exdent();
 		}
 
 		BGSEEINIManagerSettingFactory* CodaScriptBackgrounder::GetINIFactory( void )
@@ -883,12 +887,10 @@ namespace BGSEditorExtender
 		{
 			INISettingSetter(kINISection, NULL);
 			char Buffer[0x512] = {0};
-			std::stringstream SectionOut;
 
 			for (CodaScriptVariableListT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 			{
 				CodaScriptVariable* Global = *Itr;
-				SectionOut << Global->GetName() << "=";
 
 				switch (Global->GetStoreOwner()->GetDataStore()->GetType())
 				{
@@ -906,10 +908,8 @@ namespace BGSEditorExtender
 					break;
 				}
 
-				SectionOut << Buffer << std::endl;
+				INISettingSetter(Global->GetName(), kINISection, Buffer, true);
 			}
-
-			INISettingSetter(kINISection, SectionOut.str().c_str());
 		}
 
 		CodaScriptGlobalDataStore::CodaScriptGlobalDataStore( BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter ) :
@@ -937,51 +937,19 @@ namespace BGSEditorExtender
 			CODAVM->Backgrounder->Resume();
 		}
 
-		inline CodaScriptVariableListT& CodaScriptGlobalDataStore::GetCache( void )
+		CodaScriptVariableListT& CodaScriptGlobalDataStore::GetCache( void )
 		{
 			return Cache;
 		}
 
 		const std::string										CodaScriptVM::kSourceExtension	= ".coda";
 		CodaScriptVM*											CodaScriptVM::Singleton			= NULL;
-		BGSEditorExtender::BGSEEConsoleCommandInfo				CodaScriptVM::kRunScriptConsoleCommandData =
-		{
-			"RunScript",
-			1,
-			CodaScriptVM::RunScriptConsoleCommandHandler
-		};
 		BGSEditorExtender::BGSEEConsoleCommandInfo				CodaScriptVM::kDumpCodaDocsConsoleCommandData =
 		{
 			"DumpCodaDocs",
 			0,
 			CodaScriptVM::DumpCodaDocsConsoleCommandHandler
 		};
-
-		void CodaScriptVM::RunScriptConsoleCommandHandler(UInt32 ParamCount, const char* Args)
-		{
-			SME::StringHelpers::Tokenizer ArgParser(Args, " ,");
-			std::string CurrentArg;
-
-			std::string ScriptName;
-
-			for (int i = 1; i <= ParamCount; i++)
-			{
-				ArgParser.NextToken(CurrentArg);
-				switch (i)
-				{
-				case 1:
-					ScriptName = CurrentArg;
-					break;
-				}
-			}
-
-			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
-
-			bool ThrowAway = false;
-			CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway);
-
-			TODO("Handle some achievements here")
-		}
 
 		void CodaScriptVM::DumpCodaDocsConsoleCommandHandler(UInt32 ParamCount, const char* Args)
 		{
@@ -1009,8 +977,6 @@ namespace BGSEditorExtender
 
 		CodaScriptVM::~CodaScriptVM()
 		{
-			Singleton = NULL;
-
 			SAFEDELETE(Executive);
 			SAFEDELETE(Backgrounder);
 			SAFEDELETE(GlobalStore);
@@ -1018,9 +984,15 @@ namespace BGSEditorExtender
 			SAFEDELETE(ExpressionParser);
 			SAFEDELETE(MessageHandler);
 
-			TODO("perform leak check here")
+			SME_ASSERT(ICodaScriptExecutableCode::GIC == 0);
+			SME_ASSERT(CodaScriptBackingStore::GIC == 0);
+			SME_ASSERT(CodaScriptVariable::GIC == 0);
+			SME_ASSERT(mup::CodaScriptMUPArrayDataType::GIC == 0);
+			SME_ASSERT(mup::CodaScriptMUPValue::GIC == 0);
 
 			Initialized = false;
+
+			Singleton = NULL;
 		}
 
 		CodaScriptVM* CodaScriptVM::GetSingleton()
@@ -1040,6 +1012,8 @@ namespace BGSEditorExtender
 			if (Initialized)
 				return false;
 
+			Initialized = true;
+
 			BaseDirectory = BasePath;
 			CommandRegistry = new CodaScriptCommandRegistry(WikiURL);
 			MessageHandler = new CodaScriptMessageHandler();
@@ -1057,9 +1031,9 @@ namespace BGSEditorExtender
 			CommandRegistry->InitializeExpressionParser(ExpressionParser);
 
 			// register console command
-			BGSEECONSOLE->RegisterConsoleCommand(&kRunScriptConsoleCommandData);
+			BGSEECONSOLE->RegisterConsoleCommand(&kDumpCodaDocsConsoleCommandData);
 
-			Initialized = true;
+			Backgrounder->Rebuild();
 
 			return Initialized;
 		}
@@ -1071,19 +1045,25 @@ namespace BGSEditorExtender
 		{
 			SME_ASSERT(Initialized);
 
-			BGSEEResourceLocation Path(BaseDirectory.GetRelativePath() + ScriptName + CodaScriptVM::kSourceExtension);
+			BGSEEResourceLocation Path(BaseDirectory.GetRelativePath() + "\\" + ScriptName + CodaScriptVM::kSourceExtension);
 			std::fstream InputStream(Path().c_str(), std::iostream::in);
 
 			if (InputStream.fail() == false)
 			{
+				BGSEECONSOLE->Indent();
 				std::auto_ptr<CodaScriptExecutionContext> ScriptContext(CreateExecutionContext(InputStream, Parameters));
+				BGSEECONSOLE->Exdent();
+
 				if (ScriptContext->GetIsValid() == false)
 				{
 					BGSEECONSOLE_MESSAGE("CodaScriptVM::RunScript - Script '%s' has outstanding errors!", ScriptContext->ScriptName.c_str());
 				}
 				else
 				{
-					return Executive->Execute(ScriptContext.get(), Result, ReturnedResult);
+					BGSEECONSOLE->Indent();
+					bool Success = Executive->Execute(ScriptContext.get(), Result, ReturnedResult);
+					BGSEECONSOLE->Exdent();
+					return Success;
 				}
 			}
 			else
@@ -1094,35 +1074,58 @@ namespace BGSEditorExtender
 			return false;
 		}
 
-		inline void CodaScriptVM::ShowGlobalStoreEditDialog( HINSTANCE ResourceInstance, HWND Parent )
+		void CodaScriptVM::ShowGlobalStoreEditDialog( HINSTANCE ResourceInstance, HWND Parent )
 		{
 			SME_ASSERT(Initialized);
 
 			GlobalStore->ShowEditDialog(ResourceInstance, Parent);
 		}
 
-		inline CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )
+		CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )
 		{
 			SME_ASSERT(Initialized);
 
 			return GlobalStore->Lookup(Name);
 		}
 
-		inline CodaScriptVariableListT& CodaScriptVM::GetGlobals( void ) const
+		CodaScriptVariableListT& CodaScriptVM::GetGlobals( void ) const
 		{
 			SME_ASSERT(Initialized);
 
 			return GlobalStore->GetCache();
 		}
 
-		inline CodaScriptMessageHandler* CodaScriptVM::MsgHdlr( void )
+		CodaScriptMessageHandler* CodaScriptVM::MsgHdlr( void )
 		{
 			SME_ASSERT(Initialized);
 
 			return MessageHandler;
 		}
 
-		inline ICodaScriptExpressionParser* CodaScriptObjectFactory::BuildExpressionParser( UInt8 Type )
+		bool CodaScriptVM::GetBackgrounderState( void ) const
+		{
+			SME_ASSERT(Backgrounder);
+
+			return Backgrounder->GetState();
+		}
+
+		bool CodaScriptVM::ToggleBackgrounderState( void )
+		{
+			SME_ASSERT(Backgrounder);
+
+			if (Backgrounder->GetState())
+			{
+				Backgrounder->Suspend();
+				return false;
+			}
+			else
+			{
+				Backgrounder->Resume();
+				return true;
+			}
+		}
+
+		ICodaScriptExpressionParser* CodaScriptObjectFactory::BuildExpressionParser( UInt8 Type )
 		{
 			switch (Type)
 			{
@@ -1133,7 +1136,7 @@ namespace BGSEditorExtender
 			}
 		}
 
-		inline ICodaScriptDataStoreOwner* CodaScriptObjectFactory::BuildDataStoreOwner( UInt8 Type )
+		ICodaScriptDataStoreOwner* CodaScriptObjectFactory::BuildDataStoreOwner( UInt8 Type )
 		{
 			switch (Type)
 			{
@@ -1144,7 +1147,7 @@ namespace BGSEditorExtender
 			}
 		}
 
-		inline CodaScriptSharedHandleArrayT CodaScriptObjectFactory::BuildArray( UInt8 Type, UInt32 InitialSize )
+		CodaScriptSharedHandleArrayT CodaScriptObjectFactory::BuildArray( UInt8 Type, UInt32 InitialSize )
 		{
 			switch (Type)
 			{

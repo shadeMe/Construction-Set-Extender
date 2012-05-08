@@ -17,6 +17,8 @@ namespace BGSEditorExtender
 
 			virtual void			Initialize(UInt32 FormID) = 0;
 			virtual void			Deinitialize(void) = 0;
+
+			virtual UInt32			GetFormID(void) const = 0;
 		};
 
 		typedef std::list<BGSEEHallOfFameEntry*>		ExtenderHOFEntryListT;
@@ -35,9 +37,13 @@ namespace BGSEditorExtender
 
 			static BGSEEHallOfFameManager*				GetSingleton(void);
 
-			bool										Initialize(UInt32 StartingFormID, ExtenderHOFEntryListT& Entries);
+			bool										Initialize(ExtenderHOFEntryListT& Entries, UInt32 StartingFormID = 0x450);
+														// takes ownership of the entries
+
+			UInt32										GetBaseFormID(void) const;
+			bool										GetIsInductee(UInt32 FormID);
 		};
 
-#define BGSEEHALLOFFAME									BGSEEHallOfFameManager::GetSingleton()
+#define BGSEEHALLOFFAME									BGSEditorExtender::Extras::BGSEEHallOfFameManager::GetSingleton()
 	}
 }

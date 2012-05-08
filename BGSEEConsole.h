@@ -17,7 +17,7 @@ namespace BGSEditorExtender
 
 #define BGSEECONSOLECMD_ARGS										UInt32 ParamCount, const char* Args
 #define DEFINE_BGSEECONSOLECMD(name, paramcount)					\
-		BGSEEConsoleCommandInfo kBGSEEConsoleCmd_##name =			\
+		BGSEditorExtender::BGSEEConsoleCommandInfo kBGSEEConsoleCmd_##name =			\
 		{															\
 			#name,													\
 			##paramcount,											\
@@ -178,6 +178,8 @@ namespace BGSEditorExtender
 		void						UnregisterConsoleCommand(BGSEEConsoleCommandInfo* Command);
 
 		const char*					GetLogPath(void) const;
+		void						OpenDebugLog(void);
+		bool						GetLogsWarnings(void);
 
 		static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
 	};

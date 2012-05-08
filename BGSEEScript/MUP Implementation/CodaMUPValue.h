@@ -13,6 +13,9 @@ namespace BGSEditorExtender
 			// a wrapper for CodaScriptBackingStore
 			class CodaScriptMUPValue : public ICodaScriptObject, public ICodaScriptDataStoreOwner, public IValue
 			{
+				friend class CodaScriptVM;
+
+				static int									GIC;
 			protected:
 				char_type									m_cType;				///< A byte indicating the type of the represented value
 				EFlags										m_iFlags;				///< Additional flags

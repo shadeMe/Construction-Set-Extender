@@ -15,8 +15,12 @@ namespace BGSEditorExtender
 
 		DaemonCallbackListT			InitCallbacks[3];
 		DaemonCallbackListT			DeinitCallbacks;
+		DaemonCallbackListT			CrashHandlerCallbacks;
+
+		bool						FullInitComplete;
 
 		bool						ExecuteDeinitCallbacks(void);
+		bool						ExecuteCrashCallbacks(void);
 		void						ReleaseCallbacks(DaemonCallbackListT& CallbackList);
 
 		friend class				BGSEEMain;
@@ -32,8 +36,10 @@ namespace BGSEditorExtender
 
 		void						RegisterInitCallback(UInt8 CallbackType, BoolRFunctorBase* Callback);		// takes ownership of pointer
 		void						RegisterDeinitCallback(BoolRFunctorBase* Callback);							// takes ownership of pointer
+		void						RegisterCrashCallback(BoolRFunctorBase* Callback);							// takes ownership of pointer
 
 		bool						ExecuteInitCallbacks(UInt8 CallbackType);
+		bool						GetFullInitComplete(void) const;
 
 		static void					WaitForDebugger(void);
 	};
@@ -42,9 +48,9 @@ namespace BGSEditorExtender
 	{
 		SME::INI::INIManager*		ParentManager;
 	public:
-		BGSEEINIManagerSetterFunctor(SME::INI::INIManager* Parent);
+		BGSEEINIManagerSetterFunctor(SME::INI::INIManager* Parent = NULL);
 
-		void						operator()(const char* Key, const char* Section, const char* Value);
+		void						operator()(const char* Key, const char* Section, const char* Value, bool Direct = false);
 		void						operator()(const char* Section, const char* Value);
 	};
 
@@ -52,9 +58,10 @@ namespace BGSEditorExtender
 	{
 		SME::INI::INIManager*		ParentManager;
 	public:
-		BGSEEINIManagerGetterFunctor(SME::INI::INIManager* Parent);
+		BGSEEINIManagerGetterFunctor(SME::INI::INIManager* Parent = NULL);
 
 		const char*					operator()(const char* Key, const char* Section);
+		int							operator()(const char* Key, const char* Section, const char* Default, char* OutBuffer, UInt32 Size);
 		int							operator()(const char* Section, char* OutBuffer, UInt32 Size);
 	};
 
@@ -67,17 +74,17 @@ namespace BGSEditorExtender
 			const char*				Description;
 		};
 
-		typedef std::list<const SettingData*>	SettingListT;
+		typedef std::vector<const SettingData*>	SettingListT;
 
-		const char*			Section;
-		SettingListT		Settings;
+		const char*					Section;
+		SettingListT				Settings;
 
-		BGSEEINIManagerSettingFactory(const char* Section) :
-			Section(Section),
-			Settings()
-		{
-			;//
-		}
+		BGSEEINIManagerSettingFactory(const char* Section);
+
+		const SettingData*			Lookup(const char* Key);
+
+		const char*					Get(int Index, BGSEEINIManagerGetterFunctor& Getter);									// order dependent
+		void						Set(int Index, BGSEEINIManagerSetterFunctor& Setter, const char* Value, ...);			// order dependent
 	};
 	typedef std::list<BGSEEINIManagerSettingFactory*>		SettingFactoryListT;
 
@@ -113,9 +120,6 @@ namespace BGSEditorExtender
 		public:
 			const char*				LongName;
 			const char*				APPPath;
-			const char*				INIPath;
-			SettingFactoryListT		INISettingFactory;
-			SME::INI::INIManager*	INISettingsManager;
 			HINSTANCE				ModuleHandle;
 			UInt32					ExtenderVersion;
 			UInt32					EditorSupportedVersion;
@@ -132,7 +136,7 @@ namespace BGSEditorExtender
 			virtual bool			operator()();
 		};
 
-		static BOOL CALLBACK					CrashCallback(LPVOID lpvState);
+		static BOOL CALLBACK		CrashCallback(LPVOID lpvState);
 
 		class DefaultDeinitCallback : public BoolRFunctorBase
 		{
@@ -161,6 +165,7 @@ namespace BGSEditorExtender
 		std::string					GameDirectoryPath;				// path to the game's root directory
 		std::string					ExtenderDLLPath;				// derived from the dirpath and long name
 		std::string					ExtenderINIPath;				// derived from the dirpath and long name
+		std::string					ExtenderComponentDLLPath;
 
 		UInt32						ScriptExtenderPluginHandle;
 		UInt32						ScriptExtenderCurrentVersion;
@@ -168,6 +173,7 @@ namespace BGSEditorExtender
 		BGSEEINIManager*			ExtenderINIManager;
 		BGSEEConsole*				ExtenderConsole;
 		BGSEEDaemon*				ExtenderDaemon;
+		bool						CrashRptSupport;
 
 		bool						Initialized;
 	public:
@@ -188,33 +194,40 @@ namespace BGSEditorExtender
 														const char* APPPath,
 														UInt32 SEPluginHandle, UInt32 SEMinimumVersion, UInt32 SECurrentVersion,
 														SettingFactoryListT& INISettingFactoryList,
-														const char* DotNETFrameworkVersion, bool CLRMemoryProfiling, bool WaitForDebugger);
+														const char* DotNETFrameworkVersion, bool CLRMemoryProfiling, bool WaitForDebugger,
+														bool CrashRptSupport = true);
 
 		const char*								ExtenderGetLongName(void) const;
 		const char*								ExtenderGetShortName(void) const;
 		UInt32									ExtenderGetVersion(void) const;
+		const char*								ExtenderGetSEName(void) const;
 
 		const char*								ParentEditorGetLongName(void) const;
 		const char*								ParentEditorGetShortName(void) const;
 		UInt32									ParentEditorGetVersion(void) const;
 
-		HINSTANCE								GetModuleHandle(void) const;
+		HINSTANCE								GetExtenderHandle(void) const;
 
 		const char*								GetAPPPath(void) const;
 		const char*								GetDLLPath(void) const;
 		const char*								GetINIPath(void) const;
+		const char*								GetComponentDLLPath(void) const;
 
 		BGSEEConsole*							Console(void) const;
 		BGSEEDaemon*							Daemon(void) const;
 
 		BGSEEINIManagerGetterFunctor			INIGetter(void);
 		BGSEEINIManagerSetterFunctor			INISetter(void);
+
+		void									ShowPreferencesGUI(void);
 	};
 
-#define BGSEEMAIN					BGSEEMain::GetSingleton()
+#define BGSEEMAIN					BGSEditorExtender::BGSEEMain::GetSingleton()
 #define BGSEECONSOLE				BGSEEMAIN->Console()
 #define BGSEECONSOLE_MESSAGE(...)	BGSEECONSOLE->LogMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
 #define BGSEECONSOLE_ERROR(...)		BGSEECONSOLE->LogErrorMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
+
+#define BGSEE_DEBUGBREAK			BGSEditorExtender::BGSEEDaemon::WaitForDebugger(); DebugBreak()
 
 #define BGSEEMAIN_EXTENDERLONGNAME		"Bethesda Game Studios Editor Extender"
 #define BGSEEMAIN_EXTENDERSHORTNAME		"BGSEE"

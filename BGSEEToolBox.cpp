@@ -20,7 +20,10 @@ namespace BGSEditorExtender
 
 		char Buffer[0x200] = {0};
 		DlgUserData* UserData = (DlgUserData*)GetWindowLong(hWnd, GWL_USERDATA);
-		BGSEEToolBox* Instance = UserData->Instance;
+		BGSEEToolBox* Instance = NULL;
+
+		if (UserData)
+			Instance = UserData->Instance;
 
 		switch (uMsg)
 		{
@@ -225,6 +228,7 @@ namespace BGSEditorExtender
 			break;
 		case WM_DESTROY:
 			delete UserData;
+			SetWindowLong(hWnd, GWL_USERDATA, (LONG)0);
 
 			break;
 		}
@@ -232,11 +236,13 @@ namespace BGSEditorExtender
 		return FALSE;
 	}
 
-	BGSEEToolBox::BGSEEToolBox()
+	BGSEEToolBox::BGSEEToolBox() :
+		RegisteredTools(),
+		INIGetter(),
+		INISetter(),
+		Initialized(false)
 	{
-		INIGetter = NULL;
-		INISetter = NULL;
-		Initialized = false;
+		;//
 	}
 
 	BGSEEToolBox::Tool::Tool( const char* Title, const char* CommandLine, const char* InitialDir ) :
@@ -319,8 +325,6 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::ClearTools( bool ReleaseMemory /*= true*/ )
 	{
-		SME_ASSERT(Initialized);
-
 		if (ReleaseMemory)
 		{
 			for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
@@ -332,25 +336,21 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::INISaveToolList( void )
 	{
-		SME_ASSERT(INISetter);
-
-		INISetter->operator()(kINISection, NULL);
+		INISetter(kINISection, NULL);
 		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
-			INISetter->operator()((*Itr)->Title.c_str(),
+			INISetter((*Itr)->Title.c_str(),
 								kINISection,
-								(std::string((*Itr)->CommandLine + "|" + (*Itr)->InitialDir).c_str()));
+								(std::string((*Itr)->CommandLine + "|" + (*Itr)->InitialDir).c_str()), true);
 		}
 	}
 
 	void BGSEEToolBox::INILoadToolList( void )
 	{
-		SME_ASSERT(INIGetter);
-
 		char SectionBuffer[0x8000] = {0};
 		ClearTools(true);
 
-		INIGetter->operator()(kINISection, SectionBuffer, sizeof(SectionBuffer));
+		INIGetter(kINISection, SectionBuffer, sizeof(SectionBuffer));
 
 		for (const char* Itr = SectionBuffer; *Itr != '\0'; Itr += strlen(Itr) + 1)
 		{
@@ -401,14 +401,12 @@ namespace BGSEditorExtender
 
 	BGSEEToolBox::~BGSEEToolBox()
 	{
-		Singleton = NULL;
-
 		INISaveToolList();
-		SAFEDELETE(INIGetter);
-		SAFEDELETE(INISetter);
 		ClearTools(true);
 
 		Initialized = false;
+
+		Singleton = NULL;
 	}
 
 	BGSEEToolBox* BGSEEToolBox::GetSingleton()
@@ -419,78 +417,81 @@ namespace BGSEditorExtender
 		return Singleton;
 	}
 
-	bool BGSEEToolBox::Initialize( BGSEEINIManagerGetterFunctor* Getter, BGSEEINIManagerSetterFunctor* Setter, bool LoadFromINI /*= true*/ )
+	bool BGSEEToolBox::Initialize( BGSEEINIManagerGetterFunctor& Getter, BGSEEINIManagerSetterFunctor& Setter, bool LoadFromINI /*= true*/ )
 	{
 		if (Initialized)
 			return false;
 
-		SME_ASSERT(Getter && Setter);
-
 		INIGetter = Getter;
 		INISetter = Setter;
+		Initialized = true;
+
 		if (LoadFromINI)
 			INILoadToolList();
 
-		Initialized = true;
 		return Initialized;
 	}
 
 	void BGSEEToolBox::ShowGUI( HINSTANCE ResourceInstance, HWND Parent )
 	{
-		BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(IDD_BGSEE_TOOLBOX), Parent, GUIDlgProc);
+		DlgUserData* Param = new DlgUserData();
+		Param->Instance = this;
+
+		BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(IDD_BGSEE_TOOLBOX), Parent, GUIDlgProc, (LPARAM)Param);
 	}
 
-	void BGSEEToolBox::ShowToolListMenu( HINSTANCE ResourceInstance, HWND Parent, LPARAM Coords )
+	void BGSEEToolBox::ShowToolListMenu( HINSTANCE ResourceInstance, HWND Parent, POINT* Coords )
 	{
 		SME_ASSERT(Initialized);
 
-		RECT Rect;
 		POINT Point;
 
-		GetClientRect(Parent, &Rect);
-		Point.x = GET_X_LPARAM(Coords);
-		Point.y = GET_Y_LPARAM(Coords);
-
-		if (PtInRect(&Rect, Point))
+		if (Coords)
 		{
-			ClientToScreen(Parent, &Point);
-			HMENU ToolMenu = LoadMenu(ResourceInstance, (LPCSTR)IDR_BGSEE_TOOLBOX_TOOLMENU);
-
-			int i = 1;
-			for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++, i++)
-			{
-				MENUITEMINFO ToolMenuItem = {0};
-				ToolMenuItem.cbSize = sizeof(MENUITEMINFO);
-				ToolMenuItem.fMask = MIIM_ID|MIIM_STRING|MIIM_DATA;
-				ToolMenuItem.wID = i;
-				ToolMenuItem.dwTypeData = (LPSTR)(*Itr)->Title.c_str();
-				ToolMenuItem.cch = 0;
-				ToolMenuItem.dwItemData = (ULONG_PTR)(*Itr);
-				InsertMenuItem(ToolMenu, GetMenuItemCount(ToolMenu) /*-1*/, TRUE, &ToolMenuItem);
-			}
-
-			int Selection = TrackPopupMenu(ToolMenu, TPM_LEFTALIGN|TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD, Point.x, Point.y, 0, Parent, NULL);
-			switch (Selection)
-			{
-			case 0:
-				break;
-			case IDC_BGSEE_TOOLBOX_TOOLMENU_MANAGE:
-				ShowGUI(ResourceInstance, Parent);
-				break;
-			default:
-				MENUITEMINFO ToolMenuItem = {0};
-				ToolMenuItem.cbSize = sizeof(MENUITEMINFO);
-				ToolMenuItem.fMask = MIIM_DATA;
-				GetMenuItemInfo(ToolMenu, Selection, FALSE, &ToolMenuItem);
-
-				Tool* SelectedTool = (Tool*)ToolMenuItem.dwItemData;
-				SME_ASSERT(SelectedTool);
-
-				SelectedTool->Run();
-				break;
-			}
-
-			DestroyMenu(ToolMenu);
+			Point.x = Coords->x;
+			Point.y = Coords->y;
 		}
+		else
+			GetCursorPos(&Point);
+
+		HMENU ToolMenu = CreatePopupMenu();
+		AppendMenu(ToolMenu, NULL, IDC_BGSEE_TOOLBOX_TOOLMENU_MANAGE, "Manage");
+		AppendMenu(ToolMenu, MF_SEPARATOR, NULL, NULL);
+
+		int i = 1;
+		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++, i++)
+		{
+			MENUITEMINFO ToolMenuItem = {0};
+			ToolMenuItem.cbSize = sizeof(MENUITEMINFO);
+			ToolMenuItem.fMask = MIIM_ID|MIIM_STRING|MIIM_DATA;
+			ToolMenuItem.wID = i;
+			ToolMenuItem.dwTypeData = (LPSTR)(*Itr)->Title.c_str();
+			ToolMenuItem.cch = 0;
+			ToolMenuItem.dwItemData = (ULONG_PTR)(*Itr);
+			InsertMenuItem(ToolMenu, GetMenuItemCount(ToolMenu) /*-1*/, TRUE, &ToolMenuItem);
+		}
+
+		int Selection = TrackPopupMenu(ToolMenu, TPM_LEFTALIGN|TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD, Point.x, Point.y, 0, Parent, NULL);
+		switch (Selection)
+		{
+		case 0:
+			break;
+		case IDC_BGSEE_TOOLBOX_TOOLMENU_MANAGE:
+			ShowGUI(ResourceInstance, Parent);
+			break;
+		default:
+			MENUITEMINFO ToolMenuItem = {0};
+			ToolMenuItem.cbSize = sizeof(MENUITEMINFO);
+			ToolMenuItem.fMask = MIIM_DATA;
+			GetMenuItemInfo(ToolMenu, Selection, FALSE, &ToolMenuItem);
+
+			Tool* SelectedTool = (Tool*)ToolMenuItem.dwItemData;
+			SME_ASSERT(SelectedTool);
+
+			SelectedTool->Run();
+			break;
+		}
+
+		DestroyMenu(ToolMenu);
 	}
 }
