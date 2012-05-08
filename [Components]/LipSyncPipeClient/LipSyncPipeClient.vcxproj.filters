@@ -17,20 +17,20 @@
     <ClInclude Include="Resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\[Libraries]\MemoryHandler\MemoryHandler.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\[Libraries]\SME_Prefix.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\CSInteropData.h" />
     <ClInclude Include="LipSyncPipeClient.h" />
+    <ClInclude Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\[Libraries]\SME Sundries\SME_Prefix.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\[Libraries]\MemoryHandler\MemoryHandler.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
     <ClCompile Include="LipSyncPipeClient.cpp" />
+    <ClCompile Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -107,7 +107,7 @@ public:
 	/*1211*/ UInt8									unkCD1;     // set if there is an active file??
 	/*1212*/ UInt8									unkCD2;
 	/*1213*/ UInt8									unkCD3;
-	/*1214*/ UInt8									unkCD4;     // set when data handler cleared
+	/*1214*/ UInt8									clearingData;     // set when data handler cleared
 	/*1215*/ UInt8									unkCD5;     // set after fileList is initialized?
 	/*1216*/ UInt8									unkCD6;     // set after data handler is constructed
 	/*1217*/ UInt8									unkCD7;     // set after files in LO have been opened, cleared after files have been loaded
@@ -137,7 +137,7 @@ class GridArray
 {
 public:
 	// members
-	/// *00* / void**					vtbl;	
+	/// *00* / void**					vtbl;
 
 	virtual void				VFn00(void) = 0;
 };

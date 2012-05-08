@@ -2,7 +2,6 @@ To-Do
 =====
 
 IMMEDIATE  >>
-> Remove all vfn calls from ctors/dtors
 
 
 NOTE	---->
@@ -15,17 +14,15 @@ NOTE	---->
 
 MISC	---->
 > Credits:	JRoush, for allowing the use of COEF's code
-			Kyoma, for his contributions with the class definitions
+	Kyoma, for his contributions with the class definitions
 
 
 CSE		---->
-> Think up a more snazzy achivement notification
-> Replace all std::vector implementations with std::list (wherever applicable)
+> Double right click on a form list combo box (TESComboBox) opens it for editing
 > Look into the activator bug (blind dump)
 > TESFile CreateFileMapping assertion - http://forums.nexusmods.com/index.php?/topic/283608-construction-set-extender-endorsements/page__st__260__p__4976561#entry4976561
 > Allow wav files to be passed to the lip generator (currently, it expects the input file to be a MP3 file)
 > Reset list view sorting during item addition
-> Move (_FILEFINDER->AddSearchPath((this->DefaultDirectory + "Data").c_str());) to the BGSEEWorkspaceManager init client code
 > Go into Cell View. Right click on any interior cell->Edit. The Cell dialog comes up. If you click in any of the cell names on the left, they all gain a "*" and thus become dirt.
 > Editing an unrendered ref. (ie load the CK and ESMs, single-click any cell on the left, right click a ref., Edit, change a value) results in an assertion error: (and moves it to the default Tamriel worldspace)
 > Ref properties loses focus to the render window on init and every time the 3d data fields are modified
@@ -53,13 +50,22 @@ CSE		---->
 > [AFTER 6.0] Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
 > [AFTER 6.0] Add a color overlay to objects under the selection rubber band
 
+Coda Commands
+> GetBaseForm - Ref
+
 
 SE		---->
+> Recheck with the mem profiler
 > Workspace deallocs sometimes go unnoticed by the manager, leading it to think there are active instances
 > PgUp and PgDn backwards for tab selection
+> Partial search string match for the script list dialog
 > ISInterface listview sorting takes a long time when commands are being populated
+> [AFTER 6.0] New sanitze function: Anneal identifier casing - Fixup editorIds, var names and command IDs
 > [AFTER 6.0] A code snippets manager, integrated into IntelliSense
 
 
 USE		---->
 > Export all data to CSV
+
+TAG		---->
+> !IMPORTANT! Subclass the formlist to accept the 0x407 message

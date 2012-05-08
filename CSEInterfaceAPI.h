@@ -1,13 +1,5 @@
 #pragma once
 
-namespace CSAutomationScript
-{
-	class CSASCommandInfo;
-	struct CSASParamInfo;
-	class CSASDataElement;
-	class Array;
-}
-
 /********** CSE Interface API ****************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the
 *	object will be dispatched to plugins that pass an arbitrary message of type
@@ -56,19 +48,3 @@ struct CSERendererInterface
 	void			(* PrintToRenderWindow)(const char* Message, long double DisplayDuration);
 };
 
-/* ### move this to the new api interface
-struct CSEScriptInterface
-{
-	// Registers a CSAS script command. Returns false if registration fails
-	bool			(* RegisterCommand)(CSAutomationScript::CSASCommandInfo* CommandInfo);
-
-	// convenience function similar to OBSE's ExtractArgs/Ex
-	// string data buffers passed to the function are expected to be large enough to hold their arguments
-	bool			(* ExtractCommandArgs)(CSAutomationScript::CSASDataElement* ArgArray, CSAutomationScript::CSASParamInfo* Parameters, UInt32 NoOfParams, ...);
-
-	// array helper functions
-	// not to be used directly, except for initializing the global instances of the fn ptrs
-	CSAutomationScript::Array*			(* ArrayInterface_AllocateNewArray)(CSAutomationScript::CSASDataElement* Element, UInt32 Size);
-	CSAutomationScript::Array*			(* ArrayInterface_CopyNewArray)(CSAutomationScript::Array* Source);
-	void								(* ArrayInterface_ReleaseArray)(CSAutomationScript::Array* Source);
-};*/

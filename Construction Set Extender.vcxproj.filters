@@ -19,9 +19,6 @@
     <Filter Include="Hooks">
       <UniqueIdentifier>{d8a0ecb9-e056-469e-aac0-e8eb485e99fd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Console">
-      <UniqueIdentifier>{d2d48159-6f0f-439e-9fc3-7588fc0aefc7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{3edbf06c-1b58-4831-b92a-b8d339d4a486}</UniqueIdentifier>
     </Filter>
@@ -33,18 +30,6 @@
     </Filter>
     <Filter Include="EditorAPI\Forms">
       <UniqueIdentifier>{e1a88872-fa63-43c0-a11a-c771bc250ebe}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CSAS">
-      <UniqueIdentifier>{a5fab9ab-9075-48e2-9dbf-9fd670a10585}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CSAS\Commands">
-      <UniqueIdentifier>{9a109c79-3ba7-4faa-9ca8-15781d237f90}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CSAS\Types">
-      <UniqueIdentifier>{18895107-186f-4eea-8c37-745b39c96b28}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Extras">
-      <UniqueIdentifier>{0bc0c9dd-381b-4131-b82f-e563ebbcb31c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Interop">
       <UniqueIdentifier>{5dcd7610-9727-4251-985b-7c6159ab54e9}</UniqueIdentifier>
@@ -103,11 +88,23 @@
     <Filter Include="EditorAPI\Types\Bethesda">
       <UniqueIdentifier>{3bb9635e-5bb8-48b6-ba78-ae9f582e742c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\BGSEEBase Derivatives">
+      <UniqueIdentifier>{416275f2-efa6-45fe-892b-3df9e826db93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\BGSEEBase Derivatives\Coda">
+      <UniqueIdentifier>{253bc8ad-55c7-44ea-80d6-413eb868ee7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\BGSEEBase Derivatives\Coda\Commands">
+      <UniqueIdentifier>{d2b0fdf6-6089-45bb-bde4-d47867937e1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\BGSEEBase">
+      <UniqueIdentifier>{c6f5a181-2eb2-4bb7-b14c-eea7c4f03cde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components\BGSEEBase\BGSEEScript">
+      <UniqueIdentifier>{cdbae907-6883-4d01-bca3-b4690b8bd24e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\obse\obse\Utilities.cpp">
-      <Filter>OBSE</Filter>
-    </ClCompile>
     <ClCompile Include="[Common]\CLIWrapper.cpp">
       <Filter>Wrappers</Filter>
     </ClCompile>
@@ -141,21 +138,6 @@
     <ClCompile Include="Hooks\TESFile.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="Console.cpp">
-      <Filter>Console</Filter>
-    </ClCompile>
-    <ClCompile Include="ConsoleCommands.cpp">
-      <Filter>Console</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\INI Manager\INIEditGUI.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\INI Manager\INIManager.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\[Libraries]\MemoryHandler\MemoryHandler.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="CSEInterfaceManager.cpp">
       <Filter>Interop\Plugin</Filter>
     </ClCompile>
@@ -168,74 +150,16 @@
     <ClCompile Include="RenderSelectionGroupManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindowTextPainter.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="ToolManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="WorkspaceManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="Main.cpp" />
     <ClCompile Include="Hooks\VersionControl.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
     <ClCompile Include="ChangeLogManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="CSAS\ScriptParser.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\ScriptVariables.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\ScriptRunner.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\ScriptData.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\ScriptCommandInfo.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\ScriptCommands.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\ScriptTypes.cpp">
-      <Filter>CSAS</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\Array.cpp">
-      <Filter>CSAS\Types</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\Commands\Commands_General.cpp">
-      <Filter>CSAS\Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="ElapsedTimeCounter.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\Commands\Commands_Form.cpp">
-      <Filter>CSAS\Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="Achievements.cpp">
-      <Filter>Extras</Filter>
-    </ClCompile>
-    <ClCompile Include="HallofFame.cpp">
-      <Filter>Extras</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="StdAfx.cpp" />
-    <ClCompile Include="CSAS\Commands\Commands_Reference.cpp">
-      <Filter>CSAS\Commands</Filter>
-    </ClCompile>
     <ClCompile Include="PathGridUndoManager.cpp">
       <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSAS\Commands\Commands_String.cpp">
-      <Filter>CSAS\Commands</Filter>
     </ClCompile>
     <ClCompile Include="AuxiliaryViewport.cpp">
       <Filter>Components</Filter>
@@ -321,6 +245,30 @@
     <ClCompile Include="EditorAPI\BSString.cpp">
       <Filter>EditorAPI\Types\Bethesda</Filter>
     </ClCompile>
+    <ClCompile Include="CSEMain.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="CSERenderWindowPainter.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEAchievements.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEHallOfFame.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEWorkspaceManager.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEConsole.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEUIManager.cpp">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClCompile>
+    <ClCompile Include="Coda\CSECoda.cpp">
+      <Filter>Components\BGSEEBase Derivatives\Coda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -344,17 +292,8 @@
     <ClInclude Include="..\obse\obse\PluginAPI.h">
       <Filter>OBSE</Filter>
     </ClInclude>
-    <ClInclude Include="..\obse\obse\Utilities.h">
-      <Filter>OBSE</Filter>
-    </ClInclude>
     <ClInclude Include="[Common]\CLIWrapper.h">
       <Filter>Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="[Common]\HandShakeStructs.h">
       <Filter>Common</Filter>
@@ -386,24 +325,6 @@
     <ClInclude Include="Hooks\TESFile.h">
       <Filter>Hooks</Filter>
     </ClInclude>
-    <ClInclude Include="Console.h">
-      <Filter>Console</Filter>
-    </ClInclude>
-    <ClInclude Include="ConsoleCommands.h">
-      <Filter>Console</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\INI Manager\INIManager.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\MemoryHandler\MemoryHandler.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\SME_Prefix.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="CSEInterfaceAPI.h">
       <Filter>Interop\Plugin</Filter>
     </ClInclude>
@@ -419,15 +340,6 @@
     <ClInclude Include="RenderSelectionGroupManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="RenderWindowTextPainter.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ToolManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="WorkspaceManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Hooks\VersionControl.h">
       <Filter>Hooks</Filter>
@@ -435,66 +347,15 @@
     <ClInclude Include="ChangeLogManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSAS\ScriptParser.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\ScriptRunner.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\ScriptVariables.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\ScriptData.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\ScriptCommands.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\ScriptCommandInfo.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\ScriptTypes.h">
-      <Filter>CSAS</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\Array.h">
-      <Filter>CSAS\Types</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\Commands\Commands_General.h">
-      <Filter>CSAS\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowEdgeSnapper.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ElapsedTimeCounter.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\Commands\Commands_Form.h">
-      <Filter>CSAS\Commands</Filter>
-    </ClInclude>
     <ClInclude Include="EditorAPI\TESEditorAPI.h">
       <Filter>EditorAPI</Filter>
-    </ClInclude>
-    <ClInclude Include="Achievements.h">
-      <Filter>Extras</Filter>
-    </ClInclude>
-    <ClInclude Include="HallofFame.h">
-      <Filter>Extras</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowManager.h">
-      <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="[Common]\ComponentDLLInterface.h">
       <Filter>Interop\Component DLL</Filter>
     </ClInclude>
     <ClInclude Include="StdAfx.h" />
-    <ClInclude Include="CSAS\Commands\Commands_Reference.h">
-      <Filter>CSAS\Commands</Filter>
-    </ClInclude>
     <ClInclude Include="PathGridUndoManager.h">
       <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSAS\Commands\Commands_String.h">
-      <Filter>CSAS\Commands</Filter>
     </ClInclude>
     <ClInclude Include="AuxiliaryViewport.h">
       <Filter>Components</Filter>
@@ -782,23 +643,191 @@
     <ClInclude Include="..\OBSE\obse\NiRenderer.h">
       <Filter>OBSE</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase_Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEMain.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="CSERenderWindowPainter.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEAchievements.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEHallOfFame.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEWorkspaceManager.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEWorkspaceManager.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEAchievements.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEConsole.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEHallOfFame.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEMain.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowPainter.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEToolBox.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEUIManager.h">
+      <Filter>Components\BGSEEBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\Functors.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIManager.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\MemoryHandler.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\MersenneTwister.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\MiscGunk.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\SME_Prefix.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\StringHelpers.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\UIHelpers.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEConsole.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEUIManager.h">
+      <Filter>Components\BGSEEBase Derivatives</Filter>
+    </ClInclude>
+    <ClInclude Include="Construction Set Extender_Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Coda\CSECoda.h">
+      <Filter>Components\BGSEEBase Derivatives\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h">
+      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h">
+      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h">
+      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h">
+      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\Splash.bmp">
       <Filter>Resources\Images</Filter>
     </None>
-    <None Include="Images\Achievement.bmp">
-      <Filter>Resources\Images</Filter>
-    </None>
     <None Include="EditorAPI\NiTMap.h">
       <Filter>EditorAPI\Types\NetImmerse</Filter>
+    </None>
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl">
+      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+    </None>
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl">
+      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+    </None>
+    <None Include="Images\antic.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\wtf.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\automaton.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\bob.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\cardinalsin.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\cheat.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\command.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\compart.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\erudite.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\fearless.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\fly.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\heretic.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\jobless.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\lazybum.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\loquacious.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\madsci.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\magister.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\pedantic.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\powerusr.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\saboteur.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\soprano.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\wiseone.bmp">
+      <Filter>Resources\Images</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="..\[Libraries]\INI Manager\INIEditGUI_Res.rc">
+    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

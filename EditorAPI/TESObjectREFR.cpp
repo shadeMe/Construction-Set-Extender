@@ -1,6 +1,8 @@
 #include "TESObjectREFR.h"
 #include "..\Hooks\Renderer.h"
 
+using namespace ConstructionSetExtender;
+
 void TESObjectREFR::UpdateNiNode()
 {
 	Hooks::kTESObjectREFRUpdate3D.WriteJump();

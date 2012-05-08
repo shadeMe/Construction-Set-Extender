@@ -72,7 +72,7 @@ BEGIN
             VALUE "FileDescription", "BatchEditor Dynamic Link Library"
             VALUE "FileVersion", CSE_VERSION_VERSTRING
             VALUE "InternalName", "BatchEditor"
-            VALUE "LegalCopyright", "Copyright (C) 2010"
+            VALUE "LegalCopyright", "Copyright (C) 2010 - 2012"
             VALUE "OriginalFilename", "BatchEditor.dll"
             VALUE "ProductName", "BatchEditor Dynamic Link Library"
             VALUE "ProductVersion", CSE_VERSION_VERSTRING

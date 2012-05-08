@@ -1,6 +1,5 @@
 #include "TESRenderControl.h"
 #include "Core.h"
-#include "ElapsedTimeCounter.h"
 
 UInt32*								g_RenderWindowStateFlags = (UInt32*)0x00A0B058;
 TESRenderSelection**				g_TESRenderSelectionPrimary = (TESRenderSelection**)0x00A0AF60;

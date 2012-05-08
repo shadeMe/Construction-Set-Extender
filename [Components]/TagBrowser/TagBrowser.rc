@@ -74,7 +74,7 @@ BEGIN
             VALUE "FileDescription", "TagBrowser Dynamic Link Library"
             VALUE "FileVersion", CSE_VERSION_VERSTRING
             VALUE "InternalName", "TagBrowser"
-            VALUE "LegalCopyright", "Copyright (C) 2011"
+            VALUE "LegalCopyright", "Copyright (C) 2010 - 2012"
             VALUE "OriginalFilename", "TagBrowser.dll"
             VALUE "ProductName", "TagBrowser Dynamic Link Library"
             VALUE "ProductVersion", CSE_VERSION_VERSTRING

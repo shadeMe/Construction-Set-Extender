@@ -1,6 +1,6 @@
 #include "SettingCollection.h"
 
-GameSettingCollection*				g_GMSTCollection = (GameSettingCollection*)0x00A10198;
+GameSettingCollection*				GameSettingCollection::Instance = (GameSettingCollection*)0x00A10198;
 const char*							g_CSINIPath = (const char*)0x00A0ABB8;
 
 struct DefaultGMSTMapKeyComparer

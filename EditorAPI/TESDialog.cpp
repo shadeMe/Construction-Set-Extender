@@ -1,9 +1,7 @@
 #include "TESForm.h"
 #include "TESDialog.h"
-#include "WorkspaceManager.h"
-#include "Hooks\ScriptEditor.h"
-#include "Hooks\TESFile.h"
 #include "PathGridUndoManager.h"
+#include "[Common]\CLIWrapper.h"
 
 const HINSTANCE*					g_TESCS_Instance = (HINSTANCE*)0x00A0AF1C;
 const DLGPROC						g_ScriptEditor_DlgProc = (DLGPROC)0x004FE760;
@@ -39,8 +37,7 @@ RECT*								g_CellViewCellNameStaticBounds = (RECT*)0x00A0A9F0;
 RECT*								g_CellViewDlgBounds = (RECT*)0x00A0AA38;
 UInt16*								g_TESFormIDListViewFormIDColumnWidth = (UInt16*)0x009EA32A;
 
-TESDialogWindowHandleCollection		g_CustomMainWindowChildrenDialogs;
-TESDialogWindowHandleCollection		g_DragDropSupportDialogs;
+using namespace ConstructionSetExtender;
 
 FormEditParam::FormEditParam(const char* EditorID)
 {
@@ -136,11 +133,12 @@ HWND TESDialog::ShowFormEditDialog( TESForm* Form )
 		return NULL;
 
 	FormEditParam InitData(Form);
-	return CreateDialogParamA(*g_TESCS_Instance,
-							(LPCSTR)GetDialogTemplateForFormType(InitData.typeID),
+	return BGSEEUI->ModelessDialog(*g_TESCS_Instance,
+							(LPSTR)GetDialogTemplateForFormType(InitData.typeID),
 							*g_HWND_CSParent,
 							g_TESDialogFormEdit_DlgProc,
-							(LPARAM)&InitData);
+							(LPARAM)&InitData,
+							true);
 }
 
 void TESDialog::ShowScriptEditorDialog( TESForm* InitScript )
@@ -224,10 +222,10 @@ void TESDialog::RedrawRenderWindow()
 {
 	if (*g_RenderWindowPathGridEditModeFlag)
 	{
-		g_PathGridUndoManager.SetCanReset(false);
+		PathGridUndoManager::Instance.SetCanReset(false);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
 		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
-		g_PathGridUndoManager.SetCanReset(true);
+		PathGridUndoManager::Instance.SetCanReset(true);
 	}
 	else
 	{
@@ -237,7 +235,17 @@ void TESDialog::RedrawRenderWindow()
 
 HWND TESDialog::ShowUseReportDialog( TESForm* Form )
 {
-	return CreateDialogParam(*g_TESCS_Instance, (LPCSTR)TESDialog::kDialogTemplate_UseReport, NULL, g_FormUseReport_DlgProc, (LPARAM)Form);
+	return BGSEEUI->ModelessDialog(*g_TESCS_Instance, (LPSTR)TESDialog::kDialogTemplate_UseReport, NULL, g_FormUseReport_DlgProc, (LPARAM)Form, true);
+}
+
+void TESDialog::ResetFormListControls()
+{
+	TESDialog::DeinitializeCSWindows();
+
+	SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
+	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
+
+	TESDialog::InitializeCSWindows();
 }
 
 void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
@@ -268,165 +276,4 @@ void* TESListView::GetItemData( HWND hWnd, int Index )
 void TESListView::SetSelectedItem( HWND hWnd, int Index )
 {
 	cdeclCall<void>(0x00403B10, hWnd, Index);
-}
-
-void CSStartupManager::LoadStartupPlugin()
-{
-	if (g_INIManager->GetINIInt("LoadPlugin", "Extender::Startup"))
-	{
-		Hooks::kAutoLoadActivePluginOnStartup.WriteJump();
-
-		const char* PluginName = g_INIManager->GetINIStr("PluginName", "Extender::Startup");
-		TESFile* File = _DATAHANDLER->LookupPluginByName(PluginName);
-
-		if (File)
-		{
-			DebugPrint("Loading plugin '%s'", PluginName);
-			CONSOLE->Indent();
-
-			if (_stricmp(PluginName, "Oblivion.esm"))
-				ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Active, true);
-
-			ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
-			SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
-
-			CONSOLE->Exdent();
-		}
-		else if (strlen(PluginName) >= 1)
-		{
-			DebugPrint("Non-existent startup plugin '%s'", PluginName);
-		}
-
-		Hooks::kAutoLoadActivePluginOnStartup.WriteBuffer();
-	}
-}
-
-void CSStartupManager::LoadStartupScript()
-{
-	if (g_INIManager->GetINIInt("OpenScriptWindow", "Extender::Startup"))
-	{
-		const char* ScriptID = g_INIManager->GetINIStr("ScriptEditorID", "Extender::Startup");
-		if (strcmp(ScriptID, ""))
-			TESDialog::ShowScriptEditorDialog(TESForm::LookupByEditorID(ScriptID));
-		else
-			TESDialog::ShowScriptEditorDialog(NULL);
-	}
-}
-
-void CSStartupManager::LoadStartupWorkspace()
-{
-	if (g_INIManager->GetINIInt("SetWorkspace", "Extender::Startup"))
-		g_WorkspaceManager.SelectWorkspace(g_INIManager->GetINIStr("WorkspacePath", "Extender::Startup"));
-}
-
-void __stdcall FormEnumerationWrapper::ReinitializeFormLists()
-{
-	TESDialog::DeinitializeCSWindows();
-
-	SendMessage(*g_HWND_CellView, 0x40E, 1, 1);			// for worldspaces
-	SendMessage(*g_HWND_AIPackagesDlg, 0x41A, 0, 0);	// for AI packages
-
-	TESDialog::InitializeCSWindows();
-}
-
-bool FormEnumerationWrapper::GetUnmodifiedFormHiddenState()	// returns true when hidden
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-	UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_BYCOMMAND);
-
-	return (State & MF_CHECKED);
-}
-
-bool FormEnumerationWrapper::GetDeletedFormHiddenState()
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-	UInt32 State = GetMenuState(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_BYCOMMAND);
-
-	return (State & MF_CHECKED);
-}
-
-bool __stdcall FormEnumerationWrapper::GetShouldEnumerateForm(TESForm* Form)
-{
-	if (GetUnmodifiedFormHiddenState() && (Form->formFlags & TESForm::kFormFlags_FromActiveFile) == 0)
-		return false;		// skip addition
-	else if (GetDeletedFormHiddenState() && (Form->formFlags & TESForm::kFormFlags_Deleted))
-		return false;
-	else
-		return true;
-}
-
-bool __stdcall FormEnumerationWrapper::PerformListViewPrologCheck(UInt32 CallAddress)
-{
-	switch (CallAddress)
-	{
-	case 0x00445C88:
-	case 0x00445DC8:
-	case 0x00445E6E:
-	case 0x00452FA8:
-	case 0x00440FBD:
-	case 0x0040A4BF:
-	case 0x00412F7A:
-	case 0x0043FDFF:
-	case 0x00442576:
-	case 0x00452409:
-	case 0x00560DC2:
-	case 0x00445E12:
-	case 0x00445D81:
-	case 0x004F00C3:
-		return 1;
-	default:
-		return 0;
-	}
-}
-
-void FormEnumerationWrapper::ToggleUnmodifiedFormVisibility()
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-	if (GetUnmodifiedFormHiddenState())
-		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_UNCHECKED);
-	else
-		CheckMenuItem(ViewMenu, MAIN_VIEW_MODIFIEDRECORDS, MF_CHECKED);
-
-	ReinitializeFormLists();
-}
-void FormEnumerationWrapper::ToggleDeletedFormVisibility()
-{
-	HMENU MainMenu = GetMenu(*g_HWND_CSParent), ViewMenu = GetSubMenu(MainMenu, 2);
-	if (GetDeletedFormHiddenState())
-		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_UNCHECKED);
-	else
-		CheckMenuItem(ViewMenu, MAIN_VIEW_DELETEDRECORDS, MF_CHECKED);
-
-	ReinitializeFormLists();
-}
-
-void __stdcall FormEnumerationWrapper::ResetFormVisibility(void)
-{
-	if (GetUnmodifiedFormHiddenState())
-		ToggleUnmodifiedFormVisibility();
-	if (GetDeletedFormHiddenState())
-		ToggleDeletedFormVisibility();
-}
-
-TESDialogWindowHandleCollection::HandleCollectionT::iterator TESDialogWindowHandleCollection::FindHandle(HWND Handle)
-{
-	for (HandleCollectionT::iterator Itr = WindowHandles.begin(); Itr != WindowHandles.end(); Itr++)
-	{
-		if (*Itr == Handle)
-			return Itr;
-	}
-
-	return WindowHandles.end();
-}
-
-bool TESDialogWindowHandleCollection::RemoveHandle(HWND Handle)
-{
-	HandleCollectionT::iterator Match = FindHandle(Handle);
-	if (Match != WindowHandles.end())
-	{
-		WindowHandles.erase(Match);
-		return true;
-	}
-	else
-		return false;
 }

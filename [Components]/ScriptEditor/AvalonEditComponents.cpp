@@ -23,7 +23,7 @@ namespace ConstructionSetExtender
 
 				if (!CurrentSelection->IsEmpty)
 				{
-					String^ SelectionText = CurrentSelection->GetText(CurrentDocument)->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
+					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
 					String^ CurrentLine = CurrentDocument->GetText(line);
 
 					int Index = 0, Start = 0;
@@ -69,7 +69,7 @@ namespace ConstructionSetExtender
 				Segment->StartOffset = StartOffset;
 				Segment->EndOffset = EndOffset;
 
-				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment))
+				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
 				{
 					if (ColorEntireLine)
 					{
@@ -137,7 +137,7 @@ namespace ConstructionSetExtender
 
 				if (!CurrentSelection->IsEmpty)
 				{
-					String^ SelectionText = CurrentSelection->GetText(CurrentDocument)->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
+					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
 					if (SelectionText->Length > 4)
 					{
 						Color Buffer = PREFERENCES->LookupColorByKey("SelectionHighlightColor");

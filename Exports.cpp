@@ -1,14 +1,15 @@
 #include "[Common]\ComponentDLLInterface.h"
 #include "[Common]\CLIWrapper.h"
 
-#include "WindowManager.h"
+#include "CSEUIManager.h"
 #include "Hooks\CompilerErrorDetours.h"
 #include "Hooks\Misc.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
 
-using namespace Hooks;
 using namespace ComponentDLLInterface;
+using namespace ConstructionSetExtender;
+using namespace ConstructionSetExtender::Hooks;
 
 extern ComponentDLLInterface::CSEInterfaceTable g_InteropInterface;
 
@@ -32,12 +33,45 @@ void DeleteNativeHeapPointer( void* Pointer, bool IsArray )
 #pragma region EditorAPI
 void ComponentDLLDebugPrint(UInt8 Source, const char* Message)
 {
-	DebugPrint(Source, Message);
+	const char* Prefix = "";
+
+	enum MessageSource
+	{
+		e_BE = 2,
+		e_UL,
+		e_SE,
+		e_BSA,
+		e_TAG
+	};
+
+	switch (Source)
+	{
+	case e_BE:
+		Prefix = "BE";
+		break;
+	case e_UL:
+		Prefix = "UL";
+		break;
+	case e_SE:
+		Prefix = "SE";
+		break;
+	case e_BSA:
+		Prefix = "BSA";
+		break;
+	case e_TAG:
+		Prefix = "TAG";
+		break;
+	default:
+		Prefix = "???";
+		break;
+	}
+
+	BGSEECONSOLE->LogMsg(Prefix, Message);
 }
 
 const char* GetAppPath(void)
 {
-	return g_APPPath.c_str();
+	return BGSEEMAIN->GetAPPPath();
 }
 
 void WriteToStatusBar(int PanelIndex, const char* Message)
@@ -145,6 +179,7 @@ void LoadFormForEdit(const char* EditorID)
 FormData* ShowPickReferenceDialog(HWND Parent)
 {
 	TESObjectREFR* Ref = TESDialog::ShowSelectReferenceDialog(Parent, NULL);
+
 	if (!Ref)
 		return NULL;
 	else
@@ -154,6 +189,7 @@ FormData* ShowPickReferenceDialog(HWND Parent)
 void ShowUseReportDialog(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
+
 	if (Form)
 		TESDialog::ShowUseReportDialog(Form);
 }
@@ -165,12 +201,12 @@ void SaveActivePlugin(void)
 
 void ReadFromINI(const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size)
 {
-	g_INIManager->DirectReadFromINI(Setting, Section, Default, OutBuffer, Size);
+	BGSEEMAIN->INIGetter()(Setting, Section, Default, OutBuffer, Size);
 }
 
 void WriteToINI(const char* Setting, const char* Section, const char* Value)
 {
-	g_INIManager->DirectWriteToINI(Setting, Section, Value);
+	BGSEEMAIN->INISetter()(Setting, Section, Value, true);
 }
 #pragma endregion
 /**** END EDITORAPI SUBINTERFACE ****/
@@ -195,11 +231,10 @@ bool CompileScript(ScriptCompileData* Data)
 
 	if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted))
 	{
-		FORMAT_STR(Buffer, "Script %s {%08X} has been deleted and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
-		MessageBox(*g_HWND_CSParent,
-					Buffer,
-					"CSE Script Editor",
-					MB_OK|MB_ICONEXCLAMATION|MB_TOPMOST|MB_SETFOREGROUND);
+		BGSEEUI->MsgBoxI(BGSEEUI->GetMainWindow(),
+						MB_TOPMOST|MB_SETFOREGROUND,
+						"Script %s {%08X} has been deleted and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
+
 		Data->CompileResult = false;
 	}
 	else
@@ -246,8 +281,8 @@ void RecompileScripts(void)
 {
 	g_PreventScriptCompileErrorRerouting = true;
 
-	DebugPrint("Recompiling active scripts...");
-	CONSOLE->Indent();
+	BGSEECONSOLE_MESSAGE("Recompiling active scripts...");
+	BGSEECONSOLE->Indent();
 
 	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
@@ -255,15 +290,15 @@ void RecompileScripts(void)
 		if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted) == 0 &&
 			(ScriptForm->formFlags & TESForm::kFormFlags_FromActiveFile))
 		{
-			DebugPrint(Console::e_CS, "Script '%s' {%08X}:", ScriptForm->editorID.c_str(), ScriptForm->formID);
-			CONSOLE->Indent();
+			BGSEECONSOLE->LogMsg("CS", "Script '%s' {%08X}:", ScriptForm->editorID.c_str(), ScriptForm->formID);
+			BGSEECONSOLE->Indent();
 			ScriptForm->Compile();
-			CONSOLE->Exdent();
+			BGSEECONSOLE->Exdent();
 		}
 	}
 
-	CONSOLE->Exdent();
-	DebugPrint("Recompile active scripts operation completed!");
+	BGSEECONSOLE->Exdent();
+	BGSEECONSOLE_MESSAGE("Recompile active scripts operation completed!");
 
 	g_PreventScriptCompileErrorRerouting = false;
 }
@@ -453,8 +488,8 @@ bool UpdateScriptVarIndices(const char* EditorID, ScriptVarListData* Data)
 
 void CompileCrossReferencedForms(TESForm* Form)
 {
-	DebugPrint("Parsing object use list of %08X...", Form->formID);
-	CONSOLE->Indent();
+	BGSEECONSOLE_MESSAGE("Parsing object use list of %08X...", Form->formID);
+	BGSEECONSOLE->Indent();
 
 	std::vector<Script*> ScriptDepends;		// updating usage info inside an use list loop invalidates the list.
 	std::vector<TESTopicInfo*> InfoDepends; // so store the objects ptrs and parse them later
@@ -488,25 +523,25 @@ void CompileCrossReferencedForms(TESForm* Form)
 	// scripts
 	for (std::vector<Script*>::const_iterator Itr = ScriptDepends.begin(); Itr != ScriptDepends.end(); Itr++)
 	{
-		DebugPrint("Script %s {%08X}:", (*Itr)->editorID.c_str(), (*Itr)->formID);
-		CONSOLE->Indent();
+		BGSEECONSOLE_MESSAGE("Script %s {%08X}:", (*Itr)->editorID.c_str(), (*Itr)->formID);
+		BGSEECONSOLE->Indent();
 
 		if ((*Itr)->info.dataLength > 0)
 		{
 			if (!(*Itr)->Compile())
 			{
-				DebugPrint("Script failed to compile due to errors!");
+				BGSEECONSOLE_MESSAGE("Script failed to compile due to errors!");
 			}
 		}
 
-		CONSOLE->Exdent();
+		BGSEECONSOLE->Exdent();
 	}
 
 	// quests
 	for (std::vector<TESQuest*>::const_iterator Itr = QuestDepends.begin(); Itr != QuestDepends.end(); Itr++)
 	{
-		DebugPrint("Quest %s {%08X}:", (*Itr)->editorID.c_str(), (*Itr)->formID);
-		CONSOLE->Indent();
+		BGSEECONSOLE_MESSAGE("Quest %s {%08X}:", (*Itr)->editorID.c_str(), (*Itr)->formID);
+		BGSEECONSOLE->Indent();
 
 		for (TESQuest::StageListT::Iterator i = (*Itr)->stageList.Begin(); !i.End(); ++i)
 		{
@@ -525,11 +560,11 @@ void CompileCrossReferencedForms(TESForm* Form)
 				{
 					if (!StageItem->resultScript.Compile(true))
 					{
-						DebugPrint("Result script in stage item %d-%d failed to compile due to errors!", Stage->index, Count);
+						BGSEECONSOLE_MESSAGE("Result script in stage item %d-%d failed to compile due to errors!", Stage->index, Count);
 					}
 				}
 
-				DebugPrint("Found %d conditions in stage item %d-%d that referenced source script",
+				BGSEECONSOLE_MESSAGE("Found %d conditions in stage item %d-%d that referenced source script",
 					TESConditionItem::GetScriptableFormConditionCount(&StageItem->conditions, Form), Stage->index, Count);
 			}
 		}
@@ -540,55 +575,58 @@ void CompileCrossReferencedForms(TESForm* Form)
 			if (!Target)
 				break;
 
-			DebugPrint("Found %d conditions in target entry {%08X} that referenced source script",
+			BGSEECONSOLE_MESSAGE("Found %d conditions in target entry {%08X} that referenced source script",
 						TESConditionItem::GetScriptableFormConditionCount(&Target->conditionList, Form), Target->target->formID);
 		}
 
 		(*Itr)->UpdateUsageInfo();
-		CONSOLE->Exdent();
+		BGSEECONSOLE->Exdent();
 	}
 
 	// topic infos
 	for (std::vector<TESTopicInfo*>::const_iterator Itr = InfoDepends.begin(); Itr != InfoDepends.end(); Itr++)
 	{
-		DebugPrint("Topic info %08X:", (*Itr)->formID);
-		CONSOLE->Indent();
+		BGSEECONSOLE_MESSAGE("Topic info %08X:", (*Itr)->formID);
+		BGSEECONSOLE->Indent();
 
 		if ((*Itr)->resultScript.info.dataLength > 0)
 		{
 			if (!(*Itr)->resultScript.Compile(true))
 			{
-				DebugPrint("Result script failed to compile due to errors!");
+				BGSEECONSOLE_MESSAGE("Result script failed to compile due to errors!");
 			}
 		}
 
-		DebugPrint("Found %d conditions that referenced source script",
+		BGSEECONSOLE_MESSAGE("Found %d conditions that referenced source script",
 					TESConditionItem::GetScriptableFormConditionCount(&(*Itr)->conditions, Form));
 
 		(*Itr)->UpdateUsageInfo();
-		CONSOLE->Exdent();
+		BGSEECONSOLE->Exdent();
 	}
 
-	CONSOLE->Exdent();
+	BGSEECONSOLE->Exdent();
 }
 
 void CompileDependencies(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
-	if (!Form)						return;
+	if (Form == NULL)
+		return;
+
 	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (!ScriptForm)				return;
+	if (ScriptForm == NULL)
+		return;
 
-	DebugPrint("Recompiling dependencies of script %s {%08X}...", ScriptForm->editorID.c_str(), ScriptForm->formID);
-	CONSOLE->Indent();
+	BGSEECONSOLE_MESSAGE("Recompiling dependencies of script %s {%08X}...", ScriptForm->editorID.c_str(), ScriptForm->formID);
+	BGSEECONSOLE->Indent();
 
-	DebugPrint("Resolving script parent...");
-	CONSOLE->Indent();
+	BGSEECONSOLE_MESSAGE("Resolving script parent...");
+	BGSEECONSOLE->Indent();
 	switch (ScriptForm->info.type)
 	{
 	case Script::kScriptType_Object:
 	{
-		DebugPrint("Script type = Object");
+		BGSEECONSOLE_MESSAGE("Script type = Object");
 		for (FormCrossReferenceListT::Iterator Itr = Form->GetCrossReferenceList()->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			TESForm* Parent = Itr.Get()->GetForm();
@@ -596,9 +634,9 @@ void CompileDependencies(const char* EditorID)
 
 			if (ValidParent)
 			{
-				DebugPrint("Scriptable Form %s ; Type = %d:", Parent->editorID.c_str(), Parent->formType);
-				DebugPrint("Parsing cell use list...");
-				CONSOLE->Indent();
+				BGSEECONSOLE_MESSAGE("Scriptable Form %s ; Type = %d:", Parent->editorID.c_str(), Parent->formType);
+				BGSEECONSOLE_MESSAGE("Parsing cell use list...");
+				BGSEECONSOLE->Indent();
 
 				TESCellUseList* UseList = CS_CAST(Form, TESForm, TESCellUseList);
 				for (TESCellUseList::CellUseInfoListT::Iterator Itr = UseList->cellUses.Begin(); !Itr.End(); ++Itr)
@@ -617,33 +655,33 @@ void CompileDependencies(const char* EditorID)
 							CompileCrossReferencedForms((TESForm*)ThisReference);
 					}
 				}
-				CONSOLE->Exdent();
+				BGSEECONSOLE->Exdent();
 			}
 		}
 		break;
 	}
 	case Script::kScriptType_Quest:
 	{
-		DebugPrint("Script type = Quest");
+		BGSEECONSOLE_MESSAGE("Script type = Quest");
 		for (FormCrossReferenceListT::Iterator Itr = Form->GetCrossReferenceList()->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			TESForm* Parent = Itr.Get()->GetForm();
 			if (Parent->formType == TESForm::kFormType_Quest)
 			{
-				DebugPrint("Quest %s:", Parent->editorID.c_str());
+				BGSEECONSOLE_MESSAGE("Quest %s:", Parent->editorID.c_str());
 				CompileCrossReferencedForms(Parent);
 			}
 		}
 		break;
 	}
 	}
-	CONSOLE->Exdent();
+	BGSEECONSOLE->Exdent();
 
-	DebugPrint("Parsing direct dependencies...");
+	BGSEECONSOLE_MESSAGE("Parsing direct dependencies...");
 	CompileCrossReferencedForms(Form);
 
-	CONSOLE->Exdent();
-	DebugPrint("Recompile dependencies operation completed!");
+	BGSEECONSOLE->Exdent();
+	BGSEECONSOLE_MESSAGE("Recompile dependencies operation completed!");
 }
 
 IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
@@ -696,6 +734,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		Data->QuestListHead[QuestCount].ScriptName = NULL;
 		if (Itr.Get()->script)
 			Data->QuestListHead[QuestCount].ScriptName = Itr.Get()->script->editorID.c_str();
+
 		QuestCount++;
 	}
 
@@ -740,11 +779,14 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 void BindScript(const char* EditorID, HWND Parent)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
-	if (!Form)						return;
-	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
-	if (!ScriptForm)				return;
+	if (Form == NULL)
+		return;
 
-	Form = (TESForm*)DialogBox(g_DLLInstance, MAKEINTRESOURCE(DLG_BINDSCRIPT), Parent, (DLGPROC)BindScriptDlgProc);
+	Script* ScriptForm = CS_CAST(Form, TESForm, Script);
+	if (ScriptForm == NULL)
+		return;
+
+	Form = (TESForm*)DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_BINDSCRIPT), Parent, (DLGPROC)UIManager::BindScriptDlgProc);
 
 	if (Form)
 	{
@@ -755,19 +797,17 @@ void BindScript(const char* EditorID, HWND Parent)
 		if ((Quest && ScriptForm->info.type != Script::kScriptType_Quest) ||
 			(BoundObj && ScriptForm->info.type != Script::kScriptType_Object))
 		{
-			MessageBox(Parent, "Script type doesn't correspond to binding form.", "CSE Script Editor", MB_OK|MB_ICONEXCLAMATION);
+			BGSEEUI->MsgBoxW(Parent, 0, "Script type doesn't correspond to binding form.");
 		}
 		else if (ScriptableForm == NULL)
-			MessageBox(Parent, "Binding form isn't scriptable.", "CSE Script Editor", MB_OK|MB_ICONEXCLAMATION);
+			BGSEEUI->MsgBoxW(Parent, 0, "Binding form isn't scriptable.");
 		else
 		{
 			ScriptableForm->script = ScriptForm;
 			ScriptForm->AddCrossReference(Form);
 			Form->SetFromActiveFile(true);
 
-			char Buffer[0x200] = {0};
-			FORMAT_STR(Buffer, "Script '%s' bound to form '%s'", ScriptForm->editorID.c_str(), Form->editorID.c_str());
-			MessageBox(Parent, Buffer, "CSE Script Editor", MB_OK|MB_ICONINFORMATION);
+			BGSEEUI->MsgBoxW(Parent, 0, "Script '%s' bound to form '%s'", ScriptForm->editorID.c_str(), Form->editorID.c_str());
 		}
 	}
 }
@@ -788,8 +828,8 @@ void UpdateScriptVarNames(const char* EditorID, ComponentDLLInterface::ScriptVar
 
 		if (ScriptForm)
 		{
-			DebugPrint("Updating script '%s' variable names...", ScriptForm->editorID.c_str());
-			CONSOLE->Indent();
+			BGSEECONSOLE_MESSAGE("Updating script '%s' variable names...", ScriptForm->editorID.c_str());
+			BGSEECONSOLE->Indent();
 			for (int i = 0; i < Data->ScriptVarListCount; i++)
 			{
 				ScriptVarRenameData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
@@ -798,7 +838,7 @@ void UpdateScriptVarNames(const char* EditorID, ComponentDLLInterface::ScriptVar
 				if (ScriptVar)
 				{
 					ScriptVar->name.Set(VarInfo->NewName);
-					DebugPrint("Variable '%s' renamed to '%s'", VarInfo->OldName, VarInfo->NewName);
+					BGSEECONSOLE_MESSAGE("Variable '%s' renamed to '%s'", VarInfo->OldName, VarInfo->NewName);
 
 					Script::RefVariable* RefVar = ScriptForm->LookupRefVariableByIndex(ScriptVar->index);
 					if (RefVar && !RefVar->form)
@@ -806,7 +846,7 @@ void UpdateScriptVarNames(const char* EditorID, ComponentDLLInterface::ScriptVar
 				}
 			}
 
-			CONSOLE->Exdent();
+			BGSEECONSOLE->Exdent();
 			ScriptForm->SetFromActiveFile(true);
 		}
 	}
@@ -943,6 +983,7 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 				Result->UseInfoListCellItemListCount = CellUseList->Count();
 				Result->UseInfoListCellItemListHead = new UseInfoListCellItemData[Result->UseInfoListCellItemListCount];
 				int i = 0;
+
 				for (TESCellUseList::CellUseInfoListT::Iterator Itr = CellUseList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 				{
 					TESCellUseList::CellUseInfo* Data = Itr.Get();
@@ -1039,7 +1080,7 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 				TESForm* Form = TESForm::LookupByFormID(FormID);
 				if (!Form)
 				{
-					DebugPrint(Console::e_TAG, "Couldn't find form '%08X'!", FormID);
+					BGSEECONSOLE_MESSAGE("Couldn't find form '%08X'!", FormID);
 					continue;
 				}
 				_RENDERSEL->AddToSelection(Form);

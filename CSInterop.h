@@ -1,30 +1,32 @@
 #pragma once
 
-// loader derived from OBSE's code. well, duplicated.
-
-class CSInteropManager
+namespace ConstructionSetExtender
 {
-	static CSInteropManager*		Singleton;
+	// loader derived from OBSE's code. well, duplicated.
+	class CSInteropManager
+	{
+		static CSInteropManager*		Singleton;
 
-	CSInteropManager();
+		CSInteropManager();
 
-	PROCESS_INFORMATION				CS10ProcInfo;
-	std::string						DLLPath;
-	HANDLE							InteropPipeHandle;
-	bool							Loaded;
-	GUID							PipeGUID;
+		PROCESS_INFORMATION				CS10ProcInfo;
+		std::string						DLLPath;
+		HANDLE							InteropPipeHandle;
+		bool							Loaded;
+		GUID							PipeGUID;
 
-	void							DoInjectDLL(PROCESS_INFORMATION * info);
-	bool							InjectDLL(PROCESS_INFORMATION * info);
-	bool							CreateNamedPipeServer(char** GUIDOut);
-	bool							CreateTempWAVFile(const char* MP3Path, const char* WAVPath);
-public:
-	static CSInteropManager*		GetSingleton();
+		void							DoInjectDLL(PROCESS_INFORMATION * info);
+		bool							InjectDLL(PROCESS_INFORMATION * info);
+		bool							CreateNamedPipeServer(char** GUIDOut);
+		bool							CreateTempWAVFile(const char* MP3Path, const char* WAVPath);
+	public:
+		~CSInteropManager();
 
-	bool							Initialize();
-	void							Deinitialize();
+		static CSInteropManager*		GetSingleton();
 
-	bool							DoGenerateLIPOperation(const char* InputPath, const char* ResponseText);
-};
+		bool							Initialize();
+		bool							GenerateLIPSyncFile(const char* InputPath, const char* ResponseText);
+	};
 
 #define CSIOM						CSInteropManager::GetSingleton()
+}

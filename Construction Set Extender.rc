@@ -1,7 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
-#include "VersionInfo.h"
+#include "Construction Set Extender_Resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -9,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "afxres.h"
+#include "VersionInfo.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -28,12 +28,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 1 TEXTINCLUDE 
 BEGIN
-    "resource.h\0"
+    "Construction Set Extender_Resource.h\0"
 END
 
 2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
+    "#include ""VersionInfo.h""\r\n"
     "\0"
 END
 
@@ -52,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION CSE_VERSION_INTEGER,CSE_VERSION_INTEGER_MINOR,CSE_VERSION_INTEGER_BETA,0
- PRODUCTVERSION CSE_VERSION_INTEGER,CSE_VERSION_INTEGER_MINOR,CSE_VERSION_INTEGER_BETA,0
+ FILEVERSION CSE_VERSION_INTEGER,CSE_VERSION_INTEGER_MINOR,CSE_VERSION_INTEGER_BETA
+ PRODUCTVERSION CSE_VERSION_INTEGER,CSE_VERSION_INTEGER_MINOR,CSE_VERSION_INTEGER_BETA
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -73,7 +74,7 @@ BEGIN
             VALUE "FileDescription", "Construction Set Extender Dynamic Link Library"
             VALUE "FileVersion", CSE_VERSION_VERSTRING
             VALUE "InternalName", "Construction Set Extender"
-            VALUE "LegalCopyright", "Copyright (C) 2010"
+            VALUE "LegalCopyright", "Copyright (C) 2010 - 2012"
             VALUE "OriginalFilename", "Construction Set Extender.dll"
             VALUE "ProductName", "Construction Set Extender Dynamic Link Library"
             VALUE "ProductVersion", CSE_VERSION_VERSTRING
@@ -94,7 +95,7 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO
 BEGIN
-    DLG_ASSETSEL, DIALOG
+    IDD_ASSETSELECTOR, DIALOG
     BEGIN
         LEFTMARGIN, 6
         RIGHTMARGIN, 108
@@ -102,7 +103,7 @@ BEGIN
         BOTTOMMARGIN, 124
     END
 
-    DLG_TEXTEDIT, DIALOG
+    IDD_TEXTEDIT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 257
@@ -110,7 +111,7 @@ BEGIN
         BOTTOMMARGIN, 37
     END
 
-    DLG_TESFILE, DIALOG
+    IDD_TESFILESAVE, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 81
@@ -118,17 +119,11 @@ BEGIN
         BOTTOMMARGIN, 56
     END
 
-    DLG_CONSOLE, DIALOG
-    BEGIN
-        RIGHTMARGIN, 265
-        BOTTOMMARGIN, 246
-    END
-
-    DLG_IDLE, DIALOG
+    IDD_IDLE, DIALOG
     BEGIN
     END
 
-    DLG_GLOBALSCRIPT, DIALOG
+    IDD_GLOBALSCRIPT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 213
@@ -136,7 +131,7 @@ BEGIN
         BOTTOMMARGIN, 88
     END
 
-    DLG_TESCOMBOBOX, DIALOG
+    IDD_TESCOMBOBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 211
@@ -144,7 +139,7 @@ BEGIN
         BOTTOMMARGIN, 36
     END
 
-    DLG_BINDSCRIPT, DIALOG
+    IDD_BINDSCRIPT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 375
@@ -152,7 +147,7 @@ BEGIN
         BOTTOMMARGIN, 253
     END
 
-    DLG_COPYPATH, DIALOG
+    IDD_COPYPATH, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 309
@@ -160,31 +155,7 @@ BEGIN
         BOTTOMMARGIN, 60
     END
 
-    DLG_MANAGETOOLS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 309
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 169
-    END
-
-    DLG_CSASGLOBALS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 212
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 147
-    END
-
-    DLG_ACHIEVEMENTUNLOCKED, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 172
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 67
-    END
-
-    DLG_EDITRESULTSCRIPT, DIALOG
+    IDD_EDITRESULTSCRIPT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 309
@@ -192,20 +163,12 @@ BEGIN
         BOTTOMMARGIN, 162
     END
 
-    DLG_AUXVIEWPORT, DIALOG
+    IDD_AUXVIEWPORT, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 312
         TOPMARGIN, 7
         BOTTOMMARGIN, 176
-    END
-
-    DLG_DEBUGBMP, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 580
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 329
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -216,50 +179,40 @@ END
 // Dialog
 //
 
-DLG_ASSETSEL DIALOGEX 0, 0, 114, 126
+IDD_ASSETSELECTOR DIALOGEX 0, 0, 114, 126
 STYLE DS_SYSMODAL | DS_SETFONT | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_THICKFRAME
 EXSTYLE WS_EX_OVERLAPPEDWINDOW
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Select Asset On Disk",BTN_FILEB,6,3,102,16,WS_GROUP
-    PUSHBUTTON      "Select Asset In Archive",BTN_BSAB,6,19,102,16,WS_GROUP
-    PUSHBUTTON      "Edit Asset Path",BTN_EDITPATH,6,35,102,16,WS_GROUP
-    PUSHBUTTON      "Clear Asset Path",BTN_CLEARPATH,6,72,102,16,WS_GROUP
-    PUSHBUTTON      "Copy Asset Path",BTN_COPYPATH,6,51,102,16,WS_GROUP
-    PUSHBUTTON      "Extract Asset From Archive",BTN_EXTRACTFILE,6,88,102,16
-    DEFPUSHBUTTON   "Cancel",BTN_CANCEL,36,109,41,15,WS_GROUP
+    PUSHBUTTON      "Select Asset On Disk",IDC_ASSETSELECTOR_FILEBROWSER,6,3,102,16,WS_GROUP
+    PUSHBUTTON      "Select Asset In Archive",IDC_ASSETSELECTOR_ARCHIVEBROWSER,6,19,102,16,WS_GROUP
+    PUSHBUTTON      "Edit Asset Path",IDC_ASSETSELECTOR_PATHEDITOR,6,35,102,16,WS_GROUP
+    PUSHBUTTON      "Clear Asset Path",IDC_ASSETSELECTOR_CLEARPATH,6,72,102,16,WS_GROUP
+    PUSHBUTTON      "Copy Asset Path",IDC_ASSETSELECTOR_PATHCOPIER,6,51,102,16,WS_GROUP
+    PUSHBUTTON      "Extract Asset From Archive",IDC_ASSETSELECTOR_ASSETEXTRACTOR,6,88,102,16
+    DEFPUSHBUTTON   "Cancel",IDC_CSE_CANCEL,36,109,41,15,WS_GROUP
 END
 
-DLG_TEXTEDIT DIALOGEX 0, 0, 264, 39
+IDD_TEXTEDIT DIALOGEX 0, 0, 264, 39
 STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Edit Text"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    EDITTEXT        EDIT_TEXTLINE,7,3,250,16,ES_AUTOHSCROLL
-    PUSHBUTTON      "OK",BTN_OK,73,22,57,14
-    PUSHBUTTON      "Cancel",BTN_CANCEL,133,22,57,14
+    EDITTEXT        IDC_TEXTEDIT_TEXT,7,2,250,16,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",IDC_CSE_OK,73,22,57,14
+    PUSHBUTTON      "Cancel",IDC_CSE_CANCEL,133,22,57,14
 END
 
-DLG_TESFILE DIALOGEX 0, 0, 88, 61
+IDD_TESFILESAVE DIALOGEX 0, 0, 88, 61
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 12, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Save as ESP",BTN_ESP,7,5,74,24
-    PUSHBUTTON      "Save as ESM",BTN_ESM,7,32,74,24
+    PUSHBUTTON      "Save as ESP",IDC_TESFILESAVE_SAVEESP,7,5,74,24
+    PUSHBUTTON      "Save as ESM",IDC_TESFILESAVE_SAVEESM,7,32,74,24
 END
 
-DLG_CONSOLE DIALOGEX 0, 0, 266, 247
-STYLE DS_SETFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_THICKFRAME
-EXSTYLE WS_EX_TOOLWINDOW
-CAPTION "Console Window"
-FONT 8, "Lucida Console", 400, 0, 0x0
-BEGIN
-    EDITTEXT        EDIT_CONSOLE,0,0,265,230,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    EDITTEXT        EDIT_CMDBOX,0,229,265,17,ES_AUTOHSCROLL | ES_WANTRETURN,WS_EX_STATICEDGE
-END
-
-DLG_IDLE DIALOGEX 0, 0, 81, 27
+IDD_IDLE DIALOGEX 0, 0, 81, 27
 STYLE DS_SETFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_STATICEDGE
 FONT 10, "Lucida Grande", 700, 0, 0x0
@@ -267,146 +220,90 @@ BEGIN
     CTEXT           "Turn around while CSE does its magic",IDC_STATIC,0,5,81,19,0,WS_EX_TRANSPARENT
 END
 
-DLG_GLOBALSCRIPT DIALOGEX 0, 0, 220, 95
+IDD_GLOBALSCRIPT DIALOGEX 0, 0, 220, 95
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Create Global Script"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",BTN_OK,59,74,50,14,NOT WS_TABSTOP
-    PUSHBUTTON      "Cancel",BTN_CANCEL,110,74,50,14,NOT WS_TABSTOP
-    EDITTEXT        EDIT_QUESTID,120,6,93,15,ES_AUTOHSCROLL
-    EDITTEXT        EDIT_DELAY,120,52,93,15,ES_AUTOHSCROLL
-    EDITTEXT        EDIT_SCRIPTID,120,29,93,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDC_CSE_OK,59,74,50,14,NOT WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDC_CSE_CANCEL,110,74,50,14,NOT WS_TABSTOP
+    EDITTEXT        IDC_GLOBALSCRIPT_QUESTID,120,6,93,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_GLOBALSCRIPT_DELAY,120,52,93,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_GLOBALSCRIPT_SCRIPTID,120,29,93,15,ES_AUTOHSCROLL
     LTEXT           "Container Quest EditorID",IDC_STATIC,7,9,102,18
     LTEXT           "Quest Delay Time",IDC_STATIC,7,56,102,18
     LTEXT           "Script EditorID\r\n(Leave Blank To Use Quest ID)",IDC_STATIC,7,29,102,18
 END
 
-DLG_TESCOMBOBOX DIALOGEX 0, 0, 218, 43
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_TESCOMBOBOX DIALOGEX 0, 0, 218, 43
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Select Form"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",BTN_OK,55,22,50,14
-    PUSHBUTTON      "Cancel",BTN_CANCEL,111,22,50,14
-    COMBOBOX        COMBO_FORMLIST,17,7,183,145,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDC_CSE_OK,55,22,50,14
+    PUSHBUTTON      "Cancel",IDC_CSE_CANCEL,111,22,50,14
+    COMBOBOX        IDC_TESCOMBOBOX_FORMLIST,17,7,183,145,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
-DLG_BINDSCRIPT DIALOGEX 0, 0, 382, 260
+IDD_BINDSCRIPT DIALOGEX 0, 0, 382, 260
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Bind Script"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",BTN_OK,141,234,47,19
-    PUSHBUTTON      "Select Parent Cell",BTN_PARENTCELL,256,197,92,16
-    CONTROL         "Bind To Existing Form",RADIO_EXISTFORM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,8,90,18
-    CONTROL         "Bind To New Form",RADIO_NEWFORM,"Button",BS_AUTORADIOBUTTON,14,31,90,18
+    DEFPUSHBUTTON   "OK",IDC_CSE_OK,141,234,47,19
+    PUSHBUTTON      "Select Parent Cell",IDC_BINDSCRIPT_SELECTPARENTCELL,256,197,92,16
+    CONTROL         "Bind To Existing Form",IDC_BINDSCRIPT_BINDEXISTFORM,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,14,8,90,18
+    CONTROL         "Bind To New Form",IDC_BINDSCRIPT_BINDNEWFORM,"Button",BS_AUTORADIOBUTTON,14,31,90,18
     GROUPBOX        "Create New Scriptable Form",IDC_STATIC,14,55,354,174
     GROUPBOX        "",IDC_STATIC,22,113,101,108
-    EDITTEXT        EDIT_EDITORID,102,71,176,19,ES_AUTOHSCROLL
-    CONTROL         "Start Game Enabled",CHECK_QUEST_STARTGAMEENABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,149,87,20
-    CONTROL         "Allow Repeated Stages",CHECK_QUEST_REPEATEDSTAGES,
+    EDITTEXT        IDC_BINDSCRIPT_NEWFORMEDITORID,102,73,176,14,ES_AUTOHSCROLL
+    CONTROL         "Start Game Enabled",IDC_BINDSCRIPT_QUESTSTARTGAMEENABLED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,149,87,20
+    CONTROL         "Allow Repeated Stages",IDC_BINDSCRIPT_QUESTREPEATEDSTAGES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,170,87,20
-    CONTROL         "Quest",RADIO_QUEST,"Button",BS_AUTORADIOBUTTON | WS_GROUP,49,96,34,10
+    CONTROL         "Quest",IDC_BINDSCRIPT_QUESTFORM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,49,96,34,10
     GROUPBOX        "",IDC_STATIC,131,113,228,108
-    CONTROL         "Object",RADIO_OBJECT,"Button",BS_AUTORADIOBUTTON,222,96,60,10
-    CONTROL         "Quest Item",CHECK_OBJECTTOKEN_QUESTITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,145,173,87,20
+    CONTROL         "Object",IDC_BINDSCRIPT_OBJECTFORM,"Button",BS_AUTORADIOBUTTON,222,96,60,10
+    CONTROL         "Quest Item",IDC_BINDSCRIPT_OBJECTTOKENQUESTITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,145,173,87,20
     GROUPBOX        "",IDC_STATIC,137,143,101,73
     GROUPBOX        "",IDC_STATIC,252,143,101,73
-    CONTROL         "Token",RADIO_OBJECTTOKEN,"Button",BS_AUTORADIOBUTTON | WS_GROUP,153,130,60,10
-    CONTROL         "Reference",RADIO_OBJECTREFERENCE,"Button",BS_AUTORADIOBUTTON,279,130,60,10
-    DEFPUSHBUTTON   "Cancel",BTN_CANCEL,193,234,47,19
-    EDITTEXT        EDIT_REFEDITORID,256,150,92,16,ES_AUTOHSCROLL
-    CONTROL         "Initially Disabled",CHECK_OBJECTREFERENCE_DISABLED,
+    CONTROL         "Token",IDC_BINDSCRIPT_OBJECTTOKEN,"Button",BS_AUTORADIOBUTTON | WS_GROUP,153,130,60,10
+    CONTROL         "Reference",IDC_BINDSCRIPT_OBJECTREFERENCE,"Button",BS_AUTORADIOBUTTON,279,130,60,10
+    DEFPUSHBUTTON   "Cancel",IDC_CSE_CANCEL,193,234,47,19
+    EDITTEXT        IDC_BINDSCRIPT_NEWREFEDITORID,256,150,92,16,ES_AUTOHSCROLL
+    CONTROL         "Initially Disabled",IDC_BINDSCRIPT_OBJECTREFERENCEDISABLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,256,175,92,16
-    COMBOBOX        COMBO_FORMLIST,132,10,213,123,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_BINDSCRIPT_EXISTINGFORMLIST,132,10,213,123,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
-DLG_COPYPATH DIALOGEX 0, 0, 316, 67
+IDD_COPYPATH DIALOGEX 0, 0, 316, 67
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Copy Path"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",BTN_OK,106,46,50,14
-    PUSHBUTTON      "Cancel",BTN_CANCEL,160,46,50,14
-    EDITTEXT        EDIT_PATH,33,25,248,16,ES_CENTER | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDC_CSE_OK,106,46,50,14
+    PUSHBUTTON      "Cancel",IDC_CSE_CANCEL,160,46,50,14
+    EDITTEXT        IDC_COPYPATH_ASSETPATH,33,25,248,16,ES_CENTER | ES_AUTOHSCROLL
     CTEXT           "Drag and release the left mouse button on the button displaying the new path",IDC_STATIC,7,7,302,13
 END
 
-DLG_MANAGETOOLS DIALOGEX 0, 0, 316, 176
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Manage Tools"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    PUSHBUTTON      "Close",BTN_CLOSE,133,155,50,14
-    LISTBOX         LISTBOX_TOOLLIST,7,7,230,96,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "Add",BTN_ADDTOOL,244,7,65,14
-    DEFPUSHBUTTON   "Remove",BTN_REMOVETOOL,244,20,65,14
-    DEFPUSHBUTTON   "Move Up",BTN_MOVEUP,244,36,65,14
-    DEFPUSHBUTTON   "Move Down",BTN_MOVEDOWN,244,50,65,14
-    LTEXT           "Title",IDC_STATIC,7,109,62,12
-    LTEXT           "Command Line",IDC_STATIC,7,125,62,12
-    LTEXT           "Initial Directory",IDC_STATIC,7,140,62,12
-    EDITTEXT        EDIT_TITLE,64,106,245,14,ES_AUTOHSCROLL
-    EDITTEXT        EDIT_CMDLINE,64,122,224,14,ES_AUTOHSCROLL
-    EDITTEXT        EDIT_INITDIR,64,138,224,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "...",BTN_SELECTCMDLINE,293,122,16,14
-    DEFPUSHBUTTON   "...",BTN_SELECTINITDIR,293,138,16,14
-    PUSHBUTTON      "Apply Changes",BTN_APPLY,244,89,65,14
-END
-
-DLG_CSASGLOBALS DIALOGEX 0, 0, 219, 154
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "CSAS Global Data"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    DEFPUSHBUTTON   "Close",BTN_CLOSE,153,132,60,15
-    LISTBOX         LISTBOX_GLOBALLIST,7,7,205,87,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Name",IDC_STATIC,7,117,24,12
-    LTEXT           "Value",IDC_STATIC,7,135,24,12
-    EDITTEXT        EDIT_NAME,30,115,110,12,ES_AUTOHSCROLL
-    EDITTEXT        EDIT_VALUE,30,133,110,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Add As Number",BTN_ADDGLOBALNUM,7,95,63,13
-    PUSHBUTTON      "Add As String",BTN_ADDGLOBALSTR,74,95,63,13
-    PUSHBUTTON      "Remove",BTN_REMOVE,177,95,36,13
-    PUSHBUTTON      "Apply Changes",BTN_APPLYCHANGES,153,114,60,15
-END
-
-DLG_ACHIEVEMENTUNLOCKED DIALOGEX 0, 0, 179, 74
-STYLE DS_SYSMODAL | DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-EXSTYLE WS_EX_TOPMOST | WS_EX_TOOLWINDOW
-CAPTION "Achievement Unlocked"
-FONT 9, "Lucida Grande", 400, 0, 0x0
-BEGIN
-    CONTROL         127,PICT_IMG,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,137,7,35,29,WS_EX_TRANSPARENT
-    LTEXT           "Title",LBL_TITLE,7,7,128,23,SS_CENTERIMAGE
-    EDITTEXT        EDIT_DESC,7,39,165,28,ES_MULTILINE | ES_READONLY | NOT WS_BORDER
-END
-
-DLG_EDITRESULTSCRIPT DIALOGEX 0, 0, 316, 169
+IDD_EDITRESULTSCRIPT DIALOGEX 0, 0, 316, 169
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "Edit Result Script"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Save",BTN_SAVE,7,148,50,14,NOT WS_TABSTOP
-    PUSHBUTTON      "Cancel",BTN_CANCEL,259,148,50,14,NOT WS_TABSTOP
-    PUSHBUTTON      "Compile",BTN_COMPILE,59,148,50,14,NOT WS_TABSTOP
-    CONTROL         "",EDIT_SCRIPTTEXT,"RichEdit20A",ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL | ES_WANTRETURN | WS_BORDER | WS_VSCROLL | WS_HSCROLL,7,7,302,139
+    DEFPUSHBUTTON   "Save",IDC_EDITRESULTSCRIPT_SAVE,7,148,50,14,NOT WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDC_CSE_CANCEL,259,148,50,14,NOT WS_TABSTOP
+    PUSHBUTTON      "Compile",IDC_EDITRESULTSCRIPT_COMPILE,59,148,50,14,NOT WS_TABSTOP
+    CONTROL         "",IDC_EDITRESULTSCRIPT_SCRIPTTEXT,"RichEdit20A",ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL | ES_WANTRETURN | WS_BORDER | WS_VSCROLL | WS_HSCROLL,7,7,302,139
 END
 
-DLG_AUXVIEWPORT DIALOGEX 0, 0, 319, 183
-STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_THICKFRAME
+IDD_AUXVIEWPORT DIALOGEX 0, 0, 319, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_THICKFRAME
 CAPTION "Auxiliary Viewport Window"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-END
-
-DLG_DEBUGBMP DIALOGEX 0, 0, 587, 336
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    CONTROL         123,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_REALSIZEIMAGE | SS_SUNKEN,7,7,561,308,WS_EX_STATICEDGE
 END
 
 
@@ -415,86 +312,256 @@ END
 // Menu
 //
 
-IDR_MENU1 MENU
+IDR_MAINMENU MENU
 BEGIN
-    POPUP "Console Settings", MENUBARBREAK
+    POPUP "&File"
     BEGIN
-        MENUITEM "Clear Console",               CONSOLEMENU_CLEARCONSOLE
-        MENUITEM "Always on top",               CONSOLEMENU_ALWAYSONTOP
-        MENUITEM "Hide Console",                CONSOLEMENU_HIDECONSOLE
+        MENUITEM "&Data...",                    40017
         MENUITEM SEPARATOR
-        MENUITEM "Open Debug Log",              CONSOLEMENU_OPENDEBUGLOG
-        MENUITEM "Open Change Log",             CONSOLEMENU_OPENCHANGELOG
-    END
-END
-
-IDR_MENU2 MENU
-BEGIN
-    POPUP "Align Selection"
-    BEGIN
-        MENUITEM "By X Axis",                   ID_ALIGNSELECTION_BYXAXIS
-        MENUITEM "By Y Axis",                   ID_ALIGNSELECTION_BYYAXIS
-        MENUITEM "By Z Axis",                   ID_ALIGNSELECTION_BYZAXIS
-    END
-END
-
-IDR_MENU3 MENU
-BEGIN
-    POPUP "Selection Grouping"
-    BEGIN
-        MENUITEM "Group",                       ID_SELECTIONGROUPING_GROUP
-        MENUITEM "Ungroup",                     ID_SELECTIONGROUPING_UNGROUP
-    END
-END
-
-IDR_MENU4 MENU
-BEGIN
-    POPUP "Selection Freezing"
-    BEGIN
-        MENUITEM "Freeze",                      ID_SELECTIONFREEZING_FREEZE
-        MENUITEM "Unfreeze",                    ID_SELECTIONFREEZING_UNFREEZE
+        MENUITEM "&Save",                       40127
+        MENUITEM "Save As",                     IDC_MAINMENU_SAVEAS
+        POPUP "Save Options"
+        BEGIN
+            MENUITEM "Save Loaded ESPs As Masters", IDC_MAINMENU_SAVEOPTIONS_SAVEESPMASTERS
+            MENUITEM "Prevent Changes To File Timestamps", IDC_MAINMENU_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS
+        END
         MENUITEM SEPARATOR
-        MENUITEM "Thaw All In Cell",            ID_SELECTIONFREEZING_THAWALLINCELL
-    END
-END
-
-IDR_MENU5 MENU
-BEGIN
-    POPUP "Selection Visibility"
-    BEGIN
-        MENUITEM "Toggle Visibility",           ID_SELECTIONVISIBILITY_TOGGLEVISIBILITY
-        MENUITEM "Toggle Children Visibility",  ID_SELECTIONVISIBILITY_TOGGLECHILDRENVISIBILITY
+        MENUITEM "&Version Control...",         239
+        POPUP "Tools"
+        BEGIN
+            MENUITEM "&Combine Loaded Plugins",     40339
+            MENUITEM "Create &Difference Plugin",   40547
+            MENUITEM "Create F&iltered Difference Plugin", 40562
+            MENUITEM "&Filter File By IDs",         40559
+            MENUITEM "Copy Plugin &Audio Files",    40552
+            MENUITEM "&Resave With New IDs",        40549
+            MENUITEM "&Update Plugin Audio File IDs", 40553
+            MENUITEM "Create &Map To Map Map",      40564
+            MENUITEM "A&pply ID Map to Altered Forms", 40560
+        END
+        POPUP "Export"
+        BEGIN
+            MENUITEM "Interior and Exterior Cell Data", 40458
+            MENUITEM "Form Component Data for all non-World Forms", 40460
+            MENUITEM "Dialogue",                    40465
+            MENUITEM "Quest Stages",                40466
+            MENUITEM "Names",                       40472
+            MENUITEM "Script Messageboxes",         40474
+            MENUITEM "Game Settings",               40490
+            MENUITEM "Books",                       40491
+            MENUITEM "Descriptions",                40494
+            MENUITEM "Faction Rank Names",          40537
+        END
+        POPUP "Import"
+        BEGIN
+            MENUITEM "Dialogue",                    40468
+            MENUITEM "Quest Stages",                40469
+            MENUITEM "Names",                       40473
+            MENUITEM "Script Messageboxes",         40475
+            MENUITEM "Game Settings",               40492
+            MENUITEM "Books",                       40535
+            MENUITEM "Descriptions",                40493
+            MENUITEM "Faction Rank Names",          40538
+        END
         MENUITEM SEPARATOR
-        MENUITEM "Reveal All In Cell",          ID_SELECTIONVISIBILITY_SHOWALL
-    END
-END
-
-IDR_MENU6 MENU
-BEGIN
-    POPUP "Tools"
-    BEGIN
-        MENUITEM "Manage",                      ID_TOOLS_MANAGE
+        MENUITEM "Set Workspace",               IDC_MAINMENU_SETWORKSPACE
         MENUITEM SEPARATOR
-    END
-END
-
-IDR_MENU7 MENU
-BEGIN
-    POPUP "CSAS"
-    BEGIN
-        MENUITEM "Manage Global Data",          ID_CSAS_GLOBALDATA
+        MENUITEM "CS &Preferences...",          40136
+        MENUITEM "CSE Preferences...",          IDC_MAINMENU_CSEPREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "Execute Global Scripts",      ID_CSAS_EXECUTEGLOBALSCRIPTS
-        MENUITEM "Reload Global Scripts and Data", ID_CSAS_RELOADGLOBALSCRIPTS
+        MENUITEM "E&xit",                       40003
     END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl-Z",               40097
+        MENUITEM "&Redo\tCtrl-Y",               40162
+        MENUITEM SEPARATOR
+        MENUITEM "C&ut Render\tCtrl-X",         40098
+        MENUITEM "&Copy Render\tCtrl-C",        40099
+        MENUITEM "&Paste Render\tCtrl-V",       40100
+        MENUITEM "Paste &in Place\tCtrl-Shift-V", 40188
+        MENUITEM "&Duplicate\tCtrl-D",          40185
+        MENUITEM SEPARATOR
+        MENUITEM "Find &Text",                  40254
+        MENUITEM "&Search && Replace...",       40179
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    40102, CHECKED
+        MENUITEM "&Statusbar",                  40026, CHECKED
+        MENUITEM "&Render Window",              40423
+        MENUITEM "&Object Window",              40199
+        MENUITEM "Cell &View Window",           40200
+        MENUITEM "Console Window",              IDC_MAINMENU_CONSOLE
+        MENUITEM "Auxiliary Viewport Window",   IDC_MAINMENU_AUXVIEWPORT
+        MENUITEM "&Preview Window",             40121
+        MENUITEM "Memory Usage Window",         40439
+        MENUITEM "Tag Browser",                 IDC_MAINMENU_TAGBROWSER
+        MENUITEM "Open Windows...",             40455
+        MENUITEM SEPARATOR
+        MENUITEM "Hide Unmodified Records",     IDC_MAINMENU_HIDEUNMODIFIEDFORMS
+        MENUITEM "Hide Deleted Records",        IDC_MAINMENU_HIDEDELETEDFORMS
+        MENUITEM SEPARATOR
+        MENUITEM "Mar&kers\tM",                 40030, CHECKED
+        MENUITEM "&Light Radius\tL",            40031, CHECKED
+        MENUITEM "&Wireframe\tW",               40118
+        MENUITEM "&Bright Light\tA",            40206
+        MENUITEM "Sk&y\tY",                     40223
+        MENUITEM "Solid Subspaces",             40482
+        MENUITEM "Collision Geometry\tF4",      40189
+        MENUITEM "Lea&ves\tV",                  290, CHECKED
+        MENUITEM "Trees",                       40480, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Isometric\tC",               40032
+        MENUITEM "To&p\tT",                     40033
+        MENUITEM SEPARATOR
+        MENUITEM "Unload Current Cell",         IDC_MAINMENU_UNLOADCURRENTCELL
+    END
+    POPUP "Worl&d"
+    BEGIN
+        MENUITEM "Weather",                     40462
+        MENUITEM "Climates...",                 282
+        MENUITEM "&World Spaces...",            283
+        MENUITEM "&Regions...",                 247
+        MENUITEM "&Cells...",                   40035
+        MENUITEM SEPARATOR
+        POPUP "World Testing"
+        BEGIN
+            MENUITEM "Test Models",                 40476
+            MENUITEM "Test Icons/Textures",         40477
+            MENUITEM "Test All Cells",              40231
+            MENUITEM "Test Interior Cells",         40232
+            MENUITEM "Test Path Between Cells",     281
+            MENUITEM "Output Model Size List",      40522
+            POPUP "PathGrids"
+            BEGIN
+                MENUITEM "Test PathGrids",              40496
+                MENUITEM "Fix Interior PathGrids",      40533
+                MENUITEM "Fix Exterior PathGrids",      40534
+                MENUITEM "Fix Current PathGrid",        40556
+            END
+            MENUITEM SEPARATOR
+            MENUITEM "Update Distant LOD Data",     40524
+            MENUITEM "Update Bounds",               40542
+            MENUITEM "Update Model Texture Lists",  40544
+            MENUITEM "Recalc Land Normals",         40528
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Edit Cell &Path Grid",        40194
+        POPUP "Path Grid Generation"
+        BEGIN
+            MENUITEM "Generate Active Cell",        40506
+            MENUITEM "Generate Selected Cells",     40508
+            MENUITEM "Generate All BUT Selected Cells", 40510
+            MENUITEM "Generate Entire World",       40509
+            MENUITEM SEPARATOR
+            MENUITEM "Remove from Active Cell",     40511
+            MENUITEM "Remove from Selected Cells",  40512
+            MENUITEM "Remove from All BUT Selected Cells", 40513
+            MENUITEM "Remove from Entire World",    40514
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Batch Reference Editor",      IDC_MAINMENU_BATCHREFERENCEEDITOR
+        MENUITEM SEPARATOR
+        MENUITEM "Run Havok Sim",               40426
+        MENUITEM SEPARATOR
+        MENUITEM "&Landscape Editing\tH",       40191
+        MENUITEM "Heightmap Editing",           284
+        MENUITEM SEPARATOR
+        MENUITEM "Create Local &Maps",          40471
+        MENUITEM "Adjust Exterior Cells...",    40448
+    END
+    POPUP "&Character"
+    BEGIN
+        MENUITEM "&Hair...",                    40403
+        MENUITEM "&Eyes...",                    40405
+        MENUITEM SEPARATOR
+        MENUITEM "&Race...",                    40069
+        MENUITEM "&Skills...",                  40071
+        MENUITEM "&Class...",                   40070
+        MENUITEM "&Birthsigns...",              40215
+        MENUITEM SEPARATOR
+        MENUITEM "Fac&tion...",                 40059
+        MENUITEM SEPARATOR
+        MENUITEM "&Packages...",                40436
+        MENUITEM "&Quests...",                  40437
+        MENUITEM "Filtered &Dialogue...",       40060
+        MENUITEM SEPARATOR
+        MENUITEM "&Export Dialogue...",         40413
+        MENUITEM "Export NPC Face Textures",    40516
+    END
+    POPUP "&Gameplay"
+    BEGIN
+        MENUITEM "&Magic Effects...",           40064
+        MENUITEM SEPARATOR
+        MENUITEM "&Settings...",                40137
+        MENUITEM SEPARATOR
+        MENUITEM "&Edit Scripts...",            40161
+        MENUITEM "&Globals...",                 40167
+        MENUITEM "Create Global Script...",     IDC_MAINMENU_CREATEGLOBALSCRIPT
+        MENUITEM SEPARATOR
+        MENUITEM "&Idle Animations...",         40419
+        MENUITEM SEPARATOR
+        MENUITEM "Use Info Listing",            IDC_MAINMENU_USEINFOLISTING
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents",                   40157
+        MENUITEM SEPARATOR
+        MENUITEM "&About",                      40016
+    END
+    POPUP "Coda™"
+    BEGIN
+        MENUITEM "Manage Global Data Store",    IDC_MAINMENU_CODAMANAGEGLOBALDATASTORE
+        MENUITEM SEPARATOR
+        MENUITEM "Execute Background Scripts",  IDC_MAINMENU_CODABACKGROUNDER
+    END
+    MENUITEM "Tools",                       IDC_MAINMENU_TOOLS
+    MENUITEM "Launch Game...",              IDC_MAINMENU_LAUNCHGAME
 END
 
-IDR_MENU8 MENUEX
+IDR_RENDERWINDOWCONTEXT MENU
 BEGIN
-    POPUP "Save Options",                   65535,MFT_STRING | MFT_RIGHTJUSTIFY,MFS_ENABLED
+    POPUP "Render Window"
     BEGIN
-        MENUITEM "Save Loaded ESPs As Masters", ID_SAVEOPTIONS_SAVELOADEDESP,MFT_STRING,MFS_ENABLED
-        MENUITEM "Prevent Changes To File Timestamps", ID_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS,MFT_STRING,MFS_ENABLED
+        MENUITEM "Edit Regions Here",           268
+        MENUITEM SEPARATOR
+        POPUP "Generate LOD Land Texture"
+        BEGIN
+            MENUITEM "This LOD Quad",               40441
+            MENUITEM "This Cell",                   40442
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Selection:",                  9999, GRAYED
+        POPUP "Relative Alignment"
+        BEGIN
+            MENUITEM "To X-Axis",                   IDC_RENDERWINDOWCONTEXT_ALIGNTOX
+            MENUITEM "To Y-Axis",                   IDC_RENDERWINDOWCONTEXT_ALIGNTOY
+            MENUITEM "To Z-Axis",                   IDC_RENDERWINDOWCONTEXT_ALIGNTOZ
+        END
+        POPUP "Grouping"
+        BEGIN
+            MENUITEM "Group",                       IDC_RENDERWINDOWCONTEXT_GROUP
+            MENUITEM "Ungroup",                     IDC_RENDERWINDOWCONTEXT_UNGROUP
+        END
+        POPUP "Freezing"
+        BEGIN
+            MENUITEM "Freeze",                      IDC_RENDERWINDOWCONTEXT_FREEZE
+            MENUITEM "Thaw",                        IDC_RENDERWINDOWCONTEXT_THAW
+            MENUITEM SEPARATOR
+            MENUITEM "Thaw All In Cell",            IDC_RENDERWINDOWCONTEXT_THAWALLINCELL
+        END
+        POPUP "Visibility"
+        BEGIN
+            MENUITEM "Toggle Visibility",           IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY
+            MENUITEM "Toggle Children Visibility",  IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY
+            MENUITEM SEPARATOR
+            MENUITEM "Reveal All In Cell",          IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Batch Edit...",               IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR
+        MENUITEM SEPARATOR
+        MENUITEM "Render Window Properties",    293
     END
 END
 
@@ -504,36 +571,36 @@ END
 // Dialog Info
 //
 
-DLG_TESCOMBOBOX DLGINIT
+IDD_TESCOMBOBOX DLGINIT
 BEGIN
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
 0x0041, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
 0x0042, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
 0x0043, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
 0x0044, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
 0x0045, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
 0x0046, 
     0
 END
 
-DLG_BINDSCRIPT DLGINIT
+IDD_BINDSCRIPT DLGINIT
 BEGIN
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
 0x0041, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
 0x0042, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
 0x0043, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
 0x0044, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
 0x0045, 
-    COMBO_FORMLIST, 0x403, 2, 0
+    IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
 0x0046, 
     0
 END
@@ -544,8 +611,29 @@ END
 // Bitmap
 //
 
-BITMAP_SPLASH           BITMAP                  "Images\\Splash.bmp"
-BITMAP_ADORINGFAN       BITMAP                  "Images\\Achievement.bmp"
+IDB_EDITORSPLASH        BITMAP                  "Images\\Splash.bmp"
+IDB_ACHIEVEMENT_ANTICHRIST BITMAP                  "Images\\antic.bmp"
+IDB_ACHIEVEMENT_AUTOMATON BITMAP                  "Images\\automaton.bmp"
+IDB_ACHIEVEMENT_BOBTHEBUILDER BITMAP                  "Images\\bob.bmp"
+IDB_ACHIEVEMENT_CARDINALSIN BITMAP                  "Images\\cardinalsin.bmp"
+IDB_ACHIEVEMENT_CHEAT   BITMAP                  "Images\\cheat.bmp"
+IDB_ACHIEVEMENT_COMMANDANT BITMAP                  "Images\\command.bmp"
+IDB_ACHIEVEMENT_COMPARTMENTALIZER BITMAP                  "Images\\compart.bmp"
+IDB_ACHIEVEMENT_ERUDITEMODDER BITMAP                  "Images\\erudite.bmp"
+IDB_ACHIEVEMENT_FEARLESS BITMAP                  "Images\\fearless.bmp"
+IDB_ACHIEVEMENT_FLYINGBLIND BITMAP                  "Images\\fly.bmp"
+IDB_ACHIEVEMENT_HERECTIC BITMAP                  "Images\\heretic.bmp"
+IDB_ACHIEVEMENT_TOTALLYJOBLESS BITMAP                  "Images\\jobless.bmp"
+IDB_ACHIEVEMENT_LAZYBUM BITMAP                  "Images\\lazybum.bmp"
+IDB_ACHIEVEMENT_LOQUACIOUS BITMAP                  "Images\\loquacious.bmp"
+IDB_ACHIEVEMENT_MADSCIENTIST BITMAP                  "Images\\madsci.bmp"
+IDB_ACHIEVEMENT_MAGISTER BITMAP                  "Images\\magister.bmp"
+IDB_ACHIEVEMENT_PEDANTIC BITMAP                  "Images\\pedantic.bmp"
+IDB_ACHIEVEMENT_POWERUSER BITMAP                  "Images\\powerusr.bmp"
+IDB_ACHIEVEMENT_SABOTEUR BITMAP                  "Images\\saboteur.bmp"
+IDB_ACHIEVEMENT_SOPRANO BITMAP                  "Images\\soprano.bmp"
+IDB_ACHIEVEMENT_THEWISEONE BITMAP                  "Images\\wiseone.bmp"
+IDB_ACHIEVEMENT_WTF     BITMAP                  "Images\\wtf.bmp"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

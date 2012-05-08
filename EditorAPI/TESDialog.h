@@ -340,6 +340,7 @@ public:
 	static HWND								ShowUseReportDialog(TESForm* Form);
 	static void								ResetRenderWindow();
 	static void								RedrawRenderWindow();
+	static void								ResetFormListControls();
 };
 
 class TESComboBox
@@ -394,42 +395,3 @@ extern RECT*					g_CellViewObjListBounds;
 extern RECT*					g_CellViewCellNameStaticBounds;
 extern RECT*					g_CellViewDlgBounds;
 extern UInt16*					g_TESFormIDListViewFormIDColumnWidth;
-
-// CSE specific stuff
-class FormEnumerationWrapper
-{
-public:
-	static void __stdcall ReinitializeFormLists();
-	static bool GetUnmodifiedFormHiddenState();	// returns true when hidden
-	static bool GetDeletedFormHiddenState();
-	static bool __stdcall GetShouldEnumerateForm(TESForm* Form);
-	static bool __stdcall PerformListViewPrologCheck(UInt32 CallAddress);
-	static void ToggleUnmodifiedFormVisibility();
-	static void	ToggleDeletedFormVisibility();
-
-	static void __stdcall ResetFormVisibility(void);
-};
-
-class TESDialogWindowHandleCollection
-{
-	typedef std::vector<HWND>			HandleCollectionT;
-	HandleCollectionT					WindowHandles;
-
-	HandleCollectionT::iterator			FindHandle(HWND Handle);
-public:
-	void								AddHandle(HWND Handle) { WindowHandles.push_back(Handle); }
-	bool								RemoveHandle(HWND Handle);
-	bool								GetHandleExists(HWND Handle) { return FindHandle(Handle) != WindowHandles.end(); }
-	void								ClearHandles(void) { WindowHandles.clear(); }
-};
-
-extern TESDialogWindowHandleCollection	g_CustomMainWindowChildrenDialogs,		// used to keep them from being closed during a plugin load event
-										g_DragDropSupportDialogs;				// keeps track of custom dialogs/controls that allow form (drag-)dropping
-
-class CSStartupManager
-{
-public:
-	static void				LoadStartupPlugin();
-	static void				LoadStartupScript();
-	static void				LoadStartupWorkspace();
-};

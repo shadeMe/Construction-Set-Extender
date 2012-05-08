@@ -20,14 +20,14 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v100</PlatformToolset>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -53,13 +53,13 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\Debug\;$(LibraryPath)</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(IncludePath)</IncludePath>
-    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(SourcePath)</SourcePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(IncludePath)</IncludePath>
-    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;$(SourcePath)</SourcePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\Debug\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;..\[Libraries]\;..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;$(IncludePath)</IncludePath>
+    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;$(SourcePath)</SourcePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;..\[Libraries]\;..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;$(IncludePath)</IncludePath>
+    <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;$(SourcePath)</SourcePath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EnableManagedIncrementalBuild>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\Release\;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\Release\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -67,7 +67,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;NDEBUG;CS_VERSION=0x01020000;OBLIVION_VERSION=0x010201A0;CSE;RELEASE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <ForcedIncludeFiles>StdAfx.h;$(SolutionDir)EditorAPI\TESEditorAPI.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
@@ -79,10 +79,11 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;BGSEditorExtenderBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>ComCtl32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -93,22 +94,23 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\Data\obse\plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;RELEASE_BUILD=0x0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>false</SuppressStartupBanner>
@@ -119,14 +121,17 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <StringPooling>true</StringPooling>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ComCtl32.lib;shell32.lib;d3dx9.lib;BGSEditorExtenderBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ComCtl32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -138,29 +143,24 @@
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <SuppressStartupBanner>false</SuppressStartupBanner>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\obse\obse\Utilities.cpp" />
-    <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="AuxiliaryViewport.cpp" />
-    <ClCompile Include="CSAS\Array.cpp" />
-    <ClCompile Include="CSAS\Commands\Commands_Form.cpp" />
-    <ClCompile Include="CSAS\Commands\Commands_General.cpp" />
-    <ClCompile Include="CSAS\Commands\Commands_Reference.cpp" />
-    <ClCompile Include="CSAS\Commands\Commands_String.cpp" />
-    <ClCompile Include="CSAS\ScriptCommandInfo.cpp" />
-    <ClCompile Include="CSAS\ScriptCommands.cpp" />
-    <ClCompile Include="CSAS\ScriptData.cpp" />
-    <ClCompile Include="CSAS\ScriptParser.cpp" />
-    <ClCompile Include="CSAS\ScriptRunner.cpp" />
-    <ClCompile Include="CSAS\ScriptTypes.cpp" />
-    <ClCompile Include="CSAS\ScriptVariables.cpp" />
+    <ClCompile Include="Coda\CSECoda.cpp" />
+    <ClCompile Include="CSEAchievements.cpp" />
+    <ClCompile Include="CSEConsole.cpp" />
+    <ClCompile Include="CSEHallOfFame.cpp" />
+    <ClCompile Include="CSEMain.cpp" />
+    <ClCompile Include="CSERenderWindowPainter.cpp" />
+    <ClCompile Include="CSEUIManager.cpp" />
+    <ClCompile Include="CSEWorkspaceManager.cpp" />
     <ClCompile Include="EditorAPI\Archive.cpp" />
     <ClCompile Include="EditorAPI\BaseFormComponent.cpp" />
     <ClCompile Include="EditorAPI\BSFile.cpp" />
@@ -193,6 +193,7 @@
     <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="[Common]\CLIWrapper.cpp" />
     <ClCompile Include="[Common]\HandshakeStructs.cpp" />
@@ -205,25 +206,36 @@
     <ClCompile Include="Hooks\Renderer.cpp" />
     <ClCompile Include="Hooks\ScriptEditor.cpp" />
     <ClCompile Include="Hooks\TESFile.cpp" />
-    <ClCompile Include="Console.cpp" />
-    <ClCompile Include="ConsoleCommands.cpp" />
-    <ClCompile Include="..\[Libraries]\INI Manager\INIEditGUI.cpp" />
-    <ClCompile Include="..\[Libraries]\INI Manager\INIManager.cpp" />
-    <ClCompile Include="..\[Libraries]\MemoryHandler\MemoryHandler.cpp" />
     <ClCompile Include="CSEInterfaceManager.cpp" />
     <ClCompile Include="CSInterop.cpp" />
     <ClCompile Include="[Common]\CSInteropData.cpp" />
     <ClCompile Include="RenderSelectionGroupManager.cpp" />
-    <ClCompile Include="ElapsedTimeCounter.cpp" />
-    <ClCompile Include="RenderWindowTextPainter.cpp" />
-    <ClCompile Include="ToolManager.cpp" />
-    <ClCompile Include="WorkspaceManager.cpp" />
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="HallofFame.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase_Resource.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEAchievements.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEConsole.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEHallOfFame.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEMain.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowPainter.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEToolBox.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEUIManager.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEWorkspaceManager.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\Functors.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIManager.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\MemoryHandler.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\MersenneTwister.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\MiscGunk.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\SME_Prefix.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\StringHelpers.h" />
+    <ClInclude Include="..\..\[Libraries]\SME Sundries\UIHelpers.h" />
     <ClInclude Include="..\OBSE\obse\HavokBase.h" />
     <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
     <ClInclude Include="..\OBSE\obse\HavokCollision.h" />
@@ -245,21 +257,15 @@
     <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
-    <ClInclude Include="..\obse\obse\Utilities.h" />
-    <ClInclude Include="Achievements.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
-    <ClInclude Include="CSAS\Array.h" />
-    <ClInclude Include="CSAS\Commands\Commands_General.h" />
-    <ClInclude Include="CSAS\Commands\Commands_Form.h" />
-    <ClInclude Include="CSAS\Commands\Commands_Reference.h" />
-    <ClInclude Include="CSAS\Commands\Commands_String.h" />
-    <ClInclude Include="CSAS\ScriptCommandInfo.h" />
-    <ClInclude Include="CSAS\ScriptCommands.h" />
-    <ClInclude Include="CSAS\ScriptData.h" />
-    <ClInclude Include="CSAS\ScriptParser.h" />
-    <ClInclude Include="CSAS\ScriptRunner.h" />
-    <ClInclude Include="CSAS\ScriptTypes.h" />
-    <ClInclude Include="CSAS\ScriptVariables.h" />
+    <ClInclude Include="Coda\CSECoda.h" />
+    <ClInclude Include="CSEAchievements.h" />
+    <ClInclude Include="CSEConsole.h" />
+    <ClInclude Include="CSEHallOfFame.h" />
+    <ClInclude Include="CSEMain.h" />
+    <ClInclude Include="CSERenderWindowPainter.h" />
+    <ClInclude Include="CSEUIManager.h" />
+    <ClInclude Include="CSEWorkspaceManager.h" />
     <ClInclude Include="EditorAPI\ActorValues.h" />
     <ClInclude Include="EditorAPI\Archive.h" />
     <ClInclude Include="EditorAPI\BaseFormComponent.h" />
@@ -346,10 +352,8 @@
     <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="VersionInfo.h" />
-    <ClInclude Include="WindowEdgeSnapper.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
-    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI_Res.h" />
-    <ClInclude Include="Resource.h" />
+    <ClInclude Include="Construction Set Extender_Resource.h" />
     <ClInclude Include="[Common]\ComponentDLLInterface.h" />
     <ClInclude Include="[Common]\HandShakeStructs.h" />
     <ClInclude Include="Hooks\AssetSelector.h" />
@@ -361,33 +365,45 @@
     <ClInclude Include="Hooks\Renderer.h" />
     <ClInclude Include="Hooks\ScriptEditor.h" />
     <ClInclude Include="Hooks\TESFile.h" />
-    <ClInclude Include="Console.h" />
-    <ClInclude Include="ConsoleCommands.h" />
-    <ClInclude Include="..\[Libraries]\INI Manager\INIEditGUI.h" />
-    <ClInclude Include="..\[Libraries]\INI Manager\INIManager.h" />
-    <ClInclude Include="..\[Libraries]\MemoryHandler\MemoryHandler.h" />
-    <ClInclude Include="..\[Libraries]\SME_Prefix.h" />
     <ClInclude Include="CSEInterfaceAPI.h" />
     <ClInclude Include="CSEInterfaceManager.h" />
     <ClInclude Include="CSInterop.h" />
     <ClInclude Include="[Common]\CSInteropData.h" />
     <ClInclude Include="RenderSelectionGroupManager.h" />
-    <ClInclude Include="ElapsedTimeCounter.h" />
-    <ClInclude Include="RenderWindowTextPainter.h" />
-    <ClInclude Include="ToolManager.h" />
-    <ClInclude Include="WorkspaceManager.h" />
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="HallofFame.h" />
-    <ClInclude Include="WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl" />
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl" />
     <None Include="EditorAPI\NiTMap.h" />
-    <None Include="Images\Achievement.bmp" />
+    <None Include="Images\antic.bmp" />
+    <None Include="Images\automaton.bmp" />
+    <None Include="Images\bob.bmp" />
+    <None Include="Images\cardinalsin.bmp" />
+    <None Include="Images\cheat.bmp" />
+    <None Include="Images\command.bmp" />
+    <None Include="Images\compart.bmp" />
+    <None Include="Images\erudite.bmp" />
+    <None Include="Images\fearless.bmp" />
+    <None Include="Images\fly.bmp" />
+    <None Include="Images\heretic.bmp" />
+    <None Include="Images\jobless.bmp" />
+    <None Include="Images\lazybum.bmp" />
+    <None Include="Images\loquacious.bmp" />
+    <None Include="Images\madsci.bmp" />
+    <None Include="Images\magister.bmp" />
+    <None Include="Images\pedantic.bmp" />
+    <None Include="Images\powerusr.bmp" />
+    <None Include="Images\saboteur.bmp" />
+    <None Include="Images\soprano.bmp" />
     <None Include="Images\Splash.bmp" />
+    <None Include="Images\wiseone.bmp" />
+    <None Include="Images\wtf.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase.rc" />
+    <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc" />
     <ResourceCompile Include="Construction Set Extender.rc" />
-    <ResourceCompile Include="..\[Libraries]\INI Manager\INIEditGUI_Res.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -106,7 +106,8 @@ public:
 	void					ResetCollection();		// resets the collection with data from the default copy
 	UInt32					GetGMSTCount();
 	void					SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData);
+
+	static GameSettingCollection*		Instance;
 };
 
-extern GameSettingCollection*	g_GMSTCollection;
 extern const char*				g_CSINIPath;

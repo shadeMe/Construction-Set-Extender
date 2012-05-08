@@ -1,4 +1,5 @@
 #include "Archive.h"
+#include <BGSEEMain.h>
 
 ArchiveListT**			g_LoadedBSAArchives = (ArchiveListT**)0x00A0DD8C;
 
@@ -33,7 +34,7 @@ void ArchiveManager::LoadSkippedArchives(const char* ArchiveDirectory)
 		if (IsLoaded == false)
 		{
 			LoadArchive(FileName.c_str(), 0, 0);
-			DebugPrint("Loaded %s", FileName.c_str());
+			BGSEECONSOLE_MESSAGE("Loaded %s", FileName.c_str());
 		}
 	}
 }
@@ -44,7 +45,9 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 
 	if (InPath)
 	{
-		std::string Path(InPath); MakeLower(Path);
+		std::string Path(InPath); 
+		SME::StringHelpers::MakeLower(Path);
+
 		if (Path.find("data\\") != -1)
 			Path = Path.substr(Path.find("data\\") + 5);
 
@@ -64,20 +67,20 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 				DeleteFile(FileOut.c_str());		// delete file as BSFile::Ctor doesn't create it anew
 
 				BSFile* TempFile = BSFile::CreateInstance(FileOut.c_str(), NiFile::kFileMode_WriteOnly, FileSize);
-				assertR(TempFile);
+				SME_ASSERT(TempFile);
 
 				void* Buffer = FormHeap_Allocate(FileSize);
 				ZeroMemory(Buffer, FileSize);
 
 				if (!ArchiveFileStream->DirectRead(Buffer, FileSize))
 				{
-					DebugPrint("ArchiveManager::ExtractArchiveFile - Couldn't read file %s from archive %s", ArchiveFileStream->fileName, ArchiveFileStream->parentArchive->fileName);
+					BGSEECONSOLE_MESSAGE("ArchiveManager::ExtractArchiveFile - Couldn't read file %s from archive %s", ArchiveFileStream->fileName, ArchiveFileStream->parentArchive->fileName);
 				}
 				else
 				{
 					if (!TempFile->DirectWrite(Buffer, FileSize))
 					{
-						DebugPrint("ArchiveManager::ExtractArchiveFile - Couldn't write to file %s", TempFile->fileName);
+						BGSEECONSOLE_MESSAGE("ArchiveManager::ExtractArchiveFile - Couldn't write to file %s", TempFile->fileName);
 					}
 					else
 						Result = true;

@@ -86,7 +86,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -125,21 +125,21 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ResourceCompile Include="LipSyncPipeClient.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.h" />
+    <ClInclude Include="..\..\..\[Libraries]\SME Sundries\SME_Prefix.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="..\..\..\[Libraries]\MemoryHandler\MemoryHandler.h" />
-    <ClInclude Include="..\..\..\[Libraries]\SME_Prefix.h" />
     <ClInclude Include="..\..\[Common]\CSInteropData.h" />
     <ClInclude Include="LipSyncPipeClient.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\[Libraries]\MemoryHandler\MemoryHandler.cpp" />
+    <ClCompile Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.cpp" />
     <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
     <ClCompile Include="LipSyncPipeClient.cpp" />
   </ItemGroup>

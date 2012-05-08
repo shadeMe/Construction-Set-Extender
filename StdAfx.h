@@ -66,73 +66,55 @@
 #include <numeric>
 #include <functional>
 
+// RPC
+#include <Rpc.h>
+
 // DIRECTX
 #include <d3d9.h>
 #include <d3d9types.h>
 #include <d3dx9.h>
 #include <d3dx9tex.h>
 
+// BOOST
+#include <boost\scoped_ptr.hpp>
+#include <boost\scoped_array.hpp>
+#include <boost\shared_ptr.hpp>
+#include <boost\shared_array.hpp>
+#include <boost\intrusive_ptr.hpp>
+#include <boost\weak_ptr.hpp>
+
+// xSE Common
+#include <ITypes.h>
+#include <IErrors.h>
+#include <IDynamicCreate.h>
+#include <ISingleton.h>
+#include <IDirectoryIterator.h>
+#include <IFileStream.h>
+
+// SME
+#include "SME Sundries\SME_Prefix.h"
+#include "SME Sundries\MemoryHandler.h"
+#include "SME Sundries\INIManager.h"
+#include "SME Sundries\INIEditGUI.h"
+#include "SME Sundries\MersenneTwister.h"
+#include "SME Sundries\Functors.h"
+#include "SME Sundries\StringHelpers.h"
+#include "SME Sundries\UIHelpers.h"
+#include "SME Sundries\MiscGunk.h"
+
 // OBSE
 #include "obse_common/obse_version.h"
-
-#include "common/ITypes.h"
-#include "common/IErrors.h"
-#include "common/IDynamicCreate.h"
-#include "common/IDebugLog.h"
-#include "common/ISingleton.h"
-#include "common/IDirectoryIterator.h"
-#include "common/IFileStream.h"
-
 #include "obse\PluginAPI.h"
 #include "obse\GameTypes.h"
 #include "obse\Utilities.h"
 
-// SME
-#include "[Libraries]\MemoryHandler\MemoryHandler.h"
-#include "[Libraries]\INI Manager\INIManager.h"
-#include "[Libraries]\INI Manager\INIEditGUI.h"
-
 using namespace SME;
-using namespace MemoryHandler;
+using namespace SME::MemoryHandler;
+using namespace SME::Functors;
+
+// BGSEEBASE
+#include <BGSEEConsole.h>
+#include <BGSEEUIManager.h>
 
 // CSE
-#include "[Common]\CLIWrapper.h"
-#include "Console.h"
-
-extern std::string									g_APPPath;
-extern std::string									g_INIPath;
-extern std::string									g_DLLPath;
-extern bool											g_PluginPostLoad;
-
-extern OBSEMessagingInterface*						g_msgIntfc;
-extern PluginHandle									g_pluginHandle;
-extern HINSTANCE									g_DLLInstance;
-extern SME::INI::INIManager*						g_INIManager;
-extern SME::INI::INIEditGUI*						g_INIEditGUI;
-extern OBSECommandTableInterface*					g_commandTableIntfc;
-extern ComponentDLLInterface::CommandTableData		g_CommandTableData;
-
-class CSEINIManager : public INI::INIManager
-{
-public:
-	void							Initialize();
-};
-
-void				WaitUntilDebuggerAttached();
-void				ToggleFlag(UInt8* Flag, UInt32 Mask, bool State);
-void				ToggleFlag(UInt16* Flag, UInt32 Mask, bool State);
-void				ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);
-
-#define	PROJECTSHORTHAND			"CSE"
-#define	PROJECTNAME					"Construction Set Extender"
-
-#define SAFERELEASE_D3D(X)			if (X)	{ X->Release(); X = NULL; }
-#define FORMAT_STR(Buffer, ...)		sprintf_s(Buffer, sizeof(Buffer), ##__VA_ARGS__)
-/*** workaround to allow expression evaluation in release builds ***/
-#undef assertR		
-extern "C"
-{
-	_CRTIMP void __cdecl _wassert(_In_z_ const wchar_t * _Message, _In_z_ const wchar_t *_File, _In_ unsigned _Line);
-}
-#define assertR(_Expression) (void)( (!!(_Expression)) || (_wassert(_CRT_WIDE(#_Expression), _CRT_WIDE(__FILE__), __LINE__), 0) )
-/*** workaround to allow expression evaluation in release builds ***/
+#include "CSEUIManager.h"

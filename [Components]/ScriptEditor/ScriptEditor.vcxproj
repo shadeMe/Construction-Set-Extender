@@ -76,7 +76,7 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
-      <Command>copy "$(TargetPath)" "F:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,13 +111,16 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
-      <Command>copy "$(TargetPath)" "G:\TES 4 Oblivion\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Reference Include="DevComponents.DotNetBar2" />
-    <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.7070, Culture=neutral, PublicKeyToken=9cc39be672370310">
+    <Reference Include="ICSharpCode.AvalonEdit, Version=4.2.0.8774, Culture=neutral, PublicKeyToken=9cc39be672370310">
       <HintPath>..\..\[Depends]\ICSharpCode.AvalonEdit.dll</HintPath>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -142,6 +145,7 @@
       <HintPath>..\..\[Depends]\GlobalInputMonitor.dll</HintPath>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <Private>false</Private>
     </Reference>
     <Reference Include="System.Windows.Forms">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
@@ -321,6 +325,11 @@
   <ItemGroup>
     <ProjectReference Include="Preprocessor\ScriptEditor.Preprocessor.vcxproj">
       <Project>{67dd2ff6-aff7-4c49-80ae-72b47982563d}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

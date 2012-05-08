@@ -72,7 +72,7 @@ BEGIN
             VALUE "FileDescription", "ScriptEditor Dynamic Link Library"
             VALUE "FileVersion", CSE_VERSION_VERSTRING
             VALUE "InternalName", "ScriptEditor"
-            VALUE "LegalCopyright", "Copyright (C) 2010"
+            VALUE "LegalCopyright", "Copyright (C) 2010 - 2012"
             VALUE "OriginalFilename", "ScriptEditor.dll"
             VALUE "ProductName", "ScriptEditor Dynamic Link Library"
             VALUE "ProductVersion", CSE_VERSION_VERSTRING

@@ -72,7 +72,7 @@ BEGIN
             VALUE "FileDescription", "BSAViewer Dynamic Link Library"
             VALUE "FileVersion", CSE_VERSION_VERSTRING
             VALUE "InternalName", "BSAViewer"
-            VALUE "LegalCopyright", "Copyright (C) 2010"
+            VALUE "LegalCopyright", "Copyright (C) 2010 - 2012"
             VALUE "OriginalFilename", "BSAViewer.dll"
             VALUE "ProductName", "BSAViewer Dynamic Link Library"
             VALUE "ProductVersion", CSE_VERSION_VERSTRING

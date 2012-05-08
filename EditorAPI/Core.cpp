@@ -2,6 +2,8 @@
 #include "Hooks\Renderer.h"
 #include "AuxiliaryViewport.h"
 
+using namespace ConstructionSetExtender;
+
 TES**								g_TES = (TES**)0x00A0ABB0;
 TESDataHandler**					g_TESDataHandler = (TESDataHandler **)0x00A0E064;
 FileFinder**						g_FileFinder = (FileFinder**)0x00A0DE8C;
@@ -32,8 +34,6 @@ LPDIRECT3DTEXTURE9					g_LODD3DTexture6144x = NULL;
 BSRenderedTexture*					g_LODBSTexture6144x = NULL;
 
 Setting*							g_INILocalMasterPath = (Setting*)0x009ED710;
-
-
 
 void* Oblivion_DynamicCast( void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4 )
 {

@@ -1,37 +1,42 @@
 #pragma  once
 
-class AuxiliaryViewport
+namespace ConstructionSetExtender
 {
-	static AuxiliaryViewport*			Singleton;
+	namespace INISettings
+	{
+		BGSEditorExtender::BGSEEINIManagerSettingFactory*		GetAuxiliaryViewport(void);
+	}
 
-	HWND								WindowHandle;
-	bool								Valid;
-	bool								DisplayState;
-	NiCamera*							ViewportCamera;
-	bool								Frozen;
+	class AuxiliaryViewport : public BGSEditorExtender::BGSEEGenericModelessDialog
+	{
+		friend BGSEditorExtender::BGSEEINIManagerSettingFactory* INISettings::GetAuxiliaryViewport(void);
 
-	AuxiliaryViewport();
+		static AuxiliaryViewport*			Singleton;
+	protected:
+		static LRESULT CALLBACK				BaseDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 
-	void								LoadINISettings();
-	void								SaveINISettings();
-public:
-	static AuxiliaryViewport*			GetSingleton();
+		static const char*					kWindowTitle;
+		static const char*					kINISection;
 
-	bool								IsHidden() const { return DisplayState == 0; }
-	bool								IsInitialized() const { return Valid; }
-	bool								IsFrozen() const { return Frozen; }
-	bool								ToggleDisplayState();
-	bool								ToggleFrozenState();
+		NiCamera*							ViewportCamera;
+		bool								Frozen;
 
-	void								SyncViewportCamera(NiCamera* Camera);
+		AuxiliaryViewport();
+	public:
+		virtual ~AuxiliaryViewport();
 
-	void								Draw(NiNode* NodeToRender, NiCamera* Camera);
-	void								DrawBackBuffer(void);
-	void								Redraw();
-	void								ClearScreen();
-	
-	void								Initialize();
-	void								Deinitialize();
-};
+		static AuxiliaryViewport*			GetSingleton();
+		void								Initialize();
 
-#define AUXVIEWPORT						AuxiliaryViewport::GetSingleton()
+		bool								GetFrozen() const;
+		bool								ToggleFrozenState();
+
+		void								SyncViewportCamera(NiCamera* Camera);
+
+		void								Draw(NiNode* NodeToRender, NiCamera* Camera);
+		void								DrawBackBuffer(void);
+		void								Redraw();
+		void								ClearScreen();
+	};
+#define AUXVIEWPORT							AuxiliaryViewport::GetSingleton()
+}

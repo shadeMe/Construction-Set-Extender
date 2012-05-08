@@ -1,6 +1,8 @@
 #include "Script.h"
 #include "Hooks\ScriptEditor.h"
 
+using namespace ConstructionSetExtender;
+
 TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
 
 Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)
