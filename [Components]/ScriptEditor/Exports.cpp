@@ -47,6 +47,8 @@ void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTDa
 
 	ISDB->InitializeCommandTableDatabase(Data);
 	ISDB->InitializeGMSTDatabase(GMSTData);
+
+	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
 }
 
 void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)

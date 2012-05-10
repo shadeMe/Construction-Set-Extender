@@ -22,6 +22,7 @@ HWND*								g_HWND_QuestWindow = (HWND*)0x00A0B034;
 HWND*								g_HWND_LandscapeEdit = (HWND*)0x00A0AF54;
 HWND*								g_HWND_CellView_ObjectList = (HWND*)0x00A0AA00;
 HWND*								g_HWND_CellView_CellList = (HWND*)0x00A0AA34;
+HWND*								g_HWND_PreviewWindow = (HWND*)0x00A0A71C;
 
 HMENU*								g_HMENU_MainMenu = (HMENU*)0x00A0B630;
 
@@ -248,6 +249,11 @@ void TESDialog::ResetFormListControls()
 	TESDialog::InitializeCSWindows();
 }
 
+float TESDialog::GetFloatFromDlgItem( HWND Dialog, int ID )
+{
+	return cdeclCall<float>(0x00404A80, Dialog, ID);
+}
+
 void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
 {
 	cdeclCall<UInt32>(0x00403540, hWnd, Text, Data, ResizeDroppedWidth);
@@ -276,4 +282,13 @@ void* TESListView::GetItemData( HWND hWnd, int Index )
 void TESListView::SetSelectedItem( HWND hWnd, int Index )
 {
 	cdeclCall<void>(0x00403B10, hWnd, Index);
+}
+
+void TESPreviewWindow::Initialize( TESBoundObject* Object )
+{
+	if (*g_HWND_PreviewWindow == NULL)
+		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40121, NULL);
+
+	if (Object)
+		cdeclCall<void>(0x00402BC0, Object);
 }

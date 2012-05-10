@@ -30,3 +30,13 @@ void TESObjectCELL::SetPathGrid( TESPathGrid* PathGrid )
 {
 	thisCall<void>(0x00532C20, this, PathGrid);
 }
+
+void TESObjectCELL::ModExtraCellWaterHeight( float Height )
+{
+	thisCall<void>(0x00532D30, this, Height);
+}
+
+void TESObjectCELL::ModExtraCellWaterType( TESWaterForm* Water )
+{
+	thisCall<void>(0x00534420, this, Water);
+}

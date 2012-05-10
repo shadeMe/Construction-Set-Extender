@@ -1,16 +1,71 @@
-#ifndef __CSE_VERSION_H__
-#define __CSE_VERSION_H__
+// Template version resource
+// Build number format = MMDD
 
-// these have to be macros so they can be used in the .rc
-#define CSE_VERSION_INTEGER			6
-#define CSE_VERSION_INTEGER_MINOR	0
-#define CSE_VERSION_INTEGER_BETA	10
-#define CSE_VERSION_VERSTRING		"6, 0, 10, 0"
-#define CSE_VERSION_PADDEDSTRING	"0001"
+#ifndef __SME_VERSION_H__
+#define __SME_VERSION_H__
 
-#define MAKE_CSE_VERSION_EX(major, minor, build, sub)	(((major & 0xFF) << 24) | ((minor & 0xFF) << 16) | ((build & 0xFFF) << 4) | (sub & 0xF))
-#define MAKE_CSE_VERSION(major, minor, build)			MAKE_CSE_VERSION_EX(major, minor, build, 0)
+#include "BuildInfo.h"
 
-#define PACKED_CSE_VERSION		MAKE_CSE_VERSION(CSE_VERSION_INTEGER, CSE_VERSION_INTEGER_MINOR, CSE_VERSION_INTEGER_BETA)
+#define STRINGIZE2(s) #s
+#define STRINGIZE(s) STRINGIZE2(s)
 
-#endif /* __CSE_VERSION_H__ */
+#define VERSION_MAJOR               6
+#define VERSION_MINOR               0
+#define VERSION_REVISION            0
+
+#define VER_COMPANYNAME_STR         "Imitation Camel"
+
+#if defined(CSE)
+	#define VER_FILE_DESCRIPTION_STR    "A plugin for the Oblivion Script Extender"
+#else
+	#define VER_FILE_DESCRIPTION_STR    "A component of the Construction Set Extender"
+#endif
+
+#define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
+#define VER_FILE_VERSION_STR        STRINGIZE(VERSION_MAJOR)        \
+                                    "." STRINGIZE(VERSION_MINOR)    \
+                                    "." STRINGIZE(VERSION_REVISION) \
+                                    "." STRINGIZE(VERSION_BUILD_PAD)    \
+
+#if defined(CSE)
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender"
+#elif defined(CSE_SE)
+	#define VER_PRODUCTNAME_STR         "ScriptEditor"
+#elif defined(CSE_SEPREPROC)
+	#define VER_PRODUCTNAME_STR         "ScriptEditor.Preprocessor"
+#elif defined(CSE_BATCHEDITOR)
+	#define VER_PRODUCTNAME_STR         "BatchEditor"
+#elif defined(CSE_BSAVIEWER)
+	#define VER_PRODUCTNAME_STR         "BSAViewer"
+#elif defined(CSE_LIPSYNC)
+	#define VER_PRODUCTNAME_STR         "LipSyncPipeClient"
+#elif defined(CSE_TAGBROWSER)
+	#define VER_PRODUCTNAME_STR         "TagBrowser"
+#elif defined(CSE_USEINFOLIST)
+	#define VER_PRODUCTNAME_STR         "UseInfoList"
+#else
+	#define VER_PRODUCTNAME_STR         "<Unknown>"
+#endif
+
+#define VER_PRODUCT_VERSION         VER_FILE_VERSION
+#define VER_PRODUCT_VERSION_STR     VER_FILE_VERSION_STR
+#define VER_ORIGINAL_FILENAME_STR	VER_PRODUCTNAME_STR ".dll"
+#define VER_INTERNAL_NAME_STR       VER_ORIGINAL_FILENAME_STR
+
+#define VER_COPYRIGHT_STR           "Copyright (C) 2010-2012"
+
+#ifdef _DEBUG
+  #define VER_VER_DEBUG             VS_FF_DEBUG
+#else
+  #define VER_VER_DEBUG             0
+#endif
+
+#define VER_FILEOS                  VOS_NT_WINDOWS32
+#define VER_FILEFLAGS               VER_VER_DEBUG
+#define VER_FILETYPE				VFT_DLL
+
+#define MAKE_SME_VERSION(major, minor, build)	(((major & 0xFF) << 24) | ((minor & 0xFF) << 16) | (build & 0xFFFF))
+
+#define PACKED_SME_VERSION		MAKE_SME_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD)
+
+#endif /* __SME_VERSION_H__ */

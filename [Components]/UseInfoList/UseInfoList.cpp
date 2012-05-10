@@ -141,7 +141,7 @@ namespace ConstructionSetExtender
 		SearchBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::SearchBox_KeyDown);
 		SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
 
-		ExportDataButton->Enabled = true;
+		ExportDataButton->Enabled = false;
 		ExportDataButton->Location = System::Drawing::Point(253, 419);
 		ExportDataButton->Size = System::Drawing::Size(98, 29);
 		ExportDataButton->TabIndex = 5;
@@ -358,7 +358,7 @@ namespace ConstructionSetExtender
 	{
 		if (SearchBox->Text != "")
 		{
-			ListViewItem^% Result = FormList->FindItemWithText(SearchBox->Text, true, 0);
+			ListViewItem^% Result = FormList->FindItemWithText(SearchBox->Text, true, 0, true);
 
 			if (Result != nullptr)
 			{
@@ -418,7 +418,6 @@ namespace ConstructionSetExtender
 
 	void UseInfoList::ExportListData( void )
 	{
-
+		;//
 	}
-
 }

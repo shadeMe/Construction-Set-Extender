@@ -3,7 +3,7 @@
 ListViewItem^ GetListViewSelectedItem(ListView^% Source)
 {
 	ListViewItem^ Result = nullptr;
-	if (Source->SelectedItems->Count)
+	if (Source->VirtualMode == false && Source->SelectedItems->Count)
 		Result = Source->SelectedItems[0];
 	return Result;
 }
@@ -11,8 +11,10 @@ ListViewItem^ GetListViewSelectedItem(ListView^% Source)
 int GetListViewSelectedItemIndex( ListView^% Source )
 {
 	int Result = -1;
-	if (Source->SelectedItems->Count)
+
+	if (Source->SelectedIndices->Count)
 		Result = Source->SelectedIndices[0];
+
 	return Result;
 }
 

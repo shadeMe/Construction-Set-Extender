@@ -27,9 +27,6 @@
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
       <Filter>Wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="UseInfoList.h" />
@@ -54,7 +51,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="UseInfoList.rc">
+    <ResourceCompile Include="VersionInfo.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

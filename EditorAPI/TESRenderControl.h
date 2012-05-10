@@ -31,8 +31,9 @@ public:
 	void								RemoveFromSelection(TESForm* Form, bool RemoveSelectionBox = false);
 	void								ClearSelection(bool RemoveSelectionBox = false);
 	void								CalculatePositionVectorSum(void);
+	bool								HasObject(TESForm* Form);
 
-	static TESRenderSelection*			CreateInstance();
+	static TESRenderSelection*			CreateInstance(TESRenderSelection* Source = NULL);
 	void								DeleteInstance();
 };
 STATIC_ASSERT(sizeof(TESRenderSelection) == 0x18);
@@ -70,11 +71,11 @@ public:
 	};
 
 	// members
-	/*00*/ UndoData*				unk00;							// initialized in c'tor, used as a buffer?
+	/*00*/ UndoData*				unk00;							// initialized in c'tor, used as a bookend
 	/*04*/ UndoData*				first;
 
 	// methods
-	void							RecordReference(UInt32 Operation, TESRenderSelection* Selection);
+	void							RecordReference(UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection);
 };
 STATIC_ASSERT(sizeof(TESRenderUndoStack) == 0x08);
 

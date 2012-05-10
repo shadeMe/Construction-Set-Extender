@@ -360,7 +360,6 @@
     <ClInclude Include="AuxiliaryViewport.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="VersionInfo.h" />
     <ClInclude Include="EditorAPI\Core.h">
       <Filter>EditorAPI\System\Core</Filter>
     </ClInclude>
@@ -739,6 +738,9 @@
     <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h">
       <Filter>Components\BGSEEBase\BGSEEScript</Filter>
     </ClInclude>
+    <ClInclude Include="VersionInfo.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\Splash.bmp">
@@ -828,6 +830,9 @@
       <Filter>Resources</Filter>
     </ResourceCompile>
     <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="VersionInfo.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

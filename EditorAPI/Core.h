@@ -125,6 +125,8 @@ public:
 	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject, Vector3* Position, Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
 													// places an object ref at the specified position in the specified cell/worldspace, with the specified base form.
 													// if existingRef is provided, it is used as the ref, otherwise a new ref is created.  returns null on failure
+
+	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
 };
 STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 

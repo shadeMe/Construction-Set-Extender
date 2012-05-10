@@ -6,6 +6,18 @@
 
 namespace ConstructionSetExtender
 {
+	void DragonDropForm::WndProc( Message% m )
+	{
+		switch(m.Msg)
+		{
+		case 0x407:
+			NativeWrapper::g_CSEInterfaceTable->TagBrowser.InitiateDragonDrop();
+			return;
+		}
+
+		Form::WndProc(m);
+	}
+
 	TagDatabase::TagDatabase(AdvTree::AdvTree^ Tree)
 	{
 		Database = gcnew Dictionary<AdvTree::Node^, List<String^>^>();
@@ -73,7 +85,7 @@ namespace ConstructionSetExtender
 		if (GetItemsForTag(Tag, TagItems))
 		{
 			UInt32 Index = -1, Count = 0;
-			for each (String^% Itr in TagItems)
+			for each (String^ Itr in TagItems)
 			{
 				if (!String::Compare(Itr, Name, true))
 				{
@@ -92,7 +104,7 @@ namespace ConstructionSetExtender
 		List<String^>^ TagItems = nullptr;
 		if (GetItemsForTag(Tag, TagItems))
 		{
-			for each (String^% Itr in TagItems)
+			for each (String^ Itr in TagItems)
 			{
 				if (String::Compare(Itr, Name, true) == 0)
 					return true;
@@ -128,8 +140,9 @@ namespace ConstructionSetExtender
 		for each (KeyValuePair<AdvTree::Node^, List<String^>^>% Itr in Database)
 		{
 			SerializedData += Itr.Key->Text;
-			for each (String^% ItrItem in Itr.Value)
+			for each (String^ ItrItem in Itr.Value)
 				SerializedData += ";" + ItrItem;
+
 			if (SerializedData[SerializedData->Length - 1] != ';')
 				SerializedData += ";";
 
@@ -213,7 +226,7 @@ namespace ConstructionSetExtender
 	{
 		Application::EnableVisualStyles();
 
-		TagBrowserBox = gcnew Form();
+		TagBrowserBox = gcnew DragonDropForm();
 		SearchBox = (gcnew TextBox());
 		FormList = (gcnew ListView());
 		FormListHEditorID = (gcnew ColumnHeader());
@@ -690,7 +703,7 @@ namespace ConstructionSetExtender
 			FormList->Items->Clear();
 
 			bool BadItems = false;
-			for each (String^% Itr in TagItems)
+			for each (String^ Itr in TagItems)
 			{
 				ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(Itr)).c_str());
 				if (Data)
@@ -715,7 +728,10 @@ namespace ConstructionSetExtender
 	{
 		ListViewItem^ Item = gcnew ListViewItem(gcnew String(Data->EditorID));
 		Item->SubItems->Add(Data->FormID.ToString("X8"));
-		Item->SubItems->Add(TypeIdentifier[(int)Data->TypeID]);
+		if (Data->TypeID < 0x45)
+			Item->SubItems->Add(TypeIdentifier[(int)Data->TypeID]);
+		else
+			Item->SubItems->Add("<Unknown>");
 
 		FormList->Items->Add(Item);
 	}

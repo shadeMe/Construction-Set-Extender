@@ -121,6 +121,7 @@ public:
 	enum
 	{
 		// CS Main Dialogs
+		kDialogTemplate_SplashScreen				= 235,
 		kDialogTemplate_About						= 100,
 		kDialogTemplate_Temp						= 102,
 		kDialogTemplate_ObjectWindow				= 122,
@@ -129,7 +130,7 @@ public:
 		kDialogTemplate_Data						= 162,
 		kDialogTemplate_Preferences					= 169,
 		kDialogTemplate_RenderWindow				= 176,
-		kDialogTemplate_PreviewWindow				= 181,			// accessible through View > Preview Window
+		kDialogTemplate_PreviewWindow				= 315,		// accessible through View > Preview Window
 		kDialogTemplate_ScriptEdit					= 188,
 		kDialogTemplate_SearchReplace				= 198,
 		kDialogTemplate_LandscapeEdit				= 203,
@@ -307,11 +308,10 @@ public:
 		kDialogTemplate_NPCFaceAdvancedDataEx		= 3217,
 
 		// Unknown
-		kDialogTemplate_Unk235						= 235,
 		kDialogTemplate_Dialog						= 308,			// looks like a base formIDListView template of sorts
 		kDialogTemplate_Progress3238				= 3238,			// could be version control/convert ESM for xBox tool related
 		kDialogTemplate_Preview3258					= 3258,
-		kDialogTemplate_Preview315					= 315
+		kDialogTemplate_Preview181					= 181,
 	};
 
 	// methods
@@ -341,6 +341,8 @@ public:
 	static void								ResetRenderWindow();
 	static void								RedrawRenderWindow();
 	static void								ResetFormListControls();
+
+	static float							GetFloatFromDlgItem(HWND Dialog, int ID);
 };
 
 class TESComboBox
@@ -362,6 +364,13 @@ public:
 	static void*							GetItemData(HWND hWnd, int Index);
 };
 
+class TESPreviewWindow
+{
+public:
+	// methods
+	static void								Initialize(TESBoundObject* Object);
+};
+
 extern const HINSTANCE*			g_TESCS_Instance;
 
 extern const DLGPROC			g_ScriptEditor_DlgProc;
@@ -381,6 +390,7 @@ extern HWND*					g_HWND_QuestWindow;
 extern HWND*					g_HWND_LandscapeEdit;
 extern HWND*					g_HWND_CellView_ObjectList;
 extern HWND*					g_HWND_CellView_CellList;
+extern HWND*					g_HWND_PreviewWindow;
 
 extern HMENU*					g_HMENU_MainMenu;
 

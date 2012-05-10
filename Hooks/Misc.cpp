@@ -72,9 +72,9 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(AchievementBuildRoads, 0x00563CFF);
 		_DefineHookHdlr(AchievementDialogResponseCreation, 0x004F2CC3);
 		_DefineHookHdlr(ExtraTeleportInitItem, 0x00462702);
-		_DefineHookHdlr(NewSplashImage, 0x00441D73);
 		_DefinePatchHdlr(AllowMultipleEditors, 0x0041C7E1);
 		_DefineNopHdlr(SEHOverride, 0x0041C55F, 0x0041C56C - 0x0041C55F);
+		_DefineHookHdlr(VersionControlOverride, 0x0041C895);
 
 		void PatchMiscHooks(void)
 		{
@@ -113,9 +113,9 @@ namespace ConstructionSetExtender
 		void PatchEntryPointHooks(void)
 		{
 			_MemHdlr(CSRegistryEntries).WriteJump();
-			_MemHdlr(NewSplashImage).WriteJump();
 			_MemHdlr(AllowMultipleEditors).WriteUInt8(0xEB);
 			_MemHdlr(SEHOverride).WriteNop();
+			_MemHdlr(VersionControlOverride).WriteJump();
 		}
 
 		void __stdcall MessageHandlerOverride(const char* Message)
@@ -786,28 +786,14 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall DoNewSplashImageHook(HWND Dialog)
-		{
-			if (g_CSESplashImage == NULL)
-				g_CSESplashImage = LoadImage(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDB_EDITORSPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
-
-			HWND PictureControl = GetDlgItem(Dialog, 1962);
-			SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)g_CSESplashImage);
-		}
-
-		#define _hhName	NewSplashImage
+		#define _hhName	VersionControlOverride
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x00441D79);
+			_hhSetVar(Retn, 0x0041C901);
 			__asm
 			{
-				pushad
-				call	IATCacheShowWindowAddress
-				push	esi
-				call	DoNewSplashImageHook
-				popad
-
-				call	g_TempIATProcBuffer
+				mov		eax, 0x009EA608
+				mov     byte ptr [eax], 0
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

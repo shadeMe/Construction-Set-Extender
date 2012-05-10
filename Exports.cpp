@@ -317,6 +317,7 @@ void DeleteScript(const char* EditorID)
 		if (ScriptForm)
 		{
 			ScriptForm->SetDeleted(true);
+			ScriptForm->UpdateUsageInfo();
 		}
 	}
 }
@@ -700,12 +701,12 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		if (TestData.UDF)	ScriptCount++;
 	}
 
-	for (CSE_GlobalClasses::NiTMapIterator Itr = g_FormEditorIDMap->GetFirstPos(); Itr;)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
 
-		g_FormEditorIDMap->GetNext(Itr, EditorID, Form);
+		g_TESFormEditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
@@ -755,12 +756,12 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		GlobalCount++;
 	}
 
-	for (CSE_GlobalClasses::NiTMapIterator Itr = g_FormEditorIDMap->GetFirstPos(); Itr;)
+	for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
 
-		g_FormEditorIDMap->GetNext(Itr, EditorID, Form);
+		g_TESFormEditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
@@ -1094,6 +1095,19 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 		}
 	}
 }
+
+void InitiateDragonDrop(void)
+{
+	for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+	{
+		TESForm* Form = Itr->Data;
+		ComponentDLLInterface::FormData Data(Form);
+		if (!CLIWrapper::Interfaces::TAG->AddFormToActiveTag(&Data))
+			break;
+	}
+
+	_RENDERSEL->ClearSelection();
+}
 #pragma endregion
 /**** END TAGBROWSER SUBINTERFACE ****/
 
@@ -1146,5 +1160,6 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 	},
 	{
 		InstantiateObjects,
+		InitiateDragonDrop,
 	}
 };

@@ -111,7 +111,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK		MainWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		LRESULT CALLBACK		MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 
-		LRESULT CALLBACK		RenderWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
+		LRESULT CALLBACK		RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		LRESULT CALLBACK		RenderWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		LRESULT CALLBACK		ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		LRESULT CALLBACK		CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
@@ -160,3 +160,4 @@ namespace ConstructionSetExtender
 #define IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY  9918
 #define IDC_CSE_POPUP_ADDTOTAG                  9919
 #define IDC_CSE_POPUP_SHOWOVERRIDES             9925
+#define IDC_CSE_POPUP_PREVIEW		            9926

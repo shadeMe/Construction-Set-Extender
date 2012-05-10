@@ -12,17 +12,32 @@ namespace ConstructionSetExtender
 
 	namespace IntelliSense
 	{
+		int IntelliSenseItemSorter::Compare( ListViewItem^ X, ListViewItem^ Y )
+		{
+			int Result = -1;
+			Result = String::Compare((dynamic_cast<IntelliSenseItem^>(X->Tag))->GetIdentifier(),
+									(dynamic_cast<IntelliSenseItem^>(Y->Tag))->GetIdentifier(),
+									true);
+
+			if (Order == SortOrder::Descending)
+				Result *= -1;
+
+			return Result;
+		}
+
 		IntelliSenseInterface::IntelliSenseInterface(UInt32 ParentWorkspaceIndex)
 		{
 			this->ParentWorkspaceIndex = ParentWorkspaceIndex;
 
 			IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
 			LocalVariableDatabase = gcnew List<IntelliSenseItem^>();
+			VirtualListCache = gcnew List<ListViewItem^>();
 			IntelliSenseList = gcnew ListView();
 
 			IntelliSenseListSelectedIndexChangedHandler = gcnew EventHandler(this, &IntelliSenseInterface::IntelliSenseList_SelectedIndexChanged);
 			IntelliSenseListKeyDownHandler = gcnew KeyEventHandler(this, &IntelliSenseInterface::IntelliSenseList_KeyDown);
 			IntelliSenseListMouseDoubleClickHandler = gcnew MouseEventHandler(this, &IntelliSenseInterface::IntelliSenseList_MouseDoubleClick);
+			IntelliSenseListRetrieveVirtualItemEventHandler = gcnew RetrieveVirtualItemEventHandler(this, &IntelliSenseInterface::IntelliSenseList_RetrieveVirtualItem);
 			IntelliSenseBoxCancelHandler = gcnew CancelEventHandler(this, &IntelliSenseInterface::IntelliSenseBox_Cancel);
 
 			IntelliSenseBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
@@ -56,8 +71,7 @@ namespace ConstructionSetExtender
 			IntelliSenseList->HideSelection = false;
 			IntelliSenseList->Columns->Add("IntelliSense Object", 203);
 			IntelliSenseList->Sorting = SortOrder::Ascending;
-			IntelliSenseList->ListViewItemSorter = gcnew ListViewStringSorter(0, IntelliSenseList->Sorting);
-			
+
 			InfoToolTip->AutoPopDelay = 500;
 			InfoToolTip->InitialDelay = 500;
 			InfoToolTip->ReshowDelay = 0;
@@ -80,6 +94,7 @@ namespace ConstructionSetExtender
 			IntelliSenseList->SelectedIndexChanged += IntelliSenseListSelectedIndexChangedHandler;
 			IntelliSenseList->KeyDown += IntelliSenseListKeyDownHandler;
 			IntelliSenseList->MouseDoubleClick += IntelliSenseListMouseDoubleClickHandler;
+			IntelliSenseList->RetrieveVirtualItem += IntelliSenseListRetrieveVirtualItemEventHandler;
 		}
 
 		void IntelliSenseInterface::DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
@@ -103,12 +118,10 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterface::ShowInterface( IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems )
 		{
-			if (!Enabled && !ForceDisplay)
+			if (Enabled == false && ForceDisplay == false)
 				return;
 
 			UInt32 ItemCount = 0;
-			IntelliSenseList->BeginUpdate();
-
 			CleanupInterface();
 
 			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
@@ -125,14 +138,15 @@ namespace ConstructionSetExtender
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
-							IntelliSenseList->Items->Add(Item);
+							VirtualListCache->Add(Item);
 							ItemCount++;
 						}
 					}
 
 					for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 					{
-						if ((Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && !dynamic_cast<IntelliSenseItemScriptCommand^>(Itr)->GetRequiresParent()) ||
+						if ((Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd &&
+							dynamic_cast<IntelliSenseItemScriptCommand^>(Itr)->GetRequiresParent() == false) ||
 							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
 							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar ||
 							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||
@@ -142,7 +156,7 @@ namespace ConstructionSetExtender
 							{
 								ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 								Item->Tag = Itr;
-								IntelliSenseList->Items->Add(Item);
+								VirtualListCache->Add(Item);
 								ItemCount++;
 							}
 						}
@@ -159,7 +173,7 @@ namespace ConstructionSetExtender
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
-							IntelliSenseList->Items->Add(Item);
+							VirtualListCache->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -209,7 +223,7 @@ namespace ConstructionSetExtender
 						{
 							ListViewItem^ Item = gcnew ListViewItem(RemoteVarItr->Current->GetIdentifier(), (int)RemoteVarItr->Current->GetIntelliSenseItemType());
 							Item->Tag = RemoteVarItr->Current;
-							IntelliSenseList->Items->Add(Item);
+							VirtualListCache->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -223,7 +237,7 @@ namespace ConstructionSetExtender
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
-							IntelliSenseList->Items->Add(Item);
+							VirtualListCache->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -237,7 +251,7 @@ namespace ConstructionSetExtender
 					{
 						ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 						Item->Tag = Itr;
-						IntelliSenseList->Items->Add(Item);
+						VirtualListCache->Add(Item);
 						ItemCount++;
 					}
 				}
@@ -251,7 +265,7 @@ namespace ConstructionSetExtender
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
-							IntelliSenseList->Items->Add(Item);
+							VirtualListCache->Add(Item);
 							ItemCount++;
 						}
 					}
@@ -260,28 +274,32 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			IntelliSenseList->EndUpdate();
+			VirtualListCache->Sort(gcnew IntelliSenseItemSorter(SortOrder::Ascending));
 
-			if (ItemCount == 1 && !String::Compare((dynamic_cast<IntelliSenseItem^>(IntelliSenseList->Items[0]->Tag))->GetIdentifier(), Extract, true))
+			if (ItemCount == 1 &&
+				String::Compare((dynamic_cast<IntelliSenseItem^>(VirtualListCache[0]->Tag))->GetIdentifier(),
+								Extract,
+								true) == 0)
 			{
 				HideInterface();		// do not show when enumerable == extract
 			}
 			else if (ItemCount > 0)
 			{
+				IntelliSenseList->VirtualListSize = ItemCount;
+
 				Point Location = ParentEditor->GetCaretLocation(true);
 				Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
 
 				if (ItemCount > MaximumVisibleItemCount)
 					ItemCount = MaximumVisibleItemCount;
 
-				IntelliSenseList->Sort();
-
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * 19) + 17 - ((MaximumVisibleItemCount - ItemCount) * 19));
 				IntelliSenseBox->SetSize(DisplaySize);
 				IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), !IntelliSenseBox->Visible);
 
 				ParentEditor->Focus();
-				IntelliSenseList->Items[0]->Selected = true;
+
+				IntelliSenseList->SelectedIndices->Add(0);
 			}
 			else
 			{
@@ -308,13 +326,14 @@ namespace ConstructionSetExtender
 
 			if (Visible)
 			{
-				if (GetListViewSelectedItemIndex(IntelliSenseList) == -1)
+				int Index = GetListViewSelectedItemIndex(IntelliSenseList);
+				if (Index == -1)
 					return;
 
 				Point Location = Point(IntelliSenseList->Size.Width + 17, 0);
 
-				DisplayInfoToolTip((dynamic_cast<IntelliSenseItem^>(GetListViewSelectedItem(IntelliSenseList)->Tag))->GetIntelliSenseItemTypeID(),
-									(dynamic_cast<IntelliSenseItem^>(GetListViewSelectedItem(IntelliSenseList)->Tag))->Describe(),
+				DisplayInfoToolTip((dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->GetIntelliSenseItemTypeID(),
+									(dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->Describe(),
 									Location,
 									IntelliSenseBox->Handle,
 									15000);
@@ -343,9 +362,14 @@ namespace ConstructionSetExtender
 			PickSelection();
 		}
 
+		void IntelliSenseInterface::IntelliSenseList_RetrieveVirtualItem( Object^ Sender, RetrieveVirtualItemEventArgs^ E )
+		{
+			E->Item = VirtualListCache[E->ItemIndex];
+		}
+
 		void IntelliSenseInterface::IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
-			if (!Destroying)
+			if (Destroying == false)
 				E->Cancel = true;
 		}
 
@@ -358,24 +382,24 @@ namespace ConstructionSetExtender
 			switch (Direction)
 			{
 			case MoveDirection::e_Down:
-				if (SelectedIndex < (IntelliSenseList->Items->Count - 1))
+				if (SelectedIndex < (VirtualListCache->Count - 1))
 				{
-					IntelliSenseList->Items[SelectedIndex]->Selected = false;
-					IntelliSenseList->Items[SelectedIndex + 1]->Selected = true;
+					VirtualListCache[SelectedIndex]->Selected = false;
+					VirtualListCache[SelectedIndex + 1]->Selected = true;
 
-					if (IntelliSenseList->TopItem->Index < IntelliSenseList->Items->Count - 1)
-						IntelliSenseList->TopItem = IntelliSenseList->Items[IntelliSenseList->TopItem->Index + 1];
+					if (IntelliSenseList->TopItem->Index < VirtualListCache->Count - 1)
+						IntelliSenseList->TopItem = VirtualListCache[IntelliSenseList->TopItem->Index + 1];
 				}
 
 				break;
 			case MoveDirection::e_Up:
 				if (SelectedIndex > 0)
 				{
-					IntelliSenseList->Items[SelectedIndex]->Selected = false;
-					IntelliSenseList->Items[SelectedIndex - 1]->Selected = true;
+					VirtualListCache[SelectedIndex]->Selected = false;
+					VirtualListCache[SelectedIndex - 1]->Selected = true;
 
 					if (IntelliSenseList->TopItem->Index > 0 )
-						IntelliSenseList->TopItem = IntelliSenseList->Items[IntelliSenseList->TopItem->Index - 1];
+						IntelliSenseList->TopItem = VirtualListCache[IntelliSenseList->TopItem->Index - 1];
 				}
 
 				break;
@@ -398,9 +422,10 @@ namespace ConstructionSetExtender
 			String^ Result;
 			ParentEditor->Focus();
 
-			if (GetListViewSelectedItemIndex(IntelliSenseList) != -1)
+			int Index = GetListViewSelectedItemIndex(IntelliSenseList);
+			if (Index != -1)
 			{
-				Result = (dynamic_cast<IntelliSenseItem^>(GetListViewSelectedItem(IntelliSenseList)->Tag))->GetIdentifier();
+				Result = (dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->GetIdentifier();
 				CleanupInterface();
 				HideInterface();
 			}
@@ -421,7 +446,9 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterface::CleanupInterface()
 		{
-			IntelliSenseList->Items->Clear();
+			IntelliSenseList->VirtualListSize = 0;
+			IntelliSenseList->VirtualMode = true;
+			VirtualListCache->Clear();
 		}
 
 		bool IntelliSenseInterface::ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location)
@@ -493,6 +520,7 @@ namespace ConstructionSetExtender
 			IntelliSenseList->SelectedIndexChanged -= IntelliSenseListSelectedIndexChangedHandler;
 			IntelliSenseList->KeyDown -= IntelliSenseListKeyDownHandler;
 			IntelliSenseList->MouseDoubleClick -= IntelliSenseListMouseDoubleClickHandler;
+			IntelliSenseList->RetrieveVirtualItem -= IntelliSenseListRetrieveVirtualItemEventHandler;
 
 			for each (Image^ Itr in IntelliSenseList->SmallImageList->Images)
 				delete Itr;
@@ -502,6 +530,7 @@ namespace ConstructionSetExtender
 			CleanupInterface();
 			HideInfoToolTip();
 			LocalVariableDatabase->Clear();
+			VirtualListCache->Clear();
 			IntelliSenseBox->Close();
 
 			delete IntelliSenseBox;
@@ -517,5 +546,5 @@ namespace ConstructionSetExtender
 		{
 			LocalVariableDatabase->Clear();
 		}
-	}
+}
 }

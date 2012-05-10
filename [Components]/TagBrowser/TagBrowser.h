@@ -8,7 +8,13 @@ using namespace GlobalInputMonitor;
 
 namespace ConstructionSetExtender
 {
-	public ref class TagDatabase
+	ref class DragonDropForm : public Form
+	{
+	protected:
+		virtual	void										WndProc(Message% m) override;
+	};
+
+	ref class TagDatabase
 	{
 		static String^										SerializedDataMidWayMarker = "<Tag Database Marker>";
 		Dictionary<AdvTree::Node^, List<String^>^>^			Database;
@@ -35,7 +41,7 @@ namespace ConstructionSetExtender
 		bool												GetItemsForTag(AdvTree::Node^ Tag, List<String^>^% Destination) { return Database->TryGetValue(Tag, Destination); }
 	};
 
-	public ref class TagBrowser
+	ref class TagBrowser
 	{
 		static TagBrowser^									Singleton = nullptr;
 

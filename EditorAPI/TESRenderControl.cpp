@@ -33,10 +33,17 @@ void TESRenderSelection::ClearSelection( bool RemoveSelectionBox )
 	thisCall<UInt32>(0x00511C20, this, RemoveSelectionBox);
 }
 
-TESRenderSelection* TESRenderSelection::CreateInstance()
+TESRenderSelection* TESRenderSelection::CreateInstance( TESRenderSelection* Source )
 {
 	TESRenderSelection* NewInstance = (TESRenderSelection*)FormHeap_Allocate(sizeof(TESRenderSelection));
 	thisCall<UInt32>(0x00511A20, NewInstance);
+
+	if (Source && Source->selectionCount)
+	{
+		for (SelectedObjectsEntry* Itr = Source->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			NewInstance->AddToSelection(Itr->Data);
+	}
+
 	return NewInstance;
 }
 
@@ -51,9 +58,14 @@ void TESRenderSelection::CalculatePositionVectorSum( void )
 	thisCall<void>(0x00511A70, this);
 }
 
-void TESRenderUndoStack::RecordReference( UInt32 Operation, TESRenderSelection* Selection )
+bool TESRenderSelection::HasObject( TESForm* Form )
 {
-	thisCall<UInt32>(0x00432D40, this, Operation, Selection->selectionList);
+	return thisCall<bool>(0x00511CC0, this, Form);
+}
+
+void TESRenderUndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
+{
+	thisCall<UInt32>(0x00432D40, this, Operation, Selection);
 }
 
 void TESRenderComponents::RenderNode( NiCamera* Camera /*= NULL*/, NiNode* NodeToRender /*= NULL*/, BSRenderedTexture* RenderToTexture /*= NULL*/ )

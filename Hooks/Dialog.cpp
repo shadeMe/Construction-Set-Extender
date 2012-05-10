@@ -1,5 +1,6 @@
 #include "Dialog.h"
 #include "..\CSEAchievements.h"
+#include "..\CSEUIManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -81,6 +82,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(ReleaseModelessDialogsE, 0x004476A0);
 		_DefineHookHdlr(SubwindowTemplateHotSwap, 0x00404EC9);
 		_DefineHookHdlr(CellViewInitDialog, 0x00409A8E);
+		_DefineHookHdlr(TESObjectCELLGetDataFromDialog, 0x0053849E);
 
 		void PatchDialogHooks(void)
 		{
@@ -150,6 +152,7 @@ namespace ConstructionSetExtender
 
 			_MemHdlr(SubwindowTemplateHotSwap).WriteJump();
 			_MemHdlr(CellViewInitDialog).WriteJump();
+			_MemHdlr(TESObjectCELLGetDataFromDialog).WriteJump();
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -469,6 +472,7 @@ namespace ConstructionSetExtender
 					SME::MiscGunk::ToggleFlag(&Ref->formFlags,
 											kTESObjectREFRSpecialFlags_3DInvisible,
 											!(Ref->formFlags & kTESObjectREFRSpecialFlags_3DInvisible));
+					Ref->UpdateNiNode();
 
 					break;
 				}
@@ -478,6 +482,7 @@ namespace ConstructionSetExtender
 					SME::MiscGunk::ToggleFlag(&Ref->formFlags,
 											kTESObjectREFRSpecialFlags_Children3DInvisible,
 											!(Ref->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+					Ref->UpdateNiNode();
 
 					break;
 				}
@@ -499,6 +504,12 @@ namespace ConstructionSetExtender
 
 					break;
 				}
+			case IDC_CSE_POPUP_PREVIEW:
+				{
+					TESPreviewWindow::Initialize(CS_CAST(Form, TESForm, TESBoundObject));
+				}
+
+				break;
 			}
 
 			InvalidateRect(hWnd, NULL, TRUE);
@@ -521,6 +532,11 @@ namespace ConstructionSetExtender
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 			}
+			else if (CS_CAST(SelectedForm, TESForm, TESBoundObject))
+			{
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_PREVIEW, "Preview");
+			}
 		}
 
 		void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
@@ -536,6 +552,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY:
 			case IDC_CSE_POPUP_ADDTOTAG:
 			case IDC_CSE_POPUP_SHOWOVERRIDES:
+			case IDC_CSE_POPUP_PREVIEW:
 				EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 				break;
 			default:
@@ -555,6 +572,8 @@ namespace ConstructionSetExtender
 			DeleteMenu(Menu, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_ADDTOTAG, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_SHOWOVERRIDES, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_PREVIEW, MF_BYCOMMAND);
+			DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 			DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 			DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
 		}
@@ -1512,6 +1531,38 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	DoCellViewInitDialogHook
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		void __stdcall DoTESObjectCELLGetDataFromDialogHook(TESObjectCELL* Cell, HWND Dialog)
+		{
+			if (IsDlgButtonChecked(Dialog, 1006))		// has water
+			{
+				float WaterHeight = TESDialog::GetFloatFromDlgItem(Dialog, 2085);
+				Cell->ModExtraCellWaterHeight(WaterHeight);
+
+				TESWaterForm* WaterType = (TESWaterForm*)TESComboBox::GetSelectedItemData(GetDlgItem(Dialog, 1229));
+				Cell->ModExtraCellWaterType(WaterType);
+			}
+			else
+			{
+				Cell->ModExtraCellWaterHeight(0.0);
+				Cell->ModExtraCellWaterType(NULL);
+			}
+		}
+
+		#define _hhName		TESObjectCELLGetDataFromDialog
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x005384D0);
+			__asm
+			{
+				pushad
+				push	esi
+				push	edi
+				call	DoTESObjectCELLGetDataFromDialogHook
+				popad
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

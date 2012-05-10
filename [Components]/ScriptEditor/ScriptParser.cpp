@@ -54,7 +54,7 @@ namespace ConstructionSetExtender
 		int Pos = 0;
 		int Result = -1;
 
-		for each (String^% Itr in Tokens)
+		for each (String^ Itr in Tokens)
 		{
 			if (Pos == BookendTokenIndex)
 				break;
@@ -73,7 +73,7 @@ namespace ConstructionSetExtender
 	{
 		VariableRefCountData^ Result = nullptr;
 
-		for each (VariableRefCountData^% Itr in Variables)
+		for each (VariableRefCountData^ Itr in Variables)
 		{
 			if (!String::Compare(Itr->Name, Variable, true))
 			{
@@ -229,7 +229,7 @@ namespace ConstructionSetExtender
 	{
 		int Result = -1, Count = 0;
 
-		for each (String^% Itr in Tokens)
+		for each (String^ Itr in Tokens)
 		{
 			if (!String::Compare(Itr, Source, true))
 			{
@@ -318,7 +318,7 @@ namespace ConstructionSetExtender
 
 	bool ScriptParser::GetIsTokenOperator(String^% Source)
 	{
-		for each(String^% Itr in Operators)
+		for each(String^ Itr in Operators)
 		{
 			if (!String::Compare(Source, Itr))
 				return true;

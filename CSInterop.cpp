@@ -249,6 +249,11 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE_MESSAGE("Couldn't find source MP3 file '%s'!", MP3Path);
 			return false;
 		}
+		else if (TempFile.Open(WAVPath))
+		{
+			BGSEECONSOLE_MESSAGE("Using existing WAV file '%s'", WAVPath);
+			return true;
+		}
 
 		std::string DecoderArgs = std::string(BGSEEMAIN->GetAPPPath()) + "lame.exe \"" + std::string(BGSEEMAIN->GetAPPPath()) +
 			std::string(MP3Path) + "\" \"" + std::string(BGSEEMAIN->GetAPPPath()) + std::string(WAVPath) + "\" --decode";

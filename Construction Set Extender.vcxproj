@@ -60,11 +60,13 @@
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;$(SourcePath)</SourcePath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EnableManagedIncrementalBuild>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\Release\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
+    <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ExecutablePath)</ExecutablePath>
+    <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;NDEBUG;CS_VERSION=0x01020000;OBLIVION_VERSION=0x010201A0;CSE;RELEASE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;NDEBUG;CS_VERSION=0x01020000;OBLIVION_VERSION=0x010201A0;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -101,11 +103,17 @@
       <Message>Installing DLL...</Message>
       <Command>copy "$(TargetPath)" "$(OblivionPath)\Data\obse\plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cscript.exe "$(SolutionDir)\BuildIncrement.jse"</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Setting build number...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_USRDLL;CS_VERSION=0x01020000;OBLIVION_VERSION=0x010201A0;CSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
@@ -150,6 +158,12 @@
       <Message>Installing DLL...</Message>
       <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>cscript.exe "$(SolutionDir)\BuildIncrement.jse"</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Setting build number...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AuxiliaryViewport.cpp" />
@@ -404,6 +418,10 @@
     <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase.rc" />
     <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc" />
     <ResourceCompile Include="Construction Set Extender.rc" />
+    <ResourceCompile Include="VersionInfo.rc">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CSE</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CSE</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

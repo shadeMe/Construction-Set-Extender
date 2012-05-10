@@ -97,6 +97,31 @@ void TESDataHandler::ClearPluginArray()
 	fileList.RemoveAll();
 }
 
+void TESDataHandler::CleanCellWaterExtraData( void )
+{
+	for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormFormIDMap->GetFirstPos(); Itr;)
+	{
+		UInt32 FormID = NULL;
+		TESForm* Form = NULL;
+
+		g_TESFormFormIDMap->GetNext(Itr, FormID, Form);
+		if (FormID)
+		{
+			if (Form->formType == TESForm::kFormType_Cell)
+			{
+				TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
+				SME_ASSERT(Cell);
+
+				if ((Cell->cellFlags & TESObjectCELL::kCellFlags_HasWater) == 0)
+				{
+					Cell->ModExtraCellWaterHeight(0.0);
+					Cell->ModExtraCellWaterType(NULL);
+				}
+			}
+		}
+	}
+}
+
 void TES::LoadCellIntoViewPort(Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);

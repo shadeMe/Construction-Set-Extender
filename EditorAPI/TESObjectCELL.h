@@ -17,6 +17,7 @@ class   TESObjectREFR;
 class   TESObjectLAND;
 class   TESPathGrid;
 class   TESWorldSpace;
+class	TESWaterForm;
 
 // 5C
 class TESObjectCELL : public TESForm, public TESFullName, public TESMemContextForm
@@ -93,6 +94,9 @@ public:
 	bool						GetIsInterior();
 	TESObjectREFR*				LookupRefByBaseForm(TESForm* BaseForm, bool HasEditorID = false);		// returns the first ref satisfying the conditions
 	void						SetPathGrid(TESPathGrid* PathGrid);
+
+	void						ModExtraCellWaterHeight(float Height);
+	void						ModExtraCellWaterType(TESWaterForm* Water);
 };
 
 // 04

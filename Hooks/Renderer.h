@@ -7,6 +7,7 @@ namespace ConstructionSetExtender
 	{
 		extern TESForm*								g_TESObjectREFRUpdate3DBuffer;
 		extern bool									g_RenderWindowAltMovementSettings;
+		extern bool									g_FreezeInactiveRefs;
 
 		// hooks that do stuff to the renderer and the render window
 		void PatchRendererHooks(void);
@@ -19,10 +20,10 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(NiDX9RendererRecreateC, "");
 		_DeclareMemHdlr(RenderWindowUpdateViewport, "updates the render window viewport regardless of user activity");
 		_DeclareMemHdlr(RenderWindowAddToSelection, "allows groups of references to be selected at a time");
-		_DeclareMemHdlr(TESRenderControlPerformMove, "allows the freezing of references in the render window");
+		_DeclareMemHdlr(TESRenderControlPerformMoveScale, "allows the freezing of references in the render window");
 		_DeclareMemHdlr(TESRenderControlPerformRotate, "");
-		_DeclareMemHdlr(TESRenderControlPerformScale, "");
 		_DeclareMemHdlr(TESRenderControlPerformFall, "");
+		_DeclareMemHdlr(TESRenderUndoStackRecordRef, "");
 		_DeclareMemHdlr(TESObjectREFRSetupDialog, "flag temp nodes to prevent them from being unculled unnecessarily");
 		_DeclareMemHdlr(TESObjectREFRCleanDialog, "");
 		_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");

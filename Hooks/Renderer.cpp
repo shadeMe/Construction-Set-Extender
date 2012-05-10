@@ -16,6 +16,7 @@ namespace ConstructionSetExtender
 	{
 		TESForm*					g_TESObjectREFRUpdate3DBuffer = NULL;
 		bool						g_RenderWindowAltMovementSettings = false;
+		bool						g_FreezeInactiveRefs = false;
 
 		const float					kMaxLandscapeEditBrushRadius = 25.0f;
 
@@ -27,10 +28,10 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
 		_DefineHookHdlr(RenderWindowUpdateViewport, 0x0042CE70);
 		_DefineHookHdlr(RenderWindowAddToSelection, 0x0042AE71);
-		_DefineHookHdlr(TESRenderControlPerformMove, 0x00425670);
-		_DefineHookHdlr(TESRenderControlPerformRotate, 0x00425D6E);
-		_DefineHookHdlr(TESRenderControlPerformScale, 0x00424650);
+		_DefineHookHdlr(TESRenderControlPerformMoveScale, 0x0042CAB0);
+		_DefineHookHdlr(TESRenderControlPerformRotate, 0x0042B997);
 		_DefineHookHdlr(TESRenderControlPerformFall, 0x0042886A);
+		_DefineHookHdlr(TESRenderUndoStackRecordRef, 0x00432D40);
 		_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 		_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 		_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
@@ -80,10 +81,10 @@ namespace ConstructionSetExtender
 			_MemHdlr(NiDX9RendererRecreateC).WriteJump();
 			_MemHdlr(RenderWindowUpdateViewport).WriteJump();
 			_MemHdlr(RenderWindowAddToSelection).WriteJump();
-			_MemHdlr(TESRenderControlPerformMove).WriteJump();
+			_MemHdlr(TESRenderControlPerformMoveScale).WriteJump();
 			_MemHdlr(TESRenderControlPerformRotate).WriteJump();
-			_MemHdlr(TESRenderControlPerformScale).WriteJump();
 			_MemHdlr(TESRenderControlPerformFall).WriteJump();
+			_MemHdlr(TESRenderUndoStackRecordRef).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
 			_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
 			_MemHdlr(TESRenderControlPerformFallVoid).WriteJump();
@@ -384,30 +385,38 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall TESRenderControlProcessFrozenRefs(void)
+		void __stdcall TESRenderControlProcessFrozenRefs(TESRenderSelection::SelectedObjectsEntry* Current)
 		{
 			std::vector<TESForm*> FrozenRefs;
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			if (Current == NULL)
+				Current = _RENDERSEL->selectionList;
+
+			for (TESRenderSelection::SelectedObjectsEntry* Itr = Current; Itr && Itr->Data; Itr = Itr->Next)
 			{
-				if ((Itr->Data->formFlags & kTESObjectREFRSpecialFlags_Frozen))
+				if ((Itr->Data->formFlags & kTESObjectREFRSpecialFlags_Frozen) ||
+					((Itr->Data->formFlags & TESForm::kFormFlags_FromActiveFile) == false && g_FreezeInactiveRefs))
+				{
 					FrozenRefs.push_back(Itr->Data);
+				}
 			}
 
 			for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
 				_RENDERSEL->RemoveFromSelection(*Itr, true);
 		}
 
-		#define _hhName		TESRenderControlPerformMove
+		#define _hhName		TESRenderControlPerformMoveScale
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x00425676);
+			_hhSetVar(Retn, 0x0042CAB7);
 			__asm
 			{
-				sub		esp, 0x114
 				pushad
+				push	0
 				call	TESRenderControlProcessFrozenRefs
 				popad
 
+				mov		eax, 0x00A0BBDD
+				cmp		byte ptr [eax], 0
 				jmp		[_hhGetVar(Retn)]
 			}
 		}
@@ -415,29 +424,13 @@ namespace ConstructionSetExtender
 		#define _hhName		TESRenderControlPerformRotate
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x00425D74);
+			_hhSetVar(Retn, 0x0042B99E);
+
+			*g_RenderWindowUpdateViewPortFlag = 1;
 			__asm
 			{
-				sub		esp, 0xC0
 				pushad
-				call	TESRenderControlProcessFrozenRefs
-				popad
-
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		#define _hhName		TESRenderControlPerformScale
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00424659);
-			__asm
-			{
-				sub		esp, 0x40
-				mov		ecx, [g_TESRenderSelectionPrimary]
-				mov		ecx, [ecx]
-
-				pushad
+				push	0
 				call	TESRenderControlProcessFrozenRefs
 				popad
 
@@ -453,10 +446,33 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				pushad
+				push	0
 				call	TESRenderControlProcessFrozenRefs
 				popad
 
 				call	[_hhGetVar(Call)]
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		#define _hhName		TESRenderUndoStackRecordRef
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00432D48);
+			__asm
+			{
+				mov		eax, [esp + 0x8]
+
+				pushad
+				push	eax
+				call	TESRenderControlProcessFrozenRefs
+				popad
+
+				push    ebx
+				push    ebp
+				xor     ebp, ebp
+				cmp     [esp + 0x10], ebp
+
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

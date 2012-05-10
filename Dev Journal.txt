@@ -14,58 +14,51 @@ NOTE	---->
 
 MISC	---->
 > Credits:	JRoush, for allowing the use of COEF's code
-	Kyoma, for his contributions with the class definitions
+			Kyoma, for his contributions with the class definitions
 
 
 CSE		---->
-> Double right click on a form list combo box (TESComboBox) opens it for editing
-> Look into the activator bug (blind dump)
-> TESFile CreateFileMapping assertion - http://forums.nexusmods.com/index.php?/topic/283608-construction-set-extender-endorsements/page__st__260__p__4976561#entry4976561
-> Allow wav files to be passed to the lip generator (currently, it expects the input file to be a MP3 file)
-> Reset list view sorting during item addition
-> Go into Cell View. Right click on any interior cell->Edit. The Cell dialog comes up. If you click in any of the cell names on the left, they all gain a "*" and thus become dirt.
-> Editing an unrendered ref. (ie load the CK and ESMs, single-click any cell on the left, right click a ref., Edit, change a value) results in an assertion error: (and moves it to the default Tamriel worldspace)
-> Ref properties loses focus to the render window on init and every time the 3d data fields are modified
-> Increase preview control rendertarget size
-> Prevent control redrawing wherever possible; TESDialog::BuildSubwindow, WM_INITDIALOG in FormEdit/FormIDListView
-> Context Menu on TESBoundObjects -> Preview
-> http://forums.bethsoft.com/topic/1250150-rel-construction-set-extender/page__view__findpost__p__20306934
-> Wrap all editorAPI instance data
-> Option to freeze all refs in the Oblivion master file (or any master file) (to prevent accidental edits)
-> Partial black tex hasn't been fixed yet, generator still seems to crash after hitting a mem limit (around 850MB)
-	< THen again, might not be a mem issue. Try reducing the size of the textures
-> Batch LIP generator tool (the CS' output works fine with Skyrim too!)
-> Toggle visibility/reveal needs to update the ninodes after unculling
-> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
-> Fix undo manger ctd at 0x00431F68; (special marker gets freed)
-> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released
-> Main window positions not working well with 2nd mon; main window states aren't correctly inited by the InitializeWindows hook
-> Look into Konption's kf CTD; add a skeleton/kf/model tester tool that wraps the various 3d init subs in SEH (will leak pointers 'doh!)
-> Multiple object windows
-> Invert render window selection
-> Implement a fly camera mode for the render window
-> http://www.darkcreations.org/forums/topic/58-construction-set-extender-beta-test-thread/page__view__findpost__p__90230
-> [AFTER 6.0] Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
-> [AFTER 6.0] Investigate if f_TESObjectREFR::SetExtraEditorMoveDataPosition/Rotation needs to be called in the batch editor code; Yup, look into 0x005478A0
-> [AFTER 6.0] Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
-> [AFTER 6.0] Add a color overlay to objects under the selection rubber band
 
-Coda Commands
-> GetBaseForm - Ref
+	BUGFIX			=
+		> Look into the activator bug (blind dump)
+		> Partial black tex hasn't been fixed yet
+		> http://www.darkcreations.org/forums/topic/58-construction-set-extender-beta-test-thread/page__view__findpost__p__90230
+		> Fix undo manger ctd at 0x00431F68; (special marker gets freed); figure out a surefire way to repro this one first
+			^ Think it might been caused by the buggy frozen refs support hooks
+		> [AFTER 6.0] Investigate if f_TESObjectREFR::SetExtraEditorMoveDataPosition/Rotation needs to be called in the batch editor code; Yup, look into 0x005478A0
+		> [AFTER 6.0] Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
+
+
+	ENHANCEMENT		=
+		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
+		> Double right click on a form list combo box (TESComboBox) opens it for editing
+		> Batch LIP generator tool (the CS' output works fine with Skyrim too!)
+		> Increase preview control rendertarget size
+		> [AFTER 6.0] Implement a fly camera mode for the render window
+		> [AFTER 6.0] Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
+		> [AFTER 6.0] Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
+
+	CODA			=
+		> GetBaseForm - Ref
+	
+	MISC			=
+		> Wrap all editorAPI instance data
 
 
 SE		---->
-> Recheck with the mem profiler
-> Workspace deallocs sometimes go unnoticed by the manager, leading it to think there are active instances
-> PgUp and PgDn backwards for tab selection
-> Partial search string match for the script list dialog
-> ISInterface listview sorting takes a long time when commands are being populated
-> [AFTER 6.0] New sanitze function: Anneal identifier casing - Fixup editorIds, var names and command IDs
-> [AFTER 6.0] A code snippets manager, integrated into IntelliSense
+
+	BUGFIX			=
+		> Workspace deallocs sometimes go unnoticed by the manager, leading it to think there are active instances
+
+	ENHANCEMENT		=
+		> [AFTER 6.0] New sanitze function: Anneal identifier casing - Fixup editorIds, var names and command IDs
+		> [AFTER 6.0] A code snippets manager, integrated into IntelliSense
+
+	MISC			=
+		> Recheck with the mem profiler
 
 
 USE		---->
-> Export all data to CSV
 
-TAG		---->
-> !IMPORTANT! Subclass the formlist to accept the 0x407 message
+	ENHANCEMENT		=
+		> [AFTER 6.0] Export all data to CSV

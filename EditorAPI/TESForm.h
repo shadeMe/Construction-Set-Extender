@@ -171,7 +171,7 @@ public:
 	/*05*/ UInt8					formPad05[3];
 	/*08*/ UInt32					formFlags;
 	/*0C*/ UInt32					formID;
-	/*10*/ BSString				editorID;
+	/*10*/ BSString					editorID;
 	/*18*/ TrackingData				trackingData;
 	/*1C*/ OverrideFileListT		fileList; // list of TESFiles that override this form
 
@@ -227,4 +227,5 @@ class TESMemContextForm
 	// no members
 };
 
-extern CSE_GlobalClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_FormEditorIDMap;
+extern CSE_GlobalClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_TESFormEditorIDMap;
+extern CSE_GlobalClasses::NiTMapBase<UInt32, TESForm*>*					g_TESFormFormIDMap;

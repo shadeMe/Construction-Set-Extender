@@ -147,7 +147,7 @@ namespace ConstructionSetExtender
 				Show();
 			}
 
-	//		BringToFront();
+			BringToFront();
 
 			if (Animate)
 			{

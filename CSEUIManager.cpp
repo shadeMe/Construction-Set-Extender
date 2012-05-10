@@ -837,7 +837,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK RenderWindowMenuSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK RenderWindowMenuInitSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
 		{
 			LRESULT DlgProcResult = TRUE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -845,9 +845,96 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_INITMENUPOPUP:
+				{
+					if (HIWORD(lParam) == FALSE)
+					{
+						HMENU Popup = (HMENU)wParam;
+
+						for (int i = 0, j = GetMenuItemCount(Popup); i < j; i++ )
+						{
+							MENUITEMINFO CurrentItem = {0};
+							CurrentItem.cbSize = sizeof(MENUITEMINFO);
+							CurrentItem.fMask = MIIM_ID|MIIM_STATE;
+
+							if (GetMenuItemInfo(Popup, i, TRUE, &CurrentItem) == TRUE)
+							{
+								bool UpdateItem = true;
+								bool CheckItem = false;
+
+								switch (CurrentItem.wID)
+								{
+								case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
+									if (Hooks::g_FreezeInactiveRefs)
+										CheckItem = true;
+
+									break;
+								default:
+									UpdateItem = false;
+									break;
+								}
+
+								if (UpdateItem)
+								{
+									if (CheckItem)
+										CurrentItem.fState = MFS_DEFAULT|MFS_CHECKED;
+									else
+										CurrentItem.fState = MFS_DEFAULT|MFS_UNCHECKED;
+
+									CurrentItem.fMask = MIIM_STATE;
+									SetMenuItemInfo(Popup, i, TRUE, &CurrentItem);
+								}
+							}
+						}
+					}
+
+					Return = true;
+				}
+
+				break;
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
+					Hooks::g_FreezeInactiveRefs = (Hooks::g_FreezeInactiveRefs == false);
+
+					if (Hooks::g_FreezeInactiveRefs)
+						RenderWindowPainter::RenderChannelNotifications->Queue(4, "Inactive references frozen");
+					else
+						RenderWindowPainter::RenderChannelNotifications->Queue(4, "Inactive references thawed");
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
+					if (*g_RenderWindowPathGridEditModeFlag == 0)
+					{
+						TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+
+						if (CurrentCell == NULL)
+							CurrentCell = *g_RenderWindowCurrentlyLoadedCell;
+
+						if (CurrentCell)
+						{
+							TESRenderSelection* Buffer = TESRenderSelection::CreateInstance(_RENDERSEL);
+
+							_RENDERSEL->ClearSelection(true);
+
+							for (TESObjectCELL::ObjectREFRList::Iterator Itr = CurrentCell->objectList.Begin(); !Itr.End(); ++Itr)
+							{
+								TESObjectREFR* Ref = Itr.Get();
+
+								if (Ref == NULL)
+									break;
+
+								if (Buffer->HasObject(Ref) == false)
+									_RENDERSEL->AddToSelection(Ref, true);
+							}
+
+							Buffer->DeleteInstance();
+							TESDialog::RedrawRenderWindow();
+						}
+					}
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
 					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, IDC_MAINMENU_BATCHREFERENCEEDITOR, 0);
 
@@ -881,6 +968,8 @@ namespace ConstructionSetExtender
 
 									break;
 								}
+
+								Ref->UpdateNiNode();
 							}
 
 							switch (LOWORD(wParam))
@@ -908,7 +997,6 @@ namespace ConstructionSetExtender
 					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 					{
 						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-						UInt32 FlagMask = 0;
 						char Buffer[0x100] = {0};
 
 						switch (LOWORD(wParam))
@@ -991,8 +1079,8 @@ namespace ConstructionSetExtender
 					if (_RENDERSEL->selectionCount > 1)
 					{
 						// record the op twice, otherwise the thingy will crash on undo for some reason
-						(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, (*g_TESRenderSelectionPrimary));
-						(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, (*g_TESRenderSelectionPrimary));
+						(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
+						(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
 
 						TESObjectREFR* AlignRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 
@@ -1334,7 +1422,7 @@ namespace ConstructionSetExtender
 					SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, 4);
 				}
 
-				CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList);
+				CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, true);
 
 				break;
 			case WM_DESTROY:
@@ -2193,7 +2281,8 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, LandscapeTextureUseDlgSubClassProc);
 
-			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
+			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
+																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
 
 			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;

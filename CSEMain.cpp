@@ -98,6 +98,23 @@ namespace ConstructionSetExtender
 		Hooks::PatchMessageHanders();
 		BGSEECONSOLE->Exdent();
 
+		bool ComponentInitialized = BGSEEUI->Initialize("TES Construction Set",
+												LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
+
+		if (ComponentInitialized == false)
+			return false;
+
+		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMiscSubclassProc);
+
+		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, UIManager::ObjectWindowSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, UIManager::CellViewWindowSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMenuInitSelectSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMiscSubclassProc);
+
+		BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
+
 		BGSEECONSOLE_MESSAGE("Registering OBSE Plugin Message Handlers");
 		XSEMsgIntfc->RegisterListener(XSEPluginHandle, "OBSE", OBSEMessageHandler);
 
@@ -427,7 +444,7 @@ extern "C"
 	{
 		info->infoVersion = PluginInfo::kInfoVersion;
 		info->name = BGSEEMAIN_EXTENDERSHORTNAME;
-		info->version = PACKED_CSE_VERSION;
+		info->version = PACKED_SME_VERSION;
 
 		XSEPluginHandle = obse->GetPluginHandle();
 
@@ -450,7 +467,7 @@ extern "C"
 		CSEINISettings.push_back(INISettings::GetStartupWorkspace());
 		CSEINISettings.push_back(INISettings::GetVersionControl());
 
-		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME, BGSEEMAIN_EXTENDERSHORTNAME, PACKED_CSE_VERSION,
+		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME, BGSEEMAIN_EXTENDERSHORTNAME, PACKED_SME_VERSION,
 														BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS, CS_VERSION_1_2, obse->editorVersion,
 														obse->GetOblivionDirectory(), XSEPluginHandle,
 														OBSE_VERSION_INTEGER, obse->obseVersion,
@@ -466,33 +483,29 @@ extern "C"
 
 		SME_ASSERT(ComponentInitialized);
 
-		ComponentInitialized = BGSEEUI->Initialize("TES Construction Set",
-												LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
-
-		SME_ASSERT(ComponentInitialized);
-
 		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query, new InitCallbackQuery(obse));
 		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load, new InitCallbackLoad(obse));
 		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Epilog, new InitCallbackEpilog());
 		BGSEEMAIN->Daemon()->RegisterDeinitCallback(new DeinitCallback());
 		BGSEEMAIN->Daemon()->RegisterCrashCallback(new CrashCallback());
 
-		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMiscSubclassProc);
+		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
+		{
+			MessageBox(NULL, "The Construction Set Extender failed to initialize correctly!\n\nCheck the logs for more information.", "zOMG!", MB_OK|MB_ICONERROR);
+			return false;
+		}
 
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, UIManager::ObjectWindowSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, UIManager::CellViewWindowSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMenuSelectSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMiscSubclassProc);
-
-		BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
-
-		return BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query);
+		return true;
 	}
 
 	__declspec(dllexport) bool OBSEPlugin_Load(const OBSEInterface * obse)
 	{
-		return BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load);
+		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
+		{
+			MessageBox(NULL, "The Construction Set Extender failed to load correctly!\n\nCheck the logs for more information.", "zOMG!", MB_OK|MB_ICONERROR);
+			return false;
+		}
+
+		return true;
 	}
 };

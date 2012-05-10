@@ -81,8 +81,6 @@ namespace ConstructionSetExtender
 			_MemHdlr(LODTextureGenNotificationUpdate).WriteJump();
 			_MemHdlr(LODTextureGenBlackTextureFix).WriteJump();
 			_MemHdlr(LODTextureGenBlackTexturePartialFix).WriteJump();
-
-			// force set the iPostProcessMilliSecondsEditor INI setting to some big huge value here
 		}
 
 		#define _hhName		LODLandTextureMipMapLevelB
@@ -452,6 +450,8 @@ namespace ConstructionSetExtender
 					s_LODDiffuseMapPartialResolution = 32;
 				else if (s_LODDiffuseMapPartialResolution > 384)
 					s_LODDiffuseMapPartialResolution = 384;
+
+				TODO("force set the iPostProcessMilliSecondsEditor INI setting to some big huge value here")
 			}
 			else if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_FullMap)
 			{
@@ -633,10 +633,13 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall DoLODTextureGenBlackTexturePartialFixHook(NiCamera* Camera, NiFrustum* CameraFrustum)
+		void __stdcall DoLODTextureGenBlackTexturePartialFixHook(NiCamera* Camera, NiFrustum* CameraFrustum, NiNode* Container)
 		{
 			TODO("Doesn't work")
-			CameraFrustum->n = 0.0000000000000000000000000000000001;
+
+			CameraFrustum->n = 0.05f;
+			CameraFrustum->f = 1000000.0f;
+			Container->m_localTranslate.z = CameraFrustum->f - 10.0f;
 		}
 
 		#define _hhName		LODTextureGenBlackTexturePartialFix
@@ -648,6 +651,7 @@ namespace ConstructionSetExtender
 			{
 				mov		eax, [esp]
 				pushad
+				push	ebp
 				push	eax
 				push	ecx
 				call	DoLODTextureGenBlackTexturePartialFixHook

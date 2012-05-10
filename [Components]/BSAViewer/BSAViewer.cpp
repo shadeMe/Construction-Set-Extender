@@ -154,7 +154,7 @@ namespace ConstructionSetExtender
 	FolderObject^ BSAViewer::GetFolderInDirectory(FolderObject^% WorkingDirectory, String^% FolderName)
 	{
 		UInt32 Count = 0;
-		for each (FileSystemObject^% Itr in WorkingDirectory->SubItems)
+		for each (FileSystemObject^ Itr in WorkingDirectory->SubItems)
 		{
 			if (Itr->ObjectType == FileSystemObject::_ObjectType::e_Folder && !String::Compare(Itr->Name, FolderName))
 			{
@@ -173,7 +173,7 @@ namespace ConstructionSetExtender
 		UInt32 Count = 0, Tokens = Splits->Length - 1;
 		if (String::Compare(Splits[Tokens]->Substring(Splits[Tokens]->IndexOf(".") + 1), Filter))		return;
 
-		for each (String^% Itr in Splits)
+		for each (String^ Itr in Splits)
 		{
 			if (Count == Tokens)
 			{							// last token = filename

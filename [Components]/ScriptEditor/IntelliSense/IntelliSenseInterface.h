@@ -12,12 +12,24 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemVariable;
 		ref class Script;
 
+		ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<ListViewItem^>
+		{
+		protected:
+			SortOrder											Order;
+		public:
+			IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
+
+			virtual int											Compare(ListViewItem^ X, ListViewItem^ Y);
+		};
+
 		ref class IntelliSenseInterface
 		{
 		protected:
+
 			void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 			void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
+			void												IntelliSenseList_RetrieveVirtualItem(Object^ Sender, RetrieveVirtualItemEventArgs^ E);
 			void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
 			static ToolTip^										InfoToolTip = gcnew ToolTip();
@@ -33,6 +45,7 @@ namespace ConstructionSetExtender
 			Script^												RemoteScript;
 
 			List<IntelliSenseItem^>^							LocalVariableDatabase;
+			List<ListViewItem^>^								VirtualListCache;
 
 			ListView^											IntelliSenseList;
 			NonActivatingImmovableAnimatedForm^					IntelliSenseBox;
@@ -40,6 +53,7 @@ namespace ConstructionSetExtender
 			EventHandler^										IntelliSenseListSelectedIndexChangedHandler;
 			KeyEventHandler^									IntelliSenseListKeyDownHandler;
 			MouseEventHandler^									IntelliSenseListMouseDoubleClickHandler;
+			RetrieveVirtualItemEventHandler^					IntelliSenseListRetrieveVirtualItemEventHandler;
 			CancelEventHandler^									IntelliSenseBoxCancelHandler;
 
 			void												CleanupInterface();

@@ -2622,6 +2622,12 @@ namespace ConstructionSetExtender
 						CurrentScript = 0;
 					}
 
+					try			// delete the script's autorecovery cache, if any
+					{
+						System::IO::File::Delete(AUTORECOVERYCACHEPATH + GetScriptDescription() + ".txt");
+					}
+					catch (...) {}
+
 					return true;
 				}
 				else
@@ -2791,11 +2797,11 @@ namespace ConstructionSetExtender
 				break;
 			case Keys::PageDown:
 				if (E->Modifiers == Keys::Control)
-					GetParentContainer()->SelectPreviousTab();
+					GetParentContainer()->SelectNextTab();
 				break;
 			case Keys::PageUp:
 				if (E->Modifiers == Keys::Control)
-					GetParentContainer()->SelectNextTab();
+					GetParentContainer()->SelectPreviousTab();
 				break;
 			case Keys::Tab:
 				if (E->Control == true && E->Shift == false)
@@ -3246,7 +3252,7 @@ namespace ConstructionSetExtender
 
 			ContextMenuRefactorCreateUDFImplementation->Visible = false;
 			if (!String::Compare(Tokens[0], "call", true) &&
-				!TextEditor->GetCharIndexInsideCommentSegment(TextEditor->GetCharIndexFromPosition(TextEditor->GetLastKnownMouseClickLocation())))
+				!TextEditor->GetCharIndexInsideCommentSegment(TextEditor->GetLastKnownMouseClickOffset()))
 			{
 				if (!ISDB->GetIsIdentifierUserFunction(MidToken))
 				{
@@ -3291,15 +3297,14 @@ namespace ConstructionSetExtender
 				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false);
 			else
 				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtMouseLocation(), false);
-
 		}
 		void Workspace::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
 		{
-			TextEditor->ToggleComment(TextEditor->GetCharIndexFromPosition(TextEditor->GetLastKnownMouseClickLocation()));
+			TextEditor->ToggleComment(TextEditor->GetLastKnownMouseClickOffset());
 		}
 		void Workspace::ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E)
 		{
-			ToggleBookmark(TextEditor->GetCharIndexFromPosition(TextEditor->GetLastKnownMouseClickLocation()));
+			ToggleBookmark(TextEditor->GetLastKnownMouseClickOffset());
 		}
 		void Workspace::ContextMenuAddMessage_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3345,10 +3350,10 @@ namespace ConstructionSetExtender
 		{
 			ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
 			ScriptParser::VariableType VarType = (ScriptParser::VariableType)MenuItem->Tag;
-			String^ VarName = "";
+			String^ VarName = ContextMenuWord->Text;
 			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
 
-			InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable");
+			InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable", VarName);
 			if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
 				return;
 			else

@@ -68,7 +68,7 @@ namespace ConstructionSetExtender
 
 			if (_RENDERSEL->selectionCount > 1)
 			{
-				FORMAT_STR(Buffer, "%d Objects Selected\nPosition Vector Sum: %.04f, %.04f, %.04f",
+				FORMAT_STR(Buffer, "%d Objects Selected\nNominal Center: %.04f, %.04f, %.04f",
 					_RENDERSEL->selectionCount,
 					_RENDERSEL->selectionPositionVectorSum.x,
 					_RENDERSEL->selectionPositionVectorSum.y,

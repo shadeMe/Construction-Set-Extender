@@ -27,9 +27,6 @@
     <ClInclude Include="..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
       <Filter>Wrappers</Filter>
     </ClInclude>
@@ -57,11 +54,6 @@
     <ClCompile Include="..\..\[Common]\NativeWrapper.cpp">
       <Filter>Wrappers</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="BSAViewer.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images.resx">
@@ -105,5 +97,10 @@
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\Filter2HS.png">
       <Filter>Resources\Images</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VersionInfo.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

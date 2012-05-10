@@ -95,9 +95,6 @@
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
       <Filter>Wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Common]\HandShakeStructs.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -174,11 +171,6 @@
     <EmbeddedResource Include="Images.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="ScriptEditor.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\AlignObjectsBottomHS.png">
@@ -475,5 +467,10 @@
     <None Include="Images\settings1.png">
       <Filter>Resources\Images</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VersionInfo.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

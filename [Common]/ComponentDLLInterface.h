@@ -81,6 +81,7 @@ namespace ComponentDLLInterface
 		{
 		public:
 			void									(* InstantiateObjects)(TagBrowserInstantiationData* Data);
+			void									(* InitiateDragonDrop)(void);
 		};
 
 		void										(* DeleteNativeHeapPointer)(void* Pointer, bool IsArray);

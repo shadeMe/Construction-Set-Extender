@@ -85,7 +85,7 @@ namespace ConstructionSetExtender
 			bool										GetInitializingStatus();
 			void										SetInitializingStatus(bool Initializing);
 
-			Point										GetLastKnownMouseClickLocation(void);
+			int											GetLastKnownMouseClickOffset(void);
 
 			int											FindReplace(FindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOutput^ Output, UInt32 Options);		// returns the number of matches, -1 if an error was encountered
 			void										ToggleComment(int StartIndex);

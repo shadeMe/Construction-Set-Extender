@@ -18,9 +18,6 @@
     <ClInclude Include="..\..\..\[Common]\MiscUtilities.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="..\ScriptParser.h" />
     <ClInclude Include="..\..\..\[Common]\NativeWrapper.h">
       <Filter>Wrappers</Filter>
@@ -38,7 +35,7 @@
     <ClCompile Include="ScriptPreprocessor.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="ScriptEditor.Preprocessor.rc">
+    <ResourceCompile Include="VersionInfo.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

@@ -277,12 +277,12 @@ namespace ConstructionSetExtender
 
 			String^ AvalonEditTextEditor::GetTokenAtMouseLocation()
 			{
-				return GetTextAtLocation(LastKnownMouseClickLocation, false)->Replace("\n", "");
+				return GetTextAtLocation(LastKnownMouseClickOffset, false)->Replace("\n", "");
 			}
 
 			array<String^>^ AvalonEditTextEditor::GetTokensAtMouseLocation()
 			{
-				return GetTextAtLocation(GetCharIndexFromPosition(LastKnownMouseClickLocation));
+				return GetTextAtLocation(LastKnownMouseClickOffset);
 			}
 
 			int AvalonEditTextEditor::GetCaretPos()
@@ -384,9 +384,9 @@ namespace ConstructionSetExtender
 				InitializingFlag = Initializing;
 			}
 
-			Point AvalonEditTextEditor::GetLastKnownMouseClickLocation()
+			int AvalonEditTextEditor::GetLastKnownMouseClickOffset()
 			{
-				return LastKnownMouseClickLocation;
+				return LastKnownMouseClickOffset;
 			}
 
 			int AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options)
@@ -1386,11 +1386,7 @@ namespace ConstructionSetExtender
 				Nullable<AvalonEdit::TextViewPosition> Location = TextField->GetPositionFromPoint(E->GetPosition(TextField));
 				if (Location.HasValue)
 				{
-					int Offset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
-					LastKnownMouseClickLocation = GetPositionFromCharIndex(Offset);
-					System::Windows::Point ScrollCorrectedLocation = System::Windows::Point(LastKnownMouseClickLocation.X, LastKnownMouseClickLocation.Y);
-					ScrollCorrectedLocation += TextField->TextArea->TextView->ScrollOffset;
-					LastKnownMouseClickLocation = Point(ScrollCorrectedLocation.X, ScrollCorrectedLocation.Y);
+					LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
 				}
 				else
 				{
@@ -1685,7 +1681,7 @@ namespace ConstructionSetExtender
 
 				IntelliSenseBox->MaximumVisibleItemCount = PREFERENCES->FetchSettingAsInt("MaxVisibleItems", "IntelliSense");
 				IntelliSenseBox->PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
-				LastKnownMouseClickLocation = Point(0, 0);
+				LastKnownMouseClickOffset = 0;
 
 				ScrollBarSyncTimer->Interval = 200;
 				ScrollBarSyncTimer->Start();

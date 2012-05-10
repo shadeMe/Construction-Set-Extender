@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 				PreventTextChangeFlagState							PreventTextChangedEventFlag;
 				System::Windows::Input::Key							KeyToPreventHandling;
 				IntelliSense::IntelliSenseInterface^				IntelliSenseBox;
-				Point												LastKnownMouseClickLocation;
+				int													LastKnownMouseClickOffset;
 				System::Windows::Input::Key							LastKeyThatWentDown;
 
 				System::Windows::Point								ScrollStartPoint;
@@ -211,7 +211,7 @@ namespace ConstructionSetExtender
 				virtual bool								GetInitializingStatus();
 				virtual void								SetInitializingStatus(bool Initializing);
 
-				virtual Point								GetLastKnownMouseClickLocation(void);
+				virtual int									GetLastKnownMouseClickOffset(void);
 
 				virtual int									FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options);
 				virtual void								ToggleComment(int StartIndex);
