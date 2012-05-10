@@ -320,7 +320,7 @@ namespace BGSEditorExtender
 			LongName,
 			(ExtenderVersion >> 24) & 0xFF,
 			(ExtenderVersion >> 16) & 0xFF,
-			(ExtenderVersion >> 4) & 0xFFF,
+			ExtenderVersion & 0xFFFF,
 			ExtenderVersion);
 		BGSEECONSOLE->Indent();
 
@@ -362,10 +362,30 @@ namespace BGSEditorExtender
 			BGSEECONSOLE_MESSAGE("Editor/game is installed to the Program Files directory - An unprotected directory like 'C:\\Games\\' is recommended");
 			return false;
 		}
-		else if (IsUserAnAdmin() == FALSE)
+		else
 		{
-			BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges");
-			return false;
+			BOOL IsAdmin = FALSE;
+			SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+			PSID AdministratorsGroup;
+
+			IsAdmin = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+											0, 0, 0, 0, 0, 0, &AdministratorsGroup);
+
+			if (IsAdmin)
+			{
+				if (CheckTokenMembership( NULL, AdministratorsGroup, &IsAdmin) == FALSE)
+				{
+					IsAdmin = FALSE;
+				}
+
+				FreeSid(AdministratorsGroup);
+			}
+
+			if (IsAdmin == FALSE)
+			{
+				BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges - The CS(E) must be run as an administrator.");
+				return false;
+			}
 		}
 
 		if(SECurrentVersion < SEMinVersion)

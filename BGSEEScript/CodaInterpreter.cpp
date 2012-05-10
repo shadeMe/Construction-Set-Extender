@@ -1731,6 +1731,8 @@ namespace BGSEditorExtender
 			va_start(Args, ArgumentCount);
 
 			// need to cast to the correct type as we're basically performing pointer arithmetic
+			// ug-gah-ly but how many levels of abstraction am I gonna contend with just to provide some isolation for 3rd parties?!
+			// who'll probably ne'er use this, I might add...
 			CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
 			SME_ASSERT(ArgumentStore && ParameterData);
 

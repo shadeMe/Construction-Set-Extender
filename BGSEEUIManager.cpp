@@ -581,7 +581,11 @@ namespace BGSEditorExtender
 	HWND CALLBACK BGSEEUIManager::CallbackCreateDialogParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
 	{
 		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
-		SME_ASSERT(hInstance == BGSEEUI->EditorResourceInstance->operator()());		// calls to IAT functions inside the extender are routed through its own IAT
+		if (hInstance != BGSEEUI->EditorResourceInstance->operator()())			// calls to IAT functions inside the extender are routed through its own IAT
+		{																		// but since we route TESDialog::BuildSubWindow calls, perform a sanity check here
+			return ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		}
 
 		DLGPROC Replacement = NULL;
 		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
