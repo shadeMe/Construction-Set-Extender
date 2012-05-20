@@ -177,6 +177,9 @@ namespace BGSEditorExtender
 		bool						RegisterConsoleCommand(BGSEEConsoleCommandInfo* Command);
 		void						UnregisterConsoleCommand(BGSEEConsoleCommandInfo* Command);
 
+		bool						RegisterPrintCallback(BGSEEConsolePrintCallback Callback);
+		void						UnregisterPrintCallback(BGSEEConsolePrintCallback Callback);
+
 		const char*					GetLogPath(void) const;
 		void						OpenDebugLog(void);
 		bool						GetLogsWarnings(void);

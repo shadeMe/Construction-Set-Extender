@@ -95,7 +95,7 @@ namespace BGSEditorExtender
 			WorkspaceInfo.hwndOwner = BGSEEUI->GetMainWindow();
 			WorkspaceInfo.iImage = NULL;
 			WorkspaceInfo.pszDisplayName = WorkspacePath;
-			WorkspaceInfo.lpszTitle = "Select a vaild workspace inside the root game directory";
+			WorkspaceInfo.lpszTitle = "Select a valid workspace inside the root game directory";
 			WorkspaceInfo.ulFlags = BIF_NEWDIALOGSTYLE|BIF_RETURNONLYFSDIRS;
 			WorkspaceInfo.pidlRoot = NULL;
 			WorkspaceInfo.lpfn = NULL;

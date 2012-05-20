@@ -217,7 +217,7 @@ namespace BGSEditorExtender
 			CodaScriptMessageHandler*					MsgHdlr(void);
 		};
 #define CODAVM											BGSEditorExtender::BGSEEScript::CodaScriptVM::GetSingleton()
-#define CODAVM_ENABLEPROFILER							1
+#define CODAVM_ENABLEPROFILER							0
 
 		class CodaScriptObjectFactory
 		{

@@ -316,12 +316,19 @@ namespace BGSEditorExtender
 
 	bool BGSEEMain::DefaultInitCallback::operator()()
 	{
-		BGSEECONSOLE_MESSAGE("%s v%d.%d.%d {%08X} Initializing ...",
+#ifdef NDEBUG
+		const char* ReleaseMode = "";
+#else
+		const char* ReleaseMode = " DEBUG";
+#endif
+		BGSEECONSOLE_MESSAGE("%s v%d.%d.%d%s {%08X} Initializing ...",
 			LongName,
 			(ExtenderVersion >> 24) & 0xFF,
 			(ExtenderVersion >> 16) & 0xFF,
 			ExtenderVersion & 0xFFFF,
+			ReleaseMode,
 			ExtenderVersion);
+
 		BGSEECONSOLE->Indent();
 
 		if (WaitForDebuggerOnStartup)
@@ -384,6 +391,7 @@ namespace BGSEditorExtender
 			if (IsAdmin == FALSE)
 			{
 				BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges - The CS(E) must be run as an administrator.");
+				BGSEECONSOLE_MESSAGE("This can be done by opening the 'File Properties' dialog for the OBSE loader and CS executables and enabling the 'Run this program as an administrator' option from the 'Compatibility' tab.");
 				return false;
 			}
 		}

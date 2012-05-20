@@ -22,33 +22,33 @@ namespace BGSEditorExtender
 			{
 				if (wParam == (WPARAM)Instance->ContextMenuHandle)
 				{
-					if (Instance->SecondaryContexts.size() == 0)
-						EnableMenuItem((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1, MF_BYPOSITION|MF_DISABLED);		// ### the context submenu item should always be the last item
-					else
-					{
-						EnableMenuItem((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1, MF_BYPOSITION|MF_ENABLED);
+					HMENU ContextsMenu = GetSubMenu((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1);
 
-						HMENU ContextsMenu = GetSubMenu((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1);
+					if (Instance->GetActiveContext() == Instance->PrimaryContext)
+						CheckMenuItem(ContextsMenu, ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT, MFS_CHECKED);
+					else
+						CheckMenuItem(ContextsMenu, ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT, MFS_UNCHECKED);
+
+					if (Instance->SecondaryContexts.size())
 						InsertMenu(ContextsMenu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 
-						int i = 1;
-						for (ContextListT::const_iterator Itr = Instance->SecondaryContexts.begin(); Itr != Instance->SecondaryContexts.end(); Itr++, i++)
-						{
-							MENUITEMINFO ContextMenuItem = {0};
-							ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
-							ContextMenuItem.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING|MIIM_DATA;
-							ContextMenuItem.wID = ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START + i;
-							if (Instance->GetActiveContext() == *Itr)
-								ContextMenuItem.fState = MFS_ENABLED|MFS_CHECKED;
-							else
-								ContextMenuItem.fState = MFS_ENABLED;
-							ContextMenuItem.dwTypeData = (LPSTR)(*Itr)->GetName();
-							ContextMenuItem.cch = 0;
-							ContextMenuItem.dwItemData = (ULONG_PTR)(*Itr);
-							InsertMenuItem(ContextsMenu, GetMenuItemCount(ContextsMenu) - 1, TRUE, &ContextMenuItem);
+					int i = 1;
+					for (ContextListT::const_iterator Itr = Instance->SecondaryContexts.begin(); Itr != Instance->SecondaryContexts.end(); Itr++, i++)
+					{
+						MENUITEMINFO ContextMenuItem = {0};
+						ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
+						ContextMenuItem.fMask = MIIM_ID|MIIM_STATE|MIIM_STRING|MIIM_DATA;
+						ContextMenuItem.wID = ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START + i;
+						if (Instance->GetActiveContext() == *Itr)
+							ContextMenuItem.fState = MFS_ENABLED|MFS_CHECKED;
+						else
+							ContextMenuItem.fState = MFS_ENABLED;
+						ContextMenuItem.dwTypeData = (LPSTR)(*Itr)->GetName();
+						ContextMenuItem.cch = 0;
+						ContextMenuItem.dwItemData = (ULONG_PTR)(*Itr);
+						InsertMenuItem(ContextsMenu, GetMenuItemCount(ContextsMenu), TRUE, &ContextMenuItem);
 
-							SME_ASSERT(i < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END);
-						}
+						SME_ASSERT(i < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END);
 					}
 
 					UserData->UserData = NULL;
@@ -273,7 +273,7 @@ namespace BGSEditorExtender
 				{
 					std::string Command(Instance->CommandLineHistory.top());
 					Edit_SetText(hWnd, Command.c_str());
-					Edit_SetSel(hWnd, -1, -1);
+					Edit_SetSel(hWnd, Command.length(), Command.length());
 					Instance->CommandLineHistory.pop();
 					Instance->CommandLineHistoryAuxiliary.push(Command);
 				}
@@ -284,7 +284,7 @@ namespace BGSEditorExtender
 				{
 					std::string Command(Instance->CommandLineHistoryAuxiliary.top());
 					Edit_SetText(hWnd, Command.c_str());
-					Edit_SetSel(hWnd, -1, -1);
+					Edit_SetSel(hWnd, Command.length(), Command.length());
 					Instance->CommandLineHistoryAuxiliary.pop();
 					Instance->CommandLineHistory.push(Command);
 				}
@@ -914,6 +914,16 @@ namespace BGSEditorExtender
 	void BGSEEConsole::UnregisterConsoleCommand( BGSEEConsoleCommandInfo* Command )
 	{
 		CommandTable.RemoveCommand(Command);
+	}
+
+	bool BGSEEConsole::RegisterPrintCallback( BGSEEConsolePrintCallback Callback )
+	{
+		return PrimaryContext->RegisterPrintCallback(Callback);
+	}
+
+	void BGSEEConsole::UnregisterPrintCallback( BGSEEConsolePrintCallback Callback )
+	{
+		PrimaryContext->UnregisterPrintCallback(Callback);
 	}
 
 	const char* BGSEEConsole::GetLogPath( void ) const

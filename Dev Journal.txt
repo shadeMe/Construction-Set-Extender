@@ -5,13 +5,9 @@ IMMEDIATE  >>
 
 NOTE	---->
 > !!IMPORTANT!! Users of the lib need to link the runtime libs as a DLL to prevent inconsistencies across CRT states
-> SAVE DEBUG SYMBOLS FOR EACH PUBLIC RELEASE
 
 
 MISC	---->
-> Credits:	T800G, for the window snapper code
-	Ingo Berg, for muParserX (and for the great tech. support)
-	CrashRpt devs; bundle the copyright notice and stuff
 
 
 BGSEEBase		---->
