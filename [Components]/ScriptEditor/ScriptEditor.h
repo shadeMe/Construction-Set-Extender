@@ -94,12 +94,9 @@ namespace ConstructionSetExtender
 			virtual void										Destroy();
 		public:
 			WorkspaceContainer(ComponentDLLInterface::ScriptData* InitScript, UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height);
-			virtual ~WorkspaceContainer()
-			{
-				WorkspaceContainer::Destroy();
-			}
+			virtual ~WorkspaceContainer();
 
-			void												FlagDestruction(bool Destroying) { this->DestructionFlag = Destroying; }
+			void												FlagDestruction(bool Destroying);
 			virtual Workspace^									InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript);
 			void												NavigateJumpStack(UInt32 AllocatedIndex, JumpStackNavigationDirection Direction);
 			void												JumpToWorkspace(UInt32 AllocatedIndex, String^% ScriptName);
@@ -122,18 +119,18 @@ namespace ConstructionSetExtender
 			void												SelectTab(int Index);
 			void												SelectNextTab();
 			void												SelectPreviousTab();
-			void												Redraw() { EditorForm->Invalidate(true); }
-			void												SetWindowTitle(String^ Title) { EditorForm->Text = Title; }
+			void												Redraw();
+			void												SetWindowTitle(String^ Title);
 			void												DisableControls(void);
 			void												EnableControls(void);
 
 			Rectangle											GetBounds();
-			IntPtr												GetHandle() { return EditorForm->Handle; }
-			FormWindowState										GetWindowState() { return EditorForm->WindowState; }
-			void												SetWindowState(FormWindowState State) { EditorForm->WindowState = State; }
+			IntPtr												GetHandle();
+			FormWindowState										GetWindowState();
+			void												SetWindowState(FormWindowState State);
 			void												SetCursor(Cursor^ NewCursor);
 
-			UInt32												GetTabCount() { return EditorTabStrip->Tabs->Count; }
+			UInt32												GetTabCount();
 		};
 
 		ref class Workspace
@@ -434,10 +431,7 @@ namespace ConstructionSetExtender
 			virtual void                                        UpdateEnvironment(ComponentDLLInterface::ScriptData* Data, bool Initializing);
 			virtual void                                        Destroy();
 		public:
-			virtual ~Workspace()
-			{
-				Workspace::Destroy();
-			}
+			virtual ~Workspace();
 
 			virtual void                                        NewScript();
 			virtual void                                        OpenScript();

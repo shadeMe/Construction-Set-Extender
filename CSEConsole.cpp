@@ -1,6 +1,7 @@
 #include "CSEConsole.h"
 #include "Hooks\TESFile.h"
 #include "CSEAchievements.h"
+#include "CSEInterfaceManager.h"
 
 namespace ConstructionSetExtender
 {
@@ -146,6 +147,8 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_LoadPlugin);
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_SavePlugin);
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_Crash);
+
+			CSEInterfaceManager::Instance.ConsumeConsoleInterface();
 		}
 	}
 }

@@ -83,6 +83,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(SubwindowTemplateHotSwap, 0x00404EC9);
 		_DefineHookHdlr(CellViewInitDialog, 0x00409A8E);
 		_DefineHookHdlr(TESObjectCELLGetDataFromDialog, 0x0053849E);
+		_DefinePatchHdlr(TESQuestWindowResize, 0x004DD937 + 1);
 
 		void PatchDialogHooks(void)
 		{
@@ -141,8 +142,12 @@ namespace ConstructionSetExtender
 			{
 				static const UInt32 kTESDialogBuildSubwindowCallSites[14] =
 				{
-					0x00423A02, 0x00451538, 0x004CDF3A, 0x004DC5C2, 0x004DEA4A, 0x004E0B7B,
-					0x004E12C3, 0x004E3313, 0x004E3A23, 0x004E9716, 0x004EEA03, 0x0053A3ED,
+					0x00423A02, 0x00451538,
+					0x004CDF3A, 0x004DC5C2,
+					0x004DEA4A, 0x004E0B7B,
+					0x004E12C3, 0x004E3313,
+					0x004E3A23, 0x004E9716,
+					0x004EEA03, 0x0053A3ED,
 					0x0054C158, 0x0055D246
 				};
 
@@ -153,6 +158,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(SubwindowTemplateHotSwap).WriteJump();
 			_MemHdlr(CellViewInitDialog).WriteJump();
 			_MemHdlr(TESObjectCELLGetDataFromDialog).WriteJump();
+			_MemHdlr(TESQuestWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)

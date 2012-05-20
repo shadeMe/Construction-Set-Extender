@@ -37,6 +37,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
 		_DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
 		_DefineHookHdlr(DataHandlerSavePluginRetainTimeStamps, 0x0041BB12);
+		_DefineHookHdlr(DataHandlerAutoSaveA, 0x00481F81);
+		_DefineHookHdlr(DataHandlerAutoSaveB, 0x00481FC1);
 
 		void PatchTESFileHooks(void)
 		{
@@ -62,6 +64,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(DataHandlerSavePluginResetC).WriteJump();
 			_MemHdlr(DataHandlerSavePluginOverwriteESM).WriteNop();
 			_MemHdlr(DataHandlerSavePluginRetainTimeStamps).WriteJump();
+			_MemHdlr(DataHandlerAutoSaveA).WriteJump();
+			_MemHdlr(DataHandlerAutoSaveB).WriteJump();
 		}
 
 		bool __stdcall InitTESFileSaveDlg()
@@ -540,6 +544,42 @@ namespace ConstructionSetExtender
 				push	0		// restore
 				call	DoDataHandlerSavePluginRetainTimeStampsHook
 				popad
+
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		#define	_hhName		DataHandlerAutoSaveA
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00481F86);
+			_hhSetVar(CallActive, 0x00485BB0);
+			_hhSetVar(CallLoaded, 0x00485B70);
+			__asm
+			{
+				call	[_hhGetVar(CallActive)]
+
+				push	0
+				mov		ecx, ebp
+				call	[_hhGetVar(CallLoaded)]
+
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		#define	_hhName		DataHandlerAutoSaveB
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00481FC6);
+			_hhSetVar(CallActive, 0x00485BB0);
+			_hhSetVar(CallLoaded, 0x00485B70);
+			__asm
+			{
+				call	[_hhGetVar(CallActive)]
+
+				push	1
+				mov		ecx, ebp
+				call	[_hhGetVar(CallLoaded)]
 
 				jmp		[_hhGetVar(Retn)]
 			}

@@ -353,11 +353,28 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_INITDIALOG:
+				{
+					if (Hooks::g_QuickLoadToggle)
+						CheckDlgButton(hWnd, IDC_CSE_DATA_QUICKLOAD, BST_CHECKED);
+
+					LVCOLUMN ColumnData = {0};
+					ColumnData.mask = LVCF_WIDTH;
+
+					ColumnData.cx = 305;
+					ListView_SetColumn(PluginList, 0, &ColumnData);
+
+					ColumnData.cx = 65;
+					ListView_SetColumn(PluginList, 1, &ColumnData);
+				}
+
+				break;
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
 				case IDC_CSE_DATA_QUICKLOAD:
 					Hooks::g_QuickLoadToggle = (IsDlgButtonChecked(hWnd, IDC_CSE_DATA_QUICKLOAD) == BST_CHECKED);
+
 					break;
 				case IDC_CSE_DATA_SETSTARTUPPLUGIN:
 					{
@@ -415,7 +432,7 @@ namespace ConstructionSetExtender
 				TESFile* ActiveFile = _DATAHANDLER->activeFile;					// required for correct ESM handling
 
 				if (ActiveFile)
-					SME::MiscGunk::ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
+					ActiveFile->SetMaster(false);
 
 				break;
 			}
@@ -528,7 +545,7 @@ namespace ConstructionSetExtender
 					{
 						if (_DATAHANDLER->activeFile == NULL)
 						{
-							BGSEEUI->MsgBoxW("An active plugin must be set before using this tool.");
+							BGSEEUI->MsgBoxE("An active plugin must be set before using this tool.");
 							break;
 						}
 
@@ -540,8 +557,8 @@ namespace ConstructionSetExtender
 						{
 							TESFile* SaveAsBuffer = _DATAHANDLER->activeFile;
 
-							SME::MiscGunk::ToggleFlag(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Active, false);
-							SME::MiscGunk::ToggleFlag(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Loaded, false);
+							SaveAsBuffer->SetActive(false);
+							SaveAsBuffer->SetLoaded(false);
 
 							_DATAHANDLER->activeFile = NULL;
 
@@ -553,8 +570,8 @@ namespace ConstructionSetExtender
 							{
 								_DATAHANDLER->activeFile = SaveAsBuffer;
 
-								SME::MiscGunk::ToggleFlag(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Active, true);
-								SME::MiscGunk::ToggleFlag(&SaveAsBuffer->fileFlags, TESFile::kFileFlag_Loaded, true);
+								SaveAsBuffer->SetActive(true);
+								SaveAsBuffer->SetLoaded(true);
 							}
 
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
@@ -754,7 +771,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_CREATEGLOBALSCRIPT:
-					BGSEEUI->ModalDialog(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_GLOBALSCRIPT), hWnd, (DLGPROC)CreateGlobalScriptDlgProc);
+					BGSEEUI->ModelessDialog(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_GLOBALSCRIPT), hWnd, (DLGPROC)CreateGlobalScriptDlgProc);
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 					break;
@@ -793,12 +810,143 @@ namespace ConstructionSetExtender
 						INISettings::GetPlugins()->Set(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INISetter(), "0");
 					else
 						INISettings::GetPlugins()->Set(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INISetter(), "1");
+
+					break;
 				case IDC_MAINMENU_AUXVIEWPORT:
 					AUXVIEWPORT->ToggleVisibility();
 
 					break;
 				case IDC_MAINMENU_USEINFOLISTING:
 					CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(NULL);
+
+					break;
+				case IDC_MAINMENU_BATCHLIPGENERATOR:
+					{
+						if (CSIOM->GetInitialized() == false)
+						{
+							BGSEEUI->MsgBoxE("The CSInteropManager is not initialized!");
+							break;
+						}
+						else if (Hooks::g_QuickLoadToggle == true)
+						{
+							BGSEEUI->MsgBoxE("This operation cannot be performed when quick-loading plugins!");
+							break;
+						}
+
+						bool SkipInactiveTopicInfos = false;
+						bool OverwriteExisting = false;
+
+						if (BGSEEUI->MsgBoxI(hWnd,
+										MB_YESNO,
+										"Only process active topic infos?") == IDYES)
+						{
+							SkipInactiveTopicInfos = true;
+						}
+
+						if (BGSEEUI->MsgBoxI(hWnd,
+							MB_YESNO,
+							"Overwrite existing LIP files?") == IDYES)
+						{
+							OverwriteExisting = true;
+						}
+
+						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), hWnd, NULL, NULL);
+						IFileStream ExistingFile;
+						int BatchGenCounter = 0, FailedCounter = 0;
+						bool HasError = false;
+
+						for (tList<TESTopic>::Iterator ItrTopic = _DATAHANDLER->topics.Begin(); ItrTopic.End() == false && ItrTopic.Get(); ++ItrTopic)
+						{
+							TESTopic* Topic = ItrTopic.Get();
+							SME_ASSERT(Topic);
+
+							for (TESTopic::TopicDataListT::Iterator ItrTopicData = Topic->topicData.Begin();
+																	ItrTopicData.End() == false && ItrTopicData.Get();
+																	++ItrTopicData)
+							{
+								TESQuest* Quest = ItrTopicData->parentQuest;
+								SME_ASSERT(Quest);
+
+								for (int i = 0; i < ItrTopicData->questInfos.numObjs; i++)
+								{
+									TESTopicInfo* Info = ItrTopicData->questInfos.data[i];
+									SME_ASSERT(Info);
+
+									TESFile* OverrideFile = Info->GetOverrideFile(-1);
+
+									if (OverrideFile)
+									{
+										if (SkipInactiveTopicInfos == false || (Info->formFlags & TESForm::kFormFlags_FromActiveFile))
+										{
+											for (tList<TESRace>::Iterator ItrRace = _DATAHANDLER->races.Begin();
+																		ItrRace.End() == false && ItrRace.Get();
+																		++ItrRace)
+											{
+												TESRace* Race = ItrRace.Get();
+												SME_ASSERT(Race);
+
+												int ResponseCounter = 1;
+												for (TESTopicInfo::ResponseListT::Iterator ItrResponse = Info->responseList.Begin();
+																						ItrResponse.End() == false && ItrResponse.Get();
+																						++ItrResponse)
+												{
+													TESTopicInfo::ResponseData* Response = ItrResponse.Get();
+													SME_ASSERT(Response);
+
+													char VoiceFilePath[MAX_PATH] = {0};
+
+													for (int j = 0; j < 2; j++)
+													{
+														const char* Sex = "M";
+														if (j)
+															Sex = "F";
+
+														FORMAT_STR(VoiceFilePath, "Data\\Sound\\Voice\\%s\\%s\\%s\\%s_%s_%08X_%u",
+																				OverrideFile->fileName,
+																				Race->name.c_str(),
+																				Sex,
+																				Quest->editorID.c_str(),
+																				Topic->editorID.c_str(),
+																				(Info->formID & 0xFFFFFF),
+																				ResponseCounter);
+
+														std::string MP3Path(VoiceFilePath); MP3Path += ".mp3";
+														std::string WAVPath(VoiceFilePath); WAVPath += ".wav";
+														std::string LIPPath(VoiceFilePath); LIPPath += ".lip";
+
+														if (ExistingFile.Open(MP3Path.c_str()) ||
+															ExistingFile.Open(WAVPath.c_str()))
+														{
+															if (OverwriteExisting || ExistingFile.Open(LIPPath.c_str()) == false)
+															{
+																if (CSIOM->GenerateLIPSyncFile(VoiceFilePath, Response->responseText.c_str()))
+																	BatchGenCounter++;
+																else
+																{
+																	HasError = true;
+																	FailedCounter++;
+																}
+															}
+														}
+													}
+
+													ResponseCounter++;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+
+						DestroyWindow(IdleWindow);
+						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+
+						if (HasError)
+							BGSEEUI->MsgBoxW("Batch generation completed with some errors!\n\nGenerated: %d files\nFailed: %d Files", BatchGenCounter, FailedCounter);
+						else
+							BGSEEUI->MsgBoxI("Batch generation completed successfully!\n\nGenerated: %d files.", BatchGenCounter);
+					}
 
 					break;
 				default:
@@ -1259,6 +1407,9 @@ namespace ConstructionSetExtender
 			HWND TreeList = GetDlgItem(hWnd, 2093);
 			HWND Splitter = GetDlgItem(hWnd, 2157);
 
+			if (FilterEditBox == NULL)
+				return DlgProcResult;
+
 			switch (uMsg)
 			{
 			case 0x417:		// destroy window
@@ -1273,22 +1424,24 @@ namespace ConstructionSetExtender
 			case WM_SIZE:
 				if (wParam != SIZE_MINIMIZED)
 				{
-					RECT RectFormList = {0}, RectTreeView = {0}, RectSplitter = {0}, RectFilterLbl = {0};
+					RECT RectFormList = {0}, RectTreeView = {0}, RectSplitter = {0}, RectFilterLbl = {0}, RectFilterEdit = {0};
 					POINT Point = {0};
 
 					GetWindowRect(TreeList, &RectTreeView);
 					GetWindowRect(Splitter, &RectSplitter);
 					GetWindowRect(FormList, &RectFormList);
 					GetWindowRect(FilterLabel, &RectFilterLbl);
+					GetWindowRect(FilterEditBox, &RectFilterEdit);
 
 					Point.x = RectFilterLbl.left;
-					Point.y = RectFilterLbl.bottom;
+					Point.y = RectFilterLbl.bottom + 2;
 					ScreenToClient(hWnd, &Point);
-					MoveWindow(TreeList, Point.x, Point.y, RectTreeView.right - RectTreeView.left, (unsigned int)(lParam >> 16) - Point.y, 1);
+					MoveWindow(TreeList, Point.x, Point.y, RectTreeView.right - RectTreeView.left, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
 
 					Point.x = RectFormList.left;
+					Point.y = RectFilterEdit.top;
 					ScreenToClient(hWnd, &Point);
-					MoveWindow(FormList, Point.x, 0, (unsigned __int16)lParam - Point.x, (unsigned int)lParam >> 16, 1);
+					MoveWindow(FormList, Point.x, Point.y, (unsigned __int16)lParam - Point.x - 7, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
 
 					Point.x = RectSplitter.left;
 					ScreenToClient(hWnd, &Point);
@@ -1332,6 +1485,9 @@ namespace ConstructionSetExtender
 			HWND XEdit = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_XEDIT);
 			HWND YEdit = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_YEDIT);
 			HWND GoBtn = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_GOBTN);
+
+			if (FilterEditBox == NULL)
+				return DlgProcResult;
 
 			switch (uMsg)
 			{
@@ -1640,7 +1796,9 @@ namespace ConstructionSetExtender
 						}
 
 						std::string Path(VoicePath);
-						Path = Path.substr(0, Path.find_last_of("."));
+						Path = Path.substr(0, Path.rfind("."));
+
+						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 
 						if (CSIOM->GenerateLIPSyncFile(Path.c_str(), (*g_ResponseEditorData)->responseLocalCopy->responseText.c_str()) == false)
 						{
@@ -1651,6 +1809,8 @@ namespace ConstructionSetExtender
 							BGSEECONSOLE_MESSAGE("Successfully generated LIP file for the selected voice");
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kSoprano);
 						}
+
+						DestroyWindow(IdleWindow);
 
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 						Return = true;
@@ -1694,6 +1854,98 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK QuestDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					LVCOLUMN ColumnData = {0};
+					ColumnData.mask = LVCF_WIDTH;
+					HWND QuestList = GetDlgItem(hWnd, 2064);
+
+					ColumnData.cx = 200;
+					ListView_SetColumn(QuestList, 0, &ColumnData);
+
+					ColumnData.cx = 42;
+					ListView_SetColumn(QuestList, 2, &ColumnData);
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK CommonDialogQuickViewSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_MOUSEACTIVATE:
+				if (HIWORD(lParam) != WM_MBUTTONDOWN &&
+					HIWORD(lParam) != WM_MBUTTONUP)
+				{
+					break;
+				}
+			case WM_MBUTTONUP:
+				{
+					POINT Coords = {0};
+
+					if (uMsg == WM_MOUSEACTIVATE)
+					{
+						GetCursorPos(&Coords);
+					}
+					else
+					{
+						Coords.x = GET_X_LPARAM(lParam);
+						Coords.y = GET_Y_LPARAM(lParam);
+						ClientToScreen(hWnd, &Coords);
+					}
+
+					HWND WindowAtPoint = WindowFromPoint(Coords);
+
+					if (WindowAtPoint)
+					{
+						char Buffer[64] = {0};
+						GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
+
+						if (_stricmp(Buffer, "IMAGE"))		// skip preview controls
+						{
+							TESForm* Form = TESForm::LookupByEditorID(Buffer);
+							if (Form)
+							{
+								switch (Form->formType)
+								{
+								case TESForm::kFormType_Script:
+									TESDialog::ShowScriptEditorDialog(Form);
+									break;
+								case TESForm::kFormType_REFR:
+									_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+									break;
+								default:
+									TESDialog::ShowFormEditDialog(Form);
+									break;
+								}
+
+								DlgProcResult = TRUE;
+								Return = true;
+							}
+						}
+					}
 				}
 
 				break;
@@ -2280,6 +2532,66 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, LandscapeTextureUseDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, QuestDlgSubClassProc);
+
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SearchReplace, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_IdleAnimations, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FilteredDialog, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weapon, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Armor, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Clothing, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_MiscItem, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Static, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Reference, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Apparatus, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Book, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Container, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Activator, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIForm, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Light, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Potion, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Enchantment, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Sound, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Door, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledItem, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SoulGem, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ammo, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Spell, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Flora, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Tree, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CombatStyle, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Water, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_NPC, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Creature, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Grass, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Furniture, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LoadingScreen, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ingredient, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AnimObject, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Subspace, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectShader, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SigilStone, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Faction, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Class, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Skill, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectSetting, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_GameSetting, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Globals, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Birthsign, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Climate, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Worldspace, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, CommonDialogQuickViewSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, CommonDialogQuickViewSubClassProc);
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
@@ -2347,5 +2659,5 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Quest, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Eyes, RegularAppWindow);
 		}
-	}
+}
 }

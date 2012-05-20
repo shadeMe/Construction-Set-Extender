@@ -449,6 +449,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Export Dialogue...",         40413
         MENUITEM "Export NPC Face Textures",    40516
+        MENUITEM SEPARATOR
+        MENUITEM "Batch Generate LIP Files",    IDC_MAINMENU_BATCHLIPGENERATOR
     END
     POPUP "&Gameplay"
     BEGIN

@@ -26,6 +26,7 @@ namespace ConstructionSetExtender
 
 		bool							Initialize();
 		bool							GenerateLIPSyncFile(const char* InputPath, const char* ResponseText);
+		bool							GetInitialized() const;
 	};
 
 #define CSIOM						CSInteropManager::GetSingleton()

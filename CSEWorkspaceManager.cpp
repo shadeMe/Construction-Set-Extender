@@ -36,13 +36,10 @@ namespace ConstructionSetExtender
 		{
 			Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteJump();
 
-			for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); !Itr.End(); ++Itr)
+			for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); Itr.End() == false && Itr.Get(); ++Itr)
 			{
-				if (!Itr.Get())
-					break;
-
-				SME::MiscGunk::ToggleFlag(&Itr.Get()->fileFlags, TESFile::kFileFlag_Active, false);
-				SME::MiscGunk::ToggleFlag(&Itr.Get()->fileFlags, TESFile::kFileFlag_Loaded, false);
+				Itr.Get()->SetActive(false);
+				Itr.Get()->SetLoaded(false);
 			}
 
 			SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 0x9CD1, 0);

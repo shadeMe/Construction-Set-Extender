@@ -863,6 +863,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		HACK("Fugly!")
 		static bool s_PathGridMoveStart = false;
 
 		#define _hhName		TESPathGridRecordOperationMoveA

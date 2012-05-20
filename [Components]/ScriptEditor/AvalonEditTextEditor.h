@@ -153,13 +153,10 @@ namespace ConstructionSetExtender
 				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(void);
 				virtual void								Destroy();
 
-				static double								SetTextFadeAnimationDuration = 0.2;		// in seconds
+				static double								SetTextFadeAnimationDuration = 0.15;		// in seconds
 
 			public:
-				virtual ~AvalonEditTextEditor()
-				{
-					AvalonEditTextEditor::Destroy();
-				}
+				virtual ~AvalonEditTextEditor();
 
 				// interface events
 				virtual event ScriptModifiedEventHandler^	ScriptModified;

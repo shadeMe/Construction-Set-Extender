@@ -246,17 +246,16 @@ namespace ConstructionSetExtender
 
 		if (TempFile.Open(MP3Path) == false)
 		{
-			BGSEECONSOLE_MESSAGE("Couldn't find source MP3 file '%s'!", MP3Path);
+			BGSEECONSOLE_MESSAGE("Couldn't find source MP3 file!");
 			return false;
 		}
-		else if (TempFile.Open(WAVPath))
-		{
-			BGSEECONSOLE_MESSAGE("Using existing WAV file '%s'", WAVPath);
-			return true;
-		}
 
-		std::string DecoderArgs = std::string(BGSEEMAIN->GetAPPPath()) + "lame.exe \"" + std::string(BGSEEMAIN->GetAPPPath()) +
-			std::string(MP3Path) + "\" \"" + std::string(BGSEEMAIN->GetAPPPath()) + std::string(WAVPath) + "\" --decode";
+		std::string DecoderArgs = std::string(BGSEEMAIN->GetAPPPath()) +
+								"lame.exe \"" +
+								std::string(BGSEEMAIN->GetAPPPath()) + std::string(MP3Path) +
+								"\" \"" +
+								std::string(BGSEEMAIN->GetAPPPath()) + std::string(WAVPath) +
+								"\" --decode";
 
 		bool Result = CreateProcess(NULL,
 									(LPSTR)DecoderArgs.c_str(),
@@ -299,18 +298,21 @@ namespace ConstructionSetExtender
 		sprintf_s(InteropDataOut.StringBufferA, sizeof(InteropDataOut.StringBufferA), "%s", WAVPath.c_str());
 		sprintf_s(InteropDataOut.StringBufferB, sizeof(InteropDataOut.StringBufferB), "%s", ResponseText);
 
-		HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
+		bool HasWAVFile = false;
+		IFileStream	TempFile;
+		if (TempFile.Open(WAVPath.c_str()))
+			HasWAVFile = true;
 
-		BGSEECONSOLE_MESSAGE("Generating LIP file for '%s'...", MP3Path.c_str());
+		BGSEECONSOLE_MESSAGE("Generating LIP file for '%s'...", InputPath);
 		BGSEECONSOLE->Indent();
 
-		if (CreateTempWAVFile(MP3Path.c_str(), WAVPath.c_str()))
+		if (HasWAVFile || CreateTempWAVFile(MP3Path.c_str(), WAVPath.c_str()))
 		{
 			if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &ByteCounter))
 			{
 				InteropDataOut.MessageType = CSECSInteropData::kMessageType_Wait;
 
-				while (1)
+				while (true)
 				{
 					if (PerformPipeOperation(InteropPipeHandle, kPipeOperation_Read, &InteropDataIn, &ByteCounter))
 					{
@@ -347,16 +349,21 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE_MESSAGE("Couldn't create temporary WAV file for LIP generation!");
 		}
 
-		if (DeleteFile((std::string(BGSEEMAIN->GetAPPPath() + WAVPath)).c_str()) == FALSE && GetLastError() != ERROR_FILE_NOT_FOUND)
+		if (HasWAVFile == false &&
+			DeleteFile((std::string(BGSEEMAIN->GetAPPPath() + WAVPath)).c_str()) == FALSE &&
+			GetLastError() != ERROR_FILE_NOT_FOUND)
 		{
-			BGSEECONSOLE_ERROR("Couldn't delete temporary WAV file '%s'.");
+			BGSEECONSOLE_ERROR("Couldn't delete temporary WAV file '%s'!", WAVPath.c_str());
 		}
-
-		DestroyWindow(IdleWindow);
 
 		BGSEECONSOLE->Exdent();
 
 		return Result;
+	}
+
+	bool CSInteropManager::GetInitialized() const
+	{
+		return Loaded;
 	}
 }
 

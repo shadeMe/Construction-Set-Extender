@@ -8,13 +8,11 @@ NOTE	---->
 > Include empty versions of the newly added default directories in the mod package
 > Mention the changes made to the LOD INI settings to get all objects to render to the LOD diffuse maps
 > Bundle CS1.0 with the main package
-> Bundle the license agreements of the various requisite assemblies
 > Clean up the readMe - Lot of redundant info there.
+> Add a note about the disabled VC system in the readMe.
 
 
 MISC	---->
-> Credits:	JRoush, for allowing the use of COEF's code
-			Kyoma, for his contributions with the class definitions
 
 
 CSE		---->
@@ -31,8 +29,6 @@ CSE		---->
 
 	ENHANCEMENT		=
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
-		> Double right click on a form list combo box (TESComboBox) opens it for editing
-		> Batch LIP generator tool (the CS' output works fine with Skyrim too!)
 		> Increase preview control rendertarget size
 		> [AFTER 6.0] Implement a fly camera mode for the render window
 		> [AFTER 6.0] Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)

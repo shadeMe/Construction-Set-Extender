@@ -46,7 +46,7 @@ namespace ConstructionSetExtender
 						}
 						catch (Exception^ E)
 						{
-							DebugPrint("An exception was raised during a tab tearing operation!\n\tError Message: " + E->Message);
+							DebugPrint("An exception was raised during a tab tearing operation!\n\tError Message: " + E->Message, true);
 							Strip = nullptr;
 						}
 						if (Strip != nullptr)
@@ -389,7 +389,7 @@ namespace ConstructionSetExtender
 						}
 						catch (Exception^ E)
 						{
-							DebugPrint("Couldn't read script name from file " + FilePath + " for script updating!\n\tException: " + E->Message);
+							DebugPrint("Couldn't read script name from file " + FilePath + " for script updating!\n\tException: " + E->Message, true);
 							NewWorkspace = InstantiateNewWorkspace(0);
 							NewWorkspace->NewScript();
 						}
@@ -421,6 +421,11 @@ namespace ConstructionSetExtender
 					break;
 				}
 			}
+		}
+
+		WorkspaceContainer::~WorkspaceContainer()
+		{
+			WorkspaceContainer::Destroy();
 		}
 
 		void WorkspaceContainer::Destroy()
@@ -802,6 +807,40 @@ namespace ConstructionSetExtender
 			EditorForm->Cursor = NewCursor;
 		}
 
+		void WorkspaceContainer::FlagDestruction( bool Destroying )
+		{
+			this->DestructionFlag = Destroying;
+		}
+
+		void WorkspaceContainer::Redraw()
+		{
+			EditorForm->Invalidate(true);
+		}
+
+		void WorkspaceContainer::SetWindowTitle( String^ Title )
+		{
+			EditorForm->Text = Title;
+		}
+
+		System::IntPtr WorkspaceContainer::GetHandle()
+		{
+			return EditorForm->Handle;
+		}
+
+		System::Windows::Forms::FormWindowState WorkspaceContainer::GetWindowState()
+		{
+			return EditorForm->WindowState;
+		}
+
+		void WorkspaceContainer::SetWindowState( FormWindowState State )
+		{
+			EditorForm->WindowState = State;
+		}
+
+		UInt32 WorkspaceContainer::GetTabCount()
+		{
+			return EditorTabStrip->Tabs->Count;
+		}
 #pragma endregion
 
 #pragma region Workspace
@@ -1505,6 +1544,11 @@ namespace ConstructionSetExtender
 			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(InitScript, false);
 		}
 
+		Workspace::~Workspace()
+		{
+			Workspace::Destroy();
+		}
+
 #pragma region Methods
 		void Workspace::DisableControls()
 		{
@@ -2101,7 +2145,7 @@ namespace ConstructionSetExtender
 					}
 					catch (Exception^ E)
 					{
-						DebugPrint("Couldn't access auto-recovery cache '" + GetScriptDescription() + "'!\n\tException: " + E->Message);
+						DebugPrint("Couldn't access auto-recovery cache '" + GetScriptDescription() + "'!\n\tException: " + E->Message, true);
 					}
 				}
 			}
@@ -2266,7 +2310,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			if (!Result)
+			if (Result == false)
 				AddMessageToMessagePool(MessageListItemType::e_Warning, -1, "Compilation of script '" + ScriptName + "' halted - Couldn't recover from previous errors.");
 
 			ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(ScriptName)).c_str());
@@ -2363,6 +2407,7 @@ namespace ConstructionSetExtender
 
 			for each (Image^ Itr in MessageList->SmallImageList->Images)
 				delete Itr;
+
 			MessageList->SmallImageList->Images->Clear();
 			MessageList->SmallImageList =  nullptr;
 			WorkspaceTabItem->Tag = nullptr;
@@ -3936,7 +3981,7 @@ namespace ConstructionSetExtender
 				}
 			}
 		}
-#pragma endregion
+	#pragma endregion
 #pragma endregion
 	}
 }

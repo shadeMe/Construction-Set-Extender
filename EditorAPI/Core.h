@@ -105,7 +105,7 @@ public:
 	/*0E14*/ TESFile*								filesByID[0xFF]; // loaded files
 	/*1210*/ UInt8									unkCD0;     // if true, prevents check for changes to masters during load
 	/*1211*/ UInt8									unkCD1;     // set if there is an active file??
-	/*1212*/ UInt8									unkCD2;
+	/*1212*/ UInt8									unkCD2;		// set when autosaving?
 	/*1213*/ UInt8									unkCD3;
 	/*1214*/ UInt8									clearingData;     // set when data handler cleared
 	/*1215*/ UInt8									unkCD5;     // set after fileList is initialized?
@@ -125,8 +125,12 @@ public:
 	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject, Vector3* Position, Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
 													// places an object ref at the specified position in the specified cell/worldspace, with the specified base form.
 													// if existingRef is provided, it is used as the ref, otherwise a new ref is created.  returns null on failure
+	void											AutoSave(void);
+	bool											SavePlugin(const char* FileName = NULL, bool AsESM = false);
+													// if AsESM is set to true, all loaded records will be dumped to the save file regardless of their modified status
 
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
+	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
 };
 STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 

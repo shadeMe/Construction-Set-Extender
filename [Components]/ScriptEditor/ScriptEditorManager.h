@@ -75,7 +75,7 @@ namespace ConstructionSetExtender
 
 			virtual Object^										PerformOperation(OperationType Op, OperationParams^ Parameters);
 			ScriptEditor::Workspace^							GetAllocatedWorkspace(UInt32 AllocatedIndex);
-			UInt32												GetOpenEditorCount(void) { return AllocatedWorkspaces->Count; }
+			UInt32												GetOpenEditorCount(void);
 		};
 
 #define SEMGR											ScriptEditorManager::GetSingleton()

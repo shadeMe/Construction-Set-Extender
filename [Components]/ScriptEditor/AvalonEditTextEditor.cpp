@@ -41,7 +41,9 @@ namespace ConstructionSetExtender
 					e_Closing
 				};
 
-				BracketSearchData(Char Symbol, int StartOffset) : Symbol(Symbol), StartOffset(StartOffset)
+				BracketSearchData(Char Symbol, int StartOffset) :
+					Symbol(Symbol),
+					StartOffset(StartOffset)
 				{
 					EndOffset = -1;
 					Mismatching = false;
@@ -1736,6 +1738,11 @@ namespace ConstructionSetExtender
 				ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 				LocalVarsDatabaseUpdateTimer->Tick += LocalVarsDatabaseUpdateTimerTickHandler;
 				PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+			}
+
+			AvalonEditTextEditor::~AvalonEditTextEditor()
+			{
+				AvalonEditTextEditor::Destroy();
 			}
 		}
 	}

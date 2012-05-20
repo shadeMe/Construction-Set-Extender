@@ -148,5 +148,10 @@ namespace ConstructionSetExtender
 			AllocatedWorkspaces->Clear();
 			AllocatedWorkspaceContainers->Clear();
 		}
+
+		UInt32 ScriptEditorManager::GetOpenEditorCount( void )
+		{
+			return AllocatedWorkspaces->Count;
+		}
 	}
 }

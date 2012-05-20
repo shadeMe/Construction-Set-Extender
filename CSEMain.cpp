@@ -104,6 +104,7 @@ namespace ConstructionSetExtender
 		if (ComponentInitialized == false)
 			return false;
 
+		// needs to be registered here as epilog callback gets called after the main windows' creation
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMiscSubclassProc);
@@ -169,17 +170,14 @@ namespace ConstructionSetExtender
 		ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollectionData = new ComponentDLLInterface::IntelliSenseUpdateData();
 		GMSTCollectionData->GMSTCount = GameSettingCollection::Instance->GetGMSTCount();
 		GMSTCollectionData->GMSTListHead = new ComponentDLLInterface::GMSTData[GMSTCollectionData->GMSTCount];
+
 		GameSettingCollection::Instance->SerializeGMSTDataForHandShake(GMSTCollectionData->GMSTListHead);
 		CLIWrapper::Interfaces::SE->InitializeComponents(&XSECommandTableData, GMSTCollectionData);
+
 		delete GMSTCollectionData;
 
 		BGSEECONSOLE->Indent();
-		TODO("Implement")
-/*
-		for (std::map<std::string, std::string>::const_iterator Itr = g_URLMapBuffer.begin(); Itr != g_URLMapBuffer.end(); Itr++)
-			CLIWrapper::Interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
-		BGSEECONSOLE_MESSAGE(Console::e_SE, "Bound %d developer URLs", g_URLMapBuffer.size());
-		g_URLMapBuffer.clear();*/
+		BGSEECONSOLE_MESSAGE("Bound %d developer URLs", CSEInterfaceManager::Instance.ConsumeIntelliSenseInterface());
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE->Exdent();
@@ -234,6 +232,11 @@ namespace ConstructionSetExtender
 		CSEStartupManager::LoadStartupWorkspace();
 		CSEStartupManager::LoadStartupPlugin();
 		CSEStartupManager::LoadStartupScript();
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Initializing Panic Save Handler");
+		BGSEECONSOLE->Indent();
+		_DATAHANDLER->PanicSave(true);
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE->ExdentAll();
@@ -344,9 +347,20 @@ namespace ConstructionSetExtender
 	{
 		BGSEECONSOLE->Pad(2);
 		BGSEECONSOLE_MESSAGE("The editor crashed, dammit!");
+		BGSEECONSOLE->Indent();
 
 		BGSEEACHIEVEMENTS->Unlock(Achievements::kSaboteur, false, true);
-//		BGSEECONSOLE->OpenDebugLog();
+		BGSEECONSOLE_MESSAGE("Attempting to salvage the active file...");
+		BGSEECONSOLE->Indent();
+
+		if (_DATAHANDLER->PanicSave())
+			BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
+		else
+			BGSEECONSOLE_MESSAGE("BollocksBollocksBollocks! No can do...");
+
+#ifndef NDEBUG
+		BGSEECONSOLE->OpenDebugLog();
+#endif
 
 		return true;
 	}
@@ -366,10 +380,10 @@ namespace ConstructionSetExtender
 				BGSEECONSOLE_MESSAGE("Loading plugin '%s'", PluginName);
 				BGSEECONSOLE->Indent();
 
+				File->SetLoaded(true);
 				if (_stricmp(PluginName, "Oblivion.esm"))
-					SME::MiscGunk::ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Active, true);
+					File->SetActive(true);
 
-				SME::MiscGunk::ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
 				SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
 
 				BGSEECONSOLE->Exdent();
@@ -410,15 +424,13 @@ namespace ConstructionSetExtender
 
 	void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 	{
-		TODO("Implement")
-/*
 		if (Msg->type == 'CSEI')
 		{
 			BGSEECONSOLE_MESSAGE("Dispatching Plugin Interop Interface to '%s'", Msg->sender);
-			CONSOLE->Indent();
-			XSEMsgIntfc->Dispatch(XSEPluginHandle, 'CSEI', CSEInterfaceManager::GetInterface(), 4, Msg->sender);
-			CONSOLE->Exdent();
-		}*/
+			BGSEECONSOLE->Indent();
+			XSEMsgIntfc->Dispatch(XSEPluginHandle, 'CSEI', (void*)CSEInterfaceManager::Instance.GetInterface(), 4, Msg->sender);
+			BGSEECONSOLE->Exdent();
+		}
 	}
 
 	void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
@@ -478,7 +490,6 @@ extern "C"
 		TODO("Save debug symbols, dammit!")
 #else
 														false);
-		TODO("Enable CrashRpt support for Public builds")
 #endif
 
 		SME_ASSERT(ComponentInitialized);
@@ -491,7 +502,11 @@ extern "C"
 
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{
-			MessageBox(NULL, "The Construction Set Extender failed to initialize correctly!\n\nCheck the logs for more information.", "zOMG!", MB_OK|MB_ICONERROR);
+			MessageBox(NULL,
+					"The Construction Set Extender failed to initialize correctly!\n\nCheck the logs for more information.",
+					"The Cyrodiil Bunny Ranch",
+					MB_OK|MB_ICONERROR);
+
 			return false;
 		}
 
@@ -502,7 +517,11 @@ extern "C"
 	{
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
 		{
-			MessageBox(NULL, "The Construction Set Extender failed to load correctly!\n\nCheck the logs for more information.", "zOMG!", MB_OK|MB_ICONERROR);
+			MessageBox(NULL,
+					"The Construction Set Extender failed to load correctly!\n\nCheck the logs for more information.",
+					"Rumpy-Pumpy!",
+					MB_OK|MB_ICONERROR);
+
 			return false;
 		}
 

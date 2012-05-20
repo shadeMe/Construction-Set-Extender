@@ -1,5 +1,6 @@
 #include "CSECoda.h"
 #include "CSEAchievements.h"
+#include "CSEInterfaceManager.h"
 
 namespace ConstructionSetExtender
 {
@@ -36,6 +37,7 @@ namespace ConstructionSetExtender
 		void Initialize()
 		{
 			BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT ScriptCommands;
+			CSEInterfaceManager::Instance.ConsumeScriptInterface(ScriptCommands);
 
 			bool ComponentInitialized = CODAVM->Initialize(BGSEditorExtender::BGSEEResourceLocation("Coda"),
 														"http://cs.elderscrolls.com/index.php/",

@@ -122,6 +122,60 @@ void TESDataHandler::CleanCellWaterExtraData( void )
 	}
 }
 
+void TESDataHandler::AutoSave( void )
+{
+	thisCall<void>(0x00481ED0, this);
+}
+
+bool TESDataHandler::PanicSave( bool Initialize /*= false*/ )
+{
+	static TESFile* kSaveFile = NULL;
+
+	if (kSaveFile == NULL && Initialize)
+	{
+		kSaveFile = TESFile::CreateInstance("Data\\Backup\\", "PanicSave.bak");
+
+		return kSaveFile != NULL;
+	}
+	else if (kSaveFile)
+	{
+		this->unkCD2 = 1;
+		TESFile* ActiveFile = this->activeFile;
+
+		if (ActiveFile)
+		{
+			ActiveFile->SetActive(false);
+			ActiveFile->SetLoaded(false);
+		}
+
+		kSaveFile->SetActive(true);
+		kSaveFile->SetLoaded(true);
+
+		this->activeFile = kSaveFile;
+		bool Result = this->SavePlugin();
+		kSaveFile->DeleteInstance();
+		kSaveFile = NULL;
+
+		if (ActiveFile)
+		{
+			ActiveFile->SetActive(true);
+			ActiveFile->SetLoaded(true);
+		}
+
+		this->activeFile = ActiveFile;
+		this->unkCD2 = 0;
+
+		return Result;
+	}
+	else
+		return false;
+}
+
+bool TESDataHandler::SavePlugin( const char* FileName /*= NULL*/, bool AsESM /*= false*/ )
+{
+	return thisCall<bool>(0x0047E9B0, this, FileName, AsESM);
+}
+
 void TES::LoadCellIntoViewPort(Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);

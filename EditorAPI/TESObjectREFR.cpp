@@ -5,13 +5,13 @@ using namespace ConstructionSetExtender;
 
 void TESObjectREFR::UpdateNiNode()
 {
-	Hooks::kTESObjectREFRUpdate3D.WriteJump();
+	Hooks::_MemHdlr(TESObjectREFRUpdate3D).WriteJump();
 
 	Hooks::g_TESObjectREFRUpdate3DBuffer = this;
 	thisVirtualCall<UInt32>(0x11C, this, NULL);		// TESObjectREFR::DeinitializeDialog
 	Hooks::g_TESObjectREFRUpdate3DBuffer = this;
 
-	Hooks::kTESObjectREFRUpdate3D.WriteBuffer();
+	Hooks::_MemHdlr(TESObjectREFRUpdate3D).WriteBuffer();
 }
 
 bool TESObjectREFR::SetBaseForm(TESForm* BaseForm)

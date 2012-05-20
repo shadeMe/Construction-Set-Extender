@@ -7,7 +7,7 @@
 
 namespace CSE_GlobalClasses
 {
-	template <class TKEY, class TVAL> class NiTPointerMap; 
+	template <class TKEY, class TVAL> class NiTPointerMap;
 }
 
 class	BSFile;
@@ -39,7 +39,7 @@ public:
 	{
 		// not sure what flags are specific to forms, references, or records, and what is shared
 		kRecordFlags__FormFlags                = 0x000A8EE0, // flag bits copied from forms for form records
-		kRecordFlags__FileFlags                = 0xFF000091, // flag bits copied from files for TES4 records  
+		kRecordFlags__FileFlags                = 0xFF000091, // flag bits copied from files for TES4 records
 		kRecordFlags_Ignored            = /*0C*/ 0x00001000, // record is ignored during loading
 		kRecordFlags_Compressed         = /*12*/ 0x00040000, // record data is compressed using ZLib.  Note that group records cannot be compressed
 	};
@@ -49,7 +49,7 @@ public:
 	// form records: see 'record flags' above
 	// TES4 records: fileFlags
 	// group records: contained form chunk type / parent formid / block number / grid coords
-	/*0C*/ UInt32        recordID; // 
+	/*0C*/ UInt32        recordID; //
 	// form records: formID
 	// TES4 records: 0
 	// group records: group class (0-10) indicating what kind of group record
@@ -115,7 +115,7 @@ public:
 	/*010*/ BSFile*              bsFile; // used for actual read from / write to disk operations
 	/*014*/ UInt32               unkFile014;
 	/*018*/ UInt32               unkFile018;
-	/*01C*/ char                 fileName[kMAX_PATH]; 
+	/*01C*/ char                 fileName[kMAX_PATH];
 	/*120*/ char                 filePath[kMAX_PATH]; // relative to "Oblivion\"
 	/*224*/ void*                unkFile224; // simple object, no destructor
 	/*228*/ UInt32               bufferSize; // buffer size used when opening BSFile.  init to 0x2800
@@ -143,7 +143,7 @@ public:
 	/*3F4*/ TESFile**            masterFiles; // pointer to TESFile*[parentCount] of currently loaded masters
 	/*3F8*/ UInt32               unkFile3F8;
 	/*3FC*/ UInt32               unkFile3FC;
-	/*400*/ UInt8                fileIndex; // index of this file in load order (or 0xFF if not loaded) 
+	/*400*/ UInt8                fileIndex; // index of this file in load order (or 0xFF if not loaded)
 	/*401*/ UInt8                padFile401[3];
 	/*404*/ BSString			 authorName;
 	/*40C*/ BSString             description;
@@ -151,9 +151,11 @@ public:
 	/*418*/ UInt32               currentRecordDCLength; // length of decompressed record data
 	/*41C*/ TESFile*             unkFile41C; // file this object was cloned from. used for local copies of network files?
 
-
 	// methods
 	bool						IsActive(void);
+	bool						SetLoaded(bool State);
+	bool						SetActive(bool State);
+	bool						SetMaster(bool State);
 
 	static TESFile*				CreateInstance(const char* WorkingDirectory, const char* FileName, UInt8 OpenMode = NiFile::kFileMode_ReadOnly);
 	void						DeleteInstance(bool ReleaseMemory = true);

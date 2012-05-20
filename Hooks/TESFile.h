@@ -33,5 +33,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(DataHandlerSavePluginResetC, "");
 		_DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");
 		_DeclareMemHdlr(DataHandlerSavePluginRetainTimeStamps, "allows the retention of plugin timestamps during save operations");
+		_DeclareMemHdlr(DataHandlerAutoSaveA, "prevents the active file from being added as a master to the autosave backup");
+		_DeclareMemHdlr(DataHandlerAutoSaveB, "");
 	}
 }

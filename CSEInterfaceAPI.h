@@ -1,4 +1,5 @@
 #pragma once
+#include <CodaIntrinsics.inl>
 
 /********** CSE Interface API ****************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the
@@ -6,6 +7,7 @@
 *	'CSEI' post post-plugin load (reply will be of the same type).
 *
 *	All other interfaces need to be initialized by calling InitializeInterface().
+*	All RegisterXXX type calls must be made inside the OBSE Post-Post-Load message handler
 *********************************************************************************/
 
 struct CSEInterface
@@ -19,7 +21,9 @@ struct CSEInterface
 	};
 
 	// Used to initialize CSE's interface objects. Similar to OBSE's QueryInterface.
-	void*			(* InitializeInterface)(UInt8 InterfaceType);
+	const void*		(* InitializeInterface)(UInt8 InterfaceType);
+	// Returns the implementation version of the extender interface
+	UInt8			(* GetInterfaceVersion)(void);
 };
 
 struct CSEIntelliSenseInterface
@@ -45,6 +49,13 @@ struct CSEConsoleInterface
 struct CSERendererInterface
 {
 	// Queues a text message for display in the render window
-	void			(* PrintToRenderWindow)(const char* Message, long double DisplayDuration);
+	void			(* PrintToRenderWindow)(const char* Message, float DisplayDuration);
+};
+
+struct CSEScriptInterface
+{
+	// Registers a Coda command to the VM
+	// The caller retains ownership of the script command pointer
+	void			(* RegisterCommand)(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command);
 };
 

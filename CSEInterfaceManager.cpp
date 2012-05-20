@@ -1,97 +1,141 @@
-/*
-#include "CSEInterfaceManager.h"
-#include "RenderWindowTextPainter.h"
 #include "[Common]\CLIWrapper.h"
+#include "CSEInterfaceManager.h"
+#include "CSERenderWindowPainter.h"
 
-std::map<std::string, std::string>		g_URLMapBuffer;
-
-static CSEInterface				s_CSEInterface =
+namespace ConstructionSetExtender
 {
-	CSEInterfaceManager::InitializeInterface
-};
-static CSEConsoleInterface		s_CSEConsoleInterface =
-{
-	CSEInterfaceManager::PrintToConsole,
-	CSEInterfaceManager::RegisterConsoleCallback
-};
-static CSEIntelliSenseInterface	s_CSEIntelliSenseInterface =
-{
-	CSEInterfaceManager::RegisterCommandURL
-};
-static CSERendererInterface	s_CSERendererInterface =
-{
-	CSEInterfaceManager::PrintToRenderWindow
-};
-static CSEScriptInterface s_CSEScriptInterface =
-{
-	 CSEInterfaceManager::RegisterScriptCommand,
-	 CSAutomationScript::CSASCommand::ExtractCommandArgs,
-	 CSAutomationScript::Array::AllocateArray,
-	 CSAutomationScript::Array::AllocateArray,
-	 CSAutomationScript::Array::ReleaseArray
-};
-
-void* CSEInterfaceManager::InitializeInterface(UInt8 InterfaceType)
-{
-	switch (InterfaceType)
+	static const CSEInterface				kCSEInterface =
 	{
-	case CSEInterface::kCSEInterface_Console:
-		return &s_CSEConsoleInterface;
-	case CSEInterface::kCSEInterface_IntelliSense:
-		return &s_CSEIntelliSenseInterface;
-	case CSEInterface::kCSEInterface_Renderer:
-		return &s_CSERendererInterface;
-	case CSEInterface::kCSEInterface_Script:
-		return &s_CSEScriptInterface;
-	default:
-		return NULL;
-	}
-}
+		CSEInterfaceManager::InitializeInterface,
+		CSEInterfaceManager::GetVersion,
+	};
 
-void CSEInterfaceManager::PrintToConsole(const char* Prefix, const char* FormatString, ...)
-{
-	va_list Args;
-	va_start(Args, FormatString);
-	CONSOLE->LogMessage(Prefix, FormatString, Args);
-	va_end(Args);
-}
-
-static CSEInterfaceManager::ConsolePrintCallbackList	s_ConsolePrintCallbackList;
-
-void CSEInterfaceManager::RegisterConsoleCallback(CSEConsoleInterface::ConsolePrintCallback Handler)
-{
-	for (ConsolePrintCallbackList::const_iterator Itr = s_ConsolePrintCallbackList.begin(); Itr != s_ConsolePrintCallbackList.end(); Itr++)
+	static const CSEConsoleInterface		kCSEConsoleInterface =
 	{
-		if (*Itr == Handler)
-			return;
+		CSEInterfaceManager::PrintToConsole,
+		CSEInterfaceManager::RegisterConsoleCallback
+	};
+
+	static const CSEIntelliSenseInterface	kCSEIntelliSenseInterface =
+	{
+		CSEInterfaceManager::RegisterCommandURL
+	};
+
+	static const CSERendererInterface		kCSERendererInterface =
+	{
+		CSEInterfaceManager::PrintToRenderWindow
+	};
+
+	static const CSEScriptInterface			kCSEScriptInterface =
+	{
+		CSEInterfaceManager::RegisterScriptCommand,
+	};
+
+	CSEInterfaceManager						CSEInterfaceManager::Instance;
+	const UInt8								CSEInterfaceManager::kInterfaceVersion = 2;
+
+	CSEInterfaceManager::CSEInterfaceManager() :
+		ConsolePrintCallbacks(),
+		ObScriptCommandURLs(),
+		CodaScriptPluginCommandRegistrar("Plugin Functions")
+	{
+		;//
 	}
 
-	s_ConsolePrintCallbackList.push_back(Handler);
-}
-
-void CSEInterfaceManager::RegisterCommandURL(const char *CommandName, const char *URL)
-{
-	g_URLMapBuffer.insert(std::make_pair(CommandName, URL));
-}
-
-void CSEInterfaceManager::HandleConsoleCallback(const char *Message, const char *Prefix)
-{
-	for (ConsolePrintCallbackList::const_iterator Itr = s_ConsolePrintCallbackList.begin(); Itr != s_ConsolePrintCallbackList.end(); Itr++)
+	CSEInterfaceManager::~CSEInterfaceManager()
 	{
-		(*Itr)(Message, Prefix);
+		ConsolePrintCallbacks.clear();
+		ObScriptCommandURLs.clear();
+	}
+
+	const CSEInterface* CSEInterfaceManager::GetInterface()
+	{
+		return &kCSEInterface;
+	}
+
+	UInt32 CSEInterfaceManager::ConsumeIntelliSenseInterface()
+	{
+		for (CommandURLMapT::const_iterator Itr = ObScriptCommandURLs.begin(); Itr != ObScriptCommandURLs.end(); Itr++)
+		{
+			CLIWrapper::Interfaces::SE->AddScriptCommandDeveloperURL(Itr->first.c_str(), Itr->second.c_str());
+		}
+
+		return ObScriptCommandURLs.size();
+	}
+
+	void CSEInterfaceManager::ConsumeConsoleInterface()
+	{
+		BGSEECONSOLE->RegisterPrintCallback(CSEConsolePrintCallbackPrototype);
+	}
+
+	void CSEInterfaceManager::ConsumeScriptInterface( BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT& Registrars )
+	{
+		Registrars.push_back(&CodaScriptPluginCommandRegistrar);
+	}
+
+	void CSEInterfaceManager::CSEConsolePrintCallbackPrototype(const char* Prefix, const char* Message)
+	{
+		for (ConsolePrintCallbackListT::const_iterator Itr = Instance.ConsolePrintCallbacks.begin(); Itr != Instance.ConsolePrintCallbacks.end(); Itr++)
+			(*Itr)(Message, Prefix);
+	}
+
+	const void* CSEInterfaceManager::InitializeInterface(UInt8 InterfaceType)
+	{
+		switch (InterfaceType)
+		{
+		case CSEInterface::kCSEInterface_Console:
+			return &kCSEConsoleInterface;
+		case CSEInterface::kCSEInterface_IntelliSense:
+			return &kCSEIntelliSenseInterface;
+		case CSEInterface::kCSEInterface_Renderer:
+			return &kCSERendererInterface;
+		case CSEInterface::kCSEInterface_Script:
+			return &kCSEScriptInterface;
+		default:
+			return NULL;
+		}
+	}
+
+	UInt8 CSEInterfaceManager::GetVersion()
+	{
+		return kInterfaceVersion;
+	}
+
+	void CSEInterfaceManager::RegisterCommandURL(const char *CommandName, const char *URL)
+	{
+		Instance.ObScriptCommandURLs.insert(std::make_pair(CommandName, URL));
+	}
+
+	void CSEInterfaceManager::PrintToConsole(const char* Prefix, const char* FormatString, ...)
+	{
+		char Buffer[0x1000] = {0};
+
+		va_list Args;
+		va_start(Args, FormatString);
+		vsprintf_s(Buffer, sizeof(Buffer), FormatString, Args);
+		va_end(Args);
+
+		BGSEECONSOLE->LogMsg(Prefix, Buffer);
+	}
+
+	void CSEInterfaceManager::RegisterConsoleCallback(CSEConsoleInterface::ConsolePrintCallback Handler)
+	{
+		for (ConsolePrintCallbackListT::const_iterator Itr = Instance.ConsolePrintCallbacks.begin(); Itr != Instance.ConsolePrintCallbacks.end(); Itr++)
+		{
+			if (*Itr == Handler)
+				return;
+		}
+
+		Instance.ConsolePrintCallbacks.push_back(Handler);
+	}
+
+	void CSEInterfaceManager::PrintToRenderWindow(const char* Message, float DisplayDuration)
+	{
+		RenderWindowPainter::RenderChannelNotifications->Queue(DisplayDuration, "%s", Message);
+	}
+
+	void CSEInterfaceManager::RegisterScriptCommand(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command)
+	{
+		Instance.CodaScriptPluginCommandRegistrar.Add(Command);
 	}
 }
-CSEInterface* CSEInterfaceManager::GetInterface()
-{
-	return &s_CSEInterface;
-}
-
-void CSEInterfaceManager::PrintToRenderWindow(const char* Message, long double DisplayDuration)
-{
-	RENDERTEXT->QueueDrawTask(RenderWindowTextPainter::kRenderChannel_2, Message, DisplayDuration);
-}
-
-bool CSEInterfaceManager::RegisterScriptCommand(CSAutomationScript::CSASCommandInfo* CommandInfo)
-{
-	return CSAutomationScript::g_CSASCommandTable.RegisterCommand(CommandInfo, "[Plugin Functions]");
-}*/

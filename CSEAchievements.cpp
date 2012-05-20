@@ -164,7 +164,7 @@ namespace ConstructionSetExtender
 			kPedantic				= new CSEAchievementBase("Pedantic", "Saved version information to a plugin's description",
 															IDB_ACHIEVEMENT_PEDANTIC, "DB3F67DE-60F8-4CA9-928A-044AB83119B2");
 
-			kCardinalSin			= new CSEAchievementBase("Cardinal Sin", "Used the Added Topics list when adding new dialog topics to responses",
+			kCardinalSin			= new CSEAchievementBase("Cardinal Sin", "Used the Added Topics list with the GREETING topic",
 															IDB_ACHIEVEMENT_CARDINALSIN, "0D76A162-B749-4F20-9570-853AECEA003C");
 
 			kMagister				= new CSEAchievementBase("Magister", "Modified a magic effect",

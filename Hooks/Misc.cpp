@@ -266,7 +266,6 @@ namespace ConstructionSetExtender
 		void __stdcall DoDataHandlerClearDataHook(void)
 		{
 			delete BGSEEHALLOFFAME;
-
 			RenderSelectionGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
 		}
@@ -311,10 +310,14 @@ namespace ConstructionSetExtender
 		{
 			bool ShowWarning = atoi(INISettings::GetGeneral()->Get(INISettings::kGeneral_ShowNumericEditorIDWarning, BGSEEMAIN->INIGetter()));
 
-			if (g_LoadingSavingPlugins == false && ShowWarning && BGSEEMAIN->Daemon()->GetFullInitComplete() && strlen(EditorID) > 0 &&
-				isdigit((int)*EditorID) && (Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
+			if (g_LoadingSavingPlugins == false &&
+				ShowWarning &&
+				BGSEEMAIN->Daemon()->GetFullInitComplete() &&
+				strlen(EditorID) > 0 &&
+				isdigit((int)*EditorID) &&
+				(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 			{
-				BGSEEUI->MsgBoxW("The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler can attempt to parse it as an integer.\n\nConsider starting the editorID with an alphabet.", EditorID);
+				BGSEEUI->MsgBoxW("The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.", EditorID);
 			}
 		}
 
@@ -575,18 +578,30 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void __stdcall DoAchievementAddTopicHook(TESTopic* Parent)
+		{
+			if (Parent)
+			{
+				if (Parent->editorID.c_str() && !_stricmp(Parent->editorID.c_str(), "GREETING"))
+				{
+					BGSEEACHIEVEMENTS->Unlock(Achievements::kCardinalSin);
+				}
+			}
+		}
+
 		#define _hhName	AchievementAddTopic
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004F2ED9);
 			_hhSetVar(Call, 0x004F5D20);
-
-			__asm	pushad
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kCardinalSin);
-			__asm	popad
-
 			__asm
 			{
+				pushad
+				mov		eax, [ebx + 0xC]
+				push	eax
+				call	DoAchievementAddTopicHook
+				popad
+
 				call	[_hhGetVar(Call)]
 				jmp		[_hhGetVar(Retn)]
 			}

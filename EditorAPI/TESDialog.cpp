@@ -130,7 +130,7 @@ bool TESDialog::SelectTESFileCommonDialog( HWND Parent, const char* SaveDir, boo
 
 HWND TESDialog::ShowFormEditDialog( TESForm* Form )
 {
-	if (!GetIsFormEditDialogCompatible(Form))
+	if (GetIsFormEditDialogCompatible(Form) == false)
 		return NULL;
 
 	FormEditParam InitData(Form);
