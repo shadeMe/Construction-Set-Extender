@@ -76,7 +76,14 @@ namespace BGSEditorExtender
 				}
 
 				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, UserData->InitParam);
-				UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, SkipCallback);
+
+				// re-check the userdata as the window can get destroyed inside the original WM_INITDIALOG callback
+				UserData = (SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+				if (UserData)
+				{
+					UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, SkipCallback);
+				}
+
 				return DlgProcResult;
 			}
 
@@ -603,12 +610,13 @@ namespace BGSEditorExtender
  		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
  												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 
-		if (UserData)
+		if (Result)
 		{
-			UserData->Data->Handle = Result;
-		}
+			if (UserData)
+				UserData->Data->Handle = Result;
 
-		BGSEEUI->WindowStyler->StyleWindow(Result, (UInt32)lpTemplateName);
+			BGSEEUI->WindowStyler->StyleWindow(Result, (UInt32)lpTemplateName);
+		}
 
 		return Result;
 	}

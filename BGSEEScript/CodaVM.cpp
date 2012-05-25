@@ -165,7 +165,7 @@ namespace BGSEditorExtender
 				AppendToStream(DocStream, "</ul>");
 
 				AppendToStream(DocStream, "\n\n\n\n");
-				AppendToStream(DocStream, "<h2><a id=\"Function_Syntax_Format\">Function Syntax Format</a></h2><pre class=\"code\">(returnValueType)    FunctionName    parameter1:type  parameter2:type</pre><h2><a id=\"Function_CallingSyntax_Format\">Function Calling Syntax Format</a></h2><pre class=\"code\">FunctionName(parameter1, parameter2)</pre><table><caption>Parameter Types: designated after colon</caption><tr><th>numeric</th><td>a positive or negative decimal number or integer</td><td>3.1415/-56</td></tr><tr class=\"alt\"><th>ref</th><td>a formID literal or ref returned by <a href=\"#GetFormByEditorID\">GetFormByEditorID</a>/<a href=\"#GetFormByFormID\">GetFormByFormID</a></td><td>0x00A12EF2/GetFormByEditorID(\"apple\")</td></tr><tr><th>string</th><td>a set of characters in quotes</td><td>\"Uriel Septim\"</td></tr><tr class=\"alt\"><th>array</th><td>(return type only) an array that can be used in ForEach expressions</td><td>--</td></tr><tr><th>multi</th><td>a value of any type numeric, string, ref or array</td><td>--</td></tr></table>");
+				AppendToStream(DocStream, "<h2><a id=\"Function_Syntax_Format\">Function Syntax Format</a></h2><pre class=\"code\">(returnValueType)    FunctionName    parameter1:type  parameter2:type</pre><h2><a id=\"Function_CallingSyntax_Format\">Function Calling Syntax Format</a></h2><pre class=\"code\">FunctionName(parameter1, parameter2)</pre><table><caption>Parameter Types: designated after colon</caption><tr><th>numeric</th><td>a positive or negative decimal number or integer</td><td>3.1415/-56</td></tr><tr class=\"alt\"><th>ref</th><td>a formID literal or ref returned by <a href=\"#GetFormByEditorID\">GetFormByEditorID</a>/<a href=\"#GetFormByFormID\">GetFormByFormID</a></td><td>0x00A12EF2/GetFormByEditorID(\"apple\")</td></tr><tr><th>string</th><td>a set of characters in quotes</td><td>\"Uriel Septim\"</td></tr><tr class=\"alt\"><th>array</th><td>an array of elements that can be used in ForEach expressions, etc</td><td>--</td></tr><tr><th>multi</th><td>a value of any type numeric, string, ref or array</td><td>--</td></tr></table>");
 				AppendToStream(DocStream, "\n\n\n\n<br/><br/><br/>");
 
 				for (MainItr = SubItr = Registry.begin(); MainItr != Registry.end(); MainItr = SubItr)
@@ -929,12 +929,7 @@ namespace BGSEditorExtender
 
 		void CodaScriptGlobalDataStore::ShowEditDialog( HINSTANCE ResourceInstance, HWND Parent )
 		{
-			SME_ASSERT(CODAVM->Backgrounder->Backgrounding == false);
-
-			CODAVM->Backgrounder->Suspend();
 			BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(IDD_BGSEE_CODAGLOBALDATASTORE), Parent, EditDlgProc, (LPARAM)this);
-			CODAVM->Backgrounder->Rebuild();
-			CODAVM->Backgrounder->Resume();
 		}
 
 		CodaScriptVariableListT& CodaScriptGlobalDataStore::GetCache( void )
@@ -1023,9 +1018,9 @@ namespace BGSEditorExtender
 			ExpressionParser = CodaScriptObjectFactory::BuildExpressionParser(CodaScriptObjectFactory::kFactoryType_MUP);
 
 			// register built-in commands first
-			ScriptCommands.push_front(Commands::Array::GetRegistrar());
-			ScriptCommands.push_front(Commands::String::GetRegistrar());
 			ScriptCommands.push_front(Commands::General::GetRegistrar());
+			ScriptCommands.push_front(Commands::String::GetRegistrar());
+			ScriptCommands.push_front(Commands::Array::GetRegistrar());
 
 			CommandRegistry->RegisterCommands(ScriptCommands);
 			CommandRegistry->InitializeExpressionParser(ExpressionParser);
@@ -1078,7 +1073,17 @@ namespace BGSEditorExtender
 		{
 			SME_ASSERT(Initialized);
 
+			SME_ASSERT(CODAVM->Backgrounder->Backgrounding == false);
+
+			bool BackgrounderState = GetBackgrounderState();
+
+			CODAVM->Backgrounder->Suspend();
+
 			GlobalStore->ShowEditDialog(ResourceInstance, Parent);
+			CODAVM->Backgrounder->Rebuild();
+
+			if (BackgrounderState)
+				CODAVM->Backgrounder->Resume();
 		}
 
 		CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )

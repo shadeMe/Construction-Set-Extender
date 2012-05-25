@@ -1,6 +1,7 @@
 #include "CodaMUPScriptCommand.h"
 #include "CodaMUPExpressionParser.h"
 #include "CodaInterpreter.h"
+#include "CodaVM.h"
 
 namespace BGSEditorExtender
 {
@@ -115,6 +116,12 @@ namespace BGSEditorExtender
 					default:
 						break;
 					}
+				}
+				else
+				{
+					ExecutionAgent->GetVM()->MsgHdlr()->LogMsg("CodaScriptMUPScriptCommand::Eval - Command '%s' failed to successfully evaluate at line %d!",
+															Parent->GetName(),
+															ByteCode->GetSource()->GetLine());
 				}
 			}
 

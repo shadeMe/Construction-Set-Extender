@@ -27,7 +27,7 @@ namespace BGSEditorExtender
 			"ENDIF",
 			"RETURN",
 			"CALL",
-			"CODA",								// syntax: CODA(<ScriptName> [, PollingInterval])
+			"CODA",								// syntax: CODA(<ScriptName> [, "PollingInterval"])
 			"CONTINUE",
 			"BREAK"
 		};
@@ -1185,7 +1185,11 @@ namespace BGSEditorExtender
 				this->ReleaseVariables();
 				this->Validity = kValidity_Egregious;
 
-				SME_ASSERT(CodeInstanceCounter.GetCount() == 0);						// we're leaking otherwise
+				if (CodeInstanceCounter.GetCount())
+				{
+					BGSEECONSOLE_MESSAGE("CodaScriptExecutionContext::CodaScriptExecutionContext - By the Power of Grey-Skull! We are leaking executable code!");
+					MessageBeep(MB_ICONERROR);
+				}
 			}
 			else
 			{
@@ -1208,6 +1212,11 @@ namespace BGSEditorExtender
 				catch (CodaScriptException& E)
 				{
 					VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.Get());
+					this->Validity = kValidity_Egregious;
+				}
+				catch (...)
+				{
+					VirtualMachine->MsgHdlr()->LogMsg("Unknown Compiler Error!");
 					this->Validity = kValidity_Egregious;
 				}
 			}
@@ -1545,7 +1554,7 @@ namespace BGSEditorExtender
 				if (Node->State == ICodaScriptLoopBlock::kLoopState_Break)
 					break;
 
-				if (Result)			// return was called, so break
+				if (Result)			// we have a valid result (return was called), so break and unwind the loop stack
 					break;
 			}
 
