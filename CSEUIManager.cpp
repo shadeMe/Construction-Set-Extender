@@ -286,7 +286,7 @@ namespace ConstructionSetExtender
 			VisibilityUnmodifiedForms = true;
 		}
 
-		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -343,7 +343,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK DataDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK DataDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -441,7 +441,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK MainWindowMenuInitSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK MainWindowMenuInitSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -530,7 +530,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK MainWindowMenuSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK MainWindowMenuSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -962,7 +962,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK MainWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK MainWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -986,7 +986,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK RenderWindowMenuInitSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK RenderWindowMenuInitSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = TRUE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -1269,7 +1269,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK RenderWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK RenderWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = TRUE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -1402,7 +1402,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -1441,7 +1441,7 @@ namespace ConstructionSetExtender
 					GetWindowRect(FilterEditBox, &RectFilterEdit);
 
 					Point.x = RectFilterLbl.left;
-					Point.y = RectFilterLbl.bottom + 2;
+					Point.y = RectFilterLbl.bottom + 3;
 					ScreenToClient(hWnd, &Point);
 					MoveWindow(TreeList, Point.x, Point.y, RectTreeView.right - RectTreeView.left, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
 
@@ -1473,7 +1473,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK CellViewWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK CellViewWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -1715,7 +1715,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK ResponseDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK ResponseDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -1832,7 +1832,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
@@ -1869,7 +1869,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK QuestDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+		LRESULT CALLBACK QuestDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1895,13 +1895,113 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK CommonDialogQuickViewSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+#define ID_COMMONDLGQUICKVIEW_TIMERID							0x108
+
+		LRESULT CALLBACK CommonDialogQuickViewSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
 			switch (uMsg)
 			{
+			case WM_TIMER:
+				switch (wParam)
+				{
+				case ID_COMMONDLGQUICKVIEW_TIMERID:
+					CSEDialogQuickViewData* IUD = (CSEDialogQuickViewData*)InstanceUserData;
+
+					if (IUD && IUD->Window)
+					{
+						HWND WindowAtPoint = IUD->Window;
+						TESForm* Form = NULL;
+
+						char Buffer[0x200] = {0};
+						GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
+
+						if (!_stricmp("SysListView32", Buffer))
+						{
+							POINT Coords = {0};
+							Coords.x = IUD->Cursor.x;
+							Coords.y = IUD->Cursor.y;
+
+							ScreenToClient(WindowAtPoint, &Coords);
+
+							LVHITTESTINFO HitTestData = {0};
+							HitTestData.pt.x = Coords.x;
+							HitTestData.pt.y = Coords.y;
+							HitTestData.flags = LVHT_ONITEM;
+
+							if (ListView_SubItemHitTest(WindowAtPoint, &HitTestData) != -1)
+							{
+								int Item = HitTestData.iItem;
+								int SubItem = HitTestData.iSubItem;
+
+								ZeroMemory(Buffer, sizeof(Buffer));
+								ListView_GetItemText(WindowAtPoint, Item, SubItem, Buffer, sizeof(Buffer));
+
+								if (strlen(Buffer))
+								{
+									Form = TESForm::LookupByEditorID(Buffer);
+								}
+							}
+						}
+						else
+						{
+							GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
+							Form = TESForm::LookupByEditorID(Buffer);
+						}
+
+						IUD->Window = NULL;
+
+						if (Form)
+						{
+							switch (Form->formType)
+							{
+							case TESForm::kFormType_Script:
+								TESDialog::ShowScriptEditorDialog(Form);
+								break;
+							case TESForm::kFormType_REFR:
+								_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+								break;
+							default:
+								TESDialog::ShowFormEditDialog(Form);
+								break;
+							}
+
+							DlgProcResult = TRUE;
+							Return = true;
+						}
+					}
+
+					break;
+				}
+
+				break;
+			case WM_INITDIALOG:
+				{
+					CSEDialogQuickViewData* IUD = new CSEDialogQuickViewData();
+					InstanceUserData = (LPARAM)IUD;
+
+					IUD->Cursor.x = 0;
+					IUD->Cursor.y = 0;
+					IUD->Window = NULL;
+
+					SetTimer(hWnd, ID_COMMONDLGQUICKVIEW_TIMERID, 100, NULL);
+				}
+
+				break;
+
+			case WM_DESTROY:
+				{
+					CSEDialogQuickViewData* IUD = (CSEDialogQuickViewData*)InstanceUserData;
+
+					delete IUD;
+					InstanceUserData = NULL;
+
+					KillTimer(hWnd, ID_COMMONDLGQUICKVIEW_TIMERID);
+				}
+
+				break;
 			case WM_MOUSEACTIVATE:
 				if (HIWORD(lParam) != WM_MBUTTONDOWN &&
 					HIWORD(lParam) != WM_MBUTTONUP)
@@ -1927,30 +2027,13 @@ namespace ConstructionSetExtender
 
 					if (WindowAtPoint)
 					{
-						char Buffer[64] = {0};
-						GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
+						CSEDialogQuickViewData* IUD = (CSEDialogQuickViewData*)InstanceUserData;
 
-						if (_stricmp(Buffer, "IMAGE"))		// skip preview controls
+						if (IUD)
 						{
-							TESForm* Form = TESForm::LookupByEditorID(Buffer);
-							if (Form)
-							{
-								switch (Form->formType)
-								{
-								case TESForm::kFormType_Script:
-									TESDialog::ShowScriptEditorDialog(Form);
-									break;
-								case TESForm::kFormType_REFR:
-									_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
-									break;
-								default:
-									TESDialog::ShowFormEditDialog(Form);
-									break;
-								}
-
-								DlgProcResult = TRUE;
-								Return = true;
-							}
+							IUD->Cursor.x = Coords.x;
+							IUD->Cursor.y = Coords.y;
+							IUD->Window = WindowAtPoint;
 						}
 					}
 				}
@@ -2538,9 +2621,10 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, LandscapeTextureUseDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_TextureUse, LandscapeTextureUseDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, QuestDlgSubClassProc);
 
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, CommonDialogQuickViewSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogQuickViewSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, CommonDialogQuickViewSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SearchReplace, CommonDialogQuickViewSubClassProc);
@@ -2666,5 +2750,5 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Quest, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Eyes, RegularAppWindow);
 		}
-}
+	}
 }

@@ -270,10 +270,9 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDataHandlerClearDataHook(void)
 		{
-			delete BGSEEHALLOFFAME;
+ 			delete BGSEEHALLOFFAME;
 			RenderSelectionGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
-			TESIdleForm::ResetIdleFormTree();
 		}
 
 		#define _hhName	DataHandlerClearData

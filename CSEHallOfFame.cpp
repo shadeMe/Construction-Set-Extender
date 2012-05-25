@@ -162,10 +162,12 @@ namespace ConstructionSetExtender
 
 		void CSEHallOfFameShadeMe::Deinitialize()
 		{
+			UInt8 Flag = _DATAHANDLER->clearingData;
+
 			_DATAHANDLER->clearingData = 1;			// set the flag to allow default objects to be released
 			TheGreatEye->DeleteInstance();
 			TheGreatEye = NULL;
-			_DATAHANDLER->clearingData = 0;
+			_DATAHANDLER->clearingData = Flag;
 		}
 
 		void Initialize( void )
