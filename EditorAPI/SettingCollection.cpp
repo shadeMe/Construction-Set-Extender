@@ -1,7 +1,23 @@
 #include "SettingCollection.h"
 
 GameSettingCollection*				GameSettingCollection::Instance = (GameSettingCollection*)0x00A10198;
+INISettingCollection*				INISettingCollection::Instance = (INISettingCollection*)0x00A102B8;
+
 const char*							g_CSINIPath = (const char*)0x00A0ABB8;
+
+Setting* SettingCollectionList::LookupByName( const char* Name )
+{
+	for (SettingListT::Iterator Itr = settingList.Begin(); Itr.End() == false && Itr.Get(); ++Itr)
+	{
+		Setting* Current = Itr.Get();
+		SME_ASSERT(Current);
+
+		if (!_stricmp(Name, Current->name))
+			return Current;
+	}
+
+	return NULL;
+}
 
 struct DefaultGMSTMapKeyComparer
 {

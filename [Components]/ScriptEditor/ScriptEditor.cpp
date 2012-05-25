@@ -2127,7 +2127,7 @@ namespace ConstructionSetExtender
 
 			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && Initializing)
 			{
-				String^ CachePath = AUTORECOVERYCACHEPATH + GetScriptDescription() + ".txt";
+				String^ CachePath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + GetScriptDescription() + ".txt";
 				if (System::IO::File::Exists(CachePath))
 				{
 					try
@@ -2584,11 +2584,12 @@ namespace ConstructionSetExtender
 		bool Workspace::PreprocessScriptText(String^% PreprocessorResult)
 		{
 			bool Result = Preprocessor::GetSingleton()->PreprocessScript(TextEditor->GetText(),
-				PreprocessorResult,
-				gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper),
-				gcnew ScriptEditorPreprocessorData(Globals::AppPath,
-				PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
-				PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+								PreprocessorResult,
+								gcnew ScriptPreprocessor::StandardOutputError(this, &ScriptEditor::Workspace::PreprocessorErrorOutputWrapper),
+								gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
+																PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 			return Result;
 		}
 		void Workspace::AddMessageToMessagePool(MessageListItemType Type, int Line, String^ Message)
@@ -2669,7 +2670,7 @@ namespace ConstructionSetExtender
 
 					try			// delete the script's autorecovery cache, if any
 					{
-						System::IO::File::Delete(AUTORECOVERYCACHEPATH + GetScriptDescription() + ".txt");
+						System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + GetScriptDescription() + ".txt");
 					}
 					catch (...) {}
 
@@ -2760,7 +2761,7 @@ namespace ConstructionSetExtender
 			{
 				try			// delete the script's autorecovery cache, if any
 				{
-					System::IO::File::Delete(AUTORECOVERYCACHEPATH + GetScriptDescription() + ".txt");
+					System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + GetScriptDescription() + ".txt");
 				}
 				catch (...) {}
 			}
@@ -3724,7 +3725,7 @@ namespace ConstructionSetExtender
 
 			SaveManager->Description = "All open scripts in this window will be dumped to the selected folder.";
 			SaveManager->ShowNewFolderButton = true;
-			SaveManager->SelectedPath = SCRIPTSFOLDERPATH;
+			SaveManager->SelectedPath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetDefaultCachePath());
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0)
 			{
@@ -3977,7 +3978,7 @@ namespace ConstructionSetExtender
 			{
 				if (GetIsUninitialized() == false && GetIsScriptNew() == false && TextEditor->GetModifiedStatus() == true)
 				{
-					SaveScriptToDisk(AUTORECOVERYCACHEPATH, false);
+					SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()), false);
 				}
 			}
 		}

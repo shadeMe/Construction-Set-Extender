@@ -43,7 +43,10 @@ public:
 
     // members
     //     /*000*/ SettingCollection
-    /*10C*/ SettingListT     settingList;
+    /*10C*/ SettingListT	settingList;
+
+	// methods
+	Setting*				LookupByName(const char* Name);
 };
 
 // 114
@@ -55,6 +58,8 @@ public:
     // file is not actually opened; all i/o uses Get/WritePrivateProfileString()
 
 	// no additional members
+
+	static INISettingCollection*		Instance;
 };
 
 // 114

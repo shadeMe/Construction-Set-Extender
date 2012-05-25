@@ -1,11 +1,14 @@
 #include "[Common]\ComponentDLLInterface.h"
 #include "[Common]\CLIWrapper.h"
 
+#include "CSEMain.h"
 #include "CSEUIManager.h"
 #include "Hooks\CompilerErrorDetours.h"
 #include "Hooks\Misc.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
+
+#include <BGSEEWorkspaceManager.h>
 
 using namespace ComponentDLLInterface;
 using namespace ConstructionSetExtender;
@@ -857,6 +860,36 @@ bool CanUpdateIntelliSenseDatabase(void)
 {
 	return g_LoadingSavingPlugins == false;
 }
+
+const char* GetDefaultCachePath(void)
+{
+	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEDEPOT)();
+	return kBuffer.c_str();
+}
+
+const char* GetAutoRecoveryCachePath(void)
+{
+	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)();
+	return kBuffer.c_str();
+}
+
+const char* GetPreprocessorBasePath(void)
+{
+	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCDEPOT)();
+	return kBuffer.c_str();
+}
+
+const char* GetPreprocessorStandardPath(void)
+{
+	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)();
+	return kBuffer.c_str();
+}
+
+const char* GetSnippetCachePath(void)
+{
+	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)();
+	return kBuffer.c_str();
+}
 #pragma endregion
 /**** END SCRIPTEDITOR SUBINTERFACE ****/
 
@@ -1149,6 +1182,11 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		SetScriptText,
 		UpdateScriptVarNames,
 		CanUpdateIntelliSenseDatabase,
+		GetDefaultCachePath,
+		GetAutoRecoveryCachePath,
+		GetPreprocessorBasePath,
+		GetPreprocessorStandardPath,
+		GetSnippetCachePath,
 	},
 	{
 		GetLoadedForms,

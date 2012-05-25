@@ -269,6 +269,12 @@
     <ClCompile Include="Coda\CSECoda.cpp">
       <Filter>Components\BGSEEBase Derivatives\Coda</Filter>
     </ClCompile>
+    <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp">
+      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp">
+      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -740,6 +746,12 @@
     </ClInclude>
     <ClInclude Include="VersionInfo.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h">
+      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h">
+      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

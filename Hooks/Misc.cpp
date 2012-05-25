@@ -198,8 +198,13 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoCSInitHook()
 		{
-			if (!*g_HWND_CSParent || !*g_HWND_ObjectWindow || !*g_HWND_CellView || !*g_HWND_RenderWindow)
+			if (*g_HWND_CSParent == NULL ||
+				*g_HWND_ObjectWindow == NULL ||
+				*g_HWND_CellView == NULL ||
+				*g_HWND_RenderWindow == NULL)
+			{
 				return;								// prevents the hook from being called before the full init
+			}
 
 			_MemHdlr(CSInit).WriteBuffer();
 
@@ -268,6 +273,7 @@ namespace ConstructionSetExtender
 			delete BGSEEHALLOFFAME;
 			RenderSelectionGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
+			TESIdleForm::ResetIdleFormTree();
 		}
 
 		#define _hhName	DataHandlerClearData
@@ -317,7 +323,9 @@ namespace ConstructionSetExtender
 				isdigit((int)*EditorID) &&
 				(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 			{
-				BGSEEUI->MsgBoxW("The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.", EditorID);
+				BGSEEUI->MsgBoxW(NULL,
+								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONWARNING|MB_OK,
+								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.", EditorID);
 			}
 		}
 
@@ -405,7 +413,7 @@ namespace ConstructionSetExtender
 			if (Data)
 			{
 				Data->IncrementRefCount();
-				}
+			}
 			else
 			{
 				FormCrossReferenceData* NewNode = FormCrossReferenceData::CreateInstance(Form);

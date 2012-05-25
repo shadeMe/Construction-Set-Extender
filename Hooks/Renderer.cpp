@@ -60,7 +60,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESPathGridPointDtor, 0x00556190);
 		_DefineHookHdlr(TESPathGridToggleEditMode, 0x00550660);
 		_DefineHookHdlr(TESPathGridCreateNewLinkedPoint, 0x0042B37B);
-		_DefineHookHdlr(TESPathGridPerformFall, 0x00428612);
+		_DefineHookHdlr(TESPathGridPerformFall, 0x00428605);
 		_DefineHookHdlr(TESPathGridShowMultipleSelectionRing, 0x0042FC7C);
 		_DefinePatchHdlr(TESPathGridDtor, 0x00550B81);
 		_DefineHookHdlr(InitialCellLoadCameraPosition, 0x0040A8AE);
@@ -70,6 +70,7 @@ namespace ConstructionSetExtender
 		_DefinePatchHdlrWithBuffer(NiDX9RendererPresent, 0x006D5C9D, 2, 0xFF, 0xD0);
 		_DefineHookHdlr(RenderToAuxiliaryViewport, 0x0042D405);
 		_DefineHookHdlr(TESRenderControlPerformRelativeScale, 0x00424700);
+		_DefinePatchHdlr(DataHandlerClosePlugins, 0x0047B2FA);
 
 		void PatchRendererHooks(void)
 		{
@@ -120,6 +121,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(DuplicateReferences).WriteJump();
 			_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
+			_MemHdlr(DataHandlerClosePlugins).WriteUInt8(0xEB);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -863,7 +865,6 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		HACK("Fugly!")
 		static bool s_PathGridMoveStart = false;
 
 		#define _hhName		TESPathGridRecordOperationMoveA
@@ -1086,14 +1087,15 @@ namespace ConstructionSetExtender
 		#define _hhName		TESPathGridPerformFall
 		_hhBegin()
 		{
-			_hhSetVar(Call, 0x0048E0E0);
-			_hhSetVar(Retn, 0x00428617);
+			_hhSetVar(Retn, 0x00428610);
 			__asm
 			{
+				mov		ebx, g_RenderWindowSelectedPathGridPoints
+				lea		ebx, [ebx]
+
 				pushad
 				call	DoTESPathGridRecordOperation
 				popad
-				call	[_hhGetVar(Call)]
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

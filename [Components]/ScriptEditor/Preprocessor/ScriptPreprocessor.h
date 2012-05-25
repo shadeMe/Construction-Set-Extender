@@ -14,12 +14,22 @@ namespace ConstructionSetExtender
 
 	public ref struct ScriptEditorPreprocessorData
 	{
-		String^											AppPath;
+		String^											DepotPath;
+		String^											StandardDirectivePath;
 		bool											AllowMacroRedefinitions;
 		UInt8											NoOfPasses;
 
-		ScriptEditorPreprocessorData(String^% AppPath, bool AllowMacroRedefinitions, UInt8 NoOfPasses) :
-		AppPath(AppPath), AllowMacroRedefinitions(AllowMacroRedefinitions), NoOfPasses(NoOfPasses) {}
+		ScriptEditorPreprocessorData(String^ DepotPath,
+									String^ StandardDirectivePath,
+									bool AllowMacroRedefinitions,
+									UInt8 NoOfPasses) :
+			DepotPath(DepotPath),
+			StandardDirectivePath(StandardDirectivePath),
+			AllowMacroRedefinitions(AllowMacroRedefinitions),
+			NoOfPasses(NoOfPasses)
+		{
+			;//
+		}
 	};
 
 	// represents a line of the script text/directive

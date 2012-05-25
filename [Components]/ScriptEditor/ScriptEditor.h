@@ -18,8 +18,6 @@ namespace ConstructionSetExtender
 {
 #define NEWSCRIPTID					"New Script"
 #define FIRSTRUNSCRIPTID			"New Workspace"
-#define SCRIPTSFOLDERPATH			"Data\\Scripts\\"
-#define AUTORECOVERYCACHEPATH		"Data\\Scripts\\Auto-Recovery Cache\\"
 
 	namespace ScriptEditor
 	{

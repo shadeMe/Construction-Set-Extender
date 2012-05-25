@@ -105,7 +105,7 @@ void TESDataHandler::CleanCellWaterExtraData( void )
 		TESForm* Form = NULL;
 
 		g_TESFormFormIDMap->GetNext(Itr, FormID, Form);
-		if (FormID)
+		if (FormID && Form)
 		{
 			if (Form->formType == TESForm::kFormType_Cell)
 			{

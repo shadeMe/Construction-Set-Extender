@@ -29,8 +29,8 @@ public:
 	/*1FC*/ TESHair*						hair;
 	/*200*/ float							hairLength;
 	/*204*/ TESEyes*						eyes;
-	/*208*/ UInt32							unk208;
-	/*20C*/ UInt32							unk20C;
+	/*208*/ void*							unk208;					// smart pointer
+	/*20C*/ void*							unk20C;					// smart pointer
 	/*210*/ void*							unk210;					// smart pointer, BSFaceGenNiNode* ?
 	/*214*/ UInt16							unk214;					// set to race->unk478
 	/*216*/ UInt16							pad216[2];

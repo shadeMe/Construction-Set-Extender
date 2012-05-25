@@ -149,9 +149,7 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE_MESSAGE("Initializing CSInterop Manager");
 		BGSEECONSOLE->Indent();
 		if (CSIOM->Initialize() == false)
-		{
 			BGSEECONSOLE_MESSAGE("Failed to initialize successfully! Lip service will be unavailable during this session");
-		}
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Achievements");

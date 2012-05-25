@@ -220,8 +220,6 @@ namespace ConstructionSetExtender
 			case 0x00452FA8:
 			case 0x00440FBD:
 			case 0x0040A4BF:
-			case 0x00412F7A:
-			case 0x0043FDFF:
 			case 0x00442576:
 			case 0x00452409:
 			case 0x00560DC2:

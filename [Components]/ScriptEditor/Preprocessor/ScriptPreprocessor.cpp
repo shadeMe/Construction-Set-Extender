@@ -325,7 +325,8 @@ namespace ConstructionSetExtender
 
 				try
 				{
-					StreamReader^ ImportParser = gcnew StreamReader(String::Format("Data\\Scripts\\Preprocessor\\{0}.txt", Filename));
+					String^ ImportFile = PreprocessorInstance->GetInstanceData()->DepotPath + Filename + ".txt";
+					StreamReader^ ImportParser = gcnew StreamReader(ImportFile);
 					Source = ImportParser->ReadToEnd();
 					ImportParser->Close();
 				}
@@ -1159,7 +1160,7 @@ namespace ConstructionSetExtender
 		for (int i = 1; i <= Data->NoOfPasses; i++)
 		{
 			RegisteredDefineDirectives->Clear();
-			ProcessStandardDirectives(Data->AppPath, ErrorOutput);
+			ProcessStandardDirectives(Data->StandardDirectivePath, ErrorOutput);
 			OperationResult = Preprocess(SourceBuffer, ResultBuffer, ErrorOutput);
 			if (!OperationResult)
 			{
@@ -1178,11 +1179,9 @@ namespace ConstructionSetExtender
 
 	void Preprocessor::ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput)
 	{
-		String^ FolderPath = "Data\\Scripts\\Preprocessor\\STD\\";
-
-		if (Directory::Exists(FolderPath))
+		if (Directory::Exists(Path))
 		{
-			DirectoryInfo^ PreprocessorDir = gcnew DirectoryInfo(FolderPath);
+			DirectoryInfo^ PreprocessorDir = gcnew DirectoryInfo(Path);
 
 			for each (FileInfo^ Itr in PreprocessorDir->GetFiles())
 			{

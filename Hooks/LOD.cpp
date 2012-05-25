@@ -38,6 +38,16 @@ namespace ConstructionSetExtender
 		static UInt32					s_LODDiffuseMapPartialResolution = 384;		// values higher than 384 will cause buffer overruns
 		UInt8							g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_NotInUse;		// maintained by CSE
 
+		static int						s_iFadeNodeMinNearDistance = 0;
+		static float					s_fLODFadeOutPercent = 0.0f;
+		static int						s_iPostProcessMillisecondsEditor = 1215752191;
+		static float					s_fFadeDistance = 9999999790214768000000000000000000.0f;
+
+		static const int				kiFadeNodeMinNearDistance_LOD = 1073741601;
+		static const float				kfLODFadeOutPercent_LOD = 0.0f;
+		static const int				kiPostProcessMillisecondsEditor_BackgroundLoad = 1215752191;
+		static const float				kfFadeDistance_DistantLOD = 9999999790214768000000000000000000.0f;
+
 		_DefineNopHdlr(LODLandTextureMipMapLevelA, 0x00411008, 2);
 		_DefineHookHdlr(LODLandTextureMipMapLevelB, 0x005E0306);
 		_DefineHookHdlr(LODLandTextureAllocation, 0x00410D08);
@@ -451,7 +461,27 @@ namespace ConstructionSetExtender
 				else if (s_LODDiffuseMapPartialResolution > 384)
 					s_LODDiffuseMapPartialResolution = 384;
 
-				TODO("force set the iPostProcessMilliSecondsEditor INI setting to some big huge value here")
+				Setting* Current = NULL;
+
+				Current = INISettingCollection::Instance->LookupByName("iFadeNodeMinNearDistance:LOD");
+				SME_ASSERT(Current);
+				s_iFadeNodeMinNearDistance = Current->value.i;
+				Current->value.i = kiFadeNodeMinNearDistance_LOD;
+
+				Current = INISettingCollection::Instance->LookupByName("fLODFadeOutPercent:LOD");
+				SME_ASSERT(Current);
+				s_fLODFadeOutPercent = Current->value.f;
+				Current->value.f = kfLODFadeOutPercent_LOD;
+
+				Current = INISettingCollection::Instance->LookupByName("iPostProcessMillisecondsEditor:BackgroundLoad");
+				SME_ASSERT(Current);
+				s_iPostProcessMillisecondsEditor = Current->value.i;
+				Current->value.i = kiPostProcessMillisecondsEditor_BackgroundLoad;
+
+				Current = INISettingCollection::Instance->LookupByName("fFadeDistance:DistantLOD");
+				SME_ASSERT(Current);
+				s_fFadeDistance = Current->value.f;
+				Current->value.f = kfFadeDistance_DistantLOD;
 			}
 			else if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_FullMap)
 			{
@@ -492,6 +522,13 @@ namespace ConstructionSetExtender
 					if ((OpResult = SHFileOperation(&DeleteShellOp)))
 						BGSEECONSOLE_MESSAGE("Couldn't delete landscape LOD partial texture directory. Error: %04X", OpResult);
 				}
+
+				INISettingCollection::Instance->LookupByName("iFadeNodeMinNearDistance:LOD")->value.i = s_iFadeNodeMinNearDistance;
+				INISettingCollection::Instance->LookupByName("fLODFadeOutPercent:LOD")->value.f = s_fLODFadeOutPercent;
+				INISettingCollection::Instance->LookupByName("iPostProcessMillisecondsEditor:BackgroundLoad")->value.i = s_iPostProcessMillisecondsEditor;
+				INISettingCollection::Instance->LookupByName("fFadeDistance:DistantLOD")->value.f = s_fFadeDistance;
+
+				SetThreadExecutionState(ES_CONTINUOUS);
 			}
 		}
 

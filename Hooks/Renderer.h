@@ -62,5 +62,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(NiDX9RendererPresent, "temporary hook that prevents the renderer from presenting its render targets");
 		_DeclareMemHdlr(RenderToAuxiliaryViewport, "allows the scenegraph to be rendered to the auxiliary viewport window");
 		_DeclareMemHdlr(TESRenderControlPerformRelativeScale, "allows the selection group to be scaled relative to their nominal center");
+		_DeclareMemHdlr(DataHandlerClosePlugins, "prevents the view port from flashing while loading exterior cells");
 	}
 }

@@ -62,6 +62,7 @@
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\Release\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ExecutablePath)</ExecutablePath>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ExecutablePath)</ExecutablePath>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -92,12 +93,13 @@
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
@@ -121,13 +123,11 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <SuppressStartupBanner>false</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ForcedIncludeFiles>StdAfx.h;$(SolutionDir)EditorAPI\TESEditorAPI.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <StringPooling>true</StringPooling>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <UndefinePreprocessorDefinitions>
@@ -146,11 +146,9 @@
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <SuppressStartupBanner>false</SuppressStartupBanner>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <UACExecutionLevel>AsInvoker</UACExecutionLevel>
     </Link>
@@ -164,9 +162,17 @@
     <PreBuildEvent>
       <Message>Setting build number...</Message>
     </PreBuildEvent>
+    <Manifest>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Manifest>
+    <Manifest>
+      <VerboseOutput>true</VerboseOutput>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AuxiliaryViewport.cpp" />
+    <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp" />
+    <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp" />
     <ClCompile Include="Coda\CSECoda.cpp" />
     <ClCompile Include="CSEAchievements.cpp" />
     <ClCompile Include="CSEConsole.cpp" />
@@ -272,6 +278,8 @@
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
+    <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
+    <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />
     <ClInclude Include="Coda\CSECoda.h" />
     <ClInclude Include="CSEAchievements.h" />
     <ClInclude Include="CSEConsole.h" />

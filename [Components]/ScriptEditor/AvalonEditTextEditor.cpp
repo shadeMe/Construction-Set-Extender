@@ -93,6 +93,8 @@ namespace ConstructionSetExtender
 				TextField->FontSize = FontObject->Size;
 				if (FontObject->Style == Drawing::FontStyle::Bold)
 					TextField->FontWeight = Windows::FontWeights::Bold;
+				else
+					TextField->FontWeight = Windows::FontWeights::Regular;
 			}
 
 			void AvalonEditTextEditor::SetTabCharacterSize(int PixelWidth)

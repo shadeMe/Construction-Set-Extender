@@ -2,10 +2,33 @@
 #include "CSEAchievements.h"
 #include "CSEInterfaceManager.h"
 
+#include "Commands\CodaScriptCommands-Form.h"
+#include "Commands\CodaScriptCommands-Reference.h"
+//#include "Commands\CodaScriptCommands-BFC.h"
+
 namespace ConstructionSetExtender
 {
 	namespace BGSEEScript
 	{
+		void ExtractFormArguments( UInt32 Count, ... )
+		{
+			va_list Args;
+			va_start(Args, Count);
+
+			for (int i = 0; i < Count; i++)
+			{
+				TESForm** CurrentArg = va_arg(Args, TESForm**);
+				UInt32 FormID = (UInt32)*CurrentArg;
+
+				if (FormID)
+					*CurrentArg = TESForm::LookupByFormID(FormID);
+				else
+					*CurrentArg = NULL;
+			}
+
+			va_end(Args);
+		}
+
 		void BGSEEConsoleCmd_RunCodaScript_ExecuteHandler(UInt32 ParamCount, const char* Args)
 		{
 			SME::StringHelpers::Tokenizer ArgParser(Args, " ,");
@@ -37,7 +60,10 @@ namespace ConstructionSetExtender
 		void Initialize()
 		{
 			BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT ScriptCommands;
+
 			CSEInterfaceManager::Instance.ConsumeScriptInterface(ScriptCommands);
+			ScriptCommands.push_front(Commands::Form::GetRegistrar());
+			ScriptCommands.push_front(Commands::Reference::GetRegistrar());
 
 			bool ComponentInitialized = CODAVM->Initialize(BGSEditorExtender::BGSEEResourceLocation("Coda"),
 														"http://cs.elderscrolls.com/index.php/",

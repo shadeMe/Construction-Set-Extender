@@ -89,7 +89,9 @@ void CleanupAutoRecoveryCache(void)
 {
 	try
 	{
-		for each (String^ Path in System::IO::Directory::GetFiles(AUTORECOVERYCACHEPATH))
+		String^ Cache = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
+
+		for each (String^ Path in System::IO::Directory::GetFiles(Cache))
 			System::IO::File::Delete(Path);
 	}
 	catch (Exception^ E)

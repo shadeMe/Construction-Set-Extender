@@ -8,6 +8,7 @@
 #include "Hooks\AssetSelector.h"
 #include "Hooks\Dialog.h"
 #include "Hooks\Renderer.h"
+#include "Hooks\LOD.h"
 #include "RenderSelectionGroupManager.h"
 #include "PathGridUndoManager.h"
 #include "CSInterop.h"
@@ -271,9 +272,9 @@ namespace ConstructionSetExtender
 
 		bool CSEFormEnumerationManager::GetShouldEnumerate( TESForm* Form )
 		{
-			if ((Form->formFlags & TESForm::kFormFlags_FromActiveFile) == 0 && GetVisibleUnmodifiedForms() == false)
+			if (Form && (Form->formFlags & TESForm::kFormFlags_FromActiveFile) == 0 && GetVisibleUnmodifiedForms() == false)
 				return false;
-			else if ((Form->formFlags & TESForm::kFormFlags_Deleted) && GetVisibleDeletedForms() == false)
+			else if (Form && (Form->formFlags & TESForm::kFormFlags_Deleted) && GetVisibleDeletedForms() == false)
 				return false;
 			else
 				return true;
@@ -1289,6 +1290,12 @@ namespace ConstructionSetExtender
 							Period = 50;
 
 						SetTimer(hWnd, 1, Period, NULL);
+					}
+
+					if (Hooks::g_LODDiffuseMapGeneratorState != Hooks::kLODDiffuseMapGeneratorState_NotInUse)
+					{
+						// prevent the OS from triggering the screen-saver/switching to standby mode
+						SetThreadExecutionState(ES_CONTINUOUS|ES_DISPLAY_REQUIRED|ES_SYSTEM_REQUIRED);
 					}
 
 					break;

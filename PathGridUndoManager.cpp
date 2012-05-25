@@ -3,10 +3,13 @@
 namespace ConstructionSetExtender
 {
 	PathGridUndoManager			PathGridUndoManager::Instance;
+	int							PathGridUndoManager::PathGridPointUndoProxy::GIC = 0;
 
 	PathGridUndoManager::PathGridPointUndoProxy::PathGridPointUndoProxy( UInt8 Operation, TESPathGridPoint* Parent ) :
 		LinkedPoints()
 	{
+		GIC++;
+
 		this->Operation = Operation;
 		this->Parent = Parent;
 		this->Position = Parent->position;
@@ -14,6 +17,7 @@ namespace ConstructionSetExtender
 		this->ParentPathGrid = Parent->parentGrid;
 		this->ParentCell = ParentPathGrid->parentCell;
 		this->LinkedPoints.reserve(5);
+		this->Deleted = false;
 
 		for (PathGridPointListT::Iterator Itr = Parent->linkedPoints.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
@@ -27,20 +31,22 @@ namespace ConstructionSetExtender
 	PathGridUndoManager::PathGridPointUndoProxy::PathGridPointUndoProxy( const PathGridPointUndoProxy& rhs ) :
 		LinkedPoints()
 	{
+		GIC++;
+
 		this->Operation = rhs.Operation;
 		this->Parent = rhs.Parent;
 		this->Position = rhs.Position;
 		this->LinkedRef = rhs.LinkedRef;
 		this->ParentPathGrid = rhs.ParentPathGrid;
 		this->ParentCell = rhs.ParentCell;
-		this->LinkedPoints.reserve(5);
-
-		for (PathGridPointVectorT::const_iterator Itr = rhs.LinkedPoints.begin(); Itr != rhs.LinkedPoints.end(); Itr++)
-			this->LinkedPoints.push_back(*Itr);
+		this->LinkedPoints = rhs.LinkedPoints;
+		this->Deleted = rhs.Deleted;
 	}
 
 	void PathGridUndoManager::PathGridPointUndoProxy::HandlePathGridPointDeletion( TESPathGridPoint* Point )
 	{
+		SME_ASSERT(Deleted == false);
+
 		for (PathGridPointVectorT::iterator Itr = LinkedPoints.begin(); Itr != LinkedPoints.end(); Itr++)
 		{
 			if (*Itr == Point)
@@ -51,8 +57,10 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void PathGridUndoManager::PathGridPointUndoProxy::CopyToPoint(TESPathGridPoint* Point, bool Update3D)
+	void PathGridUndoManager::PathGridPointUndoProxy::SyncWithPoint(TESPathGridPoint* Point, bool Update3D)
 	{
+		SME_ASSERT(Deleted == false);
+
 		if (Point)
 		{
 			Point->UnlinkFromReference();
@@ -75,14 +83,19 @@ namespace ConstructionSetExtender
 	PathGridUndoManager::PathGridPointUndoProxy::~PathGridPointUndoProxy()
 	{
 		LinkedPoints.clear();
+
+		GIC--;
+		SME_ASSERT(GIC >= 0);
 	}
 
 	void PathGridUndoManager::PathGridPointUndoProxy::Undo( PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut )
 	{
+		SME_ASSERT(Deleted == false);
+
 		switch (Operation)
 		{
 		case kOperation_DataChange:
-			CopyToPoint(Parent, true);
+			SyncWithPoint(Parent, true);
 			break;
 		case kOperation_PointCreation:
 			{
@@ -122,7 +135,7 @@ namespace ConstructionSetExtender
 			}
 
 			CurrentPathGrid->AddPoint(NewPoint);
-			CopyToPoint(NewPoint);
+			SyncWithPoint(NewPoint);
 
 			NewPoint->GenerateNiNode();
 			CurrentPathGrid->GenerateNiNode();
@@ -137,16 +150,20 @@ namespace ConstructionSetExtender
 	PathGridUndoManager::PathGridUndoManager() :
 		UndoStack(),
 		RedoStack(),
-		CanReset(true)
+		CanReset(true),
+		WalkingStacks(false)
 	{
 		;//
 	}
+
 	PathGridUndoManager::~PathGridUndoManager()
 	{
 		CanReset = true;
 
 		ResetUndoStack();
 		ResetRedoStack();
+
+		SME_ASSERT(PathGridPointUndoProxy::GIC == 0);
 	}
 
 	void PathGridUndoManager::ResetStack( UndoProxyStackT* Stack )
@@ -159,112 +176,134 @@ namespace ConstructionSetExtender
 			UndoProxyListT* ProxyList = Stack->top();
 			Stack->pop();
 
-			for (UndoProxyListT::Iterator Itr = ProxyList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-			{
-				delete Itr.Get();
-			}
-
-			ProxyList->RemoveAll();
-			FormHeap_Free(ProxyList);
+			ProxyList->clear();
+			delete ProxyList;
 		}
 	}
 
 	void PathGridUndoManager::HandlePointDeletionOnStack( UndoProxyStackT* Stack, PathGridPointListT* Selection )
 	{
-		std::vector<UndoProxyListT*> StackBuffer;
+		std::list<UndoProxyListT*> StackBuffer;
 
 		while (Stack->size())
 		{
 			UndoProxyListT* ProxyList = Stack->top();
-			std::vector<PathGridPointUndoProxy*> Delinquents;
-
 			Stack->pop();
-			for (UndoProxyListT::Iterator Itr = ProxyList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+
+			for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
 			{
-				PathGridPointUndoProxy* Proxy = Itr.Get();
+				UndoProxyHandle Proxy(*Itr);
 
 				for (PathGridPointListT::Iterator ItrEx = Selection->Begin(); !ItrEx.End() && ItrEx.Get(); ++ItrEx)
 				{
 					if (Proxy->Parent == ItrEx.Get())
-						Delinquents.push_back(Proxy);
-					else
+						Proxy->Deleted = true;
+					else if (Proxy->Deleted == false)
 						Proxy->HandlePathGridPointDeletion(ItrEx.Get());
 				}
 			}
 
-			for (std::vector<PathGridPointUndoProxy*>::iterator Itr = Delinquents.begin(); Itr != Delinquents.end(); Itr++)
-			{
-				ProxyList->Remove(*Itr);
-				delete *Itr;
-			}
-
-			if (ProxyList->Count() == 0)
-				FormHeap_Free(ProxyList);
-			else
-				StackBuffer.push_back(ProxyList);
+			StackBuffer.push_back(ProxyList);
 		}
 
-		for (std::vector<UndoProxyListT*>::reverse_iterator Itr = StackBuffer.rbegin(); Itr != StackBuffer.rend(); Itr++)
+		for (std::list<UndoProxyListT*>::reverse_iterator Itr = StackBuffer.rbegin(); Itr != StackBuffer.rend(); Itr++)
 			Stack->push(*Itr);
 	}
 
 	void PathGridUndoManager::RecordOperation( UInt8 Operation, PathGridPointListT* Selection )
 	{
-		UndoProxyListT* ProxyList = UndoProxyListT::Create(&FormHeap_Allocate);
+		UndoProxyListT* ProxyList = new UndoProxyListT();
 
 		for (PathGridPointListT::Iterator Itr = Selection->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-			ProxyList->AddAt(new PathGridPointUndoProxy(Operation, Itr.Get()), eListEnd);
+		{
+			UndoProxyHandle Proxy(new PathGridPointUndoProxy(Operation, Itr.Get()));
+			ProxyList->push_back(Proxy);
+		}
 
 		UndoStack.push(ProxyList);
 	}
 
 	void PathGridUndoManager::WalkUndoStack( UndoProxyStackT* Stack, UndoProxyStackT* Alternate )
 	{
+		SME_ASSERT(WalkingStacks == false);
+		SME::MiscGunk::ScopedSetter<bool> GuardStackWalker(WalkingStacks, true);
+
 		if (Stack->size())
 		{
-			UndoProxyListT* ProxyList = Stack->top();
-			UndoProxyListT* AltProxyList = UndoProxyListT::Create(&FormHeap_Allocate);
+			UndoProxyListT* ProxyList = NULL;
 
-			Stack->pop();
-			for (UndoProxyListT::Iterator Itr = ProxyList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+			do
 			{
-				switch (Itr.Get()->Operation)
+				ProxyList = Stack->top();
+				Stack->pop();
+
+				for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end();)
+				{
+					if ((*Itr)->Deleted)
+						Itr = ProxyList->erase(Itr);
+					else
+						Itr++;
+				}
+
+				if (ProxyList->size())
+				{
+					break;
+				}
+				else
+				{
+					delete ProxyList;
+				}
+
+				ProxyList = NULL;
+			}
+			while (Stack->size());
+
+			if (ProxyList == NULL)
+				return;
+
+			UndoProxyListT* AltProxyList = new UndoProxyListT();
+
+			for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
+			{
+				SME_ASSERT((*Itr)->Deleted == false);
+
+				switch ((*Itr)->Operation)
 				{
 				case kOperation_PointCreation:
 					{
-						PathGridPointUndoProxy* Proxy = new PathGridPointUndoProxy(*Itr.Get());
+						UndoProxyHandle Proxy(new PathGridPointUndoProxy(*(*Itr).get()));
 						Proxy->Operation = kOperation_PointDeletion;
-						AltProxyList->AddAt(Proxy, eListEnd);
+						AltProxyList->push_back(Proxy);
 
-						TESPathGridPoint* Parent = Itr.Get()->Parent;
-						Itr.Get()->Undo(this);
+						(*Itr)->Undo(this);
 
-						delete Itr.Get();
 						break;
 					}
 				case kOperation_PointDeletion:
 					{
 						TESPathGridPoint* NewPoint = NULL;
-						Itr.Get()->Undo(this, &NewPoint);
-						delete Itr.Get();
 
-						PathGridPointUndoProxy* Proxy = new PathGridPointUndoProxy(kOperation_PointCreation, NewPoint);
-						AltProxyList->AddAt(Proxy, eListEnd);
+						(*Itr)->Undo(this, &NewPoint);
+
+						UndoProxyHandle Proxy(new PathGridPointUndoProxy(kOperation_PointCreation, NewPoint));
+						AltProxyList->push_back(Proxy);
+
 						break;
 					}
 				case kOperation_DataChange:
 					{
-						AltProxyList->AddAt(new PathGridPointUndoProxy(kOperation_DataChange, Itr.Get()->Parent), eListEnd);
+						UndoProxyHandle Proxy(new PathGridPointUndoProxy(kOperation_DataChange, (*Itr)->Parent));
+						AltProxyList->push_back(Proxy);
 
-						Itr.Get()->Undo(this);
-						delete Itr.Get();
+						(*Itr)->Undo(this);
+
 						break;
 					}
 				}
 			}
 
-			ProxyList->RemoveAll();
-			FormHeap_Free(ProxyList);
+			ProxyList->clear();
+			delete ProxyList;
 
 			Alternate->push(AltProxyList);
 		}
@@ -294,5 +333,10 @@ namespace ConstructionSetExtender
 	void PathGridUndoManager::ResetUndoStack( void )
 	{
 		ResetStack(&UndoStack);
+	}
+
+	void PathGridUndoManager::SetCanReset( bool State )
+	{
+		CanReset = State;
 	}
 }

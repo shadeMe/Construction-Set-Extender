@@ -61,6 +61,12 @@ namespace ComponentDLLInterface
 			void									(* SetScriptText)(void* CurrentScript, const char* ScriptText);
 			void									(* UpdateScriptVarNames)(const char* EditorID, ScriptVarRenameData* Data);
 			bool									(* CanUpdateIntelliSenseDatabase)(void);
+
+			const char*								(* GetDefaultCachePath)(void);
+			const char*								(* GetAutoRecoveryCachePath)(void);
+			const char*								(* GetPreprocessorBasePath)(void);
+			const char*								(* GetPreprocessorStandardPath)(void);
+			const char*								(* GetSnippetCachePath)(void);
 		};
 
 		class IUseInfoList

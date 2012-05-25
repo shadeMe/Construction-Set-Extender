@@ -132,9 +132,9 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoLoadPluginsEpilogHook(void)
 		{
-			DestroyWindow(s_LoadIdleWindow);
 			_DATAHANDLER->CleanCellWaterExtraData();
 
+			DestroyWindow(s_LoadIdleWindow);
 			g_LoadingSavingPlugins = false;
 		}
 

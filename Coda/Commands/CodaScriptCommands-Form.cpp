@@ -1,215 +1,297 @@
-#include "Commands_General.h"
-#include "..\ScriptCommands.h"
-#include "..\ScriptRunner.h"
+#include "CodaScriptCommands-Form.h"
 
-namespace CSAutomationScript
+namespace ConstructionSetExtender
 {
-	void RegisterGeneralCommands()
+	namespace BGSEEScript
 	{
-		REGISTER_CSASCOMMAND(PrintToConsole, "General Functions");
-		REGISTER_CSASCOMMAND(FormatNumber, "General Functions");
-		REGISTER_CSASCOMMAND(TypeOf, "General Functions");
+		namespace Commands
+		{
+			namespace Form
+			{
+				CodaScriptCommandRegistrarDef("Form")
 
-		REGISTER_CSASCOMMAND(GetFormByEditorID, "General Functions");
-		REGISTER_CSASCOMMAND(GetFormByFormID, "General Functions");
-		REGISTER_CSASCOMMAND(GetEditorID, "General Functions");
-		REGISTER_CSASCOMMAND(GetFormType, "General Functions");
+				CodaScriptCommandPrototypeDef(GetFormByEditorID);
+				CodaScriptCommandPrototypeDef(GetFormByFormID);
+				CodaScriptCommandPrototypeDef(GetEditorID);
+				CodaScriptCommandPrototypeDef(GetFormType);
+				CodaScriptCommandPrototypeDef(SetEditorID);
+				CodaScriptCommandPrototypeDef(SetFormID);
+				CodaScriptCommandPrototypeDef(MarkAsModified);
+				CodaScriptCommandPrototypeDef(GetDataHandlerFormList);
 
-		REGISTER_CSASCOMMAND(SetEditorID, "General Functions");
-		REGISTER_CSASCOMMAND(SetFormID, "General Functions");
-		REGISTER_CSASCOMMAND(MarkAsModified, "General Functions");
+				CodaScriptCommandParamData(SetEditorID, 2)
+				{
+					{ "Form",							ICodaScriptDataStore::kDataType_Reference },
+					{ "EditorID",						ICodaScriptDataStore::kDataType_String }
+				};
+
+				CodaScriptCommandParamData(SetFormID, 2)
+				{
+					{ "Form",							ICodaScriptDataStore::kDataType_Reference },
+					{ "FormID",							ICodaScriptDataStore::kDataType_Numeric }
+				};
+
+				CodaScriptCommandParamData(MarkAsModified, 2)
+				{
+					{ "Form",							ICodaScriptDataStore::kDataType_Reference },
+					{ "Modified Flag",					ICodaScriptDataStore::kDataType_Numeric }
+				};
+
+				CodaScriptCommandParamData(GetDataHandlerFormList, 1)
+				{
+					{ "Form Type",						ICodaScriptDataStore::kDataType_Numeric }
+				};
+
+				CodaScriptCommandHandler(GetFormByEditorID)
+				{
+					CodaScriptStringParameterTypeT Buffer = NULL;
+
+					CodaScriptCommandExtractArgs(&Buffer);
+
+					TESForm* Form = TESForm::LookupByEditorID(Buffer);
+					if (Form)
+						Result->SetFormID(Form->formID);
+					else
+						Result->SetFormID(0);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetFormByFormID)
+				{
+					CodaScriptNumericDataTypeT FormID = 0;
+
+					CodaScriptCommandExtractArgs(&FormID);
+
+					TESForm* Form = TESForm::LookupByFormID((UInt32)FormID);
+					if (Form)
+						Result->SetFormID(Form->formID);
+					else
+						Result->SetFormID(0);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetEditorID)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					Result->SetString((Form->editorID.c_str())?Form->editorID.c_str():"");
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetFormType)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					Result->SetNumber(Form->formType);
+					return true;
+				}
+
+				CodaScriptCommandHandler(SetEditorID)
+				{
+					TESForm* Form = NULL;
+					CodaScriptStringParameterTypeT Buffer = NULL;
+
+					CodaScriptCommandExtractArgs(&Form, &Buffer);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					if (Buffer)
+						Result->SetNumber(Form->SetEditorID(Buffer));
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(SetFormID)
+				{
+					TESForm* Form = NULL;
+					CodaScriptNumericDataTypeT FormID = 0;
+
+					CodaScriptCommandExtractArgs(&Form, &FormID);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					if (FormID && Form->formID != FormID)
+						Form->SetFormID(FormID);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(MarkAsModified)
+				{
+					TESForm* Form = NULL;
+					CodaScriptNumericDataTypeT State = 0;
+
+					CodaScriptCommandExtractArgs(&Form, &State);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					Form->SetFromActiveFile(State);
+
+					return true;
+				}
+
+				template <typename T>
+				void AddFormToCodaArray(tList<T>* List, ICodaScriptDataStore* Array, ICodaScriptCommandHandlerHelper* Utilities)
+				{
+					for (tList<T>::Iterator Itr = List->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+						Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Itr->formID);
+				}
+
+				CodaScriptCommandHandler(GetDataHandlerFormList)
+				{
+					CodaScriptNumericDataTypeT FormType = 0;
+
+					CodaScriptCommandExtractArgs(&FormType);
+
+					if (FormType < TESForm::kFormType_GMST || FormType > TESForm::kFormType_TOFT)
+						return false;
+
+					ICodaScriptDataStore* Array = Utilities->ArrayAllocate(200);
+					SME_ASSERT(Array);
+
+					switch ((UInt32)FormType)
+					{
+					case TESForm::kFormType_Global:
+						AddFormToCodaArray(&_DATAHANDLER->globals, Array, Utilities);
+						break;
+					case TESForm::kFormType_Class:
+						AddFormToCodaArray(&_DATAHANDLER->classes, Array, Utilities);
+						break;
+					case TESForm::kFormType_Faction:
+						AddFormToCodaArray(&_DATAHANDLER->factions, Array, Utilities);
+						break;
+					case TESForm::kFormType_Hair:
+						AddFormToCodaArray(&_DATAHANDLER->hairs, Array, Utilities);
+						break;
+					case TESForm::kFormType_Eyes:
+						AddFormToCodaArray(&_DATAHANDLER->eyes, Array, Utilities);
+						break;
+					case TESForm::kFormType_Race:
+						AddFormToCodaArray(&_DATAHANDLER->races, Array, Utilities);
+						break;
+					case TESForm::kFormType_Script:
+						AddFormToCodaArray(&_DATAHANDLER->scripts, Array, Utilities);
+						break;
+					case TESForm::kFormType_LandTexture:
+						AddFormToCodaArray(&_DATAHANDLER->landTextures, Array, Utilities);
+						break;
+					case TESForm::kFormType_Enchantment:
+						AddFormToCodaArray(&_DATAHANDLER->enchantmentItems, Array, Utilities);
+						break;
+					case TESForm::kFormType_Spell:
+						AddFormToCodaArray(&_DATAHANDLER->spellItems, Array, Utilities);
+						break;
+					case TESForm::kFormType_BirthSign:
+						AddFormToCodaArray(&_DATAHANDLER->birthsigns, Array, Utilities);
+						break;
+					case TESForm::kFormType_Weather:
+						AddFormToCodaArray(&_DATAHANDLER->weathers, Array, Utilities);
+						break;
+					case TESForm::kFormType_Climate:
+						AddFormToCodaArray(&_DATAHANDLER->climates, Array, Utilities);
+						break;
+					case TESForm::kFormType_WorldSpace:
+						AddFormToCodaArray(&_DATAHANDLER->worldSpaces, Array, Utilities);
+						break;
+					case TESForm::kFormType_Topic:
+						AddFormToCodaArray(&_DATAHANDLER->topics, Array, Utilities);
+						break;
+					case TESForm::kFormType_Quest:
+						AddFormToCodaArray(&_DATAHANDLER->quests, Array, Utilities);
+						break;
+					case TESForm::kFormType_AnimObject:
+						AddFormToCodaArray(&_DATAHANDLER->objectAnios, Array, Utilities);
+						break;
+					case TESForm::kFormType_CombatStyle:
+						AddFormToCodaArray(&_DATAHANDLER->combatStyles, Array, Utilities);
+						break;
+					case TESForm::kFormType_LoadScreen:
+						AddFormToCodaArray(&_DATAHANDLER->loadScreens, Array, Utilities);
+						break;
+					case TESForm::kFormType_WaterForm:
+						AddFormToCodaArray(&_DATAHANDLER->waterForms, Array, Utilities);
+						break;
+					case TESForm::kFormType_EffectShader:
+						AddFormToCodaArray(&_DATAHANDLER->effectShaders, Array, Utilities);
+						break;
+					case TESForm::kFormType_Package:
+						AddFormToCodaArray(&_DATAHANDLER->packages, Array, Utilities);
+						break;
+					case TESForm::kFormType_GMST:
+						break;
+					case TESForm::kFormType_Skill:
+						for (int i = 0; i < 0x15; i++)
+						{
+							TESSkill* Skill = &_DATAHANDLER->skills[i];
+							Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Skill->formID);
+						}
+
+						break;
+					case TESForm::kFormType_Activator:
+					case TESForm::kFormType_Apparatus:
+					case TESForm::kFormType_Armor:
+					case TESForm::kFormType_Book:
+					case TESForm::kFormType_Clothing:
+					case TESForm::kFormType_Container:
+					case TESForm::kFormType_Door:
+					case TESForm::kFormType_Ingredient:
+					case TESForm::kFormType_Light:
+					case TESForm::kFormType_Misc:
+					case TESForm::kFormType_Static:
+					case TESForm::kFormType_Grass:
+					case TESForm::kFormType_Tree:
+					case TESForm::kFormType_Flora:
+					case TESForm::kFormType_Furniture:
+					case TESForm::kFormType_Weapon:
+					case TESForm::kFormType_Ammo:
+					case TESForm::kFormType_NPC:
+					case TESForm::kFormType_Creature:
+					case TESForm::kFormType_LeveledCreature:
+					case TESForm::kFormType_SoulGem:
+					case TESForm::kFormType_Key:
+					case TESForm::kFormType_AlchemyItem:
+					case TESForm::kFormType_SubSpace:
+					case TESForm::kFormType_SigilStone:
+					case TESForm::kFormType_LeveledItem:
+					case TESForm::kFormType_LeveledSpell:
+						for (TESObject* Itr = _DATAHANDLER->objects->first; Itr; Itr = Itr->next)
+						{
+							if (Itr->formType == FormType)
+								Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Itr->formID);
+						}
+
+						break;
+					case TESForm::kFormType_Cell:
+						break;
+					case TESForm::kFormType_Idle:
+						break;
+					}
+
+					Result->SetArray(Array);
+
+					return true;
+				}
+			}
+		}
 	}
-
-	BEGIN_CSASCOMMAND_PARAMINFO(PrintToConsole, 1)
-	{
-		{ "Message", CSASDataElement::kParamType_String }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(PrintToConsole)
-	{
-		char Buffer[0x400] = {0};
-
-		if (!EXTRACT_CSASARGS(&Buffer))
-			return false;
-
-		DebugPrint(Buffer);
-		return true;
-	}
-	DEFINE_CSASCOMMAND_ALIAS(PrintToConsole, "printC", "Prints a message to the CSE console window", CSASDataElement::kParamType_Invalid, 1);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(FormatNumber, 3)
-	{
-		{ "Format String", CSASDataElement::kParamType_String },
-		{ "Number", CSASDataElement::kParamType_Numeric },
-		{ "Interpret As Unsigned Integer", CSASDataElement::kParamType_Numeric }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(FormatNumber)
-	{
-		char Buffer[0x200] = {0},
-			 OutBuffer[0x32] = {0};
-		double Number = 0.0, InterpretAsUInt32 = 0.0;
-
-		if (!EXTRACT_CSASARGS(&Buffer, &Number, &InterpretAsUInt32))
-			return false;
-
-		if (InterpretAsUInt32 > 0.0 || InterpretAsUInt32 < 0.0)
-			sprintf_s(OutBuffer, sizeof(OutBuffer), Buffer, (UInt32)Number);
-		else
-			sprintf_s(OutBuffer, sizeof(OutBuffer), Buffer, Number);
-
-		Result->SetString(OutBuffer);
-		return true;
-	}
-	DEFINE_CSASCOMMAND_ALIAS(FormatNumber, "fmtNum", "Formats a numeric value as a string", CSASDataElement::kParamType_String, 3);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(TypeOf, 1)
-	{
-		{ "Variable Name", CSASDataElement::kParamType_String }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(TypeOf)
-	{
-		char Buffer[0x400] = {0};
-
-		if (!EXTRACT_CSASARGS(&Buffer))
-			return false;
-
-		ScriptContext* CallingContext = SCRIPTRUNNER->GetExecutingContext();
-		assertR(CallingContext);
-
-		ScriptVariable* Variable = CallingContext->LookupVariableByName(Buffer);
-		if (!Variable)
-			throw std::exception("Invalid variable ID");
-
-		Result->SetNumber(Variable->GetDataType());
-		return true;
-	}
-	DEFINE_CSASCOMMAND(TypeOf, "Returns the type of value stored in a variable", CSASDataElement::kParamType_Numeric, 1);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(GetFormByEditorID, 1)
-	{
-		{ "EditorID", CSASDataElement::kParamType_String }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(GetFormByEditorID)
-	{
-		char Buffer[0x400] = {0};
-
-		if (!EXTRACT_CSASARGS(&Buffer))
-			return false;
-
-		TESForm* Form = TESForm::LookupByEditorID(Buffer);
-
-		Result->SetForm(Form);
-		return true;
-	}
-	DEFINE_CSASCOMMAND_ALIAS(GetFormByEditorID, "refEID", "Fetches the form with the passed editorID", CSASDataElement::kParamType_Reference, 1);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(GetFormByFormID, 1)
-	{
-		{ "FormID", CSASDataElement::kParamType_Numeric }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(GetFormByFormID)
-	{
-		double FormID = 0;
-
-		if (!EXTRACT_CSASARGS(&FormID))
-			return false;
-
-		TESForm* Form = TESForm::LookupByFormID((UInt32)FormID);
-
-		Result->SetForm(Form);
-		return true;
-	}
-	DEFINE_CSASCOMMAND_ALIAS(GetFormByFormID, "refFID", "Fetches the form with the passed formID", CSASDataElement::kParamType_Reference, 1);
-
-	BEGIN_CSASCOMMAND_HANDLER(GetEditorID)
-	{
-		TESForm* Form = NULL;
-
-		if (!EXTRACT_CSASARGS(&Form))
-			return false;
-		else if (!Form)
-			return false;
-
-		Result->SetString((Form->editorID.c_str())?Form->editorID.c_str():"");
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(GetEditorID, "Returns the editorID of the passed form", CSASDataElement::kParamType_String, kParams_OneForm, 1);
-
-	BEGIN_CSASCOMMAND_HANDLER(GetFormType)
-	{
-		TESForm* Form = NULL;
-
-		if (!EXTRACT_CSASARGS(&Form))
-			return false;
-		else if (!Form)
-			return false;
-
-		Result->SetNumber(Form->formType);
-		return true;
-	}
-	DEFINE_CSASCOMMAND_PARAM(GetFormType, "Returns the typeID of the passed form", CSASDataElement::kParamType_Numeric, kParams_OneForm, 1);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(SetEditorID, 2)
-	{
-		{ "Form", CSASDataElement::kParamType_Reference },
-		{ "EditorID", CSASDataElement::kParamType_String }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(SetEditorID)
-	{
-		TESForm* Form = NULL;
-		char Buffer[0x400] = {0};
-
-		if (!EXTRACT_CSASARGS(&Form, &Buffer))
-			return false;
-		else if (!Form)
-			return false;
-
-		if (Buffer)
-			Result->SetNumber(Form->SetEditorID(Buffer));
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND(SetEditorID, "Sets the form's editorID and returns true if succesful", CSASDataElement::kParamType_Numeric, 2);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(SetFormID, 2)
-	{
-		{ "Form", CSASDataElement::kParamType_Reference },
-		{ "FormID", CSASDataElement::kParamType_Numeric }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(SetFormID)
-	{
-		TESForm* Form = NULL;
-		double FormID = 0;
-
-		if (!EXTRACT_CSASARGS(&Form, &FormID))
-			return false;
-		else if (!Form)
-			return false;
-
-		if (FormID && Form->formID != FormID)
-			Form->SetFormID(FormID);
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND(SetFormID, "Sets the form's formID", CSASDataElement::kParamType_Invalid, 2);
-
-	BEGIN_CSASCOMMAND_PARAMINFO(MarkAsModified, 2)
-	{
-		{ "Form", CSASDataElement::kParamType_Reference },
-		{ "Modified Flag", CSASDataElement::kParamType_Numeric }
-	};
-	BEGIN_CSASCOMMAND_HANDLER(MarkAsModified)
-	{
-		TESForm* Form = NULL;
-		double State = 0;
-
-		if (!EXTRACT_CSASARGS(&Form, &State))
-			return false;
-		else if (!Form)
-			return false;
-
-		Form->SetFromActiveFile(State);
-
-		return true;
-	}
-	DEFINE_CSASCOMMAND(MarkAsModified, "Sets the 'Modified' flag on a form", CSASDataElement::kParamType_Invalid, 2);
 }

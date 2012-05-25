@@ -18,24 +18,22 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
-		> Look into the activator bug (blind dump)
-		> Partial black tex hasn't been fixed yet
 		> http://www.darkcreations.org/forums/topic/58-construction-set-extender-beta-test-thread/page__view__findpost__p__90230
-		> Fix undo manger ctd at 0x00431F68; (special marker gets freed); figure out a surefire way to repro this one first
-			^ Think it might been caused by the buggy frozen refs support hooks
+		> Partial black tex hasn't been fixed yet
+		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> [AFTER 6.0] Investigate if f_TESObjectREFR::SetExtraEditorMoveDataPosition/Rotation needs to be called in the batch editor code; Yup, look into 0x005478A0
 		> [AFTER 6.0] Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
 
 
 	ENHANCEMENT		=
-		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Increase preview control rendertarget size
+		> [AFTER 6.0] Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> [AFTER 6.0] Implement a fly camera mode for the render window
 		> [AFTER 6.0] Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> [AFTER 6.0] Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
 
 	CODA			=
-		> GetBaseForm - Ref
+
 	
 	MISC			=
 		> Wrap all editorAPI instance data

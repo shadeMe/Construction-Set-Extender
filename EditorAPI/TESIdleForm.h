@@ -20,6 +20,7 @@ public:
 
 	// methods
 	static void					InitializeIdleFormTreeRootNodes();		// actually belongs to class BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>
+	static void					ResetIdleFormTree();
 };
 
 extern void**					g_IdleFormTree;		// BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>*

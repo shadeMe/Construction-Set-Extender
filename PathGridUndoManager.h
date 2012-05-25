@@ -4,10 +4,13 @@ namespace ConstructionSetExtender
 {
 	class PathGridUndoManager
 	{
+	public:
 		typedef std::vector<TESPathGridPoint*>		PathGridPointVectorT;
 
 		struct PathGridPointUndoProxy
 		{
+			static int								GIC;
+
 			TESPathGridPoint*						Parent;
 			Vector3									Position;
 			TESObjectREFR*							LinkedRef;
@@ -15,8 +18,9 @@ namespace ConstructionSetExtender
 			TESPathGrid*							ParentPathGrid;
 			TESObjectCELL*							ParentCell;
 			UInt8									Operation;
+			bool									Deleted;
 		private:
-			void									CopyToPoint(TESPathGridPoint* Point, bool Update3D = false);
+			void									SyncWithPoint(TESPathGridPoint* Point, bool Update3D = false);
 		public:
 			PathGridPointUndoProxy(const PathGridPointUndoProxy& rhs);
 			PathGridPointUndoProxy(UInt8 Operation, TESPathGridPoint* Parent);
@@ -25,13 +29,15 @@ namespace ConstructionSetExtender
 			void									HandlePathGridPointDeletion(TESPathGridPoint* Point);
 			void									Undo(PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = NULL);
 		};
-
-		typedef tListBase<PathGridPointUndoProxy, false>		UndoProxyListT;
+	private:
+		typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandle;
+		typedef std::list<UndoProxyHandle>						UndoProxyListT;
 		typedef std::stack<UndoProxyListT*>						UndoProxyStackT;
 
 		UndoProxyStackT								UndoStack;
 		UndoProxyStackT								RedoStack;
 		bool										CanReset;
+		bool										WalkingStacks;
 
 		void										ResetStack(UndoProxyStackT* Stack);
 		void										HandlePointDeletionOnStack(UndoProxyStackT* Stack, PathGridPointListT* Selection);
@@ -42,7 +48,7 @@ namespace ConstructionSetExtender
 
 		enum
 		{
-			kOperation_DataChange	= 0x0,
+			kOperation_DataChange	= 0,
 			kOperation_PointCreation,
 			kOperation_PointDeletion
 		};
@@ -53,7 +59,7 @@ namespace ConstructionSetExtender
 		void										HandlePathGridPointDeletion(PathGridPointListT* Selection);
 		void										ResetRedoStack(void);
 		void										ResetUndoStack(void);
-		void										SetCanReset(bool State) { CanReset = State; }
+		void										SetCanReset(bool State);
 
 		static PathGridUndoManager					Instance;
 	};
