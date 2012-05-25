@@ -6,18 +6,37 @@ namespace BGSEditorExtender
 {
 	class BGSEEUIManager;
 
+	class BGSEEWindowHandleCollection
+	{
+		typedef std::list<HWND>					HandleCollectionT;
+		HandleCollectionT						HandleList;
+
+		HandleCollectionT::iterator				Find(HWND Handle);
+	public:
+		BGSEEWindowHandleCollection();
+		~BGSEEWindowHandleCollection();
+
+		bool									Add(HWND Handle);
+		bool									Remove(HWND Handle);
+		bool									GetExists(HWND Handle);
+		void									Clear(void);
+
+		void									SendMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+	};
+
 	class BGSEEWindowSubclasser
 	{
 		friend class BGSEEUIManager;
 	public:
-		typedef LRESULT							(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
-		typedef std::list<SubclassProc>			SubclassProcListT;
+		typedef LRESULT									(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+																				bool& Return, LPARAM& InstanceUserData);
+		typedef std::map<SubclassProc, LPARAM>			SubclassProcMapT;
 
 		struct SubclassData
 		{
-			HWND								Handle;
 			DLGPROC								Original;
-			SubclassProcListT					Subclasses;
+			BGSEEWindowHandleCollection			ActiveHandles;				// open windows using the parent templateID
+			SubclassProcMapT					Subclasses;
 
 			SubclassData();
 
@@ -40,7 +59,7 @@ namespace BGSEditorExtender
 
 		HWND									EditorMainWindow;
 		WNDPROC									EditorMainWindowProc;
-		SubclassProcListT						MainWindowSubclasses;
+		SubclassProcMapT						MainWindowSubclasses;
 		DialogSubclassMapT						DialogSubclasses;
 
 												// returns true if callbacks are registered for the template
@@ -54,10 +73,10 @@ namespace BGSEditorExtender
 		BGSEEWindowSubclasser();
 		~BGSEEWindowSubclasser();
 
-		bool									RegisterMainWindowSubclass(SubclassProc Proc);
+		bool									RegisterMainWindowSubclass(SubclassProc Proc, LPARAM UserData = NULL);
 		bool									UnregisterMainWindowSubclass(SubclassProc Proc);
 
-		bool									RegisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc);
+		bool									RegisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc, LPARAM UserData = NULL);
 		bool									UnregisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc);
 
 		bool									GetHasDialogSubclass(UInt32 TemplateID);
@@ -97,22 +116,6 @@ namespace BGSEditorExtender
 
 		bool									RegisterTemplateReplacer(UInt32 TemplateID, HINSTANCE Replacer);
 		bool									UnregisterTemplateReplacer(UInt32 TemplateID);
-	};
-
-	class BGSEEWindowHandleCollection
-	{
-		typedef std::list<HWND>					HandleCollectionT;
-		HandleCollectionT						HandleList;
-
-		HandleCollectionT::iterator				Find(HWND Handle);
-	public:
-		BGSEEWindowHandleCollection();
-		~BGSEEWindowHandleCollection();
-
-		bool									Add(HWND Handle);
-		bool									Remove(HWND Handle);
-		bool									GetExists(HWND Handle);
-		void									Clear(void);
 	};
 
 	class BGSEEWindowStyler

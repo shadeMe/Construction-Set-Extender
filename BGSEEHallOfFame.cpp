@@ -33,8 +33,8 @@ namespace BGSEditorExtender
 				(*Itr)->Deinitialize();
 				delete *Itr;
 			}
-			Inductees.clear();
 
+			Inductees.clear();
 			Initialized = false;
 
 			Singleton = NULL;

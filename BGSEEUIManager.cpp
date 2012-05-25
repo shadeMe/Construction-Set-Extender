@@ -6,9 +6,73 @@ namespace BGSEditorExtender
 {
 #define WM_SUBCLASSER_RELEASE		((WM_USER) + 0x100)
 
+	BGSEEWindowHandleCollection::HandleCollectionT::iterator BGSEEWindowHandleCollection::Find( HWND Handle )
+	{
+		for (HandleCollectionT::iterator Itr = HandleList.begin(); Itr != HandleList.end(); Itr++)
+		{
+			if (*Itr == Handle)
+				return Itr;
+		}
+
+		return HandleList.end();
+	}
+
+	bool BGSEEWindowHandleCollection::Add( HWND Handle )
+	{
+		if (GetExists(Handle) == false)
+		{
+			HandleList.push_back(Handle);
+			return true;
+		}
+		else
+			return false;
+	}
+
+	bool BGSEEWindowHandleCollection::Remove( HWND Handle )
+	{
+		HandleCollectionT::iterator Match = Find(Handle);
+		if (Match != HandleList.end())
+		{
+			HandleList.erase(Match);
+			return true;
+		}
+		else
+			return false;
+	}
+
+	bool BGSEEWindowHandleCollection::GetExists( HWND Handle )
+	{
+		return Find(Handle) != HandleList.end();
+	}
+
+	void BGSEEWindowHandleCollection::Clear( void )
+	{
+		HandleList.clear();
+	}
+
+	BGSEEWindowHandleCollection::BGSEEWindowHandleCollection() :
+		HandleList()
+	{
+		;//
+	}
+
+	BGSEEWindowHandleCollection::~BGSEEWindowHandleCollection()
+	{
+		Clear();
+	}
+
+	void BGSEEWindowHandleCollection::SendMessage( UINT Msg, WPARAM wParam, LPARAM lParam )
+	{
+		// need to operate on a buffer as the handle list can be modified inside a subclass callback
+		HandleCollectionT Buffer(HandleList);
+
+		for (HandleCollectionT::iterator Itr = Buffer.begin(); Itr != Buffer.end(); Itr++)
+			::SendMessage(*Itr, Msg, wParam, lParam);
+	}
+
 	BGSEEWindowSubclasser::SubclassData::SubclassData() :
-		Handle(NULL),
 		Original(NULL),
+		ActiveHandles(),
 		Subclasses()
 	{
 		;//
@@ -19,9 +83,9 @@ namespace BGSEditorExtender
 		INT_PTR Result = FALSE;
 		bool ReturnMark = Return;
 
-		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		for (SubclassProcMapT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
 		{
-			INT_PTR CurrentResult = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark);
+			INT_PTR CurrentResult = (INT_PTR)Itr->first(hWnd, uMsg, wParam, lParam, ReturnMark, Itr->second);
 
 			if (ReturnMark && Return == false)
 			{
@@ -47,9 +111,9 @@ namespace BGSEditorExtender
 			return TRUE;
 		}
 
-		for (SubclassProcListT::iterator Itr = Instance->MainWindowSubclasses.begin(); Itr != Instance->MainWindowSubclasses.end(); Itr++)
+		for (SubclassProcMapT::iterator Itr = Instance->MainWindowSubclasses.begin(); Itr != Instance->MainWindowSubclasses.end(); Itr++)
 		{
-			CallbackResult = (*Itr)(hWnd, uMsg, wParam, lParam, CallbackReturn);
+			CallbackResult = Itr->first(hWnd, uMsg, wParam, lParam, CallbackReturn, Itr->second);
 		}
 
 		if (CallbackReturn && uMsg != WM_DESTROY)
@@ -72,6 +136,13 @@ namespace BGSEditorExtender
 				{
 					SetWindowLong(hWnd, DWL_USER, (LONG)lParam);
 					UserData = (SubclassUserData*)lParam;
+
+					if (UserData->Initialized == false)
+					{
+						bool AddResult = UserData->Data->ActiveHandles.Add(hWnd);
+						SME_ASSERT(AddResult);
+					}
+
 					UserData->Initialized = true;
 				}
 
@@ -94,6 +165,9 @@ namespace BGSEditorExtender
 				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, SkipCallback);
 				if (uMsg != WM_SUBCLASSER_RELEASE)
 					DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, lParam);
+
+				bool RemoveResult = UserData->Data->ActiveHandles.Remove(hWnd);
+				SME_ASSERT(RemoveResult);
 
 				SetWindowLong(hWnd, DWL_USER, NULL);
 				SetWindowLong(hWnd, GWL_WNDPROC, (LONG)UserData->Data->Original);
@@ -170,30 +244,29 @@ namespace BGSEditorExtender
 
 		for (DialogSubclassMapT::iterator Itr = DialogSubclasses.begin(); Itr != DialogSubclasses.end(); Itr++)
 		{
-			if (Itr->second.Handle)
-				SendMessage(Itr->second.Handle, WM_SUBCLASSER_RELEASE, NULL, NULL);
+			Itr->second.ActiveHandles.SendMessage(WM_SUBCLASSER_RELEASE, NULL, NULL);
 		}
 
 		DialogSubclasses.clear();
 	}
 
-	bool BGSEEWindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc )
+	bool BGSEEWindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc, LPARAM UserData )
 	{
-		for (SubclassProcListT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
+		for (SubclassProcMapT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
 		{
-			if ((*Itr) == Proc)
+			if (Itr->first == Proc)
 				return false;
 		}
 
-		MainWindowSubclasses.push_back(Proc);
+		MainWindowSubclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
 		return true;
 	}
 
 	bool BGSEEWindowSubclasser::UnregisterMainWindowSubclass( SubclassProc Proc )
 	{
-		for (SubclassProcListT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
+		for (SubclassProcMapT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
 		{
-			if ((*Itr) == Proc)
+			if (Itr->first == Proc)
 			{
 				MainWindowSubclasses.erase(Itr);
 				return true;
@@ -203,23 +276,23 @@ namespace BGSEditorExtender
 		return false;
 	}
 
-	bool BGSEEWindowSubclasser::RegisterDialogSubclass( UInt32 TemplateID, SubclassProc Proc )
+	bool BGSEEWindowSubclasser::RegisterDialogSubclass( UInt32 TemplateID, SubclassProc Proc, LPARAM UserData )
 	{
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 		{
-			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
-				if ((*Itr) == Proc)
+				if (Itr->first == Proc)
 					return false;
 			}
 
-			Match->second.Subclasses.push_back(Proc);
+			Match->second.Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
 		}
 		else
 		{
 			DialogSubclasses.insert(std::make_pair<UInt32, SubclassData>(TemplateID, SubclassData()));
-			DialogSubclasses[TemplateID].Subclasses.push_back(Proc);
+			DialogSubclasses[TemplateID].Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
 		}
 
 		return true;
@@ -230,9 +303,9 @@ namespace BGSEditorExtender
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 		{
-			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
-				if ((*Itr) == Proc)
+				if (Itr->first == Proc)
 				{
 					MainWindowSubclasses.erase(Itr);
 					return true;
@@ -352,61 +425,6 @@ namespace BGSEditorExtender
 		}
 		else
 			return false;
-	}
-
-	BGSEEWindowHandleCollection::HandleCollectionT::iterator BGSEEWindowHandleCollection::Find( HWND Handle )
-	{
-		for (HandleCollectionT::iterator Itr = HandleList.begin(); Itr != HandleList.end(); Itr++)
-		{
-			if (*Itr == Handle)
-				return Itr;
-		}
-
-		return HandleList.end();
-	}
-
-	bool BGSEEWindowHandleCollection::Add( HWND Handle )
-	{
-		if (GetExists(Handle) == false)
-		{
-			HandleList.push_back(Handle);
-			return true;
-		}
-		else
-			return false;
-	}
-
-	bool BGSEEWindowHandleCollection::Remove( HWND Handle )
-	{
-		HandleCollectionT::iterator Match = Find(Handle);
-		if (Match != HandleList.end())
-		{
-			HandleList.erase(Match);
-			return true;
-		}
-		else
-			return false;
-	}
-
-	bool BGSEEWindowHandleCollection::GetExists( HWND Handle )
-	{
-		return Find(Handle) != HandleList.end();
-	}
-
-	void BGSEEWindowHandleCollection::Clear( void )
-	{
-		HandleList.clear();
-	}
-
-	BGSEEWindowHandleCollection::BGSEEWindowHandleCollection() :
-		HandleList()
-	{
-		;//
-	}
-
-	BGSEEWindowHandleCollection::~BGSEEWindowHandleCollection()
-	{
-		Clear();
 	}
 
 	bool BGSEEWindowStyler::StyleWindow( HWND Window, UInt32 Template )
@@ -612,9 +630,6 @@ namespace BGSEditorExtender
 
 		if (Result)
 		{
-			if (UserData)
-				UserData->Data->Handle = Result;
-
 			BGSEEUI->WindowStyler->StyleWindow(Result, (UInt32)lpTemplateName);
 		}
 
