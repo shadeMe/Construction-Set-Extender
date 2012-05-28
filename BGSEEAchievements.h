@@ -22,6 +22,7 @@ namespace BGSEditorExtender
 			const char*					Name;
 			const char*					Description;
 			UInt8						State;
+			DWORD						ExtraData;
 			UInt32						IconID;
 
 										// called by the manager before unlocking the achievement, return false to remain locked
@@ -51,7 +52,8 @@ namespace BGSEditorExtender
 
 			static BGSEEAchievementManager*				Singleton;
 
-			std::string									RegistryKey;
+			std::string									RegistryKeyRoot;
+			std::string									RegistryKeyExtraData;
 			ExtenderAchievementListT					AchievementDepot;
 			HINSTANCE									ResourceInstance;
 			bool										Initialized;
@@ -61,8 +63,8 @@ namespace BGSEditorExtender
 			void										SaveAchievementState(BGSEEAchievement* Achievement);
 			void										LoadAchievementState(BGSEEAchievement* Achievement);
 
-			bool										GetRegValue(const char* Name, UInt32* OutValue);
-			bool										SetRegValue(const char* Name, UInt32 Value);
+			bool										GetRegValue(const char* Name, UInt32* OutValue, const char* Key);
+			bool										SetRegValue(const char* Name, UInt32 Value, const char* Key);
 		public:
 			~BGSEEAchievementManager();
 

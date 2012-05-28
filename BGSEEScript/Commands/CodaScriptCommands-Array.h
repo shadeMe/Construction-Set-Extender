@@ -13,7 +13,7 @@ namespace BGSEditorExtender
 
 				CodaScriptParametricCommandPrototype(ArrayCreate,
 					"ArCreate",
-					"Creates an empty array with the passed size",
+					"Creates an empty array and reserves as many elements as the passed size. Note that new elements are to be appended, not inserted by index, as the command doesn't initialize the array.",
 					0,
 					1,
 					OneNumber,

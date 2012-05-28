@@ -78,6 +78,13 @@ namespace BGSEditorExtender
 		{
 			static const UInt32							kMaxRecursionLimit;
 
+			static const char*											kINISection;
+			static const BGSEEINIManagerSettingFactory::SettingData		kINISettings[1];
+			enum
+			{
+				kExecutiveINISetting_Profiling			= 0,
+			};
+
 			CodaScriptExecutionContextStackT			ExecutionStack;
 			CodaScriptProfiler							Profiler;
 			DWORD										OwnerThreadID;
@@ -88,6 +95,8 @@ namespace BGSEditorExtender
 
 			bool										Execute(CodaScriptExecutionContext* Context, CodaScriptBackingStore* Result, bool& ReturnedResult);
 			CodaScriptExecutionContext*					GetExecutingContext(void);
+
+			static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
 		};
 
 		class CodaScriptBackgrounder : public ICodaScriptObject
@@ -217,7 +226,6 @@ namespace BGSEditorExtender
 			CodaScriptMessageHandler*					MsgHdlr(void);
 		};
 #define CODAVM											BGSEditorExtender::BGSEEScript::CodaScriptVM::GetSingleton()
-#define CODAVM_ENABLEPROFILER							0
 
 		class CodaScriptObjectFactory
 		{

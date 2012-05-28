@@ -622,6 +622,7 @@ namespace BGSEditorExtender
 		ExtenderModuleHandle = (HINSTANCE)GetModuleHandle(ExtenderDLLPath.c_str());
 
 		INISettingFactoryList.push_back(BGSEEScript::CodaScriptBackgrounder::GetINIFactory());
+		INISettingFactoryList.push_back(BGSEEScript::CodaScriptExecutive::GetINIFactory());
 		INISettingFactoryList.push_back(BGSEEConsole::GetINIFactory());
 
 		ExtenderINIManager = new BGSEEINIManager();

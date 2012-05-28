@@ -1,6 +1,7 @@
 #include "CodaVM.h"
 #include "CodaInterpreter.h"
 #include "BGSEEUIManager.h"
+#include "BGSEEMain.h"
 #include "BGSEditorExtenderBase_Resource.h"
 
 #include "MUP Implementation\CodaMUPArrayDataType.h"
@@ -322,7 +323,12 @@ namespace BGSEditorExtender
 			BGSEECONSOLE_MESSAGE(Buffer);
 		}
 
-		const UInt32		CodaScriptExecutive::kMaxRecursionLimit = 30;
+		const UInt32											CodaScriptExecutive::kMaxRecursionLimit = 30;
+		const char*												CodaScriptExecutive::kINISection = "CodaExecutive";
+		const BGSEEINIManagerSettingFactory::SettingData		CodaScriptExecutive::kINISettings[1] =
+		{
+			{ "Profiling",			"0",		"Profile script execution" }
+		};
 
 		CodaScriptExecutive::CodaScriptExecutive( CodaScriptMessageHandler* MsgHdlr ) :
 			ICodaScriptObject(),
@@ -351,19 +357,23 @@ namespace BGSEditorExtender
 				return false;
 			}
 
-#if CODAVM_ENABLEPROFILER == 1
-			Profiler.BeginProfiling();
-#endif
+			bool ProfilerEnabled = atoi(BGSEEMAIN->INIGetter()(kINISettings[kExecutiveINISetting_Profiling].Key, kINISection));
+
+			if (ProfilerEnabled)
+			{
+				Profiler.BeginProfiling();
+			}
 
 			ExecutionStack.push(Context);
 			CodaScriptSyntaxTreeExecuteVisitor Visitor(Context->VirtualMachine, Context, Context->BoundParser);
 			bool ExecuteResult = Context->Execute(&Visitor, Result, ReturnedResult);
 			ExecutionStack.pop();
 
-#if CODAVM_ENABLEPROFILER == 1
-			double ElapsedTime = Profiler.EndProfiling() * 1.0;
-			MessageHandler->LogMsg("Profiler: %s [%.4f ms]", Context->ScriptName.c_str(), ElapsedTime);
-#endif
+			if (ProfilerEnabled)
+			{
+				double ElapsedTime = Profiler.EndProfiling() * 1.0;
+				MessageHandler->LogMsg("Profiler: %s [%.4f ms]", Context->ScriptName.c_str(), ElapsedTime);
+			}
 
 			return ExecuteResult;
 		}
@@ -374,6 +384,17 @@ namespace BGSEditorExtender
 				return ExecutionStack.top();
 			else
 				return NULL;
+		}
+
+		BGSEEINIManagerSettingFactory* CodaScriptExecutive::GetINIFactory( void )
+		{
+			static BGSEEINIManagerSettingFactory kFactory(kINISection);
+			if (kFactory.Settings.size() == 0)
+			{
+				kFactory.Settings.push_back(&kINISettings[kExecutiveINISetting_Profiling]);
+			}
+
+			return &kFactory;
 		}
 
 		const char*												CodaScriptBackgrounder::kINISection = "CodaBackgrounder";

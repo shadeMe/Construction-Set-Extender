@@ -12,6 +12,7 @@ namespace BGSEditorExtender
 			Name(Title),
 			Description(Desc),
 			State(kState_Locked),
+			ExtraData(NULL),
 			IconID(IconID)
 		{
 			SME_ASSERT(Name && Desc && GUID);
@@ -40,7 +41,8 @@ namespace BGSEditorExtender
 		BGSEEAchievementManager*			BGSEEAchievementManager::Singleton = NULL;
 
 		BGSEEAchievementManager::BGSEEAchievementManager() :
-			RegistryKey(""),
+			RegistryKeyRoot(""),
+			RegistryKeyExtraData(""),
 			AchievementDepot(),
 			ResourceInstance(0),
 			Initialized(false)
@@ -50,47 +52,59 @@ namespace BGSEditorExtender
 
 		void BGSEEAchievementManager::SaveAchievementState( BGSEEAchievement* Achievement )
 		{
-			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->State);
+			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->State, RegistryKeyRoot.c_str());
+			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->ExtraData, RegistryKeyExtraData.c_str());
 		}
 
 		void BGSEEAchievementManager::LoadAchievementState( BGSEEAchievement* Achievement )
 		{
 			UInt32 State = 0;
+			DWORD ExtraData = NULL;
 
-			if (GetRegValue(Achievement->BaseIDString.c_str(), &State))
+			if (GetRegValue(Achievement->BaseIDString.c_str(), &State, RegistryKeyRoot.c_str()))
 			{
 				if (State)
 					Achievement->State = State;
 			}
 			else
 			{
-				SetRegValue(Achievement->BaseIDString.c_str(), 0);
+				SetRegValue(Achievement->BaseIDString.c_str(), 0, RegistryKeyRoot.c_str());
 				Achievement->State = BGSEEAchievement::kState_Locked;
+			}
+
+			if (GetRegValue(Achievement->BaseIDString.c_str(), &ExtraData, RegistryKeyExtraData.c_str()) == FALSE)
+			{
+				Achievement->ExtraData = NULL;
+				SetRegValue(Achievement->BaseIDString.c_str(), 0, RegistryKeyExtraData.c_str());
+			}
+			else
+			{
+				Achievement->ExtraData = ExtraData;
 			}
 		}
 
-		bool BGSEEAchievementManager::GetRegValue( const char* Name, UInt32* OutValue )
+		bool BGSEEAchievementManager::GetRegValue( const char* Name, UInt32* OutValue, const char* Key )
 		{
-			HKEY BaseAchievementKey = NULL;
+			HKEY AchievementKey = NULL;
 
-			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, RegistryKey.c_str(), NULL, KEY_ALL_ACCESS, &BaseAchievementKey) == ERROR_SUCCESS)
+			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
 			{
 				UInt32 Type = 0, Size = 4;
 
-				if (RegQueryValueEx(BaseAchievementKey, Name, NULL, &Type, (LPBYTE)OutValue, &Size) == ERROR_SUCCESS)
+				if (RegQueryValueEx(AchievementKey, Name, NULL, &Type, (LPBYTE)OutValue, &Size) == ERROR_SUCCESS)
 					return true;
 			}
 
 			return false;
 		}
 
-		bool BGSEEAchievementManager::SetRegValue( const char* Name, UInt32 Value )
+		bool BGSEEAchievementManager::SetRegValue( const char* Name, UInt32 Value, const char* Key )
 		{
-			HKEY BaseAchievementKey = NULL;
+			HKEY AchievementKey = NULL;
 
-			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, RegistryKey.c_str(), NULL, KEY_ALL_ACCESS, &BaseAchievementKey) == ERROR_SUCCESS)
+			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
 			{
-				if (RegSetValueEx(BaseAchievementKey, Name, NULL, REG_DWORD, (const BYTE*)&Value, REG_DWORD) == ERROR_SUCCESS)
+				if (RegSetValueEx(AchievementKey, Name, NULL, REG_DWORD, (const BYTE*)&Value, REG_DWORD) == ERROR_SUCCESS)
 					return true;
 			}
 
@@ -100,7 +114,10 @@ namespace BGSEditorExtender
 		BGSEEAchievementManager::~BGSEEAchievementManager()
 		{
 			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			{
+				SaveAchievementState(*Itr);
 				delete *Itr;
+			}
 
 			AchievementDepot.clear();
 			Initialized = false;
@@ -124,14 +141,32 @@ namespace BGSEditorExtender
 			SME_ASSERT(ExtenderLongName && ResourceInstance);
 
 			this->Initialized = true;
-			this->RegistryKey = "Software\\Imitation Camel\\" + std::string(ExtenderLongName) + "\\Achievements\\";
+			this->RegistryKeyRoot = "Software\\Imitation Camel\\" + std::string(ExtenderLongName) + "\\Achievements\\";
+			this->RegistryKeyExtraData = RegistryKeyRoot + "ExtraData\\";
 			this->ResourceInstance = ResourceInstance;
 			this->AchievementDepot = Achievements;
 
-			HKEY BaseAchievementKey = NULL;
-			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, RegistryKey.c_str(), NULL, NULL, NULL, KEY_ALL_ACCESS , NULL, &BaseAchievementKey, NULL) != ERROR_SUCCESS)
+			HKEY BaseAchievementKey = NULL, ExtraDataAchievementKey = NULL;
+			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+							RegistryKeyRoot.c_str(),
+							NULL, NULL, NULL,
+							KEY_ALL_ACCESS,
+							NULL,
+							&BaseAchievementKey,
+							NULL) != ERROR_SUCCESS)
 			{
-				BGSEECONSOLE_ERROR("Couldn't create base registry key!");
+				BGSEECONSOLE_ERROR("Couldn't create root registry key!");
+			}
+
+			if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+							RegistryKeyExtraData.c_str(),
+							NULL, NULL, NULL,
+							KEY_ALL_ACCESS,
+							NULL,
+							&ExtraDataAchievementKey,
+							NULL) != ERROR_SUCCESS)
+			{
+				BGSEECONSOLE_ERROR("Couldn't create extradata registry key!");
 			}
 
 			UInt32 UnlockedCount = 0;
@@ -170,7 +205,10 @@ namespace BGSEditorExtender
 			if (TriggerOnly == false)
 			{
 				if (ForceUnlock == false && Achievement->UnlockCallback(this) == false)
+				{
+					Achievement->State = BGSEEAchievement::kState_Locked;
 					return;
+				}
 
 				Achievement->State = BGSEEAchievement::kState_Unlocked;
 
@@ -215,9 +253,10 @@ namespace BGSEditorExtender
 				}
 
 				break;
-			case WM_KEYDOWN:
-			case WM_LBUTTONDOWN:
-			case WM_RBUTTONDOWN:
+			case WM_KEYUP:
+			case WM_LBUTTONUP:
+			case WM_RBUTTONUP:
+			case WM_MBUTTONUP:
 				SendMessage(hWnd, WM_CLOSE, NULL, NULL);
 				break;
 			case WM_CTLCOLORDLG:
