@@ -3,6 +3,7 @@
 #include "RefactorTools.h"
 #include "AvalonEditTextEditor.h"
 #include "IntelliSense\IntelliSenseDatabase.h"
+#include "IntelliSense\IntelliSenseItem.h"
 
 #include "[Common]\HandShakeStructs.h"
 #include "[Common]\ListViewUtilities.h"
@@ -1991,8 +1992,14 @@ namespace ConstructionSetExtender
 								String^ Token = LocalParser->Tokens[i];
 								String^ Delimiter = "" + LocalParser->Delimiters[i];
 
-								if (LocalParser->GetCommentTokenIndex(i) == -1 && ISDB->GetIsIdentifierScriptCommand(Token))
-									SanitizedScriptText += ISDB->SanitizeCommandIdentifier(Token);
+								if (LocalParser->GetCommentTokenIndex(i) == -1)
+								{
+									IntelliSenseItemVariable^ LocalVar = TextEditor->GetIntelliSenseInterface()->LookupLocalVariableByIdentifier(Token);
+									if (LocalVar != nullptr)
+										SanitizedScriptText += LocalVar->GetIdentifier();
+									else
+										SanitizedScriptText += ISDB->SanitizeIdentifier(Token);
+								}
 								else
 									SanitizedScriptText += Token;
 
@@ -2696,7 +2703,8 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::OpenScript()
 		{
-			ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Open, CurrentScriptEditorID);
+			ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Open,
+																		(GetIsUninitialized() ? "" : CurrentScriptEditorID));
 			if (Data && PerformHouseKeeping())
 			{
 				UpdateEnvironment(Data, true);
@@ -2772,7 +2780,8 @@ namespace ConstructionSetExtender
 		{
 			if (PerformHouseKeeping())
 			{
-				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Delete, CurrentScriptEditorID);
+				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Open,
+																		(GetIsUninitialized() ? "" : CurrentScriptEditorID));
 				if (Data)
 				{
 					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(Data->EditorID);
@@ -3893,7 +3902,7 @@ namespace ConstructionSetExtender
 			}
 			else
 			{
-				if (OffsetViewer->Show())
+				if (OffsetViewer->Show((TextEditor->GetCaretPos() != -1 ? TextEditor->GetCaretPos() : 0)))
 					ToolBarShowOffsets->Checked = true;
 			}
 		}
@@ -3911,7 +3920,7 @@ namespace ConstructionSetExtender
 				String^ PreprocessedText = "";
 				if (PreprocessScriptText(PreprocessedText))
 				{
-					PreprocessedTextViewer->Show(PreprocessedText);
+					PreprocessedTextViewer->Show(PreprocessedText, (TextEditor->GetCaretPos() != -1 ? TextEditor->GetCaretPos() : 0));
 					ToolBarShowPreprocessedText->Checked = true;
 				}
 				else

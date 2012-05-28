@@ -73,7 +73,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(InvalidateSubwindowBuilding, "invalidates the parent window during subwindow construction to improve performance");
 		_DeclareMemHdlr(SubwindowTemplateHotSwap, "adds support for the hotswapping of subwindow dialog templates");
 		_DeclareMemHdlr(CellViewInitDialog, "prevents the default handler from screwing with the new controls");
-		_DeclareMemHdlr(TESObjectCELLGetDataFromDialog, "fixes a bug that caused unnecessary additions of cell water height/type extra data to cells");
 		_DeclareMemHdlr(TESQuestWindowResize, "prevents quest edit window from being resized unnecessarily");
 
 		UInt8 __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);

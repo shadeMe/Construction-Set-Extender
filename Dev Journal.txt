@@ -45,7 +45,6 @@ SE		---->
 		> Workspace deallocs sometimes go unnoticed by the manager, leading it to think there are active instances
 
 	ENHANCEMENT		=
-		> [AFTER 6.0] New sanitze function: Anneal identifier casing - Fixup editorIds, var names and command IDs
 		> [AFTER 6.0] A code snippets manager, integrated into IntelliSense
 
 	MISC			=

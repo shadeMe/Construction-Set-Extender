@@ -25,7 +25,6 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseInterface
 		{
 		protected:
-
 			void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 			void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
@@ -34,7 +33,6 @@ namespace ConstructionSetExtender
 
 			static ToolTip^										InfoToolTip = gcnew ToolTip();
 
-			IntelliSenseItemVariable^							LookupLocalVariableByIdentifier(String^% Identifier);
 			bool												ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location);
 
 			void												DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
@@ -105,6 +103,7 @@ namespace ConstructionSetExtender
 
 			void												AddLocalVariableToDatabase(IntelliSenseItemVariable^ Variable);
 			void												ClearLocalVariableDatabase();
+			IntelliSenseItemVariable^							LookupLocalVariableByIdentifier(String^% Identifier);
 		};
 	}
 }

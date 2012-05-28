@@ -176,7 +176,7 @@ bool TESDataHandler::SavePlugin( const char* FileName /*= NULL*/, bool AsESM /*=
 	return thisCall<bool>(0x0047E9B0, this, FileName, AsESM);
 }
 
-void TES::LoadCellIntoViewPort(Vector3* CameraCoordData, TESObjectREFR* Reference)
+void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);
 }

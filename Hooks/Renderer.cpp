@@ -1100,9 +1100,31 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall DoInitialCellLoadCameraPositionHook(void)
+		void __stdcall DoInitialCellLoadCameraPositionHook(TESObjectCELL* Cell)
 		{
-			SendMessage(*g_HWND_RenderWindow, 0x40D, NULL, (LPARAM)&Vector3(0.0, 0.0, -8192.0));
+			static const Vector3 kDepletedMan(0.0, 0.0, 0.0), kNotSoDepletedMan(0.0, 0.0, -8192.0);
+
+			if (Cell->objectList.Count())
+			{
+				TESObjectREFR* FirstRef = NULL;
+
+				for (TESObjectCELL::ObjectREFRList::Iterator Itr = Cell->objectList.Begin(); Itr.End() == false && Itr.Get(); ++Itr)
+				{
+					if (FirstRef == NULL)
+						FirstRef = Itr.Get();
+
+					if ((FirstRef->formID & 0xFFFFFF) > (Itr->formID & 0xFFFFFF))
+						FirstRef = Itr.Get();
+				}
+
+				if (FirstRef)
+				{
+					_TES->LoadCellIntoViewPort(&kDepletedMan, FirstRef);
+					return;
+				}
+			}
+
+			SendMessage(*g_HWND_RenderWindow, 0x40D, NULL, (LPARAM)&kNotSoDepletedMan);
 		}
 
 		#define _hhName		InitialCellLoadCameraPosition
@@ -1119,6 +1141,7 @@ namespace ConstructionSetExtender
 
 				jmp		[_hhGetVar(Retn)]
 			FIX:
+				push	ecx
 				call	DoInitialCellLoadCameraPositionHook
 				jmp		[_hhGetVar(Jump)]
 			}

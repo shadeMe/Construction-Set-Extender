@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 			void												RegisterDeveloperURL(String^% CmdName, String^% URL);
 			String^												LookupDeveloperURLByCommand(String^% CmdName);
 
-			String^												SanitizeCommandIdentifier(String^% CmdName);
+			String^												SanitizeIdentifier(String^% Name);
 
 			Script^												CacheRemoteScript(String^ BaseEditorID, String^ ScriptText);	// returns the cached script
 			IntelliSenseItem^									LookupRemoteScriptVariable(String^ BaseEditorID, String^ Variable);

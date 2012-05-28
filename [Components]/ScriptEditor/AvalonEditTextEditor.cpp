@@ -639,6 +639,11 @@ namespace ConstructionSetExtender
 			{
 				return TextField->Document->LineCount;
 			}
+
+			IntelliSense::IntelliSenseInterface^ AvalonEditTextEditor::GetIntelliSenseInterface( void )
+			{
+				return IntelliSenseBox;
+			}
 #pragma endregion
 
 #pragma region Methods

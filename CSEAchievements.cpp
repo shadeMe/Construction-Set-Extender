@@ -28,6 +28,29 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		void CSEAchievementTimeLapsed::ResetTimer( void )
+		{
+			if (TimerID)
+			{
+				KillTimer(NULL, TimerID);
+				TimerID = 0;
+			}
+		}
+
+		CSEAchievementTimeLapsed::CSEAchievementTimeLapsed( const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt32 ReqdHours ) :
+			CSEAchievementBase(Name, Desc, IconID, GUID),
+			TimerID(0),
+			TickCount(GetTickCount()),
+			HoursRequired(ReqdHours)
+		{
+			;//
+		}
+
+		CSEAchievementTimeLapsed::~CSEAchievementTimeLapsed()
+		{
+			ResetTimer();
+		}
+
 		CSEAchievementCheat*	CSEAchievementCheat::Singleton = NULL;
 
 		VOID CALLBACK CSEAchievementCheat::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
@@ -43,21 +66,12 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void CSEAchievementCheat::ResetTimer( void )
-		{
-			if (TimerID)
-			{
-				KillTimer(NULL, TimerID);
-				TimerID = 0;
-			}
-		}
-
 		CSEAchievementCheat::CSEAchievementCheat( UInt32 ReqdHours ) :
-			CSEAchievementBase("Cheat", "Managed to complete a 6 hour long CS session without any CTDs",
-														IDB_ACHIEVEMENT_CHEAT, "0F7F9D05-9679-4E75-9AE3-0B419E6C813A"),
-			TimerID(0),
-			TickCount(GetTickCount()),
-			HoursRequired(ReqdHours)
+			CSEAchievementTimeLapsed("Cheat",
+									"Managed to complete a 6 hour long CS session without any CTDs",
+									IDB_ACHIEVEMENT_CHEAT,
+									"0F7F9D05-9679-4E75-9AE3-0B419E6C813A",
+									ReqdHours)
 		{
 			TimerID = SetTimer(NULL, NULL, 60 * 1000, TimerCallback);
 			SME_ASSERT(TimerID);
@@ -65,8 +79,6 @@ namespace ConstructionSetExtender
 
 		CSEAchievementCheat::~CSEAchievementCheat()
 		{
-			ResetTimer();
-
 			Singleton = NULL;
 		}
 
@@ -76,6 +88,47 @@ namespace ConstructionSetExtender
 				Singleton = new CSEAchievementCheat(6);
 
 			return Singleton;
+		}
+
+		CSEAchievementLost*		CSEAchievementLost::Singleton = NULL;
+
+		VOID CALLBACK CSEAchievementLost::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
+		{
+			CSEAchievementLost::GetSingleton()->ExtraData += dwTime - CSEAchievementLost::GetSingleton()->TickCount;
+
+			if (CSEAchievementLost::GetSingleton()->ExtraData / (3600 * 1000) >= CSEAchievementLost::GetSingleton()->HoursRequired)
+			{
+				BGSEEACHIEVEMENTS->Unlock(CSEAchievementLost::GetSingleton());
+			}
+		}
+
+		CSEAchievementLost::CSEAchievementLost( UInt32 ReqdHours ) :
+			CSEAchievementTimeLapsed("Lost",
+									"You spend far too much time with the editor, man!",
+									IDB_ACHIEVEMENT_LOST,
+									"40AB6814-1B55-4906-A564-74E9E37BC2EC",
+									ReqdHours)
+		{
+			TimerID = SetTimer(NULL, NULL, 5 * 60 * 1000, TimerCallback);
+			SME_ASSERT(TimerID);
+		}
+
+		CSEAchievementLost::~CSEAchievementLost()
+		{
+			Singleton = NULL;
+		}
+
+		CSEAchievementLost* CSEAchievementLost::GetSingleton()
+		{
+			if (Singleton == NULL)
+				Singleton = new CSEAchievementLost(1280);
+
+			return Singleton;
+		}
+
+		float CSEAchievementLost::GetLoggedHours( void ) const
+		{
+			return ExtraData / (3600.0 * 1000.0);
 		}
 
 		bool CSEAchievementIncremented::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
@@ -100,7 +153,6 @@ namespace ConstructionSetExtender
 		}
 
 		CSEAchievementBase*			kTheWiseOne				= NULL;
-		CSEAchievementBase*			kCheat					= NULL;
 		CSEAchievementBase*			kFearless				= NULL;
 		CSEAchievementBase*			kAutomaton				= NULL;
 		CSEAchievementBase*			kHeretic				= NULL;
@@ -128,8 +180,6 @@ namespace ConstructionSetExtender
 
 			kTheWiseOne				= new CSEAchievementBase("The Wise One", "Installed the Construction Set Extender",
 															IDB_ACHIEVEMENT_THEWISEONE, "F6B59632-FD01-4762-866C-25A91AB5157D");
-
-			kCheat					= CSEAchievementCheat::GetSingleton();
 
 			kFearless				= new CSEAchievementBase("Fearless", "Set Oblivion.esm as the active file and hit the 'OK' button",
 															IDB_ACHIEVEMENT_FEARLESS, "66DC462C-46E6-438D-8F3C-0DBFB1FD8889");
@@ -193,7 +243,6 @@ namespace ConstructionSetExtender
 			AchievementDepot.push_back(CSEAchievementBase::AllClearAchievement);
 
 			AchievementDepot.push_back(kTheWiseOne);
-			AchievementDepot.push_back(kCheat);
 			AchievementDepot.push_back(kFearless);
 			AchievementDepot.push_back(kAutomaton);
 			AchievementDepot.push_back(kHeretic);
@@ -213,10 +262,15 @@ namespace ConstructionSetExtender
 			AchievementDepot.push_back(kBobTheBuilder);
 			AchievementDepot.push_back(kLoquacious);
 			AchievementDepot.push_back(kSaboteur);
+			AchievementDepot.push_back(CSEAchievementCheat::GetSingleton());
+			AchievementDepot.push_back(CSEAchievementLost::GetSingleton());
 
 			bool ComponentInitialized = BGSEEACHIEVEMENTS->Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
 
 			SME_ASSERT(ComponentInitialized);
+
+			BGSEECONSOLE->Pad(1);
+			BGSEECONSOLE_MESSAGE("Hours wasted on the CS: %0.1f", CSEAchievementLost::GetSingleton()->GetLoggedHours());
 		}
 	}
 }

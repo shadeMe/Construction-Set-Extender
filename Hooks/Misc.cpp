@@ -75,6 +75,8 @@ namespace ConstructionSetExtender
 		_DefinePatchHdlr(AllowMultipleEditors, 0x0041C7E1);
 		_DefineNopHdlr(SEHOverride, 0x0041C55F, 0x0041C56C - 0x0041C55F);
 		_DefineHookHdlr(VersionControlOverride, 0x0041C895);
+		_DefineHookHdlr(TESObjectCELLGetDataFromDialog, 0x0053849E);
+		_DefineHookHdlr(InteriorCellDuplicate, 0x0053CC3E);
 
 		void PatchMiscHooks(void)
 		{
@@ -108,6 +110,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(AchievementBuildRoads).WriteJump();
 			_MemHdlr(AchievementDialogResponseCreation).WriteJump();
 			_MemHdlr(ExtraTeleportInitItem).WriteJump();
+			_MemHdlr(TESObjectCELLGetDataFromDialog).WriteJump();
+			_MemHdlr(InteriorCellDuplicate).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -816,6 +820,73 @@ namespace ConstructionSetExtender
 			{
 				mov		eax, 0x009EA608
 				mov     byte ptr [eax], 0
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		void __stdcall DoTESObjectCELLGetDataFromDialogHook(TESObjectCELL* Cell, HWND Dialog)
+		{
+			if (IsDlgButtonChecked(Dialog, 1006))		// has water
+			{
+				float WaterHeight = TESDialog::GetFloatFromDlgItem(Dialog, 2085);
+				Cell->ModExtraCellWaterHeight(WaterHeight);
+
+				TESWaterForm* WaterType = (TESWaterForm*)TESComboBox::GetSelectedItemData(GetDlgItem(Dialog, 1229));
+				Cell->ModExtraCellWaterType(WaterType);
+			}
+			else
+			{
+				Cell->ModExtraCellWaterHeight(0.0);
+				Cell->ModExtraCellWaterType(NULL);
+			}
+		}
+
+		#define _hhName		TESObjectCELLGetDataFromDialog
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x005384D0);
+			__asm
+			{
+				pushad
+				push	esi
+				push	edi
+				call	DoTESObjectCELLGetDataFromDialogHook
+				popad
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		void __stdcall DoInteriorCellDuplicateHook(TESObjectCELL* Source, TESObjectCELL* Copy)
+		{
+			if (Source->GetIsInterior() && Copy->GetIsInterior() &&
+				Source->cellData.lighting && Copy->cellData.lighting)
+			{
+				Copy->cellData.lighting->ambient = Source->cellData.lighting->ambient;
+				Copy->cellData.lighting->directional = Source->cellData.lighting->directional;
+				Copy->cellData.lighting->directionalFade = Source->cellData.lighting->directionalFade;
+				Copy->cellData.lighting->fog = Source->cellData.lighting->fog;
+				Copy->cellData.lighting->fogClipDistance = Source->cellData.lighting->fogClipDistance;
+				Copy->cellData.lighting->fogFar = Source->cellData.lighting->fogFar;
+				Copy->cellData.lighting->fogNear = Source->cellData.lighting->fogNear;
+				Copy->cellData.lighting->rotXY = Source->cellData.lighting->rotXY;
+				Copy->cellData.lighting->rotZ = Source->cellData.lighting->rotZ;
+			}
+		}
+
+		#define _hhName		InteriorCellDuplicate
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0053CC43);
+			_hhSetVar(Call, 0x005321A0);
+			__asm
+			{
+				pushad
+				push	ebp
+				push	edi
+				call	DoInteriorCellDuplicateHook
+				popad
+
+				call	[_hhGetVar(Call)]
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

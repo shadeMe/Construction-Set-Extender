@@ -254,6 +254,20 @@ namespace ConstructionSetExtender
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kCommandant);
 		}
 
+#ifndef NDEBUG
+		BGSEECONSOLE->LogMsg("shadeMe", "This is a DEBUG build");
+		BGSEECONSOLE->LogMsg("shadeMe", "If you aren't me, please proceed to your local police precinct and turn yourself in");
+		BGSEECONSOLE->Pad(1);
+		BGSEECONSOLE->Indent();
+		BGSEECONSOLE->Indent();
+		BGSEECONSOLE->Indent();
+		BGSEECONSOLE->Indent();
+		BGSEECONSOLE->LogMsg("shadeMe", "Thank you kindly");
+		BGSEECONSOLE->LogMsg("shadeMe", "The guy who wrote this message");
+		BGSEECONSOLE->ExdentAll();
+		BGSEECONSOLE->Pad(2);
+#endif
+
 		return true;
 	}
 
@@ -482,7 +496,8 @@ extern "C"
 														obse->GetOblivionDirectory(), XSEPluginHandle,
 														OBSE_VERSION_INTEGER, obse->obseVersion,
 														CSEINISettings,
-														"v4.0.30319", false, false,
+														"v4.0.30319", false,
+														false,
 #ifdef NDEBUG
 														true);
 		TODO("Save debug symbols, dammit!")

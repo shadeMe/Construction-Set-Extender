@@ -4,7 +4,7 @@
 
 #include "Commands\CodaScriptCommands-Form.h"
 #include "Commands\CodaScriptCommands-Reference.h"
-//#include "Commands\CodaScriptCommands-BFC.h"
+#include "Commands\CodaScriptCommands-BFC.h"
 
 namespace ConstructionSetExtender
 {
@@ -62,8 +62,9 @@ namespace ConstructionSetExtender
 			BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT ScriptCommands;
 
 			CSEInterfaceManager::Instance.ConsumeScriptInterface(ScriptCommands);
-			ScriptCommands.push_front(Commands::Form::GetRegistrar());
-			ScriptCommands.push_front(Commands::Reference::GetRegistrar());
+			ScriptCommands.push_back(Commands::Form::GetRegistrar());
+			ScriptCommands.push_back(Commands::Reference::GetRegistrar());
+			ScriptCommands.push_back(Commands::BaseFormComponent::GetRegistrar());
 
 			bool ComponentInitialized = CODAVM->Initialize(BGSEditorExtender::BGSEEResourceLocation("Coda"),
 														"http://cs.elderscrolls.com/index.php/",

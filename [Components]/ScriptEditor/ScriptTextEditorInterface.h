@@ -1,4 +1,5 @@
 #pragma once
+#include "IntelliSense\IntelliSenseInterface.h"
 
 namespace ConstructionSetExtender
 {
@@ -100,6 +101,7 @@ namespace ConstructionSetExtender
 			void										EndUpdate(void);
 
 			UInt32										GetTotalLineCount(void);
+			IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 
 			// Events
 			void										OnGotFocus(void);					// called when the workspace's is brought to focus

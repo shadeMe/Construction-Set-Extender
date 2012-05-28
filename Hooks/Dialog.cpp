@@ -82,7 +82,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(ReleaseModelessDialogsE, 0x004476A0);
 		_DefineHookHdlr(SubwindowTemplateHotSwap, 0x00404EC9);
 		_DefineHookHdlr(CellViewInitDialog, 0x00409A8E);
-		_DefineHookHdlr(TESObjectCELLGetDataFromDialog, 0x0053849E);
 		_DefinePatchHdlr(TESQuestWindowResize, 0x004DD937 + 1);
 
 		void PatchDialogHooks(void)
@@ -157,7 +156,6 @@ namespace ConstructionSetExtender
 
 			_MemHdlr(SubwindowTemplateHotSwap).WriteJump();
 			_MemHdlr(CellViewInitDialog).WriteJump();
-			_MemHdlr(TESObjectCELLGetDataFromDialog).WriteJump();
 			_MemHdlr(TESQuestWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
 		}
 
@@ -1535,38 +1533,6 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	DoCellViewInitDialogHook
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		void __stdcall DoTESObjectCELLGetDataFromDialogHook(TESObjectCELL* Cell, HWND Dialog)
-		{
-			if (IsDlgButtonChecked(Dialog, 1006))		// has water
-			{
-				float WaterHeight = TESDialog::GetFloatFromDlgItem(Dialog, 2085);
-				Cell->ModExtraCellWaterHeight(WaterHeight);
-
-				TESWaterForm* WaterType = (TESWaterForm*)TESComboBox::GetSelectedItemData(GetDlgItem(Dialog, 1229));
-				Cell->ModExtraCellWaterType(WaterType);
-			}
-			else
-			{
-				Cell->ModExtraCellWaterHeight(0.0);
-				Cell->ModExtraCellWaterType(NULL);
-			}
-		}
-
-		#define _hhName		TESObjectCELLGetDataFromDialog
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x005384D0);
-			__asm
-			{
-				pushad
-				push	esi
-				push	edi
-				call	DoTESObjectCELLGetDataFromDialogHook
-				popad
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

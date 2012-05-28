@@ -226,9 +226,10 @@ namespace ConstructionSetExtender
 				virtual void								OnLostFocus(void);
 				virtual void								OnPositionSizeChange(void);
 
-				virtual void								BeginUpdate(void);
-				virtual void								EndUpdate(void);
-				virtual UInt32								GetTotalLineCount(void);
+				virtual void										BeginUpdate(void);
+				virtual void										EndUpdate(void);
+				virtual UInt32										GetTotalLineCount(void);
+				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 
 				AvalonEditTextEditor(Font^ Font, UInt32 ParentWorkspaceIndex);
 			};

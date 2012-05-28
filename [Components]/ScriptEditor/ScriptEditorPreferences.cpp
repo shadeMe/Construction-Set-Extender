@@ -705,7 +705,7 @@ namespace ConstructionSetExtender
 			this->AnnealCasing->Name = L"AnnealCasing";
 			this->AnnealCasing->Size = System::Drawing::Size(205, 17);
 			this->AnnealCasing->TabIndex = 11;
-			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
+			this->AnnealCasing->Text = L"Anneal Identifier Casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
 			//
 			// CompilerOverrideBlocks

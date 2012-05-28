@@ -34,7 +34,7 @@ namespace ConstructionSetExtender
 			Viewer->GetContainer()->Hide();
 		}
 
-		bool ScriptOffsetViewer::Show()
+		bool ScriptOffsetViewer::Show( UInt32 CaretPosition )
 		{
 			if (InitializationState == false)
 			{
@@ -44,6 +44,13 @@ namespace ConstructionSetExtender
 
 			Viewer->GetContainer()->BringToFront();
 			Viewer->GetContainer()->Show();
+
+			if (Viewer->GetTextField()->TextLength > CaretPosition)
+			{
+				Viewer->GetTextField()->SelectionStart = CaretPosition;
+				Viewer->GetTextField()->SelectionLength = 0;
+				Viewer->GetTextField()->ScrollToCaret();
+			}
 			return true;
 		}
 
@@ -81,12 +88,19 @@ namespace ConstructionSetExtender
 			Viewer->GetContainer()->Hide();
 		}
 
-		void SimpleTextViewer::Show(String^% Text)
+		void SimpleTextViewer::Show( String^% Text, UInt32 CaretPosition )
 		{
 			Viewer->GetTextField()->Text = Text;
 
 			Viewer->GetContainer()->BringToFront();
 			Viewer->GetContainer()->Show();
+
+			if (Text->Length > CaretPosition)
+			{
+				Viewer->GetTextField()->SelectionStart = CaretPosition;
+				Viewer->GetTextField()->SelectionLength = 0;
+				Viewer->GetTextField()->ScrollToCaret();
+			}
 		}
 
 		void SimpleTextViewer::SetFont( Font^ NewFont )

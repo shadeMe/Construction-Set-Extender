@@ -405,20 +405,17 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		String^	IntelliSenseDatabase::SanitizeCommandIdentifier(String^% CmdName)
+		String^	IntelliSenseDatabase::SanitizeIdentifier(String^% Name)
 		{
 			for each (IntelliSenseItem^ Itr in Enumerables)
 			{
-				if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd)
+				if (!String::Compare(Itr->GetIdentifier(), Name, true))
 				{
-					if (!String::Compare(Itr->GetIdentifier(), CmdName, true))
-					{
-						return Itr->GetIdentifier();
-					}
+					return Itr->GetIdentifier();
 				}
 			}
 
-			return CmdName;
+			return Name;
 		}
 
 		Script^ IntelliSenseDatabase::CacheRemoteScript(String^ BaseEditorID, String^ ScriptText)

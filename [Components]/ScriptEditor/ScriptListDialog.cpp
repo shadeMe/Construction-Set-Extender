@@ -165,6 +165,7 @@ namespace ConstructionSetExtender
 			if (ScriptList->Items->Count > 0)
 			{
 				SearchBox->Text = FilterString;
+				SearchBox->SelectAll();
 			}
 			else
 			{

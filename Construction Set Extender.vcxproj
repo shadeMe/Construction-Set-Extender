@@ -171,6 +171,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AuxiliaryViewport.cpp" />
+    <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp" />
     <ClCompile Include="Coda\CSECoda.cpp" />
@@ -278,6 +279,7 @@
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
+    <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />
     <ClInclude Include="Coda\CSECoda.h" />
@@ -412,6 +414,7 @@
     <None Include="Images\jobless.bmp" />
     <None Include="Images\lazybum.bmp" />
     <None Include="Images\loquacious.bmp" />
+    <None Include="Images\lost.bmp" />
     <None Include="Images\madsci.bmp" />
     <None Include="Images\magister.bmp" />
     <None Include="Images\pedantic.bmp" />

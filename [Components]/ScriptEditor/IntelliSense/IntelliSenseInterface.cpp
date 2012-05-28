@@ -124,6 +124,11 @@ namespace ConstructionSetExtender
 			UInt32 ItemCount = 0;
 			CleanupInterface();
 
+			if (ForceDisplay)
+			{
+				UpdateLocalVariableDatabase();
+			}
+
 			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
 			String^ Extract = ParentEditor->GetCurrentToken();
 

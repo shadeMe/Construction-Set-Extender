@@ -16,24 +16,47 @@ namespace ConstructionSetExtender
 			static BGSEEAchievement*	AllClearAchievement;
 		};
 
-		class CSEAchievementCheat : public CSEAchievementBase
+		class CSEAchievementTimeLapsed : public CSEAchievementBase
+		{
+		protected:
+			DWORD							TimerID;
+			DWORD							TickCount;
+			UInt32							HoursRequired;
+
+			void							ResetTimer(void);
+		public:
+			CSEAchievementTimeLapsed(const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt32 ReqdHours);
+			virtual ~CSEAchievementTimeLapsed() = 0;
+		};
+
+		class CSEAchievementCheat : public CSEAchievementTimeLapsed
 		{
 		protected:
 			static CSEAchievementCheat*		Singleton;
 
 			static VOID CALLBACK			TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
-			DWORD							TimerID;
-			DWORD							TickCount;
-			UInt32							HoursRequired;
-
-			void							ResetTimer(void);
-
 			CSEAchievementCheat(UInt32 ReqdHours);
 		public:
 			virtual ~CSEAchievementCheat();
 
 			static CSEAchievementCheat*		GetSingleton();
+		};
+
+		class CSEAchievementLost : public CSEAchievementTimeLapsed
+		{
+		protected:
+			static CSEAchievementLost*		Singleton;
+
+			static VOID CALLBACK			TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+
+			CSEAchievementLost(UInt32 ReqdHours);
+		public:
+			virtual ~CSEAchievementLost();
+
+			static CSEAchievementLost*		GetSingleton();
+
+			float							GetLoggedHours(void) const;
 		};
 
 		class CSEAchievementIncremented : public CSEAchievementBase
