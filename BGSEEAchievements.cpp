@@ -12,7 +12,7 @@ namespace BGSEditorExtender
 			Name(Title),
 			Description(Desc),
 			State(kState_Locked),
-			ExtraData(NULL),
+			ExtraData(0),
 			IconID(IconID)
 		{
 			SME_ASSERT(Name && Desc && GUID);
@@ -52,30 +52,30 @@ namespace BGSEditorExtender
 
 		void BGSEEAchievementManager::SaveAchievementState( BGSEEAchievement* Achievement )
 		{
-			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->State, RegistryKeyRoot.c_str());
-			SetRegValue(Achievement->BaseIDString.c_str(), Achievement->ExtraData, RegistryKeyExtraData.c_str());
+			SetRegValue<UInt32>(Achievement->BaseIDString.c_str(), Achievement->State, RegistryKeyRoot.c_str());
+			SetRegValue<UInt64>(Achievement->BaseIDString.c_str(), Achievement->ExtraData, RegistryKeyExtraData.c_str());
 		}
 
 		void BGSEEAchievementManager::LoadAchievementState( BGSEEAchievement* Achievement )
 		{
 			UInt32 State = 0;
-			DWORD ExtraData = NULL;
+			UInt64 ExtraData = 0;
 
-			if (GetRegValue(Achievement->BaseIDString.c_str(), &State, RegistryKeyRoot.c_str()))
+			if (GetRegValue<UInt32>(Achievement->BaseIDString.c_str(), &State, RegistryKeyRoot.c_str()))
 			{
 				if (State)
 					Achievement->State = State;
 			}
 			else
 			{
-				SetRegValue(Achievement->BaseIDString.c_str(), 0, RegistryKeyRoot.c_str());
+				SetRegValue<UInt32>(Achievement->BaseIDString.c_str(), 0, RegistryKeyRoot.c_str());
 				Achievement->State = BGSEEAchievement::kState_Locked;
 			}
 
-			if (GetRegValue(Achievement->BaseIDString.c_str(), &ExtraData, RegistryKeyExtraData.c_str()) == FALSE)
+			if (GetRegValue<UInt64>(Achievement->BaseIDString.c_str(), &ExtraData, RegistryKeyExtraData.c_str()) == FALSE)
 			{
-				Achievement->ExtraData = NULL;
-				SetRegValue(Achievement->BaseIDString.c_str(), 0, RegistryKeyExtraData.c_str());
+				Achievement->ExtraData = 0;
+				SetRegValue<UInt64>(Achievement->BaseIDString.c_str(), 0, RegistryKeyExtraData.c_str());
 			}
 			else
 			{
@@ -83,13 +83,16 @@ namespace BGSEditorExtender
 			}
 		}
 
-		bool BGSEEAchievementManager::GetRegValue( const char* Name, UInt32* OutValue, const char* Key )
+		template <typename T>
+		bool BGSEEAchievementManager::GetRegValue( const char* Name, T* OutValue, const char* Key )
 		{
 			HKEY AchievementKey = NULL;
 
 			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
 			{
-				UInt32 Type = 0, Size = 4;
+				UInt32 Type = REG_DWORD, Size = sizeof(T);
+				if (Size > Type)
+					Type = REG_QWORD;			// you lazy bum!
 
 				if (RegQueryValueEx(AchievementKey, Name, NULL, &Type, (LPBYTE)OutValue, &Size) == ERROR_SUCCESS)
 					return true;
@@ -98,13 +101,18 @@ namespace BGSEditorExtender
 			return false;
 		}
 
-		bool BGSEEAchievementManager::SetRegValue( const char* Name, UInt32 Value, const char* Key )
+		template <typename T>
+		bool BGSEEAchievementManager::SetRegValue( const char* Name, T Value, const char* Key )
 		{
 			HKEY AchievementKey = NULL;
 
 			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, Key, NULL, KEY_ALL_ACCESS, &AchievementKey) == ERROR_SUCCESS)
 			{
-				if (RegSetValueEx(AchievementKey, Name, NULL, REG_DWORD, (const BYTE*)&Value, REG_DWORD) == ERROR_SUCCESS)
+				UInt32 Size = REG_DWORD;
+				if (sizeof(T) > Size)
+					Size = REG_QWORD;
+
+				if (RegSetValueEx(AchievementKey, Name, NULL, Size, (const BYTE*)&Value, REG_DWORD) == ERROR_SUCCESS)
 					return true;
 			}
 
