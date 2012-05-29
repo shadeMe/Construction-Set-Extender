@@ -517,7 +517,6 @@ namespace ConstructionSetExtender
 				}
 				else
 				{
-					int Count = 0, ToggleType = 9;								// 0 - off, 1 - on
 					AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
 
 					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
@@ -542,23 +541,18 @@ namespace ConstructionSetExtender
 							if (FirstOffset != -1)
 							{
 								char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
-								if (FirstChar == ';' && (!Count || !ToggleType))
-								{
-									if (!Count)		ToggleType = 0;
 
+								if (FirstChar == ';')
+								{
 									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-									TextField->TextArea->Document->Replace(Line->Offset, 1, "");
+									TextField->TextArea->Document->Replace(FirstOffset, 1, "");
 								}
-								else if (FirstChar != ';' && (!Count || ToggleType))
+								else
 								{
-									if (!Count)		ToggleType = 1;
-
 									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-									TextField->TextArea->Document->Insert(Line->Offset, ";");
+									TextField->TextArea->Document->Insert(FirstOffset, ";");
 								}
 							}
-
-							Count++;
 						}
 					}
 				}

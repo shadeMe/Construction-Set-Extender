@@ -8,6 +8,7 @@ namespace ConstructionSetExtender
 		extern TESForm*								g_TESObjectREFRUpdate3DBuffer;
 		extern bool									g_RenderWindowAltMovementSettings;
 		extern bool									g_FreezeInactiveRefs;
+		extern POINT								g_MouseCaptureDelta;
 
 		// hooks that do stuff to the renderer and the render window
 		void PatchRendererHooks(void);
@@ -63,5 +64,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(RenderToAuxiliaryViewport, "allows the scenegraph to be rendered to the auxiliary viewport window");
 		_DeclareMemHdlr(TESRenderControlPerformRelativeScale, "allows the selection group to be scaled relative to their nominal center");
 		_DeclareMemHdlr(DataHandlerClosePlugins, "prevents the view port from flashing while loading exterior cells");
+		_DeclareMemHdlr(TESPathGridRubberBandSelection, "fixes a bug that selected all path grid points in the loaded cell(s) when restoring focus to the render window");
 	}
 }

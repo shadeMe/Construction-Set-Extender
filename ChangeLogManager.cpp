@@ -335,19 +335,27 @@ namespace ConstructionSetExtender
 				std::string Name(SaveFile->fileName), Extension(Name.substr(Name.find_last_of(".") + 1, 3));
 				Name = Name.substr(0, Name.find_last_of("."));
 
-				sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s - [%s].%s", Name.c_str(), TimeString, Extension.c_str());
-				sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filePath, SaveFile->fileName);
-
-				if (CopyFile(ExistingPath, NewPath, FALSE))
-					BGSEECONSOLE_MESSAGE("Saved active file backup to '%s'", NewPath);
+				sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s", Name.c_str());
+				if (CreateDirectory(NewPath, NULL) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+				{
+					BGSEECONSOLE_ERROR("Couldn't create backup directory '%s'", NewPath);
+				}
 				else
 				{
-					BGSEECONSOLE_ERROR("Couldn't save active file backup to '%s'", NewPath);
-				}
+					sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s\\%s - [%s].%s", Name.c_str(), Name.c_str(), TimeString, Extension.c_str());
+					sprintf_s(ExistingPath, sizeof(ExistingPath), "%s%s", SaveFile->filePath, SaveFile->fileName);
 
-				char Buffer[0x200] = {0};
-				FORMAT_STR(Buffer, "Data\\Backup\\%s - [%s].log", Name.c_str(), TimeString);
-				CHANGELOG->CopyActiveLog(Buffer);
+					if (CopyFile(ExistingPath, NewPath, FALSE))
+						BGSEECONSOLE_MESSAGE("Saved active file backup to '%s'", NewPath);
+					else
+					{
+						BGSEECONSOLE_ERROR("Couldn't save active file backup to '%s'", NewPath);
+					}
+
+					char Buffer[0x200] = {0};
+					FORMAT_STR(Buffer, "Data\\Backup\\%s\\%s - [%s].log", Name.c_str(), Name.c_str(), TimeString);
+					CHANGELOG->CopyActiveLog(Buffer);
+				}
 			}
 
 			CHANGELOG->PushNewActiveLog();

@@ -1,5 +1,10 @@
 #include "RTTI.h"
 
+void* Oblivion_DynamicCast( void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4 )
+{
+	return cdeclCall<void*>(0x0088DC0C, SrcObj, Arg1, FromType, ToType, Arg4);
+}
+
 const void * RTTI_BaseFormComponent = (void*)0x009EBC60;
 const void * RTTI_MemoryHeap = (void *)0x009EA008;
 const void * RTTI_BSTempNodeManager = (void *)0x009EA058;

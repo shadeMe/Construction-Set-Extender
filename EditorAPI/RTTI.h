@@ -1,5 +1,8 @@
 #pragma once
 
+void*	Oblivion_DynamicCast(void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4);
+#define CS_CAST(obj, from, to)			(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
+
 extern const void * RTTI_BaseFormComponent;
 extern const void * RTTI_MemoryHeap;
 extern const void * RTTI_BSTempNodeManager;

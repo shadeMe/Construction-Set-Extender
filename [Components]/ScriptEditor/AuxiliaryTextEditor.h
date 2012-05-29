@@ -18,8 +18,8 @@ namespace ConstructionSetExtender
 			}
 
 			virtual bool							InitializeViewer(String^% ScriptText, UInt32 Data, UInt32 Length);
-			bool									Show(UInt32 CaretPosition);
-			void									Hide(void);
+			bool									Show(int CaretPosition);
+			int										Hide(void);
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 			void									Reset(void);
 			void									SetFont(Font^ NewFont);
@@ -36,8 +36,8 @@ namespace ConstructionSetExtender
 				delete Viewer;
 			}
 
-			void									Show(String^% Text, UInt32 CaretPosition);
-			void									Hide(void);
+			void									Show(String^% Text, int CaretPosition);
+			int										Hide(void);
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 			void									SetFont(Font^ NewFont);
 		};

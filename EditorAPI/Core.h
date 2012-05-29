@@ -62,9 +62,6 @@ class	Setting;
 class	NiBinaryStream;
 class	NiFile;
 
-void*	Oblivion_DynamicCast(void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4);
-#define CS_CAST(obj, from, to)								(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
-
 // 1220
 class TESDataHandler
 {
@@ -137,7 +134,6 @@ STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 extern TESDataHandler**			g_TESDataHandler;
 #define _DATAHANDLER			(*g_TESDataHandler)
 
-/*
 // 04
 class GridArray
 {
@@ -145,7 +141,7 @@ public:
 	// members
 	/// *00* / void**					vtbl;
 
-	virtual void				VFn00(void) = 0;
+	virtual void						Dtor(bool ReleaseMemory = true) = 0;
 };
 STATIC_ASSERT(sizeof(GridArray) == 0x4);
 
@@ -153,35 +149,31 @@ STATIC_ASSERT(sizeof(GridArray) == 0x4);
 class GridCellArray : public GridArray
 {
 public:
-	// size?
+	// 8+?
 	struct CellInfo
 	{
-		UInt32		unk00;
-		NiNode		* niNode;
-		// ...
+		/*00*/ UInt32		unk00;
+		/*04*/ NiNode*		niNode;
 	};
 
 	// 04
 	struct GridEntry
 	{
-		TESObjectCELL	* cell;
-		CellInfo		* info;
+		/*00*/ TESObjectCELL*	cell;
+		/*04*/ CellInfo*		info;
 	};
 
-	// void **		vtbl
-	UInt32			worldX;		// 04 worldspace x coordinate of cell at center of grid (player's cell)
-	UInt32			worldY;		// 08 worldspace y
-	UInt32			size;		// 0C grid is size^2, size = uGridsToLoad
-	GridEntry		* grid;		// 10 dynamically alloc'ed array of GridEntry[size^2]
-	float			posX;		// 14 4096*worldX (exterior cells are 4096 square units)
-	float			posY;		// 18 4096*worldY
-	UInt32			unk1C;		// 1C seen 0
-	UInt32			unk20;		// 20 seen 1
-	UInt32			unk24;		// 24 seem 0
-
-	GridEntry* GetGridEntry(UInt32 x, UInt32 y);	// x and y range from 0 to (size-1)
+	// members
+	//     /*00*/ GridArray
+	/*04*/ UInt32			worldX;		// worldspace x coordinate of cell at center of grid
+	/*08*/ UInt32			worldY;		// worldspace y
+	/*0C*/ UInt32			size;		// grid is size ^ 2, size = uGridsToLoad
+	/*10*/ GridEntry*		grid;		// dynamically alloc'ed array of GridEntry[size ^ 2]
+	/*14*/ float			posX;		// 4096 * worldX (exterior cells are 4096 square units)
+	/*18*/ float			posY;		// 4096 * worldY
+	/*1C*/ float			unk1C;		// seen 0.0
 };
-STATIC_ASSERT(sizeof(GridCellArray) == 0x20);*/
+STATIC_ASSERT(sizeof(GridCellArray) == 0x20);
 
 // AC
 class TES
@@ -197,7 +189,20 @@ public:
 	// 30
 	struct	WaterSurfaceManager
 	{
-		UInt32						unk00;
+		/*00*/ UInt32				unk00;
+		/*04*/ UInt32				unk04;
+		/*08*/ UInt32				unk08;
+		/*0C*/ UInt32				unk0C;
+		/*10*/ UInt32				unk10;
+		/*14*/ UInt32				unk14;
+		/*18*/ UInt32				unk18;
+		/*1C*/ UInt32				unk1C;
+		/*20*/ UInt32				unk20;
+		/*24*/ UInt32				unk24;
+		/*28*/ UInt8				unk28;
+		/*29*/ UInt8				unk29;					// init to 1
+		/*2A*/ UInt16				pad2A;
+		/*2C*/ float				unk2C;					// init to 0.0
 	};
 
 	// 20
@@ -250,7 +255,7 @@ public:
 	/*80*/ tList<void>				unk80;
 	/*88*/ UInt32					unk88;
 	/*8C*/ tList<Unk8C>				list8C;
-	/*94*/ NiSourceTexture*			bloodDecals[3];			// blood.dds, lichblood.dds, whillothewispblood.dds
+	/*94*/ NiSourceTexture*			bloodDecals[3];			// blood.dds, lichblood.dds, willothewispblood.dds
 	/*A0*/ tList<void*>				listA0;					// data is some struct containing NiNode*
 	/*A8*/ UInt32					unkA8;
 
@@ -372,5 +377,3 @@ extern LPDIRECT3DTEXTURE9		g_LODD3DTexture4096x;
 extern BSRenderedTexture*		g_LODBSTexture4096x;
 extern LPDIRECT3DTEXTURE9		g_LODD3DTexture6144x;
 extern BSRenderedTexture*		g_LODBSTexture6144x;
-
-extern Setting*					g_INILocalMasterPath;

@@ -29,16 +29,17 @@ namespace ConstructionSetExtender
 			return InitializationState;
 		}
 
-		void ScriptOffsetViewer::Hide()
+		int ScriptOffsetViewer::Hide()
 		{
 			Viewer->GetContainer()->Hide();
+			return Viewer->GetTextField()->SelectionStart;
 		}
 
-		bool ScriptOffsetViewer::Show( UInt32 CaretPosition )
+		bool ScriptOffsetViewer::Show( int CaretPosition )
 		{
 			if (InitializationState == false)
 			{
-				MessageBox::Show("Offset Viewer was not initialized successfully!\n\nPlease recompile the current script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+				MessageBox::Show("Offset Viewer couldn't be initialized!\n\nPlease recompile the current script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				return false;
 			}
 
@@ -83,12 +84,13 @@ namespace ConstructionSetExtender
 			Parent->Controls->Add(Viewer->GetContainer());
 		}
 
-		void SimpleTextViewer::Hide()
+		int SimpleTextViewer::Hide()
 		{
 			Viewer->GetContainer()->Hide();
+			return Viewer->GetTextField()->SelectionStart;
 		}
 
-		void SimpleTextViewer::Show( String^% Text, UInt32 CaretPosition )
+		void SimpleTextViewer::Show( String^% Text, int CaretPosition )
 		{
 			Viewer->GetTextField()->Text = Text;
 

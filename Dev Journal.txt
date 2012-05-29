@@ -5,11 +5,6 @@ IMMEDIATE  >>
 
 
 NOTE	---->
-> Include empty versions of the newly added default directories in the mod package
-> Mention the changes made to the LOD INI settings to get all objects to render to the LOD diffuse maps
-> Bundle CS1.0 with the main package
-> Clean up the readMe - Lot of redundant info there.
-> Add a note about the disabled VC system in the readMe.
 
 
 MISC	---->

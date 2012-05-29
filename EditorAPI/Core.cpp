@@ -33,13 +33,6 @@ BSRenderedTexture*					g_LODBSTexture4096x = NULL;
 LPDIRECT3DTEXTURE9					g_LODD3DTexture6144x = NULL;
 BSRenderedTexture*					g_LODBSTexture6144x = NULL;
 
-Setting*							g_INILocalMasterPath = (Setting*)0x009ED710;
-
-void* Oblivion_DynamicCast( void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4 )
-{
-	return cdeclCall<void*>(0x0088DC0C, SrcObj, Arg1, FromType, ToType, Arg4);
-}
-
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 {
 	for (tList<TESFile>::Iterator Itr = fileList.Begin(); !Itr.End(); ++Itr)

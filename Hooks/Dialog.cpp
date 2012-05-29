@@ -83,6 +83,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(SubwindowTemplateHotSwap, 0x00404EC9);
 		_DefineHookHdlr(CellViewInitDialog, 0x00409A8E);
 		_DefinePatchHdlr(TESQuestWindowResize, 0x004DD937 + 1);
+		_DefinePatchHdlr(FilteredDialogWindowResize, 0x004E0655 + 1);
 
 		void PatchDialogHooks(void)
 		{
@@ -157,6 +158,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(SubwindowTemplateHotSwap).WriteJump();
 			_MemHdlr(CellViewInitDialog).WriteJump();
 			_MemHdlr(TESQuestWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
+			_MemHdlr(FilteredDialogWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)

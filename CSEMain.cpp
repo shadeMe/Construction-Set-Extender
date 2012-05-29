@@ -518,7 +518,7 @@ extern "C"
 			MessageBox(NULL,
 					"The Construction Set Extender failed to initialize correctly!\n\nCheck the logs for more information.",
 					"The Cyrodiil Bunny Ranch",
-					MB_OK|MB_ICONERROR);
+					MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
 			return false;
 		}
@@ -532,8 +532,8 @@ extern "C"
 		{
 			MessageBox(NULL,
 					"The Construction Set Extender failed to load correctly!\n\nCheck the logs for more information.",
-					"Rumpy-Pumpy!",
-					MB_OK|MB_ICONERROR);
+					"Rumpy-Pumpy!!",
+					MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
 			return false;
 		}

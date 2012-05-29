@@ -104,7 +104,7 @@ namespace ConstructionSetExtender
 
 		CSEAchievementLost::CSEAchievementLost( UInt32 ReqdHours ) :
 			CSEAchievementTimeLapsed("Lost",
-									"You spend far too much time with the editor, man!",
+									"You spend far too much time with the editor, man! Go do something else; watch telly, take a dump, walk the dog - Anything!",
 									IDB_ACHIEVEMENT_LOST,
 									"40AB6814-1B55-4906-A564-74E9E37BC2EC",
 									ReqdHours)

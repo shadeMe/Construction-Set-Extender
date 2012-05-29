@@ -554,7 +554,11 @@ namespace ConstructionSetExtender
 
 						char FileName[0x104] = {0};
 
-						if (TESDialog::SelectTESFileCommonDialog(hWnd, g_INILocalMasterPath->value.s, 0, FileName, 0x104))
+						if (TESDialog::SelectTESFileCommonDialog(hWnd,
+																INISettingCollection::Instance->LookupByName("sLocalMasterPath:General")->value.s,
+																0,
+																FileName,
+																0x104))
 						{
 							TESFile* SaveAsBuffer = _DATAHANDLER->activeFile;
 
@@ -1300,6 +1304,19 @@ namespace ConstructionSetExtender
 
 					break;
 				}
+
+				break;
+			case WM_LBUTTONDOWN:
+				Hooks::g_MouseCaptureDelta.x = GET_X_LPARAM(lParam);
+				Hooks::g_MouseCaptureDelta.y = GET_Y_LPARAM(lParam);
+
+				break;
+			case WM_LBUTTONUP:
+				Hooks::g_MouseCaptureDelta.x -= GET_X_LPARAM(lParam);
+				Hooks::g_MouseCaptureDelta.y -= GET_Y_LPARAM(lParam);
+
+				Hooks::g_MouseCaptureDelta.x = abs(Hooks::g_MouseCaptureDelta.x);
+				Hooks::g_MouseCaptureDelta.y = abs(Hooks::g_MouseCaptureDelta.y);
 
 				break;
 			case WM_KEYDOWN:

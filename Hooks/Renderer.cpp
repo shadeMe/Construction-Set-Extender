@@ -17,6 +17,7 @@ namespace ConstructionSetExtender
 		TESForm*					g_TESObjectREFRUpdate3DBuffer = NULL;
 		bool						g_RenderWindowAltMovementSettings = false;
 		bool						g_FreezeInactiveRefs = false;
+		POINT						g_MouseCaptureDelta = { 0, 0 };
 
 		const float					kMaxLandscapeEditBrushRadius = 25.0f;
 
@@ -71,6 +72,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(RenderToAuxiliaryViewport, 0x0042D405);
 		_DefineHookHdlr(TESRenderControlPerformRelativeScale, 0x00424700);
 		_DefinePatchHdlr(DataHandlerClosePlugins, 0x0047B2FA);
+		_DefineHookHdlr(TESPathGridRubberBandSelection, 0x0042FBE0);
 
 		void PatchRendererHooks(void)
 		{
@@ -122,6 +124,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
 			_MemHdlr(DataHandlerClosePlugins).WriteUInt8(0xEB);
+			_MemHdlr(TESPathGridRubberBandSelection).WriteJump();
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1120,6 +1123,7 @@ namespace ConstructionSetExtender
 				if (FirstRef)
 				{
 					_TES->LoadCellIntoViewPort(&kDepletedMan, FirstRef);
+					_RENDERSEL->ClearSelection(true);
 					return;
 				}
 			}
@@ -1278,6 +1282,37 @@ namespace ConstructionSetExtender
 				popad
 
 				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
+		{
+			if (g_MouseCaptureDelta.x < 4 && g_MouseCaptureDelta.y < 4)
+				return false;
+			else
+				return true;
+		}
+
+		#define _hhName		TESPathGridRubberBandSelection
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042FBE8);
+			__asm
+			{
+				pushad
+				call	DoTESPathGridRubberBandSelectionHook
+				test	al, al
+				jz		SKIP
+				popad
+
+				push	ecx
+				mov		[esp], ecx
+				mov		ecx, [esp + 0x8]
+
+				jmp		[_hhGetVar(Retn)]
+			SKIP:
+				popad
+				retn	8
 			}
 		}
 	}

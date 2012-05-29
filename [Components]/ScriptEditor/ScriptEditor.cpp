@@ -3896,8 +3896,9 @@ namespace ConstructionSetExtender
 		{
 			if (ToolBarShowOffsets->Checked)
 			{
-				OffsetViewer->Hide();
+				int Caret = OffsetViewer->Hide();
 				TextEditor->FocusTextArea();
+				TextEditor->SetCaretPos(Caret);
 				ToolBarShowOffsets->Checked = false;
 			}
 			else

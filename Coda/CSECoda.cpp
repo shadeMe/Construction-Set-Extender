@@ -50,9 +50,10 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
 
 			bool ThrowAway = false;
-			CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway);
-
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kAutomaton);
+			if (CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway))
+			{
+				BGSEEACHIEVEMENTS->Unlock(Achievements::kAutomaton);
+			}
 		}
 
 		DEFINE_BGSEECONSOLECMD(RunCodaScript, 1);
