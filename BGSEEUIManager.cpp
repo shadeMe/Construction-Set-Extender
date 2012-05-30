@@ -102,21 +102,32 @@ namespace BGSEditorExtender
 		BGSEEWindowSubclasser* Instance = (BGSEEWindowSubclasser*)GetWindowLong(hWnd, GWL_USERDATA);
 		bool CallbackReturn = false;
 		LRESULT CallbackResult = FALSE;
+		bool ReleasingSubclass = false;
 
 		if (uMsg == WM_SUBCLASSER_RELEASE)
 		{
 			SME_ASSERT(Instance);
-
-			SetWindowLong(hWnd, GWL_WNDPROC, (LONG)Instance->EditorMainWindowProc);
-			return TRUE;
+			ReleasingSubclass = true;
 		}
 
 		for (SubclassProcMapT::iterator Itr = Instance->MainWindowSubclasses.begin(); Itr != Instance->MainWindowSubclasses.end(); Itr++)
 		{
-			CallbackResult = Itr->first(hWnd, uMsg, wParam, lParam, CallbackReturn, Itr->second);
+			bool Return = false;
+			LRESULT Result = Itr->first(hWnd, (ReleasingSubclass ? WM_DESTROY : uMsg), wParam, lParam, Return, Itr->second);
+
+			if (Return && CallbackReturn == false)
+			{
+				CallbackResult = Result;
+				CallbackReturn = true;
+			}
 		}
 
-		if (CallbackReturn && uMsg != WM_DESTROY)
+		if (ReleasingSubclass)
+		{
+			SetWindowLong(hWnd, GWL_WNDPROC, (LONG)Instance->EditorMainWindowProc);
+			return TRUE;
+		}
+		else if (CallbackReturn && uMsg != WM_DESTROY)
 			return CallbackResult;
 		else
 			return Instance->EditorMainWindowProc(hWnd, uMsg, wParam, lParam);
@@ -584,6 +595,8 @@ namespace BGSEditorExtender
 			BGSEEUI->EditorResourceInstance = new HINSTANCEGetter(hInstance);
 			BGSEEUI->Subclasser->PreSubclassMainWindow(Result);
 			BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].Reset();
+
+			SendMessage(Result, WM_INITDIALOG, NULL, NULL);
 		}
 
 		return Result;
