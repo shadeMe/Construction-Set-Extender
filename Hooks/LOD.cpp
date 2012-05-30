@@ -450,9 +450,10 @@ namespace ConstructionSetExtender
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), "Please Wait\nDiffuse Map 0/256");
 				g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_Partials;
 
-				SendMessage(*g_HWND_CellView, WM_SETREDRAW, FALSE, NULL);			// reduce time spent updating the main windows during cell switch
-				SendMessage(*g_HWND_CSParent, WM_SETREDRAW, FALSE, NULL);
-				SendMessage(*g_HWND_RenderWindow, WM_SETREDRAW, FALSE, NULL);
+				// reduce time spent updating the main windows during cell switch
+				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_CellView);
+				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_CSParent);
+				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_RenderWindow);
 
 				s_LODDiffuseMapPartialResolution = atoi(INISettings::GetLOD()->Get(INISettings::kLOD_PartialTextureResolution, BGSEEMAIN->INIGetter()));
 
@@ -492,12 +493,9 @@ namespace ConstructionSetExtender
 				s_NotificationMapCounter = 0;
 				g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_NotInUse;
 
-				SendMessage(*g_HWND_CellView, WM_SETREDRAW, TRUE, NULL);
-				SendMessage(*g_HWND_CSParent, WM_SETREDRAW, TRUE, NULL);
-				SendMessage(*g_HWND_RenderWindow, WM_SETREDRAW, TRUE, NULL);
-				RedrawWindow(*g_HWND_CellView, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
-				RedrawWindow(*g_HWND_CSParent, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
-				RedrawWindow(*g_HWND_RenderWindow, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_CellView);
+				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_CSParent);
+				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_RenderWindow);
 
 				if (atoi(INISettings::GetLOD()->Get(INISettings::kLOD_PartialTextureResolution, BGSEEMAIN->INIGetter())))
 				{

@@ -186,7 +186,9 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoResultScriptErrorNotificationHook(void)
 		{
-			BGSEEUI->MsgBoxE("Result script compilation failed. Check the console for error messages.");
+			BGSEEUI->MsgBoxE(NULL,
+							MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
+							"Result script compilation failed. Check the console for error messages.");
 		}
 
 		#define _hhName		ResultScriptErrorNotification

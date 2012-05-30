@@ -234,9 +234,9 @@ bool CompileScript(ScriptCompileData* Data)
 
 	if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted))
 	{
-		BGSEEUI->MsgBoxI(BGSEEUI->GetMainWindow(),
-						MB_TOPMOST|MB_SETFOREGROUND,
-						"Script %s {%08X} has been deleted and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
+		BGSEEUI->MsgBoxI(NULL,
+						MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
+						"Script %s {%08X} has been deleted, and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
 
 		Data->CompileResult = false;
 	}
@@ -374,7 +374,7 @@ ScriptData* GetNextScriptInList(void* CurrentScript)
 void DestroyScriptInstance(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
-	_DATAHANDLER->scripts.Remove(ScriptForm);
+	thisCall<void>(0x00452AE0, &_DATAHANDLER->scripts, ScriptForm);
 	ScriptForm->DeleteInstance();
 }
 

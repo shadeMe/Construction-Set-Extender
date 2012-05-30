@@ -140,9 +140,9 @@ namespace ConstructionSetExtender
 					NativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB updated.");
 					NativeWrapper::WriteToMainWindowStatusBar(3, "[" +
 									Profiler->ElapsedMilliseconds.ToString() + "ms | " +
-									DataHandlerData->ScriptCount + " UDFs | " +
-									DataHandlerData->QuestCount + " Quests | " +
-									DataHandlerData->GlobalCount + " Globals | " +
+									DataHandlerData->ScriptCount + " UDF(s) | " +
+									DataHandlerData->QuestCount + " Quest(s) | " +
+									DataHandlerData->GlobalCount + " Global(s) | " +
 									DataHandlerData->EditorIDCount + " Forms" +
 									"]");
 

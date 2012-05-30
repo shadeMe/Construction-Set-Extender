@@ -120,6 +120,8 @@ namespace ConstructionSetExtender
 			CurrentOperation = Op;
 			if (Op == Operation::e_Open)
 				ScriptList->MultiSelect = true;
+			else
+				ScriptList->MultiSelect = false;
 
 			ScriptList->BeginUpdate();
 
@@ -209,9 +211,11 @@ namespace ConstructionSetExtender
 				ListViewItem^ Itr = ScriptList->SelectedItems[i];
 				ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)Itr->Tag);
 
-				if (!i)
+				if (i == 0)
+				{
 					FirstSelectionCache = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
-				else
+				}
+				else if (CurrentOperation == Operation::e_Open)
 				{
 					ComponentDLLInterface::ScriptData* NewData = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
 					SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->InstantiateNewWorkspace(NewData);

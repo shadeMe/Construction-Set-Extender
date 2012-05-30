@@ -805,11 +805,10 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042EF88);
 			_asm	pushad
-
 			TESDialog::RedrawRenderWindow();
 			SetActiveWindow(*g_HWND_CSParent);
 			SetActiveWindow(*g_HWND_RenderWindow);
-
+			SetForegroundWindow(*g_HWND_RenderWindow);
 			__asm
 			{
 				popad

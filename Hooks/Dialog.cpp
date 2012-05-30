@@ -159,6 +159,60 @@ namespace ConstructionSetExtender
 			_MemHdlr(CellViewInitDialog).WriteJump();
 			_MemHdlr(TESQuestWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
 			_MemHdlr(FilteredDialogWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
+
+			for (int i = 0; i < 9; i++)
+			{
+				static const UInt32 kTESTopicEnumerateDialogDataCallSites[9] =
+				{
+					0x004EFC93, 0x004F2196,
+					0x004F2327, 0x004F275B,
+					0x004F2B7D, 0x004F2D44,
+					0x004F834B,	0x004F8596,
+					0x004F8F2D
+				};
+
+				_DefineCallHdlr(InvalidateDialogueControls, kTESTopicEnumerateDialogDataCallSites[i], TESTopicEnumerateDialogDataDetour);
+				_MemHdlr(InvalidateDialogueControls).WriteCall();
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				static const UInt32 kTESDialogEnableTopicControlsCallSites[4] =
+				{
+					0x004EE7C4, 0x004EE81C,
+					0x004F26EA, 0x004F276F
+				};
+
+				_DefineCallHdlr(InvalidateDialogueControls, kTESDialogEnableTopicControlsCallSites[i], TESDialogEnableTopicControlsDetour);
+				_MemHdlr(InvalidateDialogueControls).WriteCall();
+			}
+
+			for (int i = 0; i < 10; i++)
+			{
+				static const UInt32 kTESConditionItemDisableDialogControlsDetourCallSites[10] =
+				{
+					0x004DD82F, 0x004E1783,
+					0x004E364F, 0x004E37CE,
+					0x004EEA72, 0x004F26F0,
+					0x004F2797, 0x004F399A,
+					0x004F8AEA, 0x004F8B4B
+				};
+
+				_DefineCallHdlr(InvalidateDialogueControls, kTESConditionItemDisableDialogControlsDetourCallSites[i], TESConditionItemDisableDialogControlsDetour);
+				_MemHdlr(InvalidateDialogueControls).WriteCall();
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				static const UInt32 kTESTopicInfoSetInDialogCallSites[3] =
+				{
+					0x004F27A8, 0x004F39A7,
+					0x004F8BB7
+				};
+
+				_DefineCallHdlr(InvalidateDialogueControls, kTESTopicInfoSetInDialogCallSites[i], TESTopicInfoSetInDialogDetour);
+				_MemHdlr(InvalidateDialogueControls).WriteCall();
+			}
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -586,7 +640,7 @@ namespace ConstructionSetExtender
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004435C3);
-			static HWND ParentHWND = NULL;
+			_hhSetVar(ParentHWND, 0);
 			__asm
 			{
 				pushad
@@ -594,7 +648,7 @@ namespace ConstructionSetExtender
 				popad
 
 				mov		eax, [esp + 0x18]
-				mov		ParentHWND, eax
+				mov		_hhGetVar(ParentHWND), eax
 				push	0
 				push	eax
 				mov		eax, [esp + 0x1C]
@@ -624,7 +678,7 @@ namespace ConstructionSetExtender
 
 				push	ebx
 				push	eax
-				push	ParentHWND
+				push	_hhGetVar(ParentHWND)
 				call	HandleHookedPopup
 				jmp		[_hhGetVar(Retn)]
 			SKIP:
@@ -732,7 +786,7 @@ namespace ConstructionSetExtender
 
 		int __stdcall DoFormIDListViewItemChangeHook(HWND Parent)
 		{
-			return BGSEEUI->MsgBoxI(Parent, MB_YESNO,"Save changes made to the active form?");
+			return BGSEEUI->MsgBoxI(Parent, MB_YESNO, "Save changes made to the active form?");
 		}
 
 		#define _hhName		FormIDListViewItemChange
@@ -1073,13 +1127,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoObjectWindowPopulateFormListInvalidateHook(bool RedrawState)
 		{
-			if (!RedrawState)
-				SendMessage(*g_HWND_ObjectWindow_FormList, WM_SETREDRAW, FALSE, NULL);
+			if (RedrawState == false)
+				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_ObjectWindow_FormList);
 			else
-			{
-				SendMessage(*g_HWND_ObjectWindow_FormList, WM_SETREDRAW, TRUE, NULL);
-				RedrawWindow(*g_HWND_ObjectWindow_FormList, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
-			}
+				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_ObjectWindow_FormList);
 		}
 
 		#define _hhName		ObjectWindowPopulateFormListInvalidate
@@ -1482,10 +1533,10 @@ namespace ConstructionSetExtender
 		UInt8 __cdecl TESDialogBuildSubwindowDetour( UInt16 TemplateID, Subwindow* DialogSubwindow )
 		{
 			HWND ParentDialog = DialogSubwindow->hDialog;
-			SendMessage(ParentDialog, WM_SETREDRAW, FALSE, NULL);
+
+			UIManager::CSEWindowInvalidationManager::Instance.Push(ParentDialog);
 			UInt8 Result = cdeclCall<UInt8>(0x00404EC0, TemplateID, DialogSubwindow);
-			SendMessage(ParentDialog, WM_SETREDRAW, TRUE, NULL);
-			RedrawWindow(ParentDialog, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+			UIManager::CSEWindowInvalidationManager::Instance.Pop(ParentDialog);
 			return Result;
 		}
 
@@ -1537,6 +1588,44 @@ namespace ConstructionSetExtender
 				call	DoCellViewInitDialogHook
 				jmp		[_hhGetVar(Retn)]
 			}
+		}
+
+		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
+		{
+			TESTopic* Topic = NULL;
+
+			__asm { mov		Topic, ecx }
+			SME_ASSERT(Topic);
+
+			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			thisCall<void>(0x004ED070, Topic, Dialog, SubItemIndex);
+			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+		}
+
+		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState)
+		{
+			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			cdeclCall<void>(0x004ECB40, Dialog, TopicControlState, ResponseControlState);
+			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+		}
+
+		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog)
+		{
+			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			cdeclCall<void>(0x004E35C0, Dialog);
+			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+		}
+
+		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog)
+		{
+			TESTopicInfo* TopicInfo = NULL;
+
+			__asm { mov		TopicInfo, ecx }
+			SME_ASSERT(TopicInfo);
+
+			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			thisCall<void>(0x004F5E10, TopicInfo, DialogEditorData, Dialog);
+			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
 		}
 	}
 }

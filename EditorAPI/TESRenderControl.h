@@ -76,10 +76,12 @@ public:
 
 	// methods
 	void							RecordReference(UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection);
+	void							Clear(void);
 };
 STATIC_ASSERT(sizeof(TESRenderUndoStack) == 0x08);
 
 extern TESRenderUndoStack**		g_TESRenderUndoStack;
+#define _RENDERUNDO				(*g_TESRenderUndoStack)
 
 // 4
 class Renderer

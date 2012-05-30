@@ -286,6 +286,67 @@ namespace ConstructionSetExtender
 			VisibilityUnmodifiedForms = true;
 		}
 
+		CSEWindowInvalidationManager		CSEWindowInvalidationManager::Instance;
+
+		CSEWindowInvalidationManager::CSEWindowInvalidationManager() :
+			ActiveInvalidatedWindows()
+		{
+			;//
+		}
+
+		CSEWindowInvalidationManager::~CSEWindowInvalidationManager()
+		{
+			for (InvalidationMapT::iterator Itr = ActiveInvalidatedWindows.begin(); Itr != ActiveInvalidatedWindows.end(); Itr++)
+				Invalidate(Itr->first, false);
+
+			ActiveInvalidatedWindows.clear();
+		}
+
+		void __stdcall CSEWindowInvalidationManager::Push( HWND Window )
+		{
+			SME_ASSERT(Window);
+
+			if (ActiveInvalidatedWindows.count(Window) == 0)
+			{
+				ActiveInvalidatedWindows.insert(std::make_pair<HWND, UInt32>(Window, 1));
+				Invalidate(Window, true);
+			}
+			else
+				ActiveInvalidatedWindows[Window] += 1;
+		}
+
+		void __stdcall CSEWindowInvalidationManager::Pop( HWND Window )
+		{
+			SME_ASSERT(Window);
+			SME_ASSERT(ActiveInvalidatedWindows.count(Window));
+
+			UInt32 RefCount = ActiveInvalidatedWindows[Window];
+			SME_ASSERT(RefCount);
+
+			if (RefCount == 1)
+			{
+				Invalidate(Window, false);
+				ActiveInvalidatedWindows.erase(Window);
+			}
+			else
+				ActiveInvalidatedWindows[Window] -= 1;
+		}
+
+		void CSEWindowInvalidationManager::Invalidate( HWND Window, bool State )
+		{
+			SME_ASSERT(Window);
+
+			if (State)
+			{
+				SendMessage(Window, WM_SETREDRAW, FALSE, NULL);
+			}
+			else
+			{
+				SendMessage(Window, WM_SETREDRAW, TRUE, NULL);
+				RedrawWindow(Window, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+			}
+		}
+
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -467,6 +528,11 @@ namespace ConstructionSetExtender
 
 								switch (CurrentItem.wID)
 								{
+								case 40194:		// Edit Cell Path Grid
+									if (*g_RenderWindowPathGridEditModeFlag)
+										CheckItem = true;
+
+									break;
 								case IDC_MAINMENU_SAVEOPTIONS_SAVEESPMASTERS:
 									if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_SaveLoadedESPsAsMasters, BGSEEMAIN->INIGetter())))
 										CheckItem = true;
@@ -510,9 +576,15 @@ namespace ConstructionSetExtender
 								if (UpdateItem)
 								{
 									if (CheckItem)
-										CurrentItem.fState = MFS_DEFAULT|MFS_CHECKED;
+									{
+										CurrentItem.fState &= ~MFS_UNCHECKED;
+										CurrentItem.fState |= MFS_CHECKED;
+									}
 									else
-										CurrentItem.fState = MFS_DEFAULT|MFS_UNCHECKED;
+									{
+										CurrentItem.fState &= ~MFS_CHECKED;
+										CurrentItem.fState |= MFS_UNCHECKED;
+									}
 
 									CurrentItem.fMask = MIIM_STATE;
 									SetMenuItemInfo(Popup, i, TRUE, &CurrentItem);
@@ -966,6 +1038,8 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+#define IDC_PATHGRIDTOOLBARBUTTION_TIMERID		0x99
+
 		LRESULT CALLBACK MainWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -973,6 +1047,48 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_INITDIALOG:
+				{
+					SetTimer(hWnd, IDC_PATHGRIDTOOLBARBUTTION_TIMERID, 1000, NULL);
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					KillTimer(hWnd, IDC_PATHGRIDTOOLBARBUTTION_TIMERID);
+				}
+
+				break;
+			case WM_TIMER:
+				DlgProcResult = TRUE;
+				Return = true;
+
+				switch (wParam)
+				{
+				case 2:				// autosave timer, needs to be handled here as the org wndproc doesn't compare the timerID
+					if ((*g_TESCSAllowAutoSaveFlag) != 0 && (*g_TESCSExittingCSFlag) == 0)
+					{
+						TESDialog::AutoSave();
+					}
+
+					break;
+				case IDC_PATHGRIDTOOLBARBUTTION_TIMERID:
+					{
+						TBBUTTONINFO PathGridData = {0};
+						PathGridData.cbSize = sizeof(TBBUTTONINFO);
+						PathGridData.dwMask = TBIF_STATE;
+						if (*g_RenderWindowPathGridEditModeFlag)
+							PathGridData.fsState = TBSTATE_CHECKED|TBSTATE_ENABLED;
+						else
+							PathGridData.fsState = TBSTATE_ENABLED;
+
+						SendMessage(*g_HWND_MainToolbar, TB_SETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+					}
+
+					break;
+				}
+
+				break;
 			case 0x40C:				// save handler
 				if (Hooks::g_QuickLoadToggle)
 				{
@@ -1030,9 +1146,15 @@ namespace ConstructionSetExtender
 								if (UpdateItem)
 								{
 									if (CheckItem)
-										CurrentItem.fState = MFS_DEFAULT|MFS_CHECKED;
+									{
+										CurrentItem.fState &= ~MFS_UNCHECKED;
+										CurrentItem.fState |= MFS_CHECKED;
+									}
 									else
-										CurrentItem.fState = MFS_DEFAULT|MFS_UNCHECKED;
+									{
+										CurrentItem.fState &= ~MFS_CHECKED;
+										CurrentItem.fState |= MFS_UNCHECKED;
+									}
 
 									CurrentItem.fMask = MIIM_STATE;
 									SetMenuItemInfo(Popup, i, TRUE, &CurrentItem);
@@ -1361,6 +1483,7 @@ namespace ConstructionSetExtender
 							{
 								TESPathGridPoint* Point = Itr.Get();
 								Point->UnlinkFromReference();
+								Point->HideSelectionRing();
 							}
 
 							TESDialog::RedrawRenderWindow();
@@ -1370,19 +1493,18 @@ namespace ConstructionSetExtender
 						}
 						else
 						{
+							std::list<TESPathGridPoint*> Delinquents;
+
 							for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 							{
 								if (Itr.Get()->linkedRef)
-								{
-									BGSEEUI->MsgBoxW(hWnd, 0,
-												"One or more of the selected path grid points is already linked to a reference.\n\nThey cannot not be linked to a different reference until they are unlinked first.");
+									Delinquents.push_back(Itr.Get());
 
-									TESDialog::RedrawRenderWindow();
-
-									Return = true;
-									break;
-								}
+								Itr.Get()->HideSelectionRing();
 							}
+
+							for (std::list<TESPathGridPoint*>::iterator Itr = Delinquents.begin(); Itr != Delinquents.end(); Itr++)
+								thisCall<void>(0x00452AE0, g_RenderWindowSelectedPathGridPoints, *Itr);
 						}
 					}
 

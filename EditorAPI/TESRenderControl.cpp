@@ -68,6 +68,11 @@ void TESRenderUndoStack::RecordReference( UInt32 Operation, TESRenderSelection::
 	thisCall<UInt32>(0x00432D40, this, Operation, Selection);
 }
 
+void TESRenderUndoStack::Clear( void )
+{
+	thisCall<void>(0x00433440, this);
+}
+
 void TESRenderComponents::RenderNode( NiCamera* Camera /*= NULL*/, NiNode* NodeToRender /*= NULL*/, BSRenderedTexture* RenderToTexture /*= NULL*/ )
 {
 	if (Camera == NULL)

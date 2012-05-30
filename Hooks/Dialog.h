@@ -70,12 +70,15 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ReleaseModelessDialogsC, "TESForm Common");
 		_DeclareMemHdlr(ReleaseModelessDialogsD, "");
 		_DeclareMemHdlr(ReleaseModelessDialogsE, "");
-		_DeclareMemHdlr(InvalidateSubwindowBuilding, "invalidates the parent window during subwindow construction to improve performance");
 		_DeclareMemHdlr(SubwindowTemplateHotSwap, "adds support for the hotswapping of subwindow dialog templates");
 		_DeclareMemHdlr(CellViewInitDialog, "prevents the default handler from screwing with the new controls");
 		_DeclareMemHdlr(TESQuestWindowResize, "prevents quest edit window from being resized unnecessarily");
 		_DeclareMemHdlr(FilteredDialogWindowResize, "prevents filtered dialog window from being resized unnecessarily");
 
 		UInt8 __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
+		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);
+		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState);
+		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog);
+		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog);
 	}
 }

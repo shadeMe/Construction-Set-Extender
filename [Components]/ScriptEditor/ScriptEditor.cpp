@@ -2780,7 +2780,7 @@ namespace ConstructionSetExtender
 		{
 			if (PerformHouseKeeping())
 			{
-				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Open,
+				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Delete,
 																		(GetIsUninitialized() ? "" : CurrentScriptEditorID));
 				if (Data)
 				{

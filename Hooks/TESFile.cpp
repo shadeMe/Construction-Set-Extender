@@ -243,7 +243,9 @@ namespace ConstructionSetExtender
 			if (TempFile == INVALID_HANDLE_VALUE)
 			{
 				BGSEECONSOLE_ERROR("Couldn't open TESFile '%s'!", Buffer);
-				BGSEEUI->MsgBoxE("Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->fileName);
+				BGSEEUI->MsgBoxE(NULL,
+								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
+								"Couldn't open TESFile '%s' for read/write access.\n\nError logged to the console.", Plugin->fileName);
 				return false;
 			}
 			else

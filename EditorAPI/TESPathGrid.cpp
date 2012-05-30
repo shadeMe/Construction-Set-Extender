@@ -17,8 +17,11 @@ bool TESPathGridPoint::GetIsPointLinked( TESPathGridPoint* Point )
 
 void TESPathGridPoint::UnlinkFromReference( void )
 {
-	parentGrid->UnlinkPointFromReference(this, linkedRef);
-	linkedRef = NULL;
+	if (linkedRef)
+	{
+		parentGrid->UnlinkPointFromReference(this, linkedRef);
+		linkedRef = NULL;
+	}
 }
 
 void TESPathGridPoint::GenerateNiNode( UInt32 Unk01 /*= 1*/ )
@@ -71,10 +74,12 @@ void TESPathGrid::UnlinkPointFromReference( TESPathGridPoint* Point, TESObjectRE
 		tList<TESPathGridPoint>* LinkedNodes = NULL;
 		if (thisCall<UInt32>(0x004ADB90, &linkedGridPoints, Ref, &LinkedNodes))	// NiTPointerMap_LookupByKey
 		{
-			LinkedNodes->Remove(Point);
+			thisCall<void>(0x00452AE0, LinkedNodes, Point);
 			if (LinkedNodes->Count() == 0)
 			{
 				thisCall<UInt32>(0x004BCBD0, &linkedGridPoints, Ref);			// NiTPointerMap_Remove
+				Ref->RemoveCrossReference(this);
+
 				FormHeap_Free(LinkedNodes);
 			}
 		}

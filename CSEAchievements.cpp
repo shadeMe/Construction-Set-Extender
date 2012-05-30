@@ -208,7 +208,7 @@ namespace ConstructionSetExtender
 			kWTF					= new CSEAchievementBase("WTF!", "Managed to trigger an assertion in the editor code",
 															IDB_ACHIEVEMENT_WTF, "992F82BE-4DDD-40CA-AD96-153353FDDA35");
 
-			kFlyingBlind			= new CSEAchievementBase("Flying Blind", "Disabled editor warning logging",
+			kFlyingBlind			= new CSEAchievementBase("Flying Blind", "Disabled editor warning message logging",
 															IDB_ACHIEVEMENT_FLYINGBLIND, "51721B2C-DB4F-42C0-B4F4-38154F32DF92");
 
 			kPedantic				= new CSEAchievementBase("Pedantic", "Saved version information to a plugin's description",
@@ -232,7 +232,7 @@ namespace ConstructionSetExtender
 			kBobTheBuilder			= new CSEAchievementBase("Bob The Builder", "Laid roads for a worldspace",
 															IDB_ACHIEVEMENT_BOBTHEBUILDER, "10A0F510-062B-4E21-A517-B04CC28D68A7");
 
-			kLoquacious				= new CSEAchievementIncremented("Loquacious", "Too many dialog responses created in a single CS session",
+			kLoquacious				= new CSEAchievementIncremented("Loquacious", "Created a LOT of dialog responses in a single CS session",
 															IDB_ACHIEVEMENT_LOQUACIOUS, "0E0C034F-0E4E-4709-A07D-D79059846841", 100);
 
 			kSaboteur				= new CSEAchievementBase("Saboteur", "Managed to crash the extended CS!",
@@ -270,7 +270,7 @@ namespace ConstructionSetExtender
 			SME_ASSERT(ComponentInitialized);
 
 			BGSEECONSOLE->Pad(1);
-			BGSEECONSOLE_MESSAGE("Hours wasted on the CS: %0.1f", CSEAchievementLost::GetSingleton()->GetLoggedHours());
+			BGSEECONSOLE_MESSAGE("Precious time wasted on the CS: %0.1f hours", CSEAchievementLost::GetSingleton()->GetLoggedHours());
 		}
 	}
 }

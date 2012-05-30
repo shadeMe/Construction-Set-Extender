@@ -327,7 +327,7 @@ namespace ConstructionSetExtender
 				(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
 			{
 				BGSEEUI->MsgBoxW(NULL,
-								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONWARNING|MB_OK,
+								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
 								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.", EditorID);
 			}
 		}
@@ -444,10 +444,7 @@ namespace ConstructionSetExtender
 			{
 				if (Data->DecrementRefCount() == 0)
 				{
-					HACK("Possible bug in tList::Remove, corrupts the state somehow. investigate")
-					// ReferenceList->Remove(Data);
-
-					thisCall<UInt32>(0x00452AE0, ReferenceList, Data);
+					thisCall<void>(0x00452AE0, ReferenceList, Data);
 					Data->DeleteInstance();
 				}
 
