@@ -74,6 +74,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(CellViewInitDialog, "prevents the default handler from screwing with the new controls");
 		_DeclareMemHdlr(TESQuestWindowResize, "prevents quest edit window from being resized unnecessarily");
 		_DeclareMemHdlr(FilteredDialogWindowResize, "prevents filtered dialog window from being resized unnecessarily");
+		_DeclareMemHdlr(DialogueEditorPopup, "prevents the addition of TESForm related context menus items in the dialogue editor");
 
 		UInt8 __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

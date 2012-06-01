@@ -84,6 +84,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(CellViewInitDialog, 0x00409A8E);
 		_DefinePatchHdlr(TESQuestWindowResize, 0x004DD937 + 1);
 		_DefinePatchHdlr(FilteredDialogWindowResize, 0x004E0655 + 1);
+		_DefineHookHdlr(DialogueEditorPopup, 0x004F2896);
 
 		void PatchDialogHooks(void)
 		{
@@ -213,6 +214,8 @@ namespace ConstructionSetExtender
 				_DefineCallHdlr(InvalidateDialogueControls, kTESTopicInfoSetInDialogCallSites[i], TESTopicInfoSetInDialogDetour);
 				_MemHdlr(InvalidateDialogueControls).WriteCall();
 			}
+
+			_MemHdlr(DialogueEditorPopup).WriteJump();
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -576,6 +579,8 @@ namespace ConstructionSetExtender
 
 		void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)
 		{
+			SME_ASSERT(SelectedForm);
+
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SETFORMID, "Set FormID");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_MARKUNMODIFIED, "Mark As Unmodified");
@@ -631,9 +636,12 @@ namespace ConstructionSetExtender
 			DeleteMenu(Menu, IDC_CSE_POPUP_ADDTOTAG, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_SHOWOVERRIDES, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_PREVIEW, MF_BYCOMMAND);
-			DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
-			DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
-			DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
+
+			for (int i = 0; i < 3; i++)
+			{
+				if (GetMenuItemID(Menu, GetMenuItemCount(Menu) - 1) == 0)		// make sure it's a separator
+					DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
+			}
 		}
 
 		#define _hhName		TESDialogPopupMenu
@@ -1626,6 +1634,32 @@ namespace ConstructionSetExtender
 			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
 			thisCall<void>(0x004F5E10, TopicInfo, DialogEditorData, Dialog);
 			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+		}
+
+		void __stdcall DoDialogueEditorPopupHook(HMENU Menu, POINT* Coords, HWND Parent, HWND ListView)
+		{
+			int ListViewID = GetDlgCtrlID(ListView);
+			void* Data = TESListView::GetSelectedItemData(ListView);
+
+			switch (ListViewID)
+			{
+			case 1454:		// response list
+				Data = NULL;
+				break;
+			}
+
+			TESDialog::ShowDialogPopupMenu(Menu, Coords, Parent, (LPARAM)Data);
+		}
+
+		#define _hhName		DialogueEditorPopup
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004F289E);
+			__asm
+			{
+				call	DoDialogueEditorPopupHook
+				jmp		[_hhGetVar(Retn)]
+			}
 		}
 	}
 }

@@ -343,6 +343,7 @@ public:
 	static void								ResetFormListControls();
 
 	static float							GetFloatFromDlgItem(HWND Dialog, int ID);
+	static void								ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data = NULL);
 };
 
 class TESComboBox

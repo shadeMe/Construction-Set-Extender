@@ -21,7 +21,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Increase preview control rendertarget size
 		> [AFTER 6.0] Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> [AFTER 6.0] Implement a fly camera mode for the render window
 		> [AFTER 6.0] Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)

@@ -19,11 +19,15 @@ namespace ConstructionSetExtender
 		class CSEAchievementTimeLapsed : public CSEAchievementBase
 		{
 		protected:
+			static const UInt32				kIdleTimeOut;
+
 			DWORD							TimerID;
-			DWORD							TickCount;
+			DWORD							InitTickCount;
+			DWORD							ElapsedTicks;
 			UInt32							HoursRequired;
 
 			void							ResetTimer(void);
+			bool							GetIdleState(void);
 		public:
 			CSEAchievementTimeLapsed(const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt32 ReqdHours);
 			virtual ~CSEAchievementTimeLapsed() = 0;
@@ -36,7 +40,7 @@ namespace ConstructionSetExtender
 
 			static VOID CALLBACK			TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
-			CSEAchievementCheat(UInt32 ReqdHours);
+			CSEAchievementCheat();
 		public:
 			virtual ~CSEAchievementCheat();
 

@@ -77,6 +77,6 @@ public:
     //     /*00*/ NiRefObject
 	/*08*/ Ni2DBuffer*			parentData;
 	/*0C*/ IDirect3DSurface9*	surface;
-	/*10*/ void*				surfaceData;	// 0x44 bytes long.
+	/*10*/ TextureFormat*		surfaceData;
 };
 STATIC_ASSERT(sizeof(NiDX92DBufferData) == 0x14);

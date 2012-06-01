@@ -249,6 +249,11 @@ float TESDialog::GetFloatFromDlgItem( HWND Dialog, int ID )
 	return cdeclCall<float>(0x00404A80, Dialog, ID);
 }
 
+void TESDialog::ShowDialogPopupMenu( HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data )
+{
+	cdeclCall<void>(0x00443520, Menu, Coords, Parent, Data);
+}
+
 void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
 {
 	cdeclCall<UInt32>(0x00403540, hWnd, Text, Data, ResizeDroppedWidth);

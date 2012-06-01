@@ -8,6 +8,7 @@
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "d3dx9.lib")
 #pragma comment(lib, "Ole32.lib")
+#pragma comment(lib, "mscoree.lib")
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "CrashRpt1300.lib")
 #pragma comment(lib, "BGSEditorExtenderBase.lib")

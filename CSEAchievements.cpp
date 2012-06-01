@@ -28,6 +28,8 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		const UInt32	CSEAchievementTimeLapsed::kIdleTimeOut = 60 * 1000;
+
 		void CSEAchievementTimeLapsed::ResetTimer( void )
 		{
 			if (TimerID)
@@ -40,7 +42,8 @@ namespace ConstructionSetExtender
 		CSEAchievementTimeLapsed::CSEAchievementTimeLapsed( const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt32 ReqdHours ) :
 			CSEAchievementBase(Name, Desc, IconID, GUID),
 			TimerID(0),
-			TickCount(GetTickCount()),
+			InitTickCount(GetTickCount()),
+			ElapsedTicks(0),
 			HoursRequired(ReqdHours)
 		{
 			;//
@@ -51,27 +54,45 @@ namespace ConstructionSetExtender
 			ResetTimer();
 		}
 
+		bool CSEAchievementTimeLapsed::GetIdleState( void )
+		{
+			LASTINPUTINFO InputInfo = {0};
+			InputInfo.cbSize = sizeof(LASTINPUTINFO);
+
+			GetLastInputInfo(&InputInfo);
+			UInt32 IdleTime = GetTickCount() - InputInfo.dwTime;
+
+			if (IdleTime >= kIdleTimeOut || GetActiveWindow() == NULL)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		CSEAchievementCheat*	CSEAchievementCheat::Singleton = NULL;
 
 		VOID CALLBACK CSEAchievementCheat::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
-			if (CSEAchievementCheat::GetSingleton()->GetUnlocked())
-				CSEAchievementCheat::GetSingleton()->ResetTimer();
+			if (CSEAchievementCheat::GetSingleton()->GetIdleState())
+				return;
 
-			UInt32 TimeElapsed = dwTime - CSEAchievementCheat::GetSingleton()->TickCount;
+			CSEAchievementCheat::GetSingleton()->ElapsedTicks += dwTime - CSEAchievementCheat::GetSingleton()->InitTickCount;
 
-			if (TimeElapsed / (3600 * 1000) >= CSEAchievementCheat::GetSingleton()->HoursRequired)
+			if (CSEAchievementCheat::GetSingleton()->ElapsedTicks / (3600 * 1000) >= CSEAchievementCheat::GetSingleton()->HoursRequired)
 			{
 				BGSEEACHIEVEMENTS->Unlock(CSEAchievementCheat::GetSingleton());
 			}
 		}
 
-		CSEAchievementCheat::CSEAchievementCheat( UInt32 ReqdHours ) :
+		CSEAchievementCheat::CSEAchievementCheat() :
 			CSEAchievementTimeLapsed("Cheat",
 									"Managed to complete a 6 hour long CS session without any CTDs",
 									IDB_ACHIEVEMENT_CHEAT,
 									"0F7F9D05-9679-4E75-9AE3-0B419E6C813A",
-									ReqdHours)
+									6)
 		{
 			TimerID = SetTimer(NULL, NULL, 60 * 1000, TimerCallback);
 			SME_ASSERT(TimerID);
@@ -85,7 +106,7 @@ namespace ConstructionSetExtender
 		CSEAchievementCheat* CSEAchievementCheat::GetSingleton()
 		{
 			if (Singleton == NULL)
-				Singleton = new CSEAchievementCheat(6);
+				Singleton = new CSEAchievementCheat();
 
 			return Singleton;
 		}
@@ -94,7 +115,10 @@ namespace ConstructionSetExtender
 
 		VOID CALLBACK CSEAchievementLost::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
-			CSEAchievementLost::GetSingleton()->ExtraData += dwTime - CSEAchievementLost::GetSingleton()->TickCount;
+			if (CSEAchievementLost::GetSingleton()->GetIdleState())
+				return;
+
+			CSEAchievementLost::GetSingleton()->ExtraData += dwTime - CSEAchievementLost::GetSingleton()->InitTickCount;
 
 			if (CSEAchievementLost::GetSingleton()->ExtraData / (3600 * 1000) >= CSEAchievementLost::GetSingleton()->HoursRequired)
 			{
