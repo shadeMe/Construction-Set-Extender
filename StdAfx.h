@@ -30,6 +30,7 @@
 
 // .NET INTEROP
 #include <MSCorEE.h>
+#include <MetaHost.h>
 
 // CRT
 #include <time.h>

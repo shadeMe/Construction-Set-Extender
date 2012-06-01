@@ -411,50 +411,38 @@ namespace BGSEditorExtender
 			return false;
 		}
 
-		if (LoadLibrary("d3dx9_41.dll") == NULL)
-		{
-			BGSEECONSOLE_MESSAGE("DirectX v9.0c Runtime Libraries not installed");
-			return false;
-		}
-
 		bool HasDotNet = false;
-		HMODULE MsCoreEDLL = LoadLibrary("MSCOREE.DLL");
-		if (MsCoreEDLL)
+		ICLRMetaHost* MetaHost = NULL;
+
+		if (SUCCEEDED(CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost,(LPVOID*)&MetaHost)))
 		{
-			void* CLRInterface = NULL;
-			if (GetProcAddress(MsCoreEDLL, "GetCORVersion"))
+			std::wstring VersionString(SME::StringHelpers::FormatWideString(DotNETFrameworkVersionString));
+			std::wstring ConfigName(SME::StringHelpers::FormatWideString("%s\\%s.config", APPPath, BGSEEMAIN->ParentEditorGetLongName()));
+
+			ICLRRuntimeInfo* RequiredRuntime = NULL;
+			if (SUCCEEDED(MetaHost->GetRuntime(VersionString.c_str(), IID_ICLRRuntimeInfo, (LPVOID*)&RequiredRuntime)))
 			{
-				HRESULT  ( __stdcall *CorBindToRuntimeHostProc)(LPCWSTR, LPCWSTR, LPCWSTR, void*, DWORD, REFCLSID, REFIID, LPVOID FAR *) =
-					(HRESULT  ( __stdcall *)(LPCWSTR, LPCWSTR, LPCWSTR, void*, DWORD, REFCLSID, REFIID, LPVOID FAR *))GetProcAddress(MsCoreEDLL, "CorBindToRuntimeHost");
+				DWORD StartupFlags = STARTUP_LOADER_OPTIMIZATION_MASK|STARTUP_LOADER_OPTIMIZATION_SINGLE_DOMAIN;
+				if (EnableCLRMemoryProfiling)
+					StartupFlags |= STARTUP_SERVER_GC;	// for memory profiling, concurrent GC limits the ability of profilers
+				else
+					StartupFlags |= STARTUP_CONCURRENT_GC;
 
-				if (CorBindToRuntimeHostProc)
+				if (SUCCEEDED(RequiredRuntime->SetDefaultStartupFlags(StartupFlags, ConfigName.c_str())) &&
+					SUCCEEDED(RequiredRuntime->BindAsLegacyV2Runtime()))
 				{
-					DWORD StartupFlags = STARTUP_LOADER_OPTIMIZATION_MASK|STARTUP_LOADER_OPTIMIZATION_SINGLE_DOMAIN;
-					if (EnableCLRMemoryProfiling)
-						StartupFlags |= STARTUP_SERVER_GC;	// for memory profiling, concurrent GC limits the ability of profilers
-					else
-						StartupFlags |= STARTUP_CONCURRENT_GC;
-
-					std::wstring VersionString(SME::StringHelpers::FormatWideString(DotNETFrameworkVersionString)), ConfigName(SME::StringHelpers::FormatWideString("%s.config", LongName));
-					if (SUCCEEDED(CorBindToRuntimeHostProc(VersionString.c_str(),
-														NULL,
-														ConfigName.c_str(),
-														0,
-														StartupFlags,
-														CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost,
-														&CLRInterface)))
+					ICLRRuntimeHost* CLRHost = NULL;
+					if (SUCCEEDED(RequiredRuntime->GetInterface(CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost, (LPVOID*)&CLRHost)))
 					{
 						HasDotNet = true;
 					}
 				}
 			}
-
-			FreeLibrary(MsCoreEDLL);
 		}
 
 		if (HasDotNet == false)
 		{
-			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed - v%s (Full/Client Profile) or greater required", DotNETFrameworkVersionString);
+			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed/had trouble initializing - %s (Full/Client Profile) or greater required", DotNETFrameworkVersionString);
 			return false;
 		}
 
