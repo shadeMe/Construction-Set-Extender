@@ -77,9 +77,6 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->DefineConst( _T("pi"), (float_type)MUP_CONST_PI );
   pParser->DefineConst( _T("e"),  (float_type)MUP_CONST_E );
 
-  // Vector
-  pParser->DefineFun(new FunSizeOf());
-
   // Generic functions
   pParser->DefineFun(new FunMax());
   pParser->DefineFun(new FunMin());

@@ -286,23 +286,26 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
   void OprtCastToFloat::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)
   {
-    switch(a_pArg[0]->GetType())
-    {
-    case 'i':
-    case 'f':
-    case 'b':
-         *ret = a_pArg[0]->GetFloat();
-         break;
+	  CodaScriptBackingStore* Store = a_pArg[0]->GetStore();
+	  SME_ASSERT(Store);
 
-    default:
-      {
-        ErrorContext err;
-        err.Errc = ecINVALID_TYPECAST;
-        err.Type1 = a_pArg[0]->GetType();
-        err.Type2 = 'f';
-        throw ParserError(err);
-      }
-    } // switch value type
+	  switch(Store->GetType())
+	  {
+	  case ICodaScriptDataStore::kDataType_Numeric:
+		  *ret = (float_type)Store->GetNumber();
+		  break;
+	  case ICodaScriptDataStore::kDataType_Reference:
+		  *ret = (float_type)Store->GetFormID();
+		  break;
+	  default:
+		  {
+			  ErrorContext err;
+			  err.Errc = ecINVALID_TYPECAST;
+			  err.Type1 = Store->GetType();
+			  err.Type2 = ICodaScriptDataStore::kDataType_Numeric;
+			  throw ParserError(err);
+		  }
+	  }
   }
 
   //------------------------------------------------------------------------------
@@ -330,20 +333,23 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
   void OprtCastToInt::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)
   {
-    switch(a_pArg[0]->GetType())
-    {
-    case 'f':
-    case 'i':
-    case 'b':
-         *ret = (int_type)a_pArg[0]->GetFloat();
-         break;
+	  CodaScriptBackingStore* Store = a_pArg[0]->GetStore();
+	  SME_ASSERT(Store);
 
+	  switch(Store->GetType())
+	  {
+	  case ICodaScriptDataStore::kDataType_Numeric:
+		  *ret = (float_type)Store->GetNumber();
+		  break;
+	  case ICodaScriptDataStore::kDataType_Reference:
+		  *ret = (float_type)Store->GetFormID();
+		  break;
     default:
       {
         ErrorContext err;
         err.Errc = ecINVALID_TYPECAST;
-        err.Type1 = a_pArg[0]->GetType();
-        err.Type2 = 'i';
+        err.Type1 = Store->GetType();
+        err.Type2 = ICodaScriptDataStore::kDataType_Numeric;
         throw ParserError(err);
       }
     } // switch value type
@@ -368,6 +374,9 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
 	  switch(Store->GetType())
 	  {
+	  case ICodaScriptDataStore::kDataType_Numeric:
+		  *ret = (int_type)((CodaScriptReferenceDataTypeT)Store->GetNumber());
+		  break;
 	  case ICodaScriptDataStore::kDataType_Reference:
 		  *ret = (int_type)Store->GetFormID();
 		  break;

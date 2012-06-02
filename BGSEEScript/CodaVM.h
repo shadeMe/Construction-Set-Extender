@@ -157,9 +157,11 @@ namespace BGSEditorExtender
 			BGSEEINIManagerSetterFunctor				INISettingSetter;
 
 			bool										Add(CodaScriptVariable* Variable);
-			CodaScriptVariable*							Add(const char* Name, CodaScriptStringParameterTypeT Value);
-			CodaScriptVariable*							Add(const char* Name, CodaScriptNumericDataTypeT Value);
-			CodaScriptVariable*							Add(const char* Name, CodaScriptReferenceDataTypeT Value);
+			template<typename T>
+			CodaScriptVariable*							Add(const char* Name, T Value, bool& ExistingVar);
+			CodaScriptVariable*							Add(const char* Name, CodaScriptStringParameterTypeT Value, bool& ExistingVar);
+			CodaScriptVariable*							Add(const char* Name, CodaScriptNumericDataTypeT Value, bool& ExistingVar);
+			CodaScriptVariable*							Add(const char* Name, CodaScriptReferenceDataTypeT Value, bool& ExistingVar);
 
 			void										Remove(CodaScriptVariable* Variable);
 			CodaScriptVariable*							Lookup(const char* Name);

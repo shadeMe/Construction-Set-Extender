@@ -8,6 +8,8 @@ namespace BGSEditorExtender
 	const char*								BGSEEConsole::kINISection = "Console";
 
 #define IDM_BGSEE_CONSOLE_COMMANDLINE_RESETCOMMANDSTACK			(WM_USER + 5001)
+#define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START		(WM_USER + 8001)
+#define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END		(WM_USER + 9000)
 
 	LRESULT CALLBACK BGSEEConsole::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
 	{
@@ -160,6 +162,8 @@ namespace BGSEditorExtender
 
 		return DlgProcResult;
 	}
+
+#define IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER		0xC05
 
 	LRESULT CALLBACK BGSEEConsole::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{

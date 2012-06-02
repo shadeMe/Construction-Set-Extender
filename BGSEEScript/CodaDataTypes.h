@@ -90,7 +90,7 @@ namespace BGSEditorExtender
 			CodaScriptSourceCodeT									Name;
 			CodaScriptScopedHandleDataStoreOwnerT					BoundOwner;
 		public:
-			CodaScriptVariable(CodaScriptSourceCodeT& Name, ICodaScriptDataStoreOwner* Storage);		// takes ownership of the owner
+			CodaScriptVariable(CodaScriptSourceCodeT& Name, ICodaScriptDataStoreOwner* Storage);		// claims ownership of the owner
 			virtual ~CodaScriptVariable();
 
 			const char*												GetName() const;

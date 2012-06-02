@@ -27,6 +27,8 @@ namespace BGSEditorExtender
 
 										// called by the manager before unlocking the achievement, return false to remain locked
 			virtual bool				UnlockCallback(BGSEEAchievementManager* Parameter);
+										// called before the achievement's state is serialized, return false to cancel the save op
+			virtual bool				SaveCallback(BGSEEAchievementManager* Parameter);
 		public:
 			BGSEEAchievement(const char* Name, const char* Desc, UInt32 IconID, const char* GUID);
 			virtual ~BGSEEAchievement();
@@ -60,8 +62,8 @@ namespace BGSEditorExtender
 
 			BGSEEAchievementManager();
 
-			void										SaveAchievementState(BGSEEAchievement* Achievement);
-			void										LoadAchievementState(BGSEEAchievement* Achievement);
+			void										SaveAchievementState(BGSEEAchievement* Achievement, bool StateOnly = false);
+			void										LoadAchievementState(BGSEEAchievement* Achievement, bool StateOnly = false);
 
 			template <typename T>
 			bool										GetRegValue(const char* Name, T* OutValue, const char* Key);

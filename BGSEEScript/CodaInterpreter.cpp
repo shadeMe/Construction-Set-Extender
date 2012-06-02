@@ -1575,7 +1575,11 @@ namespace BGSEditorExtender
 			else if ((Iterator = this->LookupVariable(Node->IteratorName.c_str())) == NULL)
 				throw CodaScriptException(Node, "Invalid iterator '%s'", Node->IteratorName.c_str());
 
-			CodaScriptBackingStore ArrayResult((CodaScriptNumericDataTypeT)0), IteratorBuffer((CodaScriptNumericDataTypeT)0);
+			CodaScriptBackingStore ArrayResult((CodaScriptNumericDataTypeT)0),
+								IteratorBuffer((CodaScriptNumericDataTypeT)0),
+								IteratorContents;
+
+			IteratorContents = *Iterator->GetStoreOwner()->GetDataStore();
 			ParserAgent->Evaluate(this, Node->ByteCode, &ArrayResult);
 
 			if (ArrayResult.GetType() != ICodaScriptDataStore::kDataType_Array)
@@ -1602,6 +1606,8 @@ namespace BGSEditorExtender
 				if (Result)			// return was called, so break
 					break;
 			}
+
+			*Iterator->GetStoreOwner() = IteratorContents;
 
 			CODASCRIPT_EXECUTEHNDLR_EPILOG
 

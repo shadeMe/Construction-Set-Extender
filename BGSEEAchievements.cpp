@@ -38,6 +38,11 @@ namespace BGSEditorExtender
 			return State == kState_Unlocked;
 		}
 
+		bool BGSEEAchievement::SaveCallback( BGSEEAchievementManager* Parameter )
+		{
+			return true;
+		}
+
 		BGSEEAchievementManager*			BGSEEAchievementManager::Singleton = NULL;
 
 		BGSEEAchievementManager::BGSEEAchievementManager() :
@@ -50,13 +55,20 @@ namespace BGSEditorExtender
 			;//
 		}
 
-		void BGSEEAchievementManager::SaveAchievementState( BGSEEAchievement* Achievement )
+		void BGSEEAchievementManager::SaveAchievementState( BGSEEAchievement* Achievement, bool StateOnly )
 		{
+			if (Achievement->SaveCallback(this) == false)
+				return;
+
 			SetRegValue<UInt32>(Achievement->BaseIDString.c_str(), Achievement->State, RegistryKeyRoot.c_str());
+
+			if (StateOnly)
+				return;
+
 			SetRegValue<UInt64>(Achievement->BaseIDString.c_str(), Achievement->ExtraData, RegistryKeyExtraData.c_str());
 		}
 
-		void BGSEEAchievementManager::LoadAchievementState( BGSEEAchievement* Achievement )
+		void BGSEEAchievementManager::LoadAchievementState( BGSEEAchievement* Achievement, bool StateOnly )
 		{
 			UInt32 State = 0;
 			UInt64 ExtraData = 0;
@@ -71,6 +83,9 @@ namespace BGSEditorExtender
 				SetRegValue<UInt32>(Achievement->BaseIDString.c_str(), 0, RegistryKeyRoot.c_str());
 				Achievement->State = BGSEEAchievement::kState_Locked;
 			}
+
+			if (StateOnly)
+				return;
 
 			if (GetRegValue<UInt64>(Achievement->BaseIDString.c_str(), &ExtraData, RegistryKeyExtraData.c_str()) == FALSE)
 			{
@@ -233,7 +248,7 @@ namespace BGSEditorExtender
 					(LPARAM)UserData);
 			}
 
-			SaveAchievementState(Achievement);
+			SaveAchievementState(Achievement, true);
 		}
 
 #define TIMERID_VISIBLE			8500

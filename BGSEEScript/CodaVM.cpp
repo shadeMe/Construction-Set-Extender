@@ -577,6 +577,7 @@ namespace BGSEditorExtender
 		const char*			CodaScriptGlobalDataStore::kINISection	= "CodaGlobalDataStore";
 
 #define IDM_BGSEE_CODAGLOBALDATASTORE_CLEAREDITFIELD			(WM_USER + 5003)
+#define IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST				(WM_USER + 5004)
 
 		BOOL CALLBACK CodaScriptGlobalDataStore::EditDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
@@ -592,14 +593,35 @@ namespace BGSEditorExtender
 				SetWindowText(NameBox, NULL);
 				SetWindowText(ValueBox, NULL);
 				break;
+			case IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST:
+				{
+					SendMessage(GlobaList, LB_RESETCONTENT, NULL, NULL);
+
+					char Buffer[0x100] = {0};
+					for (CodaScriptVariableListT::const_iterator Itr = Instance->Cache.begin(); Itr != Instance->Cache.end(); Itr++)
+					{
+						CodaScriptVariable* GlobalVar = *Itr;
+
+						sprintf_s(Buffer, sizeof(Buffer), "[%c]\t\t%s",
+							GlobalVar->GetStoreOwner()->GetDataStore()->GetType(),
+							GlobalVar->GetName());
+
+						int Index = SendMessage(GlobaList, LB_INSERTSTRING, -1, (LPARAM)Buffer);
+						SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)GlobalVar);
+					}
+
+					SendMessage(GlobaList, LB_SETCURSEL, -1, NULL);
+				}
+
+				break;
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
 				case IDC_BGSEE_CLOSE:
 					EndDialog(hWnd, 0);
 					return TRUE;
-				case IDC_BGSEE_CODAGLOBALDATASTORE_ADDNUMBER:
-				case IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING:
+				case IDC_BGSEE_APPLY:
+					if (IsWindowEnabled(ValueBox) == TRUE)
 					{
 						char NameBuffer[0x200] = {0}, ValueBuffer[0x200] = {0};
 						GetWindowText(NameBox, (LPSTR)NameBuffer, 0x200);
@@ -614,29 +636,26 @@ namespace BGSEditorExtender
 						}
 
 						CodaScriptVariable* GlobalVar = NULL;
+						bool ExistingVar = false;
 
-						switch (LOWORD(wParam))
+						if (IsDlgButtonChecked(hWnd, IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING) == BST_CHECKED)
+							GlobalVar = Instance->Add(NameBuffer, ValueBuffer, ExistingVar);
+						else
+							GlobalVar = Instance->Add(NameBuffer, atof(ValueBuffer), ExistingVar);
+
+						SME_ASSERT(GlobalVar);
+
+						if (ExistingVar == false)
 						{
-						case IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING:
-							GlobalVar =Instance->Add(NameBuffer, ValueBuffer);
-							break;
-						case IDC_BGSEE_CODAGLOBALDATASTORE_ADDNUMBER:
-							GlobalVar =Instance->Add(NameBuffer, atof(ValueBuffer));
-							break;
-						}
-
-						if (GlobalVar == NULL)
-						{
-							BGSEEUI->MsgBoxE(hWnd, NULL, "Enter a unique variable name");
-							break;
-						}
-
-						sprintf_s(NameBuffer, sizeof(NameBuffer), "[%c]\t\t%s",
+							sprintf_s(NameBuffer, sizeof(NameBuffer), "[%c]\t\t%s",
 								GlobalVar->GetStoreOwner()->GetDataStore()->GetType(),
 								GlobalVar->GetName());
 
-						int Index = SendMessage(GlobaList, LB_INSERTSTRING, -1, (LPARAM)NameBuffer);
-						SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)GlobalVar);
+							int Index = SendMessage(GlobaList, LB_INSERTSTRING, -1, (LPARAM)NameBuffer);
+							SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)GlobalVar);
+						}
+
+						SendMessage(hWnd, IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST, NULL, NULL);
 					}
 
 					break;
@@ -652,49 +671,10 @@ namespace BGSEditorExtender
 							SendMessage(hWnd, IDM_BGSEE_CODAGLOBALDATASTORE_CLEAREDITFIELD, NULL, NULL);
 							SendMessage(GlobaList, LB_SETSEL, FALSE, -1);
 						}
+
+						SendMessage(hWnd, IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST, NULL, NULL);
 					}
 
-					break;
-				case IDC_BGSEE_APPLY:
-					if (IsWindowEnabled(ValueBox) == TRUE)
-					{
-						int Index = SendMessage(GlobaList, LB_GETCURSEL, NULL, NULL);
-						if (Index != LB_ERR)
-						{
-							CodaScriptVariable* Global = (CodaScriptVariable*)SendMessage(GlobaList, LB_GETITEMDATA, Index, NULL);
-							char ValueBuffer[0x200] = {0};
-							GetWindowText(ValueBox, (LPSTR)ValueBuffer, 0x200);
-
-							if (strlen(ValueBuffer) > 0)
-							{
-								if (strstr(ValueBuffer, "=") || strstr(ValueBuffer, "|"))
-								{
-									BGSEEUI->MsgBoxW(hWnd, NULL, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.");
-									break;
-								}
-
-								switch (Global->GetStoreOwner()->GetDataStore()->GetType())
-								{
-								case ICodaScriptDataStore::kDataType_Numeric:
-									Global->GetStoreOwner()->GetDataStore()->SetNumber(atof(ValueBuffer));
-									break;
-								case ICodaScriptDataStore::kDataType_Reference:
-									{
-										CodaScriptReferenceDataTypeT FormID = 0;
-										sscanf_s(ValueBuffer, "%08X", &FormID);
-										Global->GetStoreOwner()->GetDataStore()->SetFormID(FormID);
-									}
-
-									break;
-								case ICodaScriptDataStore::kDataType_String:
-									Global->GetStoreOwner()->GetDataStore()->SetString(ValueBuffer);
-									break;
-								default:
-									break;
-								}
-							}
-						}
-					}
 					break;
 				case IDC_BGSEE_CODAGLOBALDATASTORE_VARLIST:
 					{
@@ -715,13 +695,19 @@ namespace BGSEditorExtender
 								case ICodaScriptDataStore::kDataType_Numeric:
 									FORMAT_STR(Buffer, "%0.6f", Global->GetStoreOwner()->GetDataStore()->GetNumber() * 1.0);
 									SetWindowText(ValueBox, (LPSTR)Buffer);
+									CheckRadioButton(hWnd,
+													IDC_BGSEE_CODAGLOBALDATASTORE_ADDNUMBER,
+													IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING,
+													IDC_BGSEE_CODAGLOBALDATASTORE_ADDNUMBER);
+
 									break;
-								case ICodaScriptDataStore::kDataType_Reference:
-									FORMAT_STR(Buffer, "%08X", Global->GetStoreOwner()->GetDataStore()->GetFormID());
-									SetWindowText(ValueBox, (LPSTR)Buffer);
-									break;;
 								case ICodaScriptDataStore::kDataType_String:
 									SetWindowText(ValueBox, (LPSTR)Global->GetStoreOwner()->GetDataStore()->GetString());
+									CheckRadioButton(hWnd,
+										IDC_BGSEE_CODAGLOBALDATASTORE_ADDNUMBER,
+										IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING,
+										IDC_BGSEE_CODAGLOBALDATASTORE_ADDSTRING);
+
 									break;
 								default:
 									EnableWindow(ValueBox, FALSE);
@@ -744,18 +730,7 @@ namespace BGSEditorExtender
 					SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
 					Instance = (CodaScriptGlobalDataStore*)lParam;
 
-					char Buffer[0x100] = {0};
-					for (CodaScriptVariableListT::const_iterator Itr = Instance->Cache.begin(); Itr != Instance->Cache.end(); Itr++)
-					{
-						CodaScriptVariable* GlobalVar = *Itr;
-
-						sprintf_s(Buffer, sizeof(Buffer), "[%c]\t\t%s",
-								GlobalVar->GetStoreOwner()->GetDataStore()->GetType(),
-								GlobalVar->GetName());
-
-						int Index = SendMessage(GlobaList, LB_INSERTSTRING, -1, (LPARAM)Buffer);
-						SendMessage(GlobaList, LB_SETITEMDATA, Index, (LPARAM)GlobalVar);
-					}
+					SendMessage(hWnd, IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST, NULL, NULL);
 				}
 
 				break;
@@ -775,49 +750,39 @@ namespace BGSEditorExtender
 			return false;
 		}
 
-		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, CodaScriptStringParameterTypeT Value )
+		template<typename T>
+		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, T Value, bool& ExistingVar )
 		{
-			if (Lookup(Name) == NULL)
+			CodaScriptVariable* Global = Lookup(Name);
+
+			if (Global == NULL)
 			{
 				ICodaScriptDataStoreOwner* StoreOwner = CodaScriptObjectFactory::BuildDataStoreOwner(CodaScriptObjectFactory::kFactoryType_MUP);
-				CodaScriptVariable* Global = new CodaScriptVariable(std::string(Name), StoreOwner);
-				StoreOwner->GetDataStore()->SetString(Value);
+				Global = new CodaScriptVariable(std::string(Name), StoreOwner);
 				Cache.push_back(Global);
 
-				return Global;
+				ExistingVar = false;
 			}
+			else
+				ExistingVar = true;
 
-			return NULL;
+			*Global->GetStoreOwner()->GetDataStore() = Value;
+			return Global;
 		}
 
-		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, CodaScriptNumericDataTypeT Value )
+		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, CodaScriptStringParameterTypeT Value, bool& ExistingVar )
 		{
-			if (Lookup(Name) == NULL)
-			{
-				ICodaScriptDataStoreOwner* StoreOwner = CodaScriptObjectFactory::BuildDataStoreOwner(CodaScriptObjectFactory::kFactoryType_MUP);
-				CodaScriptVariable* Global = new CodaScriptVariable(std::string(Name), StoreOwner);
-				StoreOwner->GetDataStore()->SetNumber(Value);
-				Cache.push_back(Global);
-
-				return Global;
-			}
-
-			return NULL;
+			return Add<CodaScriptStringParameterTypeT>(Name, Value, ExistingVar);
 		}
 
-		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, CodaScriptReferenceDataTypeT Value )
+		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, CodaScriptNumericDataTypeT Value, bool& ExistingVar )
 		{
-			if (Lookup(Name) == NULL)
-			{
-				ICodaScriptDataStoreOwner* StoreOwner = CodaScriptObjectFactory::BuildDataStoreOwner(CodaScriptObjectFactory::kFactoryType_MUP);
-				CodaScriptVariable* Global = new CodaScriptVariable(std::string(Name), StoreOwner);
-				StoreOwner->GetDataStore()->SetFormID(Value);
-				Cache.push_back(Global);
+			return Add<CodaScriptNumericDataTypeT>(Name, Value, ExistingVar);
+		}
 
-				return Global;
-			}
-
-			return NULL;
+		CodaScriptVariable* CodaScriptGlobalDataStore::Add( const char* Name, CodaScriptReferenceDataTypeT Value, bool& ExistingVar )
+		{
+			return Add<CodaScriptReferenceDataTypeT>(Name, Value, ExistingVar);
 		}
 
 		void CodaScriptGlobalDataStore::Remove( CodaScriptVariable* Variable )
@@ -883,19 +848,20 @@ namespace BGSEditorExtender
 						std::string Name(StrBuffer.substr(0, IndexA));
 						std::string Type(StrBuffer.substr(IndexA + 1, IndexB - IndexA - 1));
 						std::string Value(StrBuffer.substr(IndexB + 1));
+						bool Throwaway = false;
 
 						if (Type == "s" || Type == "S")
-							Add(Name.c_str(), Value.c_str());
+							Add(Name.c_str(), Value.c_str(), Throwaway);
 						else if (Type == "n" || Type == "N")
-							Add(Name.c_str(), atof(Value.c_str()));
+							Add(Name.c_str(), atof(Value.c_str()), Throwaway);
 						else if (Type == "r" || Type == "R")
 						{
 							CodaScriptReferenceDataTypeT FormID = 0;
 							sscanf_s(Value.c_str(), "%08X", &FormID);
-							Add(Name.c_str(), FormID);
+							Add(Name.c_str(), FormID, Throwaway);
 						}
 						else
-							Add(Name.c_str(), 0.0);
+							Add(Name.c_str(), 0.0, Throwaway);
 
 						BGSEECONSOLE_MESSAGE("%s = %s", Name.c_str(), Value.c_str());
 					}
@@ -1060,6 +1026,9 @@ namespace BGSEditorExtender
 									bool& ReturnedResult )
 		{
 			SME_ASSERT(Initialized);
+
+			std::replace(ScriptName.begin(), ScriptName.end(), '\\', ' ');
+			std::replace(ScriptName.begin(), ScriptName.end(), '/', ' ');
 
 			BGSEEResourceLocation Path(BaseDirectory.GetRelativePath() + "\\" + ScriptName + CodaScriptVM::kSourceExtension);
 			std::fstream InputStream(Path().c_str(), std::iostream::in);
