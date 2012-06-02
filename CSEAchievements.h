@@ -54,6 +54,8 @@ namespace ConstructionSetExtender
 
 			static VOID CALLBACK			TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
+			virtual bool					SaveCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+
 			CSEAchievementLost(UInt32 ReqdHours);
 		public:
 			virtual ~CSEAchievementLost();

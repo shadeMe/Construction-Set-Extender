@@ -79,7 +79,7 @@ namespace ConstructionSetExtender
 			if (CSEAchievementCheat::GetSingleton()->GetIdleState())
 				return;
 
-			CSEAchievementCheat::GetSingleton()->ElapsedTicks += dwTime - CSEAchievementCheat::GetSingleton()->InitTickCount;
+			CSEAchievementCheat::GetSingleton()->ElapsedTicks = dwTime - CSEAchievementCheat::GetSingleton()->InitTickCount;
 
 			if (CSEAchievementCheat::GetSingleton()->ElapsedTicks / (3600 * 1000) >= CSEAchievementCheat::GetSingleton()->HoursRequired)
 			{
@@ -118,9 +118,10 @@ namespace ConstructionSetExtender
 			if (CSEAchievementLost::GetSingleton()->GetIdleState())
 				return;
 
-			CSEAchievementLost::GetSingleton()->ExtraData += dwTime - CSEAchievementLost::GetSingleton()->InitTickCount;
+			CSEAchievementLost::GetSingleton()->ElapsedTicks = dwTime - CSEAchievementLost::GetSingleton()->InitTickCount;
 
-			if (CSEAchievementLost::GetSingleton()->ExtraData / (3600 * 1000) >= CSEAchievementLost::GetSingleton()->HoursRequired)
+			if ((CSEAchievementLost::GetSingleton()->ExtraData + CSEAchievementLost::GetSingleton()->ElapsedTicks) / (3600 * 1000) >=
+				CSEAchievementLost::GetSingleton()->HoursRequired)
 			{
 				BGSEEACHIEVEMENTS->Unlock(CSEAchievementLost::GetSingleton());
 			}
@@ -153,6 +154,13 @@ namespace ConstructionSetExtender
 		float CSEAchievementLost::GetLoggedHours( void ) const
 		{
 			return ExtraData / (3600.0 * 1000.0);
+		}
+
+		bool CSEAchievementLost::SaveCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		{
+			ExtraData += ElapsedTicks;
+
+			return true;
 		}
 
 		bool CSEAchievementIncremented::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )

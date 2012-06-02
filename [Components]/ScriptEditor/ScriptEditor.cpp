@@ -2100,6 +2100,7 @@ namespace ConstructionSetExtender
 
 				TextEditor->ClearScriptErrorHighlights();
 				MessageList->Items->Clear();
+				FindList->Items->Clear();
 				VariableIndexList->Items->Clear();
 
 				String^ CSEBlock = "";
