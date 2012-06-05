@@ -32,42 +32,62 @@ namespace BGSEditorExtender
 																				bool& Return, LPARAM& InstanceUserData);
 		typedef std::map<SubclassProc, LPARAM>			SubclassProcMapT;
 
-		struct SubclassData
+		struct DialogSubclassData
 		{
 			DLGPROC								Original;
 			BGSEEWindowHandleCollection			ActiveHandles;				// open windows using the parent templateID
 			SubclassProcMapT					Subclasses;
 
-			SubclassData();
+			DialogSubclassData();
 
 			INT_PTR								ProcessSubclasses(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 		};
 
-		struct SubclassUserData
+		struct DialogSubclassUserData
 		{
 			BGSEEWindowSubclasser*				Instance;
-			SubclassData*						Data;
+			DialogSubclassData*					Data;
 			LPARAM								InitParam;
 			LPARAM								ExtraData;
-			bool								Initialized;
+			bool								Initialized;				// set after the WM_INITDIALOG message is processed
+		};
+
+		struct WindowSubclassData
+		{
+			WNDPROC								Original;
+			SubclassProcMapT					Subclasses;
+
+			WindowSubclassData();
+
+			LRESULT								ProcessSubclasses(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
+		};
+
+		struct WindowSubclassUserData
+		{
+			BGSEEWindowSubclasser*				Instance;
+			WindowSubclassData*					Data;
+			LONG_PTR							OriginalUserData;			// ping-pong b'ween this and our userdata
 		};
 	private:
-		typedef std::map<UInt32, SubclassData>	DialogSubclassMapT;			// key = templateID
+		typedef std::map<UInt32, DialogSubclassData>	DialogSubclassMapT;			// key = templateID
+		typedef std::map<HWND, WindowSubclassData>		WindowSubclassMapT;
 
 		static LRESULT CALLBACK					MainWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static INT_PTR CALLBACK					DialogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK					RegularWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		HWND									EditorMainWindow;
 		WNDPROC									EditorMainWindowProc;
 		SubclassProcMapT						MainWindowSubclasses;
 		DialogSubclassMapT						DialogSubclasses;
+		WindowSubclassMapT						RegularWindowSubclasses;
 
 												// returns true if callbacks are registered for the template
-		bool									GetShouldSubclass(UInt32 TemplateID,
+		bool									GetShouldSubclassDialog(UInt32 TemplateID,
 																LPARAM InitParam,
 																DLGPROC OriginalProc,
 																DLGPROC& OutSubclassProc,
-																SubclassUserData** OutSubclassUserData);
+																DialogSubclassUserData** OutSubclassUserData);
 		void									PreSubclassMainWindow(HWND MainWindow);
 	public:
 		BGSEEWindowSubclasser();
@@ -78,6 +98,9 @@ namespace BGSEditorExtender
 
 		bool									RegisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc, LPARAM UserData = NULL);
 		bool									UnregisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc);
+
+		bool									RegisterRegularWindowSubclass(HWND Handle, SubclassProc Proc, LPARAM UserData = NULL);
+		bool									UnregisterRegularWindowSubclass(HWND Handle, SubclassProc Proc);
 
 		bool									GetHasDialogSubclass(UInt32 TemplateID);
 	};

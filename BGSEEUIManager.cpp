@@ -70,7 +70,7 @@ namespace BGSEditorExtender
 			::SendMessage(*Itr, Msg, wParam, lParam);
 	}
 
-	BGSEEWindowSubclasser::SubclassData::SubclassData() :
+	BGSEEWindowSubclasser::DialogSubclassData::DialogSubclassData() :
 		Original(NULL),
 		ActiveHandles(),
 		Subclasses()
@@ -78,7 +78,7 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	INT_PTR BGSEEWindowSubclasser::SubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+	INT_PTR BGSEEWindowSubclasser::DialogSubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
 	{
 		INT_PTR Result = FALSE;
 		bool ReturnMark = Return;
@@ -97,9 +97,35 @@ namespace BGSEditorExtender
 		return Result;
 	}
 
+	BGSEEWindowSubclasser::WindowSubclassData::WindowSubclassData() :
+		Original(NULL),
+		Subclasses()
+	{
+		;//
+	}
+
+	LRESULT BGSEEWindowSubclasser::WindowSubclassData::ProcessSubclasses( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+	{
+		LRESULT Result = FALSE;
+		bool ReturnMark = Return;
+
+		for (SubclassProcMapT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		{
+			LRESULT CurrentResult = Itr->first(hWnd, uMsg, wParam, lParam, ReturnMark, Itr->second);
+
+			if (ReturnMark && Return == false)
+			{
+				Result = CurrentResult;
+				Return = true;
+			}
+		}
+
+		return Result;
+	}
+
 	LRESULT CALLBACK BGSEEWindowSubclasser::MainWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
-		BGSEEWindowSubclasser* Instance = (BGSEEWindowSubclasser*)GetWindowLong(hWnd, GWL_USERDATA);
+		BGSEEWindowSubclasser* Instance = (BGSEEWindowSubclasser*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		bool CallbackReturn = false;
 		LRESULT CallbackResult = FALSE;
 		bool ReleasingSubclass = false;
@@ -124,7 +150,7 @@ namespace BGSEditorExtender
 
 		if (ReleasingSubclass)
 		{
-			SetWindowLong(hWnd, GWL_WNDPROC, (LONG)Instance->EditorMainWindowProc);
+			SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)Instance->EditorMainWindowProc);
 			return TRUE;
 		}
 		else if (CallbackReturn && uMsg != WM_DESTROY)
@@ -135,9 +161,9 @@ namespace BGSEditorExtender
 
 	INT_PTR CALLBACK BGSEEWindowSubclasser::DialogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
-		bool SkipCallback = false;
+		bool CallbackReturn = false;
 		INT_PTR DlgProcResult = FALSE;
-		SubclassUserData* UserData = (SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+		DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 
 		switch (uMsg)
 		{
@@ -145,8 +171,8 @@ namespace BGSEditorExtender
 			{
 				if (lParam)
 				{
-					SetWindowLong(hWnd, DWL_USER, (LONG)lParam);
-					UserData = (SubclassUserData*)lParam;
+					SetWindowLongPtr(hWnd, DWL_USER, (LONG_PTR)lParam);
+					UserData = (DialogSubclassUserData*)lParam;
 
 					if (UserData->Initialized == false)
 					{
@@ -160,10 +186,10 @@ namespace BGSEditorExtender
 				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, UserData->InitParam);
 
 				// re-check the userdata as the window can get destroyed inside the original WM_INITDIALOG callback
-				UserData = (SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+				UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 				if (UserData)
 				{
-					UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, SkipCallback);
+					UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, UserData->InitParam, CallbackReturn);
 				}
 
 				return DlgProcResult;
@@ -173,15 +199,15 @@ namespace BGSEditorExtender
 		case WM_SUBCLASSER_RELEASE:
 		case WM_DESTROY:
 			{
-				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, SkipCallback);
+				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, CallbackReturn);
 				if (uMsg != WM_SUBCLASSER_RELEASE)
 					DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, lParam);
 
 				bool RemoveResult = UserData->Data->ActiveHandles.Remove(hWnd);
 				SME_ASSERT(RemoveResult);
 
-				SetWindowLong(hWnd, DWL_USER, NULL);
-				SetWindowLong(hWnd, GWL_WNDPROC, (LONG)UserData->Data->Original);
+				SetWindowLongPtr(hWnd, DWL_USER, NULL);
+				SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)UserData->Data->Original);
 
 				delete UserData;
 				return DlgProcResult;
@@ -190,9 +216,8 @@ namespace BGSEditorExtender
 			break;
 		}
 
-		if (SkipCallback == false && UserData && UserData->Initialized)
+		if (UserData && UserData->Initialized)
 		{
-			bool CallbackReturn = false;
 			INT_PTR CallbackResult = UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
 
 			if (CallbackReturn)
@@ -205,11 +230,57 @@ namespace BGSEditorExtender
 			return DlgProcResult;
 	}
 
-	bool BGSEEWindowSubclasser::GetShouldSubclass( UInt32 TemplateID,
+	LRESULT CALLBACK BGSEEWindowSubclasser::RegularWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	{
+		WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
+		if (UserData == NULL || UserData->Instance == NULL)		// the subclass can be called recursively if the original calls SendMessage
+			return TRUE;										// so fail elegantly
+
+		bool CallbackReturn = false;
+		LRESULT CallbackResult = FALSE;
+
+		switch (uMsg)
+		{
+		case WM_SUBCLASSER_RELEASE:
+		case WM_DESTROY:
+			{
+				UserData->Data->ProcessSubclasses(hWnd, WM_DESTROY, wParam, lParam, CallbackReturn);
+				SetWindowLongPtr(hWnd, GWL_USERDATA, UserData->OriginalUserData);
+
+				if (uMsg == WM_DESTROY)
+				{
+					CallbackResult = CallWindowProc(UserData->Data->Original, hWnd, uMsg, wParam, lParam);
+				}
+
+				SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)UserData->Data->Original);
+
+				delete UserData;
+				return CallbackResult;
+			}
+
+			break;
+		}
+
+		CallbackResult = UserData->Data->ProcessSubclasses(hWnd, uMsg, wParam, lParam, CallbackReturn);
+		if (CallbackReturn == false)
+		{
+			if (UserData->OriginalUserData)
+				SetWindowLongPtr(hWnd, GWL_USERDATA, UserData->OriginalUserData);
+
+			CallbackResult = CallWindowProc(UserData->Data->Original, hWnd, uMsg, wParam, lParam);
+
+			if (UserData->OriginalUserData)
+				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)UserData);
+		}
+
+		return CallbackResult;
+	}
+
+	bool BGSEEWindowSubclasser::GetShouldSubclassDialog( UInt32 TemplateID,
 												LPARAM InitParam,
 												DLGPROC OriginalProc,
 												DLGPROC& OutSubclassProc,
-												SubclassUserData** OutSubclassUserData )
+												DialogSubclassUserData** OutSubclassUserData )
 	{
 		SME_ASSERT(OutSubclassUserData);
 
@@ -217,7 +288,7 @@ namespace BGSEditorExtender
 		if (Match != DialogSubclasses.end())
 		{
 			OutSubclassProc = DialogSubclassProc;
-			(*OutSubclassUserData) = new SubclassUserData();
+			(*OutSubclassUserData) = new DialogSubclassUserData();
 			(*OutSubclassUserData)->Instance = this;
 			(*OutSubclassUserData)->Data = &Match->second;
 			(*OutSubclassUserData)->Data->Original = OriginalProc;
@@ -233,8 +304,8 @@ namespace BGSEditorExtender
 	{
 		EditorMainWindow = MainWindow;
 
-		SetWindowLong(EditorMainWindow, GWL_USERDATA, (LONG)this);
-		EditorMainWindowProc = (WNDPROC)SetWindowLong(EditorMainWindow, GWL_WNDPROC, (LONG)MainWindowSubclassProc);
+		SetWindowLongPtr(EditorMainWindow, GWL_USERDATA, (LONG_PTR)this);
+		EditorMainWindowProc = (WNDPROC)SetWindowLongPtr(EditorMainWindow, GWL_WNDPROC, (LONG_PTR)MainWindowSubclassProc);
 
 		SME_ASSERT(EditorMainWindow && EditorMainWindowProc);
 	}
@@ -243,7 +314,8 @@ namespace BGSEditorExtender
 		EditorMainWindow(NULL),
 		EditorMainWindowProc(NULL),
 		MainWindowSubclasses(),
-		DialogSubclasses()
+		DialogSubclasses(),
+		RegularWindowSubclasses()
 	{
 		;//
 	}
@@ -259,6 +331,13 @@ namespace BGSEditorExtender
 		}
 
 		DialogSubclasses.clear();
+
+		for (WindowSubclassMapT::iterator Itr = RegularWindowSubclasses.begin(); Itr != RegularWindowSubclasses.end(); Itr++)
+		{
+			SendMessage(Itr->first, WM_SUBCLASSER_RELEASE, NULL, NULL);
+		}
+
+		RegularWindowSubclasses.clear();
 	}
 
 	bool BGSEEWindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc, LPARAM UserData )
@@ -302,7 +381,7 @@ namespace BGSEditorExtender
 		}
 		else
 		{
-			DialogSubclasses.insert(std::make_pair<UInt32, SubclassData>(TemplateID, SubclassData()));
+			DialogSubclasses.insert(std::make_pair<UInt32, DialogSubclassData>(TemplateID, DialogSubclassData()));
 			DialogSubclasses[TemplateID].Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
 		}
 
@@ -318,7 +397,7 @@ namespace BGSEditorExtender
 			{
 				if (Itr->first == Proc)
 				{
-					MainWindowSubclasses.erase(Itr);
+					Match->second.Subclasses.erase(Itr);
 					return true;
 				}
 			}
@@ -334,6 +413,63 @@ namespace BGSEditorExtender
 			return true;
 		else
 			return false;
+	}
+
+	bool BGSEEWindowSubclasser::RegisterRegularWindowSubclass( HWND Handle, SubclassProc Proc, LPARAM UserData /*= NULL*/ )
+	{
+		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
+		if (Match != RegularWindowSubclasses.end())
+		{
+			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			{
+				if (Itr->first == Proc)
+					return false;
+			}
+
+			Match->second.Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
+		}
+		else
+		{
+			RegularWindowSubclasses.insert(std::make_pair<HWND, WindowSubclassData>(Handle, WindowSubclassData()));
+			RegularWindowSubclasses[Handle].Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
+
+			WindowSubclassUserData* UserData = new WindowSubclassUserData();
+			UserData->Instance = this;
+			UserData->Data = &RegularWindowSubclasses[Handle];
+			UserData->OriginalUserData = GetWindowLongPtr(Handle, GWL_USERDATA);
+
+			SetWindowLongPtr(Handle, GWL_USERDATA, (LONG_PTR)UserData);
+			RegularWindowSubclasses[Handle].Original = (WNDPROC)SetWindowLongPtr(Handle, GWL_WNDPROC, (LONG_PTR)RegularWindowSubclassProc);
+		}
+
+		return true;
+	}
+
+	bool BGSEEWindowSubclasser::UnregisterRegularWindowSubclass( HWND Handle, SubclassProc Proc )
+	{
+		bool Result = false;
+
+		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
+		if (Match != RegularWindowSubclasses.end())
+		{
+			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			{
+				if (Itr->first == Proc)
+				{
+					Match->second.Subclasses.erase(Itr);
+					Result = true;
+					break;
+				}
+			}
+
+			if (Match->second.Subclasses.size() == 0)		// remove the subclass and reset the wndproc
+			{
+				SendMessage(Match->first, WM_SUBCLASSER_RELEASE, NULL, NULL);
+				RegularWindowSubclasses.erase(Match);
+			}
+		}
+
+		return Result;
 	}
 
 	void BGSEEResourceTemplateHotSwapper::PopulateTemplateMap( void )
@@ -444,8 +580,8 @@ namespace BGSEditorExtender
 
 		if (Match != StyleListings.end())
 		{
-			LONG WindowRegular = GetWindowLong(Window, GWL_STYLE);
-			LONG WindowExtended = GetWindowLong(Window, GWL_EXSTYLE);
+			LONG WindowRegular = GetWindowLongPtr(Window, GWL_STYLE);
+			LONG WindowExtended = GetWindowLongPtr(Window, GWL_EXSTYLE);
 
 			switch (Match->second.RegularOp)
 			{
@@ -481,10 +617,10 @@ namespace BGSEditorExtender
 			}
 
 			if (Match->second.RegularOp != StyleData::kOperation_None)
-				SetWindowLong(Window, GWL_STYLE, WindowRegular);
+				SetWindowLongPtr(Window, GWL_STYLE, (LONG_PTR)WindowRegular);
 
 			if (Match->second.ExtendedOp != StyleData::kOperation_None)
-				SetWindowLong(Window, GWL_EXSTYLE, WindowExtended);
+				SetWindowLongPtr(Window, GWL_EXSTYLE, (LONG_PTR)WindowExtended);
 
 			if (PerformOperation)
 			{
@@ -626,13 +762,13 @@ namespace BGSEditorExtender
 		}
 
 		DLGPROC Replacement = NULL;
-		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
+		BGSEEWindowSubclasser::DialogSubclassUserData* UserData = NULL;
 		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
 
 		if (Alternate)
 			hInstance = Alternate;
 
-		if (BGSEEUI->Subclasser->GetShouldSubclass((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
+		if (BGSEEUI->Subclasser->GetShouldSubclassDialog((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
 		{
 			lpDialogFunc = Replacement;
 			dwInitParam = (LPARAM)UserData;
@@ -655,13 +791,13 @@ namespace BGSEditorExtender
 		SME_ASSERT(hInstance == BGSEEUI->EditorResourceInstance->operator()());
 
 		DLGPROC Replacement = NULL;
-		BGSEEWindowSubclasser::SubclassUserData* UserData = NULL;
+		BGSEEWindowSubclasser::DialogSubclassUserData* UserData = NULL;
 		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
 
 		if (Alternate)
 			hInstance = Alternate;
 
-		if (BGSEEUI->Subclasser->GetShouldSubclass((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
+		if (BGSEEUI->Subclasser->GetShouldSubclassDialog((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
 		{
 			lpDialogFunc = Replacement;
 			dwInitParam = (LPARAM)UserData;
@@ -997,7 +1133,7 @@ namespace BGSEditorExtender
 		bool SkipCallbackResult = false;
 		bool SkipDefaultProc = false;
 		LRESULT DlgProcResult = FALSE;
-		DlgUserData* UserData = (DlgUserData*)GetWindowLong(hWnd, GWL_USERDATA);
+		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		BGSEEGenericModelessDialog* Instance = NULL;
 
 		if (UserData)
@@ -1114,7 +1250,7 @@ namespace BGSEditorExtender
 			SkipDefaultProc = true;
 			break;
 		case WM_INITDIALOG:
-			SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+			SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 			UserData = (DlgUserData*)lParam;
 			Instance = UserData->Instance;
 			UserData->Initialized = true;
@@ -1125,7 +1261,7 @@ namespace BGSEditorExtender
 			delete UserData;
 			UserData = NULL;
 
-			SetWindowLong(hWnd, GWL_USERDATA, NULL);
+			SetWindowLongPtr(hWnd, GWL_USERDATA, NULL);
 			break;
 		}
 

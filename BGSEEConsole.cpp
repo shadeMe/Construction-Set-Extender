@@ -14,7 +14,7 @@ namespace BGSEditorExtender
 	LRESULT CALLBACK BGSEEConsole::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
 	{
 		LRESULT DlgProcResult = FALSE;
-		DlgUserData* UserData = (DlgUserData*)GetWindowLong(hWnd, GWL_USERDATA);
+		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		BGSEEConsole* Instance = dynamic_cast<BGSEEConsole*>(UserData->Instance);
 		Return = false;
 
@@ -167,7 +167,7 @@ namespace BGSEditorExtender
 
 	LRESULT CALLBACK BGSEEConsole::MessageLogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
-		DlgUserData* UserData = (DlgUserData*)GetWindowLong(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
+		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		BGSEEConsole* Instance = dynamic_cast<BGSEEConsole*>(UserData->Instance);
 
 		switch (uMsg)
@@ -215,13 +215,13 @@ namespace BGSEditorExtender
 			break;
 		}
 
-		WNDPROC Original = (WNDPROC)GetWindowLong(hWnd, GWL_USERDATA);
+		WNDPROC Original = (WNDPROC)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		return CallWindowProc(Original, hWnd, uMsg, wParam, lParam);
 	}
 
 	LRESULT CALLBACK BGSEEConsole::CommandLineSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
-		DlgUserData* UserData = (DlgUserData*)GetWindowLong(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
+		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(GetAncestor(hWnd, GA_PARENT), GWL_USERDATA);
 		BGSEEConsole* Instance = dynamic_cast<BGSEEConsole*>(UserData->Instance);
 
 		switch (uMsg)
@@ -301,7 +301,7 @@ namespace BGSEditorExtender
 			break;
 		}
 
-		WNDPROC Original = (WNDPROC)GetWindowLong(hWnd, GWL_USERDATA);
+		WNDPROC Original = (WNDPROC)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		return CallWindowProc(Original, hWnd, uMsg, wParam, lParam);
 	}
 
@@ -380,6 +380,8 @@ namespace BGSEditorExtender
 
 	void BGSEEConsole::DefaultDebugLogContext::Print( const char* Prefix, const char* Message )
 	{
+		SME_ASSERT(Prefix && Message);
+
 		std::string Addend;
 
 		if (atoi(Parent->INISettingGetter(Parent->kConsoleSpecificINISettings[BGSEEConsole::kConsoleSpecificINISetting_LogTimestamps].Key, Parent->kINISection)) &&
@@ -410,7 +412,7 @@ namespace BGSEditorExtender
 
 		SetState(kState_Update);
 
-		if (ExecutingCallbacks == false)
+		if (ExecutingCallbacks == false && strlen(Message) > 0)
 		{
 			ExecutePrintCallbacks(Prefix, Message);
 		}
@@ -749,13 +751,13 @@ namespace BGSEditorExtender
 		INISaveUIState(&INISettingSetter, kINISection);
 		KillTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER);
 
-		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
+		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG),
 					GWL_WNDPROC,
-					GetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA));
+					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA));
 
-		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
+		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
 					GWL_WNDPROC,
-					GetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
+					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
 	}
 
 	void BGSEEConsole::InitializeUI( HWND Parent, HINSTANCE Resource )
@@ -764,11 +766,11 @@ namespace BGSEditorExtender
 		ResourceInstance = Resource;
 
 		Create(NULL, false);
-		LONG OrgWndProc = SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_WNDPROC, (LONG)BGSEEConsole::MessageLogSubclassProc);
-		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA, OrgWndProc);
+		LONG OrgWndProc = SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_WNDPROC, (LONG)BGSEEConsole::MessageLogSubclassProc);
+		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA, OrgWndProc);
 
-		OrgWndProc = SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_WNDPROC, (LONG)BGSEEConsole::CommandLineSubclassProc);
-		SetWindowLong(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA, OrgWndProc);
+		OrgWndProc = SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_WNDPROC, (LONG)BGSEEConsole::CommandLineSubclassProc);
+		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA, OrgWndProc);
 
 		Edit_LimitText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), sizeof(int));
 

@@ -581,7 +581,7 @@ namespace BGSEditorExtender
 
 		BOOL CALLBACK CodaScriptGlobalDataStore::EditDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
-			CodaScriptGlobalDataStore* Instance = (CodaScriptGlobalDataStore*)GetWindowLong(hWnd, GWL_USERDATA);
+			CodaScriptGlobalDataStore* Instance = (CodaScriptGlobalDataStore*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 
 			HWND GlobaList = GetDlgItem(hWnd, IDC_BGSEE_CODAGLOBALDATASTORE_VARLIST);
 			HWND NameBox =  GetDlgItem(hWnd, IDC_BGSEE_CODAGLOBALDATASTORE_NAME);
@@ -727,7 +727,7 @@ namespace BGSEditorExtender
 				break;
 			case WM_INITDIALOG:
 				{
-					SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+					SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 					Instance = (CodaScriptGlobalDataStore*)lParam;
 
 					SendMessage(hWnd, IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST, NULL, NULL);

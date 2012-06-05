@@ -255,7 +255,7 @@ namespace BGSEditorExtender
 
 		INT_PTR CALLBACK BGSEEAchievementManager::NotificationDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
-			NotificationUserData* UserData = (NotificationUserData*)GetWindowLong(hWnd, GWL_USERDATA);
+			NotificationUserData* UserData = (NotificationUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 			BGSEEAchievementManager* Instance = NULL;
 			BGSEEAchievement* UnlockedAchievement = NULL;
 
@@ -294,7 +294,7 @@ namespace BGSEditorExtender
 				return (INT_PTR)UserData->BGBrush;
 			case WM_INITDIALOG:
 				{
-					SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+					SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 					UserData = (NotificationUserData*)lParam;
 					Instance = UserData->Instance;
 					UnlockedAchievement = UserData->Achievement;

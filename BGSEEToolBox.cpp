@@ -19,7 +19,7 @@ namespace BGSEditorExtender
 		HWND InitDirBox =  GetDlgItem(hWnd, IDC_BGSEE_TOOLBOX_INITDIRBOX);
 
 		char Buffer[0x200] = {0};
-		DlgUserData* UserData = (DlgUserData*)GetWindowLong(hWnd, GWL_USERDATA);
+		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		BGSEEToolBox* Instance = NULL;
 
 		if (UserData)
@@ -220,7 +220,7 @@ namespace BGSEditorExtender
 
 			break;
 		case WM_INITDIALOG:
-			SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+			SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 			UserData = (DlgUserData*)lParam;
 			Instance = UserData->Instance;
 			Instance->EnumerateToolsInListBox(ToolList);
@@ -228,7 +228,7 @@ namespace BGSEditorExtender
 			break;
 		case WM_DESTROY:
 			delete UserData;
-			SetWindowLong(hWnd, GWL_USERDATA, (LONG)0);
+			SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)0);
 
 			break;
 		}
