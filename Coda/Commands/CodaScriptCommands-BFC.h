@@ -586,6 +586,38 @@ namespace ConstructionSetExtender
 					0,
 					3,
 					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptParametricCommandPrototype(GetBFCActorBaseDataSex,
+					0,
+					"Returns the 'sex' attribute of actor basedata component of the passed form",
+					"Sex<ul><li>&nbsp; 0: Male</li><li>&nbsp; 1: Female</li></ul>",
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Numeric);
+
+				CodaScriptParametricCommandPrototype(SetBFCActorBaseDataSex,
+					0,
+					"Sets the 'sex' attribute of actor basedata component of the passed form",
+					0,
+					2,
+					FormNumber,
+					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptParametricCommandPrototype(GetBFCRace,
+					0,
+					"Returns the race component of the passed form",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Reference);
+
+				CodaScriptParametricCommandPrototype(SetBFCRace,
+					0,
+					"Sets the passed form's race component",
+					0,
+					2,
+					TwoForms,
+					ICodaScriptDataStore::kDataType_Invalid);
 			}
 		}
 	}

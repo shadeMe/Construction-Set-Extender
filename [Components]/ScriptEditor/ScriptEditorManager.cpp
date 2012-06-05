@@ -68,7 +68,9 @@ namespace ConstructionSetExtender
 			}
 			catch (Exception^ E)
 			{
-				DebugPrint("ScriptEditorManager couldn't complete operation '" + TypeIdentifier[(int)Op] + "'\n\tException: " + E->Message, true);
+				DebugPrint("ScriptEditorManager couldn't complete operation '" + TypeIdentifier[(int)Op] + "'", true);
+				DebugPrint("\tException: " + E->Message);
+				DebugPrint("\tStack Trace:\n" + E->StackTrace);
 			}
 
 			return Result;

@@ -65,5 +65,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESRenderControlPerformRelativeScale, "allows the selection group to be scaled relative to their nominal center");
 		_DeclareMemHdlr(DataHandlerClosePlugins, "prevents the view port from flashing while loading exterior cells");
 		_DeclareMemHdlr(TESPathGridRubberBandSelection, "fixes a bug that selected all path grid points in the loaded cell(s) when restoring focus to the render window");
+		_DeclareMemHdlr(CoplanarRefDrop, "allows new references to be dropped coplanar to the object under the drop location");
+		_DeclareMemHdlr(InitPathGridNodeSelectionRing, "fixes a bug that causes selection rings to persist b'ween session of the path grid edit mode");
 	}
 }

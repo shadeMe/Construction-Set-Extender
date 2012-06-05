@@ -3409,11 +3409,14 @@ namespace ConstructionSetExtender
 			String^ VarName = ContextMenuWord->Text;
 			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
 
-			InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable", VarName);
-			if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
-				return;
-			else
-				VarName = Result->Text;
+			if (VarName->Length == 0)
+			{
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable", VarName);
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+				else
+					VarName = Result->Text;
+			}
 
 			InsertVariable(VarName, VarType);
 		}

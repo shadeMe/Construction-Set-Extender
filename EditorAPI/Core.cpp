@@ -169,6 +169,11 @@ bool TESDataHandler::SavePlugin( const char* FileName /*= NULL*/, bool AsESM /*=
 	return thisCall<bool>(0x0047E9B0, this, FileName, AsESM);
 }
 
+TESObjectCELL* TESDataHandler::GetExteriorCell( float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create /*= false*/ )
+{
+	return thisCall<TESObjectCELL*>(0x0047E480, this, XCoord, YCoord, Worldspace, Create);
+}
+
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);

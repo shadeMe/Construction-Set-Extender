@@ -26,6 +26,7 @@ namespace ConstructionSetExtender
 			kRenderer_AltCamRotationSpeed,
 			kRenderer_AltCamZoomSpeed,
 			kRenderer_AltCamPanSpeed,
+			kRenderer_CoplanarRefDrops,
 
 			kRenderer__MAX
 		};

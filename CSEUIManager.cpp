@@ -77,8 +77,8 @@ namespace ConstructionSetExtender
 		{
 			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
 
-			FormListWndProc = (WNDPROC)SetWindowLong(FormListView, GWL_WNDPROC, (LONG)FormListSubclassProc);
-			SetWindowLong(FormListView, GWL_USERDATA, (LONG)this);
+			FormListWndProc = (WNDPROC)SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListSubclassProc);
+			SetWindowLongPtr(FormListView, GWL_USERDATA, (LONG)this);
 
 			SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, NULL);
 		}
@@ -86,12 +86,12 @@ namespace ConstructionSetExtender
 		CSEFilterableFormListManager::FilterableWindowData::~FilterableWindowData()
 		{
 			KillTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID);
-			SetWindowLong(FormListView, GWL_WNDPROC, (LONG)FormListWndProc);
+			SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListWndProc);
 		}
 
 		LRESULT CALLBACK CSEFilterableFormListManager::FilterableWindowData::FormListSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
-			FilterableWindowData* UserData = (FilterableWindowData*)GetWindowLong(hWnd, GWL_USERDATA);
+			FilterableWindowData* UserData = (FilterableWindowData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 
 			switch (uMsg)
 			{
@@ -302,7 +302,7 @@ namespace ConstructionSetExtender
 			ActiveInvalidatedWindows.clear();
 		}
 
-		void __stdcall CSEWindowInvalidationManager::Push( HWND Window )
+		void CSEWindowInvalidationManager::Push( HWND Window )
 		{
 			SME_ASSERT(Window);
 
@@ -315,7 +315,7 @@ namespace ConstructionSetExtender
 				ActiveInvalidatedWindows[Window] += 1;
 		}
 
-		void __stdcall CSEWindowInvalidationManager::Pop( HWND Window )
+		void CSEWindowInvalidationManager::Pop( HWND Window )
 		{
 			SME_ASSERT(Window);
 			SME_ASSERT(ActiveInvalidatedWindows.count(Window));
@@ -350,7 +350,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -407,7 +407,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK DataDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			TESFile* ActiveTESFile = *((TESFile**)0x00A0AA7C);
@@ -1038,7 +1038,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-#define IDC_PATHGRIDTOOLBARBUTTION_TIMERID		0x99
+#define ID_PATHGRIDTOOLBARBUTTION_TIMERID		0x99
 
 		LRESULT CALLBACK MainWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
@@ -1049,13 +1049,14 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					SetTimer(hWnd, IDC_PATHGRIDTOOLBARBUTTION_TIMERID, 1000, NULL);
+					SetTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID, 500, NULL);
+					Return = true;
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					KillTimer(hWnd, IDC_PATHGRIDTOOLBARBUTTION_TIMERID);
+					KillTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID);
 				}
 
 				break;
@@ -1072,17 +1073,18 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case IDC_PATHGRIDTOOLBARBUTTION_TIMERID:
+				case ID_PATHGRIDTOOLBARBUTTION_TIMERID:
 					{
 						TBBUTTONINFO PathGridData = {0};
 						PathGridData.cbSize = sizeof(TBBUTTONINFO);
 						PathGridData.dwMask = TBIF_STATE;
-						if (*g_RenderWindowPathGridEditModeFlag)
-							PathGridData.fsState = TBSTATE_CHECKED|TBSTATE_ENABLED;
-						else
-							PathGridData.fsState = TBSTATE_ENABLED;
 
-						SendMessage(*g_HWND_MainToolbar, TB_SETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+						SendMessage(*g_HWND_MainToolbar, TB_GETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+						if ((PathGridData.fsState & TBSTATE_CHECKED) == false && *g_RenderWindowPathGridEditModeFlag)
+						{
+							PathGridData.fsState |= TBSTATE_CHECKED;
+							SendMessage(*g_HWND_MainToolbar, TB_SETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+						}
 					}
 
 					break;
@@ -1109,7 +1111,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK RenderWindowMenuInitSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = TRUE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -1135,6 +1137,11 @@ namespace ConstructionSetExtender
 								{
 								case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
 									if (Hooks::g_FreezeInactiveRefs)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_COPLANARDROP:
+									if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INIGetter())))
 										CheckItem = true;
 
 									break;
@@ -1387,6 +1394,22 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case IDC_RENDERWINDOWCONTEXT_COPLANARDROP:
+					{
+						bool CoplanarDrop = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INIGetter()));
+						CoplanarDrop = (CoplanarDrop == false);
+
+						INISettings::GetRenderer()->Set(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INISetter(), "%d", CoplanarDrop);
+
+						if (CoplanarDrop)
+							RenderWindowPainter::RenderChannelNotifications->Queue(6, "Enabled co-planar dropping");
+						else
+							RenderWindowPainter::RenderChannelNotifications->Queue(6, "Disabled co-planar dropping");
+
+						Return = true;
+					}
+
+					break;
 				}
 
 				break;
@@ -1398,7 +1421,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK RenderWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = TRUE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -1533,6 +1556,15 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case 0x45:		// E
+					if (GetAsyncKeyState(VK_SHIFT))
+					{
+						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_COPLANARDROP, NULL);
+
+						Return = true;
+					}
+
+					break;
 				}
 
 				break;
@@ -1544,7 +1576,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
@@ -1615,7 +1647,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK CellViewWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			HWND WorldspaceLabel = GetDlgItem(hWnd, 1164);
@@ -1857,7 +1889,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK ResponseDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			HWND VoiceList = GetDlgItem(hWnd, 2168);
@@ -1974,7 +2006,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::SubclassUserData*)GetWindowLong(hWnd, DWL_USER);
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -2240,7 +2272,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_COMMAND:
 				{
-					InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLong(hWnd, GWL_USERDATA);
+					InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 
 					switch (LOWORD(wParam))
 					{
@@ -2258,7 +2290,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_INITDIALOG:
-				SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 				SetDlgItemText(hWnd, IDC_TEXTEDIT_TEXT, ((InitDialogMessageParamT<UInt32>*)lParam)->Buffer);
 
 				break;
@@ -2366,7 +2398,7 @@ namespace ConstructionSetExtender
 					{
 						char Buffer[0x200] = {0};
 						GetDlgItemText(hWnd, IDC_COPYPATH_ASSETPATH, Buffer, sizeof(Buffer));
-						InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLong(hWnd, GWL_USERDATA);
+						InitDialogMessageParamT<UInt32>* InitParam = (InitDialogMessageParamT<UInt32>*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 
 						switch (InitParam->ExtraData)
 						{
@@ -2404,7 +2436,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_INITDIALOG:
-				SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 
 				break;
 			}
@@ -2543,7 +2575,7 @@ namespace ConstructionSetExtender
 							FORMAT_STR(Buffer, "%s (%08X)", Selection->editorID.c_str(), Selection->formID);
 
 							SetWindowText(SelParentCellBtn, (LPCSTR)Buffer);
-							SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)Selection);
+							SetWindowLongPtr(SelParentCellBtn, GWL_USERDATA, (LONG_PTR)Selection);
 						}
 						break;
 					}
@@ -2619,7 +2651,7 @@ namespace ConstructionSetExtender
 										else
 										{
 											bool InitiallyDisabled = IsDlgButtonChecked(hWnd, IDC_BINDSCRIPT_OBJECTREFERENCEDISABLED);
-											TESObjectCELL* ParentCell = CS_CAST(GetWindowLong(SelParentCellBtn, GWL_USERDATA), TESForm, TESObjectCELL);
+											TESObjectCELL* ParentCell = CS_CAST(GetWindowLongPtr(SelParentCellBtn, GWL_USERDATA), TESForm, TESObjectCELL);
 
 											if (!ParentCell || ParentCell->GetIsInterior() == 0)
 											{
@@ -2694,7 +2726,7 @@ namespace ConstructionSetExtender
 				CheckDlgButton(hWnd, IDC_BINDSCRIPT_QUESTFORM, BST_CHECKED);
 				CheckDlgButton(hWnd, IDC_BINDSCRIPT_OBJECTTOKEN, BST_CHECKED);
 
-				SetWindowLong(SelParentCellBtn, GWL_USERDATA, (LONG)0);
+				SetWindowLongPtr(SelParentCellBtn, GWL_USERDATA, (LONG_PTR)0);
 
 				break;
 			}
@@ -2716,7 +2748,7 @@ namespace ConstructionSetExtender
 				case IDC_EDITRESULTSCRIPT_COMPILE:
 				case IDC_EDITRESULTSCRIPT_SAVE:
 					char Buffer[0x1000] = {0};
-					HWND Parent = (HWND)GetWindowLong(hWnd, GWL_USERDATA);
+					HWND Parent = (HWND)GetWindowLongPtr(hWnd, GWL_USERDATA);
 
 					GetDlgItemText(hWnd, IDC_EDITRESULTSCRIPT_SCRIPTTEXT, Buffer, sizeof(Buffer));
 					SetDlgItemText(Parent, 1444, (LPSTR)Buffer);
@@ -2741,7 +2773,7 @@ namespace ConstructionSetExtender
 					FormattingData.rgxTabs[i] = j;
 
 				SendDlgItemMessage(hWnd, IDC_EDITRESULTSCRIPT_SCRIPTTEXT, EM_SETPARAFORMAT, NULL, (LPARAM)&FormattingData);
-				SetWindowLong(hWnd, GWL_USERDATA, (LONG)lParam);
+				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 
 				HWND ResultScriptEditBox = GetDlgItem((HWND)lParam, 1444);
 				char Buffer[0x1000] = {0};

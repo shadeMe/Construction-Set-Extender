@@ -33,6 +33,7 @@ namespace ConstructionSetExtender
 			{ "AltCamRotationSpeed",			"1.0",		"Alternate render window movement settings" },
 			{ "AltCamZoomSpeed",				"0.5",		"Alternate render window movement settings" },
 			{ "AltCamPanSpeed",					"5.0",		"Alternate render window movement settings" },
+			{ "CoplanarRefDrops",				"1",		"Places new references co-planar with the object below the cursor location when they are created" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderer( void )
@@ -215,4 +216,3 @@ namespace ConstructionSetExtender
 		}
 }
 };
-

@@ -472,7 +472,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&About",                      40016
     END
-    POPUP "Coda™"
+    POPUP "Coda"
     BEGIN
         MENUITEM "Manage Global Data Store",    IDC_MAINMENU_CODAMANAGEGLOBALDATASTORE
         MENUITEM SEPARATOR
@@ -524,6 +524,8 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "Batch Edit...",               IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR
+        MENUITEM SEPARATOR
+        MENUITEM "Co-Planar Drop New References", IDC_RENDERWINDOWCONTEXT_COPLANARDROP
         MENUITEM SEPARATOR
         MENUITEM "Render Window Properties",    293
     END

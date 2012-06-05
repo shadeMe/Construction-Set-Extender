@@ -73,6 +73,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESRenderControlPerformRelativeScale, 0x00424700);
 		_DefinePatchHdlr(DataHandlerClosePlugins, 0x0047B2FA);
 		_DefineHookHdlr(TESPathGridRubberBandSelection, 0x0042FBE0);
+		_DefineHookHdlr(CoplanarRefDrop, 0x0042DE2A);
+		_DefineHookHdlr(InitPathGridNodeSelectionRing, 0x00419AFA);
 
 		void PatchRendererHooks(void)
 		{
@@ -125,6 +127,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
 			_MemHdlr(DataHandlerClosePlugins).WriteUInt8(0xEB);
 			_MemHdlr(TESPathGridRubberBandSelection).WriteJump();
+			_MemHdlr(CoplanarRefDrop).WriteJump();
+			_MemHdlr(InitPathGridNodeSelectionRing).WriteJump();
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1312,6 +1316,84 @@ namespace ConstructionSetExtender
 			SKIP:
 				popad
 				retn	8
+			}
+		}
+
+		bool __stdcall DoCoplanarRefDropHook(NiCamera* Camera, int XCoord, int YCoord, Vector3* OutPosition, Vector3* OutRotation)
+		{
+			bool Result = true;
+
+			thisCall<bool>(0x006FF1A0, Camera, XCoord, YCoord, OutPosition, OutRotation);
+			Vector3 PosBuf(*OutPosition), RotBuf(*OutRotation);
+
+			if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INIGetter())))
+			{
+				// perform the necessary picking nonsense
+				thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
+				if (thisCall<bool>(0x005E6030, 0x00A0BC64, OutPosition, OutRotation, 0))
+				{
+					float*** NewPosition = (float***)0x00A0BC80;
+
+					OutPosition->x = *(float*)((UInt32)**NewPosition + 0x8);
+					OutPosition->y = *(float*)((UInt32)**NewPosition + 0xC);
+					OutPosition->z = *(float*)((UInt32)**NewPosition + 0x10);
+
+					OutRotation->Scale(0.0f);
+
+					Result = false;
+				}
+
+				if (_TES->currentInteriorCell == NULL)
+				{
+					TESWorldSpace* CurrentWorldspace = _TES->currentWorldSpace;
+					if (CurrentWorldspace == NULL || _DATAHANDLER->GetExteriorCell(OutPosition->x, OutPosition->y, CurrentWorldspace) == NULL)
+					{
+						*OutPosition = PosBuf;
+						*OutRotation = RotBuf;
+					}
+				}
+			}
+
+			return Result;
+		}
+
+		#define _hhName		CoplanarRefDrop
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042DE37);
+			__asm
+			{
+				push	ecx
+				xor		eax, eax
+				call	DoCoplanarRefDropHook
+				mov		ecx, 0x00A0E064
+				mov		ecx, [ecx]
+				push	eax
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		void __stdcall DoInitPathGridNodeSelectionRingHook(void)
+		{
+			for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+			{
+				Itr.Get()->selected = 0;
+			}
+		}
+
+		#define _hhName		InitPathGridNodeSelectionRing
+		_hhBegin()
+		{
+			_hhSetVar(Call, 0x00405DC0);
+			_hhSetVar(Retn, 0x00419AFF);
+			__asm
+			{
+				pushad
+				call	DoInitPathGridNodeSelectionRingHook
+				popad
+
+				call	[_hhGetVar(Call)]
+				jmp		[_hhGetVar(Retn)]
 			}
 		}
 	}

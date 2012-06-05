@@ -75,8 +75,8 @@ namespace ConstructionSetExtender
 
 		class CSEFormEnumerationManager
 		{
-			bool													VisibilityDeletedForms;
-			bool													VisibilityUnmodifiedForms;
+			bool						VisibilityDeletedForms;
+			bool						VisibilityUnmodifiedForms;
 		public:
 			CSEFormEnumerationManager();
 			~CSEFormEnumerationManager();
@@ -104,8 +104,8 @@ namespace ConstructionSetExtender
 			CSEWindowInvalidationManager();
 			~CSEWindowInvalidationManager();
 
-			void __stdcall						Push(HWND Window);
-			void __stdcall						Pop(HWND Window);
+			void								Push(HWND Window);
+			void								Pop(HWND Window);
 
 			static CSEWindowInvalidationManager				Instance;
 		};

@@ -84,6 +84,11 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(SetBFCProduceFormIngredient);
 				CodaScriptCommandPrototypeDef(SetBFCProduceFormChance);
 
+				CodaScriptCommandPrototypeDef(GetBFCActorBaseDataSex);
+				CodaScriptCommandPrototypeDef(SetBFCActorBaseDataSex);
+				CodaScriptCommandPrototypeDef(GetBFCRace);
+				CodaScriptCommandPrototypeDef(SetBFCRace);
+
 				CodaScriptCommandParamData(SetBFCAttribute, 3)
 				{
 					{ "Form",					ICodaScriptDataStore::kDataType_Reference },
@@ -1753,6 +1758,105 @@ namespace ConstructionSetExtender
 							Component->winterHarvestChance = Buffer;
 							break;
 						}
+					}
+					else
+						return false;
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetBFCActorBaseDataSex)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESNPC* Component = CS_CAST(Form, TESForm, TESNPC);
+					if (Component)
+					{
+						if ((Component->actorFlags & TESActorBaseData::kNPCFlag_Female))
+							Result->SetNumber(1);
+						else
+							Result->SetNumber(0);
+					}
+					else
+						return false;
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(SetBFCActorBaseDataSex)
+				{
+					TESForm* Form = NULL;
+					CodaScriptNumericDataTypeT Buffer = NULL;
+
+					CodaScriptCommandExtractArgs(&Form, &Buffer);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESNPC* Component = CS_CAST(Form, TESForm, TESNPC);
+					if (Component)
+					{
+						if (Buffer)
+							SME::MiscGunk::ToggleFlag(&Component->actorFlags, TESActorBaseData::kNPCFlag_Female, true);
+						else
+							SME::MiscGunk::ToggleFlag(&Component->actorFlags, TESActorBaseData::kNPCFlag_Female, false);
+					}
+					else
+						return false;
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetBFCRace)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESRaceForm* Component = CS_CAST(Form, TESForm, TESRaceForm);
+					if (Component)
+					{
+						if (Component->race)
+							Result->SetFormID(Component->race->formID);
+						else
+							Result->SetFormID(0);
+					}
+					else
+						return false;
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(SetBFCRace)
+				{
+					TESForm* Form = NULL;
+					TESForm* Buffer = 0;
+
+					CodaScriptCommandExtractArgs(&Form, &Buffer);
+					ExtractFormArguments(2, &Form, &Buffer);
+
+					if (Form == NULL)
+						return false;
+
+					TESRaceForm* Component = CS_CAST(Form, TESForm, TESRaceForm);
+					if (Component)
+					{
+						TESRace* NewRace = CS_CAST(Buffer, TESForm, TESRace);
+						if (!NewRace)
+							return false;
+
+						Component->race = NewRace;
 					}
 					else
 						return false;

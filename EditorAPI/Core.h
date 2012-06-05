@@ -126,6 +126,9 @@ public:
 	bool											SavePlugin(const char* FileName = NULL, bool AsESM = false);
 													// if AsESM is set to true, all loaded records will be dumped to the save file regardless of their modified status
 
+	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create = false);
+													// if Create is set to true, an exterior cell will be created at the input coords and returned
+
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
 	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
 };
