@@ -202,14 +202,14 @@ namespace ConstructionSetExtender
 		RpcStringFree((RPC_CSTR*)&GUIDStr);
 
 		// check for Vista failing to create the process due to elevation requirements
-		if(Loaded ==false && (GetLastError() == ERROR_ELEVATION_REQUIRED))
+		if(Loaded == false && (GetLastError() == ERROR_ELEVATION_REQUIRED))
 		{
 			// in theory we could figure out how to UAC-prompt for this process and then run CreateProcess again, but I have no way to test code for that
 			BGSEECONSOLE_MESSAGE("Vista has decided that launching the CS 1.0 requires UAC privilege elevation. There is no good reason for this to happen, but to fix it, right-click on obse_loader.exe, go to Properties, pick the Compatibility tab, then turn on \"Run this program as an administrator\".");
 			return Loaded;
 		}
 
-		if (Loaded = false)
+		if (Loaded == false)
 		{
 			BGSEECONSOLE_ERROR("Couldn't load CS 1.0!");
 			return Loaded;
@@ -217,7 +217,7 @@ namespace ConstructionSetExtender
 
 		DoInjectDLL(&CS10ProcInfo);
 
-		if(Loaded)
+		if (Loaded)
 		{
 			ResumeThread(CS10ProcInfo.hThread);
 		}

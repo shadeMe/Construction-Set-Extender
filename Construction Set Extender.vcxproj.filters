@@ -100,7 +100,7 @@
     <Filter Include="Components\BGSEEBase">
       <UniqueIdentifier>{c6f5a181-2eb2-4bb7-b14c-eea7c4f03cde}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Components\BGSEEBase\BGSEEScript">
+    <Filter Include="Components\BGSEEBase\Coda">
       <UniqueIdentifier>{cdbae907-6883-4d01-bca3-b4690b8bd24e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -736,16 +736,16 @@
       <Filter>Components\BGSEEBase Derivatives\Coda</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h">
-      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+      <Filter>Components\BGSEEBase\Coda</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h">
-      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+      <Filter>Components\BGSEEBase\Coda</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h">
-      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+      <Filter>Components\BGSEEBase\Coda</Filter>
     </ClInclude>
     <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h">
-      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+      <Filter>Components\BGSEEBase\Coda</Filter>
     </ClInclude>
     <ClInclude Include="VersionInfo.h">
       <Filter>Resources</Filter>
@@ -768,10 +768,10 @@
       <Filter>EditorAPI\Types\NetImmerse</Filter>
     </None>
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl">
-      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+      <Filter>Components\BGSEEBase\Coda</Filter>
     </None>
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl">
-      <Filter>Components\BGSEEBase\BGSEEScript</Filter>
+      <Filter>Components\BGSEEBase\Coda</Filter>
     </None>
     <None Include="Images\antic.bmp">
       <Filter>Resources\Images</Filter>

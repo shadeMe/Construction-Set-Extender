@@ -658,6 +658,7 @@ namespace ConstructionSetExtender
 				TextField->TextChanged -= TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
 				TextField->TextArea->SelectionChanged -= TextFieldSelectionChangedHandler;
+				TextField->TextArea->TextCopied -= TextFieldTextCopiedHandler;
 				TextField->LostFocus -= TextFieldLostFocusHandler;
 				TextField->TextArea->TextView->ScrollOffsetChanged -= TextFieldScrollOffsetChangedHandler;
 				TextField->PreviewKeyUp -= TextFieldKeyUpHandler;
@@ -1202,6 +1203,20 @@ namespace ConstructionSetExtender
 				IntelliSenseBox->HideInterface();
 			}
 
+			void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
+			{
+				return;
+				try
+				{
+					Clipboard::Clear();
+					Clipboard::SetText(E->Text);
+				}
+				catch (Exception^ X)
+				{
+					DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + X->Message, true);
+				}
+			}
+
 			void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 			{
 				LastKeyThatWentDown = E->Key;
@@ -1615,6 +1630,7 @@ namespace ConstructionSetExtender
 				TextFieldTextChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
 				TextFieldCaretPositionChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
 				TextFieldScrollOffsetChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_ScrollOffsetChanged);
+				TextFieldTextCopiedHandler = gcnew System::EventHandler<AvalonEdit::Editing::TextEventArgs^>(this, &AvalonEditTextEditor::TextField_TextCopied);
 				TextFieldKeyUpHandler = gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyUp);
 				TextFieldKeyDownHandler = gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyDown);
 				TextFieldMouseDownHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MouseDown);
@@ -1722,6 +1738,7 @@ namespace ConstructionSetExtender
 				TextField->TextChanged += TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged += TextFieldCaretPositionChangedHandler;
 				TextField->TextArea->SelectionChanged += TextFieldSelectionChangedHandler;
+				TextField->TextArea->TextCopied += TextFieldTextCopiedHandler;
 				TextField->LostFocus += TextFieldLostFocusHandler;
 				TextField->TextArea->TextView->ScrollOffsetChanged += TextFieldScrollOffsetChangedHandler;
 				TextField->PreviewKeyUp += TextFieldKeyUpHandler;

@@ -2157,6 +2157,7 @@ namespace ConstructionSetExtender
 					IUD->Cursor.y = 0;
 					IUD->Window = NULL;
 
+					// we need to defer the looked-up window's creation a bit to keep the source window from hogging focus
 					SetTimer(hWnd, ID_COMMONDLGQUICKVIEW_TIMERID, 100, NULL);
 				}
 

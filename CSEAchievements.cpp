@@ -258,7 +258,7 @@ namespace ConstructionSetExtender
 			kCompartmentalizer		= new CSEAchievementBase("CompartmentalizeR", "Used an editor workspace other than the default",
 															IDB_ACHIEVEMENT_COMPARTMENTALIZER, "5BD1463C-EC15-4C3C-A357-26F0F51E3E38");
 
-			kEruditeModder			= new CSEAchievementBase("Erudite Modder", "Remembered to read CSE's documentation at least once",
+			kEruditeModder			= new CSEAchievementBase("Erudite Modder", "Remembered to read the ReadMe at least once",
 															IDB_ACHIEVEMENT_ERUDITEMODDER, "56385249-C3D8-4D1C-A70E-EC9B05A4338F");
 
 			kBobTheBuilder			= new CSEAchievementBase("Bob The Builder", "Laid roads for a worldspace",

@@ -149,7 +149,7 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE_MESSAGE("Initializing CSInterop Manager");
 		BGSEECONSOLE->Indent();
 		if (CSIOM->Initialize() == false)
-			BGSEECONSOLE_MESSAGE("Failed to initialize successfully! Lip service will be unavailable during this session");
+			BGSEECONSOLE_MESSAGE("Failed to initialize successfully! Lip service will be unavailable for this session");
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Achievements");
@@ -255,17 +255,24 @@ namespace ConstructionSetExtender
 		}
 
 #ifndef NDEBUG
-		BGSEECONSOLE->LogMsg("shadeMe", "This is a DEBUG build");
-		BGSEECONSOLE->LogMsg("shadeMe", "If you aren't me, please proceed to your local police precinct and turn yourself in");
-		BGSEECONSOLE->Pad(1);
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE->Indent();
-		BGSEECONSOLE->LogMsg("shadeMe", "Thank you kindly");
-		BGSEECONSOLE->LogMsg("shadeMe", "The guy who wrote this message");
-		BGSEECONSOLE->ExdentAll();
-		BGSEECONSOLE->Pad(2);
+		char UsernameBuffer[0x200] = {0};
+		DWORD UsernameSize = sizeof(UsernameBuffer);
+		GetUserName(UsernameBuffer, &UsernameSize);
+
+		if (_stricmp(UsernameBuffer, "shadeMe"))
+		{
+			BGSEECONSOLE->LogMsg("shadeMe", "This is a DEBUG build");
+			BGSEECONSOLE->LogMsg("shadeMe", "Please proceed to your local police precinct and turn yourself in for not being me");
+			BGSEECONSOLE->Pad(1);
+			BGSEECONSOLE->Indent();
+			BGSEECONSOLE->Indent();
+			BGSEECONSOLE->Indent();
+			BGSEECONSOLE->Indent();
+			BGSEECONSOLE->LogMsg("shadeMe", "Thank you kindly");
+			BGSEECONSOLE->LogMsg("shadeMe", "The guy who wrote this message");
+			BGSEECONSOLE->ExdentAll();
+			BGSEECONSOLE->Pad(2);
+		}
 #endif
 
 		return true;
@@ -518,7 +525,7 @@ extern "C"
 			MessageBox(NULL,
 					"The Construction Set Extender failed to initialize correctly!\n\nCheck the logs for more information.",
 					"The Cyrodiil Bunny Ranch",
-					MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
+					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
 			return false;
 		}
@@ -533,7 +540,7 @@ extern "C"
 			MessageBox(NULL,
 					"The Construction Set Extender failed to load correctly!\n\nCheck the logs for more information.",
 					"Rumpy-Pumpy!!",
-					MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
+					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
 			return false;
 		}

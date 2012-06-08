@@ -94,6 +94,8 @@ namespace ConstructionSetExtender
 				EventHandler^										ExternalScrollBarValueChangedHandler;
 				EventHandler^										SetTextAnimationCompletedHandler;
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
+				System::EventHandler<AvalonEdit::Editing::TextEventArgs^>^
+																	TextFieldTextCopiedHandler;
 
 				virtual void								OnScriptModified(ScriptModifiedEventArgs^ E);
 				virtual void								OnKeyDown(KeyEventArgs^ E);
@@ -101,6 +103,7 @@ namespace ConstructionSetExtender
 				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E);
+				void										TextField_TextCopied(Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E);
 
 				void										TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
 				void										TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
