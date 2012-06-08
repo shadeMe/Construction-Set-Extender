@@ -26,8 +26,8 @@ namespace BGSEditorExtender
 
 			void CodaScriptMUPScriptCommand::Eval( ptr_val_type& ret, const ptr_val_type *arg, int argc )
 			{
-				ICodaScriptSyntaxTreeEvaluator* ExecutionAgent = GetParent()->GetEvaluationAgent();
-				ICodaScriptExpressionByteCode* ByteCode = GetParent()->GetByteCode();
+				ICodaScriptSyntaxTreeEvaluator* ExecutionAgent = GetParent()->GetCurrentEvaluationAgent();
+				ICodaScriptExpressionByteCode* ByteCode = GetParent()->GetCurrentByteCode();
 
 				SME_ASSERT(ExecutionAgent && ByteCode);
 

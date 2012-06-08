@@ -1197,17 +1197,16 @@ namespace BGSEditorExtender
 				SME_ASSERT(BlockStack.size() == 1 && BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid);
 				SME_ASSERT(CodeStack.size() == 1 && CodeStack.top() == NULL);
 
+				BGSEECONSOLE->Indent();
 				try
 				{
 					BoundParser->RegisterVariables(this, VirtualMachine->GetGlobals());		// registers global variables first
 					BoundParser->RegisterVariables(this, this->Variables);					// then the local vars
 
 					// compile source to bytecode
-					BGSEECONSOLE->Indent();
 					CodaScriptSyntaxTreeCompileVisitor Visitor(VirtualMachine, this, BoundParser);
 					this->Validity = kValidity_Good;
 					this->Accept(&Visitor);
-					BGSEECONSOLE->Exdent();
 				}
 				catch (CodaScriptException& E)
 				{
@@ -1219,6 +1218,7 @@ namespace BGSEditorExtender
 					VirtualMachine->MsgHdlr()->LogMsg("Unknown Compiler Error!");
 					this->Validity = kValidity_Egregious;
 				}
+				BGSEECONSOLE->Exdent();
 			}
 		}
 
@@ -1262,7 +1262,7 @@ namespace BGSEditorExtender
 		long double CodaScriptExecutionContext::GetSecondsPassed( void )
 		{
 			ElapsedTimeCounter.Update();
-			return ElapsedTimeCounter.GetTimePassed() / 1000.0;
+			return ElapsedTimeCounter.GetTimePassed() / 1000.0f;
 		}
 
 		CodaScriptSyntaxTreeCompileVisitor::CodaScriptSyntaxTreeCompileVisitor( CodaScriptVM* VM,
@@ -1500,16 +1500,21 @@ namespace BGSEditorExtender
 			CODASCRIPT_EXECUTEHNDLR_PROLOG
 
 			if (Node->EvaluateCondition(this))
-				Node->Traverse(this);
-
-			for (CodaScriptIFBlock::ElseIfBlockListT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
 			{
-				CodaScriptELSEIFBlock* Block = *Itr;
-
-				if (Block->EvaluateCondition(this))
+				Node->Traverse(this);
+				return;
+			}
+			else
+			{
+				for (CodaScriptIFBlock::ElseIfBlockListT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
 				{
-					Block->Accept(this);
-					return;
+					CodaScriptELSEIFBlock* Block = *Itr;
+
+					if (Block->EvaluateCondition(this))
+					{
+						Block->Accept(this);
+						return;
+					}
 				}
 			}
 

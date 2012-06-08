@@ -966,11 +966,43 @@ namespace BGSEditorExtender
 			SAFEDELETE(ExpressionParser);
 			SAFEDELETE(MessageHandler);
 
-			SME_ASSERT(ICodaScriptExecutableCode::GIC == 0);
-			SME_ASSERT(CodaScriptBackingStore::GIC == 0);
-			SME_ASSERT(CodaScriptVariable::GIC == 0);
-			SME_ASSERT(mup::CodaScriptMUPArrayDataType::GIC == 0);
-			SME_ASSERT(mup::CodaScriptMUPValue::GIC == 0);
+			bool Leakage = false;
+
+			if (ICodaScriptExecutableCode::GIC)
+			{
+				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of ICodaScriptExecutableCode!", ICodaScriptExecutableCode::GIC);
+				Leakage = true;
+			}
+
+			if (CodaScriptBackingStore::GIC)
+			{
+				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of CodaScriptBackingStore!", CodaScriptBackingStore::GIC);
+				Leakage = true;
+			}
+
+			if (CodaScriptVariable::GIC)
+			{
+				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of CodaScriptVariable!", CodaScriptVariable::GIC);
+				Leakage = true;
+			}
+
+			if (mup::CodaScriptMUPArrayDataType::GIC)
+			{
+				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPArrayDataType!", mup::CodaScriptMUPArrayDataType::GIC);
+				Leakage = true;
+			}
+
+			if (mup::CodaScriptMUPValue::GIC)
+			{
+				BGSEECONSOLE_MESSAGE("CodaScriptVM::D'tor - Session leaked %d instances of mup::CodaScriptMUPValue!", mup::CodaScriptMUPValue::GIC);
+				Leakage = true;
+			}
+
+			if (Leakage)
+			{
+				MessageBox(NULL, "'Security' is not a dirty word; perhaps 'Crevasse' is. But, 'Leak' is a positively disgusting word.\n\nDetails in the log.",
+						"CodaScriptVM", MB_OK|MB_ICONWARNING|MB_SETFOREGROUND|MB_TASKMODAL);
+			}
 
 			Initialized = false;
 
@@ -1062,18 +1094,19 @@ namespace BGSEditorExtender
 		void CodaScriptVM::ShowGlobalStoreEditDialog( HINSTANCE ResourceInstance, HWND Parent )
 		{
 			SME_ASSERT(Initialized);
-
-			SME_ASSERT(CODAVM->Backgrounder->Backgrounding == false);
+			SME_ASSERT(Backgrounder->Backgrounding == false);
 
 			bool BackgrounderState = GetBackgrounderState();
-
-			CODAVM->Backgrounder->Suspend();
+			Backgrounder->Suspend();
 
 			GlobalStore->ShowEditDialog(ResourceInstance, Parent);
-			CODAVM->Backgrounder->Rebuild();
+			BGSEECONSOLE_MESSAGE("Reinitializing Coda Virtual Machine");
+			BGSEECONSOLE->Indent();
+			Backgrounder->Rebuild();
+			BGSEECONSOLE->Exdent();
 
 			if (BackgrounderState)
-				CODAVM->Backgrounder->Resume();
+				Backgrounder->Resume();
 		}
 
 		CodaScriptVariable* CodaScriptVM::GetGlobal( const char* Name )

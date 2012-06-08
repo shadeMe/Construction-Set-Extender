@@ -50,6 +50,25 @@ namespace BGSEditorExtender
 
 				CodaScriptMUPExpressionParser(const CodaScriptMUPExpressionParser &a_Parser);
 				CodaScriptMUPExpressionParser& operator=(const CodaScriptMUPExpressionParser &a_Parser);
+
+				class ByteCodeAgentStackOperator
+				{
+					friend class CodaScriptMUPExpressionParser;
+
+					CodaScriptMUPExpressionParser*			Parent;
+					CodaScriptMUPParserByteCode*			ByteCode;
+					ICodaScriptSyntaxTreeEvaluator*			EvalAgent;
+
+					void									Push(void);
+					void									Pop(void);
+				public:
+					ByteCodeAgentStackOperator(CodaScriptMUPExpressionParser* Parent, CodaScriptMUPParserByteCode* ByteCode, ICodaScriptSyntaxTreeEvaluator* Agent);
+					ByteCodeAgentStackOperator(CodaScriptMUPExpressionParser* Parent, CodaScriptMUPParserByteCode* ByteCode);
+					ByteCodeAgentStackOperator(CodaScriptMUPExpressionParser* Parent, ICodaScriptSyntaxTreeEvaluator* Agent);
+					~ByteCodeAgentStackOperator();
+				};
+
+				friend class ByteCodeAgentStackOperator;
 			protected:
 				static const char_type*												c_DefaultOprt[];
 				typedef std::map<CodaScriptExecutionContext*, var_maptype>			ContextSpecificVariableMapT;
@@ -67,8 +86,8 @@ namespace BGSEditorExtender
 				string_type										m_sOprtChars;       ///< Charset for postfix/ binary operator tokens
 				string_type										m_sInfixOprtChars;  ///< Charset for infix operator tokens
 
-				CodaScriptMUPParserByteCode*					m_pByteCode;		///< Only valid inside an Evaluate/Compile call
-				ICodaScriptSyntaxTreeEvaluator*					m_pEvalAgent;		///< Same as above
+				std::stack<CodaScriptMUPParserByteCode*>		m_ByteCodeStack;	///< Only populated inside an Evaluate/Compile call
+				std::stack<ICodaScriptSyntaxTreeEvaluator*>		m_EvalAgentStack;	///< Same as above
 
 				void											Error(EErrorCodes a_iErrc, int a_iPos = -1,	const IToken *a_pTok = 0) const;
 
@@ -107,8 +126,8 @@ namespace BGSEditorExtender
 				void											DefineOprtChars(const char_type *a_szCharset);
 				void											DefineInfixOprtChars(const char_type *a_szCharset);
 
-				CodaScriptMUPParserByteCode*					GetByteCode(void);
-				ICodaScriptSyntaxTreeEvaluator*					GetEvaluationAgent(void);
+				CodaScriptMUPParserByteCode*					GetCurrentByteCode(void) const;
+				ICodaScriptSyntaxTreeEvaluator*					GetCurrentEvaluationAgent(void) const;
 
 				virtual void									RegisterCommand(ICodaScriptCommand* Command);
 				virtual void									RegisterConstant(const char* Name, CodaScriptBackingStore& Value);

@@ -55,7 +55,8 @@ namespace BGSEditorExtender
 					if (ArgumentCount < 1)
 						throw CodaScriptException(ByteCode->GetSource(), "Script name not passed to Call command");
 					else if (ArgumentCount > 1 + CodaScriptExecutionContext::kMaxParameters)
-						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Call command - Maximum allowed = %d", CodaScriptExecutionContext::kMaxParameters);
+						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Call command - Maximum allowed = %d",
+																		CodaScriptExecutionContext::kMaxParameters);
 
 					const char* ScriptName = Arguments[0].GetString();
 					CodaScriptBackingStore* ArgumentStore = dynamic_cast<CodaScriptBackingStore*>(Arguments);
@@ -111,7 +112,9 @@ namespace BGSEditorExtender
 					CodaScriptExecutionContext* Context = Agent->GetContext();
 					SME_ASSERT(Context);
 
-					*Result = (CodaScriptNumericDataTypeT)Context->GetSecondsPassed();
+					CodaScriptNumericDataTypeT TimePassed = Context->GetSecondsPassed();
+					*Result = TimePassed;
+
 					return true;
 				}
 

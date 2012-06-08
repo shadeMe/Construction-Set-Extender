@@ -37,7 +37,7 @@ namespace BGSEditorExtender
 
 				CodaScriptSimpleCommandPrototype(GetSecondsPassed,
 					0,
-					"Returns the amount of time passed since the last execution of the calling script. Only useful in background scripts.",
+					"Returns the amount of time passed since the command's previous call, if any. Only useful in background scripts.",
 					0,
 					ICodaScriptDataStore::kDataType_Numeric);
 
