@@ -75,6 +75,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESPathGridRubberBandSelection, 0x0042FBE0);
 		_DefineHookHdlr(CoplanarRefDrop, 0x0042DE2A);
 		_DefineHookHdlr(InitPathGridNodeSelectionRing, 0x00419AFA);
+		_DefineHookHdlr(TESLoadIntoViewPort, 0x00430F5A);
 
 		void PatchRendererHooks(void)
 		{
@@ -129,6 +130,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESPathGridRubberBandSelection).WriteJump();
 			_MemHdlr(CoplanarRefDrop).WriteJump();
 			_MemHdlr(InitPathGridNodeSelectionRing).WriteJump();
+			_MemHdlr(TESLoadIntoViewPort).WriteJump();
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1394,6 +1396,27 @@ namespace ConstructionSetExtender
 
 				call	[_hhGetVar(Call)]
 				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		#define _hhName		TESLoadIntoViewPort
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00430F61);
+			__asm
+			{
+				push	ebx
+				mov		ebx, [esp + 0xC]
+				test	ebx, ebx
+				jnz		TESTCELL
+			ENDTEST:
+				jmp		[_hhGetVar(Retn)]
+			TESTCELL:
+				mov		eax, [ebx + 0x48]
+				test	eax, eax
+				jnz		ENDTEST
+				pop		ebx
+				retn
 			}
 		}
 	}

@@ -67,5 +67,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESPathGridRubberBandSelection, "fixes a bug that selected all path grid points in the loaded cell(s) when restoring focus to the render window");
 		_DeclareMemHdlr(CoplanarRefDrop, "allows new references to be dropped coplanar to the object under the drop location");
 		_DeclareMemHdlr(InitPathGridNodeSelectionRing, "fixes a bug that causes selection rings to persist b'ween session of the path grid edit mode");
+		_DeclareMemHdlr(TESLoadIntoViewPort, "fixes a bug that causes a CTD when a detached reference (with no parent cell) was loaded into the render window");
 	}
 }
