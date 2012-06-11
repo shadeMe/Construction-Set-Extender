@@ -64,7 +64,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Initializing Component DLLs");
 		BGSEECONSOLE->Indent();
-		if (!CLIWrapper::ImportInterfaces(OBSE))
+		if (CLIWrapper::ImportInterfaces(OBSE) == false)
 			return false;
 		BGSEECONSOLE->Exdent();
 
@@ -376,10 +376,6 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
 		else
 			BGSEECONSOLE_MESSAGE("BollocksBollocksBollocks! No can do...");
-
-#ifndef NDEBUG
-		BGSEECONSOLE->OpenDebugLog();
-#endif
 
 		return true;
 	}

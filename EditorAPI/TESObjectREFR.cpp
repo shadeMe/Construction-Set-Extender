@@ -5,13 +5,9 @@ using namespace ConstructionSetExtender;
 
 void TESObjectREFR::UpdateNiNode()
 {
-	Hooks::_MemHdlr(TESObjectREFRUpdate3D).WriteJump();
-
-	Hooks::g_TESObjectREFRUpdate3DBuffer = this;
-	thisVirtualCall<UInt32>(0x11C, this, NULL);		// TESObjectREFR::DeinitializeDialog
-	Hooks::g_TESObjectREFRUpdate3DBuffer = this;
-
-	Hooks::_MemHdlr(TESObjectREFRUpdate3D).WriteBuffer();
+	SetPosition(position.x, position.y, position.z);
+	SetRotation(rotation.x, rotation.y, rotation.z, true);
+	SetScale(scale);
 }
 
 bool TESObjectREFR::SetBaseForm(TESForm* BaseForm)
@@ -67,4 +63,77 @@ NiNode* TESObjectREFR::GenerateNiNode()
 void TESObjectREFR::SetScale( float Scale )
 {
 	thisCall<void>(0x00542420, this, Scale);
+}
+
+void TESObjectREFR::SetPosition( float X, float Y, float Z )
+{
+	TESObjectCELL* Unk00 = thisCall<TESObjectCELL*>(0x00544380, this);
+	TESObjectCELL* ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+
+	thisCall<void>(0x00544250, this, X, Y, Z);									// TESObjectREFR::SetPosition
+	thisCall<void>(0x0053FD10, this, position.x, position.y, position.z);		// TESObjectREFR::SetExtraEditorMoveDataPosition
+
+	TESObjectCELL* ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+	if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)
+		_DATAHANDLER->MoveReference(ExteriorAtCoordsEpilog, this);
+
+	NiNode* Node3D = GetExtraRef3DData();
+	if (Node3D)
+	{
+		Node3D->m_localTranslate.x = position.x;
+		Node3D->m_localTranslate.y = position.y;
+		Node3D->m_localTranslate.z = position.z;
+		cdeclCall<void>(0x00609F60, Node3D, true);		// NiNode::UpdateCollision?
+		thisCall<void>(0x006F25E0, Node3D, 0.0, true);	// NiNode::Update
+
+		NiAVObject* xLight = thisCall<NiAVObject*>(0x00540110, this);
+		if (xLight && baseForm && baseForm->formType == kFormType_Light)	// TESObjectREFR::GetExtraLight
+		{
+			NiNode* SceneNode = cdeclCall<NiNode*>(0x007662E0, 0);			// TESRender::GetSceneNode
+			thisCall<void>(0x007713A0, SceneNode, xLight);
+		}
+
+		TESDialog::RedrawRenderWindow();
+	}
+}
+
+void TESObjectREFR::SetRotation( float X, float Y, float Z, bool Radians /*= false*/ )
+{
+	if (baseForm && baseForm->formType == kFormType_Tree)
+		return;
+
+	if (Radians == false)
+	{
+		X *= 0.01745329238474369;
+		Y *= 0.01745329238474369;
+		Z *= 0.01745329238474369;
+	}
+
+	rotation.x = X;
+	rotation.y = Y;
+	rotation.z = Z;
+	thisCall<void>(0x0053FC70, this, rotation.x, rotation.y, rotation.z);		// TESObjectREFR::SetExtraEditorMoveDataRotation
+
+	NiNode* Node3D = GetExtraRef3DData();
+	if (Node3D)
+	{
+		NiMatrix33 RotationMatrix = {0};
+		thisCall<NiMatrix33*>(0x00542AC0, this, &RotationMatrix);				// TESObjectREFR::GetLocalRotationMatrix
+
+		memcpy(&Node3D->m_localRotate, &RotationMatrix, sizeof(NiMatrix33));
+		cdeclCall<void>(0x00609F60, Node3D, true);								// NiNode::UpdateCollision?
+		thisCall<void>(0x006F25E0, Node3D, 0.0, true);							// NiNode::Update
+
+		TESDialog::RedrawRenderWindow();
+	}
+}
+
+const Vector3* TESObjectREFR::GetPosition() const
+{
+	return &position;
+}
+
+const Vector3* TESObjectREFR::GetRotation() const
+{
+	return &rotation;
 }

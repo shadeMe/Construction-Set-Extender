@@ -33,9 +33,13 @@ public:
 	// methods
 	void						UpdateNiNode();
 	NiNode*						GenerateNiNode();
-	Vector3*					GetPosition() {	return &position; }
+	const Vector3*				GetPosition() const;
+	const Vector3*				GetRotation() const;
 	bool						SetBaseForm(TESForm* BaseForm);
 	void						SetPersistent(bool Persistent);
+
+	void						SetPosition(float X, float Y, float Z);
+	void						SetRotation(float X, float Y, float Z, bool Radians = false);
 	void						SetScale(float Scale);
 
 	void						ModExtraHealth(float Health);

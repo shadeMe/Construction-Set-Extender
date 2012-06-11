@@ -174,6 +174,16 @@ TESObjectCELL* TESDataHandler::GetExteriorCell( float XCoord, float YCoord, TESW
 	return thisCall<TESObjectCELL*>(0x0047E480, this, XCoord, YCoord, Worldspace, Create);
 }
 
+TESObjectCELL* TESDataHandler::GetExteriorCell( float XCoord, float YCoord, float ZCoord, bool* Create, TESWorldSpace* Worldspace )
+{
+	return thisCall<TESObjectCELL*>(0x0047C7D0, this, XCoord, YCoord, ZCoord, Create, Worldspace);
+}
+
+bool TESDataHandler::MoveReference( TESObjectCELL* Cell, TESObjectREFR* Reference )
+{
+	return thisCall<bool>(0x0047F3F0, this, Cell, Reference);
+}
+
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);

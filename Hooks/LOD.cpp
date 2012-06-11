@@ -40,13 +40,13 @@ namespace ConstructionSetExtender
 
 		static int						s_iFadeNodeMinNearDistance = 0;
 		static float					s_fLODFadeOutPercent = 0.0f;
-		static int						s_iPostProcessMillisecondsEditor = 1215752191;
-		static float					s_fFadeDistance = 9999999790214768000000000000000000.0f;
+		static int						s_iPostProcessMillisecondsEditor = 0;
+		static float					s_fFadeDistance = 0.0f;
 
-		static const int				kiFadeNodeMinNearDistance_LOD = 1073741601;
+		static const int				kiFadeNodeMinNearDistance_LOD = 999999999;
 		static const float				kfLODFadeOutPercent_LOD = 0.0f;
-		static const int				kiPostProcessMillisecondsEditor_BackgroundLoad = 1215752191;
-		static const float				kfFadeDistance_DistantLOD = 9999999790214768000000000000000000.0f;
+		static const int				kiPostProcessMillisecondsEditor_BackgroundLoad = 6000;
+		static const float				kfFadeDistance_DistantLOD = 999999990.0f;
 
 		_DefineNopHdlr(LODLandTextureMipMapLevelA, 0x00411008, 2);
 		_DefineHookHdlr(LODLandTextureMipMapLevelB, 0x005E0306);
@@ -483,10 +483,12 @@ namespace ConstructionSetExtender
 				SME_ASSERT(Current);
 				s_fFadeDistance = Current->value.f;
 				Current->value.f = kfFadeDistance_DistantLOD;
+
+				*g_TESCSAllowAutoSaveFlag = 0;
 			}
 			else if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_FullMap)
 			{
-				BGSEECONSOLE_MESSAGE("Generated %d partial diffuse maps in total", s_NotificationMapCounter);
+				BGSEECONSOLE_MESSAGE("Generated %d partial diffuse map(s) in total", s_NotificationMapCounter);
 				DestroyWindow(s_NotificationDialog);
 
 				s_NotificationDialog = NULL;
@@ -497,28 +499,20 @@ namespace ConstructionSetExtender
 				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_CSParent);
 				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_RenderWindow);
 
-				if (atoi(INISettings::GetLOD()->Get(INISettings::kLOD_PartialTextureResolution, BGSEEMAIN->INIGetter())))
+				if (atoi(INISettings::GetLOD()->Get(INISettings::kLOD_DeletePartialsAfterGeneration, BGSEEMAIN->INIGetter())))
 				{
-					char Buffer[MAX_PATH] = {0};
-					sprintf_s(Buffer, sizeof(Buffer), "%s\\Data\\Textures\\LandscapeLOD\\Generated\\Partial\\", BGSEEMAIN->GetAPPPath());
+					char Buffer[MAX_PATH + 1] = {0};
+					SHFILEOPSTRUCT DeleteFolderData = {0};
 
-					SHFILEOPSTRUCT DeleteShellOp =
-					{
-						NULL,
-						FO_DELETE,
-						Buffer,
-						"",
-						FOF_NOCONFIRMATION |
-						FOF_NOERRORUI |
-						FOF_SILENT,
-						false,
-						0,
-						""
-					};
+					sprintf_s(Buffer, sizeof(Buffer), "%s\\Data\\Textures\\LandscapeLOD\\Generated\\Partial\\*.dds\0", BGSEEMAIN->GetAPPPath());
+					Buffer[strlen(Buffer) + 1] = 0;
+					DeleteFolderData.wFunc = FO_DELETE;
+					DeleteFolderData.pFrom = Buffer;
+					DeleteFolderData.fFlags = FOF_NOCONFIRMATION|FOF_SILENT|FOF_NOERRORUI;
 
-					int OpResult = 0;
-					if ((OpResult = SHFileOperation(&DeleteShellOp)))
-						BGSEECONSOLE_MESSAGE("Couldn't delete landscape LOD partial texture directory. Error: %04X", OpResult);
+					int Result = SHFileOperation(&DeleteFolderData);
+					if (Result)
+						BGSEECONSOLE_MESSAGE("Couldn't delete partial LOD textures! Error: %d", Result);
 				}
 
 				INISettingCollection::Instance->LookupByName("iFadeNodeMinNearDistance:LOD")->value.i = s_iFadeNodeMinNearDistance;
@@ -527,6 +521,7 @@ namespace ConstructionSetExtender
 				INISettingCollection::Instance->LookupByName("fFadeDistance:DistantLOD")->value.f = s_fFadeDistance;
 
 				SetThreadExecutionState(ES_CONTINUOUS);
+				*g_TESCSAllowAutoSaveFlag = 1;
 			}
 		}
 
@@ -674,7 +669,8 @@ namespace ConstructionSetExtender
 
 			CameraFrustum->n = 0.05f;
 			CameraFrustum->f = 1000000.0f;
-			Container->m_localTranslate.z = CameraFrustum->f - 10.0f;
+// 			Container->m_localTranslate.z += 12000.0f;
+// 			Camera->m_localTranslate.z += 12000.0f;
 		}
 
 		#define _hhName		LODTextureGenBlackTexturePartialFix

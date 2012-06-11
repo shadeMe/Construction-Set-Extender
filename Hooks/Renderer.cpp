@@ -14,7 +14,6 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		TESForm*					g_TESObjectREFRUpdate3DBuffer = NULL;
 		bool						g_RenderWindowAltMovementSettings = false;
 		bool						g_FreezeInactiveRefs = false;
 		POINT						g_MouseCaptureDelta = { 0, 0 };
@@ -36,7 +35,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 		_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 		_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
-		_DefineHookHdlrWithBuffer(TESObjectREFRUpdate3D, 0x00549AC5, 5, 0x56, 0x8B, 0x74, 0x24, 0x34);
 		_DefineHookHdlr(ForceShowTESObjectREFRDialog, 0x00429EE3);
 		_DefineHookHdlr(TESRenderControlAltSnapGrid, 0x00425A34);
 		_DefineHookHdlr(TESRenderControlAltRefMovementSpeedA, 0x00425737);
@@ -549,20 +547,6 @@ namespace ConstructionSetExtender
 				jmp		[_hhGetVar(Retn)]
 			FIX:
 				jmp		[_hhGetVar(Jump)]
-			}
-		}
-
-		#define _hhName		TESObjectREFRUpdate3D
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00549B2E);
-			__asm
-			{
-				push	esi
-				mov		ebp, ecx
-				mov		ebx, g_TESObjectREFRUpdate3DBuffer
-
-				jmp		[_hhGetVar(Retn)]
 			}
 		}
 
@@ -1190,8 +1174,7 @@ namespace ConstructionSetExtender
 			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 			{
 				TESObjectREFR* Reference = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-				Reference->position.z += 15.0f;
-				Reference->UpdateNiNode();
+				Reference->SetPosition(Reference->position.x, Reference->position.y, Reference->position.z + 10.0f);
 			}
 		}
 

@@ -119,6 +119,7 @@ public:
 	void											PopulatePluginArray(const char* WorkingDirectory);
 	void											ClearPluginArray();
 	void											AddTESObject(TESObject* Object);
+	bool											MoveReference(TESObjectCELL* Cell, TESObjectREFR* Reference);
 	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject, Vector3* Position, Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
 													// places an object ref at the specified position in the specified cell/worldspace, with the specified base form.
 													// if existingRef is provided, it is used as the ref, otherwise a new ref is created.  returns null on failure
@@ -126,6 +127,7 @@ public:
 	bool											SavePlugin(const char* FileName = NULL, bool AsESM = false);
 													// if AsESM is set to true, all loaded records will be dumped to the save file regardless of their modified status
 
+	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, float ZCoord, bool* Create = NULL, TESWorldSpace* Worldspace = NULL);
 	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create = false);
 													// if Create is set to true, an exterior cell will be created at the input coords and returned
 
