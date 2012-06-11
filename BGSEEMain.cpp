@@ -653,17 +653,33 @@ namespace BGSEditorExtender
 				CR_INST_SIGINT_HANDLER|
 				CR_INST_SIGTERM_HANDLER|
 				CR_INST_SIGABRT_HANDLER;
+
+			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING;
 //			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT;
 //			CrashRptData.dwFlags |= CR_INST_STORE_ZIP_ARCHIVES;
 			CrashRptData.pszPrivacyPolicyURL = NULL;
-			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
+			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal|
+														MiniDumpWithIndirectlyReferencedMemory|
+														MiniDumpScanMemory|
+ 														MiniDumpWithThreadInfo|
+ 														MiniDumpWithProcessThreadData|
+ 														MiniDumpWithUnloadedModules|
+ 														MiniDumpWithHandleData|
+// 														MiniDumpWithDataSegs|
+														MiniDumpWithFullMemoryInfo);
 			CrashRptData.pszErrorReportSaveDir = GameDirectoryPath.c_str();
 
 			if (crInstall(&CrashRptData))
 			{
 				TCHAR Buffer[0x200] = {0};
 				crGetLastErrorMsg(Buffer, sizeof(Buffer));
-				BGSEECONSOLE_MESSAGE("Failed to initialize CrashRpt! Error Message: %s", Buffer);
+
+				MessageBox(NULL,
+					"Failed to initialize CrashRpt!\n\nCheck the logs for more information.",
+					"Bethesda Game Studios Editor Extender",
+					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
+
+				BGSEECONSOLE_MESSAGE("CrashRpt failed to initialize; Error Message: %s", Buffer);
 			}
 			else
 			{
