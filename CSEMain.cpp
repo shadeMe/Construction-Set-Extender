@@ -104,12 +104,13 @@ namespace ConstructionSetExtender
 		if (ComponentInitialized == false)
 			return false;
 
-		// needs to be registered here as epilog callback gets called after the main windows' creation
+		// needs to be registered here as the epilog callbacks are called after the main windows' creation
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMiscSubclassProc);
 
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, UIManager::ObjectWindowSubclassProc);
+		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, UIManager::CommonDialogQuickViewSubClassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, UIManager::CellViewWindowSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMenuInitSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMiscSubclassProc);
@@ -215,7 +216,7 @@ namespace ConstructionSetExtender
 		ArchiveManager::LoadSkippedArchives((std::string(std::string(BGSEEMAIN->GetAPPPath()) + "Data\\")).c_str());
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Initializing Render Window Text Painter");
+		BGSEECONSOLE_MESSAGE("Initializing Render Window Painter");
 		BGSEECONSOLE->Indent();
 		RenderWindowPainter::Initialize();
 		BGSEECONSOLE->Exdent();

@@ -58,9 +58,14 @@ namespace InputBoxes
 
 				void								txtInput_KeyUp(Object^ Sender, KeyEventArgs^ E)
 				{
-					if (E->KeyCode == Keys::Enter)
+					switch (E->KeyCode)
 					{
+					case Keys::Enter:
 						btnOK->PerformClick();
+						break;
+					case Keys::Escape:
+						btnCancel->PerformClick();
+						break;
 					}
 				}
 		#pragma endregion
@@ -128,6 +133,7 @@ namespace InputBoxes
 				this->Controls->Add(this->btnOK);
 				this->Controls->Add(this->lblPrompt);
 				this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedToolWindow;
+				this->Visible = false;
 				this->Margin = System::Windows::Forms::Padding(4, 3, 4, 3);
 				this->Name = L"InputBox";
 				this->Load += gcnew System::EventHandler(this, &InputBox::InputBox_Load);
@@ -183,6 +189,8 @@ namespace InputBoxes
 				txtInput->SelectionStart = 0;
 				txtInput->SelectionLength = txtInput->Text->Length;
 				txtInput->Focus();
+
+				this->Visible = false;
 			}
 		#pragma endregion
 		#pragma region Button control click event

@@ -28,7 +28,7 @@
     <Filter Include="Components\TextEditors">
       <UniqueIdentifier>{bd189d1f-2e31-4f33-bab0-36d3abdaf0d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Components\TextEditors\AvalonEditor">
+    <Filter Include="Components\TextEditors\AvalonEdit">
       <UniqueIdentifier>{6996c544-3d88-418b-8970-822abf06a6de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -70,13 +70,13 @@
       <Filter>Components\IntelliSense</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditComponents.cpp">
-      <Filter>Components\TextEditors\AvalonEditor</Filter>
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditTextEditor.cpp">
-      <Filter>Components\TextEditors\AvalonEditor</Filter>
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="AvalonEditXSHD.cpp">
-      <Filter>Components\TextEditors\AvalonEditor</Filter>
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClCompile>
     <ClCompile Include="AuxiliaryTextEditor.cpp">
       <Filter>Components\TextEditors</Filter>
@@ -143,13 +143,13 @@
       <Filter>Components\IntelliSense</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditXSHD.h">
-      <Filter>Components\TextEditors\AvalonEditor</Filter>
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditComponents.h">
-      <Filter>Components\TextEditors\AvalonEditor</Filter>
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="AvalonEditTextEditor.h">
-      <Filter>Components\TextEditors\AvalonEditor</Filter>
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClInclude>
     <ClInclude Include="NumberedRichTextBox.h">
       <Filter>Components\TextEditors</Filter>

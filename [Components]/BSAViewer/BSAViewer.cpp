@@ -89,17 +89,23 @@ namespace ConstructionSetExtender
 		ToolBarOpenArchive->Image = gcnew Bitmap(dynamic_cast<Image^>(ImageResources->GetObject("TBOpen")));
 		ToolBarOpenArchive->AutoSize = true;
 		ToolBarOpenArchive->ToolTipText = "Open Archive";
+		ToolBarOpenArchive->Text = "Open Archive";
+		ToolBarOpenArchive->DisplayStyle = ToolStripItemDisplayStyle::ImageAndText;
 		ToolBarOpenArchive->Click += gcnew EventHandler(this, &BSAViewer::ToolBarOpenArchive_Click);
 
 		ToolBarUp->Image = gcnew Bitmap(dynamic_cast<Image^>(ImageResources->GetObject("TBUp")));
 		ToolBarUp->AutoSize = true;
 		ToolBarUp->ToolTipText = "Go Up One Level";
+		ToolBarUp->Text = "Go Up One Level";
+		ToolBarUp->DisplayStyle = ToolStripItemDisplayStyle::ImageAndText;
 		ToolBarUp->Click += gcnew EventHandler(this, &BSAViewer::ToolBarUp_Click);
 		ToolBarUp->Enabled = false;
 
 		ToolBarView->Image = gcnew Bitmap(dynamic_cast<Image^>(ImageResources->GetObject("TBView")));
 		ToolBarView->AutoSize = true;
 		ToolBarView->ToolTipText = "Change View";
+		ToolBarView->Text = "Change View";
+		ToolBarView->DisplayStyle = ToolStripItemDisplayStyle::ImageAndText;
 		ToolBarView->Click += gcnew EventHandler(this, &BSAViewer::ToolBarView_Click);
 
 		ToolBarArchiveName->AutoSize = true;

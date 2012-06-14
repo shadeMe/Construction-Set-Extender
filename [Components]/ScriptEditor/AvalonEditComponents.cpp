@@ -62,7 +62,14 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			void AvalonEditLineBackgroundColorizer::RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine )
+			void AvalonEditLineBackgroundColorizer::RenderBackground(TextView^ Destination,
+																	System::Windows::Media::DrawingContext^ DrawingContext,
+																	int StartOffset,
+																	int EndOffset,
+																	Windows::Media::Color Background,
+																	Windows::Media::Color Border,
+																	Double BorderThickness,
+																	bool ColorEntireLine )
 			{
 				Destination->EnsureVisualLines();
 				TextSegment^ Segment = gcnew TextSegment();
@@ -92,7 +99,14 @@ namespace ConstructionSetExtender
 				{
 					DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
 					Color Buffer = PREFERENCES->LookupColorByKey("CurrentLineHighlightColor");
-					RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
+					RenderBackground(textView,
+									drawingContext,
+									Line->Offset,
+									Line->EndOffset,
+									Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+									Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+									1,
+									true);
 				}
 			}
 
@@ -125,7 +139,14 @@ namespace ConstructionSetExtender
 					{
 						DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(i);
 						Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
-						RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
+						RenderBackground(textView,
+										drawingContext,
+										Line->Offset,
+										Line->EndOffset,
+										Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+										Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+										1,
+										true);
 					}
 				}
 			}
@@ -150,7 +171,15 @@ namespace ConstructionSetExtender
 							while ((Index = CurrentLine->IndexOf(SelectionText, Start, System::StringComparison::CurrentCultureIgnoreCase)) != -1)
 							{
 								int EndIndex = Index + SelectionText->Length;
-								RenderBackground(textView, drawingContext, Line->Offset + Index, Line->Offset + EndIndex, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, false);
+								RenderBackground(textView,
+												drawingContext,
+												Line->Offset + Index,
+												Line->Offset + EndIndex,
+												Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+												Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+												1,
+												false);
+
 								Start = Index + 1;
 							}
 						}
@@ -168,7 +197,14 @@ namespace ConstructionSetExtender
 
 					if (CurrentLine->Length > 512)
 					{
-						RenderBackground(textView, drawingContext, Line->Offset, Line->EndOffset, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, true);
+						RenderBackground(textView,
+										drawingContext,
+										Line->Offset,
+										Line->EndOffset,
+										Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+										Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+										1,
+										true);
 					}
 				}
 			}
@@ -182,12 +218,21 @@ namespace ConstructionSetExtender
 				{
 					try
 					{
-						RenderBackground(textView, drawingContext, Itr.Offset, Itr.Offset + Itr.Length, Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B), Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B), 1, false);
+						RenderBackground(textView,
+										drawingContext,
+										Itr.Offset,
+										Itr.Offset + Itr.Length,
+										Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+										Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+										1,
+										false);
+
 						SegmentBuffer->Add(Segment(Itr));
 					} catch (...) {}
 				}
 
 				HighlightSegments->Clear();
+
 				for each (Segment Itr in SegmentBuffer)
 					AddSegment(Itr.Offset, Itr.Length);
 			}
@@ -432,13 +477,31 @@ namespace ConstructionSetExtender
 				{
 					if (OpenBraceOffset == -1 || CloseBraceOffset == -1)
 					{
-						drawingContext->DrawGeometry( gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125, InvalidBraceColor.R, InvalidBraceColor.G, InvalidBraceColor.B)),
-							gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0), HighlightGeometry);
+						drawingContext->DrawGeometry(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125,
+																									InvalidBraceColor.R,
+																									InvalidBraceColor.G,
+																									InvalidBraceColor.B)),
+													gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(
+															System::Windows::Media::Color::FromArgb(150,
+																									0,
+																									0,
+																									0)),
+																					0),
+													HighlightGeometry);
 					}
 					else
 					{
-						drawingContext->DrawGeometry( gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125, ValidBraceColor.R, ValidBraceColor.G, ValidBraceColor.B)),
-							gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0), HighlightGeometry);
+						drawingContext->DrawGeometry(gcnew System::Windows::Media::SolidColorBrush(System::Windows::Media::Color::FromArgb(125,
+																									ValidBraceColor.R,
+																									ValidBraceColor.G,
+																									ValidBraceColor.B)),
+													gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(
+															System::Windows::Media::Color::FromArgb(150,
+																									0,
+																									0,
+																									0)),
+																					0),
+													HighlightGeometry);
 					}
 				}
 			}

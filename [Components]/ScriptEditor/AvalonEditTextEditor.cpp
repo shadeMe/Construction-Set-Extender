@@ -49,7 +49,7 @@ namespace ConstructionSetExtender
 					Mismatching = false;
 				}
 
-				BracketType								GetType()
+				BracketType GetType()
 				{
 					switch (Symbol)
 					{
@@ -67,7 +67,7 @@ namespace ConstructionSetExtender
 					}
 				}
 
-				BracketKind								GetKind()
+				BracketKind GetKind()
 				{
 					switch (Symbol)
 					{
@@ -83,7 +83,7 @@ namespace ConstructionSetExtender
 						return BracketKind::e_Invalid;
 					}
 				}
-				int										GetStartOffset() { return StartOffset; }
+				int GetStartOffset() { return StartOffset; }
 			};
 
 #pragma region Interface Methods
@@ -476,7 +476,10 @@ namespace ConstructionSetExtender
 
 				if (Hits == -1)
 				{
-					MessageBox::Show("An error was encountered while performing the find/replace operation. Please recheck your search and/or replacement strings.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+					MessageBox::Show("An error was encountered while performing the find/replace operation. Please recheck your search and/or replacement strings.",
+									SCRIPTEDITOR_TITLE,
+									MessageBoxButtons::OK,
+									MessageBoxIcon::Exclamation);
 				}
 
 				return Hits;
@@ -1030,92 +1033,95 @@ namespace ConstructionSetExtender
 			{
 				BraceColorizer->ClearHighlight();
 
-				DocumentLine^ CurrentLine = TextField->Document->GetLineByOffset(CaretPos);
-				int OpenBraceOffset = -1, CloseBraceOffset = -1, RelativeCaretPos = -1;
-				ScriptParser^ LocalParser = gcnew ScriptParser();
-				Stack<BracketSearchData^>^ BracketStack = gcnew Stack<BracketSearchData^>();
-				List<BracketSearchData^>^ ParsedBracketList = gcnew List<BracketSearchData^>();
-
-				if (CurrentLine != nullptr)
+				if (TextField->TextArea->Selection->IsEmpty)
 				{
-					RelativeCaretPos = CaretPos - CurrentLine->Offset;
-					String^ Text = TextField->Document->GetText(CurrentLine);
-					LocalParser->Tokenize(Text, true);
-					if (LocalParser->Valid)
+					DocumentLine^ CurrentLine = TextField->Document->GetLineByOffset(CaretPos);
+					int OpenBraceOffset = -1, CloseBraceOffset = -1, RelativeCaretPos = -1;
+					ScriptParser^ LocalParser = gcnew ScriptParser();
+					Stack<BracketSearchData^>^ BracketStack = gcnew Stack<BracketSearchData^>();
+					List<BracketSearchData^>^ ParsedBracketList = gcnew List<BracketSearchData^>();
+
+					if (CurrentLine != nullptr)
 					{
-						for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
+						RelativeCaretPos = CaretPos - CurrentLine->Offset;
+						String^ Text = TextField->Document->GetText(CurrentLine);
+						LocalParser->Tokenize(Text, true);
+						if (LocalParser->Valid)
 						{
-							String^ Token = LocalParser->Tokens[i];
-							Char Delimiter = LocalParser->Delimiters[i];
-							int TokenIndex = LocalParser->Indices[i];
-							int DelimiterIndex = TokenIndex + Token->Length;
-
-							if (LocalParser->GetCommentTokenIndex(-1) == i)
-								break;
-
-							if (BracketSearchData::ValidOpeningBrackets->IndexOf(Delimiter) != -1)
+							for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
 							{
-								BracketStack->Push(gcnew BracketSearchData(Delimiter, DelimiterIndex));
-							}
-							else if (BracketSearchData::ValidClosingBrackets->IndexOf(Delimiter) != -1)
-							{
-								if (BracketStack->Count == 0)
+								String^ Token = LocalParser->Tokens[i];
+								Char Delimiter = LocalParser->Delimiters[i];
+								int TokenIndex = LocalParser->Indices[i];
+								int DelimiterIndex = TokenIndex + Token->Length;
+
+								if (LocalParser->GetCommentTokenIndex(-1) == i)
+									break;
+
+								if (BracketSearchData::ValidOpeningBrackets->IndexOf(Delimiter) != -1)
 								{
-									BracketSearchData^ DelinquentBracket = gcnew BracketSearchData(Delimiter, -1);
-									DelinquentBracket->EndOffset = DelimiterIndex;
-									DelinquentBracket->Mismatching = true;
-									ParsedBracketList->Add(DelinquentBracket);
+									BracketStack->Push(gcnew BracketSearchData(Delimiter, DelimiterIndex));
 								}
-								else
+								else if (BracketSearchData::ValidClosingBrackets->IndexOf(Delimiter) != -1)
 								{
-									BracketSearchData^ CurrentBracket = BracketStack->Pop();
-									BracketSearchData Buffer(Delimiter, DelimiterIndex);
-
-									if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::e_Opening)
+									if (BracketStack->Count == 0)
 									{
-										CurrentBracket->EndOffset = DelimiterIndex;
+										BracketSearchData^ DelinquentBracket = gcnew BracketSearchData(Delimiter, -1);
+										DelinquentBracket->EndOffset = DelimiterIndex;
+										DelinquentBracket->Mismatching = true;
+										ParsedBracketList->Add(DelinquentBracket);
 									}
 									else
 									{
-										CurrentBracket->Mismatching = true;
-									}
+										BracketSearchData^ CurrentBracket = BracketStack->Pop();
+										BracketSearchData Buffer(Delimiter, DelimiterIndex);
 
-									ParsedBracketList->Add(CurrentBracket);
+										if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::e_Opening)
+										{
+											CurrentBracket->EndOffset = DelimiterIndex;
+										}
+										else
+										{
+											CurrentBracket->Mismatching = true;
+										}
+
+										ParsedBracketList->Add(CurrentBracket);
+									}
 								}
 							}
-						}
 
-						while (BracketStack->Count)
-						{
-							BracketSearchData^ DelinquentBracket = BracketStack->Pop();
-							DelinquentBracket->EndOffset = -1;
-							DelinquentBracket->Mismatching = true;
-							ParsedBracketList->Add(DelinquentBracket);
-						}
-
-						if (ParsedBracketList->Count)
-						{
-							for each (BracketSearchData^ Itr in ParsedBracketList)
+							while (BracketStack->Count)
 							{
-								if	((Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset >= RelativeCaretPos) ||
-									(Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset == -1) ||
-									(Itr->GetStartOffset() == -1 && Itr->EndOffset >= RelativeCaretPos))
+								BracketSearchData^ DelinquentBracket = BracketStack->Pop();
+								DelinquentBracket->EndOffset = -1;
+								DelinquentBracket->Mismatching = true;
+								ParsedBracketList->Add(DelinquentBracket);
+							}
+
+							if (ParsedBracketList->Count)
+							{
+								for each (BracketSearchData^ Itr in ParsedBracketList)
 								{
-									OpenBraceOffset = Itr->GetStartOffset();
-									CloseBraceOffset = Itr->EndOffset;
-									break;
+									if	((Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset >= RelativeCaretPos) ||
+										(Itr->GetStartOffset() <= RelativeCaretPos && Itr->EndOffset == -1) ||
+										(Itr->GetStartOffset() == -1 && Itr->EndOffset >= RelativeCaretPos))
+									{
+										OpenBraceOffset = Itr->GetStartOffset();
+										CloseBraceOffset = Itr->EndOffset;
+										break;
+									}
 								}
 							}
 						}
 					}
+
+					if (OpenBraceOffset != -1)
+						OpenBraceOffset += CurrentLine->Offset;
+					if (CloseBraceOffset != -1)
+						CloseBraceOffset += CurrentLine->Offset;
+
+					BraceColorizer->SetHighlight(OpenBraceOffset, CloseBraceOffset);
 				}
-
-				if (OpenBraceOffset != -1)
-					OpenBraceOffset += CurrentLine->Offset;
-				if (CloseBraceOffset != -1)
-					CloseBraceOffset += CurrentLine->Offset;
-
-				BraceColorizer->SetHighlight(OpenBraceOffset, CloseBraceOffset);
 				TextField->TextArea->TextView->InvalidateLayer(BraceColorizer->Layer);
 			}
 
@@ -1182,13 +1188,11 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E)
 			{
-				static UInt32 LineBuffer = 1;
-
-				if (TextField->TextArea->Caret->Line != LineBuffer)
+				if (TextField->TextArea->Caret->Line != PreviousLineBuffer)
 				{
 					IntelliSenseBox->Enabled = true;
 					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
-					LineBuffer = TextField->TextArea->Caret->Line;
+					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
 				}
 
@@ -1723,6 +1727,7 @@ namespace ConstructionSetExtender
 				LocalVarsDatabaseUpdateTimer->Start();
 
 				TextFieldInUpdateFlag = false;
+				PreviousLineBuffer = -1;
 
 				Container->Dock = DockStyle::Fill;
 				Container->BorderStyle = BorderStyle::FixedSingle;

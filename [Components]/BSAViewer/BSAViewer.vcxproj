@@ -171,14 +171,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Actions\png_format\Office and VS\Filter2HS.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\CHAT.A.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\DEFRAG.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - DLL.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - MOVIE.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - PICTURE.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE - SOUND.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FILE.png" />
-    <None Include="..\..\..\..\..\..\Documents\Stardock\ObjectDock Library\ecqlipse 2 - system black\FOLDER.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\1474_Tape_48x48.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\1475_Text Balloon_48x48.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\1496_wall_48x48.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Connection_Manager.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Folder_48x48.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Generic_Document.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\generic_picture.png" />
+    <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\VS2010ImageLibrary\1033\VS2010ImageLibrary\Objects\png_format\WinVista\Music_Note_Double_48.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\openfolderHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\PageUpHS.png" />
     <None Include="..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\ViewThumbnailsHS.png" />

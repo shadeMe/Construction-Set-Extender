@@ -2099,9 +2099,30 @@ namespace ConstructionSetExtender
 					TextEditor->SetInitializingStatus(true);
 
 				TextEditor->ClearScriptErrorHighlights();
-				MessageList->Items->Clear();
-				FindList->Items->Clear();
-				VariableIndexList->Items->Clear();
+
+				if (MessageList->Visible)
+				{
+					MessageList->Items->Clear();
+					ToolBarMessageList->PerformClick();
+				}
+
+				if (FindList->Visible)
+				{
+					FindList->Items->Clear();
+					ToolBarFindList->PerformClick();
+				}
+
+				if (VariableIndexList->Visible)
+				{
+					VariableIndexList->Items->Clear();
+					ToolBarGetVarIndices->PerformClick();
+				}
+
+				if (BookmarkList->Visible)
+				{
+					BookmarkList->Items->Clear();
+					ToolBarBookmarkList->PerformClick();
+				}
 
 				String^ CSEBlock = "";
 				String^ DeserializedText = DeserializeCSEBlock(ScriptText, CSEBlock);
@@ -2274,11 +2295,12 @@ namespace ConstructionSetExtender
 						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'Return' has an otiose expression following it.");
 					break;
 				}
+
 				// increment variable ref count
 				UInt32 Pos = 0;
 				if (ScriptTextParser->GetTokenType(FirstToken) != ScriptParser::TokenType::e_Variable)
 				{
-					for each (String^% Itr in ScriptTextParser->Tokens)
+					for each (String^ Itr in ScriptTextParser->Tokens)
 					{
 						if (ScriptTextParser->LookupVariableByName(Itr) != nullptr)
 						{
@@ -2288,6 +2310,7 @@ namespace ConstructionSetExtender
 									ScriptTextParser->LookupVariableByName(Itr)->RefCount++;
 							}
 						}
+
 						Pos++;
 					}
 				}
@@ -2295,7 +2318,7 @@ namespace ConstructionSetExtender
 				ReadLine = ValidateParser->ReadLine();
 			}
 
-			for each (ScriptParser::VariableRefCountData^% Itr in ScriptTextParser->Variables)
+			for each (ScriptParser::VariableRefCountData^ Itr in ScriptTextParser->Variables)
 			{
 				if (Itr->RefCount == 0)
 				{

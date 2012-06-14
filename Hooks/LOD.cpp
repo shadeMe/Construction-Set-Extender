@@ -665,12 +665,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoLODTextureGenBlackTexturePartialFixHook(NiCamera* Camera, NiFrustum* CameraFrustum, NiNode* Container)
 		{
-			TODO("Doesn't work")
+			HACK("Doesn't work")
 
-			CameraFrustum->n = 0.05f;
-			CameraFrustum->f = 1000000.0f;
-// 			Container->m_localTranslate.z += 12000.0f;
-// 			Camera->m_localTranslate.z += 12000.0f;
+			Camera->m_kViewFrustum.n = -10.0f;
+			Camera->m_kViewFrustum.f = 10000000.0f;
 		}
 
 		#define _hhName		LODTextureGenBlackTexturePartialFix
@@ -681,13 +679,16 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				mov		eax, [esp]
+				push	eax
+				call	[_hhGetVar(Call)]
+				pop		eax
+
 				pushad
 				push	ebp
 				push	eax
 				push	ecx
 				call	DoLODTextureGenBlackTexturePartialFixHook
 				popad
-				call	[_hhGetVar(Call)]
 				jmp		[_hhGetVar(Retn)]
 			}
 		}

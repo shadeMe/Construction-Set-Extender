@@ -74,6 +74,8 @@ namespace ConstructionSetExtender
 				Timer^												LocalVarsDatabaseUpdateTimer;
 				bool												TextFieldInUpdateFlag;
 
+				int													PreviousLineBuffer;
+
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
 				EventHandler^										TextFieldScrollOffsetChangedHandler;
@@ -157,7 +159,6 @@ namespace ConstructionSetExtender
 				virtual void								Destroy();
 
 				static double								SetTextFadeAnimationDuration = 0.15;		// in seconds
-
 			public:
 				virtual ~AvalonEditTextEditor();
 
