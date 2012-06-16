@@ -244,7 +244,7 @@ void TESDialog::ResetFormListControls()
 	TESDialog::InitializeCSWindows();
 }
 
-float TESDialog::GetFloatFromDlgItem( HWND Dialog, int ID )
+float TESDialog::GetDlgItemFloat( HWND Dialog, int ID )
 {
 	return cdeclCall<float>(0x00404A80, Dialog, ID);
 }
@@ -252,6 +252,21 @@ float TESDialog::GetFloatFromDlgItem( HWND Dialog, int ID )
 void TESDialog::ShowDialogPopupMenu( HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data )
 {
 	cdeclCall<void>(0x00443520, Menu, Coords, Parent, Data);
+}
+
+void TESDialog::SetDlgItemFloat( HWND Dialog, int ID, float Value, int DecimalPlaces )
+{
+	cdeclCall<void>(0x00404A90, Dialog, ID, Value, DecimalPlaces);
+}
+
+void TESDialog::UpdatePreviewWindows( bool RefreshRenderWindow /*= true*/ )
+{
+	cdeclCall<void>(0x00446F30, RefreshRenderWindow);
+}
+
+void TESDialog::ClampDlgEditField( HWND EditControl, float Min, float Max, bool NoDecimals /*= false*/, UInt32 DecimalPlaces /*= 2*/ )
+{
+	cdeclCall<void>(0x004042C0, EditControl, Min, Max, NoDecimals, DecimalPlaces);
 }
 
 void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
@@ -291,4 +306,26 @@ void TESPreviewWindow::Initialize( TESBoundObject* Object )
 
 	if (Object)
 		cdeclCall<void>(0x00402BC0, Object);
+}
+
+bool Subwindow::Build( UInt32 TemplateID )
+{
+	return cdeclCall<bool>(0x00404EC0, TemplateID, this);
+}
+
+void Subwindow::TearDown( void )
+{
+	thisCall<void>(0x00405340, this);
+}
+
+Subwindow* Subwindow::CreateInstance( void )
+{
+	Subwindow* NewInstance = (Subwindow*)FormHeap_Allocate(sizeof(Subwindow));
+	ZeroMemory(NewInstance, sizeof(Subwindow));
+	return NewInstance;
+}
+
+void Subwindow::DeleteInstance( void )
+{
+	FormHeap_Free(this);
 }

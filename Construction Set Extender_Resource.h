@@ -33,6 +33,8 @@
 #define IDC_CSE_CANCEL                  1034
 #define IDC_BINDSCRIPT_EXISTINGFORMLIST 1035
 #define IDC_CSE_OK                      1036
+#define IDC_TOOLBAR_TODSLIDER           1037
+#define IDC_TOOLBAR_TODCURRENT          1038
 #define IDD_TEXTEDIT                    5009
 #define IDD_TESFILESAVE                 5104
 #define IDD_IDLE                        5110
@@ -65,6 +67,7 @@
 #define IDB_ACHIEVEMENT_THEWISEONE      6023
 #define IDB_ACHIEVEMENT_WTF             6024
 #define IDB_ACHIEVEMENT_LOST            6025
+#define IDD_TOOLBAREXTRAS               6026
 #define IDD_ASSETSELECTOR               9800
 #define IDC_ASSETSELECTOR_FILEBROWSER   9801
 #define IDC_ASSETSELECTOR_ARCHIVEBROWSER 9802
@@ -110,9 +113,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        6026
+#define _APS_NEXT_RESOURCE_VALUE        6027
 #define _APS_NEXT_COMMAND_VALUE         50065
-#define _APS_NEXT_CONTROL_VALUE         1037
+#define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -53,6 +53,21 @@ UInt32 Script::GetScriptableFormUseCount( void )
 	return thisCall<UInt32>(0x004FC190, this);
 }
 
+bool Script::IsObjectScript() const
+{
+	return info.type == kScriptType_Object;
+}
+
+bool Script::IsQuestScript() const
+{
+	return info.type == kScriptType_Quest;
+}
+
+bool Script::IsMagicScript() const
+{
+	return info.type == kScriptType_Magic;
+}
+
 void TESScriptCompiler::ToggleScriptCompilation( bool State )
 {
 	if (!State)

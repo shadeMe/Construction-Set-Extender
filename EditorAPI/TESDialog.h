@@ -54,6 +54,13 @@ public:
 	/*10*/ POINT            position;		// position of subwindow within parent dialog
 	/*18*/ HWND             hContainer;		// handle of container control (e.g. Tab Control)
     /*1C*/ HWND             hSubwindow;		// handle of subwindow, if created
+
+	// methods
+	bool					Build(UInt32 TemplateID);
+	void					TearDown(void);
+
+	static Subwindow*		CreateInstance(void);
+	void					DeleteInstance(void);
 };
 STATIC_ASSERT(sizeof(Subwindow) == 0x20);
 
@@ -342,8 +349,12 @@ public:
 	static void								RedrawRenderWindow();
 	static void								ResetFormListControls();
 
-	static float							GetFloatFromDlgItem(HWND Dialog, int ID);
+	static float							GetDlgItemFloat(HWND Dialog, int ID);
+	static void								SetDlgItemFloat(HWND Dialog, int ID, float Value, int DecimalPlaces);
+	static void								ClampDlgEditField(HWND EditControl, float Min, float Max, bool NoDecimals = false, UInt32 DecimalPlaces = 2);
+
 	static void								ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data = NULL);
+	static void								UpdatePreviewWindows(bool RefreshRenderWindow = true);
 };
 
 class TESComboBox

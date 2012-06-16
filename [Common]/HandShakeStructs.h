@@ -374,6 +374,13 @@ namespace ComponentDLLInterface
 			bool UseRotY() { return (Flags & kFlag_UseRotY) ? true : false; }
 			bool UseRotZ() { return (Flags & kFlag_UseRotZ) ? true : false; }
 			bool UseScale() { return (Flags & kFlag_UseScale) ? true : false; }
+
+			_3DData()
+			{
+				RotX = RotY = RotZ = 0;
+				PosX = PosY = PosZ = 0;
+				Scale = 0;
+			}
 		};
 		struct _Flags
 		{
@@ -392,14 +399,20 @@ namespace ComponentDLLInterface
 			bool UsePersistent() { return (Flags & kFlag_UsePersistent) ? true : false; }
 			bool UseVWD() { return (Flags & kFlag_UseVWD) ? true : false; }
 			bool UseDisabled() { return (Flags & kFlag_UseDisabled) ? true : false; }
+
+			_Flags()
+			{
+				Persistent = VWD = Disabled = false;
+			}
 		};
 
 		struct _Extra
 		{
-			float										Health,
-				TimeLeft;
-			int											Count,
-				Charge;
+			float										Health;
+			float 										TimeLeft;
+			int											Count;
+			int											Charge;
+
 			enum Soul
 			{
 				kSoul_None = 0,
@@ -426,6 +439,14 @@ namespace ComponentDLLInterface
 			bool UseCount() { return (Flags & kFlag_UseCount) ? true : false; }
 			bool UseCharge() { return (Flags & kFlag_UseCharge) ? true : false; }
 			bool UseSoulLevel() { return (Flags & kFlag_UseSoulLevel) ? true : false; }
+
+			_Extra()
+			{
+				Health = TimeLeft = 0;
+				Count = Charge = 0;
+				SoulLevel = 0;
+				Flags = 0;
+			}
 		};
 
 		struct _EnableParent
@@ -440,6 +461,12 @@ namespace ComponentDLLInterface
 			UInt32										Flags;
 
 			bool UseEnableParent() { return (Flags & kFlag_UseEnableParent) ? true : false; }
+
+			_EnableParent()
+			{
+				Parent = 0;
+				OppositeState = false;
+			}
 		};
 
 		struct _Ownership
@@ -457,6 +484,13 @@ namespace ComponentDLLInterface
 
 			bool UseOwnership() { return (Flags & kFlag_UseOwnership) ? true : false; }
 			bool UseNPCOwner() { return (Flags & kFlag_UseNPCOwner) ? true : false; }
+
+			_Ownership()
+			{
+				Owner = Global = 0;
+				Rank = 0;
+				Flags = 0;
+			}
 		};
 
 		_3DData											World3DData;

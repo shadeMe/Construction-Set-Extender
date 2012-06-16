@@ -347,6 +347,20 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		CSEMainWindowMiscExtraData::CSEMainWindowMiscExtraData()
+		{
+			ToolbarExtras = Subwindow::CreateInstance();
+		}
+
+		CSEMainWindowMiscExtraData::~CSEMainWindowMiscExtraData()
+		{
+			if (ToolbarExtras)
+			{
+				ToolbarExtras->TearDown();
+				ToolbarExtras->DeleteInstance();
+			}
+		}
+
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -1039,6 +1053,9 @@ namespace ConstructionSetExtender
 		}
 
 #define ID_PATHGRIDTOOLBARBUTTION_TIMERID		0x99
+#define WM_MAINWINDOW_INITEXTRADATA				(WM_USER + 2003)
+#define WM_MAINTOOLBAR_SETTOD					(WM_USER + 2004)
+		// wParam = position
 
 		LRESULT CALLBACK MainWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
@@ -1057,6 +1074,47 @@ namespace ConstructionSetExtender
 			case WM_DESTROY:
 				{
 					KillTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID);
+					if (InstanceUserData)
+					{
+						CSEMainWindowMiscExtraData* IUD = (CSEMainWindowMiscExtraData*)InstanceUserData;
+						delete IUD;
+					}
+				}
+
+				break;
+			case WM_MAINWINDOW_INITEXTRADATA:
+				{
+					if (InstanceUserData == NULL)
+					{
+						CSEMainWindowMiscExtraData* IUD = new CSEMainWindowMiscExtraData();
+						InstanceUserData = (LPARAM)IUD;
+
+						IUD->ToolbarExtras->hInstance = BGSEEMAIN->GetExtenderHandle();
+						IUD->ToolbarExtras->hDialog = *g_HWND_MainToolbar;
+						IUD->ToolbarExtras->hContainer = *g_HWND_MainToolbar;
+						IUD->ToolbarExtras->position.x = 515;
+						IUD->ToolbarExtras->position.y = 0;
+
+						if (IUD->ToolbarExtras->Build(IDD_TOOLBAREXTRAS) == false)
+						{
+							BGSEECONSOLE_ERROR("Couldn't build main window toolbar subwindow!");
+						}
+						else
+						{
+							BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(*g_HWND_MainToolbar, MainWindowToolbarSubClassProc);
+
+							HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
+							HWND TODEdit = GetDlgItem(hWnd, IDC_TOOLBAR_TODCURRENT);
+
+							TESDialog::ClampDlgEditField(TODEdit, 0.0, 24.0);
+
+							SendMessage(TODSlider, TBM_SETRANGE, TRUE, MAKELONG(0, 23));
+							SendMessage(TODSlider, TBM_SETLINESIZE, NULL, 1);
+							SendMessage(TODSlider, TBM_SETPAGESIZE, NULL, 4);
+
+							SendMessage(*g_HWND_MainToolbar, WM_MAINTOOLBAR_SETTOD, _TES->GetSkyTOD() * 4.0, NULL);
+						}
+					}
 				}
 
 				break;
@@ -1100,6 +1158,79 @@ namespace ConstructionSetExtender
 					{
 						Return = true;
 					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK MainWindowToolbarSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
+			HWND TODEdit = GetDlgItem(hWnd, IDC_TOOLBAR_TODCURRENT);
+
+			switch (uMsg)
+			{
+			case WM_COMMAND:
+				if (HIWORD(wParam) == EN_CHANGE &&
+					LOWORD(wParam) == IDC_TOOLBAR_TODCURRENT &&
+					InstanceUserData == 0)
+				{
+					InstanceUserData = 1;
+					float TOD = TESDialog::GetDlgItemFloat(hWnd, IDC_TOOLBAR_TODCURRENT);
+					SendMessage(hWnd, WM_MAINTOOLBAR_SETTOD, TOD * 4.0, NULL);
+					InstanceUserData = 0;
+				}
+
+				break;
+			case WM_HSCROLL:
+				{
+					bool BreakOut = true;
+
+					switch (LOWORD(wParam))
+					{
+					case TB_BOTTOM:
+					case TB_ENDTRACK:
+					case TB_LINEDOWN:
+					case TB_LINEUP:
+					case TB_PAGEDOWN:
+					case TB_PAGEUP:
+					case TB_THUMBPOSITION:
+					case TB_THUMBTRACK:
+					case TB_TOP:
+						if ((HWND)lParam == TODSlider)
+						{
+							BreakOut = false;
+						}
+
+						break;
+					}
+
+					if (BreakOut)
+						break;
+				}
+			case WM_MAINTOOLBAR_SETTOD:
+				{
+					if (uMsg != WM_HSCROLL)
+						SendDlgItemMessage(hWnd, IDC_TOOLBAR_TODSLIDER, TBM_SETPOS, TRUE, (LPARAM)wParam);
+
+					int Position = SendMessage(TODSlider, TBM_GETPOS, NULL, NULL);
+					float TOD = Position / 4.0;
+
+					if (TOD > 24.0f)
+						TOD = 24.0f;
+
+					_TES->SetSkyTOD(TOD);
+
+					if (InstanceUserData == 0)
+						TESDialog::SetDlgItemFloat(hWnd, IDC_TOOLBAR_TODCURRENT, TOD, 2);
+
+					TESDialog::UpdatePreviewWindows();
 				}
 
 				break;
@@ -2920,6 +3051,8 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Hair, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Quest, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Eyes, RegularAppWindow);
+
+			SendMessage(BGSEEUI->GetMainWindow(), WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
 		}
 	}
 }

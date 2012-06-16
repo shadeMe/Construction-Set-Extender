@@ -189,6 +189,22 @@ void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Re
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);
 }
 
+void TES::SetSkyTOD( float TOD )
+{
+	if (sky)
+	{
+		thisCall<void>(0x00422720, sky, TOD);
+	}
+}
+
+float TES::GetSkyTOD( void )
+{
+	if (sky)
+		return *((float*)((UInt32)sky + 0xD4));
+	else
+		return 0.0;
+}
+
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)
 {
 	return thisVirtualCall<UInt8>(0x4, this, Path, Unk02, Unk03, Unk04);

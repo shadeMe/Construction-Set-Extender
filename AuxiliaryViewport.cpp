@@ -56,7 +56,11 @@ namespace ConstructionSetExtender
 	}
 
 	AuxiliaryViewport::AuxiliaryViewport() :
-		BGSEditorExtender::BGSEEGenericModelessDialog(BGSEEUI->GetMainWindow(), BGSEEMAIN->GetExtenderHandle(), IDD_AUXVIEWPORT, IDR_BGSEE_GENERIC_CONTEXTMENU, BaseDlgProc),
+		BGSEditorExtender::BGSEEGenericModelessDialog(BGSEEUI->GetMainWindow(),
+													BGSEEMAIN->GetExtenderHandle(),
+													IDD_AUXVIEWPORT,
+													IDR_BGSEE_GENERIC_CONTEXTMENU,
+													BaseDlgProc),
 		ViewportCamera(NULL),
 		Frozen(false)
 	{

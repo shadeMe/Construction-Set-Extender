@@ -269,6 +269,8 @@ public:
 	// methods
 	void							LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference);	// arg1 = Camera position if arg is valid, else arg1 = ext. cell coords
 																												// coord format: (x << 12) + 2048, (y << 12) + 2048
+	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
+	float							GetSkyTOD(void);		// this one too
 };
 STATIC_ASSERT(sizeof(TES) == 0xAC);
 

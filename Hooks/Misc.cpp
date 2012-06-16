@@ -825,7 +825,7 @@ namespace ConstructionSetExtender
 		{
 			if (IsDlgButtonChecked(Dialog, 1006))		// has water
 			{
-				float WaterHeight = TESDialog::GetFloatFromDlgItem(Dialog, 2085);
+				float WaterHeight = TESDialog::GetDlgItemFloat(Dialog, 2085);
 				Cell->ModExtraCellWaterHeight(WaterHeight);
 
 				TESWaterForm* WaterType = (TESWaterForm*)TESComboBox::GetSelectedItemData(GetDlgItem(Dialog, 1229));
