@@ -122,6 +122,9 @@ namespace ConstructionSetExtender
 			void												DisableControls(void);
 			void												EnableControls(void);
 
+			void												BeginUpdate(void);
+			void												EndUpdate(void);
+
 			Rectangle											GetBounds();
 			IntPtr												GetHandle();
 			FormWindowState										GetWindowState();

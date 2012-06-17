@@ -170,7 +170,6 @@ namespace ConstructionSetExtender
 }
 
 // custom control IDs, as baked into dialog templates
-#define IDC_CSE_DATA_QUICKLOAD                  9900
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906
 
 #define IDC_CSE_RACE_COPYHAIR                   9915

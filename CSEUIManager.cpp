@@ -431,9 +431,6 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					if (Hooks::g_QuickLoadToggle)
-						CheckDlgButton(hWnd, IDC_CSE_DATA_QUICKLOAD, BST_CHECKED);
-
 					LVCOLUMN ColumnData = {0};
 					ColumnData.mask = LVCF_WIDTH;
 
@@ -448,10 +445,6 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
-				case IDC_CSE_DATA_QUICKLOAD:
-					Hooks::g_QuickLoadToggle = (IsDlgButtonChecked(hWnd, IDC_CSE_DATA_QUICKLOAD) == BST_CHECKED);
-
-					break;
 				case IDC_CSE_DATA_SETSTARTUPPLUGIN:
 					{
 						int SelectedItem = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
@@ -475,18 +468,14 @@ namespace ConstructionSetExtender
 								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 							}
 						}
-						break;
 					}
+
+					break;
 				case 1:		// OK
 					if (CLIWrapper::Interfaces::SE->GetOpenEditorCount())
 					{
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "There are open script windows. Are you sure you'd like to proceed?") == IDNO)
 							Return = true;
-					}
-					else if (ActiveTESFile == NULL && Hooks::g_QuickLoadToggle)
-					{
-						BGSEEUI->MsgBoxI(hWnd, 0, "An active plugin must be set when quick-loading.");
-						Return = true;
 					}
 					else if (ActiveTESFile != NULL && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
 					{
@@ -707,6 +696,7 @@ namespace ConstructionSetExtender
 										break;
 									}
 								}
+
 								ThisRefData->ParentForm = ThisRef;
 							}
 
@@ -804,6 +794,8 @@ namespace ConstructionSetExtender
 											case TESForm::kFormType_AlchemyItem:
 											case TESForm::kFormType_SigilStone:
 												ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
+
+												break;
 											case TESForm::kFormType_Light:
 												TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
 												if (Light)
@@ -811,6 +803,8 @@ namespace ConstructionSetExtender
 													if (Light->IsCarriable())
 														ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
 												}
+
+												break;
 											}
 										}
 									}
@@ -854,8 +848,11 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_LAUNCHGAME:
-					ShellExecute(NULL, "open", (LPCSTR)(std::string(std::string(BGSEEMAIN->GetAPPPath()) + "\\" + std::string(BGSEEMAIN->ExtenderGetSEName()) + "_loader.exe")).c_str(),
-								NULL, NULL,
+					ShellExecute(NULL,
+								"open",
+								(LPCSTR)(std::string(std::string(BGSEEMAIN->GetAPPPath()) + "\\" + std::string(BGSEEMAIN->ExtenderGetSEName()) + "_loader.exe")).c_str(),
+								NULL,
+								NULL,
 								SW_SHOW);
 
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kLazyBum);
@@ -918,25 +915,20 @@ namespace ConstructionSetExtender
 							BGSEEUI->MsgBoxE("The CSInteropManager is not initialized!");
 							break;
 						}
-						else if (Hooks::g_QuickLoadToggle == true)
-						{
-							BGSEEUI->MsgBoxE("This operation cannot be performed when quick-loading plugins!");
-							break;
-						}
 
 						bool SkipInactiveTopicInfos = false;
 						bool OverwriteExisting = false;
 
 						if (BGSEEUI->MsgBoxI(hWnd,
-										MB_YESNO,
-										"Only process active topic infos?") == IDYES)
+											MB_YESNO,
+											"Only process active topic infos?") == IDYES)
 						{
 							SkipInactiveTopicInfos = true;
 						}
 
 						if (BGSEEUI->MsgBoxI(hWnd,
-							MB_YESNO,
-							"Overwrite existing LIP files?") == IDYES)
+											MB_YESNO,
+											"Overwrite existing LIP files?") == IDYES)
 						{
 							OverwriteExisting = true;
 						}
@@ -1150,16 +1142,6 @@ namespace ConstructionSetExtender
 
 				break;
 			case 0x40C:				// save handler
-				if (Hooks::g_QuickLoadToggle)
-				{
-					if (BGSEEUI->MsgBoxW(hWnd,
-										MB_YESNO,
-										"Are you sure you want to save the quick-loaded active plugin? There will be a loss of data if it contains master-dependent records.") == IDNO)
-					{
-						Return = true;
-					}
-				}
-
 				break;
 			}
 

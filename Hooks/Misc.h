@@ -55,8 +55,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ExtraTeleportInitItem, "patches the function to take into account refs without base forms (happens when quick-loading plugins)");
 		_DeclareMemHdlr(NewSplashImage, "replaces the default splash image with a new one");
 		_DeclareMemHdlr(AllowMultipleEditors, "allows multiple editor instances to be created regardless of the INI setting");
-		_DeclareNopHdlr(SEHOverride, "prevents the editor code from overriding CrashRpt's exception handlers");
-		_DeclareMemHdlr(VersionControlOverride, "prevents the editor code from using the remnants of the version control code");
+		_DeclareNopHdlr(SEHOverride, "prevents the editor from overriding CrashRpt's exception handlers");
+		_DeclareMemHdlr(VersionControlOverride, "prevents the editor from using the remnants of the version control code");
 		_DeclareMemHdlr(TESObjectCELLGetDataFromDialog, "fixes a bug that caused unnecessary additions of cell water height/type extra data to cells");
 		_DeclareMemHdlr(InteriorCellDuplicate, "patches the code to also copy the lighting data of the duplicated cell");
 	}

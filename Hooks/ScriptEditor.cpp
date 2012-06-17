@@ -44,6 +44,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(MaxScriptSizeOverrideParseScriptLine, 0x005031C6);
 		_DefineHookHdlr(InitializeScriptLineBufferLFLineEnds, 0x0050006A);
 		_DefineHookHdlr(ScriptCompileCheckSyntaxInvalidRef, 0x00500C6C);
+		_DefineHookHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses, 0x00502EC6);
 
 		void PatchScriptEditorHooks(void)
 		{
@@ -57,6 +58,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(MaxScriptSizeOverrideParseScriptLine).WriteJump();
 			_MemHdlr(InitializeScriptLineBufferLFLineEnds).WriteJump();
 			_MemHdlr(ScriptCompileCheckSyntaxInvalidRef).WriteJump();
+			_MemHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses).WriteJump();
 
 			PatchCompilerErrorDetours();
 		}
@@ -237,6 +239,21 @@ namespace ConstructionSetExtender
 			NOREF:
 				mov		eax, [esi]
 				jmp		EXIT
+			}
+		}
+
+		#define _hhName		ScriptCompilerWriteByteCodeCheckSetExprParentheses
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00502ECC);
+			_hhSetVar(Error, 0x00502FB2);
+			__asm
+			{
+				jz		MISMATCH
+
+				jmp		[_hhGetVar(Retn)]
+			MISMATCH:
+				jmp		[_hhGetVar(Error)]
 			}
 		}
 	}

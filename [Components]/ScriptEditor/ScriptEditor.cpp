@@ -243,10 +243,10 @@ namespace ConstructionSetExtender
 			if (EditorTabStrip->Tabs->Count > 1)
 			{
 				if (MessageBox::Show("Are you sure you want to close all open tabs?",
-					SCRIPTEDITOR_TITLE,
-					MessageBoxButtons::YesNo,
-					MessageBoxIcon::Question,
-					MessageBoxDefaultButton::Button2) == DialogResult::No)
+									SCRIPTEDITOR_TITLE,
+									MessageBoxButtons::YesNo,
+									MessageBoxIcon::Question,
+									MessageBoxDefaultButton::Button2) == DialogResult::No)
 				{
 					return;
 				}
@@ -327,7 +327,7 @@ namespace ConstructionSetExtender
 
 		Workspace^ WorkspaceContainer::InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript)
 		{
-			EditorForm->SuspendLayout();
+			BeginUpdate();
 
 			ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 			Parameters->EditorHandleIndex = 0;
@@ -338,7 +338,7 @@ namespace ConstructionSetExtender
 			Trace::Assert(NewWorkspace != nullptr, "NewWorkspace == nullptr");
 			NewWorkspace->BringToFront();
 
-			EditorForm->ResumeLayout();
+			EndUpdate();
 
 			return NewWorkspace;
 		}
@@ -842,6 +842,17 @@ namespace ConstructionSetExtender
 		{
 			return EditorTabStrip->Tabs->Count;
 		}
+
+		void WorkspaceContainer::BeginUpdate( void )
+		{
+			EditorForm->SuspendLayout();
+		}
+
+		void WorkspaceContainer::EndUpdate( void )
+		{
+			EditorForm->ResumeLayout();
+		}
+
 #pragma endregion
 
 #pragma region Workspace
@@ -2023,7 +2034,8 @@ namespace ConstructionSetExtender
 
 								if (i == 0 &&
 									LocalParser->GetCommentTokenIndex(i) == -1 &&
-									(LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_ElseIf || LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_If) &&
+									(LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_ElseIf ||
+									LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_If) &&
 									LocalParser->GetCurrentTokenCount() > 1 &&
 									String::Compare(LocalParser->Tokens[i + 1], "eval", true))
 								{
@@ -2163,9 +2175,9 @@ namespace ConstructionSetExtender
 					{
 						System::DateTime LastWriteTime = System::IO::File::GetLastWriteTime(CachePath);
 						if (MessageBox::Show("An auto-recovery cache for the script '" + GetScriptDescription() + "' was found, dated " + LastWriteTime.ToShortDateString() +  " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
-							SCRIPTEDITOR_TITLE,
-							MessageBoxButtons::YesNo,
-							MessageBoxIcon::Information) == DialogResult::Yes)
+											SCRIPTEDITOR_TITLE,
+											MessageBoxButtons::YesNo,
+											MessageBoxIcon::Information) == DialogResult::Yes)
 						{
 							LoadFileFromDisk(CachePath);
 						}
@@ -2322,8 +2334,11 @@ namespace ConstructionSetExtender
 			{
 				if (Itr->RefCount == 0)
 				{
-					if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest || PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "General") == 0)
+					if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest ||
+						PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "General") == 0)
+					{
 						AddMessageToMessagePool(MessageListItemType::e_Warning, 1, "Variable '" + Itr->Name + "' unreferenced in local context.");
+					}
 				}
 
 				bool InvalidVarName = false;
@@ -2348,9 +2363,9 @@ namespace ConstructionSetExtender
 			if (Data && String::Compare(CurrentScriptEditorID, ScriptName, true) != 0)
 			{
 				if (MessageBox::Show("Script name '" + ScriptName + "' is already used by another form. Proceeding with compilation will modify the script's editorID.\n\nDo you want to proceed?",
-					SCRIPTEDITOR_TITLE,
-					MessageBoxButtons::YesNo,
-					MessageBoxIcon::Exclamation) == DialogResult::No)
+									SCRIPTEDITOR_TITLE,
+									MessageBoxButtons::YesNo,
+									MessageBoxIcon::Exclamation) == DialogResult::No)
 				{
 					Result = false;
 				}
@@ -2687,8 +2702,10 @@ namespace ConstructionSetExtender
 			if (GetModifiedStatus())
 			{
 				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes. Do you wish to save them ?",
-					SCRIPTEDITOR_TITLE,
-					MessageBoxButtons::YesNoCancel, MessageBoxIcon::Exclamation);
+													SCRIPTEDITOR_TITLE,
+													MessageBoxButtons::YesNoCancel,
+													MessageBoxIcon::Exclamation);
+
 				if (Result == DialogResult::Yes)
 					return SaveScript(ScriptSaveOperation::e_SaveAndCompile);
 				else if (Result == DialogResult::No)
@@ -2749,7 +2766,9 @@ namespace ConstructionSetExtender
 					if (Operation == ScriptSaveOperation::e_SaveButDontCompile)
 					{
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-						AddMessageToMessagePool(MessageListItemType::e_EditorMessage, -1, "This is an uncompiled script. Expect weird behavior during runtime execution.");
+						AddMessageToMessagePool(MessageListItemType::e_EditorMessage,
+												-1,
+												"This is an uncompiled script. Expect weird behavior during runtime execution.");
 					}
 
 					ComponentDLLInterface::ScriptCompileData CompileData;
@@ -2816,13 +2835,15 @@ namespace ConstructionSetExtender
 		void Workspace::RecompileScripts()
 		{
 			if (MessageBox::Show("Are you sure you want to recompile all the scripts in the active plugin?",
-				SCRIPTEDITOR_TITLE,
-				MessageBoxButtons::YesNo, MessageBoxIcon::Exclamation) == DialogResult::Yes)
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::YesNo,
+								MessageBoxIcon::Exclamation) == DialogResult::Yes)
 			{
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileScripts();
 				MessageBox::Show("All active scripts recompiled. Results have been logged to the console.",
-					SCRIPTEDITOR_TITLE,
-					MessageBoxButtons::OK, MessageBoxIcon::Information);
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Information);
 			}
 		}
 		void Workspace::PreviousScript()
@@ -3097,8 +3118,10 @@ namespace ConstructionSetExtender
 				}
 				else
 				{
-					MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents", SCRIPTEDITOR_TITLE,
-						MessageBoxButtons::OK, MessageBoxIcon::Information);
+					MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents",
+									SCRIPTEDITOR_TITLE,
+									MessageBoxButtons::OK,
+									MessageBoxIcon::Information);
 				}
 			}
 		}
@@ -3215,7 +3238,11 @@ namespace ConstructionSetExtender
 		{
 			if (GetIsScriptNew() || GetIsUninitialized())
 			{
-				MessageBox::Show("You may only perform this operation on an existing script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+				MessageBox::Show("You may only perform this operation on an existing script.",
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Exclamation);
+
 				return;
 			}
 
@@ -3236,12 +3263,16 @@ namespace ConstructionSetExtender
 				CString CEID(CurrentScriptEditorID);
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CEID.c_str());
 				MessageBox::Show("Operation complete! Script variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
-					SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Information);
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Information);
 			}
 			else
 			{
 				MessageBox::Show("The current script needs to be compiled before its dependencies can be updated.",
-					SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Exclamation);
 			}
 		}
 		void Workspace::ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E)
@@ -3271,17 +3302,23 @@ namespace ConstructionSetExtender
 		void Workspace::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
 		{
 			SetScriptType(ScriptType::e_Object);
-			if (!GetIsUninitialized())			SetModifiedStatus(true);
+
+			if (!GetIsUninitialized())
+				SetModifiedStatus(true);
 		}
 		void Workspace::ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E)
 		{
 			SetScriptType(ScriptType::e_Quest);
-			if (!GetIsUninitialized())			SetModifiedStatus(true);
+
+			if (!GetIsUninitialized())
+				SetModifiedStatus(true);
 		}
 		void Workspace::ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E)
 		{
 			SetScriptType(ScriptType::e_MagicEffect);
-			if (!GetIsUninitialized())			SetModifiedStatus(true);
+
+			if (!GetIsUninitialized())
+				SetModifiedStatus(true);
 		}
 
 		void Workspace::TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
@@ -3414,7 +3451,10 @@ namespace ConstructionSetExtender
 			catch (Exception^ E)
 			{
 				DebugPrint("Exception raised while opening internet page.\n\tException: " + E->Message);
-				MessageBox::Show("Couldn't open internet page. Mostly likely caused by an improperly formatted URL.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Error);
+				MessageBox::Show("Couldn't open internet page. Mostly likely caused by an improperly formatted URL.",
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Error);
 			}
 		}
 		void Workspace::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
@@ -3448,14 +3488,17 @@ namespace ConstructionSetExtender
 			if (GetModifiedStatus())
 			{
 				MessageBox::Show("The current script needs to be compiled before it can be documented.",
-					SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Exclamation);
+
 				return;
 			}
 
 			Refactoring::EditScriptComponentDialog DocumentScriptData(GetParentContainer()->GetHandle(),
-				CurrentScriptEditorID,
-				Refactoring::EditScriptComponentDialog::OperationType::e_DocumentScript,
-				"Script Description");
+																	CurrentScriptEditorID,
+																	Refactoring::EditScriptComponentDialog::OperationType::e_DocumentScript,
+																	"Script Description");
 
 			if (DocumentScriptData.HasResult)
 			{
@@ -3571,7 +3614,8 @@ namespace ConstructionSetExtender
 
 				List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
 				RemoteOpParameters->Add(UDFScriptText);
-				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScriptAndSetText, RemoteOpParameters);
+				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScriptAndSetText,
+																	RemoteOpParameters);
 			}
 		}
 		void Workspace::ContextMenuRefactorRenameVariables_Click( Object^ Sender, EventArgs^ E )
@@ -3579,14 +3623,17 @@ namespace ConstructionSetExtender
 			if (GetModifiedStatus())
 			{
 				MessageBox::Show("The current script needs to be compiled before its variables can be renamed.",
-					SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Exclamation);
+
 				return;
 			}
 
 			Refactoring::EditScriptComponentDialog RenameVariablesData(GetParentContainer()->GetHandle(),
-				CurrentScriptEditorID,
-				Refactoring::EditScriptComponentDialog::OperationType::e_RenameVariables,
-				"");
+																	CurrentScriptEditorID,
+																	Refactoring::EditScriptComponentDialog::OperationType::e_RenameVariables,
+																	"");
 
 			if (RenameVariablesData.HasResult)
 			{
@@ -3622,9 +3669,9 @@ namespace ConstructionSetExtender
 					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), &RenameData);
 
 					MessageBox::Show("Variables have been renamed. Scripts referencing them (current script included) will have to be manually updated with the new identifiers.",
-						SCRIPTEDITOR_TITLE,
-						MessageBoxButtons::OK,
-						MessageBoxIcon::Information);
+									SCRIPTEDITOR_TITLE,
+									MessageBoxButtons::OK,
+									MessageBoxIcon::Information);
 
 					for each (CString^ Itr in StringAllocations)
 						delete Itr;
@@ -3645,7 +3692,12 @@ namespace ConstructionSetExtender
 		void Workspace::ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (ToolBarShowOffsets->Checked)
-				MessageBox::Show("This operation can only be performed in the text editor and the preprocessed text viewer", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+			{
+				MessageBox::Show("This operation can only be performed in the text editor and the preprocessed text viewer",
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Exclamation);
+			}
 			else
 			{
 				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Line Number (1 - " + TextEditor->GetTotalLineCount() + ")", "Go To Line");
@@ -3669,11 +3721,18 @@ namespace ConstructionSetExtender
 				OffsetViewer->JumpToLine(Result->Text);
 			}
 			else
-				MessageBox::Show("This operation can only be performed in the offset viewer", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+			{
+				MessageBox::Show("This operation can only be performed in the offset viewer",
+								SCRIPTEDITOR_TITLE,
+								MessageBoxButtons::OK,
+								MessageBoxIcon::Exclamation);
+			}
 		}
 
 		void Workspace::ToolBarMessageList_Click(Object^ Sender, EventArgs^ E)
 		{
+			GetParentContainer()->BeginUpdate();
+
 			if (FindList->Visible)
 				ToolBarFindList->PerformClick();
 			else if (BookmarkList->Visible)
@@ -3681,7 +3740,7 @@ namespace ConstructionSetExtender
 			else if (VariableIndexList->Visible)
 				ToolBarGetVarIndices->PerformClick();
 
-			if (!MessageList->Visible)
+			if (MessageList->Visible == false)
 			{
 				MessageList->Show();
 				MessageList->BringToFront();
@@ -3694,9 +3753,13 @@ namespace ConstructionSetExtender
 				ToolBarMessageList->Checked = false;
 				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
+
+			GetParentContainer()->EndUpdate();
 		}
 		void Workspace::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 		{
+			GetParentContainer()->BeginUpdate();
+
 			if (MessageList->Visible)
 				ToolBarMessageList->PerformClick();
 			else if (BookmarkList->Visible)
@@ -3704,7 +3767,7 @@ namespace ConstructionSetExtender
 			else if (VariableIndexList->Visible)
 				ToolBarGetVarIndices->PerformClick();
 
-			if (!FindList->Visible)
+			if (FindList->Visible == false)
 			{
 				FindList->Show();
 				FindList->BringToFront();
@@ -3717,9 +3780,13 @@ namespace ConstructionSetExtender
 				ToolBarFindList->Checked = false;
 				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
+
+			GetParentContainer()->EndUpdate();
 		}
 		void Workspace::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
 		{
+			GetParentContainer()->BeginUpdate();
+
 			if (MessageList->Visible)
 				ToolBarMessageList->PerformClick();
 			else if (FindList->Visible)
@@ -3727,7 +3794,7 @@ namespace ConstructionSetExtender
 			else if (VariableIndexList->Visible)
 				ToolBarGetVarIndices->PerformClick();
 
-			if (!BookmarkList->Visible)
+			if (BookmarkList->Visible == false)
 			{
 				BookmarkList->Show();
 				BookmarkList->BringToFront();
@@ -3740,6 +3807,8 @@ namespace ConstructionSetExtender
 				ToolBarBookmarkList->Checked = false;
 				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
+
+			GetParentContainer()->EndUpdate();
 		}
 		void Workspace::ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3801,10 +3870,17 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (!VariableIndexList->Visible)
+			GetParentContainer()->BeginUpdate();
+
+			if (VariableIndexList->Visible == false)
 			{
 				if (TextEditor->GetModifiedStatus())
-					MessageBox::Show("The current script needs to be compiled before its variable indices can be updated.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+				{
+					MessageBox::Show("The current script needs to be compiled before its variable indices can be updated.",
+									SCRIPTEDITOR_TITLE,
+									MessageBoxButtons::OK,
+									MessageBoxIcon::Exclamation);
+				}
 				else
 				{
 					ToolBarUpdateVarIndices->Enabled = false;
@@ -3863,6 +3939,8 @@ namespace ConstructionSetExtender
 				ToolBarUpdateVarIndices->Enabled = false;
 				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
 			}
+
+			GetParentContainer()->EndUpdate();
 		}
 		void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
 		{

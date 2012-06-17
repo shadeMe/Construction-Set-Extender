@@ -22,7 +22,6 @@ namespace ConstructionSetExtender
 		_DefinePatchHdlr(DataDialogPluginDescription, 0x0040CAB6);
 		_DefinePatchHdlr(DataDialogPluginAuthor, 0x0040CAFE);
 		_DefineHookHdlr(SavePluginCommonDialog, 0x00446D51);
-		_DefineHookHdlr(QuickLoadPluginLoadHandler, 0x004852E5);
 		_DefineJumpHdlr(MissingMasterOverride, 0x00484FC9, 0x00484E8E);
 		_DefinePatchHdlr(DataHandlerPostError, 0x004852F0);
 		_DefineHookHdlrWithBuffer(AutoLoadActivePluginOnStartup, 0x0041A26A, 6, 0x8B, 0x0D, 0x44, 0xB6, 0xA0, 0x0);
@@ -46,7 +45,6 @@ namespace ConstructionSetExtender
 			_MemHdlr(LoadPluginsEpilog).WriteJump();
 			_MemHdlr(SavePluginCommonDialog).WriteJump();
 			_MemHdlr(SavePluginMasterEnum).WriteJump();
-			_MemHdlr(QuickLoadPluginLoadHandler).WriteJump();
 			_MemHdlr(MissingMasterOverride).WriteJump();
 			_MemHdlr(DataHandlerPostError).WriteUInt8(0xEB);
 			_MemHdlr(DataDialogPluginDescription).WriteUInt8(0xEB);
@@ -185,41 +183,6 @@ namespace ConstructionSetExtender
 			SKIP:
 				popad
 				jmp		[_hhGetVar(RetnFail)]
-			}
-		}
-
-		bool __stdcall DoQuickLoadPluginLoadHandlerHook(TESFile* CurrentFile)
-		{
-			return _stricmp(CurrentFile->fileName, _DATAHANDLER->activeFile->fileName);
-		}
-
-		#define _hhName		QuickLoadPluginLoadHandler
-		_hhBegin()
-		{
-			_hhSetVar(Call, 0x00484A60);		// f_DataHandler::LoadTESFile
-			_hhSetVar(Retn, 0x004852EE);
-			_hhSetVar(Skip, 0x004852F0);
-			__asm
-			{
-				pushad
-				mov		al, g_QuickLoadToggle
-				test	al, al
-				jz		CONTINUE
-				push	edx
-				call	DoQuickLoadPluginLoadHandlerHook
-				test	eax, eax
-				jnz		SKIP
-			CONTINUE:
-				popad
-
-				push	ecx
-				push	edx
-				mov		ecx, edi
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
-			SKIP:
-				popad
-				jmp		[_hhGetVar(Skip)]
 			}
 		}
 

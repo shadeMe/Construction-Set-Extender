@@ -32,7 +32,6 @@ namespace ConstructionSetExtender
 
 	namespace Hooks
 	{
-		bool		g_QuickLoadToggle = false;
 		HANDLE		g_CSESplashImage = NULL;
 
 		_DefineNopHdlr(ResponseEditorMic, 0x00407F3D, 5);
@@ -1538,12 +1537,12 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		UInt8 __cdecl TESDialogBuildSubwindowDetour( UInt16 TemplateID, Subwindow* DialogSubwindow )
+		bool __cdecl TESDialogBuildSubwindowDetour( UInt16 TemplateID, Subwindow* DialogSubwindow )
 		{
 			HWND ParentDialog = DialogSubwindow->hDialog;
 
 			UIManager::CSEWindowInvalidationManager::Instance.Push(ParentDialog);
-			UInt8 Result = cdeclCall<UInt8>(0x00404EC0, TemplateID, DialogSubwindow);
+			bool Result = DialogSubwindow->Build(TemplateID);
 			UIManager::CSEWindowInvalidationManager::Instance.Pop(ParentDialog);
 			return Result;
 		}

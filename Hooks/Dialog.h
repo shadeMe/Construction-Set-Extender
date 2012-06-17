@@ -22,7 +22,6 @@ namespace ConstructionSetExtender
 		// hooks that modify how CS dialogs behave and add interfaces for new tools
 		void PatchDialogHooks(void);
 
-		extern bool		g_QuickLoadToggle;
 		extern HANDLE	g_CSESplashImage;
 
 		_DeclareNopHdlr(ResponseEditorMic, "nops out the call to the delinquent sound struct initializer sub, fixing a crash");
@@ -76,7 +75,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(FilteredDialogWindowResize, "prevents filtered dialog window from being resized unnecessarily");
 		_DeclareMemHdlr(DialogueEditorPopup, "prevents the addition of TESForm related context menus items in the dialogue editor");
 
-		UInt8 __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
+		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);
 		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState);
 		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog);

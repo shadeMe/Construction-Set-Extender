@@ -45,8 +45,8 @@ namespace ConstructionSetExtender
 
 			if (File)
 			{
-				SME::MiscGunk::ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Active, SetActive);
-				SME::MiscGunk::ToggleFlag(&File->fileFlags, TESFile::kFileFlag_Loaded, true);
+				File->SetActive(SetActive);
+				File->SetLoaded(true);
 				SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 0x9CD1, 0);
 			}
 			else
