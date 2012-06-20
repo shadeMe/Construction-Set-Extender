@@ -1141,6 +1141,11 @@ namespace BGSEditorExtender
 
 		switch (uMsg)
 		{
+		case WM_CLOSE:
+			Instance->ToggleVisibility();
+			SkipCallback = true;
+
+			break;
 		case WM_INITMENUPOPUP:
 			if (wParam == (WPARAM)Instance->ContextMenuHandle)
 			{
