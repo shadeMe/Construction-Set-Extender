@@ -1258,6 +1258,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
+									if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter())))
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1290,6 +1295,17 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
+					{
+						bool SwitchCY = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						SwitchCY = (SwitchCY == false);
+
+						INISettings::GetRenderer()->Set(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INISetter(), "%d", SwitchCY);
+
+						Return = true;
+					}
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
 					Hooks::g_FreezeInactiveRefs = (Hooks::g_FreezeInactiveRefs == false);
 
@@ -1445,7 +1461,7 @@ namespace ConstructionSetExtender
 							if (!RenderSelectionGroupManager::Instance.AddGroup(CurrentCell, *g_TESRenderSelectionPrimary))
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
-											"Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a preexisting group.");
+												"Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a preexisting group.");
 							}
 							else
 								RenderWindowPainter::RenderChannelNotifications->Queue(2, "Created new selection group for current cell");
@@ -1455,7 +1471,7 @@ namespace ConstructionSetExtender
 							if (!RenderSelectionGroupManager::Instance.RemoveGroup(CurrentCell, *g_TESRenderSelectionPrimary))
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
-									"Couldn't remove current selection group.\n\nMake sure the selected objects belong to a preexisting group.");
+												"Couldn't remove current selection group.\n\nMake sure the selected objects belong to a preexisting group.");
 							}
 							else
 								RenderWindowPainter::RenderChannelNotifications->Queue(2, "Removed selection group from current cell");
@@ -1503,6 +1519,7 @@ namespace ConstructionSetExtender
 
 						RenderWindowPainter::RenderChannelNotifications->Queue(2, "Selection aligned to %08X", AlignRef->formID);
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+
 						Return = true;
 					}
 
@@ -1537,8 +1554,16 @@ namespace ConstructionSetExtender
 			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
+			UInt8* YKeyState = (UInt8*)0x00A0BC1E;
+			float* UnkRotFactor = (float*)0x00A0BAC4;
+
 			switch (uMsg)
 			{
+			case WM_CLOSE:
+				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40423, NULL);
+				Return = true;
+
+				break;
 			case WM_TIMER:
 				switch (wParam)
 				{
@@ -1577,6 +1602,37 @@ namespace ConstructionSetExtender
 				Hooks::g_MouseCaptureDelta.y = abs(Hooks::g_MouseCaptureDelta.y);
 
 				break;
+			case WM_KEYUP:
+				switch (wParam)
+				{
+				case 0x43:		// C
+					{
+						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						if (SwitchEnabled)
+						{
+							if (*YKeyState)
+								*UnkRotFactor = 0.0;
+
+							*YKeyState = 0;
+
+							Return = true;
+						}
+					}
+
+					break;
+				case 0x59:		// Y
+					{
+						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						if (SwitchEnabled)
+						{
+							Return = true;
+						}
+					}
+
+					break;
+				}
+
+				break;
 			case WM_KEYDOWN:
 				switch (wParam)
 				{
@@ -1588,6 +1644,7 @@ namespace ConstructionSetExtender
 					}
 
 					Return = true;
+
 					break;
 				case 0x5A:		// Z
 					if (*g_RenderWindowPathGridEditModeFlag && GetAsyncKeyState(VK_CONTROL))
@@ -1602,6 +1659,33 @@ namespace ConstructionSetExtender
 					{
 						PathGridUndoManager::Instance.PerformRedo();
 						Return = true;
+					}
+					else
+					{
+						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						if (SwitchEnabled)
+						{
+							InstanceUserData = 1;
+							SendMessage(hWnd, WM_KEYDOWN, 0x43, lParam);
+							InstanceUserData = 0;
+
+							Return = true;
+						}
+					}
+
+					break;
+				case 0x43:		// C
+					{
+						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						if (SwitchEnabled && InstanceUserData == 0)
+						{
+							if (*YKeyState == 0)
+								*UnkRotFactor = 0.0;
+
+							*YKeyState = 1;
+
+							Return = true;
+						}
 					}
 
 					break;
@@ -1678,6 +1762,15 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case 0x56:		// V
+					if (GetAsyncKeyState(VK_SHIFT))
+					{
+						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_INVERTSELECTION, NULL);
+
+						Return = true;
+					}
+
+					break;
 				}
 
 				break;
@@ -1703,6 +1796,11 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_CLOSE:
+				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40199, NULL);
+				Return = true;
+
+				break;
 			case 0x417:		// destroy window
 			case WM_DESTROY:
 				CSEFilterableFormListManager::Instance.Unregister(hWnd);
@@ -1782,6 +1880,11 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_CLOSE:
+				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40200, NULL);
+				Return = true;
+
+				break;
 			case 0x417:		// destroy window
 				CSEFilterableFormListManager::Instance.Unregister(hWnd);
 

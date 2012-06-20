@@ -264,7 +264,8 @@ BEGIN
 END
 
 IDD_AUXVIEWPORT DIALOGEX 0, 0, 319, 183
-STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_THICKFRAME
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
 CAPTION "Auxiliary Viewport Window"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -385,7 +386,7 @@ BEGIN
         MENUITEM "Lea&ves\tV",                  290, CHECKED
         MENUITEM "Trees",                       40480, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Isometric\tC",               40032
+        MENUITEM "&Isometric",                  40032
         MENUITEM "To&p\tT",                     40033
         MENUITEM SEPARATOR
         MENUITEM "Unload Current Cell",         IDC_MAINMENU_UNLOADCURRENTCELL
@@ -539,6 +540,7 @@ BEGIN
         MENUITEM "Batch Edit...",               IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR
         MENUITEM SEPARATOR
         MENUITEM "Co-Planar Drop New References", IDC_RENDERWINDOWCONTEXT_COPLANARDROP
+        MENUITEM "Switch C <=> Y Hotkeys",      IDC_RENDERWINDOWCONTEXT_SWITCHCNY
         MENUITEM SEPARATOR
         MENUITEM "Render Window Properties",    293
     END

@@ -12,6 +12,8 @@ namespace ConstructionSetExtender
 	{
 		static char s_AssetSelectorReturnPath[0x200] = {0};
 
+		_DefinePatchHdlr(TESDialogShowNIFFileSelect, 0x00446C7D + 1);
+
 		void PatchAssetSelectorHooks(void)
 		{
 			PatchCommonDialogCancelHandler(Model);
@@ -31,6 +33,8 @@ namespace ConstructionSetExtender
 			PatchCommonDialogEpilogHandler(Sound);
 			PatchCommonDialogEpilogHandler(Texture);
 			PatchCommonDialogEpilogHandler(SPT);
+
+			_MemHdlr(TESDialogShowNIFFileSelect).WriteUInt32(0);
 		}
 
 		DefineCommonDialogCancelHandler(Model)
@@ -160,8 +164,11 @@ namespace ConstructionSetExtender
 			if (DirPath.rfind("\\") != -1)
 				DirPath = DirPath.substr(0, DirPath.rfind("\\") + 1);
 
-			if (ArchiveManager::ExtractArchiveFile(FullPathBuffer, "tempaf") &&
-				(SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) == ERROR_SUCCESS || GetLastError() == ERROR_FILE_EXISTS || GetLastError() == ERROR_ALREADY_EXISTS) &&
+			bool Extracted = ArchiveManager::ExtractArchiveFile(FullPathBuffer, "tempaf");
+			if (Extracted &&
+				(SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) == ERROR_SUCCESS ||
+				GetLastError() == ERROR_FILE_EXISTS ||
+				GetLastError() == ERROR_ALREADY_EXISTS) &&
 				CopyFile("tempaf", FullPathBuffer, FALSE))
 			{
 				BGSEECONSOLE_MESSAGE("Extracted archived file '%s'", FullPathBuffer);
@@ -175,9 +182,12 @@ namespace ConstructionSetExtender
 			else
 			{
 				BGSEEUI->MsgBoxE(Dialog, 0,
-								"Couldn't extract/copy file. Possible reasons: File not found in loaded archives, couldn't create intermediate path, insufficient permissions or an internal error.");
+								"Couldn't extract/copy file.\n\nPossible reasons:\n File not found in loaded archives.\n Couldn't create intermediate path.\n Insufficient permissions.\n Internal error.");
 
-				BGSEECONSOLE_ERROR("Couldn't extract/copy archived file '%s'", FullPathBuffer);
+				if (Extracted)
+					BGSEECONSOLE_ERROR("Couldn't extract/copy archived file '%s'", FullPathBuffer);
+				else
+					BGSEECONSOLE_MESSAGE("Couldn't extract/copy archived file '%s'", FullPathBuffer);
 			}
 		}
 

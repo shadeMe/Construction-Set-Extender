@@ -399,6 +399,7 @@
   <ItemGroup>
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl" />
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl" />
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\[Resources]\generic.bmp" />
     <None Include="EditorAPI\NiTMap.h" />
     <None Include="Images\antic.bmp" />
     <None Include="Images\automaton.bmp" />

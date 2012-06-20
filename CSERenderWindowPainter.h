@@ -14,24 +14,6 @@ namespace ConstructionSetExtender
 		};
 		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowPainterINISettings[kRenderWindowPainter__MAX];
 		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetRenderWindowPainter(void);
-
-		enum
-		{
-			kRenderer_UpdatePeriod = 0,
-			kRenderer_UpdateViewPortAsync,
-			kRenderer_AltRefMovementSpeed,
-			kRenderer_AltRefSnapGrid,
-			kRenderer_AltRefRotationSpeed,
-			kRenderer_AltRefSnapAngle,
-			kRenderer_AltCamRotationSpeed,
-			kRenderer_AltCamZoomSpeed,
-			kRenderer_AltCamPanSpeed,
-			kRenderer_CoplanarRefDrops,
-
-			kRenderer__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRendererINISettings[kRenderer__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetRenderer(void);
 	}
 
 	namespace RenderWindowPainter

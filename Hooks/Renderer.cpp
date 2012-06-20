@@ -12,6 +12,36 @@
 
 namespace ConstructionSetExtender
 {
+	namespace INISettings
+	{
+		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRendererINISettings[kRenderer__MAX] =
+		{
+			{ "UpdatePeriod",					"8",		"Duration, in milliseconds, between render window updates" },
+			{ "UpdateViewPortAsync",			"0",		"Allow the render window to be updated in the background" },
+			{ "AltRefMovementSpeed",			"0.8",		"Alternate render window movement settings" },
+			{ "AltRefSnapGrid",					"2",		"Alternate render window movement settings" },
+			{ "AltRefRotationSpeed",			"1.0",		"Alternate render window movement settings" },
+			{ "AltRefSnapAngle",				"45",		"Alternate render window movement settings" },
+			{ "AltCamRotationSpeed",			"1.0",		"Alternate render window movement settings" },
+			{ "AltCamZoomSpeed",				"0.5",		"Alternate render window movement settings" },
+			{ "AltCamPanSpeed",					"5.0",		"Alternate render window movement settings" },
+			{ "CoplanarRefDrops",				"1",		"Places new references co-planar with the object below the cursor location when they are created" },
+			{ "SwitchCAndY",					"0",		"Switch the functionalities of the C and Y hotkeys"	}
+		};
+
+		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderer( void )
+		{
+			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Renderer");
+			if (kFactory.Settings.size() == 0)
+			{
+				for (int i = 0; i < kRenderer__MAX; i++)
+					kFactory.Settings.push_back(&kRendererINISettings[i]);
+			}
+
+			return &kFactory;
+		}
+	}
+
 	namespace Hooks
 	{
 		bool						g_RenderWindowAltMovementSettings = false;
@@ -1104,8 +1134,7 @@ namespace ConstructionSetExtender
 				{
 					if (FirstRef == NULL)
 						FirstRef = Itr.Get();
-
-					if ((FirstRef->formID & 0xFFFFFF) > (Itr->formID & 0xFFFFFF))
+					else if ((FirstRef->formID & 0xFFFFFF) > (Itr->formID & 0xFFFFFF))
 						FirstRef = Itr.Get();
 				}
 

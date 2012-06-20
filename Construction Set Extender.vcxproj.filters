@@ -842,6 +842,7 @@
     <None Include="Images\lost.bmp">
       <Filter>Resources\Images</Filter>
     </None>
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\[Resources]\generic.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">
