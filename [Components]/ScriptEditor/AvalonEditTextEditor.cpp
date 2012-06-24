@@ -104,12 +104,12 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SetContextMenu(ContextMenuStrip^% Strip)
 			{
-				Container->ContextMenuStrip = Strip;
+				WinFormsContainer->ContextMenuStrip = Strip;
 			}
 
 			void AvalonEditTextEditor::AddControl(Control^ ControlObject)
 			{
-				Container->Controls->Add(ControlObject);
+				WinFormsContainer->Controls->Add(ControlObject);
 			}
 
 			String^ AvalonEditTextEditor::GetText(void)
@@ -138,6 +138,7 @@ namespace ConstructionSetExtender
 						SetSelectedText(Text, false);
 						SetSelectionLength(0);
 					}
+
 					UpdateCodeFoldings();
 				}
 				else
@@ -315,7 +316,7 @@ namespace ConstructionSetExtender
 
 			IntPtr AvalonEditTextEditor::GetHandle()
 			{
-				return Container->Handle;
+				return WinFormsContainer->Handle;
 			}
 
 			void AvalonEditTextEditor::FocusTextArea()
@@ -607,7 +608,7 @@ namespace ConstructionSetExtender
 
 			Point AvalonEditTextEditor::PointToScreen(Point Location)
 			{
-				return Container->PointToScreen(Location);
+				return WinFormsContainer->PointToScreen(Location);
 			}
 
 			void AvalonEditTextEditor::SetEnabledState(bool State)
@@ -682,9 +683,9 @@ namespace ConstructionSetExtender
 
 				TextFieldPanel->Children->Clear();
 				WPFHost->Child = nullptr;
-				Container->Controls->Clear();
+				WinFormsContainer->Controls->Clear();
 
-				delete Container;
+				delete WinFormsContainer;
 				delete WPFHost;
 				delete TextFieldPanel;
 				delete AnimationPrimitive;
@@ -1611,7 +1612,7 @@ namespace ConstructionSetExtender
 			{
 				this->ParentWorkspaceIndex = ParentWorkspaceIndex;
 
-				Container = gcnew Panel();
+				WinFormsContainer = gcnew Panel();
 				WPFHost = gcnew ElementHost();
 				TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
 				TextField = gcnew AvalonEdit::TextEditor();
@@ -1729,11 +1730,11 @@ namespace ConstructionSetExtender
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
 
-				Container->Dock = DockStyle::Fill;
-				Container->BorderStyle = BorderStyle::FixedSingle;
-				Container->Controls->Add(WPFHost);
-				Container->Controls->Add(ExternalVerticalScrollBar);
-				Container->Controls->Add(ExternalHorizontalScrollBar);
+				WinFormsContainer->Dock = DockStyle::Fill;
+				WinFormsContainer->BorderStyle = BorderStyle::FixedSingle;
+				WinFormsContainer->Controls->Add(WPFHost);
+				WinFormsContainer->Controls->Add(ExternalVerticalScrollBar);
+				WinFormsContainer->Controls->Add(ExternalHorizontalScrollBar);
 
 				WPFHost->Dock = DockStyle::Fill;
 				WPFHost->Child = TextFieldPanel;

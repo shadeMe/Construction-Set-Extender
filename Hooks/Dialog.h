@@ -10,6 +10,8 @@ namespace ConstructionSetExtender
 			kDialogs_RenderWindowState = 0,
 			kDialogs_ObjectWindowState,
 			kDialogs_CellViewWindowState,
+			kDialogs_SortFormListsByActiveForm,
+			kDialogs_ColorizeActiveForms,
 
 			kDialogs__MAX
 		};
@@ -74,11 +76,18 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESQuestWindowResize, "prevents quest edit window from being resized unnecessarily");
 		_DeclareMemHdlr(FilteredDialogWindowResize, "prevents filtered dialog window from being resized unnecessarily");
 		_DeclareMemHdlr(DialogueEditorPopup, "prevents the addition of TESForm related context menus items in the dialogue editor");
+		_DeclareMemHdlr(FormListEditorIDComparatorA, "allows form lists to be sorted by name and active record status");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);
 		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState);
 		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog);
 		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog);
+
+		int CALLBACK ObjectWindowFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK TESFormIDListViewFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK TESDialogCellListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK TESDialogReferenceListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK TESDialogFormListEDIDComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	}
 }

@@ -88,20 +88,11 @@
     <Filter Include="EditorAPI\Types\Bethesda">
       <UniqueIdentifier>{3bb9635e-5bb8-48b6-ba78-ae9f582e742c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Components\BGSEEBase Derivatives">
-      <UniqueIdentifier>{416275f2-efa6-45fe-892b-3df9e826db93}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components\BGSEEBase Derivatives\Coda">
+    <Filter Include="Components\Coda">
       <UniqueIdentifier>{253bc8ad-55c7-44ea-80d6-413eb868ee7d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Components\BGSEEBase Derivatives\Coda\Commands">
+    <Filter Include="Components\Coda\Commands">
       <UniqueIdentifier>{d2b0fdf6-6089-45bb-bde4-d47867937e1f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components\BGSEEBase">
-      <UniqueIdentifier>{c6f5a181-2eb2-4bb7-b14c-eea7c4f03cde}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Components\BGSEEBase\Coda">
-      <UniqueIdentifier>{cdbae907-6883-4d01-bca3-b4690b8bd24e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -245,38 +236,38 @@
     <ClCompile Include="EditorAPI\BSString.cpp">
       <Filter>EditorAPI\Types\Bethesda</Filter>
     </ClCompile>
-    <ClCompile Include="CSEMain.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
-    <ClCompile Include="CSERenderWindowPainter.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEAchievements.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEHallOfFame.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEWorkspaceManager.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEConsole.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEUIManager.cpp">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClCompile>
     <ClCompile Include="Coda\CSECoda.cpp">
-      <Filter>Components\BGSEEBase Derivatives\Coda</Filter>
+      <Filter>Components\Coda</Filter>
     </ClCompile>
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp">
-      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+      <Filter>Components\Coda\Commands</Filter>
     </ClCompile>
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp">
-      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+      <Filter>Components\Coda\Commands</Filter>
     </ClCompile>
     <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp">
-      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+      <Filter>Components\Coda\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEAchievements.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEConsole.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEHallOfFame.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEMain.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSERenderWindowPainter.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEUIManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEWorkspaceManager.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -657,45 +648,6 @@
     <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="CSEMain.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
-    <ClInclude Include="CSERenderWindowPainter.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEAchievements.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEHallOfFame.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEWorkspaceManager.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEWorkspaceManager.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEAchievements.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEConsole.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEHallOfFame.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEMain.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowPainter.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEToolBox.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEUIManager.h">
-      <Filter>Components\BGSEEBase</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Libraries]\SME Sundries\Functors.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -723,41 +675,80 @@
     <ClInclude Include="..\..\[Libraries]\SME Sundries\UIHelpers.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="CSEConsole.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEUIManager.h">
-      <Filter>Components\BGSEEBase Derivatives</Filter>
-    </ClInclude>
     <ClInclude Include="Construction Set Extender_Resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Coda\CSECoda.h">
-      <Filter>Components\BGSEEBase Derivatives\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h">
-      <Filter>Components\BGSEEBase\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h">
-      <Filter>Components\BGSEEBase\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h">
-      <Filter>Components\BGSEEBase\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h">
-      <Filter>Components\BGSEEBase\Coda</Filter>
+      <Filter>Components\Coda</Filter>
     </ClInclude>
     <ClInclude Include="VersionInfo.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h">
-      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+      <Filter>Components\Coda\Commands</Filter>
     </ClInclude>
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h">
-      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+      <Filter>Components\Coda\Commands</Filter>
     </ClInclude>
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h">
-      <Filter>Components\BGSEEBase Derivatives\Coda\Commands</Filter>
+      <Filter>Components\Coda\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h">
+      <Filter>Components\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h">
+      <Filter>Components\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h">
+      <Filter>Components\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h">
+      <Filter>Components\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEWorkspaceManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEAchievements.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEConsole.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEHallOfFame.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEMain.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowPainter.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEToolBox.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEUIManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEWorkspaceManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEAchievements.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEConsole.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEHallOfFame.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEMain.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSERenderWindowPainter.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEUIManager.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -766,12 +757,6 @@
     </None>
     <None Include="EditorAPI\NiTMap.h">
       <Filter>EditorAPI\Types\NetImmerse</Filter>
-    </None>
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl">
-      <Filter>Components\BGSEEBase\Coda</Filter>
-    </None>
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl">
-      <Filter>Components\BGSEEBase\Coda</Filter>
     </None>
     <None Include="Images\antic.bmp">
       <Filter>Resources\Images</Filter>
@@ -842,7 +827,15 @@
     <None Include="Images\lost.bmp">
       <Filter>Resources\Images</Filter>
     </None>
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\[Resources]\generic.bmp" />
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\[Resources]\generic.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl">
+      <Filter>Components\Coda</Filter>
+    </None>
+    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl">
+      <Filter>Components\Coda</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">

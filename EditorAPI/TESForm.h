@@ -176,7 +176,9 @@ public:
 	/*1C*/ OverrideFileListT		fileList; // list of TESFiles that override this form
 
 	// methods
-	bool							IsReference() const {  return formType >= kFormType_REFR && formType <= kFormType_ACRE; }
+	bool							IsReference() const;
+	bool							IsActive() const;
+
 	bool							SetEditorID(const char* EditorID);
 	TESFile*						GetOverrideFile(int Index);
 	void							MarkAsTemporary();

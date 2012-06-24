@@ -1,7 +1,10 @@
 #pragma once
 
 void*	Oblivion_DynamicCast(void * SrcObj, UInt32 Arg1, const void * FromType, const void * ToType, UInt32 Arg4);
+void*	NiDynamicCast(const void* ToType, void* SrcObj);
+
 #define CS_CAST(obj, from, to)			(to *)Oblivion_DynamicCast((void*)(obj), 0, RTTI_ ## from, RTTI_ ## to, 0)
+#define NI_CAST(obj, to)				(to *)NiDynamicCast(NiRTTI_ ## to, (void*)obj)	// need the correct RTTI data, the ones below are MSVC RTTI obj locators
 
 extern const void * RTTI_BaseFormComponent;
 extern const void * RTTI_MemoryHeap;

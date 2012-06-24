@@ -15,6 +15,8 @@ namespace ConstructionSetExtender
 			{ "RenderWindowState",			"1",		"Window visibility" },
 			{ "ObjectWindowState",			"1",		"Window visibility" },
 			{ "CellViewWindowState",		"1",		"Window visibility" },
+			{ "SortFormListsByActiveForm",	"1",		"Sort active forms first in list views"	},
+			{ "ColorizeActiveForms",		"1",		"Colorize active forms in list views" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetDialogs( void )
@@ -212,6 +214,71 @@ namespace ConstructionSetExtender
 
 				_DefineCallHdlr(InvalidateDialogueControls, kTESTopicInfoSetInDialogCallSites[i], TESTopicInfoSetInDialogDetour);
 				_MemHdlr(InvalidateDialogueControls).WriteCall();
+			}
+
+			for (int i = 0; i < 5; i++)
+			{
+				static const UInt32 kCallSites[5] =
+				{
+					0x00420AB7, 0x00421816,
+					0x00421EF3, 0x00421F52,
+					0x0042263F
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&ObjectWindowFormListComparator);
+			}
+
+			for (int i = 0; i < 6; i++)
+			{
+				static const UInt32 kCallSites[6] =
+				{
+					0x00448A08, 0x00448D48,
+					0x0044A004, 0x004DF397,
+					0x00568CA1, 0x00569BE4
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESFormIDListViewFormListComparator);
+			}
+
+			for (int i = 0; i < 9; i++)
+			{
+				static const UInt32 kCallSites[9] =
+				{
+					0x00409DD8,	0x0040A232,
+					0x0040A4CF,	0x0040AC87,
+					0x0040AE89,	0x00537784,
+					0x0053A596,	0x0053B1EA,
+					0x005A9C96
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogCellListComparator);
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				static const UInt32 kCallSites[3] =
+				{
+					0x00409E02,	0x0040A1BA,
+					0x0040AF89
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogReferenceListComparator);
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				static const UInt32 kCallSites[4] =
+				{
+					0x004DEEC7,	0x004EE6FF,
+					0x004F00E0,	0x004F5D71
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogFormListEDIDComparator);
 			}
 
 			_MemHdlr(DialogueEditorPopup).WriteJump();
@@ -412,7 +479,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall AppendShadeMeRefToComboBox(HWND hWnd)
 		{
-			TESComboBox::AddItem(hWnd, "'shadeMe' 'TheShadeMeRef'", TESForm::LookupByEditorID("TheShadeMeRef"), true);
+			TESComboBox::AddItem(hWnd,
+								"'shadeMe' 'TheShadeMeRef'",
+								TESForm::LookupByEditorID("TheShadeMeRef"),
+								true);
 		}
 
 		#define _hhName		CellObjectListShadeMeRefAppend
@@ -440,7 +510,10 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_SETFORMID:
 				{
 					if (Form->formID < 0x800)
+					{
+						BGSEEUI->MsgBoxE(hWnd, 0, "Cannot change the FormID of default objects.");
 						break;
+					}
 
 					FORMAT_STR(Buffer, "%08X", Form->formID);
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
@@ -453,19 +526,19 @@ namespace ConstructionSetExtender
 						sscanf_s(Buffer, "%08X", &FormID);
 						if (errno == ERANGE || errno == EINVAL)
 						{
-							BGSEEUI->MsgBoxW(hWnd, 0, "Bad FormID string - FormIDs should be unsigned 32-bit hexadecimal integers (e.g: 00503AB8)");
+							BGSEEUI->MsgBoxW(hWnd, 0, "Bad FormID string - FormIDs should be unsigned 32-bit hexadecimal integers (e.g: 00503AB8).");
 
 							break;
 						}
 						else if ((FormID & 0x00FFFFFF) < 0x800)
 						{
-							BGSEEUI->MsgBoxW(hWnd, 0, "Invalid FormID - Base should be at least 0x800");
+							BGSEEUI->MsgBoxW(hWnd, 0, "Invalid FormID - Base should be at least 0x800.");
 
 							break;
 						}
 
 						if (BGSEEUI->MsgBoxI(hWnd, MB_YESNO,
-											"Change FormID from %08X to %08X ?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.",
+											"Change FormID from %08X to %08X?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.",
 											Form->formID, FormID) == IDYES)
 						{
 							Form->SetFormID(FormID);
@@ -478,7 +551,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
 				if ((Form->formFlags & TESForm::kFormFlags_FromActiveFile) &&
 					BGSEEUI->MsgBoxI(hWnd, MB_YESNO,
-									"Are you sure you want to mark form '%s' (%08X) as unmodified ?\n\nThis will not revert any changes made to it.",
+									"Are you sure you want to mark form '%s' (%08X) as unmodified?\n\nThis will not revert any changes made to it.",
 									Form->editorID.c_str(), Form->formID) == IDYES)
 				{
 					Form->SetFromActiveFile(false);
@@ -502,9 +575,11 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_UNDELETE:
 				{
 					if ((Form->formFlags & TESForm::kFormFlags_Deleted) &&
-						BGSEEUI->MsgBoxI(hWnd, MB_YESNO,
-										"Are you sure you want to undelete form '%s' (%08X) ?\n\nOld references to it will not be restored.",
-										Form->editorID.c_str(), Form->formID) == IDYES)
+						BGSEEUI->MsgBoxI(hWnd,
+										MB_YESNO,
+										"Are you sure you want to undelete form '%s' (%08X)?\n\nOld references to it will not be restored.",
+										Form->editorID.c_str(),
+										Form->formID) == IDYES)
 					{
 						Form->SetDeleted(false);
 					}
@@ -553,7 +628,7 @@ namespace ConstructionSetExtender
 					for (TESForm::OverrideFileListT::Iterator Itr = Form->fileList.Begin(); !Itr.End(); ++Itr)
 					{
 						TESFile* File = Itr.Get();
-						if (!File)
+						if (File == NULL)
 							break;
 
 						FORMAT_STR(Buffer, "\t%s\n", File->fileName);
@@ -587,6 +662,7 @@ namespace ConstructionSetExtender
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SHOWOVERRIDES, "Show Override List");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_ADDTOTAG, "Add to Active Tag");
+
 			if (SelectedForm->IsReference())
 			{
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
@@ -1408,7 +1484,10 @@ namespace ConstructionSetExtender
 		{
 			HWND StageItemListView = GetDlgItem(Dialog, 2173);
 			UInt32 StageItemCount = ListView_GetItemCount(StageItemListView);
-			DialogExtraQuestStageData* xStageData = CS_CAST(TESDialog::GetDialogExtraByType(Dialog, BSExtraData::kDialogExtra_QuestStageData), BSExtraData, DialogExtraQuestStageData);
+
+			DialogExtraQuestStageData* xStageData = CS_CAST(TESDialog::GetDialogExtraByType(Dialog, BSExtraData::kDialogExtra_QuestStageData),
+															BSExtraData,
+															DialogExtraQuestStageData);
 
 			for (int i = StageItemCount; i > -1; i--)
 			{
@@ -1659,6 +1738,53 @@ namespace ConstructionSetExtender
 				call	DoDialogueEditorPopupHook
 				jmp		[_hhGetVar(Retn)]
 			}
+		}
+
+		int CALLBACK ActiveRecordFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort, UInt32 DefaultComparator )
+		{
+			bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter()));
+
+			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
+			int Result = ((DefaultComparatorT)DefaultComparator)(lParam1, lParam2, lParamSort);
+
+			TESForm* FormA = (TESForm*)lParam1;
+			TESForm* FormB = (TESForm*)lParam2;
+
+			bool ActiveFormA = (FormA->formFlags & TESForm::kFormFlags_FromActiveFile);
+			bool ActiveFormB = (FormB->formFlags & TESForm::kFormFlags_FromActiveFile);
+
+			if (Enabled)
+			{
+				if (ActiveFormA == true && ActiveFormB == false)
+					Result = -1;
+			}
+
+			return Result;
+		}
+
+		int CALLBACK ObjectWindowFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00415CD0);
+		}
+
+		int CALLBACK TESFormIDListViewFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00442EB0);
+		}
+
+		int CALLBACK TESDialogCellListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00537620);
+		}
+
+		int CALLBACK TESDialogReferenceListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004088C0);
+		}
+
+		int CALLBACK TESDialogFormListEDIDComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004ECAF0);
 		}
 	}
 }

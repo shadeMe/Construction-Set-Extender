@@ -156,3 +156,13 @@ const char* TESForm::GetTypeIDString( void )
 {
 	return cdeclCall<const char*>(0x004AC1B0, this->formType);
 }
+
+bool TESForm::IsReference() const
+{
+	return formType >= kFormType_REFR && formType <= kFormType_ACRE;
+}
+
+bool TESForm::IsActive() const
+{
+	return (formFlags & kFormFlags_FromActiveFile);
+}

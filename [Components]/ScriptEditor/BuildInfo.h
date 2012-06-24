@@ -1,2 +1,2 @@
-#define VERSION_BUILD               620
-#define VERSION_BUILD_PAD       0620
+#define VERSION_BUILD               624
+#define VERSION_BUILD_PAD       0624

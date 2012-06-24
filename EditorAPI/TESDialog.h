@@ -315,7 +315,7 @@ public:
 		kDialogTemplate_NPCFaceAdvancedDataEx		= 3217,
 
 		// Unknown
-		kDialogTemplate_Dialog						= 308,			// looks like a base formIDListView template of sorts
+		kDialogTemplate_Dialog						= 308,			// looks like a base formIDListView template of sorts, used by TESWeather (for one)
 		kDialogTemplate_Progress3238				= 3238,			// could be version control/convert ESM for xBox tool related
 		kDialogTemplate_Preview3258					= 3258,
 		kDialogTemplate_Preview181					= 181,

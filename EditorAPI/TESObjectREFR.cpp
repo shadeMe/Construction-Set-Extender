@@ -45,7 +45,7 @@ void TESObjectREFR::SetExtraEnableStateParentOppositeState( bool State )
 	thisCall<UInt32>(0x0053FA80, this, State);
 }
 
-NiNode* TESObjectREFR::GetExtraRef3DData( void )
+NiNode* TESObjectREFR::GetNiNode( void )
 {
 	return thisCall<NiNode*>(0x00542950, this);
 }
@@ -77,19 +77,20 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 	if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)
 		_DATAHANDLER->MoveReference(ExteriorAtCoordsEpilog, this);
 
-	NiNode* Node3D = GetExtraRef3DData();
+	NiNode* Node3D = GetNiNode();
 	if (Node3D)
 	{
 		Node3D->m_localTranslate.x = position.x;
 		Node3D->m_localTranslate.y = position.y;
 		Node3D->m_localTranslate.z = position.z;
+
 		cdeclCall<void>(0x00609F60, Node3D, true);		// NiNode::UpdateCollision?
 		thisCall<void>(0x006F25E0, Node3D, 0.0, true);	// NiNode::Update
 
-		NiAVObject* xLight = thisCall<NiAVObject*>(0x00540110, this);
-		if (xLight && baseForm && baseForm->formType == kFormType_Light)	// TESObjectREFR::GetExtraLight
+		ExtraLight::ExtraLightData* xLight = thisCall<ExtraLight::ExtraLightData*>(0x00540110, this);	// TESObjectREFR::GetExtraLight
+		if (xLight && baseForm && baseForm->formType == kFormType_Light)
 		{
-			NiNode* SceneNode = cdeclCall<NiNode*>(0x007662E0, 0);			// TESRender::GetSceneNode
+			NiNode* SceneNode = cdeclCall<NiNode*>(0x007662E0, 0);										// TESRender::GetSceneNode
 			thisCall<void>(0x007713A0, SceneNode, xLight);
 		}
 
@@ -112,9 +113,10 @@ void TESObjectREFR::SetRotation( float X, float Y, float Z, bool Radians /*= fal
 	rotation.x = X;
 	rotation.y = Y;
 	rotation.z = Z;
+
 	thisCall<void>(0x0053FC70, this, rotation.x, rotation.y, rotation.z);		// TESObjectREFR::SetExtraEditorMoveDataRotation
 
-	NiNode* Node3D = GetExtraRef3DData();
+	NiNode* Node3D = GetNiNode();
 	if (Node3D)
 	{
 		NiMatrix33 RotationMatrix = {0};

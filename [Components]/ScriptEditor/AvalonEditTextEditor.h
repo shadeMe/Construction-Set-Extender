@@ -33,7 +33,7 @@ namespace ConstructionSetExtender
 					e_Down
 				};
 
-				Panel^												Container;
+				Panel^												WinFormsContainer;
 				ElementHost^										WPFHost;
 				System::Windows::Controls::DockPanel^				TextFieldPanel;
 				AvalonEdit::TextEditor^								TextField;
@@ -218,7 +218,7 @@ namespace ConstructionSetExtender
 				virtual void								ToggleComment(int StartIndex);
 				virtual void								UpdateIntelliSenseLocalDatabase(void);
 
-				virtual Control^							GetContainer() { return Container; }
+				virtual Control^							GetContainer() { return WinFormsContainer; }
 				virtual void								ScrollToLine(String^ LineNumber);
 				virtual Point								PointToScreen(Point Location);
 

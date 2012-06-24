@@ -31,8 +31,9 @@ public:
 	/*4C*/ ExtraDataList		extraData;
 
 	// methods
-	void						UpdateNiNode();
+	NiNode*						GetNiNode(void);
 	NiNode*						GenerateNiNode();
+	void						UpdateNiNode();
 	const Vector3*				GetPosition() const;
 	const Vector3*				GetRotation() const;
 	bool						SetBaseForm(TESForm* BaseForm);
@@ -47,6 +48,5 @@ public:
 	void						ModExtraTimeLeft(float Time);
 	void						ModExtraSoul(UInt8 SoulLevel);
 	void						SetExtraEnableStateParentOppositeState(bool State);
-	NiNode*						GetExtraRef3DData(void);
 	void						RemoveExtraTeleport(void);
 };
