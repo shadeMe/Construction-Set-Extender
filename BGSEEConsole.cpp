@@ -765,7 +765,7 @@ namespace BGSEditorExtender
 		ParentHandle = Parent;
 		ResourceInstance = Resource;
 
-		Create(NULL, false);
+		Create(NULL, false, true);
 		LONG OrgWndProc = SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_WNDPROC, (LONG)BGSEEConsole::MessageLogSubclassProc);
 		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), GWL_USERDATA, OrgWndProc);
 

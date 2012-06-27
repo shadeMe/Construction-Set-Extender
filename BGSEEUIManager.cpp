@@ -755,11 +755,6 @@ namespace BGSEditorExtender
 	HWND CALLBACK BGSEEUIManager::CallbackCreateDialogParamA( HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam )
 	{
 		SME_ASSERT(BGSEEUI->Subclasser && BGSEEUI->DialogHotSwapper);
-		if (hInstance != BGSEEUI->EditorResourceInstance->operator()())			// calls to IAT functions inside the extender are routed through its own IAT
-		{																		// but since we route TESDialog::BuildSubWindow calls, perform a sanity check here
-			return ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
-												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
-		}
 
 		DLGPROC Replacement = NULL;
 		BGSEEWindowSubclasser::DialogSubclassUserData* UserData = NULL;
@@ -1388,7 +1383,7 @@ namespace BGSEditorExtender
 		DestroyWindow(DialogHandle);
 	}
 
-	void BGSEEGenericModelessDialog::Create( LPARAM InitParam, bool Hide )
+	void BGSEEGenericModelessDialog::Create( LPARAM InitParam, bool Hide, bool OverrideCreation )
 	{
 		if (DialogHandle || ContextMenuParentHandle || CallbackDlgProc == NULL)
 			return;
@@ -1396,7 +1391,12 @@ namespace BGSEditorExtender
 		DlgUserData* UserData = new DlgUserData();
 		UserData->Instance = const_cast<BGSEEGenericModelessDialog*>(this);
 		UserData->UserData = InitParam;
-		DialogHandle = BGSEEUI->ModelessDialog(ResourceInstance, MAKEINTRESOURCE(DialogTemplateID), ParentHandle, (DLGPROC)DefaultDlgProc, (LPARAM)UserData);
+		DialogHandle = BGSEEUI->ModelessDialog(ResourceInstance,
+											MAKEINTRESOURCE(DialogTemplateID),
+											ParentHandle,
+											(DLGPROC)DefaultDlgProc,
+											(LPARAM)UserData,
+											OverrideCreation);
 		ContextMenuParentHandle = LoadMenu(ResourceInstance, (LPSTR)DialogContextMenuID);
 		ContextMenuHandle = GetSubMenu(ContextMenuParentHandle, 0);
 

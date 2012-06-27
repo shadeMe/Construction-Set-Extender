@@ -346,7 +346,7 @@ namespace BGSEditorExtender
 		bool							SetVisibility(bool State);
 		bool							SetTopmost(bool State);
 
-		virtual void					Create(LPARAM InitParam, bool Hide);
+		virtual void					Create(LPARAM InitParam, bool Hide, bool OverrideCreation = false);
 
 		BGSEEGenericModelessDialog();
 	public:
