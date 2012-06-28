@@ -92,6 +92,8 @@ namespace ConstructionSetExtender
 			bool						GetShouldEnumerate(TESForm* Form);
 			void						ResetVisibility(void);
 
+			int							CompareActiveForms(TESForm* FormA, TESForm* FormB, int OriginalResult);
+
 			static CSEFormEnumerationManager				Instance;
 		};
 
@@ -123,10 +125,15 @@ namespace ConstructionSetExtender
 			RECT	GoBtn;
 		};
 
-		struct CSEDialogQuickViewData
+		struct CSEDialogExtraFittingsData
 		{
-			POINT	Cursor;
-			HWND	Window;
+			POINT	QuickViewCursorPos;
+			HWND	QuickViewWindowUnderCursor;
+
+			HFONT	ActiveFormListFont;
+
+			CSEDialogExtraFittingsData();
+			~CSEDialogExtraFittingsData();
 		};
 
 		struct CSEMainWindowMiscExtraData
@@ -155,6 +162,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK		QuestDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData);
 
 		LRESULT CALLBACK		CommonDialogExtraFittingsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData);
+		LRESULT CALLBACK		SelectTopicsQuestsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData);
 
 		BOOL CALLBACK			AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -171,6 +179,7 @@ namespace ConstructionSetExtender
 
 // custom control IDs, as baked into dialog templates
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906
+#define IDC_CSE_DATA_LOADSTARTUPPLUGIN          9907
 
 #define IDC_CSE_RACE_COPYHAIR                   9915
 #define IDC_CSE_RACE_COPYEYES                   9916

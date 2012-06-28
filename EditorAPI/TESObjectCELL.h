@@ -92,7 +92,7 @@ public:
 	// methods
 	TESWorldSpace*				GetParentWorldSpace();
 	bool						GetIsInterior();
-	TESObjectREFR*				LookupRefByBaseForm(TESForm* BaseForm, bool HasEditorID = false);		// returns the first ref satisfying the conditions
+	TESObjectREFR*				FindFirstRef(TESForm* BaseForm, bool MustHaveEditorID = false);
 	void						SetPathGrid(TESPathGrid* PathGrid);
 
 	void						ModExtraCellWaterHeight(float Height);

@@ -1021,7 +1021,7 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 				for (TESCellUseList::CellUseInfoListT::Iterator Itr = CellUseList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 				{
 					TESCellUseList::CellUseInfo* Data = Itr.Get();
-					TESObjectREFR* FirstRef = Data->cell->LookupRefByBaseForm(Form, true);
+					TESObjectREFR* FirstRef = Data->cell->FindFirstRef(Form, true);
 					TESWorldSpace* WorldSpace = Data->cell->GetParentWorldSpace();
 
 					Result->UseInfoListCellItemListHead[i].EditorID = Data->cell->editorID.c_str();

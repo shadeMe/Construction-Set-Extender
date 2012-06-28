@@ -12,6 +12,10 @@ namespace ConstructionSetExtender
 			kDialogs_CellViewWindowState,
 			kDialogs_SortFormListsByActiveForm,
 			kDialogs_ColorizeActiveForms,
+			kDialogs_ActiveFormForeColor,
+			kDialogs_ActiveFormBackColor,
+			kDialogs_ShowMainWindowsInTaskbar,
+			kDialogs_ShowEditDialogsInTaskbar,
 
 			kDialogs__MAX
 		};

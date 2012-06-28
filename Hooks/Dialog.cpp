@@ -12,11 +12,15 @@ namespace ConstructionSetExtender
 	{
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kDialogsINISettings[kDialogs__MAX] =
 		{
-			{ "RenderWindowState",			"1",		"Window visibility" },
-			{ "ObjectWindowState",			"1",		"Window visibility" },
-			{ "CellViewWindowState",		"1",		"Window visibility" },
-			{ "SortFormListsByActiveForm",	"1",		"Sort active forms first in list views"	},
-			{ "ColorizeActiveForms",		"1",		"Colorize active forms in list views" }
+			{ "RenderWindowState",			"1",				"Window visibility" },
+			{ "ObjectWindowState",			"1",				"Window visibility" },
+			{ "CellViewWindowState",		"1",				"Window visibility" },
+			{ "SortFormListsByActiveForm",	"1",				"Sort active forms first in list views"	},
+			{ "ColorizeActiveForms",		"1",				"Colorize active forms in list views" },
+			{ "ActiveFormForeColor",		"255,255,255",		"Foreground color of active form items" },
+			{ "ActiveFormBackColor",		"45,121,79",		"Background color of active form items" },
+			{ "ShowMainWindowsInTaskbar",	"0",				"Show the primary CS windows in the taskbar" },
+			{ "ShowEditDialogsInTaskbar",	"1",				"Show form edit dialogs in the taskbar" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetDialogs( void )
@@ -91,7 +95,7 @@ namespace ConstructionSetExtender
 		{
 			OSVERSIONINFO OSInfo;
 			GetVersionEx(&OSInfo);
-			if (OSInfo.dwMajorVersion >= 6)		// if running Windows Vista/7, fix the listview selection sound
+			if (OSInfo.dwMajorVersion >= 6)		// if running Windows Vista/7, fix the list view selection sound
 				RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
 
 			_MemHdlr(NPCFaceGen).WriteJump();
@@ -526,7 +530,7 @@ namespace ConstructionSetExtender
 						sscanf_s(Buffer, "%08X", &FormID);
 						if (errno == ERANGE || errno == EINVAL)
 						{
-							BGSEEUI->MsgBoxW(hWnd, 0, "Bad FormID string - FormIDs should be unsigned 32-bit hexadecimal integers (e.g: 00503AB8).");
+							BGSEEUI->MsgBoxW(hWnd, 0, "Bad FormID string - FormIDs should be unsigned 32-bit hexadecimal integers with leading zeros (e.g: 00503AB8).");
 
 							break;
 						}
@@ -541,7 +545,7 @@ namespace ConstructionSetExtender
 											"Change FormID from %08X to %08X?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.",
 											Form->formID, FormID) == IDYES)
 						{
-							Form->SetFormID(FormID);
+							Form->SetFormID((FormID & 0x00FFFFFF));
 							Form->SetFromActiveFile(true);
 						}
 					}
@@ -549,10 +553,36 @@ namespace ConstructionSetExtender
 					break;
 				}
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
+				if (hWnd == *g_HWND_ObjectWindow &&	ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList) > 1)
+				{
+					if (BGSEEUI->MsgBoxI(hWnd,
+										MB_YESNO,
+										"Are you sure you want to mark all %d forms as unmodified?",
+										ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList)) == IDYES)
+					{
+						int Selection = -1;
+						do
+						{
+							Selection = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, Selection, LVNI_SELECTED);
+							if (Selection != -1)
+							{
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*g_HWND_ObjectWindow_FormList, Selection);
+								if (Form)
+									Form->SetFromActiveFile(false);
+							}
+						}
+						while (Selection != -1);
+					}
+
+					break;
+				}
+
 				if ((Form->formFlags & TESForm::kFormFlags_FromActiveFile) &&
-					BGSEEUI->MsgBoxI(hWnd, MB_YESNO,
+					BGSEEUI->MsgBoxI(hWnd,
+									MB_YESNO,
 									"Are you sure you want to mark form '%s' (%08X) as unmodified?\n\nThis will not revert any changes made to it.",
-									Form->editorID.c_str(), Form->formID) == IDYES)
+									Form->editorID.c_str(),
+									Form->formID) == IDYES)
 				{
 					Form->SetFromActiveFile(false);
 				}
@@ -574,6 +604,30 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_UNDELETE:
 				{
+					if (hWnd == *g_HWND_ObjectWindow && ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList) > 1)
+					{
+						if (BGSEEUI->MsgBoxI(hWnd,
+											MB_YESNO,
+											"Are you sure you want to undelete all %d forms?",
+											ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList)) == IDYES)
+						{
+							int Selection = -1;
+							do
+							{
+								Selection = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, Selection, LVNI_SELECTED);
+								if (Selection != -1)
+								{
+									TESForm* Form = (TESForm*)TESListView::GetItemData(*g_HWND_ObjectWindow_FormList, Selection);
+									if (Form)
+										Form->SetDeleted(false);
+								}
+							}
+							while (Selection != -1);
+						}
+
+						break;
+					}
+
 					if ((Form->formFlags & TESForm::kFormFlags_Deleted) &&
 						BGSEEUI->MsgBoxI(hWnd,
 										MB_YESNO,
@@ -647,7 +701,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			InvalidateRect(hWnd, NULL, TRUE);
+			RedrawWindow(hWnd, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 		}
 
@@ -1742,22 +1796,13 @@ namespace ConstructionSetExtender
 
 		int CALLBACK ActiveRecordFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort, UInt32 DefaultComparator )
 		{
-			bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter()));
-
 			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
 			int Result = ((DefaultComparatorT)DefaultComparator)(lParam1, lParam2, lParamSort);
 
 			TESForm* FormA = (TESForm*)lParam1;
 			TESForm* FormB = (TESForm*)lParam2;
 
-			bool ActiveFormA = (FormA->formFlags & TESForm::kFormFlags_FromActiveFile);
-			bool ActiveFormB = (FormB->formFlags & TESForm::kFormFlags_FromActiveFile);
-
-			if (Enabled)
-			{
-				if (ActiveFormA == true && ActiveFormB == false)
-					Result = -1;
-			}
+			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
 
 			return Result;
 		}

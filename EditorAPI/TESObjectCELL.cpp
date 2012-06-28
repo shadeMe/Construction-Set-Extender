@@ -10,7 +10,7 @@ bool TESObjectCELL::GetIsInterior()
 	return thisCall<bool>(0x00532240, this);
 }
 
-TESObjectREFR* TESObjectCELL::LookupRefByBaseForm( TESForm* BaseForm, bool HasEditorID /*= false*/ )
+TESObjectREFR* TESObjectCELL::FindFirstRef( TESForm* BaseForm, bool MustHaveEditorID /*= false*/ )
 {
 	for (ObjectREFRList::Iterator Itr = objectList.Begin(); !Itr.End() && Itr.Get() && BaseForm; ++Itr)
 	{
@@ -18,7 +18,7 @@ TESObjectREFR* TESObjectCELL::LookupRefByBaseForm( TESForm* BaseForm, bool HasEd
 
 		if (Ref->baseForm == BaseForm)
 		{
-			if (!HasEditorID || Ref->editorID.c_str())
+			if (MustHaveEditorID == false || Ref->editorID.c_str())
 				return Ref;
 		}
 	}

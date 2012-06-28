@@ -1,9 +1,11 @@
 #include "AuxiliaryViewport.h"
-#include <BGSEditorExtenderBase_Resource.h>
 #include "Construction Set Extender_Resource.h"
 #include "CSERenderWindowPainter.h"
 #include "Hooks\Renderer.h"
+#include "Hooks\Dialog.h"
+
 #include <BGSEEMain.h>
+#include <BGSEditorExtenderBase_Resource.h>
 
 namespace ConstructionSetExtender
 {
@@ -80,7 +82,16 @@ namespace ConstructionSetExtender
 
 	void AuxiliaryViewport::Initialize()
 	{
-		Create(NULL, true);
+		if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowMainWindowsInTaskbar, BGSEEMAIN->INIGetter())))
+		{
+			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+			RegularAppWindow.Extended = WS_EX_APPWINDOW;
+			RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+
+			BGSEEUI->GetWindowStyler()->RegisterStyle(IDD_AUXVIEWPORT, RegularAppWindow);
+		}
+
+		Create(NULL, true, true);
 		INILoadUIState(&BGSEEMAIN->INIGetter(), kINISection);
 
 		ClearScreen();

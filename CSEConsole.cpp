@@ -1,7 +1,10 @@
 #include "CSEConsole.h"
 #include "Hooks\TESFile.h"
+#include "Hooks\Dialog.h"
 #include "CSEAchievements.h"
 #include "CSEInterfaceManager.h"
+
+#include <BGSEditorExtenderBase_Resource.h>
 
 namespace ConstructionSetExtender
 {
@@ -137,6 +140,15 @@ namespace ConstructionSetExtender
 
 		void Initialize()
 		{
+			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowMainWindowsInTaskbar, BGSEEMAIN->INIGetter())))
+			{
+				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+				RegularAppWindow.Extended = WS_EX_APPWINDOW;
+				RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+
+				BGSEEUI->GetWindowStyler()->RegisterStyle(IDD_BGSEE_CONSOLE, RegularAppWindow);
+			}
+
 			BGSEECONSOLE->InitializeUI(BGSEEUI->GetMainWindow(), BGSEEMAIN->GetExtenderHandle());
 
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_88MPH);

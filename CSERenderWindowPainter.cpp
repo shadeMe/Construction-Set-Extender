@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowPainterINISettings[kRenderWindowPainter__MAX] =
 		{
 			{ "ShowSelectionStats",		"1",		"Displays selection details" },
-			{ "ShowRAMUsage",			"1",		"Displays Editor RAM usage" }
+			{ "ShowRAMUsage",			"1",		"Displays the editor's RAM usage" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderWindowPainter( void )
@@ -59,7 +59,7 @@ namespace ConstructionSetExtender
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 					FORMAT_STR(xBuffer, "Parent: %s [%08X]  Opposite State: %d",
 						((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
-						xParent->parent->formID, (UInt8)xParent->oppositeState);
+						xParent->parent->formID, xParent->oppositeState);
 				}
 
 				FORMAT_STR(Buffer, "%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",

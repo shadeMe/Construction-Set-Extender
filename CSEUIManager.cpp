@@ -24,8 +24,8 @@ namespace ConstructionSetExtender
 	{
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupPluginINISettings[kStartupPlugin__MAX] =
 		{
-			{ "LoadPlugin",			"0",		"Load a plugin on CS startup" },
-			{ "PluginName",			"",			"Name of the plugin, with extension, that is to be loaded on startup" }
+			{ "LoadPlugin",							"0",		"Load a plugin on CS startup" },
+			{ "PluginName",							"",			"Name of the plugin, with extension, that is to be loaded on startup" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetStartupPlugin( void )
@@ -42,7 +42,7 @@ namespace ConstructionSetExtender
 
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kPluginsINISettings[kPlugins__MAX] =
 		{
-			{ "PreventTimeStampChanges",			"0",		"Prevents the modifications to the timestamps of plugins being saved" },
+			{ "PreventTimeStampChanges",			"0",		"Prevents modifications to the timestamps of plugins being saved" },
 			{ "SaveLoadedESPsAsMasters",			"1",		"Allows ESP files to be saved as the active plugin's master" }
 		};
 
@@ -286,6 +286,28 @@ namespace ConstructionSetExtender
 			VisibilityUnmodifiedForms = true;
 		}
 
+		int CSEFormEnumerationManager::CompareActiveForms( TESForm* FormA, TESForm* FormB, int OriginalResult )
+		{
+			int Result = OriginalResult;
+			bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter()));
+
+			if (FormA && FormB)
+			{
+				bool ActiveFormA = (FormA->formFlags & TESForm::kFormFlags_FromActiveFile);
+				bool ActiveFormB = (FormB->formFlags & TESForm::kFormFlags_FromActiveFile);
+
+				if (Enabled)
+				{
+					if (ActiveFormA == true && ActiveFormB == false)
+						Result = -1;
+					else if (ActiveFormA == false && ActiveFormB == true)
+						Result = 1;
+				}
+			}
+
+			return Result;
+		}
+
 		CSEWindowInvalidationManager		CSEWindowInvalidationManager::Instance;
 
 		CSEWindowInvalidationManager::CSEWindowInvalidationManager() :
@@ -345,6 +367,35 @@ namespace ConstructionSetExtender
 				SendMessage(Window, WM_SETREDRAW, TRUE, NULL);
 				RedrawWindow(Window, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
 			}
+		}
+
+		CSEDialogExtraFittingsData::CSEDialogExtraFittingsData()
+		{
+			QuickViewCursorPos.x = QuickViewCursorPos.y = 0;
+			QuickViewWindowUnderCursor = NULL;
+
+			ActiveFormListFont = NULL;
+
+			ActiveFormListFont = CreateFont(14,
+											0,
+											0,
+											0,
+											FW_MEDIUM,
+											FALSE,
+											FALSE,
+											FALSE,
+											DEFAULT_CHARSET,
+											OUT_DEFAULT_PRECIS,
+											CLIP_DEFAULT_PRECIS,
+											ANTIALIASED_QUALITY,
+											FF_DONTCARE,
+											"MS Shell Dlg");
+		}
+
+		CSEDialogExtraFittingsData::~CSEDialogExtraFittingsData()
+		{
+			if (ActiveFormListFont)
+				DeleteFont(ActiveFormListFont);
 		}
 
 		CSEMainWindowMiscExtraData::CSEMainWindowMiscExtraData()
@@ -439,12 +490,91 @@ namespace ConstructionSetExtender
 
 					ColumnData.cx = 65;
 					ListView_SetColumn(PluginList, 1, &ColumnData);
+
+					bool LoadStartupPlugin = atoi(INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INIGetter()));
+					if (LoadStartupPlugin)
+						CheckDlgButton(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN, BST_CHECKED);
+				}
+
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					switch (NotificationData->code)
+					{
+					case NM_CUSTOMDRAW:
+						if (wParam == 1056)
+						{
+							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
+
+							switch (DrawData->nmcd.dwDrawStage)
+							{
+							case CDDS_PREPAINT:
+								{
+									SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+									DlgProcResult = TRUE;
+									Return = true;
+								}
+
+								break;
+							case CDDS_ITEMPREPAINT:
+								{
+									UInt32 PluginIndex = (UInt32)DrawData->nmcd.lItemlParam;
+									TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
+									if (CurrentFile)
+									{
+										bool Update = true;
+
+										if (CurrentFile == ActiveTESFile)
+										{
+											DrawData->clrTextBk = RGB(227, 183, 251);
+										}
+										else if (!_stricmp(INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_PluginName,
+												BGSEEMAIN->INIGetter()),
+												CurrentFile->fileName))
+										{
+											DrawData->clrTextBk = RGB(248, 227, 186);
+										}
+										else if (CurrentFile->authorName.c_str() &&
+												!_stricmp(CurrentFile->authorName.c_str(), "shadeMe"))
+										{
+											DrawData->clrTextBk = RGB(249, 255, 255);
+										}
+										else
+										{
+											Update = false;
+										}
+
+										if (Update)
+										{
+											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+											DlgProcResult = TRUE;
+											Return = true;
+										}
+									}
+								}
+
+								break;
+							}
+						}
+
+						break;
+					}
 				}
 
 				break;
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_CSE_DATA_LOADSTARTUPPLUGIN:
+					{
+						if (IsDlgButtonChecked(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN) == BST_CHECKED)
+							INISettings::GetStartupPlugin()->Set(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INISetter(), "1");
+						else
+							INISettings::GetStartupPlugin()->Set(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INISetter(), "0");
+					}
+
+					break;
 				case IDC_CSE_DATA_SETSTARTUPPLUGIN:
 					{
 						int SelectedItem = ListView_GetNextItem(PluginList, -1, LVNI_SELECTED);
@@ -1762,7 +1892,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case 0x56:		// V
-					if (GetAsyncKeyState(VK_SHIFT))
+					if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_CONTROL) == FALSE)
 					{
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_INVERTSELECTION, NULL);
 
@@ -1854,6 +1984,121 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+		enum
+		{
+			kCellViewRefListColumn_Persistent = 5,
+			kCellViewRefListColumn_Disabled,
+			kCellViewRefListColumn_VWD,
+			kCellViewRefListColumn_EnableParent,
+			kCellViewRefListColumn_Count
+		};
+
+		int CALLBACK CellViewFormListCustomComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			int Result = 0;
+
+			TESObjectREFR* FormA = (TESObjectREFR*)lParam1;
+			TESObjectREFR* FormB = (TESObjectREFR*)lParam2;
+
+			if (FormA && FormB)
+			{
+				switch ((UInt32)abs(lParamSort))
+				{
+				case kCellViewRefListColumn_Persistent:
+					if ((bool)(FormA->formFlags & TESForm::kFormFlags_QuestItem) == true &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_QuestItem) == false)
+					{
+						Result = -1;
+					}
+					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_QuestItem) == false &&
+							(bool)(FormB->formFlags & TESForm::kFormFlags_QuestItem) == true)
+					{
+						Result = 1;
+					}
+
+					break;
+				case kCellViewRefListColumn_Disabled:
+					if ((bool)(FormA->formFlags & TESForm::kFormFlags_Disabled) == true &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_Disabled) == false)
+					{
+						Result = -1;
+					}
+					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_Disabled) == false &&
+							(bool)(FormB->formFlags & TESForm::kFormFlags_Disabled) == true)
+					{
+						Result = 1;
+					}
+
+					break;
+				case kCellViewRefListColumn_VWD:
+					if ((bool)(FormA->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == true &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == false)
+					{
+						Result = -1;
+					}
+					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == false &&
+							(bool)(FormB->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == true)
+					{
+						Result = 1;
+					}
+
+					break;
+				case kCellViewRefListColumn_EnableParent:
+					{
+						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+
+						if (AxData && BxData == NULL)
+							Result = -1;
+						else if (AxData == NULL && BxData)
+							Result = 1;
+						else if (AxData && BxData)
+						{
+							ExtraEnableStateParent* AxParent = CS_CAST(AxData, BSExtraData, ExtraEnableStateParent);
+							ExtraEnableStateParent* BxParent = CS_CAST(BxData, BSExtraData, ExtraEnableStateParent);
+							SME_ASSERT(AxParent->parent && BxParent->parent);
+
+							if (AxParent->parent->formID < BxParent->parent->formID)
+								Result = -1;
+							else if (AxParent->parent->formID > BxParent->parent->formID)
+								Result = 1;
+						}
+					}
+
+					break;
+				case kCellViewRefListColumn_Count:
+					{
+						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
+						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
+
+						if (AxData && BxData == NULL)
+							Result = -1;
+						else if (AxData == NULL && BxData)
+							Result = 1;
+						else if (AxData && BxData)
+						{
+							ExtraCount* AxCount = CS_CAST(AxData, BSExtraData, ExtraCount);
+							ExtraCount* BxCount = CS_CAST(BxData, BSExtraData, ExtraCount);
+
+							if (AxCount->count < BxCount->count)
+								Result = -1;
+							else if (AxCount->count > BxCount->count)
+								Result = 1;
+						}
+					}
+
+					break;
+				}
+
+				if (lParamSort < 0)
+					Result *= -1;
+
+				Result = CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+			}
+
+			return Result;
+		}
+
 		LRESULT CALLBACK CellViewWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -1874,6 +2119,8 @@ namespace ConstructionSetExtender
 			HWND YEdit = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_YEDIT);
 			HWND GoBtn = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_GOBTN);
 
+			int* RefListSortColumn = (int*)0x00A0A9D4;
+
 			if (FilterEditBox == NULL)
 				return DlgProcResult;
 
@@ -1884,98 +2131,235 @@ namespace ConstructionSetExtender
 				Return = true;
 
 				break;
+			case WM_DESTROY:
+				delete (CSECellViewExtraData*)UserData->ExtraData;
 			case 0x417:		// destroy window
 				CSEFilterableFormListManager::Instance.Unregister(hWnd);
 
 				break;
 			case WM_INITDIALOG:
-				if (UserData->ExtraData == NULL)
 				{
-					CSECellViewExtraData* ExtraData = new CSECellViewExtraData();
-					UserData->ExtraData = (LPARAM)ExtraData;
+					if (UserData->ExtraData == NULL)
+					{
+						CSECellViewExtraData* ExtraData = new CSECellViewExtraData();
+						UserData->ExtraData = (LPARAM)ExtraData;
 
-					POINT Position = {0};
-					RECT Bounds = {0};
+						POINT Position = {0};
+						RECT Bounds = {0};
 
-					GetWindowRect(FilterEditBox, &ExtraData->FilterEditBox);
-					Position.x = ExtraData->FilterEditBox.left;
-					Position.y = ExtraData->FilterEditBox.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->FilterEditBox.left = Position.x;
-					ExtraData->FilterEditBox.top = Position.y;
-					GetClientRect(FilterEditBox, &Bounds);
-					ExtraData->FilterEditBox.right = Bounds.right;
-					ExtraData->FilterEditBox.bottom = Bounds.bottom;
+						GetWindowRect(FilterEditBox, &ExtraData->FilterEditBox);
+						Position.x = ExtraData->FilterEditBox.left;
+						Position.y = ExtraData->FilterEditBox.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->FilterEditBox.left = Position.x;
+						ExtraData->FilterEditBox.top = Position.y;
+						GetClientRect(FilterEditBox, &Bounds);
+						ExtraData->FilterEditBox.right = Bounds.right;
+						ExtraData->FilterEditBox.bottom = Bounds.bottom;
 
-					GetWindowRect(FilterLabel, &ExtraData->FilterLabel);
-					Position.x = ExtraData->FilterLabel.left;
-					Position.y = ExtraData->FilterLabel.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->FilterLabel.left = Position.x;
-					ExtraData->FilterLabel.top = Position.y;
-					GetClientRect(FilterLabel, &Bounds);
-					ExtraData->FilterLabel.right = Bounds.right;
-					ExtraData->FilterLabel.bottom = Bounds.bottom;
+						GetWindowRect(FilterLabel, &ExtraData->FilterLabel);
+						Position.x = ExtraData->FilterLabel.left;
+						Position.y = ExtraData->FilterLabel.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->FilterLabel.left = Position.x;
+						ExtraData->FilterLabel.top = Position.y;
+						GetClientRect(FilterLabel, &Bounds);
+						ExtraData->FilterLabel.right = Bounds.right;
+						ExtraData->FilterLabel.bottom = Bounds.bottom;
 
-					GetWindowRect(XLabel, &ExtraData->XLabel);
-					Position.x = ExtraData->XLabel.left;
-					Position.y = ExtraData->XLabel.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->XLabel.left = Position.x;
-					ExtraData->XLabel.top = Position.y;
-					GetClientRect(XLabel, &Bounds);
-					ExtraData->XLabel.right = Bounds.right;
-					ExtraData->XLabel.bottom = Bounds.bottom;
+						GetWindowRect(XLabel, &ExtraData->XLabel);
+						Position.x = ExtraData->XLabel.left;
+						Position.y = ExtraData->XLabel.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->XLabel.left = Position.x;
+						ExtraData->XLabel.top = Position.y;
+						GetClientRect(XLabel, &Bounds);
+						ExtraData->XLabel.right = Bounds.right;
+						ExtraData->XLabel.bottom = Bounds.bottom;
 
-					GetWindowRect(YLabel, &ExtraData->YLabel);
-					Position.x = ExtraData->YLabel.left;
-					Position.y = ExtraData->YLabel.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->YLabel.left = Position.x;
-					ExtraData->YLabel.top = Position.y;
-					GetClientRect(YLabel, &Bounds);
-					ExtraData->YLabel.right = Bounds.right;
-					ExtraData->YLabel.bottom = Bounds.bottom;
+						GetWindowRect(YLabel, &ExtraData->YLabel);
+						Position.x = ExtraData->YLabel.left;
+						Position.y = ExtraData->YLabel.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->YLabel.left = Position.x;
+						ExtraData->YLabel.top = Position.y;
+						GetClientRect(YLabel, &Bounds);
+						ExtraData->YLabel.right = Bounds.right;
+						ExtraData->YLabel.bottom = Bounds.bottom;
 
-					GetWindowRect(XEdit, &ExtraData->XEdit);
-					Position.x = ExtraData->XEdit.left;
-					Position.y = ExtraData->XEdit.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->XEdit.left = Position.x;
-					ExtraData->XEdit.top = Position.y;
-					GetClientRect(XEdit, &Bounds);
-					ExtraData->XEdit.right = Bounds.right;
-					ExtraData->XEdit.bottom = Bounds.bottom;
+						GetWindowRect(XEdit, &ExtraData->XEdit);
+						Position.x = ExtraData->XEdit.left;
+						Position.y = ExtraData->XEdit.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->XEdit.left = Position.x;
+						ExtraData->XEdit.top = Position.y;
+						GetClientRect(XEdit, &Bounds);
+						ExtraData->XEdit.right = Bounds.right;
+						ExtraData->XEdit.bottom = Bounds.bottom;
 
-					GetWindowRect(YEdit, &ExtraData->YEdit);
-					Position.x = ExtraData->YEdit.left;
-					Position.y = ExtraData->YEdit.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->YEdit.left = Position.x;
-					ExtraData->YEdit.top = Position.y;
-					GetClientRect(YEdit, &Bounds);
-					ExtraData->YEdit.right = Bounds.right;
-					ExtraData->YEdit.bottom = Bounds.bottom;
+						GetWindowRect(YEdit, &ExtraData->YEdit);
+						Position.x = ExtraData->YEdit.left;
+						Position.y = ExtraData->YEdit.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->YEdit.left = Position.x;
+						ExtraData->YEdit.top = Position.y;
+						GetClientRect(YEdit, &Bounds);
+						ExtraData->YEdit.right = Bounds.right;
+						ExtraData->YEdit.bottom = Bounds.bottom;
 
-					GetWindowRect(GoBtn, &ExtraData->GoBtn);
-					Position.x = ExtraData->GoBtn.left;
-					Position.y = ExtraData->GoBtn.top;
-					ScreenToClient(hWnd, &Position);
-					ExtraData->GoBtn.left = Position.x;
-					ExtraData->GoBtn.top = Position.y;
-					GetClientRect(GoBtn, &Bounds);
-					ExtraData->GoBtn.right = Bounds.right;
-					ExtraData->GoBtn.bottom = Bounds.bottom;
+						GetWindowRect(GoBtn, &ExtraData->GoBtn);
+						Position.x = ExtraData->GoBtn.left;
+						Position.y = ExtraData->GoBtn.top;
+						ScreenToClient(hWnd, &Position);
+						ExtraData->GoBtn.left = Position.x;
+						ExtraData->GoBtn.top = Position.y;
+						GetClientRect(GoBtn, &Bounds);
+						ExtraData->GoBtn.right = Bounds.right;
+						ExtraData->GoBtn.bottom = Bounds.bottom;
 
-					TESDialog::GetPositionFromINI("Cell View", &Bounds);
-					SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, 4);
+						TESDialog::GetPositionFromINI("Cell View", &Bounds);
+						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, 4);
+					}
+
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, true);
+
+					LVCOLUMN ColumnData = {0};
+					ColumnData.mask = LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM|LVCF_FMT;
+					ColumnData.fmt = LVCFMT_CENTER;
+
+					ColumnData.cx = 45;
+					ColumnData.pszText = "Persistent";
+					ColumnData.iSubItem = kCellViewRefListColumn_Persistent;
+					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
+
+					ColumnData.cx = 45;
+					ColumnData.pszText = "Initially Disabled";
+					ColumnData.iSubItem = kCellViewRefListColumn_Disabled;
+					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
+
+					ColumnData.cx = 45;
+					ColumnData.pszText = "VWD";
+					ColumnData.iSubItem = kCellViewRefListColumn_VWD;
+					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
+
+					ColumnData.cx = 100;
+					ColumnData.pszText = "Enable Parent";
+					ColumnData.iSubItem = kCellViewRefListColumn_EnableParent;
+					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
+
+					ColumnData.cx = 40;
+					ColumnData.pszText = "Count";
+					ColumnData.iSubItem = kCellViewRefListColumn_Count;
+					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
 				}
 
-				CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, true);
-
 				break;
-			case WM_DESTROY:
-				delete (CSECellViewExtraData*)UserData->ExtraData;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					switch (NotificationData->code)
+					{
+					case LVN_GETDISPINFO:
+						if (NotificationData->hwndFrom == RefList)
+						{
+							NMLVDISPINFO* DisplayData = (NMLVDISPINFO*)lParam;
+
+							if ((DisplayData->item.mask & LVIF_TEXT) && DisplayData->item.lParam)
+							{
+								DlgProcResult = TRUE;
+								Return = true;
+
+								TESObjectREFR* Current = (TESObjectREFR*)DisplayData->item.lParam;
+
+								switch (DisplayData->item.iSubItem)
+								{
+								case kCellViewRefListColumn_Persistent:
+									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
+											((Current->formFlags & TESForm::kFormFlags_QuestItem) ? "Y" : ""));
+
+									break;
+								case kCellViewRefListColumn_Disabled:
+									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
+											((Current->formFlags & TESForm::kFormFlags_Disabled) ? "Y" : ""));
+
+									break;
+								case kCellViewRefListColumn_VWD:
+									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
+											((Current->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? "Y" : ""));
+
+									break;
+								case kCellViewRefListColumn_EnableParent:
+									{
+										BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+										if (xData)
+										{
+											ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+											SME_ASSERT(xParent->parent);
+
+											if (xParent->parent->editorID.c_str() == NULL)
+											{
+												sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax,
+													"%08X %s",
+													xParent->parent->formID,
+													(xParent->oppositeState ? " *" : ""));
+											}
+											else
+											{
+												sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax,
+													"%s %s",
+													xParent->parent->editorID.c_str(),
+													(xParent->oppositeState ? " *" : ""));
+											}
+										}
+										else
+											sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "");
+									}
+
+									break;
+								case kCellViewRefListColumn_Count:
+									{
+										BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
+										if (xData)
+										{
+											ExtraCount* xCount = CS_CAST(xData, BSExtraData, ExtraCount);
+											sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%d", xCount->count);
+										}
+										else
+											sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "");
+									}
+
+									break;
+								default:
+									Return = false;
+								}
+							}
+						}
+
+						break;
+					case LVN_COLUMNCLICK:
+						if (NotificationData->hwndFrom == RefList)
+						{
+							NMLISTVIEW* ListViewData = (NMLISTVIEW*)lParam;
+							if (ListViewData->iSubItem >= kCellViewRefListColumn_Persistent)
+							{
+								if (*RefListSortColumn > 0)
+								{
+									*RefListSortColumn = ListViewData->iSubItem;
+									*RefListSortColumn *= -1;
+								}
+								else
+									*RefListSortColumn = ListViewData->iSubItem;
+
+								SendMessage(RefList, LVM_SORTITEMS, *RefListSortColumn, (LPARAM)CellViewFormListCustomComparator);
+
+								DlgProcResult = TRUE;
+								Return = true;
+							}
+						}
+
+						break;
+					}
+				}
 
 				break;
 			case WM_SIZE:
@@ -2282,6 +2666,8 @@ namespace ConstructionSetExtender
 		}
 
 #define ID_COMMONDLGQUICKVIEW_TIMERID							0x108
+#define WM_COMDLGEXTRA_EXTRACTCOLOR								(WM_USER + 2005)
+		// wParam = const char*, lParam = COLORREF*
 
 		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
@@ -2290,79 +2676,119 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_COMDLGEXTRA_EXTRACTCOLOR:
+				{
+					DlgProcResult = TRUE;
+					Return = true;
+
+					const char* ColorString = (const char*)wParam;
+					COLORREF* ColorOut = (COLORREF*)lParam;
+
+					if (ColorString && ColorOut)
+					{
+						SME::StringHelpers::Tokenizer ColorParser(ColorString, ", ");
+						int R = 0, G = 0, B = 0;
+
+						for (int i = 0; i < 3; i++)
+						{
+							std::string Buffer;
+							if (ColorParser.NextToken(Buffer) != -1)
+							{
+								switch (i)
+								{
+								case 0:		// R
+									R = atoi(Buffer.c_str());
+									break;
+								case 1:		// G
+									G = atoi(Buffer.c_str());
+									break;
+								case 2:		// B
+									B = atoi(Buffer.c_str());
+									break;
+								}
+							}
+						}
+
+						*ColorOut = RGB(R, G, B);
+					}
+				}
+
+				break;
 			case WM_TIMER:
 				switch (wParam)
 				{
 				case ID_COMMONDLGQUICKVIEW_TIMERID:
-					CSEDialogQuickViewData* IUD = (CSEDialogQuickViewData*)InstanceUserData;
-
-					if (IUD && IUD->Window)
 					{
-						HWND WindowAtPoint = IUD->Window;
-						TESForm* Form = NULL;
+						CSEDialogExtraFittingsData* IUD = (CSEDialogExtraFittingsData*)InstanceUserData;
 
-						char Buffer[0x200] = {0};
-						GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
-
-						if (!_stricmp("SysListView32", Buffer))
+						if (IUD && IUD->QuickViewWindowUnderCursor)
 						{
-							POINT Coords = {0};
-							Coords.x = IUD->Cursor.x;
-							Coords.y = IUD->Cursor.y;
+							HWND WindowAtPoint = IUD->QuickViewWindowUnderCursor;
+							TESForm* Form = NULL;
 
-							ScreenToClient(WindowAtPoint, &Coords);
+							char Buffer[0x200] = {0};
+							GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
 
-							LVHITTESTINFO HitTestData = {0};
-							HitTestData.pt.x = Coords.x;
-							HitTestData.pt.y = Coords.y;
-							HitTestData.flags = LVHT_ONITEM;
-
-							if (ListView_SubItemHitTest(WindowAtPoint, &HitTestData) != -1)
+							if (!_stricmp("SysListView32", Buffer))
 							{
-								int Item = HitTestData.iItem;
-								int SubItem = HitTestData.iSubItem;
+								POINT Coords = {0};
+								Coords.x = IUD->QuickViewCursorPos.x;
+								Coords.y = IUD->QuickViewCursorPos.y;
 
-								ZeroMemory(Buffer, sizeof(Buffer));
-								ListView_GetItemText(WindowAtPoint, Item, SubItem, Buffer, sizeof(Buffer));
+								ScreenToClient(WindowAtPoint, &Coords);
+
+								LVHITTESTINFO HitTestData = {0};
+								HitTestData.pt.x = Coords.x;
+								HitTestData.pt.y = Coords.y;
+								HitTestData.flags = LVHT_ONITEM;
+
+								if (ListView_SubItemHitTest(WindowAtPoint, &HitTestData) != -1)
+								{
+									int Item = HitTestData.iItem;
+									int SubItem = HitTestData.iSubItem;
+
+									ZeroMemory(Buffer, sizeof(Buffer));
+									ListView_GetItemText(WindowAtPoint, Item, SubItem, Buffer, sizeof(Buffer));
+								}
 							}
-						}
-						else
-						{
-							GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
-						}
-
-						if (strlen(Buffer) < 2)
-							break;
-
-						std::string PotentialEditorID(Buffer);
-						int StatusIndicatorOffset = -1;
-
-						if ((StatusIndicatorOffset = PotentialEditorID.find(" *")) != std::string::npos)
-							PotentialEditorID.erase(StatusIndicatorOffset, 2);
-						if ((StatusIndicatorOffset = PotentialEditorID.find(" D")) != std::string::npos)
-							PotentialEditorID.erase(StatusIndicatorOffset, 2);
-
-						Form = TESForm::LookupByEditorID(PotentialEditorID.c_str());
-
-						IUD->Window = NULL;
-
-						if (Form)
-						{
-							switch (Form->formType)
+							else
 							{
-							case TESForm::kFormType_Script:
-								TESDialog::ShowScriptEditorDialog(Form);
-								break;
-							case TESForm::kFormType_REFR:
-								_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
-								break;
-							default:
-								TESDialog::ShowFormEditDialog(Form);
-								break;
+								GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
 							}
 
-							DlgProcResult = TRUE;
-							Return = true;
+							if (strlen(Buffer) < 2)
+								break;
+
+							std::string PotentialEditorID(Buffer);
+							int StatusIndicatorOffset = -1;
+
+							if ((StatusIndicatorOffset = PotentialEditorID.find(" *")) != std::string::npos)
+								PotentialEditorID.erase(StatusIndicatorOffset, 2);
+							if ((StatusIndicatorOffset = PotentialEditorID.find(" D")) != std::string::npos)
+								PotentialEditorID.erase(StatusIndicatorOffset, 2);
+
+							Form = TESForm::LookupByEditorID(PotentialEditorID.c_str());
+
+							IUD->QuickViewWindowUnderCursor = NULL;
+
+							if (Form)
+							{
+								switch (Form->formType)
+								{
+								case TESForm::kFormType_Script:
+									TESDialog::ShowScriptEditorDialog(Form);
+									break;
+								case TESForm::kFormType_REFR:
+									_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+									break;
+								default:
+									TESDialog::ShowFormEditDialog(Form);
+									break;
+								}
+
+								DlgProcResult = TRUE;
+								Return = true;
+							}
 						}
 					}
 
@@ -2372,57 +2798,102 @@ namespace ConstructionSetExtender
 				break;
 			case WM_NOTIFY:
 				{
-												// valid listviews:
-					if (wParam == 1041 ||		//		object window
-						wParam == 1977 ||		//		AI packages
-						wParam == 1155 ||		//		cell view (cell list)
-						wParam == 2064 ||		//		tesformIDlistview
-						wParam == 1448 ||		//		dialog editor (topic list)
-						wParam == 1449)			//		dialog editor (topicinfo list)
-
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					switch (NotificationData->code)
 					{
-						NMHDR* NotificationData = (NMHDR*)lParam;
-						switch (NotificationData->code)
+					case NM_CUSTOMDRAW:
+													// valid listviews:
+						if (wParam == 1041 ||		//		object window
+							wParam == 1977 ||		//		AI packages
+							wParam == 1155 ||		//		cell view (cell list)
+							wParam == 1156 ||		//		cell view (ref list)
+							wParam == 2064 ||		//		tesformIDlistview
+							wParam == 1448 ||		//		dialog editor (topic list)
+							wParam == 1449 ||		//		dialog editor (topicinfo list)
+							wParam == 1018)			//		select topics/quest
 						{
-						case NM_CUSTOMDRAW:
-							{
-								bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
+							bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
 
-								if (Enabled && CSEFormEnumerationManager::Instance.GetVisibleUnmodifiedForms())
+							if (Enabled && CSEFormEnumerationManager::Instance.GetVisibleUnmodifiedForms())
+							{
+								NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
+
+								switch (DrawData->nmcd.dwDrawStage)
 								{
-									NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
-									if (DrawData->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
+								case CDDS_PREPAINT:
 									{
-										TESForm* Form = (TESForm*)TESListView::GetItemData(DrawData->nmcd.hdr.hwndFrom, DrawData->nmcd.dwItemSpec);
+										// modal dialogs have trouble receiving the item pre-paint notification
+										// so we perform some monkey business to workaround it
+										// that being said - For fuck sake! This needs to documented somewhere!
+										// then again, it stands to reason that the return val must be passed as the dialog's result
+										// there! now I've gone and contradicted myself...
+										if (IsWindowEnabled(GetParent(hWnd)) == FALSE)
+										{
+											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+											DlgProcResult = TRUE;
+											Return = true;
+										}
+									}
+
+									break;
+								case CDDS_ITEMPREPAINT:
+									{
+										TESForm* Form = (TESForm*)DrawData->nmcd.lItemlParam;
+
 										if (Form)
 										{
 											if (Form->IsActive())
 											{
-												DrawData->clrText = RGB(255, 255, 255);
-												DrawData->clrTextBk = RGB(45, 121, 79);
+												COLORREF ForeColor = 0, BackColor = 0;
 
-												DlgProcResult = CDRF_NEWFONT;
-												Return = true;
+												SendMessage(hWnd,
+															WM_COMDLGEXTRA_EXTRACTCOLOR,
+															(WPARAM)INISettings::GetDialogs()->Get(INISettings::kDialogs_ActiveFormForeColor, BGSEEMAIN->INIGetter()),
+															(LPARAM)&ForeColor);
+
+												SendMessage(hWnd,
+															WM_COMDLGEXTRA_EXTRACTCOLOR,
+															(WPARAM)INISettings::GetDialogs()->Get(INISettings::kDialogs_ActiveFormBackColor, BGSEEMAIN->INIGetter()),
+															(LPARAM)&BackColor);
+
+												DrawData->clrText = ForeColor;
+												DrawData->clrTextBk = BackColor;
+
+												CSEDialogExtraFittingsData* IUD = (CSEDialogExtraFittingsData*)InstanceUserData;
+												if (IUD && IUD->ActiveFormListFont)
+													SelectObject(DrawData->nmcd.hdc, IUD->ActiveFormListFont);
+
+												// same here - if modal dialog, donkey boner
+												if (IsWindowEnabled(GetParent(hWnd)) == FALSE)
+												{
+													SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+
+													DlgProcResult = TRUE;
+													Return = true;
+												}
+												else
+												{
+													DlgProcResult = CDRF_NEWFONT;
+													Return = true;
+												}
 											}
 										}
 									}
+
+									break;
 								}
 							}
-
-							break;
 						}
+
+						break;
 					}
 				}
 
 				break;
 			case WM_INITDIALOG:
 				{
-					CSEDialogQuickViewData* IUD = new CSEDialogQuickViewData();
+					CSEDialogExtraFittingsData* IUD = new CSEDialogExtraFittingsData();
 					InstanceUserData = (LPARAM)IUD;
-
-					IUD->Cursor.x = 0;
-					IUD->Cursor.y = 0;
-					IUD->Window = NULL;
 
 					// we need to defer the looked-up window's creation a bit to keep the source window from hogging focus
 					SetTimer(hWnd, ID_COMMONDLGQUICKVIEW_TIMERID, 100, NULL);
@@ -2432,7 +2903,7 @@ namespace ConstructionSetExtender
 
 			case WM_DESTROY:
 				{
-					CSEDialogQuickViewData* IUD = (CSEDialogQuickViewData*)InstanceUserData;
+					CSEDialogExtraFittingsData* IUD = (CSEDialogExtraFittingsData*)InstanceUserData;
 
 					delete IUD;
 					InstanceUserData = NULL;
@@ -2466,14 +2937,83 @@ namespace ConstructionSetExtender
 
 					if (WindowAtPoint)
 					{
-						CSEDialogQuickViewData* IUD = (CSEDialogQuickViewData*)InstanceUserData;
+						CSEDialogExtraFittingsData* IUD = (CSEDialogExtraFittingsData*)InstanceUserData;
 
 						if (IUD)
 						{
-							IUD->Cursor.x = Coords.x;
-							IUD->Cursor.y = Coords.y;
-							IUD->Window = WindowAtPoint;
+							IUD->QuickViewCursorPos.x = Coords.x;
+							IUD->QuickViewCursorPos.y = Coords.y;
+							IUD->QuickViewWindowUnderCursor = WindowAtPoint;
 						}
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		int CALLBACK SelectTopicsQuestsFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			int Result = 0;
+
+			TESForm* FormA = (TESForm*)lParam1;
+			TESForm* FormB = (TESForm*)lParam2;
+
+			if (FormA && FormB)
+			{
+				const char* EDIDA = FormA->editorID.c_str();
+				const char* EDIDB = FormB->editorID.c_str();
+
+				if (EDIDA && EDIDB)
+				{
+					Result = _stricmp(EDIDA, EDIDB);
+					if (lParamSort)
+						Result *= -1;
+
+					Result = CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+				}
+			}
+
+			return Result;
+		}
+
+		LRESULT CALLBACK SelectTopicsQuestsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			HWND FormList = GetDlgItem(hWnd, 1018);
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					LVCOLUMN ColumnData = {0};
+					ColumnData.mask = LVCF_WIDTH;
+
+					ColumnData.cx = 340;
+					ListView_SetColumn(FormList, 0, &ColumnData);
+				}
+
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					switch (NotificationData->code)
+					{
+					case LVN_COLUMNCLICK:
+						{
+							// only one column, so let's sort that
+							InstanceUserData = (InstanceUserData == 0);
+							SendMessage(FormList, LVM_SORTITEMS, InstanceUserData, (LPARAM)SelectTopicsQuestsFormListComparator);
+
+							DlgProcResult = TRUE;
+							Return = true;
+						}
+
+						break;
 					}
 				}
 
@@ -3123,21 +3663,24 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Dialog, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
 			}
+
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
 
+			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowEditDialogsInTaskbar, BGSEEMAIN->INIGetter())))
 			{
 				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 				RegularAppWindow.Extended = WS_EX_APPWINDOW;
 				RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_CellEdit, RegularAppWindow);
-				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Data, RegularAppWindow);
-				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_SearchReplace, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_LandscapeEdit, RegularAppWindow);
-				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_FindText, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_IdleAnimations, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_AIPackages, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_FilteredDialog, RegularAppWindow);

@@ -209,7 +209,7 @@ public:
 
 		// Misc Dialogs
 		kDialogTemplate_StringEdit					= 174,
-		kDialogTemplate_SelectForm					= 189,
+		kDialogTemplate_SelectForm					= 189,			// used by teslistbox
 		kDialogTemplate_SoundPick					= 195,
 		kDialogTemplate_UseReport					= 220,
 		kDialogTemplate_DialogNameConflicts			= 227,

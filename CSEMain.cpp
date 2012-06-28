@@ -99,12 +99,13 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->Exdent();
 
 		bool ComponentInitialized = BGSEEUI->Initialize("TES Construction Set",
-												LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
+														LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
 
 		if (ComponentInitialized == false)
 			return false;
 
 		// needs to be registered here as the epilog callbacks are called after the main windows' creation
+		// which is far too late for the nasty stuff we like to do
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMiscSubclassProc);
@@ -115,6 +116,19 @@ namespace ConstructionSetExtender
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, UIManager::CommonDialogExtraFittingsSubClassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMenuInitSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMiscSubclassProc);
+
+		if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowMainWindowsInTaskbar, BGSEEMAIN->INIGetter())))
+		{
+			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+			RegularAppWindow.Extended = WS_EX_APPWINDOW;
+			RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+
+			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_ObjectWindow, RegularAppWindow);
+			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_CellView, RegularAppWindow);
+			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_RenderWindow, RegularAppWindow);
+			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_FindText, RegularAppWindow);
+			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_SearchReplace, RegularAppWindow);
+		}
 
 		BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
 
@@ -442,12 +456,17 @@ namespace ConstructionSetExtender
 
 	void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
 	{
-		if (Msg->type == 'CSEI')
+		switch (Msg->type)
 		{
-			BGSEECONSOLE_MESSAGE("Dispatching Plugin Interop Interface to '%s'", Msg->sender);
-			BGSEECONSOLE->Indent();
-			XSEMsgIntfc->Dispatch(XSEPluginHandle, 'CSEI', (void*)CSEInterfaceManager::Instance.GetInterface(), 4, Msg->sender);
-			BGSEECONSOLE->Exdent();
+		case 'CSEI':
+			{
+				BGSEECONSOLE_MESSAGE("Dispatching Plugin Interop Interface to '%s'", Msg->sender);
+				BGSEECONSOLE->Indent();
+				XSEMsgIntfc->Dispatch(XSEPluginHandle, 'CSEI', (void*)CSEInterfaceManager::Instance.GetInterface(), 4, Msg->sender);
+				BGSEECONSOLE->Exdent();
+			}
+
+			break;
 		}
 	}
 
@@ -497,12 +516,19 @@ extern "C"
 		CSEINISettings.push_back(INISettings::GetStartupWorkspace());
 		CSEINISettings.push_back(INISettings::GetVersionControl());
 
-		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME, BGSEEMAIN_EXTENDERSHORTNAME, PACKED_SME_VERSION,
-														BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS, CS_VERSION_1_2, obse->editorVersion,
-														obse->GetOblivionDirectory(), XSEPluginHandle,
-														OBSE_VERSION_INTEGER, obse->obseVersion,
+		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
+														BGSEEMAIN_EXTENDERSHORTNAME,
+														PACKED_SME_VERSION,
+														BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS,
+														CS_VERSION_1_2,
+														obse->editorVersion,
+														obse->GetOblivionDirectory(),
+														XSEPluginHandle,
+														OBSE_VERSION_INTEGER,
+														obse->obseVersion,
 														CSEINISettings,
-														"v4.0.30319", false,
+														"v4.0.30319",
+														false,
 														false,
 #ifdef NDEBUG
 														true);

@@ -38,6 +38,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(DataHandlerSavePluginRetainTimeStamps, 0x0041BB12);
 		_DefineHookHdlr(DataHandlerAutoSaveA, 0x00481F81);
 		_DefineHookHdlr(DataHandlerAutoSaveB, 0x00481FC1);
+		_DefineHookHdlr(DataDlgCancelled, 0x0041A289);
 
 		void PatchTESFileHooks(void)
 		{
@@ -64,6 +65,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(DataHandlerSavePluginRetainTimeStamps).WriteJump();
 			_MemHdlr(DataHandlerAutoSaveA).WriteJump();
 			_MemHdlr(DataHandlerAutoSaveB).WriteJump();
+			_MemHdlr(DataDlgCancelled).WriteJump();
 		}
 
 		bool __stdcall InitTESFileSaveDlg()
@@ -547,6 +549,21 @@ namespace ConstructionSetExtender
 				call	[_hhGetVar(CallLoaded)]
 
 				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		#define	_hhName		DataDlgCancelled
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0041A28F);
+			_hhSetVar(Jump, 0x0041BF22);
+			__asm
+			{
+				jz		SKIP
+				jmp		[_hhGetVar(Retn)]
+			SKIP:
+				push	0		// to correct the stack pointer
+				jmp		[_hhGetVar(Jump)]
 			}
 		}
 	}
