@@ -178,6 +178,7 @@ public:
 	// methods
 	bool							IsReference() const;
 	bool							IsActive() const;
+	bool							IsQuestItem() const;
 
 	bool							SetEditorID(const char* EditorID);
 	TESFile*						GetOverrideFile(int Index);
@@ -192,6 +193,7 @@ public:
 	bool							UpdateUsageInfo();
 	void							SetFromActiveFile(bool State);
 	void							SetDeleted(bool State);
+	void							SetQuestItem(bool State);
 	bool							CopyFrom(TESForm* Form);
 	bool							CompareTo(TESForm* Form);
 	void							Link();
@@ -207,7 +209,7 @@ public:
 STATIC_ASSERT(sizeof(TESForm) == 0x24);
 
 /*
-	This class is apprently used to centralize code for certain types of dialog windows in the CS.
+	This class is apparently used to centralize code for certain types of dialog windows in the CS.
 	It does not appear in the RTTI structure of the game code.
 */
 // 24

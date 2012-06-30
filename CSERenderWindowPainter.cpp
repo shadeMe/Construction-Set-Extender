@@ -73,9 +73,9 @@ namespace ConstructionSetExtender
 					((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
 					((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
 					((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
-					((Selection->formFlags & kTESObjectREFRSpecialFlags_3DInvisible)?("I"):("-")),
-					((Selection->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible)?("CI"):("-")),
-					((Selection->formFlags & kTESObjectREFRSpecialFlags_Frozen)?("F"):("-")),
+					(Selection->GetInvisible()?("I"):("-")),
+					(Selection->GetChildrenInvisible()?("CI"):("-")),
+					(Selection->GetFrozen()?("F"):("-")),
 					xBuffer);
 			}
 

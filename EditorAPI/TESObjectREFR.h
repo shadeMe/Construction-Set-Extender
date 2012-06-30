@@ -19,6 +19,18 @@
 class TESObjectREFR : public TESForm, public TESChildCell, public TESMemContextForm
 {
 public:
+	enum
+	{
+		kSpecialFlags_3DInvisible				= 1 << 31,
+		kSpecialFlags_Children3DInvisible		= 1 << 30,
+		kSpecialFlags_Frozen					= 1 << 29,
+	};
+
+	enum
+	{
+		kNiNodeSpecialFlags_DontUncull			= 1 << 15
+	};
+
 	// members
 	//     /*00*/ TESForm
 	//     /*24*/ TESChildCell
@@ -49,4 +61,12 @@ public:
 	void						ModExtraSoul(UInt8 SoulLevel);
 	void						SetExtraEnableStateParentOppositeState(bool State);
 	void						RemoveExtraTeleport(void);
+
+	void						ToggleInvisiblity(void);
+	void						ToggleChildrenInvisibility(void);
+	void						SetFrozenState(bool State);
+
+	bool						GetInvisible(void) const;
+	bool						GetChildrenInvisible(void) const;
+	bool						GetFrozen(void) const;
 };

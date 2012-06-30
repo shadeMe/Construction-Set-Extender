@@ -857,9 +857,7 @@ namespace ConstructionSetExtender
 											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
 											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
 										{
-											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
-																	TESForm::kFormFlags_QuestItem,
-																	BatchData->Flags.Persistent);
+											ThisRef->SetQuestItem(BatchData->Flags.Persistent);
 											Modified = true;
 										}
 
@@ -941,7 +939,6 @@ namespace ConstructionSetExtender
 
 									if (Modified)
 									{
-										ThisRef->UpdateUsageInfo();
 										ThisRef->SetFromActiveFile(true);
 										ThisRef->UpdateNiNode();
 									}
@@ -1500,12 +1497,15 @@ namespace ConstructionSetExtender
 								switch (LOWORD(wParam))
 								{
 								case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-									SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_3DInvisible, false);
-									SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Children3DInvisible, false);
+									if (Ref->GetInvisible())
+										Ref->ToggleInvisiblity();
+
+									if (Ref->GetChildrenInvisible())
+										Ref->ToggleChildrenInvisibility();
 
 									break;
 								case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-									SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, false);
+									Ref->SetFrozenState(false);
 
 									break;
 								}
@@ -1524,8 +1524,8 @@ namespace ConstructionSetExtender
 							}
 						}
 
-						TESDialog::RedrawRenderWindow();
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+						TESDialog::RedrawRenderWindow();
 						Return = true;
 					}
 
@@ -1542,24 +1542,22 @@ namespace ConstructionSetExtender
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
-							SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_3DInvisible,
-													!(Ref->formFlags & kTESObjectREFRSpecialFlags_3DInvisible));
+							Ref->ToggleInvisiblity();
 		//					FORMAT_STR(Buffer, "Selection '%08X's visibility toggled", Ref->formID);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
-							SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Children3DInvisible,
-													!(Ref->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+							Ref->ToggleChildrenInvisibility();
 		//					FORMAT_STR(Buffer, "Selection '%08X's children visibility toggled", Ref->formID);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_FREEZE:
-							SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, true);
+							Ref->SetFrozenState(true);
 		//					FORMAT_STR(Buffer, "Selection '%08X' frozen", Ref->formID);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_THAW:
-							SME::MiscGunk::ToggleFlag(&Ref->formFlags, kTESObjectREFRSpecialFlags_Frozen, false);
+							Ref->SetFrozenState(false);
 		//					FORMAT_STR(Buffer, "Selection '%08X' thawed", Ref->formID);
 
 							break;
@@ -1569,6 +1567,7 @@ namespace ConstructionSetExtender
 					}
 
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+					TESDialog::RedrawRenderWindow();
 					Return = true;
 
 					break;
@@ -1641,13 +1640,13 @@ namespace ConstructionSetExtender
 								break;
 							}
 
-							ThisRef->UpdateUsageInfo();
 							ThisRef->SetFromActiveFile(true);
 							ThisRef->UpdateNiNode();
 						}
 
 						RenderWindowPainter::RenderChannelNotifications->Queue(2, "Selection aligned to %08X", AlignRef->formID);
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+						TESDialog::RedrawRenderWindow();
 
 						Return = true;
 					}
@@ -1899,6 +1898,12 @@ namespace ConstructionSetExtender
 						Return = true;
 					}
 
+					break;
+				case 0x32:		// 2
+					SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
+					TESDialog::RedrawRenderWindow();
+
+					Return = true;
 					break;
 				}
 
@@ -2993,7 +2998,7 @@ namespace ConstructionSetExtender
 					LVCOLUMN ColumnData = {0};
 					ColumnData.mask = LVCF_WIDTH;
 
-					ColumnData.cx = 340;
+					ColumnData.cx = 360;
 					ListView_SetColumn(FormList, 0, &ColumnData);
 				}
 

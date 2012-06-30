@@ -154,16 +154,3 @@ class TESPathGrid;
 extern UInt8*					g_RenderWindowPathGridEditModeFlag;
 extern tList<TESPathGridPoint>*	g_RenderWindowSelectedPathGridPoints;
 extern TESObjectCELL**			g_RenderWindowCurrentlyLoadedCell;
-
-// CSE specific stuff
-enum
-{
-	kTESObjectREFRSpecialFlags_3DInvisible				= 1 << 31,
-	kTESObjectREFRSpecialFlags_Children3DInvisible		= 1 << 30,
-	kTESObjectREFRSpecialFlags_Frozen					= 1 << 29,
-};
-
-enum
-{
-	kNiNodeSpecialFlags_DontUncull						= 1 << 15
-};

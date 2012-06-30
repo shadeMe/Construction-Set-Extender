@@ -166,3 +166,13 @@ bool TESForm::IsActive() const
 {
 	return (formFlags & kFormFlags_FromActiveFile);
 }
+
+bool TESForm::IsQuestItem() const
+{
+	return (formFlags & kFormFlags_QuestItem);
+}
+
+void TESForm::SetQuestItem( bool State )
+{
+	thisCall<void>(0x00494BA0, this, State);
+}

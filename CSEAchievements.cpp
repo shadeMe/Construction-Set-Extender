@@ -146,7 +146,7 @@ namespace ConstructionSetExtender
 		CSEAchievementLost* CSEAchievementLost::GetSingleton()
 		{
 			if (Singleton == NULL)
-				Singleton = new CSEAchievementLost(1280);
+				Singleton = new CSEAchievementLost(666);
 
 			return Singleton;
 		}

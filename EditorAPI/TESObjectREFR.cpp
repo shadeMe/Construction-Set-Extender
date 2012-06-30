@@ -139,3 +139,39 @@ const Vector3* TESObjectREFR::GetRotation() const
 {
 	return &rotation;
 }
+
+void TESObjectREFR::ToggleInvisiblity( void )
+{
+	if (GetInvisible())
+		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, false);
+	else
+		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_3DInvisible, true);
+}
+
+void TESObjectREFR::ToggleChildrenInvisibility( void )
+{
+	if (GetChildrenInvisible())
+		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, false);
+	else
+		SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Children3DInvisible, true);
+}
+
+void TESObjectREFR::SetFrozenState( bool State )
+{
+	SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Frozen, State);
+}
+
+bool TESObjectREFR::GetInvisible( void ) const
+{
+	return (formFlags & kSpecialFlags_3DInvisible);
+}
+
+bool TESObjectREFR::GetChildrenInvisible( void ) const
+{
+	return (formFlags & kSpecialFlags_Children3DInvisible);
+}
+
+bool TESObjectREFR::GetFrozen( void ) const
+{
+	return (formFlags & kSpecialFlags_Frozen);
+}

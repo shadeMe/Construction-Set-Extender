@@ -236,7 +236,7 @@ bool CompileScript(ScriptCompileData* Data)
 	{
 		BGSEEUI->MsgBoxI(NULL,
 						MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-						"Script %s {%08X} has been deleted, and therefore cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
+						"Script %s {%08X} has been deleted, ergo it cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
 
 		Data->CompileResult = false;
 	}
@@ -495,9 +495,9 @@ void CompileCrossReferencedForms(TESForm* Form)
 	BGSEECONSOLE_MESSAGE("Parsing object use list of %08X...", Form->formID);
 	BGSEECONSOLE->Indent();
 
-	std::vector<Script*> ScriptDepends;		// updating usage info inside an use list loop invalidates the list.
-	std::vector<TESTopicInfo*> InfoDepends; // so store the objects ptrs and parse them later
-	std::vector<TESQuest*> QuestDepends;
+	std::list<Script*> ScriptDepends;		// updating usage info inside an use list loop invalidates the list.
+	std::list<TESTopicInfo*> InfoDepends;	// so store the objects ptrs and parse them later
+	std::list<TESQuest*> QuestDepends;
 
 	for (FormCrossReferenceListT::Iterator Itr = Form->GetCrossReferenceList()->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
@@ -525,7 +525,7 @@ void CompileCrossReferencedForms(TESForm* Form)
 	}
 
 	// scripts
-	for (std::vector<Script*>::const_iterator Itr = ScriptDepends.begin(); Itr != ScriptDepends.end(); Itr++)
+	for (std::list<Script*>::const_iterator Itr = ScriptDepends.begin(); Itr != ScriptDepends.end(); Itr++)
 	{
 		BGSEECONSOLE_MESSAGE("Script %s {%08X}:", (*Itr)->editorID.c_str(), (*Itr)->formID);
 		BGSEECONSOLE->Indent();
@@ -542,7 +542,7 @@ void CompileCrossReferencedForms(TESForm* Form)
 	}
 
 	// quests
-	for (std::vector<TESQuest*>::const_iterator Itr = QuestDepends.begin(); Itr != QuestDepends.end(); Itr++)
+	for (std::list<TESQuest*>::const_iterator Itr = QuestDepends.begin(); Itr != QuestDepends.end(); Itr++)
 	{
 		BGSEECONSOLE_MESSAGE("Quest %s {%08X}:", (*Itr)->editorID.c_str(), (*Itr)->formID);
 		BGSEECONSOLE->Indent();
@@ -588,7 +588,7 @@ void CompileCrossReferencedForms(TESForm* Form)
 	}
 
 	// topic infos
-	for (std::vector<TESTopicInfo*>::const_iterator Itr = InfoDepends.begin(); Itr != InfoDepends.end(); Itr++)
+	for (std::list<TESTopicInfo*>::const_iterator Itr = InfoDepends.begin(); Itr != InfoDepends.end(); Itr++)
 	{
 		BGSEECONSOLE_MESSAGE("Topic info %08X:", (*Itr)->formID);
 		BGSEECONSOLE->Indent();

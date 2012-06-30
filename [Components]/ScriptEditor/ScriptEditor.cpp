@@ -3174,7 +3174,6 @@ namespace ConstructionSetExtender
 				ListViewItem^ Item = GetListViewSelectedItem(VariableIndexList);
 				Item->SubItems[2]->Text = Index.ToString();
 				Item->Tag = (int)1;		// flag modification
-				DebugPrint("Set the index of variable '" + Item->Text + "' in script '" + CurrentScriptEditorID + "' to " + Index.ToString());
 			}
 		}
 		void Workspace::VariableIndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -3985,8 +3984,13 @@ namespace ConstructionSetExtender
 				DebugPrint("Couldn't successfully update all variable indices of script '" + CurrentScriptEditorID + "'");
 			else
 			{
+				TextEditor->SetModifiedStatus(true);
+
 				if (PREFERENCES->FetchSettingAsInt("RecompileVarIdx", "General"))
+				{
+					ToolBarSaveScript->PerformButtonClick();
 					ToolBarCompileDependencies->PerformClick();
+				}
 			}
 
 			if (VariableIndexList->Visible)

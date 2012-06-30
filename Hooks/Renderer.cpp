@@ -190,7 +190,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESObjectREFRGet3DDataHook(TESObjectREFR* Object, NiNode* Node)
 		{
-			if ((Node->m_flags & kNiNodeSpecialFlags_DontUncull))
+			if ((Node->m_flags & TESObjectREFR::kNiNodeSpecialFlags_DontUncull))
 				return;
 
 			SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
@@ -199,11 +199,11 @@ namespace ConstructionSetExtender
 			if (xData)
 			{
 				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-				if ((xParent->parent->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible))
+				if (xParent->parent->GetChildrenInvisible())
 					SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
 			}
 
-			if ((Object->formFlags & kTESObjectREFRSpecialFlags_3DInvisible))
+			if (Object->GetInvisible())
 				SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
 		}
 
@@ -426,20 +426,22 @@ namespace ConstructionSetExtender
 
 		void __stdcall TESRenderControlProcessFrozenRefs(TESRenderSelection::SelectedObjectsEntry* Current)
 		{
-			std::vector<TESForm*> FrozenRefs;
+			std::list<TESForm*> FrozenRefs;
 			if (Current == NULL)
 				Current = _RENDERSEL->selectionList;
 
 			for (TESRenderSelection::SelectedObjectsEntry* Itr = Current; Itr && Itr->Data; Itr = Itr->Next)
 			{
-				if ((Itr->Data->formFlags & kTESObjectREFRSpecialFlags_Frozen) ||
-					((Itr->Data->formFlags & TESForm::kFormFlags_FromActiveFile) == false && g_FreezeInactiveRefs))
+				TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+				SME_ASSERT(Selection);
+
+				if (Selection->GetFrozen() || (Selection->IsActive() == false && g_FreezeInactiveRefs))
 				{
 					FrozenRefs.push_back(Itr->Data);
 				}
 			}
 
-			for (std::vector<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
+			for (std::list<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
 				_RENDERSEL->RemoveFromSelection(*Itr, true);
 		}
 
@@ -518,7 +520,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 		{
-			SME::MiscGunk::ToggleFlag(&Node->m_flags, kNiNodeSpecialFlags_DontUncull, State);
+			SME::MiscGunk::ToggleFlag(&Node->m_flags, TESObjectREFR::kNiNodeSpecialFlags_DontUncull, State);
 		}
 
 		#define _hhName		TESObjectREFRSetupDialog

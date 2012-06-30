@@ -658,9 +658,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_TOGGLEVISIBILITY:
 				{
 					TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-					SME::MiscGunk::ToggleFlag(&Ref->formFlags,
-											kTESObjectREFRSpecialFlags_3DInvisible,
-											!(Ref->formFlags & kTESObjectREFRSpecialFlags_3DInvisible));
+					Ref->ToggleInvisiblity();
 					Ref->UpdateNiNode();
 
 					break;
@@ -668,9 +666,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY:
 				{
 					TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-					SME::MiscGunk::ToggleFlag(&Ref->formFlags,
-											kTESObjectREFRSpecialFlags_Children3DInvisible,
-											!(Ref->formFlags & kTESObjectREFRSpecialFlags_Children3DInvisible));
+					Ref->ToggleChildrenInvisibility();
 					Ref->UpdateNiNode();
 
 					break;
