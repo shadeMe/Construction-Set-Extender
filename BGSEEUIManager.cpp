@@ -293,6 +293,7 @@ namespace BGSEditorExtender
 			(*OutSubclassUserData)->Data = &Match->second;
 			(*OutSubclassUserData)->Data->Original = OriginalProc;
 			(*OutSubclassUserData)->InitParam = InitParam;
+			(*OutSubclassUserData)->TemplateID = TemplateID;
 
 			return true;
 		}

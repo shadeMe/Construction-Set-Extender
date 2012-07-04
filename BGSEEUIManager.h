@@ -49,6 +49,7 @@ namespace BGSEditorExtender
 			DialogSubclassData*					Data;
 			LPARAM								InitParam;
 			LPARAM								ExtraData;
+			UInt32								TemplateID;					// the template ID of the dialog resource
 			bool								Initialized;				// set after the WM_INITDIALOG message is processed
 		};
 
@@ -84,10 +85,10 @@ namespace BGSEditorExtender
 
 												// returns true if callbacks are registered for the template
 		bool									GetShouldSubclassDialog(UInt32 TemplateID,
-																LPARAM InitParam,
-																DLGPROC OriginalProc,
-																DLGPROC& OutSubclassProc,
-																DialogSubclassUserData** OutSubclassUserData);
+																		LPARAM InitParam,
+																		DLGPROC OriginalProc,
+																		DLGPROC& OutSubclassProc,
+																		DialogSubclassUserData** OutSubclassUserData);
 		void									PreSubclassMainWindow(HWND MainWindow);
 	public:
 		BGSEEWindowSubclasser();
