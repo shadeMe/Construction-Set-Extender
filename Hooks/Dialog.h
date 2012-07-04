@@ -80,7 +80,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESQuestWindowResize, "prevents quest edit window from being resized unnecessarily");
 		_DeclareMemHdlr(FilteredDialogWindowResize, "prevents filtered dialog window from being resized unnecessarily");
 		_DeclareMemHdlr(DialogueEditorPopup, "prevents the addition of TESForm related context menus items in the dialogue editor");
-		_DeclareMemHdlr(FormListEditorIDComparatorA, "allows form lists to be sorted by name and active record status");
+		_DeclareMemHdlr(TESWeatherSoundListSort, "fixes a bug that causes a CTD when the sound list view in the edit dialog was sorted");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);
@@ -93,5 +93,7 @@ namespace ConstructionSetExtender
 		int CALLBACK TESDialogCellListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		int CALLBACK TESDialogReferenceListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		int CALLBACK TESDialogFormListEDIDComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK FindTextGenericComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK FindTextTopicInfoComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	}
 }

@@ -1,5 +1,6 @@
 #include "CSEMain.h"
 #include "CSEInterfaceManager.h"
+#include "VersionInfo.h"
 
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Dialog.h"

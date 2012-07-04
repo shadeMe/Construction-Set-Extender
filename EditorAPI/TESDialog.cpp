@@ -140,7 +140,7 @@ HWND TESDialog::ShowFormEditDialog( TESForm* Form )
 void TESDialog::ShowScriptEditorDialog( TESForm* InitScript )
 {
 	Script* AuxScript = CS_CAST(InitScript, TESForm, Script);
-	tagRECT ScriptEditorLoc;
+	RECT ScriptEditorLoc;
 	ComponentDLLInterface::ScriptData* Data = NULL;
 
 	if (AuxScript)

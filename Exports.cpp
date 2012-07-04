@@ -2,7 +2,6 @@
 #include "[Common]\CLIWrapper.h"
 
 #include "CSEMain.h"
-#include "CSEUIManager.h"
 #include "Hooks\CompilerErrorDetours.h"
 #include "Hooks\Misc.h"
 #include "Hooks\ScriptEditor.h"

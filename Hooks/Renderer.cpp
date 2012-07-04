@@ -104,6 +104,9 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(CoplanarRefDrop, 0x0042DE2A);
 		_DefineHookHdlr(InitPathGridNodeSelectionRing, 0x00419AFA);
 		_DefineHookHdlr(TESLoadIntoViewPort, 0x00430F5A);
+		_DefineHookHdlr(RenderWindowAxisHotkeysMoveReferences, 0x0042CB79);
+		_DefineHookHdlr(RenderWindowAxisHotkeysMovePathGridPoints, 0x0042BF17);
+		_DefinePatchHdlr(RenderWindowAxisHotkeysRotateReferences, 0x0042CBBD + 2);
 
 		void PatchRendererHooks(void)
 		{
@@ -159,6 +162,9 @@ namespace ConstructionSetExtender
 			_MemHdlr(CoplanarRefDrop).WriteJump();
 			_MemHdlr(InitPathGridNodeSelectionRing).WriteJump();
 			_MemHdlr(TESLoadIntoViewPort).WriteJump();
+			_MemHdlr(RenderWindowAxisHotkeysMoveReferences).WriteJump();
+			_MemHdlr(RenderWindowAxisHotkeysMovePathGridPoints).WriteJump();
+			_MemHdlr(RenderWindowAxisHotkeysRotateReferences).WriteUInt32(0x00A0BC1E);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1431,6 +1437,37 @@ namespace ConstructionSetExtender
 				jnz		ENDTEST
 				pop		ebx
 				retn
+			}
+		}
+
+		#define _hhName		RenderWindowAxisHotkeysMoveReferences
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042CB81);
+			__asm
+			{
+				push	edx
+				push	eax			// swap x/y key states, stored in al and cl respectively
+				push	ecx
+				mov		eax, 0x00A0BACC
+				mov		eax, [eax]
+				jmp		[_hhGetVar(Retn)]
+			}
+		}
+
+		#define _hhName		RenderWindowAxisHotkeysMovePathGridPoints
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042BF1E);
+			__asm
+			{
+				push	eax			// swap x/y key states, stored in al and cl respectively
+				push	ecx
+				push	ebx
+				push	edi
+				push	ecx
+				mov		ecx, esi
+				jmp		[_hhGetVar(Retn)]
 			}
 		}
 	}

@@ -90,6 +90,7 @@ namespace ConstructionSetExtender
 		_DefinePatchHdlr(TESQuestWindowResize, 0x004DD937 + 1);
 		_DefinePatchHdlr(FilteredDialogWindowResize, 0x004E0655 + 1);
 		_DefineHookHdlr(DialogueEditorPopup, 0x004F2896);
+		_DefineJumpHdlr(TESWeatherSoundListSort, 0x0055D083, 0x0055D098);
 
 		void PatchDialogHooks(void)
 		{
@@ -285,7 +286,24 @@ namespace ConstructionSetExtender
 				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogFormListEDIDComparator);
 			}
 
+			for (int i = 0; i < 2; i++)
+			{
+				static const UInt32 kCallSites[2] =
+				{
+					0x0044850C,
+					0x004484EB
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+
+				if (i == 0)
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextGenericComparator);
+				else
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextTopicInfoComparator);
+			}
+
 			_MemHdlr(DialogueEditorPopup).WriteJump();
+			_MemHdlr(TESWeatherSoundListSort).WriteJump();
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -1826,6 +1844,24 @@ namespace ConstructionSetExtender
 		int CALLBACK TESDialogFormListEDIDComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
 		{
 			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004ECAF0);
+		}
+
+		int CALLBACK FindTextGenericComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00441F50);
+		}
+
+		int CALLBACK FindTextTopicInfoComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
+			int Result = ((DefaultComparatorT)0x00441E90)(lParam1, lParam2, lParamSort);
+
+			TESForm* FormA = *(TESForm**)lParam1;
+			TESForm* FormB = *(TESForm**)lParam2;
+
+			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+
+			return Result;
 		}
 	}
 }

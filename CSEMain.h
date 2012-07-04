@@ -1,6 +1,5 @@
 #pragma once
 #include <BGSEEMain.h>
-#include "VersionInfo.h"
 #include "[Common]\ComponentDLLInterface.h"
 
 namespace ConstructionSetExtender

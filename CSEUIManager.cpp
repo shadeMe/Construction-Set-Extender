@@ -425,36 +425,21 @@ namespace ConstructionSetExtender
 				{
 				case LVN_ITEMACTIVATE:
 					NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
-					char Buffer[0x200] = {0};
+					TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Data->iItem);
 
-					ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 0, Buffer, sizeof(Buffer));
-					std::string FormID, FormTypeStr(Buffer);
-
-					ListView_GetItemText(Data->hdr.hwndFrom, Data->iItem, 1, Buffer, sizeof(Buffer));
-					FormID = Buffer;
-					int PadStart = FormID.find("(") + 1, PadEnd = FormID.find(")", PadStart + 1);
-
-					if (PadStart != std::string::npos && PadEnd != std::string::npos)
+					if (Data->hdr.idFrom == 1018 && Form)
 					{
-						FormID = FormID.substr(PadStart, PadEnd - PadStart);
-						UInt32 FormIDInt = 0;
-						sscanf_s(FormID.c_str(), "%08X", &FormIDInt);
-						TESForm* Form = TESForm::LookupByFormID(FormIDInt);
-
-						if (Form)
+						switch (Form->formType)
 						{
-							switch (Form->formType)
-							{
-							case TESForm::kFormType_Script:
-								TESDialog::ShowScriptEditorDialog(Form);
-								break;
-							case TESForm::kFormType_REFR:
-								_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
-								break;
-							default:
-								TESDialog::ShowFormEditDialog(Form);
-								break;
-							}
+						case TESForm::kFormType_Script:
+							TESDialog::ShowScriptEditorDialog(Form);
+							break;
+						case TESForm::kFormType_REFR:
+							_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+							break;
+						default:
+							TESDialog::ShowFormEditDialog(Form);
+							break;
 						}
 					}
 
@@ -1964,7 +1949,7 @@ namespace ConstructionSetExtender
 					Point.x = RectFormList.left;
 					Point.y = RectFilterEdit.top;
 					ScreenToClient(hWnd, &Point);
-					MoveWindow(FormList, Point.x, Point.y, (unsigned __int16)lParam - Point.x - 7, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
+					MoveWindow(FormList, Point.x, Point.y, (unsigned __int16)lParam - Point.x - 6, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
 
 					Point.x = RectSplitter.left;
 					ScreenToClient(hWnd, &Point);
@@ -2674,6 +2659,27 @@ namespace ConstructionSetExtender
 #define WM_COMDLGEXTRA_EXTRACTCOLOR								(WM_USER + 2005)
 		// wParam = const char*, lParam = COLORREF*
 
+		enum
+		{
+			kFormList_ObjectWindowObjects						= 1041,
+			kFormList_TESPackage								= 1977,
+			kFormList_CellViewCells								= 1155,
+			kFormList_CellViewRefs								= 1156,
+			kFormList_TESFormIDListView							= 2064,
+			kFormList_DialogEditorTopics						= 1448,
+			kFormList_DialogEditorTopicInfos					= 1449,
+			kFormList_Generic									= 1018,
+			kFormList_TESContainer								= 2035,
+			kFormList_TESSpellList								= 1485,
+			kFormList_ActorFactions								= 1088,
+			kFormList_TESLeveledList							= 2036,
+			kFormList_WeatherSounds								= 2286,
+			kFormList_ClimateWeatherRaceHairFindTextTopics		= 1019,
+			kFormList_RaceEyes									= 2163,
+			kFormList_TESReactionForm							= 1591,
+			kFormList_FindTextTopicInfos						= 1952,
+		};
+
 		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -2794,6 +2800,8 @@ namespace ConstructionSetExtender
 								DlgProcResult = TRUE;
 								Return = true;
 							}
+
+							SetCursor(LoadCursor(NULL, IDC_ARROW));
 						}
 					}
 
@@ -2807,15 +2815,24 @@ namespace ConstructionSetExtender
 					switch (NotificationData->code)
 					{
 					case NM_CUSTOMDRAW:
-													// valid listviews:
-						if (wParam == 1041 ||		//		object window
-							wParam == 1977 ||		//		AI packages
-							wParam == 1155 ||		//		cell view (cell list)
-							wParam == 1156 ||		//		cell view (ref list)
-							wParam == 2064 ||		//		tesformIDlistview
-							wParam == 1448 ||		//		dialog editor (topic list)
-							wParam == 1449 ||		//		dialog editor (topicinfo list)
-							wParam == 1018)			//		select topics/quest
+												// valid listviews
+						if (wParam == kFormList_ObjectWindowObjects ||
+							wParam == kFormList_TESPackage ||
+							wParam == kFormList_CellViewCells ||
+							wParam == kFormList_CellViewRefs ||
+							wParam == kFormList_TESFormIDListView ||
+							wParam == kFormList_DialogEditorTopics ||
+							wParam == kFormList_DialogEditorTopicInfos ||
+							wParam == kFormList_Generic ||
+							wParam == kFormList_TESContainer ||
+							wParam == kFormList_TESSpellList ||
+							wParam == kFormList_ActorFactions ||
+							wParam == kFormList_TESLeveledList ||
+							wParam == kFormList_WeatherSounds ||
+							wParam == kFormList_ClimateWeatherRaceHairFindTextTopics ||
+							wParam == kFormList_RaceEyes ||
+							wParam == kFormList_TESReactionForm ||
+							wParam == kFormList_FindTextTopicInfos)
 						{
 							bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
 
@@ -2827,23 +2844,97 @@ namespace ConstructionSetExtender
 								{
 								case CDDS_PREPAINT:
 									{
-										// modal dialogs have trouble receiving the item pre-paint notification
-										// so we perform some monkey business to workaround it
-										// that being said - For fuck sake! This needs to documented somewhere!
-										// then again, it stands to reason that the return val must be passed as the dialog's result
-										// there! now I've gone and contradicted myself...
-										if (IsWindowEnabled(GetParent(hWnd)) == FALSE)
-										{
-											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
-											DlgProcResult = TRUE;
-											Return = true;
-										}
+										SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+										DlgProcResult = TRUE;
+										Return = true;
 									}
 
 									break;
 								case CDDS_ITEMPREPAINT:
 									{
-										TESForm* Form = (TESForm*)DrawData->nmcd.lItemlParam;
+										TESForm* Form = NULL;
+
+										switch (wParam)
+										{
+										case kFormList_ActorFactions:
+											{
+												TESActorBase::FactionInfo* Data = (TESActorBase::FactionInfo*)DrawData->nmcd.lItemlParam;
+												SME_ASSERT(Data);
+												Form = Data->faction;
+											}
+
+											break;
+										case kFormList_TESContainer:
+											{
+												TESContainer::ContentEntry* Entry = (TESContainer::ContentEntry*)DrawData->nmcd.lItemlParam;
+												SME_ASSERT(Entry);
+												Form = Entry->form;
+											}
+
+											break;
+										case kFormList_TESLeveledList:
+											{
+												TESLeveledList::ListEntry* Entry = (TESLeveledList::ListEntry*)DrawData->nmcd.lItemlParam;
+												SME_ASSERT(Entry);
+												Form = Entry->form;
+											}
+
+											break;
+										case kFormList_WeatherSounds:
+											{
+												UInt32* FormID = (UInt32*)DrawData->nmcd.lItemlParam;
+												SME_ASSERT(FormID);
+												Form = TESForm::LookupByFormID(*FormID);
+											}
+
+											break;
+										case kFormList_ClimateWeatherRaceHairFindTextTopics:
+											{
+												BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
+												(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+
+												switch (UserData->TemplateID)
+												{
+												case TESDialog::kDialogTemplate_Climate:
+													{
+														TESClimate::WeatherEntry* Entry = (TESClimate::WeatherEntry*)DrawData->nmcd.lItemlParam;
+														SME_ASSERT(Entry);
+														Form = Entry->weather;
+													}
+
+													break;
+												case TESDialog::kDialogTemplate_Race:
+													{
+														Form = (TESForm*)DrawData->nmcd.lItemlParam;
+													}
+
+													break;
+												case TESDialog::kDialogTemplate_FindText:
+													{
+														FindTextWindowData::TopicSearchResult* Data = (FindTextWindowData::TopicSearchResult*)DrawData->nmcd.lItemlParam;
+														SME_ASSERT(Data);
+														Form = Data->topic;
+													}
+
+													break;
+												}
+											}
+
+											break;
+										case kFormList_TESReactionForm:
+											{
+												TESReactionForm::ReactionInfo* Info = (TESReactionForm::ReactionInfo*)DrawData->nmcd.lItemlParam;
+												SME_ASSERT(Info);
+												Form = Info->target;
+											}
+
+											break;
+										case kFormList_FindTextTopicInfos:
+										default:
+											Form = (TESForm*)DrawData->nmcd.lItemlParam;
+
+											break;
+										}
 
 										if (Form)
 										{
@@ -2868,19 +2959,9 @@ namespace ConstructionSetExtender
 												if (IUD && IUD->ActiveFormListFont)
 													SelectObject(DrawData->nmcd.hdc, IUD->ActiveFormListFont);
 
-												// same here - if modal dialog, donkey boner
-												if (IsWindowEnabled(GetParent(hWnd)) == FALSE)
-												{
-													SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
-
-													DlgProcResult = TRUE;
-													Return = true;
-												}
-												else
-												{
-													DlgProcResult = CDRF_NEWFONT;
-													Return = true;
-												}
+												SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+												DlgProcResult = TRUE;
+												Return = true;
 											}
 										}
 									}
@@ -2949,6 +3030,8 @@ namespace ConstructionSetExtender
 							IUD->QuickViewCursorPos.x = Coords.x;
 							IUD->QuickViewCursorPos.y = Coords.y;
 							IUD->QuickViewWindowUnderCursor = WindowAtPoint;
+
+							SetCursor(LoadCursor(NULL, IDC_WAIT));
 						}
 					}
 				}

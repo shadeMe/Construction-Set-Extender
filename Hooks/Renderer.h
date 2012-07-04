@@ -88,5 +88,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(CoplanarRefDrop, "allows new references to be dropped coplanar to the object under the drop location");
 		_DeclareMemHdlr(InitPathGridNodeSelectionRing, "fixes a bug that causes selection rings to persist b'ween session of the path grid edit mode");
 		_DeclareMemHdlr(TESLoadIntoViewPort, "fixes a bug that causes a CTD when a detached reference (with no parent cell) was loaded into the render window");
+		_DeclareMemHdlr(RenderWindowAxisHotkeysMoveReferences, "fixes a bug that caused the x/y axis key states to be swapped when moving/rotating references and path grid points");
+		_DeclareMemHdlr(RenderWindowAxisHotkeysMovePathGridPoints, "");
+		_DeclareMemHdlr(RenderWindowAxisHotkeysRotateReferences, "");
 	}
 }

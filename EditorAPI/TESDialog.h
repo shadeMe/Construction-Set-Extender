@@ -121,6 +121,35 @@ public:
 };
 STATIC_ASSERT(sizeof(ObjectWindowTreeEntryInfo) == 0x14);
 
+// 18
+// stored in the dialog's DialogExtraWorkingData's localCopy member
+class FindTextWindowData
+{
+public:
+	typedef tList<Script>				ScriptListT;
+	typedef tList<TESQuest>				QuestListT;
+	typedef tList<TESForm>				FormListT;
+
+	// 0C
+	struct TopicSearchResult
+	{
+		typedef tList<TESTopicInfo>		TopicInfoListT;
+
+		/*00*/ TESTopic*				topic;
+		/*04*/ TopicInfoListT			infos;
+	};
+	typedef tList<TopicSearchResult>	TopicSearchResultListT;
+
+	// members
+	/*00*/ ScriptListT*					searchResultsScripts;
+	/*04*/ TopicSearchResultListT*		searchResultsTopics;
+	/*08*/ FormListT*					searchResultsForms;
+	/*0C*/ QuestListT*					searchResultsQuests;
+	/*10*/ UInt32						currentResultTab;				// init to 0
+	/*14*/ UInt32						resultListViewSortOrder;
+};
+STATIC_ASSERT(sizeof(FindTextWindowData) == 0x18);
+
 // only required methods exposed in the API
 class TESDialog
 {
