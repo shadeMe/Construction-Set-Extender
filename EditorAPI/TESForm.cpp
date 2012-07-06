@@ -176,3 +176,8 @@ void TESForm::SetQuestItem( bool State )
 {
 	thisCall<void>(0x00494BA0, this, State);
 }
+
+void TESForm::GetDataFromDialog( HWND Dialog )
+{
+	thisVirtualCall<void>(0x118, this, Dialog);
+}

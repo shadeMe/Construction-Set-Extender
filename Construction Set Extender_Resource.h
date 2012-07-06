@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by Construction Set Extender.rc
 //
-#define IDB_EDITORSPLASH                123
 #define IDR_MAINMENU                    130
 #define IDR_RENDERWINDOWCONTEXT         267
 #define IDC_TEXTEDIT_TEXT               1002

@@ -54,21 +54,14 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESDialogPopupMenu, 0x004435A6);
 		_DefineJumpHdlr(ResponseWindowLipButtonPatch, 0x004EC0E7, 0x004EC0F7);
 		_DefineJumpHdlr(DataDlgZOrder, 0x0040C530, 0x0040C552);
-		_DefineHookHdlr(FormIDListViewInit, 0x00448A8A);
-		_DefineHookHdlr(FormIDListViewSaveChanges, 0x0044957A);
-		_DefineHookHdlr(FormIDListViewItemChange, 0x00448DEC);
 		_DefineHookHdlr(FormIDListViewSelectItem, 0x00403B3D);
 		_DefineHookHdlr(FormIDListViewDuplicateSelection, 0x004492AE);
-		_DefineHookHdlr(TESRaceCopyHairEyeDataMessageHandler, 0x004E8FE1);
 		_DefineHookHdlr(TESDialogGetIsWindowDragDropRecipient, 0x004433FF);
-		_DefineHookHdlr(AboutDialog, 0x00441CC5);
 		_DefineHookHdlr(TESQuestStageResultScript, 0x004E238D);
 		_DefineHookHdlr(TESNPCUpdatePreviewControl, 0x0048C598);
 		_DefineHookHdlr(TESParametersFillAndInitSelectionComboBoxOwners, 0x0045942F);
 		_DefineHookHdlr(SearchReplaceDialog, 0x004448FD);
 		_DefineHookHdlr(ObjectWindowPopulateFormListInvalidate, 0x00421EE1);
-		_DefineHookHdlr(DialogEditorCommandMessageCallback, 0x004F1DCD);
-		_DefineHookHdlr(TESQuestCommandMessageCallback, 0x004E286A);
 		_DefineHookHdlr(CellViewWindowResizeFix, 0x00409813);
 		_DefineHookHdlr(TESSoundPlayFile, 0x005047B0);
 		_DefineHookHdlr(FormEditDialogTitle, 0x00447877);
@@ -113,21 +106,14 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESDialogPopupMenu).WriteJump();
 			_MemHdlr(ResponseWindowLipButtonPatch).WriteJump();
 			_MemHdlr(DataDlgZOrder).WriteJump();
-			_MemHdlr(FormIDListViewInit).WriteJump();
-			_MemHdlr(FormIDListViewSaveChanges).WriteJump();
-			_MemHdlr(FormIDListViewItemChange).WriteJump();
-			_MemHdlr(FormIDListViewSelectItem).WriteJump();
-			_MemHdlr(FormIDListViewDuplicateSelection).WriteJump();
-			_MemHdlr(TESRaceCopyHairEyeDataMessageHandler).WriteJump();
+ 			_MemHdlr(FormIDListViewSelectItem).WriteJump();
+ 			_MemHdlr(FormIDListViewDuplicateSelection).WriteJump();
 			_MemHdlr(TESDialogGetIsWindowDragDropRecipient).WriteJump();
-			_MemHdlr(AboutDialog).WriteJump();
 			_MemHdlr(TESQuestStageResultScript).WriteJump();
 			_MemHdlr(TESNPCUpdatePreviewControl).WriteJump();
 			_MemHdlr(TESParametersFillAndInitSelectionComboBoxOwners).WriteJump();
 			_MemHdlr(SearchReplaceDialog).WriteJump();
 			_MemHdlr(ObjectWindowPopulateFormListInvalidate).WriteJump();
-			_MemHdlr(DialogEditorCommandMessageCallback).WriteJump();
-			_MemHdlr(TESQuestCommandMessageCallback).WriteJump();
 			_MemHdlr(CellViewWindowResizeFix).WriteJump();
 			_MemHdlr(TESSoundPlayFile).WriteJump();
 			_MemHdlr(FormEditDialogTitle).WriteJump();
@@ -841,133 +827,6 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall DoFormIDListViewInitHook(HWND hWnd)
-		{
-			if (hWnd != *g_HWND_QuestWindow)
-			{
-				SetWindowText(GetDlgItem(hWnd, 1), "Apply");
-				SetWindowText(GetDlgItem(hWnd, 2), "Close");
-			}
-		}
-
-		#define _hhName		FormIDListViewInit
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00448A94);
-			_hhSetVar(Byte, 0x00A0BE45);
-			__asm
-			{
-				pushad
-				push	esi
-				call	DoFormIDListViewInitHook
-				popad
-
-				push	5
-				push	esi
-				mov		[_hhGetVar(Byte)], 0
-
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		UInt32 __stdcall DoFormIDListViewSaveChangesHookProlog(HWND Parent)
-		{
-			return Parent != *g_HWND_QuestWindow;
-		}
-
-		void __stdcall DoFormIDListViewSaveChangesEffectSettingHook(TESForm* Form)
-		{
-			if (Form->formType == TESForm::kFormType_EffectSetting)
-				BGSEEACHIEVEMENTS->Unlock(Achievements::kMagister);
-		}
-
-		void __stdcall DoFormIDListViewSaveChangesHookEpilog(HWND Parent)
-		{
-			if (IsWindowEnabled(GetDlgItem(Parent, 1)))
-			{
-				TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(Parent);
-				TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(Parent);
-
-				if (WorkingCopy)
-				{
-					thisVirtualCall<UInt32>(0x118, LocalCopy, Parent);		// GetDataFromDialog
-					if (WorkingCopy->CompareTo(LocalCopy))
-					{
-						if (WorkingCopy->UpdateUsageInfo())
-						{
-							WorkingCopy->SetFromActiveFile(true);
-							WorkingCopy->CopyFrom(LocalCopy);
-
-							DoFormIDListViewSaveChangesEffectSettingHook(WorkingCopy);
-						}
-					}
-				}
-			}
-		}
-
-		#define _hhName		FormIDListViewSaveChanges
-		_hhBegin()
-		{
-			_hhSetVar(QuestRetn, 0x00449580);
-			_hhSetVar(ExitRetn, 0x00448BF0);
-			__asm
-			{
-				push	esi
-				call	TESDialog::GetDialogExtraParam
-
-				pushad
-				push	esi
-				call	DoFormIDListViewSaveChangesHookProlog
-				test	eax, eax
-				jnz		NOTQUEST
-				popad
-
-				jmp		[_hhGetVar(QuestRetn)]
-			NOTQUEST:
-				popad
-
-				pushad
-				push	esi
-				call	DoFormIDListViewSaveChangesHookEpilog
-				popad
-
-				jmp		[_hhGetVar(ExitRetn)]
-			}
-		}
-
-		int __stdcall DoFormIDListViewItemChangeHook(HWND Parent)
-		{
-			return BGSEEUI->MsgBoxI(Parent, MB_YESNO, "Save changes made to the active form?");
-		}
-
-		#define _hhName		FormIDListViewItemChange
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00448DF4);
-			__asm
-			{
-				pushad
-				push	esi
-				call	DoFormIDListViewItemChangeHook
-				cmp		eax, IDYES
-				jnz		REVERT
-
-				push	edi
-				call	DoFormIDListViewSaveChangesEffectSettingHook
-				popad
-
-				mov		eax, [edi]
-				mov		edx, [eax + 0x104]
-
-				jmp		[_hhGetVar(Retn)]
-			REVERT:
-				popad
-
-				mov		eax, 0x004494C9
-				jmp		eax
-			}
-		}
-
 		void __stdcall DoFormIDListViewSelectItemHook(HWND ListView, int ItemIndex)
 		{
 			SetFocus(ListView);
@@ -1006,101 +865,6 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		UInt32 __stdcall DoTESRaceCopyHairEyeDataMessageHandlerHook(HWND Dialog, INT Identifier, TESRace* WorkingRace)
-		{
-			char Buffer[0x200] = {0};
-
-			switch (Identifier)
-			{
-			case IDC_CSE_RACE_COPYEYES:
-			case IDC_CSE_RACE_COPYHAIR:
-				TESForm* Selection = (TESForm*)DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
-															MAKEINTRESOURCE(IDD_TESCOMBOBOX),
-															Dialog,
-															(DLGPROC)UIManager::TESComboBoxDlgProc,
-															(LPARAM)TESForm::kFormType_Race);
-
-				if (Selection)
-				{
-					TESRace* SelectedRace = CS_CAST(Selection, TESForm, TESRace);
-
-					if (WorkingRace && WorkingRace != SelectedRace)
-					{
-						int Count = 0;
-						if (Identifier == IDC_CSE_RACE_COPYEYES)
-						{
-							tList<TESEyes>* Source = &SelectedRace->eyeList;
-							tList<TESEyes>* Destination = &WorkingRace->eyeList;
-
-							for (tList<TESEyes>::Iterator Itr = Source->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-							{
-								if (Destination->IndexOf(Itr.Get()) == -1)
-								{
-									Destination->AddAt(Itr.Get(), eListEnd);
-									Count++;
-								}
-							}
-
-							BGSEEUI->MsgBoxI(Dialog, 0, "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorID.c_str());
-						}
-						else if (Identifier == IDC_CSE_RACE_COPYHAIR)
-						{
-							tList<TESHair>* Source = &SelectedRace->hairList;
-							tList<TESHair>* Destination = &WorkingRace->hairList;
-
-							for (tList<TESHair>::Iterator Itr = Source->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-							{
-								if (Destination->IndexOf(Itr.Get()) == -1)
-								{
-									Destination->AddAt(Itr.Get(), eListEnd);
-									Count++;
-								}
-							}
-
-							BGSEEUI->MsgBoxI(Dialog, 0, "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorID.c_str());
-						}
-					}
-				}
-
-				return TRUE;
-			}
-
-			return FALSE;
-		}
-
-		#define _hhName		TESRaceCopyHairEyeDataMessageHandler
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x004E8FF2);
-			_hhSetVar(Jump, 0x004E8E6D);
-			__asm
-			{
-				movzx	eax, di
-				add		eax, 0x0FFFFF78C
-				cmp		eax, 0x24
-				ja		DEFAULT
-
-				jmp		[_hhGetVar(Retn)]
-			DEFAULT:
-				pushad
-				push	ebp
-				push	edi
-				push	esi
-				call	DoTESRaceCopyHairEyeDataMessageHandlerHook
-				test	eax, eax
-				jnz		HANDLED
-				popad
-
-				jmp		[_hhGetVar(Jump)]
-			HANDLED:
-				popad
-
-				xor		al, al
-				mov		ecx, 0x004E9D5B
-				jmp		ecx
-			}
-		}
-
 		bool __stdcall DoTESDialogGetIsWindowDragDropRecipientHook(HWND Handle)
 		{
 			return BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->GetExists(Handle);
@@ -1133,54 +897,6 @@ namespace ConstructionSetExtender
 				jmp		[_hhGetVar(Jump)]
 			FIX:
 				popad
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		void __stdcall DoAboutDialogHook(HWND Dialog)
-		{
-			if (g_CSESplashImage == NULL)
-				g_CSESplashImage = LoadImage(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDB_EDITORSPLASH), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE);
-
-			HWND PictureControl = GetDlgItem(Dialog, 1963);
-			SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)g_CSESplashImage);
-			Static_SetText(GetDlgItem(Dialog, -1), "Elder Scrolls Construction Set IV    +=    Construction Set Extender");
-
-			DWORD FileVersionHandle = 0,
-				  FileVersionSize = GetFileVersionInfoSize(BGSEEMAIN->GetDLLPath(), &FileVersionHandle);
-
-			if (FileVersionSize)
-			{
-				char* Buffer = new char[FileVersionSize];
-				char VersionString[0x100] = {0};
-				void* VersionStringPtr = NULL;
-
-				GetFileVersionInfo(BGSEEMAIN->GetDLLPath(), FileVersionHandle, FileVersionSize, Buffer);
-				VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
-				sprintf_s(VersionString, sizeof(VersionString), "Version %s", VersionStringPtr);
-
-				std::string ReplacedString(VersionString);
-				std::replace(ReplacedString.begin(), ReplacedString.end(), ',', '.');
-
-				SetDlgItemText(Dialog, 1580, (LPCSTR)ReplacedString.c_str());
-
-				delete [] Buffer;
-			}
-		}
-
-		#define _hhName		AboutDialog
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00441CCB);
-			__asm
-			{
-				pushad
-				push	esi
-				call	DoAboutDialogHook
-				popad
-
-				call	IATCacheShowWindowAddress
-				call	g_TempIATProcBuffer
 				jmp		[_hhGetVar(Retn)]
 			}
 		}
@@ -1301,66 +1017,6 @@ namespace ConstructionSetExtender
 				pushad
 				push	1
 				call	DoObjectWindowPopulateFormListInvalidateHook
-				popad
-
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		void __stdcall HandleEditResultScriptMessages(HWND Dialog, int Identifier)
-		{
-			switch (Identifier)
-			{
-			case IDC_CSE_QUEST_EDITRESULTSCRIPT:
-				if (IsWindowEnabled(GetDlgItem(Dialog, 1444)))
-				{
-					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
-									MAKEINTRESOURCE(IDD_EDITRESULTSCRIPT),
-									Dialog,
-									UIManager::EditResultScriptDlgProc,
-									(LPARAM)Dialog))
-					{
-						SendMessage(Dialog, WM_COMMAND, 1591, NULL);		// compile result script
-					}
-				}
-
-				break;
-			}
-		}
-
-		#define _hhName		DialogEditorCommandMessageCallback
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x004F1DD7);
-			__asm
-			{
-				movzx   esi, cx
-				mov     eax, esi
-
-				pushad
-				push	eax
-				push	edi
-				call	HandleEditResultScriptMessages
-				popad
-
-				cmp     eax, 0x66C
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		#define _hhName		TESQuestCommandMessageCallback
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x004E2874);
-			__asm
-			{
-				mov     ecx, [esp + 0x0B4]
-				movzx   eax, cx
-
-				pushad
-				push	eax
-				push	esi
-				call	HandleEditResultScriptMessages
 				popad
 
 				jmp		[_hhGetVar(Retn)]

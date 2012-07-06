@@ -33,6 +33,19 @@ namespace ConstructionSetExtender
 	OBSECommandTableInterface*					XSECommandTableIntfc = NULL;
 	ComponentDLLInterface::CommandTableData		XSECommandTableData;
 
+	CSEReleaseNameTable							CSEReleaseNameTable::Instance;
+
+	CSEReleaseNameTable::CSEReleaseNameTable() :
+		BGSEditorExtender::BGSEEReleaseNameTable()
+	{
+		RegisterRelease(6, 0, 0, "Konniving Kelpie");
+	}
+
+	CSEReleaseNameTable::~CSEReleaseNameTable()
+	{
+		;//
+	}
+
 	InitCallbackQuery::InitCallbackQuery( const OBSEInterface* OBSE ) :
 		BoolRFunctorBase(),
 		OBSE(OBSE)
@@ -519,6 +532,7 @@ extern "C"
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
 														BGSEEMAIN_EXTENDERSHORTNAME,
+														CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
 														PACKED_SME_VERSION,
 														BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS,
 														CS_VERSION_1_2,

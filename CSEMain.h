@@ -10,6 +10,18 @@ namespace ConstructionSetExtender
 	extern OBSECommandTableInterface*					XSECommandTableIntfc;
 	extern ComponentDLLInterface::CommandTableData		XSECommandTableData;
 
+	class CSEReleaseNameTable : public BGSEditorExtender::BGSEEReleaseNameTable
+	{
+	protected:
+		CSEReleaseNameTable();
+	public:
+		virtual ~CSEReleaseNameTable();
+
+		static CSEReleaseNameTable						Instance;
+	};
+
+	extern CSEReleaseNameTable							ReleaseNameTable;
+
 	class InitCallbackQuery : public BoolRFunctorBase
 	{
 		const OBSEInterface*				OBSE;

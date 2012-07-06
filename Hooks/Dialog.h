@@ -28,8 +28,6 @@ namespace ConstructionSetExtender
 		// hooks that modify how CS dialogs behave and add interfaces for new tools
 		void PatchDialogHooks(void);
 
-		extern HANDLE	g_CSESplashImage;
-
 		_DeclareNopHdlr(ResponseEditorMic, "nops out the call to the delinquent sound struct initializer sub, fixing a crash");
 		_DeclareMemHdlr(TopicResultScriptReset, "fixes the bug that clears all flags and the result script of a selected response when adding a new topic");
 		_DeclareMemHdlr(NPCFaceGen, "fixes the facegen crash by getting the CS to correctly render the model at dialog init");
@@ -43,22 +41,15 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(DeathToTheCloseOpenDialogsMessage, "gets rid of it");
 		_DeclareMemHdlr(TESDialogPopupMenu, "hooks popup menu instantiation for new menu items");
 		_DeclareMemHdlr(DataDlgZOrder, "prevents the data dlg from staying on top of all other windows");
-		_DeclareMemHdlr(FormIDListViewInit, "changes the text of the OK and CANCEL buttons");
-		_DeclareMemHdlr(FormIDListViewSaveChanges, "prevents the OK button from closing the list view dialog");
-		_DeclareMemHdlr(FormIDListViewItemChange, "displays a confirmation message before committing changes made to the active item when switching to another");
 		_DeclareMemHdlr(FormIDListViewSelectItem, "fixes a bug that prevents the correct selection of newly created list view items");
 		_DeclareMemHdlr(FormIDListViewDuplicateSelection, "increments the item index returned by TESDialog::LookupListViewItemByData when duplicating forms from the popup menu");
-		_DeclareMemHdlr(TESRaceCopyHairEyeDataMessageHandler, "handles the WM_COMMAND messages sent by the newly added controls");
 		_DeclareMemHdlr(TESDialogGetIsWindowDragDropRecipient, "allows custom windows to receive form drag-drop notifications");
 		_DeclareNopHdlr(MissingTextureWarning, "removes the ostentatious warning");
-		_DeclareMemHdlr(AboutDialog, "adds a mention of CSE");
 		_DeclareMemHdlr(TESQuestStageResultScript, "fixes a bug that prevented quest stage result scripts from being compiled when their text was empty");
 		_DeclareMemHdlr(TESNPCUpdatePreviewControl, "fixes a bug that prevented NPC models from being updated correctly after an item was removed from their inventory");
 		_DeclareMemHdlr(TESParametersFillAndInitSelectionComboBoxOwners, "allows factions to be passed as arguments to condition commands that take ownership parameters");
 		_DeclareMemHdlr(SearchReplaceDialog, "patches the search and replace dialog to stay open after a replace operation");
 		_DeclareMemHdlr(ObjectWindowPopulateFormListInvalidate, "invalidates the formList before items are added to it to increase performance");
-		_DeclareMemHdlr(DialogEditorCommandMessageCallback, "handles messages sent by the edit result script button");
-		_DeclareMemHdlr(TESQuestCommandMessageCallback, "");
 		_DeclareMemHdlr(CellViewWindowResizeFix, "fixes a bug that kept eating the cell view's list view control heights after each reinit");
 		_DeclareMemHdlr(TESSoundPlayFile, "patches the sound file sampler code to play files found in archives");
 		_DeclareMemHdlr(FormEditDialogTitle, "appends form editorIDs to the title bar of form edit dialogs");

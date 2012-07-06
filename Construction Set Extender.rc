@@ -592,7 +592,6 @@ END
 // Bitmap
 //
 
-IDB_EDITORSPLASH        BITMAP                  "Images\\Splash.bmp"
 IDB_ACHIEVEMENT_ANTICHRIST BITMAP                  "Images\\antic.bmp"
 IDB_ACHIEVEMENT_AUTOMATON BITMAP                  "Images\\automaton.bmp"
 IDB_ACHIEVEMENT_BOBTHEBUILDER BITMAP                  "Images\\bob.bmp"

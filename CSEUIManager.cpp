@@ -415,7 +415,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -457,7 +456,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK DataDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			TESFile* ActiveTESFile = *((TESFile**)0x00A0AA7C);
@@ -1336,7 +1334,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK RenderWindowMenuInitSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = TRUE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -1664,7 +1661,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK RenderWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = TRUE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			UInt8* YKeyState = (UInt8*)0x00A0BC1E;
@@ -1901,7 +1897,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
@@ -2478,7 +2473,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK ResponseDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			HWND VoiceList = GetDlgItem(hWnd, 2168);
@@ -2595,7 +2589,6 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData = (BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			Return = false;
 
 			switch (uMsg)
@@ -2629,7 +2622,7 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		LRESULT CALLBACK QuestDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
+		LRESULT CALLBACK FilteredDialogQuestDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -2638,15 +2631,185 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					LVCOLUMN ColumnData = {0};
-					ColumnData.mask = LVCF_WIDTH;
-					HWND QuestList = GetDlgItem(hWnd, 2064);
+					BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
+					(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 
-					ColumnData.cx = 200;
-					ListView_SetColumn(QuestList, 0, &ColumnData);
+					if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+					{
+						LVCOLUMN ColumnData = {0};
+						ColumnData.mask = LVCF_WIDTH;
+						HWND QuestList = GetDlgItem(hWnd, 2064);
 
-					ColumnData.cx = 42;
-					ListView_SetColumn(QuestList, 2, &ColumnData);
+						ColumnData.cx = 200;
+						ListView_SetColumn(QuestList, 0, &ColumnData);
+
+						ColumnData.cx = 42;
+						ListView_SetColumn(QuestList, 2, &ColumnData);
+					}
+				}
+
+				break;
+			case WM_COMMAND:
+				switch (LOWORD(wParam))
+				{
+				case IDC_CSE_QUEST_EDITRESULTSCRIPT:
+					if (IsWindowEnabled(GetDlgItem(hWnd, 1444)))
+					{
+						if (BGSEEUI->ModalDialog(BGSEEMAIN->GetExtenderHandle(),
+												MAKEINTRESOURCE(IDD_EDITRESULTSCRIPT),
+												hWnd,
+												UIManager::EditResultScriptDlgProc,
+												(LPARAM)hWnd))
+						{
+							SendMessage(hWnd, WM_COMMAND, 1591, NULL);		// compile result script
+						}
+					}
+
+					Return = true;
+					break;
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK AboutDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					HINSTANCE SplashImageResource = BGSEEUI->GetDialogHotSwapper()->GetAlternateResourceInstance(TESDialog::kDialogTemplate_SplashScreen);
+					if (SplashImageResource)
+					{
+						HANDLE Image = LoadImage(SplashImageResource,
+												MAKEINTRESOURCE(100),
+												IMAGE_BITMAP,
+												0,
+												0,
+												LR_DEFAULTSIZE);
+
+						SME_ASSERT(Image);
+
+						HWND PictureControl = GetDlgItem(hWnd, 1963);
+						SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)Image);
+					}
+
+					DWORD FileVersionHandle = 0;
+					DWORD FileVersionSize = GetFileVersionInfoSize(BGSEEMAIN->GetDLLPath(), &FileVersionHandle);
+
+					if (FileVersionSize)
+					{
+						char* Buffer = new char[FileVersionSize];
+						char VersionString[0x100] = {0};
+						void* VersionStringPtr = NULL;
+
+						GetFileVersionInfo(BGSEEMAIN->GetDLLPath(), FileVersionHandle, FileVersionSize, Buffer);
+						VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
+						FORMAT_STR(VersionString, "%s v%s\r\n\"%s\"", BGSEEMAIN->ExtenderGetLongName(),
+																	VersionStringPtr,
+																	BGSEEMAIN->ExtenderGetReleaseName());
+
+						std::string ReplacedString(VersionString);
+						std::replace(ReplacedString.begin(), ReplacedString.end(), ',', '.');
+
+						SetDlgItemText(hWnd, 1580, (LPCSTR)ReplacedString.c_str());
+
+						delete [] Buffer;
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					HANDLE Image = (HANDLE)SendDlgItemMessage(hWnd, 1963, STM_GETIMAGE, IMAGE_BITMAP, NULL);
+
+					if (Image)
+						DeleteBitmap(Image);
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK RaceDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_COMMAND:
+				switch (LOWORD(wParam))
+				{
+				case IDC_CSE_RACE_COPYEYES:
+				case IDC_CSE_RACE_COPYHAIR:
+					{
+						TESRace* WorkingRace = CS_CAST(TESDialog::GetDialogExtraLocalCopy(hWnd), TESForm, TESRace);
+						TESForm* Selection = (TESForm*)BGSEEUI->ModalDialog(BGSEEMAIN->GetExtenderHandle(),
+																			MAKEINTRESOURCE(IDD_TESCOMBOBOX),
+																			hWnd,
+																			(DLGPROC)UIManager::TESComboBoxDlgProc,
+																			(LPARAM)TESForm::kFormType_Race);
+
+						if (Selection)
+						{
+							TESRace* SelectedRace = CS_CAST(Selection, TESForm, TESRace);
+
+							if (WorkingRace && WorkingRace != SelectedRace)
+							{
+								int Count = 0;
+								switch (LOWORD(wParam))
+								{
+								case IDC_CSE_RACE_COPYEYES:
+									{
+										tList<TESEyes>* Source = &SelectedRace->eyeList;
+										tList<TESEyes>* Destination = &WorkingRace->eyeList;
+
+										for (tList<TESEyes>::Iterator Itr = Source->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+										{
+											if (Destination->IndexOf(Itr.Get()) == -1)
+											{
+												Destination->AddAt(Itr.Get(), eListEnd);
+												Count++;
+											}
+										}
+
+										BGSEEUI->MsgBoxI(hWnd, 0, "Copied %d eye forms from race '%s'.", Count, SelectedRace->editorID.c_str());
+									}
+
+									break;
+								case IDC_CSE_RACE_COPYHAIR:
+									{
+										tList<TESHair>* Source = &SelectedRace->hairList;
+										tList<TESHair>* Destination = &WorkingRace->hairList;
+
+										for (tList<TESHair>::Iterator Itr = Source->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+										{
+											if (Destination->IndexOf(Itr.Get()) == -1)
+											{
+												Destination->AddAt(Itr.Get(), eListEnd);
+												Count++;
+											}
+										}
+
+										BGSEEUI->MsgBoxI(hWnd, 0, "Copied %d hair forms from race '%s'.", Count, SelectedRace->editorID.c_str());
+									}
+
+									break;
+								}
+							}
+						}
+					}
+
+					break;
 				}
 
 				break;
@@ -3099,6 +3262,144 @@ namespace ConstructionSetExtender
 
 							DlgProcResult = TRUE;
 							Return = true;
+						}
+
+						break;
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+#define WM_TESFORMIDLISTVIEW_HASCHANGES							(WM_USER + 2006)
+		// return TRUE if there are changes
+#define WM_TESFORMIDLISTVIEW_SAVECHANGES						(WM_USER + 2007)
+
+		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
+			(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_TESFORMIDLISTVIEW_HASCHANGES:
+				{
+					Return = true;
+
+					if (IsWindowEnabled(GetDlgItem(hWnd, 1)))
+					{
+						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
+						if (WorkingCopy)
+						{
+							LocalCopy->GetDataFromDialog(hWnd);
+
+							if (WorkingCopy->CompareTo(LocalCopy))
+							{
+								DlgProcResult = TRUE;
+							}
+						}
+					}
+
+					SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+				}
+
+				break;
+			case WM_TESFORMIDLISTVIEW_SAVECHANGES:
+				{
+					if (IsWindowEnabled(GetDlgItem(hWnd, 1)))
+					{
+						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
+						if (WorkingCopy)
+						{
+							LocalCopy->GetDataFromDialog(hWnd);
+
+							if (WorkingCopy->CompareTo(LocalCopy))
+							{
+								if (WorkingCopy->UpdateUsageInfo())
+								{
+									WorkingCopy->SetFromActiveFile(true);
+									WorkingCopy->CopyFrom(LocalCopy);
+
+									if (WorkingCopy->formType == TESForm::kFormType_EffectSetting)
+										BGSEEACHIEVEMENTS->Unlock(Achievements::kMagister);
+								}
+							}
+						}
+					}
+
+					Return = true;
+				}
+
+				break;
+			case WM_INITDIALOG:
+				{
+					if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)
+					{
+						SetWindowText(GetDlgItem(hWnd, 1), "Apply");
+						SetWindowText(GetDlgItem(hWnd, 2), "Close");
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					;//
+				}
+
+				break;
+			case WM_COMMAND:
+				switch (LOWORD(wParam))
+				{
+				case 1:			// OK button
+					{
+						if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)
+						{
+							Return = true;
+							SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+						}
+					}
+
+					break;
+				}
+
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+					switch (NotificationData->code)
+					{
+					case LVN_ITEMCHANGED:
+						{
+							NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
+
+							if ((ChangeData->uChanged & 8) && (ChangeData->uOldState & LVIS_FOCUSED) && (ChangeData->uNewState & LVIS_FOCUSED) == false)
+							{
+								if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
+								{
+									int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "Save changes made to the active form?");
+
+									switch (MsgResult)
+									{
+									case IDYES:
+										SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+
+										break;
+									}
+
+									Return = true;
+									SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+								}
+							}
 						}
 
 						break;
@@ -3685,11 +3986,29 @@ namespace ConstructionSetExtender
 
 		void Initialize( void )
 		{
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Faction, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Class, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Skill, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectSetting, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_GameSetting, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Globals, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Birthsign, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Climate, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Worldspace, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, TESFormIDListViewDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
+
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_TextureUse, LandscapeTextureUseDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, QuestDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, FilteredDialogQuestDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FilteredDialog, FilteredDialogQuestDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_About, AboutDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, RaceDlgSubClassProc);
 
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
@@ -3750,7 +4069,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, CommonDialogExtraFittingsSubClassProc);
-				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Dialog, CommonDialogExtraFittingsSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
 			}
@@ -3822,7 +4141,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Hair, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Quest, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Eyes, RegularAppWindow);
-				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Dialog, RegularAppWindow);
+				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Weather, RegularAppWindow);
 			}
 
 			SendMessage(BGSEEUI->GetMainWindow(), WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);

@@ -199,6 +199,7 @@ public:
 	void							Link();
 	bool							SaveForm(TESFile* File);
 	const char*						GetTypeIDString(void);
+	void							GetDataFromDialog(HWND Dialog);
 
 	static TESForm*					CreateInstance(UInt8 TypeID);
 	void							DeleteInstance(bool ReleaseMemory = true);
