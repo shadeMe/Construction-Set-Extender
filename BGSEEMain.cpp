@@ -23,7 +23,7 @@ namespace BGSEditorExtender
 		BGSEECONSOLE->Indent();
 		BGSEECONSOLE_MESSAGE("Waiting For Debugger...");
 
-		while (!IsDebuggerPresent())
+		while (IsDebuggerPresent() == FALSE)
 			Sleep(100);
 
 		BGSEECONSOLE_MESSAGE("Debugger Attached!");
@@ -300,10 +300,43 @@ namespace BGSEditorExtender
 		return SME::INI::INIManager::DirectWrite(Buffer, Value);
 	}
 
+	void BGSEEReleaseNameTable::RegisterRelease( UInt8 Major, UInt8 Minor, UInt8 Revision, const char* Name )
+	{
+		SME_ASSERT(Name);
+
+		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | (Revision & 0xFFFF));
+		if (Table.count(Version) == 0)
+		{
+			Table.insert(std::make_pair<UInt32, std::string>(Version, Name));
+		}
+	}
+
+	BGSEEReleaseNameTable::BGSEEReleaseNameTable() :
+		Table()
+	{
+		;//
+	}
+
+	BGSEEReleaseNameTable::~BGSEEReleaseNameTable()
+	{
+		;//
+	}
+
+	const char* BGSEEReleaseNameTable::LookupRelease( UInt8 Major, UInt8 Minor, UInt8 Revision )
+	{
+		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | (Revision & 0xFFFF));
+
+		if (Table.count(Version))
+			return Table[Version].c_str();
+		else
+			return NULL;
+	}
+
 	BGSEEMain::DefaultInitCallback::DefaultInitCallback() :
 		BoolRFunctorBase()
 	{
 		LongName = NULL;
+		ReleaseName = NULL;
 		APPPath = NULL;
 		ExtenderVersion = 0x0;
 		ModuleHandle = 0x0;
@@ -321,13 +354,13 @@ namespace BGSEditorExtender
 #else
 		const char* ReleaseMode = " DEBUG";
 #endif
-		BGSEECONSOLE_MESSAGE("%s v%d.%d.%d%s {%08X} Initializing ...",
+		BGSEECONSOLE_MESSAGE("%s \"%s\" v%d.%d.%d%s Initializing ...",
 			LongName,
+			ReleaseName,
 			(ExtenderVersion >> 24) & 0xFF,
 			(ExtenderVersion >> 16) & 0xFF,
 			ExtenderVersion & 0xFFFF,
-			ReleaseMode,
-			ExtenderVersion);
+			ReleaseMode);
 
 		BGSEECONSOLE->Indent();
 
@@ -545,6 +578,7 @@ namespace BGSEditorExtender
 	{
 		ExtenderLongName = "<shadeMe's Awesome Extender #26942385.98979>";
 		FORMAT_STR(ExtenderShortName, "SMAE");
+		ExtenderReleaseName = "Lemon Tea";
 		ExtenderVersion = 0x57ADE00E;
 		ExtenderModuleHandle = NULL;
 
@@ -575,7 +609,7 @@ namespace BGSEditorExtender
 		return Singleton;
 	}
 
-	bool BGSEEMain::Initialize( const char* LongName, const char* ShortName, UInt32 Version,
+	bool BGSEEMain::Initialize( const char* LongName, const char* ShortName, const char* ReleaseName, UInt32 Version,
 								UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion, const char* APPPath,
 								UInt32 SEPluginHandle, UInt32 SEMinimumVersion,
 								UInt32 SECurrentVersion, SettingFactoryListT& INISettingFactoryList,
@@ -585,7 +619,7 @@ namespace BGSEditorExtender
 		if (Initialized)
 			return false;
 
-		SME_ASSERT(LongName && ShortName &&	APPPath);
+		SME_ASSERT(LongName && ShortName &&	ReleaseName && APPPath);
 		SME_ASSERT(EditorID != kExtenderParentEditor_Unknown && EditorID < kExtenderParentEditor__MAX);
 		SME_ASSERT(SEPluginHandle != 0xFFFFFFFF && DotNETFrameworkVersion);
 
@@ -593,6 +627,7 @@ namespace BGSEditorExtender
 
 		ExtenderLongName = LongName;
 		FORMAT_STR(ExtenderShortName, "%s", ShortName);
+		ExtenderReleaseName = ReleaseName;
 		ExtenderVersion = Version;
 
 		ParentEditorID = EditorID;
@@ -621,6 +656,7 @@ namespace BGSEditorExtender
 
 		DefaultInitCallback* InitCallback = new DefaultInitCallback();
 		InitCallback->LongName = ExtenderLongName.c_str();
+		InitCallback->ReleaseName = ExtenderReleaseName.c_str();
 		InitCallback->APPPath = GameDirectoryPath.c_str();
 		InitCallback->ExtenderVersion = ExtenderVersion;
 		InitCallback->ModuleHandle = ExtenderModuleHandle;
@@ -718,6 +754,12 @@ namespace BGSEditorExtender
 	{
 		SME_ASSERT(Initialized);
 		return ExtenderShortName;
+	}
+
+	const char* BGSEEMain::ExtenderGetReleaseName( void ) const
+	{
+		SME_ASSERT(Initialized);
+		return ExtenderReleaseName.c_str();
 	}
 
 	UInt32 BGSEEMain::ExtenderGetVersion( void ) const

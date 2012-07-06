@@ -88,6 +88,21 @@ namespace BGSEditorExtender
 	};
 	typedef std::list<BGSEEINIManagerSettingFactory*>		SettingFactoryListT;
 
+	class BGSEEReleaseNameTable
+	{
+	protected:
+		typedef std::map<UInt32, std::string>			VersionNameMap;
+
+		VersionNameMap				Table;
+
+		void						RegisterRelease(UInt8 Major, UInt8 Minor, UInt8 Revision, const char* Name);
+	public:
+		BGSEEReleaseNameTable();
+		virtual ~BGSEEReleaseNameTable() = 0;
+
+		const char*					LookupRelease(UInt8 Major, UInt8 Minor, UInt8 Revision);
+	};
+
 	class BGSEEMain
 	{
 		static BGSEEMain*			Singleton;
@@ -119,6 +134,7 @@ namespace BGSEditorExtender
 		{
 		public:
 			const char*				LongName;
+			const char*				ReleaseName;
 			const char*				APPPath;
 			HINSTANCE				ModuleHandle;
 			UInt32					ExtenderVersion;
@@ -155,6 +171,7 @@ namespace BGSEditorExtender
 
 		std::string					ExtenderLongName;
 		char						ExtenderShortName[0x50];		// needs to be static as xSE caches the c-string pointer
+		std::string					ExtenderReleaseName;
 		UInt32						ExtenderVersion;
 		HINSTANCE					ExtenderModuleHandle;
 
@@ -189,7 +206,7 @@ namespace BGSEditorExtender
 
 		static BGSEEMain*						GetSingleton();
 
-		bool									Initialize(const char* LongName, const char* ShortName,
+		bool									Initialize(const char* LongName, const char* ShortName, const char* ReleaseName,
 														UInt32 Version, UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion,
 														const char* APPPath,
 														UInt32 SEPluginHandle, UInt32 SEMinimumVersion, UInt32 SECurrentVersion,
@@ -199,6 +216,7 @@ namespace BGSEditorExtender
 
 		const char*								ExtenderGetLongName(void) const;
 		const char*								ExtenderGetShortName(void) const;
+		const char*								ExtenderGetReleaseName(void) const;
 		UInt32									ExtenderGetVersion(void) const;
 		const char*								ExtenderGetSEName(void) const;
 
