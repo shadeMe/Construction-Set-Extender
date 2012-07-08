@@ -5,18 +5,30 @@ namespace ConstructionSetExtender
 {
 	namespace TextEditors
 	{
-		ref class ScriptModifiedEventArgs : public EventArgs
+		ref class TextEditorScriptModifiedEventArgs : public EventArgs
 		{
 		public:
-			property bool								ModifiedStatus;
+			property bool							ModifiedStatus;
 
-			ScriptModifiedEventArgs(bool ModifiedStatus) : EventArgs()
+			TextEditorScriptModifiedEventArgs(bool ModifiedStatus) : EventArgs()
 			{
 				this->ModifiedStatus = ModifiedStatus;
 			}
 		};
 
-		delegate void									ScriptModifiedEventHandler(Object^ Sender, ScriptModifiedEventArgs^ E);
+		ref class TextEditorMouseClickEventArgs : public MouseEventArgs
+		{
+		public:
+			property int							ScriptTextOffset;
+
+			TextEditorMouseClickEventArgs(MouseButtons Button, int Clicks, int X, int Y, int ScriptTextOffset) : MouseEventArgs(Button, Clicks, X, Y, 0)
+			{
+				this->ScriptTextOffset = ScriptTextOffset;
+			}
+		};
+
+		delegate void									TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
+		delegate void									TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
 
 		interface class IScriptTextEditor
 		{
@@ -35,8 +47,9 @@ namespace ConstructionSetExtender
 			};
 
 			// events
-			event ScriptModifiedEventHandler^			ScriptModified;
-			event KeyEventHandler^						KeyDown;
+			event TextEditorScriptModifiedEventHandler^				ScriptModified;
+			event KeyEventHandler^									KeyDown;
+			event TextEditorMouseClickEventHandler^					MouseClick;
 
 			delegate void								FindReplaceOutput(String^ Line, String^ Text);
 
@@ -65,6 +78,7 @@ namespace ConstructionSetExtender
 			bool										GetCharIndexInsideCommentSegment(int Index);
 			int											GetCurrentLineNumber(void);
 
+			String^										GetTokenAtCharIndex(int Offset);
 			String^										GetTokenAtCaretPos();
 			void										SetTokenAtCaretPos(String^ Replacement);
 			String^										GetTokenAtMouseLocation();

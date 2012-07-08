@@ -44,6 +44,8 @@ namespace ConstructionSetExtender
 
 			bool												GetIsIdentifierUserFunction(String^% Name);
 			bool												GetIsIdentifierScriptCommand(String^% Name);
+			bool												GetIsIdentifierScriptableForm(String^% Name);
+			bool												GetIsIdentifierScriptableForm(String^% Name, ComponentDLLInterface::ScriptData** OutScriptData);
 
 			void												ForceUpdateDatabase();
 		};

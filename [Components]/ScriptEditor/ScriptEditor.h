@@ -46,6 +46,14 @@ namespace ConstructionSetExtender
 			static MouseEventHandler^							WorkspaceTearingEventDelegate = gcnew MouseEventHandler(&WorkspaceTearingEventHandler);
 			static Rectangle									LastUsedBounds = Rectangle(100, 100, 100, 100);
 		protected:
+			ref struct WorkspaceJumpData
+			{
+				UInt32											CallingWorkspaceIndex;
+				String^											JumpScriptName;
+
+				WorkspaceJumpData(UInt32 WorkspaceIndex, String^ ScriptName);
+			};
+
 			Stack<UInt32>^										BackJumpStack;
 			Stack<UInt32>^										ForwardJumpStack;
 
@@ -55,6 +63,7 @@ namespace ConstructionSetExtender
 			DotNetBar::SuperTabControl^							EditorTabStrip;
 			DotNetBar::ButtonItem^								NewTabButton;
 			DotNetBar::ButtonItem^								SortTabsButton;
+			Timer^												WorkspaceJumpTimer;			// for deferred jumping, as the calling event needs to return before the active workspace is changed
 			bool												DestructionFlag;
 			bool												InitializedFlag;
 
@@ -72,6 +81,7 @@ namespace ConstructionSetExtender
 			EventHandler^										NewTabButtonClickHandler;
 			EventHandler^										SortTabsButtonClickHandler;
 			EventHandler^										ScriptEditorPreferencesSavedHandler;
+			EventHandler^										WorkspaceJumpTimerTickHandler;
 
 			void												EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);
 			void												EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E);
@@ -87,6 +97,7 @@ namespace ConstructionSetExtender
 			void												NewTabButton_Click(Object^ Sender, EventArgs^ E);
 			void												SortTabsButton_Click(Object^ Sender, EventArgs^ E);
 
+			void												WorkspaceJumpTimer_Tick(Object^ Sender, EventArgs^ E);
 			void												ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
 			virtual void										Destroy();
@@ -97,7 +108,7 @@ namespace ConstructionSetExtender
 			void												FlagDestruction(bool Destroying);
 			virtual Workspace^									InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript);
 			void												NavigateJumpStack(UInt32 AllocatedIndex, JumpStackNavigationDirection Direction);
-			void												JumpToWorkspace(UInt32 AllocatedIndex, String^% ScriptName);
+			void												JumpToWorkspace(UInt32 AllocatedIndex, String^ ScriptName);
 			virtual void										PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation Operation, List<Object^>^ Parameters);
 			void												SaveAllOpenWorkspaces();
 			void												CloseAllOpenWorkspaces();
@@ -139,7 +150,7 @@ namespace ConstructionSetExtender
 		public:
 			static enum class									MessageListItemType
 			{
-				e_Warning	= 0,
+				e_Warning		= 0,
 				e_Error,
 				e_RegularMessage,
 				e_EditorMessage
@@ -147,14 +158,14 @@ namespace ConstructionSetExtender
 
 			static enum class									ScriptType
 			{
-				e_Object	= 0,
+				e_Object		= 0,
 				e_Quest,
-				e_MagicEffect = 0x100
+				e_MagicEffect	= 0x100
 			};
 
 			static enum class									ScriptSaveOperation
 			{
-				e_SaveAndCompile = 0,
+				e_SaveAndCompile		= 0,
 				e_SaveButDontCompile,
 				e_SaveActivePluginToo
 			};
@@ -163,7 +174,7 @@ namespace ConstructionSetExtender
 		protected:
 			static enum class									SanitizeOperation
 			{
-				e_Indent = 0,
+				e_Indent		= 0,
 				e_AnnealCasing,
 				e_EvalifyIfs,
 				e_CompilerOverrideBlocks
@@ -269,7 +280,8 @@ namespace ConstructionSetExtender
 			bool												NewScriptFlag;
 
 			KeyEventHandler^									TextEditorKeyDownHandler;
-			TextEditors::ScriptModifiedEventHandler^			TextEditorScriptModifiedHandler;
+			TextEditors::TextEditorScriptModifiedEventHandler^	TextEditorScriptModifiedHandler;
+			TextEditors::TextEditorMouseClickEventHandler^		TextEditorMouseClickHandler;
 			EventHandler^										MessageListDoubleClickHandler;
 			ColumnClickEventHandler^							MessageListColumnClickHandler;
 			EventHandler^										FindListDoubleClickHandler;
@@ -333,7 +345,8 @@ namespace ConstructionSetExtender
 			EventHandler^										AutoSaveTimerTickHandler;
 
 			virtual void										TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
-			virtual void										TextEditor_ScriptModified(Object^ Sender, TextEditors::ScriptModifiedEventArgs^ E);
+			virtual void										TextEditor_ScriptModified(Object^ Sender, TextEditors::TextEditorScriptModifiedEventArgs^ E);
+			virtual void										TextEditor_MouseClick(Object^ Sender, TextEditors::TextEditorMouseClickEventArgs^ E);
 
 			virtual void										MessageList_DoubleClick(Object^ Sender, EventArgs^ E);
 			virtual void                                        MessageList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);

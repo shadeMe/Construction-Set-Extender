@@ -88,10 +88,10 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 		thisCall<void>(0x006F25E0, Node3D, 0.0, true);	// NiNode::Update
 
 		ExtraLight::ExtraLightData* xLight = thisCall<ExtraLight::ExtraLightData*>(0x00540110, this);	// TESObjectREFR::GetExtraLight
-		if (xLight && baseForm && baseForm->formType == kFormType_Light)
+		if (xLight && xLight->light && baseForm && baseForm->formType == kFormType_Light)
 		{
 			NiNode* SceneNode = cdeclCall<NiNode*>(0x007662E0, 0);										// TESRender::GetSceneNode
-			thisCall<void>(0x007713A0, SceneNode, xLight);
+			thisCall<void>(0x007713A0, SceneNode, xLight->light);
 		}
 
 		TESDialog::RedrawRenderWindow();

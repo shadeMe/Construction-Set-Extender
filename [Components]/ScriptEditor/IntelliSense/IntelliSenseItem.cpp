@@ -1,5 +1,6 @@
 #include "IntelliSenseItem.h"
 #include "IntelliSenseDatabase.h"
+#include "[Common]\NativeWrapper.h"
 
 namespace ConstructionSetExtender
 {
@@ -332,8 +333,21 @@ namespace ConstructionSetExtender
 				((Flags & (UInt32)FormFlags::e_Disabled)?"   Initially Disabled\n":"") +
 				((Flags & (UInt32)FormFlags::e_VisibleWhenDistant)?"   Visible When Distant\n":"");
 
-			this->Description = Name + "\n\nType: " + GetFormTypeIdentifier() + "\nFormID: " + FormID.ToString("X8") +
-				(FlagDescription->Length?"\nFlags:\n" + FlagDescription:"");
+			String^ ScriptDescription = "";
+			ComponentDLLInterface::ScriptData* ScriptableData = 0;
+			if (FormType != 13 && ISDB->GetIsIdentifierScriptableForm(Name, &ScriptableData))
+			{
+				if (ScriptableData && ScriptableData->IsValid())
+					ScriptDescription += "\nScript: " + gcnew String(ScriptableData->EditorID);
+
+				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(ScriptableData, false);
+			}
+
+			this->Description = Name +
+								"\n\nType: " + GetFormTypeIdentifier() +
+								"\nFormID: " + FormID.ToString("X8") +
+								(FlagDescription->Length ? "\nFlags:\n" + FlagDescription : "") +
+								ScriptDescription;
 		}
 
 		String^ IntelliSenseItemEditorIDForm::GetIdentifier()

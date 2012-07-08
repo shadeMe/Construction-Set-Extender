@@ -102,6 +102,12 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		WorkspaceContainer::WorkspaceJumpData::WorkspaceJumpData( UInt32 WorkspaceIndex, String^ ScriptName )
+		{
+			CallingWorkspaceIndex = WorkspaceIndex;
+			JumpScriptName = ScriptName;
+		}
+
 		WorkspaceContainer::WorkspaceContainer(ComponentDLLInterface::ScriptData* InitScript, UInt32 PosX, UInt32 PosY, UInt32 Width, UInt32 Height)
 		{
 			Application::EnableVisualStyles();
@@ -121,6 +127,7 @@ namespace ConstructionSetExtender
 			NewTabButtonClickHandler = gcnew EventHandler(this, &WorkspaceContainer::NewTabButton_Click);
 			SortTabsButtonClickHandler = gcnew EventHandler(this, &WorkspaceContainer::SortTabsButton_Click);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &WorkspaceContainer::ScriptEditorPreferences_Saved);
+			WorkspaceJumpTimerTickHandler = gcnew EventHandler(this, &WorkspaceContainer::WorkspaceJumpTimer_Tick);
 
 			EditorForm = gcnew AnimatedForm(0.10);
 			EditorForm->SuspendLayout();
@@ -214,6 +221,10 @@ namespace ConstructionSetExtender
 			EditorTabStrip->ResumeLayout();
 			EditorForm->ResumeLayout();
 
+			WorkspaceJumpTimer = gcnew Timer();
+			WorkspaceJumpTimer->Interval = 100;
+			WorkspaceJumpTimer->Tag = nullptr;
+
 			EditorForm->Closing += EditorFormCancelHandler;
 			EditorForm->KeyDown += EditorFormKeyDownHandler;
 			EditorForm->Move += EditorFormPositionChangedHandler;
@@ -227,7 +238,10 @@ namespace ConstructionSetExtender
 			NewTabButton->Click += NewTabButtonClickHandler;
 			SortTabsButton->Click += SortTabsButtonClickHandler;
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+			WorkspaceJumpTimer->Tick += WorkspaceJumpTimerTickHandler;
 			InitializedFlag = true;
+
+			WorkspaceJumpTimer->Start();
 
 			InstantiateNewWorkspace(InitScript);
 		}
@@ -433,6 +447,7 @@ namespace ConstructionSetExtender
 		{
 			FlagDestruction(true);
 
+			WorkspaceJumpTimer->Stop();
 			BackJumpStack->Clear();
 			ForwardJumpStack->Clear();
 			for each (Image^ Itr in EditorTabStrip->ImageList->Images)
@@ -455,47 +470,25 @@ namespace ConstructionSetExtender
 			NewTabButton->Click -= NewTabButtonClickHandler;
 			SortTabsButton->Click -= SortTabsButtonClickHandler;
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+			WorkspaceJumpTimer->Tick -= WorkspaceJumpTimerTickHandler;
 
 			delete EditorTabStrip;
 			delete NewTabButton->Image;
 			delete NewTabButton;
 			delete SortTabsButton;
+			delete WorkspaceJumpTimer;
 
 			EditorForm->ForceClose();
 
 			PREFERENCES->SaveINI();
 		}
 
-		void WorkspaceContainer::JumpToWorkspace(UInt32 AllocatedIndex, String^% ScriptName)
+		void WorkspaceContainer::JumpToWorkspace(UInt32 AllocatedIndex, String^ ScriptName)
 		{
-			UInt32 Count = 0;
-			DotNetBar::SuperTabItem^ OpenedWorkspace = nullptr;
-
-			for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
+			if (WorkspaceJumpTimer->Tag == nullptr)
 			{
-				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
-
-				if (Editor != nullptr && !String::Compare(Editor->GetScriptID(), ScriptName, true))
-				{
-					Count++;
-					OpenedWorkspace = Itr;
-				}
+				WorkspaceJumpTimer->Tag = gcnew WorkspaceJumpData(AllocatedIndex, ScriptName);
 			}
-
-			if (Count == 1)
-				EditorTabStrip->SelectedTab = OpenedWorkspace;
-			else
-			{
-				CString CEID(ScriptName);
-				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
-				if (Data)
-					InstantiateNewWorkspace(Data);
-				else
-					InstantiateNewWorkspace(0);
-			}
-
-			BackJumpStack->Push(AllocatedIndex);
-			ForwardJumpStack->Clear();
 		}
 
 		void WorkspaceContainer::NavigateJumpStack(UInt32 AllocatedIndex, WorkspaceContainer::JumpStackNavigationDirection Direction)
@@ -785,6 +778,51 @@ namespace ConstructionSetExtender
 			EditorForm->Enabled = true;
 		}
 
+		void WorkspaceContainer::WorkspaceJumpTimer_Tick( Object^ Sender, EventArgs^ E )
+		{
+			WorkspaceJumpData^ Data = dynamic_cast<WorkspaceJumpData^>(WorkspaceJumpTimer->Tag);
+
+			if (WorkspaceJumpTimer->Tag != nullptr)
+			{
+				WorkspaceJumpData^ Data = dynamic_cast<WorkspaceJumpData^>(WorkspaceJumpTimer->Tag);
+				Trace::Assert(Data != nullptr, "WorkspaceJumpData == nullptr");
+
+				UInt32 Count = 0;
+				DotNetBar::SuperTabItem^ OpenedWorkspace = nullptr;
+
+				for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
+				{
+					Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
+
+					if (Editor != nullptr && !String::Compare(Editor->GetScriptID(), Data->JumpScriptName, true))
+					{
+						Count++;
+						OpenedWorkspace = Itr;
+					}
+				}
+
+				if (Count == 1)
+					EditorTabStrip->SelectedTab = OpenedWorkspace;
+				else
+				{
+					CString CEID(Data->JumpScriptName);
+					ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
+					if (Data)
+						InstantiateNewWorkspace(Data);
+					else
+						InstantiateNewWorkspace(0);
+				}
+
+				if (BackJumpStack->Count == 0 || BackJumpStack->Peek() != Data->CallingWorkspaceIndex)
+					BackJumpStack->Push(Data->CallingWorkspaceIndex);
+
+				ForwardJumpStack->Clear();
+
+				delete Data;
+				WorkspaceJumpTimer->Tag = nullptr;
+			}
+		}
+
 		void WorkspaceContainer::ScriptEditorPreferences_Saved( Object^ Sender, EventArgs^ E )
 		{
 			EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Top;
@@ -1022,7 +1060,9 @@ namespace ConstructionSetExtender
 			SetupControlImage(ContextMenuRefactorRenameVariables);
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &Workspace::TextEditor_KeyDown);
-			TextEditorScriptModifiedHandler = gcnew TextEditors::ScriptModifiedEventHandler(this, &Workspace::TextEditor_ScriptModified);
+			TextEditorScriptModifiedHandler = gcnew TextEditors::TextEditorScriptModifiedEventHandler(this, &Workspace::TextEditor_ScriptModified);
+			TextEditorMouseClickHandler = gcnew TextEditors::TextEditorMouseClickEventHandler(this, &Workspace::TextEditor_MouseClick);
+
 			MessageListDoubleClickHandler = gcnew EventHandler(this, &Workspace::MessageList_DoubleClick);
 			MessageListColumnClickHandler = gcnew ColumnClickEventHandler(this, &Workspace::MessageList_ColumnClick);
 			FindListDoubleClickHandler = gcnew EventHandler(this, &Workspace::FindList_DoubleClick);
@@ -1473,6 +1513,7 @@ namespace ConstructionSetExtender
 
 			TextEditor->KeyDown += TextEditorKeyDownHandler;
 			TextEditor->ScriptModified += TextEditorScriptModifiedHandler;
+			TextEditor->MouseClick += TextEditorMouseClickHandler;
 			ToolBarEditMenuContentsFind->Click += ToolBarEditMenuContentsFindReplaceClickHandler;
 			ToolBarEditMenuContentsReplace->Click += ToolBarEditMenuContentsFindReplaceClickHandler;
 			ToolBarEditMenuContentsGotoLine->Click += ToolBarEditMenuContentsGotoLineClickHandler;
@@ -2384,6 +2425,7 @@ namespace ConstructionSetExtender
 
 			TextEditor->KeyDown -= TextEditorKeyDownHandler;
 			TextEditor->ScriptModified -= TextEditorScriptModifiedHandler;
+			TextEditor->MouseClick -= TextEditorMouseClickHandler;
 			ToolBarEditMenuContentsFind->Click -= ToolBarEditMenuContentsFindReplaceClickHandler;
 			ToolBarEditMenuContentsReplace->Click -= ToolBarEditMenuContentsFindReplaceClickHandler;
 			ToolBarEditMenuContentsGotoLine->Click -= ToolBarEditMenuContentsGotoLineClickHandler;
@@ -2987,9 +3029,26 @@ namespace ConstructionSetExtender
 
 			HandlingKeyDownEvent = false;
 		}
-		void Workspace::TextEditor_ScriptModified(Object^ Sender, TextEditors::ScriptModifiedEventArgs^ E)
+		void Workspace::TextEditor_ScriptModified(Object^ Sender, TextEditors::TextEditorScriptModifiedEventArgs^ E)
 		{
 			WorkspaceTabItem->ImageIndex = (int)E->ModifiedStatus;
+		}
+		void Workspace::TextEditor_MouseClick(Object^ Sender, TextEditors::TextEditorMouseClickEventArgs^ E)
+		{
+			if (Control::ModifierKeys == Keys::Control && E->Button == MouseButtons::Left)
+			{
+				String^ Token = TextEditor->GetTokenAtCharIndex(E->ScriptTextOffset);
+
+				CString EID(Token);
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+
+				if (Data && Data->IsValid())
+				{
+					ParentContainer->JumpToWorkspace(WorkspaceHandleIndex, gcnew String(Data->EditorID));
+				}
+
+				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+			}
 		}
 
 		void Workspace::MessageList_DoubleClick(Object^ Sender, EventArgs^ E)

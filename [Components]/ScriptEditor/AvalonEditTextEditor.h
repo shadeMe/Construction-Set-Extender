@@ -82,6 +82,7 @@ namespace ConstructionSetExtender
 				System::Windows::Input::KeyEventHandler^			TextFieldKeyUpHandler;
 				System::Windows::Input::KeyEventHandler^			TextFieldKeyDownHandler;
 				System::Windows::Input::MouseButtonEventHandler^	TextFieldMouseDownHandler;
+				System::Windows::Input::MouseButtonEventHandler^	TextFieldMouseUpHandler;
 				System::Windows::Input::MouseWheelEventHandler^		TextFieldMouseWheelHandler;
 				System::Windows::Input::MouseEventHandler^			TextFieldMouseHoverHandler;
 				System::Windows::Input::MouseEventHandler^			TextFieldMouseHoverStoppedHandler;
@@ -99,8 +100,9 @@ namespace ConstructionSetExtender
 				System::EventHandler<AvalonEdit::Editing::TextEventArgs^>^
 																	TextFieldTextCopiedHandler;
 
-				virtual void								OnScriptModified(ScriptModifiedEventArgs^ E);
-				virtual void								OnKeyDown(KeyEventArgs^ E);
+				virtual void								OnScriptModified(bool ModificationState);
+				virtual void								OnKeyDown(System::Windows::Input::KeyEventArgs^ E);
+				virtual void								OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
 
 				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
@@ -110,6 +112,7 @@ namespace ConstructionSetExtender
 				void										TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
 				void										TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
 				void										TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
+				void										TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 				void										TextField_MouseWheel(Object^ Sender, System::Windows::Input::MouseWheelEventArgs^ E);
 
 				void										TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
@@ -163,8 +166,9 @@ namespace ConstructionSetExtender
 				virtual ~AvalonEditTextEditor();
 
 				// interface events
-				virtual event ScriptModifiedEventHandler^	ScriptModified;
-				virtual event KeyEventHandler^				KeyDown;
+				virtual event TextEditorScriptModifiedEventHandler^		ScriptModified;
+				virtual event KeyEventHandler^							KeyDown;
+				virtual event TextEditorMouseClickEventHandler^			MouseClick;
 
 				// interface methods
 				virtual void								SetFont(Font^ FontObject);
@@ -191,6 +195,7 @@ namespace ConstructionSetExtender
 				virtual bool								GetCharIndexInsideCommentSegment(int Index);
 				virtual int									GetCurrentLineNumber(void);
 
+				virtual String^								GetTokenAtCharIndex(int Offset);
 				virtual String^								GetTokenAtCaretPos();
 				virtual void								SetTokenAtCaretPos(String^ Replacement);
 				virtual String^								GetTokenAtMouseLocation();

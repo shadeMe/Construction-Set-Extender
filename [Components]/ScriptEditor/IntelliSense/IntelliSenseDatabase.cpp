@@ -495,5 +495,31 @@ namespace ConstructionSetExtender
 
 			return nullptr;
 		}
+
+		bool IntelliSenseDatabase::GetIsIdentifierScriptableForm( String^% Name )
+		{
+			return GetIsIdentifierScriptableForm(Name, 0);
+		}
+
+		bool IntelliSenseDatabase::GetIsIdentifierScriptableForm( String^% Name, ComponentDLLInterface::ScriptData** OutScriptData )
+		{
+			bool Result = false;
+
+			CString EID(Name);
+			ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+
+			if (Data && Data->IsValid())
+			{
+				Result = true;
+
+				if (OutScriptData)
+					*OutScriptData = Data;
+			}
+
+			if (OutScriptData == 0)
+				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+
+			return Result;
+		}
 	}
 }

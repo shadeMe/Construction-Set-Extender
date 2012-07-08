@@ -1194,7 +1194,7 @@ namespace ConstructionSetExtender
 						IUD->ToolbarExtras->hInstance = BGSEEMAIN->GetExtenderHandle();
 						IUD->ToolbarExtras->hDialog = *g_HWND_MainToolbar;
 						IUD->ToolbarExtras->hContainer = *g_HWND_MainToolbar;
-						IUD->ToolbarExtras->position.x = 515;
+						IUD->ToolbarExtras->position.x = 485;
 						IUD->ToolbarExtras->position.y = 0;
 
 						if (IUD->ToolbarExtras->Build(IDD_TOOLBAREXTRAS) == false)
@@ -1277,6 +1277,16 @@ namespace ConstructionSetExtender
 					float TOD = TESDialog::GetDlgItemFloat(hWnd, IDC_TOOLBAR_TODCURRENT);
 					SendMessage(hWnd, WM_MAINTOOLBAR_SETTOD, TOD * 4.0, NULL);
 					InstanceUserData = 0;
+				}
+
+				switch (LOWORD(wParam))
+				{
+				case IDC_MAINMENU_LAUNCHGAME:
+					{
+						SendMessage(BGSEEUI->GetMainWindow(), uMsg, wParam, lParam);
+					}
+
+					break;
 				}
 
 				break;

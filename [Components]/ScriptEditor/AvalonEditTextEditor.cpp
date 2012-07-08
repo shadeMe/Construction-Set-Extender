@@ -268,6 +268,11 @@ namespace ConstructionSetExtender
 				return TextField->TextArea->Caret->Line - 1;
 			}
 
+			String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
+			{
+				return GetTextAtLocation(Offset, false)->Replace("\n", "");
+			}
+
 			String^ AvalonEditTextEditor::GetTokenAtCaretPos()
 			{
 				return GetTextAtLocation(GetCaretPos() - 1, false)->Replace("\n", "");
@@ -369,14 +374,16 @@ namespace ConstructionSetExtender
 				{
 				case true:
 					ErrorColorizer->ClearLines();
+
 					if (TextFieldInUpdateFlag == false)
 						ClearFindResultIndicators();
+
 					break;
 				case false:
 					break;
 				}
 
-				OnScriptModified(gcnew ScriptModifiedEventArgs(Modified));
+				OnScriptModified(Modified);
 			}
 
 			bool AvalonEditTextEditor::GetInitializingStatus()
@@ -657,6 +664,7 @@ namespace ConstructionSetExtender
 
 				for each (AvalonEdit::Rendering::IBackgroundRenderer^ Itr in TextField->TextArea->TextView->BackgroundRenderers)
 					delete Itr;
+
 				TextField->TextArea->TextView->BackgroundRenderers->Clear();
 
 				TextField->TextChanged -= TextFieldTextChangedHandler;
@@ -668,6 +676,7 @@ namespace ConstructionSetExtender
 				TextField->PreviewKeyUp -= TextFieldKeyUpHandler;
 				TextField->PreviewKeyDown -= TextFieldKeyDownHandler;
 				TextField->PreviewMouseDown -= TextFieldMouseDownHandler;
+				TextField->PreviewMouseUp -= TextFieldMouseUpHandler;
 				TextField->PreviewMouseWheel -= TextFieldMouseWheelHandler;
 				TextField->PreviewMouseHover -= TextFieldMouseHoverHandler;
 				TextField->PreviewMouseHoverStopped -= TextFieldMouseHoverStoppedHandler;
@@ -1169,14 +1178,53 @@ namespace ConstructionSetExtender
 #pragma endregion
 
 #pragma region Events
-			void AvalonEditTextEditor::OnScriptModified(ScriptModifiedEventArgs^ E)
+			void AvalonEditTextEditor::OnScriptModified(bool ModificationState)
 			{
-				ScriptModified(this, E);
+				ScriptModified(this, gcnew TextEditorScriptModifiedEventArgs(ModificationState));
 			}
 
-			void AvalonEditTextEditor::OnKeyDown(KeyEventArgs^ E)
+			void AvalonEditTextEditor::OnKeyDown(System::Windows::Input::KeyEventArgs^ E)
 			{
-				KeyDown(this, E);
+				Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
+
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Control) == System::Windows::Input::ModifierKeys::Control)
+					KeyState |= (int)Keys::Control;
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Alt) == System::Windows::Input::ModifierKeys::Alt)
+					KeyState |= (int)Keys::Alt;
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Shift) == System::Windows::Input::ModifierKeys::Shift)
+					KeyState |= (int)Keys::Shift;
+
+				KeyEventArgs^ TunneledArgs = gcnew KeyEventArgs((Keys)KeyState);
+				KeyDown(this, TunneledArgs);
+			}
+
+			void AvalonEditTextEditor::OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E)
+			{
+				MouseButtons Buttons = MouseButtons::None;
+				switch (E->ChangedButton)
+				{
+				case System::Windows::Input::MouseButton::Left:
+					Buttons = MouseButtons::Left;
+					break;
+				case System::Windows::Input::MouseButton::Right:
+					Buttons = MouseButtons::Right;
+					break;
+				case System::Windows::Input::MouseButton::Middle:
+					Buttons = MouseButtons::Middle;
+					break;
+				case System::Windows::Input::MouseButton::XButton1:
+					Buttons = MouseButtons::XButton1;
+					break;
+				case System::Windows::Input::MouseButton::XButton2:
+					Buttons = MouseButtons::XButton2;
+					break;
+				}
+
+				MouseClick(this, gcnew TextEditorMouseClickEventArgs(Buttons,
+																	E->ClickCount,
+																	E->GetPosition(TextField).X,
+																	E->GetPosition(TextField).Y,
+																	LastKnownMouseClickOffset));
 			}
 #pragma endregion
 
@@ -1382,16 +1430,7 @@ namespace ConstructionSetExtender
 					break;
 				}
 
-				Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
-				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Control) == System::Windows::Input::ModifierKeys::Control)
-					KeyState |= (int)Keys::Control;
-				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Alt) == System::Windows::Input::ModifierKeys::Alt)
-					KeyState |= (int)Keys::Alt;
-				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Shift) == System::Windows::Input::ModifierKeys::Shift)
-					KeyState |= (int)Keys::Shift;
-
-				KeyEventArgs^ TunneledArgs = gcnew KeyEventArgs((Keys)KeyState);
-				OnKeyDown(TunneledArgs);
+				OnKeyDown(E);
 			}
 
 			void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
@@ -1424,6 +1463,11 @@ namespace ConstructionSetExtender
 				}
 
 				IntelliSenseBox->HideInfoToolTip();
+			}
+
+			void AvalonEditTextEditor::TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
+			{
+				OnMouseClick(E);
 			}
 
 			void AvalonEditTextEditor::TextField_MouseWheel(Object^ Sender, System::Windows::Input::MouseWheelEventArgs^ E)
@@ -1639,6 +1683,7 @@ namespace ConstructionSetExtender
 				TextFieldKeyUpHandler = gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyUp);
 				TextFieldKeyDownHandler = gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyDown);
 				TextFieldMouseDownHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MouseDown);
+				TextFieldMouseUpHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MouseUp);
 				TextFieldMouseWheelHandler = gcnew System::Windows::Input::MouseWheelEventHandler(this, &AvalonEditTextEditor::TextField_MouseWheel);
 				TextFieldMouseHoverHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseHover);
 				TextFieldMouseHoverStoppedHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MouseHoverStopped);
@@ -1750,6 +1795,7 @@ namespace ConstructionSetExtender
 				TextField->PreviewKeyUp += TextFieldKeyUpHandler;
 				TextField->PreviewKeyDown += TextFieldKeyDownHandler;
 				TextField->PreviewMouseDown += TextFieldMouseDownHandler;
+				TextField->PreviewMouseUp += TextFieldMouseUpHandler;
 				TextField->PreviewMouseWheel += TextFieldMouseWheelHandler;
 				TextField->PreviewMouseHover += TextFieldMouseHoverHandler;
 				TextField->PreviewMouseHoverStopped += TextFieldMouseHoverStoppedHandler;

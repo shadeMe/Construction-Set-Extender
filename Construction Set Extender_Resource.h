@@ -34,6 +34,7 @@
 #define IDC_CSE_OK                      1036
 #define IDC_TOOLBAR_TODSLIDER           1037
 #define IDC_TOOLBAR_TODCURRENT          1038
+#define IDC_BUTTON1                     1039
 #define IDD_TEXTEDIT                    5009
 #define IDD_TESFILESAVE                 5104
 #define IDD_IDLE                        5110
@@ -115,7 +116,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        6027
 #define _APS_NEXT_COMMAND_VALUE         50066
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
