@@ -21,6 +21,7 @@
     <ClInclude Include="..\SME Sundries\SME_Prefix.h" />
     <ClInclude Include="..\SME Sundries\StringHelpers.h" />
     <ClInclude Include="..\SME Sundries\UIHelpers.h" />
+    <ClInclude Include="..\SME Sundries\VersionInfo.h" />
     <ClInclude Include="BGSEEAchievements.h" />
     <ClInclude Include="BGSEEConsole.h" />
     <ClInclude Include="BGSEEHallOfFame.h" />

@@ -4,6 +4,7 @@
 #include "DetectSIMD.h"
 #include "BGSEEScript\CodaVM.h"
 #include "SME Sundries\INIEditGUI_Res.h"
+#include "SME Sundries\VersionInfo.h"
 
 #include <CrashRpt.h>
 
@@ -355,12 +356,12 @@ namespace BGSEditorExtender
 		const char* ReleaseMode = " DEBUG";
 #endif
 		BGSEECONSOLE_MESSAGE("%s \"%s\" v%d.%d.%d%s Initializing ...",
-			LongName,
-			ReleaseName,
-			(ExtenderVersion >> 24) & 0xFF,
-			(ExtenderVersion >> 16) & 0xFF,
-			ExtenderVersion & 0xFFFF,
-			ReleaseMode);
+							LongName,
+							ReleaseName,
+							SME_VERSION_MAJOR(ExtenderVersion),
+							SME_VERSION_MINOR(ExtenderVersion),
+							SME_VERSION_BUILD(ExtenderVersion),
+							ReleaseMode);
 
 		BGSEECONSOLE->Indent();
 
@@ -369,7 +370,7 @@ namespace BGSEditorExtender
 			BGSEEDaemon::WaitForDebugger();
 		}
 
-		if (!ModuleHandle)
+		if (ModuleHandle == NULL)
 		{
 			BGSEECONSOLE_MESSAGE("Couldn't fetch module handle");
 			return false;
@@ -384,13 +385,21 @@ namespace BGSEditorExtender
 			return false;
 		}
 
-		OSVERSIONINFO OSInfo = {0};
-		OSInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		GetVersionEx(&OSInfo);
-		if (OSInfo.dwMajorVersion < 5)
+		OSVERSIONINFOEX OSInfo = {0};
+		SYSTEM_INFO SysInfo = {0};
+
+		OSInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+		GetVersionEx((LPOSVERSIONINFO)&OSInfo);
+		GetSystemInfo(&SysInfo);
+
+		if (OSInfo.dwMajorVersion < 5 || (OSInfo.dwMajorVersion == 5 && OSInfo.dwMinorVersion == 1 && OSInfo.wServicePackMajor < 3))
 		{
-			BGSEECONSOLE_MESSAGE("OS version too old - Windows XP or greater required");
+			BGSEECONSOLE_MESSAGE("OS version too old - Windows XP SP3 or greater required");
 			return false;
+		}
+		else if (OSInfo.dwMajorVersion == 5 && OSInfo.dwMinorVersion == 2 && SysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+		{
+			BGSEECONSOLE_MESSAGE("Windows XP 64-bit is not officially supported - Expect general weirdness such as collapsing time vortexes and code cannibalism");
 		}
 
 		char NativeProgramFilesFolder[MAX_PATH] = {0};
@@ -475,7 +484,8 @@ namespace BGSEditorExtender
 
 		if (HasDotNet == false)
 		{
-			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed/had trouble initializing - %s (Full/Client Profile) or greater required", DotNETFrameworkVersionString);
+			BGSEECONSOLE_MESSAGE(".NET Framework too old/not installed/had trouble initializing - %s (Full & Client Profile) or greater required",
+								DotNETFrameworkVersionString);
 			return false;
 		}
 
@@ -682,13 +692,13 @@ namespace BGSEditorExtender
 			CrashRptData.pszUrl = NULL;
 			CrashRptData.pfnCrashCallback = BGSEEMain::CrashCallback;
 			CrashRptData.dwFlags |= CR_INST_SEH_EXCEPTION_HANDLER|
-				CR_INST_PURE_CALL_HANDLER|
-				CR_INST_NEW_OPERATOR_ERROR_HANDLER|
-				CR_INST_SECURITY_ERROR_HANDLER|
-				CR_INST_INVALID_PARAMETER_HANDLER|
-				CR_INST_SIGINT_HANDLER|
-				CR_INST_SIGTERM_HANDLER|
-				CR_INST_SIGABRT_HANDLER;
+									CR_INST_PURE_CALL_HANDLER|
+									CR_INST_NEW_OPERATOR_ERROR_HANDLER|
+									CR_INST_SECURITY_ERROR_HANDLER|
+									CR_INST_INVALID_PARAMETER_HANDLER|
+									CR_INST_SIGINT_HANDLER|
+									CR_INST_SIGTERM_HANDLER|
+									CR_INST_SIGABRT_HANDLER;
 
 			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING;
 //			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT;

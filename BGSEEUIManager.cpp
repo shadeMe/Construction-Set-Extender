@@ -581,8 +581,8 @@ namespace BGSEditorExtender
 
 		if (Match != StyleListings.end())
 		{
-			LONG WindowRegular = GetWindowLongPtr(Window, GWL_STYLE);
-			LONG WindowExtended = GetWindowLongPtr(Window, GWL_EXSTYLE);
+			LONG_PTR WindowRegular = GetWindowLongPtr(Window, GWL_STYLE);
+			LONG_PTR WindowExtended = GetWindowLongPtr(Window, GWL_EXSTYLE);
 
 			switch (Match->second.RegularOp)
 			{
@@ -625,8 +625,6 @@ namespace BGSEditorExtender
 
 			if (PerformOperation)
 			{
-				SetWindowTheme(Window, L"Explorer", NULL);
-
 				SetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_DRAWFRAME|SWP_SHOWWINDOW);
 				InvalidateRect(Window, NULL, TRUE);
 			}
@@ -1161,10 +1159,12 @@ namespace BGSEditorExtender
 			case IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_HIDE:
 				Instance->ToggleVisibility();
 				SkipCallback = true;
+
 				break;
 			case IDC_BGSEE_GENERICMODELESSDLG_CONTEXTMENU_ALWAYSONTOP:
 				Instance->ToggleTopmost();
 				SkipCallback = true;
+
 				break;
 			}
 
@@ -1207,6 +1207,7 @@ namespace BGSEditorExtender
 
 							NewBounds->top += (DiffHeight / 2);
 							NewBounds->bottom = NewBounds->top + TargetHeight;
+
 							break;
 						}
 					case WMSZ_TOP:
@@ -1219,23 +1220,28 @@ namespace BGSEditorExtender
 
 							NewBounds->left += (DiffWidth / 2);
 							NewBounds->right = NewBounds->left + TargetWidth;
+
 							break;
 						}
 					case WMSZ_RIGHT + WMSZ_BOTTOM:
 						//Lower-right corner
 						NewBounds->bottom = NewBounds->top + (int)((CurrentBounds.right - CurrentBounds.left) / Instance->AspectRatio);
+
 						break;
 					case WMSZ_LEFT + WMSZ_BOTTOM:
 						//Lower-left corner
 						NewBounds->bottom = NewBounds->top + (int)((CurrentBounds.right - CurrentBounds.left)  / Instance->AspectRatio);
+
 						break;
 					case WMSZ_LEFT + WMSZ_TOP:
 						//Upper-left corner
 						NewBounds->left = NewBounds->right - (int)((CurrentBounds.bottom - CurrentBounds.top) * Instance->AspectRatio);
+
 						break;
 					case WMSZ_RIGHT + WMSZ_TOP:
 						//Upper-right corner
 						NewBounds->right = NewBounds->left + (int)((CurrentBounds.bottom - CurrentBounds.top) * Instance->AspectRatio);
+
 						break;
 					}
 				}
@@ -1245,24 +1251,28 @@ namespace BGSEditorExtender
 		case WM_MOVING:
 			DlgProcResult = BGSEEUIManager::WindowEdgeSnapper.OnSnapMoving(hWnd, uMsg, wParam, lParam);
 			SkipDefaultProc = true;
+
 			break;
 		case WM_ENTERSIZEMOVE:
 			DlgProcResult = BGSEEUIManager::WindowEdgeSnapper.OnSnapEnterSizeMove(hWnd, uMsg, wParam, lParam);
 			SkipDefaultProc = true;
+
 			break;
 		case WM_INITDIALOG:
 			SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 			UserData = (DlgUserData*)lParam;
 			Instance = UserData->Instance;
 			UserData->Initialized = true;
+
 			break;
 		case WM_DESTROY:
 			Instance->CallbackDlgProc(hWnd, uMsg, wParam, lParam, SkipCallback);
 			SkipCallback = true;
 			delete UserData;
-			UserData = NULL;
 
+			UserData = NULL;
 			SetWindowLongPtr(hWnd, GWL_USERDATA, NULL);
+
 			break;
 		}
 
@@ -1390,7 +1400,7 @@ namespace BGSEditorExtender
 			return;
 
 		DlgUserData* UserData = new DlgUserData();
-		UserData->Instance = const_cast<BGSEEGenericModelessDialog*>(this);
+		UserData->Instance = this;
 		UserData->UserData = InitParam;
 		DialogHandle = BGSEEUI->ModelessDialog(ResourceInstance,
 											MAKEINTRESOURCE(DialogTemplateID),
@@ -1404,7 +1414,7 @@ namespace BGSEditorExtender
 		SME_ASSERT(DialogHandle && ContextMenuParentHandle && ContextMenuHandle);
 
 		BGSEEUI->GetWindowHandleCollection(BGSEEUIManager::kHandleCollection_MainWindowChildren)->Add(DialogHandle);
-		SetVisibility((!Hide));
+		SetVisibility(Hide == false);
 	}
 
 	bool BGSEEGenericModelessDialog::ToggleVisibility( void )

@@ -250,6 +250,9 @@
     <ClInclude Include="BGSEEHallOfFame.h">
       <Filter>Modules\BGSEEExtras</Filter>
     </ClInclude>
+    <ClInclude Include="..\SME Sundries\VersionInfo.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
