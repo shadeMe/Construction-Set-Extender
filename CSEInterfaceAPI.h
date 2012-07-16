@@ -1,14 +1,15 @@
 #pragma once
+
 #include <CodaIntrinsics.inl>
 
-/********** CSE Interface API ****************************************************
+/********** CSE Interface API ******************************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the
 *	object will be dispatched to plugins that pass an arbitrary message of type
-*	'CSEI' post post-plugin load (reply will be of the same type).
+*	'CSEI' inside the OBSE Post-Post-Load message handler. The reply will be of the same type.
 *
-*	All other interfaces need to be initialized by calling InitializeInterface().
-*	All RegisterXXX type calls must be made inside the OBSE Post-Post-Load message handler
-*********************************************************************************/
+*	All sub-interfaces need to be initialized with InitializeInterface().
+*	All RegisterXXX type calls must be made inside the OBSE Post-Post-Load message handler.
+***********************************************************************************************/
 
 struct CSEInterface
 {
@@ -59,3 +60,70 @@ struct CSEScriptInterface
 	void			(* RegisterCommand)(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command);
 };
 
+/********** Example ****************************************************************************
+
+OBSEMessagingInterface*					g_msgIntfc		= NULL;
+PluginHandle							g_pluginHandle	= kPluginHandle_Invalid;
+
+CSEIntelliSenseInterface*				g_CSEISIntfc	= NULL;
+CSEConsoleInterface*					g_CSEConsoleIntfc	= NULL;
+
+void CSEMessageHandler(OBSEMessagingInterface::Message* Msg)
+{
+	if (Msg->type == 'CSEI')
+	{
+		CSEInterface* Interface = (CSEInterface*)Msg->data;
+
+		g_CSEConsoleIntfc = (CSEConsoleInterface*)Interface->InitializeInterface(CSEInterface::kCSEInterface_Console);
+		g_CSEISIntfc = (CSEIntelliSenseInterface*)Interface->InitializeInterface(CSEInterface::kCSEInterface_IntelliSense);
+
+		_MESSAGE("Received interface from CSE");
+
+		g_CSEConsoleIntfc->PrintToConsole("Sample", "Registering command URLs ...");
+		g_CSEISIntfc->RegisterCommandURL("ScriptCommand1", "http://cs.elderscrolls.com/constwiki/index.php/ScriptCommand1");
+		g_CSEISIntfc->RegisterCommandURL("ScriptCommand2", "http://cs.elderscrolls.com/constwiki/index.php/ScriptCommand2");
+	}
+}
+
+void OBSEMessageHandler(OBSEMessagingInterface::Message* Msg)
+{
+	switch (Msg->type)
+	{
+	case OBSEMessagingInterface::kMessage_PostLoad:
+		g_msgIntfc->RegisterListener(g_pluginHandle, "CSE", CSEMessageHandler);
+		_MESSAGE("Registered to receive messages from CSE");
+
+		break;
+	case OBSEMessagingInterface::kMessage_PostPostLoad:
+		_MESSAGE("Requesting an interface from CSE");
+		g_msgIntfc->Dispatch(g_pluginHandle, 'CSEI', NULL, 0, "CSE");
+
+		break;
+	}
+}
+
+extern "C"
+{
+	bool OBSEPlugin_Query(const OBSEInterface * obse, PluginInfo * info)
+	{
+		info->infoVersion = PluginInfo::kInfoVersion;
+		info->name = "SamplePlugin";
+		info->version = 1;
+
+		return true;
+	}
+
+	bool OBSEPlugin_Load(const OBSEInterface * obse)
+	{
+		g_pluginHandle = obse->GetPluginHandle();
+
+		if(obse->isEditor)
+		{
+			g_msgIntfc = (OBSEMessagingInterface*)obse->QueryInterface(kInterface_Messaging);
+			g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
+		}
+		}
+		return true;
+	}
+};
+***********************************************************************************************/

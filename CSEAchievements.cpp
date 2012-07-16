@@ -54,7 +54,7 @@ namespace ConstructionSetExtender
 			ResetTimer();
 		}
 
-		bool CSEAchievementTimeLapsed::GetIdleState( void )
+		bool CSEAchievementTimeLapsed::GetIsIdling( void )
 		{
 			LASTINPUTINFO InputInfo = {0};
 			InputInfo.cbSize = sizeof(LASTINPUTINFO);
@@ -76,7 +76,7 @@ namespace ConstructionSetExtender
 
 		VOID CALLBACK CSEAchievementCheat::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
-			if (CSEAchievementCheat::GetSingleton()->GetIdleState())
+			if (CSEAchievementCheat::GetSingleton()->GetIsIdling())
 				return;
 
 			CSEAchievementCheat::GetSingleton()->ElapsedTicks = dwTime - CSEAchievementCheat::GetSingleton()->InitTickCount;
@@ -115,7 +115,7 @@ namespace ConstructionSetExtender
 
 		VOID CALLBACK CSEAchievementLost::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
-			if (CSEAchievementLost::GetSingleton()->GetIdleState())
+			if (CSEAchievementLost::GetSingleton()->GetIsIdling())
 				return;
 
 			CSEAchievementLost::GetSingleton()->ElapsedTicks = dwTime - CSEAchievementLost::GetSingleton()->InitTickCount;

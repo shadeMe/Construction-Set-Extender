@@ -39,6 +39,7 @@ namespace ConstructionSetExtender
 		BGSEditorExtender::BGSEEReleaseNameTable()
 	{
 		RegisterRelease(6, 0, 0, "Konniving Kelpie");
+		RegisterRelease(6, 1, 0, "Cretinous Codpiece");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
@@ -325,15 +326,15 @@ namespace ConstructionSetExtender
 
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_RenderWindowState,
 									BGSEEMAIN->INISetter(),
-									(GetMenuState(*g_HMENU_MainMenu, 40423, MF_BYCOMMAND) & MF_CHECKED)?"1":"0");
+									(GetMenuState(*g_HMENU_MainMenu, 40423, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
 
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_ObjectWindowState,
 									BGSEEMAIN->INISetter(),
-									(GetMenuState(*g_HMENU_MainMenu, 40199, MF_BYCOMMAND) & MF_CHECKED)?"1":"0");
+									(GetMenuState(*g_HMENU_MainMenu, 40199, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
 
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_CellViewWindowState,
 									BGSEEMAIN->INISetter(),
-									(GetMenuState(*g_HMENU_MainMenu, 40200, MF_BYCOMMAND) & MF_CHECKED)?"1":"0");
+									(GetMenuState(*g_HMENU_MainMenu, 40200, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Render Window Painter");
 		BGSEECONSOLE->Indent();

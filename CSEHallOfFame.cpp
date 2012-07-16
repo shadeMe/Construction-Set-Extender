@@ -181,11 +181,11 @@ namespace ConstructionSetExtender
 			Inductees.push_back(new CSEHallOfFameEntry("ScruggsywuggsyTheFerret",		"Cthulu-like Being",			TESForm::kFormType_SigilStone));
 			Inductees.push_back(new CSEHallOfFameEntry("behippo",						"Despises Peppermint",			TESForm::kFormType_Apparatus));
 			Inductees.push_back(new CSEHallOfFameEntry("Cipscis",						"ACRONYM",						TESForm::kFormType_AlchemyItem));
-			Inductees.push_back(new CSEHallOfFameEntry("haama",							"Think Tank. Not Literally",	TESForm::kFormType_Furniture));
+			Inductees.push_back(new CSEHallOfFameEntry("haama",							"Think Tank. Not Literally.",	TESForm::kFormType_Furniture));
 			Inductees.push_back(new CSEHallOfFameEntry("PacificMorrowind",				"The Jack",						TESForm::kFormType_Book));
 			Inductees.push_back(new CSEHallOfFameEntry("tejon",							"Goblin Tinkerer",				TESForm::kFormType_Creature));
 			Inductees.push_back(new CSEHallOfFameEntry("Vacuity",						"                ",				TESForm::kFormType_Container));
-			Inductees.push_back(new CSEHallOfFameEntry("daemondarque",					"His Majestry The CTD",			TESForm::kFormType_Ingredient));
+			Inductees.push_back(new CSEHallOfFameEntry("daemondarque",					"His Majestry, The CTD",		TESForm::kFormType_Ingredient));
 			Inductees.push_back(new CSEHallOfFameEntry("Shikishima",					"Slash-And-Burn",				TESForm::kFormType_Clothing));
 			Inductees.push_back(new CSEHallOfFameEntry("Waruddar",						"He-Whose-Name-I-Could-Never-Spell-Right",
 																														TESForm::kFormType_Key));
@@ -194,13 +194,13 @@ namespace ConstructionSetExtender
 			Inductees.push_back(new CSEHallOfFameEntry("AndalayBay",					"Utters The Name Of The Scottish Play Without Flinching",
 																														TESForm::kFormType_Door));
 			Inductees.push_back(new CSEHallOfFameEntry("SenChan",						"Is A Year Older Now",			TESForm::kFormType_Ammo));
-			Inductees.push_back(new CSEHallOfFameFemaleNPC("lilith",					"Likes Tea. Black. Like Me"));
+			Inductees.push_back(new CSEHallOfFameFemaleNPC("lilith",					"Likes Tea. Black. Like Me."));
 			Inductees.push_back(new CSEHallOfFameFemaleNPC("greenwarden",				"The Wise Old Woman of Putney"));
 			Inductees.push_back(new CSEHallOfFameSpellItem("kyoma",						"Deadliest Smiley Alive"));
 			Inductees.push_back(new CSEHallOfFameStaff("DragoonWraith",					"The Mighty ARSE"));
 			Inductees.push_back(new CSEHallOfFameMGEF('HSRJ',							"The Constant Physicist"));
-			Inductees.push_back(new CSEHallOfFameEntry("Arthmoor",						"Bollocks-Breaker",			TESForm::kFormType_SoulGem));
-			Inductees.push_back(new CSEHallOfFameEntry("Vorians",						"Mr. Aux Viewport",			TESForm::kFormType_Activator));
+			Inductees.push_back(new CSEHallOfFameEntry("Arthmoor",						"Bollocks-Breaker",				TESForm::kFormType_SoulGem));
+			Inductees.push_back(new CSEHallOfFameEntry("Vorians",						"Mr. Aux Viewport",				TESForm::kFormType_Activator));
 
 			Inductees.push_back(new CSEHallOfFameShadeMe());		// oh yeah!
 

@@ -20,7 +20,7 @@ namespace ConstructionSetExtender
 			{ "ActiveFormForeColor",		"255,255,255",		"Foreground color of active form items" },
 			{ "ActiveFormBackColor",		"45,121,79",		"Background color of active form items" },
 			{ "ShowMainWindowsInTaskbar",	"0",				"Show the primary CS windows in the taskbar" },
-			{ "ShowEditDialogsInTaskbar",	"1",				"Show form edit dialogs in the taskbar" }
+			{ "ShowEditDialogsInTaskbar",	"0",				"Show form edit dialogs in the taskbar" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetDialogs( void )
@@ -38,8 +38,6 @@ namespace ConstructionSetExtender
 
 	namespace Hooks
 	{
-		HANDLE		g_CSESplashImage = NULL;
-
 		_DefineNopHdlr(ResponseEditorMic, 0x00407F3D, 5);
 		_DefineJumpHdlr(TopicResultScriptReset, 0x004F49A0, 0x004F49FA);
 		_DefineHookHdlr(NPCFaceGen, 0x004D76AC);
@@ -661,17 +659,13 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_TOGGLEVISIBILITY:
 				{
-					TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-					Ref->ToggleInvisiblity();
-					Ref->UpdateNiNode();
+					SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
 
 					break;
 				}
 			case IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY:
 				{
-					TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-					Ref->ToggleChildrenInvisibility();
-					Ref->UpdateNiNode();
+					SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY, NULL);
 
 					break;
 				}
@@ -713,8 +707,8 @@ namespace ConstructionSetExtender
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SETFORMID, "Set FormID");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_UNDELETE, "Undelete");
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SHOWOVERRIDES, "Show Override List");
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_ADDTOTAG, "Add to Active Tag");
 
 			if (SelectedForm->IsReference())
@@ -1445,7 +1439,7 @@ namespace ConstructionSetExtender
 
 			switch (ListViewID)
 			{
-			case 1454:		// response list
+			case 1454:		// dialog response list
 				Data = NULL;
 				break;
 			}

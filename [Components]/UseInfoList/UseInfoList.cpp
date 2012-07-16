@@ -135,13 +135,13 @@ namespace ConstructionSetExtender
 		SearchBox->MaxLength = 100;
 		SearchBox->Multiline = true;
 		SearchBox->Name = L"SearchBox";
-		SearchBox->Size = System::Drawing::Size(235, 29);
+		SearchBox->Size = System::Drawing::Size(340, 29);
 		SearchBox->TabIndex = 4;
 		SearchBox->TextChanged += gcnew EventHandler(this, &UseInfoList::SearchBox_TextChanged);
 		SearchBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::SearchBox_KeyDown);
 		SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
 
-		ExportDataButton->Enabled = false;
+		ExportDataButton->Visible = false;
 		ExportDataButton->Location = System::Drawing::Point(253, 419);
 		ExportDataButton->Size = System::Drawing::Size(98, 29);
 		ExportDataButton->TabIndex = 5;
@@ -161,7 +161,7 @@ namespace ConstructionSetExtender
 		UseInfoListBox->FormBorderStyle = FormBorderStyle::FixedSingle;
 		UseInfoListBox->MaximizeBox = false;
 		UseInfoListBox->StartPosition = FormStartPosition::CenterScreen;
-		UseInfoListBox->Text = L"Use Info List";
+		UseInfoListBox->Text = L"Centralized Use Info Listing";
 		UseInfoListBox->Closing += gcnew CancelEventHandler(this, &UseInfoList::UseInfoListBox_Cancel);
 		UseInfoListBox->KeyPress += gcnew KeyPressEventHandler(this, &UseInfoList::UseInfoListBox_KeyPress);
 		UseInfoListBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::UseInfoListBox_KeyDown);

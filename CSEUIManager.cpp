@@ -9,6 +9,7 @@
 #include "Hooks\Dialog.h"
 #include "Hooks\Renderer.h"
 #include "Hooks\LOD.h"
+#include "ChangeLogManager.h"
 #include "RenderSelectionGroupManager.h"
 #include "PathGridUndoManager.h"
 #include "CSInterop.h"
@@ -659,6 +660,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_SAVEOPTIONS_CREATEBACKUPBEFORESAVING:
+									if (atoi(INISettings::GetVersionControl()->Get(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INIGetter())))
+										CheckItem = true;
+
+									break;
 								case IDC_MAINMENU_CONSOLE:
 									if (BGSEECONSOLE->GetVisible())
 										CheckItem = true;
@@ -676,6 +682,16 @@ namespace ConstructionSetExtender
 									break;
 								case IDC_MAINMENU_HIDEDELETEDFORMS:
 									if (CSEFormEnumerationManager::Instance.GetVisibleDeletedForms() == false)
+										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_SORTACTIVEFORMSFIRST:
+									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter())))
+										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_COLORIZEACTIVEFORMS:
+									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter())))
 										CheckItem = true;
 
 									break;
@@ -774,7 +790,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case IDC_MAINMENU_BATCHREFERENCEEDITOR:
+				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
 					{
 						TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
 						if (!ThisCell)
@@ -953,10 +969,6 @@ namespace ConstructionSetExtender
 					BGSEEMAIN->ShowPreferencesGUI();
 
 					break;
-				case IDC_MAINMENU_UNLOADCURRENTCELL:
-					TESDialog::ResetRenderWindow();
-
-					break;
 				case IDC_MAINMENU_LAUNCHGAME:
 					ShellExecute(NULL,
 								"open",
@@ -974,7 +986,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_TAGBROWSER:
-					CLIWrapper::Interfaces::TAG->ShowTagBrowserDialog(hWnd);
+					CLIWrapper::Interfaces::TAG->ShowTagBrowserDialog(NULL);
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 					break;
@@ -1142,6 +1154,27 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case IDC_MAINMENU_SAVEOPTIONS_CREATEBACKUPBEFORESAVING:
+					if (atoi(INISettings::GetVersionControl()->Get(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INIGetter())))
+						INISettings::GetVersionControl()->Set(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INISetter(), "0");
+					else
+						INISettings::GetVersionControl()->Set(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INISetter(), "1");
+
+					break;
+				case IDC_MAINMENU_SORTACTIVEFORMSFIRST:
+					if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter())))
+						INISettings::GetDialogs()->Set(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INISetter(), "0");
+					else
+						INISettings::GetDialogs()->Set(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INISetter(), "1");
+
+					break;
+				case IDC_MAINMENU_COLORIZEACTIVEFORMS:
+					if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter())))
+						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INISetter(), "0");
+					else
+						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INISetter(), "1");
+
+					break;
 				default:
 					Return = false;
 
@@ -1176,6 +1209,7 @@ namespace ConstructionSetExtender
 			case WM_DESTROY:
 				{
 					KillTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID);
+
 					if (InstanceUserData)
 					{
 						CSEMainWindowMiscExtraData* IUD = (CSEMainWindowMiscExtraData*)InstanceUserData;
@@ -1269,24 +1303,26 @@ namespace ConstructionSetExtender
 			switch (uMsg)
 			{
 			case WM_COMMAND:
-				if (HIWORD(wParam) == EN_CHANGE &&
-					LOWORD(wParam) == IDC_TOOLBAR_TODCURRENT &&
-					InstanceUserData == 0)
 				{
-					InstanceUserData = 1;
-					float TOD = TESDialog::GetDlgItemFloat(hWnd, IDC_TOOLBAR_TODCURRENT);
-					SendMessage(hWnd, WM_MAINTOOLBAR_SETTOD, TOD * 4.0, NULL);
-					InstanceUserData = 0;
-				}
-
-				switch (LOWORD(wParam))
-				{
-				case IDC_MAINMENU_LAUNCHGAME:
+					if (HIWORD(wParam) == EN_CHANGE &&
+						LOWORD(wParam) == IDC_TOOLBAR_TODCURRENT &&
+						InstanceUserData == 0)
 					{
-						SendMessage(BGSEEUI->GetMainWindow(), uMsg, wParam, lParam);
+						InstanceUserData = 1;
+						float TOD = TESDialog::GetDlgItemFloat(hWnd, IDC_TOOLBAR_TODCURRENT);
+						SendMessage(hWnd, WM_MAINTOOLBAR_SETTOD, TOD * 4.0, NULL);
+						InstanceUserData = 0;
 					}
 
-					break;
+					switch (LOWORD(wParam))
+					{
+					case IDC_MAINMENU_LAUNCHGAME:
+						{
+							SendMessage(BGSEEUI->GetMainWindow(), uMsg, wParam, lParam);
+						}
+
+						break;
+					}
 				}
 
 				break;
@@ -1414,6 +1450,10 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS:
+					TESDialog::ResetRenderWindow();
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
 					{
 						bool SwitchCY = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
@@ -1466,7 +1506,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
-					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, IDC_MAINMENU_BATCHREFERENCEEDITOR, 0);
+					SendMessage(BGSEEUI->GetMainWindow(), uMsg, wParam, lParam);
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
@@ -1529,33 +1569,26 @@ namespace ConstructionSetExtender
 					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 					{
 						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-						char Buffer[0x100] = {0};
 
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
 							Ref->ToggleInvisiblity();
-		//					FORMAT_STR(Buffer, "Selection '%08X's visibility toggled", Ref->formID);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
 							Ref->ToggleChildrenInvisibility();
-		//					FORMAT_STR(Buffer, "Selection '%08X's children visibility toggled", Ref->formID);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_FREEZE:
 							Ref->SetFrozenState(true);
-		//					FORMAT_STR(Buffer, "Selection '%08X' frozen", Ref->formID);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_THAW:
 							Ref->SetFrozenState(false);
-		//					FORMAT_STR(Buffer, "Selection '%08X' thawed", Ref->formID);
 
 							break;
 						}
-
-						RenderWindowPainter::RenderChannelNotifications->Queue(3, Buffer);
 					}
 
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
@@ -2841,6 +2874,9 @@ namespace ConstructionSetExtender
 			kFormList_TESFormIDListView							= 2064,
 			kFormList_DialogEditorTopics						= 1448,
 			kFormList_DialogEditorTopicInfos					= 1449,
+			kFormList_DialogEditorAddedTopics					= 1453,
+			kFormList_DialogEditorLinkedToTopics				= 1456,
+			kFormList_DialogEditorLinkedFromTopics				= 1455,
 			kFormList_Generic									= 1018,
 			kFormList_TESContainer								= 2035,
 			kFormList_TESSpellList								= 1485,
@@ -2996,6 +3032,9 @@ namespace ConstructionSetExtender
 							wParam == kFormList_TESFormIDListView ||
 							wParam == kFormList_DialogEditorTopics ||
 							wParam == kFormList_DialogEditorTopicInfos ||
+							wParam == kFormList_DialogEditorAddedTopics ||
+							wParam == kFormList_DialogEditorLinkedToTopics ||
+							wParam == kFormList_DialogEditorLinkedFromTopics ||
 							wParam == kFormList_Generic ||
 							wParam == kFormList_TESContainer ||
 							wParam == kFormList_TESSpellList ||
@@ -3102,7 +3141,6 @@ namespace ConstructionSetExtender
 											}
 
 											break;
-										case kFormList_FindTextTopicInfos:
 										default:
 											Form = (TESForm*)DrawData->nmcd.lItemlParam;
 
@@ -3125,8 +3163,18 @@ namespace ConstructionSetExtender
 															(WPARAM)INISettings::GetDialogs()->Get(INISettings::kDialogs_ActiveFormBackColor, BGSEEMAIN->INIGetter()),
 															(LPARAM)&BackColor);
 
-												DrawData->clrText = ForeColor;
-												DrawData->clrTextBk = BackColor;
+												TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+												if (Reference &&
+													Reference->GetNiNode() &&
+													(Reference->GetNiNode()->m_flags & NiAVObject::kFlag_AppCulled))
+												{
+													DrawData->clrText = RGB(255, 0, 255);
+												}
+												else
+												{
+													DrawData->clrText = ForeColor;
+													DrawData->clrTextBk = BackColor;
+												}
 
 												CSEDialogExtraFittingsData* IUD = (CSEDialogExtraFittingsData*)InstanceUserData;
 												if (IUD && IUD->ActiveFormListFont)
@@ -3385,7 +3433,14 @@ namespace ConstructionSetExtender
 				break;
 			case WM_NOTIFY:
 				{
+					if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+						break;
+
 					NMHDR* NotificationData = (NMHDR*)lParam;
+
+					if (NotificationData->idFrom != kFormList_TESFormIDListView)
+						break;
+
 					switch (NotificationData->code)
 					{
 					case LVN_ITEMCHANGED:

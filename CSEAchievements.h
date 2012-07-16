@@ -27,7 +27,7 @@ namespace ConstructionSetExtender
 			UInt32							HoursRequired;
 
 			void							ResetTimer(void);
-			bool							GetIdleState(void);
+			bool							GetIsIdling(void);
 		public:
 			CSEAchievementTimeLapsed(const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt32 ReqdHours);
 			virtual ~CSEAchievementTimeLapsed() = 0;

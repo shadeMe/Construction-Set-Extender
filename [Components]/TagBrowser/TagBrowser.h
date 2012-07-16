@@ -170,11 +170,11 @@ namespace ConstructionSetExtender
 	public:
 		static TagBrowser^%									GetSingleton();
 
-		void												Show(IntPtr Handle)	{ TagBrowserBox->Show(gcnew WindowHandleWrapper(Handle)); }
-		void												Hide()	{ TagBrowserBox->Hide(); }
+		void												Show(IntPtr Handle);
+		void												Hide();
 		bool												AddItemToActiveTag(ComponentDLLInterface::FormData* Data);
-		IntPtr												GetFormListHandle() { return FormList->Handle; }
-		IntPtr												GetWindowHandle() { return TagBrowserBox->Handle; }
+		IntPtr												GetFormListHandle();
+		IntPtr												GetWindowHandle();
 	};
 
 #define TAGBRWR											TagBrowser::GetSingleton()

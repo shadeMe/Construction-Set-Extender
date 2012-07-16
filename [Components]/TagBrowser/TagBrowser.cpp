@@ -626,7 +626,10 @@ namespace ConstructionSetExtender
 	{
 		if (SearchBox->Text != "" && FormList->Items->Count > 1)
 		{
-			ListViewItem^ Result = FormList->FindItemWithText(SearchBox->Text, true, 0);
+			for each (ListViewItem^ Itr in FormList->SelectedItems)
+				Itr->Selected = false;
+
+			ListViewItem^ Result = FormList->FindItemWithText(SearchBox->Text, true, 0, true);
 
 			if (Result != nullptr)
 			{
@@ -751,5 +754,28 @@ namespace ConstructionSetExtender
 			MessageBox::Show("No tag selected.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 
 		return false;
+	}
+
+	void TagBrowser::Show( IntPtr Handle )
+	{
+		if (TagBrowserBox->Visible)
+			TagBrowserBox->BringToFront();
+		else
+			TagBrowserBox->Show(gcnew WindowHandleWrapper(Handle));
+	}
+
+	void TagBrowser::Hide()
+	{
+		TagBrowserBox->Hide();
+	}
+
+	System::IntPtr TagBrowser::GetFormListHandle()
+	{
+		return FormList->Handle;
+	}
+
+	System::IntPtr TagBrowser::GetWindowHandle()
+	{
+		return TagBrowserBox->Handle;
 	}
 }
