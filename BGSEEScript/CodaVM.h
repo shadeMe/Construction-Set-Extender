@@ -130,7 +130,6 @@ namespace BGSEditorExtender
 			void										ResetTimer(bool Renew = false);
 
 			void										Execute(CodaScriptExecutive* Executive);
-
 		public:
 			CodaScriptBackgrounder(BGSEEResourceLocation Source, BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter);
 			~CodaScriptBackgrounder();

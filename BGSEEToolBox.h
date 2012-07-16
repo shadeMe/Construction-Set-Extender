@@ -19,8 +19,9 @@ namespace BGSEditorExtender
 			std::string						Title;
 			std::string						CommandLine;
 			std::string						InitialDir;
+			std::string						Parameters;
 
-			Tool(const char* Title, const char* CommandLine, const char* InitialDir);
+			Tool(const char* Title, const char* CommandLine, const char* InitialDir, const char* Paramters);
 			~Tool();
 
 			bool							Run() const;
@@ -32,7 +33,7 @@ namespace BGSEditorExtender
 			LPARAM							UserData;
 		};
 
-		Tool*								AddTool(const char* Title, const char* CmdLine, const char* InitDir);
+		Tool*								AddTool(const char* Title, const char* CmdLine, const char* InitDir, const char* Params);
 		void								AddTool(Tool* Tool);
 		void								RemoveTool(const char* Title, bool ReleaseMemory = false);
 		void								RemoveTool(Tool* Tool, bool ReleaseMemory = false);

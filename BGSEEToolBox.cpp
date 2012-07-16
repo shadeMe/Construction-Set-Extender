@@ -17,8 +17,8 @@ namespace BGSEditorExtender
 		HWND TitleBox =  GetDlgItem(hWnd, IDC_BGSEE_TOOLBOX_TITLEBOX);
 		HWND CmdLineBox =  GetDlgItem(hWnd, IDC_BGSEE_TOOLBOX_CMDLINEBOX);
 		HWND InitDirBox =  GetDlgItem(hWnd, IDC_BGSEE_TOOLBOX_INITDIRBOX);
+		HWND ParamBox =  GetDlgItem(hWnd, IDC_BGSEE_TOOLBOX_PARAMBOX);
 
-		char Buffer[0x200] = {0};
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 		BGSEEToolBox* Instance = NULL;
 
@@ -31,6 +31,7 @@ namespace BGSEditorExtender
 			SetWindowText(TitleBox, NULL);
 			SetWindowText(CmdLineBox, NULL);
 			SetWindowText(InitDirBox, NULL);
+			SetWindowText(ParamBox, NULL);
 			break;
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
@@ -48,20 +49,23 @@ namespace BGSEditorExtender
 				return TRUE;
 			case IDC_BGSEE_TOOLBOX_ADD:
 				{
-					char TitleBuffer[0x200] = {0}, CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0};
+					char TitleBuffer[0x200] = {0}, CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0}, ParamsBuffer[0x200] = {0};
 					GetWindowText(TitleBox, (LPSTR)TitleBuffer, 0x200);
 					GetWindowText(CmdLineBox, (LPSTR)CmdLineBuffer, MAX_PATH);
 					GetWindowText(InitDirBox, (LPSTR)InitDirBuffer, MAX_PATH);
+					GetWindowText(ParamBox, (LPSTR)ParamsBuffer, 0x200);
 
 					if ((strlen(TitleBuffer) < 1 || strlen(CmdLineBuffer) < 1 || strlen(InitDirBuffer) < 1) ||
-						(strstr(TitleBuffer, "=") || strstr(CmdLineBuffer, "=") || strstr(InitDirBuffer, "=")) ||
-						(strstr(TitleBuffer, "|") || strstr(CmdLineBuffer, "|") || strstr(InitDirBuffer, "|")))
+						((std::string(TitleBuffer)).find_first_of("~=|") != std::string::npos ||
+						(std::string(CmdLineBuffer)).find_first_of("~=|") != std::string::npos ||
+						(std::string(InitDirBuffer)).find_first_of("~=|") != std::string::npos ||
+						(std::string(ParamsBuffer)).find_first_of("~=|") != std::string::npos))
 					{
-						BGSEEUI->MsgBoxW(hWnd, NULL, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.");
+						BGSEEUI->MsgBoxW(hWnd, NULL, "Invalid input. Make sure the strings are non-null and don't contain any of the following reserved characters - ~, =, |");
 						break;
 					}
 
-					Tool* NewTool = Instance->AddTool(TitleBuffer, CmdLineBuffer, InitDirBuffer);
+					Tool* NewTool = Instance->AddTool(TitleBuffer, CmdLineBuffer, InitDirBuffer, ParamsBuffer);
 					if (NewTool == NULL)
 					{
 						BGSEEUI->MsgBoxE(hWnd, NULL, "Enter a unique tool title.");
@@ -96,6 +100,8 @@ namespace BGSEditorExtender
 					int Index = SendMessage(ToolList, LB_GETCURSEL, NULL, NULL);
 					if (Index != LB_ERR)
 					{
+						char Buffer[0x200] = {0};
+
 						SendMessage(ToolList, LB_GETTEXT, Index, (LPARAM)Buffer);
 						Tool* Selection = (Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
 
@@ -175,21 +181,24 @@ namespace BGSEditorExtender
 					if (Index != LB_ERR)
 					{
 						Tool* Selection = (Tool*)SendMessage(ToolList, LB_GETITEMDATA, Index, NULL);
-						char CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0};
+						char CmdLineBuffer[MAX_PATH] = {0}, InitDirBuffer[MAX_PATH] = {0}, ParamsBuffer[0x200] = {0};
 						GetWindowText(CmdLineBox, (LPSTR)CmdLineBuffer, MAX_PATH);
 						GetWindowText(InitDirBox, (LPSTR)InitDirBuffer, MAX_PATH);
+						GetWindowText(ParamBox, (LPSTR)ParamsBuffer, 0x200);
 
 						if (strlen(CmdLineBuffer) > 0 && strlen(InitDirBuffer) > 0)
 						{
-							if ((strstr(CmdLineBuffer, "=") || strstr(InitDirBuffer, "=")) ||
-								(strstr(CmdLineBuffer, "|") || strstr(InitDirBuffer, "|")))
+							if 	((std::string(CmdLineBuffer)).find_first_of("~=|") != std::string::npos ||
+								(std::string(InitDirBuffer)).find_first_of("~=|") != std::string::npos ||
+								(std::string(ParamsBuffer)).find_first_of("~=|") != std::string::npos)
 							{
-								BGSEEUI->MsgBoxW(hWnd, NULL, "Invalid input. Make sure the strings are non-null and don't contain a '=' or a '|'.");
+								BGSEEUI->MsgBoxW(hWnd, NULL, "Invalid input. Make sure the strings are non-null and don't contain any of the following reserved characters - ~, =, |");
 								break;
 							}
 
 							Selection->CommandLine = CmdLineBuffer;
 							Selection->InitialDir = InitDirBuffer;
+							Selection->Parameters = ParamsBuffer;
 						}
 					}
 				}
@@ -207,6 +216,7 @@ namespace BGSEditorExtender
 							SetWindowText(TitleBox, (LPSTR)Selection->Title.c_str());
 							SetWindowText(CmdLineBox, (LPSTR)Selection->CommandLine.c_str());
 							SetWindowText(InitDirBox, (LPSTR)Selection->InitialDir.c_str());
+							SetWindowText(ParamBox, (LPSTR)Selection->Parameters.c_str());
 						}
 						else
 							SendMessage(hWnd, IDM_BGSEE_TOOLBOX_RESETINPUTFIELDS, NULL, NULL);
@@ -245,8 +255,8 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	BGSEEToolBox::Tool::Tool( const char* Title, const char* CommandLine, const char* InitialDir ) :
-		Title(Title), CommandLine(CommandLine), InitialDir(InitialDir)
+	BGSEEToolBox::Tool::Tool( const char* Title, const char* CommandLine, const char* InitialDir, const char* Parameters ) :
+		Title(Title), CommandLine(CommandLine), InitialDir(InitialDir), Parameters(Parameters)
 	{
 		;//
 	}
@@ -258,7 +268,13 @@ namespace BGSEditorExtender
 
 	bool BGSEEToolBox::Tool::Run() const
 	{
-		DWORD Result = (DWORD)ShellExecute(NULL, "open", CommandLine.c_str(), NULL, InitialDir.c_str(), SW_SHOW);
+		DWORD Result = (DWORD)ShellExecute(NULL,
+										"open",
+										CommandLine.c_str(),
+										(Parameters.length() ? Parameters.c_str() : NULL),
+										InitialDir.c_str(),
+										SW_SHOW);
+
 		if (Result <= 32)
 		{
 			SetLastError(Result);
@@ -271,7 +287,7 @@ namespace BGSEditorExtender
 		return true;
 	}
 
-	BGSEEToolBox::Tool* BGSEEToolBox::AddTool( const char* Title, const char* CmdLine, const char* InitDir )
+	BGSEEToolBox::Tool* BGSEEToolBox::AddTool( const char* Title, const char* CmdLine, const char* InitDir, const char* Params )
 	{
 		SME_ASSERT(Initialized);
 
@@ -279,7 +295,7 @@ namespace BGSEditorExtender
 		if (LookupToolByTitle(Title, Match))
 			return NULL;
 
-		Tool* NewTool = new Tool(Title, CmdLine, InitDir);
+		Tool* NewTool = new Tool(Title, CmdLine, InitDir, Params);
 		RegisteredTools.push_back(NewTool);
 		return NewTool;
 	}
@@ -337,11 +353,13 @@ namespace BGSEditorExtender
 	void BGSEEToolBox::INISaveToolList( void )
 	{
 		INISetter(kINISection, NULL);
+
 		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			INISetter((*Itr)->Title.c_str(),
-								kINISection,
-								(std::string((*Itr)->CommandLine + "|" + (*Itr)->InitialDir).c_str()), true);
+					kINISection,
+					(std::string((*Itr)->CommandLine + "|" + (*Itr)->InitialDir + "~" + (*Itr)->Parameters).c_str()),
+					true);
 		}
 	}
 
@@ -355,15 +373,16 @@ namespace BGSEditorExtender
 		for (const char* Itr = SectionBuffer; *Itr != '\0'; Itr += strlen(Itr) + 1)
 		{
 			std::string SectionData(Itr);
-			size_t IndexA = SectionData.find("="), IndexB = SectionData.find("|");
+			size_t IndexA = SectionData.find("="), IndexB = SectionData.find("|"), IndexC = SectionData.find("~");
 
-			if (IndexA != std::string::npos && IndexB != std::string::npos)
+			if (IndexA != std::string::npos && IndexB != std::string::npos && IndexC != std::string::npos)
 			{
 				std::string Title(SectionData.substr(0, IndexA));
 				std::string CmdLine(SectionData.substr(IndexA + 1, IndexB - IndexA - 1));
-				std::string InitDir(SectionData.substr(IndexB + 1));
+				std::string InitDir(SectionData.substr(IndexB + 1, IndexC - IndexB - 1));
+				std::string Params(SectionData.substr(IndexC + 1));
 
-				AddTool(Title.c_str(), CmdLine.c_str(), InitDir.c_str());
+				AddTool(Title.c_str(), CmdLine.c_str(), InitDir.c_str(), Params.c_str());
 				BGSEECONSOLE_MESSAGE("[%s] - {%s}", Title.c_str(), CmdLine.c_str());
 			}
 		}
