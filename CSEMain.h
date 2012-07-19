@@ -4,12 +4,6 @@
 
 namespace ConstructionSetExtender
 {
-	extern OBSEMessagingInterface*						XSEMsgIntfc;
-	extern PluginHandle									XSEPluginHandle;
-
-	extern OBSECommandTableInterface*					XSECommandTableIntfc;
-	extern ComponentDLLInterface::CommandTableData		XSECommandTableData;
-
 	class CSEReleaseNameTable : public BGSEditorExtender::BGSEEReleaseNameTable
 	{
 	protected:

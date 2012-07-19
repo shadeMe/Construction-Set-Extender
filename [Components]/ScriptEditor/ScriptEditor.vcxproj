@@ -132,7 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Reference Include="DevComponents.DotNetBar2" />
-    <Reference Include="ICSharpCode.AvalonEdit, Version=4.2.0.8774, Culture=neutral, PublicKeyToken=9cc39be672370310">
+    <Reference Include="ICSharpCode.AvalonEdit, Version=4.0.0.7070, Culture=neutral, PublicKeyToken=9cc39be672370310">
       <HintPath>..\..\[Depends]\ICSharpCode.AvalonEdit.dll</HintPath>
       <Private>false</Private>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>

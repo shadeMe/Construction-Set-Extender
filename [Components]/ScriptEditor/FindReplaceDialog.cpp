@@ -177,6 +177,7 @@ namespace ConstructionSetExtender
 			FindReplaceBox->AutoScaleMode = AutoScaleMode::Font;
 			FindReplaceBox->ClientSize = System::Drawing::Size(607, 126);
 			FindReplaceBox->KeyPreview = true;
+			FindReplaceBox->ShowInTaskbar = false;
 			FindReplaceBox->Controls->Add(this->UseRegEx);
 			FindReplaceBox->Controls->Add(this->InSelection);
 			FindReplaceBox->Controls->Add(this->CaseInsensitiveSearch);

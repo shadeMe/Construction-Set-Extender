@@ -35,7 +35,8 @@ CSE		---->
 SE		---->
 
 	BUGFIX			=
-
+		> Unhandled exception in AvalonEdit; fold the function block in zzVectorzFunctUDP to reproduce
+		  Reverting back to v4.0.0.7070 until the bug is fixed
 
 	ENHANCEMENT		=
 		> [AFTER 6.0] A code snippets manager, integrated into IntelliSense
