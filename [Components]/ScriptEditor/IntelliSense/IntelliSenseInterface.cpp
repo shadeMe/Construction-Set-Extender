@@ -139,7 +139,7 @@ namespace ConstructionSetExtender
 				{
 					for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 					{
-						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
+						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1)
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
@@ -157,7 +157,7 @@ namespace ConstructionSetExtender
 							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||
 							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Form)
 						{
-							if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr))
+							if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1)
 							{
 								ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 								Item->Tag = Itr;
@@ -174,7 +174,7 @@ namespace ConstructionSetExtender
 				{
 					if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_UserFunct)
 					{
-						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
+						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
@@ -224,7 +224,7 @@ namespace ConstructionSetExtender
 				{
 					if (RemoteVarItr->Current->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
 					{
-						if (RemoteVarItr->Current->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
+						if (RemoteVarItr->Current->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
 						{
 							ListViewItem^ Item = gcnew ListViewItem(RemoteVarItr->Current->GetIdentifier(), (int)RemoteVarItr->Current->GetIntelliSenseItemType());
 							Item->Tag = RemoteVarItr->Current;
@@ -238,7 +238,7 @@ namespace ConstructionSetExtender
 				{
 					if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && CallingObjectIsRef)
 					{
-						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
+						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;
@@ -252,7 +252,7 @@ namespace ConstructionSetExtender
 			case Operation::e_Assign:
 				for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 				{
-					if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
+					if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
 					{
 						ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 						Item->Tag = Itr;
@@ -266,7 +266,7 @@ namespace ConstructionSetExtender
 					if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
 						Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar)
 					{
-						if (Itr->GetIdentifier()->StartsWith(Extract, true, nullptr) || ShowAllItems)
+						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
 						{
 							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
 							Item->Tag = Itr;

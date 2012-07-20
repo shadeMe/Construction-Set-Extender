@@ -297,7 +297,7 @@ namespace ConstructionSetExtender
 					}
 					else
 					{
-						MessageBox::Show("Please expand the second column sufficiently to allow the editing of its contents", SCRIPTEDITOR_TITLE,
+						MessageBox::Show("Please expand the second column sufficiently to allow the editing of its contents.", SCRIPTEDITOR_TITLE,
 							MessageBoxButtons::OK, MessageBoxIcon::Information);
 					}
 				}

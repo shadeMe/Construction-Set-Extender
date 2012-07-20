@@ -547,6 +547,8 @@ namespace ConstructionSetExtender
 			case Keys::Left:								// Previous script
 			case Keys::Right:								// Next script
 			case Keys::N:									// New script
+			case Keys::PageDown:
+			case Keys::PageUp:
 				Workspace^ Itr = dynamic_cast<Workspace^>(EditorTabStrip->SelectedTab->Tag);
 
 				if (Itr != nullptr)
@@ -1193,7 +1195,7 @@ namespace ConstructionSetExtender
 			ToolBarSaveAll->Margin = ToolBarButtonPaddingLarge;
 			ToolBarSaveAll->Alignment = ToolStripItemAlignment::Right;
 
-			ToolBarNavigationBack->ToolTipText = "Navigate Back";
+			ToolBarNavigationBack->ToolTipText = "Navigate Backward";
 			ToolBarNavigationBack->AutoSize = true;
 			ToolBarNavigationBack->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
 			ToolBarNavigationBack->Alignment = ToolStripItemAlignment::Right;
@@ -1334,23 +1336,23 @@ namespace ConstructionSetExtender
 			ContextMenuCopy->Text = "Copy";
 			ContextMenuPaste->Text = "Paste";
 			ContextMenuWord->Enabled = false;
-			ContextMenuWikiLookup->Text = "Look up on the Wiki";
-			ContextMenuOBSEDocLookup->Text = "Look up on the OBSE Doc";
+			ContextMenuWikiLookup->Text = "Lookup on the Wiki";
+			ContextMenuOBSEDocLookup->Text = "Lookup in the OBSE Docs";
 			ContextMenuFind->Text = "Find";
 			ContextMenuToggleComment->Text = "Toggle Comment";
 			ContextMenuToggleBookmark->Text = "Toggle Bookmark";
 			ContextMenuDirectLink->Text = "Developer Page";
 			ContextMenuJumpToScript->Text = "Jump into Script";
 			ContextMenuAddMessage->Text = "Add Message";
-			ContextMenuGoogleLookup->Text = "Look up on Google";
-			ContextMenuRefactorMenu->Text = "Refactor ...";
+			ContextMenuGoogleLookup->Text = "Lookup on Google";
+			ContextMenuRefactorMenu->Text = "Refactor...";
 
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorAddVariable);
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorDocumentScript);
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorCreateUDFImplementation);
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorRenameVariables);
 
-			ContextMenuRefactorAddVariable->Text = "Add Variable ...";
+			ContextMenuRefactorAddVariable->Text = "Add Variable...";
 			ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableInt);
 			ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableFloat);
 			ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableRef);
@@ -2288,7 +2290,7 @@ namespace ConstructionSetExtender
 						Result = false;
 					}
 					if (ScriptTextParser->LookupVariableByName(SecondToken) != nullptr)
-						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
 					else
 						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
 					break;
@@ -2743,7 +2745,7 @@ namespace ConstructionSetExtender
 		{
 			if (GetModifiedStatus())
 			{
-				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes. Do you wish to save them ?",
+				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes. Do you wish to save them?",
 													SCRIPTEDITOR_TITLE,
 													MessageBoxButtons::YesNoCancel,
 													MessageBoxIcon::Exclamation);
@@ -3011,6 +3013,7 @@ namespace ConstructionSetExtender
 				{
 					CloseScript();
 				}
+				break;
 			case Keys::D1:
 			case Keys::D2:
 			case Keys::D3:
@@ -3177,7 +3180,7 @@ namespace ConstructionSetExtender
 				}
 				else
 				{
-					MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents",
+					MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents.",
 									SCRIPTEDITOR_TITLE,
 									MessageBoxButtons::OK,
 									MessageBoxIcon::Information);
@@ -3320,7 +3323,7 @@ namespace ConstructionSetExtender
 			{
 				CString CEID(CurrentScriptEditorID);
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CEID.c_str());
-				MessageBox::Show("Operation complete! Script variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
+				MessageBox::Show("Operation complete!\n\nScript variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
 								SCRIPTEDITOR_TITLE,
 								MessageBoxButtons::OK,
 								MessageBoxIcon::Information);
@@ -3528,7 +3531,6 @@ namespace ConstructionSetExtender
 			ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
 			ScriptParser::VariableType VarType = (ScriptParser::VariableType)MenuItem->Tag;
 			String^ VarName = ContextMenuWord->Text;
-			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
 
 			if (VarName->Length == 0)
 			{
@@ -3751,7 +3753,7 @@ namespace ConstructionSetExtender
 		{
 			if (ToolBarShowOffsets->Checked)
 			{
-				MessageBox::Show("This operation can only be performed in the text editor and the preprocessed text viewer",
+				MessageBox::Show("This operation can only be performed in the text editor and the preprocessed text viewer.",
 								SCRIPTEDITOR_TITLE,
 								MessageBoxButtons::OK,
 								MessageBoxIcon::Exclamation);
@@ -3780,7 +3782,7 @@ namespace ConstructionSetExtender
 			}
 			else
 			{
-				MessageBox::Show("This operation can only be performed in the offset viewer",
+				MessageBox::Show("This operation can only be performed in the offset viewer.",
 								SCRIPTEDITOR_TITLE,
 								MessageBoxButtons::OK,
 								MessageBoxIcon::Exclamation);

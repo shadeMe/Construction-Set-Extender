@@ -56,7 +56,7 @@ namespace InputBoxes
 				System::Windows::Forms::TextBox^    txtInput;
 				System::ComponentModel::Container^  components;
 
-				void								txtInput_KeyUp(Object^ Sender, KeyEventArgs^ E)
+				void								txtInput_KeyDown(Object^ Sender, KeyEventArgs^ E)
 				{
 					switch (E->KeyCode)
 					{
@@ -120,11 +120,14 @@ namespace InputBoxes
 				this->txtInput->Name = L"txtInput";
 				this->txtInput->Size = System::Drawing::Size(452, 20);
 				this->txtInput->TabIndex = 3;
-				this->txtInput->KeyUp += gcnew KeyEventHandler(this, &InputBox::txtInput_KeyUp);
+				this->txtInput->AcceptsReturn = true;
+				this->txtInput->Multiline = true;
+				this->txtInput->KeyDown += gcnew KeyEventHandler(this, &InputBox::txtInput_KeyDown);
 				//
 				// InputBox
 				//
 				this->ControlBox = false;
+				this->ShowInTaskbar = false;
 				this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 				this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 				this->ClientSize = System::Drawing::Size(478, 128);
@@ -189,8 +192,6 @@ namespace InputBoxes
 				txtInput->SelectionStart = 0;
 				txtInput->SelectionLength = txtInput->Text->Length;
 				txtInput->Focus();
-
-				this->Visible = false;
 			}
 		#pragma endregion
 		#pragma region Button control click event

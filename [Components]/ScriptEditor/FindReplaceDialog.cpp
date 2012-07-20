@@ -51,7 +51,7 @@ namespace ConstructionSetExtender
 			this->LabelFind->Name = L"LabelFind";
 			this->LabelFind->Size = System::Drawing::Size(78, 13);
 			this->LabelFind->TabIndex = 0;
-			this->LabelFind->Text = L"Find What :";
+			this->LabelFind->Text = L"Find What:";
 			this->LabelFind->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 			//
 			// LabelReplace
@@ -60,7 +60,7 @@ namespace ConstructionSetExtender
 			this->LabelReplace->Name = L"LabelReplace";
 			this->LabelReplace->Size = System::Drawing::Size(78, 13);
 			this->LabelReplace->TabIndex = 1;
-			this->LabelReplace->Text = L"Replace With :";
+			this->LabelReplace->Text = L"Replace With:";
 			this->LabelReplace->TextAlign = System::Drawing::ContentAlignment::MiddleRight;
 			//
 			// QueryBox
@@ -194,7 +194,7 @@ namespace ConstructionSetExtender
 			FindReplaceBox->FormBorderStyle = FormBorderStyle::FixedToolWindow;
 			FindReplaceBox->Name = L"SEFindReplace";
 			FindReplaceBox->StartPosition = FormStartPosition::CenterScreen;
-			FindReplaceBox->Text = L"Find / Replace";
+			FindReplaceBox->Text = L"Find/Replace";
 			FindReplaceBox->ResumeLayout(false);
 			FindReplaceBox->PerformLayout();
 
@@ -248,9 +248,9 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Replace,
-				Query,
-				Replacement,
-				GetSelectedOptions());
+																					Query,
+																					Replacement,
+																					GetSelectedOptions());
 		}
 
 		void FindReplaceDialog::FindInTabsButton_Click( Object^ Sender, EventArgs^ E )
@@ -266,8 +266,9 @@ namespace ConstructionSetExtender
 			RemoteOpParameters->Add("");
 			RemoteOpParameters->Add(GetSelectedOptions());
 
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces,
-																											RemoteOpParameters);
+			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(
+										WorkspaceContainer::RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces,
+										RemoteOpParameters);
 		}
 
 		void FindReplaceDialog::ReplaceInTabsButton_Click( Object^ Sender, EventArgs^ E )
@@ -284,8 +285,9 @@ namespace ConstructionSetExtender
 			RemoteOpParameters->Add(Replacement);
 			RemoteOpParameters->Add(GetSelectedOptions());
 
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces,
-				RemoteOpParameters);
+			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(
+										WorkspaceContainer::RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces,
+										RemoteOpParameters);
 		}
 
 		void FindReplaceDialog::CountMatchesButton_Click( Object^ Sender, EventArgs^ E )

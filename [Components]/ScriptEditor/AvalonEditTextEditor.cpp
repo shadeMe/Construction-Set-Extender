@@ -1454,6 +1454,22 @@ namespace ConstructionSetExtender
 				{
 					SetCaretPos(GetTextLength());
 				}
+			}
+
+			void AvalonEditTextEditor::TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
+			{
+				Nullable<AvalonEdit::TextViewPosition> Location = TextField->GetPositionFromPoint(E->GetPosition(TextField));
+				if (Location.HasValue)
+				{
+					LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
+
+					if (E->ChangedButton == System::Windows::Input::MouseButton::Right)
+						SetCaretPos(LastKnownMouseClickOffset);
+				}
+				else
+				{
+					SetCaretPos(GetTextLength());
+				}
 
 				if (IntelliSenseBox->Visible)
 				{
@@ -1463,10 +1479,7 @@ namespace ConstructionSetExtender
 				}
 
 				IntelliSenseBox->HideInfoToolTip();
-			}
 
-			void AvalonEditTextEditor::TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
-			{
 				OnMouseClick(E);
 			}
 
