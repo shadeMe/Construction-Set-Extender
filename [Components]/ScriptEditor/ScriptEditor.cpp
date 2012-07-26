@@ -3471,9 +3471,9 @@ namespace ConstructionSetExtender
 		void Workspace::ContextMenuFind_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (TextEditor->GetSelectedText() != "")
-				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false);
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false, true);
 			else
-				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtMouseLocation(), false);
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtMouseLocation(), false, true);
 		}
 		void Workspace::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3745,9 +3745,9 @@ namespace ConstructionSetExtender
 		void Workspace::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (TextEditor->GetSelectedText() != "")
-				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false);
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetSelectedText(), false, false);
 			else
-				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtCaretPos(), false);
+				FindReplaceBox->Show(ParentContainer->GetHandle(), TextEditor->GetTokenAtCaretPos(), false, false);
 		}
 		void Workspace::ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E)
 		{

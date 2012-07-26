@@ -37,6 +37,11 @@ namespace ComponentDLLInterface
 
 			void									(* ReadFromINI)(const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size);
 			void									(* WriteToINI)(const char* Setting, const char* Section, const char* Value);
+
+			UInt32									(* GetFormListActiveItemForegroundColor)(void);
+			UInt32									(* GetFormListActiveItemBackgroundColor)(void);
+			bool									(* GetShouldColorizeActiveForms)(void);
+			bool									(* GetShouldSortActiveFormsFirst)(void);
 		};
 
 		class IScriptEditor

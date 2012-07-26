@@ -105,17 +105,34 @@ namespace ConstructionSetExtender
 					TESForm* Form = (TESForm*)Item->lParam;
 					if (Form->editorID.c_str() == NULL && UserData->ObjRefList)
 					{
-						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-						if (Ref)
-							Form = Ref->baseForm;
+						TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+						if (Reference)
+							Form = Reference->baseForm;
 					}
 
-					if (UserData->FilterString.size() && Form && Form->editorID.c_str())
+					if (UserData->FilterString.size() && Form)
 					{
-						std::string Buffer(Form->editorID.c_str());
-						SME::StringHelpers::MakeLower(Buffer);
+						std::string EditorID, FullName, Description;
 
-						if (Buffer.find(UserData->FilterString) == std::string::npos)
+						TESFullName* FullNameCmpt = CS_CAST(Form, TESForm, TESFullName);
+						TESDescription* DescriptionCmpt = CS_CAST(Form, TESForm, TESDescription);
+
+						if (FullNameCmpt && FullNameCmpt->name.c_str())
+							FullName = FullNameCmpt->name.c_str();
+
+						if (DescriptionCmpt && DescriptionCmpt->description.c_str())
+							Description = DescriptionCmpt->description.c_str();
+
+						if (Form->editorID.c_str())
+							EditorID = Form->editorID.c_str();
+
+						SME::StringHelpers::MakeLower(EditorID);
+						SME::StringHelpers::MakeLower(FullName);
+						SME::StringHelpers::MakeLower(Description);
+
+						if (EditorID.find(UserData->FilterString) == std::string::npos &&
+							FullName.find(UserData->FilterString) == std::string::npos &&
+							Description.find(UserData->FilterString) == std::string::npos)
 						{
 							return -1;		// couldn't find the filter string, so skip insertion
 						}
@@ -746,6 +763,19 @@ namespace ConstructionSetExtender
 
 				switch (LOWORD(wParam))
 				{
+				case 40157:		// Help > Contents
+				case 40413:		// Character > Export Dialogue
+					{
+						if (Achievements::kOldestTrickInTheBook->GetUnlocked() == false)
+						{
+							ShellExecute(NULL, "open", "http://www.youtube.com/watch?v=oHg5SJYRHA0", NULL, NULL, SW_SHOWNORMAL);
+							BGSEEACHIEVEMENTS->Unlock(Achievements::kOldestTrickInTheBook);
+						}
+						else
+							Return = false;
+					}
+
+					break;
 				case IDC_MAINMENU_SAVEAS:
 					{
 						if (_DATAHANDLER->activeFile == NULL)
@@ -2862,8 +2892,6 @@ namespace ConstructionSetExtender
 		}
 
 #define ID_COMMONDLGQUICKVIEW_TIMERID							0x108
-#define WM_COMDLGEXTRA_EXTRACTCOLOR								(WM_USER + 2005)
-		// wParam = const char*, lParam = COLORREF*
 
 		enum
 		{
@@ -2896,44 +2924,6 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
-			case WM_COMDLGEXTRA_EXTRACTCOLOR:
-				{
-					DlgProcResult = TRUE;
-					Return = true;
-
-					const char* ColorString = (const char*)wParam;
-					COLORREF* ColorOut = (COLORREF*)lParam;
-
-					if (ColorString && ColorOut)
-					{
-						SME::StringHelpers::Tokenizer ColorParser(ColorString, ", ");
-						int R = 0, G = 0, B = 0;
-
-						for (int i = 0; i < 3; i++)
-						{
-							std::string Buffer;
-							if (ColorParser.NextToken(Buffer) != -1)
-							{
-								switch (i)
-								{
-								case 0:		// R
-									R = atoi(Buffer.c_str());
-									break;
-								case 1:		// G
-									G = atoi(Buffer.c_str());
-									break;
-								case 2:		// B
-									B = atoi(Buffer.c_str());
-									break;
-								}
-							}
-						}
-
-						*ColorOut = RGB(R, G, B);
-					}
-				}
-
-				break;
 			case WM_TIMER:
 				switch (wParam)
 				{
@@ -3151,19 +3141,15 @@ namespace ConstructionSetExtender
 										{
 											if (Form->IsActive())
 											{
-												COLORREF ForeColor = 0, BackColor = 0;
-
-												SendMessage(hWnd,
-															WM_COMDLGEXTRA_EXTRACTCOLOR,
-															(WPARAM)INISettings::GetDialogs()->Get(INISettings::kDialogs_ActiveFormForeColor, BGSEEMAIN->INIGetter()),
-															(LPARAM)&ForeColor);
-
-												SendMessage(hWnd,
-															WM_COMDLGEXTRA_EXTRACTCOLOR,
-															(WPARAM)INISettings::GetDialogs()->Get(INISettings::kDialogs_ActiveFormBackColor, BGSEEMAIN->INIGetter()),
-															(LPARAM)&BackColor);
+												COLORREF ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																								INISettings::kDialogs_ActiveFormForeColor,
+																								BGSEEMAIN->INIGetter()));
+												COLORREF BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																								INISettings::kDialogs_ActiveFormBackColor,
+																								BGSEEMAIN->INIGetter()));
 
 												TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+
 												if (Reference &&
 													Reference->GetNiNode() &&
 													(Reference->GetNiNode()->m_flags & NiAVObject::kFlag_AppCulled))
@@ -4074,6 +4060,8 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FilteredDialog, FilteredDialogQuestDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_About, AboutDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, RaceDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
 
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
@@ -4138,9 +4126,6 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
 			}
-
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());

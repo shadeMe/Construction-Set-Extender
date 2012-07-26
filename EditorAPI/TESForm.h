@@ -232,5 +232,5 @@ class TESMemContextForm
 	// no members
 };
 
-extern CSE_GlobalClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_TESFormEditorIDMap;
-extern CSE_GlobalClasses::NiTMapBase<UInt32, TESForm*>*					g_TESFormFormIDMap;
+extern ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_TESFormEditorIDMap;
+extern ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*					g_TESFormFormIDMap;

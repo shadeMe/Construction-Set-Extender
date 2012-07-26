@@ -61,8 +61,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESFormDelete, 0x00498712);
 		_DefinePatchHdlr(TextureSizeCheck, 0x0044F444);
 		_DefineHookHdlr(DataHandlerPlaceTESObjectLIGH, 0x005116C7);
-		_DefineHookHdlr(TESWorldSpaceDestroyCellMapA, 0x00560753);
-		_DefineHookHdlr(TESWorldSpaceDestroyCellMapB, 0x0079CA33);
 		_DefineJumpHdlr(CSRegistryEntries, 0x00406820, 0x00406AF4);
 		_DefineHookHdlr(AchievementAddTopic, 0x004F2ED4);
 		_DefineHookHdlr(AchievementDeleteShadeMe, 0x004986B4);
@@ -100,8 +98,6 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESFormDelete).WriteJump();
 			_MemHdlr(TextureSizeCheck).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerPlaceTESObjectLIGH).WriteJump();
-			_MemHdlr(TESWorldSpaceDestroyCellMapA).WriteJump();
-			_MemHdlr(TESWorldSpaceDestroyCellMapB).WriteJump();
 			_MemHdlr(AchievementAddTopic).WriteJump();
 			_MemHdlr(AchievementDeleteShadeMe).WriteJump();
 			_MemHdlr(AchievementModifyShadeMe).WriteJump();
@@ -156,6 +152,9 @@ namespace ConstructionSetExtender
 			_DefineNopHdlr(TESPathGridGenerateNiNode, 0x0054ED59, 5);
 			_DefineNopHdlr(TESWorldspaceBuildRoadsA, 0x00563C09, 5);
 			_DefineNopHdlr(TESWorldspaceBuildRoadsB, 0x00563C71, 5);
+			_DefineNopHdlr(AnimControllerMorphError, 0x004A67B5, 5);
+			_DefineNopHdlr(ZBufferVertexColorExportA, 0x0046C533, 5);
+			_DefineNopHdlr(ZBufferVertexColorExportB, 0x0046C547, 5);
 
 			_MemHdlr(FileFinderLogMessage).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerAutoSave).WriteNop();
@@ -183,6 +182,9 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESPathGridGenerateNiNode).WriteNop();
 			_MemHdlr(TESWorldspaceBuildRoadsA).WriteNop();
 			_MemHdlr(TESWorldspaceBuildRoadsB).WriteNop();
+			_MemHdlr(AnimControllerMorphError).WriteNop();
+			_MemHdlr(ZBufferVertexColorExportA).WriteNop();
+			_MemHdlr(ZBufferVertexColorExportB).WriteNop();
 
 			if (BGSEECONSOLE->GetLogsWarnings() == false)
 				return;
@@ -547,41 +549,6 @@ namespace ConstructionSetExtender
 				mov     edx, [eax + 0x1A0]
 				jmp		[_hhGetVar(Retn)]
 			FIX:
-				jmp		[_hhGetVar(Jump)]
-			}
-		}
-
-		#define _hhName	TESWorldSpaceDestroyCellMapA
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00560703);
-			__asm
-			{
-				mov		eax, [esi + eax * 4]
-				cmp		eax, 0x10000
-				jle		FIX
-				jmp		[_hhGetVar(Retn)]
-			FIX:
-				xor		eax, eax
-				jmp		[_hhGetVar(Retn)]
-			}
-		}
-
-		#define _hhName	TESWorldSpaceDestroyCellMapB
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0079CA38);
-			_hhSetVar(Jump, 0x0079CA5A);
-			__asm
-			{
-				mov     edi, [ecx + ebx * 4]
-				cmp		edi, 0x10000
-				jle		FIX
-
-				mov		edx, [edi]
-				jmp		[_hhGetVar(Retn)]
-			FIX:
-				xor		edi, edi
 				jmp		[_hhGetVar(Jump)]
 			}
 		}

@@ -21,11 +21,8 @@ namespace ConstructionSetExtender
 				AvalonEdit::TextEditor^						ParentEditor;
 				virtual void								PerformColorization(VisualLineElement^ Element) = 0;
 			public:
-				virtual ~AvalonEditLineColorizingTransformer()
-				{
-					ParentEditor = nullptr;
-				}
-				AvalonEditLineColorizingTransformer(AvalonEdit::TextEditor^% Parent) : DocumentColorizingTransformer(), ParentEditor(Parent) {}
+				virtual ~AvalonEditLineColorizingTransformer();
+				AvalonEditLineColorizingTransformer(AvalonEdit::TextEditor^% Parent);
 			};
 
 			// deprecated in favor of BackgroundColorizers
@@ -35,7 +32,7 @@ namespace ConstructionSetExtender
 				virtual void								PerformColorization(VisualLineElement^ Element) override;
 				virtual void								ColorizeLine(DocumentLine^ line) override;
 			public:
-				AvalonEditSelectionColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
+				AvalonEditSelectionColorizingTransformer(AvalonEdit::TextEditor^% Parent);
 			};
 
 			ref class AvalonEditLineLimitColorizingTransformer : public AvalonEditLineColorizingTransformer
@@ -44,7 +41,7 @@ namespace ConstructionSetExtender
 				virtual void								PerformColorization(VisualLineElement^ Element) override;
 				virtual void								ColorizeLine(DocumentLine^ line) override;
 			public:
-				AvalonEditLineLimitColorizingTransformer(AvalonEdit::TextEditor^% Parent) : AvalonEditLineColorizingTransformer(Parent) {}
+				AvalonEditLineLimitColorizingTransformer(AvalonEdit::TextEditor^% Parent);
 			};
 
 			// background colorizers
@@ -56,10 +53,7 @@ namespace ConstructionSetExtender
 
 				void RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine);
 			public:
-				virtual ~AvalonEditLineBackgroundColorizer()
-				{
-					ParentEditor = nullptr;
-				}
+				virtual ~AvalonEditLineBackgroundColorizer();
 
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) = 0;
 
@@ -68,7 +62,7 @@ namespace ConstructionSetExtender
 					virtual KnownLayer get() { return RenderLayer; }
 				}
 
-				AvalonEditLineBackgroundColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : ParentEditor(Parent), RenderLayer(RenderLayer) {}
+				AvalonEditLineBackgroundColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
 			};
 
 			ref class AvalonEditCurrentLineBGColorizer : public AvalonEditLineBackgroundColorizer
@@ -76,7 +70,7 @@ namespace ConstructionSetExtender
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditCurrentLineBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer) {}
+				AvalonEditCurrentLineBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
 			};
 
 			ref class AvalonEditScriptErrorBGColorizer : public AvalonEditLineBackgroundColorizer
@@ -85,10 +79,7 @@ namespace ConstructionSetExtender
 
 				bool										GetLineInError(int Line);
 			public:
-				virtual ~AvalonEditScriptErrorBGColorizer()
-				{
-					ClearLines();
-				}
+				virtual ~AvalonEditScriptErrorBGColorizer();
 
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
@@ -103,7 +94,7 @@ namespace ConstructionSetExtender
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditSelectionBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer) {}
+				AvalonEditSelectionBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
 			};
 
 			ref class AvalonEditLineLimitBGColorizer : public AvalonEditLineBackgroundColorizer
@@ -111,7 +102,7 @@ namespace ConstructionSetExtender
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditLineLimitBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer) {}
+				AvalonEditLineLimitBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
 			};
 
 			ref class AvalonEditFindReplaceBGColorizer : public AvalonEditLineBackgroundColorizer
@@ -121,22 +112,19 @@ namespace ConstructionSetExtender
 					int										Offset;
 					int										Length;
 
-					Segment(int Offset, int Length) : Offset(Offset), Length(Length) {}
+					Segment(int Offset, int Length);
 				};
 
 				List<Segment>^								HighlightSegments;
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditFindReplaceBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer), HighlightSegments(gcnew List<Segment>()) {}
+				AvalonEditFindReplaceBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
 
 				void										AddSegment(int Offset, int Length);
 				void										ClearSegments();
 
-				virtual ~AvalonEditFindReplaceBGColorizer()
-				{
-					ClearSegments();
-				}
+				virtual ~AvalonEditFindReplaceBGColorizer();
 			};
 
 			ref class AvalonEditObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
@@ -146,16 +134,12 @@ namespace ConstructionSetExtender
 				bool										TrimTrailingWhitespace;
 				bool										CullEmptyLines;
 			public:
-				virtual ~AvalonEditObScriptIndentStrategy()
-				{
-					IndentParser->Reset();
-					IndentParser = nullptr;
-				}
+				virtual ~AvalonEditObScriptIndentStrategy();
 
 				virtual void								IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line);
 				virtual void								IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine);
 
-				AvalonEditObScriptIndentStrategy(bool TrimTrailingWhitespace, bool CullEmptyLines) : IndentParser(gcnew ScriptParser()), TrimTrailingWhitespace(TrimTrailingWhitespace), CullEmptyLines(CullEmptyLines) {}
+				AvalonEditObScriptIndentStrategy(bool TrimTrailingWhitespace, bool CullEmptyLines);
 			};
 
 			ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::AbstractFoldingStrategy
@@ -169,16 +153,11 @@ namespace ConstructionSetExtender
 				ScriptParser^								FoldingParser;
 				FoldingSorter^								Sorter;
 			public:
-				virtual ~AvalonEditObScriptCodeFoldingStrategy()
-				{
-					FoldingParser->Reset();
-					FoldingParser = nullptr;
-					Sorter = nullptr;
-				}
+				virtual ~AvalonEditObScriptCodeFoldingStrategy();
 
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;
 
-				AvalonEditObScriptCodeFoldingStrategy() : AvalonEdit::Folding::AbstractFoldingStrategy(), FoldingParser(gcnew ScriptParser()), Sorter(gcnew FoldingSorter()) {}
+				AvalonEditObScriptCodeFoldingStrategy();
 			};
 
 			ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
@@ -186,8 +165,7 @@ namespace ConstructionSetExtender
 			public:
 				property Object^							Tag;
 
-				TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior) :
-				DoubleAnimation(fromValue, toValue, duration, fillBehavior) {}
+				TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior);
 			};
 
 			ref class AvalonEditBraceHighlightingBGColorizer : public AvalonEditLineBackgroundColorizer
@@ -198,8 +176,7 @@ namespace ConstructionSetExtender
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditBraceHighlightingBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) :
-				AvalonEditLineBackgroundColorizer(Parent, RenderLayer), OpenBraceOffset(-1), CloseBraceOffset(-1), DoHighlight(false) {}
+				AvalonEditBraceHighlightingBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
 
 				void										SetHighlight(int OpenBraceOffset, int CloseBraceOffset);
 				void										ClearHighlight(void);

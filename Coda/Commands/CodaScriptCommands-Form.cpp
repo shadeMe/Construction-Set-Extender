@@ -162,7 +162,7 @@ namespace ConstructionSetExtender
 					ICodaScriptDataStore* Array = Utilities->ArrayAllocate(200);
 					SME_ASSERT(Array);
 
-					for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormFormIDMap->GetFirstPos(); Itr;)
+					for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormFormIDMap->GetFirstPos(); Itr;)
 					{
 						UInt32 FormID = NULL;
 						TESForm* Form = NULL;

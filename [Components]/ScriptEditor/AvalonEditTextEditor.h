@@ -163,6 +163,7 @@ namespace ConstructionSetExtender
 
 				static double								SetTextFadeAnimationDuration = 0.15;		// in seconds
 			public:
+				AvalonEditTextEditor(Font^ Font, UInt32 ParentWorkspaceIndex);
 				virtual ~AvalonEditTextEditor();
 
 				// interface events
@@ -239,8 +240,6 @@ namespace ConstructionSetExtender
 				virtual void										EndUpdate(void);
 				virtual UInt32										GetTotalLineCount(void);
 				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
-
-				AvalonEditTextEditor(Font^ Font, UInt32 ParentWorkspaceIndex);
 			};
 		}
 	}

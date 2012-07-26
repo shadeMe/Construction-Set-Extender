@@ -27,6 +27,8 @@ namespace ComponentDLLInterface
 		{
 			FillFormData(Parent);
 		}
+
+		bool											IsActive() { return ((Flags >> 1) & 1); }
 	};
 
 	struct FormListData
@@ -289,6 +291,7 @@ namespace ComponentDLLInterface
 	{
 		const char*										WorldEditorID;
 		const char*										RefEditorID;
+		bool											ParentCellInterior;
 		int												XCoord;
 		int												YCoord;
 		UInt32											UseCount;

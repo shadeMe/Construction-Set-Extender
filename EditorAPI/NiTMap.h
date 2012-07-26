@@ -3,11 +3,11 @@
 //	EditorAPI: NiTMap class and derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/*       
-    NiTMap class hierarchy: hashtable-based associative containers   
+/*
+    NiTMap class hierarchy: hashtable-based associative containers
 
     [ NOTICE: This is a templated class ]
-    Because it uses templates, this class requires a separate set of imports for every specialization.  
+    Because it uses templates, this class requires a separate set of imports for every specialization.
     In practice, most of the specializations map back to a few basic methods, but we'd still need to
     import the appropriate symbols for each.  This makes it difficult to hook and patch - but it also means
     that no one is likely to patch it, so the hooking is not strictly necessary.  We instead attempt to
@@ -63,7 +63,7 @@
          }
 
 */
-namespace CSE_GlobalClasses			// can't be in the global namespace as it conflicts with OBSE's definition of the classes
+namespace ConstructionSetExtender_OverriddenClasses			// can't be in the global namespace as it conflicts with OBSE's definition of the classes
 {
 	typedef void* NiTMapIterator;
 
@@ -74,21 +74,20 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		TKEY        m_key;
 		TVAL        m_val;
 		// use FormHeap for class new & delete
-		USEFORMHEAP 
+		USEFORMHEAP
 	};
 
 	template <class TKEY, class TVAL> class NiTMapBase
-	{// size 10/10 
-
+	{// size 10/10
 		// members
 		//void**                vtbl;               // 00
 	protected:  UInt32                  m_uiHashSize;       // 04 maximum slots in hash table
 				NiTMapItem<TKEY,TVAL>** m_ppkHashTable;     // 08 hash table storage
 				UInt32                  m_uiCount;          // 0C number of elements in list
 
-				// virtual methods              
-	public:     virtual                         ~NiTMapBase();                                                  // 000 
-				// vtbl entry is actually 'scalar deleting destructor', which calls this method       
+				// virtual methods
+	public:     virtual                         ~NiTMapBase();                                                  // 000
+				// vtbl entry is actually 'scalar deleting destructor', which calls this method
 	protected:  virtual UInt32                  KeyToHashIndex(TKEY key) const;                                 // 004 actually a templated functor
 				virtual bool                    IsKeysEqual(TKEY key1, TKEY key2) const;                        // 008 actually a templated functor
 				virtual void                    SetValue(NiTMapItem<TKEY,TVAL>* pkItem, TKEY key, TVAL val);    // 00C
@@ -107,20 +106,20 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 				inline bool             GetAt(TKEY key, TVAL& val) const;
 				// methods - map traversal
 				inline NiTMapIterator   GetFirstPos() const;
-				inline void             GetNext(NiTMapIterator& pos, TKEY& key, TVAL& val) const;  
+				inline void             GetNext(NiTMapIterator& pos, TKEY& key, TVAL& val) const;
 				// methods - Resize the map (e.g. the underlying hash table)
-				inline void             Resize(UInt32 uiNewHashSize);         
+				inline void             Resize(UInt32 uiNewHashSize);
 				// methods - construction
-	public:     NiTMapBase(UInt32 uiHashSize = 37); 
+	public:     NiTMapBase(UInt32 uiHashSize = 37);
 				// use FormHeap for class new & delete
-				USEFORMHEAP 
-					// prevent compiler from generating the default copy constructor or default assignment operator 
-	private:    NiTMapBase(const NiTMapBase&);              
-				NiTMapBase& operator=(const NiTMapBase&);           
+				USEFORMHEAP
+					// prevent compiler from generating the default copy constructor or default assignment operator
+	private:    NiTMapBase(const NiTMapBase&);
+				NiTMapBase& operator=(const NiTMapBase&);
 	};
 
 	template <class TKEY, class TVAL> class NiTMap : public NiTMapBase<TKEY, TVAL>
-	{// size 10/10 
+	{// size 10/10
 		// members
 	public:     static const UInt32 NUM_PRIMES;
 				static const UInt32 PRIMES[];
@@ -136,7 +135,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 	};
 
 	template <class TKEY, class TVAL> class NiTPointerMap : public NiTMapBase<TKEY, TVAL>
-	{// size 10/10 
+	{// size 10/10
 		// virtual methods
 	public:     virtual ~NiTPointerMap();                                   // 000
 	protected:  virtual NiTMapItem<TKEY, TVAL>* NewItem();                  // 014
@@ -145,49 +144,49 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 				// methods
 	public:     NiTPointerMap(UInt32 uiHashSize = 37) :  NiTMapBase<TKEY, TVAL>(uiHashSize) {};
 				// use FormHeap for class new & delete
-				USEFORMHEAP 
+				USEFORMHEAP
 	};
 
 	template <class TPARENT, class TVAL> class NiTStringTemplateMap : public TPARENT
-	{// size 14/14 
+	{// size 14/14
 		// members
 	protected:  bool m_bCopy;       // 10
 
 				// virtual methods
 
-	public:     virtual                     ~NiTStringTemplateMap();                                                        // 000     
+	public:     virtual                     ~NiTStringTemplateMap();                                                        // 000
 	protected:  virtual UInt32              KeyToHashIndex(const char* key) const;                                          // 004
 				virtual bool                IsKeysEqual(const char* key1, const char* key2) const;                          // 008
 				// NOTE: Bethesda used a case-insensitive string comparison for this field, even though the default
 				// hash function is case sensitive.  This violates the core invariant of hash tables - that key equality
 				// implies hash equality.  As a result, some parts of the key space will theoretically overlap.
-				// In practice with a hash table of reasonable size, however, this doesn't seem to be a problem.  
+				// In practice with a hash table of reasonable size, however, this doesn't seem to be a problem.
 				// For correctness, this definition uses the intended case sensitive comparator.
 				virtual void                SetValue(NiTMapItem<const char*, TVAL>* pkItem, const char* pcKey, TVAL val);   // 00C
 				virtual void                ClearValue(NiTMapItem<const char*, TVAL>* pkItem);                              // 010
 
-				// methods            
+				// methods
 	public:     NiTStringTemplateMap(UInt32 uiHashSize = 37, bool bCopy = true) : TPARENT(uiHashSize), m_bCopy(bCopy) {}
 				// use FormHeap for class new & delete
-				USEFORMHEAP 
+				USEFORMHEAP
 	};
 
 	template <class TVAL> class NiTStringMap : public NiTStringTemplateMap<NiTMap<const char*, TVAL>,TVAL>
-	{// size 14/14 
-	public:     
+	{// size 14/14
+	public:
 		// methods
 		NiTStringMap(UInt32 uiHashSize = 37, bool bCopy = true) : NiTStringTemplateMap<NiTMap<const char*, TVAL>,TVAL>(uiHashSize, bCopy) {}
 		// use FormHeap for class new & delete
-		USEFORMHEAP 
+		USEFORMHEAP
 	};
 
 	template <class TVAL> class NiTStringPointerMap : public NiTStringTemplateMap<NiTPointerMap<const char*, TVAL>, TVAL>
-	{// size 14/14 
-	public:     
+	{// size 14/14
+	public:
 		// methods
 		NiTStringPointerMap(UInt32 uiHashSize = 37, bool bCopy = true) : NiTStringTemplateMap<NiTPointerMap<const char*, TVAL>, TVAL>(uiHashSize, bCopy) {}
 		// use FormHeap for class new & delete
-		USEFORMHEAP 
+		USEFORMHEAP
 	};
 
 	// NiTMapBase
@@ -213,19 +212,19 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		FormHeap_Free(m_ppkHashTable);
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline UInt32 NiTMapBase<TKEY, TVAL>::GetCount() const
-	{ 
+	{
 		return m_uiCount;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline bool NiTMapBase<TKEY,TVAL>::IsEmpty() const
-	{ 
+	{
 		return m_uiCount == 0;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline void NiTMapBase<TKEY,TVAL>::SetAt(TKEY key, TVAL val)
 	{
 		if (!m_ppkHashTable) return;  // no hash table allocated
@@ -259,7 +258,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		m_uiCount++;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline bool NiTMapBase<TKEY,TVAL>::RemoveAt(TKEY key)
 	{
 		if (!m_ppkHashTable) return false;  // no hash table allocated
@@ -309,12 +308,12 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		return false;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline void NiTMapBase<TKEY, TVAL>::RemoveAll()
 	{
 		if (!m_ppkHashTable) return;  // no hash table allocated
 
-		for (UInt32 ui = 0; ui < m_uiHashSize; ui++) 
+		for (UInt32 ui = 0; ui < m_uiHashSize; ui++)
 		{
 			while (m_ppkHashTable[ui])
 			{
@@ -329,7 +328,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		m_uiCount = 0;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline bool NiTMapBase<TKEY,TVAL>::GetAt(TKEY key, TVAL& val) const
 	{
 		if (!m_ppkHashTable) return false;  // no hash table allocated
@@ -364,7 +363,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		return key1 == key2;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline void NiTMapBase<TKEY,TVAL>::SetValue(NiTMapItem<TKEY, TVAL>* pkItem, TKEY key, TVAL val)
 	{
 		pkItem->m_key = key;
@@ -376,10 +375,10 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 	{
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline NiTMapIterator NiTMapBase<TKEY,TVAL>::GetFirstPos() const
 	{
-		for (UInt32 ui = 0; ui < m_uiHashSize; ui++) 
+		for (UInt32 ui = 0; ui < m_uiHashSize; ui++)
 		{
 			if (m_ppkHashTable[ui])
 				return m_ppkHashTable[ui];
@@ -387,7 +386,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		return 0;
 	}
 	//---------------------------------------------------------------------------
-	template <class TKEY, class TVAL> 
+	template <class TKEY, class TVAL>
 	inline void NiTMapBase<TKEY,TVAL>::GetNext(NiTMapIterator& pos, TKEY& key, TVAL& val) const
 	{
 		NiTMapItem<TKEY, TVAL>* pkItem = (NiTMapItem<TKEY, TVAL>*) pos;
@@ -402,10 +401,10 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		}
 
 		UInt32 ui = KeyToHashIndex(pkItem->m_key);
-		for (++ui; ui < m_uiHashSize; ui++) 
+		for (++ui; ui < m_uiHashSize; ui++)
 		{
 			pkItem = m_ppkHashTable[ui];
-			if (pkItem) 
+			if (pkItem)
 			{
 				pos = pkItem;
 				return;
@@ -423,9 +422,9 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		// store old members
 		NiTMapItem<TKEY,TVAL>** oldHashTable = m_ppkHashTable;
 		UInt32 oldHashSize = m_uiHashSize;
-		UInt32 oldCount = m_uiCount;    
+		UInt32 oldCount = m_uiCount;
 
-		// re-initialize 
+		// re-initialize
 		m_uiHashSize = uiNewHashSize;
 		m_uiCount = 0;
 		UInt32 uiSize = sizeof(NiTMapItem<TKEY,TVAL>*) * m_uiHashSize;
@@ -434,7 +433,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		memset(m_ppkHashTable, 0, uiSize);
 
 		// Go through all entries in the old hash array and transfer to the new hash array.
-		for (UInt32 ui = 0; ui < oldHashSize; ui++) 
+		for (UInt32 ui = 0; ui < oldHashSize; ui++)
 		{
 			while (oldHashTable[ui])
 			{
@@ -469,22 +468,22 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 		7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749,
 		65521, 131071, 262139, 524287, 999983};
 		//---------------------------------------------------------------------------
-		template <class TKEY, class TVAL> 
+		template <class TKEY, class TVAL>
 		inline NiTMap<TKEY, TVAL>::~NiTMap()
 		{
 			// RemoveAll is called from here because it depends on virtual functions
-			// implemented in NiTAllocatorMap.  It will also be called in the 
+			// implemented in NiTAllocatorMap.  It will also be called in the
 			// parent destructor, but the map will already be empty.
 			NiTMap<TKEY, TVAL>::RemoveAll();
 		}
 		//---------------------------------------------------------------------------
-		template <class TKEY, class TVAL> 
+		template <class TKEY, class TVAL>
 		inline NiTMapItem<TKEY, TVAL>* NiTMap<TKEY, TVAL>::NewItem()
 		{
 			return new NiTMapItem<TKEY, TVAL>;
 		}
 		//---------------------------------------------------------------------------
-		template <class TKEY, class TVAL> 
+		template <class TKEY, class TVAL>
 		inline void NiTMap<TKEY, TVAL>::DeleteItem(NiTMapItem<TKEY, TVAL>* pkItem)
 		{
 			// set key and val to zero so that if they are smart pointers
@@ -503,22 +502,22 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 
 		// NiTPointerMap
 		//---------------------------------------------------------------------------
-		template <class TKEY, class TVAL> 
+		template <class TKEY, class TVAL>
 		inline NiTPointerMap<TKEY,TVAL>::~NiTPointerMap()
 		{
 			// RemoveAll is called from here because it depends on virtual functions
-			// implemented in NiTAllocatorMap.  It will also be called in the 
+			// implemented in NiTAllocatorMap.  It will also be called in the
 			// parent destructor, but the map will already be empty.
 			NiTPointerMap<TKEY,TVAL>::RemoveAll();
 		}
 		//---------------------------------------------------------------------------
-		template <class TKEY, class TVAL> 
+		template <class TKEY, class TVAL>
 		inline NiTMapItem<TKEY, TVAL>* NiTPointerMap<TKEY, TVAL>::NewItem()
 		{
 			return new NiTMapItem<TKEY, TVAL>;
 		}
 		//---------------------------------------------------------------------------
-		template <class TKEY, class TVAL> 
+		template <class TKEY, class TVAL>
 		inline void NiTPointerMap<TKEY, TVAL>::DeleteItem(NiTMapItem<TKEY, TVAL>* pkItem)
 		{
 			// set key and val to zero so that if they are smart pointers
@@ -529,15 +528,15 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 
 		// NiTStringTemplateMap
 		//---------------------------------------------------------------------------
-		template <class TPARENT, class TVAL>  
+		template <class TPARENT, class TVAL>
 		inline NiTStringTemplateMap<TPARENT,TVAL>::~NiTStringTemplateMap()
 		{
 			if (m_bCopy)
 			{
-				for (unsigned int i = 0; i < TPARENT::m_uiHashSize; i++) 
+				for (unsigned int i = 0; i < TPARENT::m_uiHashSize; i++)
 				{
 					NiTMapItem<const char*, TVAL>* pkItem = TPARENT::m_ppkHashTable[i];
-					while (pkItem) 
+					while (pkItem)
 					{
 						NiTMapItem<const char*, TVAL>* pkSave = pkItem;
 						pkItem = pkItem->m_pkNext;
@@ -547,7 +546,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 			}
 		}
 		//---------------------------------------------------------------------------
-		template <class TPARENT, class TVAL> 
+		template <class TPARENT, class TVAL>
 		inline void NiTStringTemplateMap<TPARENT,TVAL>::SetValue(NiTMapItem<const char*, TVAL>* pkItem, const char* pcKey, TVAL val)
 		{
 			if (m_bCopy)
@@ -564,7 +563,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 			pkItem->m_val = val;
 		}
 		//---------------------------------------------------------------------------
-		template <class TPARENT, class TVAL>  
+		template <class TPARENT, class TVAL>
 		inline void NiTStringTemplateMap<TPARENT,TVAL>::ClearValue(NiTMapItem<const char*, TVAL>* pkItem)
 		{
 			if (m_bCopy)
@@ -573,7 +572,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 			}
 		}
 		//---------------------------------------------------------------------------
-		template <class TPARENT, class TVAL> 
+		template <class TPARENT, class TVAL>
 		inline UInt32 NiTStringTemplateMap<TPARENT,TVAL>::KeyToHashIndex(const char* pKey) const
 		{
 			UInt32 uiHash = 0;
@@ -584,7 +583,7 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 			return uiHash % m_uiHashSize;
 		}
 		//---------------------------------------------------------------------------
-		template <class TPARENT, class TVAL> 
+		template <class TPARENT, class TVAL>
 		inline bool NiTStringTemplateMap<TPARENT,TVAL>::IsKeysEqual(const char* pcKey1, const char* pcKey2) const
 		{
 			return strcmp(pcKey1, pcKey2) == 0;
@@ -593,5 +592,4 @@ namespace CSE_GlobalClasses			// can't be in the global namespace as it conflict
 			// This version is more correct, however it may in rare cases not agree with the Bethesda code.
 		}
 		//---------------------------------------------------------------------------
-
 }

@@ -204,6 +204,7 @@ namespace ConstructionSetExtender
 		CSEAchievementBase*  		kBobTheBuilder			= NULL;
 		CSEAchievementIncremented*  kLoquacious				= NULL;
 		CSEAchievementBase*  		kSaboteur				= NULL;
+		CSEAchievementBase*  		kOldestTrickInTheBook	= NULL;
 
 		void Initialize()
 		{
@@ -270,6 +271,9 @@ namespace ConstructionSetExtender
 			kSaboteur				= new CSEAchievementBase("Saboteur", "Managed to crash the extended CS!",
 															IDB_ACHIEVEMENT_SABOTEUR, "F2E645A0-2503-4FFC-87A0-E6462325EBB8");
 
+			kOldestTrickInTheBook	= new CSEAchievementBase("Oldest Trick In The Book", "\"Never Gonna Give You Up, Never Gonna Let You Down!\"",
+															IDB_ACHIEVEMENT_OLDESTTRICK, "51602A18-037E-4FDC-88A8-B5F472D2026F");
+
 			BGSEditorExtender::Extras::ExtenderAchievementListT AchievementDepot;
 
 			AchievementDepot.push_back(CSEAchievementBase::AllClearAchievement);
@@ -296,6 +300,7 @@ namespace ConstructionSetExtender
 			AchievementDepot.push_back(kSaboteur);
 			AchievementDepot.push_back(CSEAchievementCheat::GetSingleton());
 			AchievementDepot.push_back(CSEAchievementLost::GetSingleton());
+			AchievementDepot.push_back(kOldestTrickInTheBook);
 
 			bool ComponentInitialized = BGSEEACHIEVEMENTS->Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
 

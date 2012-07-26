@@ -92,7 +92,7 @@ void TESDataHandler::ClearPluginArray()
 
 void TESDataHandler::CleanCellWaterExtraData( void )
 {
-	for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormFormIDMap->GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormFormIDMap->GetFirstPos(); Itr;)
 	{
 		UInt32 FormID = NULL;
 		TESForm* Form = NULL;

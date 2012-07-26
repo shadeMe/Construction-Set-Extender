@@ -251,10 +251,10 @@ namespace ConstructionSetExtender
 		//
 		// SearchBox
 		//
-		SearchBox->Location = Point(245, 389);
+		SearchBox->Location = System::Drawing::Point(310, 624);
 		//	SearchBox->Multiline = true;
 		SearchBox->Name = L"SearchBox";
-		SearchBox->Size = Size(384, 33);
+		SearchBox->Size = System::Drawing::Size(554, 33);
 		SearchBox->TabIndex = 1;
 		SearchBox->TextChanged += gcnew EventHandler(this, &TagBrowser::SearchBox_TextChanged);
 		SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
@@ -265,9 +265,9 @@ namespace ConstructionSetExtender
 			FormListHRefID, FormListHType});
 		FormList->ContextMenuStrip = FormListContextMenu;
 		FormList->FullRowSelect = true;
-		FormList->Location = Point(245, 12);
+		FormList->Location = System::Drawing::Point(310, 12);
 		FormList->Name = L"FormList";
-		FormList->Size = Size(384, 371);
+		FormList->Size = System::Drawing::Size(646, 606);
 		FormList->TabIndex = 2;
 		FormList->UseCompatibleStateImageBehavior = false;
 		FormList->View = View::Details;
@@ -281,17 +281,17 @@ namespace ConstructionSetExtender
 		// FormListHEditorID
 		//
 		FormListHEditorID->Text = L"EditorID";
-		FormListHEditorID->Width = 198;
+		FormListHEditorID->Width = 482;
 		//
 		// FormListHRefID
 		//
 		FormListHRefID->Text = L"FormID";
-		FormListHRefID->Width = 70;
+		FormListHRefID->Width = 64;
 		//
 		// FormListHType
 		//
 		FormListHType->Text = L"Type";
-		FormListHType->Width = 111;
+		FormListHType->Width = 77;
 		//
 		// FormListContextMenu
 		//
@@ -318,7 +318,7 @@ namespace ConstructionSetExtender
 		TagTree->GridRowLines = true;
 		TagTree->HideSelection = true;
 		TagTree->HotTracking = true;
-		TagTree->Location = Point(9, 12);
+		TagTree->Location = System::Drawing::Point(9, 12);
 		TagTree->Name = L"TagTree";
 		TagTree->NodesConnector = TagTreeNodeConnector;
 		TagTree->NodeSpacing = 4;
@@ -326,7 +326,7 @@ namespace ConstructionSetExtender
 		TagTree->PathSeparator = L";";
 		TagTree->SelectionBoxStyle = DevComponents::AdvTree::eSelectionStyle::NodeMarker;
 		TagTree->SelectionPerCell = true;
-		TagTree->Size = Size(225, 409);
+		TagTree->Size = System::Drawing::Size(295, 645);
 		TagTree->Styles->Add(TagTreeElementStyle1);
 		TagTree->Styles->Add(TagTreeElementStyle2);
 		TagTree->TabIndex = 4;
@@ -396,9 +396,9 @@ namespace ConstructionSetExtender
 		SaveTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 			static_cast<System::Byte>(0)));
 		SaveTags->ForeColor = System::Drawing::Color::Black;
-		SaveTags->Location = System::Drawing::Point(639, 363);
+		SaveTags->Location = System::Drawing::Point(870, 624);
 		SaveTags->Name = L"SaveTags";
-		SaveTags->Size = System::Drawing::Size(40, 27);
+		SaveTags->Size = System::Drawing::Size(40, 33);
 		SaveTags->TabIndex = 19;
 		SaveTags->Text = L"Save";
 		SaveTags->UseVisualStyleBackColor = false;
@@ -410,9 +410,9 @@ namespace ConstructionSetExtender
 		LoadTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 			static_cast<System::Byte>(0)));
 		LoadTags->ForeColor = System::Drawing::Color::Black;
-		LoadTags->Location = System::Drawing::Point(639, 392);
+		LoadTags->Location = System::Drawing::Point(916, 624);
 		LoadTags->Name = L"LoadTags";
-		LoadTags->Size = System::Drawing::Size(40, 27);
+		LoadTags->Size = System::Drawing::Size(40, 33);
 		LoadTags->TabIndex = 20;
 		LoadTags->Text = L"Load";
 		LoadTags->UseVisualStyleBackColor = false;
@@ -422,7 +422,7 @@ namespace ConstructionSetExtender
 		//
 		TagBrowserBox->AutoScaleDimensions = SizeF(6, 13);
 		TagBrowserBox->AutoScaleMode = AutoScaleMode::Font;
-		TagBrowserBox->ClientSize = Size(686, 434);
+		TagBrowserBox->ClientSize = Size(968, 669);
 		TagBrowserBox->Controls->Add(LoadTags);
 		TagBrowserBox->Controls->Add(SaveTags);
 		TagBrowserBox->Controls->Add(TagTree);
@@ -735,6 +735,20 @@ namespace ConstructionSetExtender
 			Item->SubItems->Add(TypeIdentifier[(int)Data->TypeID]);
 		else
 			Item->SubItems->Add("<Unknown>");
+
+		UInt32 ActiveForeColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+		bool ColorizeActiveForms = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+		if (Data->IsActive() && ColorizeActiveForms)
+		{
+			Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
+				(ActiveForeColor >> 8) & 0xFF,
+				(ActiveForeColor >> 16) & 0xFF);
+
+			Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
+				(ActiveBackColor >> 8) & 0xFF,
+				(ActiveBackColor >> 16) & 0xFF);
+		}
 
 		FormList->Items->Add(Item);
 	}

@@ -41,7 +41,7 @@ namespace ConstructionSetExtender
 			FormListCFormID});
 		FormList->Location = System::Drawing::Point(12, 12);
 		FormList->Name = L"FormList";
-		FormList->Size = System::Drawing::Size(340, 394);
+		FormList->Size = System::Drawing::Size(475, 638);
 		FormList->TabIndex = 0;
 		FormList->UseCompatibleStateImageBehavior = false;
 		FormList->View = View::Details;
@@ -56,13 +56,13 @@ namespace ConstructionSetExtender
 		FormList->MouseDoubleClick += gcnew MouseEventHandler(this, &UseInfoList::FormList_MouseDoubleClick);
 
 		FormListCType->Text = L"Type";
-		FormListCType->Width = 46;
+		FormListCType->Width = 75;
 
 		FormListCEditorID->Text = L"Editor ID";
-		FormListCEditorID->Width = 167;
+		FormListCEditorID->Width = 280;
 
 		FormListCFormID->Text = L"Form ID";
-		FormListCFormID->Width = 121;
+		FormListCFormID->Width = 70;
 
 		UseListObject->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {this->UseListObjectCType,
 			UseListObjectCEditorID, this->UseListObjectCFormID});
@@ -76,26 +76,30 @@ namespace ConstructionSetExtender
 		UseListObject->CheckBoxes = false;
 		UseListObject->FullRowSelect = true;
 		UseListObject->HideSelection = false;
+		UseListObject->Dock = System::Windows::Forms::DockStyle::Fill;
 		UseListObject->MouseDoubleClick += gcnew MouseEventHandler(this, &UseInfoList::UseListObject_MouseDoubleClick);
 
 		UseListObjectCType->Text = L"Type";
+		UseListObjectCType->Width = 75;
 
 		UseListObjectCEditorID->Text = L"Editor ID";
+		UseListObjectCEditorID->Width = 275;
 
 		UseListObjectCFormID->Text = L"Form ID";
+		UseListObjectCFormID->Width = 70;
 
 		UseListObjectGroup->Controls->Add(this->UseListObject);
-		UseListObjectGroup->Location = System::Drawing::Point(365, 12);
+		UseListObjectGroup->Location = System::Drawing::Point(493, 12);
 		UseListObjectGroup->Name = L"UseListObjectGroup";
-		UseListObjectGroup->Size = System::Drawing::Size(367, 215);
+		UseListObjectGroup->Size = System::Drawing::Size(469, 322);
 		UseListObjectGroup->TabIndex = 2;
 		UseListObjectGroup->TabStop = false;
 		UseListObjectGroup->Text = L"Used by these objects";
 
 		UseListCellGroup->Controls->Add(this->UseListCell);
-		UseListCellGroup->Location = System::Drawing::Point(365, 234);
+		UseListCellGroup->Location = System::Drawing::Point(493, 340);
 		UseListCellGroup->Name = L"UseListCellGroup";
-		UseListCellGroup->Size = System::Drawing::Size(367, 215);
+		UseListCellGroup->Size = System::Drawing::Size(469, 345);
 		UseListCellGroup->TabIndex = 3;
 		UseListCellGroup->TabStop = false;
 		UseListCellGroup->Text = L"Used in these cells";
@@ -112,6 +116,7 @@ namespace ConstructionSetExtender
 		UseListCell->CheckBoxes = false;
 		UseListCell->FullRowSelect = true;
 		UseListCell->HideSelection = false;
+		UseListCell->Dock = System::Windows::Forms::DockStyle::Fill;
 		UseListCell->MouseDoubleClick += gcnew MouseEventHandler(this, &UseInfoList::UseListCell_MouseDoubleClick);
 
 		UseListCellCWorldEditorID->Text = L"World Editor ID";
@@ -131,18 +136,18 @@ namespace ConstructionSetExtender
 		UseListCellCFirstRef->Text = L"First Reference";
 		UseListCellCFirstRef->Width = 100;
 
-		SearchBox->Location = System::Drawing::Point(12, 419);
-		SearchBox->MaxLength = 100;
+		SearchBox->Location = System::Drawing::Point(12, 656);
+		SearchBox->MaxLength = 255;
 		SearchBox->Multiline = true;
 		SearchBox->Name = L"SearchBox";
-		SearchBox->Size = System::Drawing::Size(340, 29);
+		SearchBox->Size = System::Drawing::Size(371 - 371 + 475, 29);
 		SearchBox->TabIndex = 4;
 		SearchBox->TextChanged += gcnew EventHandler(this, &UseInfoList::SearchBox_TextChanged);
 		SearchBox->KeyDown += gcnew KeyEventHandler(this, &UseInfoList::SearchBox_KeyDown);
 		SearchBox->Font = gcnew Font("Consolas", 14.25F, FontStyle::Regular);
 
 		ExportDataButton->Visible = false;
-		ExportDataButton->Location = System::Drawing::Point(253, 419);
+		ExportDataButton->Location = System::Drawing::Point(389, 656);
 		ExportDataButton->Size = System::Drawing::Size(98, 29);
 		ExportDataButton->TabIndex = 5;
 		ExportDataButton->Text = L"Export To CSV";
@@ -152,7 +157,7 @@ namespace ConstructionSetExtender
 		UseInfoListBox = gcnew Form();
 		UseInfoListBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 		UseInfoListBox->AutoScaleMode = AutoScaleMode::Font;
-		UseInfoListBox->ClientSize = System::Drawing::Size(744, 461);
+		UseInfoListBox->ClientSize = System::Drawing::Size(974, 697);
 		UseInfoListBox->Controls->Add(ExportDataButton);
 		UseInfoListBox->Controls->Add(SearchBox);
 		UseInfoListBox->Controls->Add(UseListCellGroup);
@@ -240,6 +245,10 @@ namespace ConstructionSetExtender
 		FormList->BeginUpdate();
 
 		ComponentDLLInterface::UseInfoListFormData* Data = NativeWrapper::g_CSEInterfaceTable->UseInfoList.GetLoadedForms();
+		UInt32 ActiveForeColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+		bool ColorizeActiveForms = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+
 		if (Data)
 		{
 			for (int i = 0; i < Data->FormCount; i++)
@@ -249,6 +258,16 @@ namespace ConstructionSetExtender
 				ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)ThisForm->TypeID]);
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
+				if (ThisForm->IsActive() && ColorizeActiveForms)
+				{
+					Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
+																	(ActiveForeColor >> 8) & 0xFF,
+																	(ActiveForeColor >> 16) & 0xFF);
+
+					Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
+																	(ActiveBackColor >> 8) & 0xFF,
+																	(ActiveBackColor >> 16) & 0xFF);
+				}
 
 				FormList->Items->Add(Item);
 			}
@@ -263,6 +282,10 @@ namespace ConstructionSetExtender
 
 		UseListObject->BeginUpdate();
 		ComponentDLLInterface::UseInfoListCrossRefData* Data = NativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCrossRefDataForForm(EditorID);
+		UInt32 ActiveForeColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+		bool ColorizeActiveForms = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+
 		if (Data)
 		{
 			for (int i = 0; i < Data->FormCount; i++)
@@ -272,6 +295,16 @@ namespace ConstructionSetExtender
 				ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)ThisForm->TypeID]);
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
+				if (ThisForm->IsActive() && ColorizeActiveForms)
+				{
+					Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
+						(ActiveForeColor >> 8) & 0xFF,
+						(ActiveForeColor >> 16) & 0xFF);
+
+					Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
+						(ActiveBackColor >> 8) & 0xFF,
+						(ActiveBackColor >> 16) & 0xFF);
+				}
 
 				UseListObject->Items->Add(Item);
 			}
@@ -290,9 +323,19 @@ namespace ConstructionSetExtender
 				ListViewItem^ Item = gcnew ListViewItem(gcnew String(ThisForm->WorldEditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
-				Item->SubItems->Add(((!ThisForm->Flags)?String::Format("{0}, {1}", ThisForm->XCoord, ThisForm->YCoord):"Interior"));
+				Item->SubItems->Add((ThisForm->ParentCellInterior == false ? String::Format("{0}, {1}", ThisForm->XCoord, ThisForm->YCoord) : "Interior"));
 				Item->SubItems->Add(gcnew String(ThisForm->RefEditorID));
 				Item->SubItems->Add(ThisForm->UseCount.ToString());
+				if (ThisForm->IsActive() && ColorizeActiveForms)
+				{
+					Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
+						(ActiveForeColor >> 8) & 0xFF,
+						(ActiveForeColor >> 16) & 0xFF);
+
+					Item->BackColor = System::Drawing::Color::FromArgb(ActiveBackColor & 0xFF,
+						(ActiveBackColor >> 8) & 0xFF,
+						(ActiveBackColor >> 16) & 0xFF);
+				}
 
 				UseListCell->Items->Add(Item);
 			}

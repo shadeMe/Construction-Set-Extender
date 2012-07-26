@@ -57,7 +57,7 @@ namespace ConstructionSetExtender
 				FindReplaceDialog::Destroy();
 			}
 
-			void										Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection);
+			void										Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection, bool PerformSearch);
 			void										Hide();
 		};
 	}

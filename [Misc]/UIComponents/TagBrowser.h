@@ -165,10 +165,10 @@ namespace UIComponents {
 			// 
 			// SearchBox
 			// 
-			this->SearchBox->Location = System::Drawing::Point(245, 389);
+			this->SearchBox->Location = System::Drawing::Point(310, 624);
 			this->SearchBox->Multiline = true;
 			this->SearchBox->Name = L"SearchBox";
-			this->SearchBox->Size = System::Drawing::Size(384, 33);
+			this->SearchBox->Size = System::Drawing::Size(554, 33);
 			this->SearchBox->TabIndex = 1;
 			// 
 			// FormList
@@ -177,9 +177,9 @@ namespace UIComponents {
 				this->FormListHRefID, this->FormListHType});
 			this->FormList->ContextMenuStrip = this->FormListContextMenu;
 			this->FormList->FullRowSelect = true;
-			this->FormList->Location = System::Drawing::Point(245, 12);
+			this->FormList->Location = System::Drawing::Point(310, 12);
 			this->FormList->Name = L"FormList";
-			this->FormList->Size = System::Drawing::Size(384, 371);
+			this->FormList->Size = System::Drawing::Size(646, 606);
 			this->FormList->TabIndex = 2;
 			this->FormList->UseCompatibleStateImageBehavior = false;
 			this->FormList->View = System::Windows::Forms::View::Details;
@@ -187,29 +187,29 @@ namespace UIComponents {
 			// FormListHEditorID
 			// 
 			this->FormListHEditorID->Text = L"EditorID";
-			this->FormListHEditorID->Width = 198;
+			this->FormListHEditorID->Width = 482;
 			// 
 			// FormListHRefID
 			// 
 			this->FormListHRefID->Text = L"FormID";
-			this->FormListHRefID->Width = 70;
+			this->FormListHRefID->Width = 64;
 			// 
 			// FormListHType
 			// 
 			this->FormListHType->Text = L"Type";
-			this->FormListHType->Width = 111;
+			this->FormListHType->Width = 77;
 			// 
 			// FormListContextMenu
 			// 
 			this->FormListContextMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->FormListContextMenuRemove});
 			this->FormListContextMenu->Name = L"FormListContextMenu";
-			this->FormListContextMenu->Size = System::Drawing::Size(172, 26);
+			this->FormListContextMenu->Size = System::Drawing::Size(165, 26);
 			// 
 			// FormListContextMenuRemove
 			// 
 			this->FormListContextMenuRemove->Name = L"FormListContextMenuRemove";
 			this->FormListContextMenuRemove->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
-			this->FormListContextMenuRemove->Size = System::Drawing::Size(171, 22);
+			this->FormListContextMenuRemove->Size = System::Drawing::Size(164, 22);
 			this->FormListContextMenuRemove->Text = L"Remove From Tag";
 			// 
 			// TagTree
@@ -221,6 +221,7 @@ namespace UIComponents {
 			// 
 			// 
 			this->TagTree->BackgroundStyle->Class = L"TreeBorderKey";
+			this->TagTree->BackgroundStyle->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->TagTree->CellEdit = true;
 			this->TagTree->ColorSchemeStyle = DevComponents::AdvTree::eColorSchemeStyle::VS2005;
 			this->TagTree->ColumnsVisible = false;
@@ -237,7 +238,7 @@ namespace UIComponents {
 			this->TagTree->PathSeparator = L";";
 			this->TagTree->SelectionBoxStyle = DevComponents::AdvTree::eSelectionStyle::NodeMarker;
 			this->TagTree->SelectionPerCell = true;
-			this->TagTree->Size = System::Drawing::Size(225, 409);
+			this->TagTree->Size = System::Drawing::Size(295, 645);
 			this->TagTree->Styles->Add(this->TagTreeElementStyle1);
 			this->TagTree->Styles->Add(this->TagTreeElementStyle2);
 			this->TagTree->TabIndex = 4;
@@ -282,7 +283,9 @@ namespace UIComponents {
 			this->TagTreeElementStyle2->BorderRightWidth = 1;
 			this->TagTreeElementStyle2->BorderTop = DevComponents::DotNetBar::eStyleBorderType::Solid;
 			this->TagTreeElementStyle2->BorderTopWidth = 1;
+			this->TagTreeElementStyle2->Class = L"";
 			this->TagTreeElementStyle2->CornerDiameter = 4;
+			this->TagTreeElementStyle2->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->TagTreeElementStyle2->Description = L"Gray";
 			this->TagTreeElementStyle2->Name = L"TagTreeElementStyle2";
 			this->TagTreeElementStyle2->PaddingBottom = 1;
@@ -293,6 +296,8 @@ namespace UIComponents {
 			// 
 			// TagTreeElementStyle1
 			// 
+			this->TagTreeElementStyle1->Class = L"";
+			this->TagTreeElementStyle1->CornerType = DevComponents::DotNetBar::eCornerType::Square;
 			this->TagTreeElementStyle1->Name = L"TagTreeElementStyle1";
 			this->TagTreeElementStyle1->TextColor = System::Drawing::SystemColors::ControlText;
 			// 
@@ -302,9 +307,9 @@ namespace UIComponents {
 			this->SaveTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
 			this->SaveTags->ForeColor = System::Drawing::Color::Black;
-			this->SaveTags->Location = System::Drawing::Point(639, 363);
+			this->SaveTags->Location = System::Drawing::Point(870, 624);
 			this->SaveTags->Name = L"SaveTags";
-			this->SaveTags->Size = System::Drawing::Size(40, 27);
+			this->SaveTags->Size = System::Drawing::Size(40, 33);
 			this->SaveTags->TabIndex = 19;
 			this->SaveTags->Text = L"Save";
 			this->SaveTags->UseVisualStyleBackColor = false;
@@ -315,9 +320,9 @@ namespace UIComponents {
 			this->LoadTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
 			this->LoadTags->ForeColor = System::Drawing::Color::Black;
-			this->LoadTags->Location = System::Drawing::Point(639, 392);
+			this->LoadTags->Location = System::Drawing::Point(916, 624);
 			this->LoadTags->Name = L"LoadTags";
-			this->LoadTags->Size = System::Drawing::Size(40, 27);
+			this->LoadTags->Size = System::Drawing::Size(40, 33);
 			this->LoadTags->TabIndex = 20;
 			this->LoadTags->Text = L"Load";
 			this->LoadTags->UseVisualStyleBackColor = false;
@@ -327,12 +332,12 @@ namespace UIComponents {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(686, 434);
-			this->Controls->Add(this->LoadTags);
-			this->Controls->Add(this->SaveTags);
+			this->ClientSize = System::Drawing::Size(968, 669);
 			this->Controls->Add(this->TagTree);
 			this->Controls->Add(this->FormList);
 			this->Controls->Add(this->SearchBox);
+			this->Controls->Add(this->SaveTags);
+			this->Controls->Add(this->LoadTags);
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedSingle;
 			this->MaximizeBox = false;
 			this->Name = L"TagBrowser";

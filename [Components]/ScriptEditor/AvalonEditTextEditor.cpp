@@ -175,6 +175,7 @@ namespace ConstructionSetExtender
 						SetSelectedText(Text, false);
 						SetSelectionLength(0);
 					}
+
 					UpdateCodeFoldings();
 				}
 			}
@@ -244,6 +245,7 @@ namespace ConstructionSetExtender
 			{
 				if (Index >= TextField->Text->Length)
 					Index = TextField->Text->Length - 1;
+
 				return TextField->Document->GetLocation(Index).Line - 1;
 			}
 
@@ -426,11 +428,18 @@ namespace ConstructionSetExtender
 
 					System::Text::RegularExpressions::Regex^ Parser = nullptr;
 					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_CaseInsensitive))
-						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern, System::Text::RegularExpressions::RegexOptions::IgnoreCase|System::Text::RegularExpressions::RegexOptions::Singleline);
+					{
+						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
+										System::Text::RegularExpressions::RegexOptions::IgnoreCase|System::Text::RegularExpressions::RegexOptions::Singleline);
+					}
 					else
-						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern, System::Text::RegularExpressions::RegexOptions::Singleline);
+					{
+						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
+										System::Text::RegularExpressions::RegexOptions::Singleline);
+					}
 
 					AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
+
 					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_InSelection))
 					{
 						if (TextSelection->IsEmpty == false)
@@ -446,6 +455,7 @@ namespace ConstructionSetExtender
 								{
 									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Output, Options);
 									Hits += Matches;
+
 									if (Matches == -1)
 									{
 										Hits = -1;
@@ -461,6 +471,7 @@ namespace ConstructionSetExtender
 						{
 							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Output, Options);
 							Hits += Matches;
+
 							if (Matches == -1)
 							{
 								Hits = -1;
@@ -839,6 +850,7 @@ namespace ConstructionSetExtender
 			{
 				int OffsetA = 0, OffsetB = 0, Throwaway = 0;
 				array<String^>^ Result = gcnew array<String^>(3);
+
 				Result[1] = GetTokenAtIndex(Index, false, OffsetA, OffsetB);
 				Result[0] = GetTokenAtIndex(OffsetA - 2, false, Throwaway, Throwaway);
 				Result[2] = GetTokenAtIndex(OffsetB + 2, false, Throwaway, Throwaway);
@@ -857,7 +869,7 @@ namespace ConstructionSetExtender
 				}
 				else
 				{
-					MessageBox::Show("Invalid line number", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+					MessageBox::Show("Invalid line number.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				}
 			}
 
@@ -1132,6 +1144,7 @@ namespace ConstructionSetExtender
 
 					BraceColorizer->SetHighlight(OpenBraceOffset, CloseBraceOffset);
 				}
+
 				TextField->TextArea->TextView->InvalidateLayer(BraceColorizer->Layer);
 			}
 
@@ -1145,26 +1158,31 @@ namespace ConstructionSetExtender
 					Color::GhostWhite,
 					PREFERENCES->LookupColorByKey("SyntaxPreprocessorColor"),
 					BoldFaced);
+
 				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_Keywords,
 					PREFERENCES->LookupColorByKey("SyntaxKeywordsColor"),
 					Color::GhostWhite,
 					Color::GhostWhite,
 					BoldFaced);
+
 				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_BlockTypes,
 					PREFERENCES->LookupColorByKey("SyntaxScriptBlocksColor"),
 					Color::GhostWhite,
 					Color::GhostWhite,
 					BoldFaced);
+
 				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_Delimiter,
 					PREFERENCES->LookupColorByKey("SyntaxDelimitersColor"),
 					Color::GhostWhite,
 					Color::GhostWhite,
 					BoldFaced);
+
 				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_Digit,
 					PREFERENCES->LookupColorByKey("SyntaxDigitsColor"),
 					Color::GhostWhite,
 					Color::GhostWhite,
 					BoldFaced);
+
 				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_String,
 					PREFERENCES->LookupColorByKey("SyntaxStringsColor"),
 					Color::GhostWhite,
@@ -1173,6 +1191,7 @@ namespace ConstructionSetExtender
 
 				AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->CreateDefinitionFromSerializedData("ObScript");
 				SyntaxHighlightingManager->PurgeSerializedHighlightingDataCache();
+
 				return Result;
 			}
 #pragma endregion
@@ -1388,8 +1407,9 @@ namespace ConstructionSetExtender
 					else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
-						AvalonEdit::Document::ISegment^ Segment = TextField->Document->GetLineByOffset(GetCaretPos());
-						MoveTextSegment(Segment, MoveSegmentDirection::e_Up);
+
+						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::e_Up);
+
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 
 						HandleKeyEventForKey(E->Key);
@@ -1407,8 +1427,9 @@ namespace ConstructionSetExtender
 					else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
-						AvalonEdit::Document::ISegment^ Segment = TextField->Document->GetLineByOffset(GetCaretPos());
-						MoveTextSegment(Segment, MoveSegmentDirection::e_Down);
+
+						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::e_Down);
+
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 
 						HandleKeyEventForKey(E->Key);
@@ -1650,14 +1671,20 @@ namespace ConstructionSetExtender
 				}
 
 				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions();
+
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
 					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy();
+
 				TextField->Options->CutCopyWholeLine = PREFERENCES->FetchSettingAsInt("CutCopyEntireLine", "General");
 				TextField->Options->ShowSpaces = PREFERENCES->FetchSettingAsInt("ShowSpaces", "Appearance");
 				TextField->Options->ShowTabs = PREFERENCES->FetchSettingAsInt("ShowTabs", "Appearance");
 				TextField->WordWrap = PREFERENCES->FetchSettingAsInt("WordWrap", "Appearance");
+
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
+				else
+					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
+
 				IntelliSenseBox->MaximumVisibleItemCount = PREFERENCES->FetchSettingAsInt("MaxVisibleItems", "IntelliSense");
 				IntelliSenseBox->PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
 
@@ -1680,8 +1707,10 @@ namespace ConstructionSetExtender
 				BraceColorizer = gcnew AvalonEditBraceHighlightingBGColorizer(TextField, KnownLayer::Caret);
 				CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 				CodeFoldingStrategy = nullptr;
+
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
 					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy();
+
 				MiddleMouseScrollTimer = gcnew Timer();
 				FoldingTimer = gcnew Timer();
 				ExternalVerticalScrollBar = gcnew VScrollBar();
@@ -1740,6 +1769,8 @@ namespace ConstructionSetExtender
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
+				else
+					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
 				AnimationPrimitive->Name = "AnimationPrimitive";
 

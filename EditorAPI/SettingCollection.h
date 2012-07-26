@@ -90,7 +90,7 @@ public:
 class SettingCollectionMap : public SettingCollection   // actually SettingCollectionMap<Setting*>
 {
 public:
-	typedef CSE_GlobalClasses::BSTCaseInsensitiveStringMap<Setting*>	SettingMapT;
+	typedef ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<Setting*>	SettingMapT;
 
     // members
     //     /*000*/ SettingCollection

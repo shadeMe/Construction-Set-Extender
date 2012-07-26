@@ -4,24 +4,21 @@
 //	EditorAPI: BSTCaseInsensitiveStringMap class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-
-namespace CSE_GlobalClasses
+namespace ConstructionSetExtender_OverriddenClasses
 {
 	template <class TVAL> class BSTCaseInsensitiveStringMap : public NiTStringMap<TVAL>
 	{// size 14
-
-		// virtual methods           
-	public:     virtual                     ~BSTCaseInsensitiveStringMap() {}                                               // 000     
+		// virtual methods
+	public:     virtual                     ~BSTCaseInsensitiveStringMap() {}                                               // 000
 	protected:  virtual UInt32              KeyToHashIndex(const char* key) const;                                          // 004
 				virtual bool                IsKeysEqual(const char* key1, const char* key2) const;                          // 008
 
-				// methods            
+				// methods
 	public:     BSTCaseInsensitiveStringMap(UInt32 uiHashSize = 37, bool bCopy = true) : NiTStringMap<TVAL>(uiHashSize,bCopy) {}
-
 	};
 
 	//---------------------------------------------------------------------------
-	template <class TVAL> 
+	template <class TVAL>
 	UInt32 BSTCaseInsensitiveStringMap<TVAL>::KeyToHashIndex(const char* pKey) const
 	{
 		unsigned int len = strlen(pKey);
@@ -36,7 +33,7 @@ namespace CSE_GlobalClasses
 		return NiTStringMap<TVAL>::KeyToHashIndex(buffer);
 	}
 	//---------------------------------------------------------------------------
-	template <class TVAL> 
+	template <class TVAL>
 	inline bool BSTCaseInsensitiveStringMap<TVAL>::IsKeysEqual(const char* pcKey1, const char* pcKey2) const
 	{
 		return _stricmp(pcKey1, pcKey2) == 0;

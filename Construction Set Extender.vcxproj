@@ -409,6 +409,7 @@
     <None Include="Images\command.bmp" />
     <None Include="Images\compart.bmp" />
     <None Include="Images\erudite.bmp" />
+    <None Include="Images\fakevoice.bmp" />
     <None Include="Images\fearless.bmp" />
     <None Include="Images\fly.bmp" />
     <None Include="Images\heretic.bmp" />

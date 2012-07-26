@@ -130,7 +130,7 @@ namespace UIComponents {
 				this->FormListCFormID});
 			this->FormList->Location = System::Drawing::Point(12, 12);
 			this->FormList->Name = L"FormList";
-			this->FormList->Size = System::Drawing::Size(340, 394);
+			this->FormList->Size = System::Drawing::Size(475, 638);
 			this->FormList->TabIndex = 0;
 			this->FormList->UseCompatibleStateImageBehavior = false;
 			this->FormList->View = System::Windows::Forms::View::Details;
@@ -154,9 +154,10 @@ namespace UIComponents {
 			// 
 			this->UseListObject->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {this->UseListObjectCType, 
 				this->UseListObjectCEditorID, this->UseListObjectCFormID});
-			this->UseListObject->Location = System::Drawing::Point(6, 19);
+			this->UseListObject->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->UseListObject->Location = System::Drawing::Point(3, 16);
 			this->UseListObject->Name = L"UseListObject";
-			this->UseListObject->Size = System::Drawing::Size(355, 190);
+			this->UseListObject->Size = System::Drawing::Size(463, 303);
 			this->UseListObject->TabIndex = 1;
 			this->UseListObject->UseCompatibleStateImageBehavior = false;
 			this->UseListObject->View = System::Windows::Forms::View::Details;
@@ -176,9 +177,9 @@ namespace UIComponents {
 			// UseListObjectGroup
 			// 
 			this->UseListObjectGroup->Controls->Add(this->UseListObject);
-			this->UseListObjectGroup->Location = System::Drawing::Point(365, 12);
+			this->UseListObjectGroup->Location = System::Drawing::Point(493, 12);
 			this->UseListObjectGroup->Name = L"UseListObjectGroup";
-			this->UseListObjectGroup->Size = System::Drawing::Size(367, 215);
+			this->UseListObjectGroup->Size = System::Drawing::Size(469, 322);
 			this->UseListObjectGroup->TabIndex = 2;
 			this->UseListObjectGroup->TabStop = false;
 			this->UseListObjectGroup->Text = L"Used by these objects";
@@ -186,9 +187,9 @@ namespace UIComponents {
 			// UseListCellGroup
 			// 
 			this->UseListCellGroup->Controls->Add(this->UseListCell);
-			this->UseListCellGroup->Location = System::Drawing::Point(365, 234);
+			this->UseListCellGroup->Location = System::Drawing::Point(493, 340);
 			this->UseListCellGroup->Name = L"UseListCellGroup";
-			this->UseListCellGroup->Size = System::Drawing::Size(367, 215);
+			this->UseListCellGroup->Size = System::Drawing::Size(469, 345);
 			this->UseListCellGroup->TabIndex = 3;
 			this->UseListCellGroup->TabStop = false;
 			this->UseListCellGroup->Text = L"Used in these cells";
@@ -197,9 +198,10 @@ namespace UIComponents {
 			// 
 			this->UseListCell->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(5) {this->UseListCellCWorldEditorID, 
 				this->UseListCellCCellFormID, this->UseListCellCCellEditorID, this->UseListCellCCellGrid, this->UseListCellCUseCount});
-			this->UseListCell->Location = System::Drawing::Point(6, 19);
+			this->UseListCell->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->UseListCell->Location = System::Drawing::Point(3, 16);
 			this->UseListCell->Name = L"UseListCell";
-			this->UseListCell->Size = System::Drawing::Size(355, 190);
+			this->UseListCell->Size = System::Drawing::Size(463, 326);
 			this->UseListCell->TabIndex = 1;
 			this->UseListCell->UseCompatibleStateImageBehavior = false;
 			this->UseListCell->View = System::Windows::Forms::View::Details;
@@ -230,17 +232,17 @@ namespace UIComponents {
 			// 
 			// SearchBox
 			// 
-			this->SearchBox->Location = System::Drawing::Point(12, 419);
+			this->SearchBox->Location = System::Drawing::Point(12, 656);
 			this->SearchBox->MaxLength = 100;
 			this->SearchBox->Multiline = true;
 			this->SearchBox->Name = L"SearchBox";
-			this->SearchBox->Size = System::Drawing::Size(235, 29);
+			this->SearchBox->Size = System::Drawing::Size(371, 29);
 			this->SearchBox->TabIndex = 4;
 			// 
 			// FilterLabel
 			// 
 			this->FilterLabel->Enabled = false;
-			this->FilterLabel->Location = System::Drawing::Point(253, 419);
+			this->FilterLabel->Location = System::Drawing::Point(389, 656);
 			this->FilterLabel->Name = L"FilterLabel";
 			this->FilterLabel->Size = System::Drawing::Size(98, 29);
 			this->FilterLabel->TabIndex = 5;
@@ -251,7 +253,7 @@ namespace UIComponents {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(744, 461);
+			this->ClientSize = System::Drawing::Size(974, 697);
 			this->Controls->Add(this->FilterLabel);
 			this->Controls->Add(this->SearchBox);
 			this->Controls->Add(this->UseListCellGroup);

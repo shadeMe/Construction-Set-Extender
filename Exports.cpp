@@ -6,6 +6,7 @@
 #include "Hooks\Misc.h"
 #include "Hooks\ScriptEditor.h"
 #include "Hooks\TESFile.h"
+#include "Hooks\Dialog.h"
 
 #include <BGSEEWorkspaceManager.h>
 
@@ -209,6 +210,30 @@ void ReadFromINI(const char* Setting, const char* Section, const char* Default, 
 void WriteToINI(const char* Setting, const char* Section, const char* Value)
 {
 	BGSEEMAIN->INISetter()(Setting, Section, Value, true);
+}
+
+UInt32 GetFormListActiveItemForegroundColor(void)
+{
+	return SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+									INISettings::kDialogs_ActiveFormForeColor,
+									BGSEEMAIN->INIGetter()));
+}
+
+UInt32 GetFormListActiveItemBackgroundColor(void)
+{
+	return SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+									INISettings::kDialogs_ActiveFormBackColor,
+									BGSEEMAIN->INIGetter()));
+}
+
+bool GetShouldColorizeActiveForms(void)
+{
+	return atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
+}
+
+bool GetShouldSortActiveFormsFirst(void)
+{
+	return atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter()));
 }
 #pragma endregion
 /**** END EDITORAPI SUBINTERFACE ****/
@@ -658,6 +683,7 @@ void CompileDependencies(const char* EditorID)
 							CompileCrossReferencedForms((TESForm*)ThisReference);
 					}
 				}
+
 				BGSEECONSOLE->Exdent();
 			}
 		}
@@ -703,7 +729,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		if (TestData.UDF)	ScriptCount++;
 	}
 
-	for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
@@ -758,7 +784,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		GlobalCount++;
 	}
 
-	for (CSE_GlobalClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
@@ -1023,11 +1049,10 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 					TESObjectREFR* FirstRef = Data->cell->FindFirstRef(Form, true);
 					TESWorldSpace* WorldSpace = Data->cell->GetParentWorldSpace();
 
-					Result->UseInfoListCellItemListHead[i].EditorID = Data->cell->editorID.c_str();
-					Result->UseInfoListCellItemListHead[i].FormID = Data->cell->formID;
-					Result->UseInfoListCellItemListHead[i].Flags = Data->cell->cellFlags & TESObjectCELL::kCellFlags_Interior;
+					Result->UseInfoListCellItemListHead[i].FillFormData(Data->cell);
 					Result->UseInfoListCellItemListHead[i].WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorID.c_str());
 					Result->UseInfoListCellItemListHead[i].RefEditorID = ((!FirstRef || !FirstRef->editorID.c_str())?"<Unnamed>":FirstRef->editorID.c_str());
+					Result->UseInfoListCellItemListHead[i].ParentCellInterior = Data->cell->cellFlags & TESObjectCELL::kCellFlags_Interior;
 					Result->UseInfoListCellItemListHead[i].XCoord = Data->cell->cellData.coords->x;
 					Result->UseInfoListCellItemListHead[i].YCoord = Data->cell->cellData.coords->y;
 					Result->UseInfoListCellItemListHead[i].UseCount = Data->count;
@@ -1161,6 +1186,10 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		SaveActivePlugin,
 		ReadFromINI,
 		WriteToINI,
+		GetFormListActiveItemForegroundColor,
+		GetFormListActiveItemBackgroundColor,
+		GetShouldColorizeActiveForms,
+		GetShouldSortActiveFormsFirst,
 	},
 	{
 		CreateNewScript,

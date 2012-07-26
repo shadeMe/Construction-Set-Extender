@@ -836,6 +836,9 @@
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl">
       <Filter>Components\Coda</Filter>
     </None>
+    <None Include="Images\fakevoice.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">

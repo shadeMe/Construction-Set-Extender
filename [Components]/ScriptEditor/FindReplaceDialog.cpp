@@ -373,7 +373,7 @@ namespace ConstructionSetExtender
 			FindReplaceBox->Hide();
 		}
 
-		void FindReplaceDialog::Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection)
+		void FindReplaceDialog::Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection, bool PerformSearch)
 		{
 			LoadOptions();
 
@@ -395,6 +395,11 @@ namespace ConstructionSetExtender
 				else
 					FindReplaceBox->Show();
 			}
+
+			if (PerformSearch)
+				FindButton->PerformClick();
+
+			QueryBox->Focus();
 		}
 
 		UInt32 FindReplaceDialog::GetSelectedOptions()

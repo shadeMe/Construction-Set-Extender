@@ -42,8 +42,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESFormDelete, "");
 		_DeclareMemHdlr(TextureSizeCheck, "allows the preview of textures of resolution > 512px");
 		_DeclareMemHdlr(DataHandlerPlaceTESObjectLIGH, "fixes a CTD that occurs on the first reference placement of a light object");
-		_DeclareMemHdlr(TESWorldSpaceDestroyCellMapA, "fixes an extremely mysterious CTD");
-		_DeclareMemHdlr(TESWorldSpaceDestroyCellMapB, "in retrospect, it was probably caused by turning on optimizations for the plugin");
 		_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registy entries at startup");
 		_DeclareMemHdlr(AchievementAddTopic, "various hooks that unlock achievements");
 		_DeclareMemHdlr(AchievementDeleteShadeMe, "");

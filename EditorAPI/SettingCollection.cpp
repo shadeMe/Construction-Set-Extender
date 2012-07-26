@@ -32,7 +32,7 @@ DefaultGMSTMapT						g_DefaultGMSTMap;
 
 void GameSettingCollection::CreateDefaultCopy()
 {
-	for (CSE_GlobalClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
 		const char* Name = NULL;
 		Setting* Data = NULL;
@@ -54,7 +54,7 @@ void GameSettingCollection::CreateDefaultCopy()
 
 void GameSettingCollection::ResetCollection()
 {
-	for (CSE_GlobalClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
 		const char* Name = NULL;
 		Setting* Data = NULL;
@@ -84,7 +84,7 @@ UInt32 GameSettingCollection::GetGMSTCount()
 void GameSettingCollection::SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData)
 {
 	UInt32 Index = 0;
-	for (CSE_GlobalClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
 		const char* Name = NULL;
 		Setting* Data = NULL;

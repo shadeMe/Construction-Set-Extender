@@ -5,7 +5,7 @@
 //	EditorAPI: TESFile and related classes.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-namespace CSE_GlobalClasses
+namespace ConstructionSetExtender_OverriddenClasses
 {
 	template <class TKEY, class TVAL> class NiTPointerMap;
 }
@@ -105,7 +105,7 @@ public:
 		/*14*/ UInt32        recordOffset;   // used internally to track header offsets of all open groups
 	};
 	typedef tList<GroupInfo> GroupList;
-	typedef CSE_GlobalClasses::NiTPointerMap< UInt32, TESFile* > ChildThreadFileMapT;
+	typedef ConstructionSetExtender_OverriddenClasses::NiTPointerMap< UInt32, TESFile* > ChildThreadFileMapT;
 
 	// members
 	/*000*/ UInt32               errorState;
