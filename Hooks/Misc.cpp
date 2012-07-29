@@ -400,12 +400,12 @@ namespace ConstructionSetExtender
 				pushad
 				push	ebx
 				mov		ecx, ebp
-				call	[_hhGetVar(Call1)]		// ExtraDataList::CopyList
+				call	_hhGetVar(Call1)		// ExtraDataList::CopyList
 				popad
 
 				pushad
 				mov		ecx, edi
-				call	[_hhGetVar(Call2)]		// TESObjectREFR::RemoveExtraTeleport
+				call	_hhGetVar(Call2)		// TESObjectREFR::RemoveExtraTeleport
 				popad
 
 				jmp		_hhGetVar(Retn)

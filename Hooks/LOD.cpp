@@ -261,7 +261,7 @@ namespace ConstructionSetExtender
 				push	eax
 				push	ecx
 				push	edx
-				mov		eax, [_hhGetVar(Byte)]
+				mov		eax, _hhGetVar(Byte)
 				mov		[eax], 1
 				jmp		_hhGetVar(Retn)
 			}

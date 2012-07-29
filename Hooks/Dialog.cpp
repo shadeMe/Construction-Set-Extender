@@ -393,7 +393,7 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
-				jmp		[_hhGetVar(Exit)]
+				jmp		_hhGetVar(Exit)
 			}
 		}
 
@@ -418,7 +418,7 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
-				jmp		[_hhGetVar(Exit)]
+				jmp		_hhGetVar(Exit)
 			}
 		}
 
@@ -445,7 +445,7 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			EXIT2:
 				popad
-				jmp		[_hhGetVar(Exit)]
+				jmp		_hhGetVar(Exit)
 			}
 		}
 
@@ -479,7 +479,7 @@ namespace ConstructionSetExtender
 			EXIT1:
 				popad
 			EXIT2:
-				jmp		[_hhGetVar(Exit)]
+				jmp		_hhGetVar(Exit)
 			}
 		}
 

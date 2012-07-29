@@ -179,10 +179,10 @@ namespace ConstructionSetExtender
 				test	al, 1
 				jnz		DOORMARKER
 
-				jmp		[_hhGetVar(Properties)]
+				jmp		_hhGetVar(Properties)
 			TELEPORT:
 				popad
-				jmp		[_hhGetVar(Teleport)]
+				jmp		_hhGetVar(Teleport)
 			DOORMARKER:
 				pushad
 				call	IsControlKeyDown
@@ -190,7 +190,7 @@ namespace ConstructionSetExtender
 				jz		TELEPORT
 				popad
 
-				jmp		[_hhGetVar(Properties)]
+				jmp		_hhGetVar(Properties)
 			}
 		}
 

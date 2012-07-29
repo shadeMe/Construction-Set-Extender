@@ -89,10 +89,10 @@ namespace ConstructionSetExtender
 				jnz		ESM
 
 				popad
-				jmp		[_hhGetVar(ESPRetn)]
+				jmp		_hhGetVar(ESPRetn)
 			ESM:
 				popad
-				jmp		[_hhGetVar(ESMRetn)]
+				jmp		_hhGetVar(ESMRetn)
 			}
 		}
 
@@ -181,10 +181,10 @@ namespace ConstructionSetExtender
 				jz		SKIP
 
 				popad
-				jmp		[_hhGetVar(RetnPass)]
+				jmp		_hhGetVar(RetnPass)
 			SKIP:
 				popad
-				jmp		[_hhGetVar(RetnFail)]
+				jmp		_hhGetVar(RetnFail)
 			}
 		}
 
@@ -239,7 +239,7 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
-				jmp		[_hhGetVar(Exit)]
+				jmp		_hhGetVar(Exit)
 			}
 		}
 
@@ -272,7 +272,7 @@ namespace ConstructionSetExtender
 			TESFile* ActiveFile = _DATAHANDLER->activeFile;
 
 			if (ActiveFile)
-				SME::MiscGunk::ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
+				ActiveFile->SetMaster(false);
 		}
 
 		#define _hhName		TESFileUpdateHeaderFlagBit
@@ -524,11 +524,11 @@ namespace ConstructionSetExtender
 			_hhSetVar(CallLoaded, 0x00485B70);
 			__asm
 			{
-				call	[_hhGetVar(CallActive)]
+				call	_hhGetVar(CallActive)
 
 				push	0
 				mov		ecx, ebp
-				call	[_hhGetVar(CallLoaded)]
+				call	_hhGetVar(CallLoaded)
 
 				jmp		_hhGetVar(Retn)
 			}
@@ -542,11 +542,11 @@ namespace ConstructionSetExtender
 			_hhSetVar(CallLoaded, 0x00485B70);
 			__asm
 			{
-				call	[_hhGetVar(CallActive)]
+				call	_hhGetVar(CallActive)
 
 				push	1
 				mov		ecx, ebp
-				call	[_hhGetVar(CallLoaded)]
+				call	_hhGetVar(CallLoaded)
 
 				jmp		_hhGetVar(Retn)
 			}

@@ -216,9 +216,9 @@ namespace ConstructionSetExtender
 				jz		JUMPLF
 				jmp		_hhGetVar(Retn)
 			JUMPCRLF:
-				jmp		[_hhGetVar(JumpCR)]
+				jmp		_hhGetVar(JumpCR)
 			JUMPLF:
-				jmp		[_hhGetVar(JumpLF)]
+				jmp		_hhGetVar(JumpLF)
 			}
 		}
 
@@ -253,7 +253,7 @@ namespace ConstructionSetExtender
 
 				jmp		_hhGetVar(Retn)
 			MISMATCH:
-				jmp		[_hhGetVar(Error)]
+				jmp		_hhGetVar(Error)
 			}
 		}
 	}
