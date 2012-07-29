@@ -125,8 +125,8 @@ namespace ConstructionSetExtender
 				call	DoLoadPluginsPrologHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -149,8 +149,8 @@ namespace ConstructionSetExtender
 				call	DoLoadPluginsEpilogHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -195,7 +195,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				mov		eax, 1
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -236,7 +236,7 @@ namespace ConstructionSetExtender
 				jz		EXIT
 
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
 				jmp		[_hhGetVar(Exit)]
@@ -257,13 +257,13 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00431310);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				call	DoDataHandlerSavePluginEpilogHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -286,7 +286,7 @@ namespace ConstructionSetExtender
 				push	esi
 				call	DoTESFileUpdateHeaderFlagBitHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -310,7 +310,7 @@ namespace ConstructionSetExtender
 				test	byte ptr [esi + 0x8], 1
 				jz		FAIL
 			EXIT:
-				jmp		[_hhGetVar(Retn)]	// TESForm::SaveForm
+				jmp		_hhGetVar(Retn)	// TESForm::SaveForm
 			FAIL:
 				pushad
 				xor		eax, eax
@@ -320,7 +320,7 @@ namespace ConstructionSetExtender
 				jnz		FIX
 				popad
 
-				jmp		[_hhGetVar(Jump)]	// TESForm::SaveFormRecord
+				jmp		_hhGetVar(Jump)	// TESForm::SaveFormRecord
 			FIX:
 				popad
 				jmp		EXIT
@@ -346,7 +346,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00485B00);
 			__asm
 			{
-				call	[_hhGetVar(Call)]		// TESFile_GetIsESM
+				call	_hhGetVar(Call)		// TESFile_GetIsESM
 				test	al, al
 				jnz		PASS
 
@@ -359,11 +359,11 @@ namespace ConstructionSetExtender
 				jnz		FIX
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FIX:
 				popad
 			PASS:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -407,11 +407,11 @@ namespace ConstructionSetExtender
 				popad
 
 				push	eax
-				call	[_hhGetVar(Call)]		// TESForm_SaveFormRecord
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)		// TESForm_SaveFormRecord
+				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -429,7 +429,7 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoDataHandlerSavePluginResetHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -442,7 +442,7 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoDataHandlerSavePluginResetHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -455,7 +455,7 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoDataHandlerSavePluginResetHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -505,14 +505,14 @@ namespace ConstructionSetExtender
 				call	DoDataHandlerSavePluginRetainTimeStampsHook
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				push	0		// restore
 				call	DoDataHandlerSavePluginRetainTimeStampsHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -530,7 +530,7 @@ namespace ConstructionSetExtender
 				mov		ecx, ebp
 				call	[_hhGetVar(CallLoaded)]
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -548,7 +548,7 @@ namespace ConstructionSetExtender
 				mov		ecx, ebp
 				call	[_hhGetVar(CallLoaded)]
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -560,10 +560,10 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				jz		SKIP
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				push	0		// to correct the stack pointer
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 	}

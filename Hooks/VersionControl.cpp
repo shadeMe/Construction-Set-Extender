@@ -66,14 +66,14 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				mov		g_PluginLoadOperationInProgress, 1
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				mov		g_PluginLoadOperationInProgress, 0
 
 				pushad
 				call	DoDataHandlerLoadPluginsWrapperHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -93,7 +93,7 @@ namespace ConstructionSetExtender
 				push	ebx
 				call	DoDataHandlerSavePluginPrologHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace ConstructionSetExtender
 				cmp     byte ptr [esp + 0x4], 0
 				push    esi
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -149,9 +149,9 @@ namespace ConstructionSetExtender
 				jz		REMOVE
 
 				mov     edx, [esi]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			REMOVE:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -169,8 +169,8 @@ namespace ConstructionSetExtender
 				call	DoTESFormChangeHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -188,8 +188,8 @@ namespace ConstructionSetExtender
 				call	DoTESFormChangeHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -205,12 +205,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004793F0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -221,12 +221,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004793F0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -237,12 +237,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004793F0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -253,12 +253,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004793F0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -269,12 +269,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004793F0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -285,12 +285,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x0053E630);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -301,12 +301,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00541870);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -317,12 +317,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004F12A0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -333,12 +333,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004F6300);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -349,12 +349,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004D25D0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -365,12 +365,12 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004D25D0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -392,7 +392,7 @@ namespace ConstructionSetExtender
 				popad
 
 				mov     eax, [edx + 0xB8]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

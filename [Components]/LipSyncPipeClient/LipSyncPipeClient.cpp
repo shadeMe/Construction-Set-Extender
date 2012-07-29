@@ -16,7 +16,6 @@ _DefineHookHdlr(LogOC3AnimFactoryMessagesA, 0x0087FDB9);
 _DefineNopHdlr(LogOC3AnimFactoryMessagesB, 0x0087FD8F, 2);
 _DefinePatchHdlr(AllowMultipleEditors, 0x0041CD97);
 
-
 BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
 	switch (dwReason)
@@ -186,10 +185,9 @@ _hhBegin()
 		call	edi
 		mov		esi, eax
 		xor		eax, eax
-		jmp		[_hhGetVar(Retn)]
+		jmp		_hhGetVar(Retn)
 	}
 }
-
 
 #define _hhName		LogOC3AnimFactoryMessagesA
 _hhBegin()
@@ -203,8 +201,8 @@ _hhBegin()
 		call	HandleDebugText
 		popad
 
-		call	[_hhGetVar(Call)]
-		jmp		[_hhGetVar(Retn)]
+		call	_hhGetVar(Call)
+		jmp		_hhGetVar(Retn)
 	}
 }
 

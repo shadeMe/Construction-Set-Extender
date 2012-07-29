@@ -302,10 +302,10 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x0049C230);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				push	esi
 				call	DoNPCFaceGenHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -335,7 +335,7 @@ namespace ConstructionSetExtender
 				popad
 				mov		edi, esi
 			FAIL:
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -390,7 +390,7 @@ namespace ConstructionSetExtender
 
 				mov		ecx, [esp + 0x10]
 				or		edx, 0x0FFFFFFFF
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
 				jmp		[_hhGetVar(Exit)]
@@ -415,7 +415,7 @@ namespace ConstructionSetExtender
 				sub		esp, 8
 				push	esi
 				mov		esi, [esp + 0x10]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			EXIT:
 				popad
 				jmp		[_hhGetVar(Exit)]
@@ -442,7 +442,7 @@ namespace ConstructionSetExtender
 				mov		eax, [0x00A0AF40]		// object window menu item checked state
 				cmp		eax, 0
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			EXIT2:
 				popad
 				jmp		[_hhGetVar(Exit)]
@@ -475,7 +475,7 @@ namespace ConstructionSetExtender
 				jz		EXIT1
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			EXIT1:
 				popad
 			EXIT2:
@@ -503,7 +503,7 @@ namespace ConstructionSetExtender
 				popad
 
 				call	TESComboBox::AddItem
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -811,13 +811,13 @@ namespace ConstructionSetExtender
 				push	eax
 				push	_hhGetVar(ParentHWND)
 				call	HandleHookedPopup
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				push	2
 				push	esi
 				call	g_TempIATProcBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -839,7 +839,7 @@ namespace ConstructionSetExtender
 				call	DoFormIDListViewSelectItemHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -855,7 +855,7 @@ namespace ConstructionSetExtender
 				push	esi
 				call	edi
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -879,7 +879,7 @@ namespace ConstructionSetExtender
 				test	eax, eax
 				jz		FAIL
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FAIL:
 				pushad
 				push	edi
@@ -888,10 +888,10 @@ namespace ConstructionSetExtender
 				jnz		FIX
 				popad
 
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			FIX:
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -904,9 +904,9 @@ namespace ConstructionSetExtender
 			{
 				cmp     dword ptr [esi + 0x44], 0
 				jnz		GETSCRIPTTEXT
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GETSCRIPTTEXT:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -936,8 +936,8 @@ namespace ConstructionSetExtender
 				call	DoTESNPCUpdatePreviewControlHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -958,7 +958,7 @@ namespace ConstructionSetExtender
 				cmp		eax, 0x24							// check if parameterID == kParamType_Owner
 				jz		FIX
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FIX:
 				push	0
 				push	0
@@ -967,7 +967,7 @@ namespace ConstructionSetExtender
 				call	TESComboBox::PopulateWithForms
 				add		esp, 0x10
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -982,7 +982,7 @@ namespace ConstructionSetExtender
 				popad
 
 				call	[g_TempIATProcBuffer]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1006,14 +1006,14 @@ namespace ConstructionSetExtender
 				call	DoObjectWindowPopulateFormListInvalidateHook
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				push	1
 				call	DoObjectWindowPopulateFormListInvalidateHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1043,10 +1043,10 @@ namespace ConstructionSetExtender
 				popad
 				call	g_TempIATProcBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				call	DoCellViewWindowResizeFixHook
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -1089,7 +1089,7 @@ namespace ConstructionSetExtender
 				mov		[esp + 4], eax
 			EXIT:
 				sub		esp, 0x310
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1118,7 +1118,7 @@ namespace ConstructionSetExtender
 				call	DoFormEditDialogTitleHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1139,10 +1139,10 @@ namespace ConstructionSetExtender
 				jz		SKIP
 
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -1165,10 +1165,10 @@ namespace ConstructionSetExtender
 
 				popad
 				add     ebp, 1
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -1191,10 +1191,10 @@ namespace ConstructionSetExtender
 
 				popad
 				add     ebp, 1
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -1229,8 +1229,8 @@ namespace ConstructionSetExtender
 				call	DoTESQuestRemoveStageDataHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1253,11 +1253,11 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00417FE0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				call	DoHideCSMainDialogsStartupHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1278,7 +1278,7 @@ namespace ConstructionSetExtender
 				push	1
 				push	edx
 				call	ProperReleaseModelessDialogs
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1291,7 +1291,7 @@ namespace ConstructionSetExtender
 				push	1
 				push	ecx
 				call	ProperReleaseModelessDialogs
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1304,7 +1304,7 @@ namespace ConstructionSetExtender
 				push	esi
 				push	edi
 				call	ProperReleaseModelessDialogs
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1317,7 +1317,7 @@ namespace ConstructionSetExtender
 				push	0
 				push	edi
 				call	ProperReleaseModelessDialogs
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1330,7 +1330,7 @@ namespace ConstructionSetExtender
 				push	0
 				push	edi
 				call	ProperReleaseModelessDialogs
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1372,9 +1372,9 @@ namespace ConstructionSetExtender
 				test    ecx, ecx
 				jz      SKIPBUILD
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIPBUILD:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -1390,7 +1390,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	DoCellViewInitDialogHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1454,7 +1454,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	DoDialogueEditorPopupHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 

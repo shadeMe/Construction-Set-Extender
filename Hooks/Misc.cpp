@@ -224,9 +224,9 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x006E5850);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				call	DoCSInitHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -270,7 +270,7 @@ namespace ConstructionSetExtender
 				popad
 				xor		eax, eax
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -293,7 +293,7 @@ namespace ConstructionSetExtender
 				call	DoDataHandlerClearDataHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -313,7 +313,7 @@ namespace ConstructionSetExtender
 
 				mov     [esi + 0x30], bx
 				mov     eax, [edi]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -351,7 +351,7 @@ namespace ConstructionSetExtender
 				push	ebp
 				mov		ebp, esp
 				sub		esp, 0x10
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -366,8 +366,8 @@ namespace ConstructionSetExtender
 				call	HallOfFame::Initialize
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -382,7 +382,7 @@ namespace ConstructionSetExtender
 				test	edx, edx
 				jz		FAIL
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FAIL:
 				mov		eax, 0x004FD271
 				jmp		eax
@@ -408,7 +408,7 @@ namespace ConstructionSetExtender
 				call	[_hhGetVar(Call2)]		// TESObjectREFR::RemoveExtraTeleport
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -435,7 +435,7 @@ namespace ConstructionSetExtender
 				push	edi
 				push	eax
 				call	DoTESFormAddReferenceHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -465,7 +465,7 @@ namespace ConstructionSetExtender
 				push	esi
 				push	edi
 				call	DoTESFormRemoveReferenceHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -491,7 +491,7 @@ namespace ConstructionSetExtender
 				call	DoTESFormClearReferenceListHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -503,7 +503,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004FC950);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				test	eax, eax
 				jz		FAIL
 
@@ -511,9 +511,9 @@ namespace ConstructionSetExtender
 				test	eax, eax
 				jz		FAIL
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FAIL:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -525,14 +525,14 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x004FC950);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				cmp		eax, ebx
 				jz		FAIL
 
 				mov		eax, [eax]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FAIL:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -547,9 +547,9 @@ namespace ConstructionSetExtender
 				jz		FIX
 				mov     eax, [esi]
 				mov     edx, [eax + 0x1A0]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FIX:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -577,8 +577,8 @@ namespace ConstructionSetExtender
 				call	DoAchievementAddTopicHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -613,8 +613,8 @@ namespace ConstructionSetExtender
 			EXIT:
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -640,7 +640,7 @@ namespace ConstructionSetExtender
 
 				mov     eax, [esi + 0x8]
 				mov     ecx, eax
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -673,8 +673,8 @@ namespace ConstructionSetExtender
 			EXIT:
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -719,8 +719,8 @@ namespace ConstructionSetExtender
 				call	DoAchievementPluginDescriptionHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -735,7 +735,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	TESDialog::WriteToStatusBar
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -750,8 +750,8 @@ namespace ConstructionSetExtender
 
 			__asm
 			{
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -770,9 +770,9 @@ namespace ConstructionSetExtender
 				test	eax, eax
 				jz		SKIP
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -784,7 +784,7 @@ namespace ConstructionSetExtender
 			{
 				mov		eax, 0x009EA608
 				mov     byte ptr [eax], 0
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -816,7 +816,7 @@ namespace ConstructionSetExtender
 				push	edi
 				call	DoTESObjectCELLGetDataFromDialogHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -850,8 +850,8 @@ namespace ConstructionSetExtender
 				call	DoInteriorCellDuplicateHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

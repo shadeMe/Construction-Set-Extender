@@ -106,7 +106,7 @@ namespace ConstructionSetExtender
 				push	eax
 				push    ebx
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -148,7 +148,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	DoLODLandTextureAllocationHook
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -180,7 +180,7 @@ namespace ConstructionSetExtender
 			{
 				call	DoLODLandTextureDestructionHook
 				xor		bl, bl
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -201,7 +201,7 @@ namespace ConstructionSetExtender
 				jz		FETCH6144
 
 				cmp     eax, 0x200
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FETCH256:
 				mov		eax, g_LODD3DTexture256x
 				retn
@@ -234,7 +234,7 @@ namespace ConstructionSetExtender
 				jz		FETCH6144
 
 				cmp     eax, 0x200
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FETCH256:
 				mov		eax, g_LODBSTexture256x
 				retn
@@ -263,7 +263,7 @@ namespace ConstructionSetExtender
 				push	edx
 				mov		eax, [_hhGetVar(Byte)]
 				mov		[eax], 1
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -292,7 +292,7 @@ namespace ConstructionSetExtender
 				push    0x20
 				push    ecx
 				push    eax
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -329,10 +329,10 @@ namespace ConstructionSetExtender
 				test	al, al
 				jz		GENFINISHED
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GENFINISHED:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -352,10 +352,10 @@ namespace ConstructionSetExtender
 				test	al, al
 				jz		GENFINISHED
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GENFINISHED:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -373,7 +373,7 @@ namespace ConstructionSetExtender
 				jz		GENFINISHED
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				call	GetIsLODDiffuseMapGeneratorInUse
@@ -381,12 +381,12 @@ namespace ConstructionSetExtender
 				jz		GENFINISHED
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GENFINISHED:
 				popad
 
 				add		esp, 0x8
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -405,10 +405,10 @@ namespace ConstructionSetExtender
 				test	al, al
 				jz		GENFINISHED
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GENFINISHED:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -426,7 +426,7 @@ namespace ConstructionSetExtender
 				jz		GENFINISHED
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				call	GetIsLODDiffuseMapGeneratorInUse
@@ -434,11 +434,11 @@ namespace ConstructionSetExtender
 				jz		GENFINISHED
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GENFINISHED:
 				popad
 
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -537,8 +537,8 @@ namespace ConstructionSetExtender
 				call	ShowLODTextureGenNotification
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -554,8 +554,8 @@ namespace ConstructionSetExtender
 				call	ShowLODTextureGenNotification
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -579,16 +579,16 @@ namespace ConstructionSetExtender
 				jmp		GENINPROGRESS
 			GENFINISHED:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			GENINPROGRESS:
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				push	0
 				call	ShowLODTextureGenNotification
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -609,7 +609,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00412480);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				test	al, al
 				jz		SKIP
 
@@ -617,7 +617,7 @@ namespace ConstructionSetExtender
 				call	DoLODTextureGenNotificationUpdateHook
 				popad
 			SKIP:
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -659,7 +659,7 @@ namespace ConstructionSetExtender
 				call	DoLODTextureGenBlackTextureFixHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -680,7 +680,7 @@ namespace ConstructionSetExtender
 			{
 				mov		eax, [esp]
 				push	eax
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pop		eax
 
 				pushad
@@ -689,7 +689,7 @@ namespace ConstructionSetExtender
 				push	ecx
 				call	DoLODTextureGenBlackTexturePartialFixHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

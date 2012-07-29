@@ -111,7 +111,7 @@ namespace ConstructionSetExtender
 				call	DoRerouteScriptErrorsHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -122,10 +122,10 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00500190);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				mov		eax, g_CompileResultBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -146,7 +146,7 @@ namespace ConstructionSetExtender
 				push    ebp
 				mov     ebp, [esp + 0xC]
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -157,14 +157,14 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x005028D0);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				test	al, al
 				jz		FAIL
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FAIL:
 				mov		g_CompileResultBuffer, 0
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -180,7 +180,7 @@ namespace ConstructionSetExtender
 				add     dword ptr [esi], 1
 				push    0x200
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -199,18 +199,18 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				mov		[g_PreventScriptCompileErrorRerouting], 1
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				mov		[g_PreventScriptCompileErrorRerouting], 0
 				test	al, al
 				jz		FAIL
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FAIL:
 				pushad
 				call	DoResultScriptErrorNotificationHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

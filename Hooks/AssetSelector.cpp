@@ -223,7 +223,7 @@ namespace ConstructionSetExtender
 				push    eax
 				lea     ecx, [ebp - 0x14]
 				mov     byte ptr [ebp - 0x4], 1
-				call    [_hhGetVar(Call)]
+				call    _hhGetVar(Call)
 
 				cmp		ebx, e_FetchPath
 				jz		SELECT

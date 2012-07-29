@@ -80,7 +80,7 @@ namespace ConstructionSetExtender
 			{
 				push	0
 				call	InstantiateScriptEditor
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -92,7 +92,7 @@ namespace ConstructionSetExtender
 			{
 				push	eax
 				call	InstantiateScriptEditor
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -104,7 +104,7 @@ namespace ConstructionSetExtender
 			{
 				push	eax
 				call	InstantiateScriptEditor
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace ConstructionSetExtender
 				call	DoLoadReleaseHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -146,7 +146,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -157,7 +157,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00430980);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 			}
 
@@ -166,7 +166,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -182,9 +182,9 @@ namespace ConstructionSetExtender
 				mov     [esi + 0x1C], ebx
 				mov     [esi + 4], ebx
 				mov     [esi + 0x24], ebx
-				call    [_hhGetVar(Call)]
+				call    _hhGetVar(Call)
 				push    kMaxScriptDataSize
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -198,7 +198,7 @@ namespace ConstructionSetExtender
 				mov     ecx, [esi + 0x40C]
 				lea     edx, [eax + ecx + 0x0A]
 				cmp     edx, kMaxScriptDataSize
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -214,7 +214,7 @@ namespace ConstructionSetExtender
 				jz      JUMPCRLF
 				cmp		bl, 0x0A	// check for '\n'
 				jz		JUMPLF
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			JUMPCRLF:
 				jmp		[_hhGetVar(JumpCR)]
 			JUMPLF:
@@ -235,7 +235,7 @@ namespace ConstructionSetExtender
 				mov		edx, [eax + 0xC8]
 				call	edx
 			EXIT:
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			NOREF:
 				mov		eax, [esi]
 				jmp		EXIT
@@ -251,7 +251,7 @@ namespace ConstructionSetExtender
 			{
 				jz		MISMATCH
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			MISMATCH:
 				jmp		[_hhGetVar(Error)]
 			}

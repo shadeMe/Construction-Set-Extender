@@ -224,7 +224,7 @@ namespace ConstructionSetExtender
 				push	0x56
 				add		ecx, 0x4C
 				xor		esi, esi
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				test	eax, eax
 				jz		NO3DDATA
 
@@ -259,13 +259,13 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x00406447);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				call	NiWindowRenderDrawHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -289,13 +289,13 @@ namespace ConstructionSetExtender
 				call	DoNiDX9RendererRecreateHook
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				push	1
 				call	DoNiDX9RendererRecreateHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -311,13 +311,13 @@ namespace ConstructionSetExtender
 				call	DoNiDX9RendererRecreateHook
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				push	1
 				call	DoNiDX9RendererRecreateHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -333,13 +333,13 @@ namespace ConstructionSetExtender
 				call	DoNiDX9RendererRecreateHook
 				popad
 
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 
 				pushad
 				push	1
 				call	DoNiDX9RendererRecreateHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -366,7 +366,7 @@ namespace ConstructionSetExtender
 				cmp		al, 0
 				jz		DONTUPDATE
 
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			DONTUPDATE:
 				pushad
 				xor		eax, eax
@@ -375,10 +375,10 @@ namespace ConstructionSetExtender
 				jz		EXIT
 
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			EXIT:
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -413,7 +413,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00511C20);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				xor		eax, eax
 
 				pushad
@@ -423,10 +423,10 @@ namespace ConstructionSetExtender
 				jnz		GROUPED
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			GROUPED:
 				popad
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -464,7 +464,7 @@ namespace ConstructionSetExtender
 
 				mov		eax, 0x00A0BBDD
 				cmp		byte ptr [eax], 0
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -481,7 +481,7 @@ namespace ConstructionSetExtender
 				call	TESRenderControlProcessFrozenRefs
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -497,8 +497,8 @@ namespace ConstructionSetExtender
 				call	TESRenderControlProcessFrozenRefs
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -520,7 +520,7 @@ namespace ConstructionSetExtender
 				xor     ebp, ebp
 				cmp     [esp + 0x10], ebp
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -545,7 +545,7 @@ namespace ConstructionSetExtender
 				call	DoTESObjectREFREditDialogHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -565,7 +565,7 @@ namespace ConstructionSetExtender
 				call	DoTESObjectREFREditDialogHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -582,9 +582,9 @@ namespace ConstructionSetExtender
 				mov		edx, [eax + 0x8]
 				mov		[esp + 0x3C], edx
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FIX:
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -605,7 +605,7 @@ namespace ConstructionSetExtender
 				call	DoForceShowTESObjectREFRDialogHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -669,7 +669,7 @@ namespace ConstructionSetExtender
 				fild	s_MovementSettingBuffer
 				fstp	dword ptr [esp + 0x20]
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -685,7 +685,7 @@ namespace ConstructionSetExtender
 				fmul	s_MovementSettingBuffer
 				lea		ecx, [esp + 0x28]
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -700,7 +700,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -715,7 +715,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -734,7 +734,7 @@ namespace ConstructionSetExtender
 				mov		eax, [eax]
 				test	eax, 0x2
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -749,7 +749,7 @@ namespace ConstructionSetExtender
 			{
 				fild	s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -764,7 +764,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -779,7 +779,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -794,7 +794,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -809,7 +809,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -824,7 +824,7 @@ namespace ConstructionSetExtender
 			{
 				lea		ecx, s_MovementSettingBuffer
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -841,7 +841,7 @@ namespace ConstructionSetExtender
 			{
 				popad
 				mov		eax, 1
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -866,7 +866,7 @@ namespace ConstructionSetExtender
 				push	eax
 				call	DoTESPreviewControlCallWndProcHook
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -891,7 +891,7 @@ namespace ConstructionSetExtender
 				call	ActivateRenderWindow
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -905,8 +905,8 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				mov		s_PathGridMoveStart, 1
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -937,8 +937,8 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridRecordOperationMoveBHook
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -952,8 +952,8 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridRecordOperation
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -967,8 +967,8 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridRecordOperation
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -982,8 +982,8 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridRecordOperation
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1006,8 +1006,8 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridDeletePointHook
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1045,7 +1045,7 @@ namespace ConstructionSetExtender
 				push    esi
 				mov     esi, ecx
 				lea     ecx, [esi + 0x10]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1065,8 +1065,8 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridToggleEditModeHook
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1085,11 +1085,11 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x0042B380);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				pushad
 				call	DoTESPathGridCreateNewLinkedPointHook
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1109,8 +1109,8 @@ namespace ConstructionSetExtender
 				push	esi
 				call	DoTESPathGridShowMultipleSelectionRingHook
 				popad
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1126,7 +1126,7 @@ namespace ConstructionSetExtender
 				pushad
 				call	DoTESPathGridRecordOperation
 				popad
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1165,15 +1165,15 @@ namespace ConstructionSetExtender
 			_hhSetVar(Jump, 0x0040A8D8);
 			__asm
 			{
-				call	[_hhGetVar(Call)]
+				call	_hhGetVar(Call)
 				test	al, al
 				jnz		FIX
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			FIX:
 				push	ecx
 				call	DoInitialCellLoadCameraPositionHook
-				jmp		[_hhGetVar(Jump)]
+				jmp		_hhGetVar(Jump)
 			}
 		}
 
@@ -1202,7 +1202,7 @@ namespace ConstructionSetExtender
 			EXIT:
 				pop		esi		// restore
 				mov		eax, esi
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1225,7 +1225,7 @@ namespace ConstructionSetExtender
 				call	DoDuplicateReferencesHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1262,7 +1262,7 @@ namespace ConstructionSetExtender
 				push	eax
 				call	edx
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1306,13 +1306,13 @@ namespace ConstructionSetExtender
 				call	DoTESRenderControlPerformRelativeScaleHook
 				popad
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
 		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
 		{
-			if (g_MouseCaptureDelta.x < 4 && g_MouseCaptureDelta.y < 4)
+			if (g_MouseCaptureDelta.x < 1 && g_MouseCaptureDelta.y < 1)
 				return false;
 			else
 				return true;
@@ -1334,7 +1334,7 @@ namespace ConstructionSetExtender
 				mov		[esp], ecx
 				mov		ecx, [esp + 0x8]
 
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			SKIP:
 				popad
 				retn	8
@@ -1391,7 +1391,7 @@ namespace ConstructionSetExtender
 				mov		ecx, 0x00A0E064
 				mov		ecx, [ecx]
 				push	eax
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1414,8 +1414,8 @@ namespace ConstructionSetExtender
 				call	DoInitPathGridNodeSelectionRingHook
 				popad
 
-				call	[_hhGetVar(Call)]
-				jmp		[_hhGetVar(Retn)]
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1430,7 +1430,7 @@ namespace ConstructionSetExtender
 				test	ebx, ebx
 				jnz		TESTCELL
 			ENDTEST:
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			TESTCELL:
 				mov		eax, [ebx + 0x48]
 				test	eax, eax
@@ -1451,7 +1451,7 @@ namespace ConstructionSetExtender
 				push	ecx
 				mov		eax, 0x00A0BACC
 				mov		eax, [eax]
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 
@@ -1467,7 +1467,7 @@ namespace ConstructionSetExtender
 				push	edi
 				push	ecx
 				mov		ecx, esi
-				jmp		[_hhGetVar(Retn)]
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}
