@@ -375,7 +375,7 @@ public:
 	static void								ShowScriptEditorDialog(TESForm* InitScript);
 	static HWND								ShowUseReportDialog(TESForm* Form);
 	static void								ResetRenderWindow();
-	static void								RedrawRenderWindow();
+	static void								RedrawRenderWindow(bool RefreshPathGrid = false);
 	static void								ResetFormListControls();
 
 	static float							GetDlgItemFloat(HWND Dialog, int ID);

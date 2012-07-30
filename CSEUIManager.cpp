@@ -1888,7 +1888,7 @@ namespace ConstructionSetExtender
 								Point->HideSelectionRing();
 							}
 
-							TESDialog::RedrawRenderWindow();
+							TESDialog::RedrawRenderWindow(true);
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 							Return = true;
@@ -1956,6 +1956,11 @@ namespace ConstructionSetExtender
 				case 0x32:		// 2
 					SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
 					TESDialog::RedrawRenderWindow();
+
+					Return = true;
+					break;
+				case 0x47:		// G
+					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 40195, NULL);
 
 					Return = true;
 					break;

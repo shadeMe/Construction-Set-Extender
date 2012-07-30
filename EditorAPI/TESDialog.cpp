@@ -214,13 +214,17 @@ bool TESDialog::GetIsFormEditDialogCompatible( TESForm* Form )
 	}
 }
 
-void TESDialog::RedrawRenderWindow()
+void TESDialog::RedrawRenderWindow( bool RefreshPathGrid )
 {
-	if (*g_RenderWindowPathGridEditModeFlag)
+	if (RefreshPathGrid && *g_RenderWindowPathGridEditModeFlag)
 	{
 		PathGridUndoManager::Instance.SetCanReset(false);
-		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
-		SendMessage(*g_HWND_CSParent, WM_COMMAND, 40195, NULL);
+
+		SendMessage(*g_HWND_RenderWindow, 0x419, NULL, NULL);
+		cdeclCall<void>(0x00550660);			// TESPathGrid::ToggleRenderWindow3DState
+		SendMessage(*g_HWND_RenderWindow, 0x419, 2, NULL);
+		cdeclCall<void>(0x00550660);			// TESPathGrid::ToggleRenderWindow3DState
+
 		PathGridUndoManager::Instance.SetCanReset(true);
 	}
 	else

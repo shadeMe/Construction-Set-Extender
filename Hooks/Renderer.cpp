@@ -833,7 +833,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042EF88);
 			_asm	pushad
-			TESDialog::RedrawRenderWindow();
+			TESDialog::RedrawRenderWindow(true);
 			SetActiveWindow(*g_HWND_CSParent);
 			SetActiveWindow(*g_HWND_RenderWindow);
 			SetForegroundWindow(*g_HWND_RenderWindow);
@@ -1312,7 +1312,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
 		{
-			if (g_MouseCaptureDelta.x < 1 && g_MouseCaptureDelta.y < 1)
+			if (g_MouseCaptureDelta.x < 2 && g_MouseCaptureDelta.y < 2)
 				return false;
 			else
 				return true;
