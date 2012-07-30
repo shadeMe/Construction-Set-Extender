@@ -73,9 +73,9 @@ namespace BGSEditorExtender
 			return BaseFormID;
 		}
 
-		bool BGSEEHallOfFameManager::GetIsInductee( UInt32 FormID )
+		bool BGSEEHallOfFameManager::GetIsInductee( UInt32 FormID ) const
 		{
-			for (ExtenderHOFEntryListT::iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
+			for (ExtenderHOFEntryListT::const_iterator Itr = Inductees.begin(); Itr != Inductees.end(); Itr++)
 			{
 				if ((*Itr)->GetFormID() == FormID)
 					return true;

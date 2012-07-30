@@ -8,8 +8,14 @@ namespace BGSEditorExtender
 	class BGSEEWorkspaceManager
 	{
 	public:
-		struct ReloadPluginsFunctor
+		class ReloadPluginsFunctor
 		{
+		public:
+			virtual ~ReloadPluginsFunctor() = 0
+			{
+				;//
+			}
+
 			virtual void					operator()(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs) = 0;
 		};
 

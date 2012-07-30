@@ -24,6 +24,8 @@ namespace BGSEditorExtender
 		void									SendMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 	};
 
+	typedef UInt32 ResourceTemplateT;
+
 	class BGSEEWindowSubclasser
 	{
 		friend class BGSEEUIManager;
@@ -49,7 +51,7 @@ namespace BGSEditorExtender
 			DialogSubclassData*					Data;
 			LPARAM								InitParam;
 			LPARAM								ExtraData;
-			UInt32								TemplateID;					// the template ID of the dialog resource
+			ResourceTemplateT					TemplateID;					// the template ID of the dialog resource
 			bool								Initialized;				// set after the WM_INITDIALOG message is processed
 		};
 
@@ -70,8 +72,8 @@ namespace BGSEditorExtender
 			LONG_PTR							OriginalUserData;			// ping-pong b'ween this and our userdata
 		};
 	private:
-		typedef std::map<UInt32, DialogSubclassData>	DialogSubclassMapT;			// key = templateID
-		typedef std::map<HWND, WindowSubclassData>		WindowSubclassMapT;
+		typedef std::map<ResourceTemplateT, DialogSubclassData>		DialogSubclassMapT;
+		typedef std::map<HWND, WindowSubclassData>					WindowSubclassMapT;
 
 		static LRESULT CALLBACK					MainWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static INT_PTR CALLBACK					DialogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -84,7 +86,7 @@ namespace BGSEditorExtender
 		WindowSubclassMapT						RegularWindowSubclasses;
 
 												// returns true if callbacks are registered for the template
-		bool									GetShouldSubclassDialog(UInt32 TemplateID,
+		bool									GetShouldSubclassDialog(ResourceTemplateT TemplateID,
 																		LPARAM InitParam,
 																		DLGPROC OriginalProc,
 																		DLGPROC& OutSubclassProc,
@@ -97,20 +99,20 @@ namespace BGSEditorExtender
 		bool									RegisterMainWindowSubclass(SubclassProc Proc, LPARAM UserData = NULL);
 		bool									UnregisterMainWindowSubclass(SubclassProc Proc);
 
-		bool									RegisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc, LPARAM UserData = NULL);
-		bool									UnregisterDialogSubclass(UInt32 TemplateID, SubclassProc Proc);
+		bool									RegisterDialogSubclass(ResourceTemplateT TemplateID, SubclassProc Proc, LPARAM UserData = NULL);
+		bool									UnregisterDialogSubclass(ResourceTemplateT TemplateID, SubclassProc Proc);
 
 		bool									RegisterRegularWindowSubclass(HWND Handle, SubclassProc Proc, LPARAM UserData = NULL);
 		bool									UnregisterRegularWindowSubclass(HWND Handle, SubclassProc Proc);
 
-		bool									GetHasDialogSubclass(UInt32 TemplateID);
+		bool									GetHasDialogSubclass(ResourceTemplateT TemplateID);
 	};
 
 	class BGSEEResourceTemplateHotSwapper
 	{
 		friend class BGSEEUIManager;
 	protected:
-		typedef std::map<UInt32, HINSTANCE>		TemplateResourceInstanceMapT;		// key = templateID
+		typedef std::map<ResourceTemplateT, HINSTANCE>		TemplateResourceInstanceMapT;
 
 		BGSEEResourceLocation					SourceDepot;
 		TemplateResourceInstanceMapT			TemplateMap;
@@ -121,7 +123,7 @@ namespace BGSEditorExtender
 		BGSEEResourceTemplateHotSwapper(std::string SourcePath);
 		virtual ~BGSEEResourceTemplateHotSwapper() = 0;
 
-		virtual HINSTANCE						GetAlternateResourceInstance(UInt32 TemplateID);		// returns NULL if there isn't one
+		virtual HINSTANCE						GetAlternateResourceInstance(ResourceTemplateT TemplateID);		// returns NULL if there isn't one
 	};
 
 	class BGSEEDialogTemplateHotSwapper : public BGSEEResourceTemplateHotSwapper
@@ -138,8 +140,8 @@ namespace BGSEditorExtender
 		BGSEEMenuTemplateHotSwapper();
 		virtual ~BGSEEMenuTemplateHotSwapper();
 
-		bool									RegisterTemplateReplacer(UInt32 TemplateID, HINSTANCE Replacer);
-		bool									UnregisterTemplateReplacer(UInt32 TemplateID);
+		bool									RegisterTemplateReplacer(ResourceTemplateT TemplateID, HINSTANCE Replacer);
+		bool									UnregisterTemplateReplacer(ResourceTemplateT TemplateID);
 	};
 
 	class BGSEEWindowStyler
@@ -162,17 +164,17 @@ namespace BGSEditorExtender
 			};
 		};
 	private:
-		typedef std::map<UInt32, StyleData>		TemplateStyleMapT;
+		typedef std::map<ResourceTemplateT, StyleData>		TemplateStyleMapT;
 
 		TemplateStyleMapT						StyleListings;
 
-		bool									StyleWindow(HWND Window, UInt32 Template);
+		bool									StyleWindow(HWND Window, ResourceTemplateT Template);
 	public:
 		BGSEEWindowStyler();
 		~BGSEEWindowStyler();
 
-		bool									RegisterStyle(UInt32 TemplateID, StyleData& Data);
-		bool									UnregisterStyle(UInt32 TemplateID);
+		bool									RegisterStyle(ResourceTemplateT TemplateID, StyleData& Data);
+		bool									UnregisterStyle(ResourceTemplateT TemplateID);
 	};
 
 	class BGSEEUIManager
@@ -333,8 +335,8 @@ namespace BGSEditorExtender
 		HMENU							ContextMenuHandle;				// all menu items must be a part of a sub-menu at index 0
 		HMENU							ContextMenuParentHandle;		// handle of the base menu
 		HINSTANCE						ResourceInstance;
-		UInt32							DialogTemplateID;
-		UInt32							DialogContextMenuID;
+		ResourceTemplateT				DialogTemplateID;
+		ResourceTemplateT				DialogContextMenuID;
 		MessageCallback					CallbackDlgProc;
 		bool							Visible;
 		bool							Topmost;
@@ -351,7 +353,7 @@ namespace BGSEditorExtender
 
 		BGSEEGenericModelessDialog();
 	public:
-		BGSEEGenericModelessDialog(HWND Parent, HINSTANCE Resource, UInt32 DialogTemplate, UInt32 ContextMenuTemplate, MessageCallback CallbackProc, float AspectRatio = 0.0f);
+		BGSEEGenericModelessDialog(HWND Parent, HINSTANCE Resource, ResourceTemplateT DialogTemplate, ResourceTemplateT ContextMenuTemplate, MessageCallback CallbackProc, float AspectRatio = 0.0f);
 		virtual ~BGSEEGenericModelessDialog();
 
 		bool							ToggleVisibility(void);		// returns the new state

@@ -41,7 +41,7 @@ namespace BGSEditorExtender
 														// takes ownership of the entries
 
 			UInt32										GetBaseFormID(void) const;
-			bool										GetIsInductee(UInt32 FormID);
+			bool										GetIsInductee(UInt32 FormID) const;
 		};
 
 #define BGSEEHALLOFFAME									BGSEditorExtender::Extras::BGSEEHallOfFameManager::GetSingleton()

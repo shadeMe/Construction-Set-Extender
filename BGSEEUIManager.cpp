@@ -276,7 +276,7 @@ namespace BGSEditorExtender
 		return CallbackResult;
 	}
 
-	bool BGSEEWindowSubclasser::GetShouldSubclassDialog( UInt32 TemplateID,
+	bool BGSEEWindowSubclasser::GetShouldSubclassDialog( ResourceTemplateT TemplateID,
 												LPARAM InitParam,
 												DLGPROC OriginalProc,
 												DLGPROC& OutSubclassProc,
@@ -367,7 +367,7 @@ namespace BGSEditorExtender
 		return false;
 	}
 
-	bool BGSEEWindowSubclasser::RegisterDialogSubclass( UInt32 TemplateID, SubclassProc Proc, LPARAM UserData )
+	bool BGSEEWindowSubclasser::RegisterDialogSubclass( ResourceTemplateT TemplateID, SubclassProc Proc, LPARAM UserData )
 	{
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
@@ -382,14 +382,14 @@ namespace BGSEditorExtender
 		}
 		else
 		{
-			DialogSubclasses.insert(std::make_pair<UInt32, DialogSubclassData>(TemplateID, DialogSubclassData()));
+			DialogSubclasses.insert(std::make_pair<ResourceTemplateT, DialogSubclassData>(TemplateID, DialogSubclassData()));
 			DialogSubclasses[TemplateID].Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
 		}
 
 		return true;
 	}
 
-	bool BGSEEWindowSubclasser::UnregisterDialogSubclass( UInt32 TemplateID, SubclassProc Proc )
+	bool BGSEEWindowSubclasser::UnregisterDialogSubclass( ResourceTemplateT TemplateID, SubclassProc Proc )
 	{
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
@@ -407,7 +407,7 @@ namespace BGSEditorExtender
 		return false;
 	}
 
-	bool BGSEEWindowSubclasser::GetHasDialogSubclass( UInt32 TemplateID )
+	bool BGSEEWindowSubclasser::GetHasDialogSubclass( ResourceTemplateT TemplateID )
 	{
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
@@ -487,7 +487,8 @@ namespace BGSEditorExtender
 				continue;
 			}
 
-			int Index = FileName.rfind("."), TemplateID = 0;
+			int Index = FileName.rfind(".");
+			ResourceTemplateT TemplateID = 0;
 			SME_ASSERT(Index != -1);
 
 			TemplateID = atoi((FileName.substr(0, Index)).c_str());
@@ -508,7 +509,7 @@ namespace BGSEditorExtender
 		TemplateMap.clear();
 	}
 
-	HINSTANCE BGSEEResourceTemplateHotSwapper::GetAlternateResourceInstance( UInt32 TemplateID )
+	HINSTANCE BGSEEResourceTemplateHotSwapper::GetAlternateResourceInstance( ResourceTemplateT TemplateID )
 	{
 		TemplateResourceInstanceMapT::iterator Match = TemplateMap.find(TemplateID);
 
@@ -554,7 +555,7 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	bool BGSEEMenuTemplateHotSwapper::RegisterTemplateReplacer( UInt32 TemplateID, HINSTANCE Replacer )
+	bool BGSEEMenuTemplateHotSwapper::RegisterTemplateReplacer( ResourceTemplateT TemplateID, HINSTANCE Replacer )
 	{
 		if (TemplateMap.count(TemplateID))
 			return false;
@@ -564,7 +565,7 @@ namespace BGSEditorExtender
 		return true;
 	}
 
-	bool BGSEEMenuTemplateHotSwapper::UnregisterTemplateReplacer( UInt32 TemplateID )
+	bool BGSEEMenuTemplateHotSwapper::UnregisterTemplateReplacer( ResourceTemplateT TemplateID )
 	{
 		if (TemplateMap.count(TemplateID))
 		{
@@ -575,7 +576,7 @@ namespace BGSEditorExtender
 			return false;
 	}
 
-	bool BGSEEWindowStyler::StyleWindow( HWND Window, UInt32 Template )
+	bool BGSEEWindowStyler::StyleWindow( HWND Window, ResourceTemplateT Template )
 	{
 		TemplateStyleMapT::iterator Match = StyleListings.find(Template);
 
@@ -646,7 +647,7 @@ namespace BGSEditorExtender
 		StyleListings.clear();
 	}
 
-	bool BGSEEWindowStyler::RegisterStyle( UInt32 TemplateID, StyleData& Data )
+	bool BGSEEWindowStyler::RegisterStyle( ResourceTemplateT TemplateID, StyleData& Data )
 	{
 		if (StyleListings.count(TemplateID))
 			return false;
@@ -656,7 +657,7 @@ namespace BGSEditorExtender
 		return true;
 	}
 
-	bool BGSEEWindowStyler::UnregisterStyle( UInt32 TemplateID )
+	bool BGSEEWindowStyler::UnregisterStyle( ResourceTemplateT TemplateID )
 	{
 		if (StyleListings.count(TemplateID))
 		{
@@ -786,12 +787,12 @@ namespace BGSEditorExtender
 
 		DLGPROC Replacement = NULL;
 		BGSEEWindowSubclasser::DialogSubclassUserData* UserData = NULL;
-		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((UInt32)lpTemplateName);
+		HINSTANCE Alternate = BGSEEUI->DialogHotSwapper->GetAlternateResourceInstance((ResourceTemplateT)lpTemplateName);
 
 		if (Alternate)
 			hInstance = Alternate;
 
-		if (BGSEEUI->Subclasser->GetShouldSubclassDialog((UInt32)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
+		if (BGSEEUI->Subclasser->GetShouldSubclassDialog((ResourceTemplateT)lpTemplateName, dwInitParam, lpDialogFunc, Replacement, &UserData))
 		{
 			lpDialogFunc = Replacement;
 			dwInitParam = (LPARAM)UserData;
@@ -1343,7 +1344,7 @@ namespace BGSEditorExtender
 
 	BGSEEGenericModelessDialog::BGSEEGenericModelessDialog( HWND Parent,
 															HINSTANCE Resource,
-															UInt32 DialogTemplate, UInt32 ContextMenuTemplate,
+															ResourceTemplateT DialogTemplate, ResourceTemplateT ContextMenuTemplate,
 															MessageCallback CallbackProc,
 															float AspectRatio /*= 0.0f*/ )
 	{

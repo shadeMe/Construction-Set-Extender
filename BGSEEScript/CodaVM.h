@@ -177,6 +177,7 @@ namespace BGSEditorExtender
 			CodaScriptVariableListT&					GetCache(void);
 		};
 
+		// A virtual machine? Hah! Fat chance!
 		class CodaScriptVM : public ICodaScriptObject
 		{
 			friend class								CodaScriptBackgrounder;
