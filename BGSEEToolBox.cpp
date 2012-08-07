@@ -116,12 +116,11 @@ namespace BGSEditorExtender
 						else if (NewIndex == SendMessage(ToolList, LB_GETCOUNT, NULL, NULL))
 							NewIndex--;
 
-						SendMessage(ToolList, LB_SETSEL, FALSE, Index);
+						SendMessage(ToolList, LB_SETCURSEL, -1, NULL);
 						SendMessage(ToolList, LB_DELETESTRING, Index, NULL);
 						SendMessage(ToolList, LB_INSERTSTRING, NewIndex, (LPARAM)Buffer);
 						SendMessage(ToolList, LB_SETITEMDATA, NewIndex, (LPARAM)Selection);
-						SendMessage(ToolList, LB_SETSEL, TRUE, NewIndex);
-						SetFocus(ToolList);
+						SendMessage(ToolList, LB_SETCURSEL, NewIndex, NULL);
 					}
 				}
 
