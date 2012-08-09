@@ -326,67 +326,6 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		CSEWindowInvalidationManager		CSEWindowInvalidationManager::Instance;
-
-		CSEWindowInvalidationManager::CSEWindowInvalidationManager() :
-			ActiveInvalidatedWindows()
-		{
-			;//
-		}
-
-		CSEWindowInvalidationManager::~CSEWindowInvalidationManager()
-		{
-			for (InvalidationMapT::iterator Itr = ActiveInvalidatedWindows.begin(); Itr != ActiveInvalidatedWindows.end(); Itr++)
-				Invalidate(Itr->first, false);
-
-			ActiveInvalidatedWindows.clear();
-		}
-
-		void CSEWindowInvalidationManager::Push( HWND Window )
-		{
-			SME_ASSERT(Window);
-
-			if (ActiveInvalidatedWindows.count(Window) == 0)
-			{
-				ActiveInvalidatedWindows.insert(std::make_pair<HWND, UInt32>(Window, 1));
-				Invalidate(Window, true);
-			}
-			else
-				ActiveInvalidatedWindows[Window] += 1;
-		}
-
-		void CSEWindowInvalidationManager::Pop( HWND Window )
-		{
-			SME_ASSERT(Window);
-			SME_ASSERT(ActiveInvalidatedWindows.count(Window));
-
-			UInt32 RefCount = ActiveInvalidatedWindows[Window];
-			SME_ASSERT(RefCount);
-
-			if (RefCount == 1)
-			{
-				Invalidate(Window, false);
-				ActiveInvalidatedWindows.erase(Window);
-			}
-			else
-				ActiveInvalidatedWindows[Window] -= 1;
-		}
-
-		void CSEWindowInvalidationManager::Invalidate( HWND Window, bool State )
-		{
-			SME_ASSERT(Window);
-
-			if (State)
-			{
-				SendMessage(Window, WM_SETREDRAW, FALSE, NULL);
-			}
-			else
-			{
-				SendMessage(Window, WM_SETREDRAW, TRUE, NULL);
-				RedrawWindow(Window, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
-			}
-		}
-
 		CSEDialogExtraFittingsData::CSEDialogExtraFittingsData()
 		{
 			QuickViewCursorPos.x = QuickViewCursorPos.y = 0;

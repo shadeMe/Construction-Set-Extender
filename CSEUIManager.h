@@ -97,23 +97,6 @@ namespace ConstructionSetExtender
 			static CSEFormEnumerationManager				Instance;
 		};
 
-		class CSEWindowInvalidationManager
-		{
-			typedef std::map<HWND, UInt32>		InvalidationMapT;
-
-			InvalidationMapT					ActiveInvalidatedWindows;
-
-			void								Invalidate(HWND Window, bool State);
-		public:
-			CSEWindowInvalidationManager();
-			~CSEWindowInvalidationManager();
-
-			void								Push(HWND Window);
-			void								Pop(HWND Window);
-
-			static CSEWindowInvalidationManager				Instance;
-		};
-
 		struct CSECellViewExtraData
 		{
 			RECT	FilterEditBox;		// init bounds of the new controls

@@ -1003,9 +1003,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoObjectWindowPopulateFormListInvalidateHook(bool RedrawState)
 		{
 			if (RedrawState == false)
-				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_ObjectWindow_FormList);
+				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_ObjectWindow_FormList);
 			else
-				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_ObjectWindow_FormList);
+				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_ObjectWindow_FormList);
 		}
 
 		#define _hhName		ObjectWindowPopulateFormListInvalidate
@@ -1352,9 +1352,9 @@ namespace ConstructionSetExtender
 		{
 			HWND ParentDialog = DialogSubwindow->hDialog;
 
-			UIManager::CSEWindowInvalidationManager::Instance.Push(ParentDialog);
+			BGSEEUI->GetInvalidationManager()->Push(ParentDialog);
 			bool Result = DialogSubwindow->Build(TemplateID);
-			UIManager::CSEWindowInvalidationManager::Instance.Pop(ParentDialog);
+			BGSEEUI->GetInvalidationManager()->Pop(ParentDialog);
 			return Result;
 		}
 
@@ -1415,23 +1415,23 @@ namespace ConstructionSetExtender
 			__asm { mov		Topic, ecx }
 			SME_ASSERT(Topic);
 
-			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
 			thisCall<void>(0x004ED070, Topic, Dialog, SubItemIndex);
-			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
 		}
 
 		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState)
 		{
-			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
 			cdeclCall<void>(0x004ECB40, Dialog, TopicControlState, ResponseControlState);
-			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
 		}
 
 		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog)
 		{
-			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
 			cdeclCall<void>(0x004E35C0, Dialog);
-			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
 		}
 
 		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog)
@@ -1441,9 +1441,9 @@ namespace ConstructionSetExtender
 			__asm { mov		TopicInfo, ecx }
 			SME_ASSERT(TopicInfo);
 
-			UIManager::CSEWindowInvalidationManager::Instance.Push(Dialog);
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
 			thisCall<void>(0x004F5E10, TopicInfo, DialogEditorData, Dialog);
-			UIManager::CSEWindowInvalidationManager::Instance.Pop(Dialog);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
 		}
 
 		void __stdcall DoDialogueEditorPopupHook(HMENU Menu, POINT* Coords, HWND Parent, HWND ListView)

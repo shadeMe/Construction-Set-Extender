@@ -451,9 +451,9 @@ namespace ConstructionSetExtender
 				g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_Partials;
 
 				// reduce time spent updating the main windows during cell switch
-				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_CellView);
-				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_CSParent);
-				UIManager::CSEWindowInvalidationManager::Instance.Push(*g_HWND_RenderWindow);
+				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_CellView);
+				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_CSParent);
+				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_RenderWindow);
 
 				s_LODDiffuseMapPartialResolution = atoi(INISettings::GetLOD()->Get(INISettings::kLOD_PartialTextureResolution, BGSEEMAIN->INIGetter()));
 
@@ -495,9 +495,9 @@ namespace ConstructionSetExtender
 				s_NotificationMapCounter = 0;
 				g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_NotInUse;
 
-				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_CellView);
-				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_CSParent);
-				UIManager::CSEWindowInvalidationManager::Instance.Pop(*g_HWND_RenderWindow);
+				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_CellView);
+				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_CSParent);
+				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_RenderWindow);
 
 				if (atoi(INISettings::GetLOD()->Get(INISettings::kLOD_DeletePartialsAfterGeneration, BGSEEMAIN->INIGetter())))
 				{
