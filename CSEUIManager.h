@@ -180,6 +180,10 @@ namespace ConstructionSetExtender
 	}
 }
 
+// custom window messages
+#define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
+// result = Vector3*
+
 // custom control IDs, as baked into dialog templates
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906
 #define IDC_CSE_DATA_LOADSTARTUPPLUGIN          9907

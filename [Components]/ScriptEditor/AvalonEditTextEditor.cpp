@@ -114,7 +114,7 @@ namespace ConstructionSetExtender
 
 			String^ AvalonEditTextEditor::GetText(void)
 			{
-				return TextField->Text;
+				return SanitizeUnicodeString(TextField->Text);
 			}
 
 			UInt32 AvalonEditTextEditor::GetTextLength(void)
@@ -124,6 +124,8 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack)
 			{
+				Text = SanitizeUnicodeString(Text);
+
 				if (PreventTextChangedEventHandling)
 					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 
@@ -1194,6 +1196,13 @@ namespace ConstructionSetExtender
 
 				return Result;
 			}
+
+			String^ AvalonEditTextEditor::SanitizeUnicodeString( String^ In )
+			{
+				String^ Result = In->Replace((wchar_t)0xA0, (wchar_t)0x20);		// replace unicode non-breaking whitespaces with ANSI equivalents
+
+				return Result;
+			}
 #pragma endregion
 
 #pragma region Events
@@ -1277,7 +1286,6 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
 			{
-				return;
 				try
 				{
 					Clipboard::Clear();
@@ -1484,7 +1492,7 @@ namespace ConstructionSetExtender
 				{
 					LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
 
-					if (E->ChangedButton == System::Windows::Input::MouseButton::Right)
+					if (E->ChangedButton == System::Windows::Input::MouseButton::Right && TextField->TextArea->Selection->IsEmpty)
 						SetCaretPos(LastKnownMouseClickOffset);
 				}
 				else

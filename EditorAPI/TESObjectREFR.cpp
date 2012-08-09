@@ -161,6 +161,26 @@ void TESObjectREFR::SetFrozenState( bool State )
 	SME::MiscGunk::ToggleFlag(&formFlags, kSpecialFlags_Frozen, State);
 }
 
+void TESObjectREFR::SetAlpha( float Alpha /*= -1.0f*/ )
+{
+	TODO("Doesn't blend correctly with other objects. Or itself!");
+
+	BSFadeNode* FadeNode = (BSFadeNode*)GetNiNode();
+	if (FadeNode == NULL)
+		return;
+
+	if (Alpha == -1.0f)
+	{
+		SME::MiscGunk::ToggleFlag(&FadeNode->m_flags, kNiNodeSpecialFlags_SpecialFade, false);
+		FadeNode->fCurrentAlpha = 1.0f;
+	}
+	else
+	{
+		SME::MiscGunk::ToggleFlag(&FadeNode->m_flags, kNiNodeSpecialFlags_SpecialFade, true);
+		FadeNode->fCurrentAlpha = Alpha;
+	}
+}
+
 bool TESObjectREFR::GetInvisible( void ) const
 {
 	return (formFlags & kSpecialFlags_3DInvisible);
@@ -174,4 +194,14 @@ bool TESObjectREFR::GetChildrenInvisible( void ) const
 bool TESObjectREFR::GetFrozen( void ) const
 {
 	return (formFlags & kSpecialFlags_Frozen);
+}
+
+float TESObjectREFR::GetAlpha( void )
+{
+	BSFadeNode* FadeNode = (BSFadeNode*)GetNiNode();
+
+	if (FadeNode && (FadeNode->m_flags & kNiNodeSpecialFlags_SpecialFade))
+		return FadeNode->fCurrentAlpha;
+	else
+		return 1.0f;
 }

@@ -115,6 +115,7 @@ namespace ConstructionSetExtender
 
 		virtual void										Tokenize(String^ Source, bool CollectEmptyTokens);
 		virtual TokenType									GetTokenType(String^% Token);
+		TokenType											GetLeadingTokenType(void);
 		void												Reset();
 		VariableRefCountData^								LookupVariableByName(String^% Variable);
 		int													GetCommentTokenIndex(int BookendTokenIndex);		// returns the index of the token that contains the comment delimiter. argument specifies the end token index for the search

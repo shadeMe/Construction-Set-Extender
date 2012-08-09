@@ -72,6 +72,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(FilteredDialogWindowResize, "prevents filtered dialog window from being resized unnecessarily");
 		_DeclareMemHdlr(DialogueEditorPopup, "prevents the addition of TESForm related context menus items in the dialogue editor");
 		_DeclareMemHdlr(TESWeatherSoundListSort, "fixes a bug that causes a CTD when the sound list view in the edit dialog was sorted");
+		_DeclareMemHdlr(TESFormShowCrossRefList, "shows the form cross ref list as modal dialog. proper modal");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

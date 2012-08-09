@@ -471,6 +471,9 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+#define WM_DATADLG_RECURSEMASTERS				(WM_USER + 2002)
+		// lParam = TESFile*
+
 		LRESULT CALLBACK DataDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, LPARAM& InstanceUserData )
 		{
 			LRESULT DlgProcResult = FALSE;
@@ -481,6 +484,19 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_DATADLG_RECURSEMASTERS:
+				{
+					TESFile* PluginFile = (TESFile*)lParam;
+					SME_ASSERT(PluginFile);
+
+					for (int i = 0; i < PluginFile->masterCount; i++)
+						SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)PluginFile->masterFiles[i]);
+
+					PluginFile->SetLoaded(true);
+					Return = true;
+				}
+
+				break;
 			case WM_INITDIALOG:
 				{
 					LVCOLUMN ColumnData = {0};
@@ -522,9 +538,15 @@ namespace ConstructionSetExtender
 								{
 									UInt32 PluginIndex = (UInt32)DrawData->nmcd.lItemlParam;
 									TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
+
 									if (CurrentFile)
 									{
 										bool Update = true;
+
+										if (CurrentFile->IsMaster())
+										{
+											DrawData->clrTextBk = RGB(242, 247, 243);
+										}
 
 										if (CurrentFile == ActiveTESFile)
 										{
@@ -618,6 +640,7 @@ namespace ConstructionSetExtender
 					else if (Return == false)
 					{
 						CSEFormEnumerationManager::Instance.ResetVisibility();
+						SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
 					}
 
 					break;
@@ -1448,6 +1471,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT:
+									if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INIGetter())))
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1480,16 +1508,27 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT:
+					{
+						bool Enabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INIGetter()));
+						Enabled = (Enabled == false);
+
+						INISettings::GetRenderer()->Set(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INISetter(), "%d", Enabled);
+
+						Return = true;
+					}
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS:
 					TESDialog::ResetRenderWindow();
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
 					{
-						bool SwitchCY = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
-						SwitchCY = (SwitchCY == false);
+						bool Enabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						Enabled = (Enabled == false);
 
-						INISettings::GetRenderer()->Set(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INISetter(), "%d", SwitchCY);
+						INISettings::GetRenderer()->Set(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INISetter(), "%d", Enabled);
 
 						Return = true;
 					}
@@ -1739,8 +1778,18 @@ namespace ConstructionSetExtender
 			UInt8* YKeyState = (UInt8*)0x00A0BC1E;
 			float* UnkRotFactor = (float*)0x00A0BAC4;
 
+			static Vector3 kCameraStaticPivot;
+
 			switch (uMsg)
 			{
+			case WM_RENDERWINDOW_GETCAMERASTATICPIVOT:
+				{
+					SetWindowLongPtr(hWnd, DWLP_MSGRESULT, (LONG_PTR)&kCameraStaticPivot);
+					DlgProcResult = TRUE;
+					Return = true;
+				}
+
+				break;
 			case WM_CLOSE:
 				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40423, NULL);
 				Return = true;
@@ -1818,6 +1867,12 @@ namespace ConstructionSetExtender
 			case WM_KEYDOWN:
 				switch (wParam)
 				{
+				case VK_SHIFT:
+					{
+						_RENDERCMPT->GetCameraPivot(&kCameraStaticPivot, 0.18);
+					}
+
+					break;
 				case VK_F1:		// F1
 					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 					{
@@ -1945,7 +2000,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case 0x56:		// V
-					if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_CONTROL) == FALSE)
+					if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_MENU))
 					{
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_INVERTSELECTION, NULL);
 
@@ -1963,6 +2018,10 @@ namespace ConstructionSetExtender
 					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 40195, NULL);
 
 					Return = true;
+					break;
+				case VK_F5:
+					SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
+
 					break;
 				}
 

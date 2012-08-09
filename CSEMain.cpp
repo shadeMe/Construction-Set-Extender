@@ -150,6 +150,9 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE_MESSAGE("Registering OBSE Plugin Message Handlers");
 		XSEMsgIntfc->RegisterListener(XSEPluginHandle, "OBSE", OBSEMessageHandler);
 
+		BGSEECONSOLE_MESSAGE("Initializing Plugin Interface Manager");
+		CSEInterfaceManager::Instance.Initialize();
+
 		return true;
 	}
 
@@ -335,6 +338,9 @@ namespace ConstructionSetExtender
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_CellViewWindowState,
 									BGSEEMAIN->INISetter(),
 									(GetMenuState(*g_HMENU_MainMenu, 40200, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
+
+		BGSEECONSOLE_MESSAGE("Deinitializing Plugin Interface Manager");
+		CSEInterfaceManager::Instance.Deinitailize();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Render Window Painter");
 		BGSEECONSOLE->Indent();

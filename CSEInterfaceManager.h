@@ -15,11 +15,15 @@ namespace ConstructionSetExtender
 		ConsolePrintCallbackListT												ConsolePrintCallbacks;
 		CommandURLMapT															ObScriptCommandURLs;
 		BGSEditorExtender::BGSEEScript::CodaScriptCommandRegistrar				CodaScriptPluginCommandRegistrar;
+		bool																	Initialized;
 
 		static void						CSEConsolePrintCallbackPrototype(const char* Prefix, const char* Message);
 	public:
 		CSEInterfaceManager();
 		~CSEInterfaceManager();
+
+		void							Initialize(void);
+		void							Deinitailize(void);
 
 		const CSEInterface*				GetInterface();
 
@@ -27,14 +31,14 @@ namespace ConstructionSetExtender
 		void							ConsumeConsoleInterface();
 		void							ConsumeScriptInterface(BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT& Registrars);
 
-		static const void*				InitializeInterface(UInt8 InterfaceType);
 		static UInt8					GetVersion();
+		static const void*				InitializeInterface(UInt8 InterfaceType);
 
 		static void						RegisterCommandURL(const char* CommandName, const char* URL);
-		static void						PrintToConsole(const char*	Prefix, const char* FormatString, ...);
 		static void						RegisterConsoleCallback(CSEConsoleInterface::ConsolePrintCallback Handler);
-		static void						PrintToRenderWindow(const char* Message, float DisplayDuration);
 		static void						RegisterScriptCommand(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command);
+		static void						PrintToConsole(const char*	Prefix, const char* FormatString, ...);
+		static void						PrintToRenderWindow(const char* Message, float DisplayDuration);
 
 		static CSEInterfaceManager		Instance;
 	};

@@ -14,9 +14,14 @@ void TESFile::DeleteInstance(bool ReleaseMemory)
 		FormHeap_Free(this);
 }
 
-bool TESFile::IsActive( void )
+bool TESFile::IsActive( void ) const
 {
 	return thisCall<bool>(0x00485BA0, this);
+}
+
+bool TESFile::IsMaster( void ) const
+{
+	return thisCall<bool>(0x00485B00, this);
 }
 
 bool TESFile::SetLoaded( bool State )

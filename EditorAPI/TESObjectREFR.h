@@ -28,7 +28,8 @@ public:
 
 	enum
 	{
-		kNiNodeSpecialFlags_DontUncull			= 1 << 15
+		kNiNodeSpecialFlags_DontUncull			= 1 << 15,
+		kNiNodeSpecialFlags_SpecialFade			= 1 << 14,
 	};
 
 	// members
@@ -65,8 +66,10 @@ public:
 	void						ToggleInvisiblity(void);
 	void						ToggleChildrenInvisibility(void);
 	void						SetFrozenState(bool State);
+	void						SetAlpha(float Alpha = -1.0f);		// pass -1.0f to reset alpha
 
 	bool						GetInvisible(void) const;
 	bool						GetChildrenInvisible(void) const;
 	bool						GetFrozen(void) const;
+	float						GetAlpha(void);
 };

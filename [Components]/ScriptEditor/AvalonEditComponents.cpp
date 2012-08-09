@@ -348,35 +348,51 @@ namespace ConstructionSetExtender
 					if (!IndentParser->Valid)
 						continue;
 
-					if (!String::Compare(IndentParser->Tokens[0], "begin", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Begin &&
+						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					{
 						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
-					else if (!String::Compare(IndentParser->Tokens[0], "if", true) && !IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					}
+					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_If &&
+						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid) == false)
+					{
 						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_If);
-					else if (!String::Compare(IndentParser->Tokens[0], "foreach", true) && !IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+					}
+					else if ((IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ForEach ||
+						IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_While) &&
+						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid) == false)
+					{
 						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-					else if (!String::Compare(IndentParser->Tokens[0], "while", true) && !IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
-						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-					else if	(!String::Compare(IndentParser->Tokens[0], "loop", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
+					}
+					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Loop &&
+						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
 					{
 						IndentParser->BlockStack->Pop();
+
 						if (Line->NextLine->LineNumber == line->LineNumber)
 							ExdentLastLine = true;
 					}
-					else if (!String::Compare(IndentParser->Tokens[0], "endIf", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If))
+					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_EndIf &&
+						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If))
 					{
 						IndentParser->BlockStack->Pop();
+
 						if (Line->NextLine->LineNumber == line->LineNumber)
 							ExdentLastLine = true;
 					}
-					else if (!String::Compare(IndentParser->Tokens[0], "end", true) && IndentParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
+					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_End &&
+						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
 					{
 						IndentParser->BlockStack->Pop();
+
 						if (Line->NextLine->LineNumber == line->LineNumber)
 							ExdentLastLine = true;
 					}
-					else if (!String::Compare(IndentParser->Tokens[0], "elseIf", true) || !String::Compare(IndentParser->Tokens[0], "else", true))
+					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ElseIf ||
+						IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Else)
 					{
-						if (IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If) && Line->NextLine->LineNumber == line->LineNumber)
+						if (IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If) &&
+							Line->NextLine->LineNumber == line->LineNumber)
 						{
 							ExdentLastLine = true;
 							SemiExdentLastLine = true;
@@ -465,44 +481,46 @@ namespace ConstructionSetExtender
 						if (!FoldingParser->Valid)
 							continue;
 
-						if (!String::Compare(FoldingParser->Tokens[0], "begin", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+						if (FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Begin &&
+							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
 						{
 							FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
 							StartOffsets->Push(Line->EndOffset);
 						}
-						else if (!String::Compare(FoldingParser->Tokens[0], "if", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+						else if (FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_If &&
+							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid) == false)
 						{
 							FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_If);
 							StartOffsets->Push(Line->EndOffset);
 						}
-						else if (!String::Compare(FoldingParser->Tokens[0], "foreach", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
+						else if ((FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ForEach ||
+							FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_While) &&
+							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid) == false)
 						{
 							FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
 							StartOffsets->Push(Line->EndOffset);
 						}
-						else if (!String::Compare(FoldingParser->Tokens[0], "while", true) && !FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
-						{
-							FoldingParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-							StartOffsets->Push(Line->EndOffset);
-						}
-						else if	(!String::Compare(FoldingParser->Tokens[0], "loop", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
+						else if	(FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Loop &&
+							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
 						{
 							FoldingParser->BlockStack->Pop();
 							Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->EndOffset));
 						}
-						else if (!String::Compare(FoldingParser->Tokens[0], "endIf", true) &&
+						else if (FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_EndIf &&
 							(FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_If) ||
 							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse)))
 						{
 							FoldingParser->BlockStack->Pop();
 							Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->EndOffset));
 						}
-						else if (!String::Compare(FoldingParser->Tokens[0], "end", true) && FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
+						else if (FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_End &&
+							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_ScriptBlock))
 						{
 							FoldingParser->BlockStack->Pop();
 							Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartOffsets->Pop(), Line->EndOffset));
 						}
-						else if ((!String::Compare(FoldingParser->Tokens[0], "elseIf", true) || !String::Compare(FoldingParser->Tokens[0], "else", true)) &&
+						else if ((FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ElseIf ||
+							FoldingParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Else) &&
 							(FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_If) ||
 							FoldingParser->CompareBlockStack(ScriptParser::BlockType::e_IfElse)))
 						{

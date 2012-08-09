@@ -152,7 +152,9 @@ public:
 	/*41C*/ TESFile*             unkFile41C; // file this object was cloned from. used for local copies of network files?
 
 	// methods
-	bool						IsActive(void);
+	bool						IsActive(void) const;
+	bool						IsMaster(void) const;
+
 	bool						SetLoaded(bool State);
 	bool						SetActive(bool State);
 	bool						SetMaster(bool State);

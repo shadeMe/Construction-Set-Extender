@@ -387,6 +387,14 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
+	ScriptParser::TokenType ScriptParser::GetLeadingTokenType( void )
+	{
+		if (Valid)
+			return GetTokenType(Tokens[0]);
+		else
+			return TokenType::e_Invalid;
+	}
+
 	UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)
 	{
 		UInt32 LoByte = (Byte)Data->GetValue((int)CurrentOffset++),

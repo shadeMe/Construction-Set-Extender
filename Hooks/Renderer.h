@@ -18,6 +18,7 @@ namespace ConstructionSetExtender
 			kRenderer_AltCamPanSpeed,
 			kRenderer_CoplanarRefDrops,
 			kRenderer_SwitchCAndY,
+			kRenderer_FixedCameraPivot,
 
 			kRenderer__MAX
 		};
@@ -91,5 +92,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(RenderWindowAxisHotkeysMoveReferences, "fixes a bug that caused the x/y axis key states to be swapped when moving/rotating references and path grid points");
 		_DeclareMemHdlr(RenderWindowAxisHotkeysMovePathGridPoints, "");
 		_DeclareMemHdlr(RenderWindowAxisHotkeysRotateReferences, "");
+		_DeclareMemHdlr(BSFadeNodeDrawTransparency, "allows objects to be rendered with arbitrary transparency");
+		_DeclareMemHdlr(TESRubberBandSelectionSkipInvisibleRefs, "prevents invisible refs from being added to the render window selection");
+		_DeclareMemHdlr(RenderWindowCameraRotationPivot, "allows the viewport camera to be rotated around an arbitrary pivot");
 	}
 }

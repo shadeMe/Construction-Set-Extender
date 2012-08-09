@@ -120,6 +120,7 @@ public:
 
 	// methods
 	void								RenderNode(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL);
+	void								GetCameraPivot(Vector3* OutPivot, float ScaleFactor);
 };
 STATIC_ASSERT(sizeof(TESRenderComponents) == 0x0C);
 

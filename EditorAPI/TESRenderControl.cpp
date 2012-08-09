@@ -80,3 +80,19 @@ void TESRenderComponents::RenderNode( NiCamera* Camera /*= NULL*/, NiNode* NodeT
 
 	thisVirtualCall<void>(0x0, niWindow, Camera, NodeToRender, RenderToTexture);
 }
+
+void TESRenderComponents::GetCameraPivot( Vector3* OutPivot, float ScaleFactor )
+{
+	NiVector3* CameraPos = &primaryCameraParentNode->m_localTranslate;
+
+	OutPivot->x = CameraPos->x;
+	OutPivot->y = CameraPos->y;
+	OutPivot->z = CameraPos->z;
+
+	Vector3 Buffer(*OutPivot);
+	Buffer.Scale(ScaleFactor);
+
+	*OutPivot += Buffer;
+}
+
+

@@ -17,16 +17,17 @@ namespace ConstructionSetExtender
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRendererINISettings[kRenderer__MAX] =
 		{
 			{ "UpdatePeriod",					"8",		"Duration, in milliseconds, between render window updates" },
-			{ "UpdateViewPortAsync",			"0",		"Allow the render window to be updated in the background" },
-			{ "AltRefMovementSpeed",			"0.8",		"Alternate render window movement settings" },
-			{ "AltRefSnapGrid",					"2",		"Alternate render window movement settings" },
-			{ "AltRefRotationSpeed",			"1.0",		"Alternate render window movement settings" },
-			{ "AltRefSnapAngle",				"45",		"Alternate render window movement settings" },
-			{ "AltCamRotationSpeed",			"1.0",		"Alternate render window movement settings" },
-			{ "AltCamZoomSpeed",				"0.5",		"Alternate render window movement settings" },
-			{ "AltCamPanSpeed",					"5.0",		"Alternate render window movement settings" },
-			{ "CoplanarRefDrops",				"1",		"Places new references co-planar with the object at the cursor location" },
-			{ "SwitchCAndY",					"0",		"Switch the functionalities of the C and Y hotkeys"	}
+			{ "UpdateViewPortAsync",			"0",		"Constantly update the render window in the background" },
+			{ "AltRefMovementSpeed",			"0.8",		"Alternate render window reference movement speed" },
+			{ "AltRefSnapGrid",					"2",		"Alternate render window reference snap to grid" },
+			{ "AltRefRotationSpeed",			"1.0",		"Alternate render window reference rotation speed" },
+			{ "AltRefSnapAngle",				"45",		"Alternate render window reference snap to angle" },
+			{ "AltCamRotationSpeed",			"1.0",		"Alternate render window camera rotation speed" },
+			{ "AltCamZoomSpeed",				"0.5",		"Alternate render window camera zoom speed" },
+			{ "AltCamPanSpeed",					"5.0",		"Alternate render window camera pan speed" },
+			{ "CoplanarRefDrops",				"1",		"Place new references co-planar with the object at the cursor location" },
+			{ "SwitchCAndY",					"0",		"Switch the functionalities of the C and Y hotkeys"	},
+			{ "FixedCameraPivot",				"0",		"Use a static pivot when rotating the viewport camera without a selection"	}
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderer( void )
@@ -107,6 +108,9 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(RenderWindowAxisHotkeysMoveReferences, 0x0042CB79);
 		_DefineHookHdlr(RenderWindowAxisHotkeysMovePathGridPoints, 0x0042BF17);
 		_DefinePatchHdlr(RenderWindowAxisHotkeysRotateReferences, 0x0042CBBD + 2);
+		_DefineHookHdlr(BSFadeNodeDrawTransparency, 0x004BC527);
+		_DefineHookHdlr(TESRubberBandSelectionSkipInvisibleRefs, 0x0042FB89);
+		_DefineHookHdlr(RenderWindowCameraRotationPivot, 0x0042CBFD);
 
 		void PatchRendererHooks(void)
 		{
@@ -165,6 +169,9 @@ namespace ConstructionSetExtender
 			_MemHdlr(RenderWindowAxisHotkeysMoveReferences).WriteJump();
 			_MemHdlr(RenderWindowAxisHotkeysMovePathGridPoints).WriteJump();
 			_MemHdlr(RenderWindowAxisHotkeysRotateReferences).WriteUInt32(0x00A0BC1E);
+			_MemHdlr(BSFadeNodeDrawTransparency).WriteJump();
+			_MemHdlr(TESRubberBandSelectionSkipInvisibleRefs).WriteJump();
+			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -1468,6 +1475,95 @@ namespace ConstructionSetExtender
 				push	ecx
 				mov		ecx, esi
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoBSFadeNodeDrawTransparencyHook(BSFadeNode* FadeNode, float* OutAlpha)
+		{
+			if ((FadeNode->m_flags & TESObjectREFR::kNiNodeSpecialFlags_SpecialFade))
+			{
+				*OutAlpha = FadeNode->fCurrentAlpha;
+			}
+		}
+
+		#define _hhName		BSFadeNodeDrawTransparency
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004BC52E);
+			__asm
+			{
+				mov		eax, esp
+				add		eax, 0x2C
+
+				pushad
+				push	eax
+				push	esi
+				call	DoBSFadeNodeDrawTransparencyHook
+				popad
+
+				cmp		byte ptr [esi + 0xDC], 0
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoTESRubberBandSelectionSkipInvisibleRefsHook(TESRenderSelection* Selection, TESObjectREFR* Ref, bool ShowSelectionRing)
+		{
+			NiNode* Node = Ref->GetNiNode();
+			if (Node)
+			{
+				if ((Node->m_flags & NiAVObject::kFlag_AppCulled) == false)
+					Selection->AddToSelection(Ref, ShowSelectionRing);
+			}
+		}
+
+		#define _hhName		TESRubberBandSelectionSkipInvisibleRefs
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042FB8E);
+			__asm
+			{
+				push	ecx
+				call	DoTESRubberBandSelectionSkipInvisibleRefsHook
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		bool __stdcall DoRenderWindowCameraRotationPivotHook(Vector3* OutPivot, UInt8* AlternatePivot)
+		{
+			bool Enabled = (_RENDERSEL->selectionCount == 0 &&
+							atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INIGetter())));
+
+			if (Enabled && GetAsyncKeyState(VK_CONTROL) == FALSE ||
+				(Enabled == false && GetAsyncKeyState(VK_CONTROL)))
+			{
+				Vector3* StaticPivot = (Vector3*)SendMessage(*g_HWND_RenderWindow, WM_RENDERWINDOW_GETCAMERASTATICPIVOT, NULL, NULL);
+				*OutPivot = *StaticPivot;
+
+				return true;
+			}
+
+			return false;
+		}
+
+		#define _hhName		RenderWindowCameraRotationPivot
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0042CC04);
+			_hhSetVar(Jump, 0x0042CCA3);
+			__asm
+			{
+				lea		eax, [esp + 0x1C]
+				push	0x00A0BC21
+				push	eax
+				call	DoRenderWindowCameraRotationPivotHook
+				test	al, al
+				jnz		USECUSTOMPIVOT
+
+				mov		eax, 0x00A0BC21
+				cmp		byte ptr [eax], 0
+				jmp		_hhGetVar(Retn)
+			USECUSTOMPIVOT:
+				jmp		_hhGetVar(Jump)
 			}
 		}
 	}

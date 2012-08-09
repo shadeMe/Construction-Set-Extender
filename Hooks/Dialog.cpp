@@ -17,8 +17,8 @@ namespace ConstructionSetExtender
 			{ "CellViewWindowState",		"1",				"Window visibility" },
 			{ "SortFormListsByActiveForm",	"1",				"Sort active forms first in list views"	},
 			{ "ColorizeActiveForms",		"1",				"Colorize active forms in list views" },
-			{ "ActiveFormForeColor",		"255,255,255",		"Foreground color of active form items" },
-			{ "ActiveFormBackColor",		"45,121,79",		"Background color of active form items" },
+			{ "ActiveFormForeColor",		"255,255,255",		"Foreground color of active form items (RGB)" },
+			{ "ActiveFormBackColor",		"0,128,64",			"Background color of active form items (RGB)" },
 			{ "ShowMainWindowsInTaskbar",	"0",				"Show the primary CS windows in the taskbar" },
 			{ "ShowEditDialogsInTaskbar",	"0",				"Show form edit dialogs in the taskbar" }
 		};
@@ -70,7 +70,7 @@ namespace ConstructionSetExtender
 		_DefinePatchHdlr(HideCSMainDialogsA, 0x00419F62 + 1);
 		_DefinePatchHdlr(HideCSMainDialogsB, 0x00419EE3 + 1);
 		_DefinePatchHdlr(HideCSMainDialogsC, 0x0041B166 + 1);
-		_DefineHookHdlr(HideCSMainDialogsStartup, 0x0041CF40);
+		_DefineHookHdlr(HideCSMainDialogsStartup, 0x0041CF56);
 		_DefineHookHdlr(ReleaseModelessDialogsA, 0x00405BBB);
 		_DefineHookHdlr(ReleaseModelessDialogsB, 0x00405AEF);
 		_DefineHookHdlr(ReleaseModelessDialogsC, 0x00447CAD);
@@ -82,6 +82,7 @@ namespace ConstructionSetExtender
 		_DefinePatchHdlr(FilteredDialogWindowResize, 0x004E0655 + 1);
 		_DefineHookHdlr(DialogueEditorPopup, 0x004F2896);
 		_DefineJumpHdlr(TESWeatherSoundListSort, 0x0055D083, 0x0055D098);
+		_DefineHookHdlr(TESFormShowCrossRefList, 0x0049875C);
 
 		void PatchDialogHooks(void)
 		{
@@ -288,6 +289,7 @@ namespace ConstructionSetExtender
 
 			_MemHdlr(DialogueEditorPopup).WriteJump();
 			_MemHdlr(TESWeatherSoundListSort).WriteJump();
+			_MemHdlr(TESFormShowCrossRefList).WriteJump();
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -659,13 +661,25 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_TOGGLEVISIBILITY:
 				{
-					SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
+					if (_RENDERSEL->selectionCount)
+						SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
+					else
+					{
+						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+						Ref->ToggleInvisiblity();
+					}
 
 					break;
 				}
 			case IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY:
 				{
-					SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY, NULL);
+					if (_RENDERSEL->selectionCount)
+						SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY, NULL);
+					else
+					{
+						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+						Ref->ToggleChildrenInvisibility();
+					}
 
 					break;
 				}
@@ -1249,8 +1263,8 @@ namespace ConstructionSetExtender
 		#define _hhName		HideCSMainDialogsStartup
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x0041CF45);
-			_hhSetVar(Call, 0x00417FE0);
+			_hhSetVar(Retn, 0x0041CF5B);
+			_hhSetVar(Call, 0x00431310);
 			__asm
 			{
 				call	_hhGetVar(Call)
@@ -1454,6 +1468,22 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	DoDialogueEditorPopupHook
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		INT_PTR __stdcall DoTESFormShowCrossRefListHook(HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam)
+		{
+			return BGSEEUI->ModalDialog(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		}
+
+		#define _hhName		TESFormShowCrossRefList
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00498762);
+			__asm
+			{
+				call	DoTESFormShowCrossRefListHook
 				jmp		_hhGetVar(Retn)
 			}
 		}

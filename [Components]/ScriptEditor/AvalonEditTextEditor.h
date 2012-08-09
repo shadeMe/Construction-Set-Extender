@@ -159,6 +159,7 @@ namespace ConstructionSetExtender
 				void										ClearFindResultIndicators(void);
 				void										SearchBracesForHighlighting(int CaretPos);
 				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(void);
+				String^										SanitizeUnicodeString(String^ In);			// removes unsupported characters
 				virtual void								Destroy();
 
 				static double								SetTextFadeAnimationDuration = 0.15;		// in seconds
