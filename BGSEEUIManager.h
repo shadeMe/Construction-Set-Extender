@@ -177,6 +177,21 @@ namespace BGSEditorExtender
 		bool									UnregisterStyle(ResourceTemplateT TemplateID);
 	};
 
+	class BGSEEWindowInvalidationManager
+	{
+		typedef std::map<HWND, UInt32>		InvalidationMapT;
+
+		InvalidationMapT					ActiveInvalidatedWindows;
+
+		void								Invalidate(HWND Window, bool State);
+	public:
+		BGSEEWindowInvalidationManager();
+		~BGSEEWindowInvalidationManager();
+
+		void								Push(HWND Window);
+		void								Pop(HWND Window);
+	};
+
 	class BGSEEUIManager
 	{
 	public:
@@ -262,6 +277,7 @@ namespace BGSEditorExtender
 		BGSEEDialogTemplateHotSwapper*			DialogHotSwapper;
 		BGSEEMenuTemplateHotSwapper*			MenuHotSwapper;
 		BGSEEWindowStyler*						WindowStyler;
+		BGSEEWindowInvalidationManager*			InvalidationManager;
 		BGSEEWindowHandleCollection				HandleCollections[kHandleCollection__MAX];
 
 		bool									Initialized;
@@ -304,6 +320,7 @@ namespace BGSEditorExtender
 		BGSEEDialogTemplateHotSwapper*			GetDialogHotSwapper(void);
 		BGSEEMenuTemplateHotSwapper*			GetMenuHotSwapper(void);
 		BGSEEWindowStyler*						GetWindowStyler(void);
+		BGSEEWindowInvalidationManager*			GetInvalidationManager(void);
 	};
 #define BGSEEUI									BGSEditorExtender::BGSEEUIManager::GetSingleton()
 

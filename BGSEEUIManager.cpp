@@ -668,6 +668,65 @@ namespace BGSEditorExtender
 			return false;
 	}
 
+	BGSEEWindowInvalidationManager::BGSEEWindowInvalidationManager() :
+		ActiveInvalidatedWindows()
+	{
+		;//
+	}
+
+	BGSEEWindowInvalidationManager::~BGSEEWindowInvalidationManager()
+	{
+		for (InvalidationMapT::iterator Itr = ActiveInvalidatedWindows.begin(); Itr != ActiveInvalidatedWindows.end(); Itr++)
+			Invalidate(Itr->first, false);
+
+		ActiveInvalidatedWindows.clear();
+	}
+
+	void BGSEEWindowInvalidationManager::Push( HWND Window )
+	{
+		SME_ASSERT(Window);
+
+		if (ActiveInvalidatedWindows.count(Window) == 0)
+		{
+			ActiveInvalidatedWindows.insert(std::make_pair<HWND, UInt32>(Window, 1));
+			Invalidate(Window, true);
+		}
+		else
+			ActiveInvalidatedWindows[Window] += 1;
+	}
+
+	void BGSEEWindowInvalidationManager::Pop( HWND Window )
+	{
+		SME_ASSERT(Window);
+		SME_ASSERT(ActiveInvalidatedWindows.count(Window));
+
+		UInt32 RefCount = ActiveInvalidatedWindows[Window];
+		SME_ASSERT(RefCount);
+
+		if (RefCount == 1)
+		{
+			Invalidate(Window, false);
+			ActiveInvalidatedWindows.erase(Window);
+		}
+		else
+			ActiveInvalidatedWindows[Window] -= 1;
+	}
+
+	void BGSEEWindowInvalidationManager::Invalidate( HWND Window, bool State )
+	{
+		SME_ASSERT(Window);
+
+		if (State)
+		{
+			SendMessage(Window, WM_SETREDRAW, FALSE, NULL);
+		}
+		else
+		{
+			SendMessage(Window, WM_SETREDRAW, TRUE, NULL);
+			RedrawWindow(Window, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+		}
+	}
+
 	BGSEEUIManager*						BGSEEUIManager::Singleton = NULL;
 	SME::UIHelpers::CSnapWindow			BGSEEUIManager::WindowEdgeSnapper;
 
@@ -888,6 +947,7 @@ namespace BGSEditorExtender
 		DialogHotSwapper(NULL),
 		MenuHotSwapper(NULL),
 		WindowStyler(NULL),
+		InvalidationManager(NULL),
 		Initialized(false)
 	{
 		OwnerThreadID = GetCurrentThreadId();
@@ -907,6 +967,7 @@ namespace BGSEditorExtender
 		SAFEDELETE(EditorWindowHandle);
 		SAFEDELETE(EditorResourceInstance);
 		SAFEDELETE(WindowStyler);
+		SAFEDELETE(InvalidationManager);
 
 		Initialized = false;
 
@@ -934,6 +995,7 @@ namespace BGSEditorExtender
 		DialogHotSwapper = new BGSEEDialogTemplateHotSwapper();
 		MenuHotSwapper = new BGSEEMenuTemplateHotSwapper();
 		WindowStyler = new BGSEEWindowStyler();
+		InvalidationManager = new BGSEEWindowInvalidationManager();
 
 		PatchIAT(kIATPatch_CreateWindowEx, CallbackCreateWindowExA);
 		PatchIAT(kIATPatch_CreateDialogParam, CallbackCreateDialogParamA);
@@ -1111,6 +1173,13 @@ namespace BGSEditorExtender
 		SME_ASSERT(Initialized);
 
 		return WindowStyler;
+	}
+
+	BGSEEWindowInvalidationManager* BGSEEUIManager::GetInvalidationManager( void )
+	{
+		SME_ASSERT(Initialized);
+
+		return InvalidationManager;
 	}
 
 	const BGSEEINIManagerSettingFactory::SettingData		BGSEEGenericModelessDialog::kDefaultINISettings[5] =
