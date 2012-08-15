@@ -1,6 +1,7 @@
 #include "ScriptEditorPreferences.h"
 #include "[Common]\NativeWrapper.h"
 #include "Globals.h"
+#include "IntelliSense\IntelliSenseDatabase.h"
 
 namespace ConstructionSetExtender
 {
@@ -380,6 +381,7 @@ namespace ConstructionSetExtender
 			UseAutoRecovery = gcnew CheckBox();
 			LabelAutoRecoveryInterval = gcnew Label();
 			AutoRecoverySavePeriod = gcnew NumericUpDown();
+			ForceDatabaseUpdate = gcnew Button();
 			//
 			// Hidden Controls
 			//
@@ -550,6 +552,7 @@ namespace ConstructionSetExtender
 			TabIntelliSense->Controls->Add(LabelISThreshold);
 			TabIntelliSense->Controls->Add(ThresholdLength);
 			TabIntelliSense->Controls->Add(NoFocusUI);
+			TabIntelliSense->Controls->Add(ForceDatabaseUpdate);
 			TabIntelliSense->Location = System::Drawing::Point(4, 22);
 			TabIntelliSense->Name = L"TabIntelliSense";
 			TabIntelliSense->Padding = Padding(3);
@@ -601,7 +604,7 @@ namespace ConstructionSetExtender
 			this->UseQuickView->Name = L"UseQuickView";
 			this->UseQuickView->Size = System::Drawing::Size(86, 17);
 			this->UseQuickView->TabIndex = 6;
-			this->UseQuickView->Text = L"QuickView™";
+			this->UseQuickView->Text = L"QuickView";
 			this->UseQuickView->UseVisualStyleBackColor = true;
 			//
 			// LabelISDBUpdatePeriod
@@ -630,6 +633,16 @@ namespace ConstructionSetExtender
 			this->NoFocusUI->TabIndex = 9;
 			this->NoFocusUI->Text = L"Prevent IntelliSense Interface From Acquiring Focus";
 			this->NoFocusUI->UseVisualStyleBackColor = true;
+			//
+			// ForceDatabaseUpdate
+			//
+			this->ForceDatabaseUpdate->Location = System::Drawing::Point(30, 238);
+			this->ForceDatabaseUpdate->Name = L"ForceDatabaseUpdate";
+			this->ForceDatabaseUpdate->Size = System::Drawing::Size(148, 24);
+			this->ForceDatabaseUpdate->TabIndex = 10;
+			this->ForceDatabaseUpdate->Text = L"Update Database Now";
+			this->ForceDatabaseUpdate->UseVisualStyleBackColor = true;
+			ForceDatabaseUpdate->Click += gcnew EventHandler(this, &ScriptEditorPreferences::ForceDatabaseUpdate_Click);
 			//
 			// TabPreprocessor
 			//
@@ -1182,6 +1195,11 @@ namespace ConstructionSetExtender
 		void ScriptEditorPreferences::OnPreferencesSaved( EventArgs^ E )
 		{
 			PreferencesSaved(this, E);
+		}
+
+		void ScriptEditorPreferences::ForceDatabaseUpdate_Click( Object^ Sender, EventArgs^ E )
+		{
+			ConstructionSetExtender::IntelliSense::ISDB->ForceUpdateDatabase();
 		}
 	}
 }

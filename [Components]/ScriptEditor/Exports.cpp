@@ -85,7 +85,7 @@ UInt32 GetOpenEditorCount(void)
 	return SEMGR->GetOpenEditorCount();
 }
 
-void CleanupAutoRecoveryCache(void)
+void Deinitalize(void)
 {
 	try
 	{
@@ -98,6 +98,8 @@ void CleanupAutoRecoveryCache(void)
 	{
 		DebugPrint("Couldn't purge auto-recovery cache!\n\tException: " + E->Message, true);
 	}
+
+	delete ISDB;
 }
 
 ComponentDLLInterface::ScriptEditorInterface g_InteropInterface =
@@ -109,5 +111,5 @@ ComponentDLLInterface::ScriptEditorInterface g_InteropInterface =
 	CloseAllOpenEditors,
 	UpdateIntelliSenseDatabase,
 	GetOpenEditorCount,
-	CleanupAutoRecoveryCache,
+	Deinitalize,
 };

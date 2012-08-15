@@ -298,6 +298,7 @@ namespace ConstructionSetExtender
 		FormListContextMenu->Items->AddRange(gcnew cli::array< ToolStripItem^  >(1) {FormListContextMenuRemove});
 		FormListContextMenu->Name = L"FormListContextMenu";
 		FormListContextMenu->Size = Size(165, 26);
+		FormListContextMenu->ShowImageMargin = false;
 
 		FormListContextMenuRemove->Name = L"FormListContextMenuRemove";
 		FormListContextMenuRemove->Size = Size(164, 22);
@@ -341,6 +342,7 @@ namespace ConstructionSetExtender
 			TagTreeContextMenuRemove});
 		TagTreeContextMenu->Name = L"TagTreeContextMenu";
 		TagTreeContextMenu->Size = Size(141, 48);
+		TagTreeContextMenu->ShowImageMargin = false;
 		//
 		// TagTreeContextMenuAdd
 		//

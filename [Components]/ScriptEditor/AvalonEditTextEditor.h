@@ -14,7 +14,8 @@ namespace ConstructionSetExtender
 			using namespace ICSharpCode;
 			using namespace System::Windows::Forms::Integration;
 
-			typedef System::Windows::Media::Imaging::RenderTargetBitmap		RTBitmap;
+			typedef System::Windows::Media::Imaging::RenderTargetBitmap			RTBitmap;
+			typedef System::EventHandler<AvalonEdit::Editing::TextEventArgs^>	AvalonEditTextEventHandler;
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
@@ -53,8 +54,8 @@ namespace ConstructionSetExtender
 				int													LastKnownMouseClickOffset;
 				System::Windows::Input::Key							LastKeyThatWentDown;
 
-				System::Windows::Point								ScrollStartPoint;
-				System::Windows::Vector								CurrentScrollOffset;
+				System::Windows::Point								MiddleMouseScrollStartPoint;
+				System::Windows::Vector								MiddleMouseCurrentScrollOffset;
 				bool												IsMiddleMouseScrolling;
 				Timer^												MiddleMouseScrollTimer;
 
@@ -66,6 +67,7 @@ namespace ConstructionSetExtender
 				HScrollBar^											ExternalHorizontalScrollBar;
 				bool												SynchronizingExternalScrollBars;
 				bool												SynchronizingInternalScrollBars;
+				System::Windows::Vector								PreviousScrollOffsetBuffer;
 
 				bool												SetTextAnimating;
 				System::Windows::Media::Animation::DoubleAnimation^	SetTextPrologAnimationCache;
@@ -97,8 +99,7 @@ namespace ConstructionSetExtender
 				EventHandler^										ExternalScrollBarValueChangedHandler;
 				EventHandler^										SetTextAnimationCompletedHandler;
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
-				System::EventHandler<AvalonEdit::Editing::TextEventArgs^>^
-																	TextFieldTextCopiedHandler;
+				AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
 
 				virtual void								OnScriptModified(bool ModificationState);
 				virtual void								OnKeyDown(System::Windows::Input::KeyEventArgs^ E);
@@ -162,85 +163,87 @@ namespace ConstructionSetExtender
 				String^										SanitizeUnicodeString(String^ In);			// removes unsupported characters
 				virtual void								Destroy();
 
-				static double								SetTextFadeAnimationDuration = 0.15;		// in seconds
+				static double								SetTextFadeAnimationDuration = 0.10;		// in seconds
 			public:
 				AvalonEditTextEditor(Font^ Font, UInt32 ParentWorkspaceIndex);
 				virtual ~AvalonEditTextEditor();
 
 				// interface events
-				virtual event TextEditorScriptModifiedEventHandler^		ScriptModified;
-				virtual event KeyEventHandler^							KeyDown;
-				virtual event TextEditorMouseClickEventHandler^			MouseClick;
+				virtual event TextEditorScriptModifiedEventHandler^			ScriptModified;
+				virtual event KeyEventHandler^								KeyDown;
+				virtual event TextEditorMouseClickEventHandler^				MouseClick;
 
 				// interface methods
-				virtual void								SetFont(Font^ FontObject);
-				virtual void								SetTabCharacterSize(int PixelWidth);	// AvalonEdit uses character lengths
-				virtual void								SetContextMenu(ContextMenuStrip^% Strip);
+				virtual void										SetFont(Font^ FontObject);
+				virtual void										SetTabCharacterSize(int PixelWidth);	// AvalonEdit uses character lengths
+				virtual void										SetContextMenu(ContextMenuStrip^% Strip);
 
-				virtual void								AddControl(Control^ ControlObject);
+				virtual void										AddControl(Control^ ControlObject);
 
-				virtual String^								GetText(void);
-				virtual UInt32								GetTextLength(void);
-				virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
-				virtual void								InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);
+				virtual String^										GetText(void);
+				virtual UInt32										GetTextLength(void);
+				virtual void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
+				virtual void										InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);
 
-				virtual String^								GetSelectedText(void);
-				virtual void								SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
+				virtual String^										GetSelectedText(void);
+				virtual void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
 
-				virtual void								SetSelectionStart(int Index);
-				virtual void								SetSelectionLength(int Length);
+				virtual void										SetSelectionStart(int Index);
+				virtual void										SetSelectionLength(int Length);
 
-				virtual int									GetCharIndexFromPosition(Point Position);
-				virtual Point								GetPositionFromCharIndex(int Index);
-				virtual Point								GetAbsolutePositionFromCharIndex(int Index);
-				virtual int									GetLineNumberFromCharIndex(int Index);
-				virtual bool								GetCharIndexInsideCommentSegment(int Index);
-				virtual int									GetCurrentLineNumber(void);
+				virtual int											GetCharIndexFromPosition(Point Position);
+				virtual Point										GetPositionFromCharIndex(int Index);
+				virtual Point										GetAbsolutePositionFromCharIndex(int Index);
+				virtual int											GetLineNumberFromCharIndex(int Index);
+				virtual bool										GetCharIndexInsideCommentSegment(int Index);
+				virtual int											GetCurrentLineNumber(void);
 
-				virtual String^								GetTokenAtCharIndex(int Offset);
-				virtual String^								GetTokenAtCaretPos();
-				virtual void								SetTokenAtCaretPos(String^ Replacement);
-				virtual String^								GetTokenAtMouseLocation();
-				virtual array<String^>^						GetTokensAtMouseLocation();
+				virtual String^										GetTokenAtCharIndex(int Offset);
+				virtual String^										GetTokenAtCaretPos();
+				virtual void										SetTokenAtCaretPos(String^ Replacement);
+				virtual String^										GetTokenAtMouseLocation();
+				virtual array<String^>^								GetTokensAtMouseLocation();
 
-				virtual int									GetCaretPos();
-				virtual void								SetCaretPos(int Index);
-				virtual void								ScrollToCaret();
+				virtual int											GetCaretPos();
+				virtual void										SetCaretPos(int Index);
+				virtual void										ScrollToCaret();
 
-				virtual IntPtr								GetHandle();
+				virtual IntPtr										GetHandle();
 
-				virtual void								FocusTextArea();
-				virtual void								LoadFileFromDisk(String^ Path);
-				virtual void								SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName);
+				virtual void										FocusTextArea();
+				virtual void										LoadFileFromDisk(String^ Path);
+				virtual void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName);
 
-				virtual bool								GetModifiedStatus();
-				virtual void								SetModifiedStatus(bool Modified);
+				virtual bool										GetModifiedStatus();
+				virtual void										SetModifiedStatus(bool Modified);
 
-				virtual bool								GetInitializingStatus();
-				virtual void								SetInitializingStatus(bool Initializing);
+				virtual bool										GetInitializingStatus();
+				virtual void										SetInitializingStatus(bool Initializing);
 
-				virtual int									GetLastKnownMouseClickOffset(void);
+				virtual int											GetLastKnownMouseClickOffset(void);
 
-				virtual int									FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options);
-				virtual void								ToggleComment(int StartIndex);
-				virtual void								UpdateIntelliSenseLocalDatabase(void);
+				virtual int											FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options);
+				virtual void										ToggleComment(int StartIndex);
+				virtual void										UpdateIntelliSenseLocalDatabase(void);
 
-				virtual Control^							GetContainer() { return WinFormsContainer; }
-				virtual void								ScrollToLine(String^ LineNumber);
-				virtual Point								PointToScreen(Point Location);
+				virtual Control^									GetContainer() { return WinFormsContainer; }
+				virtual void										ScrollToLine(String^ LineNumber);
+				virtual Point										PointToScreen(Point Location);
 
-				virtual void								HighlightScriptError(int Line);
-				virtual void								ClearScriptErrorHighlights(void);
-				virtual void								SetEnabledState(bool State);
+				virtual void										HighlightScriptError(int Line);
+				virtual void										ClearScriptErrorHighlights(void);
+				virtual void										SetEnabledState(bool State);
 
-				virtual void								OnGotFocus(void);
-				virtual void								OnLostFocus(void);
-				virtual void								OnPositionSizeChange(void);
+				virtual void										OnGotFocus(void);
+				virtual void										OnLostFocus(void);
+				virtual void										OnPositionSizeChange(void);
 
 				virtual void										BeginUpdate(void);
 				virtual void										EndUpdate(void);
 				virtual UInt32										GetTotalLineCount(void);
 				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
+
+				virtual void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
 			};
 		}
 	}

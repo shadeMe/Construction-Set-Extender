@@ -1,4 +1,6 @@
 #pragma once
+
+#include "..\ScriptParser.h"
 #include "[Common]\HandShakeStructs.h"
 
 namespace ConstructionSetExtender
@@ -6,6 +8,7 @@ namespace ConstructionSetExtender
 	namespace IntelliSense
 	{
 		ref class IntelliSenseInterface;
+		ref class CodeSnippet;
 
 		ref class IntelliSenseItem
 		{
@@ -19,7 +22,8 @@ namespace ConstructionSetExtender
 				"Quest",
 				"Global Variable",
 				"Game Setting",
-				"Object"
+				"Object",
+				"Code Snippet"
 			};
 		public:
 			static enum class									IntelliSenseItemType
@@ -32,16 +36,22 @@ namespace ConstructionSetExtender
 				e_Quest,
 				e_GlobalVar,
 				e_GMST,
-				e_Form
+				e_Form,
+				e_Snippet,
 			};
 
 			IntelliSenseItem();
 			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
 
 			virtual String^										Describe();
-			virtual String^										GetIdentifier() = 0;
-			IntelliSenseItemType								GetIntelliSenseItemType();
-			String^												GetIntelliSenseItemTypeID();
+			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface);
+																										// argument's a ScriptEditor::Workspace^
+			virtual bool										GetShouldEnumerate(String^ Token);		// returns true if the item can be enumerated in the interface
+			virtual String^										GetIdentifier() = 0;					// identifier for display in the interface
+			virtual String^										GetSubstitution() = 0;					// string to be inserted into the code
+
+			IntelliSenseItemType								GetItemType();
+			String^												GetItemTypeID();
 		protected:
 			String^												Description;
 			IntelliSenseItemType								Type;
@@ -86,6 +96,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source);
 
 			virtual String^										GetIdentifier() override;
+			virtual String^										GetSubstitution() override;
 			bool												GetRequiresParent();
 			IntelliSenseCommandItemSourceType					GetSource();
 		};
@@ -101,25 +112,18 @@ namespace ConstructionSetExtender
 				"String",
 				"Array"
 			};
-			static enum class									IntelliSenseItemVariableDataType
-			{
-				e_Int = 0,
-				e_Float,
-				e_Ref,
-				e_String,
-				e_Array
-			};
 		private:
 			String^												Name;
-			IntelliSenseItemVariableDataType					DataType;
+			ScriptParser::VariableType							DataType;
 			String^												Comment;
 
 		public:
-			IntelliSenseItemVariable(String^% Name, String^% Comment, IntelliSenseItemVariableDataType Type, IntelliSenseItemType Scope);
+			IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope);
 
 			virtual String^										GetIdentifier() override;
+			virtual String^										GetSubstitution() override;
 			String^												GetComment();
-			IntelliSenseItemVariableDataType					GetDataType();
+			ScriptParser::VariableType							GetDataType();
 			String^												GetDataTypeID();
 		};
 
@@ -132,6 +136,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItemQuest(String^% EditorID, String^% Desc, String^% ScrName);
 
 			virtual String^										GetIdentifier() override;
+			virtual String^										GetSubstitution() override;
 		};
 
 		ref class Script
@@ -182,6 +187,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItemUserFunction(UserFunction^% Parent);
 
 			virtual String^										GetIdentifier() override;
+			virtual String^										GetSubstitution() override;
 		};
 
 		ref class IntelliSenseItemEditorIDForm : public IntelliSenseItem
@@ -210,25 +216,20 @@ namespace ConstructionSetExtender
 			IntelliSenseItemEditorIDForm(ComponentDLLInterface::FormData* Data);
 
 			virtual String^										GetIdentifier() override;
+			virtual String^										GetSubstitution() override;
 		};
 
-		ref struct IntelliSenseParseScriptData
+		ref class IntelliSenseItemCodeSnippet : public IntelliSenseItem
 		{
-			IntelliSenseInterface^								SourceIntelliSenseInterface;
-			Script^												SourceScript;
+		protected:
+			CodeSnippet^										Parent;
+		public:
+			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-			static enum class									DataType
-			{
-				e_UserFunction = 0,
-				e_Script,
-				e_IntelliSenseInterface
-			};
-
-			DataType											Type;
-
-			IntelliSenseParseScriptData(IntelliSenseInterface^ Obj) : SourceIntelliSenseInterface(Obj), Type(DataType::e_IntelliSenseInterface) {};
-			IntelliSenseParseScriptData(Script^ Obj) : SourceScript(Obj), Type(DataType::e_Script) {};
-			IntelliSenseParseScriptData(UserFunction^ Obj) : SourceScript(Obj), Type(DataType::e_UserFunction) {};
+			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface) override;
+			virtual bool										GetShouldEnumerate(String^ Token) override;
+			virtual String^										GetIdentifier() override;
+			virtual String^										GetSubstitution() override;
 		};
 	}
 }

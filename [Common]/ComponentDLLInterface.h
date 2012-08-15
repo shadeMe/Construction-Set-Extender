@@ -117,7 +117,7 @@ namespace ComponentDLLInterface
 		void										(* CloseAllOpenEditors)(void);
 		void										(* UpdateIntelliSenseDatabase)(void);
 		UInt32										(* GetOpenEditorCount)(void);
-		void										(* CleanupAutoRecoveryCache)(void);
+		void										(* Deinitalize)(void);
 	};
 
 	class UseInfoListInterface

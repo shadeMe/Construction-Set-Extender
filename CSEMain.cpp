@@ -379,7 +379,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Script Editor");
 		BGSEECONSOLE->Indent();
-		CLIWrapper::Interfaces::SE->CleanupAutoRecoveryCache();
+		CLIWrapper::Interfaces::SE->Deinitalize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Change Log Manager");
@@ -550,7 +550,11 @@ extern "C"
 														obse->obseVersion,
 														CSEINISettings,
 														"v4.0.30319",
+#ifdef NDEBUG
 														false,
+#else
+														true,
+#endif
 														false,
 #ifdef NDEBUG
 														true);

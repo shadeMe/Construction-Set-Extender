@@ -1,9 +1,12 @@
 #include "IntelliSenseItem.h"
 #include "IntelliSenseDatabase.h"
 #include "IntelliSenseInterface.h"
-#include "[Common]\NativeWrapper.h"
+
 #include "..\ScriptParser.h"
 #include "..\ScriptEditorPreferences.h"
+#include "..\SnippetManager.h"
+
+#include "[Common]\NativeWrapper.h"
 
 namespace ConstructionSetExtender
 {
@@ -15,6 +18,7 @@ namespace ConstructionSetExtender
 			{
 				Singleton = gcnew IntelliSenseDatabase();
 			}
+
 			return Singleton;
 		}
 
@@ -26,14 +30,36 @@ namespace ConstructionSetExtender
 			UserFunctionList = gcnew LinkedList<UserFunction^>();
 			DeveloperURLMap = gcnew Dictionary<String^, String^>();
 			RemoteScripts = gcnew Dictionary<String^, Script^>();
+			CodeSnippets = gcnew CodeSnippetCollection();
 
-			UpdateThreadTimerInterval = PREFERENCES->FetchSettingAsInt("DatabaseUpdateInterval", "IntelliSense");
+			UpdateTimerInterval = PREFERENCES->FetchSettingAsInt("DatabaseUpdateInterval", "IntelliSense");
 
 			DatabaseUpdateTimer = gcnew Timer();
 			DatabaseUpdateTimer->Tick += gcnew EventHandler(this, &IntelliSenseDatabase::DatabaseUpdateTimer_Tick);
-			DatabaseUpdateTimer->Interval = UpdateThreadTimerInterval * 60 * 1000;
+			DatabaseUpdateTimer->Interval = UpdateTimerInterval * 60 * 1000;
 
 			DatabaseUpdateTimer->Start();
+			CodeSnippets->Load(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetSnippetCachePath()));
+
+			DebugPrint("\tLoaded " + CodeSnippets->LoadedSnippets->Count + " Code Snippet(s)");
+		}
+
+		IntelliSenseDatabase::~IntelliSenseDatabase()
+		{
+			DebugPrint("Deinitializing IntelliSense");
+
+			DatabaseUpdateTimer->Stop();
+
+			CodeSnippets->Save(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetSnippetCachePath()));
+			delete CodeSnippets;
+			CodeSnippets = nullptr;
+
+			Enumerables->Clear();
+			UserFunctionList->Clear();
+			DeveloperURLMap->Clear();
+			RemoteScripts->Clear();
+
+			Singleton = nullptr;
 		}
 
 		void IntelliSenseDatabase::DatabaseUpdateTimer_Tick(Object^ Sender, EventArgs^ E)
@@ -77,7 +103,9 @@ namespace ConstructionSetExtender
 																			gcnew String(Itr->ScriptName)));
 					}
 
-					for (ComponentDLLInterface::GlobalData* Itr = DataHandlerData->GlobalListHead; Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount; ++Itr)
+					for (ComponentDLLInterface::GlobalData* Itr = DataHandlerData->GlobalListHead;
+															Itr != DataHandlerData->GlobalListHead + DataHandlerData->GlobalCount;
+															++Itr)
 					{
 						if (!Itr->IsValid())
 							continue;
@@ -86,29 +114,29 @@ namespace ConstructionSetExtender
 						{
 							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Int,
+																			ScriptParser::VariableType::e_Integer,
 																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
 						}
 						else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 						{
 							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Float,
+																			ScriptParser::VariableType::e_Float,
 																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
 						}
 						else
 						{
 							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_String,
+																			ScriptParser::VariableType::e_String,
 																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
 						}
 					}
 
 					for each (IntelliSenseItem^ Itr in Enumerables)
 					{
-						if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
-							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST)
+						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST)
 						{
 							ParsedEnumerables->AddLast(Itr);
 						}
@@ -126,6 +154,9 @@ namespace ConstructionSetExtender
 
 						ParsedEnumerables->AddLast(gcnew IntelliSenseItemEditorIDForm(Itr));
 					}
+
+					for each (CodeSnippet^ Itr in CodeSnippets->LoadedSnippets)
+						ParsedEnumerables->AddLast(gcnew IntelliSenseItemCodeSnippet(Itr));
 
 					UserFunctionList->Clear();
 					Enumerables->Clear();
@@ -210,18 +241,7 @@ namespace ConstructionSetExtender
 						}
 
 						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
-						IntelliSenseItemVariable::IntelliSenseItemVariableDataType DataType;
-
-						if (!String::Compare(FirstToken, "ref", true) || !String::Compare(FirstToken, "reference", true))
-							DataType = IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Ref;
-						else if	(!String::Compare(FirstToken, "short", true) || !String::Compare(FirstToken, "long", true) || !String::Compare(FirstToken, "int", true))
-							DataType = IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Int;
-						else if	(!String::Compare(FirstToken, "float", true))
-							DataType = IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Float;
-						else if	(!String::Compare(FirstToken, "string_var", true))
-							DataType = IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_String;
-						else
-							DataType = IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Array;
+						ScriptParser::VariableType DataType = ScriptParser::GetVariableType(FirstToken);
 
 						switch (Box->Type)
 						{
@@ -243,7 +263,7 @@ namespace ConstructionSetExtender
 					GrabDef = false;
 					if (Box->Type == IntelliSenseParseScriptData::DataType::e_UserFunction)
 					{
-						if (!String::Compare(SecondToken, "function", true))
+						if (!String::Compare(SecondToken, "function", true) || !String::Compare(SecondToken, "_function", true))
 						{
 							String^ ParamList = ReadLine->Substring(ReadLine->IndexOf("{"), ReadLine->IndexOf("}") - ReadLine->IndexOf("{"));
 							ScriptTextParser->Tokenize(ParamList, false);
@@ -370,11 +390,11 @@ namespace ConstructionSetExtender
 					continue;
 
 				if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
-					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Int, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Integer, IntelliSenseItem::IntelliSenseItemType::e_GMST));
 				else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
-					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GMST));
 				else
-					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GMST));
 			}
 
 			DebugPrint(String::Format("\tParsed {0} Game Settings", GMSTCollection->GMSTCount));
@@ -409,7 +429,8 @@ namespace ConstructionSetExtender
 		{
 			for each (IntelliSenseItem^ Itr in Enumerables)
 			{
-				if (!String::Compare(Itr->GetIdentifier(), Name, true))
+				if (Name->Length == Itr->GetIdentifier()->Length &&
+					!String::Compare(Itr->GetIdentifier(), Name, true))
 				{
 					return Itr->GetIdentifier();
 				}
@@ -454,7 +475,7 @@ namespace ConstructionSetExtender
 
 			for each (IntelliSenseItem^ Itr in Enumerables)
 			{
-				if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd)
+				if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd)
 				{
 					if (!String::Compare(Itr->GetIdentifier(), Name, true))
 					{
@@ -482,7 +503,7 @@ namespace ConstructionSetExtender
 					Script^ RemoteScript = Itr.Value;
 					for (Script::VarListT::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
 					{
-						if (RemoteVarItr->Current->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
+						if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
 						{
 							if (!String::Compare(RemoteVarItr->Current->GetIdentifier(), Variable, true))
 							{
@@ -520,6 +541,34 @@ namespace ConstructionSetExtender
 				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
 
 			return Result;
+		}
+
+		void IntelliSenseDatabase::ShowCodeSnippetManger()
+		{
+			CodeSnippetManagerDialog ManagerDialog(CodeSnippets);
+
+			ForceUpdateDatabase();
+		}
+
+		IntelliSenseParseScriptData::IntelliSenseParseScriptData( IntelliSenseInterface^ Obj ) :
+			SourceIntelliSenseInterface(Obj),
+			Type(DataType::e_IntelliSenseInterface)
+		{
+			;//
+		}
+
+		IntelliSenseParseScriptData::IntelliSenseParseScriptData( Script^ Obj ) :
+			SourceScript(Obj),
+			Type(DataType::e_Script)
+		{
+			;//
+		}
+
+		IntelliSenseParseScriptData::IntelliSenseParseScriptData( UserFunction^ Obj ) :
+			SourceScript(Obj),
+			Type(DataType::e_UserFunction)
+		{
+			;//
 		}
 	}
 }

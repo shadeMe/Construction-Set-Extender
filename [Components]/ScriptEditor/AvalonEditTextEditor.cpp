@@ -269,7 +269,7 @@ namespace ConstructionSetExtender
 
 			int AvalonEditTextEditor::GetCurrentLineNumber(void)
 			{
-				return TextField->TextArea->Caret->Line - 1;
+				return TextField->TextArea->Caret->Line;
 			}
 
 			String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
@@ -618,7 +618,7 @@ namespace ConstructionSetExtender
 				IsFocused = false;
 				FoldingTimer->Stop();
 				ScrollBarSyncTimer->Stop();
-				IntelliSenseBox->HideInterface();
+				IntelliSenseBox->Hide();
 			}
 
 			void AvalonEditTextEditor::ClearScriptErrorHighlights(void)
@@ -638,19 +638,30 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::OnPositionSizeChange(void)
 			{
-				IntelliSenseBox->HideInterface();
+				IntelliSenseBox->Hide();
 			}
 
 			void AvalonEditTextEditor::BeginUpdate( void )
 			{
+				if (TextFieldInUpdateFlag)
+					throw gcnew CSEGeneralException("Text editor is already being updated.");
+
 				TextFieldInUpdateFlag = true;
 				TextField->Document->BeginUpdate();
+
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
 			}
 
 			void AvalonEditTextEditor::EndUpdate( void )
 			{
+				if (TextFieldInUpdateFlag == false)
+					throw gcnew CSEGeneralException("Text editor isn't being updated.");
+
 				TextField->Document->EndUpdate();
 				TextFieldInUpdateFlag = false;
+
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+				SetModifiedStatus(true);
 			}
 
 			UInt32 AvalonEditTextEditor::GetTotalLineCount( void )
@@ -662,6 +673,12 @@ namespace ConstructionSetExtender
 			{
 				return IntelliSenseBox;
 			}
+
+			void AvalonEditTextEditor::IndentLines( UInt32 BeginLine, UInt32 EndLine )
+			{
+				TextField->TextArea->IndentationStrategy->IndentLines(TextField->Document, BeginLine, EndLine);
+			}
+
 #pragma endregion
 
 #pragma region Methods
@@ -903,9 +920,9 @@ namespace ConstructionSetExtender
 						if (TextField->SelectionStart - 1 >= 0 && !GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
 						{
 							if (LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "")
-								IntelliSenseBox->ShowInterface(IntelliSenseBox->LastOperation, false, false);
+								IntelliSenseBox->Show(IntelliSenseBox->LastOperation, false, false);
 							else
-								IntelliSenseBox->HideInterface();
+								IntelliSenseBox->Hide();
 						}
 					}
 				}
@@ -915,7 +932,7 @@ namespace ConstructionSetExtender
 			{
 				IsMiddleMouseScrolling = true;
 
-				ScrollStartPoint = E->GetPosition(TextField);
+				MiddleMouseScrollStartPoint = E->GetPosition(TextField);
 
 				TextField->Cursor = (TextField->ExtentWidth > TextField->ViewportWidth) || (TextField->ExtentHeight > TextField->ViewportHeight) ? System::Windows::Input::Cursors::ScrollAll : System::Windows::Input::Cursors::IBeam;
 				TextField->CaptureMouse();
@@ -1269,6 +1286,7 @@ namespace ConstructionSetExtender
 				{
 					IntelliSenseBox->Enabled = true;
 					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+					IntelliSenseBox->OverrideThresholdCheck = false;
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
 				}
@@ -1281,7 +1299,11 @@ namespace ConstructionSetExtender
 				if (SynchronizingInternalScrollBars == false)
 					SynchronizeExternalScrollBars();
 
-				IntelliSenseBox->HideInterface();
+				System::Windows::Vector CurrentOffset = TextField->TextArea->TextView->ScrollOffset;
+				System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
+				PreviousScrollOffsetBuffer = CurrentOffset;
+
+				IntelliSenseBox->Hide();
 			}
 
 			void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
@@ -1308,7 +1330,7 @@ namespace ConstructionSetExtender
 
 				int SelStart = TextField->SelectionStart, SelLength = TextField->SelectionLength;
 
-				if (ScriptParser::GetIsDelimiterKey(E->Key))
+				if (IntelliSenseInterface::GetTriggered(E->Key))
 				{
 					IntelliSenseBox->Enabled = true;
 
@@ -1320,22 +1342,23 @@ namespace ConstructionSetExtender
 							{
 							case System::Windows::Input::Key::OemPeriod:
 								{
-									IntelliSenseBox->ShowInterface(IntelliSenseInterface::Operation::e_Dot, false, true);
+									IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Dot, false, true);
 									SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 									break;
 								}
 							case System::Windows::Input::Key::Space:
 								{
-									String^ CommandName = GetTextAtLocation(TextField->SelectionStart - 1, false)->Replace("\n", "");
+									String^ Token = GetTextAtLocation(TextField->SelectionStart - 1, false)->Replace("\n", "");
 
-									if (!String::Compare(CommandName, "call", true))
+									if (ScriptParser::GetTokenType(Token) == ScriptParser::TokenType::e_Call)
 									{
-										IntelliSenseBox->ShowInterface(IntelliSenseInterface::Operation::e_Call, false, true);
+										IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Call, false, true);
 										SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 									}
-									else if (!String::Compare(CommandName, "let", true) || !String::Compare(CommandName, "set", true))
+									else if (ScriptParser::GetTokenType(Token) == ScriptParser::TokenType::e_Set ||
+										ScriptParser::GetTokenType(Token) == ScriptParser::TokenType::e_Let)
 									{
-										IntelliSenseBox->ShowInterface(IntelliSenseInterface::Operation::e_Assign, false, true);
+										IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Assign, false, true);
 										SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
 									}
 									else
@@ -1343,12 +1366,22 @@ namespace ConstructionSetExtender
 
 									break;
 								}
+							case System::Windows::Input::Key::OemTilde:
+								if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::None)
+								{
+									IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Snippet, false, true);
+									SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+								}
+
+								break;
 							default:
 								{
 									IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
 									break;
 								}
 							}
+
+							IntelliSenseBox->OverrideThresholdCheck = false;
 						}
 						catch (Exception^ E)
 						{
@@ -1372,7 +1405,7 @@ namespace ConstructionSetExtender
 					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
 						if (!IntelliSenseBox->Visible)
-							IntelliSenseBox->ShowInterface(IntelliSenseInterface::Operation::e_Default, true, false);
+							IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Default, true, false);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1381,9 +1414,10 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Escape:
 					if (IntelliSenseBox->Visible)
 					{
-						IntelliSenseBox->HideInterface();
+						IntelliSenseBox->Hide();
 						IntelliSenseBox->Enabled = false;
 						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+						IntelliSenseBox->OverrideThresholdCheck = false;
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1399,6 +1433,7 @@ namespace ConstructionSetExtender
 						FocusTextArea();
 
 						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+						IntelliSenseBox->OverrideThresholdCheck = false;
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1407,7 +1442,7 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Up:
 					if (IntelliSenseBox->Visible)
 					{
-						IntelliSenseBox->ChangeCurrentSelection(IntelliSenseInterface::MoveDirection::e_Up);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Up);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1427,7 +1462,7 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Down:
 					if (IntelliSenseBox->Visible)
 					{
-						IntelliSenseBox->ChangeCurrentSelection(IntelliSenseInterface::MoveDirection::e_Down);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Down);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1502,12 +1537,13 @@ namespace ConstructionSetExtender
 
 				if (IntelliSenseBox->Visible)
 				{
-					IntelliSenseBox->HideInterface();
-					IntelliSenseBox->Enabled = false;
+					IntelliSenseBox->Hide();
+	//				IntelliSenseBox->Enabled = false;		why disable it?
 					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+					IntelliSenseBox->OverrideThresholdCheck = false;
 				}
 
-				IntelliSenseBox->HideInfoToolTip();
+				IntelliSenseBox->HideQuickViewToolTip();
 
 				OnMouseClick(E);
 			}
@@ -1517,14 +1553,14 @@ namespace ConstructionSetExtender
 				if (IntelliSenseBox->Visible)
 				{
 					if (E->Delta < 0)
-						IntelliSenseBox->ChangeCurrentSelection(IntelliSenseInterface::MoveDirection::e_Down);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Down);
 					else
-						IntelliSenseBox->ChangeCurrentSelection(IntelliSenseInterface::MoveDirection::e_Up);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Up);
 
 					E->Handled = true;
 				}
 				else
-					IntelliSenseBox->HideInfoToolTip();
+					IntelliSenseBox->HideQuickViewToolTip();
 			}
 
 			void AvalonEditTextEditor::TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
@@ -1546,7 +1582,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 			{
-				IntelliSenseBox->HideInfoToolTip();
+				IntelliSenseBox->HideQuickViewToolTip();
 			}
 
 			void AvalonEditTextEditor::TextField_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -1567,11 +1603,11 @@ namespace ConstructionSetExtender
 				{
 					System::Windows::Point CurrentPosition = E->GetPosition(TextField);
 
-					System::Windows::Vector Delta = CurrentPosition - ScrollStartPoint;
+					System::Windows::Vector Delta = CurrentPosition - MiddleMouseScrollStartPoint;
 					Delta.Y /= SlowScrollFactor;
 					Delta.X /= SlowScrollFactor;
 
-					CurrentScrollOffset = Delta;
+					MiddleMouseCurrentScrollOffset = Delta;
 				}
 			}
 
@@ -1593,10 +1629,10 @@ namespace ConstructionSetExtender
 
 				if (IsMiddleMouseScrolling)
 				{
-					TextField->ScrollToVerticalOffset(TextField->VerticalOffset + CurrentScrollOffset.Y);
-					TextField->ScrollToHorizontalOffset(TextField->HorizontalOffset + CurrentScrollOffset.X);
+					TextField->ScrollToVerticalOffset(TextField->VerticalOffset + MiddleMouseCurrentScrollOffset.Y);
+					TextField->ScrollToHorizontalOffset(TextField->HorizontalOffset + MiddleMouseCurrentScrollOffset.X);
 
-					CurrentScrollOffset += CurrentScrollOffset * AccelerateScrollFactor;
+					MiddleMouseCurrentScrollOffset += MiddleMouseCurrentScrollOffset * AccelerateScrollFactor;
 				}
 			}
 
@@ -1729,7 +1765,7 @@ namespace ConstructionSetExtender
 				TextFieldTextChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
 				TextFieldCaretPositionChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
 				TextFieldScrollOffsetChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_ScrollOffsetChanged);
-				TextFieldTextCopiedHandler = gcnew System::EventHandler<AvalonEdit::Editing::TextEventArgs^>(this, &AvalonEditTextEditor::TextField_TextCopied);
+				TextFieldTextCopiedHandler = gcnew AvalonEditTextEventHandler(this, &AvalonEditTextEditor::TextField_TextCopied);
 				TextFieldKeyUpHandler = gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyUp);
 				TextFieldKeyDownHandler = gcnew System::Windows::Input::KeyEventHandler(this, &AvalonEditTextEditor::TextField_KeyDown);
 				TextFieldMouseDownHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MouseDown);
@@ -1817,6 +1853,7 @@ namespace ConstructionSetExtender
 
 				SynchronizingInternalScrollBars = false;
 				SynchronizingExternalScrollBars = false;
+				PreviousScrollOffsetBuffer = System::Windows::Vector(0.0, 0.0);
 
 				SetTextAnimating = false;
 				SetTextPrologAnimationCache = nullptr;

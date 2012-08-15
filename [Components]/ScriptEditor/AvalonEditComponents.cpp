@@ -294,6 +294,8 @@ namespace ConstructionSetExtender
 
 				for each (Segment Itr in SegmentBuffer)
 					AddSegment(Itr.Offset, Itr.Length);
+
+				SegmentBuffer->Clear();
 			}
 
 			void AvalonEditFindReplaceBGColorizer::AddSegment( int Offset, int Length )
@@ -324,52 +326,44 @@ namespace ConstructionSetExtender
 				ClearSegments();
 			}
 
-			void AvalonEditObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
+			void AvalonEditObScriptIndentStrategy::CountIndents( AvalonEdit::Document::TextDocument^ document,
+																AvalonEdit::Document::DocumentLine^ line,
+																AvalonEdit::Document::DocumentLine^ indentLine,
+																bool% ExdentLastLine, bool% SemiExdentLastLine, bool% DeferredIndentCurrentLine )
 			{
-				return;
-			}
+				ExdentLastLine = false;
+				SemiExdentLastLine = false;
+				DeferredIndentCurrentLine = false;
 
-			void AvalonEditObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
-			{
-				int IndentCount = 0;
-				bool ExdentLastLine = false;
-				bool SemiExdentLastLine = false;
+				IndentParser->Tokenize(document->GetText(line), false);
 
-				IndentParser->Reset();
-				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
-
-				for each (AvalonEdit::Document::DocumentLine^ Line in document->Lines)
+				if (IndentParser->Valid && IndentParser->Tokens[0][0] != ';')
 				{
-					if (Line->LineNumber == line->LineNumber)
-						break;
-
-					IndentParser->Tokenize(document->GetText(Line), false);
-
-					if (!IndentParser->Valid)
-						continue;
-
 					if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Begin &&
 						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid))
 					{
 						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
+						DeferredIndentCurrentLine = true;
 					}
 					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_If &&
 						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid) == false)
 					{
 						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_If);
+						DeferredIndentCurrentLine = true;
 					}
 					else if ((IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ForEach ||
 						IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_While) &&
 						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Invalid) == false)
 					{
 						IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
+						DeferredIndentCurrentLine = true;
 					}
 					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Loop &&
 						IndentParser->CompareBlockStack(ScriptParser::BlockType::e_Loop))
 					{
 						IndentParser->BlockStack->Pop();
 
-						if (Line->NextLine->LineNumber == line->LineNumber)
+						if (line->LineNumber == indentLine->LineNumber || line->NextLine->LineNumber == indentLine->LineNumber)
 							ExdentLastLine = true;
 					}
 					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_EndIf &&
@@ -377,7 +371,7 @@ namespace ConstructionSetExtender
 					{
 						IndentParser->BlockStack->Pop();
 
-						if (Line->NextLine->LineNumber == line->LineNumber)
+						if (line->LineNumber == indentLine->LineNumber || line->NextLine->LineNumber == indentLine->LineNumber)
 							ExdentLastLine = true;
 					}
 					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_End &&
@@ -385,36 +379,47 @@ namespace ConstructionSetExtender
 					{
 						IndentParser->BlockStack->Pop();
 
-						if (Line->NextLine->LineNumber == line->LineNumber)
+						if (line->LineNumber == indentLine->LineNumber || line->NextLine->LineNumber == indentLine->LineNumber)
 							ExdentLastLine = true;
 					}
 					else if (IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ElseIf ||
 						IndentParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Else)
 					{
 						if (IndentParser->CompareBlockStack(ScriptParser::BlockType::e_If) &&
-							Line->NextLine->LineNumber == line->LineNumber)
+							(line->LineNumber == indentLine->LineNumber || line->NextLine->LineNumber == indentLine->LineNumber))
 						{
 							ExdentLastLine = true;
 							SemiExdentLastLine = true;
 						}
 					}
 				}
+			}
 
-				IndentCount = IndentParser->BlockStack->Count - 1;
+			void AvalonEditObScriptIndentStrategy::PerformIndent( AvalonEdit::Document::TextDocument^ document,
+																AvalonEdit::Document::DocumentLine^ currentLine,
+																AvalonEdit::Document::DocumentLine^ previousLine,
+																bool ExdentLastLine,
+																bool SemiExdentLastLine,
+																bool DeferredIndentCurrentLine)
+			{
+				int IndentCount = IndentParser->BlockStack->Count - 1;
+
+				if (DeferredIndentCurrentLine)
+					IndentCount--;
 
 				if (CullEmptyLines)
 				{
-					IndentParser->Tokenize(document->GetText(line->PreviousLine), false);
-					if (!IndentParser->Valid && document->GetText(line->PreviousLine)->Replace("\t", "")->Length == 0)
+					IndentParser->Tokenize(document->GetText(previousLine), false);
+					if (!IndentParser->Valid && document->GetText(previousLine)->Replace("\t", "")->Length == 0)
 					{
-						AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, line->PreviousLine);
+						AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
 						document->Replace(Leading, "");
 					}
 				}
 
 				if (ExdentLastLine)
 				{
-					AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, line->PreviousLine);
+					AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
 					int ExdentedCount = 0;
 
 					if (SemiExdentLastLine)
@@ -431,17 +436,78 @@ namespace ConstructionSetExtender
 
 				if (TrimTrailingWhitespace)
 				{
-					AvalonEdit::Document::ISegment^ Trailing = AvalonEdit::Document::TextUtilities::GetTrailingWhitespace(document, line->PreviousLine);
+					AvalonEdit::Document::ISegment^ Trailing = AvalonEdit::Document::TextUtilities::GetTrailingWhitespace(document, previousLine);
 					document->Replace(Trailing, "");
 				}
+
+				if (currentLine->LineNumber == previousLine->LineNumber && (ExdentLastLine || SemiExdentLastLine))
+					return;		// yeuck!
 
 				String^ IndentString = "";
 				for (int i = 0; i < IndentCount; i++)
 					IndentString += "\t";
 
-				AvalonEdit::Document::ISegment^ Indentation = AvalonEdit::Document::TextUtilities::GetWhitespaceAfter(document, line->Offset);
+				AvalonEdit::Document::ISegment^ Indentation = AvalonEdit::Document::TextUtilities::GetWhitespaceAfter(document, currentLine->Offset);
 				document->Replace(Indentation, IndentString);
-				document->Replace(AvalonEdit::Document::TextUtilities::GetWhitespaceBefore(document, line->Offset), "");
+				document->Replace(AvalonEdit::Document::TextUtilities::GetWhitespaceBefore(document, currentLine->Offset), "");
+			}
+
+			void AvalonEditObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
+			{
+				IndentParser->Reset();
+				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
+
+				bool ExdentLastLine = false;
+				bool SemiExdentLastLine = false;
+				bool DeferredIndentCurrentLine = false;
+
+				for each (AvalonEdit::Document::DocumentLine^ Itr in document->Lines)
+				{
+					if (Itr->LineNumber == beginLine)
+						break;
+
+					CountIndents(document, Itr, Itr, ExdentLastLine, SemiExdentLastLine, DeferredIndentCurrentLine);
+				}
+
+				// needlessly convoluted
+
+				for (int i = beginLine; i <= endLine && endLine <= document->LineCount; i++)
+				{
+					AvalonEdit::Document::DocumentLine^ Itr = document->GetLineByNumber(i);
+					if (Itr)
+					{
+						if (i == beginLine)
+						{
+							PerformIndent(document, Itr, Itr, false, false, DeferredIndentCurrentLine);
+							CountIndents(document, Itr, Itr, ExdentLastLine, SemiExdentLastLine, DeferredIndentCurrentLine);
+						}
+						else
+						{
+							CountIndents(document, Itr, Itr, ExdentLastLine, SemiExdentLastLine, DeferredIndentCurrentLine);
+							PerformIndent(document, Itr, Itr, ExdentLastLine, SemiExdentLastLine, DeferredIndentCurrentLine);
+						}
+					}
+				}
+			}
+
+			void AvalonEditObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
+			{
+				IndentParser->Reset();
+				IndentParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
+
+				bool ExdentLastLine = false;
+				bool SemiExdentLastLine = false;
+				bool DeferredIndentCurrentLine = false;
+
+				for each (AvalonEdit::Document::DocumentLine^ Itr in document->Lines)
+				{
+					if (Itr->LineNumber == line->LineNumber)
+						break;
+
+					CountIndents(document, Itr, line, ExdentLastLine, SemiExdentLastLine, DeferredIndentCurrentLine);
+				}
+
+				PerformIndent(document, line, line->PreviousLine, ExdentLastLine, SemiExdentLastLine, false);
 			}
 
 			AvalonEditObScriptIndentStrategy::~AvalonEditObScriptIndentStrategy()

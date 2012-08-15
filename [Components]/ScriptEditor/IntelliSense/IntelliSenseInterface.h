@@ -25,20 +25,18 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseInterface
 		{
 		protected:
+			static ToolTip^										InfoToolTip = gcnew ToolTip();
+
 			void												IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 			void												IntelliSenseList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
 			void												IntelliSenseList_RetrieveVirtualItem(Object^ Sender, RetrieveVirtualItemEventArgs^ E);
 			void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
-			static ToolTip^										InfoToolTip = gcnew ToolTip();
-
-			bool												ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location);
-
-			void												DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
+			void												DisplayToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
 
 			UInt32												ParentWorkspaceIndex;
-			bool												Destroying;
+			bool												DestructionFlag;
 			bool												CallingObjectIsRef;
 			Script^												RemoteScript;
 
@@ -54,8 +52,10 @@ namespace ConstructionSetExtender
 			RetrieveVirtualItemEventHandler^					IntelliSenseListRetrieveVirtualItemEventHandler;
 			CancelEventHandler^									IntelliSenseBoxCancelHandler;
 
-			void												CleanupInterface();
+			void												Reset();
 			virtual void										Destroy();
+
+			void												EnumerateItem(IntelliSenseItem^ Item);
 		public:
 			IntelliSenseInterface(UInt32 ParentWorkspaceIndex);
 			virtual ~IntelliSenseInterface()
@@ -68,7 +68,8 @@ namespace ConstructionSetExtender
 				e_Default = 0,
 				e_Call,
 				e_Dot,
-				e_Assign
+				e_Assign,
+				e_Snippet,
 			};
 
 			static enum	class									MoveDirection
@@ -78,6 +79,7 @@ namespace ConstructionSetExtender
 			};
 
 			property Operation									LastOperation;
+			property bool										OverrideThresholdCheck;
 			property bool										Enabled;
 			property bool										Visible
 			{
@@ -90,20 +92,22 @@ namespace ConstructionSetExtender
 				virtual void set(bool value) { IntelliSenseBox->PreventActivation = value; }
 			}
 
-			virtual void										ShowInterface(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
-			virtual void										HideInterface();
+			virtual void										Show(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
+			virtual void										Hide();
 
 			void												PickSelection();
-			void												ChangeCurrentSelection(MoveDirection Direction);
-			void												UpdateLocalVariableDatabase();
-			bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken);
-			bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point MouseLocation);
+			void												ChangeSelection(MoveDirection Direction);
 
-			void												HideInfoToolTip();
+			bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken);
+			bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point Location);
+			void												HideQuickViewToolTip();
 
 			void												AddLocalVariableToDatabase(IntelliSenseItemVariable^ Variable);
-			void												ClearLocalVariableDatabase();
 			IntelliSenseItemVariable^							LookupLocalVariableByIdentifier(String^% Identifier);
+			void												ClearLocalVariableDatabase();
+			void												UpdateLocalVariableDatabase();
+
+			static bool											GetTriggered(System::Windows::Input::Key E);
 		};
 	}
 }

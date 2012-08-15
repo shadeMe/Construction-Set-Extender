@@ -960,6 +960,7 @@ namespace ConstructionSetExtender
 			ToolBarShowPreprocessedText = gcnew ToolStripButton();
 			ToolBarSanitizeScriptText = gcnew ToolStripButton();
 			ToolBarBindScript = gcnew ToolStripButton();
+			ToolBarSnippetManager = gcnew ToolStripButton();
 			ToolBarByteCodeSize = gcnew ToolStripProgressBar();
 
 			TextEditorContextMenu = gcnew ContextMenuStrip();
@@ -1039,6 +1040,7 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarShowPreprocessedText);
 			SetupControlImage(ToolBarSanitizeScriptText);
 			SetupControlImage(ToolBarBindScript);
+			SetupControlImage(ToolBarSnippetManager);
 
 			SetupControlImage(ToolBarScriptTypeContentsObject);
 			SetupControlImage(ToolBarScriptTypeContentsQuest);
@@ -1124,6 +1126,7 @@ namespace ConstructionSetExtender
 			ToolBarShowPreprocessedTextClickHandler = gcnew EventHandler(this, &Workspace::ToolBarShowPreprocessedText_Click);
 			ToolBarSanitizeScriptTextClickHandler = gcnew EventHandler(this, &Workspace::ToolBarSanitizeScriptText_Click);
 			ToolBarBindScriptClickHandler = gcnew EventHandler(this, &Workspace::ToolBarBindScript_Click);
+			ToolBarSnippetManagerClickHandler = gcnew EventHandler(this, &Workspace::ToolBarSnippetManager_Click);
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &Workspace::ScriptEditorPreferences_Saved);
 			AutoSaveTimerTickHandler = gcnew EventHandler(this, &Workspace::AutoSaveTimer_Tick);
 
@@ -1279,6 +1282,10 @@ namespace ConstructionSetExtender
 			ToolBarBindScript->AutoSize = true;
 			ToolBarBindScript->Margin = ToolBarButtonPaddingLarge;
 
+			ToolBarSnippetManager->ToolTipText = "Code Snippet Manager";
+			ToolBarSnippetManager->AutoSize = true;
+			ToolBarSnippetManager->Margin = ToolBarButtonPaddingLarge;
+
 			ToolBarByteCodeSize->Minimum = 0;
 			ToolBarByteCodeSize->Maximum = 0x8000;
 			ToolBarByteCodeSize->AutoSize = false;
@@ -1326,6 +1333,7 @@ namespace ConstructionSetExtender
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarShowPreprocessedText);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarSanitizeScriptText);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBindScript);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarSnippetManager);
 			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarByteCodeSize);
 			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
@@ -1582,6 +1590,7 @@ namespace ConstructionSetExtender
 			VariableIndexEditBox->KeyDown += VariableIndexEditBoxKeyDownHandler;
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
+			ToolBarSnippetManager->Click += ToolBarSnippetManagerClickHandler;
 
 			AutoSaveTimer->Start();
 			DisableControls();
@@ -1745,24 +1754,7 @@ namespace ConstructionSetExtender
 			if (InsertOffset > ScriptText->Length)
 				VarText += "\n";
 
-			switch (VariableType)
-			{
-			case ScriptParser::VariableType::e_Integer:
-				VarText += "int " + VariableName;
-				break;
-			case ScriptParser::VariableType::e_Float:
-				VarText += "float " + VariableName;
-				break;
-			case ScriptParser::VariableType::e_Ref:
-				VarText += "ref " + VariableName;
-				break;
-			case ScriptParser::VariableType::e_String:
-				VarText += "string_var " + VariableName;
-				break;
-			case ScriptParser::VariableType::e_Array:
-				VarText += "array_var " + VariableName;
-				break;
-			}
+			VarText += ScriptParser::GetVariableID(VariableType) + " " + VariableName;
 			VarText += "\n";
 
 			TextEditor->InsertText(VarText, InsertOffset, true);
@@ -1998,21 +1990,21 @@ namespace ConstructionSetExtender
 							String^ Token = LocalParser->Tokens[0];
 							if (Token[0] != ';')
 							{
-								if (!String::Compare(Token, "begin", true) ||
-									!String::Compare(Token, "if", true) ||
-									!String::Compare(Token, "while", true) ||
-									!String::Compare(Token, "forEach", true))
+								if (LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Begin ||
+									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_While ||
+									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_If ||
+									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ForEach)
 								{
 									IndentMode = 1;
 								}
-								else if	(!String::Compare(Token, "loop", true) ||
-									!String::Compare(Token, "endIf", true) ||
-									!String::Compare(Token, "end", true))
+								else if	(LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Loop ||
+									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_EndIf ||
+									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_End)
 								{
 									IndentMode = 0;
 								}
-								else if	(!String::Compare(Token, "else", true) ||
-									!String::Compare(Token, "elseIf", true))
+								else if	(LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Else ||
+									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ElseIf)
 								{
 									IndentMode = 2;
 								}
@@ -2494,6 +2486,7 @@ namespace ConstructionSetExtender
 			VariableIndexEditBox->KeyDown -= VariableIndexEditBoxKeyDownHandler;
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
+			ToolBarSnippetManager->Click -= ToolBarSnippetManagerClickHandler;
 
 			for each (Image^ Itr in MessageList->SmallImageList->Images)
 				delete Itr;
@@ -2549,6 +2542,7 @@ namespace ConstructionSetExtender
 			DisposeControlImage(ToolBarShowPreprocessedText);
 			DisposeControlImage(ToolBarSanitizeScriptText);
 			DisposeControlImage(ToolBarBindScript);
+			DisposeControlImage(ToolBarSnippetManager);
 
 			DisposeControlImage(ToolBarScriptTypeContentsObject);
 			DisposeControlImage(ToolBarScriptTypeContentsQuest);
@@ -2626,6 +2620,7 @@ namespace ConstructionSetExtender
 			delete ToolBarShowPreprocessedText;
 			delete ToolBarSanitizeScriptText;
 			delete ToolBarBindScript;
+			delete ToolBarSnippetManager;
 			delete ToolBarByteCodeSize;
 
 			delete TextEditorContextMenu;
@@ -2926,6 +2921,7 @@ namespace ConstructionSetExtender
 				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_ReleaseWorkspace, Parameters);
 			}
 		}
+
 #pragma endregion
 
 #pragma region Event Handlers
@@ -4161,6 +4157,11 @@ namespace ConstructionSetExtender
 					SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()), false);
 				}
 			}
+		}
+
+		void Workspace::ToolBarSnippetManager_Click( Object^ Sender, EventArgs^ E )
+		{
+			ISDB->ShowCodeSnippetManger();
 		}
 	#pragma endregion
 #pragma endregion

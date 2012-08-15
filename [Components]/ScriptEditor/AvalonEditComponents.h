@@ -133,6 +133,20 @@ namespace ConstructionSetExtender
 
 				bool										TrimTrailingWhitespace;
 				bool										CullEmptyLines;
+
+				void										CountIndents(AvalonEdit::Document::TextDocument^ document,
+																		AvalonEdit::Document::DocumentLine^ line,
+																		AvalonEdit::Document::DocumentLine^ indentLine,
+																		bool% ExdentLastLine,
+																		bool% SemiExdentLastLine,
+																		bool% DeferredIndentCurrentLine);
+
+				void										PerformIndent(AvalonEdit::Document::TextDocument^ document,
+																		AvalonEdit::Document::DocumentLine^ currentLine,
+																		AvalonEdit::Document::DocumentLine^ previousLine,
+																		bool ExdentLastLine,
+																		bool SemiExdentLastLine,
+																		bool DeferredIndentCurrentLine);
 			public:
 				virtual ~AvalonEditObScriptIndentStrategy();
 

@@ -148,7 +148,7 @@ namespace ConstructionSetExtender
 		{
 			if (!String::Compare(Token, "scn", true) || !String::Compare(Token, "scriptName", true))
 				Result = TokenType::e_ScriptName;
-			else if (!String::Compare(Token, "ref", true) || !String::Compare(Token, "int", true) || !String::Compare(Token, "reference", true) || !String::Compare(Token, "short", true) || !String::Compare(Token, "long", true) || !String::Compare(Token, "float", true) || !String::Compare(Token, "string_var", true) || !String::Compare(Token, "array_var", true))
+			else if (ScriptParser::GetVariableType(Token) != VariableType::e_Unknown)
 				Result = TokenType::e_Variable;
 			else if (Token[0] == ';')
 				Result = TokenType::e_Comment;
@@ -174,6 +174,12 @@ namespace ConstructionSetExtender
 				Result = TokenType::e_Return;
 			else if (!String::Compare(Token, "setfunctionvalue", true))
 				Result = TokenType::e_SetFunctionValue;
+			else if (!String::Compare(Token, "set", true))
+				Result = TokenType::e_Set;
+			else if (!String::Compare(Token, "let", true))
+				Result = TokenType::e_Let;
+			else if (!String::Compare(Token, "call", true))
+				Result = TokenType::e_Call;
 		}
 
 		return Result;
@@ -318,7 +324,7 @@ namespace ConstructionSetExtender
 
 	bool ScriptParser::GetIsTokenOperator(String^% Source)
 	{
-		for each(String^ Itr in Operators)
+		for each(String^ Itr in OperatorIDs)
 		{
 			if (!String::Compare(Source, Itr))
 				return true;
@@ -393,6 +399,29 @@ namespace ConstructionSetExtender
 			return GetTokenType(Tokens[0]);
 		else
 			return TokenType::e_Invalid;
+	}
+
+	String^ ScriptParser::GetVariableID( VariableType Type )
+	{
+		return VariableIDs[(int)Type];
+	}
+
+	ScriptParser::VariableType ScriptParser::GetVariableType( String^ Token )
+	{
+		VariableType DataType = VariableType::e_Unknown;
+
+		if (!String::Compare(Token, "ref", true) || !String::Compare(Token, "reference", true))
+			DataType = ScriptParser::VariableType::e_Ref;
+		else if	(!String::Compare(Token, "short", true) || !String::Compare(Token, "long", true) || !String::Compare(Token, "int", true))
+			DataType = ScriptParser::VariableType::e_Integer;
+		else if	(!String::Compare(Token, "float", true))
+			DataType = ScriptParser::VariableType::e_Float;
+		else if	(!String::Compare(Token, "string_var", true))
+			DataType = ScriptParser::VariableType::e_String;
+		else if	(!String::Compare(Token, "array_var", true))
+			DataType = ScriptParser::VariableType::e_Array;
+
+		return DataType;
 	}
 
 	UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)

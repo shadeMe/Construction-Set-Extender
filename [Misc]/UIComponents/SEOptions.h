@@ -128,6 +128,7 @@ private: System::Windows::Forms::Label^  LabelAutoRecoveryInterval;
 
 private: System::Windows::Forms::NumericUpDown^  AutoRecoverySavePeriod;
 private: System::Windows::Forms::CheckBox^  UseAutoRecovery;
+private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 
 	protected:
 
@@ -211,6 +212,7 @@ private: System::Windows::Forms::CheckBox^  UseAutoRecovery;
 			this->LabelAutoRecoveryInterval = (gcnew System::Windows::Forms::Label());
 			this->AutoRecoverySavePeriod = (gcnew System::Windows::Forms::NumericUpDown());
 			this->UseAutoRecovery = (gcnew System::Windows::Forms::CheckBox());
+			this->ForceDatabaseUpdate = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -398,6 +400,7 @@ private: System::Windows::Forms::CheckBox^  UseAutoRecovery;
 			// 
 			// TabIntelliSense
 			// 
+			this->TabIntelliSense->Controls->Add(this->ForceDatabaseUpdate);
 			this->TabIntelliSense->Controls->Add(this->NoFocusUI);
 			this->TabIntelliSense->Controls->Add(this->LabelMaxVisibleItems);
 			this->TabIntelliSense->Controls->Add(this->MaxVisibleItems);
@@ -910,6 +913,15 @@ private: System::Windows::Forms::CheckBox^  UseAutoRecovery;
 			this->UseAutoRecovery->TabIndex = 12;
 			this->UseAutoRecovery->Text = L"Use Auto-Recovery";
 			this->UseAutoRecovery->UseVisualStyleBackColor = true;
+			// 
+			// ForceDatabaseUpdate
+			// 
+			this->ForceDatabaseUpdate->Location = System::Drawing::Point(30, 238);
+			this->ForceDatabaseUpdate->Name = L"ForceDatabaseUpdate";
+			this->ForceDatabaseUpdate->Size = System::Drawing::Size(148, 24);
+			this->ForceDatabaseUpdate->TabIndex = 10;
+			this->ForceDatabaseUpdate->Text = L"Update Database Now";
+			this->ForceDatabaseUpdate->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 

@@ -19,10 +19,10 @@ namespace ConstructionSetExtender
 	void													DebugDump(UInt8 Source, String^% Message);
 	void													ToggleFlag(UInt32* Flag, UInt32 Mask, bool State);		// state = 1 [ON], 0 [OFF]
 
-	ref class CSEGeneralException : public Exception
+	ref class CSEGeneralException : public System::InvalidOperationException
 	{
 	public:
-		CSEGeneralException(String^ Message) : Exception(Message) {};
+		CSEGeneralException(String^ Message) : System::InvalidOperationException(Message) {};
 	};
 
 	ref class ImageResourceManager

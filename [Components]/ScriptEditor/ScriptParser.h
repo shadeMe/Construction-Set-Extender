@@ -3,6 +3,8 @@
 
 namespace ConstructionSetExtender
 {
+	using namespace System::Runtime::Serialization;
+
 	ref class ScriptParser
 	{
 	protected:
@@ -57,8 +59,14 @@ namespace ConstructionSetExtender
 			e_Else,
 			e_EndIf,
 			e_Return,
-			e_SetFunctionValue
+			e_SetFunctionValue,
+			e_Set,
+			e_Let,
+			e_Call,
 		};
+
+		static TokenType									GetTokenType(String^% Token);
+
 		static enum	class									BlockType
 		{
 			e_Invalid	= 0,
@@ -79,16 +87,38 @@ namespace ConstructionSetExtender
 			e_Quest,
 			e_MagicEffect
 		};
+
+		[DataContract]
 		static enum class									VariableType
 		{
-			e_Integer = 0,
+			[EnumMember]
+			e_Unknown		= -1,
+			[EnumMember]
+			e_Integer		= 0,
+			[EnumMember]
 			e_Float,
+			[EnumMember]
 			e_Ref,
+			[EnumMember]
 			e_String,
+			[EnumMember]
 			e_Array
 		};
 
-		static array<String^>^								Operators =
+		static array<String^>^								VariableIDs =
+		{
+			"???",
+			"int",
+			"float",
+			"ref",
+			"string_var",
+			"array_var"
+		};
+
+		static String^										GetVariableID(VariableType Type);
+		static VariableType									GetVariableType(String^ Token);
+
+		static array<String^>^								OperatorIDs =
 		{
 			":=", "||", "&&", "+=", "-=", "*=" ,
 			"/=", "^=", ":", "::", "==", "!=",
@@ -114,7 +144,6 @@ namespace ConstructionSetExtender
 		}
 
 		virtual void										Tokenize(String^ Source, bool CollectEmptyTokens);
-		virtual TokenType									GetTokenType(String^% Token);
 		TokenType											GetLeadingTokenType(void);
 		void												Reset();
 		VariableRefCountData^								LookupVariableByName(String^% Variable);

@@ -60,6 +60,7 @@ namespace ConstructionSetExtender
 			IntelliSenseList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGlobalVar"));
 			IntelliSenseList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemGMST"));
 			IntelliSenseList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemForm"));
+			IntelliSenseList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("IntelliSenseItemSnippet"));
 			IntelliSenseList->Location = Point(0, 0);
 			IntelliSenseList->Font = gcnew Font("Lucida Grande", 9, FontStyle::Regular);
 			IntelliSenseList->LabelEdit = false;
@@ -79,9 +80,10 @@ namespace ConstructionSetExtender
 
 			Enabled = true;
 			LastOperation = Operation::e_Default;
-			Destroying = false;
+			DestructionFlag = false;
 			MaximumVisibleItemCount = 10;
 			PreventActivation = false;
+			OverrideThresholdCheck = false;
 
 			IntelliSenseBox->SetSize(Size(0, 0));
 			IntelliSenseBox->ShowForm(Point(0,0), IntelliSenseBox->Handle, false);
@@ -97,14 +99,14 @@ namespace ConstructionSetExtender
 			IntelliSenseList->RetrieveVirtualItem += IntelliSenseListRetrieveVirtualItemEventHandler;
 		}
 
-		void IntelliSenseInterface::DisplayInfoToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
+		void IntelliSenseInterface::DisplayToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
 		{
 			InfoToolTip->Tag = ParentHandle;
 			InfoToolTip->ToolTipTitle = Title;
 			InfoToolTip->Show(Message, Control::FromHandle(ParentHandle), Location, Duration);
 		}
 
-		void IntelliSenseInterface::HideInfoToolTip()
+		void IntelliSenseInterface::HideQuickViewToolTip()
 		{
 			try		// to account for disposed controls
 			{
@@ -116,54 +118,44 @@ namespace ConstructionSetExtender
 			InfoToolTip->Tag = nullptr;
 		}
 
-		void IntelliSenseInterface::ShowInterface( IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems )
+		void IntelliSenseInterface::Show( IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems )
 		{
 			if (Enabled == false && ForceDisplay == false)
 				return;
 
-			UInt32 ItemCount = 0;
-			CleanupInterface();
+			Reset();
 
 			if (ForceDisplay)
 			{
 				UpdateLocalVariableDatabase();
+				OverrideThresholdCheck = true;
 			}
 
 			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-			String^ Extract = ParentEditor->GetCurrentToken();
+			String^ CurrentToken = ParentEditor->GetCurrentToken();
 
 			switch (DisplayOperation)
 			{
 			case Operation::e_Default:
-				if (Extract->Length >= PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense") || ForceDisplay)
+				if (OverrideThresholdCheck || CurrentToken->Length >= PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense"))
 				{
 					for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 					{
-						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1)
-						{
-							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
-							Item->Tag = Itr;
-							VirtualListCache->Add(Item);
-							ItemCount++;
-						}
+						if (Itr->GetShouldEnumerate(CurrentToken))
+							EnumerateItem(Itr);
 					}
 
 					for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 					{
-						if ((Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd &&
+						if ((Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd &&
 							dynamic_cast<IntelliSenseItemScriptCommand^>(Itr)->GetRequiresParent() == false) ||
-							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
-							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar ||
-							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||
-							Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Form)
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Form)
 						{
-							if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1)
-							{
-								ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
-								Item->Tag = Itr;
-								VirtualListCache->Add(Item);
-								ItemCount++;
-							}
+							if (Itr->GetShouldEnumerate(CurrentToken))
+								EnumerateItem(Itr);
 						}
 					}
 				}
@@ -172,15 +164,10 @@ namespace ConstructionSetExtender
 			case Operation::e_Call:
 				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 				{
-					if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_UserFunct)
+					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_UserFunct)
 					{
-						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
-						{
-							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
-							Item->Tag = Itr;
-							VirtualListCache->Add(Item);
-							ItemCount++;
-						}
+						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+							EnumerateItem(Itr);
 					}
 				}
 
@@ -188,18 +175,18 @@ namespace ConstructionSetExtender
 			case Operation::e_Dot:
 				if (ShowAllItems)
 				{
-					IntelliSenseItemVariable^ RefVar = LookupLocalVariableByIdentifier(Extract);
-					if (RefVar != nullptr && RefVar->GetDataType() == IntelliSenseItemVariable::IntelliSenseItemVariableDataType::e_Ref)
+					IntelliSenseItemVariable^ RefVar = LookupLocalVariableByIdentifier(CurrentToken);
+					if (RefVar != nullptr && RefVar->GetDataType() == ScriptParser::VariableType::e_Ref)
 					{
 						CallingObjectIsRef = true;
 					}
-					else if (!String::Compare(Extract, "player", true) || !String::Compare(Extract, "playerref", true))
+					else if (!String::Compare(CurrentToken, "player", true) || !String::Compare(CurrentToken, "playerref", true))
 					{
 						CallingObjectIsRef = true;
 					}
 					else
 					{
-						CString CStr(Extract);						// extract = calling ref
+						CString CStr(CurrentToken);						// extract = calling ref
 						ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 						if (Data && !Data->IsValid())
 						{
@@ -222,29 +209,19 @@ namespace ConstructionSetExtender
 
 				for (Script::VarListT::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
 				{
-					if (RemoteVarItr->Current->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
+					if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
 					{
-						if (RemoteVarItr->Current->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
-						{
-							ListViewItem^ Item = gcnew ListViewItem(RemoteVarItr->Current->GetIdentifier(), (int)RemoteVarItr->Current->GetIntelliSenseItemType());
-							Item->Tag = RemoteVarItr->Current;
-							VirtualListCache->Add(Item);
-							ItemCount++;
-						}
+						if (ShowAllItems || RemoteVarItr->Current->GetShouldEnumerate(CurrentToken))
+							EnumerateItem(RemoteVarItr->Current);
 					}
 				}
 
 				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 				{
-					if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && CallingObjectIsRef)
+					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && CallingObjectIsRef)
 					{
-						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
-						{
-							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
-							Item->Tag = Itr;
-							VirtualListCache->Add(Item);
-							ItemCount++;
-						}
+						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+							EnumerateItem(Itr);
 					}
 				}
 
@@ -252,26 +229,32 @@ namespace ConstructionSetExtender
 			case Operation::e_Assign:
 				for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 				{
-					if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
-					{
-						ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
-						Item->Tag = Itr;
-						VirtualListCache->Add(Item);
-						ItemCount++;
-					}
+					if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+						EnumerateItem(Itr);
 				}
 
 				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 				{
-					if (Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
-						Itr->GetIntelliSenseItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar)
+					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
+						Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar)
 					{
-						if (Itr->GetIdentifier()->IndexOf(Extract, System::StringComparison::CurrentCultureIgnoreCase) != -1 || ShowAllItems)
+						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+							EnumerateItem(Itr);
+					}
+				}
+
+				break;
+			case Operation::e_Snippet:
+				{
+					if (CurrentToken->Length > 1)
+						CurrentToken = CurrentToken->Remove(0, 1);		// remove leading tilde character
+
+					for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+					{
+						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Snippet)
 						{
-							ListViewItem^ Item = gcnew ListViewItem(Itr->GetIdentifier(), (int)Itr->GetIntelliSenseItemType());
-							Item->Tag = Itr;
-							VirtualListCache->Add(Item);
-							ItemCount++;
+							if (ShowAllItems || CurrentToken == "`" || Itr->GetShouldEnumerate(CurrentToken))
+								EnumerateItem(Itr);
 						}
 					}
 				}
@@ -281,34 +264,34 @@ namespace ConstructionSetExtender
 
 			VirtualListCache->Sort(gcnew IntelliSenseItemSorter(SortOrder::Ascending));
 
-			if (ItemCount == 1 &&
-				String::Compare((dynamic_cast<IntelliSenseItem^>(VirtualListCache[0]->Tag))->GetIdentifier(),
-								Extract,
-								true) == 0)
-			{
-				HideInterface();		// do not show when enumerable == extract
-			}
-			else if (ItemCount > 0)
-			{
-				IntelliSenseList->VirtualListSize = ItemCount;
+			int ItemCount = VirtualListCache->Count;
 
+			if (ItemCount == 0 ||
+				(ItemCount == 1 &&
+				String::Compare((dynamic_cast<IntelliSenseItem^>(VirtualListCache[0]->Tag))->GetIdentifier(),
+								CurrentToken,				// do not show when enumerable == current token
+								true) == 0))
+			{
+				Hide();
+			}
+			else
+			{
 				Point Location = ParentEditor->GetCaretLocation(true);
+
 				Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
+				IntelliSenseList->VirtualListSize = ItemCount;
 
 				if (ItemCount > MaximumVisibleItemCount)
 					ItemCount = MaximumVisibleItemCount;
 
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * 19) + 17 - ((MaximumVisibleItemCount - ItemCount) * 19));
+
 				IntelliSenseBox->SetSize(DisplaySize);
-				IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), !IntelliSenseBox->Visible);
+				IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), (IntelliSenseBox->Visible == false));
 
 				ParentEditor->Focus();
 
 				IntelliSenseList->SelectedIndices->Add(0);
-			}
-			else
-			{
-				HideInterface();
 			}
 
 			LastOperation = DisplayOperation;
@@ -318,8 +301,11 @@ namespace ConstructionSetExtender
 		{
 			for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 			{
-				if (!String::Compare(Itr->GetIdentifier(), Identifier, true))
+				if (Identifier->Length == Itr->GetIdentifier()->Length &&
+					!String::Compare(Itr->GetIdentifier(), Identifier, true))
+				{
 					return dynamic_cast<IntelliSenseItemVariable^>(Itr);
+				}
 			}
 
 			return nullptr;
@@ -337,11 +323,11 @@ namespace ConstructionSetExtender
 
 				Point Location = Point(IntelliSenseList->Size.Width + 17, 0);
 
-				DisplayInfoToolTip((dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->GetIntelliSenseItemTypeID(),
-									(dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->Describe(),
-									Location,
-									IntelliSenseBox->Handle,
-									15000);
+				DisplayToolTip((dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->GetItemTypeID(),
+								(dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->Describe(),
+								Location,
+								IntelliSenseBox->Handle,
+								15000);
 			}
 		}
 
@@ -350,7 +336,7 @@ namespace ConstructionSetExtender
 			switch (E->KeyCode)
 			{
 			case Keys::Escape:
-				HideInterface();
+				Hide();
 				break;
 			case Keys::Tab:
 			case Keys::Enter:
@@ -374,11 +360,11 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterface::IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
-			if (Destroying == false)
+			if (DestructionFlag == false)
 				E->Cancel = true;
 		}
 
-		void IntelliSenseInterface::ChangeCurrentSelection(IntelliSenseInterface::MoveDirection Direction)
+		void IntelliSenseInterface::ChangeSelection(IntelliSenseInterface::MoveDirection Direction)
 		{
 			int SelectedIndex = GetListViewSelectedItemIndex(IntelliSenseList);
 			if (SelectedIndex == -1)
@@ -423,40 +409,44 @@ namespace ConstructionSetExtender
 		void IntelliSenseInterface::PickSelection()
 		{
 			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
+			int Index = GetListViewSelectedItemIndex(IntelliSenseList);
 
-			String^ Result;
 			ParentEditor->Focus();
 
-			int Index = GetListViewSelectedItemIndex(IntelliSenseList);
 			if (Index != -1)
 			{
-				Result = (dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag))->GetIdentifier();
-				CleanupInterface();
-				HideInterface();
-			}
-			else
-				return;
+				IntelliSenseItem^ Item = dynamic_cast<IntelliSenseItem^>(VirtualListCache[Index]->Tag);
+				Item->Insert(ParentEditor, this);
 
-			ParentEditor->SetCurrentToken(Result);
+				Reset();
+				Hide();
+			}
 		}
 
-		void IntelliSenseInterface::HideInterface()
+		void IntelliSenseInterface::Hide()
 		{
 			if (Visible)
 			{
 				IntelliSenseBox->HideForm(true);
-				HideInfoToolTip();
+				HideQuickViewToolTip();
 			}
 		}
 
-		void IntelliSenseInterface::CleanupInterface()
+		void IntelliSenseInterface::Reset()
 		{
 			IntelliSenseList->VirtualListSize = 0;
 			IntelliSenseList->VirtualMode = true;
 			VirtualListCache->Clear();
 		}
 
-		bool IntelliSenseInterface::ShowQuickInfoTip(String^ MainToken, String^ ParentToken, Point Location)
+		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken)
+		{
+			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
+
+			return ShowQuickViewTooltip(MainToken, ParentToken, ParentEditor->GetCaretLocation(true));
+		}
+
+		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point Location)
 		{
 			if (PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense") == 0)
 				return false;
@@ -492,11 +482,11 @@ namespace ConstructionSetExtender
 			if (Item != nullptr)
 			{
 				Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance");
-				DisplayInfoToolTip(Item->GetIntelliSenseItemTypeID(),
-									Item->Describe(),
-									Location,
-									ParentEditor->GetEditorBoxHandle(),
-									8000);
+				DisplayToolTip(Item->GetItemTypeID(),
+					Item->Describe(),
+					Location,
+					ParentEditor->GetEditorBoxHandle(),
+					8000);
 
 				return true;
 			}
@@ -504,21 +494,12 @@ namespace ConstructionSetExtender
 				return false;
 		}
 
-		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken)
-		{
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-
-			return ShowQuickInfoTip(MainToken, ParentToken, ParentEditor->GetCaretLocation(true));
-		}
-
-		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point MouseLocation)
-		{
-			return ShowQuickInfoTip(MainToken, ParentToken, MouseLocation);
-		}
-
 		void IntelliSenseInterface::Destroy()
 		{
-			Destroying = true;
+			Reset();
+			HideQuickViewToolTip();
+
+			DestructionFlag = true;
 			RemoteScript = nullptr;
 
 			IntelliSenseBox->Closing -= IntelliSenseBoxCancelHandler;
@@ -532,8 +513,6 @@ namespace ConstructionSetExtender
 
 			IntelliSenseList->SmallImageList->Images->Clear();
 			IntelliSenseList->SmallImageList = nullptr;
-			CleanupInterface();
-			HideInfoToolTip();
 			LocalVariableDatabase->Clear();
 			VirtualListCache->Clear();
 			IntelliSenseBox->Close();
@@ -551,5 +530,30 @@ namespace ConstructionSetExtender
 		{
 			LocalVariableDatabase->Clear();
 		}
-}
+
+		void IntelliSenseInterface::EnumerateItem( IntelliSenseItem^ Item )
+		{
+			ListViewItem^ CacheItem = gcnew ListViewItem(Item->GetIdentifier(),
+														(int)Item->GetItemType());
+			CacheItem->Tag = Item;
+
+			VirtualListCache->Add(CacheItem);
+		}
+
+		bool IntelliSenseInterface::GetTriggered( System::Windows::Input::Key E )
+		{
+			bool Result = ScriptParser::GetIsDelimiterKey(E);
+
+			if (Result == false)
+			{
+				switch (E)
+				{
+				case System::Windows::Input::Key::OemTilde:
+					Result = true;
+				}
+			}
+
+			return Result;
+		}
+	}
 }

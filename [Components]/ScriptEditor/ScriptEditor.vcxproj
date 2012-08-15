@@ -140,6 +140,7 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
@@ -288,6 +289,7 @@
     <None Include="Images\ISLocalVar.png" />
     <None Include="Images\ISQuest.png" />
     <None Include="Images\ISRemoteVar.png" />
+    <None Include="Images\ISSnippet.png" />
     <None Include="Images\ISUserF.png" />
     <None Include="..\..\..\..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\VS2008ImageLibrary\1033\VS2008ImageLibrary\Actions\pngformat\List_NumberedRTLHS.png" />
     <None Include="Images\ModifiedFlag.png" />

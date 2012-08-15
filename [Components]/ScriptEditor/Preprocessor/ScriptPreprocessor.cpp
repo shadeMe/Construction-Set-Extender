@@ -1174,6 +1174,9 @@ namespace ConstructionSetExtender
 		if (OperationResult)
 			Result = SourceBuffer;
 
+		delete DataBuffer;
+		DataBuffer = nullptr;
+
 		return OperationResult;
 	}
 

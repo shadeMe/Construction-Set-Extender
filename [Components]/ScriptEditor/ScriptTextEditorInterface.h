@@ -117,7 +117,9 @@ namespace ConstructionSetExtender
 			UInt32										GetTotalLineCount(void);
 			IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 
-			// Events
+			void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
+
+			// Event handlers
 			void										OnGotFocus(void);					// called when the workspace's is brought to focus
 			void										OnLostFocus(void);					// the opposite of the above
 			void										OnPositionSizeChange(void);			// called when the workspace's container's position or size changes

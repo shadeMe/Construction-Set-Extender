@@ -1,5 +1,11 @@
 #include "IntelliSenseItem.h"
 #include "IntelliSenseDatabase.h"
+#include "IntelliSenseInterface.h"
+
+#include "..\ScriptEditor.h"
+#include "..\ScriptTextEditorInterface.h"
+#include "..\SnippetManager.h"
+
 #include "[Common]\NativeWrapper.h"
 
 namespace ConstructionSetExtender
@@ -18,12 +24,12 @@ namespace ConstructionSetExtender
 			this->Type = Type;
 		}
 
-		IntelliSenseItem::IntelliSenseItemType IntelliSenseItem::GetIntelliSenseItemType()
+		IntelliSenseItem::IntelliSenseItemType IntelliSenseItem::GetItemType()
 		{
 			return Type;
 		}
 
-		String^ IntelliSenseItem::GetIntelliSenseItemTypeID()
+		String^ IntelliSenseItem::GetItemTypeID()
 		{
 			return IntelliSenseItemTypeID[(int)Type];
 		}
@@ -31,6 +37,18 @@ namespace ConstructionSetExtender
 		String^ IntelliSenseItem::Describe()
 		{
 			return Description;
+		}
+
+		void IntelliSenseItem::Insert( Object^ Workspace, IntelliSenseInterface^ Interface )
+		{
+			ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(Workspace);
+
+			ParentEditor->SetCurrentToken(GetSubstitution());
+		}
+
+		bool IntelliSenseItem::GetShouldEnumerate( String^ Token )
+		{
+			return (GetIdentifier()->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
 		}
 
 		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source) :
@@ -67,7 +85,12 @@ namespace ConstructionSetExtender
 			return Source;
 		}
 
-		IntelliSenseItemVariable::IntelliSenseItemVariable(String^% Name, String^% Comment, IntelliSenseItemVariableDataType Type, IntelliSenseItemType Scope) :
+		String^ IntelliSenseItemScriptCommand::GetSubstitution()
+		{
+			return GetIdentifier();
+		}
+
+		IntelliSenseItemVariable::IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope) :
 			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
 											Name,
 											IntelliSenseItemVariable::IntelliSenseItemVariableDataTypeID[(int)Type],
@@ -96,9 +119,14 @@ namespace ConstructionSetExtender
 			return IntelliSenseItemVariableDataTypeID[(int)DataType];
 		}
 
-		IntelliSenseItemVariable::IntelliSenseItemVariableDataType IntelliSenseItemVariable::GetDataType()
+		ScriptParser::VariableType IntelliSenseItemVariable::GetDataType()
 		{
 			return DataType;
+		}
+
+		String^ IntelliSenseItemVariable::GetSubstitution()
+		{
+			return GetIdentifier();
 		}
 
 		IntelliSenseItemQuest::IntelliSenseItemQuest(String^% EditorID, String^% Desc, String^% ScrName) :
@@ -113,6 +141,11 @@ namespace ConstructionSetExtender
 		String^ IntelliSenseItemQuest::GetIdentifier()
 		{
 			return Name;
+		}
+
+		String^ IntelliSenseItemQuest::GetSubstitution()
+		{
+			return GetIdentifier();
 		}
 
 		Script::Script()
@@ -204,7 +237,12 @@ namespace ConstructionSetExtender
 				ParamIdx++;
 			}
 
-			Description += Name + "\n\nDescription: " + CommentDescription + "\n" + ParamIdx + " Parameters" + Scratch + "\n\n";
+			if (CommentDescription->Length > 2)
+				CommentDescription = "\n\nDescription: " + CommentDescription;
+			else
+				CommentDescription = "\n";
+
+			Description += Name + CommentDescription + "\n" + ParamIdx + " Parameters" + Scratch + "\n\n";
 			if (ReturnVar == -1)			Description += "Does not return a value";
 			else if (ReturnVar == -9)		Description += "Return Type: Ambiguous";
 			else							Description += "Return Type: " + (dynamic_cast<IntelliSenseItemVariable^>(VarList[ReturnVar]))->GetDataTypeID();
@@ -233,6 +271,11 @@ namespace ConstructionSetExtender
 		String^ IntelliSenseItemUserFunction::GetIdentifier()
 		{
 			return Parent->GetIdentifier();
+		}
+
+		String^ IntelliSenseItemUserFunction::GetSubstitution()
+		{
+			return GetIdentifier();
 		}
 
 		String^ IntelliSenseItemEditorIDForm::GetFormTypeIdentifier()
@@ -353,6 +396,65 @@ namespace ConstructionSetExtender
 		String^ IntelliSenseItemEditorIDForm::GetIdentifier()
 		{
 			return Name;
+		}
+
+		String^ IntelliSenseItemEditorIDForm::GetSubstitution()
+		{
+			return GetIdentifier();
+		}
+
+		IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet( CodeSnippet^ Source ) :
+			IntelliSenseItem()
+		{
+			this->Type = IntelliSenseItem::IntelliSenseItemType::e_Snippet;
+
+			Parent = Source;
+
+			this->Description = "Name: " + Parent->Name + "\n" +
+				"Shorthand: " + Parent->Shorthand +
+				(Parent->Description->Length ? "\n\n" + Parent->Description : "") +
+				(Parent->Variables->Count ? "\n\nVariables: " + Parent->Variables->Count.ToString() : "");
+		}
+
+		void IntelliSenseItemCodeSnippet::Insert( Object^ Workspace, IntelliSenseInterface^ Interface )
+		{
+			ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(Workspace);
+
+			for each (CodeSnippet::VariableInfo^ Itr in Parent->Variables)
+				ParentEditor->InsertVariable(Itr->Name, Itr->Type);
+
+			String^ Code = GetSubstitution();
+			UInt32 NewLines = Code->Split('\n')->Length;
+			UInt32 CurrentLine = ParentEditor->GetTextEditor()->GetCurrentLineNumber();
+
+			Interface->Enabled = false;			// don't want it popping up when indenting the snippet
+			ParentEditor->GetTextEditor()->BeginUpdate();
+			ParentEditor->SetCurrentToken(Code);
+			ParentEditor->GetTextEditor()->IndentLines(CurrentLine, CurrentLine + NewLines);
+			ParentEditor->GetTextEditor()->EndUpdate();
+			Interface->Enabled = true;
+
+			ParentEditor->GetTextEditor()->ScrollToCaret();
+		}
+
+		bool IntelliSenseItemCodeSnippet::GetShouldEnumerate( String^ Token )
+		{
+			bool Found = (Parent->Name->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
+
+			if (Found == false)
+				Found = (Parent->Shorthand->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
+
+			return Found;
+		}
+
+		String^ IntelliSenseItemCodeSnippet::GetIdentifier()
+		{
+			return Parent->Name;
+		}
+
+		String^ IntelliSenseItemCodeSnippet::GetSubstitution()
+		{
+			return Parent->Code;
 		}
 	}
 }

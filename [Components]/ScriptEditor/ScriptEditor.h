@@ -14,11 +14,11 @@ using namespace DevComponents;
 using namespace DevComponents::DotNetBar::Events;
 using namespace GlobalInputMonitor;
 
-namespace ConstructionSetExtender
-{
 #define NEWSCRIPTID					"New Script"
 #define FIRSTRUNSCRIPTID			"New Workspace"
 
+namespace ConstructionSetExtender
+{
 	namespace ScriptEditor
 	{
 		ref class Workspace;
@@ -240,6 +240,7 @@ namespace ConstructionSetExtender
 			ToolStripButton^									ToolBarShowPreprocessedText;
 			ToolStripButton^									ToolBarSanitizeScriptText;
 			ToolStripButton^									ToolBarBindScript;
+			ToolStripButton^									ToolBarSnippetManager;
 			ToolStripProgressBar^								ToolBarByteCodeSize;
 
 			ContextMenuStrip^									TextEditorContextMenu;
@@ -341,6 +342,7 @@ namespace ConstructionSetExtender
 			EventHandler^										ToolBarShowPreprocessedTextClickHandler;
 			EventHandler^										ToolBarSanitizeScriptTextClickHandler;
 			EventHandler^										ToolBarBindScriptClickHandler;
+			EventHandler^										ToolBarSnippetManagerClickHandler;
 			EventHandler^										ScriptEditorPreferencesSavedHandler;
 			EventHandler^										AutoSaveTimerTickHandler;
 
@@ -413,6 +415,7 @@ namespace ConstructionSetExtender
 			virtual void                                        ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
+			virtual void                                        ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E);
 
 			virtual void                                        ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 			virtual void										AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
@@ -426,8 +429,6 @@ namespace ConstructionSetExtender
 			virtual void                                        FindReplaceOutput(String^ Line, String^ Text);
 			virtual void                                        ToggleBookmark(int CaretPos);
 			virtual void                                        SetScriptType(ScriptType Type);
-
-			virtual void										InsertVariable(String^ VariableName, ScriptParser::VariableType VariableType);
 
 			virtual String^										SerializeCSEBlock(void);
 			virtual void                                        SerializeCaretPos(String^% Result);
@@ -460,6 +461,7 @@ namespace ConstructionSetExtender
 			void												EnableControls();
 
 			UInt32												GetHandleIndex() { return WorkspaceHandleIndex; }
+			TextEditors::IScriptTextEditor^						GetTextEditor() { return TextEditor; }
 			bool												GetModifiedStatus() { return TextEditor->GetModifiedStatus(); }
 			void												SetModifiedStatus(bool Modified) { TextEditor->SetModifiedStatus(Modified); }
 			WorkspaceContainer^									GetParentContainer() { return ParentContainer; }
@@ -493,6 +495,7 @@ namespace ConstructionSetExtender
 			void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);
 
 			int													PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options);
+			void												InsertVariable(String^ VariableName, ScriptParser::VariableType VariableType);
 		};
 	}
 }

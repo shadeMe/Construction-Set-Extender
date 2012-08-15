@@ -181,7 +181,7 @@ namespace ConstructionSetExtender
 			Inductees.push_back(new CSEHallOfFameEntry("ScruggsywuggsyTheFerret",		"Cthulu-like Being",			TESForm::kFormType_SigilStone));
 			Inductees.push_back(new CSEHallOfFameEntry("behippo",						"Despises Peppermint",			TESForm::kFormType_Apparatus));
 			Inductees.push_back(new CSEHallOfFameEntry("Cipscis",						"ACRONYM",						TESForm::kFormType_AlchemyItem));
-			Inductees.push_back(new CSEHallOfFameEntry("haama",							"Think Tank. Not Literally.",	TESForm::kFormType_Furniture));
+			Inductees.push_back(new CSEHallOfFameEntry("haama",							"Tricksy Ol' Sod",				TESForm::kFormType_Furniture));
 			Inductees.push_back(new CSEHallOfFameEntry("PacificMorrowind",				"The Jack",						TESForm::kFormType_Book));
 			Inductees.push_back(new CSEHallOfFameEntry("tejon",							"Goblin Tinkerer",				TESForm::kFormType_Creature));
 			Inductees.push_back(new CSEHallOfFameEntry("Vacuity",						"                ",				TESForm::kFormType_Container));

@@ -7,7 +7,9 @@ namespace ConstructionSetExtender
 		ref class Script;
 		ref class IntelliSenseItem;
 		ref class UserFunction;
+		ref class IntelliSenseInterface;
 		ref struct IntelliSenseParseScriptData;
+		ref class CodeSnippetCollection;
 
 		ref class IntelliSenseDatabase
 		{
@@ -22,11 +24,14 @@ namespace ConstructionSetExtender
 			LinkedList<UserFunction^>^							UserFunctionList;
 			Dictionary<String^, String^>^						DeveloperURLMap;
 			Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
-			UInt32												UpdateThreadTimerInterval;	// in minutes
+			CodeSnippetCollection^								CodeSnippets;
+			UInt32												UpdateTimerInterval;	// in minutes
 
 			void												UpdateDatabase();
 		public:
 			LinkedList<IntelliSenseItem^>^						Enumerables;
+
+			virtual ~IntelliSenseDatabase();
 
 			virtual void										InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);
 			virtual void										InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
@@ -48,8 +53,28 @@ namespace ConstructionSetExtender
 			bool												GetIsIdentifierScriptableForm(String^% Name, ComponentDLLInterface::ScriptData** OutScriptData);
 
 			void												ForceUpdateDatabase();
+			void												ShowCodeSnippetManger();
 		};
 
 #define ISDB											IntelliSenseDatabase::GetSingleton()
+
+		ref struct IntelliSenseParseScriptData
+		{
+			IntelliSenseInterface^								SourceIntelliSenseInterface;
+			Script^												SourceScript;
+
+			static enum class									DataType
+			{
+				e_UserFunction = 0,
+				e_Script,
+				e_IntelliSenseInterface
+			};
+
+			DataType											Type;
+
+			IntelliSenseParseScriptData(IntelliSenseInterface^ Obj);
+			IntelliSenseParseScriptData(Script^ Obj);
+			IntelliSenseParseScriptData(UserFunction^ Obj);
+		};
 	}
 }

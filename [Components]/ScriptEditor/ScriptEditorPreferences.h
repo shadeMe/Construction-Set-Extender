@@ -56,6 +56,7 @@ namespace ConstructionSetExtender
 
 			void											CmDlgFont_Click(Object^ Sender, EventArgs^ E);
 			void											CmDlgColor_Click(Object^ Sender, EventArgs^ E);
+			void											ForceDatabaseUpdate_Click(Object^ Sender, EventArgs^ E);
 
 			void											OptionsBox_Cancel(Object^ Sender, CancelEventArgs^ E);
 
@@ -81,6 +82,7 @@ namespace ConstructionSetExtender
 			Label^										LabelMaxVisibleItems;
 			NumericUpDown^								MaxVisibleItems;
 			CheckBox^									NoFocusUI;
+			Button^										ForceDatabaseUpdate;
 			TabPage^									TabPreprocessor;
 			CheckBox^									AllowRedefinitions;
 			Label^										LabelNoOfPasses;
