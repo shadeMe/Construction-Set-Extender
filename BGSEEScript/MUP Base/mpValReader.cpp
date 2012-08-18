@@ -180,7 +180,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
       return 1;
 
     a_iPos += (int)(2 + nPos);
-    a_val = (int)iVal;
+    a_val = (float_type)iVal;
     return 1;
   }
 
@@ -224,7 +224,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
     if (i==iBits)
       throw ParserError(_T("Binary to integer conversion error (overflow)."));
 
-    a_Val = (int)(iVal >> (iBits-i) );
+    a_Val = (float_type)(iVal >> (iBits-i) );
     a_iPos += i+1;
 
     return true;
