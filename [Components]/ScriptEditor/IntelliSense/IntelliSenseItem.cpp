@@ -51,6 +51,11 @@ namespace ConstructionSetExtender
 			return (GetIdentifier()->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
 		}
 
+		bool IntelliSenseItem::GetIsQuickViewable()
+		{
+			return true;
+		}
+
 		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source) :
 				IntelliSenseItem(String::Format("{0}{1}\n{2} parameter(s)\nReturn Type: {3}\n\n{4}{5}",
 												Name,
@@ -280,90 +285,14 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemEditorIDForm::GetFormTypeIdentifier()
 		{
-			static const char* s_FormTypeIdentifier[] =
-			{
-				"None",
-				"TES4",
-				"Group",
-				"GMST",
-				"Global",
-				"Class",
-				"Faction",
-				"Hair",
-				"Eyes",
-				"Race",
-				"Sound",
-				"Skill",
-				"Effect",
-				"Script",
-				"Land Texture",
-				"Enchantment",
-				"Spell",
-				"BirthSign",
-				"Activator",
-				"Apparatus",
-				"Armor",
-				"Book",
-				"Clothing",
-				"Container",
-				"Door",
-				"Ingredient",
-				"Light",
-				"Misc Item",
-				"Static",
-				"Grass",
-				"Tree",
-				"Flora",
-				"Furniture",
-				"Weapon",
-				"Ammo",
-				"NPC",
-				"Creature",
-				"Leveled Creature",
-				"SoulGem",
-				"Key",
-				"Alchemy Item",
-				"SubSpace",
-				"Sigil Stone",
-				"Leveled Item",
-				"SNDG",
-				"Weather",
-				"Climate",
-				"Region",
-				"Cell",
-				"Reference",
-				"Reference",			// ACHR
-				"Reference",			// ACRE
-				"PathGrid",
-				"World Space",
-				"Land",
-				"TLOD",
-				"Road",
-				"Dialog",
-				"Dialog Info",
-				"Quest",
-				"Idle",
-				"AI Package",
-				"Combat Style",
-				"Load Screen",
-				"Leveled Spell",
-				"Anim Object",
-				"Water Type",
-				"Effect Shader",
-				"TOFT"
-			};
-
-			if (FormType >= 0x45)
-				return "Unknown";
-			else
-				return gcnew String(s_FormTypeIdentifier[FormType]);
+			return gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(TypeID));
 		}
 
 		IntelliSenseItemEditorIDForm::IntelliSenseItemEditorIDForm( ComponentDLLInterface::FormData* Data ) : IntelliSenseItem()
 		{
 			this->Type = IntelliSenseItem::IntelliSenseItemType::e_Form;
 
-			FormType = Data->TypeID;
+			TypeID = Data->TypeID;
 			FormID = Data->FormID;
 			Name = gcnew String(Data->EditorID);
 			Flags = Data->Flags;
@@ -372,13 +301,13 @@ namespace ConstructionSetExtender
 				((Flags & (UInt32)FormFlags::e_FromActiveFile)?"   From Active File\n":"") +
 				((Flags & (UInt32)FormFlags::e_Deleted)?"   Deleted\n":"") +
 				((Flags & (UInt32)FormFlags::e_TurnOffFire)?"   Turn Off Fire\n":"") +
-				((Flags & (UInt32)FormFlags::e_QuestItem)?(FormType == 0x31?"   Persistent\n":"   Quest Item\n"):"") +
+				((Flags & (UInt32)FormFlags::e_QuestItem)?(TypeID == 0x31?"   Persistent\n":"   Quest Item\n"):"") +
 				((Flags & (UInt32)FormFlags::e_Disabled)?"   Initially Disabled\n":"") +
 				((Flags & (UInt32)FormFlags::e_VisibleWhenDistant)?"   Visible When Distant\n":"");
 
 			String^ ScriptDescription = "";
 			ComponentDLLInterface::ScriptData* ScriptableData = 0;
-			if (FormType != 13 && ISDB->GetIsIdentifierScriptableForm(Name, &ScriptableData))
+			if (TypeID != 13 && ISDB->GetIsIdentifierScriptableForm(Name, &ScriptableData))
 			{
 				if (ScriptableData && ScriptableData->IsValid())
 					ScriptDescription += "\nScript: " + gcnew String(ScriptableData->EditorID);
@@ -455,6 +384,11 @@ namespace ConstructionSetExtender
 		String^ IntelliSenseItemCodeSnippet::GetSubstitution()
 		{
 			return Parent->Code;
+		}
+
+		bool IntelliSenseItemCodeSnippet::GetIsQuickViewable()
+		{
+			return false;
 		}
 	}
 }

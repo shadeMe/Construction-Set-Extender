@@ -893,7 +893,7 @@ namespace ConstructionSetExtender
 
 			ListViewItem^ NewItem = gcnew ListViewItem(gcnew String(Itr->EditorID));
 			NewItem->SubItems->Add(Itr->FormID.ToString("X8"));
-			NewItem->SubItems->Add(TypeIdentifier[Itr->TypeID]);
+			NewItem->SubItems->Add(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(Itr->TypeID)));
 			NewItem->Tag = (UInt32)Itr;
 
 			if (Itr->Selected)

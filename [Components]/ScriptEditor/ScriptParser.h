@@ -63,6 +63,7 @@ namespace ConstructionSetExtender
 			e_Set,
 			e_Let,
 			e_Call,
+			e_Player,
 		};
 
 		static TokenType									GetTokenType(String^% Token);
@@ -130,7 +131,7 @@ namespace ConstructionSetExtender
 		LinkedList<VariableRefCountData^>^					Variables;
 		Stack<BlockType>^									BlockStack;
 		List<String^>^										Tokens;
-		List<UInt32>^										Indices;											// the position of each token relative to its parent line
+		List<UInt32>^										Indices;		// the position of each token relative to its parent line
 		List<Char>^											Delimiters;
 		bool												Valid;
 		String^												ReferenceDelimiters;
@@ -138,10 +139,7 @@ namespace ConstructionSetExtender
 
 		ScriptParser();
 		ScriptParser(String^ ReferenceDelimiters, String^ ReferenceControlChars);
-		virtual ~ScriptParser()
-		{
-			Reset();
-		}
+		virtual ~ScriptParser();
 
 		virtual void										Tokenize(String^ Source, bool CollectEmptyTokens);
 		TokenType											GetLeadingTokenType(void);

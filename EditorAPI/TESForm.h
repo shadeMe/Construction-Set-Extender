@@ -135,6 +135,8 @@ public:
 		kFormType__MAX          = 0x45
 	};
 
+	static const char* FormTypeIDLongNames[kFormType__MAX];
+
 	enum FormFlags
 	{
 		kFormFlags_FromMaster           = /*00*/ 0x00000001,   // form is from an esm file
@@ -206,6 +208,7 @@ public:
 
 	static TESForm*					LookupByFormID(UInt32 FormID);
 	static TESForm*					LookupByEditorID(const char* EditorID);
+	static const char*				GetFormTypeIDLongName(UInt8 TypeID);
 };
 STATIC_ASSERT(sizeof(TESForm) == 0x24);
 

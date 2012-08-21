@@ -4,6 +4,79 @@
 ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_TESFormEditorIDMap = (ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*)0x009EE18C;
 ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*				g_TESFormFormIDMap = (ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*)0x009EE164;
 
+const char* TESForm::FormTypeIDLongNames[kFormType__MAX] =
+{
+	"None",
+	"TES4",
+	"Group",
+	"GMST",
+	"Global",
+	"Class",
+	"Faction",
+	"Hair",
+	"Eyes",
+	"Race",
+	"Sound",
+	"Skill",
+	"Effect",
+	"Script",
+	"Land Texture",
+	"Enchantment",
+	"Spell",
+	"BirthSign",
+	"Activator",
+	"Apparatus",
+	"Armor",
+	"Book",
+	"Clothing",
+	"Container",
+	"Door",
+	"Ingredient",
+	"Light",
+	"Misc Item",
+	"Static",
+	"Grass",
+	"Tree",
+	"Flora",
+	"Furniture",
+	"Weapon",
+	"Ammo",
+	"NPC",
+	"Creature",
+	"Leveled Creature",
+	"SoulGem",
+	"Key",
+	"Alchemy Item",
+	"SubSpace",
+	"Sigil Stone",
+	"Leveled Item",
+	"SNDG",
+	"Weather",
+	"Climate",
+	"Region",
+	"Cell",
+	"Reference",
+	"Reference",			// ACHR
+	"Reference",			// ACRE
+	"PathGrid",
+	"World Space",
+	"Land",
+	"TLOD",
+	"Road",
+	"Dialog",
+	"Dialog Info",
+	"Quest",
+	"Idle",
+	"AI Package",
+	"Combat Style",
+	"Load Screen",
+	"Leveled Spell",
+	"Anim Object",
+	"Water Type",
+	"Effect Shader",
+	"TOFT"
+};
+
 FormCrossReferenceData* FormCrossReferenceData::LookupFormInCrossReferenceList( FormCrossReferenceListT* CrossReferenceList, TESForm* CrossReferencedForm )
 {
 	for (FormCrossReferenceListT::Iterator Itr = CrossReferenceList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
@@ -180,4 +253,12 @@ void TESForm::SetQuestItem( bool State )
 void TESForm::GetDataFromDialog( HWND Dialog )
 {
 	thisVirtualCall<void>(0x118, this, Dialog);
+}
+
+const char* TESForm::GetFormTypeIDLongName( UInt8 TypeID )
+{
+	if (TypeID >= kFormType__MAX)
+		return "Unknown";
+	else
+		return FormTypeIDLongNames[(int)TypeID];
 }

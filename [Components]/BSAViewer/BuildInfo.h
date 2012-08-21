@@ -1,2 +1,2 @@
-#define VERSION_BUILD               815
-#define VERSION_BUILD_PAD       0815
+#define VERSION_BUILD               821
+#define VERSION_BUILD_PAD       0821

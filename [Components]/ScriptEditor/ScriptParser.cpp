@@ -180,6 +180,8 @@ namespace ConstructionSetExtender
 				Result = TokenType::e_Let;
 			else if (!String::Compare(Token, "call", true))
 				Result = TokenType::e_Call;
+			else if (!String::Compare(Token, "player", true) || !String::Compare(Token, "playerref", true))
+				Result = TokenType::e_Player;
 		}
 
 		return Result;
@@ -422,6 +424,11 @@ namespace ConstructionSetExtender
 			DataType = ScriptParser::VariableType::e_Array;
 
 		return DataType;
+	}
+
+	ScriptParser::~ScriptParser()
+	{
+		Reset();
 	}
 
 	UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)

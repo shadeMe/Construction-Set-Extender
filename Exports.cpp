@@ -159,6 +159,11 @@ bool GetIsFormReference(const char* EditorID)
 	return Result;
 }
 
+const char* GetFormTypeIDLongName(UInt8 TypeID)
+{
+	return TESForm::GetFormTypeIDLongName(TypeID);
+}
+
 void LoadFormForEdit(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
@@ -1180,6 +1185,7 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		LookupFormByEditorID,
 		LookupScriptableByEditorID,
 		GetIsFormReference,
+		GetFormTypeIDLongName,
 		LoadFormForEdit,
 		ShowPickReferenceDialog,
 		ShowUseReportDialog,

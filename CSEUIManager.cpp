@@ -425,14 +425,17 @@ namespace ConstructionSetExtender
 			{
 			case WM_DATADLG_RECURSEMASTERS:
 				{
-					TESFile* PluginFile = (TESFile*)lParam;
-					SME_ASSERT(PluginFile);
-
-					for (int i = 0; i < PluginFile->masterCount; i++)
-						SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)PluginFile->masterFiles[i]);
-
-					PluginFile->SetLoaded(true);
 					Return = true;
+
+					TESFile* PluginFile = (TESFile*)lParam;
+
+					if (PluginFile)
+					{
+						for (int i = 0; i < PluginFile->masterCount; i++)
+							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)PluginFile->masterFiles[i]);
+
+						PluginFile->SetLoaded(true);
+					}
 				}
 
 				break;
@@ -579,7 +582,25 @@ namespace ConstructionSetExtender
 					else if (Return == false)
 					{
 						CSEFormEnumerationManager::Instance.ResetVisibility();
-						SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
+						if (ActiveTESFile)
+							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
+						else
+						{
+							int Selection = -1;
+							do
+							{
+								Selection = ListView_GetNextItem(PluginList, Selection, LVNI_SELECTED);
+								if (Selection == -1)
+									break;
+
+								UInt32 PluginIndex = (UInt32)TESListView::GetItemData(PluginList, Selection);
+								TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
+
+								if (CurrentFile)
+									SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)CurrentFile);
+							}
+							while (true);
+						}
 					}
 
 					break;

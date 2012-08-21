@@ -734,7 +734,7 @@ namespace ConstructionSetExtender
 		ListViewItem^ Item = gcnew ListViewItem(gcnew String(Data->EditorID));
 		Item->SubItems->Add(Data->FormID.ToString("X8"));
 		if (Data->TypeID < 0x45)
-			Item->SubItems->Add(TypeIdentifier[(int)Data->TypeID]);
+			Item->SubItems->Add(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(Data->TypeID)));
 		else
 			Item->SubItems->Add("<Unknown>");
 

@@ -255,7 +255,7 @@ namespace ConstructionSetExtender
 			{
 				ComponentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
 
-				ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)ThisForm->TypeID]);
+				ListViewItem^ Item = gcnew ListViewItem(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
 				if (ThisForm->IsActive() && ColorizeActiveForms)
@@ -292,7 +292,7 @@ namespace ConstructionSetExtender
 			{
 				ComponentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
 
-				ListViewItem^ Item = gcnew ListViewItem(TypeIdentifier[(int)ThisForm->TypeID]);
+				ListViewItem^ Item = gcnew ListViewItem(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
 				if (ThisForm->IsActive() && ColorizeActiveForms)

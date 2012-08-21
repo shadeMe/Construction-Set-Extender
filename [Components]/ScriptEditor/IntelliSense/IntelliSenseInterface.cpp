@@ -180,7 +180,7 @@ namespace ConstructionSetExtender
 					{
 						CallingObjectIsRef = true;
 					}
-					else if (!String::Compare(CurrentToken, "player", true) || !String::Compare(CurrentToken, "playerref", true))
+					else if (ScriptParser::GetTokenType(CurrentToken) == ScriptParser::TokenType::e_Player)
 					{
 						CallingObjectIsRef = true;
 					}
@@ -471,7 +471,7 @@ namespace ConstructionSetExtender
 			{
 				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 				{
-					if (!String::Compare(Itr->GetIdentifier(), MainToken, true))
+					if (Itr->GetIsQuickViewable() && !String::Compare(Itr->GetIdentifier(), MainToken, true))
 					{
 						Item = Itr;
 						break;

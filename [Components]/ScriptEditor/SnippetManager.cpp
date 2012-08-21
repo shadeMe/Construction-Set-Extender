@@ -145,7 +145,7 @@ namespace ConstructionSetExtender
 			try
 			{
 				if (Directory::Exists(SnippetDirectory) == false)
-					throw gcnew System::IO::DirectoryNotFoundException("Directory not found");
+					Directory::CreateDirectory(SnippetDirectory);
 
 				for each (String^ Itr in Directory::GetFiles(SnippetDirectory))
 				{

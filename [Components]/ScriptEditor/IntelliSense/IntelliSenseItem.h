@@ -44,9 +44,9 @@ namespace ConstructionSetExtender
 			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
 
 			virtual String^										Describe();
-			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface);
-																										// argument's a ScriptEditor::Workspace^
+			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface); // argument's a ScriptEditor::Workspace^
 			virtual bool										GetShouldEnumerate(String^ Token);		// returns true if the item can be enumerated in the interface
+			virtual bool										GetIsQuickViewable();					// returns true if the item allows a quick view tooltip
 			virtual String^										GetIdentifier() = 0;					// identifier for display in the interface
 			virtual String^										GetSubstitution() = 0;					// string to be inserted into the code
 
@@ -207,7 +207,7 @@ namespace ConstructionSetExtender
 			};
 
 			String^												Name;
-			UInt32												FormType;
+			UInt32												TypeID;
 			UInt32												FormID;
 			UInt32												Flags;
 
@@ -228,6 +228,7 @@ namespace ConstructionSetExtender
 
 			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface) override;
 			virtual bool										GetShouldEnumerate(String^ Token) override;
+			virtual bool										GetIsQuickViewable() override;
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
 		};
