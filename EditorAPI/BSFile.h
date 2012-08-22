@@ -34,7 +34,7 @@ public:
 	UInt32					DirectWrite(const void* buffer, UInt32 size);
 
 	static BSFile*			CreateInstance(const char* fileName, UInt32 mode, UInt32 bufferSize = 0x8000, bool isTextFile = false);
-	
+
 	void					DeleteInstance(bool ReleaseMemory = true);
 };
 STATIC_ASSERT(sizeof(BSFile) == 0x154);

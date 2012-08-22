@@ -3,7 +3,7 @@
 //	EditorAPI: MemoryHeap class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-/* 
+/*
     Memory heap class and it's main global instance, the FormHeap.
     This appears to be Bethesda's answer to the global new & delete operators.
 */
@@ -16,7 +16,7 @@ public:
     typedef void (*Unk164Callback)(UInt32 unk0, UInt32 unk1, UInt32 unk2);
 
     // members
-    //     /*000*/ void**        vtbl;    
+    //     /*000*/ void**        vtbl;
     /*004*/ UInt32               unk004; // alignment
     /*008*/ UInt32               unk008;
     /*00C*/ UInt32               unk00C; // size of main memory block
