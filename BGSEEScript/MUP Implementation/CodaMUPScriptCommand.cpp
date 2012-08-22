@@ -57,7 +57,7 @@ namespace BGSEditorExtender
 							{
 									throw CodaScriptException(ByteCode->GetSource(),
 															"Parameter %d type mismatch for command '%s' - Expected '%c', received '%c'",
-															i,
+															i + 1,
 															Parent->GetName(),
 															CurrentParam->Type,
 															CurrentArg->GetType());
