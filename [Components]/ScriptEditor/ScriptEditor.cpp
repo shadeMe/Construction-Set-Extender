@@ -250,6 +250,9 @@ namespace ConstructionSetExtender
 		{
 			if (DestructionFlag)
 			{
+				Rectangle Bounds = GetBounds();
+				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
+
 				return;
 			}
 
@@ -2710,12 +2713,12 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::Relocate(WorkspaceContainer^ Destination)
 		{
+			ParentContainer->FlagDestruction(true);
+
 			WorkspaceControlBox->TabItem = nullptr;		// reset to prevent disposal
 			WorkspaceTabItem->AttachedControl = nullptr;
 
-			ParentContainer->FlagDestruction(true);
 			ParentContainer->RemoveTabControlBox(WorkspaceControlBox);
-			ParentContainer->FlagDestruction(false);
 
 			ParentContainer = Destination;
 			WorkspaceControlBox->TabItem = WorkspaceTabItem;
@@ -2723,6 +2726,8 @@ namespace ConstructionSetExtender
 
 			Destination->AddTab(WorkspaceTabItem);
 			Destination->AddTabControlBox(WorkspaceControlBox);
+
+			ParentContainer->FlagDestruction(false);
 		}
 		void Workspace::HandleFocus( bool GotFocus )
 		{

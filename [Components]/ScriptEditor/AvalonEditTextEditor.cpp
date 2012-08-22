@@ -157,7 +157,7 @@ namespace ConstructionSetExtender
 
 					System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0,
 						0.0,
-						System::Windows::Duration(System::TimeSpan::FromSeconds(SetTextFadeAnimationDuration)),
+						System::Windows::Duration(System::TimeSpan::FromSeconds(kSetTextFadeAnimationDuration)),
 						System::Windows::Media::Animation::FillBehavior::Stop);
 					SetTextPrologAnimationCache = FadeOutAnimation;
 
@@ -1685,7 +1685,7 @@ namespace ConstructionSetExtender
 
 				System::Windows::Media::Animation::DoubleAnimation^ FadeInAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(0.0,
 					1.0,
-					System::Windows::Duration(System::TimeSpan::FromSeconds(SetTextFadeAnimationDuration)),
+					System::Windows::Duration(System::TimeSpan::FromSeconds(kSetTextFadeAnimationDuration)),
 					System::Windows::Media::Animation::FillBehavior::Stop);
 				System::Windows::Media::Animation::Storyboard^ FadeInStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
 				FadeInStoryBoard->Children->Add(FadeInAnimation);

@@ -122,7 +122,7 @@ extern "C"
 			g_msgIntfc = (OBSEMessagingInterface*)obse->QueryInterface(kInterface_Messaging);
 			g_msgIntfc->RegisterListener(g_pluginHandle, "OBSE", OBSEMessageHandler);
 		}
-		}
+
 		return true;
 	}
 };

@@ -22,7 +22,7 @@ namespace ConstructionSetExtender
 			try
 			{
 				DataContractSerializer^ Serializer = gcnew DataContractSerializer(CodeSnippet::typeid);
-				FileStream^ OutStream =  gcnew FileStream(Path + "\\" + Name + ".xml", FileMode::Create);
+				FileStream^ OutStream =  gcnew FileStream(Path + "\\" + Name + ".csesnippet", FileMode::Create);
 
 				Serializer->WriteObject(OutStream, this);
 				OutStream->Close();
@@ -128,8 +128,8 @@ namespace ConstructionSetExtender
 		{
 			try
 			{
-				if (Directory::Exists(SnippetDirectory) == false)
-					Directory::CreateDirectory(SnippetDirectory);
+				Directory::Delete(SnippetDirectory, true);
+				Directory::CreateDirectory(SnippetDirectory);
 
 				for each (CodeSnippet^ Itr in LoadedSnippets)
 					Itr->Save(SnippetDirectory);

@@ -163,7 +163,7 @@ namespace ConstructionSetExtender
 				String^										SanitizeUnicodeString(String^ In);			// removes unsupported characters
 				virtual void								Destroy();
 
-				static double								SetTextFadeAnimationDuration = 0.10;		// in seconds
+				static const double							kSetTextFadeAnimationDuration = 0.10;		// in seconds
 			public:
 				AvalonEditTextEditor(Font^ Font, UInt32 ParentWorkspaceIndex);
 				virtual ~AvalonEditTextEditor();

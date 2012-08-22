@@ -378,7 +378,7 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemCodeSnippet::GetIdentifier()
 		{
-			return Parent->Name;
+			return "[" + Parent->Shorthand + "] " + Parent->Name;
 		}
 
 		String^ IntelliSenseItemCodeSnippet::GetSubstitution()
