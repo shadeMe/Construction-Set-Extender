@@ -12,8 +12,8 @@ namespace ConstructionSetExtender
 		Delimiters = gcnew List<Char>();
 		Valid = true;
 
-		ReferenceDelimiters = gcnew String(ScriptTextDelimiters);
-		ReferenceControlChars = gcnew String(ScriptTextControlChars);
+		this->ReferenceDelimiters = gcnew String(ScriptTextDelimiters);
+		this->ReferenceControlChars = gcnew String(ScriptTextControlChars);
 	}
 
 	ScriptParser::ScriptParser( String^ ReferenceDelimiters, String^ ReferenceControlChars )
@@ -27,6 +27,19 @@ namespace ConstructionSetExtender
 
 		this->ReferenceDelimiters = gcnew String(ReferenceDelimiters);
 		this->ReferenceControlChars = gcnew String(ReferenceControlChars);
+	}
+
+	ScriptParser::ScriptParser( String^ ReferenceDelimiters )
+	{
+		Variables = gcnew LinkedList<VariableRefCountData^>();
+		BlockStack = gcnew Stack<BlockType>();
+		Tokens = gcnew List<String^>();
+		Indices = gcnew List<UInt32>();
+		Delimiters = gcnew List<Char>();
+		Valid = true;
+
+		this->ReferenceDelimiters = gcnew String(ReferenceDelimiters);
+		this->ReferenceControlChars = gcnew String(ScriptTextControlChars);
 	}
 
 	bool ScriptParser::GetIsPlayerToken(String^% Source)
@@ -84,7 +97,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	void ScriptParser::Tokenize( String^ Source, bool CollectEmptyTokens )
+	bool ScriptParser::Tokenize( String^ Source, bool CollectEmptyTokens )
 	{
 		if (Source->Length && Source[Source->Length - 1] != '\n')
 			Source += "\n";
@@ -106,7 +119,7 @@ namespace ConstructionSetExtender
 		}
 
 		if (StartPos == -1)
-			return;
+			return false;
 
 		LastPos = StartPos;
 
@@ -139,6 +152,8 @@ namespace ConstructionSetExtender
 
 		if (Tokens->Count > 0)
 			Valid = true;
+
+		return Valid;
 	}
 
 	ScriptParser::TokenType ScriptParser::GetTokenType(String^% Token)

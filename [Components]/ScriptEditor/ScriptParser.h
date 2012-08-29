@@ -138,10 +138,11 @@ namespace ConstructionSetExtender
 		String^												ReferenceControlChars;
 
 		ScriptParser();
+		ScriptParser(String^ ReferenceDelimiters);
 		ScriptParser(String^ ReferenceDelimiters, String^ ReferenceControlChars);
 		virtual ~ScriptParser();
 
-		virtual void										Tokenize(String^ Source, bool CollectEmptyTokens);
+		virtual bool										Tokenize(String^ Source, bool CollectEmptyTokens);
 		TokenType											GetLeadingTokenType(void);
 		void												Reset();
 		VariableRefCountData^								LookupVariableByName(String^% Variable);

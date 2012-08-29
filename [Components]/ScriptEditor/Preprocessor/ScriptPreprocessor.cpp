@@ -330,7 +330,8 @@ namespace ConstructionSetExtender
 					Source = ImportParser->ReadToEnd();
 					ImportParser->Close();
 				}
-				catch (Exception^ E) {
+				catch (Exception^ E)
+				{
 					throw gcnew CSEGeneralException("Couldn't read from IMPORT script - " + E->Message);
 				}
 
@@ -363,7 +364,7 @@ namespace ConstructionSetExtender
 
 	void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ScriptParser^ LocalParser = gcnew ScriptParser(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
 
 		LocalParser->Tokenize(Source, false);
 		float PreviousValue = 0;
@@ -1173,6 +1174,8 @@ namespace ConstructionSetExtender
 		}
 		if (OperationResult)
 			Result = SourceBuffer;
+
+		RegisteredDefineDirectives->Clear();
 
 		delete DataBuffer;
 		DataBuffer = nullptr;

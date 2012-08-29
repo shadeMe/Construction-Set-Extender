@@ -360,7 +360,7 @@ namespace ConstructionSetExtender
 			ParentEditor->GetTextEditor()->BeginUpdate();
 			ParentEditor->SetCurrentToken(Code);
 			ParentEditor->GetTextEditor()->IndentLines(CurrentLine, CurrentLine + NewLines);
-			ParentEditor->GetTextEditor()->EndUpdate();
+			ParentEditor->GetTextEditor()->EndUpdate(false);
 			Interface->Enabled = true;
 
 			ParentEditor->GetTextEditor()->ScrollToCaret();

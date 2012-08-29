@@ -421,6 +421,7 @@ namespace ConstructionSetExtender
 			virtual void										AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
 
 			virtual bool										PerformHouseKeeping(void);
+			virtual void										CleanupAutoRecoveryCacheInstance(void);
 
 			virtual void                                        AddMessageToMessagePool(MessageListItemType Type, int Line, String^ Message);
 			virtual void                                        ClearErrorMessagesFromMessagePool(void);

@@ -163,8 +163,8 @@ namespace ConstructionSetExtender
 			  Identifier(Identifier), EvaluationHandler(EvaluationHandler), Precedence(Precedence), OperandCount(OperandCount) {}
 
 			  String^%										GetIdentifier() { return Identifier; }
-			  UInt32											GetPrecedence() { return Precedence; }
-			  UInt32											GetOperandCount() { return OperandCount; }
+			  UInt32										GetPrecedence() { return Precedence; }
+			  UInt32										GetOperandCount() { return OperandCount; }
 			  bool											Evaluate(String^% LHS, String^% RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance) { return EvaluationHandler(LHS, RHS, ErrorOutput, PreprocessorInstance); }
 		};
 

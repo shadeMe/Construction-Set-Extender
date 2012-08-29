@@ -1326,16 +1326,6 @@ namespace ConstructionSetExtender
 						SendMessage(hWnd, WM_MAINTOOLBAR_SETTOD, TOD * 4.0, NULL);
 						InstanceUserData = 0;
 					}
-
-					switch (LOWORD(wParam))
-					{
-					case IDC_MAINMENU_LAUNCHGAME:
-						{
-							SendMessage(BGSEEUI->GetMainWindow(), uMsg, wParam, lParam);
-						}
-
-						break;
-					}
 				}
 
 				break;

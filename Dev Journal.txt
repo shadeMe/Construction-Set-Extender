@@ -16,15 +16,16 @@ CSE		---->
 		> http://www.darkcreations.org/forums/topic/58-construction-set-extender-beta-test-thread/page__view__findpost__p__90230
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
-		> [AFTER 6.0] Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
+		> Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
+		> Fix memory leak in local map generator
 
 
 	ENHANCEMENT		=
-		> [AFTER 6.0] Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
-		> [AFTER 6.0] Copy/paste obj refs b'ween CS sessions
-		> [AFTER 6.0] Implement a fly camera mode for the render window
-		> [AFTER 6.0] Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
-		> [AFTER 6.0] Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
+		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
+		> Copy/paste obj refs b'ween CS sessions
+		> Implement a fly camera mode for the render window
+		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
+		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
 
 	CODA			=
 
@@ -49,4 +50,4 @@ SE		---->
 USE		---->
 
 	ENHANCEMENT		=
-		> [AFTER 6.0] Export all data to CSV
+		> Export all data to CSV

@@ -226,7 +226,7 @@ namespace ConstructionSetExtender
 				virtual void										ToggleComment(int StartIndex);
 				virtual void										UpdateIntelliSenseLocalDatabase(void);
 
-				virtual Control^									GetContainer() { return WinFormsContainer; }
+				virtual Control^									GetContainer();
 				virtual void										ScrollToLine(String^ LineNumber);
 				virtual Point										PointToScreen(Point Location);
 
@@ -239,7 +239,7 @@ namespace ConstructionSetExtender
 				virtual void										OnPositionSizeChange(void);
 
 				virtual void										BeginUpdate(void);
-				virtual void										EndUpdate(void);
+				virtual void										EndUpdate(bool FlagModification);
 				virtual UInt32										GetTotalLineCount(void);
 				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 

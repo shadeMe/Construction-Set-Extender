@@ -112,7 +112,7 @@ namespace ConstructionSetExtender
 			void										SetEnabledState(bool State);
 
 			void										BeginUpdate(void);
-			void										EndUpdate(void);
+			void										EndUpdate(bool FlagModification);
 
 			UInt32										GetTotalLineCount(void);
 			IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);

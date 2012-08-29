@@ -150,13 +150,8 @@ namespace ConstructionSetExtender
 			EditorTabStrip->SelectedTabFont = gcnew Font("Segoe UI", 9, FontStyle::Bold);
 			EditorTabStrip->FixedTabSize = Size(0, 23);
 
-			if (!PREFERENCES->FetchSettingAsInt("TabsOnTop", "Appearance"))
-			{
-				EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Left;
-				EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
-				EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Near;
-				EditorTabStrip->FixedTabSize = Size(150, 40);
-			}
+			Color TabStripGradientColorStart = Color::FromArgb(/*255, 59, 59, 59*/255, 85, 85, 85);
+			Color TabStripGradientColorEnd = Color::FromArgb(/*255, 60, 60, 60*/255, 70, 70, 70);
 
 			EditorTabStrip->CloseButtonOnTabsVisible = true;
 			EditorTabStrip->CloseButtonOnTabsAlwaysDisplayed = false;
@@ -169,8 +164,8 @@ namespace ConstructionSetExtender
 			EditorTabStrip->ImageList->TransparentColor = Color::White;
 			EditorTabStrip->ReorderTabsEnabled = true;
 			EditorTabStrip->TabStyle = DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
-			EditorTabStrip->TabStripColor->OuterBorder = Color::FromArgb(255, 59, 59, 59);
-			EditorTabStrip->TabStripColor->InnerBorder = Color::FromArgb(255, 59, 59, 59);
+			EditorTabStrip->TabStripColor->OuterBorder = TabStripGradientColorStart;
+			EditorTabStrip->TabStripColor->InnerBorder = TabStripGradientColorStart;
 
 			EditorTabStrip->TabStrip->Tag = this;
 
@@ -190,6 +185,18 @@ namespace ConstructionSetExtender
 			NewTabButton->SubItems->Add(SortTabsButton);
 			EditorTabStrip->ControlBox->SubItems->Add(NewTabButton);
 			EditorTabStrip->ControlBox->Visible = true;
+
+			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
+			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(TabStripGradientColorStart,
+																													TabStripGradientColorEnd);
+
+			if (!PREFERENCES->FetchSettingAsInt("TabsOnTop", "Appearance"))
+			{
+				EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Left;
+				EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
+				EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Near;
+				EditorTabStrip->FixedTabSize = Size(150, 40);
+			}
 
 			EditorForm->HelpButton = false;
 			EditorForm->Text = SCRIPTEDITOR_TITLE;
@@ -211,12 +218,6 @@ namespace ConstructionSetExtender
 			DestructionFlag = false;
 			BackJumpStack = gcnew Stack<UInt32>();
 			ForwardJumpStack = gcnew Stack<UInt32>();
-
-			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
-			// 			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(Color::FromArgb(255, 48, 59, 61),
-			// 																													Color::FromArgb(255, 61, 76, 106));
-			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(Color::FromArgb(255, 59, 59, 59),
-				Color::FromArgb(255, 60, 60, 60));
 
 			EditorTabStrip->ResumeLayout();
 			EditorForm->ResumeLayout();
@@ -391,18 +392,26 @@ namespace ConstructionSetExtender
 						try
 						{
 							StreamReader^ TextParser = gcnew StreamReader(FilePath);
-							String^ FileContents = TextParser->ReadToEnd();
+							String^ FirstLine = TextParser->ReadLine()->Replace("\r\n", "\n");
 							TextParser->Close();
 
-							String^ ScriptName = ((FileContents->Split('\n', 1))[0]->Split(' '))[1];
-							CString CEID(ScriptName);
-							ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
-							if (Data)
-								NewWorkspace = InstantiateNewWorkspace(Data);
-							else
+							ScriptParser^ Tokenizer = gcnew ScriptParser();
+
+							if (Tokenizer->Tokenize(FirstLine, false) &&
+								Tokenizer->GetLeadingTokenType() == ScriptParser::TokenType::e_ScriptName)
 							{
-								NewWorkspace = InstantiateNewWorkspace(0);
-								NewWorkspace->NewScript();
+								String^ ScriptName = Tokenizer->Tokens[1];
+
+								CString CEID(ScriptName);
+								ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
+
+								if (Data)
+									NewWorkspace = InstantiateNewWorkspace(Data);
+								else
+								{
+									NewWorkspace = InstantiateNewWorkspace(0);
+									NewWorkspace->NewScript();
+								}
 							}
 						}
 						catch (Exception^ E)
@@ -2760,11 +2769,7 @@ namespace ConstructionSetExtender
 						CurrentScript = 0;
 					}
 
-					try			// delete the script's autorecovery cache, if any
-					{
-						System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + GetScriptDescription() + ".txt");
-					}
-					catch (...) {}
+					CleanupAutoRecoveryCacheInstance();
 
 					return true;
 				}
@@ -2773,6 +2778,17 @@ namespace ConstructionSetExtender
 			}
 
 			return true;
+		}
+		void Workspace::CleanupAutoRecoveryCacheInstance( void )
+		{
+			try
+			{
+				System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + GetScriptDescription() + ".txt");
+			}
+			catch (...)
+			{
+				;//
+			}
 		}
 		void Workspace::NewScript()
 		{
@@ -2854,11 +2870,7 @@ namespace ConstructionSetExtender
 
 			if (Result)
 			{
-				try			// delete the script's autorecovery cache, if any
-				{
-					System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + GetScriptDescription() + ".txt");
-				}
-				catch (...) {}
+				CleanupAutoRecoveryCacheInstance();
 			}
 
 			return Result;

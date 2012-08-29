@@ -492,7 +492,7 @@ namespace ConstructionSetExtender
 				{
 					SetSelectionLength(0);
 					RefreshBGColorizerLayer();
-					EndUpdate();
+					EndUpdate(false);
 				}
 
 				if (Hits == -1)
@@ -581,7 +581,7 @@ namespace ConstructionSetExtender
 					}
 				}
 
-				EndUpdate();
+				EndUpdate(false);
 				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
 			}
 
@@ -652,7 +652,7 @@ namespace ConstructionSetExtender
 				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
 			}
 
-			void AvalonEditTextEditor::EndUpdate( void )
+			void AvalonEditTextEditor::EndUpdate( bool FlagModification )
 			{
 				if (TextFieldInUpdateFlag == false)
 					throw gcnew CSEGeneralException("Text editor isn't being updated.");
@@ -661,7 +661,9 @@ namespace ConstructionSetExtender
 				TextFieldInUpdateFlag = false;
 
 				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
-				SetModifiedStatus(true);
+
+				if (FlagModification)
+					SetModifiedStatus(true);
 			}
 
 			UInt32 AvalonEditTextEditor::GetTotalLineCount( void )
@@ -1902,6 +1904,11 @@ namespace ConstructionSetExtender
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
 				AvalonEditTextEditor::Destroy();
+			}
+
+			Control^ AvalonEditTextEditor::GetContainer()
+			{
+				return WinFormsContainer;
 			}
 		}
 	}

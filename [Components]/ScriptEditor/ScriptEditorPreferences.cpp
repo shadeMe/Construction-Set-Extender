@@ -310,7 +310,7 @@ namespace ConstructionSetExtender
 			FontSelection->AllowVerticalFonts = false;
 			FontSelection->ShowEffects = false;
 
-			OptionsBox = gcnew AnimatedForm(0.35);
+			OptionsBox = gcnew AnimatedForm(0.15);
 			AllowRedefinitions = (gcnew CheckBox());
 			LabelISThreshold = (gcnew Label());
 			ThresholdLength = (gcnew NumericUpDown());
