@@ -2295,6 +2295,10 @@ namespace ConstructionSetExtender
 					}
 					if (ScriptTextParser->LookupVariableByName(SecondToken) != nullptr)
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
+					else if (ISDB->GetIsIdentifierScriptCommand(SecondToken))
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' is reserved for a script command."), Result = false;
+					else if (ISDB->GetIsIdentifierForm(SecondToken))
+						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' has already been assigned to a form."), Result = false;
 					else
 						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
 					break;
@@ -3441,7 +3445,7 @@ namespace ConstructionSetExtender
 			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
 
 			ContextMenuRefactorCreateUDFImplementation->Visible = false;
-			if (!String::Compare(Tokens[0], "call", true) &&
+			if (ScriptParser::GetTokenType(Tokens[0]) == ScriptParser::TokenType::e_Call &&
 				!TextEditor->GetCharIndexInsideCommentSegment(TextEditor->GetLastKnownMouseClickOffset()))
 			{
 				if (!ISDB->GetIsIdentifierUserFunction(MidToken))
@@ -4178,7 +4182,7 @@ namespace ConstructionSetExtender
 
 		void Workspace::ToolBarSnippetManager_Click( Object^ Sender, EventArgs^ E )
 		{
-			ISDB->ShowCodeSnippetManger();
+			ISDB->ShowCodeSnippetManager();
 		}
 	#pragma endregion
 #pragma endregion

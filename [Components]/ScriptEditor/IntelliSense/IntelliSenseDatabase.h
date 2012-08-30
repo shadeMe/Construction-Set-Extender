@@ -51,9 +51,10 @@ namespace ConstructionSetExtender
 			bool												GetIsIdentifierScriptCommand(String^% Name);
 			bool												GetIsIdentifierScriptableForm(String^% Name);
 			bool												GetIsIdentifierScriptableForm(String^% Name, ComponentDLLInterface::ScriptData** OutScriptData);
+			bool												GetIsIdentifierForm(String^% Name);
 
 			void												ForceUpdateDatabase();
-			void												ShowCodeSnippetManger();
+			void												ShowCodeSnippetManager();
 		};
 
 #define ISDB											IntelliSenseDatabase::GetSingleton()

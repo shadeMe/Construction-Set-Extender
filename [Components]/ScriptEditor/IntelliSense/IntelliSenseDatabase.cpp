@@ -543,11 +543,26 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		void IntelliSenseDatabase::ShowCodeSnippetManger()
+		void IntelliSenseDatabase::ShowCodeSnippetManager()
 		{
 			CodeSnippetManagerDialog ManagerDialog(CodeSnippets);
 
 			ForceUpdateDatabase();
+		}
+
+		bool IntelliSenseDatabase::GetIsIdentifierForm( String^% Name )
+		{
+			bool Result = false;
+
+			CString EID(Name);
+			ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID(EID.c_str());
+
+			if (Data && Data->IsValid())
+				Result = true;
+
+			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+
+			return Result;
 		}
 
 		IntelliSenseParseScriptData::IntelliSenseParseScriptData( IntelliSenseInterface^ Obj ) :
