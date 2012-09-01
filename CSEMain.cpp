@@ -549,7 +549,7 @@ extern "C"
 														obse->editorVersion,
 														obse->GetOblivionDirectory(),
 														XSEPluginHandle,
-														OBSE_VERSION_INTEGER,
+														21,
 														obse->obseVersion,
 														CSEINISettings,
 														"v4.0.30319",
