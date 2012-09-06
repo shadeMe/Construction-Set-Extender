@@ -999,10 +999,7 @@ namespace BGSEditorExtender
 			}
 
 			if (Leakage)
-			{
-				MessageBox(NULL, "\"Security\" is not a dirty word; perhaps \"Crevasse\" is. But \"Leak\" is a positively disgusting word.\n\nDetails in the log.",
-						"CodaScriptVM", MB_OK|MB_ICONWARNING|MB_SETFOREGROUND|MB_TASKMODAL);
-			}
+				SHOW_LEAKAGE_MESSAGE("CodaScriptVM");
 
 			Initialized = false;
 

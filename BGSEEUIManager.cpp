@@ -70,6 +70,61 @@ namespace BGSEditorExtender
 			::SendMessage(*Itr, Msg, wParam, lParam);
 	}
 
+	int				BGSEEWindowExtraData::GIC = 0;
+
+	BGSEEWindowExtraData::BGSEEWindowExtraData()
+	{
+		GIC++;
+	}
+
+	BGSEEWindowExtraData::~BGSEEWindowExtraData()
+	{
+		GIC--;
+		SME_ASSERT(GIC >= 0);
+	}
+
+	BGSEEWindowExtraDataCollection::BGSEEWindowExtraDataCollection() :
+		DataStore()
+	{
+		;//
+	}
+
+	BGSEEWindowExtraDataCollection::~BGSEEWindowExtraDataCollection()
+	{
+		DataStore.clear();
+	}
+
+	bool BGSEEWindowExtraDataCollection::Add( UInt32 ID, BGSEEWindowExtraData* Data )
+	{
+		if (Lookup(ID))
+			return false;
+		else
+			DataStore.insert(std::make_pair(ID, Data));
+
+		return true;
+	}
+
+	bool BGSEEWindowExtraDataCollection::Remove( UInt32 ID )
+	{
+		if (Lookup(ID) == NULL)
+			return false;
+		else
+			DataStore.erase(ID);
+
+		return true;
+	}
+
+	BGSEEWindowExtraData* BGSEEWindowExtraDataCollection::Lookup( UInt32 ID )
+	{
+		for (ExtraDataMapT::iterator Itr = DataStore.begin(); Itr != DataStore.end(); Itr++)
+		{
+			if (Itr->first == ID)
+				return Itr->second;
+		}
+
+		return NULL;
+	}
+
 	BGSEEWindowSubclasser::DialogSubclassData::DialogSubclassData() :
 		Original(NULL),
 		ActiveHandles(),
@@ -83,9 +138,10 @@ namespace BGSEditorExtender
 		INT_PTR Result = FALSE;
 		bool ReturnMark = Return;
 
-		for (SubclassProcMapT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
 		{
-			INT_PTR CurrentResult = (INT_PTR)Itr->first(hWnd, uMsg, wParam, lParam, ReturnMark, Itr->second);
+			DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+			INT_PTR CurrentResult = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
 
 			if (ReturnMark && Return == false)
 			{
@@ -99,7 +155,8 @@ namespace BGSEditorExtender
 
 	BGSEEWindowSubclasser::WindowSubclassData::WindowSubclassData() :
 		Original(NULL),
-		Subclasses()
+		Subclasses(),
+		UserData(NULL)
 	{
 		;//
 	}
@@ -109,9 +166,10 @@ namespace BGSEditorExtender
 		LRESULT Result = FALSE;
 		bool ReturnMark = Return;
 
-		for (SubclassProcMapT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
 		{
-			LRESULT CurrentResult = Itr->first(hWnd, uMsg, wParam, lParam, ReturnMark, Itr->second);
+			WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
+			LRESULT CurrentResult = (*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
 
 			if (ReturnMark && Return == false)
 			{
@@ -123,40 +181,24 @@ namespace BGSEditorExtender
 		return Result;
 	}
 
-	LRESULT CALLBACK BGSEEWindowSubclasser::MainWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	BGSEEWindowSubclasser::DialogSubclassUserData::DialogSubclassUserData() :
+		Instance(NULL),
+		Data(NULL),
+		InitParam(NULL),
+		ExtraData(),
+		TemplateID(NULL),
+		Initialized(false)
 	{
-		BGSEEWindowSubclasser* Instance = (BGSEEWindowSubclasser*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		bool CallbackReturn = false;
-		LRESULT CallbackResult = FALSE;
-		bool ReleasingSubclass = false;
+		;//
+	}
 
-		if (uMsg == WM_SUBCLASSER_RELEASE)
-		{
-			SME_ASSERT(Instance);
-			ReleasingSubclass = true;
-		}
-
-		for (SubclassProcMapT::iterator Itr = Instance->MainWindowSubclasses.begin(); Itr != Instance->MainWindowSubclasses.end(); Itr++)
-		{
-			bool Return = false;
-			LRESULT Result = Itr->first(hWnd, (ReleasingSubclass ? WM_DESTROY : uMsg), wParam, lParam, Return, Itr->second);
-
-			if (Return && CallbackReturn == false)
-			{
-				CallbackResult = Result;
-				CallbackReturn = true;
-			}
-		}
-
-		if (ReleasingSubclass)
-		{
-			SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG_PTR)Instance->EditorMainWindowProc);
-			return TRUE;
-		}
-		else if (CallbackReturn && uMsg != WM_DESTROY)
-			return CallbackResult;
-		else
-			return Instance->EditorMainWindowProc(hWnd, uMsg, wParam, lParam);
+	BGSEEWindowSubclasser::WindowSubclassUserData::WindowSubclassUserData() :
+		Instance(NULL),
+		Data(NULL),
+		OriginalUserData(NULL),
+		ExtraData()
+	{
+		;//
 	}
 
 	INT_PTR CALLBACK BGSEEWindowSubclasser::DialogSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -232,9 +274,8 @@ namespace BGSEditorExtender
 
 	LRESULT CALLBACK BGSEEWindowSubclasser::RegularWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
-		WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		if (UserData == NULL || UserData->Instance == NULL)		// the subclass can be called recursively if the original calls SendMessage
-			return TRUE;										// so fail elegantly
+		// directly accessing the subclasser singleton as we'll lose userdata b'ween CallWindowProc calls
+		WindowSubclassUserData* UserData = BGSEEUI->GetSubclasser()->RegularWindowSubclasses[hWnd].UserData;
 
 		bool CallbackReturn = false;
 		LRESULT CallbackResult = FALSE;
@@ -301,20 +342,15 @@ namespace BGSEditorExtender
 			return false;
 	}
 
-	void BGSEEWindowSubclasser::PreSubclassMainWindow( HWND MainWindow )
+	void BGSEEWindowSubclasser::HandleMainWindowInit( HWND MainWindow )
 	{
 		EditorMainWindow = MainWindow;
 
-		SetWindowLongPtr(EditorMainWindow, GWL_USERDATA, (LONG_PTR)this);
-		EditorMainWindowProc = (WNDPROC)SetWindowLongPtr(EditorMainWindow, GWL_WNDPROC, (LONG_PTR)MainWindowSubclassProc);
-
-		SME_ASSERT(EditorMainWindow && EditorMainWindowProc);
+		SME_ASSERT(EditorMainWindow);
 	}
 
 	BGSEEWindowSubclasser::BGSEEWindowSubclasser() :
 		EditorMainWindow(NULL),
-		EditorMainWindowProc(NULL),
-		MainWindowSubclasses(),
 		DialogSubclasses(),
 		RegularWindowSubclasses()
 	{
@@ -323,9 +359,6 @@ namespace BGSEditorExtender
 
 	BGSEEWindowSubclasser::~BGSEEWindowSubclasser()
 	{
-		SendMessage(EditorMainWindow, WM_SUBCLASSER_RELEASE, NULL, NULL);
-		MainWindowSubclasses.clear();
-
 		for (DialogSubclassMapT::iterator Itr = DialogSubclasses.begin(); Itr != DialogSubclasses.end(); Itr++)
 		{
 			Itr->second.ActiveHandles.SendMessage(WM_SUBCLASSER_RELEASE, NULL, NULL);
@@ -339,51 +372,45 @@ namespace BGSEditorExtender
 		}
 
 		RegularWindowSubclasses.clear();
-	}
 
-	bool BGSEEWindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc, LPARAM UserData )
-	{
-		for (SubclassProcMapT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
+		bool Leakage = false;
+		if (BGSEEWindowExtraData::GIC)
 		{
-			if (Itr->first == Proc)
-				return false;
+			BGSEECONSOLE_MESSAGE("BGSEEWindowSubclasser::D'tor - Session leaked %d instances of BGSEEWindowExtraData!", BGSEEWindowExtraData::GIC);
+			Leakage = true;
 		}
 
-		MainWindowSubclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
-		return true;
+		if (Leakage)
+			SHOW_LEAKAGE_MESSAGE("BGSEEWindowSubclasser");
+	}
+
+	bool BGSEEWindowSubclasser::RegisterMainWindowSubclass( SubclassProc Proc )
+	{
+		return RegisterRegularWindowSubclass(EditorMainWindow, Proc);
 	}
 
 	bool BGSEEWindowSubclasser::UnregisterMainWindowSubclass( SubclassProc Proc )
 	{
-		for (SubclassProcMapT::iterator Itr = MainWindowSubclasses.begin(); Itr != MainWindowSubclasses.end(); Itr++)
-		{
-			if (Itr->first == Proc)
-			{
-				MainWindowSubclasses.erase(Itr);
-				return true;
-			}
-		}
-
-		return false;
+		return UnregisterRegularWindowSubclass(EditorMainWindow, Proc);
 	}
 
-	bool BGSEEWindowSubclasser::RegisterDialogSubclass( ResourceTemplateT TemplateID, SubclassProc Proc, LPARAM UserData )
+	bool BGSEEWindowSubclasser::RegisterDialogSubclass( ResourceTemplateT TemplateID, SubclassProc Proc )
 	{
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 		{
-			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
-				if (Itr->first == Proc)
+				if (*Itr == Proc)
 					return false;
 			}
 
-			Match->second.Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
+			Match->second.Subclasses.push_back(Proc);
 		}
 		else
 		{
 			DialogSubclasses.insert(std::make_pair<ResourceTemplateT, DialogSubclassData>(TemplateID, DialogSubclassData()));
-			DialogSubclasses[TemplateID].Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
+			DialogSubclasses[TemplateID].Subclasses.push_back(Proc);
 		}
 
 		return true;
@@ -394,9 +421,9 @@ namespace BGSEditorExtender
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 		{
-			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
-				if (Itr->first == Proc)
+				if (*Itr == Proc)
 				{
 					Match->second.Subclasses.erase(Itr);
 					return true;
@@ -416,23 +443,23 @@ namespace BGSEditorExtender
 			return false;
 	}
 
-	bool BGSEEWindowSubclasser::RegisterRegularWindowSubclass( HWND Handle, SubclassProc Proc, LPARAM UserData /*= NULL*/ )
+	bool BGSEEWindowSubclasser::RegisterRegularWindowSubclass( HWND Handle, SubclassProc Proc )
 	{
 		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
 		if (Match != RegularWindowSubclasses.end())
 		{
-			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
-				if (Itr->first == Proc)
+				if (*Itr == Proc)
 					return false;
 			}
 
-			Match->second.Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
+			Match->second.Subclasses.push_back(Proc);
 		}
 		else
 		{
 			RegularWindowSubclasses.insert(std::make_pair<HWND, WindowSubclassData>(Handle, WindowSubclassData()));
-			RegularWindowSubclasses[Handle].Subclasses.insert(std::make_pair<SubclassProc, LPARAM>(Proc, UserData));
+			RegularWindowSubclasses[Handle].Subclasses.push_back(Proc);
 
 			WindowSubclassUserData* UserData = new WindowSubclassUserData();
 			UserData->Instance = this;
@@ -441,6 +468,7 @@ namespace BGSEditorExtender
 
 			SetWindowLongPtr(Handle, GWL_USERDATA, (LONG_PTR)UserData);
 			RegularWindowSubclasses[Handle].Original = (WNDPROC)SetWindowLongPtr(Handle, GWL_WNDPROC, (LONG_PTR)RegularWindowSubclassProc);
+			RegularWindowSubclasses[Handle].UserData = UserData;
 		}
 
 		return true;
@@ -453,9 +481,9 @@ namespace BGSEditorExtender
 		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
 		if (Match != RegularWindowSubclasses.end())
 		{
-			for (SubclassProcMapT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
-				if (Itr->first == Proc)
+				if (*Itr == Proc)
 				{
 					Match->second.Subclasses.erase(Itr);
 					Result = true;
@@ -788,8 +816,10 @@ namespace BGSEditorExtender
 		{
 			BGSEEUI->EditorWindowHandle = new HWNDGetter(Result);
 			BGSEEUI->EditorResourceInstance = new HINSTANCEGetter(hInstance);
-			BGSEEUI->Subclasser->PreSubclassMainWindow(Result);
+			BGSEEUI->Subclasser->HandleMainWindowInit(Result);
 			BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].Reset();
+
+			BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEEDaemon::kInitCallback_PostMainWindowInit);
 
 			SendMessage(Result, WM_INITDIALOG, NULL, NULL);
 		}

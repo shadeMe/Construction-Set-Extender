@@ -13,7 +13,7 @@ namespace BGSEditorExtender
 		BGSEEDaemon();
 		typedef std::list<BoolRFunctorBase*>	DaemonCallbackListT;
 
-		DaemonCallbackListT			InitCallbacks[3];
+		DaemonCallbackListT			InitCallbacks[4];
 		DaemonCallbackListT			DeinitCallbacks;
 		DaemonCallbackListT			CrashHandlerCallbacks;
 
@@ -31,7 +31,10 @@ namespace BGSEditorExtender
 		{
 			kInitCallback_Query		=	0,
 			kInitCallback_Load,
-			kInitCallback_Epilog
+			kInitCallback_PostMainWindowInit,		// the WM_INITDIALOG msg will be dispatched to the main window after this event is handled
+			kInitCallback_Epilog,
+
+			kInitCallback__MAX
 		};
 
 		void						RegisterInitCallback(UInt8 CallbackType, BoolRFunctorBase* Callback);		// takes ownership of pointer

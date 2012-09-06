@@ -33,7 +33,7 @@ namespace BGSEditorExtender
 
 	void BGSEEDaemon::RegisterInitCallback( UInt8 CallbackType, BoolRFunctorBase* Callback )
 	{
-		SME_ASSERT(CallbackType < 3 && Callback);
+		SME_ASSERT(CallbackType < kInitCallback__MAX && Callback);
 		InitCallbacks[CallbackType].push_back(Callback);
 	}
 
@@ -51,7 +51,7 @@ namespace BGSEditorExtender
 
 	bool BGSEEDaemon::ExecuteInitCallbacks( UInt8 CallbackType )
 	{
-		SME_ASSERT(CallbackType < 3);
+		SME_ASSERT(CallbackType < kInitCallback__MAX);
 
 		bool Result = true;
 
@@ -90,9 +90,10 @@ namespace BGSEditorExtender
 
 	BGSEEDaemon::~BGSEEDaemon()
 	{
-		ReleaseCallbacks(InitCallbacks[0]);
-		ReleaseCallbacks(InitCallbacks[1]);
-		ReleaseCallbacks(InitCallbacks[2]);
+		ReleaseCallbacks(InitCallbacks[kInitCallback_Query]);
+		ReleaseCallbacks(InitCallbacks[kInitCallback_Load]);
+		ReleaseCallbacks(InitCallbacks[kInitCallback_PostMainWindowInit]);
+		ReleaseCallbacks(InitCallbacks[kInitCallback_Epilog]);
 		ReleaseCallbacks(DeinitCallbacks);
 		ReleaseCallbacks(CrashHandlerCallbacks);
 	}

@@ -102,3 +102,7 @@
 #include "SME Sundries\MiscGunk.h"
 
 using namespace SME::Functors;
+
+#define SHOW_LEAKAGE_MESSAGE(title)					\
+		MessageBox(NULL, "\"Security\" is not a dirty word; perhaps \"Crevasse\" is. But \"Leak\" is a positively disgusting word.\n\nDetails in the log.", \
+		title, MB_OK|MB_ICONWARNING|MB_SETFOREGROUND|MB_TASKMODAL)
