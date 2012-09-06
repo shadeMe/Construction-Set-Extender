@@ -12,7 +12,8 @@ namespace ComponentDLLInterface
 	// main function exported by all the dlls
 	typedef void*									(* QueryInterface)(void);
 
-	// all returned pointers are expected to be released by the caller
+	// pointers returned by an interface are expected to be released by the caller
+	// pointers passed to an interface are expected to be released by the caller
 	class CSEInterfaceTable
 	{
 	public:

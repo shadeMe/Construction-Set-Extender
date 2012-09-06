@@ -94,6 +94,7 @@
     <ClCompile Include="SERefactorUDF.cpp" />
     <ClCompile Include="SEScriptList.cpp" />
     <ClCompile Include="SESnippetManager.cpp" />
+    <ClCompile Include="SEVariableIndex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -123,6 +124,9 @@
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="SESnippetManager.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="SEVariableIndex.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
@@ -157,6 +161,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SESnippetManager.resx">
       <DependentUpon>SESnippetManager.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEVariableIndex.resx">
+      <DependentUpon>SEVariableIndex.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TagBrowser.resx">
       <DependentUpon>TagBrowser.h</DependentUpon>

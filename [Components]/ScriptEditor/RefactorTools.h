@@ -1,11 +1,46 @@
 #pragma once
 
+#include "[Common]\HandShakeStructs.h"
+
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
 		namespace Refactoring
 		{
+			ref class ModifyVariableIndicesDialog : public System::Windows::Forms::Form
+			{
+				System::ComponentModel::Container^		components;
+
+				ListView^								VarIndexList;
+				TextBox^								VarIndexListEditBox;
+				ColumnHeader^							VarIndexListCHName;
+				ColumnHeader^							VarIndexListCHType;
+				ColumnHeader^							VarIndexListCHIndex;
+				Button^									UpdateIndicesButton;
+
+				String^									ScriptName;
+
+				void									UpdateIndicesButton_Click(Object^ Sender, EventArgs^ E);
+				void									VarIndexList_ItemActivate(Object^ Sender, EventArgs^ E);
+				void									VarIndexList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
+				void									VarIndexListEditBox_LostFocus(Object^ Sender, EventArgs^ E);
+				void									Dialog_Cancel(Object^ Sender, CancelEventArgs^ E);
+
+				void									InitializeComponent();
+			public:
+				property bool							IndicesUpdated;
+
+				ModifyVariableIndicesDialog(IntPtr ParentHandle, String^ ScriptName);
+				~ModifyVariableIndicesDialog()
+				{
+					if (components)
+					{
+						delete components;
+					}
+				}
+			};
+
 			ref class CreateUDFImplementationData
 			{
 			public:

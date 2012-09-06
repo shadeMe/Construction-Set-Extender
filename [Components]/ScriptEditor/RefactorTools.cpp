@@ -10,6 +10,221 @@ namespace ConstructionSetExtender
 	{
 		namespace Refactoring
 		{
+			ModifyVariableIndicesDialog::ModifyVariableIndicesDialog( IntPtr ParentHandle, String^ ScriptName )
+			{
+				InitializeComponent();
+
+				VarIndexList->BeginUpdate();
+				ComponentDLLInterface::ScriptVarListData* Data = NativeWrapper::g_CSEInterfaceTable->
+																ScriptEditor.GetScriptVarList((CString(ScriptName)).c_str());
+
+				if (Data)
+				{
+					this->Tag = (UInt32)Data;
+
+					for (int i = 0; i < Data->ScriptVarListCount; i++)
+					{
+						ComponentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
+						String^ VarType;
+						switch (VarInfo->Type)
+						{
+						case 0:
+							VarType = "Float";
+							break;
+						case 1:
+							VarType = "Integer";
+							break;
+						case 2:
+							VarType = "Reference";
+							break;
+						}
+
+						ListViewItem^ Item = gcnew ListViewItem(gcnew String(VarInfo->Name));
+						Item->SubItems->Add(VarType);
+						Item->SubItems->Add(VarInfo->Index.ToString());
+						Item->Tag = (UInt32)VarInfo;
+						VarIndexList->Items->Add(Item);
+					}
+
+					if (Data->ScriptVarListCount == 0)
+						UpdateIndicesButton->Enabled = false;
+				}
+
+				VarIndexList->EndUpdate();
+				this->IndicesUpdated = false;
+				this->ScriptName = ScriptName;
+
+				this->Hide();
+				this->ShowDialog();
+			}
+
+			void ModifyVariableIndicesDialog::InitializeComponent()
+			{
+				this->VarIndexList = (gcnew System::Windows::Forms::ListView());
+				this->VarIndexListCHName = (gcnew System::Windows::Forms::ColumnHeader());
+				this->VarIndexListCHType = (gcnew System::Windows::Forms::ColumnHeader());
+				this->VarIndexListCHIndex = (gcnew System::Windows::Forms::ColumnHeader());
+				this->UpdateIndicesButton = (gcnew System::Windows::Forms::Button());
+				VarIndexListEditBox = gcnew TextBox();
+				this->SuspendLayout();
+				//
+				// VarIndexList
+				//
+				this->VarIndexList->Columns->AddRange(gcnew cli::array< System::Windows::Forms::ColumnHeader^  >(3) {this->VarIndexListCHName,
+					this->VarIndexListCHType, this->VarIndexListCHIndex});
+				this->VarIndexList->Location = System::Drawing::Point(12, 12);
+				this->VarIndexList->Name = L"VarIndexList";
+				this->VarIndexList->Size = System::Drawing::Size(484, 314);
+				this->VarIndexList->TabIndex = 0;
+				this->VarIndexList->UseCompatibleStateImageBehavior = false;
+				this->VarIndexList->View = System::Windows::Forms::View::Details;
+				VarIndexList->ItemActivate += gcnew EventHandler(this, &ModifyVariableIndicesDialog::VarIndexList_ItemActivate);
+				VarIndexList->ColumnClick += gcnew ColumnClickEventHandler(this, &ModifyVariableIndicesDialog::VarIndexList_ColumnClick);
+				VarIndexList->FullRowSelect = true;
+				VarIndexList->Tag = (int)1;
+
+				VarIndexListEditBox->Multiline = true;
+				VarIndexListEditBox->BorderStyle = BorderStyle::FixedSingle;
+				VarIndexListEditBox->Visible = false;
+				VarIndexListEditBox->AcceptsReturn = true;
+				VarIndexListEditBox->LostFocus += gcnew EventHandler(this, &ModifyVariableIndicesDialog::VarIndexListEditBox_LostFocus);
+
+				VarIndexList->Controls->Add(VarIndexListEditBox);
+				//
+				// VarIndexListCHName
+				//
+				this->VarIndexListCHName->Text = L"Name";
+				this->VarIndexListCHName->Width = 250;
+				//
+				// VarIndexListCHType
+				//
+				this->VarIndexListCHType->Text = L"Type";
+				this->VarIndexListCHType->Width = 124;
+				//
+				// VarIndexListCHIndex
+				//
+				this->VarIndexListCHIndex->Text = L"Index";
+				this->VarIndexListCHIndex->Width = 100;
+				//
+				// UpdateIndicesButton
+				//
+				this->UpdateIndicesButton->Location = System::Drawing::Point(199, 332);
+				this->UpdateIndicesButton->Name = L"UpdateIndicesButton";
+				this->UpdateIndicesButton->Size = System::Drawing::Size(113, 25);
+				this->UpdateIndicesButton->TabIndex = 1;
+				this->UpdateIndicesButton->Text = L"Update Indices";
+				this->UpdateIndicesButton->UseVisualStyleBackColor = true;
+				UpdateIndicesButton->Click += gcnew EventHandler(this, &ModifyVariableIndicesDialog::UpdateIndicesButton_Click);
+				//
+				// SEVariableIndex
+				//
+				this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+				this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
+				this->ClientSize = System::Drawing::Size(510, 369);
+				this->Controls->Add(this->UpdateIndicesButton);
+				this->Controls->Add(this->VarIndexList);
+				this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::FixedToolWindow;
+				this->Name = L"SEVariableIndex";
+				this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
+				this->Text = L"Modify Variable Indices";
+				this->Tag = nullptr;
+				this->Closing += gcnew CancelEventHandler(this, &ModifyVariableIndicesDialog::Dialog_Cancel);
+				this->ResumeLayout(false);
+			}
+
+			void ModifyVariableIndicesDialog::UpdateIndicesButton_Click( Object^ Sender, EventArgs^ E )
+			{
+				CString CScriptName(ScriptName);
+				ComponentDLLInterface::ScriptVarListData* Data = (ComponentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
+
+				if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarIndices(CScriptName.c_str(), Data) == false)
+					DebugPrint("Couldn't successfully update all variable indices of script '" + ScriptName + "'");
+
+				IndicesUpdated = true;
+				this->Close();
+			}
+
+			void ModifyVariableIndicesDialog::VarIndexList_ItemActivate( Object^ Sender, EventArgs^ E )
+			{
+				ListViewItem^ Selection = GetListViewSelectedItem(VarIndexList);
+
+				if (Selection != nullptr)
+				{
+					Rectangle Bounds = Selection->SubItems[2]->Bounds;
+					if (Bounds.Width > 35)
+					{
+						VarIndexListEditBox->SetBounds(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, BoundsSpecified::All);
+
+						VarIndexListEditBox->Text = "";
+						VarIndexListEditBox->Show();
+						VarIndexListEditBox->BringToFront();
+						VarIndexListEditBox->Focus();
+					}
+					else
+					{
+						MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents.", SCRIPTEDITOR_TITLE,
+							MessageBoxButtons::OK, MessageBoxIcon::Information);
+					}
+				}
+			}
+
+			void ModifyVariableIndicesDialog::VarIndexList_ColumnClick( Object^ Sender, ColumnClickEventArgs^ E )
+			{
+				if (E->Column != (int)VarIndexList->Tag)
+				{
+					VarIndexList->Tag = E->Column;
+					VarIndexList->Sorting = SortOrder::Ascending;
+				}
+				else
+				{
+					if (VarIndexList->Sorting == SortOrder::Ascending)
+						VarIndexList->Sorting = SortOrder::Descending;
+					else
+						VarIndexList->Sorting = SortOrder::Ascending;
+				}
+
+				VarIndexList->Sort();
+				System::Collections::IComparer^ Sorter;
+				switch (E->Column)
+				{
+				case 2:
+					Sorter = gcnew ListViewIntSorter(E->Column, VarIndexList->Sorting, false);
+					break;
+				default:
+					Sorter = gcnew ListViewStringSorter(E->Column, VarIndexList->Sorting);
+					break;
+				}
+				VarIndexList->ListViewItemSorter = Sorter;
+			}
+
+			void ModifyVariableIndicesDialog::VarIndexListEditBox_LostFocus( Object^ Sender, EventArgs^ E )
+			{
+				String^ Index = VarIndexListEditBox->Text;
+				VarIndexListEditBox->Hide();
+
+				if (Index != "" && GetListViewSelectedItem(VarIndexList) != nullptr)
+				{
+					ListViewItem^ Item = GetListViewSelectedItem(VarIndexList);
+					ComponentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = (ComponentDLLInterface::ScriptVarListData::ScriptVarInfo*)((UInt32)Item->Tag);
+
+					try
+					{
+						VarInfo->Index = UInt32::Parse(Index);
+						Item->SubItems[2]->Text = Index;
+					}
+					catch (...)	{}
+				}
+			}
+
+			void ModifyVariableIndicesDialog::Dialog_Cancel( Object^ Sender, CancelEventArgs^ E )
+			{
+				if (this->Tag != nullptr)
+				{
+					ComponentDLLInterface::ScriptVarListData* Data = (ComponentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
+					NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				}
+			}
+
 			CreateUDFImplementationDialog::CreateUDFImplementationDialog(IntPtr ParentHandle)
 			{
 				InitializeComponent();

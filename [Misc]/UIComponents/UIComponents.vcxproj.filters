@@ -56,6 +56,9 @@
     <ClCompile Include="SESnippetManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SEVariableIndex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BEReference.h">
@@ -91,6 +94,9 @@
     <ClInclude Include="SESnippetManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SEVariableIndex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -120,6 +126,9 @@
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="SEFindReplace.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SESnippetManager.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>

@@ -36,6 +36,14 @@ namespace ConstructionSetExtender
 		virtual bool						operator()();
 	};
 
+	class InitCallbackPostMainWindowInit : public BoolRFunctorBase
+	{
+	public:
+		virtual ~InitCallbackPostMainWindowInit();
+
+		virtual bool						operator()();
+	};
+
 	class InitCallbackEpilog : public BoolRFunctorBase
 	{
 	public:

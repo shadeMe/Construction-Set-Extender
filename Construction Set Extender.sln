@@ -1,11 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Misc]", "[Misc]", "{754B623C-5C4E-4EC4-9AAC-28BED9F83C8B}"
-	ProjectSection(SolutionItems) = preProject
-		Dev Journal.txt = Dev Journal.txt
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Construction Set Extender", "Construction Set Extender.vcxproj", "{D4DDA734-7E93-4581-8F82-32BB738F69FE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchEditor", "[Components]\BatchEditor\BatchEditor.vcxproj", "{F215DC0C-0A95-477D-A336-1A5080AE04AD}"
@@ -25,6 +20,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{C82E8D51-4BB3-430F-BF67-8921BEAC4375}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ScriptEditor", "ScriptEditor", "{75FAA4AC-29BF-4AB4-B967-1328EE49A186}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Misc]", "[Misc]", "{AADB48AE-E716-4969-A474-064780FAA943}"
+	ProjectSection(SolutionItems) = preProject
+		Dev Journal.txt = Dev Journal.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

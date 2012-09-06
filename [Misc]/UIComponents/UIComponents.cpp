@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "SESnippetManager.h"
+#include "SEVariableIndex.h"
 
 using namespace UIComponents;
 
@@ -13,6 +14,6 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	Application::Run(gcnew SESnippetManager());
+	Application::Run(gcnew SEVariableIndex());
 	return 0;
 }

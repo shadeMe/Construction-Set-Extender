@@ -923,8 +923,6 @@ namespace ConstructionSetExtender
 			MessageList = gcnew ListView();
 			FindList = gcnew ListView();
 			BookmarkList = gcnew ListView();
-			VariableIndexList = gcnew ListView();
-			VariableIndexEditBox = gcnew TextBox();
 			SpoilerText = gcnew Label();
 
 			WorkspaceMainToolBar = gcnew ToolStrip();
@@ -966,8 +964,6 @@ namespace ConstructionSetExtender
 			ToolBarLoadScript = gcnew ToolStripSplitButton();
 			ToolBarLoadScriptDropDown = gcnew ToolStripDropDown();
 			ToolBarLoadScriptsToTabs = gcnew ToolStripButton();
-			ToolBarGetVarIndices = gcnew ToolStripButton();
-			ToolBarUpdateVarIndices = gcnew ToolStripButton();
 			ToolBarShowOffsets = gcnew ToolStripButton();
 			ToolBarShowPreprocessedText = gcnew ToolStripButton();
 			ToolBarSanitizeScriptText = gcnew ToolStripButton();
@@ -998,6 +994,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorDocumentScript = gcnew ToolStripMenuItem();
 			ContextMenuRefactorCreateUDFImplementation = gcnew ToolStripMenuItem();
 			ContextMenuRefactorRenameVariables = gcnew ToolStripMenuItem();
+			ContextMenuRefactorModifyVariableIndices = gcnew ToolStripMenuItem();
 
 			ScriptListBox = gcnew ScriptListDialog(WorkspaceHandleIndex);
 			FindReplaceBox = gcnew FindReplaceDialog(WorkspaceHandleIndex);
@@ -1046,8 +1043,6 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarDumpAllScripts);
 			SetupControlImage(ToolBarLoadScript);
 			SetupControlImage(ToolBarLoadScriptsToTabs);
-			SetupControlImage(ToolBarGetVarIndices);
-			SetupControlImage(ToolBarUpdateVarIndices);
 			SetupControlImage(ToolBarShowOffsets);
 			SetupControlImage(ToolBarShowPreprocessedText);
 			SetupControlImage(ToolBarSanitizeScriptText);
@@ -1074,6 +1069,7 @@ namespace ConstructionSetExtender
 			SetupControlImage(ContextMenuRefactorDocumentScript);
 			SetupControlImage(ContextMenuRefactorCreateUDFImplementation);
 			SetupControlImage(ContextMenuRefactorRenameVariables);
+			SetupControlImage(ContextMenuRefactorModifyVariableIndices);
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &Workspace::TextEditor_KeyDown);
 			TextEditorScriptModifiedHandler = gcnew TextEditors::TextEditorScriptModifiedEventHandler(this, &Workspace::TextEditor_ScriptModified);
@@ -1085,10 +1081,6 @@ namespace ConstructionSetExtender
 			FindListColumnClickHandler = gcnew ColumnClickEventHandler(this, &Workspace::FindList_ColumnClick);
 			BookmarkListDoubleClickHandler = gcnew EventHandler(this, &Workspace::BookmarkList_DoubleClick);
 			BookmarkListColumnClickHandler = gcnew ColumnClickEventHandler(this, &Workspace::BookmarkList_ColumnClick);
-			VariableIndexListDoubleClickHandler = gcnew EventHandler(this, &Workspace::VariableIndexList_DoubleClick);
-			VariableIndexListColumnClickHandler = gcnew ColumnClickEventHandler(this, &Workspace::VariableIndexList_ColumnClick);
-			VariableIndexEditBoxLostFocusHandler = gcnew EventHandler(this, &Workspace::VariableIndexEditBox_LostFocus);
-			VariableIndexEditBoxKeyDownHandler = gcnew KeyEventHandler(this, &Workspace::VariableIndexEditBox_KeyDown);
 			ToolBarNewScriptClickHandler = gcnew EventHandler(this, &Workspace::ToolBarNewScript_Click);
 			ToolBarOpenScriptClickHandler = gcnew EventHandler(this, &Workspace::ToolBarOpenScript_Click);
 			ToolBarPreviousScriptClickHandler = gcnew EventHandler(this, &Workspace::ToolBarPreviousScript_Click);
@@ -1122,6 +1114,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorDocumentScriptClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorDocumentScript_Click);
 			ContextMenuRefactorCreateUDFImplementationClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorCreateUDFImplementation_Click);
 			ContextMenuRefactorRenameVariablesClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorRenameVariables_Click);
+			ContextMenuRefactorModifyVariableIndicesClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorModifyVariableIndices_Click);
 			ToolBarEditMenuContentsFindReplaceClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsFindReplace_Click);
 			ToolBarEditMenuContentsGotoLineClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsGotoLine_Click);
 			ToolBarEditMenuContentsGotoOffsetClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsGotoOffset_Click);
@@ -1132,8 +1125,6 @@ namespace ConstructionSetExtender
 			ToolBarDumpAllScriptsClickHandler = gcnew EventHandler(this, &Workspace::ToolBarDumpAllScripts_Click);
 			ToolBarLoadScriptClickHandler = gcnew EventHandler(this, &Workspace::ToolBarLoadScript_Click);
 			ToolBarLoadScriptsToTabsClickHandler = gcnew EventHandler(this, &Workspace::ToolBarLoadScriptsToTabs_Click);
-			ToolBarGetVarIndicesClickHandler = gcnew EventHandler(this, &Workspace::ToolBarGetVarIndices_Click);
-			ToolBarUpdateVarIndicesClickHandler = gcnew EventHandler(this, &Workspace::ToolBarUpdateVarIndices_Click);
 			ToolBarShowOffsetsClickHandler = gcnew EventHandler(this, &Workspace::ToolBarShowOffsets_Click);
 			ToolBarShowPreprocessedTextClickHandler = gcnew EventHandler(this, &Workspace::ToolBarShowPreprocessedText_Click);
 			ToolBarSanitizeScriptTextClickHandler = gcnew EventHandler(this, &Workspace::ToolBarSanitizeScriptText_Click);
@@ -1270,14 +1261,6 @@ namespace ConstructionSetExtender
 			ToolBarLoadScriptDropDown->Items->Add(ToolBarLoadScriptsToTabs);
 			ToolBarLoadScript->DropDown = ToolBarLoadScriptDropDown;
 
-			ToolBarGetVarIndices->ToolTipText = "Fetch Variable Indices";
-			ToolBarGetVarIndices->AutoSize = true;
-			ToolBarGetVarIndices->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
-
-			ToolBarUpdateVarIndices->ToolTipText = "Update Variable Indices";
-			ToolBarUpdateVarIndices->AutoSize = true;
-			ToolBarUpdateVarIndices->Margin = Padding(ToolBarButtonPaddingRegular.Left, 0, ToolBarButtonPaddingLarge.Right, 0);
-
 			ToolBarShowOffsets->ToolTipText = "Toggle Offset Viewer";
 			ToolBarShowOffsets->AutoSize = true;
 			ToolBarShowOffsets->Margin = Padding(ToolBarButtonPaddingLarge.Left, 0, ToolBarButtonPaddingRegular.Right, 0);
@@ -1339,8 +1322,6 @@ namespace ConstructionSetExtender
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarBookmarkList);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarDumpScript);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarLoadScript);
-			WorkspaceSecondaryToolBar->Items->Add(ToolBarGetVarIndices);
-			WorkspaceSecondaryToolBar->Items->Add(ToolBarUpdateVarIndices);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarShowOffsets);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarShowPreprocessedText);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarSanitizeScriptText);
@@ -1371,6 +1352,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorDocumentScript);
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorCreateUDFImplementation);
 			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorRenameVariables);
+			ContextMenuRefactorMenu->DropDownItems->Add(ContextMenuRefactorModifyVariableIndices);
 
 			ContextMenuRefactorAddVariable->Text = "Add Variable...";
 			ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableInt);
@@ -1392,6 +1374,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorDocumentScript->Text = "Document Script";
 			ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
 			ContextMenuRefactorRenameVariables->Text = "Rename Variables";
+			ContextMenuRefactorModifyVariableIndices->Text = "Modify Variable Indices";
 
 			TextEditorContextMenu->Items->Add(ContextMenuRefactorMenu);
 			TextEditorContextMenu->Items->Add(ContextMenuCopy);
@@ -1480,38 +1463,6 @@ namespace ConstructionSetExtender
 			BookmarkList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(2) {BookmarkListLine,
 				BookmarkListDesc});
 
-			VariableIndexList->Dock = DockStyle::Fill;
-			VariableIndexList->BorderStyle = BorderStyle::Fixed3D;
-			VariableIndexList->BackColor = BackColor;
-			VariableIndexList->ForeColor = ForeColor;
-			VariableIndexList->Visible = false;
-			VariableIndexList->View = View::Details;
-			VariableIndexList->MultiSelect = false;
-			VariableIndexList->CheckBoxes = false;
-			VariableIndexList->FullRowSelect = true;
-			VariableIndexList->HideSelection = false;
-			VariableIndexList->Tag = (int)1;
-
-			ColumnHeader^ VariableIndexListName = gcnew ColumnHeader();
-			VariableIndexListName->Text = "Variable Name";
-			VariableIndexListName->Width = 300;
-			ColumnHeader^ VariableIndexListType = gcnew ColumnHeader();
-			VariableIndexListType->Text = "Type";
-			VariableIndexListType->Width = 300;
-			ColumnHeader^ VariableIndexListIndex = gcnew ColumnHeader();
-			VariableIndexListIndex->Text = "Index";
-			VariableIndexListIndex->Width = 100;
-			VariableIndexList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(3) {VariableIndexListName,
-				VariableIndexListType,
-				VariableIndexListIndex});
-
-			VariableIndexEditBox->Multiline = true;
-			VariableIndexEditBox->BorderStyle = BorderStyle::FixedSingle;
-			VariableIndexEditBox->Visible = false;
-			VariableIndexEditBox->AcceptsReturn = true;
-
-			VariableIndexList->Controls->Add(VariableIndexEditBox);
-
 			SpoilerText->Dock = DockStyle::Fill;
 			SpoilerText->TextAlign = ContentAlignment::MiddleCenter;
 			SpoilerText->Text = "Right, everybody out! Smash the Spinning Jenny! Burn the rolling Rosalind! Destroy the going-up-and-down-a-bit-and-then-moving-along Gertrude! And death to the stupid Prince who grows fat on the profits!";
@@ -1521,7 +1472,6 @@ namespace ConstructionSetExtender
 			WorkspaceSplitter->Panel2->Controls->Add(MessageList);
 			WorkspaceSplitter->Panel2->Controls->Add(FindList);
 			WorkspaceSplitter->Panel2->Controls->Add(BookmarkList);
-			WorkspaceSplitter->Panel2->Controls->Add(VariableIndexList);
 			WorkspaceSplitter->Panel2->Controls->Add(SpoilerText);
 
 			WorkspaceControlBox->Controls->Add(WorkspaceSplitter);
@@ -1566,8 +1516,6 @@ namespace ConstructionSetExtender
 			ToolBarBindScript->Click += ToolBarBindScriptClickHandler;
 			ToolBarNavigationBack->Click += ToolBarNavigationBackClickHandler;
 			ToolBarNavigationForward->Click += ToolBarNavigationForwardClickHandler;
-			ToolBarGetVarIndices->Click += ToolBarGetVarIndicesClickHandler;
-			ToolBarUpdateVarIndices->Click += ToolBarUpdateVarIndicesClickHandler;
 			ToolBarSaveAll->Click += ToolBarSaveAllClickHandler;
 			ToolBarCompileDependencies->Click += ToolBarCompileDependenciesClickHandler;
 			ContextMenuCopy->Click += ContextMenuCopyClickHandler;
@@ -1589,6 +1537,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorDocumentScript->Click += ContextMenuRefactorDocumentScriptClickHandler;
 			ContextMenuRefactorCreateUDFImplementation->Click += ContextMenuRefactorCreateUDFImplementationClickHandler;
 			ContextMenuRefactorRenameVariables->Click += ContextMenuRefactorRenameVariablesClickHandler;
+			ContextMenuRefactorModifyVariableIndices->Click += ContextMenuRefactorModifyVariableIndicesClickHandler;
 			TextEditorContextMenu->Opening += TextEditorContextMenuOpeningHandler;
 			MessageList->DoubleClick += MessageListDoubleClickHandler;
 			MessageList->ColumnClick += MessageListColumnClickHandler;
@@ -1596,17 +1545,12 @@ namespace ConstructionSetExtender
 			FindList->ColumnClick += FindListColumnClickHandler;
 			BookmarkList->DoubleClick += BookmarkListDoubleClickHandler;
 			BookmarkList->ColumnClick += BookmarkListColumnClickHandler;
-			VariableIndexList->DoubleClick += VariableIndexListDoubleClickHandler;
-			VariableIndexList->ColumnClick += VariableIndexListColumnClickHandler;
-			VariableIndexEditBox->LostFocus += VariableIndexEditBoxLostFocusHandler;
-			VariableIndexEditBox->KeyDown += VariableIndexEditBoxKeyDownHandler;
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick += AutoSaveTimerTickHandler;
 			ToolBarSnippetManager->Click += ToolBarSnippetManagerClickHandler;
 
 			AutoSaveTimer->Start();
 			DisableControls();
-			ToolBarUpdateVarIndices->Enabled = false;
 			TextEditor->SetContextMenu(TextEditorContextMenu);
 
 			SetScriptType(ScriptType::e_Object);
@@ -2171,12 +2115,6 @@ namespace ConstructionSetExtender
 					ToolBarFindList->PerformClick();
 				}
 
-				if (VariableIndexList->Visible)
-				{
-					VariableIndexList->Items->Clear();
-					ToolBarGetVarIndices->PerformClick();
-				}
-
 				if (BookmarkList->Visible)
 				{
 					BookmarkList->Items->Clear();
@@ -2466,8 +2404,6 @@ namespace ConstructionSetExtender
 			ToolBarBindScript->Click -= ToolBarBindScriptClickHandler;
 			ToolBarNavigationBack->Click -= ToolBarNavigationBackClickHandler;
 			ToolBarNavigationForward->Click -= ToolBarNavigationForwardClickHandler;
-			ToolBarGetVarIndices->Click -= ToolBarGetVarIndicesClickHandler;
-			ToolBarUpdateVarIndices->Click -= ToolBarUpdateVarIndicesClickHandler;
 			ToolBarSaveAll->Click -= ToolBarSaveAllClickHandler;
 			ToolBarCompileDependencies->Click -= ToolBarCompileDependenciesClickHandler;
 			ContextMenuCopy->Click -= ContextMenuCopyClickHandler;
@@ -2489,6 +2425,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorDocumentScript->Click -= ContextMenuRefactorDocumentScriptClickHandler;
 			ContextMenuRefactorCreateUDFImplementation->Click -= ContextMenuRefactorDocumentScriptClickHandler;
 			ContextMenuRefactorRenameVariables->Click -= ContextMenuRefactorRenameVariablesClickHandler;
+			ContextMenuRefactorModifyVariableIndices->Click += ContextMenuRefactorModifyVariableIndicesClickHandler;
 			TextEditorContextMenu->Opening -= TextEditorContextMenuOpeningHandler;
 			MessageList->DoubleClick -= MessageListDoubleClickHandler;
 			MessageList->ColumnClick -= MessageListColumnClickHandler;
@@ -2496,10 +2433,6 @@ namespace ConstructionSetExtender
 			FindList->ColumnClick -= FindListColumnClickHandler;
 			BookmarkList->DoubleClick -= BookmarkListDoubleClickHandler;
 			BookmarkList->ColumnClick -= BookmarkListColumnClickHandler;
-			VariableIndexList->DoubleClick -= VariableIndexListDoubleClickHandler;
-			VariableIndexList->ColumnClick -= VariableIndexListColumnClickHandler;
-			VariableIndexEditBox->LostFocus -= VariableIndexEditBoxLostFocusHandler;
-			VariableIndexEditBox->KeyDown -= VariableIndexEditBoxKeyDownHandler;
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 			ToolBarSnippetManager->Click -= ToolBarSnippetManagerClickHandler;
@@ -2522,7 +2455,6 @@ namespace ConstructionSetExtender
 			WorkspaceControlBox->Controls->Clear();
 			WorkspaceSplitter->Panel1->Controls->Clear();
 			WorkspaceSplitter->Panel2->Controls->Clear();
-			VariableIndexList->Controls->Clear();
 
 			DisposeControlImage(ToolBarNewScript);
 			DisposeControlImage(ToolBarOpenScript);
@@ -2552,8 +2484,6 @@ namespace ConstructionSetExtender
 			DisposeControlImage(ToolBarDumpAllScripts);
 			DisposeControlImage(ToolBarLoadScript);
 			DisposeControlImage(ToolBarLoadScriptsToTabs);
-			DisposeControlImage(ToolBarGetVarIndices);
-			DisposeControlImage(ToolBarUpdateVarIndices);
 			DisposeControlImage(ToolBarShowOffsets);
 			DisposeControlImage(ToolBarShowPreprocessedText);
 			DisposeControlImage(ToolBarSanitizeScriptText);
@@ -2580,6 +2510,7 @@ namespace ConstructionSetExtender
 			DisposeControlImage(ContextMenuRefactorDocumentScript);
 			DisposeControlImage(ContextMenuRefactorCreateUDFImplementation);
 			DisposeControlImage(ContextMenuRefactorRenameVariables);
+			DisposeControlImage(ContextMenuRefactorModifyVariableIndices);
 
 			delete WorkspaceTabItem;
 			delete WorkspaceControlBox;
@@ -2587,8 +2518,6 @@ namespace ConstructionSetExtender
 			delete MessageList;
 			delete FindList;
 			delete BookmarkList;
-			delete VariableIndexList;
-			delete VariableIndexEditBox;
 			delete SpoilerText;
 
 			delete WorkspaceMainToolBar;
@@ -2630,8 +2559,6 @@ namespace ConstructionSetExtender
 			delete ToolBarLoadScript;
 			delete ToolBarLoadScriptDropDown;
 			delete ToolBarLoadScriptsToTabs;
-			delete ToolBarGetVarIndices;
-			delete ToolBarUpdateVarIndices;
 			delete ToolBarShowOffsets;
 			delete ToolBarShowPreprocessedText;
 			delete ToolBarSanitizeScriptText;
@@ -2662,6 +2589,7 @@ namespace ConstructionSetExtender
 			delete ContextMenuRefactorDocumentScript;
 			delete ContextMenuRefactorCreateUDFImplementation;
 			delete ContextMenuRefactorRenameVariables;
+			delete ContextMenuRefactorModifyVariableIndices;
 			delete AutoSaveTimer;
 
 			ParentContainer->Redraw();
@@ -3182,84 +3110,6 @@ namespace ConstructionSetExtender
 			}
 			BookmarkList->ListViewItemSorter = Sorter;
 		}
-		void Workspace::VariableIndexList_DoubleClick(Object^ Sender, EventArgs^ E)
-		{
-			if (GetListViewSelectedItem(VariableIndexList) != nullptr)
-			{
-				ListViewItem^ Item = GetListViewSelectedItem(VariableIndexList);
-				Rectangle Bounds = Item->SubItems[2]->Bounds;
-				if (Bounds.Width > 35)
-				{
-					VariableIndexEditBox->SetBounds(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, BoundsSpecified::All);
-					VariableIndexEditBox->Show();
-					VariableIndexEditBox->BringToFront();
-					VariableIndexEditBox->Focus();
-				}
-				else
-				{
-					MessageBox::Show("Please expand the Index column sufficiently to allow the editing of its contents.",
-									SCRIPTEDITOR_TITLE,
-									MessageBoxButtons::OK,
-									MessageBoxIcon::Information);
-				}
-			}
-		}
-		void Workspace::VariableIndexList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
-		{
-			if (E->Column != (int)VariableIndexList->Tag)
-			{
-				VariableIndexList->Tag = E->Column;
-				VariableIndexList->Sorting = SortOrder::Ascending;
-			}
-			else
-			{
-				if (VariableIndexList->Sorting == SortOrder::Ascending)
-					VariableIndexList->Sorting = SortOrder::Descending;
-				else
-					VariableIndexList->Sorting = SortOrder::Ascending;
-			}
-
-			VariableIndexList->Sort();
-			System::Collections::IComparer^ Sorter;
-			switch (E->Column)
-			{
-			case 2:
-				Sorter = gcnew ListViewIntSorter(E->Column, VariableIndexList->Sorting, false);
-				break;
-			default:
-				Sorter = gcnew ListViewStringSorter(E->Column, VariableIndexList->Sorting);
-				break;
-			}
-			VariableIndexList->ListViewItemSorter = Sorter;
-		}
-		void Workspace::VariableIndexEditBox_LostFocus(Object^ Sender, EventArgs^ E)
-		{
-			VariableIndexEditBox->Hide();
-
-			UInt32 Index = 0;
-			try
-			{
-				Index = UInt32::Parse(VariableIndexEditBox->Text);
-			}
-			catch (...)
-			{
-				VariableIndexEditBox->Text = "";
-				return;
-			}
-
-			VariableIndexEditBox->Text = "";
-			if (GetListViewSelectedItem(VariableIndexList) != nullptr)
-			{
-				ListViewItem^ Item = GetListViewSelectedItem(VariableIndexList);
-				Item->SubItems[2]->Text = Index.ToString();
-				Item->Tag = (int)1;		// flag modification
-			}
-		}
-		void Workspace::VariableIndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
-		{
-			if (E->KeyCode == Keys::Enter)
-				Workspace::VariableIndexEditBox_LostFocus(nullptr, nullptr);
-		}
 
 		void Workspace::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3758,7 +3608,31 @@ namespace ConstructionSetExtender
 				RenameEntries->Clear();
 			}
 		}
+		void Workspace::ContextMenuRefactorModifyVariableIndices_Click( Object^ Sender, EventArgs^ E )
+		{
+			if (TextEditor->GetModifiedStatus())
+			{
+				MessageBox::Show("The current script needs to be compiled before its variable indices can be updated.",
+					SCRIPTEDITOR_TITLE,
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Exclamation);
+			}
+			else
+			{
+				Refactoring::ModifyVariableIndicesDialog ModifyIndicesData(GetParentContainer()->GetHandle(), CurrentScriptEditorID);
 
+				if (ModifyIndicesData.IndicesUpdated)
+				{
+					TextEditor->SetModifiedStatus(true);
+
+					if (PREFERENCES->FetchSettingAsInt("RecompileVarIdx", "General"))
+					{
+						ToolBarSaveScript->PerformButtonClick();
+						ToolBarCompileDependencies->PerformClick();
+					}
+				}
+			}
+		}
 		void Workspace::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (TextEditor->GetSelectedText() != "")
@@ -3814,8 +3688,6 @@ namespace ConstructionSetExtender
 				ToolBarFindList->PerformClick();
 			else if (BookmarkList->Visible)
 				ToolBarBookmarkList->PerformClick();
-			else if (VariableIndexList->Visible)
-				ToolBarGetVarIndices->PerformClick();
 
 			if (MessageList->Visible == false)
 			{
@@ -3841,8 +3713,6 @@ namespace ConstructionSetExtender
 				ToolBarMessageList->PerformClick();
 			else if (BookmarkList->Visible)
 				ToolBarBookmarkList->PerformClick();
-			else if (VariableIndexList->Visible)
-				ToolBarGetVarIndices->PerformClick();
 
 			if (FindList->Visible == false)
 			{
@@ -3868,8 +3738,6 @@ namespace ConstructionSetExtender
 				ToolBarMessageList->PerformClick();
 			else if (FindList->Visible)
 				ToolBarFindList->PerformClick();
-			else if (VariableIndexList->Visible)
-				ToolBarGetVarIndices->PerformClick();
 
 			if (BookmarkList->Visible == false)
 			{
@@ -3944,140 +3812,6 @@ namespace ConstructionSetExtender
 					ParentContainer->LoadFileIntoNewWorkspace(Itr);
 				}
 			}
-		}
-		void Workspace::ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E)
-		{
-			GetParentContainer()->BeginUpdate();
-
-			if (VariableIndexList->Visible == false)
-			{
-				if (TextEditor->GetModifiedStatus())
-				{
-					MessageBox::Show("The current script needs to be compiled before its variable indices can be updated.",
-									SCRIPTEDITOR_TITLE,
-									MessageBoxButtons::OK,
-									MessageBoxIcon::Exclamation);
-				}
-				else
-				{
-					ToolBarUpdateVarIndices->Enabled = false;
-
-					if (MessageList->Visible)
-						ToolBarMessageList->PerformClick();
-					else if (FindList->Visible)
-						ToolBarFindList->PerformClick();
-					else if (BookmarkList->Visible)
-						ToolBarBookmarkList->PerformClick();
-
-					VariableIndexList->Items->Clear();
-					ComponentDLLInterface::ScriptVarListData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptVarList((CString(CurrentScriptEditorID)).c_str());
-					if (Data)
-					{
-						for (int i = 0; i < Data->ScriptVarListCount; i++)
-						{
-							ComponentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
-							String^ VarType;
-							switch (VarInfo->Type)
-							{
-							case 0:
-								VarType = "Float";
-								break;
-							case 1:
-								VarType = "Integer";
-								break;
-							case 2:
-								VarType = "Reference";
-								break;
-							}
-
-							ListViewItem^ Item = gcnew ListViewItem(gcnew String(VarInfo->Name));
-							Item->SubItems->Add(VarType);
-							Item->SubItems->Add(VarInfo->Index.ToString());
-							VariableIndexList->Items->Add(Item);
-						}
-					}
-					NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
-
-					VariableIndexList->Show();
-					VariableIndexList->BringToFront();
-
-					if (VariableIndexList->Items->Count)
-						ToolBarUpdateVarIndices->Enabled = true;
-
-					WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
-					ToolBarGetVarIndices->Checked = true;
-				}
-			}
-			else
-			{
-				VariableIndexList->Hide();
-
-				ToolBarGetVarIndices->Checked = false;
-				ToolBarUpdateVarIndices->Enabled = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
-			}
-
-			GetParentContainer()->EndUpdate();
-		}
-		void Workspace::ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E)
-		{
-			CString CScriptName(CurrentScriptEditorID);
-			CString^ Buffer = nullptr;
-
-			List<CString^>^ StringAllocations = gcnew List<CString^>();
-			int Count = 0;
-			for each (ListViewItem^ Itr in VariableIndexList->Items)
-			{
-				if (Itr->Tag != nullptr)
-					Count++;
-			}
-
-			ComponentDLLInterface::ScriptVarListData Data;
-			Data.ScriptVarListCount = Count;
-			Data.ScriptVarListHead = new ComponentDLLInterface::ScriptVarListData::ScriptVarInfo[Data.ScriptVarListCount];
-
-			int i = 0;
-			for each (ListViewItem^ Itr in VariableIndexList->Items)
-			{
-				if (Itr->Tag != nullptr)
-				{
-					Buffer = gcnew CString(Itr->Text);
-					StringAllocations->Add(Buffer);
-
-					UInt32 Index = UInt32::Parse(Itr->SubItems[2]->Text);
-
-					Data.ScriptVarListHead[i].Index = Index;
-					if	(!String::Compare(Itr->SubItems[1]->Text, "Integer", true))
-						Data.ScriptVarListHead[i].Type = 1;
-					else if (!String::Compare(Itr->SubItems[1]->Text, "Float", true))
-						Data.ScriptVarListHead[i].Type = 0;
-					else
-						Data.ScriptVarListHead[i].Type = 2;
-					Data.ScriptVarListHead[i].Name = Buffer->c_str();
-					i++;
-				}
-			}
-
-			if (!NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarIndices(CScriptName.c_str(), &Data))
-				DebugPrint("Couldn't successfully update all variable indices of script '" + CurrentScriptEditorID + "'");
-			else
-			{
-				TextEditor->SetModifiedStatus(true);
-
-				if (PREFERENCES->FetchSettingAsInt("RecompileVarIdx", "General"))
-				{
-					ToolBarSaveScript->PerformButtonClick();
-					ToolBarCompileDependencies->PerformClick();
-				}
-			}
-
-			if (VariableIndexList->Visible)
-				ToolBarGetVarIndices->PerformClick();
-
-			for each (CString^ Itr in StringAllocations)
-				delete Itr;
-
-			StringAllocations->Clear();
 		}
 		void Workspace::ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E)
 		{

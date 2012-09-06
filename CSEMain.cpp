@@ -115,15 +115,28 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Initializing UI Manager");
 		BGSEECONSOLE->Indent();
-		bool ComponentInitialized = BGSEEUI->Initialize("TES Construction Set",
-														LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
+		bool ComponentInitialized = BGSEEUI->Initialize("TES Construction Set", LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
 		BGSEECONSOLE->Exdent();
 
 		if (ComponentInitialized == false)
 			return false;
 
-		// needs to be registered here as the epilog callbacks are called after the main windows' creation
-		// which is far too late for the nasty stuff we like to do
+		BGSEECONSOLE_MESSAGE("Registering OBSE Plugin Message Handlers");
+		XSEMsgIntfc->RegisterListener(XSEPluginHandle, "OBSE", OBSEMessageHandler);
+
+		BGSEECONSOLE_MESSAGE("Initializing Plugin Interface Manager");
+		CSEInterfaceManager::Instance.Initialize();
+
+		return true;
+	}
+
+	InitCallbackPostMainWindowInit::~InitCallbackPostMainWindowInit()
+	{
+		;//
+	}
+
+	bool InitCallbackPostMainWindowInit::operator()()
+	{
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMiscSubclassProc);
@@ -149,12 +162,6 @@ namespace ConstructionSetExtender
 		}
 
 		BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
-
-		BGSEECONSOLE_MESSAGE("Registering OBSE Plugin Message Handlers");
-		XSEMsgIntfc->RegisterListener(XSEPluginHandle, "OBSE", OBSEMessageHandler);
-
-		BGSEECONSOLE_MESSAGE("Initializing Plugin Interface Manager");
-		CSEInterfaceManager::Instance.Initialize();
 
 		return true;
 	}
@@ -262,16 +269,16 @@ namespace ConstructionSetExtender
 		VersionControl::CHANGELOG->Initialize();
 		BGSEECONSOLE->Exdent();
 
+		BGSEECONSOLE_MESSAGE("Initializing Panic Save Handler");
+		BGSEECONSOLE->Indent();
+		_DATAHANDLER->PanicSave(true);
+		BGSEECONSOLE->Exdent();
+
 		BGSEECONSOLE_MESSAGE("Initializing Startup Manager");
 		BGSEECONSOLE->Indent();
 		CSEStartupManager::LoadStartupWorkspace();
 		CSEStartupManager::LoadStartupPlugin();
 		CSEStartupManager::LoadStartupScript();
-		BGSEECONSOLE->Exdent();
-
-		BGSEECONSOLE_MESSAGE("Initializing Panic Save Handler");
-		BGSEECONSOLE->Indent();
-		_DATAHANDLER->PanicSave(true);
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE->ExdentAll();
@@ -570,6 +577,7 @@ extern "C"
 
 		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query, new InitCallbackQuery(obse));
 		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load, new InitCallbackLoad(obse));
+		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_PostMainWindowInit, new InitCallbackPostMainWindowInit());
 		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Epilog, new InitCallbackEpilog());
 		BGSEEMAIN->Daemon()->RegisterDeinitCallback(new DeinitCallback());
 		BGSEEMAIN->Daemon()->RegisterCrashCallback(new CrashCallback());

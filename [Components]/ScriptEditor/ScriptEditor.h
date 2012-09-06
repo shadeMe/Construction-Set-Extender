@@ -191,8 +191,6 @@ namespace ConstructionSetExtender
 			ListView^											MessageList;
 			ListView^											FindList;
 			ListView^											BookmarkList;
-			ListView^											VariableIndexList;
-			TextBox^											VariableIndexEditBox;
 			Label^												SpoilerText;
 
 			ToolStrip^											WorkspaceMainToolBar;
@@ -234,8 +232,6 @@ namespace ConstructionSetExtender
 			ToolStripSplitButton^								ToolBarLoadScript;
 			ToolStripDropDown^									ToolBarLoadScriptDropDown;
 			ToolStripButton^									ToolBarLoadScriptsToTabs;
-			ToolStripButton^									ToolBarGetVarIndices;
-			ToolStripButton^									ToolBarUpdateVarIndices;
 			ToolStripButton^									ToolBarShowOffsets;
 			ToolStripButton^									ToolBarShowPreprocessedText;
 			ToolStripButton^									ToolBarSanitizeScriptText;
@@ -266,6 +262,7 @@ namespace ConstructionSetExtender
 			ToolStripMenuItem^									ContextMenuRefactorDocumentScript;
 			ToolStripMenuItem^									ContextMenuRefactorCreateUDFImplementation;
 			ToolStripMenuItem^									ContextMenuRefactorRenameVariables;
+			ToolStripMenuItem^									ContextMenuRefactorModifyVariableIndices;
 
 			ScriptListDialog^									ScriptListBox;
 			FindReplaceDialog^									FindReplaceBox;
@@ -289,10 +286,6 @@ namespace ConstructionSetExtender
 			ColumnClickEventHandler^							FindListColumnClickHandler;
 			EventHandler^										BookmarkListDoubleClickHandler;
 			ColumnClickEventHandler^							BookmarkListColumnClickHandler;
-			EventHandler^										VariableIndexListDoubleClickHandler;
-			ColumnClickEventHandler^							VariableIndexListColumnClickHandler;
-			EventHandler^										VariableIndexEditBoxLostFocusHandler;
-			KeyEventHandler^									VariableIndexEditBoxKeyDownHandler;
 			EventHandler^										ToolBarNewScriptClickHandler;
 			EventHandler^										ToolBarOpenScriptClickHandler;
 			EventHandler^										ToolBarPreviousScriptClickHandler;
@@ -326,6 +319,7 @@ namespace ConstructionSetExtender
 			EventHandler^										ContextMenuRefactorDocumentScriptClickHandler;
 			EventHandler^										ContextMenuRefactorCreateUDFImplementationClickHandler;
 			EventHandler^										ContextMenuRefactorRenameVariablesClickHandler;
+			EventHandler^										ContextMenuRefactorModifyVariableIndicesClickHandler;
 			EventHandler^										ToolBarEditMenuContentsFindReplaceClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoLineClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoOffsetClickHandler;
@@ -336,8 +330,6 @@ namespace ConstructionSetExtender
 			EventHandler^										ToolBarDumpAllScriptsClickHandler;
 			EventHandler^										ToolBarLoadScriptClickHandler;
 			EventHandler^										ToolBarLoadScriptsToTabsClickHandler;
-			EventHandler^										ToolBarGetVarIndicesClickHandler;
-			EventHandler^										ToolBarUpdateVarIndicesClickHandler;
 			EventHandler^										ToolBarShowOffsetsClickHandler;
 			EventHandler^										ToolBarShowPreprocessedTextClickHandler;
 			EventHandler^										ToolBarSanitizeScriptTextClickHandler;
@@ -356,10 +348,6 @@ namespace ConstructionSetExtender
 			virtual void									    FindList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 			virtual void									    BookmarkList_DoubleClick(Object^ Sender, EventArgs^ E);
 			virtual void									    BookmarkList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-			virtual void                                        VariableIndexList_DoubleClick(Object^ Sender, EventArgs^ E);
-			virtual void                                        VariableIndexList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
-			virtual void                                        VariableIndexEditBox_LostFocus(Object^ Sender, EventArgs^ E);
-			virtual void                                        VariableIndexEditBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
 			virtual void                                        ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
@@ -397,6 +385,7 @@ namespace ConstructionSetExtender
 			virtual void                                        ContextMenuRefactorDocumentScript_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuRefactorCreateUDFImplementation_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuRefactorRenameVariables_Click(Object^ Sender, EventArgs^ E);
+			virtual void                                        ContextMenuRefactorModifyVariableIndices_Click(Object^ Sender, EventArgs^ E);
 
 			virtual void                                        ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
@@ -409,8 +398,6 @@ namespace ConstructionSetExtender
 			virtual void                                        ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
-			virtual void                                        ToolBarGetVarIndices_Click(Object^ Sender, EventArgs^ E);
-			virtual void                                        ToolBarUpdateVarIndices_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);

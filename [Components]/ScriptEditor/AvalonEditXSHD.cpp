@@ -298,7 +298,7 @@ namespace ConstructionSetExtender
 				case Rulesets::e_Digit:
 					{
 						XSHDColor^ DigitColor = gcnew XSHDColor("DigitColor", Foreground, Background, Bold);
-						XSHDRule^ DigitRule = gcnew XSHDRule(DigitColor, "\\b0[xX][0-9a-fA-F]+|\t\\b(\t\\d+(\\.[0-9]+)?|\t\\.[0-9]+)([eE][+-]?[0-9]+)?");
+						XSHDRule^ DigitRule = gcnew XSHDRule(DigitColor, "\\b0[xX][0-9a-fA-F]+\r\n|\\b\r\n(\\d+(\\.[0-9]+)?\r\n|\\.[0-9]+\r\n)\r\n([eE][+-]?[0-9]+)?");
 
 						SerializedColors->AddLast(DigitColor);
 						Contents->AddLast(DigitRule);
