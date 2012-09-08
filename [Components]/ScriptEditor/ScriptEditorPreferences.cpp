@@ -180,7 +180,6 @@ namespace ConstructionSetExtender
 			RegisterColorSetting("FindResultsHighlightColor", Color::Gold, CmDlgFindResultsHighlightColor);
 
 			// General
-			SettingCollection->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "General", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("AutoIndent", "General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("SaveLastKnownPos", "General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("RecompileVarIdx", "General", "1"), gcnew BoundControl(RecompileVarIdx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -214,6 +213,11 @@ namespace ConstructionSetExtender
 			// Backup
 			SettingCollection->Add(gcnew INISetting("UseAutoRecovery", "Backup", "1"), gcnew BoundControl(UseAutoRecovery, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("AutoRecoverySavePeriod", "Backup", "5"), gcnew BoundControl(AutoRecoverySavePeriod, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+
+			// Validator
+			SettingCollection->Add(gcnew INISetting("VarFormNameCollisions", "Validator", "0"), gcnew BoundControl(VarFormNameCollisions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("CountVarRefs", "Validator", "1"), gcnew BoundControl(CountVarRefs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "Validator", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 		}
 
 		void ScriptEditorPreferences::LoadINI()
@@ -325,7 +329,6 @@ namespace ConstructionSetExtender
 			TabBox = (gcnew TabControl());
 			TabGeneral = (gcnew TabPage());
 			LoadScriptUpdateExistingScripts = (gcnew CheckBox());
-			SuppressRefCountForQuestScripts = (gcnew CheckBox());
 			TabIntelliSense = (gcnew TabPage());
 			UseQuickView = (gcnew CheckBox());
 			LabelISDBUpdatePeriod = (gcnew Label());
@@ -382,6 +385,10 @@ namespace ConstructionSetExtender
 			LabelAutoRecoveryInterval = gcnew Label();
 			AutoRecoverySavePeriod = gcnew NumericUpDown();
 			ForceDatabaseUpdate = gcnew Button();
+			this->TabValidator = (gcnew System::Windows::Forms::TabPage());
+			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
+			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
+			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
 			//
 			// Hidden Controls
 			//
@@ -400,6 +407,7 @@ namespace ConstructionSetExtender
 			TabAppearance->SuspendLayout();
 			TabSanitize->SuspendLayout();
 			TabBackup->SuspendLayout();
+			TabValidator->SuspendLayout();
 			GroupBoxSyntaxHighlighting->SuspendLayout();
 			OptionsBox->SuspendLayout();
 			//
@@ -496,6 +504,7 @@ namespace ConstructionSetExtender
 			TabBox->Controls->Add(TabAppearance);
 			TabBox->Controls->Add(TabSanitize);
 			TabBox->Controls->Add(TabBackup);
+			TabBox->Controls->Add(TabValidator);
 			TabBox->HotTrack = true;
 			TabBox->Location = System::Drawing::Point(12, 12);
 			TabBox->Multiline = true;
@@ -531,16 +540,6 @@ namespace ConstructionSetExtender
 			LoadScriptUpdateExistingScripts->TabIndex = 13;
 			LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
 			LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
-			//
-			// SuppressRefCountForQuestScripts
-			//
-			SuppressRefCountForQuestScripts->AutoSize = true;
-			SuppressRefCountForQuestScripts->Location = System::Drawing::Point(22, 227);
-			SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
-			SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
-			SuppressRefCountForQuestScripts->TabIndex = 12;
-			SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
-			SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
 			//
 			// TabIntelliSense
 			//
@@ -1105,6 +1104,49 @@ namespace ConstructionSetExtender
 			this->UseAutoRecovery->Text = L"Use Auto-Recovery";
 			this->UseAutoRecovery->UseVisualStyleBackColor = true;
 			//
+			// TabValidator
+			//
+			this->TabValidator->Controls->Add(this->CountVarRefs);
+			this->TabValidator->Controls->Add(this->SuppressRefCountForQuestScripts);
+			this->TabValidator->Controls->Add(this->VarFormNameCollisions);
+			this->TabValidator->Location = System::Drawing::Point(4, 22);
+			this->TabValidator->Name = L"TabValidator";
+			this->TabValidator->Padding = System::Windows::Forms::Padding(3);
+			this->TabValidator->Size = System::Drawing::Size(423, 290);
+			this->TabValidator->TabIndex = 6;
+			this->TabValidator->Text = L"Validator";
+			this->TabValidator->UseVisualStyleBackColor = true;
+			//
+			// VarFormNameCollisions
+			//
+			this->VarFormNameCollisions->AutoSize = true;
+			this->VarFormNameCollisions->Location = System::Drawing::Point(24, 28);
+			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
+			this->VarFormNameCollisions->Size = System::Drawing::Size(219, 17);
+			this->VarFormNameCollisions->TabIndex = 0;
+			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions";
+			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
+			//
+			// SuppressRefCountForQuestScripts
+			//
+			this->SuppressRefCountForQuestScripts->AutoSize = true;
+			this->SuppressRefCountForQuestScripts->Location = System::Drawing::Point(24, 255);
+			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
+			this->SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
+			this->SuppressRefCountForQuestScripts->TabIndex = 13;
+			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
+			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
+			//
+			// CountVarRefs
+			//
+			this->CountVarRefs->AutoSize = true;
+			this->CountVarRefs->Location = System::Drawing::Point(24, 51);
+			this->CountVarRefs->Name = L"CountVarRefs";
+			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
+			this->CountVarRefs->TabIndex = 14;
+			this->CountVarRefs->Text = L"Count Variable Use References";
+			this->CountVarRefs->UseVisualStyleBackColor = true;
+			//
 			// ScriptEditorPreferences
 			//
 			OptionsBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -1129,6 +1171,8 @@ namespace ConstructionSetExtender
 			TabSanitize->PerformLayout();
 			TabBackup->ResumeLayout(false);
 			TabBackup->PerformLayout();
+			TabValidator->ResumeLayout(false);
+			TabValidator->PerformLayout();
 			GroupBoxSyntaxHighlighting->ResumeLayout(false);
 			OptionsBox->ResumeLayout(false);
 			OptionsBox->Closing += gcnew CancelEventHandler(this, &ScriptEditorPreferences::OptionsBox_Cancel);

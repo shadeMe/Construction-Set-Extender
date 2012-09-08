@@ -650,7 +650,7 @@ namespace ConstructionSetExtender
 								UInt32 PluginIndex = (UInt32)TESListView::GetItemData(PluginList, Selection);
 								TESFile* CurrentFile = _DATAHANDLER->LookupPluginByIndex(PluginIndex);
 
-								if (CurrentFile)
+								if (CurrentFile && CurrentFile->IsLoaded())
 									SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)CurrentFile);
 							}
 							while (true);

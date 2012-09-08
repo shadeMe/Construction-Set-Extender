@@ -401,7 +401,7 @@ namespace ConstructionSetExtender
 	{
 		if (SearchBox->Text != "")
 		{
-			ListViewItem^% Result = FormList->FindItemWithText(SearchBox->Text, true, 0, true);
+			ListViewItem^ Result = FindItemWithText(FormList, SearchBox->Text, true, true);
 
 			if (Result != nullptr)
 			{

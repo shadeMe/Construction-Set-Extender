@@ -16,12 +16,17 @@ void TESFile::DeleteInstance(bool ReleaseMemory)
 
 bool TESFile::IsActive( void ) const
 {
-	return thisCall<bool>(0x00485BA0, this);
+	return fileFlags & kFileFlag_Active;
 }
 
 bool TESFile::IsMaster( void ) const
 {
-	return thisCall<bool>(0x00485B00, this);
+	return fileFlags & kFileFlag_Master;
+}
+
+bool TESFile::IsLoaded( void ) const
+{
+	return fileFlags & kFileFlag_Loaded;
 }
 
 bool TESFile::SetLoaded( bool State )

@@ -65,7 +65,7 @@ namespace UIComponents {
 	private: System::Windows::Forms::TabPage^  TabIntelliSense;
 	private: System::Windows::Forms::TabPage^  TabPreprocessor;
 	private: System::Windows::Forms::TabPage^  TabAppearance;
-	private: System::Windows::Forms::CheckBox^  SuppressRefCountForQuestScripts;
+
 	private: System::Windows::Forms::CheckBox^  LoadScriptUpdateExistingScripts;
 	private: System::Windows::Forms::Label^  LabelISDBUpdatePeriod;
 	private: System::Windows::Forms::NumericUpDown^  DatabaseUpdateInterval;
@@ -129,6 +129,12 @@ private: System::Windows::Forms::Label^  LabelAutoRecoveryInterval;
 private: System::Windows::Forms::NumericUpDown^  AutoRecoverySavePeriod;
 private: System::Windows::Forms::CheckBox^  UseAutoRecovery;
 private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
+private: System::Windows::Forms::TabPage^  TabValidator;
+private: System::Windows::Forms::CheckBox^  VarFormNameCollisions;
+
+private: System::Windows::Forms::CheckBox^  SuppressRefCountForQuestScripts;
+private: System::Windows::Forms::CheckBox^  CountVarRefs;
+
 
 	protected:
 
@@ -160,8 +166,8 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->TabGeneral = (gcnew System::Windows::Forms::TabPage());
 			this->CutCopyEntireLine = (gcnew System::Windows::Forms::CheckBox());
 			this->LoadScriptUpdateExistingScripts = (gcnew System::Windows::Forms::CheckBox());
-			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->TabIntelliSense = (gcnew System::Windows::Forms::TabPage());
+			this->ForceDatabaseUpdate = (gcnew System::Windows::Forms::Button());
 			this->NoFocusUI = (gcnew System::Windows::Forms::CheckBox());
 			this->LabelMaxVisibleItems = (gcnew System::Windows::Forms::Label());
 			this->MaxVisibleItems = (gcnew System::Windows::Forms::NumericUpDown());
@@ -212,7 +218,10 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->LabelAutoRecoveryInterval = (gcnew System::Windows::Forms::Label());
 			this->AutoRecoverySavePeriod = (gcnew System::Windows::Forms::NumericUpDown());
 			this->UseAutoRecovery = (gcnew System::Windows::Forms::CheckBox());
-			this->ForceDatabaseUpdate = (gcnew System::Windows::Forms::Button());
+			this->TabValidator = (gcnew System::Windows::Forms::TabPage());
+			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
+			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
+			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -227,6 +236,7 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->TabSanitize->SuspendLayout();
 			this->TabBackup->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->BeginInit();
+			this->TabValidator->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// AllowRedefinitions
@@ -342,6 +352,7 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->TabContainer->Controls->Add(this->TabAppearance);
 			this->TabContainer->Controls->Add(this->TabSanitize);
 			this->TabContainer->Controls->Add(this->TabBackup);
+			this->TabContainer->Controls->Add(this->TabValidator);
 			this->TabContainer->HotTrack = true;
 			this->TabContainer->Location = System::Drawing::Point(12, 12);
 			this->TabContainer->Multiline = true;
@@ -355,7 +366,6 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->TabGeneral->Controls->Add(this->CutCopyEntireLine);
 			this->TabGeneral->Controls->Add(this->LoadScriptUpdateExistingScripts);
 			this->TabGeneral->Controls->Add(this->DestroyOnLastTabClose);
-			this->TabGeneral->Controls->Add(this->SuppressRefCountForQuestScripts);
 			this->TabGeneral->Controls->Add(this->SaveLastKnownPos);
 			this->TabGeneral->Controls->Add(this->RecompileVarIdx);
 			this->TabGeneral->Controls->Add(this->AutoIndent);
@@ -388,16 +398,6 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
 			this->LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
 			// 
-			// SuppressRefCountForQuestScripts
-			// 
-			this->SuppressRefCountForQuestScripts->AutoSize = true;
-			this->SuppressRefCountForQuestScripts->Location = System::Drawing::Point(22, 227);
-			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
-			this->SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
-			this->SuppressRefCountForQuestScripts->TabIndex = 12;
-			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
-			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
-			// 
 			// TabIntelliSense
 			// 
 			this->TabIntelliSense->Controls->Add(this->ForceDatabaseUpdate);
@@ -416,6 +416,15 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->TabIntelliSense->TabIndex = 1;
 			this->TabIntelliSense->Text = L"IntelliSense";
 			this->TabIntelliSense->UseVisualStyleBackColor = true;
+			// 
+			// ForceDatabaseUpdate
+			// 
+			this->ForceDatabaseUpdate->Location = System::Drawing::Point(30, 238);
+			this->ForceDatabaseUpdate->Name = L"ForceDatabaseUpdate";
+			this->ForceDatabaseUpdate->Size = System::Drawing::Size(148, 24);
+			this->ForceDatabaseUpdate->TabIndex = 10;
+			this->ForceDatabaseUpdate->Text = L"Update Database Now";
+			this->ForceDatabaseUpdate->UseVisualStyleBackColor = true;
 			// 
 			// NoFocusUI
 			// 
@@ -914,14 +923,48 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->UseAutoRecovery->Text = L"Use Auto-Recovery";
 			this->UseAutoRecovery->UseVisualStyleBackColor = true;
 			// 
-			// ForceDatabaseUpdate
+			// TabValidator
 			// 
-			this->ForceDatabaseUpdate->Location = System::Drawing::Point(30, 238);
-			this->ForceDatabaseUpdate->Name = L"ForceDatabaseUpdate";
-			this->ForceDatabaseUpdate->Size = System::Drawing::Size(148, 24);
-			this->ForceDatabaseUpdate->TabIndex = 10;
-			this->ForceDatabaseUpdate->Text = L"Update Database Now";
-			this->ForceDatabaseUpdate->UseVisualStyleBackColor = true;
+			this->TabValidator->Controls->Add(this->CountVarRefs);
+			this->TabValidator->Controls->Add(this->SuppressRefCountForQuestScripts);
+			this->TabValidator->Controls->Add(this->VarFormNameCollisions);
+			this->TabValidator->Location = System::Drawing::Point(4, 22);
+			this->TabValidator->Name = L"TabValidator";
+			this->TabValidator->Padding = System::Windows::Forms::Padding(3);
+			this->TabValidator->Size = System::Drawing::Size(423, 290);
+			this->TabValidator->TabIndex = 6;
+			this->TabValidator->Text = L"Validator";
+			this->TabValidator->UseVisualStyleBackColor = true;
+			// 
+			// VarFormNameCollisions
+			// 
+			this->VarFormNameCollisions->AutoSize = true;
+			this->VarFormNameCollisions->Location = System::Drawing::Point(24, 28);
+			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
+			this->VarFormNameCollisions->Size = System::Drawing::Size(219, 17);
+			this->VarFormNameCollisions->TabIndex = 0;
+			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions";
+			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
+			// 
+			// SuppressRefCountForQuestScripts
+			// 
+			this->SuppressRefCountForQuestScripts->AutoSize = true;
+			this->SuppressRefCountForQuestScripts->Location = System::Drawing::Point(24, 255);
+			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
+			this->SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
+			this->SuppressRefCountForQuestScripts->TabIndex = 13;
+			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
+			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
+			// 
+			// CountVarRefs
+			// 
+			this->CountVarRefs->AutoSize = true;
+			this->CountVarRefs->Location = System::Drawing::Point(24, 51);
+			this->CountVarRefs->Name = L"CountVarRefs";
+			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
+			this->CountVarRefs->TabIndex = 14;
+			this->CountVarRefs->Text = L"Count Variable Use References";
+			this->CountVarRefs->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 
@@ -951,6 +994,8 @@ private: System::Windows::Forms::Button^  ForceDatabaseUpdate;
 			this->TabSanitize->PerformLayout();
 			this->TabBackup->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->EndInit();
+			this->TabValidator->ResumeLayout(false);
+			this->TabValidator->PerformLayout();
 			this->ResumeLayout(false);
 
 		}

@@ -134,6 +134,29 @@ namespace ConstructionSetExtender
 			_DATAHANDLER = (TESDataHandler*)DataHandlerInstance;
 		}
 
+		CSEHallOfFameScript::CSEHallOfFameScript( const char* Name, const char* Code ) :
+			CSEHallOfFameEntry(Name, Code, TESForm::kFormType_Script)
+		{
+			;//
+		}
+
+		CSEHallOfFameScript::~CSEHallOfFameScript()
+		{
+			;//
+		}
+
+		void CSEHallOfFameScript::Initialize( UInt32 FormID )
+		{
+			Script* Form = CS_CAST(TESForm::CreateInstance(FormType), TESForm, Script);
+
+			Form->SetFormID(FormID);
+			Form->SetEditorID(Name);
+			Form->SetFromActiveFile(false);
+			Form->SetText(Title);
+
+			_DATAHANDLER->scripts.AddAt(Form, eListEnd);
+		}
+
 		CSEHallOfFameShadeMe::CSEHallOfFameShadeMe() :
 			CSEHallOfFameEntry("shadeMe", "Likes Andrea Corr", TESForm::kFormType_NPC),
 			TheGreatEye(NULL)
@@ -201,6 +224,7 @@ namespace ConstructionSetExtender
 			Inductees.push_back(new CSEHallOfFameMGEF('HSRJ',							"The Constant Physicist"));
 			Inductees.push_back(new CSEHallOfFameEntry("Arthmoor",						"Bollocks-Breaker",				TESForm::kFormType_SoulGem));
 			Inductees.push_back(new CSEHallOfFameEntry("Vorians",						"Mr. Aux Viewport",				TESForm::kFormType_Activator));
+			Inductees.push_back(new CSEHallOfFameScript("QQuix",						"scn QQuix\n\nbegin function {}\n\tsetFunctionValue \"I was the one who brought up the idea for Coda, CSE's scripting language for the CS environment! Woohoo!!\"\nend"));
 
 			Inductees.push_back(new CSEHallOfFameShadeMe());		// oh yeah!
 

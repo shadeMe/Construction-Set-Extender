@@ -2235,7 +2235,7 @@ namespace ConstructionSetExtender
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
 					else if (ISDB->GetIsIdentifierScriptCommand(SecondToken))
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' is reserved for a script command."), Result = false;
-					else if (ISDB->GetIsIdentifierForm(SecondToken))
+					else if (ISDB->GetIsIdentifierForm(SecondToken) && PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' has already been assigned to a form."), Result = false;
 					else
 						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
@@ -2321,7 +2321,7 @@ namespace ConstructionSetExtender
 
 			for each (ScriptParser::VariableRefCountData^ Itr in ScriptTextParser->Variables)
 			{
-				if (Itr->RefCount == 0)
+				if (Itr->RefCount == 0 && PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
 				{
 					if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest ||
 						PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "General") == 0)

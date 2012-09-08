@@ -70,7 +70,6 @@ namespace ConstructionSetExtender
 			CheckBox^									RecompileVarIdx;
 			CheckBox^									UseCSParent;
 			CheckBox^									DestroyOnLastTabClose;
-			CheckBox^									SuppressRefCountForQuestScripts;
 			CheckBox^									LoadScriptUpdateExistingScripts;
 			CheckBox^									CutCopyEntireLine;
 			TabPage^									TabIntelliSense;
@@ -131,7 +130,10 @@ namespace ConstructionSetExtender
 			Label^										LabelAutoRecoveryInterval;
 			CheckBox^									UseAutoRecovery;
 			NumericUpDown^								AutoRecoverySavePeriod;
-
+			TabPage^									TabValidator;
+			CheckBox^									VarFormNameCollisions;
+			CheckBox^									SuppressRefCountForQuestScripts;
+			CheckBox^									CountVarRefs;
 			// hidden controls, for settings that aren't displayed in the preferences window
 
 			// Find/Replace

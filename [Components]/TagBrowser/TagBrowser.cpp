@@ -575,8 +575,8 @@ namespace ConstructionSetExtender
 	{
 		SaveFileDialog^ SaveManager = gcnew SaveFileDialog();
 
-		SaveManager->DefaultExt = "*.csetags";
-		SaveManager->Filter = "CSE Tag Database|*.csetags";
+		SaveManager->DefaultExt = "*.bgseetags";
+		SaveManager->Filter = "BGSEE Tag Database|*.bgseetags";
 		SaveManager->RestoreDirectory = true;
 
 		if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
@@ -601,8 +601,8 @@ namespace ConstructionSetExtender
 	{
 		OpenFileDialog^ LoadManager = gcnew OpenFileDialog();
 
-		LoadManager->DefaultExt = "*.csetags";
-		LoadManager->Filter = "CSE Tag Database|*.csetags";
+		LoadManager->DefaultExt = "*.bgseetags";
+		LoadManager->Filter = "BGSEE Tag Database|*.bgseetags";
 		LoadManager->RestoreDirectory = true;
 
 		if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0)
@@ -631,7 +631,7 @@ namespace ConstructionSetExtender
 			for each (ListViewItem^ Itr in FormList->SelectedItems)
 				Itr->Selected = false;
 
-			ListViewItem^ Result = FormList->FindItemWithText(SearchBox->Text, true, 0, true);
+			ListViewItem^ Result = FindItemWithText(FormList, SearchBox->Text, true, true);
 
 			if (Result != nullptr)
 			{

@@ -21,6 +21,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Sort landscape edit dialog listview by editorID and call ListView_EnsureVisible when the active landtex is changed
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Copy/paste obj refs b'ween CS sessions
 		> Implement a fly camera mode for the render window

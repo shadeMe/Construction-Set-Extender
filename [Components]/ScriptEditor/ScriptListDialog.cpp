@@ -344,7 +344,7 @@ namespace ConstructionSetExtender
 				for each (ListViewItem^ Itr in ScriptList->SelectedItems)
 					Itr->Selected = false;
 
-				ListViewItem^ Result = ScriptList->FindItemWithText(SearchBox->Text, true, 0, true);
+				ListViewItem^ Result = FindItemWithText(ScriptList, SearchBox->Text, true, true);
 				if (Result != nullptr)
 				{
 					Result->Selected = true;

@@ -18,6 +18,25 @@ int GetListViewSelectedItemIndex( ListView^% Source )
 	return Result;
 }
 
+ListViewItem^ FindItemWithText( ListView^% Source, String^ Substring, bool SearchInSubItems, bool CaseInsensitive )
+{
+	for each (ListViewItem^ Item in Source->Items)
+	{
+		if (Item->Text->IndexOf(Substring, 0, (CaseInsensitive ? StringComparison::CurrentCultureIgnoreCase : StringComparison::CurrentCulture)) != -1)
+			return Item;
+		else if (SearchInSubItems)
+		{
+			for each (ListViewItem::ListViewSubItem^ SubItem in Item->SubItems)
+			{
+				if (SubItem->Text->IndexOf(Substring, 0, (CaseInsensitive ? StringComparison::CurrentCultureIgnoreCase : StringComparison::CurrentCulture)) != -1)
+					return Item;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 int ListViewStringSorter::Compare(Object^ X, Object^ Y)
 {
 	int Result = -1;

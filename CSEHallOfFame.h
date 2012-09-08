@@ -55,6 +55,15 @@ namespace ConstructionSetExtender
 			virtual void			Initialize(UInt32 FormID);
 		};
 
+		class CSEHallOfFameScript : public CSEHallOfFameEntry
+		{
+		public:
+			CSEHallOfFameScript(const char* Name, const char* Code);
+			virtual ~CSEHallOfFameScript();
+
+			virtual void			Initialize(UInt32 FormID);
+		};
+
 		class CSEHallOfFameShadeMe : public CSEHallOfFameEntry
 		{
 		protected:

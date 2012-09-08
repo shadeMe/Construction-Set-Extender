@@ -154,6 +154,7 @@ public:
 	// methods
 	bool						IsActive(void) const;
 	bool						IsMaster(void) const;
+	bool						IsLoaded(void) const;
 
 	bool						SetLoaded(bool State);
 	bool						SetActive(bool State);
