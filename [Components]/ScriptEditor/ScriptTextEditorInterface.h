@@ -119,14 +119,13 @@ namespace ConstructionSetExtender
 
 			void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
 
+			void										HighlightScriptError(int Line);
+			void										ClearScriptErrorHighlights(void);
+
 			// Event handlers
 			void										OnGotFocus(void);					// called when the workspace's is brought to focus
 			void										OnLostFocus(void);					// the opposite of the above
 			void										OnPositionSizeChange(void);			// called when the workspace's container's position or size changes
-
-			// AvalonEdit specific
-			void										HighlightScriptError(int Line);
-			void										ClearScriptErrorHighlights(void);
 		};
 	}
 }

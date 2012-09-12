@@ -23,7 +23,7 @@ namespace ComponentDLLInterface
 		if (Form->info.type == Script::kScriptType_Object && Form->info.dataLength >= 15)
 		{
 			UInt8* data = (UInt8*)Form->data;
-			if (*(data + 8) == 7)
+			if (data && *(data + 8) == 7)
 			{
 				UDF = true;
 			}

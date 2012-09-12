@@ -45,7 +45,7 @@ namespace ConstructionSetExtender
 
 			virtual String^										Describe();
 			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface); // argument's a ScriptEditor::Workspace^
-			virtual bool										GetShouldEnumerate(String^ Token);		// returns true if the item can be enumerated in the interface
+			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);		// returns true if the item can be enumerated in the interface
 			virtual bool										GetIsQuickViewable();					// returns true if the item allows a quick view tooltip
 			virtual String^										GetIdentifier() = 0;					// identifier for display in the interface
 			virtual String^										GetSubstitution() = 0;					// string to be inserted into the code
@@ -103,20 +103,9 @@ namespace ConstructionSetExtender
 
 		ref class IntelliSenseItemVariable : public IntelliSenseItem
 		{
-		public:
-			static array<String^>^								IntelliSenseItemVariableDataTypeID =
-			{
-				"Integer",
-				"Float",
-				"Reference",
-				"String",
-				"Array"
-			};
-		private:
 			String^												Name;
 			ScriptParser::VariableType							DataType;
 			String^												Comment;
-
 		public:
 			IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope);
 
@@ -227,7 +216,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
 			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface) override;
-			virtual bool										GetShouldEnumerate(String^ Token) override;
+			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual bool										GetIsQuickViewable() override;
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;

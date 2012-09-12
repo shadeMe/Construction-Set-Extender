@@ -29,7 +29,7 @@ namespace ConstructionSetExtender
 			System::Windows::Input::Key::Enter
 		};
 	public:
-		static String^										ScriptTextDelimiters = "., (){}[]\t\n";
+		static String^										ScriptTextDelimiters = "., (){}[]\t\r\n";
 		static String^										ScriptTextControlChars = " \t";
 
 		static bool											GetIsDelimiterKey(Keys KeyCode);
@@ -93,9 +93,9 @@ namespace ConstructionSetExtender
 		static enum class									VariableType
 		{
 			[EnumMember]
-			e_Unknown		= -1,
+			e_Unknown		= 0,
 			[EnumMember]
-			e_Integer		= 0,
+			e_Integer,
 			[EnumMember]
 			e_Float,
 			[EnumMember]
@@ -106,7 +106,7 @@ namespace ConstructionSetExtender
 			e_Array
 		};
 
-		static array<String^>^								VariableIDs =
+		static array<String^>^								VariableKeywords =
 		{
 			"???",
 			"int",
@@ -116,8 +116,19 @@ namespace ConstructionSetExtender
 			"array_var"
 		};
 
-		static String^										GetVariableID(VariableType Type);
+		static array<String^>^								VariableIDs =
+		{
+			"Unknown Type",
+			"Integer",
+			"Float",
+			"Reference",
+			"String",
+			"Array"
+		};
+
 		static VariableType									GetVariableType(String^ Token);
+		static String^										GetVariableKeyword(VariableType Type);
+		static String^										GetVariableID(VariableType Type);
 
 		static array<String^>^								OperatorIDs =
 		{

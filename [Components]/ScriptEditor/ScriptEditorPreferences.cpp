@@ -194,6 +194,7 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("UseQuickView", "IntelliSense", "1"), gcnew BoundControl(UseQuickView, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("MaxVisibleItems", "IntelliSense", "5"), gcnew BoundControl(MaxVisibleItems, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
 			SettingCollection->Add(gcnew INISetting("NoFocusUI", "IntelliSense", "0"), gcnew BoundControl(NoFocusUI, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("SubstringSearch", "IntelliSense", "1"), gcnew BoundControl(SubstringSearch, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 
 			// Preprocessor
 			SettingCollection->Add(gcnew INISetting("AllowRedefinitions", "Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -216,6 +217,7 @@ namespace ConstructionSetExtender
 
 			// Validator
 			SettingCollection->Add(gcnew INISetting("VarFormNameCollisions", "Validator", "0"), gcnew BoundControl(VarFormNameCollisions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("VarCmdNameCollisions", "Validator", "1"), gcnew BoundControl(VarCmdNameCollisions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("CountVarRefs", "Validator", "1"), gcnew BoundControl(CountVarRefs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 			SettingCollection->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "Validator", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
 		}
@@ -387,8 +389,11 @@ namespace ConstructionSetExtender
 			ForceDatabaseUpdate = gcnew Button();
 			this->TabValidator = (gcnew System::Windows::Forms::TabPage());
 			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
+			this->VarCmdNameCollisions = (gcnew System::Windows::Forms::CheckBox());
 			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
+			this->SubstringSearch = (gcnew System::Windows::Forms::CheckBox());
+
 			//
 			// Hidden Controls
 			//
@@ -552,6 +557,7 @@ namespace ConstructionSetExtender
 			TabIntelliSense->Controls->Add(ThresholdLength);
 			TabIntelliSense->Controls->Add(NoFocusUI);
 			TabIntelliSense->Controls->Add(ForceDatabaseUpdate);
+			TabIntelliSense->Controls->Add(SubstringSearch);
 			TabIntelliSense->Location = System::Drawing::Point(4, 22);
 			TabIntelliSense->Name = L"TabIntelliSense";
 			TabIntelliSense->Padding = Padding(3);
@@ -1109,6 +1115,7 @@ namespace ConstructionSetExtender
 			this->TabValidator->Controls->Add(this->CountVarRefs);
 			this->TabValidator->Controls->Add(this->SuppressRefCountForQuestScripts);
 			this->TabValidator->Controls->Add(this->VarFormNameCollisions);
+			this->TabValidator->Controls->Add(this->VarCmdNameCollisions);
 			this->TabValidator->Location = System::Drawing::Point(4, 22);
 			this->TabValidator->Name = L"TabValidator";
 			this->TabValidator->Padding = System::Windows::Forms::Padding(3);
@@ -1117,15 +1124,15 @@ namespace ConstructionSetExtender
 			this->TabValidator->Text = L"Validator";
 			this->TabValidator->UseVisualStyleBackColor = true;
 			//
-			// VarFormNameCollisions
+			// CountVarRefs
 			//
-			this->VarFormNameCollisions->AutoSize = true;
-			this->VarFormNameCollisions->Location = System::Drawing::Point(24, 28);
-			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
-			this->VarFormNameCollisions->Size = System::Drawing::Size(219, 17);
-			this->VarFormNameCollisions->TabIndex = 0;
-			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions";
-			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
+			this->CountVarRefs->AutoSize = true;
+			this->CountVarRefs->Location = System::Drawing::Point(24, 74);
+			this->CountVarRefs->Name = L"CountVarRefs";
+			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
+			this->CountVarRefs->TabIndex = 14;
+			this->CountVarRefs->Text = L"Count Variable Use References";
+			this->CountVarRefs->UseVisualStyleBackColor = true;
 			//
 			// SuppressRefCountForQuestScripts
 			//
@@ -1137,15 +1144,34 @@ namespace ConstructionSetExtender
 			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
 			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
 			//
-			// CountVarRefs
+			// VarFormNameCollisions
 			//
-			this->CountVarRefs->AutoSize = true;
-			this->CountVarRefs->Location = System::Drawing::Point(24, 51);
-			this->CountVarRefs->Name = L"CountVarRefs";
-			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
-			this->CountVarRefs->TabIndex = 14;
-			this->CountVarRefs->Text = L"Count Variable Use References";
-			this->CountVarRefs->UseVisualStyleBackColor = true;
+			this->VarFormNameCollisions->AutoSize = true;
+			this->VarFormNameCollisions->Location = System::Drawing::Point(24, 28);
+			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
+			this->VarFormNameCollisions->Size = System::Drawing::Size(300, 17);
+			this->VarFormNameCollisions->TabIndex = 0;
+			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions (Recommended)";
+			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
+			//
+			// VarCmdNameCollisions
+			//
+			this->VarCmdNameCollisions->AutoSize = true;
+			this->VarCmdNameCollisions->Location = System::Drawing::Point(24, 51);
+			this->VarCmdNameCollisions->Name = L"VarCmdNameCollisions";
+			this->VarCmdNameCollisions->Size = System::Drawing::Size(324, 17);
+			this->VarCmdNameCollisions->TabIndex = 15;
+			this->VarCmdNameCollisions->Text = L"Check For Variable-Command Name Collisions (Recommended)";
+			this->VarCmdNameCollisions->UseVisualStyleBackColor = true;
+			//
+			// SubstringSearch
+			//
+			this->SubstringSearch->Location = System::Drawing::Point(231, 238);
+			this->SubstringSearch->Name = L"SubstringSearch";
+			this->SubstringSearch->Size = System::Drawing::Size(167, 36);
+			this->SubstringSearch->TabIndex = 11;
+			this->SubstringSearch->Text = L"Use Substring Search While Filtering";
+			this->SubstringSearch->UseVisualStyleBackColor = true;
 			//
 			// ScriptEditorPreferences
 			//

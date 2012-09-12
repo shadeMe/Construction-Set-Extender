@@ -39,6 +39,7 @@ namespace ConstructionSetExtender
 			IntelliSenseListMouseDoubleClickHandler = gcnew MouseEventHandler(this, &IntelliSenseInterface::IntelliSenseList_MouseDoubleClick);
 			IntelliSenseListRetrieveVirtualItemEventHandler = gcnew RetrieveVirtualItemEventHandler(this, &IntelliSenseInterface::IntelliSenseList_RetrieveVirtualItem);
 			IntelliSenseBoxCancelHandler = gcnew CancelEventHandler(this, &IntelliSenseInterface::IntelliSenseBox_Cancel);
+			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterface::ScriptEditorPreferences_Saved);
 
 			IntelliSenseBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
 			IntelliSenseBox->ShowInTaskbar = false;
@@ -78,12 +79,17 @@ namespace ConstructionSetExtender
 			InfoToolTip->ReshowDelay = 0;
 			InfoToolTip->ToolTipIcon = ToolTipIcon::None;
 
+			DestructionFlag = false;
+
 			Enabled = true;
 			LastOperation = Operation::e_Default;
-			DestructionFlag = false;
-			MaximumVisibleItemCount = 10;
-			PreventActivation = false;
 			OverrideThresholdCheck = false;
+
+			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
+			MaximumVisibleItemCount = PREFERENCES->FetchSettingAsInt("MaxVisibleItems", "IntelliSense");
+			PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
+			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
+			UseQuickView = PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense");
 
 			IntelliSenseBox->SetSize(Size(0, 0));
 			IntelliSenseBox->ShowForm(Point(0,0), IntelliSenseBox->Handle, false);
@@ -97,6 +103,7 @@ namespace ConstructionSetExtender
 			IntelliSenseList->KeyDown += IntelliSenseListKeyDownHandler;
 			IntelliSenseList->MouseDoubleClick += IntelliSenseListMouseDoubleClickHandler;
 			IntelliSenseList->RetrieveVirtualItem += IntelliSenseListRetrieveVirtualItemEventHandler;
+			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 		}
 
 		void IntelliSenseInterface::DisplayToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
@@ -137,11 +144,11 @@ namespace ConstructionSetExtender
 			switch (DisplayOperation)
 			{
 			case Operation::e_Default:
-				if (OverrideThresholdCheck || CurrentToken->Length >= PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense"))
+				if (OverrideThresholdCheck || CurrentToken->Length >= PopupThresholdLength)
 				{
 					for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 					{
-						if (Itr->GetShouldEnumerate(CurrentToken))
+						if (Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
 					}
 
@@ -154,7 +161,7 @@ namespace ConstructionSetExtender
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Form)
 						{
-							if (Itr->GetShouldEnumerate(CurrentToken))
+							if (Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 								EnumerateItem(Itr);
 						}
 					}
@@ -166,7 +173,7 @@ namespace ConstructionSetExtender
 				{
 					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_UserFunct)
 					{
-						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
 					}
 				}
@@ -211,7 +218,7 @@ namespace ConstructionSetExtender
 				{
 					if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
 					{
-						if (ShowAllItems || RemoteVarItr->Current->GetShouldEnumerate(CurrentToken))
+						if (ShowAllItems || RemoteVarItr->Current->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(RemoteVarItr->Current);
 					}
 				}
@@ -220,7 +227,7 @@ namespace ConstructionSetExtender
 				{
 					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && CallingObjectIsRef)
 					{
-						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
 					}
 				}
@@ -229,7 +236,7 @@ namespace ConstructionSetExtender
 			case Operation::e_Assign:
 				for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 				{
-					if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+					if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 						EnumerateItem(Itr);
 				}
 
@@ -238,7 +245,7 @@ namespace ConstructionSetExtender
 					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
 						Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar)
 					{
-						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken))
+						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
 					}
 				}
@@ -253,7 +260,7 @@ namespace ConstructionSetExtender
 					{
 						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Snippet)
 						{
-							if (ShowAllItems || CurrentToken == "`" || Itr->GetShouldEnumerate(CurrentToken))
+							if (ShowAllItems || CurrentToken == "`" || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 								EnumerateItem(Itr);
 						}
 					}
@@ -448,7 +455,7 @@ namespace ConstructionSetExtender
 
 		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point Location)
 		{
-			if (PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense") == 0)
+			if (UseQuickView == false)
 				return false;
 
 			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
@@ -507,6 +514,7 @@ namespace ConstructionSetExtender
 			IntelliSenseList->KeyDown -= IntelliSenseListKeyDownHandler;
 			IntelliSenseList->MouseDoubleClick -= IntelliSenseListMouseDoubleClickHandler;
 			IntelliSenseList->RetrieveVirtualItem -= IntelliSenseListRetrieveVirtualItemEventHandler;
+			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 
 			for each (Image^ Itr in IntelliSenseList->SmallImageList->Images)
 				delete Itr;
@@ -554,6 +562,15 @@ namespace ConstructionSetExtender
 			}
 
 			return Result;
+		}
+
+		void IntelliSenseInterface::ScriptEditorPreferences_Saved( Object^ Sender, EventArgs^ E )
+		{
+			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
+			MaximumVisibleItemCount = PREFERENCES->FetchSettingAsInt("MaxVisibleItems", "IntelliSense");
+			PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
+			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
+			UseQuickView = PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense");
 		}
 	}
 }

@@ -15,35 +15,6 @@ namespace ConstructionSetExtender
 		{
 			ref class AvalonEditTextEditor;
 
-			ref class AvalonEditLineColorizingTransformer abstract : public AvalonEdit::Rendering::DocumentColorizingTransformer
-			{
-			protected:
-				AvalonEdit::TextEditor^						ParentEditor;
-				virtual void								PerformColorization(VisualLineElement^ Element) = 0;
-			public:
-				virtual ~AvalonEditLineColorizingTransformer();
-				AvalonEditLineColorizingTransformer(AvalonEdit::TextEditor^% Parent);
-			};
-
-			// deprecated in favor of BackgroundColorizers
-			ref class AvalonEditSelectionColorizingTransformer : public AvalonEditLineColorizingTransformer
-			{
-			protected:
-				virtual void								PerformColorization(VisualLineElement^ Element) override;
-				virtual void								ColorizeLine(DocumentLine^ line) override;
-			public:
-				AvalonEditSelectionColorizingTransformer(AvalonEdit::TextEditor^% Parent);
-			};
-
-			ref class AvalonEditLineLimitColorizingTransformer : public AvalonEditLineColorizingTransformer
-			{
-			protected:
-				virtual void								PerformColorization(VisualLineElement^ Element) override;
-				virtual void								ColorizeLine(DocumentLine^ line) override;
-			public:
-				AvalonEditLineLimitColorizingTransformer(AvalonEdit::TextEditor^% Parent);
-			};
-
 			// background colorizers
 			ref class AvalonEditLineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 			{

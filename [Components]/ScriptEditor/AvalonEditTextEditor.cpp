@@ -274,12 +274,12 @@ namespace ConstructionSetExtender
 
 			String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
 			{
-				return GetTextAtLocation(Offset, false)->Replace("\n", "");
+				return GetTextAtLocation(Offset, false)->Replace("\r\n", "")->Replace("\n", "");
 			}
 
 			String^ AvalonEditTextEditor::GetTokenAtCaretPos()
 			{
-				return GetTextAtLocation(GetCaretPos() - 1, false)->Replace("\n", "");
+				return GetTextAtLocation(GetCaretPos() - 1, false)->Replace("\r\n", "")->Replace("\n", "");
 			}
 
 			void AvalonEditTextEditor::SetTokenAtCaretPos(String^ Replacement)
@@ -291,7 +291,7 @@ namespace ConstructionSetExtender
 
 			String^ AvalonEditTextEditor::GetTokenAtMouseLocation()
 			{
-				return GetTextAtLocation(LastKnownMouseClickOffset, false)->Replace("\n", "");
+				return GetTextAtLocation(LastKnownMouseClickOffset, false)->Replace("\r\n", "")->Replace("\n", "");
 			}
 
 			array<String^>^ AvalonEditTextEditor::GetTokensAtMouseLocation()
@@ -1731,9 +1731,6 @@ namespace ConstructionSetExtender
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
-				IntelliSenseBox->MaximumVisibleItemCount = PREFERENCES->FetchSettingAsInt("MaxVisibleItems", "IntelliSense");
-				IntelliSenseBox->PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
-
 				RefreshTextView();
 			}
 #pragma endregion
@@ -1838,8 +1835,6 @@ namespace ConstructionSetExtender
 				FoldingTimer->Interval = 5000;
 				FoldingTimer->Start();
 
-				IntelliSenseBox->MaximumVisibleItemCount = PREFERENCES->FetchSettingAsInt("MaxVisibleItems", "IntelliSense");
-				IntelliSenseBox->PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
 				LastKnownMouseClickOffset = 0;
 
 				ScrollBarSyncTimer->Interval = 200;

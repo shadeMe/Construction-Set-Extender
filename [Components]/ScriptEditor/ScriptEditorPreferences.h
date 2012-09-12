@@ -82,6 +82,7 @@ namespace ConstructionSetExtender
 			NumericUpDown^								MaxVisibleItems;
 			CheckBox^									NoFocusUI;
 			Button^										ForceDatabaseUpdate;
+			CheckBox^									SubstringSearch;
 			TabPage^									TabPreprocessor;
 			CheckBox^									AllowRedefinitions;
 			Label^										LabelNoOfPasses;
@@ -132,6 +133,7 @@ namespace ConstructionSetExtender
 			NumericUpDown^								AutoRecoverySavePeriod;
 			TabPage^									TabValidator;
 			CheckBox^									VarFormNameCollisions;
+			CheckBox^									VarCmdNameCollisions;
 			CheckBox^									SuppressRefCountForQuestScripts;
 			CheckBox^									CountVarRefs;
 			// hidden controls, for settings that aren't displayed in the preferences window

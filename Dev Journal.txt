@@ -32,6 +32,7 @@ CSE		---->
 
 	
 	MISC			=
+		> Turn on compiler optimizations (set to Max speed) and look for side effects
 		> Wrap all editorAPI instance data
 
 

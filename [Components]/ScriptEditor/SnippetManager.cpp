@@ -674,7 +674,7 @@ namespace ConstructionSetExtender
 				CodeSnippet::VariableInfo^ NewVar = gcnew CodeSnippet::VariableInfo(VarName, VarType);
 
 				ListViewItem^ Item = gcnew ListViewItem(VarName);
-				Item->SubItems->Add(ScriptParser::GetVariableID(VarType));
+				Item->SubItems->Add(ScriptParser::GetVariableKeyword(VarType));
 				Item->Tag = NewVar;
 
 				SnippetVarList->Items->Add(Item);

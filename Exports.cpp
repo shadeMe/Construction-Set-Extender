@@ -265,7 +265,7 @@ bool CompileScript(ScriptCompileData* Data)
 	{
 		BGSEEUI->MsgBoxI(NULL,
 						MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-						"Script %s {%08X} has been deleted, ergo it cannot be compiled", ScriptForm->editorID.c_str(), ScriptForm->formID);
+						"Script %s {%08X} has been deleted, ergo it cannot be compiled.", ScriptForm->editorID.c_str(), ScriptForm->formID);
 
 		Data->CompileResult = false;
 	}

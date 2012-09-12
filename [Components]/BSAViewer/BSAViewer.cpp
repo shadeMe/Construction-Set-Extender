@@ -224,8 +224,8 @@ namespace ConstructionSetExtender
 		this->WorkingDirectory = WorkingDirectory;
 
 		ContentList->Sorting = SortOrder::Ascending;
-		ContentList->Sort();
 		ContentList->ListViewItemSorter = gcnew ListViewStringSorter(0, ContentList->Sorting);
+		ContentList->Sort();
 	}
 
 	void BSAViewer::Close()

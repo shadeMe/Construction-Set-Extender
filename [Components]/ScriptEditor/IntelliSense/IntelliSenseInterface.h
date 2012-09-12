@@ -32,6 +32,7 @@ namespace ConstructionSetExtender
 			void												IntelliSenseList_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E);
 			void												IntelliSenseList_RetrieveVirtualItem(Object^ Sender, RetrieveVirtualItemEventArgs^ E);
 			void												IntelliSenseBox_Cancel(Object^ Sender, CancelEventArgs^ E);
+			void												ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
 			void												DisplayToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
 
@@ -51,6 +52,17 @@ namespace ConstructionSetExtender
 			MouseEventHandler^									IntelliSenseListMouseDoubleClickHandler;
 			RetrieveVirtualItemEventHandler^					IntelliSenseListRetrieveVirtualItemEventHandler;
 			CancelEventHandler^									IntelliSenseBoxCancelHandler;
+			EventHandler^										ScriptEditorPreferencesSavedHandler;
+
+			property UInt32										PopupThresholdLength;
+			property UInt32										MaximumVisibleItemCount;
+			property bool										PreventActivation
+			{
+				virtual bool get() { return IntelliSenseBox->PreventActivation; }
+				virtual void set(bool value) { IntelliSenseBox->PreventActivation = value; }
+			}
+			property bool										UseSubstringFiltering;
+			property bool										UseQuickView;
 
 			void												Reset();
 			virtual void										Destroy();
@@ -84,12 +96,6 @@ namespace ConstructionSetExtender
 			property bool										Visible
 			{
 				virtual bool get() { return IntelliSenseBox->Visible; }
-			}
-			property UInt32										MaximumVisibleItemCount;
-			property bool										PreventActivation
-			{
-				virtual bool get() { return IntelliSenseBox->PreventActivation; }
-				virtual void set(bool value) { IntelliSenseBox->PreventActivation = value; }
 			}
 
 			virtual void										Show(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);

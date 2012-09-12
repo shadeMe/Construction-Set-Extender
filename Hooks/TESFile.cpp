@@ -19,6 +19,8 @@ namespace ConstructionSetExtender
 		_DefineNopHdlr(TESFormGetUnUsedFormID, 0x00486C08, 2);
 		_DefineHookHdlr(LoadPluginsProlog, 0x00485252);
 		_DefineHookHdlr(LoadPluginsEpilog, 0x004856B2);
+		_DefineHookHdlr(PostPluginSave, 0x0041BBCD);
+		_DefineHookHdlr(PostPluginLoad, 0x0041BEFA);
 		_DefinePatchHdlr(DataDialogPluginDescription, 0x0040CAB6);
 		_DefinePatchHdlr(DataDialogPluginAuthor, 0x0040CAFE);
 		_DefineHookHdlr(SavePluginCommonDialog, 0x00446D51);
@@ -44,6 +46,8 @@ namespace ConstructionSetExtender
 		{
 			_MemHdlr(LoadPluginsProlog).WriteJump();
 			_MemHdlr(LoadPluginsEpilog).WriteJump();
+			_MemHdlr(PostPluginSave).WriteJump();
+			_MemHdlr(PostPluginLoad).WriteJump();
 			_MemHdlr(SavePluginCommonDialog).WriteJump();
 			_MemHdlr(SavePluginMasterEnum).WriteJump();
 			_MemHdlr(MissingMasterOverride).WriteJump();
@@ -150,6 +154,48 @@ namespace ConstructionSetExtender
 				popad
 
 				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoPostPluginSaveHook(void)
+		{
+			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+		}
+
+		#define _hhName	PostPluginSave
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0041BBD3);
+			__asm
+			{
+				call	IATCacheSetWindowTextAddress
+				call	[g_TempIATProcBuffer]				// SetWindowTextA
+				pushad
+				call	DoPostPluginSaveHook
+				popad
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoPostPluginLoadHook(void)
+		{
+			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+
+			SetActiveWindow(*g_HWND_CSParent);				// to make sure none of its child dialogs are hidden behind it
+		}
+
+		#define _hhName	PostPluginLoad
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0041BEFF);
+			_hhSetVar(Call, 0x00430980);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				pushad
+				call	DoPostPluginLoadHook
+				popad
 				jmp		_hhGetVar(Retn)
 			}
 		}

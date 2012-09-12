@@ -418,6 +418,11 @@ namespace ConstructionSetExtender
 			return TokenType::e_Invalid;
 	}
 
+	String^ ScriptParser::GetVariableKeyword( VariableType Type )
+	{
+		return VariableKeywords[(int)Type];
+	}
+
 	String^ ScriptParser::GetVariableID( VariableType Type )
 	{
 		return VariableIDs[(int)Type];
@@ -469,17 +474,9 @@ namespace ConstructionSetExtender
 		if (Extract == "")
 			return false;
 
-		if (!String::Compare(Extract, "ref", true) ||
-			!String::Compare(Extract, "reference", true) ||
-			!String::Compare(Extract, "string_var", true) ||
-			!String::Compare(Extract, "array_var", true) ||
-			!String::Compare(Extract, "long", true) ||
-			!String::Compare(Extract, "short", true) ||
-			!String::Compare(Extract, "float", true) ||
-			!String::Compare(Extract, "int", true))
-		{
+		if (ScriptParser::GetVariableType(Extract) != ScriptParser::VariableType::e_Unknown)
 			return false;
-		}
+
 		else
 			return true;
 	}

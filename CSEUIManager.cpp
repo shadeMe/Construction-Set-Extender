@@ -633,9 +633,12 @@ namespace ConstructionSetExtender
 						else
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kFearless);
 					}
-					else if (Return == false)
+
+					if (Return == false)
 					{
 						CSEFormEnumerationManager::Instance.ResetVisibility();
+						CLIWrapper::Interfaces::SE->CloseAllOpenEditors();
+
 						if (ActiveTESFile)
 							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
 						else

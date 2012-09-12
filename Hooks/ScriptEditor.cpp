@@ -35,9 +35,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(MainWindowEntryPoint, 0x0041A5F6);
 		_DefineHookHdlr(ScriptableFormEntryPoint, 0x004A16AD);
 		_DefineHookHdlr(ScriptEffectItemEntryPoint, 0x00566387);
-		_DefineHookHdlr(LoadRelease, 0x0040D090);
-		_DefineHookHdlr(PostPluginSave, 0x0041BBCD);
-		_DefineHookHdlr(PostPluginLoad, 0x0041BEFA);
 		_DefinePatchHdlrWithBuffer(ToggleScriptCompilingOriginalData, 0x00503450, 8, 0x6A, 0xFF, 0x68, 0x68, 0x13, 0x8C, 0, 0x64);
 		_DefinePatchHdlrWithBuffer(ToggleScriptCompilingNewData, 0x00503450, 8, 0xB8, 1, 0, 0, 0, 0xC2, 8, 0);
 		_DefineHookHdlr(MaxScriptSizeOverrideScriptBufferCtor, 0x004FFECB);
@@ -48,9 +45,6 @@ namespace ConstructionSetExtender
 
 		void PatchScriptEditorHooks(void)
 		{
-			_MemHdlr(LoadRelease).WriteJump();
-			_MemHdlr(PostPluginSave).WriteJump();
-			_MemHdlr(PostPluginLoad).WriteJump();
 			_MemHdlr(ScriptableFormEntryPoint).WriteJump();
 			_MemHdlr(ScriptEffectItemEntryPoint).WriteJump();
 			_MemHdlr(MainWindowEntryPoint).WriteJump();
@@ -104,68 +98,6 @@ namespace ConstructionSetExtender
 			{
 				push	eax
 				call	InstantiateScriptEditor
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		void __stdcall DoLoadReleaseHook(void)
-		{
-			CLIWrapper::Interfaces::SE->CloseAllOpenEditors();
-		}
-
-		#define _hhName		LoadRelease
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0040D096);
-			__asm
-			{
-				call	IATCacheEndDialogAddress
-				call	[g_TempIATProcBuffer]
-
-				pushad
-				call	DoLoadReleaseHook
-				popad
-
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName	PostPluginSave
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0041BBD3);
-			__asm
-			{
-				call	IATCacheSetWindowTextAddress
-				call	[g_TempIATProcBuffer]				// SetWindowTextA
-				pushad
-			}
-
-			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
-
-			__asm
-			{
-				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName	PostPluginLoad
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0041BEFF);
-			_hhSetVar(Call, 0x00430980);
-			__asm
-			{
-				call	_hhGetVar(Call)
-				pushad
-			}
-
-			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
-
-			__asm
-			{
-				popad
 				jmp		_hhGetVar(Retn)
 			}
 		}

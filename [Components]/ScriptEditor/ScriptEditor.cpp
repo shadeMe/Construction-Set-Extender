@@ -1710,7 +1710,7 @@ namespace ConstructionSetExtender
 			if (InsertOffset > ScriptText->Length)
 				VarText += "\n";
 
-			VarText += ScriptParser::GetVariableID(VariableType) + " " + VariableName;
+			VarText += ScriptParser::GetVariableKeyword(VariableType) + " " + VariableName;
 			VarText += "\n";
 
 			TextEditor->InsertText(VarText, InsertOffset, true);
@@ -2233,7 +2233,7 @@ namespace ConstructionSetExtender
 					}
 					if (ScriptTextParser->LookupVariableByName(SecondToken) != nullptr)
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
-					else if (ISDB->GetIsIdentifierScriptCommand(SecondToken))
+					else if (ISDB->GetIsIdentifierScriptCommand(SecondToken) && PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' is reserved for a script command."), Result = false;
 					else if (ISDB->GetIsIdentifierForm(SecondToken) && PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
 						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' has already been assigned to a form."), Result = false;
@@ -3899,6 +3899,7 @@ namespace ConstructionSetExtender
 				TabSize = 4;
 
 			TextEditor->SetTabCharacterSize(TabSize);
+
 			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
 			AutoSaveTimer->Start();
 		}

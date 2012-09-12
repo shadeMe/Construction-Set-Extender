@@ -46,9 +46,12 @@ namespace ConstructionSetExtender
 			ParentEditor->SetCurrentToken(GetSubstitution());
 		}
 
-		bool IntelliSenseItem::GetShouldEnumerate( String^ Token )
+		bool IntelliSenseItem::GetShouldEnumerate( String^ Token, bool SubstringSearch )
 		{
-			return (GetIdentifier()->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
+			if (SubstringSearch)
+				return (GetIdentifier()->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
+			else
+				return GetIdentifier()->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
 		}
 
 		bool IntelliSenseItem::GetIsQuickViewable()
@@ -98,7 +101,7 @@ namespace ConstructionSetExtender
 		IntelliSenseItemVariable::IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope) :
 			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
 											Name,
-											IntelliSenseItemVariable::IntelliSenseItemVariableDataTypeID[(int)Type],
+											ScriptParser::GetVariableID(Type),
 											(Comment != "")?"\n\n":"",
 											Comment),
 							Scope),
@@ -121,7 +124,7 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemVariable::GetDataTypeID()
 		{
-			return IntelliSenseItemVariableDataTypeID[(int)DataType];
+			return ScriptParser::GetVariableID(DataType);
 		}
 
 		ScriptParser::VariableType IntelliSenseItemVariable::GetDataType()
@@ -366,7 +369,7 @@ namespace ConstructionSetExtender
 			ParentEditor->GetTextEditor()->ScrollToCaret();
 		}
 
-		bool IntelliSenseItemCodeSnippet::GetShouldEnumerate( String^ Token )
+		bool IntelliSenseItemCodeSnippet::GetShouldEnumerate( String^ Token, bool SubstringSearch )
 		{
 			bool Found = (Parent->Name->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1);
 

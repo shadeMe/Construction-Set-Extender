@@ -15,6 +15,8 @@ namespace ConstructionSetExtender
 		_DeclareNopHdlr(TESFormGetUnUsedFormID, "");
 		_DeclareMemHdlr(LoadPluginsProlog, "");
 		_DeclareMemHdlr(LoadPluginsEpilog, "");
+		_DeclareMemHdlr(PostPluginSave, "");
+		_DeclareMemHdlr(PostPluginLoad, "");
 		_DeclareMemHdlr(DataDialogPluginDescription, "allows the Author and Description fields of an ESM file to be viewed and modified correctly");
 		_DeclareMemHdlr(DataDialogPluginAuthor, "");
 		_DeclareMemHdlr(SavePluginCommonDialog, "allows the creation of ESM files in the CS");

@@ -134,7 +134,8 @@ private: System::Windows::Forms::CheckBox^  VarFormNameCollisions;
 
 private: System::Windows::Forms::CheckBox^  SuppressRefCountForQuestScripts;
 private: System::Windows::Forms::CheckBox^  CountVarRefs;
-
+private: System::Windows::Forms::CheckBox^  SubstringSearch;
+private: System::Windows::Forms::CheckBox^  VarCmdNameCollisions;
 
 	protected:
 
@@ -167,6 +168,7 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->CutCopyEntireLine = (gcnew System::Windows::Forms::CheckBox());
 			this->LoadScriptUpdateExistingScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->TabIntelliSense = (gcnew System::Windows::Forms::TabPage());
+			this->SubstringSearch = (gcnew System::Windows::Forms::CheckBox());
 			this->ForceDatabaseUpdate = (gcnew System::Windows::Forms::Button());
 			this->NoFocusUI = (gcnew System::Windows::Forms::CheckBox());
 			this->LabelMaxVisibleItems = (gcnew System::Windows::Forms::Label());
@@ -219,9 +221,10 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->AutoRecoverySavePeriod = (gcnew System::Windows::Forms::NumericUpDown());
 			this->UseAutoRecovery = (gcnew System::Windows::Forms::CheckBox());
 			this->TabValidator = (gcnew System::Windows::Forms::TabPage());
-			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
-			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
+			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
+			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
+			this->VarCmdNameCollisions = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -238,26 +241,26 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->BeginInit();
 			this->TabValidator->SuspendLayout();
 			this->SuspendLayout();
-			// 
+			//
 			// AllowRedefinitions
-			// 
+			//
 			this->AllowRedefinitions->Location = System::Drawing::Point(133, 97);
 			this->AllowRedefinitions->Name = L"AllowRedefinitions";
 			this->AllowRedefinitions->Size = System::Drawing::Size(154, 23);
 			this->AllowRedefinitions->TabIndex = 9;
 			this->AllowRedefinitions->Text = L"Allow Macro Redefinitions";
 			this->AllowRedefinitions->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelISThreshold
-			// 
+			//
 			this->LabelISThreshold->Location = System::Drawing::Point(30, 51);
 			this->LabelISThreshold->Name = L"LabelISThreshold";
 			this->LabelISThreshold->Size = System::Drawing::Size(148, 31);
 			this->LabelISThreshold->TabIndex = 1;
 			this->LabelISThreshold->Text = L"IntelliSense Interface Pop-up Threshold";
-			// 
+			//
 			// ThresholdLength
-			// 
+			//
 			this->ThresholdLength->Location = System::Drawing::Point(30, 104);
 			this->ThresholdLength->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {10, 0, 0, 0});
 			this->ThresholdLength->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {3, 0, 0, 0});
@@ -265,9 +268,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->ThresholdLength->Size = System::Drawing::Size(148, 20);
 			this->ThresholdLength->TabIndex = 0;
 			this->ThresholdLength->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {3, 0, 0, 0});
-			// 
+			//
 			// DestroyOnLastTabClose
-			// 
+			//
 			this->DestroyOnLastTabClose->AutoSize = true;
 			this->DestroyOnLastTabClose->Location = System::Drawing::Point(22, 92);
 			this->DestroyOnLastTabClose->Name = L"DestroyOnLastTabClose";
@@ -275,9 +278,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->DestroyOnLastTabClose->TabIndex = 11;
 			this->DestroyOnLastTabClose->Text = L"Close Editor With Last Open Tab";
 			this->DestroyOnLastTabClose->UseVisualStyleBackColor = true;
-			// 
+			//
 			// UseCSParent
-			// 
+			//
 			this->UseCSParent->AutoSize = true;
 			this->UseCSParent->Location = System::Drawing::Point(22, 46);
 			this->UseCSParent->Name = L"UseCSParent";
@@ -285,9 +288,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->UseCSParent->TabIndex = 10;
 			this->UseCSParent->Text = L"Show Editor As Child Window";
 			this->UseCSParent->UseVisualStyleBackColor = true;
-			// 
+			//
 			// RecompileVarIdx
-			// 
+			//
 			this->RecompileVarIdx->AutoSize = true;
 			this->RecompileVarIdx->Location = System::Drawing::Point(22, 250);
 			this->RecompileVarIdx->Name = L"RecompileVarIdx";
@@ -295,9 +298,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->RecompileVarIdx->TabIndex = 9;
 			this->RecompileVarIdx->Text = L"Recompile Dependencies After Variable Index Modification";
 			this->RecompileVarIdx->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelTabSize
-			// 
+			//
 			this->LabelTabSize->AutoSize = true;
 			this->LabelTabSize->Location = System::Drawing::Point(12, 263);
 			this->LabelTabSize->Name = L"LabelTabSize";
@@ -305,16 +308,16 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->LabelTabSize->TabIndex = 3;
 			this->LabelTabSize->Text = L"Tab Size";
 			this->LabelTabSize->Click += gcnew System::EventHandler(this, &OptionsDialog::label2_Click);
-			// 
+			//
 			// TabSize
-			// 
+			//
 			this->TabSize->Location = System::Drawing::Point(73, 261);
 			this->TabSize->Name = L"TabSize";
 			this->TabSize->Size = System::Drawing::Size(88, 20);
 			this->TabSize->TabIndex = 2;
-			// 
+			//
 			// SaveLastKnownPos
-			// 
+			//
 			this->SaveLastKnownPos->AutoSize = true;
 			this->SaveLastKnownPos->Location = System::Drawing::Point(22, 69);
 			this->SaveLastKnownPos->Name = L"SaveLastKnownPos";
@@ -323,9 +326,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->SaveLastKnownPos->Text = L"Save Caret Position With Script";
 			this->SaveLastKnownPos->UseVisualStyleBackColor = true;
 			this->SaveLastKnownPos->CheckedChanged += gcnew System::EventHandler(this, &OptionsDialog::caretpos_CheckedChanged);
-			// 
+			//
 			// AutoIndent
-			// 
+			//
 			this->AutoIndent->AutoSize = true;
 			this->AutoIndent->Location = System::Drawing::Point(22, 23);
 			this->AutoIndent->Name = L"AutoIndent";
@@ -333,9 +336,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->AutoIndent->TabIndex = 5;
 			this->AutoIndent->Text = L"Auto-Indent Script Lines";
 			this->AutoIndent->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgFont
-			// 
+			//
 			this->CmDlgFont->Location = System::Drawing::Point(312, 210);
 			this->CmDlgFont->Name = L"CmDlgFont";
 			this->CmDlgFont->Size = System::Drawing::Size(88, 24);
@@ -343,9 +346,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->CmDlgFont->Text = L"Editor Font";
 			this->CmDlgFont->UseVisualStyleBackColor = true;
 			this->CmDlgFont->Click += gcnew System::EventHandler(this, &OptionsDialog::button1_Click);
-			// 
+			//
 			// TabContainer
-			// 
+			//
 			this->TabContainer->Controls->Add(this->TabGeneral);
 			this->TabContainer->Controls->Add(this->TabIntelliSense);
 			this->TabContainer->Controls->Add(this->TabPreprocessor);
@@ -360,9 +363,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabContainer->SelectedIndex = 0;
 			this->TabContainer->Size = System::Drawing::Size(431, 316);
 			this->TabContainer->TabIndex = 0;
-			// 
+			//
 			// TabGeneral
-			// 
+			//
 			this->TabGeneral->Controls->Add(this->CutCopyEntireLine);
 			this->TabGeneral->Controls->Add(this->LoadScriptUpdateExistingScripts);
 			this->TabGeneral->Controls->Add(this->DestroyOnLastTabClose);
@@ -377,9 +380,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabGeneral->TabIndex = 0;
 			this->TabGeneral->Text = L"General";
 			this->TabGeneral->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CutCopyEntireLine
-			// 
+			//
 			this->CutCopyEntireLine->AutoSize = true;
 			this->CutCopyEntireLine->Location = System::Drawing::Point(22, 138);
 			this->CutCopyEntireLine->Name = L"CutCopyEntireLine";
@@ -387,9 +390,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->CutCopyEntireLine->TabIndex = 29;
 			this->CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection Is Empty";
 			this->CutCopyEntireLine->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LoadScriptUpdateExistingScripts
-			// 
+			//
 			this->LoadScriptUpdateExistingScripts->AutoSize = true;
 			this->LoadScriptUpdateExistingScripts->Location = System::Drawing::Point(22, 115);
 			this->LoadScriptUpdateExistingScripts->Name = L"LoadScriptUpdateExistingScripts";
@@ -397,9 +400,10 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->LoadScriptUpdateExistingScripts->TabIndex = 13;
 			this->LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
 			this->LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
-			// 
+			//
 			// TabIntelliSense
-			// 
+			//
+			this->TabIntelliSense->Controls->Add(this->SubstringSearch);
 			this->TabIntelliSense->Controls->Add(this->ForceDatabaseUpdate);
 			this->TabIntelliSense->Controls->Add(this->NoFocusUI);
 			this->TabIntelliSense->Controls->Add(this->LabelMaxVisibleItems);
@@ -416,35 +420,44 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabIntelliSense->TabIndex = 1;
 			this->TabIntelliSense->Text = L"IntelliSense";
 			this->TabIntelliSense->UseVisualStyleBackColor = true;
-			// 
+			//
+			// SubstringSearch
+			//
+			this->SubstringSearch->Location = System::Drawing::Point(231, 238);
+			this->SubstringSearch->Name = L"SubstringSearch";
+			this->SubstringSearch->Size = System::Drawing::Size(167, 36);
+			this->SubstringSearch->TabIndex = 11;
+			this->SubstringSearch->Text = L"Use Substring Search While Filtering";
+			this->SubstringSearch->UseVisualStyleBackColor = true;
+			//
 			// ForceDatabaseUpdate
-			// 
+			//
 			this->ForceDatabaseUpdate->Location = System::Drawing::Point(30, 238);
 			this->ForceDatabaseUpdate->Name = L"ForceDatabaseUpdate";
 			this->ForceDatabaseUpdate->Size = System::Drawing::Size(148, 24);
 			this->ForceDatabaseUpdate->TabIndex = 10;
 			this->ForceDatabaseUpdate->Text = L"Update Database Now";
 			this->ForceDatabaseUpdate->UseVisualStyleBackColor = true;
-			// 
+			//
 			// NoFocusUI
-			// 
+			//
 			this->NoFocusUI->Location = System::Drawing::Point(231, 78);
 			this->NoFocusUI->Name = L"NoFocusUI";
 			this->NoFocusUI->Size = System::Drawing::Size(167, 46);
 			this->NoFocusUI->TabIndex = 9;
 			this->NoFocusUI->Text = L"Prevent IntelliSense Interface From Acquiring Focus";
 			this->NoFocusUI->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelMaxVisibleItems
-			// 
+			//
 			this->LabelMaxVisibleItems->Location = System::Drawing::Point(228, 152);
 			this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
 			this->LabelMaxVisibleItems->Size = System::Drawing::Size(170, 46);
 			this->LabelMaxVisibleItems->TabIndex = 8;
 			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Items Visible In IntelliSense Interface";
-			// 
+			//
 			// MaxVisibleItems
-			// 
+			//
 			this->MaxVisibleItems->Location = System::Drawing::Point(231, 201);
 			this->MaxVisibleItems->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {20, 0, 0, 0});
 			this->MaxVisibleItems->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
@@ -452,9 +465,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->MaxVisibleItems->Size = System::Drawing::Size(148, 20);
 			this->MaxVisibleItems->TabIndex = 7;
 			this->MaxVisibleItems->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
-			// 
+			//
 			// UseQuickView
-			// 
+			//
 			this->UseQuickView->AutoSize = true;
 			this->UseQuickView->Location = System::Drawing::Point(231, 51);
 			this->UseQuickView->Name = L"UseQuickView";
@@ -462,17 +475,17 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->UseQuickView->TabIndex = 6;
 			this->UseQuickView->Text = L"QuickView™";
 			this->UseQuickView->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelISDBUpdatePeriod
-			// 
+			//
 			this->LabelISDBUpdatePeriod->Location = System::Drawing::Point(30, 152);
 			this->LabelISDBUpdatePeriod->Name = L"LabelISDBUpdatePeriod";
 			this->LabelISDBUpdatePeriod->Size = System::Drawing::Size(148, 46);
 			this->LabelISDBUpdatePeriod->TabIndex = 3;
 			this->LabelISDBUpdatePeriod->Text = L"IntelliSense Database Update Period (In Earth Minutes)";
-			// 
+			//
 			// DatabaseUpdateInterval
-			// 
+			//
 			this->DatabaseUpdateInterval->Location = System::Drawing::Point(30, 201);
 			this->DatabaseUpdateInterval->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {15, 0, 0, 0});
 			this->DatabaseUpdateInterval->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
@@ -481,9 +494,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->DatabaseUpdateInterval->TabIndex = 2;
 			this->DatabaseUpdateInterval->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
 			this->DatabaseUpdateInterval->ValueChanged += gcnew System::EventHandler(this, &OptionsDialog::ISDBUpdateInterval_ValueChanged);
-			// 
+			//
 			// TabPreprocessor
-			// 
+			//
 			this->TabPreprocessor->Controls->Add(this->LabelNoOfPasses);
 			this->TabPreprocessor->Controls->Add(this->NoOfPasses);
 			this->TabPreprocessor->Controls->Add(this->AllowRedefinitions);
@@ -494,24 +507,24 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabPreprocessor->TabIndex = 2;
 			this->TabPreprocessor->Text = L"Preprocessor";
 			this->TabPreprocessor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelNoOfPasses
-			// 
+			//
 			this->LabelNoOfPasses->Location = System::Drawing::Point(133, 151);
 			this->LabelNoOfPasses->Name = L"LabelNoOfPasses";
 			this->LabelNoOfPasses->Size = System::Drawing::Size(157, 20);
 			this->LabelNoOfPasses->TabIndex = 11;
 			this->LabelNoOfPasses->Text = L"Number of Passes";
-			// 
+			//
 			// NoOfPasses
-			// 
+			//
 			this->NoOfPasses->Location = System::Drawing::Point(133, 174);
 			this->NoOfPasses->Name = L"NoOfPasses";
 			this->NoOfPasses->Size = System::Drawing::Size(154, 20);
 			this->NoOfPasses->TabIndex = 10;
-			// 
+			//
 			// TabAppearance
-			// 
+			//
 			this->TabAppearance->Controls->Add(this->BoldFacedHighlighting);
 			this->TabAppearance->Controls->Add(this->TabsOnTop);
 			this->TabAppearance->Controls->Add(this->CodeFolding);
@@ -540,9 +553,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabAppearance->Text = L"Appearance";
 			this->TabAppearance->UseVisualStyleBackColor = true;
 			this->TabAppearance->Click += gcnew System::EventHandler(this, &OptionsDialog::TabAppearance_Click);
-			// 
+			//
 			// BoldFacedHighlighting
-			// 
+			//
 			this->BoldFacedHighlighting->AutoSize = true;
 			this->BoldFacedHighlighting->Location = System::Drawing::Point(176, 194);
 			this->BoldFacedHighlighting->Name = L"BoldFacedHighlighting";
@@ -550,9 +563,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->BoldFacedHighlighting->TabIndex = 32;
 			this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
 			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
-			// 
+			//
 			// TabsOnTop
-			// 
+			//
 			this->TabsOnTop->AutoSize = true;
 			this->TabsOnTop->Location = System::Drawing::Point(312, 263);
 			this->TabsOnTop->Name = L"TabsOnTop";
@@ -560,9 +573,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabsOnTop->TabIndex = 31;
 			this->TabsOnTop->Text = L"Tabs On Top";
 			this->TabsOnTop->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CodeFolding
-			// 
+			//
 			this->CodeFolding->AutoSize = true;
 			this->CodeFolding->Location = System::Drawing::Point(312, 240);
 			this->CodeFolding->Name = L"CodeFolding";
@@ -570,9 +583,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->CodeFolding->TabIndex = 30;
 			this->CodeFolding->Text = L"Code Folding";
 			this->CodeFolding->UseVisualStyleBackColor = true;
-			// 
+			//
 			// ShowSpaces
-			// 
+			//
 			this->ShowSpaces->AutoSize = true;
 			this->ShowSpaces->Location = System::Drawing::Point(176, 263);
 			this->ShowSpaces->Name = L"ShowSpaces";
@@ -580,9 +593,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->ShowSpaces->TabIndex = 29;
 			this->ShowSpaces->Text = L"Show Spaces";
 			this->ShowSpaces->UseVisualStyleBackColor = true;
-			// 
+			//
 			// ShowTabs
-			// 
+			//
 			this->ShowTabs->AutoSize = true;
 			this->ShowTabs->Location = System::Drawing::Point(176, 240);
 			this->ShowTabs->Name = L"ShowTabs";
@@ -590,60 +603,60 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->ShowTabs->TabIndex = 28;
 			this->ShowTabs->Text = L"Show Tabs";
 			this->ShowTabs->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgFindResultsHighlightColor
-			// 
+			//
 			this->CmDlgFindResultsHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgFindResultsHighlightColor->Location = System::Drawing::Point(287, 136);
 			this->CmDlgFindResultsHighlightColor->Name = L"CmDlgFindResultsHighlightColor";
 			this->CmDlgFindResultsHighlightColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgFindResultsHighlightColor->TabIndex = 27;
 			this->CmDlgFindResultsHighlightColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelFindResultsHighlight
-			// 
+			//
 			this->LabelFindResultsHighlight->Location = System::Drawing::Point(176, 135);
 			this->LabelFindResultsHighlight->Name = L"LabelFindResultsHighlight";
 			this->LabelFindResultsHighlight->Size = System::Drawing::Size(108, 33);
 			this->LabelFindResultsHighlight->TabIndex = 26;
 			this->LabelFindResultsHighlight->Text = L"Find Results Highlight";
-			// 
+			//
 			// CmDlgCurrentLineHighlightColor
-			// 
+			//
 			this->CmDlgCurrentLineHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgCurrentLineHighlightColor->Location = System::Drawing::Point(287, 39);
 			this->CmDlgCurrentLineHighlightColor->Name = L"CmDlgCurrentLineHighlightColor";
 			this->CmDlgCurrentLineHighlightColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgCurrentLineHighlightColor->TabIndex = 25;
 			this->CmDlgCurrentLineHighlightColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelCurrentLineHighlight
-			// 
+			//
 			this->LabelCurrentLineHighlight->Location = System::Drawing::Point(176, 39);
 			this->LabelCurrentLineHighlight->Name = L"LabelCurrentLineHighlight";
 			this->LabelCurrentLineHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelCurrentLineHighlight->TabIndex = 24;
 			this->LabelCurrentLineHighlight->Text = L"Current Line Highlight";
-			// 
+			//
 			// CmDlgCharLimitColor
-			// 
+			//
 			this->CmDlgCharLimitColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgCharLimitColor->Location = System::Drawing::Point(287, 72);
 			this->CmDlgCharLimitColor->Name = L"CmDlgCharLimitColor";
 			this->CmDlgCharLimitColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgCharLimitColor->TabIndex = 23;
 			this->CmDlgCharLimitColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelCharLimitHighlight
-			// 
+			//
 			this->LabelCharLimitHighlight->Location = System::Drawing::Point(176, 68);
 			this->LabelCharLimitHighlight->Name = L"LabelCharLimitHighlight";
 			this->LabelCharLimitHighlight->Size = System::Drawing::Size(108, 30);
 			this->LabelCharLimitHighlight->TabIndex = 22;
 			this->LabelCharLimitHighlight->Text = L"Character Limit Highlight";
-			// 
+			//
 			// CmDlgErrorHighlightColor
-			// 
+			//
 			this->CmDlgErrorHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgErrorHighlightColor->Location = System::Drawing::Point(287, 104);
 			this->CmDlgErrorHighlightColor->Name = L"CmDlgErrorHighlightColor";
@@ -651,26 +664,26 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->CmDlgErrorHighlightColor->TabIndex = 21;
 			this->CmDlgErrorHighlightColor->UseVisualStyleBackColor = true;
 			this->CmDlgErrorHighlightColor->Click += gcnew System::EventHandler(this, &OptionsDialog::CmDlgErrorHighlightColor_Click);
-			// 
+			//
 			// LabelErrorHighlight
-			// 
+			//
 			this->LabelErrorHighlight->Location = System::Drawing::Point(176, 107);
 			this->LabelErrorHighlight->Name = L"LabelErrorHighlight";
 			this->LabelErrorHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelErrorHighlight->TabIndex = 20;
 			this->LabelErrorHighlight->Text = L"Error Highlight";
-			// 
+			//
 			// CmDlgSelectionHighlightColor
-			// 
+			//
 			this->CmDlgSelectionHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSelectionHighlightColor->Location = System::Drawing::Point(287, 7);
 			this->CmDlgSelectionHighlightColor->Name = L"CmDlgSelectionHighlightColor";
 			this->CmDlgSelectionHighlightColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSelectionHighlightColor->TabIndex = 19;
 			this->CmDlgSelectionHighlightColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// WordWrap
-			// 
+			//
 			this->WordWrap->AutoSize = true;
 			this->WordWrap->Location = System::Drawing::Point(176, 217);
 			this->WordWrap->Name = L"WordWrap";
@@ -678,17 +691,17 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->WordWrap->TabIndex = 5;
 			this->WordWrap->Text = L"Word-Wrap";
 			this->WordWrap->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelSelectionHighlight
-			// 
+			//
 			this->LabelSelectionHighlight->Location = System::Drawing::Point(176, 10);
 			this->LabelSelectionHighlight->Name = L"LabelSelectionHighlight";
 			this->LabelSelectionHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelSelectionHighlight->TabIndex = 18;
 			this->LabelSelectionHighlight->Text = L"Selection Highlight";
-			// 
+			//
 			// GroupBoxSyntaxHighlighting
-			// 
+			//
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxCommentsColor);
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxDigitsColor);
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxPreprocessorColor);
@@ -709,128 +722,128 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->GroupBoxSyntaxHighlighting->TabIndex = 4;
 			this->GroupBoxSyntaxHighlighting->TabStop = false;
 			this->GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
-			// 
+			//
 			// CmDlgSyntaxCommentsColor
-			// 
+			//
 			this->CmDlgSyntaxCommentsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxCommentsColor->Location = System::Drawing::Point(103, 211);
 			this->CmDlgSyntaxCommentsColor->Name = L"CmDlgSyntaxCommentsColor";
 			this->CmDlgSyntaxCommentsColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxCommentsColor->TabIndex = 18;
 			this->CmDlgSyntaxCommentsColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgSyntaxDigitsColor
-			// 
+			//
 			this->CmDlgSyntaxDigitsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxDigitsColor->Location = System::Drawing::Point(103, 50);
 			this->CmDlgSyntaxDigitsColor->Name = L"CmDlgSyntaxDigitsColor";
 			this->CmDlgSyntaxDigitsColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxDigitsColor->TabIndex = 17;
 			this->CmDlgSyntaxDigitsColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgSyntaxPreprocessorColor
-			// 
+			//
 			this->CmDlgSyntaxPreprocessorColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxPreprocessorColor->Location = System::Drawing::Point(103, 82);
 			this->CmDlgSyntaxPreprocessorColor->Name = L"CmDlgSyntaxPreprocessorColor";
 			this->CmDlgSyntaxPreprocessorColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxPreprocessorColor->TabIndex = 16;
 			this->CmDlgSyntaxPreprocessorColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgSyntaxScriptBlocksColor
-			// 
+			//
 			this->CmDlgSyntaxScriptBlocksColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxScriptBlocksColor->Location = System::Drawing::Point(103, 113);
 			this->CmDlgSyntaxScriptBlocksColor->Name = L"CmDlgSyntaxScriptBlocksColor";
 			this->CmDlgSyntaxScriptBlocksColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxScriptBlocksColor->TabIndex = 15;
 			this->CmDlgSyntaxScriptBlocksColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgSyntaxDelimitersColor
-			// 
+			//
 			this->CmDlgSyntaxDelimitersColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxDelimitersColor->Location = System::Drawing::Point(103, 146);
 			this->CmDlgSyntaxDelimitersColor->Name = L"CmDlgSyntaxDelimitersColor";
 			this->CmDlgSyntaxDelimitersColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxDelimitersColor->TabIndex = 14;
 			this->CmDlgSyntaxDelimitersColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgSyntaxStringsColor
-			// 
+			//
 			this->CmDlgSyntaxStringsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxStringsColor->Location = System::Drawing::Point(103, 178);
 			this->CmDlgSyntaxStringsColor->Name = L"CmDlgSyntaxStringsColor";
 			this->CmDlgSyntaxStringsColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxStringsColor->TabIndex = 13;
 			this->CmDlgSyntaxStringsColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CmDlgSyntaxKeywordsColor
-			// 
+			//
 			this->CmDlgSyntaxKeywordsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
 			this->CmDlgSyntaxKeywordsColor->Location = System::Drawing::Point(103, 18);
 			this->CmDlgSyntaxKeywordsColor->Name = L"CmDlgSyntaxKeywordsColor";
 			this->CmDlgSyntaxKeywordsColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgSyntaxKeywordsColor->TabIndex = 12;
 			this->CmDlgSyntaxKeywordsColor->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelPreprocessor
-			// 
+			//
 			this->LabelPreprocessor->Location = System::Drawing::Point(6, 86);
 			this->LabelPreprocessor->Name = L"LabelPreprocessor";
 			this->LabelPreprocessor->Size = System::Drawing::Size(78, 20);
 			this->LabelPreprocessor->TabIndex = 11;
 			this->LabelPreprocessor->Text = L"Preprocessor";
-			// 
+			//
 			// LabelScriptBlocks
-			// 
+			//
 			this->LabelScriptBlocks->Location = System::Drawing::Point(6, 119);
 			this->LabelScriptBlocks->Name = L"LabelScriptBlocks";
 			this->LabelScriptBlocks->Size = System::Drawing::Size(78, 20);
 			this->LabelScriptBlocks->TabIndex = 10;
 			this->LabelScriptBlocks->Text = L"Script Blocks";
-			// 
+			//
 			// LabelStrings
-			// 
+			//
 			this->LabelStrings->Location = System::Drawing::Point(6, 182);
 			this->LabelStrings->Name = L"LabelStrings";
 			this->LabelStrings->Size = System::Drawing::Size(78, 20);
 			this->LabelStrings->TabIndex = 9;
 			this->LabelStrings->Text = L"String Literals";
-			// 
+			//
 			// LabelComments
-			// 
+			//
 			this->LabelComments->Location = System::Drawing::Point(6, 215);
 			this->LabelComments->Name = L"LabelComments";
 			this->LabelComments->Size = System::Drawing::Size(78, 20);
 			this->LabelComments->TabIndex = 8;
 			this->LabelComments->Text = L"Comments";
-			// 
+			//
 			// LabelDigits
-			// 
+			//
 			this->LabelDigits->Location = System::Drawing::Point(6, 54);
 			this->LabelDigits->Name = L"LabelDigits";
 			this->LabelDigits->Size = System::Drawing::Size(78, 20);
 			this->LabelDigits->TabIndex = 7;
 			this->LabelDigits->Text = L"Digits";
-			// 
+			//
 			// LabelDelimiters
-			// 
+			//
 			this->LabelDelimiters->Location = System::Drawing::Point(6, 150);
 			this->LabelDelimiters->Name = L"LabelDelimiters";
 			this->LabelDelimiters->Size = System::Drawing::Size(78, 20);
 			this->LabelDelimiters->TabIndex = 6;
 			this->LabelDelimiters->Text = L"Delimiters";
-			// 
+			//
 			// LabelKeywords
-			// 
+			//
 			this->LabelKeywords->Location = System::Drawing::Point(6, 22);
 			this->LabelKeywords->Name = L"LabelKeywords";
 			this->LabelKeywords->Size = System::Drawing::Size(78, 20);
 			this->LabelKeywords->TabIndex = 5;
 			this->LabelKeywords->Text = L"Keywords";
-			// 
+			//
 			// TabSanitize
-			// 
+			//
 			this->TabSanitize->Controls->Add(this->EvalifyIfs);
 			this->TabSanitize->Controls->Add(this->CompilerOverrideBlocks);
 			this->TabSanitize->Controls->Add(this->IndentLines);
@@ -842,9 +855,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabSanitize->TabIndex = 4;
 			this->TabSanitize->Text = L"Sanitize";
 			this->TabSanitize->UseVisualStyleBackColor = true;
-			// 
+			//
 			// EvalifyIfs
-			// 
+			//
 			this->EvalifyIfs->AutoSize = true;
 			this->EvalifyIfs->Location = System::Drawing::Point(109, 156);
 			this->EvalifyIfs->Name = L"EvalifyIfs";
@@ -852,9 +865,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->EvalifyIfs->TabIndex = 14;
 			this->EvalifyIfs->Text = L"Eval\'ify If/ElseIf Statements";
 			this->EvalifyIfs->UseVisualStyleBackColor = true;
-			// 
+			//
 			// CompilerOverrideBlocks
-			// 
+			//
 			this->CompilerOverrideBlocks->AutoSize = true;
 			this->CompilerOverrideBlocks->Location = System::Drawing::Point(109, 195);
 			this->CompilerOverrideBlocks->Name = L"CompilerOverrideBlocks";
@@ -862,9 +875,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->CompilerOverrideBlocks->TabIndex = 13;
 			this->CompilerOverrideBlocks->Text = L"Apply Compiler Override To Script Blocks";
 			this->CompilerOverrideBlocks->UseVisualStyleBackColor = true;
-			// 
+			//
 			// IndentLines
-			// 
+			//
 			this->IndentLines->AutoSize = true;
 			this->IndentLines->Location = System::Drawing::Point(109, 117);
 			this->IndentLines->Name = L"IndentLines";
@@ -872,9 +885,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->IndentLines->TabIndex = 12;
 			this->IndentLines->Text = L"Indent Script Lines";
 			this->IndentLines->UseVisualStyleBackColor = true;
-			// 
+			//
 			// AnnealCasing
-			// 
+			//
 			this->AnnealCasing->AutoSize = true;
 			this->AnnealCasing->Location = System::Drawing::Point(109, 78);
 			this->AnnealCasing->Name = L"AnnealCasing";
@@ -882,9 +895,9 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->AnnealCasing->TabIndex = 11;
 			this->AnnealCasing->Text = L"Anneal Script Command Name Casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
-			// 
+			//
 			// TabBackup
-			// 
+			//
 			this->TabBackup->Controls->Add(this->LabelAutoRecoveryInterval);
 			this->TabBackup->Controls->Add(this->AutoRecoverySavePeriod);
 			this->TabBackup->Controls->Add(this->UseAutoRecovery);
@@ -895,17 +908,17 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabBackup->TabIndex = 5;
 			this->TabBackup->Text = L"Backup";
 			this->TabBackup->UseVisualStyleBackColor = true;
-			// 
+			//
 			// LabelAutoRecoveryInterval
-			// 
+			//
 			this->LabelAutoRecoveryInterval->Location = System::Drawing::Point(133, 139);
 			this->LabelAutoRecoveryInterval->Name = L"LabelAutoRecoveryInterval";
 			this->LabelAutoRecoveryInterval->Size = System::Drawing::Size(157, 34);
 			this->LabelAutoRecoveryInterval->TabIndex = 14;
 			this->LabelAutoRecoveryInterval->Text = L"Auto-Recovery Save Period (In Earth Minutes)";
-			// 
+			//
 			// AutoRecoverySavePeriod
-			// 
+			//
 			this->AutoRecoverySavePeriod->Location = System::Drawing::Point(133, 176);
 			this->AutoRecoverySavePeriod->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {60, 0, 0, 0});
 			this->AutoRecoverySavePeriod->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
@@ -913,18 +926,19 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->AutoRecoverySavePeriod->Size = System::Drawing::Size(154, 20);
 			this->AutoRecoverySavePeriod->TabIndex = 13;
 			this->AutoRecoverySavePeriod->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
-			// 
+			//
 			// UseAutoRecovery
-			// 
+			//
 			this->UseAutoRecovery->Location = System::Drawing::Point(133, 95);
 			this->UseAutoRecovery->Name = L"UseAutoRecovery";
 			this->UseAutoRecovery->Size = System::Drawing::Size(154, 23);
 			this->UseAutoRecovery->TabIndex = 12;
 			this->UseAutoRecovery->Text = L"Use Auto-Recovery";
 			this->UseAutoRecovery->UseVisualStyleBackColor = true;
-			// 
+			//
 			// TabValidator
-			// 
+			//
+			this->TabValidator->Controls->Add(this->VarCmdNameCollisions);
 			this->TabValidator->Controls->Add(this->CountVarRefs);
 			this->TabValidator->Controls->Add(this->SuppressRefCountForQuestScripts);
 			this->TabValidator->Controls->Add(this->VarFormNameCollisions);
@@ -935,19 +949,19 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabValidator->TabIndex = 6;
 			this->TabValidator->Text = L"Validator";
 			this->TabValidator->UseVisualStyleBackColor = true;
-			// 
-			// VarFormNameCollisions
-			// 
-			this->VarFormNameCollisions->AutoSize = true;
-			this->VarFormNameCollisions->Location = System::Drawing::Point(24, 28);
-			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
-			this->VarFormNameCollisions->Size = System::Drawing::Size(219, 17);
-			this->VarFormNameCollisions->TabIndex = 0;
-			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions";
-			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
-			// 
+			//
+			// CountVarRefs
+			//
+			this->CountVarRefs->AutoSize = true;
+			this->CountVarRefs->Location = System::Drawing::Point(24, 74);
+			this->CountVarRefs->Name = L"CountVarRefs";
+			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
+			this->CountVarRefs->TabIndex = 14;
+			this->CountVarRefs->Text = L"Count Variable Use References";
+			this->CountVarRefs->UseVisualStyleBackColor = true;
+			//
 			// SuppressRefCountForQuestScripts
-			// 
+			//
 			this->SuppressRefCountForQuestScripts->AutoSize = true;
 			this->SuppressRefCountForQuestScripts->Location = System::Drawing::Point(24, 255);
 			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
@@ -955,19 +969,29 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->SuppressRefCountForQuestScripts->TabIndex = 13;
 			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
 			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
-			// 
-			// CountVarRefs
-			// 
-			this->CountVarRefs->AutoSize = true;
-			this->CountVarRefs->Location = System::Drawing::Point(24, 51);
-			this->CountVarRefs->Name = L"CountVarRefs";
-			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
-			this->CountVarRefs->TabIndex = 14;
-			this->CountVarRefs->Text = L"Count Variable Use References";
-			this->CountVarRefs->UseVisualStyleBackColor = true;
-			// 
+			//
+			// VarFormNameCollisions
+			//
+			this->VarFormNameCollisions->AutoSize = true;
+			this->VarFormNameCollisions->Location = System::Drawing::Point(24, 28);
+			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
+			this->VarFormNameCollisions->Size = System::Drawing::Size(300, 17);
+			this->VarFormNameCollisions->TabIndex = 0;
+			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions (Recommended)";
+			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
+			//
+			// VarCmdNameCollisions
+			//
+			this->VarCmdNameCollisions->AutoSize = true;
+			this->VarCmdNameCollisions->Location = System::Drawing::Point(24, 51);
+			this->VarCmdNameCollisions->Name = L"VarCmdNameCollisions";
+			this->VarCmdNameCollisions->Size = System::Drawing::Size(324, 17);
+			this->VarCmdNameCollisions->TabIndex = 15;
+			this->VarCmdNameCollisions->Text = L"Check For Variable-Command Name Collisions (Recommended)";
+			this->VarCmdNameCollisions->UseVisualStyleBackColor = true;
+			//
 			// OptionsDialog
-			// 
+			//
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(456, 337);
@@ -997,7 +1021,6 @@ private: System::Windows::Forms::CheckBox^  CountVarRefs;
 			this->TabValidator->ResumeLayout(false);
 			this->TabValidator->PerformLayout();
 			this->ResumeLayout(false);
-
 		}
 #pragma endregion
 	private: System::Void groupBox1_Enter(System::Object^  sender, System::EventArgs^  e) {

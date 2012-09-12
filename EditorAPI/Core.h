@@ -234,10 +234,10 @@ public:
 	/*14*/ BSTempNodeManager*		tempNodeManager;
 	/*18*/ NiDirectionalLight*		sunDirectionalLight;
 	/*1C*/ BSFogProperty*			fogProperty;
-	/*20*/ UInt32					extXCoord;				// in the current worldspace
-	/*24*/ UInt32					extYCoord;
-	/*28*/ UInt32					unk28;					// same as unk20?
-	/*2C*/ UInt32					unk2C;					// same as unk24?
+	/*20*/ SInt32					extXCoord;				// in the current worldspace
+	/*24*/ SInt32					extYCoord;
+	/*28*/ SInt32					unk28;					// same as unk20?
+	/*2C*/ SInt32					unk2C;					// same as unk24?
 	/*30*/ TESObjectCELL*			currentExteriorCell;	// set to NULL when the player's in an interior
 	/*34*/ TESObjectCELL*			currentInteriorCell;	// set to NULL when the player's in an exterior
 	/*38*/ TESObjectCELL**			interiorCellBufferArray;
