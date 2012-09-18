@@ -1128,7 +1128,7 @@ namespace BGSEditorExtender
 							if (CodeStack.size())
 							{
 								CodeStack.pop();
-								if (StackTop != CodaScriptTokenizer::kTokenType_If)			// pop once again to remove the underlying IF block
+								if (CodeStack.size() && StackTop != CodaScriptTokenizer::kTokenType_If)		// pop once again to remove the underlying IF block
 									CodeStack.pop();
 							}
 
@@ -1762,7 +1762,9 @@ namespace BGSEditorExtender
 				CodaScriptBackingStore* CurrentArg = &ArgumentStore[i];
 
 				SME_ASSERT(CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
-				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type || CurrentParam->Type == ICodaScriptCommand::ParameterInfo::kType_Multi);
+				SME_ASSERT(CurrentArg->GetType() == CurrentParam->Type ||
+						CurrentParam->Type == ICodaScriptCommand::ParameterInfo::kType_Multi ||
+						CurrentArg->GetHasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type));
 
 				switch (CurrentParam->Type)
 				{

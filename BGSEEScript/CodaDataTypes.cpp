@@ -39,6 +39,22 @@ namespace BGSEditorExtender
 			}
 		}
 
+		bool CodaScriptBackingStore::GetHasImplicitCast( DataType NewType ) const
+		{
+			bool Result = false;
+
+			switch (Type)
+			{
+			case kDataType_Reference:
+				if (NewType == kDataType_Numeric)
+					Result = true;
+
+				break;
+			}
+
+			return Result;
+		}
+
 		CodaScriptReferenceDataTypeT CodaScriptBackingStore::GetFormID() const
 		{
 			SME_ASSERT(Type == kDataType_Reference);
@@ -47,8 +63,18 @@ namespace BGSEditorExtender
 
 		CodaScriptNumericDataTypeT CodaScriptBackingStore::GetNumber() const
 		{
-			SME_ASSERT(Type == kDataType_Numeric);
-			return NumericData;
+			SME_ASSERT(Type == kDataType_Numeric || GetHasImplicitCast(kDataType_Numeric));
+
+			switch (Type)
+			{
+			case kDataType_Numeric:
+				return NumericData;
+			case kDataType_Reference:
+				return RefData;
+			}
+
+			// this should never happen
+			return 0;
 		}
 
 		CodaScriptStringParameterTypeT CodaScriptBackingStore::GetString() const

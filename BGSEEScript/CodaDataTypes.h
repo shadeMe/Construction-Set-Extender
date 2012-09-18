@@ -43,6 +43,8 @@ namespace BGSEditorExtender
 			CodaScriptBackingStore& operator-=(const CodaScriptBackingStore &rhs);
 			CodaScriptBackingStore& operator*=(const CodaScriptBackingStore &rhs);
 
+			virtual bool											GetHasImplicitCast(DataType NewType) const;
+
 			virtual CodaScriptReferenceDataTypeT					GetFormID() const;
 			virtual CodaScriptNumericDataTypeT						GetNumber() const;
 			virtual CodaScriptStringParameterTypeT					GetString() const;

@@ -43,7 +43,7 @@ namespace BGSEditorExtender
 
 				CodaScriptCommandPrototype(FormatNumber,
 					"FmtNum",
-					"Formats a numeric value as a string.",
+					"Formats a numeric value as a string. References must be interpreted as unsigned integers for precise conversions.",
 					"Refer to <a href=\"http://msdn.microsoft.com/en-us/library/56e442dc(v=VS.100).aspx\">this article</a> for format specification info.",
 					3,
 					ICodaScriptDataStore::kDataType_String);

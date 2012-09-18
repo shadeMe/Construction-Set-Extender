@@ -46,6 +46,8 @@ namespace BGSEditorExtender
 				return Type;
 			}
 
+			virtual bool													GetHasImplicitCast(DataType NewType) const = 0;
+																			// the GetXXX accessor functions should perform the necessary casting internally
 			virtual CodaScriptReferenceDataTypeT							GetFormID() const = 0;
 			virtual CodaScriptNumericDataTypeT								GetNumber() const = 0;
 			virtual CodaScriptStringParameterTypeT							GetString() const = 0;

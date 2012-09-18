@@ -53,7 +53,8 @@ namespace BGSEditorExtender
 							ICodaScriptCommand::ParameterInfo* CurrentParam = &ParamArray[i];
 
 							if (CurrentArg->GetType() != CurrentParam->Type &&
-								CurrentParam->Type != ICodaScriptCommand::ParameterInfo::kType_Multi)
+								CurrentParam->Type != ICodaScriptCommand::ParameterInfo::kType_Multi &&
+								CurrentArg->GetHasImplicitCast((ICodaScriptDataStore::DataType)CurrentParam->Type) == false)
 							{
 									throw CodaScriptException(ByteCode->GetSource(),
 															"Parameter %d type mismatch for command '%s' - Expected '%c', received '%c'",
@@ -63,14 +64,15 @@ namespace BGSEditorExtender
 															CurrentArg->GetType());
 							}
 
-							SME_ASSERT(CurrentParam->Type != ICodaScriptDataStore::kDataType_Invalid && CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
+							SME_ASSERT(CurrentParam->Type != ICodaScriptDataStore::kDataType_Invalid &&
+									CurrentArg->GetType() != ICodaScriptDataStore::kDataType_Invalid);
 						}
 
 						WrappedArgs.push_back(*CurrentArg);
 					}
 				}
 				else
-					WrappedArgs.push_back(CodaScriptBackingStore(0.0));
+					WrappedArgs.push_back(CodaScriptBackingStore(0.0));		// push a dummy value to make sure we have a valid pointer to pass to the command handler
 
 				CodaScriptBackingStore ResultStore;
 				CodaScriptCommandHandlerUtilities HandlerHelper;
@@ -87,7 +89,8 @@ namespace BGSEditorExtender
 				if (ExecuteResult)
 				{
 					if (ResultStore.GetType() != ReturnType &&
-						ReturnType != ICodaScriptCommand::ParameterInfo::kType_Multi)
+						ReturnType != ICodaScriptCommand::ParameterInfo::kType_Multi &&
+						ResultStore.GetHasImplicitCast((ICodaScriptDataStore::DataType)ReturnType) == false)
 					{
 						throw CodaScriptException(ByteCode->GetSource(),
 							"Return type mismatch for command '%s' - Expected '%c', received '%c'",
