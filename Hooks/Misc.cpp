@@ -186,9 +186,6 @@ namespace ConstructionSetExtender
 			_MemHdlr(ZBufferVertexColorExportA).WriteNop();
 			_MemHdlr(ZBufferVertexColorExportB).WriteNop();
 
-			if (BGSEECONSOLE->GetLogsWarnings() == false)
-				return;
-
 			const UInt32 kMessageHandlerVTBL = 0x00940760;
 
 			SafeWrite32(kMessageHandlerVTBL + 0, (UInt32)&MessageHandlerOverride);
@@ -330,7 +327,8 @@ namespace ConstructionSetExtender
 			{
 				BGSEEUI->MsgBoxW(NULL,
 								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.", EditorID);
+								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.",
+								EditorID);
 			}
 		}
 

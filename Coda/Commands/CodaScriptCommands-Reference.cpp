@@ -20,6 +20,7 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(GetRefDisabled);
 				CodaScriptCommandPrototypeDef(GetRefVWD);
 				CodaScriptCommandPrototypeDef(GetRefBaseForm);
+				CodaScriptCommandPrototypeDef(GetRefCell);
 				CodaScriptCommandPrototypeDef(SetRefRotation);
 				CodaScriptCommandPrototypeDef(SetRefPosition);
 				CodaScriptCommandPrototypeDef(SetRefScale);
@@ -27,6 +28,7 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(SetRefDisabled);
 				CodaScriptCommandPrototypeDef(SetRefVWD);
 				CodaScriptCommandPrototypeDef(GetCellObjects);
+				CodaScriptCommandPrototypeDef(GetCellWorldspace);
 				CodaScriptCommandPrototypeDef(GetCurrentRenderWindowSelection);
 
 				CodaScriptCommandParamData(CreateRef, 9)
@@ -73,12 +75,20 @@ namespace ConstructionSetExtender
 					{ "Cell", ICodaScriptDataStore::kDataType_Reference }
 				};
 
+				CodaScriptCommandParamData(GetCellWorldspace, 1)
+				{
+					{ "Cell", ICodaScriptDataStore::kDataType_Reference }
+				};
+
 				CodaScriptCommandHandler(CreateRef)
 				{
 					TESForm* BaseForm = NULL;
 					TESForm* Cell = NULL;
 					TESForm* WorldSpace = NULL;
-					Vector3 Position, Rotation;
+					struct
+					{
+						double x, y, z;		// can't use a regular Vector3 here as CodaScriptNumericDataTypeT is a double internally
+					} Position, Rotation;
 
 					CodaScriptCommandExtractArgs(&BaseForm, &Position.x, &Position.y, &Position.z, &Rotation.x, &Rotation.y, &Rotation.z, &Cell, &WorldSpace);
 					ExtractFormArguments(3, &BaseForm, &Cell, &WorldSpace);
@@ -93,7 +103,10 @@ namespace ConstructionSetExtender
 					if (!Base || !ParentCell || (ParentCell->GetIsInterior() == false && !ParentWorldspace))
 						return false;
 
-					TESObjectREFR* NewRef = _DATAHANDLER->PlaceObjectRef(Base, &Position, &Rotation, ParentCell, ParentWorldspace, NULL);
+					TESObjectREFR* NewRef = _DATAHANDLER->PlaceObjectRef(Base,
+																		&(Vector3(Position.x, Position.y, Position.z)),
+																		&(Vector3(Rotation.x, Rotation.y, Rotation.z)),
+																		ParentCell, ParentWorldspace, NULL);
 					if (NewRef)
 						Result->SetFormID(NewRef->formID);
 					else
@@ -241,6 +254,28 @@ namespace ConstructionSetExtender
 
 					if (Reference->baseForm)
 						Result->SetFormID(Reference->baseForm->formID);
+					else
+						Result->SetFormID(0);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetRefCell)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (!Reference)
+						return false;
+
+					if (Reference->parentCell)
+						Result->SetFormID(Reference->parentCell->formID);
 					else
 						Result->SetFormID(0);
 
@@ -400,6 +435,26 @@ namespace ConstructionSetExtender
 						Utilities->ArrayPushback(CellObjects, (CodaScriptReferenceDataTypeT)Itr.Get()->formID);
 
 					Result->SetArray(CellObjects);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetCellWorldspace)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
+					if (!Cell)
+						return false;
+
+					TESWorldSpace* Worldspace = Cell->GetParentWorldSpace();
+					Result->SetFormID((Worldspace ? Worldspace->formID : NULL));
 
 					return true;
 				}

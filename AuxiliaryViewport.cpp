@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 		{
 		case WM_MOVING:
 		case WM_SHOWWINDOW:
-			AUXVIEWPORT->Redraw();
+			Instance->Redraw();
 			break;
 		}
 

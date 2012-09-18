@@ -76,6 +76,14 @@ namespace ConstructionSetExtender
 					OneForm,
 					ICodaScriptDataStore::kDataType_Reference);
 
+				CodaScriptParametricCommandPrototype(GetRefCell,
+					0,
+					"Returns the parent cell of the reference.",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Reference);
+
 				CodaScriptCommandPrototype(SetRefPosition,
 					0,
 					"Sets the position of the reference in the given axis.",
@@ -128,6 +136,13 @@ namespace ConstructionSetExtender
 					0,
 					1,
 					ICodaScriptDataStore::kDataType_Array);
+
+				CodaScriptCommandPrototype(GetCellWorldspace,
+					0,
+					"Returns the worldspace of the given cell. Will return zero if the passed cell is an interior.",
+					0,
+					1,
+					ICodaScriptDataStore::kDataType_Reference);
 
 				CodaScriptSimpleCommandPrototype(GetCurrentRenderWindowSelection,
 					0,
