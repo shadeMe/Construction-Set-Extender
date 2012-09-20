@@ -393,13 +393,19 @@ namespace BGSEditorExtender
 		}
 
 		if (strlen(Prefix))
+		{
 			Addend += "[" + std::string(Prefix) + "]\t";
 
-		for (int i = 0; i < IndentLevel; i++)
-			Addend += "\t";
+			for (int i = 0; i < IndentLevel; i++)
+				Addend += "\t";
+		}
 
-		Addend += std::string(Message) + "\n";
-		std::replace(Addend.begin(), Addend.end(), (char)'\r\n', (char)'\n');
+		std::string FormattedMessage = Message;
+		SME::StringHelpers::Erase(FormattedMessage, '\r');
+
+		Addend += FormattedMessage;
+		if (Addend.length() == 0 || Addend[Addend.length() - 1] != '\n')
+			Addend += "\n";
 
 		if (DebugLog)
 		{
@@ -407,7 +413,7 @@ namespace BGSEditorExtender
 			fflush(DebugLog);
 		}
 
-		std::replace(Addend.begin(), Addend.end(), (char)'\n', (char)'\r\n');
+		SME::StringHelpers::Replace(FormattedMessage, '\n', (char)'\r\n');
 		BackBuffer += Addend + "\r\n";
 
 		SetState(kState_Update);
