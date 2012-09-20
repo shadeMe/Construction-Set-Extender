@@ -116,6 +116,10 @@ namespace ConstructionSetExtender
 			Label^										LabelSelectionHighlight;
 			Button^										CmDlgFindResultsHighlightColor;
 			Label^										LabelFindResultsHighlight;
+			Button^										CmDlgBackgroundColor;
+			Label^										LabelBackgroundColor;
+			Button^										CmDlgForegroundColor;
+			Label^										LabelForegroundColor;
 			CheckBox^									WordWrap;
 			CheckBox^									ShowTabs;
 			CheckBox^									ShowSpaces;

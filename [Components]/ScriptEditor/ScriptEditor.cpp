@@ -2324,7 +2324,7 @@ namespace ConstructionSetExtender
 				if (Itr->RefCount == 0 && PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
 				{
 					if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest ||
-						PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "General") == 0)
+						PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator") == 0)
 					{
 						AddMessageToMessagePool(MessageListItemType::e_Warning, 1, "Variable '" + Itr->Name + "' unreferenced in local context.");
 					}
@@ -2938,7 +2938,7 @@ namespace ConstructionSetExtender
 			case Keys::H:									// Replace
 				if (E->Modifiers == Keys::Control)
 				{
-					ToolBarEditMenuContentsFind->PerformClick();
+					ContextMenuFind->PerformClick();
 				}
 				break;
 			case Keys::G:									// Goto Line

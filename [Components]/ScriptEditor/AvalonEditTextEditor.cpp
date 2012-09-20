@@ -896,7 +896,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::RefreshBGColorizerLayer()
 			{
-				TextField->TextArea->TextView->InvalidateLayer(ICSharpCode::AvalonEdit::Rendering::KnownLayer::Selection);
+				TextField->TextArea->TextView->InvalidateLayer(ICSharpCode::AvalonEdit::Rendering::KnownLayer::Text);
 			}
 
 			void AvalonEditTextEditor::RefreshTextView()
@@ -1004,7 +1004,7 @@ namespace ConstructionSetExtender
 				Context->DrawRectangle(ElementBrush, nullptr, System::Windows::Rect(TopLeft, TopRight, Width, Height));
 				Context->Close();
 
-				System::Windows::Media::Imaging::RenderTargetBitmap^ Bitmap = gcnew System::Windows::Media::Imaging::RenderTargetBitmap(Width, Height, DpiX, DpiY, ReturnFormat);
+				RTBitmap^ Bitmap = gcnew RTBitmap(Width, Height, DpiX, DpiY, ReturnFormat);
 				Bitmap->Render(Visual);
 
 				return Bitmap;
@@ -1293,7 +1293,8 @@ namespace ConstructionSetExtender
 					RefreshBGColorizerLayer();
 				}
 
-				SearchBracesForHighlighting(GetCaretPos());
+				if (TextField->TextArea->Selection->IsEmpty)
+					SearchBracesForHighlighting(GetCaretPos());
 			}
 
 			void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E)
@@ -1312,7 +1313,7 @@ namespace ConstructionSetExtender
 			{
 				try
 				{
-					Clipboard::Clear();
+					Clipboard::Clear();						// to remove HTML formatting
 					Clipboard::SetText(E->Text);
 				}
 				catch (Exception^ X)
@@ -1731,6 +1732,28 @@ namespace ConstructionSetExtender
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
+				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+				Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
+
+				WPFHost->ForeColor = ForegroundColor;
+				WPFHost->BackColor = BackgroundColor;
+				WinFormsContainer->ForeColor = ForegroundColor;
+				WinFormsContainer->BackColor = BackgroundColor;
+
+				System::Windows::Media::SolidColorBrush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
+																													ForegroundColor.R,
+																													ForegroundColor.G,
+																													ForegroundColor.B));
+				System::Windows::Media::SolidColorBrush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
+																													BackgroundColor.R,
+																													BackgroundColor.G,
+																													BackgroundColor.B));
+
+				TextField->Foreground = ForegroundBrush;
+				TextField->Background = BackgroundBrush;
+				TextField->LineNumbersForeground = ForegroundBrush;
+				TextFieldPanel->Background = BackgroundBrush;
+
 				RefreshTextView();
 			}
 #pragma endregion
@@ -1745,8 +1768,8 @@ namespace ConstructionSetExtender
 				TextField = gcnew AvalonEdit::TextEditor();
 				AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
 				IntelliSenseBox = gcnew IntelliSenseInterface(ParentWorkspaceIndex);
-				ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField, KnownLayer::Selection);
-				FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField, KnownLayer::Selection);
+				ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField, KnownLayer::Text);
+				FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField, KnownLayer::Text);
 				BraceColorizer = gcnew AvalonEditBraceHighlightingBGColorizer(TextField, KnownLayer::Caret);
 				CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 				CodeFoldingStrategy = nullptr;
@@ -1802,12 +1825,33 @@ namespace ConstructionSetExtender
 				TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions();		// each editor instance gets its own unique highlight definition
 
+				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+				Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
+
+				WPFHost->ForeColor = ForegroundColor;
+				WPFHost->BackColor = BackgroundColor;
+				WinFormsContainer->ForeColor = ForegroundColor;
+				WinFormsContainer->BackColor = BackgroundColor;
+
+				System::Windows::Media::SolidColorBrush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
+																													ForegroundColor.R,
+																													ForegroundColor.G,
+																													ForegroundColor.B));
+				System::Windows::Media::SolidColorBrush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
+																													BackgroundColor.R,
+																													BackgroundColor.G,
+																													BackgroundColor.B));
+
+				TextField->Foreground = ForegroundBrush;
+				TextField->Background = BackgroundBrush;
+				TextField->LineNumbersForeground = ForegroundBrush;
+
 				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer);
 				TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer);
 				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer);
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditSelectionBGColorizer(TextField, KnownLayer::Selection));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditLineLimitBGColorizer(TextField, KnownLayer::Selection));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditCurrentLineBGColorizer(TextField, KnownLayer::Selection));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditSelectionBGColorizer(TextField, KnownLayer::Text));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditLineLimitBGColorizer(TextField, KnownLayer::Text));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditCurrentLineBGColorizer(TextField, KnownLayer::Text));
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
@@ -1819,6 +1863,7 @@ namespace ConstructionSetExtender
 
 				TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
 				TextFieldPanel->RegisterName(TextField->Name, TextField);
+				TextFieldPanel->Background = BackgroundBrush;
 
 				TextFieldPanel->Children->Add(TextField);
 

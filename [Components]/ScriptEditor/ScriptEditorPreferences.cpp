@@ -140,6 +140,8 @@ namespace ConstructionSetExtender
 			Dialog->AnyColor = true;
 			Dialog->Color = Default;
 			Dialog->Tag = Parent;
+			Dialog->AllowFullOpen = true;
+			Dialog->FullOpen = true;
 
 			Parent->Tag = Dialog;
 
@@ -178,6 +180,9 @@ namespace ConstructionSetExtender
 			RegisterColorSetting("ErrorHighlightColor", Color::Red, CmDlgErrorHighlightColor);
 			RegisterColorSetting("SelectionHighlightColor", Color::Gold, CmDlgSelectionHighlightColor);
 			RegisterColorSetting("FindResultsHighlightColor", Color::Gold, CmDlgFindResultsHighlightColor);
+
+			RegisterColorSetting("ForegroundColor", Color::Black, CmDlgForegroundColor);
+			RegisterColorSetting("BackgroundColor", Color::White, CmDlgBackgroundColor);
 
 			// General
 			SettingCollection->Add(gcnew INISetting("AutoIndent", "General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
@@ -366,6 +371,10 @@ namespace ConstructionSetExtender
 			LabelCurrentLineHighlight = (gcnew Label());
 			CmDlgFindResultsHighlightColor = (gcnew Button());
 			LabelFindResultsHighlight = (gcnew Label());
+			LabelForegroundColor = (gcnew Label());
+			LabelBackgroundColor = (gcnew Label());
+			CmDlgForegroundColor = (gcnew Button());
+			CmDlgBackgroundColor = (gcnew Button());
 			ShowTabs = (gcnew CheckBox());
 			ShowSpaces = (gcnew CheckBox());
 			CutCopyEntireLine = (gcnew CheckBox());
@@ -457,19 +466,20 @@ namespace ConstructionSetExtender
 			//
 			// LabelTabSize
 			//
-			LabelTabSize->AutoSize = true;
-			LabelTabSize->Location = System::Drawing::Point(12, 263);
-			LabelTabSize->Name = L"LabelTabSize";
-			LabelTabSize->Size = System::Drawing::Size(49, 13);
-			LabelTabSize->TabIndex = 3;
-			LabelTabSize->Text = L"Tab Size";
+			this->LabelTabSize->AutoSize = true;
+			this->LabelTabSize->Location = System::Drawing::Point(325, 7);
+			this->LabelTabSize->Name = L"LabelTabSize";
+			this->LabelTabSize->Size = System::Drawing::Size(49, 13);
+			this->LabelTabSize->TabIndex = 3;
+			this->LabelTabSize->Text = L"Tab Size";
 			//
 			// TabSize
 			//
-			TabSize->Location = System::Drawing::Point(73, 261);
-			TabSize->Name = L"TabSize";
-			TabSize->Size = System::Drawing::Size(88, 20);
-			TabSize->TabIndex = 2;
+			this->TabSize->Location = System::Drawing::Point(328, 28);
+			this->TabSize->Name = L"TabSize";
+			this->TabSize->Size = System::Drawing::Size(88, 20);
+			this->TabSize->TabIndex = 2;
+			this->TabSize->Minimum = 4;
 			//
 			// SaveLastKnownPos
 			//
@@ -493,12 +503,12 @@ namespace ConstructionSetExtender
 			//
 			// CmDlgFont
 			//
-			this->CmDlgFont->Location = System::Drawing::Point(312, 210);
+			this->CmDlgFont->Location = System::Drawing::Point(328, 62);
 			this->CmDlgFont->Name = L"CmDlgFont";
 			this->CmDlgFont->Size = System::Drawing::Size(88, 24);
-			CmDlgFont->TabIndex = 0;
-			CmDlgFont->Text = L"Editor Font";
-			CmDlgFont->UseVisualStyleBackColor = true;
+			this->CmDlgFont->TabIndex = 0;
+			this->CmDlgFont->Text = L"Editor Font";
+			this->CmDlgFont->UseVisualStyleBackColor = true;
 			CmDlgFont->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgFont_Click);
 			//
 			// TabContainer
@@ -664,6 +674,10 @@ namespace ConstructionSetExtender
 			//
 			// TabAppearance
 			//
+			this->TabAppearance->Controls->Add(this->CmDlgBackgroundColor);
+			this->TabAppearance->Controls->Add(this->CmDlgForegroundColor);
+			this->TabAppearance->Controls->Add(this->LabelBackgroundColor);
+			this->TabAppearance->Controls->Add(this->LabelForegroundColor);
 			TabAppearance->Controls->Add(ShowTabs);
 			TabAppearance->Controls->Add(ShowSpaces);
 			TabAppearance->Controls->Add(CmDlgFindResultsHighlightColor);
@@ -898,8 +912,8 @@ namespace ConstructionSetExtender
 			// Wordwrap
 			//
 			this->WordWrap->AutoSize = true;
-			this->WordWrap->Location = System::Drawing::Point(176, 217);
-			this->WordWrap->Name = L"Wordwrap";
+			this->WordWrap->Location = System::Drawing::Point(328, 174);
+			this->WordWrap->Name = L"WordWrap";
 			this->WordWrap->Size = System::Drawing::Size(81, 17);
 			this->WordWrap->TabIndex = 5;
 			this->WordWrap->Text = L"Word-Wrap";
@@ -908,16 +922,16 @@ namespace ConstructionSetExtender
 			// CmDlgSelectionHighlightColor
 			//
 			this->CmDlgSelectionHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgSelectionHighlightColor->Location = System::Drawing::Point(287, 7);
+			this->CmDlgSelectionHighlightColor->Location = System::Drawing::Point(282, 7);
 			this->CmDlgSelectionHighlightColor->Name = L"CmDlgSelectionHighlightColor";
 			this->CmDlgSelectionHighlightColor->Size = System::Drawing::Size(34, 21);
-			CmDlgSelectionHighlightColor->TabIndex = 19;
-			CmDlgSelectionHighlightColor->UseVisualStyleBackColor = true;
+			this->CmDlgSelectionHighlightColor->TabIndex = 19;
+			this->CmDlgSelectionHighlightColor->UseVisualStyleBackColor = true;
 			CmDlgSelectionHighlightColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
 			//
 			// LabelSelectionHighlight
 			//
-			this->LabelSelectionHighlight->Location = System::Drawing::Point(176, 10);
+			this->LabelSelectionHighlight->Location = System::Drawing::Point(171, 10);
 			this->LabelSelectionHighlight->Name = L"LabelSelectionHighlight";
 			this->LabelSelectionHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelSelectionHighlight->TabIndex = 18;
@@ -926,16 +940,16 @@ namespace ConstructionSetExtender
 			// CmDlgErrorHighlightColor
 			//
 			this->CmDlgErrorHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgErrorHighlightColor->Location = System::Drawing::Point(287, 104);
+			this->CmDlgErrorHighlightColor->Location = System::Drawing::Point(282, 104);
 			this->CmDlgErrorHighlightColor->Name = L"CmDlgErrorHighlightColor";
 			this->CmDlgErrorHighlightColor->Size = System::Drawing::Size(34, 21);
-			CmDlgErrorHighlightColor->TabIndex = 21;
-			CmDlgErrorHighlightColor->UseVisualStyleBackColor = true;
+			this->CmDlgErrorHighlightColor->TabIndex = 21;
+			this->CmDlgErrorHighlightColor->UseVisualStyleBackColor = true;
 			CmDlgErrorHighlightColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
 			//
 			// LabelErrorHighlight
 			//
-			this->LabelErrorHighlight->Location = System::Drawing::Point(176, 107);
+			this->LabelErrorHighlight->Location = System::Drawing::Point(171, 107);
 			this->LabelErrorHighlight->Name = L"LabelErrorHighlight";
 			this->LabelErrorHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelErrorHighlight->TabIndex = 20;
@@ -944,16 +958,16 @@ namespace ConstructionSetExtender
 			// CmDlgCharLimitColor
 			//
 			this->CmDlgCharLimitHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgCharLimitHighlightColor->Location = System::Drawing::Point(287, 72);
+			this->CmDlgCharLimitHighlightColor->Location = System::Drawing::Point(282, 72);
 			this->CmDlgCharLimitHighlightColor->Name = L"CmDlgCharLimitColor";
 			this->CmDlgCharLimitHighlightColor->Size = System::Drawing::Size(34, 21);
-			CmDlgCharLimitHighlightColor->TabIndex = 23;
-			CmDlgCharLimitHighlightColor->UseVisualStyleBackColor = true;
+			this->CmDlgCharLimitHighlightColor->TabIndex = 23;
+			this->CmDlgCharLimitHighlightColor->UseVisualStyleBackColor = true;
 			CmDlgCharLimitHighlightColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
 			//
 			// LabelCharLimitHighlight
 			//
-			this->LabelCharLimitHighlight->Location = System::Drawing::Point(176, 68);
+			this->LabelCharLimitHighlight->Location = System::Drawing::Point(171, 68);
 			this->LabelCharLimitHighlight->Name = L"LabelCharLimitHighlight";
 			this->LabelCharLimitHighlight->Size = System::Drawing::Size(108, 30);
 			this->LabelCharLimitHighlight->TabIndex = 22;
@@ -962,16 +976,16 @@ namespace ConstructionSetExtender
 			// CmDlgCurrentLineHighlightColor
 			//
 			this->CmDlgCurrentLineHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgCurrentLineHighlightColor->Location = System::Drawing::Point(287, 39);
+			this->CmDlgCurrentLineHighlightColor->Location = System::Drawing::Point(282, 39);
 			this->CmDlgCurrentLineHighlightColor->Name = L"CmDlgCurrentLineHighlightColor";
 			this->CmDlgCurrentLineHighlightColor->Size = System::Drawing::Size(34, 21);
-			CmDlgCurrentLineHighlightColor->TabIndex = 25;
-			CmDlgCurrentLineHighlightColor->UseVisualStyleBackColor = true;
+			this->CmDlgCurrentLineHighlightColor->TabIndex = 25;
+			this->CmDlgCurrentLineHighlightColor->UseVisualStyleBackColor = true;
 			CmDlgCurrentLineHighlightColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
 			//
 			// LabelCurrentLineHighlight
 			//
-			this->LabelCurrentLineHighlight->Location = System::Drawing::Point(176, 35);
+			this->LabelCurrentLineHighlight->Location = System::Drawing::Point(171, 34);
 			this->LabelCurrentLineHighlight->Name = L"LabelCurrentLineHighlight";
 			this->LabelCurrentLineHighlight->Size = System::Drawing::Size(108, 26);
 			this->LabelCurrentLineHighlight->TabIndex = 24;
@@ -980,25 +994,63 @@ namespace ConstructionSetExtender
 			// CmDlgFindResultsHighlightColor
 			//
 			this->CmDlgFindResultsHighlightColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgFindResultsHighlightColor->Location = System::Drawing::Point(287, 136);
+			this->CmDlgFindResultsHighlightColor->Location = System::Drawing::Point(282, 136);
 			this->CmDlgFindResultsHighlightColor->Name = L"CmDlgFindResultsHighlightColor";
 			this->CmDlgFindResultsHighlightColor->Size = System::Drawing::Size(34, 21);
-			CmDlgFindResultsHighlightColor->TabIndex = 27;
-			CmDlgFindResultsHighlightColor->UseVisualStyleBackColor = true;
+			this->CmDlgFindResultsHighlightColor->TabIndex = 27;
+			this->CmDlgFindResultsHighlightColor->UseVisualStyleBackColor = true;
 			CmDlgFindResultsHighlightColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
 			//
 			// LabelFindResultsHighlight
 			//
-			this->LabelFindResultsHighlight->Location = System::Drawing::Point(176, 135);
+			this->LabelFindResultsHighlight->Location = System::Drawing::Point(171, 135);
 			this->LabelFindResultsHighlight->Name = L"LabelFindResultsHighlight";
 			this->LabelFindResultsHighlight->Size = System::Drawing::Size(108, 33);
 			this->LabelFindResultsHighlight->TabIndex = 26;
 			this->LabelFindResultsHighlight->Text = L"Find Results Highlight";
 			//
+			// LabelForegroundColor
+			//
+			this->LabelForegroundColor->AutoSize = true;
+			this->LabelForegroundColor->Location = System::Drawing::Point(6, 263);
+			this->LabelForegroundColor->Name = L"LabelForegroundColor";
+			this->LabelForegroundColor->Size = System::Drawing::Size(88, 13);
+			this->LabelForegroundColor->TabIndex = 33;
+			this->LabelForegroundColor->Text = L"Foreground Color";
+			//
+			// LabelBackgroundColor
+			//
+			this->LabelBackgroundColor->AutoSize = true;
+			this->LabelBackgroundColor->Location = System::Drawing::Point(171, 263);
+			this->LabelBackgroundColor->Name = L"LabelBackgroundColor";
+			this->LabelBackgroundColor->Size = System::Drawing::Size(92, 13);
+			this->LabelBackgroundColor->TabIndex = 34;
+			this->LabelBackgroundColor->Text = L"Background Color";
+			//
+			// CmDlgForegroundColor
+			//
+			this->CmDlgForegroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgForegroundColor->Location = System::Drawing::Point(109, 259);
+			this->CmDlgForegroundColor->Name = L"CmDlgForegroundColor";
+			this->CmDlgForegroundColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgForegroundColor->TabIndex = 35;
+			this->CmDlgForegroundColor->UseVisualStyleBackColor = true;
+			CmDlgForegroundColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
+			//
+			// CmDlgBackgroundColor
+			//
+			this->CmDlgBackgroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgBackgroundColor->Location = System::Drawing::Point(282, 259);
+			this->CmDlgBackgroundColor->Name = L"CmDlgBackgroundColor";
+			this->CmDlgBackgroundColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgBackgroundColor->TabIndex = 36;
+			this->CmDlgBackgroundColor->UseVisualStyleBackColor = true;
+			CmDlgBackgroundColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
+			//
 			// ShowTabs
 			//
 			this->ShowTabs->AutoSize = true;
-			this->ShowTabs->Location = System::Drawing::Point(176, 240);
+			this->ShowTabs->Location = System::Drawing::Point(328, 196);
 			this->ShowTabs->Name = L"ShowTabs";
 			this->ShowTabs->Size = System::Drawing::Size(80, 17);
 			this->ShowTabs->TabIndex = 28;
@@ -1008,7 +1060,7 @@ namespace ConstructionSetExtender
 			// ShowSpaces
 			//
 			this->ShowSpaces->AutoSize = true;
-			this->ShowSpaces->Location = System::Drawing::Point(176, 263);
+			this->ShowSpaces->Location = System::Drawing::Point(328, 218);
 			this->ShowSpaces->Name = L"ShowSpaces";
 			this->ShowSpaces->Size = System::Drawing::Size(92, 17);
 			this->ShowSpaces->TabIndex = 29;
@@ -1043,7 +1095,7 @@ namespace ConstructionSetExtender
 			// CodeFolding
 			//
 			this->CodeFolding->AutoSize = true;
-			this->CodeFolding->Location = System::Drawing::Point(312, 240);
+			this->CodeFolding->Location = System::Drawing::Point(328, 240);
 			this->CodeFolding->Name = L"CodeFolding";
 			this->CodeFolding->Size = System::Drawing::Size(88, 17);
 			this->CodeFolding->TabIndex = 30;
@@ -1053,7 +1105,7 @@ namespace ConstructionSetExtender
 			// TabsOnTop
 			//
 			this->TabsOnTop->AutoSize = true;
-			this->TabsOnTop->Location = System::Drawing::Point(312, 263);
+			this->TabsOnTop->Location = System::Drawing::Point(328, 262);
 			this->TabsOnTop->Name = L"TabsOnTop";
 			this->TabsOnTop->Size = System::Drawing::Size(89, 17);
 			this->TabsOnTop->TabIndex = 31;
@@ -1062,10 +1114,9 @@ namespace ConstructionSetExtender
 			//
 			// BoldFacedHighlighting
 			//
-			this->BoldFacedHighlighting->AutoSize = true;
-			this->BoldFacedHighlighting->Location = System::Drawing::Point(176, 194);
+			this->BoldFacedHighlighting->Location = System::Drawing::Point(328, 139);
 			this->BoldFacedHighlighting->Name = L"BoldFacedHighlighting";
-			this->BoldFacedHighlighting->Size = System::Drawing::Size(138, 17);
+			this->BoldFacedHighlighting->Size = System::Drawing::Size(89, 34);
 			this->BoldFacedHighlighting->TabIndex = 32;
 			this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
 			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
