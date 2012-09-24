@@ -441,9 +441,7 @@ namespace BGSEditorExtender
 
 		if(SECurrentVersion < SEMinVersion)
 		{
-			BGSEECONSOLE_MESSAGE("Script Extender version too old - v%d.%d.%d or greater required", (SEMinVersion >> 24) & 0xFF,
-																								(SEMinVersion >> 16) & 0xFF,
-																								(SEMinVersion >> 4) & 0xFFF);
+			BGSEECONSOLE_MESSAGE("Script Extender version too old - v%d or greater required", SEMinVersion);
 			return false;
 		}
 		else if (EditorCurrentVersion != EditorSupportedVersion)
