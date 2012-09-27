@@ -10,7 +10,6 @@
 #include "..\CSEWorkspaceManager.h"
 
 #include <BGSEEToolBox.h>
-#include <BGSEEToolBox.h>
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -59,7 +58,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESFormClearReferenceList, 0x0049641E);
 		_DefineHookHdlr(TESFormPopulateUseInfoList, 0x004964F2);
 		_DefineHookHdlr(TESFormDelete, 0x00498712);
-		_DefinePatchHdlr(TextureSizeCheck, 0x0044F444);
+		_DefinePatchHdlr(TextureSizeCheckA, 0x0044F444);
+		_DefinePatchHdlr(TextureSizeCheckB, 0x0044F3F2);
 		_DefineHookHdlr(DataHandlerPlaceTESObjectLIGH, 0x005116C7);
 		_DefineJumpHdlr(CSRegistryEntries, 0x00406820, 0x00406AF4);
 		_DefineHookHdlr(AchievementAddTopic, 0x004F2ED4);
@@ -96,7 +96,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESFormClearReferenceList).WriteJump();
 			_MemHdlr(TESFormPopulateUseInfoList).WriteJump();
 			_MemHdlr(TESFormDelete).WriteJump();
-			_MemHdlr(TextureSizeCheck).WriteUInt8(0xEB);
+			_MemHdlr(TextureSizeCheckA).WriteUInt8(0xEB);
+			_MemHdlr(TextureSizeCheckB).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerPlaceTESObjectLIGH).WriteJump();
 			_MemHdlr(AchievementAddTopic).WriteJump();
 			_MemHdlr(AchievementDeleteShadeMe).WriteJump();

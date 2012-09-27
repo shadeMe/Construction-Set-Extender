@@ -83,6 +83,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(DialogueEditorPopup, 0x004F2896);
 		_DefineJumpHdlr(TESWeatherSoundListSort, 0x0055D083, 0x0055D098);
 		_DefineHookHdlr(TESFormShowCrossRefList, 0x0049875C);
+		_DefineNopHdlr(TESColorControlWndProc, 0x00441400, 5);
 
 		void PatchDialogHooks(void)
 		{
@@ -290,6 +291,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(DialogueEditorPopup).WriteJump();
 			_MemHdlr(TESWeatherSoundListSort).WriteJump();
 			_MemHdlr(TESFormShowCrossRefList).WriteJump();
+			_MemHdlr(TESColorControlWndProc).WriteNop();
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)

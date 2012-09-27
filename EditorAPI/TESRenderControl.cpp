@@ -17,6 +17,7 @@ UInt8*								g_RenderWindowPathGridEditModeFlag = (UInt8*)0x00A0BC5C;
 tList<TESPathGridPoint>*			g_RenderWindowSelectedPathGridPoints = (tList<TESPathGridPoint>*)0x00A0AF68;
 TESRenderComponents**				g_TESRenderComponents = (TESRenderComponents**)0x00A0BACC;
 TESObjectCELL**						g_RenderWindowCurrentlyLoadedCell = (TESObjectCELL**)0x00A0BC3C;
+tList<TESRenderControl>*			g_ActivePreviewControls = (tList<TESRenderControl>*)0x00A0BE90;
 
 void TESRenderSelection::AddToSelection( TESForm* Form, bool AddSelectionBox )
 {

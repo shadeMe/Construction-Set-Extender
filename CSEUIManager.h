@@ -121,8 +121,6 @@ namespace ConstructionSetExtender
 			HWND		LastCursorPosWindow;
 			bool		QuickViewTriggered;
 
-			HFONT		ActiveFormListFont;
-
 			HWND		AssetControlToolTip;
 			TOOLINFO	AssetControlToolData;
 			HWND		LastTrackedTool;

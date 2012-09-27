@@ -351,23 +351,6 @@ namespace ConstructionSetExtender
 			LastCursorPosWindow = NULL;
 			QuickViewTriggered = false;
 
-			ActiveFormListFont = NULL;
-
-			ActiveFormListFont = CreateFont(14,
-											0,
-											0,
-											0,
-											FW_MEDIUM,
-											FALSE,
-											FALSE,
-											FALSE,
-											DEFAULT_CHARSET,
-											OUT_DEFAULT_PRECIS,
-											CLIP_DEFAULT_PRECIS,
-											ANTIALIASED_QUALITY,
-											FF_DONTCARE,
-											"MS Shell Dlg");
-
 			AssetControlToolTip = NULL;
 			ZeroMemory(&AssetControlToolData, sizeof(AssetControlToolData));
 			AssetControlToolData.cbSize = sizeof(AssetControlToolData);
@@ -377,9 +360,6 @@ namespace ConstructionSetExtender
 
 		CSEDialogExtraFittingsData::~CSEDialogExtraFittingsData()
 		{
-			if (ActiveFormListFont)
-				DeleteFont(ActiveFormListFont);
-
 			if (AssetControlToolTip)
 				DestroyWindow(AssetControlToolTip);
 		}
@@ -1884,6 +1864,17 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				}
+
+				break;
+			case WM_SIZING:
+				{
+					if (g_ActivePreviewControls->Count())
+					{
+						BGSEEUI->MsgBoxW(hWnd, 0, "Please close any dialogs with preview controls before attempting to resize the render window.");
+
+						Return = true;
+					}
 				}
 
 				break;
@@ -3420,9 +3411,6 @@ namespace ConstructionSetExtender
 													DrawData->clrText = ForeColor;
 													DrawData->clrTextBk = BackColor;
 												}
-
-												if (xData && xData->ActiveFormListFont)
-													SelectObject(DrawData->nmcd.hdc, xData->ActiveFormListFont);
 
 												SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
 												DlgProcResult = TRUE;

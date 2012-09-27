@@ -40,7 +40,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESFormClearReferenceList, "");
 		_DeclareMemHdlr(TESFormPopulateUseInfoList, "");
 		_DeclareMemHdlr(TESFormDelete, "");
-		_DeclareMemHdlr(TextureSizeCheck, "allows the preview of textures of resolution > 512px");
+		_DeclareMemHdlr(TextureSizeCheckA, "allows the preview of textures of resolution > 512px");
+		_DeclareMemHdlr(TextureSizeCheckB, "");
 		_DeclareMemHdlr(DataHandlerPlaceTESObjectLIGH, "fixes a CTD that occurs on the first reference placement of a light object");
 		_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registy entries at startup");
 		_DeclareMemHdlr(AchievementAddTopic, "various hooks that unlock achievements");

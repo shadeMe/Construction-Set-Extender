@@ -107,7 +107,7 @@ namespace ConstructionSetExtender
 						if (Offset != -1)
 							STLBuffer = STLBuffer.substr(Offset + 9);
 
-						FORMAT_STR(s_AssetSelectorReturnPath, "\\%s", STLBuffer.c_str());
+						FORMAT_STR(s_AssetSelectorReturnPath, "%s", STLBuffer.c_str());
 					}
 					break;
 				default:

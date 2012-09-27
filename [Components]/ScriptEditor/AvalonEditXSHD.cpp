@@ -364,60 +364,52 @@ namespace ConstructionSetExtender
 
 						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
 							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[
-								(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
-								CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-									[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-									CSEPreprocessorDirective::DirectiveIdentifier[
-										(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
 
-										CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-											[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-											CSEPreprocessorDirective::DirectiveIdentifier[
-												(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
-												CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-													[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-													CSEPreprocessorDirective::DirectiveIdentifier[
-														(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
 
-														CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-															[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-															CSEPreprocessorDirective::DirectiveIdentifier[
-																(int)CSEPreprocessorDirective::DirectiveType::e_If]));
-																CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-																	[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-																	CSEPreprocessorDirective::DirectiveIdentifier[
-																		(int)CSEPreprocessorDirective::DirectiveType::e_If]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
 
-																		CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-																			[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-																			CSEPreprocessorDirective::DirectiveIdentifier[
-																				(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
-																				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-																					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-																					CSEPreprocessorDirective::DirectiveIdentifier[
-																						(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
 
-																						CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("TODO"));
-																						CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("HACK"));
+						CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("TODO"));
+						CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("HACK"));
 
-																						CommentMarkerRuleset->AddChild(CommentMarkerPreprocessorKeywords);
-																						CommentMarkerRuleset->AddChild(CommentMarkerReminderKeywords);
+						CommentMarkerRuleset->AddChild(CommentMarkerPreprocessorKeywords);
+						CommentMarkerRuleset->AddChild(CommentMarkerReminderKeywords);
 
-																						this->CommentMarkerRuleset = gcnew String(CommentMarkerRuleset->Serialize());
+						this->CommentMarkerRuleset = gcnew String(CommentMarkerRuleset->Serialize());
 
-																						XSHDSpan^ CommentSpan = gcnew XSHDSpan(CommentColor, CommentMarkerRuleset, false);
-																						CommentSpan->AddChild(gcnew XSHDBegin(nullptr, ";"));
+						XSHDSpan^ CommentSpan = gcnew XSHDSpan(CommentColor, CommentMarkerRuleset, false);
+						CommentSpan->AddChild(gcnew XSHDBegin(nullptr, ";"));
 
-																						XSHDSpan^ PreprocessorBlockSpan = gcnew XSHDSpan(PreprocessorColor, CommentMarkerRuleset, true);
-																						PreprocessorBlockSpan->AddChild(gcnew XSHDBegin(nullptr, ";{"));
-																						PreprocessorBlockSpan->AddChild(gcnew XSHDEnd(";}"));
+						XSHDSpan^ PreprocessorBlockSpan = gcnew XSHDSpan(PreprocessorColor, CommentMarkerRuleset, true);
+						PreprocessorBlockSpan->AddChild(gcnew XSHDBegin(nullptr, ";{"));
+						PreprocessorBlockSpan->AddChild(gcnew XSHDEnd(";}"));
 
-																						SerializedColors->AddLast(CommentColor);
-																						SerializedColors->AddLast(PreprocessorColor);
-																						SerializedColors->AddLast(ReminderColor);
-																						Contents->AddLast(PreprocessorBlockSpan);
-																						Contents->AddLast(CommentSpan);
+						SerializedColors->AddLast(CommentColor);
+						SerializedColors->AddLast(PreprocessorColor);
+						SerializedColors->AddLast(ReminderColor);
+						Contents->AddLast(PreprocessorBlockSpan);
+						Contents->AddLast(CommentSpan);
 					}
 					break;
 				}

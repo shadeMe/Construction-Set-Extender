@@ -151,7 +151,11 @@ extern float*					g_RenderWindowCameraPanSpeed;
 
 class TESPathGridPoint;
 class TESPathGrid;
+class TESRenderControl;
+class TESPreviewControl;
 
 extern UInt8*					g_RenderWindowPathGridEditModeFlag;
 extern tList<TESPathGridPoint>*	g_RenderWindowSelectedPathGridPoints;
 extern TESObjectCELL**			g_RenderWindowCurrentlyLoadedCell;
+
+extern tList<TESRenderControl>*	g_ActivePreviewControls;

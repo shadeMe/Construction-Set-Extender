@@ -182,6 +182,37 @@ public:
 };
 STATIC_ASSERT(sizeof(DialogExtraWorkingData) == 0x14);
 
+// 14
+class DialogExtraColorControl : public BSExtraData
+{
+public:
+	// 20
+	struct ControlIDData
+	{
+		/*00*/ int				editR;
+		/*04*/ int				editG;
+		/*08*/ int				editB;
+		/*0C*/ int				spinR;			// numeric up-down controls
+		/*10*/ int				spinG;
+		/*14*/ int				spinB;
+		/*18*/ int				btnSelect;
+		/*1C*/ int				picPreview;
+	};
+
+	// 24
+	struct ColorData
+	{
+		/*00*/ HWND				parent;
+		/*04*/ ControlIDData	controls;
+	};
+
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ ColorData*			data;
+	/*10*/ int					controlID;		// set to data->editR, used for quick lookup
+};
+STATIC_ASSERT(sizeof(DialogExtraColorControl) == 0x14);
+
 // 20
 class DialogExtraQuestStageData : public BSExtraData
 {
