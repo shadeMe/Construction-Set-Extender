@@ -106,6 +106,12 @@ public:
 	/*04*/ NiNode*					sceneRootNode;			// smart pointer
 	/*08*/ UInt32					renderedFrameCount;		// incremented in Render()
 	/*0C*/ RenderCameraListT		attachedCameras;
+
+	// methods
+	virtual void					SetSceneNode(NiNode* Node) = 0;
+	virtual NiCamera*				AddCamera(NiCamera** OutCamera) = 0;
+	virtual bool					HandleResize(void) = 0;
+	virtual bool					UpdateCameraFrustum(NiCamera* Camera, int Width, int Height, float ClipDistance);
 };
 STATIC_ASSERT(sizeof(NiWindow) == 0x14);
 
@@ -113,6 +119,22 @@ STATIC_ASSERT(sizeof(NiWindow) == 0x14);
 class TESRenderComponents
 {
 public:
+	enum
+	{
+		kNodeUpdate_Unk00 =		0,		// translate X axis?
+		kNodeUpdate_Unk01,				// translate Y axis?
+		kNodeUpdate_Unk02,				// translate Z axis?
+		kNodeUpdate_Unk03,
+		kNodeUpdate_Unk04,				// zoom?
+		kNodeUpdate_Unk05,
+		kNodeUpdate_Unk06,
+		kNodeUpdate_Unk07,
+		kNodeUpdate_Unk08,
+		kNodeUpdate_Unk09,
+		kNodeUpdate_Unk010,
+		kNodeUpdate_Unk011,
+	};
+
 	// members
 	/*00*/ NiWindow*					niWindow;
 	/*04*/ NiNode*						primaryCameraParentNode;
@@ -121,6 +143,12 @@ public:
 	// methods
 	void								RenderNode(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL);
 	void								GetCameraPivot(Vector3* OutPivot, float ScaleFactor);
+	bool								UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier);
+	void								RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
+	void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);
+
+	// this should be moved to a better location
+	void								UpdateAVObject(NiAVObject* Object);
 };
 STATIC_ASSERT(sizeof(TESRenderComponents) == 0x0C);
 

@@ -14,6 +14,7 @@
 #include "CSEAchievements.h"
 #include "CSEConsole.h"
 #include "CSERenderWindowPainter.h"
+#include "CSERenderWindowFlyCamera.h"
 #include "CSEHallOfFame.h"
 #include "CSEUIManager.h"
 #include "CSEWorkspaceManager.h"
@@ -546,6 +547,7 @@ extern "C"
 		CSEINISettings.push_back(INISettings::GetStartupScript());
 		CSEINISettings.push_back(INISettings::GetStartupWorkspace());
 		CSEINISettings.push_back(INISettings::GetVersionControl());
+		CSEINISettings.push_back(INISettings::GetRenderWindowFlyCamera());
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
 														BGSEEMAIN_EXTENDERSHORTNAME,

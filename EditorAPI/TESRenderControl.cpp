@@ -96,4 +96,52 @@ void TESRenderComponents::GetCameraPivot( Vector3* OutPivot, float ScaleFactor )
 	*OutPivot += Buffer;
 }
 
+bool TESRenderComponents::UpdateNode( NiNode* Node, UInt32 UpdateType, float Multiplier )
+{
+	bool Result = cdeclCall<bool>(0x00430080, Node, UpdateType, Multiplier);
+
+	if (Result)
+		UpdateAVObject(Node);
+
+	return Result;
+}
+
+void TESRenderComponents::UpdateAVObject( NiAVObject* Object )
+{
+	thisCall<void>(0x006F25E0, Object, 0.0, true);		// NiAVObject::Update
+}
+
+void TESRenderComponents::RotateNode( NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier )
+{
+	cdeclCall<void>(0x00430420, Node, Pivot, XOffset, YOffset, SpeedMultiplier);
+}
+
+void TESRenderComponents::SetCameraFOV( NiCamera* Camera, float FOV, float Width /*= -1*/, float Height /*= -1*/ )
+{
+	NiFrustum ViewFrustum = {0};
+
+	ViewFrustum.f = Camera->m_kViewFrustum.f;
+	ViewFrustum.n = Camera->m_kViewFrustum.n;
+
+	RECT Bounds = {0};
+	GetWindowRect(*g_HWND_RenderWindow, &Bounds);
+
+	if (Width == -1)
+		Width = (Bounds.right - Bounds.left) * 1.0f;
+
+	if (Height == -1)
+		Height = (Bounds.bottom - Bounds.top) * 1.0f;
+
+	float SizeRatio = Height / Width * 1.0f;
+	float FOVMultiplier = FOV * 0.01745329238474369 * 0.5;
+
+	ViewFrustum.l = -tan(FOVMultiplier);
+	ViewFrustum.r = tan(FOVMultiplier);
+	ViewFrustum.b = ViewFrustum.l * SizeRatio;
+	ViewFrustum.t = SizeRatio * ViewFrustum.r;
+
+	thisCall<void>(0x006FE030, Camera, &ViewFrustum);		// NiCamera::SetViewFrustum
+	UpdateAVObject(Camera);
+}
+
 

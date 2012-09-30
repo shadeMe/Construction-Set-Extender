@@ -85,7 +85,7 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 		Node3D->m_localTranslate.z = position.z;
 
 		cdeclCall<void>(0x00609F60, Node3D, true);		// NiNode::UpdateCollision?
-		thisCall<void>(0x006F25E0, Node3D, 0.0, true);	// NiNode::Update
+		_RENDERCMPT->UpdateAVObject(Node3D);
 
 		ExtraLight::ExtraLightData* xLight = thisCall<ExtraLight::ExtraLightData*>(0x00540110, this);	// TESObjectREFR::GetExtraLight
 		if (xLight && xLight->light && baseForm && baseForm->formType == kFormType_Light)
@@ -124,7 +124,7 @@ void TESObjectREFR::SetRotation( float X, float Y, float Z, bool Radians /*= fal
 
 		memcpy(&Node3D->m_localRotate, &RotationMatrix, sizeof(NiMatrix33));
 		cdeclCall<void>(0x00609F60, Node3D, true);								// NiNode::UpdateCollision?
-		thisCall<void>(0x006F25E0, Node3D, 0.0, true);							// NiNode::Update
+		_RENDERCMPT->UpdateAVObject(Node3D);
 
 		TESDialog::RedrawRenderWindow();
 	}

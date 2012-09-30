@@ -303,6 +303,11 @@ void TESListView::SetSelectedItem( HWND hWnd, int Index )
 	cdeclCall<void>(0x00403B10, hWnd, Index);
 }
 
+int TESListView::GetItemByData( HWND hWnd, void* Data )
+{
+	return cdeclCall<int>(0x004039E0, hWnd, Data);
+}
+
 void TESPreviewWindow::Initialize( TESBoundObject* Object )
 {
 	if (*g_HWND_PreviewWindow == NULL)

@@ -4,6 +4,7 @@
 #include "[Common]\CLIWrapper.h"
 #include "CSEWorkspaceManager.h"
 #include "CSERenderWindowPainter.h"
+#include "CSERenderWindowFlyCamera.h"
 #include "CSEAchievements.h"
 #include "Hooks\AssetSelector.h"
 #include "Hooks\Dialog.h"
@@ -842,167 +843,6 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
-					{
-						TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
-						if (!ThisCell)
-							ThisCell = *g_RenderWindowCurrentlyLoadedCell;
-
-						if (ThisCell)
-						{
-							UInt32 RefCount = ThisCell->objectList.Count(), i = 0;
-
-							if (RefCount < 2)
-								break;
-
-							ComponentDLLInterface::CellObjectData* RefData = new ComponentDLLInterface::CellObjectData[RefCount];
-							ComponentDLLInterface::BatchRefData* BatchData = new ComponentDLLInterface::BatchRefData();
-
-							for (TESObjectCELL::ObjectREFRList::Iterator Itr = ThisCell->objectList.Begin(); !Itr.End(); ++Itr, ++i)
-							{
-								TESObjectREFR* ThisRef = Itr.Get();
-								ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
-
-								ThisRefData->EditorID = (!ThisRef->editorID.c_str())?ThisRef->baseForm->editorID.c_str():ThisRef->editorID.c_str();
-								ThisRefData->FormID = ThisRef->formID;
-								ThisRefData->TypeID = ThisRef->baseForm->formType;
-								ThisRefData->Flags = ThisRef->formFlags;
-								ThisRefData->Selected = false;
-
-								for (TESRenderSelection::SelectedObjectsEntry* j = _RENDERSEL->selectionList; j != 0; j = j->Next)
-								{
-									if (j->Data && j->Data == ThisRef)
-									{
-										ThisRefData->Selected = true;
-										break;
-									}
-								}
-
-								ThisRefData->ParentForm = ThisRef;
-							}
-
-							BatchData->CellObjectListHead = RefData;
-							BatchData->ObjectCount = RefCount;
-
-							if (CLIWrapper::Interfaces::BE->ShowBatchRefEditorDialog(BatchData))
-							{
-								for (UInt32 k = 0; k < RefCount; k++)
-								{
-									TESObjectREFR* ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
-									ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[k];
-									bool Modified = false;
-
-									if (ThisRefData->Selected)
-									{
-										if (BatchData->World3DData.UsePosX())	ThisRef->position.x = BatchData->World3DData.PosX, Modified = true;
-										if (BatchData->World3DData.UsePosY())	ThisRef->position.y = BatchData->World3DData.PosY, Modified = true;
-										if (BatchData->World3DData.UsePosZ())	ThisRef->position.z = BatchData->World3DData.PosZ, Modified = true;
-
-										if (BatchData->World3DData.UseRotX())	ThisRef->rotation.x = BatchData->World3DData.RotX * PI / 180, Modified = true;
-										if (BatchData->World3DData.UseRotY())	ThisRef->rotation.y = BatchData->World3DData.RotY * PI / 180, Modified = true;
-										if (BatchData->World3DData.UseRotZ())	ThisRef->rotation.z = BatchData->World3DData.RotZ * PI / 180, Modified = true;
-
-										if (BatchData->World3DData.UseScale())	ThisRef->scale = BatchData->World3DData.Scale, Modified = true;
-
-										if (BatchData->Flags.UsePersistent() &&
-											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
-											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
-										{
-											ThisRef->SetQuestItem(BatchData->Flags.Persistent);
-											Modified = true;
-										}
-
-										if (BatchData->Flags.UseDisabled())
-											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
-																	TESForm::kFormFlags_Disabled,
-																	BatchData->Flags.Disabled), Modified = true;
-
-										if (BatchData->Flags.UseVWD())
-											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
-																	TESForm::kFormFlags_VisibleWhenDistant,
-																	BatchData->Flags.VWD), Modified = true;
-
-										if (BatchData->EnableParent.UseEnableParent())
-										{
-											TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
-											if (Parent != ThisRef)
-											{
-												ThisRef->extraData.ModExtraEnableStateParent(Parent);
-												ThisRef->SetExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
-												Modified = true;
-											}
-										}
-
-										if (BatchData->Ownership.UseOwnership() &&
-											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
-											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
-										{
-											ThisRef->extraData.ModExtraGlobal(NULL);
-											ThisRef->extraData.ModExtraRank(-1);
-											ThisRef->extraData.ModExtraOwnership(NULL);
-
-											TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
-											ThisRef->extraData.ModExtraOwnership(Owner);
-
-											if (BatchData->Ownership.UseNPCOwner())
-												ThisRef->extraData.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
-											else
-												ThisRef->extraData.ModExtraRank(BatchData->Ownership.Rank);
-
-											Modified = true;
-										}
-
-										if (BatchData->Extra.UseCharge())		ThisRef->ModExtraCharge((float)BatchData->Extra.Charge), Modified = true;
-										if (BatchData->Extra.UseHealth())		ThisRef->ModExtraHealth((float)BatchData->Extra.Health), Modified = true;
-										if (BatchData->Extra.UseTimeLeft())		ThisRef->ModExtraTimeLeft((float)BatchData->Extra.TimeLeft), Modified = true;
-										if (BatchData->Extra.UseSoulLevel())	ThisRef->ModExtraSoul(BatchData->Extra.SoulLevel), Modified = true;
-										if (BatchData->Extra.UseCount())
-										{
-											switch (ThisRef->baseForm->formType)
-											{
-											case TESForm::kFormType_Apparatus:
-											case TESForm::kFormType_Armor:
-											case TESForm::kFormType_Book:
-											case TESForm::kFormType_Clothing:
-											case TESForm::kFormType_Ingredient:
-											case TESForm::kFormType_Misc:
-											case TESForm::kFormType_Weapon:
-											case TESForm::kFormType_Ammo:
-											case TESForm::kFormType_SoulGem:
-											case TESForm::kFormType_Key:
-											case TESForm::kFormType_AlchemyItem:
-											case TESForm::kFormType_SigilStone:
-												ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
-
-												break;
-											case TESForm::kFormType_Light:
-												TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
-												if (Light)
-												{
-													if (Light->IsCarriable())
-														ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
-												}
-
-												break;
-											}
-										}
-									}
-
-									if (Modified)
-									{
-										ThisRef->SetFromActiveFile(true);
-										ThisRef->UpdateNiNode();
-									}
-								}
-
-								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
-							}
-
-							delete BatchData;
-						}
-
-						break;
-					}
 				case IDC_MAINMENU_CONSOLE:
 					BGSEECONSOLE->ToggleVisibility();
 
@@ -1022,14 +862,19 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_LAUNCHGAME:
-					ShellExecute(NULL,
-								"open",
-								(LPCSTR)(std::string(std::string(BGSEEMAIN->GetAPPPath()) + "\\" + std::string(BGSEEMAIN->ExtenderGetSEName()) + "_loader.exe")).c_str(),
-								NULL,
-								NULL,
-								SW_SHOW);
+					{
+						std::string AppPath = BGSEEMAIN->GetAPPPath();
+						AppPath += "\\";
 
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kLazyBum);
+						IFileStream SteamLoader;
+						if (SteamLoader.Open((std::string(AppPath + "obse_steam_loader.dll")).c_str()) == false)
+							AppPath += "obse_loader.exe";
+						else
+							AppPath += "Oblivion.exe";
+
+						ShellExecute(NULL, "open", (LPCSTR)AppPath.c_str(), NULL, NULL, SW_SHOW);
+						BGSEEACHIEVEMENTS->Unlock(Achievements::kLazyBum);
+					}
 
 					break;
 				case IDC_MAINMENU_CREATEGLOBALSCRIPT:
@@ -1599,9 +1444,166 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
-					SendMessage(BGSEEUI->GetMainWindow(), uMsg, wParam, lParam);
+					{
+						TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
+						if (!ThisCell)
+							ThisCell = *g_RenderWindowCurrentlyLoadedCell;
 
-					break;
+						if (ThisCell)
+						{
+							UInt32 RefCount = ThisCell->objectList.Count(), i = 0;
+
+							if (RefCount < 2)
+								break;
+
+							ComponentDLLInterface::CellObjectData* RefData = new ComponentDLLInterface::CellObjectData[RefCount];
+							ComponentDLLInterface::BatchRefData* BatchData = new ComponentDLLInterface::BatchRefData();
+
+							for (TESObjectCELL::ObjectREFRList::Iterator Itr = ThisCell->objectList.Begin(); !Itr.End(); ++Itr, ++i)
+							{
+								TESObjectREFR* ThisRef = Itr.Get();
+								ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
+
+								ThisRefData->EditorID = (!ThisRef->editorID.c_str())?ThisRef->baseForm->editorID.c_str():ThisRef->editorID.c_str();
+								ThisRefData->FormID = ThisRef->formID;
+								ThisRefData->TypeID = ThisRef->baseForm->formType;
+								ThisRefData->Flags = ThisRef->formFlags;
+								ThisRefData->Selected = false;
+
+								for (TESRenderSelection::SelectedObjectsEntry* j = _RENDERSEL->selectionList; j != 0; j = j->Next)
+								{
+									if (j->Data && j->Data == ThisRef)
+									{
+										ThisRefData->Selected = true;
+										break;
+									}
+								}
+
+								ThisRefData->ParentForm = ThisRef;
+							}
+
+							BatchData->CellObjectListHead = RefData;
+							BatchData->ObjectCount = RefCount;
+
+							if (CLIWrapper::Interfaces::BE->ShowBatchRefEditorDialog(BatchData))
+							{
+								for (UInt32 k = 0; k < RefCount; k++)
+								{
+									TESObjectREFR* ThisRef = (TESObjectREFR*)RefData[k].ParentForm;
+									ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[k];
+									bool Modified = false;
+
+									if (ThisRefData->Selected)
+									{
+										if (BatchData->World3DData.UsePosX())	ThisRef->position.x = BatchData->World3DData.PosX, Modified = true;
+										if (BatchData->World3DData.UsePosY())	ThisRef->position.y = BatchData->World3DData.PosY, Modified = true;
+										if (BatchData->World3DData.UsePosZ())	ThisRef->position.z = BatchData->World3DData.PosZ, Modified = true;
+
+										if (BatchData->World3DData.UseRotX())	ThisRef->rotation.x = BatchData->World3DData.RotX * PI / 180, Modified = true;
+										if (BatchData->World3DData.UseRotY())	ThisRef->rotation.y = BatchData->World3DData.RotY * PI / 180, Modified = true;
+										if (BatchData->World3DData.UseRotZ())	ThisRef->rotation.z = BatchData->World3DData.RotZ * PI / 180, Modified = true;
+
+										if (BatchData->World3DData.UseScale())	ThisRef->scale = BatchData->World3DData.Scale, Modified = true;
+
+										if (BatchData->Flags.UsePersistent() &&
+											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
+											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
+										{
+											ThisRef->SetQuestItem(BatchData->Flags.Persistent);
+											Modified = true;
+										}
+
+										if (BatchData->Flags.UseDisabled())
+											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
+											TESForm::kFormFlags_Disabled,
+											BatchData->Flags.Disabled), Modified = true;
+
+										if (BatchData->Flags.UseVWD())
+											SME::MiscGunk::ToggleFlag(&ThisRef->formFlags,
+											TESForm::kFormFlags_VisibleWhenDistant,
+											BatchData->Flags.VWD), Modified = true;
+
+										if (BatchData->EnableParent.UseEnableParent())
+										{
+											TESObjectREFR* Parent = (TESObjectREFR*)BatchData->EnableParent.Parent;
+											if (Parent != ThisRef)
+											{
+												ThisRef->extraData.ModExtraEnableStateParent(Parent);
+												ThisRef->SetExtraEnableStateParentOppositeState(BatchData->EnableParent.OppositeState);
+												Modified = true;
+											}
+										}
+
+										if (BatchData->Ownership.UseOwnership() &&
+											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
+											ThisRef->baseForm->formType != TESForm::kFormType_Creature)
+										{
+											ThisRef->extraData.ModExtraGlobal(NULL);
+											ThisRef->extraData.ModExtraRank(-1);
+											ThisRef->extraData.ModExtraOwnership(NULL);
+
+											TESForm* Owner = (TESForm*)BatchData->Ownership.Owner;
+											ThisRef->extraData.ModExtraOwnership(Owner);
+
+											if (BatchData->Ownership.UseNPCOwner())
+												ThisRef->extraData.ModExtraGlobal((TESGlobal*)BatchData->Ownership.Global);
+											else
+												ThisRef->extraData.ModExtraRank(BatchData->Ownership.Rank);
+
+											Modified = true;
+										}
+
+										if (BatchData->Extra.UseCharge())		ThisRef->ModExtraCharge((float)BatchData->Extra.Charge), Modified = true;
+										if (BatchData->Extra.UseHealth())		ThisRef->ModExtraHealth((float)BatchData->Extra.Health), Modified = true;
+										if (BatchData->Extra.UseTimeLeft())		ThisRef->ModExtraTimeLeft((float)BatchData->Extra.TimeLeft), Modified = true;
+										if (BatchData->Extra.UseSoulLevel())	ThisRef->ModExtraSoul(BatchData->Extra.SoulLevel), Modified = true;
+										if (BatchData->Extra.UseCount())
+										{
+											switch (ThisRef->baseForm->formType)
+											{
+											case TESForm::kFormType_Apparatus:
+											case TESForm::kFormType_Armor:
+											case TESForm::kFormType_Book:
+											case TESForm::kFormType_Clothing:
+											case TESForm::kFormType_Ingredient:
+											case TESForm::kFormType_Misc:
+											case TESForm::kFormType_Weapon:
+											case TESForm::kFormType_Ammo:
+											case TESForm::kFormType_SoulGem:
+											case TESForm::kFormType_Key:
+											case TESForm::kFormType_AlchemyItem:
+											case TESForm::kFormType_SigilStone:
+												ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
+
+												break;
+											case TESForm::kFormType_Light:
+												TESObjectLIGH* Light = CS_CAST(ThisRef->baseForm, TESForm, TESObjectLIGH);
+												if (Light)
+												{
+													if (Light->IsCarriable())
+														ThisRef->extraData.ModExtraCount(BatchData->Extra.Count), Modified = true;
+												}
+
+												break;
+											}
+										}
+									}
+
+									if (Modified)
+									{
+										ThisRef->SetFromActiveFile(true);
+										ThisRef->UpdateNiNode();
+									}
+								}
+
+								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+							}
+
+							delete BatchData;
+						}
+
+						break;
+					}
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
 				case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
 					{
@@ -1807,6 +1809,20 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_RENDERWINDOW_UPDATEFOV:
+				{
+					Return = true;
+
+					float CameraFOV = atof(INISettings::GetRenderer()->Get(INISettings::kRenderer_CameraFOV, BGSEEMAIN->INIGetter()));
+					if (CameraFOV > 120.0f)
+						CameraFOV = 120.0f;
+					else if (CameraFOV < 50.0f)
+						CameraFOV = 50.0f;
+
+					_RENDERCMPT->SetCameraFOV(_RENDERCMPT->primaryCamera, CameraFOV);
+				}
+
+				break;
 			case WM_INITDIALOG:
 				{
 					CSERenderWindowMiscData* xData = dynamic_cast<CSERenderWindowMiscData*>(ExtraData->Lookup(CSERenderWindowMiscData::kTypeID));
@@ -2084,7 +2100,29 @@ namespace ConstructionSetExtender
 					Return = true;
 					break;
 				case VK_F5:
-					SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
+					{
+						SendMessage(hWnd, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
+					}
+
+					break;
+				case VK_OEM_3:	// ~
+					{
+						if (Hooks::g_LODDiffuseMapGeneratorState != Hooks::kLODDiffuseMapGeneratorState_NotInUse)
+							break;
+						else if (GetCapture())
+							break;
+
+						BGSEditorExtender::BGSEERenderWindowFlyCamera* xFreeCamData = dynamic_cast<BGSEditorExtender::BGSEERenderWindowFlyCamera*>
+																					(ExtraData->Lookup(BGSEditorExtender::BGSEERenderWindowFlyCamera::kTypeID));
+						SME_ASSERT(xFreeCamData == NULL);
+
+						xFreeCamData = new BGSEditorExtender::BGSEERenderWindowFlyCamera(new CSERenderWindowFlyCameraOperator(hWnd,
+																															TESDialog::kDialogTemplate_RenderWindow));
+						ExtraData->Add(BGSEditorExtender::BGSEERenderWindowFlyCamera::kTypeID, xFreeCamData);
+
+						Return = true;
+					}
 
 					break;
 				}
@@ -3059,6 +3097,7 @@ namespace ConstructionSetExtender
 			kFormList_RaceEyes									= 2163,
 			kFormList_TESReactionForm							= 1591,
 			kFormList_FindTextTopicInfos						= 1952,
+			kFormList_LandTextures								= 1492,
 		};
 
 		enum
@@ -3284,7 +3323,8 @@ namespace ConstructionSetExtender
 							wParam == kFormList_ClimateWeatherRaceHairFindTextTopics ||
 							wParam == kFormList_RaceEyes ||
 							wParam == kFormList_TESReactionForm ||
-							wParam == kFormList_FindTextTopicInfos)
+							wParam == kFormList_FindTextTopicInfos ||
+							wParam == kFormList_LandTextures)
 						{
 							bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
 
@@ -3692,6 +3732,42 @@ namespace ConstructionSetExtender
 						}
 
 						break;
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK LandscapeEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					if (*g_RenderWindowCurrentlyLoadedCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
+						SendMessage(hWnd, WM_COMMAND, 2, NULL);			// otherwise, the editor will crash as soon as the render window acquires input focus
+					else
+						SendDlgItemMessage(hWnd, 1492, LVM_SORTITEMS, 0, (LPARAM)0x0041E7D0);		// TESDialog::SortComparatorLandTextureList
+				}
+
+				break;
+			case 0x41A:		// update active landscape texture
+				{
+					Return = true;
+
+					HWND TexList = GetDlgItem(hWnd, 1492);
+					int Selection = TESListView::GetItemByData(TexList, *g_ActiveLandscapeEditTexture);
+					if (Selection != -1)
+					{
+						TESListView::SetSelectedItem(TexList, Selection);
+						ListView_EnsureVisible(TexList, Selection, FALSE);
 					}
 				}
 
@@ -4300,6 +4376,7 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, RaceDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, LandscapeEditDlgSubClassProc);
 
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
@@ -4432,7 +4509,8 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Weather, RegularAppWindow);
 			}
 
-			SendMessage(BGSEEUI->GetMainWindow(), WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
+			SendMessage(*g_HWND_CSParent, WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
+			SendMessage(*g_HWND_RenderWindow, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 		}
 	}
 }

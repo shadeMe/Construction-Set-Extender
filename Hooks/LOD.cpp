@@ -627,7 +627,7 @@ namespace ConstructionSetExtender
 			if (Camera->m_kViewFrustum.n > 0.05f)
 			{
 				Camera->m_kViewFrustum.n = 0.05f;
-				thisCall<void>(0x006F25E0, Camera, 0.0, 1);			// NiNode::Update
+				_RENDERCMPT->UpdateAVObject(Camera);
 			}
 
 			// render the map's node as it gets updated with each partial's trishape
@@ -635,7 +635,7 @@ namespace ConstructionSetExtender
 			{
 				thisCall<void>(0x006F28A0, RenderNode);
 				thisCall<void>(0x006F2C10, RenderNode);
-				thisCall<void>(0x006F25E0, RenderNode, 0.0, 1);
+				_RENDERCMPT->UpdateAVObject(RenderNode);
 				AUXVIEWPORT->Draw(RenderNode, Camera);			// output will be inverted
 			}
 		}

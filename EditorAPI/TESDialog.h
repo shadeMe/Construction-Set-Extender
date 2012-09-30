@@ -403,6 +403,7 @@ public:
 	static void								SetSelectedItem(HWND hWnd, int Index);
 	static void*							GetSelectedItemData(HWND hWnd);
 	static void*							GetItemData(HWND hWnd, int Index);
+	static int								GetItemByData(HWND hWnd, void* Data);
 };
 
 class TESPreviewWindow

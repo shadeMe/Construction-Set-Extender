@@ -179,6 +179,7 @@
     <ClCompile Include="CSEConsole.cpp" />
     <ClCompile Include="CSEHallOfFame.cpp" />
     <ClCompile Include="CSEMain.cpp" />
+    <ClCompile Include="CSERenderWindowFlyCamera.cpp" />
     <ClCompile Include="CSERenderWindowPainter.cpp" />
     <ClCompile Include="CSEUIManager.cpp" />
     <ClCompile Include="CSEWorkspaceManager.cpp" />
@@ -278,6 +279,7 @@
     <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
@@ -287,6 +289,7 @@
     <ClInclude Include="CSEConsole.h" />
     <ClInclude Include="CSEHallOfFame.h" />
     <ClInclude Include="CSEMain.h" />
+    <ClInclude Include="CSERenderWindowFlyCamera.h" />
     <ClInclude Include="CSERenderWindowPainter.h" />
     <ClInclude Include="CSEUIManager.h" />
     <ClInclude Include="CSEWorkspaceManager.h" />

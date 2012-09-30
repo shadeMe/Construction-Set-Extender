@@ -5,7 +5,7 @@
 /********** CSE Interface API ******************************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the
 *	object will be dispatched to plugins that pass an arbitrary message of type
-*	'CSEI' inside the OBSE Post-Post-Load message handler. The reply will be of the same type.
+*	'CSEI' to "CSE" inside the OBSE Post-Post-Load message handler. The reply will be of the same type.
 *
 *	All sub-interfaces need to be initialized with InitializeInterface().
 *	All RegisterXXX type calls must be made inside the OBSE Post-Post-Load message handler.

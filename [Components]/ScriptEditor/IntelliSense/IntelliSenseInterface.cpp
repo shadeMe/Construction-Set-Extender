@@ -154,8 +154,7 @@ namespace ConstructionSetExtender
 
 					for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
 					{
-						if ((Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd &&
-							dynamic_cast<IntelliSenseItemScriptCommand^>(Itr)->GetRequiresParent() == false) ||
+						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||

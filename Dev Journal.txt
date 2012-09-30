@@ -21,11 +21,9 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Sort landscape edit dialog listview by editorID and call ListView_EnsureVisible when the active landtex is changed
 		> Look into the SetActorAlpha script command to get transparency working
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Copy/paste obj refs b'ween CS sessions
-		> Implement a fly camera mode for the render window
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
 
@@ -33,7 +31,6 @@ CSE		---->
 
 	
 	MISC			=
-		> Turn on compiler optimizations (set to Max speed) and look for side effects
 		> Wrap all editorAPI instance data
 
 

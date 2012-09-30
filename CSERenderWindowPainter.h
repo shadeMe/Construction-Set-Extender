@@ -1,5 +1,6 @@
 #pragma once
 #include <BGSEERenderWindowPainter.h>
+#include <BGSEERenderWindowFlyCamera.h>
 
 namespace ConstructionSetExtender
 {
@@ -9,6 +10,8 @@ namespace ConstructionSetExtender
 		{
 			kRenderWindowPainter_ShowSelectionStats = 0,
 			kRenderWindowPainter_ShowRAMUsage,
+			kRenderWindowPainter_FontFace,
+			kRenderWindowPainter_FontSize,
 
 			kRenderWindowPainter__MAX
 		};

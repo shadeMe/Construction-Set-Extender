@@ -269,6 +269,9 @@
     <ClCompile Include="CSEWorkspaceManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="CSERenderWindowFlyCamera.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -748,6 +751,12 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEUIManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSERenderWindowFlyCamera.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

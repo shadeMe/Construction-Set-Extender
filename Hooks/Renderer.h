@@ -19,6 +19,7 @@ namespace ConstructionSetExtender
 			kRenderer_CoplanarRefDrops,
 			kRenderer_SwitchCAndY,
 			kRenderer_FixedCameraPivot,
+			kRenderer_CameraFOV,
 
 			kRenderer__MAX
 		};
@@ -95,5 +96,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(BSFadeNodeDrawTransparency, "allows objects to be rendered with arbitrary transparency");
 		_DeclareMemHdlr(TESRubberBandSelectionSkipInvisibleRefs, "prevents invisible refs from being added to the render window selection");
 		_DeclareMemHdlr(RenderWindowCameraRotationPivot, "allows the viewport camera to be rotated around an arbitrary pivot");
+		_DeclareMemHdlr(CellViewSetCurrentCell, "temporary hook to prevent the cell window from gaining focus during render window exterior cell switches");
 	}
 }

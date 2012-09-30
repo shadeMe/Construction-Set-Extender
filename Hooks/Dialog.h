@@ -88,5 +88,6 @@ namespace ConstructionSetExtender
 		int CALLBACK TESDialogFormListEDIDComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		int CALLBACK FindTextGenericComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		int CALLBACK FindTextTopicInfoComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+		int CALLBACK LandscapeTextureComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	}
 }

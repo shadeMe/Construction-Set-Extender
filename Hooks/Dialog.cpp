@@ -288,6 +288,11 @@ namespace ConstructionSetExtender
 					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextTopicInfoComparator);
 			}
 
+			{
+				_DefinePatchHdlr(ComparatorReplace, 0x0041EB31 + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&LandscapeTextureComparator);
+			}
+
 			_MemHdlr(DialogueEditorPopup).WriteJump();
 			_MemHdlr(TESWeatherSoundListSort).WriteJump();
 			_MemHdlr(TESFormShowCrossRefList).WriteJump();
@@ -1544,6 +1549,11 @@ namespace ConstructionSetExtender
 			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
 
 			return Result;
+		}
+
+		int CALLBACK LandscapeTextureComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x0041E7D0);
 		}
 	}
 }

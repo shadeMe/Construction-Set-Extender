@@ -181,6 +181,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoPostPluginLoadHook(void)
 		{
 			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+			SendMessage(*g_HWND_RenderWindow, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 
 			SetActiveWindow(*g_HWND_CSParent);				// to make sure none of its child dialogs are hidden behind it
 		}

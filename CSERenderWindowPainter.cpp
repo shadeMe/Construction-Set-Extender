@@ -6,8 +6,10 @@ namespace ConstructionSetExtender
 	{
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowPainterINISettings[kRenderWindowPainter__MAX] =
 		{
-			{ "ShowSelectionStats",		"1",		"Displays selection details" },
-			{ "ShowRAMUsage",			"1",		"Displays the editor's RAM usage" }
+			{ "ShowSelectionStats",		"1",			"Displays selection details" },
+			{ "ShowRAMUsage",			"1",			"Displays the editor's RAM usage" },
+			{ "FontFace",				"Consolas",		"Font face of the rendered text" },
+			{ "FontSize",				"20",			"Size of the rendered text" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderWindowPainter( void )
@@ -140,15 +142,18 @@ namespace ConstructionSetExtender
 			if (Singleton == NULL)
 			{
 				RECT DrawRect;
-				DrawRect.left = -173;
+				DrawRect.left = -185;
 				DrawRect.top = 3;
-				DrawRect.right = 173;
+				DrawRect.right = 185;
 				DrawRect.bottom = 100;
 
-				Singleton = new CSERAMUsageRenderChannel(20, 0, FW_MEDIUM, "Consolas",
+				int FontSize = atoi(INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontSize, BGSEEMAIN->INIGetter()));
+				const char* FontFace = INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontFace, BGSEEMAIN->INIGetter());
+
+				Singleton = new CSERAMUsageRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 														D3DCOLOR_ARGB(230, 230, 230, 0),
 														&DrawRect,
-														DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
+														DT_WORDBREAK|DT_RIGHT|DT_TOP|DT_NOCLIP,
 														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned);
 			}
 
@@ -164,21 +169,31 @@ namespace ConstructionSetExtender
 
 			RenderChannelRAMUsage = CSERAMUsageRenderChannel::GetSingleton();
 
+			int FontSize = atoi(INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontSize, BGSEEMAIN->INIGetter()));
+			const char* FontFace = INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontFace, BGSEEMAIN->INIGetter());
+
 			DrawRect.left = 3;
 			DrawRect.top = 3;
 			DrawRect.right = 800;
 			DrawRect.bottom = 600;
-			RenderChannelSelectionStats = new BGSEditorExtender::BGSEEStaticRenderChannel(20, 0, FW_MEDIUM, "Consolas",
+			RenderChannelSelectionStats = new BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 																						D3DCOLOR_ARGB(220, 189, 237, 99),
 																						&DrawRect,
 																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
 																						0,
 																						&RenderChannelSelectionStats_Callback);
+
+			BGSEditorExtender::RenderChannelFlyCamStatus = new BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+																						D3DCOLOR_ARGB(220, 189, 237, 99),
+																						&DrawRect,
+																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
+																						0,
+																						&BGSEditorExtender::RenderChannelFlyCamStatus_Callback);
 			DrawRect.left = 3;
 			DrawRect.top = -150;
 			DrawRect.right = 800;
 			DrawRect.bottom = 200;
-			RenderChannelNotifications = new BGSEditorExtender::BGSEEDynamicRenderChannel(20, 0, FW_MEDIUM, "Consolas",
+			RenderChannelNotifications = new BGSEditorExtender::BGSEEDynamicRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 																						D3DCOLOR_ARGB(230, 230, 230, 0),
 																						&DrawRect,
 																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
@@ -187,6 +202,7 @@ namespace ConstructionSetExtender
 			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelSelectionStats);
 			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelRAMUsage);
 			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelNotifications);
+			BGSEERWPAINTER->RegisterRenderChannel(BGSEditorExtender::RenderChannelFlyCamStatus);
 		}
 }
 };

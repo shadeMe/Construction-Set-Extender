@@ -27,7 +27,8 @@ namespace ConstructionSetExtender
 			{ "AltCamPanSpeed",					"5.0",		"Alternate render window camera pan speed" },
 			{ "CoplanarRefDrops",				"1",		"Place new references co-planar with the object at the cursor location" },
 			{ "SwitchCAndY",					"0",		"Switch the functionalities of the C and Y hotkeys"	},
-			{ "FixedCameraPivot",				"0",		"Use a static pivot when rotating the viewport camera without a selection"	}
+			{ "FixedCameraPivot",				"0",		"Use a static pivot when rotating the viewport camera without a selection"	},
+			{ "CameraFOV",						"90",		"Default camera field of vision" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderer( void )
@@ -111,6 +112,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(BSFadeNodeDrawTransparency, 0x004BC527);
 		_DefineHookHdlr(TESRubberBandSelectionSkipInvisibleRefs, 0x0042FB89);
 		_DefineHookHdlr(RenderWindowCameraRotationPivot, 0x0042CBFD);
+		_DefinePatchHdlrWithBuffer(CellViewSetCurrentCell, 0x00409170, 1, 0x53);
 
 		void PatchRendererHooks(void)
 		{
