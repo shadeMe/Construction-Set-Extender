@@ -138,9 +138,19 @@ namespace BGSEditorExtender
 		INT_PTR Result = FALSE;
 		bool ReturnMark = Return;
 
-		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		// work on a buffer as the subclass list can change inside a callback
+		// since the number of subclasses for any dialog isn't gonna be very large at any given time, the performance hit should be negligible
+		SubclassProcListT SubclassBuffer(Subclasses);
+
+		for (SubclassProcListT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
 		{
 			DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+			if (UserData == NULL)
+			{
+				// the dialog was destroyed inside a callback
+				break;
+			}
+
 			INT_PTR CurrentResult = (INT_PTR)(*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
 
 			if (ReturnMark && Return == false)
@@ -166,9 +176,15 @@ namespace BGSEditorExtender
 		LRESULT Result = FALSE;
 		bool ReturnMark = Return;
 
-		for (SubclassProcListT::iterator Itr = Subclasses.begin(); Itr != Subclasses.end(); Itr++)
+		// work on a buffer, same as before
+		SubclassProcListT SubclassBuffer(Subclasses);
+
+		for (SubclassProcListT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
 		{
 			WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
+			if (UserData == NULL)
+				break;
+
 			LRESULT CurrentResult = (*Itr)(hWnd, uMsg, wParam, lParam, ReturnMark, &UserData->ExtraData);
 
 			if (ReturnMark && Return == false)

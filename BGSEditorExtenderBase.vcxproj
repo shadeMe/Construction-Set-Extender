@@ -26,6 +26,7 @@
     <ClInclude Include="BGSEEConsole.h" />
     <ClInclude Include="BGSEEHallOfFame.h" />
     <ClInclude Include="BGSEEMain.h" />
+    <ClInclude Include="BGSEERenderWindowFlyCamera.h" />
     <ClInclude Include="BGSEERenderWindowPainter.h" />
     <ClInclude Include="BGSEEScript\CodaDataTypes.h" />
     <ClInclude Include="BGSEEScript\CodaInterpreter.h" />
@@ -92,6 +93,7 @@
     <ClCompile Include="BGSEEConsole.cpp" />
     <ClCompile Include="BGSEEHallOfFame.cpp" />
     <ClCompile Include="BGSEEMain.cpp" />
+    <ClCompile Include="BGSEERenderWindowFlyCamera.cpp" />
     <ClCompile Include="BGSEERenderWindowPainter.cpp" />
     <ClCompile Include="BGSEEScript\CodaDataTypes.cpp" />
     <ClCompile Include="BGSEEScript\CodaInterpreter.cpp" />

@@ -414,7 +414,7 @@ namespace BGSEditorExtender
 
 		if (ProgFilesSubstring != NULL && ProgFilesSubstring == APPPath && OSInfo.dwMajorVersion > 5)
 		{
-			BGSEECONSOLE_MESSAGE("Editor/game is installed to the Program Files directory - An unprotected directory like 'C:\\Games\\' is recommended");
+			BGSEECONSOLE_MESSAGE("Editor/game is installed to the Program Files directory - An unprotected directory like 'C:\\Games\\' is required");
 			return false;
 		}
 		else

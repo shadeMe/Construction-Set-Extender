@@ -74,6 +74,7 @@
 #include <d3d9types.h>
 #include <d3dx9.h>
 #include <d3dx9tex.h>
+#include <dinput.h>
 
 // BOOST
 #include <boost\scoped_ptr.hpp>

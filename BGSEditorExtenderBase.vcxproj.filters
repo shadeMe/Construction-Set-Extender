@@ -52,6 +52,9 @@
     <Filter Include="Resources\Images">
       <UniqueIdentifier>{b7b24d34-2b33-42a2-a3ac-e11129d2a46b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules\BGSEERenderWindowFlyCamera">
+      <UniqueIdentifier>{fb9c1a6a-5b33-4810-9bb4-1bc57a3411fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BGSEEMain.h">
@@ -253,6 +256,9 @@
     <ClInclude Include="..\SME Sundries\VersionInfo.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="BGSEERenderWindowFlyCamera.h">
+      <Filter>Modules\BGSEERenderWindowFlyCamera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
@@ -414,6 +420,9 @@
     </ClCompile>
     <ClCompile Include="BGSEEHallOfFame.cpp">
       <Filter>Modules\BGSEEExtras</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEERenderWindowFlyCamera.cpp">
+      <Filter>Modules\BGSEERenderWindowFlyCamera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
