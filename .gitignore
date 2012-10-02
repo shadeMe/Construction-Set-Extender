@@ -30,8 +30,7 @@ obj/
 _ReSharper*/
 [Ii]pch*/
 [Tt]est[Rr]esult*
-Construction Set Extender Manual.doc
-[Bb]uild*/
 /BuildIncrement.jse
-*[Bb]uildInfo.h
+/*[Bb]uild
 *~$*.*
+BuildInfo.h
