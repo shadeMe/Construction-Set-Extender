@@ -94,17 +94,19 @@ namespace BGSEditorExtender
 		DataStore.clear();
 	}
 
-	bool BGSEEWindowExtraDataCollection::Add( UInt32 ID, BGSEEWindowExtraData* Data )
+	bool BGSEEWindowExtraDataCollection::Add( BGSEEWindowExtraData* Data )
 	{
-		if (Lookup(ID))
+		SME_ASSERT(Data);
+
+		if (Lookup(Data->GetTypeID()))
 			return false;
 		else
-			DataStore.insert(std::make_pair(ID, Data));
+			DataStore.insert(std::make_pair(Data->GetTypeID(), Data));
 
 		return true;
 	}
 
-	bool BGSEEWindowExtraDataCollection::Remove( UInt32 ID )
+	bool BGSEEWindowExtraDataCollection::Remove( WindowExtraDataIDT ID )
 	{
 		if (Lookup(ID) == NULL)
 			return false;
@@ -114,7 +116,7 @@ namespace BGSEditorExtender
 		return true;
 	}
 
-	BGSEEWindowExtraData* BGSEEWindowExtraDataCollection::Lookup( UInt32 ID )
+	BGSEEWindowExtraData* BGSEEWindowExtraDataCollection::Lookup( WindowExtraDataIDT ID )
 	{
 		for (ExtraDataMapT::iterator Itr = DataStore.begin(); Itr != DataStore.end(); Itr++)
 		{
@@ -425,7 +427,7 @@ namespace BGSEditorExtender
 		}
 		else
 		{
-			DialogSubclasses.insert(std::make_pair<ResourceTemplateT, DialogSubclassData>(TemplateID, DialogSubclassData()));
+			DialogSubclasses.insert(std::make_pair(TemplateID, DialogSubclassData()));
 			DialogSubclasses[TemplateID].Subclasses.push_back(Proc);
 		}
 
@@ -474,7 +476,7 @@ namespace BGSEditorExtender
 		}
 		else
 		{
-			RegularWindowSubclasses.insert(std::make_pair<HWND, WindowSubclassData>(Handle, WindowSubclassData()));
+			RegularWindowSubclasses.insert(std::make_pair(Handle, WindowSubclassData()));
 			RegularWindowSubclasses[Handle].Subclasses.push_back(Proc);
 
 			WindowSubclassUserData* UserData = new WindowSubclassUserData();
@@ -732,7 +734,7 @@ namespace BGSEditorExtender
 
 		if (ActiveInvalidatedWindows.count(Window) == 0)
 		{
-			ActiveInvalidatedWindows.insert(std::make_pair<HWND, UInt32>(Window, 1));
+			ActiveInvalidatedWindows.insert(std::make_pair(Window, 1));
 			Invalidate(Window, true);
 		}
 		else

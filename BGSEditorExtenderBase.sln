@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Projects]", "[Projects]", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Misc]", "[Misc]", "{CA9B1814-75A5-42D5-8947-4F76A09BEDA2}"
 	ProjectSection(SolutionItems) = preProject
+		[Depends]\crashrpt_lang.ini = [Depends]\crashrpt_lang.ini
 		Dev Journal.txt = Dev Journal.txt
 	EndProjectSection
 EndProject

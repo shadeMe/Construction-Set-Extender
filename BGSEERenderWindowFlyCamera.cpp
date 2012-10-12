@@ -190,7 +190,7 @@ namespace BGSEditorExtender
 		LRESULT DlgProcResult = TRUE;
 		Return = true;						// never let a message pass through to the original dlgproc, unless it's absolutely necessary
 
-		BGSEERenderWindowFlyCamera* CamData = (BGSEERenderWindowFlyCamera*)ExtraData->Lookup(BGSEERenderWindowFlyCamera::kTypeID);
+		BGSEERenderWindowFlyCamera* CamData = BGSEE_GETWINDOWXDATA_QUICK(BGSEERenderWindowFlyCamera, ExtraData);
 		SME_ASSERT(CamData);
 
 		switch (uMsg)

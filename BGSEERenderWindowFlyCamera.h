@@ -68,6 +68,11 @@ namespace BGSEditorExtender
 
 		enum { kTypeID = 'XRFC' };
 
+		virtual const WindowExtraDataIDT		GetTypeID(void) const
+		{
+			return kTypeID;
+		}
+
 		static bool								FlyCamModeActive;
 	};
 }

@@ -26,6 +26,7 @@ namespace BGSEditorExtender
 	};
 
 	typedef UInt32 ResourceTemplateT;
+	typedef UInt32 WindowExtraDataIDT;
 
 	// subclass me!!
 	class BGSEEWindowExtraData
@@ -36,28 +37,36 @@ namespace BGSEditorExtender
 	public:
 		BGSEEWindowExtraData();
 		virtual ~BGSEEWindowExtraData() = 0;
+
+		virtual const WindowExtraDataIDT		GetTypeID(void) const = 0;
 	};
 
 	class BGSEEWindowExtraDataCollection
 	{
-		typedef std::map<UInt32, BGSEEWindowExtraData*>		ExtraDataMapT;
+		typedef std::map<const WindowExtraDataIDT, BGSEEWindowExtraData*>		ExtraDataMapT;
 
 		ExtraDataMapT			DataStore;
 	public:
 		BGSEEWindowExtraDataCollection();
 		~BGSEEWindowExtraDataCollection();
 
-		bool					Add(UInt32 ID, BGSEEWindowExtraData* Data);		// caller retains the ownership of the pointer
-		bool					Remove(UInt32 ID);
-		BGSEEWindowExtraData*	Lookup(UInt32 ID);
+		bool					Add(BGSEEWindowExtraData* Data);		// caller retains the ownership of the pointer
+		bool					Remove(WindowExtraDataIDT ID);
+		BGSEEWindowExtraData*	Lookup(WindowExtraDataIDT ID);
 	};
+
+// hacky, hacky and oh-my-grud-that's-hacky!
+#define BGSEE_GETWINDOWXDATA(xDataClass, xDataCollection)	\
+		dynamic_cast< xDataClass * >(xDataCollection->Lookup(xDataClass::kTypeID))
+#define BGSEE_GETWINDOWXDATA_QUICK(xDataClass, xDataCollection)	\
+		(xDataClass *)xDataCollection->Lookup(xDataClass::kTypeID)
 
 	class BGSEEWindowSubclasser
 	{
 		friend class BGSEEUIManager;
 	public:
-		typedef LRESULT									(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																				bool& Return, BGSEEWindowExtraDataCollection* ExtraData);
+		typedef LRESULT							(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+																		bool& Return, BGSEEWindowExtraDataCollection* ExtraData);
 		typedef std::list<SubclassProc>			SubclassProcListT;
 
 		struct DialogSubclassData

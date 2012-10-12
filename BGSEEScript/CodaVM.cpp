@@ -111,7 +111,7 @@ namespace BGSEditorExtender
 			if (LookupCommand(Command->GetName()) || LookupCommand(Command->GetAlias(), true))
 				return false;
 
-			Registry.insert(std::make_pair<std::string, ICodaScriptCommand*>(Buffer, Command));
+			Registry.insert(std::make_pair(Buffer, Command));
 			return true;
 		}
 

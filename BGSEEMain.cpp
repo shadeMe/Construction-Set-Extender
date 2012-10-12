@@ -309,7 +309,7 @@ namespace BGSEditorExtender
 		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | (Revision & 0xFFFF));
 		if (Table.count(Version) == 0)
 		{
-			Table.insert(std::make_pair<UInt32, std::string>(Version, Name));
+			Table.insert(std::make_pair(Version, Name));
 		}
 	}
 
@@ -692,8 +692,9 @@ namespace BGSEditorExtender
 			CrashRptData.pszAppName = NULL;
 			CrashRptData.pszAppVersion = NULL;
 			CrashRptData.pszEmailSubject = NULL;
-			CrashRptData.pszEmailTo = NULL;
+			CrashRptData.pszEmailTo = "shademe.here+bgsee@gmail.com";
 			CrashRptData.pszUrl = NULL;
+			CrashRptData.pszPrivacyPolicyURL = NULL;
 			CrashRptData.pfnCrashCallback = BGSEEMain::CrashCallback;
 			CrashRptData.dwFlags |= CR_INST_SEH_EXCEPTION_HANDLER|
 									CR_INST_PURE_CALL_HANDLER|
@@ -704,10 +705,11 @@ namespace BGSEditorExtender
 									CR_INST_SIGTERM_HANDLER|
 									CR_INST_SIGABRT_HANDLER;
 
-			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING;
-//			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT;
-//			CrashRptData.dwFlags |= CR_INST_STORE_ZIP_ARCHIVES;
-			CrashRptData.pszPrivacyPolicyURL = NULL;
+			CrashRptData.uPriorities[CR_SMAPI] = 1;
+			CrashRptData.uPriorities[CR_HTTP] = CR_NEGATIVE_PRIORITY;
+			CrashRptData.uPriorities[CR_SMTP] = CR_NEGATIVE_PRIORITY;
+			CrashRptData.dwFlags |= CR_INST_HTTP_BINARY_ENCODING|CR_INST_SHOW_ADDITIONAL_INFO_FIELDS|CR_INST_ALLOW_ATTACH_MORE_FILES;
+//			CrashRptData.dwFlags |= CR_INST_DONT_SEND_REPORT|CR_INST_STORE_ZIP_ARCHIVES;
 			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal|
 														MiniDumpWithIndirectlyReferencedMemory|
 														MiniDumpScanMemory|
