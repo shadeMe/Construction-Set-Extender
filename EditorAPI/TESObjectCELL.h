@@ -48,7 +48,7 @@ public:
 		kCellProcessLevel__MAX      = 0x7
 	};
 
-	// 8
+	// 08
 	struct CellCoordinates // what is the actual type for this?
 	{
 		/*00*/ SInt32		x;
@@ -69,6 +69,7 @@ public:
 		/*20*/ float		fogClipDistance;
 	};
 
+	// 04
 	union CellData
 	{
 		/*00*/ CellCoordinates*		coords;		// if exterior

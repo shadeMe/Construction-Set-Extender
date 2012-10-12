@@ -111,7 +111,7 @@ public:
 	virtual void					SetSceneNode(NiNode* Node) = 0;
 	virtual NiCamera*				AddCamera(NiCamera** OutCamera) = 0;
 	virtual bool					HandleResize(void) = 0;
-	virtual bool					UpdateCameraFrustum(NiCamera* Camera, int Width, int Height, float ClipDistance);
+	virtual bool					UpdateCameraFrustum(NiCamera* Camera, int Width, int Height, float ClipDistance) = 0;
 };
 STATIC_ASSERT(sizeof(NiWindow) == 0x14);
 
@@ -155,6 +155,94 @@ STATIC_ASSERT(sizeof(TESRenderComponents) == 0x0C);
 extern TESRenderComponents**	g_TESRenderComponents;
 #define _RENDERCMPT				(*g_TESRenderComponents)
 
+// arbitrarily named
+// used in the runtime as well, IIRC
+// 20
+class TESSceneNodeDebugData
+{
+public:
+	// members
+	/*00*/ HINSTANCE				instance;
+	/*04*/ HWND						parent;
+	/*08*/ HWND						debugWindow;
+	/*0C*/ HWND						treeView;
+	/*10*/ HTREEITEM				rootTreeItem;
+	/*14*/ HIMAGELIST				imageList;
+	/*18*/ NiNode*					sceneNode;
+	/*1C*/ char*					windowTitle;		// allocated by the ctor
+
+	// methods
+	TESSceneNodeDebugData*			Initialize(HINSTANCE Instance, HWND Parent, NiNode* Node, const char* WindowTitle, int X, int Y, int Width, int Height);
+};
+STATIC_ASSERT(sizeof(TESSceneNodeDebugData) == 0x20);
+
+// 48
+class TESRenderControl
+{
+public:
+	// passed to the ctor
+	// 0C
+	struct Parameters
+	{
+		/*00*/ int				previewOutputCtrlID;		// button
+		/*04*/ float			renderTargetWidth;
+		/*08*/ float			renderTargetHeight;
+	};
+
+	// members
+	//*00*/ void**					vtbl;
+	/*04*/ int						outputCtrlID;
+	/*08*/ float					renderTargetWidth;
+	/*0C*/ float					renderTargetHeight;
+	/*10*/ HWND						parentDialog;
+	/*14*/ NiNode*					sceneRoot;		// smart ptr
+	/*18*/ NiDirectionalLight*		sceneLight;		// smart ptr
+	/*1C*/ NiNode*					cameraNode;		// smart ptr
+	/*20*/ NiCamera*				camera;			// smart ptr
+	/*24*/ NiWindow*				renderer;
+	/*28*/ UInt32					unk28;
+	/*2C*/ UInt32					unk2C;
+	/*30*/ UInt32					unk30;
+	/*34*/ UInt32					unk34;
+	/*38*/ UInt32					unk38;
+	/*3C*/ TESSceneNodeDebugData*	debugData;
+	/*40*/ UInt32					currentMouseXCoord;
+	/*44*/ UInt32					currentMouseYCoord;
+
+
+	// methods
+	virtual void				Update(void) = 0;
+	virtual void				Render(void) = 0;
+	virtual void				Reset(void) = 0;
+	virtual void				HandleDeviceReset(void) = 0;
+	virtual void				Dtor(bool ReleaseMemory) = 0;
+	virtual void				SetPreviewNode(NiNode* Node) = 0;
+	virtual void				VFn18(void* Unk01) = 0;
+	virtual void				CenterCamera(void) = 0;
+	virtual void				HandleResize(void) = 0;
+	virtual void				Present(float Time) = 0;
+	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR Unk05);		// Unk05 set to 1 by the dialog msg callback calls Render()
+};
+STATIC_ASSERT(sizeof(TESRenderControl) == 0x48);
+
+// 68
+class TESPreviewControl : public TESRenderControl
+{
+public:
+	// members
+	//     /*00*/ TESRenderControl
+	/*48*/ UInt8					timerEnabled;			// set to 1 when the preview control is primed to handle WM_TIMER messages
+	/*49*/ UInt8					pad49[3];
+	/*4C*/ SInt32					elapsedTicks;			// set inside the message callback's WM_TIMER handler
+	/*50*/ float					remainingTime;			// in seconds, used when previewing animations/facegen (primarily used to play a sound file after a certain amount of time), set to -1 otherwise
+	/*54*/ BSString					soundFileName;			// name/path of the sound file that's played once an animation has completed its cycle
+	/*5C*/ UInt8					playbackCompleted;		// set to 1 on playback completion
+	/*5D*/ UInt8					pad5D[3];
+	/*60*/ NiNode*					groundPlaneNode;		// smart ptr
+	/*64*/ ShadowSceneNode*			previewSceneRoot;		// smart ptr, shared by all preview controls, destroyed with the last one
+};
+STATIC_ASSERT(sizeof(TESPreviewControl) == 0x68);
+
 enum
 {
 	kRenderWindowState_SnapToGrid					= 0x1,
@@ -179,8 +267,6 @@ extern float*					g_RenderWindowCameraPanSpeed;
 
 class TESPathGridPoint;
 class TESPathGrid;
-class TESRenderControl;
-class TESPreviewControl;
 
 extern UInt8*					g_RenderWindowPathGridEditModeFlag;
 extern tList<TESPathGridPoint>*	g_RenderWindowSelectedPathGridPoints;

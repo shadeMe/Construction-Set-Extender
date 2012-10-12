@@ -214,8 +214,7 @@ namespace ConstructionSetExtender
 
 			if (ActiveWindows.count(Window) == 0)
 			{
-				ActiveWindows.insert(std::make_pair<HWND, FilterableWindowData*>(Window,
-																			new FilterableWindowData(Window, FilterEdit, FormList, ObjRefList, TimePeriod)));
+				ActiveWindows.insert(std::make_pair(Window, new FilterableWindowData(Window, FilterEdit, FormList, ObjRefList, TimePeriod)));
 				return true;
 			}
 
@@ -1108,7 +1107,7 @@ namespace ConstructionSetExtender
 				{
 					KillTimer(hWnd, ID_PATHGRIDTOOLBARBUTTION_TIMERID);
 
-					CSEMainWindowMiscData* xData = dynamic_cast<CSEMainWindowMiscData*>(ExtraData->Lookup(CSEMainWindowMiscData::kTypeID));
+					CSEMainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEMainWindowMiscData, ExtraData);
 					if (xData)
 					{
 						ExtraData->Remove(CSEMainWindowMiscData::kTypeID);
@@ -1119,7 +1118,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_MAINWINDOW_INITEXTRADATA:
 				{
-					CSEMainWindowMiscData* xData = dynamic_cast<CSEMainWindowMiscData*>(ExtraData->Lookup(CSEMainWindowMiscData::kTypeID));
+					CSEMainWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEMainWindowMiscData, ExtraData);
 					if (xData == NULL)
 					{
 						xData = new CSEMainWindowMiscData();
@@ -1151,7 +1150,7 @@ namespace ConstructionSetExtender
 							SendMessage(*g_HWND_MainToolbar, WM_MAINTOOLBAR_SETTOD, _TES->GetSkyTOD() * 4.0, NULL);
 						}
 
-						ExtraData->Add(CSEMainWindowMiscData::kTypeID, xData);
+						ExtraData->Add(xData);
 					}
 				}
 
@@ -1207,18 +1206,18 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					CSEMainWindowToolbarData* xData = dynamic_cast<CSEMainWindowToolbarData*>(ExtraData->Lookup(CSEMainWindowToolbarData::kTypeID));
+					CSEMainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(CSEMainWindowToolbarData, ExtraData);
 					if (xData == NULL)
 					{
 						xData = new CSEMainWindowToolbarData();
-						ExtraData->Add(CSEMainWindowToolbarData::kTypeID, xData);
+						ExtraData->Add(xData);
 					}
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					CSEMainWindowToolbarData* xData = dynamic_cast<CSEMainWindowToolbarData*>(ExtraData->Lookup(CSEMainWindowToolbarData::kTypeID));
+					CSEMainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(CSEMainWindowToolbarData, ExtraData);
 					if (xData)
 					{
 						ExtraData->Remove(CSEMainWindowToolbarData::kTypeID);
@@ -1229,7 +1228,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_COMMAND:
 				{
-					CSEMainWindowToolbarData* xData = dynamic_cast<CSEMainWindowToolbarData*>(ExtraData->Lookup(CSEMainWindowToolbarData::kTypeID));
+					CSEMainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(CSEMainWindowToolbarData, ExtraData);
 					SME_ASSERT(xData);
 
 					if (HIWORD(wParam) == EN_CHANGE &&
@@ -1283,7 +1282,7 @@ namespace ConstructionSetExtender
 
 					_TES->SetSkyTOD(TOD);
 
-					CSEMainWindowToolbarData* xData = dynamic_cast<CSEMainWindowToolbarData*>(ExtraData->Lookup(CSEMainWindowToolbarData::kTypeID));
+					CSEMainWindowToolbarData* xData = BGSEE_GETWINDOWXDATA(CSEMainWindowToolbarData, ExtraData);
 					SME_ASSERT(xData);
 
 					if (xData->SettingTODSlider == false)
@@ -1825,18 +1824,18 @@ namespace ConstructionSetExtender
 				break;
 			case WM_INITDIALOG:
 				{
-					CSERenderWindowMiscData* xData = dynamic_cast<CSERenderWindowMiscData*>(ExtraData->Lookup(CSERenderWindowMiscData::kTypeID));
+					CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 					if (xData == NULL)
 					{
 						xData = new CSERenderWindowMiscData();
-						ExtraData->Add(CSERenderWindowMiscData::kTypeID, xData);
+						ExtraData->Add(xData);
 					}
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					CSERenderWindowMiscData* xData = dynamic_cast<CSERenderWindowMiscData*>(ExtraData->Lookup(CSERenderWindowMiscData::kTypeID));
+					CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 					if (xData)
 					{
 						ExtraData->Remove(CSERenderWindowMiscData::kTypeID);
@@ -1974,7 +1973,7 @@ namespace ConstructionSetExtender
 					else
 					{
 						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
-						CSERenderWindowMiscData* xData = dynamic_cast<CSERenderWindowMiscData*>(ExtraData->Lookup(CSERenderWindowMiscData::kTypeID));
+						CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 						SME_ASSERT(xData);
 
 						if (SwitchEnabled)
@@ -1991,7 +1990,7 @@ namespace ConstructionSetExtender
 				case 0x43:		// C
 					{
 						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
-						CSERenderWindowMiscData* xData = dynamic_cast<CSERenderWindowMiscData*>(ExtraData->Lookup(CSERenderWindowMiscData::kTypeID));
+						CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 						SME_ASSERT(xData);
 
 						if (SwitchEnabled && xData->TunnellingKeyMessage == false)
@@ -2113,13 +2112,12 @@ namespace ConstructionSetExtender
 						else if (GetCapture())
 							break;
 
-						BGSEditorExtender::BGSEERenderWindowFlyCamera* xFreeCamData = dynamic_cast<BGSEditorExtender::BGSEERenderWindowFlyCamera*>
-																					(ExtraData->Lookup(BGSEditorExtender::BGSEERenderWindowFlyCamera::kTypeID));
+						BGSEditorExtender::BGSEERenderWindowFlyCamera* xFreeCamData = BGSEE_GETWINDOWXDATA(BGSEditorExtender::BGSEERenderWindowFlyCamera, ExtraData);
 						SME_ASSERT(xFreeCamData == NULL);
 
 						xFreeCamData = new BGSEditorExtender::BGSEERenderWindowFlyCamera(new CSERenderWindowFlyCameraOperator(hWnd,
 																															TESDialog::kDialogTemplate_RenderWindow));
-						ExtraData->Add(BGSEditorExtender::BGSEERenderWindowFlyCamera::kTypeID, xFreeCamData);
+						ExtraData->Add(xFreeCamData);
 
 						Return = true;
 					}
@@ -2358,7 +2356,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_DESTROY:
 				{
-					CSECellViewExtraData* xData = dynamic_cast<CSECellViewExtraData*>(ExtraData->Lookup(CSECellViewExtraData::kTypeID));
+					CSECellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CSECellViewExtraData, ExtraData);
 
 					if (xData)
 					{
@@ -2372,11 +2370,11 @@ namespace ConstructionSetExtender
 				break;
 			case WM_INITDIALOG:
 				{
-					CSECellViewExtraData* xData = dynamic_cast<CSECellViewExtraData*>(ExtraData->Lookup(CSECellViewExtraData::kTypeID));
+					CSECellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CSECellViewExtraData, ExtraData);
 					if (xData == NULL)
 					{
 						xData = new CSECellViewExtraData();
-						ExtraData->Add(CSECellViewExtraData::kTypeID, xData);
+						ExtraData->Add(xData);
 
 						POINT Position = {0};
 						RECT Bounds = {0};
@@ -2637,7 +2635,7 @@ namespace ConstructionSetExtender
 
 					EndDeferWindowPos(DeferPosData);
 
-					CSECellViewExtraData* xData = dynamic_cast<CSECellViewExtraData*>(ExtraData->Lookup(CSECellViewExtraData::kTypeID));
+					CSECellViewExtraData* xData = BGSEE_GETWINDOWXDATA(CSECellViewExtraData, ExtraData);
 
 					if (xData)
 					{
@@ -3119,17 +3117,17 @@ namespace ConstructionSetExtender
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
-			CSEDialogExtraFittingsData* xData = (CSEDialogExtraFittingsData*)ExtraData->Lookup(CSEDialogExtraFittingsData::kTypeID);
-												// ugly, yeah, but dynamic cast will incur a performance penalty
+			CSEDialogExtraFittingsData* xData = BGSEE_GETWINDOWXDATA_QUICK(CSEDialogExtraFittingsData, ExtraData);
+
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
 				{
-					xData = dynamic_cast<CSEDialogExtraFittingsData*>(ExtraData->Lookup(CSEDialogExtraFittingsData::kTypeID));
+					xData = BGSEE_GETWINDOWXDATA(CSEDialogExtraFittingsData, ExtraData);
 					if (xData == NULL)
 					{
 						xData = new CSEDialogExtraFittingsData();
-						ExtraData->Add(CSEDialogExtraFittingsData::kTypeID, xData);
+						ExtraData->Add(xData);
 
 						xData->AssetControlToolTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
 																	TTS_ALWAYSTIP|TTS_NOPREFIX,
@@ -3143,10 +3141,9 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-
 			case WM_DESTROY:
 				{
-					xData = dynamic_cast<CSEDialogExtraFittingsData*>(ExtraData->Lookup(CSEDialogExtraFittingsData::kTypeID));
+					xData = BGSEE_GETWINDOWXDATA(CSEDialogExtraFittingsData, ExtraData);
 					if (xData)
 					{
 						ExtraData->Remove(CSEDialogExtraFittingsData::kTypeID);
@@ -3777,6 +3774,30 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+		LRESULT CALLBACK AIPackagesDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_COMMAND:
+				if (LOWORD(wParam) == 2)		// prevents the dialog from closing itself on renaming an AI package
+				{
+					if (HIWORD(wParam) == EN_KILLFOCUS || HIWORD(wParam) == EN_SETFOCUS)
+					{
+						Return = true;
+						DlgProcResult = TRUE;
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			switch (uMsg)
@@ -4377,6 +4398,7 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, LandscapeEditDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, AIPackagesDlgSubClassProc);
 
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);

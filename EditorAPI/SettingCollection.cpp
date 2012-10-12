@@ -47,7 +47,7 @@ void GameSettingCollection::CreateDefaultCopy()
 			TempSetting->MarkAsTemporary();
 			TempSetting->CopyFrom(SettingForm);
 
-			g_DefaultGMSTMap.insert(std::make_pair<const char*, GameSetting*>(Name, TempSetting));
+			g_DefaultGMSTMap.insert(std::make_pair(Name, TempSetting));
 		}
 	}
 }

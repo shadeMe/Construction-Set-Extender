@@ -112,6 +112,11 @@ namespace ConstructionSetExtender
 			virtual ~CSECellViewExtraData();
 
 			enum { kTypeID = 'XCVD' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
 		};
 
 		class CSEDialogExtraFittingsData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -130,6 +135,11 @@ namespace ConstructionSetExtender
 			virtual ~CSEDialogExtraFittingsData();
 
 			enum { kTypeID = 'XDEF' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
 		};
 
 		class CSEMainWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -141,6 +151,11 @@ namespace ConstructionSetExtender
 			virtual ~CSEMainWindowMiscData();
 
 			enum { kTypeID = 'XMWM' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
 		};
 
 		class CSEMainWindowToolbarData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -152,6 +167,11 @@ namespace ConstructionSetExtender
 			virtual ~CSEMainWindowToolbarData();
 
 			enum { kTypeID = 'XMTD' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
 		};
 
 		class CSERenderWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -163,6 +183,11 @@ namespace ConstructionSetExtender
 			virtual ~CSERenderWindowMiscData();
 
 			enum { kTypeID = 'XRWM' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
 		};
 
 		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
@@ -188,6 +213,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK		SelectTopicsQuestsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		TESFormIDListViewDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		LandscapeEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		AIPackagesDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 
 		BOOL CALLBACK			AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

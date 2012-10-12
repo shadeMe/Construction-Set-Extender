@@ -75,6 +75,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(VersionControlOverride, 0x0041C895);
 		_DefineHookHdlr(TESObjectCELLGetDataFromDialog, 0x0053849E);
 		_DefineHookHdlr(InteriorCellDuplicate, 0x0053CC3E);
+		_DefineHookHdlr(InteriorCellLightingDataInit, 0x00532410);
 
 		void PatchMiscHooks(void)
 		{
@@ -109,6 +110,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(ExtraTeleportInitItem).WriteJump();
 			_MemHdlr(TESObjectCELLGetDataFromDialog).WriteJump();
 			_MemHdlr(InteriorCellDuplicate).WriteJump();
+			_MemHdlr(InteriorCellLightingDataInit).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -851,6 +853,28 @@ namespace ConstructionSetExtender
 
 				call	_hhGetVar(Call)
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoInteriorCellLightingDataInitHook(TESObjectCELL::LightingData* Data)
+		{
+			Data->fogNear = 0.0001;
+		}
+
+		#define _hhName		InteriorCellLightingDataInit
+		_hhBegin()
+		{
+			__asm
+			{
+				pushad
+				push	eax
+				call	DoInteriorCellLightingDataInitHook
+				popad
+
+				mov		[edi + 0x48], eax
+				pop		edi
+				pop		esi
+				retn
 			}
 		}
 	}

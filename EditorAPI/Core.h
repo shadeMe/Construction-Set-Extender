@@ -131,6 +131,8 @@ public:
 	TESObjectCELL*									GetExteriorCell(float XCoord, float YCoord, TESWorldSpace* Worldspace, bool Create = false);
 													// if Create is set to true, an exterior cell will be created at the input coords and returned
 
+	bool											AddForm(TESForm* Form);
+
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
 	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
 };
@@ -277,7 +279,7 @@ STATIC_ASSERT(sizeof(TES) == 0xAC);
 extern TES**					g_TES;
 #define _TES					(*g_TES)
 
-// 10
+// 14
 class FileFinder
 {
 public:
@@ -289,14 +291,17 @@ public:
 	};
 
 	// members
-	/*00*/ NiTArray<const char*>	searchPaths;
+	///*00*/ void**					vtbl;
+	/*04*/ NiTArray<const char*>	searchPaths;
 
 	// methods
+	virtual void		VFn00(void* Unk01) = 0;
+
 	UInt8				FindFile(const char* Path, UInt32 Unk02 = 0, UInt32 Unk03 = 0, int Unk04 = -1);
 	NiBinaryStream*		GetFileStream(const char* Path, bool WriteAccess = false, UInt32 BufferSize = 0x8000);
 	void				AddSearchPath(const char* Path);
 };
-STATIC_ASSERT(sizeof(FileFinder) == 0x10);
+STATIC_ASSERT(sizeof(FileFinder) == 0x14);
 
 extern FileFinder**				g_FileFinder;
 #define _FILEFINDER				(*g_FileFinder)

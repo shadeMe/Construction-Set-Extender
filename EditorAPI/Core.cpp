@@ -184,6 +184,11 @@ bool TESDataHandler::MoveReference( TESObjectCELL* Cell, TESObjectREFR* Referenc
 	return thisCall<bool>(0x0047F3F0, this, Cell, Reference);
 }
 
+bool TESDataHandler::AddForm( TESForm* Form )
+{
+	return thisCall<bool>(0x004818F0, this, Form);
+}
+
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);

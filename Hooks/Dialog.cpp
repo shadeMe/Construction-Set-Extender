@@ -84,6 +84,8 @@ namespace ConstructionSetExtender
 		_DefineJumpHdlr(TESWeatherSoundListSort, 0x0055D083, 0x0055D098);
 		_DefineHookHdlr(TESFormShowCrossRefList, 0x0049875C);
 		_DefineNopHdlr(TESColorControlWndProc, 0x00441400, 5);
+		_DefineHookHdlr(TESPackageWndProcAddNew, 0x004523FD);
+		_DefineHookHdlr(RegionEditorCreateDataCopy, 0x004BF763);
 
 		void PatchDialogHooks(void)
 		{
@@ -297,6 +299,107 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESWeatherSoundListSort).WriteJump();
 			_MemHdlr(TESFormShowCrossRefList).WriteJump();
 			_MemHdlr(TESColorControlWndProc).WriteNop();
+			_MemHdlr(TESPackageWndProcAddNew).WriteJump();
+			_MemHdlr(RegionEditorCreateDataCopy).WriteJump();
+		}
+
+		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
+		{
+			TESTopic* Topic = NULL;
+
+			__asm { mov		Topic, ecx }
+			SME_ASSERT(Topic);
+
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
+			thisCall<void>(0x004ED070, Topic, Dialog, SubItemIndex);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
+		}
+
+		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState)
+		{
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
+			cdeclCall<void>(0x004ECB40, Dialog, TopicControlState, ResponseControlState);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
+		}
+
+		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog)
+		{
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
+			cdeclCall<void>(0x004E35C0, Dialog);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
+		}
+
+		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog)
+		{
+			TESTopicInfo* TopicInfo = NULL;
+
+			__asm { mov		TopicInfo, ecx }
+			SME_ASSERT(TopicInfo);
+
+			BGSEEUI->GetInvalidationManager()->Push(Dialog);
+			thisCall<void>(0x004F5E10, TopicInfo, DialogEditorData, Dialog);
+			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
+		}
+
+		int CALLBACK ActiveRecordFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort, UInt32 DefaultComparator )
+		{
+			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
+			int Result = ((DefaultComparatorT)DefaultComparator)(lParam1, lParam2, lParamSort);
+
+			TESForm* FormA = (TESForm*)lParam1;
+			TESForm* FormB = (TESForm*)lParam2;
+
+			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+
+			return Result;
+		}
+
+		int CALLBACK ObjectWindowFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00415CD0);
+		}
+
+		int CALLBACK TESFormIDListViewFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00442EB0);
+		}
+
+		int CALLBACK TESDialogCellListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00537620);
+		}
+
+		int CALLBACK TESDialogReferenceListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004088C0);
+		}
+
+		int CALLBACK TESDialogFormListEDIDComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004ECAF0);
+		}
+
+		int CALLBACK FindTextGenericComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00441F50);
+		}
+
+		int CALLBACK FindTextTopicInfoComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
+			int Result = ((DefaultComparatorT)0x00441E90)(lParam1, lParam2, lParamSort);
+
+			TESForm* FormA = *(TESForm**)lParam1;
+			TESForm* FormB = *(TESForm**)lParam2;
+
+			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+
+			return Result;
+		}
+
+		int CALLBACK LandscapeTextureComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x0041E7D0);
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -1415,44 +1518,6 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
-		{
-			TESTopic* Topic = NULL;
-
-			__asm { mov		Topic, ecx }
-			SME_ASSERT(Topic);
-
-			BGSEEUI->GetInvalidationManager()->Push(Dialog);
-			thisCall<void>(0x004ED070, Topic, Dialog, SubItemIndex);
-			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
-		}
-
-		void __cdecl TESDialogEnableTopicControlsDetour(HWND Dialog, bool TopicControlState, bool ResponseControlState)
-		{
-			BGSEEUI->GetInvalidationManager()->Push(Dialog);
-			cdeclCall<void>(0x004ECB40, Dialog, TopicControlState, ResponseControlState);
-			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
-		}
-
-		void __cdecl TESConditionItemDisableDialogControlsDetour(HWND Dialog)
-		{
-			BGSEEUI->GetInvalidationManager()->Push(Dialog);
-			cdeclCall<void>(0x004E35C0, Dialog);
-			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
-		}
-
-		void __stdcall TESTopicInfoSetInDialogDetour(void* DialogEditorData, HWND Dialog)
-		{
-			TESTopicInfo* TopicInfo = NULL;
-
-			__asm { mov		TopicInfo, ecx }
-			SME_ASSERT(TopicInfo);
-
-			BGSEEUI->GetInvalidationManager()->Push(Dialog);
-			thisCall<void>(0x004F5E10, TopicInfo, DialogEditorData, Dialog);
-			BGSEEUI->GetInvalidationManager()->Pop(Dialog);
-		}
-
 		void __stdcall DoDialogueEditorPopupHook(HMENU Menu, POINT* Coords, HWND Parent, HWND ListView)
 		{
 			int ListViewID = GetDlgCtrlID(ListView);
@@ -1495,65 +1560,50 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		int CALLBACK ActiveRecordFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort, UInt32 DefaultComparator )
+		void __stdcall DoTESPackageWndProcAddNewHook(HWND ListView, TESPackage* Package)
 		{
-			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
-			int Result = ((DefaultComparatorT)DefaultComparator)(lParam1, lParam2, lParamSort);
+			HWND Dialog = *g_HWND_AIPackagesDlg;
+			*g_HWND_AIPackagesDlg = NULL;
 
-			TESForm* FormA = (TESForm*)lParam1;
-			TESForm* FormB = (TESForm*)lParam2;
+			_DATAHANDLER->AddForm(Package);
 
-			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+			*g_HWND_AIPackagesDlg = Dialog;
 
-			return Result;
+			ListView_SetItemState(ListView, -1, 0, LVIS_SELECTED);
 		}
 
-		int CALLBACK ObjectWindowFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		#define _hhName		TESPackageWndProcAddNew
+		_hhBegin()
 		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00415CD0);
+			_hhSetVar(Retn, 0x00452402);
+			__asm
+			{
+				pop		edi
+				pushad
+				mov		eax, [esi]
+				push	edi
+				push	eax
+				call	DoTESPackageWndProcAddNewHook
+				popad
+				jmp		_hhGetVar(Retn)
+			}
 		}
 
-		int CALLBACK TESFormIDListViewFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		#define _hhName		RegionEditorCreateDataCopy
+		_hhBegin()
 		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00442EB0);
-		}
+			_hhSetVar(Retn, 0x004BF768);
+			_hhSetVar(Jump, 0x004BF795);
+			__asm
+			{
+				mov		eax, [ecx]
+				test	eax, eax
+				jz		SKIP
 
-		int CALLBACK TESDialogCellListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00537620);
-		}
-
-		int CALLBACK TESDialogReferenceListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004088C0);
-		}
-
-		int CALLBACK TESDialogFormListEDIDComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004ECAF0);
-		}
-
-		int CALLBACK FindTextGenericComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x00441F50);
-		}
-
-		int CALLBACK FindTextTopicInfoComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			typedef int (__stdcall *DefaultComparatorT)(LPARAM, LPARAM, LPARAM);
-			int Result = ((DefaultComparatorT)0x00441E90)(lParam1, lParam2, lParamSort);
-
-			TESForm* FormA = *(TESForm**)lParam1;
-			TESForm* FormB = *(TESForm**)lParam2;
-
-			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
-
-			return Result;
-		}
-
-		int CALLBACK LandscapeTextureComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x0041E7D0);
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				jmp		_hhGetVar(Jump)
+			}
 		}
 	}
 }

@@ -144,4 +144,12 @@ void TESRenderComponents::SetCameraFOV( NiCamera* Camera, float FOV, float Width
 	UpdateAVObject(Camera);
 }
 
-
+TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,
+																	HWND Parent,
+																	NiNode* Node, 
+																	const char* WindowTitle, 
+																	int X, int Y,
+																	int Width, int Height )
+{
+	return thisCall<TESSceneNodeDebugData*>(0x004B7640, this, Instance, Parent, Node, WindowTitle, X, Y, Width, Height);
+}

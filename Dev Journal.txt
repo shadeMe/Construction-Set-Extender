@@ -13,7 +13,6 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
-		> http://www.darkcreations.org/forums/topic/58-construction-set-extender-beta-test-thread/page__view__findpost__p__90230
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
@@ -26,6 +25,7 @@ CSE		---->
 		> Copy/paste obj refs b'ween CS sessions
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
+		> Add a random "roughness" factor to the landscape sculpting brush
 
 	CODA			=
 
@@ -39,9 +39,11 @@ SE		---->
 	BUGFIX			=
 		> Unhandled exception in AvalonEdit; fold the function block in zzVectorzFunctUDP to reproduce
 		  Reverting back to v4.0.0.7070 until the bug is fixed
+		> The splitter doesn't correctly resize if the editor window is maximized
 
 	ENHANCEMENT		=
-
+		> Hitting the Enter key inside the Find/Replace window should click on the appropriate button
+		> Add an unhandled exception handler for CLR
 
 	MISC			=
 
