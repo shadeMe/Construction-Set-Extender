@@ -49,6 +49,7 @@ namespace BGSEditorExtender
 
 		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = NULL);
 		const char*							GetCurrentWorkspace(void) const;
+		const char*							GetDefaultWorkspace(void) const;
 	};
 
 #define BGSEEWORKSPACE						BGSEditorExtender::BGSEEWorkspaceManager::GetSingleton()

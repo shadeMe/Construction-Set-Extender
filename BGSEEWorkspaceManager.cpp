@@ -150,6 +150,13 @@ namespace BGSEditorExtender
 		return CurrentDirectory.c_str();
 	}
 
+	const char* BGSEEWorkspaceManager::GetDefaultWorkspace( void ) const
+	{
+		SME_ASSERT(Initialized);
+
+		return DefaultDirectory.c_str();
+	}
+
 	const std::string			BGSEEResourceLocation::kBasePath = "Data\\BGSEE\\";
 
 	BGSEEResourceLocation::BGSEEResourceLocation( std::string Path ) :
