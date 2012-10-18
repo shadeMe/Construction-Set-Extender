@@ -206,6 +206,7 @@
     <ClCompile Include="EditorAPI\TESObject.cpp" />
     <ClCompile Include="EditorAPI\TESObjectCELL.cpp" />
     <ClCompile Include="EditorAPI\TESObjectREFR.cpp" />
+    <ClCompile Include="EditorAPI\TESPackage.cpp" />
     <ClCompile Include="EditorAPI\TESPathGrid.cpp" />
     <ClCompile Include="EditorAPI\TESQuest.cpp" />
     <ClCompile Include="EditorAPI\TESRenderControl.cpp" />
@@ -422,6 +423,7 @@
     <None Include="Images\lost.bmp" />
     <None Include="Images\madsci.bmp" />
     <None Include="Images\magister.bmp" />
+    <None Include="Images\omfgodrays.bmp" />
     <None Include="Images\pedantic.bmp" />
     <None Include="Images\powerusr.bmp" />
     <None Include="Images\saboteur.bmp" />

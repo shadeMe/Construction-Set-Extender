@@ -1,6 +1,7 @@
 #pragma once
+#include "[Common]\ComponentDLLInterface.h"
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void);
+	QUERYINTERFACE_EXPORT;
 }

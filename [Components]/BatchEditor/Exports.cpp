@@ -1,4 +1,3 @@
-#include "[Common]\ComponentDLLInterface.h"
 #include "BatchEditor.h"
 
 using namespace ComponentDLLInterface;
@@ -8,10 +7,15 @@ extern ComponentDLLInterface::BatchEditorInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void)
+	QUERYINTERFACE_EXPORT
 	{
 		return &g_InteropInterface;
 	}
+}
+
+void InitializeComponents(void)
+{
+	return;
 }
 
 bool ShowBatchRefEditorDialog(BatchRefData* Data)
@@ -22,5 +26,6 @@ bool ShowBatchRefEditorDialog(BatchRefData* Data)
 ComponentDLLInterface::BatchEditorInterface g_InteropInterface =
 {
 	DeleteManagedHeapPointer,
+	InitializeComponents,
 	ShowBatchRefEditorDialog
 };

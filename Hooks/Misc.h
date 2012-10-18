@@ -59,6 +59,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESObjectCELLGetDataFromDialog, "fixes a bug that caused unnecessary additions of cell water height/type extra data to cells");
 		_DeclareMemHdlr(InteriorCellDuplicate, "patches the code to also copy the lighting data of the duplicated cell");
 		_DeclareMemHdlr(InteriorCellLightingDataInit, "sets the default near fog parameter of interior cells to a non-zero value, to workaround an engine bug");
+		_DeclareMemHdlr(ConvertDDSToRGBA32, "fixes a bug that causes CTDs if icon textures did not have any mipmaps, ironically...");
 	}
 }
 

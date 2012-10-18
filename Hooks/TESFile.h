@@ -34,6 +34,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(DataHandlerSavePluginResetC, "");
 		_DeclareNopHdlr(DataHandlerSavePluginOverwriteESM, "allows the overwriting of ESM files");
 		_DeclareMemHdlr(DataHandlerSavePluginRetainTimeStamps, "allows the retention of plugin timestamps during save operations");
+		_DeclareMemHdlr(DataDialogUpdateCurrentTESFileHeaderA, "");
+		_DeclareMemHdlr(DataDialogUpdateCurrentTESFileHeaderB, "");
 		_DeclareMemHdlr(DataHandlerAutoSaveA, "prevents the active file from being added as a master to the autosave backup");
 		_DeclareMemHdlr(DataHandlerAutoSaveB, "");
 		_DeclareMemHdlr(DataDlgCancelled, "fixes a bug that causes the editor to reset the 'dirty' flag on closing the data dialog");

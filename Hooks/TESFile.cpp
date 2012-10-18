@@ -3,6 +3,7 @@
 #include "Dialog.h"
 #include "..\ChangeLogManager.h"
 #include "..\CSEUIManager.h"
+#include "..\CSEWorkspaceManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -38,6 +39,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(DataHandlerSavePluginResetC, 0x0047EC83);
 		_DefineNopHdlr(DataHandlerSavePluginOverwriteESM, 0x0047EB6F, 2);
 		_DefineHookHdlr(DataHandlerSavePluginRetainTimeStamps, 0x0041BB12);
+		_DefineHookHdlr(DataDialogUpdateCurrentTESFileHeaderA, 0x0040CE60);
+		_DefineHookHdlr(DataDialogUpdateCurrentTESFileHeaderB, 0x0040D0BF);
 		_DefineHookHdlr(DataHandlerAutoSaveA, 0x00481F81);
 		_DefineHookHdlr(DataHandlerAutoSaveB, 0x00481FC1);
 		_DefineHookHdlr(DataDlgCancelled, 0x0041A289);
@@ -70,6 +73,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(DataHandlerAutoSaveA).WriteJump();
 			_MemHdlr(DataHandlerAutoSaveB).WriteJump();
 			_MemHdlr(DataDlgCancelled).WriteJump();
+			_MemHdlr(DataDialogUpdateCurrentTESFileHeaderA).WriteJump();
+			_MemHdlr(DataDialogUpdateCurrentTESFileHeaderB).WriteJump();
 		}
 
 		bool __stdcall InitTESFileSaveDlg()
@@ -506,23 +511,28 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall DoDataHandlerSavePluginRetainTimeStampsHook(bool State)
+		void __stdcall PreserveTESFileTimeStamp(TESFile* File, bool State)
 		{
 			static FILETIME s_SavedTimestamp = {0};
 
-			TESFile* ActiveFile = _DATAHANDLER->activeFile;
-
-			if (ActiveFile == NULL)
+			if (File == NULL)
 				return;
 			else if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INIGetter())) == 0)
 				return;
 
-			char Buffer[0x200] = {0};					// will only work with files in the current workspace
-			FORMAT_STR(Buffer, "%s\\%s", ActiveFile->filePath, ActiveFile->fileName);
-			HANDLE SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL);
+			char Buffer[0x200] = {0};
+			FORMAT_STR(Buffer, "%s\\%s", File->filePath, File->fileName);	// will only work with files in the current workspace
 
+			HANDLE SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL);
 			if (SaveFile == INVALID_HANDLE_VALUE)
-				return;
+			{
+				// check if the file's from the base workspace
+				FORMAT_STR(Buffer, "%s\\%s\\%s", BGSEEWORKSPACE->GetDefaultWorkspace(), File->filePath, File->fileName);
+				SaveFile = CreateFile(Buffer, GENERIC_READ|GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, 0, NULL);
+
+				if (SaveFile == INVALID_HANDLE_VALUE)
+					return;
+			}
 
 			if (State)
 			{
@@ -538,6 +548,11 @@ namespace ConstructionSetExtender
 			}
 
 			CloseHandle(SaveFile);
+		}
+
+		void __stdcall DoDataHandlerSavePluginRetainTimeStampsHook(bool State)
+		{
+			PreserveTESFileTimeStamp(_DATAHANDLER->activeFile, State);
 		}
 
 		#define	_hhName		DataHandlerSavePluginRetainTimeStamps
@@ -559,6 +574,35 @@ namespace ConstructionSetExtender
 				call	DoDataHandlerSavePluginRetainTimeStampsHook
 				popad
 
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __cdecl DoDataDialogUpdateCurrentTESFileHeaderHook(HWND Dialog, TESFile* File)
+		{
+			PreserveTESFileTimeStamp(File, true);
+			cdeclCall<void>(0x0040CC60, Dialog, File);
+			PreserveTESFileTimeStamp(File, false);
+		}
+
+		#define	_hhName		DataDialogUpdateCurrentTESFileHeaderA
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0040CE65);
+			__asm
+			{
+				call	DoDataDialogUpdateCurrentTESFileHeaderHook
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define	_hhName		DataDialogUpdateCurrentTESFileHeaderB
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0040D0C4);
+			__asm
+			{
+				call	DoDataDialogUpdateCurrentTESFileHeaderHook
 				jmp		_hhGetVar(Retn)
 			}
 		}

@@ -98,6 +98,7 @@ namespace ConstructionSetExtender
 		extern CSEAchievementIncremented*  	kLoquacious;
 		extern CSEAchievementBase*  		kSaboteur;
 		extern CSEAchievementBase*  		kOldestTrickInTheBook;
+		extern CSEAchievementBase*  		kOver3000;
 
 		void								Initialize(void);
 	}

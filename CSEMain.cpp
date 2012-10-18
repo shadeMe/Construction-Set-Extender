@@ -41,6 +41,7 @@ namespace ConstructionSetExtender
 	{
 		RegisterRelease(6, 0, 0, "Konniving Kelpie");
 		RegisterRelease(6, 1, 0, "Cretinous Codpiece");
+		RegisterRelease(6, 2, 0, "Talkative Badger");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()

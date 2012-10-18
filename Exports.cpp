@@ -1,4 +1,3 @@
-#include "[Common]\ComponentDLLInterface.h"
 #include "[Common]\CLIWrapper.h"
 
 #include "CSEMain.h"
@@ -18,7 +17,7 @@ extern ComponentDLLInterface::CSEInterfaceTable g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void)
+	QUERYINTERFACE_EXPORT
 	{
 		return &g_InteropInterface;
 	}

@@ -286,4 +286,7 @@ public:
 	/*30*/ TargetData*			target;
 	/*34*/ ScheduleData			schedule;
 	/*3C*/ ConditionListT		conditions;
+
+	// methods
+	static void					InitializeListViewColumns(HWND ListView);
 };

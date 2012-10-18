@@ -7,6 +7,8 @@ class TESGlobal;
 #ifdef CSE
 struct CommandInfo;
 struct PluginInfo;
+#else
+typedef int HWND;
 #endif
 
 namespace ComponentDLLInterface

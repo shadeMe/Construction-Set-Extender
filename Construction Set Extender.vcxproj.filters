@@ -272,6 +272,9 @@
     <ClCompile Include="CSERenderWindowFlyCamera.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="EditorAPI\TESPackage.cpp">
+      <Filter>EditorAPI\Forms\AI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -846,6 +849,9 @@
       <Filter>Components\Coda</Filter>
     </None>
     <None Include="Images\fakevoice.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\omfgodrays.bmp">
       <Filter>Resources\Images</Filter>
     </None>
   </ItemGroup>

@@ -3782,6 +3782,17 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_INITDIALOG:
+				{
+					HWND PackageListView = GetDlgItem(hWnd, 1977);
+					LVCOLUMN ColumnData = {0};
+					ColumnData.mask = LVCF_WIDTH;
+
+					ColumnData.cx = 175;
+					ListView_SetColumn(PackageListView, 0, &ColumnData);
+				}
+
+				break;
 			case WM_COMMAND:
 				if (LOWORD(wParam) == 2)		// prevents the dialog from closing itself on renaming an AI package
 				{
@@ -3790,6 +3801,33 @@ namespace ConstructionSetExtender
 						Return = true;
 						DlgProcResult = TRUE;
 					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK AIFormDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					HWND PackageListView = GetDlgItem(hWnd, 1977);
+
+					TESPackage::InitializeListViewColumns(PackageListView);	// do this just once, not every time the listview is refreshed
+
+					LVCOLUMN ColumnData = {0};
+					ColumnData.mask = LVCF_WIDTH;
+
+					ColumnData.cx = 150;
+					ListView_SetColumn(PackageListView, 0, &ColumnData);
 				}
 
 				break;
@@ -4399,6 +4437,7 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, LandscapeEditDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, AIPackagesDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIForm, AIFormDlgSubClassProc);
 
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);

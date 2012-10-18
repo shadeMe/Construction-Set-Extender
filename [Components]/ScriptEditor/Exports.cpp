@@ -1,4 +1,3 @@
-#include "[Common]\ComponentDLLInterface.h"
 #include "ScriptEditorManager.h"
 #include "Exports.h"
 #include "IntelliSense\IntelliSenseDatabase.h"
@@ -14,13 +13,13 @@ extern ComponentDLLInterface::ScriptEditorInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void)
+	QUERYINTERFACE_EXPORT
 	{
 		return &g_InteropInterface;
 	}
 }
 
-Assembly^ ResolvePreprocessorAssemblyLoad(Object^ Sender, ResolveEventArgs^ E)
+Assembly^ ResolvePreprocessorAssemblyLoad(Object^, ResolveEventArgs^ E)
 {
 	Assembly^ PreprocAssembly, ^ExecutingAssemblies;
 	String^ TempPath = "";
@@ -40,10 +39,23 @@ Assembly^ ResolvePreprocessorAssemblyLoad(Object^ Sender, ResolveEventArgs^ E)
 	return nullptr;
 }
 
+void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
+{
+	DebugPrint("CLR Unhandled Exception Handler Invoked:");
+	DebugPrint("Exception:");
+	DebugPrint(E->ExceptionObject->ToString());
+
+	MessageBox::Show("The editor crashed while executing managed code! Check the debug log for details.",
+					"Construction Set Extender",
+					MessageBoxButtons::OK,
+					MessageBoxIcon::Error);
+}
+
 void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData)
 {
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
+	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
 
 	ISDB->InitializeCommandTableDatabase(Data);
 	ISDB->InitializeGMSTDatabase(GMSTData);

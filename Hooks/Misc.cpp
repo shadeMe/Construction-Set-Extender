@@ -76,6 +76,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESObjectCELLGetDataFromDialog, 0x0053849E);
 		_DefineHookHdlr(InteriorCellDuplicate, 0x0053CC3E);
 		_DefineHookHdlr(InteriorCellLightingDataInit, 0x00532410);
+		_DefineHookHdlr(ConvertDDSToRGBA32, 0x004AE4B4);
 
 		void PatchMiscHooks(void)
 		{
@@ -111,6 +112,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESObjectCELLGetDataFromDialog).WriteJump();
 			_MemHdlr(InteriorCellDuplicate).WriteJump();
 			_MemHdlr(InteriorCellLightingDataInit).WriteJump();
+			_MemHdlr(ConvertDDSToRGBA32).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -875,6 +877,25 @@ namespace ConstructionSetExtender
 				pop		edi
 				pop		esi
 				retn
+			}
+		}
+
+		#define _hhName		ConvertDDSToRGBA32
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004AE4BB);
+			_hhSetVar(Jump, 0x004AE6BA);
+			__asm
+			{
+				mov		edx, [ecx]
+				mov		eax, [edx + 0x14]
+				call	eax
+				test	eax, eax
+				jz		SKIP
+
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				jmp		_hhGetVar(Jump)
 			}
 		}
 	}

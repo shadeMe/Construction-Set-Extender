@@ -1,4 +1,4 @@
-#include "[Common]\ComponentDLLInterface.h"
+#include "Exports.h"
 #include "UseInfoList.h"
 
 using namespace ComponentDLLInterface;
@@ -8,10 +8,15 @@ extern ComponentDLLInterface::UseInfoListInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void)
+	QUERYINTERFACE_EXPORT
 	{
 		return &g_InteropInterface;
 	}
+}
+
+void InitializeComponents(void)
+{
+	return;
 }
 
 void ShowUseInfoListDialog(const char* FilterString)
@@ -22,5 +27,6 @@ void ShowUseInfoListDialog(const char* FilterString)
 ComponentDLLInterface::UseInfoListInterface g_InteropInterface =
 {
 	DeleteManagedHeapPointer,
+	InitializeComponents,
 	ShowUseInfoListDialog
 };

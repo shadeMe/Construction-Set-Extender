@@ -1,4 +1,3 @@
-#include "[Common]\ComponentDLLInterface.h"
 #include "TagBrowser.h"
 
 using namespace ComponentDLLInterface;
@@ -8,10 +7,15 @@ extern ComponentDLLInterface::TagBrowserInterface g_InteropInterface;
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void)
+	QUERYINTERFACE_EXPORT
 	{
 		return &g_InteropInterface;
 	}
+}
+
+void InitializeComponents(void)
+{
+	return;
 }
 
 void ShowTagBrowserDialog(HWND Parent)
@@ -42,6 +46,7 @@ HWND GetFormDropParentHandle()
 ComponentDLLInterface::TagBrowserInterface g_InteropInterface =
 {
 	DeleteManagedHeapPointer,
+	InitializeComponents,
 	ShowTagBrowserDialog,
 	HideTagBrowserDialog,
 	AddFormToActiveTag,

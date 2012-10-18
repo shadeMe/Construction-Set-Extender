@@ -86,6 +86,7 @@ namespace ConstructionSetExtender
 		_DefineNopHdlr(TESColorControlWndProc, 0x00441400, 5);
 		_DefineHookHdlr(TESPackageWndProcAddNew, 0x004523FD);
 		_DefineHookHdlr(RegionEditorCreateDataCopy, 0x004BF763);
+		_DefineNopHdlr(AIFormResetPackageListColumns, 0x00452FC9, 5);
 
 		void PatchDialogHooks(void)
 		{
@@ -301,6 +302,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESColorControlWndProc).WriteNop();
 			_MemHdlr(TESPackageWndProcAddNew).WriteJump();
 			_MemHdlr(RegionEditorCreateDataCopy).WriteJump();
+			_MemHdlr(AIFormResetPackageListColumns).WriteNop();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)

@@ -80,6 +80,18 @@ namespace ConstructionSetExtender
 			Interfaces::BSA = (ComponentDLLInterface::BSAViewerInterface*)BSAQueryInterfaceProc();
 			Interfaces::BE = (ComponentDLLInterface::BatchEditorInterface*)BEQueryInterfaceProc();
 			Interfaces::TAG = (ComponentDLLInterface::TagBrowserInterface*)TAGQueryInterfaceProc();
+
+			SME_ASSERT(Interfaces::SE);
+			SME_ASSERT(Interfaces::USE);
+			SME_ASSERT(Interfaces::BSA);
+			SME_ASSERT(Interfaces::BE);
+			SME_ASSERT(Interfaces::TAG);
+
+			// the script editor is initialized elsewhere
+			Interfaces::USE->InitializeComponents();
+			Interfaces::BSA->InitializeComponents();
+			Interfaces::BE->InitializeComponents();
+			Interfaces::TAG->InitializeComponents();
 		}
 	}
 }

@@ -1,4 +1,5 @@
 #include "CSERenderWindowPainter.h"
+#include "CSEAchievements.h"
 
 namespace ConstructionSetExtender
 {
@@ -109,6 +110,9 @@ namespace ConstructionSetExtender
 				{
 					GetSingleton()->RAMCounter = CurrentRAMCounter;
 					TESDialog::RedrawRenderWindow();
+
+					if (CurrentRAMCounter > 3000)
+						BGSEEACHIEVEMENTS->Unlock(Achievements::kOver3000);
 				}
 			}
 		}

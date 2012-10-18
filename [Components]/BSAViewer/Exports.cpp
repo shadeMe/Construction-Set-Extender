@@ -1,4 +1,4 @@
-#include "[Common]\ComponentDLLInterface.h"
+#include "Exports.h"
 #include "BSAViewer.h"
 
 extern ComponentDLLInterface::BSAViewerInterface g_InteropInterface;
@@ -7,10 +7,15 @@ using namespace ConstructionSetExtender;
 
 extern "C"
 {
-	__declspec(dllexport) void* QueryInterface(void)
+	QUERYINTERFACE_EXPORT
 	{
 		return &g_InteropInterface;
 	}
+}
+
+void InitializeComponents(void)
+{
+	return;
 }
 
 void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize)
@@ -21,5 +26,6 @@ void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, ch
 ComponentDLLInterface::BSAViewerInterface g_InteropInterface =
 {
 	DeleteManagedHeapPointer,
+	InitializeComponents,
 	ShowBSAViewerDialog
 };

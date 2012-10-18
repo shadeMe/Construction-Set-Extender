@@ -13,6 +13,7 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> The render window FOV gets reset on cell load or summat
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
@@ -43,7 +44,6 @@ SE		---->
 
 	ENHANCEMENT		=
 		> Hitting the Enter key inside the Find/Replace window should click on the appropriate button
-		> Add an unhandled exception handler for CLR
 
 	MISC			=
 

@@ -2,15 +2,13 @@
 #include "HandShakeStructs.h"
 
 // Internal interfaces exported by the DLLs for interop
-
-#ifndef CSE
-typedef void* HWND;
-#endif
+// Main function exported by all the DLLs
+#define QUERYINTERFACE_EXPORT						__declspec(dllexport) void* QueryInterface(void)
+#define QUERYINTERFACE_FWD							typedef void* (* QueryInterface)(void)
 
 namespace ComponentDLLInterface
 {
-	// main function exported by all the dlls
-	typedef void*									(* QueryInterface)(void);
+	QUERYINTERFACE_FWD;
 
 	// pointers returned by an interface are expected to be released by the caller
 	// pointers passed to an interface are expected to be released by the caller
@@ -127,6 +125,8 @@ namespace ComponentDLLInterface
 	public:
 		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
 
+		void										(* InitializeComponents)(void);
+
 		void										(* ShowUseInfoListDialog)(const char* FilterString);
 	};
 
@@ -134,6 +134,8 @@ namespace ComponentDLLInterface
 	{
 	public:
 		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
+
+		void										(* InitializeComponents)(void);
 
 		void										(* ShowBSAViewerDialog)(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize);
 	};
@@ -143,6 +145,8 @@ namespace ComponentDLLInterface
 	public:
 		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
 
+		void										(* InitializeComponents)(void);
+
 		bool										(* ShowBatchRefEditorDialog)(BatchRefData* Data);
 	};
 
@@ -150,6 +154,8 @@ namespace ComponentDLLInterface
 	{
 	public:
 		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
+
+		void										(* InitializeComponents)(void);
 
 		void										(* ShowTagBrowserDialog)(HWND Parent);
 		void										(* HideTagBrowserDialog)(void);
