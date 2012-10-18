@@ -1,5 +1,5 @@
 #include "CSEWorkspaceManager.h"
-#include "Hooks\TESFile.h"
+#include "Hooks\Hooks-Plugins.h"
 #include "CSEMain.h"
 
 namespace ConstructionSetExtender

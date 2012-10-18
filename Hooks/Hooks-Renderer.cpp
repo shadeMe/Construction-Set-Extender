@@ -1,9 +1,9 @@
-#include "Renderer.h"
+#include "Hooks-Renderer.h"
 #include "RenderSelectionGroupManager.h"
 #include "CSERenderWindowPainter.h"
 #include "PathGridUndoManager.h"
 #include "AuxiliaryViewport.h"
-#include "LOD.h"
+#include "Hooks-LOD.h"
 
 #pragma warning(push)
 #pragma optimize("", off)

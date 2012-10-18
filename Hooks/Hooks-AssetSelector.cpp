@@ -1,4 +1,4 @@
-#include "AssetSelector.h"
+#include "Hooks-AssetSelector.h"
 #include "CSEWorkspaceManager.h"
 #include "Construction Set Extender_Resource.h"
 

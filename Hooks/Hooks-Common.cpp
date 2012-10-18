@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "Hooks-Common.h"
 
 namespace ConstructionSetExtender
 {

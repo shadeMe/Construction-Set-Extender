@@ -1,5 +1,5 @@
 #include "ChangeLogManager.h"
-#include "Hooks\VersionControl.h"
+#include "Hooks\Hooks-VersionControl.h"
 
 namespace ConstructionSetExtender
 {

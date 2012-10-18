@@ -1,5 +1,5 @@
-#include "ScriptEditor.h"
-#include "CompilerErrorDetours.h"
+#include "Hooks-ScriptEditor.h"
+#include "Hooks-CompilerErrorDetours.h"
 
 #pragma warning(push)
 #pragma optimize("", off)

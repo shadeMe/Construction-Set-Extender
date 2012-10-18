@@ -1,4 +1,4 @@
-#include "LOD.h"
+#include "Hooks-LOD.h"
 #include "..\AuxiliaryViewport.h"
 
 #pragma warning(push)

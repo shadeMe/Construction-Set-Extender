@@ -1,5 +1,5 @@
-#include "VersionControl.h"
-#include "TESFile.h"
+#include "Hooks-VersionControl.h"
+#include "Hooks-Plugins.h"
 #include "..\ChangeLogManager.h"
 
 #pragma warning(push)

@@ -1,5 +1,5 @@
 #include "Script.h"
-#include "Hooks\ScriptEditor.h"
+#include "Hooks\Hooks-ScriptEditor.h"
 
 using namespace ConstructionSetExtender;
 

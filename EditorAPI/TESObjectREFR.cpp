@@ -1,5 +1,5 @@
 #include "TESObjectREFR.h"
-#include "..\Hooks\Renderer.h"
+#include "..\Hooks\Hooks-Renderer.h"
 
 using namespace ConstructionSetExtender;
 

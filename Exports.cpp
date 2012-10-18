@@ -1,11 +1,11 @@
 #include "[Common]\CLIWrapper.h"
 
 #include "CSEMain.h"
-#include "Hooks\CompilerErrorDetours.h"
-#include "Hooks\Misc.h"
-#include "Hooks\ScriptEditor.h"
-#include "Hooks\TESFile.h"
-#include "Hooks\Dialog.h"
+#include "Hooks\Hooks-CompilerErrorDetours.h"
+#include "Hooks\Hooks-Misc.h"
+#include "Hooks\Hooks-ScriptEditor.h"
+#include "Hooks\Hooks-Plugins.h"
+#include "Hooks\Hooks-Dialog.h"
 
 #include <BGSEEWorkspaceManager.h>
 

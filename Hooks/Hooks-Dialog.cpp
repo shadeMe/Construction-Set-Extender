@@ -1,4 +1,4 @@
-#include "Dialog.h"
+#include "Hooks-Dialog.h"
 #include "..\CSEAchievements.h"
 #include "..\CSEUIManager.h"
 

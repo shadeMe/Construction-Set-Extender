@@ -1,6 +1,6 @@
 #include "CSEConsole.h"
-#include "Hooks\TESFile.h"
-#include "Hooks\Dialog.h"
+#include "Hooks\Hooks-Plugins.h"
+#include "Hooks\Hooks-Dialog.h"
 #include "CSEAchievements.h"
 #include "CSEInterfaceManager.h"
 

@@ -1,4 +1,4 @@
-#include "CompilerErrorDetours.h"
+#include "Hooks-CompilerErrorDetours.h"
 #include "[Common]/CLIWrapper.h"
 
 #pragma warning(push)

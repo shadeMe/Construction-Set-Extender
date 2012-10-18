@@ -102,33 +102,6 @@
     <ClCompile Include="[Common]\HandshakeStructs.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Hooks\AssetSelector.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\Common.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\CompilerErrorDetours.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\Dialog.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\LOD.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\Misc.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\Renderer.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\ScriptEditor.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\TESFile.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
     <ClCompile Include="CSEInterfaceManager.cpp">
       <Filter>Interop\Plugin</Filter>
     </ClCompile>
@@ -142,9 +115,6 @@
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="Hooks\VersionControl.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
     <ClCompile Include="ChangeLogManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -230,9 +200,6 @@
     <ClCompile Include="EditorAPI\NiClasses.cpp">
       <Filter>EditorAPI\System</Filter>
     </ClCompile>
-    <ClCompile Include="EditorAPI\TESFile-API.cpp">
-      <Filter>EditorAPI\System\I/O</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\BSString.cpp">
       <Filter>EditorAPI\Types\Bethesda</Filter>
     </ClCompile>
@@ -275,6 +242,39 @@
     <ClCompile Include="EditorAPI\TESPackage.cpp">
       <Filter>EditorAPI\Forms\AI</Filter>
     </ClCompile>
+    <ClCompile Include="Hooks\Hooks-AssetSelector.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-Common.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-CompilerErrorDetours.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-Dialog.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-LOD.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-Misc.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-Renderer.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-ScriptEditor.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-Plugins.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-VersionControl.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\TESFile.cpp">
+      <Filter>EditorAPI\System\I/O</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -304,33 +304,6 @@
     <ClInclude Include="[Common]\HandShakeStructs.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="Hooks\AssetSelector.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\Common.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\CompilerErrorDetours.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\Dialog.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\LOD.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\Misc.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\Renderer.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\ScriptEditor.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\TESFile.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
     <ClInclude Include="CSEInterfaceAPI.h">
       <Filter>Interop\Plugin</Filter>
     </ClInclude>
@@ -347,9 +320,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="Hooks\VersionControl.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
     <ClInclude Include="ChangeLogManager.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -761,6 +731,36 @@
     </ClInclude>
     <ClInclude Include="CSERenderWindowFlyCamera.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-AssetSelector.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-Common.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-CompilerErrorDetours.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-Dialog.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-LOD.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-Misc.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-Renderer.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-ScriptEditor.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-Plugins.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-VersionControl.h">
+      <Filter>Hooks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

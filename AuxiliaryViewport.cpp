@@ -1,8 +1,8 @@
 #include "AuxiliaryViewport.h"
 #include "Construction Set Extender_Resource.h"
 #include "CSERenderWindowPainter.h"
-#include "Hooks\Renderer.h"
-#include "Hooks\Dialog.h"
+#include "Hooks\Hooks-Renderer.h"
+#include "Hooks\Hooks-Dialog.h"
 
 #include <BGSEEMain.h>
 #include <BGSEditorExtenderBase_Resource.h>
