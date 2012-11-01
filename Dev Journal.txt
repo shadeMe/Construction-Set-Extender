@@ -13,6 +13,7 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> The AI packages dlg doesn't perform active form sorting
 		> The render window FOV gets reset on cell load or summat
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
@@ -21,6 +22,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Add localization support
 		> Look into the SetActorAlpha script command to get transparency working
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Copy/paste obj refs b'ween CS sessions
@@ -41,6 +43,7 @@ SE		---->
 		> Unhandled exception in AvalonEdit; fold the function block in zzVectorzFunctUDP to reproduce
 		  Reverting back to v4.0.0.7070 until the bug is fixed
 		> The splitter doesn't correctly resize if the editor window is maximized
+		> IS interface shows up inside string literals
 
 	ENHANCEMENT		=
 		> Hitting the Enter key inside the Find/Replace window should click on the appropriate button

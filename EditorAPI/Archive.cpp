@@ -16,13 +16,13 @@ void ArchiveManager::LoadSkippedArchives(const char* ArchiveDirectory)
 	for (IDirectoryIterator Itr(ArchiveDirectory, "*.bsa"); !Itr.Done(); Itr.Next())
 	{
 		std::string FileName(Itr.Get()->cFileName);
-		FileName = FileName.substr(FileName.find_last_of("\\") + 1);
+		FileName = FileName.substr(FileName.rfind("\\") + 1);
 
 		bool IsLoaded = false;
 		for (ArchiveListT::Iterator Itr = (*g_LoadedBSAArchives)->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			std::string LoadedFileName(Itr.Get()->fileName);
-			LoadedFileName = LoadedFileName.substr(LoadedFileName.find_last_of("\\") + 1);
+			LoadedFileName = LoadedFileName.substr(LoadedFileName.rfind("\\") + 1);
 
 			if (!_stricmp(LoadedFileName.c_str(), FileName.c_str()))
 			{
