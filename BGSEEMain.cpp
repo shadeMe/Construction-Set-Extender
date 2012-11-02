@@ -405,7 +405,7 @@ namespace BGSEditorExtender
 		else if (OSInfo.dwMajorVersion >= 6 && OSInfo.dwMinorVersion > 1)
 		{
 			BGSEECONSOLE_MESSAGE("Your current version of Windows is not officially supported - Expect general weirdness such as collapsing time vortexes and code cannibalism");
-			BGSEECONSOLE_MESSAGE("You may attempt to run the editor in Windows' Compatibility Mode. This can be done by opening the 'File Properties' dialog for the OBSE loader and CS executables and enabling the 'Run this program in compatibility mode for:' option from the 'Compatibility' tab and set the option to 'Windows 7 Service Pack 1'. ");
+			BGSEECONSOLE_MESSAGE("You may attempt to run the editor in Windows' Compatibility Mode. This can be done by opening the 'File Properties' dialog for the xSE loader and editor executables and enabling the 'Run this program in compatibility mode for:' option from the 'Compatibility' tab and set the option to 'Windows 7 Service Pack 1'. ");
 		}
 
 		char NativeProgramFilesFolder[MAX_PATH] = {0};
@@ -438,8 +438,8 @@ namespace BGSEditorExtender
 
 			if (IsAdmin == FALSE)
 			{
-				BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges - The CS(E) must be run as an administrator.");
-				BGSEECONSOLE_MESSAGE("This can be done by opening the 'File Properties' dialog for the OBSE loader and CS executables and enabling the 'Run this program as an administrator' option from the 'Compatibility' tab.");
+				BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges - It must be executed through a user account with administrator preivileges.");
+				BGSEECONSOLE_MESSAGE("This can be done by opening the 'File Properties' dialog for the xSE loader and editor executables and enabling the 'Run this program as an administrator' option from the 'Compatibility' tab.");
 				return false;
 			}
 		}
