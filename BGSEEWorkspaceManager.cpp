@@ -9,8 +9,7 @@ namespace BGSEditorExtender
 
 	BGSEEWorkspaceManager::BGSEEWorkspaceManager()
 	{
-		WorkspaceResetter = NULL;
-		WorkspacePluginReloader = NULL;
+		Operator = NULL;
 		Initialized = false;
 	}
 
@@ -43,8 +42,7 @@ namespace BGSEditorExtender
 	BGSEEWorkspaceManager::~BGSEEWorkspaceManager()
 	{
 		DefaultDirectories.clear();
-		SAFEDELETE(WorkspaceResetter);
-		SAFEDELETE(WorkspacePluginReloader);
+		SAFEDELETE(Operator);
 
 		Initialized = false;
 
@@ -60,19 +58,17 @@ namespace BGSEditorExtender
 	}
 
 	bool BGSEEWorkspaceManager::Initialize( const char* DefaultDirectory,
-											VoidRFunctorBase* Resetter,
-											ReloadPluginsFunctor* Reloader,
+											BGSEEWorkspaceManagerOperator* Operator,
 											DefaultDirectoryListT& DefaultDirectoryData )
 	{
 		if (Initialized)
 			return false;
 
-		SME_ASSERT(DefaultDirectory && Resetter && Reloader && DefaultDirectoryData.size() > 1);
+		SME_ASSERT(DefaultDirectory && Operator && DefaultDirectoryData.size() > 1);
 
 		this->DefaultDirectory = DefaultDirectory;
 		this->CurrentDirectory = DefaultDirectory;
-		this->WorkspaceResetter = Resetter;
-		this->WorkspacePluginReloader = Reloader;
+		this->Operator = Operator;
 
 		for (DefaultDirectoryListT::iterator Itr = DefaultDirectoryData.begin(); Itr != DefaultDirectoryData.end(); Itr++)
 			DefaultDirectories.push_back(*Itr);
@@ -124,11 +120,11 @@ namespace BGSEditorExtender
 		{
 			if (_stricmp(CurrentDirectory.c_str(), WorkspacePath))
 			{
-				WorkspaceResetter->operator()();
-				WorkspacePluginReloader->operator()(std::string(CurrentDirectory + "Data\\").c_str(), true, false);
+				Operator->ResetCurrentWorkspace();
+				Operator->ReloadPlugins(std::string(CurrentDirectory + "Data\\").c_str(), true, false);
 				SetWorkingDirectory(WorkspacePath);
 				CreateDefaultDirectories(WorkspacePath);
-				WorkspacePluginReloader->operator()("Data\\", false, true);
+				Operator->ReloadPlugins("Data\\", false, true);
 
 				BGSEEUI->MsgBoxI("Current workspace set to '%s'.", WorkspacePath);
 				return true;

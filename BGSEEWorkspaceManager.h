@@ -4,21 +4,22 @@
 
 namespace BGSEditorExtender
 {
+	class BGSEEWorkspaceManagerOperator
+	{
+	public:
+		virtual ~BGSEEWorkspaceManagerOperator() = 0
+		{
+			;//
+		}
+
+		virtual void						ResetCurrentWorkspace(void) = 0;
+		virtual void						ReloadPlugins(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs) = 0;
+	};
+
 	// All paths are absolute unless stated otherwise
 	class BGSEEWorkspaceManager
 	{
 	public:
-		class ReloadPluginsFunctor
-		{
-		public:
-			virtual ~ReloadPluginsFunctor() = 0
-			{
-				;//
-			}
-
-			virtual void					operator()(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs) = 0;
-		};
-
 		typedef std::list<std::string>		DefaultDirectoryListT;
 	private:
 		static BGSEEWorkspaceManager*		Singleton;
@@ -31,8 +32,7 @@ namespace BGSEditorExtender
 		std::string							DefaultDirectory;
 		DirectoryListT						DefaultDirectories;
 
-		VoidRFunctorBase*					WorkspaceResetter;
-		ReloadPluginsFunctor*				WorkspacePluginReloader;
+		BGSEEWorkspaceManagerOperator*		Operator;
 		bool								Initialized;
 
 		void								SetWorkingDirectory(const char* WorkspacePath);
@@ -43,9 +43,8 @@ namespace BGSEditorExtender
 		static BGSEEWorkspaceManager*		GetSingleton();
 
 		bool								Initialize(const char* DefaultDirectory,
-													VoidRFunctorBase* Resetter,
-													ReloadPluginsFunctor* Reloader,
-													DefaultDirectoryListT& DefaultDirectoryData);	// manager takes ownership of the functors
+													BGSEEWorkspaceManagerOperator* Operator,
+													DefaultDirectoryListT& DefaultDirectoryData);	// manager takes ownership of the operator
 
 		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = NULL);
 		const char*							GetCurrentWorkspace(void) const;
