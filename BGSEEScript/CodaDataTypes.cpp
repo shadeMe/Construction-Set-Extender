@@ -112,7 +112,7 @@ namespace BGSEditorExtender
 				Data = "";
 
 			UInt32 Size = strlen(Data);
-			StringData = new char[Size + 1];
+			StringData = new CodaScriptCharDataTypeT[Size + 1];
 
 			StringData[Size] = '\0';
 			if (Size)
@@ -144,7 +144,7 @@ namespace BGSEditorExtender
 			Copy(*Data);
 		}
 
-		CodaScriptBackingStore::CodaScriptBackingStore( double Num )
+		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptNumericDataTypeT Num )
 			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
@@ -152,7 +152,7 @@ namespace BGSEditorExtender
 			SetNumber(Num);
 		}
 
-		CodaScriptBackingStore::CodaScriptBackingStore( const char* Str )
+		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptStringParameterTypeT Str )
 			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
@@ -160,7 +160,7 @@ namespace BGSEditorExtender
 			SetString(Str);
 		}
 
-		CodaScriptBackingStore::CodaScriptBackingStore( UInt32 Form )
+		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptReferenceDataTypeT Form )
 			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;

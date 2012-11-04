@@ -45,8 +45,9 @@ namespace BGSEditorExtender
 		class CodaScriptCommandContinue;
 
 		typedef double													CodaScriptNumericDataTypeT;
-		typedef char*													CodaScriptStringDataTypeT;
-		typedef const char*												CodaScriptStringParameterTypeT;
+		typedef char													CodaScriptCharDataTypeT;
+		typedef CodaScriptCharDataTypeT*								CodaScriptStringDataTypeT;
+		typedef const CodaScriptCharDataTypeT*							CodaScriptStringParameterTypeT;
 		typedef UInt32													CodaScriptReferenceDataTypeT;
 		typedef std::string												CodaScriptSourceCodeT;
 		typedef UInt32													CodaScriptKeywordT;
