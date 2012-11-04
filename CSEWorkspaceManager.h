@@ -18,20 +18,13 @@ namespace ConstructionSetExtender
 
 	namespace WorkspaceManager
 	{
-		class CSEWorkspaceResetter : public VoidRFunctorBase
+		class CSEWorkspaceManagerOperator : public BGSEditorExtender::BGSEEWorkspaceManagerOperator
 		{
 		public:
-			virtual ~CSEWorkspaceResetter();
+			virtual ~CSEWorkspaceManagerOperator();
 
-			void					operator()();
-		};
-
-		class CSEWorkspaceReloader : public BGSEditorExtender::BGSEEWorkspaceManager::ReloadPluginsFunctor
-		{
-		public:
-			virtual ~CSEWorkspaceReloader();
-
-			virtual void					operator()(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs);
+			virtual void						ResetCurrentWorkspace(void);
+			virtual void						ReloadPlugins(const char* WorkspacePath, bool ResetPluginList, bool LoadESPs);
 		};
 
 		void								Initialize(void);

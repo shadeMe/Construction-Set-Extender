@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 	{
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kVersionControlINISettings[kVersionControl__MAX] =
 		{
-			{ "BackupOnSave",			"0",		"Create a backup copy of the active plugin to the 'Backup' directory in the active workspace before commencing a save operation" }
+			{ "BackupOnSave",			"0",		"Creates a backup copy of the active plugin in the active workspace's 'Backup' directory before commencing a save operation" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetVersionControl( void )
@@ -30,7 +30,8 @@ namespace ConstructionSetExtender
 		ChangeLog::ChangeLog(const char* Path, const char* FileName)
 		{
 			char Buffer[0x100] = {0};
-			sprintf_s(Buffer, sizeof(Buffer), "%s-%08X", FileName, SME::MersenneTwister::genrand_int32());		// add a random suffix to make sure files aren't overwritten due to lousy timer resolution
+			sprintf_s(Buffer, sizeof(Buffer), "%s-%08X", FileName, SME::MersenneTwister::genrand_int32());
+			// add a random suffix to make sure files aren't overwritten due to lousy timer resolution
 
 			FilePath = std::string(Path) + "\\" + std::string(Buffer) + ".log";
 			Log = _fsopen(FilePath.c_str(), "w", _SH_DENYNO);
@@ -248,7 +249,7 @@ namespace ConstructionSetExtender
 				LogStack.top()->Finalize();
 
 			LogStack.push(new ChangeLog(GetCurrentTempDirectory(Buffer, sizeof(Buffer)),
-									SME::MiscGunk::GetTimeString(TimeString, sizeof(TimeString))));
+				SME::MiscGunk::GetTimeString(TimeString, sizeof(TimeString))));
 		}
 
 		void ChangeLogManager::RecordChange(const char* Format, ...)
@@ -332,8 +333,8 @@ namespace ConstructionSetExtender
 				char TimeString[0x100] = {0}, ExistingPath[MAX_PATH] = {0}, NewPath[MAX_PATH] = {0};
 				SME::MiscGunk::GetTimeString(TimeString, sizeof(TimeString), "%m--%d--%Y %H-%M-%S");
 
-				std::string Name(SaveFile->fileName), Extension(Name.substr(Name.find_last_of(".") + 1, 3));
-				Name = Name.substr(0, Name.find_last_of("."));
+				std::string Name(SaveFile->fileName), Extension(Name.substr(Name.rfind(".") + 1, 3));
+				Name = Name.substr(0, Name.rfind("."));
 
 				sprintf_s(NewPath, sizeof(NewPath), "Data\\Backup\\%s", Name.c_str());
 				if (CreateDirectory(NewPath, NULL) == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)

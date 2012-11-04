@@ -27,12 +27,12 @@ namespace ConstructionSetExtender
 
 	namespace WorkspaceManager
 	{
-		CSEWorkspaceResetter::~CSEWorkspaceResetter()
+		CSEWorkspaceManagerOperator::~CSEWorkspaceManagerOperator()
 		{
 			;//
 		}
 
-		void CSEWorkspaceResetter::operator()()
+		void CSEWorkspaceManagerOperator::ResetCurrentWorkspace()
 		{
 			Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteJump();
 
@@ -47,17 +47,12 @@ namespace ConstructionSetExtender
 			Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteBuffer();
 		}
 
-		CSEWorkspaceReloader::~CSEWorkspaceReloader()
-		{
-			;//
-		}
-
-		void CSEWorkspaceReloader::operator()( const char* WorkspacePath, bool ResetPluginList, bool LoadESPs )
+		void CSEWorkspaceManagerOperator::ReloadPlugins( const char* WorkspacePath, bool ResetPluginList, bool LoadESPs )
 		{
 			if (ResetPluginList)
 				_DATAHANDLER->ClearPluginArray();
 
-			 _DefinePatchHdlr(DataHandlerPopulateModList, 0x0047E708 + 2);
+			_DefinePatchHdlr(DataHandlerPopulateModList, 0x0047E708 + 2);
 
 			if (LoadESPs == false)
 				_MemHdlr(DataHandlerPopulateModList).WriteUInt8(1);
@@ -95,9 +90,8 @@ namespace ConstructionSetExtender
 			}
 
 			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(),
-																new CSEWorkspaceResetter(),
-																new CSEWorkspaceReloader(),
-																kDefaultDirectories);
+				new CSEWorkspaceManagerOperator(),
+				kDefaultDirectories);
 			SME_ASSERT(ComponentInitialized);
 
 			_FILEFINDER->AddSearchPath((std::string(std::string(BGSEEWORKSPACE->GetCurrentWorkspace()) + "Data")).c_str());

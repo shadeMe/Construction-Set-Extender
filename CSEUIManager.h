@@ -1,6 +1,8 @@
 #pragma once
 #include <BGSEEUIManager.h>
 
+class Subwindow;
+
 namespace ConstructionSetExtender
 {
 	namespace INISettings
