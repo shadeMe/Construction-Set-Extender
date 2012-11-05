@@ -92,6 +92,12 @@ namespace BGSEditorExtender
 
 			void					ExecutePrintCallbacks(const char* Prefix, const char* Message);
 			bool					LookupPrintCallback(BGSEEConsolePrintCallback Callback, PrintCallbackListT::iterator& Match);
+
+			bool					Open(const char* Path);
+			void					Close();
+
+			void					Put(const char* String);
+			void					Flush();
 		public:
 			DefaultDebugLogContext(BGSEEConsole* Parent, const char* DebugLogPath);
 			virtual ~DefaultDebugLogContext();
@@ -182,6 +188,8 @@ namespace BGSEditorExtender
 
 		const char*					GetLogPath(void) const;
 		void						OpenDebugLog(void);
+		void						FlushDebugLog(void);
+
 		bool						GetLogsWarnings(void);
 
 		static BGSEEINIManagerSettingFactory*		GetINIFactory(void);

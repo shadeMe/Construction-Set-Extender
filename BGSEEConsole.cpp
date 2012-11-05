@@ -373,7 +373,7 @@ namespace BGSEditorExtender
 	{
 		SME_ASSERT(Parent);
 
-		DebugLog = _fsopen(DebugLogPath, "w", _SH_DENYWR);
+		Open(DebugLogPath);
 		IndentLevel = 0;
 		ExecutingCallbacks = false;
 	}
@@ -409,8 +409,8 @@ namespace BGSEditorExtender
 
 		if (DebugLog)
 		{
-			fputs(Addend.c_str(), DebugLog);
-			fflush(DebugLog);
+			Put(Addend.c_str());
+			Flush();
 		}
 
 		SME::StringHelpers::Replace(FormattedMessage, '\n', (char)'\r\n');
@@ -460,8 +460,8 @@ namespace BGSEditorExtender
 	{
 		if (DebugLog)
 		{
-			fflush(DebugLog);
-			fclose(DebugLog);
+			Flush();
+			Close();
 		}
 
 		PrintCallbacks.clear();
@@ -519,6 +519,37 @@ namespace BGSEditorExtender
 		{
 			PrintCallbacks.erase(Match);
 		}
+	}
+
+	void BGSEEConsole::DefaultDebugLogContext::Flush()
+	{
+		if (DebugLog)
+			fflush(DebugLog);
+	}
+
+	void BGSEEConsole::DefaultDebugLogContext::Put( const char* String )
+	{
+		SME_ASSERT(String);
+
+		if (DebugLog)
+			fputs(String, DebugLog);
+	}
+
+	void BGSEEConsole::DefaultDebugLogContext::Close()
+	{
+		if (DebugLog)
+		{
+			fclose(DebugLog);
+			DebugLog = NULL;
+		}
+	}
+
+	bool BGSEEConsole::DefaultDebugLogContext::Open( const char* Path )
+	{
+		SME_ASSERT(DebugLog == NULL && Path);
+
+		DebugLog = _fsopen(Path, "w", _SH_DENYWR);
+		return DebugLog != NULL;
 	}
 
 	BGSEEConsole::ConsoleCommandTable::ConsoleCommandTable() : CommandList()
@@ -972,5 +1003,10 @@ namespace BGSEditorExtender
 	void BGSEEConsole::OpenDebugLog( void )
 	{
 		PrimaryContext->OpenLog();
+	}
+
+	void BGSEEConsole::FlushDebugLog( void )
+	{
+		PrimaryContext->Flush();
 	}
 }

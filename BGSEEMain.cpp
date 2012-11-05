@@ -6,8 +6,6 @@
 #include "SME Sundries\INIEditGUI_Res.h"
 #include "SME Sundries\VersionInfo.h"
 
-#include <CrashRpt.h>
-
 namespace BGSEditorExtender
 {
 	BGSEEDaemon::BGSEEDaemon() :
@@ -82,10 +80,15 @@ namespace BGSEditorExtender
 
 	bool BGSEEDaemon::ExecuteCrashCallbacks( void )
 	{
-		for (DaemonCallbackListT::const_iterator Itr = CrashHandlerCallbacks.begin(); Itr != CrashHandlerCallbacks.end(); Itr++)
-			(*Itr)->operator()();
+		bool Result = false;
 
-		return true;
+		for (DaemonCallbackListT::const_iterator Itr = CrashHandlerCallbacks.begin(); Itr != CrashHandlerCallbacks.end(); Itr++)
+		{
+			if ((*Itr)->operator()() && Result == false)
+				Result = true;
+		}
+
+		return Result;
 	}
 
 	BGSEEDaemon::~BGSEEDaemon()
@@ -695,15 +698,7 @@ namespace BGSEditorExtender
 			CrashRptData.pszEmailTo = "shademe.here+bgsee@gmail.com";
 			CrashRptData.pszUrl = NULL;
 			CrashRptData.pszPrivacyPolicyURL = NULL;
-			CrashRptData.pfnCrashCallback = BGSEEMain::CrashCallback;
-			CrashRptData.dwFlags |= CR_INST_SEH_EXCEPTION_HANDLER|
-									CR_INST_PURE_CALL_HANDLER|
-									CR_INST_NEW_OPERATOR_ERROR_HANDLER|
-									CR_INST_SECURITY_ERROR_HANDLER|
-									CR_INST_INVALID_PARAMETER_HANDLER|
-									CR_INST_SIGINT_HANDLER|
-									CR_INST_SIGTERM_HANDLER|
-									CR_INST_SIGABRT_HANDLER;
+			CrashRptData.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
 
 			CrashRptData.uPriorities[CR_SMAPI] = 1;
 			CrashRptData.uPriorities[CR_HTTP] = CR_NEGATIVE_PRIORITY;
@@ -721,7 +716,7 @@ namespace BGSEditorExtender
 														MiniDumpWithFullMemoryInfo);
 			CrashRptData.pszErrorReportSaveDir = GameDirectoryPath.c_str();
 
-			if (crInstall(&CrashRptData))
+			if (crInstall(&CrashRptData) || crSetCrashCallback(BGSEEMain::CrashCallback, this))
 			{
 				TCHAR Buffer[0x200] = {0};
 				crGetLastErrorMsg(Buffer, sizeof(Buffer));
@@ -850,13 +845,23 @@ namespace BGSEditorExtender
 		return ParentEditorSupportedVersion;
 	}
 
-	BOOL CALLBACK BGSEEMain::CrashCallback( LPVOID lpvState )
+	int CALLBACK BGSEEMain::CrashCallback(CR_CRASH_CALLBACK_INFO* pInfo)
 	{
 		// panic and toss grenades around
-		BGSEEMAIN->Daemon()->ExecuteCrashCallbacks();
+		BGSEEMain* Instance = (BGSEEMain*)pInfo->pUserParam;
 
-		SAFEDELETE(BGSEEMAIN->ExtenderConsole);			// flush the log file
-		return TRUE;
+		bool ResumeExecution = Instance->Daemon()->ExecuteCrashCallbacks();
+
+		if (ResumeExecution)
+		{
+			pInfo->bContinueExecution = TRUE;
+			Instance->Console()->LogMsg(Instance->ExtenderGetShortName(), "Sweeping a fatal crash under the ru... Shoo! Nothing to see here!");
+			Instance->Console()->Pad(2);
+		}
+
+		Instance->Console()->FlushDebugLog();
+
+		return CR_CB_DODEFAULT;
 	}
 
 	void BGSEEMain::ShowPreferencesGUI( void )

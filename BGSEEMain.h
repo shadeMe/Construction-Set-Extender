@@ -1,5 +1,7 @@
 #pragma once
 
+#include <CrashRpt.h>
+
 // BGSEEMain - Global singleton that manages all of the basic extender-specific data
 // BGSEEDaemon - Handles basic services like plugin initialization and shutdown
 
@@ -40,6 +42,7 @@ namespace BGSEditorExtender
 		void						RegisterInitCallback(UInt8 CallbackType, BoolRFunctorBase* Callback);		// takes ownership of pointer
 		void						RegisterDeinitCallback(BoolRFunctorBase* Callback);							// takes ownership of pointer
 		void						RegisterCrashCallback(BoolRFunctorBase* Callback);							// takes ownership of pointer
+																												// if a callback returns true, the editor process is not terminated
 
 		bool						ExecuteInitCallbacks(UInt8 CallbackType);
 		bool						GetFullInitComplete(void) const;
@@ -155,7 +158,7 @@ namespace BGSEditorExtender
 			virtual bool			operator()();
 		};
 
-		static BOOL CALLBACK		CrashCallback(LPVOID lpvState);
+		static int CALLBACK			CrashCallback(CR_CRASH_CALLBACK_INFO* pInfo);
 
 		class DefaultDeinitCallback : public BoolRFunctorBase
 		{
