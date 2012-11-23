@@ -11,7 +11,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "mscoree.lib")
 #pragma comment(lib, "Psapi.lib")
-#pragma comment(lib, "CrashRpt1301.lib")
+#pragma comment(lib, "CrashRpt1400.lib")
 #pragma comment(lib, "BGSEditorExtenderBase.lib")
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \

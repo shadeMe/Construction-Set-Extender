@@ -49,19 +49,19 @@ namespace ConstructionSetExtender
 		;//
 	}
 
-	InitCallbackQuery::InitCallbackQuery( const OBSEInterface* OBSE ) :
-		BoolRFunctorBase(),
+	CSEInitCallbackQuery::CSEInitCallbackQuery( const OBSEInterface* OBSE ) :
+		BGSEditorExtender::BGSEEDaemonCallback(),
 		OBSE(OBSE)
 	{
 		;//
 	}
 
-	InitCallbackQuery::~InitCallbackQuery()
+	CSEInitCallbackQuery::~CSEInitCallbackQuery()
 	{
 		;//
 	}
 
-	bool InitCallbackQuery::operator()()
+	bool CSEInitCallbackQuery::Handle(void* Parameter)
 	{
 		BGSEECONSOLE_MESSAGE("Initializing OBSE Interfaces");
 		BGSEECONSOLE->Indent();
@@ -88,19 +88,19 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	InitCallbackLoad::InitCallbackLoad( const OBSEInterface* OBSE ) :
-		BoolRFunctorBase(),
+	CSEInitCallbackLoad::CSEInitCallbackLoad( const OBSEInterface* OBSE ) :
+		BGSEditorExtender::BGSEEDaemonCallback(),
 		OBSE(OBSE)
 	{
 		;//
 	}
 
-	InitCallbackLoad::~InitCallbackLoad()
+	CSEInitCallbackLoad::~CSEInitCallbackLoad()
 	{
 		;//
 	}
 
-	bool InitCallbackLoad::operator()()
+	bool CSEInitCallbackLoad::Handle(void* Parameter)
 	{
 		BGSEECONSOLE_MESSAGE("Initializing Hooks");
 		BGSEECONSOLE->Indent();
@@ -132,12 +132,12 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	InitCallbackPostMainWindowInit::~InitCallbackPostMainWindowInit()
+	CSEInitCallbackPostMainWindowInit::~CSEInitCallbackPostMainWindowInit()
 	{
 		;//
 	}
 
-	bool InitCallbackPostMainWindowInit::operator()()
+	bool CSEInitCallbackPostMainWindowInit::Handle(void* Parameter)
 	{
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuInitSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterMainWindowSubclass(UIManager::MainWindowMenuSelectSubclassProc);
@@ -168,12 +168,12 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	InitCallbackEpilog::~InitCallbackEpilog()
+	CSEInitCallbackEpilog::~CSEInitCallbackEpilog()
 	{
 		;//
 	}
 
-	bool InitCallbackEpilog::operator()()
+	bool CSEInitCallbackEpilog::Handle(void* Parameter)
 	{
 		SME::MersenneTwister::init_genrand(GetTickCount());
 
@@ -325,12 +325,12 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	DeinitCallback::~DeinitCallback()
+	CSEDeinitCallback::~CSEDeinitCallback()
 	{
 		;//
 	}
 
-	bool DeinitCallback::operator()()
+	bool CSEDeinitCallback::Handle(void* Parameter)
 	{
 		TESDialog::WritePositionToINI(*g_HWND_CSParent, NULL);
 		TESDialog::WritePositionToINI(*g_HWND_CellView, "Cell View");
@@ -407,18 +407,17 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	CrashCallback::~CrashCallback()
+	CSECrashCallback::~CSECrashCallback()
 	{
 		;//
 	}
 
-	bool CrashCallback::operator()()
+	bool CSECrashCallback::Handle(void* Parameter)
 	{
 		BGSEECONSOLE->Pad(2);
 		BGSEECONSOLE_MESSAGE("The editor crashed, dammit!");
 		BGSEECONSOLE->Indent();
 
-		BGSEEACHIEVEMENTS->Unlock(Achievements::kSaboteur, false, true);
 		BGSEECONSOLE_MESSAGE("Attempting to salvage the active file...");
 		BGSEECONSOLE->Indent();
 
@@ -427,7 +426,58 @@ namespace ConstructionSetExtender
 		else
 			BGSEECONSOLE_MESSAGE("BollocksBollocksBollocks! No can do...");
 
-		return true;
+		if (BGSEEMAIN->Daemon()->GetFullInitComplete())
+			BGSEEACHIEVEMENTS->Unlock(Achievements::kSaboteur, false, true);
+
+		BGSEECONSOLE->Exdent();
+		BGSEECONSOLE->Exdent();
+
+		CR_CRASH_CALLBACK_INFO* CrashInfo = (CR_CRASH_CALLBACK_INFO*)Parameter;
+		bool ResumeExecution = false;
+
+		int CrashHandlerMode = atoi(INISettings::GetGeneral()->Get(INISettings::kGeneral_CrashHandlerMode, BGSEEMAIN->INIGetter()));
+
+		if (CrashHandlerMode == kCrashHandlerMode_Terminate)
+			ResumeExecution = false;
+		else if (CrashHandlerMode == kCrashHandlerMode_Resume)
+			ResumeExecution = true;
+		else if (CrashHandlerMode == kCrashHandlerMode_Ask)
+		{
+			bool FunnyGuyUnlocked = BGSEEMAIN->Daemon()->GetFullInitComplete() && (Achievements::kFunnyGuy->GetUnlocked() || Achievements::kFunnyGuy->GetTriggered());
+			int MBFlags = MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONERROR;
+
+			if (FunnyGuyUnlocked == false)
+				MBFlags |= MB_YESNOCANCEL;
+			else
+				MBFlags |= MB_YESNO;
+
+			const char* Jingle = "The editor has encountered a critical error! An error report will be generated shortly.\n\nDo you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Walked the dog\n   3. Sent the author of this editor extender plugin a pile of cash\n   4. Pleaded to the editor in a soft but sultry voice, and\n   5. Crossed your appendages...\n...in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
+			if (FunnyGuyUnlocked)
+				Jingle = "The editor has encountered a critical error! An error report will be generated shortly.\n\nDo you wish to resume execution?\n\nPS: It is almost always futile to select 'Yes'.";
+
+			switch (MessageBox(NULL, Jingle,
+							BGSEEMAIN->ExtenderGetShortName(),
+							MBFlags))
+			{
+			case IDYES:
+				ResumeExecution = true;
+
+				break;
+			case IDNO:
+				ResumeExecution = false;
+
+				break;
+			case IDCANCEL:
+				if (BGSEEMAIN->Daemon()->GetFullInitComplete())
+					BGSEEACHIEVEMENTS->Unlock(Achievements::kFunnyGuy, false, true);
+
+				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetShortName(), MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND);
+
+				break;
+			}
+		}
+
+		return ResumeExecution;
 	}
 
 	void CSEStartupManager::LoadStartupPlugin()
@@ -578,12 +628,12 @@ extern "C"
 
 		SME_ASSERT(ComponentInitialized);
 
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query, new InitCallbackQuery(obse));
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load, new InitCallbackLoad(obse));
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_PostMainWindowInit, new InitCallbackPostMainWindowInit());
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Epilog, new InitCallbackEpilog());
-		BGSEEMAIN->Daemon()->RegisterDeinitCallback(new DeinitCallback());
-		BGSEEMAIN->Daemon()->RegisterCrashCallback(new CrashCallback());
+		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query, new CSEInitCallbackQuery(obse));
+		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load, new CSEInitCallbackLoad(obse));
+		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_PostMainWindowInit, new CSEInitCallbackPostMainWindowInit());
+		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Epilog, new CSEInitCallbackEpilog());
+		BGSEEMAIN->Daemon()->RegisterDeinitCallback(new CSEDeinitCallback());
+		BGSEEMAIN->Daemon()->RegisterCrashCallback(new CSECrashCallback());
 
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{

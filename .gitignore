@@ -34,3 +34,5 @@ _ReSharper*/
 /*[Bb]uild
 *~$*.*
 BuildInfo.h
+
+*.opensdf

@@ -16,56 +16,62 @@ namespace ConstructionSetExtender
 
 	extern CSEReleaseNameTable							ReleaseNameTable;
 
-	class InitCallbackQuery : public BoolRFunctorBase
+	class CSEInitCallbackQuery : public BGSEditorExtender::BGSEEDaemonCallback
 	{
 		const OBSEInterface*				OBSE;
 	public:
-		InitCallbackQuery(const OBSEInterface* OBSE);
-		virtual ~InitCallbackQuery();
+		CSEInitCallbackQuery(const OBSEInterface* OBSE);
+		virtual ~CSEInitCallbackQuery();
 
-		virtual bool						operator()();
+		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class InitCallbackLoad : public BoolRFunctorBase
+	class CSEInitCallbackLoad : public BGSEditorExtender::BGSEEDaemonCallback
 	{
 		const OBSEInterface*				OBSE;
 	public:
-		InitCallbackLoad(const OBSEInterface* OBSE);
-		virtual ~InitCallbackLoad();
+		CSEInitCallbackLoad(const OBSEInterface* OBSE);
+		virtual ~CSEInitCallbackLoad();
 
-		virtual bool						operator()();
+		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class InitCallbackPostMainWindowInit : public BoolRFunctorBase
+	class CSEInitCallbackPostMainWindowInit : public BGSEditorExtender::BGSEEDaemonCallback
 	{
 	public:
-		virtual ~InitCallbackPostMainWindowInit();
+		virtual ~CSEInitCallbackPostMainWindowInit();
 
-		virtual bool						operator()();
+		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class InitCallbackEpilog : public BoolRFunctorBase
+	class CSEInitCallbackEpilog : public BGSEditorExtender::BGSEEDaemonCallback
 	{
 	public:
-		virtual ~InitCallbackEpilog();
+		virtual ~CSEInitCallbackEpilog();
 
-		virtual bool						operator()();
+		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class DeinitCallback : public BoolRFunctorBase
+	class CSEDeinitCallback : public BGSEditorExtender::BGSEEDaemonCallback
 	{
 	public:
-		virtual ~DeinitCallback();
+		virtual ~CSEDeinitCallback();
 
-		virtual bool						operator()();
+		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class CrashCallback : public BoolRFunctorBase
+	class CSECrashCallback : public BGSEditorExtender::BGSEEDaemonCallback
 	{
+		enum
+		{
+			kCrashHandlerMode_Terminate = 0,
+			kCrashHandlerMode_Resume,
+			kCrashHandlerMode_Ask,
+		};
 	public:
-		virtual ~CrashCallback();
+		virtual ~CSECrashCallback();
 
-		virtual bool						operator()();
+		virtual bool						Handle(void* Parameter = NULL);
 	};
 
 	class CSEStartupManager

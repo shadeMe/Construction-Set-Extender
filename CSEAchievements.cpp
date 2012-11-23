@@ -206,6 +206,7 @@ namespace ConstructionSetExtender
 		CSEAchievementBase*  		kSaboteur				= NULL;
 		CSEAchievementBase*  		kOldestTrickInTheBook	= NULL;
 		CSEAchievementBase*  		kOver3000				= NULL;
+		CSEAchievementBase*  		kFunnyGuy				= NULL;
 
 		void Initialize()
 		{
@@ -278,6 +279,9 @@ namespace ConstructionSetExtender
 			kOver3000				= new CSEAchievementBase("Over 3000!", "OMFGodrays! RAM usage of 3 gigs?! It's gonna blow!!",
 															IDB_ACHIEVEMENT_OVER3000, "17C0EA7A-DB0C-46BA-A19F-232A73630AD5");
 
+			kFunnyGuy				= new CSEAchievementBase("Funny Guy Bob", "How lovely! You've got a sense of humour",
+															IDB_ACHIEVEMENT_FUNNYGUY, "13275AC0-DA3B-4802-813A-4DB3E7C4168D");
+
 			BGSEditorExtender::Extras::ExtenderAchievementListT AchievementDepot;
 
 			AchievementDepot.push_back(CSEAchievementBase::AllClearAchievement);
@@ -306,6 +310,7 @@ namespace ConstructionSetExtender
 			AchievementDepot.push_back(CSEAchievementLost::GetSingleton());
 			AchievementDepot.push_back(kOldestTrickInTheBook);
 			AchievementDepot.push_back(kOver3000);
+			AchievementDepot.push_back(kFunnyGuy);
 
 			bool ComponentInitialized = BGSEEACHIEVEMENTS->Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
 

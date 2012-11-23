@@ -21,7 +21,8 @@ namespace ConstructionSetExtender
 	{
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kGeneralINISettings[kGeneral__MAX] =
 		{
-			{ "ShowNumericEditorIDWarning",			"1",		"Display a warning when editorIDs start with an integer" }
+			{ "ShowNumericEditorIDWarning",			"1",		"Displays a warning when editorIDs start with an integer" },
+			{ "CrashHandlerMode",					"2",		"0 - Terminate | 1 - Resume | 2 - Ask every time" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetGeneral( void )
@@ -278,7 +279,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDataHandlerClearDataHook(void)
 		{
- 			delete BGSEEHALLOFFAME;
+			delete BGSEEHALLOFFAME;
 			RenderSelectionGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
 		}
@@ -453,8 +454,8 @@ namespace ConstructionSetExtender
 					Data->DeleteInstance();
 				}
 
- 				if (ReferenceList->IsEmpty())
- 					Parent->CleanupCrossReferenceList();
+				if (ReferenceList->IsEmpty())
+					Parent->CleanupCrossReferenceList();
 			}
 		}
 

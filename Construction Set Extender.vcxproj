@@ -54,9 +54,9 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\Debug\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;..\[Libraries]\;..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;..\[Libraries]\;..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\include;$(IncludePath)</IncludePath>
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;$(SourcePath)</SourcePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;..\[Libraries]\;..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;..\[Libraries]\;..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\include;$(IncludePath)</IncludePath>
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\;..\[Libraries]\xSE Common\;$(SourcePath)</SourcePath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EnableManagedIncrementalBuild>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\[Libraries]\BGSEditorExtenderBase\Release\;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
@@ -416,6 +416,7 @@
     <None Include="Images\fakevoice.bmp" />
     <None Include="Images\fearless.bmp" />
     <None Include="Images\fly.bmp" />
+    <None Include="Images\funnyman.bmp" />
     <None Include="Images\heretic.bmp" />
     <None Include="Images\jobless.bmp" />
     <None Include="Images\lazybum.bmp" />

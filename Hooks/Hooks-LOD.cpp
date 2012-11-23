@@ -62,9 +62,9 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(GenerateLODDiffuseMapsReentryGuardC, 0x00412BA6);
 		_DefineHookHdlr(GenerateLODDiffuseMapsReentryGuardD, 0x00412AD2);
 		_DefineHookHdlr(GenerateLODDiffuseMapsReentryGuardE, 0x00412CE3);
- 		_DefineHookHdlr(LODTextureGenNotificationPrologA, 0x00429E3D);
- 		_DefineHookHdlr(LODTextureGenNotificationPrologB, 0x00429D97);
- 		_DefineHookHdlr(LODTextureGenNotificationEpilog, 0x00412D4A);
+		_DefineHookHdlr(LODTextureGenNotificationPrologA, 0x00429E3D);
+		_DefineHookHdlr(LODTextureGenNotificationPrologB, 0x00429D97);
+		_DefineHookHdlr(LODTextureGenNotificationEpilog, 0x00412D4A);
 		_DefineHookHdlr(LODTextureGenNotificationUpdate, 0x00412ABC);
 		_DefineHookHdlr(LODTextureGenBlackTextureFix, 0x00412115);
 		_DefineHookHdlr(LODTextureGenBlackTexturePartialFix, 0x00412789);
@@ -648,8 +648,8 @@ namespace ConstructionSetExtender
 			{
 				push    0
 				push    eax
- 				mov     eax, [edx + 0x84]
- 				call    eax
+				mov     eax, [edx + 0x84]
+				call    eax
 
 				mov		eax, [esp + 0x38]
 				mov		edx, [esp + 0x2C - 0x8]

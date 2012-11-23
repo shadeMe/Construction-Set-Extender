@@ -8,6 +8,7 @@ namespace ConstructionSetExtender
 		enum
 		{
 			kGeneral_ShowNumericEditorIDWarning = 0,
+			kGeneral_CrashHandlerMode,
 
 			kGeneral__MAX
 		};

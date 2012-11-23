@@ -629,6 +629,7 @@ IDB_ACHIEVEMENT_WTF     BITMAP                  "Images\\wtf.bmp"
 IDB_ACHIEVEMENT_LOST    BITMAP                  "Images\\lost.bmp"
 IDB_ACHIEVEMENT_OLDESTTRICK BITMAP                  "Images\\fakevoice.bmp"
 IDB_ACHIEVEMENT_OVER3000 BITMAP                  "Images\\omfgodrays.bmp"
+IDB_ACHIEVEMENT_FUNNYGUY BITMAP                  "Images\\funnyman.bmp"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

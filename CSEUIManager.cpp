@@ -2606,29 +2606,29 @@ namespace ConstructionSetExtender
 					RECT* BaseWorldspaceLabelRect = (RECT*)0x00A0AA14;
 					RECT* BaseCellNameLabelRect = (RECT*)0x00A0A9F0;
 
-					SetRect(&CurrentRect, 0, 0, (unsigned __int16)lParam, (unsigned int)lParam >> 16);
+					SetRect(&CurrentRect, 0, 0, LOWORD(lParam), HIWORD(lParam));
 					int DeltaDlgWidth = (CurrentRect.right - BaseDlgRect->right) >> 1;
 					HDWP DeferPosData = BeginDeferWindowPos(3);
 
 					DeferWindowPos(DeferPosData, CellList, 0,
 								0, 0,
 								DeltaDlgWidth + BaseCellListRect->right, CurrentRect.bottom + BaseCellListRect->bottom - BaseDlgRect->bottom,
-								2u);
+								SWP_NOMOVE);
 
 					DeferWindowPos(DeferPosData, WorldspaceCombo, 0,
 								0, 0,
 								BaseCellListRect->right + DeltaDlgWidth - BaseWorldspaceLabelRect->right, BaseWorldspaceComboRect->bottom,
-								2u);
+								SWP_NOMOVE);
 
 					DeferWindowPos(DeferPosData, RefList, 0,
 								DeltaDlgWidth + BaseRefListRect->left, BaseRefListRect->top,
 								DeltaDlgWidth + BaseRefListRect->right, CurrentRect.bottom + BaseRefListRect->bottom - BaseDlgRect->bottom,
-								0);
+								NULL);
 
 					DeferWindowPos(DeferPosData, CellLabel, 0,
 								BaseCellNameLabelRect->left + DeltaDlgWidth, BaseCellNameLabelRect->top,
 								DeltaDlgWidth + BaseCellNameLabelRect->right, BaseCellNameLabelRect->bottom,
-								0);
+								NULL);
 
 					InvalidateRect(CellLabel, NULL, TRUE);
 					InvalidateRect(WorldspaceLabel, NULL, TRUE);
@@ -2674,7 +2674,7 @@ namespace ConstructionSetExtender
 						DeferWindowPos(DeferPosData, FilterEditBox, 0,
 							DeltaDlgWidth + xData->FilterEditBox.left, xData->FilterEditBox.top,
 							DeltaDlgWidth + xData->FilterEditBox.right, xData->FilterEditBox.bottom + 2,
-							0);
+							NULL);
 
 						InvalidateRect(XLabel, NULL, TRUE);
 						InvalidateRect(YLabel, NULL, TRUE);

@@ -163,7 +163,7 @@ void TESObjectREFR::SetFrozenState( bool State )
 
 void TESObjectREFR::SetAlpha( float Alpha /*= -1.0f*/ )
 {
-	TODO("Doesn't blend correctly with other objects. Or itself!");
+	// doesn't blend correctly with other objects, or itself
 
 	BSFadeNode* FadeNode = (BSFadeNode*)GetNiNode();
 	if (FadeNode == NULL)

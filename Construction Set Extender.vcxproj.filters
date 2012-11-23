@@ -854,6 +854,9 @@
     <None Include="Images\omfgodrays.bmp">
       <Filter>Resources\Images</Filter>
     </None>
+    <None Include="Images\funnyman.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Construction Set Extender.rc">

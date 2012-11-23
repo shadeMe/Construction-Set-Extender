@@ -99,6 +99,7 @@ namespace ConstructionSetExtender
 		extern CSEAchievementBase*  		kSaboteur;
 		extern CSEAchievementBase*  		kOldestTrickInTheBook;
 		extern CSEAchievementBase*  		kOver3000;
+		extern CSEAchievementBase*  		kFunnyGuy;
 
 		void								Initialize(void);
 	}
