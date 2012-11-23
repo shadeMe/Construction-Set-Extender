@@ -827,8 +827,8 @@ namespace BGSEditorExtender
 				hMenu = BGSEEUI->EditorMainMenuReplacement;
 		}
 
- 		HWND Result = ((_CallbackCreateWindowExA)(BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
- 						(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+		HWND Result = ((_CallbackCreateWindowExA)(BGSEEUI->PatchDepot[kIATPatch_CreateWindowEx].OriginalFunction))
+						(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 
 		if (EditorWindow)
 		{
@@ -876,8 +876,8 @@ namespace BGSEditorExtender
 			dwInitParam = (LPARAM)UserData;
 		}
 
- 		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
- 												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		HWND Result = ((_CallbackCreateDialogParamA)(BGSEEUI->PatchDepot[kIATPatch_CreateDialogParam].OriginalFunction))
+												(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 
 		if (Result)
 		{
@@ -905,8 +905,8 @@ namespace BGSEditorExtender
 			dwInitParam = (LPARAM)UserData;
 		}
 
- 		return ((_CallbackDialogBoxParamA)(BGSEEUI->PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
- 										(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		return ((_CallbackDialogBoxParamA)(BGSEEUI->PatchDepot[kIATPatch_DialogBoxParam].OriginalFunction))
+										(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 	}
 
 	BOOL CALLBACK BGSEEUIManager::EnumThreadWindowsCallback( HWND hwnd, LPARAM lParam )
@@ -1415,7 +1415,7 @@ namespace BGSEditorExtender
 			Right = atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Right].Key, Section)),
 			Bottom = atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Bottom].Key, Section));
 
-		SetWindowPos(DialogHandle, HWND_NOTOPMOST, Left, Top, Right, Bottom, NULL);
+		SetWindowPos(DialogHandle, HWND_NOTOPMOST, Left, Top, Right, Bottom, SWP_SHOWWINDOW|SWP_FRAMECHANGED);
 		SetVisibility(atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Visible].Key, Section)));
 	}
 
@@ -1519,7 +1519,7 @@ namespace BGSEditorExtender
 
 		DlgUserData* UserData = new DlgUserData();
 		UserData->Instance = this;
-		UserData->UserData = InitParam;
+		UserData->ExtraData = InitParam;
 		DialogHandle = BGSEEUI->ModelessDialog(ResourceInstance,
 											MAKEINTRESOURCE(DialogTemplateID),
 											ParentHandle,

@@ -10,10 +10,21 @@ namespace BGSEditorExtender
 	class BGSEEMain;
 	class BGSEEConsole;
 
+	class BGSEEDaemonCallback
+	{
+	public:
+		virtual ~BGSEEDaemonCallback() = 0
+		{
+			;//
+		}
+
+		virtual bool				Handle(void* Parameter = NULL) = 0;
+	};
+
 	class BGSEEDaemon
 	{
 		BGSEEDaemon();
-		typedef std::list<BoolRFunctorBase*>	DaemonCallbackListT;
+		typedef std::list<BGSEEDaemonCallback*>	DaemonCallbackListT;
 
 		DaemonCallbackListT			InitCallbacks[4];
 		DaemonCallbackListT			DeinitCallbacks;
@@ -22,7 +33,7 @@ namespace BGSEditorExtender
 		bool						FullInitComplete;
 
 		bool						ExecuteDeinitCallbacks(void);
-		bool						ExecuteCrashCallbacks(void);
+		bool						ExecuteCrashCallbacks(CR_CRASH_CALLBACK_INFO* Data);
 		void						ReleaseCallbacks(DaemonCallbackListT& CallbackList);
 
 		friend class				BGSEEMain;
@@ -39,11 +50,10 @@ namespace BGSEditorExtender
 			kInitCallback__MAX
 		};
 
-		void						RegisterInitCallback(UInt8 CallbackType, BoolRFunctorBase* Callback);		// takes ownership of pointer
-		void						RegisterDeinitCallback(BoolRFunctorBase* Callback);							// takes ownership of pointer
-		void						RegisterCrashCallback(BoolRFunctorBase* Callback);							// takes ownership of pointer
-																												// if a callback returns true, the editor process is not terminated
-
+		void						RegisterInitCallback(UInt8 CallbackType, BGSEEDaemonCallback* Callback);		// takes ownership of pointer, no parameter
+		void						RegisterDeinitCallback(BGSEEDaemonCallback* Callback);							// takes ownership of pointer, no parameter
+		void						RegisterCrashCallback(BGSEEDaemonCallback* Callback);							// takes ownership of pointer, parameter = CR_CRASH_CALLBACK_INFO*
+																													// if a callback returns true, the editor process is not terminated
 		bool						ExecuteInitCallbacks(UInt8 CallbackType);
 		bool						GetFullInitComplete(void) const;
 
@@ -136,7 +146,7 @@ namespace BGSEditorExtender
 			void								ShowGUI(HINSTANCE ResourceInstance, HWND Parent);
 		};
 
-		class DefaultInitCallback : public BoolRFunctorBase
+		class DefaultInitCallback : public BGSEEDaemonCallback
 		{
 		public:
 			const char*				LongName;
@@ -155,19 +165,19 @@ namespace BGSEditorExtender
 			DefaultInitCallback();
 			virtual ~DefaultInitCallback();
 
-			virtual bool			operator()();
+			virtual bool			Handle(void* Parameter = NULL);
 		};
 
 		static int CALLBACK			CrashCallback(CR_CRASH_CALLBACK_INFO* pInfo);
 
-		class DefaultDeinitCallback : public BoolRFunctorBase
+		class DefaultDeinitCallback : public BGSEEDaemonCallback
 		{
 			BGSEEMain*				ParentInstance;
 		public:
 			DefaultDeinitCallback(BGSEEMain* Parent);
 			virtual ~DefaultDeinitCallback();
 
-			virtual bool			operator()();
+			virtual bool			Handle(void* Parameter = NULL);
 		};
 
 		friend class DefaultInitCallback;

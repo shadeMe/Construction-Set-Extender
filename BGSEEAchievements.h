@@ -34,6 +34,7 @@ namespace BGSEditorExtender
 			virtual ~BGSEEAchievement();
 
 			bool						GetUnlocked(void) const;
+			bool						GetTriggered(void) const;
 		};
 
 		typedef std::list<BGSEEAchievement*>			ExtenderAchievementListT;

@@ -29,19 +29,19 @@ namespace BGSEditorExtender
 		BGSEECONSOLE->Exdent();
 	}
 
-	void BGSEEDaemon::RegisterInitCallback( UInt8 CallbackType, BoolRFunctorBase* Callback )
+	void BGSEEDaemon::RegisterInitCallback( UInt8 CallbackType, BGSEEDaemonCallback* Callback )
 	{
 		SME_ASSERT(CallbackType < kInitCallback__MAX && Callback);
 		InitCallbacks[CallbackType].push_back(Callback);
 	}
 
-	void BGSEEDaemon::RegisterDeinitCallback( BoolRFunctorBase* Callback )
+	void BGSEEDaemon::RegisterDeinitCallback( BGSEEDaemonCallback* Callback )
 	{
 		SME_ASSERT(Callback);
 		DeinitCallbacks.push_back(Callback);
 	}
 
-	void BGSEEDaemon::RegisterCrashCallback( BoolRFunctorBase* Callback )
+	void BGSEEDaemon::RegisterCrashCallback( BGSEEDaemonCallback* Callback )
 	{
 		SME_ASSERT(Callback);
 		CrashHandlerCallbacks.push_back(Callback);
@@ -55,7 +55,7 @@ namespace BGSEditorExtender
 
 		for (DaemonCallbackListT::const_iterator Itr = InitCallbacks[CallbackType].begin(); Itr != InitCallbacks[CallbackType].end(); Itr++)
 		{
-			if ((*Itr)->operator()() == false)
+			if ((*Itr)->Handle() == false)
 			{
 				Result = false;
 				break;
@@ -73,18 +73,18 @@ namespace BGSEditorExtender
 	bool BGSEEDaemon::ExecuteDeinitCallbacks( void )
 	{
 		for (DaemonCallbackListT::const_iterator Itr = DeinitCallbacks.begin(); Itr != DeinitCallbacks.end(); Itr++)
-			(*Itr)->operator()();
+			(*Itr)->Handle();
 
 		return true;
 	}
 
-	bool BGSEEDaemon::ExecuteCrashCallbacks( void )
+	bool BGSEEDaemon::ExecuteCrashCallbacks( CR_CRASH_CALLBACK_INFO* Data )
 	{
 		bool Result = false;
 
 		for (DaemonCallbackListT::const_iterator Itr = CrashHandlerCallbacks.begin(); Itr != CrashHandlerCallbacks.end(); Itr++)
 		{
-			if ((*Itr)->operator()() && Result == false)
+			if ((*Itr)->Handle(Data) && Result == false)
 				Result = true;
 		}
 
@@ -338,7 +338,7 @@ namespace BGSEditorExtender
 	}
 
 	BGSEEMain::DefaultInitCallback::DefaultInitCallback() :
-		BoolRFunctorBase()
+		BGSEEDaemonCallback()
 	{
 		LongName = NULL;
 		ReleaseName = NULL;
@@ -352,7 +352,7 @@ namespace BGSEditorExtender
 		WaitForDebuggerOnStartup = false;
 	}
 
-	bool BGSEEMain::DefaultInitCallback::operator()()
+	bool BGSEEMain::DefaultInitCallback::Handle(void* Parameter)
 	{
 #ifdef NDEBUG
 		const char* ReleaseMode = "";
@@ -522,7 +522,7 @@ namespace BGSEditorExtender
 	}
 
 	BGSEEMain::DefaultDeinitCallback::DefaultDeinitCallback( BGSEEMain* Parent ) :
-		BoolRFunctorBase()
+		BGSEEDaemonCallback()
 	{
 		ParentInstance = Parent;
 	}
@@ -532,7 +532,7 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	bool BGSEEMain::DefaultDeinitCallback::operator()()
+	bool BGSEEMain::DefaultDeinitCallback::Handle(void* Parameter)
 	{
 		BGSEECONSOLE_MESSAGE("Deinitializing UI Manager");
 		BGSEECONSOLE->Indent();
@@ -708,10 +708,10 @@ namespace BGSEditorExtender
 			CrashRptData.uMiniDumpType = (MINIDUMP_TYPE)(MiniDumpNormal|
 														MiniDumpWithIndirectlyReferencedMemory|
 														MiniDumpScanMemory|
- 														MiniDumpWithThreadInfo|
- 														MiniDumpWithProcessThreadData|
- 														MiniDumpWithUnloadedModules|
- 														MiniDumpWithHandleData|
+														MiniDumpWithThreadInfo|
+														MiniDumpWithProcessThreadData|
+														MiniDumpWithUnloadedModules|
+														MiniDumpWithHandleData|
 // 														MiniDumpWithDataSegs|
 														MiniDumpWithFullMemoryInfo);
 			CrashRptData.pszErrorReportSaveDir = GameDirectoryPath.c_str();
@@ -850,7 +850,7 @@ namespace BGSEditorExtender
 		// panic and toss grenades around
 		BGSEEMain* Instance = (BGSEEMain*)pInfo->pUserParam;
 
-		bool ResumeExecution = Instance->Daemon()->ExecuteCrashCallbacks();
+		bool ResumeExecution = Instance->Daemon()->ExecuteCrashCallbacks(pInfo);
 
 		if (ResumeExecution)
 		{

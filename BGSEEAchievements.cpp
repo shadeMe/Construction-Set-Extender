@@ -43,6 +43,11 @@ namespace BGSEditorExtender
 			return true;
 		}
 
+		bool BGSEEAchievement::GetTriggered( void ) const
+		{
+			return State == kState_Triggered;
+		}
+
 		BGSEEAchievementManager*			BGSEEAchievementManager::Singleton = NULL;
 
 		BGSEEAchievementManager::BGSEEAchievementManager() :

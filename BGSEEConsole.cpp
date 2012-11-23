@@ -4,8 +4,8 @@
 namespace BGSEditorExtender
 {
 	const char*								BGSEEConsole::kCommandLinePrefix = "CMD";
-	const char*								BGSEEConsole::kWindowTitle = "Console Window";
-	const char*								BGSEEConsole::kINISection = "Console";
+	const char*								BGSEEConsole::kWindowTitle       = "Console Window";
+	const char*								BGSEEConsole::kINISection        = "Console";
 
 #define IDM_BGSEE_CONSOLE_COMMANDLINE_RESETCOMMANDSTACK			(WM_USER + 5001)
 #define ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START		(WM_USER + 8001)
@@ -53,7 +53,10 @@ namespace BGSEditorExtender
 						SME_ASSERT(i < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END);
 					}
 
-					UserData->UserData = NULL;
+					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
+					SME_ASSERT(xData);
+
+					xData->SelectedContext = NULL;
 				}
 			}
 
@@ -80,7 +83,10 @@ namespace BGSEditorExtender
 					GetMenuItemInfo((HMENU)lParam, LOWORD(wParam), FALSE, &ContextMenuItem);
 					SME_ASSERT(ContextMenuItem.dwItemData);
 
-					UserData->UserData = (LPARAM)ContextMenuItem.dwItemData;
+					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
+					SME_ASSERT(xData);
+
+					xData->SelectedContext = (MessageLogContext*)ContextMenuItem.dwItemData;
 				}
 			}
 
@@ -101,7 +107,10 @@ namespace BGSEditorExtender
 				if (LOWORD(wParam) > ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START &&
 					LOWORD(wParam) < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END)
 				{
-					Instance->SetActiveContext((MessageLogContext*)UserData->UserData);
+					UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
+					SME_ASSERT(xData);
+
+					Instance->SetActiveContext(xData->SelectedContext);
 				}
 
 				break;
@@ -110,51 +119,61 @@ namespace BGSEditorExtender
 			break;
 		case WM_SIZE:
 			{
-				RECT DialogRect, MessageLogRect;
-				GetClientRect(hWnd, &DialogRect);
-				GetClientRect(GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG), &MessageLogRect);
+				RECT CurrentRect = {0};
+				HWND MessageLog = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG);
+				HWND CommandLine = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE);
 
-				MoveWindow(GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG),
-							0,
-							0,
-							DialogRect.right,
-							DialogRect.bottom - 35,
-							TRUE);
+				UIExtraData* xData = (UIExtraData*)UserData->ExtraData;
+				SME_ASSERT(xData);
 
-				MoveWindow(GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE),
-							0,
-							MessageLogRect.bottom + 22,
-							DialogRect.right,
-							DialogRect.bottom - MessageLogRect.bottom - 22,
-							TRUE);
+				SetRect(&CurrentRect, 0, 0, LOWORD(lParam), HIWORD(lParam));
+				int DeltaDlgWidth = (CurrentRect.right - xData->DialogInitBounds.right);
+				int DeltaDlgHeight = (CurrentRect.bottom - xData->DialogInitBounds.bottom);
+				int VerticalScrollWidth = GetSystemMetrics(SM_CXVSCROLL) + 4;
+				int HorScrollWidth = GetSystemMetrics(SM_CXHSCROLL) + 4;
+				HDWP DeferPosData = BeginDeferWindowPos(2);
+
+				DeferWindowPos(DeferPosData, MessageLog, NULL,
+							xData->MessageLogInitBounds.left,
+							xData->MessageLogInitBounds.top,
+							DeltaDlgWidth + xData->MessageLogInitBounds.right + VerticalScrollWidth,
+							CurrentRect.bottom + xData->MessageLogInitBounds.bottom - xData->DialogInitBounds.bottom + HorScrollWidth,
+							NULL);
+
+				DeferWindowPos(DeferPosData, CommandLine, NULL,
+							xData->CommandLineInitBounds.left,
+							DeltaDlgHeight + xData->CommandLineInitBounds.top,
+							DeltaDlgWidth + xData->CommandLineInitBounds.right,
+							xData->CommandLineInitBounds.bottom,
+							NULL);
+
+				EndDeferWindowPos(DeferPosData);
 			}
 
 			break;
 		case WM_DESTROY:
 			{
-				HFONT CommandLineFont = (HFONT)SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE, WM_GETFONT, NULL, NULL);
-				DeleteObject(CommandLineFont);
+				delete (UIExtraData*)UserData->ExtraData;
+				UserData->ExtraData = NULL;
 			}
 
 			break;
 		case WM_INITDIALOG:
 			{
-				HFONT CommandLineFont = CreateFont(24,
-													0,
-													0,
-													0,
-													FW_BOLD,
-													FALSE,
-													FALSE,
-													FALSE,
-													ANSI_CHARSET,
-													OUT_DEFAULT_PRECIS,
-													CLIP_DEFAULT_PRECIS,
-													CLEARTYPE_QUALITY,
-													FF_DONTCARE,
-													"Consolas");
+				UIExtraData* xData = new UIExtraData();
+				UserData->ExtraData = (LPARAM)xData;
 
-				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE, WM_SETFONT, (WPARAM)CommandLineFont, (LPARAM)TRUE);
+				POINT Position = {0};
+				RECT Bounds = {0};
+
+				HWND MessageLog = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG);
+				HWND CommandLine = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE);
+
+				GetClientRect(hWnd, &xData->DialogInitBounds);
+				SME::UIHelpers::GetClientRectInitBounds(MessageLog, hWnd, &xData->MessageLogInitBounds);
+				SME::UIHelpers::GetClientRectInitBounds(CommandLine, hWnd, &xData->CommandLineInitBounds);
+
+				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE, WM_SETFONT, (WPARAM)xData->CommandLineFont, (LPARAM)TRUE);
 			}
 
 			break;
@@ -368,6 +387,7 @@ namespace BGSEditorExtender
 
 	BGSEEConsole::DefaultDebugLogContext::DefaultDebugLogContext( BGSEEConsole* Parent, const char* DebugLogPath ) :
 		BGSEEConsole::MessageLogContext("", DebugLogPath),
+		DebugLog(NULL),
 		Parent(Parent),
 		PrintCallbacks()
 	{
@@ -625,6 +645,36 @@ namespace BGSEditorExtender
 		return *Match;
 	}
 
+	BGSEEConsole::UIExtraData::UIExtraData() :
+		SelectedContext(NULL),
+		CommandLineFont(NULL),
+		DialogInitBounds(),
+		MessageLogInitBounds(),
+		CommandLineInitBounds()
+	{
+		ZeroMemory(&DialogInitBounds, sizeof(RECT));
+		ZeroMemory(&MessageLogInitBounds, sizeof(RECT));
+		ZeroMemory(&CommandLineInitBounds, sizeof(RECT));
+
+		CommandLineFont = CreateFont(24, 0, 0, 0,
+									FW_BOLD,
+									FALSE,
+									FALSE,
+									FALSE,
+									ANSI_CHARSET,
+									OUT_DEFAULT_PRECIS,
+									CLIP_DEFAULT_PRECIS,
+									CLEARTYPE_QUALITY,
+									FF_DONTCARE,
+									"Consolas");
+	}
+
+	BGSEEConsole::UIExtraData::~UIExtraData()
+	{
+		if (CommandLineFont)
+			DeleteFont(CommandLineFont);
+	}
+
 	void BGSEEConsole::ClearMessageLog( void )
 	{
 		Edit_SetText(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), NULL);
@@ -817,7 +867,6 @@ namespace BGSEditorExtender
 				NULL);
 
 		INILoadUIState(&INISettingGetter, kINISection);
-		SendMessage(DialogHandle, WM_SIZE, NULL, NULL);
 	}
 
 	void BGSEEConsole::LogMsg( std::string Prefix, const char* Format, ... )

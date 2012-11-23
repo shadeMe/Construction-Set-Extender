@@ -383,8 +383,8 @@ namespace BGSEditorExtender
 		struct DlgUserData
 		{
 			BGSEEGenericModelessDialog*		Instance;
-			LPARAM							UserData;
-			bool							Initialized;
+			LPARAM							ExtraData;					// upon init, holds the InitParam parameter (if any)
+			bool							Initialized;				// set once the WM_INITDIALOG message is sent to the dlg
 		};
 
 		HWND							DialogHandle;
@@ -400,8 +400,8 @@ namespace BGSEditorExtender
 		float							AspectRatio;
 		bool							LockAspectRatio;
 
-		void							INILoadUIState(BGSEEINIManagerGetterFunctor* Getter, const char* Section);
-		void							INISaveUIState(BGSEEINIManagerSetterFunctor* Setter, const char* Section);
+		virtual void					INILoadUIState(BGSEEINIManagerGetterFunctor* Getter, const char* Section);
+		virtual void					INISaveUIState(BGSEEINIManagerSetterFunctor* Setter, const char* Section);
 
 		bool							SetVisibility(bool State);
 		bool							SetTopmost(bool State);

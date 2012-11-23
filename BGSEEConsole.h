@@ -131,6 +131,19 @@ namespace BGSEditorExtender
 			BGSEEConsoleCommandInfo*			GetCommand(const char* Name);
 		};
 
+		struct UIExtraData
+		{
+			MessageLogContext*					SelectedContext;
+			HFONT								CommandLineFont;
+
+			RECT								DialogInitBounds;
+			RECT								MessageLogInitBounds;
+			RECT								CommandLineInitBounds;
+
+			UIExtraData();
+			~UIExtraData();
+		};
+
 		typedef std::list<MessageLogContext*>	ContextListT;
 		typedef std::stack<std::string>			CommandHistoryStackT;
 		friend class							DefaultDebugLogContext;
