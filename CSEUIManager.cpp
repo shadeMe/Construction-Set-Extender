@@ -351,7 +351,11 @@ namespace ConstructionSetExtender
 			LastCursorPosWindow = NULL;
 			QuickViewTriggered = false;
 
-			AssetControlToolTip = NULL;
+			AssetControlToolTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
+												TTS_ALWAYSTIP|TTS_NOPREFIX,
+												CW_USEDEFAULT, CW_USEDEFAULT,
+												CW_USEDEFAULT, CW_USEDEFAULT,
+												NULL, NULL, NULL, NULL);
 			ZeroMemory(&AssetControlToolData, sizeof(AssetControlToolData));
 			AssetControlToolData.cbSize = sizeof(AssetControlToolData);
 			LastTrackedTool = NULL;
@@ -684,7 +688,7 @@ namespace ConstructionSetExtender
 								switch (CurrentItem.wID)
 								{
 								case 40194:		// Edit Cell Path Grid
-									if (*g_RenderWindowPathGridEditModeFlag)
+									if (*TESRenderWindow::PathGridEditFlag)
 										CheckItem = true;
 
 									break;
@@ -730,6 +734,11 @@ namespace ConstructionSetExtender
 									break;
 								case IDC_MAINMENU_COLORIZEACTIVEFORMS:
 									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter())))
+										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_COLORIZEFORMOVERRIDES:
+									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INIGetter())))
 										CheckItem = true;
 
 									break;
@@ -806,7 +815,7 @@ namespace ConstructionSetExtender
 							break;
 						}
 
-						*g_TESCSAllowAutoSaveFlag = 0;
+						*TESCSMain::AllowAutoSaveFlag = 0;
 
 						char FileName[0x104] = {0};
 
@@ -825,7 +834,7 @@ namespace ConstructionSetExtender
 
 							if (SendMessage(hWnd, 0x40C, NULL, (LPARAM)FileName))
 							{
-								TESDialog::SetMainWindowTitleModified(false);
+								TESCSMain::SetTitleModified(false);
 							}
 							else
 							{
@@ -838,7 +847,7 @@ namespace ConstructionSetExtender
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 						}
 
-						*g_TESCSAllowAutoSaveFlag = 1;
+						*TESCSMain::AllowAutoSaveFlag = 1;
 					}
 
 					break;
@@ -1071,6 +1080,13 @@ namespace ConstructionSetExtender
 						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INISetter(), "1");
 
 					break;
+				case IDC_MAINMENU_COLORIZEFORMOVERRIDES:
+					if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INIGetter())))
+						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INISetter(), "0");
+					else
+						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INISetter(), "1");
+
+					break;
 				default:
 					Return = false;
 
@@ -1124,8 +1140,8 @@ namespace ConstructionSetExtender
 						xData = new CSEMainWindowMiscData();
 
 						xData->ToolbarExtras->hInstance = BGSEEMAIN->GetExtenderHandle();
-						xData->ToolbarExtras->hDialog = *g_HWND_MainToolbar;
-						xData->ToolbarExtras->hContainer = *g_HWND_MainToolbar;
+						xData->ToolbarExtras->hDialog = *TESCSMain::MainToolbarHandle;
+						xData->ToolbarExtras->hContainer = *TESCSMain::MainToolbarHandle;
 						xData->ToolbarExtras->position.x = 485;
 						xData->ToolbarExtras->position.y = 0;
 
@@ -1135,8 +1151,8 @@ namespace ConstructionSetExtender
 						}
 						else
 						{
-							BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(*g_HWND_MainToolbar, MainWindowToolbarSubClassProc);
-							SendMessage(*g_HWND_MainToolbar, WM_INITDIALOG, NULL, NULL);
+							BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
+							SendMessage(*TESCSMain::MainToolbarHandle, WM_INITDIALOG, NULL, NULL);
 
 							HWND TODSlider = GetDlgItem(hWnd, IDC_TOOLBAR_TODSLIDER);
 							HWND TODEdit = GetDlgItem(hWnd, IDC_TOOLBAR_TODCURRENT);
@@ -1147,7 +1163,7 @@ namespace ConstructionSetExtender
 							SendMessage(TODSlider, TBM_SETLINESIZE, NULL, 1);
 							SendMessage(TODSlider, TBM_SETPAGESIZE, NULL, 4);
 
-							SendMessage(*g_HWND_MainToolbar, WM_MAINTOOLBAR_SETTOD, _TES->GetSkyTOD() * 4.0, NULL);
+							SendMessage(*TESCSMain::MainToolbarHandle, WM_MAINTOOLBAR_SETTOD, _TES->GetSkyTOD() * 4.0, NULL);
 						}
 
 						ExtraData->Add(xData);
@@ -1162,9 +1178,9 @@ namespace ConstructionSetExtender
 				switch (wParam)
 				{
 				case 2:				// autosave timer, needs to be handled here as the org wndproc doesn't compare the timerID
-					if ((*g_TESCSAllowAutoSaveFlag) != 0 && (*g_TESCSExittingCSFlag) == 0)
+					if ((*TESCSMain::AllowAutoSaveFlag) != 0 && (*TESCSMain::ExittingCSFlag) == 0)
 					{
-						TESDialog::AutoSave();
+						TESCSMain::AutoSave();
 					}
 
 					break;
@@ -1174,11 +1190,11 @@ namespace ConstructionSetExtender
 						PathGridData.cbSize = sizeof(TBBUTTONINFO);
 						PathGridData.dwMask = TBIF_STATE;
 
-						SendMessage(*g_HWND_MainToolbar, TB_GETBUTTONINFO, 40195, (LPARAM)&PathGridData);
-						if ((PathGridData.fsState & TBSTATE_CHECKED) == false && *g_RenderWindowPathGridEditModeFlag)
+						SendMessage(*TESCSMain::MainToolbarHandle, TB_GETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+						if ((PathGridData.fsState & TBSTATE_CHECKED) == false && *TESRenderWindow::PathGridEditFlag)
 						{
 							PathGridData.fsState |= TBSTATE_CHECKED;
-							SendMessage(*g_HWND_MainToolbar, TB_SETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+							SendMessage(*TESCSMain::MainToolbarHandle, TB_SETBUTTONINFO, 40195, (LPARAM)&PathGridData);
 						}
 					}
 
@@ -1288,7 +1304,7 @@ namespace ConstructionSetExtender
 					if (xData->SettingTODSlider == false)
 						TESDialog::SetDlgItemFloat(hWnd, IDC_TOOLBAR_TODCURRENT, TOD, 2);
 
-					TESDialog::UpdatePreviewWindows();
+					TESPreviewControl::UpdatePreviewWindows();
 				}
 
 				break;
@@ -1325,7 +1341,7 @@ namespace ConstructionSetExtender
 								switch (CurrentItem.wID)
 								{
 								case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
-									if (Hooks::g_FreezeInactiveRefs)
+									if (TESRenderWindow::FreezeInactiveRefs)
 										CheckItem = true;
 
 									break;
@@ -1388,7 +1404,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_UNLOADCURRENTCELLS:
-					TESDialog::ResetRenderWindow();
+					TESRenderWindow::Reset();
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
@@ -1403,21 +1419,21 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_FREEZEINACTIVE:
-					Hooks::g_FreezeInactiveRefs = (Hooks::g_FreezeInactiveRefs == false);
+					TESRenderWindow::FreezeInactiveRefs = (TESRenderWindow::FreezeInactiveRefs == false);
 
-					if (Hooks::g_FreezeInactiveRefs)
+					if (TESRenderWindow::FreezeInactiveRefs)
 						RenderWindowPainter::RenderChannelNotifications->Queue(4, "Inactive references frozen");
 					else
 						RenderWindowPainter::RenderChannelNotifications->Queue(4, "Inactive references thawed");
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
-					if (*g_RenderWindowPathGridEditModeFlag == 0)
+					if (*TESRenderWindow::PathGridEditFlag == 0)
 					{
-						TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 
 						if (CurrentCell == NULL)
-							CurrentCell = *g_RenderWindowCurrentlyLoadedCell;
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedCell;
 
 						if (CurrentCell)
 						{
@@ -1437,16 +1453,16 @@ namespace ConstructionSetExtender
 							}
 
 							Buffer->DeleteInstance();
-							TESDialog::RedrawRenderWindow();
+							TESRenderWindow::Redraw();
 						}
 					}
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
 					{
-						TESObjectCELL* ThisCell = (*g_TES)->currentInteriorCell;
+						TESObjectCELL* ThisCell = _TES->currentInteriorCell;
 						if (!ThisCell)
-							ThisCell = *g_RenderWindowCurrentlyLoadedCell;
+							ThisCell = *TESRenderWindow::CurrentlyLoadedCell;
 
 						if (ThisCell)
 						{
@@ -1606,10 +1622,10 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
 				case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
 					{
-						TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 
 						if (CurrentCell == NULL)
-							CurrentCell = *g_RenderWindowCurrentlyLoadedCell;
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedCell;
 
 						if (CurrentCell)
 						{
@@ -1651,7 +1667,7 @@ namespace ConstructionSetExtender
 						}
 
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
-						TESDialog::RedrawRenderWindow();
+						TESRenderWindow::Redraw();
 						Return = true;
 					}
 
@@ -1686,7 +1702,7 @@ namespace ConstructionSetExtender
 					}
 
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
-					TESDialog::RedrawRenderWindow();
+					TESRenderWindow::Redraw();
 					Return = true;
 
 					break;
@@ -1694,10 +1710,10 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_UNGROUP:
 					if (_RENDERSEL->selectionCount > 1)
 					{
-						TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 
 						if (CurrentCell == NULL)
-							CurrentCell = *g_RenderWindowCurrentlyLoadedCell;
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedCell;
 
 						if (CurrentCell == NULL)
 							break;
@@ -1705,7 +1721,7 @@ namespace ConstructionSetExtender
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_GROUP:
-							if (!RenderSelectionGroupManager::Instance.AddGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+							if (!RenderSelectionGroupManager::Instance.AddGroup(CurrentCell, _RENDERSEL))
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
 												"Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a preexisting group.");
@@ -1715,7 +1731,7 @@ namespace ConstructionSetExtender
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_UNGROUP:
-							if (!RenderSelectionGroupManager::Instance.RemoveGroup(CurrentCell, *g_TESRenderSelectionPrimary))
+							if (!RenderSelectionGroupManager::Instance.RemoveGroup(CurrentCell, _RENDERSEL))
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
 												"Couldn't remove current selection group.\n\nMake sure the selected objects belong to a preexisting group.");
@@ -1737,8 +1753,8 @@ namespace ConstructionSetExtender
 					if (_RENDERSEL->selectionCount > 1)
 					{
 						// record the op twice, otherwise the thingy will crash on undo for some reason
-						(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
-						(*g_TESRenderUndoStack)->RecordReference(TESRenderUndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
+						_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
+						_RENDERUNDO->RecordReference(TESRenderWindow::UndoStack::kUndoOperation_Unk03, _RENDERSEL->selectionList);
 
 						TESObjectREFR* AlignRef = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
 
@@ -1765,7 +1781,7 @@ namespace ConstructionSetExtender
 
 						RenderWindowPainter::RenderChannelNotifications->Queue(2, "Selection aligned to %08X", AlignRef->formID);
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
-						TESDialog::RedrawRenderWindow();
+						TESRenderWindow::Redraw();
 
 						Return = true;
 					}
@@ -1818,7 +1834,7 @@ namespace ConstructionSetExtender
 					else if (CameraFOV < 50.0f)
 						CameraFOV = 50.0f;
 
-					_RENDERCMPT->SetCameraFOV(_RENDERCMPT->primaryCamera, CameraFOV);
+					TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
 				}
 
 				break;
@@ -1853,7 +1869,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_CLOSE:
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40423, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40423, NULL);
 				Return = true;
 
 				break;
@@ -1872,7 +1888,7 @@ namespace ConstructionSetExtender
 						SetTimer(hWnd, 1, Period, NULL);
 					}
 
-					if (Hooks::g_LODDiffuseMapGeneratorState != Hooks::kLODDiffuseMapGeneratorState_NotInUse)
+					if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
 					{
 						// prevent the OS from triggering the screen-saver/switching to standby mode
 						SetThreadExecutionState(ES_CONTINUOUS|ES_DISPLAY_REQUIRED|ES_SYSTEM_REQUIRED);
@@ -1884,7 +1900,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_SIZING:
 				{
-					if (g_ActivePreviewControls->Count())
+					if (TESPreviewControl::ActivePreviewControls->Count())
 					{
 						BGSEEUI->MsgBoxW(hWnd, 0, "Please close any dialogs with preview controls before attempting to resize the render window.");
 
@@ -1894,16 +1910,16 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_LBUTTONDOWN:
-				Hooks::g_MouseCaptureDelta.x = GET_X_LPARAM(lParam);
-				Hooks::g_MouseCaptureDelta.y = GET_Y_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseCoordDelta.x = GET_X_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseCoordDelta.y = GET_Y_LPARAM(lParam);
 
 				break;
 			case WM_LBUTTONUP:
-				Hooks::g_MouseCaptureDelta.x -= GET_X_LPARAM(lParam);
-				Hooks::g_MouseCaptureDelta.y -= GET_Y_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseCoordDelta.x -= GET_X_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseCoordDelta.y -= GET_Y_LPARAM(lParam);
 
-				Hooks::g_MouseCaptureDelta.x = abs(Hooks::g_MouseCaptureDelta.x);
-				Hooks::g_MouseCaptureDelta.y = abs(Hooks::g_MouseCaptureDelta.y);
+				TESRenderWindow::CurrentMouseCoordDelta.x = abs(TESRenderWindow::CurrentMouseCoordDelta.x);
+				TESRenderWindow::CurrentMouseCoordDelta.y = abs(TESRenderWindow::CurrentMouseCoordDelta.y);
 
 				break;
 			case WM_KEYUP:
@@ -1942,7 +1958,7 @@ namespace ConstructionSetExtender
 				{
 				case VK_SHIFT:
 					{
-						_RENDERCMPT->GetCameraPivot(&kCameraStaticPivot, 0.18);
+						_PRIMARYRENDERER->GetCameraPivot(&kCameraStaticPivot, 0.18);
 					}
 
 					break;
@@ -1957,7 +1973,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case 0x5A:		// Z
-					if (*g_RenderWindowPathGridEditModeFlag && GetAsyncKeyState(VK_CONTROL))
+					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
 						PathGridUndoManager::Instance.PerformUndo();
 						Return = true;
@@ -1965,7 +1981,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case 0x59:		// Y
-					if (*g_RenderWindowPathGridEditModeFlag && GetAsyncKeyState(VK_CONTROL))
+					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
 						PathGridUndoManager::Instance.PerformRedo();
 						Return = true;
@@ -2006,23 +2022,23 @@ namespace ConstructionSetExtender
 
 					break;
 				case 0x52:		// R
-					if (*g_RenderWindowPathGridEditModeFlag)
+					if (*TESRenderWindow::PathGridEditFlag)
 					{
 						if (GetAsyncKeyState(VK_CONTROL))
 						{
 							PathGridUndoManager::Instance.ResetRedoStack();
 
-							if (g_RenderWindowSelectedPathGridPoints->Count())
-								PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, g_RenderWindowSelectedPathGridPoints);
+							if (TESRenderWindow::SelectedPathGridPoints->Count())
+								PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 
-							for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 							{
 								TESPathGridPoint* Point = Itr.Get();
 								Point->UnlinkFromReference();
 								Point->HideSelectionRing();
 							}
 
-							TESDialog::RedrawRenderWindow(true);
+							TESRenderWindow::Redraw(true);
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 							Return = true;
@@ -2031,7 +2047,7 @@ namespace ConstructionSetExtender
 						{
 							std::list<TESPathGridPoint*> Delinquents;
 
-							for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 							{
 								if (Itr.Get()->linkedRef)
 									Delinquents.push_back(Itr.Get());
@@ -2040,7 +2056,7 @@ namespace ConstructionSetExtender
 							}
 
 							for (std::list<TESPathGridPoint*>::iterator Itr = Delinquents.begin(); Itr != Delinquents.end(); Itr++)
-								thisCall<void>(0x00452AE0, g_RenderWindowSelectedPathGridPoints, *Itr);
+								thisCall<void>(0x00452AE0, TESRenderWindow::SelectedPathGridPoints, *Itr);
 						}
 					}
 
@@ -2048,12 +2064,12 @@ namespace ConstructionSetExtender
 				case 0x51:		// Q
 					if (GetAsyncKeyState(VK_CONTROL))
 					{
-						if (Hooks::g_RenderWindowAltMovementSettings)
+						if (TESRenderWindow::UseAlternateMovementSettings)
 							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using vanilla movement settings");
 						else
 							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using alternate movement settings");
 
-						Hooks::g_RenderWindowAltMovementSettings = (Hooks::g_RenderWindowAltMovementSettings == false);
+						TESRenderWindow::UseAlternateMovementSettings = (TESRenderWindow::UseAlternateMovementSettings == false);
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 						Return = true;
@@ -2089,7 +2105,7 @@ namespace ConstructionSetExtender
 					break;
 				case 0x32:		// 2
 					SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
-					TESDialog::RedrawRenderWindow();
+					TESRenderWindow::Redraw();
 
 					Return = true;
 					break;
@@ -2107,7 +2123,7 @@ namespace ConstructionSetExtender
 					break;
 				case VK_OEM_3:	// ~
 					{
-						if (Hooks::g_LODDiffuseMapGeneratorState != Hooks::kLODDiffuseMapGeneratorState_NotInUse)
+						if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
 							break;
 						else if (GetCapture())
 							break;
@@ -2149,7 +2165,7 @@ namespace ConstructionSetExtender
 			switch (uMsg)
 			{
 			case WM_CLOSE:
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40199, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40199, NULL);
 				Return = true;
 
 				break;
@@ -2350,7 +2366,7 @@ namespace ConstructionSetExtender
 			switch (uMsg)
 			{
 			case WM_CLOSE:
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40200, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40200, NULL);
 				Return = true;
 
 				break;
@@ -2376,81 +2392,18 @@ namespace ConstructionSetExtender
 						xData = new CSECellViewExtraData();
 						ExtraData->Add(xData);
 
-						POINT Position = {0};
 						RECT Bounds = {0};
 
-						GetWindowRect(FilterEditBox, &xData->FilterEditBox);
-						Position.x = xData->FilterEditBox.left;
-						Position.y = xData->FilterEditBox.top;
-						ScreenToClient(hWnd, &Position);
-						xData->FilterEditBox.left = Position.x;
-						xData->FilterEditBox.top = Position.y;
-						GetClientRect(FilterEditBox, &Bounds);
-						xData->FilterEditBox.right = Bounds.right;
-						xData->FilterEditBox.bottom = Bounds.bottom;
-
-						GetWindowRect(FilterLabel, &xData->FilterLabel);
-						Position.x = xData->FilterLabel.left;
-						Position.y = xData->FilterLabel.top;
-						ScreenToClient(hWnd, &Position);
-						xData->FilterLabel.left = Position.x;
-						xData->FilterLabel.top = Position.y;
-						GetClientRect(FilterLabel, &Bounds);
-						xData->FilterLabel.right = Bounds.right;
-						xData->FilterLabel.bottom = Bounds.bottom;
-
-						GetWindowRect(XLabel, &xData->XLabel);
-						Position.x = xData->XLabel.left;
-						Position.y = xData->XLabel.top;
-						ScreenToClient(hWnd, &Position);
-						xData->XLabel.left = Position.x;
-						xData->XLabel.top = Position.y;
-						GetClientRect(XLabel, &Bounds);
-						xData->XLabel.right = Bounds.right;
-						xData->XLabel.bottom = Bounds.bottom;
-
-						GetWindowRect(YLabel, &xData->YLabel);
-						Position.x = xData->YLabel.left;
-						Position.y = xData->YLabel.top;
-						ScreenToClient(hWnd, &Position);
-						xData->YLabel.left = Position.x;
-						xData->YLabel.top = Position.y;
-						GetClientRect(YLabel, &Bounds);
-						xData->YLabel.right = Bounds.right;
-						xData->YLabel.bottom = Bounds.bottom;
-
-						GetWindowRect(XEdit, &xData->XEdit);
-						Position.x = xData->XEdit.left;
-						Position.y = xData->XEdit.top;
-						ScreenToClient(hWnd, &Position);
-						xData->XEdit.left = Position.x;
-						xData->XEdit.top = Position.y;
-						GetClientRect(XEdit, &Bounds);
-						xData->XEdit.right = Bounds.right;
-						xData->XEdit.bottom = Bounds.bottom;
-
-						GetWindowRect(YEdit, &xData->YEdit);
-						Position.x = xData->YEdit.left;
-						Position.y = xData->YEdit.top;
-						ScreenToClient(hWnd, &Position);
-						xData->YEdit.left = Position.x;
-						xData->YEdit.top = Position.y;
-						GetClientRect(YEdit, &Bounds);
-						xData->YEdit.right = Bounds.right;
-						xData->YEdit.bottom = Bounds.bottom;
-
-						GetWindowRect(GoBtn, &xData->GoBtn);
-						Position.x = xData->GoBtn.left;
-						Position.y = xData->GoBtn.top;
-						ScreenToClient(hWnd, &Position);
-						xData->GoBtn.left = Position.x;
-						xData->GoBtn.top = Position.y;
-						GetClientRect(GoBtn, &Bounds);
-						xData->GoBtn.right = Bounds.right;
-						xData->GoBtn.bottom = Bounds.bottom;
+						SME::UIHelpers::GetClientRectInitBounds(FilterEditBox, hWnd, &xData->FilterEditBox);
+						SME::UIHelpers::GetClientRectInitBounds(FilterLabel, hWnd, &xData->FilterLabel);
+						SME::UIHelpers::GetClientRectInitBounds(XLabel, hWnd, &xData->XLabel);
+						SME::UIHelpers::GetClientRectInitBounds(YLabel, hWnd, &xData->YLabel);
+						SME::UIHelpers::GetClientRectInitBounds(XEdit, hWnd, &xData->XEdit);
+						SME::UIHelpers::GetClientRectInitBounds(YEdit, hWnd, &xData->YEdit);
+						SME::UIHelpers::GetClientRectInitBounds(GoBtn, hWnd, &xData->GoBtn);
 
 						TESDialog::GetPositionFromINI("Cell View", &Bounds);
-						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, 4);
+						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
 					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, true);
@@ -2809,7 +2762,7 @@ namespace ConstructionSetExtender
 
 						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 
-						if (CSIOM->GenerateLIPSyncFile(Path.c_str(), (*g_ResponseEditorData)->responseLocalCopy->responseText.c_str()) == false)
+						if (CSIOM->GenerateLIPSyncFile(Path.c_str(), (*ResponseEditorData::EditorCache)->responseLocalCopy->responseText.c_str()) == false)
 						{
 							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't generate LIP file for the selected voice.\n\nCheck the console for more information.");
 						}
@@ -2854,10 +2807,10 @@ namespace ConstructionSetExtender
 
 					if (Texture)
 					{
-						*g_ActiveLandscapeEditTexture = CS_CAST(Texture, TESForm, TESLandTexture);
+						*TESRenderWindow::ActiveLandscapeTexture = CS_CAST(Texture, TESForm, TESLandTexture);
 
-						SendMessage(*g_HWND_LandscapeEdit, 0x41A, NULL, NULL);			// select the new texture in the landscape edit dialog
-						SetForegroundWindow(*g_HWND_RenderWindow);
+						SendMessage(*TESObjectLAND::WindowHandle, 0x41A, NULL, NULL);			// select the new texture in the landscape edit dialog
+						SetForegroundWindow(*TESRenderWindow::WindowHandle);
 
 						RenderWindowPainter::RenderChannelNotifications->Queue(3, "Active landscape texture changed");
 					}
@@ -3128,12 +3081,6 @@ namespace ConstructionSetExtender
 					{
 						xData = new CSEDialogExtraFittingsData();
 						ExtraData->Add(xData);
-
-						xData->AssetControlToolTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
-																	TTS_ALWAYSTIP|TTS_NOPREFIX,
-																	CW_USEDEFAULT, CW_USEDEFAULT,
-																	CW_USEDEFAULT, CW_USEDEFAULT,
-																	NULL, NULL, NULL, NULL);
 					}
 
 					SetTimer(hWnd, ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID, 100, NULL);
@@ -3323,141 +3270,194 @@ namespace ConstructionSetExtender
 							wParam == kFormList_FindTextTopicInfos ||
 							wParam == kFormList_LandTextures)
 						{
-							bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
+							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
 
-							if (Enabled && CSEFormEnumerationManager::Instance.GetVisibleUnmodifiedForms())
+							switch (DrawData->nmcd.dwDrawStage)
 							{
-								NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
-
-								switch (DrawData->nmcd.dwDrawStage)
+							case CDDS_PREPAINT:
 								{
-								case CDDS_PREPAINT:
-									{
-										SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
-										DlgProcResult = TRUE;
-										Return = true;
-									}
-
-									break;
-								case CDDS_ITEMPREPAINT:
-									{
-										TESForm* Form = NULL;
-
-										switch (wParam)
-										{
-										case kFormList_ActorFactions:
-											{
-												TESActorBase::FactionInfo* Data = (TESActorBase::FactionInfo*)DrawData->nmcd.lItemlParam;
-												SME_ASSERT(Data);
-												Form = Data->faction;
-											}
-
-											break;
-										case kFormList_TESContainer:
-											{
-												TESContainer::ContentEntry* Entry = (TESContainer::ContentEntry*)DrawData->nmcd.lItemlParam;
-												SME_ASSERT(Entry);
-												Form = Entry->form;
-											}
-
-											break;
-										case kFormList_TESLeveledList:
-											{
-												TESLeveledList::ListEntry* Entry = (TESLeveledList::ListEntry*)DrawData->nmcd.lItemlParam;
-												SME_ASSERT(Entry);
-												Form = Entry->form;
-											}
-
-											break;
-										case kFormList_WeatherSounds:
-											{
-												UInt32* FormID = (UInt32*)DrawData->nmcd.lItemlParam;
-												SME_ASSERT(FormID);
-												Form = TESForm::LookupByFormID(*FormID);
-											}
-
-											break;
-										case kFormList_ClimateWeatherRaceHairFindTextTopics:
-											{
-												BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
-												(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-
-												switch (UserData->TemplateID)
-												{
-												case TESDialog::kDialogTemplate_Climate:
-													{
-														TESClimate::WeatherEntry* Entry = (TESClimate::WeatherEntry*)DrawData->nmcd.lItemlParam;
-														SME_ASSERT(Entry);
-														Form = Entry->weather;
-													}
-
-													break;
-												case TESDialog::kDialogTemplate_Race:
-													{
-														Form = (TESForm*)DrawData->nmcd.lItemlParam;
-													}
-
-													break;
-												case TESDialog::kDialogTemplate_FindText:
-													{
-														FindTextWindowData::TopicSearchResult* Data = (FindTextWindowData::TopicSearchResult*)DrawData->nmcd.lItemlParam;
-														SME_ASSERT(Data);
-														Form = Data->topic;
-													}
-
-													break;
-												}
-											}
-
-											break;
-										case kFormList_TESReactionForm:
-											{
-												TESReactionForm::ReactionInfo* Info = (TESReactionForm::ReactionInfo*)DrawData->nmcd.lItemlParam;
-												SME_ASSERT(Info);
-												Form = Info->target;
-											}
-
-											break;
-										default:
-											Form = (TESForm*)DrawData->nmcd.lItemlParam;
-
-											break;
-										}
-
-										if (Form)
-										{
-											if (Form->IsActive())
-											{
-												COLORREF ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																								INISettings::kDialogs_ActiveFormForeColor,
-																								BGSEEMAIN->INIGetter()));
-												COLORREF BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																								INISettings::kDialogs_ActiveFormBackColor,
-																								BGSEEMAIN->INIGetter()));
-
-												TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
-
-												if (Reference &&
-													Reference->GetNiNode() &&
-													(Reference->GetNiNode()->m_flags & NiAVObject::kFlag_AppCulled))
-												{
-													DrawData->clrText = RGB(255, 0, 255);
-												}
-												else
-												{
-													DrawData->clrText = ForeColor;
-													DrawData->clrTextBk = BackColor;
-												}
-
-												SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
-												DlgProcResult = TRUE;
-												Return = true;
-											}
-										}
-									}
-
-									break;
+									SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+									DlgProcResult = TRUE;
+									Return = true;
 								}
+
+								break;
+							case CDDS_ITEMPREPAINT:
+								{
+									TESForm* Form = NULL;
+
+									switch (wParam)
+									{
+									case kFormList_ActorFactions:
+										{
+											TESActorBase::FactionInfo* Data = (TESActorBase::FactionInfo*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Data);
+											Form = Data->faction;
+										}
+
+										break;
+									case kFormList_TESContainer:
+										{
+											TESContainer::ContentEntry* Entry = (TESContainer::ContentEntry*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Entry);
+											Form = Entry->form;
+										}
+
+										break;
+									case kFormList_TESLeveledList:
+										{
+											TESLeveledList::ListEntry* Entry = (TESLeveledList::ListEntry*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Entry);
+											Form = Entry->form;
+										}
+
+										break;
+									case kFormList_WeatherSounds:
+										{
+											UInt32* FormID = (UInt32*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(FormID);
+											Form = TESForm::LookupByFormID(*FormID);
+										}
+
+										break;
+									case kFormList_ClimateWeatherRaceHairFindTextTopics:
+										{
+											BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
+											(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+
+											switch (UserData->TemplateID)
+											{
+											case TESDialog::kDialogTemplate_Climate:
+												{
+													TESClimate::WeatherEntry* Entry = (TESClimate::WeatherEntry*)DrawData->nmcd.lItemlParam;
+													SME_ASSERT(Entry);
+													Form = Entry->weather;
+												}
+
+												break;
+											case TESDialog::kDialogTemplate_Race:
+												{
+													Form = (TESForm*)DrawData->nmcd.lItemlParam;
+												}
+
+												break;
+											case TESDialog::kDialogTemplate_FindText:
+												{
+													FindTextWindowData::TopicSearchResult* Data = (FindTextWindowData::TopicSearchResult*)DrawData->nmcd.lItemlParam;
+													SME_ASSERT(Data);
+													Form = Data->topic;
+												}
+
+												break;
+											}
+										}
+
+										break;
+									case kFormList_TESReactionForm:
+										{
+											TESReactionForm::ReactionInfo* Info = (TESReactionForm::ReactionInfo*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Info);
+											Form = Info->target;
+										}
+
+										break;
+									default:
+										Form = (TESForm*)DrawData->nmcd.lItemlParam;
+
+										break;
+									}
+
+									bool ColorizeActiveFormsEnabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms,
+																	BGSEEMAIN->INIGetter())) &&
+																	CSEFormEnumerationManager::Instance.GetVisibleUnmodifiedForms();
+									bool ColorizeFormOverridesEnabled =  atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeFormOverrides,
+																		BGSEEMAIN->INIGetter()));
+
+									if (Form &&
+										(ColorizeActiveFormsEnabled ||
+										ColorizeFormOverridesEnabled))
+									{
+										COLORREF ForeColor, BackColor;
+										bool ColorOverridden = false;
+
+										if (ColorizeFormOverridesEnabled)
+										{
+											ColorOverridden = true;
+
+											switch (Form->fileList.Count())
+											{
+											case 0:
+												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel0ForeColor,
+																					BGSEEMAIN->INIGetter()));
+												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel0BackColor,
+																					BGSEEMAIN->INIGetter()));
+												break;
+											case 1:
+												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel1ForeColor,
+																					BGSEEMAIN->INIGetter()));
+												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel1BackColor,
+																					BGSEEMAIN->INIGetter()));
+												break;
+											case 2:
+												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel2ForeColor,
+																					BGSEEMAIN->INIGetter()));
+												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel2BackColor,
+																					BGSEEMAIN->INIGetter()));
+												break;
+											default:
+												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel3ForeColor,
+																					BGSEEMAIN->INIGetter()));
+												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																					INISettings::kDialogs_FormOverrideLevel3BackColor,
+																					BGSEEMAIN->INIGetter()));
+												break;
+											}
+										}
+
+										if (Form->IsActive() && ColorizeActiveFormsEnabled)
+										{
+											ColorOverridden = true;
+
+											ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																				INISettings::kDialogs_ActiveFormForeColor,
+																				BGSEEMAIN->INIGetter()));
+											BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
+																				INISettings::kDialogs_ActiveFormBackColor,
+																				BGSEEMAIN->INIGetter()));
+										}
+
+										TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+
+										if (Reference &&
+											Reference->GetNiNode() &&
+											(Reference->GetNiNode()->m_flags & NiAVObject::kFlag_AppCulled))
+										{
+											ColorOverridden = true;
+
+											ForeColor = RGB(255, 0, 255);
+											BackColor = RGB(255, 255, 255);
+										}
+
+										if (ColorOverridden)
+										{
+											DrawData->clrText = ForeColor;
+											DrawData->clrTextBk = BackColor;
+
+											SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NEWFONT);
+											DlgProcResult = TRUE;
+											Return = true;
+										}
+									}
+								}
+
+								break;
 							}
 						}
 
@@ -3748,7 +3748,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					if (*g_RenderWindowCurrentlyLoadedCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
+					if (*TESRenderWindow::CurrentlyLoadedCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
 						SendMessage(hWnd, WM_COMMAND, 2, NULL);			// otherwise, the editor will crash as soon as the render window acquires input focus
 					else
 						SendDlgItemMessage(hWnd, 1492, LVM_SORTITEMS, 0, (LPARAM)0x0041E7D0);		// TESDialog::SortComparatorLandTextureList
@@ -3760,7 +3760,7 @@ namespace ConstructionSetExtender
 					Return = true;
 
 					HWND TexList = GetDlgItem(hWnd, 1492);
-					int Selection = TESListView::GetItemByData(TexList, *g_ActiveLandscapeEditTexture);
+					int Selection = TESListView::GetItemByData(TexList, *TESRenderWindow::ActiveLandscapeTexture);
 					if (Selection != -1)
 					{
 						TESListView::SetSelectedItem(TexList, Selection);
@@ -4570,8 +4570,8 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_Weather, RegularAppWindow);
 			}
 
-			SendMessage(*g_HWND_CSParent, WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
-			SendMessage(*g_HWND_RenderWindow, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+			SendMessage(*TESCSMain::WindowHandle, WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
+			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 		}
 	}
 }

@@ -1,7 +1,7 @@
 #include "Archive.h"
 #include <BGSEEMain.h>
 
-ArchiveListT**			g_LoadedBSAArchives = (ArchiveListT**)0x00A0DD8C;
+ArchiveListT**			ArchiveManager::LoadedArchives = (ArchiveListT**)0x00A0DD8C;
 
 Archive* ArchiveManager::LoadArchive( const char* ArchiveName, UInt16 Unk02, UInt8 Unk03)
 {
@@ -10,7 +10,7 @@ Archive* ArchiveManager::LoadArchive( const char* ArchiveName, UInt16 Unk02, UIn
 
 void ArchiveManager::LoadSkippedArchives(const char* ArchiveDirectory)
 {
-	if (*g_LoadedBSAArchives == 0)
+	if (*LoadedArchives == 0)
 		return;
 
 	for (IDirectoryIterator Itr(ArchiveDirectory, "*.bsa"); !Itr.Done(); Itr.Next())
@@ -19,7 +19,7 @@ void ArchiveManager::LoadSkippedArchives(const char* ArchiveDirectory)
 		FileName = FileName.substr(FileName.rfind("\\") + 1);
 
 		bool IsLoaded = false;
-		for (ArchiveListT::Iterator Itr = (*g_LoadedBSAArchives)->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+		for (ArchiveListT::Iterator Itr = (*LoadedArchives)->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
 			std::string LoadedFileName(Itr.Get()->fileName);
 			LoadedFileName = LoadedFileName.substr(LoadedFileName.rfind("\\") + 1);
@@ -96,3 +96,4 @@ bool ArchiveManager::ExtractArchiveFile( const char* InPath, const char* OutPath
 
 	return Result;
 }
+

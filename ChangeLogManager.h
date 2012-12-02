@@ -79,6 +79,7 @@ namespace ConstructionSetExtender
 #define CHANGELOG				ChangeLogManager::GetSingleton()
 
 		void							HandlePluginSave(TESFile* SaveFile);
-		void							HandlePluginLoad();
+		void							HandlePluginLoadProlog();
+		void							HandlePluginLoadEpilog();
 	}
 }

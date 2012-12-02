@@ -1477,8 +1477,8 @@ namespace ConstructionSetExtender
 			WorkspaceControlBox->Controls->Add(WorkspaceSplitter);
 			WorkspaceControlBox->Controls->Add(WorkspaceMainToolBar);
 
- 			Parent->AddTab(WorkspaceTabItem);
- 			Parent->AddTabControlBox(WorkspaceControlBox);
+			Parent->AddTab(WorkspaceTabItem);
+			Parent->AddTabControlBox(WorkspaceControlBox);
 
 			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height; }
 			catch (...) {}
@@ -2686,7 +2686,7 @@ namespace ConstructionSetExtender
 		{
 			if (GetModifiedStatus())
 			{
-				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes. Do you wish to save them?",
+				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
 													SCRIPTEDITOR_TITLE,
 													MessageBoxButtons::YesNoCancel,
 													MessageBoxIcon::Exclamation);

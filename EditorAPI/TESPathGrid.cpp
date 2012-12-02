@@ -89,7 +89,7 @@ void TESPathGrid::UnlinkPointFromReference( TESPathGridPoint* Point, TESObjectRE
 void TESPathGrid::UpdateNiNode( void )
 {
 	thisCall<void>(0x006F28A0, this->gridNiNode);
-	_RENDERCMPT->UpdateAVObject(gridNiNode);
+	TESRender::UpdateAVObject(gridNiNode);
 }
 
 void TESPathGrid::GenerateNiNode( void )

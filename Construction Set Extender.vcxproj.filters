@@ -188,9 +188,6 @@
     <ClCompile Include="EditorAPI\TESDialog.cpp">
       <Filter>EditorAPI\System\CS Interfaces</Filter>
     </ClCompile>
-    <ClCompile Include="EditorAPI\TESRenderControl.cpp">
-      <Filter>EditorAPI\System\CS Interfaces</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\TESConditionItem.cpp">
       <Filter>EditorAPI\Forms\AI</Filter>
     </ClCompile>
@@ -274,6 +271,15 @@
     </ClCompile>
     <ClCompile Include="EditorAPI\TESFile.cpp">
       <Filter>EditorAPI\System\I/O</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\TESNPC.cpp">
+      <Filter>EditorAPI\Forms\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\TESRender.cpp">
+      <Filter>EditorAPI\System\CS Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorAPI\TESObjectLAND.cpp">
+      <Filter>EditorAPI\Forms\World</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -546,9 +552,6 @@
     <ClInclude Include="EditorAPI\TESDialog.h">
       <Filter>EditorAPI\System\CS Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="EditorAPI\TESRenderControl.h">
-      <Filter>EditorAPI\System\CS Interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="EditorAPI\TESConditionItem.h">
       <Filter>EditorAPI\Forms\AI</Filter>
     </ClInclude>
@@ -761,6 +764,12 @@
     </ClInclude>
     <ClInclude Include="Hooks\Hooks-VersionControl.h">
       <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESRender.h">
+      <Filter>EditorAPI\System\CS Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorAPI\TESObjectLAND.h">
+      <Filter>EditorAPI\Forms\World</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

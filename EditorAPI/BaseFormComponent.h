@@ -6,18 +6,18 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    BaseFormComponents define the various 'components' that true TESForm classes can inherit,
-    e.g. Name, Texture, Model, Weight, etc.  The root of the hierarchy is the BaseFormComponent
-    class, which exposes a common interface for Comparison, Copying, Serialization, etc.
+	BaseFormComponents define the various 'components' that true TESForm classes can inherit,
+	e.g. Name, Texture, Model, Weight, etc.  The root of the hierarchy is the BaseFormComponent
+	class, which exposes a common interface for Comparison, Copying, Serialization, etc.
 
-    NOTE: "Form" or "Component" References refer to members that point to another form, which are
-    tracked by the CS.
+	NOTE: "Form" or "Component" References refer to members that point to another form, which are
+	tracked by the CS.
 */
 
 class   TESFile;
 class   TESForm;
 class   NiNode;
-struct  FULL_HASH;  // Useage unknown - struct {void* unk00; void* unk04; void* unk08;}
+struct  FULL_HASH;  // Usage unknown - struct {void* unk00; void* unk04; void* unk08;}
 class   Script;
 class   SpellItem;
 class   TESLevSpell;

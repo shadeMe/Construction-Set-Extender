@@ -104,7 +104,7 @@ namespace ConstructionSetExtender
 
 	void AuxiliaryViewport::Redraw()
 	{
-		TESDialog::RedrawRenderWindow();
+		TESRenderWindow::Redraw();
 	}
 
 	void AuxiliaryViewport::SyncViewportCamera( NiCamera* Camera )
@@ -133,7 +133,7 @@ namespace ConstructionSetExtender
 			Camera = ViewportCamera;
 
 		BGSEERWPAINTER->SetEnabled(false);
-		_RENDERCMPT->RenderNode(Camera, NodeToRender);
+		_PRIMARYRENDERER->RenderNode(Camera, NodeToRender);
 		BGSEERWPAINTER->SetEnabled(true);
 		Hooks::_MemHdlr(NiDX9RendererPresent).WriteBuffer();
 
@@ -142,7 +142,7 @@ namespace ConstructionSetExtender
 
 	void AuxiliaryViewport::DrawBackBuffer( void )
 	{
-		_RENDERER->device->Present(NULL, NULL, DialogHandle, NULL);
+		_NIRENDERER->device->Present(NULL, NULL, DialogHandle, NULL);
 	}
 
 	bool AuxiliaryViewport::GetFrozen() const

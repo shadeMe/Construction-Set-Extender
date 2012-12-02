@@ -1,7 +1,5 @@
 #include "ExtraDataList.h"
 
-CRITICAL_SECTION*					g_ExtraDataListMutex = (CRITICAL_SECTION*)0x00A0DA80;
-
 void ExtraDataList::Link(TESForm* LinkedForm)
 {
 	thisCall<UInt32>(0x0045D740, this, LinkedForm);
@@ -40,4 +38,14 @@ void ExtraDataList::ModExtraRank( int Rank )
 void ExtraDataList::ModExtraCount( UInt32 Count )
 {
 	thisCall<UInt32>(0x0045E2A0, this, Count);
+}
+
+void BaseExtraList::AddExtra( BSExtraData* xData )
+{
+	thisCall<void>(0x0045B0D0, this, xData);
+}
+
+void BaseExtraList::RemoveExtra( UInt8 Type )
+{
+	thisCall<void>(0x0045B140, this, Type);
 }

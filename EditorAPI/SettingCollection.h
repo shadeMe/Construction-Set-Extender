@@ -9,16 +9,16 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    SettingCollection is an abstract interface for managing settings from a common source (file, registery, etc.)
-    INISettingCollection and it's descendents manage settings from the assorted INI files
-    RegSettingCollection managed windows registry values.
-    GameSettingCollection manages the configurable game settings.
+	SettingCollection is an abstract interface for managing settings from a common source (file, registery, etc.)
+	INISettingCollection and it's descendents manage settings from the assorted INI files
+	RegSettingCollection managed windows registry values.
+	GameSettingCollection manages the configurable game settings.
 
-    NOTE:
-    SettingCollection and it's abstract descendents are actually templated to accept arbitrary data types.  The only template
-    parameter used is 'Setting', so functionally the classes defined here are identical to those defined in the game/CS.
-    However, as with many of the template classes reproduced (rather than imported) in COEF, dynamic casting may not work
-    as expected with these types.
+	NOTE:
+	SettingCollection and it's abstract descendents are actually templated to accept arbitrary data types.  The only template
+	parameter used is 'Setting', so functionally the classes defined here are identical to those defined in the game/CS.
+	However, as with many of the template classes reproduced (rather than imported) in COEF, dynamic casting may not work
+	as expected with these types.
 */
 
 class   TESFile;
@@ -27,10 +27,10 @@ class   TESFile;
 class SettingCollection // actually SettingCollection<Setting*>
 {
 public:
-    // members
-    //     /*000*/ void**           vtbl;
-    /*004*/ char            filename[0x104];	// full path of ini file for ini settings, ignored for other collections
-    /*108*/ void*           fileObject;			// actual type depends on class, but must be nonzero when file is open
+	// members
+	//     /*000*/ void**           vtbl;
+	/*004*/ char            filename[0x104];	// full path of ini file for ini settings, ignored for other collections
+	/*108*/ void*           fileObject;			// actual type depends on class, but must be nonzero when file is open
 												// TESFile* for gmst, HKEY for RegSetting, this* pointer for INISetting
 	virtual void			VFn00() = 0;
 };
@@ -39,11 +39,11 @@ public:
 class SettingCollectionList : public SettingCollection  // actually SettingCollectionList<Setting*>
 {
 public:
-    typedef tList<Setting> SettingListT;
+	typedef tList<Setting> SettingListT;
 
-    // members
-    //     /*000*/ SettingCollection
-    /*10C*/ SettingListT	settingList;
+	// members
+	//     /*000*/ SettingCollection
+	/*10C*/ SettingListT	settingList;
 
 	// methods
 	Setting*				LookupByName(const char* Name);
@@ -53,9 +53,9 @@ public:
 class INISettingCollection : public SettingCollectionList
 {
 public:
-    // fileName holds the ini file name
-    // fileObject holds the this* pointer when file is "open", and is zero otherwise
-    // file is not actually opened; all i/o uses Get/WritePrivateProfileString()
+	// fileName holds the ini file name
+	// fileObject holds the this* pointer when file is "open", and is zero otherwise
+	// file is not actually opened; all i/o uses Get/WritePrivateProfileString()
 
 	// no additional members
 
@@ -66,24 +66,24 @@ public:
 class LipSynchroSettingCollection : public INISettingCollection
 {
 public:
-    // no additional members
+	// no additional members
 };
 
 // 114
 class REGINISettingCollection : public INISettingCollection
 {
 public:
-    // no additional members
+	// no additional members
 };
 
 // 114
 class RegSettingCollection : public SettingCollectionList
 {
 public:
-    // fileName holds the registry key name, from HKEY_LOCAL_MACHINE
-    // fileObject holds an HKEY to the target registery key.
+	// fileName holds the registry key name, from HKEY_LOCAL_MACHINE
+	// fileObject holds an HKEY to the target registery key.
 
-    // no additional members
+	// no additional members
 };
 
 // 120
@@ -92,19 +92,29 @@ class SettingCollectionMap : public SettingCollection   // actually SettingColle
 public:
 	typedef ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<Setting*>	SettingMapT;
 
-    // members
-    //     /*000*/ SettingCollection
-    /*10C*/ SettingMapT      settingMap;
+	// members
+	//     /*000*/ SettingCollection
+	/*10C*/ SettingMapT      settingMap;
 };
+
+// CSE-specific stuff
+struct DefaultGMSTMapKeyComparer
+{
+	bool operator()(const char* Key1, const char* Key2) const
+	{
+		return _stricmp(Key1, Key2) < 0;
+	}
+};
+typedef std::map<const char*, GameSetting*, DefaultGMSTMapKeyComparer>		DefaultGMSTMapT;
 
 // 120
 class GameSettingCollection : public SettingCollectionMap
 {
 public:
-    // fileName seems to be ignored
-    // fileObject holds a TESFile* for loading/saving the setting
+	// fileName seems to be ignored
+	// fileObject holds a TESFile* for loading/saving the setting
 
-    // no additional members
+	// no additional members
 
 	// methods
 	void					CreateDefaultCopy();	// creates a copy of the collection
@@ -113,6 +123,5 @@ public:
 	void					SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData);
 
 	static GameSettingCollection*		Instance;
+	static DefaultGMSTMapT				DefaultCopy;
 };
-
-extern const char*				g_CSINIPath;

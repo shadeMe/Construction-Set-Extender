@@ -13,8 +13,8 @@ namespace ConstructionSetExtender_OverriddenClasses
 class	BSFile;
 
 /*
-    A "chunk" is the basic unit of the TES4 mod file. A chunk is headed by a type code and size field, followed by binary data
-    This struct is public (not a subclass of TESFile) because it is also used by RecordInfo
+	A "chunk" is the basic unit of the TES4 mod file. A chunk is headed by a type code and size field, followed by binary data
+	This struct is public (not a subclass of TESFile) because it is also used by RecordInfo
 */
 
 // 08 (NOTE: 06 for non-record chunks on disk, see below)
@@ -26,9 +26,9 @@ public:
 };
 
 /*
-    Records are chunks whose data consists entirely of subchunks.  They have additional identifying information in the header
-    During serialization, each form corresponds to a single record, but there are also a few records (e.g. GRUP,TES4) that do not correspond to any form
-    This struct is public (not a subclass of TESFile) because it is also used by TESForm.h
+	Records are chunks whose data consists entirely of subchunks.  They have additional identifying information in the header
+	During serialization, each form corresponds to a single record, but there are also a few records (e.g. GRUP,TES4) that do not correspond to any form
+	This struct is public (not a subclass of TESFile) because it is also used by TESForm.h
 */
 
 // 14

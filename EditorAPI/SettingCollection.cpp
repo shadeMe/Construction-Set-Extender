@@ -2,8 +2,7 @@
 
 GameSettingCollection*				GameSettingCollection::Instance = (GameSettingCollection*)0x00A10198;
 INISettingCollection*				INISettingCollection::Instance = (INISettingCollection*)0x00A102B8;
-
-const char*							g_CSINIPath = (const char*)0x00A0ABB8;
+DefaultGMSTMapT						GameSettingCollection::DefaultCopy;
 
 Setting* SettingCollectionList::LookupByName( const char* Name )
 {
@@ -18,17 +17,6 @@ Setting* SettingCollectionList::LookupByName( const char* Name )
 
 	return NULL;
 }
-
-struct DefaultGMSTMapKeyComparer
-{
-	bool operator()(const char* Key1, const char* Key2) const
-	{
-		return _stricmp(Key1, Key2) < 0;
-	}
-};
-
-typedef std::map<const char*, GameSetting*, DefaultGMSTMapKeyComparer>		DefaultGMSTMapT;
-DefaultGMSTMapT						g_DefaultGMSTMap;
 
 void GameSettingCollection::CreateDefaultCopy()
 {
@@ -47,7 +35,7 @@ void GameSettingCollection::CreateDefaultCopy()
 			TempSetting->MarkAsTemporary();
 			TempSetting->CopyFrom(SettingForm);
 
-			g_DefaultGMSTMap.insert(std::make_pair(Name, TempSetting));
+			DefaultCopy.insert(std::make_pair(Name, TempSetting));
 		}
 	}
 }
@@ -65,9 +53,9 @@ void GameSettingCollection::ResetCollection()
 			GameSetting* SettingForm = (GameSetting*)((UInt32)Data - 0x24);
 			SettingForm->SetFromActiveFile(false);
 
-			DefaultGMSTMapT::iterator Match = g_DefaultGMSTMap.find(Name);
+			DefaultGMSTMapT::iterator Match = DefaultCopy.find(Name);
 
-			if (Match != g_DefaultGMSTMap.end())
+			if (Match != DefaultCopy.end())
 			{
 				GameSetting* DefaultGMST = Match->second;
 				SettingForm->CopyFrom(DefaultGMST);
@@ -99,3 +87,4 @@ void GameSettingCollection::SerializeGMSTDataForHandShake(ComponentDLLInterface:
 		}
 	}
 }
+

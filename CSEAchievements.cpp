@@ -28,7 +28,7 @@ namespace ConstructionSetExtender
 			;//
 		}
 
-		const UInt32	CSEAchievementTimeLapsed::kIdleTimeOut = 60 * 1000;
+		const UInt32	CSEAchievementTimeLapsed::kIdleTimeOut = 30 * 1000;
 
 		void CSEAchievementTimeLapsed::ResetTimer( void )
 		{
@@ -77,9 +77,13 @@ namespace ConstructionSetExtender
 		VOID CALLBACK CSEAchievementCheat::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
 			if (CSEAchievementCheat::GetSingleton()->GetIsIdling())
+			{
+				CSEAchievementCheat::GetSingleton()->InitTickCount = dwTime;
 				return;
+			}
 
-			CSEAchievementCheat::GetSingleton()->ElapsedTicks = dwTime - CSEAchievementCheat::GetSingleton()->InitTickCount;
+			CSEAchievementCheat::GetSingleton()->ElapsedTicks += dwTime - CSEAchievementCheat::GetSingleton()->InitTickCount;
+			CSEAchievementCheat::GetSingleton()->InitTickCount = dwTime;
 
 			if (CSEAchievementCheat::GetSingleton()->ElapsedTicks / (3600 * 1000) >= CSEAchievementCheat::GetSingleton()->HoursRequired)
 			{
@@ -116,9 +120,13 @@ namespace ConstructionSetExtender
 		VOID CALLBACK CSEAchievementLost::TimerCallback( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
 			if (CSEAchievementLost::GetSingleton()->GetIsIdling())
+			{
+				CSEAchievementLost::GetSingleton()->InitTickCount = dwTime;
 				return;
+			}
 
-			CSEAchievementLost::GetSingleton()->ElapsedTicks = dwTime - CSEAchievementLost::GetSingleton()->InitTickCount;
+			CSEAchievementLost::GetSingleton()->ElapsedTicks += dwTime - CSEAchievementLost::GetSingleton()->InitTickCount;
+			CSEAchievementLost::GetSingleton()->InitTickCount = dwTime;
 
 			if ((CSEAchievementLost::GetSingleton()->ExtraData + CSEAchievementLost::GetSingleton()->ElapsedTicks) / (3600 * 1000) >=
 				CSEAchievementLost::GetSingleton()->HoursRequired)
@@ -134,7 +142,7 @@ namespace ConstructionSetExtender
 									"40AB6814-1B55-4906-A564-74E9E37BC2EC",
 									ReqdHours)
 		{
-			TimerID = SetTimer(NULL, NULL, 5 * 60 * 1000, TimerCallback);
+			TimerID = SetTimer(NULL, NULL, 60 * 1000, TimerCallback);
 			SME_ASSERT(TimerID);
 		}
 

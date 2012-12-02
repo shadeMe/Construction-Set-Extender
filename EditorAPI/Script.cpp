@@ -4,6 +4,8 @@
 using namespace ConstructionSetExtender;
 
 TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
+bool									TESScriptCompiler::PreventErrorDetours = false;
+TESScriptCompiler::CompilerErrorListT	TESScriptCompiler::AuxiliaryErrorDepot;
 
 Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)
 {

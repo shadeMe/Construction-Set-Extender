@@ -29,10 +29,6 @@ namespace ConstructionSetExtender
 
 	namespace Hooks
 	{
-		extern bool									g_RenderWindowAltMovementSettings;
-		extern bool									g_FreezeInactiveRefs;
-		extern POINT								g_MouseCaptureDelta;
-
 		// hooks that do stuff to the renderer and the render window
 		void PatchRendererHooks(void);
 

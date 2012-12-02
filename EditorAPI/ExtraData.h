@@ -7,8 +7,8 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    ExtraData is Bethesda's tool for attaching arbitrary information to other classes.
-    BSExtraData is the absract node type for the linked list of extra data.
+	ExtraData is Bethesda's tool for attaching arbitrary information to other classes.
+	BSExtraData is the absract node type for the linked list of extra data.
 */
 
 class	TESPackage;
@@ -24,6 +24,7 @@ class	NiLines;
 class	NiAVObject;
 class	ExtraDataList;
 class	Subwindow;
+class	TESPreviewControl;
 
 // 0C
 class BSExtraData
@@ -212,6 +213,17 @@ public:
 	/*10*/ int					controlID;		// set to data->editR, used for quick lookup
 };
 STATIC_ASSERT(sizeof(DialogExtraColorControl) == 0x14);
+
+// 14
+class DialogExtraPreviewControl : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ TESPreviewControl*		previewControl;
+	/*10*/ int						previewControlID;
+};
+STATIC_ASSERT(sizeof(DialogExtraPreviewControl) == 0x14);
 
 // 20
 class DialogExtraQuestStageData : public BSExtraData

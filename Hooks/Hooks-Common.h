@@ -16,7 +16,7 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		extern FARPROC		g_TempIATProcBuffer;
+		extern FARPROC		IATProcBuffer;
 
 		void __stdcall IATCacheGetWindowTextAddress(void);
 		void __stdcall IATCacheCreateDialogParamAddress(void);

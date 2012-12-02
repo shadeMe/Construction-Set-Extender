@@ -4,20 +4,6 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		extern UInt32	g_CompileResultBuffer;
-		extern bool		g_PreventScriptCompileErrorRerouting;
-
-		struct CompilerErrorData
-		{
-			UInt32				Line;
-			std::string			Message;
-
-			CompilerErrorData(UInt32 Line, const char* Message) : Line(Line), Message(Message) {}
-		};
-
-		typedef std::vector<CompilerErrorData>	CompilerErrorListT;
-		extern CompilerErrorListT		g_CompilerErrorListBuffer;
-
 		void PatchCompilerErrorDetours();
 
 		_DeclareNopHdlr(RidScriptErrorMessageBox, "prevents the vanilla script error message box from being displayed");
@@ -38,7 +24,7 @@ namespace ConstructionSetExtender
 		static UInt32 CompilerErrorOverrideHandler##hookaddr##RetnAddr = jmpaddr##;		\
 		{																	\
 		__asm	call	TESScriptCompiler::ShowMessage						\
-		__asm	mov		g_CompileResultBuffer, 0							\
+		__asm	mov		s_CompileResultBuffer, 0							\
 		__asm	add		esp, stackoffset									\
 		__asm	jmp		CompilerErrorOverrideHandler##hookaddr##RetnAddr	\
 		}																	\

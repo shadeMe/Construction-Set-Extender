@@ -362,8 +362,17 @@ namespace ConstructionSetExtender
 			CHANGELOG->PushNewActiveLog();
 		}
 
-		void HandlePluginLoad(void)
+		void HandlePluginLoadProlog()
 		{
+			CHANGELOG->Pad(1);
+			CHANGELOG->RecordChange("Reloading plugins...");
+			CHANGELOG->Pad(1);
+		}
+
+		void HandlePluginLoadEpilog(void)
+		{
+			CHANGELOG->Pad(1);
+
 			if (_DATAHANDLER->activeFile)
 				CHANGELOG->RecordChange("Plugins reloaded; Active = %s", _DATAHANDLER->activeFile->fileName);
 			else

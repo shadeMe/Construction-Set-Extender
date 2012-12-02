@@ -61,6 +61,8 @@ class	NiDX9Renderer;
 class	Setting;
 class	NiBinaryStream;
 class	NiFile;
+class	NiRenderTargetGroup;
+class	BSFileEntry;
 
 // 1220
 class TESDataHandler
@@ -135,11 +137,14 @@ public:
 
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
 	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
+
+	static TESDataHandler**							Singleton;
+
+	static bool										PluginLoadSaveInProgress;			// managed by various hooks
 };
 STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 
-extern TESDataHandler**			g_TESDataHandler;
-#define _DATAHANDLER			(*g_TESDataHandler)
+#define _DATAHANDLER			(*TESDataHandler::Singleton)
 
 // 04
 class GridArray
@@ -273,11 +278,12 @@ public:
 																												// coord format: (x << 12) + 2048, (y << 12) + 2048
 	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
 	float							GetSkyTOD(void);		// this one too
+
+	static TES**					Singleton;
 };
 STATIC_ASSERT(sizeof(TES) == 0xAC);
 
-extern TES**					g_TES;
-#define _TES					(*g_TES)
+#define _TES					(*TES::Singleton)
 
 // 14
 class FileFinder
@@ -295,21 +301,17 @@ public:
 	/*04*/ NiTArray<const char*>	searchPaths;
 
 	// methods
-	virtual void		VFn00(void* Unk01) = 0;
+	virtual void				VFn00(void* Unk01) = 0;
 
-	UInt8				FindFile(const char* Path, UInt32 Unk02 = 0, UInt32 Unk03 = 0, int Unk04 = -1);
-	NiBinaryStream*		GetFileStream(const char* Path, bool WriteAccess = false, UInt32 BufferSize = 0x8000);
-	void				AddSearchPath(const char* Path);
+	UInt8						FindFile(const char* Path, UInt32 Unk02 = 0, UInt32 Unk03 = 0, int Unk04 = -1);
+	NiBinaryStream*				GetFileStream(const char* Path, bool WriteAccess = false, UInt32 BufferSize = 0x8000);
+	void						AddSearchPath(const char* Path);
+
+	static FileFinder**			Singleton;
 };
 STATIC_ASSERT(sizeof(FileFinder) == 0x14);
 
-extern FileFinder**				g_FileFinder;
-#define _FILEFINDER				(*g_FileFinder)
-
-extern NiDX9Renderer**			g_CSRenderer;
-#define _RENDERER				(*g_CSRenderer)
-
-class NiRenderTargetGroup;
+#define _FILEFINDER				(*FileFinder::Singleton)
 
 // 24
 class BSRenderedTexture : public NiRefObject
@@ -330,8 +332,6 @@ public:
 	void							DeleteInstance(bool ReleaseMemory = 0);
 };
 
-class BSFileEntry;
-
 // 10
 class BSTexturePalette : public NiRefObject
 {
@@ -340,6 +340,8 @@ public:
 	///*00*/ NiRefObject
 	/*08*/ ConstructionSetExtender_OverriddenClasses::NiTPointerMap<BSFileEntry*, NiPointer<NiTexture>>*		archivedTextures;
 	/*0C*/ ConstructionSetExtender_OverriddenClasses::NiTStringPointerMap<NiPointer<NiTexture>>*				looseTextures;
+
+	static BSTexturePalette**		Singleton;
 };
 
 // 48
@@ -363,29 +365,46 @@ public:
 
 	// methods
 	BSRenderedTexture*										CreateTexture(NiRenderer* Renderer, UInt32 Size, UInt32 Flags, UInt32 Unk04 = 0, UInt32 Unk05 = 0);
+
+	static BSTextureManager**								Singleton;
 };
-extern BSTextureManager**		g_BSTextureManager;
-#define _TEXMGR					(*g_BSTextureManager)
+#define _TEXMGR					(*BSTextureManager::Singleton)
 
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture32x;
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture64x;
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture128x;
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture512x;
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture1024x;
-extern LPDIRECT3DTEXTURE9*		g_LODD3DTexture2048x;
+// container class, arbitrarily named
+class TESLODTextureGenerator
+{
+public:
+	enum
+	{
+		kLODDiffuseMapGeneratorState_NotInUse = 0,
+		kLODDiffuseMapGeneratorState_Partials,
+		kLODDiffuseMapGeneratorState_FullMap,
+	};
 
-extern BSRenderedTexture**		g_LODBSTexture32x;
-extern BSRenderedTexture**		g_LODBSTexture64x;
-extern BSRenderedTexture**		g_LODBSTexture128x;
-extern BSRenderedTexture**		g_LODBSTexture512x;
-extern BSRenderedTexture**		g_LODBSTexture1024x;
-extern BSRenderedTexture**		g_LODBSTexture2048x;
+	static UInt8					GeneratorState;
 
-extern LPDIRECT3DTEXTURE9		g_LODD3DTexture256x;
-extern BSRenderedTexture*		g_LODBSTexture256x;
-extern LPDIRECT3DTEXTURE9		g_LODD3DTexture384x;
-extern BSRenderedTexture*		g_LODBSTexture384x;
-extern LPDIRECT3DTEXTURE9		g_LODD3DTexture4096x;
-extern BSRenderedTexture*		g_LODBSTexture4096x;
-extern LPDIRECT3DTEXTURE9		g_LODD3DTexture6144x;
-extern BSRenderedTexture*		g_LODBSTexture6144x;
+	static LPDIRECT3DTEXTURE9*		D3DTexture32x;
+	static LPDIRECT3DTEXTURE9*		D3DTexture64x;
+	static LPDIRECT3DTEXTURE9*		D3DTexture128x;
+	static LPDIRECT3DTEXTURE9*		D3DTexture512x;
+	static LPDIRECT3DTEXTURE9*		D3DTexture1024x;
+	static LPDIRECT3DTEXTURE9*		D3DTexture2048x;
+
+	static BSRenderedTexture**		BSTexture32x;
+	static BSRenderedTexture**		BSTexture64x;
+	static BSRenderedTexture**		BSTexture128x;
+	static BSRenderedTexture**		BSTexture512x;
+	static BSRenderedTexture**		BSTexture1024x;
+	static BSRenderedTexture**		BSTexture2048x;
+
+	static LPDIRECT3DTEXTURE9		D3DTexture256x;
+	static BSRenderedTexture*		BSTexture256x;
+	static LPDIRECT3DTEXTURE9		D3DTexture384x;
+	static BSRenderedTexture*		BSTexture384x;
+	static LPDIRECT3DTEXTURE9		D3DTexture4096x;
+	static BSRenderedTexture*		BSTexture4096x;
+	static LPDIRECT3DTEXTURE9		D3DTexture6144x;
+	static BSRenderedTexture*		BSTexture6144x;
+
+	static const char*				LODFullTexturePath;
+};

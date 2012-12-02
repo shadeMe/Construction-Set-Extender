@@ -1,6 +1,6 @@
 #include "MemoryHeap.h"
 
-MemoryHeap*					g_FormHeap = (MemoryHeap*)0x00A09E90;
+MemoryHeap*				MemoryHeap::FormHeap = (MemoryHeap*)0x00A09E90;
 
 void* FormHeap_Allocate( UInt32 Size )
 {

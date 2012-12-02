@@ -93,7 +93,7 @@ namespace ConstructionSetExtender
 
 		void BGSEEConsoleCmd_AutoSave_ExecuteHandler(BGSEECONSOLECMD_ARGS)
 		{
-			TESDialog::AutoSave();
+			TESCSMain::AutoSave();
 		}
 
 		void BGSEEConsoleCmd_Exit_ExecuteHandler(BGSEECONSOLECMD_ARGS)

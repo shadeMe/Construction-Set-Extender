@@ -23,9 +23,9 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Real-time updates for facegen preview controls (update the control for every trackbar changed notification message)
 		> Ability to filter certain warnings
 		> Add the various "missing" render window toggles to the View menu (like border, water toggling)
-		> Ctrl+F4 facegen data export for NPC records in ESP files
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Copy/paste obj refs b'ween CS sessions
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
@@ -36,7 +36,6 @@ CSE		---->
 
 	
 	MISC			=
-		> Wrap all editorAPI instance data
 
 
 SE		---->

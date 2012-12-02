@@ -203,13 +203,15 @@
     <ClCompile Include="EditorAPI\TESFile.cpp" />
     <ClCompile Include="EditorAPI\TESForm.cpp" />
     <ClCompile Include="EditorAPI\TESIdleForm.cpp" />
+    <ClCompile Include="EditorAPI\TESNPC.cpp" />
     <ClCompile Include="EditorAPI\TESObject.cpp" />
     <ClCompile Include="EditorAPI\TESObjectCELL.cpp" />
+    <ClCompile Include="EditorAPI\TESObjectLAND.cpp" />
     <ClCompile Include="EditorAPI\TESObjectREFR.cpp" />
     <ClCompile Include="EditorAPI\TESPackage.cpp" />
     <ClCompile Include="EditorAPI\TESPathGrid.cpp" />
     <ClCompile Include="EditorAPI\TESQuest.cpp" />
-    <ClCompile Include="EditorAPI\TESRenderControl.cpp" />
+    <ClCompile Include="EditorAPI\TESRender.cpp" />
     <ClCompile Include="EditorAPI\TESSound.cpp" />
     <ClCompile Include="Hooks\Hooks-VersionControl.cpp" />
     <ClCompile Include="ChangeLogManager.cpp" />
@@ -354,6 +356,7 @@
     <ClInclude Include="EditorAPI\TESObjectCLOT.h" />
     <ClInclude Include="EditorAPI\TESObjectCONT.h" />
     <ClInclude Include="EditorAPI\TESObjectDOOR.h" />
+    <ClInclude Include="EditorAPI\TESObjectLAND.h" />
     <ClInclude Include="EditorAPI\TESObjectLIGH.h" />
     <ClInclude Include="EditorAPI\TESObjectMISC.h" />
     <ClInclude Include="EditorAPI\TESObjectREFR.h" />
@@ -364,7 +367,7 @@
     <ClInclude Include="EditorAPI\TESPathGrid.h" />
     <ClInclude Include="EditorAPI\TESQuest.h" />
     <ClInclude Include="EditorAPI\TESRace.h" />
-    <ClInclude Include="EditorAPI\TESRenderControl.h" />
+    <ClInclude Include="EditorAPI\TESRender.h" />
     <ClInclude Include="EditorAPI\TESSigilStone.h" />
     <ClInclude Include="EditorAPI\TESSkill.h" />
     <ClInclude Include="EditorAPI\TESSoulGem.h" />
@@ -435,11 +438,14 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase.rc" />
-    <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc" />
+    <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
+    </ResourceCompile>
     <ResourceCompile Include="Construction Set Extender.rc" />
     <ResourceCompile Include="VersionInfo.rc">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CSE</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CSE</PreprocessorDefinitions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ExcludedFromBuild>
     </ResourceCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -46,12 +46,6 @@ namespace ConstructionSetExtender
 
 	namespace Hooks
 	{
-		bool						g_RenderWindowAltMovementSettings = false;
-		bool						g_FreezeInactiveRefs = false;
-		POINT						g_MouseCaptureDelta = { 0, 0 };
-
-		const float					kMaxLandscapeEditBrushRadius = 25.0f;
-
 		_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 		_DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
 		_DefineHookHdlr(NiWindowRender, 0x00406442);
@@ -159,7 +153,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESPathGridShowMultipleSelectionRing).WriteJump();
 			_MemHdlr(TESPathGridDtor).WriteUInt8(0xEB);
 			_MemHdlr(InitialCellLoadCameraPosition).WriteJump();
-			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&kMaxLandscapeEditBrushRadius);
+			_MemHdlr(LandscapeEditBrushRadius).WriteUInt32((UInt32)&TESRenderWindow::MaxLandscapeEditBrushRadius);
 			_MemHdlr(DuplicateReferences).WriteJump();
 			_MemHdlr(RenderToAuxiliaryViewport).WriteJump();
 			_MemHdlr(TESRenderControlPerformRelativeScale).WriteJump();
@@ -370,7 +364,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Jump, 0x0042CE7D);
 			__asm
 			{
-				mov		eax, [g_RenderWindowUpdateViewPortFlag]
+				mov		eax, [TESRenderWindow::RefreshFlag]
 				mov		eax, [eax]
 				cmp		al, 0
 				jz		DONTUPDATE
@@ -395,9 +389,9 @@ namespace ConstructionSetExtender
 		{
 			bool Result = false;
 
-			TESObjectCELL* CurrentCell = (*g_TES)->currentInteriorCell;
+			TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 			if (CurrentCell == NULL)
-				CurrentCell = (*g_TES)->currentExteriorCell;
+				CurrentCell = _TES->currentExteriorCell;
 
 			if (CurrentCell)
 			{
@@ -450,7 +444,7 @@ namespace ConstructionSetExtender
 				TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 				SME_ASSERT(Selection);
 
-				if (Selection->GetFrozen() || (Selection->IsActive() == false && g_FreezeInactiveRefs))
+				if (Selection->GetFrozen() || (Selection->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
 				{
 					FrozenRefs.push_back(Itr->Data);
 				}
@@ -482,7 +476,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042B99E);
 
-			*g_RenderWindowUpdateViewPortFlag = 1;
+			*TESRenderWindow::RefreshFlag = 1;
 			__asm
 			{
 				pushad
@@ -599,7 +593,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoForceShowTESObjectREFRDialogHook(HWND PropertiesDialog)
 		{
-			TESDialog::RedrawRenderWindow();
+			TESRenderWindow::Redraw();
 			SetWindowPos(PropertiesDialog, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
 		}
 
@@ -622,7 +616,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall InitializeCurrentRenderWindowMovementSetting(UInt8 Setting)
 		{
-			if (g_RenderWindowAltMovementSettings)
+			if (TESRenderWindow::UseAlternateMovementSettings)
 			{
 				s_MovementSettingBuffer = atof(INISettings::GetRenderer()->Get(Setting, BGSEEMAIN->INIGetter()));
 			}
@@ -631,31 +625,31 @@ namespace ConstructionSetExtender
 				switch(Setting)
 				{
 				case INISettings::kRenderer_AltRefMovementSpeed:
-					s_MovementSettingBuffer = *g_RenderWindowRefMovementSpeed;
+					s_MovementSettingBuffer = *TESRenderWindow::RefMovementSpeed;
 
 					break;
 				case INISettings::kRenderer_AltRefSnapGrid:
-					s_MovementSettingBuffer = *g_RenderWindowSnapGridDistance;
+					s_MovementSettingBuffer = *TESRenderWindow::SnapGridDistance;
 
 					break;
 				case INISettings::kRenderer_AltRefRotationSpeed:
-					s_MovementSettingBuffer = *g_RenderWindowRefRotationSpeed;
+					s_MovementSettingBuffer = *TESRenderWindow::RefRotationSpeed;
 
 					break;
 				case INISettings::kRenderer_AltRefSnapAngle:
-					s_MovementSettingBuffer = *g_RenderWindowSnapAngle;
+					s_MovementSettingBuffer = *TESRenderWindow::SnapAngle;
 
 					break;
 				case INISettings::kRenderer_AltCamRotationSpeed:
-					s_MovementSettingBuffer = *g_RenderWindowCameraRotationSpeed;
+					s_MovementSettingBuffer = *TESRenderWindow::CameraRotationSpeed;
 
 					break;
 				case INISettings::kRenderer_AltCamZoomSpeed:
-					s_MovementSettingBuffer = *g_RenderWindowCameraZoomSpeed;
+					s_MovementSettingBuffer = *TESRenderWindow::CameraZoomSpeed;
 
 					break;
 				case INISettings::kRenderer_AltCamPanSpeed:
-					s_MovementSettingBuffer = *g_RenderWindowCameraPanSpeed;
+					s_MovementSettingBuffer = *TESRenderWindow::CameraPanSpeed;
 
 					break;
 				default:
@@ -739,7 +733,7 @@ namespace ConstructionSetExtender
 			{
 				fmul	s_MovementSettingBuffer
 
-				mov		eax, [g_RenderWindowStateFlags]
+				mov		eax, [TESRenderWindow::StateFlags]
 				mov		eax, [eax]
 				test	eax, 0x2
 
@@ -842,10 +836,10 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042EF88);
 			_asm	pushad
-			TESDialog::RedrawRenderWindow(true);
-			SetActiveWindow(*g_HWND_CSParent);
-			SetActiveWindow(*g_HWND_RenderWindow);
-			SetForegroundWindow(*g_HWND_RenderWindow);
+			TESRenderWindow::Redraw(true);
+			SetActiveWindow(*TESCSMain::WindowHandle);
+			SetActiveWindow(*TESRenderWindow::WindowHandle);
+			SetForegroundWindow(*TESRenderWindow::WindowHandle);
 			__asm
 			{
 				popad
@@ -881,8 +875,8 @@ namespace ConstructionSetExtender
 
 		void __stdcall ActivateRenderWindow(void)
 		{
-			if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_NotInUse)
-				SetForegroundWindow(*g_HWND_RenderWindow);
+			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
+				SetForegroundWindow(*TESRenderWindow::WindowHandle);
 		}
 
 		#define _hhName		ActivateRenderWindowPostLandTextureChange
@@ -895,7 +889,7 @@ namespace ConstructionSetExtender
 				call	IATCacheSendMessageAddress
 				popad
 
-				call	g_TempIATProcBuffer
+				call	IATProcBuffer
 				pushad
 				call	ActivateRenderWindow
 				popad
@@ -923,8 +917,8 @@ namespace ConstructionSetExtender
 		{
 			PathGridUndoManager::Instance.ResetRedoStack();
 
-			if (g_RenderWindowSelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, g_RenderWindowSelectedPathGridPoints);
+			if (TESRenderWindow::SelectedPathGridPoints->Count())
+				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		void __stdcall DoTESPathGridRecordOperationMoveBHook(void)
@@ -999,10 +993,10 @@ namespace ConstructionSetExtender
 		void __stdcall DoTESPathGridDeletePointHook(void)
 		{
 			PathGridUndoManager::Instance.ResetRedoStack();
-			PathGridUndoManager::Instance.HandlePathGridPointDeletion(g_RenderWindowSelectedPathGridPoints);
+			PathGridUndoManager::Instance.HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
 
-			if (g_RenderWindowSelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointDeletion, g_RenderWindowSelectedPathGridPoints);
+			if (TESRenderWindow::SelectedPathGridPoints->Count())
+				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridDeletePoint
@@ -1083,8 +1077,8 @@ namespace ConstructionSetExtender
 		{
 			PathGridUndoManager::Instance.ResetRedoStack();
 
-			if (g_RenderWindowSelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointCreation, g_RenderWindowSelectedPathGridPoints);
+			if (TESRenderWindow::SelectedPathGridPoints->Count())
+				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridCreateNewLinkedPoint
@@ -1129,7 +1123,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x00428610);
 			__asm
 			{
-				mov		ebx, g_RenderWindowSelectedPathGridPoints
+				mov		ebx, TESRenderWindow::SelectedPathGridPoints
 				lea		ebx, [ebx]
 
 				pushad
@@ -1163,7 +1157,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			SendMessage(*g_HWND_RenderWindow, 0x40D, NULL, (LPARAM)&kNotSoDepletedMan);
+			SendMessage(*TESRenderWindow::WindowHandle, 0x40D, NULL, (LPARAM)&kNotSoDepletedMan);
 		}
 
 		#define _hhName		InitialCellLoadCameraPosition
@@ -1200,7 +1194,7 @@ namespace ConstructionSetExtender
 				pushad
 				call	IATCacheInterlockedDecrementAddress
 				popad
-				call	g_TempIATProcBuffer
+				call	IATProcBuffer
 				test    eax, eax
 				jnz     EXIT
 				mov     edx, [esi]
@@ -1245,7 +1239,7 @@ namespace ConstructionSetExtender
 
 			if (AUXVIEWPORT->GetFrozen() == false)
 			{
-				AUXVIEWPORT->SyncViewportCamera(_RENDERCMPT->primaryCamera);
+				AUXVIEWPORT->SyncViewportCamera(_PRIMARYRENDERER->primaryCamera);
 				AUXVIEWPORT->DrawBackBuffer();
 			}
 			else
@@ -1321,7 +1315,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
 		{
-			if (g_MouseCaptureDelta.x < 2 && g_MouseCaptureDelta.y < 2)
+			if (TESRenderWindow::CurrentMouseCoordDelta.x < 2 && TESRenderWindow::CurrentMouseCoordDelta.y < 2)
 				return false;
 			else
 				return true;
@@ -1406,7 +1400,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoInitPathGridNodeSelectionRingHook(void)
 		{
-			for (tList<TESPathGridPoint>::Iterator Itr = g_RenderWindowSelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+			for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 			{
 				Itr.Get()->selected = 0;
 			}
@@ -1538,7 +1532,7 @@ namespace ConstructionSetExtender
 			if (Enabled && GetAsyncKeyState(VK_CONTROL) == FALSE ||
 				(Enabled == false && GetAsyncKeyState(VK_CONTROL)))
 			{
-				Vector3* StaticPivot = (Vector3*)SendMessage(*g_HWND_RenderWindow, WM_RENDERWINDOW_GETCAMERASTATICPIVOT, NULL, NULL);
+				Vector3* StaticPivot = (Vector3*)SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_GETCAMERASTATICPIVOT, NULL, NULL);
 				*OutPivot = *StaticPivot;
 
 				return true;

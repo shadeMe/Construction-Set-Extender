@@ -9,8 +9,8 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    TESObjectCELL describes a physical location in the game world, tracking the scenegraph information(?)
-    and all objects (TESObjectREFRs) inside it.
+	TESObjectCELL describes a physical location in the game world, tracking the scenegraph information(?)
+	and all objects (TESObjectREFRs) inside it.
 */
 
 class   TESObjectREFR;
@@ -106,5 +106,5 @@ class TESChildCell
 public:
 	// no members, other than vtbl
 
-	virtual TESObjectCELL*		GetChildCell();
+	virtual TESObjectCELL*		GetChildCell() = 0;
 };

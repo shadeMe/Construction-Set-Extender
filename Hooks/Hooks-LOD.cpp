@@ -32,11 +32,9 @@ namespace ConstructionSetExtender
 	{
 		#define SAFERELEASE_BSR(X)		if (X)	{ X->DeleteInstance(); X = NULL; }
 
-		static const char*				kLODFullTexturePath = ".\\Data\\Textures\\LandscapeLOD\\Generated\\%i.%02i.%02i.%i.dds";
 		static HWND						s_NotificationDialog = NULL;
 		static UInt32					s_NotificationMapCounter = 0;
 		static UInt32					s_LODDiffuseMapPartialResolution = 384;		// values higher than 384 will cause buffer overruns
-		UInt8							g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_NotInUse;		// maintained by CSE
 
 		static int						s_iFadeNodeMinNearDistance = 0;
 		static float					s_fLODFadeOutPercent = 0.0f;
@@ -79,7 +77,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(LODLandBSTextureSelection).WriteJump();
 			_MemHdlr(GenerateLODPartialTexture).WriteJump();
 			_MemHdlr(GenerateLODFullTexture).WriteJump();
-			_MemHdlr(GenerateLODFullTextureFileName).WriteUInt32((UInt32)kLODFullTexturePath);
+			_MemHdlr(GenerateLODFullTextureFileName).WriteUInt32((UInt32)TESLODTextureGenerator::LODFullTexturePath);
 			_MemHdlr(GenerateLODDiffuseMapsReentryGuardA).WriteJump();
 			_MemHdlr(GenerateLODDiffuseMapsReentryGuardB).WriteJump();
 			_MemHdlr(GenerateLODDiffuseMapsReentryGuardC).WriteJump();
@@ -112,33 +110,33 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoLODLandTextureAllocationHook(void)
 		{
-			LPDIRECT3DDEVICE9 D3DDevice = (*g_CSRenderer)->device;
+			LPDIRECT3DDEVICE9 D3DDevice = _NIRENDERER->device;
 
-			D3DXCreateTexture(D3DDevice, 32, 32, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture32x);
-			D3DXCreateTexture(D3DDevice, 128, 128, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture128x);
-			D3DXCreateTexture(D3DDevice, 512, 512, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture512x);
-			D3DXCreateTexture(D3DDevice, 2048, 2048, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture2048x);
+			D3DXCreateTexture(D3DDevice, 32, 32, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, TESLODTextureGenerator::D3DTexture32x);
+			D3DXCreateTexture(D3DDevice, 128, 128, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, TESLODTextureGenerator::D3DTexture128x);
+			D3DXCreateTexture(D3DDevice, 512, 512, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, TESLODTextureGenerator::D3DTexture512x);
+			D3DXCreateTexture(D3DDevice, 2048, 2048, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, TESLODTextureGenerator::D3DTexture2048x);
 
-			D3DXCreateTexture(D3DDevice, 64, 64, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture64x);
-			D3DXCreateTexture(D3DDevice, 1024, 1024, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, g_LODD3DTexture1024x);
+			D3DXCreateTexture(D3DDevice, 64, 64, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, TESLODTextureGenerator::D3DTexture64x);
+			D3DXCreateTexture(D3DDevice, 1024, 1024, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, TESLODTextureGenerator::D3DTexture1024x);
 
-			*g_LODBSTexture32x = _TEXMGR->CreateTexture(*g_CSRenderer, 32, 21, 0, 0);
-			*g_LODBSTexture128x = _TEXMGR->CreateTexture(*g_CSRenderer, 128, 21, 0, 0);
-			*g_LODBSTexture512x = _TEXMGR->CreateTexture(*g_CSRenderer, 512, 21, 0, 0);
-			*g_LODBSTexture2048x = _TEXMGR->CreateTexture(*g_CSRenderer, 2048, 21, 0, 0);
+			*TESLODTextureGenerator::BSTexture32x = _TEXMGR->CreateTexture(_NIRENDERER, 32, 21, 0, 0);
+			*TESLODTextureGenerator::BSTexture128x = _TEXMGR->CreateTexture(_NIRENDERER, 128, 21, 0, 0);
+			*TESLODTextureGenerator::BSTexture512x = _TEXMGR->CreateTexture(_NIRENDERER, 512, 21, 0, 0);
+			*TESLODTextureGenerator::BSTexture2048x = _TEXMGR->CreateTexture(_NIRENDERER, 2048, 21, 0, 0);
 
-			*g_LODBSTexture64x = _TEXMGR->CreateTexture(*g_CSRenderer, 64, 21, 0, 0);
-			*g_LODBSTexture1024x = _TEXMGR->CreateTexture(*g_CSRenderer, 1024, 21, 0, 0);
+			*TESLODTextureGenerator::BSTexture64x = _TEXMGR->CreateTexture(_NIRENDERER, 64, 21, 0, 0);
+			*TESLODTextureGenerator::BSTexture1024x = _TEXMGR->CreateTexture(_NIRENDERER, 1024, 21, 0, 0);
 
-			D3DXCreateTexture(D3DDevice, 256, 256, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture256x);
-			D3DXCreateTexture(D3DDevice, 384, 384, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture384x);
-			D3DXCreateTexture(D3DDevice, 4096, 4096, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture4096x);
-			D3DXCreateTexture(D3DDevice, 6144, 6144, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &g_LODD3DTexture6144x);
+			D3DXCreateTexture(D3DDevice, 256, 256, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &TESLODTextureGenerator::D3DTexture256x);
+			D3DXCreateTexture(D3DDevice, 384, 384, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &TESLODTextureGenerator::D3DTexture384x);
+			D3DXCreateTexture(D3DDevice, 4096, 4096, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &TESLODTextureGenerator::D3DTexture4096x);
+			D3DXCreateTexture(D3DDevice, 6144, 6144, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &TESLODTextureGenerator::D3DTexture6144x);
 
-			g_LODBSTexture256x = _TEXMGR->CreateTexture(*g_CSRenderer, 256, 21, 0, 0);
-			g_LODBSTexture384x = _TEXMGR->CreateTexture(*g_CSRenderer, 384, 21, 0, 0);
-			g_LODBSTexture4096x = _TEXMGR->CreateTexture(*g_CSRenderer, 4096, 21, 0, 0);
-			g_LODBSTexture6144x = _TEXMGR->CreateTexture(*g_CSRenderer, 6144, 21, 0, 0);
+			TESLODTextureGenerator::BSTexture256x = _TEXMGR->CreateTexture(_NIRENDERER, 256, 21, 0, 0);
+			TESLODTextureGenerator::BSTexture384x = _TEXMGR->CreateTexture(_NIRENDERER, 384, 21, 0, 0);
+			TESLODTextureGenerator::BSTexture4096x = _TEXMGR->CreateTexture(_NIRENDERER, 4096, 21, 0, 0);
+			TESLODTextureGenerator::BSTexture6144x = _TEXMGR->CreateTexture(_NIRENDERER, 6144, 21, 0, 0);
 		}
 
 		#define _hhName		LODLandTextureAllocation
@@ -154,22 +152,22 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoLODLandTextureDestructionHook(void)
 		{
-			SAFERELEASE_D3D(g_LODD3DTexture256x)
-			SAFERELEASE_D3D(g_LODD3DTexture384x)
-			SAFERELEASE_D3D(g_LODD3DTexture4096x)
-			SAFERELEASE_D3D(g_LODD3DTexture6144x)
+			SAFERELEASE_D3D(TESLODTextureGenerator::D3DTexture256x)
+			SAFERELEASE_D3D(TESLODTextureGenerator::D3DTexture384x)
+			SAFERELEASE_D3D(TESLODTextureGenerator::D3DTexture4096x)
+			SAFERELEASE_D3D(TESLODTextureGenerator::D3DTexture6144x)
 
-			SAFERELEASE_BSR((*g_LODBSTexture32x))
-			SAFERELEASE_BSR((*g_LODBSTexture128x))
-			SAFERELEASE_BSR((*g_LODBSTexture512x))
-			SAFERELEASE_BSR((*g_LODBSTexture2048x))
-			SAFERELEASE_BSR((*g_LODBSTexture64x))
-			SAFERELEASE_BSR((*g_LODBSTexture1024x))
+			SAFERELEASE_BSR((*TESLODTextureGenerator::BSTexture32x))
+			SAFERELEASE_BSR((*TESLODTextureGenerator::BSTexture128x))
+			SAFERELEASE_BSR((*TESLODTextureGenerator::BSTexture512x))
+			SAFERELEASE_BSR((*TESLODTextureGenerator::BSTexture2048x))
+			SAFERELEASE_BSR((*TESLODTextureGenerator::BSTexture64x))
+			SAFERELEASE_BSR((*TESLODTextureGenerator::BSTexture1024x))
 
-			SAFERELEASE_BSR(g_LODBSTexture256x)
-			SAFERELEASE_BSR(g_LODBSTexture384x)
-			SAFERELEASE_BSR(g_LODBSTexture4096x)
-			SAFERELEASE_BSR(g_LODBSTexture6144x)
+			SAFERELEASE_BSR(TESLODTextureGenerator::BSTexture256x)
+			SAFERELEASE_BSR(TESLODTextureGenerator::BSTexture384x)
+			SAFERELEASE_BSR(TESLODTextureGenerator::BSTexture4096x)
+			SAFERELEASE_BSR(TESLODTextureGenerator::BSTexture6144x)
 		}
 
 		#define _hhName		LODLandTextureDestruction
@@ -203,16 +201,16 @@ namespace ConstructionSetExtender
 				cmp     eax, 0x200
 				jmp		_hhGetVar(Retn)
 			FETCH256:
-				mov		eax, g_LODD3DTexture256x
+				mov		eax, TESLODTextureGenerator::D3DTexture256x
 				retn
 			FETCH384:
-				mov		eax, g_LODD3DTexture384x
+				mov		eax, TESLODTextureGenerator::D3DTexture384x
 				retn
 			FETCH4096:
-				mov		eax, g_LODD3DTexture4096x
+				mov		eax, TESLODTextureGenerator::D3DTexture4096x
 				retn
 			FETCH6144:
-				mov		eax, g_LODD3DTexture6144x
+				mov		eax, TESLODTextureGenerator::D3DTexture6144x
 				retn
 			}
 		}
@@ -236,16 +234,16 @@ namespace ConstructionSetExtender
 				cmp     eax, 0x200
 				jmp		_hhGetVar(Retn)
 			FETCH256:
-				mov		eax, g_LODBSTexture256x
+				mov		eax, TESLODTextureGenerator::BSTexture256x
 				retn
 			FETCH384:
-				mov		eax, g_LODBSTexture384x
+				mov		eax, TESLODTextureGenerator::BSTexture384x
 				retn
 			FETCH4096:
-				mov		eax, g_LODBSTexture4096x
+				mov		eax, TESLODTextureGenerator::BSTexture4096x
 				retn
 			FETCH6144:
-				mov		eax, g_LODBSTexture6144x
+				mov		eax, TESLODTextureGenerator::BSTexture6144x
 				retn
 			}
 		}
@@ -276,7 +274,7 @@ namespace ConstructionSetExtender
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), Buffer);
 			}
 
-			g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_FullMap;
+			TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_FullMap;
 		}
 		#define _hhName		GenerateLODFullTexture
 		_hhBegin()
@@ -298,7 +296,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall GetIsLODDiffuseMapGeneratorInUse(void)
 		{
-			if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_NotInUse ||
+			if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse ||
 				*((TESWorldSpace**)0x00A0AB14) == NULL ||		// current worldspace
 				*((UInt32*)0x00A0AAF0) == 0 ||					// LOD gen state
 				*((UInt8*)0x00A0AB13) == 0)						// LOD texture state
@@ -311,7 +309,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall GetIsLODDiffuseMapGeneratorCreatingFullMap(void)
 		{
-			return g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_FullMap;
+			return TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_FullMap;
 		}
 
 		#define _hhName		GenerateLODDiffuseMapsReentryGuardA
@@ -444,16 +442,16 @@ namespace ConstructionSetExtender
 
 		void __stdcall ShowLODTextureGenNotification(bool State)
 		{
-			if (State && g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_NotInUse)
+			if (State && TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
 			{
 				s_NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 				Static_SetText(GetDlgItem(s_NotificationDialog, -1), "Please Wait\nDiffuse Map 0/256");
-				g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_Partials;
+				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_Partials;
 
 				// reduce time spent updating the main windows during cell switch
-				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_CellView);
-				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_CSParent);
-				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_RenderWindow);
+				BGSEEUI->GetInvalidationManager()->Push(*TESCellViewWindow::WindowHandle);
+				BGSEEUI->GetInvalidationManager()->Push(*TESCSMain::WindowHandle);
+				BGSEEUI->GetInvalidationManager()->Push(*TESRenderWindow::WindowHandle);
 
 				s_LODDiffuseMapPartialResolution = atoi(INISettings::GetLOD()->Get(INISettings::kLOD_PartialTextureResolution, BGSEEMAIN->INIGetter()));
 
@@ -484,20 +482,20 @@ namespace ConstructionSetExtender
 				s_fFadeDistance = Current->value.f;
 				Current->value.f = kfFadeDistance_DistantLOD;
 
-				*g_TESCSAllowAutoSaveFlag = 0;
+				*TESCSMain::AllowAutoSaveFlag = 0;
 			}
-			else if (g_LODDiffuseMapGeneratorState == kLODDiffuseMapGeneratorState_FullMap)
+			else if (TESLODTextureGenerator::GeneratorState == TESLODTextureGenerator::kLODDiffuseMapGeneratorState_FullMap)
 			{
 				BGSEECONSOLE_MESSAGE("Generated %d partial diffuse map(s) in total", s_NotificationMapCounter);
 				DestroyWindow(s_NotificationDialog);
 
 				s_NotificationDialog = NULL;
 				s_NotificationMapCounter = 0;
-				g_LODDiffuseMapGeneratorState = kLODDiffuseMapGeneratorState_NotInUse;
+				TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse;
 
-				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_CellView);
-				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_CSParent);
-				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_RenderWindow);
+				BGSEEUI->GetInvalidationManager()->Pop(*TESCellViewWindow::WindowHandle);
+				BGSEEUI->GetInvalidationManager()->Pop(*TESCSMain::WindowHandle);
+				BGSEEUI->GetInvalidationManager()->Pop(*TESRenderWindow::WindowHandle);
 
 				if (atoi(INISettings::GetLOD()->Get(INISettings::kLOD_DeletePartialsAfterGeneration, BGSEEMAIN->INIGetter())))
 				{
@@ -521,7 +519,7 @@ namespace ConstructionSetExtender
 				INISettingCollection::Instance->LookupByName("fFadeDistance:DistantLOD")->value.f = s_fFadeDistance;
 
 				SetThreadExecutionState(ES_CONTINUOUS);
-				*g_TESCSAllowAutoSaveFlag = 1;
+				*TESCSMain::AllowAutoSaveFlag = 1;
 			}
 		}
 
@@ -627,7 +625,7 @@ namespace ConstructionSetExtender
 			if (Camera->m_kViewFrustum.n > 0.05f)
 			{
 				Camera->m_kViewFrustum.n = 0.05f;
-				_RENDERCMPT->UpdateAVObject(Camera);
+				TESRender::UpdateAVObject(Camera);
 			}
 
 			// render the map's node as it gets updated with each partial's trishape
@@ -635,7 +633,7 @@ namespace ConstructionSetExtender
 			{
 				thisCall<void>(0x006F28A0, RenderNode);
 				thisCall<void>(0x006F2C10, RenderNode);
-				_RENDERCMPT->UpdateAVObject(RenderNode);
+				TESRender::UpdateAVObject(RenderNode);
 				AUXVIEWPORT->Draw(RenderNode, Camera);			// output will be inverted
 			}
 		}

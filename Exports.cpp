@@ -81,17 +81,17 @@ void WriteToStatusBar(int PanelIndex, const char* Message)
 	if (PanelIndex < 0 || PanelIndex > 3)
 		PanelIndex = 3;
 
-	TESDialog::WriteToStatusBar(MAKEWPARAM(PanelIndex, 0), Message);
+	TESCSMain::WriteToStatusBar(MAKEWPARAM(PanelIndex, 0), Message);
 }
 
 HWND GetCSMainWindowHandle(void)
 {
-	return *g_HWND_CSParent;
+	return *TESCSMain::WindowHandle;
 }
 
 HWND GetRenderWindowHandle(void)
 {
-	return *g_HWND_RenderWindow;
+	return *TESRenderWindow::WindowHandle;
 }
 
 FormData* LookupFormByEditorID(const char* EditorID)
@@ -203,7 +203,7 @@ void ShowUseReportDialog(const char* EditorID)
 
 void SaveActivePlugin(void)
 {
-	SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD2, NULL);
+	SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 0x9CD2, NULL);
 }
 
 void ReadFromINI(const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size)
@@ -284,14 +284,14 @@ bool CompileScript(ScriptCompileData* Data)
 		}
 		else
 		{
-			Data->CompileErrorData.Count = g_CompilerErrorListBuffer.size();
-			if (g_CompilerErrorListBuffer.size())
+			Data->CompileErrorData.Count = TESScriptCompiler::AuxiliaryErrorDepot.size();
+			if (TESScriptCompiler::AuxiliaryErrorDepot.size())
 			{
 				Data->CompileErrorData.ErrorListHead = new ScriptErrorListData::ErrorData[Data->CompileErrorData.Count];
 
 				for (int i = 0; i < Data->CompileErrorData.Count; i++)
 				{
-					CompilerErrorData* Error = &g_CompilerErrorListBuffer[i];
+					TESScriptCompiler::CompilerErrorData* Error = &TESScriptCompiler::AuxiliaryErrorDepot[i];
 					Data->CompileErrorData.ErrorListHead[i].Line = Error->Line;
 					Data->CompileErrorData.ErrorListHead[i].Message = Error->Message.c_str();
 				}
@@ -310,7 +310,7 @@ bool CompileScript(ScriptCompileData* Data)
 
 void RecompileScripts(void)
 {
-	g_PreventScriptCompileErrorRerouting = true;
+	TESScriptCompiler::PreventErrorDetours = true;
 
 	BGSEECONSOLE_MESSAGE("Recompiling active scripts...");
 	BGSEECONSOLE->Indent();
@@ -331,7 +331,7 @@ void RecompileScripts(void)
 	BGSEECONSOLE->Exdent();
 	BGSEECONSOLE_MESSAGE("Recompile active scripts operation completed!");
 
-	g_PreventScriptCompileErrorRerouting = false;
+	TESScriptCompiler::PreventErrorDetours = false;
 }
 
 void ToggleScriptCompilation(bool State)
@@ -411,13 +411,13 @@ void SaveEditorBoundsToINI(UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 	char Buffer[0x200] = {0};
 
 	FORMAT_STR(Buffer, "%d", Left);
-	WritePrivateProfileString("General", "Script Edit X", Buffer, g_CSINIPath);
+	WritePrivateProfileString("General", "Script Edit X", Buffer, TESCSMain::INIFilePath);
 	FORMAT_STR(Buffer, "%d", Top);
-	WritePrivateProfileString("General", "Script Edit Y", Buffer, g_CSINIPath);
+	WritePrivateProfileString("General", "Script Edit Y", Buffer, TESCSMain::INIFilePath);
 	FORMAT_STR(Buffer, "%d", Width);
-	WritePrivateProfileString("General", "Script Edit W", Buffer, g_CSINIPath);
+	WritePrivateProfileString("General", "Script Edit W", Buffer, TESCSMain::INIFilePath);
 	FORMAT_STR(Buffer, "%d", Height);
-	WritePrivateProfileString("General", "Script Edit H", Buffer, g_CSINIPath);
+	WritePrivateProfileString("General", "Script Edit H", Buffer, TESCSMain::INIFilePath);
 }
 
 ScriptListData* GetScriptList(void)
@@ -733,12 +733,12 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		if (TestData.UDF)	ScriptCount++;
 	}
 
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
 
-		g_TESFormEditorIDMap->GetNext(Itr, EditorID, Form);
+		TESForm::EditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
@@ -788,12 +788,12 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		GlobalCount++;
 	}
 
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormEditorIDMap->GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
 
-		g_TESFormEditorIDMap->GetNext(Itr, EditorID, Form);
+		TESForm::EditorIDMap->GetNext(Itr, EditorID, Form);
 		if (EditorID)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
@@ -887,7 +887,7 @@ void UpdateScriptVarNames(const char* EditorID, ComponentDLLInterface::ScriptVar
 
 bool CanUpdateIntelliSenseDatabase(void)
 {
-	return g_LoadingSavingPlugins == false;
+	return TESDataHandler::PluginLoadSaveInProgress == false;
 }
 
 const char* GetDefaultCachePath(void)
@@ -939,7 +939,7 @@ UseInfoListFormData* GetLoadedForms(void)
 {
 	UseInfoListFormData* Result = new UseInfoListFormData();
 
-	TESDialog::WriteToStatusBar(2, "Initializing Use Info List...");
+	TESCSMain::WriteToStatusBar(2, "Initializing Use Info List...");
 
 	UInt32 TotalFormCount = _DATAHANDLER->objects->objectCount;
 	TotalFormCount += _DATAHANDLER->packages.Count();
@@ -1001,7 +1001,7 @@ UseInfoListFormData* GetLoadedForms(void)
 	AddLinkedListContentsToFormList(&_DATAHANDLER->effectShaders, (FormListData*)Result, Index);
 	AddLinkedListContentsToFormList(&_DATAHANDLER->objectAnios, (FormListData*)Result, Index);
 
-	TESDialog::WriteToStatusBar(2, "Use Info List Initialized.");
+	TESCSMain::WriteToStatusBar(2, "Use Info List Initialized.");
 	return Result;
 }
 
@@ -1149,7 +1149,7 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 			}
 
 			HWND Parent = GetParent(Window);
-			if (!Parent || Parent == *g_HWND_CSParent)
+			if (!Parent || Parent == *TESCSMain::WindowHandle)
 				SendMessage(Window, 0x407, NULL, (LPARAM)&Data->InsertionPoint);
 			else
 				SendMessage(Parent, 0x407, NULL, (LPARAM)&Data->InsertionPoint);

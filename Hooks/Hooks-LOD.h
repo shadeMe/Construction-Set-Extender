@@ -21,14 +21,6 @@ namespace ConstructionSetExtender
 		// hooks that modify LOD related code
 		void PatchLODHooks(void);
 
-		extern UInt8		g_LODDiffuseMapGeneratorState;
-		enum
-		{
-			kLODDiffuseMapGeneratorState_NotInUse = 0,
-			kLODDiffuseMapGeneratorState_Partials,
-			kLODDiffuseMapGeneratorState_FullMap,
-		};
-
 		_DeclareNopHdlr(LODLandTextureMipMapLevelA, "patches the LOD texture generator to generate the full mip chain for diffuse maps");
 		_DeclareMemHdlr(LODLandTextureMipMapLevelB, "patches the LOD texture generator to generate the full mip chain for normal maps");
 		_DeclareMemHdlr(LODLandTextureAllocation, "increases the resolution of lod landscape diffuse maps");

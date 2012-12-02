@@ -289,4 +289,6 @@ public:
 
 	// methods
 	static void					InitializeListViewColumns(HWND ListView);
+
+	static HWND*				WindowHandle;
 };

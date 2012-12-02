@@ -26,26 +26,25 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "Construction Set Extender_Resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "#include ""VersionInfo.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
 END
 
 #endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -137,7 +136,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -287,7 +285,6 @@ BEGIN
     PUSHBUTTON      "Launch Game",IDC_MAINMENU_LAUNCHGAME,6,1,66,13
 END
 
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
@@ -391,6 +388,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sort Active Records First",   IDC_MAINMENU_SORTACTIVEFORMSFIRST
         MENUITEM "Colorize Active Records",     IDC_MAINMENU_COLORIZEACTIVEFORMS
+        MENUITEM "Colorize Record Overrides",   IDC_MAINMENU_COLORIZEFORMOVERRIDES
         MENUITEM SEPARATOR
         MENUITEM "Mar&kers\tM",                 40030, CHECKED
         MENUITEM "&Light Radius\tL",            40031, CHECKED
@@ -558,7 +556,6 @@ BEGIN
     END
 END
 
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog Info
@@ -567,37 +564,36 @@ END
 IDD_TESCOMBOBOX DLGINIT
 BEGIN
     IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
-0x0041, 
+0x0041,
     IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
-0x0042, 
+0x0042,
     IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
-0x0043, 
+0x0043,
     IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
-0x0044, 
+0x0044,
     IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
-0x0045, 
+0x0045,
     IDC_TESCOMBOBOX_FORMLIST, 0x403, 2, 0
-0x0046, 
+0x0046,
     0
 END
 
 IDD_BINDSCRIPT DLGINIT
 BEGIN
     IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
-0x0041, 
+0x0041,
     IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
-0x0042, 
+0x0042,
     IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
-0x0043, 
+0x0043,
     IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
-0x0044, 
+0x0044,
     IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
-0x0045, 
+0x0045,
     IDC_BINDSCRIPT_EXISTINGFORMLIST, 0x403, 2, 0
-0x0046, 
+0x0046,
     0
 END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -633,14 +629,11 @@ IDB_ACHIEVEMENT_FUNNYGUY BITMAP                  "Images\\funnyman.bmp"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
-
-
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

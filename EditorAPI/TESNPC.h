@@ -37,4 +37,7 @@ public:
 	/*218*/ TESCombatStyle*					combatStyle;			// NULL when set as DEFAULT in CS
 	/*21C*/ RGBA							hairColor;
 	/*220*/ FaceGenUndoListT				undoList;
+
+	// methods
+	void									ExportFaceGenTextures(void);
 };

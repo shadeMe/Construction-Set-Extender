@@ -6,16 +6,16 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    TESDialog is a 'container' classes for dealing with CS interface dialogs.
-    The static methods and data here may actually belong in a number of other classes, but they are grouped together
-    in the exectuable images, and apparently had their own file in the BS repository ("TESDialog.cpp").
-    At the moment, these classes are defined for convenience, to group code related to the CS interface in one place.
+	TESDialog is a 'container' classes for dealing with CS interface dialogs.
+	The static methods and data here may actually belong in a number of other classes, but they are grouped together
+	in the exectuable images, and apparently had their own file in the BS repository ("TESDialog.cpp").
+	At the moment, these classes are defined for convenience, to group code related to the CS interface in one place.
 
-    TESDialogs store a BaseExtraDataList for DialogExtra*** objects in their window 'user param' (e.g. GetWindowLong(-0x15))
+	TESDialogs store a BaseExtraDataList for DialogExtra*** objects in their window 'user param' (e.g. GetWindowLong(-0x15))
 
-    There seems to be a strong distinction between dialogs that edit forms and those that edit simpler component objects or
-    provide services like import/export or text searching.  Some members are only for dialogs that edit forms, and some are
-    only for dialogs that edit forms accessible in the Objects Window.
+	There seems to be a strong distinction between dialogs that edit forms and those that edit simpler component objects or
+	provide services like import/export or text searching.  Some members are only for dialogs that edit forms, and some are
+	only for dialogs that edit forms accessible in the Objects Window.
 */
 
 class	TESForm;
@@ -24,6 +24,8 @@ class	TESRace;
 class	Script;
 class	TESObjectREFR;
 class	BSExtraData;
+class	TESBoundObject;
+class	TESPreviewControl;
 
 // FormEditParam - for form-editing dialogs.
 // passed as initParam to CreateDialogParam() (i.e. lParam on WM_INITDIALOG message) for form-editing dialogs
@@ -49,11 +51,11 @@ public:
 	typedef tList<HWND>		ControlListT;
 
 	/*00*/ ControlListT     controls;		// items are actually HWNDs; declared as such due to tList's definition
-    /*08*/ HWND             hDialog;		// handle of parent dialog window
-    /*0C*/ HINSTANCE        hInstance;		// module instance of dialog template
+	/*08*/ HWND             hDialog;		// handle of parent dialog window
+	/*0C*/ HINSTANCE        hInstance;		// module instance of dialog template
 	/*10*/ POINT            position;		// position of subwindow within parent dialog
 	/*18*/ HWND             hContainer;		// handle of container control (e.g. Tab Control)
-    /*1C*/ HWND             hSubwindow;		// handle of subwindow, if created
+	/*1C*/ HWND             hSubwindow;		// handle of subwindow, if created
 
 	// methods
 	bool					Build(UInt32 TemplateID);
@@ -85,6 +87,8 @@ public:
 	/*1C*/ TESTopicInfo*			selectedInfo;
 	/*20*/ TESQuest*				selectedQuest;
 	/*24*/ VoicedRaceListT			voicedRaces;
+
+	static ResponseEditorData**		EditorCache;				// accessed by the response editor dlg and set by the last opened one
 };
 STATIC_ASSERT(sizeof(ResponseEditorData) == 0x2C);
 
@@ -104,22 +108,6 @@ public:
 };
 STATIC_ASSERT(sizeof(ScriptEditorData) == 0x12C);
 
-// 14
-class ObjectWindowTreeEntryInfo
-{
-public:
-	typedef tList<TESForm> FormListT;
-
-	// members
-	/*00*/ UInt8         formType;           // form type for this tree entry
-	/*01*/ UInt8         pad01[3];
-	/*04*/ UInt32        columnCount;        // number of columns in listview
-	/*08*/ UInt32        selectedIndex;      // index of currently selected item in listview (??)
-	/*0C*/ FormListT     formList;
-
-	static const UInt32		kTreeEntryCount = 0x24; // size of static tree entry arrays
-};
-STATIC_ASSERT(sizeof(ObjectWindowTreeEntryInfo) == 0x14);
 
 // 18
 // stored in the dialog's DialogExtraWorkingData's localCopy member
@@ -150,7 +138,7 @@ public:
 };
 STATIC_ASSERT(sizeof(FindTextWindowData) == 0x18);
 
-// only required methods exposed in the API
+// container class
 class TESDialog
 {
 public:
@@ -295,7 +283,7 @@ public:
 		kDialogTemplate_HeightMapEditorColorData	= 3201,
 		kDialogTemplate_ActorFactionData			= 3203,
 		kDialogTemplate_ActorInventoryData			= 3204,
-		kDialogTemplate_ActorBlank					= 3205,
+		kDialogTemplate_ActorSpellDaa				= 3205,
 		kDialogTemplate_CreatureStatsData			= 3208,
 		kDialogTemplate_FactionInterfactionData		= 3209,
 		kDialogTemplate_PreferencesRenderWindow		= 3210,
@@ -303,8 +291,8 @@ public:
 		kDialogTemplate_PreferencesMisc				= 3212,
 		kDialogTemplate_RegionEditorLandscapeData	= 3214,
 		kDialogTemplate_ActorAnimationData			= 3215,
-		kDialogTemplate_NPCFaceData					= 3216,
-		kDialogTemplate_ActorBlankEx				= 3219,			// spell list ?
+		kDialogTemplate_RaceFaceGenData				= 3216,
+		kDialogTemplate_CreatureModelData			= 3219,
 		kDialogTemplate_RegionEditorGrassData		= 3220,
 		kDialogTemplate_PreferencesShader			= 3221,
 		kDialogTemplate_PreferencesLOD				= 3222,
@@ -320,6 +308,7 @@ public:
 		kDialogTemplate_QuestTargetData				= 3245,
 		kDialogTemplate_ReferenceSelectRefData		= 3248,
 		kDialogTemplate_CreatureBloodData			= 3254,
+		kDialogTemplate_NPCFaceData					= 3218,
 		kDialogTemplate_NPCFaceAdvancedData			= 3256,
 		kDialogTemplate_WeatherHDRData				= 3257,
 		kDialogTemplate_ReferenceLeveledCreatureData
@@ -342,7 +331,6 @@ public:
 		kDialogTemplate_VersionControlCheckInProbs	= 255,
 		kDialogTemplate_MemoryUsage					= 304,
 		kDialogTemplate_CreatureSoundEx				= 3243,
-		kDialogTemplate_NPCFaceAdvancedDataEx		= 3217,
 
 		// Unknown
 		kDialogTemplate_Progress3238				= 3238,			// could be version control/convert ESM for xBox tool related
@@ -353,13 +341,6 @@ public:
 	// methods
 	static UInt32							WritePositionToINI(HWND Handle, const char* WindowClassName);
 	static bool								GetPositionFromINI(const char* WindowClassName, LPRECT OutRect);
-
-	static LRESULT							WriteToStatusBar(int PanelIndex, const char* Message);
-
-	static void								InitializeCSWindows();
-	static void								DeinitializeCSWindows();
-	static void		 						SetMainWindowTitleModified(bool State);
-	static void								AutoSave();				// should probably be in TES/TESDataHandler
 
 	static UInt32							GetDialogTemplateForFormType(UInt8 FormTypeID);
 	static TESObjectREFR*					ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection);
@@ -374,8 +355,7 @@ public:
 	static HWND								ShowFormEditDialog(TESForm* Form);
 	static void								ShowScriptEditorDialog(TESForm* InitScript);
 	static HWND								ShowUseReportDialog(TESForm* Form);
-	static void								ResetRenderWindow();
-	static void								RedrawRenderWindow(bool RefreshPathGrid = false);
+
 	static void								ResetFormListControls();
 
 	static float							GetDlgItemFloat(HWND Dialog, int ID);
@@ -383,7 +363,7 @@ public:
 	static void								ClampDlgEditField(HWND EditControl, float Min, float Max, bool NoDecimals = false, UInt32 DecimalPlaces = 2);
 
 	static void								ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data = NULL);
-	static void								UpdatePreviewWindows(bool RefreshRenderWindow = true);
+	static ExtraDataList*					GetDialogExtraDataList(HWND Dialog);
 };
 
 class TESComboBox
@@ -410,35 +390,111 @@ class TESPreviewWindow
 {
 public:
 	// methods
-	static void								Initialize(TESBoundObject* Object);
+	static void								Show(TESBoundObject* Object);
+
+	static void								HandleResize(HWND PreviewWindow);
+	static void								Initialize(HWND PreviewWindow);
+	static void								Deinitialize(HWND PreviewWindow);
+
+	static HWND*							WindowHandle;
+	static TESPreviewControl**				PreviewControl;	
 };
 
-extern const HINSTANCE*			g_TESCS_Instance;
+// container class, arbitrarily named
+class TESCSMain
+{
+public:
+	static LRESULT							WriteToStatusBar(int PanelIndex, const char* Message);
 
-extern const DLGPROC			g_ScriptEditor_DlgProc;
-extern const DLGPROC			g_FormUseReport_DlgProc;
-extern const DLGPROC			g_TESDialogFormEdit_DlgProc;
-extern const DLGPROC			g_TESDialogFormIDListView_DlgProc;
+	static void								InitializeCSWindows();
+	static void								DeinitializeCSWindows();
+	static void		 						SetTitleModified(bool State);
+	static void								AutoSave();				// should probably be in TES/TESDataHandler
 
-extern HWND*					g_HWND_RenderWindow;
-extern HWND*					g_HWND_ObjectWindow;
-extern HWND*					g_HWND_CellView;
-extern HWND*					g_HWND_CSParent;
-extern HWND*					g_HWND_AIPackagesDlg;
-extern HWND*					g_HWND_ObjectWindow_FormList;
-extern HWND*					g_HWND_ObjectWindow_Tree;
-extern HWND*					g_HWND_MainToolbar;
-extern HWND*					g_HWND_QuestWindow;
-extern HWND*					g_HWND_LandscapeEdit;
-extern HWND*					g_HWND_CellView_ObjectList;
-extern HWND*					g_HWND_CellView_CellList;
-extern HWND*					g_HWND_PreviewWindow;
+	static HINSTANCE*						Instance;
+	static HWND*							WindowHandle;
+	static HWND*							MainToolbarHandle;
+	static HMENU*							MainMenuHandle;
+	
+	static char**							ActivePluginNameBuffer;
+	static UInt8*							AllowAutoSaveFlag;
+	static UInt8*							ExittingCSFlag;
 
-extern HMENU*					g_HMENU_MainMenu;
+	static const char*						INIFilePath;
+};
 
-extern char**					g_TESActivePluginName;
-extern UInt8*					g_TESCSAllowAutoSaveFlag;
-extern UInt8*					g_TESCSExittingCSFlag;
-extern UInt8*					g_Flag_ObjectWindow_MenuState;
-extern UInt8*					g_Flag_CellView_MenuState;
-extern ResponseEditorData**		g_ResponseEditorData;
+// container class, arbitrarily named
+class TESObjectWindow
+{
+public:
+	// 14
+	class TreeEntryInfo
+	{
+	public:
+		typedef tList<TESForm> FormListT;
+
+		// members
+		/*00*/ UInt8         formType;           // form type for this tree entry
+		/*01*/ UInt8         pad01[3];
+		/*04*/ UInt32        columnCount;        // number of columns in listview
+		/*08*/ UInt32        selectedIndex;      // index of currently selected item in listview (??)
+		/*0C*/ FormListT     formList;
+
+		static const UInt32		kTreeEntryCount = 0x24; // size of static tree entry arrays
+	};
+	STATIC_ASSERT(sizeof(TreeEntryInfo) == 0x14);
+
+	static HWND*					WindowHandle;
+	static HWND*					FormListHandle;
+	static HWND*					TreeViewHandle;
+	
+	static UInt8*					MainMenuState;
+};
+
+// container class, arbitrarily named
+class TESCellViewWindow
+{
+public:
+	static HWND*					WindowHandle;
+	static HWND*					ObjectListHandle;
+	static HWND*					CellListHandle;
+
+	static UInt8*					MainMenuState;
+};
+
+// 18
+class TESObjectSelection
+{
+public:
+	// 0C
+	struct SelectedObjectsEntry
+	{
+		/*00*/ TESForm*					Data;
+		/*08*/ SelectedObjectsEntry*	Prev;
+		/*0C*/ SelectedObjectsEntry*	Next;
+	};
+
+	// members
+	/*00*/ SelectedObjectsEntry*		selectionList;
+	/*04*/ UInt32						selectionCount;
+	/*08*/ Vector3						selectionPositionVectorSum;
+	/*14*/ float						selectionBounds;						// init to 0.0
+
+	// methods
+	void								AddToSelection(TESForm* Form, bool AddSelectionBox = false);
+	void								RemoveFromSelection(TESForm* Form, bool RemoveSelectionBox = false);
+	void								ClearSelection(bool RemoveSelectionBox = false);
+	void								CalculatePositionVectorSum(void);
+	bool								HasObject(TESForm* Form);
+
+	static TESObjectSelection*			CreateInstance(TESObjectSelection* Source = NULL);
+	void								DeleteInstance();
+
+	static TESObjectSelection**			PrimaryInstance;
+};
+STATIC_ASSERT(sizeof(TESObjectSelection) == 0x18);
+
+typedef TESObjectSelection		TESRenderSelection;
+
+#define _PRIMARYOBJSEL			(*TESObjectSelection::PrimaryInstance)
+#define _RENDERSEL				(*TESObjectSelection::PrimaryInstance)

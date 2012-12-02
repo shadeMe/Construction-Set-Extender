@@ -10,9 +10,9 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    TESObjectREFR is the parent for all 'instances' of base forms in the game world
-    While each ref is a distinct form, it also points back to the 'base' form that it instantiates
-    Refs store local data like position, size, flags, etc.
+	TESObjectREFR is the parent for all 'instances' of base forms in the game world
+	While each ref is a distinct form, it also points back to the 'base' form that it instantiates
+	Refs store local data like position, size, flags, etc.
 */
 
 // 60

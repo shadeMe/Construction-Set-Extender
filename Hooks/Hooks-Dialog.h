@@ -16,6 +16,15 @@ namespace ConstructionSetExtender
 			kDialogs_ActiveFormBackColor,
 			kDialogs_ShowMainWindowsInTaskbar,
 			kDialogs_ShowEditDialogsInTaskbar,
+			kDialogs_ColorizeFormOverrides,
+			kDialogs_FormOverrideLevel0ForeColor,
+			kDialogs_FormOverrideLevel0BackColor,
+			kDialogs_FormOverrideLevel1ForeColor,
+			kDialogs_FormOverrideLevel1BackColor,
+			kDialogs_FormOverrideLevel2ForeColor,
+			kDialogs_FormOverrideLevel2BackColor,
+			kDialogs_FormOverrideLevel3ForeColor,
+			kDialogs_FormOverrideLevel3BackColor,
 
 			kDialogs__MAX
 		};
@@ -31,6 +40,7 @@ namespace ConstructionSetExtender
 		_DeclareNopHdlr(ResponseEditorMic, "nops out the call to the delinquent sound struct initializer sub, fixing a crash");
 		_DeclareMemHdlr(TopicResultScriptReset, "fixes the bug that clears all flags and the result script of a selected response when adding a new topic");
 		_DeclareMemHdlr(NPCFaceGen, "fixes the facegen crash by getting the CS to correctly render the model at dialog init");
+		_DeclareMemHdlr(CreaturePreview, "enables the preview control in teh creature edit dialog on startup");
 		_DeclareMemHdlr(CustomCSWindow, "keeps custom child windows of the CS main window from being closed on plugin load");
 		_DeclareMemHdlr(RaceDescriptionDirtyEdit, "prevent dirty edits occuring when you edit a race's text description and click directly to another race without switching tabs first, if the spellchecker pops up (which it will), the description for the race you were previously working on gets copied into the one you just selected.");
 		_DeclareMemHdlr(AddListViewItem, "patches various routines to check for the 'Hide UnModified/Deleted Forms' flag before populating controls with forms");

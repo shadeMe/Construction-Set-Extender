@@ -6,9 +6,9 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    ExtraData is Bethesda's tool for attaching arbitrary information to other classes.
-    BaseExtraList seems to be the generic extra data manager, and is used for DialogExtraData
-    ExtraDataList seems to be targeted specifically to forms (?)
+	ExtraData is Bethesda's tool for attaching arbitrary information to other classes.
+	BaseExtraList seems to be the generic extra data manager, and is used for DialogExtraData
+	ExtraDataList seems to be targeted specifically to forms (?)
 */
 
 class	TESForm;
@@ -25,7 +25,11 @@ public:
 	/*08*/ UInt8					extraTypes[0x0C];		// if a bit is set, then the extralist should contain that extradata
 															// bits are numbered starting from the lsb
 
-	virtual void					VFn00();
+	virtual void					Dtor(bool ReleaseMemory);
+
+	// methods
+	void							AddExtra(BSExtraData* xData);
+	void							RemoveExtra(UInt8 Type);
 };
 STATIC_ASSERT(sizeof(BaseExtraList) == 0x14);
 
@@ -47,5 +51,3 @@ public:
 	void							ModExtraCount(UInt32 Count);
 };
 STATIC_ASSERT(sizeof(ExtraDataList) == 0x14);
-
-extern CRITICAL_SECTION*		g_ExtraDataListMutex;

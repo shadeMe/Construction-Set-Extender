@@ -23,9 +23,9 @@
 
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
 #define VER_FILE_VERSION_STR        STRINGIZE(VERSION_MAJOR)        \
-                                    "." STRINGIZE(VERSION_MINOR)    \
-                                    "." STRINGIZE(VERSION_REVISION) \
-                                    "." STRINGIZE(VERSION_BUILD)    \
+									"." STRINGIZE(VERSION_MINOR)    \
+									"." STRINGIZE(VERSION_REVISION) \
+									"." STRINGIZE(VERSION_BUILD)    \
 
 #if defined(CSE)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender"

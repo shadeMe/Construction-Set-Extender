@@ -109,7 +109,7 @@ namespace ConstructionSetExtender
 				if (CurrentRAMCounter != GetSingleton()->RAMCounter)
 				{
 					GetSingleton()->RAMCounter = CurrentRAMCounter;
-					TESDialog::RedrawRenderWindow();
+					TESRenderWindow::Redraw();
 
 					if (CurrentRAMCounter > 3000)
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kOver3000);
@@ -167,7 +167,7 @@ namespace ConstructionSetExtender
 		void RenderWindowPainter::Initialize( void )
 		{
 			RECT DrawRect;
-			bool ComponentInitialized = BGSEERWPAINTER->Initialize(*g_HWND_RenderWindow, _RENDERER->device);
+			bool ComponentInitialized = BGSEERWPAINTER->Initialize(*TESRenderWindow::WindowHandle, _NIRENDERER->device);
 
 			SME_ASSERT(ComponentInitialized);
 

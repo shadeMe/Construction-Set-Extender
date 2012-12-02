@@ -49,8 +49,8 @@ namespace ConstructionSetExtender
 		else if (CameraFOV < 50.0f)
 			CameraFOV = 50.0f;
 
-		memcpy(&ViewportFrustumBuffer, &_RENDERCMPT->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
-		_RENDERCMPT->SetCameraFOV(_RENDERCMPT->primaryCamera, CameraFOV);
+		memcpy(&ViewportFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
+		TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
 
 		BGSEEUI->GetSubclasser()->UnregisterDialogSubclass(RenderWindowTemplateID, UIManager::RenderWindowMiscSubclassProc);
 		RefreshRenderWindow();
@@ -60,8 +60,8 @@ namespace ConstructionSetExtender
 	{
 		Hooks::_MemHdlr(CellViewSetCurrentCell).WriteBuffer();			// write original instruction
 
-		memcpy(&_RENDERCMPT->primaryCamera->m_kViewFrustum, &ViewportFrustumBuffer, sizeof(NiFrustum));
-		_RENDERCMPT->UpdateAVObject(_RENDERCMPT->primaryCamera);
+		memcpy(&_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, &ViewportFrustumBuffer, sizeof(NiFrustum));
+		TESRender::UpdateAVObject(_PRIMARYRENDERER->primaryCamera);
 
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(RenderWindowTemplateID, UIManager::RenderWindowMiscSubclassProc);
 		RefreshRenderWindow();
@@ -75,7 +75,7 @@ namespace ConstructionSetExtender
 		{
 			float RotationSpeed = atof(INISettings::GetRenderWindowFlyCamera()->Get(INISettings::kRenderWindowFlyCamera_RotationSpeed, BGSEEMAIN->INIGetter()));
 
-			_RENDERCMPT->RotateNode(_RENDERCMPT->primaryCameraParentNode,
+			TESRender::RotateNode(_PRIMARYRENDERER->primaryCameraParentNode,
 									&RotationPivot,
 									XOffset,
 									YOffset,
@@ -103,7 +103,7 @@ namespace ConstructionSetExtender
 				if (Direction == BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Backward)
 					Velocity *= -1;
 
-				_RENDERCMPT->UpdateNode(_RENDERCMPT->primaryCameraParentNode, TESRenderComponents::kNodeUpdate_Unk04, Velocity);
+				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk04, Velocity);
 			}
 
 			break;
@@ -113,7 +113,7 @@ namespace ConstructionSetExtender
 				if (Direction == BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Right)
 					Velocity *= -1;
 
-				_RENDERCMPT->UpdateNode(_RENDERCMPT->primaryCameraParentNode, TESRenderComponents::kNodeUpdate_Unk02, Velocity);
+				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk02, Velocity);
 			}
 
 			break;
@@ -123,7 +123,7 @@ namespace ConstructionSetExtender
 				if (Direction == BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Down)
 					Velocity *= -1;
 
-				_RENDERCMPT->UpdateNode(_RENDERCMPT->primaryCameraParentNode, TESRenderComponents::kNodeUpdate_Unk00, Velocity);
+				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk00, Velocity);
 			}
 
 			break;
@@ -134,6 +134,6 @@ namespace ConstructionSetExtender
 
 	void CSERenderWindowFlyCameraOperator::RefreshRenderWindow( void )
 	{
-		TESDialog::RedrawRenderWindow();
+		TESRenderWindow::Redraw();
 	}
 }

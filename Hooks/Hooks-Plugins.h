@@ -8,8 +8,6 @@ namespace ConstructionSetExtender
 		// hooks that modify how the CS handles plugin files
 		void PatchTESFileHooks(void);
 
-		extern bool		g_LoadingSavingPlugins;
-
 		_DeclareMemHdlr(SavePluginMasterEnum, "allows esps to be enumerated while filling the file header");
 		_DeclareNopHdlr(CheckIsActivePluginAnESM, "allows master files to be set as active plugins");
 		_DeclareNopHdlr(TESFormGetUnUsedFormID, "");

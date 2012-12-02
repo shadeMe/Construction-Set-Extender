@@ -13,8 +13,6 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		bool g_LoadingSavingPlugins = false;
-
 		_DefineHookHdlr(SavePluginMasterEnum, 0x0047ECC6);
 		_DefineNopHdlr(CheckIsActivePluginAnESM, 0x0040B65E, 2);
 		_DefineNopHdlr(TESFormGetUnUsedFormID, 0x00486C08, 2);
@@ -120,7 +118,7 @@ namespace ConstructionSetExtender
 			s_LoadIdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 			Static_SetText(GetDlgItem(s_LoadIdleWindow, -1), "Loading Plugins\nPlease Wait");
 
-			g_LoadingSavingPlugins = true;
+			TESDataHandler::PluginLoadSaveInProgress = true;
 		}
 
 		#define _hhName		LoadPluginsProlog
@@ -144,7 +142,7 @@ namespace ConstructionSetExtender
 			_DATAHANDLER->CleanCellWaterExtraData();
 
 			DestroyWindow(s_LoadIdleWindow);
-			g_LoadingSavingPlugins = false;
+			TESDataHandler::PluginLoadSaveInProgress = false;
 		}
 
 		#define _hhName		LoadPluginsEpilog
@@ -175,7 +173,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	IATCacheSetWindowTextAddress
-				call	[g_TempIATProcBuffer]				// SetWindowTextA
+				call	[IATProcBuffer]				// SetWindowTextA
 				pushad
 				call	DoPostPluginSaveHook
 				popad
@@ -186,9 +184,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoPostPluginLoadHook(void)
 		{
 			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
-			SendMessage(*g_HWND_RenderWindow, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 
-			SetActiveWindow(*g_HWND_CSParent);				// to make sure none of its child dialogs are hidden behind it
+			SetActiveWindow(*TESCSMain::WindowHandle);				// to make sure none of its child dialogs are hidden behind it
 		}
 
 		#define _hhName	PostPluginLoad
@@ -299,7 +297,7 @@ namespace ConstructionSetExtender
 		{
 			TESFile* ActiveFile = _DATAHANDLER->activeFile;
 			SME::MiscGunk::ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
-			g_LoadingSavingPlugins = false;
+			TESDataHandler::PluginLoadSaveInProgress = false;
 		}
 
 		#define _hhName		DataHandlerSavePluginEpilog
@@ -469,7 +467,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDataHandlerSavePluginResetHook(void)
 		{
-			ZeroMemory(*g_TESActivePluginName, 0x104);
+			ZeroMemory(*TESCSMain::ActivePluginNameBuffer, 0x104);
 		}
 
 		#define _hhName		DataHandlerSavePluginResetA

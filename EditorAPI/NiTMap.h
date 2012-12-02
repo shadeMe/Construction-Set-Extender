@@ -4,63 +4,63 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    NiTMap class hierarchy: hashtable-based associative containers
+	NiTMap class hierarchy: hashtable-based associative containers
 
-    [ NOTICE: This is a templated class ]
-    Because it uses templates, this class requires a separate set of imports for every specialization.
-    In practice, most of the specializations map back to a few basic methods, but we'd still need to
-    import the appropriate symbols for each.  This makes it difficult to hook and patch - but it also means
-    that no one is likely to patch it, so the hooking is not strictly necessary.  We instead attempt to
-    reproduce the original templated source code.
-    CAUTIONS:
-    -   Great care must be taken for some functions (e.g. hash computation) to make sure they match the game code
-    -   Because of simplification to template & inheritance structure, dynamic_cast may fail for this class
+	[ NOTICE: This is a templated class ]
+	Because it uses templates, this class requires a separate set of imports for every specialization.
+	In practice, most of the specializations map back to a few basic methods, but we'd still need to
+	import the appropriate symbols for each.  This makes it difficult to hook and patch - but it also means
+	that no one is likely to patch it, so the hooking is not strictly necessary.  We instead attempt to
+	reproduce the original templated source code.
+	CAUTIONS:
+	-   Great care must be taken for some functions (e.g. hash computation) to make sure they match the game code
+	-   Because of simplification to template & inheritance structure, dynamic_cast may fail for this class
 
-    Alterations from original code:
-    -   Removed all template parameters for the allocator, hash & comparison functors
-        The hash & comparison functors actually manifest as virtual methods
-    -   Removed all inheritance from NiMemObject
-    -   Switched NIASSERT to cassert
-    -   Switched NiMalloc & NiFree to FormHeap
+	Alterations from original code:
+	-   Removed all template parameters for the allocator, hash & comparison functors
+		The hash & comparison functors actually manifest as virtual methods
+	-   Removed all inheritance from NiMemObject
+	-   Switched NIASSERT to cassert
+	-   Switched NiMalloc & NiFree to FormHeap
 
-    [Original] Notes on Usage:
+	[Original] Notes on Usage:
 
-     The map class implements a hash table of TKEY to store values of TVAL.
-     It uses modular arithmetic for building the hash keys with a default
-     table size of 37.  If you want a larger table size, the best bet is to
-     us a large prime number.  Consult a standard text on hashing for the
-     basic theory.
+	 The map class implements a hash table of TKEY to store values of TVAL.
+	 It uses modular arithmetic for building the hash keys with a default
+	 table size of 37.  If you want a larger table size, the best bet is to
+	 us a large prime number.  Consult a standard text on hashing for the
+	 basic theory.
 
-     TKEY MUST BE THE SAME SIZE AS A POINTER!
+	 TKEY MUST BE THE SAME SIZE AS A POINTER!
 
-     The template class assumes that type TKEY has the following:
-       1.  Default constructor, TKEY::TKEY();
-       2.  Copy constructor, TKEY::TKEY(const TKEY&);
-       3.  Assignment, TKEY& operator=(const TKEY&);
-       4.  Comparison, bool TKEY::operator==(const TKEY&), or supply a
-           specialized equality testing class in your template.
-       5.  Implicit conversion, TKEY::operator long(), for building hash key,
-           or you must pass in your own hash function class in your template.
+	 The template class assumes that type TKEY has the following:
+	   1.  Default constructor, TKEY::TKEY();
+	   2.  Copy constructor, TKEY::TKEY(const TKEY&);
+	   3.  Assignment, TKEY& operator=(const TKEY&);
+	   4.  Comparison, bool TKEY::operator==(const TKEY&), or supply a
+		   specialized equality testing class in your template.
+	   5.  Implicit conversion, TKEY::operator long(), for building hash key,
+		   or you must pass in your own hash function class in your template.
 
-     The template class assumes that type TVAL has the following:
-       1.  Default constructor, TVAL::TVAL();
-       2.  Copy constructor, TVAL::TVAL(const TVAL&);
-       3.  Assignment, TVAL& operator=(const TVAL&);
+	 The template class assumes that type TVAL has the following:
+	   1.  Default constructor, TVAL::TVAL();
+	   2.  Copy constructor, TVAL::TVAL(const TVAL&);
+	   3.  Assignment, TVAL& operator=(const TVAL&);
 
-     In both cases, the compiler-generated default constructor, copy
-     constructor, and assignment operator are acceptable.
+	 In both cases, the compiler-generated default constructor, copy
+	 constructor, and assignment operator are acceptable.
 
-     Example of iteration over map
+	 Example of iteration over map
 
-         NiTMap<TKEY,TVAL> kMap;
-         NiTMapIterator pos = kMap.GetFirstPos();
-         while (pos)
-         {
-             TKEY key;
-             TVAL val;
-             kMap.GetNext(pos,key,val);
-             <process key and val here>;
-         }
+		 NiTMap<TKEY,TVAL> kMap;
+		 NiTMapIterator pos = kMap.GetFirstPos();
+		 while (pos)
+		 {
+			 TKEY key;
+			 TVAL val;
+			 kMap.GetNext(pos,key,val);
+			 <process key and val here>;
+		 }
 
 */
 namespace ConstructionSetExtender_OverriddenClasses			// can't be in the global namespace as it conflicts with OBSE's definition of the classes

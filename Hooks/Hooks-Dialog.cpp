@@ -12,15 +12,24 @@ namespace ConstructionSetExtender
 	{
 		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kDialogsINISettings[kDialogs__MAX] =
 		{
-			{ "RenderWindowState",			"1",				"Window visibility" },
-			{ "ObjectWindowState",			"1",				"Window visibility" },
-			{ "CellViewWindowState",		"1",				"Window visibility" },
-			{ "SortFormListsByActiveForm",	"1",				"Sort active forms first in list views"	},
-			{ "ColorizeActiveForms",		"1",				"Colorize active forms in list views" },
-			{ "ActiveFormForeColor",		"255,255,255",		"Foreground color of active form items (RGB)" },
-			{ "ActiveFormBackColor",		"0,128,64",			"Background color of active form items (RGB)" },
-			{ "ShowMainWindowsInTaskbar",	"0",				"Show the primary CS windows in the taskbar" },
-			{ "ShowEditDialogsInTaskbar",	"0",				"Show form edit dialogs in the taskbar" }
+			{ "RenderWindowState",					"1",				"Window visibility" },
+			{ "ObjectWindowState",					"1",				"Window visibility" },
+			{ "CellViewWindowState",				"1",				"Window visibility" },
+			{ "SortFormListsByActiveForm",			"1",				"Sort active forms first in list views"	},
+			{ "ColorizeActiveForms",				"1",				"Colorize active forms in list views" },
+			{ "ActiveFormForeColor",				"255,255,255",		"Foreground color of active form items (RGB)" },
+			{ "ActiveFormBackColor",				"0,128,64",			"Background color of active form items (RGB)" },
+			{ "ShowMainWindowsInTaskbar",			"0",				"Show the primary CS windows in the taskbar" },
+			{ "ShowEditDialogsInTaskbar",			"0",				"Show form edit dialogs in the taskbar" },
+			{ "ColorizeFormOverrides",				"0",				"Colorize overridden forms in list views" },
+			{ "FormOverrideLevel0ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
+			{ "FormOverrideLevel0BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" },
+			{ "FormOverrideLevel1ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
+			{ "FormOverrideLevel1BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" },
+			{ "FormOverrideLevel2ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
+			{ "FormOverrideLevel2BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" },
+			{ "FormOverrideLevel3ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
+			{ "FormOverrideLevel3BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" }
 		};
 
 		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetDialogs( void )
@@ -41,6 +50,7 @@ namespace ConstructionSetExtender
 		_DefineNopHdlr(ResponseEditorMic, 0x00407F3D, 5);
 		_DefineJumpHdlr(TopicResultScriptReset, 0x004F49A0, 0x004F49FA);
 		_DefineHookHdlr(NPCFaceGen, 0x004D76AC);
+		_DefineHookHdlr(CreaturePreview, 0x004CBE4C);
 		_DefineHookHdlr(CustomCSWindow, 0x004311E5);
 		_DefinePatchHdlr(RaceDescriptionDirtyEdit, 0x0049405C);
 		_DefineHookHdlr(AddListViewItem, 0x004038F0);
@@ -96,6 +106,7 @@ namespace ConstructionSetExtender
 				RegDeleteKey(HKEY_CURRENT_USER , "AppEvents\\Schemes\\Apps\\.Default\\CCSelect\\.Current");
 
 			_MemHdlr(NPCFaceGen).WriteJump();
+			_MemHdlr(CreaturePreview).WriteJump();
 			_MemHdlr(CustomCSWindow).WriteJump();
 			_MemHdlr(AddListViewItem).WriteJump();
 			_MemHdlr(ObjectListPopulateListViewItems).WriteJump();
@@ -109,8 +120,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESDialogPopupMenu).WriteJump();
 			_MemHdlr(ResponseWindowLipButtonPatch).WriteJump();
 			_MemHdlr(DataDlgZOrder).WriteJump();
- 			_MemHdlr(FormIDListViewSelectItem).WriteJump();
- 			_MemHdlr(FormIDListViewDuplicateSelection).WriteJump();
+			_MemHdlr(FormIDListViewSelectItem).WriteJump();
+			_MemHdlr(FormIDListViewDuplicateSelection).WriteJump();
 			_MemHdlr(TESDialogGetIsWindowDragDropRecipient).WriteJump();
 			_MemHdlr(TESQuestStageResultScript).WriteJump();
 			_MemHdlr(TESNPCUpdatePreviewControl).WriteJump();
@@ -422,7 +433,24 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			}
 		}
+		void __stdcall DoCreaturePreviewHook(HWND Dialog)
+		{
+			SendMessageA(Dialog, WM_COMMAND, 2177, 0);
+		}
 
+		#define _hhName		CreaturePreview
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004CBE51);
+			_hhSetVar(Call, 0x0049C230);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				push	esi
+				call	DoCreaturePreviewHook
+				jmp		_hhGetVar(Retn)
+			}
+		}
 		bool __stdcall DoCustomCSWindowPatchHook(HWND Window)
 		{
 			if (BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_MainWindowChildren)->GetExists(Window))
@@ -437,7 +465,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x004311EF);
 			__asm
 			{
-				mov		edi, [g_HWND_CSParent]
+				mov		edi, [TESCSMain::WindowHandle]
 				cmp		eax, edi
 				jnz		FAIL
 				xor		edi, edi
@@ -669,20 +697,20 @@ namespace ConstructionSetExtender
 					break;
 				}
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
-				if (hWnd == *g_HWND_ObjectWindow &&	ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList) > 1)
+				if (hWnd == *TESObjectWindow::WindowHandle &&	ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 				{
 					if (BGSEEUI->MsgBoxI(hWnd,
 										MB_YESNO,
 										"Are you sure you want to mark all %d forms as unmodified?",
-										ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList)) == IDYES)
+										ListView_GetSelectedCount(*TESObjectWindow::FormListHandle)) == IDYES)
 					{
 						int Selection = -1;
 						do
 						{
-							Selection = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*g_HWND_ObjectWindow_FormList, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 								if (Form)
 									Form->SetFromActiveFile(false);
 							}
@@ -720,20 +748,20 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_UNDELETE:
 				{
-					if (hWnd == *g_HWND_ObjectWindow && ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{
 						if (BGSEEUI->MsgBoxI(hWnd,
 											MB_YESNO,
 											"Are you sure you want to undelete all %d forms?",
-											ListView_GetSelectedCount(*g_HWND_ObjectWindow_FormList)) == IDYES)
+											ListView_GetSelectedCount(*TESObjectWindow::FormListHandle)) == IDYES)
 						{
 							int Selection = -1;
 							do
 							{
-								Selection = ListView_GetNextItem(*g_HWND_ObjectWindow_FormList, Selection, LVNI_SELECTED);
+								Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
 								if (Selection != -1)
 								{
-									TESForm* Form = (TESForm*)TESListView::GetItemData(*g_HWND_ObjectWindow_FormList, Selection);
+									TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 									if (Form)
 										Form->SetDeleted(false);
 								}
@@ -774,7 +802,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_TOGGLEVISIBILITY:
 				{
 					if (_RENDERSEL->selectionCount)
-						SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
+						SendMessage(*TESRenderWindow::WindowHandle, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY, NULL);
 					else
 					{
 						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -786,7 +814,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY:
 				{
 					if (_RENDERSEL->selectionCount)
-						SendMessage(*g_HWND_RenderWindow, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY, NULL);
+						SendMessage(*TESRenderWindow::WindowHandle, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY, NULL);
 					else
 					{
 						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -815,7 +843,44 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_PREVIEW:
 				{
-					TESPreviewWindow::Initialize(CS_CAST(Form, TESForm, TESBoundObject));
+					TESPreviewWindow::Show(CS_CAST(Form, TESForm, TESBoundObject));
+				}
+
+				break;
+			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
+				{
+					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
+					{
+						int Selection = -1, Count = 0;
+						do
+						{
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+							if (Selection != -1)
+							{
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+								if (Form)
+								{
+									TESNPC* NPC = CS_CAST(Form, TESForm, TESNPC);
+									
+									if (NPC)
+									{
+										NPC->ExportFaceGenTextures();
+										Count++;
+									}
+								}
+							}
+						}
+						while (Selection != -1);
+
+						BGSEEUI->MsgBoxI(hWnd, 0, "Exported FaceGen textures for %d NPCs.", Count);
+						break;
+					}
+
+					TESNPC* NPC = CS_CAST(Form, TESForm, TESNPC);
+					NPC->ExportFaceGenTextures();
+
+					BGSEEUI->MsgBoxI(hWnd, 0, "FaceGen textures for NPC %s (%08X) has been exported to the Textures\\Faces directory.",
+									(NPC->editorID.c_str() ? NPC->editorID.c_str() : ""), NPC->formID);
 				}
 
 				break;
@@ -845,9 +910,15 @@ namespace ConstructionSetExtender
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 			}
 			else if (CS_CAST(SelectedForm, TESForm, TESBoundObject))
-			{
+			{		
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_PREVIEW, "Preview");
+
+				if (SelectedForm->formType == TESForm::kFormType_NPC)
+				{
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EXPORTFACETEXTURES, "Export FaceGen Textures");
+				}
 			}
 		}
 
@@ -865,6 +936,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_ADDTOTAG:
 			case IDC_CSE_POPUP_SHOWOVERRIDES:
 			case IDC_CSE_POPUP_PREVIEW:
+			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
 				EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 				break;
 			default:
@@ -885,8 +957,9 @@ namespace ConstructionSetExtender
 			DeleteMenu(Menu, IDC_CSE_POPUP_ADDTOTAG, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_SHOWOVERRIDES, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_PREVIEW, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_EXPORTFACETEXTURES, MF_BYCOMMAND);
 
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 4; i++)
 			{
 				if (GetMenuItemID(Menu, GetMenuItemCount(Menu) - 1) == 0)		// make sure it's a separator
 					DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);
@@ -926,7 +999,7 @@ namespace ConstructionSetExtender
 
 				push	0x102
 				push	esi
-				call	g_TempIATProcBuffer
+				call	IATProcBuffer
 
 				pushad
 				push	esi
@@ -941,7 +1014,7 @@ namespace ConstructionSetExtender
 			SKIP:
 				push	2
 				push	esi
-				call	g_TempIATProcBuffer
+				call	IATProcBuffer
 
 				jmp		_hhGetVar(Retn)
 			}
@@ -1001,7 +1074,7 @@ namespace ConstructionSetExtender
 				call	IATCacheSendMessageAddress
 				popad
 
-				call	[g_TempIATProcBuffer]
+				call	[IATProcBuffer]
 				test	eax, eax
 				jz		FAIL
 
@@ -1107,7 +1180,7 @@ namespace ConstructionSetExtender
 				call	IATCacheMessageBoxAddress
 				popad
 
-				call	[g_TempIATProcBuffer]
+				call	[IATProcBuffer]
 				jmp		_hhGetVar(Retn)
 			}
 		}
@@ -1115,9 +1188,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoObjectWindowPopulateFormListInvalidateHook(bool RedrawState)
 		{
 			if (RedrawState == false)
-				BGSEEUI->GetInvalidationManager()->Push(*g_HWND_ObjectWindow_FormList);
+				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::FormListHandle);
 			else
-				BGSEEUI->GetInvalidationManager()->Pop(*g_HWND_ObjectWindow_FormList);
+				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::FormListHandle);
 		}
 
 		#define _hhName		ObjectWindowPopulateFormListInvalidate
@@ -1145,7 +1218,7 @@ namespace ConstructionSetExtender
 
 		UInt32 __stdcall DoCellViewWindowResizeFixHook()
 		{
-			return GetWindowLong(*g_HWND_CellView_ObjectList, GWL_STYLE);
+			return GetWindowLong(*TESCellViewWindow::ObjectListHandle, GWL_STYLE);
 		}
 
 		#define _hhName		CellViewWindowResizeFix
@@ -1167,7 +1240,7 @@ namespace ConstructionSetExtender
 				pushad
 				call	IATCacheGetClientRectAddress
 				popad
-				call	g_TempIATProcBuffer
+				call	IATProcBuffer
 
 				jmp		_hhGetVar(Retn)
 			SKIP:
@@ -1363,13 +1436,13 @@ namespace ConstructionSetExtender
 		void __stdcall DoHideCSMainDialogsStartupHook(void)
 		{
 			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_RenderWindowState, BGSEEMAIN->INIGetter())) == 0)
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40423, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40423, NULL);
 
 			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ObjectWindowState, BGSEEMAIN->INIGetter())) == 0)
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40199, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40199, NULL);
 
 			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_CellViewWindowState, BGSEEMAIN->INIGetter())) == 0)
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 40200, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40200, NULL);
 		}
 
 		#define _hhName		HideCSMainDialogsStartup
@@ -1564,12 +1637,12 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPackageWndProcAddNewHook(HWND ListView, TESPackage* Package)
 		{
-			HWND Dialog = *g_HWND_AIPackagesDlg;
-			*g_HWND_AIPackagesDlg = NULL;
+			HWND Dialog = *TESPackage::WindowHandle;
+			*TESPackage::WindowHandle = NULL;
 
 			_DATAHANDLER->AddForm(Package);
 
-			*g_HWND_AIPackagesDlg = Dialog;
+			*TESPackage::WindowHandle = Dialog;
 
 			ListView_SetItemState(ListView, -1, 0, LVIS_SELECTED);
 		}

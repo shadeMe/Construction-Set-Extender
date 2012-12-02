@@ -21,7 +21,7 @@ namespace ConstructionSetExtender
 
 		for (PathGridPointListT::Iterator Itr = Parent->linkedPoints.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
-			if (Operation == kOperation_PointDeletion && g_RenderWindowSelectedPathGridPoints->IndexOf(Itr.Get()) != -1)
+			if (Operation == kOperation_PointDeletion && TESRenderWindow::SelectedPathGridPoints->IndexOf(Itr.Get()) != -1)
 				continue;
 
 			this->LinkedPoints.push_back(Itr.Get());

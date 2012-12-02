@@ -6,7 +6,7 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    ...
+	...
 */
 
 // 68
@@ -21,6 +21,6 @@ public:
 	// methods
 	static void					InitializeIdleFormTreeRootNodes();		// actually belongs to class BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>
 	static void					ResetIdleFormTree();
-};
 
-extern void**					g_IdleFormTree;		// BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>*
+	static void**				IdleFormTree;			// BSTCaseInsensitiveMap<IDLE_ANIM_ROOT>*
+};

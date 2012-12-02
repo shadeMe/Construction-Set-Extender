@@ -77,11 +77,12 @@
 #include "TESObjectANIO.h"
 #include "TESPackage.h"
 #include "TESWaterForm.h"
-#include "Archive.h"
-#include "TESRenderControl.h"
 #include "TESDialog.h"
+#include "Archive.h"
+#include "TESRender.h"
 #include "TESIdleForm.h"
 #include "TESPathGrid.h"
+#include "TESObjectLAND.h"
 #include "SettingCollection.h"
 
 // NiAPI

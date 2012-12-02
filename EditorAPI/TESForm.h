@@ -7,17 +7,17 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    TESForm is the base class for all object 'types' (or 'Base forms') in the game.
-    It provides a common, very sophisticated interface for Serialization, Revision Control,
-    Inter-form references, and editing (in the CS).
+	TESForm is the base class for all object 'types' (or 'Base forms') in the game.
+	It provides a common, very sophisticated interface for Serialization, Revision Control,
+	Inter-form references, and editing (in the CS).
 
-    NOTE on the CS reference-tracking:
-    A Form may point to other forms through it's fields; these are it's "Form", or "Component" references.
-    These list of other forms that point to this one are it's "Cross" references.
-    The exception is if this form is a base for a placed TESObjectREFR - refs that point to this form are it's "Object" references.
-    The notation is admittedly awkward, a result of choosing names before a clear picture of the system emerged.
-    Form and Cross references are tracked individually through a global table.  Object refs are not tracked individually, but
-    every instance of TESBoundObject does maintain a cell-by-cell count.
+	NOTE on the CS reference-tracking:
+	A Form may point to other forms through it's fields; these are it's "Form", or "Component" references.
+	These list of other forms that point to this one are it's "Cross" references.
+	The exception is if this form is a base for a placed TESObjectREFR - refs that point to this form are it's "Object" references.
+	The notation is admittedly awkward, a result of choosing names before a clear picture of the system emerged.
+	Form and Cross references are tracked individually through a global table.  Object refs are not tracked individually, but
+	every instance of TESBoundObject does maintain a cell-by-cell count.
 */
 
 class   TESFile;
@@ -209,6 +209,9 @@ public:
 	static TESForm*					LookupByFormID(UInt32 FormID);
 	static TESForm*					LookupByEditorID(const char* EditorID);
 	static const char*				GetFormTypeIDLongName(UInt8 TypeID);
+
+	static ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		EditorIDMap;
+	static ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*					FormIDMap;
 };
 STATIC_ASSERT(sizeof(TESForm) == 0x24);
 
@@ -234,6 +237,3 @@ class TESMemContextForm
 {
 	// no members
 };
-
-extern ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		g_TESFormEditorIDMap;
-extern ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*					g_TESFormFormIDMap;

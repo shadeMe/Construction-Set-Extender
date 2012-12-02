@@ -4,34 +4,40 @@
 
 using namespace ConstructionSetExtender;
 
-TES**								g_TES = (TES**)0x00A0ABB0;
-TESDataHandler**					g_TESDataHandler = (TESDataHandler **)0x00A0E064;
-FileFinder**						g_FileFinder = (FileFinder**)0x00A0DE8C;
-BSTextureManager**					g_BSTextureManager = (BSTextureManager**)0x00A8E760;
-NiDX9Renderer**						g_CSRenderer = (NiDX9Renderer**)0x00A0F87C;
 
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0;
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture128x = (LPDIRECT3DTEXTURE9*)0x00A0AABC;
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture512x = (LPDIRECT3DTEXTURE9*)0x00A0AAC8;
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture1024x = (LPDIRECT3DTEXTURE9*)0x00A0AAD0;
-LPDIRECT3DTEXTURE9*					g_LODD3DTexture2048x = (LPDIRECT3DTEXTURE9*)0x00A0AACC;
+TESDataHandler**					TESDataHandler::Singleton = (TESDataHandler **)0x00A0E064;
+bool								TESDataHandler::PluginLoadSaveInProgress = false;
 
-BSRenderedTexture**					g_LODBSTexture32x = (BSRenderedTexture**)0x00A0AADC;
-BSRenderedTexture**					g_LODBSTexture64x = (BSRenderedTexture**)0x00A0AAD8;
-BSRenderedTexture**					g_LODBSTexture128x = (BSRenderedTexture**)0x00A0AAD4;
-BSRenderedTexture**					g_LODBSTexture512x = (BSRenderedTexture**)0x00A0AAE0;
-BSRenderedTexture**					g_LODBSTexture1024x = (BSRenderedTexture**)0x00A0AAE8;
-BSRenderedTexture**					g_LODBSTexture2048x = (BSRenderedTexture**)0x00A0AAE4;
+TES**								TES::Singleton = (TES**)0x00A0ABB0;
+FileFinder**						FileFinder::Singleton = (FileFinder**)0x00A0DE8C;
+BSTexturePalette**					BSTexturePalette::Singleton = (BSTexturePalette**)0x00A10004;
+BSTextureManager**					BSTextureManager::Singleton = (BSTextureManager**)0x00A8E760;
 
-LPDIRECT3DTEXTURE9					g_LODD3DTexture256x = NULL;
-BSRenderedTexture*					g_LODBSTexture256x = NULL;
-LPDIRECT3DTEXTURE9					g_LODD3DTexture384x = NULL;
-BSRenderedTexture*					g_LODBSTexture384x = NULL;
-LPDIRECT3DTEXTURE9					g_LODD3DTexture4096x = NULL;
-BSRenderedTexture*					g_LODBSTexture4096x = NULL;
-LPDIRECT3DTEXTURE9					g_LODD3DTexture6144x = NULL;
-BSRenderedTexture*					g_LODBSTexture6144x = NULL;
+UInt8								TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse;
+const char*							TESLODTextureGenerator::LODFullTexturePath = ".\\Data\\Textures\\LandscapeLOD\\Generated\\%i.%02i.%02i.%i.dds";
+
+LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;
+LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0;
+LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture128x = (LPDIRECT3DTEXTURE9*)0x00A0AABC;
+LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture512x = (LPDIRECT3DTEXTURE9*)0x00A0AAC8;
+LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture1024x = (LPDIRECT3DTEXTURE9*)0x00A0AAD0;
+LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture2048x = (LPDIRECT3DTEXTURE9*)0x00A0AACC;
+
+BSRenderedTexture**					TESLODTextureGenerator::BSTexture32x = (BSRenderedTexture**)0x00A0AADC;
+BSRenderedTexture**					TESLODTextureGenerator::BSTexture64x = (BSRenderedTexture**)0x00A0AAD8;
+BSRenderedTexture**					TESLODTextureGenerator::BSTexture128x = (BSRenderedTexture**)0x00A0AAD4;
+BSRenderedTexture**					TESLODTextureGenerator::BSTexture512x = (BSRenderedTexture**)0x00A0AAE0;
+BSRenderedTexture**					TESLODTextureGenerator::BSTexture1024x = (BSRenderedTexture**)0x00A0AAE8;
+BSRenderedTexture**					TESLODTextureGenerator::BSTexture2048x = (BSRenderedTexture**)0x00A0AAE4;
+
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture256x = NULL;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture256x = NULL;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture384x = NULL;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture384x = NULL;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture4096x = NULL;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture4096x = NULL;
+LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture6144x = NULL;
+BSRenderedTexture*					TESLODTextureGenerator::BSTexture6144x = NULL;
 
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 {
@@ -92,12 +98,12 @@ void TESDataHandler::ClearPluginArray()
 
 void TESDataHandler::CleanCellWaterExtraData( void )
 {
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = g_TESFormFormIDMap->GetFirstPos(); Itr;)
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
 		UInt32 FormID = NULL;
 		TESForm* Form = NULL;
 
-		g_TESFormFormIDMap->GetNext(Itr, FormID, Form);
+		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
 		if (FormID && Form)
 		{
 			if (Form->formType == TESForm::kFormType_Cell)
@@ -189,6 +195,7 @@ bool TESDataHandler::AddForm( TESForm* Form )
 	return thisCall<bool>(0x004818F0, this, Form);
 }
 
+
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);
@@ -209,6 +216,7 @@ float TES::GetSkyTOD( void )
 	else
 		return 0.0;
 }
+
 
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)
 {
@@ -238,7 +246,7 @@ LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 H
 	if (Height == 0)
 		Height = this->renderedTexture->unk030->height;
 
-	D3DXCreateTexture(_RENDERER->device, Width, Height, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &D3DTexture);
+	D3DXCreateTexture(_NIRENDERER->device, Width, Height, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &D3DTexture);
 	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteJump();
 	Result = cdeclCall<LPDIRECT3DTEXTURE9>(0x004113E0, this->renderedTexture, 0, 0, Width, D3DTexture, 0, 1, NULL);
 	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteBuffer();

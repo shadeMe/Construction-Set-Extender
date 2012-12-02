@@ -78,6 +78,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(InteriorCellDuplicate, 0x0053CC3E);
 		_DefineHookHdlr(InteriorCellLightingDataInit, 0x00532410);
 		_DefineHookHdlr(ConvertDDSToRGBA32, 0x004AE4B4);
+		_DefineJumpHdlr(ExportNPCFaceTextures, 0x004D9617, 0x004D9626);
 
 		void PatchMiscHooks(void)
 		{
@@ -114,6 +115,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(InteriorCellDuplicate).WriteJump();
 			_MemHdlr(InteriorCellLightingDataInit).WriteJump();
 			_MemHdlr(ConvertDDSToRGBA32).WriteJump();
+			_MemHdlr(ExportNPCFaceTextures).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -207,10 +209,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoCSInitHook()
 		{
-			if (*g_HWND_CSParent == NULL ||
-				*g_HWND_ObjectWindow == NULL ||
-				*g_HWND_CellView == NULL ||
-				*g_HWND_RenderWindow == NULL)
+			if (*TESCSMain::WindowHandle == NULL ||
+				*TESObjectWindow::WindowHandle == NULL ||
+				*TESCellViewWindow::WindowHandle == NULL ||
+				*TESRenderWindow::WindowHandle == NULL)
 			{
 				return;								// prevents the hook from being called before the full init
 			}
@@ -324,7 +326,7 @@ namespace ConstructionSetExtender
 		{
 			bool ShowWarning = atoi(INISettings::GetGeneral()->Get(INISettings::kGeneral_ShowNumericEditorIDWarning, BGSEEMAIN->INIGetter()));
 
-			if (g_LoadingSavingPlugins == false &&
+			if (TESDataHandler::PluginLoadSaveInProgress == false &&
 				ShowWarning &&
 				BGSEEMAIN->Daemon()->GetFullInitComplete() &&
 				strlen(EditorID) > 0 &&
@@ -738,7 +740,7 @@ namespace ConstructionSetExtender
 
 			__asm
 			{
-				call	TESDialog::WriteToStatusBar
+				call	TESCSMain::WriteToStatusBar
 				jmp		_hhGetVar(Retn)
 			}
 		}

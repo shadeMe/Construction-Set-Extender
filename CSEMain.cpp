@@ -332,24 +332,24 @@ namespace ConstructionSetExtender
 
 	bool CSEDeinitCallback::Handle(void* Parameter)
 	{
-		TESDialog::WritePositionToINI(*g_HWND_CSParent, NULL);
-		TESDialog::WritePositionToINI(*g_HWND_CellView, "Cell View");
-		TESDialog::WritePositionToINI(*g_HWND_ObjectWindow, "Object Window");
-		TESDialog::WritePositionToINI(*g_HWND_RenderWindow, "Render Window");
+		TESDialog::WritePositionToINI(*TESCSMain::WindowHandle, NULL);
+		TESDialog::WritePositionToINI(*TESCellViewWindow::WindowHandle, "Cell View");
+		TESDialog::WritePositionToINI(*TESObjectWindow::WindowHandle, "Object Window");
+		TESDialog::WritePositionToINI(*TESRenderWindow::WindowHandle, "Render Window");
 
 		BGSEECONSOLE_MESSAGE("Flushed CS INI Settings");
 
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_RenderWindowState,
 									BGSEEMAIN->INISetter(),
-									(GetMenuState(*g_HMENU_MainMenu, 40423, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
+									(GetMenuState(*TESCSMain::MainMenuHandle, 40423, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
 
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_ObjectWindowState,
 									BGSEEMAIN->INISetter(),
-									(GetMenuState(*g_HMENU_MainMenu, 40199, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
+									(GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
 
 		INISettings::GetDialogs()->Set(INISettings::kDialogs_CellViewWindowState,
 									BGSEEMAIN->INISetter(),
-									(GetMenuState(*g_HMENU_MainMenu, 40200, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
+									(GetMenuState(*TESCSMain::MainMenuHandle, 40200, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Plugin Interface Manager");
 		CSEInterfaceManager::Instance.Deinitailize();
@@ -499,7 +499,7 @@ namespace ConstructionSetExtender
 				if (_stricmp(PluginName, "Oblivion.esm"))
 					File->SetActive(true);
 
-				SendMessage(*g_HWND_CSParent, WM_COMMAND, 0x9CD1, 0);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 0x9CD1, 0);
 
 				BGSEECONSOLE->Exdent();
 			}
@@ -638,7 +638,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{
 			MessageBox(NULL,
-					"The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information.",
+					"The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information - It can be found in the same folder as the editor.",
 					"The Cyrodiil Bunny Ranch",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
@@ -653,7 +653,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
 		{
 			MessageBox(NULL,
-					"The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information.",
+					"The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information - It can be found in the same folder as the editor.",
 					"Rumpy-Pumpy!!",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 

@@ -6,7 +6,7 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    ...
+	...
 */
 
 class	Archive;
@@ -138,7 +138,6 @@ public:
 STATIC_ASSERT(sizeof(Archive) == 0x280);
 
 typedef tList<Archive>		ArchiveListT;
-extern ArchiveListT**		g_LoadedBSAArchives;
 
 class ArchiveManager
 {
@@ -147,4 +146,6 @@ public:
 	// methods
 	static void					LoadSkippedArchives(const char* ArchiveDirectory);
 	static bool					ExtractArchiveFile(const char* InPath, const char* OutPath, bool AppendFilePath = false);
+
+	static ArchiveListT**		LoadedArchives;
 };

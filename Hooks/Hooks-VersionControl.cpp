@@ -10,8 +10,6 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		bool g_PluginLoadOperationInProgress = false;
-
 		_DefineHookHdlr(DataHandlerSavePluginProlog, 0x0047EC8D);
 		_DefineHookHdlr(DataHandlerLoadPluginsWrapper, 0x0041BD98);
 		_DefineHookHdlr(TESFormSetFromActivePlugin, 0x00497BE0);
@@ -53,9 +51,12 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESDialogFormEditCopyForm).WriteJump();
 		}
 
-		void __stdcall DoDataHandlerLoadPluginsWrapperHook()
+		void __stdcall DoDataHandlerLoadPluginsWrapperHook(bool State)
 		{
-			VersionControl::HandlePluginLoad();
+			if (State)
+				VersionControl::HandlePluginLoadProlog();
+			else
+				VersionControl::HandlePluginLoadEpilog();
 		}
 
 		#define _hhName		DataHandlerLoadPluginsWrapper
@@ -65,11 +66,15 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00484D00);
 			__asm
 			{
-				mov		g_PluginLoadOperationInProgress, 1
+				pushad
+				push	1
+				call	DoDataHandlerLoadPluginsWrapperHook
+				popad
+
 				call	_hhGetVar(Call)
-				mov		g_PluginLoadOperationInProgress, 0
 
 				pushad
+				push	0
 				call	DoDataHandlerLoadPluginsWrapperHook
 				popad
 
@@ -80,7 +85,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
 		{
 			VersionControl::HandlePluginSave(SaveFile);
-			g_LoadingSavingPlugins = true;
+			TESDataHandler::PluginLoadSaveInProgress = true;
 		}
 
 		#define _hhName		DataHandlerSavePluginProlog
@@ -99,7 +104,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESFormChangeHook(TESForm* Form, UInt8 ChangeType, UInt32 Value)
 		{
-			if ((Form->formFlags & TESForm::kFormFlags_Temporary) == 0 && g_PluginLoadOperationInProgress == false)
+			if ((Form->formFlags & TESForm::kFormFlags_Temporary) == 0 && TESDataHandler::PluginLoadSaveInProgress == false)
 			{
 				VersionControl::CHANGELOG->RecordFormChange(Form, ChangeType, Value);
 			}
