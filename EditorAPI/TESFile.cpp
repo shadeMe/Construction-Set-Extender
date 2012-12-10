@@ -43,3 +43,58 @@ bool TESFile::SetMaster( bool State )
 {
 	return thisCall<bool>(0x00485B10, this, State);
 }
+
+UInt32 TESFile::Open()
+{
+	return thisCall<UInt32>(0x004891F0, this);
+}
+
+UInt32 TESFile::SaveHeader()
+{
+	return thisCall<UInt32>(0x00489070, this);
+}
+
+UInt32 TESFile::CorrectHeader()
+{
+	return thisCall<UInt32>(0x00487980, this);
+}
+
+bool TESFile::Close()
+{
+	return thisCall<bool>(0x004877A0, this);
+}
+
+UInt8 TESFile::GetRecordType()
+{
+	return thisCall<UInt8>(0x00488130, this);
+}
+
+bool TESFile::GetNextRecord( bool SkipIgnoredRecords )
+{
+	return thisCall<bool>(0x004890A0, this);
+}
+
+bool TESFile::InitializeBSFile( UInt32 Arg1 /*= 0*/, bool Arg2 /*= false*/ )
+{
+	return thisCall<bool>(0x004889A0, this, Arg1, Arg2);
+}
+
+bool TESFile::CreateTempFile( UInt32 Arg1 /*= 1*/ )
+{
+	return thisCall<bool>(0x00488D60, this, Arg1);
+}
+
+void TESFile::OpenGroupRecord( RecordInfo* GroupRecord )
+{
+	thisCall<void>(0x00487500, this, GroupRecord);
+}
+
+void TESFile::CloseGroupRecord()
+{
+	thisCall<void>(0x00487580, this);
+}
+
+void TESFile::SetFileIndex( UInt8 Index )
+{
+	thisCall<void>(0x00485CA0, this, Index);
+}

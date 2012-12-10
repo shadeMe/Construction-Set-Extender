@@ -14,6 +14,7 @@
 #include "RenderSelectionGroupManager.h"
 #include "PathGridUndoManager.h"
 #include "CSInterop.h"
+#include "CSEGlobalClipboard.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -526,22 +527,26 @@ namespace ConstructionSetExtender
 										if (CurrentFile->IsMaster())
 										{
 											DrawData->clrTextBk = RGB(242, 247, 243);
+											DrawData->clrText = RGB(0, 0, 0);
 										}
 
 										if (CurrentFile == ActiveTESFile)
 										{
 											DrawData->clrTextBk = RGB(227, 183, 251);
+											DrawData->clrText = RGB(0, 0, 0);
 										}
 										else if (!_stricmp(INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_PluginName,
 												BGSEEMAIN->INIGetter()),
 												CurrentFile->fileName))
 										{
 											DrawData->clrTextBk = RGB(248, 227, 186);
+											DrawData->clrText = RGB(0, 0, 0);
 										}
 										else if (CurrentFile->authorName.c_str() &&
 												!_stricmp(CurrentFile->authorName.c_str(), "shadeMe"))
 										{
 											DrawData->clrTextBk = RGB(249, 255, 255);
+											DrawData->clrText = RGB(0, 0, 0);
 										}
 										else
 										{
@@ -1087,6 +1092,14 @@ namespace ConstructionSetExtender
 						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INISetter(), "1");
 
 					break;
+				case IDC_MAINMENU_GLOBALCLIPBOARDCONTENTS:
+					BGSEECLIPBOARD->DisplayContents();
+
+					break;
+				case IDC_MAINMENU_PASTEFROMGLOBALCLIPBOARD:
+					BGSEECLIPBOARD->Paste();
+
+					break;
 				default:
 					Return = false;
 
@@ -1433,7 +1446,7 @@ namespace ConstructionSetExtender
 						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 
 						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedCell;
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
 
 						if (CurrentCell)
 						{
@@ -1462,7 +1475,7 @@ namespace ConstructionSetExtender
 					{
 						TESObjectCELL* ThisCell = _TES->currentInteriorCell;
 						if (!ThisCell)
-							ThisCell = *TESRenderWindow::CurrentlyLoadedCell;
+							ThisCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
 
 						if (ThisCell)
 						{
@@ -1625,7 +1638,7 @@ namespace ConstructionSetExtender
 						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 
 						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedCell;
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
 
 						if (CurrentCell)
 						{
@@ -1713,7 +1726,7 @@ namespace ConstructionSetExtender
 						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 
 						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedCell;
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
 
 						if (CurrentCell == NULL)
 							break;
@@ -1803,6 +1816,17 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case IDC_RENDERWINDOWCONTEXT_COPYTOGLOBALCLIPBOARD:
+					{
+						GlobalClipboard::CSEFormListBuilder Buffer;
+
+						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+							Buffer.Add(Itr->Data);
+
+						Buffer.Copy();
+					}
+
+					break;
 				}
 
 				break;
@@ -1835,6 +1859,7 @@ namespace ConstructionSetExtender
 						CameraFOV = 50.0f;
 
 					TESRender::SetCameraFOV(_PRIMARYRENDERER->primaryCamera, CameraFOV);
+					memcpy(&TESRenderWindow::CameraFrustumBuffer, &_PRIMARYRENDERER->primaryCamera->m_kViewFrustum, sizeof(NiFrustum));
 				}
 
 				break;
@@ -1892,6 +1917,19 @@ namespace ConstructionSetExtender
 					{
 						// prevent the OS from triggering the screen-saver/switching to standby mode
 						SetThreadExecutionState(ES_CONTINUOUS|ES_DISPLAY_REQUIRED|ES_SYSTEM_REQUIRED);
+					}
+
+					if (BGSEditorExtender::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
+					{
+						// the primary camera's view frustum gets updated ever so often reseting its horizontal FOV
+						// we reset it here in case it has changed
+						if (_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.l != TESRenderWindow::CameraFrustumBuffer.l ||
+							_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.r != TESRenderWindow::CameraFrustumBuffer.r ||
+							_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.b != TESRenderWindow::CameraFrustumBuffer.b ||
+							_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.t != TESRenderWindow::CameraFrustumBuffer.t)
+						{
+							SendMessage(hWnd, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+						}
 					}
 
 					break;
@@ -3748,7 +3786,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					if (*TESRenderWindow::CurrentlyLoadedCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
+					if (*TESRenderWindow::CurrentlyLoadedExteriorCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
 						SendMessage(hWnd, WM_COMMAND, 2, NULL);			// otherwise, the editor will crash as soon as the render window acquires input focus
 					else
 						SendDlgItemMessage(hWnd, 1492, LVM_SORTITEMS, 0, (LPARAM)0x0041E7D0);		// TESDialog::SortComparatorLandTextureList
@@ -4146,8 +4184,8 @@ namespace ConstructionSetExtender
 
 						Quest->script = QuestScript;
 
-						Quest->Link();
-						QuestScript->Link();
+						Quest->LinkForm();
+						QuestScript->LinkForm();
 
 						Quest->UpdateUsageInfo();
 						QuestScript->UpdateUsageInfo();

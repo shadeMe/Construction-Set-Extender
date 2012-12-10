@@ -455,11 +455,14 @@ public:
 class TESCellViewWindow
 {
 public:
+	static void						SetCellSelection(TESObjectCELL* Cell);
+
 	static HWND*					WindowHandle;
 	static HWND*					ObjectListHandle;
 	static HWND*					CellListHandle;
 
 	static UInt8*					MainMenuState;
+	static TESObjectCELL**			CurrentCellSelection;
 };
 
 // 18
@@ -498,3 +501,10 @@ typedef TESObjectSelection		TESRenderSelection;
 
 #define _PRIMARYOBJSEL			(*TESObjectSelection::PrimaryInstance)
 #define _RENDERSEL				(*TESObjectSelection::PrimaryInstance)
+
+// container class, arbitrarily named
+class TESFileFormListWindow
+{
+public:
+	static void					Show(HWND Parent, TESFile* File);
+};

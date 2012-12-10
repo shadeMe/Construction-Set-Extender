@@ -77,6 +77,33 @@ namespace ConstructionSetExtender
 			virtual ~CSEAchievementIncremented();
 		};
 
+		class CSEAchievementTimeTriggered : public CSEAchievementBase
+		{
+		protected:
+			UInt8							Day;
+			UInt8							Month;
+			UInt16							Year;
+
+			virtual bool					UnlockCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+			virtual bool					SaveCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+
+			virtual bool					GetUnlockable(void) const;
+		public:
+			CSEAchievementTimeTriggered(const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear = 0);		// pass 0 as eventyear to repeat every year
+			virtual ~CSEAchievementTimeTriggered();
+		};
+
+		class CSEAchievementHappypotamus : public CSEAchievementTimeTriggered
+		{
+		protected:
+			UInt16							GeborenJahre;
+
+			virtual void					GetName(std::string& OutBuffer) const;
+		public:
+			CSEAchievementHappypotamus(const char* Name, const char* Desc, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear);
+			virtual ~CSEAchievementHappypotamus();
+		};
+
 		extern CSEAchievementBase*			kTheWiseOne;
 		extern CSEAchievementBase*			kFearless;
 		extern CSEAchievementBase*			kAutomaton;
@@ -100,6 +127,7 @@ namespace ConstructionSetExtender
 		extern CSEAchievementBase*  		kOldestTrickInTheBook;
 		extern CSEAchievementBase*  		kOver3000;
 		extern CSEAchievementBase*  		kFunnyGuy;
+		extern CSEAchievementHappypotamus*  kHappyBDayMoi;
 
 		void								Initialize(void);
 	}

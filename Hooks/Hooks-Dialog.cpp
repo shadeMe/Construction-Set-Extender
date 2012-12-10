@@ -1,6 +1,7 @@
 #include "Hooks-Dialog.h"
 #include "..\CSEAchievements.h"
 #include "..\CSEUIManager.h"
+#include "..\CSEGlobalClipboard.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -307,6 +308,18 @@ namespace ConstructionSetExtender
 				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&LandscapeTextureComparator);
 			}
 
+			for (int i = 0; i < 3; i++)
+			{
+				static const UInt32 kCallSites[3] =
+				{
+					0x004522BB,	0x0045241E,
+					0x004526C2
+				};
+
+				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogAIPackageListComparator);
+			}
+
 			_MemHdlr(DialogueEditorPopup).WriteJump();
 			_MemHdlr(TESWeatherSoundListSort).WriteJump();
 			_MemHdlr(TESFormShowCrossRefList).WriteJump();
@@ -413,6 +426,11 @@ namespace ConstructionSetExtender
 		int CALLBACK LandscapeTextureComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
 		{
 			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x0041E7D0);
+		}
+
+		int CALLBACK TESDialogAIPackageListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			return ActiveRecordFormListComparator(lParam1, lParam2, lParamSort, 0x004520F0);
 		}
 
 		void __stdcall DoNPCFaceGenHook(HWND Dialog)
@@ -884,6 +902,34 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			case  IDC_CSE_POPUP_GLOBALCOPY:
+				{
+					GlobalClipboard::CSEFormListBuilder Buffer;
+
+					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
+					{
+						int Selection = -1;
+						do
+						{
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+							if (Selection != -1)
+							{
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+								if (Form)
+								{
+									Buffer.Add(Form);
+								}
+							}
+						}
+						while (Selection != -1);
+					}
+					else
+						Buffer.Add(Form);
+
+					Buffer.Copy();
+				}
+
+				break;
 			}
 
 			RedrawWindow(hWnd, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
@@ -899,6 +945,7 @@ namespace ConstructionSetExtender
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_MARKUNMODIFIED, "Mark As Unmodified");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_UNDELETE, "Undelete");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_SHOWOVERRIDES, "Show Override List");
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, "Jump To Central Use Info List");
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_ADDTOTAG, "Add to Active Tag");
 
@@ -920,6 +967,9 @@ namespace ConstructionSetExtender
 					InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EXPORTFACETEXTURES, "Export FaceGen Textures");
 				}
 			}
+
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
+			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_GLOBALCOPY, "Copy To Global Clipboard");
 		}
 
 		void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
@@ -937,6 +987,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_SHOWOVERRIDES:
 			case IDC_CSE_POPUP_PREVIEW:
 			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
+			case IDC_CSE_POPUP_GLOBALCOPY:
 				EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 				break;
 			default:
@@ -958,8 +1009,9 @@ namespace ConstructionSetExtender
 			DeleteMenu(Menu, IDC_CSE_POPUP_SHOWOVERRIDES, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_PREVIEW, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_EXPORTFACETEXTURES, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALCOPY, MF_BYCOMMAND);
 
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 6; i++)
 			{
 				if (GetMenuItemID(Menu, GetMenuItemCount(Menu) - 1) == 0)		// make sure it's a separator
 					DeleteMenu(Menu, GetMenuItemCount(Menu) - 1, MF_BYPOSITION);

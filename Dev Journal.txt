@@ -14,8 +14,6 @@ CSE		---->
 
 	BUGFIX			=
 		> I forgot to add " at the end of a MessageBox in some script and it crashed because of that.
-		> The AI packages dlg doesn't perform active form sorting
-		> The render window FOV gets reset on cell load or summat
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
@@ -26,9 +24,8 @@ CSE		---->
 		> Real-time updates for facegen preview controls (update the control for every trackbar changed notification message)
 		> Ability to filter certain warnings
 		> Add the various "missing" render window toggles to the View menu (like border, water toggling)
-		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
-		> Copy/paste obj refs b'ween CS sessions
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
+		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
 		> Add a random "roughness" factor to the landscape sculpting brush
 
@@ -41,16 +38,17 @@ CSE		---->
 SE		---->
 
 	BUGFIX			=
-		> Unhandled exception in AvalonEdit; fold the function block in zzVectorzFunctUDP to reproduce
-		  Reverting back to v4.0.0.7070 until the bug is fixed
+		> Close the IS intfc after an undo op
 		> The splitter doesn't correctly resize if the editor window is maximized
 		> IS interface shows up inside string literals
 
 	ENHANCEMENT		=
 		> Hitting the Enter key inside the Find/Replace window should click on the appropriate button
+		> Use levenshtein distance for ISinterface string matching
 
 	MISC			=
-
+		> Unhandled exception in AvalonEdit; fold the function block in zzVectorzFunctUDP to reproduce
+		  Reverting back to v4.0.0.7070 until the bug is fixed
 
 
 USE		---->

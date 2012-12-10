@@ -62,6 +62,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(InteriorCellLightingDataInit, "sets the default near fog parameter of interior cells to a non-zero value, to workaround an engine bug");
 		_DeclareMemHdlr(ConvertDDSToRGBA32, "fixes a bug that causes CTDs if icon textures did not have any mipmaps, ironically...");
 		_DeclareMemHdlr(ExportNPCFaceTextures, "allows NPC records from non-ESM files to export their face textures");
+		_DeclareNopHdlr(TESTestAllCells, "fixes a CTD that gets triggered when testing cells");
+		_DeclareMemHdlr(DataHandlerGetInteriorAtIndex, "patchs an out-of-bounds index condition");
 	}
 }
 

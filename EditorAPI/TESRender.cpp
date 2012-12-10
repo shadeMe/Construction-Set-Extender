@@ -20,7 +20,7 @@ float*								TESRenderWindow::RefRotationSpeed = (float*)0x00A0B070;
 float*								TESRenderWindow::RefMovementSpeed = (float*)0x00A0B078;
 
 TESLandTexture**					TESRenderWindow::ActiveLandscapeTexture = (TESLandTexture**)0x00A0B0C0;
-TESObjectCELL**						TESRenderWindow::CurrentlyLoadedCell = (TESObjectCELL**)0x00A0BC3C;
+TESObjectCELL**						TESRenderWindow::CurrentlyLoadedExteriorCell = (TESObjectCELL**)0x00A0BC3C;
 
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
@@ -30,6 +30,7 @@ UInt32*								TESRenderWindow::StateFlags = (UInt32*)0x00A0B058;
 POINT								TESRenderWindow::CurrentMouseCoordDelta = { 0, 0 };
 bool								TESRenderWindow::UseAlternateMovementSettings = false;
 bool								TESRenderWindow::FreezeInactiveRefs = false;
+NiFrustum							TESRenderWindow::CameraFrustumBuffer = {0};
 const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
 
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
@@ -70,7 +71,6 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 		*RefreshFlag = 1;
 	}
 }
-
 
 void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
 {

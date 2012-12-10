@@ -77,6 +77,7 @@ public:
 		kFileState_Unk2         = 0x2, // set in OpenBSFile
 		kFileState_Unk9         = 0x9, // set in OpenBSFile
 		kFileState_WriteError   = 0xA,
+		kFileState_NoHeader		= 0xB,
 		kFileState_UnkC         = 0xC, // set in OpenBSFile
 	};
 
@@ -160,6 +161,21 @@ public:
 	bool						SetActive(bool State);
 	bool						SetMaster(bool State);
 
+	UInt32						Open(); 
+	bool						CreateTempFile(UInt32 Arg1 = 1);
+	bool						InitializeBSFile(UInt32 Arg1 = 0, bool Arg2 = false);
+	UInt32						SaveHeader();
+	UInt32						CorrectHeader();
+	bool						Close();
+
+	UInt8						GetRecordType();	// returns zero if invalid or no record
+	bool						GetNextRecord(bool SkipIgnoredRecords);
+
+	void						OpenGroupRecord(RecordInfo* GroupRecord);
+	void						CloseGroupRecord();
+
+	void						SetFileIndex(UInt8 Index);
+	
 	static TESFile*				CreateInstance(const char* WorkingDirectory, const char* FileName, UInt8 OpenMode = NiFile::kFileMode_ReadOnly);
 	void						DeleteInstance(bool ReleaseMemory = true);
 };

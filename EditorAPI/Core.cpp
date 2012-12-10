@@ -79,7 +79,7 @@ void TESDataHandler::AddTESObject(TESObject* Object)
 	this->objects->AddObject(Object);
 }
 
-TESObjectREFR* TESDataHandler::PlaceObjectRef( TESObject* BaseObject, Vector3* Position, Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef )
+TESObjectREFR* TESDataHandler::PlaceObjectRef( TESObject* BaseObject, const Vector3* Position, const Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef )
 {
 	return thisCall<TESObjectREFR*>(0x0047A060, this, BaseObject, Position, Rotation, Cell, WorldSpace, ExistingRef);
 }

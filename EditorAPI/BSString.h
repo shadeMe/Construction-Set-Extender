@@ -4,12 +4,12 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    Basic dynamically-sizeable string class.
+	Basic dynamically-sizeable string class.
 
-    High level string manipulation - comparison, replacement, etc. seems to be done 'manually'
-    using cstdlib functions rather than through member functions.  That doesn't mean that
-    member functions for comparison, etc. don't exist, but if they do they are very hard to find.
-    The exception so far is 'sprintf', which has a member function wrapper.
+	High level string manipulation - comparison, replacement, etc. seems to be done 'manually'
+	using cstdlib functions rather than through member functions.  That doesn't mean that
+	member functions for comparison, etc. don't exist, but if they do they are very hard to find.
+	The exception so far is 'sprintf', which has a member function wrapper.
 */
 
 // 08

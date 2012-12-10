@@ -94,7 +94,7 @@ public:
 	/*00AC*/ tList<TESEffectShader>					effectShaders;
 	/*00B4*/ tList<TESObjectANIO>					objectAnios;
 	/*00BC*/ TESRegionList*							regionList;
-	/*00C0*/ NiTLargeArray<TESObjectCELL*>			cellArray;
+	/*00C0*/ NiTLargeArray<TESObjectCELL*>			interiorCellArray;
 	/*00D8*/ TESSkill								skills[0x15];
 	/*0DF8*/ tList<void*>							unk8B8;     // general garbage list for unsupported form types?, new EffectSettings added here
 	/*0E00*/ UInt32									nextFormID; // next available formID?
@@ -122,7 +122,7 @@ public:
 	void											ClearPluginArray();
 	void											AddTESObject(TESObject* Object);
 	bool											MoveReference(TESObjectCELL* Cell, TESObjectREFR* Reference);
-	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject, Vector3* Position, Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
+	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject, const Vector3* Position, const Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
 													// places an object ref at the specified position in the specified cell/worldspace, with the specified base form.
 													// if existingRef is provided, it is used as the ref, otherwise a new ref is created.  returns null on failure
 	void											AutoSave(void);
@@ -253,7 +253,8 @@ public:
 	/*44*/ UInt32					unk44;
 	/*48*/ UInt32					unk48;					// seen caching unk20 in editor
 	/*4C*/ UInt32					unk4C;					// seen caching unk24 in editor
-	/*50*/ UInt32					unk50;
+	/*50*/ UInt8					unk50;					// set/reset when testing cells
+	/*51*/ UInt8					pad51[3];
 	/*54*/ WaterSurfaceManager*		waterSurfaceManager;
 	/*58*/ WaterPlaneData*			waterNodeData;
 	/*5C*/ Sky*						sky;

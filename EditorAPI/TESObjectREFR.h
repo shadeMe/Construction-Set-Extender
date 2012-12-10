@@ -52,6 +52,8 @@ public:
 	bool						SetBaseForm(TESForm* BaseForm);
 	void						SetPersistent(bool Persistent);
 
+	void						ChangeCell(TESObjectCELL* Cell);
+
 	void						SetPosition(float X, float Y, float Z);
 	void						SetRotation(float X, float Y, float Z, bool Radians = false);
 	void						SetScale(float Scale);

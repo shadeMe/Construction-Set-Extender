@@ -2167,7 +2167,9 @@ namespace ConstructionSetExtender
 							LoadFileFromDisk(CachePath);
 						}
 
-						System::IO::File::Delete(CachePath);
+						Microsoft::VisualBasic::FileIO::FileSystem::DeleteFile(CachePath,
+																Microsoft::VisualBasic::FileIO::UIOption::OnlyErrorDialogs,
+																Microsoft::VisualBasic::FileIO::RecycleOption::SendToRecycleBin);
 					}
 					catch (Exception^ E)
 					{

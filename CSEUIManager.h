@@ -264,3 +264,4 @@ namespace ConstructionSetExtender
 #define IDC_CSE_POPUP_SHOWOVERRIDES             9925
 #define IDC_CSE_POPUP_PREVIEW		            9926
 #define IDC_CSE_POPUP_EXPORTFACETEXTURES		9927
+#define IDC_CSE_POPUP_GLOBALCOPY				9928

@@ -40,3 +40,13 @@ void TESObjectCELL::ModExtraCellWaterType( TESWaterForm* Water )
 {
 	thisCall<void>(0x00534420, this, Water);
 }
+
+void TESObjectCELL::RemoveObjectReference( TESObjectREFR* Ref )
+{
+	thisCall<void>(0x00534910, this, Ref);
+}
+
+void TESObjectCELL::AddObjectReference( TESObjectREFR* Ref )
+{
+	thisCall<void>(0x00539170, this, Ref);
+}

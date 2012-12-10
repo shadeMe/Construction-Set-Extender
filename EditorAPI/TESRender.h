@@ -85,7 +85,7 @@ public:
 	// methods
 	static bool								UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier);
 	static void								RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
-	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);	
+	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
 
 	static void								UpdateAVObject(NiAVObject* Object);		// this should be moved to a better location, actually a NiAVObject method
 
@@ -164,7 +164,7 @@ public:
 	static UInt8*						PathGridEditFlag;
 	static UInt8*						LandscapeEditFlag;
 
-	static TESObjectCELL**				CurrentlyLoadedCell;
+	static TESObjectCELL**				CurrentlyLoadedExteriorCell;
 	static TESLandTexture**				ActiveLandscapeTexture;
 
 	static float*						RefMovementSpeed;
@@ -180,6 +180,7 @@ public:
 	static bool							FreezeInactiveRefs;
 	static bool							UseAlternateMovementSettings;
 	static POINT						CurrentMouseCoordDelta;
+	static NiFrustum					CameraFrustumBuffer;
 	
 	static const float					MaxLandscapeEditBrushRadius;
 };

@@ -281,6 +281,9 @@
     <ClCompile Include="EditorAPI\TESObjectLAND.cpp">
       <Filter>EditorAPI\Forms\World</Filter>
     </ClCompile>
+    <ClCompile Include="CSEGlobalClipboard.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -771,6 +774,12 @@
     <ClInclude Include="EditorAPI\TESObjectLAND.h">
       <Filter>EditorAPI\Forms\World</Filter>
     </ClInclude>
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEGlobalClipboard.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEGlobalClipboard.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\Splash.bmp">
@@ -864,6 +873,9 @@
       <Filter>Resources\Images</Filter>
     </None>
     <None Include="Images\funnyman.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Images\cake.bmp">
       <Filter>Resources\Images</Filter>
     </None>
   </ItemGroup>

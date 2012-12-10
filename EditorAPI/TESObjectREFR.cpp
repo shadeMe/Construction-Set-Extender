@@ -205,3 +205,8 @@ float TESObjectREFR::GetAlpha( void )
 	else
 		return 1.0f;
 }
+
+void TESObjectREFR::ChangeCell( TESObjectCELL* Cell )
+{
+	thisVirtualCall<void>(0x1AC, this, Cell);
+}

@@ -192,6 +192,93 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		bool CSEAchievementTimeTriggered::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		{
+			time_t CurrentTime = time(NULL);
+			tm Now = {0};
+			
+			if (localtime_s(&Now, &CurrentTime))
+				return false;
+			
+			if (Day == Now.tm_mday && Month == Now.tm_mon + 1 && (Year == 0 || Year == Now.tm_year + 1900))
+			{
+				if (Year == 0 || Year == Now.tm_year)
+				{
+					if (ExtraData)
+						return false;
+					else
+						ExtraData = 1;		// prevents multiple unlocks during the same day
+				}
+
+				return true;
+			}
+			else
+			{
+				ExtraData = 0;
+				return false;
+			}
+		}
+
+		CSEAchievementTimeTriggered::CSEAchievementTimeTriggered( const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear /*= 0*/ ) :
+			CSEAchievementBase(Name, Desc, IconID, GUID),
+			Day(EventDay),
+			Month(EventMonth),
+			Year(EventYear)
+		{
+			;//
+		}
+
+		CSEAchievementTimeTriggered::~CSEAchievementTimeTriggered()
+		{
+			;//
+		}
+
+		bool CSEAchievementTimeTriggered::SaveCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		{
+			if (Year == 0)
+			{
+				// repeatable events can't be unlocked in the traditional sense
+				State = kState_Locked;
+			}
+
+			return true;
+		}
+
+		bool CSEAchievementTimeTriggered::GetUnlockable( void ) const
+		{
+			if (Year == 0)			// don't unlock if repeatable
+				return false;
+			else
+				return true;
+		}
+
+		CSEAchievementHappypotamus::CSEAchievementHappypotamus( const char* Name, const char* Desc, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear ) :
+			CSEAchievementTimeTriggered(Name, Desc, IDB_ACHIEVEMENT_CAKE, GUID, EventDay, EventMonth, 0),
+			GeborenJahre(EventYear)
+		{
+			;//
+		}
+
+		CSEAchievementHappypotamus::~CSEAchievementHappypotamus()
+		{
+			;//
+		}
+
+		void CSEAchievementHappypotamus::GetName( std::string& OutBuffer ) const
+		{
+			time_t CurrentTime = time(NULL);
+			tm Now = {0};
+
+			if (localtime_s(&Now, &CurrentTime))
+				OutBuffer = "Happy B'day, " + Name + "!";
+			else
+			{
+				char Buffer[0x200] = {0};
+				FORMAT_STR(Buffer, "%u years on and still alive! Go %s!", Now.tm_year + 1900 - GeborenJahre, Name.c_str());
+				OutBuffer = Buffer;
+			}
+		}
+
 		CSEAchievementBase*			kTheWiseOne				= NULL;
 		CSEAchievementBase*			kFearless				= NULL;
 		CSEAchievementBase*			kAutomaton				= NULL;
@@ -215,6 +302,7 @@ namespace ConstructionSetExtender
 		CSEAchievementBase*  		kOldestTrickInTheBook	= NULL;
 		CSEAchievementBase*  		kOver3000				= NULL;
 		CSEAchievementBase*  		kFunnyGuy				= NULL;
+		CSEAchievementHappypotamus* kHappyBDayMoi			= NULL;
 
 		void Initialize()
 		{
@@ -278,7 +366,7 @@ namespace ConstructionSetExtender
 			kLoquacious				= new CSEAchievementIncremented("Loquacious", "Created a LOT of dialog responses in a single CS session",
 															IDB_ACHIEVEMENT_LOQUACIOUS, "0E0C034F-0E4E-4709-A07D-D79059846841", 100);
 
-			kSaboteur				= new CSEAchievementBase("Saboteur", "Managed to crash the extended CS!",
+			kSaboteur				= new CSEAchievementBase("Saboteur", "Mon Dieu! Managed to crash the extended CS!",
 															IDB_ACHIEVEMENT_SABOTEUR, "F2E645A0-2503-4FFC-87A0-E6462325EBB8");
 
 			kOldestTrickInTheBook	= new CSEAchievementBase("Oldest Trick In The Book", "\"Never Gonna Give You Up, Never Gonna Let You Down!\"",
@@ -289,6 +377,10 @@ namespace ConstructionSetExtender
 
 			kFunnyGuy				= new CSEAchievementBase("Funny Guy Bob", "How lovely! You've got a sense of humour",
 															IDB_ACHIEVEMENT_FUNNYGUY, "13275AC0-DA3B-4802-813A-4DB3E7C4168D");
+
+			kHappyBDayMoi			= new CSEAchievementHappypotamus("CSE", "I mean, who would have thought!",
+															"3AA57BC5-7B1C-4C5B-B7F4-AC0A19EF1A2E",
+															2, 3, 2010);
 
 			BGSEditorExtender::Extras::ExtenderAchievementListT AchievementDepot;
 
@@ -319,6 +411,7 @@ namespace ConstructionSetExtender
 			AchievementDepot.push_back(kOldestTrickInTheBook);
 			AchievementDepot.push_back(kOver3000);
 			AchievementDepot.push_back(kFunnyGuy);
+			AchievementDepot.push_back(kHappyBDayMoi);
 
 			bool ComponentInitialized = BGSEEACHIEVEMENTS->Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
 

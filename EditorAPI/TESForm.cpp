@@ -3,6 +3,7 @@
 
 ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*				TESForm::FormIDMap = (ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*)0x009EE164;
 ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		TESForm::EditorIDMap = (ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*)0x009EE18C;
+TESForm::FormTypeInfo*																	TESForm::FormTypeInfoTable = (TESForm::FormTypeInfo*)0x009EDE28;
 
 const char* TESForm::FormTypeIDLongNames[kFormType__MAX] =
 {
@@ -190,9 +191,9 @@ void TESForm::SetDeleted(bool State)
 	thisVirtualCall<UInt32>(0x90, this, State);
 }
 
-bool TESForm::CopyFrom(TESForm* Form)
+void TESForm::CopyFrom(TESForm* Form)
 {
-	return thisVirtualCall<bool>(0xB8, this, Form);
+	thisVirtualCall<void>(0xB8, this, Form);
 }
 
 bool TESForm::CompareTo(TESForm* Form)
@@ -205,7 +206,7 @@ bool TESForm::UpdateUsageInfo()
 	return thisVirtualCall<bool>(0x104, this);
 }
 
-void TESForm::Link()
+void TESForm::LinkForm()
 {
 	thisVirtualCall<UInt32>(0x70, this);
 }
@@ -261,4 +262,19 @@ const char* TESForm::GetFormTypeIDLongName( UInt8 TypeID )
 		return "Unknown";
 	else
 		return FormTypeIDLongNames[(int)TypeID];
+}
+
+bool TESForm::LoadForm( TESFile* File )
+{
+	return thisVirtualCall<bool>(0x40, this, File);
+}
+
+bool TESForm::SaveFormRecord( TESFile* File )
+{
+	return thisVirtualCall<bool>(0x44, this, File);
+}
+
+const char* TESForm::GetEditorID() const
+{
+	return editorID.c_str();
 }

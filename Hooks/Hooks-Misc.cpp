@@ -9,8 +9,6 @@
 #include "..\CSEHallOfFame.h"
 #include "..\CSEWorkspaceManager.h"
 
-#include <BGSEEToolBox.h>
-
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
@@ -79,6 +77,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(InteriorCellLightingDataInit, 0x00532410);
 		_DefineHookHdlr(ConvertDDSToRGBA32, 0x004AE4B4);
 		_DefineJumpHdlr(ExportNPCFaceTextures, 0x004D9617, 0x004D9626);
+		_DefineNopHdlr(TESTestAllCells, 0x00478C75, 6);
+		_DefineHookHdlr(DataHandlerGetInteriorAtIndex, 0x0047BB19);
 
 		void PatchMiscHooks(void)
 		{
@@ -116,6 +116,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(InteriorCellLightingDataInit).WriteJump();
 			_MemHdlr(ConvertDDSToRGBA32).WriteJump();
 			_MemHdlr(ExportNPCFaceTextures).WriteJump();
+			_MemHdlr(TESTestAllCells).WriteNop();
+			_MemHdlr(DataHandlerGetInteriorAtIndex).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -163,6 +165,7 @@ namespace ConstructionSetExtender
 			_DefineNopHdlr(AnimControllerMorphError, 0x004A67B5, 5);
 			_DefineNopHdlr(ZBufferVertexColorExportA, 0x0046C533, 5);
 			_DefineNopHdlr(ZBufferVertexColorExportB, 0x0046C547, 5);
+			_DefinePatchHdlr(DataHandlerNonParentForm, 0x00483477);
 
 			_MemHdlr(FileFinderLogMessage).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerAutoSave).WriteNop();
@@ -193,6 +196,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(AnimControllerMorphError).WriteNop();
 			_MemHdlr(ZBufferVertexColorExportA).WriteNop();
 			_MemHdlr(ZBufferVertexColorExportB).WriteNop();
+			_MemHdlr(DataHandlerNonParentForm).WriteUInt8(0xEB);
 
 			const UInt32 kMessageHandlerVTBL = 0x00940760;
 
@@ -899,6 +903,29 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			SKIP:
 				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		#define _hhName		DataHandlerGetInteriorAtIndex
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0047BB1E);
+			_hhSetVar(Call, 0x0059AD60);
+			__asm
+			{
+				call	_hhGetVar(Call)
+
+				lea		eax, [esi + 0xC0]
+				mov		eax, [eax + 0x10]
+				mov		ecx, [esp + 0x8]
+				cmp		ecx, eax			// check index with array size
+				jge		SKIP
+
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				mov		eax, 0
+				pop		esi
+				retn	4
 			}
 		}
 	}

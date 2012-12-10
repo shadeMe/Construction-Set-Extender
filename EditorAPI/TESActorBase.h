@@ -7,7 +7,7 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    TESActorBase is the fundamental base form class for actors.
+	TESActorBase is the fundamental base form class for actors.
 */
 
 class   TESCombatStyle;

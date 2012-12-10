@@ -178,6 +178,7 @@ public:
 	/*1C*/ OverrideFileListT		fileList; // list of TESFiles that override this form
 
 	// methods
+	const char*						GetEditorID() const;
 	bool							IsReference() const;
 	bool							IsActive() const;
 	bool							IsQuestItem() const;
@@ -196,10 +197,12 @@ public:
 	void							SetFromActiveFile(bool State);
 	void							SetDeleted(bool State);
 	void							SetQuestItem(bool State);
-	bool							CopyFrom(TESForm* Form);
+	void							CopyFrom(TESForm* Form);
 	bool							CompareTo(TESForm* Form);
-	void							Link();
-	bool							SaveForm(TESFile* File);
+	bool							LoadForm(TESFile* File);
+	bool							SaveForm(TESFile* File);				// saves an empty record for deleted forms
+	bool							SaveFormRecord(TESFile* File);
+	void							LinkForm();
 	const char*						GetTypeIDString(void);
 	void							GetDataFromDialog(HWND Dialog);
 
@@ -210,6 +213,7 @@ public:
 	static TESForm*					LookupByEditorID(const char* EditorID);
 	static const char*				GetFormTypeIDLongName(UInt8 TypeID);
 
+	static FormTypeInfo*																			FormTypeInfoTable;
 	static ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		EditorIDMap;
 	static ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*					FormIDMap;
 };

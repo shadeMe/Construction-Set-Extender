@@ -20,6 +20,7 @@ HWND*						TESCellViewWindow::WindowHandle = (HWND*)0x00A0AF4C;
 HWND*						TESCellViewWindow::ObjectListHandle = (HWND*)0x00A0AA00;
 HWND*						TESCellViewWindow::CellListHandle = (HWND*)0x00A0AA34;
 UInt8*						TESCellViewWindow::MainMenuState = (UInt8*)0x00A0AF48;
+TESObjectCELL**				TESCellViewWindow::CurrentCellSelection = (TESObjectCELL**)0x00A0A9DC;
 
 ResponseEditorData**		ResponseEditorData::EditorCache = (ResponseEditorData**)0x00A10E2C;
 
@@ -356,8 +357,16 @@ bool TESObjectSelection::HasObject( TESForm* Form )
 	return thisCall<bool>(0x00511CC0, this, Form);
 }
 
+void TESFileFormListWindow::Show( HWND Parent, TESFile* File)
+{
+	if (Parent == NULL)
+		Parent = *TESCSMain::WindowHandle;
+
+	BGSEEUI->ModalDialog(*TESCSMain::Instance, MAKEINTRESOURCE(0xB4), Parent, (DLGPROC)0x00410280, (LPARAM)File, true);
+}
 
 
-
-
-
+void TESCellViewWindow::SetCellSelection( TESObjectCELL* Cell )
+{
+	cdeclCall<void>(0x00409070, Cell);
+}

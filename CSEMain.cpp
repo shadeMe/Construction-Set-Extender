@@ -22,6 +22,7 @@
 #include "AuxiliaryViewport.h"
 #include "CSInterop.h"
 #include "Coda\CSECoda.h"
+#include "CSEGlobalClipboard.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -39,9 +40,9 @@ namespace ConstructionSetExtender
 	CSEReleaseNameTable::CSEReleaseNameTable() :
 		BGSEditorExtender::BGSEEReleaseNameTable()
 	{
-		RegisterRelease(6, 0, 0, "Konniving Kelpie");
-		RegisterRelease(6, 1, 0, "Cretinous Codpiece");
-		RegisterRelease(6, 2, 0, "Talkative Badger");
+		RegisterRelease(6, 0, "Konniving Kelpie");
+		RegisterRelease(6, 1, "Cretinous Codpiece");
+		RegisterRelease(6, 2, "Talkative Badger");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
@@ -226,7 +227,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Initializing Coda Virtual Machine");
+		BGSEECONSOLE_MESSAGE("Initializing Coda *snicker* \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
 		BGSEEScript::Initialize();
 		BGSEECONSOLE->Exdent();
@@ -276,6 +277,11 @@ namespace ConstructionSetExtender
 		_DATAHANDLER->PanicSave(true);
 		BGSEECONSOLE->Exdent();
 
+		BGSEECONSOLE_MESSAGE("Initializing Global Clipboard");
+		BGSEECONSOLE->Indent();
+		GlobalClipboard::Initialize();
+		BGSEECONSOLE->Exdent();
+
 		BGSEECONSOLE_MESSAGE("Initializing Startup Manager");
 		BGSEECONSOLE->Indent();
 		CSEStartupManager::LoadStartupWorkspace();
@@ -284,11 +290,11 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE->ExdentAll();
-		BGSEECONSOLE_MESSAGE("Construction Set Extender Initialized!");
+		BGSEECONSOLE_MESSAGE("%s Initialized!", BGSEEMAIN_EXTENDERLONGNAME);
 		BGSEECONSOLE->Pad(2);
 
 		BGSEEACHIEVEMENTS->Unlock(Achievements::kTheWiseOne);
-
+		
 		if (BGSEECONSOLE->GetLogsWarnings() == false)
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kFlyingBlind);
 
@@ -299,6 +305,8 @@ namespace ConstructionSetExtender
 
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kCommandant);
 		}
+
+		BGSEEACHIEVEMENTS->Unlock(Achievements::kHappyBDayMoi, false, false, true);
 
 #ifndef NDEBUG
 		char UsernameBuffer[0x200] = {0};
@@ -379,9 +387,14 @@ namespace ConstructionSetExtender
 		delete BGSEEWORKSPACE;
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Deinitializing Coda Virtual Machine");
+		BGSEECONSOLE_MESSAGE("Deinitializing Coda *snicker* \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
 		delete CODAVM;
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Deinitializing Global Clipboard");
+		BGSEECONSOLE->Indent();
+		delete BGSEECLIPBOARD;
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Auxiliary Viewport");
@@ -602,7 +615,7 @@ extern "C"
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
 														BGSEEMAIN_EXTENDERSHORTNAME,
-														CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
+														CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
 														PACKED_SME_VERSION,
 														BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS,
 														CS_VERSION_1_2,

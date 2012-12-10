@@ -96,6 +96,9 @@ public:
 	TESObjectREFR*				FindFirstRef(TESForm* BaseForm, bool MustHaveEditorID = false);
 	void						SetPathGrid(TESPathGrid* PathGrid);
 
+	void						AddObjectReference(TESObjectREFR* Ref);
+	void						RemoveObjectReference(TESObjectREFR* Ref);
+
 	void						ModExtraCellWaterHeight(float Height);
 	void						ModExtraCellWaterType(TESWaterForm* Water);
 };
