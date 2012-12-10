@@ -111,12 +111,12 @@ namespace BGSEditorExtender
 
 		VersionNameMap				Table;
 
-		void						RegisterRelease(UInt8 Major, UInt8 Minor, UInt8 Revision, const char* Name);
+		void						RegisterRelease(UInt16 Major, UInt8 Minor, const char* Name);
 	public:
 		BGSEEReleaseNameTable();
 		virtual ~BGSEEReleaseNameTable() = 0;
 
-		const char*					LookupRelease(UInt8 Major, UInt8 Minor, UInt8 Revision);
+		const char*					LookupRelease(UInt16 Major, UInt8 Minor);
 	};
 
 	class BGSEEMain
@@ -261,7 +261,7 @@ namespace BGSEditorExtender
 #define BGSEECONSOLE_MESSAGE(...)	BGSEECONSOLE->LogMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
 #define BGSEECONSOLE_ERROR(...)		BGSEECONSOLE->LogErrorMsg(BGSEEMAIN->ExtenderGetShortName(), __VA_ARGS__)
 
-#define BGSEE_DEBUGBREAK			BGSEditorExtender::BGSEEDaemon::WaitForDebugger(); DebugBreak()
+#define BGSEE_DEBUGBREAK			BGSEditorExtender::BGSEEDaemon::WaitForDebugger(); __asm { int 3 }
 
 #define BGSEEMAIN_EXTENDERLONGNAME		"Bethesda Game Studios Editor Extender"
 #define BGSEEMAIN_EXTENDERSHORTNAME		"BGSEE"

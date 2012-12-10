@@ -15,7 +15,7 @@ namespace BGSEditorExtender
 			ExtraData(0),
 			IconID(IconID)
 		{
-			SME_ASSERT(Name && Desc && GUID);
+			SME_ASSERT(GUID);
 
 			ZeroMemory(&BaseID, sizeof(BaseID));
 			RPC_STATUS Result = UuidFromString((RPC_CSTR)GUID, &BaseID);
@@ -35,6 +35,9 @@ namespace BGSEditorExtender
 
 		bool BGSEEAchievement::GetUnlocked( void ) const
 		{
+			if (GetUnlockable() == false)
+				return false;
+
 			return State == kState_Unlocked;
 		}
 
@@ -46,6 +49,25 @@ namespace BGSEditorExtender
 		bool BGSEEAchievement::GetTriggered( void ) const
 		{
 			return State == kState_Triggered;
+		}
+
+		void BGSEEAchievement::GetName( std::string& OutBuffer ) const
+		{
+			SME_ASSERT(Name.length());
+
+			OutBuffer = Name;
+		}
+
+		void BGSEEAchievement::GetDescription( std::string& OutBuffer ) const
+		{
+			SME_ASSERT(Description.length());
+
+			OutBuffer = Description;
+		}
+
+		bool BGSEEAchievement::GetUnlockable( void ) const
+		{
+			return true;
 		}
 
 		BGSEEAchievementManager*			BGSEEAchievementManager::Singleton = NULL;
@@ -211,36 +233,41 @@ namespace BGSEditorExtender
 				}
 			}
 
-			BGSEECONSOLE_MESSAGE("Unlocked Achievements: %d/%d", UnlockedCount, AchievementDepot.size());
+			BGSEECONSOLE_MESSAGE("Unlocked Achievements: %d/%d", UnlockedCount, GetTotalAchievements());
 			BGSEECONSOLE->Indent();
 			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
 				if ((*Itr)->GetUnlocked())
-					BGSEECONSOLE_MESSAGE((*Itr)->Name);
+					BGSEECONSOLE_MESSAGE((*Itr)->Name.c_str());
 			}
 			BGSEECONSOLE->Exdent();
 
 			return Initialized;
 		}
 
-		void BGSEEAchievementManager::Unlock( BGSEEAchievement* Achievement, bool ForceUnlock, bool TriggerOnly )
+		void BGSEEAchievementManager::Unlock( BGSEEAchievement* Achievement, bool ForceUnlock, bool TriggerOnly, bool PreserveUnlockState )
 		{
 			if (Initialized == false || Achievement->GetUnlocked())
 				return;
 
-			Achievement->State = BGSEEAchievement::kState_Triggered;
+			if (PreserveUnlockState == false)
+				Achievement->State = BGSEEAchievement::kState_Triggered;
 
 			if (TriggerOnly == false)
 			{
 				if (ForceUnlock == false && Achievement->UnlockCallback(this) == false)
 				{
-					Achievement->State = BGSEEAchievement::kState_Locked;
+					if (PreserveUnlockState == false)
+						Achievement->State = BGSEEAchievement::kState_Locked;
+
 					return;
 				}
 
-				Achievement->State = BGSEEAchievement::kState_Unlocked;
-
-				BGSEECONSOLE_MESSAGE("New Achievement Unlocked: %s", Achievement->Name);
+				if (PreserveUnlockState == false)
+				{
+					Achievement->State = BGSEEAchievement::kState_Unlocked;
+					BGSEECONSOLE_MESSAGE("New Achievement Unlocked: %s", Achievement->Name.c_str());
+				}
 
 				NotificationUserData* UserData = new NotificationUserData();
 				UserData->Instance = this;
@@ -344,8 +371,14 @@ namespace BGSEditorExtender
 					SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, WM_SETFONT, (WPARAM)JingleFont, (LPARAM)TRUE);
 					SendDlgItemMessage(hWnd, 1, WM_SETFONT, (WPARAM)JingleFont, (LPARAM)TRUE);
 
-					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE, UnlockedAchievement->Name);
-					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, UnlockedAchievement->Description);
+					std::string Buffer;
+
+					UnlockedAchievement->GetName(Buffer);
+					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_TITLE, Buffer.c_str());
+
+					UnlockedAchievement->GetDescription(Buffer);
+					SetDlgItemText(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_JINGLE, Buffer.c_str());
+
 					SendDlgItemMessage(hWnd, IDC_BGSEE_ACHIEVEMENTUNLOCKED_ICON, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)UserData->Icon);
 
 					SetTimer(hWnd, TIMERID_VISIBLE, 6500, NULL);
@@ -377,7 +410,15 @@ namespace BGSEditorExtender
 
 		UInt32 BGSEEAchievementManager::GetTotalAchievements( void ) const
 		{
-			return AchievementDepot.size();
+			UInt32 Result = 0;
+
+			for (ExtenderAchievementListT::const_iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			{
+				if ((*Itr)->GetUnlockable())
+					Result++;
+			}
+
+			return Result;
 		}
 
 		UInt32 BGSEEAchievementManager::GetUnlockedAchievements( void ) const

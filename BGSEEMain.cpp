@@ -305,11 +305,11 @@ namespace BGSEditorExtender
 		return SME::INI::INIManager::DirectWrite(Buffer, Value);
 	}
 
-	void BGSEEReleaseNameTable::RegisterRelease( UInt8 Major, UInt8 Minor, UInt8 Revision, const char* Name )
+	void BGSEEReleaseNameTable::RegisterRelease( UInt16 Major, UInt8 Minor, const char* Name )
 	{
 		SME_ASSERT(Name);
 
-		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | (Revision & 0xFFFF));
+		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | 0xFFFF);
 		if (Table.count(Version) == 0)
 		{
 			Table.insert(std::make_pair(Version, Name));
@@ -327,9 +327,9 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	const char* BGSEEReleaseNameTable::LookupRelease( UInt8 Major, UInt8 Minor, UInt8 Revision )
+	const char* BGSEEReleaseNameTable::LookupRelease( UInt16 Major, UInt8 Minor )
 	{
-		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | (Revision & 0xFFFF));
+		UInt32 Version = (((Major & 0xFF) << 24) | ((Minor & 0xFF) << 16) | 0xFFFF);
 
 		if (Table.count(Version))
 			return Table[Version].c_str();
@@ -359,11 +359,12 @@ namespace BGSEditorExtender
 #else
 		const char* ReleaseMode = " DEBUG";
 #endif
-		BGSEECONSOLE_MESSAGE("%s \"%s\" v%d.%d.%d%s Initializing ...",
+		BGSEECONSOLE_MESSAGE("%s \"%s\" v%d.%d.%d.%d%s Initializing...",
 							LongName,
 							ReleaseName,
 							SME_VERSION_MAJOR(ExtenderVersion),
 							SME_VERSION_MINOR(ExtenderVersion),
+							SME_VERSION_REVISION(ExtenderVersion),
 							SME_VERSION_BUILD(ExtenderVersion),
 							ReleaseMode);
 

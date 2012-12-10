@@ -24,6 +24,7 @@
     <ClInclude Include="..\SME Sundries\VersionInfo.h" />
     <ClInclude Include="BGSEEAchievements.h" />
     <ClInclude Include="BGSEEConsole.h" />
+    <ClInclude Include="BGSEEGlobalClipboard.h" />
     <ClInclude Include="BGSEEHallOfFame.h" />
     <ClInclude Include="BGSEEMain.h" />
     <ClInclude Include="BGSEERenderWindowFlyCamera.h" />
@@ -91,6 +92,7 @@
     <ClCompile Include="..\SME Sundries\UIHelpers.cpp" />
     <ClCompile Include="BGSEEAchievements.cpp" />
     <ClCompile Include="BGSEEConsole.cpp" />
+    <ClCompile Include="BGSEEGlobalClipboard.cpp" />
     <ClCompile Include="BGSEEHallOfFame.cpp" />
     <ClCompile Include="BGSEEMain.cpp" />
     <ClCompile Include="BGSEERenderWindowFlyCamera.cpp" />

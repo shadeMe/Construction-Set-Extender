@@ -55,6 +55,9 @@
     <Filter Include="Modules\BGSEERenderWindowFlyCamera">
       <UniqueIdentifier>{fb9c1a6a-5b33-4810-9bb4-1bc57a3411fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules\BGSEEGlobalClipboard">
+      <UniqueIdentifier>{3bf3549c-9b89-4b17-869f-b1f7ca10458f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BGSEEMain.h">
@@ -259,6 +262,9 @@
     <ClInclude Include="BGSEERenderWindowFlyCamera.h">
       <Filter>Modules\BGSEERenderWindowFlyCamera</Filter>
     </ClInclude>
+    <ClInclude Include="BGSEEGlobalClipboard.h">
+      <Filter>Modules\BGSEEGlobalClipboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
@@ -423,6 +429,9 @@
     </ClCompile>
     <ClCompile Include="BGSEERenderWindowFlyCamera.cpp">
       <Filter>Modules\BGSEERenderWindowFlyCamera</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEGlobalClipboard.cpp">
+      <Filter>Modules\BGSEEGlobalClipboard</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

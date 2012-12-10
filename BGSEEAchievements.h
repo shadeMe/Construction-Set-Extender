@@ -19,8 +19,8 @@ namespace BGSEditorExtender
 
 			UUID						BaseID;
 			std::string					BaseIDString;
-			const char*					Name;
-			const char*					Description;
+			std::string					Name;
+			std::string					Description;
 			UInt8						State;
 			UInt64						ExtraData;
 			UInt32						IconID;
@@ -29,6 +29,11 @@ namespace BGSEditorExtender
 			virtual bool				UnlockCallback(BGSEEAchievementManager* Parameter);
 										// called before the achievement's state is serialized, return false to cancel the save op
 			virtual bool				SaveCallback(BGSEEAchievementManager* Parameter);
+			
+			virtual void				GetName(std::string& OutBuffer) const;
+			virtual void				GetDescription(std::string& OutBuffer) const;
+
+			virtual bool				GetUnlockable(void) const;		// only unlockable achievements count towards the total/unlocked achievement count
 		public:
 			BGSEEAchievement(const char* Name, const char* Desc, UInt32 IconID, const char* GUID);
 			virtual ~BGSEEAchievement();
@@ -78,7 +83,7 @@ namespace BGSEditorExtender
 														// takes ownership of achievement instances
 			bool										Initialize(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementListT& Achievements);
 
-			void										Unlock(BGSEEAchievement* Achievement, bool ForceUnlock = false, bool TriggerOnly = false);
+			void										Unlock(BGSEEAchievement* Achievement, bool ForceUnlock = false, bool TriggerOnly = false, bool PreserveUnlockState = false);
 			UInt32										GetTotalAchievements(void) const;
 			UInt32										GetUnlockedAchievements(void) const;
 		};
