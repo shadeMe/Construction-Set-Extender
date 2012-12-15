@@ -7,27 +7,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupScriptINISettings[kStartupScript__MAX] =
-		{
-			{ "OpenScriptWindow",		"0",		"Open an empty script editor window on startup" },
-			{ "ScriptEditorID",			"",			"EditorID of the script to be loaded on startup, should a script editor also be opened. An empty string results in a blank workspace" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetStartupScript( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Startup");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kStartupScript__MAX; i++)
-					kFactory.Settings.push_back(&kStartupScriptINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace Hooks
 	{
 		const UInt32						kMaxScriptDataSize = 0x8000;

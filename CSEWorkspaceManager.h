@@ -3,19 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kStartupWorkspace_SetWorkspace = 0,
-			kStartupWorkspace_WorkspacePath,
-
-			kStartupWorkspace__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupWorkspaceINISettings[kStartupWorkspace__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetStartupWorkspace(void);
-	}
-
 	namespace WorkspaceManager
 	{
 		class CSEWorkspaceManagerOperator : public BGSEditorExtender::BGSEEWorkspaceManagerOperator

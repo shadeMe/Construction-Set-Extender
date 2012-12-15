@@ -3,30 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowFlyCameraINISettings[kRenderWindowFlyCamera__MAX] =
-		{
-			{ "MovementSpeed",			"10.0",			"Fly camera movement speed" },
-			{ "SprintMultiplier",		"7.5",			"Fly camera sprint speed multiplier" },
-			{ "CrawlMultiplier",		"0.05",			"Fly camera crawl speed multiplier" },
-			{ "RotationSpeed",			"1.0",			"Fly camera rotation" },
-			{ "CameraFOV",				"90",			"Fly camera field of vision" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderWindowFlyCamera( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("RenderWindowFlyCamera");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kRenderWindowFlyCamera__MAX; i++)
-					kFactory.Settings.push_back(&kRenderWindowFlyCameraINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	CSERenderWindowFlyCameraOperator::CSERenderWindowFlyCameraOperator( HWND Parent, BGSEditorExtender::ResourceTemplateT TemplateID ) :
 		BGSEditorExtender::BGSEERenderWindowFlyCameraOperator(Parent, TemplateID)
 	{
@@ -43,7 +19,7 @@ namespace ConstructionSetExtender
 		_RENDERSEL->ClearSelection(true);
 		Hooks::_MemHdlr(CellViewSetCurrentCell).WriteUInt8(0xC3);		// write an immediate retn
 
-		float CameraFOV = atof(INISettings::GetRenderWindowFlyCamera()->Get(INISettings::kRenderWindowFlyCamera_CameraFOV, BGSEEMAIN->INIGetter()));
+		float CameraFOV = Settings::RenderWindowFlyCamera::kCameraFOV.GetData().f;
 		if (CameraFOV > 120.0f)
 			CameraFOV = 120.0f;
 		else if (CameraFOV < 50.0f)
@@ -73,7 +49,7 @@ namespace ConstructionSetExtender
 
 		if (XOffset || YOffset)
 		{
-			float RotationSpeed = atof(INISettings::GetRenderWindowFlyCamera()->Get(INISettings::kRenderWindowFlyCamera_RotationSpeed, BGSEEMAIN->INIGetter()));
+			float RotationSpeed = Settings::RenderWindowFlyCamera::kRotationSpeed.GetData().f;
 
 			TESRender::RotateNode(_PRIMARYRENDERER->primaryCameraParentNode,
 									&RotationPivot,
@@ -87,13 +63,13 @@ namespace ConstructionSetExtender
 
 	void CSERenderWindowFlyCameraOperator::Move( UInt8 Direction, bool Sprinting, bool Crawling )
 	{
-		float Velocity = atof(INISettings::GetRenderWindowFlyCamera()->Get(INISettings::kRenderWindowFlyCamera_MovementSpeed, BGSEEMAIN->INIGetter()));
+		float Velocity = Settings::RenderWindowFlyCamera::kMovementSpeed.GetData().f;
 
 		if (Sprinting)
-			Velocity *= atof(INISettings::GetRenderWindowFlyCamera()->Get(INISettings::kRenderWindowFlyCamera_SprintMultiplier, BGSEEMAIN->INIGetter()));
+			Velocity *= Settings::RenderWindowFlyCamera::kSprintMultiplier.GetData().f;
 
 		if (Crawling)
-			Velocity *= atof(INISettings::GetRenderWindowFlyCamera()->Get(INISettings::kRenderWindowFlyCamera_CrawlMultiplier, BGSEEMAIN->INIGetter()));
+			Velocity *= Settings::RenderWindowFlyCamera::kCrawlMultiplier.GetData().f;
 
 		switch (Direction)
 		{

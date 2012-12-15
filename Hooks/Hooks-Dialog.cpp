@@ -9,43 +9,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kDialogsINISettings[kDialogs__MAX] =
-		{
-			{ "RenderWindowState",					"1",				"Window visibility" },
-			{ "ObjectWindowState",					"1",				"Window visibility" },
-			{ "CellViewWindowState",				"1",				"Window visibility" },
-			{ "SortFormListsByActiveForm",			"1",				"Sort active forms first in list views"	},
-			{ "ColorizeActiveForms",				"1",				"Colorize active forms in list views" },
-			{ "ActiveFormForeColor",				"255,255,255",		"Foreground color of active form items (RGB)" },
-			{ "ActiveFormBackColor",				"0,128,64",			"Background color of active form items (RGB)" },
-			{ "ShowMainWindowsInTaskbar",			"0",				"Show the primary CS windows in the taskbar" },
-			{ "ShowEditDialogsInTaskbar",			"0",				"Show form edit dialogs in the taskbar" },
-			{ "ColorizeFormOverrides",				"0",				"Colorize overridden forms in list views" },
-			{ "FormOverrideLevel0ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
-			{ "FormOverrideLevel0BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" },
-			{ "FormOverrideLevel1ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
-			{ "FormOverrideLevel1BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" },
-			{ "FormOverrideLevel2ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
-			{ "FormOverrideLevel2BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" },
-			{ "FormOverrideLevel3ForeColor",		"0,0,0",			"Foreground color of overridden form items (RGB)" },
-			{ "FormOverrideLevel3BackColor",		"255,255,255",		"Background color of overridden form items (RGB)" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetDialogs( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Dialogs");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kDialogs__MAX; i++)
-					kFactory.Settings.push_back(&kDialogsINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace Hooks
 	{
 		_DefineNopHdlr(ResponseEditorMic, 0x00407F3D, 5);
@@ -1487,13 +1450,13 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoHideCSMainDialogsStartupHook(void)
 		{
-			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_RenderWindowState, BGSEEMAIN->INIGetter())) == 0)
+			if (Settings::Dialogs::kRenderWindowState.GetData().i == 0)
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40423, NULL);
 
-			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ObjectWindowState, BGSEEMAIN->INIGetter())) == 0)
+			if (Settings::Dialogs::kObjectWindowState.GetData().i == 0)
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40199, NULL);
 
-			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_CellViewWindowState, BGSEEMAIN->INIGetter())) == 0)
+			if (Settings::Dialogs::kCellViewWindowState.GetData().i == 0)
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40200, NULL);
 		}
 

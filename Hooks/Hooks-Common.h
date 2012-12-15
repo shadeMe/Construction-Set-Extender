@@ -8,7 +8,6 @@
 class TESForm;
 class TESObjectCELL;
 class TESWorldSpace;
-class INISetting;
 
 using namespace	MemoryHandler;
 

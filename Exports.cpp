@@ -213,31 +213,27 @@ void ReadFromINI(const char* Setting, const char* Section, const char* Default, 
 
 void WriteToINI(const char* Setting, const char* Section, const char* Value)
 {
-	BGSEEMAIN->INISetter()(Setting, Section, Value, true);
+	BGSEEMAIN->INISetter()(Setting, Section, Value);
 }
 
 UInt32 GetFormListActiveItemForegroundColor(void)
 {
-	return SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-									INISettings::kDialogs_ActiveFormForeColor,
-									BGSEEMAIN->INIGetter()));
+	 return SME::StringHelpers::GetRGB(Settings::Dialogs::kActiveFormForeColor.GetData().s);
 }
 
 UInt32 GetFormListActiveItemBackgroundColor(void)
 {
-	return SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-									INISettings::kDialogs_ActiveFormBackColor,
-									BGSEEMAIN->INIGetter()));
+	return SME::StringHelpers::GetRGB(Settings::Dialogs::kActiveFormBackColor.GetData().s);
 }
 
 bool GetShouldColorizeActiveForms(void)
 {
-	return atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter()));
+	return Settings::Dialogs::kColorizeActiveForms.GetData().i;
 }
 
 bool GetShouldSortActiveFormsFirst(void)
 {
-	return atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter()));
+	return Settings::Dialogs::kSortFormListsByActiveForm.GetData().i;
 }
 #pragma endregion
 /**** END EDITORAPI SUBINTERFACE ****/

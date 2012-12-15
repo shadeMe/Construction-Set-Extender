@@ -4,25 +4,9 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kRenderWindowPainter_ShowSelectionStats = 0,
-			kRenderWindowPainter_ShowRAMUsage,
-			kRenderWindowPainter_FontFace,
-			kRenderWindowPainter_FontSize,
-
-			kRenderWindowPainter__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowPainterINISettings[kRenderWindowPainter__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetRenderWindowPainter(void);
-	}
-
 	namespace RenderWindowPainter
 	{
 		extern BGSEditorExtender::BGSEEStaticRenderChannel*						RenderChannelSelectionStats;
-		extern BGSEditorExtender::BGSEEStaticRenderChannel*						RenderChannelRAMUsage;
 		extern BGSEditorExtender::BGSEEDynamicRenderChannel*					RenderChannelNotifications;
 
 		class CSERAMUsageRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
@@ -48,6 +32,27 @@ namespace ConstructionSetExtender
 			virtual ~CSERAMUsageRenderChannel();
 
 			static CSERAMUsageRenderChannel*		GetSingleton();
+		};
+
+		class CSEMouseRefRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
+		{
+		protected:
+			static CSEMouseRefRenderChannel*		Singleton;
+
+			static bool								RenderChannelCallback(std::string& RenderedText);
+
+			virtual void							Render(void* Parameter, LPD3DXSPRITE RenderToSprite);
+
+			CSEMouseRefRenderChannel(INT FontHeight,
+				INT FontWidth,
+				UINT FontWeight,
+				const char* FontFace,
+				D3DCOLOR Color,
+				DWORD DrawFormat);
+		public:
+			virtual ~CSEMouseRefRenderChannel();
+
+			static CSEMouseRefRenderChannel*		GetSingleton();
 		};
 
 		void																	Initialize(void);

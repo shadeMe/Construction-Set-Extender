@@ -86,6 +86,7 @@ public:
 	static bool								UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier);
 	static void								RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
+	static TESObjectREFR*					PickAtCoords(int X, int Y);
 
 	static void								UpdateAVObject(NiAVObject* Object);		// this should be moved to a better location, actually a NiAVObject method
 
@@ -179,8 +180,10 @@ public:
 
 	static bool							FreezeInactiveRefs;
 	static bool							UseAlternateMovementSettings;
-	static POINT						CurrentMouseCoordDelta;
+	static POINT						CurrentMouseLBDragCoordDelta;
 	static NiFrustum					CameraFrustumBuffer;
+	static TESObjectREFR*				CurrentMouseRef;
+	static POINT						CurrentMouseCoord;
 	
 	static const float					MaxLandscapeEditBrushRadius;
 };

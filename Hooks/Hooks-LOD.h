@@ -3,19 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kLOD_PartialTextureResolution = 0,
-			kLOD_DeletePartialsAfterGeneration,
-
-			kLOD__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kLODINISettings[kLOD__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetLOD(void);
-	}
-
 	namespace Hooks
 	{
 		// hooks that modify LOD related code

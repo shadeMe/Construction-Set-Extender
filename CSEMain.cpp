@@ -151,7 +151,7 @@ namespace ConstructionSetExtender
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMenuInitSelectSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, UIManager::RenderWindowMiscSubclassProc);
 
-		if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowMainWindowsInTaskbar, BGSEEMAIN->INIGetter())))
+		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
 			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
@@ -347,17 +347,9 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Flushed CS INI Settings");
 
-		INISettings::GetDialogs()->Set(INISettings::kDialogs_RenderWindowState,
-									BGSEEMAIN->INISetter(),
-									(GetMenuState(*TESCSMain::MainMenuHandle, 40423, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
-
-		INISettings::GetDialogs()->Set(INISettings::kDialogs_ObjectWindowState,
-									BGSEEMAIN->INISetter(),
-									(GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
-
-		INISettings::GetDialogs()->Set(INISettings::kDialogs_CellViewWindowState,
-									BGSEEMAIN->INISetter(),
-									(GetMenuState(*TESCSMain::MainMenuHandle, 40200, MF_BYCOMMAND) & MF_CHECKED) ? "1" : "0");
+		Settings::Dialogs::kRenderWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40423, MF_BYCOMMAND) & MF_CHECKED) != 0);
+		Settings::Dialogs::kCellViewWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40200, MF_BYCOMMAND) & MF_CHECKED) != 0);
+		Settings::Dialogs::kObjectWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) != 0);
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Plugin Interface Manager");
 		CSEInterfaceManager::Instance.Deinitailize();
@@ -448,7 +440,7 @@ namespace ConstructionSetExtender
 		CR_CRASH_CALLBACK_INFO* CrashInfo = (CR_CRASH_CALLBACK_INFO*)Parameter;
 		bool ResumeExecution = false;
 
-		int CrashHandlerMode = atoi(INISettings::GetGeneral()->Get(INISettings::kGeneral_CrashHandlerMode, BGSEEMAIN->INIGetter()));
+		int CrashHandlerMode = Settings::General::kCrashHandlerMode.GetData().i;
 
 		if (CrashHandlerMode == kCrashHandlerMode_Terminate)
 			ResumeExecution = false;
@@ -495,8 +487,8 @@ namespace ConstructionSetExtender
 
 	void CSEStartupManager::LoadStartupPlugin()
 	{
-		bool Load = atoi(INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INIGetter()));
-		const char* PluginName = INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_PluginName, BGSEEMAIN->INIGetter());
+		bool Load = Settings::Startup::kLoadPlugin.GetData().i;
+		const char* PluginName = Settings::Startup::kPluginName.GetData().s;
 
 		if (Load)
 		{
@@ -527,8 +519,8 @@ namespace ConstructionSetExtender
 
 	void CSEStartupManager::LoadStartupScript()
 	{
-		bool Load = atoi(INISettings::GetStartupScript()->Get(INISettings::kStartupScript_OpenScriptWindow, BGSEEMAIN->INIGetter()));
-		const char* ScriptID = INISettings::GetStartupScript()->Get(INISettings::kStartupScript_ScriptEditorID, BGSEEMAIN->INIGetter());
+		bool Load = Settings::Startup::kOpenScriptWindow.GetData().i;
+		const char* ScriptID = Settings::Startup::kScriptEditorID.GetData().s;
 
 		if (Load)
 		{
@@ -541,8 +533,8 @@ namespace ConstructionSetExtender
 
 	void CSEStartupManager::LoadStartupWorkspace()
 	{
-		bool Load = atoi(INISettings::GetStartupWorkspace()->Get(INISettings::kStartupWorkspace_SetWorkspace, BGSEEMAIN->INIGetter()));
-		const char* WorkspacePath = INISettings::GetStartupWorkspace()->Get(INISettings::kStartupWorkspace_WorkspacePath, BGSEEMAIN->INIGetter());
+		bool Load = Settings::Startup::kSetWorkspace.GetData().i;
+		const char* WorkspacePath = Settings::Startup::kWorkspacePath.GetData().s;
 
 		if (Load)
 		{
@@ -598,20 +590,10 @@ extern "C"
 			return false;
 		}
 
-		BGSEditorExtender::SettingFactoryListT CSEINISettings;
+		BGSEditorExtender::INISettingDepotT CSEINISettings;
 
-		CSEINISettings.push_back(INISettings::GetAuxiliaryViewport());
-		CSEINISettings.push_back(INISettings::GetDialogs());
-		CSEINISettings.push_back(INISettings::GetGeneral());
-		CSEINISettings.push_back(INISettings::GetLOD());
-		CSEINISettings.push_back(INISettings::GetPlugins());
-		CSEINISettings.push_back(INISettings::GetRenderer());
-		CSEINISettings.push_back(INISettings::GetRenderWindowPainter());
-		CSEINISettings.push_back(INISettings::GetStartupPlugin());
-		CSEINISettings.push_back(INISettings::GetStartupScript());
-		CSEINISettings.push_back(INISettings::GetStartupWorkspace());
-		CSEINISettings.push_back(INISettings::GetVersionControl());
-		CSEINISettings.push_back(INISettings::GetRenderWindowFlyCamera());
+		Settings::Register(CSEINISettings);
+		AuxiliaryViewport::RegisterINISettings(CSEINISettings);
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
 														BGSEEMAIN_EXTENDERSHORTNAME,

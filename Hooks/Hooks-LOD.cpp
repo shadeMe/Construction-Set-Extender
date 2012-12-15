@@ -7,27 +7,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kLODINISettings[kLOD__MAX] =
-		{
-			{ "PartialTextureResolution",			"384",		"Resolution of the generated partial LOD diffuse maps. Size of the full map = 16 * Res. Must be a power of 2 and b'ween 32 and 384" },
-			{ "DeletePartialsAfterGeneration",		"1",		"Delete the partial LOD textures after the full map is generated" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetLOD( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("LOD");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kLOD__MAX; i++)
-					kFactory.Settings.push_back(&kLODINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace Hooks
 	{
 		#define SAFERELEASE_BSR(X)		if (X)	{ X->DeleteInstance(); X = NULL; }
@@ -453,7 +432,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetInvalidationManager()->Push(*TESCSMain::WindowHandle);
 				BGSEEUI->GetInvalidationManager()->Push(*TESRenderWindow::WindowHandle);
 
-				s_LODDiffuseMapPartialResolution = atoi(INISettings::GetLOD()->Get(INISettings::kLOD_PartialTextureResolution, BGSEEMAIN->INIGetter()));
+				s_LODDiffuseMapPartialResolution = Settings::LOD::kPartialTextureResolution.GetData().i;
 
 				if (s_LODDiffuseMapPartialResolution % 2 || s_LODDiffuseMapPartialResolution < 32)
 					s_LODDiffuseMapPartialResolution = 32;
@@ -497,7 +476,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetInvalidationManager()->Pop(*TESCSMain::WindowHandle);
 				BGSEEUI->GetInvalidationManager()->Pop(*TESRenderWindow::WindowHandle);
 
-				if (atoi(INISettings::GetLOD()->Get(INISettings::kLOD_DeletePartialsAfterGeneration, BGSEEMAIN->INIGetter())))
+				if (Settings::LOD::kDeletePartialsAfterGeneration.GetData().i)
 				{
 					char Buffer[MAX_PATH + 1] = {0};
 					SHFILEOPSTRUCT DeleteFolderData = {0};

@@ -182,6 +182,7 @@
     <ClCompile Include="CSEMain.cpp" />
     <ClCompile Include="CSERenderWindowFlyCamera.cpp" />
     <ClCompile Include="CSERenderWindowPainter.cpp" />
+    <ClCompile Include="CSESettings.cpp" />
     <ClCompile Include="CSEUIManager.cpp" />
     <ClCompile Include="CSEWorkspaceManager.cpp" />
     <ClCompile Include="EditorAPI\Archive.cpp" />
@@ -297,6 +298,7 @@
     <ClInclude Include="CSEMain.h" />
     <ClInclude Include="CSERenderWindowFlyCamera.h" />
     <ClInclude Include="CSERenderWindowPainter.h" />
+    <ClInclude Include="CSESettings.h" />
     <ClInclude Include="CSEUIManager.h" />
     <ClInclude Include="CSEWorkspaceManager.h" />
     <ClInclude Include="EditorAPI\ActorValues.h" />

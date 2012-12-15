@@ -3,30 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kRenderer_UpdatePeriod = 0,
-			kRenderer_UpdateViewPortAsync,
-			kRenderer_AltRefMovementSpeed,
-			kRenderer_AltRefSnapGrid,
-			kRenderer_AltRefRotationSpeed,
-			kRenderer_AltRefSnapAngle,
-			kRenderer_AltCamRotationSpeed,
-			kRenderer_AltCamZoomSpeed,
-			kRenderer_AltCamPanSpeed,
-			kRenderer_CoplanarRefDrops,
-			kRenderer_SwitchCAndY,
-			kRenderer_FixedCameraPivot,
-			kRenderer_CameraFOV,
-
-			kRenderer__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRendererINISettings[kRenderer__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetRenderer(void);
-	}
-
 	namespace Hooks
 	{
 		// hooks that do stuff to the renderer and the render window

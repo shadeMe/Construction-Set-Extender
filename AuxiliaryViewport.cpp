@@ -9,27 +9,25 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetAuxiliaryViewport(void)
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory kFactory(AuxiliaryViewport::kINISection);
-			if (kFactory.Settings.size() == 0)
-			{
-				kFactory.Settings.push_back(&AuxiliaryViewport::kDefaultINISettings[AuxiliaryViewport::kDefaultINISetting_Top]);
-				kFactory.Settings.push_back(&AuxiliaryViewport::kDefaultINISettings[AuxiliaryViewport::kDefaultINISetting_Left]);
-				kFactory.Settings.push_back(&AuxiliaryViewport::kDefaultINISettings[AuxiliaryViewport::kDefaultINISetting_Right]);
-				kFactory.Settings.push_back(&AuxiliaryViewport::kDefaultINISettings[AuxiliaryViewport::kDefaultINISetting_Bottom]);
-				kFactory.Settings.push_back(&AuxiliaryViewport::kDefaultINISettings[AuxiliaryViewport::kDefaultINISetting_Visible]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	AuxiliaryViewport*		AuxiliaryViewport::Singleton = NULL;
-	const char*				AuxiliaryViewport::kINISection = "AuxViewport";
 	const char*				AuxiliaryViewport::kWindowTitle = "Auxiliary Viewport Window";
+
+#define AUXVIEWPORT_INISECTION				"AuxViewport"
+	SME::INI::INISetting					AuxiliaryViewport::kINI_Top("Top", AUXVIEWPORT_INISECTION,
+																		"Dialog Rect Top",
+																		(SInt32)150);
+	SME::INI::INISetting					AuxiliaryViewport::kINI_Left("Left", AUXVIEWPORT_INISECTION,
+																		"Dialog Rect Left",
+																		(SInt32)150);
+	SME::INI::INISetting					AuxiliaryViewport::kINI_Right("Right", AUXVIEWPORT_INISECTION,
+																		"Dialog Rect Right",
+																		(SInt32)150);
+	SME::INI::INISetting					AuxiliaryViewport::kINI_Bottom("Bottom", AUXVIEWPORT_INISECTION,
+																		"Dialog Rect Bottom",
+																		(SInt32)150);
+	SME::INI::INISetting					AuxiliaryViewport::kINI_Visible("Visible", AUXVIEWPORT_INISECTION,
+																		"Dialog Visibility State",
+																		(SInt32)1);
 
 	AuxiliaryViewport* AuxiliaryViewport::GetSingleton()
 	{
@@ -75,14 +73,14 @@ namespace ConstructionSetExtender
 	{
 		ViewportCamera->m_uiRefCount--;
 		thisVirtualCall<void>(0x0, ViewportCamera, true);
-		INISaveUIState(&BGSEEMAIN->INISetter(), kINISection);
+		INISaveUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
 
 		Singleton = NULL;
 	}
 
 	void AuxiliaryViewport::Initialize()
 	{
-		if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowMainWindowsInTaskbar, BGSEEMAIN->INIGetter())))
+		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
 			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
@@ -92,7 +90,7 @@ namespace ConstructionSetExtender
 		}
 
 		Create(NULL, true, true);
-		INILoadUIState(&BGSEEMAIN->INIGetter(), kINISection);
+		INILoadUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
 
 		ClearScreen();
 	}
@@ -149,4 +147,14 @@ namespace ConstructionSetExtender
 	{
 		return Frozen;
 	}
+
+	void AuxiliaryViewport::RegisterINISettings( BGSEditorExtender::INISettingDepotT& Depot )
+	{
+		Depot.push_back(&kINI_Top);
+		Depot.push_back(&kINI_Left);
+		Depot.push_back(&kINI_Right);
+		Depot.push_back(&kINI_Bottom);
+		Depot.push_back(&kINI_Visible);
+	}
+
 }

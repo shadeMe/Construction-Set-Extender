@@ -209,11 +209,8 @@ namespace ConstructionSetExtender
 		{
 			if ((CurrentFile->fileFlags & TESFile::kFileFlag_Loaded) == 0)
 				return false;
-			else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 &&
-				atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_SaveLoadedESPsAsMasters, BGSEEMAIN->INIGetter())) == 0)
-			{
+			else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && Settings::Plugins::kSaveLoadedESPsAsMasters.GetData().i == 0)
 				return false;
-			}
 			else
 				return true;
 		}
@@ -516,7 +513,7 @@ namespace ConstructionSetExtender
 
 			if (File == NULL)
 				return;
-			else if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INIGetter())) == 0)
+			else if (Settings::Plugins::kPreventTimeStampChanges.GetData().i == 0)
 				return;
 
 			char Buffer[0x200] = {0};

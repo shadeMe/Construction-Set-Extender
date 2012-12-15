@@ -27,10 +27,13 @@ UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
 UInt8*								TESRenderWindow::RefreshFlag = (UInt8*)0x00A0BC4D;
 UInt32*								TESRenderWindow::StateFlags = (UInt32*)0x00A0B058;
 
-POINT								TESRenderWindow::CurrentMouseCoordDelta = { 0, 0 };
+POINT								TESRenderWindow::CurrentMouseLBDragCoordDelta = { 0, 0 };
 bool								TESRenderWindow::UseAlternateMovementSettings = false;
 bool								TESRenderWindow::FreezeInactiveRefs = false;
 NiFrustum							TESRenderWindow::CameraFrustumBuffer = {0};
+POINT								TESRenderWindow::CurrentMouseCoord = {0};
+TESObjectREFR*						TESRenderWindow::CurrentMouseRef = NULL;
+
 const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
 
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
@@ -71,6 +74,7 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 		*RefreshFlag = 1;
 	}
 }
+
 
 void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
 {
@@ -150,6 +154,11 @@ void TESRender::SetCameraFOV( NiCamera* Camera, float FOV, float Width /*= -1*/,
 
 	thisCall<void>(0x006FE030, Camera, &ViewFrustum);		// NiCamera::SetViewFrustum
 	UpdateAVObject(Camera);
+}
+
+TESObjectREFR* TESRender::PickAtCoords( int X, int Y )
+{
+	return cdeclCall<TESObjectREFR*>(0x00426BB0, X, Y);
 }
 
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,

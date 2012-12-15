@@ -110,6 +110,7 @@
 #include "obse\Utilities.h"
 
 using namespace SME;
+using namespace SME::INI;
 using namespace SME::MemoryHandler;
 using namespace SME::Functors;
 
@@ -118,4 +119,5 @@ using namespace SME::Functors;
 #include <BGSEEUIManager.h>
 
 // CSE
+#include "CSESettings.h"
 #include "CSEUIManager.h"

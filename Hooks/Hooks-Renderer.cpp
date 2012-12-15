@@ -12,38 +12,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRendererINISettings[kRenderer__MAX] =
-		{
-			{ "UpdatePeriod",					"8",		"Duration, in milliseconds, between render window updates" },
-			{ "UpdateViewPortAsync",			"0",		"Constantly update the render window in the background" },
-			{ "AltRefMovementSpeed",			"0.8",		"Alternate render window reference movement speed" },
-			{ "AltRefSnapGrid",					"2",		"Alternate render window reference snap to grid" },
-			{ "AltRefRotationSpeed",			"1.0",		"Alternate render window reference rotation speed" },
-			{ "AltRefSnapAngle",				"45",		"Alternate render window reference snap to angle" },
-			{ "AltCamRotationSpeed",			"1.0",		"Alternate render window camera rotation speed" },
-			{ "AltCamZoomSpeed",				"0.5",		"Alternate render window camera zoom speed" },
-			{ "AltCamPanSpeed",					"5.0",		"Alternate render window camera pan speed" },
-			{ "CoplanarRefDrops",				"1",		"Place new references co-planar with the object at the cursor location" },
-			{ "SwitchCAndY",					"0",		"Switch the functionalities of the C and Y hotkeys"	},
-			{ "FixedCameraPivot",				"0",		"Use a static pivot when rotating the viewport camera without a selection"	},
-			{ "CameraFOV",						"90",		"Default camera field of vision" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderer( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Renderer");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kRenderer__MAX; i++)
-					kFactory.Settings.push_back(&kRendererINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace Hooks
 	{
 		_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
@@ -348,11 +316,8 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoRenderWindowUpdateViewportHook(void)
 		{
-			if (BGSEERWPAINTER->GetHasActiveTasks() ||
-				atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_UpdateViewPortAsync, BGSEEMAIN->INIGetter())))
-			{
+			if (BGSEERWPAINTER->GetHasActiveTasks() || Settings::Renderer::kUpdateViewPortAsync.GetData().i)
 				return true;
-			}
 			else
 				return false;
 		}
@@ -614,49 +579,74 @@ namespace ConstructionSetExtender
 
 		static float s_MovementSettingBuffer = 0.0;
 
+		enum
+		{
+			kMovementSetting_RefMovementSpeed = 0,
+			kMovementSetting_RefSnapGrid,
+			kMovementSetting_RefRotationSpeed,
+			kMovementSetting_RefSnapAngle,
+			kMovementSetting_CamRotationSpeed,
+			kMovementSetting_CamZoomSpeed,
+			kMovementSetting_CamPanSpeed,
+		};
+
 		void __stdcall InitializeCurrentRenderWindowMovementSetting(UInt8 Setting)
 		{
-			if (TESRenderWindow::UseAlternateMovementSettings)
+			switch (Setting)
 			{
-				s_MovementSettingBuffer = atof(INISettings::GetRenderer()->Get(Setting, BGSEEMAIN->INIGetter()));
-			}
-			else
-			{
-				switch(Setting)
-				{
-				case INISettings::kRenderer_AltRefMovementSpeed:
+			case kMovementSetting_RefMovementSpeed:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltRefMovementSpeed.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefMovementSpeed;
 
-					break;
-				case INISettings::kRenderer_AltRefSnapGrid:
+				break;
+			case kMovementSetting_RefSnapGrid:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltRefSnapGrid.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::SnapGridDistance;
 
-					break;
-				case INISettings::kRenderer_AltRefRotationSpeed:
+				break;
+			case kMovementSetting_RefRotationSpeed:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltRefRotationSpeed.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefRotationSpeed;
 
-					break;
-				case INISettings::kRenderer_AltRefSnapAngle:
+				break;
+			case kMovementSetting_RefSnapAngle:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltRefSnapAngle.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::SnapAngle;
 
-					break;
-				case INISettings::kRenderer_AltCamRotationSpeed:
+				break;
+			case kMovementSetting_CamRotationSpeed:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltCamRotationSpeed.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraRotationSpeed;
 
-					break;
-				case INISettings::kRenderer_AltCamZoomSpeed:
+				break;
+			case kMovementSetting_CamZoomSpeed:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltCamZoomSpeed.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraZoomSpeed;
 
-					break;
-				case INISettings::kRenderer_AltCamPanSpeed:
+				break;
+			case kMovementSetting_CamPanSpeed:
+				if (TESRenderWindow::UseAlternateMovementSettings)
+					s_MovementSettingBuffer = Settings::Renderer::kAltCamPanSpeed.GetData().f;
+				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraPanSpeed;
 
-					break;
-				default:
-					s_MovementSettingBuffer = 0.0;
+				break;
+			default:
+				s_MovementSettingBuffer = 0.0;
 
-					break;
-				}
+				break;
 			}
 		}
 
@@ -665,7 +655,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x00425A3E);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltRefSnapGrid);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefSnapGrid);
 			__asm	popad
 			__asm
 			{
@@ -681,7 +671,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x00425741);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltRefMovementSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefMovementSpeed);
 			__asm	popad
 			__asm
 			{
@@ -697,7 +687,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042BE85);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltRefMovementSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefMovementSpeed);
 			__asm	popad
 			__asm
 			{
@@ -712,7 +702,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042D0B2);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltRefMovementSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefMovementSpeed);
 			__asm	popad
 			__asm
 			{
@@ -727,7 +717,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x00425DC1);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltRefRotationSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefRotationSpeed);
 			__asm	popad
 			__asm
 			{
@@ -746,7 +736,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x00425DCD);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltRefSnapAngle);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_RefSnapAngle);
 			__asm	popad
 			__asm
 			{
@@ -761,7 +751,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042CCB0);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltCamRotationSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_CamRotationSpeed);
 			__asm	popad
 			__asm
 			{
@@ -776,7 +766,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042CCE5);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltCamZoomSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_CamZoomSpeed);
 			__asm	popad
 			__asm
 			{
@@ -791,7 +781,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042CDB4);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltCamZoomSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_CamZoomSpeed);
 			__asm	popad
 			__asm
 			{
@@ -806,7 +796,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042CD2B);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltCamPanSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_CamPanSpeed);
 			__asm	popad
 			__asm
 			{
@@ -821,7 +811,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0042CD76);
 			__asm	pushad
-			InitializeCurrentRenderWindowMovementSetting(INISettings::kRenderer_AltCamPanSpeed);
+			InitializeCurrentRenderWindowMovementSetting(kMovementSetting_CamPanSpeed);
 			__asm	popad
 			__asm
 			{
@@ -1315,7 +1305,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoTESPathGridRubberBandSelectionHook(void)
 		{
-			if (TESRenderWindow::CurrentMouseCoordDelta.x < 2 && TESRenderWindow::CurrentMouseCoordDelta.y < 2)
+			if (TESRenderWindow::CurrentMouseLBDragCoordDelta.x < 2 && TESRenderWindow::CurrentMouseLBDragCoordDelta.y < 2)
 				return false;
 			else
 				return true;
@@ -1351,7 +1341,7 @@ namespace ConstructionSetExtender
 			thisCall<bool>(0x006FF1A0, Camera, XCoord, YCoord, OutPosition, OutRotation);
 			Vector3 PosBuf(*OutPosition), RotBuf(*OutRotation);
 
-			if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INIGetter())))
+			if (Settings::Renderer::kCoplanarRefDrops.GetData().i)
 			{
 				// perform the necessary picking nonsense
 				thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
@@ -1526,8 +1516,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoRenderWindowCameraRotationPivotHook(Vector3* OutPivot, UInt8* AlternatePivot)
 		{
-			bool Enabled = (_RENDERSEL->selectionCount == 0 &&
-							atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INIGetter())));
+			bool Enabled = _RENDERSEL->selectionCount == 0 && Settings::Renderer::kFixedCameraPivot.GetData().i;
 
 			if (Enabled && GetAsyncKeyState(VK_CONTROL) == FALSE ||
 				(Enabled == false && GetAsyncKeyState(VK_CONTROL)))

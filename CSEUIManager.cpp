@@ -23,45 +23,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupPluginINISettings[kStartupPlugin__MAX] =
-		{
-			{ "LoadPlugin",							"0",		"Load a plugin on CS startup" },
-			{ "PluginName",							"",			"Name of the plugin, with extension, that is to be loaded on startup" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetStartupPlugin( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Startup");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kStartupPlugin__MAX; i++)
-					kFactory.Settings.push_back(&kStartupPluginINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kPluginsINISettings[kPlugins__MAX] =
-		{
-			{ "PreventTimeStampChanges",			"0",		"Prevents modifications to the timestamps of plugins being saved" },
-			{ "SaveLoadedESPsAsMasters",			"1",		"Allows ESP files to be saved as the active plugin's master" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetPlugins( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Plugins");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kPlugins__MAX; i++)
-					kFactory.Settings.push_back(&kPluginsINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace UIManager
 	{
 #define ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID				0x99
@@ -308,7 +269,7 @@ namespace ConstructionSetExtender
 		int CSEFormEnumerationManager::CompareActiveForms( TESForm* FormA, TESForm* FormB, int OriginalResult )
 		{
 			int Result = OriginalResult;
-			bool Enabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter()));
+			bool Enabled = Settings::Dialogs::kSortFormListsByActiveForm.GetData().i;
 
 			if (FormA && FormB)
 			{
@@ -489,7 +450,7 @@ namespace ConstructionSetExtender
 					ColumnData.cx = 65;
 					ListView_SetColumn(PluginList, 1, &ColumnData);
 
-					bool LoadStartupPlugin = atoi(INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INIGetter()));
+					bool LoadStartupPlugin = Settings::Startup::kLoadPlugin.GetData().i;
 					if (LoadStartupPlugin)
 						CheckDlgButton(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN, BST_CHECKED);
 				}
@@ -535,9 +496,7 @@ namespace ConstructionSetExtender
 											DrawData->clrTextBk = RGB(227, 183, 251);
 											DrawData->clrText = RGB(0, 0, 0);
 										}
-										else if (!_stricmp(INISettings::GetStartupPlugin()->Get(INISettings::kStartupPlugin_PluginName,
-												BGSEEMAIN->INIGetter()),
-												CurrentFile->fileName))
+										else if (!_stricmp(Settings::Startup::kPluginName.GetData().s, CurrentFile->fileName))
 										{
 											DrawData->clrTextBk = RGB(248, 227, 186);
 											DrawData->clrText = RGB(0, 0, 0);
@@ -576,10 +535,7 @@ namespace ConstructionSetExtender
 				{
 				case IDC_CSE_DATA_LOADSTARTUPPLUGIN:
 					{
-						if (IsDlgButtonChecked(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN) == BST_CHECKED)
-							INISettings::GetStartupPlugin()->Set(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INISetter(), "1");
-						else
-							INISettings::GetStartupPlugin()->Set(INISettings::kStartupPlugin_LoadPlugin, BGSEEMAIN->INISetter(), "0");
+						Settings::Startup::kLoadPlugin.SetInt((IsDlgButtonChecked(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN) == BST_CHECKED));
 					}
 
 					break;
@@ -600,7 +556,7 @@ namespace ConstructionSetExtender
 
 							if (ListView_GetItem(PluginList, &SelectedPluginItem) == TRUE)
 							{
-								INISettings::GetStartupPlugin()->Set(INISettings::kStartupPlugin_PluginName, BGSEEMAIN->INISetter(), PluginNameBuffer);
+								Settings::Startup::kPluginName.SetString(PluginNameBuffer);
 
 								BGSEEUI->MsgBoxI(hWnd, 0, "Startup plugin set to '%s'.", PluginNameBuffer);
 								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
@@ -698,17 +654,17 @@ namespace ConstructionSetExtender
 
 									break;
 								case IDC_MAINMENU_SAVEOPTIONS_SAVEESPMASTERS:
-									if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_SaveLoadedESPsAsMasters, BGSEEMAIN->INIGetter())))
+									if (Settings::Plugins::kSaveLoadedESPsAsMasters.GetData().i)
 										CheckItem = true;
 
 									break;
 								case IDC_MAINMENU_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS:
-									if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INIGetter())))
+									if (Settings::Plugins::kPreventTimeStampChanges.GetData().i)
 										CheckItem = true;
 
 									break;
 								case IDC_MAINMENU_SAVEOPTIONS_CREATEBACKUPBEFORESAVING:
-									if (atoi(INISettings::GetVersionControl()->Get(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INIGetter())))
+									if (Settings::VersionControl::kBackupOnSave.GetData().i)
 										CheckItem = true;
 
 									break;
@@ -733,17 +689,17 @@ namespace ConstructionSetExtender
 
 									break;
 								case IDC_MAINMENU_SORTACTIVEFORMSFIRST:
-									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter())))
+									if (Settings::Dialogs::kSortFormListsByActiveForm.GetData().i)
 										CheckItem = true;
 
 									break;
 								case IDC_MAINMENU_COLORIZEACTIVEFORMS:
-									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter())))
+									if (Settings::Dialogs::kColorizeActiveForms.GetData().i)
 										CheckItem = true;
 
 									break;
 								case IDC_MAINMENU_COLORIZEFORMOVERRIDES:
-									if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INIGetter())))
+									if (Settings::Dialogs::kColorizeFormOverrides.GetData().i)
 										CheckItem = true;
 
 									break;
@@ -919,17 +875,11 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_SAVEOPTIONS_SAVEESPMASTERS:
-					if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_SaveLoadedESPsAsMasters, BGSEEMAIN->INIGetter())))
-						INISettings::GetPlugins()->Set(INISettings::kPlugins_SaveLoadedESPsAsMasters, BGSEEMAIN->INISetter(), "0");
-					else
-						INISettings::GetPlugins()->Set(INISettings::kPlugins_SaveLoadedESPsAsMasters, BGSEEMAIN->INISetter(), "1");
+					Settings::Plugins::kSaveLoadedESPsAsMasters.ToggleData();
 
 					break;
 				case IDC_MAINMENU_SAVEOPTIONS_PREVENTCHANGESTOFILETIMESTAMPS:
-					if (atoi(INISettings::GetPlugins()->Get(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INIGetter())))
-						INISettings::GetPlugins()->Set(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INISetter(), "0");
-					else
-						INISettings::GetPlugins()->Set(INISettings::kPlugins_PreventTimeStampChanges, BGSEEMAIN->INISetter(), "1");
+					Settings::Plugins::kPreventTimeStampChanges.ToggleData();
 
 					break;
 				case IDC_MAINMENU_AUXVIEWPORT:
@@ -1065,31 +1015,19 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_SAVEOPTIONS_CREATEBACKUPBEFORESAVING:
-					if (atoi(INISettings::GetVersionControl()->Get(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INIGetter())))
-						INISettings::GetVersionControl()->Set(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INISetter(), "0");
-					else
-						INISettings::GetVersionControl()->Set(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INISetter(), "1");
+					Settings::VersionControl::kBackupOnSave.ToggleData();
 
 					break;
 				case IDC_MAINMENU_SORTACTIVEFORMSFIRST:
-					if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INIGetter())))
-						INISettings::GetDialogs()->Set(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INISetter(), "0");
-					else
-						INISettings::GetDialogs()->Set(INISettings::kDialogs_SortFormListsByActiveForm, BGSEEMAIN->INISetter(), "1");
+					Settings::Dialogs::kSortFormListsByActiveForm.ToggleData();
 
 					break;
 				case IDC_MAINMENU_COLORIZEACTIVEFORMS:
-					if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INIGetter())))
-						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INISetter(), "0");
-					else
-						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeActiveForms, BGSEEMAIN->INISetter(), "1");
+					Settings::Dialogs::kColorizeActiveForms.ToggleData();
 
 					break;
 				case IDC_MAINMENU_COLORIZEFORMOVERRIDES:
-					if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INIGetter())))
-						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INISetter(), "0");
-					else
-						INISettings::GetDialogs()->Set(INISettings::kDialogs_ColorizeFormOverrides, BGSEEMAIN->INISetter(), "1");
+					Settings::Dialogs::kColorizeFormOverrides.ToggleData();
 
 					break;
 				case IDC_MAINMENU_GLOBALCLIPBOARDCONTENTS:
@@ -1359,17 +1297,32 @@ namespace ConstructionSetExtender
 
 									break;
 								case IDC_RENDERWINDOWCONTEXT_COPLANARDROP:
-									if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INIGetter())))
+									if (Settings::Renderer::kCoplanarRefDrops.GetData().i)
 										CheckItem = true;
 
 									break;
 								case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
-									if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter())))
+									if (Settings::Renderer::kSwitchCAndY.GetData().i)
 										CheckItem = true;
 
 									break;
 								case IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT:
-									if (atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INIGetter())))
+									if (Settings::Renderer::kFixedCameraPivot.GetData().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_MOUSEREFENABLED:
+									if (Settings::RenderWindowPainter::kShowMouseRef.GetData().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_MOUSEREFCTRLMODIFIED:
+									if (Settings::RenderWindowPainter::kMouseRefCtrlModified.GetData().i)
+										CheckItem = true;
+
+									break;
+								case IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS:
+									if (TESRenderWindow::UseAlternateMovementSettings)
 										CheckItem = true;
 
 									break;
@@ -1405,13 +1358,22 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
+				case IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS:
+					{
+						TESRenderWindow::UseAlternateMovementSettings = (TESRenderWindow::UseAlternateMovementSettings == false);
+
+						if (TESRenderWindow::UseAlternateMovementSettings == false)
+							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using vanilla movement settings");
+						else
+							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using alternate movement settings");
+
+						Return = true;
+					}
+
+					break;
 				case IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT:
 					{
-						bool Enabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INIGetter()));
-						Enabled = (Enabled == false);
-
-						INISettings::GetRenderer()->Set(INISettings::kRenderer_FixedCameraPivot, BGSEEMAIN->INISetter(), "%d", Enabled);
-
+						Settings::Renderer::kFixedCameraPivot.ToggleData();
 						Return = true;
 					}
 
@@ -1422,11 +1384,7 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
 					{
-						bool Enabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
-						Enabled = (Enabled == false);
-
-						INISettings::GetRenderer()->Set(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INISetter(), "%d", Enabled);
-
+						Settings::Renderer::kSwitchCAndY.ToggleData();
 						Return = true;
 					}
 
@@ -1802,12 +1760,9 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_RENDERWINDOWCONTEXT_COPLANARDROP:
 					{
-						bool CoplanarDrop = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INIGetter()));
-						CoplanarDrop = (CoplanarDrop == false);
+						Settings::Renderer::kCoplanarRefDrops.ToggleData();
 
-						INISettings::GetRenderer()->Set(INISettings::kRenderer_CoplanarRefDrops, BGSEEMAIN->INISetter(), "%d", CoplanarDrop);
-
-						if (CoplanarDrop)
+						if (Settings::Renderer::kCoplanarRefDrops.GetData().i)
 							RenderWindowPainter::RenderChannelNotifications->Queue(6, "Enabled co-planar dropping");
 						else
 							RenderWindowPainter::RenderChannelNotifications->Queue(6, "Disabled co-planar dropping");
@@ -1824,6 +1779,20 @@ namespace ConstructionSetExtender
 							Buffer.Add(Itr->Data);
 
 						Buffer.Copy();
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_MOUSEREFENABLED:
+					{
+						Settings::RenderWindowPainter::kShowMouseRef.ToggleData();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_MOUSEREFCTRLMODIFIED:
+					{
+						Settings::RenderWindowPainter::kMouseRefCtrlModified.ToggleData();
+						Return = true;
 					}
 
 					break;
@@ -1852,7 +1821,7 @@ namespace ConstructionSetExtender
 				{
 					Return = true;
 
-					float CameraFOV = atof(INISettings::GetRenderer()->Get(INISettings::kRenderer_CameraFOV, BGSEEMAIN->INIGetter()));
+					float CameraFOV = Settings::Renderer::kCameraFOV.GetData().f;
 					if (CameraFOV > 120.0f)
 						CameraFOV = 120.0f;
 					else if (CameraFOV < 50.0f)
@@ -1906,7 +1875,7 @@ namespace ConstructionSetExtender
 					if (SetTimerPeriod)
 					{
 						SetTimerPeriod = false;
-						UInt32 Period = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_UpdatePeriod, BGSEEMAIN->INIGetter()));
+						UInt32 Period = Settings::Renderer::kUpdatePeriod.GetData().i;
 						if (Period == 0 || Period >= 100)
 							Period = 50;
 
@@ -1947,17 +1916,65 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			case WM_MOUSEMOVE:
+				{
+					TESRenderWindow::CurrentMouseCoord.x = GET_X_LPARAM(lParam);
+					TESRenderWindow::CurrentMouseCoord.y = GET_Y_LPARAM(lParam);
+
+					TESObjectREFR* LastMouseRef = TESRenderWindow::CurrentMouseRef;
+					TESRenderWindow::CurrentMouseRef = NULL;
+
+					if (GetActiveWindow() == hWnd)
+					{
+						if (GetAsyncKeyState(VK_SHIFT) ||
+							GetAsyncKeyState(VK_LBUTTON) || 
+							GetAsyncKeyState(VK_RBUTTON) || 
+							GetAsyncKeyState(VK_MBUTTON) || 
+							GetAsyncKeyState(VK_SPACE) || 
+							GetAsyncKeyState(0x56))				// V
+						{
+							// don't pick if the viewport is turbulent
+							break;
+						}
+
+						int Enabled = Settings::RenderWindowPainter::kShowMouseRef.GetData().i;
+						int ControlModified = Settings::RenderWindowPainter::kMouseRefCtrlModified.GetData().i;
+
+						if (Enabled == false || (ControlModified && GetAsyncKeyState(VK_CONTROL) == 0))
+							break;
+
+						TESRenderWindow::CurrentMouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x,
+																				TESRenderWindow::CurrentMouseCoord.y);
+
+						if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
+							TESRenderWindow::CurrentMouseRef = NULL;
+
+						if (TESRenderWindow::CurrentMouseRef ||
+							(LastMouseRef && TESRenderWindow::CurrentMouseRef == NULL))
+						{
+							TESRenderWindow::Redraw();
+						}
+					}
+				}
+
+				break;
+			case WM_MOUSELEAVE:
+			case WM_NCMOUSELEAVE:
+				TESRenderWindow::CurrentMouseRef = NULL;
+				TESRenderWindow::Redraw();
+
+				break;
 			case WM_LBUTTONDOWN:
-				TESRenderWindow::CurrentMouseCoordDelta.x = GET_X_LPARAM(lParam);
-				TESRenderWindow::CurrentMouseCoordDelta.y = GET_Y_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseLBDragCoordDelta.x = GET_X_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseLBDragCoordDelta.y = GET_Y_LPARAM(lParam);
 
 				break;
 			case WM_LBUTTONUP:
-				TESRenderWindow::CurrentMouseCoordDelta.x -= GET_X_LPARAM(lParam);
-				TESRenderWindow::CurrentMouseCoordDelta.y -= GET_Y_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseLBDragCoordDelta.x -= GET_X_LPARAM(lParam);
+				TESRenderWindow::CurrentMouseLBDragCoordDelta.y -= GET_Y_LPARAM(lParam);
 
-				TESRenderWindow::CurrentMouseCoordDelta.x = abs(TESRenderWindow::CurrentMouseCoordDelta.x);
-				TESRenderWindow::CurrentMouseCoordDelta.y = abs(TESRenderWindow::CurrentMouseCoordDelta.y);
+				TESRenderWindow::CurrentMouseLBDragCoordDelta.x = abs(TESRenderWindow::CurrentMouseLBDragCoordDelta.x);
+				TESRenderWindow::CurrentMouseLBDragCoordDelta.y = abs(TESRenderWindow::CurrentMouseLBDragCoordDelta.y);
 
 				break;
 			case WM_KEYUP:
@@ -1965,7 +1982,7 @@ namespace ConstructionSetExtender
 				{
 				case 0x43:		// C
 					{
-						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						int SwitchEnabled = Settings::Renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled)
 						{
 							if (*YKeyState)
@@ -1980,7 +1997,7 @@ namespace ConstructionSetExtender
 					break;
 				case 0x59:		// Y
 					{
-						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						int SwitchEnabled = Settings::Renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled)
 						{
 							Return = true;
@@ -2026,7 +2043,7 @@ namespace ConstructionSetExtender
 					}
 					else
 					{
-						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						int SwitchEnabled = Settings::Renderer::kSwitchCAndY.GetData().i;
 						CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 						SME_ASSERT(xData);
 
@@ -2043,7 +2060,7 @@ namespace ConstructionSetExtender
 					break;
 				case 0x43:		// C
 					{
-						int SwitchEnabled = atoi(INISettings::GetRenderer()->Get(INISettings::kRenderer_SwitchCAndY, BGSEEMAIN->INIGetter()));
+						int SwitchEnabled = Settings::Renderer::kSwitchCAndY.GetData().i;
 						CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 						SME_ASSERT(xData);
 
@@ -2101,13 +2118,8 @@ namespace ConstructionSetExtender
 					break;
 				case 0x51:		// Q
 					if (GetAsyncKeyState(VK_CONTROL))
-					{
-						if (TESRenderWindow::UseAlternateMovementSettings)
-							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using vanilla movement settings");
-						else
-							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using alternate movement settings");
-
-						TESRenderWindow::UseAlternateMovementSettings = (TESRenderWindow::UseAlternateMovementSettings == false);
+					{	
+						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS, NULL);
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 						Return = true;
@@ -2165,6 +2177,8 @@ namespace ConstructionSetExtender
 							break;
 						else if (GetCapture())
 							break;
+
+						TESRenderWindow::CurrentMouseRef = NULL;
 
 						BGSEditorExtender::BGSEERenderWindowFlyCamera* xFreeCamData = BGSEE_GETWINDOWXDATA(BGSEditorExtender::BGSEERenderWindowFlyCamera, ExtraData);
 						SME_ASSERT(xFreeCamData == NULL);
@@ -3405,15 +3419,12 @@ namespace ConstructionSetExtender
 										break;
 									}
 
-									bool ColorizeActiveFormsEnabled = atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeActiveForms,
-																	BGSEEMAIN->INIGetter())) &&
+									bool ColorizeActiveFormsEnabled = Settings::Dialogs::kColorizeActiveForms.GetData().i && 
 																	CSEFormEnumerationManager::Instance.GetVisibleUnmodifiedForms();
-									bool ColorizeFormOverridesEnabled =  atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ColorizeFormOverrides,
-																		BGSEEMAIN->INIGetter()));
 
-									if (Form &&
-										(ColorizeActiveFormsEnabled ||
-										ColorizeFormOverridesEnabled))
+									bool ColorizeFormOverridesEnabled = Settings::Dialogs::kColorizeFormOverrides.GetData().i;
+
+									if (Form && (ColorizeActiveFormsEnabled || ColorizeFormOverridesEnabled))
 									{
 										COLORREF ForeColor, BackColor;
 										bool ColorOverridden = false;
@@ -3425,36 +3436,24 @@ namespace ConstructionSetExtender
 											switch (Form->fileList.Count())
 											{
 											case 0:
-												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel0ForeColor,
-																					BGSEEMAIN->INIGetter()));
-												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel0BackColor,
-																					BGSEEMAIN->INIGetter()));
+												ForeColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel0ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel0BackColor.GetData().s);
+
 												break;
 											case 1:
-												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel1ForeColor,
-																					BGSEEMAIN->INIGetter()));
-												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel1BackColor,
-																					BGSEEMAIN->INIGetter()));
+												ForeColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel1ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel1BackColor.GetData().s);
+
 												break;
 											case 2:
-												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel2ForeColor,
-																					BGSEEMAIN->INIGetter()));
-												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel2BackColor,
-																					BGSEEMAIN->INIGetter()));
+												ForeColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel2ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel2BackColor.GetData().s);
+
 												break;
 											default:
-												ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel3ForeColor,
-																					BGSEEMAIN->INIGetter()));
-												BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																					INISettings::kDialogs_FormOverrideLevel3BackColor,
-																					BGSEEMAIN->INIGetter()));
+												ForeColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel3ForeColor.GetData().s);
+												BackColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kFormOverrideLevel3BackColor.GetData().s);
+
 												break;
 											}
 										}
@@ -3463,12 +3462,8 @@ namespace ConstructionSetExtender
 										{
 											ColorOverridden = true;
 
-											ForeColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																				INISettings::kDialogs_ActiveFormForeColor,
-																				BGSEEMAIN->INIGetter()));
-											BackColor = SME::StringHelpers::GetRGB(INISettings::GetDialogs()->Get(
-																				INISettings::kDialogs_ActiveFormBackColor,
-																				BGSEEMAIN->INIGetter()));
+											ForeColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kActiveFormForeColor.GetData().s);
+											BackColor = SME::StringHelpers::GetRGB(Settings::Dialogs::kActiveFormBackColor.GetData().s);
 										}
 
 										TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -4544,7 +4539,7 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
 
-			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowEditDialogsInTaskbar, BGSEEMAIN->INIGetter())))
+			if (Settings::Dialogs::kShowEditDialogsInTaskbar.GetData().i)
 			{
 				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 				RegularAppWindow.Extended = WS_EX_APPWINDOW;

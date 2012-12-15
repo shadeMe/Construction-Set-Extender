@@ -2,18 +2,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kVersionControl_BackupOnSave = 0,
-
-			kVersionControl__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kVersionControlINISettings[kVersionControl__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetVersionControl(void);
-	}
-
 	namespace VersionControl
 	{
 		class ChangeLogManager;

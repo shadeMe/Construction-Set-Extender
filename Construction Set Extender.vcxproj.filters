@@ -284,6 +284,9 @@
     <ClCompile Include="CSEGlobalClipboard.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="CSESettings.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -778,6 +781,9 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEGlobalClipboard.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSESettings.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,21 +2,19 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*		GetAuxiliaryViewport(void);
-	}
-
 	class AuxiliaryViewport : public BGSEditorExtender::BGSEEGenericModelessDialog
 	{
-		friend BGSEditorExtender::BGSEEINIManagerSettingFactory* INISettings::GetAuxiliaryViewport(void);
-
 		static AuxiliaryViewport*			Singleton;
 	protected:
 		static LRESULT CALLBACK				BaseDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 
 		static const char*					kWindowTitle;
-		static const char*					kINISection;
+
+		static INISetting					kINI_Top;
+		static INISetting					kINI_Left;
+		static INISetting					kINI_Right;
+		static INISetting					kINI_Bottom;
+		static INISetting					kINI_Visible;
 
 		NiCamera*							ViewportCamera;
 		bool								Frozen;
@@ -37,6 +35,8 @@ namespace ConstructionSetExtender
 		void								DrawBackBuffer(void);
 		void								Redraw();
 		void								ClearScreen();
+
+		static void							RegisterINISettings(BGSEditorExtender::INISettingDepotT& Depot);
 	};
 #define AUXVIEWPORT							AuxiliaryViewport::GetSingleton()
 }

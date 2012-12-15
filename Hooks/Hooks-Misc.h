@@ -3,19 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kGeneral_ShowNumericEditorIDWarning = 0,
-			kGeneral_CrashHandlerMode,
-
-			kGeneral__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kGeneralINISettings[kGeneral__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetGeneral(void);
-	}
-
 	namespace Hooks
 	{
 		// hooks that do odd jobs such as fixing bugs and shoveling dung

@@ -5,29 +5,6 @@ class Subwindow;
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kStartupPlugin_LoadPlugin = 0,
-			kStartupPlugin_PluginName,
-
-			kStartupPlugin__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupPluginINISettings[kStartupPlugin__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetStartupPlugin(void);
-
-		enum
-		{
-			kPlugins_PreventTimeStampChanges = 0,
-			kPlugins_SaveLoadedESPsAsMasters,
-
-			kPlugins__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kPluginsINISettings[kPlugins__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetPlugins(void);
-	}
-
 	namespace UIManager
 	{
 		template <typename T>

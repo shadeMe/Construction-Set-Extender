@@ -140,7 +140,7 @@ namespace ConstructionSetExtender
 
 		void Initialize()
 		{
-			if (atoi(INISettings::GetDialogs()->Get(INISettings::kDialogs_ShowMainWindowsInTaskbar, BGSEEMAIN->INIGetter())))
+			if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 			{
 				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 				RegularAppWindow.Extended = WS_EX_APPWINDOW;

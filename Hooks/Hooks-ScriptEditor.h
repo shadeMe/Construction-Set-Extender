@@ -3,19 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kStartupScript_OpenScriptWindow = 0,
-			kStartupScript_ScriptEditorID,
-
-			kStartupScript__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupScriptINISettings[kStartupScript__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetStartupScript(void);
-	}
-
 	namespace Hooks
 	{
 		// hooks that put a spike up the vanilla script editor's bottom

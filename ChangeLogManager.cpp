@@ -3,26 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kVersionControlINISettings[kVersionControl__MAX] =
-		{
-			{ "BackupOnSave",			"0",		"Creates a backup copy of the active plugin in the active workspace's 'Backup' directory before commencing a save operation" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetVersionControl( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("VersionControl");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kVersionControl__MAX; i++)
-					kFactory.Settings.push_back(&kVersionControlINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace VersionControl
 	{
 		ChangeLogManager*		ChangeLogManager::Singleton = NULL;
@@ -328,7 +308,7 @@ namespace ConstructionSetExtender
 			CHANGELOG->RecordChange("Active plugin %s saved", SaveFile->fileName);
 			CHANGELOG->Pad(1);
 
-			if (atoi(INISettings::GetVersionControl()->Get(INISettings::kVersionControl_BackupOnSave, BGSEEMAIN->INIGetter())))
+			if (Settings::VersionControl::kBackupOnSave.GetData().i)
 			{
 				char TimeString[0x100] = {0}, ExistingPath[MAX_PATH] = {0}, NewPath[MAX_PATH] = {0};
 				SME::MiscGunk::GetTimeString(TimeString, sizeof(TimeString), "%m--%d--%Y %H-%M-%S");

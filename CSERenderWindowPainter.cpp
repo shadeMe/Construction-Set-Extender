@@ -3,46 +3,19 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowPainterINISettings[kRenderWindowPainter__MAX] =
-		{
-			{ "ShowSelectionStats",		"1",			"Displays selection details" },
-			{ "ShowRAMUsage",			"1",			"Displays the editor's RAM usage" },
-			{ "FontFace",				"Consolas",		"Font face of the rendered text" },
-			{ "FontSize",				"20",			"Size of the rendered text" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetRenderWindowPainter( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("RenderWindowPainter");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kRenderWindowPainter__MAX; i++)
-					kFactory.Settings.push_back(&kRenderWindowPainterINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 #define PI					3.151592653589793
 
 	namespace RenderWindowPainter
 	{
 		BGSEditorExtender::BGSEEStaticRenderChannel*	RenderChannelSelectionStats = NULL;
-		BGSEditorExtender::BGSEEStaticRenderChannel*	RenderChannelRAMUsage = NULL;
 		BGSEditorExtender::BGSEEDynamicRenderChannel*	RenderChannelNotifications = NULL;
 
 		bool RenderChannelSelectionStats_Callback( std::string& RenderedText )
 		{
-			int Enabled = atoi(INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_ShowSelectionStats, BGSEEMAIN->INIGetter()));
-			if (Enabled == 0 || _RENDERSEL->selectionCount == 0)
-			{
+			if (Settings::RenderWindowPainter::kShowSelectionStats.GetData().i == 0 || _RENDERSEL->selectionCount == 0)
 				return false;
-			}
 
-			char Buffer[0x500] = {0};
+			char Buffer[0x200] = {0};
 
 			if (_RENDERSEL->selectionCount > 1)
 			{
@@ -90,8 +63,7 @@ namespace ConstructionSetExtender
 
 		bool CSERAMUsageRenderChannel::RenderChannelCallback(std::string& RenderedText)
 		{
-			int Enabled = atoi(INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_ShowRAMUsage, BGSEEMAIN->INIGetter()));
-			if (Enabled == 0)
+			if (Settings::RenderWindowPainter::kShowRAMUsage.GetData().i == 0)
 				return false;
 
 			char Buffer[0x50] = {0};
@@ -126,7 +98,9 @@ namespace ConstructionSetExtender
 															DWORD DrawFormat,
 															UInt32 DrawAreaFlags ) :
 			BGSEditorExtender::BGSEEStaticRenderChannel(FontHeight, FontWidth, FontWeight, FontFace,
-														Color, DrawArea, DrawFormat, DrawAreaFlags, RenderChannelCallback),
+														Color, DrawArea, DrawFormat,
+														DrawAreaFlags,
+														RenderChannelCallback),
 			TimerID(0),
 			RAMCounter(0)
 		{
@@ -151,14 +125,86 @@ namespace ConstructionSetExtender
 				DrawRect.right = 185;
 				DrawRect.bottom = 100;
 
-				int FontSize = atoi(INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontSize, BGSEEMAIN->INIGetter()));
-				const char* FontFace = INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontFace, BGSEEMAIN->INIGetter());
+				int FontSize = Settings::RenderWindowPainter::kFontSize.GetData().i;
+				const char* FontFace = Settings::RenderWindowPainter::kFontFace.GetData().s;
 
 				Singleton = new CSERAMUsageRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 														D3DCOLOR_ARGB(230, 230, 230, 0),
 														&DrawRect,
 														DT_WORDBREAK|DT_RIGHT|DT_TOP|DT_NOCLIP,
 														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned);
+			}
+
+			return Singleton;
+		}
+
+		CSEMouseRefRenderChannel*			CSEMouseRefRenderChannel::Singleton = NULL;
+
+
+		bool CSEMouseRefRenderChannel::RenderChannelCallback( std::string& RenderedText )
+		{
+			if (TESRenderWindow::CurrentMouseRef == NULL)
+				return false;
+
+			char Buffer[0x200] = {0}, BaseBuffer[0x100] = {0};
+			TESObjectREFR* Ref = TESRenderWindow::CurrentMouseRef;
+			TESForm* Base = Ref->baseForm;
+			SME_ASSERT(Base);
+
+			if (Base->GetEditorID())
+				FORMAT_STR(BaseBuffer, "BASE(%s)", Base->GetEditorID());
+			else
+				FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
+
+			FORMAT_STR(Buffer, "%s%s%08X) %s",
+				(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
+				(Ref->GetEditorID() ? "(" : "REF("),
+				Ref->formID,
+				BaseBuffer);
+
+			RenderedText = Buffer;
+			return true;
+		}
+
+		void CSEMouseRefRenderChannel::Render( void* Parameter, LPD3DXSPRITE RenderToSprite )
+		{
+			RenderArea.left = TESRenderWindow::CurrentMouseCoord.x + 25;
+			RenderArea.top = TESRenderWindow::CurrentMouseCoord.y + 10;
+			RenderArea.right = RenderArea.left + 300;
+			RenderArea.bottom = RenderArea.top + 100;
+
+			BGSEEStaticRenderChannel::Render(Parameter, RenderToSprite);
+		}
+
+		CSEMouseRefRenderChannel::CSEMouseRefRenderChannel( INT FontHeight,
+															INT FontWidth,
+															UINT FontWeight,
+															const char* FontFace,
+															D3DCOLOR Color,
+															DWORD DrawFormat ) :
+			BGSEditorExtender::BGSEEStaticRenderChannel(FontHeight, FontWidth, FontWeight, FontFace,
+														Color, NULL, DrawFormat,
+														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_Default,
+														RenderChannelCallback)
+		{
+			;//
+		}
+
+		CSEMouseRefRenderChannel::~CSEMouseRefRenderChannel()
+		{
+			Singleton = NULL;
+		}
+
+		CSEMouseRefRenderChannel* CSEMouseRefRenderChannel::GetSingleton()
+		{
+			if (Singleton == NULL)
+			{				
+				int FontSize = Settings::RenderWindowPainter::kFontSize.GetData().i;
+				const char* FontFace = Settings::RenderWindowPainter::kFontFace.GetData().s;
+
+				Singleton = new CSEMouseRefRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+														D3DCOLOR_ARGB(255, 255, 128, 0),
+														DT_SINGLELINE|DT_LEFT|DT_TOP|DT_NOCLIP);
 			}
 
 			return Singleton;
@@ -171,10 +217,8 @@ namespace ConstructionSetExtender
 
 			SME_ASSERT(ComponentInitialized);
 
-			RenderChannelRAMUsage = CSERAMUsageRenderChannel::GetSingleton();
-
-			int FontSize = atoi(INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontSize, BGSEEMAIN->INIGetter()));
-			const char* FontFace = INISettings::GetRenderWindowPainter()->Get(INISettings::kRenderWindowPainter_FontFace, BGSEEMAIN->INIGetter());
+			int FontSize = Settings::RenderWindowPainter::kFontSize.GetData().i;
+			const char* FontFace = Settings::RenderWindowPainter::kFontFace.GetData().s;
 
 			DrawRect.left = 3;
 			DrawRect.top = 3;
@@ -204,9 +248,10 @@ namespace ConstructionSetExtender
 																						BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_BottomAligned);
 
 			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelSelectionStats);
-			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelRAMUsage);
+			BGSEERWPAINTER->RegisterRenderChannel(CSERAMUsageRenderChannel::GetSingleton());
 			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelNotifications);
 			BGSEERWPAINTER->RegisterRenderChannel(BGSEditorExtender::RenderChannelFlyCamStatus);
+			BGSEERWPAINTER->RegisterRenderChannel(CSEMouseRefRenderChannel::GetSingleton());
 		}
-}
+	}
 };

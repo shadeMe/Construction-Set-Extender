@@ -3,35 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kDialogs_RenderWindowState = 0,
-			kDialogs_ObjectWindowState,
-			kDialogs_CellViewWindowState,
-			kDialogs_SortFormListsByActiveForm,
-			kDialogs_ColorizeActiveForms,
-			kDialogs_ActiveFormForeColor,
-			kDialogs_ActiveFormBackColor,
-			kDialogs_ShowMainWindowsInTaskbar,
-			kDialogs_ShowEditDialogsInTaskbar,
-			kDialogs_ColorizeFormOverrides,
-			kDialogs_FormOverrideLevel0ForeColor,
-			kDialogs_FormOverrideLevel0BackColor,
-			kDialogs_FormOverrideLevel1ForeColor,
-			kDialogs_FormOverrideLevel1BackColor,
-			kDialogs_FormOverrideLevel2ForeColor,
-			kDialogs_FormOverrideLevel2BackColor,
-			kDialogs_FormOverrideLevel3ForeColor,
-			kDialogs_FormOverrideLevel3BackColor,
-
-			kDialogs__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kDialogsINISettings[kDialogs__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetDialogs(void);
-	}
-
 	namespace Hooks
 	{
 		// hooks that modify how CS dialogs behave and add interfaces for new tools

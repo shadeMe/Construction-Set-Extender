@@ -3,22 +3,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		enum
-		{
-			kRenderWindowFlyCamera_MovementSpeed = 0,
-			kRenderWindowFlyCamera_SprintMultiplier,
-			kRenderWindowFlyCamera_CrawlMultiplier,
-			kRenderWindowFlyCamera_RotationSpeed,
-			kRenderWindowFlyCamera_CameraFOV,
-
-			kRenderWindowFlyCamera__MAX
-		};
-		extern const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kRenderWindowFlyCameraINISettings[kRenderWindowFlyCamera__MAX];
-		BGSEditorExtender::BGSEEINIManagerSettingFactory*								GetRenderWindowFlyCamera(void);
-	}
-
 	class CSERenderWindowFlyCameraOperator : public BGSEditorExtender::BGSEERenderWindowFlyCameraOperator
 	{
 		NiFrustum								ViewportFrustumBuffer;

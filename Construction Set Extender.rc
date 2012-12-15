@@ -556,6 +556,13 @@ BEGIN
         MENUITEM "Co-Planar Drop New References", IDC_RENDERWINDOWCONTEXT_COPLANARDROP
         MENUITEM "Switch C <=> Y Hotkeys",      IDC_RENDERWINDOWCONTEXT_SWITCHCNY
         MENUITEM "Static Camera Pivot",         IDC_RENDERWINDOWCONTEXT_STATICCAMERAPIVOT
+        MENUITEM "Use Alternate Movement Settings", IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS
+        POPUP "Object-Under-Pointer Display"
+        BEGIN
+            MENUITEM "Enabled",                     IDC_RENDERWINDOWCONTEXT_MOUSEREFENABLED
+            MENUITEM SEPARATOR
+            MENUITEM "CTRL Key Modified",           IDC_RENDERWINDOWCONTEXT_MOUSEREFCTRLMODIFIED
+        END
         MENUITEM SEPARATOR
         MENUITEM "Render Window Properties",    293
         MENUITEM SEPARATOR

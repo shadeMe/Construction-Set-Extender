@@ -15,27 +15,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kGeneralINISettings[kGeneral__MAX] =
-		{
-			{ "ShowNumericEditorIDWarning",			"1",		"Displays a warning when editorIDs start with an integer" },
-			{ "CrashHandlerMode",					"2",		"0 - Terminate | 1 - Resume | 2 - Ask every time" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetGeneral( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("General");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kGeneral__MAX; i++)
-					kFactory.Settings.push_back(&kGeneralINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace Hooks
 	{
 		_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0x0);
@@ -328,7 +307,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoNumericEditorIDHook(TESForm* Form, const char* EditorID)
 		{
-			bool ShowWarning = atoi(INISettings::GetGeneral()->Get(INISettings::kGeneral_ShowNumericEditorIDWarning, BGSEEMAIN->INIGetter()));
+			bool ShowWarning = Settings::General::kShowNumericEditorIDWarning.GetData().i;
 
 			if (TESDataHandler::PluginLoadSaveInProgress == false &&
 				ShowWarning &&

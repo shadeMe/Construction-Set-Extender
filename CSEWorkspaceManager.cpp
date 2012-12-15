@@ -4,27 +4,6 @@
 
 namespace ConstructionSetExtender
 {
-	namespace INISettings
-	{
-		const BGSEditorExtender::BGSEEINIManagerSettingFactory::SettingData		kStartupWorkspaceINISettings[kStartupWorkspace__MAX] =
-		{
-			{ "SetWorkspace",			"0",		"Set the working directory to a custom path on startup" },
-			{ "WorkspacePath",			"",			"Path of the custom workspace directory" }
-		};
-
-		BGSEditorExtender::BGSEEINIManagerSettingFactory* GetStartupWorkspace( void )
-		{
-			static BGSEditorExtender::BGSEEINIManagerSettingFactory	kFactory("Startup");
-			if (kFactory.Settings.size() == 0)
-			{
-				for (int i = 0; i < kStartupWorkspace__MAX; i++)
-					kFactory.Settings.push_back(&kStartupWorkspaceINISettings[i]);
-			}
-
-			return &kFactory;
-		}
-	}
-
 	namespace WorkspaceManager
 	{
 		CSEWorkspaceManagerOperator::~CSEWorkspaceManagerOperator()
