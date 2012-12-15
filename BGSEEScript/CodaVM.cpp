@@ -324,11 +324,11 @@ namespace BGSEditorExtender
 		}
 
 		const UInt32											CodaScriptExecutive::kMaxRecursionLimit = 30;
-		const char*												CodaScriptExecutive::kINISection = "CodaExecutive";
-		const BGSEEINIManagerSettingFactory::SettingData		CodaScriptExecutive::kINISettings[1] =
-		{
-			{ "Profiling",			"0",		"Profile script execution" }
-		};
+
+#define CODASCRIPTEXECUTIVE_INISECTION							"CodaExecutive"
+		SME::INI::INISetting									CodaScriptExecutive::kINI_Profiling("Profiling", CODASCRIPTEXECUTIVE_INISECTION,
+																									"Profile script execution",
+																									(SInt32)0);
 
 		CodaScriptExecutive::CodaScriptExecutive( CodaScriptMessageHandler* MsgHdlr ) :
 			ICodaScriptObject(),
@@ -357,7 +357,7 @@ namespace BGSEditorExtender
 				return false;
 			}
 
-			bool ProfilerEnabled = atoi(BGSEEMAIN->INIGetter()(kINISettings[kExecutiveINISetting_Profiling].Key, kINISection));
+			bool ProfilerEnabled = kINI_Profiling.GetData().i;
 
 			if (ProfilerEnabled)
 			{
@@ -386,24 +386,22 @@ namespace BGSEditorExtender
 				return NULL;
 		}
 
-		BGSEEINIManagerSettingFactory* CodaScriptExecutive::GetINIFactory( void )
+		void CodaScriptExecutive::RegisterINISettings( INISettingDepotT& Depot )
 		{
-			static BGSEEINIManagerSettingFactory kFactory(kINISection);
-			if (kFactory.Settings.size() == 0)
-			{
-				kFactory.Settings.push_back(&kINISettings[kExecutiveINISetting_Profiling]);
-			}
-
-			return &kFactory;
+			Depot.push_back(&kINI_Profiling);
 		}
 
-		const char*												CodaScriptBackgrounder::kINISection = "CodaBackgrounder";
+
+		
 		const std::string										CodaScriptBackgrounder::kDepotName	= "Background";
-		const BGSEEINIManagerSettingFactory::SettingData		CodaScriptBackgrounder::kINISettings[2] =
-		{
-			{ "Enabled",			"1",		"Execute background scripts" },
-			{ "UpdatePeriod",		"10",		"Duration, in milliseconds, between consecutive executions" }
-		};
+
+#define CODASCRIPTBACKGROUNDER_INISECTION						"CodaBackgrounder"
+		SME::INI::INISetting									CodaScriptBackgrounder::kINI_Enabled("Enabled", CODASCRIPTBACKGROUNDER_INISECTION,
+																										"Execute background scripts",
+																										(SInt32)1);
+		SME::INI::INISetting									CodaScriptBackgrounder::kINI_UpdatePeriod("UpdatePeriod", CODASCRIPTBACKGROUNDER_INISECTION,
+																									"Duration, in milliseconds, between consecutive executions",
+																									(SInt32)10);
 
 		VOID CALLBACK CodaScriptBackgrounder::CallbackProc( HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime )
 		{
@@ -460,7 +458,7 @@ namespace BGSEditorExtender
 
 			if (Renew)
 			{
-				UInt32 UpdatePeriod = atoi(INISettingGetter(kINISettings[kBackgrounderINISetting_UpdatePeriod].Key, kINISection));
+				UInt32 UpdatePeriod = kINI_UpdatePeriod.GetData().i;
 				TimerID = SetTimer(NULL, 0, UpdatePeriod, &CallbackProc);
 				SME_ASSERT(TimerID);
 			}
@@ -521,7 +519,7 @@ namespace BGSEditorExtender
 			INISettingGetter(Getter),
 			INISettingSetter(Setter)
 		{
-			State = atoi(INISettingGetter(kINISettings[kBackgrounderINISetting_Enabled].Key, kINISection));
+			State = kINI_Enabled.GetData().i;
 		}
 
 		CodaScriptBackgrounder::~CodaScriptBackgrounder()
@@ -531,7 +529,7 @@ namespace BGSEditorExtender
 			ResetTimer();
 			ResetCache();
 
-			INISettingSetter(kINISettings[kBackgrounderINISetting_Enabled].Key, kINISection, (State ? "1" : "0"));
+			kINI_Enabled.SetInt(State);
 		}
 
 		void CodaScriptBackgrounder::Suspend( void )
@@ -562,19 +560,15 @@ namespace BGSEditorExtender
 			BGSEECONSOLE->Exdent();
 		}
 
-		BGSEEINIManagerSettingFactory* CodaScriptBackgrounder::GetINIFactory( void )
+		void CodaScriptBackgrounder::RegisterINISettings( INISettingDepotT& Depot )
 		{
-			static BGSEEINIManagerSettingFactory kFactory(kINISection);
-			if (kFactory.Settings.size() == 0)
-			{
-				kFactory.Settings.push_back(&kINISettings[kBackgrounderINISetting_Enabled]);
-				kFactory.Settings.push_back(&kINISettings[kBackgrounderINISetting_UpdatePeriod]);
-			}
-
-			return &kFactory;
+			Depot.push_back(&kINI_Enabled);
+			Depot.push_back(&kINI_UpdatePeriod);
 		}
 
-		const char*			CodaScriptGlobalDataStore::kINISection	= "CodaGlobalDataStore";
+
+
+#define CODASCRIPTGLOBALDATASTORE_INISECTION					"CodaGlobalDataStore"
 
 #define IDM_BGSEE_CODAGLOBALDATASTORE_CLEAREDITFIELD			(WM_USER + 5003)
 #define IDM_BGSEE_CODAGLOBALDATASTORE_RELOADVARLIST				(WM_USER + 5004)
@@ -835,7 +829,7 @@ namespace BGSEditorExtender
 			this->Clear();
 
 			char SectionBuffer[0x8000] = {0};
-			if (INISettingGetter(kINISection, SectionBuffer, sizeof(SectionBuffer)))
+			if (INISettingGetter(CODASCRIPTGLOBALDATASTORE_INISECTION, SectionBuffer, sizeof(SectionBuffer)))
 			{
 				BGSEECONSOLE_MESSAGE("Global Data Store:");
 				BGSEECONSOLE->Indent();
@@ -872,7 +866,7 @@ namespace BGSEditorExtender
 
 		void CodaScriptGlobalDataStore::INISaveState( void )
 		{
-			INISettingSetter(kINISection, NULL);
+			INISettingSetter(CODASCRIPTGLOBALDATASTORE_INISECTION, NULL);
 			char Buffer[0x512] = {0};
 
 			for (CodaScriptVariableListT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
@@ -895,7 +889,7 @@ namespace BGSEditorExtender
 					break;
 				}
 
-				INISettingSetter(Global->GetName(), kINISection, Buffer, true);
+				INISettingSetter(Global->GetName(), CODASCRIPTGLOBALDATASTORE_INISECTION, Buffer);
 			}
 		}
 

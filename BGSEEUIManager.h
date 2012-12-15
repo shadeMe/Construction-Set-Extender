@@ -369,17 +369,7 @@ namespace BGSEditorExtender
 		static LRESULT CALLBACK			DefaultDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	protected:
 		typedef LRESULT (CALLBACK*		MessageCallback)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
-
-		static const BGSEEINIManagerSettingFactory::SettingData		kDefaultINISettings[5];
-		enum
-		{
-			kDefaultINISetting_Top = 0,
-			kDefaultINISetting_Left,
-			kDefaultINISetting_Right,
-			kDefaultINISetting_Bottom,
-			kDefaultINISetting_Visible,
-		};
-
+		
 		struct DlgUserData
 		{
 			BGSEEGenericModelessDialog*		Instance;
@@ -400,8 +390,8 @@ namespace BGSEditorExtender
 		float							AspectRatio;
 		bool							LockAspectRatio;
 
-		virtual void					INILoadUIState(BGSEEINIManagerGetterFunctor* Getter, const char* Section);
-		virtual void					INISaveUIState(BGSEEINIManagerSetterFunctor* Setter, const char* Section);
+		virtual void					INILoadUIState(INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible);
+		virtual void					INISaveUIState(INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible);
 
 		bool							SetVisibility(bool State);
 		bool							SetTopmost(bool State);

@@ -122,16 +122,6 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	void BGSEEINIManagerSetterFunctor::operator()( const char* Key, const char* Section, const char* Value, bool Direct )
-	{
-		SME_ASSERT(ParentManager);
-
-		if (Direct)
-			ParentManager->DirectWrite(Key, Section, Value);
-		else
-			ParentManager->FetchSetting(Key, Section)->SetValue(Value);
-	}
-
 	void BGSEEINIManagerSetterFunctor::operator()( const char* Section, const char* Value )
 	{
 		SME_ASSERT(ParentManager);
@@ -139,17 +129,17 @@ namespace BGSEditorExtender
 		ParentManager->DirectWrite(Section, Value);
 	}
 
+	void BGSEEINIManagerSetterFunctor::operator()( const char* Key, const char* Section, const char* Value )
+	{
+		SME_ASSERT(ParentManager);
+
+		ParentManager->DirectWrite(Key, Section, Value);
+	}
+
 	BGSEEINIManagerGetterFunctor::BGSEEINIManagerGetterFunctor( SME::INI::INIManager* Parent ) :
 			ParentManager(Parent)
 	{
 		;//
-	}
-
-	const char* BGSEEINIManagerGetterFunctor::operator()( const char* Key, const char* Section )
-	{
-		SME_ASSERT(ParentManager);
-
-		return ParentManager->FetchSetting(Key, Section)->GetValueAsString();
 	}
 
 	int BGSEEINIManagerGetterFunctor::operator()( const char* Key, const char* Section, const char* Default, char* OutBuffer, UInt32 Size )
@@ -165,49 +155,9 @@ namespace BGSEditorExtender
 
 		return ParentManager->DirectRead(Section, OutBuffer, Size);
 	}
-
-	BGSEEINIManagerSettingFactory::BGSEEINIManagerSettingFactory( const char* Section ) :
-		Section(Section),
-		Settings()
-	{
-		;//
-	}
-
-	const BGSEEINIManagerSettingFactory::SettingData* BGSEEINIManagerSettingFactory::Lookup( const char* Key )
-	{
-		for (SettingListT::const_iterator Itr = Settings.begin(); Itr != Settings.end(); Itr++)
-		{
-			if (_stricmp((*Itr)->Key, Key))
-				return *Itr;
-		}
-
-		return NULL;
-	}
-
-	const char* BGSEEINIManagerSettingFactory::Get( int Index, BGSEEINIManagerGetterFunctor& Getter )
-	{
-		if (Settings.size() <= Index)
-			return NULL;
-		else
-			return Getter(Settings[Index]->Key, Section);
-	}
-
-	void BGSEEINIManagerSettingFactory::Set( int Index, BGSEEINIManagerSetterFunctor& Setter, const char* Value, ... )
-	{
-		if (Settings.size() <= Index)
-			return;
-
-		char Buffer[0x100] = {0};
-
-		va_list Args;
-		va_start(Args, Value);
-		vsprintf_s(Buffer, sizeof(Buffer), Value, Args);
-		va_end(Args);
-
-		Setter(Settings[Index]->Key, Section, Buffer);
-	}
-
-	BGSEEMain::BGSEEINIManager::BGSEEINIManager() : GUI()
+	
+	BGSEEMain::BGSEEINIManager::BGSEEINIManager() :
+		GUI()
 	{
 		;//
 	}
@@ -217,22 +167,23 @@ namespace BGSEditorExtender
 		;//
 	}
 
-	bool BGSEEMain::BGSEEINIManager::RegisterSetting( const char* Key, const char* Section, const char* DefaultValue, const char* Description )
+	bool BGSEEMain::BGSEEINIManager::RegisterSetting( INISetting* Setting, bool AutoLoad /*= true*/, bool Dynamic /*= false*/ )
 	{
-		char Buffer[0x200] = {0};
-		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
+		SME_ASSERT(Setting);
 
-		return SME::INI::INIManager::RegisterSetting(Key, Buffer, DefaultValue, Description);
+		char Buffer[0x200] = {0};
+		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Setting->GetSection());
+		SetSettingSection(Setting, Buffer);
+
+		return SME::INI::INIManager::RegisterSetting(Setting, AutoLoad, Dynamic);
 	}
 
-	SME::INI::INISetting* BGSEEMain::BGSEEINIManager::FetchSetting( const char* Key, const char* Section )
+	SME::INI::INISetting* BGSEEMain::BGSEEINIManager::FetchSetting( const char* Key, const char* Section, bool Dynamic /*= false*/ )
 	{
 		char Buffer[0x200] = {0};
 		FORMAT_STR(Buffer, "%s%s", kSectionPrefix, Section);
 
-		SME::INI::INISetting* Result = SME::INI::INIManager::FetchSetting(Key, Buffer);
-
-		return Result;
+		return SME::INI::INIManager::FetchSetting(Key, Buffer, Dynamic);
 	}
 
 	void BGSEEMain::BGSEEINIManager::Initialize(const char* INIPath, void* Paramenter)
@@ -251,16 +202,10 @@ namespace BGSEditorExtender
 		INIStream.clear();
 
 		char Buffer[0x200] = {0};
-		SettingFactoryListT* FactoryList = (SettingFactoryListT*)Paramenter;
+		INISettingDepotT* FactoryList = (INISettingDepotT*)Paramenter;
 
-		for (SettingFactoryListT::const_iterator Itr = FactoryList->begin(); Itr != FactoryList->end(); Itr++)
-		{
-			for (BGSEEINIManagerSettingFactory::SettingListT::const_iterator ItrX = (*Itr)->Settings.begin(); ItrX != (*Itr)->Settings.end(); ItrX++)
-			{
-				const BGSEEINIManagerSettingFactory::SettingData* Current = *ItrX;
-				RegisterSetting(Current->Key, (*Itr)->Section, Current->DefaultValue, Current->Description);
-			}
-		}
+		for (INISettingDepotT::iterator Itr = FactoryList->begin(); Itr != FactoryList->end(); Itr++)
+			RegisterSetting((*Itr), true, false);
 
 		if (CreateINI)
 		{
@@ -630,7 +575,7 @@ namespace BGSEditorExtender
 	bool BGSEEMain::Initialize( const char* LongName, const char* ShortName, const char* ReleaseName, UInt32 Version,
 								UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion, const char* APPPath,
 								UInt32 SEPluginHandle, UInt32 SEMinimumVersion,
-								UInt32 SECurrentVersion, SettingFactoryListT& INISettingFactoryList,
+								UInt32 SECurrentVersion, INISettingDepotT& INISettings,
 								const char* DotNETFrameworkVersion,	bool CLRMemoryProfiling, bool WaitForDebugger,
 								bool CrashRptSupport)
 	{
@@ -662,14 +607,14 @@ namespace BGSEditorExtender
 
 		ExtenderModuleHandle = (HINSTANCE)GetModuleHandle(ExtenderDLLPath.c_str());
 
-		INISettingFactoryList.push_back(BGSEEScript::CodaScriptBackgrounder::GetINIFactory());
-		INISettingFactoryList.push_back(BGSEEScript::CodaScriptExecutive::GetINIFactory());
-		INISettingFactoryList.push_back(BGSEEConsole::GetINIFactory());
+		BGSEEScript::CodaScriptBackgrounder::RegisterINISettings(INISettings);
+		BGSEEScript::CodaScriptExecutive::RegisterINISettings(INISettings);
+		BGSEEConsole::RegisterINISettings(INISettings);
 
 		ExtenderINIManager = new BGSEEINIManager();
-		ExtenderINIManager->Initialize(ExtenderINIPath.c_str(), (void*)&INISettingFactoryList);
+		ExtenderINIManager->Initialize(ExtenderINIPath.c_str(), (void*)&INISettings);
 
-		ExtenderConsole = new BGSEEConsole((std::string(APPPath + std::string(LongName) + ".log")).c_str(), ExtenderINIManager, ExtenderINIManager);
+		ExtenderConsole = new BGSEEConsole((std::string(APPPath + std::string(LongName) + ".log")).c_str());
 		ExtenderDaemon = new BGSEEDaemon();
 
 		DefaultInitCallback* InitCallback = new DefaultInitCallback();

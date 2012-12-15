@@ -77,14 +77,8 @@ namespace BGSEditorExtender
 		class CodaScriptExecutive : public ICodaScriptObject
 		{
 			static const UInt32							kMaxRecursionLimit;
-
-			static const char*											kINISection;
-			static const BGSEEINIManagerSettingFactory::SettingData		kINISettings[1];
-			enum
-			{
-				kExecutiveINISetting_Profiling			= 0,
-			};
-
+			static INISetting							kINI_Profiling;
+			
 			CodaScriptExecutionContextStackT			ExecutionStack;
 			CodaScriptProfiler							Profiler;
 			DWORD										OwnerThreadID;
@@ -96,7 +90,7 @@ namespace BGSEditorExtender
 			bool										Execute(CodaScriptExecutionContext* Context, CodaScriptBackingStore* Result, bool& ReturnedResult);
 			CodaScriptExecutionContext*					GetExecutingContext(void);
 
-			static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
+			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};
 
 		class CodaScriptBackgrounder : public ICodaScriptObject
@@ -104,14 +98,10 @@ namespace BGSEditorExtender
 			friend class CodaScriptGlobalDataStore;
 			friend class CodaScriptVM;
 
-			static const char*											kINISection;
-			static const std::string									kDepotName;
-			static const BGSEEINIManagerSettingFactory::SettingData		kINISettings[2];
-			enum
-			{
-				kBackgrounderINISetting_Enabled				= 0,
-				kBackgrounderINISetting_UpdatePeriod,
-			};
+			static const std::string					kDepotName;
+			static INISetting							kINI_Enabled;
+			static INISetting							kINI_UpdatePeriod;
+
 			static VOID CALLBACK						CallbackProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 			typedef std::list<CodaScriptExecutionContext*>	CodaScriptBackgroundExecutionCacheT;
@@ -140,14 +130,12 @@ namespace BGSEditorExtender
 
 			void										Rebuild(void);		// renews the cache
 
-			static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
+			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};
 
 		class CodaScriptGlobalDataStore : public ICodaScriptObject
 		{
 			friend class CodaScriptVM;
-
-			static const char*							kINISection;
 
 			static BOOL CALLBACK						EditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

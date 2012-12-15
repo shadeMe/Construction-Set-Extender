@@ -14,7 +14,11 @@ namespace BGSEditorExtender
 		this->DrawFormat = DrawFormat;
 
 		sprintf_s(this->FontFace, sizeof(this->FontFace), "%s", FontFace);
-		memcpy(&this->DrawArea, DrawArea, sizeof(RECT));
+
+		if (DrawArea == NULL)
+			ZeroMemory(&this->DrawArea, sizeof(RECT));
+		else
+			memcpy(&this->DrawArea, DrawArea, sizeof(RECT));
 	}
 
 	BGSEERenderChannelBase::BGSEERenderChannelBase( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags ) :

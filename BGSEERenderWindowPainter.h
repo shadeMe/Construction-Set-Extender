@@ -8,6 +8,13 @@ namespace BGSEditorExtender
 
 	class BGSEERenderChannelBase
 	{
+	public:
+		enum
+		{
+			kDrawAreaFlags_Default			= 0,
+			kDrawAreaFlags_RightAligned		= 1 << 0,
+			kDrawAreaFlags_BottomAligned	= 1 << 1,
+		};
 	protected:
 		struct Parameters
 		{
@@ -42,7 +49,7 @@ namespace BGSEditorExtender
 			D3DCOLOR Color,
 			RECT* DrawArea,
 			DWORD DrawFormat,
-			UInt32 DrawAreaFlags = 0);
+			UInt32 DrawAreaFlags = kDrawAreaFlags_Default);
 
 		virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite) = 0;
 		bool							CreateD3D();
@@ -51,12 +58,6 @@ namespace BGSEditorExtender
 
 		friend class					BGSEERenderWindowPainter;
 	public:
-		enum
-		{
-			kDrawAreaFlags_RightAligned		= 1 << 0,
-			kDrawAreaFlags_BottomAligned	= 1 << 1,
-		};
-
 		virtual ~BGSEERenderChannelBase();
 	};
 

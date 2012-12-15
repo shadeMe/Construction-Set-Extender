@@ -1230,15 +1230,6 @@ namespace BGSEditorExtender
 		return InvalidationManager;
 	}
 
-	const BGSEEINIManagerSettingFactory::SettingData		BGSEEGenericModelessDialog::kDefaultINISettings[5] =
-	{
-		{ "Top",		"150",		"Dialog Rect Top" },
-		{ "Left",		"150",		"Dialog Rect Left" },
-		{ "Right",		"150",		"Dialog Rect Right" },
-		{ "Bottom",		"150",		"Dialog Rect Bottom" },
-		{ "Visible",	"1",		"Dialog Visibility State" }
-	};
-
 	LRESULT CALLBACK BGSEEGenericModelessDialog::DefaultDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
 		bool SkipCallback = false;
@@ -1408,33 +1399,42 @@ namespace BGSEditorExtender
 			return FALSE;
 	}
 
-	void BGSEEGenericModelessDialog::INILoadUIState( BGSEEINIManagerGetterFunctor* Getter, const char* Section )
+	void BGSEEGenericModelessDialog::INILoadUIState( INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible )
 	{
-		int Top = atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Top].Key, Section)),
-			Left = atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Left].Key, Section)),
-			Right = atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Right].Key, Section)),
-			Bottom = atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Bottom].Key, Section));
+		SME_ASSERT(Top && Top->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Left && Left->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Right && Right->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Bottom && Bottom->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Visible && Visible->GetType() == INISetting::kType_Integer);
 
-		SetWindowPos(DialogHandle, HWND_NOTOPMOST, Left, Top, Right, Bottom, SWP_SHOWWINDOW|SWP_FRAMECHANGED);
-		SetVisibility(atoi(Getter->operator()(kDefaultINISettings[kDefaultINISetting_Visible].Key, Section)));
+		SetWindowPos(DialogHandle,
+					HWND_NOTOPMOST,
+					Left->GetData().i,
+					Top->GetData().i,
+					Right->GetData().i,
+					Bottom->GetData().i, 
+					SWP_SHOWWINDOW|SWP_FRAMECHANGED);
+
+		SetVisibility(Visible->GetData().i);
 	}
 
-	void BGSEEGenericModelessDialog::INISaveUIState( BGSEEINIManagerSetterFunctor* Setter, const char* Section )
+	void BGSEEGenericModelessDialog::INISaveUIState( INISetting* Top, INISetting* Left, INISetting* Right, INISetting* Bottom, INISetting* Visible )
 	{
-		tagRECT WindowRect;
+		SME_ASSERT(Top && Top->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Left && Left->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Right && Right->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Bottom && Bottom->GetType() == INISetting::kType_Integer);
+		SME_ASSERT(Visible && Visible->GetType() == INISetting::kType_Integer);
+
+		RECT WindowRect;
 		char Buffer[20] = {0};
 		GetWindowRect(DialogHandle, &WindowRect);
 
-		_itoa_s(WindowRect.top, Buffer, sizeof(Buffer), 10);
-		Setter->operator()(kDefaultINISettings[kDefaultINISetting_Top].Key, Section, Buffer);
-		_itoa_s(WindowRect.left, Buffer, sizeof(Buffer), 10);
-		Setter->operator()(kDefaultINISettings[kDefaultINISetting_Left].Key, Section, Buffer);
-		_itoa_s(WindowRect.right - WindowRect.left, Buffer, sizeof(Buffer), 10);
-		Setter->operator()(kDefaultINISettings[kDefaultINISetting_Right].Key, Section, Buffer);
-		_itoa_s(WindowRect.bottom - WindowRect.top, Buffer, sizeof(Buffer), 10);
-		Setter->operator()(kDefaultINISettings[kDefaultINISetting_Bottom].Key, Section, Buffer);
-
-		Setter->operator()(kDefaultINISettings[kDefaultINISetting_Visible].Key, Section, ((Visible)?"1":"0"));
+		Top->SetInt(WindowRect.top);
+		Left->SetInt(WindowRect.left);
+		Right->SetInt(WindowRect.right - WindowRect.left);
+		Bottom->SetInt(WindowRect.bottom - WindowRect.top);
+		Visible->SetInt(this->Visible);
 	}
 
 	bool BGSEEGenericModelessDialog::SetVisibility( bool State )

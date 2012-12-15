@@ -8,7 +8,6 @@ namespace BGSEditorExtender
 	class BGSEEToolBox
 	{
 		static BOOL CALLBACK				GUIDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-		static const char*					kINISection;
 
 		static BGSEEToolBox*				Singleton;
 		BGSEEToolBox();

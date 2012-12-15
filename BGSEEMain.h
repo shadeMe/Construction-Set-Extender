@@ -60,49 +60,30 @@ namespace BGSEditorExtender
 		static void					WaitForDebugger(void);
 	};
 
+	// for direct writing
 	class BGSEEINIManagerSetterFunctor
 	{
 		SME::INI::INIManager*		ParentManager;
 	public:
 		BGSEEINIManagerSetterFunctor(SME::INI::INIManager* Parent = NULL);
 
-		void						operator()(const char* Key, const char* Section, const char* Value, bool Direct = false);
+		void						operator()(const char* Key, const char* Section, const char* Value);
 		void						operator()(const char* Section, const char* Value);
 	};
 
+	// for direct reading
 	class BGSEEINIManagerGetterFunctor
 	{
 		SME::INI::INIManager*		ParentManager;
 	public:
 		BGSEEINIManagerGetterFunctor(SME::INI::INIManager* Parent = NULL);
 
-		const char*					operator()(const char* Key, const char* Section);
 		int							operator()(const char* Key, const char* Section, const char* Default, char* OutBuffer, UInt32 Size);
 		int							operator()(const char* Section, char* OutBuffer, UInt32 Size);
 	};
 
-	struct BGSEEINIManagerSettingFactory
-	{
-		struct SettingData
-		{
-			const char*				Key;
-			const char*				DefaultValue;
-			const char*				Description;
-		};
-
-		typedef std::vector<const SettingData*>	SettingListT;
-
-		const char*					Section;
-		SettingListT				Settings;
-
-		BGSEEINIManagerSettingFactory(const char* Section);
-
-		const SettingData*			Lookup(const char* Key);
-
-		const char*					Get(int Index, BGSEEINIManagerGetterFunctor& Getter);									// order dependent
-		void						Set(int Index, BGSEEINIManagerSetterFunctor& Setter, const char* Value, ...);			// order dependent
-	};
-	typedef std::list<BGSEEINIManagerSettingFactory*>		SettingFactoryListT;
+	
+	typedef SME::INI::INISettingListT			INISettingDepotT;
 
 	class BGSEEReleaseNameTable
 	{
@@ -130,13 +111,13 @@ namespace BGSEditorExtender
 
 			SME::INI::INIEditGUI				GUI;
 
-			virtual bool						RegisterSetting(const char* Key, const char* Section, const char* DefaultValue, const char* Description);
+			virtual bool						RegisterSetting(INISetting* Setting, bool AutoLoad = true, bool Dynamic = false);
 		public:
 			BGSEEINIManager();
 			virtual ~BGSEEINIManager();
 
 			virtual void						Initialize(const char* INIPath, void* Paramenter);
-			virtual SME::INI::INISetting*		FetchSetting(const char* Key, const char* Section);
+			virtual SME::INI::INISetting*		FetchSetting(const char* Key, const char* Section, bool Dynamic = false);
 
 			virtual int							DirectRead(const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size);
 			virtual int							DirectRead(const char* Section, char* OutBuffer, UInt32 Size);
@@ -226,7 +207,7 @@ namespace BGSEditorExtender
 														UInt32 Version, UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion,
 														const char* APPPath,
 														UInt32 SEPluginHandle, UInt32 SEMinimumVersion, UInt32 SECurrentVersion,
-														SettingFactoryListT& INISettingFactoryList,
+														INISettingDepotT& INISettings,
 														const char* DotNETFrameworkVersion, bool CLRMemoryProfiling, bool WaitForDebugger,
 														bool CrashRptSupport = true);
 

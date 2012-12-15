@@ -33,18 +33,19 @@ namespace BGSEditorExtender
 		static LRESULT CALLBACK		MessageLogSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK		CommandLineSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-		static const BGSEEINIManagerSettingFactory::SettingData		kConsoleSpecificINISettings[4];
-		enum
-		{
-			kConsoleSpecificINISetting_UpdatePeriod = 0,
-			kConsoleSpecificINISetting_LogWarnings,
-			kConsoleSpecificINISetting_LogAssertions,
-			kConsoleSpecificINISetting_LogTimestamps,
-		};
+		static INISetting			kINI_Top;
+		static INISetting			kINI_Left;
+		static INISetting			kINI_Right;
+		static INISetting			kINI_Bottom;
+		static INISetting			kINI_Visible;
 
-		static const char*											kCommandLinePrefix;
-		static const char*											kWindowTitle;
-		static const char*											kINISection;
+		static INISetting			kINI_UpdatePeriod;
+		static INISetting			kINI_LogWarnings;
+		static INISetting			kINI_LogAssertions;
+		static INISetting			kINI_LogTimestamps;
+
+		static const char*			kCommandLinePrefix;
+		static const char*			kWindowTitle;
 
 		class MessageLogContext
 		{
@@ -155,8 +156,6 @@ namespace BGSEditorExtender
 		ConsoleCommandTable						CommandTable;
 		CommandHistoryStackT					CommandLineHistory;
 		CommandHistoryStackT					CommandLineHistoryAuxiliary;
-		BGSEEINIManagerGetterFunctor			INISettingGetter;
-		BGSEEINIManagerSetterFunctor			INISettingSetter;
 
 		void						ClearMessageLog(void);
 		void						SetTitle(const char* Prefix);
@@ -174,7 +173,7 @@ namespace BGSEditorExtender
 		static const UInt32			kMessageLogCharLimit = 0x8000;
 		static const UInt32			kMaxIndentLevel = 0x10;
 
-		BGSEEConsole(const char* LogPath, BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter);
+		BGSEEConsole(const char* LogPath);
 		virtual ~BGSEEConsole();
 
 		virtual void				InitializeUI(HWND Parent, HINSTANCE Resource);
@@ -205,6 +204,6 @@ namespace BGSEditorExtender
 
 		bool						GetLogsWarnings(void);
 
-		static BGSEEINIManagerSettingFactory*		GetINIFactory(void);
+		static void					RegisterINISettings(INISettingDepotT& Depot);
 	};
 }
