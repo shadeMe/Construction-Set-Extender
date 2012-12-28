@@ -23,6 +23,12 @@ namespace BGSEditorExtender
 																"Dialog Visibility State",
 																(SInt32)1);
 	
+	SME::INI::INISetting					BGSEEConsole::kINI_FontFace("FontFace", BGSEECONSOLE_INISECTION,
+																		"Message log font type",
+																		"Consolas");
+	SME::INI::INISetting					BGSEEConsole::kINI_FontSize("FontSize", BGSEECONSOLE_INISECTION,
+																		"Message log font size",
+																		(SInt32)13);
 	SME::INI::INISetting					BGSEEConsole::kINI_UpdatePeriod("UpdatePeriod", BGSEECONSOLE_INISECTION,
 																			"Duration, in milliseconds, between message log updates",
 																			(SInt32)1000);
@@ -202,6 +208,7 @@ namespace BGSEditorExtender
 				SME::UIHelpers::GetClientRectInitBounds(MessageLog, hWnd, &xData->MessageLogInitBounds);
 				SME::UIHelpers::GetClientRectInitBounds(CommandLine, hWnd, &xData->CommandLineInitBounds);
 
+				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG, WM_SETFONT, (WPARAM)xData->MessageLogFont, (LPARAM)TRUE);
 				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE, WM_SETFONT, (WPARAM)xData->CommandLineFont, (LPARAM)TRUE);
 			}
 
@@ -675,6 +682,7 @@ namespace BGSEditorExtender
 
 	BGSEEConsole::UIExtraData::UIExtraData() :
 		SelectedContext(NULL),
+		MessageLogFont(NULL),
 		CommandLineFont(NULL),
 		DialogInitBounds(),
 		MessageLogInitBounds(),
@@ -683,6 +691,18 @@ namespace BGSEditorExtender
 		ZeroMemory(&DialogInitBounds, sizeof(RECT));
 		ZeroMemory(&MessageLogInitBounds, sizeof(RECT));
 		ZeroMemory(&CommandLineInitBounds, sizeof(RECT));
+
+		MessageLogFont = CreateFont(BGSEEConsole::kINI_FontSize.GetData().i, 0, 0, 0,
+									FW_REGULAR,
+									FALSE,
+									FALSE,
+									FALSE,
+									ANSI_CHARSET,
+									OUT_DEFAULT_PRECIS,
+									CLIP_DEFAULT_PRECIS,
+									CLEARTYPE_QUALITY,
+									FF_DONTCARE,
+									BGSEEConsole::kINI_FontFace.GetData().s);
 
 		CommandLineFont = CreateFont(24, 0, 0, 0,
 									FW_BOLD,
@@ -699,6 +719,9 @@ namespace BGSEditorExtender
 
 	BGSEEConsole::UIExtraData::~UIExtraData()
 	{
+		if (MessageLogFont)
+			DeleteFont(MessageLogFont);
+
 		if (CommandLineFont)
 			DeleteFont(CommandLineFont);
 	}
@@ -1067,6 +1090,8 @@ namespace BGSEditorExtender
 		Depot.push_back(&kINI_Bottom);
 		Depot.push_back(&kINI_Visible);
 
+		Depot.push_back(&kINI_FontFace);
+		Depot.push_back(&kINI_FontSize);
 		Depot.push_back(&kINI_UpdatePeriod);
 		Depot.push_back(&kINI_LogWarnings);
 		Depot.push_back(&kINI_LogAssertions);

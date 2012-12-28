@@ -39,6 +39,8 @@ namespace BGSEditorExtender
 		static INISetting			kINI_Bottom;
 		static INISetting			kINI_Visible;
 
+		static INISetting			kINI_FontFace;
+		static INISetting			kINI_FontSize;
 		static INISetting			kINI_UpdatePeriod;
 		static INISetting			kINI_LogWarnings;
 		static INISetting			kINI_LogAssertions;
@@ -135,8 +137,9 @@ namespace BGSEditorExtender
 		struct UIExtraData
 		{
 			MessageLogContext*					SelectedContext;
+			HFONT								MessageLogFont;
 			HFONT								CommandLineFont;
-
+			
 			RECT								DialogInitBounds;
 			RECT								MessageLogInitBounds;
 			RECT								CommandLineInitBounds;
@@ -147,7 +150,9 @@ namespace BGSEditorExtender
 
 		typedef std::list<MessageLogContext*>	ContextListT;
 		typedef std::stack<std::string>			CommandHistoryStackT;
+
 		friend class							DefaultDebugLogContext;
+		friend struct							UIExtraData;
 
 		DWORD									OwnerThreadID;
 		MessageLogContext*						ActiveContext;

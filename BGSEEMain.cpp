@@ -205,7 +205,10 @@ namespace BGSEditorExtender
 		INISettingDepotT* FactoryList = (INISettingDepotT*)Paramenter;
 
 		for (INISettingDepotT::iterator Itr = FactoryList->begin(); Itr != FactoryList->end(); Itr++)
-			RegisterSetting((*Itr), true, false);
+		{
+			bool Result = RegisterSetting((*Itr), true, false);
+			SME_ASSERT(Result);
+		}
 
 		if (CreateINI)
 		{
