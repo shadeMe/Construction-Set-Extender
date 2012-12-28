@@ -1393,8 +1393,6 @@ namespace ConstructionSetExtender
 
 			MessageList->Dock = DockStyle::Fill;
 			MessageList->BorderStyle = BorderStyle::Fixed3D;
-			MessageList->BackColor = BackColor;
-			MessageList->ForeColor = ForeColor;
 			MessageList->Visible = false;
 			MessageList->View = View::Details;
 			MessageList->MultiSelect = false;
@@ -1423,8 +1421,6 @@ namespace ConstructionSetExtender
 
 			FindList->Dock = DockStyle::Fill;
 			FindList->BorderStyle = BorderStyle::Fixed3D;
-			FindList->BackColor = BackColor;
-			FindList->ForeColor = ForeColor;
 			FindList->Visible = false;
 			FindList->View = View::Details;
 			FindList->MultiSelect = false;
@@ -1444,8 +1440,6 @@ namespace ConstructionSetExtender
 
 			BookmarkList->Dock = DockStyle::Fill;
 			BookmarkList->BorderStyle = BorderStyle::Fixed3D;
-			BookmarkList->BackColor = BackColor;
-			BookmarkList->ForeColor = ForeColor;
 			BookmarkList->Visible = false;
 			BookmarkList->View = View::Details;
 			BookmarkList->MultiSelect = false;

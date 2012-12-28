@@ -13,17 +13,12 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
-		> I forgot to add " at the end of a MessageBox in some script and it crashed because of that.
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
-		> Look into washington's request with the region editor; requires a fair amount of TESRegion/TESRegionDataXXX decoding
 		> Fix memory leak in local map generator
 
 
 	ENHANCEMENT		=
-		> Real-time updates for facegen preview controls (update the control for every trackbar changed notification message)
-		> Ability to filter certain warnings
-		> Add the various "missing" render window toggles to the View menu (like border, water toggling)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.

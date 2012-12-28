@@ -27,7 +27,7 @@ namespace ConstructionSetExtender
 		DefineCompilerErrorOverrideHook(0x005027D3, 0x00502824, 0xC)
 		DefineCompilerErrorOverrideHook(0x005028B5, 0x00502889, 0x8)
 																		// f_ScriptCompiler__CheckSyntax
-		DefineCompilerErrorOverrideHook(0x00500B44, 0x00500A14, 0x8)
+		DefineCompilerErrorOverrideHook(0x00500B44, 0x00500B4C, 0x8)	// Mismatching quotes check - this one needs to return immediately , will CTD otherwise
 		DefineCompilerErrorOverrideHook(0x00500B5D, 0x00500A7E, 0x8)
 		DefineCompilerErrorOverrideHook(0x00500B76, 0x00500A8B, 0x8)
 		DefineCompilerErrorOverrideHook(0x00500B8C, 0x00500AAB, 0xC)

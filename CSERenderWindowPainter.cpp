@@ -28,6 +28,9 @@ namespace ConstructionSetExtender
 			else
 			{
 				TESObjectREFR* Selection = CS_CAST(_RENDERSEL->selectionList->Data, TESForm, TESObjectREFR);
+				if (Selection == NULL)
+					return false;			// in the off-chance that the selection contains a regular form
+
 				BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 				char xBuffer[0x50] = {0};
 				if (xData)
@@ -38,7 +41,7 @@ namespace ConstructionSetExtender
 						xParent->parent->formID, xParent->oppositeState);
 				}
 
-				FORMAT_STR(Buffer, "%s (%08X) BASE[%s (%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
+				FORMAT_STR(Buffer, "%s(%08X) BASE[%s(%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
 					((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
 					((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
 					Selection->position.x, Selection->position.y, Selection->position.z,
@@ -81,7 +84,9 @@ namespace ConstructionSetExtender
 				if (CurrentRAMCounter != GetSingleton()->RAMCounter)
 				{
 					GetSingleton()->RAMCounter = CurrentRAMCounter;
-					TESRenderWindow::Redraw();
+
+					if (Settings::RenderWindowPainter::kShowRAMUsage.GetData().i)
+						TESRenderWindow::Redraw();
 
 					if (CurrentRAMCounter > 3000)
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kOver3000);

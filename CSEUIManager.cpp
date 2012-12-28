@@ -3869,6 +3869,46 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+		enum
+		{
+			kFaceGenControl_AgeEditCtrl				= 2117,
+			kFaceGenControl_ComplexionEditCtrl		= 2125,
+			kFaceGenControl_HairLengthEditCtrl		= 2127,
+			kFaceGenControl_AdvancedEditCtrl		= 2115,
+		};
+
+		LRESULT CALLBACK FaceGenDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_COMMAND:
+				switch (HIWORD(wParam))
+				{
+				case EN_CHANGE:
+					{
+						if (LOWORD(wParam) == kFaceGenControl_AgeEditCtrl ||
+							LOWORD(wParam) == kFaceGenControl_ComplexionEditCtrl ||
+							LOWORD(wParam) == kFaceGenControl_HairLengthEditCtrl ||
+							LOWORD(wParam) == kFaceGenControl_AdvancedEditCtrl)
+						{
+							// refresh the preview control
+							SendMessage(hWnd, 0x41A, NULL, NULL);
+						}
+					}
+
+					break;
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			switch (uMsg)
@@ -4471,6 +4511,8 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, LandscapeEditDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, AIPackagesDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIForm, AIFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_NPC, FaceGenDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, FaceGenDlgSubClassProc);
 
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
