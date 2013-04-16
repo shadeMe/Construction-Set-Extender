@@ -8,6 +8,8 @@ TESRender::PrimaryRenderer**		TESRender::PrimaryRenderer::Singleton = (TESRender
 HWND*								TESRenderWindow::WindowHandle = (HWND*)0x00A0AF28;
 TESRenderSelection**				TESRenderWindow::ClipboardSelection = (TESRenderSelection**)0x00A0AF64;
 TESRenderWindow::UndoStack**		TESRenderWindow::UndoBuffer = (TESRenderWindow::UndoStack**)0x00A0B124;
+TESRenderWindow::RubberBandSelection**
+									TESRenderWindow::RubberBandSelector = (TESRenderWindow::RubberBandSelection**)0x00A0BC48;
 
 PathGridPointListT*					TESRenderWindow::SelectedPathGridPoints = (PathGridPointListT*)0x00A0AF68;
 
@@ -38,6 +40,7 @@ const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
 
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
 
+
 void TESRenderWindow::Reset()
 {
 	UInt8 ObjWndState = *TESObjectWindow::MainMenuState, CellWndState = *TESCellViewWindow::MainMenuState;
@@ -63,9 +66,9 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 		ConstructionSetExtender::PathGridUndoManager::Instance.SetCanReset(false);
 
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, NULL, NULL);
-		cdeclCall<void>(0x00550660);			// TESPathGrid::ToggleRenderWindow3DState
+		TogglePathGridEditMode();
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, 2, NULL);
-		cdeclCall<void>(0x00550660);			// TESPathGrid::ToggleRenderWindow3DState
+		TogglePathGridEditMode();
 
 		ConstructionSetExtender::PathGridUndoManager::Instance.SetCanReset(true);
 	}
@@ -75,6 +78,10 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 	}
 }
 
+void TESRenderWindow::TogglePathGridEditMode()
+{
+	cdeclCall<void>(0x00550660);
+}
 
 void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
 {

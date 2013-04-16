@@ -1890,8 +1890,8 @@ namespace ConstructionSetExtender
 
 					if (BGSEditorExtender::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
 					{
-						// the primary camera's view frustum gets updated ever so often reseting its horizontal FOV
-						// we reset it here in case it has changed
+						// the primary camera's view frustum gets updated ever so often resetting its horizontal FOV
+						// we update it here in case it has changed
 						if (_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.l != TESRenderWindow::CameraFrustumBuffer.l ||
 							_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.r != TESRenderWindow::CameraFrustumBuffer.r ||
 							_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.b != TESRenderWindow::CameraFrustumBuffer.b ||
@@ -3101,6 +3101,8 @@ namespace ConstructionSetExtender
 			kFormList_TESReactionForm							= 1591,
 			kFormList_FindTextTopicInfos						= 1952,
 			kFormList_LandTextures								= 1492,
+			kFormList_CrossReferences							= 1637,
+			kFormList_CellUseList								= 1638,
 		};
 
 		enum
@@ -3320,7 +3322,9 @@ namespace ConstructionSetExtender
 							wParam == kFormList_RaceEyes ||
 							wParam == kFormList_TESReactionForm ||
 							wParam == kFormList_FindTextTopicInfos ||
-							wParam == kFormList_LandTextures)
+							wParam == kFormList_LandTextures ||
+							wParam == kFormList_CrossReferences ||
+							wParam == kFormList_CellUseList)
 						{
 							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
 
@@ -4576,6 +4580,8 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
+				PANIC("Test")
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_UseReport, CommonDialogExtraFittingsSubClassProc);
 			}
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(

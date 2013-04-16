@@ -53,19 +53,18 @@ public:
 	/*78*/ TESClimate*									climate;
 	/*7C*/ UInt8										worldSpaceFlags;
 	/*7D*/ UInt8										pad7D[3];
-	/*80*/ UInt32										unk80;
-	/*84*/ UInt32										unk84;
+	/*80*/ tList<TESObjectREFR>							unk80;		// TESSubSpace refs
 	/*88*/ TESWorldSpace*								parentWorldspace;
 	/*8C*/ TESWaterForm*								waterType;
 	/*90*/ UInt32										usableDimensionsX;
 	/*94*/ UInt32										usableDimensionsY;
-	/*98*/ UInt16										northWestCoordX;
-	/*9A*/ UInt16										northWestCoordY;
-	/*9C*/ UInt16										southEastCoordX;
-	/*9E*/ UInt16										southEastCoordY;
+	/*98*/ SInt16										northWestCoordX;
+	/*9A*/ SInt16										northWestCoordY;
+	/*9C*/ SInt16										southEastCoordX;
+	/*9E*/ SInt16										southEastCoordY;
 	/*A0*/ UInt32										musicType;
 	/*A4*/ float										unkA4;
-	/*A8*/ float										unkA8;
+	/*A8*/ float										unkA8;		// Vector3?
 	/*AC*/ float										unkAC;
 	/*B0*/ float										unkB0;
 	/*B4*/ NiTMapBase<UInt32, bool>						unkB4;

@@ -375,7 +375,7 @@ namespace ConstructionSetExtender
 			kOver3000				= new CSEAchievementBase("Over 3000!", "OMFGodrays! RAM usage of 3 gigs?! It's gonna blow!!",
 															IDB_ACHIEVEMENT_OVER3000, "17C0EA7A-DB0C-46BA-A19F-232A73630AD5");
 
-			kFunnyGuy				= new CSEAchievementBase("Funny Guy Bob", "How lovely! You've got a sense of humour",
+			kFunnyGuy				= new CSEAchievementBase("Funny Guy Bob", "How lovely! You've got a sense of humour...",
 															IDB_ACHIEVEMENT_FUNNYGUY, "13275AC0-DA3B-4802-813A-4DB3E7C4168D");
 
 			kHappyBDayMoi			= new CSEAchievementHappypotamus("CSE", "I mean, who would have thought!",

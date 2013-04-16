@@ -127,7 +127,7 @@ public:
 		kExtra_PersuasionPercent            = 0x46, // Game only
 		kExtra_CannotWear                   = 0x47,
 		kExtra_Poison                       = 0x48,
-		//Unknown                           = 0x49,
+		//Unknown                           = 0x49,	// Related to ExtraLight
 		kExtra_LastFinishedSequence         = 0x4A, // Game only
 		kExtra_SavedMovementData            = 0x4B, // Game only
 		kExtra_NorthRotation                = 0x4C, // Game only
@@ -672,3 +672,14 @@ public:
 	/*0C*/ ContainerExtraData*		data;
 };
 STATIC_ASSERT(sizeof(ExtraContainerChanges) == 0x10);
+
+// 14
+class ExtraEditorRef3DData : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ NiNode*			node;						// smart pointer
+	/*10*/ NiLines*			selectionBox;
+};
+STATIC_ASSERT(sizeof(ExtraEditorRef3DData) == 0x14);

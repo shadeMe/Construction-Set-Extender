@@ -130,7 +130,7 @@ public:
 		struct UndoData
 		{
 			/*00*/ UInt32				selIndex;						// index of the ref in its parent selection
-			/*04*/ UInt32				selCount;						// number of refs in the selection this ref was a part of
+			/*04*/ UInt32				selCount;						// number of refs in the selection that this ref was a part of
 			/*08*/ TESObjectREFR*		refr;
 			/*0C*/ UInt32				operationType;
 			/*10*/ Vector3				rotation;
@@ -150,14 +150,37 @@ public:
 		void							Clear(void);
 	};
 	STATIC_ASSERT(sizeof(UndoStack) == 0x08);
+	
+	// 60
+	class RubberBandSelection
+	{
+	public:
+		/*00*/ int							originXCoord;			// set at the start of a drag op, i.e., inside the WM_LBUTTONDOWN handler
+		/*04*/ int							originYCoord;
+		/*08*/ Vector3						unk08;
+		/*14*/ Vector3						bandVertices[4];
+		/*44*/ NiVector3*					vertexBuffer;			// 4x dynamic array, passed to NiLines ctor
+		/*48*/ NiNode*						sceneNode;
+		/*4C*/ NiCamera*					sceneCamera;
+		/*50*/ NiLines*						bandBox;				// smart ptr
+		/*54*/ float						unk54;					// init to 60.0f, some sort of multiplier used when updating the band box's vertices
+		/*58*/ TESRenderSelection*			selectionBuffer;		// allocated by ctor
+		/*5C*/ UInt8						dragging;				// set to 1 during selection operations
+		/*5D*/ UInt8						hasSelection;			// set to 0 if the area of the band box is zero, i.e., if one of the current mouse coords is the same as that of the origin
+		/*5E*/ UInt16						pad5E;
+	};
+	STATIC_ASSERT(sizeof(RubberBandSelection) == 0x60);
+
 
 	// methods
 	static void							Reset();
 	static void							Redraw(bool RefreshPathGrid = false);
+	static void							TogglePathGridEditMode();
 
 	static HWND*						WindowHandle;
 	static TESRenderSelection**			ClipboardSelection;
 	static UndoStack**					UndoBuffer;
+	static RubberBandSelection**		RubberBandSelector;
 
 	static UInt32*						StateFlags;
 
@@ -242,8 +265,8 @@ public:
 	/*34*/ UInt32					unk34;
 	/*38*/ UInt32					unk38;
 	/*3C*/ TESSceneNodeDebugData*	debugData;
-	/*40*/ UInt32					currentMouseXCoord;
-	/*44*/ UInt32					currentMouseYCoord;
+	/*40*/ int						currentMouseXCoord;
+	/*44*/ int						currentMouseYCoord;
 
 
 	// methods
@@ -257,7 +280,7 @@ public:
 	virtual void				CenterCamera(void) = 0;
 	virtual void				HandleResize(void) = 0;
 	virtual void				Present(float Time) = 0;
-	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR Unk05);		// Unk05 set to 1 by the dialog msg callback calls Render()
+	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR OutUnk05);		// OutUnk05 set to 1 inside the WM_DRAWITEM callback, whenin the method call Render()
 };
 STATIC_ASSERT(sizeof(TESRenderControl) == 0x48);
 
@@ -275,7 +298,7 @@ public:
 	/*5C*/ UInt8					playbackCompleted;		// set to 1 on playback completion
 	/*5D*/ UInt8					pad5D[3];
 	/*60*/ NiNode*					groundPlaneNode;		// smart ptr
-	/*64*/ ShadowSceneNode*			previewSceneRoot;		// smart ptr, shared by all preview controls, destroyed with the last one
+	/*64*/ ShadowSceneNode*			previewSceneRoot;		// smart ptr, shared by all preview controls, destroyed with the last one and created with the first
 
 	// methods
 	static TESPreviewControl*		CreatePreviewControl(HWND Dialog, const TESRenderControl::Parameters* Params);

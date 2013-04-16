@@ -112,7 +112,7 @@ namespace ConstructionSetExtender
 					else
 					{
 						ParentPathGrid->SetDeleted(true);
-						thisCall<void>(0x0054E440, ParentPathGrid);
+						ParentPathGrid->ReleaseAllPoints();
 						ParentPathGrid->CleanupLinkedReferences();
 					}
 				}

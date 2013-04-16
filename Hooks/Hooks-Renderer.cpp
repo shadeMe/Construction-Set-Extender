@@ -1343,12 +1343,14 @@ namespace ConstructionSetExtender
 
 			if (Settings::Renderer::kCoplanarRefDrops.GetData().i)
 			{
-				// perform the necessary picking nonsense
+				// perform the necessary (nose)picking nonsense
 				thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
 				if (thisCall<bool>(0x005E6030, 0x00A0BC64, OutPosition, OutRotation, 0))
 				{
+					TODO("Repent the sin I'm about to commit")
+
 					float*** NewPosition = (float***)0x00A0BC80;
-					// forgive me, daddyo, for I'm fucking nuts and must be stapled to floor with a croquet hoop
+					
 					OutPosition->x = *(float*)((UInt32)**NewPosition + 0x8);
 					OutPosition->y = *(float*)((UInt32)**NewPosition + 0xC);
 					OutPosition->z = *(float*)((UInt32)**NewPosition + 0x10);

@@ -39,6 +39,11 @@ void TESPathGridPoint::UnlinkAllPoints( void )
 	thisCall<void>(0x00555C70, this);
 }
 
+void TESPathGridPoint::ReleaseAllPoints( void )
+{
+	thisCall<void>(0x0054E440, this);
+}
+
 void TESPathGridPoint::ShowSelectionRing( void )
 {
 	thisCall<void>(0x00555ED0, this);

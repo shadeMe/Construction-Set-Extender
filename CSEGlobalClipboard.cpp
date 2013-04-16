@@ -356,6 +356,11 @@ namespace ConstructionSetExtender
 						BGSEECONSOLE_MESSAGE("Cannot copy references! Possible reasons: No cell loaded in the render window, pathgrid/landscape edit mode enabled");
 						break;
 					}
+					else if (CS_CAST(TempForm, TESForm, TESObjectREFR)->baseForm == NULL)
+					{
+						BGSEECONSOLE_MESSAGE("Couldn't copy reference %08X '%s' - Unresolved base form", TempForm->formID, TempForm->GetEditorID());
+						continue;
+					}
 				}
 
 
@@ -418,6 +423,8 @@ namespace ConstructionSetExtender
 				{
 					TESObjectREFR* Ref = CS_CAST(CurrentForm, TESForm, TESObjectREFR);
 					TESObject* Base = CS_CAST(Ref->baseForm, TESForm, TESObject);
+
+					SME_ASSERT(Ref && Base);
 
 					Vector3 Position(Ref->position);
 					Vector3 Rotation(Ref->rotation);

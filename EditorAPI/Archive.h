@@ -48,6 +48,17 @@ public:
 };
 STATIC_ASSERT(sizeof(CompressedArchiveFile) == 0x174);
 
+// a.k.a BSHash, in the database
+// 8 (not confirmed but unlikely to be larger)
+class BSFilePathHash
+{
+public:
+	// members
+	/*00*/ UInt32					unk00;
+	/*04*/ UInt32					unk04;
+};
+STATIC_ASSERT(sizeof(BSFilePathHash) == 0x08);
+
 // 24
 class BSArchiveHeader
 {
@@ -113,27 +124,39 @@ public:
 		kArchiveFlags_HasFileNameTable	=	/*05*/ 0x020
 	};
 
+	// used to represent both directories and files
+	// the sign bit is used to signify something in both the class members(regarding invalidation, for files?)
+	// 10
+	class ArchiveContentRawData : public BSFilePathHash
+	{
+	public:
+		// members
+		//     /*00*/ BSFilePathHash
+		/*08*/ UInt32						entries;	// no of files for directory instances
+		/*0C*/ ArchiveContentRawData**		buffer;		// probably a union { void*, ArchiveContentRawData** }, the former for file instances and the latter for directories
+	};
+
 	// members
 	//     /*000*/ BSFile
 	//     /*154*/ BSArchiveHeader
-	/*178*/ void*				contentBuffer;
-	/*17C*/ UInt32				unk17C;
-	/*180*/ __time64_t			lastModifiedTimeStamp;
-	/*188*/ UInt32				unk188;
-	/*18C*/ SInt32				unk18C;						// init to -1
-	/*190*/ SInt32				unk19C;						// init to -1
-	/*194*/ UInt8				archiveFlags;
-	/*195*/ UInt8				pad195[3];
-	/*198*/ char**				directoryNameTable;			// array of directory names, terminated by a ' ' entry
-	/*19C*/ UInt32*				directoryNameLengthTable;	// array of string lengths
-	/*1A0*/ char**				fileNameTable;
-	/*1A4*/ void**				fileOffsetTable;			// corresponding to the entries in fileNameTable, each offset points to the entry's buffer
-	/*1A8*/ volatile LONG		openFiles;					// number of active child ArchiveFile/CompressedArchiveFile instances
-	/*1AC*/ UInt8				releaseFlag;				// set by Archive::CheckDelete, call d'tor if set
-	/*1AD*/ UInt8				pad1AD[3];
-	/*1B0*/ UInt8				unk1B0[0x50];
-	/*200*/ CRITICAL_SECTION	criticalSection;
-	/*218*/ UInt8				unk218[0x68];
+	/*178*/ ArchiveContentRawData**	rawData;					// contains as many objects as the archive's dirCount
+	/*17C*/ UInt32					unk17C;
+	/*180*/ __time64_t				lastModifiedTimeStamp;
+	/*188*/ SInt32					fileNameTableOffset;
+	/*18C*/ SInt32					unk18C;						// last accessed directory index?
+	/*190*/ SInt32					lastAccessedFileIndex;
+	/*194*/ UInt8					archiveFlags;
+	/*195*/ UInt8					pad195[3];
+	/*198*/ char**					directoryNameTable;			// array of directory names, terminated by a ' ' entry
+	/*19C*/ UInt32*					directoryNameLengthTable;	// array of string lengths
+	/*1A0*/ char**					fileNameTable;
+	/*1A4*/ UInt32*					fileOffsetTable;			// corresponding to the entries in fileNameTable, each stores the offset into the raw data
+	/*1A8*/ volatile LONG			openFiles;					// number of active child ArchiveFile/CompressedArchiveFile instances
+	/*1AC*/ UInt8					releaseFlag;				// set by Archive::CheckDelete, call d'tor if set
+	/*1AD*/ UInt8					pad1AD[3];
+	/*1B0*/ UInt8					unk1B0[0x50];
+	/*200*/ CRITICAL_SECTION		criticalSection;
+	/*218*/ UInt8					unk218[0x68];
 };
 STATIC_ASSERT(sizeof(Archive) == 0x280);
 

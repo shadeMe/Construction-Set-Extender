@@ -202,7 +202,7 @@ public:
 	bool							LoadForm(TESFile* File);
 	bool							SaveForm(TESFile* File);				// saves an empty record for deleted forms
 	bool							SaveFormRecord(TESFile* File);
-	void							LinkForm();
+	void							LinkForm();								// internally referred to as InitItem
 	const char*						GetTypeIDString(void);
 	void							GetDataFromDialog(HWND Dialog);
 

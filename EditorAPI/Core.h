@@ -146,46 +146,6 @@ STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 
 #define _DATAHANDLER			(*TESDataHandler::Singleton)
 
-// 04
-class GridArray
-{
-public:
-	// members
-	/// *00* / void**					vtbl;
-
-	virtual void						Dtor(bool ReleaseMemory = true) = 0;
-};
-STATIC_ASSERT(sizeof(GridArray) == 0x4);
-
-// 020
-class GridCellArray : public GridArray
-{
-public:
-	// 8+?
-	struct CellInfo
-	{
-		/*00*/ UInt32		unk00;
-		/*04*/ NiNode*		niNode;
-	};
-
-	// 04
-	struct GridEntry
-	{
-		/*00*/ TESObjectCELL*	cell;
-		/*04*/ CellInfo*		info;
-	};
-
-	// members
-	//     /*00*/ GridArray
-	/*04*/ UInt32			worldX;		// worldspace x coordinate of cell at center of grid
-	/*08*/ UInt32			worldY;		// worldspace y
-	/*0C*/ UInt32			size;		// grid is size ^ 2, size = uGridsToLoad
-	/*10*/ GridEntry*		grid;		// dynamically alloc'ed array of GridEntry[size ^ 2]
-	/*14*/ float			posX;		// 4096 * worldX (exterior cells are 4096 square units)
-	/*18*/ float			posY;		// 4096 * worldY
-	/*1C*/ float			unk1C;		// seen 0.0
-};
-STATIC_ASSERT(sizeof(GridCellArray) == 0x20);
 
 // AC
 class TES
@@ -220,13 +180,13 @@ public:
 	// 20
 	struct WaterPlaneData
 	{
-		/*00*/ UInt8				unk00;					// seen 0
+		/*00*/ UInt8				culled;
 		/*01*/ UInt8				pad01[3];
 		/*04*/ NiNode*				waterNode;
 		/*08*/ NiTriShape**			waterPlaneArray;
 		/*0C*/ void*				unk0C;
 		/*10*/ NiSourceTexture*		unk10;					// current water texture?
-		/*14*/ TESObjectCELL*		currentCell;
+		/*14*/ TESObjectCELL*		parent;
 		/*18*/ UInt32				unk18;
 		/*1C*/ UInt8				flags;
 		/*1D*/ UInt8				pad1D[3];
@@ -243,20 +203,22 @@ public:
 	/*1C*/ BSFogProperty*			fogProperty;
 	/*20*/ SInt32					extXCoord;				// in the current worldspace
 	/*24*/ SInt32					extYCoord;
-	/*28*/ SInt32					unk28;					// same as unk20?
-	/*2C*/ SInt32					unk2C;					// same as unk24?
+	/*28*/ SInt32					unk28;					// same as extXCoord, prolly gets updated to store some offset into the loaded cell grid
+	/*2C*/ SInt32					unk2C;					// same as above but for Y
 	/*30*/ TESObjectCELL*			currentExteriorCell;	// set to NULL when the player's in an interior
 	/*34*/ TESObjectCELL*			currentInteriorCell;	// set to NULL when the player's in an exterior
 	/*38*/ TESObjectCELL**			interiorCellBufferArray;
 	/*3C*/ TESObjectCELL**			exteriorCellBufferArray;
 	/*40*/ UInt32					unk40;
 	/*44*/ UInt32					unk44;
-	/*48*/ UInt32					unk48;					// seen caching unk20 in editor
-	/*4C*/ UInt32					unk4C;					// seen caching unk24 in editor
+	/*48*/ SInt32					unk48;					// seen caching extXCoord
+	/*4C*/ SInt32					unk4C;					// seen caching extYCoord
 	/*50*/ UInt8					unk50;					// set/reset when testing cells
-	/*51*/ UInt8					pad51[3];
+	/*51*/ UInt8					unk51;
+	/*52*/ UInt8					unk52;
+	/*53*/ UInt8					unk53;					// passed to a TESObjectLAND method (recreates land bounds if set?)
 	/*54*/ WaterSurfaceManager*		waterSurfaceManager;
-	/*58*/ WaterPlaneData*			waterNodeData;
+	/*58*/ WaterPlaneData*			waterNodeData;			// for the current interior
 	/*5C*/ Sky*						sky;
 	/*60*/ UInt32					unk60;
 	/*64*/ UInt32					unk64;
@@ -264,19 +226,19 @@ public:
 	/*6C*/ float					unk6C;
 	/*70*/ float					unk70;
 	/*74*/ TESWorldSpace*			currentWorldSpace;
-	/*78*/ tList<void>				unk78;
+	/*78*/ tList<TESObjectCELL>		unk78;					// active cells in the cell grid
 	/*80*/ tList<void>				unk80;
 	/*88*/ UInt32					unk88;
 	/*8C*/ tList<Unk8C>				list8C;
 	/*94*/ NiSourceTexture*			bloodDecals[3];			// blood.dds, lichblood.dds, willothewispblood.dds
-	/*A0*/ tList<void*>				listA0;					// data is some struct containing NiNode*
+	/*A0*/ tList<void>				unkA0;					// data is some struct containing NiNode*
 	/*A8*/ UInt32					unkA8;
 
-	virtual void					VFn00();
+	virtual bool					VFn00(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, TESWorldSpace* worldspace = NULL);		// calls worldspace->vtbl0x183, if worldspace == NULL, uses the currentWorldspace member
 
 	// methods
 	void							LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference);	// arg1 = Camera position if arg is valid, else arg1 = ext. cell coords
-																												// coord format: (x << 12) + 2048, (y << 12) + 2048
+																													// coord format: (x << 12) + 2048, (y << 12) + 2048
 	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
 	float							GetSkyTOD(void);		// this one too
 
@@ -285,6 +247,48 @@ public:
 STATIC_ASSERT(sizeof(TES) == 0xAC);
 
 #define _TES					(*TES::Singleton)
+
+// ### appears to be as large as 0x10, the corresponding members in GridCellArray are probably members of this class
+// strangely, the c'tor only inits the vtbl ptr. however, vtbl+4 seems to do the same for the other members
+// 04+?
+class GridArray
+{
+public:
+	// members
+	/// *00* / void**					vtbl;
+
+	virtual void						Dtor(bool ReleaseMemory = true) = 0;
+};
+STATIC_ASSERT(sizeof(GridArray) == 0x4);
+
+// 020
+class GridCellArray : public GridArray
+{
+public:
+	// 8+?
+	struct CellInfo
+	{
+		/*00*/ TES::WaterPlaneData*		waterData;
+		/*04*/ NiNode*					niNode;		// ### cell's node? confirm
+	};
+
+	// 04
+	struct GridEntry
+	{
+		/*00*/ TESObjectCELL*	cell;
+		/*04*/ CellInfo*		info;
+	};
+
+	// members
+	//     /*00*/ GridArray
+	/*04*/ UInt32			worldX;				// worldspace x coordinate of cell at center of grid
+	/*08*/ UInt32			worldY;				// worldspace y
+	/*0C*/ UInt32			size;				// grid is size ^ 2, size = uGridsToLoad
+	/*10*/ GridEntry*		grid;				// dynamically alloc'ed array of GridEntry[size ^ 2]
+	/*14*/ Vector3			extents;			// x = 4096 * worldX (exterior cells are 4096 square units),  y = 4096 * worldY, z = seen 0.0
+												// init'ed with coords and passed to a bhkWorldM method, which calculates the extents
+};
+STATIC_ASSERT(sizeof(GridCellArray) == 0x20);
 
 // 14
 class FileFinder

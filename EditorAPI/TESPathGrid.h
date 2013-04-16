@@ -38,6 +38,7 @@ public:
 	void						UnlinkPoint(TESPathGridPoint* Point);
 	bool						GetIsPointLinked(TESPathGridPoint* Point);
 	void						UnlinkAllPoints(void);
+	void						ReleaseAllPoints(void);
 	void						GenerateNiNode(UInt32 Unk01 = 1);
 	void						ShowSelectionRing(void);
 	void						HideSelectionRing(void);

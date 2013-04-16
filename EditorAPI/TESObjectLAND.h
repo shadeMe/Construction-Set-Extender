@@ -17,10 +17,10 @@ public:
 	// members
 	//     /*00*/ TESForm
 	//     /*24*/ TESChildCell
-	/*28*/ UInt8		unk28;			// flags of some sort
-	/*29*/ UInt8		pad29[3];
-	/*2C*/ UInt32		unk2C;
-	/*30*/ void*		unk30;			// heightfield data
+	/*28*/ UInt8				unk28;			// flags of some sort
+	/*29*/ UInt8				pad29[3];
+	/*2C*/ TESObjectCELL*		parentCell;
+	/*30*/ void*				unk30;			// heightfield data
 
 	static HWND*		WindowHandle;
 };

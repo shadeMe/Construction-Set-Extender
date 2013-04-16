@@ -63,7 +63,7 @@
 #define VER_FILEFLAGS               VER_VER_DEBUG
 #define VER_FILETYPE				VFT_DLL
 
-#define MAKE_SME_VERSION(major, minor, rev, build)			(((major & 0xFF) << 24) | ((minor & 0xF) << 16) | ((minor & 0xFF) << 14) | ((build & 0xFFF)))
+#define MAKE_SME_VERSION(major, minor, rev, build)			(((major & 0xFF) << 24) | ((minor & 0xF) << 16) | ((rev & 0xFF) << 14) | ((build & 0xFFF)))
 
 #define PACKED_SME_VERSION		MAKE_SME_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD)
 
