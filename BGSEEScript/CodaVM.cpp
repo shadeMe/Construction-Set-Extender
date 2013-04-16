@@ -469,7 +469,7 @@ namespace BGSEditorExtender
 			SME_ASSERT(Executive && Backgrounding == false);
 
 			if (Executive->GetExecutingContext())
-				return;		// the timer message will be dispatched by the message pump in the event of a non-background script failing an assertion
+				return;		// the timer message will be dispatched by the message pump if a dialog box or window is spawned during the course of a script's execution
 
 			SME::MiscGunk::ScopedSetter<bool> GuardBackgrounding(Backgrounding, true);
 			PollingTimeCounter.Update();

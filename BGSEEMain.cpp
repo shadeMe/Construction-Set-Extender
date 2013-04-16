@@ -201,7 +201,6 @@ namespace BGSEditorExtender
 		INIStream.close();
 		INIStream.clear();
 
-		char Buffer[0x200] = {0};
 		INISettingDepotT* FactoryList = (INISettingDepotT*)Paramenter;
 
 		for (INISettingDepotT::iterator Itr = FactoryList->begin(); Itr != FactoryList->end(); Itr++)
@@ -390,7 +389,7 @@ namespace BGSEditorExtender
 
 			if (IsAdmin == FALSE)
 			{
-				BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges - It must be executed through a user account with administrator preivileges.");
+				BGSEECONSOLE_MESSAGE("Editor isn't running with elevated privileges - It must be executed through a user account with administrator privileges.");
 				BGSEECONSOLE_MESSAGE("This can be done by opening the 'File Properties' dialog for the xSE loader and editor executables and enabling the 'Run this program as an administrator' option from the 'Compatibility' tab.");
 				return false;
 			}
