@@ -8,7 +8,7 @@ namespace BGSEditorExtender
 {
 	namespace BGSEEScript
 	{
-		class CodaScriptCommandRegistry : public ICodaScriptObject
+		class CodaScriptCommandRegistry
 		{
 			friend class CodaScriptVM;
 
@@ -33,7 +33,7 @@ namespace BGSEditorExtender
 			void										Dump(std::string OutPath);
 		};
 
-		class CodaScriptCommandRegistrar : public ICodaScriptObject
+		class CodaScriptCommandRegistrar
 		{
 			friend class CodaScriptCommandRegistry;
 		protected:
@@ -48,7 +48,7 @@ namespace BGSEditorExtender
 			void										Add(ICodaScriptCommand* Command);
 		};
 
-		class CodaScriptProfiler : public ICodaScriptObject
+		class CodaScriptProfiler
 		{
 			typedef std::stack<CodaScriptElapsedTimeCounterT>		TimeCounterStackT;
 
@@ -61,7 +61,7 @@ namespace BGSEditorExtender
 			long double									EndProfiling(void);
 		};
 
-		class CodaScriptMessageHandler : public ICodaScriptObject
+		class CodaScriptMessageHandler
 		{
 			bool										State;
 		public:
@@ -74,7 +74,7 @@ namespace BGSEditorExtender
 			void										LogMsg(const char* Format, ...);
 		};
 
-		class CodaScriptExecutive : public ICodaScriptObject
+		class CodaScriptExecutive
 		{
 			static const UInt32							kMaxRecursionLimit;
 			static INISetting							kINI_Profiling;
@@ -93,7 +93,7 @@ namespace BGSEditorExtender
 			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};
 
-		class CodaScriptBackgrounder : public ICodaScriptObject
+		class CodaScriptBackgrounder
 		{
 			friend class CodaScriptGlobalDataStore;
 			friend class CodaScriptVM;
@@ -133,7 +133,7 @@ namespace BGSEditorExtender
 			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};
 
-		class CodaScriptGlobalDataStore : public ICodaScriptObject
+		class CodaScriptGlobalDataStore
 		{
 			friend class CodaScriptVM;
 
@@ -166,7 +166,7 @@ namespace BGSEditorExtender
 		};
 
 		// A virtual machine? Hah! Fat chance!
-		class CodaScriptVM : public ICodaScriptObject
+		class CodaScriptVM
 		{
 			friend class								CodaScriptBackgrounder;
 			friend class								CodaScriptGlobalDataStore;

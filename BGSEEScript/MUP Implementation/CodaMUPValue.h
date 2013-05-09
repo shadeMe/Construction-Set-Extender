@@ -11,7 +11,7 @@ namespace BGSEditorExtender
 		namespace mup
 		{
 			// a wrapper for CodaScriptBackingStore
-			class CodaScriptMUPValue : public ICodaScriptObject, public ICodaScriptDataStoreOwner, public IValue
+			class CodaScriptMUPValue : public ICodaScriptDataStoreOwner, public IValue
 			{
 				friend class CodaScriptVM;
 

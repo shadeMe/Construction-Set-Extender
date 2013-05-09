@@ -23,7 +23,7 @@ namespace BGSEditorExtender
 			class CodaScriptMUPExpressionParser;
 			class CodaScriptMUPFunction;
 
-			class CodaScriptMUPParserByteCode : public ICodaScriptObject, public ICodaScriptExpressionByteCode
+			class CodaScriptMUPParserByteCode : public ICodaScriptExpressionByteCode
 			{
 				friend class CodaScriptMUPExpressionParser;
 
@@ -43,7 +43,7 @@ namespace BGSEditorExtender
 			};
 
 			// a stripped-down and slightly different implementation of mup::ParserXBase
-			class CodaScriptMUPExpressionParser : public ICodaScriptObject, public ICodaScriptExpressionParser
+			class CodaScriptMUPExpressionParser : public ICodaScriptExpressionParser
 			{
 				friend class TokenReader;
 				friend class CodaScriptMUPFunction;

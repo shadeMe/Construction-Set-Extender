@@ -164,7 +164,7 @@ namespace BGSEditorExtender
 
 	BGSEEMain::BGSEEINIManager::~BGSEEINIManager()
 	{
-		;//
+		Save();
 	}
 
 	bool BGSEEMain::BGSEEINIManager::RegisterSetting( INISetting* Setting, bool AutoLoad /*= true*/, bool Dynamic /*= false*/ )

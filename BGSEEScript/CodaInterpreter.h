@@ -5,7 +5,7 @@ namespace BGSEditorExtender
 {
 	namespace BGSEEScript
 	{
-		class CodaScriptTokenizer : public ICodaScriptObject
+		class CodaScriptTokenizer
 		{
 		public:
 			typedef std::vector<CodaScriptSourceCodeT>		ParsedTokenListT;
@@ -273,7 +273,7 @@ namespace BGSEditorExtender
 			void									Break();
 		};
 
-		class CodaScriptExpression : public ICodaScriptObject, public ICodaScriptExecutableCode
+		class CodaScriptExpression : public ICodaScriptExecutableCode
 		{
 		public:
 			CodaScriptExpression(CodaScriptSourceCodeT& Source, UInt32 Line);
@@ -282,7 +282,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptBEGINBlock : public ICodaScriptObject, public ICodaScriptUnconditionalCodeBlockT
+		class CodaScriptBEGINBlock : public ICodaScriptUnconditionalCodeBlockT
 		{
 		public:
 			CodaScriptBEGINBlock(CodaScriptSourceCodeT& Source, UInt32 Line);
@@ -291,7 +291,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptIFBlock : public ICodaScriptObject, public ICodaScriptConditionalCodeBlock
+		class CodaScriptIFBlock : public ICodaScriptConditionalCodeBlock
 		{
 			friend class CodaScriptExecutionContext;
 			friend class CodaScriptSyntaxTreeCompileVisitor;
@@ -308,7 +308,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptELSEIFBlock : public ICodaScriptObject, public ICodaScriptConditionalCodeBlock
+		class CodaScriptELSEIFBlock : public ICodaScriptConditionalCodeBlock
 		{
 		public:
 			CodaScriptELSEIFBlock(CodaScriptSourceCodeT& Source, UInt32 Line);
@@ -317,7 +317,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptELSEBlock : public ICodaScriptObject, public ICodaScriptUnconditionalCodeBlockT
+		class CodaScriptELSEBlock : public ICodaScriptUnconditionalCodeBlockT
 		{
 		public:
 			CodaScriptELSEBlock(CodaScriptSourceCodeT& Source, UInt32 Line);
@@ -326,7 +326,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptWHILEBlock : public ICodaScriptObject, public ICodaScriptLoopBlock
+		class CodaScriptWHILEBlock : public ICodaScriptLoopBlock
 		{
 		public:
 			CodaScriptWHILEBlock(CodaScriptSourceCodeT& Source, UInt32 Line);
@@ -335,7 +335,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptFOREACHBlock : public ICodaScriptObject, public ICodaScriptLoopBlock
+		class CodaScriptFOREACHBlock : public ICodaScriptLoopBlock
 		{
 			friend class CodaScriptSyntaxTreeCompileVisitor;
 			friend class CodaScriptSyntaxTreeExecuteVisitor;
@@ -348,7 +348,7 @@ namespace BGSEditorExtender
 			virtual void									Accept(ICodaScriptSyntaxTreeVisitor* Visitor);
 		};
 
-		class CodaScriptExecutionContext : public ICodaScriptObject, public ICodaScriptParseTree
+		class CodaScriptExecutionContext : public ICodaScriptParseTree
 		{
 			friend class CodaScriptVM;
 			friend class CodaScriptBackgrounder;
@@ -397,7 +397,7 @@ namespace BGSEditorExtender
 			static const UInt32								kMaxParameters;
 		};
 
-		class CodaScriptSyntaxTreeCompileVisitor : public ICodaScriptObject, public ICodaScriptSyntaxTreeEvaluator
+		class CodaScriptSyntaxTreeCompileVisitor : public ICodaScriptSyntaxTreeEvaluator
 		{
 		protected:
 			void											GenericCompile(ICodaScriptExecutableCode* Node);
@@ -418,7 +418,7 @@ namespace BGSEditorExtender
 			virtual void									Visit(CodaScriptFOREACHBlock* Node);
 		};
 
-		class CodaScriptSyntaxTreeExecuteVisitor : public ICodaScriptObject, public ICodaScriptSyntaxTreeEvaluator
+		class CodaScriptSyntaxTreeExecuteVisitor : public ICodaScriptSyntaxTreeEvaluator
 		{
 			friend class ICodaScriptLoopBlock;
 		protected:
@@ -457,7 +457,7 @@ namespace BGSEditorExtender
 			virtual void									Visit(CodaScriptFOREACHBlock* Node);
 		};
 
-		class CodaScriptException : public ICodaScriptObject
+		class CodaScriptException
 		{
 		protected:
 			char											ErrorString[0x768];
@@ -468,7 +468,7 @@ namespace BGSEditorExtender
 			virtual const char*								Get() const;
 		};
 
-		class CodaScriptCommandHandlerUtilities : public ICodaScriptObject, public ICodaScriptCommandHandlerHelper
+		class CodaScriptCommandHandlerUtilities : public ICodaScriptCommandHandlerHelper
 		{
 		protected:
 			typedef std::list<CodaScriptScopedHandleDataStoreT>		DataStoreAllocationTableT;

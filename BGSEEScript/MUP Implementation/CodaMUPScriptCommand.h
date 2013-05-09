@@ -1,5 +1,5 @@
 #pragma once
-#include "CodaIntrinsics.inl"
+#include "CodaIntrinsics.h"
 #include "mpICallback.h"
 
 namespace BGSEditorExtender
@@ -9,7 +9,7 @@ namespace BGSEditorExtender
 		namespace mup
 		{
 			// a wrapper for ICodaScriptCommands
-			class CodaScriptMUPScriptCommand : public ICodaScriptObject, public ICallback
+			class CodaScriptMUPScriptCommand : public ICallback
 			{
 			protected:
 				ICodaScriptCommand*					Parent;

@@ -1,20 +1,19 @@
 #pragma once
-#include "CodaForwardDecls.inl"
 
 namespace BGSEditorExtender
 {
 	namespace BGSEEScript
 	{
-		// a mostly useless shim
-		// "all" concrete BGSEEScript classes must derive from this
-		class ICodaScriptObject
-		{
-		public:
-			virtual ~ICodaScriptObject() = 0
-			{
-				;//
-			}
-		};
+		// these typedefs could, of course, be wrapped but what would be the point? I say "meh"
+		typedef double													CodaScriptNumericDataTypeT;
+		typedef char													CodaScriptCharDataTypeT;
+		typedef CodaScriptCharDataTypeT*								CodaScriptStringDataTypeT;
+		typedef const CodaScriptCharDataTypeT*							CodaScriptStringParameterTypeT;
+		typedef UInt32													CodaScriptReferenceDataTypeT;
+
+		class ICodaScriptCommandHandlerHelper;
+		class ICodaScriptSyntaxTreeEvaluator;
+		class ICodaScriptExpressionByteCode;
 
 		class ICodaScriptDataStore
 		{
@@ -47,7 +46,7 @@ namespace BGSEditorExtender
 			}
 
 			virtual bool													GetHasImplicitCast(DataType NewType) const = 0;
-																			// the GetXXX accessor functions should perform the necessary casting internally
+																			// the GetXXX accessory functions should perform the necessary casting internally
 			virtual CodaScriptReferenceDataTypeT							GetFormID() const = 0;
 			virtual CodaScriptNumericDataTypeT								GetNumber() const = 0;
 			virtual CodaScriptStringParameterTypeT							GetString() const = 0;
@@ -140,29 +139,6 @@ namespace BGSEditorExtender
 																// pass CodaScriptStringParameterTypeT pointers for string arguments
 																// ICodaScriptDataStore pointers for arrays and multitype args
 																// variadic functions must manually extract their arguments
-		};
-
-		template<typename T>
-		class CodaScriptSimpleInstanceCounter
-		{
-			int&										BaseGIC;
-			int											InitGIC;
-		public:
-			CodaScriptSimpleInstanceCounter() :
-			  BaseGIC(T::GIC), InitGIC(BaseGIC)
-			  {
-				  ;//
-			  }
-
-			  ~CodaScriptSimpleInstanceCounter()
-			  {
-				  ;//
-			  }
-
-			  int	GetCount(void) const
-			  {
-				  return BaseGIC - InitGIC;
-			  }
 		};
 	}
 }

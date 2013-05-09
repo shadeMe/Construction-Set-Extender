@@ -12,13 +12,12 @@
 		}
 
 #define CodaScriptCommandPrototype(Name, Alias, Description, Documentation, ParameterCount, ResultType)				\
-		class CodaScriptCommand##Name : public ICodaScriptObject, public ICodaScriptCommand							\
+		class CodaScriptCommand##Name : public ICodaScriptCommand													\
 		{																											\
 		protected:																									\
 			static ParameterInfo							kParameterInfoArray[##ParameterCount];					\
 		public:																										\
 			CodaScriptCommand##Name() :																				\
-				ICodaScriptObject(),																				\
 				ICodaScriptCommand()																				\
 			{																										\
 				GetRegistrar()->Add(this);																			\
@@ -69,11 +68,10 @@
 		ICodaScriptCommand::ParameterInfo	CodaScriptCommand##Name##::kParameterInfoArray[##ParameterCount] =
 
 #define CodaScriptParametricCommandPrototype(Name, Alias, Description, Documentation, ParameterCount, ParameterArray, ResultType)				\
-		class CodaScriptCommand##Name : public ICodaScriptObject, public ICodaScriptCommand							\
+		class CodaScriptCommand##Name : public ICodaScriptCommand													\
 		{																											\
 		public:																										\
 			CodaScriptCommand##Name() :																				\
-				ICodaScriptObject(),																				\
 				ICodaScriptCommand()																				\
 			{																										\
 				GetRegistrar()->Add(this);																			\
@@ -127,11 +125,10 @@
 		extern ICodaScriptCommand::ParameterInfo	kCodaScriptCommandCommonParameterInfoArray##Name##[]
 
 #define CodaScriptVariadicCommandPrototype(Name, Alias, Description, Documentation, ResultType)						\
-		class CodaScriptCommand##Name : public ICodaScriptObject, public ICodaScriptCommand							\
+		class CodaScriptCommand##Name : public ICodaScriptCommand													\
 		{																											\
 		public:																										\
 			CodaScriptCommand##Name() :																				\
-				ICodaScriptObject(),																				\
 				ICodaScriptCommand()																				\
 			{																										\
 				GetRegistrar()->Add(this);																			\
@@ -179,11 +176,10 @@
 		extern CodaScriptCommand##Name					kCommand##Name##Prototype
 
 #define CodaScriptSimpleCommandPrototype(Name, Alias, Description, Documentation, ResultType)						\
-		class CodaScriptCommand##Name : public ICodaScriptObject, public ICodaScriptCommand							\
+		class CodaScriptCommand##Name : public ICodaScriptCommand													\
 		{																											\
 		public:																										\
 			CodaScriptCommand##Name() :																				\
-				ICodaScriptObject(),																				\
 				ICodaScriptCommand()																				\
 			{																										\
 				GetRegistrar()->Add(this);																			\

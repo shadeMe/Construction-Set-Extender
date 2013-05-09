@@ -12,7 +12,6 @@ namespace BGSEditorExtender
 			int			CodaScriptMUPValue::GIC = 0;
 
 			CodaScriptMUPValue::CodaScriptMUPValue(char_type cType) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType(cType),
@@ -39,7 +38,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( float_type val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('f'),
@@ -52,7 +50,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( string_type val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('s'),
@@ -65,7 +62,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( const char_type *val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('s'),
@@ -78,7 +74,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( const CodaScriptMUPValue &a_Val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_iFlags(flNONE),
@@ -92,7 +87,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( const IValue &a_Val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_pCache(NULL),
@@ -119,7 +113,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( CodaScriptBackingStore *val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('i'),
@@ -140,7 +133,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( const CodaScriptBackingStore& val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('i'),
@@ -161,7 +153,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( CodaScriptReferenceDataTypeT val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('i'),
@@ -174,7 +165,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPValue::CodaScriptMUPValue( CodaScriptSharedHandleArrayT val ) :
-				ICodaScriptObject(),
 				ICodaScriptDataStoreOwner(),
 				IValue(cmVAL),
 				m_cType('i'),

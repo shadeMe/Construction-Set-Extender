@@ -31,7 +31,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType() :
-				ICodaScriptObject(),
 				ICodaScriptArrayDataType(),
 				DataStore()
 			{
@@ -41,7 +40,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType( CodaScriptBackingStore* Elements, UInt32 Size ) :
-				ICodaScriptObject(),
 				ICodaScriptArrayDataType(),
 				DataStore(Size)
 			{
@@ -52,7 +50,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType( CodaScriptMUPArrayDataType* Source ) :
-				ICodaScriptObject(),
 				ICodaScriptArrayDataType(),
 				DataStore()
 			{
@@ -70,7 +67,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType( const CodaScriptMUPArrayDataType& rhs ) :
-				ICodaScriptObject(),
 				ICodaScriptArrayDataType(),
 				DataStore()
 			{
@@ -80,7 +76,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPArrayDataType::CodaScriptMUPArrayDataType( UInt32 Size ) :
-				ICodaScriptObject(),
 				ICodaScriptArrayDataType(),
 				DataStore()
 			{

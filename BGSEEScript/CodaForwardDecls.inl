@@ -17,7 +17,6 @@ namespace BGSEditorExtender
 		class ICodaScriptDataStore;
 		class ICodaScriptDataStoreOwner;
 		class ICodaScriptParseTree;
-		class ICodaScriptCommandHandlerHelper;
 		class ICodaScriptExpressionByteCode;
 
 		class CodaScriptVM;
@@ -43,12 +42,7 @@ namespace BGSEditorExtender
 		class CodaScriptCommandCall;
 		class CodaScriptCommandBreak;
 		class CodaScriptCommandContinue;
-
-		typedef double													CodaScriptNumericDataTypeT;
-		typedef char													CodaScriptCharDataTypeT;
-		typedef CodaScriptCharDataTypeT*								CodaScriptStringDataTypeT;
-		typedef const CodaScriptCharDataTypeT*							CodaScriptStringParameterTypeT;
-		typedef UInt32													CodaScriptReferenceDataTypeT;
+		
 		typedef std::string												CodaScriptSourceCodeT;
 		typedef UInt32													CodaScriptKeywordT;
 		typedef std::vector<CodaScriptBackingStore>						CodaScriptMutableDataArrayT;

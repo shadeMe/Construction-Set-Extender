@@ -18,7 +18,6 @@ namespace BGSEditorExtender
 		namespace mup
 		{
 			CodaScriptMUPParserByteCode::CodaScriptMUPParserByteCode( CodaScriptMUPExpressionParser* Parent, ICodaScriptExecutableCode* Source ) :
-				ICodaScriptObject(),
 				ICodaScriptExpressionByteCode(Source),
 				Parser(Parent),
 				Tokenizer(),
@@ -587,7 +586,6 @@ namespace BGSEditorExtender
 			}
 
 			CodaScriptMUPExpressionParser::CodaScriptMUPExpressionParser() :
-				ICodaScriptObject(),
 				ICodaScriptExpressionParser(),
 				m_FunDef(),
 				m_PostOprtDef(),

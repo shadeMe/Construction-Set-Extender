@@ -10,7 +10,6 @@ namespace BGSEditorExtender
 		namespace mup
 		{
 			CodaScriptMUPScriptCommand::CodaScriptMUPScriptCommand( ICodaScriptCommand* Source, bool UseAlias ) :
-				ICodaScriptObject(),
 				ICallback(cmFUNC,
 						(UseAlias && Source->GetAlias() ? Source->GetAlias() : Source->GetName()),
 						Source->GetParameterData(NULL, NULL, NULL)),

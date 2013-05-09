@@ -32,8 +32,7 @@ namespace BGSEditorExtender
 			"BREAK"
 		};
 
-		CodaScriptTokenizer::CodaScriptTokenizer() :
-			ICodaScriptObject()
+		CodaScriptTokenizer::CodaScriptTokenizer()
 		{
 			;//
 		}
@@ -511,7 +510,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptExpression::CodaScriptExpression( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptExecutableCode()
+			ICodaScriptExecutableCode()
 		{
 			this->Type = kCodeType_Line_EXPRESSION;
 			this->Line = Line;
@@ -534,7 +533,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBEGINBlock::CodaScriptBEGINBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptUnconditionalCodeBlockT()
+			ICodaScriptUnconditionalCodeBlockT()
 		{
 			this->Type = kCodeType_Block_BEGIN;
 			this->Line = Line;
@@ -557,7 +556,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptIFBlock::CodaScriptIFBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptConditionalCodeBlock(), BranchELSE(NULL), BranchELSEIF()
+			ICodaScriptConditionalCodeBlock(), BranchELSE(NULL), BranchELSEIF()
 		{
 			this->Type = kCodeType_Block_IF;
 			this->Line = Line;
@@ -592,7 +591,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptELSEIFBlock::CodaScriptELSEIFBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptConditionalCodeBlock()
+			ICodaScriptConditionalCodeBlock()
 		{
 			this->Type = kCodeType_Block_ELSEIF;
 			this->Line = Line;
@@ -624,7 +623,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptELSEBlock::CodaScriptELSEBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptUnconditionalCodeBlockT()
+			ICodaScriptUnconditionalCodeBlockT()
 		{
 			this->Type = kCodeType_Block_ELSE;
 			this->Line = Line;
@@ -647,7 +646,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptWHILEBlock::CodaScriptWHILEBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptLoopBlock()
+			ICodaScriptLoopBlock()
 		{
 			this->Type = kCodeType_Loop_WHILE;
 			this->Line = Line;
@@ -679,7 +678,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptFOREACHBlock::CodaScriptFOREACHBlock( CodaScriptSourceCodeT& Source, UInt32 Line ) :
-			ICodaScriptObject(), ICodaScriptLoopBlock(), IteratorName("")
+			ICodaScriptLoopBlock(), IteratorName("")
 		{
 			this->Type = kCodeType_Loop_FOREACH;
 			this->Line = Line;
@@ -768,7 +767,6 @@ namespace BGSEditorExtender
 																std::fstream& SourceCode,
 																ICodaScriptExpressionParser* ExpressionParser,
 																CodaScriptMutableDataArrayT* Parameters ) :
-			ICodaScriptObject(),
 			ICodaScriptParseTree(VirtualMachine),
 			ScriptName("<unknown>"),
 			Variables(),
@@ -1268,7 +1266,6 @@ namespace BGSEditorExtender
 		CodaScriptSyntaxTreeCompileVisitor::CodaScriptSyntaxTreeCompileVisitor( CodaScriptVM* VM,
 																				CodaScriptExecutionContext* Context,
 																				ICodaScriptExpressionParser* Parser ) :
-			ICodaScriptObject(),
 			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser)
 		{
 			;//
@@ -1368,8 +1365,7 @@ namespace BGSEditorExtender
 			CODASCRIPT_COMPILERERROR_CATCHER
 		}
 
-		CodaScriptException::CodaScriptException( ICodaScriptExecutableCode* Source, const char* Message, ... ) :
-			ICodaScriptObject()
+		CodaScriptException::CodaScriptException( ICodaScriptExecutableCode* Source, const char* Message, ... )
 		{
 			ZeroMemory(ErrorString, sizeof(ErrorString));
 			char Buffer[0x512] = {0};
@@ -1405,7 +1401,6 @@ namespace BGSEditorExtender
 		CodaScriptSyntaxTreeExecuteVisitor::CodaScriptSyntaxTreeExecuteVisitor( CodaScriptVM* VM,
 																				CodaScriptExecutionContext* Context,
 																				ICodaScriptExpressionParser* Parser ) :
-			ICodaScriptObject(),
 			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser),
 			Result(NULL),
 			ExecutingLoops(),
@@ -1625,7 +1620,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptCommandHandlerUtilities::CodaScriptCommandHandlerUtilities() :
-			ICodaScriptObject(),
 			ICodaScriptCommandHandlerHelper(),
 			AllocatedWrappers()
 		{

@@ -1,5 +1,5 @@
 #pragma once
-#include "CodaIntrinsics.inl"
+#include "CodaIntrinsics.h"
 
 namespace BGSEditorExtender
 {
@@ -11,7 +11,7 @@ namespace BGSEditorExtender
 		typedef boost::shared_ptr<ICodaScriptDataStore>					CodaScriptScopedHandleDataStoreT;
 		typedef boost::shared_array<ICodaScriptDataStore>				CodaScriptScopedHandleDataStoreArrayT;
 
-		class CodaScriptBackingStore : public ICodaScriptObject, public ICodaScriptDataStore
+		class CodaScriptBackingStore : public ICodaScriptDataStore
 		{
 			friend class CodaScriptVM;
 
@@ -80,7 +80,7 @@ namespace BGSEditorExtender
 			virtual UInt32											Size(void) const = 0;
 		};
 
-		class CodaScriptVariable : public ICodaScriptObject
+		class CodaScriptVariable
 		{
 			friend class CodaScriptVM;
 

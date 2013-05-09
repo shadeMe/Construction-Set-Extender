@@ -137,7 +137,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptBackingStore* Data )
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 
@@ -145,7 +145,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptNumericDataTypeT Num )
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 
@@ -153,7 +153,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptStringParameterTypeT Str )
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 
@@ -161,7 +161,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptReferenceDataTypeT Form )
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 
@@ -169,7 +169,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore( CodaScriptSharedHandleArrayT Array )
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 
@@ -185,7 +185,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore( const CodaScriptBackingStore& rhs )
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 
@@ -193,7 +193,7 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackingStore::CodaScriptBackingStore()
-			: ICodaScriptObject(), ICodaScriptDataStore(), NumericData(0), ArrayData()
+			: ICodaScriptDataStore(), NumericData(0), ArrayData()
 		{
 			GIC++;
 		}
@@ -286,7 +286,6 @@ namespace BGSEditorExtender
 		int				CodaScriptVariable::GIC = 0;
 
 		CodaScriptVariable::CodaScriptVariable( CodaScriptSourceCodeT& Name, ICodaScriptDataStoreOwner* Storage ) :
-			ICodaScriptObject(),
 			Name(Name),
 			BoundOwner(Storage)
 		{

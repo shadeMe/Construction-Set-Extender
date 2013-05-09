@@ -30,7 +30,9 @@
     <ClInclude Include="BGSEERenderWindowFlyCamera.h" />
     <ClInclude Include="BGSEERenderWindowPainter.h" />
     <ClInclude Include="BGSEEScript\CodaDataTypes.h" />
+    <ClInclude Include="BGSEEScript\CodaBaseInterfaces.inl" />
     <ClInclude Include="BGSEEScript\CodaInterpreter.h" />
+    <ClInclude Include="BGSEEScript\CodaPublicAPI.h" />
     <ClInclude Include="BGSEEScript\CodaVM.h" />
     <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-Array.h" />
     <ClInclude Include="BGSEEScript\Commands\CodaScriptCommands-General.h" />
@@ -152,7 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BGSEEScript\CodaForwardDecls.inl" />
-    <None Include="BGSEEScript\CodaIntrinsics.inl" />
+    <None Include="BGSEEScript\CodaIntrinsics.h" />
     <None Include="BGSEEScript\Commands\CodaScriptCommand.h" />
     <None Include="[Resources]\generic.bmp" />
   </ItemGroup>

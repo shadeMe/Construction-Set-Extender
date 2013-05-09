@@ -265,6 +265,12 @@
     <ClInclude Include="BGSEEGlobalClipboard.h">
       <Filter>Modules\BGSEEGlobalClipboard</Filter>
     </ClInclude>
+    <ClInclude Include="BGSEEScript\CodaBaseInterfaces.inl">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEScript\CodaPublicAPI.h">
+      <Filter>Modules\BGSEEScript</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
@@ -443,9 +449,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BGSEEScript\CodaIntrinsics.inl">
-      <Filter>Modules\BGSEEScript</Filter>
-    </None>
     <None Include="BGSEEScript\CodaForwardDecls.inl">
       <Filter>Modules\BGSEEScript</Filter>
     </None>
@@ -454,6 +457,9 @@
     </None>
     <None Include="[Resources]\generic.bmp">
       <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="BGSEEScript\CodaIntrinsics.h">
+      <Filter>Modules\BGSEEScript</Filter>
     </None>
   </ItemGroup>
 </Project>

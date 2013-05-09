@@ -69,7 +69,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptCommandRegistry::CodaScriptCommandRegistry(const char* WikiURL) :
-			ICodaScriptObject(),
 			Registry(),
 			BaseWikiURL(WikiURL)
 		{
@@ -235,7 +234,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptCommandRegistrar::CodaScriptCommandRegistrar( const char* Category ) :
-			ICodaScriptObject(),
 			Commands(),
 			Category(Category)
 		{
@@ -253,7 +251,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptProfiler::CodaScriptProfiler() :
-			ICodaScriptObject(),
 			Counters()
 		{
 			;//
@@ -283,7 +280,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptMessageHandler::CodaScriptMessageHandler() :
-			ICodaScriptObject(),
 			State(true)
 		{
 			;//
@@ -331,7 +327,6 @@ namespace BGSEditorExtender
 																									(SInt32)0);
 
 		CodaScriptExecutive::CodaScriptExecutive( CodaScriptMessageHandler* MsgHdlr ) :
-			ICodaScriptObject(),
 			ExecutionStack(),
 			Profiler(),
 			OwnerThreadID(0),
@@ -509,7 +504,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptBackgrounder::CodaScriptBackgrounder( BGSEEResourceLocation Source, BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter ) :
-			ICodaScriptObject(),
 			SourceDepot(Source),
 			BackgroundCache(),
 			State(false),
@@ -894,7 +888,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptGlobalDataStore::CodaScriptGlobalDataStore( BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter ) :
-			ICodaScriptObject(),
 			Cache(),
 			INISettingGetter(Getter),
 			INISettingSetter(Setter)
@@ -933,7 +926,6 @@ namespace BGSEditorExtender
 		}
 
 		CodaScriptVM::CodaScriptVM() :
-			ICodaScriptObject(),
 			BaseDirectory(),
 			CommandRegistry(NULL),
 			MessageHandler(NULL),

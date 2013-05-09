@@ -8,7 +8,7 @@ namespace BGSEditorExtender
 	{
 		namespace mup
 		{
-			class CodaScriptMUPArrayDataType : public ICodaScriptObject, public ICodaScriptArrayDataType
+			class CodaScriptMUPArrayDataType : public ICodaScriptArrayDataType
 			{
 				friend class CodaScriptVM;
 
