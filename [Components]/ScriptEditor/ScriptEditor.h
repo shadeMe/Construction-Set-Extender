@@ -136,7 +136,7 @@ namespace ConstructionSetExtender
 			void												BeginUpdate(void);
 			void												EndUpdate(void);
 
-			Rectangle											GetBounds();
+			Rectangle											GetBounds(bool UseRestoreBounds);
 			IntPtr												GetHandle();
 			FormWindowState										GetWindowState();
 			void												SetWindowState(FormWindowState State);
@@ -263,6 +263,7 @@ namespace ConstructionSetExtender
 			ToolStripMenuItem^									ContextMenuRefactorCreateUDFImplementation;
 			ToolStripMenuItem^									ContextMenuRefactorRenameVariables;
 			ToolStripMenuItem^									ContextMenuRefactorModifyVariableIndices;
+			ToolStripMenuItem^									ContextMenuOpenImportFile;
 
 			ScriptListDialog^									ScriptListBox;
 			FindReplaceDialog^									FindReplaceBox;
@@ -320,6 +321,7 @@ namespace ConstructionSetExtender
 			EventHandler^										ContextMenuRefactorCreateUDFImplementationClickHandler;
 			EventHandler^										ContextMenuRefactorRenameVariablesClickHandler;
 			EventHandler^										ContextMenuRefactorModifyVariableIndicesClickHandler;
+			EventHandler^										ContextMenuOpenImportFileClickHandler;
 			EventHandler^										ToolBarEditMenuContentsFindReplaceClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoLineClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoOffsetClickHandler;
@@ -380,6 +382,7 @@ namespace ConstructionSetExtender
 			virtual void                                        ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuGoogleLookup_Click(Object^ Sender, EventArgs^ E);
+			virtual void                                        ContextMenuOpenImportFile_Click(Object^ Sender, EventArgs^ E);
 
 			virtual void                                        ContextMenuRefactorAddVariable_Click(Object^ Sender, EventArgs^ E);
 			virtual void                                        ContextMenuRefactorDocumentScript_Click(Object^ Sender, EventArgs^ E);
@@ -417,6 +420,8 @@ namespace ConstructionSetExtender
 			virtual void                                        FindReplaceOutput(String^ Line, String^ Text);
 			virtual void                                        ToggleBookmark(int CaretPos);
 			virtual void                                        SetScriptType(ScriptType Type);
+
+			virtual void										ToggleSplitter(bool Enabled);
 
 			virtual String^										SerializeCSEBlock(void);
 			virtual void                                        SerializeCaretPos(String^% Result);

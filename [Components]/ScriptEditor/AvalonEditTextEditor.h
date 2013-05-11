@@ -139,6 +139,8 @@ namespace ConstructionSetExtender
 				String^										GetTextAtLocation(int Index, bool SelectText);
 				array<String^>^								GetTextAtLocation(int Index);							// gets three of the closest tokens surrounding the offset
 
+				bool										GetCharIndexInsideStringSegment(int Index);
+
 				void										SetPreventTextChangedFlag(PreventTextChangeFlagState State) { PreventTextChangedEventFlag = State; }
 				void										HandleKeyEventForKey(System::Windows::Input::Key Key) { KeyToPreventHandling = Key; }
 
@@ -182,6 +184,7 @@ namespace ConstructionSetExtender
 
 				virtual String^										GetText(void);
 				virtual UInt32										GetTextLength(void);
+				virtual String^										GetTextAtLine(int LineNumber);
 				virtual void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
 				virtual void										InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);
 

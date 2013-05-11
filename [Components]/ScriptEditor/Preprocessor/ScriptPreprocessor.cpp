@@ -3,6 +3,11 @@
 
 namespace ConstructionSetExtender
 {
+	void ScriptPreprocessor::DummyStandardErrorOutput( String^ Message )
+	{
+		;//
+	}
+
 	using namespace ScriptPreprocessor;
 
 	CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
@@ -361,7 +366,7 @@ namespace ConstructionSetExtender
 		else
 			return ImportSegment;
 	}
-
+	
 	void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
 		ScriptParser^ LocalParser = gcnew ScriptParser(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
@@ -1010,6 +1015,7 @@ namespace ConstructionSetExtender
 	Preprocessor::Preprocessor()
 	{
 		RegisteredDefineDirectives = gcnew LinkedList<DefineDirective^>();
+		Busy = false;
 	}
 
 	Preprocessor^% Preprocessor::GetSingleton()
@@ -1152,33 +1158,41 @@ namespace ConstructionSetExtender
 	bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data)
 	{
 		bool OperationResult = false;
-
-		DataBuffer = Data;
-
-		String^ SourceBuffer = gcnew String(Source);
-		String^ ResultBuffer = "";
-
-		for (int i = 1; i <= Data->NoOfPasses; i++)
+		
+		if (Busy)
+			ErrorOutput("Preprocessing failed - A previous operation is in progress");
+		else
 		{
-			RegisteredDefineDirectives->Clear();
-			ProcessStandardDirectives(Data->StandardDirectivePath, ErrorOutput);
-			OperationResult = Preprocess(SourceBuffer, ResultBuffer, ErrorOutput);
-			if (!OperationResult)
+			DataBuffer = Data;
+			Busy = true;
+
+			String^ SourceBuffer = gcnew String(Source);
+			String^ ResultBuffer = "";
+
+			for (int i = 1; i <= Data->NoOfPasses; i++)
 			{
-				ErrorOutput("Preprocessing failed in pass " + i.ToString());
-				break;
+				RegisteredDefineDirectives->Clear();
+				ProcessStandardDirectives(Data->StandardDirectivePath, ErrorOutput);
+				OperationResult = Preprocess(SourceBuffer, ResultBuffer, ErrorOutput);
+				if (!OperationResult)
+				{
+					ErrorOutput("Preprocessing failed in pass " + i.ToString());
+					break;
+				}
+
+				SourceBuffer = ResultBuffer;
+				ResultBuffer = "";
 			}
+			if (OperationResult)
+				Result = SourceBuffer;
 
-			SourceBuffer = ResultBuffer;
-			ResultBuffer = "";
+			RegisteredDefineDirectives->Clear();
+
+			delete DataBuffer;
+
+			DataBuffer = nullptr;
+			Busy = false;
 		}
-		if (OperationResult)
-			Result = SourceBuffer;
-
-		RegisteredDefineDirectives->Clear();
-
-		delete DataBuffer;
-		DataBuffer = nullptr;
 
 		return OperationResult;
 	}
@@ -1211,4 +1225,34 @@ namespace ConstructionSetExtender
 		else
 			DebugPrint("Standard preprocessor directives folder not found!");
 	}
+
+	bool Preprocessor::GetImportFilePath( String^% Source, String^% Result, ScriptEditorPreprocessorData^ Data )
+	{
+		bool OperationResult = false;
+
+		if (Busy == false)
+		{
+			DataBuffer = Data;
+
+			CSEPreprocessorToken^ Directive = CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType::e_SingleLine,
+												CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import],
+												Source, nullptr, gcnew StandardOutputError(&DummyStandardErrorOutput));
+
+			if (Directive->GetValid())
+			{
+				ImportDirective^ Import = dynamic_cast<ImportDirective^>(Directive);
+
+				if (Import != nullptr)
+				{
+					Result = Data->DepotPath + Import->GetFilename() + ".txt";
+					OperationResult = true;
+				}
+			}
+
+			DataBuffer = nullptr;
+		}
+
+		return OperationResult;
+	}
+	
 }

@@ -69,5 +69,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESRubberBandSelectionSkipInvisibleRefs, "prevents invisible refs from being added to the render window selection");
 		_DeclareMemHdlr(RenderWindowCameraRotationPivot, "allows the viewport camera to be rotated around an arbitrary pivot");
 		_DeclareMemHdlr(CellViewSetCurrentCell, "temporary hook to prevent the cell window from gaining focus during render window exterior cell switches");
+		_DeclareMemHdlr(RenderWindowCursorSwap, "prevents the cursor icon changes from screwing themselves up");
 	}
 }

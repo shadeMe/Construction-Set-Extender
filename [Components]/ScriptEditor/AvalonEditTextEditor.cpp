@@ -117,6 +117,14 @@ namespace ConstructionSetExtender
 				return SanitizeUnicodeString(TextField->Text);
 			}
 
+			String^ AvalonEditTextEditor::GetTextAtLine( int LineNumber )
+			{
+				if (LineNumber > TextField->Document->LineCount || LineNumber <= 0)
+					return "";
+				else
+					return TextField->Document->GetText(TextField->Document->GetLineByNumber(LineNumber));
+			}
+
 			UInt32 AvalonEditTextEditor::GetTextLength(void)
 			{
 				return TextField->Text->Length;
@@ -248,7 +256,7 @@ namespace ConstructionSetExtender
 				if (Index >= TextField->Text->Length)
 					Index = TextField->Text->Length - 1;
 
-				return TextField->Document->GetLocation(Index).Line - 1;
+				return TextField->Document->GetLocation(Index).Line;
 			}
 
 			bool AvalonEditTextEditor::GetCharIndexInsideCommentSegment(int Index)
@@ -879,6 +887,20 @@ namespace ConstructionSetExtender
 				return Result;
 			}
 
+			bool AvalonEditTextEditor::GetCharIndexInsideStringSegment( int Index )
+			{
+				bool Result = true;
+
+				if (Index < TextField->Text->Length)
+				{
+					AvalonEdit::Document::DocumentLine^ Line = TextField->Document->GetLineByOffset(Index);
+					ScriptParser^ LocalParser = gcnew ScriptParser();
+					Result = LocalParser->GetIsIndexInsideString(TextField->Document->GetText(Line), Index - Line->Offset);
+				}
+
+				return Result;
+			}
+
 			void AvalonEditTextEditor::GotoLine(int Line)
 			{
 				if (Line > 0 && Line <= TextField->LineCount)
@@ -919,7 +941,9 @@ namespace ConstructionSetExtender
 						PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
 					else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::e_Disabled)
 					{
-						if (TextField->SelectionStart - 1 >= 0 && !GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
+						if (TextField->SelectionStart - 1 >= 0 &&
+							GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
+							GetCharIndexInsideStringSegment(TextField->SelectionStart - 1) == false)
 						{
 							if (LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "")
 								IntelliSenseBox->Show(IntelliSenseBox->LastOperation, false, false);
@@ -1337,7 +1361,9 @@ namespace ConstructionSetExtender
 				{
 					IntelliSenseBox->Enabled = true;
 
-					if (TextField->SelectionStart - 1 >= 0 && !GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1))
+					if (TextField->SelectionStart - 1 >= 0 &&
+						GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
+						GetCharIndexInsideStringSegment(TextField->SelectionStart - 1) == false)
 					{
 						try
 						{

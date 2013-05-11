@@ -29,6 +29,10 @@ UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
 UInt8*								TESRenderWindow::RefreshFlag = (UInt8*)0x00A0BC4D;
 UInt32*								TESRenderWindow::StateFlags = (UInt32*)0x00A0B058;
 
+HCURSOR*							TESRenderWindow::CursorMove = (HCURSOR*)0x00A0BAB4;
+HCURSOR*							TESRenderWindow::CursorSelect = (HCURSOR*)0x00A0BAB0;
+HCURSOR*							TESRenderWindow::CursorArrow = (HCURSOR*)0x00A0BABC;
+
 POINT								TESRenderWindow::CurrentMouseLBDragCoordDelta = { 0, 0 };
 bool								TESRenderWindow::UseAlternateMovementSettings = false;
 bool								TESRenderWindow::FreezeInactiveRefs = false;

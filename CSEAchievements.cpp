@@ -303,6 +303,7 @@ namespace ConstructionSetExtender
 		CSEAchievementBase*  		kOver3000				= NULL;
 		CSEAchievementBase*  		kFunnyGuy				= NULL;
 		CSEAchievementHappypotamus* kHappyBDayMoi			= NULL;
+		CSEAchievementBase*  		kChicken				= NULL;
 
 		void Initialize()
 		{
@@ -382,6 +383,9 @@ namespace ConstructionSetExtender
 															"3AA57BC5-7B1C-4C5B-B7F4-AC0A19EF1A2E",
 															2, 3, 2010);
 
+			kChicken				= new CSEAchievementBase("Chicken", "Well, at least the Daleks will be grateful for that...",
+															IDB_ACHIEVEMENT_CHICKEN, "D1A90233-3F6A-4F28-9B45-598070913B6A");
+
 			BGSEditorExtender::Extras::ExtenderAchievementListT AchievementDepot;
 
 			AchievementDepot.push_back(CSEAchievementBase::AllClearAchievement);
@@ -412,6 +416,7 @@ namespace ConstructionSetExtender
 			AchievementDepot.push_back(kOver3000);
 			AchievementDepot.push_back(kFunnyGuy);
 			AchievementDepot.push_back(kHappyBDayMoi);
+			AchievementDepot.push_back(kChicken);
 
 			bool ComponentInitialized = BGSEEACHIEVEMENTS->Initialize(BGSEEMAIN->ExtenderGetLongName(), BGSEEMAIN->GetExtenderHandle(), AchievementDepot);
 

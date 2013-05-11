@@ -203,7 +203,7 @@ public:
 	/*1C*/ BSFogProperty*			fogProperty;
 	/*20*/ SInt32					extXCoord;				// in the current worldspace
 	/*24*/ SInt32					extYCoord;
-	/*28*/ SInt32					unk28;					// same as extXCoord, prolly gets updated to store some offset into the loaded cell grid
+	/*28*/ SInt32					unk28;					// same as extXCoord, probably gets updated to store some offset into the loaded cell grid
 	/*2C*/ SInt32					unk2C;					// same as above but for Y
 	/*30*/ TESObjectCELL*			currentExteriorCell;	// set to NULL when the player's in an interior
 	/*34*/ TESObjectCELL*			currentInteriorCell;	// set to NULL when the player's in an exterior

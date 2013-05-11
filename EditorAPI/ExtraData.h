@@ -621,7 +621,7 @@ class ExtraEditorRef3DData : public BSExtraData
 public:
 	// members
 	//     /*00*/ BSExtraData
-	/*0C*/ NiNode*			niNode;
+	/*0C*/ NiNode*			niNode;			// smart pointer
 	/*10*/ NiLines*			selectionBox;	// present when selected in editor
 };
 STATIC_ASSERT(sizeof(ExtraEditorRef3DData) == 0x14);
@@ -672,14 +672,3 @@ public:
 	/*0C*/ ContainerExtraData*		data;
 };
 STATIC_ASSERT(sizeof(ExtraContainerChanges) == 0x10);
-
-// 14
-class ExtraEditorRef3DData : public BSExtraData
-{
-public:
-	// members
-	//     /*00*/ BSExtraData
-	/*0C*/ NiNode*			node;						// smart pointer
-	/*10*/ NiLines*			selectionBox;
-};
-STATIC_ASSERT(sizeof(ExtraEditorRef3DData) == 0x14);

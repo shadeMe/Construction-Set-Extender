@@ -481,6 +481,7 @@ public:
 
 	static UInt8*					MainMenuState;
 	static TESObjectCELL**			CurrentCellSelection;
+	static int*						ObjectListSortColumn;
 };
 
 // 18

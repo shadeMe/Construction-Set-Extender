@@ -162,6 +162,7 @@ namespace ConstructionSetExtender
 		int													GetTokenAtOffset(int Offset);						// returns the index of the token that takes up the passed offset
 
 		bool												GetIsStringLiteral(String^% Source);				// checks if the passed string in enclosed in quotes
+		bool												GetIsIndexInsideString(String^% Source, int Index);	// returns true if the index follows a " character or if it is wrapped b'ween two
 		virtual bool										GetIsPlayerToken(String^% Source);
 		virtual bool										GetIsBlockValidForScriptType(String^% Source, ScriptType EditorScriptType);
 		int													GetTokenIndex(String^ Source);						// returns the token index corresponding to the first match

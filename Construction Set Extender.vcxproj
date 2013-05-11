@@ -419,6 +419,7 @@
     <None Include="Images\cake.bmp" />
     <None Include="Images\cardinalsin.bmp" />
     <None Include="Images\cheat.bmp" />
+    <None Include="Images\chicken.bmp" />
     <None Include="Images\command.bmp" />
     <None Include="Images\compart.bmp" />
     <None Include="Images\erudite.bmp" />

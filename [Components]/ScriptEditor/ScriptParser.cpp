@@ -451,6 +451,34 @@ namespace ConstructionSetExtender
 		Reset();
 	}
 
+	bool ScriptParser::GetIsIndexInsideString( String^% Source, int Index )
+	{
+		if (Index >= Source->Length)
+			return false;
+
+		int QuoteStack = 0;
+		int Idx = 0;
+		for each (char Itr in Source)
+		{
+			if (Itr == '"')
+			{
+				if (QuoteStack == 0)
+					QuoteStack++;
+				else if (QuoteStack == 1)
+					QuoteStack--;
+				else
+					break;				// wtf
+			}
+
+			if (Index == Idx && QuoteStack)
+				return true;
+
+			Idx++;
+		}
+	
+		return false;
+	}
+
 	UInt32 ByteCodeParser::Read16(Array^% Data, UInt32% CurrentOffset)
 	{
 		UInt32 LoByte = (Byte)Data->GetValue((int)CurrentOffset++),

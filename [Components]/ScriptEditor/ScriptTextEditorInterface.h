@@ -62,6 +62,7 @@ namespace ConstructionSetExtender
 
 			String^										GetText(void);
 			UInt32										GetTextLength(void);
+			String^										GetTextAtLine(int LineNumber);
 			void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
 			void										InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);			// performs bounds check
 

@@ -1,6 +1,8 @@
 #include "AvalonEditComponents.h"
 #include "ScriptEditorPreferences.h"
 
+#define VERSION_4_0_0_7070 0
+
 namespace ConstructionSetExtender
 {
 	namespace TextEditors
@@ -21,8 +23,11 @@ namespace ConstructionSetExtender
 				Segment->StartOffset = StartOffset;
 				Segment->EndOffset = EndOffset;
 
+#if VERSION_4_0_0_7070
 				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment))
-//				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
+#else
+				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
+#endif
 				{
 					if (ColorEntireLine)
 					{
@@ -127,8 +132,11 @@ namespace ConstructionSetExtender
 
 				if (!CurrentSelection->IsEmpty)
 				{
+#if VERSION_4_0_0_7070
 					String^ SelectionText = CurrentSelection->GetText(CurrentDocument)->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
-//					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
+#else
+					String^ SelectionText = CurrentSelection->GetText()->Replace("\t", "")->Replace(" ", "")->Replace("\n", "")->Replace("\r\n", "");
+#endif
 					if (SelectionText->Length > 4)
 					{
 						Color Buffer = PREFERENCES->LookupColorByKey("SelectionHighlightColor");

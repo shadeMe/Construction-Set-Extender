@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CodaIntrinsics.inl>
+#include <CodaPublicAPI.h>
 
 /********** CSE Interface API ******************************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the
@@ -55,7 +55,7 @@ struct CSERendererInterface
 
 struct CSEScriptInterface
 {
-	// Registers a Coda command to the VM
+	// Registers a Coda command with the VM
 	// The caller retains ownership of the script command pointer
 	void			(* RegisterCommand)(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command);
 };

@@ -251,7 +251,7 @@ namespace ConstructionSetExtender
 		{
 			if (DestructionFlag)
 			{
-				Rectangle Bounds = GetBounds();
+				Rectangle Bounds = GetBounds(true);
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 
 				return;
@@ -652,9 +652,9 @@ namespace ConstructionSetExtender
 			PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation::e_LoadFileIntoNewWorkspace, RemoteOpParameters);
 		}
 
-		Rectangle WorkspaceContainer::GetBounds()
+		Rectangle WorkspaceContainer::GetBounds(bool UseRestoreBounds)
 		{
-			if (GetWindowState() == FormWindowState::Normal)
+			if (GetWindowState() == FormWindowState::Normal || UseRestoreBounds == false)
 				return EditorForm->Bounds;
 			else
 				return EditorForm->RestoreBounds;
@@ -995,6 +995,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorCreateUDFImplementation = gcnew ToolStripMenuItem();
 			ContextMenuRefactorRenameVariables = gcnew ToolStripMenuItem();
 			ContextMenuRefactorModifyVariableIndices = gcnew ToolStripMenuItem();
+			ContextMenuOpenImportFile = gcnew ToolStripMenuItem();
 
 			ScriptListBox = gcnew ScriptListDialog(WorkspaceHandleIndex);
 			FindReplaceBox = gcnew FindReplaceDialog(WorkspaceHandleIndex);
@@ -1115,6 +1116,7 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorCreateUDFImplementationClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorCreateUDFImplementation_Click);
 			ContextMenuRefactorRenameVariablesClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorRenameVariables_Click);
 			ContextMenuRefactorModifyVariableIndicesClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuRefactorModifyVariableIndices_Click);
+			ContextMenuOpenImportFileClickHandler = gcnew EventHandler(this, &Workspace::ContextMenuOpenImportFile_Click);
 			ToolBarEditMenuContentsFindReplaceClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsFindReplace_Click);
 			ToolBarEditMenuContentsGotoLineClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsGotoLine_Click);
 			ToolBarEditMenuContentsGotoOffsetClickHandler = gcnew EventHandler(this, &Workspace::ToolBarEditMenuContentsGotoOffset_Click);
@@ -1376,6 +1378,9 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorRenameVariables->Text = "Rename Variables";
 			ContextMenuRefactorModifyVariableIndices->Text = "Modify Variable Indices";
 
+			ContextMenuOpenImportFile->Text = "Open Import File";
+			ContextMenuOpenImportFile->Visible = false;
+
 			TextEditorContextMenu->Items->Add(ContextMenuRefactorMenu);
 			TextEditorContextMenu->Items->Add(ContextMenuCopy);
 			TextEditorContextMenu->Items->Add(ContextMenuPaste);
@@ -1390,6 +1395,7 @@ namespace ConstructionSetExtender
 			TextEditorContextMenu->Items->Add(ContextMenuGoogleLookup);
 			TextEditorContextMenu->Items->Add(ContextMenuDirectLink);
 			TextEditorContextMenu->Items->Add(ContextMenuJumpToScript);
+			TextEditorContextMenu->Items->Add(ContextMenuOpenImportFile);
 
 			MessageList->Dock = DockStyle::Fill;
 			MessageList->BorderStyle = BorderStyle::Fixed3D;
@@ -1474,7 +1480,7 @@ namespace ConstructionSetExtender
 			Parent->AddTab(WorkspaceTabItem);
 			Parent->AddTabControlBox(WorkspaceControlBox);
 
-			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height; }
+			try { WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds(true).Height; }
 			catch (...) {}
 
 			TextEditor->KeyDown += TextEditorKeyDownHandler;
@@ -1523,6 +1529,7 @@ namespace ConstructionSetExtender
 			ContextMenuJumpToScript->Click += ContextMenuJumpToScriptClickHandler;
 			ContextMenuAddMessage->Click += ContextMenuAddMessageClickHandler;
 			ContextMenuGoogleLookup->Click += ContextMenuGoogleLookupClickHandler;
+			ContextMenuOpenImportFile->Click += ContextMenuOpenImportFileClickHandler;
 			ContextMenuRefactorAddVariableInt->Click += ContextMenuRefactorAddVariableClickHandler;
 			ContextMenuRefactorAddVariableFloat->Click += ContextMenuRefactorAddVariableClickHandler;
 			ContextMenuRefactorAddVariableRef->Click += ContextMenuRefactorAddVariableClickHandler;
@@ -1612,7 +1619,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToggleBookmark(int CaretPos)
 		{
-			int LineNo = TextEditor->GetLineNumberFromCharIndex(CaretPos) + 1, Count = 0;
+			int LineNo = TextEditor->GetLineNumberFromCharIndex(CaretPos), Count = 0;
 			for each (ListViewItem^ Itr in BookmarkList->Items)
 			{
 				if (int::Parse(Itr->SubItems[0]->Text) == LineNo)
@@ -1656,6 +1663,14 @@ namespace ConstructionSetExtender
 			}
 
 			CurrentScriptType = Type;
+		}
+
+		void Workspace::ToggleSplitter( bool Enabled )
+		{
+			if (Enabled)
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds(false).Height / 1.5;
+			else
+				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds(false).Height;
 		}
 
 		void Workspace::InsertVariable( String^ VariableName, ScriptParser::VariableType VariableType )
@@ -2413,6 +2428,7 @@ namespace ConstructionSetExtender
 			ContextMenuJumpToScript->Click -= ContextMenuJumpToScriptClickHandler;
 			ContextMenuAddMessage->Click -= ContextMenuAddMessageClickHandler;
 			ContextMenuGoogleLookup->Click -= ContextMenuGoogleLookupClickHandler;
+			ContextMenuOpenImportFile->Click -= ContextMenuOpenImportFileClickHandler;
 			ContextMenuRefactorAddVariableInt->Click -= ContextMenuRefactorAddVariableClickHandler;
 			ContextMenuRefactorAddVariableFloat->Click -= ContextMenuRefactorAddVariableClickHandler;
 			ContextMenuRefactorAddVariableRef->Click -= ContextMenuRefactorAddVariableClickHandler;
@@ -2858,7 +2874,7 @@ namespace ConstructionSetExtender
 		{
 			if (PerformHouseKeeping())
 			{
-				Rectangle Bounds = GetParentContainer()->GetBounds();
+				Rectangle Bounds = GetParentContainer()->GetBounds(true);
 				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 
 				ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
@@ -3002,7 +3018,12 @@ namespace ConstructionSetExtender
 				if (GetListViewSelectedItem(MessageList)->ImageIndex == (int)MessageListItemType::e_RegularMessage)
 					MessageList->Items->Remove(GetListViewSelectedItem(MessageList));
 				else
-					TextEditor->ScrollToLine(GetListViewSelectedItem(MessageList)->SubItems[1]->Text);
+				{
+					if (ToolBarShowPreprocessedText->Checked == false)
+						TextEditor->ScrollToLine(GetListViewSelectedItem(MessageList)->SubItems[1]->Text);
+					else
+						PreprocessedTextViewer->JumpToLine(GetListViewSelectedItem(MessageList)->SubItems[1]->Text);
+				}
 			}
 		}
 		void Workspace::MessageList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -3126,10 +3147,10 @@ namespace ConstructionSetExtender
 				case Keys::Shift:
 					Parameters->EditorHandleIndex = 0;
 					Parameters->ParameterList->Add((UInt32)0);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().X);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().Y);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().Width);
-					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds().Height);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds(true).X);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds(true).Y);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds(true).Width);
+					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds(true).Height);
 
 					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspaceContainer, Parameters);
 					break;
@@ -3300,6 +3321,21 @@ namespace ConstructionSetExtender
 					ContextMenuRefactorCreateUDFImplementation->Tag = MidToken;
 				}
 			}
+
+			String^ ImportFile = "";
+			String^ Line = TextEditor->GetTextAtLine(TextEditor->GetLineNumberFromCharIndex(TextEditor->GetLastKnownMouseClickOffset()));
+
+			bool IsImportDirective = Preprocessor::GetSingleton()->GetImportFilePath(Line, ImportFile,
+																gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																	gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																	PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
+																	PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+			ContextMenuOpenImportFile->Visible = false;
+			if (IsImportDirective)
+			{
+				ContextMenuOpenImportFile->Visible = true;
+				ContextMenuOpenImportFile->Tag = ImportFile;
+			}
 		}
 		void Workspace::ContextMenuCopy_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3389,6 +3425,10 @@ namespace ConstructionSetExtender
 		{
 			Process::Start("http://www.google.com/search?hl=en&source=hp&q=" + TextEditor->GetTokenAtMouseLocation());
 		}
+		void Workspace::ContextMenuOpenImportFile_Click(Object^ Sender, EventArgs^ E)
+		{
+			Process::Start(dynamic_cast<String^>(ContextMenuOpenImportFile->Tag));
+		}		
 		void Workspace::ContextMenuRefactorAddVariable_Click( Object^ Sender, EventArgs^ E )
 		{
 			ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
@@ -3690,13 +3730,13 @@ namespace ConstructionSetExtender
 				MessageList->Show();
 				MessageList->BringToFront();
 				ToolBarMessageList->Checked = true;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
+				ToggleSplitter(true);
 			}
 			else
 			{
 				MessageList->Hide();
 				ToolBarMessageList->Checked = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
+				ToggleSplitter(false);
 			}
 
 			GetParentContainer()->EndUpdate();
@@ -3715,13 +3755,13 @@ namespace ConstructionSetExtender
 				FindList->Show();
 				FindList->BringToFront();
 				ToolBarFindList->Checked = true;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
+				ToggleSplitter(true);
 			}
 			else
 			{
 				FindList->Hide();
 				ToolBarFindList->Checked = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
+				ToggleSplitter(false);
 			}
 
 			GetParentContainer()->EndUpdate();
@@ -3740,13 +3780,13 @@ namespace ConstructionSetExtender
 				BookmarkList->Show();
 				BookmarkList->BringToFront();
 				ToolBarBookmarkList->Checked = true;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height / 1.5;
+				ToggleSplitter(true);
 			}
 			else
 			{
 				BookmarkList->Hide();
 				ToolBarBookmarkList->Checked = false;
-				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds().Height;
+				ToggleSplitter(false);
 			}
 
 			GetParentContainer()->EndUpdate();
@@ -3834,7 +3874,8 @@ namespace ConstructionSetExtender
 			}
 			else
 			{
-				ClearErrorMessagesFromMessagePool();
+				// don't clear any errors - the user can use them to lookup errors in scripts with imported text
+				// ClearErrorMessagesFromMessagePool();
 				String^ PreprocessedText = "";
 				if (PreprocessScriptText(PreprocessedText))
 				{

@@ -5,7 +5,6 @@ namespace ConstructionSetExtender
 {
 	namespace Console
 	{
-
 		void Initialize(void);
 	}
 }

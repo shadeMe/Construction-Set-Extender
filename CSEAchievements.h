@@ -128,6 +128,7 @@ namespace ConstructionSetExtender
 		extern CSEAchievementBase*  		kOver3000;
 		extern CSEAchievementBase*  		kFunnyGuy;
 		extern CSEAchievementHappypotamus*  kHappyBDayMoi;
+		extern CSEAchievementBase*  		kChicken;
 
 		void								Initialize(void);
 	}

@@ -94,6 +94,17 @@ namespace ConstructionSetExtender
 			{
 				return kTypeID;
 			}
+
+			enum
+			{
+				kExtraRefListColumn_Persistent = 5,
+				kExtraRefListColumn_Disabled,
+				kExtraRefListColumn_VWD,
+				kExtraRefListColumn_EnableParent,
+				kExtraRefListColumn_Count
+			};
+
+			static int CALLBACK											CustomFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		};
 
 		class CSEDialogExtraFittingsData : public BGSEditorExtender::BGSEEWindowExtraData

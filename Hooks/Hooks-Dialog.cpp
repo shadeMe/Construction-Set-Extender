@@ -61,6 +61,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESPackageWndProcAddNew, 0x004523FD);
 		_DefineHookHdlr(RegionEditorCreateDataCopy, 0x004BF763);
 		_DefineNopHdlr(AIFormResetPackageListColumns, 0x00452FC9, 5);
+		_DefineHookHdlr(CellViewOnCellSelection, 0x0040A174);
 
 		void PatchDialogHooks(void)
 		{
@@ -290,6 +291,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESPackageWndProcAddNew).WriteJump();
 			_MemHdlr(RegionEditorCreateDataCopy).WriteJump();
 			_MemHdlr(AIFormResetPackageListColumns).WriteNop();
+			_MemHdlr(CellViewOnCellSelection).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
@@ -1693,6 +1695,39 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			SKIP:
 				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		void __stdcall DoCellViewOnCellSelectionHook(void)
+		{
+			if (abs(*TESCellViewWindow::ObjectListSortColumn) < UIManager::CSECellViewExtraData::kExtraRefListColumn_Persistent)
+			{
+				SendMessage(*TESCellViewWindow::ObjectListHandle,
+							LVM_SORTITEMS,
+							*TESCellViewWindow::ObjectListSortColumn,
+							(LPARAM)TESDialogReferenceListComparator);
+			}
+			else
+			{
+				SendMessage(*TESCellViewWindow::ObjectListHandle,
+				LVM_SORTITEMS,
+				*TESCellViewWindow::ObjectListSortColumn,
+				(LPARAM)UIManager::CSECellViewExtraData::CustomFormListComparator);
+			}
+		}
+
+		#define _hhName		CellViewOnCellSelection
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0040A179);
+			_hhSetVar(Call, 0x00409030);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				pushad
+				call	DoCellViewOnCellSelectionHook
+				popad
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

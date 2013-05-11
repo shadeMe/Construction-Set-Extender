@@ -306,6 +306,112 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		int CALLBACK CSECellViewExtraData::CustomFormListComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+		{
+			int Result = 0;
+
+			TESObjectREFR* FormA = (TESObjectREFR*)lParam1;
+			TESObjectREFR* FormB = (TESObjectREFR*)lParam2;
+
+			if (FormA && FormB)
+			{
+				switch ((UInt32)abs(lParamSort))
+				{
+				case kExtraRefListColumn_Persistent:
+					if ((bool)(FormA->formFlags & TESForm::kFormFlags_QuestItem) == true &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_QuestItem) == false)
+					{
+						Result = -1;
+					}
+					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_QuestItem) == false &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_QuestItem) == true)
+					{
+						Result = 1;
+					}
+
+					break;
+				case kExtraRefListColumn_Disabled:
+					if ((bool)(FormA->formFlags & TESForm::kFormFlags_Disabled) == true &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_Disabled) == false)
+					{
+						Result = -1;
+					}
+					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_Disabled) == false &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_Disabled) == true)
+					{
+						Result = 1;
+					}
+
+					break;
+				case kExtraRefListColumn_VWD:
+					if ((bool)(FormA->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == true &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == false)
+					{
+						Result = -1;
+					}
+					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == false &&
+						(bool)(FormB->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == true)
+					{
+						Result = 1;
+					}
+
+					break;
+				case kExtraRefListColumn_EnableParent:
+					{
+						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+
+						if (AxData && BxData == NULL)
+							Result = -1;
+						else if (AxData == NULL && BxData)
+							Result = 1;
+						else if (AxData && BxData)
+						{
+							ExtraEnableStateParent* AxParent = CS_CAST(AxData, BSExtraData, ExtraEnableStateParent);
+							ExtraEnableStateParent* BxParent = CS_CAST(BxData, BSExtraData, ExtraEnableStateParent);
+							SME_ASSERT(AxParent->parent && BxParent->parent);
+
+							if (AxParent->parent->formID < BxParent->parent->formID)
+								Result = -1;
+							else if (AxParent->parent->formID > BxParent->parent->formID)
+								Result = 1;
+						}
+					}
+
+					break;
+				case kExtraRefListColumn_Count:
+					{
+						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
+						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
+
+						if (AxData && BxData == NULL)
+							Result = -1;
+						else if (AxData == NULL && BxData)
+							Result = 1;
+						else if (AxData && BxData)
+						{
+							ExtraCount* AxCount = CS_CAST(AxData, BSExtraData, ExtraCount);
+							ExtraCount* BxCount = CS_CAST(BxData, BSExtraData, ExtraCount);
+
+							if (AxCount->count < BxCount->count)
+								Result = -1;
+							else if (AxCount->count > BxCount->count)
+								Result = 1;
+						}
+					}
+
+					break;
+				}
+
+				if (lParamSort < 0)
+					Result *= -1;
+
+				Result = CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+			}
+
+			return Result;
+		}
+
 		CSEDialogExtraFittingsData::CSEDialogExtraFittingsData() :
 			BGSEditorExtender::BGSEEWindowExtraData()
 		{
@@ -575,6 +681,11 @@ namespace ConstructionSetExtender
 					{
 						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world?") == IDNO)
 							Return = true;
+						else if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "What you're about to do is akin to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
+						{
+							Return = true;
+							BGSEEACHIEVEMENTS->Unlock(Achievements::kChicken);
+						}
 						else
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kFearless);
 					}
@@ -1890,7 +2001,7 @@ namespace ConstructionSetExtender
 
 					if (BGSEditorExtender::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
 					{
-						// the primary camera's view frustum gets updated ever so often resetting its horizontal FOV
+						// the primary camera's view frustum gets updated ever so often, resetting its horizontal FOV
 						// we update it here in case it has changed
 						if (_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.l != TESRenderWindow::CameraFrustumBuffer.l ||
 							_PRIMARYRENDERER->primaryCamera->m_kViewFrustum.r != TESRenderWindow::CameraFrustumBuffer.r ||
@@ -1931,7 +2042,8 @@ namespace ConstructionSetExtender
 							GetAsyncKeyState(VK_RBUTTON) || 
 							GetAsyncKeyState(VK_MBUTTON) || 
 							GetAsyncKeyState(VK_SPACE) || 
-							GetAsyncKeyState(0x56))				// V
+							GetAsyncKeyState(0x56) ||		// V
+							GetCapture() == hWnd)				
 						{
 							// don't pick if the viewport is turbulent
 							break;
@@ -1955,6 +2067,19 @@ namespace ConstructionSetExtender
 							TESRenderWindow::Redraw();
 						}
 					}
+
+					HCURSOR* Icon = TESRenderWindow::CursorArrow;
+					TESObjectREFR* MouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
+					if (*TESRenderWindow::PathGridEditFlag == 0 && MouseRef)
+					{
+						if (_RENDERSEL->HasObject(MouseRef))
+							Icon = TESRenderWindow::CursorMove;
+						else
+							Icon = TESRenderWindow::CursorSelect;
+					}
+
+					if (GetCursor() != *Icon)
+						SetCursor(*Icon);
 				}
 
 				break;
@@ -2275,121 +2400,6 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		enum
-		{
-			kCellViewRefListColumn_Persistent = 5,
-			kCellViewRefListColumn_Disabled,
-			kCellViewRefListColumn_VWD,
-			kCellViewRefListColumn_EnableParent,
-			kCellViewRefListColumn_Count
-		};
-
-		int CALLBACK CellViewFormListCustomComparator( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-		{
-			int Result = 0;
-
-			TESObjectREFR* FormA = (TESObjectREFR*)lParam1;
-			TESObjectREFR* FormB = (TESObjectREFR*)lParam2;
-
-			if (FormA && FormB)
-			{
-				switch ((UInt32)abs(lParamSort))
-				{
-				case kCellViewRefListColumn_Persistent:
-					if ((bool)(FormA->formFlags & TESForm::kFormFlags_QuestItem) == true &&
-						(bool)(FormB->formFlags & TESForm::kFormFlags_QuestItem) == false)
-					{
-						Result = -1;
-					}
-					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_QuestItem) == false &&
-							(bool)(FormB->formFlags & TESForm::kFormFlags_QuestItem) == true)
-					{
-						Result = 1;
-					}
-
-					break;
-				case kCellViewRefListColumn_Disabled:
-					if ((bool)(FormA->formFlags & TESForm::kFormFlags_Disabled) == true &&
-						(bool)(FormB->formFlags & TESForm::kFormFlags_Disabled) == false)
-					{
-						Result = -1;
-					}
-					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_Disabled) == false &&
-							(bool)(FormB->formFlags & TESForm::kFormFlags_Disabled) == true)
-					{
-						Result = 1;
-					}
-
-					break;
-				case kCellViewRefListColumn_VWD:
-					if ((bool)(FormA->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == true &&
-						(bool)(FormB->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == false)
-					{
-						Result = -1;
-					}
-					else if ((bool)(FormA->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == false &&
-							(bool)(FormB->formFlags & TESForm::kFormFlags_VisibleWhenDistant) == true)
-					{
-						Result = 1;
-					}
-
-					break;
-				case kCellViewRefListColumn_EnableParent:
-					{
-						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-
-						if (AxData && BxData == NULL)
-							Result = -1;
-						else if (AxData == NULL && BxData)
-							Result = 1;
-						else if (AxData && BxData)
-						{
-							ExtraEnableStateParent* AxParent = CS_CAST(AxData, BSExtraData, ExtraEnableStateParent);
-							ExtraEnableStateParent* BxParent = CS_CAST(BxData, BSExtraData, ExtraEnableStateParent);
-							SME_ASSERT(AxParent->parent && BxParent->parent);
-
-							if (AxParent->parent->formID < BxParent->parent->formID)
-								Result = -1;
-							else if (AxParent->parent->formID > BxParent->parent->formID)
-								Result = 1;
-						}
-					}
-
-					break;
-				case kCellViewRefListColumn_Count:
-					{
-						BSExtraData* AxData = FormA->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
-						BSExtraData* BxData = FormB->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
-
-						if (AxData && BxData == NULL)
-							Result = -1;
-						else if (AxData == NULL && BxData)
-							Result = 1;
-						else if (AxData && BxData)
-						{
-							ExtraCount* AxCount = CS_CAST(AxData, BSExtraData, ExtraCount);
-							ExtraCount* BxCount = CS_CAST(BxData, BSExtraData, ExtraCount);
-
-							if (AxCount->count < BxCount->count)
-								Result = -1;
-							else if (AxCount->count > BxCount->count)
-								Result = 1;
-						}
-					}
-
-					break;
-				}
-
-				if (lParamSort < 0)
-					Result *= -1;
-
-				Result = CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
-			}
-
-			return Result;
-		}
-
 		LRESULT CALLBACK CellViewWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -2410,7 +2420,7 @@ namespace ConstructionSetExtender
 			HWND YEdit = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_YEDIT);
 			HWND GoBtn = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_GOBTN);
 
-			int* RefListSortColumn = (int*)0x00A0A9D4;
+			int* RefListSortColumn = TESCellViewWindow::ObjectListSortColumn;
 
 			if (FilterEditBox == NULL)
 				return DlgProcResult;
@@ -2466,27 +2476,27 @@ namespace ConstructionSetExtender
 
 					ColumnData.cx = 45;
 					ColumnData.pszText = "Persistent";
-					ColumnData.iSubItem = kCellViewRefListColumn_Persistent;
+					ColumnData.iSubItem = CSECellViewExtraData::kExtraRefListColumn_Persistent;
 					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
 
 					ColumnData.cx = 45;
 					ColumnData.pszText = "Initially Disabled";
-					ColumnData.iSubItem = kCellViewRefListColumn_Disabled;
+					ColumnData.iSubItem = CSECellViewExtraData::kExtraRefListColumn_Disabled;
 					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
 
 					ColumnData.cx = 45;
 					ColumnData.pszText = "VWD";
-					ColumnData.iSubItem = kCellViewRefListColumn_VWD;
+					ColumnData.iSubItem = CSECellViewExtraData::kExtraRefListColumn_VWD;
 					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
 
 					ColumnData.cx = 100;
 					ColumnData.pszText = "Enable Parent";
-					ColumnData.iSubItem = kCellViewRefListColumn_EnableParent;
+					ColumnData.iSubItem = CSECellViewExtraData::kExtraRefListColumn_EnableParent;
 					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
 
 					ColumnData.cx = 40;
 					ColumnData.pszText = "Count";
-					ColumnData.iSubItem = kCellViewRefListColumn_Count;
+					ColumnData.iSubItem = CSECellViewExtraData::kExtraRefListColumn_Count;
 					ListView_InsertColumn(RefList, ColumnData.iSubItem, &ColumnData);
 				}
 
@@ -2510,22 +2520,22 @@ namespace ConstructionSetExtender
 
 								switch (DisplayData->item.iSubItem)
 								{
-								case kCellViewRefListColumn_Persistent:
+								case CSECellViewExtraData::kExtraRefListColumn_Persistent:
 									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
 											((Current->formFlags & TESForm::kFormFlags_QuestItem) ? "Y" : ""));
 
 									break;
-								case kCellViewRefListColumn_Disabled:
+								case CSECellViewExtraData::kExtraRefListColumn_Disabled:
 									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
 											((Current->formFlags & TESForm::kFormFlags_Disabled) ? "Y" : ""));
 
 									break;
-								case kCellViewRefListColumn_VWD:
+								case CSECellViewExtraData::kExtraRefListColumn_VWD:
 									sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s",
 											((Current->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? "Y" : ""));
 
 									break;
-								case kCellViewRefListColumn_EnableParent:
+								case CSECellViewExtraData::kExtraRefListColumn_EnableParent:
 									{
 										BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 										if (xData)
@@ -2553,7 +2563,7 @@ namespace ConstructionSetExtender
 									}
 
 									break;
-								case kCellViewRefListColumn_Count:
+								case CSECellViewExtraData::kExtraRefListColumn_Count:
 									{
 										BSExtraData* xData = Current->extraData.GetExtraDataByType(BSExtraData::kExtra_Count);
 										if (xData)
@@ -2577,7 +2587,7 @@ namespace ConstructionSetExtender
 						if (NotificationData->hwndFrom == RefList)
 						{
 							NMLISTVIEW* ListViewData = (NMLISTVIEW*)lParam;
-							if (ListViewData->iSubItem >= kCellViewRefListColumn_Persistent)
+							if (ListViewData->iSubItem >= CSECellViewExtraData::kExtraRefListColumn_Persistent)
 							{
 								if (*RefListSortColumn > 0)
 								{
@@ -2587,7 +2597,7 @@ namespace ConstructionSetExtender
 								else
 									*RefListSortColumn = ListViewData->iSubItem;
 
-								SendMessage(RefList, LVM_SORTITEMS, *RefListSortColumn, (LPARAM)CellViewFormListCustomComparator);
+								SendMessage(RefList, LVM_SORTITEMS, *RefListSortColumn, (LPARAM)CSECellViewExtraData::CustomFormListComparator);
 
 								DlgProcResult = TRUE;
 								Return = true;
@@ -3414,6 +3424,14 @@ namespace ConstructionSetExtender
 											TESReactionForm::ReactionInfo* Info = (TESReactionForm::ReactionInfo*)DrawData->nmcd.lItemlParam;
 											SME_ASSERT(Info);
 											Form = Info->target;
+										}
+
+										break;
+									case kFormList_CellUseList:
+										{
+											TESCellUseList::CellUseInfo* Info = (TESCellUseList::CellUseInfo*)DrawData->nmcd.lItemlParam;
+											SME_ASSERT(Info);
+											Form = Info->cell;
 										}
 
 										break;
@@ -4580,7 +4598,6 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
-				PANIC("Test")
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_UseReport, CommonDialogExtraFittingsSubClassProc);
 			}
 

@@ -58,6 +58,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESPackageWndProcAddNew, "prevents the packages listview from being repopulated every time a new package is created (by renaming an existing one). Also fixes a bug in the process.");
 		_DeclareMemHdlr(RegionEditorCreateDataCopy, "fixes a bug that causes a CTD when a data copy operation was attempted on a brand new region record");
 		_DeclareNopHdlr(AIFormResetPackageListColumns, "fixes a bug that causes the AI data dlg's packages listview to reset its columns everytime the thing was refreshed");
+		_DeclareMemHdlr(CellViewOnCellSelection, "prevents the object ref list from losing its sort status whenever a cell is selected in the cell list");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

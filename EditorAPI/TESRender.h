@@ -108,7 +108,7 @@ public:
 		kRenderWindowState_AllowRenderWindowCellLoads	= 0x4,
 		kRenderWindowState_ShowMarkers					= 0x8,
 		kRenderWindowState_SkipInitialCellLoad			= 0x10,
-		kRenderWindowState_UseCSDiscAsSource			= 0x20,		// deprecated
+		kRenderWindowState_UseCSDiscAsSource			= 0x20,		// deprecated, probably from the TES3 CS code base
 		kRenderWindowState_UseWorld						= 0x40,
 	};
 
@@ -200,6 +200,10 @@ public:
 	static float*						CameraPanSpeed;
 
 	static PathGridPointListT*			SelectedPathGridPoints;
+
+	static HCURSOR*						CursorArrow;
+	static HCURSOR*						CursorSelect;
+	static HCURSOR*						CursorMove;
 
 	static bool							FreezeInactiveRefs;
 	static bool							UseAlternateMovementSettings;

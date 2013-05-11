@@ -319,8 +319,19 @@ namespace ConstructionSetExtender
 		{
 			switch (E->KeyCode)
 			{
+			case Keys::Enter:
+				if (FindReplaceBox->ActiveControl == QueryBox)
+					FindButton->PerformClick();
+				else if (FindReplaceBox->ActiveControl == ReplacementBox)
+					ReplaceButton->PerformClick();
+
+				E->Handled = true;
+
+				break;
 			case Keys::Escape:
 				Hide();
+				E->Handled = true;
+				
 				break;
 			}
 		}

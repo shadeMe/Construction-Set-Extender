@@ -13,16 +13,12 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
-		> Crosshair ref screws with the mouse cursor
-			http://www.darkcreations.org/forums/topic/2609-construction-set-extender-61/page__st__160#entry141316
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Fix memory leak in local map generator
 
 
 	ENHANCEMENT		=
-		> When using the default asset selection common dialog, start at the existing path's folder.
-		> Prevent the cell view window obj list from reinit'ing its columns after a cell change (to preserve listview sort status - manually sort after cell switch,  if necessary)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
@@ -32,23 +28,17 @@ CSE		---->
 
 	
 	MISC			=
-		> Add clarification to manual about copy asset path's inability to copy from the parent window
 
 
 SE		---->
 
 	BUGFIX			=
-		> Allow white spaces in individual ENUM component definitions ( enum_name		=   222)
-		> Close the IS intfc after an undo op
-		> The splitter doesn't correctly resize if the editor window is maximized
-		> IS interface shows up inside string literals
+
 
 	ENHANCEMENT		=
-		> Hitting the Enter key inside the Find/Replace window should click on the appropriate button
+		> Automatically create a new tab/workspace when opening a script (unless the current tab/workspace is empty).
 
 	MISC			=
-		> Unhandled exception in AvalonEdit; fold the function block in zzVectorzFunctUDP to reproduce
-		  Reverting back to v4.0.0.7070 until the bug is fixed
 
 
 USE		---->

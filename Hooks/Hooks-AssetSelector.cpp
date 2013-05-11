@@ -10,9 +10,12 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		static char s_AssetSelectorReturnPath[0x200] = {0};
+		static char						s_AssetSelectorReturnPath[MAX_PATH] = {0};
+		static BaseFormComponent*		s_AssetFormComponent = NULL;
+		static std::string				s_AssetFileBrowserBaseDir;
 
 		_DefinePatchHdlr(TESDialogShowNIFFileSelect, 0x00446C7D + 1);
+		_DefineHookHdlr(TESDialogShowFileSelect, 0x00446BA7);
 
 		void PatchAssetSelectorHooks(void)
 		{
@@ -35,6 +38,38 @@ namespace ConstructionSetExtender
 			PatchCommonDialogEpilogHandler(SPT);
 
 			_MemHdlr(TESDialogShowNIFFileSelect).WriteUInt32(0);
+			_MemHdlr(TESDialogShowFileSelect).WriteJump();
+		}
+
+		void __stdcall DoTESDialogShowFileSelectHook(LPOPENFILENAME Data)
+		{
+			if (s_AssetFileBrowserBaseDir.length())
+			{
+				int Idx = s_AssetFileBrowserBaseDir.rfind("\\");
+				if (Idx != std::string::npos)
+					s_AssetFileBrowserBaseDir.erase(Idx + 1);
+
+				DWORD Attribs = GetFileAttributes(s_AssetFileBrowserBaseDir.c_str());
+				if (Attribs != INVALID_FILE_ATTRIBUTES && (Attribs & FILE_ATTRIBUTE_DIRECTORY))
+					Data->lpstrInitialDir = s_AssetFileBrowserBaseDir.c_str();		// replace path only when valid
+			}
+		}
+
+		#define _hhName		TESDialogShowFileSelect
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00446BAC);
+			__asm
+			{
+				lea		edx, [esp + 0x18]
+				pushad
+				push	edx
+				call	DoTESDialogShowFileSelectHook
+				popad
+
+				push	edx
+				jmp		_hhGetVar(Retn)
+			}
 		}
 
 		DefineCommonDialogCancelHandler(Model)
@@ -42,6 +77,82 @@ namespace ConstructionSetExtender
 		DefineCommonDialogCancelHandler(Sound)
 		DefineCommonDialogCancelHandler(Texture)
 		DefineCommonDialogCancelHandler(SPT)
+
+		bool InitModelFileBrowser(HWND Parent, const char* SaveDir, char* OutBuffer, int BufferSize)
+		{
+			TESModel* BaseForm = CS_CAST(s_AssetFormComponent, BaseFormComponent, TESModel);
+			SME_ASSERT(BaseForm);
+			
+			s_AssetFileBrowserBaseDir = "";
+			if (BaseForm->modelPath.c_str())
+				s_AssetFileBrowserBaseDir = "Data\\Meshes\\" + std::string(BaseForm->modelPath.c_str());
+
+			bool Result = cdeclCall<bool>(kModelSelectorCommonDialogCallAddr, Parent, SaveDir, OutBuffer, BufferSize);
+
+			s_AssetFileBrowserBaseDir = "";
+			return Result;
+		}
+
+		bool InitAnimationFileBrowser(HWND Parent, const char* SaveDir, const char* FilterStr, const char* Title, const char* DefaultExt,
+									LPOFNHOOKPROC HookProc, bool FileMustExist, bool SaveVSOpen, char* OutBuffer, int BufferSize)
+		{
+			TESModelAnim* BaseForm = CS_CAST(s_AssetFormComponent, BaseFormComponent, TESModelAnim);
+			SME_ASSERT(BaseForm);
+
+			s_AssetFileBrowserBaseDir = "";
+			if (BaseForm->modelPath.c_str())
+			{
+				s_AssetFileBrowserBaseDir = "Data\\Meshes\\" + std::string(BaseForm->modelPath.c_str());
+
+				if (s_AssetFileBrowserBaseDir[s_AssetFileBrowserBaseDir.length() - 1] != 'f')
+					s_AssetFileBrowserBaseDir += "\\";		// fix up trailing backslash if the path doesn't point to a KF file	
+			}
+
+			bool Result = cdeclCall<bool>(kAnimationSelectorCommonDialogCallAddr, Parent, SaveDir, FilterStr,
+								Title, DefaultExt, HookProc, FileMustExist, SaveVSOpen, OutBuffer, BufferSize);
+
+			s_AssetFileBrowserBaseDir = "";
+			return Result;
+		}
+
+		bool InitSoundFileBrowser(HWND Parent, const char* SaveDir, char* OutBuffer)
+		{
+			// uses a shell dialog, which doesn't even care about the init dir parameter
+			// like hell I'm gonna patch that!
+			return cdeclCall<bool>(kSoundSelectorCommonDialogCallAddr, Parent, SaveDir, OutBuffer);
+		}
+
+		bool InitTextureFileBrowser(HWND Parent, const char* SaveDir, const char* FilterStr, char* OutBuffer, int BufferSize)
+		{
+			TESTexture* BaseForm = CS_CAST(s_AssetFormComponent, BaseFormComponent, TESTexture);
+			SME_ASSERT(BaseForm);
+
+			s_AssetFileBrowserBaseDir = "";
+			if (BaseForm->texturePath.c_str())
+				s_AssetFileBrowserBaseDir = std::string(SaveDir) + std::string(BaseForm->texturePath.c_str());
+		
+			bool Result = cdeclCall<bool>(kTextureSelectorCommonDialogCallAddr, Parent, SaveDir, FilterStr, OutBuffer, BufferSize);
+
+			s_AssetFileBrowserBaseDir = "";
+			return Result;
+		}
+
+		bool InitSPTFileBrowser(HWND Parent, const char* SaveDir, const char* FilterStr, const char* Title, const char* DefaultExt,
+			LPOFNHOOKPROC HookProc, bool FileMustExist, bool SaveVSOpen, char* OutBuffer, int BufferSize)
+		{
+			TESModelTree* BaseForm = CS_CAST(s_AssetFormComponent, BaseFormComponent, TESModelTree);
+			SME_ASSERT(BaseForm);
+
+			s_AssetFileBrowserBaseDir = "";
+			if (BaseForm->modelPath.c_str())
+				s_AssetFileBrowserBaseDir = std::string(SaveDir) + std::string(BaseForm->modelPath.c_str());
+
+			bool Result = cdeclCall<bool>(kSPTSelectorCommonDialogCallAddr, Parent, SaveDir, FilterStr,
+								Title, DefaultExt, HookProc, FileMustExist, SaveVSOpen, OutBuffer, BufferSize);
+
+			s_AssetFileBrowserBaseDir = "";
+			return Result;
+		}
 
 		UInt32 __stdcall InitBSAViewer(UInt32 Filter)
 		{

@@ -29,7 +29,8 @@ namespace ConstructionSetExtender
 		const UInt32			kModelSelectorCommonDialogRetnAddr = 0x0049BDB0;
 		const UInt32			kModelSelectorCommonDialogCallAddr = 0x00446C60;
 		const UInt32			kModelSelectorCommonDialogFilterType = e_NIF;
-#define					kModelPathButtonID				 edi + 0x20
+#define					kModelPathButtonID				edi + 0x20
+#define					kModelBaseForm					edi
 
 		const UInt32			kModelPostCommonDialogHookAddr = 0x0049BDBE;
 		const UInt32			kModelPostCommonDialogRetnAddr = 0x0049BDC4;
@@ -45,7 +46,8 @@ namespace ConstructionSetExtender
 		const UInt32			kAnimationSelectorCommonDialogRetnAddr = 0x0049D915;
 		const UInt32			kAnimationSelectorCommonDialogCallAddr = 0x00446A30;
 		const UInt32			kAnimationSelectorCommonDialogFilterType = e_KF;
-#define					kAnimationPathButtonID				 esi + 0x20
+#define					kAnimationPathButtonID			esi + 0x20
+#define					kAnimationBaseForm				esi
 
 		const UInt32			kAnimationPostCommonDialogHookAddr = 0x0049D92B;
 		const UInt32			kAnimationPostCommonDialogRetnAddr = 0x0049D943;
@@ -61,7 +63,8 @@ namespace ConstructionSetExtender
 		const UInt32			kSoundSelectorCommonDialogRetnAddr = 0x004A1C88;
 		const UInt32			kSoundSelectorCommonDialogCallAddr = 0x004431A0;
 		const UInt32			kSoundSelectorCommonDialogFilterType = e_WAV;
-#define					kSoundPathButtonID				 1451
+#define					kSoundPathButtonID				1451
+#define					kSoundBaseForm					ecx
 
 		const UInt32			kSoundPostCommonDialogHookAddr = 0x004A1C8F;
 		const UInt32			kSoundPostCommonDialogRetnAddr = 0x004A1C9B;
@@ -77,7 +80,8 @@ namespace ConstructionSetExtender
 		const UInt32			kTextureSelectorCommonDialogRetnAddr = 0x004A4150;
 		const UInt32			kTextureSelectorCommonDialogCallAddr = 0x00446CA0;
 		const UInt32			kTextureSelectorCommonDialogFilterType = e_DDS;
-#define					kTexturePathButtonID				 esi + 0x10
+#define					kTexturePathButtonID			esi + 0x10
+#define					kTextureBaseForm				esi
 
 		const UInt32			kTexturePostCommonDialogHookAddr = 0x004A415B;
 		const UInt32			kTexturePostCommonDialogRetnAddr = 0x004A4162;
@@ -93,7 +97,8 @@ namespace ConstructionSetExtender
 		const UInt32			kSPTSelectorCommonDialogRetnAddr = 0x0049EAD5;
 		const UInt32			kSPTSelectorCommonDialogCallAddr = 0x00446A30;
 		const UInt32			kSPTSelectorCommonDialogFilterType = e_SPT;
-#define					kSPTPathButtonID				 edi + 0x20
+#define					kSPTPathButtonID				edi + 0x20
+#define					kSPTBaseForm					edi
 
 		const UInt32			kSPTPostCommonDialogHookAddr = 0x0049EAE3;
 		const UInt32			kSPTPostCommonDialogRetnAddr = 0x0049EAE9;
@@ -139,7 +144,8 @@ namespace ConstructionSetExtender
 		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
 		__asm FILEB: \
 		__asm popad \
-		__asm call		[k##name##SelectorCommonDialogCallAddr]  \
+		__asm mov		s_AssetFormComponent, k##name##BaseForm \
+		__asm call		Init##name##FileBrowser \
 		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
 		__asm BSAB:  \
 		__asm popad  \
@@ -213,5 +219,6 @@ namespace ConstructionSetExtender
 		void SPTCancelCommonDialogHook(void);
 
 		_DeclareMemHdlr(TESDialogShowNIFFileSelect, "fixes a bug that forced NIF file selections to use the old style common dialog");
+		_DeclareMemHdlr(TESDialogShowFileSelect, "gets the windows open file dialog to use existing asset paths when available");
 	}
 }

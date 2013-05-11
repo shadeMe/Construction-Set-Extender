@@ -75,6 +75,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESRubberBandSelectionSkipInvisibleRefs, 0x0042FB89);
 		_DefineHookHdlr(RenderWindowCameraRotationPivot, 0x0042CBFD);
 		_DefinePatchHdlrWithBuffer(CellViewSetCurrentCell, 0x00409170, 1, 0x53);
+		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
 
 		void PatchRendererHooks(void)
 		{
@@ -136,6 +137,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(BSFadeNodeDrawTransparency).WriteJump();
 			_MemHdlr(TESRubberBandSelectionSkipInvisibleRefs).WriteJump();
 			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
+			_MemHdlr(RenderWindowCursorSwap).WriteJump();
 		}
 
 		#define _hhName		DoorMarkerProperties

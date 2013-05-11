@@ -21,6 +21,7 @@ HWND*						TESCellViewWindow::ObjectListHandle = (HWND*)0x00A0AA00;
 HWND*						TESCellViewWindow::CellListHandle = (HWND*)0x00A0AA34;
 UInt8*						TESCellViewWindow::MainMenuState = (UInt8*)0x00A0AF48;
 TESObjectCELL**				TESCellViewWindow::CurrentCellSelection = (TESObjectCELL**)0x00A0A9DC;
+int*						TESCellViewWindow::ObjectListSortColumn = (int*)0x00A0A9D4;
 
 ResponseEditorData**		ResponseEditorData::EditorCache = (ResponseEditorData**)0x00A10E2C;
 
@@ -370,3 +371,4 @@ void TESCellViewWindow::SetCellSelection( TESObjectCELL* Cell )
 {
 	cdeclCall<void>(0x00409070, Cell);
 }
+

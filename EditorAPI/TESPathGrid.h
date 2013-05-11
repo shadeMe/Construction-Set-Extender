@@ -38,7 +38,6 @@ public:
 	void						UnlinkPoint(TESPathGridPoint* Point);
 	bool						GetIsPointLinked(TESPathGridPoint* Point);
 	void						UnlinkAllPoints(void);
-	void						ReleaseAllPoints(void);
 	void						GenerateNiNode(UInt32 Unk01 = 1);
 	void						ShowSelectionRing(void);
 	void						HideSelectionRing(void);
@@ -79,6 +78,7 @@ public:
 	void														AddPoint(TESPathGridPoint* Point);
 	void														RemovePoint(TESPathGridPoint* Point);
 	SInt32														HasPoint(TESPathGridPoint* Point);		// returns the index of the passed point in the point array. -1 when not found
+	void														ReleaseAllPoints(void);
 
 	void														SetParentCell(TESObjectCELL* Cell);
 

@@ -8,6 +8,8 @@ namespace ConstructionSetExtender
 	namespace ScriptPreprocessor
 	{
 		public delegate void StandardOutputError(String^ Message);
+
+		void DummyStandardErrorOutput(String^ Message);
 	}
 
 	using namespace ScriptPreprocessor;
@@ -39,6 +41,7 @@ namespace ConstructionSetExtender
 		String^												Token;
 	public:
 		virtual String^										GetToken() { return Token; }			// returns the preprocessed token
+		virtual bool										GetValid() { return true; }
 
 		CSEPreprocessorToken(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 	};
@@ -88,6 +91,8 @@ namespace ConstructionSetExtender
 	public:
 		CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::e_Invalid), Encoding(EncodingType::e_Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
 
+		virtual bool										GetValid() override { return ErrorFlag == false; }
+
 		EncodingType										GetEncodingType() { return Encoding; }
 		DirectiveType										GetDirectiveType()	{ return Type; }
 		bool												GetErrorFlag() { return ErrorFlag; }
@@ -132,6 +137,7 @@ namespace ConstructionSetExtender
 		ImportDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
 		virtual	String^										GetToken() override;
+		String^												GetFilename() { return Filename; }
 	};
 
 	public ref class EnumDirective : public CSEPreprocessorDirective
@@ -215,6 +221,7 @@ namespace ConstructionSetExtender
 
 		LinkedList<DefineDirective^>^						RegisteredDefineDirectives;
 		ScriptEditorPreprocessorData^						DataBuffer;
+		bool												Busy;
 
 		void												ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput);
 		CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, StringReader^ TextReader, StandardOutputError^ ErrorOutput);
@@ -226,7 +233,9 @@ namespace ConstructionSetExtender
 		DefineDirective^									LookupDefineDirectiveByName(String^% Name);
 		bool												Preprocess(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
 
+		// public API
 		bool												PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data);
+		bool												GetImportFilePath(String^% Source, String^% Result, ScriptEditorPreprocessorData^ Data);
 	};
 
 #define PREPROC											Preprocessor::GetSingleton()
