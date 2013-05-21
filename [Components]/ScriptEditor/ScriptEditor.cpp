@@ -632,7 +632,7 @@ namespace ConstructionSetExtender
 			ActiveWorkspaces->Clear();
 		}
 
-		void WorkspaceContainer::DumpAllOpenWorkspacesToFolder(String^ FolderPath)
+		void WorkspaceContainer::DumpAllOpenWorkspacesToFolder(String^ FolderPath, String^ FileExtension)
 		{
 			for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
 			{
@@ -641,7 +641,7 @@ namespace ConstructionSetExtender
 				if (Editor->GetIsScriptNew() || Editor->GetIsUninitialized())
 					continue;
 
-				Editor->SaveScriptToDisk(FolderPath, false);
+				Editor->SaveScriptToDisk(FolderPath, false, FileExtension);
 			}
 		}
 
@@ -2191,9 +2191,9 @@ namespace ConstructionSetExtender
 		{
 			TextEditor->LoadFileFromDisk(Path);
 		}
-		void Workspace::SaveScriptToDisk(String^ Path, bool PathIncludesFileName)
+		void Workspace::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ Extension)
 		{
-			TextEditor->SaveScriptToDisk(Path, PathIncludesFileName, GetScriptDescription());
+			TextEditor->SaveScriptToDisk(Path, PathIncludesFileName, GetScriptDescription(), Extension);
 		}
 		bool Workspace::ValidateScript(String^% PreprocessedScriptText)
 		{
@@ -3802,7 +3802,7 @@ namespace ConstructionSetExtender
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
 			{
-				SaveScriptToDisk(SaveManager->FileName, true);
+				SaveScriptToDisk(SaveManager->FileName, true, gcnew String("txt"));
 			}
 		}
 		void Workspace::ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E)
@@ -3815,8 +3815,14 @@ namespace ConstructionSetExtender
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0)
 			{
-				ParentContainer->DumpAllOpenWorkspacesToFolder(SaveManager->SelectedPath);
-				DebugPrint("Dumped all open scripts to " + SaveManager->SelectedPath);
+				String^ FileExtension = "txt";
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter The File Extension To Use", "Dump Scripts", FileExtension);
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+				else
+					FileExtension = Result->Text;
+
+				ParentContainer->DumpAllOpenWorkspacesToFolder(SaveManager->SelectedPath, FileExtension);
 			}
 		}
 		void Workspace::ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E)
@@ -3947,7 +3953,7 @@ namespace ConstructionSetExtender
 			{
 				if (GetIsUninitialized() == false && GetIsScriptNew() == false && TextEditor->GetModifiedStatus() == true)
 				{
-					SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()), false);
+					SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()), false, gcnew String("txt"));
 				}
 			}
 		}

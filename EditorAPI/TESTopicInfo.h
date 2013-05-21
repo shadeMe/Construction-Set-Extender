@@ -76,9 +76,9 @@ public:
 
 	// members
 	//     /*00*/ TESForm
-	/*24*/ TESTopic*			unk024;			// always NULL ?
+	/*24*/ TESTopic*			unk024;			// always NULL?
 	/*28*/ ConditionListT		conditions;
-	/*30*/ UInt16				unk30;			// init to -1. used to determine previous info	?
+	/*30*/ UInt16				unk30;			// init to -1. index into a TopicInfoArray, used to determine previous info?
 	/*32*/ UInt16				infotype;
 	/*34*/ UInt8				topicInfoFlags;
 	/*35*/ UInt8				pad35[3];

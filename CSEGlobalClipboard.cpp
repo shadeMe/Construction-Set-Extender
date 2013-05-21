@@ -6,153 +6,6 @@ namespace ConstructionSetExtender
 {
 	namespace GlobalClipboard
 	{
-		CSEFormWrapper::CSEFormWrapper( TESForm* Form ) :
-			BGSEditorExtender::BGSEEFormWrapper(),
-			WrappedForm(Form)
-		{
-			SME_ASSERT(WrappedForm);
-		}
-
-		CSEFormWrapper::~CSEFormWrapper()
-		{
-			WrappedForm = NULL;
-		}
-
-		UInt32 CSEFormWrapper::GetFormID( void ) const
-		{
-			return WrappedForm->formID;
-		}
-
-		const char* CSEFormWrapper::GetEditorID( void ) const
-		{
-			return WrappedForm->GetEditorID();
-		}
-
-		UInt8 CSEFormWrapper::GetType( void ) const
-		{
-			return WrappedForm->formType;
-		}
-
-		const char* CSEFormWrapper::GetTypeString( void ) const
-		{
-			return WrappedForm->GetTypeIDString();
-		}
-
-		UInt32 CSEFormWrapper::GetFlags( void ) const
-		{
-			return WrappedForm->formFlags;
-		}
-
-		bool CSEFormWrapper::GetIsDeleted( void ) const
-		{
-			return (WrappedForm->formFlags & TESForm::kFormFlags_Deleted);
-		}
-
-		void CSEPluginFileWrapper::CreateTempFile( void )
-		{
-			if (PluginPath.length())
-			{
-				DeleteFile(PluginPath.c_str());
-				DeleteFile((std::string(PluginPath + ".tes")).c_str());
-
-				BSFile* TempFile = BSFile::CreateInstance(PluginPath.c_str(), NiFile::kFileMode_WriteOnly);
-				TempFile->DeleteInstance();
-			}
-		}
-
-		CSEPluginFileWrapper::CSEPluginFileWrapper() :
-			BGSEditorExtender::BGSEEPluginFileWrapper(),
-			WrappedPlugin(NULL),
-			PluginPath("")
-		{
-			;//
-		}
-
-		CSEPluginFileWrapper::~CSEPluginFileWrapper()
-		{
-			if (WrappedPlugin)
-				WrappedPlugin->DeleteInstance();
-		}
-
-		bool CSEPluginFileWrapper::Construct( const char* FileName )
-		{
-			SME_ASSERT(WrappedPlugin == NULL);
-
-			char Buffer[0x200] = {0};
-			FORMAT_STR(Buffer, "%s\\%s", BGSEEWORKSPACE->GetCurrentWorkspace(), FileName);
-			PluginPath = Buffer;
-
-			CreateTempFile();
-			WrappedPlugin = TESFile::CreateInstance(BGSEEWORKSPACE->GetCurrentWorkspace(), FileName);
-			if (WrappedPlugin)
-			{
-				WrappedPlugin->SetFileIndex(0);
-			}
-			
-			return WrappedPlugin != NULL;
-		}
-
-		void CSEPluginFileWrapper::Purge( void )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			CreateTempFile();
-		}
-
-		bool CSEPluginFileWrapper::Open( bool ForWriting )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			if (ForWriting)
-				WrappedPlugin->CreateTempFile();
-
-			UInt8 ErrorState = WrappedPlugin->Open();
-			return (ErrorState == TESFile::kFileState_None || ErrorState == TESFile::kFileState_NoHeader);
-		}
-
-		bool CSEPluginFileWrapper::SaveHeader( void )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			return WrappedPlugin->SaveHeader() == TESFile::kFileState_None;
-		}
-
-		bool CSEPluginFileWrapper::CorrectHeader( UInt32 RecordCount )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			WrappedPlugin->fileHeader.numRecords = RecordCount;
-			return WrappedPlugin->CorrectHeader() == TESFile::kFileState_None;
-		}
-
-		bool CSEPluginFileWrapper::Close( void )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			return WrappedPlugin->Close();
-		}
-
-		UInt8 CSEPluginFileWrapper::GetRecordType( void )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			return WrappedPlugin->GetRecordType();
-		}
-
-		bool CSEPluginFileWrapper::GetNextRecord( bool SkipIgnoredRecords )
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			return WrappedPlugin->GetNextRecord(SkipIgnoredRecords);
-		}
-
-		int CSEPluginFileWrapper::GetErrorState( void ) const
-		{
-			SME_ASSERT(WrappedPlugin);
-
-			return WrappedPlugin->errorState;
-		}
-
 		CSEGlobalClipboardOperator::CSEGlobalClipboardOperator() :
 			BGSEditorExtender::BGSEEGlobalClipboardOperator(),
 			LoadedFormBuffer()
@@ -242,7 +95,7 @@ namespace ConstructionSetExtender
 		{
 			CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
 
-			SME_ASSERT(Wrapper && Wrapper->WrappedPlugin);
+			SME_ASSERT(Wrapper && Wrapper->GetWrappedPlugin());
 
 			switch (Wrapper->GetRecordType())
 			{
@@ -270,9 +123,9 @@ namespace ConstructionSetExtender
 					SME_ASSERT(TempForm);
 
 					TempForm->MarkAsTemporary();
-					if (TempForm->LoadForm(Wrapper->WrappedPlugin) == false)
+					if (TempForm->LoadForm(Wrapper->GetWrappedPlugin()) == false)
 					{
-						BGSEECONSOLE_MESSAGE("Couldn't load form %08X!", Wrapper->WrappedPlugin->currentRecord.recordID);
+						BGSEECONSOLE_MESSAGE("Couldn't load form %08X!", Wrapper->GetWrappedPlugin()->currentRecord.recordID);
 						TempForm->DeleteInstance();
 					}
 					else
@@ -294,9 +147,9 @@ namespace ConstructionSetExtender
 			CSEFormWrapper* FormW = dynamic_cast<CSEFormWrapper*>(Form);
 			CSEPluginFileWrapper* FileW = dynamic_cast<CSEPluginFileWrapper*>(File);
 
-			SME_ASSERT(FormW && FormW->WrappedForm && FileW && FileW->WrappedPlugin);
+			SME_ASSERT(FormW && FormW->GetWrappedForm() && FileW && FileW->GetWrappedPlugin());
 
-			FormW->WrappedForm->SaveFormRecord(FileW->WrappedPlugin);
+			FormW->GetWrappedForm()->SaveFormRecord(FileW->GetWrappedPlugin());
 
 #ifdef _DEBUG
 			BGSEECONSOLE_MESSAGE("Wrote form %s %08X to buffer", Form->GetEditorID(), Form->GetFormID());
@@ -307,33 +160,29 @@ namespace ConstructionSetExtender
 		{
 			CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
 
-			SME_ASSERT(Wrapper && Wrapper->WrappedPlugin);
+			SME_ASSERT(Wrapper && Wrapper->GetWrappedPlugin());
 
-			TESFileFormListWindow::Show(NULL, Wrapper->WrappedPlugin);
+			TESFileFormListWindow::Show(NULL, Wrapper->GetWrappedPlugin());
 		}
 
-		bool CSEGlobalClipboardOperator::PreSaveCallback( BGSEditorExtender::BGSEEFormListT& SaveForms, BGSEditorExtender::BGSEEPluginFileWrapper* File )
+		void CSEGlobalClipboardOperator::PreSaveCallback( BGSEditorExtender::BGSEEFormListT& SaveForms, BGSEditorExtender::BGSEEPluginFileWrapper* File )
 		{
 			// get rid of the "Failed to CreateGroupData..." warning
 			Hooks::_MemHdlr(TESFileUpdateOpenGroups).WriteJump();
-			
-			return true;
 		}
 
-		bool CSEGlobalClipboardOperator::PostSaveCallback( void )
+		void CSEGlobalClipboardOperator::PostSaveCallback( void )
 		{
 			// restore the warning
 			Hooks::_MemHdlr(TESFileUpdateOpenGroups).WriteBuffer();
-
-			return true;
 		}
 
-		bool CSEGlobalClipboardOperator::PreLoadCallback( void )
+		void CSEGlobalClipboardOperator::PreLoadCallback( void )
 		{
-			return true;
+			;//
 		}
 
-		bool CSEGlobalClipboardOperator::PostLoadCallback( void )
+		void CSEGlobalClipboardOperator::PostLoadCallback( void )
 		{
 			bool ReplaceAll = false;
 			bool CopyingRefs = false;
@@ -460,8 +309,6 @@ namespace ConstructionSetExtender
 				BGSEECONSOLE_MESSAGE("Pasted %d forms", CopiedForms);
 
 			FreeBuffer();
-
-			return true;
 		}
 
 		void CSEGlobalClipboardOperator::FreeBuffer( void )

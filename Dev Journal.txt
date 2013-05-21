@@ -21,7 +21,6 @@ CSE		---->
 	ENHANCEMENT		=
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
-		> Look into adding a global "undo-buffer"; the last n-changes made to any form can be undone.
 		> Add a random "roughness" factor to the landscape sculpting brush
 
 	CODA			=

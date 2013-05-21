@@ -267,6 +267,7 @@ namespace ConstructionSetExtender
 			delete BGSEEHALLOFFAME;
 			RenderSelectionGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
+			BGSEEUNDOSTACK->Reset();
 		}
 
 		#define _hhName	DataHandlerClearData

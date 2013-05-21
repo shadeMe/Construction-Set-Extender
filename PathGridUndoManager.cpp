@@ -192,7 +192,7 @@ namespace ConstructionSetExtender
 
 			for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
 			{
-				UndoProxyHandle Proxy(*Itr);
+				UndoProxyHandleT Proxy(*Itr);
 
 				for (PathGridPointListT::Iterator ItrEx = Selection->Begin(); !ItrEx.End() && ItrEx.Get(); ++ItrEx)
 				{
@@ -216,7 +216,7 @@ namespace ConstructionSetExtender
 
 		for (PathGridPointListT::Iterator Itr = Selection->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 		{
-			UndoProxyHandle Proxy(new PathGridPointUndoProxy(Operation, Itr.Get()));
+			UndoProxyHandleT Proxy(new PathGridPointUndoProxy(Operation, Itr.Get()));
 			ProxyList->push_back(Proxy);
 		}
 
@@ -271,7 +271,7 @@ namespace ConstructionSetExtender
 				{
 				case kOperation_PointCreation:
 					{
-						UndoProxyHandle Proxy(new PathGridPointUndoProxy(*(*Itr).get()));
+						UndoProxyHandleT Proxy(new PathGridPointUndoProxy(*(*Itr).get()));
 						Proxy->Operation = kOperation_PointDeletion;
 						AltProxyList->push_back(Proxy);
 
@@ -285,14 +285,14 @@ namespace ConstructionSetExtender
 
 						(*Itr)->Undo(this, &NewPoint);
 
-						UndoProxyHandle Proxy(new PathGridPointUndoProxy(kOperation_PointCreation, NewPoint));
+						UndoProxyHandleT Proxy(new PathGridPointUndoProxy(kOperation_PointCreation, NewPoint));
 						AltProxyList->push_back(Proxy);
 
 						break;
 					}
 				case kOperation_DataChange:
 					{
-						UndoProxyHandle Proxy(new PathGridPointUndoProxy(kOperation_DataChange, (*Itr)->Parent));
+						UndoProxyHandleT Proxy(new PathGridPointUndoProxy(kOperation_DataChange, (*Itr)->Parent));
 						AltProxyList->push_back(Proxy);
 
 						(*Itr)->Undo(this);

@@ -287,6 +287,12 @@
     <ClCompile Include="CSESettings.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="CSEWrappers.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEFormUndoStack.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -786,6 +792,21 @@
     <ClInclude Include="CSESettings.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEFormUndoStack.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEWrappers.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEWrappers.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEFormUndoStack.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.h">
+      <Filter>Components\Coda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\Splash.bmp">
@@ -865,12 +886,6 @@
     </None>
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\[Resources]\generic.bmp">
       <Filter>Resources\Images</Filter>
-    </None>
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl">
-      <Filter>Components\Coda</Filter>
-    </None>
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl">
-      <Filter>Components\Coda</Filter>
     </None>
     <None Include="Images\fakevoice.bmp">
       <Filter>Resources\Images</Filter>

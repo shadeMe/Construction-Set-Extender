@@ -359,6 +359,9 @@ BEGIN
         MENUITEM "&Undo\tCtrl-Z",               40097
         MENUITEM "&Redo\tCtrl-Y",               40162
         MENUITEM SEPARATOR
+        MENUITEM "Global Undo",                 IDC_MAINMENU_GLOBALUNDO
+        MENUITEM "Global Redo",                 IDC_MAINMENU_GLOBALREDO
+        MENUITEM SEPARATOR
         MENUITEM "C&ut Render\tCtrl-X",         40098
         MENUITEM "&Copy Render\tCtrl-C",        40099
         MENUITEM "&Paste Render\tCtrl-V",       40100

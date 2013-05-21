@@ -15,6 +15,7 @@
 #include "PathGridUndoManager.h"
 #include "CSInterop.h"
 #include "CSEGlobalClipboard.h"
+#include "CSEFormUndoStack.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -25,6 +26,33 @@ namespace ConstructionSetExtender
 {
 	namespace UIManager
 	{
+		enum
+		{
+			kFormList_ObjectWindowObjects						= 1041,
+			kFormList_TESPackage								= 1977,
+			kFormList_CellViewCells								= 1155,
+			kFormList_CellViewRefs								= 1156,
+			kFormList_TESFormIDListView							= 2064,
+			kFormList_DialogEditorTopics						= 1448,
+			kFormList_DialogEditorTopicInfos					= 1449,
+			kFormList_DialogEditorAddedTopics					= 1453,
+			kFormList_DialogEditorLinkedToTopics				= 1456,
+			kFormList_DialogEditorLinkedFromTopics				= 1455,
+			kFormList_Generic									= 1018,
+			kFormList_TESContainer								= 2035,
+			kFormList_TESSpellList								= 1485,
+			kFormList_ActorFactions								= 1088,
+			kFormList_TESLeveledList							= 2036,
+			kFormList_WeatherSounds								= 2286,
+			kFormList_ClimateWeatherRaceHairFindTextTopics		= 1019,
+			kFormList_RaceEyes									= 2163,
+			kFormList_TESReactionForm							= 1591,
+			kFormList_FindTextTopicInfos						= 1952,
+			kFormList_LandTextures								= 1492,
+			kFormList_CrossReferences							= 1637,
+			kFormList_CellUseList								= 1638,
+		};
+
 #define ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID				0x99
 
 		CSEFilterableFormListManager		CSEFilterableFormListManager::Instance;
@@ -471,6 +499,35 @@ namespace ConstructionSetExtender
 		CSERenderWindowMiscData::~CSERenderWindowMiscData()
 		{
 			;//
+		}
+		
+		CSETESFormEditData::CSETESFormEditData() :
+			BGSEditorExtender::BGSEEWindowExtraData()
+		{
+			Buffer = NULL;
+		}
+
+		CSETESFormEditData::~CSETESFormEditData()
+		{
+			if (Buffer)
+				Buffer->DeleteInstance();
+		}
+
+		void CSETESFormEditData::FillBuffer( TESForm* Parent )
+		{
+			SME_ASSERT(Parent && Buffer == NULL);
+
+			Buffer = TESForm::CreateInstance(Parent->formType);
+			Buffer->MarkAsTemporary();
+			Buffer->CopyFrom(Parent);
+			Buffer->SetFromActiveFile(Parent->GetFromActiveFile());
+		}
+
+		bool CSETESFormEditData::HasChanges( TESForm* Parent )
+		{
+			SME_ASSERT(Buffer && Buffer->formType == Parent->formType);
+
+			return Buffer->CompareTo(Parent);
 		}
 
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -1147,6 +1204,14 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_PASTEFROMGLOBALCLIPBOARD:
 					BGSEECLIPBOARD->Paste();
+
+					break;
+				case IDC_MAINMENU_GLOBALUNDO:
+					BGSEEUNDOSTACK->PerformUndo();
+
+					break;
+				case IDC_MAINMENU_GLOBALREDO:
+					BGSEEUNDOSTACK->PerformRedo();
 
 					break;
 				default:
@@ -2037,34 +2102,32 @@ namespace ConstructionSetExtender
 
 					if (GetActiveWindow() == hWnd)
 					{
-						if (GetAsyncKeyState(VK_SHIFT) ||
-							GetAsyncKeyState(VK_LBUTTON) || 
-							GetAsyncKeyState(VK_RBUTTON) || 
-							GetAsyncKeyState(VK_MBUTTON) || 
-							GetAsyncKeyState(VK_SPACE) || 
-							GetAsyncKeyState(0x56) ||		// V
-							GetCapture() == hWnd)				
+						// don't pick if the viewport is turbulent
+						if (GetAsyncKeyState(VK_SHIFT) == 0 &&
+							GetAsyncKeyState(VK_LBUTTON) == 0 &&
+							GetAsyncKeyState(VK_RBUTTON) == 0 &&
+							GetAsyncKeyState(VK_MBUTTON) == 0 &&
+							GetAsyncKeyState(VK_SPACE) == 0 &&
+							GetAsyncKeyState(0x56) == 0 &&			// V
+							GetCapture() != hWnd)				
 						{
-							// don't pick if the viewport is turbulent
-							break;
-						}
+							int Enabled = Settings::RenderWindowPainter::kShowMouseRef.GetData().i;
+							int ControlModified = Settings::RenderWindowPainter::kMouseRefCtrlModified.GetData().i;
 
-						int Enabled = Settings::RenderWindowPainter::kShowMouseRef.GetData().i;
-						int ControlModified = Settings::RenderWindowPainter::kMouseRefCtrlModified.GetData().i;
+							if (Enabled && (ControlModified == false || GetAsyncKeyState(VK_CONTROL)))
+							{
+								TESRenderWindow::CurrentMouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x,
+									TESRenderWindow::CurrentMouseCoord.y);
 
-						if (Enabled == false || (ControlModified && GetAsyncKeyState(VK_CONTROL) == 0))
-							break;
+								if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
+									TESRenderWindow::CurrentMouseRef = NULL;
 
-						TESRenderWindow::CurrentMouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x,
-																				TESRenderWindow::CurrentMouseCoord.y);
-
-						if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
-							TESRenderWindow::CurrentMouseRef = NULL;
-
-						if (TESRenderWindow::CurrentMouseRef ||
-							(LastMouseRef && TESRenderWindow::CurrentMouseRef == NULL))
-						{
-							TESRenderWindow::Redraw();
+								if (TESRenderWindow::CurrentMouseRef ||
+									(LastMouseRef && TESRenderWindow::CurrentMouseRef == NULL))
+								{
+									TESRenderWindow::Redraw();
+								}
+							}
 						}
 					}
 
@@ -3090,33 +3153,6 @@ namespace ConstructionSetExtender
 
 		enum
 		{
-			kFormList_ObjectWindowObjects						= 1041,
-			kFormList_TESPackage								= 1977,
-			kFormList_CellViewCells								= 1155,
-			kFormList_CellViewRefs								= 1156,
-			kFormList_TESFormIDListView							= 2064,
-			kFormList_DialogEditorTopics						= 1448,
-			kFormList_DialogEditorTopicInfos					= 1449,
-			kFormList_DialogEditorAddedTopics					= 1453,
-			kFormList_DialogEditorLinkedToTopics				= 1456,
-			kFormList_DialogEditorLinkedFromTopics				= 1455,
-			kFormList_Generic									= 1018,
-			kFormList_TESContainer								= 2035,
-			kFormList_TESSpellList								= 1485,
-			kFormList_ActorFactions								= 1088,
-			kFormList_TESLeveledList							= 2036,
-			kFormList_WeatherSounds								= 2286,
-			kFormList_ClimateWeatherRaceHairFindTextTopics		= 1019,
-			kFormList_RaceEyes									= 2163,
-			kFormList_TESReactionForm							= 1591,
-			kFormList_FindTextTopicInfos						= 1952,
-			kFormList_LandTextures								= 1492,
-			kFormList_CrossReferences							= 1637,
-			kFormList_CellUseList								= 1638,
-		};
-
-		enum
-		{
 			kAssetFileButton_Model								= 1043,		// includes idle animations and trees
 			kAssetFileButton_Texture							= 1044,
 			kAssetFileButton_Sound								= 1451,
@@ -3651,8 +3687,9 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+// returns TRUE if there are changes
 #define WM_TESFORMIDLISTVIEW_HASCHANGES							(WM_USER + 2006)
-		// return TRUE if there are changes
+// lParam = NMLISTVIEW* 
 #define WM_TESFORMIDLISTVIEW_SAVECHANGES						(WM_USER + 2007)
 
 		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -3668,6 +3705,8 @@ namespace ConstructionSetExtender
 			{
 			case WM_TESFORMIDLISTVIEW_HASCHANGES:
 				{
+					// doesn't reliably work on TESGlobal forms
+					// given their bollocks'd-up way of copying data from the dialog
 					Return = true;
 
 					if (IsWindowEnabled(GetDlgItem(hWnd, 1)))
@@ -3696,6 +3735,7 @@ namespace ConstructionSetExtender
 					{
 						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
 						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+						NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
 
 						if (WorkingCopy)
 						{
@@ -3703,6 +3743,9 @@ namespace ConstructionSetExtender
 
 							if (WorkingCopy->CompareTo(LocalCopy))
 							{
+								// fill in a new proxy from the working copy
+								BGSEEUNDOSTACK->Record(new FormUndoStack::CSEFormUndoProxy(WorkingCopy));
+								
 								if (WorkingCopy->UpdateUsageInfo())
 								{
 									WorkingCopy->SetFromActiveFile(true);
@@ -3710,6 +3753,9 @@ namespace ConstructionSetExtender
 
 									if (WorkingCopy->formType == TESForm::kFormType_EffectSetting)
 										BGSEEACHIEVEMENTS->Unlock(Achievements::kMagister);
+
+									if (ChangeData)
+										SendMessage(ChangeData->hdr.hwndFrom, LVM_REDRAWITEMS, ChangeData->iItem, ChangeData->iItem);
 								}
 							}
 						}
@@ -3730,17 +3776,57 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_DESTROY:
+				{
+					;//
+				}
+
 				break;
 			case WM_COMMAND:
+				if (HIWORD(wParam))		// to keep EN_KILLFOCUS notifications from inadvertently calling the button handlers
+					break;				// ### could cause weird behaviour later on
+
 				switch (LOWORD(wParam))
 				{
-				case 1:			// OK button
+				case 1:			// OK/Apply button
 					{
-						if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)
+						Return = true;
+						
+						SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+
+						if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
 						{
-							Return = true;
-							SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+							// the exception
+							DestroyWindow(hWnd);
 						}
+					}
+
+					break;
+				case 2:			// Cancel/Close button
+					{
+						Return = true;
+						bool Cancelled = false;
+
+						if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
+						{
+							int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNOCANCEL, "Save changes made to the active form and close the dialog?");
+
+							switch (MsgResult)
+							{
+							case IDCANCEL:
+								Cancelled = true;
+
+								break;
+							case IDYES:
+								SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+
+								break;
+							}
+
+							if (Cancelled)
+								break;
+						}
+
+						DestroyWindow(hWnd);
 					}
 
 					break;
@@ -3749,13 +3835,12 @@ namespace ConstructionSetExtender
 				break;
 			case WM_NOTIFY:
 				{
-					if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
-						break;
-
 					NMHDR* NotificationData = (NMHDR*)lParam;
 
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
-						break;
+						break;		// only interested in the main listview control
+					else if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+						break;		// you! go away!
 
 					switch (NotificationData->code)
 					{
@@ -3765,6 +3850,8 @@ namespace ConstructionSetExtender
 
 							if ((ChangeData->uChanged & 8) && (ChangeData->uOldState & LVIS_FOCUSED) && (ChangeData->uNewState & LVIS_FOCUSED) == false)
 							{
+								// before the new listview item is selected
+
 								if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
 								{
 									int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "Save changes made to the active form?");
@@ -3772,10 +3859,50 @@ namespace ConstructionSetExtender
 									switch (MsgResult)
 									{
 									case IDYES:
-										SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
+										SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, lParam);
 
 										break;
+									}									
+								}
+
+								Return = true;
+								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+							}
+							else if ((ChangeData->uChanged & 8) && (ChangeData->uOldState & LVIS_FOCUSED) == false && (ChangeData->uNewState & LVIS_FOCUSED) == false)
+							{
+								// after the new listview item is selected
+
+								int NewIndex = ChangeData->iItem;
+								HWND ListView = ChangeData->hdr.hwndFrom;
+								DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraParam);
+								DialogExtraLocalCopy* xLocalCopy = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraLocalCopy);
+								TESForm* NewSelection = NULL;
+
+								if (xParam && xLocalCopy && NewIndex != -1 && (NewSelection = (TESForm*)TESListView::GetItemData(ListView, NewIndex)))
+								{
+									xParam->form = NewSelection;
+									xLocalCopy->localCopy->CopyFrom(NewSelection);
+									xLocalCopy->localCopy->SetFromActiveFile(true);
+									xLocalCopy->localCopy->SetDataInDialog(hWnd);
+
+									char WindowTitle[0x100] = {0};
+									if (NewSelection->editorID.Size())
+									{
+										FORMAT_STR(WindowTitle, "%s : %s", NewSelection->GetTypeIDString(), NewSelection->GetEditorID());
 									}
+									else
+									{
+										FORMAT_STR(WindowTitle, "%s : EMPTY", NewSelection->GetTypeIDString());
+									}
+
+									SetWindowText(hWnd, WindowTitle);
+									if (IsWindowEnabled(GetDlgItem(hWnd, 1)) == FALSE)
+									{
+										EnableWindow(GetDlgItem(hWnd, 1), TRUE);
+										InvalidateRect(hWnd, NULL, TRUE);
+									}
+
+									SetFocus(ListView);
 
 									Return = true;
 									SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
@@ -3930,6 +4057,55 @@ namespace ConstructionSetExtender
 
 			return DlgProcResult;
 		}
+
+
+		LRESULT CALLBACK TESFormEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_INITDIALOG:
+				{
+					CSETESFormEditData* xData = BGSEE_GETWINDOWXDATA(CSETESFormEditData, ExtraData);
+					if (xData == NULL)
+					{
+						xData = new CSETESFormEditData();
+						ExtraData->Add(xData);
+
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+						xData->FillBuffer(WorkingCopy);
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				{
+					CSETESFormEditData* xData = BGSEE_GETWINDOWXDATA(CSETESFormEditData, ExtraData);
+					if (xData)
+					{
+						// at this point, the working copy is already modified (if there were changes and the user confirmed them)
+						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
+						if (xData->HasChanges(WorkingCopy))
+						{
+							// create a proxy from the pre-filled buffer
+							BGSEEUNDOSTACK->Record(new FormUndoStack::CSEFormUndoProxy(WorkingCopy, xData->Buffer));
+						}
+
+						ExtraData->Remove(CSETESFormEditData::kTypeID);
+						delete xData;
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
 
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
@@ -4505,20 +4681,60 @@ namespace ConstructionSetExtender
 
 		void Initialize( void )
 		{
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Faction, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Class, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Skill, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectSetting, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_GameSetting, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Globals, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Birthsign, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Climate, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Worldspace, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, TESFormIDListViewDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
+			{
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Enchantment, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Spell, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Sound, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Activator, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Apparatus, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Armor, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Book, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Clothing, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Container, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Door, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ingredient, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Light, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_MiscItem, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Static, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Grass, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Tree, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Flora, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Furniture, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weapon, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ammo, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_NPC, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Creature, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SoulGem, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Potion, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Subspace, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SigilStone, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledItem, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Package, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CombatStyle, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LoadingScreen, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AnimObject, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Water, TESFormEditDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectShader, TESFormEditDlgSubClassProc);
+			}
+
+			{
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Faction, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Class, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Skill, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectSetting, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_GameSetting, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Globals, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Birthsign, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Climate, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Worldspace, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
+			}
 
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);

@@ -177,6 +177,7 @@
     <ClCompile Include="Coda\CSECoda.cpp" />
     <ClCompile Include="CSEAchievements.cpp" />
     <ClCompile Include="CSEConsole.cpp" />
+    <ClCompile Include="CSEFormUndoStack.cpp" />
     <ClCompile Include="CSEGlobalClipboard.cpp" />
     <ClCompile Include="CSEHallOfFame.cpp" />
     <ClCompile Include="CSEMain.cpp" />
@@ -185,6 +186,7 @@
     <ClCompile Include="CSESettings.cpp" />
     <ClCompile Include="CSEUIManager.cpp" />
     <ClCompile Include="CSEWorkspaceManager.cpp" />
+    <ClCompile Include="CSEWrappers.cpp" />
     <ClCompile Include="EditorAPI\Archive.cpp" />
     <ClCompile Include="EditorAPI\BaseFormComponent.cpp" />
     <ClCompile Include="EditorAPI\BSFile.cpp" />
@@ -284,8 +286,11 @@
     <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEFormUndoStack.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEGlobalClipboard.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h" />
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.h" />
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEWrappers.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
@@ -293,6 +298,7 @@
     <ClInclude Include="Coda\CSECoda.h" />
     <ClInclude Include="CSEAchievements.h" />
     <ClInclude Include="CSEConsole.h" />
+    <ClInclude Include="CSEFormUndoStack.h" />
     <ClInclude Include="CSEGlobalClipboard.h" />
     <ClInclude Include="CSEHallOfFame.h" />
     <ClInclude Include="CSEMain.h" />
@@ -301,6 +307,7 @@
     <ClInclude Include="CSESettings.h" />
     <ClInclude Include="CSEUIManager.h" />
     <ClInclude Include="CSEWorkspaceManager.h" />
+    <ClInclude Include="CSEWrappers.h" />
     <ClInclude Include="EditorAPI\ActorValues.h" />
     <ClInclude Include="EditorAPI\Archive.h" />
     <ClInclude Include="EditorAPI\BaseFormComponent.h" />
@@ -409,8 +416,6 @@
     <ClInclude Include="Exports.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaForwardDecls.inl" />
-    <None Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.inl" />
     <None Include="..\..\[Libraries]\BGSEditorExtenderBase\[Resources]\generic.bmp" />
     <None Include="EditorAPI\NiTMap.h" />
     <None Include="Images\antic.bmp" />

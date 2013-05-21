@@ -93,7 +93,7 @@ namespace ConstructionSetExtender
 
 			void										FocusTextArea();
 			void										LoadFileFromDisk(String^ Path);
-			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName);
+			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, String^% DefaultExtension);
 
 			bool										GetModifiedStatus();
 			void										SetModifiedStatus(bool Modified);

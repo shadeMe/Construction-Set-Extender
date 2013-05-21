@@ -3,6 +3,7 @@
 #include "Hooks\Hooks-Dialog.h"
 #include "CSEAchievements.h"
 #include "CSEInterfaceManager.h"
+#include "CSEFormUndoStack.h"
 
 #include <BGSEditorExtenderBase_Resource.h>
 
@@ -129,6 +130,16 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void BGSEEConsoleCmd_Undo_ExecuteHandler(BGSEECONSOLECMD_ARGS)
+		{
+			BGSEEUNDOSTACK->PerformUndo();
+		}
+
+		void BGSEEConsoleCmd_Redo_ExecuteHandler(BGSEECONSOLECMD_ARGS)
+		{
+			BGSEEUNDOSTACK->PerformRedo();
+		}
+
 		DEFINE_BGSEECONSOLECMD(88MPH, 0);
 		DEFINE_BGSEECONSOLECMD(Wubble, 0);
 		DEFINE_BGSEECONSOLECMD(LoadPlugin, 2);
@@ -137,6 +148,8 @@ namespace ConstructionSetExtender
 		DEFINE_BGSEECONSOLECMD(AutoSave, 0);
 		DEFINE_BGSEECONSOLECMD(Exit, 0);
 		DEFINE_BGSEECONSOLECMD(Crash, 1);
+		DEFINE_BGSEECONSOLECMD(Undo, 0);
+		DEFINE_BGSEECONSOLECMD(Redo, 0);
 
 		void Initialize()
 		{
@@ -159,6 +172,8 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_LoadPlugin);
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_SavePlugin);
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_Crash);
+			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_Undo);
+			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_Redo);
 
 			CSEInterfaceManager::Instance.ConsumeConsoleInterface();
 		}

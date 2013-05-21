@@ -195,6 +195,7 @@ public:
 
 	bool							UpdateUsageInfo();
 	void							SetFromActiveFile(bool State);
+	bool							GetFromActiveFile() const;
 	void							SetDeleted(bool State);
 	void							SetQuestItem(bool State);
 	void							CopyFrom(TESForm* Form);
@@ -205,6 +206,7 @@ public:
 	void							LinkForm();								// internally referred to as InitItem
 	const char*						GetTypeIDString(void);
 	void							GetDataFromDialog(HWND Dialog);
+	void							SetDataInDialog(HWND Dialog);
 
 	static TESForm*					CreateInstance(UInt8 TypeID);
 	void							DeleteInstance(bool ReleaseMemory = true);

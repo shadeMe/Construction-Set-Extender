@@ -8,7 +8,7 @@
 /*
 	TESDialog is a 'container' classes for dealing with CS interface dialogs.
 	The static methods and data here may actually belong in a number of other classes, but they are grouped together
-	in the exectuable images, and apparently had their own file in the BS repository ("TESDialog.cpp").
+	in the executable images, and apparently had their own file in the BS repository ("TESDialog.cpp").
 	At the moment, these classes are defined for convenience, to group code related to the CS interface in one place.
 
 	TESDialogs store a BaseExtraDataList for DialogExtra*** objects in their window 'user param' (e.g. GetWindowLong(-0x15))
@@ -26,6 +26,7 @@ class	TESObjectREFR;
 class	BSExtraData;
 class	TESBoundObject;
 class	TESPreviewControl;
+class	ExtraDataList;
 
 // FormEditParam - for form-editing dialogs.
 // passed as initParam to CreateDialogParam() (i.e. lParam on WM_INITDIALOG message) for form-editing dialogs
@@ -227,7 +228,7 @@ public:
 
 		// Misc Dialogs
 		kDialogTemplate_StringEdit					= 174,
-		kDialogTemplate_SelectForm					= 189,			// used by teslistbox
+		kDialogTemplate_SelectForm					= 189,			// used by TESListBox
 		kDialogTemplate_SoundPick					= 195,
 		kDialogTemplate_UseReport					= 220,
 		kDialogTemplate_DialogNameConflicts			= 227,
@@ -350,6 +351,7 @@ public:
 	static bool								GetIsWindowDragDropRecipient(UInt16 FormType, HWND hWnd);
 
 	static bool								GetIsFormEditDialogCompatible(TESForm* Form);
+	static bool								CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong);
 
 	static bool								SelectTESFileCommonDialog(HWND Parent, const char* SaveDir, bool SaveAsESM, char* FileNameOut, size_t OutSize);
 	static HWND								ShowFormEditDialog(TESForm* Form);
@@ -461,6 +463,8 @@ public:
 		/*14*/ POINT		cursorPos;			// buffer used to store the coords of the cursor during a drag op
 	};
 	STATIC_ASSERT(sizeof(SplitterData) == 0x1C);
+
+	static void						RefreshFormList(void);
 
 	static HWND*					WindowHandle;
 	static HWND*					FormListHandle;

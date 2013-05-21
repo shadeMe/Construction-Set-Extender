@@ -1,5 +1,6 @@
 #pragma once
 #include <BGSEEUIManager.h>
+#include <BGSEEFormUndoStack.h>
 
 class Subwindow;
 
@@ -178,6 +179,25 @@ namespace ConstructionSetExtender
 			}
 		};
 
+		class CSETESFormEditData : public BGSEditorExtender::BGSEEWindowExtraData
+		{
+		public:
+			TESForm*						Buffer;		// stores a temp copy of the form being edited
+
+			CSETESFormEditData();
+			virtual ~CSETESFormEditData();
+
+			enum { kTypeID = 'XFED' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
+
+			void							FillBuffer(TESForm* Parent);
+			bool							HasChanges(TESForm* Parent);
+		};
+
 		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 
@@ -204,6 +224,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK		AIPackagesDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		AIFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		FaceGenDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		TESFormEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 
 		BOOL CALLBACK			AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -219,11 +240,11 @@ namespace ConstructionSetExtender
 }
 
 // custom window messages
-#define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
 // result = Vector3*
+#define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
 #define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
 
-// custom control IDs, as baked into dialog templates
+// custom control IDs, as baked into the dialog templates
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906
 #define IDC_CSE_DATA_LOADSTARTUPPLUGIN          9907
 

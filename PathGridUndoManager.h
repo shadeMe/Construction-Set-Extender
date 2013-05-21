@@ -30,8 +30,8 @@ namespace ConstructionSetExtender
 			void									Undo(PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = NULL);
 		};
 	private:
-		typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandle;
-		typedef std::list<UndoProxyHandle>						UndoProxyListT;
+		typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandleT;
+		typedef std::list<UndoProxyHandleT>						UndoProxyListT;
 		typedef std::stack<UndoProxyListT*>						UndoProxyStackT;
 
 		UndoProxyStackT								UndoStack;

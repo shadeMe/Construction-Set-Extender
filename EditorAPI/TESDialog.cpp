@@ -232,6 +232,11 @@ ExtraDataList* TESDialog::GetDialogExtraDataList( HWND Dialog )
 	return cdeclCall<ExtraDataList*>(0x00442980, Dialog);
 }
 
+bool TESDialog::CallFormDialogMessageCallback( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong )
+{
+	return cdeclCall<bool>(0x00442BD0, hWnd, uMsg, wParam, lParam, outLong);
+}
+
 void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
 {
 	cdeclCall<UInt32>(0x00403540, hWnd, Text, Data, ResizeDroppedWidth);
@@ -372,3 +377,8 @@ void TESCellViewWindow::SetCellSelection( TESObjectCELL* Cell )
 	cdeclCall<void>(0x00409070, Cell);
 }
 
+
+void TESObjectWindow::RefreshFormList( void )
+{
+	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
+}

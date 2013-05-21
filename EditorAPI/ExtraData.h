@@ -2,6 +2,7 @@
 
 #include "TESForm.h"
 #include "TESQuest.h"
+#include "TESDialog.h"
 
 //	EditorAPI: ExtraData class and its derivatives.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
@@ -161,6 +162,20 @@ public:
 };
 STATIC_ASSERT(sizeof(BSExtraData) == 0x0C);
 
+// stores the current form objected being edited in a dialog
+// init with FormEditParam's members
+// 14
+class DialogExtraParam : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ UInt8			formType;
+	/*0D*/ UInt8			pad0D[3];
+	/*10*/ TESForm*			form;
+};
+STATIC_ASSERT(sizeof(DialogExtraParam) == 0x14);
+
 // 14
 class DialogExtraSubWindow : public BSExtraData
 {
@@ -182,6 +197,17 @@ public:
 	/*10*/ void*				localCopy;
 };
 STATIC_ASSERT(sizeof(DialogExtraWorkingData) == 0x14);
+
+// stores a temporary form object to be used as a buffer
+// 10
+class DialogExtraLocalCopy : public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ TESForm*				localCopy;
+};
+STATIC_ASSERT(sizeof(DialogExtraLocalCopy) == 0x10);
 
 // 14
 class DialogExtraColorControl : public BSExtraData

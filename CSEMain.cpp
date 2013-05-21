@@ -23,6 +23,7 @@
 #include "CSInterop.h"
 #include "Coda\CSECoda.h"
 #include "CSEGlobalClipboard.h"
+#include "CSEFormUndoStack.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -282,6 +283,11 @@ namespace ConstructionSetExtender
 		GlobalClipboard::Initialize();
 		BGSEECONSOLE->Exdent();
 
+		BGSEECONSOLE_MESSAGE("Initializing Form Undo Stack");
+		BGSEECONSOLE->Indent();
+		FormUndoStack::Initialize();
+		BGSEECONSOLE->Exdent();
+
 		BGSEECONSOLE_MESSAGE("Initializing Startup Manager");
 		BGSEECONSOLE->Indent();
 		CSEStartupManager::LoadStartupWorkspace();
@@ -387,6 +393,11 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE_MESSAGE("Deinitializing Global Clipboard");
 		BGSEECONSOLE->Indent();
 		delete BGSEECLIPBOARD;
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Deinitializing Form Undo Stack");
+		BGSEECONSOLE->Indent();
+		delete BGSEEUNDOSTACK;
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Auxiliary Viewport");

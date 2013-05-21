@@ -65,7 +65,7 @@
 #include "TESSoulGem.h"
 #include "TESSound.h"
 #include "TESSubSpace.h"
-#include "TESWeather.h"
+#include "TESWeather.h"			// ### incomplete
 #include "TESQuest.h"
 #include "TESWorldSpace.h"
 #include "TESTopicInfo.h"
@@ -76,14 +76,16 @@
 #include "TESLoadScreen.h"
 #include "TESObjectANIO.h"
 #include "TESPackage.h"
-#include "TESWaterForm.h"
+#include "TESWaterForm.h"		// ### incomplete
 #include "TESDialog.h"
 #include "Archive.h"
 #include "TESRender.h"
 #include "TESIdleForm.h"
 #include "TESPathGrid.h"
-#include "TESObjectLAND.h"
+#include "TESObjectLAND.h"		// ### incomplete
 #include "SettingCollection.h"
+//#include "TESLevSpell.h"
+
 
 // NiAPI
 #include "NiGeometry.h"

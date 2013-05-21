@@ -113,7 +113,7 @@ namespace ConstructionSetExtender
 			void												SaveAllOpenWorkspaces();
 			void												CloseAllOpenWorkspaces();
 
-			void												DumpAllOpenWorkspacesToFolder(String^ FolderPath);
+			void												DumpAllOpenWorkspacesToFolder(String^ FolderPath, String^ FileExtension);
 			void												LoadFileIntoNewWorkspace(String^ FileName);
 
 			Workspace^											LookupWorkspaceByTabIndex(UInt32 TabIndex);
@@ -485,7 +485,7 @@ namespace ConstructionSetExtender
 			void												HandlePositionSizeChange() { TextEditor->OnPositionSizeChange(); }
 
 			void												LoadFileFromDisk(String^ Path);
-			void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName);
+			void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ Extension);
 
 			int													PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options);
 			void												InsertVariable(String^ VariableName, ScriptParser::VariableType VariableType);

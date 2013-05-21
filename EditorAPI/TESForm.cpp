@@ -228,7 +228,7 @@ TESForm* TESForm::LookupByEditorID(const char* EditorID)
 
 const char* TESForm::GetTypeIDString( void )
 {
-	return cdeclCall<const char*>(0x004AC1B0, this->formType);
+	return GetFormTypeIDLongName(this->formType);
 }
 
 bool TESForm::IsReference() const
@@ -258,10 +258,7 @@ void TESForm::GetDataFromDialog( HWND Dialog )
 
 const char* TESForm::GetFormTypeIDLongName( UInt8 TypeID )
 {
-	if (TypeID >= kFormType__MAX)
-		return "Unknown";
-	else
-		return FormTypeIDLongNames[(int)TypeID];
+	return cdeclCall<const char*>(0x004AC1B0, TypeID);
 }
 
 bool TESForm::LoadForm( TESFile* File )
@@ -277,4 +274,14 @@ bool TESForm::SaveFormRecord( TESFile* File )
 const char* TESForm::GetEditorID() const
 {
 	return editorID.c_str();
+}
+
+void TESForm::SetDataInDialog( HWND Dialog )
+{
+	thisVirtualCall<void>(0x114, this, Dialog);
+}
+
+bool TESForm::GetFromActiveFile() const
+{
+	return (formFlags & kFormFlags_FromActiveFile);
 }
