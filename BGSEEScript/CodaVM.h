@@ -36,7 +36,6 @@ namespace BGSEditorExtender
 		class CodaScriptCommandRegistrar
 		{
 			friend class CodaScriptCommandRegistry;
-		protected:
 			typedef std::list<ICodaScriptCommand*>		CommandListT;
 
 			CommandListT								Commands;

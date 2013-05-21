@@ -121,7 +121,7 @@ namespace BGSEditorExtender
 	class BGSEERenderWindowPainter
 	{
 		static BGSEERenderWindowPainter*		Singleton;
-	protected:
+		
 		BGSEERenderWindowPainter();
 
 		typedef std::list<BGSEERenderChannelBase*>	RenderChannelListT;

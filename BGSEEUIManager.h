@@ -324,7 +324,7 @@ namespace BGSEditorExtender
 
 		void									PatchIAT(UInt8 PatchType, void* Callback);		// CALLBACK call convention
 	public:
-		virtual ~BGSEEUIManager();
+		~BGSEEUIManager();
 
 		static BGSEEUIManager*					GetSingleton();
 		bool									Initialize(const char* MainWindowClassName, HMENU MainMenuHandle = NULL);

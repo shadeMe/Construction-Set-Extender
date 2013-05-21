@@ -58,6 +58,12 @@
     <Filter Include="Modules\BGSEEGlobalClipboard">
       <UniqueIdentifier>{3bf3549c-9b89-4b17-869f-b1f7ca10458f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules\BGSEEFormUndoStack">
+      <UniqueIdentifier>{417dc664-ab5f-4541-9f0c-073cfdd271a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\BGSEEWrappers">
+      <UniqueIdentifier>{7e25680c-be39-47ff-9351-248812afe82c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BGSEEMain.h">
@@ -271,6 +277,12 @@
     <ClInclude Include="BGSEEScript\CodaPublicAPI.h">
       <Filter>Modules\BGSEEScript</Filter>
     </ClInclude>
+    <ClInclude Include="BGSEEFormUndoStack.h">
+      <Filter>Modules\BGSEEFormUndoStack</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEEWrappers.h">
+      <Filter>Modules\BGSEEWrappers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
@@ -438,6 +450,9 @@
     </ClCompile>
     <ClCompile Include="BGSEEGlobalClipboard.cpp">
       <Filter>Modules\BGSEEGlobalClipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEFormUndoStack.cpp">
+      <Filter>Modules\BGSEEFormUndoStack</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

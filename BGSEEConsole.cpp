@@ -368,7 +368,10 @@ namespace BGSEditorExtender
 	BGSEEConsole::MessageLogContext::MessageLogContext( const char* ContextName, const char* ContextLogPath /*= NULL*/ )
 	{
 		this->Name = ContextName;
-		this->LogPath = ContextLogPath;
+		if (ContextLogPath)
+			this->LogPath = ContextLogPath;
+		else
+			this->LogPath = "";
 		this->BackBuffer.reserve(BGSEEConsole::kMessageLogCharLimit);
 		this->SetState(kState_Default);
 	}

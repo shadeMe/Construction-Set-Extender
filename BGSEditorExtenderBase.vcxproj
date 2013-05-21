@@ -24,6 +24,7 @@
     <ClInclude Include="..\SME Sundries\VersionInfo.h" />
     <ClInclude Include="BGSEEAchievements.h" />
     <ClInclude Include="BGSEEConsole.h" />
+    <ClInclude Include="BGSEEFormUndoStack.h" />
     <ClInclude Include="BGSEEGlobalClipboard.h" />
     <ClInclude Include="BGSEEHallOfFame.h" />
     <ClInclude Include="BGSEEMain.h" />
@@ -79,6 +80,7 @@
     <ClInclude Include="BGSEEToolBox.h" />
     <ClInclude Include="BGSEEUIManager.h" />
     <ClInclude Include="BGSEEWorkspaceManager.h" />
+    <ClInclude Include="BGSEEWrappers.h" />
     <ClInclude Include="DetectSIMD.h" />
     <ClInclude Include="BGSEditorExtenderBase_Resource.h" />
     <ClInclude Include="StdAfx.h" />
@@ -94,6 +96,7 @@
     <ClCompile Include="..\SME Sundries\UIHelpers.cpp" />
     <ClCompile Include="BGSEEAchievements.cpp" />
     <ClCompile Include="BGSEEConsole.cpp" />
+    <ClCompile Include="BGSEEFormUndoStack.cpp" />
     <ClCompile Include="BGSEEGlobalClipboard.cpp" />
     <ClCompile Include="BGSEEHallOfFame.cpp" />
     <ClCompile Include="BGSEEMain.cpp" />

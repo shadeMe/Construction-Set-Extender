@@ -127,7 +127,7 @@ namespace BGSEditorExtender
 			bool								LookupCommandByInstance(BGSEEConsoleCommandInfo* Command, ConsoleCommandListT::iterator& Match);
 		public:
 			ConsoleCommandTable();
-			virtual ~ConsoleCommandTable();
+			~ConsoleCommandTable();
 
 			bool								AddCommand(BGSEEConsoleCommandInfo* Command);
 			void								RemoveCommand(BGSEEConsoleCommandInfo* Command);
@@ -193,8 +193,8 @@ namespace BGSEditorExtender
 		void						ExdentAll();
 		void						Pad(UInt32 Count);
 
-		void*						RegisterMessageLogContext(const char* Name, const char* LogPath = NULL);
-		void						UnregisterMessageLogContext(void* Context);
+		void*						RegisterMessageLogContext(const char* Name, const char* LogPath = NULL);	// returns the context object
+		void						UnregisterMessageLogContext(void* Context);									// destroys the pointer
 		void						PrintToMessageLogContext(void* Context, const char* Format, ...);
 
 		bool						RegisterConsoleCommand(BGSEEConsoleCommandInfo* Command);

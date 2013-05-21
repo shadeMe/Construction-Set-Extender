@@ -163,7 +163,7 @@ namespace BGSEditorExtender
 
 		friend class DefaultInitCallback;
 		friend class DefaultDeinitCallback;
-	protected:
+
 		BGSEEMain();
 
 		std::string					ExtenderLongName;
@@ -191,7 +191,7 @@ namespace BGSEditorExtender
 
 		bool						Initialized;
 	public:
-		virtual ~BGSEEMain();
+		~BGSEEMain();
 
 		enum
 		{
