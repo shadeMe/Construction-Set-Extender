@@ -1794,9 +1794,6 @@ namespace ConstructionSetExtender
 				TextField = gcnew AvalonEdit::TextEditor();
 				AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
 				IntelliSenseBox = gcnew IntelliSenseInterface(ParentWorkspaceIndex);
-				ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField, KnownLayer::Text);
-				FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField, KnownLayer::Text);
-				BraceColorizer = gcnew AvalonEditBraceHighlightingBGColorizer(TextField, KnownLayer::Caret);
 				CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 				CodeFoldingStrategy = nullptr;
 
@@ -1872,12 +1869,16 @@ namespace ConstructionSetExtender
 				TextField->Background = BackgroundBrush;
 				TextField->LineNumbersForeground = ForegroundBrush;
 
-				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer);
-				TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer);
-				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer);
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditSelectionBGColorizer(TextField, KnownLayer::Text));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditLineLimitBGColorizer(TextField, KnownLayer::Text));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditCurrentLineBGColorizer(TextField, KnownLayer::Text));
+
+				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField,
+																																KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField,
+																																KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer = gcnew AvalonEditBraceHighlightingBGColorizer(TextField,
+																																KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditSelectionBGColorizer(TextField, KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditLineLimitBGColorizer(TextField, KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditCurrentLineBGColorizer(TextField, KnownLayer::Background));
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))

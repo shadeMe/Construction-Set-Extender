@@ -1710,9 +1710,9 @@ namespace ConstructionSetExtender
 			else
 			{
 				SendMessage(*TESCellViewWindow::ObjectListHandle,
-				LVM_SORTITEMS,
-				*TESCellViewWindow::ObjectListSortColumn,
-				(LPARAM)UIManager::CSECellViewExtraData::CustomFormListComparator);
+							LVM_SORTITEMS,
+							*TESCellViewWindow::ObjectListSortColumn,
+							(LPARAM)UIManager::CSECellViewExtraData::CustomFormListComparator);
 			}
 		}
 

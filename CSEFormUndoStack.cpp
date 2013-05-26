@@ -61,12 +61,20 @@ namespace ConstructionSetExtender
 
 			if (EditorID.length())
 			{
-				if (_stricmp(EditorID.c_str(), Parent->GetEditorID()) && TESForm::LookupByEditorID(EditorID.c_str()) == NULL)
+				if (_stricmp(EditorID.c_str(), Parent->GetEditorID()))
 				{
-					// copy editorID if it's been changed and no other form's using it
-					if (Parent->SetEditorID(EditorID.c_str()) == false)
+				
+					if (TESForm::LookupByEditorID(EditorID.c_str()) == NULL)
 					{
-						BGSEEUNDOSTACK->Print("Couldn't copy editorID from undo proxy to form %08X", Parent->formID);
+						// copy editorID if it's been changed and no other form's using it
+						if (Parent->SetEditorID(EditorID.c_str()) == false)
+						{
+							BGSEEUNDOSTACK->Print("Couldn't copy editorID from undo proxy to form %08X", GetFormID());
+						}
+					}
+					else
+					{
+						BGSEEUNDOSTACK->Print("Couldn't undo editorID for proxy %08X - Old editorID is in use", GetFormID());
 					}
 				}
 			}
@@ -136,7 +144,7 @@ namespace ConstructionSetExtender
 			case TESForm::kFormType_WorldSpace:
 			case TESForm::kFormType_GMST:
 			case TESForm::kFormType_Global:			//	### weird bugger, this - has a stubbed out TESForm::GetFromDialog
-													//		counter intuitively, the data sync is performed directly inside the dlg message callback
+													//		counterintuitively, the data sync is performed directly inside the dlg message callback
 													//		remnant of the Morrowind CS code base, methinks. perhaps even ToddCode™
 			// Misc forms
 //			case TESForm::kFormType_TopicInfo:			### can be copied but might be troublesome
