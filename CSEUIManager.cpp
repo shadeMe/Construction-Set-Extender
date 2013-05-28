@@ -4093,7 +4093,10 @@ namespace ConstructionSetExtender
 						ExtraData->Add(xData);
 
 						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
-						xData->FillBuffer(WorkingCopy);
+						if (WorkingCopy)		// can be NULL when creating new forms
+						{
+							xData->FillBuffer(WorkingCopy);
+						}
 					}
 				}
 
@@ -4106,7 +4109,7 @@ namespace ConstructionSetExtender
 						// at this point, the working copy is already modified (if there were changes and the user confirmed them)
 						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
 
-						if (xData->HasChanges(WorkingCopy))
+						if (WorkingCopy && xData->HasChanges(WorkingCopy))
 						{
 							// create a proxy from the pre-filled buffer
 							BGSEEUNDOSTACK->Record(new FormUndoStack::CSEFormUndoProxy(WorkingCopy, xData->Buffer));
