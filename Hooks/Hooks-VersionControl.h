@@ -25,6 +25,5 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESTopicInfoCreate, "");
 		_DeclareMemHdlr(TESIdleFormCreateSibling, "");
 		_DeclareMemHdlr(TESIdleFormCreateChild, "");
-		_DeclareMemHdlr(TESDialogFormEditCopyForm, "records changes made to a form on closing a form edit dialog");
 	}
 }

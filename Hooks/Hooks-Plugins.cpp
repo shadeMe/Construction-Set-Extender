@@ -1,7 +1,6 @@
 #include "Hooks-Plugins.h"
 #include "Hooks-Misc.h"
 #include "Hooks-Dialog.h"
-#include "..\ChangeLogManager.h"
 #include "..\CSEUIManager.h"
 #include "..\CSEWorkspaceManager.h"
 

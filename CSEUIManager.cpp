@@ -10,7 +10,6 @@
 #include "Hooks\Hooks-Dialog.h"
 #include "Hooks\Hooks-Renderer.h"
 #include "Hooks\Hooks-LOD.h"
-#include "ChangeLogManager.h"
 #include "RenderSelectionGroupManager.h"
 #include "PathGridUndoManager.h"
 #include "CSInterop.h"

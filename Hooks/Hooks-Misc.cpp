@@ -4,10 +4,10 @@
 #include "Hooks-Renderer.h"
 #include "..\RenderSelectionGroupManager.h"
 #include "..\AuxiliaryViewport.h"
-#include "..\ChangeLogManager.h"
 #include "..\CSEAchievements.h"
 #include "..\CSEHallOfFame.h"
 #include "..\CSEWorkspaceManager.h"
+#include "..\CSEFormUndoStack.h"
 
 #pragma warning(push)
 #pragma optimize("", off)

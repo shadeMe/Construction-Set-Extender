@@ -18,7 +18,7 @@
 #include "CSEHallOfFame.h"
 #include "CSEUIManager.h"
 #include "CSEWorkspaceManager.h"
-#include "ChangeLogManager.h"
+#include "CSEChangeLogManager.h"
 #include "AuxiliaryViewport.h"
 #include "CSInterop.h"
 #include "Coda\CSECoda.h"
@@ -177,8 +177,6 @@ namespace ConstructionSetExtender
 
 	bool CSEInitCallbackEpilog::Handle(void* Parameter)
 	{
-		SME::MersenneTwister::init_genrand(GetTickCount());
-
 		BGSEECONSOLE_MESSAGE("Initializing Component DLL Interfaces");
 		BGSEECONSOLE->Indent();
 		CLIWrapper::QueryInterfaces();
@@ -270,7 +268,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Initializing Change Log Manager");
 		BGSEECONSOLE->Indent();
-		VersionControl::CHANGELOG->Initialize();
+		ChangeLogManager::Initialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Panic Save Handler");
@@ -412,7 +410,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Change Log Manager");
 		BGSEECONSOLE->Indent();
-		delete VersionControl::CHANGELOG;
+		delete BGSEECHANGELOG;
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing CSInterop Manager");

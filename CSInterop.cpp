@@ -56,7 +56,7 @@ namespace ConstructionSetExtender
 
 		if ((GUIDReturn == RPC_S_OK || GUIDReturn == RPC_S_UUID_LOCAL_ONLY) && GUIDStrReturn == RPC_S_OK)
 		{
-			BGSEECONSOLE_MESSAGE("Pipe GUID = %s", *GUIDOut);
+	//		BGSEECONSOLE_MESSAGE("Pipe GUID = %s", *GUIDOut);
 			char PipeName[0x200] = {0};
 			sprintf_s(PipeName, 0x200, "\\\\.\\pipe\\{%s}", *GUIDOut);
 

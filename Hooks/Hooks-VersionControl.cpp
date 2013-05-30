@@ -1,6 +1,6 @@
 #include "Hooks-VersionControl.h"
 #include "Hooks-Plugins.h"
-#include "..\ChangeLogManager.h"
+#include "..\CSEChangeLogManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -27,7 +27,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESTopicInfoCreate, 0x004F07E9);
 		_DefineHookHdlr(TESIdleFormCreateSibling, 0x004D4093);
 		_DefineHookHdlr(TESIdleFormCreateChild, 0x004D426B);
-		_DefineHookHdlr(TESDialogFormEditCopyForm, 0x00447B21);
 
 		void PatchVersionControlHooks(void)
 		{
@@ -48,15 +47,14 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESTopicInfoCreate).WriteJump();
 			_MemHdlr(TESIdleFormCreateSibling).WriteJump();
 			_MemHdlr(TESIdleFormCreateChild).WriteJump();
-			_MemHdlr(TESDialogFormEditCopyForm).WriteJump();
 		}
 
 		void __stdcall DoDataHandlerLoadPluginsWrapperHook(bool State)
 		{
 			if (State)
-				VersionControl::HandlePluginLoadProlog();
+				ChangeLogManager::HandlePluginLoadProlog();
 			else
-				VersionControl::HandlePluginLoadEpilog();
+				ChangeLogManager::HandlePluginLoadEpilog();
 		}
 
 		#define _hhName		DataHandlerLoadPluginsWrapper
@@ -84,7 +82,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
 		{
-			VersionControl::HandlePluginSave(SaveFile);
+			ChangeLogManager::HandlePluginSave(SaveFile);
 			TESDataHandler::PluginLoadSaveInProgress = true;
 		}
 
@@ -106,7 +104,7 @@ namespace ConstructionSetExtender
 		{
 			if ((Form->formFlags & TESForm::kFormFlags_Temporary) == 0 && TESDataHandler::PluginLoadSaveInProgress == false)
 			{
-				VersionControl::CHANGELOG->RecordFormChange(Form, ChangeType, Value);
+				BGSEECHANGELOG->RecordChange(ChangeLogManager::CSEBasicFormChangeEntry(ChangeType, Form, Value));
 			}
 		}
 
@@ -123,7 +121,7 @@ namespace ConstructionSetExtender
 				movzx	eax, byte ptr [esp + 0x4]
 				pushad
 				push	eax
-				push	0		// VersionControl::ChangeLogManager::kFormChange_SetActive
+				push	0		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetActive
 				push	ecx
 				call	DoTESFormChangeHook
 				popad
@@ -145,7 +143,7 @@ namespace ConstructionSetExtender
 				movzx	eax, bl
 				pushad
 				push	eax
-				push	1		// VersionControl::ChangeLogManager::kFormChange_SetDeleted
+				push	1		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetDeleted
 				push	esi
 				call	DoTESFormChangeHook
 				popad
@@ -169,7 +167,7 @@ namespace ConstructionSetExtender
 			{
 				pushad
 				push	edi
-				push	2		// VersionControl::ChangeLogManager::kFormChange_SetFormID
+				push	2		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetFormID
 				push	esi
 				call	DoTESFormChangeHook
 				popad
@@ -188,7 +186,7 @@ namespace ConstructionSetExtender
 			{
 				pushad
 				push	esi
-				push	3		// VersionControl::ChangeLogManager::kFormChange_SetEditorID
+				push	3		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetEditorID
 				push	edi
 				call	DoTESFormChangeHook
 				popad
@@ -200,7 +198,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDataHandlerCreateFormHook(TESForm* Form)
 		{
-			VersionControl::CHANGELOG->RecordChange("%s\t[%08X]\t%s\tInstantiated",  Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
+			BGSEECHANGELOG->RecordChange("%s\t[%08X]\t%s\tInstantiated",  Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
 		}
 
 		#define _hhName		TESDialogFormEditNewForm
@@ -375,28 +373,6 @@ namespace ConstructionSetExtender
 				push	eax
 				call	DoDataHandlerCreateFormHook
 				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		void __stdcall DoTESFormCopyHook(TESForm* To, TESForm* From)
-		{
-	//		VersionControl::CHANGELOG->RecordChange(To, From);
-		}
-
-		#define _hhName		TESDialogFormEditCopyForm
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00447B27);
-			__asm
-			{
-				pushad
-				push	ebx
-				push	esi
-				call	DoTESFormCopyHook
-				popad
-
-				mov     eax, [edx + 0xB8]
 				jmp		_hhGetVar(Retn)
 			}
 		}

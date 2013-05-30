@@ -218,7 +218,7 @@
     <ClCompile Include="EditorAPI\TESRender.cpp" />
     <ClCompile Include="EditorAPI\TESSound.cpp" />
     <ClCompile Include="Hooks\Hooks-VersionControl.cpp" />
-    <ClCompile Include="ChangeLogManager.cpp" />
+    <ClCompile Include="CSEChangeLogManager.cpp" />
     <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -286,6 +286,7 @@
     <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEChangeLogManager.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEFormUndoStack.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEGlobalClipboard.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h" />
@@ -391,7 +392,7 @@
     <ClInclude Include="EditorAPI\TESWeather.h" />
     <ClInclude Include="EditorAPI\TESWorldSpace.h" />
     <ClInclude Include="Hooks\Hooks-VersionControl.h" />
-    <ClInclude Include="ChangeLogManager.h" />
+    <ClInclude Include="CSEChangeLogManager.h" />
     <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="VersionInfo.h" />

@@ -1,6 +1,5 @@
 #pragma once
 #include <BGSEEUIManager.h>
-#include <BGSEEFormUndoStack.h>
 
 class Subwindow;
 

@@ -115,9 +115,6 @@
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="ChangeLogManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="StdAfx.cpp" />
     <ClCompile Include="PathGridUndoManager.cpp">
       <Filter>Components</Filter>
@@ -293,6 +290,9 @@
     <ClCompile Include="CSEFormUndoStack.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="CSEChangeLogManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -338,9 +338,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
-    <ClInclude Include="ChangeLogManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="EditorAPI\TESEditorAPI.h">
       <Filter>EditorAPI</Filter>
     </ClInclude>
@@ -806,6 +803,12 @@
     </ClInclude>
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.h">
       <Filter>Components\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEChangeLogManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEChangeLogManager.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

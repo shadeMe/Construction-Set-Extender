@@ -1613,7 +1613,10 @@ namespace ConstructionSetExtender
 				gcnew TextEditors::IScriptTextEditor::FindReplaceOutput(this, &ScriptEditor::Workspace::FindReplaceOutput), Options);
 
 			if (Hits > 0 && FindList->Visible == false)
-				ToolBarFindList->PerformClick();
+			{
+		//		ToolBarFindList->PerformClick();		will only work for the currently visible workspace
+				ToolBarFindList_Click(nullptr, nullptr);
+			}
 
 			return Hits;
 		}
