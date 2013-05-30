@@ -101,6 +101,7 @@
 #include "SME Sundries\StringHelpers.h"
 #include "SME Sundries\UIHelpers.h"
 #include "SME Sundries\MiscGunk.h"
+#include "SME Sundries\MersenneTwister.h"
 
 using namespace SME::Functors;
 using namespace SME::INI;

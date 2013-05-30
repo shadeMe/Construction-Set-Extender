@@ -23,6 +23,7 @@
     <ClInclude Include="..\SME Sundries\UIHelpers.h" />
     <ClInclude Include="..\SME Sundries\VersionInfo.h" />
     <ClInclude Include="BGSEEAchievements.h" />
+    <ClInclude Include="BGSEEChangeLogManager.h" />
     <ClInclude Include="BGSEEConsole.h" />
     <ClInclude Include="BGSEEFormUndoStack.h" />
     <ClInclude Include="BGSEEGlobalClipboard.h" />
@@ -95,6 +96,7 @@
     <ClCompile Include="..\SME Sundries\StringHelpers.cpp" />
     <ClCompile Include="..\SME Sundries\UIHelpers.cpp" />
     <ClCompile Include="BGSEEAchievements.cpp" />
+    <ClCompile Include="BGSEEChangeLogManager.cpp" />
     <ClCompile Include="BGSEEConsole.cpp" />
     <ClCompile Include="BGSEEFormUndoStack.cpp" />
     <ClCompile Include="BGSEEGlobalClipboard.cpp" />

@@ -64,6 +64,9 @@
     <Filter Include="Modules\BGSEEWrappers">
       <UniqueIdentifier>{7e25680c-be39-47ff-9351-248812afe82c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Modules\BGSEEChangeLogManager">
+      <UniqueIdentifier>{e12e7162-6922-4d38-b917-17cb81d6e00a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BGSEEMain.h">
@@ -283,6 +286,9 @@
     <ClInclude Include="BGSEEWrappers.h">
       <Filter>Modules\BGSEEWrappers</Filter>
     </ClInclude>
+    <ClInclude Include="BGSEEChangeLogManager.h">
+      <Filter>Modules\BGSEEChangeLogManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BGSEEMain.cpp">
@@ -453,6 +459,9 @@
     </ClCompile>
     <ClCompile Include="BGSEEFormUndoStack.cpp">
       <Filter>Modules\BGSEEFormUndoStack</Filter>
+    </ClCompile>
+    <ClCompile Include="BGSEEChangeLogManager.cpp">
+      <Filter>Modules\BGSEEChangeLogManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

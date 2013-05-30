@@ -459,6 +459,9 @@ namespace BGSEditorExtender
 			BGSEECONSOLE_MESSAGE("Couldn't initialize common controls");
 			return false;
 		}
+
+		SME::MersenneTwister::init_genrand(GetTickCount());
+
 		BGSEECONSOLE->Exdent();
 
 		return true;
