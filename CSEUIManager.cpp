@@ -688,6 +688,34 @@ namespace ConstructionSetExtender
 						}
 
 						break;
+					case LVN_KEYDOWN:
+						if (wParam == 1057)
+						{
+							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
+
+							switch (KeyData->wVKey)
+							{
+							case VK_DELETE:		// delete master
+								{
+									TESFile* Selection = (TESFile*)TESListView::GetSelectedItemData(KeyData->hdr.hwndFrom);
+									if (Selection)
+									{
+										if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "You are about to remove a master file from the selected plugin.\n\nAre you sure you'd like to proceed?") == IDNO)
+											Return = true;
+									}
+								}
+
+								break;
+							case VK_INSERT:		// insert master
+								{
+									;//
+								}
+
+								break;
+							}
+						}
+
+						break;
 					}
 				}
 
@@ -2101,7 +2129,6 @@ namespace ConstructionSetExtender
 
 					if (GetActiveWindow() == hWnd && GetCapture() != hWnd && *TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 					{
-
 						int Enabled = Settings::RenderWindowPainter::kShowMouseRef.GetData().i;
 						int ControlModified = Settings::RenderWindowPainter::kMouseRefCtrlModified.GetData().i;
 
@@ -3824,7 +3851,7 @@ namespace ConstructionSetExtender
 
 						if (SendMessage(hWnd, WM_TESFORMIDLISTVIEW_HASCHANGES, NULL, NULL) == TRUE)
 						{
-							int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNOCANCEL, "Save changes made to the active form and close the dialog?");
+							int MsgResult = BGSEEUI->MsgBoxW(hWnd, MB_YESNOCANCEL, "Save changes made to the active form before closing the dialog?");
 
 							switch (MsgResult)
 							{

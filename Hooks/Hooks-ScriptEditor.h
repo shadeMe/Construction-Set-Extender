@@ -17,6 +17,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(MaxScriptSizeOverrideParseScriptLine, "");
 		_DeclareMemHdlr(InitializeScriptLineBufferLFLineEnds, "patches the code to indentify LF line ends in addition to those with CRLF");
 		_DeclareMemHdlr(ScriptCompileCheckSyntaxInvalidRef, "fixes a bug that causes a CTD when a ref var was used as a calling reference in a compound expression, e.g. message \"object agi: %d\" someRefvar.getAV Agility");
-		_DeclareMemHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses, "fixes a bug that causes the scirpt compiler to skip warning the user about mismatching parentheses in set expressions");
+		_DeclareMemHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses, "fixes a bug that causes the script compiler to skip warning the user about mismatching parentheses in set expressions");
 	}
 }

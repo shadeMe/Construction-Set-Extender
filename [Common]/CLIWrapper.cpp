@@ -61,7 +61,7 @@ namespace ConstructionSetExtender
 				}
 
 				ComponentDLLInterface::QueryInterface ExportedProc = (ComponentDLLInterface::QueryInterface)GetProcAddress(hMod, "QueryInterface");
-				if (!ExportedProc)
+				if (ExportedProc == NULL)
 				{
 					BGSEECONSOLE_ERROR("Couldn't import interface from %s", DLLName.c_str());
 					return false;
