@@ -642,7 +642,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{
 			MessageBox(NULL,
-					"The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information - It can be found in the same folder as the editor.",
+					"The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information - It can be found in the same folder as the editor, named 'Construction Set Extender'.",
 					"The Cyrodiil Bunny Ranch",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
@@ -657,7 +657,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
 		{
 			MessageBox(NULL,
-					"The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information - It can be found in the same folder as the editor.",
+					"The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. Check the plugin's log for more information - It can be found in the same folder as the editor, named 'Construction Set Extender'.",
 					"Rumpy-Pumpy!!",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
