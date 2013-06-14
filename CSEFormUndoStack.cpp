@@ -144,7 +144,7 @@ namespace ConstructionSetExtender
 			case TESForm::kFormType_WorldSpace:
 			case TESForm::kFormType_GMST:
 			case TESForm::kFormType_Global:			//	### weird bugger, this - has a stubbed out TESForm::GetFromDialog
-													//		counterintuitively, the data sync is performed directly inside the dlg message callback
+													//		counter-intuitively, the data sync is performed directly inside the dlg message callback
 													//		remnant of the Morrowind CS code base, methinks. perhaps even ToddCode™
 			// Misc forms
 //			case TESForm::kFormType_TopicInfo:			### can be copied but might be troublesome
@@ -159,7 +159,7 @@ namespace ConstructionSetExtender
 //			case TESForm::kFormType_Road:				### what this is, I don't even...
 //			case TESForm::kFormType_Topic:				### doesn't allow copying
 //			case TESForm::kFormType_Cell:				### yet another special-case (Morrowind code again?), not gonna bother supporting this one either
-//			case TESForm::kFormType_Quest:				### up is down with this form's UI code! too screwed up to fix/enchance
+//			case TESForm::kFormType_Quest:				### up is down with this form's UI code! too screwed up to fix/enhance
 				return true;
 			default:
 				return false;
