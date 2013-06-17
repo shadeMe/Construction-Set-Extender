@@ -2,9 +2,9 @@
 
 namespace ConstructionSetExtender
 {
-	class AuxiliaryViewport : public BGSEditorExtender::BGSEEGenericModelessDialog
+	class CSEAuxiliaryViewport : public BGSEditorExtender::BGSEEGenericModelessDialog
 	{
-		static AuxiliaryViewport*			Singleton;
+		static CSEAuxiliaryViewport*			Singleton;
 	protected:
 		static LRESULT CALLBACK				BaseDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
 
@@ -19,11 +19,11 @@ namespace ConstructionSetExtender
 		NiCamera*							ViewportCamera;
 		bool								Frozen;
 
-		AuxiliaryViewport();
+		CSEAuxiliaryViewport();
 	public:
-		virtual ~AuxiliaryViewport();
+		virtual ~CSEAuxiliaryViewport();
 
-		static AuxiliaryViewport*			GetSingleton();
+		static CSEAuxiliaryViewport*			GetSingleton();
 		void								Initialize();
 
 		bool								GetFrozen() const;
@@ -38,5 +38,5 @@ namespace ConstructionSetExtender
 
 		static void							RegisterINISettings(BGSEditorExtender::INISettingDepotT& Depot);
 	};
-#define AUXVIEWPORT							AuxiliaryViewport::GetSingleton()
+#define AUXVIEWPORT							CSEAuxiliaryViewport::GetSingleton()
 }

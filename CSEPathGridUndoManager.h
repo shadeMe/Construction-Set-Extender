@@ -2,7 +2,7 @@
 
 namespace ConstructionSetExtender
 {
-	class PathGridUndoManager
+	class CSEPathGridUndoManager
 	{
 	public:
 		typedef std::vector<TESPathGridPoint*>		PathGridPointVectorT;
@@ -27,7 +27,7 @@ namespace ConstructionSetExtender
 			~PathGridPointUndoProxy();
 
 			void									HandlePathGridPointDeletion(TESPathGridPoint* Point);
-			void									Undo(PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = NULL);
+			void									Undo(CSEPathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut = NULL);
 		};
 	private:
 		typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandleT;
@@ -43,8 +43,8 @@ namespace ConstructionSetExtender
 		void										HandlePointDeletionOnStack(UndoProxyStackT* Stack, PathGridPointListT* Selection);
 		void										WalkUndoStack(UndoProxyStackT* Stack, UndoProxyStackT* Alternate);
 	public:
-		PathGridUndoManager();
-		~PathGridUndoManager();
+		CSEPathGridUndoManager();
+		~CSEPathGridUndoManager();
 
 		enum
 		{
@@ -61,6 +61,6 @@ namespace ConstructionSetExtender
 		void										ResetUndoStack(void);
 		void										SetCanReset(bool State);
 
-		static PathGridUndoManager					Instance;
+		static CSEPathGridUndoManager					Instance;
 	};
 }

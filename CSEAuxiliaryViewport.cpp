@@ -1,4 +1,4 @@
-#include "AuxiliaryViewport.h"
+#include "CSEAuxiliaryViewport.h"
 #include "Construction Set Extender_Resource.h"
 #include "CSERenderWindowPainter.h"
 #include "Hooks\Hooks-Renderer.h"
@@ -9,53 +9,56 @@
 
 namespace ConstructionSetExtender
 {
-	AuxiliaryViewport*		AuxiliaryViewport::Singleton = NULL;
-	const char*				AuxiliaryViewport::kWindowTitle = "Auxiliary Viewport Window";
+	CSEAuxiliaryViewport*		CSEAuxiliaryViewport::Singleton = NULL;
+	const char*					CSEAuxiliaryViewport::kWindowTitle = "Auxiliary Viewport Window";
 
 #define AUXVIEWPORT_INISECTION				"AuxViewport"
-	SME::INI::INISetting					AuxiliaryViewport::kINI_Top("Top", AUXVIEWPORT_INISECTION,
+	SME::INI::INISetting					CSEAuxiliaryViewport::kINI_Top("Top", AUXVIEWPORT_INISECTION,
 																		"Dialog Rect Top",
 																		(SInt32)150);
-	SME::INI::INISetting					AuxiliaryViewport::kINI_Left("Left", AUXVIEWPORT_INISECTION,
+	SME::INI::INISetting					CSEAuxiliaryViewport::kINI_Left("Left", AUXVIEWPORT_INISECTION,
 																		"Dialog Rect Left",
 																		(SInt32)150);
-	SME::INI::INISetting					AuxiliaryViewport::kINI_Right("Right", AUXVIEWPORT_INISECTION,
+	SME::INI::INISetting					CSEAuxiliaryViewport::kINI_Right("Right", AUXVIEWPORT_INISECTION,
 																		"Dialog Rect Right",
 																		(SInt32)150);
-	SME::INI::INISetting					AuxiliaryViewport::kINI_Bottom("Bottom", AUXVIEWPORT_INISECTION,
+	SME::INI::INISetting					CSEAuxiliaryViewport::kINI_Bottom("Bottom", AUXVIEWPORT_INISECTION,
 																		"Dialog Rect Bottom",
 																		(SInt32)150);
-	SME::INI::INISetting					AuxiliaryViewport::kINI_Visible("Visible", AUXVIEWPORT_INISECTION,
+	SME::INI::INISetting					CSEAuxiliaryViewport::kINI_Visible("Visible", AUXVIEWPORT_INISECTION,
 																		"Dialog Visibility State",
 																		(SInt32)1);
 
-	AuxiliaryViewport* AuxiliaryViewport::GetSingleton()
+	CSEAuxiliaryViewport* CSEAuxiliaryViewport::GetSingleton()
 	{
 		if (Singleton == NULL)
-			Singleton = new AuxiliaryViewport();
+			Singleton = new CSEAuxiliaryViewport();
 
 		return Singleton;
 	}
 
-	LRESULT CALLBACK AuxiliaryViewport::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
+	LRESULT CALLBACK CSEAuxiliaryViewport::BaseDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return )
 	{
 		LRESULT DlgProcResult = FALSE;
 		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
-		AuxiliaryViewport* Instance = dynamic_cast<AuxiliaryViewport*>(UserData->Instance);
 		Return = false;
 
 		switch (uMsg)
 		{
 		case WM_MOVING:
 		case WM_SHOWWINDOW:
-			Instance->Redraw();
+			{
+				CSEAuxiliaryViewport* Instance = dynamic_cast<CSEAuxiliaryViewport*>(UserData->Instance);
+				Instance->Redraw();
+			}
+
 			break;
 		}
 
 		return DlgProcResult;
 	}
 
-	AuxiliaryViewport::AuxiliaryViewport() :
+	CSEAuxiliaryViewport::CSEAuxiliaryViewport() :
 		BGSEditorExtender::BGSEEGenericModelessDialog(BGSEEUI->GetMainWindow(),
 													BGSEEMAIN->GetExtenderHandle(),
 													IDD_AUXVIEWPORT,
@@ -69,7 +72,7 @@ namespace ConstructionSetExtender
 		ViewportCamera->m_uiRefCount++;
 	}
 
-	AuxiliaryViewport::~AuxiliaryViewport()
+	CSEAuxiliaryViewport::~CSEAuxiliaryViewport()
 	{
 		ViewportCamera->m_uiRefCount--;
 		thisVirtualCall<void>(0x0, ViewportCamera, true);
@@ -78,7 +81,7 @@ namespace ConstructionSetExtender
 		Singleton = NULL;
 	}
 
-	void AuxiliaryViewport::Initialize()
+	void CSEAuxiliaryViewport::Initialize()
 	{
 		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
@@ -95,17 +98,17 @@ namespace ConstructionSetExtender
 		ClearScreen();
 	}
 
-	void AuxiliaryViewport::ClearScreen()
+	void CSEAuxiliaryViewport::ClearScreen()
 	{
 		InvalidateRect(DialogHandle, NULL, TRUE);
 	}
 
-	void AuxiliaryViewport::Redraw()
+	void CSEAuxiliaryViewport::Redraw()
 	{
 		TESRenderWindow::Redraw();
 	}
 
-	void AuxiliaryViewport::SyncViewportCamera( NiCamera* Camera )
+	void CSEAuxiliaryViewport::SyncViewportCamera( NiCamera* Camera )
 	{
 		UInt32 RefCountBuffer = ViewportCamera->m_uiRefCount;
 
@@ -114,7 +117,7 @@ namespace ConstructionSetExtender
 		ViewportCamera->m_parent = NULL;
 	}
 
-	bool AuxiliaryViewport::ToggleFrozenState()
+	bool CSEAuxiliaryViewport::ToggleFrozenState()
 	{
 		if (GetFrozen())
 			Frozen = false;
@@ -124,7 +127,7 @@ namespace ConstructionSetExtender
 		return Frozen;
 	}
 
-	void AuxiliaryViewport::Draw( NiNode* NodeToRender, NiCamera* Camera )
+	void CSEAuxiliaryViewport::Draw( NiNode* NodeToRender, NiCamera* Camera )
 	{
 		Hooks::_MemHdlr(NiDX9RendererPresent).WriteUInt16(0x9090);
 		if (Camera == NULL)
@@ -138,17 +141,17 @@ namespace ConstructionSetExtender
 		DrawBackBuffer();
 	}
 
-	void AuxiliaryViewport::DrawBackBuffer( void )
+	void CSEAuxiliaryViewport::DrawBackBuffer( void )
 	{
 		_NIRENDERER->device->Present(NULL, NULL, DialogHandle, NULL);
 	}
 
-	bool AuxiliaryViewport::GetFrozen() const
+	bool CSEAuxiliaryViewport::GetFrozen() const
 	{
 		return Frozen;
 	}
 
-	void AuxiliaryViewport::RegisterINISettings( BGSEditorExtender::INISettingDepotT& Depot )
+	void CSEAuxiliaryViewport::RegisterINISettings( BGSEditorExtender::INISettingDepotT& Depot )
 	{
 		Depot.push_back(&kINI_Top);
 		Depot.push_back(&kINI_Left);

@@ -1,10 +1,10 @@
-#include "RenderSelectionGroupManager.h"
+#include "CSERenderSelectionGroupManager.h"
 
 namespace ConstructionSetExtender
 {
-	RenderSelectionGroupManager			RenderSelectionGroupManager::Instance;
+	CSERenderSelectionGroupManager			CSERenderSelectionGroupManager::Instance;
 
-	std::vector<TESRenderSelection*>* RenderSelectionGroupManager::GetCellExists(TESObjectCELL* Cell)
+	std::vector<TESRenderSelection*>* CSERenderSelectionGroupManager::GetCellExists(TESObjectCELL* Cell)
 	{
 		SelectionGroupMapT::iterator Match = SelectionGroupMap.find(Cell);
 		if (Match != SelectionGroupMap.end())
@@ -13,7 +13,7 @@ namespace ConstructionSetExtender
 			return NULL;
 	}
 
-	TESRenderSelection* RenderSelectionGroupManager::GetRefSelectionGroup(TESObjectREFR* Ref, TESObjectCELL* Cell)
+	TESRenderSelection* CSERenderSelectionGroupManager::GetRefSelectionGroup(TESObjectREFR* Ref, TESObjectCELL* Cell)
 	{
 		TESRenderSelection* Result = NULL;
 
@@ -36,7 +36,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	void RenderSelectionGroupManager::Clear()
+	void CSERenderSelectionGroupManager::Clear()
 	{
 		for (SelectionGroupMapT::iterator Itr = SelectionGroupMap.begin(); Itr != SelectionGroupMap.end(); Itr++)
 		{
@@ -48,7 +48,7 @@ namespace ConstructionSetExtender
 		SelectionGroupMap.clear();
 	}
 
-	TESRenderSelection* RenderSelectionGroupManager::AllocateNewSelection(TESRenderSelection* Selection)
+	TESRenderSelection* CSERenderSelectionGroupManager::AllocateNewSelection(TESRenderSelection* Selection)
 	{
 		TESRenderSelection* Group = TESRenderSelection::CreateInstance();
 
@@ -58,7 +58,7 @@ namespace ConstructionSetExtender
 		return Group;
 	}
 
-	TESObjectREFR* RenderSelectionGroupManager::GetRefAtSelectionIndex(TESRenderSelection* Selection, UInt32 Index)
+	TESObjectREFR* CSERenderSelectionGroupManager::GetRefAtSelectionIndex(TESRenderSelection* Selection, UInt32 Index)
 	{
 		UInt32 Count = 0;
 		for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next, Count++)
@@ -69,7 +69,7 @@ namespace ConstructionSetExtender
 		return NULL;
 	}
 
-	TESRenderSelection* RenderSelectionGroupManager::GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection)
+	TESRenderSelection* CSERenderSelectionGroupManager::GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection)
 	{
 		TESRenderSelection* Result = NULL;
 
@@ -101,7 +101,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	void RenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* TrackedSelection)
+	void CSERenderSelectionGroupManager::UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* TrackedSelection)
 	{
 		std::vector<TESRenderSelection*>* SelectionList = GetCellExists(Cell);
 		if (SelectionList)
@@ -123,7 +123,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	bool RenderSelectionGroupManager::AddGroup(TESObjectCELL *Cell, TESRenderSelection *Selection)
+	bool CSERenderSelectionGroupManager::AddGroup(TESObjectCELL *Cell, TESRenderSelection *Selection)
 	{
 		bool Result = false;
 
@@ -159,7 +159,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	bool RenderSelectionGroupManager::RemoveGroup(TESObjectCELL *Cell, TESRenderSelection *Selection)
+	bool CSERenderSelectionGroupManager::RemoveGroup(TESObjectCELL *Cell, TESRenderSelection *Selection)
 	{
 		bool Result = false;
 

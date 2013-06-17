@@ -2,7 +2,7 @@
 
 namespace ConstructionSetExtender
 {
-	class RenderSelectionGroupManager
+	class CSERenderSelectionGroupManager
 	{
 		typedef std::map<TESObjectCELL*,
 			std::vector<TESRenderSelection*>>	SelectionGroupMapT;
@@ -22,6 +22,6 @@ namespace ConstructionSetExtender
 		TESRenderSelection*							GetRefSelectionGroup(TESObjectREFR* Ref, TESObjectCELL* Cell);
 		void										Clear();
 
-		static RenderSelectionGroupManager			Instance;
+		static CSERenderSelectionGroupManager			Instance;
 	};
 }

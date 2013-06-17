@@ -1,11 +1,11 @@
-#include "PathGridUndoManager.h"
+#include "CSEPathGridUndoManager.h"
 
 namespace ConstructionSetExtender
 {
-	PathGridUndoManager			PathGridUndoManager::Instance;
-	int							PathGridUndoManager::PathGridPointUndoProxy::GIC = 0;
+	CSEPathGridUndoManager			CSEPathGridUndoManager::Instance;
+	int							CSEPathGridUndoManager::PathGridPointUndoProxy::GIC = 0;
 
-	PathGridUndoManager::PathGridPointUndoProxy::PathGridPointUndoProxy( UInt8 Operation, TESPathGridPoint* Parent ) :
+	CSEPathGridUndoManager::PathGridPointUndoProxy::PathGridPointUndoProxy( UInt8 Operation, TESPathGridPoint* Parent ) :
 		LinkedPoints()
 	{
 		GIC++;
@@ -28,7 +28,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	PathGridUndoManager::PathGridPointUndoProxy::PathGridPointUndoProxy( const PathGridPointUndoProxy& rhs ) :
+	CSEPathGridUndoManager::PathGridPointUndoProxy::PathGridPointUndoProxy( const PathGridPointUndoProxy& rhs ) :
 		LinkedPoints()
 	{
 		GIC++;
@@ -43,7 +43,7 @@ namespace ConstructionSetExtender
 		this->Deleted = rhs.Deleted;
 	}
 
-	void PathGridUndoManager::PathGridPointUndoProxy::HandlePathGridPointDeletion( TESPathGridPoint* Point )
+	void CSEPathGridUndoManager::PathGridPointUndoProxy::HandlePathGridPointDeletion( TESPathGridPoint* Point )
 	{
 		SME_ASSERT(Deleted == false);
 
@@ -57,7 +57,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void PathGridUndoManager::PathGridPointUndoProxy::SyncWithPoint(TESPathGridPoint* Point, bool Update3D)
+	void CSEPathGridUndoManager::PathGridPointUndoProxy::SyncWithPoint(TESPathGridPoint* Point, bool Update3D)
 	{
 		SME_ASSERT(Deleted == false);
 
@@ -80,7 +80,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	PathGridUndoManager::PathGridPointUndoProxy::~PathGridPointUndoProxy()
+	CSEPathGridUndoManager::PathGridPointUndoProxy::~PathGridPointUndoProxy()
 	{
 		LinkedPoints.clear();
 
@@ -88,7 +88,7 @@ namespace ConstructionSetExtender
 		SME_ASSERT(GIC >= 0);
 	}
 
-	void PathGridUndoManager::PathGridPointUndoProxy::Undo( PathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut )
+	void CSEPathGridUndoManager::PathGridPointUndoProxy::Undo( CSEPathGridUndoManager* Manager, TESPathGridPoint** CreatedPointOut )
 	{
 		SME_ASSERT(Deleted == false);
 
@@ -147,7 +147,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	PathGridUndoManager::PathGridUndoManager() :
+	CSEPathGridUndoManager::CSEPathGridUndoManager() :
 		UndoStack(),
 		RedoStack(),
 		CanReset(true),
@@ -156,7 +156,7 @@ namespace ConstructionSetExtender
 		;//
 	}
 
-	PathGridUndoManager::~PathGridUndoManager()
+	CSEPathGridUndoManager::~CSEPathGridUndoManager()
 	{
 		CanReset = true;
 
@@ -166,7 +166,7 @@ namespace ConstructionSetExtender
 		SME_ASSERT(PathGridPointUndoProxy::GIC == 0);
 	}
 
-	void PathGridUndoManager::ResetStack( UndoProxyStackT* Stack )
+	void CSEPathGridUndoManager::ResetStack( UndoProxyStackT* Stack )
 	{
 		if (CanReset == false)
 			return;
@@ -181,7 +181,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void PathGridUndoManager::HandlePointDeletionOnStack( UndoProxyStackT* Stack, PathGridPointListT* Selection )
+	void CSEPathGridUndoManager::HandlePointDeletionOnStack( UndoProxyStackT* Stack, PathGridPointListT* Selection )
 	{
 		std::list<UndoProxyListT*> StackBuffer;
 
@@ -210,7 +210,7 @@ namespace ConstructionSetExtender
 			Stack->push(*Itr);
 	}
 
-	void PathGridUndoManager::RecordOperation( UInt8 Operation, PathGridPointListT* Selection )
+	void CSEPathGridUndoManager::RecordOperation( UInt8 Operation, PathGridPointListT* Selection )
 	{
 		UndoProxyListT* ProxyList = new UndoProxyListT();
 
@@ -223,7 +223,7 @@ namespace ConstructionSetExtender
 		UndoStack.push(ProxyList);
 	}
 
-	void PathGridUndoManager::WalkUndoStack( UndoProxyStackT* Stack, UndoProxyStackT* Alternate )
+	void CSEPathGridUndoManager::WalkUndoStack( UndoProxyStackT* Stack, UndoProxyStackT* Alternate )
 	{
 		SME_ASSERT(WalkingStacks == false);
 		SME::MiscGunk::ScopedSetter<bool> GuardStackWalker(WalkingStacks, true);
@@ -309,33 +309,33 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void PathGridUndoManager::PerformUndo( void )
+	void CSEPathGridUndoManager::PerformUndo( void )
 	{
 		WalkUndoStack(&UndoStack, &RedoStack);
 	}
 
-	void PathGridUndoManager::PerformRedo( void )
+	void CSEPathGridUndoManager::PerformRedo( void )
 	{
 		WalkUndoStack(&RedoStack, &UndoStack);
 	}
 
-	void PathGridUndoManager::HandlePathGridPointDeletion( PathGridPointListT* Selection )
+	void CSEPathGridUndoManager::HandlePathGridPointDeletion( PathGridPointListT* Selection )
 	{
 		HandlePointDeletionOnStack(&UndoStack, Selection);
 		HandlePointDeletionOnStack(&RedoStack, Selection);
 	}
 
-	void PathGridUndoManager::ResetRedoStack( void )
+	void CSEPathGridUndoManager::ResetRedoStack( void )
 	{
 		ResetStack(&RedoStack);
 	}
 
-	void PathGridUndoManager::ResetUndoStack( void )
+	void CSEPathGridUndoManager::ResetUndoStack( void )
 	{
 		ResetStack(&UndoStack);
 	}
 
-	void PathGridUndoManager::SetCanReset( bool State )
+	void CSEPathGridUndoManager::SetCanReset( bool State )
 	{
 		CanReset = State;
 	}
