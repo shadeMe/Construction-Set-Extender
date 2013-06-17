@@ -1,6 +1,6 @@
 #include "CSEUIManager.h"
 #include "Construction Set Extender_Resource.h"
-#include "AuxiliaryViewport.h"
+#include "CSEAuxiliaryViewport.h"
 #include "[Common]\CLIWrapper.h"
 #include "CSEWorkspaceManager.h"
 #include "CSERenderWindowPainter.h"
@@ -10,8 +10,8 @@
 #include "Hooks\Hooks-Dialog.h"
 #include "Hooks\Hooks-Renderer.h"
 #include "Hooks\Hooks-LOD.h"
-#include "RenderSelectionGroupManager.h"
-#include "PathGridUndoManager.h"
+#include "CSERenderSelectionGroupManager.h"
+#include "CSEPathGridUndoManager.h"
 #include "CSInterop.h"
 #include "CSEGlobalClipboard.h"
 #include "CSEFormUndoStack.h"
@@ -1895,7 +1895,7 @@ namespace ConstructionSetExtender
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_GROUP:
-							if (!RenderSelectionGroupManager::Instance.AddGroup(CurrentCell, _RENDERSEL))
+							if (!CSERenderSelectionGroupManager::Instance.AddGroup(CurrentCell, _RENDERSEL))
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
 												"Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a preexisting group.");
@@ -1905,7 +1905,7 @@ namespace ConstructionSetExtender
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_UNGROUP:
-							if (!RenderSelectionGroupManager::Instance.RemoveGroup(CurrentCell, _RENDERSEL))
+							if (!CSERenderSelectionGroupManager::Instance.RemoveGroup(CurrentCell, _RENDERSEL))
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
 												"Couldn't remove current selection group.\n\nMake sure the selected objects belong to a preexisting group.");
@@ -2238,7 +2238,7 @@ namespace ConstructionSetExtender
 				case 0x5A:		// Z
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
-						PathGridUndoManager::Instance.PerformUndo();
+						CSEPathGridUndoManager::Instance.PerformUndo();
 						Return = true;
 					}
 
@@ -2246,7 +2246,7 @@ namespace ConstructionSetExtender
 				case 0x59:		// Y
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
-						PathGridUndoManager::Instance.PerformRedo();
+						CSEPathGridUndoManager::Instance.PerformRedo();
 						Return = true;
 					}
 					else
@@ -2289,10 +2289,10 @@ namespace ConstructionSetExtender
 					{
 						if (GetAsyncKeyState(VK_CONTROL))
 						{
-							PathGridUndoManager::Instance.ResetRedoStack();
+							CSEPathGridUndoManager::Instance.ResetRedoStack();
 
 							if (TESRenderWindow::SelectedPathGridPoints->Count())
-								PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+								CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 
 							for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 							{

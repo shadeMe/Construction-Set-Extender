@@ -2,8 +2,8 @@
 #include "Hooks-Dialog.h"
 #include "Hooks-Plugins.h"
 #include "Hooks-Renderer.h"
-#include "..\RenderSelectionGroupManager.h"
-#include "..\AuxiliaryViewport.h"
+#include "..\CSERenderSelectionGroupManager.h"
+#include "..\CSEAuxiliaryViewport.h"
 #include "..\CSEAchievements.h"
 #include "..\CSEHallOfFame.h"
 #include "..\CSEWorkspaceManager.h"
@@ -265,7 +265,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoDataHandlerClearDataHook(void)
 		{
 			delete BGSEEHALLOFFAME;
-			RenderSelectionGroupManager::Instance.Clear();
+			CSERenderSelectionGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
 			BGSEEUNDOSTACK->Reset();
 		}

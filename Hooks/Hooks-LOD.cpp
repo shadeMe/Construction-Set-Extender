@@ -1,5 +1,5 @@
 #include "Hooks-LOD.h"
-#include "..\AuxiliaryViewport.h"
+#include "..\CSEAuxiliaryViewport.h"
 
 #pragma warning(push)
 #pragma optimize("", off)

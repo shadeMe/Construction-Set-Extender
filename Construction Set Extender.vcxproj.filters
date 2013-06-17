@@ -111,17 +111,8 @@
     <ClCompile Include="[Common]\CSInteropData.cpp">
       <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
-    <ClCompile Include="RenderSelectionGroupManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="StdAfx.cpp" />
-    <ClCompile Include="PathGridUndoManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="AuxiliaryViewport.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\Core.cpp">
       <Filter>EditorAPI\System\Core</Filter>
     </ClCompile>
@@ -293,6 +284,15 @@
     <ClCompile Include="CSEChangeLogManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="CSEAuxiliaryViewport.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSEPathGridUndoManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="CSERenderSelectionGroupManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -334,9 +334,6 @@
     <ClInclude Include="[Common]\CSInteropData.h">
       <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
-    <ClInclude Include="RenderSelectionGroupManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="Exports.h" />
     <ClInclude Include="EditorAPI\TESEditorAPI.h">
       <Filter>EditorAPI</Filter>
@@ -345,12 +342,6 @@
       <Filter>Interop\Component DLL</Filter>
     </ClInclude>
     <ClInclude Include="StdAfx.h" />
-    <ClInclude Include="PathGridUndoManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="AuxiliaryViewport.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="EditorAPI\Core.h">
       <Filter>EditorAPI\System\Core</Filter>
     </ClInclude>
@@ -808,6 +799,15 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEChangeLogManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEAuxiliaryViewport.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEPathGridUndoManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSERenderSelectionGroupManager.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

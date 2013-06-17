@@ -1,6 +1,5 @@
 #include "Core.h"
 #include "Hooks\Hooks-Renderer.h"
-#include "AuxiliaryViewport.h"
 
 using namespace ConstructionSetExtender;
 

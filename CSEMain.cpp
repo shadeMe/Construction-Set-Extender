@@ -19,7 +19,7 @@
 #include "CSEUIManager.h"
 #include "CSEWorkspaceManager.h"
 #include "CSEChangeLogManager.h"
-#include "AuxiliaryViewport.h"
+#include "CSEAuxiliaryViewport.h"
 #include "CSInterop.h"
 #include "Coda\CSECoda.h"
 #include "CSEGlobalClipboard.h"
@@ -602,7 +602,7 @@ extern "C"
 		BGSEditorExtender::INISettingDepotT CSEINISettings;
 
 		Settings::Register(CSEINISettings);
-		AuxiliaryViewport::RegisterINISettings(CSEINISettings);
+		CSEAuxiliaryViewport::RegisterINISettings(CSEINISettings);
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
 														BGSEEMAIN_EXTENDERSHORTNAME,

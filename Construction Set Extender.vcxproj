@@ -170,17 +170,19 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp" />
     <ClCompile Include="Coda\CSECoda.cpp" />
     <ClCompile Include="CSEAchievements.cpp" />
+    <ClCompile Include="CSEAuxiliaryViewport.cpp" />
     <ClCompile Include="CSEConsole.cpp" />
     <ClCompile Include="CSEFormUndoStack.cpp" />
     <ClCompile Include="CSEGlobalClipboard.cpp" />
     <ClCompile Include="CSEHallOfFame.cpp" />
     <ClCompile Include="CSEMain.cpp" />
+    <ClCompile Include="CSEPathGridUndoManager.cpp" />
+    <ClCompile Include="CSERenderSelectionGroupManager.cpp" />
     <ClCompile Include="CSERenderWindowFlyCamera.cpp" />
     <ClCompile Include="CSERenderWindowPainter.cpp" />
     <ClCompile Include="CSESettings.cpp" />
@@ -219,7 +221,6 @@
     <ClCompile Include="EditorAPI\TESSound.cpp" />
     <ClCompile Include="Hooks\Hooks-VersionControl.cpp" />
     <ClCompile Include="CSEChangeLogManager.cpp" />
-    <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -238,7 +239,6 @@
     <ClCompile Include="CSEInterfaceManager.cpp" />
     <ClCompile Include="CSInterop.cpp" />
     <ClCompile Include="[Common]\CSInteropData.cpp" />
-    <ClCompile Include="RenderSelectionGroupManager.cpp" />
     <ClCompile Include="Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -292,17 +292,19 @@
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.h" />
     <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEWrappers.h" />
-    <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />
     <ClInclude Include="Coda\CSECoda.h" />
     <ClInclude Include="CSEAchievements.h" />
+    <ClInclude Include="CSEAuxiliaryViewport.h" />
     <ClInclude Include="CSEConsole.h" />
     <ClInclude Include="CSEFormUndoStack.h" />
     <ClInclude Include="CSEGlobalClipboard.h" />
     <ClInclude Include="CSEHallOfFame.h" />
     <ClInclude Include="CSEMain.h" />
+    <ClInclude Include="CSEPathGridUndoManager.h" />
+    <ClInclude Include="CSERenderSelectionGroupManager.h" />
     <ClInclude Include="CSERenderWindowFlyCamera.h" />
     <ClInclude Include="CSERenderWindowPainter.h" />
     <ClInclude Include="CSESettings.h" />
@@ -393,7 +395,6 @@
     <ClInclude Include="EditorAPI\TESWorldSpace.h" />
     <ClInclude Include="Hooks\Hooks-VersionControl.h" />
     <ClInclude Include="CSEChangeLogManager.h" />
-    <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="VersionInfo.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
@@ -413,7 +414,6 @@
     <ClInclude Include="CSEInterfaceManager.h" />
     <ClInclude Include="CSInterop.h" />
     <ClInclude Include="[Common]\CSInteropData.h" />
-    <ClInclude Include="RenderSelectionGroupManager.h" />
     <ClInclude Include="Exports.h" />
   </ItemGroup>
   <ItemGroup>

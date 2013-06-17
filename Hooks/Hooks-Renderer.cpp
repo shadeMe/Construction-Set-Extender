@@ -1,8 +1,8 @@
 #include "Hooks-Renderer.h"
-#include "RenderSelectionGroupManager.h"
+#include "CSERenderSelectionGroupManager.h"
 #include "CSERenderWindowPainter.h"
-#include "PathGridUndoManager.h"
-#include "AuxiliaryViewport.h"
+#include "CSEPathGridUndoManager.h"
+#include "CSEAuxiliaryViewport.h"
 #include "Hooks-LOD.h"
 
 #pragma warning(push)
@@ -362,7 +362,7 @@ namespace ConstructionSetExtender
 
 			if (CurrentCell)
 			{
-				TESRenderSelection* Selection = RenderSelectionGroupManager::Instance.GetRefSelectionGroup(Ref, CurrentCell);
+				TESRenderSelection* Selection = CSERenderSelectionGroupManager::Instance.GetRefSelectionGroup(Ref, CurrentCell);
 				if (Selection)
 				{
 					for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
@@ -907,10 +907,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridRecordOperation(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
+			CSEPathGridUndoManager::Instance.ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+				CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		void __stdcall DoTESPathGridRecordOperationMoveBHook(void)
@@ -984,11 +984,11 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridDeletePointHook(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
-			PathGridUndoManager::Instance.HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
+			CSEPathGridUndoManager::Instance.ResetRedoStack();
+			CSEPathGridUndoManager::Instance.HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
+				CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridDeletePoint
@@ -1010,7 +1010,7 @@ namespace ConstructionSetExtender
 		{
 			PathGridPointListT* DeletionList = (PathGridPointListT*)PathGridPointListT::Create(&FormHeap_Allocate);
 			DeletionList->AddAt(Point, eListEnd);
-			PathGridUndoManager::Instance.HandlePathGridPointDeletion(DeletionList);
+			CSEPathGridUndoManager::Instance.HandlePathGridPointDeletion(DeletionList);
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
 		}
@@ -1046,8 +1046,8 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridToggleEditModeHook(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
-			PathGridUndoManager::Instance.ResetUndoStack();
+			CSEPathGridUndoManager::Instance.ResetRedoStack();
+			CSEPathGridUndoManager::Instance.ResetUndoStack();
 		}
 
 		#define _hhName		TESPathGridToggleEditMode
@@ -1067,10 +1067,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridCreateNewLinkedPointHook(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
+			CSEPathGridUndoManager::Instance.ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
+				CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridCreateNewLinkedPoint
