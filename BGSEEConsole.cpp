@@ -92,6 +92,15 @@ namespace BGSEditorExtender
 					SME_ASSERT(xData);
 
 					xData->SelectedContext = NULL;
+
+					MENUITEMINFO ContextMenuItem = {0};
+					ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
+					ContextMenuItem.fMask = MIIM_STATE;
+					if (Instance->GetActiveContext()->HasLog())
+						ContextMenuItem.fState = MFS_ENABLED;
+					else
+						ContextMenuItem.fState = MFS_DISABLED;
+					SetMenuItemInfo((HMENU)wParam, ID_BGSEE_CONSOLE_CONTEXTMENU_OPENLOG, FALSE, &ContextMenuItem);
 				}
 			}
 
@@ -398,10 +407,18 @@ namespace BGSEditorExtender
 
 	void BGSEEConsole::MessageLogContext::OpenLog() const
 	{
-		if (LogPath.size())
+		if (HasLog())
 		{
 			ShellExecute(NULL, "open", (LPSTR)LogPath.c_str(), NULL, NULL, SW_SHOW);
 		}
+	}
+
+	bool BGSEEConsole::MessageLogContext::HasLog() const
+	{
+		if (LogPath.size())
+			return true;
+		else
+			return false;
 	}
 
 	const char* BGSEEConsole::MessageLogContext::GetName() const

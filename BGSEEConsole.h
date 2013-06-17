@@ -75,6 +75,7 @@ namespace BGSEditorExtender
 			UInt8					GetState() const;
 			void					SetState(UInt8 NewState);
 			void					OpenLog() const;
+			bool					HasLog() const;
 			const char*				GetName() const;
 			const char*				GetBuffer() const;
 			void					ClearBuffer();
