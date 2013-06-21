@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef CSEAPI_NO_CODA
 #include <CodaPublicAPI.h>
+#endif
 
 /********** CSE Interface API ******************************************************************
 *	Interface object passed through the OBSE messaging system. A pointer to the
@@ -53,12 +55,14 @@ struct CSERendererInterface
 	void			(* PrintToRenderWindow)(const char* Message, float DisplayDuration);
 };
 
+#ifndef CSEAPI_NO_CODA
 struct CSEScriptInterface
 {
 	// Registers a Coda command with the VM
 	// The caller retains ownership of the script command pointer
 	void			(* RegisterCommand)(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command);
 };
+#endif
 
 /********** Example ****************************************************************************
 

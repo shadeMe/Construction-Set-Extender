@@ -253,7 +253,9 @@ namespace ConstructionSetExtender
 
 			int AvalonEditTextEditor::GetLineNumberFromCharIndex(int Index)
 			{
-				if (Index >= TextField->Text->Length)
+				if (Index == -1 || TextField->Text->Length == 0)
+					return 1;
+				else if (Index >= TextField->Text->Length)
 					Index = TextField->Text->Length - 1;
 
 				return TextField->Document->GetLocation(Index).Line;
@@ -263,7 +265,7 @@ namespace ConstructionSetExtender
 			{
 				bool Result = true;
 
-				if (Index < TextField->Text->Length)
+				if (Index >= 0 && Index < TextField->Text->Length)
 				{
 					AvalonEdit::Document::DocumentLine^ Line = TextField->Document->GetLineByOffset(Index);
 					ScriptParser^ LocalParser = gcnew ScriptParser();
@@ -410,6 +412,9 @@ namespace ConstructionSetExtender
 
 			int AvalonEditTextEditor::GetLastKnownMouseClickOffset()
 			{
+				if (LastKnownMouseClickOffset == -1)
+					LastKnownMouseClickOffset = 0;
+
 				return LastKnownMouseClickOffset;
 			}
 

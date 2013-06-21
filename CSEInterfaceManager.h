@@ -1,5 +1,8 @@
 #pragma once
 
+#define CSEAPI_NO_CODA		1
+#undef CSEAPI_NO_CODA
+
 #include "CSEInterfaceAPI.h"
 #include <CodaVM.h>
 
