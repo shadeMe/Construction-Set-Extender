@@ -1241,6 +1241,42 @@ namespace ConstructionSetExtender
 					BGSEEUNDOSTACK->PerformRedo();
 
 					break;
+				case IDC_MAINMENU_PURGELOADEDRESOURCES:
+					{
+#ifdef NDEBUG
+						BGSEEUI->MsgBoxI("This feature has not been implemented yet.");
+						break;
+#endif
+
+#if 0
+						BGSEECONSOLE_MESSAGE("Purging resources...");
+						BGSEECONSOLE->Indent();
+						PROCESS_MEMORY_COUNTERS_EX MemCounter = {0};
+						UInt32 RAMUsage = 0;
+						
+						GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter));
+						RAMUsage = MemCounter.WorkingSetSize / (1024 * 1024);
+						BGSEECONSOLE_MESSAGE("Current RAM Usage: %d MB", RAMUsage);
+
+						TESRenderWindow::Reset();
+						thisCall<void>(0x004763A0, _TES, 0, 0);
+						thisCall<void>(0x00476190, _TES, 0);
+
+						thisCall<void>(0x00474760, _MODELLOADER);
+						FormHeap_Free(_MODELLOADER);
+
+						_MODELLOADER = (ModelLoader*)FormHeap_Allocate(0x1C);
+						thisCall<void>(0x00474CD0, _MODELLOADER);
+						BGSEECONSOLE_MESSAGE("Resources purged!");
+
+						GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter));
+						RAMUsage = MemCounter.WorkingSetSize / (1024 * 1024);
+						BGSEECONSOLE_MESSAGE("Current RAM Usage: %d MB", RAMUsage);
+						BGSEECONSOLE->Exdent();
+#endif
+					}
+
+					break;
 				default:
 					Return = false;
 

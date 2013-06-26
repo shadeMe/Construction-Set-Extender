@@ -4,6 +4,8 @@
 
 namespace ConstructionSetExtender
 {
+	extern bool								shadeMeMode;
+
 	class CSEReleaseNameTable : public BGSEditorExtender::BGSEEReleaseNameTable
 	{
 	protected:
@@ -13,8 +15,6 @@ namespace ConstructionSetExtender
 
 		static CSEReleaseNameTable						Instance;
 	};
-
-	extern CSEReleaseNameTable							ReleaseNameTable;
 
 	class CSEInitCallbackQuery : public BGSEditorExtender::BGSEEDaemonCallback
 	{

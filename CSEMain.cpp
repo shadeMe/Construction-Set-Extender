@@ -37,6 +37,7 @@ namespace ConstructionSetExtender
 	ComponentDLLInterface::CommandTableData		XSECommandTableData;
 
 	CSEReleaseNameTable							CSEReleaseNameTable::Instance;
+	bool										shadeMeMode = false;
 
 	CSEReleaseNameTable::CSEReleaseNameTable() :
 		BGSEditorExtender::BGSEEReleaseNameTable()
@@ -312,12 +313,15 @@ namespace ConstructionSetExtender
 
 		BGSEEACHIEVEMENTS->Unlock(Achievements::kHappyBDayMoi, false, false, true);
 
-#ifndef NDEBUG
 		char UsernameBuffer[0x200] = {0};
 		DWORD UsernameSize = sizeof(UsernameBuffer);
 		GetUserName(UsernameBuffer, &UsernameSize);
 
-		if (_stricmp(UsernameBuffer, "shadeMe"))
+		if (!_stricmp(UsernameBuffer, "shadeMe"))
+			shadeMeMode = true;
+
+#ifndef NDEBUG
+		if (shadeMeMode == false)
 		{
 			BGSEECONSOLE->LogMsg("shadeMe", "This is a DEBUG build");
 			BGSEECONSOLE->LogMsg("shadeMe", "Please proceed to your local police precinct and turn yourself in for not being me");

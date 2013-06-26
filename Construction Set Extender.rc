@@ -463,6 +463,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Create Local &Maps",          40471
         MENUITEM "Adjust Exterior Cells...",    40448
+        MENUITEM SEPARATOR
+        MENUITEM "Purge Loaded Resources",      IDC_MAINMENU_PURGELOADEDRESOURCES
     END
     POPUP "&Character"
     BEGIN

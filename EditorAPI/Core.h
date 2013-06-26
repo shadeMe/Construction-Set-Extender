@@ -63,6 +63,14 @@ class	NiBinaryStream;
 class	NiFile;
 class	NiRenderTargetGroup;
 class	BSFileEntry;
+class	BackgroundCloneThread;
+class	Model;
+class	kfModel;
+class	QueuedReference;
+class	QueuedAnimIdle;
+class	QueuedHelmet;
+class	AttachDistant3DTask;
+
 
 // 1220
 class TESDataHandler
@@ -413,3 +421,20 @@ public:
 
 	static const char*				LODFullTexturePath;
 };
+
+// 1C
+class ModelLoader
+{
+public:
+	// members
+	/*00*/ LockFreeMap<Model*>*									modelMap;		// LockFreeCaseInsensitiveStringMap<Model>
+	/*04*/ LockFreeMap<kfModel*>*								kfMap;			// LockFreeCaseInsensitiveStringMap<kfModel>
+	/*08*/ LockFreeMap< NiPointer<QueuedReference*> >*			refMap;			// key is TESObjectREFR*
+	/*0C*/ LockFreeMap< NiPointer<QueuedAnimIdle*> >*			idleMap;		// key is AnimIdle*
+	/*10*/ LockFreeMap< NiPointer<QueuedHelmet*> >*				helmetMap;		// key is TESObjectREFR*
+	/*14*/ LockFreeQueue< NiPointer<AttachDistant3DTask*> >*	distant3DMap;
+	/*18*/ BackgroundCloneThread*								bgCloneThread;
+
+	static ModelLoader**										Singleton;
+};
+#define _MODELLOADER			(*ModelLoader::Singleton)

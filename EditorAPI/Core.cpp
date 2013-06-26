@@ -38,6 +38,9 @@ BSRenderedTexture*					TESLODTextureGenerator::BSTexture4096x = NULL;
 LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture6144x = NULL;
 BSRenderedTexture*					TESLODTextureGenerator::BSTexture6144x = NULL;
 
+ModelLoader**						ModelLoader::Singleton = (ModelLoader**)0x00A0DEAC;
+
+
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 {
 	for (tList<TESFile>::Iterator Itr = fileList.Begin(); !Itr.End(); ++Itr)
