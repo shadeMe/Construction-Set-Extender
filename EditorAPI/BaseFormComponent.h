@@ -435,7 +435,7 @@ public:
 	//     /*00*/ void**			vtbl;
 	/*04*/ ReactionListT			reactionList;
 	/*0C*/ UInt8					unk0C;			// intialized to 6
-	/*0D*/ UInt8					unk0D[2];
+	/*0D*/ UInt8					pad0D[3];
 };
 STATIC_ASSERT(sizeof(TESReactionForm) == 0x10);
 
