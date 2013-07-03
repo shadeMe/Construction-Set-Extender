@@ -65,7 +65,7 @@ class	NiRenderTargetGroup;
 class	BSFileEntry;
 class	BackgroundCloneThread;
 class	Model;
-class	kfModel;
+class	KFModel;
 class	QueuedReference;
 class	QueuedAnimIdle;
 class	QueuedHelmet;
@@ -269,7 +269,7 @@ public:
 };
 STATIC_ASSERT(sizeof(GridArray) == 0x4);
 
-// 020
+// 20
 class GridCellArray : public GridArray
 {
 public:
@@ -428,7 +428,7 @@ class ModelLoader
 public:
 	// members
 	/*00*/ LockFreeMap<Model*>*									modelMap;		// LockFreeCaseInsensitiveStringMap<Model>
-	/*04*/ LockFreeMap<kfModel*>*								kfMap;			// LockFreeCaseInsensitiveStringMap<kfModel>
+	/*04*/ LockFreeMap<KFModel*>*								kfMap;			// LockFreeCaseInsensitiveStringMap<KFModel>
 	/*08*/ LockFreeMap< NiPointer<QueuedReference*> >*			refMap;			// key is TESObjectREFR*
 	/*0C*/ LockFreeMap< NiPointer<QueuedAnimIdle*> >*			idleMap;		// key is AnimIdle*
 	/*10*/ LockFreeMap< NiPointer<QueuedHelmet*> >*				helmetMap;		// key is TESObjectREFR*

@@ -197,6 +197,23 @@ namespace ConstructionSetExtender
 			bool							HasChanges(TESForm* Parent);
 		};
 
+		class CSEFaceGenWindowData : public BGSEditorExtender::BGSEEWindowExtraData
+		{
+		public:
+			bool				TunnellingTabSelectMessage;
+			bool				AllowPreviewUpdates;
+
+			CSEFaceGenWindowData();
+			virtual ~CSEFaceGenWindowData();
+
+			enum { kTypeID = 'XFGD' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
+		};
+
 		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 

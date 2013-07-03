@@ -529,6 +529,18 @@ namespace ConstructionSetExtender
 			return Buffer->CompareTo(Parent);
 		}
 
+		CSEFaceGenWindowData::CSEFaceGenWindowData() :
+			BGSEditorExtender::BGSEEWindowExtraData()
+		{
+			TunnellingTabSelectMessage = false;
+			AllowPreviewUpdates = true;
+		}
+
+		CSEFaceGenWindowData::~CSEFaceGenWindowData()
+		{
+			;//
+		}
+
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -4113,11 +4125,72 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_DESTROY:
+				{
+					CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+
+					if (xData)
+					{
+						ExtraData->Remove(CSEFaceGenWindowData::kTypeID);
+						delete xData;
+					}
+				}
+
+				break;
+			case WM_INITDIALOG:
+				{
+					CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+					if (xData == NULL)
+					{
+						xData = new CSEFaceGenWindowData();
+						ExtraData->Add(xData);
+					}
+				}
+				
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+
+					switch (NotificationData->idFrom)
+					{
+					case 1777:		// tab control, same for both the NPC and Race dialogs
+						{
+							if (NotificationData->code == TCN_SELCHANGE)
+							{
+								CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+
+								// consume the original notification and disable preview control updates
+								// otherwise, the morph values will get reset upon subwindow init
+								if (xData && xData->TunnellingTabSelectMessage == false)
+								{
+									Return = true;
+
+									xData->TunnellingTabSelectMessage = true;
+									xData->AllowPreviewUpdates = false;
+
+									SendMessage(hWnd, uMsg, wParam, lParam);
+
+									xData->TunnellingTabSelectMessage = false;
+									xData->AllowPreviewUpdates = true;
+								}
+							}
+						}
+
+						break;
+					}
+				}
+
+				break;
 			case WM_COMMAND:
 				switch (HIWORD(wParam))
 				{
 				case EN_CHANGE:
 					{
+						CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+						if (xData == NULL || xData->AllowPreviewUpdates == false)
+							break;
+
 						if (LOWORD(wParam) == kFaceGenControl_AgeEditCtrl ||
 							LOWORD(wParam) == kFaceGenControl_ComplexionEditCtrl ||
 							LOWORD(wParam) == kFaceGenControl_HairLengthEditCtrl ||
