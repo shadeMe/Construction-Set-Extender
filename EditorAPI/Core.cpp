@@ -197,6 +197,31 @@ bool TESDataHandler::AddForm( TESForm* Form )
 	return thisCall<bool>(0x004818F0, this, Form);
 }
 
+void TESDataHandler::RemoveInvalidScripts( void )
+{
+	std::list<Script*> Delinquents;
+
+	for (tList<Script>::Iterator Itr = scripts.Begin(); !Itr.End(); ++Itr)
+	{
+		Script* Current = Itr.Get();
+		
+		if (Current)
+		{
+			if (Current->editorID.c_str() == NULL && Current->text == NULL && Current->data == NULL)
+			{
+				Delinquents.push_back(Current);
+			}
+		}
+	}
+
+	for (std::list<Script*>::iterator Itr = Delinquents.begin(); Itr != Delinquents.end(); ++Itr)
+	{
+		thisCall<void>(0x00452AE0, &scripts, *Itr);		// remove from list
+		(*Itr)->DeleteInstance();
+	}
+
+	SortScripts();
+}
 
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {

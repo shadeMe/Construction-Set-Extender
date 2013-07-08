@@ -39,6 +39,9 @@ Script::RefVariable* Script::LookupRefVariableByIndex(UInt32 Index)
 
 bool Script::Compile(bool AsResultScript)
 {
+	if (this->text == NULL)
+		return false;
+
 	if (AsResultScript)
 		return thisCall<bool>(0x005034E0, 0x00A0B128, this, 0, 0);
 	else

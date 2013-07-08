@@ -2824,7 +2824,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::DeleteScript()
 		{
-			if (PerformHouseKeeping())
+	//		if (PerformHouseKeeping())
 			{
 				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Delete,
 																		(GetIsUninitialized() ? "" : CurrentScriptEditorID));

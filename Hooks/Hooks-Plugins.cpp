@@ -140,6 +140,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoLoadPluginsEpilogHook(void)
 		{
 			_DATAHANDLER->CleanCellWaterExtraData();
+			_DATAHANDLER->RemoveInvalidScripts();
 
 			DestroyWindow(s_LoadIdleWindow);
 			TESDataHandler::PluginLoadSaveInProgress = false;

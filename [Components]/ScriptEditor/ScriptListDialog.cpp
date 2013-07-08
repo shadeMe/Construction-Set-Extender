@@ -131,6 +131,8 @@ namespace ConstructionSetExtender
 				for (int i = 0; i < Data->ScriptCount; i++)
 				{
 					ComponentDLLInterface::ScriptData* ThisScript = &Data->ScriptListHead[i];
+					if (ThisScript->IsValid() == false)
+						continue;
 
 					ListViewItem^ NewScript = gcnew ListViewItem("");
 					NewScript->SubItems->Add(gcnew String(ThisScript->EditorID));

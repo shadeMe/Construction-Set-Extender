@@ -143,6 +143,7 @@ public:
 
 	bool											AddForm(TESForm* Form);
 
+	void											RemoveInvalidScripts(void);			// destroys any empty scripts, i.e., scripts without script text/editorID
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
 	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
 
