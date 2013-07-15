@@ -11,6 +11,9 @@
 *
 *	All sub-interfaces need to be initialized with InitializeInterface().
 *	All RegisterXXX type calls must be made inside the OBSE Post-Post-Load message handler.
+*	
+*	The Coda related headers can be found in the BGSEditorExtenderBase project. Include file
+*	paths will need to be correctly defined to use the script interface.
 ***********************************************************************************************/
 
 struct CSEInterface
