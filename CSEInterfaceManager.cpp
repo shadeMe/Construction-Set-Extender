@@ -174,6 +174,9 @@ namespace ConstructionSetExtender
 		if (Instance.Initialized == false)
 			return;
 
-		RenderWindowPainter::RenderChannelNotifications->Queue(DisplayDuration, "%s", Message);
+		if (RenderWindowPainter::RenderChannelNotifications)
+		{
+			RenderWindowPainter::RenderChannelNotifications->Queue(DisplayDuration, "%s", Message);
+		}
 	}
 }
