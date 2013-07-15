@@ -101,6 +101,16 @@ namespace ConstructionSetExtender
 				if (LocalParser->Valid)
 				{
 					int FirstTokenIndex = LocalParser->Indices[0];
+					
+					// make sure the line's commented
+					// otherwise the parser will eat up a character for each pass
+					if (ReadLine[FirstTokenIndex] != ';')
+					{
+						ReadLine = ";" + ReadLine;
+						LocalParser->Tokenize(ReadLine, false);
+						FirstTokenIndex = LocalParser->Indices[0];
+					}
+
 					Result += "\n" + ReadLine->Substring(0, FirstTokenIndex) + ReadLine->Substring(FirstTokenIndex + 1);
 				}
 				else
@@ -506,6 +516,103 @@ namespace ConstructionSetExtender
 		}
 	}
 
+
+	bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance )
+	{
+		bool Result = false;
+		try
+		{
+			String^ LHSString = "";
+			String^ RHSString = "";
+			int LHSInt = 0.0;
+			int RHSInt = 0.0;
+
+			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
+
+			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
+			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
+
+			switch (Type)
+			{
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_Equal:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt == RHSInt);
+				else if (!LHSNumeric && !RHSNumeric)
+					Result = (LHSString == RHSString);
+				else
+					throw gcnew CSEGeneralException("Mismatching operand types.");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LessThanOrEqual:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt <= RHSInt);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_GreaterThanOrEqual:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt >= RHSInt);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LessThan:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt < RHSInt);
+				else if (!LHSNumeric && !RHSNumeric)
+					Result = (String::Compare(LHSString, RHSString) < 0);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_GreaterThan:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt > RHSInt);
+				else if (!LHSNumeric && !RHSNumeric)
+					Result = (String::Compare(LHSString, RHSString) > 0);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_NotEqual:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt != RHSInt);
+				else if (!LHSNumeric && !RHSNumeric)
+					Result = (LHSString != RHSString);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LogicalAND:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt && RHSInt);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LogicalOR:
+				if (LHSNumeric && RHSNumeric)
+					Result = (LHSInt || RHSInt);
+				else
+					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
+
+				break;
+			default:
+				throw gcnew CSEGeneralException("Unknown operator");
+
+				break;
+			}
+		}
+		catch (Exception^ E)
+		{
+			ErrorOutput("Couldn't evaluate " + BuiltInOperatorsIdentifier[(int)Type] + " operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
+			Result = false;
+		}
+
+		return Result;
+	}
+
 	IfDirective::Operator^ IfDirective::LookupOperatorByIdentifier(String^% Identifier)
 	{
 		for each (Operator^ Itr in OperatorList)
@@ -561,234 +668,42 @@ namespace ConstructionSetExtender
 
 	bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt == RHSInt);
-			else if (!LHSNumeric && !RHSNumeric)
-				Result = (LHSString == RHSString);
-			else
-				throw gcnew CSEGeneralException("Mismatching operand types.");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate == operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_Equal, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt <= RHSInt);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate <= operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_LessThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt >= RHSInt);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate >= operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_GreaterThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt < RHSInt);
-			else if (!LHSNumeric && !RHSNumeric)
-				Result = (String::Compare(LHSString, RHSString) < 0);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate < operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_LessThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt > RHSInt);
-			else if (!LHSNumeric && !RHSNumeric)
-				Result = (String::Compare(LHSString, RHSString) > 0);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate > operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_GreaterThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt != RHSInt);
-			else if (!LHSNumeric && !RHSNumeric)
-				Result = (LHSString != RHSString);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate != operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_NotEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt && RHSInt);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate && operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_LogicalAND, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		bool Result = false;
-		try
-		{
-			String^ LHSString = "";
-			String^ RHSString = "";
-			int LHSInt = 0.0;
-			int RHSInt = 0.0;
-
-			ProcessOperands(LHS, RHS, LHSString, RHSString, PreprocessorInstance);
-
-			bool LHSNumeric = ParseAsInt(LHSString, LHSInt);
-			bool RHSNumeric = ParseAsInt(RHSString, RHSInt);
-
-			if (LHSNumeric && RHSNumeric)
-				Result = (LHSInt || RHSInt);
-			else
-				throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
-		}
-		catch (Exception^ E)
-		{
-			ErrorOutput("Couldn't evaluate || operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
-			Result = false;
-		}
-		return Result;
+		return Operator::Evaluator(Operator::BuiltInOperators::e_LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Result, StandardOutputError^ ErrorOutput)
@@ -935,8 +850,12 @@ namespace ConstructionSetExtender
 							Result = true;
 						else if (ResultExpression == "0")
 							Result = false;
+						else if (PreprocessorInstance->LookupDefineDirectiveByName(ResultExpression) == nullptr)
+							Result = false;		// doubles as a #ifdef when called without any operators
 						else
-							throw gcnew CSEGeneralException("Invalid result expression '" + ResultExpression + "'.");
+							Result = true;
+
+			//				throw gcnew CSEGeneralException("Invalid result expression '" + ResultExpression + "'.");
 					}
 					else
 						throw gcnew CSEGeneralException("Too many operands.");

@@ -159,6 +159,33 @@ namespace ConstructionSetExtender
 		ref struct Operator
 		{
 			delegate bool									Handler(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+
+			static enum class								BuiltInOperators
+			{
+				e_Equal,
+				e_LessThanOrEqual,
+				e_GreaterThanOrEqual,
+				e_LessThan,
+				e_GreaterThan,
+				e_NotEqual,
+
+				e_LogicalAND,
+				e_LogicalOR
+			};
+			static array<String^>^							BuiltInOperatorsIdentifier =
+			{
+				"==",
+				"<=",
+				">=",
+				"<",
+				">",
+				"!=",
+
+				"&&",
+				"||"
+			};
+
+			static bool										Evaluator(BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
 		private:
 			String^											Identifier;
 			Handler^										EvaluationHandler;
@@ -177,6 +204,7 @@ namespace ConstructionSetExtender
 		static bool											ParseAsInt(String^% Source, int% Result);
 		static void											ProcessOperands(String^% LHSSource, String^% RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^% PreprocessorInstance);
 
+		// use anonymous delegates, dammit!
 		static bool											EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
 		static bool											LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
 		static bool											GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
@@ -189,15 +217,23 @@ namespace ConstructionSetExtender
 
 		static array<Operator^>^							OperatorList =
 		{
-			gcnew Operator("==", gcnew Operator::Handler(&IfDirective::EqualityOperatorEvaluator), 2, 2),
-			gcnew Operator("<=", gcnew Operator::Handler(&IfDirective::LessThanOrEqualOperatorEvaluator), 0, 2),
-			gcnew Operator(">=", gcnew Operator::Handler(&IfDirective::GreaterThanOrEqualOperatorEvaluator), 1, 2),
-			gcnew Operator("<", gcnew Operator::Handler(&IfDirective::LessThanOperatorEvaluator), 0, 2),
-			gcnew Operator(">", gcnew Operator::Handler(&IfDirective::GreaterThanOperatorEvaluator), 1, 2),
-			gcnew Operator("!=", gcnew Operator::Handler(&IfDirective::NotEqualOperatorEvaluator), 2, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_Equal],
+							gcnew Operator::Handler(&IfDirective::EqualityOperatorEvaluator), 2, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LessThanOrEqual],
+							gcnew Operator::Handler(&IfDirective::LessThanOrEqualOperatorEvaluator), 0, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_GreaterThanOrEqual],
+							gcnew Operator::Handler(&IfDirective::GreaterThanOrEqualOperatorEvaluator), 1, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LessThan],
+							gcnew Operator::Handler(&IfDirective::LessThanOperatorEvaluator), 0, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_GreaterThan],
+							gcnew Operator::Handler(&IfDirective::GreaterThanOperatorEvaluator), 1, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_NotEqual],
+							gcnew Operator::Handler(&IfDirective::NotEqualOperatorEvaluator), 2, 2),
 
-			gcnew Operator("&&", gcnew Operator::Handler(&IfDirective::LogicalAndOperatorEvaluator), 3, 2),
-			gcnew Operator("||", gcnew Operator::Handler(&IfDirective::LogicalOrOperatorEvaluator), 4, 2)
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LogicalAND],
+							gcnew Operator::Handler(&IfDirective::LogicalAndOperatorEvaluator), 3, 2),
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LogicalOR],
+							gcnew Operator::Handler(&IfDirective::LogicalOrOperatorEvaluator), 4, 2)
 		};
 
 		bool												ConvertInfixExpressionToPostFix(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
