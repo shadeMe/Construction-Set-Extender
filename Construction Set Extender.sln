@@ -127,10 +127,4 @@ Global
 		{AA53012B-2307-47FE-B637-4A828BA77A24} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
 		{67DD2FF6-AFF7-4C49-80AE-72B47982563D} = {C82E8D51-4BB3-430F-BF67-8921BEAC4375}
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_BuildVersioningStyle = None.None.MonthAndDayStamp.TimeStamp
-		BuildVersion_UpdateFileVersion = True
-		BuildVersion_UpdateAssemblyVersion = True
-	EndGlobalSection
 EndGlobal
