@@ -5,6 +5,7 @@
 namespace ConstructionSetExtender
 {
 	extern bool								shadeMeMode;
+	extern bool								IsWarholAGenius;
 
 	class CSEReleaseNameTable : public BGSEditorExtender::BGSEEReleaseNameTable
 	{

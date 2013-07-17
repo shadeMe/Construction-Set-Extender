@@ -17,7 +17,7 @@
 #if defined(CSE)
 	#define VER_FILE_DESCRIPTION_STR    "A plugin for the Oblivion Script Extender"
 #else
-	#define VER_FILE_DESCRIPTION_STR    "A component of the Construction Set Extender"
+	#define VER_FILE_DESCRIPTION_STR    "A component of the ConstruKction Set Extender"
 #endif
 
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
@@ -27,7 +27,7 @@
 									"." STRINGIZE(VERSION_BUILD)    \
 
 #if defined(CSE)
-	#define VER_PRODUCTNAME_STR         "Construction Set Extender"
+	#define VER_PRODUCTNAME_STR         "ConstruKction Set Extender"
 #elif defined(CSE_SE)
 	#define VER_PRODUCTNAME_STR         "ScriptEditor"
 #elif defined(CSE_SEPREPROC)

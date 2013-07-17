@@ -27,6 +27,7 @@
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
+#include "SME Sundries\MersenneTwister.h"
 
 namespace ConstructionSetExtender
 {
@@ -38,6 +39,7 @@ namespace ConstructionSetExtender
 
 	CSEReleaseNameTable							CSEReleaseNameTable::Instance;
 	bool										shadeMeMode = false;
+	bool										IsWarholAGenius = false;
 
 	CSEReleaseNameTable::CSEReleaseNameTable() :
 		BGSEditorExtender::BGSEEReleaseNameTable()
@@ -295,7 +297,7 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE->ExdentAll();
-		BGSEECONSOLE_MESSAGE("%s Initialized!", BGSEEMAIN_EXTENDERLONGNAME);
+		BGSEECONSOLE_MESSAGE("%s Initialized!", BGSEEMAIN->ExtenderGetDisplayName());
 		BGSEECONSOLE->Pad(2);
 
 		BGSEEACHIEVEMENTS->Unlock(Achievements::kTheWiseOne);
@@ -603,12 +605,17 @@ extern "C"
 			return false;
 		}
 
+		SME::MersenneTwister::init_genrand(GetTickCount());
+		if (SME::MersenneTwister::genrand_real1() > 0.5)
+			IsWarholAGenius = true;
+
 		BGSEditorExtender::INISettingDepotT CSEINISettings;
 
 		Settings::Register(CSEINISettings);
 		CSEAuxiliaryViewport::RegisterINISettings(CSEINISettings);
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
+														(IsWarholAGenius ? "ConstruKction Set Extender" : NULL),
 														BGSEEMAIN_EXTENDERSHORTNAME,
 														CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
 														PACKED_SME_VERSION,
@@ -646,7 +653,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{
 			MessageBox(NULL,
-					"The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
+					"The ConstruKction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
 					"The Cyrodiil Bunny Ranch",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
@@ -662,7 +669,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
 		{
 			MessageBox(NULL,
-					"The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
+					"The ConstruKction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
 					"Rumpy-Pumpy!!",
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 

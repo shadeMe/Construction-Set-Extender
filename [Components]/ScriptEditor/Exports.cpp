@@ -46,7 +46,7 @@ void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
 	DebugPrint(E->ExceptionObject->ToString());
 
 	MessageBox::Show("The editor crashed while executing managed code! Check the debug log for details.",
-					"Construction Set Extender",
+					"ConstruKction Set Extender",
 					MessageBoxButtons::OK,
 					MessageBoxIcon::Error);
 }
