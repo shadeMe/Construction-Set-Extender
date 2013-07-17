@@ -287,7 +287,7 @@ namespace BGSEditorExtender
 	BGSEEMain::DefaultInitCallback::DefaultInitCallback() :
 		BGSEEDaemonCallback()
 	{
-		LongName = NULL;
+		DisplayName = NULL;
 		ReleaseName = NULL;
 		APPPath = NULL;
 		ExtenderVersion = 0x0;
@@ -307,7 +307,7 @@ namespace BGSEditorExtender
 		const char* ReleaseMode = " DEBUG";
 #endif
 		BGSEECONSOLE_MESSAGE("%s \"%s\" v%d.%d.%d.%d%s Initializing...",
-							LongName,
+							DisplayName,
 							ReleaseName,
 							SME_VERSION_MAJOR(ExtenderVersion),
 							SME_VERSION_MINOR(ExtenderVersion),
@@ -583,7 +583,7 @@ namespace BGSEditorExtender
 		return Singleton;
 	}
 
-	bool BGSEEMain::Initialize( const char* LongName, const char* ShortName, const char* ReleaseName, UInt32 Version,
+	bool BGSEEMain::Initialize( const char* LongName, const char* DisplayName, const char* ShortName, const char* ReleaseName, UInt32 Version,
 								UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion, const char* APPPath,
 								UInt32 SEPluginHandle, UInt32 SEMinimumVersion,
 								UInt32 SECurrentVersion, INISettingDepotT& INISettings,
@@ -603,6 +603,10 @@ namespace BGSEditorExtender
 		FORMAT_STR(ExtenderShortName, "%s", ShortName);
 		ExtenderReleaseName = ReleaseName;
 		ExtenderVersion = Version;
+		if (DisplayName == NULL)
+			ExtenderDisplayName = ExtenderLongName;
+		else
+			ExtenderDisplayName = DisplayName;
 
 		ParentEditorID = EditorID;
 		ParentEditorName = kParentEditorLongName[(int)EditorID];
@@ -629,7 +633,7 @@ namespace BGSEditorExtender
 		ExtenderDaemon = new BGSEEDaemon();
 
 		DefaultInitCallback* InitCallback = new DefaultInitCallback();
-		InitCallback->LongName = ExtenderLongName.c_str();
+		InitCallback->DisplayName = ExtenderDisplayName.c_str();
 		InitCallback->ReleaseName = ExtenderReleaseName.c_str();
 		InitCallback->APPPath = GameDirectoryPath.c_str();
 		InitCallback->ExtenderVersion = ExtenderVersion;
@@ -838,6 +842,12 @@ namespace BGSEditorExtender
 		SME_ASSERT(Initialized);
 
 		return ExtenderINIManager;
+	}
+
+	const char* BGSEEMain::ExtenderGetDisplayName( void ) const
+	{
+		SME_ASSERT(Initialized);
+		return ExtenderDisplayName.c_str();
 	}
 
 	BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)

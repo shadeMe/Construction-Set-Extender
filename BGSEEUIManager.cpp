@@ -1073,7 +1073,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(Parent, Buffer, BGSEEMAIN->ExtenderGetShortName(), Flags|MB_ICONINFORMATION);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Information - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(Parent, Buffer, Title, Flags|MB_ICONINFORMATION);
 	}
 
 	int BGSEEUIManager::MsgBoxI( UINT Flags, const char* Format, ... )
@@ -1084,7 +1087,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), Flags|MB_ICONINFORMATION);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Information - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(GetMainWindow(), Buffer, Title, Flags|MB_ICONINFORMATION);
 	}
 
 	int BGSEEUIManager::MsgBoxI( const char* Format, ... )
@@ -1095,7 +1101,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), MB_OK|MB_ICONINFORMATION);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Information - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(GetMainWindow(), Buffer, Title, MB_OK|MB_ICONINFORMATION);
 	}
 
 	int BGSEEUIManager::MsgBoxW( HWND Parent, UINT Flags, const char* Format, ... )
@@ -1106,7 +1115,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(Parent, Buffer, BGSEEMAIN->ExtenderGetShortName(), Flags|MB_ICONWARNING);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Warning - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(Parent, Buffer, Title, Flags|MB_ICONWARNING);
 	}
 
 	int BGSEEUIManager::MsgBoxW( UINT Flags, const char* Format, ... )
@@ -1117,7 +1129,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), Flags|MB_ICONWARNING);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Warning - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(GetMainWindow(), Buffer, Title, Flags|MB_ICONWARNING);
 	}
 
 	int BGSEEUIManager::MsgBoxW( const char* Format, ... )
@@ -1128,7 +1143,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), MB_OK|MB_ICONWARNING);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Warning - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(GetMainWindow(), Buffer, Title, MB_OK|MB_ICONWARNING);
 	}
 
 	int BGSEEUIManager::MsgBoxE( HWND Parent, UINT Flags, const char* Format, ... )
@@ -1139,7 +1157,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(Parent, Buffer, BGSEEMAIN->ExtenderGetShortName(), Flags|MB_ICONERROR);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Error - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(Parent, Buffer, Title, Flags|MB_ICONERROR);
 	}
 
 	int BGSEEUIManager::MsgBoxE( UINT Flags, const char* Format, ... )
@@ -1150,7 +1171,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), Flags|MB_ICONERROR);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Error - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(GetMainWindow(), Buffer, Title, Flags|MB_ICONERROR);
 	}
 
 	int BGSEEUIManager::MsgBoxE( const char* Format, ... )
@@ -1161,7 +1185,10 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		return MessageBox(GetMainWindow(), Buffer, BGSEEMAIN->ExtenderGetShortName(), MB_OK|MB_ICONERROR);
+		char Title[0x100] = {0};
+		FORMAT_STR(Title, "Error - %s", BGSEEMAIN->ExtenderGetDisplayName());
+
+		return MessageBox(GetMainWindow(), Buffer, Title, MB_OK|MB_ICONERROR);
 	}
 
 	HWND BGSEEUIManager::ModelessDialog( HINSTANCE hInstance, LPSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam /*= NULL*/, bool Override )

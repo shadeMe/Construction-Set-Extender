@@ -130,7 +130,7 @@ namespace BGSEditorExtender
 		class DefaultInitCallback : public BGSEEDaemonCallback
 		{
 		public:
-			const char*				LongName;
+			const char*				DisplayName;
 			const char*				ReleaseName;
 			const char*				APPPath;
 			HINSTANCE				ModuleHandle;
@@ -167,6 +167,7 @@ namespace BGSEditorExtender
 		BGSEEMain();
 
 		std::string					ExtenderLongName;
+		std::string					ExtenderDisplayName;
 		char						ExtenderShortName[0x50];		// needs to be static as xSE caches the c-string pointer
 		std::string					ExtenderReleaseName;
 		UInt32						ExtenderVersion;
@@ -203,7 +204,7 @@ namespace BGSEditorExtender
 
 		static BGSEEMain*						GetSingleton();
 
-		bool									Initialize(const char* LongName, const char* ShortName, const char* ReleaseName,
+		bool									Initialize(const char* LongName, const char* DisplayName, const char* ShortName, const char* ReleaseName,
 														UInt32 Version, UInt8 EditorID, UInt32 EditorSupportedVersion, UInt32 EditorCurrentVersion,
 														const char* APPPath,
 														UInt32 SEPluginHandle, UInt32 SEMinimumVersion, UInt32 SECurrentVersion,
@@ -212,6 +213,7 @@ namespace BGSEditorExtender
 														bool CrashRptSupport = true);
 
 		const char*								ExtenderGetLongName(void) const;
+		const char*								ExtenderGetDisplayName(void) const;
 		const char*								ExtenderGetShortName(void) const;
 		const char*								ExtenderGetReleaseName(void) const;
 		UInt32									ExtenderGetVersion(void) const;
