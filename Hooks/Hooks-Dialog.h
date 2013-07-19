@@ -59,6 +59,9 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(RegionEditorCreateDataCopy, "fixes a bug that causes a CTD when a data copy operation was attempted on a brand new region record");
 		_DeclareNopHdlr(AIFormResetPackageListColumns, "fixes a bug that causes the AI data dlg's packages listview to reset its columns everytime the thing was refreshed");
 		_DeclareMemHdlr(CellViewOnCellSelection, "prevents the object ref list from losing its sort status whenever a cell is selected in the cell list");
+		_DeclareMemHdlr(EffectItemListViewSortingA, "prevents the sorting of the effect item list view");
+		_DeclareMemHdlr(EffectItemListViewSortingB, "");
+		_DeclareMemHdlr(EffectItemListViewSortingC, "");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

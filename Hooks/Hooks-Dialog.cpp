@@ -62,6 +62,9 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(RegionEditorCreateDataCopy, 0x004BF763);
 		_DefineNopHdlr(AIFormResetPackageListColumns, 0x00452FC9, 5);
 		_DefineHookHdlr(CellViewOnCellSelection, 0x0040A174);
+		_DefineJumpHdlr(EffectItemListViewSortingA, 0x0051DE03, 0x0051DE1B);
+		_DefineJumpHdlr(EffectItemListViewSortingB, 0x00567F15, 0x00567F27);
+		_DefineJumpHdlr(EffectItemListViewSortingC, 0x0056D963, 0x0056D97B);
 
 		void PatchDialogHooks(void)
 		{
@@ -132,156 +135,158 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESQuestWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
 			_MemHdlr(FilteredDialogWindowResize).WriteUInt8(SWP_NOSIZE|SWP_NOZORDER);
 
-			for (int i = 0; i < 9; i++)
 			{
-				static const UInt32 kTESTopicEnumerateDialogDataCallSites[9] =
+				for (int i = 0; i < 9; i++)
 				{
-					0x004EFC93, 0x004F2196,
-					0x004F2327, 0x004F275B,
-					0x004F2B7D, 0x004F2D44,
-					0x004F834B,	0x004F8596,
-					0x004F8F2D
-				};
+					static const UInt32 kTESTopicEnumerateDialogDataCallSites[9] =
+					{
+						0x004EFC93, 0x004F2196,
+						0x004F2327, 0x004F275B,
+						0x004F2B7D, 0x004F2D44,
+						0x004F834B,	0x004F8596,
+						0x004F8F2D
+					};
 
-				_DefineCallHdlr(InvalidateDialogueControls, kTESTopicEnumerateDialogDataCallSites[i], TESTopicEnumerateDialogDataDetour);
-				_MemHdlr(InvalidateDialogueControls).WriteCall();
-			}
+					_DefineCallHdlr(InvalidateDialogueControls, kTESTopicEnumerateDialogDataCallSites[i], TESTopicEnumerateDialogDataDetour);
+					_MemHdlr(InvalidateDialogueControls).WriteCall();
+				}
 
-			for (int i = 0; i < 4; i++)
-			{
-				static const UInt32 kTESDialogEnableTopicControlsCallSites[4] =
+				for (int i = 0; i < 4; i++)
 				{
-					0x004EE7C4, 0x004EE81C,
-					0x004F26EA, 0x004F276F
-				};
+					static const UInt32 kTESDialogEnableTopicControlsCallSites[4] =
+					{
+						0x004EE7C4, 0x004EE81C,
+						0x004F26EA, 0x004F276F
+					};
 
-				_DefineCallHdlr(InvalidateDialogueControls, kTESDialogEnableTopicControlsCallSites[i], TESDialogEnableTopicControlsDetour);
-				_MemHdlr(InvalidateDialogueControls).WriteCall();
-			}
+					_DefineCallHdlr(InvalidateDialogueControls, kTESDialogEnableTopicControlsCallSites[i], TESDialogEnableTopicControlsDetour);
+					_MemHdlr(InvalidateDialogueControls).WriteCall();
+				}
 
-			for (int i = 0; i < 10; i++)
-			{
-				static const UInt32 kTESConditionItemDisableDialogControlsDetourCallSites[10] =
+				for (int i = 0; i < 10; i++)
 				{
-					0x004DD82F, 0x004E1783,
-					0x004E364F, 0x004E37CE,
-					0x004EEA72, 0x004F26F0,
-					0x004F2797, 0x004F399A,
-					0x004F8AEA, 0x004F8B4B
-				};
+					static const UInt32 kTESConditionItemDisableDialogControlsDetourCallSites[10] =
+					{
+						0x004DD82F, 0x004E1783,
+						0x004E364F, 0x004E37CE,
+						0x004EEA72, 0x004F26F0,
+						0x004F2797, 0x004F399A,
+						0x004F8AEA, 0x004F8B4B
+					};
 
-				_DefineCallHdlr(InvalidateDialogueControls, kTESConditionItemDisableDialogControlsDetourCallSites[i], TESConditionItemDisableDialogControlsDetour);
-				_MemHdlr(InvalidateDialogueControls).WriteCall();
-			}
+					_DefineCallHdlr(InvalidateDialogueControls, kTESConditionItemDisableDialogControlsDetourCallSites[i], TESConditionItemDisableDialogControlsDetour);
+					_MemHdlr(InvalidateDialogueControls).WriteCall();
+				}
 
-			for (int i = 0; i < 3; i++)
-			{
-				static const UInt32 kTESTopicInfoSetInDialogCallSites[3] =
+				for (int i = 0; i < 3; i++)
 				{
-					0x004F27A8, 0x004F39A7,
-					0x004F8BB7
-				};
+					static const UInt32 kTESTopicInfoSetInDialogCallSites[3] =
+					{
+						0x004F27A8, 0x004F39A7,
+						0x004F8BB7
+					};
 
-				_DefineCallHdlr(InvalidateDialogueControls, kTESTopicInfoSetInDialogCallSites[i], TESTopicInfoSetInDialogDetour);
-				_MemHdlr(InvalidateDialogueControls).WriteCall();
-			}
+					_DefineCallHdlr(InvalidateDialogueControls, kTESTopicInfoSetInDialogCallSites[i], TESTopicInfoSetInDialogDetour);
+					_MemHdlr(InvalidateDialogueControls).WriteCall();
+				}
 
-			for (int i = 0; i < 5; i++)
-			{
-				static const UInt32 kCallSites[5] =
+				for (int i = 0; i < 5; i++)
 				{
-					0x00420AB7, 0x00421816,
-					0x00421EF3, 0x00421F52,
-					0x0042263F
-				};
+					static const UInt32 kCallSites[5] =
+					{
+						0x00420AB7, 0x00421816,
+						0x00421EF3, 0x00421F52,
+						0x0042263F
+					};
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&ObjectWindowFormListComparator);
-			}
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&ObjectWindowFormListComparator);
+				}
 
-			for (int i = 0; i < 6; i++)
-			{
-				static const UInt32 kCallSites[6] =
+				for (int i = 0; i < 6; i++)
 				{
-					0x00448A08, 0x00448D48,
-					0x0044A004, 0x004DF397,
-					0x00568CA1, 0x00569BE4
-				};
+					static const UInt32 kCallSites[6] =
+					{
+						0x00448A08, 0x00448D48,
+						0x0044A004, 0x004DF397,
+						0x00568CA1, 0x00569BE4
+					};
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESFormIDListViewFormListComparator);
-			}
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESFormIDListViewFormListComparator);
+				}
 
-			for (int i = 0; i < 9; i++)
-			{
-				static const UInt32 kCallSites[9] =
+				for (int i = 0; i < 9; i++)
 				{
-					0x00409DD8,	0x0040A232,
-					0x0040A4CF,	0x0040AC87,
-					0x0040AE89,	0x00537784,
-					0x0053A596,	0x0053B1EA,
-					0x005A9C96
-				};
+					static const UInt32 kCallSites[9] =
+					{
+						0x00409DD8,	0x0040A232,
+						0x0040A4CF,	0x0040AC87,
+						0x0040AE89,	0x00537784,
+						0x0053A596,	0x0053B1EA,
+						0x005A9C96
+					};
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogCellListComparator);
-			}
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogCellListComparator);
+				}
 
-			for (int i = 0; i < 3; i++)
-			{
-				static const UInt32 kCallSites[3] =
+				for (int i = 0; i < 3; i++)
 				{
-					0x00409E02,	0x0040A1BA,
-					0x0040AF89
-				};
+					static const UInt32 kCallSites[3] =
+					{
+						0x00409E02,	0x0040A1BA,
+						0x0040AF89
+					};
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogReferenceListComparator);
-			}
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogReferenceListComparator);
+				}
 
-			for (int i = 0; i < 4; i++)
-			{
-				static const UInt32 kCallSites[4] =
+				for (int i = 0; i < 4; i++)
 				{
-					0x004DEEC7,	0x004EE6FF,
-					0x004F00E0,	0x004F5D71
-				};
+					static const UInt32 kCallSites[4] =
+					{
+						0x004DEEC7,	0x004EE6FF,
+						0x004F00E0,	0x004F5D71
+					};
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogFormListEDIDComparator);
-			}
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogFormListEDIDComparator);
+				}
 
-			for (int i = 0; i < 2; i++)
-			{
-				static const UInt32 kCallSites[2] =
+				for (int i = 0; i < 2; i++)
 				{
-					0x0044850C,
-					0x004484EB
-				};
+					static const UInt32 kCallSites[2] =
+					{
+						0x0044850C,
+						0x004484EB
+					};
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
 
-				if (i == 0)
-					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextGenericComparator);
-				else
-					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextTopicInfoComparator);
-			}
+					if (i == 0)
+						_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextGenericComparator);
+					else
+						_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&FindTextTopicInfoComparator);
+				}
 
-			{
-				_DefinePatchHdlr(ComparatorReplace, 0x0041EB31 + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&LandscapeTextureComparator);
-			}
-
-			for (int i = 0; i < 3; i++)
-			{
-				static const UInt32 kCallSites[3] =
 				{
-					0x004522BB,	0x0045241E,
-					0x004526C2
-				};
+					_DefinePatchHdlr(ComparatorReplace, 0x0041EB31 + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&LandscapeTextureComparator);
+				}
 
-				_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
-				_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogAIPackageListComparator);
+				for (int i = 0; i < 3; i++)
+				{
+					static const UInt32 kCallSites[3] =
+					{
+						0x004522BB,	0x0045241E,
+						0x004526C2
+					};
+
+					_DefinePatchHdlr(ComparatorReplace, kCallSites[i] + 1);
+					_MemHdlr(ComparatorReplace).WriteUInt32((UInt32)&TESDialogAIPackageListComparator);
+				}
 			}
 
 			_MemHdlr(DialogueEditorPopup).WriteJump();
@@ -292,6 +297,9 @@ namespace ConstructionSetExtender
 			_MemHdlr(RegionEditorCreateDataCopy).WriteJump();
 			_MemHdlr(AIFormResetPackageListColumns).WriteNop();
 			_MemHdlr(CellViewOnCellSelection).WriteJump();
+			_MemHdlr(EffectItemListViewSortingA).WriteJump();
+			_MemHdlr(EffectItemListViewSortingB).WriteJump();
+			_MemHdlr(EffectItemListViewSortingC).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)

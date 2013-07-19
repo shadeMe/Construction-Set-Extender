@@ -8,7 +8,7 @@
 
 /*
 	MagicItem is an abstract form component for objects with 'castable' effects - Spells, Enchantments, Ingredients, & Potions
-    It is *not* the base for sigil stones, which cannot be cast directly.
+	It is *not* the base for sigil stones, which cannot be cast directly.
 */
 
 class   TESFile;

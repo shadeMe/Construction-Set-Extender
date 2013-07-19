@@ -1,4 +1,5 @@
 #include "CSEUIManager.h"
+#include "CSEMain.h"
 #include "Construction Set Extender_Resource.h"
 #include "CSEAuxiliaryViewport.h"
 #include "[Common]\CLIWrapper.h"
@@ -3128,17 +3129,22 @@ namespace ConstructionSetExtender
 						char* Buffer = new char[FileVersionSize];
 						char VersionString[0x100] = {0};
 						void* VersionStringPtr = NULL;
-
+						
 						GetFileVersionInfo(BGSEEMAIN->GetDLLPath(), FileVersionHandle, FileVersionSize, Buffer);
 						VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
-						FORMAT_STR(VersionString, "%s v%s\r\n\"%s\"", BGSEEMAIN->ExtenderGetLongName(),
-																	VersionStringPtr,
-																	BGSEEMAIN->ExtenderGetReleaseName());
+						FORMAT_STR(VersionString, "%s v%s\r\n\"%s\"", BGSEEMAIN->ExtenderGetDisplayName(),
+																	VersionStringPtr, BGSEEMAIN->ExtenderGetReleaseName());
 
 						std::string ReplacedString(VersionString);
 						std::replace(ReplacedString.begin(), ReplacedString.end(), ',', '.');
 
 						SetDlgItemText(hWnd, 1580, (LPCSTR)ReplacedString.c_str());
+
+						if (IsWarholAGenius)
+						{
+							Edit_SetText(GetDlgItem(hWnd, 1000),
+								"Pain, day, sky, beauty, black, die, joy,\n love, empty, time, sun, hurt, trust, peace, dark, rage, sad, white, rain, hate,\n anger, hope, sacred, passion, life, night,\n ache, soft light");
+						}
 
 						delete [] Buffer;
 					}
@@ -4261,6 +4267,106 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+		LRESULT CALLBACK MagicItemFormDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_NOTIFY:
+				{
+					HWND EffectItemListView = GetDlgItem(hWnd, 2069);
+					NMHDR* NotificationData = (NMHDR*)lParam;
+
+					if (NotificationData->hwndFrom != EffectItemListView)
+						break;
+
+					switch (NotificationData->code)
+					{
+					case LVN_COLUMNCLICK:
+						{
+							Return = true;				// no sorting!
+						}
+
+						break;
+					case LVN_KEYDOWN:
+						if (GetAsyncKeyState(VK_CONTROL))
+						{
+							Return = true;
+
+							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
+							TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+
+							if (LocalCopy && (KeyData->wVKey == VK_UP || KeyData->wVKey == VK_DOWN))
+							{
+								EffectItemList* EffectItems = CS_CAST(LocalCopy, TESForm, EffectItemList);
+								EffectItem* Selection = (EffectItem*)TESListView::GetSelectedItemData(EffectItemListView);
+
+								if (EffectItems && Selection)
+								{
+									EffectItemList::EffectItemListT::_Node* CurrentNode = NULL;
+									EffectItemList::EffectItemListT::_Node* PreviousNode = NULL;
+									EffectItemList::EffectItemListT::_Node* NextNode = NULL;
+
+									for (EffectItemList::EffectItemListT::_Node* Itr = EffectItems->effects.Head();
+																				Itr; PreviousNode = Itr, Itr = Itr->Next())
+									{
+										CurrentNode = Itr;
+										NextNode = Itr->Next();
+
+										if (Itr->Item() == Selection)
+											break;
+									}
+									
+									bool SelectionMoved = true, Up = false;
+									switch (KeyData->wVKey)
+									{
+									case VK_UP:
+										Up = true;
+
+										if (PreviousNode == NULL)
+											SelectionMoved = false;
+										else
+										{
+											EffectItem* Buffer = CurrentNode->item;
+											CurrentNode->item = PreviousNode->item;
+											PreviousNode->item = Buffer;
+										}
+
+										break;
+									case VK_DOWN:
+										if (NextNode == NULL)
+											SelectionMoved = false;
+										else
+										{
+											EffectItem* Buffer = NextNode->item;
+											NextNode->item = CurrentNode->item;
+											CurrentNode->item = Buffer;
+										}
+
+										break;
+									}
+
+									if (SelectionMoved)
+									{
+										EffectItems->PopulateListView(EffectItemListView);
+										TESListView::SetSelectedItem(EffectItemListView,
+																	TESListView::GetItemByData(EffectItemListView, Selection) + (Up ? 1 : -1));
+									}
+								}
+							}
+						}
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
 
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
@@ -4891,22 +4997,6 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
 			}
 
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_TextureUse, LandscapeTextureUseDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, FilteredDialogQuestDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FilteredDialog, FilteredDialogQuestDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_About, AboutDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, RaceDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, LandscapeEditDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, AIPackagesDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIForm, AIFormDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_NPC, FaceGenDlgSubClassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, FaceGenDlgSubClassProc);
-
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, CommonDialogExtraFittingsSubClassProc);
@@ -4971,6 +5061,29 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_UseReport, CommonDialogExtraFittingsSubClassProc);
 			}
+
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, DataDlgSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ResponseEditor, ResponseDlgSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_TextureUse, LandscapeTextureUseDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, FilteredDialogQuestDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FilteredDialog, FilteredDialogQuestDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_About, AboutDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, RaceDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, SelectTopicsQuestsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, SelectTopicsQuestsSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, LandscapeEditDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, AIPackagesDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIForm, AIFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_NPC, FaceGenDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, FaceGenDlgSubClassProc);
+
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ingredient, MagicItemFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SigilStone, MagicItemFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Enchantment, MagicItemFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Potion, MagicItemFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Spell, MagicItemFormDlgSubClassProc);
+
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());

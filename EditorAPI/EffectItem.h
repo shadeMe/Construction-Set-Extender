@@ -27,7 +27,7 @@ public:
 		// members
 		/*00*/ UInt32         scriptFormID;
 		/*04*/ UInt32         school;
-		/*08*/ BSString      name;
+		/*08*/ BSString		  name;
 		/*10*/ UInt32         fxMgefCode; // effect setting from which FX are taken
 		/*14*/ bool           hostile;
 		/*15*/ UInt8          pad15[3];
@@ -63,10 +63,13 @@ public:
 
 	// members
 	//     /*00*/ void**				vtbl;
-	/*04*/ EffectItemListT				firstEffect;
+	/*04*/ EffectItemListT				effects;
 	/*0C*/ UInt32						hostileCount; // includes 'ignored' effects, so technically broken, but no vanilla effects are ignored
 	/*10*/ EffectSetting				filterEffect; // used as a filter for allowable magic effects
 
 	virtual void						VFn00();
+
+	// methods
+	void								PopulateListView(HWND ListView);
 };
 STATIC_ASSERT(sizeof(EffectItemList) == 0xDC);

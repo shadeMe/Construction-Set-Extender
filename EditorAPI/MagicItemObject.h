@@ -9,7 +9,7 @@
 
 /*
 	MagicItemObject is an abstract form component for objects with 'castable' effects that can be
-    placed as references, i.e. Potions & Ingredients.
+	placed as references, i.e. Potions & Ingredients.
 */
 
 // 140
