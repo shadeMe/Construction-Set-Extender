@@ -8,7 +8,7 @@ namespace ConstructionSetExtender
 	{
 	public:
 		static String^												AppPath = gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetAppPath());
-		static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("CSEScriptEditor.Images");
+		static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("ScriptEditor.Images");
 	};
 
 #define SetupControlImage(Identifier)							Identifier##->Name = #Identifier;	\

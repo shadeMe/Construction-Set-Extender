@@ -46,7 +46,7 @@ namespace ConstructionSetExtender
 		SmallIcons->ColorDepth = ColorDepth::Depth32Bit;
 
 		WorkingDirectory = FSONULL;
-		ResourceManager^ ImageResources = gcnew ResourceManager("CSEBSAViewer.Images", Assembly::GetExecutingAssembly());
+		ResourceManager^ ImageResources = gcnew ResourceManager("BSAViewer.Images", Assembly::GetExecutingAssembly());
 
 		OpenDialog->DefaultExt = "bsa";
 		OpenDialog->Filter = "Bethesda Archive|*.bsa";
