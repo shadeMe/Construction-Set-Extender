@@ -3,8 +3,7 @@
 #include "BGSEEUIManager.h"
 #include "DetectSIMD.h"
 #include "BGSEEScript\CodaVM.h"
-#include "SME Sundries\INIEditGUI_Res.h"
-#include "SME Sundries\VersionInfo.h"
+#include <Tools\VersionInfo.h>
 
 namespace BGSEditorExtender
 {

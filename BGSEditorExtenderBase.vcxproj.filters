@@ -97,9 +97,6 @@
     <ClInclude Include="..\SME Sundries\MemoryHandler.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="..\SME Sundries\SME_Prefix.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="..\SME Sundries\StringHelpers.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -300,30 +297,6 @@
     </ClCompile>
     <ClCompile Include="BGSEEUIManager.cpp">
       <Filter>Modules\BGSEEUIManager</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\Functors.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\INIEditGUI.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\INIManager.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\MemoryHandler.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\StringHelpers.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\MersenneTwister.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\UIHelpers.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="..\SME Sundries\MiscGunk.cpp">
-      <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="BGSEERenderWindowPainter.cpp">
       <Filter>Modules\BGSEERenderWindowPainter</Filter>

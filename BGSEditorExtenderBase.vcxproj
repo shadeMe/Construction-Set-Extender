@@ -18,7 +18,6 @@
     <ClInclude Include="..\SME Sundries\INIManager.h" />
     <ClInclude Include="..\SME Sundries\MemoryHandler.h" />
     <ClInclude Include="..\SME Sundries\MersenneTwister.h" />
-    <ClInclude Include="..\SME Sundries\SME_Prefix.h" />
     <ClInclude Include="..\SME Sundries\StringHelpers.h" />
     <ClInclude Include="..\SME Sundries\UIHelpers.h" />
     <ClInclude Include="..\SME Sundries\VersionInfo.h" />
@@ -87,14 +86,6 @@
     <ClInclude Include="StdAfx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\SME Sundries\MiscGunk.cpp" />
-    <ClCompile Include="..\SME Sundries\Functors.cpp" />
-    <ClCompile Include="..\SME Sundries\INIEditGUI.cpp" />
-    <ClCompile Include="..\SME Sundries\INIManager.cpp" />
-    <ClCompile Include="..\SME Sundries\MemoryHandler.cpp" />
-    <ClCompile Include="..\SME Sundries\MersenneTwister.cpp" />
-    <ClCompile Include="..\SME Sundries\StringHelpers.cpp" />
-    <ClCompile Include="..\SME Sundries\UIHelpers.cpp" />
     <ClCompile Include="BGSEEAchievements.cpp" />
     <ClCompile Include="BGSEEChangeLogManager.cpp" />
     <ClCompile Include="BGSEEConsole.cpp" />
@@ -184,14 +175,14 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -208,12 +199,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
     <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
-    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
     <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
