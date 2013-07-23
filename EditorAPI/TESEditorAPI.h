@@ -88,5 +88,5 @@
 
 
 // NiAPI
-#include "NiGeometry.h"
-#include "NiRenderer.h"
+#include "obse\NiGeometry.h"
+#include "obse\NiRenderer.h"

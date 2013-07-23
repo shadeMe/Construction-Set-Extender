@@ -32,6 +32,8 @@ CSE		---->
 SE		---->
 
 	BUGFIX			=
+		> ISinterface pop issues
+			http://www.darkcreations.org/forums/topic/2609-construction-set-extender-61/?p=168571
 
 
 	ENHANCEMENT		=
