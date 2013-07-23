@@ -184,12 +184,14 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -206,13 +208,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\include;$(IncludePath)</IncludePath>
-    <LibraryPath>..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
-    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Include;C:\Users\shadeMe\Documents\[VS Libraries]\Boost;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\include;$(IncludePath)</IncludePath>
-    <LibraryPath>..\xSE Common;C:\Users\shadeMe\Documents\[VS Libraries]\DirectX\Lib\x86;C:\Users\shadeMe\Documents\[VS Libraries]\CrashRpt\lib;C:\Users\shadeMe\Documents\[VS Libraries]\Boost\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>BGSEEScript;BGSEEScript\MUP Base;BGSEEScript\MUP Implementation;$(XSECommonIncludePath);$(DirectXIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -221,7 +223,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <StringPooling>true</StringPooling>
@@ -254,7 +256,7 @@
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\obse\obse;$(SolutionDir)\..\obse\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
