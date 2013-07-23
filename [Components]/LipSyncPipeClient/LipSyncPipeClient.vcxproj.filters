@@ -21,9 +21,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
     <ClCompile Include="LipSyncPipeClient.cpp" />
-    <ClCompile Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.cpp">
-      <Filter>Utilities</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">

@@ -1,6 +1,6 @@
 #pragma once
-#include "SME Sundries\SME_Prefix.h"
-#include "SME Sundries\MemoryHandler.h"
+#include <SME_Prefix.h>
+#include <MemoryHandler.h>
 
 using namespace SME::MemoryHandler;
 

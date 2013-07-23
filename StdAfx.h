@@ -93,14 +93,14 @@
 #include <IFileStream.h>
 
 // SME
-#include "SME Sundries\SME_Prefix.h"
-#include "SME Sundries\MemoryHandler.h"
-#include "SME Sundries\INIManager.h"
-#include "SME Sundries\INIEditGUI.h"
-#include "SME Sundries\Functors.h"
-#include "SME Sundries\StringHelpers.h"
-#include "SME Sundries\UIHelpers.h"
-#include "SME Sundries\MiscGunk.h"
+#include <MemoryHandler.h>
+#include <INIManager.h>
+#include <INIEditGUI.h>
+#include <Functors.h>
+#include <StringHelpers.h>
+#include <UIHelpers.h>
+#include <MiscGunk.h>
+#include <MersenneTwister.h>
 
 // OBSE
 #include "obse_common/obse_version.h"

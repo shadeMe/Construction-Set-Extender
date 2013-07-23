@@ -27,7 +27,6 @@
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
-#include "SME Sundries\MersenneTwister.h"
 
 namespace ConstructionSetExtender
 {
