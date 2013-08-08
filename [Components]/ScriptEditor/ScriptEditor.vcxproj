@@ -121,7 +121,8 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL ...</Message>
-      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"</Command>
+      <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"
+copy "$(TargetPath)" "C:\Users\shadeMe\Documents\Dropbox\CSE Once-In-Awhile'lies\$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>cscript.exe "$(SolutionDir)\BuildIncrement.jse"</Command>
