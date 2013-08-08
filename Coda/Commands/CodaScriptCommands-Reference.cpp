@@ -326,11 +326,11 @@ namespace ConstructionSetExtender
 						return false;
 
 					if (!_stricmp(Buffer, "x"))
-						Reference->position.x = Value * PI / 180;
+						Reference->rotation.x = Value * PI / 180;
 					else if (!_stricmp(Buffer, "y"))
-						Reference->position.y = Value * PI / 180;
+						Reference->rotation.y = Value * PI / 180;
 					else
-						Reference->position.z = Value * PI / 180;
+						Reference->rotation.z = Value * PI / 180;
 
 					Reference->UpdateNiNode();
 					return true;
