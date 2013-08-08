@@ -439,6 +439,9 @@ namespace BGSEditorExtender
 			CodaScriptBackingStore Result;
 			Context->GetParser()->Evaluate(Context, ByteCode, &Result);
 
+			if (Result.GetIsNumber() == false)
+				throw CodaScriptException(this, "Condition expression didn't evaluate to a boolean value");
+
 			return Result.GetNumber();
 		}
 

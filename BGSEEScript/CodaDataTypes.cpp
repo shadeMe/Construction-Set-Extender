@@ -57,13 +57,13 @@ namespace BGSEditorExtender
 
 		CodaScriptReferenceDataTypeT CodaScriptBackingStore::GetFormID() const
 		{
-			SME_ASSERT(Type == kDataType_Reference);
+			SME_ASSERT(GetIsReference());
 			return RefData;
 		}
 
 		CodaScriptNumericDataTypeT CodaScriptBackingStore::GetNumber() const
 		{
-			SME_ASSERT(Type == kDataType_Numeric || GetHasImplicitCast(kDataType_Numeric));
+			SME_ASSERT(GetIsNumber());
 
 			switch (Type)
 			{
@@ -73,19 +73,19 @@ namespace BGSEditorExtender
 				return RefData;
 			}
 
-			// this should never happen
+			// this should never happen, duh!
 			return 0;
 		}
 
 		CodaScriptStringParameterTypeT CodaScriptBackingStore::GetString() const
 		{
-			SME_ASSERT(Type == kDataType_String);
+			SME_ASSERT(GetIsString());
 			return StringData;
 		}
 
 		CodaScriptSharedHandleArrayT CodaScriptBackingStore::GetArray() const
 		{
-			SME_ASSERT(Type == kDataType_Array);
+			SME_ASSERT(GetIsArray());
 			return ArrayData;
 		}
 

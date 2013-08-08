@@ -45,6 +45,26 @@ namespace BGSEditorExtender
 				return Type;
 			}
 
+			bool															GetIsNumber() const
+			{
+				return (Type == kDataType_Numeric || GetHasImplicitCast(kDataType_Numeric));
+			}
+
+			bool															GetIsReference() const
+			{
+				return (Type == kDataType_Reference);
+			}
+
+			bool															GetIsString() const
+			{
+				return (Type == kDataType_String);
+			}
+
+			bool															GetIsArray() const
+			{
+				return (Type == kDataType_Array);
+			}
+
 			virtual bool													GetHasImplicitCast(DataType NewType) const = 0;
 																			// the GetXXX accessory functions should perform the necessary casting internally
 			virtual CodaScriptReferenceDataTypeT							GetFormID() const = 0;
