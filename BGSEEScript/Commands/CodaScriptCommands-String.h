@@ -38,7 +38,7 @@ namespace BGSEditorExtender
 					"Returns the index of the first occurrence of the substring within the source string, starting at the specified position.",
 					0,
 					4,
-					ICodaScriptDataStore::kDataType_String);
+					ICodaScriptDataStore::kDataType_Numeric);
 
 				CodaScriptCommandPrototype(StringInsert,
 					0,
