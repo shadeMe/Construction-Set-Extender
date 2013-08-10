@@ -1,12 +1,12 @@
 /*
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -16,10 +16,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -49,27 +49,27 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   FunParserID::FunParserID()
-    :ICallback(cmFUNC, _T("parserid"), 0)
+	:ICallback(cmFUNC, _T("parserid"), 0)
   {}
 
   //------------------------------------------------------------------------------
   /** \brief Returns the number of elements stored in the first parameter. */
   void FunParserID::Eval(ptr_val_type &ret, const ptr_val_type * /*a_pArg*/, int /*a_iArgc*/)
   {
-    string_type sVer = _T("muParserX CodaMod V") + GetParent()->GetVersion();
-    *ret = sVer;
+	string_type sVer = _T("muParserX CodaMod V") + GetParent()->GetVersion();
+	*ret = sVer;
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunParserID::GetDesc() const
   {
-    return _T("parserid() - muParserX version information");
+	return _T("parserid() - muParserX version information");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunParserID::Clone() const
   {
-    return new FunParserID(*this);
+	return new FunParserID(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -84,41 +84,44 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
   void FunMax::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc)
   {
-    float_type smax(-1e30), sval(0);
-    for (int i=0; i<a_iArgc; ++i)
-    {
-      switch(a_pArg[i]->GetType())
-      {
-      case 'f': sval = a_pArg[i]->GetFloat();   break;
-      case 'i': sval = a_pArg[i]->GetFloat(); break;
-      case 'n': break; // ignore not in list entries (missing parameter)
-      case 'c':
-      default:
-        {
-          ErrorContext err;
-          err.Errc = ecTYPE_CONFLICT_FUN;
-          err.Arg = i+1;
-          err.Type1 = a_pArg[i]->GetType();
-          err.Type2 = 'f';
-          throw ParserError(err);
-        }
-      }
-      smax = max(smax, sval);
-    }
+	  if (a_iArgc < 1)
+		throw ParserError(ErrorContext(ecTOO_FEW_PARAMS, GetExprPos(), GetIdent()));
 
-    *ret = smax;
+	float_type smax(-1e30), sval(0);
+	for (int i=0; i<a_iArgc; ++i)
+	{
+	  switch(a_pArg[i]->GetType())
+	  {
+	  case 'f': sval = a_pArg[i]->GetFloat();   break;
+	  case 'i': sval = a_pArg[i]->GetFloat(); break;
+	  case 'n': break; // ignore not in list entries (missing parameter)
+	  case 'c':
+	  default:
+		{
+		  ErrorContext err;
+		  err.Errc = ecTYPE_CONFLICT_FUN;
+		  err.Arg = i+1;
+		  err.Type1 = a_pArg[i]->GetType();
+		  err.Type2 = 'f';
+		  throw ParserError(err);
+		}
+	  }
+	  smax = max(smax, sval);
+	}
+
+	*ret = smax;
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunMax::GetDesc() const
   {
-    return _T("max(x,y,...,z) - Returns the maximum value from all of its function arguments.");
+	return _T("max(x,y,...,z) - Returns the maximum value from all of its function arguments.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunMax::Clone() const
   {
-    return new FunMax(*this);
+	return new FunMax(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -132,45 +135,48 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
   //------------------------------------------------------------------------------
   /** \brief Returns the minimum value of all values.
-      \param a_pArg Pointer to an array of Values
-      \param a_iArgc Number of values stored in a_pArg
+	  \param a_pArg Pointer to an array of Values
+	  \param a_iArgc Number of values stored in a_pArg
   */
   void FunMin::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc)
   {
-    float_type smin(1e30), sval(smin);
+	  if (a_iArgc < 1)
+		  throw ParserError(ErrorContext(ecTOO_FEW_PARAMS, GetExprPos(), GetIdent()));
 
-    for (int i=0; i<a_iArgc; ++i)
-    {
-      switch(a_pArg[i]->GetType())
-      {
-      case 'f':
-      case 'i': sval = a_pArg[i]->GetFloat();   break;
-      default:
-        {
-          ErrorContext err;
-          err.Errc = ecTYPE_CONFLICT_FUN;
-          err.Arg = i+1;
-          err.Type1 = a_pArg[i]->GetType();
-          err.Type2 = 'f';
-          throw ParserError(err);
-        }
-      }
-      smin = min(smin, sval);
-    }
+	float_type smin(1e30), sval(smin);
 
-    *ret = smin;
+	for (int i=0; i<a_iArgc; ++i)
+	{
+	  switch(a_pArg[i]->GetType())
+	  {
+	  case 'f':
+	  case 'i': sval = a_pArg[i]->GetFloat();   break;
+	  default:
+		{
+		  ErrorContext err;
+		  err.Errc = ecTYPE_CONFLICT_FUN;
+		  err.Arg = i+1;
+		  err.Type1 = a_pArg[i]->GetType();
+		  err.Type2 = 'f';
+		  throw ParserError(err);
+		}
+	  }
+	  smin = min(smin, sval);
+	}
+
+	*ret = smin;
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunMin::GetDesc() const
   {
-    return _T("min(x,y,...,z) - Returns the minimum value from all of its function arguments.");
+	return _T("min(x,y,...,z) - Returns the minimum value from all of its function arguments.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunMin::Clone() const
   {
-    return new FunMin(*this);
+	return new FunMin(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -180,49 +186,52 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   FunSum::FunSum()
-    :ICallback(cmFUNC, _T("sum"), -1)
+	:ICallback(cmFUNC, _T("sum"), -1)
   {}
 
   //------------------------------------------------------------------------------
   /** \brief Returns the minimum value of all values.
-      \param a_pArg Pointer to an array of Values
-      \param a_iArgc Number of values stored in a_pArg
+	  \param a_pArg Pointer to an array of Values
+	  \param a_iArgc Number of values stored in a_pArg
   */
   void FunSum::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc)
   {
-    float_type sum(0);
+	  if (a_iArgc < 1)
+		  throw ParserError(ErrorContext(ecTOO_FEW_PARAMS, GetExprPos(), GetIdent()));
 
-    for (int i=0; i<a_iArgc; ++i)
-    {
-      switch(a_pArg[i]->GetType())
-      {
-      case 'f':
-      case 'i': sum += a_pArg[i]->GetFloat();   break;
-      default:
-        {
-          ErrorContext err;
-          err.Errc = ecTYPE_CONFLICT_FUN;
-          err.Arg = i+1;
-          err.Type1 = a_pArg[i]->GetType();
-          err.Type2 = 'f';
-          throw ParserError(err);
-        }
-      }
-    }
+	float_type sum(0);
 
-    *ret = sum;
+	for (int i=0; i<a_iArgc; ++i)
+	{
+	  switch(a_pArg[i]->GetType())
+	  {
+	  case 'f':
+	  case 'i': sum += a_pArg[i]->GetFloat();   break;
+	  default:
+		{
+		  ErrorContext err;
+		  err.Errc = ecTYPE_CONFLICT_FUN;
+		  err.Arg = i+1;
+		  err.Type1 = a_pArg[i]->GetType();
+		  err.Type2 = 'f';
+		  throw ParserError(err);
+		}
+	  }
+	}
+
+	*ret = sum;
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunSum::GetDesc() const
   {
-    return _T("sum(x,y,...,z) - Returns the sum of all arguments.");
+	return _T("sum(x,y,...,z) - Returns the sum of all arguments.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunSum::Clone() const
   {
-    return new FunSum(*this);
+	return new FunSum(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -232,7 +241,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   FunSizeOf::FunSizeOf()
-    :ICallback(cmFUNC, _T("sizeof"), 1)
+	:ICallback(cmFUNC, _T("sizeof"), 1)
   {}
 
   //------------------------------------------------------------------------------
@@ -240,22 +249,21 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   {}
 
   //------------------------------------------------------------------------------
-  /** \brief Returns the number of elements stored in the first parameter. */
   void FunSizeOf::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc)
   {
-    assert(a_iArgc==1);
-    *ret = (int)(a_pArg[0]->GetArray().GetRows());
+	assert(a_iArgc==1);
+	*ret = (int)(a_pArg[0]->GetArray().GetRows());
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunSizeOf::GetDesc() const
   {
-    return _T("sizeof(a) - Returns the number of elements in a.");
+	return _T("sizeof(a) - Returns the number of elements in a.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunSizeOf::Clone() const
   {
-    return new FunSizeOf(*this);
+	return new FunSizeOf(*this);
   }
 } } }

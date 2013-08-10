@@ -1,12 +1,12 @@
 /*
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -16,10 +16,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -35,6 +35,207 @@
 #include "mpOprtBinCommon.h"
 
 namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
+
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtStrAdd
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtStrAdd::OprtStrAdd() 
+		:IOprtBin(_T("//"), (int)prADD_SUB, oaLEFT) 
+	{}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtStrAdd::Eval(ptr_val_type& ret, const ptr_val_type *arg, int argc)
+	{
+		assert(argc==2);
+		string_type a = arg[0]->GetString();
+		string_type b = arg[1]->GetString();
+		*ret = a+b;
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtStrAdd::GetDesc() const 
+	{ 
+		return _T("string concatenation"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtStrAdd::Clone() const
+	{ 
+		return new OprtStrAdd(*this); 
+	}
+
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtEQ
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtEQ::OprtEQ() 
+		:IOprtBin(_T("=="), (int)prRELATIONAL1, oaLEFT) 
+	{}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtEQ::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
+	{ 
+		*ret = *a_pArg[0] == *a_pArg[1]; 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtEQ::GetDesc() const 
+	{ 
+		return _T("equals operator"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtEQ::Clone() const
+	{ 
+		return new OprtEQ(*this); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtNEQ
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtNEQ::OprtNEQ() 
+		:IOprtBin(_T("!="), (int)prRELATIONAL1, oaLEFT) 
+	{}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtNEQ::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
+	{ 
+		*ret = *a_pArg[0] != *a_pArg[1]; 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtNEQ::GetDesc() const 
+	{ 
+		return _T("not equal operator"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtNEQ::Clone() const
+	{ 
+		return new OprtNEQ(*this); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtLT
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtLT::OprtLT() 
+		:IOprtBin(_T("<"), (int)prRELATIONAL2, oaLEFT) 
+	{}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtLT::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
+	{ 
+		*ret = *a_pArg[0] < *a_pArg[1];
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtLT::GetDesc() const 
+	{ 
+		return _T("less than operator"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtLT::Clone() const
+	{ 
+		return new OprtLT(*this); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtGT
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtGT::OprtGT() 
+		:IOprtBin(_T(">"), (int)prRELATIONAL2, oaLEFT) {}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtGT::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
+	{ 
+		*ret = *a_pArg[0] > *a_pArg[1]; 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtGT::GetDesc() const 
+	{ 
+		return _T("greater than operator"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtGT::Clone() const
+	{ 
+		return new OprtGT(*this); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtLE
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtLE::OprtLE() 
+		:IOprtBin(_T("<="), (int)prRELATIONAL2, oaLEFT) 
+	{}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtLE::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
+	{ 
+		*ret = *a_pArg[0] <= *a_pArg[1];
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtLE::GetDesc() const 
+	{ 
+		return _T("less or equal operator"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtLE::Clone() const
+	{ 
+		return new OprtLE(*this); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	//
+	// class OprtGE
+	//
+	//-----------------------------------------------------------------------------------------------
+
+	OprtGE::OprtGE() 
+		:IOprtBin(_T(">="), (int)prRELATIONAL2, oaLEFT) 
+	{}
+
+	//-----------------------------------------------------------------------------------------------
+	void OprtGE::Eval(ptr_val_type& ret, const ptr_val_type *a_pArg, int)
+	{ 
+		*ret = *a_pArg[0] >= *a_pArg[1]; 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	const char_type* OprtGE::GetDesc() const 
+	{ 
+		return _T("greater or equal operator"); 
+	}
+
+	//-----------------------------------------------------------------------------------------------
+	IToken* OprtGE::Clone() const
+	{ 
+		return new OprtGE(*this); 
+	}
+
   //-----------------------------------------------------------
   //
   // class OprtAnd
@@ -42,42 +243,42 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //-----------------------------------------------------------
 
   OprtAnd::OprtAnd()
-    :IOprtBin(_T("&"), (int)prBIT_AND, oaLEFT)
+	:IOprtBin(_T("&"), (int)prBIT_AND, oaLEFT)
   {}
 
   //-----------------------------------------------------------
   void OprtAnd::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int num)
   {
-    assert(num==2);
+	assert(num==2);
 
-    if (!a_pArg[0]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[0]->GetType(), 'i', 1));
+	if (!a_pArg[0]->IsScalar())
+	  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[0]->GetType(), 'i', 1));
 
-    if (!a_pArg[1]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[1]->GetType(), 'i', 2));
+	if (!a_pArg[1]->IsScalar())
+	  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[1]->GetType(), 'i', 2));
 
-    float_type a = a_pArg[0]->GetFloat(),
-               b = a_pArg[1]->GetFloat();
+	float_type a = a_pArg[0]->GetFloat(),
+			   b = a_pArg[1]->GetFloat();
 
-    if (a!=(int_type)a)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
+	if (a!=(int_type)a)
+	  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
 
-    if (b!=(int_type)b)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
+	if (b!=(int_type)b)
+	  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
 
-    *ret = (int_type)a & (int_type)(b);
+	*ret = (int_type)a & (int_type)(b);
   }
 
   //-----------------------------------------------------------
   const char_type* OprtAnd::GetDesc() const
   {
-    return _T("bitwise and");
+	return _T("bitwise and");
   }
 
   //-----------------------------------------------------------
   IToken* OprtAnd::Clone() const
   {
-    return new OprtAnd(*this);
+	return new OprtAnd(*this);
   }
 
   //-----------------------------------------------------------
@@ -87,42 +288,42 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //-----------------------------------------------------------
 
   OprtOr::OprtOr()
-    :IOprtBin(_T("|"), (int)prBIT_OR, oaLEFT)
+	:IOprtBin(_T("|"), (int)prBIT_OR, oaLEFT)
   {}
 
   //-----------------------------------------------------------
   void OprtOr::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int num)
   {
-    assert(num==2);
+	assert(num==2);
 
-    if (!a_pArg[0]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[0]->GetType(), 'i', 1));
+	if (!a_pArg[0]->IsScalar())
+	  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[0]->GetType(), 'i', 1));
 
-    if (!a_pArg[1]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[1]->GetType(), 'i', 2));
+	if (!a_pArg[1]->IsScalar())
+	  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[1]->GetType(), 'i', 2));
 
-    float_type a = a_pArg[0]->GetFloat(),
-               b = a_pArg[1]->GetFloat();
+	float_type a = a_pArg[0]->GetFloat(),
+			   b = a_pArg[1]->GetFloat();
 
-    if (a!=(int_type)a)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
+	if (a!=(int_type)a)
+	  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
 
-    if (b!=(int_type)b)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
+	if (b!=(int_type)b)
+	  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
 
-    *ret = (int_type)a | (int_type)(b);
+	*ret = (int_type)a | (int_type)(b);
   }
 
   //-----------------------------------------------------------
   const char_type* OprtOr::GetDesc() const
   {
-    return _T("bitwise or");
+	return _T("bitwise or");
   }
 
   //-----------------------------------------------------------
   IToken* OprtOr::Clone() const
   {
-    return new OprtOr(*this);
+	return new OprtOr(*this);
   }
 
   //-----------------------------------------------------------
@@ -131,27 +332,27 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //
   //-----------------------------------------------------------
 
-  OprtLOr::OprtLOr()
-    :IOprtBin(_T("||"), (int)prLOGIC_OR, oaLEFT)
+  OprtLOr::OprtLOr(const char_type *szIdent)
+	  :IOprtBin(szIdent, (int)prLOGIC_OR, oaLEFT)
   {}
 
   //-----------------------------------------------------------
   void OprtLOr::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int num)
   {
-    assert(num==2);
-    *ret = a_pArg[0]->GetBool() || a_pArg[1]->GetBool();
+	assert(num==2);
+	*ret = a_pArg[0]->GetBool() || a_pArg[1]->GetBool();
   }
 
   //-----------------------------------------------------------
   const char_type* OprtLOr::GetDesc() const
   {
-    return _T("logical or");
+	return _T("logical or");
   }
 
   //-----------------------------------------------------------
   IToken* OprtLOr::Clone() const
   {
-    return new OprtLOr(*this);
+	return new OprtLOr(*this);
   }
 
   //-----------------------------------------------------------
@@ -160,27 +361,27 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //
   //-----------------------------------------------------------
 
-  OprtLAnd::OprtLAnd()
-    :IOprtBin(_T("&&"), (int)prLOGIC_AND, oaLEFT)
+  OprtLAnd::OprtLAnd(const char_type *szIdent)
+	  :IOprtBin(szIdent, (int)prLOGIC_AND, oaLEFT)
   {}
 
   //-----------------------------------------------------------
   void OprtLAnd::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int num)
   {
-    assert(num==2);
-    *ret = a_pArg[0]->GetBool() && a_pArg[1]->GetBool();
+	assert(num==2);
+	*ret = a_pArg[0]->GetBool() && a_pArg[1]->GetBool();
   }
 
   //-----------------------------------------------------------
   const char_type* OprtLAnd::GetDesc() const
   {
-    return _T("logical and");
+	return _T("logical and");
   }
 
   //-----------------------------------------------------------
   IToken* OprtLAnd::Clone() const
   {
-    return new OprtLAnd(*this);
+	return new OprtLAnd(*this);
   }
 
   //-----------------------------------------------------------
@@ -190,42 +391,51 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //-----------------------------------------------------------
 
   OprtShl::OprtShl()
-    :IOprtBin(_T("<<"), (int)prSHIFT, oaLEFT)
+	:IOprtBin(_T("<<"), (int)prSHIFT, oaLEFT)
   {}
 
   //-----------------------------------------------------------
   void OprtShl::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int num)
   {
-    assert(num==2);
+	assert(num==2);
 
-    if (!a_pArg[0]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[0]->GetType(), 'i', 1));
+	if (!a_pArg[0]->IsScalar())
+	  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), GetIdent(), a_pArg[0]->GetType(), 'i', 1));
 
-    if (!a_pArg[1]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[1]->GetType(), 'i', 2));
+	if (!a_pArg[1]->IsScalar())
+	  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), GetIdent(), a_pArg[1]->GetType(), 'i', 2));
 
-    float_type a = a_pArg[0]->GetFloat(),
-               b = a_pArg[1]->GetFloat();
+	float_type a = a_pArg[0]->GetFloat(),
+			   b = a_pArg[1]->GetFloat();
 
-    if (a!=(int_type)a)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
+	if (a!=(int_type)a)
+	  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
 
-    if (b!=(int_type)b)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
+	if (b!=(int_type)b)
+	  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
 
-    *ret = (int_type)a << (int_type)(b);
+	float_type result = a*std::pow(2, b);
+	int numDigits = std::numeric_limits<float_type>::digits10;
+
+	if (std::fabs(result) >= std::fabs(std::pow(10.0, numDigits)))
+		throw ParserError(ErrorContext(ecOVERFLOW, GetExprPos(), GetIdent()));
+		
+	if (result>0)
+		*ret = std::floor(result);
+	else
+		*ret = std::ceil(result);
   }
 
   //-----------------------------------------------------------
   const char_type* OprtShl::GetDesc() const
   {
-    return _T("shift left");
+	return _T("shift left");
   }
 
   //-----------------------------------------------------------
   IToken* OprtShl::Clone() const
   {
-    return new OprtShl(*this);
+	return new OprtShl(*this);
   }
 
   //-----------------------------------------------------------
@@ -235,42 +445,51 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //-----------------------------------------------------------
 
   OprtShr::OprtShr()
-    :IOprtBin(_T(">>"), (int)prSHIFT, oaLEFT)
+	:IOprtBin(_T(">>"), (int)prSHIFT, oaLEFT)
   {}
 
   //-----------------------------------------------------------
   void OprtShr::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int num)
   {
-    assert(num==2);
+	  assert(num==2);
 
-    if (!a_pArg[0]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[0]->GetType(), 'i', 1));
+	  if (!a_pArg[0]->IsScalar())
+		  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), GetIdent(), a_pArg[0]->GetType(), 'i', 1));
 
-    if (!a_pArg[1]->IsScalar())
-      throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, -1, GetIdent(), a_pArg[1]->GetType(), 'i', 2));
+	  if (!a_pArg[1]->IsScalar())
+		  throw ParserError(ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), GetIdent(), a_pArg[1]->GetType(), 'i', 2));
 
-    float_type a = a_pArg[0]->GetFloat(),
-               b = a_pArg[1]->GetFloat();
+	  float_type a = a_pArg[0]->GetFloat(),
+		  b = a_pArg[1]->GetFloat();
 
-    if (a!=(int_type)a)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) );
+	  if (a!=(int_type)a)
+		  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[0]->GetIdent(), a_pArg[0]->GetType(), 'i', 1) ); 
 
-    if (b!=(int_type)b)
-      throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, -1, a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) );
+	  if (b!=(int_type)b)
+		  throw ParserError( ErrorContext(ecTYPE_CONFLICT_FUN, GetExprPos(), a_pArg[1]->GetIdent(), a_pArg[1]->GetType(), 'i', 2) ); 
 
-    *ret = (int_type)a >> (int_type)b;
+	  float_type result = a*std::pow(2, -b);
+	  int numDigits = std::numeric_limits<float_type>::digits10;
+
+	  if (std::fabs(result) >= std::fabs(std::pow(10.0, numDigits)))
+		  throw ParserError(ErrorContext(ecOVERFLOW, GetExprPos(), GetIdent()));
+
+	  if (result>0)
+		  *ret = std::floor(result);
+	  else
+		  *ret = std::ceil(result);
   }
 
   //-----------------------------------------------------------
   const char_type* OprtShr::GetDesc() const
   {
-    return _T("shift left");
+	return _T("shift right");
   }
 
   //-----------------------------------------------------------
   IToken* OprtShr::Clone() const
   {
-    return new OprtShr(*this);
+	return new OprtShr(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -280,7 +499,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   OprtCastToFloat::OprtCastToFloat()
-    :IOprtInfix( _T("(float)"))
+	:IOprtInfix( _T("(float)"), prINFIX)
   {}
 
   //------------------------------------------------------------------------------
@@ -311,13 +530,13 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
   const char_type* OprtCastToFloat::GetDesc() const
   {
-    return _T("cast a value into a floating point number");
+	return _T("cast a value into a floating point number");
   }
 
   //------------------------------------------------------------------------------
   IToken* OprtCastToFloat::Clone() const
   {
-    return new OprtCastToFloat(*this);
+	return new OprtCastToFloat(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -327,7 +546,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   OprtCastToInt::OprtCastToInt()
-    :IOprtInfix( _T("(int)"))
+	:IOprtInfix( _T("(int)"), prINFIX)
   {}
 
   //------------------------------------------------------------------------------
@@ -344,27 +563,27 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 	  case ICodaScriptDataStore::kDataType_Reference:
 		  *ret = (float_type)Store->GetFormID();
 		  break;
-    default:
-      {
-        ErrorContext err;
-        err.Errc = ecINVALID_TYPECAST;
-        err.Type1 = Store->GetType();
-        err.Type2 = ICodaScriptDataStore::kDataType_Numeric;
-        throw ParserError(err);
-      }
-    } // switch value type
+	default:
+	  {
+		ErrorContext err;
+		err.Errc = ecINVALID_TYPECAST;
+		err.Type1 = Store->GetType();
+		err.Type2 = ICodaScriptDataStore::kDataType_Numeric;
+		throw ParserError(err);
+	  }
+	} // switch value type
   }
 
   //------------------------------------------------------------------------------
   const char_type* OprtCastToInt::GetDesc() const
   {
-    return _T("cast a value into a floating point number");
+	return _T("cast a value into a floating point number");
   }
 
   //------------------------------------------------------------------------------
   IToken* OprtCastToInt::Clone() const
   {
-    return new OprtCastToInt(*this);
+	return new OprtCastToInt(*this);
   }
 
   void OprtCastToRef::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int /*a_iArgc*/)

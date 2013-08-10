@@ -43,7 +43,7 @@ namespace BGSEditorExtender
 				m_cType('f'),
 				m_iFlags(flNONE),
 				m_pCache(NULL),
-				m_DataStore(val),
+				m_DataStore((CodaScriptNumericDataTypeT)val),
 				m_StringBuffer(new string_type())
 			{
 				GIC++;
@@ -485,9 +485,9 @@ namespace BGSEditorExtender
 				return 0;
 			}
 
-			bool CodaScriptMUPValue::IsVolatile() const
+			bool CodaScriptMUPValue::IsVariable() const
 			{
-				return IsFlagSet(IValue::flVOLATILE);
+				return false;
 			}
 
 			IToken* CodaScriptMUPValue::Clone() const
@@ -521,6 +521,31 @@ namespace BGSEditorExtender
 				default:
 					return 'f';
 				}
+			}
+
+
+			//-----------------------------------------------------------------------------------------------
+			CodaScriptMUPValue::operator int ()
+			{ 
+				return GetInteger(); 
+			}
+
+			//-----------------------------------------------------------------------------------------------
+			CodaScriptMUPValue::operator string_type()
+			{ 
+				return GetString(); 
+			}
+
+			//-----------------------------------------------------------------------------------------------
+			CodaScriptMUPValue::operator float_type()
+			{ 
+				return GetFloat(); 
+			}
+
+			//-----------------------------------------------------------------------------------------------
+			CodaScriptMUPValue::operator bool()
+			{
+				return GetBool();
 			}
 		}
 	}

@@ -42,6 +42,9 @@
 #include "mpFwdDecl.h"
 
 namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
+
+	class IOprtInfix;
+	class IOprtPostfix;
   //------------------------------------------------------------------------------
   /** \brief Generic token interface for expression tokens.
       \author (C) 2010 Ingo Berg
@@ -58,9 +61,12 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   friend class TokenPtr<IToken>;
   friend class TokenPtr<IValue>;
   friend class TokenPtr<IOprtBin>;
+  friend class TokenPtr<IOprtInfix>;
+  friend class TokenPtr<IOprtPostfix>;
   friend class TokenPtr<IFunction>;
   friend class TokenPtr<CodaScriptMUPValue>;
   friend class TokenPtr<Variable>;
+  friend class TokenPtr<ICallback>;
 
   public:
 
@@ -150,7 +156,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
       typedef T* token_type;
 
       //---------------------------------------------------------------------------
-      explicit TokenPtr(token_type p = 0)
+      TokenPtr(token_type p = 0)
         :m_pTok(p)
       {
         if (m_pTok)

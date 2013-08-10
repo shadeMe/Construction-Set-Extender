@@ -81,22 +81,6 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
     return m_eAsc;
   }
 
-  //------------------------------------------------------------------------------
-  /** \brief Verify the operator prototype.
-
-    Binary operators have the additional constraint that return type and the types
-    of both arguments must be the same. So adding to floats can not produce a string
-    and adding a number to a string is impossible.
-  */
-  void IOprtBin::CheckPrototype(const string_type &a_sProt)
-  {
-    if (a_sProt.length()!=4)
-      throw ParserError( ErrorContext(ecAPI_INVALID_PROTOTYPE, -1, GetIdent() ) );
-
-    //if (a_sProt[0]!=a_sProt[2] || a_sProt[0]!=a_sProt[3])
-    //  throw ParserError( ErrorContext(ecAPI_INVALID_PROTOTYPE, -1, GetIdent() ) );
-  }
-
   //---------------------------------------------------------------------------
   IPrecedence* IOprtBin::AsIPrecedence()
   {
@@ -137,8 +121,10 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //
   //------------------------------------------------------------------------------
 
-  IOprtInfix::IOprtInfix(const char_type *a_szIdent)
-    :ICallback(cmOPRT_INFIX, a_szIdent, 1)
+  IOprtInfix::IOprtInfix(const char_type *a_szIdent, int nPrec)
+	  :ICallback(cmOPRT_INFIX, a_szIdent, 1)
+	  ,IPrecedence()
+	  ,m_nPrec(nPrec)
   {}
 
   //------------------------------------------------------------------------------
@@ -148,15 +134,33 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
   string_type IOprtInfix::AsciiDump() const
   {
-    stringstream_type ss;
+	  stringstream_type ss;
 
-    ss << g_sCmdCode[ GetCode() ];
-    ss << _T(" [addr=0x") << std::hex << this << std::dec;
-    ss << _T("; ident=\"") << GetIdent() << _T("\"");
-    ss << _T("; argc=") << GetArgc();
-    ss << _T("]");
+	  ss << g_sCmdCode[ GetCode() ];
+	  ss << _T(" [addr=0x") << std::hex << this << std::dec;
+	  ss << _T("; ident=\"") << GetIdent() << _T("\"");
+	  ss << _T("; argc=") << GetArgc();
+	  ss << _T("]");
 
-    return ss.str();
+	  return ss.str();
+  }
+
+  //---------------------------------------------------------------------------
+  IPrecedence* IOprtInfix::AsIPrecedence()
+  {
+	  return this;
+  }
+
+  //------------------------------------------------------------------------------
+  int IOprtInfix::GetPri() const
+  {
+	  return m_nPrec;
+  }
+
+  //------------------------------------------------------------------------------
+  EOprtAsct IOprtInfix::GetAssociativity() const
+  {
+	  return oaNONE;
   }
 
   //------------------------------------------------------------------------------

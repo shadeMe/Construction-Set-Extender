@@ -59,9 +59,13 @@
   */
   #define MUP_STRING_TYPE std::string
 #endif
+/** \brief Floating point type used by the parser. */
+#define MUP_FLOAT_TYPE double
+
+#define MUP_INT_TYPE int
 
 /** \brief A macro containing the version of muParserX. */
-#define MUP_PARSER_VERSION _T("2.1.2 (20120224)")
+#define MUP_PARSER_VERSION _T("MUPBase = 3.0.0 Mod")
 
 /** \brief A macro for setting the parser namespace. */
 #define MUP_NAMESPACE_START namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {

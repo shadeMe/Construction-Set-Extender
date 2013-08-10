@@ -43,6 +43,7 @@
 
 /** \brief Pi (what else?). */
 #define MUP_CONST_PI  3.141592653589793238462643
+//#define MUP_CONST_PI    3.14159265358979323846264338327950288419716939937510L
 
 /** \brief The eulerian number. */
 #define MUP_CONST_E   2.718281828459045235360287
@@ -68,10 +69,10 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   // Readers that need fancy decorations on their values must
   // be added first (i.e. hex -> "0x...") Otherwise the
   // zero in 0x will be read as a value of zero!
-  pParser->AddValueReader(new HexValReader());
-  pParser->AddValueReader(new DblValReader());
-  pParser->AddValueReader(new BoolValReader());
-  pParser->AddValueReader(new BinValReader());
+  pParser->AddValueReader(new HexValReader);
+  pParser->AddValueReader(new DblValReader);
+  pParser->AddValueReader(new BoolValReader);
+  pParser->AddValueReader(new BinValReader);
 
   // Constants
   pParser->DefineConst( _T("pi"), (float_type)MUP_CONST_PI );
@@ -83,7 +84,7 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->DefineFun(new FunSum());
 
   // misc
-  pParser->DefineFun(new FunParserID());
+  pParser->DefineFun(new FunParserID);
 
   // integer package
   pParser->DefineOprt(new OprtLAnd);
@@ -100,11 +101,8 @@ void PackageCommon::AddToParser(CodaScriptMUPExpressionParser *pParser)
   pParser->DefineOprt(new OprtGT);
   pParser->DefineOprt(new OprtEQ);
   pParser->DefineOprt(new OprtNEQ);
-  pParser->DefineOprt(new OprtBAnd);
-  pParser->DefineOprt(new OprtBOr);
-  pParser->DefineOprt(new OprtBXor);
-  pParser->DefineOprt(new OprtBAndSymb());
-  pParser->DefineOprt(new OprtBOrSymb());
+  pParser->DefineOprt(new OprtLAnd(_T("and")));  // add logic and with a different identifier
+  pParser->DefineOprt(new OprtLOr(_T("or")));    // add logic and with a different identifier
 
   // assignement operators
   pParser->DefineOprt(new OprtAssign);

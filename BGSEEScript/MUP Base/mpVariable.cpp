@@ -1,15 +1,15 @@
 /** \file
-    \brief Implementation of the muParserX variable class.
+	\brief Implementation of the muParserX variable class.
 
 <pre>         ========= Modified by shadeMe for the BGSEditorExtenderBase project =========
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -19,10 +19,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -43,126 +43,127 @@
 namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //-----------------------------------------------------------------------------------------------
   /** \brief Create a variable and bind a value to it.
-      \param pVal Pointer of the value to bind to this variable.
+	  \param pVal Pointer of the value to bind to this variable.
 
-    It is possible to create an empty variable object by setting pVal to null.
-    Such variable objects must be bound later in order to be of any use.
+	It is possible to create an empty variable object by setting pVal to null.
+	Such variable objects must be bound later in order to be of any use. The parser
+	does NOT assume ownership over the pointer!
   */
   Variable::Variable(IValue *pVal)
-    :IValue(cmVAR)
-    ,m_pVal(pVal)
+	:IValue(cmVAL)
+	,m_pVal(pVal)
   {
-    AddFlags(IToken::flVOLATILE);
+	AddFlags(IToken::flVOLATILE);
   }
 
   //-----------------------------------------------------------------------------------------------
   Variable::Variable(const Variable &obj)
-    :IValue(cmVAR)
+	:IValue(cmVAL)
   {
-    Assign(obj);
-    AddFlags(IToken::flVOLATILE);
+	Assign(obj);
+	AddFlags(IToken::flVOLATILE);
   }
 
   //-----------------------------------------------------------------------------------------------
   Variable& Variable::operator=(const Variable &obj)
   {
-    Assign(obj);
-    return *this;
+	Assign(obj);
+	return *this;
   }
 
   //-----------------------------------------------------------------------------------------------
   /** \brief Assign a value to the variable.
-      \param ref Reference to the value to be assigned
+	  \param ref Reference to the value to be assigned
   */
   IValue& Variable::operator=(const CodaScriptMUPValue &ref)
   {
-    assert(m_pVal);
-    *m_pVal = ref;
-    return *this;
+	assert(m_pVal);
+	*m_pVal = ref;
+	return *this;
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator=(int_type val)
   {
-    assert(m_pVal);
-    return m_pVal->operator=(val);
+	assert(m_pVal);
+	return m_pVal->operator=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator=(float_type val)
   {
-    assert(m_pVal);
-    return m_pVal->operator=(val);
+	assert(m_pVal);
+	return m_pVal->operator=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator=(string_type val)
   {
-    assert(m_pVal);
-    return m_pVal->operator=(val);
+	assert(m_pVal);
+	return m_pVal->operator=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator=(bool_type val)
   {
-    assert(m_pVal);
-    return m_pVal->operator=(val);
+	assert(m_pVal);
+	return m_pVal->operator=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator=(const matrix_type &val)
   {
-    assert(m_pVal);
-    return m_pVal->operator=(val);
+	assert(m_pVal);
+	return m_pVal->operator=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator=(const cmplx_type &val)
   {
-    assert(m_pVal);
-    return m_pVal->operator=(val);
+	assert(m_pVal);
+	return m_pVal->operator=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator+=(const IValue &val)
   {
-    assert(m_pVal);
-    return m_pVal->operator+=(val);
+	assert(m_pVal);
+	return m_pVal->operator+=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator-=(const IValue &val)
   {
-    assert(m_pVal);
-    return m_pVal->operator-=(val);
+	assert(m_pVal);
+	return m_pVal->operator-=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::operator*=(const IValue &val)
   {
-    assert(m_pVal);
-    return m_pVal->operator*=(val);
+	assert(m_pVal);
+	return m_pVal->operator*=(val);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::At(int nRow, int nCol)
   {
-    return m_pVal->At(nRow, nCol);
+	return m_pVal->At(nRow, nCol);
   }
 
   //-----------------------------------------------------------------------------------------------
   IValue& Variable::At(const IValue &row, const IValue &col)
   {
-    try
-    {
-      return m_pVal->At(row, col);
-    }
-    catch(ParserError &exc)
-    {
-      // add the identifier to the error context
-      exc.GetContext().Ident = GetIdent();
-      throw exc;
-    }
+	try
+	{
+	  return m_pVal->At(row, col);
+	}
+	catch(ParserError &exc)
+	{
+	  // add the identifier to the error context
+	  exc.GetContext().Ident = GetIdent();
+	  throw exc;
+	}
   }
 
   //-----------------------------------------------------------------------------------------------
@@ -172,152 +173,152 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //-----------------------------------------------------------------------------------------------
   void Variable::Assign(const Variable &ref)
   {
-    if (this==&ref)
-      return;
+	if (this==&ref)
+	  return;
 
-    m_pVal = ref.m_pVal;
+	m_pVal = ref.m_pVal;
   }
 
   //-----------------------------------------------------------------------------------------------
   /** \brief Returns a character representing the type of the variable.
-      \throw nothrow
+	  \throw nothrow
   */
   char_type Variable::GetType() const
   {
-    return (m_pVal) ? m_pVal->GetType() : 'v';
+	return (m_pVal) ? m_pVal->GetType() : 'v';
   }
 
   //-----------------------------------------------------------------------------------------------
   /** \brief Returns the Value pointer bound to this variable.
-      \throw nothrow
+	  \throw nothrow
   */
   IValue* Variable::GetPtr() const
   {
-    return m_pVal;
+	return m_pVal;
   }
 
   //-----------------------------------------------------------------------------------------------
   int_type Variable::GetInteger() const
   {
-    return m_pVal->GetInteger();
+	return m_pVal->GetInteger();
   }
 
   //-----------------------------------------------------------------------------------------------
   float_type Variable::GetFloat() const
   {
-    return m_pVal->GetFloat();
+	return m_pVal->GetFloat();
   }
 
   //-----------------------------------------------------------------------------------------------
   float_type Variable::GetImag() const
   {
-    return m_pVal->GetImag();
+	return m_pVal->GetImag();
   }
 
   //-----------------------------------------------------------------------------------------------
   const cmplx_type& Variable::GetComplex() const
   {
-    return m_pVal->GetComplex();
+	return m_pVal->GetComplex();
   }
 
   //-----------------------------------------------------------------------------------------------
   const string_type& Variable::GetString() const
   {
-    return m_pVal->GetString();
+	return m_pVal->GetString();
   }
 
   //-----------------------------------------------------------------------------------------------
   bool Variable::GetBool() const
   {
-    return m_pVal->GetBool();
+	return m_pVal->GetBool();
   }
 
   //-----------------------------------------------------------------------------------------------
   const matrix_type& Variable::GetArray() const
   {
-    return m_pVal->GetArray();
+	return m_pVal->GetArray();
   }
 
   //-----------------------------------------------------------------------------------------------
   int Variable::GetRows() const
   {
-    return m_pVal->GetRows();
+	return m_pVal->GetRows();
   }
 
   //-----------------------------------------------------------------------------------------------
   int Variable::GetCols() const
   {
-    return m_pVal->GetCols();
+	return m_pVal->GetCols();
   }
 
   //-----------------------------------------------------------------------------------------------
   void Variable::SetFloat(float_type a_fVal)
   {
-    assert(m_pVal);
-    *m_pVal = a_fVal;
+	assert(m_pVal);
+	*m_pVal = a_fVal;
   }
 
   //-----------------------------------------------------------------------------------------------
   void Variable::SetString(const string_type &a_sVal)
   {
-    assert(m_pVal);
-    *m_pVal = a_sVal;
+	assert(m_pVal);
+	*m_pVal = a_sVal;
   }
 
   //-----------------------------------------------------------------------------------------------
   void Variable::SetBool(bool a_bVal)
   {
-    assert(m_pVal);
-    *m_pVal = a_bVal;
+	assert(m_pVal);
+	*m_pVal = a_bVal;
   }
 
   //-----------------------------------------------------------------------------------------------
   void Variable::Bind(IValue *pValue)
   {
-    m_pVal = pValue;
+	m_pVal = pValue;
   }
 
   //-----------------------------------------------------------------------------------------------
-  bool Variable::IsVolatile() const
+  bool Variable::IsVariable() const
   {
-    return true;
+	return true;
   }
 
   //-----------------------------------------------------------------------------------------------
   IToken* Variable::Clone() const
   {
-    return new Variable(*this);
+	return new Variable(*this);
   }
 
   //-----------------------------------------------------------------------------------------------
   CodaScriptMUPValue* Variable::AsValue()
   {
-    return NULL;
+	return NULL;
   }
 
   //-----------------------------------------------------------------------------------------------
   string_type Variable::AsciiDump() const
   {
-    stringstream_type ss;
+	stringstream_type ss;
 
-    ss << g_sCmdCode[ GetCode() ];
-    ss << _T(" [addr=0x") << std::hex << this << std::dec;
-    ss << _T("; id=\"") << GetIdent() << _T("\"");
-    ss << _T("; type=\"") << GetType() << _T("\"");
-    ss << _T("; val=");
+	ss << g_sCmdCode[ GetCode() ];
+	ss << _T(" [addr=0x") << std::hex << this << std::dec;
+	ss << _T("; id=\"") << GetIdent() << _T("\"");
+	ss << _T("; type=\"") << GetType() << _T("\"");
+	ss << _T("; val=");
 
-    switch(GetType())
-    {
-    case 'i': ss << (int_type)GetFloat(); break;
-    case 'f': ss << GetFloat(); break;
-    case 'm': ss << _T("(array)"); break;
-    case 's': ss << _T("\"") << GetString() << _T("\""); break;
-    }
+	switch(GetType())
+	{
+	case 'i': ss << (int_type)GetFloat(); break;
+	case 'f': ss << GetFloat(); break;
+	case 'm': ss << _T("(array)"); break;
+	case 's': ss << _T("\"") << GetString() << _T("\""); break;
+	}
 
-    ss << ((IsFlagSet(IToken::flVOLATILE)) ? _T("; ") : _T("; not ")) << _T("volatile");
-    ss << _T("]");
+	ss << ((IsFlagSet(IToken::flVOLATILE)) ? _T("; ") : _T("; not ")) << _T("volatile");
+	ss << _T("]");
 
-    return ss.str();
+	return ss.str();
   }
 
   CodaScriptBackingStore* Variable::GetStore( void ) const

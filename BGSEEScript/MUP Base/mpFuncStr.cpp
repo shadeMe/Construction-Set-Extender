@@ -1,12 +1,12 @@
 /*
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -16,10 +16,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -51,26 +51,26 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   FunStrLen::FunStrLen()
-    :ICallback(cmFUNC, _T("strlen"), 1)
+	:ICallback(cmFUNC, _T("strlen"), 1)
   {}
 
   //------------------------------------------------------------------------------
   void FunStrLen::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int)
   {
-    string_type str = a_pArg[0]->GetString();
-    *ret = (int)str.length();
+	string_type str = a_pArg[0]->GetString();
+	*ret = (int)str.length();
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunStrLen::GetDesc() const
   {
-    return _T("strlen(s) - Returns the length of the string s.");
+	return _T("strlen(s) - Returns the length of the string s.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunStrLen::Clone() const
   {
-    return new FunStrLen(*this);
+	return new FunStrLen(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -80,30 +80,30 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   FunStrToUpper::FunStrToUpper()
-    :ICallback(cmFUNC, _T("toupper"), 1)
+	:ICallback(cmFUNC, _T("toupper"), 1)
   {}
 
   //------------------------------------------------------------------------------
   void FunStrToUpper::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int)
   {
-    using namespace std;
+	using namespace std;
 
-    string_type str = a_pArg[0]->GetString();
-    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+	string_type str = a_pArg[0]->GetString();
+	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 
-    *ret = str;
+	*ret = str;
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunStrToUpper::GetDesc() const
   {
-    return _T("toupper(s) - Converts the string s to uppercase characters.");
+	return _T("toupper(s) - Converts the string s to uppercase characters.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunStrToUpper::Clone() const
   {
-    return new FunStrToUpper(*this);
+	return new FunStrToUpper(*this);
   }
 
   //------------------------------------------------------------------------------
@@ -113,36 +113,37 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   FunStrToDbl::FunStrToDbl()
-    :ICallback(cmFUNC, _T("str2dbl"), 1)
+	:ICallback(cmFUNC, _T("str2dbl"), 1)
   {}
 
   //------------------------------------------------------------------------------
   void FunStrToDbl::Eval(ptr_val_type &ret, const ptr_val_type *a_pArg, int a_iArgc)
   {
-    assert(a_iArgc==1);
-    string_type in;
-    float_type out;
+	assert(a_iArgc==1);
+	string_type in;
+	double out;			// <- Ich will hier wirklich double, auch wenn der Type long double
+						// ist. sscanf und long double geht nicht mit GCC!
 
-    in = a_pArg[0]->GetString();
+	in = a_pArg[0]->GetString();
 
 #ifndef _UNICODE
-    sscanf(in.c_str(), "%lf", &out);
+	sscanf(in.c_str(), "%lf", &out);
 #else
-    swscanf(in.c_str(), _T("%lf"), &out);
+	swscanf(in.c_str(), _T("%lf"), &out);
 #endif
 
-    *ret = out;
+	*ret = (float_type)out;
   }
 
   //------------------------------------------------------------------------------
   const char_type* FunStrToDbl::GetDesc() const
   {
-    return _T("str2dbl(s) - Converts the string stored in s into a floating foint value.");
+	return _T("str2dbl(s) - Converts the string stored in s into a floating foint value.");
   }
 
   //------------------------------------------------------------------------------
   IToken* FunStrToDbl::Clone() const
   {
-    return new FunStrToDbl(*this);
+	return new FunStrToDbl(*this);
   }
 } } }  // namespace mu

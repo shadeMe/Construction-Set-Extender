@@ -124,6 +124,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   */
   class StrValReader : public IValueReader
   {
+	  string_type Unescape(const char_type *szExpr, int &len);
   public:
       StrValReader();
       virtual ~StrValReader();

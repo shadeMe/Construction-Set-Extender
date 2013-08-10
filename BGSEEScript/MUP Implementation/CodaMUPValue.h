@@ -68,7 +68,7 @@ namespace BGSEditorExtender
 				virtual int									GetRows() const;
 				virtual int									GetCols() const;
 
-				virtual bool								IsVolatile() const;
+				virtual bool								IsVariable() const;
 				virtual IToken*								Clone() const;
 				virtual CodaScriptMUPValue*					AsValue();
 				virtual string_type							AsciiDump() const;
@@ -77,6 +77,12 @@ namespace BGSEditorExtender
 
 				virtual ICodaScriptDataStore*				GetDataStore();
 				virtual ICodaScriptDataStoreOwner&			operator=(const ICodaScriptDataStore& rhs);
+
+				// Conversion operators
+				operator int ();
+				operator string_type();
+				operator float_type();
+				operator bool();
 			};
 		}
 	}

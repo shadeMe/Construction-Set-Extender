@@ -69,13 +69,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   {
     return NULL;
   }
-
-  //------------------------------------------------------------------------------
-  bool ICallback::IsVolatile() const
-  {
-    return false;
-  }
-
+  
   //------------------------------------------------------------------------------
   /** \brief Returns a pointer to the parser object owning this callback.
       \pre [assert] m_pParent must be defined

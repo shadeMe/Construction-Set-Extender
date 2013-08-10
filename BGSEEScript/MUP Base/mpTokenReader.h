@@ -91,18 +91,18 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
     const ptr_tok_type& Store(const ptr_tok_type &t, int pos);
 
     CodaScriptMUPExpressionParser *m_pParser;  ///< Pointer to the parser bound to this token reader
-    string_type m_sExpr;     ///< The expression beeing currently parsed
+    string_type m_sExpr;     ///< The expression being currently parsed
     int  m_nPos;             ///< Current parsing position in the expression
     int  m_nNumBra;          ///< Number of open parenthesis
-    int  m_nNumIndex;        ///< Number of open index paranethesis
-    int  m_nNumIfElse;       ///< Coubter for if-then-else levels
-    int  m_nSynFlags;        ///< Flags to controll the syntax flow
+    int  m_nNumIndex;        ///< Number of open index parenthesis
+    int  m_nNumIfElse;       ///< Counter for if-then-else levels
+    int  m_nSynFlags;        ///< Flags to control the syntax flow
 
     token_buf_type m_vTokens;
     ECmdCode m_eLastTokCode;
 
     mutable fun_maptype  *m_pFunDef;
-    mutable oprt_bin_multimap *m_pOprtDef;
+    mutable oprt_bin_maptype *m_pOprtDef;
     mutable oprt_ifx_maptype *m_pInfixOprtDef;
     mutable oprt_pfx_maptype *m_pPostOprtDef;
     mutable val_maptype  *m_pConstDef;
@@ -121,7 +121,6 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
     void AddValueReader(IValueReader *a_pReader);
     void AddSynFlags(int flag);
-    //void SetVarCreator(facfun_type a_pFactory);
     int GetPos() const;
     const string_type& GetExpr() const;
     const var_maptype& GetUsedVar() const;

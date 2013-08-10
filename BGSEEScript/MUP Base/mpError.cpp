@@ -1,12 +1,12 @@
 /*
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -16,10 +16,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -41,13 +41,13 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
   const ParserErrorMsg& ParserErrorMsg::Instance()
   {
-    return m_Instance;
+	return m_Instance;
   }
 
   //------------------------------------------------------------------------------
   string_type ParserErrorMsg::operator[](unsigned a_iIdx) const
   {
-    return (a_iIdx<m_vErrMsg.size()) ? m_vErrMsg[a_iIdx] : string_type();
+	return (a_iIdx<m_vErrMsg.size()) ? m_vErrMsg[a_iIdx] : string_type();
   }
 
   //---------------------------------------------------------------------------
@@ -59,8 +59,8 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   */
   ParserErrorMsg& ParserErrorMsg::operator=(const ParserErrorMsg& )
   {
-    assert(false);
-    return *this;
+	assert(false);
+	return *this;
   }
 
   //---------------------------------------------------------------------------
@@ -69,63 +69,66 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
   //---------------------------------------------------------------------------
   ParserErrorMsg::ParserErrorMsg()
-    :m_vErrMsg(0)
+	:m_vErrMsg(0)
   {
-    m_vErrMsg.resize(ecCOUNT);
+	m_vErrMsg.resize(ecCOUNT);
 
-    m_vErrMsg[ecUNASSIGNABLE_TOKEN]      = _T("Undefined token \"$IDENT$\" found at position $POS$");
-    m_vErrMsg[ecINTERNAL_ERROR]          = _T("Internal error");
-    m_vErrMsg[ecINVALID_NAME]            = _T("Invalid function-, variable- or constant name");
-    m_vErrMsg[ecINVALID_FUN_PTR]         = _T("Invalid pointer to callback function");
-    m_vErrMsg[ecINVALID_VAR_PTR]         = _T("Invalid pointer to variable");
-    m_vErrMsg[ecUNEXPECTED_OPERATOR]     = _T("Unexpected operator \"$IDENT$\" found at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_EOF]          = _T("Unexpected end of expression at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_COMMA]        = _T("Unexpected comma at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_PARENS  ]     = _T("Unexpected parenthesis \"$IDENT$\" at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_FUN]          = _T("Unexpected function \"$IDENT$\" at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_VAL]          = _T("Unexpected value \"$IDENT$\" found at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_VAR]          = _T("Unexpected variable \"$IDENT$\" found at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_STR]          = _T("Unexpected string token found at position $POS$");
-    m_vErrMsg[ecUNEXPECTED_CONDITIONAL]  = _T("The \"$IDENT$\" operator must be preceeded by a closing bracket");
-    m_vErrMsg[ecUNEXPECTED_NEWLINE]      = _T("Unexprected newline");
-    m_vErrMsg[ecMISSING_PARENS]          = _T("Missing parenthesis");
-    m_vErrMsg[ecMISSING_ELSE_CLAUSE]     = _T("If-then-else operator is missing an else clause");
-    m_vErrMsg[ecMISPLACED_COLON]         = _T("Misplaced colon at position $POS$");
-    m_vErrMsg[ecTOO_MANY_PARAMS]         = _T("Too many parameters for function \"$IDENT$\"");
-    m_vErrMsg[ecTOO_FEW_PARAMS]          = _T("Too few parameters for function \"$IDENT$\"");
-    m_vErrMsg[ecDIV_BY_ZERO]             = _T("Divide by zero");
-    m_vErrMsg[ecDOMAIN_ERROR]            = _T("Domain error");
-    m_vErrMsg[ecNAME_CONFLICT]           = _T("Name conflict");
-    m_vErrMsg[ecOPT_PRI]                 = _T("Invalid value for operator priority (must be greater or equal to zero)");
-    m_vErrMsg[ecBUILTIN_OVERLOAD]        = _T("Binary operator identifier conflicts with a built in operator");
-    m_vErrMsg[ecUNTERMINATED_STRING]     = _T("Unterminated string starting at position $POS$");
-    m_vErrMsg[ecSTRING_EXPECTED]         = _T("String function called with a non string type of argument");
-    m_vErrMsg[ecVAL_EXPECTED]            = _T("Numerical function called with a non value type of argument");
-    m_vErrMsg[ecTYPE_CONFLICT]           = _T("Value \"$IDENT$\" is of type '$TYPE1$'. There is no implicit conversion to type '$TYPE2$'");
-    m_vErrMsg[ecTYPE_CONFLICT_FUN]       = _T("Argument $ARG$ of function/operator \"$IDENT$\" is of type '$TYPE1$' whereas type '$TYPE2$' was expected");
-    m_vErrMsg[ecTYPE_CONFLICT_IDX]       = _T("Index to \"$IDENT$\" must be a positive integer value. '$TYPE1$' is not an acceptable type.");
-    m_vErrMsg[ecGENERIC]                 = _T("Parser error");
-    m_vErrMsg[ecINVALID_TYPE]            = _T("Invalid argument type");
-    m_vErrMsg[ecINVALID_TYPECAST]        = _T("Value type conversion from type '$TYPE1$' to '$TYPE2$' is not supported!");
-    m_vErrMsg[ecARRAY_SIZE_MISMATCH]     = _T("Array size mismatch");
-    m_vErrMsg[ecNOT_AN_ARRAY]            = _T("Using the index operator on the scalar variable \"$IDENT$\" is not allowed");
-    m_vErrMsg[ecUNEXPECTED_SQR_BRACKET]  = _T("Unexpected \"]\"");
-    m_vErrMsg[ecAPI_INVALID_PROTOTYPE]   = _T("Invalid prototype (use something like: \"f:fff\")");
-    m_vErrMsg[ecAPI_NOT_AN_ARRAY]        = _T("Not an array");
-    m_vErrMsg[ecAPI_INVALID_DIMENSION]   = _T("Invalid matrix dimensions");
-    m_vErrMsg[ecINDEX_OUT_OF_BOUNDS]     = _T("Index to variable \"$IDENT$\" is out of bounds");
-    m_vErrMsg[ecINDEX_DIMENSION]         = _T("Index operator dimension error");
-    m_vErrMsg[ecMISSING_SQR_BRACKET]     = _T("Missing \"]\"");
-    m_vErrMsg[ecASSIGNEMENT_TO_VALUE]    = _T("Assignment operator \"$IDENT$\" can't be used in this context");
-    m_vErrMsg[ecEVAL]                    = _T("Can't evaluate function/operator \"$IDENT$\": $HINT$");
-    m_vErrMsg[ecINVALID_PARAMETER]       = _T("Parameter $ARG$ of function \"$IDENT$\" is invalid");
-    m_vErrMsg[ecINVALID_NUMBER_OF_PARAMETERS] = _T("Invalid number of function arguments");
+	m_vErrMsg[ecUNASSIGNABLE_TOKEN]      = _T("Undefined token \"$IDENT$\" found at position $POS$.");
+	m_vErrMsg[ecINTERNAL_ERROR]          = _T("Internal error.");
+	m_vErrMsg[ecUNKNOWN_ESCAPE_SEQUENCE] = _T("Unknown escape sequence.");
+	m_vErrMsg[ecINVALID_NAME]            = _T("Invalid function, variable or constant name.");
+	m_vErrMsg[ecINVALID_FUN_PTR]         = _T("Invalid pointer to callback function.");
+	m_vErrMsg[ecINVALID_VAR_PTR]         = _T("Invalid pointer to variable.");
+	m_vErrMsg[ecUNEXPECTED_OPERATOR]     = _T("Unexpected operator \"$IDENT$\" found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_EOF]          = _T("Unexpected end of expression found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_COMMA]        = _T("Unexpected comma found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_PARENS  ]     = _T("Unexpected parenthesis \"$IDENT$\" found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_FUN]          = _T("Unexpected function \"$IDENT$\" found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_VAL]          = _T("Unexpected value \"$IDENT$\" found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_VAR]          = _T("Unexpected variable \"$IDENT$\" found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_STR]          = _T("Unexpected string token found at position $POS$.");
+	m_vErrMsg[ecUNEXPECTED_CONDITIONAL]  = _T("The \"$IDENT$\" operator must be preceded by a closing bracket.");
+	m_vErrMsg[ecUNEXPECTED_NEWLINE]      = _T("Unexprected newline.");
+	m_vErrMsg[ecMISSING_PARENS]          = _T("Missing parenthesis.");
+	m_vErrMsg[ecMISSING_ELSE_CLAUSE]     = _T("If-then-else operator is missing an else clause.");
+	m_vErrMsg[ecMISPLACED_COLON]         = _T("Misplaced colon at position $POS$.");
+	m_vErrMsg[ecTOO_MANY_PARAMS]         = _T("Too many parameters passed to function \"$IDENT$\".");
+	m_vErrMsg[ecTOO_FEW_PARAMS]          = _T("Too few parameters passed to function \"$IDENT$\".");
+	m_vErrMsg[ecDIV_BY_ZERO]             = _T("Division by zero occurred.");
+	m_vErrMsg[ecDOMAIN_ERROR]            = _T("The value passed as argument to function/operator \"$IDENT$\" is not part of its domain.");
+	m_vErrMsg[ecNAME_CONFLICT]           = _T("Name conflict.");
+	m_vErrMsg[ecOPT_PRI]                 = _T("Invalid value for operator priority (must be greater or equal to zero).");
+	m_vErrMsg[ecBUILTIN_OVERLOAD]        = _T("Binary operator identifier conflicts with a built in operator.");
+	m_vErrMsg[ecUNTERMINATED_STRING]     = _T("Unterminated string starting at position $POS$.");
+	m_vErrMsg[ecSTRING_EXPECTED]         = _T("String function called with a non string type of argument.");
+	m_vErrMsg[ecVAL_EXPECTED]            = _T("Numerical function called with a non value type of argument.");
+	m_vErrMsg[ecTYPE_CONFLICT]           = _T("Value \"$IDENT$\" is of type '$TYPE1$'. There is no implicit conversion to type '$TYPE2$'.");
+	m_vErrMsg[ecTYPE_CONFLICT_FUN]       = _T("Argument $ARG$ of function/operator \"$IDENT$\" is of type '$TYPE1$' whereas type '$TYPE2$' was expected.");
+	m_vErrMsg[ecTYPE_CONFLICT_IDX]       = _T("Index to \"$IDENT$\" must be a positive integer value. '$TYPE1$' is not an acceptable type.");
+	m_vErrMsg[ecGENERIC]                 = _T("Parser error.");
+	m_vErrMsg[ecINVALID_TYPE]            = _T("Invalid argument type.");
+	m_vErrMsg[ecINVALID_TYPECAST]        = _T("Value type conversion from type '$TYPE1$' to '$TYPE2$' is not supported!");
+	m_vErrMsg[ecARRAY_SIZE_MISMATCH]     = _T("Array size mismatch.");
+	m_vErrMsg[ecNOT_AN_ARRAY]            = _T("Using the index operator on the scalar variable \"$IDENT$\" is not allowed.");
+	m_vErrMsg[ecUNEXPECTED_SQR_BRACKET]  = _T("Unexpected \"]\".");
+	m_vErrMsg[ecINDEX_OUT_OF_BOUNDS]     = _T("Index to variable \"$IDENT$\" is out of bounds.");
+	m_vErrMsg[ecINDEX_DIMENSION]         = _T("Index operator dimension error.");
+	m_vErrMsg[ecMISSING_SQR_BRACKET]     = _T("Missing \"]\".");
+	m_vErrMsg[ecASSIGNEMENT_TO_VALUE]    = _T("Assignment operator \"$IDENT$\" can't be used in this context.");
+	m_vErrMsg[ecEVAL]                    = _T("Can't evaluate function/operator \"$IDENT$\": $HINT$");
+	m_vErrMsg[ecINVALID_PARAMETER]       = _T("Parameter $ARG$ of function \"$IDENT$\" is invalid.");
+	m_vErrMsg[ecINVALID_NUMBER_OF_PARAMETERS] = _T("Invalid number of function arguments.");
+	m_vErrMsg[ecOVERFLOW]                     = _T("Possible arithmetic overflow occurred in function/operator \"$IDENT$\".");
+	m_vErrMsg[ecMATRIX_DIMENSION_MISMATCH]    = _T("Matrix dimension error.");
+	m_vErrMsg[ecVARIABLE_DEFINED]   = _T("Variable \"$IDENT$\" is already defined.");
+	m_vErrMsg[ecCONSTANT_DEFINED]   = _T("Constant \"$IDENT$\" is already defined.");
+	m_vErrMsg[ecFUNOPRT_DEFINED]    = _T("Function/operator \"$IDENT$\" is already defined.");
 
-    #if defined(_DEBUG)
-      for (int i=0; i<ecCOUNT; ++i)
-        if (!m_vErrMsg[i].length())
-          assert(false);
-    #endif
+	#if 1
+	  for (int i=0; i<ecCOUNT; ++i)
+		if (!m_vErrMsg[i].length())
+		  assert(false);
+	#endif
   }
 
   //---------------------------------------------------------------------------
@@ -136,33 +139,33 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
   /** \brief Constructs an empty Error context structure. */
   ErrorContext::ErrorContext(EErrorCodes a_iErrc,
-                             int a_iPos,
-                             string_type a_sIdent)
-    :Expr()
-    ,Ident(a_sIdent)
-    ,Hint()
-    ,Errc(a_iErrc)
-    ,Type1(0)
-    ,Type2(0)
-    ,Arg(-1)
-    ,Pos(a_iPos)
+							 int a_iPos,
+							 string_type a_sIdent)
+	:Expr()
+	,Ident(a_sIdent)
+	,Hint()
+	,Errc(a_iErrc)
+	,Type1(0)
+	,Type2(0)
+	,Arg(-1)
+	,Pos(a_iPos)
   {}
 
   //---------------------------------------------------------------------------
   ErrorContext::ErrorContext(EErrorCodes iErrc,
-                             int iPos,
-                             string_type sIdent,
-                             char_type cType1,
-                             char_type cType2,
-                             int nArg)
-    :Expr()
-    ,Ident(sIdent)
-    ,Hint()
-    ,Errc(iErrc)
-    ,Type1(cType1)
-    ,Type2(cType2)
-    ,Arg(nArg)
-    ,Pos(iPos)
+							 int iPos,
+							 string_type sIdent,
+							 char_type cType1,
+							 char_type cType2,
+							 int nArg)
+	:Expr()
+	,Ident(sIdent)
+	,Hint()
+	,Errc(iErrc)
+	,Type1(cType1)
+	,Type2(cType2)
+	,Arg(nArg)
+	,Pos(iPos)
   {}
 
   //---------------------------------------------------------------------------
@@ -172,145 +175,145 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //---------------------------------------------------------------------------
 
   ParserError::ParserError()
-    :m_Err()
-    ,m_sMsg()
-    ,m_ErrMsg(ParserErrorMsg::Instance())
+	:m_Err()
+	,m_sMsg()
+	,m_ErrMsg(ParserErrorMsg::Instance())
   {}
 
   //------------------------------------------------------------------------------
   ParserError::ParserError(const string_type &sMsg)
-    :m_Err()
-    ,m_sMsg(sMsg)
-    ,m_ErrMsg(ParserErrorMsg::Instance())
+	:m_Err()
+	,m_sMsg(sMsg)
+	,m_ErrMsg(ParserErrorMsg::Instance())
   {}
 
   //------------------------------------------------------------------------------
   ParserError::ParserError(const ErrorContext &a_Err)
-    :m_Err(a_Err)
-    ,m_sMsg()
-    ,m_ErrMsg(ParserErrorMsg::Instance())
+	:m_Err(a_Err)
+	,m_sMsg()
+	,m_ErrMsg(ParserErrorMsg::Instance())
   {
-    m_sMsg = m_ErrMsg[a_Err.Errc];
+	m_sMsg = m_ErrMsg[a_Err.Errc];
   }
 
   //------------------------------------------------------------------------------
   ParserError::ParserError(const ParserError &a_Obj)
-    :m_Err(a_Obj.m_Err)
-    ,m_sMsg(a_Obj.m_sMsg)
-    ,m_ErrMsg(ParserErrorMsg::Instance())
+	:m_Err(a_Obj.m_Err)
+	,m_sMsg(a_Obj.m_sMsg)
+	,m_ErrMsg(ParserErrorMsg::Instance())
   {}
 
   //------------------------------------------------------------------------------
   ParserError& ParserError::operator=(const ParserError &a_Obj)
   {
-    if (this==&a_Obj)
-      return *this;
+	if (this==&a_Obj)
+	  return *this;
 
-    m_sMsg = a_Obj.m_sMsg;
-    m_Err = a_Obj.m_Err;
-    return *this;
+	m_sMsg = a_Obj.m_sMsg;
+	m_Err = a_Obj.m_Err;
+	return *this;
   }
 
   //------------------------------------------------------------------------------
   /** \brief Replace all occurences of a substring with another string. */
   void ParserError::ReplaceSubString( string_type &sSource,
-                                      const string_type &sFind,
-                                      const string_type &sReplaceWith) const
+									  const string_type &sFind,
+									  const string_type &sReplaceWith) const
   {
-    string_type sResult;
-    string_type::size_type iPos(0), iNext(0);
+	string_type sResult;
+	string_type::size_type iPos(0), iNext(0);
 
-    for(;;)
-    {
-      iNext = sSource.find(sFind, iPos);
-      sResult.append(sSource, iPos, iNext-iPos);
+	for(;;)
+	{
+	  iNext = sSource.find(sFind, iPos);
+	  sResult.append(sSource, iPos, iNext-iPos);
 
-      if( iNext==string_type::npos )
-        break;
+	  if( iNext==string_type::npos )
+		break;
 
-      sResult.append(sReplaceWith);
-      iPos = iNext + sFind.length();
-    }
+	  sResult.append(sReplaceWith);
+	  iPos = iNext + sFind.length();
+	}
 
-    sSource.swap(sResult);
+	sSource.swap(sResult);
   }
 
   //------------------------------------------------------------------------------
   /** \brief Replace all occurences of a substring with another string. */
   void ParserError::ReplaceSubString( string_type &sSource,
-                                      const string_type &sFind,
-                                      int iReplaceWith) const
+									  const string_type &sFind,
+									  int iReplaceWith) const
   {
-    stringstream_type stream;
-    stream << iReplaceWith;
-    ReplaceSubString(sSource, sFind, stream.str());
+	stringstream_type stream;
+	stream << iReplaceWith;
+	ReplaceSubString(sSource, sFind, stream.str());
   }
 
   //------------------------------------------------------------------------------
   /** \brief Replace all occurences of a substring with another string. */
   void ParserError::ReplaceSubString( string_type &sSource,
-                                      const string_type &sFind,
-                                      char_type cReplaceWith) const
+									  const string_type &sFind,
+									  char_type cReplaceWith) const
   {
-    stringstream_type stream;
-    stream << cReplaceWith;
-    ReplaceSubString(sSource, sFind, stream.str());
+	stringstream_type stream;
+	stream << cReplaceWith;
+	ReplaceSubString(sSource, sFind, stream.str());
   }
 
   //------------------------------------------------------------------------------
   void ParserError::Reset()
   {
-    m_sMsg = _T("");
-    m_Err = ErrorContext();
+	m_sMsg = _T("");
+	m_Err = ErrorContext();
   }
 
   //------------------------------------------------------------------------------
   const string_type& ParserError::GetExpr() const
   {
-    return m_Err.Expr;
+	return m_Err.Expr;
   }
 
   //------------------------------------------------------------------------------
   string_type ParserError::GetMsg() const
   {
-    string_type sMsg(m_sMsg);
-    ReplaceSubString(sMsg, _T("$EXPR$"),  m_Err.Expr);
-    ReplaceSubString(sMsg, _T("$IDENT$"), m_Err.Ident);
-    ReplaceSubString(sMsg, _T("$POS$"),   m_Err.Pos);
-    ReplaceSubString(sMsg, _T("$ARG$"),   m_Err.Arg);
-    ReplaceSubString(sMsg, _T("$TYPE1$"), m_Err.Type1);
-    ReplaceSubString(sMsg, _T("$TYPE2$"), m_Err.Type2);
-    ReplaceSubString(sMsg, _T("$HINT$"),  m_Err.Hint);
-    return sMsg;
+	string_type sMsg(m_sMsg);
+	ReplaceSubString(sMsg, _T("$EXPR$"),  m_Err.Expr);
+	ReplaceSubString(sMsg, _T("$IDENT$"), m_Err.Ident);
+	ReplaceSubString(sMsg, _T("$POS$"),   m_Err.Pos);
+	ReplaceSubString(sMsg, _T("$ARG$"),   m_Err.Arg);
+	ReplaceSubString(sMsg, _T("$TYPE1$"), m_Err.Type1);
+	ReplaceSubString(sMsg, _T("$TYPE2$"), m_Err.Type2);
+	ReplaceSubString(sMsg, _T("$HINT$"),  m_Err.Hint);
+	return sMsg;
   }
 
   //------------------------------------------------------------------------------
   ErrorContext& ParserError::GetContext()
   {
-    return m_Err;
+	return m_Err;
   }
 
   //------------------------------------------------------------------------------
   /** \brief Return the expression position related to the error.
 
-    If the error is not related to a distinct position this will return -1
+	If the error is not related to a distinct position this will return -1
   */
   int ParserError::GetPos() const
   {
-    return m_Err.Pos;
+	return m_Err.Pos;
   }
 
   //------------------------------------------------------------------------------
   /** \brief Return string related with this token (if available). */
   const string_type& ParserError::GetToken() const
   {
-    return m_Err.Ident;
+	return m_Err.Ident;
   }
 
   //------------------------------------------------------------------------------
   /** \brief Return the error code. */
   EErrorCodes ParserError::GetCode() const
   {
-    return m_Err.Errc;
+	return m_Err.Errc;
   }
 } } }  // namespace mu

@@ -42,7 +42,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   //------------------------------------------------------------------------------
 
   OprtSign::OprtSign()
-    :IOprtInfix( _T("-"))
+    :IOprtInfix( _T("-"), prINFIX)
   {}
 
   //------------------------------------------------------------------------------

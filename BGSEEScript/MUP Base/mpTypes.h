@@ -59,6 +59,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   // smart pointer types
   template<typename T>
   class TokenPtr;
+  class ICallback;
 
   /** \brief Type of a managed pointer storing parser tokens. */
   typedef TokenPtr<IToken>   ptr_tok_type;
@@ -69,6 +70,9 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   /** \brief Type of a managed pointer storing binary operator tokens. */
   typedef TokenPtr<IOprtBin> ptr_binop_type;
 
+  /** \brief Type of a managed pointer storing callback tokens. */
+  typedef TokenPtr<ICallback>   ptr_cal_type;
+
   /** \brief Type for a vector of tokens. */
   typedef std::vector<ptr_tok_type> token_vec_type;
 
@@ -78,10 +82,10 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   // parser type definitions
 
   /** \brief Parser datatype for floating point value. */
-  typedef /*long*/ double float_type;
+  typedef MUP_FLOAT_TYPE  float_type;
 
-  /** \brief Parser datatype for integer valuse. */
-  typedef int int_type;
+  /** \brief Parser datatype for integer value. */
+  typedef MUP_INT_TYPE int_type;
 
   /** \brief The basic type used for representing complex numbers. */
   typedef std::complex<float_type> cmplx_type;
@@ -145,8 +149,6 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 			 to operator identifiers. */
   typedef std::map<string_type, ptr_tok_type, su::pred::SortByLength<string_type> > oprt_bin_maptype;
 
-  typedef std::multimap<string_type, ptr_tok_type, su::pred::SortByLength<string_type> > oprt_bin_multimap;
-
   /** \brief Type of a map for storing postfix operators by their name. */
 #ifdef MUP_CASEINSENSITIVE_DEFMAP
   typedef std::map<string_type, ptr_tok_type, DefMap_Key_Comparer> oprt_pfx_maptype;
@@ -168,42 +170,44 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   */
   enum ECmdCode
   {
-	// The following are codes for built in binary operators
-	// apart from built in operators the user has the opportunity to
-	// add user defined operators.
-	cmBO                =  0,  ///< Operator item:  opening bracket
-	cmBC                =  1,  ///< Operator item:  closing bracket
-	cmIO                =  2,  ///< Operator item:  index operator opening
-	cmIC                =  3,  ///< Operator item:  index operator closing
-	cmARG_SEP           =  4,  ///< Operator item:  comma
-	cmIF                =  5,  ///< Ternary if then else operator
-	cmELSE              =  6,  ///< Ternary if then else operator
-	cmENDIF             =  7,  ///< Ternary if then else operator
-	cmJMP               =  8,  ///< Reserved for future use
-	cmVAR               =  9,  ///< variable item
-	cmVAL               = 10,  ///< value item
-	cmFUNC              = 11,  ///< Code for a function item
-	cmOPRT_BIN          = 12,  ///< Binary operator
-	cmOPRT_INFIX        = 13,  ///< Infix operator
-	cmOPRT_POSTFIX      = 14,  ///< Postfix operator
-	cmEOE               = 15,  ///< End of expression
+	  // The following are codes for built in binary operators
+	  // apart from built in operators the user has the opportunity to
+	  // add user defined operators.
+	  cmBO                =  0,  ///< Operator item:  opening bracket
+	  cmBC                =  1,  ///< Operator item:  closing bracket
+	  cmIO                =  2,  ///< Operator item:  index operator opening
+	  cmIC                =  3,  ///< Operator item:  index operator closing
+	  cmARG_SEP           =  4,  ///< Operator item:  comma
+	  cmIF                =  5,  ///< Ternary if then else operator
+	  cmELSE              =  6,  ///< Ternary if then else operator 
+	  cmENDIF             =  7,  ///< Ternary if then else operator 
+	  cmJMP               =  8,  ///< Reserved for future use
+	  cmVAL               =  9,  ///< value item
+	  cmANY               = 10,  ///< Reserved for futur use: matrix row/column placeholder m[1,:] or m[:,1]
+	  cmFUNC              = 11,  ///< Code for a function item
+	  cmOPRT_BIN          = 12,  ///< Binary operator
+	  cmOPRT_INFIX        = 13,  ///< Infix operator
+	  cmOPRT_POSTFIX      = 14,  ///< Postfix operator
+	  cmEOE               = 15,  ///< End of expression
 
-	// The following codes are reserved in case i will ever turn this
-	// into a scripting language
-	cmSCRIPT_GOTO       = 16,  ///< Reserved for future use
-	cmSCRIPT_LABEL      = 17,  ///< Reserved for future use
-	cmSCRIPT_FOR        = 18,  ///< Reserved for future use
-	cmSCRIPT_IF         = 19,  ///< Reserved for future use
-	cmSCRIPT_ELSE       = 20,  ///< Reserved for future use
-	cmSCRIPT_ELSEIF     = 21,  ///< Reserved for future use
-	cmSCRIPT_ENDIF      = 22,  ///< Reserved for future use
-	cmSCRIPT_NEWLINE    = 23,  ///< Newline
-	cmSCRIPT_FUNCTION   = 24,  ///< Reserved for future use
+	  // The following codes are reserved in case i will ever turn this
+	  // into a scripting language
+	  cmSCRIPT_GOTO       = 16,  ///< Reserved for future use
+	  cmSCRIPT_LABEL      = 17,  ///< Reserved for future use
+	  cmSCRIPT_FOR        = 18,  ///< Reserved for future use
+	  cmSCRIPT_IF         = 19,  ///< Reserved for future use
+	  cmSCRIPT_ELSE       = 20,  ///< Reserved for future use
+	  cmSCRIPT_ELSEIF     = 21,  ///< Reserved for future use
+	  cmSCRIPT_ENDIF      = 22,  ///< Reserved for future use
+	  cmSCRIPT_NEWLINE    = 23,  ///< Newline
+	  cmSCRIPT_COMMENT    = 24,  ///< reserved for future use
+	  cmSCRIPT_FUNCTION   = 25,  ///< Reserved for future use
 
-	// misc codes
-	cmUNKNOWN           = 25,  ///< uninitialized item
-	cmCOUNT             = 26   ///< Dummy entry for counting the enum values
+	  // misc codes
+	  cmUNKNOWN           = 26,  ///< uninitialized item
+	  cmCOUNT             = 27   ///< Dummy entry for counting the enum values
   }; // ECmdCode
+
 
   //------------------------------------------------------------------------------
   /** \brief Strings assigned to the enum codes of ECmdCode.
@@ -270,31 +274,109 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   */
   enum EOprtPrecedence
   {
-	// assignment operators
-	prASSIGN       = -1,
+	  // assignment operators
+	  prASSIGN       = -1,
 
-	// if-then-else
-	prIF_THEN_ELSE =  0,
+	  // if-then-else
+	  prIF_THEN_ELSE =  0,
 
-	// binary operators
-	prLOGIC_OR     =  1,
-	prLOGIC_AND    =  2,
-	prBIT_OR       =  3,
-	prBIT_AND      =  4,
+	  // binary operators
+	  prLOGIC_OR     =  1,
+	  //  prLOGIC_XOR    =  2,
+	  prLOGIC_AND    =  3,
+	  prBIT_OR       =  4,
+	  prBIT_XOR      =  5,
+	  prBIT_AND      =  6, 
 
-	prRELATIONAL1  =  5, ///< For "==", "!="
-	prRELATIONAL2  =  6, ///< Relational operators "<", "<=", ">", ">="
-	prSHIFT        =  7, ///< Shift operators "<<", ">>"
+	  prRELATIONAL1  =  7, ///< For "==", "!=" 
+	  prRELATIONAL2  =  8, ///< Relational operators "<", "<=", ">", ">="
+	  prSHIFT        =  9, ///< Shift operators "<<", ">>"
 
-	prCOLON        =  8, ///< Colon operator
+	  prCOLON        = 10, ///< Colon operator
 
-	prADD_SUB      =  9, ///< addition
-	prMUL_DIV      = 10, ///< multiplication/division
-	prPOW          = 11, ///< power operator priority (highest)
+	  prADD_SUB      = 11, ///< addition
+	  prMUL_DIV      = 12, ///< multiplication/division
+	  prPOW          = 13, ///< power operator priority (highest)
 
-	// infix operators
-	prINFIX        = 10, ///< Signs have a higher priority than ADD_SUB, but lower than power operator
-	prPOSTFIX      = 10  ///< Postfix operator priority (currently unused)
+	  // infix operators
+	  prINFIX        = 12, ///< Signs have a higher priority than ADD_SUB, but lower than power operator
+	  prPOSTFIX      = 12  ///< Postfix operator priority (currently unused)
+  };
+
+	/** \brief Error codes.
+
+	  This is the complete list of all error codes used by muParserX
+	*/
+  enum EErrorCodes
+  {
+	  // Expression syntax errors
+	  ecUNEXPECTED_OPERATOR    =  0, ///< Unexpected binary operator found
+	  ecUNASSIGNABLE_TOKEN     =  1, ///< Token cant be identified.
+	  ecUNEXPECTED_EOF         =  2, ///< Unexpected end of expression. (Example: "2+sin(")
+	  ecUNEXPECTED_COMMA       =  3, ///< An unexpected comma has been found. (Example: "1,23")
+	  ecUNEXPECTED_VAL         =  4, ///< An unexpected value token has been found
+	  ecUNEXPECTED_VAR         =  5, ///< An unexpected variable token has been found
+	  ecUNEXPECTED_PARENS      =  6, ///< Unexpected Parenthesis, opening or closing
+	  ecUNEXPECTED_STR         =  7, ///< A string has been found at an inapropriate position
+	  ecUNEXPECTED_CONDITIONAL =  8,
+	  ecUNEXPECTED_NEWLINE     =  9,
+	  ecSTRING_EXPECTED        = 10, ///< A string function has been called with a different type of argument
+	  ecVAL_EXPECTED           = 11, ///< A numerical function has been called with a non value type of argument
+	  ecMISSING_PARENS         = 12, ///< Missing parens. (Example: "3*sin(3")
+	  ecMISSING_ELSE_CLAUSE    = 13,
+	  ecMISPLACED_COLON        = 14,
+	  ecUNEXPECTED_FUN         = 15, ///< Unexpected function found. (Example: "sin(8)cos(9)")
+	  ecUNTERMINATED_STRING    = 16, ///< unterminated string constant. (Example: "3*valueof("hello)")
+	  ecTOO_MANY_PARAMS        = 17, ///< Too many function parameters
+	  ecTOO_FEW_PARAMS         = 18, ///< Too few function parameters. (Example: "ite(1<2,2)")
+	  ecTYPE_CONFLICT          = 19, ///< Generic type conflict
+	  ecTYPE_CONFLICT_FUN      = 20, ///< Function argument type conflict.
+	  ecTYPE_CONFLICT_IDX      = 21, ///< Function argument type conflict.
+	  ecINVALID_TYPE           = 22,
+	  ecINVALID_TYPECAST       = 23, ///< Invalid Value token cast.
+	  ecARRAY_SIZE_MISMATCH    = 24, ///< Array size mismatch during a vector operation
+	  ecNOT_AN_ARRAY           = 25, ///< Using the index operator on a scalar variable
+	  ecUNEXPECTED_SQR_BRACKET = 26, ///< Invalid use of the index operator
+
+	  ecINVALID_NAME           = 27, ///< Invalid function, variable or constant name.
+	  ecBUILTIN_OVERLOAD       = 28, ///< Trying to overload builtin operator
+	  ecINVALID_FUN_PTR        = 29, ///< Invalid callback function pointer
+	  ecINVALID_VAR_PTR        = 30, ///< Invalid variable pointer
+	  ecINVALID_PARAMETER      = 31, ///< Invalid function parameter
+	  ecINVALID_NUMBER_OF_PARAMETERS = 32,
+
+	  ecNAME_CONFLICT          = 33, ///< Name conflict
+	  ecOPT_PRI                = 34, ///< Invalid operator priority
+	  ecASSIGNEMENT_TO_VALUE   = 35, ///< Assignment to operator (3=4 instead of a=4)
+
+	  //
+	  ecDOMAIN_ERROR           = 36, ///< Trying to use func/oprtr with out-of-domain input args
+	  ecDIV_BY_ZERO            = 37, ///< Division by zero (currently unused)
+	  ecGENERIC                = 38, ///< Generic error
+
+	  ecINDEX_OUT_OF_BOUNDS    = 39, ///< Array index is out of bounds
+	  ecINDEX_DIMENSION        = 40,
+	  ecMISSING_SQR_BRACKET    = 41, ///< The index operator was not closed properly (i.e. "v[3")
+	  ecEVAL                   = 42, ///< Error while evaluating function / operator
+	  ecOVERFLOW               = 43, ///< Overflow (possibly) occurred
+
+	  // Matrix errors
+	  ecMATRIX_DIMENSION_MISMATCH = 44,
+
+	  // string related errors
+	  ecUNKNOWN_ESCAPE_SEQUENCE = 45,
+
+	  // already-defined item errors
+	  ecVARIABLE_DEFINED = 46, ///< Variable is already defined
+	  ecCONSTANT_DEFINED = 47, ///< Constant is already defined
+	  ecFUNOPRT_DEFINED = 48, ///< Function/operator is already defined
+
+	  // internal errors
+	  ecINTERNAL_ERROR         = 49, ///< Internal error of any kind.
+
+	  // The last two are special entries
+	  ecCOUNT,                       ///< This is no error code, It just stores just the total number of error codes
+	  ecUNDEFINED              = -1  ///< Undefined message, placeholder to detect unassigned error messages
   };
 
 #if defined(_UNICODE)

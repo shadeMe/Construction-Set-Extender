@@ -59,18 +59,15 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
       virtual ~IOprtBin();
       virtual string_type AsciiDump() const;
 
-      virtual int GetPri() const;
-      virtual EOprtAsct GetAssociativity() const;
-
       //------------------------------------------
       // IPrecedence implementation
       //------------------------------------------
 
       virtual IPrecedence* AsIPrecedence();
+	  virtual EOprtAsct GetAssociativity() const;
+	  virtual int GetPri() const;
 
     private:
-
-      void CheckPrototype(const string_type &a_szProt);
       int m_nPrec;
       EOprtAsct m_eAsc;
     }; // class IOperator
@@ -91,13 +88,25 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
     /** \brief Interface for unary infix operators.
         \ingroup infix
     */
-    class IOprtInfix : public ICallback
-    {
-    public:
-        IOprtInfix(const char_type *a_szIdent);
-        virtual ~IOprtInfix();
-        virtual string_type AsciiDump() const;
-    }; // class IOperator
+	class IOprtInfix : public ICallback,
+		public IPrecedence
+	{
+	public:
+		IOprtInfix(const char_type *a_szIdent, int nPrec);
+		virtual ~IOprtInfix();
+		virtual string_type AsciiDump() const;
+
+		//------------------------------------------
+		// IPrecedence implementation
+		//------------------------------------------
+
+		virtual IPrecedence* AsIPrecedence();
+		virtual int GetPri() const;
+		virtual EOprtAsct GetAssociativity() const;
+
+	private:
+		int m_nPrec;
+	}; // class IOperator
 
     //------------------------------------------------------------------------------
     /** \brief Interface for index operator tokens.

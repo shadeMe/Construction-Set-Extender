@@ -76,10 +76,10 @@ namespace BGSEditorExtender
 				fun_maptype										m_FunDef;           ///< Function definitions
 				oprt_pfx_maptype								m_PostOprtDef;		///< Postfix operator callbacks
 				oprt_ifx_maptype								m_InfixOprtDef;		///< Infix operator callbacks.
-				oprt_bin_multimap								m_OprtDef;			///< Binary operator callbacks
-				val_maptype										m_valConst;         ///< Definition of parser constants
+				oprt_bin_maptype								m_OprtDef;			///< Binary operator callbacks
+				val_maptype										m_valDef;         ///< Definition of parser constants
 				val_vec_type									m_valDynVarShadow;  ///< Value objects referenced by variables created at parser runtime
-				var_maptype										m_VarDef;           ///< User defind variables. Deprecated, always empty
+				var_maptype										m_varDef;           ///< User defined variables. Deprecated, always empty
 				ContextSpecificVariableMapT						m_CSVarDef;			///< Maps execution contexts to a MUP var_maptype variable map
 
 				string_type										m_sNameChars;       ///< Charset for names
@@ -106,11 +106,11 @@ namespace BGSEditorExtender
 				void											AddValueReader(IValueReader *a_pReader);
 				void											AddPackage(IPackage *p);
 
-				void											DefineFun(ICallback *a_pCallback);
+				void											DefineFun(const ptr_cal_type &a_pFunc);
 				void											DefineConst(const string_type &a_sName, const CodaScriptMUPValue &a_Val);
-				void											DefineOprt(IOprtBin *a_pCallback);
-				void											DefinePostfixOprt(IOprtPostfix *a_pCallback);
-				void											DefineInfixOprt(IOprtInfix *a_pCallback);
+				void											DefineOprt(const TokenPtr<IOprtBin> &a_Oprt);
+				void											DefinePostfixOprt(const TokenPtr<IOprtPostfix> &a_pOprt);
+				void											DefineInfixOprt(const TokenPtr<IOprtInfix> &a_iOprt);
 
 				const var_maptype&								GetVar() const;
 				const val_maptype&								GetConst() const;

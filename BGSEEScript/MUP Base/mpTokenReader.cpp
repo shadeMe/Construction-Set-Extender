@@ -351,7 +351,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 		m_pInfixOprtDef       = &a_pParent->m_InfixOprtDef;
 		m_pPostOprtDef        = &a_pParent->m_PostOprtDef;
 		m_pVarDef             = const_cast<var_maptype*>(&a_pParent->GetVar());
-		m_pConstDef           = &a_pParent->m_valConst;
+		m_pConstDef           = &a_pParent->m_valDef;
 		m_pDynVarShadowValues = &a_pParent->m_valDynVarShadow;
 	}
 
@@ -742,7 +742,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 		if (iEnd==m_nPos)
 			return false;
 
-		oprt_bin_multimap::reverse_iterator item;
+		oprt_bin_maptype::reverse_iterator item;
 #ifdef MUP_CASEINSENSITIVE_DEFMAP
 		SME::StringHelpers::MakeLower(sTok);
 #endif // MUP_CASEINSENSITIVE_DEFMAP
@@ -939,7 +939,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 			err.Errc = ecUNEXPECTED_VAR;
 			err.Ident = sTok;
 			err.Expr = m_sExpr;
-			err.Pos = m_nPos - (int)sTok.length();
+			err.Pos = m_nPos;
 			throw ParserError(err);
 		}
 

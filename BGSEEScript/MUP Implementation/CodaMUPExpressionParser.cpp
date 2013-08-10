@@ -261,8 +261,8 @@ namespace BGSEditorExtender
 
 					switch(op->GetCode())
 					{
+					case  cmOPRT_INFIX:
 					case  cmOPRT_BIN:
-						MUP_ASSERT(a_stOpt.top()->GetCode()==cmOPRT_BIN);
 						ApplyFunc(a_stOpt, a_stVal, 2);
 						break;
 
@@ -306,7 +306,7 @@ namespace BGSEditorExtender
 				// such as in "a=10,b=20,c=c+a"
 				stArgCount.push(1);
 
-				for(bool bLoop=true; bLoop;)
+				for(;;)
 				{
 					pTokPrev = pTok;
 					pTok = OutByteCode->Tokenizer->ReadNextToken();
@@ -314,7 +314,6 @@ namespace BGSEditorExtender
 					ECmdCode eCmd = pTok->GetCode();
 					switch (eCmd)
 					{
-					case  cmVAR:
 					case  cmVAL:
 						{
 							IValue *pVal = pTok->AsIValue();
@@ -333,7 +332,7 @@ namespace BGSEditorExtender
 							// since there may be an index operator following next...
 							OutByteCode->RPNStack.Add(pTok);
 
-							// Apply infix operator if existant
+							// Apply infix operator if existent
 							if (stOpt.size() && stOpt.top()->GetCode()==cmOPRT_INFIX)
 								ApplyFunc(stOpt, stVal, 1);
 						}
@@ -578,11 +577,11 @@ namespace BGSEditorExtender
 					} // switch Code
 
 					if ( pTok->GetCode() == cmEOE )
-						bLoop = false;
+						break;
 				} // for (all tokens)
 
 				OutByteCode->FinalResultIndex = stArgCount.top()-1;
-				MUP_ASSERT(stVal.size());
+		//		MUP_ASSERT(stVal.size());
 			}
 
 			CodaScriptMUPExpressionParser::CodaScriptMUPExpressionParser() :
@@ -591,9 +590,9 @@ namespace BGSEditorExtender
 				m_PostOprtDef(),
 				m_InfixOprtDef(),
 				m_OprtDef(),
-				m_valConst(),
+				m_valDef(),
 				m_valDynVarShadow(),
-				m_VarDef(),
+				m_varDef(),
 				m_CSVarDef(),
 				m_sNameChars(),
 				m_sOprtChars(),
@@ -624,32 +623,66 @@ namespace BGSEditorExtender
 				p->AddToParser(this);
 			}
 
-			void CodaScriptMUPExpressionParser::DefineFun( ICallback *a_pCallback )
+			void CodaScriptMUPExpressionParser::DefineFun(const ptr_cal_type &a_pFunc)
 			{
-				a_pCallback->SetParent(this);
-				m_FunDef[ a_pCallback->GetIdent() ] = ptr_tok_type(a_pCallback);
+				if (m_FunDef.find(a_pFunc.Get()->GetIdent()) == m_FunDef.end()) {
+					// Function is not added yet, add it.
+					a_pFunc.Get()->SetParent(this);
+					m_FunDef[a_pFunc.Get()->GetIdent()] = ptr_tok_type(a_pFunc.Get());
+				}
+				else {
+		;//			throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_pFunc.Get()->GetIdent()));
+				}
 			}
 
 			void CodaScriptMUPExpressionParser::DefineConst( const string_type &a_sName, const CodaScriptMUPValue &a_Val )
 			{
 				CheckName(a_sName, ValidNameChars());
-				m_valConst[a_sName] = ptr_tok_type( a_Val.Clone() );
+
+				if (m_varDef.find(a_sName) == m_varDef.end()) {
+					// Constant is not added yet, add it.
+					m_valDef[a_sName] = ptr_tok_type( a_Val.Clone() );
+				}
+				else {
+			;//		throw ParserError(ErrorContext(ecCONSTANT_DEFINED, 0, a_sName));
+				}
 			}
 
-			void CodaScriptMUPExpressionParser::DefineOprt( IOprtBin *a_pCallback )
+			void CodaScriptMUPExpressionParser::DefineOprt(const TokenPtr<IOprtBin> &a_Oprt)
 			{
-				a_pCallback->SetParent(this);
-				m_OprtDef.insert(make_pair(a_pCallback->GetIdent(), ptr_tok_type(a_pCallback)));
+				if (m_OprtDef.find(a_Oprt.Get()->GetIdent()) == m_OprtDef.end()) {
+					// Operator is not added yet, add it.
+					a_Oprt.Get()->SetParent(this);
+					m_OprtDef.insert(make_pair(a_Oprt.Get()->GetIdent(),
+						ptr_tok_type(a_Oprt.Get())));
+				}
+				else {
+			;//		throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_Oprt.Get()->GetIdent()));
+				}
 			}
 
-			void CodaScriptMUPExpressionParser::DefinePostfixOprt( IOprtPostfix *a_pCallback )
+			void CodaScriptMUPExpressionParser::DefinePostfixOprt(const TokenPtr<IOprtPostfix> &a_pOprt)
 			{
-				m_PostOprtDef[a_pCallback->GetIdent()] = ptr_tok_type(a_pCallback);
+				if (m_PostOprtDef.find(a_pOprt.Get()->GetIdent()) == m_PostOprtDef.end()) {
+					// Operator is not added yet, add it.
+					a_pOprt.Get()->SetParent(this);
+					m_PostOprtDef[a_pOprt.Get()->GetIdent()] = ptr_tok_type(a_pOprt.Get());
+				}
+				else {
+			;//		throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_pOprt.Get()->GetIdent()));
+				}
 			}
 
-			void CodaScriptMUPExpressionParser::DefineInfixOprt( IOprtInfix *a_pCallback )
+			void CodaScriptMUPExpressionParser::DefineInfixOprt(const TokenPtr<IOprtInfix> &a_iOprt)
 			{
-				m_InfixOprtDef[a_pCallback->GetIdent()] = ptr_tok_type(a_pCallback);
+				if (m_InfixOprtDef.find(a_iOprt.Get()->GetIdent()) == m_InfixOprtDef.end()) {
+					// Operator is not added yet, add it.
+					a_iOprt.Get()->SetParent(this);
+					m_InfixOprtDef[a_iOprt.Get()->GetIdent()] = ptr_tok_type(a_iOprt.Get());
+				}
+				else {
+			;//		throw ParserError(ErrorContext(ecFUNOPRT_DEFINED, 0, a_iOprt.Get()->GetIdent()));
+				}
 			}
 
 			const var_maptype& CodaScriptMUPExpressionParser::GetVar() const
@@ -659,14 +692,14 @@ namespace BGSEditorExtender
 
 				ContextSpecificVariableMapT::const_iterator Match = m_CSVarDef.find(EvalAgent->GetContext());
 				if (Match == m_CSVarDef.end())
-					return m_VarDef;					// return the empty collection
+					return m_varDef;					// return the empty collection
 				else
 					return Match->second;
 			}
 
 			const val_maptype& CodaScriptMUPExpressionParser::GetConst() const
 			{
-				return m_valConst;
+				return m_valDef;
 			}
 
 			const fun_maptype& CodaScriptMUPExpressionParser::GetFunDef() const
@@ -739,7 +772,7 @@ namespace BGSEditorExtender
 
 				ContextSpecificVariableMapT::const_iterator Match = m_CSVarDef.find(ParentContext);
 				if (Match == m_CSVarDef.end())
-					m_CSVarDef[ParentContext] = m_VarDef;
+					m_CSVarDef[ParentContext] = m_varDef;
 
 				for (CodaScriptVariableListT::const_iterator Itr = VariableList.begin(); Itr != VariableList.end(); Itr++)
 				{
@@ -829,6 +862,15 @@ namespace BGSEditorExtender
 					ByteCodeAgentStackOperator Prolog(this, CompiledByteCode, EvaluationAgent);
 
 					ptr_val_type *pStack = &CompiledByteCode->StackBuffer[0];
+					if (CompiledByteCode->RPNStack.GetSize()==0)
+					{
+						ErrorContext err;
+						err.Expr = CompiledByteCode->Tokenizer->GetExpr();
+						err.Errc = ecUNEXPECTED_EOF;
+						err.Pos  = 0;
+						throw ParserError(err);
+					}
+
 					const ptr_tok_type *pRPN = &(CompiledByteCode->RPNStack.GetData()[0]);
 
 					int sidx = -1;
@@ -844,22 +886,24 @@ namespace BGSEditorExtender
 							sidx = -1;
 							CompiledByteCode->FinalResultIndex = 0;
 							continue;
-						case cmVAR:
-							{
-								sidx++;
-								assert(sidx<(int)CompiledByteCode->StackBuffer.size());
-								pStack[sidx].Reset(static_cast<IValue*>(pTok));
-							}
-							continue;
 						case cmVAL:
 							{
+								IValue *pVal = static_cast<IValue*>(pTok);
+
 								sidx++;
 								assert(sidx<(int)CompiledByteCode->StackBuffer.size());
-								ptr_val_type &val = pStack[sidx];
-								if (val->GetCode()==cmVAR)
-									val.Reset(CompiledByteCode->Cache.CreateFromCache());
+								if (pVal->IsVariable())
+								{
+									pStack[sidx].Reset(pVal);
+								}
+								else
+								{
+									ptr_val_type &val = pStack[sidx];
+									if (val->IsVariable())
+										val.Reset(CompiledByteCode->Cache.CreateFromCache());
 
-								*val = *(static_cast<IValue*>(pTok));
+									*val = *(static_cast<IValue*>(pTok));
+								}
 							}
 							continue;
 						case  cmIC:
@@ -887,7 +931,7 @@ namespace BGSEditorExtender
 								ptr_val_type &val = pStack[sidx];
 								try
 								{
-									if (val->GetCode()==cmVAR)
+									if (val->IsVariable())
 									{
 										ptr_val_type buf(CompiledByteCode->Cache.CreateFromCache());
 										pFun->Eval(buf, &val, nArgs);
@@ -898,6 +942,15 @@ namespace BGSEditorExtender
 								}
 								catch(ParserError &exc)
 								{
+									// <ibg 20130131> Not too happy about that:
+									// Multiarg functions may throw ecTOO_FEW_PARAMS from eval. I don't 
+									// want this to be converted to ecEVAL because fixed argument functions
+									// already throw ecTOO_FEW_PARAMS in case of missing parameters and two 
+									// different error codes would be inconsistent. 
+									if (exc.GetCode()==ecTOO_FEW_PARAMS || exc.GetCode()==ecDOMAIN_ERROR || exc.GetCode()==ecOVERFLOW)
+										throw;
+									// </ibg>
+
 									ErrorContext err;
 									err.Expr = CompiledByteCode->Tokenizer->GetExpr();
 									err.Ident = pFun->GetIdent();
@@ -911,9 +964,8 @@ namespace BGSEditorExtender
 									ErrorContext err;
 									err.Expr = CompiledByteCode->Tokenizer->GetExpr();
 									err.Ident = pFun->GetIdent();
-									err.Errc = ecEVAL;
+									err.Errc = ecMATRIX_DIMENSION_MISMATCH;
 									err.Pos = pFun->GetExprPos();
-									err.Hint = _T("Matrix dimension mismatch");
 									throw ParserError(err);
 								}
 							}
