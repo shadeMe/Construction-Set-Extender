@@ -1,15 +1,15 @@
 /** \file
-    \brief Definition of basic types used by muParserX
+	\brief Definition of basic types used by muParserX
 
 <pre>         ========= Modified by shadeMe for the BGSEditorExtenderBase project =========
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -19,10 +19,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -88,8 +88,8 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
   /** \brief Parser boolean datatype.
 
-      This must be bool! The only reason for this typedef is that I need the name bool_type
-      for a preprocessor macro definition to avoid inconsistent naming of the macro parameters.
+	  This must be bool! The only reason for this typedef is that I need the name bool_type
+	  for a preprocessor macro definition to avoid inconsistent naming of the macro parameters.
   */
   typedef bool bool_type;
 
@@ -103,8 +103,8 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   typedef string_type::value_type char_type;
 
   typedef std::basic_stringstream<char_type,
-                                  std::char_traits<char_type>,
-                                  std::allocator<char_type> > stringstream_type;
+								  std::char_traits<char_type>,
+								  std::allocator<char_type> > stringstream_type;
 
   /** \brief Type of a vector holding pointers to value reader objects. */
   typedef std::vector<IValueReader*> readervec_type;
@@ -134,7 +134,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 #endif
 
   /** \brief Type of a container that binds Callback object pointer
-             to operator identifiers. */
+			 to operator identifiers. */
 #ifdef MUP_CASEINSENSITIVE_DEFMAP
   typedef std::map<string_type, ptr_tok_type, DefMap_Key_Comparer> fun_maptype;
 #else
@@ -142,7 +142,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 #endif
 
   /** \brief Type of a container that binds Callback object pointer
-             to operator identifiers. */
+			 to operator identifiers. */
   typedef std::map<string_type, ptr_tok_type, su::pred::SortByLength<string_type> > oprt_bin_maptype;
 
   typedef std::multimap<string_type, ptr_tok_type, su::pred::SortByLength<string_type> > oprt_bin_multimap;
@@ -163,138 +163,138 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
   //------------------------------------------------------------------------------
   /** \brief Bytecode values.
-      \attention The order of the operator entries must match the order in
-                 ParserXBase::c_DefaultOprt!
+	  \attention The order of the operator entries must match the order in
+				 ParserXBase::c_DefaultOprt!
   */
   enum ECmdCode
   {
-    // The following are codes for built in binary operators
-    // apart from built in operators the user has the opportunity to
-    // add user defined operators.
-    cmBO                =  0,  ///< Operator item:  opening bracket
-    cmBC                =  1,  ///< Operator item:  closing bracket
-    cmIO                =  2,  ///< Operator item:  index operator opening
-    cmIC                =  3,  ///< Operator item:  index operator closing
-    cmARG_SEP           =  4,  ///< Operator item:  comma
-    cmIF                =  5,  ///< Ternary if then else operator
-    cmELSE              =  6,  ///< Ternary if then else operator
-    cmENDIF             =  7,  ///< Ternary if then else operator
-    cmJMP               =  8,  ///< Reserved for future use
-    cmVAR               =  9,  ///< variable item
-    cmVAL               = 10,  ///< value item
-    cmFUNC              = 11,  ///< Code for a function item
-    cmOPRT_BIN          = 12,  ///< Binary operator
-    cmOPRT_INFIX        = 13,  ///< Infix operator
-    cmOPRT_POSTFIX      = 14,  ///< Postfix operator
-    cmEOE               = 15,  ///< End of expression
+	// The following are codes for built in binary operators
+	// apart from built in operators the user has the opportunity to
+	// add user defined operators.
+	cmBO                =  0,  ///< Operator item:  opening bracket
+	cmBC                =  1,  ///< Operator item:  closing bracket
+	cmIO                =  2,  ///< Operator item:  index operator opening
+	cmIC                =  3,  ///< Operator item:  index operator closing
+	cmARG_SEP           =  4,  ///< Operator item:  comma
+	cmIF                =  5,  ///< Ternary if then else operator
+	cmELSE              =  6,  ///< Ternary if then else operator
+	cmENDIF             =  7,  ///< Ternary if then else operator
+	cmJMP               =  8,  ///< Reserved for future use
+	cmVAR               =  9,  ///< variable item
+	cmVAL               = 10,  ///< value item
+	cmFUNC              = 11,  ///< Code for a function item
+	cmOPRT_BIN          = 12,  ///< Binary operator
+	cmOPRT_INFIX        = 13,  ///< Infix operator
+	cmOPRT_POSTFIX      = 14,  ///< Postfix operator
+	cmEOE               = 15,  ///< End of expression
 
-    // The following codes are reserved in case i will ever turn this
-    // into a scripting language
-    cmSCRIPT_GOTO       = 16,  ///< Reserved for future use
-    cmSCRIPT_LABEL      = 17,  ///< Reserved for future use
-    cmSCRIPT_FOR        = 18,  ///< Reserved for future use
-    cmSCRIPT_IF         = 19,  ///< Reserved for future use
-    cmSCRIPT_ELSE       = 20,  ///< Reserved for future use
-    cmSCRIPT_ELSEIF     = 21,  ///< Reserved for future use
-    cmSCRIPT_ENDIF      = 22,  ///< Reserved for future use
-    cmSCRIPT_NEWLINE    = 23,  ///< Newline
-    cmSCRIPT_FUNCTION   = 24,  ///< Reserved for future use
+	// The following codes are reserved in case i will ever turn this
+	// into a scripting language
+	cmSCRIPT_GOTO       = 16,  ///< Reserved for future use
+	cmSCRIPT_LABEL      = 17,  ///< Reserved for future use
+	cmSCRIPT_FOR        = 18,  ///< Reserved for future use
+	cmSCRIPT_IF         = 19,  ///< Reserved for future use
+	cmSCRIPT_ELSE       = 20,  ///< Reserved for future use
+	cmSCRIPT_ELSEIF     = 21,  ///< Reserved for future use
+	cmSCRIPT_ENDIF      = 22,  ///< Reserved for future use
+	cmSCRIPT_NEWLINE    = 23,  ///< Newline
+	cmSCRIPT_FUNCTION   = 24,  ///< Reserved for future use
 
-    // misc codes
-    cmUNKNOWN           = 25,  ///< uninitialized item
-    cmCOUNT             = 26   ///< Dummy entry for counting the enum values
+	// misc codes
+	cmUNKNOWN           = 25,  ///< uninitialized item
+	cmCOUNT             = 26   ///< Dummy entry for counting the enum values
   }; // ECmdCode
 
   //------------------------------------------------------------------------------
   /** \brief Strings assigned to the enum codes of ECmdCode.
 
-      Used for debugging purposes only.
+	  Used for debugging purposes only.
   */
   extern const char_type *g_sCmdCode[];
 
   //------------------------------------------------------------------------------
   enum EPackages
   {
-    pckCOMMON          = 1 << 0,
-    pckUNIT            = 1 << 1,
-    pckCOMPLEX         = 1 << 2,
-    pckNON_COMPLEX     = 1 << 3,
-    pckSTRING          = 1 << 4,
-    pckMATRIX          = 1 << 5,
-    pckALL_COMPLEX     = pckCOMMON | pckCOMPLEX | pckSTRING | pckUNIT | pckMATRIX,
-    pckALL_NON_COMPLEX = pckCOMMON | pckNON_COMPLEX | pckSTRING | pckUNIT | pckMATRIX
+	pckCOMMON          = 1 << 0,
+	pckUNIT            = 1 << 1,
+	pckCOMPLEX         = 1 << 2,
+	pckNON_COMPLEX     = 1 << 3,
+	pckSTRING          = 1 << 4,
+	pckMATRIX          = 1 << 5,
+	pckALL_COMPLEX     = pckCOMMON | pckCOMPLEX | pckSTRING | pckUNIT | pckMATRIX,
+	pckALL_NON_COMPLEX = pckCOMMON | pckNON_COMPLEX | pckSTRING | pckUNIT | pckMATRIX
   };
 
   //------------------------------------------------------------------------------
   /** \brief Syntax codes.
 
-    The syntax codes control the syntax check done during the first time parsing of
-    the expression string. They are flags that indicate which tokens are allowed next
-    if certain tokens are identified.
+	The syntax codes control the syntax check done during the first time parsing of
+	the expression string. They are flags that indicate which tokens are allowed next
+	if certain tokens are identified.
   */
   enum ESynCodes
   {
-    noBO      = 1 <<  0,  ///< to avoid i.e. "cos(7)("
-    noBC      = 1 <<  1,  ///< to avoid i.e. "sin)" or "()"
-    noIO      = 1 <<  2,  ///< No opening bracket "["
-    noIC      = 1 <<  3,  ///< No closing bracket "]"
-    noVAL     = 1 <<  4,  ///< to avoid i.e. "tan 2" or "sin(8)3.14"
-    noVAR     = 1 <<  5,  ///< to avoid i.e. "sin a" or "sin(8)a"
-    noCOMMA   = 1 <<  6,  ///< to avoid i.e. ",," or "+," ...
-    noFUN     = 1 <<  7,  ///< to avoid i.e. "sqrt cos" or "(1)sin"
-    noOPT     = 1 <<  8,  ///< to avoid i.e. "(+)"
-    noPFX     = 1 <<  9,  ///< to avoid i.e. "(5!!)" "sin!"
-    noIFX     = 1 << 10,  ///< to avoid i.e. "++4" "!!4"
-    noEND     = 1 << 11,  ///< to avoid unexpected end of expression
-    noIF      = 1 << 12,
-    noELSE    = 1 << 13,
-    noNEWLINE = 1 << 14,  ///< to avoid i.e. "a+\nb" or "sin(\na)"
+	noBO      = 1 <<  0,  ///< to avoid i.e. "cos(7)("
+	noBC      = 1 <<  1,  ///< to avoid i.e. "sin)" or "()"
+	noIO      = 1 <<  2,  ///< No opening bracket "["
+	noIC      = 1 <<  3,  ///< No closing bracket "]"
+	noVAL     = 1 <<  4,  ///< to avoid i.e. "tan 2" or "sin(8)3.14"
+	noVAR     = 1 <<  5,  ///< to avoid i.e. "sin a" or "sin(8)a"
+	noCOMMA   = 1 <<  6,  ///< to avoid i.e. ",," or "+," ...
+	noFUN     = 1 <<  7,  ///< to avoid i.e. "sqrt cos" or "(1)sin"
+	noOPT     = 1 <<  8,  ///< to avoid i.e. "(+)"
+	noPFX     = 1 <<  9,  ///< to avoid i.e. "(5!!)" "sin!"
+	noIFX     = 1 << 10,  ///< to avoid i.e. "++4" "!!4"
+	noEND     = 1 << 11,  ///< to avoid unexpected end of expression
+	noIF      = 1 << 12,
+	noELSE    = 1 << 13,
+	noNEWLINE = 1 << 14,  ///< to avoid i.e. "a+\nb" or "sin(\na)"
 
-    sfSTART_OF_LINE = noOPT | noBC | noPFX | noCOMMA | noIO | noIC | noIF | noELSE,
-    sfALLOW_NONE    = ~0        ///< All of he above flags set
+	sfSTART_OF_LINE = noOPT | noBC | noPFX | noCOMMA | noIO | noIC | noIF | noELSE,
+	sfALLOW_NONE    = ~0        ///< All of he above flags set
   };
 
   //------------------------------------------------------------------------------
   /** \brief Binary operator associativity values. */
   enum EOprtAsct
   {
-    oaNONE  = 0,
-    oaLEFT  = 1,
-    oaRIGHT = 2
+	oaNONE  = 0,
+	oaLEFT  = 1,
+	oaRIGHT = 2
   };
 
   //------------------------------------------------------------------------------
   /** \brief Parser operator precedence values.
 
-    These are predefined values for the operator precedence.
+	These are predefined values for the operator precedence.
   */
   enum EOprtPrecedence
   {
-    // assignment operators
-    prASSIGN       = -1,
+	// assignment operators
+	prASSIGN       = -1,
 
-    // if-then-else
-    prIF_THEN_ELSE =  0,
+	// if-then-else
+	prIF_THEN_ELSE =  0,
 
-    // binary operators
-    prLOGIC_OR     =  1,
-    prLOGIC_AND    =  2,
-    prBIT_OR       =  3,
-    prBIT_AND      =  4,
+	// binary operators
+	prLOGIC_OR     =  1,
+	prLOGIC_AND    =  2,
+	prBIT_OR       =  3,
+	prBIT_AND      =  4,
 
-    prRELATIONAL1  =  5, ///< For "==", "!="
-    prRELATIONAL2  =  6, ///< Relational operators "<", "<=", ">", ">="
-    prSHIFT        =  7, ///< Shift operators "<<", ">>"
+	prRELATIONAL1  =  5, ///< For "==", "!="
+	prRELATIONAL2  =  6, ///< Relational operators "<", "<=", ">", ">="
+	prSHIFT        =  7, ///< Shift operators "<<", ">>"
 
-    prCOLON        =  8, ///< Colon operator
+	prCOLON        =  8, ///< Colon operator
 
-    prADD_SUB      =  9, ///< addition
-    prMUL_DIV      = 10, ///< multiplication/division
-    prPOW          = 11, ///< power operator priority (highest)
+	prADD_SUB      =  9, ///< addition
+	prMUL_DIV      = 10, ///< multiplication/division
+	prPOW          = 11, ///< power operator priority (highest)
 
-    // infix operators
-    prINFIX        = 10, ///< Signs have a higher priority than ADD_SUB, but lower than power operator
-    prPOSTFIX      = 10  ///< Postfix operator priority (currently unused)
+	// infix operators
+	prINFIX        = 10, ///< Signs have a higher priority than ADD_SUB, but lower than power operator
+	prPOSTFIX      = 10  ///< Postfix operator priority (currently unused)
   };
 
 #if defined(_UNICODE)
@@ -303,34 +303,34 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   /** \brief Encapsulate wcout. */
   inline std::wostream& console()
   {
-    return std::wcout;
+	return std::wcout;
   }
 
   //------------------------------------------------------------------------------
   /** \brief Encapsulate cin. */
   inline std::wistream& console_in()
   {
-    return std::wcin;
+	return std::wcin;
   }
 
 #else
 
   /** \brief Encapsulate cout.
 
-    Used for supporting UNICODE more easily.
+	Used for supporting UNICODE more easily.
   */
   inline std::ostream& console()
   {
-    return std::cout;
+	return std::cout;
   }
 
   /** \brief Encapsulate cin.
 
-    Used for supporting UNICODE more easily.
+	Used for supporting UNICODE more easily.
   */
   inline std::istream& console_in()
   {
-    return std::cin;
+	return std::cin;
   }
 
 #endif // _UNICODE

@@ -596,15 +596,24 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
 		try
 		{
-			// iteraterate over all infix operator strings
+			// iterate over all infix operator strings
+#ifdef MUP_CASEINSENSITIVE_DEFMAP
+			SME::StringHelpers::MakeLower(sTok);
+#endif // MUP_CASEINSENSITIVE_DEFMAP
+
 			oprt_ifx_maptype::const_iterator item = m_pInfixOprtDef->begin();
 			for (item=m_pInfixOprtDef->begin(); item!=m_pInfixOprtDef->end(); ++item)
 			{
-				if (sTok.find(item->first)!=0)
+				string_type oprtId = item->first;
+#ifdef MUP_CASEINSENSITIVE_DEFMAP
+				SME::StringHelpers::MakeLower(oprtId);
+#endif // MUP_CASEINSENSITIVE_DEFMAP
+
+				if (sTok.find(oprtId)!=0)
 					continue;
 
 				a_Tok = ptr_tok_type(item->second->Clone());
-				m_nPos += (int)item->first.length();
+				m_nPos += (int)oprtId.length();
 
 				if (m_nSynFlags & noIFX)
 					throw ecUNEXPECTED_OPERATOR;
@@ -685,15 +694,24 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
 		try
 		{
-			// iteraterate over all postfix operator strings
+			// iterate over all postfix operator strings
+#ifdef MUP_CASEINSENSITIVE_DEFMAP
+			SME::StringHelpers::MakeLower(sTok);
+#endif // MUP_CASEINSENSITIVE_DEFMAP
+
 			oprt_pfx_maptype::const_iterator item;
 			for (item=m_pPostOprtDef->begin(); item!=m_pPostOprtDef->end(); ++item)
 			{
-				if (sTok.find(item->first)!=0)
+				string_type oprtId = item->first;
+#ifdef MUP_CASEINSENSITIVE_DEFMAP
+				SME::StringHelpers::MakeLower(oprtId);
+#endif // MUP_CASEINSENSITIVE_DEFMAP
+
+				if (sTok.find(oprtId)!=0)
 					continue;
 
 				a_Tok = ptr_tok_type(item->second->Clone());
-				m_nPos += (int)item->first.length();
+				m_nPos += (int)oprtId.length();
 
 				if (m_nSynFlags & noPFX)
 					throw ecUNEXPECTED_OPERATOR;
@@ -725,6 +743,10 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 			return false;
 
 		oprt_bin_multimap::reverse_iterator item;
+#ifdef MUP_CASEINSENSITIVE_DEFMAP
+		SME::StringHelpers::MakeLower(sTok);
+#endif // MUP_CASEINSENSITIVE_DEFMAP
+
 		try
 		{
 			// Note:
@@ -735,7 +757,12 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 			// Length sorting is done with ascending length so we use a reverse iterator here.
 			for (item=m_pOprtDef->rbegin(); item!=m_pOprtDef->rend(); ++item)
 			{
-				if (sTok.find(item->first)!=0)
+				string_type oprtId = item->first;
+#ifdef MUP_CASEINSENSITIVE_DEFMAP
+				SME::StringHelpers::MakeLower(oprtId);
+#endif // MUP_CASEINSENSITIVE_DEFMAP
+
+				if (sTok.find(oprtId)!=0)
 					continue;
 
 				// operator found, check if we expect one...
