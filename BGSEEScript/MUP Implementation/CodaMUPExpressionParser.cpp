@@ -21,7 +21,7 @@ namespace BGSEditorExtender
 				ICodaScriptExpressionByteCode(Source),
 				Parser(Parent),
 				Tokenizer(),
-				FinalResultIndex(0),
+				TokenPos(0),
 				RPNStack(),
 				StackBuffer(),
 				Cache()
@@ -43,32 +43,32 @@ namespace BGSEditorExtender
 			}
 
 			//------------------------------------------------------------------------------
-			const char_type *g_sCmdCode[] = { _T("BRCK. OPEN     "),
-				_T("BRCK. CLOSE    "),
-				_T("IDX OPEN       "),
-				_T("IDX CLOSE      "),
-				_T("ARG_SEP        "),
-				_T("IF             "),
-				_T("ELSE           "),
-				_T("ENDIF          "),
-				_T("JMP            "),
-				_T("VAR            "),
-				_T("VAL            "),
-				_T("FUNC           "),
-				_T("OPRT_BIN       "),
-				_T("OPRT_IFX       "),
-				_T("OPRT_PFX       "),
-				_T("END            "),
-				_T("SCRIPT_GOTO    "),
-				_T("SCRIPT_LABEL   "),
-				_T("SCRIPT_FOR     "),
-				_T("SCRIPT_IF      "),
-				_T("SCRIPT_ELSE    "),
-				_T("SCRIPT_ELSEIF  "),
-				_T("SCRIPT_ENDIF   "),
-				_T("SCRIPT_NEWLINE "),
-				_T("SCRIPT_FUNCTION"),
-				_T("UNKNOWN        ") };
+			const char_type *g_sCmdCode[] = { _T("BRCK. OPEN  "),
+				_T("BRCK. CLOSE "),
+				_T("IDX OPEN    "),
+				_T("IDX CLOSE   "),
+				_T("ARG_SEP     "),
+				_T("IF          "),
+				_T("ELSE        "),
+				_T("ENDIF       "),
+				_T("JMP         "),
+				_T("VAL         "),
+				_T("FUNC        "),
+				_T("OPRT_BIN    "),
+				_T("OPRT_IFX    "),
+				_T("OPRT_PFX    "),
+				_T("END         "),
+				_T("SCRIPT_ENDL "),
+				_T("SCRIPT_CMT  "),
+				_T("SCRIPT_GOTO "),
+				_T("SCRIPT_LABEL"),
+				_T("SCRIPT_FOR  "),
+				_T("SCRIPT_IF   "),
+				_T("SCRIPT_ELSE "),
+				_T("SCRIPT_ELIF "),
+				_T("SCRIPT_ENDIF"),
+				_T("SCRIPT_FUNC "),
+				_T("UNKNOWN     ") };
 
 			CodaScriptMUPExpressionParser::ByteCodeAgentStackOperator::ByteCodeAgentStackOperator( CodaScriptMUPExpressionParser* Parent,
 																								CodaScriptMUPParserByteCode* ByteCode,
@@ -156,7 +156,7 @@ namespace BGSEditorExtender
 				throw ParserError(err);
 			}
 
-			void CodaScriptMUPExpressionParser::ApplyFunc( Stack<ptr_tok_type> &a_stOpt, Stack<ptr_val_type> &a_stVal, int a_iArgCount ) const
+			void CodaScriptMUPExpressionParser::ApplyFunc( Stack<ptr_tok_type> &a_stOpt, int a_iArgCount ) const
 			{
 				if (a_stOpt.empty())
 					return;
@@ -168,56 +168,13 @@ namespace BGSEditorExtender
 				ICallback *pFun = tok->AsICallback();
 
 				int iArgCount = (pFun->GetArgc()>=0) ? pFun->GetArgc() : a_iArgCount;
-				int iOffset = a_stVal.size() - iArgCount;
-				MUP_ASSERT(iOffset>=0);
+				pFun->SetNumArgsPresent(iArgCount);
 
-				// The parameter stack may be empty since functions may not
-				// have a parameter. They do always have a return value though.
-				// If the param stack is empty create an entry for the function
-				// return value.
-				if (iArgCount==0)
-					a_stVal.push(ptr_val_type(new CodaScriptMUPValue()));
-
-				MUP_ASSERT((std::size_t)iOffset<a_stVal.size());
-				ptr_val_type *pArg = a_stVal.get_data() + iOffset;
-
-				try
-				{
-					// Make sure to pass on a volatile flag to the function result
-					bool bResultIsVolatile = false;
-					for (int i=0; i<iArgCount && bResultIsVolatile==false; ++i)
-					{
-						if (pArg[i]->IsFlagSet(IToken::flVOLATILE))
-							bResultIsVolatile = true;
-					}
-
-					// Instead of evaluating the function merely a dummy value of the same type as the function return value
-					// is created
-					*pArg = ptr_val_type(new CodaScriptMUPValue());
-					pFun->SetNumArgsPresent(iArgCount);
-
-					if (bResultIsVolatile)
-						(*pArg)->AddFlags(IToken::flVOLATILE);
-
-					ByteCode->RPNStack.Add(tok);
-				}
-				catch(ParserError &e)
-				{
-					ErrorContext &err = e.GetContext();
-					err.Pos   = ByteCode->Tokenizer->GetPos();
-					err.Expr  = ByteCode->Tokenizer->GetExpr();
-
-					if (err.Ident.empty())
-						err.Ident = pFun->GetIdent();
-
-					throw;
-				}
-
-				if (iArgCount>0)
-					a_stVal.pop(iArgCount-1); // remove the arguments
+				ByteCode->TokenPos -= (iArgCount - 1);
+				ByteCode->RPNStack.Add(tok);
 			}
 
-			void CodaScriptMUPExpressionParser::ApplyIfElse( Stack<ptr_tok_type> &a_stOpt, Stack<ptr_val_type> &a_stVal ) const
+			void CodaScriptMUPExpressionParser::ApplyIfElse( Stack<ptr_tok_type> &a_stOpt ) const
 			{
 				CodaScriptMUPParserByteCode* ByteCode = GetCurrentByteCode();
 				SME_ASSERT(ByteCode && ByteCode->Tokenizer.get());
@@ -225,32 +182,21 @@ namespace BGSEditorExtender
 				while (a_stOpt.size() && a_stOpt.top()->GetCode()==cmELSE)
 				{
 					MUP_ASSERT(a_stOpt.size()>0);
-					MUP_ASSERT(a_stVal.size()>=3);
+					MUP_ASSERT(ByteCode->TokenPos>=3);
 					MUP_ASSERT(a_stOpt.top()->GetCode()==cmELSE);
-
-					// it then else is a ternary operator Pop all three values from the value
-					// stack and just return the right value
-					ptr_val_type vVal2 = a_stVal.pop();
-					ptr_val_type vVal1 = a_stVal.pop();
-					ptr_val_type bExpr = a_stVal.pop();
-
-					// Push a dummy value of the correct type
-					a_stVal.push(ptr_val_type(new CodaScriptMUPValue(/*cType*/)));
-
-					// Pass on volatile flags
-					if (vVal1->IsFlagSet(IToken::flVOLATILE) || vVal2->IsFlagSet(IToken::flVOLATILE))
-						a_stVal.top()->AddFlags(IToken::flVOLATILE);
-
+					
 					ptr_tok_type opElse = a_stOpt.pop();
 					ptr_tok_type opIf = a_stOpt.pop();
 					MUP_ASSERT(opElse->GetCode()==cmELSE)
 					MUP_ASSERT(opIf->GetCode()==cmIF)
 
+					// If then else hat 3 argumente und erzeugt einen rückgabewert (3-1=2)
+					ByteCode->TokenPos -= 2;
 					ByteCode->RPNStack.Add(ptr_tok_type(new TokenIfThenElse(cmENDIF)));
 				}
 			}
 
-			void CodaScriptMUPExpressionParser::ApplyRemainingOprt( Stack<ptr_tok_type> &a_stOpt, Stack<ptr_val_type> &a_stVal ) const
+			void CodaScriptMUPExpressionParser::ApplyRemainingOprt( Stack<ptr_tok_type> &a_stOpt ) const
 			{
 				while (a_stOpt.size() &&
 					a_stOpt.top()->GetCode() != cmBO &&
@@ -263,11 +209,11 @@ namespace BGSEditorExtender
 					{
 					case  cmOPRT_INFIX:
 					case  cmOPRT_BIN:
-						ApplyFunc(a_stOpt, a_stVal, 2);
+						ApplyFunc(a_stOpt, 2);
 						break;
 
 					case  cmELSE:
-						ApplyIfElse(a_stOpt, a_stVal);
+						ApplyIfElse(a_stOpt);
 						break;
 
 					default:
@@ -295,17 +241,12 @@ namespace BGSEditorExtender
 
 				// The Stacks take the ownership over the tokens
 				Stack<ptr_tok_type> stOpt;
-				Stack<ptr_val_type> stVal;
 				Stack<ICallback*>   stFunc;
 				Stack<int>  stArgCount;
 				Stack<int>  stIdxCount;
 				ptr_tok_type pTok, pTokPrev;
 				CodaScriptMUPValue val;
-
-				// The outermost counter counts the number of seperated items
-				// such as in "a=10,b=20,c=c+a"
-				stArgCount.push(1);
-
+				
 				for(;;)
 				{
 					pTokPrev = pTok;
@@ -316,25 +257,8 @@ namespace BGSEditorExtender
 					{
 					case  cmVAL:
 						{
-							IValue *pVal = pTok->AsIValue();
-							if (stFunc.empty() && pVal->GetType()=='n')
-							{
-								ErrorContext err;
-								err.Errc  = ecUNEXPECTED_PARENS;
-								err.Ident = _T(")");
-								err.Pos   = pTok->GetExprPos();
-								throw ParserError(err);
-							}
-
-							stVal.push( ptr_val_type(pVal) );
-
-							// Arrays can't be added directly to the reverse polish notation
-							// since there may be an index operator following next...
+							OutByteCode->TokenPos++;
 							OutByteCode->RPNStack.Add(pTok);
-
-							// Apply infix operator if existent
-							if (stOpt.size() && stOpt.top()->GetCode()==cmOPRT_INFIX)
-								ApplyFunc(stOpt, stVal, 1);
 						}
 						break;
 
@@ -347,7 +271,7 @@ namespace BGSEditorExtender
 							if (pTokPrev.Get()!=NULL && pTokPrev->GetCode()==cmIO)
 								--stArgCount.top();
 
-							ApplyRemainingOprt(stOpt, stVal);
+							ApplyRemainingOprt(stOpt);
 
 							// if opt is "]" and opta is "[" the bracket content has been evaluated.
 							// Now its time to check if there is either a function or a sign pending.
@@ -361,7 +285,6 @@ namespace BGSEditorExtender
 								// Find out how many dimensions were used in the index operator.
 								//
 								std::size_t iArgc = stArgCount.pop();
-
 								stOpt.pop(); // Take opening bracket from stack
 
 								IOprtIndex *pOprtIndex = pTok->AsIOprtIndex();
@@ -371,15 +294,8 @@ namespace BGSEditorExtender
 								OutByteCode->RPNStack.Add(pTok);
 
 								// Pop the index values from the stack
-								MUP_ASSERT(stVal.size()>=iArgc+1);
-								for (std::size_t i=0; i<iArgc; ++i)
-									stVal.pop();
-
-								// Now i would need to pop the topmost value from the stack, apply the index
-								// opertor and push the result back to the stack. But here we are just creating the
-								// RPN and are working with dummy values anyway so i just mark the topmost value as
-								// volatile and leave it were it is. The real index logic is in the RPN evaluator...
-								stVal.top()->AddFlags(IToken::flVOLATILE);
+								MUP_ASSERT(OutByteCode->TokenPos>=iArgc+1);
+								OutByteCode->TokenPos -= iArgc;
 							} // if opening index bracket is on top of operator stack
 						}
 						break;
@@ -393,7 +309,7 @@ namespace BGSEditorExtender
 							if (pTokPrev.Get()!=NULL && pTokPrev->GetCode()==cmBO)
 								--stArgCount.top();
 
-							ApplyRemainingOprt(stOpt, stVal);
+							ApplyRemainingOprt(stOpt);
 
 							// if opt is ")" and opta is "(" the bracket content has been evaluated.
 							// Now its time to check if there is either a function or a sign pending.
@@ -424,32 +340,32 @@ namespace BGSEditorExtender
 								if (iArgc < pFun->GetArgc())
 									Error(ecTOO_FEW_PARAMS, pTok->GetExprPos(), pFun);
 
-								// Evaluate the function
-								ApplyFunc(stOpt, stVal, iArgc);
-
-								// Apply an infix operator, if present
-								if (stOpt.size() && stOpt.top()->GetCode()==cmOPRT_INFIX)
-									ApplyFunc(stOpt, stVal, 1);
+								// Apply function, if present
+								if (stOpt.size() && 
+									stOpt.top()->GetCode()!=cmOPRT_INFIX && 
+									stOpt.top()->GetCode()!=cmOPRT_BIN)
+								{
+									ApplyFunc(stOpt, iArgc);
+								}
 							}
 						}
 						break;
 
 					case  cmELSE:
-						ApplyRemainingOprt(stOpt, stVal);
+						ApplyRemainingOprt(stOpt);
 						OutByteCode->RPNStack.Add(pTok);
 						stOpt.push(pTok);
 						break;
 
 					case  cmSCRIPT_NEWLINE:
 						{
-							ApplyRemainingOprt(stOpt, stVal);
+							ApplyRemainingOprt(stOpt);
 
 							// Value stack plätten
 							// Stack der RPN um die Anzahl im stack enthaltener Werte zurück setzen
-							int n = stVal.size();
-							OutByteCode->RPNStack.AddNewline(pTok, n);
-							stVal.clear();
+							OutByteCode->RPNStack.AddNewline(pTok, OutByteCode->TokenPos);
 							stOpt.clear();
+							OutByteCode->TokenPos = 0;
 						}
 						break;
 
@@ -459,14 +375,11 @@ namespace BGSEditorExtender
 
 						++stArgCount.top();
 
-						//if (stVal.size()) // increase argument counter
-						//  stArgCount.top()++;
-
-						ApplyRemainingOprt(stOpt, stVal);
+						ApplyRemainingOprt(stOpt);
 						break;
 
 					case  cmEOE:
-						ApplyRemainingOprt(stOpt, stVal);
+						ApplyRemainingOprt(stOpt);
 						OutByteCode->RPNStack.Finalize();
 						break;
 
@@ -504,7 +417,7 @@ namespace BGSEditorExtender
 
 								// apply the operator now
 								// (binary operators are identic to functions with two arguments)
-								ApplyFunc(stOpt, stVal, 2);
+								ApplyFunc(stOpt, 2);
 							} // while ( ... )
 
 							if (pTok->GetCode()==cmIF)
@@ -519,22 +432,8 @@ namespace BGSEditorExtender
 						//
 					case  cmOPRT_POSTFIX:
 						{
-							MUP_ASSERT(stVal.size());
-
-							ptr_val_type &pVal(stVal.top());
-							try
-							{
-								// place a dummy return value into the value stack, do not
-								// evaluate pOprt (this is important for lazy evaluation!)
-								// The only place where evaluation takes place is the RPN
-								// engine!
-								pVal = ptr_val_type(new CodaScriptMUPValue());
-								OutByteCode->RPNStack.Add(pTok);
-							}
-							catch(ParserError &)
-							{
-								throw;
-							}
+							MUP_ASSERT(OutByteCode->TokenPos);
+							OutByteCode->RPNStack.Add(pTok);
 						}
 						break;
 
@@ -580,8 +479,10 @@ namespace BGSEditorExtender
 						break;
 				} // for (all tokens)
 
-				OutByteCode->FinalResultIndex = stArgCount.top()-1;
-		//		MUP_ASSERT(stVal.size());
+				if (OutByteCode->TokenPos > 1)
+				{
+					Error(ecUNEXPECTED_COMMA, -1);
+				}
 			}
 
 			CodaScriptMUPExpressionParser::CodaScriptMUPExpressionParser() :
@@ -884,7 +785,6 @@ namespace BGSEditorExtender
 						{
 						case cmSCRIPT_NEWLINE:
 							sidx = -1;
-							CompiledByteCode->FinalResultIndex = 0;
 							continue;
 						case cmVAL:
 							{
@@ -988,8 +888,7 @@ namespace BGSEditorExtender
 
 					if (Result)
 					{
-						SME_ASSERT(CompiledByteCode->FinalResultIndex != -1);
-						*Result = *pStack[CompiledByteCode->FinalResultIndex]->GetStore();
+						*Result = *pStack[0]->GetStore();
 					}
 				}
 				catch (ParserError& E)

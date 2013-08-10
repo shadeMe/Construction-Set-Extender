@@ -33,7 +33,7 @@ namespace BGSEditorExtender
 				CodaScriptMUPExpressionParser*	Parser;
 				std::auto_ptr<TokenReader>		Tokenizer;
 
-				mutable int						FinalResultIndex;	///< Index of the final result in the stack array.
+				mutable int						TokenPos;
 				mutable RPN						RPNStack;			///< reverse polish notation
 				mutable val_vec_type			StackBuffer;
 				mutable ValueCache				Cache;				///< A cache for recycling value items instead of deleting them
@@ -77,7 +77,7 @@ namespace BGSEditorExtender
 				oprt_pfx_maptype								m_PostOprtDef;		///< Postfix operator callbacks
 				oprt_ifx_maptype								m_InfixOprtDef;		///< Infix operator callbacks.
 				oprt_bin_maptype								m_OprtDef;			///< Binary operator callbacks
-				val_maptype										m_valDef;         ///< Definition of parser constants
+				val_maptype										m_valDef;			///< Definition of parser constants
 				val_vec_type									m_valDynVarShadow;  ///< Value objects referenced by variables created at parser runtime
 				var_maptype										m_varDef;           ///< User defined variables. Deprecated, always empty
 				ContextSpecificVariableMapT						m_CSVarDef;			///< Maps execution contexts to a MUP var_maptype variable map
@@ -91,9 +91,9 @@ namespace BGSEditorExtender
 
 				void											Error(EErrorCodes a_iErrc, int a_iPos = -1,	const IToken *a_pTok = 0) const;
 
-				void											ApplyFunc(Stack<ptr_tok_type> &a_stOpt, Stack<ptr_val_type> &a_stVal, int a_iArgCount) const;
-				void											ApplyIfElse(Stack<ptr_tok_type> &a_stOpt, Stack<ptr_val_type> &a_stVal) const;
-				void											ApplyRemainingOprt(Stack<ptr_tok_type> &a_stOpt, Stack<ptr_val_type> &a_stVal) const;
+				void											ApplyFunc(Stack<ptr_tok_type> &a_stOpt, int a_iArgCount) const;
+				void											ApplyIfElse(Stack<ptr_tok_type> &a_stOpt) const;
+				void											ApplyRemainingOprt(Stack<ptr_tok_type> &a_stOpt) const;
 
 				void											CheckName(const string_type &a_sName, const string_type &a_CharSet) const;
 				void											CreateRPN(CodaScriptMUPParserByteCode* OutByteCode) const;

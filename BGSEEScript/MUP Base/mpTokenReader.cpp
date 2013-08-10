@@ -268,10 +268,38 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 	}
 
 	//---------------------------------------------------------------------------
+	void TokenReader::SkipCommentsAndWhitespaces()
+	{
+		bool bSkip = true;
+		while (m_nPos<(int)m_sExpr.length() && bSkip)
+		{
+			switch(m_sExpr[m_nPos])
+			{
+				// skip comments
+			case  '#':
+				{
+					std::size_t i = m_sExpr.find_first_of('\n', m_nPos+1);
+					m_nPos = (i!=string_type::npos) ? i : m_sExpr.length();
+				}
+				break;
+
+				// skip whitespaces
+			case ' ':
+				++m_nPos;
+				break;
+
+			default:
+				bSkip = false;
+			} // switch 
+		} // while comment or whitespace
+	}
+
+	//---------------------------------------------------------------------------
 	/** \brief Read the next token from the string. */
 	ptr_tok_type TokenReader::ReadNextToken()
 	{
 		assert(m_pParser);
+		SkipCommentsAndWhitespaces();
 		const char_type *szFormula = m_sExpr.c_str();
 
 		while (szFormula[m_nPos]==' ')
@@ -881,7 +909,8 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
 				m_nPos = iEnd;
 				m_nSynFlags = noVAL | noVAR | noFUN | noBO | noIFX;
-				a_Tok = item->second;
+		//		a_Tok = item->second;
+				a_Tok = ptr_tok_type(item->second->Clone());
 				a_Tok->SetIdent(sTok);
 				m_UsedVar[item->first] = item->second;  // Add variable to used-var-list
 				return true;
@@ -896,7 +925,8 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
 				m_nPos = iEnd;
 				m_nSynFlags = noVAL | noVAR | noFUN | noBO | noIFX | noIO;
-				a_Tok = item->second;
+		//		a_Tok = item->second;
+				a_Tok = ptr_tok_type(item->second->Clone());
 				a_Tok->SetIdent(sTok);
 				return true;
 			}

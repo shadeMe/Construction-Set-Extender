@@ -1,16 +1,16 @@
 /** \file
-    \brief Definition of the token reader used to break the expression string up
-           into tokens.
+	\brief Definition of the token reader used to break the expression string up
+		   into tokens.
 
 <pre>         ========= Modified by shadeMe for the BGSEditorExtenderBase project =========
-               __________                                 ____  ___
-    _____  __ _\______   \_____ _______  ______ __________\   \/  /
+			   __________                                 ____  ___
+	_____  __ _\______   \_____ _______  ______ __________\   \/  /
    /     \|  |  \     ___/\__  \\_  __ \/  ___// __ \_  __ \     /
   |  Y Y  \  |  /    |     / __ \|  | \/\___ \\  ___/|  | \/     \
   |__|_|  /____/|____|    (____  /__|  /____  >\___  >__| /___/\  \
-        \/                     \/           \/     \/           \_/
-                                       Copyright (C) 2012 Ingo Berg
-                                       All rights reserved.
+		\/                     \/           \/     \/           \_/
+									   Copyright (C) 2012 Ingo Berg
+									   All rights reserved.
 
   muParserX - A C++ math parser library with array and string support
   Copyright (c) 2012, Ingo Berg
@@ -20,10 +20,10 @@
   modification, are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+	 this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+	 this list of conditions and the following disclaimer in the documentation
+	 and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -63,72 +63,73 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
 
   public:
 
-    typedef std::vector<ptr_tok_type> token_buf_type;
+	typedef std::vector<ptr_tok_type> token_buf_type;
 
   private:
 
-    TokenReader(const TokenReader &a_Reader);
-    TokenReader& operator=(const TokenReader &a_Reader);
-    void Assign(const TokenReader &a_Reader);
-    void DeleteValReader();
-    void SetParent(CodaScriptMUPExpressionParser *a_pParent);
+	TokenReader(const TokenReader &a_Reader);
+	TokenReader& operator=(const TokenReader &a_Reader);
+	void Assign(const TokenReader &a_Reader);
+	void DeleteValReader();
+	void SetParent(CodaScriptMUPExpressionParser *a_pParent);
 
-    int ExtractToken(const char_type *a_szCharSet, string_type &a_sTok, int a_iPos) const;
+	int ExtractToken(const char_type *a_szCharSet, string_type &a_sTok, int a_iPos) const;
 
-    bool IsBuiltIn(ptr_tok_type &t);
-    bool IsEOF(ptr_tok_type &t);
-    bool IsNewline(ptr_tok_type &a_Tok);
-    bool IsNewLine(ptr_tok_type &t);
-    bool IsInfixOpTok(ptr_tok_type &t);
-    bool IsFunTok(ptr_tok_type &t);
-    bool IsPostOpTok(ptr_tok_type &t);
-    bool IsOprt(ptr_tok_type &t);
-    bool IsValTok(ptr_tok_type &t);
-    bool IsVarOrConstTok(ptr_tok_type &t);
-    bool IsUndefVarTok(ptr_tok_type &t);
-    bool IsComment();
+	void SkipCommentsAndWhitespaces();
+	bool IsBuiltIn(ptr_tok_type &t);
+	bool IsEOF(ptr_tok_type &t);
+	bool IsNewline(ptr_tok_type &a_Tok);
+	bool IsNewLine(ptr_tok_type &t);
+	bool IsInfixOpTok(ptr_tok_type &t);
+	bool IsFunTok(ptr_tok_type &t);
+	bool IsPostOpTok(ptr_tok_type &t);
+	bool IsOprt(ptr_tok_type &t);
+	bool IsValTok(ptr_tok_type &t);
+	bool IsVarOrConstTok(ptr_tok_type &t);
+	bool IsUndefVarTok(ptr_tok_type &t);
+	bool IsComment();
 
-    const ptr_tok_type& Store(const ptr_tok_type &t, int pos);
+	const ptr_tok_type& Store(const ptr_tok_type &t, int pos);
 
-    CodaScriptMUPExpressionParser *m_pParser;  ///< Pointer to the parser bound to this token reader
-    string_type m_sExpr;     ///< The expression being currently parsed
-    int  m_nPos;             ///< Current parsing position in the expression
-    int  m_nNumBra;          ///< Number of open parenthesis
-    int  m_nNumIndex;        ///< Number of open index parenthesis
-    int  m_nNumIfElse;       ///< Counter for if-then-else levels
-    int  m_nSynFlags;        ///< Flags to control the syntax flow
+	CodaScriptMUPExpressionParser *m_pParser;  ///< Pointer to the parser bound to this token reader
+	string_type m_sExpr;     ///< The expression being currently parsed
+	int  m_nPos;             ///< Current parsing position in the expression
+	int  m_nNumBra;          ///< Number of open parenthesis
+	int  m_nNumIndex;        ///< Number of open index parenthesis
+	int  m_nNumIfElse;       ///< Counter for if-then-else levels
+	int  m_nSynFlags;        ///< Flags to control the syntax flow
 
-    token_buf_type m_vTokens;
-    ECmdCode m_eLastTokCode;
+	token_buf_type m_vTokens;
+	ECmdCode m_eLastTokCode;
 
-    mutable fun_maptype  *m_pFunDef;
-    mutable oprt_bin_maptype *m_pOprtDef;
-    mutable oprt_ifx_maptype *m_pInfixOprtDef;
-    mutable oprt_pfx_maptype *m_pPostOprtDef;
-    mutable val_maptype  *m_pConstDef;
-    val_vec_type *m_pDynVarShadowValues; ///< Value items created for holding values of variables created at parser runtime
-    var_maptype  *m_pVarDef;             ///< The only non const pointer to parser internals
+	mutable fun_maptype  *m_pFunDef;
+	mutable oprt_bin_maptype *m_pOprtDef;
+	mutable oprt_ifx_maptype *m_pInfixOprtDef;
+	mutable oprt_pfx_maptype *m_pPostOprtDef;
+	mutable val_maptype  *m_pConstDef;
+	val_vec_type *m_pDynVarShadowValues; ///< Value items created for holding values of variables created at parser runtime
+	var_maptype  *m_pVarDef;             ///< The only non const pointer to parser internals
 
-    readervec_type m_vValueReader;  ///< Value token identification function
-    var_maptype m_UsedVar;
-    float_type m_fZero;             ///< Dummy value of zero, referenced by undefined variables
+	readervec_type m_vValueReader;  ///< Value token identification function
+	var_maptype m_UsedVar;
+	float_type m_fZero;             ///< Dummy value of zero, referenced by undefined variables
 
   public:
 
-    TokenReader(CodaScriptMUPExpressionParser *a_pParent);
+	TokenReader(CodaScriptMUPExpressionParser *a_pParent);
    ~TokenReader();
-    TokenReader* Clone(CodaScriptMUPExpressionParser *a_pParent) const;
+	TokenReader* Clone(CodaScriptMUPExpressionParser *a_pParent) const;
 
-    void AddValueReader(IValueReader *a_pReader);
-    void AddSynFlags(int flag);
-    int GetPos() const;
-    const string_type& GetExpr() const;
-    const var_maptype& GetUsedVar() const;
-    const token_buf_type& GetTokens() const;
-    void SetExpr(const string_type &a_sExpr);
+	void AddValueReader(IValueReader *a_pReader);
+	void AddSynFlags(int flag);
+	int GetPos() const;
+	const string_type& GetExpr() const;
+	const var_maptype& GetUsedVar() const;
+	const token_buf_type& GetTokens() const;
+	void SetExpr(const string_type &a_sExpr);
 
-    void ReInit();
-    ptr_tok_type ReadNextToken();
+	void ReInit();
+	ptr_tok_type ReadNextToken();
   }; // class TokenReader
 } } }
 

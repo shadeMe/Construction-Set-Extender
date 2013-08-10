@@ -65,7 +65,7 @@ namespace BGSEditorExtender { namespace BGSEEScript { namespace mup {
   {
     stringstream_type ss;
 
-    ss << "NEWLINE";
+    ss << g_sCmdCode[ GetCode() ];
     ss << _T(" [addr=0x") << std::hex << this << std::dec;
     ss << _T(" ; offset=") << m_nOffset;
     ss << _T("]");
