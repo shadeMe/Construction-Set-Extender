@@ -18,12 +18,19 @@ namespace BGSEditorExtender
 				CodaScriptCommandPrototypeDef(GetSecondsPassed);
 				CodaScriptCommandPrototypeDef(FormatNumber);
 				CodaScriptCommandPrototypeDef(PrintToConsole);
+				CodaScriptCommandPrototypeDef(RandomNumber);
 
 				CodaScriptCommandParamData(FormatNumber, 3)
 				{
 					{ "Format String",					ICodaScriptDataStore::kDataType_String	},
 					{ "Number",							ICodaScriptDataStore::kDataType_Numeric	},
 					{ "Interpret As Unsigned Int",		ICodaScriptDataStore::kDataType_Numeric	}
+				};
+
+				CodaScriptCommandParamData(RandomNumber, 2)
+				{
+					{ "Minimum",						ICodaScriptDataStore::kDataType_Numeric	},
+					{ "Maximum",						ICodaScriptDataStore::kDataType_Numeric	}
 				};
 
 				CodaScriptCommandHandler(Return)
@@ -143,6 +150,29 @@ namespace BGSEditorExtender
 					CodaScriptCommandExtractArgs(&Message);
 
 					BGSEECONSOLE_MESSAGE(Message);
+					return true;
+				}
+
+				CodaScriptCommandHandler(RandomNumber)
+				{
+					CodaScriptNumericDataTypeT Min = 0.0, Max = 0.0, Range = 0.0, Value = 0.0;
+
+					CodaScriptCommandExtractArgs(&Min, &Max);
+
+					if (Max < Min)
+					{
+						Range = Min - Max;
+						Value = SME::MersenneTwister::genrand_real2() * Range;
+						Value += Max;
+					}
+					else
+					{
+						Range = Max - Min;
+						Value = SME::MersenneTwister::genrand_real2() * Range;
+						Value += Min;
+					}
+
+					*Result = Value;
 					return true;
 				}
 			}

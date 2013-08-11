@@ -55,6 +55,13 @@ namespace BGSEditorExtender
 					1,
 					OneString,
 					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptCommandPrototype(RandomNumber,
+					"Rand",
+					"Returns a random number within an interval.",
+					0,
+					2,
+					ICodaScriptDataStore::kDataType_Numeric);
 			}
 		}
 	}
