@@ -916,6 +916,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_INITIALLYDISABLEDREFERENCES:
+									if (TESRenderWindow::ShowInitiallyDisabledRefs)
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1288,6 +1293,10 @@ namespace ConstructionSetExtender
 						BGSEECONSOLE->Exdent();
 #endif
 					}
+
+					break;
+				case IDC_MAINMENU_INITIALLYDISABLEDREFERENCES:
+					TESRenderWindow::ShowInitiallyDisabledRefs = (TESRenderWindow::ShowInitiallyDisabledRefs == false);
 
 					break;
 				default:

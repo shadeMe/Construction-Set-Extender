@@ -245,28 +245,7 @@ copy "$(TargetPath)" "C:\Users\shadeMe\Documents\Dropbox\CSE Once-In-Awhile'lies
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase_Resource.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEAchievements.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEConsole.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEHallOfFame.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEMain.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowPainter.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEToolBox.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEUIManager.h" />
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEWorkspaceManager.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\Functors.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI.h" />
     <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIManager.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\MemoryHandler.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\MersenneTwister.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\MiscGunk.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\SME_Prefix.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\StringHelpers.h" />
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\UIHelpers.h" />
     <ClInclude Include="..\OBSE\obse\HavokBase.h" />
     <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
     <ClInclude Include="..\OBSE\obse\HavokCollision.h" />
@@ -288,12 +267,6 @@ copy "$(TargetPath)" "C:\Users\shadeMe\Documents\Dropbox\CSE Once-In-Awhile'lies
     <ClInclude Include="..\OBSE\obse\NiRenderer.h" />
     <ClInclude Include="..\obse\obse\NiTypes.h" />
     <ClInclude Include="..\obse\obse\PluginAPI.h" />
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEChangeLogManager.h" />
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEFormUndoStack.h" />
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEGlobalClipboard.h" />
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h" />
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.h" />
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEWrappers.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />

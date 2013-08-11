@@ -408,6 +408,7 @@ BEGIN
         MENUITEM "Collision Geometry\tF4",      40189
         MENUITEM "Lea&ves\tV",                  290, CHECKED
         MENUITEM "Trees",                       40480, CHECKED
+        MENUITEM "Initially Disabled References", IDC_MAINMENU_INITIALLYDISABLEDREFERENCES
         MENUITEM SEPARATOR
         MENUITEM "&Isometric",                  40032
         MENUITEM "To&p\tT",                     40033

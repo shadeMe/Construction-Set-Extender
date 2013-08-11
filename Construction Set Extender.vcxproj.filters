@@ -19,9 +19,6 @@
     <Filter Include="Hooks">
       <UniqueIdentifier>{d8a0ecb9-e056-469e-aac0-e8eb485e99fd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utilities">
-      <UniqueIdentifier>{3edbf06c-1b58-4831-b92a-b8d339d4a486}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Components">
       <UniqueIdentifier>{38df1a7a-ab76-44e1-b352-1c9aa39613d7}</UniqueIdentifier>
     </Filter>
@@ -627,33 +624,6 @@
     <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\Functors.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\INIManager.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\MemoryHandler.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\MersenneTwister.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\MiscGunk.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\SME_Prefix.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\StringHelpers.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\SME Sundries\UIHelpers.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="Construction Set Extender_Resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
@@ -672,43 +642,7 @@
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h">
       <Filter>Components\Coda\Commands</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaDataTypes.h">
-      <Filter>Components\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaInterpreter.h">
-      <Filter>Components\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\Commands\CodaScriptCommand.h">
-      <Filter>Components\Coda</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaVM.h">
-      <Filter>Components\Coda</Filter>
-    </ClInclude>
     <ClInclude Include="CSEWorkspaceManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEAchievements.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEConsole.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEHallOfFame.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEMain.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowPainter.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEToolBox.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEUIManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEEWorkspaceManager.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEAchievements.h">
@@ -727,9 +661,6 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEUIManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEERenderWindowFlyCamera.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSERenderWindowFlyCamera.h">
@@ -771,19 +702,10 @@
     <ClInclude Include="EditorAPI\TESObjectLAND.h">
       <Filter>EditorAPI\Forms\World</Filter>
     </ClInclude>
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEGlobalClipboard.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="CSEGlobalClipboard.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSESettings.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEFormUndoStack.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEWrappers.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEWrappers.h">
@@ -792,13 +714,7 @@
     <ClInclude Include="CSEFormUndoStack.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEScript\CodaIntrinsics.h">
-      <Filter>Components\Coda</Filter>
-    </ClInclude>
     <ClInclude Include="CSEChangeLogManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\[Libraries]\BGSEditorExtenderBase\BGSEEChangeLogManager.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEAuxiliaryViewport.h">

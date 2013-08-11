@@ -174,6 +174,9 @@ namespace ConstructionSetExtender
 
 			SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
 
+			if (TESRenderWindow::ShowInitiallyDisabledRefs == false && (Object->formFlags & TESForm::kFormFlags_Disabled))
+				SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+
 			BSExtraData* xData = Object->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 			if (xData)
 			{

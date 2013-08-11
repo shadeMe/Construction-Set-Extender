@@ -211,6 +211,7 @@ public:
 	static NiFrustum					CameraFrustumBuffer;
 	static TESObjectREFR*				CurrentMouseRef;
 	static POINT						CurrentMouseCoord;
+	static bool							ShowInitiallyDisabledRefs;
 	
 	static const float					MaxLandscapeEditBrushRadius;
 };
