@@ -212,6 +212,7 @@ public:
 	static TESObjectREFR*				CurrentMouseRef;
 	static POINT						CurrentMouseCoord;
 	static bool							ShowInitiallyDisabledRefs;
+	static bool							ShowInitiallyDisabledRefChildren;
 	
 	static const float					MaxLandscapeEditBrushRadius;
 };

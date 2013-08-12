@@ -921,6 +921,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED:
+									if (TESRenderWindow::ShowInitiallyDisabledRefChildren)
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1297,6 +1302,10 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_INITIALLYDISABLEDREFERENCES:
 					TESRenderWindow::ShowInitiallyDisabledRefs = (TESRenderWindow::ShowInitiallyDisabledRefs == false);
+
+					break;
+				case IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED:
+					TESRenderWindow::ShowInitiallyDisabledRefChildren = (TESRenderWindow::ShowInitiallyDisabledRefChildren == false);
 
 					break;
 				default:

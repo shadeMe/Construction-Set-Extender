@@ -409,6 +409,7 @@ BEGIN
         MENUITEM "Lea&ves\tV",                  290, CHECKED
         MENUITEM "Trees",                       40480, CHECKED
         MENUITEM "Initially Disabled References", IDC_MAINMENU_INITIALLYDISABLEDREFERENCES
+        MENUITEM "Initially Disabled References' Children", IDC_MAINMENU_CHILDREFERENCESOFTHEDISABLED
         MENUITEM SEPARATOR
         MENUITEM "&Isometric",                  40032
         MENUITEM "To&p\tT",                     40033

@@ -42,6 +42,7 @@ NiFrustum							TESRenderWindow::CameraFrustumBuffer = {0};
 POINT								TESRenderWindow::CurrentMouseCoord = {0};
 TESObjectREFR*						TESRenderWindow::CurrentMouseRef = NULL;
 bool								TESRenderWindow::ShowInitiallyDisabledRefs = true;
+bool								TESRenderWindow::ShowInitiallyDisabledRefChildren = true;
 
 const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
 

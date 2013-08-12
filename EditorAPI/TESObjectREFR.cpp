@@ -210,3 +210,8 @@ void TESObjectREFR::ChangeCell( TESObjectCELL* Cell )
 {
 	thisVirtualCall<void>(0x1AC, this, Cell);
 }
+
+bool TESObjectREFR::GetDisabled( void ) const
+{
+	return (formFlags & kFormFlags_Disabled);
+}

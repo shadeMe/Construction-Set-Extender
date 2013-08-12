@@ -74,4 +74,5 @@ public:
 	bool						GetChildrenInvisible(void) const;
 	bool						GetFrozen(void) const;
 	float						GetAlpha(void);
+	bool						GetDisabled(void) const;
 };
