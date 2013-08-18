@@ -24,10 +24,12 @@ namespace ConstructionSetExtender
 		static UInt32 CompilerErrorOverrideHandler##hookaddr##RetnAddr = jmpaddr##;		\
 		{																	\
 		__asm	call	TESScriptCompiler::ShowMessage						\
-		__asm	mov		s_CompileResultBuffer, 0							\
+		__asm	mov		ScriptCompileResultBuffer, 0						\
 		__asm	add		esp, stackoffset									\
 		__asm	jmp		CompilerErrorOverrideHandler##hookaddr##RetnAddr	\
 		}																	\
 	}
+
+		extern UInt32						ScriptCompileResultBuffer;
 	}
 }

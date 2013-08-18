@@ -21,6 +21,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(InitializeScriptLineBufferLFLineEnds, 0x0050006A);
 		_DefineHookHdlr(ScriptCompileCheckSyntaxInvalidRef, 0x00500C6C);
 		_DefineHookHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses, 0x00502EC6);
+		_DefineHookHdlr(ScriptCompilerParseIFExpression, 0x00503005);
 
 		void PatchScriptEditorHooks(void)
 		{
@@ -32,6 +33,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(InitializeScriptLineBufferLFLineEnds).WriteJump();
 			_MemHdlr(ScriptCompileCheckSyntaxInvalidRef).WriteJump();
 			_MemHdlr(ScriptCompilerWriteByteCodeCheckSetExprParentheses).WriteJump();
+			_MemHdlr(ScriptCompilerParseIFExpression).WriteJump();
 
 			PatchCompilerErrorDetours();
 		}
@@ -164,6 +166,33 @@ namespace ConstructionSetExtender
 
 				jmp		_hhGetVar(Retn)
 			MISMATCH:
+				jmp		_hhGetVar(Error)
+			}
+		}
+
+		void __stdcall DoScriptCompilerParseIFExpressionHook(ScriptBuffer* Buffer)
+		{
+			ScriptCompileResultBuffer = 0;
+			TESScriptCompiler::ShowMessage(Buffer, "Invalid condition expression.");
+		}
+
+		#define _hhName		ScriptCompilerParseIFExpression
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0050300B);
+			_hhSetVar(Error, 0x00503283);
+			__asm
+			{
+				jz		BADEXPR
+
+				jmp		_hhGetVar(Retn)
+			BADEXPR:
+				pushad
+				push	edi
+				call	DoScriptCompilerParseIFExpressionHook
+				popad
+
+				mov		al, 1				// fix-up the result so that compilation continues
 				jmp		_hhGetVar(Error)
 			}
 		}

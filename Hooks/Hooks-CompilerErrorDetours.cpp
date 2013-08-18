@@ -9,7 +9,7 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		static UInt32								s_CompileResultBuffer = 0;	// saves the result of a compile operation so as to allow it to go on unhindered
+		UInt32								ScriptCompileResultBuffer = 0;	// saves the result of a compile operation so as to allow it to go on unhindered
 
 		_DefineNopHdlr(RidScriptErrorMessageBox, 0x004FFFEC, 20);
 		_DefineNopHdlr(RidUnknownFunctionCodeMessage, 0x0050310C, 5);
@@ -101,7 +101,7 @@ namespace ConstructionSetExtender
 				mov     [esp + 0x18], ebx
 				mov     [esp + 0x1C], bx
 
-				mov		s_CompileResultBuffer, 0
+				mov		ScriptCompileResultBuffer, 0
 				lea     edx, [esp + 0x20]
 				pushad
 				push	edx
@@ -121,7 +121,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				call	_hhGetVar(Call)
-				mov		eax, s_CompileResultBuffer
+				mov		eax, ScriptCompileResultBuffer
 
 				jmp		_hhGetVar(Retn)
 			}
@@ -133,7 +133,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x00503336);
 			__asm
 			{
-				mov		s_CompileResultBuffer, 1
+				mov		ScriptCompileResultBuffer, 1
 				pushad
 			}
 			TESScriptCompiler::AuxiliaryErrorDepot.clear();
@@ -161,7 +161,7 @@ namespace ConstructionSetExtender
 
 				jmp		_hhGetVar(Retn)
 			FAIL:
-				mov		s_CompileResultBuffer, 0
+				mov		ScriptCompileResultBuffer, 0
 				jmp		_hhGetVar(Retn)
 			}
 		}
