@@ -4223,9 +4223,15 @@ namespace ConstructionSetExtender
 			kFaceGenControl_AdvancedEditCtrl		= 2115,
 
 			kFaceGenControl_PreviewCtrl				= 2175,
+
+			kFaceGenControl_AdvancedTrackbar		= 2114,
+			kFaceGenControl_AgeTrackbar				= 2116,
+			kFaceGenControl_ComplexionTrackbar		= 2124,
+			kFaceGenControl_HairLengthTrackbar		= 2126,
 		};
 
 #define IDT_FACEGENPREVIEW_VOICEPLAYBACK			0x6FF
+#define IDT_FACEGENPREVIEW_PREVIEWUPDATE			0x7FF
 
 		LRESULT CALLBACK FaceGenDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
@@ -4248,6 +4254,19 @@ namespace ConstructionSetExtender
 
 							TESSound::PlaySoundFile(xData->VoicePlaybackFilePath.c_str());
 							KillTimer(hWnd, IDT_FACEGENPREVIEW_VOICEPLAYBACK);
+						}
+
+						break;
+					case IDT_FACEGENPREVIEW_PREVIEWUPDATE:
+						{
+							Return = true;
+
+							CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+							SME_ASSERT(xData);
+
+							// re-enable updates now that most, if not all, of the init is done
+							xData->AllowPreviewUpdates = true;
+							KillTimer(hWnd, IDT_FACEGENPREVIEW_PREVIEWUPDATE);
 						}
 
 						break;
@@ -4287,8 +4306,12 @@ namespace ConstructionSetExtender
 						FaceTestSoundName->SetStringValue(RelativeLipPath.c_str());
 
 						SetForegroundWindow(hWnd);
-						SetActiveWindow(GetDlgItem(hWnd, kFaceGenControl_PreviewCtrl));
 
+						// make sure the head preview is selected
+						if (IsDlgButtonChecked(hWnd, 1014) != BST_CHECKED)
+							SendMessage(hWnd, WM_COMMAND, 1014, NULL);
+
+						SetActiveWindow(GetDlgItem(hWnd, kFaceGenControl_PreviewCtrl));
 						SendDlgItemMessage(hWnd, kFaceGenControl_PreviewCtrl, WM_KEYDOWN, 0x4C, NULL);
 
 						// delay voice file playback to account for synchronization
@@ -4318,6 +4341,7 @@ namespace ConstructionSetExtender
 					}
 
 					DragAcceptFiles(hWnd, FALSE);
+					Settings::General::kFaceGenPreviewVoiceDelay.SetInt(TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY));
 				}
 
 				break;
@@ -4331,6 +4355,8 @@ namespace ConstructionSetExtender
 					}
 
 					DragAcceptFiles(hWnd, TRUE);
+					TESDialog::ClampDlgEditField(GetDlgItem(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY), 0.0, 5000.0, true);
+					TESDialog::SetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY, Settings::General::kFaceGenPreviewVoiceDelay.GetData().i, 0);
 				}
 				
 				break;
@@ -4372,7 +4398,7 @@ namespace ConstructionSetExtender
 							CSEFaceGenVoicePreviewData PreviewData = {0};
 							FORMAT_STR(PreviewData.VoicePath, "%s", FilePathVoice);
 							FORMAT_STR(PreviewData.LipPath, "%s", FilePathLip);
-							PreviewData.DelayTime = Settings::General::kFaceGenPreviewVoiceDelay.GetData().i;
+							PreviewData.DelayTime = TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY);
 
 							SendMessage(hWnd, WM_FACEGENPREVIEW_PLAYVOICE, (WPARAM)&PreviewData, NULL);
 						}
@@ -4389,7 +4415,7 @@ namespace ConstructionSetExtender
 			case WM_NOTIFY:
 				{
 					NMHDR* NotificationData = (NMHDR*)lParam;
-
+					
 					switch (NotificationData->idFrom)
 					{
 					case 1777:		// tab control, same for both the NPC and Race dialogs
@@ -4410,7 +4436,11 @@ namespace ConstructionSetExtender
 									SendMessage(hWnd, uMsg, wParam, lParam);
 
 									xData->TunnellingTabSelectMessage = false;
-									xData->AllowPreviewUpdates = true;
+
+									// don't allow updates immediately, use a cool-down timer
+									static const UInt32 kPreviewUpdateCoolDownPeriod = 1000;		// in ms
+
+									SetTimer(hWnd, IDT_FACEGENPREVIEW_PREVIEWUPDATE, kPreviewUpdateCoolDownPeriod, NULL);
 								}
 							}
 						}
@@ -4425,6 +4455,12 @@ namespace ConstructionSetExtender
 				{
 				case EN_CHANGE:
 					{
+						// this method is actually rather buggy
+						// the 0x41A message updates the NPC/Race form before regenerating the face model
+						// this causes the form's compare method to inadvertently return true, leading to false changes
+						// the issue is only noticeable in the race edit dialog as it's a FormIDListView dlg
+						// we HACK around this by preventing updates for a short time after the current tab's been switched
+						// during this time, updates to the edit controls' text will be ignored by this handler
 						CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
 						if (xData == NULL || xData->AllowPreviewUpdates == false)
 							break;

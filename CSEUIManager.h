@@ -290,6 +290,7 @@ namespace ConstructionSetExtender
 #define IDC_CSE_CELLVIEW_GOBTN					9933
 
 #define IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW	9934
+// also used in the NPC edit dialog
 #define IDC_CSE_RESPONSEWINDOW_VOICEDELAY		9935
 
 // custom popup menu item IDs
