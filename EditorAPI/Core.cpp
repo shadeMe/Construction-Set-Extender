@@ -260,6 +260,11 @@ NiBinaryStream* FileFinder::GetFileStream(const char* Path, bool WriteAccess, UI
 	return cdeclCall<NiBinaryStream*>(0x00468400, Path, WriteAccess, BufferSize);
 }
 
+const char* FileFinder::GetRelativePath( const char* Path, const char* RelativeTo )
+{
+	return cdeclCall<const char*>(0x004308B0, Path, RelativeTo);
+}
+
 BSRenderedTexture* BSTextureManager::CreateTexture( NiRenderer* Renderer, UInt32 Size, UInt32 Flags, UInt32 Unk04 /*= 0*/, UInt32 Unk05 /*= 0*/ )
 {
 	return thisCall<BSRenderedTexture*>(0x00773080, this, Renderer, Size, Flags, Unk04, Unk05);

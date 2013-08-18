@@ -290,6 +290,9 @@
     <ClCompile Include="CSERenderSelectionGroupManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="EditorAPI\Setting.cpp">
+      <Filter>EditorAPI\System\Settings</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">

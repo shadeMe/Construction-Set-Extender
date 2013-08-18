@@ -2,6 +2,8 @@
 #include "TESDialog.h"
 #include "[Common]\CLIWrapper.h"
 
+tList<HWND>*				TESDialog::OpenEditWindows = (tList<HWND>*)0x00A0B55C;
+
 HINSTANCE*					TESCSMain::Instance = (HINSTANCE*)0x00A0AF1C;
 HWND*						TESCSMain::WindowHandle = (HWND*)0x00A0AF20;
 HWND*						TESCSMain::MainToolbarHandle = (HWND*)0x00A0AFD0;

@@ -535,6 +535,7 @@ namespace ConstructionSetExtender
 		{
 			TunnellingTabSelectMessage = false;
 			AllowPreviewUpdates = true;
+			VoicePlaybackFilePath = "";
 		}
 
 		CSEFaceGenWindowData::~CSEFaceGenWindowData()
@@ -2915,8 +2916,83 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_DESTROY:
+				{
+					Settings::General::kFaceGenPreviewVoiceDelay.SetInt(TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY));
+				}
+
+				break;
 			case WM_INITDIALOG:
-				EnableWindow(GetDlgItem(hWnd, 1016), TRUE);
+				{
+					EnableWindow(GetDlgItem(hWnd, 1016), TRUE);
+
+					CheckDlgButton(hWnd,
+								IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW,
+								(Settings::General::kFaceGenPreviewResponseWindow.GetData().i ? BST_CHECKED : BST_UNCHECKED));
+
+					TESDialog::ClampDlgEditField(GetDlgItem(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY), 0.0, 5000.0, true);
+					TESDialog::SetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY, Settings::General::kFaceGenPreviewVoiceDelay.GetData().i, 0);
+				}
+
+				break;
+			case WM_NOTIFY:
+				{
+					NMHDR* NotificationData = (NMHDR*)lParam;
+
+					switch (NotificationData->idFrom)
+					{
+					case 2168:		// voice file listview
+						{
+							if (NotificationData->code == LVN_ITEMACTIVATE)
+							{
+								if (Settings::General::kFaceGenPreviewResponseWindow.GetData().i == 0)
+									break;
+
+								int SelectedItem = ListView_GetNextItem(VoiceList, -1, LVNI_SELECTED);
+
+								char VoicePath[0x200] = {0};
+								LVITEM SelectedVoiceItem;
+
+								SelectedVoiceItem.iItem = SelectedItem;
+								SelectedVoiceItem.iSubItem = 6;
+								SelectedVoiceItem.mask = LVIF_TEXT;
+								SelectedVoiceItem.pszText = VoicePath;
+								SelectedVoiceItem.cchTextMax = sizeof(VoicePath);
+								ListView_GetItem(VoiceList, &SelectedVoiceItem);
+
+								std::string LipPath(VoicePath);
+								LipPath = LipPath.substr(0, LipPath.rfind("."));
+								LipPath += ".lip";
+
+								HWND NPCEditDlg = NULL;
+								for (tList<HWND>::Iterator Itr = TESDialog::OpenEditWindows->Begin(); Itr.End() == false && Itr.Get(); ++Itr)
+								{
+									HWND Current = (HWND)Itr.Get();
+									TESForm* Form = TESDialog::GetDialogExtraParam(Current);
+									if (Form && Form->formType == TESForm::kFormType_NPC)
+									{
+										NPCEditDlg = Current;
+										break;
+									}
+								}
+
+								if (NPCEditDlg)
+								{
+									Return = true;
+
+									CSEFaceGenVoicePreviewData PreviewData = {0};
+									FORMAT_STR(PreviewData.VoicePath, "%s", VoicePath);
+									FORMAT_STR(PreviewData.LipPath, "%s", LipPath.c_str());
+									PreviewData.DelayTime = TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY);
+
+									SendMessage(NPCEditDlg, WM_FACEGENPREVIEW_PLAYVOICE, (WPARAM)&PreviewData, NULL);
+								}
+							}
+						}
+
+						break;
+					}
+				}
 
 				break;
 			case WM_COMMAND:
@@ -2934,6 +3010,12 @@ namespace ConstructionSetExtender
 
 					switch (LOWORD(wParam))
 					{
+					case IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW:
+						{
+							Settings::General::kFaceGenPreviewResponseWindow.SetInt(IsDlgButtonChecked(hWnd, IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW) == BST_CHECKED);
+						}
+
+						break;
 					case 2223:					// Copy external file
 						{
 							if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
@@ -4139,7 +4221,11 @@ namespace ConstructionSetExtender
 			kFaceGenControl_ComplexionEditCtrl		= 2125,
 			kFaceGenControl_HairLengthEditCtrl		= 2127,
 			kFaceGenControl_AdvancedEditCtrl		= 2115,
+
+			kFaceGenControl_PreviewCtrl				= 2175,
 		};
+
+#define IDT_FACEGENPREVIEW_VOICEPLAYBACK			0x6FF
 
 		LRESULT CALLBACK FaceGenDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
@@ -4149,6 +4235,78 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_TIMER:
+				{
+					switch (wParam)
+					{
+					case IDT_FACEGENPREVIEW_VOICEPLAYBACK:
+						{
+							Return = true;
+
+							CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+							SME_ASSERT(xData);
+
+							TESSound::PlaySoundFile(xData->VoicePlaybackFilePath.c_str());
+							KillTimer(hWnd, IDT_FACEGENPREVIEW_VOICEPLAYBACK);
+						}
+
+						break;
+					}
+				}
+
+				break;
+			case WM_FACEGENPREVIEW_PLAYVOICE:
+				{
+					CSEFaceGenVoicePreviewData* Data = (CSEFaceGenVoicePreviewData*)wParam;
+					SME_ASSERT(Data);
+
+					const char* VoicePath = Data->VoicePath;
+					const char* LipPath = Data->LipPath;
+
+					if (LipPath)
+					{			
+						std::string RelativeLipPath(_FILEFINDER->GetRelativePath(LipPath, "Data\\Sound\\Voice\\"));
+						std::string RelativeVoicePath = "";
+						if (strlen(VoicePath))
+							RelativeVoicePath = std::string(_FILEFINDER->GetRelativePath(VoicePath, "Data\\Sound\\Voice\\"));
+
+						if (_FILEFINDER->FindFile(RelativeLipPath.c_str()) == FileFinder::kFileStatus_NotFound)
+						{
+							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't find lip file at '%s'.", RelativeLipPath.c_str());
+							break;
+						}
+						else if (RelativeVoicePath != "" && _FILEFINDER->FindFile(RelativeVoicePath.c_str()) == FileFinder::kFileStatus_NotFound)
+						{
+							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't find voice file at '%s'.", RelativeVoicePath.c_str());
+							break;
+						}
+
+						Setting* FaceTestSoundName = INISettingCollection::Instance->LookupByName("sFaceTestSoundName:General");
+						SME_ASSERT(FaceTestSoundName);
+
+						FaceTestSoundName->SetStringValue(RelativeLipPath.c_str());
+
+						SetForegroundWindow(hWnd);
+						SetActiveWindow(GetDlgItem(hWnd, kFaceGenControl_PreviewCtrl));
+
+						SendDlgItemMessage(hWnd, kFaceGenControl_PreviewCtrl, WM_KEYDOWN, 0x4C, NULL);
+
+						// delay voice file playback to account for synchronization
+						if (RelativeVoicePath != "")
+						{
+							CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
+							SME_ASSERT(xData);
+
+							if (Data->DelayTime < 8 || Data->DelayTime > 5000)
+								Data->DelayTime = 10;
+
+							xData->VoicePlaybackFilePath = RelativeVoicePath;
+							SetTimer(hWnd, IDT_FACEGENPREVIEW_VOICEPLAYBACK, Data->DelayTime, NULL);
+						}
+					}
+				}
+
+				break;
 			case WM_DESTROY:
 				{
 					CSEFaceGenWindowData* xData = BGSEE_GETWINDOWXDATA(CSEFaceGenWindowData, ExtraData);
@@ -4158,6 +4316,8 @@ namespace ConstructionSetExtender
 						ExtraData->Remove(CSEFaceGenWindowData::kTypeID);
 						delete xData;
 					}
+
+					DragAcceptFiles(hWnd, FALSE);
 				}
 
 				break;
@@ -4169,8 +4329,62 @@ namespace ConstructionSetExtender
 						xData = new CSEFaceGenWindowData();
 						ExtraData->Add(xData);
 					}
+
+					DragAcceptFiles(hWnd, TRUE);
 				}
 				
+				break;
+			case WM_DROPFILES:
+				{
+					HDROP DropData = (HDROP)wParam;
+					char FilePathVoice[MAX_PATH] = {0}, FilePathLip[MAX_PATH] = {0}, Buffer[MAX_PATH] = {0};
+					UInt32 FileCount = DragQueryFile(DropData, 0xFFFFFFFF, FilePathLip, sizeof(FilePathLip));
+
+					if (FileCount == 1 || FileCount == 2)
+					{
+						for (int i = 0; i < FileCount; i++)
+						{
+							if (DragQueryFile(DropData, i, Buffer, sizeof(Buffer)))
+							{
+								if (_FILEFINDER->GetRelativePath(Buffer, "Data\\Sound\\Voice\\"))
+								{
+									char* Extension = strrchr(Buffer, '.') + 1;
+									if (!_stricmp(Extension, "lip"))
+										memcpy(FilePathLip, Buffer, sizeof(Buffer));
+									else if (!_stricmp(Extension, "wav") || !_stricmp(Extension, "mp3"))
+										memcpy(FilePathVoice, Buffer, sizeof(Buffer));
+									else
+										BGSEEUI->MsgBoxE(hWnd, 0, "Invalid extension '%s' - Must be one of the following: mp3, wav, lip.", Extension);
+								}
+								else
+								{
+									BGSEEUI->MsgBoxE(hWnd, 0, "Path '%s' is invalid - Must be inside the Data\\Sound\\Voice directory.", Buffer);
+								}
+							}
+							else
+							{
+								BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't retrieve dropped file path at index %d.", i);
+							}
+						}
+
+						if (strlen(FilePathLip))
+						{
+							CSEFaceGenVoicePreviewData PreviewData = {0};
+							FORMAT_STR(PreviewData.VoicePath, "%s", FilePathVoice);
+							FORMAT_STR(PreviewData.LipPath, "%s", FilePathLip);
+							PreviewData.DelayTime = Settings::General::kFaceGenPreviewVoiceDelay.GetData().i;
+
+							SendMessage(hWnd, WM_FACEGENPREVIEW_PLAYVOICE, (WPARAM)&PreviewData, NULL);
+						}
+					}
+					else if (FileCount)
+					{
+						BGSEEUI->MsgBoxW(hWnd, 0, "No more than two files may be dropped into the preview control.");
+					}
+
+					DragFinish(DropData);
+				}
+
 				break;
 			case WM_NOTIFY:
 				{

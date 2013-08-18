@@ -322,6 +322,8 @@ public:
 	void						AddSearchPath(const char* Path);
 
 	static FileFinder**			Singleton;
+
+	static const char*			GetRelativePath(const char* Path, const char* RelativeTo);
 };
 STATIC_ASSERT(sizeof(FileFinder) == 0x14);
 

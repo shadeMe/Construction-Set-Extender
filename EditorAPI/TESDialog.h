@@ -366,6 +366,8 @@ public:
 
 	static void								ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data = NULL);
 	static ExtraDataList*					GetDialogExtraDataList(HWND Dialog);
+
+	static tList<HWND>*						OpenEditWindows;						
 };
 
 class TESComboBox

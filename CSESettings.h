@@ -36,6 +36,8 @@ namespace ConstructionSetExtender
 		{
 			extern INISetting					kShowNumericEditorIDWarning;
 			extern INISetting					kCrashHandlerMode;
+			extern INISetting					kFaceGenPreviewResponseWindow;
+			extern INISetting					kFaceGenPreviewVoiceDelay;
 		}
 
 		namespace LOD

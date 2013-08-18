@@ -202,6 +202,7 @@ namespace ConstructionSetExtender
 		public:
 			bool				TunnellingTabSelectMessage;
 			bool				AllowPreviewUpdates;
+			std::string			VoicePlaybackFilePath;
 
 			CSEFaceGenWindowData();
 			virtual ~CSEFaceGenWindowData();
@@ -212,6 +213,13 @@ namespace ConstructionSetExtender
 			{
 				return kTypeID;
 			}
+		};
+
+		struct CSEFaceGenVoicePreviewData
+		{
+			char				VoicePath[MAX_PATH];
+			char				LipPath[MAX_PATH];
+			UInt32				DelayTime;
 		};
 
 		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
@@ -260,6 +268,8 @@ namespace ConstructionSetExtender
 // result = Vector3*
 #define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
 #define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
+// wParam = CSEFaceGenVoicePreviewData*
+#define WM_FACEGENPREVIEW_PLAYVOICE				(WM_USER + 2020)
 
 // custom control IDs, as baked into the dialog templates
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906
@@ -278,6 +288,9 @@ namespace ConstructionSetExtender
 #define IDC_CSE_CELLVIEW_XEDIT					9931
 #define IDC_CSE_CELLVIEW_YEDIT					9932
 #define IDC_CSE_CELLVIEW_GOBTN					9933
+
+#define IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW	9934
+#define IDC_CSE_RESPONSEWINDOW_VOICEDELAY		9935
 
 // custom popup menu item IDs
 #define IDC_CSE_POPUP_SETFORMID                 9907

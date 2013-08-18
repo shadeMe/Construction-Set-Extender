@@ -27,7 +27,9 @@ namespace ConstructionSetExtender
 
 			Depot.push_back(&General::kShowNumericEditorIDWarning);
 			Depot.push_back(&General::kCrashHandlerMode);
-
+			Depot.push_back(&General::kFaceGenPreviewResponseWindow);
+			Depot.push_back(&General::kFaceGenPreviewVoiceDelay);
+			
 			Depot.push_back(&LOD::kPartialTextureResolution);
 			Depot.push_back(&LOD::kDeletePartialsAfterGeneration);
 
@@ -105,6 +107,8 @@ namespace ConstructionSetExtender
 			
 			INISetting		kShowNumericEditorIDWarning("ShowNumericEditorIDWarning", GENERAL_INISECTION, "Displays a warning when editorIDs start with an integer", (SInt32)1);
 			INISetting		kCrashHandlerMode("CrashHandlerMode", GENERAL_INISECTION, "0 - Terminate | 1 - Resume | 2 - Ask every time", (SInt32)2);
+			INISetting		kFaceGenPreviewResponseWindow("FaceGenPreviewResponseWindow", GENERAL_INISECTION, "Preview voice/lip file playback in NPC dialogs", (SInt32)0);
+			INISetting		kFaceGenPreviewVoiceDelay("FaceGenPreviewVoiceDelay", GENERAL_INISECTION, "Delay, in milliseconds, between voice file and lip sync file playback during previews", (SInt32)50);
 		}
 
 		namespace LOD

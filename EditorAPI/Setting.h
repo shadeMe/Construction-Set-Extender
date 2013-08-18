@@ -4,7 +4,7 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    Setting is a common base for game settings, ini settings, etc.  Basically just name+value pairs.
+	Setting is a common base for game settings, ini settings, etc.  Basically just name+value pairs.
 */
 
 // 08
@@ -49,5 +49,8 @@ public:
 	// members
 	/*00*/ SettingValue			value;
 	/*04*/ const char*			name;   // must begin with one of the type characters
+
+	// methods
+	void						SetStringValue(const char* Value);
 };
 STATIC_ASSERT(sizeof(Setting) == 0x8);

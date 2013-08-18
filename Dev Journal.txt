@@ -13,6 +13,7 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> Race dialog seems to record erroneous changes when in the facegen data tab
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Fix memory leak in local map generator
@@ -20,6 +21,7 @@ CSE		---->
 
 	ENHANCEMENT		=
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
+		> LIP sync preview
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Add a random "roughness" factor to the landscape sculpting brush

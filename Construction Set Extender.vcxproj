@@ -205,6 +205,7 @@ copy "$(TargetPath)" "C:\Users\shadeMe\Documents\Dropbox\CSE Once-In-Awhile'lies
     <ClCompile Include="EditorAPI\NiClasses.cpp" />
     <ClCompile Include="EditorAPI\RTTI.cpp" />
     <ClCompile Include="EditorAPI\Script.cpp" />
+    <ClCompile Include="EditorAPI\Setting.cpp" />
     <ClCompile Include="EditorAPI\SettingCollection.cpp" />
     <ClCompile Include="EditorAPI\TESConditionItem.cpp" />
     <ClCompile Include="EditorAPI\TESDialog.cpp" />
