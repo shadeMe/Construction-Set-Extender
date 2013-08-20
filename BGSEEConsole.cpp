@@ -1,4 +1,5 @@
 #include "BGSEEConsole.h"
+#include "BGSEEScript\CodaVM.h"
 #include "BGSEditorExtenderBase_Resource.h"
 
 namespace BGSEditorExtender
@@ -55,6 +56,50 @@ namespace BGSEditorExtender
 
 		switch (uMsg)
 		{
+		case WM_DROPFILES:
+			{
+				// drag-drop coda script files to execute them
+				HDROP DropData = (HDROP)wParam;
+
+				char Buffer[MAX_PATH] = {0};
+				UInt32 FileCount = DragQueryFile(DropData, 0xFFFFFFFF, Buffer, sizeof(Buffer));
+				bool BadFile = false;
+				std::vector<std::string> DroppedScripts;
+
+				for (int i = 0; i < FileCount; i++)
+				{
+					if (DragQueryFile(DropData, i, Buffer, sizeof(Buffer)))
+					{						
+						char* Extension = strrchr(Buffer, '.');
+						if (Extension && !_stricmp(Extension, BGSEEScript::CodaScriptVM::kSourceExtension.c_str()))
+						{
+							*Extension = '\0';
+							const char* FileName = strrchr(Buffer, '\\');
+							if (FileName)
+								DroppedScripts.push_back(std::string(++FileName));
+						}
+						else
+							BadFile = true;
+					}
+				}
+
+				if (BadFile)
+					BGSEEUI->MsgBoxE(hWnd, 0, "Only Coda scripts may be dropped into the window.");
+
+				if (DroppedScripts.size())
+				{
+					BGSEECONSOLE_MESSAGE("Executing %d Coda scripts...", DroppedScripts.size());
+					BGSEECONSOLE->Indent();
+
+					bool Throwaway = false;
+					for (int i = 0; i < DroppedScripts.size(); i++)
+						CODAVM->RunScript(DroppedScripts[i], NULL, NULL, Throwaway);
+
+					BGSEECONSOLE->Exdent();
+				}
+			}
+
+			break;
 		case WM_INITMENUPOPUP:
 			{
 				if (wParam == (WPARAM)Instance->ContextMenuHandle)
@@ -199,6 +244,8 @@ namespace BGSEditorExtender
 			{
 				delete (UIExtraData*)UserData->ExtraData;
 				UserData->ExtraData = NULL;
+
+				DragAcceptFiles(hWnd, FALSE);
 			}
 
 			break;
@@ -219,6 +266,8 @@ namespace BGSEditorExtender
 
 				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_MESSAGELOG, WM_SETFONT, (WPARAM)xData->MessageLogFont, (LPARAM)TRUE);
 				SendDlgItemMessage(hWnd, IDC_BGSEE_CONSOLE_COMMANDLINE, WM_SETFONT, (WPARAM)xData->CommandLineFont, (LPARAM)TRUE);
+
+				DragAcceptFiles(hWnd, TRUE);
 			}
 
 			break;

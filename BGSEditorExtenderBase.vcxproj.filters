@@ -85,32 +85,8 @@
     <ClInclude Include="BGSEditorExtenderBase_Resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="..\SME Sundries\Functors.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\INIEditGUI.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\INIManager.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\MemoryHandler.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\StringHelpers.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="..\SME Sundries\INIEditGUI_Res.h">
       <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\MersenneTwister.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\UIHelpers.h">
-      <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\MiscGunk.h">
-      <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="BGSEERenderWindowPainter.h">
       <Filter>Modules\BGSEERenderWindowPainter</Filter>
@@ -261,9 +237,6 @@
     </ClInclude>
     <ClInclude Include="BGSEEHallOfFame.h">
       <Filter>Modules\BGSEEExtras</Filter>
-    </ClInclude>
-    <ClInclude Include="..\SME Sundries\VersionInfo.h">
-      <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="BGSEERenderWindowFlyCamera.h">
       <Filter>Modules\BGSEERenderWindowFlyCamera</Filter>

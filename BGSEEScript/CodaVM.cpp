@@ -838,18 +838,12 @@ namespace BGSEditorExtender
 						std::string Value(StrBuffer.substr(IndexB + 1));
 						bool Throwaway = false;
 
+						SME_ASSERT(Type == "s" || Type == "S" || Type == "n" || Type == "N");
+
 						if (Type == "s" || Type == "S")
 							Add(Name.c_str(), Value.c_str(), Throwaway);
-						else if (Type == "n" || Type == "N")
-							Add(Name.c_str(), atof(Value.c_str()), Throwaway);
-						else if (Type == "r" || Type == "R")
-						{
-							CodaScriptReferenceDataTypeT FormID = 0;
-							sscanf_s(Value.c_str(), "%08X", &FormID);
-							Add(Name.c_str(), FormID, Throwaway);
-						}
 						else
-							Add(Name.c_str(), 0.0, Throwaway);
+							Add(Name.c_str(), atof(Value.c_str()), Throwaway);
 
 						BGSEECONSOLE_MESSAGE("%s = %s", Name.c_str(), Value.c_str());
 					}
@@ -867,23 +861,29 @@ namespace BGSEditorExtender
 			{
 				CodaScriptVariable* Global = *Itr;
 
+				bool InvalidType = false;
 				switch (Global->GetStoreOwner()->GetDataStore()->GetType())
 				{
 				case ICodaScriptDataStore::kDataType_Numeric:
 					FORMAT_STR(Buffer, "n|%0.6f", Global->GetStoreOwner()->GetDataStore()->GetNumber() * 1.0);
 					break;
-				case ICodaScriptDataStore::kDataType_Reference:
-					FORMAT_STR(Buffer, "r|%08X", Global->GetStoreOwner()->GetDataStore()->GetFormID());
-					break;;
 				case ICodaScriptDataStore::kDataType_String:
 					FORMAT_STR(Buffer, "s|%s", Global->GetStoreOwner()->GetDataStore()->GetString());
 					break;
 				default:
-					FORMAT_STR(Buffer, "x|0");
+					InvalidType = true;
 					break;
 				}
 
-				INISettingSetter(Global->GetName(), CODASCRIPTGLOBALDATASTORE_INISECTION, Buffer);
+				if (InvalidType)
+				{
+					BGSEECONSOLE_MESSAGE("CodaScriptGlobalDataStore::INISaveState - Blasphemy!! Unexpected data store value of type %c! Did you assign a reference/array to a global variable? Why dammit?!",
+										Global->GetStoreOwner()->GetDataStore()->GetType());
+				}
+				else
+				{
+					INISettingSetter(Global->GetName(), CODASCRIPTGLOBALDATASTORE_INISECTION, Buffer);
+				}
 			}
 		}
 

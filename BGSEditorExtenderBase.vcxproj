@@ -11,16 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\SME Sundries\MiscGunk.h" />
-    <ClInclude Include="..\SME Sundries\Functors.h" />
-    <ClInclude Include="..\SME Sundries\INIEditGUI.h" />
     <ClInclude Include="..\SME Sundries\INIEditGUI_Res.h" />
-    <ClInclude Include="..\SME Sundries\INIManager.h" />
-    <ClInclude Include="..\SME Sundries\MemoryHandler.h" />
-    <ClInclude Include="..\SME Sundries\MersenneTwister.h" />
-    <ClInclude Include="..\SME Sundries\StringHelpers.h" />
-    <ClInclude Include="..\SME Sundries\UIHelpers.h" />
-    <ClInclude Include="..\SME Sundries\VersionInfo.h" />
     <ClInclude Include="BGSEEAchievements.h" />
     <ClInclude Include="BGSEEChangeLogManager.h" />
     <ClInclude Include="BGSEEConsole.h" />
@@ -92,7 +83,9 @@
     <ClCompile Include="BGSEEFormUndoStack.cpp" />
     <ClCompile Include="BGSEEGlobalClipboard.cpp" />
     <ClCompile Include="BGSEEHallOfFame.cpp" />
-    <ClCompile Include="BGSEEMain.cpp" />
+    <ClCompile Include="BGSEEMain.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
+    </ClCompile>
     <ClCompile Include="BGSEERenderWindowFlyCamera.cpp" />
     <ClCompile Include="BGSEERenderWindowPainter.cpp" />
     <ClCompile Include="BGSEEScript\CodaDataTypes.cpp" />

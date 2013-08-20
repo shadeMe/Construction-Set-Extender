@@ -27,6 +27,7 @@
 #include <uxtheme.h>
 #include <Objbase.h>
 #include <Psapi.h>
+#include <ShellAPI.h>
 
 // .NET INTEROP
 #include <MSCorEE.h>

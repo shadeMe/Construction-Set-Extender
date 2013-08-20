@@ -106,8 +106,6 @@ namespace BGSEditorExtender
 	BGSEEChangeLogManager::BGSEEChangeLogManager() :
 		LogStack(),
 		SessionLog(NULL),
-		GUIDString(),
-		TempPath(),
 		ConsoleMessageContext(NULL),
 		Initialized(false)
 	{
