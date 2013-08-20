@@ -182,6 +182,8 @@ public:
 	bool							IsReference() const;
 	bool							IsActive() const;
 	bool							IsQuestItem() const;
+	bool							IsDeleted() const;
+	bool							IsTemporary() const;
 
 	bool							SetEditorID(const char* EditorID);
 	TESFile*						GetOverrideFile(int Index);

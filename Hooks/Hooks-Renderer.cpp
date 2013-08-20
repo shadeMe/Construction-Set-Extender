@@ -362,25 +362,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoRenderWindowSelectionHook(TESObjectREFR* Ref)
 		{
-			bool Result = false;
-
-			TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
-			if (CurrentCell == NULL)
-				CurrentCell = _TES->currentExteriorCell;
-
-			if (CurrentCell)
-			{
-				TESRenderSelection* Selection = CSERenderSelectionGroupManager::Instance.GetRefSelectionGroup(Ref, CurrentCell);
-				if (Selection)
-				{
-					for (TESRenderSelection::SelectedObjectsEntry* Itr = Selection->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-						_RENDERSEL->AddToSelection(Itr->Data, true);
-
-					Result = true;
-				}
-			}
-
-			return Result;
+			return CSERenderSelectionGroupManager::Instance.SelectAffiliatedGroup(Ref, _RENDERSEL);
 		}
 
 		#define _hhName		RenderWindowAddToSelection

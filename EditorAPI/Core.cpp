@@ -292,3 +292,8 @@ void BSRenderedTexture::DeleteInstance( bool ReleaseMemory /*= 0*/ )
 {
 	thisVirtualCall<void>(0x0, this, ReleaseMemory);
 }
+
+GridCellArray::GridEntry* GridCellArray::GetCellEntry( SInt32 X, SInt32 Y )
+{
+	return &grid[Y + X * size];
+}

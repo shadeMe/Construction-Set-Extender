@@ -290,12 +290,15 @@ public:
 
 	// members
 	//     /*00*/ GridArray
-	/*04*/ UInt32			worldX;				// worldspace x coordinate of cell at center of grid
-	/*08*/ UInt32			worldY;				// worldspace y
+	/*04*/ SInt32			worldX;				// worldspace x coordinate of cell at center of grid
+	/*08*/ SInt32			worldY;				// worldspace y
 	/*0C*/ UInt32			size;				// grid is size ^ 2, size = uGridsToLoad
 	/*10*/ GridEntry*		grid;				// dynamically alloc'ed array of GridEntry[size ^ 2]
 	/*14*/ Vector3			extents;			// x = 4096 * worldX (exterior cells are 4096 square units),  y = 4096 * worldY, z = seen 0.0
 												// init'ed with coords and passed to a bhkWorldM method, which calculates the extents
+
+	// methods
+	GridEntry*				GetCellEntry(SInt32 X, SInt32 Y);
 };
 STATIC_ASSERT(sizeof(GridCellArray) == 0x20);
 

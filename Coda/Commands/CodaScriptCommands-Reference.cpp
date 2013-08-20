@@ -1,4 +1,5 @@
 #include "CodaScriptCommands-Reference.h"
+#include "CSERenderSelectionGroupManager.h"
 
 #define PI	3.151592653589793
 
@@ -30,6 +31,11 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(GetCellObjects);
 				CodaScriptCommandPrototypeDef(GetCellWorldspace);
 				CodaScriptCommandPrototypeDef(GetCurrentRenderWindowSelection);
+				CodaScriptCommandPrototypeDef(GetLoadedRenderWindowCells);
+				CodaScriptCommandPrototypeDef(AddRefToRenderWindowSelection);
+				CodaScriptCommandPrototypeDef(RemoveRefFromRenderWindowSelection);
+				CodaScriptCommandPrototypeDef(CreateRenderWindowSelectionGroup);
+				CodaScriptCommandPrototypeDef(DissolveRenderWindowSelectionGroup);
 
 				CodaScriptCommandParamData(CreateRef, 9)
 				{
@@ -473,6 +479,163 @@ namespace ConstructionSetExtender
 					}
 
 					Result->SetArray(Array);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetLoadedRenderWindowCells)
+				{
+					ICodaScriptDataStore* Array = Utilities->ArrayAllocate();
+					SME_ASSERT(Array);
+
+					if (_TES->currentInteriorCell)
+					{
+						Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)_TES->currentInteriorCell->formID);
+					}
+					else if (*TESRenderWindow::CurrentlyLoadedExteriorCell)
+					{
+						UInt32 GridEdge = INISettingCollection::Instance->LookupByName("uGridsToLoad:General")->value.u;
+
+						for (int i = 0; i < GridEdge; i++)
+						{
+							for (int j = 0; j < GridEdge; j++)
+							{
+								TESObjectCELL* Cell = _TES->gridCellArray->GetCellEntry(i, j)->cell;
+								if (Cell)
+									Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Cell->formID);
+							}
+						}
+					}
+
+					Result->SetArray(Array);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(AddRefToRenderWindowSelection)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (!Reference)
+						return false;
+
+					_RENDERSEL->AddToSelection(Reference, true);
+					return true;
+				}
+
+				CodaScriptCommandHandler(RemoveRefFromRenderWindowSelection)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (!Reference)
+						return false;
+
+					_RENDERSEL->RemoveFromSelection(Reference, true);
+					return true;
+				}
+
+				CodaScriptCommandHandler(CreateRenderWindowSelectionGroup)
+				{
+					ICodaScriptDataStore* Array = NULL;
+
+					CodaScriptCommandExtractArgs(&Array);
+
+					SME_ASSERT(Array);
+
+					Result->SetNumber(0);
+					
+					if (Utilities->ArraySize(Array) > 1)
+					{
+						std::vector<TESObjectREFR*> Members;
+						for (int i = 0, j = Utilities->ArraySize(Array); i < j; i++)
+						{
+							ICodaScriptDataStore* Current = NULL;
+							if (Utilities->ArrayAt(Array, i, &Current))
+							{
+								if (Current->GetIsReference())
+								{
+									TESObjectREFR* Ref = CS_CAST(TESForm::LookupByFormID(Current->GetFormID()), TESForm, TESObjectREFR);
+									if (Ref)
+										Members.push_back(Ref);
+									else
+										return false;
+								}
+								else
+									return false;
+							}
+							else
+								return false;
+						}
+
+						TESRenderSelection* Buffer = TESRenderSelection::CreateInstance();
+						for (int i = 0, j = Members.size(); i < j; i++)
+							Buffer->AddToSelection(Members[i], false);
+
+						if (CSERenderSelectionGroupManager::Instance.AddGroup(Buffer))
+							Result->SetNumber(1);
+
+						Buffer->DeleteInstance();
+					}
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(DissolveRenderWindowSelectionGroup)
+				{
+					ICodaScriptDataStore* Array = NULL;
+
+					CodaScriptCommandExtractArgs(&Array);
+
+					SME_ASSERT(Array);
+
+					Result->SetNumber(0);
+
+					if (Utilities->ArraySize(Array) > 1)
+					{
+						std::vector<TESObjectREFR*> Members;
+						for (int i = 0, j = Utilities->ArraySize(Array); i < j; i++)
+						{
+							ICodaScriptDataStore* Current = NULL;
+							if (Utilities->ArrayAt(Array, i, &Current))
+							{
+								if (Current->GetIsReference())
+								{
+									TESObjectREFR* Ref = CS_CAST(TESForm::LookupByFormID(Current->GetFormID()), TESForm, TESObjectREFR);
+									if (Ref)
+										Members.push_back(Ref);
+									else
+										return false;
+								}
+								else
+									return false;
+							}
+							else
+								return false;
+						}
+
+						TESRenderSelection* Buffer = TESRenderSelection::CreateInstance();
+						for (int i = 0, j = Members.size(); i < j; i++)
+							Buffer->AddToSelection(Members[i], false);
+
+						if (CSERenderSelectionGroupManager::Instance.RemoveGroup(Buffer))
+							Result->SetNumber(1);
+
+						Buffer->DeleteInstance();
+					}
 
 					return true;
 				}

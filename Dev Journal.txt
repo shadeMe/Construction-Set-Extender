@@ -13,6 +13,7 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> Dynamic channels in the Renderwindowpainter have timer issues (text zips by randomly)
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Fix memory leak in local map generator
@@ -26,8 +27,8 @@ CSE		---->
 
 
 	CODA			=
-
 	
+
 	MISC			=
 
 

@@ -149,6 +149,44 @@ namespace ConstructionSetExtender
 					"Returns an array of references that are currently selected in the render window.",
 					0,
 					ICodaScriptDataStore::kDataType_Array);
+
+				CodaScriptSimpleCommandPrototype(GetLoadedRenderWindowCells,
+					0,
+					"Returns either an array of cells in the render window's active grid (when in an exterior location) or the current interior cell.",
+					0,
+					ICodaScriptDataStore::kDataType_Array);
+
+				CodaScriptParametricCommandPrototype(AddRefToRenderWindowSelection,
+					"addRefToSel",
+					"Adds the reference to the active render window selection.",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptParametricCommandPrototype(RemoveRefFromRenderWindowSelection,
+					"removeRefFromSel",
+					"Removes the reference from the active render window selection.",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptParametricCommandPrototype(CreateRenderWindowSelectionGroup,
+					"createSelGroup",
+					"Creates a render window selection group from an array of references. Returns true if successful, false otherwise.",
+					0,
+					1,
+					OneArray,
+					ICodaScriptDataStore::kDataType_Numeric);
+
+				CodaScriptParametricCommandPrototype(DissolveRenderWindowSelectionGroup,
+					"dissolveSelGroup",
+					"Removes an existing render window selection group that consists an array of references. Returns true if successful, false otherwise.",
+					0,
+					1,
+					OneArray,
+					ICodaScriptDataStore::kDataType_Numeric);
 			}
 		}
 	}

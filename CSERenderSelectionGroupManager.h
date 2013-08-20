@@ -4,24 +4,50 @@ namespace ConstructionSetExtender
 {
 	class CSERenderSelectionGroupManager
 	{
-		typedef std::map<TESObjectCELL*,
-			std::vector<TESRenderSelection*>>	SelectionGroupMapT;
+		// I'm just being pretentious - these are regular formIDs
+		typedef UInt32								ReferenceHandleT;
 
-		SelectionGroupMapT							SelectionGroupMap;
+		static bool									GetReferenceExists(ReferenceHandleT Ref);
 
-		TESObjectREFR*								GetRefAtSelectionIndex(TESRenderSelection* Selection, UInt32 Index);
+		class GroupData
+		{
+			static UInt32							GetNextID(void);
 
-		std::vector<TESRenderSelection*>*			GetCellExists(TESObjectCELL* Cell);
-		TESRenderSelection*							AllocateNewSelection(TESRenderSelection* Selection);
-		TESRenderSelection*							GetTrackedSelection(TESObjectCELL* Cell, TESRenderSelection* Selection);			// returns the tracked copy of the source selection
-		void										UntrackSelection(TESObjectCELL* Cell, TESRenderSelection* TrackedSelection);		// pass GetTrackedSelection's result
+			typedef std::list<ReferenceHandleT>		MemberRosterT;
+
+			MemberRosterT							Members;
+			UInt32									ID;
+
+			bool									GetIsMember(ReferenceHandleT Ref, MemberRosterT::iterator& Match);
+		public:
+			GroupData(TESRenderSelection* Selection);
+
+			UInt32									ValidateMembers(void);
+			void									RemoveMember(ReferenceHandleT Ref);
+			void									ConvertToSelection(TESRenderSelection* Selection);
+
+			const UInt32							GetID(void) const { return ID; }
+			const UInt32							GetSize(void) const { return Members.size(); }
+		};
+
+		// Being totally sincere here - these are proper "handles"
+		typedef boost::shared_ptr<GroupData>		GroupDataHandleT;			
+
+		typedef std::map<ReferenceHandleT, GroupDataHandleT>	GroupDataStoreT;
+
+		GroupDataStoreT								DataStore;
 	public:
-		bool										AddGroup(TESObjectCELL* Cell, TESRenderSelection* Selection);
-		bool										RemoveGroup(TESObjectCELL* Cell, TESRenderSelection* Selection);
+		CSERenderSelectionGroupManager();
 
-		TESRenderSelection*							GetRefSelectionGroup(TESObjectREFR* Ref, TESObjectCELL* Cell);
+		bool										AddGroup(TESRenderSelection* Selection);		// returns false if any of the refs in the selection were already a part of some group
+		bool										RemoveGroup(TESRenderSelection* Selection);
+		void										Orphanize(ReferenceHandleT Ref);				// removes the ref from its parent group, if any
+
+													// if the ref is a part of a group, replaces the selection with the group and returns true. returns false otherwise
+		bool										SelectAffiliatedGroup(TESObjectREFR* Ref, TESRenderSelection* Selection);
+
 		void										Clear();
 
-		static CSERenderSelectionGroupManager			Instance;
+		static CSERenderSelectionGroupManager		Instance;
 	};
 }

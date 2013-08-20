@@ -285,3 +285,13 @@ bool TESForm::GetFromActiveFile() const
 {
 	return (formFlags & kFormFlags_FromActiveFile);
 }
+
+bool TESForm::IsDeleted() const
+{
+	return (formFlags & kFormFlags_Deleted);
+}
+
+bool TESForm::IsTemporary() const
+{
+	return (formFlags & kFormFlags_Temporary);
+}

@@ -63,13 +63,13 @@
 #define VER_FILEFLAGS               VER_VER_DEBUG
 #define VER_FILETYPE				VFT_DLL
 
-#define MAKE_SME_VERSION(major, minor, rev, build)			(((major & 0xFF) << 24) | ((minor & 0xF) << 16) | ((rev & 0xFF) << 14) | ((build & 0xFFF)))
+#define MAKE_SME_VERSION(major, minor, rev, build)			(((major & 0xFF) << 24) | ((minor & 0xFF) << 16) | ((build & 0xFFF) << 4) | ((rev & 0xF)))
 
 #define PACKED_SME_VERSION		MAKE_SME_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD)
 
 #define SME_VERSION_MAJOR(version)		(version >> 24) & 0xFF
-#define SME_VERSION_MINOR(version)		(version >> 16) & 0xF
-#define SME_VERSION_REVISION(version)	(version >> 14) & 0xFF
-#define SME_VERSION_BUILD(version)		(version) & 0xFFF
+#define SME_VERSION_MINOR(version)		(version >> 16) & 0xFF
+#define SME_VERSION_BUILD(version)		(version >> 4) & 0xFFF
+#define SME_VERSION_REVISION(version)	(version) & 0xF
 
 #endif /* __SME_VERSION_H__ */

@@ -1309,6 +1309,10 @@ namespace ConstructionSetExtender
 					TESRenderWindow::ShowInitiallyDisabledRefChildren = (TESRenderWindow::ShowInitiallyDisabledRefChildren == false);
 
 					break;
+				case IDC_MAINMENU_CODAOPENSCRIPTREPOSITORY:
+					CODAVM->OpenScriptRepository();
+
+					break;
 				default:
 					Return = false;
 
@@ -1952,34 +1956,26 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_UNGROUP:
 					if (_RENDERSEL->selectionCount > 1)
 					{
-						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
-
-						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
-
-						if (CurrentCell == NULL)
-							break;
-
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_GROUP:
-							if (!CSERenderSelectionGroupManager::Instance.AddGroup(CurrentCell, _RENDERSEL))
+							if (CSERenderSelectionGroupManager::Instance.AddGroup(_RENDERSEL) == false)
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
-												"Couldn't add current selection to a new group.\n\nMake sure none of the selected objects belong to a preexisting group.");
+												"Couldn't add current selection to a new group.\n\nCheck the console for more details.");
 							}
 							else
-								RenderWindowPainter::RenderChannelNotifications->Queue(2, "Created new selection group for current cell");
+								RenderWindowPainter::RenderChannelNotifications->Queue(4, "Created new selection group");
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_UNGROUP:
-							if (!CSERenderSelectionGroupManager::Instance.RemoveGroup(CurrentCell, _RENDERSEL))
+							if (CSERenderSelectionGroupManager::Instance.RemoveGroup(_RENDERSEL) == false)
 							{
 								BGSEEUI->MsgBoxW(hWnd, 0,
-												"Couldn't remove current selection group.\n\nMake sure the selected objects belong to a preexisting group.");
+												"Couldn't dissolve the current selection's group.\n\nCheck the console for more details.");
 							}
 							else
-								RenderWindowPainter::RenderChannelNotifications->Queue(2, "Removed selection group from current cell");
+								RenderWindowPainter::RenderChannelNotifications->Queue(4, "Removed selection group");
 
 							break;
 						}
@@ -4312,7 +4308,7 @@ namespace ConstructionSetExtender
 							SendMessage(hWnd, WM_COMMAND, 1014, NULL);
 
 						SetActiveWindow(GetDlgItem(hWnd, kFaceGenControl_PreviewCtrl));
-						SendDlgItemMessage(hWnd, kFaceGenControl_PreviewCtrl, WM_KEYDOWN, 0x4C, NULL);
+						SendDlgItemMessage(hWnd, kFaceGenControl_PreviewCtrl, WM_KEYDOWN, 0x4C, NULL);		// L key
 
 						// delay voice file playback to account for synchronization
 						if (RelativeVoicePath != "")
@@ -4372,7 +4368,7 @@ namespace ConstructionSetExtender
 						{
 							if (DragQueryFile(DropData, i, Buffer, sizeof(Buffer)))
 							{
-								if (_FILEFINDER->GetRelativePath(Buffer, "Data\\Sound\\Voice\\"))
+								if (_FILEFINDER->GetRelativePath(Buffer, "Data\\Sound\\Voice\\") && strrchr(Buffer, '.'))
 								{
 									char* Extension = strrchr(Buffer, '.') + 1;
 									if (!_stricmp(Extension, "lip"))
