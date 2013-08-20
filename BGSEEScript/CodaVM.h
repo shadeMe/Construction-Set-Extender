@@ -213,6 +213,8 @@ namespace BGSEditorExtender
 			bool										ToggleBackgrounderState(void);
 
 			CodaScriptMessageHandler*					MsgHdlr(void);
+
+			void										OpenScriptRepository(void) const;
 		};
 #define CODAVM											BGSEditorExtender::BGSEEScript::CodaScriptVM::GetSingleton()
 

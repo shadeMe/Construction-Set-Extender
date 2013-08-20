@@ -1136,6 +1136,13 @@ namespace BGSEditorExtender
 			}
 		}
 
+		void CodaScriptVM::OpenScriptRepository( void ) const
+		{
+			SME_ASSERT(Initialized);
+
+			ShellExecute(NULL, "open", BaseDirectory.GetFullPath().c_str(), NULL, NULL, SW_SHOW);
+		}
+
 		ICodaScriptExpressionParser* CodaScriptObjectFactory::BuildExpressionParser( UInt8 Type )
 		{
 			switch (Type)
