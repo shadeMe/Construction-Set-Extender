@@ -440,8 +440,6 @@ namespace ConstructionSetExtender
 			PREFERENCES->FetchSetting("CaseInsensitive", "FindReplace")->SetValue(((int)CaseInsensitiveSearch->Checked).ToString());
 			PREFERENCES->FetchSetting("MatchWholeWord", "FindReplace")->SetValue(((int)MatchWholeWord->Checked).ToString());
 			PREFERENCES->FetchSetting("UseRegEx", "FindReplace")->SetValue(((int)UseRegEx->Checked).ToString());
-
-			PREFERENCES->SaveINI();
 		}
 	}
 }

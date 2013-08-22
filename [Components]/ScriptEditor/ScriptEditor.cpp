@@ -2452,6 +2452,8 @@ namespace ConstructionSetExtender
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 			ToolBarSnippetManager->Click -= ToolBarSnippetManagerClickHandler;
 
+			PREFERENCES->SaveINI();
+
 			for each (Image^ Itr in MessageList->SmallImageList->Images)
 				delete Itr;
 
@@ -2463,6 +2465,7 @@ namespace ConstructionSetExtender
 			delete OffsetViewer;
 			delete PreprocessedTextViewer;
 			delete ScriptListBox;
+			delete FindReplaceBox;
 
 			ParentContainer->RemoveTab(WorkspaceTabItem);
 			ParentContainer->RemoveTabControlBox(WorkspaceControlBox);
