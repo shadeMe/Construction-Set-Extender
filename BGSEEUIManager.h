@@ -55,7 +55,7 @@ namespace BGSEditorExtender
 		BGSEEWindowExtraData*	Lookup(WindowExtraDataIDT ID);
 	};
 
-// hacky, hacky and oh-my-grud-that's-hacky!
+// not very elegant, is it?
 #define BGSEE_GETWINDOWXDATA(xDataClass, xDataCollection)	\
 		dynamic_cast< xDataClass * >(xDataCollection->Lookup(xDataClass::kTypeID))
 #define BGSEE_GETWINDOWXDATA_QUICK(xDataClass, xDataCollection)	\
@@ -147,6 +147,10 @@ namespace BGSEditorExtender
 
 		bool									GetHasDialogSubclass(ResourceTemplateT TemplateID);
 	};
+// sent to subclassed dialogs before their org wndproc processes the WM_INITDIALOG message
+// params are the same as WM_INITDIALOG's
+// the dialog MUST NOT be destroyed inside this callback
+#define WM_SUBCLASSER_PREDIALOGINIT				((WM_USER) + 0x101)
 
 	class BGSEEResourceTemplateHotSwapper
 	{

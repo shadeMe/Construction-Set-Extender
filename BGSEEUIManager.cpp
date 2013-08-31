@@ -243,9 +243,17 @@ namespace BGSEditorExtender
 					UserData->Initialized = true;
 				}
 
+				// send the pre-initdialog message first
+				UserData->Data->ProcessSubclasses(hWnd, WM_SUBCLASSER_PREDIALOGINIT, wParam, UserData->InitParam, CallbackReturn);
+				
+				// make sure the dialog's not destroyed
+				UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+				SME_ASSERT(UserData);
+
+				// send the initdialog message to the original handler
 				DlgProcResult = UserData->Data->Original(hWnd, uMsg, wParam, UserData->InitParam);
 
-				// re-check the userdata as the window can get destroyed inside the original WM_INITDIALOG callback
+				// re-check the userdata as the dialog can get destroyed inside the original WM_INITDIALOG callback
 				UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 				if (UserData)
 				{
