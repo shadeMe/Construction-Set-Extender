@@ -384,3 +384,8 @@ void TESObjectWindow::RefreshFormList( void )
 {
 	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
 }
+
+void TESObjectWindow::SetSplitterEnabled( bool State )
+{
+	cdeclCall<void>(0x004044D0, GetDlgItem(*TESObjectWindow::WindowHandle, 2157), State);
+}

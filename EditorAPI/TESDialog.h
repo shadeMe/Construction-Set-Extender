@@ -467,6 +467,7 @@ public:
 	STATIC_ASSERT(sizeof(SplitterData) == 0x1C);
 
 	static void						RefreshFormList(void);
+	static void						SetSplitterEnabled(bool State);
 
 	static HWND*					WindowHandle;
 	static HWND*					FormListHandle;

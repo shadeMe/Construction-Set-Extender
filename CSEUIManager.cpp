@@ -543,22 +543,118 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		enum
+		{
+			kFindTextListView_Topics		= 1019,
+			kFindTextListView_Infos			= 1952,
+			kFindTextListView_Objects		= 1018,			// displays scripts and quests too
+		};
+
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
+			static bool kDraggingForms = false;
+
 			switch (uMsg)
 			{
+			case WM_MOUSEMOVE:
+				if (kDraggingForms)
+				{
+					POINT Pos = {0};
+					GetCursorPos(&Pos);
+					HWND Window = WindowFromPoint(Pos);
+
+					if (_RENDERSEL->selectionList && _RENDERSEL->selectionList->Data)
+					{
+						if (TESDialog::GetIsWindowDragDropRecipient(_RENDERSEL->selectionList->Data->formType, Window))
+						{
+							SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xBA));
+						}
+						else
+						{
+							SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
+						}
+					}
+				}
+
+				break;
+			case WM_LBUTTONUP:
+				if (kDraggingForms)
+				{
+					POINT Pos = {0};
+					GetCursorPos(&Pos);
+					HWND Window = WindowFromPoint(Pos);
+
+					if (_RENDERSEL->selectionList && _RENDERSEL->selectionList->Data)
+					{
+						if (TESDialog::GetIsWindowDragDropRecipient(_RENDERSEL->selectionList->Data->formType, Window))
+						{
+							HWND Parent = GetParent(Window);
+							if (Parent == NULL || Parent == *TESCSMain::WindowHandle)
+								Parent = Window;
+
+							SendMessage(Parent, 0x407, NULL, (LPARAM)&Pos);
+						}
+						else
+						{
+							_RENDERSEL->ClearSelection();
+						}
+
+						kDraggingForms = false;
+						SetCursor(LoadCursor(NULL, IDC_ARROW));
+						ReleaseCapture();
+					}
+				}
+
+				break;
 			case WM_NOTIFY:
 				switch (((LPNMHDR)lParam)->code)
 				{
+				case LVN_BEGINDRAG:
+					{
+						NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
+						std::list<TESForm*> Selection;
+
+						switch (Data->hdr.idFrom)
+						{
+						case kFindTextListView_Objects:
+							{
+								int Index = -1;
+								while ((Index = ListView_GetNextItem(Data->hdr.hwndFrom, Index, LVNI_SELECTED)) != -1)
+								{
+									TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Index);
+									SME_ASSERT(Form);
+
+									Selection.push_back(Form);
+								}
+							}
+
+							break;
+						}
+
+						kDraggingForms = false;
+						if (Selection.size())
+						{
+							_RENDERSEL->ClearSelection(true);
+
+							for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
+								_RENDERSEL->AddToSelection(*Itr);
+
+							kDraggingForms = true;
+							SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
+							SetCapture(hWnd);
+						}
+					}
+
+					break;
 				case LVN_ITEMACTIVATE:
 					NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
 					TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Data->iItem);
 
-					if (Data->hdr.idFrom == 1018 && Form)
+					if (Data->hdr.idFrom == kFindTextListView_Objects && Form)
 					{
 						switch (Form->formType)
 						{
@@ -577,6 +673,8 @@ namespace ConstructionSetExtender
 					break;
 				}
 
+				break;
+			case WM_INITDIALOG:
 				break;
 			case WM_DESTROY:
 				break;
@@ -3965,6 +4063,11 @@ namespace ConstructionSetExtender
 						SetWindowText(GetDlgItem(hWnd, 1), "Apply");
 						SetWindowText(GetDlgItem(hWnd, 2), "Close");
 					}
+
+					// ideally, we'd be changing the form listview's style to allow multiple selections
+					// unfortunately, adding/removing the LVS_SINGLESEL style post-window creation has no effect
+					// so we tuck in out tails and create replacement templates for all TESFormIDListView forms
+					// PS: Dammit!
 				}
 
 				break;
@@ -4032,12 +4135,46 @@ namespace ConstructionSetExtender
 
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
 						break;		// only interested in the main listview control
-					else if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
-						break;		// you! go away!
+				
 
 					switch (NotificationData->code)
 					{
+					case LVN_BEGINDRAG:
+						{
+							// override the vanilla handler to allow multiple selections
+							NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
+							std::list<TESForm*> Selection;
+							UInt8* DraggingForms = (UInt8*)0x00A0BE45;
+
+							int Index = -1;
+							while ((Index = ListView_GetNextItem(Data->hdr.hwndFrom, Index, LVNI_SELECTED)) != -1)
+							{
+								TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Index);
+								SME_ASSERT(Form);
+
+								Selection.push_back(Form);
+							}
+							
+							if (Selection.size())
+							{
+								*DraggingForms = 1;
+
+								_RENDERSEL->ClearSelection(true);
+								TESObjectWindow::SetSplitterEnabled(false);
+
+								for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
+									_RENDERSEL->AddToSelection(*Itr);
+
+								SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
+								SetCapture(hWnd);
+
+								Return = true;
+							}
+						}
+
+						break;
 					case LVN_ITEMCHANGED:
+						if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)			// you! go away!
 						{
 							NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
 
