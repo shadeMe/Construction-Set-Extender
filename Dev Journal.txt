@@ -21,9 +21,12 @@ CSE		---->
 
 	ENHANCEMENT		=
 		> Prevent creation of circular leveled lists
+		> Apply nVidia fog fix for all loaded interiors
+		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
+		> Grass rendering
 		> Add a random "roughness" factor to the landscape sculpting brush
 
 

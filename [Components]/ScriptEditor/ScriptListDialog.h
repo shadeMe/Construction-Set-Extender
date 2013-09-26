@@ -44,6 +44,7 @@ namespace ConstructionSetExtender
 			ComponentDLLInterface::ScriptListData*				ScriptListCache;
 			ComponentDLLInterface::ScriptData*					FirstSelectionCache;
 			bool												Closing;
+			bool												SelectionComplete;		// stoopid workaround for the form's obsession with an accept button
 
 			AnimatedForm^										ScriptBox;
 			TextBox^											PreviewBox;

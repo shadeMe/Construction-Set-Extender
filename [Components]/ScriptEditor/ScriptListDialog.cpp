@@ -97,6 +97,7 @@ namespace ConstructionSetExtender
 			ScriptBox->MaximizeBox = false;
 			ScriptBox->MinimizeBox = false;
 			ScriptBox->Text = "Select Script";
+			ScriptBox->AcceptButton = nullptr;
 
 			ScriptBox->Hide();
 			ScriptList->Tag = (int)0;
@@ -118,6 +119,7 @@ namespace ConstructionSetExtender
 		ComponentDLLInterface::ScriptData* ScriptListDialog::Show(Operation Op, String^ FilterString)
 		{
 			CurrentOperation = Op;
+
 			if (Op == Operation::e_Open)
 				ScriptList->MultiSelect = true;
 			else
@@ -185,6 +187,7 @@ namespace ConstructionSetExtender
 				ScriptBox->ClientSize = LastKnownSize;
 
 			Closing = false;
+			SelectionComplete = false;
 			ScriptBox->ShowDialog();
 
 			return FirstSelectionCache;
@@ -205,7 +208,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::PerformOperationOnSelection()
 		{
-			if (GetListViewSelectedItem(ScriptList) == nullptr)
+			if (GetListViewSelectedItem(ScriptList) == nullptr || SelectionComplete)
 				return;
 
 			for (UInt32 i = 0; i < ScriptList->SelectedItems->Count; i++)
@@ -225,6 +228,7 @@ namespace ConstructionSetExtender
 			}
 
 			Closing = true;
+			SelectionComplete = true;
 			ScriptBox->Close();
 		}
 
