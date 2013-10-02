@@ -21,7 +21,6 @@ CSE		---->
 
 	ENHANCEMENT		=
 		> Prevent creation of circular leveled lists
-		> Apply nVidia fog fix for all loaded interiors
 		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
@@ -39,8 +38,6 @@ CSE		---->
 SE		---->
 
 	BUGFIX			=
-		> ISinterface pop issues
-			http://www.darkcreations.org/forums/topic/2609-construction-set-extender-61/?p=168571
 
 
 	ENHANCEMENT		=
@@ -52,5 +49,9 @@ SE		---->
 
 USE		---->
 
+	BUGFIX			=
+		> Double clicking in the used in these cells listview doesn't always work.
+			Use the formID to perform the look up, not the editorID
+		
 	ENHANCEMENT		=
 		> Export all data to CSV

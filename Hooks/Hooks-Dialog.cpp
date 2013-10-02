@@ -654,7 +654,9 @@ namespace ConstructionSetExtender
 						break;
 					}
 
-					FORMAT_STR(Buffer, "%08X", Form->formID);
+					TESFile* Plugin = Form->GetOverrideFile(-1);
+					FORMAT_STR(Buffer, "Current:%08X Next:%08X", Form->formID, (Plugin ? Plugin->fileHeader.nextFormID : _DATAHANDLER->nextFormID));
+
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 									MAKEINTRESOURCE(IDD_TEXTEDIT),
 									hWnd,
@@ -680,7 +682,12 @@ namespace ConstructionSetExtender
 											"Change FormID from %08X to %08X?\n\nMod index bits will be automatically corrected by the CS when saving.\nCheck the console for formID bashing on confirmation.",
 											Form->formID, FormID) == IDYES)
 						{
-							Form->SetFormID((FormID & 0x00FFFFFF));
+							if (Plugin)
+								FormID |= Plugin->fileIndex << 24;
+							else
+								FormID &= ~0xFF000000;
+
+							Form->SetFormID(FormID);
 							Form->SetFromActiveFile(true);
 						}
 					}
@@ -903,6 +910,42 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			case IDC_CSE_POPUP_REPLACEBASEFORM:
+				{
+					FORMAT_STR(Buffer, "Enter the editorID of the new base form");
+					
+					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
+						MAKEINTRESOURCE(IDD_TEXTEDIT),
+						hWnd,
+						(DLGPROC)UIManager::TextEditDlgProc,
+						(LPARAM)Buffer))
+					{
+						TESForm* NewBaseForm = TESForm::LookupByEditorID(Buffer);
+						if (NewBaseForm == NULL)
+						{
+							BGSEEUI->MsgBoxE(hWnd, 0, "Invalid editorID '%s'", Buffer);
+							break;
+						}
+
+						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+						SME_ASSERT(Ref);
+
+						if (BGSEEUI->MsgBoxI(hWnd,
+							MB_YESNO,
+							"Are you sure you want to change the base form from '%s' (%08X) to '%s' (%08X)?",
+							Ref->baseForm->editorID.c_str(),
+							Ref->baseForm->formID,
+							NewBaseForm->editorID.c_str(),
+							NewBaseForm->formID) == IDYES)
+						{
+							Ref->SetBaseForm(NewBaseForm);
+							Ref->GenerateNiNode();
+							TESRenderWindow::Refresh3D();
+						}
+					}
+				}
+
+				break;
 			}
 
 			RedrawWindow(hWnd, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
@@ -926,6 +969,7 @@ namespace ConstructionSetExtender
 			{
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_EDITBASEFORM, "Edit Base Form");
+				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_REPLACEBASEFORM, "Replace Base Form");
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLEVISIBILITY, "Toggle Visibility");
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 			}
@@ -954,6 +998,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_JUMPTOUSEINFOLIST:
 			case IDC_CSE_POPUP_UNDELETE:
 			case IDC_CSE_POPUP_EDITBASEFORM:
+			case IDC_CSE_POPUP_REPLACEBASEFORM:
 			case IDC_CSE_POPUP_TOGGLEVISIBILITY:
 			case IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY:
 			case IDC_CSE_POPUP_ADDTOTAG:
@@ -976,6 +1021,7 @@ namespace ConstructionSetExtender
 			DeleteMenu(Menu, IDC_CSE_POPUP_JUMPTOUSEINFOLIST, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_UNDELETE, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_EDITBASEFORM, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_REPLACEBASEFORM, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_TOGGLEVISIBILITY, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_ADDTOTAG, MF_BYCOMMAND);

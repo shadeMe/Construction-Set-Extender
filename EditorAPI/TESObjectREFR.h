@@ -45,6 +45,7 @@ public:
 
 	// methods
 	NiNode*						GetNiNode(void);
+	void						SetNiNode(NiNode* Node);
 	NiNode*						GenerateNiNode();
 	void						UpdateNiNode();
 	const Vector3*				GetPosition() const;
@@ -67,6 +68,7 @@ public:
 
 	void						ToggleInvisiblity(void);
 	void						ToggleChildrenInvisibility(void);
+	void						ToggleSelectionBox(bool State);
 	void						SetFrozenState(bool State);
 	void						SetAlpha(float Alpha = -1.0f);		// pass -1.0f to reset alpha
 

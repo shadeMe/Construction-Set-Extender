@@ -223,6 +223,41 @@ void TESDataHandler::RemoveInvalidScripts( void )
 	SortScripts();
 }
 
+void TESDataHandler::FixInteriorCellFogPlane( void )
+{
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+	{
+		UInt32 FormID = NULL;
+		TESForm* Form = NULL;
+
+		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
+		if (FormID && Form)
+		{
+			if (Form->formType == TESForm::kFormType_Cell)
+			{
+				TESObjectCELL* Cell = CS_CAST(Form, TESForm, TESObjectCELL);
+				SME_ASSERT(Cell);
+
+				if ((Cell->cellFlags & TESObjectCELL::kCellFlags_Interior))
+				{
+					if (Cell->cellData.lighting)
+					{
+						if (Cell->cellData.lighting->fogNear < 0.0001)
+							Cell->cellData.lighting->fogNear = 0.0001;
+					}
+				}
+			}
+		}
+	}
+}
+
+void TESDataHandler::PerformPostLoadTasks( void )
+{
+	CleanCellWaterExtraData();
+	RemoveInvalidScripts();
+	FixInteriorCellFogPlane();
+}
+
 void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Reference)
 {
 	cdeclCall<UInt32>(0x00430F40, CameraCoordData, Reference);

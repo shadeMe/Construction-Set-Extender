@@ -15,11 +15,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(NiDX9RendererRecreateB, "");
 		_DeclareMemHdlr(NiDX9RendererRecreateC, "");
 		_DeclareMemHdlr(RenderWindowUpdateViewport, "updates the render window viewport regardless of user activity");
-		_DeclareMemHdlr(RenderWindowAddToSelection, "allows groups of references to be selected at a time");
-		_DeclareMemHdlr(TESRenderControlPerformMoveScale, "allows the freezing of references in the render window");
-		_DeclareMemHdlr(TESRenderControlPerformRotate, "");
-		_DeclareMemHdlr(TESRenderControlPerformFall, "");
-		_DeclareMemHdlr(TESRenderUndoStackRecordRef, "");
 		_DeclareMemHdlr(TESObjectREFRSetupDialog, "flag temp nodes to prevent them from being unculled unnecessarily");
 		_DeclareMemHdlr(TESObjectREFRCleanDialog, "");
 		_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");
@@ -70,5 +65,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(RenderWindowCameraRotationPivot, "allows the viewport camera to be rotated around an arbitrary pivot");
 		_DeclareMemHdlr(CellViewSetCurrentCell, "temporary hook to prevent the cell window from gaining focus during render window exterior cell switches");
 		_DeclareMemHdlr(RenderWindowCursorSwap, "prevents the cursor icon changes from screwing themselves up");
+
+		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 	}
 }

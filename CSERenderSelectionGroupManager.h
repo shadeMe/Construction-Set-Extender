@@ -24,7 +24,7 @@ namespace ConstructionSetExtender
 
 			UInt32									ValidateMembers(void);
 			void									RemoveMember(ReferenceHandleT Ref);
-			void									ConvertToSelection(TESRenderSelection* Selection);
+			void									ConvertToSelection(TESRenderSelection* Selection, bool ClearSelection);
 
 			const UInt32							GetID(void) const { return ID; }
 			const UInt32							GetSize(void) const { return Members.size(); }
@@ -44,7 +44,7 @@ namespace ConstructionSetExtender
 		void										Orphanize(ReferenceHandleT Ref);				// removes the ref from its parent group, if any
 
 													// if the ref is a part of a group, replaces the selection with the group and returns true. returns false otherwise
-		bool										SelectAffiliatedGroup(TESObjectREFR* Ref, TESRenderSelection* Selection);
+		bool										SelectAffiliatedGroup(TESObjectREFR* Ref, TESRenderSelection* Selection, bool ClearSelection);
 
 		void										Clear();
 

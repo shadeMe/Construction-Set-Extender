@@ -145,6 +145,10 @@ public:
 
 	void											RemoveInvalidScripts(void);			// destroys any empty scripts, i.e., scripts without script text/editorID
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
+	void											FixInteriorCellFogPlane(void);		// applys the "nVidia fog" fix
+
+	void											PerformPostLoadTasks(void);
+
 	bool											PanicSave(bool Initialize = false);	// last chance save handler, used when the editor crashes
 
 	static TESDataHandler**							Singleton;

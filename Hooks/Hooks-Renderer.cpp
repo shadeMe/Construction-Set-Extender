@@ -21,11 +21,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(NiDX9RendererRecreateB, 0x006D7A0D);
 		_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
 		_DefineHookHdlr(RenderWindowUpdateViewport, 0x0042CE70);
-		_DefineHookHdlr(RenderWindowAddToSelection, 0x0042AE71);
-		_DefineHookHdlr(TESRenderControlPerformMoveScale, 0x0042CAB0);
-		_DefineHookHdlr(TESRenderControlPerformRotate, 0x0042B997);
-		_DefineHookHdlr(TESRenderControlPerformFall, 0x0042886A);
-		_DefineHookHdlr(TESRenderUndoStackRecordRef, 0x00432D40);
 		_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 		_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 		_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
@@ -86,11 +81,6 @@ namespace ConstructionSetExtender
 			_MemHdlr(NiDX9RendererRecreateB).WriteJump();
 			_MemHdlr(NiDX9RendererRecreateC).WriteJump();
 			_MemHdlr(RenderWindowUpdateViewport).WriteJump();
-			_MemHdlr(RenderWindowAddToSelection).WriteJump();
-			_MemHdlr(TESRenderControlPerformMoveScale).WriteJump();
-			_MemHdlr(TESRenderControlPerformRotate).WriteJump();
-			_MemHdlr(TESRenderControlPerformFall).WriteJump();
-			_MemHdlr(TESRenderUndoStackRecordRef).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
 			_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
 			_MemHdlr(TESRenderControlPerformFallVoid).WriteJump();
@@ -138,6 +128,55 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESRubberBandSelectionSkipInvisibleRefs).WriteJump();
 			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
+
+			for (int i = 0; i < 4; i++)
+			{
+				static const UInt32 kRenderWindowRefSelectionCallSites[4] =
+				{
+					0x0042AE3A, 0x0042AE7F,
+					0x0042AEDB, 0x0042AF8B				// rubber band selection
+				};
+
+				_DefineCallHdlr(RerouteRenderWindowRefSelection, kRenderWindowRefSelectionCallSites[i], RenderWindowReferenceSelectionDetour);
+				_MemHdlr(RerouteRenderWindowRefSelection).WriteCall();
+			}
+		}
+
+		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
+		{
+			Ref->ToggleSelectionBox(false);
+
+			if (GetAsyncKeyState(VK_MENU))
+			{
+				// if the alt key is held down, fallback to regular handling
+				_RENDERSEL->AddToSelection(Ref, ShowSelectionBox);
+			}
+			else
+			{
+				if (Ref->GetFrozen() || (Ref->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+					;// ref's frozen, don't select
+				else
+				{
+					// add the parent group to the selection, if any
+					if (CSERenderSelectionGroupManager::Instance.SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
+						_RENDERSEL->AddToSelection(Ref, ShowSelectionBox);
+
+					// recheck the selection for frozen refs that may have been a part of the group
+					std::list<TESForm*> FrozenRefs;
+
+					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+					{
+						TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+						SME_ASSERT(Selection);
+
+						if (Selection->GetFrozen() || (Selection->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+							FrozenRefs.push_back(Itr->Data);
+					}
+
+					for (std::list<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
+						_RENDERSEL->RemoveFromSelection(*Itr, true);
+				}
+			}
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -356,130 +395,6 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Jump)
 			EXIT:
 				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		bool __stdcall DoRenderWindowSelectionHook(TESObjectREFR* Ref)
-		{
-			return CSERenderSelectionGroupManager::Instance.SelectAffiliatedGroup(Ref, _RENDERSEL);
-		}
-
-		#define _hhName		RenderWindowAddToSelection
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042AE76);
-			_hhSetVar(Jump, 0x0042AE84);
-			_hhSetVar(Call, 0x00511C20);
-			__asm
-			{
-				call	_hhGetVar(Call)
-				xor		eax, eax
-
-				pushad
-				push	esi
-				call	DoRenderWindowSelectionHook
-				test	al, al
-				jnz		GROUPED
-				popad
-
-				jmp		_hhGetVar(Retn)
-			GROUPED:
-				popad
-				jmp		_hhGetVar(Jump)
-			}
-		}
-
-		void __stdcall TESRenderControlProcessFrozenRefs(TESRenderSelection::SelectedObjectsEntry* Current)
-		{
-			std::list<TESForm*> FrozenRefs;
-			if (Current == NULL)
-				Current = _RENDERSEL->selectionList;
-
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = Current; Itr && Itr->Data; Itr = Itr->Next)
-			{
-				TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-				SME_ASSERT(Selection);
-
-				if (Selection->GetFrozen() || (Selection->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
-				{
-					FrozenRefs.push_back(Itr->Data);
-				}
-			}
-
-			for (std::list<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
-				_RENDERSEL->RemoveFromSelection(*Itr, true);
-		}
-
-		#define _hhName		TESRenderControlPerformMoveScale
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042CAB7);
-			__asm
-			{
-				pushad
-				push	0
-				call	TESRenderControlProcessFrozenRefs
-				popad
-
-				mov		eax, 0x00A0BBDD
-				cmp		byte ptr [eax], 0
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName		TESRenderControlPerformRotate
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042B99E);
-
-			*TESRenderWindow::RefreshFlag = 1;
-			__asm
-			{
-				pushad
-				push	0
-				call	TESRenderControlProcessFrozenRefs
-				popad
-
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName		TESRenderControlPerformFall
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042886F);
-			_hhSetVar(Call, 0x00512990);
-			__asm
-			{
-				pushad
-				push	0
-				call	TESRenderControlProcessFrozenRefs
-				popad
-
-				call	_hhGetVar(Call)
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName		TESRenderUndoStackRecordRef
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00432D48);
-			__asm
-			{
-				mov		eax, [esp + 0x8]
-
-				pushad
-				push	eax
-				call	TESRenderControlProcessFrozenRefs
-				popad
-
-				push    ebx
-				push    ebp
-				xor     ebp, ebp
-				cmp     [esp + 0x10], ebp
-
 				jmp		_hhGetVar(Retn)
 			}
 		}

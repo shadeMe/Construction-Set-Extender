@@ -863,6 +863,8 @@ namespace ConstructionSetExtender
 			}
 			SanitizeControls(Tab);
 		}
+
+		Rank->Text = "-1";
 	}
 
 	void RefBatchEditor::SanitizeControls(Control^ Container)

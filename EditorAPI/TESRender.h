@@ -175,6 +175,7 @@ public:
 	// methods
 	static void							Reset();
 	static void							Redraw(bool RefreshPathGrid = false);
+	static void							Refresh3D();
 	static void							TogglePathGridEditMode();
 
 	static HWND*						WindowHandle;

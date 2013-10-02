@@ -94,6 +94,8 @@ namespace ConstructionSetExtender
 				if (Item->lParam)
 				{
 					TESForm* Form = (TESForm*)Item->lParam;
+					UInt32 FormID = Form->formID;
+
 					if (Form->editorID.c_str() == NULL && UserData->ObjRefList)
 					{
 						TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
@@ -103,7 +105,7 @@ namespace ConstructionSetExtender
 
 					if (UserData->FilterString.size() && Form)
 					{
-						std::string EditorID, FullName, Description;
+						std::string EditorID, FullName, Description, FormIDStr;
 
 						TESFullName* FullNameCmpt = CS_CAST(Form, TESForm, TESFullName);
 						TESDescription* DescriptionCmpt = CS_CAST(Form, TESForm, TESDescription);
@@ -117,13 +119,18 @@ namespace ConstructionSetExtender
 						if (Form->editorID.c_str())
 							EditorID = Form->editorID.c_str();
 
+						char Buffer[50] =  {0};
+						FORMAT_STR(Buffer, "%08x", FormID);
+						FormIDStr = Buffer;
+
 						SME::StringHelpers::MakeLower(EditorID);
 						SME::StringHelpers::MakeLower(FullName);
 						SME::StringHelpers::MakeLower(Description);
 
 						if (EditorID.find(UserData->FilterString) == std::string::npos &&
 							FullName.find(UserData->FilterString) == std::string::npos &&
-							Description.find(UserData->FilterString) == std::string::npos)
+							Description.find(UserData->FilterString) == std::string::npos &&
+							FormIDStr.find(UserData->FilterString) == std::string::npos)
 						{
 							return -1;		// couldn't find the filter string, so skip insertion
 						}
@@ -2281,6 +2288,23 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			case WM_LBUTTONDBLCLK:
+				{
+					if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0 && GetAsyncKeyState(VK_MENU) == 0)
+					{
+						TESObjectREFR* Ref = TESRender::PickAtCoords(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+						if (Ref)
+						{
+							if (Ref->GetFrozen() || (Ref->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+							{
+								// ref's frozen, preempt the vanilla handler
+								Return = true;
+							}
+						}
+					}
+				}
+
+				break;
 			case WM_MOUSEMOVE:
 				{
 					TESRenderWindow::CurrentMouseCoord.x = GET_X_LPARAM(lParam);
@@ -2310,21 +2334,24 @@ namespace ConstructionSetExtender
 						}
 					}
 
-					HCURSOR* Icon = TESRenderWindow::CursorArrow;
-					if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+					if (GetCapture() != hWnd)
 					{
-						TESObjectREFR* MouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
-						if (MouseRef)
+						HCURSOR* Icon = TESRenderWindow::CursorArrow;
+						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
-							if (_RENDERSEL->HasObject(MouseRef))
-								Icon = TESRenderWindow::CursorMove;
-							else
-								Icon = TESRenderWindow::CursorSelect;
+							TESObjectREFR* MouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
+							if (MouseRef)
+							{
+								if (_RENDERSEL->HasObject(MouseRef))
+									Icon = TESRenderWindow::CursorMove;
+								else
+									Icon = TESRenderWindow::CursorSelect;
+							}
 						}
-					}
 
-					if (GetCursor() != *Icon)
-						SetCursor(*Icon);
+						if (Icon && GetCursor() != *Icon)
+							SetCursor(*Icon);						
+					}
 				}
 
 				break;
@@ -4066,7 +4093,7 @@ namespace ConstructionSetExtender
 
 					// ideally, we'd be changing the form listview's style to allow multiple selections
 					// unfortunately, adding/removing the LVS_SINGLESEL style post-window creation has no effect
-					// so we tuck in out tails and create replacement templates for all TESFormIDListView forms
+					// so we tuck in our tails and create replacement templates for all TESFormIDListView forms
 					// PS: Dammit!
 				}
 
@@ -5069,7 +5096,11 @@ namespace ConstructionSetExtender
 							QuestScript->info.type = Script::kScriptType_Quest;
 							QuestScript->SetFromActiveFile(true);
 
-							FORMAT_STR(Buffer, "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tset fQuestDelayTime to %s\n\nend", ScriptID, Delay);
+							if (strlen(Delay))
+								FORMAT_STR(Buffer, "scn %s\n\nfloat fQuestDelayTime\n\nBegin GameMode\n\tset fQuestDelayTime to %s\n\nend", ScriptID, Delay);
+							else
+								FORMAT_STR(Buffer, "scn %s\n\nBegin GameMode\n\nEnd", ScriptID);
+
 							QuestScript->SetText(Buffer);
 							QuestScript->SetEditorID(ScriptID);
 

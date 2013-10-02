@@ -91,6 +91,11 @@ void TESRenderWindow::TogglePathGridEditMode()
 	cdeclCall<void>(0x00550660);
 }
 
+void TESRenderWindow::Refresh3D()
+{
+	SendMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);
+}
+
 void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
 {
 	thisCall<UInt32>(0x00432D40, this, Operation, Selection);

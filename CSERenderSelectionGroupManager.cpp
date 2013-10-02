@@ -81,18 +81,20 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void CSERenderSelectionGroupManager::GroupData::ConvertToSelection( TESRenderSelection* Selection )
+	void CSERenderSelectionGroupManager::GroupData::ConvertToSelection( TESRenderSelection* Selection, bool ClearSelection )
 	{
 		SME_ASSERT(Selection);
 
-		Selection->ClearSelection(true);
+		if (ClearSelection)
+			Selection->ClearSelection(true);
 
 		for (MemberRosterT::iterator Itr = Members.begin(); Itr != Members.end(); Itr++)
 		{
 			TESObjectREFR* Ref = CS_CAST(TESForm::LookupByFormID(*Itr), TESForm, TESObjectREFR);
-
 			SME_ASSERT(Ref);
-			Selection->AddToSelection(Ref, true);
+
+			if (Selection->HasObject(Ref) == false)
+				Selection->AddToSelection(Ref, true);
 		}
 	}
 
@@ -207,7 +209,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	bool CSERenderSelectionGroupManager::SelectAffiliatedGroup( TESObjectREFR* Ref, TESRenderSelection* Selection )
+	bool CSERenderSelectionGroupManager::SelectAffiliatedGroup( TESObjectREFR* Ref, TESRenderSelection* Selection, bool ClearSelection )
 	{
 		SME_ASSERT(Ref && Selection);
 
@@ -224,7 +226,7 @@ namespace ConstructionSetExtender
 			}
 			else
 			{
-				Group->ConvertToSelection(Selection);
+				Group->ConvertToSelection(Selection, ClearSelection);
 				Result = true;
 			}
 		}
