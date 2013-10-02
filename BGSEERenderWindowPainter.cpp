@@ -142,7 +142,7 @@ namespace BGSEditorExtender
 		else if (TaskQueue.size() < 1 || Parameter == NULL)
 			return;
 
-		long double TimePassed = *((long double*)Parameter);
+		double TimePassed = *((double*)Parameter);
 		RenderTask* CurrentTask = TaskQueue.front();
 
 		if (CurrentTask->RemainingTime > 0.0)
@@ -278,7 +278,7 @@ namespace BGSEditorExtender
 		if (Enabled == false || OutputSprite == NULL)
 			return;
 
-		long double TimePassed = TimeCounter.GetTimePassed();
+		double TimePassed = TimeCounter.GetTimePassed();
 
 		OutputSprite->Begin(D3DXSPRITE_ALPHABLEND|D3DXSPRITE_SORT_TEXTURE);
 

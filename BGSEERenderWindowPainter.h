@@ -99,7 +99,7 @@ namespace BGSEditorExtender
 
 		std::queue<RenderTask*>			TaskQueue;
 
-		virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite);		// parameter's long double* - TimePassedSinceLastUpdate
+		virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite);		// parameter's double* - TimePassedSinceLastUpdate
 
 		friend class					BGSEERenderWindowPainter;
 	public:
