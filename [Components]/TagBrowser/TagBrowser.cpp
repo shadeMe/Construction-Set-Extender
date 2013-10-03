@@ -514,7 +514,7 @@ namespace ConstructionSetExtender
 		ListViewItem^ Selected = GetListViewSelectedItem(List);
 		if (Selected != nullptr)
 		{
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEdit((CString(Selected->Text)).c_str());
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID((CString(Selected->Text)).c_str());
 		}
 	}
 	void TagBrowser::FormSelectionList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)

@@ -324,7 +324,7 @@ namespace ConstructionSetExtender
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add((ThisForm->ParentCellInterior == false ? String::Format("{0}, {1}", ThisForm->XCoord, ThisForm->YCoord) : "Interior"));
-				Item->SubItems->Add(gcnew String(ThisForm->RefEditorID));
+				Item->SubItems->Add(gcnew String(ThisForm->RefFormID.ToString("X8")));
 				Item->SubItems->Add(ThisForm->UseCount.ToString());
 				if (ThisForm->IsActive() && ColorizeActiveForms)
 				{
@@ -429,7 +429,7 @@ namespace ConstructionSetExtender
 
 		CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
 
-		NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEdit(CEID.c_str());
+		NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
 	}
 
 	void UseInfoList::UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -439,7 +439,7 @@ namespace ConstructionSetExtender
 
 		CString CEID(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text);
 
-		NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEdit(CEID.c_str());
+		NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
 	}
 
 	void UseInfoList::UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -447,11 +447,10 @@ namespace ConstructionSetExtender
 		if (GetListViewSelectedItem(UseListCell) == nullptr)
 			return;
 
-		if (GetListViewSelectedItem(UseListCell)->SubItems[4]->Text != "<Unnamed>")
-		{
-			CString CEID(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text);
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEdit(CEID.c_str());
-		}
+		UInt32 FormID = 0;
+		UInt32::TryParse(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text, System::Globalization::NumberStyles::HexNumber, nullptr, FormID);
+		if (FormID)
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByFormID(FormID);
 	}
 
 	void UseInfoList::ExportDataButton_Click( Object^ Sender, EventArgs^ E )

@@ -211,11 +211,12 @@ public:
 	void							SetDataInDialog(HWND Dialog);
 
 	static TESForm*					CreateInstance(UInt8 TypeID);
-	void							DeleteInstance(bool ReleaseMemory = true);
+	void							DeleteInstance();
 
 	static TESForm*					LookupByFormID(UInt32 FormID);
 	static TESForm*					LookupByEditorID(const char* EditorID);
 	static const char*				GetFormTypeIDLongName(UInt8 TypeID);
+	static TESForm*					CreateTemporaryCopy(TESForm* Source, bool CopyModifiedState = true);
 
 	static FormTypeInfo*																			FormTypeInfoTable;
 	static ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		EditorIDMap;

@@ -292,7 +292,8 @@ namespace ComponentDLLInterface
 	struct UseInfoListCellItemData : public FormData
 	{
 		const char*										WorldEditorID;
-		const char*										RefEditorID;
+		const char*										RefEditorID;			// first ref in cell
+		UInt32											RefFormID;
 		bool											ParentCellInterior;
 		int												XCoord;
 		int												YCoord;
@@ -302,6 +303,7 @@ namespace ComponentDLLInterface
 		{
 			WorldEditorID = 0;
 			RefEditorID = 0;
+			RefFormID = 0;
 			XCoord = 0;
 			YCoord = 0;
 			UseCount = 0;

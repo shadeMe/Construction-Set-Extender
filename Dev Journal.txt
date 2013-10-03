@@ -20,7 +20,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Prevent creation of circular leveled lists
 		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
@@ -41,7 +40,6 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Automatically create a new tab/workspace when opening a script (unless the current tab/workspace is empty).
 
 
 	MISC			=
@@ -50,8 +48,7 @@ SE		---->
 USE		---->
 
 	BUGFIX			=
-		> Double clicking in the used in these cells listview doesn't always work.
-			Use the formID to perform the look up, not the editorID
 		
+
 	ENHANCEMENT		=
 		> Export all data to CSV

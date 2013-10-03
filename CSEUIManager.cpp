@@ -522,12 +522,9 @@ namespace ConstructionSetExtender
 
 		void CSETESFormEditData::FillBuffer( TESForm* Parent )
 		{
-			SME_ASSERT(Parent && Buffer == NULL);
+			SME_ASSERT(Buffer == NULL);
 
-			Buffer = TESForm::CreateInstance(Parent->formType);
-			Buffer->MarkAsTemporary();
-			Buffer->CopyFrom(Parent);
-			Buffer->SetFromActiveFile(Parent->GetFromActiveFile());
+			Buffer = TESForm::CreateTemporaryCopy(Parent);
 		}
 
 		bool CSETESFormEditData::HasChanges( TESForm* Parent )
@@ -4795,6 +4792,44 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+		LRESULT CALLBACK LeveledItemFormDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{			
+			case WM_COMMAND:
+				switch (LOWORD(wParam))
+				{
+				case 1:			// OK button
+					{
+						// validate list
+						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+						// use a temp copy as the local copy is used to determine if changes were made
+						TESForm* TempCopy = TESForm::CreateTemporaryCopy(LocalCopy);
+						TempCopy->GetDataFromDialog(hWnd);
+						
+						std::string ValidationOutput = "";
+						if ((CS_CAST(TempCopy, TESForm, TESLeveledList))->CheckForCircularPaths(ValidationOutput) == false)
+						{
+							BGSEEUI->MsgBoxE(hWnd, 0, "The leveled list contents are invalid!\n\nA circular link was found at:\n%s", ValidationOutput.c_str());
+							Return = true;
+						}
+						
+						TempCopy->DeleteInstance();
+					}
+
+					break;
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
 
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
@@ -5374,6 +5409,7 @@ namespace ConstructionSetExtender
 
 		void Initialize( void )
 		{
+			// FormEdit subclasses
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, TESFormEditDlgSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Enchantment, TESFormEditDlgSubClassProc);
@@ -5413,6 +5449,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectShader, TESFormEditDlgSubClassProc);
 			}
 
+			// FormIDListView subclasses
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Faction, TESFormIDListViewDlgSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, TESFormIDListViewDlgSubClassProc);
@@ -5429,6 +5466,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
 			}
 
+			// Generic extra fittings subclasses
 			{
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Data, CommonDialogExtraFittingsSubClassProc);
@@ -5515,6 +5553,11 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Enchantment, MagicItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Potion, MagicItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Spell, MagicItemFormDlgSubClassProc);
+
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledItem, LeveledItemFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, LeveledItemFormDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, LeveledItemFormDlgSubClassProc);
+
 
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(

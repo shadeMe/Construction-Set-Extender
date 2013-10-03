@@ -241,10 +241,11 @@ STATIC_ASSERT(sizeof(TESSpellList) == 0x14);
 // 10
 class TESLeveledList : public BaseFormComponent
 {
+	static bool					WalkForCircularPath(std::string& Output, TESLeveledList* Check, TESLeveledList* Against);
 public:
 	enum LeveledListFlags
 	{
-		kLevListFlag_CalcAllLevels      = 0x01, // ignores max level difference, effective level is no greate than highest level in list
+		kLevListFlag_CalcAllLevels      = 0x01, // ignores max level difference, effective level is no greater than highest level in list
 		kLevListFlag_CalcEachInCount    = 0x02, // for nested lists
 	};
 
@@ -265,6 +266,8 @@ public:
 	/*0C*/ UInt8				chanceNone;
 	/*0D*/ UInt8				levListFlags;
 	/*0E*/ UInt16				padLevList0E;
+
+	bool						CheckForCircularPaths(std::string& Output);
 };
 STATIC_ASSERT(sizeof(TESLeveledList) == 0x10);
 

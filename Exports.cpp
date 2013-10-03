@@ -163,9 +163,29 @@ const char* GetFormTypeIDLongName(UInt8 TypeID)
 	return TESForm::GetFormTypeIDLongName(TypeID);
 }
 
-void LoadFormForEdit(const char* EditorID)
+void LoadFormForEditByEditorID(const char* EditorID)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
+	if (Form)
+	{
+		switch (Form->formType)
+		{
+		case TESForm::kFormType_Script:
+			TESDialog::ShowScriptEditorDialog(Form);
+			break;
+		case TESForm::kFormType_REFR:
+			_TES->LoadCellIntoViewPort((CS_CAST(Form, TESForm, TESObjectREFR))->GetPosition(), CS_CAST(Form, TESForm, TESObjectREFR));
+			break;
+		default:
+			TESDialog::ShowFormEditDialog(Form);
+			break;
+		}
+	}
+}
+
+void LoadFormForEditByFormID(UInt32 FormID)
+{
+	TESForm* Form = TESForm::LookupByFormID(FormID);
 	if (Form)
 	{
 		switch (Form->formType)
@@ -1046,12 +1066,13 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 				for (TESCellUseList::CellUseInfoListT::Iterator Itr = CellUseList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 				{
 					TESCellUseList::CellUseInfo* Data = Itr.Get();
-					TESObjectREFR* FirstRef = Data->cell->FindFirstRef(Form, true);
+					TESObjectREFR* FirstRef = Data->cell->FindFirstRef(Form, false);
 					TESWorldSpace* WorldSpace = Data->cell->GetParentWorldSpace();
 
 					Result->UseInfoListCellItemListHead[i].FillFormData(Data->cell);
 					Result->UseInfoListCellItemListHead[i].WorldEditorID = ((!WorldSpace)?"Interior":WorldSpace->editorID.c_str());
 					Result->UseInfoListCellItemListHead[i].RefEditorID = ((!FirstRef || !FirstRef->editorID.c_str())?"<Unnamed>":FirstRef->editorID.c_str());
+					Result->UseInfoListCellItemListHead[i].RefFormID = (FirstRef == NULL ? 0 : FirstRef->formID);
 					Result->UseInfoListCellItemListHead[i].ParentCellInterior = Data->cell->cellFlags & TESObjectCELL::kCellFlags_Interior;
 					Result->UseInfoListCellItemListHead[i].XCoord = Data->cell->cellData.coords->x;
 					Result->UseInfoListCellItemListHead[i].YCoord = Data->cell->cellData.coords->y;
@@ -1181,7 +1202,8 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		LookupScriptableByEditorID,
 		GetIsFormReference,
 		GetFormTypeIDLongName,
-		LoadFormForEdit,
+		LoadFormForEditByEditorID,
+		LoadFormForEditByFormID,
 		ShowPickReferenceDialog,
 		ShowUseReportDialog,
 		SaveActivePlugin,

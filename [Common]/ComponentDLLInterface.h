@@ -29,7 +29,8 @@ namespace ComponentDLLInterface
 			bool									(* GetIsFormReference)(const char* EditorID);
 			const char*								(* GetFormTypeIDLongName)(UInt8 TypeID);
 
-			void									(* LoadFormForEdit)(const char* EditorID);
+			void									(* LoadFormForEditByEditorID)(const char* EditorID);
+			void									(* LoadFormForEditByFormID)(UInt32 FormID);
 			FormData*								(* ShowPickReferenceDialog)(HWND Parent);
 			void									(* ShowUseReportDialog)(const char* EditorID);
 

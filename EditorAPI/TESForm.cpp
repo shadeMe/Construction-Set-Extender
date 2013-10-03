@@ -151,9 +151,9 @@ TESForm* TESForm::CreateInstance(UInt8 TypeID)
 	return _DATAHANDLER->CreateForm(TypeID);
 }
 
-void TESForm::DeleteInstance(bool ReleaseMemory)
+void TESForm::DeleteInstance()
 {
-	thisVirtualCall<UInt32>(0x34, this, ReleaseMemory);
+	thisVirtualCall<UInt32>(0x34, this, true);
 }
 
 void TESForm::SetFormID(UInt32 FormID, bool Unk02)
@@ -295,3 +295,18 @@ bool TESForm::IsTemporary() const
 {
 	return (formFlags & kFormFlags_Temporary);
 }
+
+TESForm* TESForm::CreateTemporaryCopy( TESForm* Source, bool CopyModifiedState /*= true*/ )
+{
+	SME_ASSERT(Source);
+
+	TESForm* Buffer = TESForm::CreateInstance(Source->formType);
+	Buffer->MarkAsTemporary();
+	Buffer->CopyFrom(Source);
+
+	if (CopyModifiedState)
+		Buffer->SetFromActiveFile(Source->GetFromActiveFile());
+
+	return Buffer;
+}
+

@@ -26,11 +26,7 @@ namespace ConstructionSetExtender
 				BGSEEUNDOSTACK->Print("Creating a undo proxy for a temporary form %s %08X - WTF!", EditorID.c_str(), CopySource->formID);
 			}
 
-			Buffer = TESForm::CreateInstance(CopySource->formType);
-			SME_ASSERT(Buffer);
-
-			Buffer->MarkAsTemporary();
-			Buffer->CopyFrom(CopySource);
+			Buffer = TESForm::CreateTemporaryCopy(CopySource, false);
 		}
 
 		CSEFormUndoProxy::~CSEFormUndoProxy()
