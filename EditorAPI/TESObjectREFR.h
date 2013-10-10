@@ -54,6 +54,7 @@ public:
 	void						SetPersistent(bool Persistent);
 
 	void						ChangeCell(TESObjectCELL* Cell);
+	void						Floor();
 
 	void						SetPosition(float X, float Y, float Z);
 	void						SetRotation(float X, float Y, float Z, bool Radians = false);

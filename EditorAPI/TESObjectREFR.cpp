@@ -68,14 +68,23 @@ void TESObjectREFR::SetScale( float Scale )
 void TESObjectREFR::SetPosition( float X, float Y, float Z )
 {
 	TESObjectCELL* Unk00 = thisCall<TESObjectCELL*>(0x00544380, this);
-	TESObjectCELL* ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+	TESObjectCELL* ExteriorAtCoordsProlog = NULL;
+	TESObjectCELL* ExteriorAtCoordsEpilog = NULL;
+
+	if (parentCell->GetIsInterior() == false)
+	{
+		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+	}
 
 	thisCall<void>(0x00544250, this, X, Y, Z);									// TESObjectREFR::SetPosition
 	thisCall<void>(0x0053FD10, this, position.x, position.y, position.z);		// TESObjectREFR::SetExtraEditorMoveDataPosition
 
-	TESObjectCELL* ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
-	if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)
-		_DATAHANDLER->MoveReference(ExteriorAtCoordsEpilog, this);
+	if (parentCell->GetIsInterior() == false)
+	{
+		ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+		if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)
+			_DATAHANDLER->MoveReference(ExteriorAtCoordsEpilog, this);
+	}
 
 	NiNode* Node3D = GetNiNode();
 	if (Node3D)
@@ -224,4 +233,9 @@ void TESObjectREFR::ToggleSelectionBox( bool State )
 void TESObjectREFR::SetNiNode( NiNode* Node )
 {
 	thisVirtualCall<UInt32>(0x17C, this, Node);
+}
+
+void TESObjectREFR::Floor()
+{
+	cdeclCall<void>(0x00426E50, 0x00A0BC64, this);
 }

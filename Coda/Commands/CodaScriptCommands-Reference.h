@@ -187,6 +187,14 @@ namespace ConstructionSetExtender
 					1,
 					OneArray,
 					ICodaScriptDataStore::kDataType_Numeric);
+
+				CodaScriptParametricCommandPrototype(FloorRef,
+					0,
+					"Moves the reference to the nearest collision object in the negative Z axis.",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Invalid);
 			}
 		}
 	}

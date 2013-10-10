@@ -36,6 +36,7 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(RemoveRefFromRenderWindowSelection);
 				CodaScriptCommandPrototypeDef(CreateRenderWindowSelectionGroup);
 				CodaScriptCommandPrototypeDef(DissolveRenderWindowSelectionGroup);
+				CodaScriptCommandPrototypeDef(FloorRef);
 
 				CodaScriptCommandParamData(CreateRef, 9)
 				{
@@ -636,6 +637,25 @@ namespace ConstructionSetExtender
 
 						Buffer->DeleteInstance();
 					}
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(FloorRef)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (!Reference || Reference->formType != TESForm::kFormType_REFR)
+						return false;
+
+					Reference->Floor();
 
 					return true;
 				}
