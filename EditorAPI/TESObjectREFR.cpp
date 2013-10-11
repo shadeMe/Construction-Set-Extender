@@ -67,13 +67,13 @@ void TESObjectREFR::SetScale( float Scale )
 
 void TESObjectREFR::SetPosition( float X, float Y, float Z )
 {
-	TESObjectCELL* Unk00 = thisCall<TESObjectCELL*>(0x00544380, this);
+	thisCall<TESObjectCELL*>(0x00544380, this);
 	TESObjectCELL* ExteriorAtCoordsProlog = NULL;
 	TESObjectCELL* ExteriorAtCoordsEpilog = NULL;
 
 	if (parentCell->GetIsInterior() == false)
 	{
-		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
 	}
 
 	thisCall<void>(0x00544250, this, X, Y, Z);									// TESObjectREFR::SetPosition
@@ -81,7 +81,7 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 
 	if (parentCell->GetIsInterior() == false)
 	{
-		ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, NULL, NULL);
+		ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
 		if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)
 			_DATAHANDLER->MoveReference(ExteriorAtCoordsEpilog, this);
 	}

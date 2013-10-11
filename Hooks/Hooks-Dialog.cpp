@@ -65,6 +65,7 @@ namespace ConstructionSetExtender
 		_DefineJumpHdlr(EffectItemListViewSortingA, 0x0051DE03, 0x0051DE1B);
 		_DefineJumpHdlr(EffectItemListViewSortingB, 0x00567F15, 0x00567F27);
 		_DefineJumpHdlr(EffectItemListViewSortingC, 0x0056D963, 0x0056D97B);
+		_DefinePatchHdlr(TESObjectLIGHClampFalloffExp, 0x0050FBB1 + 1);
 
 		void PatchDialogHooks(void)
 		{
@@ -300,6 +301,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(EffectItemListViewSortingA).WriteJump();
 			_MemHdlr(EffectItemListViewSortingB).WriteJump();
 			_MemHdlr(EffectItemListViewSortingC).WriteJump();
+			_MemHdlr(TESObjectLIGHClampFalloffExp).WriteUInt32(1031);
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)

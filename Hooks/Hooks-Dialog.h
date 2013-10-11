@@ -62,6 +62,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(EffectItemListViewSortingA, "prevents the sorting of the effect item list view");
 		_DeclareMemHdlr(EffectItemListViewSortingB, "");
 		_DeclareMemHdlr(EffectItemListViewSortingC, "");
+		_DeclareMemHdlr(TESObjectLIGHClampFalloffExp, "makes sure the falloff exponent text field is clamped to its expected limits");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);
