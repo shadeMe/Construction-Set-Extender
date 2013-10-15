@@ -190,7 +190,15 @@ namespace ConstructionSetExtender
 
 				CodaScriptParametricCommandPrototype(FloorRef,
 					0,
-					"Moves the reference to the nearest collision object in the negative Z axis.",
+					"Moves the reference to the nearest collision object in the negative Z axis. The parameter reference needs to be loaded in the render window.",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptParametricCommandPrototype(LoadRefIntoRenderWindow,
+					0,
+					"Loads the reference's parent cell into the render window and places the camera at the reference's position.",
 					0,
 					1,
 					OneForm,

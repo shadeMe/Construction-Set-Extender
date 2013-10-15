@@ -37,6 +37,7 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(CreateRenderWindowSelectionGroup);
 				CodaScriptCommandPrototypeDef(DissolveRenderWindowSelectionGroup);
 				CodaScriptCommandPrototypeDef(FloorRef);
+				CodaScriptCommandPrototypeDef(LoadRefIntoRenderWindow);
 
 				CodaScriptCommandParamData(CreateRef, 9)
 				{
@@ -656,6 +657,25 @@ namespace ConstructionSetExtender
 						return false;
 
 					Reference->Floor();
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(LoadRefIntoRenderWindow)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (!Reference || Reference->formType != TESForm::kFormType_REFR)
+						return false;
+
+					_TES->LoadCellIntoViewPort(NULL, Reference);
 
 					return true;
 				}
