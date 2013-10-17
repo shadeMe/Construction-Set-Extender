@@ -8,7 +8,7 @@ namespace BGSEditorExtender
 {
 	BGSEEToolBox*					BGSEEToolBox::Singleton = NULL;
 
-#define BGSEETOOLBOX_INISECTION		"ToolBox"
+	const char*						BGSEEToolBox::kINISection = "ToolBox";
 
 #define IDM_BGSEE_TOOLBOX_RESETINPUTFIELDS		(WM_USER + 5002)
 
@@ -352,12 +352,12 @@ namespace BGSEditorExtender
 
 	void BGSEEToolBox::INISaveToolList( void )
 	{
-		INISetter(BGSEETOOLBOX_INISECTION, NULL);
+		INISetter(kINISection, NULL);
 
 		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			INISetter((*Itr)->Title.c_str(),
-					BGSEETOOLBOX_INISECTION,
+					kINISection,
 					(std::string((*Itr)->CommandLine + "|" + (*Itr)->InitialDir + "~" + (*Itr)->Parameters).c_str()));
 		}
 	}
@@ -367,7 +367,7 @@ namespace BGSEditorExtender
 		char SectionBuffer[0x8000] = {0};
 		ClearTools(true);
 
-		INIGetter(BGSEETOOLBOX_INISECTION, SectionBuffer, sizeof(SectionBuffer));
+		INIGetter(kINISection, SectionBuffer, sizeof(SectionBuffer));
 
 		for (const char* Itr = SectionBuffer; *Itr != '\0'; Itr += strlen(Itr) + 1)
 		{
@@ -512,4 +512,6 @@ namespace BGSEditorExtender
 
 		DestroyMenu(ToolMenu);
 	}
+
+
 }

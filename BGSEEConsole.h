@@ -24,6 +24,79 @@ namespace BGSEditorExtender
 			BGSEEConsoleCmd_ ## name ## _ExecuteHandler				\
 		}
 
+	class BGSEEConsole;
+	class BGSEEConsoleWarningManager;
+
+	class BGSEEConsoleWarning
+	{
+	public:
+		typedef UInt32									WarningCallSiteT;
+	private:
+		friend class BGSEEConsoleWarningManager;
+
+		typedef std::vector<WarningCallSiteT>			CallSiteListT;
+
+		UUID						BaseID;
+		std::string					BaseIDString;
+		std::string					Description;
+		CallSiteListT				CallSites;
+		bool						Enabled;
+	public:
+		BGSEEConsoleWarning(const char* GUID, const char* Desc, UInt32 CallSiteCount, ...);
+		~BGSEEConsoleWarning();
+
+		bool						GetEnabled(void) const;
+	};
+
+	class BGSEEConsoleWarningManager
+	{
+		friend class BGSEEConsole;
+
+		static const char*					kINISection;
+
+		static BOOL CALLBACK				GUIDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+		typedef std::vector<BGSEEConsoleWarning*>		WarningListT;
+
+		struct DlgUserData
+		{
+			BGSEEConsoleWarningManager*		Instance;
+			LPARAM							UserData;
+		};
+
+		WarningListT						WarningDepot;
+		BGSEEINIManagerGetterFunctor		INIGetter;
+		BGSEEINIManagerSetterFunctor		INISetter;
+
+		void								Clear();
+		void								INISaveWarnings(void);
+		void								INILoadWarnings(void);
+
+		void								EnumerateWarningsInListView(HWND ListView) const;
+		BGSEEConsoleWarning*				LookupWarning(const char* GUID) const;
+		BGSEEConsoleWarning*				LookupWarning(BGSEEConsoleWarning::WarningCallSiteT CallSite) const;
+	public:
+		BGSEEConsoleWarningManager(BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter);
+		~BGSEEConsoleWarningManager();
+
+
+		void								RegisterWarning(BGSEEConsoleWarning* Warning);								// takes ownership of the pointer
+		bool								GetWarningEnabled(BGSEEConsoleWarning::WarningCallSiteT CallSite) const;	// returns true if enabled, false otherwise
+		
+		void								ShowGUI(HINSTANCE ResourceInstance, HWND Parent);
+	};
+
+	class BGSEEConsoleWarningRegistrar
+	{
+	public:
+		virtual ~BGSEEConsoleWarningRegistrar() = 0
+		{
+			;//
+		}
+
+		virtual void						operator()(BGSEEConsoleWarningManager* Manager) = 0;
+	};
+
 	class BGSEEConsole : public BGSEEGenericModelessDialog
 	{
 	public:
@@ -162,6 +235,7 @@ namespace BGSEditorExtender
 		ConsoleCommandTable						CommandTable;
 		CommandHistoryStackT					CommandLineHistory;
 		CommandHistoryStackT					CommandLineHistoryAuxiliary;
+		BGSEEConsoleWarningManager*				WarningManager;
 
 		void						ClearMessageLog(void);
 		void						SetTitle(const char* Prefix);
@@ -183,6 +257,9 @@ namespace BGSEditorExtender
 		virtual ~BGSEEConsole();
 
 		virtual void				InitializeUI(HWND Parent, HINSTANCE Resource);
+		virtual void				InitializeWarningManager(BGSEEINIManagerGetterFunctor Getter,
+															BGSEEINIManagerSetterFunctor Setter,
+															BGSEEConsoleWarningRegistrar& Registrar);
 
 		virtual void				LogMsg(std::string Prefix, const char* Format, ...);
 		virtual void				LogErrorMsg(std::string Prefix, const char* Format, ...);
@@ -208,8 +285,9 @@ namespace BGSEditorExtender
 		void						OpenDebugLog(void);
 		void						FlushDebugLog(void);
 
-		bool						GetLogsWarnings(void);
+		bool								GetLogsWarnings(void);
+		BGSEEConsoleWarningManager*			GetWarningManager(void) const;
 
-		static void					RegisterINISettings(INISettingDepotT& Depot);
+		static void							RegisterINISettings(INISettingDepotT& Depot);
 	};
 }

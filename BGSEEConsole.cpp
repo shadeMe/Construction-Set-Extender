@@ -192,6 +192,9 @@ namespace BGSEditorExtender
 			case ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_DEFAULT:
 				Instance->ResetActiveContext();
 				break;
+			case ID_BGSEE_CONSOLE_CONTEXTMENU_WARNINGS:
+				Instance->GetWarningManager()->ShowGUI(Instance->ResourceInstance, hWnd);
+				break;
 			default:
 				if (LOWORD(wParam) > ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_START &&
 					LOWORD(wParam) < ID_BGSEE_CONSOLE_CONTEXTMENU_CONTEXTS_CUSTOM_END)
@@ -933,6 +936,7 @@ namespace BGSEditorExtender
 		DialogTemplateID = IDD_BGSEE_CONSOLE;
 		DialogContextMenuID = IDR_BGSEE_CONSOLE_CONTEXTMENU;
 		CallbackDlgProc = &BGSEEConsole::BaseDlgProc;
+		WarningManager = NULL;
 	}
 
 	BGSEEConsole::~BGSEEConsole()
@@ -947,6 +951,8 @@ namespace BGSEditorExtender
 		while (CommandLineHistoryAuxiliary.size())
 			CommandLineHistoryAuxiliary.pop();
 
+		SAFEDELETE(WarningManager);
+
 		INISaveUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
 		KillTimer(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_MESSAGELOG), IDC_BGSEE_CONSOLE_MESSAGELOG_REFRESHTIMER);
 
@@ -957,6 +963,7 @@ namespace BGSEditorExtender
 		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
 					GWL_WNDPROC,
 					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
+
 	}
 
 	void BGSEEConsole::InitializeUI( HWND Parent, HINSTANCE Resource )
@@ -979,6 +986,15 @@ namespace BGSEditorExtender
 				NULL);
 
 		INILoadUIState(&kINI_Top, &kINI_Left, &kINI_Right, &kINI_Bottom, &kINI_Visible);
+	}
+
+	void BGSEEConsole::InitializeWarningManager( BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter, BGSEEConsoleWarningRegistrar& Registrar )
+	{
+		SME_ASSERT(WarningManager == NULL);
+
+		WarningManager = new BGSEEConsoleWarningManager(Getter, Setter);
+		Registrar.operator()(WarningManager);
+		WarningManager->INILoadWarnings();
 	}
 
 	void BGSEEConsole::LogMsg( std::string Prefix, const char* Format, ... )
@@ -1165,5 +1181,278 @@ namespace BGSEditorExtender
 		Depot.push_back(&kINI_LogWarnings);
 		Depot.push_back(&kINI_LogAssertions);
 		Depot.push_back(&kINI_LogTimestamps);
+	}
+
+	BGSEEConsoleWarningManager* BGSEEConsole::GetWarningManager( void ) const
+	{
+		SME_ASSERT(WarningManager);
+
+		return WarningManager;
+	}
+	
+
+	BGSEEConsoleWarning::BGSEEConsoleWarning( const char* GUID, const char* Desc, UInt32 CallSiteCount, ... ) :
+		BaseIDString(GUID),
+		Description(Desc),
+		CallSites(),
+		Enabled(true)
+	{
+		SME_ASSERT(GUID);
+
+		ZeroMemory(&BaseID, sizeof(BaseID));
+		RPC_STATUS Result = UuidFromString((RPC_CSTR)GUID, &BaseID);
+
+		SME_ASSERT(Result == RPC_S_OK);
+
+		va_list Args;
+		va_start(Args, CallSiteCount);
+
+		for (int i = 0; i < CallSiteCount; i++)
+		{
+			WarningCallSiteT CurrentArg = va_arg(Args, WarningCallSiteT);
+			SME_ASSERT(CurrentArg);
+
+			CallSites.push_back(CurrentArg);
+		}
+
+		va_end(Args);
+	}
+
+	BGSEEConsoleWarning::~BGSEEConsoleWarning()
+	{
+		;//
+	}
+
+	bool BGSEEConsoleWarning::GetEnabled( void ) const
+	{
+		return Enabled;
+	}
+
+
+	const char* BGSEEConsoleWarningManager::kINISection = "ConsoleWarnings";
+
+
+	BOOL CALLBACK BGSEEConsoleWarningManager::GUIDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+	{
+		HWND ListView = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_WARNINGS_WARNINGSLIST);
+
+		DlgUserData* UserData = (DlgUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
+		BGSEEConsoleWarningManager* Instance = NULL;
+
+		if (UserData)
+			Instance = UserData->Instance;
+
+		switch (uMsg)
+		{
+		case WM_NOTIFY:
+			{
+				NMHDR* NotificationData = (NMHDR*)lParam;
+				switch (NotificationData->code)
+				{
+				case LVN_GETDISPINFO:
+					{
+						NMLVDISPINFO* DisplayData = (NMLVDISPINFO*)lParam;
+
+						if ((DisplayData->item.mask & LVIF_TEXT) && DisplayData->item.lParam)
+						{
+							BGSEEConsoleWarning* Current = (BGSEEConsoleWarning*)DisplayData->item.lParam;
+
+							switch (DisplayData->item.iSubItem)
+							{
+							case 0:
+								sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s", (Current->GetEnabled() ? "Y" : " "));
+								break;
+							case 1:
+								sprintf_s(DisplayData->item.pszText, DisplayData->item.cchTextMax, "%s", Current->Description.c_str());
+								break;
+							}
+						}
+					}
+
+					break;
+				case LVN_ITEMACTIVATE:
+					{
+						NMITEMACTIVATE* Data = (NMITEMACTIVATE*)lParam;
+
+						LVITEM Item = {0};
+						Item.mask = LVIF_PARAM;
+						Item.iItem = Data->iItem;
+						ListView_GetItem(ListView, &Item);
+
+						BGSEEConsoleWarning* Current = (BGSEEConsoleWarning*)Item.lParam;
+
+						Current->Enabled = Current->Enabled == false;
+						InvalidateRect(hWnd, NULL, TRUE);
+					}
+
+					break;
+				}
+			}
+
+			break;
+		case WM_CLOSE:
+			EndDialog(hWnd, 0);
+			return TRUE;
+		case WM_INITDIALOG:
+			{
+				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
+				UserData = (DlgUserData*)lParam;
+				Instance = UserData->Instance;
+				ListView = GetDlgItem(hWnd, IDC_BGSEE_CONSOLE_WARNINGS_WARNINGSLIST);
+
+				LVCOLUMN ColumnData = {0};
+				ColumnData.mask = LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM|LVCF_FMT;
+				ColumnData.fmt = LVCFMT_LEFT;
+
+				ColumnData.cx = 55;
+				ColumnData.pszText = "Enabled";
+				ColumnData.iSubItem = 0;
+				ListView_InsertColumn(ListView, ColumnData.iSubItem, &ColumnData);
+
+				ColumnData.cx = 475;
+				ColumnData.pszText = "Warning";
+				ColumnData.iSubItem = 1;
+				ListView_InsertColumn(ListView, ColumnData.iSubItem, &ColumnData);
+
+
+				ListView_SetExtendedListViewStyle(ListView, LVS_EX_FULLROWSELECT);
+				Instance->EnumerateWarningsInListView(ListView);
+			}
+
+			break;
+		case WM_DESTROY:
+			delete UserData;
+			SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)0);
+
+			break;
+		}
+
+		return FALSE;
+	}
+
+	void BGSEEConsoleWarningManager::Clear()
+	{
+		for (WarningListT::iterator Itr = WarningDepot.begin(); Itr != WarningDepot.end(); Itr++)
+			delete *Itr;
+
+		WarningDepot.clear();
+	}
+
+	void BGSEEConsoleWarningManager::INISaveWarnings( void )
+	{
+		INISetter(kINISection, NULL);
+
+		for (WarningListT::iterator Itr = WarningDepot.begin(); Itr != WarningDepot.end(); Itr++)
+		{
+			INISetter((*Itr)->BaseIDString.c_str(), kINISection, ((*Itr)->Enabled ? "1" : "0"));
+		}
+	}
+
+	void BGSEEConsoleWarningManager::INILoadWarnings( void )
+	{
+		char SectionBuffer[0x8000] = {0};
+
+		INIGetter(kINISection, SectionBuffer, sizeof(SectionBuffer));
+		for (const char* Itr = SectionBuffer; *Itr != '\0'; Itr += strlen(Itr) + 1)
+		{
+			std::string SectionData(Itr);
+			size_t Index = SectionData.find("=");
+
+			if (Index != std::string::npos)
+			{
+				std::string GUID(SectionData.substr(0, Index));
+				std::string State(SectionData.substr(Index + 1));
+
+				BGSEEConsoleWarning* Current = LookupWarning(GUID.c_str());
+				SME_ASSERT(Current);
+
+				if (State == "1")
+					Current->Enabled = true;
+				else
+					Current->Enabled = false;
+			}
+		}
+	}
+
+	BGSEEConsoleWarning* BGSEEConsoleWarningManager::LookupWarning( const char* GUID ) const
+	{
+		for (WarningListT::const_iterator Itr = WarningDepot.begin(); Itr != WarningDepot.end(); Itr++)
+		{
+			if (!_stricmp(GUID, (*Itr)->BaseIDString.c_str()))
+				return *Itr;
+		}
+
+		return NULL;
+	}
+
+	BGSEEConsoleWarning* BGSEEConsoleWarningManager::LookupWarning( BGSEEConsoleWarning::WarningCallSiteT CallSite ) const
+	{
+		for (WarningListT::const_iterator Itr = WarningDepot.begin(); Itr != WarningDepot.end(); Itr++)
+		{
+			for (BGSEEConsoleWarning::CallSiteListT::iterator ItrEx = (*Itr)->CallSites.begin(); ItrEx != (*Itr)->CallSites.end(); ItrEx++)
+			{
+				if (*ItrEx == CallSite)
+					return *Itr;
+			}
+		}
+
+		return NULL;
+	}
+
+	BGSEEConsoleWarningManager::BGSEEConsoleWarningManager( BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter ) :
+		WarningDepot(),
+		INIGetter(Getter),
+		INISetter(Setter)
+	{
+		;//
+	}
+
+	BGSEEConsoleWarningManager::~BGSEEConsoleWarningManager()
+	{
+		INISaveWarnings();
+		Clear();
+	}
+
+	void BGSEEConsoleWarningManager::RegisterWarning( BGSEEConsoleWarning* Warning )
+	{
+		SME_ASSERT(Warning);
+
+		WarningDepot.push_back(Warning);
+	}
+
+	bool BGSEEConsoleWarningManager::GetWarningEnabled( BGSEEConsoleWarning::WarningCallSiteT CallSite ) const
+	{
+		SME_ASSERT(CallSite);
+
+		bool Result = true;
+		BGSEEConsoleWarning* Warning = LookupWarning(CallSite);
+
+		if (Warning && Warning->GetEnabled() == false)
+			Result = false;
+
+		return Result;
+	}
+
+	void BGSEEConsoleWarningManager::ShowGUI( HINSTANCE ResourceInstance, HWND Parent )
+	{
+		DlgUserData* Param = new DlgUserData();
+		Param->Instance = this;
+
+		BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(IDD_BGSEE_CONSOLE_WARNINGS), Parent, GUIDlgProc, (LPARAM)Param);
+	}
+
+	void BGSEEConsoleWarningManager::EnumerateWarningsInListView( HWND ListView ) const
+	{
+		int Index = 0;
+		for (WarningListT::const_iterator Itr = WarningDepot.begin(); Itr != WarningDepot.end(); Itr++)
+		{
+			LVITEM Item = {0};
+			Item.mask = LVIF_PARAM|LVIF_TEXT|LVIF_STATE;
+			Item.lParam = (LPARAM)*Itr;
+			Item.pszText = LPSTR_TEXTCALLBACK;
+			Item.iItem = Index++;
+
+			ListView_InsertItem(ListView, &Item);
+		}
 	}
 }
