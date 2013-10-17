@@ -1198,28 +1198,8 @@ namespace BGSEditorExtender
 				SME_ASSERT(BlockStack.size() == 1 && BlockStack.top() == CodaScriptTokenizer::kTokenType_Invalid);
 				SME_ASSERT(CodeStack.size() == 1 && CodeStack.top() == NULL);
 
-				BGSEECONSOLE->Indent();
-				try
-				{
-					BoundParser->RegisterVariables(this, VirtualMachine->GetGlobals());		// registers global variables first
-					BoundParser->RegisterVariables(this, this->Variables);					// then the local vars
-
-					// compile source to bytecode
-					CodaScriptSyntaxTreeCompileVisitor Visitor(VirtualMachine, this, BoundParser);
-					this->Validity = kValidity_Good;
-					this->Accept(&Visitor);
-				}
-				catch (CodaScriptException& E)
-				{
-					VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.Get());
-					this->Validity = kValidity_Egregious;
-				}
-				catch (...)
-				{
-					VirtualMachine->MsgHdlr()->LogMsg("Unknown Compiler Error!");
-					this->Validity = kValidity_Egregious;
-				}
-				BGSEECONSOLE->Exdent();
+				// generate bytecode
+				Compile(VirtualMachine);
 			}
 		}
 
@@ -1237,6 +1217,11 @@ namespace BGSEditorExtender
 			return (Validity == kValidity_Good);
 		}
 
+		bool CodaScriptExecutionContext::GetIsEnded( void ) const
+		{
+			return (Validity == kValidity_Ended);
+		}
+
 		bool CodaScriptExecutionContext::Execute( CodaScriptSyntaxTreeExecuteVisitor* Agent,
 												CodaScriptBackingStore* Result,
 												bool& ReturnedResult )
@@ -1249,8 +1234,16 @@ namespace BGSEditorExtender
 			this->Accept(Agent);
 
 			if (Agent->GetState() == CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Terminate)
+			{
 				ExecuteResult = false;
+				Validity = kValidity_Bad;
+			}
 
+			if (Agent->GetState() == CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_End)
+			{
+				Validity = kValidity_Ended;
+			}
+			
 			if (Agent->GetResult() && Result)
 			{
 				ReturnedResult = true;
@@ -1260,16 +1253,51 @@ namespace BGSEditorExtender
 			return ExecuteResult;
 		}
 
-		long double CodaScriptExecutionContext::GetSecondsPassed( void )
+		double CodaScriptExecutionContext::GetSecondsPassed( void )
 		{
 			ElapsedTimeCounter.Update();
 			return ElapsedTimeCounter.GetTimePassed() / 1000.0f;
 		}
 
+		bool CodaScriptExecutionContext::Compile( CodaScriptVM* VirtualMachine )
+		{
+			bool Result = false;
+
+			BGSEECONSOLE->Indent();
+			try
+			{
+				BoundParser->RegisterVariables(this, VirtualMachine->GetGlobals());		// registers global variables first
+				BoundParser->RegisterVariables(this, this->Variables);					// then the local vars
+
+				// compile source to bytecode
+				CodaScriptSyntaxTreeCompileVisitor Visitor(VirtualMachine, this, BoundParser);
+				this->Accept(&Visitor);
+
+				Result = Visitor.GetCompilationFailed() == false;
+			}
+			catch (CodaScriptException& E)
+			{
+				VirtualMachine->MsgHdlr()->LogMsg("Compiler Error - %s", E.Get());
+			}
+			catch (...)
+			{
+				VirtualMachine->MsgHdlr()->LogMsg("Unknown Compiler Error!");
+			}
+			BGSEECONSOLE->Exdent();
+
+			if (Result)
+				this->Validity = kValidity_Good;
+			else
+				this->Validity = kValidity_Egregious;
+
+			return Result;
+		}
+
 		CodaScriptSyntaxTreeCompileVisitor::CodaScriptSyntaxTreeCompileVisitor( CodaScriptVM* VM,
 																				CodaScriptExecutionContext* Context,
 																				ICodaScriptExpressionParser* Parser ) :
-			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser)
+			ICodaScriptSyntaxTreeEvaluator(VM, Context, Parser),
+			Failed(false)
 		{
 			;//
 		}
@@ -1298,8 +1326,7 @@ namespace BGSEditorExtender
 			{																\
 				BGSEECONSOLE_MESSAGE("Unknown Compiler Error");				\
 			}																\
-			ScriptContext->Validity =										\
-			CodaScriptExecutionContext::kValidity_Egregious;				\
+			Failed = true;													\
 			return;
 
 		void CodaScriptSyntaxTreeCompileVisitor::Visit( CodaScriptExpression* Node )
@@ -1366,6 +1393,11 @@ namespace BGSEditorExtender
 			CODASCRIPT_COMPILERHNDLR_EPILOG
 
 			CODASCRIPT_COMPILERERROR_CATCHER
+		}
+
+		bool CodaScriptSyntaxTreeCompileVisitor::GetCompilationFailed( void ) const
+		{
+			return Failed;
 		}
 
 		CodaScriptException::CodaScriptException( ICodaScriptExecutableCode* Source, const char* Message, ... )
@@ -1452,7 +1484,8 @@ namespace BGSEditorExtender
 			try																\
 			{																\
 				if (ExecutionState == kExecutionState_Terminate ||			\
-					ExecutionState == kExecutionState_Break)				\
+					ExecutionState == kExecutionState_Break ||				\
+					ExecutionState == kExecutionState_End)					\
 				{															\
 					return;													\
 				}
@@ -1473,8 +1506,6 @@ namespace BGSEditorExtender
 				BGSEECONSOLE_MESSAGE("Unknown Evaluate Error");				\
 			}																\
 			SetState(kExecutionState_Terminate);							\
-			ScriptContext->Validity =										\
-			CodaScriptExecutionContext::kValidity_Bad;						\
 			return;
 
 		void CodaScriptSyntaxTreeExecuteVisitor::Visit( CodaScriptExpression* Node )

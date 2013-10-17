@@ -35,7 +35,7 @@ namespace BGSEditorExtender
 
 				CodaScriptCommandHandler(Return)
 				{
-					if (ArgumentCount > 1)
+					if (ArgumentCount > 2)
 						throw CodaScriptException(ByteCode->GetSource(), "Too many arguments passed to Return command");
 
 					CodaScriptSyntaxTreeExecuteVisitor* Agent = dynamic_cast<CodaScriptSyntaxTreeExecuteVisitor*>(ExecutionAgent);
@@ -52,7 +52,17 @@ namespace BGSEditorExtender
 					else
 						Agent->SetResult(CodaScriptBackingStore(0.0));
 
-					Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Break);
+					
+					if (ArgumentCount == 2)
+					{
+						// the calling script is requesting destruction
+						Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_End);
+					}
+					else
+					{
+						// break as normal, just end the current execution cycle
+						Agent->SetState(CodaScriptSyntaxTreeExecuteVisitor::kExecutionState_Break);
+					}
 
 					return true;
 				}

@@ -363,6 +363,7 @@ namespace BGSEditorExtender
 				kValidity_Good,
 				kValidity_Bad,								// context encountered an exception during runtime
 				kValidity_Egregious,						// source code's got outstanding syntactical errors, needs to be re-parsed/compiled
+				kValidity_Ended,							// context is content having lived an eventful life and now awaits destruction
 			};
 
 			CodaScriptSourceCodeT							ScriptName;
@@ -378,6 +379,8 @@ namespace BGSEditorExtender
 			CodaScriptVariable*								GetVariable(CodaScriptSourceCodeT& Name);
 			CodaScriptVariable*								GetVariable(const char* Name);
 			void											ReleaseVariables(void);
+
+			bool											Compile(CodaScriptVM* VirtualMachine);
 		public:
 			CodaScriptExecutionContext(CodaScriptVM* VirtualMachine,
 									std::fstream& SourceCode,
@@ -387,12 +390,14 @@ namespace BGSEditorExtender
 			virtual ~CodaScriptExecutionContext();
 
 			bool											GetIsValid(void) const;
+			bool											GetIsEnded(void) const;
+
 			bool											Execute(CodaScriptSyntaxTreeExecuteVisitor* Agent,
 																CodaScriptBackingStore* Result,
 																bool& ReturnedResult);
 															// returns false if an unexpected exception was thrown
 
-			long double										GetSecondsPassed(void);
+			double											GetSecondsPassed(void);
 
 			static const UInt32								kMaxParameters;
 		};
@@ -400,6 +405,8 @@ namespace BGSEditorExtender
 		class CodaScriptSyntaxTreeCompileVisitor : public ICodaScriptSyntaxTreeEvaluator
 		{
 		protected:
+			bool											Failed;		// set to true when the compile operation fails
+
 			void											GenericCompile(ICodaScriptExecutableCode* Node);
 		public:
 			CodaScriptSyntaxTreeCompileVisitor(CodaScriptVM* VM,
@@ -416,6 +423,8 @@ namespace BGSEditorExtender
 			virtual void									Visit(CodaScriptELSEBlock* Node);
 			virtual void									Visit(CodaScriptWHILEBlock* Node);
 			virtual void									Visit(CodaScriptFOREACHBlock* Node);
+
+			bool											GetCompilationFailed(void) const;
 		};
 
 		class CodaScriptSyntaxTreeExecuteVisitor : public ICodaScriptSyntaxTreeEvaluator
@@ -436,7 +445,8 @@ namespace BGSEditorExtender
 			{
 				kExecutionState_Default	= 0,				// normal execution
 				kExecutionState_Break,						// break execution without error; set by the return, break and continue commands
-				kExecutionState_Terminate					// break execution with error
+				kExecutionState_Terminate,					// break execution with error
+				kExecutionState_End							// break execution without error; special case, signifies EOL
 			};
 
 			UInt8											GetState(void) const;

@@ -121,7 +121,7 @@ namespace BGSEditorExtender
 				}
 				else
 				{
-					ExecutionAgent->GetVM()->MsgHdlr()->LogMsg("CodaScriptMUPScriptCommand::Eval - Command '%s' failed to successfully evaluate at line %d!",
+					ExecutionAgent->GetVM()->MsgHdlr()->LogMsg("CodaScriptMUPScriptCommand::Eval - Command '%s' failed to evaluate at line %d!",
 															Parent->GetName(),
 															ByteCode->GetSource()->GetLine());
 				}

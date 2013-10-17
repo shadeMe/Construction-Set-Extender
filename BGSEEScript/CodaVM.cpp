@@ -402,18 +402,18 @@ namespace BGSEditorExtender
 		{
 			if (CODAVM->Backgrounder && CODAVM->Backgrounder->TimerID == idEvent)
 			{
-				CODAVM->Backgrounder->Execute(CODAVM->Executive);
+				CODAVM->Backgrounder->Tick(CODAVM->Executive);
 			}
 		}
 
-		void CodaScriptBackgrounder::ResetCache( bool Renew /*= false*/ )
+		void CodaScriptBackgrounder::ResetCache( CodaScriptBackgroundExecutionCacheT& Cache, bool Renew /*= false*/ )
 		{
 			SME_ASSERT(Backgrounding == false);
 
-			for (CodaScriptBackgroundExecutionCacheT::iterator Itr = BackgroundCache.begin(); Itr != BackgroundCache.end(); Itr++)
+			for (CodaScriptBackgroundExecutionCacheT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 				delete *Itr;
 
-			BackgroundCache.clear();
+			Cache.clear();
 
 			if (Renew)
 			{
@@ -431,7 +431,7 @@ namespace BGSEditorExtender
 						if (BackgroundScript->GetIsValid())
 						{
 							BGSEECONSOLE_MESSAGE("Success: %s [%.6f s]", BackgroundScript->ScriptName.c_str(), BackgroundScript->PollingInterval);
-							BackgroundCache.push_back(BackgroundScript);
+							Cache.push_back(BackgroundScript);
 						}
 						else
 						{
@@ -459,26 +459,18 @@ namespace BGSEditorExtender
 			}
 		}
 
-		void CodaScriptBackgrounder::Execute( CodaScriptExecutive* Executive )
+		void CodaScriptBackgrounder::Execute( CodaScriptBackgroundExecutionCacheT& Cache, CodaScriptExecutive* Executive, double TimePassed )
 		{
-			SME_ASSERT(Executive && Backgrounding == false);
-
-			if (Executive->GetExecutingContext())
-				return;		// the timer message will be dispatched by the message pump if a dialog box or window is spawned during the course of a script's execution
-
-			SME::MiscGunk::ScopedSetter<bool> GuardBackgrounding(Backgrounding, true);
-			PollingTimeCounter.Update();
-
-			for (CodaScriptBackgroundExecutionCacheT::iterator Itr = BackgroundCache.begin(); Itr != BackgroundCache.end();)
+			for (CodaScriptBackgroundExecutionCacheT::iterator Itr = Cache.begin(); Itr != Cache.end();)
 			{
 				CodaScriptExecutionContext* BackgroundScript = *Itr;
-				BackgroundScript->PollingIntervalReminder -= PollingTimeCounter.GetTimePassed() / 1000.0f;
+				BackgroundScript->PollingIntervalReminder -= TimePassed;
 
 				if (BackgroundScript->PollingIntervalReminder <= 0.0f)
 				{
 					BackgroundScript->PollingIntervalReminder = BackgroundScript->PollingInterval;
 
-					if (State == true)
+					if (GetState())
 					{
 						bool Throwaway = false;
 
@@ -488,12 +480,19 @@ namespace BGSEditorExtender
 						CODAVM->MsgHdlr()->Resume();
 						BGSEECONSOLE->Exdent();
 
-						if (ExecuteResult == false)
+						if (BackgroundScript->GetIsValid() == false)
 						{
-							BGSEECONSOLE_MESSAGE("CodaScriptBackgrounder::Execute - Script '%s' halted!", BackgroundScript->ScriptName.c_str());
+							if (BackgroundScript->GetIsEnded() == false)
+							{
+								BGSEECONSOLE_MESSAGE("CodaScriptBackgrounder::Execute - Script '%s' halted!", BackgroundScript->ScriptName.c_str());
+							}
+							else
+							{
+								BGSEECONSOLE_MESSAGE("CodaScriptBackgrounder::Execute - Script '%s' says 'Byeee!'", BackgroundScript->ScriptName.c_str());
+							}
 
 							delete BackgroundScript;
-							Itr = BackgroundCache.erase(Itr);
+							Itr = Cache.erase(Itr);
 							continue;
 						}
 					}
@@ -503,9 +502,27 @@ namespace BGSEditorExtender
 			}
 		}
 
+		void CodaScriptBackgrounder::Tick( CodaScriptExecutive* Executive )
+		{
+			SME_ASSERT(Executive);
+
+			// prevent nested calls that might crop in the event of message pump congestions
+			if (Executive->GetExecutingContext() || Backgrounding)
+				return;
+
+			SME::MiscGunk::ScopedSetter<bool> GuardBackgrounding(Backgrounding, true);
+
+			PollingTimeCounter.Update();
+			double TimePassed = PollingTimeCounter.GetTimePassed() / 1000.0f;
+
+			Execute(DepotCache, Executive, TimePassed);
+			Execute(RuntimeCache, Executive, TimePassed);
+		}
+
 		CodaScriptBackgrounder::CodaScriptBackgrounder( BGSEEResourceLocation Source, BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter ) :
 			SourceDepot(Source),
-			BackgroundCache(),
+			DepotCache(),
+			RuntimeCache(),
 			State(false),
 			Backgrounding(false),
 			TimerID(0),
@@ -521,7 +538,8 @@ namespace BGSEditorExtender
 			SME_ASSERT(Backgrounding == false);
 
 			ResetTimer();
-			ResetCache();
+			ResetCache(DepotCache);
+			ResetCache(RuntimeCache);
 
 			kINI_Enabled.SetInt(State);
 		}
@@ -550,7 +568,7 @@ namespace BGSEditorExtender
 			BGSEECONSOLE_MESSAGE("Backgrounder:");
 			BGSEECONSOLE->Indent();
 			ResetTimer(true);
-			ResetCache(true);
+			ResetCache(DepotCache, true);
 			BGSEECONSOLE->Exdent();
 		}
 
@@ -558,6 +576,13 @@ namespace BGSEditorExtender
 		{
 			Depot.push_back(&kINI_Enabled);
 			Depot.push_back(&kINI_UpdatePeriod);
+		}
+
+		void CodaScriptBackgrounder::Queue( CodaScriptExecutionContext* Context )
+		{
+			SME_ASSERT(Backgrounding == false);
+
+			RuntimeCache.push_back(Context);
 		}
 
 
@@ -1038,7 +1063,8 @@ namespace BGSEditorExtender
 		bool CodaScriptVM::RunScript( std::string ScriptName,
 									CodaScriptMutableDataArrayT* Parameters,
 									CodaScriptBackingStore* Result,
-									bool& ReturnedResult )
+									bool& ReturnedResult,
+									bool RunInBackground /*= false*/ )
 		{
 			SME_ASSERT(Initialized);
 
@@ -1060,10 +1086,19 @@ namespace BGSEditorExtender
 				}
 				else
 				{
-					BGSEECONSOLE->Indent();
-					bool Success = Executive->Execute(ScriptContext.get(), Result, ReturnedResult);
-					BGSEECONSOLE->Exdent();
-					return Success;
+					if (RunInBackground == false)
+					{
+						BGSEECONSOLE->Indent();
+						bool Success = Executive->Execute(ScriptContext.get(), Result, ReturnedResult);
+						BGSEECONSOLE->Exdent();
+						return Success;
+					}
+					else
+					{
+						// queue the script for execution
+						Backgrounder->Queue(ScriptContext.release());
+						return true;
+					}
 				}
 			}
 			else

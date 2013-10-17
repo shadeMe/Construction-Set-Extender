@@ -106,7 +106,8 @@ namespace BGSEditorExtender
 			typedef std::list<CodaScriptExecutionContext*>	CodaScriptBackgroundExecutionCacheT;
 
 			BGSEEResourceLocation						SourceDepot;
-			CodaScriptBackgroundExecutionCacheT			BackgroundCache;
+			CodaScriptBackgroundExecutionCacheT			DepotCache;		// stores the contexts for scripts in the depot
+			CodaScriptBackgroundExecutionCacheT			RuntimeCache;	// stores the contexts for regular scripts executing in the background
 			bool										State;
 			bool										Backgrounding;
 			UINT_PTR									TimerID;
@@ -115,19 +116,22 @@ namespace BGSEditorExtender
 			BGSEEINIManagerGetterFunctor				INISettingGetter;
 			BGSEEINIManagerSetterFunctor				INISettingSetter;
 
-			void										ResetCache(bool Renew = false);
+			void										ResetCache(CodaScriptBackgroundExecutionCacheT& Cache, bool Renew = false);
 			void										ResetTimer(bool Renew = false);
 
-			void										Execute(CodaScriptExecutive* Executive);
+			void										Execute(CodaScriptBackgroundExecutionCacheT& Cache, CodaScriptExecutive* Executive, double TimePassed);
+			void										Tick(CodaScriptExecutive* Executive);
 		public:
 			CodaScriptBackgrounder(BGSEEResourceLocation Source, BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter);
 			~CodaScriptBackgrounder();
 
 			void										Suspend(void);
 			void										Resume(void);
-			bool										GetState(void) const;
-
-			void										Rebuild(void);		// renews the cache
+			bool										GetState(void) const;		// returns true if enabled, false otherwise
+			
+			void										Rebuild(void);				// renews the depot cache
+			
+			void										Queue(CodaScriptExecutionContext* Context);
 
 			static void									RegisterINISettings(INISettingDepotT& Depot);
 		};
@@ -203,7 +207,8 @@ namespace BGSEditorExtender
 			bool										RunScript(std::string ScriptName,					// script name's the same as filename
 																CodaScriptMutableDataArrayT* Parameters,
 																CodaScriptBackingStore* Result,
-																bool& ReturnedResult);
+																bool& ReturnedResult,
+																bool RunInBackground = false);
 
 			void										ShowGlobalStoreEditDialog(HINSTANCE ResourceInstance, HWND Parent);
 			CodaScriptVariable*							GetGlobal(const char* Name);
