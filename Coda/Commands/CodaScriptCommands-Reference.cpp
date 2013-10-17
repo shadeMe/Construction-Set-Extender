@@ -675,7 +675,10 @@ namespace ConstructionSetExtender
 					if (!Reference || Reference->formType != TESForm::kFormType_REFR)
 						return false;
 
-					_TES->LoadCellIntoViewPort(NULL, Reference);
+					_TES->LoadCellIntoViewPort(Reference->GetPosition(), Reference);
+					
+					// clean up the selection buffer for the above call selects the ref
+					_RENDERSEL->ClearSelection(true);
 
 					return true;
 				}

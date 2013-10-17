@@ -440,7 +440,8 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE_MESSAGE("Attempting to salvage the active file...");
 		BGSEECONSOLE->Indent();
 
-		if (_DATAHANDLER->PanicSave())
+		bool PanicSaved = false;
+		if ((PanicSaved = _DATAHANDLER->PanicSave()))
 			BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
 		else
 			BGSEECONSOLE_MESSAGE("BollocksBollocksBollocks! No can do...");
@@ -470,13 +471,18 @@ namespace ConstructionSetExtender
 			else
 				MBFlags |= MB_YESNO;
 
-			const char* Jingle = "The editor has encountered a critical error! An error report will be generated shortly.\n\nDo you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Walked the dog\n   3. Sent the author of this editor extender plugin a pile of cash\n   4. Pleaded to the editor in a soft but sultry voice, and\n   5. Crossed your appendages...\n...in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
-			if (FunnyGuyUnlocked)
-				Jingle = "The editor has encountered a critical error! An error report will be generated shortly.\n\nDo you wish to resume execution?\n\nPS: It is almost always futile to select 'Yes'.";
+			std::string Jingle = "The editor has encountered a critical error! ";
+			if (PanicSaved)
+				Jingle += "Unsaved changes were saved to the panic file. ";
+				
+			Jingle += "An error report will be generated shortly.\n\n";
 
-			switch (MessageBox(NULL, Jingle,
-							BGSEEMAIN->ExtenderGetShortName(),
-							MBFlags))
+			if (FunnyGuyUnlocked == false)
+				Jingle += "Do you wish to resume execution once you've:\n   1. Prayed to your various deities\n   2. Walked the dog\n   3. Sent the author of this editor extender plugin a pile of cash\n   4. Pleaded to the editor in a soft but sultry voice, and\n   5. Crossed your appendages...\n...in hopes of preventing it from crashing outright upon selecting 'Yes' in this dialog?";
+			else
+				Jingle += "Do you wish to resume execution?\n\nPS: It is almost always futile to select 'Yes'.";
+
+			switch (MessageBox(NULL, Jingle.c_str(), BGSEEMAIN->ExtenderGetShortName(), MBFlags))
 			{
 			case IDYES:
 				ResumeExecution = true;
@@ -490,7 +496,7 @@ namespace ConstructionSetExtender
 				if (BGSEEMAIN->Daemon()->GetFullInitComplete())
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kFunnyGuy, false, true);
 
-				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetShortName(), MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND);
+				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND);
 
 				break;
 			}

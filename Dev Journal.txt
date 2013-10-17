@@ -13,14 +13,16 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> Add NULL checks for the D3D surfaces in NiRenderedTexture::CreateSourceTexture and handle NULL return @0x0041143E
 		> Dynamic channels in the Renderwindowpainter have timer issues (text zips by randomly)
+		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
 		> Fix memory leak in local map generator
 
 
 	ENHANCEMENT		=
-		> Fix the global clipboard's to correctly paste refs in place in exteriors
+		> Add the current cell's formID to the render window's titlebar
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		

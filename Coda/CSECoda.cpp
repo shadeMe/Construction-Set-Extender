@@ -35,6 +35,7 @@ namespace ConstructionSetExtender
 			std::string CurrentArg;
 
 			std::string ScriptName;
+			std::string RunInBackground;
 
 			for (int i = 1; i <= ParamCount; i++)
 			{
@@ -44,19 +45,22 @@ namespace ConstructionSetExtender
 				case 1:
 					ScriptName = CurrentArg;
 					break;
+				case 2:
+					RunInBackground = CurrentArg;
+					break;
 				}
 			}
 
 			BGSEECONSOLE_MESSAGE("Executing Coda Script '%s'", ScriptName.c_str());
 
 			bool ThrowAway = false;
-			if (CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway))
+			if (CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway, (RunInBackground == "1" ? true : false)))
 			{
 				BGSEEACHIEVEMENTS->Unlock(Achievements::kAutomaton);
 			}
 		}
 
-		DEFINE_BGSEECONSOLECMD(RunCodaScript, 1);
+		DEFINE_BGSEECONSOLECMD(RunCodaScript, 2);
 
 		void Initialize()
 		{

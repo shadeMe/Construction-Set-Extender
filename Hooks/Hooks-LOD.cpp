@@ -550,7 +550,7 @@ namespace ConstructionSetExtender
 				jz		GENFINISHED
 				call	GetIsLODDiffuseMapGeneratorCreatingFullMap		// this is necessary though
 				test	al, al
-				jnz		GENFINISHED										// already generating the full map, so piss off
+				jnz		GENFINISHED										// already generating the full map, so sod off
 				popad
 
 				jmp		GENINPROGRESS
