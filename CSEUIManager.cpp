@@ -2173,6 +2173,8 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+#define IDT_RENDERWINDOW_TITLEBARUPDATE			0x154
+
 		LRESULT CALLBACK RenderWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -2209,6 +2211,8 @@ namespace ConstructionSetExtender
 						xData = new CSERenderWindowMiscData();
 						ExtraData->Add(xData);
 					}
+
+					SetTimer(hWnd, IDT_RENDERWINDOW_TITLEBARUPDATE, 2000, NULL);
 				}
 
 				break;
@@ -2220,6 +2224,8 @@ namespace ConstructionSetExtender
 						ExtraData->Remove(CSERenderWindowMiscData::kTypeID);
 						delete xData;
 					}
+
+					KillTimer(hWnd, IDT_RENDERWINDOW_TITLEBARUPDATE);
 				}
 
 				break;
@@ -2239,6 +2245,34 @@ namespace ConstructionSetExtender
 			case WM_TIMER:
 				switch (wParam)
 				{
+				case IDT_RENDERWINDOW_TITLEBARUPDATE:
+					{
+						char Buffer[0x100] = {0};
+						GetWindowText(hWnd, Buffer, sizeof(Buffer));
+						if (!_stricmp("Render Window", Buffer))
+							break;
+
+						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
+						if (CurrentCell == NULL)
+							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
+
+						if (CurrentCell)
+						{
+							if (CurrentCell->GetIsInterior())
+							{
+								FORMAT_STR(Buffer, "%s (%08X)", CurrentCell->GetEditorID(), CurrentCell->formID);
+							}
+							else
+							{
+								FORMAT_STR(Buffer, "%s %d,%d (%08X)", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
+										CurrentCell->cellData.coords->y, CurrentCell->formID);
+							}
+
+							SetWindowText(hWnd, Buffer);
+						}
+					}
+
+					break;
 				case 1:			// update timer
 					static bool SetTimerPeriod = true;
 					if (SetTimerPeriod)

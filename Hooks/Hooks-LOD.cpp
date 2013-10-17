@@ -45,7 +45,10 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(LODTextureGenNotificationUpdate, 0x00412ABC);
 		_DefineHookHdlr(LODTextureGenBlackTextureFix, 0x00412115);
 		_DefineHookHdlr(LODTextureGenBlackTexturePartialFix, 0x00412789);
-
+		_DefineHookHdlr(NiRenderedTextureCreateSourceTextureA, 0x004AD4B7);
+		_DefineHookHdlr(NiRenderedTextureCreateSourceTextureB, 0x004AD515);
+		_DefineHookHdlr(LODTextureGenSavePartialToDisk, 0x0041143E);
+		
 		void PatchLODHooks(void)
 		{
 			_MemHdlr(LODLandTextureMipMapLevelA).WriteNop();
@@ -68,6 +71,9 @@ namespace ConstructionSetExtender
 			_MemHdlr(LODTextureGenNotificationUpdate).WriteJump();
 			_MemHdlr(LODTextureGenBlackTextureFix).WriteJump();
 			_MemHdlr(LODTextureGenBlackTexturePartialFix).WriteJump();
+			_MemHdlr(NiRenderedTextureCreateSourceTextureA).WriteJump();
+			_MemHdlr(NiRenderedTextureCreateSourceTextureB).WriteJump();
+			_MemHdlr(LODTextureGenSavePartialToDisk).WriteJump();
 		}
 
 		#define _hhName		LODLandTextureMipMapLevelB
@@ -667,6 +673,111 @@ namespace ConstructionSetExtender
 				call	DoLODTextureGenBlackTexturePartialFixHook
 				popad
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall ReportLODD3DError(int ID)
+		{
+			switch (ID)
+			{
+			case 1:
+				BGSEECONSOLE_MESSAGE("Bad NiTexture::RendererData for partial %d!", s_NotificationMapCounter);
+				break;
+			case 2:
+				BGSEECONSOLE_MESSAGE("CreateOffscreenPlainSurface/GetRenderTargetData failed for partial %d!", s_NotificationMapCounter);
+				break;
+			case 3:
+				BGSEECONSOLE_MESSAGE("Bad NiSourceTexture for partial %d!", s_NotificationMapCounter);
+				break;
+			default:
+				break;
+			}
+		}
+
+		#define _hhName		NiRenderedTextureCreateSourceTextureA
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004AD4C9);
+			_hhSetVar(Skip, 0x004AD642);
+			__asm
+			{
+				mov     eax, [esi]
+				mov     edx, [eax + 0x18]
+				mov     ecx, esi
+				call    edx
+				test	eax, eax
+				jz		SODOFF
+
+				mov     edx, [eax]
+				mov     ecx, eax
+				mov     eax, [edx + 0x14]
+				call    eax
+				test	eax, eax
+				jz		SODOFF
+
+				jmp		_hhGetVar(Retn)
+			SODOFF:
+				pushad
+				push	1
+				call	ReportLODD3DError
+				popad
+				jmp		_hhGetVar(Skip)
+			}
+		}
+
+		#define _hhName		NiRenderedTextureCreateSourceTextureB
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004AD51E);
+			_hhSetVar(Skip, 0x004AD642);
+			__asm
+			{
+				test	eax, eax					// test destination surface
+				jz		SODOFF
+
+				test	ecx, ecx					// test render target surface
+				jz		SODOFF
+
+				push	eax
+				push	ecx
+				push	edi
+				call	edx
+
+				mov		eax, [esp + 0x14]			// retest destination surface for a successful copy
+				test	eax, eax
+				jz		SODOFF
+
+				jmp		_hhGetVar(Retn)
+			SODOFF:
+				pushad
+				push	2
+				call	ReportLODD3DError
+				popad
+				jmp		_hhGetVar(Skip)
+			}
+		}
+
+		#define _hhName		LODTextureGenSavePartialToDisk
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00411448);
+			_hhSetVar(Call, 0x004AD410);
+			_hhSetVar(Skip, 0x004116A3);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				mov		esi, eax
+				add		esp, 0xC
+				test	eax, eax					// check if we've got a valid source texture
+				jz		SODOFF
+
+				jmp		_hhGetVar(Retn)
+			SODOFF:
+				pushad
+				push	3
+				call	ReportLODD3DError
+				popad
+				jmp		_hhGetVar(Skip)
 			}
 		}
 	}

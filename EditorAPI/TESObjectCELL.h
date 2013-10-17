@@ -91,6 +91,8 @@ public:
 	/*54*/ ObjectREFRList		objectList;
 
 	// methods
+	const char*					GetEditorID() const;
+
 	TESWorldSpace*				GetParentWorldSpace();
 	bool						GetIsInterior();
 	TESObjectREFR*				FindFirstRef(TESForm* BaseForm, bool MustHaveEditorID = false);

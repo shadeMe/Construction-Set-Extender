@@ -50,3 +50,8 @@ void TESObjectCELL::AddObjectReference( TESObjectREFR* Ref )
 {
 	thisCall<void>(0x00539170, this, Ref);
 }
+
+const char* TESObjectCELL::GetEditorID() const
+{
+	return thisVirtualCall<const char*>(0xC8, this);
+}

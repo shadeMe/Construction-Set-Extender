@@ -51,6 +51,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ExportNPCFaceTextures, "allows NPC records from non-ESM files to export their face textures");
 		_DeclareNopHdlr(TESTestAllCells, "fixes a CTD that gets triggered when testing cells");
 		_DeclareMemHdlr(DataHandlerGetInteriorAtIndex, "patchs an out-of-bounds index condition");
+		_DeclareMemHdlr(MessageHandlerShowWarning, "adds support for warning toggling");
+		_DeclareMemHdlr(NiControllerSequenceShowWarning, "");
 	}
 }
 

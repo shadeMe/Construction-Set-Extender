@@ -58,6 +58,8 @@ namespace ConstructionSetExtender
 		_DefineJumpHdlr(ExportNPCFaceTextures, 0x004D9617, 0x004D9626);
 		_DefineNopHdlr(TESTestAllCells, 0x00478C75, 6);
 		_DefineHookHdlr(DataHandlerGetInteriorAtIndex, 0x0047BB19);
+		_DefineHookHdlr(MessageHandlerShowWarning, 0x00403490);
+		_DefineHookHdlr(NiControllerSequenceShowWarning, 0x00867EB0);
 
 		void PatchMiscHooks(void)
 		{
@@ -97,6 +99,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(ExportNPCFaceTextures).WriteJump();
 			_MemHdlr(TESTestAllCells).WriteNop();
 			_MemHdlr(DataHandlerGetInteriorAtIndex).WriteJump();
+			_MemHdlr(MessageHandlerShowWarning).WriteJump();
+			_MemHdlr(NiControllerSequenceShowWarning).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -906,6 +910,53 @@ namespace ConstructionSetExtender
 				mov		eax, 0
 				pop		esi
 				retn	4
+			}
+		}
+
+		bool __stdcall CheckWithWarningManager(UInt32 CallSite)
+		{
+			return BGSEECONSOLE->GetWarningManager()->GetWarningEnabled(CallSite);
+		}
+
+		#define _hhName		MessageHandlerShowWarning
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00403498);
+			__asm
+			{
+				mov		eax, [esp]
+				sub		eax, 5
+				push	eax
+				call	CheckWithWarningManager
+				test	al, al
+				jz		SKIP
+
+				mov		ecx, [esp + 0x4]
+				lea		eax, [esp + 0x8]
+				jmp		_hhGetVar(Retn)
+			SKIP:				
+				retn
+			}
+		}
+
+		#define _hhName		NiControllerSequenceShowWarning
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00867EB6);
+			__asm
+			{
+				mov		eax, [esp]
+				sub		eax, 5
+				push	eax
+				call	CheckWithWarningManager
+				test	al, al
+				jz		SKIP
+
+				mov		eax, [esp + 0x8]
+				test	eax, eax
+				jmp		_hhGetVar(Retn)
+			SKIP:				
+				retn
 			}
 		}
 	}

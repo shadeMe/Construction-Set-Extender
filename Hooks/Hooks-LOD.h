@@ -18,7 +18,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(GenerateLODFullTexture, "");
 		_DeclareMemHdlr(GenerateLODFullTextureFileName, "corrects the filename used to save generated textures under");
 		_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardA, "prevents the GenerateLODDiffuseMaps() function from being called recursively");
-		_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardB, "ugly kludge. I repeat - fucking ugly kludges, these are");
+		_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardB, "ugly kludge. I repeat - fugly kludges, these are");
 		_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardC, "");
 		_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardD, "");
 		_DeclareMemHdlr(GenerateLODDiffuseMapsReentryGuardE, "");
@@ -28,5 +28,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(LODTextureGenNotificationUpdate, "");
 		_DeclareMemHdlr(LODTextureGenBlackTextureFix, "fixes the bug that caused half of the texture to not be rendered");
 		_DeclareMemHdlr(LODTextureGenBlackTexturePartialFix, "for the partial textures, this");
+		_DeclareMemHdlr(NiRenderedTextureCreateSourceTextureA, "adds NULL checks all over the place");
+		_DeclareMemHdlr(NiRenderedTextureCreateSourceTextureB, "");
+		_DeclareMemHdlr(LODTextureGenSavePartialToDisk, "");
 	}
 }
