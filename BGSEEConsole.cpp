@@ -104,6 +104,7 @@ namespace BGSEditorExtender
 			{
 				if (wParam == (WPARAM)Instance->ContextMenuHandle)
 				{
+					// this means the contexts menu absolutely needs to be the last item
 					HMENU ContextsMenu = GetSubMenu((HMENU)wParam, GetMenuItemCount((HMENU)wParam) - 1);
 
 					if (Instance->GetActiveContext() == Instance->PrimaryContext)

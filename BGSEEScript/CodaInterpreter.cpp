@@ -461,7 +461,7 @@ namespace BGSEditorExtender
 			return Condition;
 		}
 
-		const UInt32			ICodaScriptLoopBlock::kRecursionOverrunLimit = 0xFFFFF;
+		const UInt32			ICodaScriptLoopBlock::kOverrunLimit = 0xFFFFF;
 
 		void ICodaScriptLoopBlock::BeginLooping( CodaScriptSyntaxTreeExecuteVisitor* Context )
 		{
@@ -1575,8 +1575,8 @@ namespace BGSEditorExtender
 			while (Node->EvaluateCondition(this))
 			{
 				IterationCounter++;
-				if (IterationCounter >= ICodaScriptLoopBlock::kRecursionOverrunLimit)
-					throw CodaScriptException(Node, "Loop recursion overrun - When will it ennnnnnd?!");
+				if (IterationCounter >= ICodaScriptLoopBlock::kOverrunLimit)
+					throw CodaScriptException(Node, "Loop overrun - When will it ennnnnnd?!");
 
 				Node->Traverse(this);
 

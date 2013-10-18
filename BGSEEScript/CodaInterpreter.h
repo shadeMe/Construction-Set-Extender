@@ -254,7 +254,7 @@ namespace BGSEditorExtender
 				void									Reset(void);
 			};
 		protected:
-			static const UInt32						kRecursionOverrunLimit;
+			static const UInt32						kOverrunLimit;
 
 			UInt8									State;
 
