@@ -440,7 +440,10 @@ namespace ConstructionSetExtender
 					SME_ASSERT(CellObjects);
 
 					for (TESObjectCELL::ObjectREFRList::Iterator Itr = Cell->objectList.Begin(); !Itr.End() && Itr.Get(); ++Itr)
-						Utilities->ArrayPushback(CellObjects, (CodaScriptReferenceDataTypeT)Itr.Get()->formID);
+					{
+						if (Itr.Get()->formID)
+							Utilities->ArrayPushback(CellObjects, (CodaScriptReferenceDataTypeT)Itr.Get()->formID);
+					}
 
 					Result->SetArray(CellObjects);
 
