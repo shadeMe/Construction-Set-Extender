@@ -112,6 +112,7 @@ namespace ConstructionSetExtender
 			e_ClearPath,
 			e_CopyPath,
 			e_ExtractPath,
+			e_OpenPath,
 			e_FetchPath			= 0x32
 		};
 
@@ -135,6 +136,8 @@ namespace ConstructionSetExtender
 		__asm jz		COPYP \
 		__asm cmp		eax, e_ExtractPath \
 		__asm jz		EXTRACTP \
+		__asm cmp		eax, e_OpenPath \
+		__asm jz		OPENP \
 		__asm popad  \
 		__asm mov		eax, e_ClearPath \
 		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]  \
@@ -176,6 +179,17 @@ namespace ConstructionSetExtender
 		__asm push		eax \
 		__asm push		k##name##SelectorCommonDialogFilterType	\
 		__asm call		InitAssetExtractor \
+		__asm mov		eax, e_Close \
+		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
+		__asm OPENP: \
+		__asm popad \
+		__asm push		eax \
+		__asm mov		eax, [esp + 0x8]	\
+		__asm push		eax	\
+		__asm mov		eax, [k##name##PathButtonID] \
+		__asm push		eax \
+		__asm push		k##name##SelectorCommonDialogFilterType	\
+		__asm call		InitAssetViewer \
 		__asm mov		eax, e_Close \
 		__asm jmp		[k##name##SelectorCommonDialogRetnAddr]      \
 		}  \

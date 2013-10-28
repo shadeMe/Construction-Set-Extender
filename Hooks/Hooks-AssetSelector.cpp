@@ -302,6 +302,47 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void __stdcall InitAssetViewer(UInt32 Filter, UInt32 PathID, const char* DefaultLookupDir, HWND Dialog)
+		{
+			char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
+
+			GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
+			FORMAT_STR(FullPathBuffer, "%s%s", DefaultLookupDir, RelativePathBuffer);
+
+			bool FileFound = false;
+			if (GetFileAttributes(FullPathBuffer) == INVALID_FILE_ATTRIBUTES)
+			{
+				if (ArchiveManager::ExtractArchiveFile(FullPathBuffer, "tempaf"))
+				{
+					std::string DirPath(BGSEEWORKSPACE->GetCurrentWorkspace());
+					DirPath += FullPathBuffer;
+
+					if (DirPath.rfind("\\") != -1)
+						DirPath = DirPath.substr(0, DirPath.rfind("\\") + 1);
+
+					if ((SHCreateDirectoryEx(NULL, DirPath.c_str(), NULL) == ERROR_SUCCESS ||
+						GetLastError() == ERROR_FILE_EXISTS ||
+						GetLastError() == ERROR_ALREADY_EXISTS) &&
+						CopyFile("tempaf", FullPathBuffer, FALSE))
+					{
+						FileFound = true;
+					}
+				}
+			}
+			else
+				FileFound = true;
+
+			if (FileFound)
+			{
+				BGSEECONSOLE_MESSAGE("Opened asset at '%s'", FullPathBuffer);
+				ShellExecute(NULL, "open", (LPSTR)FullPathBuffer, NULL, NULL, SW_SHOW);
+			}
+			else
+			{
+				BGSEECONSOLE_MESSAGE("Couldn't open asset at '%s'", FullPathBuffer);
+			}
+		}
+
 		DefineCommonDialogPrologHandler(Model)
 		DefineCommonDialogPrologHandler(Animation)
 		DefineCommonDialogPrologHandler(Sound)

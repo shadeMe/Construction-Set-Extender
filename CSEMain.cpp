@@ -46,6 +46,7 @@ namespace ConstructionSetExtender
 		RegisterRelease(6, 0, "Konniving Kelpie");
 		RegisterRelease(6, 1, "Cretinous Codpiece");
 		RegisterRelease(6, 2, "Talkative Badger");
+		RegisterRelease(6, 3, "Drunken Glaswegian");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
@@ -228,7 +229,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Initializing Coda *snicker* \"Virtual Machine\"");
+		BGSEECONSOLE_MESSAGE("Initializing Coda \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
 		BGSEEScript::Initialize();
 		BGSEECONSOLE->Exdent();
@@ -388,7 +389,7 @@ namespace ConstructionSetExtender
 		delete BGSEEWORKSPACE;
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Deinitializing Coda *snicker* \"Virtual Machine\"");
+		BGSEECONSOLE_MESSAGE("Deinitializing Coda \"Virtual Machine\"");
 		BGSEECONSOLE->Indent();
 		delete CODAVM;
 		BGSEECONSOLE->Exdent();

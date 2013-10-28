@@ -4875,7 +4875,7 @@ namespace ConstructionSetExtender
 				{
 					MINMAXINFO* SizeInfo = (MINMAXINFO*)lParam;
 					SizeInfo->ptMaxTrackSize.x = SizeInfo->ptMinTrackSize.x = 189;
-					SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 223;
+					SizeInfo->ptMaxTrackSize.y = SizeInfo->ptMinTrackSize.y = 255;
 
 					break;
 				}
@@ -4904,6 +4904,10 @@ namespace ConstructionSetExtender
 					return TRUE;
 				case IDC_ASSETSELECTOR_ASSETEXTRACTOR:
 					EndDialog(hWnd, Hooks::e_ExtractPath);
+
+					return TRUE;
+				case IDC_ASSETSELECTOR_OPENASSET:
+					EndDialog(hWnd, Hooks::e_OpenPath);
 
 					return TRUE;
 				case IDC_CSE_CANCEL:

@@ -355,7 +355,7 @@ void RecompileScripts(void)
 		if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted) == 0 &&
 			(ScriptForm->formFlags & TESForm::kFormFlags_FromActiveFile))
 		{
-			BGSEECONSOLE->LogMsg("CS", "Script '%s' {%08X}:", ScriptForm->editorID.c_str(), ScriptForm->formID);
+			BGSEECONSOLE_MESSAGE("Script '%s' {%08X}:", ScriptForm->editorID.c_str(), ScriptForm->formID);
 			BGSEECONSOLE->Indent();
 
 			Current++;
@@ -376,7 +376,7 @@ void RecompileScripts(void)
 			}
 			else
 			{
-				BGSEECONSOLE->LogMsg("CS", "Preprocessing failed!");
+				BGSEECONSOLE_MESSAGE("Preprocessing failed!");
 			}
 
 			BGSEECONSOLE->Exdent();
