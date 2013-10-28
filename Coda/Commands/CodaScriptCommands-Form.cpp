@@ -18,6 +18,7 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(SetFormID);
 				CodaScriptCommandPrototypeDef(MarkAsModified);
 				CodaScriptCommandPrototypeDef(GetDataHandlerFormList);
+				CodaScriptCommandPrototypeDef(GetCellUseList);
 
 				CodaScriptCommandParamData(SetEditorID, 2)
 				{
@@ -174,6 +175,37 @@ namespace ConstructionSetExtender
 							{
 								Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)FormID);
 							}
+						}
+					}
+
+					Result->SetArray(Array);
+
+					return true;
+				}
+
+				CodaScriptCommandHandler(GetCellUseList)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					ICodaScriptDataStore* Array = Utilities->ArrayAllocate();
+					SME_ASSERT(Array);
+
+					TESCellUseList* UseList = CS_CAST(Form, TESForm, TESCellUseList);
+					if (UseList)
+					{
+						for (TESCellUseList::CellUseInfoListT::Iterator Itr = UseList->cellUses.Begin(); !Itr.End(); ++Itr)
+						{
+							TESCellUseList::CellUseInfo* Data = Itr.Get();
+							if (!Data)
+								break;
+
+							Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)Data->cell->formID);
 						}
 					}
 
