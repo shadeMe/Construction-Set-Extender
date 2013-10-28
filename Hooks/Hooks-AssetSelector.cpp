@@ -214,7 +214,8 @@ namespace ConstructionSetExtender
 				case e_KF:
 					{
 						std::string STLBuffer(PathEditorParam.Buffer);
-						int Offset = STLBuffer.find("IdleAnims\\");
+						SME::StringHelpers::MakeLower(STLBuffer);
+						int Offset = STLBuffer.find("idleanims\\");
 						if (Offset != -1)
 							STLBuffer = STLBuffer.substr(Offset + 9);
 
@@ -259,6 +260,20 @@ namespace ConstructionSetExtender
 			char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
 
 			GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
+			switch (Filter)
+			{
+			case e_KF:
+				std::string STLBuffer(RelativePathBuffer);
+				SME::StringHelpers::MakeLower(STLBuffer);
+				int Offset = STLBuffer.find("idleanims\\");
+				if (Offset != -1)
+				{
+					STLBuffer = STLBuffer.substr(Offset + 9);
+					FORMAT_STR(RelativePathBuffer, "%s", STLBuffer.c_str());
+				}
+
+				break;
+			}
 			FORMAT_STR(FullPathBuffer, "%s%s", DefaultLookupDir, RelativePathBuffer);
 
 			if (GetFileAttributes(FullPathBuffer) != INVALID_FILE_ATTRIBUTES)
@@ -307,6 +322,20 @@ namespace ConstructionSetExtender
 			char FullPathBuffer[MAX_PATH] = {0}, RelativePathBuffer[MAX_PATH] = {0};
 
 			GetDlgItemText(Dialog, PathID, RelativePathBuffer, sizeof(RelativePathBuffer));
+			switch (Filter)
+			{
+			case e_KF:
+				std::string STLBuffer(RelativePathBuffer);
+				SME::StringHelpers::MakeLower(STLBuffer);
+				int Offset = STLBuffer.find("idleanims\\");
+				if (Offset != -1)
+				{
+					STLBuffer = STLBuffer.substr(Offset + 9);
+					FORMAT_STR(RelativePathBuffer, "%s", STLBuffer.c_str());
+				}
+
+				break;
+			}
 			FORMAT_STR(FullPathBuffer, "%s%s", DefaultLookupDir, RelativePathBuffer);
 
 			bool FileFound = false;

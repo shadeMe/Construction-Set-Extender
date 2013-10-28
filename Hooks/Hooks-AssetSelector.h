@@ -232,7 +232,7 @@ namespace ConstructionSetExtender
 		void SPTPostCommonDialogHook(void);
 		void SPTCancelCommonDialogHook(void);
 
-		_DeclareMemHdlr(TESDialogShowNIFFileSelect, "fixes a bug that forced NIF file selections to use the old style common dialog");
+		_DeclareMemHdlr(TESDialogShowNIFFileSelect, "fixes a bug that forced NIF file selections to use the legacy common dialog");
 		_DeclareMemHdlr(TESDialogShowFileSelect, "gets the windows open file dialog to use existing asset paths when available");
 	}
 }
