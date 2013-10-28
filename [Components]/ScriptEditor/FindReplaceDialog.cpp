@@ -430,9 +430,20 @@ namespace ConstructionSetExtender
 
 		void FindReplaceDialog::LoadOptions()
 		{
-			CaseInsensitiveSearch->Checked = PREFERENCES->FetchSettingAsInt("CaseInsensitive", "FindReplace");
-			MatchWholeWord->Checked = PREFERENCES->FetchSettingAsInt("MatchWholeWord", "FindReplace");
-			UseRegEx->Checked = PREFERENCES->FetchSettingAsInt("UseRegEx", "FindReplace");
+			if (PREFERENCES->FetchSettingAsInt("CaseInsensitive", "FindReplace"))
+				CaseInsensitiveSearch->Checked = true;
+			else
+				CaseInsensitiveSearch->Checked = false;
+
+			if (PREFERENCES->FetchSettingAsInt("MatchWholeWord", "FindReplace"))
+				MatchWholeWord->Checked = true;
+			else
+				MatchWholeWord->Checked = false;
+
+			if (PREFERENCES->FetchSettingAsInt("UseRegEx", "FindReplace"))
+				UseRegEx->Checked = true;
+			else
+				UseRegEx->Checked = false;
 		}
 
 		void FindReplaceDialog::SaveOptions()

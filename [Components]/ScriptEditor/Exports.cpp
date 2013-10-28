@@ -3,6 +3,8 @@
 #include "IntelliSense\IntelliSenseDatabase.h"
 #include "Globals.h"
 
+#include <memory.h>
+
 using namespace ComponentDLLInterface;
 using namespace System::Reflection;
 using namespace ConstructionSetExtender;
@@ -97,6 +99,33 @@ UInt32 GetOpenEditorCount(void)
 	return SEMGR->GetOpenEditorCount();
 }
 
+void DummyPreprocessorErrorOutputWrapper(String^ Message)
+{
+	;//
+}
+
+bool PreprocessScript(const char* ScriptText, char* OutPreprocessed, UInt32 BufferSize)
+{
+	String^ PreprocessedResult = "";
+	bool OperationResult = Preprocessor::GetSingleton()->PreprocessScript(gcnew String(ScriptText),
+								PreprocessedResult,
+								gcnew ScriptPreprocessor::StandardOutputError(&DummyPreprocessorErrorOutputWrapper),
+								gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+								gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+								PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
+								PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+
+	if (OperationResult)
+	{
+		PreprocessedResult->Replace("\n", "\r\n");
+		CString OutText(PreprocessedResult);
+		memcpy_s(OutPreprocessed, BufferSize, OutText.c_str(), PreprocessedResult->Length);
+	}
+
+	return OperationResult;
+}
+
+
 void Deinitalize(void)
 {
 	try
@@ -123,5 +152,6 @@ ComponentDLLInterface::ScriptEditorInterface g_InteropInterface =
 	CloseAllOpenEditors,
 	UpdateIntelliSenseDatabase,
 	GetOpenEditorCount,
+	PreprocessScript,
 	Deinitalize,
 };

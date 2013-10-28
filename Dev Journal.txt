@@ -40,7 +40,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
-
+		> Add a compilation success message to the UI
 
 	MISC			=
 

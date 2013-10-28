@@ -328,9 +328,27 @@ void RecompileScripts(void)
 {
 	TESScriptCompiler::PreventErrorDetours = true;
 
+	UInt32 ScriptCount = 0, Current = 0;
+
+	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+	{
+		Script* ScriptForm = Itr.Get();
+		if ((ScriptForm->formFlags & TESForm::kFormFlags_Deleted) == 0 &&
+			(ScriptForm->formFlags & TESForm::kFormFlags_FromActiveFile))
+		{
+			ScriptCount++;
+		}
+	}
+
+	HWND NotificationDialog = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
+	Static_SetText(GetDlgItem(NotificationDialog, -1), "Please Wait");
+	char Buffer[0x200] = {0};
+
 	BGSEECONSOLE_MESSAGE("Recompiling active scripts...");
 	BGSEECONSOLE->Indent();
 
+	static const UInt32 kPreprocessorBufferSize = 2 * 1024 * 1024;
+	char* PreprocessedTextBuffer = new char[kPreprocessorBufferSize];
 	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
 		Script* ScriptForm = Itr.Get();
@@ -339,12 +357,36 @@ void RecompileScripts(void)
 		{
 			BGSEECONSOLE->LogMsg("CS", "Script '%s' {%08X}:", ScriptForm->editorID.c_str(), ScriptForm->formID);
 			BGSEECONSOLE->Indent();
-			ScriptForm->Compile();
+
+			Current++;
+			FORMAT_STR(Buffer, "Please Wait\nCompiling Script %d/%d", Current, ScriptCount);
+			Static_SetText(GetDlgItem(NotificationDialog, -1), Buffer);
+
+			ZeroMemory(PreprocessedTextBuffer, kPreprocessorBufferSize);
+			bool PreprocessResult = CLIWrapper::Interfaces::SE->PreprocessScript(ScriptForm->text, PreprocessedTextBuffer, kPreprocessorBufferSize);
+			if (PreprocessResult)
+			{
+				BSString* OldText = BSString::CreateInstance(ScriptForm->text);
+
+				ScriptForm->SetText(PreprocessedTextBuffer);
+				ScriptForm->Compile();
+				ScriptForm->SetText(OldText->c_str());
+
+				OldText->DeleteInstance();
+			}
+			else
+			{
+				BGSEECONSOLE->LogMsg("CS", "Preprocessing failed!");
+			}
+
 			BGSEECONSOLE->Exdent();
 		}
 	}
 
+	delete [] PreprocessedTextBuffer;
 	BGSEECONSOLE->Exdent();
+
+	DestroyWindow(NotificationDialog);
 	BGSEECONSOLE_MESSAGE("Recompile active scripts operation completed!");
 
 	TESScriptCompiler::PreventErrorDetours = false;

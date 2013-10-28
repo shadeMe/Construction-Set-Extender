@@ -118,6 +118,7 @@ namespace ComponentDLLInterface
 		void										(* CloseAllOpenEditors)(void);
 		void										(* UpdateIntelliSenseDatabase)(void);
 		UInt32										(* GetOpenEditorCount)(void);
+		bool										(* PreprocessScript)(const char* ScriptText, char* OutPreprocessed, UInt32 BufferSize);
 		void										(* Deinitalize)(void);
 	};
 
