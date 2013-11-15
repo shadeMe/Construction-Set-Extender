@@ -280,7 +280,7 @@ namespace BGSEditorExtender
 		if (Table.count(Version))
 			return Table[Version].c_str();
 		else
-			return NULL;
+			return "Herr Keuner";
 	}
 
 	BGSEEMain::DefaultInitCallback::DefaultInitCallback() :

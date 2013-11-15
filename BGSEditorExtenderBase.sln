@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BGSEditorExtenderBase", "BGSEditorExtenderBase.vcxproj", "{414EDF4A-5930-416A-B382-216B445539DB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "[Projects]", "[Projects]", "{4BDA7013-1F38-46D0-90AB-561CE802B4BB}"
