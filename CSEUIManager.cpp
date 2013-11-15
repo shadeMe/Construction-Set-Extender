@@ -2270,6 +2270,8 @@ namespace ConstructionSetExtender
 
 							SetWindowText(hWnd, Buffer);
 						}
+
+						Return = true;
 					}
 
 					break;
@@ -2368,20 +2370,27 @@ namespace ConstructionSetExtender
 					if (GetCapture() != hWnd)
 					{
 						HCURSOR* Icon = TESRenderWindow::CursorArrow;
+
 						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
 							TESObjectREFR* MouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
 							if (MouseRef)
 							{
 								if (_RENDERSEL->HasObject(MouseRef))
+								{
 									Icon = TESRenderWindow::CursorMove;
+								}
 								else
+								{
 									Icon = TESRenderWindow::CursorSelect;
+								}
 							}
 						}
 
 						if (Icon && GetCursor() != *Icon)
+						{
 							SetCursor(*Icon);						
+						}
 					}
 				}
 
@@ -2504,7 +2513,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case 0x52:		// R
+				case 0x52:		// R					
 					if (*TESRenderWindow::PathGridEditFlag)
 					{
 						if (GetAsyncKeyState(VK_CONTROL))
@@ -4421,10 +4430,45 @@ namespace ConstructionSetExtender
 			kFaceGenControl_AgeTrackbar				= 2116,
 			kFaceGenControl_ComplexionTrackbar		= 2124,
 			kFaceGenControl_HairLengthTrackbar		= 2126,
+
+			kFaceGenControl_AdvancedParamsListView	= 1020,
 		};
 
 #define IDT_FACEGENPREVIEW_VOICEPLAYBACK			0x6FF
 #define IDT_FACEGENPREVIEW_PREVIEWUPDATE			0x7FF
+
+		LRESULT CALLBACK FaceGenParamListSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_MOUSEWHEEL:
+				{
+					if (GetAsyncKeyState(VK_RBUTTON))
+					{
+						// RMB is held down, forward the message to the trackbar and then consume it
+						Return = true;
+
+						HWND Parent = NULL;
+						if ((Parent = GetParent(hWnd)))
+						{
+							HWND Trackbar = GetDlgItem(Parent, kFaceGenControl_AdvancedTrackbar);
+							if (Trackbar)
+							{
+								SendMessage(Trackbar, uMsg, wParam, lParam);
+							}
+						}
+					}
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
 
 		LRESULT CALLBACK FaceGenDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
@@ -4634,6 +4678,19 @@ namespace ConstructionSetExtender
 									static const UInt32 kPreviewUpdateCoolDownPeriod = 1000;		// in ms
 
 									SetTimer(hWnd, IDT_FACEGENPREVIEW_PREVIEWUPDATE, kPreviewUpdateCoolDownPeriod, NULL);
+
+									HWND AdvancedParamsList = GetDlgItem(hWnd, kFaceGenControl_AdvancedParamsListView);
+									if (AdvancedParamsList)
+									{
+										char Buffer[0x200] = {0};
+										GetClassName(AdvancedParamsList, Buffer, sizeof(Buffer));
+
+										if (!_stricmp("SysListView32", Buffer))
+										{
+											// right, subclass it to forward mouse wheel messages to the trackbar
+											BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(AdvancedParamsList, FaceGenParamListSubClassProc);
+										}
+									}
 								}
 							}
 						}
@@ -4648,9 +4705,9 @@ namespace ConstructionSetExtender
 				{
 				case EN_CHANGE:
 					{
-						// this method is actually rather buggy
+						// the method used here is actually rather buggy
 						// the 0x41A message updates the NPC/Race form before regenerating the face model
-						// this causes the form's compare method to inadvertently return true, leading to false changes
+						// this causes the form's compare method to return true, leading to false changes
 						// the issue is only noticeable in the race edit dialog as it's a FormIDListView dlg
 						// we HACK around this by preventing updates for a short time after the current tab's been switched
 						// during this time, updates to the edit controls' text will be ignored by this handler

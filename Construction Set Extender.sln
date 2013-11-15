@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Construction Set Extender", "Construction Set Extender.vcxproj", "{D4DDA734-7E93-4581-8F82-32BB738F69FE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchEditor", "[Components]\BatchEditor\BatchEditor.vcxproj", "{F215DC0C-0A95-477D-A336-1A5080AE04AD}"

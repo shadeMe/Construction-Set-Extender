@@ -7,8 +7,9 @@
 	Container class for facegen related data.
 */
 
+// primary data block used to store face data
 // 18
-struct FaceGenFaceData18
+struct FaceGenFaceDataBlock
 {
 	/*00*/ UInt32			unk00;
 	/*04*/ UInt32			unk04;	// init to 1
@@ -18,11 +19,17 @@ struct FaceGenFaceData18
 	/*14*/ void*			unk14;
 };
 
+// 60
+struct FaceGenFaceParameters
+{
+	/*00*/ FaceGenFaceDataBlock		data[4];
+};
+
 // C4
 struct FaceGenUndo
 {
-	/*00*/ FaceGenFaceData18		unk00[4];	// previous/base face data?
-	/*60*/ FaceGenFaceData18		unk60[4];	// current face data?
+	/*00*/ FaceGenFaceParameters	unk00;		// previous/base face data?
+	/*60*/ FaceGenFaceParameters	unk60;		// current face data?
 	/*C0*/ UInt8					unkC0;		// initialized to 0
 	/*C1*/ UInt8					unkC1[3];
 };

@@ -4,8 +4,8 @@
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
-    'ActorValues' is a generic container class used to group the various global data and functions related
-    to actor values.
+	'ActorValues' is a generic container class used to group the various global data and functions related
+	to actor values.
 */
 
 class ActorValues

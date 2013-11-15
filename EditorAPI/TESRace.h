@@ -103,10 +103,11 @@ public:
 	/*3D0*/ TESTexture					femaleHandTexture;
 	/*3E8*/ TESTexture					femaleFootTexture;
 	/*400*/ TESTexture					femalTailTexture;
-	/*418*/ FaceGenFaceData18			unk418[4];
-	/*478*/ UInt16						unk478;					// init to 0
+	/*418*/ FaceGenFaceParameters		genericFaceData;
+	/*478*/ UInt16						faceDataID;				// init to 0, randomly generated whenever face data is modified
 	/*47A*/ UInt8						pad47A[2];
 	/*47C*/ TESRace*					maleVoiceRace;
 	/*480*/ TESRace*					femaleVoiceRace;
 	/*484*/ FaceGenUndoListT			faceGenUndoList;
 };
+STATIC_ASSERT(sizeof(TESRace) == 0x494);

@@ -185,6 +185,10 @@ namespace ConstructionSetExtender
 			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("9B986781-814C-478A-9D12-1BAD354F7193",
 									"Pathgrid for cell contains inter-grid connections",
 									1, 0x0054F6BE));
+
+			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("2B3B0430-3C6B-40D9-9A8E-FED0B377CC5B",
+									"Bad note string in animation frame",
+									2, 0x004C9EBD, 0x004CA03A));
 		}
 
 		void Initialize()

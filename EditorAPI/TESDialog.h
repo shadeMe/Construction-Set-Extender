@@ -286,7 +286,7 @@ public:
 		kDialogTemplate_ActorInventoryData			= 3204,
 		kDialogTemplate_ActorSpellDaa				= 3205,
 		kDialogTemplate_CreatureStatsData			= 3208,
-		kDialogTemplate_FactionInterfactionData		= 3209,
+		kDialogTemplate_RaceFactionReactionData		= 3209,
 		kDialogTemplate_PreferencesRenderWindow		= 3210,
 		kDialogTemplate_PreferencesMovement			= 3211,
 		kDialogTemplate_PreferencesMisc				= 3212,
