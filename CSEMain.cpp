@@ -47,6 +47,7 @@ namespace ConstructionSetExtender
 		RegisterRelease(6, 1, "Cretinous Codpiece");
 		RegisterRelease(6, 2, "Talkative Badger");
 		RegisterRelease(6, 3, "Drunken Glaswegian");
+		RegisterRelease(6, 4, "(Subterranean)Homesick Alien");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()

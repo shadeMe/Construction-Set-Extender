@@ -3529,7 +3529,7 @@ namespace ConstructionSetExtender
 						{
 							HWND WindowAtPoint = xData->LastCursorPosWindow;
 							bool Viewable = false;
-							char Buffer[0x200] = {0};
+							char Buffer[0x200] = {0}, ControlText[0x200] = {0};
 
 							if (IsWindowEnabled(WindowAtPoint))
 							{
@@ -3537,13 +3537,13 @@ namespace ConstructionSetExtender
 								LONG_PTR WindowStyle = GetWindowLongPtr(WindowAtPoint, GWL_STYLE);
 
 								GetClassName(WindowAtPoint, Buffer, sizeof(Buffer));
+								GetWindowText(WindowAtPoint, (LPSTR)ControlText, sizeof(ControlText));
 
 								if ((!_stricmp("Button", Buffer) &&
 									CtrlID != kFaceGenControl_PreviewCtrl &&
 									(WindowStyle & BS_AUTOCHECKBOX) == false &&
-									CtrlID > 5) ||
-									!_stricmp("ComboBox", Buffer) ||
-									!_stricmp("Edit", Buffer))
+									CtrlID > 5 && strlen(ControlText) > 3) ||
+									!_stricmp("ComboBox", Buffer))
 								{
 									Viewable = true;
 								}
@@ -3552,14 +3552,12 @@ namespace ConstructionSetExtender
 							if (Viewable)
 							{
 								// valid control, show tooltip
-								GetWindowText(WindowAtPoint, (LPSTR)Buffer, sizeof(Buffer));
-
-								if (strlen(Buffer))
+								if (strlen(ControlText))
 								{
 									ZeroMemory(&xData->AssetControlToolData, sizeof(TOOLINFO));
 									xData->AssetControlToolData.cbSize = sizeof(TOOLINFO);
 									xData->AssetControlToolData.uFlags = TTF_TRACK;
-									xData->AssetControlToolData.lpszText = Buffer;
+									xData->AssetControlToolData.lpszText = ControlText;
 
 									SendMessage(xData->AssetControlToolTip, TTM_ADDTOOL, NULL, (LPARAM)&xData->AssetControlToolData);
 									SendMessage(xData->AssetControlToolTip,
