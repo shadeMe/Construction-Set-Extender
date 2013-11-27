@@ -139,6 +139,72 @@ public:
 };
 STATIC_ASSERT(sizeof(FindTextWindowData) == 0x18);
 
+enum
+{
+	kFindTextListView_Topics		= 1019,
+	kFindTextListView_Infos			= 1952,
+	kFindTextListView_Objects		= 1018,			// displays scripts and quests too
+};
+
+// control IDs of listview controls that are populated with TESForm instances
+enum
+{
+	kFormList_ObjectWindowObjects						= 1041,
+	kFormList_TESPackage								= 1977,
+	kFormList_CellViewCells								= 1155,
+	kFormList_CellViewRefs								= 1156,
+	kFormList_TESFormIDListView							= 2064,
+	kFormList_DialogEditorTopics						= 1448,
+	kFormList_DialogEditorTopicInfos					= 1449,
+	kFormList_DialogEditorAddedTopics					= 1453,
+	kFormList_DialogEditorLinkedToTopics				= 1456,
+	kFormList_DialogEditorLinkedFromTopics				= 1455,
+	kFormList_Generic									= 1018,
+	kFormList_TESContainer								= 2035,
+	kFormList_TESSpellList								= 1485,
+	kFormList_ActorFactions								= 1088,
+	kFormList_TESLeveledList							= 2036,
+	kFormList_WeatherSounds								= 2286,
+	kFormList_ClimateWeatherRaceHairFindTextTopics		= 1019,
+	kFormList_RaceEyes									= 2163,
+	kFormList_TESReactionForm							= 1591,
+	kFormList_FindTextTopicInfos						= 1952,
+	kFormList_LandTextures								= 1492,
+	kFormList_CrossReferences							= 1637,
+	kFormList_CellUseList								= 1638,
+};
+
+enum
+{
+	kAssetFileButton_Model								= 1043,		// includes idle animations and trees
+	kAssetFileButton_Texture							= 1044,
+	kAssetFileButton_Sound								= 1451,
+	kAssetFileButton_Script								= 1226,		// not really an asset but meh
+	kAssetFileButton_BipedModel_Male					= 1045,
+	kAssetFileButton_BipedModel_Female					= 1046,
+	kAssetFileButton_WorldModel_Male					= 2088,
+	kAssetFileButton_WorldModel_Female					= 2091,
+	kAssetFileButton_BipedIcon_Male						= 2089,
+	kAssetFileButton_BipedIcon_Female					= 2092,
+};
+
+enum
+{
+	kFaceGenControl_AgeEditCtrl				= 2117,
+	kFaceGenControl_ComplexionEditCtrl		= 2125,
+	kFaceGenControl_HairLengthEditCtrl		= 2127,
+	kFaceGenControl_AdvancedEditCtrl		= 2115,
+
+	kFaceGenControl_PreviewCtrl				= 2175,
+
+	kFaceGenControl_AdvancedTrackbar		= 2114,
+	kFaceGenControl_AgeTrackbar				= 2116,
+	kFaceGenControl_ComplexionTrackbar		= 2124,
+	kFaceGenControl_HairLengthTrackbar		= 2126,
+
+	kFaceGenControl_AdvancedParamsListView	= 1020,
+};
+
 // container class
 class TESDialog
 {
@@ -350,7 +416,7 @@ public:
 	static TESForm*							GetDialogExtraLocalCopy(HWND Dialog);
 	static bool								GetIsWindowDragDropRecipient(UInt16 FormType, HWND hWnd);
 
-	static bool								GetIsFormEditDialogCompatible(TESForm* Form);
+	static DLGPROC							GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm);
 	static bool								CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong);
 
 	static bool								SelectTESFileCommonDialog(HWND Parent, const char* SaveDir, bool SaveAsESM, char* FileNameOut, size_t OutSize);
@@ -388,6 +454,7 @@ public:
 	static void*							GetSelectedItemData(HWND hWnd);
 	static void*							GetItemData(HWND hWnd, int Index);
 	static int								GetItemByData(HWND hWnd, void* Data);
+	static void								ScrollToItem(HWND hWnd, int Index);
 };
 
 class TESPreviewWindow
@@ -463,6 +530,8 @@ public:
 		/*12*/ UInt8		enabled;			// disables all message processing when not set
 		/*13*/ UInt8		pad13;
 		/*14*/ POINT		cursorPos;			// buffer used to store the coords of the cursor during a drag op
+
+		enum { kSplitterCtrlID = 2157 };
 	};
 	STATIC_ASSERT(sizeof(SplitterData) == 0x1C);
 

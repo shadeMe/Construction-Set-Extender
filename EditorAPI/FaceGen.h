@@ -31,7 +31,7 @@ struct FaceGenUndo
 	/*00*/ FaceGenFaceParameters	unk00;		// previous/base face data?
 	/*60*/ FaceGenFaceParameters	unk60;		// current face data?
 	/*C0*/ UInt8					unkC0;		// initialized to 0
-	/*C1*/ UInt8					unkC1[3];
+	/*C1*/ UInt8					unkC1[3];	// padding probably
 };
 
 typedef NiTArray<FaceGenUndo*> FaceGenUndoListT;

@@ -122,16 +122,36 @@ bool TESDialog::SelectTESFileCommonDialog( HWND Parent, const char* SaveDir, boo
 
 HWND TESDialog::ShowFormEditDialog( TESForm* Form )
 {
-	if (GetIsFormEditDialogCompatible(Form) == false)
+	bool FormIDListViewForm = false;
+	DLGPROC WndProc = GetFormEditDlgProc(Form, FormIDListViewForm);
+
+	if (WndProc == NULL || GetDialogTemplateForFormType(Form->formType) == 0)
 		return NULL;
 
 	FormEditParam InitData(Form);
-	return BGSEEUI->ModelessDialog(*TESCSMain::Instance,
+	HWND Dialog = BGSEEUI->ModelessDialog(*TESCSMain::Instance,
 							(LPSTR)GetDialogTemplateForFormType(InitData.typeID),
 							*TESCSMain::WindowHandle,
-							(DLGPROC)0x00447580,
+							WndProc,
 							(LPARAM)&InitData,
 							true);
+
+	if (FormIDListViewForm)
+	{
+		// attempt to select the form
+		HWND ListView = GetDlgItem(Dialog, kFormList_TESFormIDListView);
+		if (ListView)
+		{
+			int Index = TESListView::GetItemByData(ListView, Form);
+			if (Index != -1)
+			{
+				TESListView::SetSelectedItem(ListView, Index);
+				TESListView::ScrollToItem(ListView, Index);
+			}
+		}
+	}
+
+	return Dialog;
 }
 
 void TESDialog::ShowScriptEditorDialog( TESForm* InitScript )
@@ -148,8 +168,10 @@ void TESDialog::ShowScriptEditorDialog( TESForm* InitScript )
 }
 
 
-bool TESDialog::GetIsFormEditDialogCompatible( TESForm* Form )
+DLGPROC TESDialog::GetFormEditDlgProc( TESForm* Form, bool& FormIDListViewForm )
 {
+	FormIDListViewForm = false;
+
 	switch (Form->formType)
 	{
 	case TESForm::kFormType_Activator:
@@ -188,9 +210,24 @@ bool TESDialog::GetIsFormEditDialogCompatible( TESForm* Form )
 	case TESForm::kFormType_SubSpace:
 	case TESForm::kFormType_EffectShader:
 	case TESForm::kFormType_SigilStone:
-		return true;
+		return (DLGPROC)0x00447580;
+	case TESForm::kFormType_Faction:
+	case TESForm::kFormType_Race:
+	case TESForm::kFormType_Class:
+	case TESForm::kFormType_Skill:
+	case TESForm::kFormType_EffectSetting:
+	case TESForm::kFormType_GMST:
+	case TESForm::kFormType_Global:
+	case TESForm::kFormType_BirthSign:
+	case TESForm::kFormType_Climate:
+	case TESForm::kFormType_WorldSpace:
+	case TESForm::kFormType_Hair:
+	case TESForm::kFormType_Eyes:
+	case TESForm::kFormType_Weather:
+		FormIDListViewForm = true;
+		return (DLGPROC)0x00448820;
 	default:
-		return false;
+		return NULL;
 	}
 }
 
@@ -272,6 +309,11 @@ void TESListView::SetSelectedItem( HWND hWnd, int Index )
 int TESListView::GetItemByData( HWND hWnd, void* Data )
 {
 	return cdeclCall<int>(0x004039E0, hWnd, Data);
+}
+
+void TESListView::ScrollToItem( HWND hWnd, int Index )
+{
+	cdeclCall<void>(0x00403BA0, hWnd, Index);
 }
 
 void TESPreviewWindow::Show( TESBoundObject* Object )
@@ -370,7 +412,7 @@ void TESFileFormListWindow::Show( HWND Parent, TESFile* File)
 	if (Parent == NULL)
 		Parent = *TESCSMain::WindowHandle;
 
-	BGSEEUI->ModalDialog(*TESCSMain::Instance, MAKEINTRESOURCE(0xB4), Parent, (DLGPROC)0x00410280, (LPARAM)File, true);
+	BGSEEUI->ModalDialog(*TESCSMain::Instance, MAKEINTRESOURCE(TESDialog::kDialogTemplate_TESFileDetails), Parent, (DLGPROC)0x00410280, (LPARAM)File, true);
 }
 
 
@@ -387,5 +429,5 @@ void TESObjectWindow::RefreshFormList( void )
 
 void TESObjectWindow::SetSplitterEnabled( bool State )
 {
-	cdeclCall<void>(0x004044D0, GetDlgItem(*TESObjectWindow::WindowHandle, 2157), State);
+	cdeclCall<void>(0x004044D0, GetDlgItem(*TESObjectWindow::WindowHandle, TESObjectWindow::SplitterData::kSplitterCtrlID), State);
 }
