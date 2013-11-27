@@ -595,9 +595,7 @@ namespace BGSEditorExtender
 		SME_ASSERT(LongName && ShortName &&	ReleaseName && APPPath);
 		SME_ASSERT(EditorID != kExtenderParentEditor_Unknown && EditorID < kExtenderParentEditor__MAX);
 		SME_ASSERT(SEPluginHandle != 0xFFFFFFFF && DotNETFrameworkVersion);
-
-		Initialized = true;
-
+		
 		ExtenderLongName = LongName;
 		FORMAT_STR(ExtenderShortName, "%s", ShortName);
 		ExtenderReleaseName = ReleaseName;
@@ -647,7 +645,8 @@ namespace BGSEditorExtender
 		ExtenderDaemon->RegisterInitCallback(BGSEEDaemon::kInitCallback_Query, InitCallback);
 
 		this->CrashRptSupport = CrashRptSupport;
-
+		Initialized = true;
+		
 		if (CrashRptSupport)
 		{
 			CR_INSTALL_INFO CrashRptData = {0};
@@ -687,6 +686,7 @@ namespace BGSEditorExtender
 					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
 
 				BGSEECONSOLE_MESSAGE("CrashRpt failed to initialize; Error Message: %s", Buffer);
+				Initialized = false;
 			}
 			else
 			{
