@@ -13,6 +13,8 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> Mouse-over object details crashes when it's displaying details about a temp ref (created when the source ref's edit dialog is open, freed once done - clear the mouse over ref when closing ref edit dialogs, if it points to a temp ref)		
+		> Opening and closing too many preview windows slows down the editor
 		> Dynamic channels in the Renderwindowpainter have timer issues (text zips by randomly)
 		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Partial black tex hasn't been fixed yet
@@ -21,6 +23,9 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Multiple preview windows
+		> Enhanced vanilla error messages
+			http://forums.bethsoft.com/topic/1474937-rel-construction-set-extender-v62/?p=23411005
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
@@ -30,6 +35,7 @@ CSE		---->
 
 
 	CODA			=
+		> EffectItem commands
 	
 
 	MISC			=

@@ -14,5 +14,7 @@ namespace ConstructionSetExtender
 		}; 
 
 		void Initialize(void);
+
+		extern bool		Initialized;
 	}
 }

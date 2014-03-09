@@ -8,6 +8,7 @@
 #include "..\CSEHallOfFame.h"
 #include "..\CSEWorkspaceManager.h"
 #include "..\CSEFormUndoStack.h"
+#include "..\CSEConsole.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -915,7 +916,10 @@ namespace ConstructionSetExtender
 
 		bool __stdcall CheckWithWarningManager(UInt32 CallSite)
 		{
-			return BGSEECONSOLE->GetWarningManager()->GetWarningEnabled(CallSite);
+			if (Console::Initialized == false)
+				return true;
+			else
+				return BGSEECONSOLE->GetWarningManager()->GetWarningEnabled(CallSite);
 		}
 
 		#define _hhName		MessageHandlerShowWarning

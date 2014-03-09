@@ -191,6 +191,8 @@ namespace ConstructionSetExtender
 									2, 0x004C9EBD, 0x004CA03A));
 		}
 
+		bool Initialized = false;
+
 		void Initialize()
 		{
 			if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
@@ -217,6 +219,7 @@ namespace ConstructionSetExtender
 			BGSEECONSOLE->RegisterConsoleCommand(&kBGSEEConsoleCmd_Redo);
 
 			CSEInterfaceManager::Instance.ConsumeConsoleInterface();
+			Initialized = true;
 		}
 	}
 }
