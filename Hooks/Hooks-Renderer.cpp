@@ -402,6 +402,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 		{
 			SME::MiscGunk::ToggleFlag(&Node->m_flags, TESObjectREFR::kNiNodeSpecialFlags_DontUncull, State);
+
+			// reset the current mouse-over ref, just in case it happens to be the temp ref the edit dlg created
+			TESRenderWindow::CurrentMouseRef = NULL;
 		}
 
 		#define _hhName		TESObjectREFRSetupDialog

@@ -1,5 +1,6 @@
 #include "Core.h"
 #include "Hooks\Hooks-Renderer.h"
+#include "Hooks\Hooks-LOD.h"
 
 using namespace ConstructionSetExtender;
 
@@ -14,6 +15,8 @@ BSTextureManager**					BSTextureManager::Singleton = (BSTextureManager**)0x00A8E
 
 UInt8								TESLODTextureGenerator::GeneratorState = TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse;
 const char*							TESLODTextureGenerator::LODFullTexturePath = ".\\Data\\Textures\\LandscapeLOD\\Generated\\%i.%02i.%02i.%i.dds";
+const char*							TESLODTextureGenerator::ExteriorSnapshotPathBuffer = NULL;
+TESObjectCELL*						TESLODTextureGenerator::ExteriorSnapshotSource = NULL;
 
 LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture32x = (LPDIRECT3DTEXTURE9*)0x00A0AAC4;
 LPDIRECT3DTEXTURE9*					TESLODTextureGenerator::D3DTexture64x = (LPDIRECT3DTEXTURE9*)0x00A0AAC0;
@@ -317,8 +320,7 @@ LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 H
 	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteJump();
 	Result = cdeclCall<LPDIRECT3DTEXTURE9>(0x004113E0, this->renderedTexture, 0, 0, Width, D3DTexture, 0, 1, NULL);
 	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteBuffer();
-	D3DTexture->Release();
-	D3DTexture = NULL;
+	SAFERELEASE_D3D(D3DTexture);
 
 	return Result;
 }
@@ -331,4 +333,69 @@ void BSRenderedTexture::DeleteInstance( bool ReleaseMemory /*= 0*/ )
 GridCellArray::GridEntry* GridCellArray::GetCellEntry( SInt32 X, SInt32 Y )
 {
 	return &grid[Y + X * size];
+}
+
+void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt32 Resolution, const char* SavePath )
+{
+	SME_ASSERT(Exterior && Exterior->GetIsInterior() == false && Resolution);
+	SME_ASSERT(GeneratorState == kLODDiffuseMapGeneratorState_NotInUse);
+
+	ExteriorSnapshotSource = Exterior;
+	SInt32 XCoord = Exterior->cellData.coords->x;
+	SInt32 YCoord = Exterior->cellData.coords->y;
+
+	// load the cell into the render window first
+	Vector3 Coords((XCoord << 12) + 2048.0, (YCoord << 12) + 2048.0, 0);
+	_TES->LoadCellIntoViewPort(&Coords, NULL);
+
+	if (Resolution > 6144)
+		Resolution = 6144;
+	else if (Resolution < 32)
+		Resolution = 32;
+	else switch (Resolution)
+	{
+	case 32:
+	case 64:
+	case 128:
+	case 256:
+	case 512:
+	case 1024:
+	case 2048:
+	case 4096:
+	case 6144:
+		break;
+	default:
+		Resolution = 1024;
+		break;
+	}
+
+	char PathBuffer[MAX_PATH] = {0};
+	if (SavePath == NULL)
+	{
+		CreateDirectory("Data\\Textures\\Landscape\\", NULL);
+		FORMAT_STR(PathBuffer, "Data\\Textures\\Landscape\\Snapshot_%i.%i.dds", XCoord, YCoord);
+		ExteriorSnapshotPathBuffer = PathBuffer;
+	}
+	else
+		ExteriorSnapshotPathBuffer = SavePath;
+
+	Hooks::_MemHdlr(GeneratePartialLODFilePath).WriteJump();
+	CreateTextureBuffers();
+	cdeclCall<void>(0x00412480, XCoord, YCoord, Resolution);
+	ReleaseTextureBuffers();
+	Hooks::_MemHdlr(GeneratePartialLODFilePath).WriteBuffer();
+	BGSEECONSOLE_MESSAGE("Saved exterior cell %i,%i snapshot to %s", XCoord, YCoord, ExteriorSnapshotPathBuffer);
+
+	ExteriorSnapshotPathBuffer = NULL;
+	ExteriorSnapshotSource = NULL;
+}
+
+void TESLODTextureGenerator::CreateTextureBuffers( void )
+{
+	cdeclCall<void>(0x00410CD0);
+}
+
+void TESLODTextureGenerator::ReleaseTextureBuffers( void )
+{
+	cdeclCall<void>(0x00410A30);
 }

@@ -53,6 +53,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(DataHandlerGetInteriorAtIndex, "patchs an out-of-bounds index condition");
 		_DeclareMemHdlr(MessageHandlerShowWarning, "adds support for warning toggling");
 		_DeclareMemHdlr(NiControllerSequenceShowWarning, "");
+		_DeclareMemHdlr(ExtraDataListInitForCell, "adds support for verbose debug logging");
+		_DeclareMemHdlr(ExtraDataListInitForRef, "");
 	}
 }
 

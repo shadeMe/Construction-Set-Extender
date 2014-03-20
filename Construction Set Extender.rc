@@ -530,6 +530,7 @@ BEGIN
             MENUITEM "This LOD Quad",               40441
             MENUITEM "This Cell",                   40442
         END
+        MENUITEM "Save Current Exterior Snapshot", IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT
         MENUITEM SEPARATOR
         MENUITEM "Selection:",                  9999, GRAYED
         MENUITEM "Invert",                      IDC_RENDERWINDOWCONTEXT_INVERTSELECTION

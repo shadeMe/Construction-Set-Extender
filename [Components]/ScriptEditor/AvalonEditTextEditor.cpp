@@ -950,8 +950,11 @@ namespace ConstructionSetExtender
 							GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
 							GetCharIndexInsideStringSegment(TextField->SelectionStart - 1) == false)
 						{
-							if (LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "")
+							if ((LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "") &&
+								TextField->TextArea->Selection->IsMultiline == false)
+							{
 								IntelliSenseBox->Show(IntelliSenseBox->LastOperation, false, false);
+							}
 							else
 								IntelliSenseBox->Hide();
 						}

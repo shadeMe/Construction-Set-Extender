@@ -11,6 +11,30 @@ namespace ComponentDLLInterface
 		ParentForm = Form;
 	}
 
+	bool TryGetUDF(Script* Form, bool& IsUDF)
+	{
+		// need to SEH-wrap this to be safe
+		bool Result = false;
+		IsUDF = false;
+
+		__try 
+		{
+			UInt8* data = (UInt8*)Form->data;
+			if (data && *(data + 8) == 7)
+			{
+				IsUDF = true;
+			}
+
+			Result = true;
+		}
+		__except(EXCEPTION_EXECUTE_HANDLER) 
+		{
+			Result = false;
+		}
+
+		return Result;
+	}
+
 	void ScriptData::FillScriptData(Script* Form)
 	{
 		FillFormData(Form);
@@ -22,11 +46,7 @@ namespace ComponentDLLInterface
 		UDF = false;
 		if (Form->info.type == Script::kScriptType_Object && Form->info.dataLength >= 15)
 		{
-			UInt8* data = (UInt8*)Form->data;
-			if (data && *(data + 8) == 7)
-			{
-				UDF = true;
-			}
+			TryGetUDF(Form, UDF);
 		}
 
 		Compiled = Form->compileResult;

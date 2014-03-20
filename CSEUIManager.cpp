@@ -1633,6 +1633,8 @@ namespace ConstructionSetExtender
 							{
 								bool UpdateItem = true;
 								bool CheckItem = false;
+								bool DisableItem = false;
+								char NewItemText[0x200] = {0};
 
 								switch (CurrentItem.wID)
 								{
@@ -1671,6 +1673,19 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
+									FORMAT_STR(NewItemText, "Save Current Exterior Cell Snapshot");
+
+									if (*TESRenderWindow::CurrentlyLoadedExteriorCell == NULL || _TES->currentInteriorCell)
+										DisableItem = true;
+									else
+									{
+										FORMAT_STR(NewItemText, "Save Exterior Cell %i,%i Snapshot",
+												(*TESRenderWindow::CurrentlyLoadedExteriorCell)->cellData.coords->x,
+												(*TESRenderWindow::CurrentlyLoadedExteriorCell)->cellData.coords->y);
+									}
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1689,7 +1704,27 @@ namespace ConstructionSetExtender
 										CurrentItem.fState |= MFS_UNCHECKED;
 									}
 
+									if (DisableItem)
+									{
+										CurrentItem.fState &= ~MFS_ENABLED;
+										CurrentItem.fState |= MFS_DISABLED;
+									}
+									else
+									{
+										CurrentItem.fState &= ~MFS_DISABLED;
+										CurrentItem.fState |= MFS_ENABLED;
+									}
+
 									CurrentItem.fMask = MIIM_STATE;
+
+									if (NewItemText[0] != 0)
+									{
+										CurrentItem.fMask |= MIIM_STRING;
+										CurrentItem.fType |= MFT_STRING;
+										CurrentItem.dwTypeData = NewItemText;
+										CurrentItem.cch = strlen(NewItemText);
+									}
+
 									SetMenuItemInfo(Popup, i, TRUE, &CurrentItem);
 								}
 							}
@@ -2130,6 +2165,16 @@ namespace ConstructionSetExtender
 					{
 						Settings::RenderWindowPainter::kMouseRefCtrlModified.ToggleData();
 						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
+					{
+						SME_ASSERT(*TESRenderWindow::CurrentlyLoadedExteriorCell && _TES->currentInteriorCell == NULL);
+
+						TESLODTextureGenerator::SaveExteriorSnapshot(*TESRenderWindow::CurrentlyLoadedExteriorCell,
+																	Settings::Renderer::kExteriorSnapshotResolution.GetData().i,
+																	NULL) ;
 					}
 
 					break;
@@ -4171,6 +4216,22 @@ namespace ConstructionSetExtender
 
 					switch (NotificationData->code)
 					{
+					case LVN_BEGINLABELEDIT:
+						{
+							// prevent the modification of GMST editorIDs, they aren't meant to be modified
+							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, 0), BSExtraData, DialogExtraParam);
+							SME_ASSERT(xParam);
+
+							if (xParam->formType == TESForm::kFormType_GMST)
+							{
+								Return = true;
+
+								DlgProcResult = TRUE;
+								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
+							}
+						}
+
+						break;
 					case LVN_BEGINDRAG:
 						{
 							// override the vanilla handler to allow multiple selections

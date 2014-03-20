@@ -396,6 +396,8 @@ public:
 // container class, arbitrarily named
 class TESLODTextureGenerator
 {
+	static void						CreateTextureBuffers(void);
+	static void						ReleaseTextureBuffers(void);
 public:
 	enum
 	{
@@ -420,6 +422,7 @@ public:
 	static BSRenderedTexture**		BSTexture1024x;
 	static BSRenderedTexture**		BSTexture2048x;
 
+	// custom buffers
 	static LPDIRECT3DTEXTURE9		D3DTexture256x;
 	static BSRenderedTexture*		BSTexture256x;
 	static LPDIRECT3DTEXTURE9		D3DTexture384x;
@@ -430,6 +433,10 @@ public:
 	static BSRenderedTexture*		BSTexture6144x;
 
 	static const char*				LODFullTexturePath;
+	static const char*				ExteriorSnapshotPathBuffer;
+	static TESObjectCELL*			ExteriorSnapshotSource;
+
+	static void						SaveExteriorSnapshot(TESObjectCELL* Exterior, UInt32 Resolution, const char* SavePath);
 };
 
 // 1C

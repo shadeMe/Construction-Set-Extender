@@ -48,6 +48,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(NiRenderedTextureCreateSourceTextureA, 0x004AD4B7);
 		_DefineHookHdlr(NiRenderedTextureCreateSourceTextureB, 0x004AD515);
 		_DefineHookHdlr(LODTextureGenSavePartialToDisk, 0x0041143E);
+		_DefineHookHdlrWithBuffer(GeneratePartialLODFilePath, 0x004128B3, 6, 0x6A, 0x0, 0x6A, 0x0, 0x6A, 0x0);
 		
 		void PatchLODHooks(void)
 		{
@@ -648,10 +649,35 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoLODTextureGenBlackTexturePartialFixHook(NiCamera* Camera, NiFrustum* CameraFrustum, NiNode* Container)
 		{
-			HACK("Doesn't work")
-
+			// does this actually work?
 			Camera->m_kViewFrustum.n = -10.0f;
 			Camera->m_kViewFrustum.f = 10000000.0f;
+
+			if (TESLODTextureGenerator::ExteriorSnapshotSource)
+			{
+				// by default, the LOD partial generator camera is setup to render a 2x2 cell grid at a time
+				// the starting cell is placed at the top-right corner
+				// we relocate the camera and change its frustum to just render the starting cell when generating custom snapshots
+				SInt32 XCoord = TESLODTextureGenerator::ExteriorSnapshotSource->cellData.coords->x;
+				SInt32 YCoord = TESLODTextureGenerator::ExteriorSnapshotSource->cellData.coords->y;
+
+				float CameraPosX = (XCoord << 12) + 2048.0f;
+				float CameraPosY = (YCoord << 12) + 2048.0f;
+
+				Container->m_localTranslate.x = CameraPosX;
+				Container->m_localTranslate.y = CameraPosY;
+
+				SME_ASSERT(TESLODTextureGenerator::ExteriorSnapshotSource->land);
+				TESObjectLAND::HeightLimitData Limits = {0};
+				TESLODTextureGenerator::ExteriorSnapshotSource->land->GetHeightLimits(&Limits);
+
+				Container->m_localTranslate.z = Limits.minHeight + 20000.0f;
+
+				Camera->m_kViewFrustum.l = -2048.0f;
+				Camera->m_kViewFrustum.r = 2048.0f;
+				Camera->m_kViewFrustum.t = 2048.0f;
+				Camera->m_kViewFrustum.b = -2048.0f;
+			}
 		}
 
 		#define _hhName		LODTextureGenBlackTexturePartialFix
@@ -778,6 +804,19 @@ namespace ConstructionSetExtender
 				call	ReportLODD3DError
 				popad
 				jmp		_hhGetVar(Skip)
+			}
+		}
+
+		#define _hhName		GeneratePartialLODFilePath
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004128B9);
+			__asm
+			{
+				push	TESLODTextureGenerator::ExteriorSnapshotPathBuffer
+				push	0
+				push	1							// also generate mipmaps
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

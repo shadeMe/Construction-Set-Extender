@@ -44,7 +44,7 @@ namespace ConstructionSetExtender
 					{ "Base Form", ICodaScriptDataStore::kDataType_Reference },
 					{ "Pos X", ICodaScriptDataStore::kDataType_Numeric },
 					{ "Pos Y", ICodaScriptDataStore::kDataType_Numeric },
-					{ "Pos X", ICodaScriptDataStore::kDataType_Numeric },
+					{ "Pos Z", ICodaScriptDataStore::kDataType_Numeric },
 					{ "Rot X", ICodaScriptDataStore::kDataType_Numeric },
 					{ "Rot Y", ICodaScriptDataStore::kDataType_Numeric },
 					{ "Rot Z", ICodaScriptDataStore::kDataType_Numeric },
@@ -164,11 +164,11 @@ namespace ConstructionSetExtender
 						return false;
 
 					if (!_stricmp(Buffer, "x"))
-						Result->SetNumber(Reference->rotation.x * 180 / PI);
+						Result->SetNumber(Reference->rotation.x * 57.2957763671875);
 					else if (!_stricmp(Buffer, "y"))
-						Result->SetNumber(Reference->rotation.y * 180 / PI);
+						Result->SetNumber(Reference->rotation.y * 57.2957763671875);
 					else
-						Result->SetNumber(Reference->rotation.z * 180 / PI);
+						Result->SetNumber(Reference->rotation.z * 57.2957763671875);
 
 					return true;
 				}
@@ -334,11 +334,11 @@ namespace ConstructionSetExtender
 						return false;
 
 					if (!_stricmp(Buffer, "x"))
-						Reference->rotation.x = Value * PI / 180;
+						Reference->rotation.x = Value * 0.01745329238474369;
 					else if (!_stricmp(Buffer, "y"))
-						Reference->rotation.y = Value * PI / 180;
+						Reference->rotation.y = Value * 0.01745329238474369;
 					else
-						Reference->rotation.z = Value * PI / 180;
+						Reference->rotation.z = Value * 0.01745329238474369;
 
 					Reference->UpdateNiNode();
 					return true;
@@ -680,7 +680,7 @@ namespace ConstructionSetExtender
 
 					_TES->LoadCellIntoViewPort(Reference->GetPosition(), Reference);
 					
-					// clean up the selection buffer for the above call selects the ref
+					// clean up the selection buffer as the above call selects the ref
 					_RENDERSEL->ClearSelection(true);
 
 					return true;

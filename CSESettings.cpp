@@ -49,6 +49,7 @@ namespace ConstructionSetExtender
 			Depot.push_back(&Renderer::kSwitchCAndY);
 			Depot.push_back(&Renderer::kFixedCameraPivot);
 			Depot.push_back(&Renderer::kCameraFOV);
+			Depot.push_back(&Renderer::kExteriorSnapshotResolution);
 
 			Depot.push_back(&RenderWindowPainter::kShowSelectionStats);
 			Depot.push_back(&RenderWindowPainter::kShowRAMUsage);
@@ -144,6 +145,7 @@ namespace ConstructionSetExtender
 			INISetting		kSwitchCAndY("SwitchCAndY", RENDERER_INISECTION, "Switch the functionalities of the C and Y hotkeys", (SInt32)0);
 			INISetting		kFixedCameraPivot("FixedCameraPivot", RENDERER_INISECTION, "Use a static pivot when rotating the viewport camera without a selection", (SInt32)0);
 			INISetting		kCameraFOV("CameraFOV", RENDERER_INISECTION, "Default camera field of vision", (float)90);
+			INISetting		kExteriorSnapshotResolution("ExteriorSnapshotResolution", RENDERER_INISECTION, "Resolution of the exterior cell snapshot texture. Size must be a power of 2", (SInt32)1024);
 		}
 
 		namespace RenderWindowPainter

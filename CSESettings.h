@@ -67,6 +67,7 @@ namespace ConstructionSetExtender
 			extern INISetting					kSwitchCAndY;
 			extern INISetting					kFixedCameraPivot;
 			extern INISetting					kCameraFOV;
+			extern INISetting					kExteriorSnapshotResolution;
 		}
 
 		namespace RenderWindowPainter

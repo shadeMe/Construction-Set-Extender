@@ -14,6 +14,13 @@
 class TESObjectLAND : public TESForm, public TESChildCell
 {
 public:
+	// 08
+	struct HeightLimitData
+	{
+		/*00*/ float			maxHeight;
+		/*04*/ float			minHeight;
+	};
+
 	// members
 	//     /*00*/ TESForm
 	//     /*24*/ TESChildCell
@@ -22,5 +29,8 @@ public:
 	/*2C*/ TESObjectCELL*		parentCell;
 	/*30*/ void*				unk30;			// heightfield data
 
-	static HWND*		WindowHandle;
+	// methods
+	const HeightLimitData*		GetHeightLimits(HeightLimitData* Out);
+
+	static HWND*				WindowHandle;
 };

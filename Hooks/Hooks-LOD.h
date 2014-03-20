@@ -31,5 +31,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(NiRenderedTextureCreateSourceTextureA, "adds NULL checks all over the place");
 		_DeclareMemHdlr(NiRenderedTextureCreateSourceTextureB, "");
 		_DeclareMemHdlr(LODTextureGenSavePartialToDisk, "");
+		_DeclareMemHdlr(GeneratePartialLODFilePath, "temp hook to add support for exterior cell snapshots");
 	}
 }

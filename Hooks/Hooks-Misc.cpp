@@ -61,6 +61,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(DataHandlerGetInteriorAtIndex, 0x0047BB19);
 		_DefineHookHdlr(MessageHandlerShowWarning, 0x00403490);
 		_DefineHookHdlr(NiControllerSequenceShowWarning, 0x00867EB0);
+		_DefineHookHdlr(ExtraDataListInitForCell, 0x0053C573);
+		_DefineHookHdlr(ExtraDataListInitForRef, 0x005488D8);
 
 		void PatchMiscHooks(void)
 		{
@@ -102,6 +104,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(DataHandlerGetInteriorAtIndex).WriteJump();
 			_MemHdlr(MessageHandlerShowWarning).WriteJump();
 			_MemHdlr(NiControllerSequenceShowWarning).WriteJump();
+			_MemHdlr(ExtraDataListInitForCell).WriteJump();
+			_MemHdlr(ExtraDataListInitForRef).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -922,12 +926,23 @@ namespace ConstructionSetExtender
 				return BGSEECONSOLE->GetWarningManager()->GetWarningEnabled(CallSite);
 		}
 
+		static bool kExtraDataList_InitErrorState =	false;
+		static bool	kExtraDataList_InitCallState = false;
+
+		void __stdcall CheckExtraDataListInitCallState(void)
+		{
+			if (kExtraDataList_InitCallState)
+				kExtraDataList_InitErrorState = true;
+		}
+
 		#define _hhName		MessageHandlerShowWarning
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x00403498);
 			__asm
 			{
+				call	CheckExtraDataListInitCallState
+
 				mov		eax, [esp]
 				sub		eax, 5
 				push	eax
@@ -961,6 +976,77 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			SKIP:				
 				retn
+			}
+		}
+
+		void __stdcall DoExtraDataListInitHook(TESForm* LinkedForm, bool State)
+		{
+			SME_ASSERT(LinkedForm);
+
+			if (State)
+			{
+				kExtraDataList_InitCallState = true;
+				kExtraDataList_InitErrorState = false;
+			}
+			else
+			{
+				if (kExtraDataList_InitErrorState == true)
+				{
+					BGSEECONSOLE_MESSAGE("ExtraData initialization encountered errors for form %08X {%s}...", LinkedForm->formID, LinkedForm->GetEditorID());
+				}
+					
+				kExtraDataList_InitErrorState = false;
+				kExtraDataList_InitCallState = false;
+			}
+		}
+
+		#define _hhName		ExtraDataListInitForCell
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0053C578);
+			_hhSetVar(Call, 0x0045D740);
+			__asm
+			{
+				pushad
+				push	1
+				push	esi
+				call	DoExtraDataListInitHook
+				popad
+
+				call	_hhGetVar(Call)
+
+				pushad
+				push	0
+				push	esi
+				call	DoExtraDataListInitHook
+				popad
+
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		ExtraDataListInitForRef
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x005488DD);
+			_hhSetVar(Call, 0x0045D740);
+			__asm
+			{
+				pushad
+				push	1
+				push	esi
+				call	DoExtraDataListInitHook
+				popad
+
+				call	_hhGetVar(Call)
+
+				pushad
+				push	0
+				push	esi
+				call	DoExtraDataListInitHook
+				popad
+
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}
