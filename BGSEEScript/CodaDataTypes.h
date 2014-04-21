@@ -53,7 +53,7 @@ namespace BGSEditorExtender
 			virtual void											SetFormID(CodaScriptReferenceDataTypeT Data);
 			virtual void											SetNumber(CodaScriptNumericDataTypeT Data);
 			virtual void											SetString(CodaScriptStringParameterTypeT Data);
-			virtual void											SetArray(ICodaScriptDataStore* Data);					// fuck-ugly workaround for CRT state inconsistencies during runtime
+			virtual void											SetArray(ICodaScriptDataStore* Data);					// ugly workaround for CRT state inconsistencies during runtime
 			void													SetArray(CodaScriptSharedHandleArrayT Data);
 
 			virtual ICodaScriptDataStore&							operator=(const ICodaScriptDataStore& rhs);
