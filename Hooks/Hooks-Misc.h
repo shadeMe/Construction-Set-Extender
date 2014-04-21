@@ -55,6 +55,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(NiControllerSequenceShowWarning, "");
 		_DeclareMemHdlr(ExtraDataListInitForCell, "adds support for verbose debug logging");
 		_DeclareMemHdlr(ExtraDataListInitForRef, "");
+		_DeclareMemHdlr(GameSettingCopyFrom, "fixes a bug that triggers an assertion during the copy process");
 	}
 }
 

@@ -44,7 +44,7 @@ namespace ConstructionSetExtender
 			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
 
 			FormListWndProc = (WNDPROC)SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListSubclassProc);
-			SetWindowLongPtr(FormListView, GWL_USERDATA, (LONG)this);
+			SetWindowLongPtr(EditBox, GWL_USERDATA, (LONG)this);
 
 			SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, NULL);
 		}
@@ -57,7 +57,11 @@ namespace ConstructionSetExtender
 
 		LRESULT CALLBACK CSEFilterableFormListManager::FilterableWindowData::FormListSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
-			FilterableWindowData* UserData = (FilterableWindowData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
+			HWND Parent = GetParent(hWnd);
+			HWND EditBox = GetDlgItem(Parent, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
+			SME_ASSERT(EditBox);
+
+			FilterableWindowData* UserData = (FilterableWindowData*)GetWindowLongPtr(EditBox, GWL_USERDATA);
 
 			switch (uMsg)
 			{
@@ -4385,8 +4389,18 @@ namespace ConstructionSetExtender
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
+			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
+			HWND FormList = GetDlgItem(hWnd, 1977);
+
+			if (FilterEditBox == NULL)
+				return DlgProcResult;
+
 			switch (uMsg)
 			{
+			case WM_DESTROY:
+				CSEFilterableFormListManager::Instance.Unregister(hWnd);
+
+				break;
 			case WM_INITDIALOG:
 				{
 					HWND PackageListView = GetDlgItem(hWnd, 1977);
@@ -4395,6 +4409,8 @@ namespace ConstructionSetExtender
 
 					ColumnData.cx = 175;
 					ListView_SetColumn(PackageListView, 0, &ColumnData);
+
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
 				}
 
 				break;
@@ -4406,6 +4422,11 @@ namespace ConstructionSetExtender
 						Return = true;
 						DlgProcResult = TRUE;
 					}
+				}
+			default:
+				if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+				{
+					SendMessage(hWnd, 0x41A, 0, 0);
 				}
 
 				break;

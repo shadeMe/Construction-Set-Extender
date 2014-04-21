@@ -63,6 +63,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(NiControllerSequenceShowWarning, 0x00867EB0);
 		_DefineHookHdlr(ExtraDataListInitForCell, 0x0053C573);
 		_DefineHookHdlr(ExtraDataListInitForRef, 0x005488D8);
+		_DefineHookHdlr(GameSettingCopyFrom, 0x004FA388);
 
 		void PatchMiscHooks(void)
 		{
@@ -106,6 +107,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(NiControllerSequenceShowWarning).WriteJump();
 			_MemHdlr(ExtraDataListInitForCell).WriteJump();
 			_MemHdlr(ExtraDataListInitForRef).WriteJump();
+			_MemHdlr(GameSettingCopyFrom).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -1046,6 +1048,46 @@ namespace ConstructionSetExtender
 				call	DoExtraDataListInitHook
 				popad
 
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoGameSettingCopyFromHook(GameSetting* New, GameSetting* Source)
+		{
+			if (New->IsTemporary())
+			{
+				if (New->name == NULL)
+				{
+					switch (Source->GetValueType())
+					{
+					case Setting::kSetting_String:
+						New->name = "sDefault";
+						break;
+					case Setting::kSetting_Float:
+						New->name = "fDefault";
+						break;
+					default:
+						New->name = "iDefault";
+						break;		
+					}
+				}
+			}
+		}
+
+		#define _hhName		GameSettingCopyFrom
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004FA38D);
+			_hhSetVar(Call, 0x004C66D0);
+			__asm
+			{
+				pushad
+				push	edi
+				push	esi
+				call	DoGameSettingCopyFromHook
+				popad
+
+				call	_hhGetVar(Call)
 				jmp		_hhGetVar(Retn)
 			}
 		}

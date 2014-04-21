@@ -8,11 +8,17 @@ NOTE	---->
 
 
 MISC	---->
+	> Mention the ResizeEnable tool in the readMe
 
 
 CSE		---->
 
 	BUGFIX			=
+		> File browser for idle anims hangs up
+			>> Can't reproduce; Possible solutions:
+				Filter string could have an extra null byte in the end
+				http://www.progtown.com/topic1043045-getopenfilename-hangs-up-a-program.html
+				http://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/545f1ada-0ff1-4263-a611-2a71f2703d05/getopenfilename-hangs-up-if-app-is-compiled-with-large-stack-reserve?forum=windowsuidevelopment
 		> Dynamic channels in the Renderwindowpainter have timer issues (text zips by randomly)
 		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Partial black tex hasn't been fixed yet
@@ -43,7 +49,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
-
+		> IntelliSense interface displays command aliases
 
 	MISC			=
 

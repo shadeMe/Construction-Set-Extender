@@ -52,5 +52,6 @@ public:
 
 	// methods
 	void						SetStringValue(const char* Value);
+	UInt8						GetValueType(void);
 };
 STATIC_ASSERT(sizeof(Setting) == 0x8);

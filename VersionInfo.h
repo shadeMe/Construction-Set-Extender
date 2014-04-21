@@ -51,7 +51,7 @@
 #define VER_ORIGINAL_FILENAME_STR	VER_PRODUCTNAME_STR ".dll"
 #define VER_INTERNAL_NAME_STR       VER_ORIGINAL_FILENAME_STR
 
-#define VER_COPYRIGHT_STR           "Copyright shadeMe (C) 2010-2013"
+#define VER_COPYRIGHT_STR           "Copyright shadeMe (C) 2010-2014"
 
 #ifdef _DEBUG
   #define VER_VER_DEBUG             VS_FF_DEBUG

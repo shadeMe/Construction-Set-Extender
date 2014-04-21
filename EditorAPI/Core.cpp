@@ -365,6 +365,7 @@ void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt
 	case 6144:
 		break;
 	default:
+		BGSEECONSOLE_MESSAGE("Invalid resolution %d for exterior snapshot! Reset to 1024...", Resolution);
 		Resolution = 1024;
 		break;
 	}

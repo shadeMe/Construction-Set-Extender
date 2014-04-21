@@ -36,12 +36,20 @@ namespace ConstructionSetExtender
 				if (xData)
 				{
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-					FORMAT_STR(xBuffer, "Parent: %s [%08X]  Opposite State: %d",
+					FORMAT_STR(xBuffer, "\nParent: %s [%08X]  Opposite State: %d",
 						((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
 						xParent->parent->formID, xParent->oppositeState);
 				}
 
-				FORMAT_STR(Buffer, "%s(%08X) BASE[%s(%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s\n%s",
+				char cBuffer[0x50] = {0};
+				if (Selection->parentCell->GetIsInterior() == false)
+				{
+					FORMAT_STR(cBuffer, "\nParent Cell: %s(%08X) %d,%d", Selection->parentCell->GetEditorID(),
+							Selection->parentCell->formID,
+							Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y);
+				}
+
+				FORMAT_STR(Buffer, "%s(%08X) BASE[%s(%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s%s%s",
 					((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
 					((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
 					Selection->position.x, Selection->position.y, Selection->position.z,
@@ -55,7 +63,8 @@ namespace ConstructionSetExtender
 					(Selection->GetInvisible()?("I"):("-")),
 					(Selection->GetChildrenInvisible()?("CI"):("-")),
 					(Selection->GetFrozen()?("F"):("-")),
-					xBuffer);
+					xBuffer,
+					cBuffer);
 			}
 
 			RenderedText = Buffer;
