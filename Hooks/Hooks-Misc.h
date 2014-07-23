@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 {
 	namespace Hooks
 	{
-		// hooks that do odd jobs such as fixing bugs and shoveling dung
+		// hooks that do odd jobs such as fixing bugs and shovelling dung
 		void PatchMiscHooks(void);
 		void PatchEntryPointHooks(void);
 		void PatchMessageHanders(void);
@@ -23,7 +23,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(DataHandlerConstructSpecialForms, "initializes easter egg forms");
 		_DeclareMemHdlr(ResultScriptSaveForm, "prevents a crash that occurs when a result script has local variable declarations");
 		_DeclareMemHdlr(TESObjectREFRDoCopyFrom, "patches the TESObjectREFR::Copy handler to fully duplicate extradata from the source");
-		_DeclareMemHdlr(TESFormAddReference, "patches the CS form referencing code to take into account mutiple references of a form by another");
+		_DeclareMemHdlr(TESFormAddReference, "patches the CS form referencing code to take into account multiple references of a form by another");
 		_DeclareMemHdlr(TESFormRemoveReference, "");
 		_DeclareMemHdlr(TESFormClearReferenceList, "");
 		_DeclareMemHdlr(TESFormPopulateUseInfoList, "");
@@ -31,7 +31,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TextureSizeCheckA, "allows the preview of textures of resolution > 512px");
 		_DeclareMemHdlr(TextureSizeCheckB, "");
 		_DeclareMemHdlr(DataHandlerPlaceTESObjectLIGH, "fixes a CTD that occurs on the first reference placement of a light object");
-		_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registy entries at startup");
+		_DeclareMemHdlr(CSRegistryEntries, "prevents the CS from messing around the ESM/ESP file registry entries at startup");
 		_DeclareMemHdlr(AchievementAddTopic, "various hooks that unlock achievements");
 		_DeclareMemHdlr(AchievementDeleteShadeMe, "");
 		_DeclareMemHdlr(AchievementModifyShadeMe, "");
@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ConvertDDSToRGBA32, "fixes a bug that causes CTDs if icon textures did not have any mipmaps, ironically...");
 		_DeclareMemHdlr(ExportNPCFaceTextures, "allows NPC records from non-ESM files to export their face textures");
 		_DeclareNopHdlr(TESTestAllCells, "fixes a CTD that gets triggered when testing cells");
-		_DeclareMemHdlr(DataHandlerGetInteriorAtIndex, "patchs an out-of-bounds index condition");
+		_DeclareMemHdlr(DataHandlerGetInteriorAtIndex, "patches an out-of-bounds index condition");
 		_DeclareMemHdlr(MessageHandlerShowWarning, "adds support for warning toggling");
 		_DeclareMemHdlr(NiControllerSequenceShowWarning, "");
 		_DeclareMemHdlr(ExtraDataListInitForCell, "adds support for verbose debug logging");
