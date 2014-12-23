@@ -36,3 +36,4 @@ _ReSharper*/
 BuildInfo.h
 
 *.opensdf
+*.Identifier
