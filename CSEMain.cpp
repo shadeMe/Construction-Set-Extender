@@ -47,7 +47,8 @@ namespace ConstructionSetExtender
 		RegisterRelease(6, 1, "Cretinous Codpiece");
 		RegisterRelease(6, 2, "Talkative Badger");
 		RegisterRelease(6, 3, "Drunken Glaswegian");
-		RegisterRelease(6, 4, "(Subterranean)Homesick Alien");
+		RegisterRelease(6, 4, "Subterranean Homesick Alien");
+		RegisterRelease(6, 5, "Bloody Bull-buggering Bollock");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
@@ -55,7 +56,7 @@ namespace ConstructionSetExtender
 		;//
 	}
 
-	CSEInitCallbackQuery::CSEInitCallbackQuery( const OBSEInterface* OBSE ) :
+	CSEInitCallbackQuery::CSEInitCallbackQuery(const OBSEInterface* OBSE) :
 		BGSEditorExtender::BGSEEDaemonCallback(),
 		OBSE(OBSE)
 	{
@@ -94,7 +95,7 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	CSEInitCallbackLoad::CSEInitCallbackLoad( const OBSEInterface* OBSE ) :
+	CSEInitCallbackLoad::CSEInitCallbackLoad(const OBSEInterface* OBSE) :
 		BGSEditorExtender::BGSEEDaemonCallback(),
 		OBSE(OBSE)
 	{
@@ -158,7 +159,7 @@ namespace ConstructionSetExtender
 
 		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
-			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
 			RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
 
@@ -302,7 +303,7 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->Pad(2);
 
 		BGSEEACHIEVEMENTS->Unlock(Achievements::kTheWiseOne);
-		
+
 		if (BGSEECONSOLE->GetLogsWarnings() == false)
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kFlyingBlind);
 
@@ -316,7 +317,7 @@ namespace ConstructionSetExtender
 
 		BGSEEACHIEVEMENTS->Unlock(Achievements::kHappyBDayMoi, false, false, true);
 
-		char UsernameBuffer[0x200] = {0};
+		char UsernameBuffer[0x200] = { 0 };
 		DWORD UsernameSize = sizeof(UsernameBuffer);
 		GetUserName(UsernameBuffer, &UsernameSize);
 
@@ -353,7 +354,7 @@ namespace ConstructionSetExtender
 	{
 		TESDialog::WritePositionToINI(*TESCSMain::WindowHandle, NULL);
 		TESDialog::WritePositionToINI(*TESCellViewWindow::WindowHandle, "Cell View");
-		TESDialog::WritePositionToINI(*TESObjectWindow::WindowHandle, "Object Window");
+		TESDialog::WritePositionToINI(*TESObjectWindow::WindowHandleCache, "Object Window");
 		TESDialog::WritePositionToINI(*TESRenderWindow::WindowHandle, "Render Window");
 
 		BGSEECONSOLE_MESSAGE("Flushed CS INI Settings");
@@ -466,7 +467,7 @@ namespace ConstructionSetExtender
 		else if (CrashHandlerMode == kCrashHandlerMode_Ask)
 		{
 			bool FunnyGuyUnlocked = BGSEEMAIN->Daemon()->GetFullInitComplete() && (Achievements::kFunnyGuy->GetUnlocked() || Achievements::kFunnyGuy->GetTriggered());
-			int MBFlags = MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_ICONERROR;
+			int MBFlags = MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR;
 
 			if (FunnyGuyUnlocked == false)
 				MBFlags |= MB_YESNOCANCEL;
@@ -476,7 +477,7 @@ namespace ConstructionSetExtender
 			std::string Jingle = "The editor has encountered a critical error! ";
 			if (PanicSaved)
 				Jingle += "Unsaved changes were saved to the panic file. ";
-				
+
 			Jingle += "An error report will be generated shortly.\n\n";
 
 			if (FunnyGuyUnlocked == false)
@@ -498,7 +499,7 @@ namespace ConstructionSetExtender
 				if (BGSEEMAIN->Daemon()->GetFullInitComplete())
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kFunnyGuy, false, true);
 
-				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND);
+				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
 
 				break;
 			}
@@ -622,30 +623,30 @@ extern "C"
 		CSEAuxiliaryViewport::RegisterINISettings(CSEINISettings);
 
 		bool ComponentInitialized = BGSEEMAIN->Initialize(BGSEEMAIN_EXTENDERLONGNAME,
-														(IsWarholAGenius ? "ConstruKction Set Extender" : NULL),
-														BGSEEMAIN_EXTENDERSHORTNAME,
-														CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
-														PACKED_SME_VERSION,
-														BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS,
-														CS_VERSION_1_2,
-														obse->editorVersion,
-														obse->GetOblivionDirectory(),
-														XSEPluginHandle,
-														21,
-														obse->obseVersion,
-														CSEINISettings,
-														"v4.0.30319",
+														  (IsWarholAGenius ? "ConstruKction Set Extender" : NULL),
+														  BGSEEMAIN_EXTENDERSHORTNAME,
+														  CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
+														  PACKED_SME_VERSION,
+														  BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS,
+														  CS_VERSION_1_2,
+														  obse->editorVersion,
+														  obse->GetOblivionDirectory(),
+														  XSEPluginHandle,
+														  21,
+														  obse->obseVersion,
+														  CSEINISettings,
+														  "v4.0.30319",
 #ifdef NDEBUG
-														false,
+														  false,
 #else
-														true,
+														  true,
 #endif
-														false,
+														  false,
 #ifdef NDEBUG
-														true);
+														  true);
 		TODO("Save debug symbols, dammit!")
 #else
-														false);
+														  false);
 #endif
 
 		SME_ASSERT(ComponentInitialized);
@@ -660,9 +661,9 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{
 			MessageBox(NULL,
-					"The ConstruKction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
-					"The Cyrodiil Bunny Ranch",
-					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
+					   "The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
+					   "The Cyrodiil Bunny Ranch",
+					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
 
 			BGSEECONSOLE->OpenDebugLog();
 			return false;
@@ -676,9 +677,9 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
 		{
 			MessageBox(NULL,
-					"The ConstruKction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
-					"Rumpy-Pumpy!!",
-					MB_TASKMODAL|MB_SETFOREGROUND|MB_ICONERROR|MB_OK);
+					   "The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
+					   "Rumpy-Pumpy!!",
+					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
 
 			BGSEECONSOLE->OpenDebugLog();
 			return false;

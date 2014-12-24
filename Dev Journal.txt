@@ -29,6 +29,18 @@ CSE		---->
 	ENHANCEMENT		=
 		> Temp disable ENB wrapper at load time
 		> Multiple preview and object windows
+			+ Multiple object windows:
+				[[ Try using the first subclass instead of code caving]]
+				- Patch org wnd proc's prolog to update the cached HWNDs of the controls
+				- Patch init dlg and destroy handlers to account for other caches
+				- Track tree view selections of imposters and update g_INI::ObjectSelection_General in the prolog 
+				- Same as above for the sort column array
+				- Handle the main update/refresh message in the main sub class (imposters have a seperate subclass)
+				- Use scoped setters for updating caches
+				- Account for GetDlgItem called on the main object window's HWND cache
+					ObjectWindow::ProcessForm() calls are outside the wnd proc hierarchy and can't be reliably accounted for
+					Possible workaround - refresh all imposters on new form creation 
+						patch the above funct's epilog and only refresh if the caller was DataHandler::AddForm() and a plugin load isn't in progress
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)

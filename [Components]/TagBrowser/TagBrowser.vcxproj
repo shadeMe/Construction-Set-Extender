@@ -21,13 +21,13 @@
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>true</CLRSupport>
     <WholeProgramOptimization>false</WholeProgramOptimization>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v120_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>true</CLRSupport>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v120_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -120,7 +120,7 @@
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
       <Command>copy "$(TargetPath)" "$(OblivionPath)\data\obse\plugins\CSE\$(TargetFileName)"
-copy "$(TargetPath)" "C:\Users\shadeMe\Documents\Dropbox\CSE Once-In-Awhile'lies\$(TargetFileName)"</Command>
+copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>cscript.exe "$(SolutionDir)\BuildIncrement.jse"</Command>
@@ -131,6 +131,7 @@ copy "$(TargetPath)" "C:\Users\shadeMe\Documents\Dropbox\CSE Once-In-Awhile'lies
   </ItemDefinitionGroup>
   <ItemGroup>
     <Reference Include="DevComponents.DotNetBar2">
+      <HintPath>..\..\[Depends]\DevComponents.DotNetBar2.dll</HintPath>
       <Private>false</Private>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>

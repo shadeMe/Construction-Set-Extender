@@ -204,7 +204,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoCSInitHook()
 		{
 			if (*TESCSMain::WindowHandle == NULL ||
-				*TESObjectWindow::WindowHandle == NULL ||
+				*TESObjectWindow::WindowHandleCache == NULL ||
 				*TESCellViewWindow::WindowHandle == NULL ||
 				*TESRenderWindow::WindowHandle == NULL)
 			{
@@ -955,7 +955,7 @@ namespace ConstructionSetExtender
 				mov		ecx, [esp + 0x4]
 				lea		eax, [esp + 0x8]
 				jmp		_hhGetVar(Retn)
-			SKIP:				
+			SKIP:
 				retn
 			}
 		}
@@ -976,7 +976,7 @@ namespace ConstructionSetExtender
 				mov		eax, [esp + 0x8]
 				test	eax, eax
 				jmp		_hhGetVar(Retn)
-			SKIP:				
+			SKIP:
 				retn
 			}
 		}
@@ -996,7 +996,7 @@ namespace ConstructionSetExtender
 				{
 					BGSEECONSOLE_MESSAGE("ExtraData initialization encountered errors for form %08X {%s}...", LinkedForm->formID, LinkedForm->GetEditorID());
 				}
-					
+
 				kExtraDataList_InitErrorState = false;
 				kExtraDataList_InitCallState = false;
 			}
@@ -1068,7 +1068,7 @@ namespace ConstructionSetExtender
 						break;
 					default:
 						New->name = "iDefault";
-						break;		
+						break;
 					}
 				}
 			}

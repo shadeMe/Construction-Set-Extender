@@ -4,7 +4,6 @@
 #include "TESDialog.h"
 
 //	EditorAPI: Render control related classes.
-//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 class	TESForm;
 class	TESObjectREFR;
@@ -108,7 +107,7 @@ public:
 		kRenderWindowState_AllowRenderWindowCellLoads	= 0x4,
 		kRenderWindowState_ShowMarkers					= 0x8,
 		kRenderWindowState_SkipInitialCellLoad			= 0x10,
-		kRenderWindowState_UseCSDiscAsSource			= 0x20,		// deprecated, probably from the TES3 CS code base
+		kRenderWindowState_UseCSDiscAsSource			= 0x20,		// deprecated, probably from the TES3 CS codebase
 		kRenderWindowState_UseWorld						= 0x40,
 	};
 
@@ -130,7 +129,7 @@ public:
 		struct UndoData
 		{
 			/*00*/ UInt32				selIndex;						// index of the ref in its parent selection
-			/*04*/ UInt32				selCount;						// number of refs in the selection that this ref was a part of
+			/*04*/ UInt32				selCount;						// number of refs in the selection of which this ref was a part
 			/*08*/ TESObjectREFR*		refr;
 			/*0C*/ UInt32				operationType;
 			/*10*/ Vector3				rotation;

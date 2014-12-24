@@ -697,20 +697,20 @@ namespace ConstructionSetExtender
 					break;
 				}
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
-				if (hWnd == *TESObjectWindow::WindowHandle &&	ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
+				if (hWnd == *TESObjectWindow::WindowHandleCache &&	ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
 				{
 					if (BGSEEUI->MsgBoxI(hWnd,
 										MB_YESNO,
 										"Are you sure you want to mark all %d forms as unmodified?",
-										ListView_GetSelectedCount(*TESObjectWindow::FormListHandle)) == IDYES)
+										ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache)) == IDYES)
 					{
 						int Selection = -1;
 						do
 						{
-							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
 								if (Form)
 									Form->SetFromActiveFile(false);
 							}
@@ -748,20 +748,20 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_UNDELETE:
 				{
-					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandleCache && ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
 					{
 						if (BGSEEUI->MsgBoxI(hWnd,
 											MB_YESNO,
 											"Are you sure you want to undelete all %d forms?",
-											ListView_GetSelectedCount(*TESObjectWindow::FormListHandle)) == IDYES)
+											ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache)) == IDYES)
 						{
 							int Selection = -1;
 							do
 							{
-								Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+								Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
 								if (Selection != -1)
 								{
-									TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+									TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
 									if (Form)
 										Form->SetDeleted(false);
 								}
@@ -849,19 +849,19 @@ namespace ConstructionSetExtender
 				break;
 			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
 				{
-					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandleCache && ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
 					{
 						int Selection = -1, Count = 0;
 						do
 						{
-							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
 								if (Form)
 								{
 									TESNPC* NPC = CS_CAST(Form, TESForm, TESNPC);
-									
+
 									if (NPC)
 									{
 										NPC->ExportFaceGenTextures();
@@ -888,15 +888,15 @@ namespace ConstructionSetExtender
 				{
 					GlobalClipboard::CSEFormListBuilder Buffer;
 
-					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandleCache && ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
 					{
 						int Selection = -1;
 						do
 						{
-							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
 								if (Form)
 								{
 									Buffer.Add(Form);
@@ -915,7 +915,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_REPLACEBASEFORM:
 				{
 					FORMAT_STR(Buffer, "Enter the editorID of the new base form");
-					
+
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 						MAKEINTRESOURCE(IDD_TEXTEDIT),
 						hWnd,
@@ -976,7 +976,7 @@ namespace ConstructionSetExtender
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_TOGGLECHILDRENVISIBILITY, "Toggle Children Visibility");
 			}
 			else if (CS_CAST(SelectedForm, TESForm, TESBoundObject))
-			{		
+			{
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 				InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_PREVIEW, "Preview");
 
@@ -1261,9 +1261,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoObjectWindowPopulateFormListInvalidateHook(bool RedrawState)
 		{
 			if (RedrawState == false)
-				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::FormListHandle);
+				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::FormListHandleCache);
 			else
-				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::FormListHandle);
+				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::FormListHandleCache);
 		}
 
 		#define _hhName		ObjectWindowPopulateFormListInvalidate

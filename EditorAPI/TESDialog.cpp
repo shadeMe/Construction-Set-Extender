@@ -13,9 +13,10 @@ UInt8*						TESCSMain::AllowAutoSaveFlag = (UInt8*)0x00A0B628;
 UInt8*						TESCSMain::ExittingCSFlag = (UInt8*)0x00A0B63C;
 const char*					TESCSMain::INIFilePath = (const char*)0x00A0ABB8;
 
-HWND*						TESObjectWindow::WindowHandle = (HWND*)0x00A0AF44;
-HWND*						TESObjectWindow::FormListHandle = (HWND*)0x00A0BAA0;
-HWND*						TESObjectWindow::TreeViewHandle = (HWND*)0x00A0BAA4;
+HWND*						TESObjectWindow::WindowHandleCache = (HWND*)0x00A0AF44;
+HWND*						TESObjectWindow::FormListHandleCache = (HWND*)0x00A0BAA0;
+HWND*						TESObjectWindow::TreeViewHandleCache = (HWND*)0x00A0BAA4;
+HWND*						TESObjectWindow::SplitterHandleCache = (HWND*)0x00A0BA6C;
 UInt8*						TESObjectWindow::MainMenuState = (UInt8*)0x00A0AF40;
 
 HWND*						TESCellViewWindow::WindowHandle = (HWND*)0x00A0AF4C;
@@ -44,23 +45,23 @@ FormEditParam::FormEditParam(UInt32 FormID)
 	typeID = form->formType;
 }
 
-FormEditParam::FormEditParam( TESForm* Form )
+FormEditParam::FormEditParam(TESForm* Form)
 {
 	form = Form;
 	typeID = Form->formType;
 }
 
-UInt32 TESDialog::WritePositionToINI( HWND Handle, const char* WindowClassName )
+UInt32 TESDialog::WritePositionToINI(HWND Handle, const char* WindowClassName)
 {
 	return cdeclCall<UInt32>(0x00417510, Handle, WindowClassName);
 }
 
-bool TESDialog::GetPositionFromINI( const char* WindowClassName, LPRECT OutRect )
+bool TESDialog::GetPositionFromINI(const char* WindowClassName, LPRECT OutRect)
 {
 	return cdeclCall<bool>(0x004176D0, WindowClassName, OutRect);
 }
 
-LRESULT TESCSMain::WriteToStatusBar( int PanelIndex, const char* Message )
+LRESULT TESCSMain::WriteToStatusBar(int PanelIndex, const char* Message)
 {
 	return cdeclCall<UInt32>(0x00431310, PanelIndex, Message);
 }
@@ -75,7 +76,7 @@ void TESCSMain::DeinitializeCSWindows()
 	cdeclCall<UInt32>(0x00431220);
 }
 
-void TESCSMain::SetTitleModified( bool State )
+void TESCSMain::SetTitleModified(bool State)
 {
 	cdeclCall<UInt32>(0x004306F0, State);
 }
@@ -85,42 +86,42 @@ void TESCSMain::AutoSave()
 	cdeclCall<UInt32>(0x004307C0);
 }
 
-UInt32 TESDialog::GetDialogTemplateForFormType( UInt8 FormTypeID )
+UInt32 TESDialog::GetDialogTemplateForFormType(UInt8 FormTypeID)
 {
 	return cdeclCall<UInt32>(0x00442050, FormTypeID);
 }
 
-TESObjectREFR* TESDialog::ShowSelectReferenceDialog( HWND Parent, TESObjectREFR* DefaultSelection )
+TESObjectREFR* TESDialog::ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection)
 {
 	return cdeclCall<TESObjectREFR*>(0x0044D660, Parent, DefaultSelection, 0x00545B10, 0);
 }
 
-BSExtraData* TESDialog::GetDialogExtraByType( HWND Dialog, UInt16 Type )
+BSExtraData* TESDialog::GetDialogExtraByType(HWND Dialog, UInt16 Type)
 {
 	return cdeclCall<BSExtraData*>(0x00442990, Dialog, Type);
 }
 
-TESForm* TESDialog::GetDialogExtraParam( HWND Dialog )
+TESForm* TESDialog::GetDialogExtraParam(HWND Dialog)
 {
 	return cdeclCall<TESForm*>(0x004429D0, Dialog);
 }
 
-TESForm* TESDialog::GetDialogExtraLocalCopy( HWND Dialog )
+TESForm* TESDialog::GetDialogExtraLocalCopy(HWND Dialog)
 {
 	return cdeclCall<TESForm*>(0x004429B0, Dialog);
 }
 
-bool TESDialog::GetIsWindowDragDropRecipient( UInt16 FormType, HWND hWnd )
+bool TESDialog::GetIsWindowDragDropRecipient(UInt16 FormType, HWND hWnd)
 {
 	return cdeclCall<bool>(0x004433C0, FormType, hWnd);
 }
 
-bool TESDialog::SelectTESFileCommonDialog( HWND Parent, const char* SaveDir, bool SaveAsESM, char* FileNameOut, size_t OutSize )
+bool TESDialog::SelectTESFileCommonDialog(HWND Parent, const char* SaveDir, bool SaveAsESM, char* FileNameOut, size_t OutSize)
 {
 	return cdeclCall<bool>(0x00446D40, Parent, SaveDir, SaveAsESM, FileNameOut, OutSize);
 }
 
-HWND TESDialog::ShowFormEditDialog( TESForm* Form )
+HWND TESDialog::ShowFormEditDialog(TESForm* Form)
 {
 	bool FormIDListViewForm = false;
 	DLGPROC WndProc = GetFormEditDlgProc(Form, FormIDListViewForm);
@@ -130,11 +131,11 @@ HWND TESDialog::ShowFormEditDialog( TESForm* Form )
 
 	FormEditParam InitData(Form);
 	HWND Dialog = BGSEEUI->ModelessDialog(*TESCSMain::Instance,
-							(LPSTR)GetDialogTemplateForFormType(InitData.typeID),
-							*TESCSMain::WindowHandle,
-							WndProc,
-							(LPARAM)&InitData,
-							true);
+										  (LPSTR)GetDialogTemplateForFormType(InitData.typeID),
+										  *TESCSMain::WindowHandle,
+										  WndProc,
+										  (LPARAM)&InitData,
+										  true);
 
 	if (FormIDListViewForm)
 	{
@@ -154,7 +155,7 @@ HWND TESDialog::ShowFormEditDialog( TESForm* Form )
 	return Dialog;
 }
 
-void TESDialog::ShowScriptEditorDialog( TESForm* InitScript )
+void TESDialog::ShowScriptEditorDialog(TESForm* InitScript)
 {
 	Script* AuxScript = CS_CAST(InitScript, TESForm, Script);
 	RECT ScriptEditorLoc;
@@ -167,8 +168,7 @@ void TESDialog::ShowScriptEditorDialog( TESForm* InitScript )
 	ConstructionSetExtender::CLIWrapper::Interfaces::SE->InstantiateEditor(Data, ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
 }
 
-
-DLGPROC TESDialog::GetFormEditDlgProc( TESForm* Form, bool& FormIDListViewForm )
+DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)
 {
 	FormIDListViewForm = false;
 
@@ -231,7 +231,7 @@ DLGPROC TESDialog::GetFormEditDlgProc( TESForm* Form, bool& FormIDListViewForm )
 	}
 }
 
-HWND TESDialog::ShowUseReportDialog( TESForm* Form )
+HWND TESDialog::ShowUseReportDialog(TESForm* Form)
 {
 	return BGSEEUI->ModelessDialog(*TESCSMain::Instance, (LPSTR)TESDialog::kDialogTemplate_UseReport, NULL, (DLGPROC)0x00433FE0, (LPARAM)Form, true);
 }
@@ -246,77 +246,77 @@ void TESDialog::ResetFormListControls()
 	TESCSMain::InitializeCSWindows();
 }
 
-float TESDialog::GetDlgItemFloat( HWND Dialog, int ID )
+float TESDialog::GetDlgItemFloat(HWND Dialog, int ID)
 {
 	return cdeclCall<float>(0x00404A80, Dialog, ID);
 }
 
-void TESDialog::ShowDialogPopupMenu( HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data )
+void TESDialog::ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data)
 {
 	cdeclCall<void>(0x00443520, Menu, Coords, Parent, Data);
 }
 
-void TESDialog::SetDlgItemFloat( HWND Dialog, int ID, float Value, int DecimalPlaces )
+void TESDialog::SetDlgItemFloat(HWND Dialog, int ID, float Value, int DecimalPlaces)
 {
 	cdeclCall<void>(0x00404A90, Dialog, ID, Value, DecimalPlaces);
 }
 
-void TESDialog::ClampDlgEditField( HWND EditControl, float Min, float Max, bool NoDecimals /*= false*/, UInt32 DecimalPlaces /*= 2*/ )
+void TESDialog::ClampDlgEditField(HWND EditControl, float Min, float Max, bool NoDecimals /*= false*/, UInt32 DecimalPlaces /*= 2*/)
 {
 	cdeclCall<void>(0x004042C0, EditControl, Min, Max, NoDecimals, DecimalPlaces);
 }
 
-ExtraDataList* TESDialog::GetDialogExtraDataList( HWND Dialog )
+ExtraDataList* TESDialog::GetDialogExtraDataList(HWND Dialog)
 {
 	return cdeclCall<ExtraDataList*>(0x00442980, Dialog);
 }
 
-bool TESDialog::CallFormDialogMessageCallback( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong )
+bool TESDialog::CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong)
 {
 	return cdeclCall<bool>(0x00442BD0, hWnd, uMsg, wParam, lParam, outLong);
 }
 
-void TESComboBox::AddItem( HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth )
+void TESComboBox::AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth)
 {
 	cdeclCall<UInt32>(0x00403540, hWnd, Text, Data, ResizeDroppedWidth);
 }
 
-void* TESComboBox::GetSelectedItemData( HWND hWnd )
+void* TESComboBox::GetSelectedItemData(HWND hWnd)
 {
 	return cdeclCall<void*>(0x00403690, hWnd);
 }
 
-void TESComboBox::PopulateWithForms( HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem )
+void TESComboBox::PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem)
 {
 	cdeclCall<UInt32>(0x004456F0, hWnd, FormType, ClearItems, AddDefaultItem);
 }
 
-void* TESListView::GetSelectedItemData( HWND hWnd )
+void* TESListView::GetSelectedItemData(HWND hWnd)
 {
 	return cdeclCall<void*>(0x00403C40, hWnd);
 }
 
-void* TESListView::GetItemData( HWND hWnd, int Index )
+void* TESListView::GetItemData(HWND hWnd, int Index)
 {
 	return cdeclCall<void*>(0x00403A30, hWnd, Index);
 }
 
-void TESListView::SetSelectedItem( HWND hWnd, int Index )
+void TESListView::SetSelectedItem(HWND hWnd, int Index)
 {
 	cdeclCall<void>(0x00403B10, hWnd, Index);
 }
 
-int TESListView::GetItemByData( HWND hWnd, void* Data )
+int TESListView::GetItemByData(HWND hWnd, void* Data)
 {
 	return cdeclCall<int>(0x004039E0, hWnd, Data);
 }
 
-void TESListView::ScrollToItem( HWND hWnd, int Index )
+void TESListView::ScrollToItem(HWND hWnd, int Index)
 {
 	cdeclCall<void>(0x00403BA0, hWnd, Index);
 }
 
-void TESPreviewWindow::Show( TESBoundObject* Object )
+void TESPreviewWindow::Show(TESBoundObject* Object)
 {
 	if (*WindowHandle == NULL)
 		SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40121, NULL);
@@ -325,59 +325,59 @@ void TESPreviewWindow::Show( TESBoundObject* Object )
 		cdeclCall<void>(0x00402BC0, Object);
 }
 
-void TESPreviewWindow::HandleResize( HWND PreviewWindow )
+void TESPreviewWindow::HandleResize(HWND PreviewWindow)
 {
 	cdeclCall<void>(0x004025A0, PreviewWindow);
 }
 
-void TESPreviewWindow::Initialize( HWND PreviewWindow )
+void TESPreviewWindow::Initialize(HWND PreviewWindow)
 {
 	cdeclCall<void>(0x00402910, PreviewWindow);
 }
 
-void TESPreviewWindow::Deinitialize( HWND PreviewWindow )
+void TESPreviewWindow::Deinitialize(HWND PreviewWindow)
 {
 	cdeclCall<void>(0x00402B00, PreviewWindow);
 }
 
-bool Subwindow::Build( UInt32 TemplateID )
+bool Subwindow::Build(UInt32 TemplateID)
 {
 	return cdeclCall<bool>(0x00404EC0, TemplateID, this);
 }
 
-void Subwindow::TearDown( void )
+void Subwindow::TearDown(void)
 {
 	thisCall<void>(0x00405340, this);
 }
 
-Subwindow* Subwindow::CreateInstance( void )
+Subwindow* Subwindow::CreateInstance(void)
 {
 	Subwindow* NewInstance = (Subwindow*)FormHeap_Allocate(sizeof(Subwindow));
 	ZeroMemory(NewInstance, sizeof(Subwindow));
 	return NewInstance;
 }
 
-void Subwindow::DeleteInstance( void )
+void Subwindow::DeleteInstance(void)
 {
 	FormHeap_Free(this);
 }
 
-void TESObjectSelection::AddToSelection( TESForm* Form, bool AddSelectionBox )
+void TESObjectSelection::AddToSelection(TESForm* Form, bool AddSelectionBox)
 {
 	thisCall<UInt32>(0x00512730, this, Form, AddSelectionBox);
 }
 
-void TESObjectSelection::RemoveFromSelection( TESForm* Form, bool RemoveSelectionBox )
+void TESObjectSelection::RemoveFromSelection(TESForm* Form, bool RemoveSelectionBox)
 {
 	thisCall<UInt32>(0x00512830, this, Form, RemoveSelectionBox);
 }
 
-void TESObjectSelection::ClearSelection( bool RemoveSelectionBox )
+void TESObjectSelection::ClearSelection(bool RemoveSelectionBox)
 {
 	thisCall<UInt32>(0x00511C20, this, RemoveSelectionBox);
 }
 
-TESObjectSelection* TESObjectSelection::CreateInstance( TESObjectSelection* Source )
+TESObjectSelection* TESObjectSelection::CreateInstance(TESObjectSelection* Source)
 {
 	TESObjectSelection* NewInstance = (TESObjectSelection*)FormHeap_Allocate(sizeof(TESObjectSelection));
 	thisCall<UInt32>(0x00511A20, NewInstance);
@@ -397,17 +397,17 @@ void TESObjectSelection::DeleteInstance()
 	FormHeap_Free(this);
 }
 
-void TESObjectSelection::CalculatePositionVectorSum( void )
+void TESObjectSelection::CalculatePositionVectorSum(void)
 {
 	thisCall<void>(0x00511A70, this);
 }
 
-bool TESObjectSelection::HasObject( TESForm* Form )
+bool TESObjectSelection::HasObject(TESForm* Form)
 {
 	return thisCall<bool>(0x00511CC0, this, Form);
 }
 
-void TESFileFormListWindow::Show( HWND Parent, TESFile* File)
+void TESFileFormListWindow::Show(HWND Parent, TESFile* File)
 {
 	if (Parent == NULL)
 		Parent = *TESCSMain::WindowHandle;
@@ -415,19 +415,17 @@ void TESFileFormListWindow::Show( HWND Parent, TESFile* File)
 	BGSEEUI->ModalDialog(*TESCSMain::Instance, MAKEINTRESOURCE(TESDialog::kDialogTemplate_TESFileDetails), Parent, (DLGPROC)0x00410280, (LPARAM)File, true);
 }
 
-
-void TESCellViewWindow::SetCellSelection( TESObjectCELL* Cell )
+void TESCellViewWindow::SetCellSelection(TESObjectCELL* Cell)
 {
 	cdeclCall<void>(0x00409070, Cell);
 }
 
-
-void TESObjectWindow::RefreshFormList( void )
+void TESObjectWindow::RefreshFormList(void)
 {
-	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
+	SendMessage(*TESObjectWindow::WindowHandleCache, 0x41A, NULL, NULL);
 }
 
-void TESObjectWindow::SetSplitterEnabled( bool State )
+void TESObjectWindow::SetSplitterEnabled(bool State)
 {
-	cdeclCall<void>(0x004044D0, GetDlgItem(*TESObjectWindow::WindowHandle, TESObjectWindow::SplitterData::kSplitterCtrlID), State);
+	cdeclCall<void>(0x004044D0, GetDlgItem(*TESObjectWindow::WindowHandleCache, TESObjectWindow::SplitterData::kSplitterCtrlID), State);
 }

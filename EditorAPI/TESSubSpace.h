@@ -3,7 +3,6 @@
 #include "TESObject.h"
 
 //	EditorAPI: TESSubSpace class.
-//	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
 /*
 	...
@@ -20,5 +19,4 @@ public:
 	/*5C*/ UInt16					dimensionZ;
 	/*5E*/ UInt16					pad5E;
 	/*60*/ float					unk60;			// initialized to sqrt((x/2)² + (y/2)² + (z/2)²)
-													// the name of the formula escapes me...
 };
