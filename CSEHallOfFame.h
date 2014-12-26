@@ -77,5 +77,6 @@ namespace ConstructionSetExtender
 		};
 
 		void						Initialize(void);
+		void						GetRandomESMember(std::string& OutName, bool Possessive = true);
 	}
 }

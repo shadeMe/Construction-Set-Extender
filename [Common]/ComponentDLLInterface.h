@@ -164,5 +164,6 @@ namespace ComponentDLLInterface
 		bool										(* AddFormToActiveTag)(FormData* Data);
 		HWND										(* GetFormDropWindowHandle)(void);
 		HWND										(* GetFormDropParentHandle)(void);
+		bool										(* GetDragOpInProgress)(void);
 	};
 }

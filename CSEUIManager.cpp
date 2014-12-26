@@ -7,6 +7,7 @@
 #include "CSERenderWindowPainter.h"
 #include "CSERenderWindowFlyCamera.h"
 #include "CSEAchievements.h"
+#include "CSEHallOfFame.h"
 #include "Hooks\Hooks-AssetSelector.h"
 #include "Hooks\Hooks-Dialog.h"
 #include "Hooks\Hooks-Renderer.h"
@@ -16,6 +17,7 @@
 #include "CSInterop.h"
 #include "CSEGlobalClipboard.h"
 #include "CSEFormUndoStack.h"
+#include "CSEObjectWindowManager.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -26,7 +28,6 @@ namespace ConstructionSetExtender
 {
 	namespace UIManager
 	{
-
 #define ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID				0x99
 
 		CSEFilterableFormListManager		CSEFilterableFormListManager::Instance;
@@ -478,14 +479,14 @@ namespace ConstructionSetExtender
 		CSERenderWindowMiscData::CSERenderWindowMiscData() :
 			BGSEditorExtender::BGSEEWindowExtraData()
 		{
-			TunnellingKeyMessage = false;
+			TunnelingKeyMessage = false;
 		}
 
 		CSERenderWindowMiscData::~CSERenderWindowMiscData()
 		{
 			;//
 		}
-		
+
 		CSETESFormEditData::CSETESFormEditData() :
 			BGSEditorExtender::BGSEEWindowExtraData()
 		{
@@ -515,7 +516,7 @@ namespace ConstructionSetExtender
 		CSEFaceGenWindowData::CSEFaceGenWindowData() :
 			BGSEditorExtender::BGSEEWindowExtraData()
 		{
-			TunnellingTabSelectMessage = false;
+			TunnelingTabSelectMessage = false;
 			AllowPreviewUpdates = true;
 			VoicePlaybackFilePath = "";
 		}
@@ -525,6 +526,16 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		CSEObjectWindowMiscData::CSEObjectWindowMiscData() :
+			BGSEditorExtender::BGSEEWindowExtraData()
+		{
+			TunnelingRefreshMessage = false;
+		}
+
+		CSEObjectWindowMiscData::~CSEObjectWindowMiscData()
+		{
+			;//
+		}
 
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
@@ -1351,7 +1362,7 @@ namespace ConstructionSetExtender
 						BGSEECONSOLE->Indent();
 						PROCESS_MEMORY_COUNTERS_EX MemCounter = {0};
 						UInt32 RAMUsage = 0;
-						
+
 						GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter));
 						RAMUsage = MemCounter.WorkingSetSize / (1024 * 1024);
 						BGSEECONSOLE_MESSAGE("Current RAM Usage: %d MB", RAMUsage);
@@ -1385,6 +1396,10 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_CODAOPENSCRIPTREPOSITORY:
 					CODAVM->OpenScriptRepository();
+
+					break;
+				case IDC_MAINMENU_SPAWNEXTRAOBJECTWINDOW:
+					ObjectWindowManager::Instance.SpawnImposter();
 
 					break;
 				default:
@@ -2406,7 +2421,7 @@ namespace ConstructionSetExtender
 
 						if (Icon && GetCursor() != *Icon)
 						{
-							SetCursor(*Icon);						
+							SetCursor(*Icon);
 						}
 					}
 				}
@@ -2503,9 +2518,9 @@ namespace ConstructionSetExtender
 
 						if (SwitchEnabled)
 						{
-							xData->TunnellingKeyMessage = true;
+							xData->TunnelingKeyMessage = true;
 							SendMessage(hWnd, WM_KEYDOWN, 0x43, lParam);
-							xData->TunnellingKeyMessage = false;
+							xData->TunnelingKeyMessage = false;
 
 							Return = true;
 						}
@@ -2518,7 +2533,7 @@ namespace ConstructionSetExtender
 						CSERenderWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSERenderWindowMiscData, ExtraData);
 						SME_ASSERT(xData);
 
-						if (SwitchEnabled && xData->TunnellingKeyMessage == false)
+						if (SwitchEnabled && xData->TunnelingKeyMessage == false)
 						{
 							if (*YKeyState == 0)
 								*UnkRotFactor = 0.0;
@@ -2530,7 +2545,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case 0x52:		// R					
+				case 0x52:		// R
 					if (*TESRenderWindow::PathGridEditFlag)
 					{
 						if (GetAsyncKeyState(VK_CONTROL))
@@ -2572,7 +2587,7 @@ namespace ConstructionSetExtender
 					break;
 				case 0x51:		// Q
 					if (GetAsyncKeyState(VK_CONTROL))
-					{	
+					{
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS, NULL);
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
@@ -2676,6 +2691,8 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+#define ID_OBJECTWINDOW_REFRESHTIMERID						0x978
+
 		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -2683,58 +2700,98 @@ namespace ConstructionSetExtender
 			Return = false;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
-			HWND FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
-			HWND FormList = GetDlgItem(hWnd, 1041);
-			HWND TreeList = GetDlgItem(hWnd, 2093);
-			HWND Splitter = GetDlgItem(hWnd, 2157);
-
-			if (FilterEditBox == NULL)
-				return DlgProcResult;
+			HWND FormList = GetDlgItem(hWnd, TESObjectWindow::kFormListCtrlID);
+			HWND TreeList = GetDlgItem(hWnd, TESObjectWindow::kTreeViewCtrlID);
 
 			switch (uMsg)
 			{
+			case WM_ACTIVATE:
+				ObjectWindowManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
+				Return = true;
+
+				break;
 			case WM_CLOSE:
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40199, NULL);
 				Return = true;
 
 				break;
+			case WM_TIMER:
+				switch (wParam)
+				{
+				case ID_OBJECTWINDOW_REFRESHTIMERID:
+					{
+						KillTimer(hWnd, ID_OBJECTWINDOW_REFRESHTIMERID);
+						SendMessage(hWnd, 0x41A, NULL, NULL);
+
+						break;
+					}
+				}
+
+				break;
+			case WM_OBJECTWINDOWIMPOSTER_FULLREFRESH:
+				// create a timer to schedule the full refresh
+				SetTimer(hWnd, ID_OBJECTWINDOW_REFRESHTIMERID, 1000, NULL);
+				Return = true;
+
+				break;
+			case 0x412:		// full refresh
+				{
+					CSEObjectWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEObjectWindowMiscData, ExtraData);
+
+					if (xData && xData->TunnelingRefreshMessage == false)
+					{
+						// the org proc needs to handle the message before we can update the imposters
+						// hence the tunneling
+						xData->TunnelingRefreshMessage = true;
+						Return = true;
+						SendMessage(hWnd, uMsg, wParam, lParam);
+						xData->TunnelingRefreshMessage = false;
+						// the tree entry array has been refreshed at this point
+						ObjectWindowManager::Instance.RefreshImposters();
+					}
+				}
+
+				break;
 			case 0x417:		// destroy window
 			case WM_DESTROY:
-				CSEFilterableFormListManager::Instance.Unregister(hWnd);
+				{
+					CSEObjectWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEObjectWindowMiscData, ExtraData);
+					if (xData)
+					{
+						ExtraData->Remove(CSEObjectWindowMiscData::kTypeID);
+						delete xData;
+					}
+
+					CSEFilterableFormListManager::Instance.Unregister(hWnd);
+					ObjectWindowManager::Instance.DestroyImposters();
+					TESObjectWindow::PrimaryObjectWindowHandle = NULL;
+				}
 
 				break;
 			case WM_INITDIALOG:
-				CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
+				{
+					SME_ASSERT(FilterEditBox);
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
+
+					CSEObjectWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEObjectWindowMiscData, ExtraData);
+					if (xData == NULL)
+					{
+						xData = new CSEObjectWindowMiscData();
+						ExtraData->Add(xData);
+					}
+
+					std::string WndTitle;
+					HallOfFame::GetRandomESMember(WndTitle);
+					WndTitle += " Object Window";
+					SetWindowText(hWnd, WndTitle.c_str());
+
+					TESObjectWindow::PrimaryObjectWindowHandle = hWnd;
+				}
 
 				break;
 			case WM_SIZE:
-				if (wParam != SIZE_MINIMIZED)
-				{
-					RECT RectFormList = {0}, RectTreeView = {0}, RectSplitter = {0}, RectFilterLbl = {0}, RectFilterEdit = {0};
-					POINT Point = {0};
-
-					GetWindowRect(TreeList, &RectTreeView);
-					GetWindowRect(Splitter, &RectSplitter);
-					GetWindowRect(FormList, &RectFormList);
-					GetWindowRect(FilterLabel, &RectFilterLbl);
-					GetWindowRect(FilterEditBox, &RectFilterEdit);
-
-					Point.x = RectFilterLbl.left;
-					Point.y = RectFilterLbl.bottom + 3;
-					ScreenToClient(hWnd, &Point);
-					MoveWindow(TreeList, Point.x, Point.y, RectTreeView.right - RectTreeView.left, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
-
-					Point.x = RectFormList.left;
-					Point.y = RectFilterEdit.top;
-					ScreenToClient(hWnd, &Point);
-					MoveWindow(FormList, Point.x, Point.y, (unsigned __int16)lParam - Point.x - 6, (unsigned int)(lParam >> 16) - Point.y - 6, 1);
-
-					Point.x = RectSplitter.left;
-					ScreenToClient(hWnd, &Point);
-					MoveWindow(Splitter, Point.x, 0, RectSplitter.right - RectSplitter.left, (unsigned int)lParam >> 16, 1);
-
-					Return = true;
-				}
+				ObjectWindowManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
+				Return = true;
 
 				break;
 			default:
@@ -3409,7 +3466,7 @@ namespace ConstructionSetExtender
 						char* Buffer = new char[FileVersionSize];
 						char VersionString[0x100] = {0};
 						void* VersionStringPtr = NULL;
-						
+
 						GetFileVersionInfo(BGSEEMAIN->GetDLLPath(), FileVersionHandle, FileVersionSize, Buffer);
 						VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
 						FORMAT_STR(VersionString, "%s v%s\r\n\"%s\"", BGSEEMAIN->ExtenderGetDisplayName(),
@@ -3528,8 +3585,6 @@ namespace ConstructionSetExtender
 #define ID_COMMONDLGEXTRAFITTINGS_QUICKVIEWTIMERID						0x108
 #define ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID					0x109
 
-		
-
 		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 															bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -3540,6 +3595,7 @@ namespace ConstructionSetExtender
 			switch (uMsg)
 			{
 			case WM_INITDIALOG:
+			case WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA:
 				{
 					xData = BGSEE_GETWINDOWXDATA(CSEDialogExtraFittingsData, ExtraData);
 					if (xData == NULL)
@@ -3751,7 +3807,7 @@ namespace ConstructionSetExtender
 							case CDDS_PREPAINT:
 								{
 									SetWindowLongPtr(hWnd, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
-									DlgProcResult = TRUE;
+									DlgProcResult = CDRF_NOTIFYITEMDRAW;
 									Return = true;
 								}
 
@@ -3849,7 +3905,7 @@ namespace ConstructionSetExtender
 										break;
 									}
 
-									bool ColorizeActiveFormsEnabled = Settings::Dialogs::kColorizeActiveForms.GetData().i && 
+									bool ColorizeActiveFormsEnabled = Settings::Dialogs::kColorizeActiveForms.GetData().i &&
 																	CSEFormEnumerationManager::Instance.GetVisibleUnmodifiedForms();
 
 									bool ColorizeFormOverridesEnabled = Settings::Dialogs::kColorizeFormOverrides.GetData().i;
@@ -4061,7 +4117,7 @@ namespace ConstructionSetExtender
 
 // returns TRUE if there are changes
 #define WM_TESFORMIDLISTVIEW_HASCHANGES							(WM_USER + 2006)
-// lParam = NMLISTVIEW* 
+// lParam = NMLISTVIEW*
 #define WM_TESFORMIDLISTVIEW_SAVECHANGES						(WM_USER + 2007)
 
 		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -4117,7 +4173,7 @@ namespace ConstructionSetExtender
 							{
 								// fill in a new proxy from the working copy
 								BGSEEUNDOSTACK->Record(new FormUndoStack::CSEFormUndoProxy(WorkingCopy));
-								
+
 								if (WorkingCopy->UpdateUsageInfo())
 								{
 									WorkingCopy->SetFromActiveFile(true);
@@ -4167,7 +4223,7 @@ namespace ConstructionSetExtender
 				case 1:			// OK/Apply button
 					{
 						Return = true;
-						
+
 						SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
 
 						if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
@@ -4216,7 +4272,6 @@ namespace ConstructionSetExtender
 
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
 						break;		// only interested in the main listview control
-				
 
 					switch (NotificationData->code)
 					{
@@ -4241,7 +4296,6 @@ namespace ConstructionSetExtender
 							// override the vanilla handler to allow multiple selections
 							NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
 							std::list<TESForm*> Selection;
-							UInt8* DraggingForms = (UInt8*)0x00A0BE45;
 
 							int Index = -1;
 							while ((Index = ListView_GetNextItem(Data->hdr.hwndFrom, Index, LVNI_SELECTED)) != -1)
@@ -4251,13 +4305,13 @@ namespace ConstructionSetExtender
 
 								Selection.push_back(Form);
 							}
-							
+
 							if (Selection.size())
 							{
-								*DraggingForms = 1;
+								*TESDialog::TESFormIDListViewDragDropInProgress = 1;
 
 								_RENDERSEL->ClearSelection(true);
-								TESObjectWindow::SetSplitterEnabled(false);
+								TESObjectWindow::SetSplitterEnabled(*TESObjectWindow::SplitterHandle, false);
 
 								for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
 									_RENDERSEL->AddToSelection(*Itr);
@@ -4289,7 +4343,7 @@ namespace ConstructionSetExtender
 										SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, lParam);
 
 										break;
-									}									
+									}
 								}
 
 								Return = true;
@@ -4462,7 +4516,6 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-		
 #define IDT_FACEGENPREVIEW_VOICEPLAYBACK			0x6FF
 #define IDT_FACEGENPREVIEW_PREVIEWUPDATE			0x7FF
 
@@ -4549,7 +4602,7 @@ namespace ConstructionSetExtender
 					const char* LipPath = Data->LipPath;
 
 					if (LipPath)
-					{			
+					{
 						std::string RelativeLipPath(_FILEFINDER->GetRelativePath(LipPath, "Data\\Sound\\Voice\\"));
 						std::string RelativeVoicePath = "";
 						if (strlen(VoicePath))
@@ -4624,7 +4677,7 @@ namespace ConstructionSetExtender
 					TESDialog::ClampDlgEditField(GetDlgItem(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY), 0.0, 5000.0, true);
 					TESDialog::SetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY, Settings::General::kFaceGenPreviewVoiceDelay.GetData().i, 0);
 				}
-				
+
 				break;
 			case WM_DROPFILES:
 				{
@@ -4681,7 +4734,7 @@ namespace ConstructionSetExtender
 			case WM_NOTIFY:
 				{
 					NMHDR* NotificationData = (NMHDR*)lParam;
-					
+
 					switch (NotificationData->idFrom)
 					{
 					case 1777:		// tab control, same for both the NPC and Race dialogs
@@ -4692,16 +4745,16 @@ namespace ConstructionSetExtender
 
 								// consume the original notification and disable preview control updates
 								// otherwise, the morph values will get reset upon subwindow init
-								if (xData && xData->TunnellingTabSelectMessage == false)
+								if (xData && xData->TunnelingTabSelectMessage == false)
 								{
 									Return = true;
 
-									xData->TunnellingTabSelectMessage = true;
+									xData->TunnelingTabSelectMessage = true;
 									xData->AllowPreviewUpdates = false;
 
 									SendMessage(hWnd, uMsg, wParam, lParam);
 
-									xData->TunnellingTabSelectMessage = false;
+									xData->TunnelingTabSelectMessage = false;
 
 									// don't allow updates immediately, use a cool-down timer
 									static const UInt32 kPreviewUpdateCoolDownPeriod = 1000;		// in ms
@@ -4763,7 +4816,6 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-
 		LRESULT CALLBACK TESFormEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -4775,16 +4827,26 @@ namespace ConstructionSetExtender
 			case WM_INITDIALOG:
 				{
 					CSETESFormEditData* xData = BGSEE_GETWINDOWXDATA(CSETESFormEditData, ExtraData);
+					TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
+
 					if (xData == NULL)
 					{
 						xData = new CSETESFormEditData();
 						ExtraData->Add(xData);
 
-						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
 						if (WorkingCopy)		// can be NULL when creating new forms
 						{
 							xData->FillBuffer(WorkingCopy);
 						}
+					}
+
+					if (WorkingCopy)
+					{
+						std::string WndTitle;
+
+						HallOfFame::GetRandomESMember(WndTitle);
+						WndTitle += " " + std::string(WorkingCopy->GetTypeIDString()) + " [" + std::string(WorkingCopy->GetEditorID()) + "]";
+						SetWindowText(hWnd, WndTitle.c_str());
 					}
 				}
 
@@ -4866,7 +4928,7 @@ namespace ConstructionSetExtender
 										if (Itr->Item() == Selection)
 											break;
 									}
-									
+
 									bool SelectionMoved = true, Up = false;
 									switch (KeyData->wVKey)
 									{
@@ -4921,7 +4983,7 @@ namespace ConstructionSetExtender
 			Return = false;
 
 			switch (uMsg)
-			{			
+			{
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
@@ -4932,14 +4994,14 @@ namespace ConstructionSetExtender
 						// use a temp copy as the local copy is used to determine if changes were made
 						TESForm* TempCopy = TESForm::CreateTemporaryCopy(LocalCopy);
 						TempCopy->GetDataFromDialog(hWnd);
-						
+
 						std::string ValidationOutput = "";
 						if ((CS_CAST(TempCopy, TESForm, TESLeveledList))->CheckForCircularPaths(ValidationOutput) == false)
 						{
 							BGSEEUI->MsgBoxE(hWnd, 0, "The leveled list contents are invalid!\n\nA circular link was found at:\n%s", ValidationOutput.c_str());
 							Return = true;
 						}
-						
+
 						TempCopy->DeleteInstance();
 					}
 
@@ -4951,7 +5013,6 @@ namespace ConstructionSetExtender
 
 			return DlgProcResult;
 		}
-
 
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
@@ -5683,8 +5744,6 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledItem, LeveledItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, LeveledItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, LeveledItemFormDlgSubClassProc);
-
-
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());

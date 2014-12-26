@@ -33,7 +33,6 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ObjectWindowPopulateFormListInvalidate, "invalidates the formList before items are added to it to increase performance");
 		_DeclareMemHdlr(CellViewWindowResizeFix, "fixes a bug that kept eating the cell view's list view control heights after each reinit");
 		_DeclareMemHdlr(TESSoundPlayFile, "patches the sound file sampler code to play files found in archives");
-		_DeclareMemHdlr(FormEditDialogTitle, "appends form editorIDs to the title bar of form edit dialogs");
 		_DeclareMemHdlr(FindTextFormEnumerationA, "patches the find text dialog to account for the new 'Hide XXX records' tools");
 		_DeclareMemHdlr(FindTextFormEnumerationB, "");
 		_DeclareMemHdlr(FindTextFormEnumerationC, "");
@@ -63,6 +62,11 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(EffectItemListViewSortingB, "");
 		_DeclareMemHdlr(EffectItemListViewSortingC, "");
 		_DeclareMemHdlr(TESObjectLIGHClampFalloffExp, "makes sure the falloff exponent text field is clamped to its expected limits");
+		_DeclareMemHdlr(TESPackageWndProBeginDrag, "caches drag drop operation state for non-object window/formID listview dialogs");
+		_DeclareMemHdlr(TESPackageWndProcEndDrag, "");
+		_DeclareMemHdlr(TESObjectCELLWndProcBeginDrag, "");
+		_DeclareMemHdlr(TESObjectCELLWndProcEndDrag, "");
+		_DeclareMemHdlr(ObjectWindowSplitterWndProcDisable, "disables the splitter when a drag-drop op is in progress, regardless of its enabled state");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

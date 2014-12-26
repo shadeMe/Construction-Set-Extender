@@ -293,6 +293,9 @@
     <ClCompile Include="EditorAPI\Setting.cpp">
       <Filter>EditorAPI\System\Settings</Filter>
     </ClCompile>
+    <ClCompile Include="CSEObjectWindowManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -727,6 +730,9 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSERenderSelectionGroupManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="CSEObjectWindowManager.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

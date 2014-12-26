@@ -2,6 +2,7 @@
 #include "..\CSEAchievements.h"
 #include "..\CSEUIManager.h"
 #include "..\CSEGlobalClipboard.h"
+#include "[Common]\CLIWrapper.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -36,7 +37,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(ObjectWindowPopulateFormListInvalidate, 0x00421EE1);
 		_DefineHookHdlr(CellViewWindowResizeFix, 0x00409813);
 		_DefineHookHdlr(TESSoundPlayFile, 0x005047B0);
-		_DefineHookHdlr(FormEditDialogTitle, 0x00447877);
 		_DefineHookHdlr(FindTextFormEnumerationA, 0x00444211);
 		_DefineHookHdlr(FindTextFormEnumerationB, 0x0044417B);
 		_DefineHookHdlr(FindTextFormEnumerationC, 0x00444430);
@@ -66,6 +66,11 @@ namespace ConstructionSetExtender
 		_DefineJumpHdlr(EffectItemListViewSortingB, 0x00567F15, 0x00567F27);
 		_DefineJumpHdlr(EffectItemListViewSortingC, 0x0056D963, 0x0056D97B);
 		_DefinePatchHdlr(TESObjectLIGHClampFalloffExp, 0x0050FBB1 + 1);
+		_DefineHookHdlr(TESPackageWndProBeginDrag, 0x00452794);
+		_DefineHookHdlr(TESPackageWndProcEndDrag, 0x004528CE);
+		_DefineHookHdlr(TESObjectCELLWndProcBeginDrag, 0x0053AA0C);
+		_DefineHookHdlr(TESObjectCELLWndProcEndDrag, 0x0053B501);
+		_DefineHookHdlr(ObjectWindowSplitterWndProcDisable, 0x00404502);
 
 		void PatchDialogHooks(void)
 		{
@@ -99,7 +104,6 @@ namespace ConstructionSetExtender
 			_MemHdlr(ObjectWindowPopulateFormListInvalidate).WriteJump();
 			_MemHdlr(CellViewWindowResizeFix).WriteJump();
 			_MemHdlr(TESSoundPlayFile).WriteJump();
-			_MemHdlr(FormEditDialogTitle).WriteJump();
 			_MemHdlr(FindTextFormEnumerationA).WriteJump();
 			_MemHdlr(FindTextFormEnumerationB).WriteJump();
 			_MemHdlr(FindTextFormEnumerationC).WriteJump();
@@ -302,6 +306,11 @@ namespace ConstructionSetExtender
 			_MemHdlr(EffectItemListViewSortingB).WriteJump();
 			_MemHdlr(EffectItemListViewSortingC).WriteJump();
 			_MemHdlr(TESObjectLIGHClampFalloffExp).WriteUInt32(1031);
+			_MemHdlr(TESPackageWndProBeginDrag).WriteJump();
+			_MemHdlr(TESPackageWndProcEndDrag).WriteJump();
+			_MemHdlr(TESObjectCELLWndProcBeginDrag).WriteJump();
+			_MemHdlr(TESObjectCELLWndProcEndDrag).WriteJump();
+			_MemHdlr(ObjectWindowSplitterWndProcDisable).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
@@ -697,20 +706,20 @@ namespace ConstructionSetExtender
 					break;
 				}
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
-				if (hWnd == *TESObjectWindow::WindowHandleCache &&	ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
+				if (hWnd == *TESObjectWindow::WindowHandle &&	ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 				{
 					if (BGSEEUI->MsgBoxI(hWnd,
 										MB_YESNO,
 										"Are you sure you want to mark all %d forms as unmodified?",
-										ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache)) == IDYES)
+										ListView_GetSelectedCount(*TESObjectWindow::FormListHandle)) == IDYES)
 					{
 						int Selection = -1;
 						do
 						{
-							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 								if (Form)
 									Form->SetFromActiveFile(false);
 							}
@@ -748,20 +757,20 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_UNDELETE:
 				{
-					if (hWnd == *TESObjectWindow::WindowHandleCache && ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{
 						if (BGSEEUI->MsgBoxI(hWnd,
 											MB_YESNO,
 											"Are you sure you want to undelete all %d forms?",
-											ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache)) == IDYES)
+											ListView_GetSelectedCount(*TESObjectWindow::FormListHandle)) == IDYES)
 						{
 							int Selection = -1;
 							do
 							{
-								Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
+								Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
 								if (Selection != -1)
 								{
-									TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
+									TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 									if (Form)
 										Form->SetDeleted(false);
 								}
@@ -849,15 +858,15 @@ namespace ConstructionSetExtender
 				break;
 			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
 				{
-					if (hWnd == *TESObjectWindow::WindowHandleCache && ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{
 						int Selection = -1, Count = 0;
 						do
 						{
-							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 								if (Form)
 								{
 									TESNPC* NPC = CS_CAST(Form, TESForm, TESNPC);
@@ -888,15 +897,15 @@ namespace ConstructionSetExtender
 				{
 					GlobalClipboard::CSEFormListBuilder Buffer;
 
-					if (hWnd == *TESObjectWindow::WindowHandleCache && ListView_GetSelectedCount(*TESObjectWindow::FormListHandleCache) > 1)
+					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{
 						int Selection = -1;
 						do
 						{
-							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandleCache, Selection, LVNI_SELECTED);
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
 							if (Selection != -1)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandleCache, Selection);
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
 								if (Form)
 								{
 									Buffer.Add(Form);
@@ -950,7 +959,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			RedrawWindow(hWnd, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+			BGSEEUI->GetInvalidationManager()->Redraw(hWnd);
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 		}
 
@@ -1043,7 +1052,6 @@ namespace ConstructionSetExtender
 		_hhBegin()
 		{
 			_hhSetVar(Retn, 0x004435C3);
-			_hhSetVar(ParentHWND, 0);
 			__asm
 			{
 				pushad
@@ -1051,7 +1059,6 @@ namespace ConstructionSetExtender
 				popad
 
 				mov		eax, [esp + 0x18]
-				mov		_hhGetVar(ParentHWND), eax
 				push	0
 				push	eax
 				mov		eax, [esp + 0x1C]
@@ -1079,9 +1086,10 @@ namespace ConstructionSetExtender
 				call	RemoveFormListPopupMenuItems
 				popad
 
+				mov		ecx, [esp + 0x18]		// window handle
 				push	ebx
 				push	eax
-				push	_hhGetVar(ParentHWND)
+				push	ecx
 				call	HandleHookedPopup
 				jmp		_hhGetVar(Retn)
 			SKIP:
@@ -1261,9 +1269,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoObjectWindowPopulateFormListInvalidateHook(bool RedrawState)
 		{
 			if (RedrawState == false)
-				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::FormListHandleCache);
+				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::FormListHandle);
 			else
-				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::FormListHandleCache);
+				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::FormListHandle);
 		}
 
 		#define _hhName		ObjectWindowPopulateFormListInvalidate
@@ -1361,35 +1369,6 @@ namespace ConstructionSetExtender
 				mov		[esp + 4], eax
 			EXIT:
 				sub		esp, 0x310
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		void __stdcall DoFormEditDialogTitleHook(HWND Dialog, TESForm* Form)
-		{
-			if (Form && Form->editorID.c_str())
-			{
-				char BufferA[0x200] = {0}, BufferB[0x200] = {0};
-				GetWindowText(Dialog, BufferA, sizeof(BufferA));
-				sprintf_s(BufferB, sizeof(BufferB), "%s [%s]", BufferA, Form->editorID.c_str());
-				SetWindowText(Dialog, BufferB);
-			}
-		}
-
-		#define _hhName		FormEditDialogTitle
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0044788B);
-			__asm
-			{
-				mov     ecx, [ebx + 4]
-
-				pushad
-				push	ecx
-				push	edi
-				call	DoFormEditDialogTitleHook
-				popad
-
 				jmp		_hhGetVar(Retn)
 			}
 		}
@@ -1784,6 +1763,101 @@ namespace ConstructionSetExtender
 				call	DoCellViewOnCellSelectionHook
 				popad
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		TESPackageWndProBeginDrag
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00452799);
+			_hhSetVar(Call, 0x004044D0);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				mov		TESDialog::PackageCellDragDropInProgress, 1
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		TESPackageWndProcEndDrag
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x004528D3);
+			_hhSetVar(Call, 0x004044D0);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				mov		TESDialog::PackageCellDragDropInProgress, 0
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		TESObjectCELLWndProcBeginDrag
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0053AA11);
+			_hhSetVar(Call, 0x004044D0);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				mov		TESDialog::PackageCellDragDropInProgress, 1
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		TESObjectCELLWndProcEndDrag
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0053B506);
+			_hhSetVar(Call, 0x004044D0);
+			__asm
+			{
+				call	_hhGetVar(Call)
+				mov		TESDialog::PackageCellDragDropInProgress, 0
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		bool __stdcall DoObjectWindowSplitterWndProcDisableHook(void)
+		{
+			if (BGSEEMAIN->Daemon()->GetFullInitComplete())
+			{
+				if (*TESDialog::ObjectWindowDragDropInProgress ||
+					*TESDialog::TESFormIDListViewDragDropInProgress ||
+					TESDialog::PackageCellDragDropInProgress ||
+					CLIWrapper::Interfaces::TAG->GetDragOpInProgress())
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		#define _hhName		ObjectWindowSplitterWndProcDisable
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00404508);
+			_hhSetVar(Jump, 0x00404518);
+			_hhSetVar(Skip, 0x0040450E);
+			__asm
+			{
+				pushad
+				call	DoObjectWindowSplitterWndProcDisableHook
+				test	al, al
+				jnz		SKIP
+
+				popad
+				mov		esi, eax
+				test	esi, esi
+				jz		JUMP
+
+				jmp		_hhGetVar(Retn)
+			JUMP:
+				jmp		_hhGetVar(Jump)
+			SKIP:
+				popad
+				jmp		_hhGetVar(Skip)
 			}
 		}
 	}

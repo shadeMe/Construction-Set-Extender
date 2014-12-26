@@ -207,6 +207,7 @@ namespace ConstructionSetExtender
 			Inductees.push_back(new CSEHallOfFameEntry("haama",							"Tricksy Ol' Sod",				TESForm::kFormType_Furniture));
 			Inductees.push_back(new CSEHallOfFameEntry("PacificMorrowind",				"The Jack",						TESForm::kFormType_Book));
 			Inductees.push_back(new CSEHallOfFameEntry("tejon",							"Goblin Tinkerer",				TESForm::kFormType_Creature));
+			Inductees.push_back(new CSEHallOfFameEntry("Lojack",						"Land Ahoy!",					TESForm::kFormType_Creature));
 			Inductees.push_back(new CSEHallOfFameEntry("Vacuity",						"                ",				TESForm::kFormType_Container));
 			Inductees.push_back(new CSEHallOfFameEntry("daemondarque",					"His Majestry, The CTD",		TESForm::kFormType_Ingredient));
 			Inductees.push_back(new CSEHallOfFameEntry("Shikishima",					"Slash-And-Burn",				TESForm::kFormType_Clothing));
@@ -232,6 +233,152 @@ namespace ConstructionSetExtender
 
 			SME_ASSERT(ComponentInitialized);
 		}
+
+		void GetRandomESMember(std::string& OutName, bool Possessive)
+		{
+			static std::vector<std::string> kESMembers;
+			if (kESMembers.size() == 0)
+			{
+				// was flitting through the official forums and the Nexus on a wave of nostalgia when the thought hit me
+				// thanks for all the memories and fish(sticks)!
+				kESMembers.push_back("The Elder Scrolls Modding Community");
+				kESMembers.push_back("saebel");
+				kESMembers.push_back("Arkngt X");
+				kESMembers.push_back("gruftikus");
+				kESMembers.push_back("migck");
+				kESMembers.push_back("forli");
+				kESMembers.push_back("dev_akm");
+				kESMembers.push_back("hlp");
+				kESMembers.push_back("zilav");
+				kESMembers.push_back("Drake the Dragon");
+				kESMembers.push_back("ElminsterEU");
+				kESMembers.push_back("Ethatron");
+				kESMembers.push_back("Galahaut");
+				kESMembers.push_back("Reneer");
+				kESMembers.push_back("HeX_0ff");
+				kESMembers.push_back("Timeslip");
+				kESMembers.push_back("IlmrynAkios");
+				kESMembers.push_back("kuertee");
+				kESMembers.push_back("LogicDragon");
+				kESMembers.push_back("bg2408");
+				kESMembers.push_back("Qazaaq");
+				kESMembers.push_back("scanti");
+				kESMembers.push_back("Skycaptain");
+				kESMembers.push_back("SkyRanger-1");
+				kESMembers.push_back("Tekuromoto");
+				kESMembers.push_back("TheNiceOne");
+				kESMembers.push_back("TheTalkieToaster");
+				kESMembers.push_back("Wrye");
+				kESMembers.push_back("AlienSlof");
+				kESMembers.push_back("Saiden Storm");
+				kESMembers.push_back("Fliggerty");
+				kESMembers.push_back("Kivan");
+				kESMembers.push_back("Quarn");
+				kESMembers.push_back("Dark0ne");
+				kESMembers.push_back("Trollf");
+				kESMembers.push_back("Shezrie");
+				kESMembers.push_back("VagabondAngel");
+				kESMembers.push_back("wz_");
+				kESMembers.push_back("PurpleLunchbox");
+				kESMembers.push_back("snakster");
+				kESMembers.push_back("Emma");
+				kESMembers.push_back("WillieSea");
+				kESMembers.push_back("WhoGuru");
+				kESMembers.push_back("Buddah");
+				kESMembers.push_back("Phitt");
+				kESMembers.push_back("MentalElf");
+				kESMembers.push_back("Nicoroshi");
+				kESMembers.push_back("Mr. Siika");
+				kESMembers.push_back("throttlekitty");
+				kESMembers.push_back("Cipscis");
+				kESMembers.push_back("DarN");
+				kESMembers.push_back("xilver");
+				kESMembers.push_back("Elys");
+				kESMembers.push_back("nuska");
+				kESMembers.push_back("mmmpld");
+				kESMembers.push_back("Ismelda Lasombra");
+				kESMembers.push_back("Jaga");
+				kESMembers.push_back("Qarl");
+				kESMembers.push_back("SomeWelshGuy");
+				kESMembers.push_back("SirFrederik");
+				kESMembers.push_back("Cliffworms");
+				kESMembers.push_back("Strategy Master");
+				kESMembers.push_back("Quazzy");
+				kESMembers.push_back("LHammonds");
+				kESMembers.push_back("reznod");
+				kESMembers.push_back("Simyaz");
+				kESMembers.push_back("Sen-chan");
+				kESMembers.push_back("Speedo");
+				kESMembers.push_back("Axil");
+				kESMembers.push_back("Eloise Shadowborn");
+				kESMembers.push_back("Martigen");
+				kESMembers.push_back("StarX");
+				kESMembers.push_back("Waalx");
+				kESMembers.push_back("Showler");
+				kESMembers.push_back("Sein_Schatten");
+				kESMembers.push_back("Random007");
+				kESMembers.push_back("Sotobrastos");
+				kESMembers.push_back("Newcomer24");
+				kESMembers.push_back("L@zarus");
+				kESMembers.push_back("Mr. Dave");
+				kESMembers.push_back("Loth DeBonneville");
+				kESMembers.push_back("ScripterRon");
+				kESMembers.push_back("KomodoDave");
+				kESMembers.push_back("dDefinder");
+				kESMembers.push_back("wolve");
+				kESMembers.push_back("Steve Carrow");
+				kESMembers.push_back("The10CentGamer");
+				kESMembers.push_back("UK47");
+				kESMembers.push_back("XMarksTheSpot");
+				kESMembers.push_back("Khettienna");
+				kESMembers.push_back("InsanitySorrow");
+				kESMembers.push_back("Windom Earle");
+				kESMembers.push_back("dewshine");
+				kESMembers.push_back("HTF");
+				kESMembers.push_back("vtastek");
+				kESMembers.push_back("entim");
+				kESMembers.push_back("qzilla");
+				kESMembers.push_back("Tibixie");
+				kESMembers.push_back("Exnem");
+				kESMembers.push_back("Hel Borne");
+				kESMembers.push_back("Deathless Aphrodite");
+				kESMembers.push_back("flyfightflea");
+				kESMembers.push_back("Jog");
+				kESMembers.push_back("Darkrider");
+				kESMembers.push_back("Texian");
+				kESMembers.push_back("Khugan");
+				kESMembers.push_back("Lady Nerevar");
+				kESMembers.push_back("ghastley");
+				kESMembers.push_back("Vality");
+				kESMembers.push_back("Hrnchamd");
+				kESMembers.push_back("Lanceor");
+				kESMembers.push_back("The SureAI Team");
+				kESMembers.push_back("Ed_Conn");
+				kESMembers.push_back("David Brasher");
+				kESMembers.push_back("vurt");
+				kESMembers.push_back("HeyYou");
+				kESMembers.push_back("jonwd7");
+				kESMembers.push_back("Zaldiir");
+				kESMembers.push_back("Todd Howard");
+			}
+
+			srand(GetTickCount());
+			int BadRand = (double)rand() / (RAND_MAX + 1) * kESMembers.size();
+			SME_ASSERT(BadRand >= 0 && BadRand < kESMembers.size());
+
+			OutName = kESMembers.at(BadRand);
+			if (OutName[OutName.length() - 1] == ' ')
+				OutName.erase(OutName.length() - 1);
+			if (OutName[0] == ' ')
+				OutName.erase(0, 1);
+
+			if (Possessive)
+			{
+				if (OutName[OutName.length() - 1] == 's' || OutName[OutName.length() - 1] == 'S')
+					OutName += "'";
+				else
+					OutName += "'s";
+			}
+		}
 	}
 }
-

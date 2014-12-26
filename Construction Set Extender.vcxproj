@@ -183,6 +183,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\$(TargetFileName)"<
     <ClCompile Include="CSEGlobalClipboard.cpp" />
     <ClCompile Include="CSEHallOfFame.cpp" />
     <ClCompile Include="CSEMain.cpp" />
+    <ClCompile Include="CSEObjectWindowManager.cpp" />
     <ClCompile Include="CSEPathGridUndoManager.cpp" />
     <ClCompile Include="CSERenderSelectionGroupManager.cpp" />
     <ClCompile Include="CSERenderWindowFlyCamera.cpp" />
@@ -279,6 +280,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\$(TargetFileName)"<
     <ClInclude Include="CSEGlobalClipboard.h" />
     <ClInclude Include="CSEHallOfFame.h" />
     <ClInclude Include="CSEMain.h" />
+    <ClInclude Include="CSEObjectWindowManager.h" />
     <ClInclude Include="CSEPathGridUndoManager.h" />
     <ClInclude Include="CSERenderSelectionGroupManager.h" />
     <ClInclude Include="CSERenderWindowFlyCamera.h" />

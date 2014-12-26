@@ -433,6 +433,10 @@ public:
 	static ExtraDataList*					GetDialogExtraDataList(HWND Dialog);
 
 	static tList<HWND>*						OpenEditWindows;
+
+	static UInt8*							ObjectWindowDragDropInProgress;
+	static UInt8*							TESFormIDListViewDragDropInProgress;
+	static bool								PackageCellDragDropInProgress;
 };
 
 class TESComboBox
@@ -491,6 +495,7 @@ public:
 	static UInt8*							ExittingCSFlag;
 
 	static const char*						INIFilePath;
+	static HIMAGELIST*						BoundObjectIcons;
 };
 
 // container class, arbitrarily named
@@ -514,6 +519,29 @@ public:
 	};
 	STATIC_ASSERT(sizeof(TreeEntryInfo) == 0x14);
 
+	// 210
+	struct TreeViewItemData
+	{
+		enum
+		{
+			kGroup_Actors = 0,
+			kGroup_Items,
+			kGroup_Magic,
+			kGroup_WorldObjects,
+			kGroup_Miscellaneous,
+
+			kGroup__MAX
+		};
+
+		// members
+		/*000*/ SInt32		formType;					// -1 for groups
+		/*004*/ UInt32		group;						// parent group ID
+		/*008*/ char		hierarchy[MAX_PATH];		// path to the item in the tree view hierarchy, including the item name
+														// only filled for items with depth > 2
+		/*10C*/ char		name[MAX_PATH];				// display name
+	};
+	STATIC_ASSERT(sizeof(TreeViewItemData) == 0x210);
+
 	// stored as the splitter control's userdata
 	// 1C
 	class SplitterData
@@ -529,20 +557,38 @@ public:
 		/*12*/ UInt8		enabled;			// disables all message processing when not set
 		/*13*/ UInt8		pad13;
 		/*14*/ POINT		cursorPos;			// buffer used to store the coords of the cursor during a drag op
-
-		enum { kSplitterCtrlID = 2157 };
 	};
 	STATIC_ASSERT(sizeof(SplitterData) == 0x1C);
 
 	static void						RefreshFormList(void);
-	static void						SetSplitterEnabled(bool State);
+	static void						SetSplitterEnabled(HWND Splitter, bool State);
 
-	static HWND*					WindowHandleCache;
-	static HWND*					FormListHandleCache;
-	static HWND*					TreeViewHandleCache;
-	static HWND*					SplitterHandleCache;
+	// object window imposter wrappers
+	// caches must point to the calling imposter's child controls
+	static void						PerformLimitedInit(HWND ObjectWindow);
+	static void						PerformLimitedDeinit(HWND ObjectWindow);
+	static void						UpdateTreeChildren(HWND ObjectWindow);
 
-	static UInt8*					MainMenuState;
+	// caches used by the object window, and to a lesser extent, other dialogs
+	static HWND*					WindowHandle;
+	static HWND*					FormListHandle;
+	static HWND*					TreeViewHandle;
+	static HWND*					SplitterHandle;
+
+	static UInt8*					Initialized;			// set when the window is created and initialized
+	static UInt32*					CurrentTreeNode;		// index of the current tree view selection, used with the tree entry and sort column arrays
+	static int*						SortColumnArray;
+	static TreeEntryInfo**			TreeEntryArray;
+
+	static DLGPROC					DialogProc;
+	enum
+	{
+		kFormListCtrlID = 1041,
+		kTreeViewCtrlID = 2093,
+		kSplitterCtrlID = 2157,
+	};
+
+	static HWND						PrimaryObjectWindowHandle;			// always points to the main object window instance
 };
 
 // container class, arbitrarily named

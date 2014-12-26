@@ -43,6 +43,11 @@ HWND GetFormDropParentHandle()
 	return (HWND)TAGBRWR->GetWindowHandle();
 }
 
+bool GetDragOpInProgress()
+{
+	return TAGBRWR->GetDragInProgress();
+}
+
 ComponentDLLInterface::TagBrowserInterface g_InteropInterface =
 {
 	DeleteManagedHeapPointer,
@@ -51,5 +56,6 @@ ComponentDLLInterface::TagBrowserInterface g_InteropInterface =
 	HideTagBrowserDialog,
 	AddFormToActiveTag,
 	GetFormDropWindowHandle,
-	GetFormDropParentHandle
+	GetFormDropParentHandle,
+	GetDragOpInProgress
 };

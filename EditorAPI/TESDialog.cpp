@@ -1,8 +1,12 @@
 #include "TESForm.h"
 #include "TESDialog.h"
 #include "[Common]\CLIWrapper.h"
+#include "Hooks\Hooks-Dialog.h"
 
 tList<HWND>*				TESDialog::OpenEditWindows = (tList<HWND>*)0x00A0B55C;
+bool						TESDialog::PackageCellDragDropInProgress = false;
+UInt8*						TESDialog::TESFormIDListViewDragDropInProgress = (UInt8*)0x00A0BE45;
+UInt8*						TESDialog::ObjectWindowDragDropInProgress = (UInt8*)0x00A0BA68;
 
 HINSTANCE*					TESCSMain::Instance = (HINSTANCE*)0x00A0AF1C;
 HWND*						TESCSMain::WindowHandle = (HWND*)0x00A0AF20;
@@ -12,12 +16,19 @@ char**						TESCSMain::ActivePluginNameBuffer = (char**)0x00A0AF00;
 UInt8*						TESCSMain::AllowAutoSaveFlag = (UInt8*)0x00A0B628;
 UInt8*						TESCSMain::ExittingCSFlag = (UInt8*)0x00A0B63C;
 const char*					TESCSMain::INIFilePath = (const char*)0x00A0ABB8;
+HIMAGELIST*					TESCSMain::BoundObjectIcons = (HIMAGELIST*)0x00A0B158;
 
-HWND*						TESObjectWindow::WindowHandleCache = (HWND*)0x00A0AF44;
-HWND*						TESObjectWindow::FormListHandleCache = (HWND*)0x00A0BAA0;
-HWND*						TESObjectWindow::TreeViewHandleCache = (HWND*)0x00A0BAA4;
-HWND*						TESObjectWindow::SplitterHandleCache = (HWND*)0x00A0BA6C;
-UInt8*						TESObjectWindow::MainMenuState = (UInt8*)0x00A0AF40;
+HWND*						TESObjectWindow::WindowHandle = (HWND*)0x00A0AF44;
+HWND*						TESObjectWindow::FormListHandle = (HWND*)0x00A0BAA0;
+HWND*						TESObjectWindow::TreeViewHandle = (HWND*)0x00A0BAA4;
+HWND*						TESObjectWindow::SplitterHandle = (HWND*)0x00A0BA6C;
+UInt8*						TESObjectWindow::Initialized = (UInt8*)0x00A0AF40;
+UInt32*						TESObjectWindow::CurrentTreeNode = (UInt32*)0x00A0B6F8;
+int*						TESObjectWindow::SortColumnArray = (int*)0x00A0B668;
+DLGPROC						TESObjectWindow::DialogProc = (DLGPROC)0x00420240;
+TESObjectWindow::TreeEntryInfo**
+							TESObjectWindow::TreeEntryArray = (TESObjectWindow::TreeEntryInfo**)0x00A0B700;
+HWND						TESObjectWindow::PrimaryObjectWindowHandle = NULL;
 
 HWND*						TESCellViewWindow::WindowHandle = (HWND*)0x00A0AF4C;
 HWND*						TESCellViewWindow::ObjectListHandle = (HWND*)0x00A0AA00;
@@ -422,10 +433,81 @@ void TESCellViewWindow::SetCellSelection(TESObjectCELL* Cell)
 
 void TESObjectWindow::RefreshFormList(void)
 {
-	SendMessage(*TESObjectWindow::WindowHandleCache, 0x41A, NULL, NULL);
+	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
 }
 
-void TESObjectWindow::SetSplitterEnabled(bool State)
+void TESObjectWindow::SetSplitterEnabled(HWND Splitter, bool State)
 {
-	cdeclCall<void>(0x004044D0, GetDlgItem(*TESObjectWindow::WindowHandleCache, TESObjectWindow::SplitterData::kSplitterCtrlID), State);
+	cdeclCall<void>(0x004044D0, Splitter, State);
+}
+
+void TESObjectWindow::PerformLimitedInit(HWND ObjectWindow)
+{
+	SME_ASSERT(ObjectWindow == *WindowHandle);
+
+	cdeclCall<void>(0x00420130, *TESObjectWindow::TreeViewHandle);
+	int TreeIndex = cdeclCall<int>(0x0041FA00,
+					*TESObjectWindow::TreeViewHandle,
+					SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, 0, 0),
+					0, 0, 0);
+	SendMessage(*TESObjectWindow::TreeViewHandle, TVM_SELECTITEM, 9u, TreeIndex);
+	thisCall<void>(0x00414C90, TESObjectWindow::TreeEntryArray[0], 0);
+	SendMessage(*TESObjectWindow::FormListHandle, LVM_SORTITEMS, 1, (LPARAM)ConstructionSetExtender::Hooks::ObjectWindowFormListComparator);
+	SetWindowLong(*TESObjectWindow::FormListHandle,
+				  GWL_STYLE,
+				  GetWindowLong(*TESObjectWindow::FormListHandle, GWL_STYLE) | LVS_SHAREIMAGELISTS);
+	SendMessage(*TESObjectWindow::FormListHandle, LVM_SETIMAGELIST, 1u, (LPARAM)*TESCSMain::BoundObjectIcons);
+	cdeclCall<void>(0x00404F30, *TESObjectWindow::SplitterHandle, *TESObjectWindow::TreeViewHandle, *TESObjectWindow::FormListHandle);
+	SendMessage(*TESObjectWindow::FormListHandle, LVM_SETEXTENDEDLISTVIEWSTYLE, 0x421u, 0x421u);
+	BGSEEUI->GetInvalidationManager()->Redraw(ObjectWindow);
+}
+
+void TESObjectWindow::PerformLimitedDeinit(HWND ObjectWindow)
+{
+	SME_ASSERT(ObjectWindow == *WindowHandle);
+
+	int FirstNode = SendMessage(*TESObjectWindow::TreeViewHandle, TVM_GETNEXTITEM, 0, 0);
+	cdeclCall<void>(0x0041FE40, *TESObjectWindow::TreeViewHandle, FirstNode);
+	SendMessage(*TESObjectWindow::TreeViewHandle, TVM_DELETEITEM, 0, -65536);
+	SendMessage(*TESObjectWindow::FormListHandle, LVM_DELETEALLITEMS, NULL, NULL);
+}
+
+int CALLBACK TreeViewSortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	TESObjectWindow::TreeViewItemData* Item1 = (TESObjectWindow::TreeViewItemData*)lParam1;
+	TESObjectWindow::TreeViewItemData* Item2 = (TESObjectWindow::TreeViewItemData*)lParam2;
+
+	return _stricmp(Item1->name, Item2->name);
+}
+
+void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
+{
+	SME_ASSERT(ObjectWindow == *WindowHandle);
+
+	for (int i = 0; i < TESObjectWindow::TreeEntryInfo::kTreeEntryCount; i++)
+	{
+		TESObjectWindow::TreeEntryInfo* Info = TESObjectWindow::TreeEntryArray[i];
+		for (TESObjectWindow::TreeEntryInfo::FormListT::Iterator Itr = Info->formList.Begin();
+			 Itr.Get() && !Itr.End();
+			 ++Itr)
+		{
+			TESForm* Form = Itr.Get();
+			cdeclCall<void>(0x00422310, Form);
+		}
+	}
+
+	// ### imposter treeviews aren't sorted on item insertion - investigate
+	TVSORTCB SortData = { 0 };
+	SortData.hParent = NULL;
+	SortData.lpfnCompare = TreeViewSortComparator;
+
+	TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, NULL);
+
+	for (HTREEITEM i = TreeView_GetRoot(*TESObjectWindow::TreeViewHandle); i; i = TreeView_GetNextItem(*TESObjectWindow::TreeViewHandle, i, TVGN_NEXT))
+	{
+		SortData.hParent = i;
+		SortData.lpfnCompare = TreeViewSortComparator;
+
+		TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, NULL);
+	}
 }

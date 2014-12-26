@@ -204,7 +204,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoCSInitHook()
 		{
 			if (*TESCSMain::WindowHandle == NULL ||
-				*TESObjectWindow::WindowHandleCache == NULL ||
+				*TESObjectWindow::Initialized == 0 ||
 				*TESCellViewWindow::WindowHandle == NULL ||
 				*TESRenderWindow::WindowHandle == NULL)
 			{

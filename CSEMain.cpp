@@ -354,7 +354,7 @@ namespace ConstructionSetExtender
 	{
 		TESDialog::WritePositionToINI(*TESCSMain::WindowHandle, NULL);
 		TESDialog::WritePositionToINI(*TESCellViewWindow::WindowHandle, "Cell View");
-		TESDialog::WritePositionToINI(*TESObjectWindow::WindowHandleCache, "Object Window");
+		TESDialog::WritePositionToINI(*TESObjectWindow::WindowHandle, "Object Window");
 		TESDialog::WritePositionToINI(*TESRenderWindow::WindowHandle, "Render Window");
 
 		BGSEECONSOLE_MESSAGE("Flushed CS INI Settings");
@@ -362,6 +362,8 @@ namespace ConstructionSetExtender
 		Settings::Dialogs::kRenderWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40423, MF_BYCOMMAND) & MF_CHECKED) != 0);
 		Settings::Dialogs::kCellViewWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40200, MF_BYCOMMAND) & MF_CHECKED) != 0);
 		Settings::Dialogs::kObjectWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) != 0);
+
+		TESCSMain::DeinitializeCSWindows();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Plugin Interface Manager");
 		CSEInterfaceManager::Instance.Deinitailize();

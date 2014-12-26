@@ -48,12 +48,11 @@ const float							TESRenderWindow::MaxLandscapeEditBrushRadius = 25.0f;
 
 TESPreviewControl::PreviewControlListT*		TESPreviewControl::ActivePreviewControls = (TESPreviewControl::PreviewControlListT*)0x00A0BE90;
 
-
 void TESRenderWindow::Reset()
 {
-	UInt8 ObjWndState = *TESObjectWindow::MainMenuState, CellWndState = *TESCellViewWindow::MainMenuState;
+	UInt8 ObjWndState = *TESObjectWindow::Initialized, CellWndState = *TESCellViewWindow::MainMenuState;
 
-	*TESObjectWindow::MainMenuState = 0;
+	*TESObjectWindow::Initialized = 0;
 	*TESCellViewWindow::MainMenuState = 0;
 
 	SendMessage(*TESRenderWindow::WindowHandle, 0x419, 6, 1);
@@ -63,7 +62,7 @@ void TESRenderWindow::Reset()
 	TESCSMain::DeinitializeCSWindows();
 	TESCSMain::InitializeCSWindows();
 
-	*TESObjectWindow::MainMenuState = ObjWndState;
+	*TESObjectWindow::Initialized = ObjWndState;
 	*TESCellViewWindow::MainMenuState = CellWndState;
 }
 
@@ -183,14 +182,13 @@ TESObjectREFR* TESRender::PickAtCoords( int X, int Y )
 
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,
 																	HWND Parent,
-																	NiNode* Node, 
-																	const char* WindowTitle, 
+																	NiNode* Node,
+																	const char* WindowTitle,
 																	int X, int Y,
 																	int Width, int Height )
 {
 	return thisCall<TESSceneNodeDebugData*>(0x004B7640, this, Instance, Parent, Node, WindowTitle, X, Y, Width, Height);
 }
-
 
 void TESPreviewControl::UpdatePreviewWindows( bool RefreshRenderWindow /*= true*/ )
 {
@@ -201,4 +199,3 @@ TESPreviewControl* TESPreviewControl::CreatePreviewControl( HWND Dialog, const T
 {
 	return cdeclCall<TESPreviewControl*>(0x00446440, Dialog, Params);
 }
-

@@ -794,4 +794,9 @@ namespace ConstructionSetExtender
 	{
 		return TagBrowserBox->Handle;
 	}
+
+	bool TagBrowser::GetDragInProgress()
+	{
+		return MouseDragInProgress;
+	}
 }

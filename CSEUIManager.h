@@ -165,7 +165,7 @@ namespace ConstructionSetExtender
 		class CSERenderWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
 		{
 		public:
-			bool				TunnellingKeyMessage;
+			bool				TunnelingKeyMessage;
 
 			CSERenderWindowMiscData();
 			virtual ~CSERenderWindowMiscData();
@@ -200,7 +200,7 @@ namespace ConstructionSetExtender
 		class CSEFaceGenWindowData : public BGSEditorExtender::BGSEEWindowExtraData
 		{
 		public:
-			bool				TunnellingTabSelectMessage;
+			bool				TunnelingTabSelectMessage;
 			bool				AllowPreviewUpdates;
 			std::string			VoicePlaybackFilePath;
 
@@ -220,6 +220,22 @@ namespace ConstructionSetExtender
 			char				VoicePath[MAX_PATH];
 			char				LipPath[MAX_PATH];
 			UInt32				DelayTime;
+		};
+
+		class CSEObjectWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
+		{
+		public:
+			bool				TunnelingRefreshMessage;
+
+			CSEObjectWindowMiscData();
+			virtual ~CSEObjectWindowMiscData();
+
+			enum { kTypeID = 'XOWM' };
+
+			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
+			{
+				return kTypeID;
+			}
 		};
 
 		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);

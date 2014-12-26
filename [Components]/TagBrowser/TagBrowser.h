@@ -102,6 +102,7 @@ namespace ConstructionSetExtender
 		bool												AddItemToActiveTag(ComponentDLLInterface::FormData* Data);
 		IntPtr												GetFormListHandle();
 		IntPtr												GetWindowHandle();
+		bool												GetDragInProgress();
 	};
 
 #define TAGBRWR											TagBrowser::GetSingleton()

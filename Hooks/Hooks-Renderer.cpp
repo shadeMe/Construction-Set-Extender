@@ -1257,14 +1257,11 @@ namespace ConstructionSetExtender
 				thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
 				if (thisCall<bool>(0x005E6030, 0x00A0BC64, OutPosition, OutRotation, 0))
 				{
-					TODO("Repent the sin I'm about to commit")
-
+					// sacrilege! SACRILEGE!!
 					float*** NewPosition = (float***)0x00A0BC80;
-					
 					OutPosition->x = *(float*)((UInt32)**NewPosition + 0x8);
 					OutPosition->y = *(float*)((UInt32)**NewPosition + 0xC);
 					OutPosition->z = *(float*)((UInt32)**NewPosition + 0x10);
-
 					OutRotation->Scale(0.0f);
 
 					Result = false;
