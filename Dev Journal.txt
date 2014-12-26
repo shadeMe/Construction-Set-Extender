@@ -27,7 +27,6 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Temp disable ENB wrapper at load time
 		> Multiple preview windows
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)

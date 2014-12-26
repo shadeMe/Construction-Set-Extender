@@ -496,7 +496,6 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 		}
 	}
 
-	// ### imposter treeviews aren't sorted on item insertion - investigate
 	TVSORTCB SortData = { 0 };
 	SortData.hParent = NULL;
 	SortData.lpfnCompare = TreeViewSortComparator;
@@ -510,4 +509,9 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 
 		TreeView_SortChildrenCB(*TESObjectWindow::TreeViewHandle, &SortData, NULL);
 	}
+}
+
+void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
+{
+	return cdeclCall<void*>(0x0041F990, hWnd, Item);
 }

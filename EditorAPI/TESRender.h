@@ -17,10 +17,8 @@ public:
 
 	// abstract base class
 	virtual void					Render(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL) = 0;
-
 };
 STATIC_ASSERT(sizeof(Renderer) == 0x04);
-
 
 // 14
 class NiWindow : public Renderer
@@ -41,7 +39,6 @@ public:
 	virtual bool					UpdateCameraFrustum(NiCamera* Camera, int Width, int Height, float ClipDistance) = 0;
 };
 STATIC_ASSERT(sizeof(NiWindow) == 0x14);
-
 
 // container class for the editor's renderer implementation
 class TESRender
@@ -94,7 +91,6 @@ public:
 
 #define _NIRENDERER				(*TESRender::NiRendererSingleton)
 #define _PRIMARYRENDERER		(*TESRender::PrimaryRenderer::Singleton)
-
 
 // container class, arbitrarily named
 class TESRenderWindow
@@ -149,7 +145,7 @@ public:
 		void							Clear(void);
 	};
 	STATIC_ASSERT(sizeof(UndoStack) == 0x08);
-	
+
 	// 60
 	class RubberBandSelection
 	{
@@ -169,7 +165,6 @@ public:
 		/*5E*/ UInt16						pad5E;
 	};
 	STATIC_ASSERT(sizeof(RubberBandSelection) == 0x60);
-
 
 	// methods
 	static void							Reset();
@@ -213,7 +208,7 @@ public:
 	static POINT						CurrentMouseCoord;
 	static bool							ShowInitiallyDisabledRefs;
 	static bool							ShowInitiallyDisabledRefChildren;
-	
+
 	static const float					MaxLandscapeEditBrushRadius;
 };
 
@@ -273,7 +268,6 @@ public:
 	/*3C*/ TESSceneNodeDebugData*	debugData;
 	/*40*/ int						currentMouseXCoord;
 	/*44*/ int						currentMouseYCoord;
-
 
 	// methods
 	virtual void				Update(void) = 0;

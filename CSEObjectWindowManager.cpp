@@ -6,6 +6,8 @@ namespace ConstructionSetExtender
 {
 	ObjectWindowManager					ObjectWindowManager::Instance;
 
+#define ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID			0x656
+
 	INT_PTR CALLBACK ObjectWindowManager::ObjectWindowImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
@@ -34,30 +36,49 @@ namespace ConstructionSetExtender
 				DlgProcResult = TRUE;
 				break;
 			}
+		case WM_TIMER:
+			switch (wParam)
+			{
+			case ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID:
+				for (int i = 0;; i++)
+				{
+					// skip the formID column
+					if (i == 1)
+						continue;
+
+					if (ListView_SetColumnWidth(FormList, i, LVSCW_AUTOSIZE_USEHEADER) == FALSE)
+						break;
+				}
+
+				KillTimer(hWnd, ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID);
+				break;
+			}
+
+			break;
 		case WM_NOTIFY:
 			{
-				bool Skip = true;
+				NMHDR* NotifyData = (NMHDR*)lParam;
+				switch (NotifyData->code)
+				{
+				case LVN_KEYDOWN:
+				case TVN_KEYDOWN:
+					if (((NMLVKEYDOWN*)lParam)->wVKey == VK_F5)
+					{
+						SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
+						DlgProcResult = TRUE;
+					}
 
-				if (((NMHDR*)lParam)->code == NM_KEYDOWN && ((NMKEY*)lParam)->nVKey == VK_F5)
-					Skip = false;
-				else if (((NMHDR*)lParam)->code == LVN_KEYDOWN && ((NMLVKEYDOWN*)lParam)->wVKey == VK_F5)
-					Skip = false;
-				else if (((NMHDR*)lParam)->code == TVN_KEYDOWN && ((NMTVKEYDOWN*)lParam)->wVKey == VK_F5)
-					Skip = false;
-
-				if (Skip)
 					break;
-			}
-		case 0x412:
-			TODO("force a full refresh on new object creation/ ObjectWindow::ProcessForm");
-			// full refreshes are handled by the primary window exclusively
-			// but we can't forward the message, as we can potentially be in a nested call inside the imposter dlg proc, i.e., the caches may be dirty
-			// so we need to defer the refresh until the outermost call returns
-			SME_ASSERT(TESObjectWindow::PrimaryObjectWindowHandle);
+				case TVN_SELCHANGED:
+					{
+						// (ugly)workaround for the non-sorting form list
+						SetTimer(hWnd, ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID, 500, NULL);
+						break;
+					}
+				}
 
-			SendMessage(TESObjectWindow::PrimaryObjectWindowHandle, WM_OBJECTWINDOWIMPOSTER_FULLREFRESH, NULL, NULL);
-			DlgProcResult = TRUE;
-			break;
+				break;
+			}
 		case WM_ACTIVATE:
 			ObjectWindowManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
 
@@ -245,7 +266,6 @@ namespace ConstructionSetExtender
 	{
 		for each (auto Itr  in ImposterRegistry)
 		{
-			SendMessage(Itr.first, WM_OBJECTWINDOWIMPOSTER_REFRESHTREEVIEW, NULL, NULL);
 			SendMessage(Itr.first, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
 		}
 	}

@@ -6,14 +6,15 @@ namespace ConstructionSetExtender
 #define WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST		(WM_USER + 2400)
 // refreshes the imposter's tree view
 #define WM_OBJECTWINDOWIMPOSTER_REFRESHTREEVIEW		(WM_USER + 2404)
-	// signals the primary object window to schedule a full refresh
-#define WM_OBJECTWINDOWIMPOSTER_FULLREFRESH			(WM_USER + 2401)
 // initializes the imposter's controls and data
 #define WM_OBJECTWINDOWIMPOSTER_INITIALIZE			(WM_USER + 2402)
 // initializes the extra fittings subclass, works around the delayed subclassing
 // handled elsewhere by the subclass
 #define WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA		(WM_USER + 2403)
 
+	// this implementation isn't without it's share of bugs
+	// most of them are related to form creation, control updates, i.e., failed sorting
+	// hence we pick up the slack whenever necessary
 	class ObjectWindowManager
 	{
 		static INT_PTR CALLBACK						ObjectWindowImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

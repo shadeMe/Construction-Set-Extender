@@ -460,6 +460,13 @@ public:
 	static void								ScrollToItem(HWND hWnd, int Index);
 };
 
+class TESTreeView
+{
+public:
+	// methods
+	static void*							GetItemData(HWND hWnd, HTREEITEM Item);
+};
+
 class TESPreviewWindow
 {
 public:

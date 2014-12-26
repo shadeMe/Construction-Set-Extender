@@ -526,17 +526,6 @@ namespace ConstructionSetExtender
 			;//
 		}
 
-		CSEObjectWindowMiscData::CSEObjectWindowMiscData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
-		{
-			TunnelingRefreshMessage = false;
-		}
-
-		CSEObjectWindowMiscData::~CSEObjectWindowMiscData()
-		{
-			;//
-		}
-
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -2691,8 +2680,6 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
-#define ID_OBJECTWINDOW_REFRESHTIMERID						0x978
-
 		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
@@ -2705,6 +2692,24 @@ namespace ConstructionSetExtender
 
 			switch (uMsg)
 			{
+			case WM_NOTIFY:
+				{
+					bool Skip = true;
+
+					if (((NMHDR*)lParam)->code == NM_KEYDOWN && ((NMKEY*)lParam)->nVKey == VK_F5)
+						Skip = false;
+					else if (((NMHDR*)lParam)->code == LVN_KEYDOWN && ((NMLVKEYDOWN*)lParam)->wVKey == VK_F5)
+						Skip = false;
+					else if (((NMHDR*)lParam)->code == TVN_KEYDOWN && ((NMTVKEYDOWN*)lParam)->wVKey == VK_F5)
+						Skip = false;
+
+					if (Skip)
+						break;
+
+					Return = true;
+					ObjectWindowManager::Instance.RefreshImposters();
+					SendMessage(hWnd, 0x41A, NULL, NULL);
+				}
 			case WM_ACTIVATE:
 				ObjectWindowManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
 				Return = true;
@@ -2715,53 +2720,9 @@ namespace ConstructionSetExtender
 				Return = true;
 
 				break;
-			case WM_TIMER:
-				switch (wParam)
-				{
-				case ID_OBJECTWINDOW_REFRESHTIMERID:
-					{
-						KillTimer(hWnd, ID_OBJECTWINDOW_REFRESHTIMERID);
-						SendMessage(hWnd, 0x41A, NULL, NULL);
-
-						break;
-					}
-				}
-
-				break;
-			case WM_OBJECTWINDOWIMPOSTER_FULLREFRESH:
-				// create a timer to schedule the full refresh
-				SetTimer(hWnd, ID_OBJECTWINDOW_REFRESHTIMERID, 1000, NULL);
-				Return = true;
-
-				break;
-			case 0x412:		// full refresh
-				{
-					CSEObjectWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEObjectWindowMiscData, ExtraData);
-
-					if (xData && xData->TunnelingRefreshMessage == false)
-					{
-						// the org proc needs to handle the message before we can update the imposters
-						// hence the tunneling
-						xData->TunnelingRefreshMessage = true;
-						Return = true;
-						SendMessage(hWnd, uMsg, wParam, lParam);
-						xData->TunnelingRefreshMessage = false;
-						// the tree entry array has been refreshed at this point
-						ObjectWindowManager::Instance.RefreshImposters();
-					}
-				}
-
-				break;
 			case 0x417:		// destroy window
 			case WM_DESTROY:
 				{
-					CSEObjectWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEObjectWindowMiscData, ExtraData);
-					if (xData)
-					{
-						ExtraData->Remove(CSEObjectWindowMiscData::kTypeID);
-						delete xData;
-					}
-
 					CSEFilterableFormListManager::Instance.Unregister(hWnd);
 					ObjectWindowManager::Instance.DestroyImposters();
 					TESObjectWindow::PrimaryObjectWindowHandle = NULL;
@@ -2772,13 +2733,6 @@ namespace ConstructionSetExtender
 				{
 					SME_ASSERT(FilterEditBox);
 					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
-
-					CSEObjectWindowMiscData* xData = BGSEE_GETWINDOWXDATA(CSEObjectWindowMiscData, ExtraData);
-					if (xData == NULL)
-					{
-						xData = new CSEObjectWindowMiscData();
-						ExtraData->Add(xData);
-					}
 
 					std::string WndTitle;
 					HallOfFame::GetRandomESMember(WndTitle);
@@ -4868,6 +4822,8 @@ namespace ConstructionSetExtender
 						ExtraData->Remove(CSETESFormEditData::kTypeID);
 						delete xData;
 					}
+
+					ObjectWindowManager::Instance.RefreshImposters();
 				}
 
 				break;
