@@ -219,6 +219,8 @@ namespace BGSEditorExtender
 
 		bool									RegisterStyle(ResourceTemplateT TemplateID, StyleData& Data);
 		bool									UnregisterStyle(ResourceTemplateT TemplateID);
+
+		void									StyleWindow(HWND Window, StyleData& Data);
 	};
 
 	class BGSEEWindowInvalidationManager
@@ -234,6 +236,7 @@ namespace BGSEditorExtender
 
 		void								Push(HWND Window);
 		void								Pop(HWND Window);
+		void								Redraw(HWND Window);
 	};
 
 	class BGSEEUIManager
@@ -373,7 +376,7 @@ namespace BGSEditorExtender
 		static LRESULT CALLBACK			DefaultDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	protected:
 		typedef LRESULT (CALLBACK*		MessageCallback)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return);
-		
+
 		struct DlgUserData
 		{
 			BGSEEGenericModelessDialog*		Instance;

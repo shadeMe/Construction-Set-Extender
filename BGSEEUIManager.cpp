@@ -245,7 +245,7 @@ namespace BGSEditorExtender
 
 				// send the pre-initdialog message first
 				UserData->Data->ProcessSubclasses(hWnd, WM_SUBCLASSER_PREDIALOGINIT, wParam, UserData->InitParam, CallbackReturn);
-				
+
 				// make sure the dialog's not destroyed
 				UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 				SME_ASSERT(UserData);
@@ -636,58 +636,62 @@ namespace BGSEditorExtender
 
 		if (Match != StyleListings.end())
 		{
-			LONG_PTR WindowRegular = GetWindowLongPtr(Window, GWL_STYLE);
-			LONG_PTR WindowExtended = GetWindowLongPtr(Window, GWL_EXSTYLE);
-
-			switch (Match->second.RegularOp)
-			{
-			case StyleData::kOperation_OR:
-				WindowRegular |= Match->second.Regular;
-				break;
-			case StyleData::kOperation_AND:
-				WindowRegular &= ~Match->second.Regular;
-				break;
-			case StyleData::kOperation_Replace:
-				WindowRegular = Match->second.Regular;
-				break;
-			}
-
-			switch (Match->second.ExtendedOp)
-			{
-			case StyleData::kOperation_OR:
-				WindowExtended |= Match->second.Extended;
-				break;
-			case StyleData::kOperation_AND:
-				WindowExtended &= ~Match->second.Extended;
-				break;
-			case StyleData::kOperation_Replace:
-				WindowExtended = Match->second.Extended;
-				break;
-			}
-
-			bool PerformOperation = Match->second.RegularOp != StyleData::kOperation_None || Match->second.ExtendedOp != StyleData::kOperation_None;
-
-			if (PerformOperation)
-			{
-				ShowWindow(Window, SW_HIDE);
-			}
-
-			if (Match->second.RegularOp != StyleData::kOperation_None)
-				SetWindowLongPtr(Window, GWL_STYLE, (LONG_PTR)WindowRegular);
-
-			if (Match->second.ExtendedOp != StyleData::kOperation_None)
-				SetWindowLongPtr(Window, GWL_EXSTYLE, (LONG_PTR)WindowExtended);
-
-			if (PerformOperation)
-			{
-				SetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_DRAWFRAME|SWP_SHOWWINDOW);
-				InvalidateRect(Window, NULL, TRUE);
-			}
-
+			StyleWindow(Window, Match->second);
 			return true;
 		}
 
 		return false;
+	}
+
+	void BGSEEWindowStyler::StyleWindow(HWND Window, StyleData& Data)
+	{
+		LONG_PTR WindowRegular = GetWindowLongPtr(Window, GWL_STYLE);
+		LONG_PTR WindowExtended = GetWindowLongPtr(Window, GWL_EXSTYLE);
+
+		switch (Data.RegularOp)
+		{
+		case StyleData::kOperation_OR:
+			WindowRegular |= Data.Regular;
+			break;
+		case StyleData::kOperation_AND:
+			WindowRegular &= ~Data.Regular;
+			break;
+		case StyleData::kOperation_Replace:
+			WindowRegular = Data.Regular;
+			break;
+		}
+
+		switch (Data.ExtendedOp)
+		{
+		case StyleData::kOperation_OR:
+			WindowExtended |= Data.Extended;
+			break;
+		case StyleData::kOperation_AND:
+			WindowExtended &= ~Data.Extended;
+			break;
+		case StyleData::kOperation_Replace:
+			WindowExtended = Data.Extended;
+			break;
+		}
+
+		bool PerformOperation = Data.RegularOp != StyleData::kOperation_None || Data.ExtendedOp != StyleData::kOperation_None;
+
+		if (PerformOperation)
+		{
+			ShowWindow(Window, SW_HIDE);
+		}
+
+		if (Data.RegularOp != StyleData::kOperation_None)
+			SetWindowLongPtr(Window, GWL_STYLE, (LONG_PTR)WindowRegular);
+
+		if (Data.ExtendedOp != StyleData::kOperation_None)
+			SetWindowLongPtr(Window, GWL_EXSTYLE, (LONG_PTR)WindowExtended);
+
+		if (PerformOperation)
+		{
+			SetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_DRAWFRAME | SWP_SHOWWINDOW);
+			InvalidateRect(Window, NULL, TRUE);
+		}
 	}
 
 	BGSEEWindowStyler::BGSEEWindowStyler() :
@@ -777,8 +781,13 @@ namespace BGSEditorExtender
 		else
 		{
 			SendMessage(Window, WM_SETREDRAW, TRUE, NULL);
-			RedrawWindow(Window, NULL, NULL, RDW_ERASE|RDW_FRAME|RDW_INVALIDATE|RDW_ALLCHILDREN);
+			Redraw(Window);
 		}
+	}
+
+	void BGSEEWindowInvalidationManager::Redraw(HWND Window)
+	{
+		RedrawWindow(Window, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 	}
 
 	BGSEEUIManager*						BGSEEUIManager::Singleton = NULL;
@@ -1447,7 +1456,7 @@ namespace BGSEditorExtender
 					Left->GetData().i,
 					Top->GetData().i,
 					Right->GetData().i,
-					Bottom->GetData().i, 
+					Bottom->GetData().i,
 					SWP_SHOWWINDOW|SWP_FRAMECHANGED);
 
 		SetVisibility(Visible->GetData().i);

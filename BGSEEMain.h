@@ -82,7 +82,6 @@ namespace BGSEditorExtender
 		int							operator()(const char* Section, char* OutBuffer, UInt32 Size);
 	};
 
-	
 	typedef SME::INI::INISettingListT			INISettingDepotT;
 
 	class BGSEEReleaseNameTable

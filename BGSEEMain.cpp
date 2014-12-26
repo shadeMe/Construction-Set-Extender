@@ -154,7 +154,7 @@ namespace BGSEditorExtender
 
 		return ParentManager->DirectRead(Section, OutBuffer, Size);
 	}
-	
+
 	BGSEEMain::BGSEEINIManager::BGSEEINIManager() :
 		GUI()
 	{
@@ -595,7 +595,7 @@ namespace BGSEditorExtender
 		SME_ASSERT(LongName && ShortName &&	ReleaseName && APPPath);
 		SME_ASSERT(EditorID != kExtenderParentEditor_Unknown && EditorID < kExtenderParentEditor__MAX);
 		SME_ASSERT(SEPluginHandle != 0xFFFFFFFF && DotNETFrameworkVersion);
-		
+
 		ExtenderLongName = LongName;
 		FORMAT_STR(ExtenderShortName, "%s", ShortName);
 		ExtenderReleaseName = ReleaseName;
@@ -646,7 +646,7 @@ namespace BGSEditorExtender
 
 		this->CrashRptSupport = CrashRptSupport;
 		Initialized = true;
-		
+
 		if (CrashRptSupport)
 		{
 			CR_INSTALL_INFO CrashRptData = {0};
