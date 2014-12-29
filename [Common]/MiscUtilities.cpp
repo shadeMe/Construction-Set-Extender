@@ -72,15 +72,6 @@ namespace ConstructionSetExtender
 			delete Itr;
 		}
 	}
-
-	void DeleteManagedHeapPointer( void* Pointer, bool IsArray )
-	{
-		if (IsArray)
-			delete [] Pointer;
-		else
-			delete Pointer;
-	}
-
 	void CopyStringToCharBuffer( String^% Source, char* Buffer, UInt32 Size )
 	{
 		int i = 0;

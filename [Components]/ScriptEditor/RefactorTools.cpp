@@ -221,7 +221,7 @@ namespace ConstructionSetExtender
 				if (this->Tag != nullptr)
 				{
 					ComponentDLLInterface::ScriptVarListData* Data = (ComponentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
-					NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 				}
 			}
 
@@ -408,7 +408,7 @@ namespace ConstructionSetExtender
 						ElementList->Items->Add(Item);
 					}
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				this->Hide();
 				this->ShowDialog();

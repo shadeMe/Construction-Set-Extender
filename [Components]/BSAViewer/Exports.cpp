@@ -25,7 +25,6 @@ void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, ch
 
 ComponentDLLInterface::BSAViewerInterface g_InteropInterface =
 {
-	DeleteManagedHeapPointer,
 	InitializeComponents,
 	ShowBSAViewerDialog
 };

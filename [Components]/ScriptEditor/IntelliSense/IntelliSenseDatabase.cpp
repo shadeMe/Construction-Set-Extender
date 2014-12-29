@@ -78,9 +78,11 @@ namespace ConstructionSetExtender
 				{
 					NativeWrapper::WriteToMainWindowStatusBar(2, "Updating IntelliSense DB...");
 
-					LinkedList<UserFunction^>^ ParsedUDFList = gcnew LinkedList<UserFunction^>();
-					LinkedList<IntelliSenseItem^>^ ParsedEnumerables = gcnew LinkedList<IntelliSenseItem^>();
 					ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetIntelliSenseUpdateData();
+
+					UserFunctionList->Clear();
+					Enumerables->Clear();
+					RemoteScripts->Clear();
 
 					for (ComponentDLLInterface::ScriptData* Itr = DataHandlerData->ScriptListHead;
 															Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount;
@@ -89,7 +91,7 @@ namespace ConstructionSetExtender
 						if (!Itr->IsValid())
 							continue;
 
-						ParsedUDFList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
+						UserFunctionList->AddLast(gcnew UserFunction(gcnew String(Itr->Text)));
 					}
 					for (ComponentDLLInterface::QuestData* Itr = DataHandlerData->QuestListHead;
 															Itr != DataHandlerData->QuestListHead + DataHandlerData->QuestCount;
@@ -98,7 +100,7 @@ namespace ConstructionSetExtender
 						if (!Itr->IsValid())
 							continue;
 
-						ParsedEnumerables->AddLast(gcnew IntelliSenseItemQuest(gcnew String(Itr->EditorID),
+						Enumerables->AddLast(gcnew IntelliSenseItemQuest(gcnew String(Itr->EditorID),
 																			gcnew String(Itr->FullName),
 																			gcnew String(Itr->ScriptName)));
 					}
@@ -112,21 +114,21 @@ namespace ConstructionSetExtender
 
 						if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
 						{
-							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
 																			ScriptParser::VariableType::e_Integer,
 																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
 						}
 						else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 						{
-							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
 																			ScriptParser::VariableType::e_Float,
 																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
 						}
 						else
 						{
-							ParsedEnumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
 																			ScriptParser::VariableType::e_String,
 																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
@@ -138,13 +140,13 @@ namespace ConstructionSetExtender
 						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST)
 						{
-							ParsedEnumerables->AddLast(Itr);
+							Enumerables->AddLast(Itr);
 						}
 					}
 
-					for each (UserFunction^ Itr in ParsedUDFList)
+					for each (UserFunction^ Itr in UserFunctionList)
 					{
-						ParsedEnumerables->AddLast(gcnew IntelliSenseItemUserFunction(Itr));
+						Enumerables->AddLast(gcnew IntelliSenseItemUserFunction(Itr));
 					}
 
 					for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead; Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount; ++Itr)
@@ -152,21 +154,11 @@ namespace ConstructionSetExtender
 						if (!Itr->IsValid())
 							continue;
 
-						ParsedEnumerables->AddLast(gcnew IntelliSenseItemEditorIDForm(Itr));
+						Enumerables->AddLast(gcnew IntelliSenseItemEditorIDForm(Itr));
 					}
 
 					for each (CodeSnippet^ Itr in CodeSnippets->LoadedSnippets)
-						ParsedEnumerables->AddLast(gcnew IntelliSenseItemCodeSnippet(Itr));
-
-					UserFunctionList->Clear();
-					Enumerables->Clear();
-					RemoteScripts->Clear();
-
-					delete UserFunctionList;
-					delete Enumerables;
-
-					UserFunctionList = ParsedUDFList;
-					Enumerables = ParsedEnumerables;
+						Enumerables->AddLast(gcnew IntelliSenseItemCodeSnippet(Itr));
 
 					NativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB updated.");
 					NativeWrapper::WriteToMainWindowStatusBar(3, "[" +
@@ -177,7 +169,7 @@ namespace ConstructionSetExtender
 									DataHandlerData->EditorIDCount + " Forms" +
 									"]");
 
-					NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(DataHandlerData, false);
+					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(DataHandlerData, false);
 				}
 				catch (Exception^ E)
 				{
@@ -538,7 +530,7 @@ namespace ConstructionSetExtender
 			}
 
 			if (OutScriptData == 0)
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			return Result;
 		}
@@ -560,7 +552,7 @@ namespace ConstructionSetExtender
 			if (Data && Data->IsValid())
 				Result = true;
 
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			return Result;
 		}

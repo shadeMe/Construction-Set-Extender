@@ -209,7 +209,7 @@ namespace ConstructionSetExtender
 							CallingObjectIsRef = false;
 							RemoteScript = Script::NullScript;
 						}
-						NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+						NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 					}
 				}
 
@@ -466,7 +466,7 @@ namespace ConstructionSetExtender
 				ParentToken = "" + gcnew String(Data->ParentID);
 				ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
 			}
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			IntelliSenseItem^ Item = ISDB->LookupRemoteScriptVariable(ParentToken, MainToken);
 

@@ -38,7 +38,6 @@
 #include <intrin.h>
 #include <errno.h>
 #include <crtdefs.h>
-#include <malloc.h>
 
 // STL
 #include <cstdlib>

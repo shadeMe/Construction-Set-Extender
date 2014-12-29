@@ -666,7 +666,7 @@ namespace ConstructionSetExtender
 					}
 
 					TESFile* Plugin = Form->GetOverrideFile(-1);
-					FORMAT_STR(Buffer, "Current:%08X Next:%08X", Form->formID, (Plugin ? Plugin->fileHeader.nextFormID : _DATAHANDLER->nextFormID));
+					FORMAT_STR(Buffer, "Current FormID:%08X Next Available FormID:%08X", Form->formID, (Plugin ? Plugin->fileHeader.nextFormID : _DATAHANDLER->nextFormID));
 
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 									MAKEINTRESOURCE(IDD_TEXTEDIT),

@@ -73,6 +73,9 @@ namespace ComponentDLLInterface
 			const char*								(* GetPreprocessorBasePath)(void);
 			const char*								(* GetPreprocessorStandardPath)(void);
 			const char*								(* GetSnippetCachePath)(void);
+
+			ScriptVarRenameData*					(* AllocateVarRenameData)(UInt32 VarCount);
+			ScriptCompileData*						(* AllocateCompileData)(void);
 		};
 
 		class IUseInfoList
@@ -94,9 +97,11 @@ namespace ComponentDLLInterface
 		public:
 			void									(* InstantiateObjects)(TagBrowserInstantiationData* Data);
 			void									(* InitiateDragonDrop)(void);
+
+			TagBrowserInstantiationData*			(* AllocateInstantionData)(UInt32 FormCount);
 		};
 
-		void										(* DeleteNativeHeapPointer)(void* Pointer, bool IsArray);
+		void										(* DeleteInterOpData)(IDisposableData* Pointer, bool IsArray);
 
 		IEditorAPI									EditorAPI;
 		IScriptEditor								ScriptEditor;
@@ -108,8 +113,6 @@ namespace ComponentDLLInterface
 	class ScriptEditorInterface
 	{
 	public:
-		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
-
 		void										(* InitializeComponents)(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);
 
 		void										(* InstantiateEditor)(ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
@@ -125,8 +128,6 @@ namespace ComponentDLLInterface
 	class UseInfoListInterface
 	{
 	public:
-		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
-
 		void										(* InitializeComponents)(void);
 
 		void										(* ShowUseInfoListDialog)(const char* FilterString);
@@ -135,8 +136,6 @@ namespace ComponentDLLInterface
 	class BSAViewerInterface
 	{
 	public:
-		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
-
 		void										(* InitializeComponents)(void);
 
 		void										(* ShowBSAViewerDialog)(const char* WorkingDir, const char* ExtensionFilter, char* ReturnPathOut, UInt32 BufferSize);
@@ -145,8 +144,6 @@ namespace ComponentDLLInterface
 	class BatchEditorInterface
 	{
 	public:
-		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
-
 		void										(* InitializeComponents)(void);
 
 		bool										(* ShowBatchRefEditorDialog)(BatchRefData* Data);
@@ -155,8 +152,6 @@ namespace ComponentDLLInterface
 	class TagBrowserInterface
 	{
 	public:
-		void										(* DeleteManagedHeapPointer)(void* Pointer, bool IsArray);
-
 		void										(* InitializeComponents)(void);
 
 		void										(* ShowTagBrowserDialog)(HWND Parent);

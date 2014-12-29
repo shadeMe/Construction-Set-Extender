@@ -106,7 +106,7 @@ namespace ConstructionSetExtender
 			virtual ~WorkspaceContainer();
 
 			void												FlagDestruction(bool Destroying);
-			virtual Workspace^									InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript);
+			virtual Workspace^									InstantiateNewWorkspace(ComponentDLLInterface::ScriptData* InitScript);		// takes ownership of pointer
 			void												NavigateJumpStack(UInt32 AllocatedIndex, JumpStackNavigationDirection Direction);
 			void												JumpToWorkspace(UInt32 AllocatedIndex, String^ ScriptName);
 			virtual void										PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation Operation, List<Object^>^ Parameters);

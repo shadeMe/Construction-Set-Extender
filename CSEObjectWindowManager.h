@@ -12,7 +12,7 @@ namespace ConstructionSetExtender
 // handled elsewhere by the subclass
 #define WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA		(WM_USER + 2403)
 
-	// this implementation isn't without it's share of bugs
+	// this implementation isn't without its share of bugs
 	// most of them are related to form creation, control updates, i.e., failed sorting
 	// hence we pick up the slack whenever necessary
 	class ObjectWindowManager

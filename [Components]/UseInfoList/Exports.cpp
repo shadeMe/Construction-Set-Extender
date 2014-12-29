@@ -26,7 +26,6 @@ void ShowUseInfoListDialog(const char* FilterString)
 
 ComponentDLLInterface::UseInfoListInterface g_InteropInterface =
 {
-	DeleteManagedHeapPointer,
 	InitializeComponents,
 	ShowUseInfoListDialog
 };

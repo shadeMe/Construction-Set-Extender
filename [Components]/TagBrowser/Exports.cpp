@@ -50,7 +50,6 @@ bool GetDragOpInProgress()
 
 ComponentDLLInterface::TagBrowserInterface g_InteropInterface =
 {
-	DeleteManagedHeapPointer,
 	InitializeComponents,
 	ShowTagBrowserDialog,
 	HideTagBrowserDialog,

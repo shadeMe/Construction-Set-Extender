@@ -216,14 +216,11 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE_MESSAGE("Initializing ScriptEditor");
 		BGSEECONSOLE->Indent();
 
-		ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollectionData = new ComponentDLLInterface::IntelliSenseUpdateData();
-		GMSTCollectionData->GMSTCount = GameSettingCollection::Instance->GetGMSTCount();
-		GMSTCollectionData->GMSTListHead = new ComponentDLLInterface::GMSTData[GMSTCollectionData->GMSTCount];
-
-		GameSettingCollection::Instance->SerializeGMSTDataForHandShake(GMSTCollectionData->GMSTListHead);
-		CLIWrapper::Interfaces::SE->InitializeComponents(&XSECommandTableData, GMSTCollectionData);
-
-		delete GMSTCollectionData;
+		ComponentDLLInterface::IntelliSenseUpdateData GMSTCollectionData;
+		GMSTCollectionData.GMSTCount = GameSettingCollection::Instance->GetGMSTCount();
+		GMSTCollectionData.GMSTListHead = new ComponentDLLInterface::GMSTData[GMSTCollectionData.GMSTCount];
+		GameSettingCollection::Instance->SerializeGMSTDataForHandShake(GMSTCollectionData.GMSTListHead);
+		CLIWrapper::Interfaces::SE->InitializeComponents(&XSECommandTableData, &GMSTCollectionData);
 
 		BGSEECONSOLE->Indent();
 		BGSEECONSOLE_MESSAGE("Bound %d developer URLs", CSEInterfaceManager::Instance.ConsumeIntelliSenseInterface());
@@ -428,6 +425,13 @@ namespace ConstructionSetExtender
 		delete CSIOM;
 		BGSEECONSOLE->Exdent();
 
+#ifndef NDEBUG
+		BGSEECONSOLE_MESSAGE("Performing Diagnostics...");
+		BGSEECONSOLE->Indent();
+		ComponentDLLInterface::DumpInstanceCounters();
+		BGSEECONSOLE->Exdent();
+#endif
+
 		return true;
 	}
 
@@ -616,7 +620,7 @@ extern "C"
 		}
 
 		SME::MersenneTwister::init_genrand(GetTickCount());
-		if (SME::MersenneTwister::genrand_real1() < 0.15)
+		if (SME::MersenneTwister::genrand_real1() < 0.1)
 			IsWarholAGenius = true;
 
 		BGSEditorExtender::INISettingDepotT CSEINISettings;

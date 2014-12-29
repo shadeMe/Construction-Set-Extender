@@ -191,7 +191,7 @@ namespace ConstructionSetExtender
 							BadItems = true;
 							DebugPrint("Couldn't find form '" + Token + "'");
 						}
-						NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+						NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 					}
 				}
 			}
@@ -469,19 +469,18 @@ namespace ConstructionSetExtender
 				IntPtr Window = NativeWrapper::WindowFromPoint(E->Location);
 				if (Window != GetFormListHandle() && Window != GetWindowHandle())
 				{
-					ComponentDLLInterface::TagBrowserInstantiationData InteropData;
-					ComponentDLLInterface::FormData* Data = InteropData.FormListHead = new ComponentDLLInterface::FormData[FormList->SelectedItems->Count];
-					InteropData.FormCount = FormList->SelectedItems->Count;
-					InteropData.InsertionPoint = E->Location;
+					ComponentDLLInterface::TagBrowserInstantiationData* InteropData = NativeWrapper::g_CSEInterfaceTable->TagBrowser.AllocateInstantionData(FormList->SelectedItems->Count);
+					InteropData->InsertionPoint = E->Location;
 
 					UInt32 Index = 0;
 					for each (ListViewItem^ Itr in FormList->SelectedItems)
 					{
-						Data[Index].FormID = UInt32::Parse(Itr->SubItems[1]->Text, Globalization::NumberStyles::HexNumber);
+						InteropData->FormListHead[Index].FormID = UInt32::Parse(Itr->SubItems[1]->Text, Globalization::NumberStyles::HexNumber);
 						Index++;
 					}
 
-					NativeWrapper::g_CSEInterfaceTable->TagBrowser.InstantiateObjects(&InteropData);
+					NativeWrapper::g_CSEInterfaceTable->TagBrowser.InstantiateObjects(InteropData);
+					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData, false);
 				}
 			}
 			else
@@ -720,7 +719,7 @@ namespace ConstructionSetExtender
 					BadItems = true;
 					DebugPrint("Couldn't find form '" + Itr + "'");
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 
 			FormList->EndUpdate();

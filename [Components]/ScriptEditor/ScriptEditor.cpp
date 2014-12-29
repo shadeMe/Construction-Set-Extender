@@ -1562,7 +1562,7 @@ namespace ConstructionSetExtender
 			else
 				CurrentScript = 0;
 
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(InitScript, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InitScript, false);
 		}
 
 		Workspace::~Workspace()
@@ -2373,7 +2373,7 @@ namespace ConstructionSetExtender
 					Result = false;
 				}
 			}
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			if (MessageList->Items->Count && MessageList->Visible == false)
 				ToolBarMessageList->PerformClick();
@@ -2746,7 +2746,7 @@ namespace ConstructionSetExtender
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript();
 				UpdateEnvironment(Data, true);
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				NewScriptFlag = true;
 				SetModifiedStatus(true);
@@ -2760,7 +2760,7 @@ namespace ConstructionSetExtender
 			{
 				UpdateEnvironment(Data, true);
 			}
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
 		bool Workspace::SaveScript(ScriptSaveOperation Operation)
 		{
@@ -2781,16 +2781,16 @@ namespace ConstructionSetExtender
 												"This is an uncompiled script. Expect weird behavior during runtime execution.");
 					}
 
-					ComponentDLLInterface::ScriptCompileData CompileData;
+					ComponentDLLInterface::ScriptCompileData* CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
 
 					CString ScriptText(PreprocessedScriptResult->Replace("\n", "\r\n"));
-					CompileData.Script.Text = ScriptText.c_str();
-					CompileData.Script.Type = (int)GetScriptType();
-					CompileData.Script.ParentForm = (TESForm*)CurrentScript;
+					CompileData->Script.Text = ScriptText.c_str();
+					CompileData->Script.Type = (int)GetScriptType();
+					CompileData->Script.ParentForm = (TESForm*)CurrentScript;
 
-					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(&CompileData))
+					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
 					{
-						UpdateEnvironment(&CompileData.Script, false);
+						UpdateEnvironment(&CompileData->Script, false);
 
 						String^ OriginalText = GetScriptText() + SerializeCSEBlock();
 						CString OrgScriptText(OriginalText);
@@ -2799,20 +2799,20 @@ namespace ConstructionSetExtender
 					}
 					else
 					{
-						for (int i = 0; i < CompileData.CompileErrorData.Count; i++)
+						for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
 						{
 							AddMessageToMessagePool(MessageListItemType::e_Error,
-								CompileData.CompileErrorData.ErrorListHead[i].Line,
-								gcnew String(CompileData.CompileErrorData.ErrorListHead[i].Message));
+								CompileData->CompileErrorData.ErrorListHead[i].Line,
+								gcnew String(CompileData->CompileErrorData.ErrorListHead[i].Message));
 						}
-
-						NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(CompileData.CompileErrorData.ErrorListHead, true);
 					}
 
 					if (Operation == ScriptSaveOperation::e_SaveButDontCompile)
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
 					else if (Operation == ScriptSaveOperation::e_SaveActivePluginToo)
 						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
+
+					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
 				}
 				else
 					Result = true;
@@ -2835,7 +2835,7 @@ namespace ConstructionSetExtender
 				{
 					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(Data->EditorID);
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}
 		void Workspace::RecompileScripts()
@@ -2861,7 +2861,7 @@ namespace ConstructionSetExtender
 				{
 					UpdateEnvironment(Data, true);
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}
 		void Workspace::NextScript()
@@ -2873,7 +2873,7 @@ namespace ConstructionSetExtender
 				{
 					UpdateEnvironment(Data, true);
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}
 		void Workspace::CloseScript()
@@ -3013,7 +3013,7 @@ namespace ConstructionSetExtender
 					ParentContainer->JumpToWorkspace(WorkspaceHandleIndex, gcnew String(Data->EditorID));
 				}
 
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}
 
@@ -3315,7 +3315,7 @@ namespace ConstructionSetExtender
 			else
 				ContextMenuJumpToScript->Visible = false;
 
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			ContextMenuRefactorCreateUDFImplementation->Visible = false;
 			if (ScriptParser::GetTokenType(Tokens[0]) == ScriptParser::TokenType::e_Call &&
@@ -3434,7 +3434,7 @@ namespace ConstructionSetExtender
 		void Workspace::ContextMenuOpenImportFile_Click(Object^ Sender, EventArgs^ E)
 		{
 			Process::Start(dynamic_cast<String^>(ContextMenuOpenImportFile->Tag));
-		}		
+		}
 		void Workspace::ContextMenuRefactorAddVariable_Click( Object^ Sender, EventArgs^ E )
 		{
 			ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
@@ -3608,7 +3608,6 @@ namespace ConstructionSetExtender
 			{
 				List<CString^>^ StringAllocations = gcnew List<CString^>();
 				List<Refactoring::EditScriptComponentData::ScriptComponent^>^ RenameEntries = gcnew List<Refactoring::EditScriptComponentData::ScriptComponent^>();
-				ComponentDLLInterface::ScriptVarRenameData RenameData;
 
 				for each (Refactoring::EditScriptComponentData::ScriptComponent^ Itr in RenameVariablesData.ResultData->ScriptComponentList)
 				{
@@ -3618,12 +3617,11 @@ namespace ConstructionSetExtender
 
 				if (RenameEntries->Count)
 				{
-					RenameData.ScriptVarListCount = RenameEntries->Count;
-					RenameData.ScriptVarListHead = new ComponentDLLInterface::ScriptVarRenameData::ScriptVarInfo[RenameData.ScriptVarListCount];
+					ComponentDLLInterface::ScriptVarRenameData* RenameData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateVarRenameData(RenameEntries->Count);
 
-					for (int i = 0; i < RenameData.ScriptVarListCount; i++)
+					for (int i = 0; i < RenameData->ScriptVarListCount; i++)
 					{
-						ComponentDLLInterface::ScriptVarRenameData::ScriptVarInfo* Data = &RenameData.ScriptVarListHead[i];
+						ComponentDLLInterface::ScriptVarRenameData::ScriptVarInfo* Data = &RenameData->ScriptVarListHead[i];
 						CString^ OldID = gcnew CString(RenameEntries[i]->ElementName);
 						CString^ NewID = gcnew CString(RenameEntries[i]->EditData);
 
@@ -3635,7 +3633,7 @@ namespace ConstructionSetExtender
 					}
 
 					CString CEID(CurrentScriptEditorID);
-					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), &RenameData);
+					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), RenameData);
 
 					MessageBox::Show("Variables have been renamed. Scripts referencing them (current script included) will have to be manually updated with the new identifiers.",
 									SCRIPTEDITOR_TITLE,
@@ -3644,6 +3642,8 @@ namespace ConstructionSetExtender
 
 					for each (CString^ Itr in StringAllocations)
 						delete Itr;
+
+					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(RenameData, false);
 				}
 
 				StringAllocations->Clear();

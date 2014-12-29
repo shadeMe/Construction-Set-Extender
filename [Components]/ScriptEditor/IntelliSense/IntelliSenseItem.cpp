@@ -315,7 +315,7 @@ namespace ConstructionSetExtender
 				if (ScriptableData && ScriptableData->IsValid())
 					ScriptDescription += "\nScript: " + gcnew String(ScriptableData->EditorID);
 
-				NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(ScriptableData, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptableData, false);
 			}
 
 			this->Description = Name +

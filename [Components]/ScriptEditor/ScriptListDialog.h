@@ -74,7 +74,7 @@ namespace ConstructionSetExtender
 				ScriptListDialog::Destroy();
 			}
 
-			virtual ComponentDLLInterface::ScriptData*			Show(Operation Op, String^ FilterString);
+			virtual ComponentDLLInterface::ScriptData*			Show(Operation Op, String^ FilterString);		// caller takes ownership of pointer
 		};
 	}
 }

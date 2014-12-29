@@ -947,7 +947,7 @@ namespace ConstructionSetExtender
 		GlobalList->EndUpdate();
 		FactionList->EndUpdate();
 
-		NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 	}
 
 	bool RefBatchEditor::InitializeBatchEditor(BatchRefData* Data)
@@ -1149,6 +1149,6 @@ namespace ConstructionSetExtender
 		else
 			SetParent->Text = "Set Parent to NONE";
 
-		NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 	}
 }

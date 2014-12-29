@@ -13,7 +13,17 @@ typedef int HWND;
 
 namespace ComponentDLLInterface
 {
-	struct FormData
+	void DumpInstanceCounters(void);
+
+	class IDisposableData
+	{
+	public:
+		virtual ~IDisposableData() = 0
+		{
+			;//
+		}
+	};
+	struct FormData : public IDisposableData
 	{
 		const char*										EditorID;
 		UInt32											FormID;
@@ -24,25 +34,20 @@ namespace ComponentDLLInterface
 		virtual bool									IsValid() { return (EditorID) ? true : false; }
 		void											FillFormData(TESForm* Form);
 
-		FormData() : EditorID(0), FormID(0), TypeID(0), Flags(0), ParentForm(0) {}
-		FormData(TESForm* Parent)
-		{
-			FillFormData(Parent);
-		}
+		FormData();
+		FormData(TESForm* Parent);
+		virtual ~FormData();
 
 		bool											IsActive() { return ((Flags >> 1) & 1); }
 	};
 
-	struct FormListData
+	struct FormListData : public IDisposableData
 	{
 		FormData*										FormListHead;
 		UInt32											FormCount;
 
-		FormListData() : FormListHead(0), FormCount(0) {}
-		~FormListData()
-		{
-			delete [] FormListHead;
-		}
+		FormListData();
+		virtual ~FormListData();
 	};
 
 	struct ScriptData : public FormData
@@ -65,27 +70,18 @@ namespace ComponentDLLInterface
 
 		void											FillScriptData(Script* Form);
 
-		ScriptData() : FormData(), Text(0), Type(0), ModifiedFlag(0), ByteCode(0), Length(0), ParentID(0), UDF(false), Compiled(false) {}
-		ScriptData(Script* Parent)
-		{
-			FillScriptData(Parent);
-		}
+		ScriptData();
+		ScriptData(Script* Parent);
+		virtual ~ScriptData();
 	};
 
-	struct ScriptListData
+	struct ScriptListData : public IDisposableData
 	{
 		ScriptData*										ScriptListHead;
 		UInt32											ScriptCount;
 
-		ScriptListData()
-		{
-			ScriptListHead = 0;
-			ScriptCount = 0;
-		}
-		~ScriptListData()
-		{
-			delete [] ScriptListHead;
-		}
+		ScriptListData();
+		virtual ~ScriptListData();
 	};
 
 	struct QuestData : public FormData
@@ -93,11 +89,8 @@ namespace ComponentDLLInterface
 		const char*										FullName;
 		const char*										ScriptName;
 
-		QuestData() : FormData()
-		{
-			FullName = 0;
-			ScriptName = 0;
-		}
+		QuestData();
+		virtual ~QuestData();
 	};
 
 	struct VariableData : public FormData
@@ -114,16 +107,14 @@ namespace ComponentDLLInterface
 		void											FillVariableData(const char* VariableName);
 		void											FillVariableData(TESGlobal* Global);
 
-		VariableData() : FormData()
-		{
-			Type = 0;
-		}
+		VariableData();
+		virtual ~VariableData();
 	};
 
 	typedef VariableData GlobalData;
 	typedef VariableData GMSTData;
 
-	struct IntelliSenseUpdateData
+	struct IntelliSenseUpdateData : public IDisposableData
 	{
 		ScriptData*										ScriptListHead;
 		UInt32											ScriptCount;
@@ -140,35 +131,11 @@ namespace ComponentDLLInterface
 		FormData*										EditorIDListHead;
 		UInt32											EditorIDCount;
 
-		IntelliSenseUpdateData()
-		{
-			ScriptListHead = 0;
-			ScriptCount = 0;
-
-			QuestListHead = 0;
-			QuestCount = 0;
-
-			GlobalListHead = 0;
-			GlobalCount = 0;
-
-			GMSTListHead = 0;
-			GMSTCount = 0;
-
-			EditorIDListHead = 0;
-			EditorIDCount = 0;
-		}
-
-		~IntelliSenseUpdateData()
-		{
-			delete [] ScriptListHead;
-			delete [] QuestListHead;
-			delete [] GlobalListHead;
-			delete [] GMSTListHead;
-			delete [] EditorIDListHead;
-		}
+		IntelliSenseUpdateData();
+		virtual ~IntelliSenseUpdateData();
 	};
 
-	struct ScriptVarListData
+	struct ScriptVarListData : public IDisposableData
 	{
 		struct ScriptVarInfo
 		{
@@ -180,19 +147,11 @@ namespace ComponentDLLInterface
 		ScriptVarInfo*									ScriptVarListHead;
 		UInt32											ScriptVarListCount;
 
-		ScriptVarListData()
-		{
-			ScriptVarListHead = 0;
-			ScriptVarListCount = 0;
-		}
-
-		~ScriptVarListData()
-		{
-			delete [] ScriptVarListHead;
-		}
+		ScriptVarListData();
+		virtual ~ScriptVarListData();
 	};
 
-	struct ScriptErrorListData
+	struct ScriptErrorListData : public IDisposableData
 	{
 		struct ErrorData
 		{
@@ -203,22 +162,22 @@ namespace ComponentDLLInterface
 		ErrorData*										ErrorListHead;
 		UInt32											Count;
 
-		ScriptErrorListData()
-		{
-			ErrorListHead = 0;
-			Count = 0;
-		}
+		ScriptErrorListData();
+		virtual ~ScriptErrorListData();
 	};
 
-	struct ScriptCompileData
+	struct ScriptCompileData : public IDisposableData
 	{
 		ScriptData										Script;			// callee updates the member after a successful compile op
 
 		bool											CompileResult;
 		ScriptErrorListData								CompileErrorData;
+
+		ScriptCompileData();
+		virtual ~ScriptCompileData();
 	};
 
-	struct ScriptVarRenameData
+	struct ScriptVarRenameData : public IDisposableData
 	{
 		struct ScriptVarInfo
 		{
@@ -230,17 +189,8 @@ namespace ComponentDLLInterface
 		ScriptVarInfo*									ScriptVarListHead;
 		UInt32											ScriptVarListCount;
 
-		ScriptVarRenameData()
-		{
-			ParentScriptID = 0;
-			ScriptVarListHead = 0;
-			ScriptVarListCount = 0;
-		}
-
-		~ScriptVarRenameData()
-		{
-			delete [] ScriptVarListHead;
-		}
+		ScriptVarRenameData();
+		virtual ~ScriptVarRenameData();
 	};
 
 	struct ObScriptCommandInfo
@@ -299,32 +249,17 @@ namespace ComponentDLLInterface
 		int												YCoord;
 		UInt32											UseCount;
 
-		UseInfoListCellItemData() : FormData()
-		{
-			WorldEditorID = 0;
-			RefEditorID = 0;
-			RefFormID = 0;
-			XCoord = 0;
-			YCoord = 0;
-			UseCount = 0;
-		}
+		UseInfoListCellItemData();
+		virtual ~UseInfoListCellItemData();
 	};
 
-	struct UseInfoListCellItemListData
+	struct UseInfoListCellItemListData : public IDisposableData
 	{
 		UseInfoListCellItemData*						UseInfoListCellItemListHead;
 		UInt32											UseInfoListCellItemListCount;
 
-		UseInfoListCellItemListData()
-		{
-			UseInfoListCellItemListHead = 0;
-			UseInfoListCellItemListCount = 0;
-		}
-
-		~UseInfoListCellItemListData()
-		{
-			delete [] UseInfoListCellItemListHead;
-		}
+		UseInfoListCellItemListData();
+		virtual ~UseInfoListCellItemListData();
 	};
 
 	struct CellObjectData : public FormData
@@ -333,15 +268,13 @@ namespace ComponentDLLInterface
 
 		bool											IsValid() { return (FormID) ? true : false; }
 
-		CellObjectData() : FormData()
-		{
-			Selected = false;
-		}
+		CellObjectData();
+		virtual ~CellObjectData();
 	};
 
 	typedef FormListData BatchRefOwnerFormData;
 
-	struct BatchRefData
+	struct BatchRefData : public IDisposableData
 	{
 		CellObjectData*									CellObjectListHead;
 		UInt32											ObjectCount;
@@ -506,19 +439,11 @@ namespace ComponentDLLInterface
 		_EnableParent									EnableParent;
 		_Ownership										Ownership;
 
-		BatchRefData()
-		{
-			CellObjectListHead = 0;
-			ObjectCount = 0;
-		}
-
-		~BatchRefData()
-		{
-			delete [] CellObjectListHead;
-		}
+		BatchRefData();
+		virtual ~BatchRefData();
 	};
 
-	struct TagBrowserInstantiationData
+	struct TagBrowserInstantiationData : public IDisposableData
 	{
 #ifdef CSE
 		POINT											InsertionPoint;
@@ -529,15 +454,7 @@ namespace ComponentDLLInterface
 		FormData*										FormListHead;
 		UInt32											FormCount;
 
-		TagBrowserInstantiationData()
-		{
-			FormListHead = 0;
-			FormCount = 0;
-		}
-
-		~TagBrowserInstantiationData()
-		{
-			delete [] FormListHead;
-		}
+		TagBrowserInstantiationData();
+		virtual ~TagBrowserInstantiationData();
 	};
 }

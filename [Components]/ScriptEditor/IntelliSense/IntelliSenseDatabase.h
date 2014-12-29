@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 			bool												GetIsIdentifierUserFunction(String^% Name);
 			bool												GetIsIdentifierScriptCommand(String^% Name);
 			bool												GetIsIdentifierScriptableForm(String^% Name);
-			bool												GetIsIdentifierScriptableForm(String^% Name, ComponentDLLInterface::ScriptData** OutScriptData);
+			bool												GetIsIdentifierScriptableForm(String^% Name, ComponentDLLInterface::ScriptData** OutScriptData);	// caller takes ownership of pointer
 			bool												GetIsIdentifierForm(String^% Name);
 
 			void												ForceUpdateDatabase();

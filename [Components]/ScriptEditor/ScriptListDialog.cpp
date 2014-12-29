@@ -201,7 +201,7 @@ namespace ConstructionSetExtender
 			PreviewBox->Text = "";
 			SearchBox->Text = "";
 			ScriptList->MultiSelect = false;
-			NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(ScriptListCache, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptListCache, false);
 			ScriptListCache = 0;
 			LastKnownSize = ScriptBox->ClientSize;
 		}

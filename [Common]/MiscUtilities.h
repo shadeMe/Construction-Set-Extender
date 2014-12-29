@@ -57,7 +57,6 @@ namespace ConstructionSetExtender
 		};
 	};
 
-	void									DeleteManagedHeapPointer(void* Pointer, bool IsArray);
 	void									CopyStringToCharBuffer(String^% Source, char* Buffer, UInt32 Size);
 
 	namespace Log

@@ -25,7 +25,6 @@ bool ShowBatchRefEditorDialog(BatchRefData* Data)
 
 ComponentDLLInterface::BatchEditorInterface g_InteropInterface =
 {
-	DeleteManagedHeapPointer,
 	InitializeComponents,
 	ShowBatchRefEditorDialog
 };

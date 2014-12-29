@@ -14,19 +14,21 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
-		> File browser for idle anims hangs up
-			>> Can't reproduce; Possible solutions:
-				Filter string could have an extra null byte in the end
-				http://www.progtown.com/topic1043045-getopenfilename-hangs-up-a-program.html
-				http://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/545f1ada-0ff1-4263-a611-2a71f2703d05/getopenfilename-hangs-up-if-app-is-compiled-with-large-stack-reserve?forum=windowsuidevelopment
+		> Fix batch editor handling (use full cell grid and the correct Object refr commands for pos/rot/scale)
+		> Critical section crash @ 0x0070C682 (can only occur at the time of process termination)
+			>> The CS' dtor thunk gets called before the static NiDevImageConverter instance's thunk
 		> Dynamic channels in the Renderwindowpainter have timer issues (text zips by randomly)
 		> Fix the global clipboard's to correctly paste refs in place in exteriors
 		> Partial black tex hasn't been fixed yet
-		> Look into the activator bug at 0x00511D8C; need to get working repro steps.
+		> Look into the activator bug at 0x00511D8C
+			>> Need to get working repro steps.
 		> Fix memory leak in local map generator
 
 
 	ENHANCEMENT		=
+		> INI toggle for the splash screen, auto elevation of duplicated refs
+		> On the fly adjustment of zoom sensitivity
+		> Cross-references for script effects (enumerate them by walking magic items)
 		> Multiple preview windows
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
@@ -49,7 +51,8 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> IntelliSense interface displays command aliases
+		> IntelliSense interface parses command aliases at lookup time
+		> Update AvalonEdit (and update license to MIT)
 
 	MISC			=
 

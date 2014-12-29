@@ -272,7 +272,7 @@ namespace ConstructionSetExtender
 				FormList->Items->Add(Item);
 			}
 		}
-		NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		FormList->EndUpdate();
 	}
 
@@ -309,12 +309,12 @@ namespace ConstructionSetExtender
 				UseListObject->Items->Add(Item);
 			}
 		}
-		NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		UseListObject->EndUpdate();
 
 		UseListCell->BeginUpdate();
 		ComponentDLLInterface::UseInfoListCellItemListData* DataEx = NativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCellRefDataForForm(EditorID);
-		if (Data)
+		if (DataEx)
 		{
 			for (int i = 0; i < DataEx->UseInfoListCellItemListCount; i++)
 			{
@@ -340,7 +340,7 @@ namespace ConstructionSetExtender
 				UseListCell->Items->Add(Item);
 			}
 		}
-		NativeWrapper::g_CSEInterfaceTable->DeleteNativeHeapPointer(Data, false);
+		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(DataEx, false);
 		UseListCell->EndUpdate();
 	}
 

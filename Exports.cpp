@@ -23,7 +23,7 @@ extern "C"
 	}
 }
 
-void DeleteNativeHeapPointer( void* Pointer, bool IsArray )
+void DeleteInterOpData(IDisposableData* Pointer, bool IsArray)
 {
 	if (IsArray)
 		delete [] Pointer;
@@ -977,6 +977,22 @@ const char* GetSnippetCachePath(void)
 	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)();
 	return kBuffer.c_str();
 }
+
+ScriptVarRenameData* AllocateVarRenameData(UInt32 VarCount)
+{
+	ScriptVarRenameData* Data = new ScriptVarRenameData();
+	Data->ScriptVarListHead = new ScriptVarRenameData::ScriptVarInfo[VarCount];
+	Data->ScriptVarListCount = VarCount;
+
+	return Data;
+}
+
+ScriptCompileData* AllocateCompileData(void)
+{
+	ScriptCompileData* Data = new ScriptCompileData();
+	return Data;
+}
+
 #pragma endregion
 /**** END SCRIPTEDITOR SUBINTERFACE ****/
 
@@ -1228,12 +1244,21 @@ void InitiateDragonDrop(void)
 
 	_RENDERSEL->ClearSelection();
 }
+
+TagBrowserInstantiationData* AllocateInstantionData(UInt32 FormCount)
+{
+	ComponentDLLInterface::TagBrowserInstantiationData* Data = new ComponentDLLInterface::TagBrowserInstantiationData();
+	Data->FormCount = FormCount;
+	Data->FormListHead = new FormData[FormCount];
+
+	return Data;
+}
 #pragma endregion
 /**** END TAGBROWSER SUBINTERFACE ****/
 
 ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 {
-	DeleteNativeHeapPointer,
+	DeleteInterOpData,
 	{
 		ComponentDLLDebugPrint,
 		WriteToStatusBar,
@@ -1280,6 +1305,8 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		GetPreprocessorBasePath,
 		GetPreprocessorStandardPath,
 		GetSnippetCachePath,
+		AllocateVarRenameData,
+		AllocateCompileData,
 	},
 	{
 		GetLoadedForms,
@@ -1292,5 +1319,6 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 	{
 		InstantiateObjects,
 		InitiateDragonDrop,
+		AllocateInstantionData,
 	}
 };

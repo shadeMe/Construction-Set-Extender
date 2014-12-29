@@ -125,7 +125,6 @@ bool PreprocessScript(const char* ScriptText, char* OutPreprocessed, UInt32 Buff
 	return OperationResult;
 }
 
-
 void Deinitalize(void)
 {
 	try
@@ -145,7 +144,6 @@ void Deinitalize(void)
 
 ComponentDLLInterface::ScriptEditorInterface g_InteropInterface =
 {
-	DeleteManagedHeapPointer,
 	InitializeComponents,
 	InstantiateEditor,
 	AddScriptCommandDeveloperURL,
