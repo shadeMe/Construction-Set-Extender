@@ -15,21 +15,16 @@ namespace ConstructionSetExtender
 	// this implementation isn't without its share of bugs
 	// most of them are related to form creation, control updates, i.e., failed sorting
 	// hence we pick up the slack whenever necessary
-	class ObjectWindowManager
+	class ObjectWindowImposterManager
 	{
-		static INT_PTR CALLBACK						ObjectWindowImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static INT_PTR CALLBACK						ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		struct ImposterData
 		{
 			UInt32				TreeSelection;			// last selected tree node
 			int					SortColumns[TESObjectWindow::TreeEntryInfo::kTreeEntryCount];
 
-			ImposterData()
-			{
-				TreeSelection = 0;
-				for (int i = 0; i < TESObjectWindow::TreeEntryInfo::kTreeEntryCount; i++)
-					SortColumns[i] = 1;
-			}
+			ImposterData();
 		};
 
 		// stores the original values of the caches and restores them on destruction
@@ -57,8 +52,8 @@ namespace ConstructionSetExtender
 		void										DisposeImposter(HWND Imposter);
 		ImposterData*								GetImposterData(HWND Imposter) const;
 	public:
-		ObjectWindowManager();
-		~ObjectWindowManager();
+		ObjectWindowImposterManager();
+		~ObjectWindowImposterManager();
 
 		void										SpawnImposter(void);
 		void										RefreshImposters(void) const;
@@ -67,6 +62,57 @@ namespace ConstructionSetExtender
 		void										HandleObjectWindowSizing(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
 		void										HandleObjectWindowActivating(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const;
 
-		static ObjectWindowManager					Instance;
+		static ObjectWindowImposterManager			Instance;
+	};
+
+#define WM_PREVIEWWINDOWIMPOSTER_INITIALIZE			(WM_USER + 2405)
+
+	// same as above but for the preview window
+	class PreviewWindowImposterManager
+	{
+		static INT_PTR CALLBACK						ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+		struct ImposterData
+		{
+			DWORD						InitTickCount;
+			TESObjectREFR*				PreviewRef;
+			TESObjectSTAT*				PreviewGround;
+			TESPreviewControl*			Renderer;
+			RECT						Bounds;
+			TESBoundObject*				PreviewSource;
+
+			ImposterData();
+			~ImposterData();
+		};
+
+		class CacheOperator
+		{
+			HWND					MainWindow;
+			HWND					AnimationList;
+			DWORD					InitTicks;
+			TESObjectREFR*			PreviewRef;
+			TESObjectSTAT*			PreviewGround;
+			TESPreviewControl*		Renderer;
+
+			ImposterData*			ParentData;
+		public:
+			CacheOperator(HWND Imposter);
+			~CacheOperator();
+		};
+
+		typedef std::map<HWND, ImposterData*>		ImposterTableT;
+
+		ImposterTableT								ImposterRegistry;
+
+		void										DisposeImposter(HWND Imposter);
+		ImposterData*								GetImposterData(HWND Imposter) const;
+	public:
+		PreviewWindowImposterManager();
+		~PreviewWindowImposterManager();
+
+		void										SpawnImposter(TESBoundObject* Object);
+		void										DestroyImposters(void);
+
+		static PreviewWindowImposterManager			Instance;
 	};
 }

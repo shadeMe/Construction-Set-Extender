@@ -38,6 +38,7 @@ namespace ConstructionSetExtender
 			extern INISetting					kCrashHandlerMode;
 			extern INISetting					kFaceGenPreviewResponseWindow;
 			extern INISetting					kFaceGenPreviewVoiceDelay;
+			extern INISetting					kDisableSplashScreen;
 		}
 
 		namespace LOD
@@ -68,6 +69,7 @@ namespace ConstructionSetExtender
 			extern INISetting					kFixedCameraPivot;
 			extern INISetting					kCameraFOV;
 			extern INISetting					kExteriorSnapshotResolution;
+			extern INISetting					kZOffsetDuplicatedRefs;
 		}
 
 		namespace RenderWindowPainter

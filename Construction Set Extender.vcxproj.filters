@@ -293,7 +293,7 @@
     <ClCompile Include="EditorAPI\Setting.cpp">
       <Filter>EditorAPI\System\Settings</Filter>
     </ClCompile>
-    <ClCompile Include="CSEObjectWindowManager.cpp">
+    <ClCompile Include="CSEDialogImposterManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
@@ -732,7 +732,7 @@
     <ClInclude Include="CSERenderSelectionGroupManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEObjectWindowManager.h">
+    <ClInclude Include="CSEDialogImposterManager.h">
       <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>

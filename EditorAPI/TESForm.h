@@ -194,6 +194,7 @@ public:
 	void							RemoveCrossReference(TESForm* Form);
 	FormCrossReferenceListT*		GetCrossReferenceList(bool CreateNew = true);
 	void							CleanupCrossReferenceList();
+	void							PopulateCrossReferenceListView(HWND ListView);
 
 	bool							UpdateUsageInfo();
 	void							SetFromActiveFile(bool State);

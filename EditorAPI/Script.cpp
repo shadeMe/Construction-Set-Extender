@@ -80,3 +80,37 @@ void TESScriptCompiler::ToggleScriptCompilation( bool State )
 	else
 		Hooks::_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
 }
+
+UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefListT& OutList)
+{
+	OutList.clear();
+
+	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+	{
+		UInt32 FormID = NULL;
+		TESForm* Form = NULL;
+
+		TESForm::FormIDMap->GetNext(Itr, FormID, Form);
+		if (FormID && Form)
+		{
+			if (Form->formType == TESForm::kFormType_SigilStone ||
+				Form->formType == TESForm::kFormType_Enchantment ||
+				Form->formType == TESForm::kFormType_AlchemyItem ||
+				Form->formType == TESForm::kFormType_Spell)
+			{
+				MagicItem* Item = CS_CAST(Form, TESForm, MagicItem);
+				if (Item)
+				{
+					for (EffectItemList::EffectItemListT::Iterator Itr = Item->effects.Begin(); Itr.Get() && !Itr.End(); ++Itr)
+					{
+						EffectItem* Current = Itr.Get();
+						if (Current->scriptInfo && Current->scriptInfo->scriptFormID == this->formID)
+							OutList.push_back(Form);
+					}
+				}
+			}
+		}
+	}
+
+	return OutList.size();
+}

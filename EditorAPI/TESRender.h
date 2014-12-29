@@ -92,6 +92,8 @@ public:
 #define _NIRENDERER				(*TESRender::NiRendererSingleton)
 #define _PRIMARYRENDERER		(*TESRender::PrimaryRenderer::Singleton)
 
+typedef std::vector<TESObjectREFR*>		CellObjectListT;
+
 // container class, arbitrarily named
 class TESRenderWindow
 {
@@ -171,6 +173,7 @@ public:
 	static void							Redraw(bool RefreshPathGrid = false);
 	static void							Refresh3D();
 	static void							TogglePathGridEditMode();
+	static UInt32						GetActiveCellObjects(CellObjectListT& OutList);		// enumerates refs in the current interior/exterior grid and returns the count
 
 	static HWND*						WindowHandle;
 	static TESRenderSelection**			ClipboardSelection;
@@ -183,7 +186,7 @@ public:
 	static UInt8*						PathGridEditFlag;
 	static UInt8*						LandscapeEditFlag;
 
-	static TESObjectCELL**				CurrentlyLoadedExteriorCell;
+	static TESObjectCELL**				ActiveCell;						// points to the current interior cell or the exterior cell at the camera's position
 	static TESLandTexture**				ActiveLandscapeTexture;
 
 	static float*						RefMovementSpeed;
@@ -248,6 +251,8 @@ public:
 		/*04*/ float			renderTargetWidth;
 		/*08*/ float			renderTargetHeight;
 	};
+
+	enum { kPreviewOutputCtrlID = 2175 };
 
 	// members
 	//*00*/ void**					vtbl;

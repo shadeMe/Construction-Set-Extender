@@ -1,14 +1,14 @@
-#include "CSEObjectWindowManager.h"
+#include "CSEDialogImposterManager.h"
 #include "CSEUIManager.h"
 #include "CSEHallOfFame.h"
 
 namespace ConstructionSetExtender
 {
-	ObjectWindowManager					ObjectWindowManager::Instance;
+	ObjectWindowImposterManager					ObjectWindowImposterManager::Instance;
 
 #define ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID			0x656
 
-	INT_PTR CALLBACK ObjectWindowManager::ObjectWindowImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	INT_PTR CALLBACK ObjectWindowImposterManager::ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 		HWND FormList = GetDlgItem(hWnd, TESObjectWindow::kFormListCtrlID);
@@ -80,13 +80,13 @@ namespace ConstructionSetExtender
 				break;
 			}
 		case WM_ACTIVATE:
-			ObjectWindowManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
+			ObjectWindowImposterManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
 
 			DlgProcResult = TRUE;
 			break;
 		case WM_CLOSE:
 			// destroy window
-			ObjectWindowManager::Instance.DisposeImposter(hWnd);
+			ObjectWindowImposterManager::Instance.DisposeImposter(hWnd);
 
 			DlgProcResult = TRUE;
 			break;
@@ -136,7 +136,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 		case WM_SIZE:
-			ObjectWindowManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
+			ObjectWindowImposterManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
 
 			DlgProcResult = TRUE;
 			break;
@@ -161,11 +161,18 @@ namespace ConstructionSetExtender
 		return DlgProcResult;
 	}
 
-	ObjectWindowManager::CacheOperator::CacheOperator(HWND Imposter) :
+	ObjectWindowImposterManager::ImposterData::ImposterData()
+	{
+		TreeSelection = 0;
+		for (int i = 0; i < TESObjectWindow::TreeEntryInfo::kTreeEntryCount; i++)
+			SortColumns[i] = 1;
+	}
+
+	ObjectWindowImposterManager::CacheOperator::CacheOperator(HWND Imposter) :
 		ParentData(NULL)
 	{
 		SME_ASSERT(Imposter);
-		ParentData = ObjectWindowManager::Instance.GetImposterData(Imposter);
+		ParentData = ObjectWindowImposterManager::Instance.GetImposterData(Imposter);
 		SME_ASSERT(ParentData);
 
 		MainWindow = *TESObjectWindow::WindowHandle;
@@ -183,7 +190,7 @@ namespace ConstructionSetExtender
 		memcpy(TESObjectWindow::SortColumnArray, ParentData->SortColumns, sizeof(ParentData->SortColumns));
 	}
 
-	ObjectWindowManager::CacheOperator::~CacheOperator()
+	ObjectWindowImposterManager::CacheOperator::~CacheOperator()
 	{
 		*TESObjectWindow::WindowHandle = MainWindow;
 		*TESObjectWindow::FormListHandle = FormList;
@@ -198,7 +205,7 @@ namespace ConstructionSetExtender
 		memcpy(TESObjectWindow::SortColumnArray, SortColumns, sizeof(SortColumns));
 	}
 
-	void ObjectWindowManager::DisposeImposter(HWND Imposter)
+	void ObjectWindowImposterManager::DisposeImposter(HWND Imposter)
 	{
 		if (ImposterRegistry.count(Imposter))
 		{
@@ -210,7 +217,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	ObjectWindowManager::ImposterData* ObjectWindowManager::GetImposterData(HWND Imposter) const
+	ObjectWindowImposterManager::ImposterData* ObjectWindowImposterManager::GetImposterData(HWND Imposter) const
 	{
 		SME_ASSERT(Imposter);
 
@@ -220,18 +227,18 @@ namespace ConstructionSetExtender
 			return NULL;
 	}
 
-	ObjectWindowManager::ObjectWindowManager() :
+	ObjectWindowImposterManager::ObjectWindowImposterManager() :
 		ImposterRegistry()
 	{
 		;//
 	}
 
-	ObjectWindowManager::~ObjectWindowManager()
+	ObjectWindowImposterManager::~ObjectWindowImposterManager()
 	{
 		DestroyImposters();
 	}
 
-	void ObjectWindowManager::SpawnImposter(void)
+	void ObjectWindowImposterManager::SpawnImposter(void)
 	{
 		if (*TESObjectWindow::Initialized == 0)
 			return;
@@ -243,7 +250,7 @@ namespace ConstructionSetExtender
 		HWND Imposter = BGSEEUI->ModelessDialog(ReplacementTemplate,
 												(LPSTR)TESDialog::kDialogTemplate_ObjectWindow,
 												*TESCSMain::WindowHandle,
-												ObjectWindowImposterDlgProc,
+												ImposterDlgProc,
 												(LPARAM)Data);
 		SME_ASSERT(Imposter);
 
@@ -262,7 +269,7 @@ namespace ConstructionSetExtender
 		SendMessage(Imposter, WM_OBJECTWINDOWIMPOSTER_INITIALIZE, NULL, NULL);
 	}
 
-	void ObjectWindowManager::RefreshImposters(void) const
+	void ObjectWindowImposterManager::RefreshImposters(void) const
 	{
 		for each (auto Itr  in ImposterRegistry)
 		{
@@ -270,7 +277,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void ObjectWindowManager::DestroyImposters(void)
+	void ObjectWindowImposterManager::DestroyImposters(void)
 	{
 		for each (auto Itr  in ImposterRegistry)
 		{
@@ -281,7 +288,7 @@ namespace ConstructionSetExtender
 		ImposterRegistry.clear();
 	}
 
-	void ObjectWindowManager::HandleObjectWindowSizing(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
+	void ObjectWindowImposterManager::HandleObjectWindowSizing(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
 	{
 		HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 		HWND FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
@@ -316,7 +323,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void ObjectWindowManager::HandleObjectWindowActivating(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
+	void ObjectWindowImposterManager::HandleObjectWindowActivating(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) const
 	{
 		if (LOWORD(wParam) != WA_INACTIVE)
 		{
@@ -330,5 +337,226 @@ namespace ConstructionSetExtender
 				}
 			}
 		}
+	}
+
+	PreviewWindowImposterManager		PreviewWindowImposterManager::Instance;
+
+	INT_PTR CALLBACK PreviewWindowImposterManager::ImposterDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		HWND AnimList = GetDlgItem(hWnd, TESPreviewWindow::kAnimListCtrlID);
+
+		INT_PTR DlgProcResult = FALSE;
+
+		switch (uMsg)
+		{
+		case WM_SIZE:
+			{
+				ImposterData* Data = PreviewWindowImposterManager::Instance.GetImposterData(hWnd);
+				SME_ASSERT(Data);
+
+				RECT NewBounds = { 0 };
+				HWND PreviewCtrl = GetDlgItem(hWnd, TESRenderControl::kPreviewOutputCtrlID);
+
+				GetClientRect(hWnd, &NewBounds);
+				int DeltaX = NewBounds.right - Data->Bounds.right;
+				int DeltaY = NewBounds.bottom - Data->Bounds.bottom;
+				memcpy(&Data->Bounds, &NewBounds, sizeof(NewBounds));
+
+				GetWindowRect(AnimList, &NewBounds);
+				SetWindowPos(AnimList, HWND_NOTOPMOST, NewBounds.left, NewBounds.top, NewBounds.right - NewBounds.left, NewBounds.bottom - NewBounds.top + DeltaY, SWP_NOZORDER|SWP_NOMOVE);
+
+				GetWindowRect(PreviewCtrl, &NewBounds);
+				SetWindowPos(PreviewCtrl, HWND_NOTOPMOST, NewBounds.left, NewBounds.top, NewBounds.right - NewBounds.left + DeltaX, NewBounds.bottom - NewBounds.top + DeltaY, SWP_NOZORDER|SWP_NOMOVE);
+
+				Data->Renderer->HandleResize();
+
+				DlgProcResult = TRUE;
+				break;
+			};
+		case WM_CLOSE:
+			// destroy window
+			PreviewWindowImposterManager::Instance.DisposeImposter(hWnd);
+
+			DlgProcResult = TRUE;
+			break;
+		case WM_INITDIALOG:
+			{
+				ImposterData* Data = (ImposterData*)lParam;
+				SME_ASSERT(Data);
+
+				ExtraDataList* ExtraList = TESDialog::CreateDialogExtraDataList(hWnd);
+				SME_ASSERT(ExtraList);
+
+				Data->InitTickCount = GetTickCount();
+				Data->PreviewRef = (TESObjectREFR*)TESForm::CreateInstance(TESForm::kFormType_REFR);
+				Data->PreviewRef->MarkAsTemporary();
+				Data->PreviewGround = (TESObjectSTAT*)TESForm::CreateInstance(TESForm::kFormType_Static);
+				Data->PreviewGround->MarkAsTemporary();
+
+				TESRenderControl::Parameters Params = { 0 };
+				Params.previewOutputCtrlID = TESRenderControl::kPreviewOutputCtrlID;
+				Params.renderTargetWidth = Params.renderTargetHeight = 1024.f;
+				Data->Renderer = TESPreviewControl::CreatePreviewControl(hWnd, &Params);
+
+				SetTimer(hWnd, 1, 5, NULL);		// preview control refresh timer
+				ShowWindow(hWnd, SW_SHOW);
+
+				GetClientRect(hWnd, &Data->Bounds);
+
+				DlgProcResult = TRUE;
+				break;
+			}
+		case WM_PREVIEWWINDOWIMPOSTER_INITIALIZE:
+			{
+				TESBoundObject* Object = (TESBoundObject*)lParam;
+
+				CacheOperator CacheBackup(hWnd);
+				TESPreviewWindow::SetSourceObject(Object);
+
+				char Buffer[0x100] = { 0 };
+				FORMAT_STR(Buffer, "Preview Window - '%s' %08X", Object->GetEditorID(), Object->formID);
+				SetWindowText(hWnd, Buffer);
+
+				SetWindowLongPtr(AnimList, GWL_USERDATA, 1);
+
+				DlgProcResult = TRUE;
+				break;
+			}
+		case WM_DESTROY:
+			KillTimer(hWnd, 1);
+			TESDialog::DestroyDialogExtraDataList(hWnd);
+
+			DlgProcResult = TRUE;
+			break;
+		}
+
+		if (DlgProcResult == FALSE && GetWindowLongPtr(AnimList, GWL_USERDATA) != NULL)
+		{
+			CacheOperator CacheBackup(hWnd);
+			DlgProcResult = TESPreviewWindow::DialogProc(hWnd, uMsg, wParam, lParam);
+		}
+
+		return DlgProcResult;
+	}
+
+	PreviewWindowImposterManager::ImposterData::ImposterData()
+	{
+		InitTickCount = 0;
+		PreviewRef = NULL;
+		PreviewGround = NULL;
+		Renderer = NULL;
+		PreviewSource = NULL;
+		ZeroMemory(&Bounds, sizeof(Bounds));
+	}
+
+	PreviewWindowImposterManager::ImposterData::~ImposterData()
+	{
+		PreviewGround->DeleteInstance();
+		PreviewRef->DeleteInstance();
+	}
+	PreviewWindowImposterManager::CacheOperator::CacheOperator(HWND Imposter) :
+		ParentData(NULL)
+	{
+		SME_ASSERT(Imposter);
+		ParentData = PreviewWindowImposterManager::Instance.GetImposterData(Imposter);
+		SME_ASSERT(ParentData);
+
+		MainWindow = *TESPreviewWindow::WindowHandle;
+		AnimationList = *TESPreviewWindow::AnimationListHandle;
+		InitTicks = *TESPreviewWindow::InitialTickCount;
+		PreviewRef = *TESPreviewWindow::PreviewRef;
+		PreviewGround = *TESPreviewWindow::PreviewGround;
+		Renderer = *TESPreviewWindow::PreviewControl;
+
+		*TESPreviewWindow::WindowHandle = Imposter;
+		*TESPreviewWindow::AnimationListHandle = GetDlgItem(Imposter, TESPreviewWindow::kAnimListCtrlID);
+		*TESPreviewWindow::InitialTickCount = ParentData->InitTickCount;
+		*TESPreviewWindow::PreviewRef = ParentData->PreviewRef;
+		*TESPreviewWindow::PreviewGround = ParentData->PreviewGround;
+		*TESPreviewWindow::PreviewControl = ParentData->Renderer;
+	}
+
+	PreviewWindowImposterManager::CacheOperator::~CacheOperator()
+	{
+		*TESPreviewWindow::WindowHandle = MainWindow;
+		*TESPreviewWindow::AnimationListHandle = AnimationList;
+		*TESPreviewWindow::InitialTickCount = InitTicks;
+		*TESPreviewWindow::PreviewRef = PreviewRef;
+		*TESPreviewWindow::PreviewGround = PreviewGround;
+		*TESPreviewWindow::PreviewControl = Renderer;
+	}
+
+	void PreviewWindowImposterManager::DisposeImposter(HWND Imposter)
+	{
+		if (ImposterRegistry.count(Imposter))
+		{
+			ImposterData* Data = ImposterRegistry[Imposter];
+
+			DestroyWindow(Imposter);
+			delete Data;
+			ImposterRegistry.erase(Imposter);
+		}
+	}
+
+	PreviewWindowImposterManager::ImposterData* PreviewWindowImposterManager::GetImposterData(HWND Imposter) const
+	{
+		SME_ASSERT(Imposter);
+
+		if (ImposterRegistry.count(Imposter))
+			return ImposterRegistry.at(Imposter);
+		else
+			return NULL;
+	}
+
+	PreviewWindowImposterManager::PreviewWindowImposterManager() :
+		ImposterRegistry()
+	{
+		;//
+	}
+
+	PreviewWindowImposterManager::~PreviewWindowImposterManager()
+	{
+		DestroyImposters();
+	}
+
+	void PreviewWindowImposterManager::SpawnImposter(TESBoundObject* Object)
+	{
+		if (Object)
+		{
+			ImposterData* Data = new ImposterData();
+			HINSTANCE ReplacementTemplate = BGSEEUI->GetDialogHotSwapper()->GetAlternateResourceInstance(TESDialog::kDialogTemplate_PreviewWindow);
+			SME_ASSERT(ReplacementTemplate);
+
+			Data->PreviewSource = Object;
+			HWND Imposter = BGSEEUI->ModelessDialog(ReplacementTemplate,
+													(LPSTR)TESDialog::kDialogTemplate_PreviewWindow,
+													*TESCSMain::WindowHandle,
+													ImposterDlgProc,
+													(LPARAM)Data);
+			SME_ASSERT(Imposter);
+
+			if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
+			{
+				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
+				RegularAppWindow.Extended = WS_EX_APPWINDOW;
+				RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+
+				BGSEEUI->GetWindowStyler()->StyleWindow(Imposter, RegularAppWindow);
+			}
+
+			ImposterRegistry[Imposter] = Data;
+			SendMessage(Imposter, WM_PREVIEWWINDOWIMPOSTER_INITIALIZE, NULL, (LPARAM)Object);
+		}
+	}
+
+	void PreviewWindowImposterManager::DestroyImposters(void)
+	{
+		for each (auto Itr  in ImposterRegistry)
+		{
+			DestroyWindow(Itr.first);
+			delete Itr.second;
+		}
+
+		ImposterRegistry.clear();
 	}
 }

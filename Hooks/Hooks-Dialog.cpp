@@ -3,6 +3,7 @@
 #include "..\CSEUIManager.h"
 #include "..\CSEGlobalClipboard.h"
 #include "[Common]\CLIWrapper.h"
+#include "..\CSEDialogImposterManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -71,6 +72,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESObjectCELLWndProcBeginDrag, 0x0053AA0C);
 		_DefineHookHdlr(TESObjectCELLWndProcEndDrag, 0x0053B501);
 		_DefineHookHdlr(ObjectWindowSplitterWndProcDisable, 0x00404502);
+		_DefineHookHdlr(TESDialogCloseAllDialogs, 0x00431182);
 
 		void PatchDialogHooks(void)
 		{
@@ -311,6 +313,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESObjectCELLWndProcBeginDrag).WriteJump();
 			_MemHdlr(TESObjectCELLWndProcEndDrag).WriteJump();
 			_MemHdlr(ObjectWindowSplitterWndProcDisable).WriteJump();
+			_MemHdlr(TESDialogCloseAllDialogs).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
@@ -852,7 +855,24 @@ namespace ConstructionSetExtender
 				}
 			case IDC_CSE_POPUP_PREVIEW:
 				{
-					TESPreviewWindow::Show(CS_CAST(Form, TESForm, TESBoundObject));
+					if (hWnd == *TESObjectWindow::WindowHandle)
+					{
+						int Selection = -1;
+						do
+						{
+							Selection = ListView_GetNextItem(*TESObjectWindow::FormListHandle, Selection, LVNI_SELECTED);
+							if (Selection != -1)
+							{
+								TESForm* Form = (TESForm*)TESListView::GetItemData(*TESObjectWindow::FormListHandle, Selection);
+								if (Form)
+								{
+									TESBoundObject* Obj = CS_CAST(Form, TESForm, TESBoundObject);
+									if (Obj)
+										PreviewWindowImposterManager::Instance.SpawnImposter(Obj);
+								}
+							}
+						} while (Selection != -1);
+					}
 				}
 
 				break;
@@ -893,7 +913,7 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case  IDC_CSE_POPUP_GLOBALCOPY:
+			case IDC_CSE_POPUP_GLOBALCOPY:
 				{
 					GlobalClipboard::CSEFormListBuilder Buffer;
 
@@ -957,6 +977,10 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			case IDC_CSE_POPUP_GLOBALPASTE:
+				BGSEECLIPBOARD->Paste();
+
+				break;
 			}
 
 			BGSEEUI->GetInvalidationManager()->Redraw(hWnd);
@@ -997,7 +1021,8 @@ namespace ConstructionSetExtender
 			}
 
 			InsertMenu(Menu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
-			InsertMenu(Menu, -1, MF_BYPOSITION|MF_STRING, IDC_CSE_POPUP_GLOBALCOPY, "Copy To Global Clipboard");
+			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALCOPY, "Copy To Global Clipboard");
+			InsertMenu(Menu, -1, MF_BYPOSITION | MF_STRING, IDC_CSE_POPUP_GLOBALPASTE, "Paste From Global Clipboard");
 		}
 
 		void __stdcall HandleHookedPopup(HWND Parent, int MenuIdentifier, TESForm* SelectedObject)
@@ -1017,6 +1042,7 @@ namespace ConstructionSetExtender
 			case IDC_CSE_POPUP_PREVIEW:
 			case IDC_CSE_POPUP_EXPORTFACETEXTURES:
 			case IDC_CSE_POPUP_GLOBALCOPY:
+			case IDC_CSE_POPUP_GLOBALPASTE:
 				EvaluatePopupMenuItems(Parent, MenuIdentifier, SelectedObject);
 				break;
 			default:
@@ -1040,6 +1066,7 @@ namespace ConstructionSetExtender
 			DeleteMenu(Menu, IDC_CSE_POPUP_PREVIEW, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_EXPORTFACETEXTURES, MF_BYCOMMAND);
 			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALCOPY, MF_BYCOMMAND);
+			DeleteMenu(Menu, IDC_CSE_POPUP_GLOBALPASTE, MF_BYCOMMAND);
 
 			for (int i = 0; i < 6; i++)
 			{
@@ -1858,6 +1885,27 @@ namespace ConstructionSetExtender
 			SKIP:
 				popad
 				jmp		_hhGetVar(Skip)
+			}
+		}
+
+		void __stdcall DoTESDialogCloseAllDialogsHook(void)
+		{
+			PreviewWindowImposterManager::Instance.DestroyImposters();
+		}
+
+		#define _hhName		TESDialogCloseAllDialogs
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00431187);
+			_hhSetVar(Call, 0x005A7C40);
+			__asm
+			{
+				pushad
+				call	DoTESDialogCloseAllDialogsHook
+				popad
+
+				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

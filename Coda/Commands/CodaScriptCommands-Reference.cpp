@@ -497,13 +497,11 @@ namespace ConstructionSetExtender
 					{
 						Utilities->ArrayPushback(Array, (CodaScriptReferenceDataTypeT)_TES->currentInteriorCell->formID);
 					}
-					else if (*TESRenderWindow::CurrentlyLoadedExteriorCell)
+					else if (*TESRenderWindow::ActiveCell)
 					{
-						UInt32 GridEdge = INISettingCollection::Instance->LookupByName("uGridsToLoad:General")->value.u;
-
-						for (int i = 0; i < GridEdge; i++)
+						for (int i = 0; i < _TES->gridCellArray->size; i++)
 						{
-							for (int j = 0; j < GridEdge; j++)
+							for (int j = 0; j < _TES->gridCellArray->size; j++)
 							{
 								TESObjectCELL* Cell = _TES->gridCellArray->GetCellEntry(i, j)->cell;
 								if (Cell)
@@ -562,7 +560,7 @@ namespace ConstructionSetExtender
 					SME_ASSERT(Array);
 
 					Result->SetNumber(0);
-					
+
 					if (Utilities->ArraySize(Array) > 1)
 					{
 						std::vector<TESObjectREFR*> Members;
@@ -679,7 +677,7 @@ namespace ConstructionSetExtender
 						return false;
 
 					_TES->LoadCellIntoViewPort(Reference->GetPosition(), Reference);
-					
+
 					// clean up the selection buffer as the above call selects the ref
 					_RENDERSEL->ClearSelection(true);
 
@@ -689,4 +687,3 @@ namespace ConstructionSetExtender
 		}
 	}
 }
-

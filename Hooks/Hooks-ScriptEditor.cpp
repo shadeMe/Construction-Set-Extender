@@ -42,7 +42,7 @@ namespace ConstructionSetExtender
 		{
 			Script* AuxScript = NULL;
 			if (ScriptListComboBox)
-				AuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(ScriptListComboBox, 1226));
+				AuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(ScriptListComboBox, kAssetFileButton_Script));
 
 			TESDialog::ShowScriptEditorDialog(AuxScript);
 		}

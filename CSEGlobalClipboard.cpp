@@ -184,125 +184,172 @@ namespace ConstructionSetExtender
 
 		void CSEGlobalClipboardOperator::PostLoadCallback( void )
 		{
-			bool ReplaceAll = false;
 			bool CopyingRefs = false;
 			UInt32 CopiedForms = 0;
 
-			for (FormListT::iterator Itr = LoadedFormBuffer.begin(); Itr != LoadedFormBuffer.end(); Itr++)
+			if (LoadedFormBuffer.size())
 			{
-				TESForm* TempForm = *Itr;
-				bool FormExists = false;
-
-				TempForm->LinkForm();
-
-				if (TempForm->IsReference())
+				CopyingRefs = (*LoadedFormBuffer.begin())->IsReference();
+				if (CopyingRefs == false)
 				{
-					CopyingRefs = true;
-					if ((*TESRenderWindow::CurrentlyLoadedExteriorCell == NULL && _TES->currentInteriorCell == NULL) ||
-						*TESRenderWindow::PathGridEditFlag ||
-						*TESRenderWindow::LandscapeEditFlag)
+					bool ReplaceAll = false;
+					for (FormListT::iterator Itr = LoadedFormBuffer.begin(); Itr != LoadedFormBuffer.end(); Itr++)
 					{
-						BGSEECONSOLE_MESSAGE("Cannot copy references! Possible reasons: No cell loaded in the render window, pathgrid/landscape edit mode enabled");
-						break;
-					}
-					else if ((CS_CAST(TempForm, TESForm, TESObjectREFR))->baseForm == NULL)
-					{
-						BGSEECONSOLE_MESSAGE("Couldn't copy reference %08X '%s' - Unresolved base form", TempForm->formID, TempForm->GetEditorID());
-						continue;
-					}
-				}
+						TESForm* TempForm = *Itr;
+						bool FormExists = false;
 
+						TempForm->LinkForm();
+						TESForm* CurrentForm = TESForm::LookupByEditorID(TempForm->GetEditorID());
 
-				TESForm* CurrentForm = TESForm::LookupByEditorID(TempForm->GetEditorID());
-				if (CurrentForm == NULL)
-				{
-					switch (TempForm->formType)
-					{
-					case TESForm::kFormType_REFR:
-					case TESForm::kFormType_ACHR:
-					case TESForm::kFormType_ACRE:
-						CurrentForm = TESForm::CreateInstance(TESForm::kFormType_REFR);
-						break;
-					default:
-						CurrentForm = TESForm::CreateInstance(TempForm->formType);
-						break;
+						if (CurrentForm == NULL)
+						{
+							CurrentForm = TESForm::CreateInstance(TempForm->formType);
+						}
+						else
+						{
+							FormExists = true;
+
+							if (TempForm->formType != CurrentForm->formType)
+							{
+								BGSEECONSOLE_MESSAGE("Couldn't copy form %s %08X from clipboard - A form with the same editorID but different type exists!",
+													 TempForm->GetEditorID(), TempForm->formID);
+								continue;
+							}
+							else if (ReplaceAll == false)
+							{
+								bool Skip = false;
+								switch (BGSEEUI->MsgBoxI(NULL,
+									MB_TASKMODAL | MB_SETFOREGROUND | MB_YESNOCANCEL,
+									"Form %s already exists. Do you wish to replace it?\n\n\"Cancel\" will replace all existing forms.", CurrentForm->GetEditorID()))
+								{
+								case IDNO:
+									Skip = true;
+									break;
+								case IDCANCEL:
+									ReplaceAll = true;
+									break;
+								}
+
+								if (Skip)
+									continue;
+							}
+						}
+
+						CurrentForm->CopyFrom(TempForm);
+						CurrentForm->SetFromActiveFile(true);
+
+						if (FormExists == false)
+						{
+							if (TempForm->GetEditorID())
+								CurrentForm->SetEditorID(TempForm->GetEditorID());
+
+							_DATAHANDLER->AddForm(CurrentForm);
+						}
+
+						CopiedForms++;
 					}
 				}
 				else
 				{
-					FormExists = true;
-
-					if (TempForm->formType != CurrentForm->formType)
+					if ((*TESRenderWindow::ActiveCell == NULL && _TES->currentInteriorCell == NULL) ||
+						*TESRenderWindow::PathGridEditFlag ||
+						*TESRenderWindow::LandscapeEditFlag)
 					{
-						BGSEECONSOLE_MESSAGE("Couldn't copy form %s %08X from clipboard - A form with the same editorID but different type exists!", TempForm->GetEditorID(), TempForm->formID);
-						continue;
+						BGSEECONSOLE_MESSAGE("Cannot copy references! Possible reasons: No cell loaded in the render window, pathgrid/landscape edit mode enabled");
 					}
-					else if (ReplaceAll == false)
+					else
 					{
-						bool Skip = false;
-						switch (BGSEEUI->MsgBoxI(NULL,
-							MB_TASKMODAL|MB_SETFOREGROUND|MB_YESNOCANCEL,
-							"Form %s already exists. Do you wish to replace it?\n\n\"Cancel\" will replace all existing forms.", CurrentForm->GetEditorID()))
+						std::map<TESObjectREFR*, const char*> RefEditorIDMap;
+						for (FormListT::iterator Itr = LoadedFormBuffer.begin(); Itr != LoadedFormBuffer.end(); Itr++)
 						{
-						case IDNO:
-							Skip = true;
-							break;
-						case IDCANCEL:
-							ReplaceAll = true;
-							break;
+							TESForm* TempForm = *Itr;
+							bool FormExists = false;
+
+							TempForm->LinkForm();
+							TESObjectREFR* Ref = CS_CAST(TempForm, TESForm, TESObjectREFR);
+							SME_ASSERT(Ref);
+
+							if (Ref->baseForm == NULL)
+							{
+								BGSEECONSOLE_MESSAGE("Couldn't copy reference %08X '%s' - Unresolved base form", TempForm->formID, TempForm->GetEditorID());
+								continue;
+							}
+
+							RefEditorIDMap[Ref] = TempForm->GetEditorID();
+							CopiedForms++;
 						}
 
-						if (Skip)
-							continue;
+						if (RefEditorIDMap.size())
+						{
+							// we attempt to instantiate the refs in place
+							TESObjectREFR* FirstRef = RefEditorIDMap.begin()->first;
+							Vector3 RelativeOrigin(FirstRef->position.x, FirstRef->position.y, FirstRef->position.z);
+							NiNode* CameraNode = _PRIMARYRENDERER->primaryCameraParentNode;
+
+							static const float kMultiplier = 15.0f;
+							Vector3 NewOrigin(CameraNode->m_localTranslate.x, CameraNode->m_localTranslate.y, CameraNode->m_localTranslate.z);
+
+							NewOrigin.x += CameraNode->m_worldRotate.data[1] * kMultiplier;
+							NewOrigin.y += CameraNode->m_worldRotate.data[4] * kMultiplier;
+							NewOrigin.z += CameraNode->m_worldRotate.data[7] * kMultiplier;
+
+							bool RefreshRenderWindow = false;
+							TESObjectCELL* Interior = _TES->currentInteriorCell;
+							TESWorldSpace* Worldspace = _TES->currentWorldSpace;
+							if (Interior)
+								Worldspace = NULL;
+
+							for (std::map<TESObjectREFR*, const char*>::iterator Itr = RefEditorIDMap.begin(); Itr != RefEditorIDMap.end(); Itr++)
+							{
+								TESObjectREFR* TempRef = Itr->first;
+								TESObject* Base = CS_CAST(Itr->first->baseForm, TESForm, TESObject);
+								const char* EditorID = Itr->second;
+								SME_ASSERT(Base);
+
+								Vector3 NewPosition(0.f, 0.f, 0.f);
+								NewPosition.x = RelativeOrigin.x - TempRef->position.x;
+								NewPosition.y = RelativeOrigin.y - TempRef->position.y;
+								NewPosition.z = RelativeOrigin.z - TempRef->position.z;
+								NewPosition += NewOrigin;
+
+								Vector3 NewRotation(TempRef->GetRotation()->x, TempRef->GetRotation()->y, TempRef->GetRotation()->z);
+								NewRotation.Scale(180.0f / PI);
+								NewRotation.z += 180.0f;
+								NewRotation.Scale(PI / 180.0f);
+
+								TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
+								if (NewRef == NULL)
+								{
+									BGSEECONSOLE_MESSAGE("Couldn't create reference @ %0.3f, %0.3f, %0.3f, Cell = %08X, Worldspace = %08X",
+														 NewPosition.x, NewPosition.y, NewPosition.z,
+														 (Interior ? Interior->formID : 0),
+														 (Worldspace ? Worldspace->formID : 0));
+								}
+								else
+								{
+									RefreshRenderWindow = true;
+
+									if (EditorID && TESForm::LookupByEditorID(EditorID))
+									{
+										BGSEECONSOLE_MESSAGE("Couldn't set editorID '%s' on copied reference %08X - It's already in use", EditorID, NewRef->formID);
+										EditorID = NULL;
+										TempRef->SetEditorID(NULL);
+									}
+
+									NewRef->CopyFrom(TempRef);
+									NewRef->SetFromActiveFile(true);
+									_DATAHANDLER->PlaceObjectRef(Base, &NewPosition, &NewRotation, Interior, Worldspace, NewRef);
+
+									if (EditorID)
+										NewRef->SetEditorID(EditorID);
+								}
+							}
+
+							if (RefreshRenderWindow)
+								TESRenderWindow::Redraw();
+						}
 					}
 				}
-				
-				CurrentForm->CopyFrom(TempForm);
-				CurrentForm->SetFromActiveFile(true);
-
-				if (FormExists == false)
-				{
-					if(TempForm->GetEditorID())
-						CurrentForm->SetEditorID(TempForm->GetEditorID());
-
-					_DATAHANDLER->AddForm(CurrentForm);
-				}
-
-				if (CurrentForm->IsReference())
-				{
-					TESObjectREFR* Ref = CS_CAST(CurrentForm, TESForm, TESObjectREFR);
-					TESObject* Base = CS_CAST(Ref->baseForm, TESForm, TESObject);
-
-					SME_ASSERT(Ref && Base);
-
-					Vector3 Position(Ref->position);
-					Vector3 Rotation(Ref->rotation);
-
-					TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
-					if (CurrentCell == NULL)
-					{
-						CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
-						
-						Position.x = CurrentCell->cellData.coords->x * 4096.0f;
-						Position.y = CurrentCell->cellData.coords->y * 4096.0f;
-					}									
-
-					// move references to the currently loaded cell
-					_DATAHANDLER->PlaceObjectRef(Base,
-												&Position,
-												&Rotation,
-												CurrentCell,
-												CurrentCell->GetParentWorldSpace(),
-												Ref);
-				}
-
-				CopiedForms++;
-			}
-
-			if (CopyingRefs && CopiedForms)
-			{
-				TESRenderWindow::Redraw();
-				TESCellViewWindow::SetCellSelection(*TESCellViewWindow::CurrentCellSelection);
 			}
 
 			if (CopiedForms)
@@ -337,13 +384,26 @@ namespace ConstructionSetExtender
 		{
 			SME_ASSERT(Form);
 
+			if (Form->IsReference())
+			{
+				TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+				if (Ref->baseForm)
+				{
+					if (Ref->baseForm->formType == TESForm::kFormType_Door ||
+						Ref->baseForm == TESForm::LookupByEditorID("DoorMarker"))
+					{
+						return;
+					}
+				}
+			}
+
 			FormList.push_back(new CSEFormWrapper(Form));
 		}
 
 		bool CSEFormListBuilder::Copy( void )
 		{
 			bool Result = false;
-			
+
 			if (FormList.size())
 			{
 				Result = BGSEECLIPBOARD->Copy(FormList);

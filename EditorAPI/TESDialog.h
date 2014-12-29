@@ -178,7 +178,7 @@ enum
 	kAssetFileButton_Model = 1043,		// includes idle animations and trees
 	kAssetFileButton_Texture = 1044,
 	kAssetFileButton_Sound = 1451,
-	kAssetFileButton_Script = 1226,		// not really an asset but meh
+	kAssetFileButton_Script = 1226,		// not really an asset (or a button) but meh
 	kAssetFileButton_BipedModel_Male = 1045,
 	kAssetFileButton_BipedModel_Female = 1046,
 	kAssetFileButton_WorldModel_Male = 2088,
@@ -431,8 +431,13 @@ public:
 
 	static void								ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data = NULL);
 	static ExtraDataList*					GetDialogExtraDataList(HWND Dialog);
+	static ExtraDataList*					CreateDialogExtraDataList(HWND Dialog);
+	static void								DestroyDialogExtraDataList(HWND Dialog);
 
-	static tList<HWND>*						OpenEditWindows;
+	static void								AddDialogToOpenList(HWND Dialog);
+	static void								RemoveDialogFromOpenList(HWND Dialog);
+
+	static tList<HWND>*						OpenDialogWindows;
 
 	static UInt8*							ObjectWindowDragDropInProgress;
 	static UInt8*							TESFormIDListViewDragDropInProgress;
@@ -458,6 +463,7 @@ public:
 	static void*							GetItemData(HWND hWnd, int Index);
 	static int								GetItemByData(HWND hWnd, void* Data);
 	static void								ScrollToItem(HWND hWnd, int Index);
+	static void								InsertItem(HWND hWnd, void* Data, bool ImageCallback = false, int Index = -1);
 };
 
 class TESTreeView
@@ -471,14 +477,25 @@ class TESPreviewWindow
 {
 public:
 	// methods
-	static void								Show(TESBoundObject* Object);
+	static void								SetSourceObject(TESBoundObject* Object);
 
 	static void								HandleResize(HWND PreviewWindow);
 	static void								Initialize(HWND PreviewWindow);
 	static void								Deinitialize(HWND PreviewWindow);
 
 	static HWND*							WindowHandle;
+	static HWND*							AnimationListHandle;
 	static TESPreviewControl**				PreviewControl;
+	static DWORD*							InitialTickCount;
+	static TESObjectREFR**					PreviewRef;
+	static TESObjectSTAT**					PreviewGround;
+
+	static DLGPROC							DialogProc;
+
+	enum
+	{
+		kAnimListCtrlID = 2408,
+	};
 };
 
 // container class, arbitrarily named

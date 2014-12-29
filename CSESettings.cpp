@@ -29,7 +29,8 @@ namespace ConstructionSetExtender
 			Depot.push_back(&General::kCrashHandlerMode);
 			Depot.push_back(&General::kFaceGenPreviewResponseWindow);
 			Depot.push_back(&General::kFaceGenPreviewVoiceDelay);
-			
+			Depot.push_back(&General::kDisableSplashScreen);
+
 			Depot.push_back(&LOD::kPartialTextureResolution);
 			Depot.push_back(&LOD::kDeletePartialsAfterGeneration);
 
@@ -50,6 +51,7 @@ namespace ConstructionSetExtender
 			Depot.push_back(&Renderer::kFixedCameraPivot);
 			Depot.push_back(&Renderer::kCameraFOV);
 			Depot.push_back(&Renderer::kExteriorSnapshotResolution);
+			Depot.push_back(&Renderer::kZOffsetDuplicatedRefs);
 
 			Depot.push_back(&RenderWindowPainter::kShowSelectionStats);
 			Depot.push_back(&RenderWindowPainter::kShowRAMUsage);
@@ -105,11 +107,12 @@ namespace ConstructionSetExtender
 		namespace General
 		{
 #define GENERAL_INISECTION					"General"
-			
+
 			INISetting		kShowNumericEditorIDWarning("ShowNumericEditorIDWarning", GENERAL_INISECTION, "Displays a warning when editorIDs start with an integer", (SInt32)1);
 			INISetting		kCrashHandlerMode("CrashHandlerMode", GENERAL_INISECTION, "0 - Terminate | 1 - Resume | 2 - Ask every time", (SInt32)2);
 			INISetting		kFaceGenPreviewResponseWindow("FaceGenPreviewResponseWindow", GENERAL_INISECTION, "Preview voice/lip file playback in NPC dialogs", (SInt32)0);
 			INISetting		kFaceGenPreviewVoiceDelay("FaceGenPreviewVoiceDelay", GENERAL_INISECTION, "Delay, in milliseconds, between voice file and lip sync file playback during previews", (SInt32)50);
+			INISetting		kDisableSplashScreen("DisableSplashScreen", GENERAL_INISECTION, "Disables the startup splash screen", (SInt32)0);
 		}
 
 		namespace LOD
@@ -146,6 +149,7 @@ namespace ConstructionSetExtender
 			INISetting		kFixedCameraPivot("FixedCameraPivot", RENDERER_INISECTION, "Use a static pivot when rotating the viewport camera without a selection", (SInt32)0);
 			INISetting		kCameraFOV("CameraFOV", RENDERER_INISECTION, "Default camera field of vision", (float)90);
 			INISetting		kExteriorSnapshotResolution("ExteriorSnapshotResolution", RENDERER_INISECTION, "Resolution of the exterior cell snapshot texture. Size must be a power of 2", (SInt32)1024);
+			INISetting		kZOffsetDuplicatedRefs("ZOffsetDuplicatedRefs", RENDERER_INISECTION, "Moves duplicated refs slightly in the positive Z axis after creation", (SInt32)0);
 		}
 
 		namespace RenderWindowPainter
@@ -156,7 +160,7 @@ namespace ConstructionSetExtender
 			INISetting		kShowRAMUsage("ShowRAMUsage", RWPAINTER_INISECTION, "Displays the editor's RAM usage", (SInt32)1);
 			INISetting		kShowMouseRef("ShowMouseRef", RWPAINTER_INISECTION, "Displays details about the reference under the mouse pointer", (SInt32)1);
 			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWPAINTER_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
-			INISetting		kFontFace("FontFace", RWPAINTER_INISECTION, "Font face of the rendered text", "Consolas");
+			INISetting		kFontFace("FontFace", RWPAINTER_INISECTION, "Font face of the rendered text", "Arial");
 			INISetting		kFontSize("FontSize", RWPAINTER_INISECTION, "Size of the rendered text", (SInt32)20);
 		}
 

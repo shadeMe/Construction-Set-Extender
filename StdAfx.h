@@ -120,3 +120,5 @@ using namespace SME::Functors;
 // CSE
 #include "CSESettings.h"
 #include "CSEUIManager.h"
+
+#define PI					3.151592653589793

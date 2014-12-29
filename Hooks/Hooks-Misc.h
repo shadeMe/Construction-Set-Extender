@@ -56,6 +56,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ExtraDataListInitForCell, "adds support for verbose debug logging");
 		_DeclareMemHdlr(ExtraDataListInitForRef, "");
 		_DeclareMemHdlr(GameSettingCopyFrom, "fixes a bug that triggers an assertion during the copy process");
+		_DeclareMemHdlr(DisableSplashScreen, "adds support for toggling splash screen visibility");
+		_DeclareMemHdlr(ScriptEnumerateEffectCrossRefs, "enumerates MagicItem cross refs of scripts in the use report window");
 	}
 }
 

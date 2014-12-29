@@ -309,10 +309,13 @@ namespace ComponentDLLInterface
 			bool UsePosX() { return (Flags & kFlag_UsePosX) ? true : false; }
 			bool UsePosY() { return (Flags & kFlag_UsePosY) ? true : false; }
 			bool UsePosZ() { return (Flags & kFlag_UsePosZ) ? true : false; }
+			bool PosChanged() { return UsePosX() || UsePosY() || UsePosZ(); }
 
 			bool UseRotX() { return (Flags & kFlag_UseRotX) ? true : false; }
 			bool UseRotY() { return (Flags & kFlag_UseRotY) ? true : false; }
 			bool UseRotZ() { return (Flags & kFlag_UseRotZ) ? true : false; }
+			bool RotChanged() { return UseRotX() || UseRotY() || UseRotZ(); }
+
 			bool UseScale() { return (Flags & kFlag_UseScale) ? true : false; }
 
 			_3DData()

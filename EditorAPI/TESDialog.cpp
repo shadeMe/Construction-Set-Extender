@@ -3,7 +3,7 @@
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Hooks-Dialog.h"
 
-tList<HWND>*				TESDialog::OpenEditWindows = (tList<HWND>*)0x00A0B55C;
+tList<HWND>*				TESDialog::OpenDialogWindows = (tList<HWND>*)0x00A0B55C;
 bool						TESDialog::PackageCellDragDropInProgress = false;
 UInt8*						TESDialog::TESFormIDListViewDragDropInProgress = (UInt8*)0x00A0BE45;
 UInt8*						TESDialog::ObjectWindowDragDropInProgress = (UInt8*)0x00A0BA68;
@@ -41,6 +41,11 @@ ResponseEditorData**		ResponseEditorData::EditorCache = (ResponseEditorData**)0x
 
 HWND*						TESPreviewWindow::WindowHandle = (HWND*)0x00A0A71C;
 TESPreviewControl**			TESPreviewWindow::PreviewControl = (TESPreviewControl**)0x00A0A730;
+DLGPROC						TESPreviewWindow::DialogProc = (DLGPROC)0x00402F30;
+TESObjectSTAT**				TESPreviewWindow::PreviewGround = (TESObjectSTAT**)0x00A0A728;
+TESObjectREFR**				TESPreviewWindow::PreviewRef = (TESObjectREFR**)0x00A0A72C;
+DWORD*						TESPreviewWindow::InitialTickCount = (DWORD*)0x00A0A724;
+HWND*						TESPreviewWindow::AnimationListHandle = (HWND*)0x00A0A720;
 
 TESObjectSelection**		TESObjectSelection::PrimaryInstance = (TESRenderSelection**)0x00A0AF60;
 
@@ -287,6 +292,26 @@ bool TESDialog::CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wPara
 	return cdeclCall<bool>(0x00442BD0, hWnd, uMsg, wParam, lParam, outLong);
 }
 
+ExtraDataList* TESDialog::CreateDialogExtraDataList(HWND Dialog)
+{
+	return cdeclCall<ExtraDataList*>(0x004428C0, Dialog);
+}
+
+void TESDialog::AddDialogToOpenList(HWND Dialog)
+{
+	thisCall<void>(0x004E3900, OpenDialogWindows, Dialog);
+}
+
+void TESDialog::RemoveDialogFromOpenList(HWND Dialog)
+{
+	thisCall<void>(0x00452AE0, OpenDialogWindows, Dialog);
+}
+
+void TESDialog::DestroyDialogExtraDataList(HWND Dialog)
+{
+	cdeclCall<void>(0x004428C0, Dialog);
+}
+
 void TESComboBox::AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth)
 {
 	cdeclCall<UInt32>(0x00403540, hWnd, Text, Data, ResizeDroppedWidth);
@@ -294,7 +319,7 @@ void TESComboBox::AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDr
 
 void* TESComboBox::GetSelectedItemData(HWND hWnd)
 {
-	return cdeclCall<void*>(0x00403690, hWnd);
+	return cdeclCall<void*>(0x00442950, hWnd);
 }
 
 void TESComboBox::PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem)
@@ -327,11 +352,13 @@ void TESListView::ScrollToItem(HWND hWnd, int Index)
 	cdeclCall<void>(0x00403BA0, hWnd, Index);
 }
 
-void TESPreviewWindow::Show(TESBoundObject* Object)
+void TESListView::InsertItem(HWND hWnd, void* Data, bool ImageCallback /*= false*/, int Index /*= -1*/)
 {
-	if (*WindowHandle == NULL)
-		SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40121, NULL);
+	cdeclCall<void>(0x004038F0, hWnd, Data, ImageCallback, Index);
+}
 
+void TESPreviewWindow::SetSourceObject(TESBoundObject* Object)
+{
 	if (Object)
 		cdeclCall<void>(0x00402BC0, Object);
 }

@@ -133,6 +133,13 @@ TESForm* FormCrossReferenceData::GetForm() const
 
 bool TESForm::SetEditorID(const char* EditorID)
 {
+	if (IsTemporary() && EditorID == NULL)
+	{
+		this->editorID.Clear();
+		return true;
+	}
+
+	SME_ASSERT(EditorID);
 	return thisCall<bool>(0x00497670, this, EditorID);
 }
 
@@ -310,3 +317,7 @@ TESForm* TESForm::CreateTemporaryCopy( TESForm* Source, bool CopyModifiedState /
 	return Buffer;
 }
 
+void TESForm::PopulateCrossReferenceListView(HWND ListView)
+{
+	thisCall<void>(0x004964C0, this, ListView);
+}

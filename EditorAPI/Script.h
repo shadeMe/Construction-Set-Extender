@@ -8,6 +8,8 @@
 	...
 */
 
+typedef std::vector<TESForm*> ScriptMagicItemCrossRefListT;
+
 // 54
 class Script : public TESForm
 {
@@ -79,6 +81,7 @@ public:
 	void								SetText(const char* Text);
 
 	UInt32								GetScriptableFormUseCount(void);
+	UInt32								GetEffectItemReferences(ScriptMagicItemCrossRefListT& OutList);
 };
 
 enum ScriptCompileErrors

@@ -1111,10 +1111,13 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDuplicateReferencesHook(void)
 		{
-			for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+			if (Settings::Renderer::kZOffsetDuplicatedRefs().i)
 			{
-				TESObjectREFR* Reference = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-				Reference->SetPosition(Reference->position.x, Reference->position.y, Reference->position.z + 10.0f);
+				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+				{
+					TESObjectREFR* Reference = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+					Reference->SetPosition(Reference->position.x, Reference->position.y, Reference->position.z + 10.0f);
+				}
 			}
 		}
 

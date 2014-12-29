@@ -1087,17 +1087,26 @@ UseInfoListCrossRefData* GetCrossRefDataForForm(const char* EditorID)
 	if (Form)
 	{
 		FormCrossReferenceListT* CrossRefList = Form->GetCrossReferenceList();
-		if (CrossRefList->Count())
+		ScriptMagicItemCrossRefListT EffectRefs;
+
+		UInt32 Count = CrossRefList->Count();
+		if (Form->formType == TESForm::kFormType_Script)
 		{
-			Result->FormCount = CrossRefList->Count();
+			Script* ThisScript = CS_CAST(Form, TESForm, Script);
+			Count += ThisScript->GetEffectItemReferences(EffectRefs);
+		}
+
+		if (Count)
+		{
+			Result->FormCount = Count;
 			Result->FormListHead = new FormData[Result->FormCount];
+
 			int i = 0;
-			for (FormCrossReferenceListT::Iterator Itr = CrossRefList->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-			{
-				TESForm* Reference = Itr.Get()->GetForm();
-				Result->FormListHead[i].FillFormData(Reference);
-				i++;
-			}
+			for (FormCrossReferenceListT::Iterator Itr = CrossRefList->Begin(); !Itr.End() && Itr.Get(); ++Itr, ++i)
+				Result->FormListHead[i].FillFormData(Itr.Get()->GetForm());
+
+			for (ScriptMagicItemCrossRefListT::iterator Itr = EffectRefs.begin(); Itr != EffectRefs.end(); ++Itr, ++i)
+				Result->FormListHead[i].FillFormData(*Itr);
 		}
 	}
 

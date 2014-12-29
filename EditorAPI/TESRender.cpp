@@ -24,7 +24,7 @@ float*								TESRenderWindow::RefRotationSpeed = (float*)0x00A0B070;
 float*								TESRenderWindow::RefMovementSpeed = (float*)0x00A0B078;
 
 TESLandTexture**					TESRenderWindow::ActiveLandscapeTexture = (TESLandTexture**)0x00A0B0C0;
-TESObjectCELL**						TESRenderWindow::CurrentlyLoadedExteriorCell = (TESObjectCELL**)0x00A0BC3C;
+TESObjectCELL**						TESRenderWindow::ActiveCell = (TESObjectCELL**)0x00A0BC3C;
 
 UInt8*								TESRenderWindow::LandscapeEditFlag = (UInt8*)0x00A0BC35;
 UInt8*								TESRenderWindow::PathGridEditFlag = (UInt8*)0x00A0BC5C;
@@ -93,6 +93,36 @@ void TESRenderWindow::TogglePathGridEditMode()
 void TESRenderWindow::Refresh3D()
 {
 	SendMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);
+}
+
+UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
+{
+	OutList.clear();
+
+	if (_TES->currentInteriorCell)
+	{
+		for (TESObjectCELL::ObjectREFRList::Iterator Itr = _TES->currentInteriorCell->objectList.Begin(); !Itr.End(); ++Itr)
+			OutList.push_back(Itr.Get());
+	}
+	else
+	{
+		GridCellArray* CellGrid = _TES->gridCellArray;
+
+		for (int i = 0; i < CellGrid->size; i++)
+		{
+			for (int j = 0; j < CellGrid->size; j++)
+			{
+				GridCellArray::GridEntry* Data = CellGrid->GetCellEntry(i, j);
+				if (Data && Data->cell)
+				{
+					for (TESObjectCELL::ObjectREFRList::Iterator Itr = Data->cell->objectList.Begin(); !Itr.End(); ++Itr)
+						OutList.push_back(Itr.Get());
+				}
+			}
+		}
+	}
+
+	return OutList.size();
 }
 
 void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )

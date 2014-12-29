@@ -64,6 +64,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(ExtraDataListInitForCell, 0x0053C573);
 		_DefineHookHdlr(ExtraDataListInitForRef, 0x005488D8);
 		_DefineHookHdlr(GameSettingCopyFrom, 0x004FA388);
+		_DefineHookHdlr(DisableSplashScreen, 0x0041CDBA);
+		_DefineHookHdlr(ScriptEnumerateEffectCrossRefs, 0x00433AF1);
 
 		void PatchMiscHooks(void)
 		{
@@ -108,6 +110,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(ExtraDataListInitForCell).WriteJump();
 			_MemHdlr(ExtraDataListInitForRef).WriteJump();
 			_MemHdlr(GameSettingCopyFrom).WriteJump();
+			_MemHdlr(ScriptEnumerateEffectCrossRefs).WriteJump();
 		}
 
 		void PatchEntryPointHooks(void)
@@ -116,6 +119,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(AllowMultipleEditors).WriteUInt8(0xEB);
 			_MemHdlr(SEHOverride).WriteNop();
 			_MemHdlr(VersionControlOverride).WriteJump();
+			_MemHdlr(DisableSplashScreen).WriteJump();
 		}
 
 		void __stdcall MessageHandlerOverride(const char* Message)
@@ -324,6 +328,7 @@ namespace ConstructionSetExtender
 			if (TESDataHandler::PluginLoadSaveInProgress == false &&
 				ShowWarning &&
 				BGSEEMAIN->Daemon()->GetFullInitComplete() &&
+				EditorID &&
 				strlen(EditorID) > 0 &&
 				isdigit((int)*EditorID) &&
 				(Form->formFlags & TESForm::kFormFlags_Temporary) == 0)
@@ -1088,6 +1093,61 @@ namespace ConstructionSetExtender
 				popad
 
 				call	_hhGetVar(Call)
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoDisableSplashScreenHook(HWND SplashScreen)
+		{
+			if (Settings::General::kDisableSplashScreen().i)
+				ShowWindow(SplashScreen, SW_HIDE);
+			else
+			{
+				ShowWindow(SplashScreen, SW_SHOW);
+				UpdateWindow(SplashScreen);
+			}
+		}
+
+		#define _hhName		DisableSplashScreen
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0041CDC8);
+			__asm
+			{
+				pushad
+				push	eax
+				call	DoDisableSplashScreenHook
+				popad
+
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoScriptEnumerateEffectCrossRefsHook(TESForm* Form, HWND ListView)
+		{
+			Form->PopulateCrossReferenceListView(ListView);
+
+			if (Form->formType == TESForm::kFormType_Script)
+			{
+				Script* ThisScript = CS_CAST(Form, TESForm, Script);
+				ScriptMagicItemCrossRefListT EffectRefs;
+
+				ThisScript->GetEffectItemReferences(EffectRefs);
+				for (ScriptMagicItemCrossRefListT::iterator Itr = EffectRefs.begin(); Itr != EffectRefs.end(); ++Itr)
+					TESListView::InsertItem(ListView, *Itr);
+			}
+		}
+
+		#define _hhName		ScriptEnumerateEffectCrossRefs
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00433AF6);
+			_hhSetVar(Call, 0x004964C0);
+			__asm
+			{
+				push	ecx
+				call	DoScriptEnumerateEffectCrossRefsHook
+
 				jmp		_hhGetVar(Retn)
 			}
 		}

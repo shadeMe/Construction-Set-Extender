@@ -17,12 +17,10 @@
 #include "CSInterop.h"
 #include "CSEGlobalClipboard.h"
 #include "CSEFormUndoStack.h"
-#include "CSEObjectWindowManager.h"
+#include "CSEDialogImposterManager.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
-
-#define PI					3.151592653589793
 
 namespace ConstructionSetExtender
 {
@@ -1048,6 +1046,9 @@ namespace ConstructionSetExtender
 
 				switch (LOWORD(wParam))
 				{
+				case 40121:		// View > Preview Window
+					BGSEEUI->MsgBoxI("Use the Object Window's context menu to preview objects.");
+					break;
 				case 40157:		// Help > Contents
 				case 40413:		// Character > Export Dialogue
 					{
@@ -1388,7 +1389,7 @@ namespace ConstructionSetExtender
 
 					break;
 				case IDC_MAINMENU_SPAWNEXTRAOBJECTWINDOW:
-					ObjectWindowManager::Instance.SpawnImposter();
+					ObjectWindowImposterManager::Instance.SpawnImposter();
 
 					break;
 				default:
@@ -1684,13 +1685,13 @@ namespace ConstructionSetExtender
 								case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
 									FORMAT_STR(NewItemText, "Save Current Exterior Cell Snapshot");
 
-									if (*TESRenderWindow::CurrentlyLoadedExteriorCell == NULL || _TES->currentInteriorCell)
+									if (*TESRenderWindow::ActiveCell == NULL || _TES->currentInteriorCell)
 										DisableItem = true;
 									else
 									{
 										FORMAT_STR(NewItemText, "Save Exterior Cell %i,%i Snapshot",
-												(*TESRenderWindow::CurrentlyLoadedExteriorCell)->cellData.coords->x,
-												(*TESRenderWindow::CurrentlyLoadedExteriorCell)->cellData.coords->y);
+												(*TESRenderWindow::ActiveCell)->cellData.coords->x,
+												(*TESRenderWindow::ActiveCell)->cellData.coords->y);
 									}
 
 									break;
@@ -1789,23 +1790,15 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
 					if (*TESRenderWindow::PathGridEditFlag == 0)
 					{
-						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
-
-						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
-
-						if (CurrentCell)
+						CellObjectListT Refs;
+						if (TESRenderWindow::GetActiveCellObjects(Refs))
 						{
 							TESRenderSelection* Buffer = TESRenderSelection::CreateInstance(_RENDERSEL);
-
 							_RENDERSEL->ClearSelection(true);
 
-							for (TESObjectCELL::ObjectREFRList::Iterator Itr = CurrentCell->objectList.Begin(); !Itr.End(); ++Itr)
+							for (CellObjectListT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 							{
-								TESObjectREFR* Ref = Itr.Get();
-
-								if (Ref == NULL)
-									break;
+								TESObjectREFR* Ref = *Itr;
 
 								if (Buffer->HasObject(Ref) == false)
 									_RENDERSEL->AddToSelection(Ref, true);
@@ -1819,23 +1812,18 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_RENDERWINDOWCONTEXT_BATCHREFERENCEEDITOR:
 					{
-						TESObjectCELL* ThisCell = _TES->currentInteriorCell;
-						if (!ThisCell)
-							ThisCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
+						CellObjectListT Refs;
+						UInt32 RefCount = TESRenderWindow::GetActiveCellObjects(Refs);
 
-						if (ThisCell)
+						if (RefCount > 1)
 						{
-							UInt32 RefCount = ThisCell->objectList.Count(), i = 0;
-
-							if (RefCount < 2)
-								break;
-
+							int i = 0;
 							ComponentDLLInterface::CellObjectData* RefData = new ComponentDLLInterface::CellObjectData[RefCount];
 							ComponentDLLInterface::BatchRefData* BatchData = new ComponentDLLInterface::BatchRefData();
 
-							for (TESObjectCELL::ObjectREFRList::Iterator Itr = ThisCell->objectList.Begin(); !Itr.End(); ++Itr, ++i)
+							for (CellObjectListT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr, ++i)
 							{
-								TESObjectREFR* ThisRef = Itr.Get();
+								TESObjectREFR* ThisRef = *Itr;
 								ComponentDLLInterface::CellObjectData* ThisRefData = &RefData[i];
 
 								ThisRefData->EditorID = (!ThisRef->editorID.c_str())?ThisRef->baseForm->editorID.c_str():ThisRef->editorID.c_str();
@@ -1873,11 +1861,17 @@ namespace ConstructionSetExtender
 										if (BatchData->World3DData.UsePosY())	ThisRef->position.y = BatchData->World3DData.PosY, Modified = true;
 										if (BatchData->World3DData.UsePosZ())	ThisRef->position.z = BatchData->World3DData.PosZ, Modified = true;
 
+										if (BatchData->World3DData.PosChanged())
+											ThisRef->SetPosition(ThisRef->position.x, ThisRef->position.y, ThisRef->position.z);
+
 										if (BatchData->World3DData.UseRotX())	ThisRef->rotation.x = BatchData->World3DData.RotX * PI / 180, Modified = true;
 										if (BatchData->World3DData.UseRotY())	ThisRef->rotation.y = BatchData->World3DData.RotY * PI / 180, Modified = true;
 										if (BatchData->World3DData.UseRotZ())	ThisRef->rotation.z = BatchData->World3DData.RotZ * PI / 180, Modified = true;
 
-										if (BatchData->World3DData.UseScale())	ThisRef->scale = BatchData->World3DData.Scale, Modified = true;
+										if (BatchData->World3DData.RotChanged())
+											ThisRef->SetRotation(ThisRef->rotation.x, ThisRef->rotation.y, ThisRef->rotation.z, true);
+
+										if (BatchData->World3DData.UseScale())	ThisRef->SetScale(BatchData->World3DData.Scale), Modified = true;
 
 										if (BatchData->Flags.UsePersistent() &&
 											ThisRef->baseForm->formType != TESForm::kFormType_NPC &&
@@ -1966,7 +1960,6 @@ namespace ConstructionSetExtender
 									if (Modified)
 									{
 										ThisRef->SetFromActiveFile(true);
-										ThisRef->UpdateNiNode();
 									}
 								}
 
@@ -1981,48 +1974,40 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
 				case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
 					{
-						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
+						CellObjectListT Refs;
+						TESRenderWindow::GetActiveCellObjects(Refs);
 
-						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
-
-						if (CurrentCell)
+						for (CellObjectListT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 						{
-							for (TESObjectCELL::ObjectREFRList::Iterator Itr = CurrentCell->objectList.Begin(); !Itr.End(); ++Itr)
-							{
-								TESObjectREFR* Ref = Itr.Get();
-
-								if (Ref == NULL)
-									break;
-
-								switch (LOWORD(wParam))
-								{
-								case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-									if (Ref->GetInvisible())
-										Ref->ToggleInvisiblity();
-
-									if (Ref->GetChildrenInvisible())
-										Ref->ToggleChildrenInvisibility();
-
-									break;
-								case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-									Ref->SetFrozenState(false);
-
-									break;
-								}
-							}
+							TESObjectREFR* Ref = *Itr;
 
 							switch (LOWORD(wParam))
 							{
 							case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-								RenderWindowPainter::RenderChannelNotifications->Queue(3, "Reset visibility flags on the active cell's references");
+								if (Ref->GetInvisible())
+									Ref->ToggleInvisiblity();
+
+								if (Ref->GetChildrenInvisible())
+									Ref->ToggleChildrenInvisibility();
 
 								break;
 							case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-								RenderWindowPainter::RenderChannelNotifications->Queue(3, "Thawed all of the active cell's references");
+								Ref->SetFrozenState(false);
 
 								break;
 							}
+						}
+
+						switch (LOWORD(wParam))
+						{
+						case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
+							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Reset visibility flags on the active cell's references");
+
+							break;
+						case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
+							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Thawed all of the active cell's references");
+
+							break;
 						}
 
 						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
@@ -2159,6 +2144,14 @@ namespace ConstructionSetExtender
 							Buffer.Add(Itr->Data);
 
 						Buffer.Copy();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_PASTEFROMGLOBALCLIPBOARD:
+					{
+						BGSEECLIPBOARD->Paste();
+						Return = true;
 					}
 
 					break;
@@ -2178,9 +2171,9 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_RENDERWINDOWCONTEXT_SAVEEXTERIORSNAPSHOT:
 					{
-						SME_ASSERT(*TESRenderWindow::CurrentlyLoadedExteriorCell && _TES->currentInteriorCell == NULL);
+						SME_ASSERT(*TESRenderWindow::ActiveCell && _TES->currentInteriorCell == NULL);
 
-						TESLODTextureGenerator::SaveExteriorSnapshot(*TESRenderWindow::CurrentlyLoadedExteriorCell,
+						TESLODTextureGenerator::SaveExteriorSnapshot(*TESRenderWindow::ActiveCell,
 																	Settings::Renderer::kExteriorSnapshotResolution.GetData().i,
 																	NULL) ;
 					}
@@ -2275,7 +2268,7 @@ namespace ConstructionSetExtender
 
 						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
 						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::CurrentlyLoadedExteriorCell;
+							CurrentCell = *TESRenderWindow::ActiveCell;
 
 						if (CurrentCell)
 						{
@@ -2654,13 +2647,12 @@ namespace ConstructionSetExtender
 					{
 						Return = true;
 
-						TESObjectCELL* Current = _TES->currentInteriorCell;
-						if (Current == NULL)
-							Current = *TESRenderWindow::CurrentlyLoadedExteriorCell;
+						CellObjectListT Refs;
+						TESRenderWindow::GetActiveCellObjects(Refs);
 
-						for (TESObjectCELL::ObjectREFRList::Iterator Itr = Current->objectList.Begin(); Itr.End() == false; ++Itr)
+						for (CellObjectListT::iterator Itr = Refs.begin(); Itr != Refs.end(); ++Itr)
 						{
-							TESObjectREFR* Ref = Itr.Get();
+							TESObjectREFR* Ref = *Itr;
 
 							if (_RENDERSEL->HasObject(Ref) == false &&
 								(Ref->formFlags & TESObjectREFR::kSpecialFlags_3DInvisible) == false &&
@@ -2707,11 +2699,11 @@ namespace ConstructionSetExtender
 						break;
 
 					Return = true;
-					ObjectWindowManager::Instance.RefreshImposters();
+					ObjectWindowImposterManager::Instance.RefreshImposters();
 					SendMessage(hWnd, 0x41A, NULL, NULL);
 				}
 			case WM_ACTIVATE:
-				ObjectWindowManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
+				ObjectWindowImposterManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
 				Return = true;
 
 				break;
@@ -2724,7 +2716,7 @@ namespace ConstructionSetExtender
 			case WM_DESTROY:
 				{
 					CSEFilterableFormListManager::Instance.Unregister(hWnd);
-					ObjectWindowManager::Instance.DestroyImposters();
+					ObjectWindowImposterManager::Instance.DestroyImposters();
 					TESObjectWindow::PrimaryObjectWindowHandle = NULL;
 				}
 
@@ -2744,7 +2736,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_SIZE:
-				ObjectWindowManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
+				ObjectWindowImposterManager::Instance.HandleObjectWindowSizing(hWnd, uMsg, wParam, lParam);
 				Return = true;
 
 				break;
@@ -3156,7 +3148,7 @@ namespace ConstructionSetExtender
 								LipPath += ".lip";
 
 								HWND NPCEditDlg = NULL;
-								for (tList<HWND>::Iterator Itr = TESDialog::OpenEditWindows->Begin(); Itr.End() == false && Itr.Get(); ++Itr)
+								for (tList<HWND>::Iterator Itr = TESDialog::OpenDialogWindows->Begin(); Itr.End() == false && Itr.Get(); ++Itr)
 								{
 									HWND Current = (HWND)Itr.Get();
 									TESForm* Form = TESDialog::GetDialogExtraParam(Current);
@@ -4365,7 +4357,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					if (*TESRenderWindow::CurrentlyLoadedExteriorCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
+					if (*TESRenderWindow::ActiveCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
 						SendMessage(hWnd, WM_COMMAND, 2, NULL);			// otherwise, the editor will crash as soon as the render window acquires input focus
 					else
 						SendDlgItemMessage(hWnd, 1492, LVM_SORTITEMS, 0, (LPARAM)0x0041E7D0);		// TESDialog::SortComparatorLandTextureList
@@ -4823,7 +4815,7 @@ namespace ConstructionSetExtender
 						delete xData;
 					}
 
-					ObjectWindowManager::Instance.RefreshImposters();
+					ObjectWindowImposterManager::Instance.RefreshImposters();
 				}
 
 				break;

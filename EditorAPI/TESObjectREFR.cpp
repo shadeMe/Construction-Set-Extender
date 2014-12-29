@@ -67,7 +67,7 @@ void TESObjectREFR::SetScale( float Scale )
 
 void TESObjectREFR::SetPosition( float X, float Y, float Z )
 {
-	thisCall<TESObjectCELL*>(0x00544380, this);
+	thisCall<TESObjectCELL*>(0x00544380, this);			// subspace related
 	TESObjectCELL* ExteriorAtCoordsProlog = NULL;
 	TESObjectCELL* ExteriorAtCoordsEpilog = NULL;
 

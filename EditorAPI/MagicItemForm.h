@@ -8,7 +8,7 @@
 
 /*
 	MagicItemForm is an abstract form component for objects with 'castable' effects that cannot be
-    placed as references, i.e. Spells & Enchantments.
+	placed as references, i.e. Spells & Enchantments.
 */
 
 // 10C
