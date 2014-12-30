@@ -152,7 +152,7 @@ namespace ConstructionSetExtender
 							EnumerateItem(Itr);
 					}
 
-					for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+					for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 					{
 						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
@@ -168,7 +168,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case Operation::e_Call:
-				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
 					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_UserFunct)
 					{
@@ -222,7 +222,7 @@ namespace ConstructionSetExtender
 					}
 				}
 
-				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
 					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && CallingObjectIsRef)
 					{
@@ -239,7 +239,7 @@ namespace ConstructionSetExtender
 						EnumerateItem(Itr);
 				}
 
-				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
 					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
 						Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar)
@@ -255,7 +255,7 @@ namespace ConstructionSetExtender
 					if (CurrentToken->Length > 1)
 						CurrentToken = CurrentToken->Remove(0, 1);		// remove leading tilde character
 
-					for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+					for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 					{
 						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Snippet)
 						{
@@ -475,9 +475,9 @@ namespace ConstructionSetExtender
 
 			if (Item == nullptr)
 			{
-				for each (IntelliSenseItem^ Itr in ISDB->Enumerables)
+				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
-					if (Itr->GetIsQuickViewable() && !String::Compare(Itr->GetIdentifier(), MainToken, true))
+					if (Itr->GetIsQuickViewable(MainToken))
 					{
 						Item = Itr;
 						break;

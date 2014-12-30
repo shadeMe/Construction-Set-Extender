@@ -54,9 +54,9 @@ namespace ConstructionSetExtender
 				return GetIdentifier()->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
 		}
 
-		bool IntelliSenseItem::GetIsQuickViewable()
+		bool IntelliSenseItem::GetIsQuickViewable(String^ Token)
 		{
-			return true;
+			return !String::Compare(GetIdentifier(), Token, true);
 		}
 
 		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source) :
@@ -96,6 +96,30 @@ namespace ConstructionSetExtender
 		String^ IntelliSenseItemScriptCommand::GetSubstitution()
 		{
 			return GetIdentifier();
+		}
+
+		bool IntelliSenseItemScriptCommand::GetShouldEnumerate(String^ Token, bool SubstringSearch)
+		{
+			bool Found = false;
+			if (SubstringSearch)
+				Found = Name->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1;
+			else
+				Found = Name->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
+
+			if (Found == false)
+			{
+				if (SubstringSearch)
+					Found = Shorthand->IndexOf(Token, System::StringComparison::CurrentCultureIgnoreCase) != -1;
+				else
+					Found = Shorthand->StartsWith(Token, System::StringComparison::CurrentCultureIgnoreCase);
+			}
+
+			return Found;
+		}
+
+		bool IntelliSenseItemScriptCommand::GetIsQuickViewable(String^ Token)
+		{
+			return !String::Compare(Name, Token, true) || !String::Compare(Shorthand, Token, true);
 		}
 
 		IntelliSenseItemVariable::IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope) :
@@ -389,7 +413,7 @@ namespace ConstructionSetExtender
 			return Parent->Code;
 		}
 
-		bool IntelliSenseItemCodeSnippet::GetIsQuickViewable()
+		bool IntelliSenseItemCodeSnippet::GetIsQuickViewable(String^ Token)
 		{
 			return false;
 		}

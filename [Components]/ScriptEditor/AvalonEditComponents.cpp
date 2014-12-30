@@ -1,8 +1,6 @@
 #include "AvalonEditComponents.h"
 #include "ScriptEditorPreferences.h"
 
-#define VERSION_4_0_0_7070 0
-
 namespace ConstructionSetExtender
 {
 	namespace TextEditors
@@ -22,8 +20,7 @@ namespace ConstructionSetExtender
 				TextSegment^ Segment = gcnew TextSegment();
 				Segment->StartOffset = StartOffset;
 				Segment->EndOffset = EndOffset;
-
-#if VERSION_4_0_0_7070
+#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_4_0_0_7070
 				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment))
 #else
 				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
@@ -556,7 +553,9 @@ namespace ConstructionSetExtender
 			}
 
 			AvalonEditObScriptCodeFoldingStrategy::AvalonEditObScriptCodeFoldingStrategy() :
+#if BUILD_AVALONEDIT_VERSION != AVALONEDIT_5_0_1
 				AvalonEdit::Folding::AbstractFoldingStrategy(),
+#endif
 				FoldingParser(gcnew ScriptParser()),
 				Sorter(gcnew FoldingSorter())
 			{

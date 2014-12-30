@@ -201,6 +201,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="EditorAPI\EffectSetting.cpp" />
     <ClCompile Include="EditorAPI\ExtraDataList.cpp" />
     <ClCompile Include="EditorAPI\GameSetting.cpp" />
+    <ClCompile Include="EditorAPI\MagicItem.cpp" />
     <ClCompile Include="EditorAPI\MagicItemForm.cpp" />
     <ClCompile Include="EditorAPI\MemoryHeap.cpp" />
     <ClCompile Include="EditorAPI\NiClasses.cpp" />

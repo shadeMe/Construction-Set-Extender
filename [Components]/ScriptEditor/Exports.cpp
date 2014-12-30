@@ -61,6 +61,7 @@ void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTDa
 
 	ISDB->InitializeCommandTableDatabase(Data);
 	ISDB->InitializeGMSTDatabase(GMSTData);
+	ISDB->ForceUpdateDatabase();
 
 	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
 }

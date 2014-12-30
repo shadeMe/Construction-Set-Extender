@@ -46,7 +46,7 @@ namespace ConstructionSetExtender
 			virtual String^										Describe();
 			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface); // argument's a ScriptEditor::Workspace^
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);		// returns true if the item can be enumerated in the interface
-			virtual bool										GetIsQuickViewable();					// returns true if the item allows a quick view tooltip
+			virtual bool										GetIsQuickViewable(String^ Token);					// returns true if the item allows a quick view tooltip and the token matches
 			virtual String^										GetIdentifier() = 0;					// identifier for display in the interface
 			virtual String^										GetSubstitution() = 0;					// string to be inserted into the code
 
@@ -95,8 +95,10 @@ namespace ConstructionSetExtender
 		public:
 			IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source);
 
+			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
+			virtual bool										GetIsQuickViewable(String^ Token) override;
 			bool												GetRequiresParent();
 			IntelliSenseCommandItemSourceType					GetSource();
 		};
@@ -217,7 +219,7 @@ namespace ConstructionSetExtender
 
 			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface) override;
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
-			virtual bool										GetIsQuickViewable() override;
+			virtual bool										GetIsQuickViewable(String^ Token) override;
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
 		};

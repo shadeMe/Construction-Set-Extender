@@ -217,6 +217,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClInclude Include="..\..\[Common]\CustomInputBox.h" />
     <ClInclude Include="..\..\[Common]\NativeWrapper.h" />
     <ClInclude Include="AvalonEditComponents.h" />
+    <ClInclude Include="AvalonEditDefs.h" />
     <ClInclude Include="FindReplaceDialog.h" />
     <ClInclude Include="IntelliSense\IntelliSenseDatabase.h" />
     <ClInclude Include="IntelliSense\IntelliSenseInterface.h" />

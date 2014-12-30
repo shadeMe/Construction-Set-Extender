@@ -296,6 +296,9 @@
     <ClCompile Include="CSEDialogImposterManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="EditorAPI\MagicItem.cpp">
+      <Filter>EditorAPI\Forms\Magic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">

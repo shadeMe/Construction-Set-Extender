@@ -181,12 +181,21 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void __stdcall DoPostPluginLoadHook(void)
+		void __stdcall DoPostPluginLoadHook(bool State)
 		{
-			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
-			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+			if (State == false)
+			{
+				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::WindowHandle);
+			}
+			else
+			{
+				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::WindowHandle);
 
-			SetActiveWindow(*TESCSMain::WindowHandle);				// to make sure none of its child dialogs are hidden behind it
+				CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+				SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+
+				SetActiveWindow(*TESCSMain::WindowHandle);				// to make sure none of its child dialogs are hidden behind it
+			}
 		}
 
 		#define _hhName	PostPluginLoad
@@ -196,10 +205,18 @@ namespace ConstructionSetExtender
 			_hhSetVar(Call, 0x00430980);
 			__asm
 			{
-				call	_hhGetVar(Call)
 				pushad
+				push	0
 				call	DoPostPluginLoadHook
 				popad
+
+				call	_hhGetVar(Call)
+
+				pushad
+				push	1
+				call	DoPostPluginLoadHook
+				popad
+
 				jmp		_hhGetVar(Retn)
 			}
 		}

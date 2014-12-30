@@ -1127,6 +1127,7 @@ namespace ConstructionSetExtender
 		{
 			Form->PopulateCrossReferenceListView(ListView);
 
+			MagicItem* Item = NULL;
 			if (Form->formType == TESForm::kFormType_Script)
 			{
 				Script* ThisScript = CS_CAST(Form, TESForm, Script);
@@ -1134,6 +1135,14 @@ namespace ConstructionSetExtender
 
 				ThisScript->GetEffectItemReferences(EffectRefs);
 				for (ScriptMagicItemCrossRefListT::iterator Itr = EffectRefs.begin(); Itr != EffectRefs.end(); ++Itr)
+					TESListView::InsertItem(ListView, *Itr);
+			}
+			else if ((Item = CS_CAST(Form, TESForm, MagicItem)))
+			{
+				MagicItemScriptCrossRefListT ScriptRefs;
+
+				Item->GetScriptReferences(ScriptRefs);
+				for (MagicItemScriptCrossRefListT::iterator Itr = ScriptRefs.begin(); Itr != ScriptRefs.end(); ++Itr)
 					TESListView::InsertItem(ListView, *Itr);
 			}
 		}

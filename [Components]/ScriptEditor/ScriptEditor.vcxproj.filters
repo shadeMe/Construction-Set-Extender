@@ -166,6 +166,9 @@
     <ClInclude Include="SnippetManager.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="AvalonEditDefs.h">
+      <Filter>Components\TextEditors\AvalonEdit</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images.resx">

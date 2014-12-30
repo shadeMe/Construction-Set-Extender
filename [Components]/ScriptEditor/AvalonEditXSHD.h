@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AvalonEditDefs.h"
+
 namespace ConstructionSetExtender
 {
 	namespace TextEditors

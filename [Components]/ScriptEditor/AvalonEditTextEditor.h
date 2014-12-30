@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AvalonEditDefs.h"
 #include "ScriptTextEditorInterface.h"
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"

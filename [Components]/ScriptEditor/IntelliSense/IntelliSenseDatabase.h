@@ -10,6 +10,8 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseInterface;
 		ref struct IntelliSenseParseScriptData;
 		ref class CodeSnippetCollection;
+		ref class IntelliSenseItemScriptCommand;
+		ref class IntelliSenseItemVariable;
 
 		ref class IntelliSenseDatabase
 		{
@@ -25,11 +27,17 @@ namespace ConstructionSetExtender
 			Dictionary<String^, String^>^						DeveloperURLMap;
 			Dictionary<String^, Script^>^						RemoteScripts;				// key = baseEditorID
 			CodeSnippetCollection^								CodeSnippets;
-			UInt32												UpdateTimerInterval;	// in minutes
+			UInt32												UpdateTimerInterval;		// in minutes
+			LinkedList<IntelliSenseItemScriptCommand^>^			ScriptCommands;
+			LinkedList<IntelliSenseItemVariable^>^				GameSettings;
+			LinkedList<IntelliSenseItem^>^						Enumerables;
 
 			void												UpdateDatabase();
 		public:
-			LinkedList<IntelliSenseItem^>^						Enumerables;
+			property LinkedList<IntelliSenseItem^>^		ItemRegistry
+			{
+				virtual LinkedList<IntelliSenseItem^>^ get() { return Enumerables; }
+			}
 
 			virtual ~IntelliSenseDatabase();
 

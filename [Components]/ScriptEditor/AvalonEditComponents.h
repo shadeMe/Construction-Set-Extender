@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AvalonEditDefs.h"
 #include "ScriptParser.h"
 
 using namespace ICSharpCode;
@@ -127,7 +128,11 @@ namespace ConstructionSetExtender
 				AvalonEditObScriptIndentStrategy(bool TrimTrailingWhitespace, bool CullEmptyLines);
 			};
 
-			ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::AbstractFoldingStrategy
+#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
+			ref class AvalonEditObScriptCodeFoldingStrategy
+#else
+			ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::XmlFoldingStrategy
+#endif
 			{
 				ref class FoldingSorter : public IComparer<AvalonEdit::Folding::NewFolding^>
 				{
@@ -140,8 +145,11 @@ namespace ConstructionSetExtender
 			public:
 				virtual ~AvalonEditObScriptCodeFoldingStrategy();
 
+#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
+				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset);
+#else
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;
-
+#endif
 				AvalonEditObScriptCodeFoldingStrategy();
 			};
 

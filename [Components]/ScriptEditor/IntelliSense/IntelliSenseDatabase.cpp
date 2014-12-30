@@ -31,6 +31,8 @@ namespace ConstructionSetExtender
 			DeveloperURLMap = gcnew Dictionary<String^, String^>();
 			RemoteScripts = gcnew Dictionary<String^, Script^>();
 			CodeSnippets = gcnew CodeSnippetCollection();
+			ScriptCommands = gcnew LinkedList<IntelliSenseItemScriptCommand^>();
+			GameSettings = gcnew LinkedList<IntelliSenseItemVariable^>();
 
 			UpdateTimerInterval = PREFERENCES->FetchSettingAsInt("DatabaseUpdateInterval", "IntelliSense");
 
@@ -58,6 +60,8 @@ namespace ConstructionSetExtender
 			UserFunctionList->Clear();
 			DeveloperURLMap->Clear();
 			RemoteScripts->Clear();
+			ScriptCommands->Clear();
+			GameSettings->Clear();
 
 			Singleton = nullptr;
 		}
@@ -81,8 +85,8 @@ namespace ConstructionSetExtender
 					ComponentDLLInterface::IntelliSenseUpdateData* DataHandlerData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetIntelliSenseUpdateData();
 
 					UserFunctionList->Clear();
-					Enumerables->Clear();
 					RemoteScripts->Clear();
+					Enumerables->Clear();
 
 					for (ComponentDLLInterface::ScriptData* Itr = DataHandlerData->ScriptListHead;
 															Itr != DataHandlerData->ScriptListHead + DataHandlerData->ScriptCount;
@@ -135,21 +139,20 @@ namespace ConstructionSetExtender
 						}
 					}
 
-					for each (IntelliSenseItem^ Itr in Enumerables)
-					{
-						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
-							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST)
-						{
-							Enumerables->AddLast(Itr);
-						}
-					}
+					for each (IntelliSenseItem^ Itr in ScriptCommands)
+						Enumerables->AddLast(Itr);
+
+					for each (IntelliSenseItem^ Itr in GameSettings)
+						Enumerables->AddLast(Itr);
 
 					for each (UserFunction^ Itr in UserFunctionList)
 					{
 						Enumerables->AddLast(gcnew IntelliSenseItemUserFunction(Itr));
 					}
 
-					for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead; Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount; ++Itr)
+					for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead;
+						 Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount;
+						 ++Itr)
 					{
 						if (!Itr->IsValid())
 							continue;
@@ -364,7 +367,7 @@ namespace ConstructionSetExtender
 				if (ReturnType == 6)
 					ReturnType = 0;
 
-				Enumerables->AddLast(gcnew IntelliSenseItemScriptCommand(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType, Source));
+				ScriptCommands->AddLast(gcnew IntelliSenseItemScriptCommand(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType, Source));
 
 				CSCount++;
 				Count++;
@@ -382,11 +385,11 @@ namespace ConstructionSetExtender
 					continue;
 
 				if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
-					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Integer, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Integer, IntelliSenseItem::IntelliSenseItemType::e_GMST));
 				else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
-					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GMST));
 				else
-					Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GMST));
 			}
 
 			DebugPrint(String::Format("\tParsed {0} Game Settings", GMSTCollection->GMSTCount));

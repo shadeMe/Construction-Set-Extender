@@ -417,17 +417,33 @@ namespace ConstructionSetExtender
 				FORMAT_STR(Buffer, "Preview Window - '%s' %08X", Object->GetEditorID(), Object->formID);
 				SetWindowText(hWnd, Buffer);
 
+				int X = INISettingCollection::Instance->LookupByName("iPreviewX:General")->value.i;
+				int Y = INISettingCollection::Instance->LookupByName("iPreviewY:General")->value.i;
+				int W = INISettingCollection::Instance->LookupByName("iPreviewW:General")->value.i;
+				int H = INISettingCollection::Instance->LookupByName("iPreviewH:General")->value.i;
+				MoveWindow(hWnd, X, Y, W, H, TRUE);
+
 				SetWindowLongPtr(AnimList, GWL_USERDATA, 1);
 
 				DlgProcResult = TRUE;
 				break;
 			}
 		case WM_DESTROY:
-			KillTimer(hWnd, 1);
-			TESDialog::DestroyDialogExtraDataList(hWnd);
+			{
+				RECT Bounds = { 0 };
+				GetWindowRect(hWnd, &Bounds);
 
-			DlgProcResult = TRUE;
-			break;
+				INISettingCollection::Instance->LookupByName("iPreviewX:General")->value.i = Bounds.left;
+				INISettingCollection::Instance->LookupByName("iPreviewY:General")->value.i = Bounds.top;
+				INISettingCollection::Instance->LookupByName("iPreviewW:General")->value.i = Bounds.right - Bounds.left;
+				INISettingCollection::Instance->LookupByName("iPreviewH:General")->value.i = Bounds.bottom - Bounds.top;
+
+				KillTimer(hWnd, 1);
+				TESDialog::DestroyDialogExtraDataList(hWnd);
+
+				DlgProcResult = TRUE;
+				break;
+			}
 		}
 
 		if (DlgProcResult == FALSE && GetWindowLongPtr(AnimList, GWL_USERDATA) != NULL)

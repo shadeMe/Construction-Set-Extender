@@ -984,7 +984,15 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::UpdateCodeFoldings()
 			{
 				if (IsFocused && CodeFoldingStrategy != nullptr)
+				{
+#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
+					int FirstErrorOffset = 0;
+					IEnumerable<AvalonEdit::Folding::NewFolding^>^ Foldings = CodeFoldingStrategy->CreateNewFoldings(TextField->Document, FirstErrorOffset);
+					CodeFoldingManager->UpdateFoldings(Foldings, FirstErrorOffset);
+#else
 					CodeFoldingStrategy->UpdateFoldings(CodeFoldingManager, TextField->Document);
+#endif
+				}
 			}
 
 			void AvalonEditTextEditor::SynchronizeExternalScrollBars()
@@ -1876,7 +1884,6 @@ namespace ConstructionSetExtender
 				TextField->Foreground = ForegroundBrush;
 				TextField->Background = BackgroundBrush;
 				TextField->LineNumbersForeground = ForegroundBrush;
-
 
 				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField,
 																																KnownLayer::Background));
