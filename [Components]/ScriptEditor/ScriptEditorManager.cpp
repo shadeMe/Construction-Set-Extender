@@ -71,6 +71,11 @@ namespace ConstructionSetExtender
 				DebugPrint("ScriptEditorManager couldn't complete operation '" + TypeIdentifier[(int)Op] + "'", true);
 				DebugPrint("\tException: " + E->Message);
 				DebugPrint("\tStack Trace:\n" + E->StackTrace);
+
+				if (Marshal::GetHRForException(E) == 0x80131515)
+				{
+					DebugPrint("This error is caused by a blocked .NET assembly. Ensure that the downloaded CSE archive and its contents were unblocked as specified in the readMe file");
+				}
 			}
 
 			return Result;
