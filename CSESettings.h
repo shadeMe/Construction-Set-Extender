@@ -39,6 +39,7 @@ namespace ConstructionSetExtender
 			extern INISetting					kFaceGenPreviewResponseWindow;
 			extern INISetting					kFaceGenPreviewVoiceDelay;
 			extern INISetting					kDisableSplashScreen;
+			extern INISetting					kShowSecondaryHallOfFameMembers;
 		}
 
 		namespace LOD

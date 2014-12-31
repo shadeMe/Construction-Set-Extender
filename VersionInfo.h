@@ -29,19 +29,19 @@
 #if defined(CSE)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender"
 #elif defined(CSE_SE)
-	#define VER_PRODUCTNAME_STR         "ScriptEditor"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.ScriptEditor"
 #elif defined(CSE_SEPREPROC)
-	#define VER_PRODUCTNAME_STR         "ScriptEditor.Preprocessor"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.ScriptEditor.Preprocessor"
 #elif defined(CSE_BATCHEDITOR)
-	#define VER_PRODUCTNAME_STR         "BatchEditor"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.BatchEditor"
 #elif defined(CSE_BSAVIEWER)
-	#define VER_PRODUCTNAME_STR         "BSAViewer"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.BSAViewer"
 #elif defined(CSE_LIPSYNC)
-	#define VER_PRODUCTNAME_STR         "LipSyncPipeClient"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.LipSyncPipeClient"
 #elif defined(CSE_TAGBROWSER)
-	#define VER_PRODUCTNAME_STR         "TagBrowser"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.TagBrowser"
 #elif defined(CSE_USEINFOLIST)
-	#define VER_PRODUCTNAME_STR         "UseInfoList"
+	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.UseInfoList"
 #else
 	#define VER_PRODUCTNAME_STR         "<Unknown>"
 #endif

@@ -1114,6 +1114,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x0041CDC8);
 			__asm
 			{
+				mov		[ebp - 0x14], eax
 				pushad
 				push	eax
 				call	DoDisableSplashScreenHook

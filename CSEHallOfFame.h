@@ -78,5 +78,11 @@ namespace ConstructionSetExtender
 
 		void						Initialize(void);
 		void						GetRandomESMember(std::string& OutName, bool Possessive = true);
+		enum
+		{
+			kDisplayESMember_None	= 0,
+			kDisplayESMember_ObjectPreview,
+			kDisplayESMember_ObjectPreviewEdit,
+		};
 	}
 }

@@ -2726,9 +2726,12 @@ namespace ConstructionSetExtender
 					SME_ASSERT(FilterEditBox);
 					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
 
-					std::string WndTitle;
-					HallOfFame::GetRandomESMember(WndTitle);
-					WndTitle += " Object Window";
+					std::string WndTitle = "Object Window";
+					if (Settings::General::kShowSecondaryHallOfFameMembers().i != HallOfFame::kDisplayESMember_None)
+					{
+						HallOfFame::GetRandomESMember(WndTitle);
+						WndTitle += " Object Window";
+					}
 					SetWindowText(hWnd, WndTitle.c_str());
 
 					TESObjectWindow::PrimaryObjectWindowHandle = hWnd;
@@ -4788,10 +4791,14 @@ namespace ConstructionSetExtender
 
 					if (WorkingCopy)
 					{
-						std::string WndTitle;
+						std::string Desc = std::string(WorkingCopy->GetTypeIDString()) + " [" + std::string(WorkingCopy->GetEditorID()) + "]";
+						std::string WndTitle = Desc;
 
-						HallOfFame::GetRandomESMember(WndTitle);
-						WndTitle += " " + std::string(WorkingCopy->GetTypeIDString()) + " [" + std::string(WorkingCopy->GetEditorID()) + "]";
+						if (Settings::General::kShowSecondaryHallOfFameMembers().i == HallOfFame::kDisplayESMember_ObjectPreviewEdit)
+						{
+							HallOfFame::GetRandomESMember(WndTitle);
+							WndTitle += " " + Desc;
+						}
 						SetWindowText(hWnd, WndTitle.c_str());
 					}
 				}

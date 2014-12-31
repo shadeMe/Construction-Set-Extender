@@ -119,13 +119,16 @@ namespace ConstructionSetExtender
 
 				// reproduce the relevant bits of the org wnd proc's code
 				CacheOperator CacheBackup(hWnd);
-				std::string WndTitle;
+				std::string WndTitle = "Object Window";
 
 				TESObjectWindow::PerformLimitedInit(hWnd);
 				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_REFRESHTREEVIEW, NULL, NULL);
 
-				HallOfFame::GetRandomESMember(WndTitle);
-				WndTitle += " Object Window";
+				if (Settings::General::kShowSecondaryHallOfFameMembers().i != HallOfFame::kDisplayESMember_None)
+				{
+					HallOfFame::GetRandomESMember(WndTitle);
+					WndTitle += " Object Window";
+				}
 				SetWindowText(hWnd, WndTitle.c_str());
 
 				BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(hWnd, UIManager::CommonDialogExtraFittingsSubClassProc);
@@ -415,7 +418,13 @@ namespace ConstructionSetExtender
 
 				char Buffer[0x100] = { 0 };
 				FORMAT_STR(Buffer, "Preview Window - '%s' %08X", Object->GetEditorID(), Object->formID);
-				SetWindowText(hWnd, Buffer);
+				std::string WndTitle = Buffer;
+				if (Settings::General::kShowSecondaryHallOfFameMembers().i != HallOfFame::kDisplayESMember_None)
+				{
+					HallOfFame::GetRandomESMember(WndTitle);
+					WndTitle += " " + std::string(Buffer);
+				}
+				SetWindowText(hWnd, WndTitle.c_str());
 
 				int X = INISettingCollection::Instance->LookupByName("iPreviewX:General")->value.i;
 				int Y = INISettingCollection::Instance->LookupByName("iPreviewY:General")->value.i;
