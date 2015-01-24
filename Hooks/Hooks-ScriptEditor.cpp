@@ -38,11 +38,11 @@ namespace ConstructionSetExtender
 			PatchCompilerErrorDetours();
 		}
 
-		void __stdcall InstantiateScriptEditor(HWND ScriptListComboBox)
+		void __stdcall InstantiateScriptEditor(HWND ParentWindow)
 		{
 			Script* AuxScript = NULL;
-			if (ScriptListComboBox)
-				AuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(ScriptListComboBox, kAssetFileButton_Script));
+			if (ParentWindow)
+				AuxScript = (Script*)TESComboBox::GetSelectedItemData(GetDlgItem(ParentWindow, kAssetFileButton_Script));
 
 			TESDialog::ShowScriptEditorDialog(AuxScript);
 		}

@@ -49,3 +49,8 @@ void BaseExtraList::RemoveExtra( UInt8 Type )
 {
 	thisCall<void>(0x0045B140, this, Type);
 }
+
+void BaseExtraList::Dtor(void)
+{
+	thisVirtualCall<void>(0x0, this, true);
+}

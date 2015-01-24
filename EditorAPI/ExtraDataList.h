@@ -25,7 +25,8 @@ public:
 	/*08*/ UInt8					extraTypes[0x0C];		// if a bit is set, then the extralist should contain that extradata
 															// bits are numbered starting from the lsb
 
-	virtual void					Dtor(bool ReleaseMemory);
+	// ### HACK - shitty workaround to allow instantiation
+	virtual void					Dtor(void);
 
 	// methods
 	void							AddExtra(BSExtraData* xData);

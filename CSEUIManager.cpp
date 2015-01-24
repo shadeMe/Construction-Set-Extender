@@ -2727,7 +2727,7 @@ namespace ConstructionSetExtender
 					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
 
 					std::string WndTitle = "Object Window";
-					if (Settings::General::kShowSecondaryHallOfFameMembers().i != HallOfFame::kDisplayESMember_None)
+					if (Settings::General::kShowHallOfFameMembersInTitleBar().i != HallOfFame::kDisplayESMember_None)
 					{
 						HallOfFame::GetRandomESMember(WndTitle);
 						WndTitle += " Object Window";
@@ -4794,7 +4794,7 @@ namespace ConstructionSetExtender
 						std::string Desc = std::string(WorkingCopy->GetTypeIDString()) + " [" + std::string(WorkingCopy->GetEditorID()) + "]";
 						std::string WndTitle = Desc;
 
-						if (Settings::General::kShowSecondaryHallOfFameMembers().i == HallOfFame::kDisplayESMember_ObjectPreviewEdit)
+						if (Settings::General::kShowHallOfFameMembersInTitleBar().i == HallOfFame::kDisplayESMember_ObjectPreviewEdit)
 						{
 							HallOfFame::GetRandomESMember(WndTitle);
 							WndTitle += " " + Desc;

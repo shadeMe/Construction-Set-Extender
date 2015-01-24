@@ -124,7 +124,7 @@ namespace ConstructionSetExtender
 				TESObjectWindow::PerformLimitedInit(hWnd);
 				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_REFRESHTREEVIEW, NULL, NULL);
 
-				if (Settings::General::kShowSecondaryHallOfFameMembers().i != HallOfFame::kDisplayESMember_None)
+				if (Settings::General::kShowHallOfFameMembersInTitleBar().i != HallOfFame::kDisplayESMember_None)
 				{
 					HallOfFame::GetRandomESMember(WndTitle);
 					WndTitle += " Object Window";
@@ -387,9 +387,10 @@ namespace ConstructionSetExtender
 				ImposterData* Data = (ImposterData*)lParam;
 				SME_ASSERT(Data);
 
-				ExtraDataList* ExtraList = TESDialog::CreateDialogExtraDataList(hWnd);
+				BaseExtraList* ExtraList = TESDialog::CreateDialogExtraDataList(hWnd);
 				SME_ASSERT(ExtraList);
 
+				Data->DialogExtraList = ExtraList;
 				Data->InitTickCount = GetTickCount();
 				Data->PreviewRef = (TESObjectREFR*)TESForm::CreateInstance(TESForm::kFormType_REFR);
 				Data->PreviewRef->MarkAsTemporary();
@@ -419,7 +420,7 @@ namespace ConstructionSetExtender
 				char Buffer[0x100] = { 0 };
 				FORMAT_STR(Buffer, "Preview Window - '%s' %08X", Object->GetEditorID(), Object->formID);
 				std::string WndTitle = Buffer;
-				if (Settings::General::kShowSecondaryHallOfFameMembers().i != HallOfFame::kDisplayESMember_None)
+				if (Settings::General::kShowHallOfFameMembersInTitleBar().i != HallOfFame::kDisplayESMember_None)
 				{
 					HallOfFame::GetRandomESMember(WndTitle);
 					WndTitle += " " + std::string(Buffer);
@@ -448,7 +449,6 @@ namespace ConstructionSetExtender
 				INISettingCollection::Instance->LookupByName("iPreviewH:General")->value.i = Bounds.bottom - Bounds.top;
 
 				KillTimer(hWnd, 1);
-				TESDialog::DestroyDialogExtraDataList(hWnd);
 
 				DlgProcResult = TRUE;
 				break;
@@ -472,13 +472,20 @@ namespace ConstructionSetExtender
 		Renderer = NULL;
 		PreviewSource = NULL;
 		ZeroMemory(&Bounds, sizeof(Bounds));
+		DialogExtraList = NULL;
 	}
 
 	PreviewWindowImposterManager::ImposterData::~ImposterData()
 	{
-		PreviewGround->DeleteInstance();
-		PreviewRef->DeleteInstance();
+		if (PreviewRef)
+			PreviewRef->DeleteInstance();
+
+		if (PreviewGround)
+			PreviewGround->DeleteInstance();
+
+		DialogExtraList->Dtor();
 	}
+
 	PreviewWindowImposterManager::CacheOperator::CacheOperator(HWND Imposter) :
 		ParentData(NULL)
 	{

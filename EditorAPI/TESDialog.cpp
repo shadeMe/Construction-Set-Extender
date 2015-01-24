@@ -282,9 +282,9 @@ void TESDialog::ClampDlgEditField(HWND EditControl, float Min, float Max, bool N
 	cdeclCall<void>(0x004042C0, EditControl, Min, Max, NoDecimals, DecimalPlaces);
 }
 
-ExtraDataList* TESDialog::GetDialogExtraDataList(HWND Dialog)
+BaseExtraList* TESDialog::GetDialogExtraDataList(HWND Dialog)
 {
-	return cdeclCall<ExtraDataList*>(0x00442980, Dialog);
+	return cdeclCall<BaseExtraList*>(0x00442980, Dialog);
 }
 
 bool TESDialog::CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LONG* outLong)
@@ -292,9 +292,9 @@ bool TESDialog::CallFormDialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wPara
 	return cdeclCall<bool>(0x00442BD0, hWnd, uMsg, wParam, lParam, outLong);
 }
 
-ExtraDataList* TESDialog::CreateDialogExtraDataList(HWND Dialog)
+BaseExtraList* TESDialog::CreateDialogExtraDataList(HWND Dialog)
 {
-	return cdeclCall<ExtraDataList*>(0x004428C0, Dialog);
+	return cdeclCall<BaseExtraList*>(0x004428C0, Dialog);
 }
 
 void TESDialog::AddDialogToOpenList(HWND Dialog)
@@ -309,7 +309,7 @@ void TESDialog::RemoveDialogFromOpenList(HWND Dialog)
 
 void TESDialog::DestroyDialogExtraDataList(HWND Dialog)
 {
-	cdeclCall<void>(0x004428C0, Dialog);
+	cdeclCall<void>(0x00442950, Dialog);
 }
 
 void TESComboBox::AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth)
@@ -319,7 +319,7 @@ void TESComboBox::AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDr
 
 void* TESComboBox::GetSelectedItemData(HWND hWnd)
 {
-	return cdeclCall<void*>(0x00442950, hWnd);
+	return cdeclCall<void*>(0x00403690, hWnd);
 }
 
 void TESComboBox::PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem)

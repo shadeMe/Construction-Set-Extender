@@ -26,7 +26,7 @@ class	TESObjectREFR;
 class	BSExtraData;
 class	TESBoundObject;
 class	TESPreviewControl;
-class	ExtraDataList;
+class	BaseExtraList;
 
 // FormEditParam - for form-editing dialogs.
 // passed as initParam to CreateDialogParam() (i.e. lParam on WM_INITDIALOG message) for form-editing dialogs
@@ -430,8 +430,8 @@ public:
 	static void								ClampDlgEditField(HWND EditControl, float Min, float Max, bool NoDecimals = false, UInt32 DecimalPlaces = 2);
 
 	static void								ShowDialogPopupMenu(HMENU Menu, POINT* Coords, HWND Parent, LPARAM Data = NULL);
-	static ExtraDataList*					GetDialogExtraDataList(HWND Dialog);
-	static ExtraDataList*					CreateDialogExtraDataList(HWND Dialog);
+	static BaseExtraList*					GetDialogExtraDataList(HWND Dialog);
+	static BaseExtraList*					CreateDialogExtraDataList(HWND Dialog);
 	static void								DestroyDialogExtraDataList(HWND Dialog);
 
 	static void								AddDialogToOpenList(HWND Dialog);

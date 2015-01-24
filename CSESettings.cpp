@@ -30,7 +30,7 @@ namespace ConstructionSetExtender
 			Depot.push_back(&General::kFaceGenPreviewResponseWindow);
 			Depot.push_back(&General::kFaceGenPreviewVoiceDelay);
 			Depot.push_back(&General::kDisableSplashScreen);
-			Depot.push_back(&General::kShowSecondaryHallOfFameMembers);
+			Depot.push_back(&General::kShowHallOfFameMembersInTitleBar);
 
 			Depot.push_back(&LOD::kPartialTextureResolution);
 			Depot.push_back(&LOD::kDeletePartialsAfterGeneration);
@@ -114,7 +114,7 @@ namespace ConstructionSetExtender
 			INISetting		kFaceGenPreviewResponseWindow("FaceGenPreviewResponseWindow", GENERAL_INISECTION, "Preview voice/lip file playback in NPC dialogs", (SInt32)0);
 			INISetting		kFaceGenPreviewVoiceDelay("FaceGenPreviewVoiceDelay", GENERAL_INISECTION, "Delay, in milliseconds, between voice file and lip sync file playback during previews", (SInt32)50);
 			INISetting		kDisableSplashScreen("DisableSplashScreen", GENERAL_INISECTION, "Disables the startup splash screen", (SInt32)0);
-			INISetting		kShowSecondaryHallOfFameMembers("ShowSecondaryHallOfFameMembers", GENERAL_INISECTION, "Displays names of various ES Modding community members in dialog title bars. 0 - Disable | 1 - Object Windows + Preview Windows | 2 - Object Windows + Preview Windows + Edit Dialogs", (SInt32)1);
+			INISetting		kShowHallOfFameMembersInTitleBar("ShowHallOfFameMembersInTitleBar", GENERAL_INISECTION, "Displays names of various ES Modding community members in dialog title bars. 0 - Disable | 1 - Object Windows + Preview Windows | 2 - Object Windows + Preview Windows + Edit Dialogs", (SInt32)1);
 		}
 
 		namespace LOD

@@ -80,6 +80,7 @@ namespace ConstructionSetExtender
 			TESPreviewControl*			Renderer;
 			RECT						Bounds;
 			TESBoundObject*				PreviewSource;
+			BaseExtraList*				DialogExtraList;
 
 			ImposterData();
 			~ImposterData();
