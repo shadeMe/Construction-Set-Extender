@@ -26,10 +26,10 @@ namespace BGSEditorExtender
 		Valid(false),
 		InputParams(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags)
 	{
-		CreateD3D();
+		;//
 	}
 
-	bool BGSEERenderChannelBase::CreateD3D(void)
+	bool BGSEERenderChannelBase::CreateD3D(LPDIRECT3DDEVICE9 Device, HWND Window)
 	{
 		Valid = false;
 
@@ -37,7 +37,7 @@ namespace BGSEditorExtender
 		if (InputParams.DrawAreaFlags)
 		{
 			RECT RenderWindowBounds;
-			GetClientRect(BGSEERWPAINTER->GetD3DWindow(), &RenderWindowBounds);
+			GetClientRect(Window, &RenderWindowBounds);
 
 			UInt32 RenderWindowWidth = RenderWindowBounds.right,
 				RenderWindowHeight = RenderWindowBounds.bottom;
@@ -55,7 +55,8 @@ namespace BGSEditorExtender
 			}
 		}
 
-		HRESULT OpResult = D3DXCreateFont(BGSEERWPAINTER->GetD3DDevice(),
+		SME_ASSERT(Font == NULL);
+		HRESULT OpResult = D3DXCreateFont(Device,
 										InputParams.FontHeight, InputParams.FontWidth,
 										InputParams.FontWeight, 0, FALSE,
 										DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
@@ -85,79 +86,154 @@ namespace BGSEditorExtender
 		ReleaseD3D();
 	}
 
-	BGSEEStaticRenderChannel::BGSEEStaticRenderChannel( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= 0*/, RenderHandler RenderCallback ) :
+	BGSEEStaticRenderChannel::BGSEEStaticRenderChannel(INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= kDrawAreaFlags_Default*/) :
 		BGSEERenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags),
-		RenderText(""),
-		RenderCallback(RenderCallback)
+		LastRenderedText("")
 	{
 		;//
 	}
 
 	BGSEEStaticRenderChannel::~BGSEEStaticRenderChannel()
 	{
-		RenderText.clear();
-		RenderCallback = NULL;
+		;//
 	}
 
-	void BGSEEStaticRenderChannel::Render(void* Parameter, LPD3DXSPRITE RenderToSprite)
+	void BGSEEStaticRenderChannel::Render(LPD3DXSPRITE RenderToSprite)
 	{
-		if (Valid == false || RenderCallback == NULL)
+		if (Valid == false)
 			return;
 
-		RenderText.clear();
-		if (RenderCallback(RenderText) == false)
+		std::string Drawable;
+		if (DrawText(Drawable) == false)
 			return;
 
-		Font->DrawTextA(RenderToSprite, RenderText.c_str(), -1, &RenderArea, InputParams.DrawFormat, InputParams.Color);
+		LastRenderedText = Drawable;
+		Font->DrawTextA(RenderToSprite, LastRenderedText.c_str(), -1, &RenderArea, InputParams.DrawFormat, InputParams.Color);
 	}
 
-	BGSEEDynamicRenderChannel::RenderTask::RenderTask( const char* Text, float SecondsToDisplay ) :
-		Text(Text),
-		RemainingTime(SecondsToDisplay)
+	VOID CALLBACK BGSEEDynamicRenderChannelScheduler::UpdateTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+	{
+		BGSEEDynamicRenderChannelScheduler::GetSingleton()->UpdateTasks(dwTime);
+	}
+
+	void BGSEEDynamicRenderChannelScheduler::UpdateTasks(DWORD CurrentTickCount)
+	{
+		for each (auto Itr in TaskRegistry)
+		{
+			Itr->UpdateTasks(CurrentTickCount);
+		}
+	}
+
+	BGSEEDynamicRenderChannelScheduler::BGSEEDynamicRenderChannelScheduler() :
+		TaskRegistry(),
+		TimerID(0)
+	{
+		TimerID = SetTimer(NULL, NULL, kTimerPeriod, &UpdateTimerProc);
+		SME_ASSERT(TimerID);
+	}
+
+	BGSEEDynamicRenderChannelScheduler::~BGSEEDynamicRenderChannelScheduler()
+	{
+		TaskRegistry.clear();
+	}
+
+	bool BGSEEDynamicRenderChannelScheduler::Register(BGSEEDynamicRenderChannel* Channel)
+	{
+		SME_ASSERT(Channel);
+
+		for each (auto Itr in TaskRegistry)
+		{
+			if (Itr == Channel)
+				return false;
+		}
+
+		TaskRegistry.push_back(Channel);
+		return true;
+	}
+
+	void BGSEEDynamicRenderChannelScheduler::Unregister(BGSEEDynamicRenderChannel* Channel)
+	{
+		SME_ASSERT(Channel);
+
+		for (UpdateCallbackListT::const_iterator Itr = TaskRegistry.begin(); Itr != TaskRegistry.end(); Itr++)
+		{
+			if (*Itr == Channel)
+			{
+				TaskRegistry.erase(Itr);
+				return;
+			}
+		}
+	}
+
+	BGSEEDynamicRenderChannelScheduler* BGSEEDynamicRenderChannelScheduler::GetSingleton(void)
+	{
+		static BGSEEDynamicRenderChannelScheduler kInstance;
+
+		return &kInstance;
+	}
+
+	BGSEEDynamicRenderChannel::Task::Task(const char* Text, DWORD Duration) :
+		Drawable(Text),
+		Duration(Duration),
+		StartTickCount(0)
 	{
 		;//
 	}
 
-	BGSEEDynamicRenderChannel::BGSEEDynamicRenderChannel( INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= 0*/ ) :
+	void BGSEEDynamicRenderChannel::Render(LPD3DXSPRITE RenderToSprite)
+	{
+		if (Valid == false)
+			return;
+		else if (QueuedItems.size() == 0)
+			return;
+
+		Task& Current = QueuedItems.front();
+		Font->DrawTextA(RenderToSprite, Current.Drawable.c_str(), -1, &RenderArea, InputParams.DrawFormat, InputParams.Color);
+	}
+
+	void BGSEEDynamicRenderChannel::UpdateTasks(DWORD CurrentTickCount)
+	{
+		if (QueuedItems.size())
+		{
+			Task& Current = QueuedItems.front();
+			if (Current.StartTickCount == 0)
+			{
+				// new task
+				Current.StartTickCount = CurrentTickCount;
+				BGSEERWPAINTER->Redraw();
+			}
+			else if (CurrentTickCount - Current.StartTickCount > Current.Duration)
+			{
+				// elapsed
+				QueuedItems.pop();
+				if (QueuedItems.size())
+				{
+					Current = QueuedItems.front();
+					SME_ASSERT(Current.StartTickCount == 0);
+					Current.StartTickCount = CurrentTickCount;
+				}
+
+				BGSEERWPAINTER->Redraw();
+			}
+		}
+	}
+
+	BGSEEDynamicRenderChannel::BGSEEDynamicRenderChannel(INT FontHeight, INT FontWidth, UINT FontWeight, const char* FontFace, D3DCOLOR Color, RECT* DrawArea, DWORD DrawFormat, UInt32 DrawAreaFlags /*= kDrawAreaFlags_Default*/) :
 		BGSEERenderChannelBase(FontHeight, FontWidth, FontWeight, FontFace, Color, DrawArea, DrawFormat, DrawAreaFlags),
-		TaskQueue()
+		QueuedItems()
 	{
-		;//
+		BGSEEDynamicRenderChannelScheduler::GetSingleton()->Register(this);
 	}
 
 	BGSEEDynamicRenderChannel::~BGSEEDynamicRenderChannel()
 	{
-		while (TaskQueue.size())
-		{
-			RenderTask* CurrentTask = TaskQueue.front();
-			delete CurrentTask;
-			TaskQueue.pop();
-		}
+		while (QueuedItems.size())
+			QueuedItems.pop();
+
+		BGSEEDynamicRenderChannelScheduler::GetSingleton()->Unregister(this);
 	}
 
-	void BGSEEDynamicRenderChannel::Render(void* Parameter, LPD3DXSPRITE RenderToSprite)
-	{
-		if (Valid == false)
-			return;
-		else if (TaskQueue.size() < 1 || Parameter == NULL)
-			return;
-
-		double TimePassed = *((double*)Parameter);
-		RenderTask* CurrentTask = TaskQueue.front();
-
-		if (CurrentTask->RemainingTime > 0.0)
-		{
-			Font->DrawTextA(RenderToSprite, CurrentTask->Text.c_str(), -1, &RenderArea, InputParams.DrawFormat, InputParams.Color);
-			CurrentTask->RemainingTime -= TimePassed / 1000.0;
-		}
-		else
-		{
-			delete CurrentTask;
-			TaskQueue.pop();
-		}
-	}
-
-	bool BGSEEDynamicRenderChannel::Queue( float SecondsToDisplay, const char* Format, ... )
+	bool BGSEEDynamicRenderChannel::Queue(float DurationInSeconds, const char* Format, ...)
 	{
 		if (Valid == false || Format == NULL)
 			return false;
@@ -168,83 +244,55 @@ namespace BGSEditorExtender
 		vsprintf_s(Buffer, sizeof(Buffer), Format, Args);
 		va_end(Args);
 
-		if (strlen(Buffer) && SecondsToDisplay > 0)
-			TaskQueue.push(new RenderTask(Buffer, SecondsToDisplay));
-		else
+		if (strlen(Buffer) == 0 || DurationInSeconds < 1 || DurationInSeconds > 10)
 			return false;
 
+		QueuedItems.push(Task(Buffer, DurationInSeconds * 1000));
 		return true;
-	}
-
-	UInt32 BGSEEDynamicRenderChannel::GetQueueSize() const
-	{
-		return TaskQueue.size();
 	}
 
 	BGSEERenderWindowPainter* BGSEERenderWindowPainter::Singleton = NULL;
 
-	BGSEERenderWindowPainter::BGSEERenderWindowPainter()
+	BGSEERenderWindowPainter::BGSEERenderWindowPainter() :
+		RegisteredChannels(),
+		Operator(NULL),
+		OutputSprite(NULL),
+		Enabled(true),
+		Initialized(false)
 	{
-		OutputSprite = NULL;
-		D3DDevice = NULL;
-		D3DWindow = NULL;
-		Enabled = true;
-		Initialized = false;
+		;//
 	}
 
 	BGSEERenderWindowPainter::~BGSEERenderWindowPainter()
 	{
 		ReleaseD3D();
-		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
-			delete *Itr;
+		delete Operator;
 
-		RegisteredChannels.clear();
-		SAFEDELETE(D3DDevice);
-		SAFEDELETE(D3DWindow);
-
-		Initialized = false;
+		for each (auto Itr in RegisteredChannels)
+			Itr->ReleaseD3D();
 
 		Singleton = NULL;
 	}
 
-	bool BGSEERenderWindowPainter::Initialize( HWND RenderWindowHandle, LPDIRECT3DDEVICE9 RendererD3DDevice )
+	bool BGSEERenderWindowPainter::Initialize(BGSEERenderWindowPainterOperator* Operator)
 	{
 		if (Initialized)
 			return false;
 
-		SME_ASSERT(RenderWindowHandle &&  RendererD3DDevice);
+		SME_ASSERT(Operator);
+
 		Initialized = true;
-
-		SAFEDELETE(D3DDevice);
-		SAFEDELETE(D3DWindow);
-		D3DWindow = new HWNDGetter(RenderWindowHandle);
-		D3DDevice = new D3D9DeviceGetter(RendererD3DDevice);
-
+		this->Operator = Operator;
 		Initialized = CreateD3D();
 		return Initialized;
 	}
 
-	bool BGSEERenderWindowPainter::LookupRenderChannel( BGSEERenderChannelBase* Channel, RenderChannelListT::iterator& Match )
-	{
-		bool Result = false;
-
-		for (RenderChannelListT::iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
-		{
-			if (*Itr == Channel)
-			{
-				Match = Itr;
-				Result = true;
-				break;
-			}
-		}
-
-		return Result;
-	}
-
 	bool BGSEERenderWindowPainter::CreateD3D( void )
 	{
+		SME_ASSERT(OutputSprite == NULL);
+
 		bool Result = true;
-		HRESULT OpResult = D3DXCreateSprite(D3DDevice->operator()(), &OutputSprite);
+		HRESULT OpResult = D3DXCreateSprite(Operator->GetD3DDevice(), &OutputSprite);
 
 		if (FAILED(OpResult))
 		{
@@ -272,52 +320,37 @@ namespace BGSEditorExtender
 	{
 		if (Initialized == false)
 			return;
-
-		TimeCounter.Update();
-
-		if (Enabled == false || OutputSprite == NULL)
+		else if (Enabled == false || OutputSprite == NULL)
 			return;
-
-		double TimePassed = TimeCounter.GetTimePassed();
 
 		OutputSprite->Begin(D3DXSPRITE_ALPHABLEND|D3DXSPRITE_SORT_TEXTURE);
 
-		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
-			(*Itr)->Render(&TimePassed, OutputSprite);
+		for each (auto Itr in RegisteredChannels)
+			Itr->Render(OutputSprite);
 
 		OutputSprite->End();
 	}
 
-	bool BGSEERenderWindowPainter::HandleD3DDeviceReset( UInt8 Operation )
+	bool BGSEERenderWindowPainter::HandleReset(bool Release, bool Renew)
 	{
 		if (Initialized == false)
 			return false;
 
+		SME_ASSERT(Release != Renew);
+
 		bool Result = true;
 
-		switch (Operation)
-		{
-		case kDeviceReset_Release:
+		if (Release)
 			ReleaseD3D();
-			break;
-		case kDeviceReset_Renew:
+		else
 			Result = CreateD3D();
-			break;
-		}
 
-		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
+		for each (auto Itr in RegisteredChannels)
 		{
-			switch (Operation)
-			{
-			case kDeviceReset_Release:
-				(*Itr)->ReleaseD3D();
-				break;
-			case kDeviceReset_Renew:
-				if ((*Itr)->CreateD3D() == false)
-					Result = false;
-
-				break;
-			}
+			if (Release)
+				Itr->ReleaseD3D();
+			else if (Itr->CreateD3D(Operator->GetD3DDevice(), Operator->GetD3DWindow()) == false)
+				Result = false;
 		}
 
 		return Result;
@@ -325,25 +358,30 @@ namespace BGSEditorExtender
 
 	bool BGSEERenderWindowPainter::RegisterRenderChannel( BGSEERenderChannelBase* Channel )
 	{
-		SME_ASSERT(Initialized);
-		RenderChannelListT::iterator Match;
-		if (LookupRenderChannel(Channel, Match) == false)
+		SME_ASSERT(Initialized && Channel);
+		for each (auto Itr in RegisteredChannels)
 		{
-			RegisteredChannels.push_back(Channel);
-			return true;
+			if (Itr == Channel)
+				return false;
 		}
-		else
-			return false;
+
+		RegisteredChannels.push_back(Channel);
+		Channel->CreateD3D(Operator->GetD3DDevice(), Operator->GetD3DWindow());
+		return true;
 	}
 
 	void BGSEERenderWindowPainter::UnregisterRenderChannel( BGSEERenderChannelBase* Channel )
 	{
-		SME_ASSERT(Initialized);
-		RenderChannelListT::iterator Match;
-		if (LookupRenderChannel(Channel, Match))
+		SME_ASSERT(Initialized && Channel);
+
+		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 		{
-			delete Channel;
-			RegisteredChannels.erase(Match);
+			if (*Itr == Channel)
+			{
+				RegisteredChannels.erase(Itr);
+				Channel->ReleaseD3D();
+				return;
+			}
 		}
 	}
 
@@ -363,30 +401,8 @@ namespace BGSEditorExtender
 		return Enabled;
 	}
 
-	bool BGSEERenderWindowPainter::GetHasActiveTasks( void ) const
+	void BGSEERenderWindowPainter::Redraw(void) const
 	{
-		if (Initialized == false)
-			return false;
-
-		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
-		{
-			BGSEEDynamicRenderChannel* Dynamic = dynamic_cast<BGSEEDynamicRenderChannel*>(*Itr);
-			if (Dynamic && Dynamic->GetQueueSize())
-				return true;
-		}
-
-		return false;
-	}
-
-	HWND BGSEERenderWindowPainter::GetD3DWindow( void ) const
-	{
-		SME_ASSERT(D3DWindow);
-		return D3DWindow->operator()();
-	}
-
-	LPDIRECT3DDEVICE9 BGSEERenderWindowPainter::GetD3DDevice( void ) const
-	{
-		SME_ASSERT(D3DDevice);
-		return D3DDevice->operator()();
+		Operator->RedrawRenderWindow();
 	}
 }

@@ -5,16 +5,14 @@
 namespace BGSEditorExtender
 {
 	class BGSEERenderWindowPainter;
+	class BGSEERenderWindowPainterOperator;
+	class BGSEEDynamicRenderChannel;
 
 	class BGSEERenderChannelBase
 	{
-	public:
-		enum
-		{
-			kDrawAreaFlags_Default			= 0,
-			kDrawAreaFlags_RightAligned		= 1 << 0,
-			kDrawAreaFlags_BottomAligned	= 1 << 1,
-		};
+		friend class					BGSEERenderWindowPainter;
+
+		virtual void					Render(LPD3DXSPRITE RenderToSprite) = 0;
 	protected:
 		struct Parameters
 		{
@@ -39,39 +37,41 @@ namespace BGSEditorExtender
 
 		LPD3DXFONT						Font;
 		RECT							RenderArea;
-		bool							Valid;
 		Parameters						InputParams;
+		bool							Valid;
 
-		BGSEERenderChannelBase(INT FontHeight,
-			INT FontWidth,
-			UINT FontWeight,
-			const char* FontFace,
-			D3DCOLOR Color,
-			RECT* DrawArea,
-			DWORD DrawFormat,
-			UInt32 DrawAreaFlags = kDrawAreaFlags_Default);
-
-		virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite) = 0;
-		bool							CreateD3D();
+		bool							CreateD3D(LPDIRECT3DDEVICE9 Device, HWND Window);
 		void							ReleaseD3D();
 		bool							GetIsValid() const;
-
-		friend class					BGSEERenderWindowPainter;
 	public:
-		virtual ~BGSEERenderChannelBase();
+		enum
+		{
+			kDrawAreaFlags_Default = 0,
+			kDrawAreaFlags_RightAligned = 1 << 0,
+			kDrawAreaFlags_BottomAligned = 1 << 1,
+		};
+
+		BGSEERenderChannelBase(INT FontHeight,
+							   INT FontWidth,
+							   UINT FontWeight,
+							   const char* FontFace,
+							   D3DCOLOR Color,
+							   RECT* DrawArea,
+							   DWORD DrawFormat,
+							   UInt32 DrawAreaFlags = kDrawAreaFlags_Default);
+
+		virtual ~BGSEERenderChannelBase() = 0;
 	};
 
 	class BGSEEStaticRenderChannel : public BGSEERenderChannelBase
 	{
-	public:
-		typedef bool					(* RenderHandler)(std::string& RenderedText);		// return false to skip rendering
-	protected:
-		std::string						RenderText;
-		RenderHandler					RenderCallback;
-
-		virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite);
-
 		friend class					BGSEERenderWindowPainter;
+
+		std::string						LastRenderedText;
+
+		virtual void					Render(LPD3DXSPRITE RenderToSprite);
+	protected:
+		virtual bool					DrawText(std::string& OutText) = 0;				// return false to skip rendering
 	public:
 		BGSEEStaticRenderChannel(INT FontHeight,
 			INT FontWidth,
@@ -80,28 +80,54 @@ namespace BGSEditorExtender
 			D3DCOLOR Color,
 			RECT* DrawArea,
 			DWORD DrawFormat,
-			UInt32 DrawAreaFlags = 0,
-			RenderHandler RenderCallback = NULL);
+			UInt32 DrawAreaFlags = kDrawAreaFlags_Default);
 
 		virtual ~BGSEEStaticRenderChannel();
 	};
 
+	class BGSEEDynamicRenderChannelScheduler
+	{
+		static const UInt32				kTimerPeriod = 50;		// in ms
+
+		static VOID CALLBACK			UpdateTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+
+		typedef std::vector<BGSEEDynamicRenderChannel*>		UpdateCallbackListT;
+
+		UpdateCallbackListT				TaskRegistry;
+		UINT_PTR						TimerID;
+
+		void							UpdateTasks(DWORD CurrentTickCount);
+	public:
+		BGSEEDynamicRenderChannelScheduler();
+		~BGSEEDynamicRenderChannelScheduler();
+
+		bool							Register(BGSEEDynamicRenderChannel* Channel);
+		void							Unregister(BGSEEDynamicRenderChannel* Channel);
+
+		static BGSEEDynamicRenderChannelScheduler*				GetSingleton(void);
+	};
+
 	class BGSEEDynamicRenderChannel : public BGSEERenderChannelBase
 	{
-	protected:
-		struct RenderTask
-		{
-			std::string					Text;
-			float						RemainingTime;
+		friend class					BGSEERenderWindowPainter;
+		friend class					BGSEEDynamicRenderChannelScheduler;
 
-			RenderTask(const char* Text, float SecondsToDisplay);
+		virtual void					Render(LPD3DXSPRITE RenderToSprite);
+
+		struct Task
+		{
+			std::string					Drawable;
+			DWORD						Duration;			// in ms
+			DWORD						StartTickCount;
+
+			Task(const char* Text, DWORD Duration);
 		};
 
-		std::queue<RenderTask*>			TaskQueue;
+		typedef std::queue<Task>		TaskQueueT;
 
-		virtual void					Render(void* Parameter, LPD3DXSPRITE RenderToSprite);		// parameter's double* - TimePassedSinceLastUpdate
+		TaskQueueT						QueuedItems;
 
-		friend class					BGSEERenderWindowPainter;
+		void							UpdateTasks(DWORD CurrentTickCount);
 	public:
 		BGSEEDynamicRenderChannel(INT FontHeight,
 			INT FontWidth,
@@ -110,58 +136,58 @@ namespace BGSEditorExtender
 			D3DCOLOR Color,
 			RECT* DrawArea,
 			DWORD DrawFormat,
-			UInt32 DrawAreaFlags = 0);
+			UInt32 DrawAreaFlags = kDrawAreaFlags_Default);
 
 		virtual ~BGSEEDynamicRenderChannel();
 
-		bool							Queue(float SecondsToDisplay, const char* Format, ...);
-		UInt32							GetQueueSize() const;
+		bool							Queue(float DurationInSeconds, const char* Format, ...);		// duration must be b'ween 1 and 10 seconds
+	};
+
+	class BGSEERenderWindowPainterOperator
+	{
+	public:
+		virtual ~BGSEERenderWindowPainterOperator() = 0
+		{
+			;//
+		}
+
+		virtual LPDIRECT3DDEVICE9				GetD3DDevice(void) = 0;
+		virtual HWND							GetD3DWindow(void) = 0;
+		virtual void							RedrawRenderWindow(void) = 0;
 	};
 
 	class BGSEERenderWindowPainter
 	{
 		static BGSEERenderWindowPainter*		Singleton;
-		
+
 		BGSEERenderWindowPainter();
 
 		typedef std::list<BGSEERenderChannelBase*>	RenderChannelListT;
 
 		RenderChannelListT						RegisteredChannels;
-		SME::MiscGunk::ElapsedTimeCounter		TimeCounter;
+		BGSEERenderWindowPainterOperator*		Operator;
 		LPD3DXSPRITE							OutputSprite;
-		D3D9DeviceGetter*						D3DDevice;
-		HWNDGetter*								D3DWindow;
 		bool									Enabled;
 		bool									Initialized;
 
-		bool									LookupRenderChannel(BGSEERenderChannelBase* Channel, RenderChannelListT::iterator& Match);
 		bool									CreateD3D(void);
 		void									ReleaseD3D(void);
 	public:
 		~BGSEERenderWindowPainter();
 
-		enum
-		{
-			kDeviceReset_Release				= 0,
-			kDeviceReset_Renew,
-		};
-
 		static BGSEERenderWindowPainter*		GetSingleton(void);
 
-		bool									Initialize(HWND RenderWindowHandle, LPDIRECT3DDEVICE9 RendererD3DDevice);
+		bool									Initialize(BGSEERenderWindowPainterOperator* Operator);		// takes ownership of pointer
 
-		void									Render();
-		bool									HandleD3DDeviceReset(UInt8 Operation);
+		bool									RegisterRenderChannel(BGSEERenderChannelBase* Channel);		// caller retains ownership of pointer; returns true if successful
+		void									UnregisterRenderChannel(BGSEERenderChannelBase* Channel);
 
-		bool									RegisterRenderChannel(BGSEERenderChannelBase* Channel);		// painter takes ownership of the pointer, returns true if successful
-		void									UnregisterRenderChannel(BGSEERenderChannelBase* Channel);	// releases the registered channel
+		void									Render(void);
+		bool									HandleReset(bool Release, bool Renew);
+		void									Redraw(void) const;											// force a redraw of current render window scene
 
 		void									SetEnabled(bool State);
 		bool									GetEnabled(void) const;
-
-		bool									GetHasActiveTasks(void) const;
-		HWND									GetD3DWindow(void) const;
-		LPDIRECT3DDEVICE9						GetD3DDevice(void) const;
 	};
 
 #define BGSEERWPAINTER							BGSEditorExtender::BGSEERenderWindowPainter::GetSingleton()

@@ -4,17 +4,6 @@
 
 namespace BGSEditorExtender
 {
-	BGSEEStaticRenderChannel*	RenderChannelFlyCamStatus = NULL;
-
-	bool RenderChannelFlyCamStatus_Callback(std::string& RenderedText)
-	{
-		if (BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
-			return false;
-
-		RenderedText = "Seriously? This thing flies?!";
-		return true;
-	}
-
 	BGSEERenderWindowFlyCameraOperator::BGSEERenderWindowFlyCameraOperator( HWND Parent, ResourceTemplateT TemplateID )
 	{
 		RenderWindow = Parent;

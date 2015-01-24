@@ -6,10 +6,6 @@
 
 namespace BGSEditorExtender
 {
-	extern BGSEEStaticRenderChannel*			RenderChannelFlyCamStatus;
-
-	bool										RenderChannelFlyCamStatus_Callback(std::string& RenderedText);
-
 	class BGSEERenderWindowFlyCameraOperator
 	{
 	public:
