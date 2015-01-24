@@ -3,27 +3,24 @@
 
 namespace ConstructionSetExtender
 {
-#define PI					3.151592653589793
-
 	namespace RenderWindowPainter
 	{
-		BGSEditorExtender::BGSEEStaticRenderChannel*	RenderChannelSelectionStats = NULL;
 		BGSEditorExtender::BGSEEDynamicRenderChannel*	RenderChannelNotifications = NULL;
 
-		bool RenderChannelSelectionStats_Callback( std::string& RenderedText )
+		bool CSESelectionInfoRenderChannel::DrawText(std::string& OutText)
 		{
 			if (Settings::RenderWindowPainter::kShowSelectionStats.GetData().i == 0 || _RENDERSEL->selectionCount == 0)
 				return false;
 
-			char Buffer[0x200] = {0};
+			char Buffer[0x200] = { 0 };
 
 			if (_RENDERSEL->selectionCount > 1)
 			{
 				FORMAT_STR(Buffer, "%d Objects Selected\nNominal Center: %.04f, %.04f, %.04f",
-					_RENDERSEL->selectionCount,
-					_RENDERSEL->selectionPositionVectorSum.x,
-					_RENDERSEL->selectionPositionVectorSum.y,
-					_RENDERSEL->selectionPositionVectorSum.z);
+						   _RENDERSEL->selectionCount,
+						   _RENDERSEL->selectionPositionVectorSum.x,
+						   _RENDERSEL->selectionPositionVectorSum.y,
+						   _RENDERSEL->selectionPositionVectorSum.z);
 			}
 			else
 			{
@@ -32,55 +29,80 @@ namespace ConstructionSetExtender
 					return false;			// in the off-chance that the selection contains a regular form
 
 				BSExtraData* xData = Selection->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				char xBuffer[0x50] = {0};
+				char xBuffer[0x50] = { 0 };
 				if (xData)
 				{
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
 					FORMAT_STR(xBuffer, "\nParent: %s [%08X]  Opposite State: %d",
-						((xParent->parent->editorID.Size())?(xParent->parent->editorID.c_str()):("")),
-						xParent->parent->formID, xParent->oppositeState);
+							   ((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
+							   xParent->parent->formID, xParent->oppositeState);
 				}
 
-				char cBuffer[0x50] = {0};
+				char cBuffer[0x50] = { 0 };
 				if (Selection->parentCell->GetIsInterior() == false)
 				{
 					FORMAT_STR(cBuffer, "\nParent Cell: %s(%08X) %d,%d", Selection->parentCell->GetEditorID(),
-							Selection->parentCell->formID,
-							Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y);
+							   Selection->parentCell->formID,
+							   Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y);
 				}
 
 				FORMAT_STR(Buffer, "%s(%08X) BASE[%s(%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s%s%s",
-					((Selection->editorID.Size())?(Selection->editorID.c_str()):("")), Selection->formID,
-					((Selection->baseForm->editorID.Size())?(Selection->baseForm->editorID.c_str()):("")), Selection->baseForm->formID,
-					Selection->position.x, Selection->position.y, Selection->position.z,
-					Selection->rotation.x * 57.2957763671875,
-					Selection->rotation.y * 57.2957763671875,
-					Selection->rotation.z * 57.2957763671875,
-					Selection->scale,
-					((Selection->formFlags & TESForm::kFormFlags_QuestItem)?("P"):("-")),
-					((Selection->formFlags & TESForm::kFormFlags_Disabled)?("D"):("-")),
-					((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant)?("V"):("-")),
-					(Selection->GetInvisible()?("I"):("-")),
-					(Selection->GetChildrenInvisible()?("CI"):("-")),
-					(Selection->GetFrozen()?("F"):("-")),
-					xBuffer,
-					cBuffer);
+						   ((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID,
+						   ((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID,
+						   Selection->position.x, Selection->position.y, Selection->position.z,
+						   Selection->rotation.x * 57.2957763671875,
+						   Selection->rotation.y * 57.2957763671875,
+						   Selection->rotation.z * 57.2957763671875,
+						   Selection->scale,
+						   ((Selection->formFlags & TESForm::kFormFlags_QuestItem) ? ("P") : ("-")),
+						   ((Selection->formFlags & TESForm::kFormFlags_Disabled) ? ("D") : ("-")),
+						   ((Selection->formFlags & TESForm::kFormFlags_VisibleWhenDistant) ? ("V") : ("-")),
+						   (Selection->GetInvisible() ? ("I") : ("-")),
+						   (Selection->GetChildrenInvisible() ? ("CI") : ("-")),
+						   (Selection->GetFrozen() ? ("F") : ("-")),
+						   xBuffer,
+						   cBuffer);
 			}
 
-			RenderedText = Buffer;
+			OutText = Buffer;
 			return true;
 		}
 
-		CSERAMUsageRenderChannel*		CSERAMUsageRenderChannel::Singleton = NULL;
+		CSESelectionInfoRenderChannel::CSESelectionInfoRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect) :
+			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+														D3DCOLOR_ARGB(220, 189, 237, 99),
+														DrawRect,
+														DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP)
+		{
+			;//
+		}
 
-		bool CSERAMUsageRenderChannel::RenderChannelCallback(std::string& RenderedText)
+		CSESelectionInfoRenderChannel::~CSESelectionInfoRenderChannel()
+		{
+			;//
+		}
+
+		CSESelectionInfoRenderChannel* CSESelectionInfoRenderChannel::GetInstance(const char* FontFace, UInt32 FontSize)
+		{
+			RECT DrawRect;
+			DrawRect.left = 3;
+			DrawRect.top = 3;
+			DrawRect.right = 800;
+			DrawRect.bottom = 600;
+
+			static CSESelectionInfoRenderChannel kInstance(FontFace, FontSize, &DrawRect);
+
+			return &kInstance;
+		}
+
+		bool CSERAMUsageRenderChannel::DrawText(std::string& OutText)
 		{
 			if (Settings::RenderWindowPainter::kShowRAMUsage.GetData().i == 0)
 				return false;
 
-			char Buffer[0x50] = {0};
-			FORMAT_STR(Buffer, "RAM Usage: %d MB", GetSingleton()->RAMCounter);
-			RenderedText = Buffer;
+			char Buffer[0x50] = { 0 };
+			FORMAT_STR(Buffer, "RAM Usage: %d MB", GetInstance()->RAMCounter);
+			OutText = Buffer;
 			return true;
 		}
 
@@ -90,9 +112,9 @@ namespace ConstructionSetExtender
 			if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
 			{
 				UInt32 CurrentRAMCounter = MemCounter.WorkingSetSize / (1024 * 1024);		// in megabytes
-				if (CurrentRAMCounter != GetSingleton()->RAMCounter)
+				if (CurrentRAMCounter != GetInstance()->RAMCounter)
 				{
-					GetSingleton()->RAMCounter = CurrentRAMCounter;
+					GetInstance()->RAMCounter = CurrentRAMCounter;
 
 					if (Settings::RenderWindowPainter::kShowRAMUsage.GetData().i)
 						TESRenderWindow::Redraw();
@@ -103,18 +125,12 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		CSERAMUsageRenderChannel::CSERAMUsageRenderChannel( INT FontHeight,
-															INT FontWidth,
-															UINT FontWeight,
-															const char* FontFace,
-															D3DCOLOR Color,
-															RECT* DrawArea,
-															DWORD DrawFormat,
-															UInt32 DrawAreaFlags ) :
-			BGSEditorExtender::BGSEEStaticRenderChannel(FontHeight, FontWidth, FontWeight, FontFace,
-														Color, DrawArea, DrawFormat,
-														DrawAreaFlags,
-														RenderChannelCallback),
+		CSERAMUsageRenderChannel::CSERAMUsageRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect) :
+			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+														D3DCOLOR_ARGB(230, 230, 230, 0),
+														DrawRect,
+														DT_WORDBREAK|DT_RIGHT|DT_TOP|DT_NOCLIP,
+														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned),
 			TimerID(0),
 			RAMCounter(0)
 		{
@@ -125,42 +141,41 @@ namespace ConstructionSetExtender
 		CSERAMUsageRenderChannel::~CSERAMUsageRenderChannel()
 		{
 			KillTimer(NULL, TimerID);
-
-			Singleton = NULL;
 		}
 
-		CSERAMUsageRenderChannel* CSERAMUsageRenderChannel::GetSingleton()
+		CSERAMUsageRenderChannel* CSERAMUsageRenderChannel::GetInstance(const char* FontFace /*= NULL*/, UInt32 FontSize /*= NULL*/)
 		{
-			if (Singleton == NULL)
-			{
-				RECT DrawRect;
-				DrawRect.left = -185;
-				DrawRect.top = 3;
-				DrawRect.right = 185;
-				DrawRect.bottom = 100;
+			RECT DrawRect;
+			DrawRect.left = -185;
+			DrawRect.top = 3;
+			DrawRect.right = 185;
+			DrawRect.bottom = 100;
 
-				int FontSize = Settings::RenderWindowPainter::kFontSize.GetData().i;
-				const char* FontFace = Settings::RenderWindowPainter::kFontFace.GetData().s;
+			static CSERAMUsageRenderChannel kInstance(FontFace, FontSize, &DrawRect);
 
-				Singleton = new CSERAMUsageRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-														D3DCOLOR_ARGB(230, 230, 230, 0),
-														&DrawRect,
-														DT_WORDBREAK|DT_RIGHT|DT_TOP|DT_NOCLIP,
-														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned);
-			}
-
-			return Singleton;
+			return &kInstance;
 		}
 
-		CSEMouseRefRenderChannel*			CSEMouseRefRenderChannel::Singleton = NULL;
+		CSEMouseRefRenderChannel::CSEMouseRefRenderChannel(const char* FontFace, UInt32 FontSize) :
+			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+														D3DCOLOR_ARGB(255, 255, 128, 0), NULL,
+														DT_SINGLELINE|DT_LEFT|DT_TOP|DT_NOCLIP,
+														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_Default)
+		{
+			;//
+		}
 
+		CSEMouseRefRenderChannel::~CSEMouseRefRenderChannel()
+		{
+			;//
+		}
 
-		bool CSEMouseRefRenderChannel::RenderChannelCallback( std::string& RenderedText )
+		bool CSEMouseRefRenderChannel::DrawText(std::string& OutText)
 		{
 			if (TESRenderWindow::CurrentMouseRef == NULL)
 				return false;
 
-			char Buffer[0x200] = {0}, BaseBuffer[0x100] = {0};
+			char Buffer[0x200] = { 0 }, BaseBuffer[0x100] = { 0 };
 			TESObjectREFR* Ref = TESRenderWindow::CurrentMouseRef;
 			TESForm* Base = Ref->baseForm;
 			SME_ASSERT(Base);
@@ -171,86 +186,57 @@ namespace ConstructionSetExtender
 				FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
 
 			FORMAT_STR(Buffer, "%s%s%08X) %s",
-				(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
-				(Ref->GetEditorID() ? "(" : "REF("),
-				Ref->formID,
-				BaseBuffer);
+					   (Ref->GetEditorID() ? Ref->GetEditorID() : ""),
+					   (Ref->GetEditorID() ? "(" : "REF("),
+					   Ref->formID,
+					   BaseBuffer);
 
-			RenderedText = Buffer;
-			return true;
-		}
-
-		void CSEMouseRefRenderChannel::Render( void* Parameter, LPD3DXSPRITE RenderToSprite )
-		{
+			OutText = Buffer;
 			RenderArea.left = TESRenderWindow::CurrentMouseCoord.x + 25;
 			RenderArea.top = TESRenderWindow::CurrentMouseCoord.y + 10;
 			RenderArea.right = RenderArea.left + 300;
 			RenderArea.bottom = RenderArea.top + 100;
 
-			BGSEEStaticRenderChannel::Render(Parameter, RenderToSprite);
+			return true;
 		}
 
-		CSEMouseRefRenderChannel::CSEMouseRefRenderChannel( INT FontHeight,
-															INT FontWidth,
-															UINT FontWeight,
-															const char* FontFace,
-															D3DCOLOR Color,
-															DWORD DrawFormat ) :
-			BGSEditorExtender::BGSEEStaticRenderChannel(FontHeight, FontWidth, FontWeight, FontFace,
-														Color, NULL, DrawFormat,
-														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_Default,
-														RenderChannelCallback)
+		CSEMouseRefRenderChannel* CSEMouseRefRenderChannel::GetInstance(const char* FontFace /*= NULL*/, UInt32 FontSize /*= NULL*/)
+		{
+			static CSEMouseRefRenderChannel kInstance(FontFace, FontSize);
+
+			return &kInstance;
+		}
+
+		CSERenderWindowPainterOperator::~CSERenderWindowPainterOperator()
 		{
 			;//
 		}
 
-		CSEMouseRefRenderChannel::~CSEMouseRefRenderChannel()
+		LPDIRECT3DDEVICE9 CSERenderWindowPainterOperator::GetD3DDevice(void)
 		{
-			Singleton = NULL;
+			return _NIRENDERER->device;
 		}
 
-		CSEMouseRefRenderChannel* CSEMouseRefRenderChannel::GetSingleton()
+		HWND CSERenderWindowPainterOperator::GetD3DWindow(void)
 		{
-			if (Singleton == NULL)
-			{				
-				int FontSize = Settings::RenderWindowPainter::kFontSize.GetData().i;
-				const char* FontFace = Settings::RenderWindowPainter::kFontFace.GetData().s;
+			return *TESRenderWindow::WindowHandle;
+		}
 
-				Singleton = new CSEMouseRefRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-														D3DCOLOR_ARGB(255, 255, 128, 0),
-														DT_SINGLELINE|DT_LEFT|DT_TOP|DT_NOCLIP);
-			}
-
-			return Singleton;
+		void CSERenderWindowPainterOperator::RedrawRenderWindow(void)
+		{
+			TESRenderWindow::Redraw();
 		}
 
 		void RenderWindowPainter::Initialize( void )
 		{
-			RECT DrawRect;
-			bool ComponentInitialized = BGSEERWPAINTER->Initialize(*TESRenderWindow::WindowHandle, _NIRENDERER->device);
+			bool ComponentInitialized = BGSEERWPAINTER->Initialize(new CSERenderWindowPainterOperator());
 
 			SME_ASSERT(ComponentInitialized);
 
 			int FontSize = Settings::RenderWindowPainter::kFontSize.GetData().i;
 			const char* FontFace = Settings::RenderWindowPainter::kFontFace.GetData().s;
 
-			DrawRect.left = 3;
-			DrawRect.top = 3;
-			DrawRect.right = 800;
-			DrawRect.bottom = 600;
-			RenderChannelSelectionStats = new BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-																						D3DCOLOR_ARGB(220, 189, 237, 99),
-																						&DrawRect,
-																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
-																						0,
-																						&RenderChannelSelectionStats_Callback);
-
-			BGSEditorExtender::RenderChannelFlyCamStatus = new BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-																						D3DCOLOR_ARGB(220, 189, 237, 99),
-																						&DrawRect,
-																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
-																						0,
-																						&BGSEditorExtender::RenderChannelFlyCamStatus_Callback);
+			RECT DrawRect;
 			DrawRect.left = 3;
 			DrawRect.top = -150;
 			DrawRect.right = 800;
@@ -261,11 +247,16 @@ namespace ConstructionSetExtender
 																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
 																						BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_BottomAligned);
 
-			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelSelectionStats);
-			BGSEERWPAINTER->RegisterRenderChannel(CSERAMUsageRenderChannel::GetSingleton());
+			BGSEERWPAINTER->RegisterRenderChannel(CSESelectionInfoRenderChannel::GetInstance(FontFace, FontSize));
+			BGSEERWPAINTER->RegisterRenderChannel(CSERAMUsageRenderChannel::GetInstance(FontFace, FontSize));
+			BGSEERWPAINTER->RegisterRenderChannel(CSEMouseRefRenderChannel::GetInstance(FontFace, FontSize));
 			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelNotifications);
-			BGSEERWPAINTER->RegisterRenderChannel(BGSEditorExtender::RenderChannelFlyCamStatus);
-			BGSEERWPAINTER->RegisterRenderChannel(CSEMouseRefRenderChannel::GetSingleton());
+		}
+
+		void Deinitialize(void)
+		{
+			delete BGSEERWPAINTER;
+			delete RenderChannelNotifications;
 		}
 	}
 };

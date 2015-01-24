@@ -292,9 +292,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoNiDX9RendererRecreateHook(bool State)
 		{
 			if (State == false)
-				BGSEERWPAINTER->HandleD3DDeviceReset(BGSEditorExtender::BGSEERenderWindowPainter::kDeviceReset_Release);
+				BGSEERWPAINTER->HandleReset(true, false);
 			else
-				BGSEERWPAINTER->HandleD3DDeviceReset(BGSEditorExtender::BGSEERenderWindowPainter::kDeviceReset_Renew);
+				BGSEERWPAINTER->HandleReset(false, true);
 		}
 
 		#define _hhName		NiDX9RendererRecreateA
@@ -365,7 +365,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoRenderWindowUpdateViewportHook(void)
 		{
-			if (BGSEERWPAINTER->GetHasActiveTasks() || Settings::Renderer::kUpdateViewPortAsync.GetData().i)
+			if (Settings::Renderer::kUpdateViewPortAsync.GetData().i)
 				return true;
 			else
 				return false;

@@ -6,55 +6,60 @@ namespace ConstructionSetExtender
 {
 	namespace RenderWindowPainter
 	{
-		extern BGSEditorExtender::BGSEEStaticRenderChannel*						RenderChannelSelectionStats;
-		extern BGSEditorExtender::BGSEEDynamicRenderChannel*					RenderChannelNotifications;
+		extern BGSEditorExtender::BGSEEDynamicRenderChannel*	RenderChannelNotifications;
+
+		class CSESelectionInfoRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
+		{
+		protected:
+			virtual bool							DrawText(std::string& OutText);
+
+			CSESelectionInfoRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect);
+		public:
+			virtual ~CSESelectionInfoRenderChannel();
+
+			static CSESelectionInfoRenderChannel*	GetInstance(const char* FontFace = NULL, UInt32 FontSize = NULL);
+		};
 
 		class CSERAMUsageRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
 		{
 		protected:
-			static CSERAMUsageRenderChannel*		Singleton;
-
 			static VOID CALLBACK					TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
-			static bool								RenderChannelCallback(std::string& RenderedText);
 
 			DWORD									TimerID;
 			UInt32									RAMCounter;
 
-			CSERAMUsageRenderChannel(INT FontHeight,
-				INT FontWidth,
-				UINT FontWeight,
-				const char* FontFace,
-				D3DCOLOR Color,
-				RECT* DrawArea,
-				DWORD DrawFormat,
-				UInt32 DrawAreaFlags);
+			virtual bool							DrawText(std::string& OutText);
+
+			CSERAMUsageRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect);
 		public:
 			virtual ~CSERAMUsageRenderChannel();
 
-			static CSERAMUsageRenderChannel*		GetSingleton();
+			static CSERAMUsageRenderChannel*		GetInstance(const char* FontFace = NULL, UInt32 FontSize = NULL);
 		};
 
 		class CSEMouseRefRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
 		{
 		protected:
-			static CSEMouseRefRenderChannel*		Singleton;
+			virtual bool							DrawText(std::string& OutText);
 
-			static bool								RenderChannelCallback(std::string& RenderedText);
-
-			virtual void							Render(void* Parameter, LPD3DXSPRITE RenderToSprite);
-
-			CSEMouseRefRenderChannel(INT FontHeight,
-				INT FontWidth,
-				UINT FontWeight,
-				const char* FontFace,
-				D3DCOLOR Color,
-				DWORD DrawFormat);
+			CSEMouseRefRenderChannel(const char* FontFace, UInt32 FontSize);
 		public:
 			virtual ~CSEMouseRefRenderChannel();
 
-			static CSEMouseRefRenderChannel*		GetSingleton();
+			static CSEMouseRefRenderChannel*	GetInstance(const char* FontFace = NULL, UInt32 FontSize = NULL);
 		};
 
-		void																	Initialize(void);
+		class CSERenderWindowPainterOperator : public BGSEditorExtender::BGSEERenderWindowPainterOperator
+		{
+		public:
+			virtual ~CSERenderWindowPainterOperator();
+
+			virtual LPDIRECT3DDEVICE9				GetD3DDevice(void);
+			virtual HWND							GetD3DWindow(void);
+			virtual void							RedrawRenderWindow(void);
+		};
+
+		void Initialize(void);
+		void Deinitialize(void);
 	}
 };

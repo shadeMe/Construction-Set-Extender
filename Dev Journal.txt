@@ -15,8 +15,6 @@ CSE		---->
 
 	BUGFIX			=
 		> Fix the global clipboard's to correctly paste refs in place
-		> Dynamic channels in the Renderwindowpainter have timer issues (text zips by randomly)
-			> Reimplement dynamic render window painter channels independently of the main viewport's update timer
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C
 			>> Need to get working repro steps

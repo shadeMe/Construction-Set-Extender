@@ -367,7 +367,7 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Render Window Painter");
 		BGSEECONSOLE->Indent();
-		delete BGSEERWPAINTER;
+		RenderWindowPainter::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Achievements Manager");
