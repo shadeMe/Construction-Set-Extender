@@ -601,6 +601,9 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
 			{
 				IntelliSenseBox->UpdateLocalVariableDatabase();
+
+				delete TextField->SyntaxHighlighting;
+				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(false);
 			}
 
 			void AvalonEditTextEditor::ScrollToLine(String^ LineNumber)
@@ -1209,50 +1212,12 @@ namespace ConstructionSetExtender
 				TextField->TextArea->TextView->InvalidateLayer(BraceColorizer->Layer);
 			}
 
-			AvalonEditHighlightingDefinition^ AvalonEditTextEditor::CreateSyntaxHighlightDefinitions( void )
+			AvalonEditHighlightingDefinition^ AvalonEditTextEditor::CreateSyntaxHighlightDefinitions( bool UpdateStableDefs )
 			{
-				SyntaxHighlightingManager->PurgeSerializedHighlightingDataCache();
-				bool BoldFaced = PREFERENCES->FetchSettingAsInt("BoldFacedHighlighting", "Appearance");
+				if (UpdateStableDefs)
+					SyntaxHighlightingManager->UpdateBaseDefinitions();
 
-				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_CommentAndPreprocessor,
-					PREFERENCES->LookupColorByKey("SyntaxCommentsColor"),
-					Color::GhostWhite,
-					PREFERENCES->LookupColorByKey("SyntaxPreprocessorColor"),
-					BoldFaced);
-
-				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_Keywords,
-					PREFERENCES->LookupColorByKey("SyntaxKeywordsColor"),
-					Color::GhostWhite,
-					Color::GhostWhite,
-					BoldFaced);
-
-				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_BlockTypes,
-					PREFERENCES->LookupColorByKey("SyntaxScriptBlocksColor"),
-					Color::GhostWhite,
-					Color::GhostWhite,
-					BoldFaced);
-
-				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_Delimiter,
-					PREFERENCES->LookupColorByKey("SyntaxDelimitersColor"),
-					Color::GhostWhite,
-					Color::GhostWhite,
-					BoldFaced);
-
-				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_Digit,
-					PREFERENCES->LookupColorByKey("SyntaxDigitsColor"),
-					Color::GhostWhite,
-					Color::GhostWhite,
-					BoldFaced);
-
-				SyntaxHighlightingManager->CreateSerializedHighlightingData(AvalonEditXSHDManager::Rulesets::e_String,
-					PREFERENCES->LookupColorByKey("SyntaxStringsColor"),
-					Color::GhostWhite,
-					Color::GhostWhite,
-					BoldFaced);
-
-				AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->CreateDefinitionFromSerializedData("ObScript");
-				SyntaxHighlightingManager->PurgeSerializedHighlightingDataCache();
-
+				AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->GenerateHighlightingDefinition(IntelliSenseBox->GetLocalVariableNames());
 				return Result;
 			}
 
@@ -1694,7 +1659,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::LocalVarsDatabaseUpdateTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
-				IntelliSenseBox->UpdateLocalVariableDatabase();
+				UpdateIntelliSenseLocalDatabase();
 			}
 
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
@@ -1759,7 +1724,7 @@ namespace ConstructionSetExtender
 					TextField->TextArea->IndentationStrategy = nullptr;
 				}
 
-				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions();
+				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(true);
 
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
 					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy();
@@ -1862,7 +1827,7 @@ namespace ConstructionSetExtender
 				TextField->ShowLineNumbers = true;
 				TextField->HorizontalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 				TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
-				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions();		// each editor instance gets its own unique highlight definition
+				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(true);
 
 				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 				Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");

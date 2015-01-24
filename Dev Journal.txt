@@ -43,9 +43,8 @@ SE		---->
 
 
 	ENHANCEMENT		=
-		> Fully resizable select script dialog
-		> Local var/script command highlighting support
-		
+		> Document minimap
+
 
 	MISC			=
 

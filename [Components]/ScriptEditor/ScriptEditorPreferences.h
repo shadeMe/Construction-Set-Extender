@@ -140,6 +140,8 @@ namespace ConstructionSetExtender
 			CheckBox^									VarCmdNameCollisions;
 			CheckBox^									SuppressRefCountForQuestScripts;
 			CheckBox^									CountVarRefs;
+			Button^										CmDlgSyntaxLocalVarsColor;
+			Label^										LabelLocalVars;
 			// hidden controls, for settings that aren't displayed in the preferences window
 
 			// Find/Replace

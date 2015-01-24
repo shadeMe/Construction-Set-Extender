@@ -571,5 +571,15 @@ namespace ConstructionSetExtender
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 			UseQuickView = PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense");
 		}
+
+		LinkedList<String^>^ IntelliSenseInterface::GetLocalVariableNames()
+		{
+			LinkedList<String^>^ Out = gcnew LinkedList<String^>();
+
+			for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
+				Out->AddLast(Itr->GetIdentifier());
+
+			return Out;
+		}
 	}
 }

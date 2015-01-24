@@ -229,30 +229,17 @@ namespace ConstructionSetExtender
 			ref class AvalonEditXSHDManager
 			{
 			protected:
+				List<String^>^											GetKeyWordList(void);
+				List<String^>^											GetBlockTypeList(void);
+
 				String^													CommentMarkerRuleset;
-				LinkedList<XSHDColor^>^									SerializedColors;
-				LinkedList<String^>^									SerializedRulesets;
-
-				virtual List<String^>^									GetKeyWordList(void);
-				virtual List<String^>^									GetBlockTypeList(void);
+				String^													StableDefinitions;			// XML of the base highlighting defs, updated
+				XSHDColor^												LocalVarsColor;
 			public:
-				static enum class										Rulesets
-				{
-					e_Digit = 0,
-					e_Delimiter,
-					e_String,
-					e_Keywords,
-					e_BlockTypes,
-					e_CommentAndPreprocessor
-				};
+				void													UpdateBaseDefinitions(void);
+				AvalonEditHighlightingDefinition^						GenerateHighlightingDefinition(LinkedList<String^>^ LocalVariables);
 
-				// pass Color::GhostWhite as fore/back colors to have them ignored
-				void													CreateSerializedHighlightingData(Rulesets Ruleset, Color Foreground, Color Background, Color Arbitrary, bool Bold);
-
-				AvalonEditHighlightingDefinition^						CreateDefinitionFromSerializedData(String^ DefinitionName);
-				void													PurgeSerializedHighlightingDataCache();
-
-				AvalonEditXSHDManager() : SerializedRulesets(gcnew LinkedList<String^>()), SerializedColors(gcnew LinkedList<XSHDColor^>()), CommentMarkerRuleset(nullptr) {}
+				AvalonEditXSHDManager();
 			};
 		}
 	}

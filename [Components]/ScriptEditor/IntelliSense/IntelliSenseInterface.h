@@ -112,6 +112,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItemVariable^							LookupLocalVariableByIdentifier(String^% Identifier);
 			void												ClearLocalVariableDatabase();
 			void												UpdateLocalVariableDatabase();
+			LinkedList<String^>^								GetLocalVariableNames();
 
 			static bool											GetTriggered(System::Windows::Input::Key E);
 		};

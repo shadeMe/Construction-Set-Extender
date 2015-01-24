@@ -131,5 +131,8 @@
     <EmbeddedResource Include="SESnippetManager.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
+    <EmbeddedResource Include="SEVariableIndex.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

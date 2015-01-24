@@ -140,6 +140,8 @@ private: System::Windows::Forms::Button^  CmDlgBackgroundColor;
 private: System::Windows::Forms::Button^  CmDlgForegroundColor;
 private: System::Windows::Forms::Label^  LabelBackgroundColor;
 private: System::Windows::Forms::Label^  LabelForegroundColor;
+private: System::Windows::Forms::Button^  CmDlgSyntaxLocalVarsColor;
+private: System::Windows::Forms::Label^  LabelLocalVars;
 
 	protected:
 
@@ -184,6 +186,10 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			this->LabelNoOfPasses = (gcnew System::Windows::Forms::Label());
 			this->NoOfPasses = (gcnew System::Windows::Forms::NumericUpDown());
 			this->TabAppearance = (gcnew System::Windows::Forms::TabPage());
+			this->CmDlgBackgroundColor = (gcnew System::Windows::Forms::Button());
+			this->CmDlgForegroundColor = (gcnew System::Windows::Forms::Button());
+			this->LabelBackgroundColor = (gcnew System::Windows::Forms::Label());
+			this->LabelForegroundColor = (gcnew System::Windows::Forms::Label());
 			this->BoldFacedHighlighting = (gcnew System::Windows::Forms::CheckBox());
 			this->TabsOnTop = (gcnew System::Windows::Forms::CheckBox());
 			this->CodeFolding = (gcnew System::Windows::Forms::CheckBox());
@@ -229,24 +235,22 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
 			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
-			this->LabelForegroundColor = (gcnew System::Windows::Forms::Label());
-			this->LabelBackgroundColor = (gcnew System::Windows::Forms::Label());
-			this->CmDlgForegroundColor = (gcnew System::Windows::Forms::Button());
-			this->CmDlgBackgroundColor = (gcnew System::Windows::Forms::Button());
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->BeginInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->BeginInit();
+			this->LabelLocalVars = (gcnew System::Windows::Forms::Label());
+			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ThresholdLength))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
 			this->TabGeneral->SuspendLayout();
 			this->TabIntelliSense->SuspendLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->MaxVisibleItems))->BeginInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->DatabaseUpdateInterval))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MaxVisibleItems))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DatabaseUpdateInterval))->BeginInit();
 			this->TabPreprocessor->SuspendLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->NoOfPasses))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NoOfPasses))->BeginInit();
 			this->TabAppearance->SuspendLayout();
 			this->GroupBoxSyntaxHighlighting->SuspendLayout();
 			this->TabSanitize->SuspendLayout();
 			this->TabBackup->SuspendLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->AutoRecoverySavePeriod))->BeginInit();
 			this->TabValidator->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -270,12 +274,12 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			// ThresholdLength
 			// 
 			this->ThresholdLength->Location = System::Drawing::Point(30, 104);
-			this->ThresholdLength->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {10, 0, 0, 0});
-			this->ThresholdLength->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {3, 0, 0, 0});
+			this->ThresholdLength->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 10, 0, 0, 0 });
+			this->ThresholdLength->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 3, 0, 0, 0 });
 			this->ThresholdLength->Name = L"ThresholdLength";
 			this->ThresholdLength->Size = System::Drawing::Size(148, 20);
 			this->ThresholdLength->TabIndex = 0;
-			this->ThresholdLength->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {3, 0, 0, 0});
+			this->ThresholdLength->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 3, 0, 0, 0 });
 			// 
 			// DestroyOnLastTabClose
 			// 
@@ -467,12 +471,12 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			// MaxVisibleItems
 			// 
 			this->MaxVisibleItems->Location = System::Drawing::Point(231, 201);
-			this->MaxVisibleItems->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {20, 0, 0, 0});
-			this->MaxVisibleItems->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+			this->MaxVisibleItems->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 20, 0, 0, 0 });
+			this->MaxVisibleItems->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 5, 0, 0, 0 });
 			this->MaxVisibleItems->Name = L"MaxVisibleItems";
 			this->MaxVisibleItems->Size = System::Drawing::Size(148, 20);
 			this->MaxVisibleItems->TabIndex = 7;
-			this->MaxVisibleItems->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+			this->MaxVisibleItems->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 5, 0, 0, 0 });
 			// 
 			// UseQuickView
 			// 
@@ -495,12 +499,12 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			// DatabaseUpdateInterval
 			// 
 			this->DatabaseUpdateInterval->Location = System::Drawing::Point(30, 201);
-			this->DatabaseUpdateInterval->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {15, 0, 0, 0});
-			this->DatabaseUpdateInterval->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+			this->DatabaseUpdateInterval->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 15, 0, 0, 0 });
+			this->DatabaseUpdateInterval->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 5, 0, 0, 0 });
 			this->DatabaseUpdateInterval->Name = L"DatabaseUpdateInterval";
 			this->DatabaseUpdateInterval->Size = System::Drawing::Size(148, 20);
 			this->DatabaseUpdateInterval->TabIndex = 2;
-			this->DatabaseUpdateInterval->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {5, 0, 0, 0});
+			this->DatabaseUpdateInterval->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 5, 0, 0, 0 });
 			this->DatabaseUpdateInterval->ValueChanged += gcnew System::EventHandler(this, &OptionsDialog::ISDBUpdateInterval_ValueChanged);
 			// 
 			// TabPreprocessor
@@ -565,6 +569,42 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			this->TabAppearance->Text = L"Appearance";
 			this->TabAppearance->UseVisualStyleBackColor = true;
 			this->TabAppearance->Click += gcnew System::EventHandler(this, &OptionsDialog::TabAppearance_Click);
+			// 
+			// CmDlgBackgroundColor
+			// 
+			this->CmDlgBackgroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgBackgroundColor->Location = System::Drawing::Point(282, 259);
+			this->CmDlgBackgroundColor->Name = L"CmDlgBackgroundColor";
+			this->CmDlgBackgroundColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgBackgroundColor->TabIndex = 36;
+			this->CmDlgBackgroundColor->UseVisualStyleBackColor = true;
+			// 
+			// CmDlgForegroundColor
+			// 
+			this->CmDlgForegroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgForegroundColor->Location = System::Drawing::Point(282, 229);
+			this->CmDlgForegroundColor->Name = L"CmDlgForegroundColor";
+			this->CmDlgForegroundColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgForegroundColor->TabIndex = 35;
+			this->CmDlgForegroundColor->UseVisualStyleBackColor = true;
+			// 
+			// LabelBackgroundColor
+			// 
+			this->LabelBackgroundColor->AutoSize = true;
+			this->LabelBackgroundColor->Location = System::Drawing::Point(171, 263);
+			this->LabelBackgroundColor->Name = L"LabelBackgroundColor";
+			this->LabelBackgroundColor->Size = System::Drawing::Size(92, 13);
+			this->LabelBackgroundColor->TabIndex = 34;
+			this->LabelBackgroundColor->Text = L"Background Color";
+			// 
+			// LabelForegroundColor
+			// 
+			this->LabelForegroundColor->AutoSize = true;
+			this->LabelForegroundColor->Location = System::Drawing::Point(171, 233);
+			this->LabelForegroundColor->Name = L"LabelForegroundColor";
+			this->LabelForegroundColor->Size = System::Drawing::Size(88, 13);
+			this->LabelForegroundColor->TabIndex = 33;
+			this->LabelForegroundColor->Text = L"Foreground Color";
 			// 
 			// BoldFacedHighlighting
 			// 
@@ -713,6 +753,8 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			// 
 			// GroupBoxSyntaxHighlighting
 			// 
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxLocalVarsColor);
+			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelLocalVars);
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxCommentsColor);
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxDigitsColor);
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->CmDlgSyntaxPreprocessorColor);
@@ -729,7 +771,7 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			this->GroupBoxSyntaxHighlighting->Controls->Add(this->LabelKeywords);
 			this->GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
 			this->GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";
-			this->GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(155, 247);
+			this->GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(155, 281);
 			this->GroupBoxSyntaxHighlighting->TabIndex = 4;
 			this->GroupBoxSyntaxHighlighting->TabStop = false;
 			this->GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
@@ -931,12 +973,12 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			// AutoRecoverySavePeriod
 			// 
 			this->AutoRecoverySavePeriod->Location = System::Drawing::Point(133, 176);
-			this->AutoRecoverySavePeriod->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) {60, 0, 0, 0});
-			this->AutoRecoverySavePeriod->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
+			this->AutoRecoverySavePeriod->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 60, 0, 0, 0 });
+			this->AutoRecoverySavePeriod->Minimum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
 			this->AutoRecoverySavePeriod->Name = L"AutoRecoverySavePeriod";
 			this->AutoRecoverySavePeriod->Size = System::Drawing::Size(154, 20);
 			this->AutoRecoverySavePeriod->TabIndex = 13;
-			this->AutoRecoverySavePeriod->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) {1, 0, 0, 0});
+			this->AutoRecoverySavePeriod->Value = System::Decimal(gcnew cli::array< System::Int32 >(4) { 1, 0, 0, 0 });
 			// 
 			// UseAutoRecovery
 			// 
@@ -1001,41 +1043,22 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions (Recommended)";
 			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
 			// 
-			// LabelForegroundColor
+			// LabelLocalVars
 			// 
-			this->LabelForegroundColor->AutoSize = true;
-			this->LabelForegroundColor->Location = System::Drawing::Point(6, 263);
-			this->LabelForegroundColor->Name = L"LabelForegroundColor";
-			this->LabelForegroundColor->Size = System::Drawing::Size(88, 13);
-			this->LabelForegroundColor->TabIndex = 33;
-			this->LabelForegroundColor->Text = L"Foreground Color";
+			this->LabelLocalVars->Location = System::Drawing::Point(6, 247);
+			this->LabelLocalVars->Name = L"LabelLocalVars";
+			this->LabelLocalVars->Size = System::Drawing::Size(91, 25);
+			this->LabelLocalVars->TabIndex = 19;
+			this->LabelLocalVars->Text = L"Local Variables";
 			// 
-			// LabelBackgroundColor
+			// CmDlgSyntaxLocalVarsColor
 			// 
-			this->LabelBackgroundColor->AutoSize = true;
-			this->LabelBackgroundColor->Location = System::Drawing::Point(171, 263);
-			this->LabelBackgroundColor->Name = L"LabelBackgroundColor";
-			this->LabelBackgroundColor->Size = System::Drawing::Size(92, 13);
-			this->LabelBackgroundColor->TabIndex = 34;
-			this->LabelBackgroundColor->Text = L"Background Color";
-			// 
-			// CmDlgForegroundColor
-			// 
-			this->CmDlgForegroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgForegroundColor->Location = System::Drawing::Point(109, 259);
-			this->CmDlgForegroundColor->Name = L"CmDlgForegroundColor";
-			this->CmDlgForegroundColor->Size = System::Drawing::Size(34, 21);
-			this->CmDlgForegroundColor->TabIndex = 35;
-			this->CmDlgForegroundColor->UseVisualStyleBackColor = true;
-			// 
-			// CmDlgBackgroundColor
-			// 
-			this->CmDlgBackgroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgBackgroundColor->Location = System::Drawing::Point(282, 259);
-			this->CmDlgBackgroundColor->Name = L"CmDlgBackgroundColor";
-			this->CmDlgBackgroundColor->Size = System::Drawing::Size(34, 21);
-			this->CmDlgBackgroundColor->TabIndex = 36;
-			this->CmDlgBackgroundColor->UseVisualStyleBackColor = true;
+			this->CmDlgSyntaxLocalVarsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxLocalVarsColor->Location = System::Drawing::Point(103, 243);
+			this->CmDlgSyntaxLocalVarsColor->Name = L"CmDlgSyntaxLocalVarsColor";
+			this->CmDlgSyntaxLocalVarsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxLocalVarsColor->TabIndex = 20;
+			this->CmDlgSyntaxLocalVarsColor->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 
@@ -1047,24 +1070,24 @@ private: System::Windows::Forms::Label^  LabelForegroundColor;
 			this->Name = L"OptionsDialog";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Preferences";
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ThresholdLength))->EndInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->TabSize))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ThresholdLength))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->TabSize))->EndInit();
 			this->TabContainer->ResumeLayout(false);
 			this->TabGeneral->ResumeLayout(false);
 			this->TabGeneral->PerformLayout();
 			this->TabIntelliSense->ResumeLayout(false);
 			this->TabIntelliSense->PerformLayout();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->MaxVisibleItems))->EndInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->DatabaseUpdateInterval))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->MaxVisibleItems))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->DatabaseUpdateInterval))->EndInit();
 			this->TabPreprocessor->ResumeLayout(false);
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->NoOfPasses))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->NoOfPasses))->EndInit();
 			this->TabAppearance->ResumeLayout(false);
 			this->TabAppearance->PerformLayout();
 			this->GroupBoxSyntaxHighlighting->ResumeLayout(false);
 			this->TabSanitize->ResumeLayout(false);
 			this->TabSanitize->PerformLayout();
 			this->TabBackup->ResumeLayout(false);
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->AutoRecoverySavePeriod))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->AutoRecoverySavePeriod))->EndInit();
 			this->TabValidator->ResumeLayout(false);
 			this->TabValidator->PerformLayout();
 			this->ResumeLayout(false);

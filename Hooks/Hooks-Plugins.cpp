@@ -185,11 +185,13 @@ namespace ConstructionSetExtender
 		{
 			if (State == false)
 			{
-				BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::WindowHandle);
+				if (TESObjectWindow::IsMinimized() == false)
+					BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::WindowHandle);
 			}
 			else
 			{
-				BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::WindowHandle);
+				if (TESObjectWindow::IsMinimized() == false)
+					BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::WindowHandle);
 
 				CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
 				SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);

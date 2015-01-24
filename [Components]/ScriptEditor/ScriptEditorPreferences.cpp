@@ -174,6 +174,7 @@ namespace ConstructionSetExtender
 			RegisterColorSetting("SyntaxDelimitersColor", Color::DarkMagenta, CmDlgSyntaxDelimitersColor);
 			RegisterColorSetting("SyntaxStringsColor", Color::Firebrick, CmDlgSyntaxStringsColor);
 			RegisterColorSetting("SyntaxKeywordsColor", Color::RoyalBlue, CmDlgSyntaxKeywordsColor);
+			RegisterColorSetting("SyntaxLocalVarsColor", Color::Orchid, CmDlgSyntaxLocalVarsColor);
 
 			RegisterColorSetting("CurrentLineHighlightColor", Color::DodgerBlue, CmDlgCurrentLineHighlightColor);
 			RegisterColorSetting("CharLimitHighlightColor", Color::IndianRed, CmDlgCharLimitHighlightColor);
@@ -402,7 +403,8 @@ namespace ConstructionSetExtender
 			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
 			this->SubstringSearch = (gcnew System::Windows::Forms::CheckBox());
-
+			this->LabelLocalVars = (gcnew System::Windows::Forms::Label());
+			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
 			//
 			// Hidden Controls
 			//
@@ -762,6 +764,8 @@ namespace ConstructionSetExtender
 			//
 			// GroupBoxSyntaxHighlighting
 			//
+			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxLocalVarsColor);
+			GroupBoxSyntaxHighlighting->Controls->Add(LabelLocalVars);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxCommentsColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxDigitsColor);
 			GroupBoxSyntaxHighlighting->Controls->Add(CmDlgSyntaxPreprocessorColor);
@@ -778,7 +782,7 @@ namespace ConstructionSetExtender
 			GroupBoxSyntaxHighlighting->Controls->Add(LabelKeywords);
 			GroupBoxSyntaxHighlighting->Location = System::Drawing::Point(6, 3);
 			GroupBoxSyntaxHighlighting->Name = L"GroupBoxSyntaxHighlighting";
-			GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(155, 247);
+			GroupBoxSyntaxHighlighting->Size = System::Drawing::Size(155, 281);
 			GroupBoxSyntaxHighlighting->TabIndex = 4;
 			GroupBoxSyntaxHighlighting->TabStop = false;
 			GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
@@ -1012,7 +1016,7 @@ namespace ConstructionSetExtender
 			// LabelForegroundColor
 			//
 			this->LabelForegroundColor->AutoSize = true;
-			this->LabelForegroundColor->Location = System::Drawing::Point(6, 263);
+			this->LabelForegroundColor->Location = System::Drawing::Point(171, 233);
 			this->LabelForegroundColor->Name = L"LabelForegroundColor";
 			this->LabelForegroundColor->Size = System::Drawing::Size(88, 13);
 			this->LabelForegroundColor->TabIndex = 33;
@@ -1030,7 +1034,7 @@ namespace ConstructionSetExtender
 			// CmDlgForegroundColor
 			//
 			this->CmDlgForegroundColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgForegroundColor->Location = System::Drawing::Point(109, 259);
+			this->CmDlgForegroundColor->Location = System::Drawing::Point(282, 229);
 			this->CmDlgForegroundColor->Name = L"CmDlgForegroundColor";
 			this->CmDlgForegroundColor->Size = System::Drawing::Size(34, 21);
 			this->CmDlgForegroundColor->TabIndex = 35;
@@ -1223,6 +1227,25 @@ namespace ConstructionSetExtender
 			this->SubstringSearch->TabIndex = 11;
 			this->SubstringSearch->Text = L"Use Substring Search While Filtering";
 			this->SubstringSearch->UseVisualStyleBackColor = true;
+			//
+			// LabelLocalVars
+			//
+			this->LabelLocalVars->Location = System::Drawing::Point(6, 247);
+			this->LabelLocalVars->Name = L"LabelLocalVars";
+			this->LabelLocalVars->Size = System::Drawing::Size(91, 25);
+			this->LabelLocalVars->TabIndex = 19;
+			this->LabelLocalVars->Text = L"Local Variables";
+			//
+			// CmDlgSyntaxLocalVarsColor
+			//
+			this->CmDlgSyntaxLocalVarsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxLocalVarsColor->Location = System::Drawing::Point(103, 243);
+			this->CmDlgSyntaxLocalVarsColor->Name = L"CmDlgSyntaxLocalVarsColor";
+			this->CmDlgSyntaxLocalVarsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxLocalVarsColor->TabIndex = 20;
+			this->CmDlgSyntaxLocalVarsColor->UseVisualStyleBackColor = true;
+			CmDlgSyntaxLocalVarsColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
+
 			//
 			// ScriptEditorPreferences
 			//

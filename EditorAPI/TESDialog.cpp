@@ -538,6 +538,11 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 	}
 }
 
+bool TESObjectWindow::IsMinimized(void)
+{
+	return (GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) == false;
+}
+
 void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
 {
 	return cdeclCall<void*>(0x0041F990, hWnd, Item);

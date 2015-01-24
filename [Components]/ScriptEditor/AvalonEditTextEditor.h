@@ -162,7 +162,7 @@ namespace ConstructionSetExtender
 				RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
 				void										ClearFindResultIndicators(void);
 				void										SearchBracesForHighlighting(int CaretPos);
-				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(void);
+				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(bool UpdateStableDefs);
 				String^										SanitizeUnicodeString(String^ In);			// removes unsupported characters
 				virtual void								Destroy();
 

@@ -21,8 +21,6 @@ namespace ConstructionSetExtender
 				e_Active
 			};
 		protected:
-			static Size											LastKnownSize = Size(0, 0);
-
 			void												ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 			void												ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			void												ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
@@ -37,7 +35,7 @@ namespace ConstructionSetExtender
 
 			virtual void										ShowUseReportForSelection();
 			void												PerformOperationOnSelection();
-			void												CleanupDialog();
+			void												CleanupDialog(bool SaveBoundsToINI);
 
 			UInt32												ParentWorkspaceIndex;
 			Operation											CurrentOperation;

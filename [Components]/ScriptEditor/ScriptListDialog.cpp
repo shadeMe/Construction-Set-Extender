@@ -39,13 +39,13 @@ namespace ConstructionSetExtender
 			PreviewBox->ScrollBars = ScrollBars::Both;
 			PreviewBox->WordWrap = false;
 			PreviewBox->Size = System::Drawing::Size(444, 520);
-			PreviewBox->Anchor = AnchorStyles::Top|AnchorStyles::Right|AnchorStyles::Bottom;
+			PreviewBox->Anchor = AnchorStyles::Top|AnchorStyles::Right|AnchorStyles::Bottom|AnchorStyles::Left;
 
 			ScriptList->Columns->AddRange(gcnew cli::array< ColumnHeader^  >(4) {ScriptListCFlags,
 				ScriptListCScriptName,
 				ScriptListCFormID,
 				ScriptListCScriptType});
-			ScriptList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
+		//	ScriptList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
 			ScriptList->Location = System::Drawing::Point(12, 12);
 			ScriptList->Size = System::Drawing::Size(444, 485);
 			ScriptList->UseCompatibleStateImageBehavior = false;
@@ -79,7 +79,7 @@ namespace ConstructionSetExtender
 			SearchBox->Size = System::Drawing::Size(312, 30);
 			SearchBox->Anchor = AnchorStyles::Left|AnchorStyles::Bottom;
 
-			SelectBox->Font = gcnew Font("Segoe UI", 10);
+		//	SelectBox->Font = gcnew Font("Segoe UI", 10);
 			SelectBox->Location = System::Drawing::Point(330, 503);
 			SelectBox->Text = "Select Script(s)";
 			SelectBox->Size = System::Drawing::Size(126, 29);
@@ -87,13 +87,13 @@ namespace ConstructionSetExtender
 
 			ScriptBox->ClientSize = System::Drawing::Size(916, 541);
 			ScriptBox->MinimumSize = System::Drawing::Size(935, 320);
-			ScriptBox->MaximumSize = System::Drawing::Size(935, 2000);
+		//	ScriptBox->MaximumSize = System::Drawing::Size(935, 2000);
 			ScriptBox->Controls->Add(ScriptList);
 			ScriptBox->Controls->Add(PreviewBox);
 			ScriptBox->Controls->Add(SelectBox);
 			ScriptBox->Controls->Add(SearchBox);
 			ScriptBox->FormBorderStyle = FormBorderStyle::SizableToolWindow;
-			ScriptBox->StartPosition = FormStartPosition::CenterScreen;
+			ScriptBox->StartPosition = FormStartPosition::Manual;
 			ScriptBox->MaximizeBox = false;
 			ScriptBox->MinimizeBox = false;
 			ScriptBox->Text = "Select Script";
@@ -183,8 +183,19 @@ namespace ConstructionSetExtender
 
 			SearchBox->Focus();
 
-			if (LastKnownSize.Width)
-				ScriptBox->ClientSize = LastKnownSize;
+			char Buffer[0x200] = { 0 };
+			int X, Y, W, H;
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("W", "ScriptEditor::ScriptListDialog", "916", Buffer, sizeof(Buffer));
+			W = Int32::Parse(gcnew String(Buffer));
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("H", "ScriptEditor::ScriptListDialog", "541", Buffer, sizeof(Buffer));
+			H = Int32::Parse(gcnew String(Buffer));
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("X", "ScriptEditor::ScriptListDialog", "0", Buffer, sizeof(Buffer));
+			X = Int32::Parse(gcnew String(Buffer));
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("Y", "ScriptEditor::ScriptListDialog", "0", Buffer, sizeof(Buffer));
+			Y = Int32::Parse(gcnew String(Buffer));
+
+			ScriptBox->ClientSize = Size(W, H);
+			ScriptBox->DesktopLocation = Point(X, Y);
 
 			Closing = false;
 			SelectionComplete = false;
@@ -193,7 +204,7 @@ namespace ConstructionSetExtender
 			return FirstSelectionCache;
 		}
 
-		void ScriptListDialog::CleanupDialog()
+		void ScriptListDialog::CleanupDialog(bool SaveBoundsToINI)
 		{
 			ScriptList->Items->Clear();
 			ScriptList->Enabled = true;
@@ -203,7 +214,14 @@ namespace ConstructionSetExtender
 			ScriptList->MultiSelect = false;
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptListCache, false);
 			ScriptListCache = 0;
-			LastKnownSize = ScriptBox->ClientSize;
+
+			if (SaveBoundsToINI)
+			{
+				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("W", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->ClientSize.Width.ToString())).c_str());
+				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("H", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->ClientSize.Height.ToString())).c_str());
+				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("X", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->DesktopLocation.X.ToString())).c_str());
+				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("Y", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->DesktopLocation.Y.ToString())).c_str());
+			}
 		}
 
 		void ScriptListDialog::PerformOperationOnSelection()
@@ -243,7 +261,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
-			CleanupDialog();
+			CleanupDialog(true);
 
 			if (Closing == false)
 			{
@@ -382,7 +400,7 @@ namespace ConstructionSetExtender
 			SelectBox->Click -= SelectBoxClickHandler;
 			ScriptBox->Closing -= ScriptBoxCancelHandler;
 
-			CleanupDialog();
+			CleanupDialog(false);
 			for each (Image^ Itr in ScriptList->SmallImageList->Images)
 				delete Itr;
 			ScriptList->SmallImageList->Images->Clear();

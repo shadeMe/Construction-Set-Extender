@@ -1,5 +1,6 @@
 #include "AvalonEditXSHD.h"
 #include "Globals.h"
+#include "ScriptEditorPreferences.h"
 
 namespace ConstructionSetExtender
 {
@@ -204,7 +205,6 @@ namespace ConstructionSetExtender
 
 				KeywordList->Add("call");
 				KeywordList->Add("setfunctionvalue");
-				KeywordList->Add("getcallingscript");
 
 				KeywordList->Add("array_var");
 				KeywordList->Add("string_var");
@@ -289,170 +289,187 @@ namespace ConstructionSetExtender
 				return BlockTypeList;
 			}
 
-			void AvalonEditXSHDManager::CreateSerializedHighlightingData(Rulesets Ruleset, Color Foreground, Color Background, Color Arbitrary, bool Bold)
+			void AvalonEditXSHDManager::UpdateBaseDefinitions(void)
 			{
+				bool Bold = PREFERENCES->FetchSettingAsInt("BoldFacedHighlighting", "Appearance");
+				Color Comments = PREFERENCES->LookupColorByKey("SyntaxCommentsColor");
+				Color Preprocessor = PREFERENCES->LookupColorByKey("SyntaxPreprocessorColor");
+				Color Keywords = PREFERENCES->LookupColorByKey("SyntaxKeywordsColor");
+				Color Blocks = PREFERENCES->LookupColorByKey("SyntaxScriptBlocksColor");
+				Color Delimiters = PREFERENCES->LookupColorByKey("SyntaxDelimitersColor");
+				Color Digits = PREFERENCES->LookupColorByKey("SyntaxDigitsColor");
+				Color Strings = PREFERENCES->LookupColorByKey("SyntaxStringsColor");
+				Color Vars = PREFERENCES->LookupColorByKey("SyntaxLocalVarsColor");
+
 				LinkedList<IXSHDElement^>^ Contents = gcnew LinkedList<IXSHDElement^>();
+				LinkedList<XSHDColor^>^ SerializedColors = gcnew LinkedList<XSHDColor^>();
+				LinkedList<String^>^ SerializedRulesets = gcnew LinkedList<String^>();
 
-				switch (Ruleset)
-				{
-				case Rulesets::e_Digit:
-					{
-						XSHDColor^ DigitColor = gcnew XSHDColor("DigitColor", Foreground, Background, Bold);
-						XSHDRule^ DigitRule = gcnew XSHDRule(DigitColor, "\\b0[xX][0-9a-fA-F]+\r\n|\\b\r\n(\\d+(\\.[0-9]+)?\r\n|\\.[0-9]+\r\n)\r\n([eE][+-]?[0-9]+)?");
+				delete LocalVarsColor;
+				LocalVarsColor = gcnew XSHDColor("VarColor", Vars, Color::GhostWhite, Bold);
+				SerializedColors->AddLast(LocalVarsColor);
 
-						SerializedColors->AddLast(DigitColor);
-						Contents->AddLast(DigitRule);
-					}
-					break;
-				case Rulesets::e_Delimiter:
-					{
-						XSHDColor^ DelimiterColor = gcnew XSHDColor("DelimiterColor", Foreground, Background, Bold);
-						XSHDRule^ DelimiterRule = gcnew XSHDRule(DelimiterColor, "[?,.;:>#$=()\\[\\]{}+\\-/%*&lt;&gt;^+~!|&amp;]+");
+				// digits
+				XSHDColor^ DigitColor = gcnew XSHDColor("DigitColor", Digits, Color::GhostWhite, Bold);
+				XSHDRule^ DigitRule = gcnew XSHDRule(DigitColor, "\\b0[xX][0-9a-fA-F]+\r\n|\\b\r\n(\\d+(\\.[0-9]+)?\r\n|\\.[0-9]+\r\n)\r\n([eE][+-]?[0-9]+)?");
 
-						SerializedColors->AddLast(DelimiterColor);
-						Contents->AddLast(DelimiterRule);
-					}
-					break;
-				case Rulesets::e_String:
-					{
-						XSHDColor^ StringColor = gcnew XSHDColor("StringColor", Foreground, Background, Bold);
-						XSHDSpan^ StringSpan = gcnew XSHDSpan(StringColor, nullptr, false);
-						StringSpan->AddChild(gcnew XSHDBegin(nullptr, "\""));
-						StringSpan->AddChild(gcnew XSHDEnd("\""));
+				SerializedColors->AddLast(DigitColor);
+				Contents->AddLast(DigitRule);
 
-						XSHDRuleset^ StringRulesetInner = gcnew XSHDRuleset("StringInner");
-						StringRulesetInner->AddChild(gcnew XSHDArbitrary("<Span begin=\"\\\\\" end=\".\"/>"));
-						StringSpan->AddChild(StringRulesetInner);
+				// delimiters
+				XSHDColor^ DelimiterColor = gcnew XSHDColor("DelimiterColor", Delimiters, Color::GhostWhite, Bold);
+				XSHDRule^ DelimiterRule = gcnew XSHDRule(DelimiterColor, "[?,.;:>#$=()\\[\\]{}+\\-/%*&lt;&gt;^+~!|&amp;]+");
 
-						SerializedColors->AddLast(StringColor);
-						Contents->AddLast(StringSpan);
-					}
-					break;
-				case Rulesets::e_Keywords:
-					{
-						XSHDColor^ HighlightColor = gcnew XSHDColor("CommandColor", Foreground, Background, Bold);
-						XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(HighlightColor, Color::GhostWhite, Color::GhostWhite, Bold);
+				SerializedColors->AddLast(DelimiterColor);
+				Contents->AddLast(DelimiterRule);
 
-						for each (String^ Itr in GetKeyWordList())
-							HighlightKeywords->AddWord(gcnew XSHDWord(Itr));
+				// strings
+				XSHDColor^ StringColor = gcnew XSHDColor("StringColor", Strings, Color::GhostWhite, Bold);
+				XSHDSpan^ StringSpan = gcnew XSHDSpan(StringColor, nullptr, false);
+				StringSpan->AddChild(gcnew XSHDBegin(nullptr, "\""));
+				StringSpan->AddChild(gcnew XSHDEnd("\""));
 
-						SerializedColors->AddLast(HighlightColor);
-						Contents->AddLast(HighlightKeywords);
-					}
-					break;
-				case Rulesets::e_BlockTypes:
-					{
-						XSHDColor^ HighlightColor = gcnew XSHDColor("BlockColor", Foreground, Background, Bold);
-						XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(HighlightColor, Color::GhostWhite, Color::GhostWhite, Bold);
+				XSHDRuleset^ StringRulesetInner = gcnew XSHDRuleset("StringInner");
+				StringRulesetInner->AddChild(gcnew XSHDArbitrary("<Span begin=\"\\\\\" end=\".\"/>"));
+				StringSpan->AddChild(StringRulesetInner);
 
-						for each (String^ Itr in GetBlockTypeList())
-							HighlightKeywords->AddWord(gcnew XSHDWord(Itr));
+				SerializedColors->AddLast(StringColor);
+				Contents->AddLast(StringSpan);
 
-						SerializedColors->AddLast(HighlightColor);
-						Contents->AddLast(HighlightKeywords);
-					}
-					break;
-				case Rulesets::e_CommentAndPreprocessor:
-					{
-						XSHDColor^ CommentColor = gcnew XSHDColor("CommentColor", Foreground, Background, Bold);
-						XSHDColor^ PreprocessorColor = gcnew XSHDColor("PreprocessorColor", Arbitrary, Background, Bold);
-						XSHDColor^ ReminderColor = gcnew XSHDColor("ReminderColor", Color::Red, Background, Bold);
+				// keywords
+				XSHDColor^ KWColor = gcnew XSHDColor("KeywordColor", Keywords, Color::GhostWhite, Bold);
+				XSHDKeywords^ KWKeywords = gcnew XSHDKeywords(KWColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
-						XSHDRuleset^ CommentMarkerRuleset = gcnew XSHDRuleset("CommentPreprocessorMarker");
-						XSHDKeywords^ CommentMarkerPreprocessorKeywords = gcnew XSHDKeywords(PreprocessorColor, Color::GhostWhite, Color::GhostWhite, true);
-						XSHDKeywords^ CommentMarkerReminderKeywords = gcnew XSHDKeywords(ReminderColor, Color::GhostWhite, Color::GhostWhite, true);
+				for each (String^ Itr in GetKeyWordList())
+					KWKeywords->AddWord(gcnew XSHDWord(Itr));
 
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
+				SerializedColors->AddLast(KWColor);
+				Contents->AddLast(KWKeywords);
 
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
+				// script blocks
+				XSHDColor^ HighlightColor = gcnew XSHDColor("BlockColor", Blocks, Color::GhostWhite, Bold);
+				XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(HighlightColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
+				for each (String^ Itr in GetBlockTypeList())
+					HighlightKeywords->AddWord(gcnew XSHDWord(Itr));
 
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
-						CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-							[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-							CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+				SerializedColors->AddLast(HighlightColor);
+				Contents->AddLast(HighlightKeywords);
 
-						CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("TODO"));
-						CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("HACK"));
+				// comments and preprocessor
+				XSHDColor^ CommentColor = gcnew XSHDColor("CommentColor", Comments, Color::GhostWhite, Bold);
+				XSHDColor^ PreprocessorColor = gcnew XSHDColor("PreprocessorColor", Preprocessor, Color::GhostWhite, Bold);
+				XSHDColor^ ReminderColor = gcnew XSHDColor("ReminderColor", Color::Red, Color::GhostWhite, Bold);
 
-						CommentMarkerRuleset->AddChild(CommentMarkerPreprocessorKeywords);
-						CommentMarkerRuleset->AddChild(CommentMarkerReminderKeywords);
+				XSHDRuleset^ CommentMarkerRuleset = gcnew XSHDRuleset("CommentPreprocessorMarker");
+				XSHDKeywords^ CommentMarkerPreprocessorKeywords = gcnew XSHDKeywords(PreprocessorColor, Color::GhostWhite, Color::GhostWhite, true);
+				XSHDKeywords^ CommentMarkerReminderKeywords = gcnew XSHDKeywords(ReminderColor, Color::GhostWhite, Color::GhostWhite, true);
 
-						this->CommentMarkerRuleset = gcnew String(CommentMarkerRuleset->Serialize());
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
 
-						XSHDSpan^ CommentSpan = gcnew XSHDSpan(CommentColor, CommentMarkerRuleset, false);
-						CommentSpan->AddChild(gcnew XSHDBegin(nullptr, ";"));
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
 
-						XSHDSpan^ PreprocessorBlockSpan = gcnew XSHDSpan(PreprocessorColor, CommentMarkerRuleset, true);
-						PreprocessorBlockSpan->AddChild(gcnew XSHDBegin(nullptr, ";{"));
-						PreprocessorBlockSpan->AddChild(gcnew XSHDEnd(";}"));
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
 
-						SerializedColors->AddLast(CommentColor);
-						SerializedColors->AddLast(PreprocessorColor);
-						SerializedColors->AddLast(ReminderColor);
-						Contents->AddLast(PreprocessorBlockSpan);
-						Contents->AddLast(CommentSpan);
-					}
-					break;
-				}
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
+					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+
+				CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("TODO"));
+				CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("HACK"));
+
+				CommentMarkerRuleset->AddChild(CommentMarkerPreprocessorKeywords);
+				CommentMarkerRuleset->AddChild(CommentMarkerReminderKeywords);
+
+				this->CommentMarkerRuleset = gcnew String(CommentMarkerRuleset->Serialize());
+
+				XSHDSpan^ CommentSpan = gcnew XSHDSpan(CommentColor, CommentMarkerRuleset, false);
+				CommentSpan->AddChild(gcnew XSHDBegin(nullptr, ";"));
+
+				XSHDSpan^ PreprocessorBlockSpan = gcnew XSHDSpan(PreprocessorColor, CommentMarkerRuleset, true);
+				PreprocessorBlockSpan->AddChild(gcnew XSHDBegin(nullptr, ";{"));
+				PreprocessorBlockSpan->AddChild(gcnew XSHDEnd(";}"));
+
+				SerializedColors->AddLast(CommentColor);
+				SerializedColors->AddLast(PreprocessorColor);
+				SerializedColors->AddLast(ReminderColor);
+				Contents->AddLast(PreprocessorBlockSpan);
+				Contents->AddLast(CommentSpan);
 
 				String^ Definition = "";
 				for each (IXSHDElement^ Itr in Contents)
 					Definition += Itr->Serialize() + Environment::NewLine;
 
 				SerializedRulesets->AddLast(Definition);
-			}
 
-			AvalonEditHighlightingDefinition^ AvalonEditXSHDManager::CreateDefinitionFromSerializedData(String^ DefinitionName)
-			{
-				String^ CompleteDefinition = "<?xml version=\"1.0\"?>" + Environment::NewLine + "<SyntaxDefinition name=\"" + DefinitionName + "\" xmlns=\"http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008\">" + Environment::NewLine;
+				// generate XML
+				StableDefinitions = "<?xml version=\"1.0\"?>" + Environment::NewLine + "<SyntaxDefinition name=\"ObScript\" xmlns=\"http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008\">" + Environment::NewLine;
 
 				for each (XSHDColor^ Itr in SerializedColors)
-					CompleteDefinition += Itr->Serialize() + Environment::NewLine;
+					StableDefinitions += Itr->Serialize() + Environment::NewLine;
 
-				CompleteDefinition += CommentMarkerRuleset + Environment::NewLine;
+				StableDefinitions += CommentMarkerRuleset->Serialize() + Environment::NewLine;
 
-				CompleteDefinition += "<RuleSet ignoreCase = \"true\">" + Environment::NewLine;
+				StableDefinitions += "<RuleSet ignoreCase = \"true\">" + Environment::NewLine;
 				for each (String^ Itr in SerializedRulesets)
-					CompleteDefinition += Itr + Environment::NewLine;
-				CompleteDefinition += "</RuleSet>" + Environment::NewLine;
-				CompleteDefinition += "</SyntaxDefinition>";
+					StableDefinitions += Itr + Environment::NewLine;
+
+				// leave the closing tags for later
+			}
+
+			AvalonEditXSHDManager::AvalonEditXSHDManager() :
+				CommentMarkerRuleset(""),
+				StableDefinitions(""),
+				LocalVarsColor(nullptr)
+			{
+				;//
+			}
+
+			AvalonEditHighlightingDefinition^ AvalonEditXSHDManager::GenerateHighlightingDefinition(LinkedList<String^>^ LocalVariables)
+			{
+				String^ OutDefs = StableDefinitions;
+
+				if (LocalVariables == nullptr || LocalVariables->Count)
+				{
+					bool Bold = PREFERENCES->FetchSettingAsInt("BoldFacedHighlighting", "Appearance");
+					XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(LocalVarsColor, Color::GhostWhite, Color::GhostWhite, Bold);
+
+					for each (String^ Itr in LocalVariables)
+						HighlightKeywords->AddWord(gcnew XSHDWord(Itr));
+					OutDefs += HighlightKeywords->Serialize() + Environment::NewLine;
+				}
+
+				OutDefs += "</RuleSet>" + Environment::NewLine;
+				OutDefs += "</SyntaxDefinition>";
 
 #if 0
 				StreamWriter^ XSHDWriter = gcnew StreamWriter(Globals::AppPath + "XSHD-CSE.txt");
-				XSHDWriter->Write(CompleteDefinition);
+				XSHDWriter->Write(OutDefs);
 				XSHDWriter->Close();
 #endif
 
-				array<Byte>^ ByteArray = System::Text::Encoding::ASCII->GetBytes(CompleteDefinition);
+				array<Byte>^ ByteArray = System::Text::Encoding::ASCII->GetBytes(OutDefs);
 				XmlTextReader^ Reader = gcnew XmlTextReader(gcnew IO::MemoryStream(ByteArray));
 
 				return AvalonEdit::Highlighting::Xshd::HighlightingLoader::Load(Reader, AvalonEdit::Highlighting::HighlightingManager::Instance);
-			}
-
-			void AvalonEditXSHDManager::PurgeSerializedHighlightingDataCache()
-			{
-				CommentMarkerRuleset = "";
-				SerializedColors->Clear();
-				SerializedRulesets->Clear();
 			}
 		}
 	}
