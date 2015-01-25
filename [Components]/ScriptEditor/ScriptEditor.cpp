@@ -1025,6 +1025,7 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarSaveScriptAndPlugin);
 			SetupControlImage(ToolBarRecompileScripts);
 			SetupControlImage(ToolBarCompileDependencies);
+			ToolBarCompileDependencies->ImageTransparentColor = Color::White;
 			SetupControlImage(ToolBarDeleteScript);
 			SetupControlImage(ToolBarNavigationBack);
 			SetupControlImage(ToolBarNavigationForward);
@@ -1300,7 +1301,7 @@ namespace ConstructionSetExtender
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsObject);
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsQuest);
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsMagicEffect);
-			ToolBarScriptType->ImageTransparentColor = Color::White;
+		//	ToolBarScriptType->ImageTransparentColor = Color::White;
 			ToolBarScriptType->DropDown = ToolBarScriptTypeContents;
 			ToolBarScriptType->Alignment = ToolStripItemAlignment::Right;
 
@@ -1405,7 +1406,7 @@ namespace ConstructionSetExtender
 			MessageList->CheckBoxes = false;
 			MessageList->FullRowSelect = true;
 			MessageList->HideSelection = false;
-			MessageList->SmallImageList =  gcnew ImageList();
+			MessageList->SmallImageList = gcnew ImageList();
 			MessageList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListWarning"));
 			MessageList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListError"));
 			MessageList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListMessage"));

@@ -13,7 +13,7 @@ namespace ConstructionSetExtender
 
 #define SetupControlImage(Identifier)							Identifier##->Name = #Identifier;	\
 																Identifier##->Image = Globals::ScriptEditorImageResourceManager->CreateImageFromResource(#Identifier);	\
-																Identifier##->ImageTransparentColor = Color::White
+																/*Identifier##->ImageTransparentColor = Color::White*/
 
 #define DisposeControlImage(Identifier)							delete Identifier##->Image; \
 																Identifier##->Image = nullptr

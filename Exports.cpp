@@ -856,7 +856,14 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
 				Form->formType != TESForm::kFormType_Global &&
-				Form->formType != TESForm::kFormType_Quest)
+				Form->formType != TESForm::kFormType_Quest &&
+				Form->formType != TESForm::kFormType_LandTexture &&
+				Form->formType != TESForm::kFormType_Tree &&
+				Form->formType != TESForm::kFormType_Grass &&
+				Form->formType != TESForm::kFormType_Region &&
+				Form->formType != TESForm::kFormType_LoadScreen &&
+				Form->formType != TESForm::kFormType_AnimObject
+				)
 			{
 				Data->EditorIDListHead[EditorIDFormCount].FillFormData(Form);
 				EditorIDFormCount++;
