@@ -160,6 +160,7 @@ namespace ConstructionSetExtender
 			_DefineNopHdlr(ZBufferVertexColorExportA, 0x0046C533, 5);
 			_DefineNopHdlr(ZBufferVertexColorExportB, 0x0046C547, 5);
 			_DefinePatchHdlr(DataHandlerNonParentForm, 0x00483477);
+			_DefineNopHdlr(DataHandlerExportTopicToFile, 0x004EDCFA, 5);
 
 			_MemHdlr(FileFinderLogMessage).WriteUInt8(0xEB);
 			_MemHdlr(DataHandlerAutoSave).WriteNop();
@@ -191,6 +192,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(ZBufferVertexColorExportA).WriteNop();
 			_MemHdlr(ZBufferVertexColorExportB).WriteNop();
 			_MemHdlr(DataHandlerNonParentForm).WriteUInt8(0xEB);
+			_MemHdlr(DataHandlerExportTopicToFile).WriteNop();
 
 			const UInt32 kMessageHandlerVTBL = 0x00940760;
 

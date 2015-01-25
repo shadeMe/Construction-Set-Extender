@@ -61,7 +61,6 @@ namespace ConstructionSetExtender
 				Timer^												MiddleMouseScrollTimer;
 
 				bool												IsFocused;
-				Timer^												FoldingTimer;
 
 				Timer^												ScrollBarSyncTimer;
 				VScrollBar^											ExternalVerticalScrollBar;
@@ -74,7 +73,7 @@ namespace ConstructionSetExtender
 				System::Windows::Media::Animation::DoubleAnimation^	SetTextPrologAnimationCache;
 				UInt32												ParentWorkspaceIndex;
 
-				Timer^												LocalVarsDatabaseUpdateTimer;
+				Timer^												SemanticAnalysisTimer;
 				bool												TextFieldInUpdateFlag;
 
 				int													PreviousLineBuffer;
@@ -94,9 +93,8 @@ namespace ConstructionSetExtender
 				System::Windows::Input::MouseEventHandler^			TextFieldMiddleMouseScrollMoveHandler;
 				System::Windows::Input::MouseButtonEventHandler^	TextFieldMiddleMouseScrollDownHandler;
 				EventHandler^										MiddleMouseScrollTimerTickHandler;
-				EventHandler^										FoldingTimerTickHandler;
 				EventHandler^										ScrollBarSyncTimerTickHandler;
-				EventHandler^										LocalVarsDatabaseUpdateTimerTickHandler;
+				EventHandler^										SemanticAnalysisTimerTickHandler;
 				EventHandler^										ExternalScrollBarValueChangedHandler;
 				EventHandler^										SetTextAnimationCompletedHandler;
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
@@ -127,9 +125,8 @@ namespace ConstructionSetExtender
 				void										TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 
 				void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
-				void										FoldingTimer_Tick(Object^ Sender, EventArgs^ E);
 				void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
-				void										LocalVarsDatabaseUpdateTimer_Tick(Object^ Sender, EventArgs^ E);
+				void										SemanticAnalysisTimer_Tick(Object^ Sender, EventArgs^ E);
 
 				void										ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
 				void										SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);

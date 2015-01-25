@@ -213,7 +213,7 @@ namespace ConstructionSetExtender
 					continue;
 				}
 
-				if (ScriptTextParser->Tokens[0][0] == ';' && ReadLine->IndexOf(";<CSE") != 0 && ReadLine->IndexOf(";</CSE") != 0 && GrabDef)
+				if (ScriptTextParser->Tokens[0][0] == ';' && GrabDef)
 					Description += ReadLine->Substring(ScriptTextParser->Indices[0] + 1) + "\n";
 
 				FirstToken = ScriptTextParser->Tokens[0],

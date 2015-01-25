@@ -619,7 +619,7 @@ namespace ConstructionSetExtender
 				FocusTextArea();
 
 				IsFocused = true;
-				FoldingTimer->Start();
+				SemanticAnalysisTimer->Start();
 				ScrollBarSyncTimer->Start();
 			}
 
@@ -632,7 +632,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::OnLostFocus( void )
 			{
 				IsFocused = false;
-				FoldingTimer->Stop();
+				SemanticAnalysisTimer->Stop();
 				ScrollBarSyncTimer->Stop();
 				IntelliSenseBox->Hide();
 			}
@@ -704,9 +704,8 @@ namespace ConstructionSetExtender
 			{
 				TextField->Clear();
 				MiddleMouseScrollTimer->Stop();
-				FoldingTimer->Stop();
 				ScrollBarSyncTimer->Stop();
-				LocalVarsDatabaseUpdateTimer->Stop();
+				SemanticAnalysisTimer->Stop();
 				CodeFoldingManager->Clear();
 				AvalonEdit::Folding::FoldingManager::Uninstall(CodeFoldingManager);
 
@@ -731,11 +730,10 @@ namespace ConstructionSetExtender
 				TextField->PreviewMouseMove -= TextFieldMiddleMouseScrollMoveHandler;
 				TextField->PreviewMouseDown -= TextFieldMiddleMouseScrollDownHandler;
 				MiddleMouseScrollTimer->Tick -= MiddleMouseScrollTimerTickHandler;
-				FoldingTimer->Tick -= FoldingTimerTickHandler;
 				ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
 				ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
 				ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
-				LocalVarsDatabaseUpdateTimer->Tick -= LocalVarsDatabaseUpdateTimerTickHandler;
+				SemanticAnalysisTimer->Tick -= SemanticAnalysisTimerTickHandler;
 				PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 
 				TextFieldPanel->Children->Clear();
@@ -751,14 +749,13 @@ namespace ConstructionSetExtender
 				delete TextField;
 				delete IntelliSenseBox;
 				delete MiddleMouseScrollTimer;
-				delete FoldingTimer;
 				delete ErrorColorizer;
 				delete FindReplaceColorizer;
 				delete BraceColorizer;
 				delete CodeFoldingManager;
 				delete CodeFoldingStrategy;
 				delete ScrollBarSyncTimer;
-				delete LocalVarsDatabaseUpdateTimer;
+				delete SemanticAnalysisTimer;
 				delete ExternalVerticalScrollBar;
 				delete ExternalHorizontalScrollBar;
 
@@ -1646,20 +1643,16 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			void AvalonEditTextEditor::FoldingTimer_Tick( Object^ Sender, EventArgs^ E )
-			{
-				UpdateCodeFoldings();
-			}
-
 			void AvalonEditTextEditor::ScrollBarSyncTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
 				SynchronizingInternalScrollBars = false;
 				SynchronizeExternalScrollBars();
 			}
 
-			void AvalonEditTextEditor::LocalVarsDatabaseUpdateTimer_Tick( Object^ Sender, EventArgs^ E )
+			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
 				UpdateIntelliSenseLocalDatabase();
+				UpdateCodeFoldings();
 			}
 
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
@@ -1782,11 +1775,10 @@ namespace ConstructionSetExtender
 					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy();
 
 				MiddleMouseScrollTimer = gcnew Timer();
-				FoldingTimer = gcnew Timer();
 				ExternalVerticalScrollBar = gcnew VScrollBar();
 				ExternalHorizontalScrollBar = gcnew HScrollBar();
 				ScrollBarSyncTimer = gcnew Timer();
-				LocalVarsDatabaseUpdateTimer = gcnew Timer();
+				SemanticAnalysisTimer = gcnew Timer();
 
 				TextFieldTextChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_TextChanged);
 				TextFieldCaretPositionChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::TextField_CaretPositionChanged);
@@ -1804,9 +1796,8 @@ namespace ConstructionSetExtender
 				TextFieldMiddleMouseScrollMoveHandler = gcnew System::Windows::Input::MouseEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollMove);
 				TextFieldMiddleMouseScrollDownHandler = gcnew System::Windows::Input::MouseButtonEventHandler(this, &AvalonEditTextEditor::TextField_MiddleMouseScrollDown);
 				MiddleMouseScrollTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::MiddleMouseScrollTimer_Tick);
-				FoldingTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::FoldingTimer_Tick);
 				ScrollBarSyncTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScrollBarSyncTimer_Tick);
-				LocalVarsDatabaseUpdateTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::LocalVarsDatabaseUpdateTimer_Tick);
+				SemanticAnalysisTimerTickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SemanticAnalysisTimer_Tick);
 				ExternalScrollBarValueChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ExternalScrollBar_ValueChanged);
 				SetTextAnimationCompletedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SetTextAnimation_Completed);
 				ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScriptEditorPreferences_Saved);
@@ -1884,8 +1875,6 @@ namespace ConstructionSetExtender
 				MiddleMouseScrollTimer->Interval = 16;
 
 				IsFocused = true;
-				FoldingTimer->Interval = 5000;
-				FoldingTimer->Start();
 
 				LastKnownMouseClickOffset = 0;
 
@@ -1907,8 +1896,8 @@ namespace ConstructionSetExtender
 				SetTextAnimating = false;
 				SetTextPrologAnimationCache = nullptr;
 
-				LocalVarsDatabaseUpdateTimer->Interval = 5000;
-				LocalVarsDatabaseUpdateTimer->Start();
+				SemanticAnalysisTimer->Interval = 5000;
+				SemanticAnalysisTimer->Start();
 
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
@@ -1940,11 +1929,10 @@ namespace ConstructionSetExtender
 				TextField->PreviewMouseMove += TextFieldMiddleMouseScrollMoveHandler;
 				TextField->PreviewMouseDown += TextFieldMiddleMouseScrollDownHandler;
 				MiddleMouseScrollTimer->Tick += MiddleMouseScrollTimerTickHandler;
-				FoldingTimer->Tick += FoldingTimerTickHandler;
 				ScrollBarSyncTimer->Tick += ScrollBarSyncTimerTickHandler;
 				ExternalVerticalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 				ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
-				LocalVarsDatabaseUpdateTimer->Tick += LocalVarsDatabaseUpdateTimerTickHandler;
+				SemanticAnalysisTimer->Tick += SemanticAnalysisTimerTickHandler;
 				PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 			}
 
