@@ -1,5 +1,5 @@
 #include "NumberedRichTextBox.h"
-#include "ScriptParser.h"
+#include "SemanticAnalysis.h"
 #include "[Common]\NativeWrapper.h"
 
 namespace ConstructionSetExtender

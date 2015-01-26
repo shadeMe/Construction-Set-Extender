@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AvalonEditDefs.h"
-#include "ScriptParser.h"
+#include "SemanticAnalysis.h"
 
 using namespace ICSharpCode;
 using namespace ICSharpCode::AvalonEdit::Rendering;
@@ -101,31 +101,18 @@ namespace ConstructionSetExtender
 
 			ref class AvalonEditObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
 			{
-				ScriptParser^								IndentParser;
-
+				AvalonEditTextEditor^						Parent;
 				bool										TrimTrailingWhitespace;
 				bool										CullEmptyLines;
 
-				void										CountIndents(AvalonEdit::Document::TextDocument^ document,
-																		AvalonEdit::Document::DocumentLine^ line,
-																		AvalonEdit::Document::DocumentLine^ indentLine,
-																		bool% ExdentLastLine,
-																		bool% SemiExdentLastLine,
-																		bool% DeferredIndentCurrentLine);
-
-				void										PerformIndent(AvalonEdit::Document::TextDocument^ document,
-																		AvalonEdit::Document::DocumentLine^ currentLine,
-																		AvalonEdit::Document::DocumentLine^ previousLine,
-																		bool ExdentLastLine,
-																		bool SemiExdentLastLine,
-																		bool DeferredIndentCurrentLine);
+				UInt32										GetIndentLevel(UInt32 LineNumber);
 			public:
 				virtual ~AvalonEditObScriptIndentStrategy();
 
 				virtual void								IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line);
 				virtual void								IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine);
 
-				AvalonEditObScriptIndentStrategy(bool TrimTrailingWhitespace, bool CullEmptyLines);
+				AvalonEditObScriptIndentStrategy(AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines);
 			};
 
 #if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
@@ -140,7 +127,7 @@ namespace ConstructionSetExtender
 					virtual int								Compare(AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y);
 				};
 
-				ScriptParser^								FoldingParser;
+				AvalonEditTextEditor^						Parent;
 				FoldingSorter^								Sorter;
 			public:
 				virtual ~AvalonEditObScriptCodeFoldingStrategy();
@@ -150,7 +137,7 @@ namespace ConstructionSetExtender
 #else
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;
 #endif
-				AvalonEditObScriptCodeFoldingStrategy();
+				AvalonEditObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent);
 			};
 
 			ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation

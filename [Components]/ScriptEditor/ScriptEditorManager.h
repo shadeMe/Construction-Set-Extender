@@ -12,18 +12,18 @@ namespace ConstructionSetExtender
 		public:
 			static enum class									OperationType
 			{
-				e_AllocateWorkspaceContainer = 0,
-				e_AllocateWorkspace,
-				e_ReleaseWorkspaceContainer,
-				e_ReleaseWorkspace,
-				e_WorkspaceTearing,
-				e_CloseAllOpenEditors
+				AllocateWorkspaceContainer = 0,
+				AllocateWorkspace,
+				ReleaseWorkspaceContainer,
+				ReleaseWorkspace,
+				WorkspaceTearing,
+				CloseAllOpenEditors
 			};
 
 			static enum class									WorkspaceTearOpType
 			{
-				e_NewContainer = 0,
-				e_RelocateToContainer
+				NewContainer = 0,
+				RelocateToContainer
 			};
 
 			static array<String^>^								TypeIdentifier =

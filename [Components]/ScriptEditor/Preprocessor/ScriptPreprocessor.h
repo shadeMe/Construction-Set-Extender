@@ -51,9 +51,9 @@ namespace ConstructionSetExtender
 	public:
 		static enum class									EncodingType
 		{
-			e_Invalid = 0,
-			e_SingleLine,
-			e_MultiLine
+			Invalid = 0,
+			SingleLine,
+			MultiLine
 		};
 		static array<Char>^									EncodingIdentifier =
 		{
@@ -64,11 +64,11 @@ namespace ConstructionSetExtender
 
 		static enum class									DirectiveType
 		{
-			e_Invalid = 0,
-			e_Define,
-			e_Import,
-			e_Enum,
-			e_If
+			Invalid = 0,
+			Define,
+			Import,
+			Enum,
+			If
 		};
 		static array<String^>^								DirectiveIdentifier =
 		{
@@ -86,10 +86,10 @@ namespace ConstructionSetExtender
 		String^												SliceStart;
 		String^												SliceEnd;
 
-		String^												GetMultilineValue(StringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
+		String^												GetMultilineValue(CSEStringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
 		String^												ObfuscateToCompiler(String^% Token);
 	public:
-		CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::e_Invalid), Encoding(EncodingType::e_Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
+		CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::Invalid), Encoding(EncodingType::Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
 
 		virtual bool										GetValid() override { return ErrorFlag == false; }
 
@@ -107,8 +107,8 @@ namespace ConstructionSetExtender
 	public:
 		static enum class									AccessoryOperatorType
 		{
-			e_None = 0,
-			e_Stringize
+			None = 0,
+			Stringize
 		};
 		static array<String^>^								AccessoryOperatorIdentifier =
 		{
@@ -116,8 +116,8 @@ namespace ConstructionSetExtender
 			"#"
 		};
 
-		DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);						// used for single line definitions
-		DefineDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
+		DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
+		DefineDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 		String^												GetName() { return Name; }
 		String^												GetValue(String^% Prefix, AccessoryOperatorType ActiveOperator);
@@ -134,7 +134,7 @@ namespace ConstructionSetExtender
 		String^												Filename;
 		String^												ImportSegment;
 	public:
-		ImportDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		ImportDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);
 
 		virtual	String^										GetToken() override;
 		String^												GetFilename() { return Filename; }
@@ -146,10 +146,10 @@ namespace ConstructionSetExtender
 		String^												Value;
 		LinkedList<DefineDirective^>^						ComponentDefineDirectives;
 
-		void												ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+		void												ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance, UInt32 LineNumber);
 	public:
-		EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);						// used for single line definitions
-		EnumDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
+		EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
+		EnumDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 		virtual	String^										GetToken() override;
 	};
@@ -162,15 +162,15 @@ namespace ConstructionSetExtender
 
 			static enum class								BuiltInOperators
 			{
-				e_Equal,
-				e_LessThanOrEqual,
-				e_GreaterThanOrEqual,
-				e_LessThan,
-				e_GreaterThan,
-				e_NotEqual,
+				Equal,
+				LessThanOrEqual,
+				GreaterThanOrEqual,
+				LessThan,
+				GreaterThan,
+				NotEqual,
 
-				e_LogicalAND,
-				e_LogicalOR
+				LogicalAND,
+				LogicalOR
 			};
 			static array<String^>^							BuiltInOperatorsIdentifier =
 			{
@@ -217,22 +217,22 @@ namespace ConstructionSetExtender
 
 		static array<Operator^>^							OperatorList =
 		{
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_Equal],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::Equal],
 							gcnew Operator::Handler(&IfDirective::EqualityOperatorEvaluator), 2, 2),
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LessThanOrEqual],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LessThanOrEqual],
 							gcnew Operator::Handler(&IfDirective::LessThanOrEqualOperatorEvaluator), 0, 2),
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_GreaterThanOrEqual],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::GreaterThanOrEqual],
 							gcnew Operator::Handler(&IfDirective::GreaterThanOrEqualOperatorEvaluator), 1, 2),
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LessThan],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LessThan],
 							gcnew Operator::Handler(&IfDirective::LessThanOperatorEvaluator), 0, 2),
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_GreaterThan],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::GreaterThan],
 							gcnew Operator::Handler(&IfDirective::GreaterThanOperatorEvaluator), 1, 2),
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_NotEqual],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::NotEqual],
 							gcnew Operator::Handler(&IfDirective::NotEqualOperatorEvaluator), 2, 2),
 
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LogicalAND],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LogicalAND],
 							gcnew Operator::Handler(&IfDirective::LogicalAndOperatorEvaluator), 3, 2),
-			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::e_LogicalOR],
+			gcnew Operator(Operator::BuiltInOperatorsIdentifier[(int)Operator::BuiltInOperators::LogicalOR],
 							gcnew Operator::Handler(&IfDirective::LogicalOrOperatorEvaluator), 4, 2)
 		};
 
@@ -245,7 +245,7 @@ namespace ConstructionSetExtender
 
 		bool												CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
 	public:
-		IfDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		IfDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
 		virtual	String^										GetToken() override;
 	};
@@ -260,7 +260,7 @@ namespace ConstructionSetExtender
 		bool												Busy;
 
 		void												ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput);
-		CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, StringReader^ TextReader, StandardOutputError^ ErrorOutput);
+		CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, CSEStringReader^ TextReader, StandardOutputError^ ErrorOutput);
 	public:
 		static Preprocessor^%								GetSingleton();
 

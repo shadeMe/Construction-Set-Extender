@@ -1,5 +1,4 @@
 #include "AvalonEditTextEditor.h"
-#include "ScriptParser.h"
 #include "Globals.h"
 #include "ScriptEditorPreferences.h"
 
@@ -135,7 +134,7 @@ namespace ConstructionSetExtender
 				Text = SanitizeUnicodeString(Text);
 
 				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 
 				if (SetTextAnimating)
 				{
@@ -196,7 +195,7 @@ namespace ConstructionSetExtender
 					Index = GetTextLength();
 
 				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 
 				TextField->Document->Insert(Index, Text);
 			}
@@ -209,7 +208,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::SetSelectedText(String^ Text, bool PreventTextChangedEventHandling)
 			{
 				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 
 				TextField->SelectedText = Text;
 			}
@@ -347,12 +346,12 @@ namespace ConstructionSetExtender
 			{
 				try
 				{
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 					StreamReader^ Reader = gcnew StreamReader(Path);
 					String^ FileText = Reader->ReadToEnd();
 					SetText(FileText, false, false);
 					Reader->Close();
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 				}
 				catch (Exception^ E)
 				{
@@ -521,7 +520,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ToggleComment(int StartIndex)
 			{
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 				BeginUpdate();
 
 				AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
@@ -595,12 +594,12 @@ namespace ConstructionSetExtender
 				}
 
 				EndUpdate(false);
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 			}
 
 			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
 			{
-				IntelliSenseBox->UpdateLocalVariableDatabase();
+				IntelliSenseBox->UpdateLocalVariableDatabase(SemanticAnalysisCache);
 
 				delete TextField->SyntaxHighlighting;
 				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(false);
@@ -665,7 +664,7 @@ namespace ConstructionSetExtender
 				TextFieldInUpdateFlag = true;
 				TextField->Document->BeginUpdate();
 
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 			}
 
 			void AvalonEditTextEditor::EndUpdate( bool FlagModification )
@@ -676,7 +675,7 @@ namespace ConstructionSetExtender
 				TextField->Document->EndUpdate();
 				TextFieldInUpdateFlag = false;
 
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 
 				if (FlagModification)
 					SetModifiedStatus(true);
@@ -834,7 +833,7 @@ namespace ConstructionSetExtender
 				{
 					for (int i = Index; i > 0; i--)
 					{
-						if (ScriptParser::ScriptTextDelimiters->IndexOf(Source[i]) != -1)
+						if (ScriptParser::DefaultDelimiters->IndexOf(Source[i]) != -1)
 						{
 							SubStrStart = i + 1;
 							break;
@@ -843,7 +842,7 @@ namespace ConstructionSetExtender
 
 					for (int i = Index; i < SearchIndex; i++)
 					{
-						if (ScriptParser::ScriptTextDelimiters->IndexOf(Source[i]) != -1)
+						if (ScriptParser::DefaultDelimiters->IndexOf(Source[i]) != -1)
 						{
 							SubStrEnd = i;
 							break;
@@ -899,8 +898,7 @@ namespace ConstructionSetExtender
 				if (Index < TextField->Text->Length)
 				{
 					AvalonEdit::Document::DocumentLine^ Line = TextField->Document->GetLineByOffset(Index);
-					ScriptParser^ LocalParser = gcnew ScriptParser();
-					Result = LocalParser->GetIsIndexInsideString(TextField->Document->GetText(Line), Index - Line->Offset);
+					Result = ScriptParser::GetIndexInsideString(TextField->Document->GetText(Line), Index - Line->Offset);
 				}
 
 				return Result;
@@ -942,9 +940,9 @@ namespace ConstructionSetExtender
 				else
 				{
 					SetModifiedStatus(true);
-					if (PreventTextChangedEventFlag == PreventTextChangeFlagState::e_AutoReset)
-						PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
-					else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::e_Disabled)
+					if (PreventTextChangedEventFlag == PreventTextChangeFlagState::AutoReset)
+						PreventTextChangedEventFlag = PreventTextChangeFlagState::Disabled;
+					else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::Disabled)
 					{
 						if (TextField->SelectionStart - 1 >= 0 &&
 							GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
@@ -1071,7 +1069,7 @@ namespace ConstructionSetExtender
 
 				switch (Direction)
 				{
-				case MoveSegmentDirection::e_Up:
+				case MoveSegmentDirection::Up:
 					if (PreviousLine != nullptr)
 					{
 						String^ PreviousText = TextField->Document->GetText(PreviousLine);
@@ -1088,7 +1086,7 @@ namespace ConstructionSetExtender
 						SetCaretPos(InsertOffset);
 					}
 					break;
-				case MoveSegmentDirection::e_Down:
+				case MoveSegmentDirection::Down:
 					if (NextLine != nullptr)
 					{
 						String^ NextText = TextField->Document->GetText(NextLine);
@@ -1131,7 +1129,7 @@ namespace ConstructionSetExtender
 						LocalParser->Tokenize(Text, true);
 						if (LocalParser->Valid)
 						{
-							for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
+							for (int i = 0; i < LocalParser->TokenCount; i++)
 							{
 								String^ Token = LocalParser->Tokens[i];
 								Char Delimiter = LocalParser->Delimiters[i];
@@ -1214,7 +1212,11 @@ namespace ConstructionSetExtender
 				if (UpdateStableDefs)
 					SyntaxHighlightingManager->UpdateBaseDefinitions();
 
-				AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->GenerateHighlightingDefinition(IntelliSenseBox->GetLocalVariableNames());
+				List<String^>^ LocalVars = gcnew List<String^>();
+				for each (ObScriptSemanticAnalysis::Variable^ Itr in SemanticAnalysisCache->Variables)
+					LocalVars->Add(Itr->Name);
+
+				AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->GenerateHighlightingDefinition(LocalVars);
 				return Result;
 			}
 
@@ -1289,7 +1291,7 @@ namespace ConstructionSetExtender
 				if (TextField->TextArea->Caret->Line != PreviousLineBuffer)
 				{
 					IntelliSenseBox->Enabled = true;
-					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 					IntelliSenseBox->OverrideThresholdCheck = false;
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
@@ -1349,41 +1351,41 @@ namespace ConstructionSetExtender
 							{
 							case System::Windows::Input::Key::OemPeriod:
 								{
-									IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Dot, false, true);
-									SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+									IntelliSenseBox->Show(IntelliSenseInterface::Operation::Dot, false, true);
+									SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 									break;
 								}
 							case System::Windows::Input::Key::Space:
 								{
 									String^ Token = GetTextAtLocation(TextField->SelectionStart - 1, false)->Replace("\n", "");
 
-									if (ScriptParser::GetTokenType(Token) == ScriptParser::TokenType::e_Call)
+									if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Call)
 									{
-										IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Call, false, true);
-										SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+										IntelliSenseBox->Show(IntelliSenseInterface::Operation::Call, false, true);
+										SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 									}
-									else if (ScriptParser::GetTokenType(Token) == ScriptParser::TokenType::e_Set ||
-										ScriptParser::GetTokenType(Token) == ScriptParser::TokenType::e_Let)
+									else if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Set ||
+											 ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Let)
 									{
-										IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Assign, false, true);
-										SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+										IntelliSenseBox->Show(IntelliSenseInterface::Operation::Assign, false, true);
+										SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 									}
 									else
-										IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+										IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 
 									break;
 								}
 							case System::Windows::Input::Key::OemTilde:
 								if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::None)
 								{
-									IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Snippet, false, true);
-									SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+									IntelliSenseBox->Show(IntelliSenseInterface::Operation::Snippet, false, true);
+									SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 								}
 
 								break;
 							default:
 								{
-									IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+									IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 									break;
 								}
 							}
@@ -1412,7 +1414,7 @@ namespace ConstructionSetExtender
 					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
 						if (!IntelliSenseBox->Visible)
-							IntelliSenseBox->Show(IntelliSenseInterface::Operation::e_Default, true, false);
+							IntelliSenseBox->Show(IntelliSenseInterface::Operation::Default, true, false);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1423,7 +1425,7 @@ namespace ConstructionSetExtender
 					{
 						IntelliSenseBox->Hide();
 						IntelliSenseBox->Enabled = false;
-						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 						IntelliSenseBox->OverrideThresholdCheck = false;
 
 						HandleKeyEventForKey(E->Key);
@@ -1435,11 +1437,11 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Tab:
 					if (IntelliSenseBox->Visible)
 					{
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 						IntelliSenseBox->PickSelection();
 						FocusTextArea();
 
-						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 						IntelliSenseBox->OverrideThresholdCheck = false;
 
 						HandleKeyEventForKey(E->Key);
@@ -1449,18 +1451,18 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Up:
 					if (IntelliSenseBox->Visible)
 					{
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Up);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Up);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
 					}
 					else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 
-						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::e_Up);
+						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::Up);
 
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1469,18 +1471,18 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Down:
 					if (IntelliSenseBox->Visible)
 					{
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Down);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Down);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
 					}
 					else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_ManualReset);
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 
-						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::e_Down);
+						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::Down);
 
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_Disabled);
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1489,7 +1491,7 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::Z:
 				case System::Windows::Input::Key::Y:
 					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::e_AutoReset);
+						SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
 					break;
 				case System::Windows::Input::Key::PageUp:
 				case System::Windows::Input::Key::PageDown:
@@ -1546,7 +1548,7 @@ namespace ConstructionSetExtender
 				{
 					IntelliSenseBox->Hide();
 	//				IntelliSenseBox->Enabled = false;		why disable it?
-					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::e_Default;
+					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 					IntelliSenseBox->OverrideThresholdCheck = false;
 				}
 
@@ -1560,9 +1562,9 @@ namespace ConstructionSetExtender
 				if (IntelliSenseBox->Visible)
 				{
 					if (E->Delta < 0)
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Down);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Down);
 					else
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::e_Up);
+						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Up);
 
 					E->Handled = true;
 				}
@@ -1651,6 +1653,10 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
+				SemanticAnalysisCache->PerformAnalysis(GetText(), ObScriptSemanticAnalysis::ScriptType::None,
+													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
+													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks,
+													   nullptr);
 				UpdateIntelliSenseLocalDatabase();
 				UpdateCodeFoldings();
 			}
@@ -1720,7 +1726,7 @@ namespace ConstructionSetExtender
 				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(true);
 
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
-					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy();
+					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy(this);
 
 				TextField->Options->CutCopyWholeLine = PREFERENCES->FetchSettingAsInt("CutCopyEntireLine", "General");
 				TextField->Options->ShowSpaces = PREFERENCES->FetchSettingAsInt("ShowSpaces", "Appearance");
@@ -1728,7 +1734,7 @@ namespace ConstructionSetExtender
 				TextField->WordWrap = PREFERENCES->FetchSettingAsInt("WordWrap", "Appearance");
 
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
-					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
+					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(this, true, true);
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
@@ -1772,7 +1778,7 @@ namespace ConstructionSetExtender
 				CodeFoldingStrategy = nullptr;
 
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
-					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy();
+					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy(this);
 
 				MiddleMouseScrollTimer = gcnew Timer();
 				ExternalVerticalScrollBar = gcnew VScrollBar();
@@ -1853,7 +1859,7 @@ namespace ConstructionSetExtender
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
-					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(true, true);
+					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(this, true, true);
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
@@ -1867,7 +1873,7 @@ namespace ConstructionSetExtender
 
 				InitializingFlag = false;
 				ModifiedFlag = false;
-				PreventTextChangedEventFlag = PreventTextChangeFlagState::e_Disabled;
+				PreventTextChangedEventFlag = PreventTextChangeFlagState::Disabled;
 				KeyToPreventHandling = System::Windows::Input::Key::None;
 				LastKeyThatWentDown = System::Windows::Input::Key::None;
 				IsMiddleMouseScrolling = false;
@@ -1901,6 +1907,7 @@ namespace ConstructionSetExtender
 
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
+				SemanticAnalysisCache = gcnew ObScriptSemanticAnalysis::AnalysisData();
 
 				WinFormsContainer->Dock = DockStyle::Fill;
 				WinFormsContainer->BorderStyle = BorderStyle::FixedSingle;
@@ -1944,6 +1951,11 @@ namespace ConstructionSetExtender
 			Control^ AvalonEditTextEditor::GetContainer()
 			{
 				return WinFormsContainer;
+			}
+
+			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(void)
+			{
+				return SemanticAnalysisCache;
 			}
 		}
 	}

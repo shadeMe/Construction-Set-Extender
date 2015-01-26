@@ -38,30 +38,30 @@ namespace ConstructionSetExtender
 
 				switch (Op)
 				{
-				case OperationType::e_AllocateWorkspaceContainer:
+				case OperationType::AllocateWorkspaceContainer:
 					AllocateNewWorkspaceContainer((ComponentDLLInterface::ScriptData*)((UInt32)Parameters->ParameterList[0]),
 						(UInt32)Parameters->ParameterList[1],
 						(UInt32)Parameters->ParameterList[2],
 						(UInt32)Parameters->ParameterList[3],
 						(UInt32)Parameters->ParameterList[4]);
 					break;
-				case OperationType::e_AllocateWorkspace:
+				case OperationType::AllocateWorkspace:
 					Result = AllocateNewWorkspace(dynamic_cast<ScriptEditor::WorkspaceContainer^>(Parameters->ParameterList[0]),
 						(ComponentDLLInterface::ScriptData*)((UInt32)Parameters->ParameterList[1]));
 					break;
-				case OperationType::e_ReleaseWorkspaceContainer:
+				case OperationType::ReleaseWorkspaceContainer:
 					ReleaseWorkspaceContainer(dynamic_cast<ScriptEditor::WorkspaceContainer^>(Parameters->ParameterList[0]));
 					break;
-				case OperationType::e_ReleaseWorkspace:
+				case OperationType::ReleaseWorkspace:
 					ReleaseWorkspace(dynamic_cast<ScriptEditor::Workspace^>(Parameters->ParameterList[0]));
 					break;
-				case OperationType::e_WorkspaceTearing:
+				case OperationType::WorkspaceTearing:
 					WorkspaceTearingHandler((WorkspaceTearOpType)Parameters->ParameterList[0],
 						dynamic_cast<ScriptEditor::Workspace^>(Parameters->ParameterList[1]),
 						dynamic_cast<ScriptEditor::WorkspaceContainer^>(Parameters->ParameterList[2]),
 						(Point)(Parameters->ParameterList[3]));
 					break;
-				case OperationType::e_CloseAllOpenEditors:
+				case OperationType::CloseAllOpenEditors:
 					CloseAllOpenEditors();
 					break;
 				}
@@ -127,15 +127,15 @@ namespace ConstructionSetExtender
 		{
 			switch (Operation)
 			{
-			case WorkspaceTearOpType::e_NewContainer:
+			case WorkspaceTearOpType::NewContainer:
 				{
 					AllocateNewWorkspaceContainer(0, MousePos.X, MousePos.Y, ScriptEditor::WorkspaceContainer::LastUsedBounds.Width, ScriptEditor::WorkspaceContainer::LastUsedBounds.Height);
 					Container = AllocatedWorkspaceContainers->Last->Value;
-					WorkspaceTearingHandler(WorkspaceTearOpType::e_RelocateToContainer, Workspace, Container, MousePos);
+					WorkspaceTearingHandler(WorkspaceTearOpType::RelocateToContainer, Workspace, Container, MousePos);
 					Container->LookupWorkspaceByTabIndex(0)->CloseScript();
 					break;
 				}
-			case WorkspaceTearOpType::e_RelocateToContainer:
+			case WorkspaceTearOpType::RelocateToContainer:
 				{
 					Workspace->Relocate(Container);
 					break;

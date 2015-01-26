@@ -82,7 +82,7 @@ namespace ConstructionSetExtender
 			DestructionFlag = false;
 
 			Enabled = true;
-			LastOperation = Operation::e_Default;
+			LastOperation = Operation::Default;
 			OverrideThresholdCheck = false;
 
 			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
@@ -133,17 +133,14 @@ namespace ConstructionSetExtender
 			Reset();
 
 			if (ForceDisplay)
-			{
-				UpdateLocalVariableDatabase();
 				OverrideThresholdCheck = true;
-			}
 
 			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
 			String^ CurrentToken = ParentEditor->GetCurrentToken();
 
 			switch (DisplayOperation)
 			{
-			case Operation::e_Default:
+			case Operation::Default:
 				if (OverrideThresholdCheck || CurrentToken->Length >= PopupThresholdLength)
 				{
 					for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
@@ -154,11 +151,11 @@ namespace ConstructionSetExtender
 
 					for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 					{
-						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd ||
-							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
-							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar ||
-							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GMST ||
-							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Form)
+						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Command ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Quest ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::GlobalVar ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::GMST ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Form)
 						{
 							if (Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 								EnumerateItem(Itr);
@@ -167,10 +164,10 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case Operation::e_Call:
+			case Operation::Call:
 				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
-					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_UserFunct)
+					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::UserFunction)
 					{
 						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
@@ -178,15 +175,15 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case Operation::e_Dot:
+			case Operation::Dot:
 				if (ShowAllItems)
 				{
 					IntelliSenseItemVariable^ RefVar = LookupLocalVariableByIdentifier(CurrentToken);
-					if (RefVar != nullptr && RefVar->GetDataType() == ScriptParser::VariableType::e_Ref)
+					if (RefVar != nullptr && RefVar->GetDataType() == ObScriptSemanticAnalysis::Variable::DataType::Ref)
 					{
 						CallingObjectIsRef = true;
 					}
-					else if (ScriptParser::GetTokenType(CurrentToken) == ScriptParser::TokenType::e_Player)
+					else if (ScriptParser::GetScriptTokenType(CurrentToken) == ObScriptSemanticAnalysis::ScriptTokenType::Player)
 					{
 						CallingObjectIsRef = true;
 					}
@@ -196,7 +193,7 @@ namespace ConstructionSetExtender
 						ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 						if (Data && !Data->IsValid())
 						{
-							LastOperation = Operation::e_Default;
+							LastOperation = Operation::Default;
 							break;
 						}
 						else if (Data)
@@ -215,7 +212,7 @@ namespace ConstructionSetExtender
 
 				for (Script::VarListT::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
 				{
-					if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
+					if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::RemoteVar)
 					{
 						if (ShowAllItems || RemoteVarItr->Current->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(RemoteVarItr->Current);
@@ -224,7 +221,7 @@ namespace ConstructionSetExtender
 
 				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
-					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd && CallingObjectIsRef)
+					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Command && CallingObjectIsRef)
 					{
 						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
@@ -232,7 +229,7 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case Operation::e_Assign:
+			case Operation::Assign:
 				for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 				{
 					if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
@@ -241,8 +238,8 @@ namespace ConstructionSetExtender
 
 				for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 				{
-					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Quest ||
-						Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_GlobalVar)
+					if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Quest ||
+						Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::GlobalVar)
 					{
 						if (ShowAllItems || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 							EnumerateItem(Itr);
@@ -250,14 +247,14 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case Operation::e_Snippet:
+			case Operation::Snippet:
 				{
 					if (CurrentToken->Length > 1)
 						CurrentToken = CurrentToken->Remove(0, 1);		// remove leading tilde character
 
 					for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
 					{
-						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Snippet)
+						if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Snippet)
 						{
 							if (ShowAllItems || CurrentToken == "`" || Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 								EnumerateItem(Itr);
@@ -303,7 +300,7 @@ namespace ConstructionSetExtender
 			LastOperation = DisplayOperation;
 		}
 
-		IntelliSenseItemVariable^ IntelliSenseInterface::LookupLocalVariableByIdentifier(String^% Identifier)
+		IntelliSenseItemVariable^ IntelliSenseInterface::LookupLocalVariableByIdentifier(String^ Identifier)
 		{
 			for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
 			{
@@ -378,7 +375,7 @@ namespace ConstructionSetExtender
 
 			switch (Direction)
 			{
-			case MoveDirection::e_Down:
+			case MoveDirection::Down:
 				if (SelectedIndex < (VirtualListCache->Count - 1))
 				{
 					VirtualListCache[SelectedIndex]->Selected = false;
@@ -389,7 +386,7 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case MoveDirection::e_Up:
+			case MoveDirection::Up:
 				if (SelectedIndex > 0)
 				{
 					VirtualListCache[SelectedIndex]->Selected = false;
@@ -403,13 +400,19 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseInterface::UpdateLocalVariableDatabase()
+		void IntelliSenseInterface::UpdateLocalVariableDatabase(ObScriptSemanticAnalysis::AnalysisData^ Data)
 		{
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-			if (ParentEditor == nullptr)		// will return true when called inside a workspace ctor
-				return;
+			if (Data)
+			{
+				LocalVariableDatabase->Clear();
 
-			ISDB->ParseScript(ParentEditor->GetScriptText(), gcnew IntelliSenseParseScriptData(this));
+				for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+				{
+					IntelliSenseItemVariable^ NewVar = gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment,
+																					  Itr->Type, IntelliSenseItem::IntelliSenseItemType::LocalVar);
+					LocalVariableDatabase->Add(NewVar);
+				}
+			}
 		}
 
 		void IntelliSenseInterface::PickSelection()
@@ -528,16 +531,6 @@ namespace ConstructionSetExtender
 			delete IntelliSenseList;
 		}
 
-		void IntelliSenseInterface::AddLocalVariableToDatabase( IntelliSenseItemVariable^ Variable )
-		{
-			LocalVariableDatabase->Add(Variable);
-		}
-
-		void IntelliSenseInterface::ClearLocalVariableDatabase()
-		{
-			LocalVariableDatabase->Clear();
-		}
-
 		void IntelliSenseInterface::EnumerateItem( IntelliSenseItem^ Item )
 		{
 			ListViewItem^ CacheItem = gcnew ListViewItem(Item->GetIdentifier(),
@@ -549,7 +542,19 @@ namespace ConstructionSetExtender
 
 		bool IntelliSenseInterface::GetTriggered( System::Windows::Input::Key E )
 		{
-			bool Result = ScriptParser::GetIsDelimiterKey(E);
+			bool Result = false;
+
+			if (E == System::Windows::Input::Key::OemPeriod ||
+				E == System::Windows::Input::Key::OemComma ||
+				E == System::Windows::Input::Key::Space ||
+				E == System::Windows::Input::Key::OemOpenBrackets ||
+				E == System::Windows::Input::Key::OemCloseBrackets ||
+				E == System::Windows::Input::Key::Tab ||
+				E == System::Windows::Input::Key::Enter
+				)
+			{
+				Result = true;
+			}
 
 			if (Result == false)
 			{
@@ -570,16 +575,6 @@ namespace ConstructionSetExtender
 			PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 			UseQuickView = PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense");
-		}
-
-		LinkedList<String^>^ IntelliSenseInterface::GetLocalVariableNames()
-		{
-			LinkedList<String^>^ Out = gcnew LinkedList<String^>();
-
-			for each (IntelliSenseItem^ Itr in LocalVariableDatabase)
-				Out->AddLast(Itr->GetIdentifier());
-
-			return Out;
 		}
 	}
 }

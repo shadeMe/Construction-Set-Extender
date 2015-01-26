@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\ScriptParser.h"
+#include "..\SemanticAnalysis.h"
 #include "[Common]\HandShakeStructs.h"
 
 namespace ConstructionSetExtender
@@ -28,16 +28,16 @@ namespace ConstructionSetExtender
 		public:
 			static enum class									IntelliSenseItemType
 			{
-				e_Invalid = 0,
-				e_Cmd,
-				e_LocalVar,
-				e_RemoteVar,
-				e_UserFunct,
-				e_Quest,
-				e_GlobalVar,
-				e_GMST,
-				e_Form,
-				e_Snippet,
+				Invalid = 0,
+				Command,
+				LocalVar,
+				RemoteVar,
+				UserFunction,
+				Quest,
+				GlobalVar,
+				GMST,
+				Form,
+				Snippet,
 			};
 
 			IntelliSenseItem();
@@ -62,8 +62,8 @@ namespace ConstructionSetExtender
 		public:
 			static enum class									IntelliSenseCommandItemSourceType
 			{
-				e_Vanilla = 0,
-				e_OBSE
+				Vanilla = 0,
+				OBSE
 			};
 		private:
 			static array<String^>^								IntelliSenseItemCommandReturnTypeID =
@@ -77,12 +77,12 @@ namespace ConstructionSetExtender
 			};
 			static enum class									IntelliSenseItemCommandReturnType
 			{
-				e_Default = 0,
-				e_Form,
-				e_String,
-				e_Array,
-				e_ArrayIndex,
-				e_Ambiguous
+				Default = 0,
+				Form,
+				String,
+				Array,
+				ArrayIndex,
+				Ambiguous
 			};
 
 			String^												Name;
@@ -93,7 +93,7 @@ namespace ConstructionSetExtender
 			UInt16												ReturnType;
 			IntelliSenseCommandItemSourceType					Source;
 		public:
-			IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source);
+			IntelliSenseItemScriptCommand(String^ Name, String^ Desc, String^ Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source);
 
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual String^										GetIdentifier() override;
@@ -106,15 +106,15 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemVariable : public IntelliSenseItem
 		{
 			String^												Name;
-			ScriptParser::VariableType							DataType;
+			ObScriptSemanticAnalysis::Variable::DataType		DataType;
 			String^												Comment;
 		public:
-			IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope);
+			IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptSemanticAnalysis::Variable::DataType Type, IntelliSenseItemType Scope);
 
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
 			String^												GetComment();
-			ScriptParser::VariableType							GetDataType();
+			ObScriptSemanticAnalysis::Variable::DataType		GetDataType();
 			String^												GetDataTypeID();
 		};
 
@@ -124,7 +124,7 @@ namespace ConstructionSetExtender
 			String^												Name;
 			String^												ScriptName;
 		public:
-			IntelliSenseItemQuest(String^% EditorID, String^% Desc, String^% ScrName);
+			IntelliSenseItemQuest(String^ EditorID, String^ Desc, String^ ScrName);
 
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
@@ -136,7 +136,7 @@ namespace ConstructionSetExtender
 			typedef List<IntelliSenseItemVariable^>				VarListT;
 		protected:
 			Script();
-			Script(String^% ScriptText, String^% Name);
+			Script(String^ ScriptText, String^ Name);
 
 			VarListT^											VarList;
 			String^												Name;
@@ -144,16 +144,11 @@ namespace ConstructionSetExtender
 		public:
 			static Script^										NullScript = gcnew Script(gcnew String("scn nullscript"));
 
-			Script(String^% ScriptText);
+			Script(String^ ScriptText);
 
 			virtual String^										Describe();
 			virtual String^										GetIdentifier();
 
-			void												SetName(String^ Name);
-			void												SetCommentDescription(String^ Description);
-
-			void												AddVariable(IntelliSenseItemVariable^ Variable);
-			void												ClearVariableList();
 			List<IntelliSenseItemVariable^>::Enumerator^		GetVariableListEnumerator();
 		};
 
@@ -163,19 +158,16 @@ namespace ConstructionSetExtender
 			Array^												Parameters;			// indices of the parameters in VarList
 			int													ReturnVar;			// index of the return var. -9 for ambiguous retn values
 		public:
-			UserFunction(String^% ScriptText);
+			UserFunction(String^ ScriptText);
 
 			virtual String^										Describe() override;
-
-			void												AddParameter(int VariableIndex, int ParameterIndex);
-			void												SetReturnVariable(int VariableIndex);
 		};
 
 		ref class IntelliSenseItemUserFunction : public IntelliSenseItem
 		{
 			UserFunction^										Parent;
 		public:
-			IntelliSenseItemUserFunction(UserFunction^% Parent);
+			IntelliSenseItemUserFunction(UserFunction^ Parent);
 
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
@@ -186,15 +178,15 @@ namespace ConstructionSetExtender
 		protected:
 			static enum class									FormFlags
 			{
-				e_FromMaster           = /*00*/ 0x00000001,
-				e_FromActiveFile       = /*01*/ 0x00000002,
-				e_Deleted              = /*05*/ 0x00000020,
-				e_TurnOffFire          = /*07*/ 0x00000080,
-				e_QuestItem            = /*0A*/ 0x00000400,
-				e_Disabled             = /*0B*/ 0x00000800,
-				e_Ignored              = /*0C*/ 0x00001000,
-				e_Temporary            = /*0E*/ 0x00004000,
-				e_VisibleWhenDistant   = /*0F*/ 0x00008000,
+				FromMaster           = /*00*/ 0x00000001,
+				FromActiveFile       = /*01*/ 0x00000002,
+				Deleted              = /*05*/ 0x00000020,
+				TurnOffFire          = /*07*/ 0x00000080,
+				QuestItem            = /*0A*/ 0x00000400,
+				Disabled             = /*0B*/ 0x00000800,
+				Ignored              = /*0C*/ 0x00001000,
+				Temporary            = /*0E*/ 0x00004000,
+				VisibleWhenDistant   = /*0F*/ 0x00008000,
 			};
 
 			String^												Name;

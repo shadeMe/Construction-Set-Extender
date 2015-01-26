@@ -30,11 +30,11 @@ namespace ConstructionSetExtender
 						{
 							ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 							Parameters->EditorHandleIndex = 0;
-							Parameters->ParameterList->Add(ScriptEditorManager::WorkspaceTearOpType::e_NewContainer);
+							Parameters->ParameterList->Add(ScriptEditorManager::WorkspaceTearOpType::NewContainer);
 							Parameters->ParameterList->Add(SEMGR->TornWorkspace);
 							Parameters->ParameterList->Add(nullptr);
 							Parameters->ParameterList->Add(E->Location);
-							SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_WorkspaceTearing, Parameters);
+							SEMGR->PerformOperation(ScriptEditorManager::OperationType::WorkspaceTearing, Parameters);
 
 							HookManager::MouseUp -= WorkspaceContainer::WorkspaceTearingEventDelegate;
 							SEMGR->TornWorkspace = nullptr;
@@ -61,11 +61,11 @@ namespace ConstructionSetExtender
 							{
 								ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 								Parameters->EditorHandleIndex = 0;
-								Parameters->ParameterList->Add(ScriptEditorManager::WorkspaceTearOpType::e_RelocateToContainer);
+								Parameters->ParameterList->Add(ScriptEditorManager::WorkspaceTearOpType::RelocateToContainer);
 								Parameters->ParameterList->Add(SEMGR->TornWorkspace);
 								Parameters->ParameterList->Add(dynamic_cast<WorkspaceContainer^>(Strip->Tag));
 								Parameters->ParameterList->Add(E->Location);
-								SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_WorkspaceTearing, Parameters);
+								SEMGR->PerformOperation(ScriptEditorManager::OperationType::WorkspaceTearing, Parameters);
 
 								HookManager::MouseUp -= WorkspaceContainer::WorkspaceTearingEventDelegate;
 								SEMGR->TornWorkspace = nullptr;
@@ -75,11 +75,11 @@ namespace ConstructionSetExtender
 						{
 							ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 							Parameters->EditorHandleIndex = 0;
-							Parameters->ParameterList->Add(ScriptEditorManager::WorkspaceTearOpType::e_NewContainer);
+							Parameters->ParameterList->Add(ScriptEditorManager::WorkspaceTearOpType::NewContainer);
 							Parameters->ParameterList->Add(SEMGR->TornWorkspace);
 							Parameters->ParameterList->Add(nullptr);
 							Parameters->ParameterList->Add(E->Location);
-							SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_WorkspaceTearing, Parameters);
+							SEMGR->PerformOperation(ScriptEditorManager::OperationType::WorkspaceTearing, Parameters);
 
 							HookManager::MouseUp -= WorkspaceContainer::WorkspaceTearingEventDelegate;
 							SEMGR->TornWorkspace = nullptr;
@@ -338,7 +338,7 @@ namespace ConstructionSetExtender
 				{
 					ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 					Parameters->ParameterList->Add(this);
-					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_ReleaseWorkspaceContainer, Parameters);
+					SEMGR->PerformOperation(ScriptEditorManager::OperationType::ReleaseWorkspaceContainer, Parameters);
 				}
 			}
 		}
@@ -352,7 +352,7 @@ namespace ConstructionSetExtender
 			Parameters->ParameterList->Add(this);
 			Parameters->ParameterList->Add((UInt32)InitScript);
 
-			Workspace^ NewWorkspace = dynamic_cast<Workspace^>(SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspace, Parameters));
+			Workspace^ NewWorkspace = dynamic_cast<Workspace^>(SEMGR->PerformOperation(ScriptEditorManager::OperationType::AllocateWorkspace, Parameters));
 			Trace::Assert(NewWorkspace != nullptr, "NewWorkspace == nullptr");
 			NewWorkspace->BringToFront();
 
@@ -365,19 +365,19 @@ namespace ConstructionSetExtender
 		{
 			switch (Operation)
 			{
-			case RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScript:
+			case RemoteWorkspaceOperation::CreateNewWorkspaceAndScript:
 				{
 					Workspace^ NewWorkspace = InstantiateNewWorkspace(0);
 					NewWorkspace->NewScript();
 					break;
 				}
-			case RemoteWorkspaceOperation::e_CreateNewWorkspaceAndSelectScript:
+			case RemoteWorkspaceOperation::CreateNewWorkspaceAndSelectScript:
 				{
 					Workspace^ NewWorkspace = InstantiateNewWorkspace(0);
 					NewWorkspace->OpenScript();
 					break;
 				}
-			case RemoteWorkspaceOperation::e_LoadFileIntoNewWorkspace:
+			case RemoteWorkspaceOperation::LoadFileIntoNewWorkspace:
 				{
 					String^ FilePath = dynamic_cast<String^>(Parameters[0]);
 					Workspace^ NewWorkspace = nullptr;
@@ -398,7 +398,7 @@ namespace ConstructionSetExtender
 							ScriptParser^ Tokenizer = gcnew ScriptParser();
 
 							if (Tokenizer->Tokenize(FirstLine, false) &&
-								Tokenizer->GetLeadingTokenType() == ScriptParser::TokenType::e_ScriptName)
+								Tokenizer->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ScriptName)
 							{
 								String^ ScriptName = Tokenizer->Tokens[1];
 
@@ -425,14 +425,14 @@ namespace ConstructionSetExtender
 					NewWorkspace->LoadFileFromDisk(FilePath);
 					break;
 				}
-			case RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScriptAndSetText:
+			case RemoteWorkspaceOperation::CreateNewWorkspaceAndScriptAndSetText:
 				{
 					Workspace^ NewWorkspace = InstantiateNewWorkspace(0);
 					NewWorkspace->NewScript();
 					NewWorkspace->SetScriptText(dynamic_cast<String^>(Parameters[0]), true);
 					break;
 				}
-			case RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces:
+			case RemoteWorkspaceOperation::FindReplaceInOpenWorkspaces:
 				{
 					for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
 					{
@@ -508,13 +508,13 @@ namespace ConstructionSetExtender
 			UInt32 JumpIndex = 0;
 			switch (Direction)
 			{
-			case JumpStackNavigationDirection::e_Back:
+			case JumpStackNavigationDirection::Back:
 				if (BackJumpStack->Count < 1)
 					return;
 
 				JumpIndex = BackJumpStack->Pop();
 				break;
-			case JumpStackNavigationDirection::e_Forward:
+			case JumpStackNavigationDirection::Forward:
 				if (ForwardJumpStack->Count < 1)
 					return;
 
@@ -532,10 +532,10 @@ namespace ConstructionSetExtender
 			{
 				switch (Direction)
 				{
-				case JumpStackNavigationDirection::e_Back:
+				case JumpStackNavigationDirection::Back:
 					ForwardJumpStack->Push(AllocatedIndex);
 					break;
-				case JumpStackNavigationDirection::e_Forward:
+				case JumpStackNavigationDirection::Forward:
 					BackJumpStack->Push(AllocatedIndex);
 					break;
 				}
@@ -616,7 +616,7 @@ namespace ConstructionSetExtender
 			for each (DotNetBar::SuperTabItem^ Itr in EditorTabStrip->Tabs)
 			{
 				Workspace^ Editor = dynamic_cast<Workspace^>(Itr->Tag);
-				Editor->SaveScript(Workspace::ScriptSaveOperation::e_SaveAndCompile);
+				Editor->SaveScript(Workspace::ScriptSaveOperation::SaveAndCompile);
 			}
 		}
 
@@ -649,7 +649,7 @@ namespace ConstructionSetExtender
 		{
 			List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
 			RemoteOpParameters->Add(FileName);
-			PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation::e_LoadFileIntoNewWorkspace, RemoteOpParameters);
+			PerformRemoteWorkspaceOperation(RemoteWorkspaceOperation::LoadFileIntoNewWorkspace, RemoteOpParameters);
 		}
 
 		Rectangle WorkspaceContainer::GetBounds(bool UseRestoreBounds)
@@ -1365,15 +1365,15 @@ namespace ConstructionSetExtender
 			ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableArray);
 
 			ContextMenuRefactorAddVariableInt->Text = "Integer";
-			ContextMenuRefactorAddVariableInt->Tag = ScriptParser::VariableType::e_Integer;
+			ContextMenuRefactorAddVariableInt->Tag = ObScriptSemanticAnalysis::Variable::DataType::Integer;
 			ContextMenuRefactorAddVariableFloat->Text = "Float";
-			ContextMenuRefactorAddVariableFloat->Tag = ScriptParser::VariableType::e_Float;
+			ContextMenuRefactorAddVariableFloat->Tag = ObScriptSemanticAnalysis::Variable::DataType::Float;
 			ContextMenuRefactorAddVariableRef->Text = "Reference";
-			ContextMenuRefactorAddVariableRef->Tag = ScriptParser::VariableType::e_Ref;
+			ContextMenuRefactorAddVariableRef->Tag = ObScriptSemanticAnalysis::Variable::DataType::Ref;
 			ContextMenuRefactorAddVariableString->Text = "String";
-			ContextMenuRefactorAddVariableString->Tag = ScriptParser::VariableType::e_String;
+			ContextMenuRefactorAddVariableString->Tag = ObScriptSemanticAnalysis::Variable::DataType::StringVar;
 			ContextMenuRefactorAddVariableArray->Text = "Array";
-			ContextMenuRefactorAddVariableArray->Tag = ScriptParser::VariableType::e_Array;
+			ContextMenuRefactorAddVariableArray->Tag = ObScriptSemanticAnalysis::Variable::DataType::ArrayVar;
 			ContextMenuRefactorDocumentScript->Text = "Document Script";
 			ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
 			ContextMenuRefactorRenameVariables->Text = "Rename Variables";
@@ -1555,7 +1555,7 @@ namespace ConstructionSetExtender
 			DisableControls();
 			TextEditor->SetContextMenu(TextEditorContextMenu);
 
-			SetScriptType(ScriptType::e_Object);
+			SetScriptType(ScriptType::Object);
 			SetModifiedStatus(false);
 
 			if (InitScript && InitScript->ParentForm)
@@ -1590,7 +1590,7 @@ namespace ConstructionSetExtender
 
 			for each (ListViewItem^ Itr in MessageList->Items)
 			{
-				if (Itr->ImageIndex < (int)MessageListItemType::e_RegularMessage)
+				if (Itr->ImageIndex < (int)MessageListItemType::RegularMessage)
 					InvalidItems->AddLast(Itr);
 			}
 
@@ -1652,15 +1652,15 @@ namespace ConstructionSetExtender
 		{
 			switch (Type)
 			{
-			case ScriptType::e_Object:
+			case ScriptType::Object:
 				ToolBarScriptType->Text = "Object Script";
 				ToolBarScriptType->Image = ToolBarScriptTypeContentsObject->Image;
 				break;
-			case ScriptType::e_Quest:
+			case ScriptType::Quest:
 				ToolBarScriptType->Text = "Quest Script";
 				ToolBarScriptType->Image = ToolBarScriptTypeContentsQuest->Image;
 				break;
-			case ScriptType::e_MagicEffect:
+			case ScriptType::MagicEffect:
 				ToolBarScriptType->Text = "Magic Effect Script";
 				ToolBarScriptType->Image = ToolBarScriptTypeContentsMagicEffect->Image;
 				break;
@@ -1677,7 +1677,7 @@ namespace ConstructionSetExtender
 				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds(false).Height;
 		}
 
-		void Workspace::InsertVariable( String^ VariableName, ScriptParser::VariableType VariableType )
+		void Workspace::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
 		{
 			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
 			ScriptParser^ TextParser = gcnew ScriptParser();
@@ -1695,13 +1695,13 @@ namespace ConstructionSetExtender
 				}
 
 				bool ExitLoop = false, SaveOffset = false;
-				switch (TextParser->GetTokenType(TextParser->Tokens[0]))
+				switch (TextParser->GetScriptTokenType(TextParser->Tokens[0]))
 				{
-				case ScriptParser::TokenType::e_Variable:
+				case ObScriptSemanticAnalysis::ScriptTokenType::Variable:
 					SaveOffset = true;
 					break;
-				case ScriptParser::TokenType::e_Comment:
-				case ScriptParser::TokenType::e_ScriptName:
+				case ObScriptSemanticAnalysis::ScriptTokenType::Comment:
+				case ObScriptSemanticAnalysis::ScriptTokenType::ScriptName:
 					break;
 				default:
 					ExitLoop = true;
@@ -1723,7 +1723,7 @@ namespace ConstructionSetExtender
 			if (InsertOffset > ScriptText->Length)
 				VarText += "\n";
 
-			VarText += ScriptParser::GetVariableKeyword(VariableType) + " " + VariableName;
+			VarText += ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName;
 			VarText += "\n";
 
 			TextEditor->InsertText(VarText, InsertOffset, true);
@@ -1768,19 +1768,19 @@ namespace ConstructionSetExtender
 		{
 			for each (ListViewItem^ Itr in MessageList->Items)
 			{
-				if (Itr->ImageIndex > (int)MessageListItemType::e_Error)
+				if (Itr->ImageIndex > (int)MessageListItemType::Error)
 					switch ((MessageListItemType)Itr->ImageIndex)
 				{
-					case MessageListItemType::e_EditorMessage:
+					case MessageListItemType::EditorMessage:
 						Result += ";<CSEMessageEditor> " + Itr->SubItems[2]->Text + " </CSEMessageEditor>\n";
 						break;
-					case MessageListItemType::e_RegularMessage:
+					case MessageListItemType::RegularMessage:
 						Result += ";<CSEMessageRegular> " + Itr->SubItems[2]->Text + " </CSEMessageRegular>\n";
 						break;
 				}
 			}
 		}
-		String^ Workspace::DeserializeCSEBlock(String^% Source, String^% ExtractedBlock)
+		String^ Workspace::DeserializeCSEBlock(String^ Source, String^% ExtractedBlock)
 		{
 			ScriptParser^ TextParser = gcnew ScriptParser();
 			StringReader^ StringParser = gcnew StringReader(Source);
@@ -1827,7 +1827,7 @@ namespace ConstructionSetExtender
 			else
 				return Result->Substring(1);
 		}
-		void Workspace::DeserializeCaretPos(String^% ExtractedBlock)
+		void Workspace::DeserializeCaretPos(String^ ExtractedBlock)
 		{
 			ScriptParser^ TextParser = gcnew ScriptParser();
 			StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
@@ -1860,7 +1860,7 @@ namespace ConstructionSetExtender
 			TextEditor->SetCaretPos(CaretPos);
 			TextEditor->ScrollToCaret();
 		}
-		void Workspace::DeserializeBookmarks(String^% ExtractedBlock)
+		void Workspace::DeserializeBookmarks(String^ ExtractedBlock)
 		{
 			BookmarkList->Items->Clear();
 			BookmarkList->BeginUpdate();
@@ -1900,7 +1900,7 @@ namespace ConstructionSetExtender
 			}
 			BookmarkList->EndUpdate();
 		}
-		void Workspace::DeserializeMessages(String^% ExtractedBlock)
+		void Workspace::DeserializeMessages(String^ ExtractedBlock)
 		{
 			ScriptParser^ TextParser = gcnew ScriptParser();
 			StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
@@ -1919,12 +1919,12 @@ namespace ConstructionSetExtender
 				if (!TextParser->GetTokenIndex(";<CSEMessageEditor>"))
 				{
 					Message = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEMessageEditor>", "");
-					AddMessageToMessagePool(MessageListItemType::e_EditorMessage, -1, Message);
+					AddMessageToMessagePool(MessageListItemType::EditorMessage, -1, Message);
 				}
 				else if (!TextParser->GetTokenIndex(";<CSEMessageRegular>"))
 				{
 					Message = ReadLine->Substring(TextParser->Indices[1])->Replace(" </CSEMessageRegular>", "");
-					AddMessageToMessagePool(MessageListItemType::e_RegularMessage, -1, Message);
+					AddMessageToMessagePool(MessageListItemType::RegularMessage, -1, Message);
 				}
 
 				ReadLine = StringParser->ReadLine();
@@ -1932,7 +1932,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::PreprocessorErrorOutputWrapper(String^ Message)
 		{
-			AddMessageToMessagePool(MessageListItemType::e_Error, -1, Message);
+			AddMessageToMessagePool(MessageListItemType::Error, -1, Message);
 		}
 		String^ Workspace::SanitizeScriptText(SanitizeOperation Operation, String^ ScriptText)
 		{
@@ -1946,7 +1946,7 @@ namespace ConstructionSetExtender
 			{
 				switch (Operation)
 				{
-				case SanitizeOperation::e_Indent:
+				case SanitizeOperation::Indent:
 					{
 						int IndentMode = -1;
 						// 0 = Decrement
@@ -1959,21 +1959,21 @@ namespace ConstructionSetExtender
 							String^ Token = LocalParser->Tokens[0];
 							if (Token[0] != ';')
 							{
-								if (LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Begin ||
-									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_While ||
-									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_If ||
-									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ForEach)
+								if (LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Begin ||
+									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::While ||
+									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::If ||
+									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ForEach)
 								{
 									IndentMode = 1;
 								}
-								else if	(LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Loop ||
-									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_EndIf ||
-									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_End)
+								else if	(LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Loop ||
+									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::EndIf ||
+									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::End)
 								{
 									IndentMode = 0;
 								}
-								else if	(LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_Else ||
-									LocalParser->GetLeadingTokenType() == ScriptParser::TokenType::e_ElseIf)
+								else if	(LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Else ||
+									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ElseIf)
 								{
 									IndentMode = 2;
 								}
@@ -1997,12 +1997,12 @@ namespace ConstructionSetExtender
 
 						break;
 					}
-				case SanitizeOperation::e_AnnealCasing:
+				case SanitizeOperation::AnnealCasing:
 					{
 						LocalParser->Tokenize(ReadLine, true);
 						if (LocalParser->Valid)
 						{
-							for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
+							for (int i = 0; i < LocalParser->TokenCount; i++)
 							{
 								String^ Token = LocalParser->Tokens[i];
 								String^ Delimiter = "" + LocalParser->Delimiters[i];
@@ -2026,21 +2026,21 @@ namespace ConstructionSetExtender
 
 						break;
 					}
-				case SanitizeOperation::e_EvalifyIfs:
+				case SanitizeOperation::EvalifyIfs:
 					{
 						LocalParser->Tokenize(ReadLine, true);
 						if (LocalParser->Valid)
 						{
-							for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
+							for (int i = 0; i < LocalParser->TokenCount; i++)
 							{
 								String^ Token = LocalParser->Tokens[i];
 								String^ Delimiter = "" + LocalParser->Delimiters[i];
 
 								if (i == 0 &&
 									LocalParser->GetCommentTokenIndex(i) == -1 &&
-									(LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_ElseIf ||
-									LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_If) &&
-									LocalParser->GetCurrentTokenCount() > 1 &&
+									(LocalParser->GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::ElseIf ||
+									LocalParser->GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::If) &&
+									LocalParser->TokenCount > 1 &&
 									String::Compare(LocalParser->Tokens[i + 1], "eval", true))
 								{
 									SanitizedScriptText += Token + " eval";
@@ -2056,20 +2056,20 @@ namespace ConstructionSetExtender
 
 						break;
 					}
-				case SanitizeOperation::e_CompilerOverrideBlocks:
+				case SanitizeOperation::CompilerOverrideBlocks:
 					{
 						LocalParser->Tokenize(ReadLine, true);
 						if (LocalParser->Valid)
 						{
-							for (int i = 0; i < LocalParser->GetCurrentTokenCount(); i++)
+							for (int i = 0; i < LocalParser->TokenCount; i++)
 							{
 								String^ Token = LocalParser->Tokens[i];
 								String^ Delimiter = "" + LocalParser->Delimiters[i];
 
 								if (i == 0 &&
 									LocalParser->GetCommentTokenIndex(i) == -1 &&
-									LocalParser->GetTokenType(Token) == ScriptParser::TokenType::e_Begin &&
-									LocalParser->GetCurrentTokenCount() > 1 &&
+									LocalParser->GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Begin &&
+									LocalParser->TokenCount > 1 &&
 									LocalParser->Tokens[i + 1]->Length > 0 &&
 									LocalParser->Tokens[i + 1][0] != '_')
 								{
@@ -2199,174 +2199,63 @@ namespace ConstructionSetExtender
 		{
 			TextEditor->SaveScriptToDisk(Path, PathIncludesFileName, GetScriptDescription(), Extension);
 		}
-		bool Workspace::ValidateScript(String^% PreprocessedScriptText)
-		{
-			StringReader^ ValidateParser = gcnew StringReader(PreprocessedScriptText);
-			String^ ReadLine = ValidateParser->ReadLine();
-			ScriptParser^ ScriptTextParser = gcnew ScriptParser();
-			UInt32 ScriptType = (UInt32)GetScriptType();
-			int CurrentLineNo = 0, PreviousLineNo = 0;
-			String^ ScriptName = "";
 
-			ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Invalid);
+		void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
+		{
+			HasCommandCollision = ISDB->GetIsIdentifierScriptCommand(VarName);
+			HasFormCollision = ISDB->GetIsIdentifierForm(VarName);
+		}
+
+		bool Workspace::ValidateScript(String^ PreprocessedScriptText)
+		{
+			ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
+			if (CurrentScriptType == ScriptType::MagicEffect)
+				Type = ObScriptSemanticAnalysis::ScriptType::MagicEffect;
+			else if (CurrentScriptType == ScriptType::Quest)
+				Type = ObScriptSemanticAnalysis::ScriptType::Quest;
+
 			ClearErrorMessagesFromMessagePool();
 
 			bool Result = true;
+			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
+			ObScriptSemanticAnalysis::AnalysisData::Operation ValidationOps = ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
+				ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
+				ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData |
+				ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
 
-			while (ReadLine != nullptr)
+			if (PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
+				ValidationOps = ValidationOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+
+			if (PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
+				ValidationOps = ValidationOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameFormCollisions;
+
+			if (PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
+				ValidationOps = ValidationOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CountVariableReferences;
+
+			if (PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator"))
+				ValidationOps = ValidationOps | ObScriptSemanticAnalysis::AnalysisData::Operation::SuppressQuestVariableRefCount;
+
+			Data->PerformAnalysis(PreprocessedScriptText, Type, ValidationOps,
+								  gcnew ObScriptSemanticAnalysis::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
+
+			for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in Data->AnalysisMessages)
 			{
-				ScriptTextParser->Tokenize(ReadLine, false);
-
-				if (!ScriptTextParser->Valid || ScriptTextParser->Tokens[0][0] == ';')
-				{
-					CurrentLineNo++;
-					ReadLine = ValidateParser->ReadLine();
-					continue;
-				}
-
-				CurrentLineNo++;
-
-				String^ FirstToken = ScriptTextParser->Tokens[0];
-				String^ SecondToken = (ScriptTextParser->Tokens->Count > 1)?ScriptTextParser->Tokens[1]:"";
-				ScriptParser::TokenType TokenType = ScriptTextParser->GetTokenType(FirstToken);
-
-				switch (TokenType)
-				{
-				case ScriptParser::TokenType::e_ScriptName:
-					if (ScriptTextParser->GetContainsIllegalChar(SecondToken, "_", ""))
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Identifier '" + SecondToken + "' contains an invalid character."), Result = false;
-					if (ScriptName == "")
-						ScriptName = SecondToken;
-					else
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of script name."), Result = false;
-					break;
-				case ScriptParser::TokenType::e_Variable:
-					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_Invalid)
-					{
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Variable '" + SecondToken + "' declared inside a script block.");
-						Result = false;
-					}
-					if (ScriptTextParser->LookupVariableByName(SecondToken) != nullptr)
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Redeclaration of variable '" + SecondToken + "'."), Result = false;
-					else if (ISDB->GetIsIdentifierScriptCommand(SecondToken) && PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' is reserved for a script command."), Result = false;
-					else if (ISDB->GetIsIdentifierForm(SecondToken) && PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "The identifier '" + SecondToken + "' has already been assigned to a form."), Result = false;
-					else
-						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
-					break;
-				case ScriptParser::TokenType::e_Begin:
-					if (!ScriptTextParser->GetIsBlockValidForScriptType(SecondToken, (ScriptParser::ScriptType)ScriptType))
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid script block '" + SecondToken + "' for script type."), Result = false;
-					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_ScriptBlock);
-					break;
-				case ScriptParser::TokenType::e_End:
-					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_ScriptBlock)
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'End' has no matching 'Begin'."), Result = false;
-					else
-						ScriptTextParser->BlockStack->Pop();
-					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'End' has an otiose expression following it.");
-					break;
-				case ScriptParser::TokenType::e_While:
-					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-					break;
-				case ScriptParser::TokenType::e_ForEach:
-					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_Loop);
-					break;
-				case ScriptParser::TokenType::e_Loop:
-					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_Loop)
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'Loop' has no matching 'While' or 'ForEach'."), Result = false;
-					else
-						ScriptTextParser->BlockStack->Pop();
-					break;
-				case ScriptParser::TokenType::e_If:
-					if (ScriptTextParser->GetCurrentTokenCount() < 2 || ScriptTextParser->Tokens[1][0] == ';')
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid condition."), Result = false;
-
-					ScriptTextParser->BlockStack->Push(ScriptParser::BlockType::e_If);
-					break;
-				case ScriptParser::TokenType::e_ElseIf:
-					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'ElseIf' has no matching 'If'."), Result = false;
-					else if (ScriptTextParser->GetCurrentTokenCount() < 2 || ScriptTextParser->Tokens[1][0] == ';')
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid condition."), Result = false;
-					break;
-				case ScriptParser::TokenType::e_Else:
-					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'Else' has no matching 'If'."), Result = false;
-					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'Else' has an otiose expression following it.");
-					break;
-				case ScriptParser::TokenType::e_EndIf:
-					if (ScriptTextParser->BlockStack->Peek() != ScriptParser::BlockType::e_If)
-						AddMessageToMessagePool(MessageListItemType::e_Error, CurrentLineNo, "Invalid block structure. Command 'EndIf' has no matching 'If'."), Result = false;
-					else
-						ScriptTextParser->BlockStack->Pop();
-					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'EndIf' has an otiose expression following it.");
-					break;
-				case ScriptParser::TokenType::e_Return:
-					if (ScriptTextParser->Tokens->Count > 1 && ScriptTextParser->Tokens[1][0] != ';')
-						AddMessageToMessagePool(MessageListItemType::e_Warning, CurrentLineNo, "Command 'Return' has an otiose expression following it.");
-					break;
-				}
-
-				// increment variable ref count
-				UInt32 Pos = 0;
-				if (ScriptTextParser->GetTokenType(FirstToken) != ScriptParser::TokenType::e_Variable)
-				{
-					for each (String^ Itr in ScriptTextParser->Tokens)
-					{
-						if (ScriptTextParser->LookupVariableByName(Itr) != nullptr)
-						{
-							if (Pos == 0 || ScriptTextParser->Delimiters[Pos - 1] != '.')
-							{
-								if (ScriptTextParser->GetCommentTokenIndex(Pos) == -1)
-									ScriptTextParser->LookupVariableByName(Itr)->RefCount++;
-							}
-						}
-
-						Pos++;
-					}
-				}
-
-				ReadLine = ValidateParser->ReadLine();
+				if (Itr->Critical)
+					AddMessageToMessagePool(MessageListItemType::Error, Itr->Line, Itr->Message);
+				else
+					AddMessageToMessagePool(MessageListItemType::Warning, Itr->Line, Itr->Message);
 			}
 
-			for each (ScriptParser::VariableRefCountData^ Itr in ScriptTextParser->Variables)
+			if (Data->HasCriticalIssues)
 			{
-				if (Itr->RefCount == 0 && PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
-				{
-					if ((ScriptParser::ScriptType)ScriptType != ScriptParser::ScriptType::e_Quest ||
-						PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator") == 0)
-					{
-						AddMessageToMessagePool(MessageListItemType::e_Warning, 1, "Variable '" + Itr->Name + "' unreferenced in local context.");
-					}
-				}
-
-				bool InvalidVarName = false;
-				try
-				{
-					UInt32 Temp = int::Parse(Itr->Name);
-					InvalidVarName = true;
-				}
-				catch (...) { }
-
-				if (InvalidVarName)
-				{
-					AddMessageToMessagePool(MessageListItemType::e_Error, 1, "Variable '" + Itr->Name + "' has an all-numeric identifier.");
-					Result = false;
-				}
+				Result = false;
+				AddMessageToMessagePool(MessageListItemType::Warning, -1, "Compilation of script '" + Data->Name + "' halted - Couldn't recover from previous errors.");
 			}
 
-			if (Result == false)
-				AddMessageToMessagePool(MessageListItemType::e_Warning, -1, "Compilation of script '" + ScriptName + "' halted - Couldn't recover from previous errors.");
-
-			ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(ScriptName)).c_str());
-			if (Data && String::Compare(CurrentScriptEditorID, ScriptName, true) != 0)
+			ComponentDLLInterface::FormData* ExistingForm = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(Data->Name)).c_str());
+			if (Data && String::Compare(CurrentScriptEditorID, Data->Name, true) != 0)
 			{
-				if (MessageBox::Show("Script name '" + ScriptName + "' is already used by another form. Proceeding with compilation will modify the script's editorID.\n\nDo you want to proceed?",
+				if (MessageBox::Show("Script name '" + Data->Name + "' is already used by another form. Proceeding with compilation will modify the script's editorID.\n\nDo you want to proceed?",
 									SCRIPTEDITOR_TITLE,
 									MessageBoxButtons::YesNo,
 									MessageBoxIcon::Exclamation) == DialogResult::No)
@@ -2374,7 +2263,7 @@ namespace ConstructionSetExtender
 					Result = false;
 				}
 			}
-			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ExistingForm, false);
 
 			if (MessageList->Items->Count && MessageList->Visible == false)
 				ToolBarMessageList->PerformClick();
@@ -2648,14 +2537,14 @@ namespace ConstructionSetExtender
 			else
 				Item->SubItems->Add("");
 			Item->SubItems->Add(Message);
-			if (Type == MessageListItemType::e_RegularMessage)
+			if (Type == MessageListItemType::RegularMessage)
 				Item->ToolTipText = "Double click to remove message";
 
 			MessageList->Items->Add(Item);
 			if (MessageList->Visible == false)
 				ToolBarMessageList->PerformClick();
 
-			if (Type == MessageListItemType::e_Error)
+			if (Type == MessageListItemType::Error)
 				TextEditor->HighlightScriptError(Line);
 		}
 		void Workspace::ClearEditorMessagesFromMessagePool(void)
@@ -2664,7 +2553,7 @@ namespace ConstructionSetExtender
 
 			for each (ListViewItem^ Itr in MessageList->Items)
 			{
-				if (Itr->ImageIndex == (int)MessageListItemType::e_EditorMessage)
+				if (Itr->ImageIndex == (int)MessageListItemType::EditorMessage)
 					InvalidItems->AddLast(Itr);
 			}
 
@@ -2711,7 +2600,7 @@ namespace ConstructionSetExtender
 													MessageBoxIcon::Exclamation);
 
 				if (Result == DialogResult::Yes)
-					return SaveScript(ScriptSaveOperation::e_SaveAndCompile);
+					return SaveScript(ScriptSaveOperation::SaveAndCompile);
 				else if (Result == DialogResult::No)
 				{
 					if (NewScriptFlag)
@@ -2768,16 +2657,24 @@ namespace ConstructionSetExtender
 			bool Result = false;
 			String^ PreprocessedScriptResult = "";
 
+			System::Diagnostics::Stopwatch^ Profiler = gcnew System::Diagnostics::Stopwatch();
+			Profiler->Start();
+
 			if (PreprocessScriptText(PreprocessedScriptResult) && ValidateScript(PreprocessedScriptResult))
 			{
+				Profiler->Stop();
+#if 1
+				DebugPrint("Preprocess + Validate = " + Profiler->ElapsedMilliseconds + " ms");
+#endif
+
 				if (CurrentScript)
 				{
 					ClearEditorMessagesFromMessagePool();
 
-					if (Operation == ScriptSaveOperation::e_SaveButDontCompile)
+					if (Operation == ScriptSaveOperation::SaveButDontCompile)
 					{
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-						AddMessageToMessagePool(MessageListItemType::e_EditorMessage,
+						AddMessageToMessagePool(MessageListItemType::EditorMessage,
 												-1,
 												"This is an uncompiled script. Expect weird behavior during runtime execution.");
 					}
@@ -2802,15 +2699,15 @@ namespace ConstructionSetExtender
 					{
 						for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
 						{
-							AddMessageToMessagePool(MessageListItemType::e_Error,
+							AddMessageToMessagePool(MessageListItemType::Error,
 								CompileData->CompileErrorData.ErrorListHead[i].Line,
 								gcnew String(CompileData->CompileErrorData.ErrorListHead[i].Message));
 						}
 					}
 
-					if (Operation == ScriptSaveOperation::e_SaveButDontCompile)
+					if (Operation == ScriptSaveOperation::SaveButDontCompile)
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
-					else if (Operation == ScriptSaveOperation::e_SaveActivePluginToo)
+					else if (Operation == ScriptSaveOperation::SaveActivePluginToo)
 						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
 
 					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
@@ -2818,6 +2715,8 @@ namespace ConstructionSetExtender
 				else
 					Result = true;
 			}
+			else
+				Profiler->Stop();
 
 			if (Result)
 			{
@@ -2886,7 +2785,7 @@ namespace ConstructionSetExtender
 
 				ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
 				Parameters->ParameterList->Add(this);
-				SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_ReleaseWorkspace, Parameters);
+				SEMGR->PerformOperation(ScriptEditorManager::OperationType::ReleaseWorkspace, Parameters);
 			}
 		}
 
@@ -2923,7 +2822,7 @@ namespace ConstructionSetExtender
 				break;
 			case Keys::S:									// Save script
 				if (E->Modifiers == Keys::Control)
-					SaveScript(ScriptSaveOperation::e_SaveAndCompile);
+					SaveScript(ScriptSaveOperation::SaveAndCompile);
 				else if (E->Control && E->Shift)
 					ParentContainer->SaveAllOpenWorkspaces();
 				break;
@@ -3022,7 +2921,7 @@ namespace ConstructionSetExtender
 		{
 			if (GetListViewSelectedItem(MessageList) != nullptr)
 			{
-				if (GetListViewSelectedItem(MessageList)->ImageIndex == (int)MessageListItemType::e_RegularMessage)
+				if (GetListViewSelectedItem(MessageList)->ImageIndex == (int)MessageListItemType::RegularMessage)
 					MessageList->Items->Remove(GetListViewSelectedItem(MessageList));
 				else
 				{
@@ -3149,7 +3048,7 @@ namespace ConstructionSetExtender
 				switch (Control::ModifierKeys)
 				{
 				case Keys::Control:
-					ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScript, nullptr);
+					ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::CreateNewWorkspaceAndScript, nullptr);
 					break;
 				case Keys::Shift:
 					Parameters->EditorHandleIndex = 0;
@@ -3159,7 +3058,7 @@ namespace ConstructionSetExtender
 					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds(true).Width);
 					Parameters->ParameterList->Add((UInt32)ParentContainer->GetBounds(true).Height);
 
-					SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspaceContainer, Parameters);
+					SEMGR->PerformOperation(ScriptEditorManager::OperationType::AllocateWorkspaceContainer, Parameters);
 					break;
 				default:
 					NewScript();
@@ -3170,7 +3069,7 @@ namespace ConstructionSetExtender
 		void Workspace::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
 		{
 			if (Control::ModifierKeys == Keys::Control && !HandlingKeyDownEvent)
-				ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndSelectScript, nullptr);
+				ParentContainer->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::CreateNewWorkspaceAndSelectScript, nullptr);
 			else
 				OpenScript();
 		}
@@ -3184,7 +3083,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
 		{
-			SaveScript(ScriptSaveOperation::e_SaveAndCompile);
+			SaveScript(ScriptSaveOperation::SaveAndCompile);
 		}
 		void Workspace::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3198,11 +3097,11 @@ namespace ConstructionSetExtender
 				return;
 			}
 
-			SaveScript(ScriptSaveOperation::e_SaveButDontCompile);
+			SaveScript(ScriptSaveOperation::SaveButDontCompile);
 		}
 		void Workspace::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
 		{
-			SaveScript(ScriptSaveOperation::e_SaveActivePluginToo);
+			SaveScript(ScriptSaveOperation::SaveActivePluginToo);
 		}
 		void Workspace::ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3233,12 +3132,12 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::ToolBarNavigationBack_Click(Object^ Sender, EventArgs^ E)
 		{
-			ParentContainer->NavigateJumpStack(WorkspaceHandleIndex, WorkspaceContainer::JumpStackNavigationDirection::e_Back);
+			ParentContainer->NavigateJumpStack(WorkspaceHandleIndex, WorkspaceContainer::JumpStackNavigationDirection::Back);
 		}
 
 		void Workspace::ToolBarNavigationForward_Click(Object^ Sender, EventArgs^ E)
 		{
-			ParentContainer->NavigateJumpStack(WorkspaceHandleIndex, WorkspaceContainer::JumpStackNavigationDirection::e_Forward);
+			ParentContainer->NavigateJumpStack(WorkspaceHandleIndex, WorkspaceContainer::JumpStackNavigationDirection::Forward);
 		}
 
 		void Workspace::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
@@ -3253,21 +3152,21 @@ namespace ConstructionSetExtender
 
 		void Workspace::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
 		{
-			SetScriptType(ScriptType::e_Object);
+			SetScriptType(ScriptType::Object);
 
 			if (!GetIsUninitialized())
 				SetModifiedStatus(true);
 		}
 		void Workspace::ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E)
 		{
-			SetScriptType(ScriptType::e_Quest);
+			SetScriptType(ScriptType::Quest);
 
 			if (!GetIsUninitialized())
 				SetModifiedStatus(true);
 		}
 		void Workspace::ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E)
 		{
-			SetScriptType(ScriptType::e_MagicEffect);
+			SetScriptType(ScriptType::MagicEffect);
 
 			if (!GetIsUninitialized())
 				SetModifiedStatus(true);
@@ -3319,7 +3218,7 @@ namespace ConstructionSetExtender
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			ContextMenuRefactorCreateUDFImplementation->Visible = false;
-			if (ScriptParser::GetTokenType(Tokens[0]) == ScriptParser::TokenType::e_Call &&
+			if (ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptSemanticAnalysis::ScriptTokenType::Call &&
 				!TextEditor->GetCharIndexInsideCommentSegment(TextEditor->GetLastKnownMouseClickOffset()))
 			{
 				if (!ISDB->GetIsIdentifierUserFunction(MidToken))
@@ -3399,7 +3298,7 @@ namespace ConstructionSetExtender
 			else
 				Message = Result->Text;
 
-			AddMessageToMessagePool(MessageListItemType::e_RegularMessage, -1, Message);
+			AddMessageToMessagePool(MessageListItemType::RegularMessage, -1, Message);
 		}
 		void Workspace::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)
 		{
@@ -3439,7 +3338,7 @@ namespace ConstructionSetExtender
 		void Workspace::ContextMenuRefactorAddVariable_Click( Object^ Sender, EventArgs^ E )
 		{
 			ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
-			ScriptParser::VariableType VarType = (ScriptParser::VariableType)MenuItem->Tag;
+			ObScriptSemanticAnalysis::Variable::DataType VarType = (ObScriptSemanticAnalysis::Variable::DataType)MenuItem->Tag;
 			String^ VarName = ContextMenuWord->Text;
 
 			if (VarName->Length == 0)
@@ -3507,11 +3406,11 @@ namespace ConstructionSetExtender
 					String^ SecondToken = (ScriptTextParser->Tokens->Count > 1)?ScriptTextParser->Tokens[1]:"";
 					String^ EditData = "";
 
-					ScriptParser::TokenType Type = ScriptTextParser->GetTokenType(FirstToken);
+					ObScriptSemanticAnalysis::ScriptTokenType Type = ScriptTextParser->GetScriptTokenType(FirstToken);
 
 					switch (Type)
 					{
-					case ScriptParser::TokenType::e_Variable:
+					case ObScriptSemanticAnalysis::ScriptTokenType::Variable:
 						if (!SkippedDescription)
 						{
 							SkippedDescription = true;
@@ -3526,14 +3425,14 @@ namespace ConstructionSetExtender
 						else
 							DocumentedScript += ReadLine + "\n";
 						break;
-					case ScriptParser::TokenType::e_ScriptName:
+					case ObScriptSemanticAnalysis::ScriptTokenType::ScriptName:
 						ScriptName = SecondToken;
 						break;
-					case ScriptParser::TokenType::e_Comment:
+					case ObScriptSemanticAnalysis::ScriptTokenType::Comment:
 						if (SkippedDescription)
 							DocumentedScript += ReadLine + "\n";
 						break;
-					case ScriptParser::TokenType::e_Begin:
+					case ObScriptSemanticAnalysis::ScriptTokenType::Begin:
 						if (!SkippedDescription)
 						{
 							SkippedDescription = true;
@@ -3584,7 +3483,7 @@ namespace ConstructionSetExtender
 
 				List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
 				RemoteOpParameters->Add(UDFScriptText);
-				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::e_CreateNewWorkspaceAndScriptAndSetText,
+				GetParentContainer()->PerformRemoteWorkspaceOperation(WorkspaceContainer::RemoteWorkspaceOperation::CreateNewWorkspaceAndScriptAndSetText,
 																	RemoteOpParameters);
 			}
 		}
@@ -3906,16 +3805,16 @@ namespace ConstructionSetExtender
 			String^ SanitizedText = TextEditor->GetText();
 
 			if (PREFERENCES->FetchSettingAsInt("AnnealCasing", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::e_AnnealCasing, SanitizedText);
+				SanitizedText = SanitizeScriptText(SanitizeOperation::AnnealCasing, SanitizedText);
 
 			if (PREFERENCES->FetchSettingAsInt("EvalifyIfs", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::e_EvalifyIfs, SanitizedText);
+				SanitizedText = SanitizeScriptText(SanitizeOperation::EvalifyIfs, SanitizedText);
 
 			if (PREFERENCES->FetchSettingAsInt("CompilerOverrideBlocks", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::e_CompilerOverrideBlocks, SanitizedText);
+				SanitizedText = SanitizeScriptText(SanitizeOperation::CompilerOverrideBlocks, SanitizedText);
 
 			if (PREFERENCES->FetchSettingAsInt("IndentLines", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::e_Indent, SanitizedText);
+				SanitizedText = SanitizeScriptText(SanitizeOperation::Indent, SanitizedText);
 
 			TextEditor->SetText(SanitizedText, false, false);
 

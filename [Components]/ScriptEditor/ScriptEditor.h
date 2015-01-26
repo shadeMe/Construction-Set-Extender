@@ -2,7 +2,7 @@
 #pragma warning (disable: 4374 4965)
 
 #include "Globals.h"
-#include "ScriptParser.h"
+#include "SemanticAnalysis.h"
 #include "ScriptTextEditorInterface.h"
 #include "ScriptEditorPreferences.h"
 #include "ScriptListDialog.h"
@@ -30,17 +30,17 @@ namespace ConstructionSetExtender
 		public:
 			static enum class									JumpStackNavigationDirection
 			{
-				e_Back = 0,
-				e_Forward
+				Back = 0,
+				Forward
 			};
 
 			static enum class									RemoteWorkspaceOperation
 			{
-				e_CreateNewWorkspaceAndScript = 0,
-				e_CreateNewWorkspaceAndSelectScript,
-				e_LoadFileIntoNewWorkspace,
-				e_CreateNewWorkspaceAndScriptAndSetText,
-				e_FindReplaceInOpenWorkspaces
+				CreateNewWorkspaceAndScript = 0,
+				CreateNewWorkspaceAndSelectScript,
+				LoadFileIntoNewWorkspace,
+				CreateNewWorkspaceAndScriptAndSetText,
+				FindReplaceInOpenWorkspaces
 			};
 
 			static MouseEventHandler^							WorkspaceTearingEventDelegate = gcnew MouseEventHandler(&WorkspaceTearingEventHandler);
@@ -150,34 +150,34 @@ namespace ConstructionSetExtender
 		public:
 			static enum class									MessageListItemType
 			{
-				e_Warning		= 0,
-				e_Error,
-				e_RegularMessage,
-				e_EditorMessage
+				Warning		= 0,
+				Error,
+				RegularMessage,
+				EditorMessage
 			};
 
 			static enum class									ScriptType
 			{
-				e_Object		= 0,
-				e_Quest,
-				e_MagicEffect	= 0x100
+				Object		= 0,
+				Quest,
+				MagicEffect	= 0x100
 			};
 
 			static enum class									ScriptSaveOperation
 			{
-				e_SaveAndCompile		= 0,
-				e_SaveButDontCompile,
-				e_SaveActivePluginToo
+				SaveAndCompile		= 0,
+				SaveButDontCompile,
+				SaveActivePluginToo
 			};
 
 			Workspace(UInt32 Index, WorkspaceContainer^ Parent, ComponentDLLInterface::ScriptData* InitScript);
 		protected:
 			static enum class									SanitizeOperation
 			{
-				e_Indent		= 0,
-				e_AnnealCasing,
-				e_EvalifyIfs,
-				e_CompilerOverrideBlocks
+				Indent		= 0,
+				AnnealCasing,
+				EvalifyIfs,
+				CompilerOverrideBlocks
 			};
 
 			DotNetBar::SuperTabItem^							WorkspaceTabItem;
@@ -427,12 +427,12 @@ namespace ConstructionSetExtender
 			virtual void                                        SerializeCaretPos(String^% Result);
 			virtual void                                        SerializeBookmarks(String^% Result);
 			virtual void                                        SerializeMessages(String^% Result);
-			virtual String^										DeserializeCSEBlock(String^% Source, String^% ExtractedBlock);
-			virtual void                                        DeserializeCaretPos(String^% ExtractedBlock);
-			virtual void                                        DeserializeBookmarks(String^% ExtractedBlock);
-			virtual void                                        DeserializeMessages(String^% ExtractedBlock);
+			virtual String^										DeserializeCSEBlock(String^ Source, String^% ExtractedBlock);
+			virtual void                                        DeserializeCaretPos(String^ ExtractedBlock);
+			virtual void                                        DeserializeBookmarks(String^ ExtractedBlock);
+			virtual void                                        DeserializeMessages(String^ ExtractedBlock);
 
-			virtual bool										ValidateScript(String^% PreprocessedScriptText);
+			virtual bool										ValidateScript(String^ PreprocessedScriptText);
 			virtual bool										PreprocessScriptText(String^% PreprocessorResult);
 			virtual void                                        PreprocessorErrorOutputWrapper(String^ Message);
 			virtual String^										SanitizeScriptText(SanitizeOperation Operation, String^ ScriptText);
@@ -473,8 +473,8 @@ namespace ConstructionSetExtender
 			String^												GetScriptText() { return TextEditor->GetText(); }
 			ScriptType											GetScriptType();
 
-			void												SetScriptText(String^% Text, bool ResetUndoStack) { TextEditor->SetText(Text, false, ResetUndoStack); }
-			void												SetCurrentToken(String^% Replacement) { TextEditor->SetTokenAtCaretPos(Replacement); }
+			void												SetScriptText(String^ Text, bool ResetUndoStack) { TextEditor->SetText(Text, false, ResetUndoStack); }
+			void												SetCurrentToken(String^ Replacement) { TextEditor->SetTokenAtCaretPos(Replacement); }
 
 			void												BringToFront() { ParentContainer->SelectTab(WorkspaceTabItem); }
 			void												Relocate(WorkspaceContainer^ Destination);
@@ -488,7 +488,7 @@ namespace ConstructionSetExtender
 			void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ Extension);
 
 			int													PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options);
-			void												InsertVariable(String^ VariableName, ScriptParser::VariableType VariableType);
+			void												InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 		};
 	}
 }

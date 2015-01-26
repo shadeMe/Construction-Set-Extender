@@ -237,7 +237,7 @@ namespace ConstructionSetExtender
 				XSHDColor^												LocalVarsColor;
 			public:
 				void													UpdateBaseDefinitions(void);
-				AvalonEditHighlightingDefinition^						GenerateHighlightingDefinition(LinkedList<String^>^ LocalVariables);
+				AvalonEditHighlightingDefinition^						GenerateHighlightingDefinition(List<String^>^ LocalVariables);
 
 				AvalonEditXSHDManager();
 			};

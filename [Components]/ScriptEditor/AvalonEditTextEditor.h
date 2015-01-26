@@ -5,6 +5,7 @@
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
 #include "IntelliSense\IntelliSenseInterface.h"
+#include "SemanticAnalysis.h"
 
 namespace ConstructionSetExtender
 {
@@ -24,15 +25,15 @@ namespace ConstructionSetExtender
 			protected:
 				static enum class									PreventTextChangeFlagState
 				{
-					e_Disabled = 0,
-					e_AutoReset,
-					e_ManualReset
+					Disabled = 0,
+					AutoReset,
+					ManualReset
 				};
 
 				static enum class									MoveSegmentDirection
 				{
-					e_Up = 0,
-					e_Down
+					Up = 0,
+					Down
 				};
 
 				Panel^												WinFormsContainer;
@@ -77,6 +78,7 @@ namespace ConstructionSetExtender
 				bool												TextFieldInUpdateFlag;
 
 				int													PreviousLineBuffer;
+				ObScriptSemanticAnalysis::AnalysisData^				SemanticAnalysisCache;
 
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
@@ -245,6 +247,7 @@ namespace ConstructionSetExtender
 				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 
 				virtual void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
+				virtual ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(void);
 			};
 		}
 	}

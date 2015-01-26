@@ -15,7 +15,7 @@ namespace ConstructionSetExtender
 		IntelliSenseItem::IntelliSenseItem()
 		{
 			this->Description = "";
-			this->Type = IntelliSenseItemType::e_Invalid;
+			this->Type = IntelliSenseItemType::Invalid;
 		}
 
 		IntelliSenseItem::IntelliSenseItem(String^ Desc, IntelliSenseItemType Type)
@@ -59,14 +59,14 @@ namespace ConstructionSetExtender
 			return !String::Compare(GetIdentifier(), Token, true);
 		}
 
-		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^% Name, String^% Desc, String^% Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source) :
+		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^ Name, String^ Desc, String^ Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source) :
 				IntelliSenseItem(String::Format("{0}{1}\n{2} parameter(s)\nReturn Type: {3}\n\n{4}{5}",
 												Name,
 												(Shorthand == "None")?"":("\t[ " + Shorthand + " ]"),
 												NoOfParams.ToString(),
 												IntelliSenseItemScriptCommand::IntelliSenseItemCommandReturnTypeID[(int)ReturnType],
 												Desc, (RequiresParent)?"\n\nRequires a calling reference":""),
-								IntelliSenseItemType::e_Cmd),
+								IntelliSenseItemType::Command),
 				Name(Name),
 				CmdDescription(Desc),
 				Shorthand(Shorthand),
@@ -122,10 +122,10 @@ namespace ConstructionSetExtender
 			return !String::Compare(Name, Token, true) || !String::Compare(Shorthand, Token, true);
 		}
 
-		IntelliSenseItemVariable::IntelliSenseItemVariable(String^% Name, String^% Comment, ScriptParser::VariableType Type, IntelliSenseItemType Scope) :
+		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptSemanticAnalysis::Variable::DataType Type, IntelliSenseItemType Scope) :
 			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
 											Name,
-											ScriptParser::GetVariableID(Type),
+											ObScriptSemanticAnalysis::Variable::GetVariableDataTypeDescription(Type),
 											(Comment != "")?"\n\n":"",
 											Comment),
 							Scope),
@@ -148,10 +148,10 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemVariable::GetDataTypeID()
 		{
-			return ScriptParser::GetVariableID(DataType);
+			return ObScriptSemanticAnalysis::Variable::GetVariableDataTypeDescription(DataType);
 		}
 
-		ScriptParser::VariableType IntelliSenseItemVariable::GetDataType()
+		ObScriptSemanticAnalysis::Variable::DataType IntelliSenseItemVariable::GetDataType()
 		{
 			return DataType;
 		}
@@ -161,9 +161,9 @@ namespace ConstructionSetExtender
 			return GetIdentifier();
 		}
 
-		IntelliSenseItemQuest::IntelliSenseItemQuest(String^% EditorID, String^% Desc, String^% ScrName) :
+		IntelliSenseItemQuest::IntelliSenseItemQuest(String^ EditorID, String^ Desc, String^ ScrName) :
 					IntelliSenseItem(EditorID + ((Desc != "")?"\n":"") + Desc + ((ScrName != "")?"\n\nQuest Script: ":"") + ScrName,
-									IntelliSenseItem::IntelliSenseItemType::e_Quest),
+									IntelliSenseItem::IntelliSenseItemType::Quest),
 					Name(EditorID),
 					ScriptName(ScrName)
 		{
@@ -182,20 +182,43 @@ namespace ConstructionSetExtender
 
 		Script::Script()
 		{
-			VarList = gcnew List<IntelliSenseItemVariable^>();
+			VarList = gcnew VarListT;
 		}
 
-		Script::Script(String^% ScriptText)
+		Script::Script(String^ ScriptText)
 		{
-			VarList = gcnew List<IntelliSenseItemVariable^>();
-			ISDB->ParseScript(ScriptText, gcnew IntelliSenseParseScriptData(this));
+			VarList = gcnew VarListT;
+
+			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
+			Data->PerformAnalysis(ScriptText, ObScriptSemanticAnalysis::ScriptType::None,
+								ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
+								ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
+								ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData,
+								nullptr);
+
+			for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
+
+			Name = Data->Name;
+			CommentDescription = Data->Description;
 		}
 
-		Script::Script(String^% ScriptText, String^% Name)
+		Script::Script(String^ ScriptText, String^ Name)
 		{
-			VarList = gcnew VarListT();
-			ISDB->ParseScript(ScriptText, gcnew IntelliSenseParseScriptData(this));
+			VarList = gcnew VarListT;
+
+			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
+			Data->PerformAnalysis(ScriptText, ObScriptSemanticAnalysis::ScriptType::None,
+								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
+								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
+								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData,
+								  nullptr);
+
+			for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
+
 			this->Name = Name;
+			CommentDescription = Data->Description;
 		}
 
 		String^ Script::Describe()
@@ -210,32 +233,12 @@ namespace ConstructionSetExtender
 			return Name;
 		}
 
-		void Script::SetName( String^ Name )
-		{
-			this->Name = Name;
-		}
-
-		void Script::SetCommentDescription( String^ Description )
-		{
-			this->CommentDescription = Description;
-		}
-
-		void Script::AddVariable( IntelliSenseItemVariable^ Variable )
-		{
-			VarList->Add(Variable);
-		}
-
-		void Script::ClearVariableList()
-		{
-			VarList->Clear();
-		}
-
 		List<IntelliSenseItemVariable^>::Enumerator^ Script::GetVariableListEnumerator()
 		{
 			return VarList->GetEnumerator();
 		}
 
-		UserFunction::UserFunction(String^% ScriptText) : Script()
+		UserFunction::UserFunction(String^ ScriptText) : Script()
 		{
 			Parameters = Array::CreateInstance(int::typeid, 10);
 			Parameters->SetValue(-1, 0);
@@ -250,7 +253,28 @@ namespace ConstructionSetExtender
 			Parameters->SetValue(-1, 9);
 			ReturnVar = -1;
 
-			ISDB->ParseScript(ScriptText, gcnew IntelliSenseParseScriptData(this));
+			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
+			Data->PerformAnalysis(ScriptText, ObScriptSemanticAnalysis::ScriptType::None,
+								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
+								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
+								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData,
+								  nullptr);
+
+			int VarIdx = 0;
+			for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+			{
+				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
+				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
+					Parameters->SetValue(VarIdx, (int)Itr->ParameterIndex);
+
+				if (Data->UDFResult == Itr)
+					ReturnVar = VarIdx;
+
+				VarIdx++;
+			}
+
+			Name = Data->Name;
+			CommentDescription = Data->Description;
 		}
 
 		String^ UserFunction::Describe()
@@ -282,19 +306,9 @@ namespace ConstructionSetExtender
 			return Description;
 		}
 
-		void UserFunction::AddParameter( int VariableIndex, int ParameterIndex )
-		{
-			Parameters->SetValue(VariableIndex, ParameterIndex);
-		}
-
-		void UserFunction::SetReturnVariable( int VariableIndex )
-		{
-			ReturnVar = VariableIndex;
-		}
-
-		IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(UserFunction^% Parent) :
+		IntelliSenseItemUserFunction::IntelliSenseItemUserFunction(UserFunction^ Parent) :
 				IntelliSenseItem(Parent->Describe(),
-								IntelliSenseItemType::e_UserFunct),
+								IntelliSenseItemType::UserFunction),
 				Parent(Parent)
 		{
 			;//
@@ -317,20 +331,20 @@ namespace ConstructionSetExtender
 
 		IntelliSenseItemEditorIDForm::IntelliSenseItemEditorIDForm( ComponentDLLInterface::FormData* Data ) : IntelliSenseItem()
 		{
-			this->Type = IntelliSenseItem::IntelliSenseItemType::e_Form;
+			this->Type = IntelliSenseItem::IntelliSenseItemType::Form;
 
 			TypeID = Data->TypeID;
 			FormID = Data->FormID;
 			Name = gcnew String(Data->EditorID);
 			Flags = Data->Flags;
 
-			String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::e_FromMaster)?"   From Master File\n":"") +
-				((Flags & (UInt32)FormFlags::e_FromActiveFile)?"   From Active File\n":"") +
-				((Flags & (UInt32)FormFlags::e_Deleted)?"   Deleted\n":"") +
-				((Flags & (UInt32)FormFlags::e_TurnOffFire)?"   Turn Off Fire\n":"") +
-				((Flags & (UInt32)FormFlags::e_QuestItem)?(TypeID == 0x31?"   Persistent\n":"   Quest Item\n"):"") +
-				((Flags & (UInt32)FormFlags::e_Disabled)?"   Initially Disabled\n":"") +
-				((Flags & (UInt32)FormFlags::e_VisibleWhenDistant)?"   Visible When Distant\n":"");
+			String^ FlagDescription = "" + ((Flags & (UInt32)FormFlags::FromMaster)?"   From Master File\n":"") +
+				((Flags & (UInt32)FormFlags::FromActiveFile)?"   From Active File\n":"") +
+				((Flags & (UInt32)FormFlags::Deleted)?"   Deleted\n":"") +
+				((Flags & (UInt32)FormFlags::TurnOffFire)?"   Turn Off Fire\n":"") +
+				((Flags & (UInt32)FormFlags::QuestItem)?(TypeID == 0x31?"   Persistent\n":"   Quest Item\n"):"") +
+				((Flags & (UInt32)FormFlags::Disabled)?"   Initially Disabled\n":"") +
+				((Flags & (UInt32)FormFlags::VisibleWhenDistant)?"   Visible When Distant\n":"");
 
 			String^ ScriptDescription = "";
 			ComponentDLLInterface::ScriptData* ScriptableData = 0;
@@ -362,7 +376,7 @@ namespace ConstructionSetExtender
 		IntelliSenseItemCodeSnippet::IntelliSenseItemCodeSnippet( CodeSnippet^ Source ) :
 			IntelliSenseItem()
 		{
-			this->Type = IntelliSenseItem::IntelliSenseItemType::e_Snippet;
+			this->Type = IntelliSenseItem::IntelliSenseItemType::Snippet;
 
 			Parent = Source;
 

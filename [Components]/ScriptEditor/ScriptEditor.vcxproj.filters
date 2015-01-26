@@ -45,9 +45,6 @@
     <ClCompile Include="ScriptListDialog.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="ScriptParser.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptEditor.cpp" />
     <ClCompile Include="ScriptEditorManager.cpp" />
@@ -90,6 +87,9 @@
     <ClCompile Include="SnippetManager.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="SemanticAnalysis.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -105,9 +105,6 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="ScriptListDialog.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptParser.h">
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
@@ -168,6 +165,9 @@
     </ClInclude>
     <ClInclude Include="AvalonEditDefs.h">
       <Filter>Components\TextEditors\AvalonEdit</Filter>
+    </ClInclude>
+    <ClInclude Include="SemanticAnalysis.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

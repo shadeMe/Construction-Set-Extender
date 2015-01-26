@@ -15,6 +15,7 @@ CSE		---->
 
 	BUGFIX			=
 		> The dialog edit window flickers on mouse interaction
+		> Break script compilation on reaching max byte code size
 		> Fix the global clipboard's to correctly paste refs in place
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C

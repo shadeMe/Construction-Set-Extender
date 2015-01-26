@@ -76,7 +76,7 @@ void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UIn
 	Parameters->ParameterList->Add(Width);
 	Parameters->ParameterList->Add(Height);
 
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_AllocateWorkspaceContainer, Parameters);
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::AllocateWorkspaceContainer, Parameters);
 }
 
 void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL)
@@ -87,7 +87,7 @@ void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL
 void CloseAllOpenEditors(void)
 {
 	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::e_CloseAllOpenEditors, Parameters);
+	SEMGR->PerformOperation(ScriptEditorManager::OperationType::CloseAllOpenEditors, Parameters);
 }
 
 void UpdateIntelliSenseDatabase(void)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "[Libraries]\SME Sundries\SME_Prefix.h"
+#include "SME_Prefix.h"
 
 #pragma warning(disable : 4800 4244 4390 4018 4570)
 

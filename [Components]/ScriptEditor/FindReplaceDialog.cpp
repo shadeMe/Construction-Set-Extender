@@ -267,7 +267,7 @@ namespace ConstructionSetExtender
 			RemoteOpParameters->Add(GetSelectedOptions());
 
 			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(
-										WorkspaceContainer::RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces,
+										WorkspaceContainer::RemoteWorkspaceOperation::FindReplaceInOpenWorkspaces,
 										RemoteOpParameters);
 		}
 
@@ -286,7 +286,7 @@ namespace ConstructionSetExtender
 			RemoteOpParameters->Add(GetSelectedOptions());
 
 			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(
-										WorkspaceContainer::RemoteWorkspaceOperation::e_FindReplaceInOpenWorkspaces,
+										WorkspaceContainer::RemoteWorkspaceOperation::FindReplaceInOpenWorkspaces,
 										RemoteOpParameters);
 		}
 
@@ -331,7 +331,7 @@ namespace ConstructionSetExtender
 			case Keys::Escape:
 				Hide();
 				E->Handled = true;
-				
+
 				break;
 			}
 		}

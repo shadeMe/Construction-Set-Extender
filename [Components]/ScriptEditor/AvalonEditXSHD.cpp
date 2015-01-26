@@ -366,32 +366,32 @@ namespace ConstructionSetExtender
 				XSHDKeywords^ CommentMarkerReminderKeywords = gcnew XSHDKeywords(ReminderColor, Color::GhostWhite, Color::GhostWhite, true);
 
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
+					[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define]));
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define]));
+					[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define]));
 
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
+					[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Enum]));
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum]));
+					[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Enum]));
 
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
+					[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::If]));
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If]));
+					[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::If]));
 
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+					[(int)CSEPreprocessorDirective::EncodingType::SingleLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import]));
 				CommentMarkerPreprocessorKeywords->AddWord(gcnew XSHDWord(CSEPreprocessorDirective::EncodingIdentifier
-					[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine] +
-					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import]));
+					[(int)CSEPreprocessorDirective::EncodingType::MultiLine] +
+					CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import]));
 
 				CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("TODO"));
 				CommentMarkerReminderKeywords->AddWord(gcnew XSHDWord("HACK"));
@@ -443,7 +443,7 @@ namespace ConstructionSetExtender
 				;//
 			}
 
-			AvalonEditHighlightingDefinition^ AvalonEditXSHDManager::GenerateHighlightingDefinition(LinkedList<String^>^ LocalVariables)
+			AvalonEditHighlightingDefinition^ AvalonEditXSHDManager::GenerateHighlightingDefinition(List<String^>^ LocalVariables)
 			{
 				String^ OutDefs = StableDefinitions;
 

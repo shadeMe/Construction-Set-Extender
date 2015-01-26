@@ -145,13 +145,13 @@ namespace ConstructionSetExtender
 					{
 						switch (ThisScript->Type)
 						{
-						case ScriptEditor::Workspace::ScriptType::e_Object:
+						case ScriptEditor::Workspace::ScriptType::Object:
 							NewScript->SubItems->Add("Object");
 							break;
-						case ScriptEditor::Workspace::ScriptType::e_Quest:
+						case ScriptEditor::Workspace::ScriptType::Quest:
 							NewScript->SubItems->Add("Quest");
 							break;
-						case ScriptEditor::Workspace::ScriptType::e_MagicEffect:
+						case ScriptEditor::Workspace::ScriptType::MagicEffect:
 							NewScript->SubItems->Add("Magic Effect");
 							break;
 						}

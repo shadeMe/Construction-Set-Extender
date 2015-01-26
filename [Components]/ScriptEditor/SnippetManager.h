@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ScriptParser.h"
+#include "SemanticAnalysis.h"
 
 namespace ConstructionSetExtender
 {
@@ -16,11 +16,11 @@ namespace ConstructionSetExtender
 			ref struct VariableInfo
 			{
 				[DataMember]
-				String^								Name;
+				String^													Name;
 				[DataMember]
-				ScriptParser::VariableType			Type;
+				ObScriptSemanticAnalysis::Variable::DataType			Type;
 
-				VariableInfo(String^ Name, ScriptParser::VariableType Type);
+				VariableInfo(String^ Name, ObScriptSemanticAnalysis::Variable::DataType Type);
 			};
 
 			[DataMember]
@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 			CodeSnippet();
 			~CodeSnippet();
 
-			void						AddVariable(String^ Name, ScriptParser::VariableType Type);
+			void						AddVariable(String^ Name, ObScriptSemanticAnalysis::Variable::DataType Type);
 			void						AddVariable(VariableInfo^ Var);
 			void						RemoveVariable(VariableInfo^ Var);
 			VariableInfo^				LookupVariable(String^ Name);

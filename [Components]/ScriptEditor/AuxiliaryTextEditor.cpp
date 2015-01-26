@@ -18,7 +18,7 @@ namespace ConstructionSetExtender
 			Parent->Controls->Add(Viewer->GetContainer());
 		}
 
-		bool ScriptOffsetViewer::InitializeViewer(String^% ScriptText, UInt32 Data, UInt32 Length)
+		bool ScriptOffsetViewer::InitializeViewer(String^ ScriptText, UInt32 Data, UInt32 Length)
 		{
 			Viewer->GetTextField()->Text = ScriptText;
 			if (Viewer->CalculateLineOffsetsForTextField(Data, Length))
@@ -90,7 +90,7 @@ namespace ConstructionSetExtender
 			return Viewer->GetTextField()->SelectionStart;
 		}
 
-		void SimpleTextViewer::Show( String^% Text, int CaretPosition )
+		void SimpleTextViewer::Show( String^ Text, int CaretPosition )
 		{
 			Viewer->GetTextField()->Text = Text;
 

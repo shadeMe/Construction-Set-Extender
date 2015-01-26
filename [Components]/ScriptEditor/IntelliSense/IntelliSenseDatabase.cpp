@@ -2,7 +2,7 @@
 #include "IntelliSenseDatabase.h"
 #include "IntelliSenseInterface.h"
 
-#include "..\ScriptParser.h"
+#include "..\SemanticAnalysis.h"
 #include "..\ScriptEditorPreferences.h"
 #include "..\SnippetManager.h"
 
@@ -12,12 +12,10 @@ namespace ConstructionSetExtender
 {
 	namespace IntelliSense
 	{
-		IntelliSenseDatabase^% IntelliSenseDatabase::GetSingleton()
+		IntelliSenseDatabase^ IntelliSenseDatabase::GetSingleton()
 		{
 			if (Singleton == nullptr)
-			{
 				Singleton = gcnew IntelliSenseDatabase();
-			}
 
 			return Singleton;
 		}
@@ -120,22 +118,22 @@ namespace ConstructionSetExtender
 						{
 							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			ScriptParser::VariableType::e_Integer,
-																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
+																			ObScriptSemanticAnalysis::Variable::DataType::Integer,
+																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 						else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 						{
 							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			ScriptParser::VariableType::e_Float,
-																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
+																			ObScriptSemanticAnalysis::Variable::DataType::Float,
+																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 						else
 						{
 							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			ScriptParser::VariableType::e_String,
-																			IntelliSenseItem::IntelliSenseItemType::e_GlobalVar));
+																			ObScriptSemanticAnalysis::Variable::DataType::StringVar,
+																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 					}
 
@@ -184,138 +182,6 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseDatabase::ParseScript(String^% SourceText, IntelliSenseParseScriptData^ Box)
-		{
-			ScriptParser^ ScriptTextParser = gcnew ScriptParser();
-			StringReader^ TextParser = gcnew StringReader(SourceText);
-
-			String^ ReadLine = TextParser->ReadLine(), ^FirstToken, ^SecondToken = "", ^Comment = "", ^Description = "", ^ScriptName;
-			bool GrabDef = false, LocalVars = false;
-
-			switch (Box->Type)
-			{
-			case IntelliSenseParseScriptData::DataType::e_Script:
-			case IntelliSenseParseScriptData::DataType::e_UserFunction:
-				Box->SourceScript->ClearVariableList();
-				break;
-			case IntelliSenseParseScriptData::DataType::e_IntelliSenseInterface:
-				Box->SourceIntelliSenseInterface->ClearLocalVariableDatabase();
-				LocalVars = true;
-				break;
-			}
-
-			while (ReadLine != nullptr)
-			{
-				ScriptTextParser->Tokenize(ReadLine, false);
-				if (!ScriptTextParser->Valid)
-				{
-					ReadLine = TextParser->ReadLine();
-					continue;
-				}
-
-				if (ScriptTextParser->Tokens[0][0] == ';' && GrabDef)
-					Description += ReadLine->Substring(ScriptTextParser->Indices[0] + 1) + "\n";
-
-				FirstToken = ScriptTextParser->Tokens[0],
-					SecondToken = (ScriptTextParser->Tokens->Count > 1)?ScriptTextParser->Tokens[1]:"";
-
-				ScriptParser::TokenType Type = ScriptTextParser->GetTokenType(FirstToken);
-
-				switch (Type)
-				{
-				case ScriptParser::TokenType::e_Variable:
-					GrabDef = false;
-					if (ScriptTextParser->LookupVariableByName(SecondToken) == nullptr && SecondToken != "")
-					{
-						Comment = "";
-						if (ScriptTextParser->Tokens->Count > 2 && ScriptTextParser->GetCommentTokenIndex(ScriptTextParser->Tokens->Count) == 2)
-						{
-							Comment = ReadLine->Substring(ReadLine->IndexOf(";") + 1);
-							ScriptTextParser->Tokenize(Comment, false);
-							Comment = (ScriptTextParser->Indices->Count > 0)?Comment->Substring(ScriptTextParser->Indices[0]):Comment;
-						}
-
-						ScriptTextParser->Variables->AddLast(gcnew ScriptParser::VariableRefCountData(SecondToken, 0));
-						ScriptParser::VariableType DataType = ScriptParser::GetVariableType(FirstToken);
-
-						switch (Box->Type)
-						{
-						case IntelliSenseParseScriptData::DataType::e_UserFunction:
-						case IntelliSenseParseScriptData::DataType::e_Script:
-							Box->SourceScript->AddVariable(gcnew IntelliSenseItemVariable(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::IntelliSenseItemType::e_LocalVar):(IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)));
-							break;
-						case IntelliSenseParseScriptData::DataType::e_IntelliSenseInterface:
-							Box->SourceIntelliSenseInterface->AddLocalVariableToDatabase(gcnew IntelliSenseItemVariable(SecondToken, Comment, DataType, (LocalVars)?(IntelliSenseItem::IntelliSenseItemType::e_LocalVar):(IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)));
-							break;
-						}
-					}
-					break;
-				case ScriptParser::TokenType::e_ScriptName:
-					GrabDef = true;
-					ScriptName = SecondToken;
-					break;
-				case ScriptParser::TokenType::e_Begin:
-					GrabDef = false;
-					if (Box->Type == IntelliSenseParseScriptData::DataType::e_UserFunction)
-					{
-						if (!String::Compare(SecondToken, "function", true) || !String::Compare(SecondToken, "_function", true))
-						{
-							String^ ParamList = ReadLine->Substring(ReadLine->IndexOf("{"), ReadLine->IndexOf("}") - ReadLine->IndexOf("{"));
-							ScriptTextParser->Tokenize(ParamList, false);
-							int ParamIdx = 0;
-							for each (String^ Itr in ScriptTextParser->Tokens)
-							{
-								int VarIdx = 0;
-								for each (ScriptParser::VariableRefCountData^ ItrEx in ScriptTextParser->Variables)
-								{
-									if (!String::Compare(ItrEx->Name, Itr, true) && ParamIdx < 10)
-									{
-										(dynamic_cast<UserFunction^>(Box->SourceScript))->AddParameter(VarIdx, ParamIdx);
-										ParamIdx++;
-									}
-									VarIdx++;
-								}
-							}
-						}
-					}
-					break;
-				case ScriptParser::TokenType::e_Comment:
-					break;
-				case ScriptParser::TokenType::e_SetFunctionValue:
-					GrabDef = false;
-					if (Box->Type == IntelliSenseParseScriptData::DataType::e_UserFunction)
-					{
-						(dynamic_cast<UserFunction^>(Box->SourceScript))->SetReturnVariable(-9);						// ambiguous
-						int VarIdx = 0;
-						for each (ScriptParser::VariableRefCountData^ Itr in ScriptTextParser->Variables)
-						{
-							if (!String::Compare(SecondToken, Itr->Name, true))
-							{
-								(dynamic_cast<UserFunction^>(Box->SourceScript))->SetReturnVariable(VarIdx);
-								break;
-							}
-							VarIdx++;
-						}
-					}
-					break;
-				default:
-					GrabDef = false;
-					break;
-				}
-
-				ReadLine = TextParser->ReadLine();
-			}
-
-			switch (Box->Type)
-			{
-			case IntelliSenseParseScriptData::DataType::e_Script:
-			case IntelliSenseParseScriptData::DataType::e_UserFunction:
-				Box->SourceScript->SetName(ScriptName);
-				Box->SourceScript->SetCommentDescription(Description);
-				break;
-			}
-		}
-
 		void IntelliSenseDatabase::InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data)
 		{
 			String^ Name, ^Desc, ^SH, ^PluginName;
@@ -333,7 +199,7 @@ namespace ConstructionSetExtender
 				if (CSCount < 370)
 				{
 					Desc = "[CS] ";				// 369 vanilla commands
-					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::e_Vanilla;
+					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::Vanilla;
 				}
 				else if (Info)
 				{
@@ -344,13 +210,13 @@ namespace ConstructionSetExtender
 						PluginName = "Pluggy";
 
 					Desc = "[" + PluginName + " v" + Info->version + "] ";
-					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::e_OBSE;
+					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::OBSE;
 				}
 				else
 				{
 					UInt32 OBSEVersion = Data->GetRequiredOBSEVersion(Itr);
 					Desc = "[OBSE v" + OBSEVersion + "] ";
-					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::e_OBSE;
+					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::OBSE;
 				}
 
 				if (!String::Compare(gcnew String(Itr->helpText), "", true))
@@ -385,17 +251,20 @@ namespace ConstructionSetExtender
 					continue;
 
 				if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
-					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Integer, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+										gcnew String(""), ObScriptSemanticAnalysis::Variable::DataType::Integer, IntelliSenseItem::IntelliSenseItemType::GMST));
 				else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
-					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_Float, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+										gcnew String(""), ObScriptSemanticAnalysis::Variable::DataType::Float, IntelliSenseItem::IntelliSenseItemType::GMST));
 				else
-					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID), gcnew String(""), ScriptParser::VariableType::e_String, IntelliSenseItem::IntelliSenseItemType::e_GMST));
+					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+										gcnew String(""), ObScriptSemanticAnalysis::Variable::DataType::StringVar, IntelliSenseItem::IntelliSenseItemType::GMST));
 			}
 
 			DebugPrint(String::Format("\tParsed {0} Game Settings", GMSTCollection->GMSTCount));
 		}
 
-		void IntelliSenseDatabase::RegisterDeveloperURL(String^% CmdName, String^% URL)
+		void IntelliSenseDatabase::RegisterDeveloperURL(String^ CmdName, String^ URL)
 		{
 			for each (KeyValuePair<String^, String^>% Itr in DeveloperURLMap)
 			{
@@ -406,7 +275,7 @@ namespace ConstructionSetExtender
 			DeveloperURLMap->Add(CmdName, URL);
 		}
 
-		String^	IntelliSenseDatabase::LookupDeveloperURLByCommand(String^% CmdName)
+		String^	IntelliSenseDatabase::LookupDeveloperURLByCommand(String^ CmdName)
 		{
 			String^ Result = nullptr;
 			for each (KeyValuePair<String^, String^>% Itr in DeveloperURLMap)
@@ -420,7 +289,7 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		String^	IntelliSenseDatabase::SanitizeIdentifier(String^% Name)
+		String^	IntelliSenseDatabase::SanitizeIdentifier(String^ Name)
 		{
 			for each (IntelliSenseItem^ Itr in Enumerables)
 			{
@@ -448,7 +317,7 @@ namespace ConstructionSetExtender
 			return CacheRemoteScript(BaseEditorID, nullptr);
 		}
 
-		bool IntelliSenseDatabase::GetIsIdentifierUserFunction(String^% Name)
+		bool IntelliSenseDatabase::GetIsIdentifierUserFunction(String^ Name)
 		{
 			bool Result = false;
 
@@ -464,13 +333,13 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		bool IntelliSenseDatabase::GetIsIdentifierScriptCommand(String^% Name)
+		bool IntelliSenseDatabase::GetIsIdentifierScriptCommand(String^ Name)
 		{
 			bool Result = false;
 
 			for each (IntelliSenseItem^ Itr in Enumerables)
 			{
-				if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_Cmd)
+				if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Command)
 				{
 					if (!String::Compare(Itr->GetIdentifier(), Name, true))
 					{
@@ -498,7 +367,7 @@ namespace ConstructionSetExtender
 					Script^ RemoteScript = Itr.Value;
 					for (Script::VarListT::Enumerator^ RemoteVarItr = RemoteScript->GetVariableListEnumerator(); RemoteVarItr->MoveNext();)
 					{
-						if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::e_RemoteVar)
+						if (RemoteVarItr->Current->GetItemType() == IntelliSenseItem::IntelliSenseItemType::RemoteVar)
 						{
 							if (!String::Compare(RemoteVarItr->Current->GetIdentifier(), Variable, true))
 							{
@@ -512,12 +381,12 @@ namespace ConstructionSetExtender
 			return nullptr;
 		}
 
-		bool IntelliSenseDatabase::GetIsIdentifierScriptableForm( String^% Name )
+		bool IntelliSenseDatabase::GetIsIdentifierScriptableForm( String^ Name )
 		{
 			return GetIsIdentifierScriptableForm(Name, 0);
 		}
 
-		bool IntelliSenseDatabase::GetIsIdentifierScriptableForm( String^% Name, ComponentDLLInterface::ScriptData** OutScriptData )
+		bool IntelliSenseDatabase::GetIsIdentifierScriptableForm( String^ Name, ComponentDLLInterface::ScriptData** OutScriptData )
 		{
 			bool Result = false;
 
@@ -545,7 +414,7 @@ namespace ConstructionSetExtender
 			ForceUpdateDatabase();
 		}
 
-		bool IntelliSenseDatabase::GetIsIdentifierForm( String^% Name )
+		bool IntelliSenseDatabase::GetIsIdentifierForm( String^ Name )
 		{
 			bool Result = false;
 
@@ -558,27 +427,6 @@ namespace ConstructionSetExtender
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 			return Result;
-		}
-
-		IntelliSenseParseScriptData::IntelliSenseParseScriptData( IntelliSenseInterface^ Obj ) :
-			SourceIntelliSenseInterface(Obj),
-			Type(DataType::e_IntelliSenseInterface)
-		{
-			;//
-		}
-
-		IntelliSenseParseScriptData::IntelliSenseParseScriptData( Script^ Obj ) :
-			SourceScript(Obj),
-			Type(DataType::e_Script)
-		{
-			;//
-		}
-
-		IntelliSenseParseScriptData::IntelliSenseParseScriptData( UserFunction^ Obj ) :
-			SourceScript(Obj),
-			Type(DataType::e_UserFunction)
-		{
-			;//
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "[Common]\AuxiliaryWindowsForm.h"
+#include "..\SemanticAnalysis.h"
 
 namespace ConstructionSetExtender
 {
@@ -77,17 +78,17 @@ namespace ConstructionSetExtender
 
 			static enum class									Operation
 			{
-				e_Default = 0,
-				e_Call,
-				e_Dot,
-				e_Assign,
-				e_Snippet,
+				Default = 0,
+				Call,
+				Dot,
+				Assign,
+				Snippet,
 			};
 
 			static enum	class									MoveDirection
 			{
-				e_Up = 0,
-				e_Down
+				Up = 0,
+				Down
 			};
 
 			property Operation									LastOperation;
@@ -108,11 +109,8 @@ namespace ConstructionSetExtender
 			bool												ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point Location);
 			void												HideQuickViewToolTip();
 
-			void												AddLocalVariableToDatabase(IntelliSenseItemVariable^ Variable);
-			IntelliSenseItemVariable^							LookupLocalVariableByIdentifier(String^% Identifier);
-			void												ClearLocalVariableDatabase();
-			void												UpdateLocalVariableDatabase();
-			LinkedList<String^>^								GetLocalVariableNames();
+			IntelliSenseItemVariable^							LookupLocalVariableByIdentifier(String^ Identifier);
+			void												UpdateLocalVariableDatabase(ObScriptSemanticAnalysis::AnalysisData^ Data);
 
 			static bool											GetTriggered(System::Windows::Input::Key E);
 		};

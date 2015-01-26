@@ -1,5 +1,5 @@
 #include "ScriptPreprocessor.h"
-#include "..\ScriptParser.h"
+#include "..\SemanticAnalysis.h"
 
 namespace ConstructionSetExtender
 {
@@ -18,7 +18,7 @@ namespace ConstructionSetExtender
 		try
 		{
 			String^ ExpandedToken = "";
-			ScriptParser^ LocalParser = gcnew ScriptParser();
+			ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 			LocalParser->Tokenize(Token, true);
 			if (!LocalParser->Valid)
@@ -35,7 +35,7 @@ namespace ConstructionSetExtender
 					DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(Itr);
 					switch (DefineOperator)
 					{
-					case DefineDirective::AccessoryOperatorType::e_None:
+					case DefineDirective::AccessoryOperatorType::None:
 						break;
 					default:
 						TokenBuffer = Itr->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
@@ -65,11 +65,11 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	String^ CSEPreprocessorDirective::GetMultilineValue(StringReader^% TextReader, String^% SliceStart, String^% SliceEnd)
+	String^ CSEPreprocessorDirective::GetMultilineValue(CSEStringReader^% TextReader, String^% SliceStart, String^% SliceEnd)
 	{
 		String^ Result = "";
 		bool SliceStartFound = false, SliceEndFound = false;
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		String^ ReadLine = TextReader->ReadLine();
 		while (ReadLine != nullptr)
@@ -101,7 +101,7 @@ namespace ConstructionSetExtender
 				if (LocalParser->Valid)
 				{
 					int FirstTokenIndex = LocalParser->Indices[0];
-					
+
 					// make sure the line's commented
 					// otherwise the parser will eat up a character for each pass
 					if (ReadLine[FirstTokenIndex] != ';')
@@ -129,7 +129,7 @@ namespace ConstructionSetExtender
 	String^ CSEPreprocessorDirective::ObfuscateToCompiler(String^% Token)
 	{
 		String^ Result = "";
-		StringReader^ TextReader = gcnew StringReader(Token);
+		CSEStringReader^ TextReader = gcnew CSEStringReader(Token);
 
 		for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 		{
@@ -155,20 +155,20 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	DefineDirective::DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
 		this->Token = Token;
-		this->Type = DirectiveType::e_Define;
-		this->Encoding = EncodingType::e_SingleLine;
+		this->Type = DirectiveType::Define;
+		this->Encoding = EncodingType::SingleLine;
 
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		try
 		{
 			LocalParser->Tokenize(Token, false);
 			if (LocalParser->Valid)
 			{
-				switch (LocalParser->GetCurrentTokenCount())
+				switch (LocalParser->TokenCount)
 				{
 				case 1:
 					throw gcnew CSEGeneralException("No name specified.");
@@ -176,7 +176,7 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("No value specified.");
 				}
 
-				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Define]);
+				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Define]);
 				Name = LocalParser->Tokens[Index + 1];
 				Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1);
 
@@ -194,31 +194,31 @@ namespace ConstructionSetExtender
 		{
 			Name = "INVALID";
 			Value = "INVALID";
-			ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' - " + E->Message);
+			ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' at line " + LineNumber + "- " + E->Message);
 			ErrorFlag = true;
 		}
 	}
 
-	DefineDirective::DefineDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	DefineDirective::DefineDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		this->Token = Token;
-		this->Type = DirectiveType::e_Define;
-		this->Encoding = EncodingType::e_MultiLine;
+		this->Type = DirectiveType::Define;
+		this->Encoding = EncodingType::MultiLine;
 
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		try
 		{
 			LocalParser->Tokenize(Token, false);
 			if (LocalParser->Valid)
 			{
-				switch (LocalParser->GetCurrentTokenCount())
+				switch (LocalParser->TokenCount)
 				{
 				case 1:
 					throw gcnew CSEGeneralException("No name specified.");
 				}
 
-				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_Define]);
+				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::Define]);
 				Name = LocalParser->Tokens[Index + 1];
 				Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
@@ -242,7 +242,7 @@ namespace ConstructionSetExtender
 		{
 			Name = "INVALID";
 			Value = "INVALID";
-			ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' - " + E->Message);
+			ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' at line " + TextReader->LineNumber + " - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -251,9 +251,9 @@ namespace ConstructionSetExtender
 	{
 		String^ Result = "";
 
-		if (Encoding == EncodingType::e_MultiLine)
+		if (Encoding == EncodingType::MultiLine)
 		{
-			StringReader^ TextReader = gcnew StringReader(this->Value);
+			CSEStringReader^ TextReader = gcnew CSEStringReader(this->Value);
 			Result += "\n" + TextReader->ReadLine();
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
@@ -266,7 +266,7 @@ namespace ConstructionSetExtender
 
 		switch (ActiveOperator)
 		{
-		case AccessoryOperatorType::e_Stringize:
+		case AccessoryOperatorType::Stringize:
 			Result = "\"" + Result + "\"";
 			break;
 		}
@@ -281,7 +281,7 @@ namespace ConstructionSetExtender
 
 	DefineDirective::AccessoryOperatorType	DefineDirective::GetAccessoryOperatorFromToken(String^% Token)
 	{
-		AccessoryOperatorType ActiveOperator = AccessoryOperatorType::e_None;
+		AccessoryOperatorType ActiveOperator = AccessoryOperatorType::None;
 
 		UInt32 Index = 0;
 		for each (String^% Itr in DefineDirective::AccessoryOperatorIdentifier)
@@ -305,35 +305,35 @@ namespace ConstructionSetExtender
 
 		switch (Encoding)
 		{
-		case EncodingType::e_SingleLine:
+		case EncodingType::SingleLine:
 			return Token;
-		case EncodingType::e_MultiLine:
+		case EncodingType::MultiLine:
 			return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Value) + "\n" + SliceEnd + ";}";
 		default:
 			return Token;
 		}
 	}
 
-	ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput, Preprocessor^ PreprocessorInstance)
+	ImportDirective::ImportDirective(String ^Token, StandardOutputError ^ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
 		this->Token = Token;
-		this->Type = DirectiveType::e_Import;
-		this->Encoding = EncodingType::e_SingleLine;
+		this->Type = DirectiveType::Import;
+		this->Encoding = EncodingType::SingleLine;
 
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		try
 		{
 			LocalParser->Tokenize(Token, false);
 			if (LocalParser->Valid)
 			{
-				switch (LocalParser->GetCurrentTokenCount())
+				switch (LocalParser->TokenCount)
 				{
 				case 1:
 					throw gcnew CSEGeneralException("No value specified.");
 				}
 
-				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Import]);
+				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Import]);
 				Filename = LocalParser->Tokens[Index + 1]->Replace("\"", "");
 				String^ Source = "";
 				String^ Result = "";
@@ -364,7 +364,7 @@ namespace ConstructionSetExtender
 		{
 			Filename = "INVALID";
 			ImportSegment = "INVALID";
-			ErrorOutput("Failed to parse IMPORT directive in '" + Token + "' - " + E->Message);
+			ErrorOutput("Failed to parse IMPORT directive in '" + Token + "' at line " + LineNumber + " - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -376,10 +376,10 @@ namespace ConstructionSetExtender
 		else
 			return ImportSegment;
 	}
-	
-	void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+
+	void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance, UInt32 LineNumber)
 	{
-		ScriptParser^ LocalParser = gcnew ScriptParser(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
 
 		LocalParser->Tokenize(Source, false);
 		float PreviousValue = 0;
@@ -406,26 +406,26 @@ namespace ConstructionSetExtender
 			catch (...) { throw gcnew CSEGeneralException("Invalid value assigned to " + Name); }
 			PreviousValue = CurrentValue;
 
-			String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Define] + " " + Name + " " + ValueString;
-			ComponentDefineDirectives->AddLast(gcnew DefineDirective(DefineToken, ErrorOutput, PreprocessorInstance));
+			String^ DefineToken = ";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Define] + " " + Name + " " + ValueString;
+			ComponentDefineDirectives->AddLast(gcnew DefineDirective(DefineToken, ErrorOutput, PreprocessorInstance, LineNumber));
 		}
 	}
 
-	EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	EnumDirective::EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
 		this->Token = Token;
-		this->Type = DirectiveType::e_Enum;
-		this->Encoding = EncodingType::e_SingleLine;
+		this->Type = DirectiveType::Enum;
+		this->Encoding = EncodingType::SingleLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		try
 		{
 			LocalParser->Tokenize(Token, false);
 			if (LocalParser->Valid)
 			{
-				switch (LocalParser->GetCurrentTokenCount())
+				switch (LocalParser->TokenCount)
 				{
 				case 1:
 					throw gcnew CSEGeneralException("No name specified.");
@@ -433,13 +433,13 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("No value specified.");
 				}
 
-				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::e_SingleLine] + DirectiveIdentifier[(int)DirectiveType::e_Enum]);
+				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::SingleLine] + DirectiveIdentifier[(int)DirectiveType::Enum]);
 				String^ Value;
 
 				Name = LocalParser->Tokens[Index + 1];
 				Value = Token->Substring(LocalParser->Indices[Index + 1] + Name->Length + 1)->Replace("}", "")->Replace("{", "");
 
-				ParseComponentDefineDirectives(Value, ErrorOutput, PreprocessorInstance);
+				ParseComponentDefineDirectives(Value, ErrorOutput, PreprocessorInstance, LineNumber);
 			}
 			else
 				throw gcnew CSEGeneralException("Token parser was in an invalid state.");
@@ -448,44 +448,43 @@ namespace ConstructionSetExtender
 		{
 			Name = "INVALID";
 			ComponentDefineDirectives->Clear();
-			ErrorOutput("Failed to parse ENUM directive in '" + Token + "' - " + E->Message);
+			ErrorOutput("Failed to parse ENUM directive in '" + Token + "' at line " + LineNumber + " - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
 
-	EnumDirective::EnumDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	EnumDirective::EnumDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		this->Token = Token;
-		this->Type = DirectiveType::e_Enum;
-		this->Encoding = EncodingType::e_MultiLine;
+		this->Type = DirectiveType::Enum;
+		this->Encoding = EncodingType::MultiLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		try
 		{
 			LocalParser->Tokenize(Token, false);
 			if (LocalParser->Valid)
 			{
-				switch (LocalParser->GetCurrentTokenCount())
+				switch (LocalParser->TokenCount)
 				{
 				case 1:
 					throw gcnew CSEGeneralException("No name specified.");
 				}
 
-				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_Enum]);
+				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::Enum]);
 
 				Name = LocalParser->Tokens[Index + 1];
+				UInt32 LineNumber = TextReader->LineNumber;
 				Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
 				String^ CondensedValue = "";
-				StringReader^ TextReader = gcnew StringReader(Value);
-				for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
-				{
+				CSEStringReader^ NewTextReader = gcnew CSEStringReader(Value);
+				for (String^ ReadLine = NewTextReader->ReadLine(); ReadLine != nullptr; ReadLine = NewTextReader->ReadLine())
 					CondensedValue += ReadLine + " ";
-				}
 
-				ParseComponentDefineDirectives(CondensedValue, ErrorOutput, PreprocessorInstance);
+				ParseComponentDefineDirectives(CondensedValue, ErrorOutput, PreprocessorInstance, LineNumber);
 			}
 			else
 				throw gcnew CSEGeneralException("Token parser was in an invalid state.");
@@ -495,7 +494,7 @@ namespace ConstructionSetExtender
 			Name = "INVALID";
 			Value = "INVALID";
 			ComponentDefineDirectives->Clear();
-			ErrorOutput("Failed to parse ENUM directive in '" + Token + "' - " + E->Message);
+			ErrorOutput("Failed to parse ENUM directive in '" + Token + "' at line " + TextReader->LineNumber + " - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -507,15 +506,14 @@ namespace ConstructionSetExtender
 
 		switch (Encoding)
 		{
-		case EncodingType::e_SingleLine:
+		case EncodingType::SingleLine:
 			return Token;
-		case EncodingType::e_MultiLine:
+		case EncodingType::MultiLine:
 			return Token + "\n" + SliceStart + ";{\n" + ObfuscateToCompiler(Value) + "\n" + SliceEnd + ";}";
 		default:
 			return Token;
 		}
 	}
-
 
 	bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance )
 	{
@@ -534,7 +532,7 @@ namespace ConstructionSetExtender
 
 			switch (Type)
 			{
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_Equal:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::Equal:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt == RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -543,21 +541,21 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching operand types.");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LessThanOrEqual:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LessThanOrEqual:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt <= RHSInt);
 				else
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_GreaterThanOrEqual:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::GreaterThanOrEqual:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt >= RHSInt);
 				else
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LessThan:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LessThan:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt < RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -566,7 +564,7 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_GreaterThan:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::GreaterThan:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt > RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -575,7 +573,7 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_NotEqual:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::NotEqual:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt != RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -584,14 +582,14 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LogicalAND:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LogicalAND:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt && RHSInt);
 				else
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::e_LogicalOR:
+			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LogicalOR:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt || RHSInt);
 				else
@@ -643,7 +641,7 @@ namespace ConstructionSetExtender
 		DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
 		switch (DefineOperator)
 		{
-		case DefineDirective::AccessoryOperatorType::e_None:
+		case DefineDirective::AccessoryOperatorType::None:
 			break;
 		default:
 			OperandBuffer = OperandBuffer->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
@@ -656,7 +654,7 @@ namespace ConstructionSetExtender
 		DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
 		switch (DefineOperator)
 		{
-		case DefineDirective::AccessoryOperatorType::e_None:
+		case DefineDirective::AccessoryOperatorType::None:
 			break;
 		default:
 			OperandBuffer = OperandBuffer->Substring(DefineDirective::AccessoryOperatorIdentifier[(int)DefineOperator]->Length);
@@ -668,42 +666,42 @@ namespace ConstructionSetExtender
 
 	bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_Equal, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::Equal, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_LessThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::LessThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_GreaterThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::GreaterThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_LessThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::LessThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_GreaterThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::GreaterThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_NotEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::NotEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_LogicalAND, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::LogicalAND, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
 	{
-		return Operator::Evaluator(Operator::BuiltInOperators::e_LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
+		return Operator::Evaluator(Operator::BuiltInOperators::LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
 	bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Result, StandardOutputError^ ErrorOutput)
@@ -716,7 +714,7 @@ namespace ConstructionSetExtender
 			String^ PostFixExpression = "";
 			Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
 
-			ScriptParser^ LocalParser = gcnew ScriptParser();
+			ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 			LocalParser->Tokenize(InfixExpression, true);
 
 			if (LocalParser->Valid)
@@ -814,7 +812,7 @@ namespace ConstructionSetExtender
 			if (ConvertInfixExpressionToPostFix(Base, PostFixExpression, ErrorOutput))
 			{
 				Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
-				ScriptParser^ LocalParser = gcnew ScriptParser();
+				ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 				LocalParser->Tokenize(PostFixExpression, true);
 
@@ -873,26 +871,26 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	IfDirective::IfDirective(String^ Token, StringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	IfDirective::IfDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		this->Token = Token;
-		this->Type = DirectiveType::e_If;
-		this->Encoding = EncodingType::e_MultiLine;
+		this->Type = DirectiveType::If;
+		this->Encoding = EncodingType::MultiLine;
 
-		ScriptParser^ LocalParser = gcnew ScriptParser();
+		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 		try
 		{
 			LocalParser->Tokenize(Token, false);
 			if (LocalParser->Valid)
 			{
-				switch (LocalParser->GetCurrentTokenCount())
+				switch (LocalParser->TokenCount)
 				{
 				case 1:
 					throw gcnew CSEGeneralException("No condition specified.");
 				}
 
-				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::e_MultiLine] + DirectiveIdentifier[(int)DirectiveType::e_If]);
+				int Index = LocalParser->GetTokenIndex(";" + EncodingIdentifier[(int)EncodingType::MultiLine] + DirectiveIdentifier[(int)DirectiveType::If]);
 				String^ ConditionString = Token->Substring(LocalParser->Indices[Index] + 4);
 				Block = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
@@ -915,7 +913,7 @@ namespace ConstructionSetExtender
 			BaseCondition = "INVALID";
 			Block = "INVALID";
 			ValidationResult = false;
-			ErrorOutput("Failed to parse IF directive in '" + Token + "' - " + E->Message);
+			ErrorOutput("Failed to parse IF directive in '" + Token + "' at line " + TextReader->LineNumber + " - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -950,7 +948,7 @@ namespace ConstructionSetExtender
 		DefineDirective^ ExistingDirective = LookupDefineDirectiveByName(Directive->GetName());
 
 		if (ExistingDirective != nullptr)
-			ExistingDirective->SetValue(Directive->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::e_None));
+			ExistingDirective->SetValue(Directive->GetValue(gcnew String(""), DefineDirective::AccessoryOperatorType::None));
 		else
 			RegisteredDefineDirectives->AddLast(Directive->CreateCopy());
 	}
@@ -965,30 +963,32 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, StringReader^ TextReader, StandardOutputError^ ErrorOutput)
+	CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, CSEStringReader^ TextReader, StandardOutputError^ ErrorOutput)
 	{
-		if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Define], true))
+		UInt32 LineNumber = TextReader->LineNumber;
+
+		if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define], true))
 		{
-			if (Encoding == CSEPreprocessorDirective::EncodingType::e_SingleLine)
-				return gcnew DefineDirective(Token, ErrorOutput, this);
-			else if (Encoding == CSEPreprocessorDirective::EncodingType::e_MultiLine)
+			if (Encoding == CSEPreprocessorDirective::EncodingType::SingleLine)
+				return gcnew DefineDirective(Token, ErrorOutput, this, LineNumber);
+			else if (Encoding == CSEPreprocessorDirective::EncodingType::MultiLine)
 				return gcnew DefineDirective(Token, TextReader, ErrorOutput, this);
 		}
-		else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import], true))
+		else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import], true))
 		{
-			if (Encoding == CSEPreprocessorDirective::EncodingType::e_SingleLine)
-				return gcnew ImportDirective(Token, ErrorOutput, this);
+			if (Encoding == CSEPreprocessorDirective::EncodingType::SingleLine)
+				return gcnew ImportDirective(Token, ErrorOutput, this, LineNumber);
 		}
-		else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Enum], true))
+		else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Enum], true))
 		{
-			if (Encoding == CSEPreprocessorDirective::EncodingType::e_SingleLine)
-				return gcnew EnumDirective(Token, ErrorOutput, this);
-			else if (Encoding == CSEPreprocessorDirective::EncodingType::e_MultiLine)
+			if (Encoding == CSEPreprocessorDirective::EncodingType::SingleLine)
+				return gcnew EnumDirective(Token, ErrorOutput, this, LineNumber);
+			else if (Encoding == CSEPreprocessorDirective::EncodingType::MultiLine)
 				return gcnew EnumDirective(Token, TextReader, ErrorOutput, this);
 		}
-		else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_If], true))
+		else if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::If], true))
 		{
-			if (Encoding == CSEPreprocessorDirective::EncodingType::e_MultiLine)
+			if (Encoding == CSEPreprocessorDirective::EncodingType::MultiLine)
 				return gcnew IfDirective(Token, TextReader, ErrorOutput, this);
 		}
 
@@ -1003,8 +1003,8 @@ namespace ConstructionSetExtender
 		try
 		{
 			LinkedList<CSEPreprocessorToken^>^ TokenList = gcnew LinkedList<CSEPreprocessorToken^>();
-			StringReader^ TextReader = gcnew StringReader(Source);
-			ScriptParser^ LocalParser = gcnew ScriptParser();
+			CSEStringReader^ TextReader = gcnew CSEStringReader(Source);
+			ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 			{
@@ -1018,15 +1018,15 @@ namespace ConstructionSetExtender
 					String^ FirstToken = LocalParser->Tokens[0];
 					if (FirstToken[0] == ';' && FirstToken->Length >= 2)
 					{
-						CSEPreprocessorDirective::EncodingType Encoding = CSEPreprocessorDirective::EncodingType::e_Invalid;
+						CSEPreprocessorDirective::EncodingType Encoding = CSEPreprocessorDirective::EncodingType::Invalid;
 						bool TokenIsDirective = false;
 
-						if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::EncodingType::e_SingleLine])
-							Encoding = CSEPreprocessorDirective::EncodingType::e_SingleLine;
-						else if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::EncodingType::e_MultiLine])
-							Encoding = CSEPreprocessorDirective::EncodingType::e_MultiLine;
+						if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::EncodingType::SingleLine])
+							Encoding = CSEPreprocessorDirective::EncodingType::SingleLine;
+						else if (FirstToken[1] == CSEPreprocessorDirective::EncodingIdentifier[(int)CSEPreprocessorDirective::EncodingType::MultiLine])
+							Encoding = CSEPreprocessorDirective::EncodingType::MultiLine;
 
-						if (Encoding != CSEPreprocessorDirective::EncodingType::e_Invalid)
+						if (Encoding != CSEPreprocessorDirective::EncodingType::Invalid)
 						{
 							for each (String^ Directive in CSEPreprocessorDirective::DirectiveIdentifier)
 							{
@@ -1077,7 +1077,7 @@ namespace ConstructionSetExtender
 	bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data)
 	{
 		bool OperationResult = false;
-		
+
 		if (Busy)
 			ErrorOutput("Preprocessing failed - A previous operation is in progress");
 		else
@@ -1153,8 +1153,8 @@ namespace ConstructionSetExtender
 		{
 			DataBuffer = Data;
 
-			CSEPreprocessorToken^ Directive = CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType::e_SingleLine,
-												CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::e_Import],
+			CSEPreprocessorToken^ Directive = CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType::SingleLine,
+												CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Import],
 												Source, nullptr, gcnew StandardOutputError(&DummyStandardErrorOutput));
 
 			if (Directive->GetValid())
@@ -1173,5 +1173,4 @@ namespace ConstructionSetExtender
 
 		return OperationResult;
 	}
-	
 }

@@ -57,6 +57,27 @@ namespace ConstructionSetExtender
 		};
 	};
 
+	ref class CSEStringReader : public System::IO::StringReader
+	{
+		UInt32					CurrentLine;
+	public:
+		CSEStringReader(String^% In) : StringReader(In), CurrentLine(0) {}
+
+		virtual String^			ReadLine() override
+		{
+			String^ Out = StringReader::ReadLine();
+			if (Out != nullptr)
+				CurrentLine++;
+
+			return Out;
+		}
+
+		property UInt32			LineNumber			// line no of the last read line
+		{
+			virtual UInt32 get() { return CurrentLine; }
+		}
+	};
+
 	void									CopyStringToCharBuffer(String^% Source, char* Buffer, UInt32 Size);
 
 	namespace Log

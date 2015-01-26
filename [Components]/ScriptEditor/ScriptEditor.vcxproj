@@ -53,8 +53,8 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\;$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\;$(SMESundriesIncludePath);$(IncludePath)</IncludePath>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ExecutablePath)</ExecutablePath>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
@@ -205,10 +205,10 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClCompile Include="ScriptEditorPreferences.cpp" />
     <ClCompile Include="RefactorTools.cpp" />
     <ClCompile Include="ScriptListDialog.cpp" />
-    <ClCompile Include="ScriptParser.cpp" />
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="ScriptEditor.cpp" />
     <ClCompile Include="ScriptEditorManager.cpp" />
+    <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -233,13 +233,13 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClInclude Include="NumberedRichTextBox.h" />
     <ClInclude Include="ScriptEditorPreferences.h" />
     <ClInclude Include="ScriptListDialog.h" />
-    <ClInclude Include="ScriptParser.h" />
     <ClInclude Include="ScriptTextEditorInterface.h" />
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
     <ClInclude Include="ScriptEditor.h" />
     <ClInclude Include="ScriptEditorManager.h" />
+    <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
   </ItemGroup>
   <ItemGroup>
