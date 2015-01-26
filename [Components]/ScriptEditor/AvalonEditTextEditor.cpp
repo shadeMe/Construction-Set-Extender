@@ -148,6 +148,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
+					UpdateSemanticAnalysisCache();
 					UpdateCodeFoldings();
 				}
 				else
@@ -185,6 +186,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
+					UpdateSemanticAnalysisCache();
 					UpdateCodeFoldings();
 				}
 			}
@@ -1213,8 +1215,11 @@ namespace ConstructionSetExtender
 					SyntaxHighlightingManager->UpdateBaseDefinitions();
 
 				List<String^>^ LocalVars = gcnew List<String^>();
-				for each (ObScriptSemanticAnalysis::Variable^ Itr in SemanticAnalysisCache->Variables)
-					LocalVars->Add(Itr->Name);
+				if (SemanticAnalysisCache)
+				{
+					for each (ObScriptSemanticAnalysis::Variable^ Itr in SemanticAnalysisCache->Variables)
+						LocalVars->Add(Itr->Name);
+				}
 
 				AvalonEditHighlightingDefinition^ Result = SyntaxHighlightingManager->GenerateHighlightingDefinition(LocalVars);
 				return Result;
@@ -1653,10 +1658,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
-				SemanticAnalysisCache->PerformAnalysis(GetText(), ObScriptSemanticAnalysis::ScriptType::None,
-													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
-													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks,
-													   nullptr);
+				UpdateSemanticAnalysisCache();
 				UpdateIntelliSenseLocalDatabase();
 				UpdateCodeFoldings();
 			}
@@ -1956,6 +1958,14 @@ namespace ConstructionSetExtender
 			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(void)
 			{
 				return SemanticAnalysisCache;
+			}
+
+			void AvalonEditTextEditor::UpdateSemanticAnalysisCache()
+			{
+				SemanticAnalysisCache->PerformAnalysis(GetText(), ObScriptSemanticAnalysis::ScriptType::None,
+													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
+													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks,
+													   nullptr);
 			}
 		}
 	}

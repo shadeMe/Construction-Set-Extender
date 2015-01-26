@@ -118,7 +118,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		if (StartPos)
+		if (StartPos != -1)
 		{
 			LastPos = StartPos;
 
@@ -503,7 +503,7 @@ namespace ConstructionSetExtender
 			return ScriptBlockType::ScriptEffectStart;
 		else if (!String::Compare(TypeToken, "ScriptEffectUpdate", true))
 			return ScriptBlockType::ScriptEffectUpdate;
-		else if (!String::Compare(TypeToken, "GameMode", true))
+		else if (!String::Compare(TypeToken, "Function", true))
 			return ScriptBlockType::Function;
 		else
 			return ScriptBlockType::None;
@@ -546,6 +546,11 @@ namespace ConstructionSetExtender
 
 		Name = "";
 		Description = "";
+
+#ifndef NDEBUG
+		System::Diagnostics::Stopwatch^ Profiler = gcnew System::Diagnostics::Stopwatch();
+		Profiler->Start();
+#endif // !NDEBUG
 
 		if (Operations.HasFlag(Operation::FillVariables))
 		{
@@ -865,6 +870,9 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Comment:
+					// break early to save the script description
+					break;
 				default:
 					SaveDefinitionComments = false;
 					break;
@@ -929,6 +937,11 @@ namespace ConstructionSetExtender
 				}
 			}
 		}
+
+#ifndef NDEBUG
+		Profiler->Stop();
+	//	DebugPrint("Analysis of script '" + Name + "' complete. Time = " + Profiler->ElapsedMilliseconds + " ms, Flags = " + Operations.ToString());
+#endif // !NDEBUG
 	}
 
 	ObScriptSemanticAnalysis::Variable^ ObScriptSemanticAnalysis::AnalysisData::LookupVariable(String^ VarName)

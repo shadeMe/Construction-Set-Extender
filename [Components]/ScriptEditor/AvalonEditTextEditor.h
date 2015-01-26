@@ -153,6 +153,7 @@ namespace ConstructionSetExtender
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
+				void										UpdateSemanticAnalysisCache();
 				void										UpdateCodeFoldings();
 				void										SynchronizeExternalScrollBars();
 

@@ -338,15 +338,17 @@ namespace ConstructionSetExtender
 				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache();
 				for each (ObScriptSemanticAnalysis::ControlBlock^ Itr in Data->ControlBlocks)
 				{
-					if (Itr->IsMalformed() == false)
+					if (Itr->IsMalformed() == false &&
+						Itr->StartLine <= document->LineCount && Itr->StartLine > 0 &&
+						Itr->EndLine <= document->LineCount && Itr->EndLine > 0)
 					{
 						AvalonEdit::Document::DocumentLine^ StartLine = document->GetLineByNumber(Itr->StartLine);
 						AvalonEdit::Document::DocumentLine^ EndLine = document->GetLineByNumber(Itr->EndLine);
 
-						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartLine->EndOffset, EndLine->Offset));
+						Foldings->Add(gcnew AvalonEdit::Folding::NewFolding(StartLine->EndOffset, EndLine->Offset - 1));
 					}
 				}
-				if (Data->MalformedStructure)
+				if (Data->MalformedStructure && Data->FirstStructuralErrorLine <= document->LineCount && Data->FirstStructuralErrorLine > 0)
 				{
 					AvalonEdit::Document::DocumentLine^ ErrorLine = document->GetLineByNumber(Data->FirstStructuralErrorLine);
 					firstErrorOffset = ErrorLine->Offset;
