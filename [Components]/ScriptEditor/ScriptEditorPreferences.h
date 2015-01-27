@@ -20,21 +20,21 @@ namespace ConstructionSetExtender
 		public:
 			static enum class								ControlType
 			{
-				e_Checkbox = 0,
-				e_NumericUpDown,
-				e_FontDialog,
-				e_ColorDialog
+				Checkbox = 0,
+				NumericUpDown,
+				FontDialog,
+				ColorDialog
 			};
 			static enum class								ValueType
 			{
-				e_Checked = 0,
-				e_Value,
-				e_Font_FontFamily_Name,
-				e_Font_Size,
-				e_Font_Style,
-				e_Color_R,
-				e_Color_G,
-				e_Color_B
+				Checked = 0,
+				Value,
+				Font_FontFamily_Name,
+				Font_Size,
+				Font_Style,
+				Color_R,
+				Color_G,
+				Color_B
 			};
 		protected:
 			Control^										INIControl;

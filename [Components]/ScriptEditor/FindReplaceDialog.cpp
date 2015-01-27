@@ -233,7 +233,7 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Find,
+			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::Find,
 																					Query,
 																					"",
 																					GetSelectedOptions());
@@ -247,7 +247,7 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Replace,
+			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::Replace,
 																					Query,
 																					Replacement,
 																					GetSelectedOptions());
@@ -261,7 +261,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
-			RemoteOpParameters->Add(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Find);
+			RemoteOpParameters->Add(TextEditors::IScriptTextEditor::FindReplaceOperation::Find);
 			RemoteOpParameters->Add(Query);
 			RemoteOpParameters->Add("");
 			RemoteOpParameters->Add(GetSelectedOptions());
@@ -280,7 +280,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
-			RemoteOpParameters->Add(TextEditors::IScriptTextEditor::FindReplaceOperation::e_Replace);
+			RemoteOpParameters->Add(TextEditors::IScriptTextEditor::FindReplaceOperation::Replace);
 			RemoteOpParameters->Add(Query);
 			RemoteOpParameters->Add(Replacement);
 			RemoteOpParameters->Add(GetSelectedOptions());
@@ -297,7 +297,7 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			int Hits = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::e_CountMatches,
+			int Hits = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches,
 				Query,
 				"",
 				GetSelectedOptions());
@@ -417,13 +417,13 @@ namespace ConstructionSetExtender
 		{
 			UInt32 Options = 0;
 			if (CaseInsensitiveSearch->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::e_CaseInsensitive;
+				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive;
 			if (MatchWholeWord->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::e_MatchWholeWord;
+				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::MatchWholeWord;
 			if (UseRegEx->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::e_RegEx;
+				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::RegEx;
 			if (InSelection->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::e_InSelection;
+				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::InSelection;
 
 			return Options;
 		}

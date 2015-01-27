@@ -380,14 +380,14 @@ namespace ConstructionSetExtender
 
 				switch (Operation)
 				{
-				case OperationType::e_DocumentScript:
+				case OperationType::DocumentScript:
 					{
 						ElementListCHElementName->Text = "Documentable Element";
 						ElementListCHEditData->Text = "Comment";
 						this->Text = "Document Script";
 						break;
 					}
-				case OperationType::e_RenameVariables:
+				case OperationType::RenameVariables:
 					{
 						ElementListCHElementName->Text = "Old Identifier";
 						ElementListCHEditData->Text = "New Identifier";

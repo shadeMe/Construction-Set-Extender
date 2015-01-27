@@ -1677,59 +1677,6 @@ namespace ConstructionSetExtender
 				WorkspaceSplitter->SplitterDistance = ParentContainer->GetBounds(false).Height;
 		}
 
-		void Workspace::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
-		{
-			TODO("fix this to use the anlyis cache")
-			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
-			ScriptParser^ TextParser = gcnew ScriptParser();
-			StringReader^ TextReader = gcnew StringReader(ScriptText);
-			int LastVarOffset = 0, InsertOffset = 0;
-
-			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
-			{
-				TextParser->Tokenize(ReadLine, false);
-
-				if (!TextParser->Valid)
-				{
-					InsertOffset += ReadLine->Length + 1;
-					continue;
-				}
-
-				bool ExitLoop = false, SaveOffset = false;
-				switch (TextParser->GetScriptTokenType(TextParser->Tokens[0]))
-				{
-				case ObScriptSemanticAnalysis::ScriptTokenType::Variable:
-					SaveOffset = true;
-					break;
-				case ObScriptSemanticAnalysis::ScriptTokenType::Comment:
-				case ObScriptSemanticAnalysis::ScriptTokenType::ScriptName:
-					break;
-				default:
-					ExitLoop = true;
-					break;
-				}
-
-				if (ExitLoop)
-					break;
-
-				InsertOffset += ReadLine->Length + 1;
-				if (SaveOffset)
-					LastVarOffset = InsertOffset;
-			}
-
-			if (LastVarOffset)
-				InsertOffset = LastVarOffset;
-
-			String^ VarText = "";
-			if (InsertOffset > ScriptText->Length)
-				VarText += "\n";
-
-			VarText += ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName;
-			VarText += "\n";
-
-			TextEditor->InsertText(VarText, InsertOffset, true);
-		}
-
 		String^ Workspace::SerializeCSEBlock(void)
 		{
 			String^ Block = "";
@@ -3191,7 +3138,7 @@ namespace ConstructionSetExtender
 					VarName = Result->Text;
 			}
 
-			InsertVariable(VarName, VarType);
+			GetTextEditor()->InsertVariable(VarName, VarType);
 		}
 		void Workspace::ContextMenuRefactorDocumentScript_Click( Object^ Sender, EventArgs^ E )
 		{
@@ -3207,7 +3154,7 @@ namespace ConstructionSetExtender
 
 			Refactoring::EditScriptComponentDialog DocumentScriptData(GetParentContainer()->GetHandle(),
 																	CurrentScriptEditorID,
-																	Refactoring::EditScriptComponentDialog::OperationType::e_DocumentScript,
+																	Refactoring::EditScriptComponentDialog::OperationType::DocumentScript,
 																	"Script Description");
 
 			if (DocumentScriptData.HasResult)
@@ -3342,7 +3289,7 @@ namespace ConstructionSetExtender
 
 			Refactoring::EditScriptComponentDialog RenameVariablesData(GetParentContainer()->GetHandle(),
 																	CurrentScriptEditorID,
-																	Refactoring::EditScriptComponentDialog::OperationType::e_RenameVariables,
+																	Refactoring::EditScriptComponentDialog::OperationType::RenameVariables,
 																	"");
 
 			if (RenameVariablesData.HasResult)

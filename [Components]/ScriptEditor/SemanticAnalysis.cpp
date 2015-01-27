@@ -596,6 +596,7 @@ namespace ConstructionSetExtender
 		Name = "Unknown";
 		Description = "";
 		Variables = gcnew List<Variable^>();
+		NextVariableLine = 0;
 		ControlBlocks = gcnew List<ControlBlock^>();
 		MalformedStructure = false;
 		FirstStructuralErrorLine = 0;
@@ -625,6 +626,7 @@ namespace ConstructionSetExtender
 		{
 			Variables->Clear();
 			UDFResult = nullptr;
+			NextVariableLine = 0;
 		}
 
 		if (Operations.HasFlag(Operation::FillControlBlocks))
@@ -650,7 +652,10 @@ namespace ConstructionSetExtender
 			if (Parser->Valid)
 			{
 				if (SaveDefinitionComments && Parser->GetFirstTokenType() == ScriptTokenType::Comment)
+				{
 					Description += ReadLine->Substring(Parser->Indices[0] + 1) + "\n";
+					NextVariableLine = CurrentLine + 1;
+				}
 
 				String^ FirstToken = Parser->Tokens[0];
 				String^ SecondToken = (Parser->TokenCount > 1) ? Parser->Tokens[1] : "";
@@ -673,6 +678,8 @@ namespace ConstructionSetExtender
 
 					if (EncounteredProblem == false)
 						Name = SecondToken;
+
+					NextVariableLine = CurrentLine + 1;
 
 					break;
 				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Variable:
@@ -711,11 +718,14 @@ namespace ConstructionSetExtender
 
 						if (EncounteredProblem == false)
 							Variables->Add(gcnew Variable(SecondToken, Variable::GetVariableDataType(FirstToken), Comment, CurrentLine));
+
+						NextVariableLine = CurrentLine + 1;
 					}
 
 					break;
 				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Begin:
 					SaveDefinitionComments = false;
+					NextVariableLine = CurrentLine - 1;
 
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
@@ -1078,6 +1088,62 @@ namespace ConstructionSetExtender
 		}
 
 		return nullptr;
+	}
+
+	String^ ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel)
+	{
+		int IndentCount = DefaultIndentLevel;
+		String^ Result = "";
+		Tokenizer^ Parser = gcnew Tokenizer();
+		CSEStringReader^ Reader = gcnew CSEStringReader(Source);
+
+		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
+		{
+			String^ Indents = "";
+			int CurrentIndentCount = IndentCount;
+
+			if (Parser->Tokenize(ReadLine, false))
+			{
+				switch (Parser->GetFirstTokenType())
+				{
+				case ScriptTokenType::Begin:
+				case ScriptTokenType::If:
+				case ScriptTokenType::ForEach:
+				case ScriptTokenType::While:
+					IndentCount++;
+					break;
+				case ScriptTokenType::ElseIf:
+				case ScriptTokenType::Else:
+					CurrentIndentCount--;
+					break;
+				case ScriptTokenType::End:
+				case ScriptTokenType::EndIf:
+				case ScriptTokenType::Loop:
+					IndentCount--;
+					CurrentIndentCount--;
+					break;
+				}
+
+				if (IndentCount < 0)
+					IndentCount = 0;
+
+				if (CurrentIndentCount < 0)
+					CurrentIndentCount = 0;
+
+				if (Reader->LineNumber != 1)
+				{
+					for (int i = 0; i < CurrentIndentCount; i++)
+						Indents += "\t";
+				}
+
+				ReadLine = ReadLine->Substring(Parser->Indices[0]);
+			}
+
+			Result += Indents + ReadLine + "\n";
+		}
+
+		Result->Remove(Result->Length - 1);
+		return Result;
 	}
 
 	ObScriptSemanticAnalysis::Sanitizer::Sanitizer(String^ Source) :

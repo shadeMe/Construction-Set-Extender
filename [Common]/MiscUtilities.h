@@ -1,6 +1,8 @@
 #pragma once
 #include "IncludesCLR.h"
 
+#pragma warning(disable: 4677)
+
 namespace ConstructionSetExtender
 {
 	ref class CString

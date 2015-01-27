@@ -101,6 +101,7 @@ namespace ConstructionSetExtender
 
 			virtual void										Show(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
 			virtual void										Hide();
+			void												MoveToCaret(bool AllowHidden);
 
 			void												PickSelection();
 			void												ChangeSelection(MoveDirection Direction);

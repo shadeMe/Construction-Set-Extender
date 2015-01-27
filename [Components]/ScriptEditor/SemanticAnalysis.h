@@ -215,6 +215,7 @@ namespace ConstructionSetExtender
 			String^										Name;
 			String^										Description;
 			List<Variable^>^							Variables;
+			UInt32										NextVariableLine;			// line where the next variable can be inserted
 			List<ControlBlock^>^						ControlBlocks;
 			bool										MalformedStructure;
 			UInt32										FirstStructuralErrorLine;
@@ -246,6 +247,8 @@ namespace ConstructionSetExtender
 			ControlBlock^						GetBlockAt(UInt32 Line);
 			UInt32								GetLineIndentLevel(UInt32 Line);
 			Variable^							LookupVariable(String^ VarName);
+
+			static String^						PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel);
 		private:
 			void								LogAnalysisMessage(UInt32 Line, String^ Message);
 			void								LogCriticalAnalysisMessage(UInt32 Line, String^ Message);

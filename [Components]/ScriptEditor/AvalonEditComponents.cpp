@@ -257,7 +257,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
 			{
-				TODO("implement")
+				;//
 			}
 
 			void AvalonEditObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)

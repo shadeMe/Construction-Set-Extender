@@ -1,8 +1,13 @@
 #pragma once
-#include "IntelliSense\IntelliSenseInterface.h"
+#include "SemanticAnalysis.h"
 
 namespace ConstructionSetExtender
 {
+	namespace IntelliSense
+	{
+		ref class IntelliSenseInterface;
+	}
+
 	namespace TextEditors
 	{
 		ref class TextEditorScriptModifiedEventArgs : public EventArgs
@@ -34,16 +39,18 @@ namespace ConstructionSetExtender
 		{
 			static enum class							FindReplaceOperation
 			{
-				e_Find = 0,
-				e_Replace,
-				e_CountMatches
+				Find = 0,
+				Replace,
+				CountMatches
 			};
+
+			[Flags]
 			static enum class							FindReplaceOptions
 			{
-				e_InSelection		=		1 << 0,
-				e_MatchWholeWord	=		1 << 1,
-				e_CaseInsensitive	=		1 << 2,
-				e_RegEx				=		1 << 3
+				InSelection		=		1 << 0,
+				MatchWholeWord	=		1 << 1,
+				CaseInsensitive	=		1 << 2,
+				RegEx			=		1 << 3
 			};
 
 			// events
@@ -117,8 +124,8 @@ namespace ConstructionSetExtender
 
 			UInt32										GetTotalLineCount(void);
 			IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
-
-			void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
+			UInt32										GetIndentLevel(UInt32 LineNumber);
+			void										InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
 			void										HighlightScriptError(int Line);
 			void										ClearScriptErrorHighlights(void);

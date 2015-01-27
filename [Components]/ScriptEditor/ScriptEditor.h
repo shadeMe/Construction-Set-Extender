@@ -480,7 +480,6 @@ namespace ConstructionSetExtender
 			void												SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ Extension);
 
 			int													PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options);
-			void												InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 		};
 	}
 }

@@ -387,16 +387,15 @@ namespace ConstructionSetExtender
 		void IntelliSenseItemCodeSnippet::Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface)
 		{
 			for each (CodeSnippet::VariableInfo^ Itr in Parent->Variables)
-				Workspace->InsertVariable(Itr->Name, Itr->Type);
+				Workspace->GetTextEditor()->InsertVariable(Itr->Name, Itr->Type);
 
 			String^ Code = GetSubstitution();
-			UInt32 NewLines = Code->Split('\n')->Length;
-			UInt32 CurrentLine = Workspace->GetTextEditor()->GetCurrentLineNumber();
+			UInt32 CurrentLineIndents = Workspace->GetTextEditor()->GetIndentLevel(Workspace->GetTextEditor()->GetCurrentLineNumber());
+			Code = ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
 			Interface->Enabled = false;			// don't want it popping up when indenting the snippet
 			Workspace->GetTextEditor()->BeginUpdate();
 			Workspace->SetCurrentToken(Code);
-			Workspace->GetTextEditor()->IndentLines(CurrentLine, CurrentLine + NewLines);
 			Workspace->GetTextEditor()->EndUpdate(false);
 			Interface->Enabled = true;
 

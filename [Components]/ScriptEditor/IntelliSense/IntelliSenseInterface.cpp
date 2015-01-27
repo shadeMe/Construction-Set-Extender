@@ -115,7 +115,8 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterface::HideQuickViewToolTip()
 		{
-			try		// to account for disposed controls
+			// HACK to account for disposed controls
+			try
 			{
 				if (InfoToolTip->Tag != nullptr && Control::FromHandle((IntPtr)InfoToolTip->Tag) != nullptr)
 					InfoToolTip->Hide(Control::FromHandle((IntPtr)InfoToolTip->Tag));
@@ -279,21 +280,15 @@ namespace ConstructionSetExtender
 			}
 			else
 			{
-				Point Location = ParentEditor->GetCaretLocation(true);
-
-				Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
 				IntelliSenseList->VirtualListSize = ItemCount;
 
 				if (ItemCount > MaximumVisibleItemCount)
 					ItemCount = MaximumVisibleItemCount;
 
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * 19) + 17 - ((MaximumVisibleItemCount - ItemCount) * 19));
-
 				IntelliSenseBox->SetSize(DisplaySize);
-				IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), (IntelliSenseBox->Visible == false));
 
-				ParentEditor->Focus();
-
+				MoveToCaret(true);
 				IntelliSenseList->SelectedIndices->Add(0);
 			}
 
@@ -575,6 +570,20 @@ namespace ConstructionSetExtender
 			PreventActivation = PREFERENCES->FetchSettingAsInt("NoFocusUI", "IntelliSense") == 0;
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 			UseQuickView = PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense");
+		}
+
+		void IntelliSenseInterface::MoveToCaret(bool AllowHidden)
+		{
+			if (AllowHidden || IntelliSenseBox->Visible)
+			{
+				ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
+				Point Location = ParentEditor->GetCaretLocation(true);
+
+				Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
+				IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), (IntelliSenseBox->Visible == false));
+
+				ParentEditor->Focus();
+			}
 		}
 	}
 }

@@ -5,7 +5,6 @@
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
 #include "IntelliSense\IntelliSenseInterface.h"
-#include "SemanticAnalysis.h"
 
 namespace ConstructionSetExtender
 {
@@ -247,9 +246,10 @@ namespace ConstructionSetExtender
 				virtual void										EndUpdate(bool FlagModification);
 				virtual UInt32										GetTotalLineCount(void);
 				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
+				virtual UInt32										GetIndentLevel(UInt32 LineNumber);
+				virtual void										InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
-				virtual void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
-				virtual ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+				ObScriptSemanticAnalysis::AnalysisData^				GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 			};
 		}
 	}

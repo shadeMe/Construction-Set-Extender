@@ -126,8 +126,8 @@ namespace ConstructionSetExtender
 
 				static enum class						OperationType
 				{
-					e_DocumentScript = 0,
-					e_RenameVariables
+					DocumentScript = 0,
+					RenameVariables
 				};
 
 				EditScriptComponentDialog(IntPtr ParentHandle, String^ ScriptEditorID, OperationType Operation, String^ DefaultItemString);

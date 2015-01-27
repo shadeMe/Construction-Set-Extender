@@ -13,47 +13,47 @@ namespace ConstructionSetExtender
 
 			switch (BoundType)				// value type implicitly assumed for all controls except Font & Color dialogs
 			{
-			case ControlType::e_Checkbox:
+			case ControlType::Checkbox:
 				{
 					CheckBox^ Control = dynamic_cast<CheckBox^>(INIControl);
 					Result = ((int)Control->Checked).ToString();
 					break;
 				}
-			case ControlType::e_NumericUpDown:
+			case ControlType::NumericUpDown:
 				{
 					NumericUpDown^ Control = dynamic_cast<NumericUpDown^>(INIControl);
 					Result = Control->Value.ToString();
 					break;
 				}
-			case ControlType::e_FontDialog:
+			case ControlType::FontDialog:
 				{
 					FontDialog^ Control = dynamic_cast<FontDialog^>(INIDialog);
 					switch (Property)
 					{
-					case ValueType::e_Font_FontFamily_Name:
+					case ValueType::Font_FontFamily_Name:
 						Result = Control->Font->FontFamily->Name;
 						break;
-					case ValueType::e_Font_Size:
+					case ValueType::Font_Size:
 						Result = Control->Font->Size.ToString();
 						break;
-					case ValueType::e_Font_Style:
+					case ValueType::Font_Style:
 						Result = ((int)Control->Font->Style).ToString();
 						break;
 					}
 					break;
 				}
-			case ControlType::e_ColorDialog:
+			case ControlType::ColorDialog:
 				{
 					ColorDialog^ Control = dynamic_cast<ColorDialog^>(INIDialog);
 					switch (Property)
 					{
-					case ValueType::e_Color_R:
+					case ValueType::Color_R:
 						Result = Control->Color.R.ToString();
 						break;
-					case ValueType::e_Color_G:
+					case ValueType::Color_G:
 						Result = Control->Color.G.ToString();
 						break;
-					case ValueType::e_Color_B:
+					case ValueType::Color_B:
 						Result = Control->Color.B.ToString();
 						break;
 					}
@@ -75,53 +75,53 @@ namespace ConstructionSetExtender
 			catch (...)
 			{
 				Numeric = 0;
-				if (Property != ValueType::e_Font_FontFamily_Name)
+				if (Property != ValueType::Font_FontFamily_Name)
 					DebugPrint(String::Format("Couldn't parse INI value of type {0}", (int)Property), true);
 			}
 
 			switch (BoundType)
 			{
-			case ControlType::e_Checkbox:
+			case ControlType::Checkbox:
 				{
 					CheckBox^ Control = dynamic_cast<CheckBox^>(INIControl);
 					Control->Checked = Numeric?true:false;
 					break;
 				}
-			case ControlType::e_NumericUpDown:
+			case ControlType::NumericUpDown:
 				{
 					NumericUpDown^ Control = dynamic_cast<NumericUpDown^>(INIControl);
 					Control->Value = (int)Numeric;
 					break;
 				}
-			case ControlType::e_FontDialog:
+			case ControlType::FontDialog:
 				{
 					FontDialog^ Control = dynamic_cast<FontDialog^>(INIDialog);
 					switch (Property)
 					{
-					case ValueType::e_Font_FontFamily_Name:
+					case ValueType::Font_FontFamily_Name:
 						Control->Font = gcnew Font(Value, Control->Font->Size, Control->Font->Style);
 						break;
-					case ValueType::e_Font_Size:
+					case ValueType::Font_Size:
 						Control->Font = gcnew Font(Control->Font->FontFamily->Name, Numeric,  Control->Font->Style);
 						break;
-					case ValueType::e_Font_Style:
+					case ValueType::Font_Style:
 						Control->Font = gcnew Font(Control->Font->FontFamily->Name, Control->Font->Size, (FontStyle)(int)Numeric);
 					}
 
 					break;
 				}
-			case ControlType::e_ColorDialog:
+			case ControlType::ColorDialog:
 				{
 					ColorDialog^ Control = dynamic_cast<ColorDialog^>(INIDialog);
 					switch (Property)
 					{
-					case ValueType::e_Color_R:
+					case ValueType::Color_R:
 						Control->Color = Color::FromArgb(255, Numeric, Control->Color.G, Control->Color.B);
 						break;
-					case ValueType::e_Color_G:
+					case ValueType::Color_G:
 						Control->Color = Color::FromArgb(255, Control->Color.R, Numeric, Control->Color.B);
 						break;
-					case ValueType::e_Color_B:
+					case ValueType::Color_B:
 						Control->Color = Color::FromArgb(255, Control->Color.R, Control->Color.G, Numeric);
 						break;
 					}
@@ -145,9 +145,9 @@ namespace ConstructionSetExtender
 
 			Parent->Tag = Dialog;
 
-			SettingCollection->Add(gcnew INISetting(Key + "R", "Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_R));
-			SettingCollection->Add(gcnew INISetting(Key + "G", "Appearance", Default.G.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_G));
-			SettingCollection->Add(gcnew INISetting(Key + "B", "Appearance", Default.B.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::e_ColorDialog, BoundControl::ValueType::e_Color_B));
+			SettingCollection->Add(gcnew INISetting(Key + "R", "Appearance", Default.R.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::ColorDialog, BoundControl::ValueType::Color_R));
+			SettingCollection->Add(gcnew INISetting(Key + "G", "Appearance", Default.G.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::ColorDialog, BoundControl::ValueType::Color_G));
+			SettingCollection->Add(gcnew INISetting(Key + "B", "Appearance", Default.B.ToString()), gcnew BoundControl(Dialog, BoundControl::ControlType::ColorDialog, BoundControl::ValueType::Color_B));
 
 			ColorDatabase->Add(Key, Dialog);
 		}
@@ -155,17 +155,17 @@ namespace ConstructionSetExtender
 		void ScriptEditorPreferences::InitializeSettings()
 		{
 			// Appearance
-			SettingCollection->Add(gcnew INISetting("Font", "Appearance", "Lucida Console"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_FontFamily_Name));
-			SettingCollection->Add(gcnew INISetting("FontSize", "Appearance", "14"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Size));
-			SettingCollection->Add(gcnew INISetting("FontStyle", "Appearance", "0"), gcnew BoundControl(FontSelection, BoundControl::ControlType::e_FontDialog, BoundControl::ValueType::e_Font_Style));
+			SettingCollection->Add(gcnew INISetting("Font", "Appearance", "Lucida Console"), gcnew BoundControl(FontSelection, BoundControl::ControlType::FontDialog, BoundControl::ValueType::Font_FontFamily_Name));
+			SettingCollection->Add(gcnew INISetting("FontSize", "Appearance", "14"), gcnew BoundControl(FontSelection, BoundControl::ControlType::FontDialog, BoundControl::ValueType::Font_Size));
+			SettingCollection->Add(gcnew INISetting("FontStyle", "Appearance", "0"), gcnew BoundControl(FontSelection, BoundControl::ControlType::FontDialog, BoundControl::ValueType::Font_Style));
 
-			SettingCollection->Add(gcnew INISetting("TabSize", "Appearance", "4"), gcnew BoundControl(TabSize, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-			SettingCollection->Add(gcnew INISetting("WordWrap", "Appearance", "0"), gcnew BoundControl(WordWrap, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("ShowTabs", "Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("ShowSpaces", "Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("CodeFolding", "Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("TabsOnTop", "Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("BoldFacedHighlighting", "Appearance", "0"), gcnew BoundControl(BoldFacedHighlighting, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("TabSize", "Appearance", "4"), gcnew BoundControl(TabSize, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
+			SettingCollection->Add(gcnew INISetting("WordWrap", "Appearance", "0"), gcnew BoundControl(WordWrap, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("ShowTabs", "Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("ShowSpaces", "Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("CodeFolding", "Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("TabsOnTop", "Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("BoldFacedHighlighting", "Appearance", "0"), gcnew BoundControl(BoldFacedHighlighting, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			RegisterColorSetting("SyntaxCommentsColor", Color::Green, CmDlgSyntaxCommentsColor);
 			RegisterColorSetting("SyntaxDigitsColor", Color::DarkGoldenrod, CmDlgSyntaxDigitsColor);
@@ -186,46 +186,46 @@ namespace ConstructionSetExtender
 			RegisterColorSetting("BackgroundColor", Color::White, CmDlgBackgroundColor);
 
 			// General
-			SettingCollection->Add(gcnew INISetting("AutoIndent", "General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("SaveLastKnownPos", "General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("RecompileVarIdx", "General", "1"), gcnew BoundControl(RecompileVarIdx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("UseCSParent", "General", "0"), gcnew BoundControl(UseCSParent, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("DestroyOnLastTabClose", "General", "1"), gcnew BoundControl(DestroyOnLastTabClose, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("LoadScriptUpdateExistingScripts", "General", "0"), gcnew BoundControl(LoadScriptUpdateExistingScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("CutCopyEntireLine", "General", "0"), gcnew BoundControl(CutCopyEntireLine, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("AutoIndent", "General", "1"), gcnew BoundControl(AutoIndent, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("SaveLastKnownPos", "General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("RecompileVarIdx", "General", "1"), gcnew BoundControl(RecompileVarIdx, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("UseCSParent", "General", "0"), gcnew BoundControl(UseCSParent, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("DestroyOnLastTabClose", "General", "1"), gcnew BoundControl(DestroyOnLastTabClose, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("LoadScriptUpdateExistingScripts", "General", "0"), gcnew BoundControl(LoadScriptUpdateExistingScripts, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("CutCopyEntireLine", "General", "0"), gcnew BoundControl(CutCopyEntireLine, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// IntelliSense
-			SettingCollection->Add(gcnew INISetting("ThresholdLength", "IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-			SettingCollection->Add(gcnew INISetting("DatabaseUpdateInterval", "IntelliSense", "5"), gcnew BoundControl(DatabaseUpdateInterval, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-			SettingCollection->Add(gcnew INISetting("UseQuickView", "IntelliSense", "1"), gcnew BoundControl(UseQuickView, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("MaxVisibleItems", "IntelliSense", "5"), gcnew BoundControl(MaxVisibleItems, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
-			SettingCollection->Add(gcnew INISetting("NoFocusUI", "IntelliSense", "0"), gcnew BoundControl(NoFocusUI, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("SubstringSearch", "IntelliSense", "1"), gcnew BoundControl(SubstringSearch, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("ThresholdLength", "IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
+			SettingCollection->Add(gcnew INISetting("DatabaseUpdateInterval", "IntelliSense", "5"), gcnew BoundControl(DatabaseUpdateInterval, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
+			SettingCollection->Add(gcnew INISetting("UseQuickView", "IntelliSense", "1"), gcnew BoundControl(UseQuickView, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("MaxVisibleItems", "IntelliSense", "5"), gcnew BoundControl(MaxVisibleItems, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
+			SettingCollection->Add(gcnew INISetting("NoFocusUI", "IntelliSense", "0"), gcnew BoundControl(NoFocusUI, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("SubstringSearch", "IntelliSense", "1"), gcnew BoundControl(SubstringSearch, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// Preprocessor
-			SettingCollection->Add(gcnew INISetting("AllowRedefinitions", "Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("NoOfPasses", "Preprocessor", "1"), gcnew BoundControl(NoOfPasses, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+			SettingCollection->Add(gcnew INISetting("AllowRedefinitions", "Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("NoOfPasses", "Preprocessor", "1"), gcnew BoundControl(NoOfPasses, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
 
 			// Sanitize
-			SettingCollection->Add(gcnew INISetting("AnnealCasing", "Sanitize", "1"), gcnew BoundControl(AnnealCasing, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("IndentLines", "Sanitize", "1"), gcnew BoundControl(IndentLines, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("EvalifyIfs", "Sanitize", "0"), gcnew BoundControl(EvalifyIfs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("CompilerOverrideBlocks", "Sanitize", "0"), gcnew BoundControl(CompilerOverrideBlocks, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("AnnealCasing", "Sanitize", "1"), gcnew BoundControl(AnnealCasing, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("IndentLines", "Sanitize", "1"), gcnew BoundControl(IndentLines, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("EvalifyIfs", "Sanitize", "0"), gcnew BoundControl(EvalifyIfs, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("CompilerOverrideBlocks", "Sanitize", "0"), gcnew BoundControl(CompilerOverrideBlocks, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// Find/Replace
-			SettingCollection->Add(gcnew INISetting("CaseInsensitive", "FindReplace", "0"), gcnew BoundControl(CaseInsensitive, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("MatchWholeWord", "FindReplace", "0"), gcnew BoundControl(MatchWholeWord, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("UseRegEx", "FindReplace", "0"), gcnew BoundControl(UseRegEx, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("CaseInsensitive", "FindReplace", "0"), gcnew BoundControl(CaseInsensitive, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("MatchWholeWord", "FindReplace", "0"), gcnew BoundControl(MatchWholeWord, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("UseRegEx", "FindReplace", "0"), gcnew BoundControl(UseRegEx, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// Backup
-			SettingCollection->Add(gcnew INISetting("UseAutoRecovery", "Backup", "1"), gcnew BoundControl(UseAutoRecovery, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("AutoRecoverySavePeriod", "Backup", "5"), gcnew BoundControl(AutoRecoverySavePeriod, BoundControl::ControlType::e_NumericUpDown, BoundControl::ValueType::e_Value));
+			SettingCollection->Add(gcnew INISetting("UseAutoRecovery", "Backup", "1"), gcnew BoundControl(UseAutoRecovery, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("AutoRecoverySavePeriod", "Backup", "5"), gcnew BoundControl(AutoRecoverySavePeriod, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
 
 			// Validator
-			SettingCollection->Add(gcnew INISetting("VarFormNameCollisions", "Validator", "0"), gcnew BoundControl(VarFormNameCollisions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("VarCmdNameCollisions", "Validator", "1"), gcnew BoundControl(VarCmdNameCollisions, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("CountVarRefs", "Validator", "1"), gcnew BoundControl(CountVarRefs, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
-			SettingCollection->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "Validator", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::e_Checkbox, BoundControl::ValueType::e_Checked));
+			SettingCollection->Add(gcnew INISetting("VarFormNameCollisions", "Validator", "0"), gcnew BoundControl(VarFormNameCollisions, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("VarCmdNameCollisions", "Validator", "1"), gcnew BoundControl(VarCmdNameCollisions, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("CountVarRefs", "Validator", "1"), gcnew BoundControl(CountVarRefs, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("SuppressRefCountForQuestScripts", "Validator", "1"), gcnew BoundControl(SuppressRefCountForQuestScripts, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 		}
 
 		void ScriptEditorPreferences::LoadINI()

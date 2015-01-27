@@ -28,16 +28,16 @@ namespace ConstructionSetExtender
 
 				static enum class						BracketType
 				{
-					e_Invalid = 0,
-					e_Curved,
-					e_Square,
-					e_Squiggly
+					Invalid = 0,
+					Curved,
+					Square,
+					Squiggly
 				};
 				static enum class						BracketKind
 				{
-					e_Invalid = 0,
-					e_Opening,
-					e_Closing
+					Invalid = 0,
+					Opening,
+					Closing
 				};
 
 				BracketSearchData(Char Symbol, int StartOffset) :
@@ -54,15 +54,15 @@ namespace ConstructionSetExtender
 					{
 					case '(':
 					case ')':
-						return BracketType::e_Curved;
+						return BracketType::Curved;
 					case '[':
 					case ']':
-						return BracketType::e_Square;
+						return BracketType::Square;
 					case '{':
 					case '}':
-						return BracketType::e_Squiggly;
+						return BracketType::Squiggly;
 					default:
-						return BracketType::e_Invalid;
+						return BracketType::Invalid;
 					}
 				}
 
@@ -73,13 +73,13 @@ namespace ConstructionSetExtender
 					case '(':
 					case '[':
 					case '{':
-						return BracketKind::e_Opening;
+						return BracketKind::Opening;
 					case ')':
 					case ']':
 					case '}':
-						return BracketKind::e_Closing;
+						return BracketKind::Closing;
 					default:
-						return BracketKind::e_Invalid;
+						return BracketKind::Invalid;
 					}
 				}
 				int GetStartOffset() { return StartOffset; }
@@ -425,7 +425,7 @@ namespace ConstructionSetExtender
 			{
 				int Hits = 0;
 
-				if (Operation != IScriptTextEditor::FindReplaceOperation::e_CountMatches)
+				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
 				{
 					ClearFindResultIndicators();
 					BeginUpdate();
@@ -435,17 +435,17 @@ namespace ConstructionSetExtender
 				{
 					String^ Pattern = "";
 
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_RegEx))
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::RegEx))
 						Pattern = Query;
 					else
 					{
 						Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
-						if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_MatchWholeWord))
+						if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::MatchWholeWord))
 							Pattern = "\\b" + Pattern + "\\b";
 					}
 
 					System::Text::RegularExpressions::Regex^ Parser = nullptr;
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_CaseInsensitive))
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::CaseInsensitive))
 					{
 						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
 										System::Text::RegularExpressions::RegexOptions::IgnoreCase|System::Text::RegularExpressions::RegexOptions::Singleline);
@@ -458,7 +458,7 @@ namespace ConstructionSetExtender
 
 					AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::e_InSelection))
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::InSelection))
 					{
 						if (TextSelection->IsEmpty == false)
 						{
@@ -504,7 +504,7 @@ namespace ConstructionSetExtender
 					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
 				}
 
-				if (Operation != IScriptTextEditor::FindReplaceOperation::e_CountMatches)
+				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
 				{
 					SetSelectionLength(0);
 					RefreshBGColorizerLayer();
@@ -692,11 +692,36 @@ namespace ConstructionSetExtender
 				return IntelliSenseBox;
 			}
 
-			void AvalonEditTextEditor::IndentLines( UInt32 BeginLine, UInt32 EndLine )
+			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
 			{
-				TextField->TextArea->IndentationStrategy->IndentLines(TextField->Document, BeginLine, EndLine);
+				if (GetModifiedStatus())
+					UpdateSemanticAnalysisCache(false, true);
+
+				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
 
+			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
+			{
+				if (GetModifiedStatus())
+					UpdateSemanticAnalysisCache(true, false);
+
+				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
+				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
+				if (InsertionLine == 0)
+					InsertText(Declaration, TextField->Document->GetOffset(TextField->Document->LineCount, 1), true);
+				else
+				{
+					if (InsertionLine - 1 == TextField->Document->LineCount)
+					{
+						int Offset = TextField->Document->GetLineByNumber(TextField->Document->LineCount)->EndOffset;
+						InsertText("\n", Offset, true);
+					}
+					else if (InsertionLine > TextField->Document->LineCount)
+						InsertionLine = TextField->Document->LineCount;
+
+					InsertText(Declaration, TextField->Document->GetOffset(InsertionLine, 1), true);
+				}
+			}
 #pragma endregion
 
 #pragma region Methods
@@ -790,7 +815,7 @@ namespace ConstructionSetExtender
 								int Offset = Line->Offset + Itr->Index, Length = Itr->Length;
 								Hits++;
 
-								if (Operation == IScriptTextEditor::FindReplaceOperation::e_Replace)
+								if (Operation == IScriptTextEditor::FindReplaceOperation::Replace)
 								{
 									TextField->Document->Replace(Offset, Length, Replacement);
 									CurrentLine = TextField->Document->GetText(Line);
@@ -799,7 +824,7 @@ namespace ConstructionSetExtender
 									Restart = true;
 									break;
 								}
-								else if (Operation == IScriptTextEditor::FindReplaceOperation::e_Find)
+								else if (Operation == IScriptTextEditor::FindReplaceOperation::Find)
 								{
 									FindReplaceColorizer->AddSegment(Offset, Length);
 								}
@@ -1158,7 +1183,7 @@ namespace ConstructionSetExtender
 										BracketSearchData^ CurrentBracket = BracketStack->Pop();
 										BracketSearchData Buffer(Delimiter, DelimiterIndex);
 
-										if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::e_Opening)
+										if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::Opening)
 										{
 											CurrentBracket->EndOffset = DelimiterIndex;
 										}
@@ -1314,7 +1339,13 @@ namespace ConstructionSetExtender
 				System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
-				IntelliSenseBox->Hide();
+				if (TextField->TextArea->TextView->GetVisualLine(GetCurrentLineNumber()) == nullptr)
+					IntelliSenseBox->Hide();
+				else
+				{
+					IntelliSenseBox->MoveToCaret(false);
+					IntelliSenseBox->HideQuickViewToolTip();
+				}
 			}
 
 			void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
