@@ -148,8 +148,9 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache();
+					UpdateSemanticAnalysisCache(true, true);
 					UpdateCodeFoldings();
+					UpdateSyntaxHighlighting(false);
 				}
 				else
 				{
@@ -186,8 +187,9 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache();
+					UpdateSemanticAnalysisCache(true, true);
 					UpdateCodeFoldings();
+					UpdateSyntaxHighlighting(false);
 				}
 			}
 
@@ -602,9 +604,6 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
 			{
 				IntelliSenseBox->UpdateLocalVariableDatabase(SemanticAnalysisCache);
-
-				delete TextField->SyntaxHighlighting;
-				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(false);
 			}
 
 			void AvalonEditTextEditor::ScrollToLine(String^ LineNumber)
@@ -1658,9 +1657,10 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
-				UpdateSemanticAnalysisCache();
+				UpdateSemanticAnalysisCache(true, true);
 				UpdateIntelliSenseLocalDatabase();
 				UpdateCodeFoldings();
+				UpdateSyntaxHighlighting(false);
 			}
 
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
@@ -1709,11 +1709,6 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ScriptEditorPreferences_Saved( Object^ Sender, EventArgs^ E )
 			{
-				if (TextField->SyntaxHighlighting != nullptr)
-				{
-					delete TextField->SyntaxHighlighting;
-					TextField->SyntaxHighlighting = nullptr;
-				}
 				if (CodeFoldingStrategy != nullptr)
 				{
 					delete CodeFoldingStrategy;
@@ -1725,7 +1720,7 @@ namespace ConstructionSetExtender
 					TextField->TextArea->IndentationStrategy = nullptr;
 				}
 
-				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(true);
+				UpdateSyntaxHighlighting(true);
 
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
 					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy(this);
@@ -1826,7 +1821,7 @@ namespace ConstructionSetExtender
 				TextField->ShowLineNumbers = true;
 				TextField->HorizontalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
 				TextField->VerticalScrollBarVisibility = System::Windows::Controls::ScrollBarVisibility::Hidden;
-				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(true);
+				UpdateSyntaxHighlighting(true);
 
 				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 				Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
@@ -1955,17 +1950,31 @@ namespace ConstructionSetExtender
 				return WinFormsContainer;
 			}
 
-			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(void)
+			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
+				if (UpdateVars || UpdateControlBlocks)
+					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks);
+
 				return SemanticAnalysisCache;
 			}
 
-			void AvalonEditTextEditor::UpdateSemanticAnalysisCache()
+			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks)
 			{
-				SemanticAnalysisCache->PerformAnalysis(GetText(), ObScriptSemanticAnalysis::ScriptType::None,
-													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
-													   ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks,
-													   nullptr);
+				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps;
+
+				if (FillVariables)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables;
+
+				if (FillControlBlocks)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
+
+				SemanticAnalysisCache->PerformAnalysis(GetText(), ObScriptSemanticAnalysis::ScriptType::None, AnalysisOps, nullptr);
+			}
+
+			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
+			{
+				delete TextField->SyntaxHighlighting;
+				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(Regenerate);
 			}
 		}
 	}

@@ -153,8 +153,9 @@ namespace ConstructionSetExtender
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
-				void										UpdateSemanticAnalysisCache();
+				void										UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks);
 				void										UpdateCodeFoldings();
+				void										UpdateSyntaxHighlighting(bool Regenerate);
 				void										SynchronizeExternalScrollBars();
 
 				void										MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction);
@@ -248,7 +249,7 @@ namespace ConstructionSetExtender
 				virtual IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 
 				virtual void										IndentLines(UInt32 BeginLine, UInt32 EndLine);
-				virtual ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(void);
+				virtual ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 			};
 		}
 	}

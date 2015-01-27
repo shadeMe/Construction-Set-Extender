@@ -5,6 +5,11 @@
 
 namespace ConstructionSetExtender
 {
+	namespace ScriptEditor
+	{
+		ref class Workspace;
+	}
+
 	namespace IntelliSense
 	{
 		ref class IntelliSenseInterface;
@@ -44,7 +49,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
 
 			virtual String^										Describe();
-			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface); // argument's a ScriptEditor::Workspace^
+			virtual void										Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface); // argument's a ScriptEditor::Workspace^
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);		// returns true if the item can be enumerated in the interface
 			virtual bool										GetIsQuickViewable(String^ Token);					// returns true if the item allows a quick view tooltip and the token matches
 			virtual String^										GetIdentifier() = 0;					// identifier for display in the interface
@@ -209,7 +214,7 @@ namespace ConstructionSetExtender
 		public:
 			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-			virtual void										Insert(Object^ Workspace, IntelliSenseInterface^ Interface) override;
+			virtual void										Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface) override;
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual bool										GetIsQuickViewable(String^ Token) override;
 			virtual String^										GetIdentifier() override;

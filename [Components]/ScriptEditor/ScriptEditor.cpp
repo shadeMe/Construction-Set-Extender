@@ -1679,6 +1679,7 @@ namespace ConstructionSetExtender
 
 		void Workspace::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
 		{
+			TODO("fix this to use the anlyis cache")
 			String^ ScriptText = TextEditor->GetText()->Replace("\r", "");
 			ScriptParser^ TextParser = gcnew ScriptParser();
 			StringReader^ TextReader = gcnew StringReader(ScriptText);
@@ -1934,166 +1935,6 @@ namespace ConstructionSetExtender
 		{
 			AddMessageToMessagePool(MessageListItemType::Error, -1, Message);
 		}
-		String^ Workspace::SanitizeScriptText(SanitizeOperation Operation, String^ ScriptText)
-		{
-			String^ SanitizedScriptText = "";
-
-			StringReader^ TextReader = gcnew StringReader(ScriptText);
-			ScriptParser^ LocalParser = gcnew ScriptParser();
-
-			int IndentCount = 0;
-			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
-			{
-				switch (Operation)
-				{
-				case SanitizeOperation::Indent:
-					{
-						int IndentMode = -1;
-						// 0 = Decrement
-						// 1 = Post-Increment
-						// 2 = Decrement&Increment
-
-						LocalParser->Tokenize(ReadLine, false);
-						if (LocalParser->Valid)
-						{
-							String^ Token = LocalParser->Tokens[0];
-							if (Token[0] != ';')
-							{
-								if (LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Begin ||
-									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::While ||
-									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::If ||
-									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ForEach)
-								{
-									IndentMode = 1;
-								}
-								else if	(LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Loop ||
-									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::EndIf ||
-									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::End)
-								{
-									IndentMode = 0;
-								}
-								else if	(LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Else ||
-									LocalParser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ElseIf)
-								{
-									IndentMode = 2;
-								}
-
-								if (IndentMode == 0 || IndentMode == 2)
-									IndentCount--;
-
-								for (int i = 0; i < IndentCount; i++)
-									SanitizedScriptText += "\t";
-
-								SanitizedScriptText += ReadLine->Substring(LocalParser->Indices[0]) + "\n";
-
-								if (IndentMode == 1 || IndentMode == 2)
-									IndentCount++;
-							}
-							else
-								SanitizedScriptText += ReadLine + "\n";
-						}
-						else
-							SanitizedScriptText += ReadLine + "\n";
-
-						break;
-					}
-				case SanitizeOperation::AnnealCasing:
-					{
-						LocalParser->Tokenize(ReadLine, true);
-						if (LocalParser->Valid)
-						{
-							for (int i = 0; i < LocalParser->TokenCount; i++)
-							{
-								String^ Token = LocalParser->Tokens[i];
-								String^ Delimiter = "" + LocalParser->Delimiters[i];
-
-								if (LocalParser->GetCommentTokenIndex(i) == -1)
-								{
-									IntelliSenseItemVariable^ LocalVar = TextEditor->GetIntelliSenseInterface()->LookupLocalVariableByIdentifier(Token);
-									if (LocalVar != nullptr)
-										SanitizedScriptText += LocalVar->GetIdentifier();
-									else
-										SanitizedScriptText += ISDB->SanitizeIdentifier(Token);
-								}
-								else
-									SanitizedScriptText += Token;
-
-								SanitizedScriptText += Delimiter;
-							}
-						}
-						else
-							SanitizedScriptText += ReadLine + "\n";
-
-						break;
-					}
-				case SanitizeOperation::EvalifyIfs:
-					{
-						LocalParser->Tokenize(ReadLine, true);
-						if (LocalParser->Valid)
-						{
-							for (int i = 0; i < LocalParser->TokenCount; i++)
-							{
-								String^ Token = LocalParser->Tokens[i];
-								String^ Delimiter = "" + LocalParser->Delimiters[i];
-
-								if (i == 0 &&
-									LocalParser->GetCommentTokenIndex(i) == -1 &&
-									(LocalParser->GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::ElseIf ||
-									LocalParser->GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::If) &&
-									LocalParser->TokenCount > 1 &&
-									String::Compare(LocalParser->Tokens[i + 1], "eval", true))
-								{
-									SanitizedScriptText += Token + " eval";
-								}
-								else
-									SanitizedScriptText += Token;
-
-								SanitizedScriptText += Delimiter;
-							}
-						}
-						else
-							SanitizedScriptText += ReadLine + "\n";
-
-						break;
-					}
-				case SanitizeOperation::CompilerOverrideBlocks:
-					{
-						LocalParser->Tokenize(ReadLine, true);
-						if (LocalParser->Valid)
-						{
-							for (int i = 0; i < LocalParser->TokenCount; i++)
-							{
-								String^ Token = LocalParser->Tokens[i];
-								String^ Delimiter = "" + LocalParser->Delimiters[i];
-
-								if (i == 0 &&
-									LocalParser->GetCommentTokenIndex(i) == -1 &&
-									LocalParser->GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Begin &&
-									LocalParser->TokenCount > 1 &&
-									LocalParser->Tokens[i + 1]->Length > 0 &&
-									LocalParser->Tokens[i + 1][0] != '_')
-								{
-									SanitizedScriptText += Token + " _";
-									continue;
-								}
-								else
-									SanitizedScriptText += Token;
-
-								SanitizedScriptText += Delimiter;
-							}
-						}
-						else
-							SanitizedScriptText += ReadLine + "\n";
-						break;
-					}
-				}
-			}
-
-			if (SanitizedScriptText->Length > 0 && SanitizedScriptText[SanitizedScriptText->Length - 1] == '\n')
-				SanitizedScriptText = SanitizedScriptText->Substring(0, SanitizedScriptText->Length - 1);
-
-			return SanitizedScriptText;
-		}
 		void Workspace::UpdateEnvironment(ComponentDLLInterface::ScriptData* Data, bool Initializing)
 		{
 			String^ ScriptText = gcnew String(Data->Text);
@@ -2246,7 +2087,7 @@ namespace ConstructionSetExtender
 					AddMessageToMessagePool(MessageListItemType::Warning, Itr->Line, Itr->Message);
 			}
 
-			if (Data->HasCriticalIssues)
+			if (Data->HasCriticalMessages)
 			{
 				Result = false;
 				AddMessageToMessagePool(MessageListItemType::Warning, -1, "Compilation of script '" + Data->Name + "' halted - Couldn't recover from previous errors.");
@@ -3798,27 +3639,40 @@ namespace ConstructionSetExtender
 					MessageBox::Show("The preprocessing operation was unsuccessful.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Error);
 			}
 		}
+
+		String^ GetSanitizedIdentifier(String^ Identifier)
+		{
+			return ISDB->SanitizeIdentifier(Identifier);
+		}
 		void Workspace::ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E)
 		{
 			ParentContainer->SetCursor(Cursors::WaitCursor);
 
-			String^ SanitizedText = TextEditor->GetText();
+			ObScriptSemanticAnalysis::Sanitizer^ Agent = gcnew ObScriptSemanticAnalysis::Sanitizer(TextEditor->GetText());
+			ObScriptSemanticAnalysis::Sanitizer::Operation Operation;
 
 			if (PREFERENCES->FetchSettingAsInt("AnnealCasing", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::AnnealCasing, SanitizedText);
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::AnnealCasing;
 
 			if (PREFERENCES->FetchSettingAsInt("EvalifyIfs", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::EvalifyIfs, SanitizedText);
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::EvalifyIfs;
 
 			if (PREFERENCES->FetchSettingAsInt("CompilerOverrideBlocks", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::CompilerOverrideBlocks, SanitizedText);
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::CompilerOverrideBlocks;
 
 			if (PREFERENCES->FetchSettingAsInt("IndentLines", "Sanitize"))
-				SanitizedText = SanitizeScriptText(SanitizeOperation::Indent, SanitizedText);
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::IndentLines;
 
-			TextEditor->SetText(SanitizedText, false, false);
-
+			bool Result = Agent->SanitizeScriptText(Operation, gcnew ObScriptSemanticAnalysis::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
 			ParentContainer->SetCursor(Cursors::Default);
+
+			if (Result)
+				TextEditor->SetText(Agent->Output, false, false);
+			else
+			{
+				MessageBox::Show("The script contains structural errors that must be fixed before this operation can be performed.",
+								 SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Error);
+			}
 		}
 
 		void Workspace::ToolBarBindScript_Click(Object^ Sender, EventArgs^ E)

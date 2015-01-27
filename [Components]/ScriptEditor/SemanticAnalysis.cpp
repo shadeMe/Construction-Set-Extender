@@ -517,6 +517,75 @@ namespace ConstructionSetExtender
 			return false;
 	}
 
+	String^ ObScriptSemanticAnalysis::ScriptBlock::GetScriptBlockTypeToken(ScriptBlockType Type)
+	{
+		switch (Type)
+		{
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::GameMode:
+			return "GameMode";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::MenuMode:
+			return "MenuMode";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActivate:
+			return "OnActivate";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActorEquip:
+			return "OnActorEquip";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActorUnequip:
+			return "OnActorUnequip";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAdd:
+			return "OnAdd";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAlarm:
+			return "OnAlarm";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAlarmVictim:
+			return "OnAlarmVictim";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnDeath:
+			return "OnDeath";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnDrop:
+			return "OnDrop";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnEquip:
+			return "OnEquip";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnHit:
+			return "OnHit";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnHitWith:
+			return "OnHitWith";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnKnockout:
+			return "OnKnockout";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnLoad:
+			return "OnLoad";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
+			return "OnMagicEffectHit";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnMurder:
+			return "OnMurder";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageChange:
+			return "OnPackageChange";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageDone:
+			return "OnPackageDone";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageStart:
+			return "OnPackageStart";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnReset:
+			return "OnReset";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnSell:
+			return "OnSell";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTrigger:
+			return "OnTrigger";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTriggerActor:
+			return "OnTriggerActor";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTriggerMob:
+			return "OnTriggerMob";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnUnequip:
+			return "OnUnequip";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
+			return "ScriptEffectFinish";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectStart:
+			return "ScriptEffectStart";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
+			return "ScriptEffectUpdate";
+		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::Function:
+			return "Function";
+		default:
+			return "None";
+		}
+	}
+
 	ObScriptSemanticAnalysis::AnalysisData::UserMessage::UserMessage(UInt32 Line, String^ Message, bool Critical) :
 		Line(Line), Message(Message), Critical(Critical)
 	{
@@ -530,7 +599,7 @@ namespace ConstructionSetExtender
 		ControlBlocks = gcnew List<ControlBlock^>();
 		MalformedStructure = false;
 		FirstStructuralErrorLine = 0;
-		HasCriticalIssues = false;
+		HasCriticalMessages = false;
 		UDF = false;
 		UDFResult = nullptr;
 		AnalysisMessages = gcnew List<UserMessage^>();
@@ -730,10 +799,14 @@ namespace ConstructionSetExtender
 						else
 						{
 							ControlBlock^ Parent = BlockStack->Peek();
-							ControlBlock^ NewBlock = gcnew ControlBlock(ControlBlock::ControlBlockType::Loop, CurrentLine,
+							ControlBlock::ControlBlockType BlockType = ControlBlock::ControlBlockType::While;
+							if (FirstTokenType == ScriptTokenType::ForEach)
+								BlockType = ControlBlock::ControlBlockType::ForEach;
+
+							ControlBlock^ NewBlock = gcnew ControlBlock(BlockType, CurrentLine,
 																		Parent->IndentLevel + 1, Parent);
 
-							StructureStack->Push(ControlBlock::ControlBlockType::Loop);
+							StructureStack->Push(BlockType);
 							BlockStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
 						}
@@ -746,7 +819,8 @@ namespace ConstructionSetExtender
 						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
 							LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
 
-						if (StructureStack->Peek() != ControlBlock::ControlBlockType::Loop)
+						if (StructureStack->Peek() != ControlBlock::ControlBlockType::While &&
+							StructureStack->Peek() != ControlBlock::ControlBlockType::ForEach)
 						{
 							EncounteredProblem = true;
 							MalformedStructure = true;
@@ -904,6 +978,15 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		for each (ControlBlock^ Itr in ControlBlocks)
+		{
+			if (Itr->IsMalformed())
+			{
+				MalformedStructure = true;
+				break;
+			}
+		}
+
 		if (Operations.HasFlag(Operation::PerformBasicValidation))
 		{
 			for each (Variable^ Itr in Variables)
@@ -962,7 +1045,147 @@ namespace ConstructionSetExtender
 
 	void ObScriptSemanticAnalysis::AnalysisData::LogCriticalAnalysisMessage(UInt32 Line, String^ Message)
 	{
-		HasCriticalIssues = true;
+		HasCriticalMessages = true;
 		AnalysisMessages->Add(gcnew UserMessage(Line, Message, true));
+	}
+
+	UInt32 ObScriptSemanticAnalysis::AnalysisData::GetLineIndentLevel(UInt32 Line)
+	{
+		int IndentCount = 0;
+		for each (ControlBlock^ Itr in ControlBlocks)
+		{
+			if (Itr->IsMalformed() == false && Line > Itr->EndLine)
+				continue;
+
+			if (Itr->IsMalformed() == false && (Line == Itr->StartLine || Line == Itr->EndLine))
+				IndentCount = Itr->IndentLevel - 1;
+			else if (Line > Itr->StartLine)
+				IndentCount = Itr->IndentLevel;
+		}
+
+		if (IndentCount < 0)
+			IndentCount = 0;
+
+		return IndentCount;
+	}
+
+	ObScriptSemanticAnalysis::ControlBlock^ ObScriptSemanticAnalysis::AnalysisData::GetBlockAt(UInt32 Line)
+	{
+		for each (ControlBlock^ Itr in ControlBlocks)
+		{
+			if (Itr->StartLine == Line)
+				return Itr;
+		}
+
+		return nullptr;
+	}
+
+	ObScriptSemanticAnalysis::Sanitizer::Sanitizer(String^ Source) :
+		InputText(Source),
+		Data(gcnew AnalysisData()),
+		SanitizedText("")
+	{
+		Data->PerformAnalysis(InputText, ScriptType::None, AnalysisData::Operation::FillControlBlocks, nullptr);
+	}
+
+	bool ObScriptSemanticAnalysis::Sanitizer::SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate)
+	{
+		if (Data->MalformedStructure)
+			return false;
+
+		Tokenizer^ Parser = gcnew Tokenizer();
+		CSEStringReader^ Reader = gcnew CSEStringReader(InputText);
+
+		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
+		{
+			UInt32 CurrentLine = Reader->LineNumber;
+			String^ SanitizedLine = ReadLine;
+
+			// cull empty lines
+			if (Parser->Tokenize(SanitizedLine, false) == false)
+				SanitizedLine = "";
+
+			if (Operations.HasFlag(Operation::IndentLines))
+			{
+				if (Parser->Tokenize(ReadLine, false))
+				{
+					SanitizedLine = "";
+					UInt32 IndentCount = Data->GetLineIndentLevel(CurrentLine);
+					for (int i = 0; i < IndentCount; i++)
+						SanitizedLine += "\t";
+
+					SanitizedLine += ReadLine->Substring(Parser->Indices[0]);
+				}
+			}
+
+			ControlBlock^ CurrentBlock = Data->GetBlockAt(CurrentLine);
+			if (CurrentBlock && (CurrentBlock->Type == ControlBlock::ControlBlockType::If || CurrentBlock->Type == ControlBlock::ControlBlockType::ElseIf))
+			{
+				if (Operations.HasFlag(Operation::EvalifyIfs))
+				{
+					if (Parser->Tokenize(SanitizedLine, false) && Parser->TokenCount > 1)
+					{
+						if (String::Compare(Parser->Tokens[1], "eval", true))
+						{
+							SanitizedLine = SanitizedLine->Substring(0, Parser->Indices[0] + Parser->Tokens[0]->Length) + " eval" +
+											SanitizedLine->Substring(Parser->Indices[0] + Parser->Tokens[0]->Length);
+						}
+					}
+				}
+			}
+
+			if (Operations.HasFlag(Operation::CompilerOverrideBlocks))
+			{
+				if (CurrentBlock && CurrentBlock->Type == ControlBlock::ControlBlockType::ScriptBlock)
+				{
+					ScriptBlock^ BeginBlock = dynamic_cast<ScriptBlock^>(CurrentBlock);
+					if (BeginBlock->CompilerOverride == false)
+					{
+						if (Parser->Tokenize(SanitizedLine, false))
+						{
+							SanitizedLine = SanitizedLine->Substring(0, Parser->Indices[0] + Parser->Tokens[0]->Length) + " _" +
+											SanitizedLine->Substring(Parser->Indices[1]);
+						}
+					}
+				}
+			}
+
+			if (Operations.HasFlag(Operation::AnnealCasing))
+			{
+				Parser->Tokenize(SanitizedLine, true);
+				if (Parser->Valid)
+				{
+					SanitizedLine = SanitizedLine->Substring(0, Parser->Indices[0]);
+					for (int i = 0; i < Parser->TokenCount; i++)
+					{
+						String^ Token = Parser->Tokens[i];
+						String^ Delimiter = "" + Parser->Delimiters[i];
+
+						if (Parser->GetCommentTokenIndex(i) == -1)
+						{
+							Variable^ LocalVar = Data->LookupVariable(Token);
+							if (LocalVar)
+								SanitizedLine += LocalVar->Name;
+							else if (Delegate)
+								SanitizedLine += Delegate(Token);
+							else
+								SanitizedLine += Token;
+						}
+						else
+							SanitizedLine += Token;
+
+						if (Delimiter != "\n" && Delimiter != "\r\n")
+							SanitizedLine += Delimiter;
+					}
+				}
+			}
+
+			SanitizedText += SanitizedLine + "\n";
+		}
+
+		if (SanitizedText->Length > 0 && SanitizedText[SanitizedText->Length - 1] == '\n')
+			SanitizedText = SanitizedText->Substring(0, SanitizedText->Length - 1);
+
+		return true;
 	}
 }

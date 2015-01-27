@@ -172,14 +172,6 @@ namespace ConstructionSetExtender
 
 			Workspace(UInt32 Index, WorkspaceContainer^ Parent, ComponentDLLInterface::ScriptData* InitScript);
 		protected:
-			static enum class									SanitizeOperation
-			{
-				Indent		= 0,
-				AnnealCasing,
-				EvalifyIfs,
-				CompilerOverrideBlocks
-			};
-
 			DotNetBar::SuperTabItem^							WorkspaceTabItem;
 			DotNetBar::SuperTabControlPanel^					WorkspaceControlBox;
 
@@ -435,7 +427,7 @@ namespace ConstructionSetExtender
 			virtual bool										ValidateScript(String^ PreprocessedScriptText);
 			virtual bool										PreprocessScriptText(String^% PreprocessorResult);
 			virtual void                                        PreprocessorErrorOutputWrapper(String^ Message);
-			virtual String^										SanitizeScriptText(SanitizeOperation Operation, String^ ScriptText);
+
 			virtual void                                        UpdateEnvironment(ComponentDLLInterface::ScriptData* Data, bool Initializing);
 			virtual void                                        Destroy();
 		public:

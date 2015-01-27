@@ -42,7 +42,6 @@ CSE		---->
 SE		---->
 
 	BUGFIX			=
-		> Indenting - broken
 
 
 	ENHANCEMENT		=

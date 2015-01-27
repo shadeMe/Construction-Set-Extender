@@ -262,6 +262,9 @@ namespace ConstructionSetExtender
 
 			void AvalonEditObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
 			{
+				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
+				UInt32 CurrIndent = Data->GetLineIndentLevel(line->LineNumber);
+
 				AvalonEdit::Document::DocumentLine^ previousLine = line->PreviousLine;
 				ScriptParser^ Parser = gcnew ScriptParser();
 
@@ -277,18 +280,22 @@ namespace ConstructionSetExtender
 
 				if (Parser->Valid)
 				{
+					AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
+
 					if (Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ElseIf ||
-						Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Else ||
-						Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::End ||
-						Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Loop)
+						Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Else)
 					{
-						UInt32 PrevIndent = GetIndentLevel(previousLine->LineNumber);
-						AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
-						document->Replace(Leading, gcnew String('\t', PrevIndent));
+						if (CurrIndent)
+							document->Replace(Leading, gcnew String('\t', CurrIndent - 1));
+					}
+					else if	(Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::EndIf ||
+							Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::End ||
+							Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Loop)
+					{
+						document->Replace(Leading, gcnew String('\t', CurrIndent));
 					}
 				}
 
-				UInt32 CurrIndent = GetIndentLevel(line->LineNumber);
 				AvalonEdit::Document::ISegment^ Indentation = AvalonEdit::Document::TextUtilities::GetWhitespaceAfter(document, line->Offset);
 				document->Replace(Indentation, gcnew String('\t', CurrIndent));
 				document->Replace(AvalonEdit::Document::TextUtilities::GetWhitespaceBefore(document, line->Offset), "");
@@ -307,23 +314,6 @@ namespace ConstructionSetExtender
 				;//
 			}
 
-			UInt32 AvalonEditObScriptIndentStrategy::GetIndentLevel(UInt32 LineNumber)
-			{
-				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache();
-
-				int IndentCount = 0;
-				for each (ObScriptSemanticAnalysis::ControlBlock^ Itr in Data->ControlBlocks)
-				{
-					if (LineNumber > Itr->StartLine)
-						IndentCount = Itr->IndentLevel;
-
-					if (LineNumber < Itr->EndLine)
-						break;
-				}
-
-				return IndentCount;
-			}
-
 			int AvalonEditObScriptCodeFoldingStrategy::FoldingSorter::Compare( AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y )
 			{
 				return X->StartOffset.CompareTo(Y->StartOffset);
@@ -335,7 +325,7 @@ namespace ConstructionSetExtender
 
 				List<AvalonEdit::Folding::NewFolding^>^ Foldings = gcnew List<AvalonEdit::Folding::NewFolding^>();
 
-				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache();
+				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, false);
 				for each (ObScriptSemanticAnalysis::ControlBlock^ Itr in Data->ControlBlocks)
 				{
 					if (Itr->IsMalformed() == false &&

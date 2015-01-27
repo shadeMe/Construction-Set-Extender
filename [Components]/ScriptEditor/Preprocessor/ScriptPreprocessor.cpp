@@ -965,7 +965,9 @@ namespace ConstructionSetExtender
 
 	CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, CSEStringReader^ TextReader, StandardOutputError^ ErrorOutput)
 	{
-		UInt32 LineNumber = TextReader->LineNumber;
+		UInt32 LineNumber = 0;
+		if (TextReader)
+			LineNumber = TextReader->LineNumber;
 
 		if (!String::Compare(Identifier, CSEPreprocessorDirective::DirectiveIdentifier[(int)CSEPreprocessorDirective::DirectiveType::Define], true))
 		{

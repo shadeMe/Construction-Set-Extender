@@ -1095,6 +1095,7 @@ namespace ConstructionSetExtender
 			NoOfPasses->Name = L"NoOfPasses";
 			NoOfPasses->Size = System::Drawing::Size(154, 20);
 			NoOfPasses->TabIndex = 10;
+			NoOfPasses->Minimum = 1;
 			//
 			// CodeFolding
 			//

@@ -104,8 +104,6 @@ namespace ConstructionSetExtender
 				AvalonEditTextEditor^						Parent;
 				bool										TrimTrailingWhitespace;
 				bool										CullEmptyLines;
-
-				UInt32										GetIndentLevel(UInt32 LineNumber);
 			public:
 				virtual ~AvalonEditObScriptIndentStrategy();
 

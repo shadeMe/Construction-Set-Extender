@@ -39,11 +39,9 @@ namespace ConstructionSetExtender
 			return Description;
 		}
 
-		void IntelliSenseItem::Insert( Object^ Workspace, IntelliSenseInterface^ Interface )
+		void IntelliSenseItem::Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface)
 		{
-			ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(Workspace);
-
-			ParentEditor->SetCurrentToken(GetSubstitution());
+			Workspace->SetCurrentToken(GetSubstitution());
 		}
 
 		bool IntelliSenseItem::GetShouldEnumerate( String^ Token, bool SubstringSearch )
@@ -386,25 +384,23 @@ namespace ConstructionSetExtender
 				(Parent->Variables->Count ? "\n\nVariables: " + Parent->Variables->Count.ToString() : "");
 		}
 
-		void IntelliSenseItemCodeSnippet::Insert( Object^ Workspace, IntelliSenseInterface^ Interface )
+		void IntelliSenseItemCodeSnippet::Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface)
 		{
-			ScriptEditor::Workspace^ ParentEditor = dynamic_cast<ScriptEditor::Workspace^>(Workspace);
-
 			for each (CodeSnippet::VariableInfo^ Itr in Parent->Variables)
-				ParentEditor->InsertVariable(Itr->Name, Itr->Type);
+				Workspace->InsertVariable(Itr->Name, Itr->Type);
 
 			String^ Code = GetSubstitution();
 			UInt32 NewLines = Code->Split('\n')->Length;
-			UInt32 CurrentLine = ParentEditor->GetTextEditor()->GetCurrentLineNumber();
+			UInt32 CurrentLine = Workspace->GetTextEditor()->GetCurrentLineNumber();
 
 			Interface->Enabled = false;			// don't want it popping up when indenting the snippet
-			ParentEditor->GetTextEditor()->BeginUpdate();
-			ParentEditor->SetCurrentToken(Code);
-			ParentEditor->GetTextEditor()->IndentLines(CurrentLine, CurrentLine + NewLines);
-			ParentEditor->GetTextEditor()->EndUpdate(false);
+			Workspace->GetTextEditor()->BeginUpdate();
+			Workspace->SetCurrentToken(Code);
+			Workspace->GetTextEditor()->IndentLines(CurrentLine, CurrentLine + NewLines);
+			Workspace->GetTextEditor()->EndUpdate(false);
 			Interface->Enabled = true;
 
-			ParentEditor->GetTextEditor()->ScrollToCaret();
+			Workspace->GetTextEditor()->ScrollToCaret();
 		}
 
 		bool IntelliSenseItemCodeSnippet::GetShouldEnumerate( String^ Token, bool SubstringSearch )

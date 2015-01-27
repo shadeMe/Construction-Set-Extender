@@ -125,10 +125,11 @@ namespace ConstructionSetExtender
 			{
 				None = 0,
 				ScriptBlock,
-				Loop,
 				If,
 				ElseIf,
-				Else
+				Else,
+				While,
+				ForEach
 			};
 
 			ControlBlockType		Type;
@@ -196,6 +197,7 @@ namespace ConstructionSetExtender
 			bool					IsBlockValid(ScriptType Type);
 
 			static ScriptBlockType			GetScriptBlockType(String^ TypeToken);
+			static String^					GetScriptBlockTypeToken(ScriptBlockType Type);
 			static bool						HasCompilerOverride(String^ TypeToken);
 		};
 
@@ -216,7 +218,7 @@ namespace ConstructionSetExtender
 			List<ControlBlock^>^						ControlBlocks;
 			bool										MalformedStructure;
 			UInt32										FirstStructuralErrorLine;
-			bool										HasCriticalIssues;
+			bool										HasCriticalMessages;
 			bool										UDF;
 			Variable^									UDFResult;					// nullptr if ambiguous
 			List<UserMessage^>^							AnalysisMessages;
@@ -240,10 +242,40 @@ namespace ConstructionSetExtender
 			delegate void						CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision);
 
 			void								PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate);
-		private:
+
+			ControlBlock^						GetBlockAt(UInt32 Line);
+			UInt32								GetLineIndentLevel(UInt32 Line);
 			Variable^							LookupVariable(String^ VarName);
+		private:
 			void								LogAnalysisMessage(UInt32 Line, String^ Message);
 			void								LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
+		};
+
+		ref class Sanitizer
+		{
+			String^								InputText;
+			AnalysisData^						Data;
+			String^								SanitizedText;
+		public:
+			Sanitizer(String^ Source);
+
+			[Flags]
+			static enum class Operation
+			{
+				IndentLines = 1 << 0,
+				AnnealCasing = 1 << 1,
+				EvalifyIfs = 1 << 2,
+				CompilerOverrideBlocks = 1 << 3,
+			};
+
+			property String^					Output
+			{
+				virtual String^	get() { return SanitizedText; }
+			}
+
+			delegate String^					GetSanitizedIdentifier(String^ Identifier);
+
+			bool								SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate);		// returns false if unsuccessful
 		};
 	};
 
