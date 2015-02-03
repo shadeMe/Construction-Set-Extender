@@ -17,6 +17,11 @@ class	TESCombatStyle;
 class TESNPC : public TESActorBase, public TESRaceForm
 {
 public:
+	enum
+	{
+		kHeadPeviewCheckBox = 1014,
+	};
+
 	// members
 	//     /*000*/ TESActorBase
 	//     /*118*/ TESRaceForm
@@ -32,7 +37,7 @@ public:
 	/*20C*/ void*							unk20C;					// smart pointer
 	/*210*/ void*							unk210;					// smart pointer, BSFaceGenNiNode* ?
 	/*214*/ UInt16							faceDataID;				// either 0xFF or race->faceDataID
-																	// compared with latter, presumably used as a FaceGen morph caching optimization 
+																	// compared with latter, presumably used as a FaceGen morph caching optimization
 	/*216*/ UInt16							pad216;
 	/*218*/ TESCombatStyle*					combatStyle;			// NULL when set as DEFAULT in CS
 	/*21C*/ RGBA							hairColor;

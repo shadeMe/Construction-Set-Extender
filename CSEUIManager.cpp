@@ -38,7 +38,8 @@ namespace ConstructionSetExtender
 			FilterLabel(Label),
 			FilterString(""),
 			TimerPeriod(TimerPeriod),
-			TimeCounter(-1)
+			TimeCounter(-1),
+			Enabled(true)
 		{
 			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
 
@@ -69,7 +70,7 @@ namespace ConstructionSetExtender
 			case LVM_INSERTITEMW:
 				LVITEM* Item = (LVITEM*)lParam;
 
-				if (Item->lParam)
+				if (UserData->Enabled && Item->lParam)
 				{
 					TESForm* Form = (TESForm*)Item->lParam;
 					if (Form)
@@ -357,6 +358,11 @@ namespace ConstructionSetExtender
 			DestroyMenu(Popup);
 		}
 
+		void CSEFilterableFormListManager::FilterableWindowData::SetEnabledState(bool State)
+		{
+			Enabled = State;
+		}
+
 		CSEFilterableFormListManager::CSEFilterableFormListManager() :
 			ActiveWindows()
 		{
@@ -409,6 +415,16 @@ namespace ConstructionSetExtender
 			}
 
 			return false;
+		}
+
+		void CSEFilterableFormListManager::SetEnabledState(HWND Window, bool State)
+		{
+			SME_ASSERT(Window);
+
+			if (ActiveWindows.count(Window))
+			{
+				ActiveWindows[Window]->SetEnabledState(State);
+			}
 		}
 
 		CSEFormEnumerationManager		CSEFormEnumerationManager::Instance;
@@ -856,7 +872,7 @@ namespace ConstructionSetExtender
 			Return = false;
 
 			TESFile* ActiveTESFile = *((TESFile**)0x00A0AA7C);
-			HWND PluginList = GetDlgItem(hWnd, 1056);
+			HWND PluginList = GetDlgItem(hWnd, kDataDlg_PluginFileList);
 
 			switch (uMsg)
 			{
@@ -899,7 +915,7 @@ namespace ConstructionSetExtender
 					switch (NotificationData->code)
 					{
 					case NM_CUSTOMDRAW:
-						if (wParam == 1056)
+						if (wParam == kDataDlg_PluginFileList)
 						{
 							NMLVCUSTOMDRAW* DrawData = (NMLVCUSTOMDRAW*)lParam;
 
@@ -964,7 +980,7 @@ namespace ConstructionSetExtender
 
 						break;
 					case LVN_KEYDOWN:
-						if (wParam == 1057)
+						if (wParam == kDataDlg_ParentMasterFileList)
 						{
 							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
 
@@ -1118,7 +1134,7 @@ namespace ConstructionSetExtender
 
 								switch (CurrentItem.wID)
 								{
-								case 40194:		// Edit Cell Path Grid
+								case TESCSMain::kMainMenu_World_EditCellPathGrid:
 									if (*TESRenderWindow::PathGridEditFlag)
 										CheckItem = true;
 
@@ -1240,15 +1256,15 @@ namespace ConstructionSetExtender
 
 				switch (LOWORD(wParam))
 				{
-				case 40121:		// View > Preview Window
+				case TESCSMain::kMainMenu_View_PreviewWindow:
 					if (PreviewWindowImposterManager::Instance.GetEnabled())
 						BGSEEUI->MsgBoxI("Use the Object Window's context menu to preview objects when multiple preview windows are enabled.");
 					else
 						Return = false;
 
 					break;
-				case 40157:		// Help > Contents
-				case 40413:		// Character > Export Dialogue
+				case TESCSMain::kMainMenu_Help_Contents:
+				case TESCSMain::kMainMenu_Character_ExportDialogue:
 					{
 						if (Achievements::kOldestTrickInTheBook->GetUnlocked() == false)
 						{
@@ -1693,7 +1709,7 @@ namespace ConstructionSetExtender
 
 				switch (wParam)
 				{
-				case 2:				// autosave timer, needs to be handled here as the org wndproc doesn't compare the timerID
+				case TESCSMain::kTimer_Autosave:				// autosave timer, needs to be handled here as the org wndproc doesn't compare the timerID
 					if ((*TESCSMain::AllowAutoSaveFlag) != 0 && (*TESCSMain::ExittingCSFlag) == 0)
 					{
 						TESCSMain::AutoSave();
@@ -1706,11 +1722,11 @@ namespace ConstructionSetExtender
 						PathGridData.cbSize = sizeof(TBBUTTONINFO);
 						PathGridData.dwMask = TBIF_STATE;
 
-						SendMessage(*TESCSMain::MainToolbarHandle, TB_GETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+						SendMessage(*TESCSMain::MainToolbarHandle, TB_GETBUTTONINFO, TESCSMain::kToolbar_PathGridEdit, (LPARAM)&PathGridData);
 						if ((PathGridData.fsState & TBSTATE_CHECKED) == false && *TESRenderWindow::PathGridEditFlag)
 						{
 							PathGridData.fsState |= TBSTATE_CHECKED;
-							SendMessage(*TESCSMain::MainToolbarHandle, TB_SETBUTTONINFO, 40195, (LPARAM)&PathGridData);
+							SendMessage(*TESCSMain::MainToolbarHandle, TB_SETBUTTONINFO, TESCSMain::kToolbar_PathGridEdit, (LPARAM)&PathGridData);
 						}
 					}
 
@@ -2463,7 +2479,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_CLOSE:
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40423, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_RenderWindow, NULL);
 				Return = true;
 
 				break;
@@ -2500,7 +2516,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case 1:			// update timer
+				case TESRenderWindow::kTimer_ViewportUpdate:			// update timer
 					static bool SetTimerPeriod = true;
 					if (SetTimerPeriod)
 					{
@@ -2509,7 +2525,7 @@ namespace ConstructionSetExtender
 						if (Period == 0 || Period >= 100)
 							Period = 50;
 
-						SetTimer(hWnd, 1, Period, NULL);
+						SetTimer(hWnd, TESRenderWindow::kTimer_ViewportUpdate, Period, NULL);
 					}
 
 					if (TESLODTextureGenerator::GeneratorState != TESLODTextureGenerator::kLODDiffuseMapGeneratorState_NotInUse)
@@ -2822,7 +2838,7 @@ namespace ConstructionSetExtender
 					Return = true;
 					break;
 				case 0x47:		// G
-					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 40195, NULL);
+					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, TESCSMain::kToolbar_PathGridEdit, NULL);
 
 					Return = true;
 					break;
@@ -2919,7 +2935,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_CLOSE:
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40199, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_ObjectWindow, NULL);
 				Return = true;
 
 				break;
@@ -2954,16 +2970,14 @@ namespace ConstructionSetExtender
 				Return = true;
 
 				break;
-			default:
-				if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
-				{
-					HTREEITEM Selection = TreeView_GetSelection(TreeList);
+			}
 
-					TreeView_SelectItem(TreeList, NULL);
-					TreeView_SelectItem(TreeList, Selection);
-				}
+			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			{
+				HTREEITEM Selection = TreeView_GetSelection(TreeList);
 
-				break;
+				TreeView_SelectItem(TreeList, NULL);
+				TreeView_SelectItem(TreeList, Selection);
 			}
 
 			return DlgProcResult;
@@ -2975,11 +2989,11 @@ namespace ConstructionSetExtender
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
-			HWND WorldspaceLabel = GetDlgItem(hWnd, 1164);
-			HWND WorldspaceCombo = GetDlgItem(hWnd, 2083);
-			HWND CellLabel = GetDlgItem(hWnd, 1163);
-			HWND CellList = GetDlgItem(hWnd, 1155);
-			HWND RefList = GetDlgItem(hWnd, 1156);
+			HWND WorldspaceLabel = GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceLabel);
+			HWND WorldspaceCombo = GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceComboBox);
+			HWND CellLabel = GetDlgItem(hWnd, TESCellViewWindow::kCellLabel);
+			HWND CellList = GetDlgItem(hWnd, TESCellViewWindow::kCellListView);
+			HWND RefList = GetDlgItem(hWnd, TESCellViewWindow::kObjectRefListView);
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 			HWND FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
@@ -2991,13 +3005,10 @@ namespace ConstructionSetExtender
 
 			int* RefListSortColumn = TESCellViewWindow::ObjectListSortColumn;
 
-			if (FilterEditBox == NULL)
-				return DlgProcResult;
-
 			switch (uMsg)
 			{
 			case WM_CLOSE:
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40200, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_CellViewWindow, NULL);
 				Return = true;
 
 				break;
@@ -3289,13 +3300,11 @@ namespace ConstructionSetExtender
 
 					break;
 				}
-			default:
-				if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
-				{
-					SendMessage(hWnd, 0x40F, NULL, NULL);		// reinit object list
-				}
+			}
 
-				break;
+			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			{
+				SendMessage(hWnd, 0x40F, NULL, NULL);		// reinit object list
 			}
 
 			return DlgProcResult;
@@ -3307,7 +3316,7 @@ namespace ConstructionSetExtender
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
-			HWND VoiceList = GetDlgItem(hWnd, 2168);
+			HWND VoiceList = GetDlgItem(hWnd, ResponseEditorData::kVoiceFileListView);
 
 			switch (uMsg)
 			{
@@ -3319,7 +3328,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_INITDIALOG:
 				{
-					EnableWindow(GetDlgItem(hWnd, 1016), TRUE);
+					EnableWindow(GetDlgItem(hWnd, ResponseEditorData::kGenerateLIPFileButton), TRUE);
 
 					CheckDlgButton(hWnd,
 								IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW,
@@ -3338,7 +3347,7 @@ namespace ConstructionSetExtender
 
 					switch (NotificationData->idFrom)
 					{
-					case 2168:		// voice file listview
+					case ResponseEditorData::kVoiceFileListView:		// voice file listview
 						{
 							if (NotificationData->code == LVN_ITEMACTIVATE)
 							{
@@ -3413,7 +3422,7 @@ namespace ConstructionSetExtender
 						}
 
 						break;
-					case 2223:					// Copy external file
+					case ResponseEditorData::kCopyExternalFileButton:					// Copy external file
 						{
 							if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 							{
@@ -3555,7 +3564,7 @@ namespace ConstructionSetExtender
 					{
 						LVCOLUMN ColumnData = {0};
 						ColumnData.mask = LVCF_WIDTH;
-						HWND QuestList = GetDlgItem(hWnd, 2064);
+						HWND QuestList = GetDlgItem(hWnd, kFormList_TESFormIDListView);
 
 						ColumnData.cx = 200;
 						ListView_SetColumn(QuestList, 0, &ColumnData);
@@ -3570,7 +3579,7 @@ namespace ConstructionSetExtender
 				switch (LOWORD(wParam))
 				{
 				case IDC_CSE_QUEST_EDITRESULTSCRIPT:
-					if (IsWindowEnabled(GetDlgItem(hWnd, 1444)))
+					if (IsWindowEnabled(GetDlgItem(hWnd, kDialogEditor_ResultScriptTextBox)))
 					{
 						if (BGSEEUI->ModalDialog(BGSEEMAIN->GetExtenderHandle(),
 												MAKEINTRESOURCE(IDD_EDITRESULTSCRIPT),
@@ -3578,7 +3587,7 @@ namespace ConstructionSetExtender
 												UIManager::EditResultScriptDlgProc,
 												(LPARAM)hWnd))
 						{
-							SendMessage(hWnd, WM_COMMAND, 1591, NULL);		// compile result script
+							SendMessage(hWnd, WM_COMMAND, kDialogEditor_CompileResultScriptButton, NULL);		// compile result script
 						}
 					}
 
@@ -3614,7 +3623,7 @@ namespace ConstructionSetExtender
 
 						SME_ASSERT(Image);
 
-						HWND PictureControl = GetDlgItem(hWnd, 1963);
+						HWND PictureControl = GetDlgItem(hWnd, kAboutDialog_LogoPictureControl);
 						SendMessage(PictureControl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)Image);
 					}
 
@@ -3635,11 +3644,11 @@ namespace ConstructionSetExtender
 						std::string ReplacedString(VersionString);
 						std::replace(ReplacedString.begin(), ReplacedString.end(), ',', '.');
 
-						SetDlgItemText(hWnd, 1580, (LPCSTR)ReplacedString.c_str());
+						SetDlgItemText(hWnd, kAboutDialog_VersionLabel, (LPCSTR)ReplacedString.c_str());
 
 						if (IsWarholAGenius)
 						{
-							Edit_SetText(GetDlgItem(hWnd, 1000),
+							Edit_SetText(GetDlgItem(hWnd, kAboutDialog_CopyrightTextBox),
 								"Pain, day, sky, beauty, black, die, joy,\n love, empty, time, sun, hurt, trust, peace, dark, rage, sad, white, rain, hate,\n anger, hope, sacred, passion, life, night,\n ache, soft light");
 						}
 
@@ -3650,7 +3659,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_DESTROY:
 				{
-					HANDLE Image = (HANDLE)SendDlgItemMessage(hWnd, 1963, STM_GETIMAGE, IMAGE_BITMAP, NULL);
+					HANDLE Image = (HANDLE)SendDlgItemMessage(hWnd, kAboutDialog_LogoPictureControl, STM_GETIMAGE, IMAGE_BITMAP, NULL);
 
 					if (Image)
 						DeleteBitmap(Image);
@@ -4230,7 +4239,7 @@ namespace ConstructionSetExtender
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
-			HWND FormList = GetDlgItem(hWnd, 1018);
+			HWND FormList = GetDlgItem(hWnd, kFormList_Generic);
 
 			switch (uMsg)
 			{
@@ -4287,6 +4296,8 @@ namespace ConstructionSetExtender
 			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
 			(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 
+			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
+
 			Return = false;
 
 			switch (uMsg)
@@ -4297,7 +4308,7 @@ namespace ConstructionSetExtender
 					// given their bollocks'd-up way of copying data from the dialog
 					Return = true;
 
-					if (IsWindowEnabled(GetDlgItem(hWnd, 1)))
+					if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)))
 					{
 						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
 						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
@@ -4319,7 +4330,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_TESFORMIDLISTVIEW_SAVECHANGES:
 				{
-					if (IsWindowEnabled(GetDlgItem(hWnd, 1)))
+					if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)))
 					{
 						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
 						TESForm* WorkingCopy = TESDialog::GetDialogExtraParam(hWnd);
@@ -4357,20 +4368,24 @@ namespace ConstructionSetExtender
 				{
 					if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)
 					{
-						SetWindowText(GetDlgItem(hWnd, 1), "Apply");
-						SetWindowText(GetDlgItem(hWnd, 2), "Close");
+						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), "Apply");
+						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Cancel), "Close");
 					}
 
 					// ideally, we'd be changing the form listview's style to allow multiple selections
 					// unfortunately, adding/removing the LVS_SINGLESEL style post-window creation has no effect
 					// so we tuck in our tails and create replacement templates for all TESFormIDListView forms
 					// PS: Dammit!
+
+					SME_ASSERT(FilterEditBox);
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, GetDlgItem(hWnd, kFormList_TESFormIDListView),
+																	GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					;//
+					CSEFilterableFormListManager::Instance.Unregister(hWnd);
 				}
 
 				break;
@@ -4378,23 +4393,20 @@ namespace ConstructionSetExtender
 				if (HIWORD(wParam))		// to keep EN_KILLFOCUS notifications from inadvertently calling the button handlers
 					break;				// ### could cause weird behaviour later on
 
+				if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+					break;
+
 				switch (LOWORD(wParam))
 				{
-				case 1:			// OK/Apply button
+				case TESDialog::kStandardButton_Ok:			// OK/Apply button
 					{
 						Return = true;
 
 						SendMessage(hWnd, WM_TESFORMIDLISTVIEW_SAVECHANGES, NULL, NULL);
-
-						if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
-						{
-							// the exception
-							DestroyWindow(hWnd);
-						}
 					}
 
 					break;
-				case 2:			// Cancel/Close button
+				case TESDialog::kStandardButton_Cancel:			// Cancel/Close button
 					{
 						Return = true;
 						bool Cancelled = false;
@@ -4432,6 +4444,9 @@ namespace ConstructionSetExtender
 
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
 						break;		// only interested in the main listview control
+
+					if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+						break;
 
 					switch (NotificationData->code)
 					{
@@ -4485,7 +4500,6 @@ namespace ConstructionSetExtender
 
 						break;
 					case LVN_ITEMCHANGED:
-						if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)			// you! go away!
 						{
 							NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
 
@@ -4537,9 +4551,9 @@ namespace ConstructionSetExtender
 									}
 
 									SetWindowText(hWnd, WindowTitle);
-									if (IsWindowEnabled(GetDlgItem(hWnd, 1)) == FALSE)
+									if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)) == FALSE)
 									{
-										EnableWindow(GetDlgItem(hWnd, 1), TRUE);
+										EnableWindow(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), TRUE);
 										InvalidateRect(hWnd, NULL, TRUE);
 									}
 
@@ -4558,6 +4572,16 @@ namespace ConstructionSetExtender
 				break;
 			}
 
+			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			{
+				TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
+				if (LocalCopy)
+				{
+					TESFormIDListView* Item = CS_CAST(LocalCopy, TESForm, TESFormIDListView);
+					Item->RefreshFormList(GetDlgItem(hWnd, kFormList_TESFormIDListView));
+				}
+			}
+
 			return DlgProcResult;
 		}
 
@@ -4574,7 +4598,7 @@ namespace ConstructionSetExtender
 					if (*TESRenderWindow::ActiveCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
 						SendMessage(hWnd, WM_COMMAND, 2, NULL);			// otherwise, the editor will crash as soon as the render window acquires input focus
 					else
-						SendDlgItemMessage(hWnd, 1492, LVM_SORTITEMS, 0, (LPARAM)0x0041E7D0);		// TESDialog::SortComparatorLandTextureList
+						SendDlgItemMessage(hWnd, kFormList_LandTextures, LVM_SORTITEMS, 0, (LPARAM)TESDialog::LandscapeTextureSortComparator);
 				}
 
 				break;
@@ -4582,7 +4606,7 @@ namespace ConstructionSetExtender
 				{
 					Return = true;
 
-					HWND TexList = GetDlgItem(hWnd, 1492);
+					HWND TexList = GetDlgItem(hWnd, kFormList_LandTextures);
 					int Selection = TESListView::GetItemByData(TexList, *TESRenderWindow::ActiveLandscapeTexture);
 					if (Selection != -1)
 					{
@@ -4604,10 +4628,7 @@ namespace ConstructionSetExtender
 			Return = false;
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
-			HWND FormList = GetDlgItem(hWnd, 1977);
-
-			if (FilterEditBox == NULL)
-				return DlgProcResult;
+			HWND FormList = GetDlgItem(hWnd, kFormList_TESPackage);
 
 			switch (uMsg)
 			{
@@ -4617,7 +4638,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_INITDIALOG:
 				{
-					HWND PackageListView = GetDlgItem(hWnd, 1977);
+					HWND PackageListView = GetDlgItem(hWnd, kFormList_TESPackage);
 					LVCOLUMN ColumnData = {0};
 					ColumnData.mask = LVCF_WIDTH;
 
@@ -4629,7 +4650,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_COMMAND:
-				if (LOWORD(wParam) == 2)		// prevents the dialog from closing itself on renaming an AI package
+				if (LOWORD(wParam) == TESDialog::kStandardButton_Cancel)		// prevents the dialog from closing itself on renaming an AI package
 				{
 					if (HIWORD(wParam) == EN_KILLFOCUS || HIWORD(wParam) == EN_SETFOCUS)
 					{
@@ -4637,13 +4658,13 @@ namespace ConstructionSetExtender
 						DlgProcResult = TRUE;
 					}
 				}
-			default:
-				if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
-				{
-					SendMessage(hWnd, 0x41A, 0, 0);
-				}
 
 				break;
+			}
+
+			if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			{
+				SendMessage(hWnd, 0x41A, 0, 0);
 			}
 
 			return DlgProcResult;
@@ -4659,7 +4680,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					HWND PackageListView = GetDlgItem(hWnd, 1977);
+					HWND PackageListView = GetDlgItem(hWnd, kFormList_TESPackage);
 
 					TESPackage::InitializeListViewColumns(PackageListView);	// do this just once, not every time the listview is refreshed
 
@@ -4787,8 +4808,8 @@ namespace ConstructionSetExtender
 						SetForegroundWindow(hWnd);
 
 						// make sure the head preview is selected
-						if (IsDlgButtonChecked(hWnd, 1014) != BST_CHECKED)
-							SendMessage(hWnd, WM_COMMAND, 1014, NULL);
+						if (IsDlgButtonChecked(hWnd, TESNPC::kHeadPeviewCheckBox) != BST_CHECKED)
+							SendMessage(hWnd, WM_COMMAND, TESNPC::kHeadPeviewCheckBox, NULL);
 
 						SetActiveWindow(GetDlgItem(hWnd, kFaceGenControl_PreviewCtrl));
 						SendDlgItemMessage(hWnd, kFaceGenControl_PreviewCtrl, WM_KEYDOWN, 0x4C, NULL);		// L key
@@ -4897,7 +4918,7 @@ namespace ConstructionSetExtender
 
 					switch (NotificationData->idFrom)
 					{
-					case 1777:		// tab control, same for both the NPC and Race dialogs
+					case TESTabControl::kTabControl:		// tab control, same for both the NPC and Race dialogs
 						{
 							if (NotificationData->code == TCN_SELCHANGE)
 							{
@@ -5052,7 +5073,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_NOTIFY:
 				{
-					HWND EffectItemListView = GetDlgItem(hWnd, 2069);
+					HWND EffectItemListView = GetDlgItem(hWnd, EffectItemList::kEffectItemListView);
 					NMHDR* NotificationData = (NMHDR*)lParam;
 
 					if (NotificationData->hwndFrom != EffectItemListView)
@@ -5153,7 +5174,7 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
-				case 1:			// OK button
+				case TESDialog::kStandardButton_Ok:			// OK button
 					{
 						// validate list
 						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
@@ -5175,6 +5196,52 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			}
+
+			return DlgProcResult;
+		}
+
+		LRESULT CALLBACK TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												   bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData)
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
+			HWND FormList = GetDlgItem(hWnd, kFormList_TESFormIDListView);
+
+			switch (uMsg)
+			{
+			case WM_COMMAND:
+				if (LOWORD(wParam) == TESCellViewWindow::kWorldspaceComboBox && HIWORD(wParam) == 1)
+				{
+					if ((HWND)lParam == GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceComboBox))
+					{
+						// we didn't send this message, so clear the filter string
+						// this is done to prevent the dialog's controls from being disabled if the active filter string doesn't match any forms in the new worldspace
+						SetWindowText(FilterEditBox, "");
+						TODO("tunnel the message and wrap it inside an enable/disable call pair")
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				CSEFilterableFormListManager::Instance.Unregister(hWnd);
+
+				break;
+			case WM_INITDIALOG:
+				{
+					SME_ASSERT(FilterEditBox);
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+				}
+
+				break;
+			}
+
+			if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			{
+				// pass NULL as lParam to indicate a filter refresh
+				SendMessage(hWnd, WM_COMMAND, MAKEWPARAM(TESCellViewWindow::kWorldspaceComboBox, 1), NULL);
 			}
 
 			return DlgProcResult;
@@ -5724,7 +5791,7 @@ namespace ConstructionSetExtender
 					HWND Parent = (HWND)GetWindowLongPtr(hWnd, GWL_USERDATA);
 
 					GetDlgItemText(hWnd, IDC_EDITRESULTSCRIPT_SCRIPTTEXT, Buffer, sizeof(Buffer));
-					SetDlgItemText(Parent, 1444, (LPSTR)Buffer);
+					SetDlgItemText(Parent, kDialogEditor_ResultScriptTextBox, (LPSTR)Buffer);
 
 					if (LOWORD(wParam) == IDC_EDITRESULTSCRIPT_COMPILE)
 						EndDialog(hWnd, 1);
@@ -5748,7 +5815,7 @@ namespace ConstructionSetExtender
 				SendDlgItemMessage(hWnd, IDC_EDITRESULTSCRIPT_SCRIPTTEXT, EM_SETPARAFORMAT, NULL, (LPARAM)&FormattingData);
 				SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)lParam);
 
-				HWND ResultScriptEditBox = GetDlgItem((HWND)lParam, 1444);
+				HWND ResultScriptEditBox = GetDlgItem((HWND)lParam, kDialogEditor_ResultScriptTextBox);
 				char Buffer[0x1000] = {0};
 
 				GetWindowText(ResultScriptEditBox, Buffer, sizeof(Buffer));
@@ -5817,6 +5884,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, TESFormIDListViewDlgSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, TESFormIDListViewDlgSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, TESFormIDListViewDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Quest, TESFormIDListViewDlgSubClassProc);
 			}
 
 			// Generic extra fittings subclasses
@@ -5910,6 +5978,8 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledItem, LeveledItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, LeveledItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, LeveledItemFormDlgSubClassProc);
+
+	//		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, TESObjectCELLDlgSubClassProc);
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());

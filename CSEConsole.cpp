@@ -51,7 +51,7 @@ namespace ConstructionSetExtender
 			{
 				File->SetActive(SetActive);
 				File->SetLoaded(true);
-				SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 0x9CD1, 0);
+				SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, TESCSMain::kToolbar_DataFiles, 0);
 			}
 			else
 				BGSEECONSOLE_MESSAGE("Plugin '%s' doesn't exist!", PluginName.c_str());
@@ -89,7 +89,7 @@ namespace ConstructionSetExtender
 
 		void BGSEEConsoleCmd_SavePlugin_ExecuteHandler(BGSEECONSOLECMD_ARGS)
 		{
-			SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 0x9CD2, 0);
+			SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, TESCSMain::kToolbar_Save, 0);
 		}
 
 		void BGSEEConsoleCmd_AutoSave_ExecuteHandler(BGSEECONSOLECMD_ARGS)

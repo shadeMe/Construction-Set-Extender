@@ -223,7 +223,7 @@ void ShowUseReportDialog(const char* EditorID)
 
 void SaveActivePlugin(void)
 {
-	SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 0x9CD2, NULL);
+	SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kToolbar_Save, NULL);
 }
 
 void ReadFromINI(const char* Setting, const char* Section, const char* Default, char* OutBuffer, UInt32 Size)

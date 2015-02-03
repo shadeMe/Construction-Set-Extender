@@ -213,6 +213,11 @@ public:
 	static bool							ShowInitiallyDisabledRefChildren;
 
 	static const float					MaxLandscapeEditBrushRadius;
+
+	enum
+	{
+		kTimer_ViewportUpdate = 1,
+	};
 };
 
 #define _RENDERUNDO				(*TESRenderWindow::UndoBuffer)

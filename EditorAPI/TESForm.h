@@ -234,6 +234,9 @@ class TESFormIDListView : public TESForm
 {
 public:
 	// no additional members
+
+	// methods
+	void							RefreshFormList(HWND ListView);
 };
 STATIC_ASSERT(sizeof(TESFormIDListView) == 0x24);
 

@@ -31,6 +31,7 @@ namespace ConstructionSetExtender
 				int						TimerPeriod;
 				int						TimeCounter;
 				UInt8					Flags;
+				bool					Enabled;
 
 				enum
 				{
@@ -54,6 +55,7 @@ namespace ConstructionSetExtender
 				~FilterableWindowData();
 
 				bool					HandleMessages(HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
+				void					SetEnabledState(bool State);
 			};
 
 			static CSEFilterableFormListManager				Instance;
@@ -69,6 +71,7 @@ namespace ConstructionSetExtender
 			bool						Unregister(HWND Window);
 
 			bool						HandleMessages(HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam);
+			void						SetEnabledState(HWND Window, bool State);
 		};
 
 		class CSEFormEnumerationManager
@@ -270,6 +273,7 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK		TESFormEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		MagicItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 
 		BOOL CALLBACK			AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

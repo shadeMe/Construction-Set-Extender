@@ -90,6 +90,13 @@ public:
 	/*24*/ VoicedRaceListT			voicedRaces;
 
 	static ResponseEditorData**		EditorCache;				// accessed by the response editor dlg and set by the last opened one
+
+	enum
+	{
+		kVoiceFileListView = 2168,
+		kGenerateLIPFileButton = 1016,
+		kCopyExternalFileButton = 2223,
+	};
 };
 STATIC_ASSERT(sizeof(ResponseEditorData) == 0x2C);
 
@@ -202,6 +209,25 @@ enum
 	kFaceGenControl_HairLengthTrackbar = 2126,
 
 	kFaceGenControl_AdvancedParamsListView = 1020,
+};
+
+enum
+{
+	kDataDlg_PluginFileList = 1056,
+	kDataDlg_ParentMasterFileList = 1057,
+};
+
+enum
+{
+	kDialogEditor_ResultScriptTextBox = 1444,
+	kDialogEditor_CompileResultScriptButton = 1591,
+};
+
+enum
+{
+	kAboutDialog_LogoPictureControl = 1963,
+	kAboutDialog_VersionLabel = 1580,
+	kAboutDialog_CopyrightTextBox = 1000,
 };
 
 // container class
@@ -404,6 +430,12 @@ public:
 		kDialogTemplate_Preview181 = 181,
 	};
 
+	enum
+	{
+		kStandardButton_Ok = 1,
+		kStandardButton_Cancel = 2,
+	};
+
 	// methods
 	static UInt32							WritePositionToINI(HWND Handle, const char* WindowClassName);
 	static bool								GetPositionFromINI(const char* WindowClassName, LPRECT OutRect);
@@ -442,6 +474,8 @@ public:
 	static UInt8*							ObjectWindowDragDropInProgress;
 	static UInt8*							TESFormIDListViewDragDropInProgress;
 	static bool								PackageCellDragDropInProgress;
+
+	static void*							LandscapeTextureSortComparator;
 };
 
 class TESComboBox
@@ -471,6 +505,15 @@ class TESTreeView
 public:
 	// methods
 	static void*							GetItemData(HWND hWnd, HTREEITEM Item);
+};
+
+class TESTabControl
+{
+public:
+	enum
+	{
+		kTabControl = 1777,
+	};
 };
 
 class TESPreviewWindow
@@ -522,6 +565,26 @@ public:
 
 	static const char*						INIFilePath;
 	static HIMAGELIST*						BoundObjectIcons;
+
+	enum
+	{
+		kMainMenu_World_EditCellPathGrid = 40194,
+		kMainMenu_View_PreviewWindow = 40121,
+		kMainMenu_Help_Contents = 40157,
+		kMainMenu_Character_ExportDialogue = 40413,
+		kMainMenu_View_CellViewWindow = 40200,
+		kMainMenu_View_RenderWindow = 40423,
+		kMainMenu_View_ObjectWindow = 40199,
+	};
+
+	enum
+	{
+		kTimer_Autosave = 2,
+
+		kToolbar_PathGridEdit = 40195,
+		kToolbar_DataFiles = 40145,
+		kToolbar_Save = 40146,
+	};
 };
 
 // container class, arbitrarily named
@@ -631,6 +694,15 @@ public:
 	static UInt8*					MainMenuState;
 	static TESObjectCELL**			CurrentCellSelection;
 	static int*						ObjectListSortColumn;
+
+	enum
+	{
+		kWorldspaceLabel = 1164,
+		kWorldspaceComboBox = 2083,
+		kCellLabel = 1163,
+		kCellListView = 1155,
+		kObjectRefListView = 1156,
+	};
 };
 
 // 18

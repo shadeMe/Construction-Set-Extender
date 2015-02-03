@@ -321,3 +321,8 @@ void TESForm::PopulateCrossReferenceListView(HWND ListView)
 {
 	thisCall<void>(0x004964C0, this, ListView);
 }
+
+void TESFormIDListView::RefreshFormList(HWND ListView)
+{
+	return thisVirtualCall<void>(0x12C, this, ListView);
+}

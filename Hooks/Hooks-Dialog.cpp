@@ -1483,7 +1483,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESQuestRemoveStageDataHook(HWND Dialog, TESQuest::StageData* Stage)
 		{
-			HWND StageItemListView = GetDlgItem(Dialog, 2173);
+			HWND StageItemListView = GetDlgItem(Dialog, TESQuest::StageData::QuestStageItem::kStageItemsListView);
 			UInt32 StageItemCount = ListView_GetItemCount(StageItemListView);
 
 			DialogExtraQuestStageData* xStageData = CS_CAST(TESDialog::GetDialogExtraByType(Dialog, BSExtraData::kDialogExtra_QuestStageData),
@@ -1520,13 +1520,13 @@ namespace ConstructionSetExtender
 		void __stdcall DoHideCSMainDialogsStartupHook(void)
 		{
 			if (Settings::Dialogs::kRenderWindowState.GetData().i == 0)
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40423, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_RenderWindow, NULL);
 
 			if (Settings::Dialogs::kObjectWindowState.GetData().i == 0)
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40199, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_ObjectWindow, NULL);
 
 			if (Settings::Dialogs::kCellViewWindowState.GetData().i == 0)
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40200, NULL);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_CellViewWindow, NULL);
 		}
 
 		#define _hhName		HideCSMainDialogsStartup

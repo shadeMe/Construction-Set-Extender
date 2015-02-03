@@ -71,5 +71,10 @@ public:
 
 	// methods
 	void								PopulateListView(HWND ListView);
+
+	enum
+	{
+		kEffectItemListView = 2069,
+	};
 };
 STATIC_ASSERT(sizeof(EffectItemList) == 0xDC);

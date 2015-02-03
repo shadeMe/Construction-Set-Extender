@@ -533,7 +533,7 @@ namespace ConstructionSetExtender
 				if (_stricmp(PluginName, "Oblivion.esm"))
 					File->SetActive(true);
 
-				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 0x9CD1, 0);
+				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kToolbar_DataFiles, 0);
 
 				BGSEECONSOLE->Exdent();
 			}

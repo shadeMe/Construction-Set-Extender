@@ -27,6 +27,11 @@ public:
 				kQuestStageItemFlags_CompletesQuest	=	/*00*/ 0x1
 			};
 
+			enum
+			{
+				kStageItemsListView = 2173,
+			};
+
 			/*00*/ UInt8			flags;
 			/*01*/ UInt8			pad01[3];
 			/*04*/ ConditionListT	conditions;

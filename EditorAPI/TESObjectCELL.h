@@ -76,6 +76,13 @@ public:
 		/*00*/ LightingData*		lighting;	// if interior
 	};
 
+	enum
+	{
+		kHasWaterCheckBox = 1006,
+		kWaterTypeComboBox = 1229,
+		kWaterHeightTextBox = 2085,
+	};
+
 	// members
 	//     /*00*/ TESForm
 	//     /*24*/ TESFullName

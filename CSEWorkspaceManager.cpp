@@ -21,7 +21,7 @@ namespace ConstructionSetExtender
 				Itr.Get()->SetLoaded(false);
 			}
 
-			SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, 0x9CD1, 0);
+			SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, TESCSMain::kToolbar_DataFiles, 0);
 
 			Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteBuffer();
 		}

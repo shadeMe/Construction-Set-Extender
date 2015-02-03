@@ -798,12 +798,12 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESObjectCELLGetDataFromDialogHook(TESObjectCELL* Cell, HWND Dialog)
 		{
-			if (IsDlgButtonChecked(Dialog, 1006))		// has water
+			if (IsDlgButtonChecked(Dialog, TESObjectCELL::kHasWaterCheckBox))		// has water
 			{
-				float WaterHeight = TESDialog::GetDlgItemFloat(Dialog, 2085);
+				float WaterHeight = TESDialog::GetDlgItemFloat(Dialog, TESObjectCELL::kWaterHeightTextBox);
 				Cell->ModExtraCellWaterHeight(WaterHeight);
 
-				TESWaterForm* WaterType = (TESWaterForm*)TESComboBox::GetSelectedItemData(GetDlgItem(Dialog, 1229));
+				TESWaterForm* WaterType = (TESWaterForm*)TESComboBox::GetSelectedItemData(GetDlgItem(Dialog, TESObjectCELL::kWaterTypeComboBox));
 				Cell->ModExtraCellWaterType(WaterType);
 			}
 			else

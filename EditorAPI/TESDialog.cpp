@@ -7,6 +7,7 @@ tList<HWND>*				TESDialog::OpenDialogWindows = (tList<HWND>*)0x00A0B55C;
 bool						TESDialog::PackageCellDragDropInProgress = false;
 UInt8*						TESDialog::TESFormIDListViewDragDropInProgress = (UInt8*)0x00A0BE45;
 UInt8*						TESDialog::ObjectWindowDragDropInProgress = (UInt8*)0x00A0BA68;
+void*						TESDialog::LandscapeTextureSortComparator = (void*)0x0041E7D0;
 
 HINSTANCE*					TESCSMain::Instance = (HINSTANCE*)0x00A0AF1C;
 HWND*						TESCSMain::WindowHandle = (HWND*)0x00A0AF20;
@@ -381,7 +382,7 @@ void TESPreviewWindow::Deinitialize(HWND PreviewWindow)
 void TESPreviewWindow::Display(TESBoundObject* Object)
 {
 	if (*WindowHandle == NULL)
-		SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40121, NULL);
+		SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_PreviewWindow, NULL);
 
 	if (Object)
 		SetSourceObject(Object);

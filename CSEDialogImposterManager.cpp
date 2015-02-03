@@ -143,14 +143,15 @@ namespace ConstructionSetExtender
 
 			DlgProcResult = TRUE;
 			break;
-		default:
+		}
+
+		if (DlgProcResult == FALSE)
+		{
 			if (UIManager::CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
 			{
 				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
 				DlgProcResult = TRUE;
 			}
-
-			break;
 		}
 
 		if (DlgProcResult == FALSE && GetWindowLongPtr(FormList, GWL_USERDATA) != NULL)

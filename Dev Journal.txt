@@ -14,6 +14,7 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> Cell filter for cell view window
 		> Render window selection loses NiLines after a copy operation (works after moving them around)
 		> Fix the global clipboard's to correctly paste refs in place
 		> Partial black tex hasn't been fixed yet
