@@ -78,6 +78,7 @@ namespace ConstructionSetExtender
 
 			void										SetSelectionStart(int Index);
 			void										SetSelectionLength(int Length);
+			bool										GetInSelection(int Index);
 
 			int											GetCharIndexFromPosition(Point Position);
 			Point										GetPositionFromCharIndex(int Index);
@@ -116,6 +117,7 @@ namespace ConstructionSetExtender
 
 			Control^									GetContainer();
 			void										ScrollToLine(String^ LineNumber);
+			bool										GetLineVisible(UInt32 LineNumber);	// inside the text field's viewable area
 			Point										PointToScreen(Point Location);
 			void										SetEnabledState(bool State);
 

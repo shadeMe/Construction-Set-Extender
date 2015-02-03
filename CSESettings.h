@@ -30,6 +30,8 @@ namespace ConstructionSetExtender
 			extern INISetting					kFormOverrideLevel2BackColor;
 			extern INISetting					kFormOverrideLevel3ForeColor;
 			extern INISetting					kFormOverrideLevel3BackColor;
+
+			extern INISetting					kMultiplePreviewWindows;
 		}
 
 		namespace General

@@ -115,7 +115,7 @@ namespace ConstructionSetExtender
 		case WM_OBJECTWINDOWIMPOSTER_INITIALIZE:
 			{
 				SME_ASSERT(FilterEditBox);
-				UIManager::CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
+				UIManager::CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
 
 				// reproduce the relevant bits of the org wnd proc's code
 				CacheOperator CacheBackup(hWnd);
@@ -541,7 +541,8 @@ namespace ConstructionSetExtender
 	}
 
 	PreviewWindowImposterManager::PreviewWindowImposterManager() :
-		ImposterRegistry()
+		ImposterRegistry(),
+		Enabled(false)
 	{
 		;//
 	}
@@ -553,7 +554,7 @@ namespace ConstructionSetExtender
 
 	void PreviewWindowImposterManager::SpawnImposter(TESBoundObject* Object)
 	{
-		if (Object)
+		if (Enabled && Object)
 		{
 			ImposterData* Data = new ImposterData();
 			HINSTANCE ReplacementTemplate = BGSEEUI->GetDialogHotSwapper()->GetAlternateResourceInstance(TESDialog::kDialogTemplate_PreviewWindow);
@@ -590,5 +591,15 @@ namespace ConstructionSetExtender
 		}
 
 		ImposterRegistry.clear();
+	}
+
+	bool PreviewWindowImposterManager::GetEnabled(void) const
+	{
+		return Enabled;
+	}
+
+	void PreviewWindowImposterManager::SetEnabled(bool State)
+	{
+		Enabled = State;
 	}
 }

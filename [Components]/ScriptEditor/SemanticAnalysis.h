@@ -137,6 +137,7 @@ namespace ConstructionSetExtender
 			UInt32					EndLine;				// line with the block end specifier
 			UInt32					IndentLevel;			// indent count for the block's contents
 			ControlBlock^			Parent;					// nullptr for script blocks
+			bool					BasicBlock;				// set to true for all blocks except IF's with ELSE/ELSEIF clauses
 
 			ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent);
 
@@ -231,11 +232,11 @@ namespace ConstructionSetExtender
 				FillControlBlocks = 1 << 1,
 				FillUDFData = 1 << 2,
 
-				PerformBasicValidation = 1 << 31,
-				CountVariableReferences = 1 << 30,
-				SuppressQuestVariableRefCount = 1 << 29,
-				CheckVariableNameCommandCollisions = 1 << 28,
-				CheckVariableNameFormCollisions = 1 << 27,
+				PerformBasicValidation = 1 << 3,
+				CountVariableReferences = 1 << 4,
+				SuppressQuestVariableRefCount = 1 << 5,
+				CheckVariableNameCommandCollisions = 1 << 6,
+				CheckVariableNameFormCollisions = 1 << 7,
 			};
 
 			AnalysisData();
@@ -244,7 +245,8 @@ namespace ConstructionSetExtender
 
 			void								PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate);
 
-			ControlBlock^						GetBlockAt(UInt32 Line);
+			ControlBlock^						GetBlockStartingAt(UInt32 Line);
+			ControlBlock^						GetBlockEndingAt(UInt32 Line);
 			UInt32								GetLineIndentLevel(UInt32 Line);
 			Variable^							LookupVariable(String^ VarName);
 

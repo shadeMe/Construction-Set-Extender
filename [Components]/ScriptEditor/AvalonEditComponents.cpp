@@ -8,7 +8,7 @@ namespace ConstructionSetExtender
 	{
 		namespace AvalonEditor
 		{
-			void AvalonEditLineBackgroundColorizer::RenderBackground(TextView^ Destination,
+			void ILineBackgroundColorizer::RenderBackground(TextView^ Destination,
 																	System::Windows::Media::DrawingContext^ DrawingContext,
 																	int StartOffset,
 																	int EndOffset,
@@ -42,19 +42,19 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			AvalonEditLineBackgroundColorizer::~AvalonEditLineBackgroundColorizer()
+			ILineBackgroundColorizer::~ILineBackgroundColorizer()
 			{
 				ParentEditor = nullptr;
 			}
 
-			AvalonEditLineBackgroundColorizer::AvalonEditLineBackgroundColorizer( AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer ) :
+			ILineBackgroundColorizer::ILineBackgroundColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
 				ParentEditor(Parent),
 				RenderLayer(RenderLayer)
 			{
 				;//
 			}
 
-			void AvalonEditCurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			void CurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				if (ParentEditor->TextArea->Selection->IsEmpty)
 				{
@@ -71,13 +71,13 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			AvalonEditCurrentLineBGColorizer::AvalonEditCurrentLineBGColorizer( AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer ) :
-				AvalonEditLineBackgroundColorizer(Parent, RenderLayer)
+			CurrentLineBGColorizer::CurrentLineBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+				ILineBackgroundColorizer(Parent, RenderLayer)
 			{
 				;//
 			}
 
-			bool AvalonEditScriptErrorBGColorizer::GetLineInError(int Line)
+			bool ScriptErrorBGColorizer::GetLineInError(int Line)
 			{
 				for each (int Itr in ErrorLines)
 				{
@@ -87,18 +87,18 @@ namespace ConstructionSetExtender
 				return false;
 			}
 
-			void AvalonEditScriptErrorBGColorizer::AddLine(int Line)
+			void ScriptErrorBGColorizer::AddLine(int Line)
 			{
 				if (GetLineInError(Line) == false)
 					ErrorLines->Add(Line);
 			}
 
-			void AvalonEditScriptErrorBGColorizer::ClearLines()
+			void ScriptErrorBGColorizer::ClearLines()
 			{
 				ErrorLines->Clear();
 			}
 
-			void AvalonEditScriptErrorBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			void ScriptErrorBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				for (int i = 1; i <= ParentEditor->LineCount; i++)
 				{
@@ -118,12 +118,12 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			AvalonEditScriptErrorBGColorizer::~AvalonEditScriptErrorBGColorizer()
+			ScriptErrorBGColorizer::~ScriptErrorBGColorizer()
 			{
 				ClearLines();
 			}
 
-			void AvalonEditSelectionBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			void SelectionBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				TextDocument^ CurrentDocument = ParentEditor->Document;
 				Selection^ CurrentSelection = ParentEditor->TextArea->Selection;
@@ -163,13 +163,13 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			AvalonEditSelectionBGColorizer::AvalonEditSelectionBGColorizer( AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer ) :
-				AvalonEditLineBackgroundColorizer(Parent, RenderLayer)
+			SelectionBGColorizer::SelectionBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+				ILineBackgroundColorizer(Parent, RenderLayer)
 			{
 				;//
 			}
 
-			void AvalonEditLineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			void LineLimitBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				Color Buffer = PREFERENCES->LookupColorByKey("CharLimitHighlightColor");
 
@@ -191,13 +191,13 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			AvalonEditLineLimitBGColorizer::AvalonEditLineLimitBGColorizer( AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer ) :
-				AvalonEditLineBackgroundColorizer(Parent, RenderLayer)
+			LineLimitBGColorizer::LineLimitBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+				ILineBackgroundColorizer(Parent, RenderLayer)
 			{
 				;//
 			}
 
-			void AvalonEditFindReplaceBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			void FindReplaceBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
 				List<Segment>^ SegmentBuffer = gcnew List<Segment>();
@@ -227,40 +227,40 @@ namespace ConstructionSetExtender
 				SegmentBuffer->Clear();
 			}
 
-			void AvalonEditFindReplaceBGColorizer::AddSegment( int Offset, int Length )
+			void FindReplaceBGColorizer::AddSegment( int Offset, int Length )
 			{
 				HighlightSegments->Add(Segment(Offset, Length));
 			}
 
-			void AvalonEditFindReplaceBGColorizer::ClearSegments()
+			void FindReplaceBGColorizer::ClearSegments()
 			{
 				HighlightSegments->Clear();
 			}
 
-			AvalonEditFindReplaceBGColorizer::Segment::Segment( int Offset, int Length ) :
+			FindReplaceBGColorizer::Segment::Segment( int Offset, int Length ) :
 				Offset(Offset), Length(Length)
 			{
 				;//
 			}
 
-			AvalonEditFindReplaceBGColorizer::AvalonEditFindReplaceBGColorizer( AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer ) :
-				AvalonEditLineBackgroundColorizer(Parent, RenderLayer),
+			FindReplaceBGColorizer::FindReplaceBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+				ILineBackgroundColorizer(Parent, RenderLayer),
 				HighlightSegments(gcnew List<Segment>())
 			{
 				;//
 			}
 
-			AvalonEditFindReplaceBGColorizer::~AvalonEditFindReplaceBGColorizer()
+			FindReplaceBGColorizer::~FindReplaceBGColorizer()
 			{
 				ClearSegments();
 			}
 
-			void AvalonEditObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
+			void ObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
 			{
 				;//
 			}
 
-			void AvalonEditObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
+			void ObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
 			{
 				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
 				UInt32 CurrIndent = Data->GetLineIndentLevel(line->LineNumber);
@@ -301,12 +301,12 @@ namespace ConstructionSetExtender
 				document->Replace(AvalonEdit::Document::TextUtilities::GetWhitespaceBefore(document, line->Offset), "");
 			}
 
-			AvalonEditObScriptIndentStrategy::~AvalonEditObScriptIndentStrategy()
+			ObScriptIndentStrategy::~ObScriptIndentStrategy()
 			{
 				;//
 			}
 
-			AvalonEditObScriptIndentStrategy::AvalonEditObScriptIndentStrategy( AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines ) :
+			ObScriptIndentStrategy::ObScriptIndentStrategy( AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines ) :
 				Parent(Parent),
 				TrimTrailingWhitespace(TrimTrailingWhitespace),
 				CullEmptyLines(CullEmptyLines)
@@ -314,12 +314,12 @@ namespace ConstructionSetExtender
 				;//
 			}
 
-			int AvalonEditObScriptCodeFoldingStrategy::FoldingSorter::Compare( AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y )
+			int ObScriptCodeFoldingStrategy::FoldingSorter::Compare( AvalonEdit::Folding::NewFolding^ X, AvalonEdit::Folding::NewFolding^ Y )
 			{
 				return X->StartOffset.CompareTo(Y->StartOffset);
 			}
 
-			IEnumerable<AvalonEdit::Folding::NewFolding^>^ AvalonEditObScriptCodeFoldingStrategy::CreateNewFoldings( AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset )
+			IEnumerable<AvalonEdit::Folding::NewFolding^>^ ObScriptCodeFoldingStrategy::CreateNewFoldings( AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset )
 			{
 				firstErrorOffset = -1;
 
@@ -350,11 +350,11 @@ namespace ConstructionSetExtender
 				return Foldings;
 			}
 
-			AvalonEditObScriptCodeFoldingStrategy::~AvalonEditObScriptCodeFoldingStrategy()
+			ObScriptCodeFoldingStrategy::~ObScriptCodeFoldingStrategy()
 			{
 			}
 
-			AvalonEditObScriptCodeFoldingStrategy::AvalonEditObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent) :
+			ObScriptCodeFoldingStrategy::ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent) :
 #if BUILD_AVALONEDIT_VERSION != AVALONEDIT_5_0_1
 				AvalonEdit::Folding::AbstractFoldingStrategy(),
 #endif
@@ -364,7 +364,7 @@ namespace ConstructionSetExtender
 				;//
 			}
 
-			void AvalonEditBraceHighlightingBGColorizer::Draw( TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext )
+			void BraceHighlightingBGColorizer::Draw( TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext )
 			{
 				if (DoHighlight == false || (OpenBraceOffset == -1 && CloseBraceOffset == -1))
 					return;
@@ -430,20 +430,20 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			void AvalonEditBraceHighlightingBGColorizer::SetHighlight( int OpenBraceOffset, int CloseBraceOffset )
+			void BraceHighlightingBGColorizer::SetHighlight( int OpenBraceOffset, int CloseBraceOffset )
 			{
 				this->OpenBraceOffset = OpenBraceOffset;
 				this->CloseBraceOffset = CloseBraceOffset;
 				this->DoHighlight = true;
 			}
 
-			void AvalonEditBraceHighlightingBGColorizer::ClearHighlight( void )
+			void BraceHighlightingBGColorizer::ClearHighlight( void )
 			{
 				this->DoHighlight = false;
 			}
 
-			AvalonEditBraceHighlightingBGColorizer::AvalonEditBraceHighlightingBGColorizer( AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer ) :
-				AvalonEditLineBackgroundColorizer(Parent, RenderLayer),
+			BraceHighlightingBGColorizer::BraceHighlightingBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+				ILineBackgroundColorizer(Parent, RenderLayer),
 				OpenBraceOffset(-1),
 				CloseBraceOffset(-1),
 				DoHighlight(false)
@@ -458,6 +458,65 @@ namespace ConstructionSetExtender
 				DoubleAnimation(fromValue, toValue, duration, fillBehavior)
 			{
 				;//
+			}
+
+			StructureVisualizerRenderer::StructureVisualizerRenderer(AvalonEditTextEditor^ Parent) :
+				VisualLineElementGenerator(),
+				ParentEditor(Parent)
+			{
+				;//
+			}
+
+			int StructureVisualizerRenderer::GetFirstInterestedOffset(Int32 startOffset)
+			{
+				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(startOffset);
+
+				if (ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber))
+					return startOffset + CurrentLine->Length;
+				else
+					return -1;
+			}
+
+			VisualLineElement^ StructureVisualizerRenderer::ConstructElement(Int32 offset)
+			{
+				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(offset);
+				ObScriptSemanticAnalysis::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
+
+				if (Block && Block->BasicBlock)
+				{
+				//	if (ParentEditor->GetLineVisible(Block->StartLine))
+				//	if (ParentEditor->GetCurrentLineNumber() != CurrentLine->LineNumber && ParentEditor->GetInSelection(offset) == false)
+					{
+						DocumentLine^ BlockStart = CurrentContext->Document->GetLineByNumber(Block->StartLine);
+						if (BlockStart)
+						{
+							Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+							Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
+							Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
+														  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
+														  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+							Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+							Windows::Media::Brush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
+
+							String^ StartText = CurrentContext->Document->GetText(BlockStart)->Replace("\t", "");
+
+							Windows::Controls::Label^ UIElement = gcnew Windows::Controls::Label();
+							UIElement->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
+							UIElement->FontSize = CustomFont->Size;
+							UIElement->Foreground = ForegroundBrush;
+							UIElement->Background = BackgroundBrush;
+							UIElement->Content = StartText;
+							UIElement->Padding = Windows::Thickness(0, 0, 0, 0);
+							UIElement->Margin = Windows::Thickness(10, 0, 0, 0);
+							UIElement->HorizontalAlignment = Windows::HorizontalAlignment::Left;
+							UIElement->VerticalAlignment = Windows::VerticalAlignment::Top;
+
+							return gcnew InlineObjectElement(0, UIElement);
+						}
+					}
+				}
+
+				return nullptr;
 			}
 		}
 	}

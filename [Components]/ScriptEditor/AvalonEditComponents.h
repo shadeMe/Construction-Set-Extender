@@ -8,6 +8,8 @@ using namespace ICSharpCode::AvalonEdit::Rendering;
 using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
 
+// http://danielgrunwald.de/coding/AvalonEdit/rendering.php
+
 namespace ConstructionSetExtender
 {
 	namespace TextEditors
@@ -16,8 +18,7 @@ namespace ConstructionSetExtender
 		{
 			ref class AvalonEditTextEditor;
 
-			// background colorizers
-			ref class AvalonEditLineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
+			ref class ILineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 			{
 			protected:
 				AvalonEdit::TextEditor^						ParentEditor;
@@ -25,7 +26,7 @@ namespace ConstructionSetExtender
 
 				void RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine);
 			public:
-				virtual ~AvalonEditLineBackgroundColorizer();
+				virtual ~ILineBackgroundColorizer();
 
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) = 0;
 
@@ -34,50 +35,50 @@ namespace ConstructionSetExtender
 					virtual KnownLayer get() { return RenderLayer; }
 				}
 
-				AvalonEditLineBackgroundColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
+				ILineBackgroundColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 			};
 
-			ref class AvalonEditCurrentLineBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class CurrentLineBGColorizer : public ILineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditCurrentLineBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
+				CurrentLineBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 			};
 
-			ref class AvalonEditScriptErrorBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class ScriptErrorBGColorizer : public ILineBackgroundColorizer
 			{
 				List<int>^									ErrorLines;
 
 				bool										GetLineInError(int Line);
 			public:
-				virtual ~AvalonEditScriptErrorBGColorizer();
+				virtual ~ScriptErrorBGColorizer();
 
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditScriptErrorBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer) : AvalonEditLineBackgroundColorizer(Parent, RenderLayer), ErrorLines(gcnew List<int>()) {}
+				ScriptErrorBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer) : ILineBackgroundColorizer(Parent, RenderLayer), ErrorLines(gcnew List<int>()) {}
 
 				void										AddLine(int Line);
 				void										ClearLines(void);
 			};
 
-			ref class AvalonEditSelectionBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class SelectionBGColorizer : public ILineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditSelectionBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
+				SelectionBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 			};
 
-			ref class AvalonEditLineLimitBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class LineLimitBGColorizer : public ILineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditLineLimitBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
+				LineLimitBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 			};
 
-			ref class AvalonEditFindReplaceBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class FindReplaceBGColorizer : public ILineBackgroundColorizer
 			{
 				value struct Segment
 				{
@@ -91,32 +92,32 @@ namespace ConstructionSetExtender
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditFindReplaceBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
+				FindReplaceBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 
 				void										AddSegment(int Offset, int Length);
 				void										ClearSegments();
 
-				virtual ~AvalonEditFindReplaceBGColorizer();
+				virtual ~FindReplaceBGColorizer();
 			};
 
-			ref class AvalonEditObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
+			ref class ObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
 			{
 				AvalonEditTextEditor^						Parent;
 				bool										TrimTrailingWhitespace;
 				bool										CullEmptyLines;
 			public:
-				virtual ~AvalonEditObScriptIndentStrategy();
+				virtual ~ObScriptIndentStrategy();
 
 				virtual void								IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line);
 				virtual void								IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine);
 
-				AvalonEditObScriptIndentStrategy(AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines);
+				ObScriptIndentStrategy(AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines);
 			};
 
 #if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
-			ref class AvalonEditObScriptCodeFoldingStrategy
+			ref class ObScriptCodeFoldingStrategy
 #else
-			ref class AvalonEditObScriptCodeFoldingStrategy : public AvalonEdit::Folding::XmlFoldingStrategy
+			ref class ObScriptCodeFoldingStrategy : public AvalonEdit::Folding::XmlFoldingStrategy
 #endif
 			{
 				ref class FoldingSorter : public IComparer<AvalonEdit::Folding::NewFolding^>
@@ -128,14 +129,14 @@ namespace ConstructionSetExtender
 				AvalonEditTextEditor^						Parent;
 				FoldingSorter^								Sorter;
 			public:
-				virtual ~AvalonEditObScriptCodeFoldingStrategy();
+				virtual ~ObScriptCodeFoldingStrategy();
 
 #if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset);
 #else
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;
 #endif
-				AvalonEditObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent);
+				ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent);
 			};
 
 			ref class TagableDoubleAnimation : public System::Windows::Media::Animation::DoubleAnimation
@@ -146,7 +147,7 @@ namespace ConstructionSetExtender
 				TagableDoubleAnimation(double fromValue, double toValue, System::Windows::Duration duration, System::Windows::Media::Animation::FillBehavior fillBehavior);
 			};
 
-			ref class AvalonEditBraceHighlightingBGColorizer : public AvalonEditLineBackgroundColorizer
+			ref class BraceHighlightingBGColorizer : public ILineBackgroundColorizer
 			{
 				int											OpenBraceOffset;
 				int											CloseBraceOffset;
@@ -154,10 +155,21 @@ namespace ConstructionSetExtender
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
-				AvalonEditBraceHighlightingBGColorizer(AvalonEdit::TextEditor^% Parent, KnownLayer RenderLayer);
+				BraceHighlightingBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 
 				void										SetHighlight(int OpenBraceOffset, int CloseBraceOffset);
 				void										ClearHighlight(void);
+			};
+
+			ref class StructureVisualizerRenderer : public VisualLineElementGenerator
+			{
+			protected:
+				AvalonEditTextEditor^						ParentEditor;
+			public:
+				virtual int									GetFirstInterestedOffset(Int32 startOffset) override;
+				virtual VisualLineElement^					ConstructElement(Int32 offset) override;
+
+				StructureVisualizerRenderer(AvalonEditTextEditor^ Parent);
 			};
 		}
 	}

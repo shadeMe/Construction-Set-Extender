@@ -383,6 +383,8 @@ BEGIN
         MENUITEM "&Object Window",              40199
         MENUITEM "Cell &View Window",           40200
         MENUITEM "&Preview Window",             40121
+        MENUITEM SEPARATOR
+        MENUITEM "Multiple Preview Windows",    IDC_MAINMENU_MULTIPLEPREVIEWWINDOWS
         MENUITEM "Spawn Extra Object Window",   IDC_MAINMENU_SPAWNEXTRAOBJECTWINDOW
         MENUITEM SEPARATOR
         MENUITEM "Memory Usage Window",         40439

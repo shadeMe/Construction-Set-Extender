@@ -378,6 +378,15 @@ void TESPreviewWindow::Deinitialize(HWND PreviewWindow)
 	cdeclCall<void>(0x00402B00, PreviewWindow);
 }
 
+void TESPreviewWindow::Display(TESBoundObject* Object)
+{
+	if (*WindowHandle == NULL)
+		SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, 40121, NULL);
+
+	if (Object)
+		SetSourceObject(Object);
+}
+
 bool Subwindow::Build(UInt32 TemplateID)
 {
 	return cdeclCall<bool>(0x00404EC0, TemplateID, this);

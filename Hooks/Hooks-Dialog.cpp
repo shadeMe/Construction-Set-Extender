@@ -868,7 +868,12 @@ namespace ConstructionSetExtender
 								{
 									TESBoundObject* Obj = CS_CAST(Form, TESForm, TESBoundObject);
 									if (Obj)
-										PreviewWindowImposterManager::Instance.SpawnImposter(Obj);
+									{
+										if (PreviewWindowImposterManager::Instance.GetEnabled())
+											PreviewWindowImposterManager::Instance.SpawnImposter(Obj);
+										else
+											TESPreviewWindow::Display(Obj);
+									}
 								}
 							}
 						} while (Selection != -1);

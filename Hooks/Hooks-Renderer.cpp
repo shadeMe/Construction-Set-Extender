@@ -211,6 +211,7 @@ namespace ConstructionSetExtender
 			if ((Node->m_flags & TESObjectREFR::kNiNodeSpecialFlags_DontUncull))
 				return;
 
+			bool CullState = Node->IsCulled();
 			SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
 
 			if (TESRenderWindow::ShowInitiallyDisabledRefs == false && Object->GetDisabled())
@@ -231,6 +232,9 @@ namespace ConstructionSetExtender
 
 			if (Object->GetInvisible())
 				SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
+
+			if (Node->IsCulled() == false && CullState)
+				TESRender::UpdateAVObject(Node);
 		}
 
 		#define _hhName		TESObjectREFRGet3DData

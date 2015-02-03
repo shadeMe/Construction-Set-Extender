@@ -227,6 +227,11 @@ namespace ConstructionSetExtender
 				TextField->SelectionLength = Length;
 			}
 
+			bool AvalonEditTextEditor::GetInSelection(int Index)
+			{
+				return TextField->TextArea->Selection->Contains(Index);
+			}
+
 			int AvalonEditTextEditor::GetCharIndexFromPosition(Point Position)
 			{
 				Nullable<AvalonEdit::TextViewPosition> TextPos = TextField->TextArea->TextView->GetPosition(Windows::Point(Position.X, Position.Y));
@@ -645,6 +650,12 @@ namespace ConstructionSetExtender
 			Point AvalonEditTextEditor::PointToScreen(Point Location)
 			{
 				return WinFormsContainer->PointToScreen(Location);
+			}
+
+			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber)
+			{
+				TODO("inconsistent")
+				return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
 			}
 
 			void AvalonEditTextEditor::SetEnabledState(bool State)
@@ -1322,12 +1333,20 @@ namespace ConstructionSetExtender
 					IntelliSenseBox->Enabled = true;
 					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
 					IntelliSenseBox->OverrideThresholdCheck = false;
+
+					TextField->TextArea->TextView->Redraw(TextField->TextArea->TextView->GetVisualLine(PreviousLineBuffer),
+														  Windows::Threading::DispatcherPriority::Normal);
+
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
 				}
 
 				if (TextField->TextArea->Selection->IsEmpty)
 					SearchBracesForHighlighting(GetCaretPos());
+
+				// redraw caret line to update VisualLineGenerators
+				TextField->TextArea->TextView->Redraw(TextField->TextArea->TextView->GetVisualLine(PreviousLineBuffer),
+													Windows::Threading::DispatcherPriority::Normal);
 			}
 
 			void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E)
@@ -1339,7 +1358,7 @@ namespace ConstructionSetExtender
 				System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
-				if (TextField->TextArea->TextView->GetVisualLine(GetCurrentLineNumber()) == nullptr)
+				if (GetLineVisible(GetCurrentLineNumber()))
 					IntelliSenseBox->Hide();
 				else
 				{
@@ -1754,7 +1773,7 @@ namespace ConstructionSetExtender
 				UpdateSyntaxHighlighting(true);
 
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
-					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy(this);
+					CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
 
 				TextField->Options->CutCopyWholeLine = PREFERENCES->FetchSettingAsInt("CutCopyEntireLine", "General");
 				TextField->Options->ShowSpaces = PREFERENCES->FetchSettingAsInt("ShowSpaces", "Appearance");
@@ -1762,7 +1781,7 @@ namespace ConstructionSetExtender
 				TextField->WordWrap = PREFERENCES->FetchSettingAsInt("WordWrap", "Appearance");
 
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
-					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(this, true, true);
+					TextField->TextArea->IndentationStrategy = gcnew ObScriptIndentStrategy(this, true, true);
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
@@ -1806,7 +1825,7 @@ namespace ConstructionSetExtender
 				CodeFoldingStrategy = nullptr;
 
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
-					CodeFoldingStrategy = gcnew AvalonEditObScriptCodeFoldingStrategy(this);
+					CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
 
 				MiddleMouseScrollTimer = gcnew Timer();
 				ExternalVerticalScrollBar = gcnew VScrollBar();
@@ -1875,22 +1894,25 @@ namespace ConstructionSetExtender
 				TextField->Background = BackgroundBrush;
 				TextField->LineNumbersForeground = ForegroundBrush;
 
-				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer = gcnew AvalonEditScriptErrorBGColorizer(TextField,
+				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer = gcnew ScriptErrorBGColorizer(TextField,
 																																KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer = gcnew AvalonEditFindReplaceBGColorizer(TextField,
+				TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer = gcnew FindReplaceBGColorizer(TextField,
 																																KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer = gcnew AvalonEditBraceHighlightingBGColorizer(TextField,
+				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer = gcnew BraceHighlightingBGColorizer(TextField,
 																																KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditSelectionBGColorizer(TextField, KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditLineLimitBGColorizer(TextField, KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew AvalonEditCurrentLineBGColorizer(TextField, KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew SelectionBGColorizer(TextField, KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew LineLimitBGColorizer(TextField, KnownLayer::Background));
+				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew CurrentLineBGColorizer(TextField, KnownLayer::Background));
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
-					TextField->TextArea->IndentationStrategy = gcnew AvalonEditObScriptIndentStrategy(this, true, true);
+					TextField->TextArea->IndentationStrategy = gcnew ObScriptIndentStrategy(this, true, true);
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
+#ifndef NDEBUG
+				TextField->TextArea->TextView->ElementGenerators->Add(gcnew StructureVisualizerRenderer(this));
+#endif
 				AnimationPrimitive->Name = "AnimationPrimitive";
 
 				TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
@@ -2007,6 +2029,6 @@ namespace ConstructionSetExtender
 				delete TextField->SyntaxHighlighting;
 				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(Regenerate);
 			}
-		}
+}
 	}
 }

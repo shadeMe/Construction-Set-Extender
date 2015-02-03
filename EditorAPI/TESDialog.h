@@ -476,6 +476,8 @@ public:
 class TESPreviewWindow
 {
 public:
+	static void								Display(TESBoundObject* Object);
+
 	// methods
 	static void								SetSourceObject(TESBoundObject* Object);
 

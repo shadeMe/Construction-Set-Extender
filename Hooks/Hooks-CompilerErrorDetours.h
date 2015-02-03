@@ -14,6 +14,7 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(ParseScriptLineOverride, "");
 		_DeclareMemHdlr(CheckLineLengthLineCount, "fixes a bug in the compiler that causes empty lines to be skipped when line numbers are counted");
 		_DeclareMemHdlr(ResultScriptErrorNotification, "displays a notification when result scripts fail to compile");
+		_DeclareMemHdlr(MaxScriptSizeExceeded, "ensures compilation breaks immediately");
 
 #define GetErrorMemHdlr(hookaddr)								CompilerErrorOverrideHandler##hookaddr
 #define DefineCompilerErrorOverrideHook(hookaddr, jmpaddr, stackoffset)		\

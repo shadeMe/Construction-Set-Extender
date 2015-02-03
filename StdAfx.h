@@ -65,6 +65,7 @@
 #include <iomanip>
 #include <numeric>
 #include <functional>
+#include <regex>
 
 // RPC
 #include <Rpc.h>

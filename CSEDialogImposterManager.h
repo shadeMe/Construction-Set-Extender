@@ -104,6 +104,7 @@ namespace ConstructionSetExtender
 		typedef std::map<HWND, ImposterData*>		ImposterTableT;
 
 		ImposterTableT								ImposterRegistry;
+		bool										Enabled;
 
 		void										DisposeImposter(HWND Imposter);
 		ImposterData*								GetImposterData(HWND Imposter) const;
@@ -113,6 +114,9 @@ namespace ConstructionSetExtender
 
 		void										SpawnImposter(TESBoundObject* Object);
 		void										DestroyImposters(void);
+
+		bool										GetEnabled(void) const;
+		void										SetEnabled(bool State);
 
 		static PreviewWindowImposterManager			Instance;
 	};

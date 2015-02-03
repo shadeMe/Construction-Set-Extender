@@ -102,7 +102,10 @@ UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
 	if (_TES->currentInteriorCell)
 	{
 		for (TESObjectCELL::ObjectREFRList::Iterator Itr = _TES->currentInteriorCell->objectList.Begin(); !Itr.End(); ++Itr)
-			OutList.push_back(Itr.Get());
+		{
+			if (Itr.Get())
+				OutList.push_back(Itr.Get());
+		}
 	}
 	else
 	{
@@ -116,7 +119,10 @@ UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
 				if (Data && Data->cell)
 				{
 					for (TESObjectCELL::ObjectREFRList::Iterator Itr = Data->cell->objectList.Begin(); !Itr.End(); ++Itr)
-						OutList.push_back(Itr.Get());
+					{
+						if (Itr.Get())
+							OutList.push_back(Itr.Get());
+					}
 				}
 			}
 		}

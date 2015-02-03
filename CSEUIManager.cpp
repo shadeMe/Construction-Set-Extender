@@ -30,15 +30,15 @@ namespace ConstructionSetExtender
 
 		CSEFilterableFormListManager		CSEFilterableFormListManager::Instance;
 
-		CSEFilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, bool RefList, int TimerPeriod ) :
+		CSEFilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod ) :
 			ParentWindow(Parent),
 			FilterEditBox(EditBox),
 			FormListView(FormList),
 			FormListWndProc(NULL),
+			FilterLabel(Label),
 			FilterString(""),
 			TimerPeriod(TimerPeriod),
-			TimeCounter(-1),
-			ObjRefList(RefList)
+			TimeCounter(-1)
 		{
 			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
 
@@ -46,6 +46,7 @@ namespace ConstructionSetExtender
 			SetWindowLongPtr(EditBox, GWL_USERDATA, (LONG)this);
 
 			SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, NULL);
+			Flags = kFlags_SearchEditorID | kFlags_SearchDescription | kFlags_SearchName;
 		}
 
 		CSEFilterableFormListManager::FilterableWindowData::~FilterableWindowData()
@@ -71,46 +72,10 @@ namespace ConstructionSetExtender
 				if (Item->lParam)
 				{
 					TESForm* Form = (TESForm*)Item->lParam;
-					UInt32 FormID = Form->formID;
-
-					if (Form->editorID.c_str() == NULL && UserData->ObjRefList)
+					if (Form)
 					{
-						TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
-						if (Reference)
-							Form = Reference->baseForm;
-					}
-
-					if (UserData->FilterString.size() && Form)
-					{
-						std::string EditorID, FullName, Description, FormIDStr;
-
-						TESFullName* FullNameCmpt = CS_CAST(Form, TESForm, TESFullName);
-						TESDescription* DescriptionCmpt = CS_CAST(Form, TESForm, TESDescription);
-
-						if (FullNameCmpt && FullNameCmpt->name.c_str())
-							FullName = FullNameCmpt->name.c_str();
-
-						if (DescriptionCmpt && DescriptionCmpt->description.c_str())
-							Description = DescriptionCmpt->description.c_str();
-
-						if (Form->editorID.c_str())
-							EditorID = Form->editorID.c_str();
-
-						char Buffer[50] =  {0};
-						FORMAT_STR(Buffer, "%08x", FormID);
-						FormIDStr = Buffer;
-
-						SME::StringHelpers::MakeLower(EditorID);
-						SME::StringHelpers::MakeLower(FullName);
-						SME::StringHelpers::MakeLower(Description);
-
-						if (EditorID.find(UserData->FilterString) == std::string::npos &&
-							FullName.find(UserData->FilterString) == std::string::npos &&
-							Description.find(UserData->FilterString) == std::string::npos &&
-							FormIDStr.find(UserData->FilterString) == std::string::npos)
-						{
-							return -1;		// couldn't find the filter string, so skip insertion
-						}
+						if (UserData->FilterForm(Form) == false)
+							return -1;
 					}
 				}
 
@@ -119,6 +84,12 @@ namespace ConstructionSetExtender
 
 			return CallWindowProc(UserData->FormListWndProc, hWnd, uMsg, wParam, lParam);
 		}
+
+#define IDC_CSEFILTERABLEFORMLIST_REGEX				9009
+#define IDC_CSEFILTERABLEFORMLIST_EDITORID			9010
+#define IDC_CSEFILTERABLEFORMLIST_NAME				9011
+#define IDC_CSEFILTERABLEFORMLIST_DESCRIPTION		9012
+#define IDC_CSEFILTERABLEFORMLIST_FORMID			9013
 
 		bool CSEFilterableFormListManager::FilterableWindowData::HandleMessages( HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
@@ -129,6 +100,17 @@ namespace ConstructionSetExtender
 					LOWORD(wParam) == IDC_CSEFILTERABLEFORMLIST_FILTEREDIT)
 				{
 					TimeCounter = 0;
+				}
+
+				break;
+			case WM_RBUTTONUP:
+				{
+					POINT CursorLoc = { 0 };
+					GetCursorPos(&CursorLoc);
+
+					HWND WindowFromPoint = SME::UIHelpers::WinSpy::WindowFromPointEx(CursorLoc, FALSE);
+					if (WindowFromPoint == FilterLabel)
+						HandlePopupMenu(Window, CursorLoc.x, CursorLoc.y);
 				}
 
 				break;
@@ -144,7 +126,9 @@ namespace ConstructionSetExtender
 						if (strlen(Buffer))
 						{
 							FilterString = Buffer;
-							SME::StringHelpers::MakeLower(FilterString);
+
+							if (HasRegEx() == false)
+								SME::StringHelpers::MakeLower(FilterString);
 						}
 						else
 						{
@@ -168,6 +152,211 @@ namespace ConstructionSetExtender
 			return false;
 		}
 
+		bool CSEFilterableFormListManager::FilterableWindowData::FilterForm(TESForm* Form)
+		{
+			SME_ASSERT(Form);
+
+			// fallthrough if no filters are active
+			if (HasEditorID() == false && HasName() == false && HasDescription() == false && HasFormID() == false)
+				return true;
+			else if (FilterString.length() == 0)
+				return true;
+
+			std::string EditorID, FullName, Description, FormIDStr;
+			TESFullName* FullNameCmpt = NULL;
+			TESDescription* DescriptionCmpt = NULL;
+
+			if (Form->IsReference())
+			{
+				TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+				if (Reference->baseForm)
+				{
+					FullNameCmpt = CS_CAST(Reference->baseForm, TESForm, TESFullName);
+					DescriptionCmpt = CS_CAST(Reference->baseForm, TESForm, TESDescription);
+				}
+			}
+
+			if (Form->IsReference() == false && FullNameCmpt == NULL)
+				FullNameCmpt = CS_CAST(Form, TESForm, TESFullName);
+
+			if (Form->IsReference() == false && DescriptionCmpt == NULL)
+				DescriptionCmpt = CS_CAST(Form, TESForm, TESDescription);
+
+			if (FullNameCmpt && FullNameCmpt->name.c_str())
+				FullName = FullNameCmpt->name.c_str();
+
+			if (DescriptionCmpt && DescriptionCmpt->description.c_str())
+				Description = DescriptionCmpt->description.c_str();
+
+			if (Form->editorID.c_str())
+				EditorID = Form->GetEditorID();
+			else if (Form->IsReference())
+			{
+				TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+				if (Reference->baseForm && Reference->baseForm->GetEditorID())
+					EditorID = Reference->baseForm->GetEditorID();
+			}
+
+			char Buffer[50] = { 0 };
+			FORMAT_STR(Buffer, "%08x", Form->formID);
+			FormIDStr = Buffer;
+
+			bool CanAdd = false;
+
+			if (HasRegEx())
+			{
+				try
+				{
+					std::regex Expr(FilterString);
+					std::smatch Results;
+
+					while (true)
+					{
+						if (HasEditorID() && std::regex_search(EditorID, Results, Expr))
+						{
+							CanAdd = true;
+							break;
+						}
+
+						if (HasName() && std::regex_search(FullName, Results, Expr))
+						{
+							CanAdd = true;
+							break;
+						}
+
+						if (HasDescription() && std::regex_search(Description, Results, Expr))
+						{
+							CanAdd = true;
+							break;
+						}
+
+						if (HasFormID() && std::regex_search(FormIDStr, Results, Expr))
+						{
+							CanAdd = true;
+							break;
+						}
+
+						break;
+					}
+				}
+				catch (std::exception& e)
+				{
+					BGSEECONSOLE_MESSAGE("An error occurred while matching the regular expresssion filter string. Exception - %s", e.what());
+					FilterString.clear();
+				}
+			}
+			else
+			{
+				SME::StringHelpers::MakeLower(EditorID);
+				SME::StringHelpers::MakeLower(FullName);
+				SME::StringHelpers::MakeLower(Description);
+				SME::StringHelpers::MakeLower(FormIDStr);
+
+				while (true)
+				{
+					if (HasEditorID() && EditorID.find(FilterString) != std::string::npos)
+					{
+						CanAdd = true;
+						break;
+					}
+
+					if (HasName() && FullName.find(FilterString) != std::string::npos)
+					{
+						CanAdd = true;
+						break;
+					}
+
+					if (HasDescription() && Description.find(FilterString) != std::string::npos)
+					{
+						CanAdd = true;
+						break;
+					}
+
+					if (HasFormID() && FormIDStr.find(FilterString) != std::string::npos)
+					{
+						CanAdd = true;
+						break;
+					}
+
+					break;
+				}
+			}
+
+			return CanAdd;
+		}
+
+		void CSEFilterableFormListManager::FilterableWindowData::HandlePopupMenu(HWND Parent, int X, int Y)
+		{
+			HMENU Popup = CreatePopupMenu();
+			MENUITEMINFO Item = { 0 };
+			Item.cbSize = sizeof(MENUITEMINFO);
+			Item.fMask = MIIM_STATE | MIIM_TYPE | MIIM_ID;
+			Item.fType = MFT_STRING;
+
+			Item.fState = MFS_ENABLED;
+			Item.dwTypeData = "Use Regular Expressions";
+			Item.cch = strlen((const char*)Item.dwTypeData);
+			if (HasRegEx())
+				Item.fState |= MFS_CHECKED;
+			Item.wID = IDC_CSEFILTERABLEFORMLIST_REGEX;
+			InsertMenuItem(Popup, -1, TRUE, &Item);
+
+			InsertMenu(Popup, -1, MF_BYPOSITION | MF_SEPARATOR, NULL, NULL);
+
+			Item.fState = MFS_ENABLED;
+			Item.dwTypeData = "Search EditorID";
+			Item.cch = strlen((const char*)Item.dwTypeData);
+			if (HasEditorID())
+				Item.fState |= MFS_CHECKED;
+			Item.wID = IDC_CSEFILTERABLEFORMLIST_EDITORID;
+			InsertMenuItem(Popup, -1, TRUE, &Item);
+
+			Item.fState = MFS_ENABLED;
+			Item.dwTypeData = "Search Name";
+			Item.cch = strlen((const char*)Item.dwTypeData);
+			if (HasName())
+				Item.fState |= MFS_CHECKED;
+			Item.wID = IDC_CSEFILTERABLEFORMLIST_NAME;
+			InsertMenuItem(Popup, -1, TRUE, &Item);
+
+			Item.fState = MFS_ENABLED;
+			Item.dwTypeData = "Search Description";
+			Item.cch = strlen((const char*)Item.dwTypeData);
+			if (HasDescription())
+				Item.fState |= MFS_CHECKED;
+			Item.wID = IDC_CSEFILTERABLEFORMLIST_DESCRIPTION;
+			InsertMenuItem(Popup, -1, TRUE, &Item);
+
+			Item.fState = MFS_ENABLED;
+			Item.dwTypeData = "Search FormID";
+			Item.cch = strlen((const char*)Item.dwTypeData);
+			if (HasFormID())
+				Item.fState |= MFS_CHECKED;
+			Item.wID = IDC_CSEFILTERABLEFORMLIST_FORMID;
+			InsertMenuItem(Popup, -1, TRUE, &Item);
+
+			switch (TrackPopupMenu(Popup, TPM_RETURNCMD, X, Y, NULL, Parent, NULL))
+			{
+			case IDC_CSEFILTERABLEFORMLIST_REGEX:
+				SME::MiscGunk::ToggleFlag(&Flags, kFlags_RegEx, HasRegEx() == false);
+				break;
+			case IDC_CSEFILTERABLEFORMLIST_EDITORID:
+				SME::MiscGunk::ToggleFlag(&Flags, kFlags_SearchEditorID, HasEditorID() == false);
+				break;
+			case IDC_CSEFILTERABLEFORMLIST_NAME:
+				SME::MiscGunk::ToggleFlag(&Flags, kFlags_SearchName, HasName() == false);
+				break;
+			case IDC_CSEFILTERABLEFORMLIST_DESCRIPTION:
+				SME::MiscGunk::ToggleFlag(&Flags, kFlags_SearchDescription, HasDescription() == false);
+				break;
+			case IDC_CSEFILTERABLEFORMLIST_FORMID:
+				SME::MiscGunk::ToggleFlag(&Flags, kFlags_SearchFormID, HasFormID() == false);
+				break;
+			}
+
+			DestroyMenu(Popup);
+		}
+
 		CSEFilterableFormListManager::CSEFilterableFormListManager() :
 			ActiveWindows()
 		{
@@ -182,13 +371,13 @@ namespace ConstructionSetExtender
 			ActiveWindows.clear();
 		}
 
-		bool CSEFilterableFormListManager::Register( HWND Window, HWND FilterEdit, HWND FormList, bool ObjRefList /*= false*/, int TimePeriod /*= 500*/ )
+		bool CSEFilterableFormListManager::Register(HWND Window, HWND FilterEdit, HWND FormList, HWND Label, int TimePeriod /*= 500*/)
 		{
 			SME_ASSERT(Window);
 
 			if (ActiveWindows.count(Window) == 0)
 			{
-				ActiveWindows.insert(std::make_pair(Window, new FilterableWindowData(Window, FilterEdit, FormList, ObjRefList, TimePeriod)));
+				ActiveWindows.insert(std::make_pair(Window, new FilterableWindowData(Window, FilterEdit, FormList, Label, TimePeriod)));
 				return true;
 			}
 
@@ -999,6 +1188,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_MULTIPLEPREVIEWWINDOWS:
+									if (PreviewWindowImposterManager::Instance.GetEnabled())
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1047,7 +1241,11 @@ namespace ConstructionSetExtender
 				switch (LOWORD(wParam))
 				{
 				case 40121:		// View > Preview Window
-					BGSEEUI->MsgBoxI("Use the Object Window's context menu to preview objects.");
+					if (PreviewWindowImposterManager::Instance.GetEnabled())
+						BGSEEUI->MsgBoxI("Use the Object Window's context menu to preview objects when multiple preview windows are enabled.");
+					else
+						Return = false;
+
 					break;
 				case 40157:		// Help > Contents
 				case 40413:		// Character > Export Dialogue
@@ -1390,6 +1588,19 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_SPAWNEXTRAOBJECTWINDOW:
 					ObjectWindowImposterManager::Instance.SpawnImposter();
+
+					break;
+				case IDC_MAINMENU_MULTIPLEPREVIEWWINDOWS:
+					if (PreviewWindowImposterManager::Instance.GetEnabled())
+					{
+						PreviewWindowImposterManager::Instance.SetEnabled(false);
+						Settings::Dialogs::kMultiplePreviewWindows.SetInt(0);
+					}
+					else
+					{
+						PreviewWindowImposterManager::Instance.SetEnabled(true);
+						Settings::Dialogs::kMultiplePreviewWindows.SetInt(1);
+					}
 
 					break;
 				default:
@@ -2724,7 +2935,7 @@ namespace ConstructionSetExtender
 			case WM_INITDIALOG:
 				{
 					SME_ASSERT(FilterEditBox);
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
 
 					std::string WndTitle = "Object Window";
 					if (Settings::General::kShowHallOfFameMembersInTitleBar().i != HallOfFame::kDisplayESMember_None)
@@ -2826,7 +3037,7 @@ namespace ConstructionSetExtender
 						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, true);
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
 
 					LVCOLUMN ColumnData = {0};
 					ColumnData.mask = LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM|LVCF_FMT;
@@ -4413,7 +4624,7 @@ namespace ConstructionSetExtender
 					ColumnData.cx = 175;
 					ListView_SetColumn(PackageListView, 0, &ColumnData);
 
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList);
+					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
 				}
 
 				break;
@@ -5769,6 +5980,8 @@ namespace ConstructionSetExtender
 
 			SendMessage(*TESCSMain::WindowHandle, WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
 			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
+
+			PreviewWindowImposterManager::Instance.SetEnabled(Settings::Dialogs::kMultiplePreviewWindows().i == 1);
 		}
 	}
 }

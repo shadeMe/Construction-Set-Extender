@@ -366,7 +366,7 @@ namespace ConstructionSetExtender
 	}
 
 	ObScriptSemanticAnalysis::ControlBlock::ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent) :
-		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent)
+		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent), BasicBlock(true)
 	{
 	}
 
@@ -900,6 +900,7 @@ namespace ConstructionSetExtender
 							StructureStack->Pop();
 							ControlBlock^ PrevBlock = BlockStack->Pop();
 							PrevBlock->EndLine = CurrentLine;
+							PrevBlock->BasicBlock = false;
 
 							ControlBlock::ControlBlockType BlockType = ControlBlock::ControlBlockType::ElseIf;
 							if (FirstTokenType == ScriptTokenType::Else)
@@ -934,8 +935,12 @@ namespace ConstructionSetExtender
 						}
 						else
 						{
+							ControlBlock^ Block = BlockStack->Pop();
+							if (StructureStack->Peek() != ControlBlock::ControlBlockType::If)
+								Block->BasicBlock = false;
+
 							StructureStack->Pop();
-							BlockStack->Pop()->EndLine = CurrentLine;
+							Block->EndLine = CurrentLine;
 						}
 					}
 
@@ -1079,7 +1084,7 @@ namespace ConstructionSetExtender
 		return IndentCount;
 	}
 
-	ObScriptSemanticAnalysis::ControlBlock^ ObScriptSemanticAnalysis::AnalysisData::GetBlockAt(UInt32 Line)
+	ObScriptSemanticAnalysis::ControlBlock^ ObScriptSemanticAnalysis::AnalysisData::GetBlockStartingAt(UInt32 Line)
 	{
 		for each (ControlBlock^ Itr in ControlBlocks)
 		{
@@ -1146,6 +1151,17 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
+	ObScriptSemanticAnalysis::ControlBlock^ ObScriptSemanticAnalysis::AnalysisData::GetBlockEndingAt(UInt32 Line)
+	{
+		for each (ControlBlock^ Itr in ControlBlocks)
+		{
+			if (Itr->EndLine == Line)
+				return Itr;
+		}
+
+		return nullptr;
+	}
+
 	ObScriptSemanticAnalysis::Sanitizer::Sanitizer(String^ Source) :
 		InputText(Source),
 		Data(gcnew AnalysisData()),
@@ -1184,7 +1200,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			ControlBlock^ CurrentBlock = Data->GetBlockAt(CurrentLine);
+			ControlBlock^ CurrentBlock = Data->GetBlockStartingAt(CurrentLine);
 			if (CurrentBlock && (CurrentBlock->Type == ControlBlock::ControlBlockType::If || CurrentBlock->Type == ControlBlock::ControlBlockType::ElseIf))
 			{
 				if (Operations.HasFlag(Operation::EvalifyIfs))

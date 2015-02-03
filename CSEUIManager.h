@@ -25,13 +25,32 @@ namespace ConstructionSetExtender
 				HWND					FilterEditBox;
 				HWND					FormListView;
 				WNDPROC					FormListWndProc;
+				HWND					FilterLabel;
 
 				std::string				FilterString;
 				int						TimerPeriod;
 				int						TimeCounter;
-				bool					ObjRefList;
+				UInt8					Flags;
+
+				enum
+				{
+					kFlags_RegEx				= 1 << 0,
+					kFlags_SearchEditorID		= 1 << 1,
+					kFlags_SearchName			= 1 << 2,
+					kFlags_SearchDescription	= 1 << 3,
+					kFlags_SearchFormID			= 1 << 4,
+				};
+
+				bool					HasRegEx(void) const { return Flags & kFlags_RegEx; }
+				bool					HasEditorID(void) const { return Flags & kFlags_SearchEditorID; }
+				bool					HasName(void) const { return Flags & kFlags_SearchName; }
+				bool					HasDescription(void) const { return Flags & kFlags_SearchDescription; }
+				bool					HasFormID(void) const { return Flags & kFlags_SearchFormID; }
+
+				bool					FilterForm(TESForm* Form);		// returns true if the form matches the active filter
+				void					HandlePopupMenu(HWND Parent, int X, int Y);
 			public:
-				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, bool RefList, int TimerPeriod);
+				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod);
 				~FilterableWindowData();
 
 				bool					HandleMessages(HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
@@ -46,7 +65,7 @@ namespace ConstructionSetExtender
 			CSEFilterableFormListManager();
 			~CSEFilterableFormListManager();
 
-			bool						Register(HWND Window, HWND FilterEdit, HWND FormList, bool ObjRefList = false, int TimePeriod = 500);
+			bool						Register(HWND Window, HWND FilterEdit, HWND FormList, HWND Label, int TimePeriod = 500);
 			bool						Unregister(HWND Window);
 
 			bool						HandleMessages(HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam);

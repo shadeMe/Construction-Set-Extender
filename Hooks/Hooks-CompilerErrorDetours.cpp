@@ -19,6 +19,7 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(ParseScriptLineOverride, 0x00503401);
 		_DefineHookHdlr(CheckLineLengthLineCount, 0x0050013B);
 		_DefineHookHdlr(ResultScriptErrorNotification, 0x005035EE);
+		_DefineHookHdlr(MaxScriptSizeExceeded, 0x005031DB);
 
 		// ERROR HANDLERS
 																		//  f_ScriptBuffer__ConstructLineBuffers
@@ -57,6 +58,7 @@ namespace ConstructionSetExtender
 			_MemHdlr(ParseScriptLineOverride).WriteJump();
 			_MemHdlr(CheckLineLengthLineCount).WriteJump();
 			_MemHdlr(ResultScriptErrorNotification).WriteJump();
+			_MemHdlr(MaxScriptSizeExceeded).WriteJump();
 
 			GetErrorMemHdlr(0x00502781).WriteJump();
 			GetErrorMemHdlr(0x00502813).WriteJump();
@@ -126,6 +128,7 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			}
 		}
+		UInt32	MaxScriptSizeExceeded = 0;
 
 		#define _hhName		CompilerPrologReset
 		_hhBegin()
@@ -134,6 +137,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				mov		ScriptCompileResultBuffer, 1
+				mov		MaxScriptSizeExceeded, 0
 				pushad
 			}
 			TESScriptCompiler::AuxiliaryErrorDepot.clear();
@@ -153,6 +157,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x0050340A);
 			_hhSetVar(Call, 0x005028D0);
+			_hhSetVar(Exit, 0x005033BE);
 			__asm
 			{
 				call	_hhGetVar(Call)
@@ -162,7 +167,13 @@ namespace ConstructionSetExtender
 				jmp		_hhGetVar(Retn)
 			FAIL:
 				mov		ScriptCompileResultBuffer, 0
+				mov		eax, MaxScriptSizeExceeded
+				test	eax, eax
+				jnz		EXIT
+
 				jmp		_hhGetVar(Retn)
+			EXIT:
+				jmp		_hhGetVar(Exit)
 			}
 		}
 
@@ -208,6 +219,18 @@ namespace ConstructionSetExtender
 				call	DoResultScriptErrorNotificationHook
 				popad
 
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		MaxScriptSizeExceeded
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00502A7C);
+			__asm
+			{
+				mov		MaxScriptSizeExceeded, 1
+				push	0x0094AD6C
 				jmp		_hhGetVar(Retn)
 			}
 		}
