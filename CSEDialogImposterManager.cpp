@@ -92,7 +92,7 @@ namespace ConstructionSetExtender
 			break;
 		case WM_DESTROY:
 			{
-				UIManager::CSEFilterableFormListManager::Instance.Unregister(hWnd);
+				UIManager::CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 
 				CacheOperator CacheBackup(hWnd);
 				TESObjectWindow::PerformLimitedDeinit(hWnd);
@@ -115,7 +115,7 @@ namespace ConstructionSetExtender
 		case WM_OBJECTWINDOWIMPOSTER_INITIALIZE:
 			{
 				SME_ASSERT(FilterEditBox);
-				UIManager::CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+				UIManager::CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
 
 				// reproduce the relevant bits of the org wnd proc's code
 				CacheOperator CacheBackup(hWnd);
@@ -147,7 +147,7 @@ namespace ConstructionSetExtender
 
 		if (DlgProcResult == FALSE)
 		{
-			if (UIManager::CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			if (UIManager::CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
 				DlgProcResult = TRUE;

@@ -686,6 +686,8 @@ class TESCellViewWindow
 {
 public:
 	static void						SetCellSelection(TESObjectCELL* Cell);
+	static void						RefreshObjectList(void);
+	static void						RefreshCellList(bool RefreshWorldspaces = false);
 
 	static HWND*					WindowHandle;
 	static HWND*					ObjectListHandle;

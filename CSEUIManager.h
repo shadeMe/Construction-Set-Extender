@@ -16,10 +16,15 @@ namespace ConstructionSetExtender
 
 		class CSEFilterableFormListManager
 		{
-		public:
 			class FilterableWindowData
 			{
-				static LRESULT CALLBACK		FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+				static LRESULT CALLBACK			FormListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+				typedef std::map<HWND, UInt32>	WindowTimerMapT;
+				static WindowTimerMapT			FilterTimerTable;
+
+				typedef std::map<HWND, FilterableWindowData*>	FormListFilterDataMapT;
+				static FormListFilterDataMapT	FormListDataTable;
 
 				HWND					ParentWindow;
 				HWND					FilterEditBox;
@@ -50,28 +55,38 @@ namespace ConstructionSetExtender
 
 				bool					FilterForm(TESForm* Form);		// returns true if the form matches the active filter
 				void					HandlePopupMenu(HWND Parent, int X, int Y);
+
+				void					CreateTimer(void) const;
+				void					DestroyTimer(void) const;
+
+				void					HookFormList(void);
+				void					UnhookFormList(void);
 			public:
 				FilterableWindowData(HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod);
 				~FilterableWindowData();
 
-				bool					HandleMessages(HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
+				bool					HandleMessages(UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true on timeout
 				void					SetEnabledState(bool State);
+
+				bool					operator==(HWND FilterEditBox);
 			};
 
-			static CSEFilterableFormListManager				Instance;
-		private:
-			typedef std::map<HWND, FilterableWindowData*>	FilterDataMapT;
+			typedef std::vector<FilterableWindowData*>	FilterDataListT;
 
-			FilterDataMapT				ActiveWindows;
+			FilterDataListT				ActiveFilters;
+
+			FilterableWindowData*		Lookup(HWND FilterEdit);
 		public:
 			CSEFilterableFormListManager();
 			~CSEFilterableFormListManager();
 
-			bool						Register(HWND Window, HWND FilterEdit, HWND FormList, HWND Label, int TimePeriod = 500);
-			bool						Unregister(HWND Window);
+			bool						Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod = 500);
+			void						Unregister(HWND FilterEdit);
 
-			bool						HandleMessages(HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam);
-			void						SetEnabledState(HWND Window, bool State);
+			bool						HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam);		// returns true to request a refresh of the form list
+			void						SetEnabledState(HWND FilterEdit, bool State);
+
+			static CSEFilterableFormListManager				Instance;
 		};
 
 		class CSEFormEnumerationManager
@@ -99,13 +114,15 @@ namespace ConstructionSetExtender
 		class CSECellViewExtraData : public BGSEditorExtender::BGSEEWindowExtraData
 		{
 		public:
-			RECT	FilterEditBox;		// init bounds of the new controls
-			RECT	FilterLabel;
+			RECT	RefFilterEditBox;		// init bounds of the new controls
+			RECT	RefFilterLabel;
 			RECT	XLabel;
 			RECT	YLabel;
 			RECT	XEdit;
 			RECT	YEdit;
 			RECT	GoBtn;
+			RECT	CellFilterEditBox;
+			RECT	CellFilterLabel;
 
 			CSECellViewExtraData();
 			virtual ~CSECellViewExtraData();
@@ -316,6 +333,10 @@ namespace ConstructionSetExtender
 #define IDC_CSE_RESPONSEWINDOW_FACEGENPREVIEW	9934
 // also used in the NPC edit dialog
 #define IDC_CSE_RESPONSEWINDOW_VOICEDELAY		9935
+
+// the IDC_CSEFILTERABLEFORMLIST_XXX IDs are used for the ref list filter
+#define IDC_CSE_CELLVIEW_CELLFILTEREDIT			9936
+#define IDC_CSE_CELLVIEW_CELLFILTERLBL			9937
 
 // custom popup menu item IDs
 #define IDC_CSE_POPUP_SETFORMID                 9907

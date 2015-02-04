@@ -28,7 +28,9 @@ namespace ConstructionSetExtender
 	{
 #define ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID				0x99
 
-		CSEFilterableFormListManager		CSEFilterableFormListManager::Instance;
+		CSEFilterableFormListManager												CSEFilterableFormListManager::Instance;
+		CSEFilterableFormListManager::FilterableWindowData::WindowTimerMapT			CSEFilterableFormListManager::FilterableWindowData::FilterTimerTable;
+		CSEFilterableFormListManager::FilterableWindowData::FormListFilterDataMapT	CSEFilterableFormListManager::FilterableWindowData::FormListDataTable;
 
 		CSEFilterableFormListManager::FilterableWindowData::FilterableWindowData( HWND Parent, HWND EditBox, HWND FormList, HWND Label, int TimerPeriod ) :
 			ParentWindow(Parent),
@@ -43,26 +45,21 @@ namespace ConstructionSetExtender
 		{
 			SME_ASSERT(ParentWindow && FilterEditBox && FormListView);
 
-			FormListWndProc = (WNDPROC)SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListSubclassProc);
-			SetWindowLongPtr(EditBox, GWL_USERDATA, (LONG)this);
-
-			SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, NULL);
+			HookFormList();
+			CreateTimer();
 			Flags = kFlags_SearchEditorID | kFlags_SearchDescription | kFlags_SearchName;
 		}
 
 		CSEFilterableFormListManager::FilterableWindowData::~FilterableWindowData()
 		{
-			KillTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID);
-			SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListWndProc);
+			UnhookFormList();
+			DestroyTimer();
 		}
 
 		LRESULT CALLBACK CSEFilterableFormListManager::FilterableWindowData::FormListSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
-			HWND Parent = GetParent(hWnd);
-			HWND EditBox = GetDlgItem(Parent, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
-			SME_ASSERT(EditBox);
-
-			FilterableWindowData* UserData = (FilterableWindowData*)GetWindowLongPtr(EditBox, GWL_USERDATA);
+			SME_ASSERT(FormListDataTable.count(hWnd));
+			FilterableWindowData* UserData = FormListDataTable[hWnd];
 
 			switch (uMsg)
 			{
@@ -92,13 +89,12 @@ namespace ConstructionSetExtender
 #define IDC_CSEFILTERABLEFORMLIST_DESCRIPTION		9012
 #define IDC_CSEFILTERABLEFORMLIST_FORMID			9013
 
-		bool CSEFilterableFormListManager::FilterableWindowData::HandleMessages( HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam )
+		bool CSEFilterableFormListManager::FilterableWindowData::HandleMessages( UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
 			switch (uMsg)
 			{
 			case WM_COMMAND:
-				if (HIWORD(wParam) == EN_CHANGE &&
-					LOWORD(wParam) == IDC_CSEFILTERABLEFORMLIST_FILTEREDIT)
+				if (HIWORD(wParam) == EN_CHANGE && (HWND)lParam == FilterEditBox)
 				{
 					TimeCounter = 0;
 				}
@@ -111,7 +107,7 @@ namespace ConstructionSetExtender
 
 					HWND WindowFromPoint = SME::UIHelpers::WinSpy::WindowFromPointEx(CursorLoc, FALSE);
 					if (WindowFromPoint == FilterLabel)
-						HandlePopupMenu(Window, CursorLoc.x, CursorLoc.y);
+						HandlePopupMenu(ParentWindow, CursorLoc.x, CursorLoc.y);
 				}
 
 				break;
@@ -363,68 +359,121 @@ namespace ConstructionSetExtender
 			Enabled = State;
 		}
 
+		bool CSEFilterableFormListManager::FilterableWindowData::operator==(HWND FilterEditBox)
+		{
+			return this->FilterEditBox == FilterEditBox;
+		}
+
+		void CSEFilterableFormListManager::FilterableWindowData::CreateTimer(void) const
+		{
+			if (FilterTimerTable.count(ParentWindow) == 0)
+			{
+				FilterTimerTable[ParentWindow] = 1;
+				SetTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID, TimerPeriod, NULL);
+			}
+			else
+				FilterTimerTable[ParentWindow]++;
+		}
+
+		void CSEFilterableFormListManager::FilterableWindowData::DestroyTimer(void) const
+		{
+			SME_ASSERT(FilterTimerTable.count(ParentWindow));
+
+			if (--FilterTimerTable[ParentWindow] == 0)
+			{
+				KillTimer(ParentWindow, ID_CSEFILTERABLEFORMLIST_FILTERINPUTTIMERID);
+				FilterTimerTable.erase(ParentWindow);
+			}
+		}
+
+		void CSEFilterableFormListManager::FilterableWindowData::HookFormList(void)
+		{
+			FormListWndProc = (WNDPROC)SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListSubclassProc);
+			FormListDataTable[FormListView] = this;
+		}
+
+		void CSEFilterableFormListManager::FilterableWindowData::UnhookFormList(void)
+		{
+			SetWindowLongPtr(FormListView, GWL_WNDPROC, (LONG)FormListWndProc);
+			FormListDataTable.erase(FormListView);
+		}
+
 		CSEFilterableFormListManager::CSEFilterableFormListManager() :
-			ActiveWindows()
+			ActiveFilters()
 		{
 			;//
 		}
 
 		CSEFilterableFormListManager::~CSEFilterableFormListManager()
 		{
-			for (FilterDataMapT::iterator Itr = ActiveWindows.begin(); Itr != ActiveWindows.end(); Itr++)
-				delete Itr->second;
+			for each (auto Itr in ActiveFilters)
+				delete Itr;
 
-			ActiveWindows.clear();
+			ActiveFilters.clear();
 		}
 
-		bool CSEFilterableFormListManager::Register(HWND Window, HWND FilterEdit, HWND FormList, HWND Label, int TimePeriod /*= 500*/)
+		bool CSEFilterableFormListManager::Register(HWND FilterEdit, HWND FilterLabel, HWND FormList, HWND ParentWindow, int TimePeriod /*= 500*/)
 		{
-			SME_ASSERT(Window);
+			SME_ASSERT(ParentWindow && FormList);
+			SME_ASSERT(FilterEdit && FilterLabel);
 
-			if (ActiveWindows.count(Window) == 0)
+			if (Lookup(FilterEdit) == NULL)
 			{
-				ActiveWindows.insert(std::make_pair(Window, new FilterableWindowData(Window, FilterEdit, FormList, Label, TimePeriod)));
+				ActiveFilters.push_back(new FilterableWindowData(ParentWindow, FilterEdit, FormList, FilterLabel, TimePeriod));
 				return true;
 			}
 
 			return false;
 		}
 
-		bool CSEFilterableFormListManager::Unregister( HWND Window )
+		void CSEFilterableFormListManager::Unregister(HWND FilterEdit)
 		{
-			SME_ASSERT(Window);
+			SME_ASSERT(FilterEdit);
 
-			FilterDataMapT::iterator Match = ActiveWindows.find(Window);
-			if (Match != ActiveWindows.end())
+			for (auto Itr = ActiveFilters.begin(); Itr != ActiveFilters.end(); Itr++)
 			{
-				delete Match->second;
-				ActiveWindows.erase(Match);
-				return true;
+				if (**Itr == FilterEdit)
+				{
+					delete *Itr;
+					ActiveFilters.erase(Itr);
+					return;
+				}
+			}
+		}
+
+		bool CSEFilterableFormListManager::HandleMessages(HWND FilterEdit, UINT uMsg, WPARAM wParam, LPARAM lParam)
+		{
+			SME_ASSERT(FilterEdit);
+
+			FilterableWindowData* Data = Lookup(FilterEdit);
+			if (Data)
+			{
+				return Data->HandleMessages(uMsg, wParam, lParam);
 			}
 
 			return false;
 		}
 
-		bool CSEFilterableFormListManager::HandleMessages( HWND Window, UINT uMsg, WPARAM wParam, LPARAM lParam )
+		void CSEFilterableFormListManager::SetEnabledState(HWND FilterEdit, bool State)
 		{
-			SME_ASSERT(Window);
+			SME_ASSERT(FilterEdit);
 
-			if (ActiveWindows.count(Window))
+			FilterableWindowData* Data = Lookup(FilterEdit);
+			if (Data)
 			{
-				return ActiveWindows[Window]->HandleMessages(Window, uMsg, wParam, lParam);
+				return Data->SetEnabledState(State);
 			}
-
-			return false;
 		}
 
-		void CSEFilterableFormListManager::SetEnabledState(HWND Window, bool State)
+		CSEFilterableFormListManager::FilterableWindowData* CSEFilterableFormListManager::Lookup(HWND FilterEdit)
 		{
-			SME_ASSERT(Window);
-
-			if (ActiveWindows.count(Window))
+			for each (auto Itr in ActiveFilters)
 			{
-				ActiveWindows[Window]->SetEnabledState(State);
+				if (*Itr == FilterEdit)
+					return Itr;
 			}
+
+			return NULL;
 		}
 
 		CSEFormEnumerationManager		CSEFormEnumerationManager::Instance;
@@ -512,13 +561,15 @@ namespace ConstructionSetExtender
 
 		CSECellViewExtraData::CSECellViewExtraData() :
 			BGSEditorExtender::BGSEEWindowExtraData(),
-			FilterEditBox(),
-			FilterLabel(),
+			RefFilterEditBox(),
+			RefFilterLabel(),
 			XLabel(),
 			YLabel(),
 			XEdit(),
 			YEdit(),
-			GoBtn()
+			GoBtn(),
+			CellFilterEditBox(),
+			CellFilterLabel()
 		{
 			;//
 		}
@@ -2942,7 +2993,7 @@ namespace ConstructionSetExtender
 			case 0x417:		// destroy window
 			case WM_DESTROY:
 				{
-					CSEFilterableFormListManager::Instance.Unregister(hWnd);
+					CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 					ObjectWindowImposterManager::Instance.DestroyImposters();
 					TESObjectWindow::PrimaryObjectWindowHandle = NULL;
 				}
@@ -2951,7 +3002,7 @@ namespace ConstructionSetExtender
 			case WM_INITDIALOG:
 				{
 					SME_ASSERT(FilterEditBox);
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+					CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
 
 					std::string WndTitle = "Object Window";
 					if (Settings::General::kShowHallOfFameMembersInTitleBar().i != HallOfFame::kDisplayESMember_None)
@@ -2972,7 +3023,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				HTREEITEM Selection = TreeView_GetSelection(TreeList);
 
@@ -2995,14 +3046,15 @@ namespace ConstructionSetExtender
 			HWND CellList = GetDlgItem(hWnd, TESCellViewWindow::kCellListView);
 			HWND RefList = GetDlgItem(hWnd, TESCellViewWindow::kObjectRefListView);
 
-			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
-			HWND FilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
+			HWND RefFilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
+			HWND RefFilterLabel = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL);
 			HWND XLabel = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_XLBL);
 			HWND YLabel = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_YLBL);
 			HWND XEdit = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_XEDIT);
 			HWND YEdit = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_YEDIT);
 			HWND GoBtn = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_GOBTN);
-
+			HWND CellFilterEditBox = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_CELLFILTEREDIT);
+			HWND CellFilterLabel = GetDlgItem(hWnd, IDC_CSE_CELLVIEW_CELLFILTERLBL);
 			int* RefListSortColumn = TESCellViewWindow::ObjectListSortColumn;
 
 			switch (uMsg)
@@ -3023,7 +3075,8 @@ namespace ConstructionSetExtender
 					}
 				}
 			case 0x417:		// destroy window
-				CSEFilterableFormListManager::Instance.Unregister(hWnd);
+				CSEFilterableFormListManager::Instance.Unregister(RefFilterEditBox);
+				CSEFilterableFormListManager::Instance.Unregister(CellFilterEditBox);
 
 				break;
 			case WM_INITDIALOG:
@@ -3036,19 +3089,22 @@ namespace ConstructionSetExtender
 
 						RECT Bounds = {0};
 
-						SME::UIHelpers::GetClientRectInitBounds(FilterEditBox, hWnd, &xData->FilterEditBox);
-						SME::UIHelpers::GetClientRectInitBounds(FilterLabel, hWnd, &xData->FilterLabel);
+						SME::UIHelpers::GetClientRectInitBounds(RefFilterEditBox, hWnd, &xData->RefFilterEditBox);
+						SME::UIHelpers::GetClientRectInitBounds(RefFilterLabel, hWnd, &xData->RefFilterLabel);
 						SME::UIHelpers::GetClientRectInitBounds(XLabel, hWnd, &xData->XLabel);
 						SME::UIHelpers::GetClientRectInitBounds(YLabel, hWnd, &xData->YLabel);
 						SME::UIHelpers::GetClientRectInitBounds(XEdit, hWnd, &xData->XEdit);
 						SME::UIHelpers::GetClientRectInitBounds(YEdit, hWnd, &xData->YEdit);
 						SME::UIHelpers::GetClientRectInitBounds(GoBtn, hWnd, &xData->GoBtn);
+						SME::UIHelpers::GetClientRectInitBounds(CellFilterEditBox, hWnd, &xData->CellFilterEditBox);
+						SME::UIHelpers::GetClientRectInitBounds(CellFilterLabel, hWnd, &xData->CellFilterLabel);
 
 						TESDialog::GetPositionFromINI("Cell View", &Bounds);
 						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, RefList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+					CSEFilterableFormListManager::Instance.Register(RefFilterEditBox, RefFilterLabel, RefList, hWnd);
+					CSEFilterableFormListManager::Instance.Register(CellFilterEditBox, CellFilterLabel, CellList, hWnd);
 
 					LVCOLUMN ColumnData = {0};
 					ColumnData.mask = LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM|LVCF_FMT;
@@ -3234,7 +3290,7 @@ namespace ConstructionSetExtender
 
 					if (xData)
 					{
-						DeferPosData = BeginDeferWindowPos(7);
+						DeferPosData = BeginDeferWindowPos(8);
 
 						DeferWindowPos(DeferPosData, XLabel, 0,
 							DeltaDlgWidth + xData->XLabel.left, xData->XLabel.top,
@@ -3261,19 +3317,24 @@ namespace ConstructionSetExtender
 							0, 0,
 							SWP_NOSIZE);
 
-						DeferWindowPos(DeferPosData, FilterLabel, 0,
-							DeltaDlgWidth + xData->FilterLabel.left, xData->FilterLabel.top,
+						DeferWindowPos(DeferPosData, RefFilterLabel, 0,
+							DeltaDlgWidth + xData->RefFilterLabel.left, xData->RefFilterLabel.top,
 							0, 0,
 							SWP_NOSIZE);
 
-						DeferWindowPos(DeferPosData, FilterEditBox, 0,
-							DeltaDlgWidth + xData->FilterEditBox.left, xData->FilterEditBox.top,
-							DeltaDlgWidth + xData->FilterEditBox.right, xData->FilterEditBox.bottom + 2,
+						DeferWindowPos(DeferPosData, RefFilterEditBox, 0,
+							DeltaDlgWidth + xData->RefFilterEditBox.left, xData->RefFilterEditBox.top,
+							DeltaDlgWidth + xData->RefFilterEditBox.right, xData->RefFilterEditBox.bottom + 2,
 							NULL);
+
+						DeferWindowPos(DeferPosData, CellFilterEditBox, 0,
+									   0, 0,
+									   BaseCellListRect->right + DeltaDlgWidth - xData->CellFilterLabel.right - 7, xData->CellFilterEditBox.bottom,
+									   SWP_NOMOVE);
 
 						InvalidateRect(XLabel, NULL, TRUE);
 						InvalidateRect(YLabel, NULL, TRUE);
-						InvalidateRect(FilterLabel, NULL, TRUE);
+						InvalidateRect(RefFilterLabel, NULL, TRUE);
 
 						EndDeferWindowPos(DeferPosData);
 					}
@@ -3302,9 +3363,13 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			if (Return == false)
 			{
-				SendMessage(hWnd, 0x40F, NULL, NULL);		// reinit object list
+				if (CSEFilterableFormListManager::Instance.HandleMessages(RefFilterEditBox, uMsg, wParam, lParam))
+					TESCellViewWindow::RefreshObjectList();
+
+				if (CSEFilterableFormListManager::Instance.HandleMessages(CellFilterEditBox, uMsg, wParam, lParam))
+					TESCellViewWindow::RefreshCellList();
 			}
 
 			return DlgProcResult;
@@ -3557,10 +3622,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_INITDIALOG:
 				{
-					BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
-					(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
-
-					if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+					if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 					{
 						LVCOLUMN ColumnData = {0};
 						ColumnData.mask = LVCF_WIDTH;
@@ -4021,10 +4083,9 @@ namespace ConstructionSetExtender
 										break;
 									case kFormList_ClimateWeatherRaceHairFindTextTopics:
 										{
-											BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
-											(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
+											BGSEditorExtender::ResourceTemplateT TemplateID = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
 
-											switch (UserData->TemplateID)
+											switch (TemplateID)
 											{
 											case TESDialog::kDialogTemplate_Climate:
 												{
@@ -4293,8 +4354,6 @@ namespace ConstructionSetExtender
 														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
-			BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData* UserData =
-			(BGSEditorExtender::BGSEEWindowSubclasser::DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 
 			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 
@@ -4366,7 +4425,7 @@ namespace ConstructionSetExtender
 				break;
 			case WM_INITDIALOG:
 				{
-					if (UserData->TemplateID != TESDialog::kDialogTemplate_Quest)
+					if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) != TESDialog::kDialogTemplate_Quest)
 					{
 						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok), "Apply");
 						SetWindowText(GetDlgItem(hWnd, TESDialog::kStandardButton_Cancel), "Close");
@@ -4378,14 +4437,14 @@ namespace ConstructionSetExtender
 					// PS: Dammit!
 
 					SME_ASSERT(FilterEditBox);
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, GetDlgItem(hWnd, kFormList_TESFormIDListView),
-																	GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+					CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
+																	GetDlgItem(hWnd, kFormList_TESFormIDListView), hWnd);
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					CSEFilterableFormListManager::Instance.Unregister(hWnd);
+					CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 				}
 
 				break;
@@ -4393,7 +4452,7 @@ namespace ConstructionSetExtender
 				if (HIWORD(wParam))		// to keep EN_KILLFOCUS notifications from inadvertently calling the button handlers
 					break;				// ### could cause weird behaviour later on
 
-				if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+				if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 					break;
 
 				switch (LOWORD(wParam))
@@ -4445,7 +4504,7 @@ namespace ConstructionSetExtender
 					if (NotificationData->idFrom != kFormList_TESFormIDListView)
 						break;		// only interested in the main listview control
 
-					if (UserData->TemplateID == TESDialog::kDialogTemplate_Quest)
+					if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_Quest)
 						break;
 
 					switch (NotificationData->code)
@@ -4572,7 +4631,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
 				if (LocalCopy)
@@ -4633,7 +4692,7 @@ namespace ConstructionSetExtender
 			switch (uMsg)
 			{
 			case WM_DESTROY:
-				CSEFilterableFormListManager::Instance.Unregister(hWnd);
+				CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 
 				break;
 			case WM_INITDIALOG:
@@ -4645,7 +4704,7 @@ namespace ConstructionSetExtender
 					ColumnData.cx = 175;
 					ListView_SetColumn(PackageListView, 0, &ColumnData);
 
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+					CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
 				}
 
 				break;
@@ -4662,7 +4721,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			if (CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				SendMessage(hWnd, 0x41A, 0, 0);
 			}
@@ -5215,30 +5274,42 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				if (LOWORD(wParam) == TESCellViewWindow::kWorldspaceComboBox && HIWORD(wParam) == 1)
 				{
+					Return = true;
+
 					if ((HWND)lParam == GetDlgItem(hWnd, TESCellViewWindow::kWorldspaceComboBox))
 					{
 						// we didn't send this message, so clear the filter string
 						// this is done to prevent the dialog's controls from being disabled if the active filter string doesn't match any forms in the new worldspace
+						CSEFilterableFormListManager::Instance.SetEnabledState(FilterEditBox, false);
 						SetWindowText(FilterEditBox, "");
-						TODO("tunnel the message and wrap it inside an enable/disable call pair")
+						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+						CSEFilterableFormListManager::Instance.SetEnabledState(FilterEditBox, true);
+					}
+					else if (lParam == NULL)
+					{
+						// filter refresh
+						// prevent filter controls from being disabled
+						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+						EnableWindow(FilterEditBox, TRUE);
+						EnableWindow(GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), TRUE);
 					}
 				}
 
 				break;
 			case WM_DESTROY:
-				CSEFilterableFormListManager::Instance.Unregister(hWnd);
+				CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 
 				break;
 			case WM_INITDIALOG:
 				{
 					SME_ASSERT(FilterEditBox);
-					CSEFilterableFormListManager::Instance.Register(hWnd, FilterEditBox, FormList, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL));
+					CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL), FormList, hWnd);
 				}
 
 				break;
 			}
 
-			if (CSEFilterableFormListManager::Instance.HandleMessages(hWnd, uMsg, wParam, lParam))
+			if (CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{
 				// pass NULL as lParam to indicate a filter refresh
 				SendMessage(hWnd, WM_COMMAND, MAKEWPARAM(TESCellViewWindow::kWorldspaceComboBox, 1), NULL);
@@ -5979,7 +6050,7 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, LeveledItemFormDlgSubClassProc);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, LeveledItemFormDlgSubClassProc);
 
-	//		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, TESObjectCELLDlgSubClassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, TESObjectCELLDlgSubClassProc);
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());

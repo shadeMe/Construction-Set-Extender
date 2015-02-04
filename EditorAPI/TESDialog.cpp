@@ -468,6 +468,18 @@ void TESCellViewWindow::SetCellSelection(TESObjectCELL* Cell)
 	cdeclCall<void>(0x00409070, Cell);
 }
 
+void TESCellViewWindow::RefreshObjectList(void)
+{
+	SendMessage(*WindowHandle, 0x40F, NULL, NULL);
+}
+
+void TESCellViewWindow::RefreshCellList(bool RefreshWorldspaces /*= false*/)
+{
+	// the vanilla handler only updates when the no. of list view items is not equal to the current worldspace's exterior/interior cell count
+	SendMessage(*CellListHandle, LVM_DELETEALLITEMS, NULL, NULL);
+	SendMessage(*WindowHandle, 0x40E, RefreshWorldspaces, NULL);
+}
+
 void TESObjectWindow::RefreshFormList(void)
 {
 	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);
