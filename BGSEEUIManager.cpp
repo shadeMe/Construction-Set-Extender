@@ -460,9 +460,9 @@ namespace BGSEditorExtender
 		return false;
 	}
 
-	bool BGSEEWindowSubclasser::GetHasDialogSubclass( ResourceTemplateT TemplateID )
+	bool BGSEEWindowSubclasser::GetHasDialogSubclass( ResourceTemplateT TemplateID ) const
 	{
-		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
+		DialogSubclassMapT::const_iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 			return true;
 		else
@@ -525,6 +525,22 @@ namespace BGSEditorExtender
 		}
 
 		return Result;
+	}
+
+	ResourceTemplateT BGSEEWindowSubclasser::GetDialogTemplate(HWND SubclassedDialog) const
+	{
+		DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(SubclassedDialog, DWL_USER);
+		SME_ASSERT(UserData);
+
+		return UserData->TemplateID;
+	}
+
+	INT_PTR BGSEEWindowSubclasser::TunnelDialogMessage(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(SubclassedDialog, DWL_USER);
+		SME_ASSERT(UserData);
+
+		return UserData->Data->Original(SubclassedDialog, uMsg, wParam, lParam);
 	}
 
 	void BGSEEResourceTemplateHotSwapper::PopulateTemplateMap( void )

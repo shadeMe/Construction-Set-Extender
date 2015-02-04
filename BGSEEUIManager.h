@@ -68,7 +68,7 @@ namespace BGSEditorExtender
 		typedef LRESULT							(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 																		bool& Return, BGSEEWindowExtraDataCollection* ExtraData);
 		typedef std::list<SubclassProc>			SubclassProcListT;
-
+	private:
 		struct DialogSubclassData
 		{
 			DLGPROC								Original;
@@ -114,7 +114,7 @@ namespace BGSEditorExtender
 
 			WindowSubclassUserData();
 		};
-	private:
+
 		typedef std::map<ResourceTemplateT, DialogSubclassData>		DialogSubclassMapT;
 		typedef std::map<HWND, WindowSubclassData>					WindowSubclassMapT;
 
@@ -145,7 +145,9 @@ namespace BGSEditorExtender
 		bool									RegisterRegularWindowSubclass(HWND Handle, SubclassProc Proc);
 		bool									UnregisterRegularWindowSubclass(HWND Handle, SubclassProc Proc);
 
-		bool									GetHasDialogSubclass(ResourceTemplateT TemplateID);
+		bool									GetHasDialogSubclass(ResourceTemplateT TemplateID) const;
+		ResourceTemplateT						GetDialogTemplate(HWND SubclassedDialog) const;
+		INT_PTR									TunnelDialogMessage(HWND SubclassedDialog, UINT uMsg, WPARAM wParam, LPARAM lParam);		// passes the message to the original dlgproc for handling
 	};
 // sent to subclassed dialogs before their org wndproc processes the WM_INITDIALOG message
 // params are the same as WM_INITDIALOG's
