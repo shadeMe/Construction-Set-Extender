@@ -2451,9 +2451,7 @@ namespace ConstructionSetExtender
 			if (PreprocessScriptText(PreprocessedScriptResult) && ValidateScript(PreprocessedScriptResult))
 			{
 				Profiler->Stop();
-#if 1
-				DebugPrint("Preprocess + Validate = " + Profiler->ElapsedMilliseconds + " ms");
-#endif
+		//		DebugPrint("Preprocess + Validate = " + Profiler->ElapsedMilliseconds + " ms");
 
 				if (CurrentScript)
 				{

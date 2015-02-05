@@ -1,6 +1,7 @@
 #include "AvalonEditComponents.h"
 #include "AvalonEditTextEditor.h"
 #include "ScriptEditorPreferences.h"
+#include "Globals.h"
 
 namespace ConstructionSetExtender
 {
@@ -100,20 +101,20 @@ namespace ConstructionSetExtender
 
 			void ScriptErrorBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
+				Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
+				ScriptParser^ Parser = gcnew ScriptParser();
+
 				for (int i = 1; i <= ParentEditor->LineCount; i++)
 				{
 					if (GetLineInError(i))
 					{
 						DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(i);
-						Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
-						RenderBackground(textView,
-										drawingContext,
-										Line->Offset,
-										Line->EndOffset,
-										Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-										Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-										1,
-										true);
+						if (Parser->Tokenize(ParentEditor->Document->GetText(Line), false))
+						{
+							RenderSquiggly(textView, drawingContext,
+										   Line->Offset + Parser->Indices[0], Line->EndOffset,
+										   Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
+						}
 					}
 				}
 			}
@@ -121,6 +122,45 @@ namespace ConstructionSetExtender
 			ScriptErrorBGColorizer::~ScriptErrorBGColorizer()
 			{
 				ClearLines();
+			}
+
+			void ScriptErrorBGColorizer::RenderSquiggly(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Color)
+			{
+				Destination->EnsureVisualLines();
+				TextSegment^ Segment = gcnew TextSegment();
+				Segment->StartOffset = StartOffset;
+				Segment->EndOffset = EndOffset;
+
+#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_4_0_0_7070
+				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment))
+#else
+				for each (Windows::Rect R in BackgroundGeometryBuilder::GetRectsForSegment(Destination, Segment, false))
+#endif
+				{
+					Windows::Point StartPoint = R.BottomLeft;
+					Windows::Point EndPoint = R.BottomRight;
+					Windows::Media::SolidColorBrush^ Brush = gcnew Windows::Media::SolidColorBrush(Color);
+					Brush->Freeze();
+
+					double Offset = 2.5;
+					int Count = Math::Max((int)((EndPoint.X - StartPoint.X) / Offset) + 1, 4);
+					Windows::Media::StreamGeometry^ Geometry = gcnew Windows::Media::StreamGeometry;
+					Windows::Media::StreamGeometryContext^ Context = Geometry->Open();
+					List<Windows::Point>^ Points = gcnew List < Windows::Point >;
+
+					for (int i = 0; i < Count; i++)
+						Points->Add(Windows::Point(StartPoint.X + i * Offset, StartPoint.Y - ((i + 1) % 2 == 0 ? Offset : 0)));
+
+					Context->BeginFigure(StartPoint, false, false);
+					Context->PolyLineTo(Points, true, false);
+					delete Context;
+
+					Geometry->Freeze();
+
+					Windows::Media::Pen^ Pen = gcnew System::Windows::Media::Pen(Brush, 1);
+					Pen->Freeze();
+					DrawingContext->DrawGeometry(Windows::Media::Brushes::Transparent, Pen, Geometry);
+				}
 			}
 
 			void SelectionBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
@@ -462,9 +502,28 @@ namespace ConstructionSetExtender
 
 			StructureVisualizerRenderer::StructureVisualizerRenderer(AvalonEditTextEditor^ Parent) :
 				VisualLineElementGenerator(),
-				ParentEditor(Parent)
+				ParentEditor(Parent),
+				IconSource(nullptr)
 			{
-				;//
+				Drawing::Bitmap^ OrgResource = (Drawing::Bitmap^)Globals::ScriptEditorImageResourceManager->CreateImageFromResource("AvalonEditStructureVisualizer");
+
+				try
+				{
+					IconSource = System::Windows::Interop::Imaging::CreateBitmapSourceFromHBitmap(OrgResource->GetHbitmap(),
+																								  IntPtr::Zero,
+																								  Windows::Int32Rect::Empty,
+																								  Windows::Media::Imaging::BitmapSizeOptions::FromEmptyOptions());
+				}
+				catch (...)
+				{
+					IconSource = nullptr;
+				}
+				finally
+				{
+					NativeWrapper::DeleteObject(OrgResource->GetHbitmap());
+				}
+
+				delete OrgResource;
 			}
 
 			int StructureVisualizerRenderer::GetFirstInterestedOffset(Int32 startOffset)
@@ -490,33 +549,72 @@ namespace ConstructionSetExtender
 						DocumentLine^ BlockStart = CurrentContext->Document->GetLineByNumber(Block->StartLine);
 						if (BlockStart)
 						{
-							Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
-							Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
-							Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
-														  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
-														  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
-							Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
-							Windows::Media::Brush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B));
-
-							String^ StartText = CurrentContext->Document->GetText(BlockStart)->Replace("\t", "");
-
-							Windows::Controls::Label^ UIElement = gcnew Windows::Controls::Label();
-							UIElement->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
-							UIElement->FontSize = CustomFont->Size;
-							UIElement->Foreground = ForegroundBrush;
-							UIElement->Background = BackgroundBrush;
-							UIElement->Content = StartText;
-							UIElement->Padding = Windows::Thickness(0, 0, 0, 0);
-							UIElement->Margin = Windows::Thickness(10, 0, 0, 0);
-							UIElement->HorizontalAlignment = Windows::HorizontalAlignment::Left;
-							UIElement->VerticalAlignment = Windows::VerticalAlignment::Top;
-
-							return gcnew InlineObjectElement(0, UIElement);
+							return gcnew InlineObjectElement(0, GenerateAdornment(Block->StartLine, CurrentContext->Document->GetText(BlockStart)));
 						}
 					}
 				}
 
 				return nullptr;
+			}
+
+			void StructureVisualizerRenderer::OnMouseClick(Object^ Sender, Windows::Input::MouseButtonEventArgs^ E)
+			{
+				E->Handled = true;
+				AdornmentData^ Data = (AdornmentData^)((Windows::Controls::StackPanel^)Sender)->Tag;
+				if (Data)
+				{
+					Data->Parent->ScrollToLine(Data->JumpLine);
+				}
+			}
+
+			Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
+			{
+				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+				Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
+											  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
+											  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+
+				Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+				Windows::Media::Brush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
+
+				ElementText = ElementText->Replace("\t", "");
+
+				AdornmentData^ Data = gcnew AdornmentData;
+				Data->JumpLine = JumpLine;
+				Data->Parent = ParentEditor;
+
+				Windows::Controls::StackPanel^ Panel = gcnew Windows::Controls::StackPanel();
+				Panel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
+				Panel->Orientation = Windows::Controls::Orientation::Horizontal;
+				Panel->Margin = Windows::Thickness(15, 0, 15, 0);
+				Panel->Cursor = Windows::Input::Cursors::Hand;
+				Panel->Tag = Data;
+				Panel->PreviewMouseDown += gcnew System::Windows::Input::MouseButtonEventHandler(OnMouseClick);
+
+				if (IconSource)
+				{
+					Windows::Controls::Image^ Icon = gcnew Windows::Controls::Image();
+					Icon->Source = IconSource;
+					Icon->Width = 12;
+					Icon->Height = 12;
+					Icon->HorizontalAlignment = Windows::HorizontalAlignment::Center;
+					Icon->VerticalAlignment = Windows::VerticalAlignment::Bottom;
+					Panel->Children->Add(Icon);
+				}
+
+				Windows::Controls::Label^ AdornmentLabel = gcnew Windows::Controls::Label();
+				AdornmentLabel->FontFamily = gcnew Windows::Media::FontFamily(CustomFont->FontFamily->Name);
+				AdornmentLabel->FontSize = CustomFont->Size;
+				AdornmentLabel->Foreground = ForegroundBrush;
+				AdornmentLabel->Background = BackgroundBrush;
+				AdornmentLabel->Content = ElementText;
+				AdornmentLabel->Padding = Windows::Thickness(0, 0, 0, 0);
+				AdornmentLabel->Margin = Windows::Thickness(4, 0, 0, 0);
+				AdornmentLabel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
+				AdornmentLabel->VerticalAlignment = Windows::VerticalAlignment::Bottom;
+				Panel->Children->Add(AdornmentLabel);
+
+				return Panel;
 			}
 		}
 	}

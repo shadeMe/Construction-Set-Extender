@@ -23,6 +23,8 @@ namespace ConstructionSetExtender
 		IntPtr											SendMessageA(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 		[DllImport("user32.dll")]
 		IntPtr											SetActiveWindow(IntPtr handle);
+		[DllImport("gdi32.dll")]
+		int												DeleteObject(IntPtr hObject);
 
 		void											WriteToMainWindowStatusBar(int PanelIndex, String^ Message);
 		void											ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);

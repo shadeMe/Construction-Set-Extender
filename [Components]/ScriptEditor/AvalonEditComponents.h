@@ -17,6 +17,28 @@ namespace ConstructionSetExtender
 		namespace AvalonEditor
 		{
 			ref class AvalonEditTextEditor;
+/*
+
+			ref class AnchorSegmentTracker
+			{
+				typedef Dictionary<ScriptErrorMessage^, AnchorSegment^> ErrorMessageTableT;
+
+				List<AnchorSegment^>^					FindReplaceResults;
+				ErrorMessageTableT^						CompileTimeErrors;
+				List<AnchorSegment^>^					ValidatorErrors;		// updated from the semantic analysis cache
+
+				AvalonEdit::Document::TextDocument^		Parent;
+			public:
+				AnchorSegmentTracker(AvalonEdit::Document::TextDocument^ Source);
+				~AnchorSegmentTracker();
+
+				void							TrackFindReplaceResult(int StartOffset, int EndOffset);
+				void							ClearFindReplaceResults(void);
+
+				void							TrackCompileTimeError(UInt32 Line);
+				void							ClearCompileTimeErrors(void);
+				void
+			};*/
 
 			ref class ILineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 			{
@@ -51,6 +73,7 @@ namespace ConstructionSetExtender
 				List<int>^									ErrorLines;
 
 				bool										GetLineInError(int Line);
+				void										RenderSquiggly(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Color);
 			public:
 				virtual ~ScriptErrorBGColorizer();
 
@@ -164,7 +187,19 @@ namespace ConstructionSetExtender
 			ref class StructureVisualizerRenderer : public VisualLineElementGenerator
 			{
 			protected:
+				static void									OnMouseClick(Object^ Sender, Windows::Input::MouseButtonEventArgs^ E);
+
+				ref class AdornmentData
+				{
+				public:
+					UInt32						JumpLine;
+					AvalonEditTextEditor^		Parent;
+				};
+
 				AvalonEditTextEditor^						ParentEditor;
+				Windows::Media::Imaging::BitmapSource^		IconSource;
+
+				Windows::UIElement^							GenerateAdornment(UInt32 JumpLine, String^ ElementText);
 			public:
 				virtual int									GetFirstInterestedOffset(Int32 startOffset) override;
 				virtual VisualLineElement^					ConstructElement(Int32 offset) override;

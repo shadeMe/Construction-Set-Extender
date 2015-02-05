@@ -44,11 +44,14 @@ SE		---->
 
 
 	ENHANCEMENT		=
+		> Use TextAnchors for error lines and find results
 		> Document minimap
 
 
 	MISC			=
-
+		> Isolate "View" components to the Workspace/Container class(es) - Move the others, when apparopriate, to AvalonEditTextEditor
+		> Document script tool - refactor to use semantic analysis
+		> Bind messages, bookmarks, find results to their ListViews
 
 
 USE		---->

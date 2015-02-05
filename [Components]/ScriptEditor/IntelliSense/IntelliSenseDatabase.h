@@ -41,7 +41,7 @@ namespace ConstructionSetExtender
 
 			virtual ~IntelliSenseDatabase();
 
-			virtual void										InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);
+			virtual UInt32										InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);
 			virtual void										InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
 
 			static IntelliSenseDatabase^						GetSingleton();

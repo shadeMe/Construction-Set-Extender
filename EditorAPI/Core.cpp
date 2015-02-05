@@ -4,7 +4,6 @@
 
 using namespace ConstructionSetExtender;
 
-
 TESDataHandler**					TESDataHandler::Singleton = (TESDataHandler **)0x00A0E064;
 bool								TESDataHandler::PluginLoadSaveInProgress = false;
 
@@ -42,7 +41,6 @@ LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture6144x = NULL;
 BSRenderedTexture*					TESLODTextureGenerator::BSTexture6144x = NULL;
 
 ModelLoader**						ModelLoader::Singleton = (ModelLoader**)0x00A0DEAC;
-
 
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 {
@@ -143,33 +141,41 @@ bool TESDataHandler::PanicSave( bool Initialize /*= false*/ )
 	}
 	else if (kSaveFile)
 	{
-		this->unkCD2 = 1;
-		TESFile* ActiveFile = this->activeFile;
-
-		if (ActiveFile)
+		// wrap this in SEH to prevent the crash handler from being invoked again (we won't be here unless the editor has already crashed)
+		__try
 		{
-			ActiveFile->SetActive(false);
-			ActiveFile->SetLoaded(false);
+			this->unkCD2 = 1;
+			TESFile* ActiveFile = this->activeFile;
+
+			if (ActiveFile)
+			{
+				ActiveFile->SetActive(false);
+				ActiveFile->SetLoaded(false);
+			}
+
+			kSaveFile->SetActive(true);
+			kSaveFile->SetLoaded(true);
+
+			this->activeFile = kSaveFile;
+			bool Result = this->SavePlugin();
+			kSaveFile->DeleteInstance();
+			kSaveFile = NULL;
+
+			if (ActiveFile)
+			{
+				ActiveFile->SetActive(true);
+				ActiveFile->SetLoaded(true);
+			}
+
+			this->activeFile = ActiveFile;
+			this->unkCD2 = 0;
+
+			return Result;
 		}
-
-		kSaveFile->SetActive(true);
-		kSaveFile->SetLoaded(true);
-
-		this->activeFile = kSaveFile;
-		bool Result = this->SavePlugin();
-		kSaveFile->DeleteInstance();
-		kSaveFile = NULL;
-
-		if (ActiveFile)
+		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
-			ActiveFile->SetActive(true);
-			ActiveFile->SetLoaded(true);
+			return false;
 		}
-
-		this->activeFile = ActiveFile;
-		this->unkCD2 = 0;
-
-		return Result;
 	}
 	else
 		return false;
@@ -207,7 +213,7 @@ void TESDataHandler::RemoveInvalidScripts( void )
 	for (tList<Script>::Iterator Itr = scripts.Begin(); !Itr.End(); ++Itr)
 	{
 		Script* Current = Itr.Get();
-		
+
 		if (Current)
 		{
 			if (Current->editorID.c_str() == NULL && Current->text == NULL && Current->data == NULL)
@@ -281,7 +287,6 @@ float TES::GetSkyTOD( void )
 	else
 		return 0.0;
 }
-
 
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)
 {

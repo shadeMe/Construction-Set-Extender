@@ -53,17 +53,19 @@ void CLRUnhandledExceptionFilter(Object^, UnhandledExceptionEventArgs^ E)
 					MessageBoxIcon::Error);
 }
 
-void InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData)
+UInt32 InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMSTData)
 {
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
 	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
 
-	ISDB->InitializeCommandTableDatabase(Data);
+	UInt32 NonVanillaCommandCount = ISDB->InitializeCommandTableDatabase(Data);
 	ISDB->InitializeGMSTDatabase(GMSTData);
 	ISDB->ForceUpdateDatabase();
 
 	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
+
+	return NonVanillaCommandCount;
 }
 
 void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)

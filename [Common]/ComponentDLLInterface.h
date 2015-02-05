@@ -113,7 +113,7 @@ namespace ComponentDLLInterface
 	class ScriptEditorInterface
 	{
 	public:
-		void										(* InitializeComponents)(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);
+		UInt32										(* InitializeComponents)(CommandTableData* Data, IntelliSenseUpdateData* GMSTData);		// returns the no. of script commands (OBSE+Plugins) parsed
 
 		void										(* InstantiateEditor)(ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height);
 		void										(* AddScriptCommandDeveloperURL)(const char* ScriptCommandName, const char* URL);

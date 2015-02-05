@@ -182,7 +182,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseDatabase::InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data)
+		UInt32 IntelliSenseDatabase::InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data)
 		{
 			String^ Name, ^Desc, ^SH, ^PluginName;
 			int Count = 0, ReturnType = 0, CSCount = 0;
@@ -240,6 +240,8 @@ namespace ConstructionSetExtender
 			}
 
 			DebugPrint(String::Format("\tParsed {0} Commands", Count));
+
+			return Count;
 		}
 
 		void IntelliSenseDatabase::InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection)

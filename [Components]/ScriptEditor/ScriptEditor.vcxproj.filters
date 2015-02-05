@@ -479,4 +479,9 @@
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Namespace.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

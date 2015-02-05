@@ -22,7 +22,6 @@ using namespace System::Collections::Generic;
 using namespace System::Resources;
 using namespace System::Reflection;
 using namespace System::Runtime::InteropServices;
-using namespace System::ComponentModel;
 
 typedef unsigned char		UInt8;
 

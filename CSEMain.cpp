@@ -356,9 +356,12 @@ namespace ConstructionSetExtender
 
 		BGSEECONSOLE_MESSAGE("Flushed CS INI Settings");
 
-		Settings::Dialogs::kRenderWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40423, MF_BYCOMMAND) & MF_CHECKED) != 0);
-		Settings::Dialogs::kCellViewWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40200, MF_BYCOMMAND) & MF_CHECKED) != 0);
-		Settings::Dialogs::kObjectWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) != 0);
+		Settings::Dialogs::kRenderWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle,
+			TESCSMain::kMainMenu_View_RenderWindow, MF_BYCOMMAND) & MF_CHECKED) != 0);
+		Settings::Dialogs::kCellViewWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle,
+			TESCSMain::kMainMenu_View_CellViewWindow, MF_BYCOMMAND) & MF_CHECKED) != 0);
+		Settings::Dialogs::kObjectWindowState.SetInt((GetMenuState(*TESCSMain::MainMenuHandle,
+			TESCSMain::kMainMenu_View_ObjectWindow, MF_BYCOMMAND) & MF_CHECKED) != 0);
 
 		TESCSMain::DeinitializeCSWindows();
 
@@ -461,6 +464,9 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->Exdent();
 		BGSEECONSOLE->Exdent();
 
+		// it's highly inadvisable to do anything inside handler apart from the bare minimum of diagnostics
+		// memory allocations are a big no-no as the CRT state can potentially be corrupted...
+		// ... but sod that! Achievements are more important, obviously.
 		CR_CRASH_CALLBACK_INFO* CrashInfo = (CR_CRASH_CALLBACK_INFO*)Parameter;
 		bool ResumeExecution = false;
 

@@ -619,6 +619,11 @@ namespace ConstructionSetExtender
 				GotoLine(LineNo);
 			}
 
+			void AvalonEditTextEditor::ScrollToLine(UInt32 LineNumber)
+			{
+				GotoLine(LineNumber);
+			}
+
 			void AvalonEditTextEditor::OnGotFocus(void)
 			{
 				FocusTextArea();

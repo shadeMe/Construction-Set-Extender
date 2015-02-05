@@ -41,11 +41,11 @@ namespace ConstructionSetExtender
 				AvalonEdit::TextEditor^								TextField;
 				System::Windows::Shapes::Rectangle^					AnimationPrimitive;
 
-				ScriptErrorBGColorizer^					ErrorColorizer;
-				FindReplaceBGColorizer^					FindReplaceColorizer;
+				ScriptErrorBGColorizer^								ErrorColorizer;
+				FindReplaceBGColorizer^								FindReplaceColorizer;
 				AvalonEdit::Folding::FoldingManager^				CodeFoldingManager;
-				ObScriptCodeFoldingStrategy^				CodeFoldingStrategy;
-				BraceHighlightingBGColorizer^				BraceColorizer;
+				ObScriptCodeFoldingStrategy^						CodeFoldingStrategy;
+				BraceHighlightingBGColorizer^						BraceColorizer;
 
 				bool												InitializingFlag;
 				bool												ModifiedFlag;
@@ -233,6 +233,7 @@ namespace ConstructionSetExtender
 
 				virtual Control^									GetContainer();
 				virtual void										ScrollToLine(String^ LineNumber);
+				virtual void										ScrollToLine(UInt32 LineNumber);
 				virtual Point										PointToScreen(Point Location);
 				virtual bool										GetLineVisible(UInt32 LineNumber);
 

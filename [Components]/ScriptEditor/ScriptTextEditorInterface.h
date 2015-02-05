@@ -117,6 +117,7 @@ namespace ConstructionSetExtender
 
 			Control^									GetContainer();
 			void										ScrollToLine(String^ LineNumber);
+			void										ScrollToLine(UInt32 LineNumber);
 			bool										GetLineVisible(UInt32 LineNumber);	// inside the text field's viewable area
 			Point										PointToScreen(Point Location);
 			void										SetEnabledState(bool State);

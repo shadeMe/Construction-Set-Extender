@@ -285,6 +285,7 @@ namespace ConstructionSetExtender
 	};
 
 #ifdef CSE_SE
-	typedef ObScriptSemanticAnalysis::Tokenizer		ScriptParser;
+	typedef ObScriptSemanticAnalysis::Tokenizer						ScriptParser;
+	typedef ObScriptSemanticAnalysis::AnalysisData::UserMessage		ScriptErrorMessage;
 #endif
 }
