@@ -312,6 +312,13 @@ namespace ConstructionSetExtender
 			ToolBarDumpAllScriptsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarDumpAllScripts_Click);
 			ToolBarLoadScriptsToTabsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarLoadScriptsToTabs_Click);
 
+			ToolBarNewScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarNewScript_Click);
+			ToolBarOpenScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarOpenScript_Click);
+
+			ToolBarMessageListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarMessageList_Click);
+			ToolBarFindListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarFindList_Click);
+			ToolBarBookmarkListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarBookmarkList_Click);
+
 			Padding ToolBarButtonPaddingLarge = Padding(16, 0, 16, 0);
 			Padding ToolBarButtonPaddingRegular = Padding(10, 0, 10, 0);
 
@@ -468,6 +475,11 @@ namespace ConstructionSetExtender
 			ToolBarEditMenu->Padding = Padding(0);
 			ToolBarEditMenu->Alignment = ToolStripItemAlignment::Right;
 
+			ToolBarNewScript->Click += ToolBarNewScriptClickHandler;
+			ToolBarOpenScript->Click += ToolBarOpenScriptClickHandler;
+			ToolBarMessageList->Click += ToolBarMessageListClickHandler;
+			ToolBarFindList->Click += ToolBarFindListClickHandler;
+			ToolBarBookmarkList->Click += ToolBarBookmarkListClickHandler;
 			ToolBarDumpAllScripts->Click += ToolBarDumpAllScriptsClickHandler;
 			ToolBarLoadScriptsToTabs->Click += ToolBarLoadScriptsToTabsClickHandler;
 			ToolBarOptions->Click += ToolBarOptionsClickHandler;
@@ -580,6 +592,7 @@ namespace ConstructionSetExtender
 			EditorTabStrip->TabMoving -= ScriptStripTabMovingHandler;
 			NewTabButton->Click -= NewTabButtonClickHandler;
 			SortTabsButton->Click -= SortTabsButtonClickHandler;
+
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 
 			delete EditorTabStrip;
@@ -587,6 +600,11 @@ namespace ConstructionSetExtender
 			delete NewTabButton;
 			delete SortTabsButton;
 						
+			ToolBarNewScript->Click -= ToolBarNewScriptClickHandler;
+			ToolBarOpenScript->Click -= ToolBarOpenScriptClickHandler;
+			ToolBarMessageList->Click -= ToolBarMessageListClickHandler;
+			ToolBarFindList->Click -= ToolBarFindListClickHandler;
+			ToolBarBookmarkList->Click -= ToolBarBookmarkListClickHandler;
 			ToolBarDumpAllScripts->Click -= ToolBarDumpAllScriptsClickHandler;
 			ToolBarLoadScriptsToTabs->Click -= ToolBarLoadScriptsToTabsClickHandler;
 			ToolBarOptions->Click -= ToolBarOptionsClickHandler;
@@ -889,19 +907,133 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void ConcreteWorkspaceView::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
+		{
+
+			switch (Control::ModifierKeys)
+			{
+			case Keys::Control:
+				NewTabOperationArgs^ Args = gcnew NewTabOperationArgs;
+				Args->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::New;
+				NewTab(Args);
+
+				break;
+			case Keys::Shift:
+				{
+					Rectangle Bounds = GetBounds(false);
+					ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ViewFactory->CreateView(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
+					IWorkspaceModel^ Model = ModelFactory()->CreateModel(nullptr);
+
+					New->AssociateModel(Model, true);
+				}
+
+				break;
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			switch (Control::ModifierKeys)
+			{
+			case Keys::Control:
+				NewTabOperationArgs^ Args = gcnew NewTabOperationArgs;
+				Args->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::OpenList;
+				NewTab(Args);
+
+				break;
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarMessageList_Click(Object^ Sender, EventArgs^ E)
+		{
+			BeginUpdate();
+
+			if (FindList->Visible)
+				ToolBarFindList->PerformClick();
+			else if (BookmarkList->Visible)
+				ToolBarBookmarkList->PerformClick();
+
+			if (MessageList->Visible == false)
+			{
+				MessageList->Show();
+				MessageList->BringToFront();
+				ToolBarMessageList->Checked = true;
+				ToggleSecondaryPanel(true);
+			}
+			else
+			{
+				MessageList->Hide();
+				ToolBarMessageList->Checked = false;
+				ToggleSecondaryPanel(false);
+			}
+
+			EndUpdate();
+		}
+
+		void ConcreteWorkspaceView::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
+		{
+			BeginUpdate();
+
+			if (MessageList->Visible)
+				ToolBarMessageList->PerformClick();
+			else if (BookmarkList->Visible)
+				ToolBarBookmarkList->PerformClick();
+
+			if (FindList->Visible == false)
+			{
+				FindList->Show();
+				FindList->BringToFront();
+				ToolBarFindList->Checked = true;
+				ToggleSecondaryPanel(true);
+			}
+			else
+			{
+				FindList->Hide();
+				ToolBarFindList->Checked = false;
+				ToggleSecondaryPanel(false);
+			}
+
+			EndUpdate();
+		}
+
+		void ConcreteWorkspaceView::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
+		{
+			BeginUpdate();
+
+			if (MessageList->Visible)
+				ToolBarMessageList->PerformClick();
+			else if (FindList->Visible)
+				ToolBarFindList->PerformClick();
+
+			if (BookmarkList->Visible == false)
+			{
+				BookmarkList->Show();
+				BookmarkList->BringToFront();
+				ToolBarBookmarkList->Checked = true;
+				ToggleSecondaryPanel(true);
+			}
+			else
+			{
+				BookmarkList->Hide();
+				ToolBarBookmarkList->Checked = false;
+				ToggleSecondaryPanel(false);
+			}
+
+			EndUpdate();
+		}
 
 		IWorkspaceModelController^ ConcreteWorkspaceView::ModelController()
 		{
 			Debug::Assert(AssociatedModels->Count != 0);
 
-			return AssociatedModels->GetEnumerator().Current.Key->ModelController;
+			return AssociatedModels->GetEnumerator().Current.Key->Controller;
 		}
 
 		IWorkspaceModelFactory^ ConcreteWorkspaceView::ModelFactory()
 		{
 			Debug::Assert(AssociatedModels->Count != 0);
 
-			return AssociatedModels->GetEnumerator().Current.Key->ModelFactory;
+			return AssociatedModels->GetEnumerator().Current.Key->Factory;
 		}
 
 		bool ConcreteWorkspaceView::IsModelAssociated(IWorkspaceModel^ Model)
@@ -999,6 +1131,14 @@ namespace ConstructionSetExtender
 				return EditorForm->Bounds;
 			else
 				return EditorForm->RestoreBounds;
+		}
+
+		void ConcreteWorkspaceView::ToggleSecondaryPanel(bool State)
+		{
+			if (State)
+				WorkspaceSplitter->SplitterDistance = GetBounds(false).Height / 1.5;
+			else
+				WorkspaceSplitter->SplitterDistance = GetBounds(false).Height;
 		}
 
 		void ConcreteWorkspaceView::SaveAll()
@@ -1216,6 +1356,8 @@ namespace ConstructionSetExtender
 				break;
 			}
 		}
+		
+		
 
 
 		// ConcreteWorkspaceViewController

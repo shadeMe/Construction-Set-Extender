@@ -93,9 +93,9 @@ namespace ConstructionSetExtender
 
 			static enum class SaveOperation
 			{
-				SaveCompile,
-				SaveDontCompile,
-				SaveAndPlugin
+				Default,
+				NoCompile,
+				SavePlugin,
 			};
 
 			TextEditors::IScriptTextEditor^			TextEditor;
@@ -104,6 +104,7 @@ namespace ConstructionSetExtender
 			void*									CurrentScript;
 			Type									CurrentScriptType;
 			String^									CurrentScriptEditorID;
+			UInt32									CurrentScriptFormID;
 			bool									NewScriptFlag;
 			bool									Closed;
 
@@ -111,10 +112,16 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceModelFactory^			ModelFactory;
 
 			IWorkspaceView^							BoundParent;
-			property bool							IsBound
+			property bool							Bound
 			{
 				virtual bool get() { return BoundParent != nullptr; }
 				virtual void set(bool e) {}
+			}
+
+			property String^						Description
+			{
+				virtual String^ get() { return CurrentScriptEditorID + " [" + CurrentScriptFormID.ToString("X8") + "]"; }
+				virtual void set(String^ e) {}
 			}
 
 			void									Setup(ComponentDLLInterface::ScriptData* Data);
@@ -131,7 +138,13 @@ namespace ConstructionSetExtender
 			void									NextScript();
 			void									CloseScript();
 
-			void									SetType(Type New);
+			void									SetType(Type New, bool Redraw);
+			void									ShowFindReplace();
+			void									GotoLine();
+			void									GotoOffset();
+
+			void									LoadFromDisk(String^ Path);
+			void									SaveToDisk(String^ Path, bool PathIncludesFileName, String^ Extension);
 
 			ConcreteWorkspaceModel(ConcreteWorkspaceModelController^ Controller, ConcreteWorkspaceModelFactory^ Factory, ComponentDLLInterface::ScriptData* Data);
 			~ConcreteWorkspaceModel();
@@ -159,6 +172,28 @@ namespace ConstructionSetExtender
 				virtual void set(bool e) {}
 			}
 #pragma endregion
+		};
+
+		ref class ConcreteWorkspaceModelController : public IWorkspaceModelController
+		{
+		public:
+			virtual void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To) override;
+			virtual void					Unbind(IWorkspaceModel^ Model) override;
+
+			virtual void					TunnelKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E) override;
+
+			virtual void					SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack) override;
+
+			virtual void					New(IWorkspaceModel^ Model) override;
+			virtual void					Open(IWorkspaceModel^ Model) override;
+			virtual void					Save(IWorkspaceModel^ Model) override;
+			virtual bool					Close(IWorkspaceModel^ Model) override;
+
+			virtual void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile) override;
+			virtual void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension) override;
+
+			virtual int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+														String^ Query, String^ Replacement, UInt32 Options) override;
 		};
 
 		ref class ConcreteWorkspaceModelFactory : public IWorkspaceModelFactory

@@ -36,11 +36,7 @@ namespace ConstructionSetExtender
 			property ToolStripButton^					ButtonReplace;
 			property ToolStripButton^					ButtonGotoLine;
 			property ToolStripButton^					ButtonGotoOffset;
-
-			property ToolStripButton^					ButtonMessages;
-			property ToolStripButton^					ButtonBookmarks;
-			property ToolStripButton^					ButtonFindResults;
-
+			
 			property ToolStripSplitButton^				ButtonSaveToDisk;
 			property ToolStripSplitButton^				ButtonLoadFromDisk;
 
@@ -114,21 +110,21 @@ namespace ConstructionSetExtender
 		interface class IWorkspaceViewController
 		{
 		public:
-			virtual void								SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
-			virtual void								BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
+			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
+			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 			
-			virtual void								Jump(IWorkspaceView^ View, String^ ScriptEditorID);
-			virtual void								FindReplaceAll(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
+			virtual void	FindReplaceAll(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 																	String^ Query, String^ Replacement, UInt32 Options);
 
-			virtual void								Redraw(IWorkspaceView^ View);
+			virtual void	Redraw(IWorkspaceView^ View);
 		};
 
 		interface class IWorkspaceViewFactory
 		{
 		public:
-			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height);
-			virtual IWorkspaceViewController^			CreateController();
+			virtual IWorkspaceView^					CreateView(int X, int Y, int Width, int Height);
+			virtual IWorkspaceViewController^		CreateController();
 		};
 	}
 }

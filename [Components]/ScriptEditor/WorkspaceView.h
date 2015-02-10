@@ -81,6 +81,20 @@ namespace ConstructionSetExtender
 
 			void									ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
 			void									ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
+
+			EventHandler^							ToolBarNewScriptClickHandler;
+			EventHandler^							ToolBarOpenScriptClickHandler;
+
+			void									ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
+
+			EventHandler^							ToolBarMessageListClickHandler;
+			EventHandler^							ToolBarFindListClickHandler;
+			EventHandler^							ToolBarBookmarkListClickHandler;
+
+			void									ToolBarMessageList_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarFindList_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E);
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -167,6 +181,7 @@ namespace ConstructionSetExtender
 			DotNetBar::SuperTabItem^				GetActiveTab();
 
 			Rectangle								GetBounds(bool UseRestoreBounds);
+			void									ToggleSecondaryPanel(bool State);
 
 			void									SaveAll();
 			void									CloseAll();
@@ -261,22 +276,6 @@ namespace ConstructionSetExtender
 			virtual property ToolStripButton^		ButtonGotoOffset
 			{
 				virtual ToolStripButton^ get() { return ToolBarEditMenuContentsGotoOffset; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-
-			virtual property ToolStripButton^		ButtonMessages
-			{
-				virtual ToolStripButton^ get() { return ToolBarMessageList; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonBookmarks
-			{
-				virtual ToolStripButton^ get() { return ToolBarBookmarkList; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonFindResults
-			{
-				virtual ToolStripButton^ get() { return ToolBarFindList; }
 				virtual void set(ToolStripButton^ e) {}
 			}
 

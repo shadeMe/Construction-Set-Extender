@@ -23,7 +23,7 @@ namespace ConstructionSetExtender
 		{
 		public:
 			virtual void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To);		// attaches to the view for display
-			virtual void					Unbind(IWorkspaceModel^ Model);							// detaches from the view from display
+			virtual void					Unbind(IWorkspaceModel^ Model);							// detaches from the view
 
 			virtual void					TunnelKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
