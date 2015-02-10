@@ -210,6 +210,8 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClCompile Include="ScriptEditorManager.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
+    <ClCompile Include="WorkspaceModel.cpp" />
+    <ClCompile Include="WorkspaceView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\AuxiliaryWindowsForm.h" />
@@ -241,6 +243,10 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClInclude Include="ScriptEditorManager.h" />
     <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
+    <ClInclude Include="WorkspaceModel.h" />
+    <ClInclude Include="WorkspaceModelInterface.h" />
+    <ClInclude Include="WorkspaceView.h" />
+    <ClInclude Include="WorkspaceViewInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images.resx">

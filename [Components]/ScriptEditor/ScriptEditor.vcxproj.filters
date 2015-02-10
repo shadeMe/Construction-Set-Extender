@@ -90,6 +90,8 @@
     <ClCompile Include="SemanticAnalysis.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="WorkspaceView.cpp" />
+    <ClCompile Include="WorkspaceModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -169,6 +171,10 @@
     <ClInclude Include="SemanticAnalysis.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="WorkspaceViewInterface.h" />
+    <ClInclude Include="WorkspaceModelInterface.h" />
+    <ClInclude Include="WorkspaceView.h" />
+    <ClInclude Include="WorkspaceModel.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images.resx">

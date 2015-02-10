@@ -134,9 +134,9 @@ namespace ConstructionSetExtender
 			void										ClearScriptErrorHighlights(void);
 
 			// Event handlers
+			TODO("anneal these with the new bind implementation");
 			void										OnGotFocus(void);					// called when the workspace's is brought to focus
 			void										OnLostFocus(void);					// the opposite of the above
-			void										OnPositionSizeChange(void);			// called when the workspace's container's position or size changes
 		};
 	}
 }

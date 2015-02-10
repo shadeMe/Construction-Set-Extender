@@ -228,6 +228,7 @@ namespace ConstructionSetExtender
 			[Flags]
 			static enum class Operation
 			{
+				None = 0,
 				FillVariables = 1 << 0,
 				FillControlBlocks = 1 << 1,
 				FillUDFData = 1 << 2,

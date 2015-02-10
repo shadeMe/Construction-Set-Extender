@@ -51,7 +51,7 @@ namespace ConstructionSetExtender
 
 			virtual void								Destroy();
 		public:
-			FindReplaceDialog(UInt32 ParentWorkspaceIndex);
+			FindReplaceDialog();
 			virtual ~FindReplaceDialog()
 			{
 				FindReplaceDialog::Destroy();

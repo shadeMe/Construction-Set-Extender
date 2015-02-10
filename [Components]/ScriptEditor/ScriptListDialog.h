@@ -66,7 +66,7 @@ namespace ConstructionSetExtender
 
 			virtual void										Destroy();
 		public:
-			ScriptListDialog(UInt32 ParentWorkspaceIndex);
+			ScriptListDialog();
 			virtual ~ScriptListDialog()
 			{
 				ScriptListDialog::Destroy();

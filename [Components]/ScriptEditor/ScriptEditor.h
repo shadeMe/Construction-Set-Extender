@@ -273,12 +273,14 @@ namespace ConstructionSetExtender
 			KeyEventHandler^									TextEditorKeyDownHandler;
 			TextEditors::TextEditorScriptModifiedEventHandler^	TextEditorScriptModifiedHandler;
 			TextEditors::TextEditorMouseClickEventHandler^		TextEditorMouseClickHandler;
+
 			EventHandler^										MessageListDoubleClickHandler;
 			ColumnClickEventHandler^							MessageListColumnClickHandler;
 			EventHandler^										FindListDoubleClickHandler;
 			ColumnClickEventHandler^							FindListColumnClickHandler;
 			EventHandler^										BookmarkListDoubleClickHandler;
 			ColumnClickEventHandler^							BookmarkListColumnClickHandler;
+
 			EventHandler^										ToolBarNewScriptClickHandler;
 			EventHandler^										ToolBarOpenScriptClickHandler;
 			EventHandler^										ToolBarPreviousScriptClickHandler;
@@ -296,6 +298,7 @@ namespace ConstructionSetExtender
 			EventHandler^										ToolBarScriptTypeContentsObjectClickHandler;
 			EventHandler^										ToolBarScriptTypeContentsQuestClickHandler;
 			EventHandler^										ToolBarScriptTypeContentsMagicEffectClickHandler;
+
 			CancelEventHandler^									TextEditorContextMenuOpeningHandler;
 			EventHandler^										ContextMenuCopyClickHandler;
 			EventHandler^										ContextMenuPasteClickHandler;
@@ -314,9 +317,11 @@ namespace ConstructionSetExtender
 			EventHandler^										ContextMenuRefactorRenameVariablesClickHandler;
 			EventHandler^										ContextMenuRefactorModifyVariableIndicesClickHandler;
 			EventHandler^										ContextMenuOpenImportFileClickHandler;
+
 			EventHandler^										ToolBarEditMenuContentsFindReplaceClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoLineClickHandler;
 			EventHandler^										ToolBarEditMenuContentsGotoOffsetClickHandler;
+
 			EventHandler^										ToolBarMessageListClickHandler;
 			EventHandler^										ToolBarFindListClickHandler;
 			EventHandler^										ToolBarBookmarkListClickHandler;

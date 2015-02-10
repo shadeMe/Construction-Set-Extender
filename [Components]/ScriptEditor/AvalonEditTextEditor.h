@@ -243,7 +243,6 @@ namespace ConstructionSetExtender
 
 				virtual void										OnGotFocus(void);
 				virtual void										OnLostFocus(void);
-				virtual void										OnPositionSizeChange(void);
 
 				virtual void										BeginUpdate(void);
 				virtual void										EndUpdate(bool FlagModification);
