@@ -1,16 +1,16 @@
 #include "FindReplaceDialog.h"
-#include "ScriptEditor.h"
-#include "ScriptEditorManager.h"
 #include "ScriptEditorPreferences.h"
 
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
-		FindReplaceDialog::FindReplaceDialog( UInt32 ParentWorkspaceIndex )
+		FindReplaceDialog::FindReplaceDialog(IWorkspaceView^ Parent)
 		{
-			this->ParentWorkspaceIndex = ParentWorkspaceIndex;
+			Debug::Assert(Parent != nullptr);
+
 			Closing = false;
+			ParentView = Parent;
 
 			FindReplaceBox = gcnew AnimatedForm(0.10);
 			this->LabelFind = (gcnew Label());
@@ -201,7 +201,7 @@ namespace ConstructionSetExtender
 			FindReplaceBox->Hide();
 		}
 
-		void FindReplaceDialog::Destroy()
+		FindReplaceDialog::~FindReplaceDialog()
 		{
 			FindButton->Click -= FindButtonClickHandler;
 			ReplaceButton->Click -= ReplaceButtonClickHandler;
@@ -224,6 +224,8 @@ namespace ConstructionSetExtender
 			delete MatchWholeWord;
 			delete CaseInsensitiveSearch;
 			delete InSelection;
+
+			ParentView = nullptr;
 		}
 
 		void FindReplaceDialog::FindButton_Click( Object^ Sender, EventArgs^ E )
@@ -233,10 +235,12 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::Find,
-																					Query,
-																					"",
-																					GetSelectedOptions());
+			ParentView->Controller->FindReplace(ParentView,
+												TextEditors::IScriptTextEditor::FindReplaceOperation::Find,
+												Query,
+												"",
+												GetSelectedOptions(),
+												false);
 		}
 
 		void FindReplaceDialog::ReplaceButton_Click( Object^ Sender, EventArgs^ E )
@@ -247,10 +251,12 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::Replace,
-																					Query,
-																					Replacement,
-																					GetSelectedOptions());
+			ParentView->Controller->FindReplace(ParentView,
+												TextEditors::IScriptTextEditor::FindReplaceOperation::Replace,
+												Query,
+												Replacement,
+												GetSelectedOptions(),
+												false);
 		}
 
 		void FindReplaceDialog::FindInTabsButton_Click( Object^ Sender, EventArgs^ E )
@@ -260,15 +266,12 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
-			RemoteOpParameters->Add(TextEditors::IScriptTextEditor::FindReplaceOperation::Find);
-			RemoteOpParameters->Add(Query);
-			RemoteOpParameters->Add("");
-			RemoteOpParameters->Add(GetSelectedOptions());
-
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(
-										WorkspaceContainer::RemoteWorkspaceOperation::FindReplaceInOpenWorkspaces,
-										RemoteOpParameters);
+			ParentView->Controller->FindReplace(ParentView,
+												TextEditors::IScriptTextEditor::FindReplaceOperation::Find,
+												Query,
+												"",
+												GetSelectedOptions(),
+												true);
 		}
 
 		void FindReplaceDialog::ReplaceInTabsButton_Click( Object^ Sender, EventArgs^ E )
@@ -279,15 +282,12 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			List<Object^>^ RemoteOpParameters = gcnew List<Object^>();
-			RemoteOpParameters->Add(TextEditors::IScriptTextEditor::FindReplaceOperation::Replace);
-			RemoteOpParameters->Add(Query);
-			RemoteOpParameters->Add(Replacement);
-			RemoteOpParameters->Add(GetSelectedOptions());
-
-			SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->PerformRemoteWorkspaceOperation(
-										WorkspaceContainer::RemoteWorkspaceOperation::FindReplaceInOpenWorkspaces,
-										RemoteOpParameters);
+			ParentView->Controller->FindReplace(ParentView,
+												TextEditors::IScriptTextEditor::FindReplaceOperation::Replace,
+												Query,
+												Replacement,
+												GetSelectedOptions(),
+												true);
 		}
 
 		void FindReplaceDialog::CountMatchesButton_Click( Object^ Sender, EventArgs^ E )
@@ -297,10 +297,12 @@ namespace ConstructionSetExtender
 				return;
 
 			CacheComboBoxStrings();
-			int Hits = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->PerformFindReplace(TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches,
-				Query,
-				"",
-				GetSelectedOptions());
+			int Hits = ParentView->Controller->FindReplace(ParentView,
+														   TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches,
+														   Query,
+														   "",
+														   GetSelectedOptions(),
+														   false);
 
 			if (Hits != -1)
 				MessageBox::Show("Found " + Hits + " matches.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Information);
@@ -384,7 +386,7 @@ namespace ConstructionSetExtender
 			FindReplaceBox->Hide();
 		}
 
-		void FindReplaceDialog::Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection, bool PerformSearch)
+		void FindReplaceDialog::Show(String^ Query, bool DefaultInSelection, bool PerformSearch)
 		{
 			LoadOptions();
 
@@ -401,10 +403,7 @@ namespace ConstructionSetExtender
 			if (FindReplaceBox->Visible == false)
 			{
 				Closing = false;
-				if (ParentHandle != IntPtr::Zero)
-					FindReplaceBox->Show(gcnew WindowHandleWrapper(ParentHandle));
-				else
-					FindReplaceBox->Show();
+				FindReplaceBox->Show(gcnew WindowHandleWrapper(ParentView->WindowHandle));
 			}
 
 			if (PerformSearch)

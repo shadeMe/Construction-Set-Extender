@@ -457,6 +457,12 @@ ScriptData* GetNextScriptInList(void* CurrentScript)
 	return Result;
 }
 
+void RemoveScriptBytecode(void* Script)
+{
+	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
+	ScriptForm->RemoveCompiledData();
+}
+
 void DestroyScriptInstance(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
@@ -1316,6 +1322,7 @@ ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
 		DeleteScript,
 		GetPreviousScriptInList,
 		GetNextScriptInList,
+		RemoveScriptBytecode,
 		SaveEditorBoundsToINI,
 		GetScriptList,
 		GetScriptVarList,

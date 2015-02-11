@@ -114,3 +114,17 @@ UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefListT& OutList)
 
 	return OutList.size();
 }
+
+void Script::RemoveCompiledData(void)
+{
+	FormHeap_Free(data);
+	data = NULL;
+
+	info.dataLength = 0;
+	info.lastVarIdx = 0;
+	info.refCount = 0;
+	compileResult = 0;
+
+	thisCall<void>(0x004FF831, this);		// cleanup ref var list
+	thisCall<void>(0x004FF7D0, this);		// cleanup var list
+}

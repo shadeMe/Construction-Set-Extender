@@ -1,6 +1,7 @@
 #include "WorkspaceModel.h"
 #include "[Common]\CustomInputBox.h"
 #include "ScriptEditorPreferences.h"
+#include "IntelliSense\IntelliSenseDatabase.h"
 
 namespace ConstructionSetExtender
 {
@@ -13,9 +14,11 @@ namespace ConstructionSetExtender
 			ModelFactory = Factory;
 
 			CurrentScript = nullptr;
-			CurrentScriptType = Type::Object;
+			CurrentScriptType = IWorkspaceModel::ScriptType::Object;
 			CurrentScriptEditorID = NEWSCRIPTID;
 			CurrentScriptFormID = 0;
+			CurrentScriptBytecode = 0;
+			CurrentScriptBytecodeLength = 0;
 			NewScriptFlag = false;
 			Closed = false;
 			BoundParent = nullptr;
@@ -26,7 +29,9 @@ namespace ConstructionSetExtender
 			Color ForeColor = Color::Black;
 			Color BackColor = Color::White;
 			Color HighlightColor = Color::Maroon;
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
+										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
+										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
 
 			TODO("move context menu, bookmarks, cse block serialization, code validation and preprocessing to AvalonEditTextEditor");
@@ -38,33 +43,6 @@ namespace ConstructionSetExtender
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceModel::TextEditor_KeyDown);
 			TextEditorScriptModifiedHandler = gcnew TextEditors::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
 			TextEditorMouseClickHandler = gcnew TextEditors::TextEditorMouseClickEventHandler(this, &ConcreteWorkspaceModel::TextEditor_MouseClick);
-
-			ToolBarNewScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarNewScript_Click);
-			ToolBarOpenScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarOpenScript_Click);
-			ToolBarPreviousScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarPreviousScript_Click);
-			ToolBarNextScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarNextScript_Click);
-			ToolBarSaveScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarSaveScript_Click);
-			ToolBarSaveScriptNoCompileClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarSaveScriptNoCompile_Click);
-			ToolBarSaveScriptAndPluginClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarSaveScriptAndPlugin_Click);
-			ToolBarRecompileScriptsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarRecompileScripts_Click);
-			ToolBarCompileDependenciesClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarCompileDependencies_Click);
-			ToolBarDeleteScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarDeleteScript_Click);
-
-			ToolBarScriptTypeContentsObjectClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarScriptTypeContentsObject_Click);
-			ToolBarScriptTypeContentsQuestClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarScriptTypeContentsQuest_Click);
-			ToolBarScriptTypeContentsMagicEffectClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarScriptTypeContentsMagicEffect_Click);
-
-			ToolBarEditMenuContentsFindReplaceClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarEditMenuContentsFindReplace_Click);
-			ToolBarEditMenuContentsGotoLineClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarEditMenuContentsGotoLine_Click);
-			ToolBarEditMenuContentsGotoOffsetClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarEditMenuContentsGotoOffset_Click);
-
-			ToolBarDumpScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarDumpScript_Click);
-			ToolBarLoadScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarLoadScript_Click);
-			ToolBarShowOffsetsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarShowOffsets_Click);
-			ToolBarShowPreprocessedTextClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarShowPreprocessedText_Click);
-			ToolBarSanitizeScriptTextClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarSanitizeScriptText_Click);
-			ToolBarBindScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarBindScript_Click);
-			ToolBarSnippetManagerClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ToolBarSnippetManager_Click);
 
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::ScriptEditorPreferences_Saved);
 			AutoSaveTimerTickHandler = gcnew EventHandler(this, &ConcreteWorkspaceModel::AutoSaveTimer_Tick);
@@ -79,7 +57,7 @@ namespace ConstructionSetExtender
 			AutoSaveTimer->Start();
 
 			if (Data && Data->ParentForm)
-				Setup(Data);
+				Setup(Data, false);
 
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
@@ -109,62 +87,6 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		{
-			switch (E->KeyCode)
-			{
-			case Keys::N:
-				if (E->Modifiers == Keys::Control)
-					NewScript();
-
-				break;
-			case Keys::O:
-				if (E->Modifiers == Keys::Control)
-					OpenScript();
-
-				break;
-			case Keys::S:
-				if (E->Modifiers == Keys::Control)
-					SaveScript(SaveOperation::Default);
-
-				break;
-			case Keys::D:
-				if (E->Modifiers == Keys::Control)
-					DeleteScript();
-
-				break;
-			case Keys::Left:
-				if (E->Control && E->Alt)
-				{
-					PreviousScript();
-					TextEditor->FocusTextArea();
-				}
-
-				break;
-			case Keys::Right:
-				if (E->Control && E->Alt)
-				{
-					NextScript();
-					TextEditor->FocusTextArea();
-				}
-
-				break;
-			case Keys::F:
-			case Keys::H:
-				if (E->Modifiers == Keys::Control)
-					ShowFindReplace();
-
-				break;
-			case Keys::G:
-				if (E->Modifiers == Keys::Control)
-					GotoLine();
-
-				break;
-			case Keys::E:
-				if (E->Modifiers == Keys::Control)
-					GotoOffset();
-
-				break;
-			}
-
 			BoundParent->Controller->BubbleKeyDownEvent(BoundParent, E);
 		}
 
@@ -192,166 +114,528 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void ConcreteWorkspaceModel::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
+		void ConcreteWorkspaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
-			NewScript();
+			AutoSaveTimer->Stop();
+
+			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			TextEditor->SetFont(CustomFont);
+
+			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
+			if (TabSize == 0)
+				TabSize = 4;
+
+			TextEditor->SetTabCharacterSize(TabSize);
+
+			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
+			AutoSaveTimer->Start();
 		}
 
-		void ConcreteWorkspaceModel::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
+		void ConcreteWorkspaceModel::AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E)
 		{
-			OpenScript();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E)
-		{
-			PreviousScript();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarNextScript_Click(Object^ Sender, EventArgs^ E)
-		{
-			NextScript();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
-		{
-			SaveScript(SaveOperation::Default);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
-		{
-			if (New == true || Initialized == false)
+			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup"))
 			{
-				MessageBox::Show("You may only perform this operation on an existing script.",
+				if (Initialized == true && New == false && TextEditor->GetModifiedStatus() == true)
+				{
+					TextEditor->SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()),
+												 false, Description, "txt");
+				}
+			}
+		}
+
+		void ConcreteWorkspaceModel::ClearAutoRecovery()
+		{
+			try {
+				System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + Description + ".txt");
+			}
+			catch (...) {}
+		}
+
+		void ConcreteWorkspaceModel::Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate)
+		{
+			String^ ScriptText = gcnew String(Data->Text);
+			UInt16 ScriptType = Data->Type;
+			String^ ScriptName = gcnew String(Data->EditorID);
+			UInt32 ByteCode = (UInt32)Data->ByteCode;
+			UInt32 ByteCodeLength = Data->Length;
+			UInt32 FormID = Data->FormID;
+
+			if (ScriptName->Length == 0)
+				ScriptName = NEWSCRIPTID;
+
+			if (PartialUpdate == false)
+			{
+				CurrentScript = Data->ParentForm;
+				NewScriptFlag = false;
+
+				if (ScriptName != NEWSCRIPTID)
+					TextEditor->SetInitializingStatus(true);
+
+				TODO("clear editor's tracked data, i.e, bookmarks, etc")
+				TextEditor->SetText(ScriptText, false, true);
+
+				if (Bound)
+					BoundParent->Enabled = true;
+			}
+
+			CurrentScriptEditorID = ScriptName;
+			CurrentScriptFormID = FormID;
+			CurrentScriptBytecode = ByteCode;
+			CurrentScriptBytecodeLength = ByteCodeLength;
+
+			if (Bound)
+				BoundParent->Description = Description;
+
+			SetType((IWorkspaceModel::ScriptType)ScriptType, Bound);
+			TextEditor->SetModifiedStatus(false);
+
+			if (Bound)
+				BoundParent->Controller->SetByteCodeSize(BoundParent, ByteCodeLength);
+
+			TODO("modify TextEditor::GetText to take another argument to preprocess")
+			TextEditor->UpdateIntelliSenseLocalDatabase();
+
+			if (PartialUpdate == false && Data->Compiled == false && PREFERENCES->FetchSettingAsInt("WarnUncompiledScripts", "General"))
+			{
+				MessageBox::Show("The current script has not been compiled. It cannot be executed in-game until it has been compiled at least once.",
 								 SCRIPTEDITOR_TITLE,
 								 MessageBoxButtons::OK,
 								 MessageBoxIcon::Exclamation);
-
-				return;
 			}
 
-			SaveScript(SaveOperation::NoCompile);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
-		{
-			SaveScript(SaveOperation::SavePlugin);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E)
-		{
-			RecompileScripts();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
-		{
-			if (New == false && Initialized == true)
+			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && PartialUpdate == false)
 			{
-				CString CEID(CurrentScriptEditorID);
-				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CEID.c_str());
-				MessageBox::Show("Operation complete!\n\nScript variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
-								 SCRIPTEDITOR_TITLE,
-								 MessageBoxButtons::OK,
-								 MessageBoxIcon::Information);
+				String^ CachePath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + Description + ".txt";
+				if (System::IO::File::Exists(CachePath))
+				{
+					try
+					{
+						System::DateTime LastWriteTime = System::IO::File::GetLastWriteTime(CachePath);
+						if (MessageBox::Show("An auto-recovery cache for the script '" + Description + "' was found, dated " + LastWriteTime.ToShortDateString() + " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
+							SCRIPTEDITOR_TITLE,
+							MessageBoxButtons::YesNo,
+							MessageBoxIcon::Information) == DialogResult::Yes)
+						{
+							TextEditor->LoadFileFromDisk(CachePath);
+						}
+
+						Microsoft::VisualBasic::FileIO::FileSystem::DeleteFile(CachePath,
+																			   Microsoft::VisualBasic::FileIO::UIOption::OnlyErrorDialogs,
+																			   Microsoft::VisualBasic::FileIO::RecycleOption::SendToRecycleBin);
+					}
+					catch (Exception^ E)
+					{
+						DebugPrint("Couldn't access auto-recovery cache '" + Description + "'!\n\tException: " + E->Message, true);
+					}
+				}
 			}
-			else
+		}
+
+		bool ConcreteWorkspaceModel::DoHouseKeeping()
+		{
+			if (TextEditor->GetModifiedStatus())
 			{
-				MessageBox::Show("The current script needs to be compiled before its dependencies can be updated.",
-								 SCRIPTEDITOR_TITLE,
-								 MessageBoxButtons::OK,
-								 MessageBoxIcon::Exclamation);
+				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
+													   SCRIPTEDITOR_TITLE,
+													   MessageBoxButtons::YesNoCancel,
+													   MessageBoxIcon::Exclamation);
+
+				if (Result == DialogResult::Yes)
+					return SaveScript(IWorkspaceModel::SaveOperation::Default);
+				else if (Result == DialogResult::No)
+				{
+					if (NewScriptFlag)
+					{
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DestroyScriptInstance(CurrentScript);
+						CurrentScript = 0;
+					}
+
+					ClearAutoRecovery();
+					return true;
+				}
+				else
+					return false;
 			}
+
+			return true;
 		}
 
-		void ConcreteWorkspaceModel::ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E)
+		void ConcreteWorkspaceModel::Bind(IWorkspaceView^ To)
 		{
-			DeleteScript();
+			Debug::Assert(Bound == false);
+
+			BoundParent = To;
+			TODO("bind the listview to the text editor here");
+			BoundParent->Controller->AttachModelInternalView(BoundParent, this);
 		}
 
-		void ConcreteWorkspaceModel::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
+		void ConcreteWorkspaceModel::Unbind()
 		{
-			SetType(Type::Object, true);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E)
-		{
-			SetType(Type::Quest, true);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E)
-		{
-			SetType(Type::MagicEffect, true);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
-		{
-			ShowFindReplace();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E)
-		{
-			GotoLine();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E)
-		{
-			GotoOffset();
-		}
-
-		void ConcreteWorkspaceModel::ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E)
-		{
-			SaveFileDialog^ SaveManager = gcnew SaveFileDialog();
-
-			SaveManager->DefaultExt = "*.txt";
-			SaveManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
-			SaveManager->FileName = Description;
-			SaveManager->RestoreDirectory = true;
-
-			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
-				SaveToDisk(SaveManager->FileName, true, gcnew String("txt"));
-		}
-
-		void ConcreteWorkspaceModel::ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E)
-		{
-			OpenFileDialog^ LoadManager = gcnew OpenFileDialog();
-
-			LoadManager->DefaultExt = "*.txt";
-			LoadManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
-			LoadManager->RestoreDirectory = true;
-
-			if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0)
-				LoadFromDisk(LoadManager->FileName);
-		}
-
-		void ConcreteWorkspaceModel::ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E)
-		{
-			if (BounToolBarShowOffsets->Checked)
+			if (Bound)
 			{
-				int Caret = OffsetViewer->Hide();
-				TextEditor->FocusTextArea();
-				TextEditor->SetCaretPos(Caret);
-				ToolBarShowOffsets->Checked = false;
+				BoundParent = nullptr;
+				TODO("unbind the listview");
+				BoundParent->Controller->DettachModelInternalView(BoundParent, this);
 			}
-			else
+		}
+
+		void ConcreteWorkspaceModel::NewScript()
+		{
+			if (DoHouseKeeping())
 			{
-				if (OffsetViewer->Show((TextEditor->GetCaretPos() != -1 ? TextEditor->GetCaretPos() : 0)))
-					ToolBarShowOffsets->Checked = true;
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript();
+				Setup(Data, false);
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+
+				NewScriptFlag = true;
+				TextEditor->SetModifiedStatus(true);
 			}
 		}
 
-		void ConcreteWorkspaceModel::ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E)
+		void ConcreteWorkspaceModel::OpenScript(ComponentDLLInterface::ScriptData* Data)
 		{
+			Debug::Assert(Data != nullptr);
+
+			if (DoHouseKeeping())
+				Setup(Data, false);
+
+			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
 
-		void ConcreteWorkspaceModel::ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E)
+		bool ConcreteWorkspaceModel::SaveScript(IWorkspaceModel::SaveOperation Operation)
 		{
+			bool Result = false;
+			String^ Preprocessed = "";
+			String^ Unpreprocessed = "";
+			TODO("implement TextEditor::SerializeMetaData and TextEditor::CanCompile - preprocesses the text and runs the validator");
+
+			if (TextEditor->CanCompile())
+			{
+				bool Throwaway = false;
+				Preprocessed = TextEditor->GetText(true, Throwaway);
+				Unpreprocessed = TextEditor->GetText(false, Throwaway);
+
+				if (CurrentScript)
+				{
+					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+					{
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
+					}
+
+					ComponentDLLInterface::ScriptCompileData* CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
+
+					CString ScriptText(Preprocessed->Replace("\n", "\r\n"));
+					CompileData->Script.Text = ScriptText.c_str();
+					CompileData->Script.Type = (int)Type;
+					CompileData->Script.ParentForm = (TESForm*)CurrentScript;
+
+					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
+					{
+						Setup(&CompileData->Script, true);
+
+						String^ OriginalText = Unpreprocessed + TextEditor->SerializeMetaData();
+						CString OrgScriptText(OriginalText);
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
+						Result = true;
+					}
+					else
+					{
+						for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
+							TODO("track error message");
+					}
+
+					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+					{
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
+					}
+					else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
+						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
+
+					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
+				}
+				else
+					Result = true;
+			}
+
+			if (Result)
+				ClearAutoRecovery();
+
+			return Result;
 		}
 
-		void ConcreteWorkspaceModel::ToolBarBindScript_Click(Object^ Sender, EventArgs^ E)
+		bool ConcreteWorkspaceModel::CloseScript()
 		{
+			if (DoHouseKeeping())
+			{
+				Closed = true;
+				return true;
+			}
+
+			return false;
 		}
 
-		void ConcreteWorkspaceModel::ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E)
+		void ConcreteWorkspaceModel::NextScript()
 		{
+			if (DoHouseKeeping())
+			{
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(CurrentScript);
+				if (Data)
+					Setup(Data, false);
+
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+			}
+		}
+
+		void ConcreteWorkspaceModel::PreviousScript()
+		{
+			if (DoHouseKeeping())
+			{
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(CurrentScript);
+				if (Data)
+					Setup(Data, false);
+
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+			}
+		}
+
+		void ConcreteWorkspaceModel::SetType(IWorkspaceModel::ScriptType New, bool UpdateView)
+		{
+			Type = New;
+			if (UpdateView)
+			{
+				Debug::Assert(Bound == true);
+				BoundParent->Controller->UpdateType(BoundParent, this);
+			}
+		}
+
+		String^ GetSanitizedIdentifier(String^ Identifier)
+		{
+			return IntelliSense::ISDB->SanitizeIdentifier(Identifier);
+		}
+
+		bool ConcreteWorkspaceModel::Sanitize()
+		{
+			ObScriptSemanticAnalysis::Sanitizer^ Agent = gcnew ObScriptSemanticAnalysis::Sanitizer(TextEditor->GetText());
+			ObScriptSemanticAnalysis::Sanitizer::Operation Operation;
+
+			if (PREFERENCES->FetchSettingAsInt("AnnealCasing", "Sanitize"))
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::AnnealCasing;
+
+			if (PREFERENCES->FetchSettingAsInt("EvalifyIfs", "Sanitize"))
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::EvalifyIfs;
+
+			if (PREFERENCES->FetchSettingAsInt("CompilerOverrideBlocks", "Sanitize"))
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::CompilerOverrideBlocks;
+
+			if (PREFERENCES->FetchSettingAsInt("IndentLines", "Sanitize"))
+				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::IndentLines;
+
+			bool Result = Agent->SanitizeScriptText(Operation, gcnew ObScriptSemanticAnalysis::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
+			if (Result)
+				TextEditor->SetText(Agent->Output, false, false);
+
+			return Result;
+		}
+
+		// ConcreteWorkspaceModelController
+		void ConcreteWorkspaceModelController::Bind(IWorkspaceModel^ Model, IWorkspaceView^ To)
+		{
+			Debug::Assert(Model != nullptr);
+			Debug::Assert(To != nullptr);
+
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->Bind(To);
+		}
+
+		void ConcreteWorkspaceModelController::Unbind(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			Concrete->Unbind();
+		}
+
+		void ConcreteWorkspaceModelController::SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->TextEditor->SetText(Text, true, ResetUndoStack);
+		}
+
+		String^ ConcreteWorkspaceModelController::GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->TextEditor->GetText(Preprocess, PreprocessResult);
+		}
+
+		int ConcreteWorkspaceModelController::GetCaret(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->TextEditor->GetCaretPos();
+		}
+
+		void ConcreteWorkspaceModelController::SetCaret(IWorkspaceModel^ Model, int Index)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->TextEditor->SetCaretPos(Index);
+		}
+
+		void ConcreteWorkspaceModelController::AcquireInputFocus(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->TextEditor->FocusTextArea();
+		}
+
+		void ConcreteWorkspaceModelController::New(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->NewScript();
+		}
+
+		void ConcreteWorkspaceModelController::Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->OpenScript(Data);
+		}
+
+		bool ConcreteWorkspaceModelController::Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->SaveScript(Operation);
+		}
+
+		bool ConcreteWorkspaceModelController::Close(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->CloseScript();
+		}
+
+		void ConcreteWorkspaceModelController::Next(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->NextScript();
+		}
+
+		void ConcreteWorkspaceModelController::Previous(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->PreviousScript();
+		}
+
+		void ConcreteWorkspaceModelController::CompileDepends(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			CString CEID(Concrete->CurrentScriptEditorID);
+			NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileDependencies(CEID.c_str());
+		}
+
+		void ConcreteWorkspaceModelController::SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->SetType(New, false);
+		}
+
+		void ConcreteWorkspaceModelController::GotoLine(IWorkspaceModel^ Model, UInt32 Line)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->TextEditor->ScrollToLine(Line);
+		}
+
+		UInt32 ConcreteWorkspaceModelController::GetLineCount(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->TextEditor->GetTotalLineCount();
+		}
+
+		bool ConcreteWorkspaceModelController::Sanitize(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->Sanitize();
+		}
+
+		void ConcreteWorkspaceModelController::BindToForm(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			NativeWrapper::g_CSEInterfaceTable->ScriptEditor.BindScript((CString(Concrete->CurrentScriptEditorID)).c_str(),
+																		(HWND)Concrete->BoundParent->WindowHandle);
+		}
+
+		void ConcreteWorkspaceModelController::LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->TextEditor->LoadFileFromDisk(PathToFile);
+		}
+
+		void ConcreteWorkspaceModelController::SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			Concrete->TextEditor->SaveScriptToDisk(PathToFile, PathIncludesFileName, Concrete->Description, Extension);
+		}
+
+		int ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			int Hits = Concrete->TextEditor->FindReplace(Operation, Query, Replacement, Options);
+			return Hits;
+		}
+
+		bool ConcreteWorkspaceModelController::GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			if (Concrete->TextEditor->GetModifiedStatus())
+				return false;
+
+			bool PP = false;
+			String^ Preprocessed = Concrete->TextEditor->GetText(true, PP);
+			if (PP == false)
+				return false;
+
+			OutText = Preprocessed;
+			OutBytecode = Concrete->CurrentScriptBytecode;
+			OutLength = Concrete->CurrentScriptBytecodeLength;
+			return true;
 		}
 
 		// ConcreteWorkspaceModelFactory

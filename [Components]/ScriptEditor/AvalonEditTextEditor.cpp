@@ -368,7 +368,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, String^% DefaultExtension)
+			void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension)
 			{
 				if (PathIncludesFileName == false)
 					Path += "\\" + DefaultName + "." + DefaultExtension;

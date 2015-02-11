@@ -1,17 +1,15 @@
 #include "ScriptListDialog.h"
 #include "Globals.h"
 #include "[Common]\NativeWrapper.h"
-#include "ScriptEditorManager.h"
+#include "WorkspaceModelInterface.h"
 #include "[Common]\ListViewUtilities.h"
 
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
-		ScriptListDialog::ScriptListDialog(UInt32 ParentWorkspaceIndex)
+		ScriptListDialog::ScriptListDialog()
 		{
-			this->ParentWorkspaceIndex = ParentWorkspaceIndex;
-
 			ScriptBox = gcnew AnimatedForm(0.20);
 			PreviewBox = gcnew TextBox();
 			ScriptList = gcnew ListView();
@@ -21,6 +19,7 @@ namespace ConstructionSetExtender
 			ScriptListCScriptType= gcnew ColumnHeader();
 			SelectBox = gcnew Button();
 			SearchBox = gcnew TextBox();
+			SelectedEditorIDs = gcnew List < String^ > ;
 
 			ScriptListSelectedIndexChangedHandler = gcnew EventHandler(this, &ScriptListDialog::ScriptList_SelectedIndexChanged);
 			ScriptListKeyDownHandler = gcnew KeyEventHandler(this, &ScriptListDialog::ScriptList_KeyDown);
@@ -58,6 +57,7 @@ namespace ConstructionSetExtender
 			ScriptList->SmallImageList = gcnew ImageList();
 			ScriptList->SmallImageList->TransparentColor = Color::White;
 			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagDeleted"));
+			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagUncompiled"));
 			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagActive"));
 			ScriptList->Anchor = AnchorStyles::Top|AnchorStyles::Left|AnchorStyles::Bottom;
 
@@ -116,11 +116,44 @@ namespace ConstructionSetExtender
 			ScriptBox->Closing += ScriptBoxCancelHandler;
 		}
 
-		ComponentDLLInterface::ScriptData* ScriptListDialog::Show(Operation Op, String^ FilterString)
+		ScriptListDialog::~ScriptListDialog()
 		{
-			CurrentOperation = Op;
+			ScriptList->SelectedIndexChanged -= ScriptListSelectedIndexChangedHandler;
+			ScriptList->KeyDown -= ScriptListKeyDownHandler;
+			ScriptList->ItemActivate -= ScriptListItemActivateHandler;
+			ScriptList->ColumnClick -= ScriptListColumnClickHandler;
+			ScriptList->KeyPress -= ScriptListKeyPressHandler;
+			SearchBox->TextChanged -= SearchBoxTextChangedHandler;
+			SearchBox->KeyDown -= SearchBoxKeyDownHandler;
+			SelectBox->Click -= SelectBoxClickHandler;
+			ScriptBox->Closing -= ScriptBoxCancelHandler;
 
-			if (Op == Operation::e_Open)
+			CleanupDialog(false);
+
+			for each (Image^ Itr in ScriptList->SmallImageList->Images)
+				delete Itr;
+
+			ScriptList->SmallImageList->Images->Clear();
+			ScriptList->SmallImageList = nullptr;
+
+			delete ScriptBox;
+			delete PreviewBox;
+			delete ScriptList;
+			delete ScriptListCFlags;
+			delete ScriptListCScriptName;
+			delete ScriptListCFormID;
+			delete ScriptListCScriptType;
+			delete SearchBox;
+			delete SelectBox;
+
+			SelectedEditorIDs->Clear();
+		}
+
+		bool ScriptListDialog::Show(ShowOperation Operation, String^ FilterString, List<String^>^% OutSelectedScriptEditorIDs)
+		{
+			CurrentOperation = Operation;
+
+			if (Operation == ShowOperation::Open)
 				ScriptList->MultiSelect = true;
 			else
 				ScriptList->MultiSelect = false;
@@ -143,24 +176,26 @@ namespace ConstructionSetExtender
 						NewScript->SubItems->Add("Function");
 					else
 					{
-						switch (ThisScript->Type)
+						switch ((IWorkspaceModel::ScriptType)ThisScript->Type)
 						{
-						case ScriptEditor::Workspace::ScriptType::Object:
+						case IWorkspaceModel::ScriptType::Object:
 							NewScript->SubItems->Add("Object");
 							break;
-						case ScriptEditor::Workspace::ScriptType::Quest:
+						case IWorkspaceModel::ScriptType::Quest:
 							NewScript->SubItems->Add("Quest");
 							break;
-						case ScriptEditor::Workspace::ScriptType::MagicEffect:
+						case IWorkspaceModel::ScriptType::MagicEffect:
 							NewScript->SubItems->Add("Magic Effect");
 							break;
 						}
 					}
 
 					if (ThisScript->Flags & 0x20)
-						NewScript->ImageIndex = (int)FlagIcons::e_Deleted;
+						NewScript->ImageIndex = (int)FlagIcons::Deleted;
+					else if (ThisScript->Compiled == false)
+						NewScript->ImageIndex = (int)FlagIcons::Uncompiled;
 					else if (ThisScript->Flags & 0x2)
-						NewScript->ImageIndex = (int)FlagIcons::e_Active;
+						NewScript->ImageIndex = (int)FlagIcons::Active;
 
 					NewScript->Tag = (UInt32)ThisScript;
 					ScriptList->Items->Add(NewScript);
@@ -178,8 +213,6 @@ namespace ConstructionSetExtender
 				ScriptList->Enabled = false;
 				SearchBox->Enabled = false;
 			}
-
-			FirstSelectionCache = 0;
 
 			SearchBox->Focus();
 
@@ -201,7 +234,10 @@ namespace ConstructionSetExtender
 			SelectionComplete = false;
 			ScriptBox->ShowDialog();
 
-			return FirstSelectionCache;
+			if (SelectionComplete)
+				OutSelectedScriptEditorIDs->AddRange(SelectedEditorIDs);
+
+			return SelectionComplete;
 		}
 
 		void ScriptListDialog::CleanupDialog(bool SaveBoundsToINI)
@@ -214,6 +250,7 @@ namespace ConstructionSetExtender
 			ScriptList->MultiSelect = false;
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptListCache, false);
 			ScriptListCache = 0;
+			SelectedEditorIDs->Clear();
 
 			if (SaveBoundsToINI)
 			{
@@ -224,7 +261,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void ScriptListDialog::PerformOperationOnSelection()
+		void ScriptListDialog::CompleteSelection()
 		{
 			if (GetListViewSelectedItem(ScriptList) == nullptr || SelectionComplete)
 				return;
@@ -234,15 +271,7 @@ namespace ConstructionSetExtender
 				ListViewItem^ Itr = ScriptList->SelectedItems[i];
 				ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)Itr->Tag);
 
-				if (i == 0)
-				{
-					FirstSelectionCache = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
-				}
-				else if (CurrentOperation == Operation::e_Open)
-				{
-					ComponentDLLInterface::ScriptData* NewData = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(Data->EditorID);
-					SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex)->GetParentContainer()->InstantiateNewWorkspace(NewData);
-				}
+				SelectedEditorIDs->Add(gcnew String(Data->EditorID));
 			}
 
 			Closing = true;
@@ -250,13 +279,14 @@ namespace ConstructionSetExtender
 			ScriptBox->Close();
 		}
 
-		void ScriptListDialog::ShowUseReportForSelection()
+		void ScriptListDialog::ShowUseReport()
 		{
-			if (GetListViewSelectedItem(ScriptList) == nullptr)
+			ListViewItem^ First = GetListViewSelectedItem(ScriptList);
+			if (First == nullptr)
 				return;
 
-			CString CEID(GetListViewSelectedItem(ScriptList)->SubItems[1]->Text);
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowUseReportDialog(CEID.c_str());
+			ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)First->Tag);
+			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowUseReportDialog(Data->EditorID);
 		}
 
 		void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
@@ -273,7 +303,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::SelectBox_Click(Object^ Sender, EventArgs^ E)
 		{
-			PerformOperationOnSelection();
+			CompleteSelection();
 		}
 
 		void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
@@ -292,10 +322,10 @@ namespace ConstructionSetExtender
 			switch (E->KeyCode)
 			{
 			case Keys::Enter:
-				PerformOperationOnSelection();
+				CompleteSelection();
 				break;
 			case Keys::F1:
-				ShowUseReportForSelection();
+				ShowUseReport();
 				break;
 			case Keys::Escape:
 				Closing = true;
@@ -326,7 +356,7 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::ScriptList_ItemActivate(Object^ Sender, EventArgs^ E)
 		{
-			PerformOperationOnSelection();
+			CompleteSelection();
 		}
 
 		void ScriptListDialog::ScriptList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -386,35 +416,6 @@ namespace ConstructionSetExtender
 			}
 
 			ScriptListDialog::ScriptList_KeyDown(nullptr, E);
-		}
-
-		void ScriptListDialog::Destroy()
-		{
-			ScriptList->SelectedIndexChanged -= ScriptListSelectedIndexChangedHandler;
-			ScriptList->KeyDown -= ScriptListKeyDownHandler;
-			ScriptList->ItemActivate -= ScriptListItemActivateHandler;
-			ScriptList->ColumnClick -= ScriptListColumnClickHandler;
-			ScriptList->KeyPress -= ScriptListKeyPressHandler;
-			SearchBox->TextChanged -= SearchBoxTextChangedHandler;
-			SearchBox->KeyDown -= SearchBoxKeyDownHandler;
-			SelectBox->Click -= SelectBoxClickHandler;
-			ScriptBox->Closing -= ScriptBoxCancelHandler;
-
-			CleanupDialog(false);
-			for each (Image^ Itr in ScriptList->SmallImageList->Images)
-				delete Itr;
-			ScriptList->SmallImageList->Images->Clear();
-			ScriptList->SmallImageList = nullptr;
-
-			delete ScriptBox;
-			delete PreviewBox;
-			delete ScriptList;
-			delete ScriptListCFlags;
-			delete ScriptListCScriptName;
-			delete ScriptListCFormID;
-			delete ScriptListCScriptType;
-			delete SearchBox;
-			delete SelectBox;
 		}
 	}
 }

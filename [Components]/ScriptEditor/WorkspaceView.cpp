@@ -1,6 +1,6 @@
 #include "WorkspaceView.h"
 #include "[Common]\CustomInputBox.h"
-#include "[Common]\AuxiliaryWindowsForm.h"
+#include "IntelliSense\IntelliSenseDatabase.h"
 #include "ScriptEditorPreferences.h"
 
 using namespace GlobalInputMonitor;
@@ -8,7 +8,7 @@ using namespace GlobalInputMonitor;
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
-	{	
+	{
 		void WorkspaceViewTabTearing::End()
 		{
 			Debug::Assert(InProgress == true);
@@ -44,7 +44,7 @@ namespace ConstructionSetExtender
 
 					bool Relocated = false;
 					IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
-					if (Wnd != IntPtr::Zero)					
+					if (Wnd != IntPtr::Zero)
 					{
 						Control^ UnderMouse = Control::FromHandle(Wnd);
 						if (UnderMouse)
@@ -86,8 +86,6 @@ namespace ConstructionSetExtender
 				break;
 			}
 		}
-
-		
 
 		ConcreteWorkspaceView::ConcreteWorkspaceView(ConcreteWorkspaceViewController^ Controller, ConcreteWorkspaceViewFactory^ Factory, Rectangle Bounds)
 		{
@@ -254,7 +252,7 @@ namespace ConstructionSetExtender
 			ToolBarSnippetManager = gcnew ToolStripButton();
 			ToolBarByteCodeSize = gcnew ToolStripProgressBar();
 
-			ScriptListBox = gcnew ScriptListDialog(this);
+			ScriptListBox = gcnew ScriptListDialog();
 			FindReplaceBox = gcnew FindReplaceDialog(this);
 
 			Color ForeColor = Color::Black;
@@ -262,8 +260,8 @@ namespace ConstructionSetExtender
 			Color HighlightColor = Color::Maroon;
 			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 
-			OffsetViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
-			PreprocessedTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
+			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
+			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -304,20 +302,46 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarScriptTypeContentsQuest);
 			SetupControlImage(ToolBarScriptTypeContentsMagicEffect);
 
+			ToolBarMessageListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarMessageList_Click);
+			ToolBarFindListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarFindList_Click);
+			ToolBarBookmarkListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarBookmarkList_Click);
+
+			ToolBarNewScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarNewScript_Click);
+			ToolBarOpenScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarOpenScript_Click);
+			ToolBarPreviousScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarPreviousScript_Click);
+			ToolBarNextScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarNextScript_Click);
+			ToolBarSaveScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarSaveScript_Click);
+			ToolBarSaveScriptNoCompileClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarSaveScriptNoCompile_Click);
+			ToolBarSaveScriptAndPluginClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarSaveScriptAndPlugin_Click);
+			ToolBarRecompileScriptsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarRecompileScripts_Click);
+			ToolBarCompileDependenciesClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarCompileDependencies_Click);
+			ToolBarDeleteScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarDeleteScript_Click);
 			ToolBarNavigationBackClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarNavigationBack_Click);
 			ToolBarNavigationForwardClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarNavigationForward_Click);
 			ToolBarSaveAllClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarSaveAll_Click);
 			ToolBarOptionsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarOptions_Click);
 
-			ToolBarDumpAllScriptsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarDumpAllScripts_Click);
-			ToolBarLoadScriptsToTabsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarLoadScriptsToTabs_Click);
+			ToolBarScriptTypeContentsObjectClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarScriptTypeContentsObject_Click);
+			ToolBarScriptTypeContentsQuestClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarScriptTypeContentsQuest_Click);
+			ToolBarScriptTypeContentsMagicEffectClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarScriptTypeContentsMagicEffect_Click);
 
-			ToolBarNewScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarNewScript_Click);
-			ToolBarOpenScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarOpenScript_Click);
+			ToolBarEditMenuContentsFindReplaceClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarEditMenuContentsFindReplace_Click);
+			ToolBarEditMenuContentsGotoLineClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarEditMenuContentsGotoLine_Click);
+			ToolBarEditMenuContentsGotoOffsetClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarEditMenuContentsGotoOffset_Click);
 
 			ToolBarMessageListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarMessageList_Click);
 			ToolBarFindListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarFindList_Click);
 			ToolBarBookmarkListClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarBookmarkList_Click);
+
+			ToolBarDumpScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarDumpScript_Click);
+			ToolBarDumpAllScriptsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarDumpAllScripts_Click);
+			ToolBarLoadScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarLoadScript_Click);
+			ToolBarLoadScriptsToTabsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarLoadScriptsToTabs_Click);
+			ToolBarShowOffsetsClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarShowOffsets_Click);
+			ToolBarShowPreprocessedTextClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarShowPreprocessedText_Click);
+			ToolBarSanitizeScriptTextClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarSanitizeScriptText_Click);
+			ToolBarBindScriptClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarBindScript_Click);
+			ToolBarSnippetManagerClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ToolBarSnippetManager_Click);
 
 			Padding ToolBarButtonPaddingLarge = Padding(16, 0, 16, 0);
 			Padding ToolBarButtonPaddingRegular = Padding(10, 0, 10, 0);
@@ -475,18 +499,6 @@ namespace ConstructionSetExtender
 			ToolBarEditMenu->Padding = Padding(0);
 			ToolBarEditMenu->Alignment = ToolStripItemAlignment::Right;
 
-			ToolBarNewScript->Click += ToolBarNewScriptClickHandler;
-			ToolBarOpenScript->Click += ToolBarOpenScriptClickHandler;
-			ToolBarMessageList->Click += ToolBarMessageListClickHandler;
-			ToolBarFindList->Click += ToolBarFindListClickHandler;
-			ToolBarBookmarkList->Click += ToolBarBookmarkListClickHandler;
-			ToolBarDumpAllScripts->Click += ToolBarDumpAllScriptsClickHandler;
-			ToolBarLoadScriptsToTabs->Click += ToolBarLoadScriptsToTabsClickHandler;
-			ToolBarOptions->Click += ToolBarOptionsClickHandler;
-			ToolBarNavigationBack->Click += ToolBarNavigationBackClickHandler;
-			ToolBarNavigationForward->Click += ToolBarNavigationForwardClickHandler;
-			ToolBarSaveAll->Click += ToolBarSaveAllClickHandler;
-
 			WorkspaceMainToolBar->Dock = DockStyle::Top;
 			WorkspaceMainToolBar->Items->Add(ToolBarNewScript);
 			WorkspaceMainToolBar->Items->Add(ToolBarOpenScript);
@@ -535,6 +547,44 @@ namespace ConstructionSetExtender
 			EditorForm->Controls->Add(WorkspaceMainToolBar);
 			EditorForm->Controls->Add(WorkspaceSplitter);
 
+			ToolBarNewScript->Click += ToolBarNewScriptClickHandler;
+			ToolBarOpenScript->Click += ToolBarOpenScriptClickHandler;
+			ToolBarPreviousScript->Click += ToolBarPreviousScriptClickHandler;
+			ToolBarNextScript->Click += ToolBarNextScriptClickHandler;
+			ToolBarSaveScript->ButtonClick += ToolBarSaveScriptClickHandler;
+			ToolBarSaveScriptNoCompile->Click += ToolBarSaveScriptNoCompileClickHandler;
+			ToolBarSaveScriptAndPlugin->Click += ToolBarSaveScriptAndPluginClickHandler;
+			ToolBarRecompileScripts->Click += ToolBarRecompileScriptsClickHandler;
+			ToolBarDeleteScript->Click += ToolBarDeleteScriptClickHandler;
+			ToolBarCompileDependencies->Click += ToolBarCompileDependenciesClickHandler;
+			ToolBarNavigationBack->Click += ToolBarNavigationBackClickHandler;
+			ToolBarNavigationForward->Click += ToolBarNavigationForwardClickHandler;
+			ToolBarSaveAll->Click += ToolBarSaveAllClickHandler;
+			ToolBarOptions->Click += ToolBarOptionsClickHandler;
+
+			ToolBarEditMenuContentsFind->Click += ToolBarEditMenuContentsFindReplaceClickHandler;
+			ToolBarEditMenuContentsReplace->Click += ToolBarEditMenuContentsFindReplaceClickHandler;
+			ToolBarEditMenuContentsGotoLine->Click += ToolBarEditMenuContentsGotoLineClickHandler;
+			ToolBarEditMenuContentsGotoOffset->Click += ToolBarEditMenuContentsGotoOffsetClickHandler;
+
+			ToolBarScriptTypeContentsObject->Click += ToolBarScriptTypeContentsObjectClickHandler;
+			ToolBarScriptTypeContentsQuest->Click += ToolBarScriptTypeContentsQuestClickHandler;
+			ToolBarScriptTypeContentsMagicEffect->Click += ToolBarScriptTypeContentsMagicEffectClickHandler;
+
+			ToolBarMessageList->Click += ToolBarMessageListClickHandler;
+			ToolBarFindList->Click += ToolBarFindListClickHandler;
+			ToolBarBookmarkList->Click += ToolBarBookmarkListClickHandler;
+
+			ToolBarDumpScript->ButtonClick += ToolBarDumpScriptClickHandler;
+			ToolBarDumpAllScripts->Click += ToolBarDumpAllScriptsClickHandler;
+			ToolBarLoadScript->ButtonClick += ToolBarLoadScriptClickHandler;
+			ToolBarLoadScriptsToTabs->Click += ToolBarLoadScriptsToTabsClickHandler;
+			ToolBarShowOffsets->Click += ToolBarShowOffsetsClickHandler;
+			ToolBarShowPreprocessedText->Click += ToolBarShowPreprocessedTextClickHandler;
+			ToolBarSanitizeScriptText->Click += ToolBarSanitizeScriptTextClickHandler;
+			ToolBarBindScript->Click += ToolBarBindScriptClickHandler;
+			ToolBarSnippetManager->Click += ToolBarSnippetManagerClickHandler;
+
 			try { WorkspaceSplitter->SplitterDistance = GetBounds(true).Height; }
 			catch (...) {}
 
@@ -558,7 +608,6 @@ namespace ConstructionSetExtender
 
 			TODO("track the instance");
 		}
-			
 
 		ConcreteWorkspaceView::~ConcreteWorkspaceView()
 		{
@@ -599,18 +648,44 @@ namespace ConstructionSetExtender
 			delete NewTabButton->Image;
 			delete NewTabButton;
 			delete SortTabsButton;
-						
+
 			ToolBarNewScript->Click -= ToolBarNewScriptClickHandler;
 			ToolBarOpenScript->Click -= ToolBarOpenScriptClickHandler;
-			ToolBarMessageList->Click -= ToolBarMessageListClickHandler;
-			ToolBarFindList->Click -= ToolBarFindListClickHandler;
-			ToolBarBookmarkList->Click -= ToolBarBookmarkListClickHandler;
-			ToolBarDumpAllScripts->Click -= ToolBarDumpAllScriptsClickHandler;
-			ToolBarLoadScriptsToTabs->Click -= ToolBarLoadScriptsToTabsClickHandler;
-			ToolBarOptions->Click -= ToolBarOptionsClickHandler;
+			ToolBarPreviousScript->Click -= ToolBarPreviousScriptClickHandler;
+			ToolBarNextScript->Click -= ToolBarNextScriptClickHandler;
+			ToolBarSaveScript->ButtonClick -= ToolBarSaveScriptClickHandler;
+			ToolBarSaveScriptNoCompile->Click -= ToolBarSaveScriptNoCompileClickHandler;
+			ToolBarSaveScriptAndPlugin->Click -= ToolBarSaveScriptAndPluginClickHandler;
+			ToolBarRecompileScripts->Click -= ToolBarRecompileScriptsClickHandler;
+			ToolBarDeleteScript->Click -= ToolBarDeleteScriptClickHandler;
+			ToolBarCompileDependencies->Click -= ToolBarCompileDependenciesClickHandler;
 			ToolBarNavigationBack->Click -= ToolBarNavigationBackClickHandler;
 			ToolBarNavigationForward->Click -= ToolBarNavigationForwardClickHandler;
 			ToolBarSaveAll->Click -= ToolBarSaveAllClickHandler;
+			ToolBarOptions->Click -= ToolBarOptionsClickHandler;
+
+			ToolBarEditMenuContentsFind->Click -= ToolBarEditMenuContentsFindReplaceClickHandler;
+			ToolBarEditMenuContentsReplace->Click -= ToolBarEditMenuContentsFindReplaceClickHandler;
+			ToolBarEditMenuContentsGotoLine->Click -= ToolBarEditMenuContentsGotoLineClickHandler;
+			ToolBarEditMenuContentsGotoOffset->Click -= ToolBarEditMenuContentsGotoOffsetClickHandler;
+
+			ToolBarScriptTypeContentsObject->Click -= ToolBarScriptTypeContentsObjectClickHandler;
+			ToolBarScriptTypeContentsQuest->Click -= ToolBarScriptTypeContentsQuestClickHandler;
+			ToolBarScriptTypeContentsMagicEffect->Click -= ToolBarScriptTypeContentsMagicEffectClickHandler;
+
+			ToolBarMessageList->Click -= ToolBarMessageListClickHandler;
+			ToolBarFindList->Click -= ToolBarFindListClickHandler;
+			ToolBarBookmarkList->Click -= ToolBarBookmarkListClickHandler;
+
+			ToolBarDumpScript->ButtonClick -= ToolBarDumpScriptClickHandler;
+			ToolBarDumpAllScripts->Click -= ToolBarDumpAllScriptsClickHandler;
+			ToolBarLoadScript->ButtonClick -= ToolBarLoadScriptClickHandler;
+			ToolBarLoadScriptsToTabs->Click -= ToolBarLoadScriptsToTabsClickHandler;
+			ToolBarShowOffsets->Click -= ToolBarShowOffsetsClickHandler;
+			ToolBarShowPreprocessedText->Click -= ToolBarShowPreprocessedTextClickHandler;
+			ToolBarSanitizeScriptText->Click -= ToolBarSanitizeScriptTextClickHandler;
+			ToolBarBindScript->Click -= ToolBarBindScriptClickHandler;
+			ToolBarSnippetManager->Click -= ToolBarSnippetManagerClickHandler;
 
 			DisposeControlImage(ToolBarNewScript);
 			DisposeControlImage(ToolBarOpenScript);
@@ -696,15 +771,15 @@ namespace ConstructionSetExtender
 			delete ToolBarSnippetManager;
 			delete ToolBarByteCodeSize;
 
-			delete OffsetViewer;
-			delete PreprocessedTextViewer;
+			delete OffsetTextViewer;
+			delete PreprocessorTextViewer;
 			delete ScriptListBox;
 			delete FindReplaceBox;
 
 			ScriptListBox = nullptr;
 			FindReplaceBox = nullptr;
-			OffsetViewer = nullptr;
-			PreprocessedTextViewer = nullptr;
+			OffsetTextViewer = nullptr;
+			PreprocessorTextViewer = nullptr;
 
 			WorkspaceSplitter->Panel1->Controls->Clear();
 			WorkspaceSplitter->Panel2->Controls->Clear();
@@ -716,11 +791,11 @@ namespace ConstructionSetExtender
 			delete SpoilerText;
 
 			EditorForm->ForceClose();
-			
+
 			PREFERENCES->SaveINI();
 
 			ViewFactory->Remove(this);
-		}		
+		}
 
 		void ConcreteWorkspaceView::EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E)
 		{
@@ -756,7 +831,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		{
-			TODO("Tunnel key events down");
+			Controller->BubbleKeyDownEvent(this, E);
 		}
 
 		void ConcreteWorkspaceView::EditorForm_SizeChanged(Object^ Sender, EventArgs^ E)
@@ -780,14 +855,18 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E)
 		{
-			if (E->OldValue == nullptr || E->NewValue == nullptr)
+			if (E->NewValue == nullptr)
 				return;
 
-			IWorkspaceModel^ Old = GetModel((DotNetBar::SuperTabItem^)E->OldValue);
+			IWorkspaceModel^ Old = nullptr;
 			IWorkspaceModel^ New = GetModel((DotNetBar::SuperTabItem^)E->NewValue);
 
+			if (E->OldValue)
+				Old = GetModel((DotNetBar::SuperTabItem^)E->OldValue);
+
 			BeginUpdate();
-			ModelController()->Unbind(Old);
+			if (Old)
+				ModelController()->Unbind(Old);
 			ModelController()->Bind(New, this);
 			EndUpdate();
 		}
@@ -795,9 +874,7 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceView::ScriptStrip_TabRemoved(Object^ Sender, DotNetBar::SuperTabStripTabRemovedEventArgs^ E)
 		{
 			if (GetTabCount() == 0)
-			{
 				EditorForm->Close();
-			}
 		}
 
 		void ConcreteWorkspaceView::ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E)
@@ -855,6 +932,12 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
+			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
+										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
+										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			OffsetTextViewer->SetFont(CustomFont);
+			PreprocessorTextViewer->SetFont(CustomFont);
+
 			EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Top;
 			EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
 			EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Far;
@@ -904,43 +987,6 @@ namespace ConstructionSetExtender
 			if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0)
 			{
 				LoadAllFromDisk(LoadManager->FileNames);
-			}
-		}
-
-		void ConcreteWorkspaceView::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
-		{
-
-			switch (Control::ModifierKeys)
-			{
-			case Keys::Control:
-				NewTabOperationArgs^ Args = gcnew NewTabOperationArgs;
-				Args->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::New;
-				NewTab(Args);
-
-				break;
-			case Keys::Shift:
-				{
-					Rectangle Bounds = GetBounds(false);
-					ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ViewFactory->CreateView(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
-					IWorkspaceModel^ Model = ModelFactory()->CreateModel(nullptr);
-
-					New->AssociateModel(Model, true);
-				}
-
-				break;
-			}
-		}
-
-		void ConcreteWorkspaceView::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
-		{
-			switch (Control::ModifierKeys)
-			{
-			case Keys::Control:
-				NewTabOperationArgs^ Args = gcnew NewTabOperationArgs;
-				Args->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::OpenList;
-				NewTab(Args);
-
-				break;
 			}
 		}
 
@@ -1020,6 +1066,276 @@ namespace ConstructionSetExtender
 			}
 
 			EndUpdate();
+		}
+
+		void ConcreteWorkspaceView::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			switch (Control::ModifierKeys)
+			{
+			case Keys::Control:
+				NewTabOperationArgs^ Args = gcnew NewTabOperationArgs;
+				Args->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::New;
+				NewTab(Args);
+
+				break;
+			case Keys::Shift:
+				{
+					Rectangle Bounds = GetBounds(false);
+					ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ViewFactory->CreateView(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
+					IWorkspaceModel^ Model = ModelFactory()->CreateModel(nullptr);
+
+					New->AssociateModel(Model, true);
+				}
+
+				break;
+			default:
+				ModelController()->New(GetActiveModel());
+				break;
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			switch (Control::ModifierKeys)
+			{
+			case Keys::Control:
+				NewTabOperationArgs^ Args = gcnew NewTabOperationArgs;
+				Args->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::OpenList;
+				NewTab(Args);
+
+				break;
+			default:
+				ShowOpenDialog();
+				break;
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			ModelController()->Previous(GetActiveModel());
+		}
+
+		void ConcreteWorkspaceView::ToolBarNextScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			ModelController()->Next(GetActiveModel());
+		}
+
+		void ConcreteWorkspaceView::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::Default);
+		}
+
+		void ConcreteWorkspaceView::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			if (Active->New == true || Active->Initialized == false)
+			{
+				MessageBox::Show("You may only perform this operation on an existing script.",
+								 SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK,
+								 MessageBoxIcon::Exclamation);
+
+				return;
+			}
+
+			ModelController()->Save(Active, IWorkspaceModel::SaveOperation::NoCompile);
+		}
+
+		void ConcreteWorkspaceView::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
+		{
+			ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::SavePlugin);
+		}
+
+		void ConcreteWorkspaceView::ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E)
+		{
+			if (MessageBox::Show("Are you sure you want to recompile all the scripts in the active plugin?",
+				SCRIPTEDITOR_TITLE,
+				MessageBoxButtons::YesNo,
+				MessageBoxIcon::Exclamation) == DialogResult::Yes)
+			{
+				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileScripts();
+				MessageBox::Show("All active scripts recompiled. Results have been logged to the console.",
+								 SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK,
+								 MessageBoxIcon::Information);
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			if (Active->New == false && Active->Initialized == true)
+			{
+				ModelController()->CompileDepends(Active);
+				MessageBox::Show("Operation complete!\n\nScript variables used as condition parameters will need to be corrected manually. The results have been logged to the console.",
+								 SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK,
+								 MessageBoxIcon::Information);
+			}
+			else
+			{
+				MessageBox::Show("The current script needs to be compiled before its dependencies can be updated.",
+								 SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK,
+								 MessageBoxIcon::Exclamation);
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			ShowDeleteDialog();
+		}
+
+		void ConcreteWorkspaceView::ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			ModelController()->SetType(Active, IWorkspaceModel::ScriptType::Object);
+			UpdateScriptTypeControls();
+		}
+
+		void ConcreteWorkspaceView::ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			ModelController()->SetType(Active, IWorkspaceModel::ScriptType::Quest);
+			UpdateScriptTypeControls();
+		}
+
+		void ConcreteWorkspaceView::ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			ModelController()->SetType(Active, IWorkspaceModel::ScriptType::MagicEffect);
+			UpdateScriptTypeControls();
+		}
+
+		void ConcreteWorkspaceView::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
+		{
+			ShowFindReplaceDialog();
+		}
+
+		void ConcreteWorkspaceView::ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E)
+		{
+			GotoLine();
+		}
+
+		void ConcreteWorkspaceView::ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E)
+		{
+			GotoOffset();
+		}
+
+		void ConcreteWorkspaceView::ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			SaveFileDialog^ SaveManager = gcnew SaveFileDialog();
+			IWorkspaceModel^ Active = GetActiveModel();
+
+			SaveManager->DefaultExt = "*.txt";
+			SaveManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
+			SaveManager->FileName = Active->Description;
+			SaveManager->RestoreDirectory = true;
+
+			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
+				ModelController()->SaveToDisk(Active, SaveManager->FileName, true, gcnew String("txt"));
+		}
+
+		void ConcreteWorkspaceView::ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			OpenFileDialog^ LoadManager = gcnew OpenFileDialog();
+			IWorkspaceModel^ Active = GetActiveModel();
+
+			LoadManager->DefaultExt = "*.txt";
+			LoadManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
+			LoadManager->RestoreDirectory = true;
+
+			if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileName->Length > 0)
+				ModelController()->LoadFromDisk(Active, LoadManager->FileName);
+		}
+
+		void ConcreteWorkspaceView::ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			if (ToolBarShowOffsets->Checked)
+			{
+				int Caret = OffsetTextViewer->Hide();
+				ModelController()->SetCaret(Active, Caret);
+				ModelController()->AcquireInputFocus(Active);
+				ToolBarShowOffsets->Checked = false;
+			}
+			else
+			{
+				String^ Text = "";
+				UInt32 Data = 0, Length = 0;
+
+				if (ModelController()->GetOffsetViewerData(Active, Text, Data, Length))
+				{
+					OffsetTextViewer->InitializeViewer(Text, Data, Length);
+					int Caret = ModelController()->GetCaret(Active);
+					if (Caret == -1)
+						Caret = 0;
+
+					if (OffsetTextViewer->Show(Caret))
+					{
+						ToolBarShowOffsets->Checked = true;
+						return;
+					}
+				}
+
+				MessageBox::Show("Offset Viewer couldn't be initialized!\n\nPlease recompile the current script.",
+								 SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			if (ToolBarShowPreprocessedText->Checked)
+			{
+				PreprocessorTextViewer->Hide();
+				ModelController()->AcquireInputFocus(Active);
+				ToolBarShowPreprocessedText->Checked = false;
+			}
+			else
+			{
+				bool Preprocess = false;
+				String^ PreprocessedText = ModelController()->GetText(Active, true, Preprocess);
+				if (Preprocess)
+				{
+					int Caret = ModelController()->GetCaret(Active);
+					if (Caret == -1)
+						Caret = 0;
+
+					PreprocessorTextViewer->Show(PreprocessedText, Caret);
+					ToolBarShowPreprocessedText->Checked = true;
+				}
+				else
+					MessageBox::Show("The preprocessing operation was unsuccessful.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Error);
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E)
+		{
+			if (ModelController()->Sanitize(GetActiveModel()) == false)
+			{
+				MessageBox::Show("The script contains structural errors that must be fixed before this operation can be performed.",
+								 SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Error);
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarBindScript_Click(Object^ Sender, EventArgs^ E)
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+			if (Active->New == true || Active->Initialized == false)
+			{
+				MessageBox::Show("You may only perform this operation on an existing script.", SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+			}
+			else
+			{
+				ModelController()->BindToForm(Active);
+			}
+		}
+
+		void ConcreteWorkspaceView::ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E)
+		{
+			IntelliSense::ISDB->ShowCodeSnippetManager();
 		}
 
 		IWorkspaceModelController^ ConcreteWorkspaceView::ModelController()
@@ -1141,12 +1457,127 @@ namespace ConstructionSetExtender
 				WorkspaceSplitter->SplitterDistance = GetBounds(false).Height;
 		}
 
+		void ConcreteWorkspaceView::UpdateScriptTypeControls()
+		{
+			IWorkspaceModel^ Active = GetActiveModel();
+
+			switch (Active->Type)
+			{
+			case IWorkspaceModel::ScriptType::Object:
+				ToolBarScriptType->Text = "Object Script";
+				ToolBarScriptType->Image = ToolBarScriptTypeContentsObject->Image;
+				break;
+			case IWorkspaceModel::ScriptType::Quest:
+				ToolBarScriptType->Text = "Quest Script";
+				ToolBarScriptType->Image = ToolBarScriptTypeContentsQuest->Image;
+				break;
+			case IWorkspaceModel::ScriptType::MagicEffect:
+				ToolBarScriptType->Text = "Magic Effect Script";
+				ToolBarScriptType->Image = ToolBarScriptTypeContentsMagicEffect->Image;
+				break;
+			}
+		}
+
+		void ConcreteWorkspaceView::ShowOpenDialog()
+		{
+			List<String^>^ Selection = gcnew List < String^ > ;
+			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Open, GetActiveModel()->Description, Selection))
+			{
+				NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
+				int i = 0;
+				for each (auto Itr in Selection)
+				{
+					CString EID(Itr);
+
+					if (i == 0)
+					{
+						ModelController()->Open(GetActiveModel(),
+												NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
+					}
+					else
+					{
+						E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::Open;
+						E->OpenArgs = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+						Debug::Assert(E->OpenArgs != nullptr);
+						NewTab(E);
+					}
+
+					i++;
+				}
+			}
+		}
+
+		void ConcreteWorkspaceView::ShowDeleteDialog()
+		{
+			List<String^>^ Selection = gcnew List < String^ >;
+			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Delete, "", Selection))
+			{
+				CString EID(Selection[0]);
+				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
+			}
+		}
+
+		void ConcreteWorkspaceView::ShowFindReplaceDialog()
+		{
+			TODO("implement");
+		}
+
+		void ConcreteWorkspaceView::GotoLine()
+		{
+			if (ToolBarShowOffsets->Checked)
+			{
+				MessageBox::Show("This operation can only be performed in the text editor and the preprocessed text viewer.",
+								 SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK,
+								 MessageBoxIcon::Exclamation);
+			}
+			else
+			{
+				IWorkspaceModel^ Active = GetActiveModel();
+				UInt32 LineCount = 0;
+				if (ToolBarShowPreprocessedText->Checked)
+					LineCount = PreprocessorTextViewer->GetLineCount();
+				else
+					LineCount = ModelController()->GetLineCount(Active);
+
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Line Number (1 - " + LineCount + ")", "Go To Line");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+
+				if (ToolBarShowPreprocessedText->Checked)
+					PreprocessorTextViewer->JumpToLine(Result->Text);
+				else
+				{
+					int Line = 0;
+					if (int::TryParse(Result->Text, Line))
+						ModelController()->GotoLine(Active, Line);
+				}
+			}
+		}
+
+		void ConcreteWorkspaceView::GotoOffset()
+		{
+			if (ToolBarShowOffsets->Checked)
+			{
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Offset (0000 - " + OffsetTextViewer->GetLastOffset().ToString("X4") + ")", "Go To Offset");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+
+				OffsetTextViewer->JumpToLine(Result->Text);
+			}
+			else
+			{
+				MessageBox::Show("This operation can only be performed in the offset viewer.",
+								 SCRIPTEDITOR_TITLE,
+								 MessageBoxButtons::OK,
+								 MessageBoxIcon::Exclamation);
+			}
+		}
+
 		void ConcreteWorkspaceView::SaveAll()
 		{
 			for each (auto Itr in AssociatedModels)
-			{
-				ModelController()->Save(Itr.Key);
-			}
+				ModelController()->Save(Itr.Key, IWorkspaceModel::SaveOperation::Default);
 		}
 
 		void ConcreteWorkspaceView::CloseAll()
@@ -1247,9 +1678,7 @@ namespace ConstructionSetExtender
 			}
 
 			if (TabIndex != -1)
-			{
 				SelectTab(TabIndex);
-			}
 		}
 
 		void ConcreteWorkspaceView::SelectTab(int Index)
@@ -1277,7 +1706,7 @@ namespace ConstructionSetExtender
 			if (EditorTabStrip->SelectNextTab() == false)
 				SelectTab(0);
 		}
-		
+
 		void ConcreteWorkspaceView::NewTab(NewTabOperationArgs^ E)
 		{
 			IWorkspaceModel^ New = nullptr;
@@ -1299,7 +1728,7 @@ namespace ConstructionSetExtender
 				Debug::Assert(E->OpenArgs != nullptr);
 				break;
 			case NewTabOperationArgs::PostNewTabOperation::OpenList:
-				ModelController()->Open(New);
+				ShowOpenDialog();
 				break;
 			case NewTabOperationArgs::PostNewTabOperation::LoadFromDisk:
 				{
@@ -1356,11 +1785,26 @@ namespace ConstructionSetExtender
 				break;
 			}
 		}
-		
-		
-
 
 		// ConcreteWorkspaceViewController
+		void ConcreteWorkspaceViewController::AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
+		{
+			Debug::Assert(View != nullptr);
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+
+			Concrete->WorkspaceSplitter->Panel1->Controls->Add(Model->InternalView);
+		}
+
+		void ConcreteWorkspaceViewController::DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
+		{
+			Debug::Assert(View != nullptr);
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+
+			Concrete->WorkspaceSplitter->Panel1->Controls->Remove(Model->InternalView);
+		}
+
 		void ConcreteWorkspaceViewController::SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified)
 		{
 			Debug::Assert(View != nullptr);
@@ -1371,13 +1815,82 @@ namespace ConstructionSetExtender
 			Tab->ImageIndex = (int)Modified;
 		}
 
-		void ConcreteWorkspaceViewController::BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E)
+		void ConcreteWorkspaceViewController::SetByteCodeSize(IWorkspaceView^ View, UInt32 Size)
 		{
 			Debug::Assert(View != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
 
+			Concrete->ToolBarByteCodeSize->Value = Size;
+			Concrete->ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(Size / 1024.0));
+		}
+
+		void ConcreteWorkspaceViewController::UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model)
+		{
+			Debug::Assert(View != nullptr);
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+
+			IWorkspaceModel^ Active = Concrete->GetActiveModel();
+			Debug::Assert(Model == Active);
+			Concrete->UpdateScriptTypeControls();
+		}
+
+		void ConcreteWorkspaceViewController::BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E)
+		{
+			Debug::Assert(View != nullptr);
+			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+			IWorkspaceModel^ Active = Concrete->GetActiveModel();
+
 			switch (E->KeyCode)
 			{
+			case Keys::N:
+				if (E->Modifiers == Keys::Control)
+					Concrete->ModelController()->New(Active);
+
+				break;
+			case Keys::O:
+				if (E->Modifiers == Keys::Control)
+					Concrete->ShowOpenDialog();
+
+				break;
+			case Keys::S:
+				if (E->Modifiers == Keys::Control)
+					Concrete->ModelController()->Save(Active, IWorkspaceModel::SaveOperation::Default);
+				else if (E->Control && E->Shift)
+					Concrete->SaveAll();
+
+				break;
+			case Keys::D:
+				if (E->Modifiers == Keys::Control)
+					Concrete->ShowDeleteDialog();
+
+				break;
+			case Keys::Left:
+				if (E->Control && E->Alt)
+					Concrete->ModelController()->Previous(Active);
+
+				break;
+			case Keys::Right:
+				if (E->Control && E->Alt)
+					Concrete->ModelController()->Next(Active);
+
+				break;
+			case Keys::F:
+			case Keys::H:
+				if (E->Modifiers == Keys::Control)
+					Concrete->ShowFindReplaceDialog();
+
+				break;
+			case Keys::G:
+				if (E->Modifiers == Keys::Control)
+					Concrete->GotoLine();
+
+				break;
+			case Keys::E:
+				if (E->Modifiers == Keys::Control)
+					Concrete->GotoOffset();
+
+				break;
 			case Keys::T:
 				if (E->Modifiers == Keys::Control)
 					Concrete->NewTab(gcnew NewTabOperationArgs);
@@ -1398,11 +1911,6 @@ namespace ConstructionSetExtender
 					Concrete->SelectNextTab();
 				else if (E->Control == true && E->Shift == true)
 					Concrete->SelectPreviousTab();
-
-				break;
-			case Keys::S:
-				if (E->Control && E->Shift)
-					Concrete->SaveAll();
 
 				break;
 			case Keys::F4:
@@ -1437,13 +1945,21 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
 		}
 
-		void ConcreteWorkspaceViewController::FindReplaceAll(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
+		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+														  String^ Query, String^ Replacement, UInt32 Options, bool Global)
 		{
 			Debug::Assert(View != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
 
-			for each (auto Itr in Concrete->AssociatedModels)
-				Concrete->ModelController->FindReplace(Itr.Key, Operation, Query, Replacement, Options);
+			if (Global)
+			{
+				for each (auto Itr in Concrete->AssociatedModels)
+					Concrete->ModelController->FindReplace(Itr.Key, Operation, Query, Replacement, Options);
+
+				return -1;
+			}
+			else
+				return Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(), Operation, Query, Replacement, Options);
 		}
 
 		void ConcreteWorkspaceViewController::Redraw(IWorkspaceView^ View)

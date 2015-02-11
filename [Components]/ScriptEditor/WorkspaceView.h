@@ -1,16 +1,17 @@
 #pragma once
 
+#include "[Common]\AuxiliaryWindowsForm.h"
+#include "AuxiliaryTextEditor.h"
 #include "WorkspaceViewInterface.h"
 #include "WorkspaceModelInterface.h"
+#include "ScriptListDialog.h"
+#include "FindReplaceDialog.h"
 
 using namespace DevComponents;
 using namespace DevComponents::DotNetBar::Events;
 
 namespace ConstructionSetExtender
 {
-	ref class AnimatedForm;
-	TODO("remove the destroyonlasttab setting");
-
 	namespace ScriptEditor
 	{
 		ref class ConcreteWorkspaceView;
@@ -20,7 +21,7 @@ namespace ConstructionSetExtender
 		{
 			void								TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
 
-			static MouseEventHandler^			TearingEventDelegate = gcnew MouseEventHandler(&WorkspaceViewTabTearing::TearingEventHandler);
+			static MouseEventHandler^			TearingEventDelegate = gcnew MouseEventHandler(&TearingEventHandler);
 
 			static IWorkspaceModel^				Torn = nullptr;
 			static ConcreteWorkspaceView^		Source = nullptr;
@@ -82,12 +83,6 @@ namespace ConstructionSetExtender
 			void									ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
 			void									ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
 
-			EventHandler^							ToolBarNewScriptClickHandler;
-			EventHandler^							ToolBarOpenScriptClickHandler;
-
-			void									ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
-
 			EventHandler^							ToolBarMessageListClickHandler;
 			EventHandler^							ToolBarFindListClickHandler;
 			EventHandler^							ToolBarBookmarkListClickHandler;
@@ -95,6 +90,61 @@ namespace ConstructionSetExtender
 			void									ToolBarMessageList_Click(Object^ Sender, EventArgs^ E);
 			void									ToolBarFindList_Click(Object^ Sender, EventArgs^ E);
 			void									ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E);
+
+			EventHandler^							ToolBarNewScriptClickHandler;
+			EventHandler^							ToolBarOpenScriptClickHandler;
+			EventHandler^							ToolBarPreviousScriptClickHandler;
+			EventHandler^							ToolBarNextScriptClickHandler;
+			EventHandler^							ToolBarSaveScriptClickHandler;
+			EventHandler^							ToolBarSaveScriptNoCompileClickHandler;
+			EventHandler^							ToolBarSaveScriptAndPluginClickHandler;
+			EventHandler^							ToolBarRecompileScriptsClickHandler;
+			EventHandler^							ToolBarCompileDependenciesClickHandler;
+			EventHandler^							ToolBarDeleteScriptClickHandler;
+
+			void									ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarNextScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E);
+
+			EventHandler^							ToolBarScriptTypeContentsObjectClickHandler;
+			EventHandler^							ToolBarScriptTypeContentsQuestClickHandler;
+			EventHandler^							ToolBarScriptTypeContentsMagicEffectClickHandler;
+
+			void									ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E);
+
+			EventHandler^							ToolBarEditMenuContentsFindReplaceClickHandler;
+			EventHandler^							ToolBarEditMenuContentsGotoLineClickHandler;
+			EventHandler^							ToolBarEditMenuContentsGotoOffsetClickHandler;
+
+			void									ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E);
+
+			EventHandler^							ToolBarDumpScriptClickHandler;
+			EventHandler^							ToolBarLoadScriptClickHandler;
+			EventHandler^							ToolBarShowOffsetsClickHandler;
+			EventHandler^							ToolBarShowPreprocessedTextClickHandler;
+			EventHandler^							ToolBarSanitizeScriptTextClickHandler;
+			EventHandler^							ToolBarBindScriptClickHandler;
+			EventHandler^							ToolBarSnippetManagerClickHandler;
+
+			void									ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
+			void									ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E);
+
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -182,6 +232,14 @@ namespace ConstructionSetExtender
 
 			Rectangle								GetBounds(bool UseRestoreBounds);
 			void									ToggleSecondaryPanel(bool State);
+			void									UpdateScriptTypeControls();
+
+			void									ShowOpenDialog();
+			void									ShowDeleteDialog();
+			void									ShowFindReplaceDialog();
+
+			void									GotoLine();
+			void									GotoOffset();
 
 			void									SaveAll();
 			void									CloseAll();
@@ -206,139 +264,6 @@ namespace ConstructionSetExtender
 			~ConcreteWorkspaceView();
 
 #pragma region Interfaces
-			// IWorkspaceViewBindableToolbar
-			virtual property ToolStripButton^		ButtonNew
-			{
-				virtual ToolStripButton^ get() { return ToolBarNewScript; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonOpen
-			{
-				virtual ToolStripButton^ get() { return ToolBarOpenScript; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonPrevious
-			{
-				virtual ToolStripButton^ get() { return ToolBarPreviousScript; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonNext
-			{
-				virtual ToolStripButton^ get() { return ToolBarNextScript; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripSplitButton^	ButtonSave
-			{
-				virtual ToolStripSplitButton^ get() { return ToolBarSaveScript; }
-				virtual void set(ToolStripSplitButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonSaveNoCompile
-			{
-				virtual ToolStripButton^ get() { return ToolBarSaveScriptNoCompile; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonSaveAndPlugin
-			{
-				virtual ToolStripButton^ get() { return ToolBarSaveScriptAndPlugin; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonRecompile
-			{
-				virtual ToolStripButton^ get() { return ToolBarRecompileScripts; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonCompileDepends
-			{
-				virtual ToolStripButton^ get() { return ToolBarCompileDependencies; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonDelete
-			{
-				virtual ToolStripButton^ get() { return ToolBarDeleteScript; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-
-			virtual property ToolStripButton^		ButtonFind
-			{
-				virtual ToolStripButton^ get() { return ToolBarEditMenuContentsFind; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonReplace
-			{
-				virtual ToolStripButton^ get() { return ToolBarEditMenuContentsReplace; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonGotoLine
-			{
-				virtual ToolStripButton^ get() { return ToolBarEditMenuContentsGotoLine; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonGotoOffset
-			{
-				virtual ToolStripButton^ get() { return ToolBarEditMenuContentsGotoOffset; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-
-			virtual property ToolStripSplitButton^	ButtonSaveToDisk
-			{
-				virtual ToolStripSplitButton^ get() { return ToolBarDumpScript; }
-				virtual void set(ToolStripSplitButton^ e) {}
-			}
-			virtual property ToolStripSplitButton^	ButtonLoadFromDisk
-			{
-				virtual ToolStripSplitButton^ get() { return ToolBarLoadScript; }
-				virtual void set(ToolStripSplitButton^ e) {}
-			}
-
-			virtual property ToolStripButton^		ButtonOffsetViewer
-			{
-				virtual ToolStripButton^ get() { return ToolBarShowOffsets; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonPreprocessorViewer
-			{
-				virtual ToolStripButton^ get() { return ToolBarShowPreprocessedText; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-
-			virtual property ToolStripButton^		ButtonSanitize
-			{
-				virtual ToolStripButton^ get() { return ToolBarSanitizeScriptText; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonBind
-			{
-				virtual ToolStripButton^ get() { return ToolBarBindScript; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonSnippets
-			{
-				virtual ToolStripButton^ get() { return ToolBarSnippetManager; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-
-			virtual property ToolStripProgressBar^	ProgressBarByteCodeSize
-			{
-				virtual ToolStripProgressBar^ get() { return ToolBarByteCodeSize; }
-				virtual void set(ToolStripProgressBar^ e) {}
-			}
-
-			virtual property ToolStripButton^		ButtonTypeObject
-			{
-				virtual ToolStripButton^ get() { return ToolBarScriptTypeContentsObject; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonTypeQuest
-			{
-				virtual ToolStripButton^ get() { return ToolBarScriptTypeContentsQuest; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-			virtual property ToolStripButton^		ButtonTypeMagicEffect
-			{
-				virtual ToolStripButton^ get() { return ToolBarScriptTypeContentsMagicEffect; }
-				virtual void set(ToolStripButton^ e) {}
-			}
-
 			// IWorkspaceViewBindableListView
 			property ListView^						ListViewMessages
 			{
@@ -356,48 +281,17 @@ namespace ConstructionSetExtender
 				virtual void set(ListView^ e) {}
 			}
 
-			// IWorkspaceViewBindableBase
-			property Control^								TextEditorContainer
-			{
-				virtual Control^ get() { return WorkspaceSplitter->Panel1; }
-				virtual void set(Control^ e) {}
-			}
-
-			property TextEditors::ScriptOffsetViewer^		OffsetViewer
-			{
-				virtual TextEditors::ScriptOffsetViewer^ get() { return OffsetTextViewer; }
-				virtual void set(TextEditors::ScriptOffsetViewer^ e) {}
-			}
-			property TextEditors::SimpleTextViewer^			PreprocessedTextViewer
-			{
-				virtual TextEditors::SimpleTextViewer^ get() { return PreprocessorTextViewer; }
-				virtual void set(TextEditors::SimpleTextViewer^ e) {}
-			}
-
-			property ScriptListDialog^						ScriptListWindow
-			{
-				virtual ScriptListDialog^ get() { return ScriptListWindow; }
-				virtual void set(ScriptListDialog^ e) {}
-			}
-			property FindReplaceDialog^						FindReplaceWindow
-			{
-				virtual FindReplaceDialog^ get() { return FindReplaceWindow; }
-				virtual void set(FindReplaceDialog^ e) {}
-			}
-
-			property IWorkspaceViewController^			Controller
+			property IWorkspaceViewController^		Controller
 			{
 				virtual IWorkspaceViewController^ get() { return ViewController; }
 				virtual void set(IWorkspaceViewController^ e) {}
 			}
-
-			property IntPtr								WindowHandle
+			property IntPtr							WindowHandle
 			{
 				virtual IntPtr get() { return EditorForm->Handle; }
 				virtual void set(IntPtr e) {}
 			}
-
-			property String^							Description
+			property String^						Description
 			{
 				virtual String^ get() { return String::Empty; }
 				virtual void set(String^ e)
@@ -406,7 +300,7 @@ namespace ConstructionSetExtender
 					GetActiveTab()->Tooltip = e;
 				}
 			}
-			property bool								Enabled
+			property bool							Enabled
 			{
 				virtual bool get() { return WorkspaceSplitter->Panel1->Enabled; }
 				virtual void set(bool e)
@@ -421,12 +315,18 @@ namespace ConstructionSetExtender
 		ref class ConcreteWorkspaceViewController : public IWorkspaceViewController
 		{
 		public:
+			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model) override;
+			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model) override;
+
 			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified) override;
+			virtual void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size) override;
+			virtual void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model) override;
+
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E) override;
 
 			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID) override;
-			virtual void	FindReplaceAll(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
-										String^ Query, String^ Replacement, UInt32 Options) override;
+			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+										String^ Query, String^ Replacement, UInt32 Options, bool Global) override;
 
 			virtual void	Redraw(IWorkspaceView^ View) override;
 		};

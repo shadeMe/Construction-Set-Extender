@@ -38,10 +38,7 @@ namespace ConstructionSetExtender
 		bool ScriptOffsetViewer::Show( int CaretPosition )
 		{
 			if (InitializationState == false)
-			{
-				MessageBox::Show("Offset Viewer couldn't be initialized!\n\nPlease recompile the current script.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 				return false;
-			}
 
 			Viewer->GetContainer()->BringToFront();
 			Viewer->GetContainer()->Show();

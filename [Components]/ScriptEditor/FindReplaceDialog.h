@@ -1,5 +1,7 @@
 #pragma once
+
 #include "[Common]\AuxiliaryWindowsForm.h"
+#include "WorkspaceViewInterface.h"
 
 namespace ConstructionSetExtender
 {
@@ -23,7 +25,7 @@ namespace ConstructionSetExtender
 			CheckBox^									InSelection;
 			CheckBox^									UseRegEx;
 
-			UInt32										ParentWorkspaceIndex;
+			IWorkspaceView^								ParentView;
 			bool										Closing;
 
 			EventHandler^								FindButtonClickHandler;
@@ -49,15 +51,11 @@ namespace ConstructionSetExtender
 			void										LoadOptions();
 			void										SaveOptions();
 
-			virtual void								Destroy();
 		public:
-			FindReplaceDialog();
-			virtual ~FindReplaceDialog()
-			{
-				FindReplaceDialog::Destroy();
-			}
+			FindReplaceDialog(IWorkspaceView^ Parent);
+			~FindReplaceDialog();
 
-			void										Show(IntPtr ParentHandle, String^ Query, bool DefaultInSelection, bool PerformSearch);
+			void										Show(String^ Query, bool DefaultInSelection, bool PerformSearch);
 			void										Hide();
 		};
 	}

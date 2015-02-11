@@ -689,7 +689,7 @@
         DjTyfGrP7EQlqJEVcKm8AEVZEedKC5GVFEoF2yFnuBVyhv8Peb8ASHINqHCVkJMAAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="MessageListCSEMessage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="ScriptListDialogFlagUncompiled" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         R0lGODlhEAAQAIZXAKmMD9K1NwAAAPv1UvDBE8upFfXZMPLKHsuqFvDCFfTWLPrvSuPRg/PRJubWkPHG
         GfDmvfPsyuzgrOnbnt/GK/n25t3GLPv57t/Lcs6vJv7+/P79+fDDFv379Na7SPfiO/nqRfHIG3FoHPHF
@@ -1712,11 +1712,11 @@
   </data>
   <data name="AvalonEditStructureVisualizer" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC/SURBVDhPrZOxDcMgFEQZISNklIgt6N0zC1NQumCALEGf
-        ESgQpnS46GN/G6Mklk/6knX3dNiAxWUKIdymaRrLzHUoEtwrM4KlaFVK6WmMmaWUn9kXVB8MWIpWcWgY
-        hqYAXs15togXeO8bAF63gL6/Cxzlm32AYa39uQDshuGh1nqOMb4oWgQPWeWuL3DOHYckvgjYhuHAt4Im
-        328SjqxCOecHnv86RqVUUwCvWwD1rnIpuPPy7lWmtzj/M52TEG9vBp7lLUPttgAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        wwAADsMBx2+oZAAAAL9JREFUOE+tk7ENwyAURBkhI2SUiC3o3TMLU1C6YIAsQZ8RKBCmdLjoY38boySW
+        T/qSdfd02IDFZQoh3KZpGsvMdSgS3CszgqVoVUrpaYyZpZSf2RdUHwxYilZxaBiGpgBezXm2iBd47xsA
+        XreAvr8LHOWbfYBhrf25AOyG4aHWeo4xvihaBA9Z5a4vcM4dhyS+CNiG4cC3gibfbxKOrEI55wee/zpG
+        pVRTAK9bAPWucim48/LuVaa3OP8znZMQb28GnuUtQ+22AAAAAElFTkSuQmCC
 </value>
   </data>
 </root>

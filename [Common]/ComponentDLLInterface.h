@@ -25,7 +25,7 @@ namespace ComponentDLLInterface
 			HWND									(* GetRenderWindowHandle)(void);
 
 			FormData*								(* LookupFormByEditorID)(const char* EditorID);
-			ScriptData*								(* LookupScriptableFormByEditorID)(const char* EditorID);
+			ScriptData*								(* LookupScriptableFormByEditorID)(const char* EditorID);		// returns the form's script data
 			bool									(* GetIsFormReference)(const char* EditorID);
 			const char*								(* GetFormTypeIDLongName)(UInt8 TypeID);
 
@@ -56,6 +56,7 @@ namespace ComponentDLLInterface
 			void									(* DeleteScript)(const char* EditorID);
 			ScriptData*								(* GetPreviousScriptInList)(void* CurrentScript);
 			ScriptData*								(* GetNextScriptInList)(void* CurrentScript);
+			void									(* RemoveScriptBytecode)(void* Script);
 
 			void									(* SaveEditorBoundsToINI)(UInt32 Left, UInt32 Top, UInt32 Width, UInt32 Height);
 			ScriptListData*							(* GetScriptList)(void);

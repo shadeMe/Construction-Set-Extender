@@ -69,7 +69,7 @@ namespace ConstructionSetExtender
 			CheckBox^									SaveLastKnownPos;
 			CheckBox^									RecompileVarIdx;
 			CheckBox^									UseCSParent;
-			CheckBox^									DestroyOnLastTabClose;
+			CheckBox^									WarnUncompiledScripts;
 			CheckBox^									LoadScriptUpdateExistingScripts;
 			CheckBox^									CutCopyEntireLine;
 			TabPage^									TabIntelliSense;

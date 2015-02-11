@@ -217,7 +217,7 @@ namespace ConstructionSetExtender
 
 				virtual void										FocusTextArea();
 				virtual void										LoadFileFromDisk(String^ Path);
-				virtual void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^% DefaultName, String^% DefaultExtension);
+				virtual void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
 				virtual bool										GetModifiedStatus();
 				virtual void										SetModifiedStatus(bool Modified);

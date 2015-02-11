@@ -1,83 +1,26 @@
 #pragma once
-#include "Globals.h"
-#include "AuxiliaryTextEditor.h"
-#include "ScriptTextEditorInterface.h"
 
-using namespace DevComponents;
+#include "Globals.h"
+#include "ScriptTextEditorInterface.h"
 
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
-	{	
-		ref class ScriptListDialog;
-		ref class FindReplaceDialog;
-
+	{
 		// not a real/proper MVC implementation, just less ugly than what came before it
 		interface class IWorkspaceModel;
-		interface class IWorkspaceModelController;
-		interface class IWorkspaceModelFactory;
 		interface class IWorkspaceViewController;
-
-		interface class IWorkspaceViewBindableToolbar
-		{
-		public:
-			property ToolStripButton^					ButtonNew;
-			property ToolStripButton^					ButtonOpen;
-			property ToolStripButton^					ButtonPrevious;
-			property ToolStripButton^					ButtonNext;
-			property ToolStripSplitButton^				ButtonSave;
-			property ToolStripButton^					ButtonSaveNoCompile;
-			property ToolStripButton^					ButtonSaveAndPlugin;
-			property ToolStripButton^					ButtonRecompile;
-			property ToolStripButton^					ButtonCompileDepends;
-			property ToolStripButton^					ButtonDelete;
-
-			property ToolStripButton^					ButtonFind;
-			property ToolStripButton^					ButtonReplace;
-			property ToolStripButton^					ButtonGotoLine;
-			property ToolStripButton^					ButtonGotoOffset;
-			
-			property ToolStripSplitButton^				ButtonSaveToDisk;
-			property ToolStripSplitButton^				ButtonLoadFromDisk;
-
-			property ToolStripButton^					ButtonOffsetViewer;
-			property ToolStripButton^					ButtonPreprocessorViewer;
-
-			property ToolStripButton^					ButtonSanitize;
-			property ToolStripButton^					ButtonBind;
-			property ToolStripButton^					ButtonSnippets;
-
-			property ToolStripProgressBar^				ProgressBarByteCodeSize;
-
-			property ToolStripButton^					ButtonTypeObject;
-			property ToolStripButton^					ButtonTypeQuest;
-			property ToolStripButton^					ButtonTypeMagicEffect;
-		};
 
 		interface class IWorkspaceViewBindableListView
 		{
 		public:
-			property ListView^							ListViewMessages;
-			property ListView^							ListViewBookmarks;
-			property ListView^							ListViewFindResults;
+			property ListView^		ListViewMessages;
+			property ListView^		ListViewBookmarks;
+			property ListView^		ListViewFindResults;
 		};
 
-		interface class IWorkspaceViewBindableBase
+		interface class IWorkspaceView : public	IWorkspaceViewBindableListView
 		{
-		public:
-			property Control^								TextEditorContainer;
-
-			property TextEditors::ScriptOffsetViewer^		OffsetViewer;
-			property TextEditors::SimpleTextViewer^			PreprocessedTextViewer;
-
-			property ScriptListDialog^						ScriptListWindow;
-			property FindReplaceDialog^						FindReplaceWindow;
-		};
-
-		interface class IWorkspaceView : public	IWorkspaceViewBindableBase,
-												IWorkspaceViewBindableToolbar,
-												IWorkspaceViewBindableListView
-		{ 
 		public:
 			property IWorkspaceViewController^			Controller;
 
@@ -106,16 +49,22 @@ namespace ConstructionSetExtender
 
 			NewTabOperationArgs() : PostCreationOperation(PostNewTabOperation::None), PathToFile(""), OpenArgs(nullptr), NewText("") {}
 		};
-		
+
 		interface class IWorkspaceViewController
 		{
 		public:
+			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+
 			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
+			virtual void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size);
+			virtual void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model);
+
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
-			
+
 			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
-			virtual void	FindReplaceAll(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
-																	String^ Query, String^ Replacement, UInt32 Options);
+			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+																	String^ Query, String^ Replacement, UInt32 Options, bool Global);
 
 			virtual void	Redraw(IWorkspaceView^ View);
 		};

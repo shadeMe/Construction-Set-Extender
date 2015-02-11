@@ -79,6 +79,7 @@ public:
 
 	bool								Compile(bool AsResultScript = false);
 	void								SetText(const char* Text);
+	void								RemoveCompiledData(void);
 
 	UInt32								GetScriptableFormUseCount(void);
 	UInt32								GetEffectItemReferences(ScriptMagicItemCrossRefListT& OutList);

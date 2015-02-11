@@ -40,6 +40,7 @@ namespace ConstructionSetExtender
 			int										Hide(void);
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 			void									SetFont(Font^ NewFont);
+			UInt32									GetLineCount(void) { return Viewer->GetLineCount(); }
 		};
 	}
 }

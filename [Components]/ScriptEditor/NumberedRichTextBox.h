@@ -99,6 +99,8 @@ namespace ConstructionSetExtender
 
 			virtual void										JumpToLine(String^ Line);
 			virtual void										SetFont(Font^ NewFont);
+
+			UInt32												GetLineCount(void) { return TextField->Lines->Length; }
 		};
 
 		ref class OffsetRichTextBox : public NumberedRichTextBox

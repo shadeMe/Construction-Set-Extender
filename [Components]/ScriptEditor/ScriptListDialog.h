@@ -9,18 +9,19 @@ namespace ConstructionSetExtender
 		ref class ScriptListDialog
 		{
 		public:
-			static enum class									Operation
+			static enum class ShowOperation
 			{
-				e_Open = 0,
-				e_Delete
-			};
-
-			static enum class									FlagIcons
-			{
-				e_Deleted = 0,
-				e_Active
+				Open,
+				Delete
 			};
 		protected:
+			static enum class FlagIcons
+			{
+				Deleted = 0,
+				Uncompiled,
+				Active
+			};
+
 			void												ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E);
 			void												ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			void												ScriptList_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
@@ -33,14 +34,13 @@ namespace ConstructionSetExtender
 			void												SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
 			void												SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
 
-			virtual void										ShowUseReportForSelection();
-			void												PerformOperationOnSelection();
+			void												ShowUseReport();
+			void												CompleteSelection();
 			void												CleanupDialog(bool SaveBoundsToINI);
 
-			UInt32												ParentWorkspaceIndex;
-			Operation											CurrentOperation;
+			ShowOperation										CurrentOperation;
 			ComponentDLLInterface::ScriptListData*				ScriptListCache;
-			ComponentDLLInterface::ScriptData*					FirstSelectionCache;
+			List<String^>^										SelectedEditorIDs;
 			bool												Closing;
 			bool												SelectionComplete;		// stoopid workaround for the form's obsession with an accept button
 
@@ -63,16 +63,12 @@ namespace ConstructionSetExtender
 			EventHandler^										SelectBoxClickHandler;
 			EventHandler^										SearchBoxTextChangedHandler;
 			KeyEventHandler^									SearchBoxKeyDownHandler;
-
-			virtual void										Destroy();
 		public:
 			ScriptListDialog();
-			virtual ~ScriptListDialog()
-			{
-				ScriptListDialog::Destroy();
-			}
+			~ScriptListDialog();
 
-			virtual ComponentDLLInterface::ScriptData*			Show(Operation Op, String^ FilterString);		// caller takes ownership of pointer
+																// returns true if at least one script was selected
+			bool												Show(ShowOperation Operation, String^ FilterString, List<String^>^% OutSelectedScriptEditorIDs);
 		};
 	}
 }

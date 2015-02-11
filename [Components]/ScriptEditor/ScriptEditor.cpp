@@ -2432,7 +2432,7 @@ namespace ConstructionSetExtender
 		}
 		void Workspace::OpenScript()
 		{
-			ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Open,
+			ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::ShowOperation::Open,
 																		(GetIsUninitialized() ? "" : CurrentScriptEditorID));
 			if (Data && PerformHouseKeeping())
 			{
@@ -2515,7 +2515,7 @@ namespace ConstructionSetExtender
 		{
 	//		if (PerformHouseKeeping())
 			{
-				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::Operation::e_Delete,
+				ComponentDLLInterface::ScriptData* Data = ScriptListBox->Show(ScriptListDialog::ShowOperation::Delete,
 																		(GetIsUninitialized() ? "" : CurrentScriptEditorID));
 				if (Data)
 				{

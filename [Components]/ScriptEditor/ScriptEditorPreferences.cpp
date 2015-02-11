@@ -190,7 +190,7 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("SaveLastKnownPos", "General", "1"), gcnew BoundControl(SaveLastKnownPos, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("RecompileVarIdx", "General", "1"), gcnew BoundControl(RecompileVarIdx, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("UseCSParent", "General", "0"), gcnew BoundControl(UseCSParent, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
-			SettingCollection->Add(gcnew INISetting("DestroyOnLastTabClose", "General", "1"), gcnew BoundControl(DestroyOnLastTabClose, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("WarnUncompiledScripts", "General", "1"), gcnew BoundControl(WarnUncompiledScripts, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("LoadScriptUpdateExistingScripts", "General", "0"), gcnew BoundControl(LoadScriptUpdateExistingScripts, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("CutCopyEntireLine", "General", "0"), gcnew BoundControl(CutCopyEntireLine, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
@@ -326,7 +326,7 @@ namespace ConstructionSetExtender
 			AllowRedefinitions = (gcnew CheckBox());
 			LabelISThreshold = (gcnew Label());
 			ThresholdLength = (gcnew NumericUpDown());
-			DestroyOnLastTabClose = (gcnew CheckBox());
+			WarnUncompiledScripts = (gcnew CheckBox());
 			UseCSParent = (gcnew CheckBox());
 			RecompileVarIdx = (gcnew CheckBox());
 			LabelTabSize = (gcnew Label());
@@ -433,18 +433,18 @@ namespace ConstructionSetExtender
 			AllowRedefinitions->Name = L"AllowRedefinitions";
 			AllowRedefinitions->Size = System::Drawing::Size(154, 23);
 			AllowRedefinitions->TabIndex = 9;
-			AllowRedefinitions->Text = L"Allow Macro Redefinitions";
+			AllowRedefinitions->Text = L"Allow macro redefinitions";
 			AllowRedefinitions->UseVisualStyleBackColor = true;
 			//
 			// DestroyOnLastTabClose
 			//
-			DestroyOnLastTabClose->AutoSize = true;
-			DestroyOnLastTabClose->Location = System::Drawing::Point(22, 92);
-			DestroyOnLastTabClose->Name = L"DestroyOnLastTabClose";
-			DestroyOnLastTabClose->Size = System::Drawing::Size(152, 17);
-			DestroyOnLastTabClose->TabIndex = 11;
-			DestroyOnLastTabClose->Text = L"Close Editor With Last Open Tab";
-			DestroyOnLastTabClose->UseVisualStyleBackColor = true;
+			WarnUncompiledScripts->AutoSize = true;
+			WarnUncompiledScripts->Location = System::Drawing::Point(22, 92);
+			WarnUncompiledScripts->Name = L"WarnUncompiledScripts";
+			WarnUncompiledScripts->Size = System::Drawing::Size(152, 17);
+			WarnUncompiledScripts->TabIndex = 11;
+			WarnUncompiledScripts->Text = L"Warn when opening uncompiled scripts";
+			WarnUncompiledScripts->UseVisualStyleBackColor = true;
 			//
 			// UseCSParent
 			//
@@ -453,7 +453,7 @@ namespace ConstructionSetExtender
 			UseCSParent->Name = L"UseCSParent";
 			UseCSParent->Size = System::Drawing::Size(166, 17);
 			UseCSParent->TabIndex = 10;
-			UseCSParent->Text = L"Show Editor As Child Window";
+			UseCSParent->Text = L"Show editor as child window";
 			UseCSParent->UseVisualStyleBackColor = true;
 			//
 			// RecompileVarIdx
@@ -463,7 +463,7 @@ namespace ConstructionSetExtender
 			RecompileVarIdx->Name = L"RecompileVarIdx";
 			RecompileVarIdx->Size = System::Drawing::Size(303, 17);
 			RecompileVarIdx->TabIndex = 9;
-			RecompileVarIdx->Text = L"Recompile Dependencies After Variable Index Modification";
+			RecompileVarIdx->Text = L"Recompile dependencies after variable index modification";
 			RecompileVarIdx->UseVisualStyleBackColor = true;
 			//
 			// LabelTabSize
@@ -473,7 +473,7 @@ namespace ConstructionSetExtender
 			this->LabelTabSize->Name = L"LabelTabSize";
 			this->LabelTabSize->Size = System::Drawing::Size(49, 13);
 			this->LabelTabSize->TabIndex = 3;
-			this->LabelTabSize->Text = L"Tab Size";
+			this->LabelTabSize->Text = L"Tab size";
 			//
 			// TabSize
 			//
@@ -490,7 +490,7 @@ namespace ConstructionSetExtender
 			SaveLastKnownPos->Name = L"SaveLastKnownPos";
 			SaveLastKnownPos->Size = System::Drawing::Size(174, 17);
 			SaveLastKnownPos->TabIndex = 8;
-			SaveLastKnownPos->Text = L"Save Caret Position With Script";
+			SaveLastKnownPos->Text = L"Save caret position with script";
 			SaveLastKnownPos->UseVisualStyleBackColor = true;
 			//
 			// AutoIndent
@@ -500,7 +500,7 @@ namespace ConstructionSetExtender
 			AutoIndent->Name = L"AutoIndent";
 			AutoIndent->Size = System::Drawing::Size(139, 17);
 			AutoIndent->TabIndex = 5;
-			AutoIndent->Text = L"Auto-Indent Script Lines";
+			AutoIndent->Text = L"Automatically indent script lines";
 			AutoIndent->UseVisualStyleBackColor = true;
 			//
 			// CmDlgFont
@@ -534,7 +534,7 @@ namespace ConstructionSetExtender
 			//
 			TabGeneral->Controls->Add(CutCopyEntireLine);
 			TabGeneral->Controls->Add(LoadScriptUpdateExistingScripts);
-			TabGeneral->Controls->Add(DestroyOnLastTabClose);
+			TabGeneral->Controls->Add(WarnUncompiledScripts);
 			TabGeneral->Controls->Add(SuppressRefCountForQuestScripts);
 			TabGeneral->Controls->Add(SaveLastKnownPos);
 			TabGeneral->Controls->Add(RecompileVarIdx);
@@ -555,7 +555,7 @@ namespace ConstructionSetExtender
 			LoadScriptUpdateExistingScripts->Name = L"LoadScriptUpdateExistingScripts";
 			LoadScriptUpdateExistingScripts->Size = System::Drawing::Size(236, 17);
 			LoadScriptUpdateExistingScripts->TabIndex = 13;
-			LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' Tool Updates Existing Scripts";
+			LoadScriptUpdateExistingScripts->Text = L"\'Load Script(s)\' updates existing scripts";
 			LoadScriptUpdateExistingScripts->UseVisualStyleBackColor = true;
 			//
 			// TabIntelliSense
@@ -584,7 +584,7 @@ namespace ConstructionSetExtender
 			this->LabelISThreshold->Name = L"LabelISThreshold";
 			this->LabelISThreshold->Size = System::Drawing::Size(148, 31);
 			this->LabelISThreshold->TabIndex = 1;
-			this->LabelISThreshold->Text = L"IntelliSense Interface Pop-up Threshold";
+			this->LabelISThreshold->Text = L"IntelliSense interface pop-up threshold";
 			//
 			// ThresholdLength
 			//
@@ -602,7 +602,7 @@ namespace ConstructionSetExtender
 			this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
 			this->LabelMaxVisibleItems->Size = System::Drawing::Size(170, 26);
 			this->LabelMaxVisibleItems->TabIndex = 8;
-			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Items Visible In IntelliSense Interface";
+			this->LabelMaxVisibleItems->Text = L"Maximum number of items visible in IntelliSense interface";
 			//
 			// MaxVisibleItems
 			//
@@ -630,7 +630,7 @@ namespace ConstructionSetExtender
 			this->LabelISDBUpdatePeriod->Name = L"LabelISDBUpdatePeriod";
 			this->LabelISDBUpdatePeriod->Size = System::Drawing::Size(148, 46);
 			this->LabelISDBUpdatePeriod->TabIndex = 3;
-			this->LabelISDBUpdatePeriod->Text = L"IntelliSense Database Update Period (In Earth Minutes)";
+			this->LabelISDBUpdatePeriod->Text = L"IntelliSense database update period (in Earth minutes)";
 			//
 			// DatabaseUpdateInterval
 			//
@@ -648,7 +648,7 @@ namespace ConstructionSetExtender
 			this->NoFocusUI->Name = L"NoFocusUI";
 			this->NoFocusUI->Size = System::Drawing::Size(167, 46);
 			this->NoFocusUI->TabIndex = 9;
-			this->NoFocusUI->Text = L"Prevent IntelliSense Interface From Acquiring Focus";
+			this->NoFocusUI->Text = L"Prevent IntelliSense interface from acquiring focus";
 			this->NoFocusUI->UseVisualStyleBackColor = true;
 			//
 			// ForceDatabaseUpdate
@@ -729,7 +729,7 @@ namespace ConstructionSetExtender
 			this->IndentLines->Name = L"IndentLines";
 			this->IndentLines->Size = System::Drawing::Size(114, 17);
 			this->IndentLines->TabIndex = 12;
-			this->IndentLines->Text = L"Indent Script Lines";
+			this->IndentLines->Text = L"Indent script lines";
 			this->IndentLines->UseVisualStyleBackColor = true;
 			//
 			// AnnealCasing
@@ -739,7 +739,7 @@ namespace ConstructionSetExtender
 			this->AnnealCasing->Name = L"AnnealCasing";
 			this->AnnealCasing->Size = System::Drawing::Size(205, 17);
 			this->AnnealCasing->TabIndex = 11;
-			this->AnnealCasing->Text = L"Anneal Identifier Casing";
+			this->AnnealCasing->Text = L"Anneal identifier casing";
 			this->AnnealCasing->UseVisualStyleBackColor = true;
 			//
 			// CompilerOverrideBlocks
@@ -749,7 +749,7 @@ namespace ConstructionSetExtender
 			this->CompilerOverrideBlocks->Name = L"CompilerOverrideBlocks";
 			this->CompilerOverrideBlocks->Size = System::Drawing::Size(219, 17);
 			this->CompilerOverrideBlocks->TabIndex = 13;
-			this->CompilerOverrideBlocks->Text = L"Apply Compiler Override To Script Blocks";
+			this->CompilerOverrideBlocks->Text = L"Apply compiler override to script blocks";
 			this->CompilerOverrideBlocks->UseVisualStyleBackColor = true;
 			//
 			// EvalifyIfs
@@ -759,7 +759,7 @@ namespace ConstructionSetExtender
 			this->EvalifyIfs->Name = L"EvalifyIfs";
 			this->EvalifyIfs->Size = System::Drawing::Size(155, 17);
 			this->EvalifyIfs->TabIndex = 14;
-			this->EvalifyIfs->Text = L"Eval\'ify If/ElseIf Statements";
+			this->EvalifyIfs->Text = L"Eval\'ify If/ElseIf statements";
 			this->EvalifyIfs->UseVisualStyleBackColor = true;
 			//
 			// GroupBoxSyntaxHighlighting
@@ -920,7 +920,7 @@ namespace ConstructionSetExtender
 			this->WordWrap->Name = L"WordWrap";
 			this->WordWrap->Size = System::Drawing::Size(81, 17);
 			this->WordWrap->TabIndex = 5;
-			this->WordWrap->Text = L"Word-Wrap";
+			this->WordWrap->Text = L"Word wrap";
 			this->WordWrap->UseVisualStyleBackColor = true;
 			//
 			// CmDlgSelectionHighlightColor
@@ -1020,7 +1020,7 @@ namespace ConstructionSetExtender
 			this->LabelForegroundColor->Name = L"LabelForegroundColor";
 			this->LabelForegroundColor->Size = System::Drawing::Size(88, 13);
 			this->LabelForegroundColor->TabIndex = 33;
-			this->LabelForegroundColor->Text = L"Foreground Color";
+			this->LabelForegroundColor->Text = L"Foreground color";
 			//
 			// LabelBackgroundColor
 			//
@@ -1029,7 +1029,7 @@ namespace ConstructionSetExtender
 			this->LabelBackgroundColor->Name = L"LabelBackgroundColor";
 			this->LabelBackgroundColor->Size = System::Drawing::Size(92, 13);
 			this->LabelBackgroundColor->TabIndex = 34;
-			this->LabelBackgroundColor->Text = L"Background Color";
+			this->LabelBackgroundColor->Text = L"Background color";
 			//
 			// CmDlgForegroundColor
 			//
@@ -1058,7 +1058,7 @@ namespace ConstructionSetExtender
 			this->ShowTabs->Name = L"ShowTabs";
 			this->ShowTabs->Size = System::Drawing::Size(80, 17);
 			this->ShowTabs->TabIndex = 28;
-			this->ShowTabs->Text = L"Show Tabs";
+			this->ShowTabs->Text = L"Show tabs";
 			this->ShowTabs->UseVisualStyleBackColor = true;
 			//
 			// ShowSpaces
@@ -1068,7 +1068,7 @@ namespace ConstructionSetExtender
 			this->ShowSpaces->Name = L"ShowSpaces";
 			this->ShowSpaces->Size = System::Drawing::Size(92, 17);
 			this->ShowSpaces->TabIndex = 29;
-			this->ShowSpaces->Text = L"Show Spaces";
+			this->ShowSpaces->Text = L"Show spaces";
 			this->ShowSpaces->UseVisualStyleBackColor = true;
 			//
 			// CutCopyEntireLine
@@ -1078,7 +1078,7 @@ namespace ConstructionSetExtender
 			CutCopyEntireLine->Name = L"CutCopyEntireLine";
 			CutCopyEntireLine->Size = System::Drawing::Size(242, 17);
 			CutCopyEntireLine->TabIndex = 29;
-			CutCopyEntireLine->Text = L"Copy/Cut Entire Line When Selection Is Empty";
+			CutCopyEntireLine->Text = L"Copy/Cut entire line when selection is empty";
 			CutCopyEntireLine->UseVisualStyleBackColor = true;
 			//
 			// LabelNoOfPasses
@@ -1087,7 +1087,7 @@ namespace ConstructionSetExtender
 			LabelNoOfPasses->Name = L"LabelNoOfPasses";
 			LabelNoOfPasses->Size = System::Drawing::Size(157, 20);
 			LabelNoOfPasses->TabIndex = 11;
-			LabelNoOfPasses->Text = L"Number of Passes";
+			LabelNoOfPasses->Text = L"Number of passes";
 			//
 			// NoOfPasses
 			//
@@ -1104,7 +1104,7 @@ namespace ConstructionSetExtender
 			this->CodeFolding->Name = L"CodeFolding";
 			this->CodeFolding->Size = System::Drawing::Size(88, 17);
 			this->CodeFolding->TabIndex = 30;
-			this->CodeFolding->Text = L"Code Folding";
+			this->CodeFolding->Text = L"Code folding";
 			this->CodeFolding->UseVisualStyleBackColor = true;
 			//
 			// TabsOnTop
@@ -1114,7 +1114,7 @@ namespace ConstructionSetExtender
 			this->TabsOnTop->Name = L"TabsOnTop";
 			this->TabsOnTop->Size = System::Drawing::Size(89, 17);
 			this->TabsOnTop->TabIndex = 31;
-			this->TabsOnTop->Text = L"Tabs On Top";
+			this->TabsOnTop->Text = L"Tabs on top";
 			this->TabsOnTop->UseVisualStyleBackColor = true;
 			//
 			// BoldFacedHighlighting
@@ -1123,7 +1123,7 @@ namespace ConstructionSetExtender
 			this->BoldFacedHighlighting->Name = L"BoldFacedHighlighting";
 			this->BoldFacedHighlighting->Size = System::Drawing::Size(89, 34);
 			this->BoldFacedHighlighting->TabIndex = 32;
-			this->BoldFacedHighlighting->Text = L"Bold-Faced Highlighting";
+			this->BoldFacedHighlighting->Text = L"Bold-faced highlighting";
 			this->BoldFacedHighlighting->UseVisualStyleBackColor = true;
 			//
 			// TabBackup
@@ -1145,7 +1145,7 @@ namespace ConstructionSetExtender
 			this->LabelAutoRecoveryInterval->Name = L"LabelAutoRecoveryInterval";
 			this->LabelAutoRecoveryInterval->Size = System::Drawing::Size(157, 34);
 			this->LabelAutoRecoveryInterval->TabIndex = 14;
-			this->LabelAutoRecoveryInterval->Text = L"Auto-Recovery Save Period (In Earth Minutes)";
+			this->LabelAutoRecoveryInterval->Text = L"Auto-Recovery save period (in earth minutes)";
 			//
 			// AutoRecoverySavePeriod
 			//
@@ -1187,7 +1187,7 @@ namespace ConstructionSetExtender
 			this->CountVarRefs->Name = L"CountVarRefs";
 			this->CountVarRefs->Size = System::Drawing::Size(175, 17);
 			this->CountVarRefs->TabIndex = 14;
-			this->CountVarRefs->Text = L"Count Variable Use References";
+			this->CountVarRefs->Text = L"Count variable use references";
 			this->CountVarRefs->UseVisualStyleBackColor = true;
 			//
 			// SuppressRefCountForQuestScripts
@@ -1197,7 +1197,7 @@ namespace ConstructionSetExtender
 			this->SuppressRefCountForQuestScripts->Name = L"SuppressRefCountForQuestScripts";
 			this->SuppressRefCountForQuestScripts->Size = System::Drawing::Size(293, 17);
 			this->SuppressRefCountForQuestScripts->TabIndex = 13;
-			this->SuppressRefCountForQuestScripts->Text = L"Suppress Variable Reference Counting For Quest Scripts";
+			this->SuppressRefCountForQuestScripts->Text = L"Suppress variable reference counting for Quest scripts";
 			this->SuppressRefCountForQuestScripts->UseVisualStyleBackColor = true;
 			//
 			// VarFormNameCollisions
@@ -1207,7 +1207,7 @@ namespace ConstructionSetExtender
 			this->VarFormNameCollisions->Name = L"VarFormNameCollisions";
 			this->VarFormNameCollisions->Size = System::Drawing::Size(300, 17);
 			this->VarFormNameCollisions->TabIndex = 0;
-			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions (Recommended)";
+			this->VarFormNameCollisions->Text = L"Check for variable-record name collisions (Recommended)";
 			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
 			//
 			// VarCmdNameCollisions
@@ -1217,7 +1217,7 @@ namespace ConstructionSetExtender
 			this->VarCmdNameCollisions->Name = L"VarCmdNameCollisions";
 			this->VarCmdNameCollisions->Size = System::Drawing::Size(324, 17);
 			this->VarCmdNameCollisions->TabIndex = 15;
-			this->VarCmdNameCollisions->Text = L"Check For Variable-Command Name Collisions (Recommended)";
+			this->VarCmdNameCollisions->Text = L"Check for variable-command name collisions (Recommended)";
 			this->VarCmdNameCollisions->UseVisualStyleBackColor = true;
 			//
 			// SubstringSearch
@@ -1226,7 +1226,7 @@ namespace ConstructionSetExtender
 			this->SubstringSearch->Name = L"SubstringSearch";
 			this->SubstringSearch->Size = System::Drawing::Size(167, 36);
 			this->SubstringSearch->TabIndex = 11;
-			this->SubstringSearch->Text = L"Use Substring Search While Filtering";
+			this->SubstringSearch->Text = L"Use substring search while filtering";
 			this->SubstringSearch->UseVisualStyleBackColor = true;
 			//
 			// LabelLocalVars

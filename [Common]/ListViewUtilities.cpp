@@ -1,6 +1,6 @@
 #include "ListViewUtilities.h"
 
-ListViewItem^ GetListViewSelectedItem(ListView^% Source)
+ListViewItem^ GetListViewSelectedItem(ListView^ Source)
 {
 	ListViewItem^ Result = nullptr;
 	if (Source->VirtualMode == false && Source->SelectedItems->Count)
@@ -8,7 +8,7 @@ ListViewItem^ GetListViewSelectedItem(ListView^% Source)
 	return Result;
 }
 
-int GetListViewSelectedItemIndex( ListView^% Source )
+int GetListViewSelectedItemIndex( ListView^ Source )
 {
 	int Result = -1;
 
@@ -18,7 +18,7 @@ int GetListViewSelectedItemIndex( ListView^% Source )
 	return Result;
 }
 
-ListViewItem^ FindItemWithText( ListView^% Source, String^ Substring, bool SearchInSubItems, bool CaseInsensitive )
+ListViewItem^ FindItemWithText( ListView^ Source, String^ Substring, bool SearchInSubItems, bool CaseInsensitive )
 {
 	for each (ListViewItem^ Item in Source->Items)
 	{

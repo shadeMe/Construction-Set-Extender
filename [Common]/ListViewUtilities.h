@@ -2,9 +2,9 @@
 
 #include "IncludesCLR.h"
 
-ListViewItem^											GetListViewSelectedItem(ListView^% Source);
-int														GetListViewSelectedItemIndex(ListView^% Source);
-ListViewItem^											FindItemWithText(ListView^% Source, String^ Substring, bool SearchInSubItems, bool CaseInsensitive);
+ListViewItem^											GetListViewSelectedItem(ListView^ Source);
+int														GetListViewSelectedItemIndex(ListView^ Source);
+ListViewItem^											FindItemWithText(ListView^ Source, String^ Substring, bool SearchInSubItems, bool CaseInsensitive);
 
 ref class ListViewGenericSorter abstract
 {
