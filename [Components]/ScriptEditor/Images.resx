@@ -789,7 +789,7 @@
         w4lJQoIgju3U/NX0fwLxGxJ8y0RTwhjkAAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="ContextMenuRefactorModifyVariableIndices" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="ToolBarRefactorMenuContentsModifyVariableIndices" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6
         JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAACXBIWXMAAAsSAAALEgHS3X78AAAB3klE
@@ -1032,7 +1032,7 @@
         QxFVQXphgwBQ/QVEgYLS4qDtUAAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="ToolBarEditMenuContentsFind" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="ToolBarEditMenuContentsFindReplace" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6
         JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAACXBIWXMAAAsSAAALEgHS3X78AAACLklE
@@ -1357,7 +1357,7 @@
         +mneq3nYLdrQDdrw78DzCX3MYC0/GM92AAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="ContextMenuRefactorDocumentScript" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="ToolBarRefactorMenuContentsDocumentScript" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAACH
         DwAAjA8AAP1SAACBQAAAfXkAAOmLAAA85QAAGcxzPIV3AAAKOWlDQ1BQaG90b3Nob3AgSUNDIHByb2Zp
@@ -1414,7 +1414,7 @@
         XXrtlyjHLCZxIiRxfJPAwRVnAcneOKRf/FVlC0g0/I8A2H4BRRgqW1mZ3UcAAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="ContextMenuRefactorMenu" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="ToolBarRefactorMenu" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAACH
         DwAAjA8AAP1SAACBQAAAfXkAAOmLAAA85QAAGcxzPIV3AAAKOWlDQ1BQaG90b3Nob3AgSUNDIHByb2Zp
@@ -1471,7 +1471,7 @@
         hitmkTFWQUowVkFKMFZB8vF/BgD3hmLg1xmBCwAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="ContextMenuRefactorRenameVariables" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="ToolBarRefactorMenuContentsRenameVariables" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6
         JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAACXBIWXMAAAsSAAALEgHS3X78AAABNklE

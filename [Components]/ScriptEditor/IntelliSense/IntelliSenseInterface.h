@@ -2,26 +2,15 @@
 
 #include "[Common]\AuxiliaryWindowsForm.h"
 #include "..\SemanticAnalysis.h"
+#include "..\ScriptTextEditorInterface.h"
 
 namespace ConstructionSetExtender
 {
-	ref class NonActivatingImmovableAnimatedForm;
-
 	namespace IntelliSense
 	{
 		ref class IntelliSenseItem;
 		ref class IntelliSenseItemVariable;
 		ref class Script;
-
-		ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<ListViewItem^>
-		{
-		protected:
-			SortOrder											Order;
-		public:
-			IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
-
-			virtual int											Compare(ListViewItem^ X, ListViewItem^ Y);
-		};
 
 		ref class IntelliSenseInterface
 		{
@@ -37,7 +26,7 @@ namespace ConstructionSetExtender
 
 			void												DisplayToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration);
 
-			UInt32												ParentWorkspaceIndex;
+			TextEditors::IScriptTextEditor^						ParentEditor;
 			bool												DestructionFlag;
 			bool												CallingObjectIsRef;
 			Script^												RemoteScript;
@@ -66,15 +55,10 @@ namespace ConstructionSetExtender
 			property bool										UseQuickView;
 
 			void												Reset();
-			virtual void										Destroy();
-
 			void												EnumerateItem(IntelliSenseItem^ Item);
 		public:
-			IntelliSenseInterface(UInt32 ParentWorkspaceIndex);
-			virtual ~IntelliSenseInterface()
-			{
-				IntelliSenseInterface::Destroy();
-			}
+			IntelliSenseInterface(TextEditors::IScriptTextEditor^ Parent);
+			~IntelliSenseInterface();
 
 			static enum class									Operation
 			{
@@ -99,8 +83,8 @@ namespace ConstructionSetExtender
 				virtual bool get() { return IntelliSenseBox->Visible; }
 			}
 
-			virtual void										Show(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
-			virtual void										Hide();
+			void												Show(IntelliSenseInterface::Operation DisplayOperation, bool ForceDisplay, bool ShowAllItems);
+			void												Hide();
 			void												MoveToCaret(bool AllowHidden);
 
 			void												PickSelection();

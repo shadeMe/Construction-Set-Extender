@@ -10,16 +10,67 @@
 using namespace DevComponents;
 using namespace DevComponents::DotNetBar::Events;
 
+#define ConcreteWorkspaceViewDeclareClickHandler(Name)		EventHandler^ Name##ClickHandler; \
+															void ConcreteWorkspaceView::##Name##_Click(Object^ Sender, EventArgs^ E)
+#define ConcreteWorkspaceViewDefineClickHandler(Name)		Name##ClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::##Name##_Click)
+#define ConcreteWorkspaceViewSubscribeClickEvent(Name)		Name##->Click += Name##ClickHandler
+#define ConcreteWorkspaceViewUnsubscribeClickEvent(Name)	Name##->Click -= Name##ClickHandler
+
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
 		ref class ConcreteWorkspaceView;
-		ref class ConcreteWorkspaceViewFactory;
+
+		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
+		{
+			List<ConcreteWorkspaceView^>^				Allocations;
+
+			ConcreteWorkspaceViewFactory();
+		public:
+			~ConcreteWorkspaceViewFactory();
+
+			property UInt32								Count
+			{
+				virtual UInt32 get() { return Allocations->Count; }
+				virtual void set(UInt32 e) {}
+			}
+
+			static ConcreteWorkspaceViewFactory^		Instance = gcnew ConcreteWorkspaceViewFactory;
+
+			void										Remove(ConcreteWorkspaceView^ Allocation);
+
+			// IWorkspaceViewFactory
+			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height);
+			virtual IWorkspaceViewController^			CreateController();
+		};
+
+		ref class ConcreteWorkspaceViewController : public IWorkspaceViewController
+		{
+		public:
+			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+
+			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
+			virtual void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size);
+			virtual void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model);
+
+			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
+
+			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
+			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+										String^ Query, String^ Replacement, UInt32 Options, bool Global);
+
+			virtual void	Redraw(IWorkspaceView^ View);
+
+			virtual void	NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
+
+			virtual DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
+		};
 
 		ref class WorkspaceViewTabTearing
 		{
-			void								TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
+			static void							TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
 
 			static MouseEventHandler^			TearingEventDelegate = gcnew MouseEventHandler(&TearingEventHandler);
 
@@ -48,8 +99,6 @@ namespace ConstructionSetExtender
 			EventHandler<MouseEventArgs^>^											ScriptStripMouseClickHandler;
 			EventHandler<DotNetBar::SuperTabStripTabMovingEventArgs^>^              ScriptStripTabMovingHandler;
 
-			EventHandler^							NewTabButtonClickHandler;
-			EventHandler^							SortTabsButtonClickHandler;
 			EventHandler^							ScriptEditorPreferencesSavedHandler;
 
 			void									EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E);
@@ -63,88 +112,53 @@ namespace ConstructionSetExtender
 			void									ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E);
 			void									ScriptStrip_TabMoving(Object^ Sender, DotNetBar::SuperTabStripTabMovingEventArgs^ E);
 
-			void									NewTabButton_Click(Object^ Sender, EventArgs^ E);
-			void									SortTabsButton_Click(Object^ Sender, EventArgs^ E);
 			void									ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 
-			EventHandler^							ToolBarNavigationBackClickHandler;
-			EventHandler^							ToolBarNavigationForwardClickHandler;
-			EventHandler^							ToolBarSaveAllClickHandler;
-			EventHandler^							ToolBarOptionsClickHandler;
+			ConcreteWorkspaceViewDeclareClickHandler(NewTabButton);
+			ConcreteWorkspaceViewDeclareClickHandler(SortTabsButton);
 
-			void									ToolBarNavigationBack_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarNavigationForward_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarOptions_Click(Object^ Sender, EventArgs^ E);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarNavigationBack);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarNavigationForward);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSaveAll);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarOptions);
 
-			EventHandler^							ToolBarDumpAllScriptsClickHandler;
-			EventHandler^							ToolBarLoadScriptsToTabsClickHandler;
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarDumpAllScripts);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarLoadScriptsToTabs);
 
-			void									ToolBarDumpAllScripts_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarLoadScriptsToTabs_Click(Object^ Sender, EventArgs^ E);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarMessageList);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarFindList);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarBookmarkList);
 
-			EventHandler^							ToolBarMessageListClickHandler;
-			EventHandler^							ToolBarFindListClickHandler;
-			EventHandler^							ToolBarBookmarkListClickHandler;
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarNewScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarOpenScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarPreviousScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarNextScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSaveScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSaveScriptNoCompile);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSaveScriptAndPlugin);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarRecompileScripts);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarCompileDependencies);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarDeleteScript);
 
-			void									ToolBarMessageList_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarFindList_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarScriptTypeContentsObject);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarScriptTypeContentsQuest);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarScriptTypeContentsMagicEffect);
 
-			EventHandler^							ToolBarNewScriptClickHandler;
-			EventHandler^							ToolBarOpenScriptClickHandler;
-			EventHandler^							ToolBarPreviousScriptClickHandler;
-			EventHandler^							ToolBarNextScriptClickHandler;
-			EventHandler^							ToolBarSaveScriptClickHandler;
-			EventHandler^							ToolBarSaveScriptNoCompileClickHandler;
-			EventHandler^							ToolBarSaveScriptAndPluginClickHandler;
-			EventHandler^							ToolBarRecompileScriptsClickHandler;
-			EventHandler^							ToolBarCompileDependenciesClickHandler;
-			EventHandler^							ToolBarDeleteScriptClickHandler;
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarEditMenuContentsFindReplace);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarEditMenuContentsGotoLine);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarEditMenuContentsGotoOffset);
 
-			void									ToolBarNewScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarOpenScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarPreviousScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarNextScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarCompileDependencies_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarDeleteScript_Click(Object^ Sender, EventArgs^ E);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarRefactorMenuContentsDocumentScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarRefactorMenuContentsRenameVariables);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarRefactorMenuContentsModifyVariableIndices);
 
-			EventHandler^							ToolBarScriptTypeContentsObjectClickHandler;
-			EventHandler^							ToolBarScriptTypeContentsQuestClickHandler;
-			EventHandler^							ToolBarScriptTypeContentsMagicEffectClickHandler;
-
-			void									ToolBarScriptTypeContentsObject_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E);
-
-			EventHandler^							ToolBarEditMenuContentsFindReplaceClickHandler;
-			EventHandler^							ToolBarEditMenuContentsGotoLineClickHandler;
-			EventHandler^							ToolBarEditMenuContentsGotoOffsetClickHandler;
-
-			void									ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarEditMenuContentsGotoOffset_Click(Object^ Sender, EventArgs^ E);
-
-			EventHandler^							ToolBarDumpScriptClickHandler;
-			EventHandler^							ToolBarLoadScriptClickHandler;
-			EventHandler^							ToolBarShowOffsetsClickHandler;
-			EventHandler^							ToolBarShowPreprocessedTextClickHandler;
-			EventHandler^							ToolBarSanitizeScriptTextClickHandler;
-			EventHandler^							ToolBarBindScriptClickHandler;
-			EventHandler^							ToolBarSnippetManagerClickHandler;
-
-			void									ToolBarDumpScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarLoadScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarShowOffsets_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarShowPreprocessedText_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarSanitizeScriptText_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarBindScript_Click(Object^ Sender, EventArgs^ E);
-			void									ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E);
-
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarDumpScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarLoadScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarShowOffsets);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarShowPreprocessedText);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSanitizeScriptText);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarBindScript);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSnippetManager);
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -169,12 +183,25 @@ namespace ConstructionSetExtender
 			ToolStripButton^						ToolBarOptions;
 
 			ToolStrip^								WorkspaceSecondaryToolBar;
+
 			ToolStripDropDownButton^				ToolBarEditMenu;
 			ToolStripDropDown^						ToolBarEditMenuContents;
-			ToolStripButton^						ToolBarEditMenuContentsFind;
-			ToolStripButton^						ToolBarEditMenuContentsReplace;
+			ToolStripButton^						ToolBarEditMenuContentsFindReplace;
 			ToolStripButton^						ToolBarEditMenuContentsGotoLine;
 			ToolStripButton^						ToolBarEditMenuContentsGotoOffset;
+
+			ToolStripDropDownButton^				ToolBarRefactorMenu;
+			ToolStripDropDown^						ToolBarRefactorMenuContents;
+			ToolStripButton^						ToolBarRefactorMenuContentsDocumentScript;
+			ToolStripButton^						ToolBarRefactorMenuContentsRenameVariables;
+			ToolStripButton^						ToolBarRefactorMenuContentsModifyVariableIndices;
+
+			ToolStripDropDownButton^				ToolBarScriptType;
+			ToolStripDropDown^						ToolBarScriptTypeContents;
+			ToolStripButton^						ToolBarScriptTypeContentsObject;
+			ToolStripButton^						ToolBarScriptTypeContentsQuest;
+			ToolStripButton^						ToolBarScriptTypeContentsMagicEffect;
+
 			ToolStripButton^						ToolBarMessageList;
 			ToolStripButton^						ToolBarFindList;
 			ToolStripButton^						ToolBarBookmarkList;
@@ -190,12 +217,6 @@ namespace ConstructionSetExtender
 			ToolStripButton^						ToolBarBindScript;
 			ToolStripButton^						ToolBarSnippetManager;
 			ToolStripProgressBar^					ToolBarByteCodeSize;
-
-			ToolStripDropDownButton^				ToolBarScriptType;
-			ToolStripDropDown^						ToolBarScriptTypeContents;
-			ToolStripButton^						ToolBarScriptTypeContentsObject;
-			ToolStripButton^						ToolBarScriptTypeContentsQuest;
-			ToolStripButton^						ToolBarScriptTypeContentsMagicEffect;
 
 			SplitContainer^							WorkspaceSplitter;
 			ListView^								MessageList;
@@ -310,47 +331,6 @@ namespace ConstructionSetExtender
 				}
 			}
 #pragma endregion
-		};
-
-		ref class ConcreteWorkspaceViewController : public IWorkspaceViewController
-		{
-		public:
-			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model) override;
-			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model) override;
-
-			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified) override;
-			virtual void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size) override;
-			virtual void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model) override;
-
-			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E) override;
-
-			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID) override;
-			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
-										String^ Query, String^ Replacement, UInt32 Options, bool Global) override;
-
-			virtual void	Redraw(IWorkspaceView^ View) override;
-		};
-
-		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
-		{
-			List<ConcreteWorkspaceView^>^				Allocations;
-
-			ConcreteWorkspaceViewFactory();
-			~ConcreteWorkspaceViewFactory();
-		public:
-			property UInt32								Count
-			{
-				virtual UInt32 get() { return Allocations->Count; }
-				virtual void set(UInt32 e) {}
-			}
-
-			static ConcreteWorkspaceViewFactory^		Instance = gcnew ConcreteWorkspaceViewFactory;
-
-			void										Remove(ConcreteWorkspaceView^ Allocation);
-
-			// IWorkspaceViewFactory
-			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height) override;
-			virtual IWorkspaceViewController^			CreateController() override;
 		};
 	}
 }

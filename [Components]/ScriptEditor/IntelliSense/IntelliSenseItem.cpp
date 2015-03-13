@@ -39,9 +39,9 @@ namespace ConstructionSetExtender
 			return Description;
 		}
 
-		void IntelliSenseItem::Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface)
+		void IntelliSenseItem::Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface)
 		{
-			Workspace->SetCurrentToken(GetSubstitution());
+			Editor->SetTokenAtCaretPos(GetSubstitution());
 		}
 
 		bool IntelliSenseItem::GetShouldEnumerate( String^ Token, bool SubstringSearch )
@@ -384,22 +384,22 @@ namespace ConstructionSetExtender
 				(Parent->Variables->Count ? "\n\nVariables: " + Parent->Variables->Count.ToString() : "");
 		}
 
-		void IntelliSenseItemCodeSnippet::Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface)
+		void IntelliSenseItemCodeSnippet::Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface)
 		{
 			for each (CodeSnippet::VariableInfo^ Itr in Parent->Variables)
-				Workspace->GetTextEditor()->InsertVariable(Itr->Name, Itr->Type);
+				Editor->InsertVariable(Itr->Name, Itr->Type);
 
 			String^ Code = GetSubstitution();
-			UInt32 CurrentLineIndents = Workspace->GetTextEditor()->GetIndentLevel(Workspace->GetTextEditor()->GetCurrentLineNumber());
+			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->GetCurrentLineNumber());
 			Code = ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
 			Interface->Enabled = false;			// don't want it popping up when indenting the snippet
-			Workspace->GetTextEditor()->BeginUpdate();
-			Workspace->SetCurrentToken(Code);
-			Workspace->GetTextEditor()->EndUpdate(false);
+			Editor->BeginUpdate();
+			Editor->SetTokenAtCaretPos(Code);
+			Editor->EndUpdate(false);
 			Interface->Enabled = true;
 
-			Workspace->GetTextEditor()->ScrollToCaret();
+			Editor->ScrollToCaret();
 		}
 
 		bool IntelliSenseItemCodeSnippet::GetShouldEnumerate( String^ Token, bool SubstringSearch )

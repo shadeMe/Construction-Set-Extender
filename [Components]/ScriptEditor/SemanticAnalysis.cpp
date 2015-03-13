@@ -250,6 +250,12 @@ namespace ConstructionSetExtender
 				Result = ScriptTokenType::Call;
 			else if (!String::Compare(ScriptToken, "player", true) || !String::Compare(ScriptToken, "playerref", true))
 				Result = ScriptTokenType::Player;
+			else if (!String::Compare(ScriptToken, "seteventhandler", true))
+				Result = ScriptTokenType::SetEventHandler;
+			else if (!String::Compare(ScriptToken, "removeeventhandler", true))
+				Result = ScriptTokenType::RemoveEventHandler;
+			else if (!String::Compare(ScriptToken, "dispatchevent", true))
+				Result = ScriptTokenType::DispatchEvent;
 		}
 
 		return Result;
@@ -1269,5 +1275,116 @@ namespace ConstructionSetExtender
 			SanitizedText = SanitizedText->Substring(0, SanitizedText->Length - 1);
 
 		return true;
+	}
+
+	ObScriptSemanticAnalysis::Documenter::Documenter(String^ Source) :
+		InputText(Source),
+		DocumentedText("")
+	{
+		;//
+	}
+
+	String^ ObScriptSemanticAnalysis::Documenter::GetVariableDescription(String^ Identifier, Dictionary<String^, String^>^ Descriptions)
+	{
+		for each (auto Itr in Descriptions)
+		{
+			if (String::Compare(Identifier, Itr.Key, true) == 0)
+				return Itr.Value;
+		}
+
+		return "";
+	}
+
+	void ObScriptSemanticAnalysis::Documenter::Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions)
+	{
+		Tokenizer^ Parser = gcnew Tokenizer();
+		CSEStringReader^ Reader = gcnew CSEStringReader(InputText);
+
+		String^ Description = "";
+		String^ FixedDescription = "";
+		String^ ScriptName = "";
+		CSEStringReader^ DescriptionReader = gcnew CSEStringReader(ScriptDescription);
+
+		for (String^ ReadLine = DescriptionReader->ReadLine(); ReadLine != nullptr; ReadLine = DescriptionReader->ReadLine())
+		{
+			if (ReadLine != "")
+				FixedDescription += "; " + ReadLine + "\n";
+			else
+				FixedDescription += "\n";
+		}
+
+		bool SkippedDescription = false;
+		bool DoneDocumenting = false;
+
+		for (String^ ReadLine = Reader->ReadLine(); ReadLine != nullptr; ReadLine = Reader->ReadLine())
+		{
+			Parser->Tokenize(ReadLine, false);
+
+			if (DoneDocumenting || Parser->Valid == false)
+			{
+				DocumentedText += ReadLine + "\n";
+				continue;
+			}
+
+			String^ FirstToken = Parser->Tokens[0];
+			String^ SecondToken = (Parser->Tokens->Count > 1) ? Parser->Tokens[1] : "";
+
+			ObScriptSemanticAnalysis::ScriptTokenType Type = Parser->GetScriptTokenType(FirstToken);
+
+			switch (Type)
+			{
+			case ObScriptSemanticAnalysis::ScriptTokenType::Variable:
+				{
+					if (SkippedDescription == false)
+					{
+						SkippedDescription = true;
+						DocumentedText = "scn " + ScriptName + "\n\n" + FixedDescription + "\n";
+					}
+
+					String^ VarDesc = GetVariableDescription(SecondToken, VariableDescriptions);
+					if (VarDesc != "")
+					{
+						DocumentedText += FirstToken + " " + SecondToken + "\t ; " + VarDesc->Replace("\n", "")->Replace("\r", "") + "\n";
+						continue;
+					}
+					else
+						DocumentedText += ReadLine + "\n";
+				}
+
+				break;
+			case ObScriptSemanticAnalysis::ScriptTokenType::ScriptName:
+				ScriptName = SecondToken;
+				break;
+			case ObScriptSemanticAnalysis::ScriptTokenType::Comment:
+				if (SkippedDescription)
+					DocumentedText += ReadLine + "\n";
+
+				break;
+			case ObScriptSemanticAnalysis::ScriptTokenType::Begin:
+				if (SkippedDescription == false)
+				{
+					SkippedDescription = true;
+					DocumentedText = "scn " + ScriptName + "\n\n" + FixedDescription + "\n";
+				}
+
+				DoneDocumenting = true;
+				DocumentedText += ReadLine + "\n";
+				break;
+			default:
+				if (SkippedDescription == false)
+				{
+					SkippedDescription = true;
+					DocumentedText = "scn " + ScriptName + "\n\n" + FixedDescription + "\n";
+				}
+
+				DocumentedText += ReadLine + "\n";
+				break;
+			}
+		}
+
+		if (SkippedDescription == false)
+			DocumentedText = "scn " + ScriptName + "\n\n" + FixedDescription + "\n";
+
+		DocumentedText = DocumentedText->Substring(0, DocumentedText->Length - 1);
 	}
 }

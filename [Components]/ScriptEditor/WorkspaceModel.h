@@ -11,8 +11,69 @@ namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
-		ref class ConcreteWorkspaceModelController;
-		ref class ConcreteWorkspaceModelFactory;
+		ref class ConcreteWorkspaceModel;
+
+		ref class ConcreteWorkspaceModelFactory : public IWorkspaceModelFactory
+		{
+			List<ConcreteWorkspaceModel^>^				Allocations;
+
+			ConcreteWorkspaceModelFactory();
+		public:
+			~ConcreteWorkspaceModelFactory();
+
+			property UInt32								Count
+			{
+				virtual UInt32 get() { return Allocations->Count; }
+				virtual void set(UInt32 e) {}
+			}
+
+			static ConcreteWorkspaceModelFactory^		Instance = gcnew ConcreteWorkspaceModelFactory;
+
+			void										Remove(ConcreteWorkspaceModel^ Allocation);
+
+			// IWorkspaceModelFactory
+			virtual IWorkspaceModel^				CreateModel(ComponentDLLInterface::ScriptData* Data);
+			virtual IWorkspaceModelController^		CreateController();
+		};
+
+		ref class ConcreteWorkspaceModelController : public IWorkspaceModelController
+		{
+		public:
+			virtual void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To);
+			virtual void					Unbind(IWorkspaceModel^ Model);
+
+			virtual void					SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack);
+			virtual String^					GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult);
+
+			virtual int						GetCaret(IWorkspaceModel^ Model);
+			virtual void					SetCaret(IWorkspaceModel^ Model, int Index);
+
+			virtual void					AcquireInputFocus(IWorkspaceModel^ Model);
+
+			virtual void					New(IWorkspaceModel^ Model);
+			virtual void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
+			virtual bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation);
+			virtual bool					Close(IWorkspaceModel^ Model);
+			virtual void					Next(IWorkspaceModel^ Model);
+			virtual void					Previous(IWorkspaceModel^ Model);
+			virtual void					CompileDepends(IWorkspaceModel^ Model);
+
+			virtual void					SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New);
+			virtual void					GotoLine(IWorkspaceModel^ Model, UInt32 Line);
+			virtual UInt32					GetLineCount(IWorkspaceModel^ Model);
+			virtual bool					Sanitize(IWorkspaceModel^ Model);
+			virtual void					BindToForm(IWorkspaceModel^ Model);
+
+			virtual void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
+			virtual void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
+
+			virtual int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+														String^ Query, String^ Replacement, UInt32 Options);
+
+			virtual bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);
+
+			virtual bool					ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg);
+		};
 
 		ref class ConcreteWorkspaceModel : public IWorkspaceModel
 		{
@@ -89,6 +150,11 @@ namespace ConstructionSetExtender
 				virtual bool get() { return NewScriptFlag; }
 				virtual void set(bool e) {}
 			}
+			property bool							Dirty
+			{
+				virtual bool get() { return TextEditor->GetModifiedStatus(); }
+				virtual void set(bool e) {}
+			}
 			property IWorkspaceModel::ScriptType	Type
 			{
 				virtual IWorkspaceModel::ScriptType get() { return CurrentScriptType; }
@@ -110,65 +176,6 @@ namespace ConstructionSetExtender
 				virtual void set(bool e) {}
 			}
 #pragma endregion
-		};
-
-		ref class ConcreteWorkspaceModelController : public IWorkspaceModelController
-		{
-		public:
-			virtual void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To) override;
-			virtual void					Unbind(IWorkspaceModel^ Model) override;
-
-			virtual void					SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack) override;
-			virtual String^					GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult) override;
-
-			virtual int						GetCaret(IWorkspaceModel^ Model) override;
-			virtual void					SetCaret(IWorkspaceModel^ Model, int Index) override;
-
-			virtual void					AcquireInputFocus(IWorkspaceModel^ Model) override;
-
-			virtual void					New(IWorkspaceModel^ Model) override;
-			virtual void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data) override;
-			virtual bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation) override;
-			virtual bool					Close(IWorkspaceModel^ Model) override;
-			virtual void					Next(IWorkspaceModel^ Model) override;
-			virtual void					Previous(IWorkspaceModel^ Model) override;
-			virtual void					CompileDepends(IWorkspaceModel^ Model) override;
-
-			virtual void					SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New) override;
-			virtual void					GotoLine(IWorkspaceModel^ Model, UInt32 Line) override;
-			virtual UInt32					GetLineCount(IWorkspaceModel^ Model) override;
-			virtual bool					Sanitize(IWorkspaceModel^ Model) override;
-			virtual void					BindToForm(IWorkspaceModel^ Model) override;
-
-			virtual void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile) override;
-			virtual void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension) override;
-
-			virtual int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
-														String^ Query, String^ Replacement, UInt32 Options) override;
-
-			virtual bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength) override;
-		};
-
-		ref class ConcreteWorkspaceModelFactory : public IWorkspaceModelFactory
-		{
-			List<ConcreteWorkspaceModel^>^				Allocations;
-
-			ConcreteWorkspaceModelFactory();
-			~ConcreteWorkspaceModelFactory();
-		public:
-			property UInt32								Count
-			{
-				virtual UInt32 get() { return Allocations->Count; }
-				virtual void set(UInt32 e) {}
-			}
-
-			static ConcreteWorkspaceModelFactory^		Instance = gcnew ConcreteWorkspaceModelFactory;
-
-			void										Remove(ConcreteWorkspaceModel^ Allocation);
-
-			// IWorkspaceModelFactory
-			virtual IWorkspaceModel^				CreateModel(ComponentDLLInterface::ScriptData* Data);
-			virtual IWorkspaceModelController^		CreateController();
 		};
 	}
 }

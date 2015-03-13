@@ -2,6 +2,7 @@
 #include "[Common]\CustomInputBox.h"
 #include "ScriptEditorPreferences.h"
 #include "IntelliSense\IntelliSenseDatabase.h"
+#include "RefactorTools.h"
 
 namespace ConstructionSetExtender
 {
@@ -34,11 +35,7 @@ namespace ConstructionSetExtender
 										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
 
-			TODO("move context menu, bookmarks, cse block serialization, code validation and preprocessing to AvalonEditTextEditor");
-			TODO("handle teh relevant shortcuts there");
-			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(CustomFont);
-			if (TabSize)
-				TextEditor->SetTabCharacterSize(TabSize);
+			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(this, CustomFont, TabSize);
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceModel::TextEditor_KeyDown);
 			TextEditorScriptModifiedHandler = gcnew TextEditors::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
@@ -117,16 +114,6 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
 			AutoSaveTimer->Stop();
-
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
-			TextEditor->SetFont(CustomFont);
-
-			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
-			if (TabSize == 0)
-				TabSize = 4;
-
-			TextEditor->SetTabCharacterSize(TabSize);
-
 			AutoSaveTimer->Interval = PREFERENCES->FetchSettingAsInt("AutoRecoverySavePeriod", "Backup") * 1000 * 60;
 			AutoSaveTimer->Start();
 		}
@@ -135,7 +122,7 @@ namespace ConstructionSetExtender
 		{
 			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup"))
 			{
-				if (Initialized == true && New == false && TextEditor->GetModifiedStatus() == true)
+				if (Initialized == true && New == false && TextEditor->Modified == true)
 				{
 					TextEditor->SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()),
 												 false, Description, "txt");
@@ -169,10 +156,10 @@ namespace ConstructionSetExtender
 				NewScriptFlag = false;
 
 				if (ScriptName != NEWSCRIPTID)
-					TextEditor->SetInitializingStatus(true);
+					TextEditor->Initializing = true;
 
 				TODO("clear editor's tracked data, i.e, bookmarks, etc")
-				TextEditor->SetText(ScriptText, false, true);
+				TextEditor->SetText(TextEditor->DeserializeMetadata(ScriptText), false, true);
 
 				if (Bound)
 					BoundParent->Enabled = true;
@@ -187,23 +174,22 @@ namespace ConstructionSetExtender
 				BoundParent->Description = Description;
 
 			SetType((IWorkspaceModel::ScriptType)ScriptType, Bound);
-			TextEditor->SetModifiedStatus(false);
+			TextEditor->Modified = false;
 
 			if (Bound)
 				BoundParent->Controller->SetByteCodeSize(BoundParent, ByteCodeLength);
 
-			TODO("modify TextEditor::GetText to take another argument to preprocess")
-			TextEditor->UpdateIntelliSenseLocalDatabase();
-
 			if (PartialUpdate == false && Data->Compiled == false && PREFERENCES->FetchSettingAsInt("WarnUncompiledScripts", "General"))
 			{
-				MessageBox::Show("The current script has not been compiled. It cannot be executed in-game until it has been compiled at least once.",
-								 SCRIPTEDITOR_TITLE,
-								 MessageBoxButtons::OK,
-								 MessageBoxIcon::Exclamation);
+				if (Bound)
+				{
+					BoundParent->Controller->MessageBox("The current script has not been compiled. It cannot be executed in-game until it has been compiled at least once.",
+														MessageBoxButtons::OK,
+														MessageBoxIcon::Exclamation);
+				}
 			}
 
-			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && PartialUpdate == false)
+			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && PartialUpdate == false && Bound)
 			{
 				String^ CachePath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + Description + ".txt";
 				if (System::IO::File::Exists(CachePath))
@@ -211,8 +197,7 @@ namespace ConstructionSetExtender
 					try
 					{
 						System::DateTime LastWriteTime = System::IO::File::GetLastWriteTime(CachePath);
-						if (MessageBox::Show("An auto-recovery cache for the script '" + Description + "' was found, dated " + LastWriteTime.ToShortDateString() + " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
-							SCRIPTEDITOR_TITLE,
+						if (BoundParent->Controller->MessageBox("An auto-recovery cache for the script '" + Description + "' was found, dated " + LastWriteTime.ToShortDateString() + " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
 							MessageBoxButtons::YesNo,
 							MessageBoxIcon::Information) == DialogResult::Yes)
 						{
@@ -233,10 +218,10 @@ namespace ConstructionSetExtender
 
 		bool ConcreteWorkspaceModel::DoHouseKeeping()
 		{
-			if (TextEditor->GetModifiedStatus())
+			if (TextEditor->Modified)
 			{
-				DialogResult Result = MessageBox::Show("The current script '" + CurrentScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
-													   SCRIPTEDITOR_TITLE,
+				Debug::Assert(Bound == true);
+				DialogResult Result = BoundParent->Controller->MessageBox("The current script '" + CurrentScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
 													   MessageBoxButtons::YesNoCancel,
 													   MessageBoxIcon::Exclamation);
 
@@ -266,6 +251,7 @@ namespace ConstructionSetExtender
 
 			BoundParent = To;
 			TODO("bind the listview to the text editor here");
+			TODO("bind the intellisense model to the view here");
 			BoundParent->Controller->AttachModelInternalView(BoundParent, this);
 		}
 
@@ -274,7 +260,7 @@ namespace ConstructionSetExtender
 			if (Bound)
 			{
 				BoundParent = nullptr;
-				TODO("unbind the listview");
+				TODO("unbind the listview and IS model");
 				BoundParent->Controller->DettachModelInternalView(BoundParent, this);
 			}
 		}
@@ -288,7 +274,7 @@ namespace ConstructionSetExtender
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				NewScriptFlag = true;
-				TextEditor->SetModifiedStatus(true);
+				TextEditor->Modified = true;
 			}
 		}
 
@@ -307,13 +293,13 @@ namespace ConstructionSetExtender
 			bool Result = false;
 			String^ Preprocessed = "";
 			String^ Unpreprocessed = "";
-			TODO("implement TextEditor::SerializeMetaData and TextEditor::CanCompile - preprocesses the text and runs the validator");
+			bool HasDirectives = false;
 
-			if (TextEditor->CanCompile())
+			if (TextEditor->CanCompile(HasDirectives))
 			{
 				bool Throwaway = false;
-				Preprocessed = TextEditor->GetText(true, Throwaway);
-				Unpreprocessed = TextEditor->GetText(false, Throwaway);
+				Preprocessed = TextEditor->GetPreprocessedText(Throwaway, true);
+				Unpreprocessed = TextEditor->GetText();
 
 				if (CurrentScript)
 				{
@@ -333,7 +319,7 @@ namespace ConstructionSetExtender
 					{
 						Setup(&CompileData->Script, true);
 
-						String^ OriginalText = Unpreprocessed + TextEditor->SerializeMetaData();
+						String^ OriginalText = Unpreprocessed + TextEditor->SerializeMetadata(HasDirectives);
 						CString OrgScriptText(OriginalText);
 						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
 						Result = true;
@@ -469,7 +455,10 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			return Concrete->TextEditor->GetText(Preprocess, PreprocessResult);
+			if (Preprocess)
+				return Concrete->TextEditor->GetPreprocessedText(PreprocessResult, true);
+			else
+				return Concrete->TextEditor->GetText();
 		}
 
 		int ConcreteWorkspaceModelController::GetCaret(IWorkspaceModel^ Model)
@@ -477,7 +466,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			return Concrete->TextEditor->GetCaretPos();
+			return Concrete->TextEditor->Caret;
 		}
 
 		void ConcreteWorkspaceModelController::SetCaret(IWorkspaceModel^ Model, int Index)
@@ -485,7 +474,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			Concrete->TextEditor->SetCaretPos(Index);
+			Concrete->TextEditor->Caret = Index;
 		}
 
 		void ConcreteWorkspaceModelController::AcquireInputFocus(IWorkspaceModel^ Model)
@@ -574,7 +563,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			return Concrete->TextEditor->GetTotalLineCount();
+			return Concrete->TextEditor->LineCount;
 		}
 
 		bool ConcreteWorkspaceModelController::Sanitize(IWorkspaceModel^ Model)
@@ -624,11 +613,11 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			if (Concrete->TextEditor->GetModifiedStatus())
+			if (Concrete->TextEditor->Modified)
 				return false;
 
 			bool PP = false;
-			String^ Preprocessed = Concrete->TextEditor->GetText(true, PP);
+			String^ Preprocessed = Concrete->TextEditor->GetPreprocessedText(PP, true);
 			if (PP == false)
 				return false;
 
@@ -636,6 +625,135 @@ namespace ConstructionSetExtender
 			OutBytecode = Concrete->CurrentScriptBytecode;
 			OutLength = Concrete->CurrentScriptBytecodeLength;
 			return true;
+		}
+
+		bool ConcreteWorkspaceModelController::ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg)
+		{
+			Debug::Assert(Model != nullptr);
+			Debug::Assert(Model->Bound == true);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+			bool Result = false;
+
+			// UI related code ought to be in the view but can't be bothered to refactor the refactor tools code
+			switch (Operation)
+			{
+			case ConstructionSetExtender::ScriptEditor::IWorkspaceModel::RefactorOperation::DocumentScript:
+				{
+					Refactoring::EditScriptComponentDialog DocumentScriptData(Concrete->BoundParent->WindowHandle,
+																			  Concrete->CurrentScriptEditorID,
+																			  Refactoring::EditScriptComponentDialog::OperationType::DocumentScript,
+																			  "Script Description");
+
+					if (DocumentScriptData.HasResult)
+					{
+						String^ Description = "";
+						DocumentScriptData.ResultData->LookupEditDataByName("Script Description", Description);
+						ObScriptSemanticAnalysis::Documenter^ Agent = gcnew ObScriptSemanticAnalysis::Documenter(Concrete->TextEditor->GetText());
+						Agent->Document(Description, DocumentScriptData.ResultData->AsTable());
+
+						Concrete->TextEditor->SetText(Agent->Output, false, false);
+						Result = true;
+					}
+				}
+
+				break;
+			case ConstructionSetExtender::ScriptEditor::IWorkspaceModel::RefactorOperation::RenameVariables:
+				{
+					Refactoring::EditScriptComponentDialog RenameVariablesData(Concrete->BoundParent->WindowHandle,
+																			   Concrete->CurrentScriptEditorID,
+																			   Refactoring::EditScriptComponentDialog::OperationType::RenameVariables,
+																			   "");
+
+					if (RenameVariablesData.HasResult)
+					{
+						List<CString^>^ StringAllocations = gcnew List<CString^>();
+						List<Refactoring::EditScriptComponentData::ScriptComponent^>^ RenameEntries = gcnew List<Refactoring::EditScriptComponentData::ScriptComponent^>();
+
+						for each (Refactoring::EditScriptComponentData::ScriptComponent^ Itr in RenameVariablesData.ResultData->ScriptComponentList)
+						{
+							if (Itr->EditData != "")
+								RenameEntries->Add(Itr);
+						}
+
+						if (RenameEntries->Count)
+						{
+							ComponentDLLInterface::ScriptVarRenameData* RenameData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateVarRenameData(RenameEntries->Count);
+
+							for (int i = 0; i < RenameData->ScriptVarListCount; i++)
+							{
+								ComponentDLLInterface::ScriptVarRenameData::ScriptVarInfo* Data = &RenameData->ScriptVarListHead[i];
+								CString^ OldID = gcnew CString(RenameEntries[i]->ElementName);
+								CString^ NewID = gcnew CString(RenameEntries[i]->EditData);
+
+								Data->OldName = OldID->c_str();
+								Data->NewName = NewID->c_str();
+
+								StringAllocations->Add(OldID);
+								StringAllocations->Add(NewID);
+							}
+
+							CString CEID(Concrete->CurrentScriptEditorID);
+							NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarNames(CEID.c_str(), RenameData);
+
+							for each (CString^ Itr in StringAllocations)
+								delete Itr;
+
+							NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(RenameData, false);
+
+							Result = true;
+						}
+
+						StringAllocations->Clear();
+						RenameEntries->Clear();
+					}
+				}
+
+				break;
+			case ConstructionSetExtender::ScriptEditor::IWorkspaceModel::RefactorOperation::ModifyVariableIndices:
+				{
+					Refactoring::ModifyVariableIndicesDialog ModifyIndicesData(Concrete->BoundParent->WindowHandle, Concrete->CurrentScriptEditorID);
+
+					if (ModifyIndicesData.IndicesUpdated)
+					{
+						Concrete->TextEditor->Modified = true;
+						Result = true;
+					}
+				}
+
+				break;
+			case ConstructionSetExtender::ScriptEditor::IWorkspaceModel::RefactorOperation::CreateUDF:
+				{
+					String^ UDFName = (String^)Arg;
+
+					Refactoring::CreateUDFImplementationDialog UDFData(Concrete->BoundParent->WindowHandle);
+
+					if (UDFData.HasResult)
+					{
+						String^ UDFScriptText = "scn " + UDFName + "\n\n";
+						String^ ParamList = "{ ";
+						for each (Refactoring::CreateUDFImplementationData::ParameterData^ Itr in UDFData.ResultData->ParameterList)
+						{
+							UDFScriptText += Itr->Type + " " + Itr->Name + "\n";
+							ParamList += Itr->Name + " ";
+						}
+						ParamList += "}";
+						if (UDFData.ResultData->ParameterList->Count)
+							UDFScriptText += "\n";
+
+						UDFScriptText += "begin function " + ParamList + "\n\nend\n";
+
+						NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
+						E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::SetText;
+						E->NewText = UDFScriptText;
+
+						Concrete->BoundParent->Controller->NewTab(Concrete->BoundParent, E);
+						Result = true;
+				}
+
+				break;
+			}
+
+			return Result;
 		}
 
 		// ConcreteWorkspaceModelFactory

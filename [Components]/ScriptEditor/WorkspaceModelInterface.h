@@ -1,13 +1,15 @@
 #pragma once
 
 #include "ScriptTextEditorInterface.h"
+#include "RefactorTools.h"
 
 namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
 		interface class IWorkspaceView;
-		interface class IWorkspaceViewController;
+		interface class IWorkspaceModelFactory;
+		interface class IWorkspaceModelController;
 
 		interface class IWorkspaceModel
 		{
@@ -26,11 +28,20 @@ namespace ConstructionSetExtender
 				SavePlugin,
 			};
 
+			static enum class RefactorOperation
+			{
+				DocumentScript,
+				RenameVariables,
+				ModifyVariableIndices,
+				CreateUDF,
+			};
+
 			property IWorkspaceModelFactory^		Factory;
 			property IWorkspaceModelController^		Controller;
 
 			property bool							Initialized;		// has a valid native script object
 			property bool							New;				// is a new script
+			property bool							Dirty;
 			property ScriptType						Type;
 			property String^						Description;		// EditorID [FormID]
 
@@ -41,46 +52,49 @@ namespace ConstructionSetExtender
 		interface class IWorkspaceModelController
 		{
 		public:
-			virtual void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To);		// attaches to the view for display
-			virtual void					Unbind(IWorkspaceModel^ Model);							// detaches from the view
+			void					Bind(IWorkspaceModel^ Model, IWorkspaceView^ To);		// attaches to the view for display
+			void					Unbind(IWorkspaceModel^ Model);							// detaches from the view
 
-			virtual void					SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack);
-			virtual String^					GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult);
+			void					SetText(IWorkspaceModel^ Model, String^ Text, bool ResetUndoStack);
+			String^					GetText(IWorkspaceModel^ Model, bool Preprocess, bool% PreprocessResult);
 
-			virtual int						GetCaret(IWorkspaceModel^ Model);
-			virtual void					SetCaret(IWorkspaceModel^ Model, int Index);
+			int						GetCaret(IWorkspaceModel^ Model);
+			void					SetCaret(IWorkspaceModel^ Model, int Index);
 
-			virtual void					AcquireInputFocus(IWorkspaceModel^ Model);
+			void					AcquireInputFocus(IWorkspaceModel^ Model);
 
-			virtual void					New(IWorkspaceModel^ Model);
-			virtual void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
-			virtual bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation);
-			virtual bool					Close(IWorkspaceModel^ Model);							// returns true if successful
-			virtual void					Next(IWorkspaceModel^ Model);
-			virtual void					Previous(IWorkspaceModel^ Model);
-			virtual void					CompileDepends(IWorkspaceModel^ Model);
+			void					New(IWorkspaceModel^ Model);
+			void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
+			bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation);
+			bool					Close(IWorkspaceModel^ Model);							// returns true if successful
+			void					Next(IWorkspaceModel^ Model);
+			void					Previous(IWorkspaceModel^ Model);
+			void					CompileDepends(IWorkspaceModel^ Model);
 
-			virtual void					SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New);
-			virtual void					GotoLine(IWorkspaceModel^ Model, UInt32 Line);
-			virtual UInt32					GetLineCount(IWorkspaceModel^ Model);
-			virtual bool					Sanitize(IWorkspaceModel^ Model);						// returns true if successful
-			virtual void					BindToForm(IWorkspaceModel^ Model);
+			void					SetType(IWorkspaceModel^ Model, IWorkspaceModel::ScriptType New);
+			void					GotoLine(IWorkspaceModel^ Model, UInt32 Line);
+			UInt32					GetLineCount(IWorkspaceModel^ Model);
+			bool					Sanitize(IWorkspaceModel^ Model);						// returns true if successful
+			void					BindToForm(IWorkspaceModel^ Model);
 
-			virtual void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
-			virtual void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
+			void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
+			void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			virtual int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 														String^ Query, String^ Replacement, UInt32 Options);
 
 											// returns false if the operation's invalid (unsaved changes)
-			virtual bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);
+			bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);
+
+											// returns true on success
+			bool					ApplyRefactor(IWorkspaceModel^ Model, IWorkspaceModel::RefactorOperation Operation, Object^ Arg);
 		};
 
 		interface class IWorkspaceModelFactory
 		{
 		public:
-			virtual IWorkspaceModel^				CreateModel(ComponentDLLInterface::ScriptData* Data);
-			virtual IWorkspaceModelController^		CreateController();
+			IWorkspaceModel^				CreateModel(ComponentDLLInterface::ScriptData* Data);
+			IWorkspaceModelController^		CreateController();
 		};
 	}
 }

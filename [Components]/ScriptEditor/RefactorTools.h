@@ -101,6 +101,7 @@ namespace ConstructionSetExtender
 				EditScriptComponentData() : ScriptComponentList(gcnew List<ScriptComponent^>()) {}
 
 				bool								LookupEditDataByName(String^ ElementName, String^% OutEditData);
+				Dictionary<String^, String^>^		AsTable();
 			};
 
 			ref class EditScriptComponentDialog : public System::Windows::Forms::Form

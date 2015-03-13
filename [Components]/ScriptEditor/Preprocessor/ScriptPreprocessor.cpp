@@ -28,7 +28,7 @@ namespace ConstructionSetExtender
 				String^ Prefix = ExpandedToken += Token->Substring(0, LocalParser->Indices[0]);		// gives us the controlchars to prepend
 				int TokenIndex = 0;
 
-				for each (String^% Itr in LocalParser->Tokens)
+				for each (String^ Itr in LocalParser->Tokens)
 				{
 					String^ TokenBuffer = Itr;
 
@@ -126,7 +126,7 @@ namespace ConstructionSetExtender
 		return Result->Substring(1);
 	}
 
-	String^ CSEPreprocessorDirective::ObfuscateToCompiler(String^% Token)
+	String^ CSEPreprocessorDirective::ObfuscateToCompiler(String^ Token)
 	{
 		String^ Result = "";
 		CSEStringReader^ TextReader = gcnew CSEStringReader(Token);
@@ -139,7 +139,7 @@ namespace ConstructionSetExtender
 		return Result->Substring(1);
 	}
 
-	bool DefineDirective::IsNameValid(String^% Name)
+	bool DefineDirective::IsNameValid(String^ Name)
 	{
 		bool Result = true;
 
@@ -247,7 +247,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	String^ DefineDirective::GetValue(String^% Prefix, DefineDirective::AccessoryOperatorType ActiveOperator)
+	String^ DefineDirective::GetValue(String^ Prefix, DefineDirective::AccessoryOperatorType ActiveOperator)
 	{
 		String^ Result = "";
 
@@ -279,12 +279,12 @@ namespace ConstructionSetExtender
 		return dynamic_cast<DefineDirective^>(this->MemberwiseClone());
 	}
 
-	DefineDirective::AccessoryOperatorType	DefineDirective::GetAccessoryOperatorFromToken(String^% Token)
+	DefineDirective::AccessoryOperatorType	DefineDirective::GetAccessoryOperatorFromToken(String^ Token)
 	{
 		AccessoryOperatorType ActiveOperator = AccessoryOperatorType::None;
 
 		UInt32 Index = 0;
-		for each (String^% Itr in DefineDirective::AccessoryOperatorIdentifier)
+		for each (String^ Itr in DefineDirective::AccessoryOperatorIdentifier)
 		{
 			if (Token->IndexOf(Itr) == 0 && Index != (UInt32)ActiveOperator)
 			{
@@ -377,14 +377,14 @@ namespace ConstructionSetExtender
 			return ImportSegment;
 	}
 
-	void EnumDirective::ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance, UInt32 LineNumber)
+	void EnumDirective::ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
 		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
 
 		LocalParser->Tokenize(Source, false);
 		float PreviousValue = 0;
 
-		for each (String^% Itr in LocalParser->Tokens)
+		for each (String^ Itr in LocalParser->Tokens)
 		{
 			String^ Name;
 			String^ ValueString;
@@ -515,7 +515,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance )
+	bool IfDirective::Operator::Evaluator( BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance )
 	{
 		bool Result = false;
 		try
@@ -611,7 +611,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	IfDirective::Operator^ IfDirective::LookupOperatorByIdentifier(String^% Identifier)
+	IfDirective::Operator^ IfDirective::LookupOperatorByIdentifier(String^ Identifier)
 	{
 		for each (Operator^ Itr in OperatorList)
 		{
@@ -621,7 +621,7 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	bool IfDirective::ParseAsInt(String^% Source, int% Result)
+	bool IfDirective::ParseAsInt(String^ Source, int% Result)
 	{
 		int ParseResult = 0;
 
@@ -635,7 +635,7 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	void IfDirective::ProcessOperands(String^% LHSSource, String^% RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^% PreprocessorInstance)
+	void IfDirective::ProcessOperands(String^ LHSSource, String^ RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^ PreprocessorInstance)
 	{
 		String^ OperandBuffer = LHSSource;
 		DefineDirective::AccessoryOperatorType DefineOperator = DefineDirective::GetAccessoryOperatorFromToken(OperandBuffer);
@@ -664,47 +664,47 @@ namespace ConstructionSetExtender
 		RHSResult = ((RHSDirective)?(RHSDirective->GetValue(gcnew String(""), DefineOperator)):RHSSource);
 	}
 
-	bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::Equal, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::LessThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::GreaterThanOrEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::LessThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::GreaterThan, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::NotEqual, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::LogicalAND, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		return Operator::Evaluator(Operator::BuiltInOperators::LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::ConvertInfixExpressionToPostFix(String^% Source, String^% Result, StandardOutputError^ ErrorOutput)
+	bool IfDirective::ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput)
 	{
 		bool OperationResult = false;				// uses the shunting-yard algorithm
 
@@ -802,7 +802,7 @@ namespace ConstructionSetExtender
 		return OperationResult;
 	}
 
-	bool IfDirective::CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance)
+	bool IfDirective::CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		bool Result = false;
 
@@ -935,7 +935,7 @@ namespace ConstructionSetExtender
 		Busy = false;
 	}
 
-	Preprocessor^% Preprocessor::GetSingleton()
+	Preprocessor^ Preprocessor::GetSingleton()
 	{
 		if (Singleton == nullptr)
 			Singleton = gcnew Preprocessor();
@@ -953,7 +953,7 @@ namespace ConstructionSetExtender
 			RegisteredDefineDirectives->AddLast(Directive->CreateCopy());
 	}
 
-	DefineDirective^ Preprocessor::LookupDefineDirectiveByName(String^% Name)
+	DefineDirective^ Preprocessor::LookupDefineDirectiveByName(String^ Name)
 	{
 		for each (DefineDirective^ Itr in RegisteredDefineDirectives)
 		{
@@ -997,9 +997,10 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	bool Preprocessor::Preprocess(String^% Source, String^% Result, StandardOutputError^ ErrorOutput)
+	bool Preprocessor::Preprocess(String^ Source, String^% Result, StandardOutputError^ ErrorOutput)
 	{
 		bool OperationResult = false;
+		DataBuffer->ContainsDirectives = false;
 		String^ PreprocessedText = "";
 
 		try
@@ -1035,6 +1036,7 @@ namespace ConstructionSetExtender
 								if (LocalParser->GetTokenIndex(";" + CSEPreprocessorDirective::EncodingIdentifier[(int)Encoding] + Directive) == 0)
 								{
 									ThisToken = CreateDirectiveFromIdentifier(Encoding, Directive, ReadLine, TextReader, ErrorOutput);
+									DataBuffer->ContainsDirectives = true;
 									TokenIsDirective = true;
 									break;
 								}
@@ -1076,7 +1078,7 @@ namespace ConstructionSetExtender
 		return OperationResult;
 	}
 
-	bool Preprocessor::PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data)
+	bool Preprocessor::PreprocessScript(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data)
 	{
 		bool OperationResult = false;
 
@@ -1147,7 +1149,7 @@ namespace ConstructionSetExtender
 			DebugPrint("Standard preprocessor directives folder not found!");
 	}
 
-	bool Preprocessor::GetImportFilePath( String^% Source, String^% Result, ScriptEditorPreprocessorData^ Data )
+	bool Preprocessor::GetImportFilePath( String^ Source, String^% Result, ScriptEditorPreprocessorData^ Data )
 	{
 		bool OperationResult = false;
 

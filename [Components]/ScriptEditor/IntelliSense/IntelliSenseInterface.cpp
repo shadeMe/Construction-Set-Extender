@@ -12,22 +12,11 @@ namespace ConstructionSetExtender
 
 	namespace IntelliSense
 	{
-		int IntelliSenseItemSorter::Compare( ListViewItem^ X, ListViewItem^ Y )
+		IntelliSenseInterface::IntelliSenseInterface(TextEditors::IScriptTextEditor^ Parent)
 		{
-			int Result = -1;
-			Result = String::Compare((dynamic_cast<IntelliSenseItem^>(X->Tag))->GetIdentifier(),
-									(dynamic_cast<IntelliSenseItem^>(Y->Tag))->GetIdentifier(),
-									true);
+			Debug::Assert(Parent != nullptr);
 
-			if (Order == SortOrder::Descending)
-				Result *= -1;
-
-			return Result;
-		}
-
-		IntelliSenseInterface::IntelliSenseInterface(UInt32 ParentWorkspaceIndex)
-		{
-			this->ParentWorkspaceIndex = ParentWorkspaceIndex;
+			ParentEditor = Parent;
 
 			IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
 			LocalVariableDatabase = gcnew List<IntelliSenseItem^>();
@@ -106,6 +95,34 @@ namespace ConstructionSetExtender
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 		}
 
+		IntelliSenseInterface::~IntelliSenseInterface()
+		{
+			Reset();
+			HideQuickViewToolTip();
+
+			DestructionFlag = true;
+			RemoteScript = nullptr;
+
+			IntelliSenseBox->Closing -= IntelliSenseBoxCancelHandler;
+			IntelliSenseList->SelectedIndexChanged -= IntelliSenseListSelectedIndexChangedHandler;
+			IntelliSenseList->KeyDown -= IntelliSenseListKeyDownHandler;
+			IntelliSenseList->MouseDoubleClick -= IntelliSenseListMouseDoubleClickHandler;
+			IntelliSenseList->RetrieveVirtualItem -= IntelliSenseListRetrieveVirtualItemEventHandler;
+			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+
+			for each (Image^ Itr in IntelliSenseList->SmallImageList->Images)
+				delete Itr;
+
+			IntelliSenseList->SmallImageList->Images->Clear();
+			IntelliSenseList->SmallImageList = nullptr;
+			LocalVariableDatabase->Clear();
+			VirtualListCache->Clear();
+			IntelliSenseBox->Close();
+
+			delete IntelliSenseBox;
+			delete IntelliSenseList;
+		}
+
 		void IntelliSenseInterface::DisplayToolTip(String^ Title, String^ Message, Point Location, IntPtr ParentHandle, UInt32 Duration)
 		{
 			InfoToolTip->Tag = ParentHandle;
@@ -136,8 +153,7 @@ namespace ConstructionSetExtender
 			if (ForceDisplay)
 				OverrideThresholdCheck = true;
 
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-			String^ CurrentToken = ParentEditor->GetCurrentToken();
+			String^ CurrentToken = ParentEditor->GetTokenAtCaretPos();
 
 			switch (DisplayOperation)
 			{
@@ -311,8 +327,6 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterface::IntelliSenseList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 		{
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-
 			if (Visible)
 			{
 				int Index = GetListViewSelectedItemIndex(IntelliSenseList);
@@ -412,10 +426,9 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterface::PickSelection()
 		{
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
 			int Index = GetListViewSelectedItemIndex(IntelliSenseList);
 
-			ParentEditor->Focus();
+			ParentEditor->FocusTextArea();
 
 			if (Index != -1)
 			{
@@ -445,17 +458,13 @@ namespace ConstructionSetExtender
 
 		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken)
 		{
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-
-			return ShowQuickViewTooltip(MainToken, ParentToken, ParentEditor->GetCaretLocation(true));
+			return ShowQuickViewTooltip(MainToken, ParentToken, ParentEditor->GetAbsolutePositionFromCharIndex(ParentEditor->GetCaretPos()));
 		}
 
 		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point Location)
 		{
 			if (UseQuickView == false)
 				return false;
-
-			ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
 
 			CString CStr(ParentToken);
 			ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
@@ -489,41 +498,13 @@ namespace ConstructionSetExtender
 				DisplayToolTip(Item->GetItemTypeID(),
 					Item->Describe(),
 					Location,
-					ParentEditor->GetEditorBoxHandle(),
+					ParentEditor->GetHandle(),
 					8000);
 
 				return true;
 			}
 			else
 				return false;
-		}
-
-		void IntelliSenseInterface::Destroy()
-		{
-			Reset();
-			HideQuickViewToolTip();
-
-			DestructionFlag = true;
-			RemoteScript = nullptr;
-
-			IntelliSenseBox->Closing -= IntelliSenseBoxCancelHandler;
-			IntelliSenseList->SelectedIndexChanged -= IntelliSenseListSelectedIndexChangedHandler;
-			IntelliSenseList->KeyDown -= IntelliSenseListKeyDownHandler;
-			IntelliSenseList->MouseDoubleClick -= IntelliSenseListMouseDoubleClickHandler;
-			IntelliSenseList->RetrieveVirtualItem -= IntelliSenseListRetrieveVirtualItemEventHandler;
-			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
-
-			for each (Image^ Itr in IntelliSenseList->SmallImageList->Images)
-				delete Itr;
-
-			IntelliSenseList->SmallImageList->Images->Clear();
-			IntelliSenseList->SmallImageList = nullptr;
-			LocalVariableDatabase->Clear();
-			VirtualListCache->Clear();
-			IntelliSenseBox->Close();
-
-			delete IntelliSenseBox;
-			delete IntelliSenseList;
 		}
 
 		void IntelliSenseInterface::EnumerateItem( IntelliSenseItem^ Item )
@@ -576,13 +557,12 @@ namespace ConstructionSetExtender
 		{
 			if (AllowHidden || IntelliSenseBox->Visible)
 			{
-				ScriptEditor::Workspace^ ParentEditor = SEMGR->GetAllocatedWorkspace(ParentWorkspaceIndex);
-				Point Location = ParentEditor->GetCaretLocation(true);
+				Point Location = ParentEditor->GetAbsolutePositionFromCharIndex(ParentEditor->GetCaretPos());
 
 				Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
-				IntelliSenseBox->ShowForm(ParentEditor->GetScreenPoint(Location), ParentEditor->GetControlBoxHandle(), (IntelliSenseBox->Visible == false));
+				IntelliSenseBox->ShowForm(ParentEditor->PointToScreen(Location), ParentEditor->GetHandle(), (IntelliSenseBox->Visible == false));
 
-				ParentEditor->Focus();
+				ParentEditor->FocusTextArea();
 			}
 		}
 	}

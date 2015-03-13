@@ -1,6 +1,9 @@
 #include "AvalonEditTextEditor.h"
 #include "Globals.h"
 #include "ScriptEditorPreferences.h"
+#include "IntelliSense/IntelliSenseDatabase.h"
+#include "[Common]/CustomInputBox.h"
+#include "RefactorTools.h"
 
 using namespace ICSharpCode::AvalonEdit::Rendering;
 using namespace ICSharpCode::AvalonEdit::Document;
@@ -85,733 +88,11 @@ namespace ConstructionSetExtender
 				int GetStartOffset() { return StartOffset; }
 			};
 
-#pragma region Interface Methods
-			void AvalonEditTextEditor::SetFont(Font^ FontObject)
-			{
-				TextField->FontFamily = gcnew Windows::Media::FontFamily(FontObject->FontFamily->Name);
-				TextField->FontSize = FontObject->Size;
-				if (FontObject->Style == Drawing::FontStyle::Bold)
-					TextField->FontWeight = Windows::FontWeights::Bold;
-				else
-					TextField->FontWeight = Windows::FontWeights::Regular;
-			}
-
-			void AvalonEditTextEditor::SetTabCharacterSize(int PixelWidth)
-			{
-				TextField->Options->IndentationSize = PixelWidth;
-			}
-
-			void AvalonEditTextEditor::SetContextMenu(ContextMenuStrip^% Strip)
-			{
-				WinFormsContainer->ContextMenuStrip = Strip;
-			}
-
-			void AvalonEditTextEditor::AddControl(Control^ ControlObject)
-			{
-				WinFormsContainer->Controls->Add(ControlObject);
-			}
-
-			String^ AvalonEditTextEditor::GetText(void)
-			{
-				return SanitizeUnicodeString(TextField->Text);
-			}
-
-			String^ AvalonEditTextEditor::GetTextAtLine( int LineNumber )
-			{
-				if (LineNumber > TextField->Document->LineCount || LineNumber <= 0)
-					return "";
-				else
-					return TextField->Document->GetText(TextField->Document->GetLineByNumber(LineNumber));
-			}
-
-			UInt32 AvalonEditTextEditor::GetTextLength(void)
-			{
-				return TextField->Text->Length;
-			}
-
-			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack)
-			{
-				Text = SanitizeUnicodeString(Text);
-
-				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-
-				if (SetTextAnimating)
-				{
-					if (ResetUndoStack)
-						TextField->Text = Text;
-					else
-					{
-						SetSelectionStart(0);
-						SetSelectionLength(GetTextLength());
-						SetSelectedText(Text, false);
-						SetSelectionLength(0);
-					}
-
-					UpdateSemanticAnalysisCache(true, true);
-					UpdateCodeFoldings();
-					UpdateSyntaxHighlighting(false);
-				}
-				else
-				{
-					SetTextAnimating = true;
-
-					TextFieldPanel->Children->Add(AnimationPrimitive);
-
-					AnimationPrimitive->Fill =  gcnew System::Windows::Media::VisualBrush(TextField);
-					AnimationPrimitive->Height = TextField->ActualHeight;
-					AnimationPrimitive->Width = TextField->ActualWidth;
-
-					TextFieldPanel->Children->Remove(TextField);
-
-					System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0,
-						0.0,
-						System::Windows::Duration(System::TimeSpan::FromSeconds(kSetTextFadeAnimationDuration)),
-						System::Windows::Media::Animation::FillBehavior::Stop);
-					SetTextPrologAnimationCache = FadeOutAnimation;
-
-					FadeOutAnimation->Completed += SetTextAnimationCompletedHandler;
-					System::Windows::Media::Animation::Storyboard^ FadeOutStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
-					FadeOutStoryBoard->Children->Add(FadeOutAnimation);
-					FadeOutStoryBoard->SetTargetName(FadeOutAnimation, AnimationPrimitive->Name);
-					FadeOutStoryBoard->SetTargetProperty(FadeOutAnimation, gcnew System::Windows::PropertyPath(AnimationPrimitive->OpacityProperty));
-					FadeOutStoryBoard->Begin(TextFieldPanel);
-
-					if (ResetUndoStack)
-						TextField->Text = Text;
-					else
-					{
-						SetSelectionStart(0);
-						SetSelectionLength(GetTextLength());
-						SetSelectedText(Text, false);
-						SetSelectionLength(0);
-					}
-
-					UpdateSemanticAnalysisCache(true, true);
-					UpdateCodeFoldings();
-					UpdateSyntaxHighlighting(false);
-				}
-			}
-
-			void AvalonEditTextEditor::InsertText( String^ Text, int Index, bool PreventTextChangedEventHandling )
-			{
-				if (Index > GetTextLength())
-					Index = GetTextLength();
-
-				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-
-				TextField->Document->Insert(Index, Text);
-			}
-
-			String^ AvalonEditTextEditor::GetSelectedText(void)
-			{
-				return TextField->SelectedText;
-			}
-
-			void AvalonEditTextEditor::SetSelectedText(String^ Text, bool PreventTextChangedEventHandling)
-			{
-				if (PreventTextChangedEventHandling)
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-
-				TextField->SelectedText = Text;
-			}
-
-			void AvalonEditTextEditor::SetSelectionStart(int Index)
-			{
-				TextField->SelectionStart = Index;
-			}
-
-			void AvalonEditTextEditor::SetSelectionLength(int Length)
-			{
-				TextField->SelectionLength = Length;
-			}
-
-			bool AvalonEditTextEditor::GetInSelection(int Index)
-			{
-				return TextField->TextArea->Selection->Contains(Index);
-			}
-
-			int AvalonEditTextEditor::GetCharIndexFromPosition(Point Position)
-			{
-				Nullable<AvalonEdit::TextViewPosition> TextPos = TextField->TextArea->TextView->GetPosition(Windows::Point(Position.X, Position.Y));
-				if (TextPos.HasValue)
-					return TextField->Document->GetOffset(TextPos.Value.Line, TextPos.Value.Column);
-				else
-					return GetTextLength() + 1;
-			}
-
-			Point AvalonEditTextEditor::GetPositionFromCharIndex(int Index)
-			{
-				AvalonEdit::Document::TextLocation Location = TextField->Document->GetLocation(Index);
-				Windows::Point Result = TextField->TextArea->TextView->GetVisualPosition(AvalonEdit::TextViewPosition(Location), AvalonEdit::Rendering::VisualYPosition::TextTop) - TextField->TextArea->TextView->ScrollOffset;
-
-				return Point(Result.X, Result.Y);
-			}
-
-			Point AvalonEditTextEditor::GetAbsolutePositionFromCharIndex( int Index )
-			{
-				Point Result = GetPositionFromCharIndex(Index);
-
-				for each (System::Windows::UIElement^ Itr in TextField->TextArea->LeftMargins)
-					Result.X += (dynamic_cast<System::Windows::FrameworkElement^>(Itr))->ActualWidth;
-
-				return Result;
-			}
-
-			int AvalonEditTextEditor::GetLineNumberFromCharIndex(int Index)
-			{
-				if (Index == -1 || TextField->Text->Length == 0)
-					return 1;
-				else if (Index >= TextField->Text->Length)
-					Index = TextField->Text->Length - 1;
-
-				return TextField->Document->GetLocation(Index).Line;
-			}
-
-			bool AvalonEditTextEditor::GetCharIndexInsideCommentSegment(int Index)
-			{
-				bool Result = true;
-
-				if (Index >= 0 && Index < TextField->Text->Length)
-				{
-					AvalonEdit::Document::DocumentLine^ Line = TextField->Document->GetLineByOffset(Index);
-					ScriptParser^ LocalParser = gcnew ScriptParser();
-					LocalParser->Tokenize(TextField->Document->GetText(Line), false);
-					if (LocalParser->GetCommentTokenIndex(LocalParser->GetTokenIndex(GetTextAtLocation(Index, false))) == -1)
-						Result = false;
-				}
-
-				return Result;
-			}
-
-			int AvalonEditTextEditor::GetCurrentLineNumber(void)
-			{
-				return TextField->TextArea->Caret->Line;
-			}
-
-			String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
-			{
-				return GetTextAtLocation(Offset, false)->Replace("\r\n", "")->Replace("\n", "");
-			}
-
-			String^ AvalonEditTextEditor::GetTokenAtCaretPos()
-			{
-				return GetTextAtLocation(GetCaretPos() - 1, false)->Replace("\r\n", "")->Replace("\n", "");
-			}
-
-			void AvalonEditTextEditor::SetTokenAtCaretPos(String^ Replacement)
-			{
-				GetTextAtLocation(GetCaretPos() - 1, true);
-				TextField->SelectedText	= Replacement;
-				SetCaretPos(TextField->SelectionStart + TextField->SelectionLength);
-			}
-
-			String^ AvalonEditTextEditor::GetTokenAtMouseLocation()
-			{
-				return GetTextAtLocation(LastKnownMouseClickOffset, false)->Replace("\r\n", "")->Replace("\n", "");
-			}
-
-			array<String^>^ AvalonEditTextEditor::GetTokensAtMouseLocation()
-			{
-				return GetTextAtLocation(LastKnownMouseClickOffset);
-			}
-
-			int AvalonEditTextEditor::GetCaretPos()
-			{
-				return TextField->TextArea->Caret->Offset;
-			}
-
-			void AvalonEditTextEditor::SetCaretPos(int Index)
-			{
-				TextField->SelectionLength = 0;
-				if (Index > GetTextLength())
-					Index = GetTextLength() - 1;
-
-				if (Index > -1)
-					TextField->TextArea->Caret->Offset = Index;
-				else
-					TextField->TextArea->Caret->Offset = 0;
-
-				ScrollToCaret();
-			}
-
-			void AvalonEditTextEditor::ScrollToCaret()
-			{
-				TextField->TextArea->Caret->BringCaretToView();
-			}
-
-			IntPtr AvalonEditTextEditor::GetHandle()
-			{
-				return WinFormsContainer->Handle;
-			}
-
-			void AvalonEditTextEditor::FocusTextArea()
-			{
-				TextField->Focus();
-			}
-
-			void AvalonEditTextEditor::LoadFileFromDisk(String^ Path)
-			{
-				try
-				{
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
-					StreamReader^ Reader = gcnew StreamReader(Path);
-					String^ FileText = Reader->ReadToEnd();
-					SetText(FileText, false, false);
-					Reader->Close();
-					SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
-				}
-				catch (Exception^ E)
-				{
-					DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
-				}
-			}
-
-			void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension)
-			{
-				if (PathIncludesFileName == false)
-					Path += "\\" + DefaultName + "." + DefaultExtension;
-
-				try
-				{
-					TextField->Save(Path);
-				}
-				catch (Exception^ E)
-				{
-					DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
-				}
-			}
-
-			bool AvalonEditTextEditor::GetModifiedStatus()
-			{
-				return ModifiedFlag;
-			}
-
-			void AvalonEditTextEditor::SetModifiedStatus(bool Modified)
-			{
-				ModifiedFlag = Modified;
-
-				switch (Modified)
-				{
-				case true:
-					ErrorColorizer->ClearLines();
-
-					if (TextFieldInUpdateFlag == false)
-						ClearFindResultIndicators();
-
-					break;
-				case false:
-					break;
-				}
-
-				OnScriptModified(Modified);
-			}
-
-			bool AvalonEditTextEditor::GetInitializingStatus()
-			{
-				return InitializingFlag;
-			}
-
-			void AvalonEditTextEditor::SetInitializingStatus(bool Initializing)
-			{
-				InitializingFlag = Initializing;
-			}
-
-			int AvalonEditTextEditor::GetLastKnownMouseClickOffset()
-			{
-				if (LastKnownMouseClickOffset == -1)
-					LastKnownMouseClickOffset = 0;
-
-				return LastKnownMouseClickOffset;
-			}
-
-			int AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options)
-			{
-				int Hits = 0;
-
-				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
-				{
-					ClearFindResultIndicators();
-					BeginUpdate();
-				}
-
-				try
-				{
-					String^ Pattern = "";
-
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::RegEx))
-						Pattern = Query;
-					else
-					{
-						Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
-						if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::MatchWholeWord))
-							Pattern = "\\b" + Pattern + "\\b";
-					}
-
-					System::Text::RegularExpressions::Regex^ Parser = nullptr;
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::CaseInsensitive))
-					{
-						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
-										System::Text::RegularExpressions::RegexOptions::IgnoreCase|System::Text::RegularExpressions::RegexOptions::Singleline);
-					}
-					else
-					{
-						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
-										System::Text::RegularExpressions::RegexOptions::Singleline);
-					}
-
-					AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
-
-					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::InSelection))
-					{
-						if (TextSelection->IsEmpty == false)
-						{
-							AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
-
-							for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
-							{
-								FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
-								LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
-
-								for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
-								{
-									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Output, Options);
-									Hits += Matches;
-
-									if (Matches == -1)
-									{
-										Hits = -1;
-										break;
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						for each (DocumentLine^ Line in TextField->Document->Lines)
-						{
-							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Output, Options);
-							Hits += Matches;
-
-							if (Matches == -1)
-							{
-								Hits = -1;
-								break;
-							}
-						}
-					}
-				}
-				catch (Exception^ E)
-				{
-					Hits = -1;
-					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
-				}
-
-				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
-				{
-					SetSelectionLength(0);
-					RefreshBGColorizerLayer();
-					EndUpdate(false);
-				}
-
-				if (Hits == -1)
-				{
-					MessageBox::Show("An error was encountered while performing the find/replace operation. Please recheck your search and/or replacement strings.",
-									SCRIPTEDITOR_TITLE,
-									MessageBoxButtons::OK,
-									MessageBoxIcon::Exclamation);
-				}
-
-				return Hits;
-			}
-
-			void AvalonEditTextEditor::ToggleComment(int StartIndex)
-			{
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
-				BeginUpdate();
-
-				AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
-				if (TextSelection->IsEmpty)
-				{
-					AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(StartIndex);
-					if (Line != nullptr)
-					{
-						int FirstOffset = -1;
-						for (int i = Line->Offset; i <= Line->EndOffset; i++)
-						{
-							char FirstChar = TextField->TextArea->Document->GetCharAt(i);
-							if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
-								AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
-							{
-								FirstOffset = i;
-								break;
-							}
-						}
-
-						if (FirstOffset != -1)
-						{
-							char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
-							if (FirstChar == ';')
-								TextField->TextArea->Document->Replace(FirstOffset, 1, "");
-							else
-								TextField->TextArea->Document->Insert(FirstOffset, ";");
-						}
-					}
-				}
-				else
-				{
-					AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
-
-					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
-					{
-						FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
-						LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
-
-						for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
-						{
-							int FirstOffset = -1;
-							for (int i = Itr->Offset; i < TextField->Text->Length && i <= Itr->EndOffset; i++)
-							{
-								char FirstChar = TextField->TextArea->Document->GetCharAt(i);
-								if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
-									AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
-								{
-									FirstOffset = i;
-									break;
-								}
-							}
-
-							if (FirstOffset != -1)
-							{
-								char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
-
-								if (FirstChar == ';')
-								{
-									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-									TextField->TextArea->Document->Replace(FirstOffset, 1, "");
-								}
-								else
-								{
-									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-									TextField->TextArea->Document->Insert(FirstOffset, ";");
-								}
-							}
-						}
-					}
-				}
-
-				EndUpdate(false);
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
-			}
-
-			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
-			{
-				IntelliSenseBox->UpdateLocalVariableDatabase(SemanticAnalysisCache);
-			}
-
-			void AvalonEditTextEditor::ScrollToLine(String^ LineNumber)
-			{
-				int LineNo = 0;
-				try { LineNo = Int32::Parse(LineNumber); } catch (...) { return; }
-
-				GotoLine(LineNo);
-			}
-
-			void AvalonEditTextEditor::ScrollToLine(UInt32 LineNumber)
-			{
-				GotoLine(LineNumber);
-			}
-
-			void AvalonEditTextEditor::OnGotFocus(void)
-			{
-				FocusTextArea();
-
-				IsFocused = true;
-				SemanticAnalysisTimer->Start();
-				ScrollBarSyncTimer->Start();
-			}
-
-			void AvalonEditTextEditor::HighlightScriptError(int Line)
-			{
-				ErrorColorizer->AddLine(Line);
-				RefreshBGColorizerLayer();
-			}
-
-			void AvalonEditTextEditor::OnLostFocus( void )
-			{
-				IsFocused = false;
-				SemanticAnalysisTimer->Stop();
-				ScrollBarSyncTimer->Stop();
-				IntelliSenseBox->Hide();
-			}
-
-			void AvalonEditTextEditor::ClearScriptErrorHighlights(void)
-			{
-				ErrorColorizer->ClearLines();
-			}
-
-			Point AvalonEditTextEditor::PointToScreen(Point Location)
-			{
-				return WinFormsContainer->PointToScreen(Location);
-			}
-
-			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber)
-			{
-				TODO("inconsistent")
-				return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
-			}
-
-			void AvalonEditTextEditor::SetEnabledState(bool State)
-			{
-				WPFHost->Enabled = State;
-			}
-
-			void AvalonEditTextEditor::OnPositionSizeChange(void)
-			{
-				IntelliSenseBox->Hide();
-			}
-
-			void AvalonEditTextEditor::BeginUpdate( void )
-			{
-				if (TextFieldInUpdateFlag)
-					throw gcnew CSEGeneralException("Text editor is already being updated.");
-
-				TextFieldInUpdateFlag = true;
-				TextField->Document->BeginUpdate();
-
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
-			}
-
-			void AvalonEditTextEditor::EndUpdate( bool FlagModification )
-			{
-				if (TextFieldInUpdateFlag == false)
-					throw gcnew CSEGeneralException("Text editor isn't being updated.");
-
-				TextField->Document->EndUpdate();
-				TextFieldInUpdateFlag = false;
-
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
-
-				if (FlagModification)
-					SetModifiedStatus(true);
-			}
-
-			UInt32 AvalonEditTextEditor::GetTotalLineCount( void )
-			{
-				return TextField->Document->LineCount;
-			}
-
-			IntelliSense::IntelliSenseInterface^ AvalonEditTextEditor::GetIntelliSenseInterface( void )
-			{
-				return IntelliSenseBox;
-			}
-
-			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
-			{
-				if (GetModifiedStatus())
-					UpdateSemanticAnalysisCache(false, true);
-
-				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
-			}
-
-			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
-			{
-				if (GetModifiedStatus())
-					UpdateSemanticAnalysisCache(true, false);
-
-				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
-				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
-				if (InsertionLine == 0)
-					InsertText(Declaration, TextField->Document->GetOffset(TextField->Document->LineCount, 1), true);
-				else
-				{
-					if (InsertionLine - 1 == TextField->Document->LineCount)
-					{
-						int Offset = TextField->Document->GetLineByNumber(TextField->Document->LineCount)->EndOffset;
-						InsertText("\n", Offset, true);
-					}
-					else if (InsertionLine > TextField->Document->LineCount)
-						InsertionLine = TextField->Document->LineCount;
-
-					InsertText(Declaration, TextField->Document->GetOffset(InsertionLine, 1), true);
-				}
-			}
-#pragma endregion
-
-#pragma region Methods
-			void AvalonEditTextEditor::Destroy()
-			{
-				TextField->Clear();
-				MiddleMouseScrollTimer->Stop();
-				ScrollBarSyncTimer->Stop();
-				SemanticAnalysisTimer->Stop();
-				CodeFoldingManager->Clear();
-				AvalonEdit::Folding::FoldingManager::Uninstall(CodeFoldingManager);
-
-				for each (AvalonEdit::Rendering::IBackgroundRenderer^ Itr in TextField->TextArea->TextView->BackgroundRenderers)
-					delete Itr;
-
-				TextField->TextArea->TextView->BackgroundRenderers->Clear();
-
-				TextField->TextChanged -= TextFieldTextChangedHandler;
-				TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
-				TextField->TextArea->SelectionChanged -= TextFieldSelectionChangedHandler;
-				TextField->TextArea->TextCopied -= TextFieldTextCopiedHandler;
-				TextField->LostFocus -= TextFieldLostFocusHandler;
-				TextField->TextArea->TextView->ScrollOffsetChanged -= TextFieldScrollOffsetChangedHandler;
-				TextField->PreviewKeyUp -= TextFieldKeyUpHandler;
-				TextField->PreviewKeyDown -= TextFieldKeyDownHandler;
-				TextField->PreviewMouseDown -= TextFieldMouseDownHandler;
-				TextField->PreviewMouseUp -= TextFieldMouseUpHandler;
-				TextField->PreviewMouseWheel -= TextFieldMouseWheelHandler;
-				TextField->PreviewMouseHover -= TextFieldMouseHoverHandler;
-				TextField->PreviewMouseHoverStopped -= TextFieldMouseHoverStoppedHandler;
-				TextField->PreviewMouseMove -= TextFieldMiddleMouseScrollMoveHandler;
-				TextField->PreviewMouseDown -= TextFieldMiddleMouseScrollDownHandler;
-				MiddleMouseScrollTimer->Tick -= MiddleMouseScrollTimerTickHandler;
-				ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
-				ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
-				ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
-				SemanticAnalysisTimer->Tick -= SemanticAnalysisTimerTickHandler;
-				PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
-
-				TextFieldPanel->Children->Clear();
-				WPFHost->Child = nullptr;
-				WinFormsContainer->Controls->Clear();
-
-				delete WinFormsContainer;
-				delete WPFHost;
-				delete TextFieldPanel;
-				delete AnimationPrimitive;
-				delete TextField->TextArea->TextView;
-				delete TextField->TextArea;
-				delete TextField;
-				delete IntelliSenseBox;
-				delete MiddleMouseScrollTimer;
-				delete ErrorColorizer;
-				delete FindReplaceColorizer;
-				delete BraceColorizer;
-				delete CodeFoldingManager;
-				delete CodeFoldingStrategy;
-				delete ScrollBarSyncTimer;
-				delete SemanticAnalysisTimer;
-				delete ExternalVerticalScrollBar;
-				delete ExternalHorizontalScrollBar;
-
-				IntelliSenseBox = nullptr;
-				TextField->TextArea->IndentationStrategy = nullptr;
-				TextField->SyntaxHighlighting = nullptr;
-				TextField->Document = nullptr;
-				CodeFoldingStrategy = nullptr;
-				ErrorColorizer = nullptr;
-				FindReplaceColorizer = nullptr;
-				CodeFoldingManager = nullptr;
-				BraceColorizer = nullptr;
-			}
-
-			int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser, IScriptTextEditor::FindReplaceOperation Operation, AvalonEdit::Document::DocumentLine^ Line, String^ Replacement, IScriptTextEditor::FindReplaceOutput^ Output, UInt32 Options)
+			int AvalonEditTextEditor::PerformFindReplaceOperationOnSegment(System::Text::RegularExpressions::Regex^ ExpressionParser,
+																		   IScriptTextEditor::FindReplaceOperation Operation,
+																		   AvalonEdit::Document::DocumentLine^ Line,
+																		   String^ Replacement,
+																		   UInt32 Options)
 			{
 				int Hits = 0, SearchStartOffset = 0;
 				String^ CurrentLine = TextField->Document->GetText(Line);
@@ -860,7 +141,8 @@ namespace ConstructionSetExtender
 				}
 
 				if (Hits)
-					Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
+					TODO("track hits");
+					//Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
 
 				return Hits;
 			}
@@ -973,15 +255,15 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::HandleTextChangeEvent()
 			{
-				if (InitializingFlag)
+				if (Initializing)
 				{
-					InitializingFlag = false;
-					SetModifiedStatus(false);
+					Initializing = false;
+					Modified = false;
 					ClearFindResultIndicators();
 				}
 				else
 				{
-					SetModifiedStatus(true);
+					Modified = true;
 					if (PreventTextChangedEventFlag == PreventTextChangeFlagState::AutoReset)
 						PreventTextChangedEventFlag = PreventTextChangeFlagState::Disabled;
 					else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::Disabled)
@@ -1125,7 +407,7 @@ namespace ConstructionSetExtender
 
 						TextField->Document->Insert(InsertOffset, SegmentText + "\n" + PreviousText);
 
-						SetCaretPos(InsertOffset);
+						Caret = InsertOffset;
 					}
 					break;
 				case MoveSegmentDirection::Down:
@@ -1146,7 +428,7 @@ namespace ConstructionSetExtender
 
 						TextField->Document->Insert(InsertOffset, InsertText);
 
-						SetCaretPos(InsertOffset + InsertText->Length);
+						Caret = InsertOffset + InsertText->Length;
 					}
 					break;
 				}
@@ -1271,8 +553,194 @@ namespace ConstructionSetExtender
 
 				return Result;
 			}
-#pragma endregion
 
+			void AvalonEditTextEditor::SetFont(Font^ FontObject)
+			{
+				TextField->FontFamily = gcnew Windows::Media::FontFamily(FontObject->FontFamily->Name);
+				TextField->FontSize = FontObject->Size;
+				if (FontObject->Style == Drawing::FontStyle::Bold)
+					TextField->FontWeight = Windows::FontWeights::Bold;
+				else
+					TextField->FontWeight = Windows::FontWeights::Regular;
+			}
+
+			void AvalonEditTextEditor::SetTabCharacterSize(int PixelWidth)
+			{
+				TextField->Options->IndentationSize = PixelWidth;
+			}
+
+			String^ AvalonEditTextEditor::GetTextAtLine(int LineNumber)
+			{
+				if (LineNumber > TextField->Document->LineCount || LineNumber <= 0)
+					return "";
+				else
+					return TextField->Document->GetText(TextField->Document->GetLineByNumber(LineNumber));
+			}
+
+			UInt32 AvalonEditTextEditor::GetTextLength(void)
+			{
+				return TextField->Text->Length;
+			}
+
+			void AvalonEditTextEditor::InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling)
+			{
+				if (Index > GetTextLength())
+					Index = GetTextLength();
+
+				if (PreventTextChangedEventHandling)
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
+
+				TextField->Document->Insert(Index, Text);
+			}
+
+			void AvalonEditTextEditor::SetSelectionStart(int Index)
+			{
+				TextField->SelectionStart = Index;
+			}
+
+			void AvalonEditTextEditor::SetSelectionLength(int Length)
+			{
+				TextField->SelectionLength = Length;
+			}
+
+			bool AvalonEditTextEditor::GetInSelection(int Index)
+			{
+				return TextField->TextArea->Selection->Contains(Index);
+			}
+
+			int AvalonEditTextEditor::GetLineNumberFromCharIndex(int Index)
+			{
+				if (Index == -1 || TextField->Text->Length == 0)
+					return 1;
+				else if (Index >= TextField->Text->Length)
+					Index = TextField->Text->Length - 1;
+
+				return TextField->Document->GetLocation(Index).Line;
+			}
+
+			bool AvalonEditTextEditor::GetCharIndexInsideCommentSegment(int Index)
+			{
+				bool Result = true;
+
+				if (Index >= 0 && Index < TextField->Text->Length)
+				{
+					AvalonEdit::Document::DocumentLine^ Line = TextField->Document->GetLineByOffset(Index);
+					ScriptParser^ LocalParser = gcnew ScriptParser();
+					LocalParser->Tokenize(TextField->Document->GetText(Line), false);
+					if (LocalParser->GetCommentTokenIndex(LocalParser->GetTokenIndex(GetTextAtLocation(Index, false))) == -1)
+						Result = false;
+				}
+
+				return Result;
+			}
+
+			String^ AvalonEditTextEditor::GetTokenAtMouseLocation()
+			{
+				return GetTextAtLocation(LastKnownMouseClickOffset, false)->Replace("\r\n", "")->Replace("\n", "");
+			}
+
+			array<String^>^ AvalonEditTextEditor::GetTokensAtMouseLocation()
+			{
+				return GetTextAtLocation(LastKnownMouseClickOffset);
+			}
+
+			int AvalonEditTextEditor::GetLastKnownMouseClickOffset()
+			{
+				if (LastKnownMouseClickOffset == -1)
+					LastKnownMouseClickOffset = 0;
+
+				return LastKnownMouseClickOffset;
+			}
+
+			void AvalonEditTextEditor::ToggleComment(int StartIndex)
+			{
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
+				BeginUpdate();
+
+				AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
+				if (TextSelection->IsEmpty)
+				{
+					AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(StartIndex);
+					if (Line != nullptr)
+					{
+						int FirstOffset = -1;
+						for (int i = Line->Offset; i <= Line->EndOffset; i++)
+						{
+							char FirstChar = TextField->TextArea->Document->GetCharAt(i);
+							if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
+								AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
+							{
+								FirstOffset = i;
+								break;
+							}
+						}
+
+						if (FirstOffset != -1)
+						{
+							char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
+							if (FirstChar == ';')
+								TextField->TextArea->Document->Replace(FirstOffset, 1, "");
+							else
+								TextField->TextArea->Document->Insert(FirstOffset, ";");
+						}
+					}
+				}
+				else
+				{
+					AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
+
+					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
+					{
+						FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
+						LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
+
+						for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+						{
+							int FirstOffset = -1;
+							for (int i = Itr->Offset; i < TextField->Text->Length && i <= Itr->EndOffset; i++)
+							{
+								char FirstChar = TextField->TextArea->Document->GetCharAt(i);
+								if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
+									AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
+								{
+									FirstOffset = i;
+									break;
+								}
+							}
+
+							if (FirstOffset != -1)
+							{
+								char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
+
+								if (FirstChar == ';')
+								{
+									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
+									TextField->TextArea->Document->Replace(FirstOffset, 1, "");
+								}
+								else
+								{
+									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
+									TextField->TextArea->Document->Insert(FirstOffset, ";");
+								}
+							}
+						}
+					}
+				}
+
+				EndUpdate(false);
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
+			}
+
+			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
+			{
+				IntelliSenseBox->UpdateLocalVariableDatabase(SemanticAnalysisCache);
+			}
+
+			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber)
+			{
+				TODO("inconsistent")
+					return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
+			}
 #pragma region Events
 			void AvalonEditTextEditor::OnScriptModified(bool ModificationState)
 			{
@@ -1328,7 +796,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 			{
 				HandleTextChangeEvent();
-				SearchBracesForHighlighting(GetCaretPos());
+				SearchBracesForHighlighting(Caret);
 			}
 
 			void AvalonEditTextEditor::TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E)
@@ -1347,7 +815,7 @@ namespace ConstructionSetExtender
 				}
 
 				if (TextField->TextArea->Selection->IsEmpty)
-					SearchBracesForHighlighting(GetCaretPos());
+					SearchBracesForHighlighting(Caret);
 
 				// redraw caret line to update VisualLineGenerators
 				TextField->TextArea->TextView->Redraw(TextField->TextArea->TextView->GetVisualLine(PreviousLineBuffer),
@@ -1363,7 +831,7 @@ namespace ConstructionSetExtender
 				System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
-				if (GetLineVisible(GetCurrentLineNumber()))
+				if (GetLineVisible(CurrentLine))
 					IntelliSenseBox->Hide();
 				else
 				{
@@ -1460,6 +928,15 @@ namespace ConstructionSetExtender
 
 				switch (E->Key)
 				{
+				case System::Windows::Input::Key::B:
+					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+					{
+						ToggleBookmark(TextField->SelectionStart);
+
+						HandleKeyEventForKey(E->Key);
+						E->Handled = true;
+					}
+					break;
 				case System::Windows::Input::Key::Q:
 					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
@@ -1519,7 +996,7 @@ namespace ConstructionSetExtender
 					{
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 
-						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::Up);
+						MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Up);
 
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 
@@ -1539,7 +1016,7 @@ namespace ConstructionSetExtender
 					{
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
 
-						MoveTextSegment(TextField->Document->GetLineByOffset(GetCaretPos()), MoveSegmentDirection::Down);
+						MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Down);
 
 						SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 
@@ -1584,7 +1061,7 @@ namespace ConstructionSetExtender
 				}
 				else
 				{
-					SetCaretPos(GetTextLength());
+					Caret = GetTextLength();
 				}
 			}
 
@@ -1596,11 +1073,11 @@ namespace ConstructionSetExtender
 					LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
 
 					if (E->ChangedButton == System::Windows::Input::MouseButton::Right && TextField->TextArea->Selection->IsEmpty)
-						SetCaretPos(LastKnownMouseClickOffset);
+						Caret = LastKnownMouseClickOffset;
 				}
 				else
 				{
-					SetCaretPos(GetTextLength());
+					Caret = GetTextLength();
 				}
 
 				if (IntelliSenseBox->Visible)
@@ -1637,7 +1114,7 @@ namespace ConstructionSetExtender
 				if (ViewLocation.HasValue)
 				{
 					int Offset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
-					Point Location = GetAbsolutePositionFromCharIndex(Offset);
+					Point Location = GetPositionFromCharIndex(Offset, true);
 
 					if (TextField->Text->Length > 0)
 					{
@@ -1780,6 +1257,17 @@ namespace ConstructionSetExtender
 				if (PREFERENCES->FetchSettingAsInt("CodeFolding", "Appearance"))
 					CodeFoldingStrategy = gcnew ObScriptCodeFoldingStrategy(this);
 
+				Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
+											  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
+											  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+				SetFont(CustomFont);
+
+				int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
+				if (TabSize == 0)
+					TabSize = 4;
+
+				SetTabCharacterSize(TabSize);
+
 				TextField->Options->CutCopyWholeLine = PREFERENCES->FetchSettingAsInt("CutCopyEntireLine", "General");
 				TextField->Options->ShowSpaces = PREFERENCES->FetchSettingAsInt("ShowSpaces", "Appearance");
 				TextField->Options->ShowTabs = PREFERENCES->FetchSettingAsInt("ShowTabs", "Appearance");
@@ -1814,18 +1302,202 @@ namespace ConstructionSetExtender
 
 				RefreshTextView();
 			}
+
+			void AvalonEditTextEditor::TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
+			{
+				array<String^>^ Tokens = GetTokensAtMouseLocation();
+				String^ MidToken = Tokens[1]->Replace("\n", "")->Replace("\t", " ")->Replace("\r", "");
+
+				if (MidToken->Length > 20)
+					ContextMenuWord->Text = MidToken->Substring(0, 17) + gcnew String("...");
+				else
+					ContextMenuWord->Text = MidToken;
+
+				ContextMenuDirectLink->Tag = nullptr;
+				if (ISDB->GetIsIdentifierScriptCommand(MidToken))
+					ContextMenuDirectLink->Tag = ISDB->LookupDeveloperURLByCommand(MidToken);
+
+				if (ContextMenuDirectLink->Tag == nullptr)
+					ContextMenuDirectLink->Visible = false;
+				else
+					ContextMenuDirectLink->Visible = true;
+
+				ContextMenuJumpToScript->Visible = true;
+
+				CString CTUM(MidToken);
+				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CTUM.c_str());
+				if (Data && Data->IsValid())
+				{
+					switch (Data->Type)
+					{
+					case ComponentDLLInterface::ScriptData::kScriptType_Object:
+						if (Data->UDF)
+							ContextMenuJumpToScript->Text = "Jump to Function script";
+						else
+							ContextMenuJumpToScript->Text = "Jump to Object script";
+						break;
+					case ComponentDLLInterface::ScriptData::kScriptType_Quest:
+						ContextMenuJumpToScript->Text = "Jump to Quest script";
+						break;
+					}
+
+					ContextMenuJumpToScript->Tag = gcnew String(Data->EditorID);
+				}
+				else
+					ContextMenuJumpToScript->Visible = false;
+
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+
+				ContextMenuRefactorCreateUDFImplementation->Visible = false;
+				if ((ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptSemanticAnalysis::ScriptTokenType::Call ||
+					(ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptSemanticAnalysis::ScriptTokenType::Call) &&
+					GetCharIndexInsideCommentSegment(GetLastKnownMouseClickOffset()) == false))
+				{
+					if (ISDB->GetIsIdentifierUserFunction(MidToken) == false)
+					{
+						ContextMenuRefactorCreateUDFImplementation->Visible = true;
+						ContextMenuRefactorCreateUDFImplementation->Tag = MidToken;
+					}
+				}
+
+				String^ ImportFile = "";
+				String^ Line = GetTextAtLine(GetLineNumberFromCharIndex(GetLastKnownMouseClickOffset()));
+
+				bool IsImportDirective = Preprocessor::GetSingleton()->GetImportFilePath(Line, ImportFile,
+																						 gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																						 gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																						 PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
+																						 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+				ContextMenuOpenImportFile->Visible = false;
+				if (IsImportDirective)
+				{
+					ContextMenuOpenImportFile->Visible = true;
+					ContextMenuOpenImportFile->Tag = ImportFile;
+				}
+			}
+
+			void AvalonEditTextEditor::ContextMenuCopy_Click(Object^ Sender, EventArgs^ E)
+			{
+				try
+				{
+					Clipboard::Clear();
+
+					String^ CopiedText = GetSelectedText();
+					if (CopiedText == "")
+						CopiedText = GetTokenAtMouseLocation();
+
+					if (CopiedText != "")
+						Clipboard::SetText(CopiedText->Replace("\n", "\r\n"));
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
+				}
+			}
+
+			void AvalonEditTextEditor::ContextMenuPaste_Click(Object^ Sender, EventArgs^ E)
+			{
+				try
+				{
+					if (Clipboard::GetText() != "")
+						SetSelectedText(Clipboard::GetText(), false);
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Exception raised while accessing the clipboard.\n\tException: " + E->Message, true);
+				}
+			}
+
+			void AvalonEditTextEditor::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
+			{
+				ToggleComment(GetLastKnownMouseClickOffset());
+			}
+
+			void AvalonEditTextEditor::ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E)
+			{
+				ToggleBookmark(GetLastKnownMouseClickOffset());
+			}
+
+			void AvalonEditTextEditor::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)
+			{
+				Process::Start("http://cs.elderscrolls.com/constwiki/index.php/Special:Search?search=" + GetTokenAtMouseLocation() + "&fulltext=Search");
+			}
+
+			void AvalonEditTextEditor::ContextMenuOBSEDocLookup_Click(Object^ Sender, EventArgs^ E)
+			{
+				Process::Start("http://obse.silverlock.org/obse_command_doc.html#" + GetTokenAtMouseLocation());
+			}
+
+			void AvalonEditTextEditor::ContextMenuDirectLink_Click(Object^ Sender, EventArgs^ E)
+			{
+				try
+				{
+					Process::Start(dynamic_cast<String^>(ContextMenuDirectLink->Tag));
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Exception raised while opening internet page.\n\tException: " + E->Message);
+					MessageBox::Show("Couldn't open internet page. Mostly likely caused by an improperly formatted URL.",
+									 SCRIPTEDITOR_TITLE,
+									 MessageBoxButtons::OK,
+									 MessageBoxIcon::Error);
+				}
+			}
+
+			void AvalonEditTextEditor::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
+			{
+				TODO("implement");
+				//ParentContainer->JumpToWorkspace(WorkspaceHandleIndex, dynamic_cast<String^>(ContextMenuJumpToScript->Tag));
+			}
+
+			void AvalonEditTextEditor::ContextMenuGoogleLookup_Click(Object^ Sender, EventArgs^ E)
+			{
+				Process::Start("http://www.google.com/search?hl=en&source=hp&q=" + GetTokenAtMouseLocation());
+			}
+
+			void AvalonEditTextEditor::ContextMenuOpenImportFile_Click(Object^ Sender, EventArgs^ E)
+			{
+				Process::Start(dynamic_cast<String^>(ContextMenuOpenImportFile->Tag));
+			}
+
+			void AvalonEditTextEditor::ContextMenuRefactorAddVariable_Click(Object^ Sender, EventArgs^ E)
+			{
+				ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
+				ObScriptSemanticAnalysis::Variable::DataType VarType = (ObScriptSemanticAnalysis::Variable::DataType)MenuItem->Tag;
+				String^ VarName = ContextMenuWord->Text;
+
+				if (VarName->Length == 0)
+				{
+					InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable", VarName);
+					if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+						return;
+					else
+						VarName = Result->Text;
+				}
+
+				InsertVariable(VarName, VarType);
+			}
+
+			void AvalonEditTextEditor::ContextMenuRefactorCreateUDFImplementation_Click(Object^ Sender, EventArgs^ E)
+			{
+				// ugly
+				Parent->Controller->ApplyRefactor(Parent,
+												  ScriptEditor::IWorkspaceModel::RefactorOperation::CreateUDF,
+												  ContextMenuRefactorCreateUDFImplementation->Tag);
+			}
 #pragma endregion
 
-			AvalonEditTextEditor::AvalonEditTextEditor(Font^ Font, UInt32 ParentWorkspaceIndex)
+			AvalonEditTextEditor::AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, Font^ Font, int TabSize)
 			{
-				this->ParentWorkspaceIndex = ParentWorkspaceIndex;
+				Debug::Assert(ParentModel != nullptr);
+				this->Parent = ParentModel;
 
 				WinFormsContainer = gcnew Panel();
 				WPFHost = gcnew ElementHost();
 				TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
 				TextField = gcnew AvalonEdit::TextEditor();
 				AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
-				IntelliSenseBox = gcnew IntelliSenseInterface(ParentWorkspaceIndex);
+				IntelliSenseBox = gcnew IntelliSenseInterface(this);
 				CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 				CodeFoldingStrategy = nullptr;
 
@@ -1964,8 +1636,106 @@ namespace ConstructionSetExtender
 				PreviousLineBuffer = -1;
 				SemanticAnalysisCache = gcnew ObScriptSemanticAnalysis::AnalysisData();
 
+				TextEditorContextMenu = gcnew ContextMenuStrip();
+				ContextMenuCopy = gcnew ToolStripMenuItem();
+				ContextMenuPaste = gcnew ToolStripMenuItem();
+				ContextMenuToggleComment = gcnew ToolStripMenuItem();
+				ContextMenuToggleBookmark = gcnew ToolStripMenuItem();
+				ContextMenuWord = gcnew ToolStripMenuItem();
+				ContextMenuWikiLookup = gcnew ToolStripMenuItem();
+				ContextMenuOBSEDocLookup = gcnew ToolStripMenuItem();
+				ContextMenuDirectLink = gcnew ToolStripMenuItem();
+				ContextMenuJumpToScript = gcnew ToolStripMenuItem();
+				ContextMenuGoogleLookup = gcnew ToolStripMenuItem();
+				ContextMenuOpenImportFile = gcnew ToolStripMenuItem();
+				ContextMenuRefactorAddVariable = gcnew ToolStripMenuItem();
+				ContextMenuRefactorAddVariableInt = gcnew ToolStripMenuItem();
+				ContextMenuRefactorAddVariableFloat = gcnew ToolStripMenuItem();
+				ContextMenuRefactorAddVariableRef = gcnew ToolStripMenuItem();
+				ContextMenuRefactorAddVariableString = gcnew ToolStripMenuItem();
+				ContextMenuRefactorAddVariableArray = gcnew ToolStripMenuItem();
+				ContextMenuRefactorCreateUDFImplementation = gcnew ToolStripMenuItem();
+
+				SetupControlImage(ContextMenuCopy);
+				SetupControlImage(ContextMenuPaste);
+				SetupControlImage(ContextMenuToggleComment);
+				SetupControlImage(ContextMenuToggleBookmark);
+				SetupControlImage(ContextMenuWikiLookup);
+				SetupControlImage(ContextMenuOBSEDocLookup);
+				SetupControlImage(ContextMenuDirectLink);
+				SetupControlImage(ContextMenuJumpToScript);
+				SetupControlImage(ContextMenuGoogleLookup);
+				SetupControlImage(ContextMenuRefactorAddVariable);
+				SetupControlImage(ContextMenuRefactorCreateUDFImplementation);
+
+				AvalonEditTextEditorDefineClickHandler(ContextMenuCopy);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuPaste);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuToggleComment);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuToggleBookmark);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuWikiLookup);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuOBSEDocLookup);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuDirectLink);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuJumpToScript);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuGoogleLookup);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuOpenImportFile);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuRefactorAddVariable);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuRefactorCreateUDFImplementation);
+
+				TextEditorContextMenuOpeningHandler = gcnew CancelEventHandler(this, &AvalonEditTextEditor::TextEditorContextMenu_Opening);
+
+				ContextMenuCopy->Text = "Copy";
+				ContextMenuPaste->Text = "Paste";
+				ContextMenuWord->Enabled = false;
+				ContextMenuWikiLookup->Text = "Lookup on the Wiki";
+				ContextMenuOBSEDocLookup->Text = "Lookup in the OBSE Docs";
+				ContextMenuToggleComment->Text = "Toggle Comment";
+				ContextMenuToggleBookmark->Text = "Toggle Bookmark";
+				ContextMenuDirectLink->Text = "Developer Page";
+				ContextMenuJumpToScript->Text = "Jump into Script";
+				ContextMenuGoogleLookup->Text = "Lookup on Google";
+
+				ContextMenuRefactorAddVariable->Text = "Add Variable...";
+				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableInt);
+				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableFloat);
+				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableRef);
+				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableString);
+				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableArray);
+
+				ContextMenuRefactorAddVariableInt->Text = "Integer";
+				ContextMenuRefactorAddVariableInt->Tag = ObScriptSemanticAnalysis::Variable::DataType::Integer;
+				ContextMenuRefactorAddVariableFloat->Text = "Float";
+				ContextMenuRefactorAddVariableFloat->Tag = ObScriptSemanticAnalysis::Variable::DataType::Float;
+				ContextMenuRefactorAddVariableRef->Text = "Reference";
+				ContextMenuRefactorAddVariableRef->Tag = ObScriptSemanticAnalysis::Variable::DataType::Ref;
+				ContextMenuRefactorAddVariableString->Text = "String";
+				ContextMenuRefactorAddVariableString->Tag = ObScriptSemanticAnalysis::Variable::DataType::StringVar;
+				ContextMenuRefactorAddVariableArray->Text = "Array";
+				ContextMenuRefactorAddVariableArray->Tag = ObScriptSemanticAnalysis::Variable::DataType::ArrayVar;
+				ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
+				ContextMenuRefactorCreateUDFImplementation->Visible = false;
+
+				ContextMenuOpenImportFile->Text = "Open Import File";
+				ContextMenuOpenImportFile->Visible = false;
+
+				TextEditorContextMenu->Items->Add(ContextMenuCopy);
+				TextEditorContextMenu->Items->Add(ContextMenuPaste);
+				TextEditorContextMenu->Items->Add(ContextMenuToggleComment);
+				TextEditorContextMenu->Items->Add(ContextMenuToggleBookmark);
+				TextEditorContextMenu->Items->Add(gcnew ToolStripSeparator());
+				TextEditorContextMenu->Items->Add(ContextMenuWord);
+				TextEditorContextMenu->Items->Add(ContextMenuWikiLookup);
+				TextEditorContextMenu->Items->Add(ContextMenuOBSEDocLookup);
+				TextEditorContextMenu->Items->Add(ContextMenuGoogleLookup);
+				TextEditorContextMenu->Items->Add(ContextMenuDirectLink);
+				TextEditorContextMenu->Items->Add(ContextMenuJumpToScript);
+				TextEditorContextMenu->Items->Add(ContextMenuOpenImportFile);
+				TextEditorContextMenu->Items->Add(gcnew ToolStripSeparator());
+				TextEditorContextMenu->Items->Add(ContextMenuRefactorAddVariable);
+				TextEditorContextMenu->Items->Add(ContextMenuRefactorCreateUDFImplementation);
+
 				WinFormsContainer->Dock = DockStyle::Fill;
 				WinFormsContainer->BorderStyle = BorderStyle::FixedSingle;
+				WinFormsContainer->ContextMenuStrip = TextEditorContextMenu;
 				WinFormsContainer->Controls->Add(WPFHost);
 				WinFormsContainer->Controls->Add(ExternalVerticalScrollBar);
 				WinFormsContainer->Controls->Add(ExternalHorizontalScrollBar);
@@ -1974,6 +1744,8 @@ namespace ConstructionSetExtender
 				WPFHost->Child = TextFieldPanel;
 
 				SetFont(Font);
+				if (TabSize)
+					SetTabCharacterSize(TabSize);
 
 				TextField->TextChanged += TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged += TextFieldCaretPositionChangedHandler;
@@ -1996,29 +1768,164 @@ namespace ConstructionSetExtender
 				ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 				SemanticAnalysisTimer->Tick += SemanticAnalysisTimerTickHandler;
 				PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+
+				TextEditorContextMenu->Opening += TextEditorContextMenuOpeningHandler;
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuCopy);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuPaste);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuToggleComment);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuToggleBookmark);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuWikiLookup);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuOBSEDocLookup);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuDirectLink);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuJumpToScript);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuGoogleLookup);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuOpenImportFile);
+				ContextMenuRefactorAddVariableInt->Click += ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableFloat->Click += ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableRef->Click += ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableString->Click += ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableArray->Click += ContextMenuRefactorAddVariableClickHandler;
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuRefactorCreateUDFImplementation);
 			}
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
-				AvalonEditTextEditor::Destroy();
-			}
+				TextField->Clear();
+				MiddleMouseScrollTimer->Stop();
+				ScrollBarSyncTimer->Stop();
+				SemanticAnalysisTimer->Stop();
+				CodeFoldingManager->Clear();
+				AvalonEdit::Folding::FoldingManager::Uninstall(CodeFoldingManager);
 
-			Control^ AvalonEditTextEditor::GetContainer()
-			{
-				return WinFormsContainer;
+				for each (AvalonEdit::Rendering::IBackgroundRenderer^ Itr in TextField->TextArea->TextView->BackgroundRenderers)
+					delete Itr;
+
+				TextField->TextArea->TextView->BackgroundRenderers->Clear();
+
+				TextField->TextChanged -= TextFieldTextChangedHandler;
+				TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
+				TextField->TextArea->SelectionChanged -= TextFieldSelectionChangedHandler;
+				TextField->TextArea->TextCopied -= TextFieldTextCopiedHandler;
+				TextField->LostFocus -= TextFieldLostFocusHandler;
+				TextField->TextArea->TextView->ScrollOffsetChanged -= TextFieldScrollOffsetChangedHandler;
+				TextField->PreviewKeyUp -= TextFieldKeyUpHandler;
+				TextField->PreviewKeyDown -= TextFieldKeyDownHandler;
+				TextField->PreviewMouseDown -= TextFieldMouseDownHandler;
+				TextField->PreviewMouseUp -= TextFieldMouseUpHandler;
+				TextField->PreviewMouseWheel -= TextFieldMouseWheelHandler;
+				TextField->PreviewMouseHover -= TextFieldMouseHoverHandler;
+				TextField->PreviewMouseHoverStopped -= TextFieldMouseHoverStoppedHandler;
+				TextField->PreviewMouseMove -= TextFieldMiddleMouseScrollMoveHandler;
+				TextField->PreviewMouseDown -= TextFieldMiddleMouseScrollDownHandler;
+				MiddleMouseScrollTimer->Tick -= MiddleMouseScrollTimerTickHandler;
+				ScrollBarSyncTimer->Tick -= ScrollBarSyncTimerTickHandler;
+				ExternalVerticalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
+				ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
+				SemanticAnalysisTimer->Tick -= SemanticAnalysisTimerTickHandler;
+				PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+
+				TextEditorContextMenu->Opening -= TextEditorContextMenuOpeningHandler;
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuCopy);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuPaste);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuToggleComment);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuToggleBookmark);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuWikiLookup);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuOBSEDocLookup);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuDirectLink);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuJumpToScript);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuGoogleLookup);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuOpenImportFile);
+				ContextMenuRefactorAddVariableInt->Click -= ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableFloat->Click -= ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableRef->Click -= ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableString->Click -= ContextMenuRefactorAddVariableClickHandler;
+				ContextMenuRefactorAddVariableArray->Click -= ContextMenuRefactorAddVariableClickHandler;
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuRefactorCreateUDFImplementation);
+
+				DisposeControlImage(ContextMenuCopy);
+				DisposeControlImage(ContextMenuPaste);
+				DisposeControlImage(ContextMenuToggleComment);
+				DisposeControlImage(ContextMenuToggleBookmark);
+				DisposeControlImage(ContextMenuWikiLookup);
+				DisposeControlImage(ContextMenuOBSEDocLookup);
+				DisposeControlImage(ContextMenuDirectLink);
+				DisposeControlImage(ContextMenuJumpToScript);
+				DisposeControlImage(ContextMenuGoogleLookup);
+				DisposeControlImage(ContextMenuRefactorAddVariable);
+				DisposeControlImage(ContextMenuRefactorCreateUDFImplementation);
+
+				TextFieldPanel->Children->Clear();
+				WPFHost->Child = nullptr;
+				WinFormsContainer->Controls->Clear();
+				WinFormsContainer->ContextMenu = nullptr;
+
+				delete TextEditorContextMenu;
+				delete ContextMenuCopy;
+				delete ContextMenuPaste;
+				delete ContextMenuToggleComment;
+				delete ContextMenuToggleBookmark;
+				delete ContextMenuWord;
+				delete ContextMenuWikiLookup;
+				delete ContextMenuOBSEDocLookup;
+				delete ContextMenuDirectLink;
+				delete ContextMenuJumpToScript;
+				delete ContextMenuGoogleLookup;
+				delete ContextMenuRefactorAddVariable;
+				delete ContextMenuRefactorAddVariableInt;
+				delete ContextMenuRefactorAddVariableFloat;
+				delete ContextMenuRefactorAddVariableRef;
+				delete ContextMenuRefactorAddVariableString;
+				delete ContextMenuRefactorAddVariableArray;
+				delete ContextMenuRefactorCreateUDFImplementation;
+
+				delete WinFormsContainer;
+				delete WPFHost;
+				delete TextFieldPanel;
+				delete AnimationPrimitive;
+				delete TextField->TextArea->TextView;
+				delete TextField->TextArea;
+				delete TextField;
+				delete IntelliSenseBox;
+				delete MiddleMouseScrollTimer;
+				delete ErrorColorizer;
+				delete FindReplaceColorizer;
+				delete BraceColorizer;
+				delete CodeFoldingManager;
+				delete CodeFoldingStrategy;
+				delete ScrollBarSyncTimer;
+				delete SemanticAnalysisTimer;
+				delete ExternalVerticalScrollBar;
+				delete ExternalHorizontalScrollBar;
+
+				IntelliSenseBox = nullptr;
+				TextField->TextArea->IndentationStrategy = nullptr;
+				TextField->SyntaxHighlighting = nullptr;
+				TextField->Document = nullptr;
+				CodeFoldingStrategy = nullptr;
+				ErrorColorizer = nullptr;
+				FindReplaceColorizer = nullptr;
+				CodeFoldingManager = nullptr;
+				BraceColorizer = nullptr;
 			}
 
 			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
 				if (UpdateVars || UpdateControlBlocks)
-					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks);
+					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false);
 
 				return SemanticAnalysisCache;
 			}
 
-			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks)
+			void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
 			{
-				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps;
+				HasCommandCollision = ISDB->GetIsIdentifierScriptCommand(VarName);
+				HasFormCollision = ISDB->GetIsIdentifierForm(VarName);
+			}
+
+			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool FullValidation)
+			{
+				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
+				ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
 
 				if (FillVariables)
 					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables;
@@ -2026,7 +1933,30 @@ namespace ConstructionSetExtender
 				if (FillControlBlocks)
 					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
 
-				SemanticAnalysisCache->PerformAnalysis(GetText(), ObScriptSemanticAnalysis::ScriptType::None, AnalysisOps, nullptr);
+				if (FullValidation)
+				{
+					if (PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
+						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+
+					if (PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
+						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameFormCollisions;
+
+					if (PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
+						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CountVariableReferences;
+
+					if (PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator"))
+						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::SuppressQuestVariableRefCount;
+				}
+
+				if (Parent->Type == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
+					Type = ObScriptSemanticAnalysis::ScriptType::MagicEffect;
+				else if (Parent->Type == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
+					Type = ObScriptSemanticAnalysis::ScriptType::Quest;
+
+				SemanticAnalysisCache->PerformAnalysis(GetText(), Type, AnalysisOps,
+													   gcnew ObScriptSemanticAnalysis::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
+
+				TODO("track the messages");
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -2034,6 +1964,573 @@ namespace ConstructionSetExtender
 				delete TextField->SyntaxHighlighting;
 				TextField->SyntaxHighlighting = CreateSyntaxHighlightDefinitions(Regenerate);
 			}
-}
+
+			void AvalonEditTextEditor::SerializeCaretPos(String^% Result)
+			{
+				if (PREFERENCES->FetchSettingAsInt("SaveLastKnownPos", "General"))
+				{
+					Result += String::Format(";<" + kMetadataSigilCaret + "> {0} </" + kMetadataSigilCaret + ">\n", Caret);
+				}
+			}
+			void AvalonEditTextEditor::SerializeBookmarks(String^% Result)
+			{
+				TODO("serialize bookmarks");
+				String^ BookmarkSegment = "";
+
+				/*for each (ListViewItem^ Itr in BookmarkList->Items)
+				{
+					BookmarkSegment += ";<CSEBookmark>\t" + Itr->SubItems[0]->Text + "\t" + Itr->SubItems[1]->Text + "\t</CSEBookmark>\n";
+				}
+
+				Result += BookmarkSegment;*/
+			}
+
+			void AvalonEditTextEditor::DeserializeCaretPos(String^ ExtractedBlock)
+			{
+				ScriptParser^ TextParser = gcnew ScriptParser();
+				StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
+				String^ ReadLine = StringParser->ReadLine();
+				int CaretPos = 0;
+
+				while (ReadLine != nullptr)
+				{
+					TextParser->Tokenize(ReadLine, false);
+					if (!TextParser->Valid)
+					{
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					if (!TextParser->GetTokenIndex(";<" + kMetadataSigilCaret + ">"))
+					{
+						try { CaretPos = int::Parse(TextParser->Tokens[1]); }
+						catch (...) { CaretPos = -1; }
+						break;
+					}
+
+					ReadLine = StringParser->ReadLine();
+				}
+
+				if (CaretPos >= GetTextLength())
+					CaretPos = GetTextLength() - 1;
+				else if (CaretPos < 0)
+					CaretPos = 0;
+
+				Caret = CaretPos;
+				ScrollToCaret();
+			}
+
+			void AvalonEditTextEditor::DeserializeBookmarks(String^ ExtractedBlock)
+			{
+				ScriptParser^ TextParser = gcnew ScriptParser();
+				StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
+				String^ ReadLine = StringParser->ReadLine();
+				int LineNo = 0;
+
+				while (ReadLine != nullptr)
+				{
+					TextParser->Tokenize(ReadLine, false);
+					if (!TextParser->Valid)
+					{
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					if (!TextParser->GetTokenIndex(";<" + kMetadataSigilBookmark + ">"))
+					{
+						array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split((String("\t")).ToCharArray());
+						try
+						{
+							LineNo = int::Parse(Splits[1]);
+						}
+						catch (...)
+						{
+							LineNo = 1;
+						}
+
+						TODO("deserialize bookmarks")
+					}
+
+					ReadLine = StringParser->ReadLine();
+				}
+			}
+
+#pragma region Interface
+			void AvalonEditTextEditor::Bind(BindData^ Args)
+			{
+				FocusTextArea();
+				IsFocused = true;
+				SemanticAnalysisTimer->Start();
+				ScrollBarSyncTimer->Start();
+			}
+
+			void AvalonEditTextEditor::Unbind()
+			{
+				IsFocused = false;
+				SemanticAnalysisTimer->Stop();
+				ScrollBarSyncTimer->Stop();
+				IntelliSenseBox->Hide();
+			}
+
+			void DummyOutputWrapper(String^ Message)
+			{
+				;//
+			}
+
+			String^ AvalonEditTextEditor::GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors)
+			{
+				String^ Preprocessed = "";
+				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
+				if (SuppressErrors == false)
+					TODO("route errors to the tracker");
+
+				bool Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
+																			 Preprocessed,
+																			 ErrorOutput,
+																			 gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																			 gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																			 PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
+																			 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+
+				OutPreprocessResult = Result;
+				return Preprocessed;
+			}
+
+			String^ AvalonEditTextEditor::GetText(void)
+			{
+				return SanitizeUnicodeString(TextField->Text);
+			}
+
+			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack)
+			{
+				Text = SanitizeUnicodeString(Text);
+
+				if (PreventTextChangedEventHandling)
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
+
+				if (SetTextAnimating)
+				{
+					if (ResetUndoStack)
+						TextField->Text = Text;
+					else
+					{
+						SetSelectionStart(0);
+						SetSelectionLength(GetTextLength());
+						SetSelectedText(Text, false);
+						SetSelectionLength(0);
+					}
+
+					UpdateSemanticAnalysisCache(true, true);
+					UpdateCodeFoldings();
+					UpdateSyntaxHighlighting(false);
+				}
+				else
+				{
+					SetTextAnimating = true;
+
+					TextFieldPanel->Children->Add(AnimationPrimitive);
+
+					AnimationPrimitive->Fill = gcnew System::Windows::Media::VisualBrush(TextField);
+					AnimationPrimitive->Height = TextField->ActualHeight;
+					AnimationPrimitive->Width = TextField->ActualWidth;
+
+					TextFieldPanel->Children->Remove(TextField);
+
+					System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0,
+																																					0.0,
+																																					System::Windows::Duration(System::TimeSpan::FromSeconds(kSetTextFadeAnimationDuration)),
+																																					System::Windows::Media::Animation::FillBehavior::Stop);
+					SetTextPrologAnimationCache = FadeOutAnimation;
+
+					FadeOutAnimation->Completed += SetTextAnimationCompletedHandler;
+					System::Windows::Media::Animation::Storyboard^ FadeOutStoryBoard = gcnew System::Windows::Media::Animation::Storyboard();
+					FadeOutStoryBoard->Children->Add(FadeOutAnimation);
+					FadeOutStoryBoard->SetTargetName(FadeOutAnimation, AnimationPrimitive->Name);
+					FadeOutStoryBoard->SetTargetProperty(FadeOutAnimation, gcnew System::Windows::PropertyPath(AnimationPrimitive->OpacityProperty));
+					FadeOutStoryBoard->Begin(TextFieldPanel);
+
+					if (ResetUndoStack)
+						TextField->Text = Text;
+					else
+					{
+						SetSelectionStart(0);
+						SetSelectionLength(GetTextLength());
+						SetSelectedText(Text, false);
+						SetSelectionLength(0);
+					}
+
+					UpdateSemanticAnalysisCache(true, true);
+					UpdateCodeFoldings();
+					UpdateSyntaxHighlighting(false);
+				}
+			}
+
+			String^ AvalonEditTextEditor::GetSelectedText(void)
+			{
+				return TextField->SelectedText;
+			}
+
+			void AvalonEditTextEditor::SetSelectedText(String^ Text, bool PreventTextChangedEventHandling)
+			{
+				if (PreventTextChangedEventHandling)
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
+
+				TextField->SelectedText = Text;
+			}
+
+			int AvalonEditTextEditor::GetCharIndexFromPosition(Point Position)
+			{
+				Nullable<AvalonEdit::TextViewPosition> TextPos = TextField->TextArea->TextView->GetPosition(Windows::Point(Position.X, Position.Y));
+				if (TextPos.HasValue)
+					return TextField->Document->GetOffset(TextPos.Value.Line, TextPos.Value.Column);
+				else
+					return GetTextLength() + 1;
+			}
+
+			Point AvalonEditTextEditor::GetPositionFromCharIndex(int Index, bool Absolute)
+			{
+				if (Absolute)
+				{
+					Point Result = GetPositionFromCharIndex(Index, false);
+
+					for each (System::Windows::UIElement^ Itr in TextField->TextArea->LeftMargins)
+						Result.X += (dynamic_cast<System::Windows::FrameworkElement^>(Itr))->ActualWidth;
+
+					return Result;
+				}
+				else
+				{
+					AvalonEdit::Document::TextLocation Location = TextField->Document->GetLocation(Index);
+					Windows::Point Result = TextField->TextArea->TextView->GetVisualPosition(AvalonEdit::TextViewPosition(Location), AvalonEdit::Rendering::VisualYPosition::TextTop) - TextField->TextArea->TextView->ScrollOffset;
+					return Point(Result.X, Result.Y);
+				}
+			}
+
+			String^ AvalonEditTextEditor::GetTokenAtCharIndex(int Offset)
+			{
+				return GetTextAtLocation(Offset, false)->Replace("\r\n", "")->Replace("\n", "");
+			}
+
+			String^ AvalonEditTextEditor::GetTokenAtCaretPos()
+			{
+				return GetTextAtLocation(Caret - 1, false)->Replace("\r\n", "")->Replace("\n", "");
+			}
+
+			void AvalonEditTextEditor::SetTokenAtCaretPos(String^ Replacement)
+			{
+				GetTextAtLocation(Caret - 1, true);
+				TextField->SelectedText = Replacement;
+				Caret = TextField->SelectionStart + TextField->SelectionLength;
+			}
+
+			void AvalonEditTextEditor::ScrollToCaret()
+			{
+				TextField->TextArea->Caret->BringCaretToView();
+			}
+
+			void AvalonEditTextEditor::FocusTextArea()
+			{
+				TextField->Focus();
+			}
+
+			void AvalonEditTextEditor::LoadFileFromDisk(String^ Path)
+			{
+				try
+				{
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
+					StreamReader^ Reader = gcnew StreamReader(Path);
+					String^ FileText = Reader->ReadToEnd();
+					SetText(FileText, false, false);
+					Reader->Close();
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
+				}
+			}
+
+			void AvalonEditTextEditor::SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension)
+			{
+				if (PathIncludesFileName == false)
+					Path += "\\" + DefaultName + "." + DefaultExtension;
+
+				try
+				{
+					TextField->Save(Path);
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Error encountered when opening file for write operation!\n\tError Message: " + E->Message);
+				}
+			}
+
+			int AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
+			{
+				int Hits = 0;
+
+				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
+				{
+					ClearFindResultIndicators();
+					BeginUpdate();
+				}
+
+				try
+				{
+					String^ Pattern = "";
+
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::RegEx))
+						Pattern = Query;
+					else
+					{
+						Pattern = System::Text::RegularExpressions::Regex::Escape(Query);
+						if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::MatchWholeWord))
+							Pattern = "\\b" + Pattern + "\\b";
+					}
+
+					System::Text::RegularExpressions::Regex^ Parser = nullptr;
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::CaseInsensitive))
+					{
+						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
+																			   System::Text::RegularExpressions::RegexOptions::IgnoreCase | System::Text::RegularExpressions::RegexOptions::Singleline);
+					}
+					else
+					{
+						Parser = gcnew System::Text::RegularExpressions::Regex(Pattern,
+																			   System::Text::RegularExpressions::RegexOptions::Singleline);
+					}
+
+					AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
+
+					if ((Options & (UInt32)IScriptTextEditor::FindReplaceOptions::InSelection))
+					{
+						if (TextSelection->IsEmpty == false)
+						{
+							AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
+
+							for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
+							{
+								FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
+								LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
+
+								for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+								{
+									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Output, Options);
+									Hits += Matches;
+
+									if (Matches == -1)
+									{
+										Hits = -1;
+										break;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						for each (DocumentLine^ Line in TextField->Document->Lines)
+						{
+							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Output, Options);
+							Hits += Matches;
+
+							if (Matches == -1)
+							{
+								Hits = -1;
+								break;
+							}
+						}
+					}
+				}
+				catch (Exception^ E)
+				{
+					Hits = -1;
+					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
+				}
+
+				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
+				{
+					SetSelectionLength(0);
+					RefreshBGColorizerLayer();
+					EndUpdate(false);
+				}
+
+				if (Hits == -1)
+				{
+					MessageBox::Show("An error was encountered while performing the find/replace operation. Please recheck your search and/or replacement strings.",
+									 SCRIPTEDITOR_TITLE,
+									 MessageBoxButtons::OK,
+									 MessageBoxIcon::Exclamation);
+				}
+
+				return Hits;
+			}
+
+			void AvalonEditTextEditor::ScrollToLine(UInt32 LineNumber)
+			{
+				GotoLine(LineNumber);
+			}
+
+			Point AvalonEditTextEditor::PointToScreen(Point Location)
+			{
+				return WinFormsContainer->PointToScreen(Location);
+			}
+
+			void AvalonEditTextEditor::BeginUpdate(void)
+			{
+				if (TextFieldInUpdateFlag)
+					throw gcnew CSEGeneralException("Text editor is already being updated.");
+
+				TextFieldInUpdateFlag = true;
+				TextField->Document->BeginUpdate();
+
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
+			}
+
+			void AvalonEditTextEditor::EndUpdate(bool FlagModification)
+			{
+				if (TextFieldInUpdateFlag == false)
+					throw gcnew CSEGeneralException("Text editor isn't being updated.");
+
+				TextField->Document->EndUpdate();
+				TextFieldInUpdateFlag = false;
+
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
+
+				if (FlagModification)
+					Modified = true;
+			}
+
+			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
+			{
+				if (Modified)
+					UpdateSemanticAnalysisCache(false, true);
+
+				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
+			}
+
+			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
+			{
+				if (Modified)
+					UpdateSemanticAnalysisCache(true, false);
+
+				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
+				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
+				if (InsertionLine == 0)
+					InsertText(Declaration, TextField->Document->GetOffset(TextField->Document->LineCount, 1), true);
+				else
+				{
+					if (InsertionLine - 1 == TextField->Document->LineCount)
+					{
+						int Offset = TextField->Document->GetLineByNumber(TextField->Document->LineCount)->EndOffset;
+						InsertText("\n", Offset, true);
+					}
+					else if (InsertionLine > TextField->Document->LineCount)
+						InsertionLine = TextField->Document->LineCount;
+
+					InsertText(Declaration, TextField->Document->GetOffset(InsertionLine, 1), true);
+				}
+			}
+
+			String^ AvalonEditTextEditor::SerializeMetadata(bool AddPreprocessorSigil)
+			{
+				String^ Block = "";
+				String^ Result = "";
+
+				SerializeCaretPos(Block);
+				SerializeBookmarks(Block);
+
+				if (AddPreprocessorSigil)
+					Result += Preprocessor::kPreprocessorSigil + "\n";
+
+				if (Block != "")
+				{
+					Result += "\n;<" + kMetadataBlockMarker + ">\n";
+					Result += Block;
+					Result += ";</" + kMetadataBlockMarker + ">";
+				}
+
+				return Result;
+			}
+
+			String^ AvalonEditTextEditor::DeserializeMetadata(String^ Input)
+			{
+				ScriptParser^ TextParser = gcnew ScriptParser();
+				StringReader^ StringParser = gcnew StringReader(Input);
+				String^ ReadLine = StringParser->ReadLine();
+				String^ CSEBlock = "";
+				String^ Result = "";
+				bool ExtractingBlock = false;
+
+				while (ReadLine != nullptr)
+				{
+					TextParser->Tokenize(ReadLine, false);
+
+					if (ExtractingBlock)
+					{
+						if (!TextParser->GetTokenIndex(";</" + kMetadataBlockMarker + ">"))
+							ExtractingBlock = false;
+						else
+							CSEBlock += ReadLine + "\n";
+
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					if (!TextParser->Valid)
+					{
+						Result += "\n" + ReadLine;
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+					else if (!TextParser->GetTokenIndex(";<" + kMetadataBlockMarker + ">"))
+					{
+						ExtractingBlock = true;
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					Result += "\n" + ReadLine;
+					ReadLine = StringParser->ReadLine();
+				}
+
+				DeserializeCaretPos(CSEBlock);
+				DeserializeBookmarks(CSEBlock);
+
+				if (Result == "")
+					return Result;
+				else
+					return Result->Substring(1);
+			}
+
+			bool AvalonEditTextEditor::CanCompile(bool% OutContainsPreprocessorDirectives)
+			{
+				bool Result = false;
+
+				String^ Preprocessed = "";
+				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
+				ScriptEditorPreprocessorData^ Data = gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																						gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																						PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
+																						PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor"));
+				TODO("route errors to the tracker");
+
+				UpdateSemanticAnalysisCache(true, true, true);
+				if (SemanticAnalysisCache->HasCriticalMessages == false)
+				{
+					Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
+																			Preprocessed,
+																			ErrorOutput,
+																			Data);
+
+					if (Result)
+						OutContainsPreprocessorDirectives = Data->ContainsDirectives;
+				}
+
+				return Result;
+			}
+
+#pragma endregion
+		}
 	}
 }

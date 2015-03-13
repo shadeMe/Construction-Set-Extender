@@ -172,7 +172,7 @@ namespace ConstructionSetExtender
 				return Value;
 			}
 
-			List<String^>^ AvalonEditXSHDManager::GetKeyWordList( void )
+			List<String^>^ AvalonEditXSHDManager::GetKeywordList( void )
 			{
 				List<String^>^ KeywordList = gcnew List<String^>();
 
@@ -205,6 +205,10 @@ namespace ConstructionSetExtender
 
 				KeywordList->Add("call");
 				KeywordList->Add("setfunctionvalue");
+
+				KeywordList->Add("seteventhandler");
+				KeywordList->Add("removeeventhandler");
+				KeywordList->Add("dispatchevent");
 
 				KeywordList->Add("array_var");
 				KeywordList->Add("string_var");
@@ -340,7 +344,7 @@ namespace ConstructionSetExtender
 				XSHDColor^ KWColor = gcnew XSHDColor("KeywordColor", Keywords, Color::GhostWhite, Bold);
 				XSHDKeywords^ KWKeywords = gcnew XSHDKeywords(KWColor, Color::GhostWhite, Color::GhostWhite, Bold);
 
-				for each (String^ Itr in GetKeyWordList())
+				for each (String^ Itr in GetKeywordList())
 					KWKeywords->AddWord(gcnew XSHDWord(Itr));
 
 				SerializedColors->AddLast(KWColor);

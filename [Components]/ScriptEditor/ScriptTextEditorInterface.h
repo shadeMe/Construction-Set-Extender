@@ -35,6 +35,12 @@ namespace ConstructionSetExtender
 		delegate void									TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
 		delegate void									TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
 
+		ref struct BindData
+		{
+			// bindable stuff, ie., list views, etc
+			// ### do i need this? the model already derives from the bindable listview interface
+		};
+
 		interface class IScriptTextEditor
 		{
 			static enum class							FindReplaceOperation
@@ -58,85 +64,61 @@ namespace ConstructionSetExtender
 			event KeyEventHandler^									KeyDown;
 			event TextEditorMouseClickEventHandler^					MouseClick;
 
-			delegate void								FindReplaceOutput(String^ Line, String^ Text);
+			// properties
+			property Control^							Container;
+			property IntPtr								WindowHandle;
+			property bool								Enabled;
+
+			property int								CurrentLine;
+			property int								LineCount;
+			property int								Caret;
+
+			property bool								Modified;
+			property bool								Initializing;
 
 			// methods
-			void										SetFont(Font^ FontObject);
-			void										SetTabCharacterSize(int PixelWidth);
-			void										SetContextMenu(ContextMenuStrip^% Strip);
+			void										Bind(BindData^ Args);		// called when the parent model is bound to a view, i.e., when the text editor is activated
+			void										Unbind();					// opposite of the above
 
-			void										AddControl(Control^ ControlObject);
-
-			String^										GetText(void);
-			UInt32										GetTextLength(void);
-			String^										GetTextAtLine(int LineNumber);
+			String^										GetText();
+			String^										GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
 			void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
-			void										InsertText(String^ Text, int Index, bool PreventTextChangedEventHandling);			// performs bounds check
 
 			String^										GetSelectedText(void);
 			void										SetSelectedText(String^ Text, bool PreventTextChangedEventHandling);
 
-			void										SetSelectionStart(int Index);
-			void										SetSelectionLength(int Length);
-			bool										GetInSelection(int Index);
-
 			int											GetCharIndexFromPosition(Point Position);
-			Point										GetPositionFromCharIndex(int Index);
-			Point										GetAbsolutePositionFromCharIndex(int Index);
-			int											GetLineNumberFromCharIndex(int Index);
-			bool										GetCharIndexInsideCommentSegment(int Index);
-			int											GetCurrentLineNumber(void);
+			Point										GetPositionFromCharIndex(int Index, bool Absolute);
 
 			String^										GetTokenAtCharIndex(int Offset);
 			String^										GetTokenAtCaretPos();
 			void										SetTokenAtCaretPos(String^ Replacement);
-			String^										GetTokenAtMouseLocation();
-			array<String^>^								GetTokensAtMouseLocation();						// gets three of the closest tokens surrounding the mouse loc
 
-			int											GetCaretPos();
-			void										SetCaretPos(int Index);
 			void										ScrollToCaret();
-
-			IntPtr										GetHandle();
 
 			void										FocusTextArea();
 			void										LoadFileFromDisk(String^ Path);
 			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
-			bool										GetModifiedStatus();
-			void										SetModifiedStatus(bool Modified);
+			int											FindReplace(FindReplaceOperation Operation,
+																	String^ Query,
+																	String^ Replacement,
+																	UInt32 Options);		// returns the number of matches, -1 if an error was encountered
 
-			bool										GetInitializingStatus();
-			void										SetInitializingStatus(bool Initializing);
-
-			int											GetLastKnownMouseClickOffset(void);
-
-			int											FindReplace(FindReplaceOperation Operation, String^ Query, String^ Replacement, FindReplaceOutput^ Output, UInt32 Options);		// returns the number of matches, -1 if an error was encountered
-			void										ToggleComment(int StartIndex);
-			void										UpdateIntelliSenseLocalDatabase(void);
-
-			Control^									GetContainer();
-			void										ScrollToLine(String^ LineNumber);
 			void										ScrollToLine(UInt32 LineNumber);
-			bool										GetLineVisible(UInt32 LineNumber);	// inside the text field's viewable area
 			Point										PointToScreen(Point Location);
-			void										SetEnabledState(bool State);
 
 			void										BeginUpdate(void);
 			void										EndUpdate(bool FlagModification);
 
-			UInt32										GetTotalLineCount(void);
-			IntelliSense::IntelliSenseInterface^		GetIntelliSenseInterface(void);
 			UInt32										GetIndentLevel(UInt32 LineNumber);
 			void										InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
-			void										HighlightScriptError(int Line);
-			void										ClearScriptErrorHighlights(void);
+			String^										SerializeMetadata(bool AddPreprocessorSigil);			// returns the metadata block for the current script, if any. includes caret pos, bookmarks, etc
+			String^										DeserializeMetadata(String^ Input);						// extracts and processes the metadata block from the script text, after clearing the current state
+																												// returns the rest of the text
 
-			// Event handlers
-			TODO("anneal these with the new bind implementation");
-			void										OnGotFocus(void);					// called when the workspace's is brought to focus
-			void										OnLostFocus(void);					// the opposite of the above
+			bool										CanCompile(bool% OutContainsPreprocessorDirectives);	// preprocesses and validates the script text, returns true if successful
 		};
 	}
 }

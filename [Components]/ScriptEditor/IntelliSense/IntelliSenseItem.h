@@ -1,7 +1,8 @@
 #pragma once
 
-#include "..\SemanticAnalysis.h"
 #include "[Common]\HandShakeStructs.h"
+#include "..\SemanticAnalysis.h"
+#include "..\ScriptTextEditorInterface.h"
 
 namespace ConstructionSetExtender
 {
@@ -17,7 +18,7 @@ namespace ConstructionSetExtender
 
 		ref class IntelliSenseItem
 		{
-			static array<String^>^								IntelliSenseItemTypeID =
+			static array<String^>^ IntelliSenseItemTypeID =
 			{
 				"Unknown Object",
 				"Command",
@@ -31,7 +32,7 @@ namespace ConstructionSetExtender
 				"Code Snippet"
 			};
 		public:
-			static enum class									IntelliSenseItemType
+			static enum class IntelliSenseItemType
 			{
 				Invalid = 0,
 				Command,
@@ -49,11 +50,19 @@ namespace ConstructionSetExtender
 			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
 
 			virtual String^										Describe();
-			virtual void										Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface); // argument's a ScriptEditor::Workspace^
-			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);		// returns true if the item can be enumerated in the interface
-			virtual bool										GetIsQuickViewable(String^ Token);					// returns true if the item allows a quick view tooltip and the token matches
-			virtual String^										GetIdentifier() = 0;					// identifier for display in the interface
-			virtual String^										GetSubstitution() = 0;					// string to be inserted into the code
+			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface);
+
+																// returns true if the item can be enumerated in the interface
+			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);
+
+																// returns true if the item allows a quick view tooltip and the token matches
+			virtual bool										GetIsQuickViewable(String^ Token);
+
+																// identifier for display in the interface
+			virtual String^										GetIdentifier() abstract;
+
+																// string to be inserted into the code
+			virtual String^										GetSubstitution() abstract;
 
 			IntelliSenseItemType								GetItemType();
 			String^												GetItemTypeID();
@@ -65,13 +74,13 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemScriptCommand : public IntelliSenseItem
 		{
 		public:
-			static enum class									IntelliSenseCommandItemSourceType
+			static enum class IntelliSenseCommandItemSourceType
 			{
 				Vanilla = 0,
 				OBSE
 			};
 		private:
-			static array<String^>^								IntelliSenseItemCommandReturnTypeID =
+			static array<String^>^ IntelliSenseItemCommandReturnTypeID =
 			{
 				"Numeric",
 				"Form",
@@ -80,7 +89,7 @@ namespace ConstructionSetExtender
 				"Array [Reference]",
 				"Ambiguous"
 			};
-			static enum class									IntelliSenseItemCommandReturnType
+			static enum class IntelliSenseItemCommandReturnType
 			{
 				Default = 0,
 				Form,
@@ -181,7 +190,7 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemEditorIDForm : public IntelliSenseItem
 		{
 		protected:
-			static enum class									FormFlags
+			static enum class FormFlags
 			{
 				FromMaster           = /*00*/ 0x00000001,
 				FromActiveFile       = /*01*/ 0x00000002,
@@ -214,11 +223,32 @@ namespace ConstructionSetExtender
 		public:
 			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-			virtual void										Insert(ScriptEditor::Workspace^ Workspace, IntelliSenseInterface^ Interface) override;
+			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface) override;
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual bool										GetIsQuickViewable(String^ Token) override;
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
+		};
+
+		ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<ListViewItem^>
+		{
+		protected:
+			SortOrder	Order;
+		public:
+			IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
+
+			virtual int Compare(ListViewItem^ X, ListViewItem^ Y)
+			{
+				int Result = -1;
+				Result = String::Compare(((IntelliSenseItem^)X->Tag)->GetIdentifier(),
+										 ((IntelliSenseItem^)Y->Tag)->GetIdentifier(),
+										 true);
+
+				if (Order == SortOrder::Descending)
+					Result *= -1;
+
+				return Result;
+			}
 		};
 	}
 }

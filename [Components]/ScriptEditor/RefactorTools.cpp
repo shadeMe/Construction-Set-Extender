@@ -364,6 +364,16 @@ namespace ConstructionSetExtender
 				return Result;
 			}
 
+			Dictionary<String^, String^>^ EditScriptComponentData::AsTable()
+			{
+				Dictionary<String^, String^>^ Out = gcnew Dictionary < String^, String^ > ;
+
+				for each (ScriptComponent^ Itr in ScriptComponentList)
+					Out->Add(Itr->ElementName, Itr->EditData);
+
+				return Out;
+			}
+
 			EditScriptComponentDialog::EditScriptComponentDialog(IntPtr ParentHandle, String^ ScriptEditorID, EditScriptComponentDialog::OperationType Operation, String^ DefaultItemString)
 			{
 				this->DefaultItemString = DefaultItemString;

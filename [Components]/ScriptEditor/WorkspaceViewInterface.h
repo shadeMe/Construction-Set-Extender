@@ -53,27 +53,31 @@ namespace ConstructionSetExtender
 		interface class IWorkspaceViewController
 		{
 		public:
-			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 
-			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
-			virtual void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size);
-			virtual void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
+			void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size);
+			void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model);
 
-			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
+			void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
-			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
-			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
+			int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 																	String^ Query, String^ Replacement, UInt32 Options, bool Global);
 
-			virtual void	Redraw(IWorkspaceView^ View);
+			void	Redraw(IWorkspaceView^ View);
+
+			void	NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
+
+			DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
 		};
 
 		interface class IWorkspaceViewFactory
 		{
 		public:
-			virtual IWorkspaceView^					CreateView(int X, int Y, int Width, int Height);
-			virtual IWorkspaceViewController^		CreateController();
+			IWorkspaceView^					CreateView(int X, int Y, int Width, int Height);
+			IWorkspaceViewController^		CreateController();
 		};
 	}
 }

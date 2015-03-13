@@ -20,6 +20,7 @@ namespace ConstructionSetExtender
 		String^											StandardDirectivePath;
 		bool											AllowMacroRedefinitions;
 		UInt8											NoOfPasses;
+		bool											ContainsDirectives;				// set to true if the source script contained at least one directive
 
 		ScriptEditorPreprocessorData(String^ DepotPath,
 									String^ StandardDirectivePath,
@@ -28,7 +29,8 @@ namespace ConstructionSetExtender
 			DepotPath(DepotPath),
 			StandardDirectivePath(StandardDirectivePath),
 			AllowMacroRedefinitions(AllowMacroRedefinitions),
-			NoOfPasses(NoOfPasses)
+			NoOfPasses(NoOfPasses),
+			ContainsDirectives(false)
 		{
 			;//
 		}
@@ -87,7 +89,7 @@ namespace ConstructionSetExtender
 		String^												SliceEnd;
 
 		String^												GetMultilineValue(CSEStringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
-		String^												ObfuscateToCompiler(String^% Token);
+		String^												ObfuscateToCompiler(String^ Token);
 	public:
 		CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::Invalid), Encoding(EncodingType::Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
 
@@ -103,7 +105,7 @@ namespace ConstructionSetExtender
 		String^												Name;
 		String^												Value;
 
-		bool												IsNameValid(String^% Name);
+		bool												IsNameValid(String^ Name);
 	public:
 		static enum class									AccessoryOperatorType
 		{
@@ -120,11 +122,11 @@ namespace ConstructionSetExtender
 		DefineDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 		String^												GetName() { return Name; }
-		String^												GetValue(String^% Prefix, AccessoryOperatorType ActiveOperator);
-		void												SetValue(String^% Value) { this->Value = Value; }
+		String^												GetValue(String^ Prefix, AccessoryOperatorType ActiveOperator);
+		void												SetValue(String^ Value) { this->Value = Value; }
 		DefineDirective^									CreateCopy();
 
-		static AccessoryOperatorType						GetAccessoryOperatorFromToken(String^% Token);
+		static AccessoryOperatorType						GetAccessoryOperatorFromToken(String^ Token);
 
 		virtual	String^										GetToken() override;
 	};
@@ -146,7 +148,7 @@ namespace ConstructionSetExtender
 		String^												Value;
 		LinkedList<DefineDirective^>^						ComponentDefineDirectives;
 
-		void												ParseComponentDefineDirectives(String^% Source, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance, UInt32 LineNumber);
+		void												ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);
 	public:
 		EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
 		EnumDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
@@ -158,7 +160,7 @@ namespace ConstructionSetExtender
 	{
 		ref struct Operator
 		{
-			delegate bool									Handler(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+			delegate bool									Handler(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
 			static enum class								BuiltInOperators
 			{
@@ -185,7 +187,7 @@ namespace ConstructionSetExtender
 				"||"
 			};
 
-			static bool										Evaluator(BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+			static bool										Evaluator(BuiltInOperators Type, String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 		private:
 			String^											Identifier;
 			Handler^										EvaluationHandler;
@@ -195,25 +197,24 @@ namespace ConstructionSetExtender
 			Operator(String^ Identifier, Handler^ EvaluationHandler, UInt32 Precedence, UInt32 OperandCount) :
 			  Identifier(Identifier), EvaluationHandler(EvaluationHandler), Precedence(Precedence), OperandCount(OperandCount) {}
 
-			  String^%										GetIdentifier() { return Identifier; }
+			  String^										GetIdentifier() { return Identifier; }
 			  UInt32										GetPrecedence() { return Precedence; }
 			  UInt32										GetOperandCount() { return OperandCount; }
-			  bool											Evaluate(String^% LHS, String^% RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance) { return EvaluationHandler(LHS, RHS, ErrorOutput, PreprocessorInstance); }
+			  bool											Evaluate(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance) { return EvaluationHandler(LHS, RHS, ErrorOutput, PreprocessorInstance); }
 		};
 
-		static bool											ParseAsInt(String^% Source, int% Result);
-		static void											ProcessOperands(String^% LHSSource, String^% RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^% PreprocessorInstance);
+		static bool											ParseAsInt(String^ Source, int% Result);
+		static void											ProcessOperands(String^ LHSSource, String^ RHSSource, String^% LHSResult, String^% RHSResult, Preprocessor^ PreprocessorInstance);
 
-		// use anonymous delegates, dammit!
-		static bool											EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
-		static bool											LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
-		static bool											GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
-		static bool											LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
-		static bool											GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
-		static bool											NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+		static bool											EqualityOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool											LessThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool											GreaterThanOrEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool											LessThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool											GreaterThanOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool											NotEqualOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
-		static bool											LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
-		static bool											LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+		static bool											LogicalAndOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		static bool											LogicalOrOperatorEvaluator(String^ LHS, String^ RHS, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
 		static array<Operator^>^							OperatorList =
 		{
@@ -236,14 +237,14 @@ namespace ConstructionSetExtender
 							gcnew Operator::Handler(&IfDirective::LogicalOrOperatorEvaluator), 4, 2)
 		};
 
-		bool												ConvertInfixExpressionToPostFix(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
-		Operator^											LookupOperatorByIdentifier(String^% Identifier);
+		bool												ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput);
+		Operator^											LookupOperatorByIdentifier(String^ Identifier);
 
 		String^												BaseCondition;
 		String^												Block;
 		bool												ValidationResult;
 
-		bool												CheckBaseCondition(String^% Base, StandardOutputError^ ErrorOutput, Preprocessor^% PreprocessorInstance);
+		bool												CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 	public:
 		IfDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
@@ -262,16 +263,18 @@ namespace ConstructionSetExtender
 		void												ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput);
 		CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, CSEStringReader^ TextReader, StandardOutputError^ ErrorOutput);
 	public:
-		static Preprocessor^%								GetSingleton();
+		static Preprocessor^								GetSingleton();
+
+		static String^										kPreprocessorSigil = ";<CSE_PREPROCESSOR_SIGIL>;";
 
 		ScriptEditorPreprocessorData^%						GetInstanceData() { return DataBuffer; }
 		void												RegisterDefineDirective(DefineDirective^ Directive);
-		DefineDirective^									LookupDefineDirectiveByName(String^% Name);
-		bool												Preprocess(String^% Source, String^% Result, StandardOutputError^ ErrorOutput);
+		DefineDirective^									LookupDefineDirectiveByName(String^ Name);
+		bool												Preprocess(String^ Source, String^% Result, StandardOutputError^ ErrorOutput);		// INTERNAL
 
 		// public API
-		bool												PreprocessScript(String^% Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data);
-		bool												GetImportFilePath(String^% Source, String^% Result, ScriptEditorPreprocessorData^ Data);
+		bool												PreprocessScript(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, ScriptEditorPreprocessorData^ Data);
+		bool												GetImportFilePath(String^ Source, String^% Result, ScriptEditorPreprocessorData^ Data);
 	};
 
 #define PREPROC											Preprocessor::GetSingleton()

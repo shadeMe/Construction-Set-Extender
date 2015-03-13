@@ -229,7 +229,7 @@ namespace ConstructionSetExtender
 			ref class AvalonEditXSHDManager
 			{
 			protected:
-				List<String^>^											GetKeyWordList(void);
+				List<String^>^											GetKeywordList(void);
 				List<String^>^											GetBlockTypeList(void);
 
 				String^													CommentMarkerRuleset;

@@ -45,6 +45,9 @@ namespace ConstructionSetExtender
 			Let,
 			Call,
 			Player,
+			SetEventHandler,
+			RemoveEventHandler,
+			DispatchEvent,
 		};
 
 		ref class Tokenizer
@@ -282,6 +285,23 @@ namespace ConstructionSetExtender
 			delegate String^					GetSanitizedIdentifier(String^ Identifier);
 
 			bool								SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate);		// returns false if unsuccessful
+		};
+
+		ref class Documenter
+		{
+			String^								InputText;
+			String^								DocumentedText;
+
+			String^								GetVariableDescription(String^ Identifier, Dictionary<String^, String^>^ Descriptions);
+		public:
+			Documenter(String^ Source);
+
+			property String^					Output
+			{
+				virtual String^	get() { return DocumentedText; }
+			}
+
+			void								Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions);
 		};
 	};
 
