@@ -61,6 +61,9 @@ namespace ConstructionSetExtender
 			int						GetCaret(IWorkspaceModel^ Model);
 			void					SetCaret(IWorkspaceModel^ Model, int Index);
 
+			String^					GetSelection(IWorkspaceModel^ Model);
+			String^					GetCaretToken(IWorkspaceModel^ Model);
+
 			void					AcquireInputFocus(IWorkspaceModel^ Model);
 
 			void					New(IWorkspaceModel^ Model);

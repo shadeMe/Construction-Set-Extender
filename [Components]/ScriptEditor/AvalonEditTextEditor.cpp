@@ -116,14 +116,14 @@ namespace ConstructionSetExtender
 								{
 									TextField->Document->Replace(Offset, Length, Replacement);
 									CurrentLine = TextField->Document->GetText(Line);
-									FindReplaceColorizer->AddSegment(Offset, Replacement->Length);
+									LineTracker->TrackFindResult(Offset, Replacement->Length, CurrentLine);
 									SearchStartOffset = Itr->Index + Replacement->Length;
 									Restart = true;
 									break;
 								}
 								else if (Operation == IScriptTextEditor::FindReplaceOperation::Find)
 								{
-									FindReplaceColorizer->AddSegment(Offset, Length);
+									LineTracker->TrackFindResult(Offset, Length, CurrentLine);
 								}
 							}
 
@@ -139,10 +139,6 @@ namespace ConstructionSetExtender
 					Hits = -1;
 					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
 				}
-
-				if (Hits)
-					TODO("track hits");
-					//Output(Line->LineNumber.ToString(), TextField->Document->GetText(Line));
 
 				return Hits;
 			}
@@ -255,31 +251,22 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::HandleTextChangeEvent()
 			{
-				if (Initializing)
+				Modified = true;
+				if (PreventTextChangedEventFlag == PreventTextChangeFlagState::AutoReset)
+					PreventTextChangedEventFlag = PreventTextChangeFlagState::Disabled;
+				else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::Disabled)
 				{
-					Initializing = false;
-					Modified = false;
-					ClearFindResultIndicators();
-				}
-				else
-				{
-					Modified = true;
-					if (PreventTextChangedEventFlag == PreventTextChangeFlagState::AutoReset)
-						PreventTextChangedEventFlag = PreventTextChangeFlagState::Disabled;
-					else if (PreventTextChangedEventFlag == PreventTextChangeFlagState::Disabled)
+					if (TextField->SelectionStart - 1 >= 0 &&
+						GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
+						GetCharIndexInsideStringSegment(TextField->SelectionStart - 1) == false)
 					{
-						if (TextField->SelectionStart - 1 >= 0 &&
-							GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
-							GetCharIndexInsideStringSegment(TextField->SelectionStart - 1) == false)
+						if ((LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "") &&
+							TextField->TextArea->Selection->IsMultiline == false)
 						{
-							if ((LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "") &&
-								TextField->TextArea->Selection->IsMultiline == false)
-							{
-								IntelliSenseBox->Show(IntelliSenseBox->LastOperation, false, false);
-							}
-							else
-								IntelliSenseBox->Hide();
+							IntelliSenseBox->Show(IntelliSenseBox->LastOperation, false, false);
 						}
+						else
+							IntelliSenseBox->Hide();
 					}
 				}
 			}
@@ -374,8 +361,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ClearFindResultIndicators()
 			{
-				FindReplaceColorizer->ClearSegments();
-				RefreshBGColorizerLayer();
+				LineTracker->ClearFindResults();
 			}
 
 			void AvalonEditTextEditor::MoveTextSegment( AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction )
@@ -738,8 +724,22 @@ namespace ConstructionSetExtender
 
 			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber)
 			{
-				TODO("inconsistent")
-					return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
+				TODO("inconsistent");
+				return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
+			}
+
+			void AvalonEditTextEditor::AddBookmark(int Index)
+			{
+				int LineNo = GetLineNumberFromCharIndex(Index), Count = 0;
+
+				String^ BookmarkDesc = "";
+				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter A Description For The Bookmark", "Place Bookmark");
+				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
+					return;
+				else
+					BookmarkDesc = Result->Text;
+
+				LineTracker->AddBookmark(LineNo, BookmarkDesc);
 			}
 #pragma region Events
 			void AvalonEditTextEditor::OnScriptModified(bool ModificationState)
@@ -931,7 +931,7 @@ namespace ConstructionSetExtender
 				case System::Windows::Input::Key::B:
 					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 					{
-						ToggleBookmark(TextField->SelectionStart);
+						AddBookmark(TextField->SelectionStart);
 
 						HandleKeyEventForKey(E->Key);
 						E->Handled = true;
@@ -1189,10 +1189,11 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
-				UpdateSemanticAnalysisCache(true, true);
+				UpdateSemanticAnalysisCache(true, true, false);
 				UpdateIntelliSenseLocalDatabase();
 				UpdateCodeFoldings();
 				UpdateSyntaxHighlighting(false);
+				LineTracker->Cleanup();
 			}
 
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
@@ -1413,9 +1414,9 @@ namespace ConstructionSetExtender
 				ToggleComment(GetLastKnownMouseClickOffset());
 			}
 
-			void AvalonEditTextEditor::ContextMenuToggleBookmark_Click(Object^ Sender, EventArgs^ E)
+			void AvalonEditTextEditor::ContextMenuAddBookmark_Click(Object^ Sender, EventArgs^ E)
 			{
-				ToggleBookmark(GetLastKnownMouseClickOffset());
+				AddBookmark(GetLastKnownMouseClickOffset());
 			}
 
 			void AvalonEditTextEditor::ContextMenuWikiLookup_Click(Object^ Sender, EventArgs^ E)
@@ -1432,7 +1433,7 @@ namespace ConstructionSetExtender
 			{
 				try
 				{
-					Process::Start(dynamic_cast<String^>(ContextMenuDirectLink->Tag));
+					Process::Start((String^)ContextMenuDirectLink->Tag);
 				}
 				catch (Exception^ E)
 				{
@@ -1446,8 +1447,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ContextMenuJumpToScript_Click(Object^ Sender, EventArgs^ E)
 			{
-				TODO("implement");
-				//ParentContainer->JumpToWorkspace(WorkspaceHandleIndex, dynamic_cast<String^>(ContextMenuJumpToScript->Tag));
+				JumpScriptDelegate((String^)ContextMenuJumpToScript->Tag);
 			}
 
 			void AvalonEditTextEditor::ContextMenuGoogleLookup_Click(Object^ Sender, EventArgs^ E)
@@ -1457,12 +1457,12 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ContextMenuOpenImportFile_Click(Object^ Sender, EventArgs^ E)
 			{
-				Process::Start(dynamic_cast<String^>(ContextMenuOpenImportFile->Tag));
+				Process::Start((String^)ContextMenuOpenImportFile->Tag);
 			}
 
 			void AvalonEditTextEditor::ContextMenuRefactorAddVariable_Click(Object^ Sender, EventArgs^ E)
 			{
-				ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
+				ToolStripMenuItem^ MenuItem = (ToolStripMenuItem^)Sender;
 				ObScriptSemanticAnalysis::Variable::DataType VarType = (ObScriptSemanticAnalysis::Variable::DataType)MenuItem->Tag;
 				String^ VarName = ContextMenuWord->Text;
 
@@ -1481,16 +1481,17 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::ContextMenuRefactorCreateUDFImplementation_Click(Object^ Sender, EventArgs^ E)
 			{
 				// ugly
-				Parent->Controller->ApplyRefactor(Parent,
+				ParentModel->Controller->ApplyRefactor(ParentModel,
 												  ScriptEditor::IWorkspaceModel::RefactorOperation::CreateUDF,
 												  ContextMenuRefactorCreateUDFImplementation->Tag);
 			}
 #pragma endregion
 
-			AvalonEditTextEditor::AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, Font^ Font, int TabSize)
+			AvalonEditTextEditor::AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize)
 			{
 				Debug::Assert(ParentModel != nullptr);
-				this->Parent = ParentModel;
+				this->ParentModel = ParentModel;
+				this->JumpScriptDelegate = JumpScriptDelegate;
 
 				WinFormsContainer = gcnew Panel();
 				WPFHost = gcnew ElementHost();
@@ -1571,10 +1572,6 @@ namespace ConstructionSetExtender
 				TextField->Background = BackgroundBrush;
 				TextField->LineNumbersForeground = ForegroundBrush;
 
-				TextField->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer = gcnew ScriptErrorBGColorizer(TextField,
-																																KnownLayer::Background));
-				TextField->TextArea->TextView->BackgroundRenderers->Add(FindReplaceColorizer = gcnew FindReplaceBGColorizer(TextField,
-																																KnownLayer::Background));
 				TextField->TextArea->TextView->BackgroundRenderers->Add(BraceColorizer = gcnew BraceHighlightingBGColorizer(TextField,
 																																KnownLayer::Background));
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew SelectionBGColorizer(TextField, KnownLayer::Background));
@@ -1640,7 +1637,7 @@ namespace ConstructionSetExtender
 				ContextMenuCopy = gcnew ToolStripMenuItem();
 				ContextMenuPaste = gcnew ToolStripMenuItem();
 				ContextMenuToggleComment = gcnew ToolStripMenuItem();
-				ContextMenuToggleBookmark = gcnew ToolStripMenuItem();
+				ContextMenuAddBookmark = gcnew ToolStripMenuItem();
 				ContextMenuWord = gcnew ToolStripMenuItem();
 				ContextMenuWikiLookup = gcnew ToolStripMenuItem();
 				ContextMenuOBSEDocLookup = gcnew ToolStripMenuItem();
@@ -1659,7 +1656,7 @@ namespace ConstructionSetExtender
 				SetupControlImage(ContextMenuCopy);
 				SetupControlImage(ContextMenuPaste);
 				SetupControlImage(ContextMenuToggleComment);
-				SetupControlImage(ContextMenuToggleBookmark);
+				SetupControlImage(ContextMenuAddBookmark);
 				SetupControlImage(ContextMenuWikiLookup);
 				SetupControlImage(ContextMenuOBSEDocLookup);
 				SetupControlImage(ContextMenuDirectLink);
@@ -1671,7 +1668,7 @@ namespace ConstructionSetExtender
 				AvalonEditTextEditorDefineClickHandler(ContextMenuCopy);
 				AvalonEditTextEditorDefineClickHandler(ContextMenuPaste);
 				AvalonEditTextEditorDefineClickHandler(ContextMenuToggleComment);
-				AvalonEditTextEditorDefineClickHandler(ContextMenuToggleBookmark);
+				AvalonEditTextEditorDefineClickHandler(ContextMenuAddBookmark);
 				AvalonEditTextEditorDefineClickHandler(ContextMenuWikiLookup);
 				AvalonEditTextEditorDefineClickHandler(ContextMenuOBSEDocLookup);
 				AvalonEditTextEditorDefineClickHandler(ContextMenuDirectLink);
@@ -1689,7 +1686,7 @@ namespace ConstructionSetExtender
 				ContextMenuWikiLookup->Text = "Lookup on the Wiki";
 				ContextMenuOBSEDocLookup->Text = "Lookup in the OBSE Docs";
 				ContextMenuToggleComment->Text = "Toggle Comment";
-				ContextMenuToggleBookmark->Text = "Toggle Bookmark";
+				ContextMenuAddBookmark->Text = "Add Bookmark";
 				ContextMenuDirectLink->Text = "Developer Page";
 				ContextMenuJumpToScript->Text = "Jump into Script";
 				ContextMenuGoogleLookup->Text = "Lookup on Google";
@@ -1720,7 +1717,7 @@ namespace ConstructionSetExtender
 				TextEditorContextMenu->Items->Add(ContextMenuCopy);
 				TextEditorContextMenu->Items->Add(ContextMenuPaste);
 				TextEditorContextMenu->Items->Add(ContextMenuToggleComment);
-				TextEditorContextMenu->Items->Add(ContextMenuToggleBookmark);
+				TextEditorContextMenu->Items->Add(ContextMenuAddBookmark);
 				TextEditorContextMenu->Items->Add(gcnew ToolStripSeparator());
 				TextEditorContextMenu->Items->Add(ContextMenuWord);
 				TextEditorContextMenu->Items->Add(ContextMenuWikiLookup);
@@ -1746,6 +1743,8 @@ namespace ConstructionSetExtender
 				SetFont(Font);
 				if (TabSize)
 					SetTabCharacterSize(TabSize);
+
+				LineTracker = gcnew LineTrackingManager(TextField);
 
 				TextField->TextChanged += TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged += TextFieldCaretPositionChangedHandler;
@@ -1773,7 +1772,7 @@ namespace ConstructionSetExtender
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuCopy);
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuPaste);
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuToggleComment);
-				AvalonEditTextEditorSubscribeClickEvent(ContextMenuToggleBookmark);
+				AvalonEditTextEditorSubscribeClickEvent(ContextMenuAddBookmark);
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuWikiLookup);
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuOBSEDocLookup);
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuDirectLink);
@@ -1790,6 +1789,9 @@ namespace ConstructionSetExtender
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
+				ParentModel = nullptr;
+				JumpScriptDelegate = nullptr;
+
 				TextField->Clear();
 				MiddleMouseScrollTimer->Stop();
 				ScrollBarSyncTimer->Stop();
@@ -1801,6 +1803,8 @@ namespace ConstructionSetExtender
 					delete Itr;
 
 				TextField->TextArea->TextView->BackgroundRenderers->Clear();
+
+				delete LineTracker;
 
 				TextField->TextChanged -= TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
@@ -1828,7 +1832,7 @@ namespace ConstructionSetExtender
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuCopy);
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuPaste);
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuToggleComment);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuToggleBookmark);
+				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuAddBookmark);
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuWikiLookup);
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuOBSEDocLookup);
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuDirectLink);
@@ -1845,7 +1849,7 @@ namespace ConstructionSetExtender
 				DisposeControlImage(ContextMenuCopy);
 				DisposeControlImage(ContextMenuPaste);
 				DisposeControlImage(ContextMenuToggleComment);
-				DisposeControlImage(ContextMenuToggleBookmark);
+				DisposeControlImage(ContextMenuAddBookmark);
 				DisposeControlImage(ContextMenuWikiLookup);
 				DisposeControlImage(ContextMenuOBSEDocLookup);
 				DisposeControlImage(ContextMenuDirectLink);
@@ -1863,7 +1867,7 @@ namespace ConstructionSetExtender
 				delete ContextMenuCopy;
 				delete ContextMenuPaste;
 				delete ContextMenuToggleComment;
-				delete ContextMenuToggleBookmark;
+				delete ContextMenuAddBookmark;
 				delete ContextMenuWord;
 				delete ContextMenuWikiLookup;
 				delete ContextMenuOBSEDocLookup;
@@ -1887,8 +1891,6 @@ namespace ConstructionSetExtender
 				delete TextField;
 				delete IntelliSenseBox;
 				delete MiddleMouseScrollTimer;
-				delete ErrorColorizer;
-				delete FindReplaceColorizer;
 				delete BraceColorizer;
 				delete CodeFoldingManager;
 				delete CodeFoldingStrategy;
@@ -1902,8 +1904,6 @@ namespace ConstructionSetExtender
 				TextField->SyntaxHighlighting = nullptr;
 				TextField->Document = nullptr;
 				CodeFoldingStrategy = nullptr;
-				ErrorColorizer = nullptr;
-				FindReplaceColorizer = nullptr;
 				CodeFoldingManager = nullptr;
 				BraceColorizer = nullptr;
 			}
@@ -1948,15 +1948,25 @@ namespace ConstructionSetExtender
 						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::SuppressQuestVariableRefCount;
 				}
 
-				if (Parent->Type == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
+				if (ParentModel->Type == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
 					Type = ObScriptSemanticAnalysis::ScriptType::MagicEffect;
-				else if (Parent->Type == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
+				else if (ParentModel->Type == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
 					Type = ObScriptSemanticAnalysis::ScriptType::Quest;
 
 				SemanticAnalysisCache->PerformAnalysis(GetText(), Type, AnalysisOps,
 													   gcnew ObScriptSemanticAnalysis::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
 
-				TODO("track the messages");
+				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
+				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator);
+
+				for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+				{
+					LineTracker->TrackMessage(Itr->Line,
+											  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
+											  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
+				}
+
+				LineTracker->EndUpdate();
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -1974,15 +1984,7 @@ namespace ConstructionSetExtender
 			}
 			void AvalonEditTextEditor::SerializeBookmarks(String^% Result)
 			{
-				TODO("serialize bookmarks");
-				String^ BookmarkSegment = "";
-
-				/*for each (ListViewItem^ Itr in BookmarkList->Items)
-				{
-					BookmarkSegment += ";<CSEBookmark>\t" + Itr->SubItems[0]->Text + "\t" + Itr->SubItems[1]->Text + "\t</CSEBookmark>\n";
-				}
-
-				Result += BookmarkSegment;*/
+				Result += LineTracker->SerializeBookmarks();
 			}
 
 			void AvalonEditTextEditor::DeserializeCaretPos(String^ ExtractedBlock)
@@ -2022,46 +2024,18 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::DeserializeBookmarks(String^ ExtractedBlock)
 			{
-				ScriptParser^ TextParser = gcnew ScriptParser();
-				StringReader^ StringParser = gcnew StringReader(ExtractedBlock);
-				String^ ReadLine = StringParser->ReadLine();
-				int LineNo = 0;
-
-				while (ReadLine != nullptr)
-				{
-					TextParser->Tokenize(ReadLine, false);
-					if (!TextParser->Valid)
-					{
-						ReadLine = StringParser->ReadLine();
-						continue;
-					}
-
-					if (!TextParser->GetTokenIndex(";<" + kMetadataSigilBookmark + ">"))
-					{
-						array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split((String("\t")).ToCharArray());
-						try
-						{
-							LineNo = int::Parse(Splits[1]);
-						}
-						catch (...)
-						{
-							LineNo = 1;
-						}
-
-						TODO("deserialize bookmarks")
-					}
-
-					ReadLine = StringParser->ReadLine();
-				}
+				LineTracker->DeserializeBookmarks(ExtractedBlock, true);
 			}
 
 #pragma region Interface
-			void AvalonEditTextEditor::Bind(BindData^ Args)
+			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
 			{
 				FocusTextArea();
 				IsFocused = true;
 				SemanticAnalysisTimer->Start();
 				ScrollBarSyncTimer->Start();
+
+				LineTracker->Bind(MessageList, BookmarkList, FindResultList);
 			}
 
 			void AvalonEditTextEditor::Unbind()
@@ -2070,11 +2044,20 @@ namespace ConstructionSetExtender
 				SemanticAnalysisTimer->Stop();
 				ScrollBarSyncTimer->Stop();
 				IntelliSenseBox->Hide();
+
+				LineTracker->Unbind();
 			}
 
-			void DummyOutputWrapper(String^ Message)
+			void DummyOutputWrapper(int Line, String^ Message)
 			{
 				;//
+			}
+
+			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
+			{
+				LineTracker->TrackMessage(Line,
+										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
+										  TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
 			}
 
 			String^ AvalonEditTextEditor::GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors)
@@ -2082,7 +2065,11 @@ namespace ConstructionSetExtender
 				String^ Preprocessed = "";
 				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
 				if (SuppressErrors == false)
-					TODO("route errors to the tracker");
+				{
+					ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(this, &AvalonEditTextEditor::RoutePreprocessorMessages);
+					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
+				}
 
 				bool Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
 																			 Preprocessed,
@@ -2091,6 +2078,11 @@ namespace ConstructionSetExtender
 																			 gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 																			 PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
 																			 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
+
+				if (SuppressErrors == false)
+				{
+					LineTracker->EndUpdate();
+				}
 
 				OutPreprocessResult = Result;
 				return Preprocessed;
@@ -2120,7 +2112,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache(true, true);
+					UpdateSemanticAnalysisCache(true, true, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
 				}
@@ -2159,7 +2151,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache(true, true);
+					UpdateSemanticAnalysisCache(true, true, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
 				}
@@ -2273,6 +2265,7 @@ namespace ConstructionSetExtender
 				{
 					ClearFindResultIndicators();
 					BeginUpdate();
+					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::FindResults);
 				}
 
 				try
@@ -2315,7 +2308,7 @@ namespace ConstructionSetExtender
 
 								for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
 								{
-									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Output, Options);
+									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Options);
 									Hits += Matches;
 
 									if (Matches == -1)
@@ -2331,7 +2324,7 @@ namespace ConstructionSetExtender
 					{
 						for each (DocumentLine^ Line in TextField->Document->Lines)
 						{
-							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Output, Options);
+							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Options);
 							Hits += Matches;
 
 							if (Matches == -1)
@@ -2353,6 +2346,7 @@ namespace ConstructionSetExtender
 					SetSelectionLength(0);
 					RefreshBGColorizerLayer();
 					EndUpdate(false);
+					LineTracker->EndUpdate();
 				}
 
 				if (Hits == -1)
@@ -2404,7 +2398,7 @@ namespace ConstructionSetExtender
 			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
 			{
 				if (Modified)
-					UpdateSemanticAnalysisCache(false, true);
+					UpdateSemanticAnalysisCache(false, true, false);
 
 				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
@@ -2412,7 +2406,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
 			{
 				if (Modified)
-					UpdateSemanticAnalysisCache(true, false);
+					UpdateSemanticAnalysisCache(true, false, false);
 
 				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
@@ -2453,7 +2447,7 @@ namespace ConstructionSetExtender
 				return Result;
 			}
 
-			String^ AvalonEditTextEditor::DeserializeMetadata(String^ Input)
+			String^ AvalonEditTextEditor::DeserializeMetadata(String^ Input, bool SetText)
 			{
 				ScriptParser^ TextParser = gcnew ScriptParser();
 				StringReader^ StringParser = gcnew StringReader(Input);
@@ -2494,13 +2488,18 @@ namespace ConstructionSetExtender
 					ReadLine = StringParser->ReadLine();
 				}
 
+				if (Result != "")
+					Result = Result->Substring(1);
+
 				DeserializeCaretPos(CSEBlock);
+
+				// not very pretty but we need to set the text before deserializing bookmarks to correctly create the text anchors
+				if (SetText)
+					this->SetText(Result, true, true);
+
 				DeserializeBookmarks(CSEBlock);
 
-				if (Result == "")
-					return Result;
-				else
-					return Result->Substring(1);
+				return Result;
 			}
 
 			bool AvalonEditTextEditor::CanCompile(bool% OutContainsPreprocessorDirectives)
@@ -2508,16 +2507,20 @@ namespace ConstructionSetExtender
 				bool Result = false;
 
 				String^ Preprocessed = "";
-				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
+				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(this,
+																								&AvalonEditTextEditor::RoutePreprocessorMessages);
+
 				ScriptEditorPreprocessorData^ Data = gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 																						gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 																						PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
 																						PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor"));
-				TODO("route errors to the tracker");
 
+				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 				UpdateSemanticAnalysisCache(true, true, true);
 				if (SemanticAnalysisCache->HasCriticalMessages == false)
 				{
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
+
 					Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
 																			Preprocessed,
 																			ErrorOutput,
@@ -2526,10 +2529,35 @@ namespace ConstructionSetExtender
 					if (Result)
 						OutContainsPreprocessorDirectives = Data->ContainsDirectives;
 				}
+				LineTracker->EndUpdate();
 
 				return Result;
 			}
 
+			void AvalonEditTextEditor::ClearTrackedData(bool CompilerMessages, bool PreprocessorMessages, bool ValidatorMessages, bool Bookmarks, bool FindResults)
+			{
+				if (CompilerMessages)
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler);
+
+				if (PreprocessorMessages)
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
+
+				if (ValidatorMessages)
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator);
+
+				if (Bookmarks)
+					LineTracker->ClearBookmarks();
+
+				if (FindResults)
+					LineTracker->ClearFindResults();
+			}
+
+			void AvalonEditTextEditor::TrackCompilerError(int Line, String^ Message)
+			{
+				LineTracker->TrackMessage(Line,
+										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
+										  TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
+			}
 #pragma endregion
 		}
 	}

@@ -24,13 +24,14 @@ namespace ConstructionSetExtender
 			typedef System::Windows::Media::Imaging::RenderTargetBitmap			RTBitmap;
 			typedef System::EventHandler<AvalonEdit::Editing::TextEventArgs^>	AvalonEditTextEventHandler;
 
+			delegate void JumpToScriptHandler(String^ TargetEditorID);
+
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
 				static const double									kSetTextFadeAnimationDuration = 0.10;		// in seconds
 
 				static String^										kMetadataBlockMarker = "CSEBlock";
 				static String^										kMetadataSigilCaret = "CSECaretPos";
-				static String^										kMetadataSigilBookmark = "CSEBookmark";
 
 				static AvalonEditXSHDManager^						SyntaxHighlightingManager = gcnew AvalonEditXSHDManager();
 			protected:
@@ -53,8 +54,6 @@ namespace ConstructionSetExtender
 				AvalonEdit::TextEditor^								TextField;
 				System::Windows::Shapes::Rectangle^					AnimationPrimitive;
 
-				ScriptErrorBGColorizer^								ErrorColorizer;
-				FindReplaceBGColorizer^								FindReplaceColorizer;
 				AvalonEdit::Folding::FoldingManager^				CodeFoldingManager;
 				ObScriptCodeFoldingStrategy^						CodeFoldingStrategy;
 				BraceHighlightingBGColorizer^						BraceColorizer;
@@ -90,7 +89,9 @@ namespace ConstructionSetExtender
 				int													PreviousLineBuffer;
 				ObScriptSemanticAnalysis::AnalysisData^				SemanticAnalysisCache;
 
-				ScriptEditor::IWorkspaceModel^						Parent;
+				ScriptEditor::IWorkspaceModel^						ParentModel;
+				LineTrackingManager^								LineTracker;
+				JumpToScriptHandler^								JumpScriptDelegate;
 
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
@@ -118,7 +119,7 @@ namespace ConstructionSetExtender
 				ToolStripMenuItem^									ContextMenuCopy;
 				ToolStripMenuItem^									ContextMenuPaste;
 				ToolStripMenuItem^									ContextMenuToggleComment;
-				ToolStripMenuItem^									ContextMenuToggleBookmark;
+				ToolStripMenuItem^									ContextMenuAddBookmark;
 				ToolStripMenuItem^									ContextMenuWord;
 				ToolStripMenuItem^									ContextMenuWikiLookup;
 				ToolStripMenuItem^									ContextMenuOBSEDocLookup;
@@ -137,7 +138,7 @@ namespace ConstructionSetExtender
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuCopy);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuPaste);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuToggleComment);
-				AvalonEditTextEditorDeclareClickHandler(ContextMenuToggleBookmark);
+				AvalonEditTextEditorDeclareClickHandler(ContextMenuAddBookmark);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuWikiLookup);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuOBSEDocLookup);
 				AvalonEditTextEditorDeclareClickHandler(ContextMenuDirectLink);
@@ -181,6 +182,8 @@ namespace ConstructionSetExtender
 				void										ExternalScrollBar_ValueChanged(Object^ Sender, EventArgs^ E);
 				void										SetTextAnimation_Completed(Object^ Sender, EventArgs^ E);
 				void										ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
+
+				void										RoutePreprocessorMessages(int Line, String^ Message);
 
 				String^										GetTokenAtIndex(int Index, bool SelectText, int% StartIndexOut, int% EndIndexOut);
 				String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
@@ -236,6 +239,7 @@ namespace ConstructionSetExtender
 				array<String^>^								GetTokensAtMouseLocation();	// gets three of the closest tokens surrounding the mouse loc
 				int											GetLastKnownMouseClickOffset(void);
 				void										ToggleComment(int StartIndex);
+				void										AddBookmark(int Index);
 
 				void										UpdateIntelliSenseLocalDatabase(void);
 
@@ -245,12 +249,11 @@ namespace ConstructionSetExtender
 				void                                        SerializeBookmarks(String^% Result);
 				void                                        DeserializeCaretPos(String^ ExtractedBlock);
 				void                                        DeserializeBookmarks(String^ ExtractedBlock);
-
 			public:
-				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, Font^ Font, int TabSize);
+				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
 
-				ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+				ObScriptSemanticAnalysis::AnalysisData^						GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 #pragma region Interfaces
 				virtual event TextEditorScriptModifiedEventHandler^			ScriptModified;
@@ -305,25 +308,11 @@ namespace ConstructionSetExtender
 					virtual void set(bool State)
 					{
 						ModifiedFlag = State;
-
-						if (State)
-						{
-							ErrorColorizer->ClearLines();
-
-							if (TextFieldInUpdateFlag == false)
-								ClearFindResultIndicators();
-						}
-
 						OnScriptModified(Modified);
 					}
 				}
-				property bool								Initializing
-				{
-					virtual bool get() { return InitializingFlag; }
-					virtual void set(bool e) { InitializingFlag = e; }
-				}
 
-				virtual void								Bind(BindData^ Args);
+				virtual void								Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);
 				virtual void								Unbind();
 
 				virtual String^								GetText();
@@ -361,9 +350,15 @@ namespace ConstructionSetExtender
 				virtual void								InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
 				virtual String^								SerializeMetadata(bool AddPreprocessorSigil);
-				virtual String^								DeserializeMetadata(String^ Input);
+				virtual String^								DeserializeMetadata(String^ Input, bool SetText);
 				virtual bool								CanCompile(bool% OutContainsPreprocessorDirectives);
 
+				virtual void								ClearTrackedData(bool CompilerMessages,
+																			 bool PreprocessorMessages,
+																			 bool ValidatorMessages,
+																			 bool Bookmarks,
+																			 bool FindResults);
+				virtual void								TrackCompilerError(int Line, String^ Message);
 #pragma endregion
 			};
 		}

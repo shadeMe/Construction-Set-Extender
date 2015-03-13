@@ -7,9 +7,9 @@ namespace ConstructionSetExtender
 
 	namespace ScriptPreprocessor
 	{
-		public delegate void StandardOutputError(String^ Message);
+		public delegate void StandardOutputError(int Line, String^ Message);
 
-		void DummyStandardErrorOutput(String^ Message);
+		void DummyStandardErrorOutput(int Line, String^ Message);
 	}
 
 	using namespace ScriptPreprocessor;
@@ -21,6 +21,7 @@ namespace ConstructionSetExtender
 		bool											AllowMacroRedefinitions;
 		UInt8											NoOfPasses;
 		bool											ContainsDirectives;				// set to true if the source script contained at least one directive
+		UInt32											CurrentLine;
 
 		ScriptEditorPreprocessorData(String^ DepotPath,
 									String^ StandardDirectivePath,
@@ -30,7 +31,8 @@ namespace ConstructionSetExtender
 			StandardDirectivePath(StandardDirectivePath),
 			AllowMacroRedefinitions(AllowMacroRedefinitions),
 			NoOfPasses(NoOfPasses),
-			ContainsDirectives(false)
+			ContainsDirectives(false),
+			CurrentLine(0)
 		{
 			;//
 		}
@@ -237,7 +239,7 @@ namespace ConstructionSetExtender
 							gcnew Operator::Handler(&IfDirective::LogicalOrOperatorEvaluator), 4, 2)
 		};
 
-		bool												ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput);
+		bool												ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 		Operator^											LookupOperatorByIdentifier(String^ Identifier);
 
 		String^												BaseCondition;

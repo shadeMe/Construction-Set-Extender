@@ -406,7 +406,7 @@ namespace ConstructionSetExtender
 				FindReplaceBox->Show(gcnew WindowHandleWrapper(ParentView->WindowHandle));
 			}
 
-			if (PerformSearch)
+			if (PerformSearch && Query != "")
 				FindButton->PerformClick();
 
 			QueryBox->Focus();

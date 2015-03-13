@@ -46,8 +46,6 @@
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="ScriptEditor.cpp" />
-    <ClCompile Include="ScriptEditorManager.cpp" />
     <ClCompile Include="RefactorTools.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -112,8 +110,6 @@
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
-    <ClInclude Include="ScriptEditor.h" />
-    <ClInclude Include="ScriptEditorManager.h" />
     <ClInclude Include="..\..\[Common]\CustomInputBox.h">
       <Filter>Utilities</Filter>
     </ClInclude>

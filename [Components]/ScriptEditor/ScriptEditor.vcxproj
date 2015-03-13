@@ -206,8 +206,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClCompile Include="RefactorTools.cpp" />
     <ClCompile Include="ScriptListDialog.cpp" />
     <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="ScriptEditor.cpp" />
-    <ClCompile Include="ScriptEditorManager.cpp" />
     <ClCompile Include="SemanticAnalysis.cpp" />
     <ClCompile Include="SnippetManager.cpp" />
     <ClCompile Include="WorkspaceModel.cpp" />
@@ -239,8 +237,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <ClInclude Include="Exports.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Prefix.h" />
-    <ClInclude Include="ScriptEditor.h" />
-    <ClInclude Include="ScriptEditorManager.h" />
     <ClInclude Include="SemanticAnalysis.h" />
     <ClInclude Include="SnippetManager.h" />
     <ClInclude Include="WorkspaceModel.h" />

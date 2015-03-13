@@ -2,7 +2,6 @@
 #include "IntelliSenseDatabase.h"
 #include "IntelliSenseInterface.h"
 
-#include "..\ScriptEditor.h"
 #include "..\ScriptTextEditorInterface.h"
 #include "..\SnippetManager.h"
 
@@ -390,7 +389,7 @@ namespace ConstructionSetExtender
 				Editor->InsertVariable(Itr->Name, Itr->Type);
 
 			String^ Code = GetSubstitution();
-			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->GetCurrentLineNumber());
+			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->CurrentLine);
 			Code = ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
 			Interface->Enabled = false;			// don't want it popping up when indenting the snippet

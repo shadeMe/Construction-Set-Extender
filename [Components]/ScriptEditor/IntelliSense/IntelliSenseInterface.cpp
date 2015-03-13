@@ -4,7 +4,6 @@
 #include "[Common]\ListViewUtilities.h"
 #include "..\Globals.h"
 #include "..\ScriptEditorPreferences.h"
-#include "..\ScriptEditorManager.h"
 
 namespace ConstructionSetExtender
 {
@@ -458,7 +457,7 @@ namespace ConstructionSetExtender
 
 		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken)
 		{
-			return ShowQuickViewTooltip(MainToken, ParentToken, ParentEditor->GetAbsolutePositionFromCharIndex(ParentEditor->GetCaretPos()));
+			return ShowQuickViewTooltip(MainToken, ParentToken, ParentEditor->GetPositionFromCharIndex(ParentEditor->Caret, true));
 		}
 
 		bool IntelliSenseInterface::ShowQuickViewTooltip(String^ MainToken, String^ ParentToken, Point Location)
@@ -498,7 +497,7 @@ namespace ConstructionSetExtender
 				DisplayToolTip(Item->GetItemTypeID(),
 					Item->Describe(),
 					Location,
-					ParentEditor->GetHandle(),
+					ParentEditor->WindowHandle,
 					8000);
 
 				return true;
@@ -557,10 +556,10 @@ namespace ConstructionSetExtender
 		{
 			if (AllowHidden || IntelliSenseBox->Visible)
 			{
-				Point Location = ParentEditor->GetAbsolutePositionFromCharIndex(ParentEditor->GetCaretPos());
+				Point Location = ParentEditor->GetPositionFromCharIndex(ParentEditor->Caret, true);
 
 				Location.X += 3; Location.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
-				IntelliSenseBox->ShowForm(ParentEditor->PointToScreen(Location), ParentEditor->GetHandle(), (IntelliSenseBox->Visible == false));
+				IntelliSenseBox->ShowForm(ParentEditor->PointToScreen(Location), ParentEditor->WindowHandle, (IntelliSenseBox->Visible == false));
 
 				ParentEditor->FocusTextArea();
 			}

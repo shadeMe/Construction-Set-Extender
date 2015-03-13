@@ -3,7 +3,7 @@
 
 namespace ConstructionSetExtender
 {
-	void ScriptPreprocessor::DummyStandardErrorOutput( String^ Message )
+	void ScriptPreprocessor::DummyStandardErrorOutput(int Line, String^ Message)
 	{
 		;//
 	}
@@ -61,7 +61,7 @@ namespace ConstructionSetExtender
 		catch (Exception^ E)
 		{
 			this->Token = Token;
-			ErrorOutput("Failed to parse TOKEN '" + Token + "' - " + E->Message);
+			ErrorOutput(PreprocessorInstance->GetInstanceData()->CurrentLine, "Failed to parse TOKEN '" + Token + "' - " + E->Message);
 		}
 	}
 
@@ -194,7 +194,7 @@ namespace ConstructionSetExtender
 		{
 			Name = "INVALID";
 			Value = "INVALID";
-			ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' at line " + LineNumber + "- " + E->Message);
+			ErrorOutput(LineNumber, "Failed to parse DEFINE directive in '" + Token + "' - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -242,7 +242,7 @@ namespace ConstructionSetExtender
 		{
 			Name = "INVALID";
 			Value = "INVALID";
-			ErrorOutput("Failed to parse DEFINE directive in '" + Token + "' at line " + TextReader->LineNumber + " - " + E->Message);
+			ErrorOutput(TextReader->LineNumber, "Failed to parse DEFINE directive in '" + Token + "' - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -364,7 +364,7 @@ namespace ConstructionSetExtender
 		{
 			Filename = "INVALID";
 			ImportSegment = "INVALID";
-			ErrorOutput("Failed to parse IMPORT directive in '" + Token + "' at line " + LineNumber + " - " + E->Message);
+			ErrorOutput(LineNumber, "Failed to parse IMPORT directive in '" + Token + "' - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -448,7 +448,7 @@ namespace ConstructionSetExtender
 		{
 			Name = "INVALID";
 			ComponentDefineDirectives->Clear();
-			ErrorOutput("Failed to parse ENUM directive in '" + Token + "' at line " + LineNumber + " - " + E->Message);
+			ErrorOutput(LineNumber, "Failed to parse ENUM directive in '" + Token + "' - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -494,7 +494,7 @@ namespace ConstructionSetExtender
 			Name = "INVALID";
 			Value = "INVALID";
 			ComponentDefineDirectives->Clear();
-			ErrorOutput("Failed to parse ENUM directive in '" + Token + "' at line " + TextReader->LineNumber + " - " + E->Message);
+			ErrorOutput(TextReader->LineNumber, "Failed to parse ENUM directive in '" + Token + "' - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -604,7 +604,8 @@ namespace ConstructionSetExtender
 		}
 		catch (Exception^ E)
 		{
-			ErrorOutput("Couldn't evaluate " + BuiltInOperatorsIdentifier[(int)Type] + " operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
+			ErrorOutput(PreprocessorInstance->GetInstanceData()->CurrentLine,
+						"Couldn't evaluate " + BuiltInOperatorsIdentifier[(int)Type] + " operator for operands '" + LHS + "' and '" + RHS + "' - " + E->Message);
 			Result = false;
 		}
 
@@ -704,7 +705,7 @@ namespace ConstructionSetExtender
 		return Operator::Evaluator(Operator::BuiltInOperators::LogicalOR, LHS, RHS, ErrorOutput, PreprocessorInstance);
 	}
 
-	bool IfDirective::ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput)
+	bool IfDirective::ConvertInfixExpressionToPostFix(String^ Source, String^% Result, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		bool OperationResult = false;				// uses the shunting-yard algorithm
 
@@ -796,7 +797,8 @@ namespace ConstructionSetExtender
 		catch (Exception^ E)
 		{
 			OperationResult = false;
-			ErrorOutput("Infix to postfix converter failed to parse expression '" + Source + "' - " + E->Message);
+			ErrorOutput(PreprocessorInstance->GetInstanceData()->CurrentLine,
+						"Infix to postfix converter failed to parse expression '" + Source + "' - " + E->Message);
 		}
 
 		return OperationResult;
@@ -809,7 +811,7 @@ namespace ConstructionSetExtender
 		try
 		{
 			String^ PostFixExpression = "";
-			if (ConvertInfixExpressionToPostFix(Base, PostFixExpression, ErrorOutput))
+			if (ConvertInfixExpressionToPostFix(Base, PostFixExpression, ErrorOutput, PreprocessorInstance))
 			{
 				Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
 				ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
@@ -865,7 +867,7 @@ namespace ConstructionSetExtender
 		catch (Exception^ E)
 		{
 			Result = false;
-			ErrorOutput("Failed to evaluate condition - " + E->Message);
+			ErrorOutput(PreprocessorInstance->GetInstanceData()->CurrentLine, "Failed to evaluate condition - " + E->Message);
 		}
 
 		return Result;
@@ -913,7 +915,7 @@ namespace ConstructionSetExtender
 			BaseCondition = "INVALID";
 			Block = "INVALID";
 			ValidationResult = false;
-			ErrorOutput("Failed to parse IF directive in '" + Token + "' at line " + TextReader->LineNumber + " - " + E->Message);
+			ErrorOutput(TextReader->LineNumber, "Failed to parse IF directive in '" + Token + "' - " + E->Message);
 			ErrorFlag = true;
 		}
 	}
@@ -1011,6 +1013,7 @@ namespace ConstructionSetExtender
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 			{
+				DataBuffer->CurrentLine = TextReader->LineNumber;
 				LocalParser->Tokenize(ReadLine, false);
 				CSEPreprocessorToken^ ThisToken = nullptr;
 
@@ -1055,6 +1058,7 @@ namespace ConstructionSetExtender
 			}
 
 			OperationResult = true;
+			DataBuffer->CurrentLine = 1;
 			for each (CSEPreprocessorToken^ Token in TokenList)
 			{
 				PreprocessedText += "\n" + Token->GetToken();
@@ -1062,6 +1066,8 @@ namespace ConstructionSetExtender
 
 				if (Directive != nullptr && Directive->GetErrorFlag())
 					OperationResult = false;
+
+				DataBuffer->CurrentLine++;
 			}
 
 			if (PreprocessedText->Length > 1)
@@ -1072,7 +1078,7 @@ namespace ConstructionSetExtender
 		catch (Exception^ E)
 		{
 			OperationResult = false;
-			ErrorOutput("Preprocessing failed - " + E->Message);
+			ErrorOutput(DataBuffer->CurrentLine, "Preprocessing failed - " + E->Message);
 		}
 
 		return OperationResult;
@@ -1083,7 +1089,7 @@ namespace ConstructionSetExtender
 		bool OperationResult = false;
 
 		if (Busy)
-			ErrorOutput("Preprocessing failed - A previous operation is in progress");
+			ErrorOutput(0, "Preprocessing failed - A previous operation is in progress");
 		else
 		{
 			DataBuffer = Data;
@@ -1099,7 +1105,7 @@ namespace ConstructionSetExtender
 				OperationResult = Preprocess(SourceBuffer, ResultBuffer, ErrorOutput);
 				if (!OperationResult)
 				{
-					ErrorOutput("Preprocessing failed in pass " + i.ToString());
+					ErrorOutput(0, "Preprocessing failed in pass " + i.ToString());
 					break;
 				}
 

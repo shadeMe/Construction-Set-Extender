@@ -48,6 +48,9 @@ namespace ConstructionSetExtender
 			virtual int						GetCaret(IWorkspaceModel^ Model);
 			virtual void					SetCaret(IWorkspaceModel^ Model, int Index);
 
+			virtual String^					GetSelection(IWorkspaceModel^ Model);
+			virtual String^					GetCaretToken(IWorkspaceModel^ Model);
+
 			virtual void					AcquireInputFocus(IWorkspaceModel^ Model);
 
 			virtual void					New(IWorkspaceModel^ Model);
@@ -92,6 +95,7 @@ namespace ConstructionSetExtender
 			void									AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
 
 			void									ClearAutoRecovery();
+			void									JumpToScript(String^ TargetEditorID);
 		public:
 			TextEditors::IScriptTextEditor^			TextEditor;
 			Timer^									AutoSaveTimer;
@@ -152,7 +156,7 @@ namespace ConstructionSetExtender
 			}
 			property bool							Dirty
 			{
-				virtual bool get() { return TextEditor->GetModifiedStatus(); }
+				virtual bool get() { return TextEditor->Modified; }
 				virtual void set(bool e) {}
 			}
 			property IWorkspaceModel::ScriptType	Type
@@ -167,7 +171,7 @@ namespace ConstructionSetExtender
 			}
 			property Control^						InternalView
 			{
-				virtual Control^ get() { return TextEditor->GetContainer(); }
+				virtual Control^ get() { return TextEditor->Container; }
 				virtual void set(Control^ e) {}
 			}
 			property bool							Bound

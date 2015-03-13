@@ -50,7 +50,6 @@ CSE		---->
 SE		---->
 
 	IMMEDIATE		=
-		> Move the message box code out of the model and into the view - the controller exposes the method
 		> Make the offset viewer and preproc view use the same for/background colors as teh editor
 		> Add script command param data to intellisense
 		> Save script editor bounds to cse ini
@@ -61,12 +60,10 @@ SE		---->
 		
 
 	ENHANCEMENT		=
-		> Use TextAnchors for error lines and find results
 		> Document minimap
 
 
 	MISC			=
-		> Document script tool - refactor to use semantic analysis
 
 
 USE		---->

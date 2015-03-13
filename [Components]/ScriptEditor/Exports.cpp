@@ -1,7 +1,9 @@
-#include "ScriptEditorManager.h"
 #include "Exports.h"
 #include "IntelliSense\IntelliSenseDatabase.h"
 #include "Globals.h"
+#include "WorkspaceModel.h"
+#include "WorkspaceView.h"
+#include "ScriptEditorPreferences.h"
 
 #include <memory.h>
 
@@ -70,15 +72,10 @@ UInt32 InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMST
 
 void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
-	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-	Parameters->EditorHandleIndex = 0;
-	Parameters->ParameterList->Add((UInt32)InitializerScript);
-	Parameters->ParameterList->Add(Left);
-	Parameters->ParameterList->Add(Top);
-	Parameters->ParameterList->Add(Width);
-	Parameters->ParameterList->Add(Height);
+	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
+	IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScript);
 
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::AllocateWorkspaceContainer, Parameters);
+	New->AssociateModel(Model, true);
 }
 
 void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL)
@@ -88,8 +85,7 @@ void AddScriptCommandDeveloperURL(const char* ScriptCommandName, const char* URL
 
 void CloseAllOpenEditors(void)
 {
-	ScriptEditorManager::OperationParams^ Parameters = gcnew ScriptEditorManager::OperationParams();
-	SEMGR->PerformOperation(ScriptEditorManager::OperationType::CloseAllOpenEditors, Parameters);
+	ConcreteWorkspaceViewFactory::Instance->Clear();
 }
 
 void UpdateIntelliSenseDatabase(void)
@@ -99,10 +95,10 @@ void UpdateIntelliSenseDatabase(void)
 
 UInt32 GetOpenEditorCount(void)
 {
-	return SEMGR->GetOpenEditorCount();
+	return ConcreteWorkspaceModelFactory::Instance->Count;
 }
 
-void DummyPreprocessorErrorOutputWrapper(String^ Message)
+void DummyPreprocessorErrorOutputWrapper(int Line, String^ Message)
 {
 	;//
 }

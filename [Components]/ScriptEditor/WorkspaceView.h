@@ -39,6 +39,7 @@ namespace ConstructionSetExtender
 			static ConcreteWorkspaceViewFactory^		Instance = gcnew ConcreteWorkspaceViewFactory;
 
 			void										Remove(ConcreteWorkspaceView^ Allocation);
+			void										Clear();
 
 			// IWorkspaceViewFactory
 			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height);
@@ -57,7 +58,7 @@ namespace ConstructionSetExtender
 
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
-			virtual void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
+			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
 			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 										String^ Query, String^ Replacement, UInt32 Options, bool Global);
 
@@ -257,7 +258,7 @@ namespace ConstructionSetExtender
 
 			void									ShowOpenDialog();
 			void									ShowDeleteDialog();
-			void									ShowFindReplaceDialog();
+			void									ShowFindReplaceDialog(bool PerformSearch);
 
 			void									GotoLine();
 			void									GotoOffset();

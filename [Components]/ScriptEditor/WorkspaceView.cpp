@@ -2,6 +2,7 @@
 #include "[Common]\CustomInputBox.h"
 #include "IntelliSense\IntelliSenseDatabase.h"
 #include "ScriptEditorPreferences.h"
+#include "[Common]/ListViewUtilities.h"
 
 using namespace GlobalInputMonitor;
 
@@ -202,9 +203,9 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewSubscribeClickEvent(SortTabsButton);
 
 			WorkspaceSplitter = gcnew SplitContainer();
-			MessageList = gcnew ListView();
-			FindList = gcnew ListView();
-			BookmarkList = gcnew ListView();
+			MessageList = gcnew DoubleBufferedListView();
+			FindList = gcnew DoubleBufferedListView();
+			BookmarkList = gcnew DoubleBufferedListView();
 			SpoilerText = gcnew Label();
 
 			WorkspaceMainToolBar = gcnew ToolStrip();
@@ -564,6 +565,33 @@ namespace ConstructionSetExtender
 			SpoilerText->Dock = DockStyle::Fill;
 			SpoilerText->TextAlign = ContentAlignment::MiddleCenter;
 			SpoilerText->Text = "Right, everybody out! Smash the Spinning Jenny! Burn the rolling Rosalind! Destroy the going-up-and-down-a-bit-and-then-moving-along Gertrude! And death to the stupid Prince who grows fat on the profits!";
+
+			MessageList->Dock = DockStyle::Fill;
+			MessageList->BorderStyle = BorderStyle::Fixed3D;
+			MessageList->Visible = false;
+			MessageList->View = View::Details;
+			MessageList->MultiSelect = false;
+			MessageList->CheckBoxes = false;
+			MessageList->FullRowSelect = true;
+			MessageList->HideSelection = false;
+
+			FindList->Dock = DockStyle::Fill;
+			FindList->BorderStyle = BorderStyle::Fixed3D;
+			FindList->Visible = false;
+			FindList->View = View::Details;
+			FindList->MultiSelect = false;
+			FindList->CheckBoxes = false;
+			FindList->FullRowSelect = true;
+			FindList->HideSelection = false;
+
+			BookmarkList->Dock = DockStyle::Fill;
+			BookmarkList->BorderStyle = BorderStyle::Fixed3D;
+			BookmarkList->Visible = false;
+			BookmarkList->View = View::Details;
+			BookmarkList->MultiSelect = false;
+			BookmarkList->CheckBoxes = false;
+			BookmarkList->FullRowSelect = true;
+			BookmarkList->HideSelection = false;
 
 			WorkspaceSplitter->Panel2->Controls->Add(WorkspaceSecondaryToolBar);
 			WorkspaceSplitter->Panel2->Controls->Add(MessageList);
@@ -958,6 +986,27 @@ namespace ConstructionSetExtender
 			EditorTabStrip->RecalcLayout();
 		}
 
+		void ConcreteWorkspaceView::ToolBarNavigationBack_Click(Object^ Sender, EventArgs^ E)
+		{
+			TODO("implement");
+		}
+
+		void ConcreteWorkspaceView::ToolBarNavigationForward_Click(Object^ Sender, EventArgs^ E)
+		{
+			TODO("implement");
+		}
+
+		void ConcreteWorkspaceView::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
+		{
+			SaveAll();
+		}
+
+		void ConcreteWorkspaceView::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
+		{
+			PREFERENCES->LoadINI();
+			PREFERENCES->Show();
+		}
+
 		void ConcreteWorkspaceView::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
 			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
@@ -1241,7 +1290,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
 		{
-			ShowFindReplaceDialog();
+			ShowFindReplaceDialog(false);
 		}
 
 		void ConcreteWorkspaceView::ToolBarEditMenuContentsGotoLine_Click(Object^ Sender, EventArgs^ E)
@@ -1613,9 +1662,14 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void ConcreteWorkspaceView::ShowFindReplaceDialog()
+		void ConcreteWorkspaceView::ShowFindReplaceDialog(bool PerformSearch)
 		{
-			TODO("implement, get the selection/caret text from texteditor");
+			IWorkspaceModel^ Active = GetActiveModel();
+			String^ Query = Active->Controller->GetSelection(Active);
+			if (Query == "")
+				Query = Active->Controller->GetCaretToken(Active);
+
+			FindReplaceBox->Show(Query, false, PerformSearch);
 		}
 
 		void ConcreteWorkspaceView::GotoLine()
@@ -1974,7 +2028,7 @@ namespace ConstructionSetExtender
 			case Keys::F:
 			case Keys::H:
 				if (E->Modifiers == Keys::Control)
-					Concrete->ShowFindReplaceDialog();
+					Concrete->ShowFindReplaceDialog(true);
 
 				break;
 			case Keys::G:
@@ -2013,7 +2067,7 @@ namespace ConstructionSetExtender
 				if (E->Modifiers == Keys::Control)
 				{
 					IWorkspaceModel^ Active = Concrete->GetActiveModel();
-					if (Concrete->ModelController->Close(Active))
+					if (Active->Controller->Close(Active))
 						Concrete->DissociateModel(Active, true);
 				}
 
@@ -2034,7 +2088,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void ConcreteWorkspaceViewController::Jump(IWorkspaceView^ View, String^ ScriptEditorID)
+		void ConcreteWorkspaceViewController::Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID)
 		{
 			TODO("implement jumping");
 			Debug::Assert(View != nullptr);
@@ -2050,7 +2104,7 @@ namespace ConstructionSetExtender
 			if (Global)
 			{
 				for each (auto Itr in Concrete->AssociatedModels)
-					Concrete->ModelController->FindReplace(Itr.Key, Operation, Query, Replacement, Options);
+					Concrete->ModelController()->FindReplace(Itr.Key, Operation, Query, Replacement, Options);
 
 				return -1;
 			}
@@ -2109,6 +2163,17 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceViewFactory::Remove(ConcreteWorkspaceView^ Allocation)
 		{
 			Allocations->Remove(Allocation);
+		}
+
+		void ConcreteWorkspaceViewFactory::Clear()
+		{
+			// this is totally unbecoming...
+			List<ConcreteWorkspaceView^>^ Buffer = gcnew List<ConcreteWorkspaceView^>(Allocations);
+			for each (ConcreteWorkspaceView^ Itr in Buffer)
+				delete Itr;
+
+			Debug::Assert(Allocations->Count == 0);
+			Buffer->Clear();
 		}
 	}
 }

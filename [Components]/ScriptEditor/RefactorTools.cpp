@@ -1,8 +1,7 @@
 #include "[Common]\CustomInputBox.h"
 #include "[Common]\ListViewUtilities.h"
 #include "RefactorTools.h"
-#include "ScriptEditor.h"
-#include "ScriptEditorManager.h"
+#include "Globals.h"
 
 namespace ConstructionSetExtender
 {

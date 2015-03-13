@@ -35,23 +35,31 @@ namespace ConstructionSetExtender
 		delegate void									TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
 		delegate void									TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
 
-		ref struct BindData
-		{
-			// bindable stuff, ie., list views, etc
-			// ### do i need this? the model already derives from the bindable listview interface
-		};
-
 		interface class IScriptTextEditor
 		{
-			static enum class							FindReplaceOperation
+			static enum class ScriptMessageType
 			{
-				Find = 0,
+				Warning = 0,
+				Error = 1,
+			};
+
+			static enum class ScriptMessageSource
+			{
+				None = 0,
+				Compiler,
+				Validator,
+				Preprocessor,
+			};
+
+			static enum class FindReplaceOperation
+			{
+				Find,
 				Replace,
 				CountMatches
 			};
 
 			[Flags]
-			static enum class							FindReplaceOptions
+			static enum class FindReplaceOptions
 			{
 				InSelection		=		1 << 0,
 				MatchWholeWord	=		1 << 1,
@@ -74,11 +82,10 @@ namespace ConstructionSetExtender
 			property int								Caret;
 
 			property bool								Modified;
-			property bool								Initializing;
 
 			// methods
-			void										Bind(BindData^ Args);		// called when the parent model is bound to a view, i.e., when the text editor is activated
-			void										Unbind();					// opposite of the above
+			void										Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);		// called when the parent model is bound to a view, i.e., when the text editor is activated
+			void										Unbind();	// opposite of the above
 
 			String^										GetText();
 			String^										GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
@@ -115,10 +122,17 @@ namespace ConstructionSetExtender
 			void										InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
 			String^										SerializeMetadata(bool AddPreprocessorSigil);			// returns the metadata block for the current script, if any. includes caret pos, bookmarks, etc
-			String^										DeserializeMetadata(String^ Input);						// extracts and processes the metadata block from the script text, after clearing the current state
+			String^										DeserializeMetadata(String^ Input, bool SetText);		// extracts and processes the metadata block from the script text, after clearing the current state
 																												// returns the rest of the text
 
 			bool										CanCompile(bool% OutContainsPreprocessorDirectives);	// preprocesses and validates the script text, returns true if successful
+
+			void										ClearTrackedData(bool CompilerMessages,
+																		 bool PreprocessorMessages,
+																		 bool ValidatorMessages,
+																		 bool Bookmarks,
+																		 bool FindResults);
+			void										TrackCompilerError(int Line, String^ Message);
 		};
-	}
+}
 }

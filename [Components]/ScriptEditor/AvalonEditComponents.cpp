@@ -10,13 +10,13 @@ namespace ConstructionSetExtender
 		namespace AvalonEditor
 		{
 			void ILineBackgroundColorizer::RenderBackground(TextView^ Destination,
-																	System::Windows::Media::DrawingContext^ DrawingContext,
-																	int StartOffset,
-																	int EndOffset,
-																	Windows::Media::Color Background,
-																	Windows::Media::Color Border,
-																	Double BorderThickness,
-																	bool ColorEntireLine )
+															System::Windows::Media::DrawingContext^ DrawingContext,
+															int StartOffset,
+															int EndOffset,
+															Windows::Media::Color Background,
+															Windows::Media::Color Border,
+															Double BorderThickness,
+															bool ColorEntireLine)
 			{
 				Destination->EnsureVisualLines();
 				TextSegment^ Segment = gcnew TextSegment();
@@ -31,14 +31,14 @@ namespace ConstructionSetExtender
 					if (ColorEntireLine)
 					{
 						DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
-							gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
-							Windows::Rect(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height)), 2, 2);
+															 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
+															 Windows::Rect(R.Location, Windows::Size(Destination->ActualWidth + Destination->HorizontalOffset, R.Height)), 2, 2);
 					}
 					else
 					{
 						DrawingContext->DrawRoundedRectangle(gcnew System::Windows::Media::SolidColorBrush(Background),
-							gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
-							Windows::Rect(R.Location, Windows::Size(R.Width, R.Height)), 2, 2);
+															 gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(Border), BorderThickness),
+															 Windows::Rect(R.Location, Windows::Size(R.Width, R.Height)), 2, 2);
 					}
 				}
 			}
@@ -48,83 +48,383 @@ namespace ConstructionSetExtender
 				ParentEditor = nullptr;
 			}
 
-			ILineBackgroundColorizer::ILineBackgroundColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+			ILineBackgroundColorizer::ILineBackgroundColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer) :
 				ParentEditor(Parent),
 				RenderLayer(RenderLayer)
 			{
 				;//
 			}
 
-			void CurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			ScriptMessage::ScriptMessage(LineTrackingManager^ Parent, TextAnchor^ Location,
+										 IScriptTextEditor::ScriptMessageType Type,
+										 IScriptTextEditor::ScriptMessageSource Source,
+										 String^ Text)
 			{
-				if (ParentEditor->TextArea->Selection->IsEmpty)
+				Manager = Parent;
+				Anchor = Location;
+				MessageType = Type;
+				MessageSource = Source;
+				MessageString = Text;
+			}
+
+			int ScriptMessage::Line()
+			{
+				return Anchor->Line;
+			}
+
+			String^ ScriptMessage::Message()
+			{
+				return MessageString;
+			}
+
+			int ScriptMessage::ImageIndex()
+			{
+				return (int)MessageType;
+			}
+
+			void ScriptMessage::Jump()
+			{
+				Manager->Jump(this);
+			}
+
+			ScriptMessage::~ScriptMessage()
+			{
+				Manager = nullptr;
+			}
+
+			IScriptTextEditor::ScriptMessageSource ScriptMessage::Source()
+			{
+				return MessageSource;
+			}
+
+			bool ScriptMessage::Deleted()
+			{
+				return Anchor->IsDeleted;
+			}
+
+			ScriptBookmark::ScriptBookmark(LineTrackingManager^ Parent, TextAnchor^ Location, String^ Text)
+			{
+				Manager = Parent;
+				Anchor = Location;
+				Description = Text;
+			}
+
+			int ScriptBookmark::Line()
+			{
+				return Anchor->Line;
+			}
+
+			String^ ScriptBookmark::Message()
+			{
+				return Description;
+			}
+
+			void ScriptBookmark::Jump()
+			{
+				Manager->Jump(this);
+			}
+
+			ScriptBookmark::~ScriptBookmark()
+			{
+				Manager = nullptr;
+			}
+
+			bool ScriptBookmark::Deleted()
+			{
+				return Anchor->IsDeleted;
+			}
+
+			ScriptFindResult::ScriptFindResult(LineTrackingManager^ Parent, TextAnchor^ Start, TextAnchor^ End, String^ Text)
+			{
+				Manager = Parent;
+				AnchorStart = Start;
+				AnchorEnd = End;
+				Description = Text;
+			}
+
+			int ScriptFindResult::Line()
+			{
+				return AnchorStart->Line;
+			}
+
+			String^ ScriptFindResult::Message()
+			{
+				return Description;
+			}
+
+			void ScriptFindResult::Jump()
+			{
+				Manager->Jump(this);
+			}
+
+			ScriptFindResult::~ScriptFindResult()
+			{
+				Manager = nullptr;
+			}
+
+			bool ScriptFindResult::Deleted()
+			{
+				return (AnchorStart->IsDeleted || AnchorEnd->IsDeleted);
+			}
+
+			int ScriptFindResult::StartOffset()
+			{
+				return AnchorStart->Offset;
+			}
+
+			int ScriptFindResult::EndOffset()
+			{
+				return AnchorEnd->Offset;
+			}
+
+			int TrackingMessageListViewSorter::Compare(Object^ X, Object^ Y)
+			{
+				int Result = -1;
+
+				TrackingMessage^ First = (TrackingMessage^)((ListViewItem^)X)->Tag;
+				TrackingMessage^ Second = (TrackingMessage^)((ListViewItem^)Y)->Tag;
+
+				switch (_Column)
 				{
-					DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
-					Color Buffer = PREFERENCES->LookupColorByKey("CurrentLineHighlightColor");
-					RenderBackground(textView,
-									drawingContext,
-									Line->Offset,
-									Line->EndOffset,
-									Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-									Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-									1,
-									true);
+				case 0:		// line
+					Result = First->Line() - Second->Line();
+					break;
+				case 1:		// message
+					Result = String::Compare(First->Message(), Second->Message(), true);
+					break;
 				}
+
+				if (_Order == SortOrder::Descending)
+					Result *= -1;
+
+				return Result;
 			}
 
-			CurrentLineBGColorizer::CurrentLineBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
-				ILineBackgroundColorizer(Parent, RenderLayer)
+			int TrackingImageMessageListViewSorter::Compare(Object^ X, Object^ Y)
 			{
-				;//
-			}
+				int Result = -1;
 
-			bool ScriptErrorBGColorizer::GetLineInError(int Line)
-			{
-				for each (int Itr in ErrorLines)
+				TrackingImageMessage^ First = (TrackingImageMessage^)((ListViewItem^)X)->Tag;
+				TrackingImageMessage^ Second = (TrackingImageMessage^)((ListViewItem^)Y)->Tag;
+
+				switch (_Column)
 				{
-					if (Itr == Line)
-						return true;
+				case 0:		// image/dummy column
+					Result = First->ImageIndex() - Second->ImageIndex();
+					break;
+				case 1:		// line
+					Result = First->Line() - Second->Line();
+					break;
+				case 2:		// message
+					Result = String::Compare(First->Message(), Second->Message(), true);
+					break;
 				}
-				return false;
+
+				if (_Order == SortOrder::Descending)
+					Result *= -1;
+
+				return Result;
 			}
 
-			void ScriptErrorBGColorizer::AddLine(int Line)
+			void ScriptBookmarkBinder::InitializeListView(ListView^ Control)
 			{
-				if (GetLineInError(Line) == false)
-					ErrorLines->Add(Line);
+				ColumnHeader^ Line = gcnew ColumnHeader();
+				Line->Text = "Line";
+				Line->Width = 50;
+				ColumnHeader^ Message = gcnew ColumnHeader();
+				Message->Text = "Description";
+				Message->Width = 300;
+
+				Control->Columns->Add(Line);
+				Control->Columns->Add(Message);
 			}
 
-			void ScriptErrorBGColorizer::ClearLines()
+			System::Collections::IComparer^ ScriptBookmarkBinder::GetSorter(int Column, SortOrder Order)
 			{
-				ErrorLines->Clear();
+				return gcnew TrackingMessageListViewSorter(Column, Order);
 			}
 
-			void ScriptErrorBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			int ScriptBookmarkBinder::GetImageIndex(ScriptBookmark^ Item)
 			{
-				Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
-				ScriptParser^ Parser = gcnew ScriptParser();
+				return -1;
+			}
 
-				for (int i = 1; i <= ParentEditor->LineCount; i++)
+			void ScriptBookmarkBinder::DrawItem(DrawListViewSubItemEventArgs^ E)
+			{
+				TrackingMessage^ Data = (TrackingMessage^)E->Item->Tag;
+				switch (E->ColumnIndex)
 				{
-					if (GetLineInError(i))
+				case 0:		// line
+					E->SubItem->Text = Data->Line().ToString();
+					break;
+				case 1:
+					E->SubItem->Text = Data->Message();
+					break;
+				}
+
+				if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
+					E->DrawBackground();
+
+				E->DrawText();
+			}
+
+			void ScriptBookmarkBinder::ActivateItem(ScriptBookmark^ Item)
+			{
+				Item->Jump();
+			}
+
+			void ScriptBookmarkBinder::KeyPress(KeyEventArgs^ E)
+			{
+				if (E->KeyCode == Keys::Delete)
+				{
+					ListViewItem^ Selection = GetListViewSelectedItem(Sink);
+					if (Selection)
 					{
-						DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(i);
-						if (Parser->Tokenize(ParentEditor->Document->GetText(Line), false))
-						{
-							RenderSquiggly(textView, drawingContext,
-										   Line->Offset + Parser->Indices[0], Line->EndOffset,
-										   Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B));
-						}
+						ScriptBookmark^ Data = (ScriptBookmark^)Selection->Tag;
+						Source->Remove(Data);
 					}
 				}
 			}
 
-			ScriptErrorBGColorizer::~ScriptErrorBGColorizer()
+			void ScriptMessageBinder::InitializeListView(ListView^ Control)
 			{
-				ClearLines();
+				ColumnHeader^ Dummy = gcnew ColumnHeader();
+				Dummy->Text = " ";
+				Dummy->Width = 25;
+				ColumnHeader^ Line = gcnew ColumnHeader();
+				Line->Text = "Line";
+				Line->Width = 50;
+				ColumnHeader^ Message = gcnew ColumnHeader();
+				Message->Text = "Message";
+				Message->Width = 300;
+
+				Control->Columns->Add(Dummy);
+				Control->Columns->Add(Line);
+				Control->Columns->Add(Message);
+
+				Control->SmallImageList = gcnew ImageList();
+				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListWarning"));
+				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListError"));
 			}
 
-			void ScriptErrorBGColorizer::RenderSquiggly(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Color)
+			System::Collections::IComparer^ ScriptMessageBinder::GetSorter(int Column, SortOrder Order)
+			{
+				return gcnew TrackingImageMessageListViewSorter(Column, Order);
+			}
+
+			int ScriptMessageBinder::GetImageIndex(ScriptMessage^ Item)
+			{
+				return Item->ImageIndex();
+			}
+
+			void ScriptMessageBinder::DrawItem(DrawListViewSubItemEventArgs^ E)
+			{
+				TrackingImageMessage^ Data = (TrackingImageMessage^)E->Item->Tag;
+				switch (E->ColumnIndex)
+				{
+				case 0:		// image/dummy
+					E->SubItem->Text = "";
+					break;
+				case 1:		// line
+					E->SubItem->Text = Data->Line().ToString();
+					break;
+				case 2:		// message
+					E->SubItem->Text = Data->Message();
+					break;
+				}
+
+				if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
+					E->DrawBackground();
+
+				E->DrawText();
+			}
+
+			void ScriptMessageBinder::ActivateItem(ScriptMessage^ Item)
+			{
+				Item->Jump();
+			}
+
+			void ScriptMessageBinder::KeyPress(KeyEventArgs^ E)
+			{
+				;//
+			}
+
+			bool ScriptFindResultBinder::HasLine(ScriptFindResult^ Check)
+			{
+				for each (ListViewItem^ Itr in Sink->Items)
+				{
+					ScriptFindResult^ Data = (ScriptFindResult^)Itr->Tag;
+					if (Data->Line() == Check->Line())
+						return true;
+				}
+
+				return false;
+			}
+
+			ListViewItem^ ScriptFindResultBinder::Create(ScriptFindResult^ Data)
+			{
+				if (HasLine(Data) == false)
+					return SimpleListViewBinder::Create(Data);
+				else
+					return nullptr;
+			}
+
+			void ScriptFindResultBinder::InitializeListView(ListView^ Control)
+			{
+				ColumnHeader^ Line = gcnew ColumnHeader();
+				Line->Text = "Line";
+				Line->Width = 50;
+				ColumnHeader^ Message = gcnew ColumnHeader();
+				Message->Text = "Result";
+				Message->Width = 300;
+
+				Control->Columns->Add(Line);
+				Control->Columns->Add(Message);
+			}
+
+			System::Collections::IComparer^ ScriptFindResultBinder::GetSorter(int Column, SortOrder Order)
+			{
+				return gcnew TrackingMessageListViewSorter(Column, Order);
+			}
+
+			int ScriptFindResultBinder::GetImageIndex(ScriptFindResult^ Item)
+			{
+				return -1;
+			}
+
+			void ScriptFindResultBinder::DrawItem(DrawListViewSubItemEventArgs^ E)
+			{
+				TrackingMessage^ Data = (TrackingMessage^)E->Item->Tag;
+				switch (E->ColumnIndex)
+				{
+				case 0:		// line
+					E->SubItem->Text = Data->Line().ToString();
+					break;
+				case 1:
+					E->SubItem->Text = Data->Message();
+					break;
+				}
+
+				if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
+					E->DrawBackground();
+
+				E->DrawText();
+			}
+
+			void ScriptFindResultBinder::ActivateItem(ScriptFindResult^ Item)
+			{
+				Item->Jump();
+			}
+
+			void ScriptFindResultBinder::KeyPress(KeyEventArgs^ E)
+			{
+				;//
+			}
+
+			void ScriptErrorIndicator::RenderSquiggly(TextView^ Destination,
+													  System::Windows::Media::DrawingContext^ DrawingContext,
+													  int StartOffset, int EndOffset,
+													  Windows::Media::Color Color)
 			{
 				Destination->EnsureVisualLines();
 				TextSegment^ Segment = gcnew TextSegment();
@@ -161,6 +461,442 @@ namespace ConstructionSetExtender
 					Pen->Freeze();
 					DrawingContext->DrawGeometry(Windows::Media::Brushes::Transparent, Pen, Geometry);
 				}
+			}
+
+			ScriptErrorIndicator::ScriptErrorIndicator(GetColorizerSegments^ Getter)
+			{
+				Delegate = Getter;
+			}
+
+			ScriptErrorIndicator::~ScriptErrorIndicator()
+			{
+				Delegate = nullptr;
+			}
+
+			void ScriptErrorIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				Color Buffer = PREFERENCES->LookupColorByKey("ErrorHighlightColor");
+				Windows::Media::Color RenderColor = Windows::Media::Color::FromArgb(255, Buffer.R, Buffer.G, Buffer.B);
+
+				for each (ColorizerSegment^ Itr in Delegate())
+					RenderSquiggly(textView, drawingContext, Itr->Start, Itr->End, RenderColor);
+			}
+
+			ScriptFindResultIndicator::ScriptFindResultIndicator(GetColorizerSegments^ Getter) :
+				ILineBackgroundColorizer(nullptr, KnownLayer::Background)
+			{
+				Delegate = Getter;
+			}
+
+			ScriptFindResultIndicator::~ScriptFindResultIndicator()
+			{
+				Delegate = nullptr;
+			}
+
+			void ScriptFindResultIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
+
+				for each (ColorizerSegment^ Itr in Delegate())
+				{
+					try
+					{
+						RenderBackground(textView,
+										 drawingContext,
+										 Itr->Start,
+										 Itr->End,
+										 Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+										 Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+										 1,
+										 false);
+					}
+					catch (...) {}
+				}
+			}
+
+			TextAnchor^ LineTrackingManager::CreateAnchor(UInt32 Offset)
+			{
+				if (Offset >= Parent->Document->TextLength)
+					Offset = 0;
+
+				TextAnchor^ New = Parent->Document->CreateAnchor(Offset);
+				New->SurviveDeletion = true;
+				return New;
+			}
+
+			void LineTrackingManager::RefreshBackgroundRenderers(bool IgnoreBatchUpdate)
+			{
+				if (IgnoreBatchUpdate || CurrentBatchUpdate == UpdateSource::None)
+					Parent->TextArea->TextView->InvalidateLayer(KnownLayer::Background);
+			}
+
+			void LineTrackingManager::GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out)
+			{
+				for each (ScriptBookmark^ Itr in Bookmarks)
+				{
+					if (Itr->Line() == At)
+						Out->Add(Itr);
+				}
+			}
+
+			List<ColorizerSegment^>^ LineTrackingManager::GetErrorColorizerSegments()
+			{
+				List<ColorizerSegment^>^ Result = gcnew List < ColorizerSegment^ > ;
+
+				for each (ScriptMessage^ Itr in Messages)
+				{
+					if (Itr->Deleted() == false)
+					{
+						DocumentLine^ Line = Parent->TextArea->Document->GetLineByNumber(Itr->Line());
+						ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(Parent->TextArea->Document, Line);
+						ISegment^ WhitespaceTrailing = AvalonEdit::Document::TextUtilities::GetTrailingWhitespace(Parent->TextArea->Document, Line);
+
+						ColorizerSegment^ Segment = gcnew ColorizerSegment;
+						Segment->Start = WhitespaceLeading->EndOffset;
+						Segment->End = WhitespaceTrailing->Offset;
+						Result->Add(Segment);
+
+						TODO("will this throw an exception if there's no whitespace? check");
+					}
+				}
+
+				return Result;
+			}
+
+			List<ColorizerSegment^>^ LineTrackingManager::GetFindResultColorizerSegments()
+			{
+				List<ColorizerSegment^>^ Result = gcnew List < ColorizerSegment^ >;
+
+				for each (ScriptFindResult^ Itr in FindResults)
+				{
+					if (Itr->Deleted() == false)
+					{
+						ColorizerSegment^ Segment = gcnew ColorizerSegment;
+						Segment->Start = Itr->StartOffset();
+						Segment->End = Itr->EndOffset();
+						Result->Add(Segment);
+					}
+				}
+
+				return Result;
+			}
+
+			LineTrackingManager::LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor) :
+				Parent(ParentEditor)
+			{
+				Messages = gcnew SimpleBindingList < ScriptMessage^ > ;
+				Bookmarks = gcnew SimpleBindingList < ScriptBookmark^ > ;
+				FindResults = gcnew SimpleBindingList < ScriptFindResult^ > ;
+
+				BinderMessages = gcnew ScriptMessageBinder;
+				BinderBookmarks = gcnew ScriptBookmarkBinder;
+				BinderFindResults = gcnew ScriptFindResultBinder;
+
+				CurrentBatchUpdate = UpdateSource::None;
+				CurrentUpdateCounter = 0;
+
+				ErrorColorizer = gcnew ScriptErrorIndicator(gcnew GetColorizerSegments(this, &LineTrackingManager::GetErrorColorizerSegments));
+				FindResultColorizer = gcnew ScriptFindResultIndicator(gcnew GetColorizerSegments(this, &LineTrackingManager::GetFindResultColorizerSegments));
+
+				Parent->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer);
+				Parent->TextArea->TextView->BackgroundRenderers->Add(FindResultColorizer);
+			}
+
+			LineTrackingManager::~LineTrackingManager()
+			{
+				Debug::Assert(CurrentBatchUpdate == UpdateSource::None && CurrentUpdateCounter == 0);
+
+				Unbind();
+
+				ClearMessages(IScriptTextEditor::ScriptMessageSource::None);
+				ClearBookmarks();
+				ClearFindResults();
+
+				Parent->TextArea->TextView->BackgroundRenderers->Remove(ErrorColorizer);
+				Parent->TextArea->TextView->BackgroundRenderers->Remove(FindResultColorizer);
+
+				delete ErrorColorizer;
+				delete FindResultColorizer;
+			}
+
+			void LineTrackingManager::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
+			{
+				BinderMessages->Bind(MessageList, Messages);
+				BinderBookmarks->Bind(BookmarkList, Bookmarks);
+				BinderFindResults->Bind(FindResultList, FindResults);
+			}
+
+			void LineTrackingManager::Unbind()
+			{
+				BinderMessages->Unbind();
+				BinderBookmarks->Unbind();
+				BinderFindResults->Unbind();
+			}
+
+			void LineTrackingManager::BeginUpdate(UpdateSource Source)
+			{
+				Debug::Assert(CurrentBatchUpdate == UpdateSource::None || CurrentBatchUpdate == Source);
+				Debug::Assert(Source != UpdateSource::None);
+
+				if (CurrentUpdateCounter == 0)
+				{
+					switch (Source)
+					{
+					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Messages:
+						Messages->BeginUpdate();
+						break;
+					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
+						Bookmarks->BeginUpdate();
+						break;
+					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::FindResults:
+						FindResults->BeginUpdate();
+						break;
+					}
+				}
+
+				CurrentUpdateCounter++;
+				CurrentBatchUpdate = Source;
+			}
+
+			void LineTrackingManager::EndUpdate()
+			{
+				Debug::Assert(CurrentBatchUpdate != UpdateSource::None);
+
+				CurrentUpdateCounter--;
+				Debug::Assert(CurrentUpdateCounter >= 0);
+
+				if (CurrentUpdateCounter == 0)
+				{
+					switch (CurrentBatchUpdate)
+					{
+					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Messages:
+						Messages->EndUpdate();
+						break;
+					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
+						Bookmarks->EndUpdate();
+						break;
+					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::FindResults:
+						FindResults->EndUpdate();
+						break;
+					}
+
+					CurrentBatchUpdate = UpdateSource::None;
+					RefreshBackgroundRenderers(false);
+				}
+			}
+
+			void LineTrackingManager::TrackMessage(UInt32 Line,
+												   IScriptTextEditor::ScriptMessageType Type,
+												   IScriptTextEditor::ScriptMessageSource Source,
+												   String^ Message)
+			{
+				Debug::Assert(Source != IScriptTextEditor::ScriptMessageSource::None);
+
+				ScriptMessage^ New = gcnew ScriptMessage(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset),
+														 Type, Source, Message);
+				Messages->Add(New);
+				RefreshBackgroundRenderers(false);
+			}
+
+			void LineTrackingManager::ClearMessages(IScriptTextEditor::ScriptMessageSource Filter)
+			{
+				if (Filter == IScriptTextEditor::ScriptMessageSource::None)
+				{
+					// remove all
+					Messages->Clear();
+				}
+				else
+				{
+					List<ScriptMessage^>^ Buffer = gcnew List < ScriptMessage^ > ;
+					Messages->BeginUpdate();
+					for each (ScriptMessage^ Itr in Messages)
+					{
+						if (Itr->Source() == Filter)
+							Buffer->Add(Itr);
+					}
+
+					for each (ScriptMessage^ Itr in Buffer)
+						Messages->Remove(Itr);
+
+					Messages->EndUpdate();
+				}
+
+				RefreshBackgroundRenderers(false);
+			}
+
+			void LineTrackingManager::AddBookmark(UInt32 Line, String^ Description)
+			{
+				TODO("how do we handle deleted bookmark anchors?");
+
+				Description->Replace("\t", " ");
+				ScriptBookmark^ New = gcnew ScriptBookmark(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset), Description);
+
+				Bookmarks->Add(New);
+				RefreshBackgroundRenderers(false);
+			}
+
+			void LineTrackingManager::ClearBookmarks()
+			{
+				Bookmarks->Clear();
+				RefreshBackgroundRenderers(false);
+			}
+
+			String^ LineTrackingManager::SerializeBookmarks()
+			{
+				String^ Out = "";
+
+				for each (ScriptBookmark^ Itr in Bookmarks)
+					Out += ";<" + kMetadataSigilBookmark + ">\t" + Itr->Line() + "\t" + Itr->Message() + "\t</" + kMetadataSigilBookmark + ">\n";
+
+				return Out;
+			}
+
+			void LineTrackingManager::DeserializeBookmarks(String^ Serialized, bool ClearExisting)
+			{
+				Bookmarks->BeginUpdate();
+
+				if (ClearExisting)
+					ClearBookmarks();
+
+				ScriptParser^ TextParser = gcnew ScriptParser();
+				StringReader^ StringParser = gcnew StringReader(Serialized);
+				String^ ReadLine = StringParser->ReadLine();
+				int LineNo = 0;
+
+				while (ReadLine != nullptr)
+				{
+					if (TextParser->Tokenize(ReadLine, false) == false)
+					{
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					if (TextParser->GetTokenIndex(";<" + kMetadataSigilBookmark + ">") == 0)
+					{
+						array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split((String("\t")).ToCharArray());
+						try	{
+							LineNo = int::Parse(Splits[1]);
+						} catch (...){
+							LineNo = 1;
+						}
+
+						if (LineNo > 0 && LineNo <= Parent->Document->LineCount)
+							AddBookmark(LineNo, Splits[2]);
+					}
+
+					ReadLine = StringParser->ReadLine();
+				}
+
+				Bookmarks->EndUpdate();
+				RefreshBackgroundRenderers(false);
+			}
+
+			void LineTrackingManager::TrackFindResult(UInt32 Start, UInt32 End, String^ Text)
+			{
+				ScriptFindResult^ New = gcnew ScriptFindResult(this, CreateAnchor(Start), CreateAnchor(End), Text);
+
+				FindResults->Add(New);
+				RefreshBackgroundRenderers(false);
+			}
+
+			void LineTrackingManager::ClearFindResults()
+			{
+				FindResults->Clear();
+				RefreshBackgroundRenderers(false);
+			}
+
+			void LineTrackingManager::Cleanup()
+			{
+				List<ScriptMessage^>^ RemovedMessages = gcnew List < ScriptMessage^ > ;
+				List<ScriptBookmark^>^ RemovedBookmarks = gcnew List < ScriptBookmark^ > ;
+				List<ScriptFindResult^>^ RemovedFindResults = gcnew List < ScriptFindResult^ > ;
+
+				for each (ScriptMessage^ Itr in Messages)
+				{
+					if (Itr->Deleted())
+						RemovedMessages->Add(Itr);
+				}
+
+				for each (ScriptBookmark^ Itr in Bookmarks)
+				{
+					if (Itr->Deleted())
+						RemovedBookmarks->Add(Itr);
+				}
+
+				for each (ScriptFindResult^ Itr in FindResults)
+				{
+					if (Itr->Deleted())
+						RemovedFindResults->Add(Itr);
+				}
+
+				static const int BatchUpdateThreshold = 5;
+
+				if (RemovedMessages->Count > BatchUpdateThreshold)
+					Messages->BeginUpdate();
+
+				for each (ScriptMessage^ Itr in RemovedMessages)
+					Messages->Remove(Itr);
+
+				if (RemovedMessages->Count > BatchUpdateThreshold)
+					Messages->EndUpdate();
+
+				if (RemovedBookmarks->Count > BatchUpdateThreshold)
+					Bookmarks->BeginUpdate();
+
+				for each (ScriptBookmark^ Itr in RemovedBookmarks)
+					Bookmarks->Remove(Itr);
+
+				if (RemovedBookmarks->Count > BatchUpdateThreshold)
+					Bookmarks->EndUpdate();
+
+				if (RemovedFindResults->Count > BatchUpdateThreshold)
+					FindResults->BeginUpdate();
+
+				for each (ScriptFindResult^ Itr in RemovedFindResults)
+					FindResults->Remove(Itr);
+
+				if (RemovedFindResults->Count > BatchUpdateThreshold)
+					FindResults->EndUpdate();
+
+				RemovedMessages->Clear();
+				RemovedBookmarks->Clear();
+				RemovedFindResults->Clear();
+			}
+
+			void LineTrackingManager::Jump(TrackingMessage^ To)
+			{
+				int Line = To->Line();
+
+				if (Line > 0 && Line <= Parent->LineCount)
+				{
+					Parent->TextArea->Caret->Line = Line;
+					Parent->TextArea->Caret->Column = 0;
+					Parent->TextArea->Caret->BringCaretToView();
+					Parent->Focus();
+				}
+			}
+
+			void CurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
+			{
+				if (ParentEditor->TextArea->Selection->IsEmpty)
+				{
+					DocumentLine^ Line = ParentEditor->Document->GetLineByNumber(ParentEditor->TextArea->Caret->Line);
+					Color Buffer = PREFERENCES->LookupColorByKey("CurrentLineHighlightColor");
+					RenderBackground(textView,
+									drawingContext,
+									Line->Offset,
+									Line->EndOffset,
+									Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
+									Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
+									1,
+									true);
+				}
+			}
+
+			CurrentLineBGColorizer::CurrentLineBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
+				ILineBackgroundColorizer(Parent, RenderLayer)
+			{
+				;//
 			}
 
 			void SelectionBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
@@ -235,64 +971,6 @@ namespace ConstructionSetExtender
 				ILineBackgroundColorizer(Parent, RenderLayer)
 			{
 				;//
-			}
-
-			void FindReplaceBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
-			{
-				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
-				List<Segment>^ SegmentBuffer = gcnew List<Segment>();
-
-				for each (Segment Itr in HighlightSegments)
-				{
-					try
-					{
-						RenderBackground(textView,
-										drawingContext,
-										Itr.Offset,
-										Itr.Offset + Itr.Length,
-										Windows::Media::Color::FromArgb(100, Buffer.R, Buffer.G, Buffer.B),
-										Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B),
-										1,
-										false);
-
-						SegmentBuffer->Add(Segment(Itr));
-					} catch (...) {}
-				}
-
-				HighlightSegments->Clear();
-
-				for each (Segment Itr in SegmentBuffer)
-					AddSegment(Itr.Offset, Itr.Length);
-
-				SegmentBuffer->Clear();
-			}
-
-			void FindReplaceBGColorizer::AddSegment( int Offset, int Length )
-			{
-				HighlightSegments->Add(Segment(Offset, Length));
-			}
-
-			void FindReplaceBGColorizer::ClearSegments()
-			{
-				HighlightSegments->Clear();
-			}
-
-			FindReplaceBGColorizer::Segment::Segment( int Offset, int Length ) :
-				Offset(Offset), Length(Length)
-			{
-				;//
-			}
-
-			FindReplaceBGColorizer::FindReplaceBGColorizer( AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer ) :
-				ILineBackgroundColorizer(Parent, RenderLayer),
-				HighlightSegments(gcnew List<Segment>())
-			{
-				;//
-			}
-
-			FindReplaceBGColorizer::~FindReplaceBGColorizer()
-			{
-				ClearSegments();
 			}
 
 			void ObScriptIndentStrategy::IndentLines(AvalonEdit::Document::TextDocument^ document, Int32 beginLine, Int32 endLine)
@@ -615,6 +1293,14 @@ namespace ConstructionSetExtender
 				Panel->Children->Add(AdornmentLabel);
 
 				return Panel;
+			}
+
+			StructureVisualizerRenderer::~StructureVisualizerRenderer()
+			{
+				delete IconSource;
+
+				IconSource = nullptr;
+				ParentEditor = nullptr;
 			}
 		}
 	}

@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 {
 	namespace ScriptEditor
 	{
-		// not a real/proper MVC implementation, just less ugly than what came before it
+		// not a real/proper MVC implementation, obviously
 		interface class IWorkspaceModel;
 		interface class IWorkspaceViewController;
 
@@ -62,7 +62,7 @@ namespace ConstructionSetExtender
 
 			void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
-			void	Jump(IWorkspaceView^ View, String^ ScriptEditorID);
+			void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
 			int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 																	String^ Query, String^ Replacement, UInt32 Options, bool Global);
 

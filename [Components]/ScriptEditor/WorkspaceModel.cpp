@@ -35,7 +35,9 @@ namespace ConstructionSetExtender
 										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 			int TabSize = Decimal::ToInt32(PREFERENCES->FetchSettingAsInt("TabSize", "Appearance"));
 
-			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(this, CustomFont, TabSize);
+			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(this,
+																			   gcnew TextEditors::AvalonEditor::JumpToScriptHandler(this, &ConcreteWorkspaceModel::JumpToScript),
+																			   CustomFont, TabSize);
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceModel::TextEditor_KeyDown);
 			TextEditorScriptModifiedHandler = gcnew TextEditors::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
@@ -104,7 +106,7 @@ namespace ConstructionSetExtender
 
 				if (Data && Data->IsValid())
 				{
-					BoundParent->Controller->Jump(BoundParent, gcnew String(Data->EditorID));
+					BoundParent->Controller->Jump(BoundParent, this, gcnew String(Data->EditorID));
 				}
 
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
@@ -138,6 +140,12 @@ namespace ConstructionSetExtender
 			catch (...) {}
 		}
 
+		void ConcreteWorkspaceModel::JumpToScript(String^ TargetEditorID)
+		{
+			if (Bound)
+				BoundParent->Controller->Jump(BoundParent, this, TargetEditorID);
+		}
+
 		void ConcreteWorkspaceModel::Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate)
 		{
 			String^ ScriptText = gcnew String(Data->Text);
@@ -155,11 +163,8 @@ namespace ConstructionSetExtender
 				CurrentScript = Data->ParentForm;
 				NewScriptFlag = false;
 
-				if (ScriptName != NEWSCRIPTID)
-					TextEditor->Initializing = true;
-
-				TODO("clear editor's tracked data, i.e, bookmarks, etc")
-				TextEditor->SetText(TextEditor->DeserializeMetadata(ScriptText), false, true);
+				TextEditor->ClearTrackedData(true, true, true, true, true);
+				TextEditor->DeserializeMetadata(ScriptText, true);
 
 				if (Bound)
 					BoundParent->Enabled = true;
@@ -250,17 +255,18 @@ namespace ConstructionSetExtender
 			Debug::Assert(Bound == false);
 
 			BoundParent = To;
-			TODO("bind the listview to the text editor here");
-			TODO("bind the intellisense model to the view here");
 			BoundParent->Controller->AttachModelInternalView(BoundParent, this);
+
+			TextEditor->Bind(BoundParent->ListViewMessages, BoundParent->ListViewBookmarks, BoundParent->ListViewFindResults);
 		}
 
 		void ConcreteWorkspaceModel::Unbind()
 		{
 			if (Bound)
 			{
+				TextEditor->Unbind();
+
 				BoundParent = nullptr;
-				TODO("unbind the listview and IS model");
 				BoundParent->Controller->DettachModelInternalView(BoundParent, this);
 			}
 		}
@@ -327,7 +333,10 @@ namespace ConstructionSetExtender
 					else
 					{
 						for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
-							TODO("track error message");
+						{
+							TextEditor->TrackCompilerError(CompileData->CompileErrorData.ErrorListHead[i].Line,
+														   gcnew String(CompileData->CompileErrorData.ErrorListHead[i].Message));
+						}
 					}
 
 					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
@@ -475,6 +484,22 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
 			Concrete->TextEditor->Caret = Index;
+		}
+
+		String^ ConcreteWorkspaceModelController::GetSelection(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->TextEditor->GetSelectedText();
+		}
+
+		String^ ConcreteWorkspaceModelController::GetCaretToken(IWorkspaceModel^ Model)
+		{
+			Debug::Assert(Model != nullptr);
+			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
+
+			return Concrete->TextEditor->GetTokenAtCaretPos();
 		}
 
 		void ConcreteWorkspaceModelController::AcquireInputFocus(IWorkspaceModel^ Model)
@@ -748,9 +773,10 @@ namespace ConstructionSetExtender
 
 						Concrete->BoundParent->Controller->NewTab(Concrete->BoundParent, E);
 						Result = true;
-				}
+					}
 
-				break;
+					break;
+				}
 			}
 
 			return Result;

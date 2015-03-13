@@ -1,14 +1,15 @@
 #pragma once
 
 #include "AvalonEditDefs.h"
-#include "SemanticAnalysis.h"
+#include "[Common]/ListViewUtilities.h"
+#include "ScriptTextEditorInterface.h"
 
 using namespace ICSharpCode;
 using namespace ICSharpCode::AvalonEdit::Rendering;
 using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
 
-// http://danielgrunwald.de/coding/AvalonEdit/rendering.php
+/* http://danielgrunwald.de/coding/AvalonEdit/rendering.php */
 
 namespace ConstructionSetExtender
 {
@@ -17,28 +18,7 @@ namespace ConstructionSetExtender
 		namespace AvalonEditor
 		{
 			ref class AvalonEditTextEditor;
-/*
-
-			ref class AnchorSegmentTracker
-			{
-				typedef Dictionary<ScriptErrorMessage^, AnchorSegment^> ErrorMessageTableT;
-
-				List<AnchorSegment^>^					FindReplaceResults;
-				ErrorMessageTableT^						CompileTimeErrors;
-				List<AnchorSegment^>^					ValidatorErrors;		// updated from the semantic analysis cache
-
-				AvalonEdit::Document::TextDocument^		Parent;
-			public:
-				AnchorSegmentTracker(AvalonEdit::Document::TextDocument^ Source);
-				~AnchorSegmentTracker();
-
-				void							TrackFindReplaceResult(int StartOffset, int EndOffset);
-				void							ClearFindReplaceResults(void);
-
-				void							TrackCompileTimeError(UInt32 Line);
-				void							ClearCompileTimeErrors(void);
-				void
-			};*/
+			ref class LineTrackingManager;
 
 			ref class ILineBackgroundColorizer abstract : public AvalonEdit::Rendering::IBackgroundRenderer
 			{
@@ -46,11 +26,17 @@ namespace ConstructionSetExtender
 				AvalonEdit::TextEditor^						ParentEditor;
 				KnownLayer									RenderLayer;
 
-				void RenderBackground(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Background, Windows::Media::Color Border, Double BorderThickness, bool ColorEntireLine);
+				void										RenderBackground(TextView^ Destination,
+																			 System::Windows::Media::DrawingContext^ DrawingContext,
+																			 int StartOffset, int EndOffset,
+																			 Windows::Media::Color Background,
+																			 Windows::Media::Color Border,
+																			 Double BorderThickness,
+																			 bool ColorEntireLine);
 			public:
 				virtual ~ILineBackgroundColorizer();
 
-				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) = 0;
+				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) abstract;
 
 				property KnownLayer							Layer
 				{
@@ -60,29 +46,247 @@ namespace ConstructionSetExtender
 				ILineBackgroundColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
 			};
 
+			ref class TrackingMessage abstract
+			{
+			public:
+				virtual int					Line() abstract;
+				virtual String^				Message() abstract;
+
+				virtual void				Jump() abstract;
+				virtual bool				Deleted() abstract;
+			};
+
+			ref class TrackingImageMessage abstract : public TrackingMessage
+			{
+			public:
+				virtual int					ImageIndex() abstract;
+			};
+
+			ref class TrackingMessageListViewSorter : public ListViewGenericSorter, public System::Collections::IComparer
+			{
+			public:
+				TrackingMessageListViewSorter(int Index, SortOrder Order) : ListViewGenericSorter(Index, Order) {}
+
+				virtual int					Compare(Object^ X, Object^ Y);
+			};
+
+			ref class TrackingImageMessageListViewSorter : public ListViewGenericSorter, public System::Collections::IComparer
+			{
+			public:
+				TrackingImageMessageListViewSorter(int Index, SortOrder Order) : ListViewGenericSorter(Index, Order) {}
+
+				virtual int					Compare(Object^ X, Object^ Y);
+			};
+
+			ref class ScriptMessage : public TrackingImageMessage
+			{
+				LineTrackingManager^						Manager;
+			protected:
+				TextAnchor^									Anchor;
+				IScriptTextEditor::ScriptMessageType		MessageType;
+				IScriptTextEditor::ScriptMessageSource		MessageSource;
+				String^										MessageString;
+			public:
+				ScriptMessage(LineTrackingManager^ Parent, TextAnchor^ Location,
+							  IScriptTextEditor::ScriptMessageType Type,
+							  IScriptTextEditor::ScriptMessageSource Source,
+							  String^ Text);
+				~ScriptMessage();
+
+				virtual int									Line() override;
+				virtual String^								Message() override;
+				virtual int									ImageIndex() override;
+				virtual void								Jump() override;
+				virtual bool								Deleted() override;
+
+				IScriptTextEditor::ScriptMessageSource		Source();
+			};
+
+			ref class ScriptBookmark : public TrackingMessage
+			{
+				LineTrackingManager^						Manager;
+			protected:
+				TextAnchor^									Anchor;
+				String^										Description;
+			public:
+				ScriptBookmark(LineTrackingManager^ Parent, TextAnchor^ Location, String^ Text);
+				~ScriptBookmark();
+
+				virtual int									Line() override;
+				virtual String^								Message() override;
+				virtual void								Jump() override;
+				virtual bool								Deleted() override;
+			};
+
+			ref class ScriptFindResult : public TrackingMessage
+			{
+				LineTrackingManager^						Manager;
+			protected:
+				TextAnchor^									AnchorStart;
+				TextAnchor^									AnchorEnd;
+				String^										Description;
+			public:
+				ScriptFindResult(LineTrackingManager^ Parent, TextAnchor^ Start, TextAnchor^ End, String^ Text);
+				~ScriptFindResult();
+
+				virtual int									Line() override;
+				virtual String^								Message() override;
+				virtual void								Jump() override;
+				virtual bool								Deleted() override;
+
+				int											StartOffset();
+				int											EndOffset();
+			};
+
+			ref class ScriptBookmarkBinder : public SimpleListViewBinder < ScriptBookmark^ >
+			{
+			protected:
+				virtual void	InitializeListView(ListView^ Control) override;
+				virtual System::Collections::IComparer^	GetSorter(int Column, SortOrder Order) override;
+
+				virtual int		GetImageIndex(ScriptBookmark^ Item) override;
+				virtual void	DrawItem(DrawListViewSubItemEventArgs^ E) override;
+				virtual void	ActivateItem(ScriptBookmark^ Item) override;
+				virtual void	KeyPress(KeyEventArgs^ E) override;
+			};
+
+			ref class ScriptMessageBinder : public SimpleListViewBinder < ScriptMessage^ >
+			{
+			protected:
+				virtual void	InitializeListView(ListView^ Control) override;
+				virtual System::Collections::IComparer^	GetSorter(int Column, SortOrder Order) override;
+
+				virtual int		GetImageIndex(ScriptMessage^ Item) override;
+				virtual void	DrawItem(DrawListViewSubItemEventArgs^ E) override;
+				virtual void	ActivateItem(ScriptMessage^ Item) override;
+				virtual void	KeyPress(KeyEventArgs^ E) override;
+			};
+
+			ref class ScriptFindResultBinder : public SimpleListViewBinder < ScriptFindResult^ >
+			{
+			protected:
+				bool			HasLine(ScriptFindResult^ Check);
+
+				virtual ListViewItem^	Create(ScriptFindResult^ Data) override;
+
+				virtual void	InitializeListView(ListView^ Control) override;
+				virtual System::Collections::IComparer^	GetSorter(int Column, SortOrder Order) override;
+
+				virtual int		GetImageIndex(ScriptFindResult^ Item) override;
+				virtual void	DrawItem(DrawListViewSubItemEventArgs^ E) override;
+				virtual void	ActivateItem(ScriptFindResult^ Item) override;
+				virtual void	KeyPress(KeyEventArgs^ E) override;
+			};
+
+			ref struct ColorizerSegment
+			{
+				int Start;
+				int End;
+			};
+
+			delegate List<ColorizerSegment^>^				GetColorizerSegments();
+
+			ref class ScriptErrorIndicator : public AvalonEdit::Rendering::IBackgroundRenderer
+			{
+			protected:
+				GetColorizerSegments^						Delegate;
+
+				void										RenderSquiggly(TextView^ Destination,
+																		   System::Windows::Media::DrawingContext^ DrawingContext,
+																		   int StartOffset, int EndOffset,
+																		   Windows::Media::Color Color);
+			public:
+				ScriptErrorIndicator(GetColorizerSegments^ Getter);
+				~ScriptErrorIndicator();
+
+				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext);
+
+				property KnownLayer							Layer
+				{
+					virtual KnownLayer get() { return KnownLayer::Background; }
+				}
+			};
+
+			ref class ScriptFindResultIndicator : public ILineBackgroundColorizer
+			{
+			protected:
+				GetColorizerSegments^						Delegate;
+			public:
+				ScriptFindResultIndicator(GetColorizerSegments^ Getter);
+				~ScriptFindResultIndicator();
+
+				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
+			};
+
+			ref class LineTrackingManager
+			{
+			public:
+				static enum class UpdateSource
+				{
+					None,
+					Messages,
+					Bookmarks,
+					FindResults,
+				};
+			private:
+				static String^								kMetadataSigilBookmark = "CSEBookmark";
+
+				AvalonEdit::TextEditor^						Parent;
+
+				SimpleBindingList<ScriptMessage^>^			Messages;
+				SimpleBindingList<ScriptBookmark^>^			Bookmarks;
+				SimpleBindingList<ScriptFindResult^>^		FindResults;
+
+				ScriptMessageBinder^						BinderMessages;
+				ScriptBookmarkBinder^						BinderBookmarks;
+				ScriptFindResultBinder^						BinderFindResults;
+
+				UpdateSource								CurrentBatchUpdate;
+				int											CurrentUpdateCounter;
+
+				ScriptErrorIndicator^						ErrorColorizer;
+				ScriptFindResultIndicator^					FindResultColorizer;
+
+				TextAnchor^									CreateAnchor(UInt32 Offset);
+				void										RefreshBackgroundRenderers(bool IgnoreBatchUpdate);
+				void										GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out);
+
+				List<ColorizerSegment^>^					GetErrorColorizerSegments();
+				List<ColorizerSegment^>^					GetFindResultColorizerSegments();
+			public:
+				LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor);
+				~LineTrackingManager();
+
+				void										Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);
+				void										Unbind();
+
+				void										BeginUpdate(UpdateSource Source);
+				void										EndUpdate();
+
+				void										TrackMessage(UInt32 Line,
+																		 IScriptTextEditor::ScriptMessageType Type,
+																		 IScriptTextEditor::ScriptMessageSource Source,
+																		 String^ Message);
+				void										ClearMessages(IScriptTextEditor::ScriptMessageSource Filter);		// pass None to clear all
+
+				void										AddBookmark(UInt32 Line, String^ Description);
+				void										ClearBookmarks();
+				String^										SerializeBookmarks();
+				void										DeserializeBookmarks(String^ Serialized, bool ClearExisting);
+
+				void										TrackFindResult(UInt32 Start, UInt32 End, String^ Text);
+				void										ClearFindResults();
+
+				void										Cleanup();						// removes deleted anchors
+				void										Jump(TrackingMessage^ To);
+			};
+
 			ref class CurrentLineBGColorizer : public ILineBackgroundColorizer
 			{
 			public:
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
 				CurrentLineBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-			};
-
-			ref class ScriptErrorBGColorizer : public ILineBackgroundColorizer
-			{
-				List<int>^									ErrorLines;
-
-				bool										GetLineInError(int Line);
-				void										RenderSquiggly(TextView^ Destination, System::Windows::Media::DrawingContext^ DrawingContext, int StartOffset, int EndOffset, Windows::Media::Color Color);
-			public:
-				virtual ~ScriptErrorBGColorizer();
-
-				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
-
-				ScriptErrorBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer) : ILineBackgroundColorizer(Parent, RenderLayer), ErrorLines(gcnew List<int>()) {}
-
-				void										AddLine(int Line);
-				void										ClearLines(void);
 			};
 
 			ref class SelectionBGColorizer : public ILineBackgroundColorizer
@@ -99,28 +303,6 @@ namespace ConstructionSetExtender
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
 
 				LineLimitBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-			};
-
-			ref class FindReplaceBGColorizer : public ILineBackgroundColorizer
-			{
-				value struct Segment
-				{
-					int										Offset;
-					int										Length;
-
-					Segment(int Offset, int Length);
-				};
-
-				List<Segment>^								HighlightSegments;
-			public:
-				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) override;
-
-				FindReplaceBGColorizer(AvalonEdit::TextEditor^ Parent, KnownLayer RenderLayer);
-
-				void										AddSegment(int Offset, int Length);
-				void										ClearSegments();
-
-				virtual ~FindReplaceBGColorizer();
 			};
 
 			ref class ObScriptIndentStrategy : public AvalonEdit::Indentation::IIndentationStrategy
@@ -205,6 +387,7 @@ namespace ConstructionSetExtender
 				virtual VisualLineElement^					ConstructElement(Int32 offset) override;
 
 				StructureVisualizerRenderer(AvalonEditTextEditor^ Parent);
+				~StructureVisualizerRenderer();
 			};
 		}
 	}
