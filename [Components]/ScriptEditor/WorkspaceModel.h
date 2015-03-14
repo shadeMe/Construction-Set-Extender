@@ -94,8 +94,14 @@ namespace ConstructionSetExtender
 			void                                    ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
 			void									AutoSaveTimer_Tick(Object^ Sender, EventArgs^ E);
 
+			void									CheckAutoRecovery();
 			void									ClearAutoRecovery();
 			void									JumpToScript(String^ TargetEditorID);
+
+			void									OnStateChangedDirty(bool Modified);
+			void									OnStateChangedByteCodeSize(UInt32 Size);
+			void									OnStateChangedType(IWorkspaceModel::ScriptType Type);
+			void									OnStateChangedDescription();
 		public:
 			TextEditors::IScriptTextEditor^			TextEditor;
 			Timer^									AutoSaveTimer;
@@ -127,13 +133,18 @@ namespace ConstructionSetExtender
 			void					NextScript();
 			void					PreviousScript();
 
-			void					SetType(IWorkspaceModel::ScriptType New, bool UpdateView);
+			void					SetType(IWorkspaceModel::ScriptType New);
 			bool					Sanitize();
 
 			ConcreteWorkspaceModel(ConcreteWorkspaceModelController^ Controller, ConcreteWorkspaceModelFactory^ Factory, ComponentDLLInterface::ScriptData* Data);
 			~ConcreteWorkspaceModel();
 
 #pragma region Interfaces
+			virtual event IWorkspaceModel::StateChangeEventHandler^			StateChangedDirty;
+			virtual event IWorkspaceModel::StateChangeEventHandler^			StateChangedByteCodeSize;
+			virtual event IWorkspaceModel::StateChangeEventHandler^			StateChangedType;
+			virtual event IWorkspaceModel::StateChangeEventHandler^			StateChangedDescription;
+
 			property IWorkspaceModelFactory^		Factory
 			{
 				virtual IWorkspaceModelFactory^ get() { return ModelFactory; }
@@ -164,7 +175,12 @@ namespace ConstructionSetExtender
 				virtual IWorkspaceModel::ScriptType get() { return CurrentScriptType; }
 				virtual void set(IWorkspaceModel::ScriptType e) {}
 			}
-			property String^						Description
+			property String^						ShortDescription
+			{
+				virtual String^ get() { return CurrentScriptEditorID; }
+				virtual void set(String^ e) {}
+			}
+			property String^						LongDescription
 			{
 				virtual String^ get() { return CurrentScriptEditorID + " [" + CurrentScriptFormID.ToString("X8") + "]"; }
 				virtual void set(String^ e) {}

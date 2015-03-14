@@ -28,7 +28,7 @@ namespace ConstructionSetExtender
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
-				static const double									kSetTextFadeAnimationDuration = 0.10;		// in seconds
+				static const double									kSetTextFadeAnimationDuration = 0.1;		// in seconds
 
 				static String^										kMetadataBlockMarker = "CSEBlock";
 				static String^										kMetadataSigilCaret = "CSECaretPos";
@@ -37,14 +37,14 @@ namespace ConstructionSetExtender
 			protected:
 				static enum class									PreventTextChangeFlagState
 				{
-					Disabled = 0,
+					Disabled,
 					AutoReset,
 					ManualReset
 				};
 
 				static enum class									MoveSegmentDirection
 				{
-					Up = 0,
+					Up,
 					Down
 				};
 
@@ -208,7 +208,7 @@ namespace ConstructionSetExtender
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
-				void										UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool FullValidation);
+				void										UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool BasicValidation, bool FullValidation);
 				void										UpdateCodeFoldings();
 				void										UpdateSyntaxHighlighting(bool Regenerate);
 				void										SynchronizeExternalScrollBars();

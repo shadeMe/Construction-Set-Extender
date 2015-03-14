@@ -249,25 +249,6 @@ namespace ConstructionSetExtender
 				return -1;
 			}
 
-			void ScriptBookmarkBinder::DrawItem(DrawListViewSubItemEventArgs^ E)
-			{
-				TrackingMessage^ Data = (TrackingMessage^)E->Item->Tag;
-				switch (E->ColumnIndex)
-				{
-				case 0:		// line
-					E->SubItem->Text = Data->Line().ToString();
-					break;
-				case 1:
-					E->SubItem->Text = Data->Message();
-					break;
-				}
-
-				if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
-					E->DrawBackground();
-
-				E->DrawText();
-			}
-
 			void ScriptBookmarkBinder::ActivateItem(ScriptBookmark^ Item)
 			{
 				Item->Jump();
@@ -283,6 +264,24 @@ namespace ConstructionSetExtender
 						ScriptBookmark^ Data = (ScriptBookmark^)Selection->Tag;
 						Source->Remove(Data);
 					}
+				}
+			}
+
+			UInt32 ScriptBookmarkBinder::GetColumnCount()
+			{
+				return 2;
+			}
+
+			String^ ScriptBookmarkBinder::GetSubItemText(ScriptBookmark^ Item, int Column)
+			{
+				switch (Column)
+				{
+				case 0:
+					return Item->Line().ToString();
+				case 1:
+					return Item->Message();
+				default:
+					return "<unknown>";
 				}
 			}
 
@@ -317,28 +316,6 @@ namespace ConstructionSetExtender
 				return Item->ImageIndex();
 			}
 
-			void ScriptMessageBinder::DrawItem(DrawListViewSubItemEventArgs^ E)
-			{
-				TrackingImageMessage^ Data = (TrackingImageMessage^)E->Item->Tag;
-				switch (E->ColumnIndex)
-				{
-				case 0:		// image/dummy
-					E->SubItem->Text = "";
-					break;
-				case 1:		// line
-					E->SubItem->Text = Data->Line().ToString();
-					break;
-				case 2:		// message
-					E->SubItem->Text = Data->Message();
-					break;
-				}
-
-				if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
-					E->DrawBackground();
-
-				E->DrawText();
-			}
-
 			void ScriptMessageBinder::ActivateItem(ScriptMessage^ Item)
 			{
 				Item->Jump();
@@ -347,6 +324,26 @@ namespace ConstructionSetExtender
 			void ScriptMessageBinder::KeyPress(KeyEventArgs^ E)
 			{
 				;//
+			}
+
+			UInt32 ScriptMessageBinder::GetColumnCount()
+			{
+				return 3;
+			}
+
+			String^ ScriptMessageBinder::GetSubItemText(ScriptMessage^ Item, int Column)
+			{
+				switch (Column)
+				{
+				case 0:
+					return "";
+				case 1:
+					return Item->Line().ToString();
+				case 2:
+					return Item->Message();
+				default:
+					return "<unknown>";
+				}
 			}
 
 			bool ScriptFindResultBinder::HasLine(ScriptFindResult^ Check)
@@ -392,25 +389,6 @@ namespace ConstructionSetExtender
 				return -1;
 			}
 
-			void ScriptFindResultBinder::DrawItem(DrawListViewSubItemEventArgs^ E)
-			{
-				TrackingMessage^ Data = (TrackingMessage^)E->Item->Tag;
-				switch (E->ColumnIndex)
-				{
-				case 0:		// line
-					E->SubItem->Text = Data->Line().ToString();
-					break;
-				case 1:
-					E->SubItem->Text = Data->Message();
-					break;
-				}
-
-				if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
-					E->DrawBackground();
-
-				E->DrawText();
-			}
-
 			void ScriptFindResultBinder::ActivateItem(ScriptFindResult^ Item)
 			{
 				Item->Jump();
@@ -419,6 +397,24 @@ namespace ConstructionSetExtender
 			void ScriptFindResultBinder::KeyPress(KeyEventArgs^ E)
 			{
 				;//
+			}
+
+			UInt32 ScriptFindResultBinder::GetColumnCount()
+			{
+				return 2;
+			}
+
+			String^ ScriptFindResultBinder::GetSubItemText(ScriptFindResult^ Item, int Column)
+			{
+				switch (Column)
+				{
+				case 0:
+					return Item->Line().ToString();
+				case 1:
+					return Item->Message();
+				default:
+					return "<unknown>";
+				}
 			}
 
 			void ScriptErrorIndicator::RenderSquiggly(TextView^ Destination,
@@ -691,6 +687,9 @@ namespace ConstructionSetExtender
 												   String^ Message)
 			{
 				Debug::Assert(Source != IScriptTextEditor::ScriptMessageSource::None);
+				Debug::Assert(Line > 0);
+				if (Line > Parent->LineCount)
+					Line = Parent->LineCount;
 
 				ScriptMessage^ New = gcnew ScriptMessage(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset),
 														 Type, Source, Message);
@@ -704,11 +703,13 @@ namespace ConstructionSetExtender
 				{
 					// remove all
 					Messages->Clear();
+					RefreshBackgroundRenderers(false);
 				}
 				else
 				{
 					List<ScriptMessage^>^ Buffer = gcnew List < ScriptMessage^ > ;
-					Messages->BeginUpdate();
+
+					BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 					for each (ScriptMessage^ Itr in Messages)
 					{
 						if (Itr->Source() == Filter)
@@ -718,15 +719,16 @@ namespace ConstructionSetExtender
 					for each (ScriptMessage^ Itr in Buffer)
 						Messages->Remove(Itr);
 
-					Messages->EndUpdate();
+					EndUpdate();
 				}
-
-				RefreshBackgroundRenderers(false);
 			}
 
 			void LineTrackingManager::AddBookmark(UInt32 Line, String^ Description)
 			{
 				TODO("how do we handle deleted bookmark anchors?");
+				Debug::Assert(Line > 0);
+				if (Line > Parent->LineCount)
+					Line = Parent->LineCount;
 
 				Description->Replace("\t", " ");
 				ScriptBookmark^ New = gcnew ScriptBookmark(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset), Description);
@@ -753,7 +755,7 @@ namespace ConstructionSetExtender
 
 			void LineTrackingManager::DeserializeBookmarks(String^ Serialized, bool ClearExisting)
 			{
-				Bookmarks->BeginUpdate();
+				BeginUpdate(LineTrackingManager::UpdateSource::Bookmarks);
 
 				if (ClearExisting)
 					ClearBookmarks();
@@ -787,8 +789,7 @@ namespace ConstructionSetExtender
 					ReadLine = StringParser->ReadLine();
 				}
 
-				Bookmarks->EndUpdate();
-				RefreshBackgroundRenderers(false);
+				EndUpdate();
 			}
 
 			void LineTrackingManager::TrackFindResult(UInt32 Start, UInt32 End, String^ Text)
@@ -830,33 +831,38 @@ namespace ConstructionSetExtender
 				}
 
 				static const int BatchUpdateThreshold = 5;
+				{
+					if (RemovedMessages->Count > BatchUpdateThreshold)
+						BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 
-				if (RemovedMessages->Count > BatchUpdateThreshold)
-					Messages->BeginUpdate();
+					for each (ScriptMessage^ Itr in RemovedMessages)
+						Messages->Remove(Itr);
 
-				for each (ScriptMessage^ Itr in RemovedMessages)
-					Messages->Remove(Itr);
+					if (RemovedMessages->Count > BatchUpdateThreshold)
+						EndUpdate();
+				}
 
-				if (RemovedMessages->Count > BatchUpdateThreshold)
-					Messages->EndUpdate();
+				{
+					if (RemovedBookmarks->Count > BatchUpdateThreshold)
+						BeginUpdate(LineTrackingManager::UpdateSource::Bookmarks);
 
-				if (RemovedBookmarks->Count > BatchUpdateThreshold)
-					Bookmarks->BeginUpdate();
+					for each (ScriptBookmark^ Itr in RemovedBookmarks)
+						Bookmarks->Remove(Itr);
 
-				for each (ScriptBookmark^ Itr in RemovedBookmarks)
-					Bookmarks->Remove(Itr);
+					if (RemovedBookmarks->Count > BatchUpdateThreshold)
+						EndUpdate();
+				}
 
-				if (RemovedBookmarks->Count > BatchUpdateThreshold)
-					Bookmarks->EndUpdate();
+				{
+					if (RemovedFindResults->Count > BatchUpdateThreshold)
+						BeginUpdate(LineTrackingManager::UpdateSource::FindResults);
 
-				if (RemovedFindResults->Count > BatchUpdateThreshold)
-					FindResults->BeginUpdate();
+					for each (ScriptFindResult^ Itr in RemovedFindResults)
+						FindResults->Remove(Itr);
 
-				for each (ScriptFindResult^ Itr in RemovedFindResults)
-					FindResults->Remove(Itr);
-
-				if (RemovedFindResults->Count > BatchUpdateThreshold)
-					FindResults->EndUpdate();
+					if (RemovedFindResults->Count > BatchUpdateThreshold)
+						EndUpdate();
+				}
 
 				RemovedMessages->Clear();
 				RemovedBookmarks->Clear();

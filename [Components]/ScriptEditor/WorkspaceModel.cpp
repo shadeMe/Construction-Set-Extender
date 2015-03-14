@@ -16,7 +16,7 @@ namespace ConstructionSetExtender
 
 			CurrentScript = nullptr;
 			CurrentScriptType = IWorkspaceModel::ScriptType::Object;
-			CurrentScriptEditorID = NEWSCRIPTID;
+			CurrentScriptEditorID = FIRSTRUNSCRIPTID;
 			CurrentScriptFormID = 0;
 			CurrentScriptBytecode = 0;
 			CurrentScriptBytecodeLength = 0;
@@ -67,9 +67,6 @@ namespace ConstructionSetExtender
 
 			AutoSaveTimer->Stop();
 
-			ModelController = nullptr;
-			ModelFactory = nullptr;
-
 			TextEditor->KeyDown -= TextEditorKeyDownHandler;
 			TextEditor->ScriptModified -= TextEditorScriptModifiedHandler;
 			TextEditor->MouseClick -= TextEditorMouseClickHandler;
@@ -82,6 +79,9 @@ namespace ConstructionSetExtender
 			TextEditor = nullptr;
 
 			ModelFactory->Remove(this);
+
+			ModelController = nullptr;
+			ModelFactory = nullptr;
 		}
 
 		void ConcreteWorkspaceModel::TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -91,8 +91,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::TextEditor_ScriptModified(Object^ Sender, TextEditors::TextEditorScriptModifiedEventArgs^ E)
 		{
-			if (Bound)
-				BoundParent->Controller->SetModifiedIndicator(BoundParent, this, E->ModifiedStatus);
+			OnStateChangedDirty(E->ModifiedStatus);
 		}
 
 		void ConcreteWorkspaceModel::TextEditor_MouseClick(Object^ Sender, TextEditors::TextEditorMouseClickEventArgs^ E)
@@ -127,7 +126,33 @@ namespace ConstructionSetExtender
 				if (Initialized == true && New == false && TextEditor->Modified == true)
 				{
 					TextEditor->SaveScriptToDisk(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()),
-												 false, Description, "txt");
+												 false, LongDescription, "txt");
+				}
+			}
+		}
+
+		void ConcreteWorkspaceModel::CheckAutoRecovery()
+		{
+			String^ CachePath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + LongDescription + ".txt";
+			if (System::IO::File::Exists(CachePath))
+			{
+				try
+				{
+					System::DateTime LastWriteTime = System::IO::File::GetLastWriteTime(CachePath);
+					if (BoundParent->Controller->MessageBox("An auto-recovery cache for the script '" + LongDescription + "' was found, dated " + LastWriteTime.ToShortDateString() + " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
+						MessageBoxButtons::YesNo,
+						MessageBoxIcon::Information) == DialogResult::Yes)
+					{
+						TextEditor->LoadFileFromDisk(CachePath);
+					}
+
+					Microsoft::VisualBasic::FileIO::FileSystem::DeleteFile(CachePath,
+																		   Microsoft::VisualBasic::FileIO::UIOption::OnlyErrorDialogs,
+																		   Microsoft::VisualBasic::FileIO::RecycleOption::SendToRecycleBin);
+				}
+				catch (Exception^ E)
+				{
+					DebugPrint("Couldn't access auto-recovery cache '" + LongDescription + "'!\n\tException: " + E->Message, true);
 				}
 			}
 		}
@@ -135,7 +160,7 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceModel::ClearAutoRecovery()
 		{
 			try {
-				System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + Description + ".txt");
+				System::IO::File::Delete(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + LongDescription + ".txt");
 			}
 			catch (...) {}
 		}
@@ -172,17 +197,13 @@ namespace ConstructionSetExtender
 
 			CurrentScriptEditorID = ScriptName;
 			CurrentScriptFormID = FormID;
+			OnStateChangedDescription();
 			CurrentScriptBytecode = ByteCode;
 			CurrentScriptBytecodeLength = ByteCodeLength;
+			OnStateChangedByteCodeSize(CurrentScriptBytecodeLength);
 
-			if (Bound)
-				BoundParent->Description = Description;
-
-			SetType((IWorkspaceModel::ScriptType)ScriptType, Bound);
+			SetType((IWorkspaceModel::ScriptType)ScriptType);
 			TextEditor->Modified = false;
-
-			if (Bound)
-				BoundParent->Controller->SetByteCodeSize(BoundParent, ByteCodeLength);
 
 			if (PartialUpdate == false && Data->Compiled == false && PREFERENCES->FetchSettingAsInt("WarnUncompiledScripts", "General"))
 			{
@@ -195,30 +216,7 @@ namespace ConstructionSetExtender
 			}
 
 			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && PartialUpdate == false && Bound)
-			{
-				String^ CachePath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath()) + Description + ".txt";
-				if (System::IO::File::Exists(CachePath))
-				{
-					try
-					{
-						System::DateTime LastWriteTime = System::IO::File::GetLastWriteTime(CachePath);
-						if (BoundParent->Controller->MessageBox("An auto-recovery cache for the script '" + Description + "' was found, dated " + LastWriteTime.ToShortDateString() + " " + LastWriteTime.ToLongTimeString() + ".\n\nWould you like to load it instead?",
-							MessageBoxButtons::YesNo,
-							MessageBoxIcon::Information) == DialogResult::Yes)
-						{
-							TextEditor->LoadFileFromDisk(CachePath);
-						}
-
-						Microsoft::VisualBasic::FileIO::FileSystem::DeleteFile(CachePath,
-																			   Microsoft::VisualBasic::FileIO::UIOption::OnlyErrorDialogs,
-																			   Microsoft::VisualBasic::FileIO::RecycleOption::SendToRecycleBin);
-					}
-					catch (Exception^ E)
-					{
-						DebugPrint("Couldn't access auto-recovery cache '" + Description + "'!\n\tException: " + E->Message, true);
-					}
-				}
-			}
+				CheckAutoRecovery();
 		}
 
 		bool ConcreteWorkspaceModel::DoHouseKeeping()
@@ -256,6 +254,8 @@ namespace ConstructionSetExtender
 
 			BoundParent = To;
 			BoundParent->Controller->AttachModelInternalView(BoundParent, this);
+			SetType(CurrentScriptType);
+			CheckAutoRecovery();
 
 			TextEditor->Bind(BoundParent->ListViewMessages, BoundParent->ListViewBookmarks, BoundParent->ListViewFindResults);
 		}
@@ -266,8 +266,8 @@ namespace ConstructionSetExtender
 			{
 				TextEditor->Unbind();
 
-				BoundParent = nullptr;
 				BoundParent->Controller->DettachModelInternalView(BoundParent, this);
+				BoundParent = nullptr;
 			}
 		}
 
@@ -301,56 +301,52 @@ namespace ConstructionSetExtender
 			String^ Unpreprocessed = "";
 			bool HasDirectives = false;
 
-			if (TextEditor->CanCompile(HasDirectives))
+			if (CurrentScript && TextEditor->CanCompile(HasDirectives))
 			{
 				bool Throwaway = false;
 				Preprocessed = TextEditor->GetPreprocessedText(Throwaway, true);
 				Unpreprocessed = TextEditor->GetText();
 
-				if (CurrentScript)
+				if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
 				{
-					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-					{
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-					}
+					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
+				}
 
-					ComponentDLLInterface::ScriptCompileData* CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
+				ComponentDLLInterface::ScriptCompileData* CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
 
-					CString ScriptText(Preprocessed->Replace("\n", "\r\n"));
-					CompileData->Script.Text = ScriptText.c_str();
-					CompileData->Script.Type = (int)Type;
-					CompileData->Script.ParentForm = (TESForm*)CurrentScript;
+				CString ScriptText(Preprocessed->Replace("\n", "\r\n"));
+				CompileData->Script.Text = ScriptText.c_str();
+				CompileData->Script.Type = (int)Type;
+				CompileData->Script.ParentForm = (TESForm*)CurrentScript;
 
-					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
-					{
-						Setup(&CompileData->Script, true);
+				TextEditor->ClearTrackedData(true, false, false, false, false);
+				if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
+				{
+					Setup(&CompileData->Script, true);
 
-						String^ OriginalText = Unpreprocessed + TextEditor->SerializeMetadata(HasDirectives);
-						CString OrgScriptText(OriginalText);
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
-						Result = true;
-					}
-					else
-					{
-						for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
-						{
-							TextEditor->TrackCompilerError(CompileData->CompileErrorData.ErrorListHead[i].Line,
-														   gcnew String(CompileData->CompileErrorData.ErrorListHead[i].Message));
-						}
-					}
-
-					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-					{
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
-					}
-					else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
-						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
-
-					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
+					String^ OriginalText = Unpreprocessed + TextEditor->SerializeMetadata(HasDirectives);
+					CString OrgScriptText(OriginalText);
+					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
+					Result = true;
 				}
 				else
-					Result = true;
+				{
+					for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
+					{
+						TextEditor->TrackCompilerError(CompileData->CompileErrorData.ErrorListHead[i].Line,
+														gcnew String(CompileData->CompileErrorData.ErrorListHead[i].Message));
+					}
+				}
+
+				if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+				{
+					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
+					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
+				}
+				else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
+					NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
+
+				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
 			}
 
 			if (Result)
@@ -394,14 +390,10 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void ConcreteWorkspaceModel::SetType(IWorkspaceModel::ScriptType New, bool UpdateView)
+		void ConcreteWorkspaceModel::SetType(IWorkspaceModel::ScriptType New)
 		{
-			Type = New;
-			if (UpdateView)
-			{
-				Debug::Assert(Bound == true);
-				BoundParent->Controller->UpdateType(BoundParent, this);
-			}
+			CurrentScriptType = New;
+			OnStateChangedType(New);
 		}
 
 		String^ GetSanitizedIdentifier(String^ Identifier)
@@ -431,6 +423,35 @@ namespace ConstructionSetExtender
 				TextEditor->SetText(Agent->Output, false, false);
 
 			return Result;
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedDirty(bool Modified)
+		{
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->Dirty = Modified;
+			StateChangedDirty(this, E);
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedByteCodeSize(UInt32 Size)
+		{
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->ByteCodeSize = Size;
+			StateChangedByteCodeSize(this, E);
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedType(IWorkspaceModel::ScriptType Type)
+		{
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->Type = Type;
+			StateChangedType(this, E);
+		}
+
+		void ConcreteWorkspaceModel::OnStateChangedDescription()
+		{
+			IWorkspaceModel::StateChangeEventArgs^ E = gcnew IWorkspaceModel::StateChangeEventArgs;
+			E->ShortDescription = ShortDescription;
+			E->LongDescription = LongDescription;
+			StateChangedDescription(this, E);
 		}
 
 		// ConcreteWorkspaceModelController
@@ -465,7 +486,7 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
 			if (Preprocess)
-				return Concrete->TextEditor->GetPreprocessedText(PreprocessResult, true);
+				return Concrete->TextEditor->GetPreprocessedText(PreprocessResult, false);
 			else
 				return Concrete->TextEditor->GetText();
 		}
@@ -572,7 +593,10 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			Concrete->SetType(New, false);
+			if (Concrete->Type != New)
+				Concrete->TextEditor->Modified = true;
+
+			Concrete->SetType(New);
 		}
 
 		void ConcreteWorkspaceModelController::GotoLine(IWorkspaceModel^ Model, UInt32 Line)
@@ -621,7 +645,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			Concrete->TextEditor->SaveScriptToDisk(PathToFile, PathIncludesFileName, Concrete->Description, Extension);
+			Concrete->TextEditor->SaveScriptToDisk(PathToFile, PathIncludesFileName, Concrete->LongDescription, Extension);
 		}
 
 		int ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)

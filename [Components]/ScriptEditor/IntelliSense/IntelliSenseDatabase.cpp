@@ -300,6 +300,13 @@ namespace ConstructionSetExtender
 				{
 					return Itr->GetIdentifier();
 				}
+				else if (Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Command)
+				{
+					IntelliSenseItemScriptCommand^ Current = (IntelliSenseItemScriptCommand^)Itr;
+					String^ Alias = Current->GetShorthand();
+					if (Alias->Length == Name->Length && !String::Compare(Alias, Name, true))
+						return Alias;
+				}
 			}
 
 			return Name;

@@ -115,6 +115,7 @@ namespace ConstructionSetExtender
 			virtual bool										GetIsQuickViewable(String^ Token) override;
 			bool												GetRequiresParent();
 			IntelliSenseCommandItemSourceType					GetSource();
+			String^												GetShorthand();
 		};
 
 		ref class IntelliSenseItemVariable : public IntelliSenseItem

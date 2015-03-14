@@ -28,10 +28,10 @@ namespace ConstructionSetExtender
 						switch (VarInfo->Type)
 						{
 						case 0:
-							VarType = "Float";
+							VarType = "Float/Array";
 							break;
 						case 1:
-							VarType = "Integer";
+							VarType = "Integer/String";
 							break;
 						case 2:
 							VarType = "Reference";

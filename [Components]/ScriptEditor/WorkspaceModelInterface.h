@@ -36,6 +36,25 @@ namespace ConstructionSetExtender
 				CreateUDF,
 			};
 
+			// common for all events, holds the updated state
+			ref struct StateChangeEventArgs
+			{
+				bool								Dirty;
+				UInt32								ByteCodeSize;		// in bytes
+				ScriptType							Type;
+				String^								ShortDescription;
+				String^								LongDescription;
+
+				StateChangeEventArgs() : Dirty(false), ByteCodeSize(0), Type(ScriptType::Object), ShortDescription(""), LongDescription("") {}
+			};
+
+			delegate void StateChangeEventHandler(IWorkspaceModel^ Sender, StateChangeEventArgs^ E);
+
+			event StateChangeEventHandler^			StateChangedDirty;
+			event StateChangeEventHandler^			StateChangedByteCodeSize;
+			event StateChangeEventHandler^			StateChangedType;
+			event StateChangeEventHandler^			StateChangedDescription;		// raised when either of the descriptions is changed
+
 			property IWorkspaceModelFactory^		Factory;
 			property IWorkspaceModelController^		Controller;
 
@@ -43,7 +62,8 @@ namespace ConstructionSetExtender
 			property bool							New;				// is a new script
 			property bool							Dirty;
 			property ScriptType						Type;
-			property String^						Description;		// EditorID [FormID]
+			property String^						ShortDescription;	// EditorID
+			property String^						LongDescription;	// EditorID [FormID]
 
 			property Control^						InternalView;		// the text editor
 			property bool							Bound;

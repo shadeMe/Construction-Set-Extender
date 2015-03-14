@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 			ScriptList->UseCompatibleStateImageBehavior = false;
 			ScriptList->View = View::Details;
 			ScriptList->AutoSize = false;
-			ScriptList->MultiSelect = false;
+			ScriptList->MultiSelect = true;
 			ScriptList->CheckBoxes = false;
 			ScriptList->FullRowSelect = true;
 			ScriptList->HideSelection = false;
@@ -153,11 +153,6 @@ namespace ConstructionSetExtender
 		{
 			CurrentOperation = Operation;
 
-			if (Operation == ShowOperation::Open)
-				ScriptList->MultiSelect = true;
-			else
-				ScriptList->MultiSelect = false;
-
 			ScriptList->BeginUpdate();
 
 			ComponentDLLInterface::ScriptListData* Data = ScriptListCache = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptList();
@@ -232,6 +227,14 @@ namespace ConstructionSetExtender
 
 			Closing = false;
 			SelectionComplete = false;
+			SelectedEditorIDs->Clear();
+			SelectBox->Text = "Select Script(s)";
+
+			if (CurrentOperation == ShowOperation::Open)
+				ScriptBox->Text = "Open Script(s)";
+			else
+				ScriptBox->Text = "Delete Script(s)";
+
 			ScriptBox->ShowDialog();
 
 			if (SelectionComplete)
@@ -247,10 +250,8 @@ namespace ConstructionSetExtender
 			SearchBox->Enabled = true;
 			PreviewBox->Text = "";
 			SearchBox->Text = "";
-			ScriptList->MultiSelect = false;
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptListCache, false);
 			ScriptListCache = 0;
-			SelectedEditorIDs->Clear();
 
 			if (SaveBoundsToINI)
 			{
@@ -308,6 +309,11 @@ namespace ConstructionSetExtender
 
 		void ScriptListDialog::ScriptList_SelectedIndexChanged(Object^ Sender, EventArgs^ E)
 		{
+			if (ScriptList->SelectedIndices->Count)
+				SelectBox->Text = "Select " + ScriptList->SelectedIndices->Count + " Script(s)";
+			else
+				SelectBox->Text = "Select Script(s)";
+
 			if (GetListViewSelectedItem(ScriptList) == nullptr)
 				return;
 

@@ -91,16 +91,16 @@ namespace ConstructionSetExtender
 		FadeTimer->Start();
 	}
 
-	void AnimatedForm::Destroy()
+	void AnimatedForm::ForceClose()
+	{
+		Form::Close();
+	}
+
+	AnimatedForm::~AnimatedForm()
 	{
 		FadeTimer->Stop();
 		FadeTimer->Tick -= FadeTimerTickHandler;
 		delete FadeTimer;
-	}
-
-	void AnimatedForm::ForceClose()
-	{
-		Form::Close();
 	}
 
 	void NonActivatingImmovableAnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
@@ -230,7 +230,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	void NonActivatingImmovableAnimatedForm::Destroy()
+	NonActivatingImmovableAnimatedForm::~NonActivatingImmovableAnimatedForm()
 	{
 		FadeTimer->Stop();
 		FadeTimer->Tick -= FadeTimerTickHandler;

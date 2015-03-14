@@ -79,9 +79,7 @@ namespace ComponentDLLInterface
 		{
 			UInt8* data = (UInt8*)Form->data;
 			if (data && *(data + 8) == 7)
-			{
 				IsUDF = true;
-			}
 
 			Result = true;
 		}
@@ -105,7 +103,7 @@ namespace ComponentDLLInterface
 		if (Form->info.type == Script::kScriptType_Object && Form->info.dataLength >= 15)
 			TryGetUDF(Form, UDF);
 
-		Compiled = (Form->data == NULL || Length == 0);
+		Compiled = (Form->data != NULL && Length > 0);
 	}
 
 	ScriptData::ScriptData() : FormData(), Text(0), Type(0), ModifiedFlag(0), ByteCode(0), Length(0), ParentID(0), UDF(false), Compiled(false)

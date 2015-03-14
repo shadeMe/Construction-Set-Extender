@@ -53,13 +53,16 @@ SE		---->
 		> Make the offset viewer and preproc view use the same for/background colors as teh editor
 		> Add script command param data to intellisense
 		> Save script editor bounds to cse ini
-		> Enable deleting multiple scripts in teh script list dialog
+		> Use the default avalonedit current line indicator
+		> Predict the correct delinquent block for mismatches
 
 
 	BUGFIX			=
 		
 
 	ENHANCEMENT		=
+		> Bookmark indicator margin
+		> Mouse-over on error segments displays errors
 		> Document minimap
 
 

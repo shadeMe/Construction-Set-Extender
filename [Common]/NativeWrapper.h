@@ -23,6 +23,10 @@ namespace ConstructionSetExtender
 		IntPtr											SendMessageA(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 		[DllImport("user32.dll")]
 		IntPtr											SetActiveWindow(IntPtr handle);
+		[DllImport("user32.dll")]
+		IntPtr											GetActiveWindow();
+		[DllImport("user32.dll")]
+		IntPtr											GetForegroundWindow();
 		[DllImport("gdi32.dll")]
 		int												DeleteObject(IntPtr hObject);
 

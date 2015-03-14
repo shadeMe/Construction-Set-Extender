@@ -52,10 +52,6 @@ namespace ConstructionSetExtender
 			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 
-			virtual void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
-			virtual void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size);
-			virtual void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model);
-
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
 			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
@@ -160,6 +156,19 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSanitizeScriptText);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarBindScript);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSnippetManager);
+
+			void											ModelStateChangeHandler_Dirty(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
+			void											ModelStateChangeHandler_ByteCodeSize(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
+			void											ModelStateChangeHandler_Type(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
+			void											ModelStateChangeHandler_Description(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E);
+
+			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedDirty;
+			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedByteCodeSize;
+			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedType;
+			IWorkspaceModel::StateChangeEventHandler^		ModelStateChangedDescription;
+
+			void									ModelSubscribeEvents(IWorkspaceModel^ Model);
+			void									ModelUnsubscribeEvents(IWorkspaceModel^ Model);
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -220,6 +229,7 @@ namespace ConstructionSetExtender
 			ToolStripProgressBar^					ToolBarByteCodeSize;
 
 			SplitContainer^							WorkspaceSplitter;
+			Panel^									AttachPanel;
 			ListView^								MessageList;
 			ListView^								FindList;
 			ListView^								BookmarkList;
@@ -237,7 +247,8 @@ namespace ConstructionSetExtender
 			typedef Dictionary<IWorkspaceModel^, DotNetBar::SuperTabItem^>	ModelTabTableT;
 			ModelTabTableT^							AssociatedModels;
 
-			property bool							AllowDisposal;												// when false, the form's closing is canceled
+			bool									AllowDisposal;												// when false, the form's closing is canceled
+			bool									DisallowBinding;											// when true, prevents models from binding to the view
 
 			IWorkspaceModelController^				ModelController();
 			IWorkspaceModelFactory^					ModelFactory();
@@ -254,7 +265,12 @@ namespace ConstructionSetExtender
 
 			Rectangle								GetBounds(bool UseRestoreBounds);
 			void									ToggleSecondaryPanel(bool State);
-			void									UpdateScriptTypeControls();
+			void									UpdateScriptTypeControls(IWorkspaceModel::ScriptType Type);
+
+			void									ShowMessageList();
+			void									ToggleMessageList(bool State);
+			void									ToggleBookmarkList(bool State);
+			void									ToggleFindResultList(bool State);
 
 			void									ShowOpenDialog();
 			void									ShowDeleteDialog();
@@ -272,6 +288,7 @@ namespace ConstructionSetExtender
 			void									BeginUpdate();
 			void									EndUpdate();
 			void									Redraw();
+			void									Focus();
 
 			int										GetTabCount();
 			void									SelectTab(DotNetBar::SuperTabItem^ Tab);
@@ -313,21 +330,12 @@ namespace ConstructionSetExtender
 				virtual IntPtr get() { return EditorForm->Handle; }
 				virtual void set(IntPtr e) {}
 			}
-			property String^						Description
-			{
-				virtual String^ get() { return String::Empty; }
-				virtual void set(String^ e)
-				{
-					EditorForm->Text = e + " - " + SCRIPTEDITOR_TITLE;
-					GetActiveTab()->Tooltip = e;
-				}
-			}
 			property bool							Enabled
 			{
 				virtual bool get() { return WorkspaceSplitter->Panel1->Enabled; }
 				virtual void set(bool e)
 				{
-					WorkspaceSplitter->Panel1->Enabled = e;
+					AttachPanel->Enabled = e;
 					WorkspaceSplitter->Panel2->Enabled = e;
 				}
 			}

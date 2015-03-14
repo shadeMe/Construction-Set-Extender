@@ -457,7 +457,7 @@ ScriptData* GetNextScriptInList(void* CurrentScript)
 	return Result;
 }
 
-void RemoveScriptBytecode(void* Script)
+void RemoveScriptBytecode(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptForm->RemoveCompiledData();

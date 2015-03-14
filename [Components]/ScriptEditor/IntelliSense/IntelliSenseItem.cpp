@@ -119,6 +119,11 @@ namespace ConstructionSetExtender
 			return !String::Compare(Name, Token, true) || !String::Compare(Shorthand, Token, true);
 		}
 
+		String^ IntelliSenseItemScriptCommand::GetShorthand()
+		{
+			return Shorthand;
+		}
+
 		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptSemanticAnalysis::Variable::DataType Type, IntelliSenseItemType Scope) :
 			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
 											Name,

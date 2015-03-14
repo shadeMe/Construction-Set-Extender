@@ -116,14 +116,14 @@ namespace ConstructionSetExtender
 								{
 									TextField->Document->Replace(Offset, Length, Replacement);
 									CurrentLine = TextField->Document->GetText(Line);
-									LineTracker->TrackFindResult(Offset, Replacement->Length, CurrentLine);
+									LineTracker->TrackFindResult(Offset, Offset + Replacement->Length, CurrentLine);
 									SearchStartOffset = Itr->Index + Replacement->Length;
 									Restart = true;
 									break;
 								}
 								else if (Operation == IScriptTextEditor::FindReplaceOperation::Find)
 								{
-									LineTracker->TrackFindResult(Offset, Length, CurrentLine);
+									LineTracker->TrackFindResult(Offset, Offset + Length, CurrentLine);
 								}
 							}
 
@@ -1183,13 +1183,19 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ScrollBarSyncTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
+				if (IsFocused == false)
+					return;
+
 				SynchronizingInternalScrollBars = false;
 				SynchronizeExternalScrollBars();
 			}
 
 			void AvalonEditTextEditor::SemanticAnalysisTimer_Tick( Object^ Sender, EventArgs^ E )
 			{
-				UpdateSemanticAnalysisCache(true, true, false);
+				if (IsFocused == false)
+					return;
+
+				UpdateSemanticAnalysisCache(true, true, true, false);
 				UpdateIntelliSenseLocalDatabase();
 				UpdateCodeFoldings();
 				UpdateSyntaxHighlighting(false);
@@ -1604,12 +1610,12 @@ namespace ConstructionSetExtender
 
 				MiddleMouseScrollTimer->Interval = 16;
 
-				IsFocused = true;
+				IsFocused = false;
 
 				LastKnownMouseClickOffset = 0;
 
 				ScrollBarSyncTimer->Interval = 200;
-				ScrollBarSyncTimer->Start();
+		//		ScrollBarSyncTimer->Start();
 
 				ExternalVerticalScrollBar->Dock = DockStyle::Right;
 				ExternalVerticalScrollBar->SmallChange = 30;
@@ -1627,7 +1633,7 @@ namespace ConstructionSetExtender
 				SetTextPrologAnimationCache = nullptr;
 
 				SemanticAnalysisTimer->Interval = 5000;
-				SemanticAnalysisTimer->Start();
+		//		SemanticAnalysisTimer->Start();
 
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
@@ -1911,7 +1917,7 @@ namespace ConstructionSetExtender
 			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
 				if (UpdateVars || UpdateControlBlocks)
-					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false);
+					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false, false);
 
 				return SemanticAnalysisCache;
 			}
@@ -1922,9 +1928,9 @@ namespace ConstructionSetExtender
 				HasFormCollision = ISDB->GetIsIdentifierForm(VarName);
 			}
 
-			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool FullValidation)
+			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool BasicValidation, bool FullValidation)
 			{
-				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
+				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::None;
 				ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
 
 				if (FillVariables)
@@ -1932,6 +1938,9 @@ namespace ConstructionSetExtender
 
 				if (FillControlBlocks)
 					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
+
+				if (BasicValidation)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
 
 				if (FullValidation)
 				{
@@ -2055,6 +2064,9 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
 			{
+				if (Line < 1)
+					Line = 1;
+
 				LineTracker->TrackMessage(Line,
 										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
 										  TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
@@ -2112,7 +2124,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache(true, true, false);
+					UpdateSemanticAnalysisCache(true, true, false, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
 				}
@@ -2151,7 +2163,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache(true, true, false);
+					UpdateSemanticAnalysisCache(true, true, false, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
 				}
@@ -2398,7 +2410,7 @@ namespace ConstructionSetExtender
 			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
 			{
 				if (Modified)
-					UpdateSemanticAnalysisCache(false, true, false);
+					UpdateSemanticAnalysisCache(false, true, false, false);
 
 				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
@@ -2406,7 +2418,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
 			{
 				if (Modified)
-					UpdateSemanticAnalysisCache(true, false, false);
+					UpdateSemanticAnalysisCache(true, false, false, false);
 
 				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
@@ -2435,7 +2447,7 @@ namespace ConstructionSetExtender
 				SerializeBookmarks(Block);
 
 				if (AddPreprocessorSigil)
-					Result += Preprocessor::kPreprocessorSigil + "\n";
+					Block += Preprocessor::kPreprocessorSigil + "\n";
 
 				if (Block != "")
 				{
@@ -2516,7 +2528,7 @@ namespace ConstructionSetExtender
 																						PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor"));
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-				UpdateSemanticAnalysisCache(true, true, true);
+				UpdateSemanticAnalysisCache(true, true, true, true);
 				if (SemanticAnalysisCache->HasCriticalMessages == false)
 				{
 					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
@@ -2550,10 +2562,15 @@ namespace ConstructionSetExtender
 
 				if (FindResults)
 					LineTracker->ClearFindResults();
+
+				RefreshBGColorizerLayer();
 			}
 
 			void AvalonEditTextEditor::TrackCompilerError(int Line, String^ Message)
 			{
+				if (Line < 1)
+					Line = 1;
+
 				LineTracker->TrackMessage(Line,
 										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
 										  TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);

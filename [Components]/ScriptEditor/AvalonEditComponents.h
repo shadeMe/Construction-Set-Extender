@@ -145,9 +145,10 @@ namespace ConstructionSetExtender
 				virtual System::Collections::IComparer^	GetSorter(int Column, SortOrder Order) override;
 
 				virtual int		GetImageIndex(ScriptBookmark^ Item) override;
-				virtual void	DrawItem(DrawListViewSubItemEventArgs^ E) override;
+				virtual String^	GetSubItemText(ScriptBookmark^ Item, int Column) override;
 				virtual void	ActivateItem(ScriptBookmark^ Item) override;
 				virtual void	KeyPress(KeyEventArgs^ E) override;
+				virtual UInt32	GetColumnCount() override;
 			};
 
 			ref class ScriptMessageBinder : public SimpleListViewBinder < ScriptMessage^ >
@@ -157,9 +158,10 @@ namespace ConstructionSetExtender
 				virtual System::Collections::IComparer^	GetSorter(int Column, SortOrder Order) override;
 
 				virtual int		GetImageIndex(ScriptMessage^ Item) override;
-				virtual void	DrawItem(DrawListViewSubItemEventArgs^ E) override;
+				virtual String^	GetSubItemText(ScriptMessage^ Item, int Column) override;
 				virtual void	ActivateItem(ScriptMessage^ Item) override;
 				virtual void	KeyPress(KeyEventArgs^ E) override;
+				virtual UInt32	GetColumnCount() override;
 			};
 
 			ref class ScriptFindResultBinder : public SimpleListViewBinder < ScriptFindResult^ >
@@ -173,9 +175,10 @@ namespace ConstructionSetExtender
 				virtual System::Collections::IComparer^	GetSorter(int Column, SortOrder Order) override;
 
 				virtual int		GetImageIndex(ScriptFindResult^ Item) override;
-				virtual void	DrawItem(DrawListViewSubItemEventArgs^ E) override;
+				virtual String^	GetSubItemText(ScriptFindResult^ Item, int Column) override;
 				virtual void	ActivateItem(ScriptFindResult^ Item) override;
 				virtual void	KeyPress(KeyEventArgs^ E) override;
+				virtual UInt32	GetColumnCount() override;
 			};
 
 			ref struct ColorizerSegment

@@ -20,7 +20,7 @@ namespace ConstructionSetExtender
 			IntelliSenseBox = gcnew NonActivatingImmovableAnimatedForm();
 			LocalVariableDatabase = gcnew List<IntelliSenseItem^>();
 			VirtualListCache = gcnew List<ListViewItem^>();
-			IntelliSenseList = gcnew ListView();
+			IntelliSenseList = gcnew DoubleBufferedListView();
 
 			IntelliSenseListSelectedIndexChangedHandler = gcnew EventHandler(this, &IntelliSenseInterface::IntelliSenseList_SelectedIndexChanged);
 			IntelliSenseListKeyDownHandler = gcnew KeyEventHandler(this, &IntelliSenseInterface::IntelliSenseList_KeyDown);

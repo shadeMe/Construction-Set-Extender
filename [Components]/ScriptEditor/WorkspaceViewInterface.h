@@ -25,8 +25,6 @@ namespace ConstructionSetExtender
 			property IWorkspaceViewController^			Controller;
 
 			property IntPtr								WindowHandle;
-
-			property String^							Description;	// updates the window title and tab item tooltip
 			property bool								Enabled;
 		};
 
@@ -47,7 +45,9 @@ namespace ConstructionSetExtender
 			ComponentDLLInterface::ScriptData*			OpenArgs;
 			String^										NewText;
 
-			NewTabOperationArgs() : PostCreationOperation(PostNewTabOperation::None), PathToFile(""), OpenArgs(nullptr), NewText("") {}
+			bool										BindPostCreation;
+
+			NewTabOperationArgs() : PostCreationOperation(PostNewTabOperation::None), PathToFile(""), OpenArgs(nullptr), NewText(""), BindPostCreation(true) {}
 		};
 
 		interface class IWorkspaceViewController
@@ -55,10 +55,6 @@ namespace ConstructionSetExtender
 		public:
 			void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 			void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-
-			void	SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified);
-			void	SetByteCodeSize(IWorkspaceView^ View, UInt32 Size);
-			void	UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model);
 
 			void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 

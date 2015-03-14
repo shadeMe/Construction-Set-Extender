@@ -44,6 +44,7 @@ namespace ConstructionSetExtender
 					Debug::Assert(Source != nullptr);
 
 					bool Relocated = false;
+					bool SameTabStrip = false;
 					IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
 					if (Wnd != IntPtr::Zero)
 					{
@@ -57,18 +58,24 @@ namespace ConstructionSetExtender
 							if (Strip && Strip->Tag)
 							{
 								ConcreteWorkspaceView^ Parent = (ConcreteWorkspaceView^)Strip->Tag;
-								if (Parent && Parent != Source)
+								Debug::Assert(Parent != nullptr);
+
+								if (Parent != Source)
 								{
 									// relocate to the view under the mouse
 									Source->DissociateModel(Torn, false);
 									Parent->AssociateModel(Torn, true);
+									Parent->Focus();
+
 									Relocated = true;
 								}
+								else
+									SameTabStrip = true;
 							}
 						}
 					}
 
-					if (Relocated == false)
+					if (Relocated == false && SameTabStrip == false)
 					{
 						// create new view and relocate
 						Rectangle Bounds = Source->GetBounds(true);
@@ -76,6 +83,10 @@ namespace ConstructionSetExtender
 																											 Bounds.Width, Bounds.Height);
 						Source->DissociateModel(Torn, false);
 						New->AssociateModel(Torn, true);
+						New->Focus();
+
+						if (Torn->Initialized)
+							New->Enabled = true;
 					}
 
 					End();
@@ -120,7 +131,10 @@ namespace ConstructionSetExtender
 
 			EditorTabStrip = gcnew DotNetBar::SuperTabControl();
 			EditorTabStrip->SuspendLayout();
-			EditorTabStrip->Dock = DockStyle::Fill;
+			EditorTabStrip->Dock = DockStyle::Top;
+			EditorTabStrip->MaximumSize = Size(2000, 26);
+	//		EditorTabStrip->Size = Size(500, 26);
+	//		EditorTabStrip->Anchor = AnchorStyles::Top | AnchorStyles::Right;
 			EditorTabStrip->Location = Point(0, 0);
 			EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Top;
 			EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
@@ -172,21 +186,18 @@ namespace ConstructionSetExtender
 			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
 			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(TabStripGradientColorStart,
 																													 TabStripGradientColorEnd);
-
-			if (!PREFERENCES->FetchSettingAsInt("TabsOnTop", "Appearance"))
-			{
-				EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Left;
-				EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
-				EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Near;
-				EditorTabStrip->FixedTabSize = Size(150, 40);
-			}
+			TODO("remove tabs on left");
 
 			EditorForm->HelpButton = false;
 			EditorForm->Text = SCRIPTEDITOR_TITLE;
 
-			EditorForm->Controls->Add(EditorTabStrip);
-
 			AllowDisposal = false;
+			DisallowBinding = false;
+
+			ModelStateChangedDirty = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_Dirty);
+			ModelStateChangedByteCodeSize = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_ByteCodeSize);
+			ModelStateChangedType = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_Type);
+			ModelStateChangedDescription = gcnew IWorkspaceModel::StateChangeEventHandler(this, &ConcreteWorkspaceView::ModelStateChangeHandler_Description);
 
 			EditorForm->Closing += EditorFormCancelHandler;
 			EditorForm->KeyDown += EditorFormKeyDownHandler;
@@ -207,6 +218,10 @@ namespace ConstructionSetExtender
 			FindList = gcnew DoubleBufferedListView();
 			BookmarkList = gcnew DoubleBufferedListView();
 			SpoilerText = gcnew Label();
+
+			AttachPanel = gcnew Panel();
+			AttachPanel->Dock = DockStyle::Fill;
+			AttachPanel->BorderStyle = BorderStyle::None;
 
 			WorkspaceMainToolBar = gcnew ToolStrip();
 			ToolBarNewScript = gcnew ToolStripButton();
@@ -504,6 +519,8 @@ namespace ConstructionSetExtender
 			ToolBarScriptType->Alignment = ToolStripItemAlignment::Right;
 			ToolBarScriptType->Padding = ToolBarButtonPaddingLarge;
 
+			UpdateScriptTypeControls(IWorkspaceModel::ScriptType::Object);
+
 			ToolBarEditMenuContentsFindReplace->Text = "Find/Replace";
 			ToolBarEditMenuContentsGotoLine->Text = "Goto Line";
 			ToolBarEditMenuContentsGotoOffset->Text = "Goto Offset";
@@ -535,7 +552,6 @@ namespace ConstructionSetExtender
 			WorkspaceMainToolBar->Items->Add(ToolBarRecompileScripts);
 			WorkspaceMainToolBar->Items->Add(ToolBarCompileDependencies);
 			WorkspaceMainToolBar->Items->Add(ToolBarDeleteScript);
-			WorkspaceMainToolBar->Items->Add(ToolBarScriptType);
 			WorkspaceMainToolBar->Items->Add(ToolBarSpacerA);
 			WorkspaceMainToolBar->Items->Add(ToolBarOptions);
 			WorkspaceMainToolBar->Items->Add(ToolBarNavigationForward);
@@ -560,6 +576,7 @@ namespace ConstructionSetExtender
 			WorkspaceSecondaryToolBar->Items->Add(gcnew ToolStripSeparator());
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarEditMenu);
 			WorkspaceSecondaryToolBar->Items->Add(ToolBarRefactorMenu);
+			WorkspaceSecondaryToolBar->Items->Add(ToolBarScriptType);
 			WorkspaceSecondaryToolBar->ShowItemToolTips = true;
 
 			SpoilerText->Dock = DockStyle::Fill;
@@ -593,14 +610,18 @@ namespace ConstructionSetExtender
 			BookmarkList->FullRowSelect = true;
 			BookmarkList->HideSelection = false;
 
+			// ideally, the main toolbar should be the main form's child but that screws with the tab strip's layout
+			WorkspaceSplitter->Panel1->Controls->Add(AttachPanel);
+			WorkspaceSplitter->Panel1->Controls->Add(WorkspaceMainToolBar);
+
 			WorkspaceSplitter->Panel2->Controls->Add(WorkspaceSecondaryToolBar);
 			WorkspaceSplitter->Panel2->Controls->Add(MessageList);
 			WorkspaceSplitter->Panel2->Controls->Add(FindList);
 			WorkspaceSplitter->Panel2->Controls->Add(BookmarkList);
 			WorkspaceSplitter->Panel2->Controls->Add(SpoilerText);
 
-			EditorForm->Controls->Add(WorkspaceMainToolBar);
 			EditorForm->Controls->Add(WorkspaceSplitter);
+			EditorForm->Controls->Add(EditorTabStrip);
 
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarNewScript);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarOpenScript);
@@ -643,22 +664,22 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarBindScript);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarSnippetManager);
 
-			try { WorkspaceSplitter->SplitterDistance = GetBounds(true).Height; }
-			catch (...) {}
-
 			if (PREFERENCES->FetchSettingAsInt("UseCSParent", "General"))
 			{
 				EditorForm->ShowInTaskbar = false;
 				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle()));
 			}
 			else
-			{
 				EditorForm->Show();
-			}
+
+			Enabled = false;
 
 			EditorForm->Location = Point(Bounds.Left, Bounds.Top);
 			EditorTabStrip->ResumeLayout();
 			EditorForm->ResumeLayout();
+
+			try { WorkspaceSplitter->SplitterDistance = GetBounds(true).Height; }
+			catch (...) {}
 
 			AssociatedModels = gcnew ModelTabTableT;
 
@@ -667,13 +688,12 @@ namespace ConstructionSetExtender
 
 		ConcreteWorkspaceView::~ConcreteWorkspaceView()
 		{
-			AllowDisposal = true;
-
-			ViewController = nullptr;
-			ViewFactory = nullptr;
-
 			for each (auto Itr in AssociatedModels)
+			{
+				Itr.Value->Tag = nullptr;
+				ModelUnsubscribeEvents(Itr.Key);
 				delete Itr.Key;
+			}
 
 			AssociatedModels->Clear();
 
@@ -837,6 +857,8 @@ namespace ConstructionSetExtender
 			OffsetTextViewer = nullptr;
 			PreprocessorTextViewer = nullptr;
 
+			delete AttachPanel;
+
 			WorkspaceSplitter->Panel1->Controls->Clear();
 			WorkspaceSplitter->Panel2->Controls->Clear();
 
@@ -846,11 +868,14 @@ namespace ConstructionSetExtender
 			delete BookmarkList;
 			delete SpoilerText;
 
-			EditorForm->ForceClose();
+			ViewFactory->Remove(this);
+
+			ViewController = nullptr;
+			ViewFactory = nullptr;
 
 			PREFERENCES->SaveINI();
 
-			ViewFactory->Remove(this);
+			EditorForm->ForceClose();
 		}
 
 		void ConcreteWorkspaceView::EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E)
@@ -880,9 +905,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			AllowDisposal = true;
 			CloseAll();
-			AllowDisposal = false;
 		}
 
 		void ConcreteWorkspaceView::EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E)
@@ -905,12 +928,15 @@ namespace ConstructionSetExtender
 			E->Cancel = true;
 
 			IWorkspaceModel^ Active = GetModel((DotNetBar::SuperTabItem^)E->Tab);	// clicking on the close button doesn't change the active tab
-			if (ModelController()->Close(Active))
+			if (Active->Controller->Close(Active))
 				DissociateModel(Active, true);
 		}
 
 		void ConcreteWorkspaceView::ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E)
 		{
+			if (DisallowBinding)
+				return;
+
 			if (E->NewValue == nullptr)
 				return;
 
@@ -921,16 +947,17 @@ namespace ConstructionSetExtender
 				Old = GetModel((DotNetBar::SuperTabItem^)E->OldValue);
 
 			BeginUpdate();
+
 			if (Old)
-				ModelController()->Unbind(Old);
-			ModelController()->Bind(New, this);
+				Old->Controller->Unbind(Old);
+			New->Controller->Bind(New, this);
+
 			EndUpdate();
 		}
 
 		void ConcreteWorkspaceView::ScriptStrip_TabRemoved(Object^ Sender, DotNetBar::SuperTabStripTabRemovedEventArgs^ E)
 		{
-			if (GetTabCount() == 0)
-				EditorForm->Close();
+			;//
 		}
 
 		void ConcreteWorkspaceView::ScriptStrip_MouseClick(Object^ Sender, MouseEventArgs^ E)
@@ -1071,24 +1098,11 @@ namespace ConstructionSetExtender
 		{
 			BeginUpdate();
 
-			if (FindList->Visible)
-				ToolBarFindList->PerformClick();
-			else if (BookmarkList->Visible)
-				ToolBarBookmarkList->PerformClick();
+			ToggleBookmarkList(false);
+			ToggleFindResultList(false);
 
-			if (MessageList->Visible == false)
-			{
-				MessageList->Show();
-				MessageList->BringToFront();
-				ToolBarMessageList->Checked = true;
-				ToggleSecondaryPanel(true);
-			}
-			else
-			{
-				MessageList->Hide();
-				ToolBarMessageList->Checked = false;
-				ToggleSecondaryPanel(false);
-			}
+			ToggleMessageList(MessageList->Visible == false);
+			ToggleSecondaryPanel(MessageList->Visible);
 
 			EndUpdate();
 		}
@@ -1097,24 +1111,11 @@ namespace ConstructionSetExtender
 		{
 			BeginUpdate();
 
-			if (MessageList->Visible)
-				ToolBarMessageList->PerformClick();
-			else if (BookmarkList->Visible)
-				ToolBarBookmarkList->PerformClick();
+			ToggleBookmarkList(false);
+			ToggleMessageList(false);
 
-			if (FindList->Visible == false)
-			{
-				FindList->Show();
-				FindList->BringToFront();
-				ToolBarFindList->Checked = true;
-				ToggleSecondaryPanel(true);
-			}
-			else
-			{
-				FindList->Hide();
-				ToolBarFindList->Checked = false;
-				ToggleSecondaryPanel(false);
-			}
+			ToggleFindResultList(FindList->Visible == false);
+			ToggleSecondaryPanel(FindList->Visible);
 
 			EndUpdate();
 		}
@@ -1123,24 +1124,11 @@ namespace ConstructionSetExtender
 		{
 			BeginUpdate();
 
-			if (MessageList->Visible)
-				ToolBarMessageList->PerformClick();
-			else if (FindList->Visible)
-				ToolBarFindList->PerformClick();
+			ToggleFindResultList(false);
+			ToggleMessageList(false);
 
-			if (BookmarkList->Visible == false)
-			{
-				BookmarkList->Show();
-				BookmarkList->BringToFront();
-				ToolBarBookmarkList->Checked = true;
-				ToggleSecondaryPanel(true);
-			}
-			else
-			{
-				BookmarkList->Hide();
-				ToolBarBookmarkList->Checked = false;
-				ToggleSecondaryPanel(false);
-			}
+			ToggleBookmarkList(BookmarkList->Visible == false);
+			ToggleSecondaryPanel(BookmarkList->Visible);
 
 			EndUpdate();
 		}
@@ -1203,7 +1191,8 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
 		{
-			ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::Default);
+			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::Default) == false)
+				ShowMessageList();
 		}
 
 		void ConcreteWorkspaceView::ToolBarSaveScriptNoCompile_Click(Object^ Sender, EventArgs^ E)
@@ -1219,12 +1208,14 @@ namespace ConstructionSetExtender
 				return;
 			}
 
-			ModelController()->Save(Active, IWorkspaceModel::SaveOperation::NoCompile);
+			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::NoCompile) == false)
+				ShowMessageList();
 		}
 
 		void ConcreteWorkspaceView::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
 		{
-			ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::SavePlugin);
+			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::SavePlugin) == false)
+				ShowMessageList();
 		}
 
 		void ConcreteWorkspaceView::ToolBarRecompileScripts_Click(Object^ Sender, EventArgs^ E)
@@ -1253,7 +1244,7 @@ namespace ConstructionSetExtender
 								 MessageBoxButtons::OK,
 								 MessageBoxIcon::Information);
 			}
-			else
+			else if (Active->Initialized == true)
 			{
 				MessageBox::Show("The current script needs to be compiled before its dependencies can be updated.",
 								 SCRIPTEDITOR_TITLE,
@@ -1271,21 +1262,18 @@ namespace ConstructionSetExtender
 		{
 			IWorkspaceModel^ Active = GetActiveModel();
 			ModelController()->SetType(Active, IWorkspaceModel::ScriptType::Object);
-			UpdateScriptTypeControls();
 		}
 
 		void ConcreteWorkspaceView::ToolBarScriptTypeContentsQuest_Click(Object^ Sender, EventArgs^ E)
 		{
 			IWorkspaceModel^ Active = GetActiveModel();
 			ModelController()->SetType(Active, IWorkspaceModel::ScriptType::Quest);
-			UpdateScriptTypeControls();
 		}
 
 		void ConcreteWorkspaceView::ToolBarScriptTypeContentsMagicEffect_Click(Object^ Sender, EventArgs^ E)
 		{
 			IWorkspaceModel^ Active = GetActiveModel();
 			ModelController()->SetType(Active, IWorkspaceModel::ScriptType::MagicEffect);
-			UpdateScriptTypeControls();
 		}
 
 		void ConcreteWorkspaceView::ToolBarEditMenuContentsFindReplace_Click(Object^ Sender, EventArgs^ E)
@@ -1310,7 +1298,7 @@ namespace ConstructionSetExtender
 
 			SaveManager->DefaultExt = "*.txt";
 			SaveManager->Filter = "Text Files|*.txt|All files (*.*)|*.*";
-			SaveManager->FileName = Active->Description;
+			SaveManager->FileName = Active->LongDescription;
 			SaveManager->RestoreDirectory = true;
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->FileName->Length > 0)
@@ -1387,7 +1375,10 @@ namespace ConstructionSetExtender
 					ToolBarShowPreprocessedText->Checked = true;
 				}
 				else
+				{
 					MessageBox::Show("The preprocessing operation was unsuccessful.", SCRIPTEDITOR_TITLE, MessageBoxButtons::OK, MessageBoxIcon::Error);
+					ShowMessageList();
+				}
 			}
 		}
 
@@ -1483,18 +1474,57 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void ConcreteWorkspaceView::ModelStateChangeHandler_Dirty(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
+		{
+			DotNetBar::SuperTabItem^ Tab = GetTab(Sender);
+			Debug::Assert(Tab != nullptr);
+
+			Tab->ImageIndex = (int)E->Dirty;
+		}
+
+		void ConcreteWorkspaceView::ModelStateChangeHandler_ByteCodeSize(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
+		{
+			if (GetActiveModel() == Sender)
+			{
+				ToolBarByteCodeSize->Value = E->ByteCodeSize;
+				ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(E->ByteCodeSize / 1024.0));
+			}
+		}
+
+		void ConcreteWorkspaceView::ModelStateChangeHandler_Type(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
+		{
+			if (GetActiveModel() == Sender)
+				UpdateScriptTypeControls(E->Type);
+		}
+
+		void ConcreteWorkspaceView::ModelStateChangeHandler_Description(IWorkspaceModel^ Sender, IWorkspaceModel::StateChangeEventArgs^ E)
+		{
+			DotNetBar::SuperTabItem^ Tab = GetTab(Sender);
+			Debug::Assert(Tab != nullptr);
+
+			Tab->Text = E->ShortDescription;
+			Tab->Tooltip = E->LongDescription;
+
+			if (GetActiveModel() == Sender)
+				EditorForm->Text = E->LongDescription + " - " + SCRIPTEDITOR_TITLE;
+		}
+
 		IWorkspaceModelController^ ConcreteWorkspaceView::ModelController()
 		{
 			Debug::Assert(AssociatedModels->Count != 0);
+			ModelTabTableT::Enumerator Itr = AssociatedModels->GetEnumerator();
+			Itr.MoveNext();
 
-			return AssociatedModels->GetEnumerator().Current.Key->Controller;
+			return Itr.Current.Key->Controller;
 		}
 
 		IWorkspaceModelFactory^ ConcreteWorkspaceView::ModelFactory()
 		{
 			Debug::Assert(AssociatedModels->Count != 0);
+			ModelTabTableT::Enumerator Itr = AssociatedModels->GetEnumerator();
+			Itr.MoveNext();
 
-			return AssociatedModels->GetEnumerator().Current.Key->Factory;
+			return Itr.Current.Key->Factory;
 		}
 
 		bool ConcreteWorkspaceView::IsModelAssociated(IWorkspaceModel^ Model)
@@ -1507,23 +1537,15 @@ namespace ConstructionSetExtender
 			Debug::Assert(IsModelAssociated(Model) == false);
 
 			DotNetBar::SuperTabItem^ Tab = gcnew DotNetBar::SuperTabItem;
-			DotNetBar::SuperTabControlPanel^ Container = gcnew DotNetBar::SuperTabControlPanel;
-
-		//	Container->Dock = DockStyle::Fill;
-			Container->Location = Point(-5, -55);
-			Container->Size = Size(1, 1);
-			Container->Padding = Padding(1);
-			Container->TabItem = Tab;
-
-			Tab->AttachedControl = Container;
-			Tab->Tooltip = Description;
-			Tab->Text = " " + Description;
-			Tab->Tag = this;
+			Tab->Text = Model->ShortDescription;
+			Tab->ImageIndex = (int)Model->Dirty;
+			Tab->Tag = Model;
 
 			EditorTabStrip->Tabs->Add(Tab);
-			EditorTabStrip->Controls->Add(Container);
 
 			AssociatedModels->Add(Model, Tab);
+
+			ModelSubscribeEvents(Model);
 
 			if (Bind)
 				SelectTab(Tab);
@@ -1533,23 +1555,27 @@ namespace ConstructionSetExtender
 		{
 			Debug::Assert(IsModelAssociated(Model) == true);
 
-			ModelController()->Unbind(Model);
+			Model->Controller->Unbind(Model);
 			DotNetBar::SuperTabItem^ Tab = GetTab(Model);
-			DotNetBar::SuperTabControlPanel^ Container = (DotNetBar::SuperTabControlPanel^)Tab->AttachedControl;
 
-			EditorTabStrip->Tabs->Remove(Tab);
-			EditorTabStrip->Controls->Remove(Container);
-
-			Tab->AttachedControl = nullptr;
 			Tab->Tag = nullptr;
-
 			delete Tab;
-			delete Container;
 
 			AssociatedModels->Remove(Model);
 
+			ModelUnsubscribeEvents(Model);
+
 			if (Destroy)
 				delete Model;
+
+			EditorTabStrip->Tabs->Remove(Tab);
+
+			// close form if there are no more tabs left
+			if (GetTabCount() == 0 && DisallowBinding == false)
+			{
+				AllowDisposal = true;
+				EditorForm->Close();
+			}
 		}
 
 		IWorkspaceModel^ ConcreteWorkspaceView::GetModel(DotNetBar::SuperTabItem^ Tab)
@@ -1602,11 +1628,9 @@ namespace ConstructionSetExtender
 				WorkspaceSplitter->SplitterDistance = GetBounds(false).Height;
 		}
 
-		void ConcreteWorkspaceView::UpdateScriptTypeControls()
+		void ConcreteWorkspaceView::UpdateScriptTypeControls(IWorkspaceModel::ScriptType New)
 		{
-			IWorkspaceModel^ Active = GetActiveModel();
-
-			switch (Active->Type)
+			switch (New)
 			{
 			case IWorkspaceModel::ScriptType::Object:
 				ToolBarScriptType->Text = "Object Script";
@@ -1626,8 +1650,9 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceView::ShowOpenDialog()
 		{
 			List<String^>^ Selection = gcnew List < String^ > ;
-			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Open, GetActiveModel()->Description, Selection))
+			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Open, GetActiveModel()->LongDescription, Selection))
 			{
+				BeginUpdate();
 				NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
 				int i = 0;
 				for each (auto Itr in Selection)
@@ -1643,12 +1668,14 @@ namespace ConstructionSetExtender
 					{
 						E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::Open;
 						E->OpenArgs = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+						E->BindPostCreation = false;
 						Debug::Assert(E->OpenArgs != nullptr);
 						NewTab(E);
 					}
 
 					i++;
 				}
+				EndUpdate();
 			}
 		}
 
@@ -1657,8 +1684,11 @@ namespace ConstructionSetExtender
 			List<String^>^ Selection = gcnew List < String^ >;
 			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Delete, "", Selection))
 			{
-				CString EID(Selection[0]);
-				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
+				for each (auto Itr in Selection)
+				{
+					CString EID(Itr);
+					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
+				}
 			}
 		}
 
@@ -1740,8 +1770,21 @@ namespace ConstructionSetExtender
 					Dissociate->Add(Itr.Key);
 			}
 
+			DisallowBinding = true;
+			BeginUpdate();
+
 			for each (auto Itr in Dissociate)
 				DissociateModel(Itr, true);
+
+			Dissociate->Clear();
+			DisallowBinding = false;
+			EndUpdate();
+
+			if (GetTabCount() == 0)
+			{
+				AllowDisposal = true;
+				EditorForm->Close();
+			}
 		}
 
 		void ConcreteWorkspaceView::DumpAllToDisk(String^ OutputDirectory, String^ FileExtension)
@@ -1864,7 +1907,7 @@ namespace ConstructionSetExtender
 			if (E->PostCreationOperation != NewTabOperationArgs::PostNewTabOperation::LoadFromDisk)
 			{
 				New = ModelFactory()->CreateModel(E->OpenArgs);
-				AssociateModel(New, true);
+				AssociateModel(New, E->BindPostCreation);
 			}
 
 			switch (E->PostCreationOperation)
@@ -1886,7 +1929,7 @@ namespace ConstructionSetExtender
 					{
 						New = ModelFactory()->CreateModel(nullptr);
 						ModelController()->New(New);
-						AssociateModel(New, true);
+						AssociateModel(New, E->BindPostCreation);
 					}
 					else
 					{
@@ -1924,7 +1967,7 @@ namespace ConstructionSetExtender
 						}
 
 						ModelController()->LoadFromDisk(New, E->PathToFile);
-						AssociateModel(New, true);
+						AssociateModel(New, E->BindPostCreation);
 					}
 				}
 
@@ -1936,6 +1979,84 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void ConcreteWorkspaceView::ModelSubscribeEvents(IWorkspaceModel^ Model)
+		{
+			Model->StateChangedDirty += ModelStateChangedDirty;
+			Model->StateChangedByteCodeSize += ModelStateChangedByteCodeSize;
+			Model->StateChangedType += ModelStateChangedType;
+			Model->StateChangedDescription += ModelStateChangedDescription;
+		}
+
+		void ConcreteWorkspaceView::ModelUnsubscribeEvents(IWorkspaceModel^ Model)
+		{
+			Model->StateChangedDirty -= ModelStateChangedDirty;
+			Model->StateChangedByteCodeSize -= ModelStateChangedByteCodeSize;
+			Model->StateChangedType -= ModelStateChangedType;
+			Model->StateChangedDescription -= ModelStateChangedDescription;
+		}
+
+		void ConcreteWorkspaceView::Focus()
+		{
+			EditorForm->Focus();
+		}
+
+		void ConcreteWorkspaceView::ToggleMessageList(bool State)
+		{
+			if (State)
+			{
+				ToolBarMessageList->Checked = true;
+				MessageList->Visible = true;
+				MessageList->BringToFront();
+			}
+			else
+			{
+				ToolBarMessageList->Checked = false;
+				MessageList->Visible = false;
+				MessageList->SendToBack();
+			}
+		}
+
+		void ConcreteWorkspaceView::ToggleBookmarkList(bool State)
+		{
+			if (State)
+			{
+				ToolBarBookmarkList->Checked = true;
+				BookmarkList->Visible = true;
+				BookmarkList->BringToFront();
+			}
+			else
+			{
+				ToolBarBookmarkList->Checked = false;
+				BookmarkList->Visible = false;
+				BookmarkList->SendToBack();
+			}
+		}
+
+		void ConcreteWorkspaceView::ToggleFindResultList(bool State)
+		{
+			if (State)
+			{
+				ToolBarFindList->Checked = true;
+				FindList->Visible = true;
+				FindList->BringToFront();
+			}
+			else
+			{
+				ToolBarFindList->Checked = false;
+				FindList->Visible = false;
+				FindList->SendToBack();
+			}
+		}
+
+		void ConcreteWorkspaceView::ShowMessageList()
+		{
+			ToggleBookmarkList(false);
+			ToggleFindResultList(false);
+
+			ToggleMessageList(true);
+			ToggleSecondaryPanel(true);
+		}
+
 		// ConcreteWorkspaceViewController
 		void ConcreteWorkspaceViewController::AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
 		{
@@ -1943,7 +2064,9 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
 
-			Concrete->WorkspaceSplitter->Panel1->Controls->Add(Model->InternalView);
+			// we need multiple levels of indirection when swapping the textview to keep the form's layout intact
+			// directly adding it to the splitter panel will screw up the toolbar's docking, among other things
+			Concrete->AttachPanel->Controls->Add(Model->InternalView);
 		}
 
 		void ConcreteWorkspaceViewController::DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
@@ -1952,37 +2075,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
 
-			Concrete->WorkspaceSplitter->Panel1->Controls->Remove(Model->InternalView);
-		}
-
-		void ConcreteWorkspaceViewController::SetModifiedIndicator(IWorkspaceView^ View, IWorkspaceModel^ Model, bool Modified)
-		{
-			Debug::Assert(View != nullptr);
-			Debug::Assert(Model != nullptr);
-
-			DotNetBar::SuperTabItem^ Tab = ((ConcreteWorkspaceView^)View)->GetTab(Model);
-			Debug::Assert(Tab != nullptr);
-			Tab->ImageIndex = (int)Modified;
-		}
-
-		void ConcreteWorkspaceViewController::SetByteCodeSize(IWorkspaceView^ View, UInt32 Size)
-		{
-			Debug::Assert(View != nullptr);
-			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
-
-			Concrete->ToolBarByteCodeSize->Value = Size;
-			Concrete->ToolBarByteCodeSize->ToolTipText = String::Format("Compiled Script Size: {0:F2} KB", (float)(Size / 1024.0));
-		}
-
-		void ConcreteWorkspaceViewController::UpdateType(IWorkspaceView^ View, IWorkspaceModel^ Model)
-		{
-			Debug::Assert(View != nullptr);
-			Debug::Assert(Model != nullptr);
-			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
-
-			IWorkspaceModel^ Active = Concrete->GetActiveModel();
-			Debug::Assert(Model == Active);
-			Concrete->UpdateScriptTypeControls();
+			Concrete->AttachPanel->Controls->Remove(Model->InternalView);
 		}
 
 		void ConcreteWorkspaceViewController::BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E)
@@ -2005,7 +2098,10 @@ namespace ConstructionSetExtender
 				break;
 			case Keys::S:
 				if (E->Modifiers == Keys::Control)
-					Concrete->ModelController()->Save(Active, IWorkspaceModel::SaveOperation::Default);
+				{
+					if (Concrete->ModelController()->Save(Active, IWorkspaceModel::SaveOperation::Default) == false)
+						Concrete->ShowMessageList();
+				}
 				else if (E->Control && E->Shift)
 					Concrete->SaveAll();
 
@@ -2109,7 +2205,13 @@ namespace ConstructionSetExtender
 				return -1;
 			}
 			else
-				return Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(), Operation, Query, Replacement, Options);
+			{
+				int Hits = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(), Operation, Query, Replacement, Options);
+				if (Hits)
+					Concrete->ToolBarFindList->PerformClick();
+
+				return Hits;
+			}
 		}
 
 		void ConcreteWorkspaceViewController::Redraw(IWorkspaceView^ View)
