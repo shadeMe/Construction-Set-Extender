@@ -62,8 +62,6 @@ namespace ConstructionSetExtender
 			LineField->Text = "";
 			LineField->ScrollBars = RichTextBoxScrollBars::None;
 			LineField->BorderStyle = BorderStyle::None;
-			LineField->BackColor = BackgroundColor;
-			LineField->ForeColor = ForegroundColor;
 			LineField->SelectionAlignment = HorizontalAlignment::Right;
 			LineField->Dock = DockStyle::Fill;
 			LineField->HideSelection = true;
@@ -85,6 +83,8 @@ namespace ConstructionSetExtender
 			TextField->KeyUp += TextFieldKeyDownAndUpHandler;
 			this->LineChanged += NumberedRichTextBoxLineChangedHandler;
 			LineField->MouseDown += LineFieldMouseDownHandler;
+
+			UpdateColors();
 		}
 
 		void NumberedRichTextBox::ValidateLineChange(void)
@@ -104,6 +104,7 @@ namespace ConstructionSetExtender
 
 		void NumberedRichTextBox::TextField_TextChanged(Object^ Sender, EventArgs^ E)
 		{
+			UpdateColors();
 			ValidateLineChange();
 		}
 
@@ -233,6 +234,46 @@ namespace ConstructionSetExtender
 		{
 			TextField->Font = NewFont;
 			LineField->Font = NewFont;
+		}
+
+		NumberedRichTextBox::~NumberedRichTextBox()
+		{
+			TextField->TextChanged -= TextFieldTextChangedHandler;
+			TextField->Resize -= UpdateLineNumbersEventHandlerHandler;
+			TextField->VScroll -= UpdateLineNumbersEventHandlerHandler;
+			TextField->HScroll -= UpdateLineNumbersEventHandlerHandler;
+			TextField->MouseDown -= TextFieldMouseDownAndUpHandler;
+			TextField->MouseUp -= TextFieldMouseDownAndUpHandler;
+			TextField->KeyUp -= TextFieldKeyDownAndUpHandler;
+			this->LineChanged -= NumberedRichTextBoxLineChangedHandler;
+			LineField->MouseDown -= LineFieldMouseDownHandler;
+
+			Splitter->Panel1->Controls->Clear();
+			Splitter->Panel2->Controls->Clear();
+
+			delete Splitter;
+			delete LineField;
+			delete TextField;
+		}
+
+		void NumberedRichTextBox::SetForegroundColor(Color Foreground)
+		{
+			ForegroundColor = Foreground;
+			UpdateColors();
+		}
+
+		void NumberedRichTextBox::SetBackgroundColor(Color Background)
+		{
+			BackgroundColor = Background;
+			UpdateColors();
+		}
+
+		void NumberedRichTextBox::UpdateColors()
+		{
+			TextField->ForeColor = ForegroundColor;
+			TextField->BackColor = BackgroundColor;
+			LineField->ForeColor = ForegroundColor;
+			LineField->BackColor = BackgroundColor;
 		}
 
 		OffsetRichTextBox::OffsetRichTextBox(UInt32 LinesToScroll, Font^ Font, Color ForegroundColor, Color BackgroundColor, Color HighlightColor) : NumberedRichTextBox(LinesToScroll, Font, ForegroundColor, BackgroundColor, HighlightColor)
@@ -400,9 +441,7 @@ namespace ConstructionSetExtender
 					ByteCode = Array::CreateInstance(Byte::typeid, Length);
 
 					for (UInt32 i = 0; i < Length; i++)
-					{
 						ByteCode->SetValue(*(DataPtr + i), (int)i);
-					}
 
 					UInt32 ScriptOffset = 0, CurrentOffset = 0, SkipOffset = 0;
 
@@ -443,6 +482,11 @@ namespace ConstructionSetExtender
 			}
 
 			return Offset;
+		}
+
+		OffsetRichTextBox::~OffsetRichTextBox()
+		{
+			ClearOffsets();
 		}
 	}
 }

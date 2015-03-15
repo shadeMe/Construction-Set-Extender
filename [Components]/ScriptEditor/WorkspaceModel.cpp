@@ -167,7 +167,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::JumpToScript(String^ TargetEditorID)
 		{
-			if (Bound)
+			if (String::Compare(TargetEditorID, CurrentScriptEditorID, true) && Bound)
 				BoundParent->Controller->Jump(BoundParent, this, TargetEditorID);
 		}
 
@@ -254,9 +254,15 @@ namespace ConstructionSetExtender
 
 			BoundParent = To;
 			BoundParent->Controller->AttachModelInternalView(BoundParent, this);
-			SetType(CurrentScriptType);
-			CheckAutoRecovery();
 			BoundParent->Enabled = Initialized;
+
+			// update the view's state
+			OnStateChangedType(CurrentScriptType);
+			OnStateChangedByteCodeSize(CurrentScriptBytecodeLength);
+			OnStateChangedDescription();
+			OnStateChangedDirty(TextEditor->Modified);
+
+			CheckAutoRecovery();
 
 			TextEditor->Bind(BoundParent->ListViewMessages,
 							 BoundParent->ListViewBookmarks,

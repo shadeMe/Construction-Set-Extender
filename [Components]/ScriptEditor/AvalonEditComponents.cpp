@@ -466,6 +466,7 @@ namespace ConstructionSetExtender
 
 			ScriptErrorIndicator::~ScriptErrorIndicator()
 			{
+				delete Delegate;
 				Delegate = nullptr;
 			}
 
@@ -486,6 +487,7 @@ namespace ConstructionSetExtender
 
 			ScriptFindResultIndicator::~ScriptFindResultIndicator()
 			{
+				delete Delegate;
 				Delegate = nullptr;
 			}
 

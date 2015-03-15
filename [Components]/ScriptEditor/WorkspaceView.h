@@ -169,6 +169,12 @@ namespace ConstructionSetExtender
 
 			void									ModelSubscribeEvents(IWorkspaceModel^ Model);
 			void									ModelUnsubscribeEvents(IWorkspaceModel^ Model);
+
+			Stack<IWorkspaceModel^>^				NavigationStackBackward;
+			Stack<IWorkspaceModel^>^				NavigationStackForward;
+			bool									FreezeNavigationStacks;
+
+			void									RemoveFromNavigationStacks(IWorkspaceModel^ Model);
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -249,8 +255,8 @@ namespace ConstructionSetExtender
 			typedef Dictionary<IWorkspaceModel^, DotNetBar::SuperTabItem^>	ModelTabTableT;
 			ModelTabTableT^							AssociatedModels;
 
-			bool									AllowDisposal;												// when false, the form's closing is canceled
-			bool									DisallowBinding;											// when true, prevents models from binding to the view
+			bool									AllowDisposal;								// when false, the form's closing is canceled
+			bool									DisallowBinding;							// when true, prevents models from binding to the view
 
 			IWorkspaceModelController^				ModelController();
 			IWorkspaceModelFactory^					ModelFactory();
@@ -260,6 +266,7 @@ namespace ConstructionSetExtender
 			IWorkspaceModel^						GetModel(DotNetBar::SuperTabItem^ Tab);
 			bool									IsModelAssociated(IWorkspaceModel^ Model);
 			IWorkspaceModel^						GetActiveModel();
+			IWorkspaceModel^						GetModel(String^ Description);
 
 			DotNetBar::SuperTabItem^				GetTab(IWorkspaceModel^ Model);
 			DotNetBar::SuperTabItem^				GetMouseOverTab();

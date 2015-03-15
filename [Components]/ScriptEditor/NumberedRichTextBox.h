@@ -71,26 +71,9 @@ namespace ConstructionSetExtender
 			virtual void										ValidateLineChange(void);
 
 			void												GotoLine(int Line);
+			void												UpdateColors();
 		public:
-			virtual ~NumberedRichTextBox()
-			{
-				TextField->TextChanged -= TextFieldTextChangedHandler;
-				TextField->Resize -= UpdateLineNumbersEventHandlerHandler;
-				TextField->VScroll -= UpdateLineNumbersEventHandlerHandler;
-				TextField->HScroll -= UpdateLineNumbersEventHandlerHandler;
-				TextField->MouseDown -= TextFieldMouseDownAndUpHandler;
-				TextField->MouseUp -= TextFieldMouseDownAndUpHandler;
-				TextField->KeyUp -= TextFieldKeyDownAndUpHandler;
-				this->LineChanged -= NumberedRichTextBoxLineChangedHandler;
-				LineField->MouseDown -= LineFieldMouseDownHandler;
-
-				Splitter->Panel1->Controls->Clear();
-				Splitter->Panel2->Controls->Clear();
-
-				delete Splitter;
-				delete LineField;
-				delete TextField;
-			}
+			virtual ~NumberedRichTextBox();
 
 			RichTextBox^										GetTextField() { return TextField; }
 			SplitContainer^										GetContainer() { return Splitter; }
@@ -99,6 +82,8 @@ namespace ConstructionSetExtender
 
 			virtual void										JumpToLine(String^ Line);
 			virtual void										SetFont(Font^ NewFont);
+			virtual void										SetForegroundColor(Color Foreground);
+			virtual void										SetBackgroundColor(Color Background);
 
 			UInt32												GetLineCount(void) { return TextField->Lines->Length; }
 		};
@@ -120,10 +105,7 @@ namespace ConstructionSetExtender
 			void												AddOffsetToList(UInt16 Offset) { LineOffsets->Add(Offset); }
 			UInt32												GetOffsetCount() { return LineOffsets->Count; }
 		public:
-			virtual ~OffsetRichTextBox()
-			{
-				ClearOffsets();
-			}
+			virtual ~OffsetRichTextBox();
 
 			property bool										OffsetFlag;		// line numbering will be rendered in offsets when set to true
 

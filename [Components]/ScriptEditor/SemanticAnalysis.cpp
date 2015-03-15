@@ -1004,7 +1004,8 @@ namespace ConstructionSetExtender
 			if (Itr->IsMalformed())
 			{
 				MalformedStructure = true;
-				break;
+				if (Operations.HasFlag(Operation::PerformBasicValidation))
+					LogCriticalAnalysisMessage(Itr->StartLine, "Mismatching block.");
 			}
 		}
 

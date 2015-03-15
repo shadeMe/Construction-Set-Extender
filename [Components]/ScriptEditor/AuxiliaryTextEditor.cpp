@@ -70,6 +70,16 @@ namespace ConstructionSetExtender
 				return Viewer->GetLastOffset();
 		}
 
+		void ScriptOffsetViewer::SetForegroundColor(Color Foreground)
+		{
+			Viewer->SetForegroundColor(Foreground);
+		}
+
+		void ScriptOffsetViewer::SetBackgroundColor(Color Background)
+		{
+			Viewer->SetBackgroundColor(Background);
+		}
+
 		SimpleTextViewer::SimpleTextViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
 		{
 			Viewer = gcnew NumberedRichTextBox(6, gcnew Font(FontData->FontFamily, FontData->Size - 3, FontStyle::Regular), ForegroundColor, BackgroundColor, HighlightColor);
@@ -105,6 +115,16 @@ namespace ConstructionSetExtender
 		void SimpleTextViewer::SetFont( Font^ NewFont )
 		{
 			Viewer->SetFont(gcnew Font(NewFont->FontFamily, NewFont->Size - 3, FontStyle::Regular));
+		}
+
+		void SimpleTextViewer::SetForegroundColor(Color Foreground)
+		{
+			Viewer->SetForegroundColor(Foreground);
+		}
+
+		void SimpleTextViewer::SetBackgroundColor(Color Background)
+		{
+			Viewer->SetBackgroundColor(Background);
 		}
 	}
 }

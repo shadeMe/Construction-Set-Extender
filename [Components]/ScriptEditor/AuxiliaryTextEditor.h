@@ -23,6 +23,8 @@ namespace ConstructionSetExtender
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 			void									Reset(void);
 			void									SetFont(Font^ NewFont);
+			void									SetForegroundColor(Color Foreground);
+			void									SetBackgroundColor(Color Background);
 			UInt16									GetLastOffset();
 		};
 
@@ -40,6 +42,8 @@ namespace ConstructionSetExtender
 			int										Hide(void);
 			void									JumpToLine(String^ Line) { Viewer->JumpToLine(Line); }
 			void									SetFont(Font^ NewFont);
+			void									SetForegroundColor(Color Foreground);
+			void									SetBackgroundColor(Color Background);
 			UInt32									GetLineCount(void) { return Viewer->GetLineCount(); }
 		};
 	}

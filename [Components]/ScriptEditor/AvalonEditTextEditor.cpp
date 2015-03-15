@@ -799,7 +799,7 @@ namespace ConstructionSetExtender
 				DisplayLocation.X += 5;
 
 				VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
-				if (CurrentLine)
+				if (Current)
 					DisplayLocation.Y += Current->Height + 5;
 				else
 					DisplayLocation.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
@@ -833,7 +833,7 @@ namespace ConstructionSetExtender
 				DisplayLocation.X += 5;
 
 				VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
-				if (CurrentLine)
+				if (Current)
 					DisplayLocation.Y += Current->Height + 5;
 				else
 					DisplayLocation.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
@@ -951,6 +951,9 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
 			{
+				if (IsFocused == false)
+					return;
+
 				LastKeyThatWentDown = E->Key;
 
 				if (IsMiddleMouseScrolling)
@@ -1762,6 +1765,8 @@ namespace ConstructionSetExtender
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
 				ParentModel = nullptr;
+
+				delete JumpScriptDelegate;
 				JumpScriptDelegate = nullptr;
 
 				HideInsightPopup();
@@ -2007,9 +2012,11 @@ namespace ConstructionSetExtender
 					String^ DisplayText = "";
 					String^ DisplayTitle = "";
 					List<ScriptMessage^>^ Messages = gcnew List < ScriptMessage^ >;
-					if (LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Compiler, Messages))
+					LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Validator, Messages);
+					LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Compiler, Messages);
+
+					if (Messages->Count)
 					{
-						LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Validator, Messages);
 						for each (ScriptMessage^ Itr in Messages)
 						{
 							String^ Str = Itr->Message();
@@ -2081,7 +2088,7 @@ namespace ConstructionSetExtender
 						DisplayLocation.Y = Location.Y;
 
 						VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
-						if (CurrentLine)
+						if (Current)
 							DisplayLocation.Y += Current->Height;
 						else
 							DisplayLocation.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance");
@@ -2592,7 +2599,7 @@ namespace ConstructionSetExtender
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 				UpdateSemanticAnalysisCache(true, true, true, true);
-				if (SemanticAnalysisCache->HasCriticalMessages == false)
+				if (SemanticAnalysisCache->HasCriticalMessages == false && SemanticAnalysisCache->MalformedStructure == false)
 				{
 					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
 

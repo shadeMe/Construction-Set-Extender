@@ -120,6 +120,10 @@ namespace ConstructionSetExtender
 
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::ScriptEditorPreferences_Saved);
 
+			NavigationStackBackward = gcnew Stack < IWorkspaceModel^ > ;
+			NavigationStackForward = gcnew Stack < IWorkspaceModel^ > ;
+			FreezeNavigationStacks = false;
+
 			EditorForm = gcnew AnimatedForm(0.10);
 			EditorForm->SuspendLayout();
 
@@ -279,13 +283,13 @@ namespace ConstructionSetExtender
 			ScriptListBox = gcnew ScriptListDialog();
 			FindReplaceBox = gcnew FindReplaceDialog(this);
 
-			Color ForeColor = Color::Black;
-			Color BackColor = Color::White;
+			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+			Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
 			Color HighlightColor = Color::Maroon;
 			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 
-			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
-			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
+			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
+			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
 			IntelliSenseView = gcnew IntelliSense::IntelliSenseInterfaceView;
 
 			SetupControlImage(ToolBarNewScript);
@@ -690,6 +694,10 @@ namespace ConstructionSetExtender
 
 		ConcreteWorkspaceView::~ConcreteWorkspaceView()
 		{
+			NavigationStackBackward->Clear();
+			NavigationStackForward->Clear();
+			FreezeNavigationStacks = true;
+
 			for each (auto Itr in AssociatedModels)
 			{
 				Itr.Value->Tag = nullptr;
@@ -950,6 +958,14 @@ namespace ConstructionSetExtender
 			if (E->OldValue)
 				Old = GetModel((DotNetBar::SuperTabItem^)E->OldValue);
 
+			if (FreezeNavigationStacks == false)
+			{
+				if (Old)
+					NavigationStackBackward->Push(Old);
+
+				NavigationStackForward->Clear();
+			}
+
 			BeginUpdate();
 
 			if (Old)
@@ -1019,12 +1035,44 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ToolBarNavigationBack_Click(Object^ Sender, EventArgs^ E)
 		{
-			TODO("implement");
+			try
+			{
+				FreezeNavigationStacks = true;
+
+				IWorkspaceModel^ Current = GetActiveModel();
+				if (NavigationStackBackward->Count)
+				{
+					IWorkspaceModel^ Previous = NavigationStackBackward->Pop();
+
+					NavigationStackForward->Push(Current);
+					SelectTab(GetTab(Previous));
+				}
+			}
+			finally
+			{
+				FreezeNavigationStacks = false;
+			}
 		}
 
 		void ConcreteWorkspaceView::ToolBarNavigationForward_Click(Object^ Sender, EventArgs^ E)
 		{
-			TODO("implement");
+			try
+			{
+				FreezeNavigationStacks = true;
+
+				IWorkspaceModel^ Current = GetActiveModel();
+				if (NavigationStackForward->Count)
+				{
+					IWorkspaceModel^ Next = NavigationStackForward->Pop();
+
+					NavigationStackBackward->Push(Current);
+					SelectTab(GetTab(Next));
+				}
+			}
+			finally
+			{
+				FreezeNavigationStacks = false;
+			}
 		}
 
 		void ConcreteWorkspaceView::ToolBarSaveAll_Click(Object^ Sender, EventArgs^ E)
@@ -1043,21 +1091,16 @@ namespace ConstructionSetExtender
 			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
 										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
 										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
+			Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
+
 			OffsetTextViewer->SetFont(CustomFont);
+			OffsetTextViewer->SetForegroundColor(ForegroundColor);
+			OffsetTextViewer->SetBackgroundColor(BackgroundColor);
+
 			PreprocessorTextViewer->SetFont(CustomFont);
-
-			EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Top;
-			EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
-			EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Far;
-			EditorTabStrip->FixedTabSize = Size(0, 23);
-
-			if (!PREFERENCES->FetchSettingAsInt("TabsOnTop", "Appearance"))
-			{
-				EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Left;
-				EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
-				EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Near;
-				EditorTabStrip->FixedTabSize = Size(150, 40);
-			}
+			PreprocessorTextViewer->SetForegroundColor(ForegroundColor);
+			PreprocessorTextViewer->SetBackgroundColor(BackgroundColor);
 
 			Redraw();
 		}
@@ -1545,11 +1588,12 @@ namespace ConstructionSetExtender
 			Tab->ImageIndex = (int)Model->Dirty;
 			Tab->Tag = Model;
 
-			EditorTabStrip->Tabs->Add(Tab);
-
+			ModelSubscribeEvents(Model);
 			AssociatedModels->Add(Model, Tab);
 
-			ModelSubscribeEvents(Model);
+			// when the model being associated is the very first one (for the view), the addition of the tab to the strip automatically triggers its selection
+			// so it must be added to the table beforehand
+			EditorTabStrip->Tabs->Add(Tab);
 
 			if (Bind)
 				SelectTab(Tab);
@@ -1560,14 +1604,16 @@ namespace ConstructionSetExtender
 			Debug::Assert(IsModelAssociated(Model) == true);
 
 			Model->Controller->Unbind(Model);
+
+			RemoveFromNavigationStacks(Model);
+			ModelUnsubscribeEvents(Model);
+
 			DotNetBar::SuperTabItem^ Tab = GetTab(Model);
 
 			Tab->Tag = nullptr;
 			delete Tab;
 
 			AssociatedModels->Remove(Model);
-
-			ModelUnsubscribeEvents(Model);
 
 			if (Destroy)
 				delete Model;
@@ -1585,6 +1631,17 @@ namespace ConstructionSetExtender
 		IWorkspaceModel^ ConcreteWorkspaceView::GetModel(DotNetBar::SuperTabItem^ Tab)
 		{
 			return (IWorkspaceModel^)Tab->Tag;
+		}
+
+		IWorkspaceModel^ ConcreteWorkspaceView::GetModel(String^ Description)
+		{
+			for each (auto Itr in AssociatedModels)
+			{
+				if (String::Compare(Itr.Key->ShortDescription, Description, true) == 0)
+					return Itr.Key;
+			}
+
+			return nullptr;
 		}
 
 		DotNetBar::SuperTabItem^ ConcreteWorkspaceView::GetTab(IWorkspaceModel^ Model)
@@ -1770,6 +1827,10 @@ namespace ConstructionSetExtender
 
 			for each (auto Itr in AssociatedModels)
 			{
+				// switch to dirty models to enable user interaction
+				if (Itr.Key->Dirty)
+					SelectTab(GetTab(Itr.Key));
+
 				if (ModelController()->Close(Itr.Key))
 					Dissociate->Add(Itr.Key);
 			}
@@ -1999,6 +2060,31 @@ namespace ConstructionSetExtender
 			Model->StateChangedDescription -= ModelStateChangedDescription;
 		}
 
+		void ConcreteWorkspaceView::RemoveFromNavigationStacks(IWorkspaceModel^ Model)
+		{
+			Stack<IWorkspaceModel^>^ Buffer = gcnew Stack < IWorkspaceModel^ > ;
+
+			while (NavigationStackBackward->Count)
+			{
+				IWorkspaceModel^ Current = NavigationStackBackward->Pop();
+				if (Current != Model)
+					Buffer->Push(Current);
+			}
+
+			while (Buffer->Count)
+				NavigationStackBackward->Push(Buffer->Pop());
+
+			while (NavigationStackForward->Count)
+			{
+				IWorkspaceModel^ Current = NavigationStackForward->Pop();
+				if (Current != Model)
+					Buffer->Push(Current);
+			}
+
+			while (Buffer->Count)
+				NavigationStackForward->Push(Buffer->Pop());
+		}
+
 		void ConcreteWorkspaceView::Focus()
 		{
 			EditorForm->Focus();
@@ -2190,9 +2276,23 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceViewController::Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID)
 		{
-			TODO("implement jumping");
 			Debug::Assert(View != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+
+			IWorkspaceModel^ Existing = Concrete->GetModel(ScriptEditorID);
+			if (Existing)
+				Concrete->SelectTab(Concrete->GetTab(Existing));
+			else
+			{
+				CString EID(ScriptEditorID);
+				NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
+
+				E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::Open;
+				E->OpenArgs = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+
+				if (E->OpenArgs);
+					Concrete->NewTab(E);
+			}
 		}
 
 		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,

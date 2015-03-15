@@ -50,10 +50,7 @@ CSE		---->
 SE		---->
 
 	IMMEDIATE		=
-		> Make the offset viewer and preproc view use the same for/background colors as teh editor
 		> Add script command param data to intellisense
-		> Save script editor bounds to cse ini
-		> Use the default avalonedit current line indicator
 		> Predict the correct delinquent block for mismatches
 
 
