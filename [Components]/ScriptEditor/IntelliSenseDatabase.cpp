@@ -2,9 +2,9 @@
 #include "IntelliSenseDatabase.h"
 #include "IntelliSenseInterface.h"
 
-#include "..\SemanticAnalysis.h"
-#include "..\ScriptEditorPreferences.h"
-#include "..\SnippetManager.h"
+#include "SemanticAnalysis.h"
+#include "ScriptEditorPreferences.h"
+#include "SnippetManager.h"
 
 #include "[Common]\NativeWrapper.h"
 

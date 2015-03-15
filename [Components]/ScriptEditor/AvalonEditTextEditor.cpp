@@ -1,7 +1,8 @@
 #include "AvalonEditTextEditor.h"
 #include "Globals.h"
 #include "ScriptEditorPreferences.h"
-#include "IntelliSense/IntelliSenseDatabase.h"
+#include "IntelliSenseDatabase.h"
+#include "IntelliSenseItem.h"
 #include "[Common]/CustomInputBox.h"
 #include "RefactorTools.h"
 
@@ -263,10 +264,10 @@ namespace ConstructionSetExtender
 						if ((LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "") &&
 							TextField->TextArea->Selection->IsMultiline == false)
 						{
-							IntelliSenseBox->Show(IntelliSenseBox->LastOperation, false, false);
+							OnIntelliSenseShow(true, IIntelliSenseInterfaceModel::Operation::Default);
 						}
 						else
-							IntelliSenseBox->Hide();
+							OnIntelliSenseHide(false);
 					}
 				}
 			}
@@ -719,7 +720,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
 			{
-				IntelliSenseBox->UpdateLocalVariableDatabase(SemanticAnalysisCache);
+				IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
 			}
 
 			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber)
@@ -742,6 +743,106 @@ namespace ConstructionSetExtender
 				LineTracker->AddBookmark(LineNo, BookmarkDesc);
 			}
 #pragma region Events
+			bool AvalonEditTextEditor::OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E)
+			{
+				Debug::Assert(IsFocused == true);
+				Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
+
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Control) == System::Windows::Input::ModifierKeys::Control)
+					KeyState |= (int)Keys::Control;
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Alt) == System::Windows::Input::ModifierKeys::Alt)
+					KeyState |= (int)Keys::Alt;
+				if ((E->KeyboardDevice->Modifiers & System::Windows::Input::ModifierKeys::Shift) == System::Windows::Input::ModifierKeys::Shift)
+					KeyState |= (int)Keys::Shift;
+
+				IntelliSenseKeyEventArgs^ TunneledArgs = gcnew IntelliSenseKeyEventArgs((Keys)KeyState);
+				if (IntelliSenseModel->GetTriggered(E->Key))
+				{
+					if (TextField->SelectionStart - 1 < 0 ||
+						GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) ||
+						GetCharIndexInsideStringSegment(TextField->SelectionStart - 1))
+					{
+						TunneledArgs->AllowForDisplay = false;
+					}
+				}
+				else
+					TunneledArgs->AllowForDisplay = false;
+
+				IntelliSenseKeyDown(this, TunneledArgs);
+
+				if (TunneledArgs->Handled)
+				{
+					HandleKeyEventForKey(E->Key);
+					E->Handled = true;
+				}
+
+				if (TunneledArgs->PreventNextTextChangeEvent)
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
+
+				if (TunneledArgs->Display)
+				{
+					// new operation, show all valid items
+					OnIntelliSenseShow(false, TunneledArgs->DisplayOperation);
+				}
+
+				return TunneledArgs->Handled;
+			}
+
+			void AvalonEditTextEditor::OnIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation)
+			{
+				if (IsFocused == false)
+					return;
+
+				IntelliSenseShowEventArgs^ E = gcnew IntelliSenseShowEventArgs;
+				E->WindowHandle = WindowHandle;
+				Point DisplayLocation = PointToScreen(GetPositionFromCharIndex(Caret, true));
+				DisplayLocation.X += 5;
+
+				VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
+				if (CurrentLine)
+					DisplayLocation.Y += Current->Height + 5;
+				else
+					DisplayLocation.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
+
+				E->Location = DisplayLocation;
+				E->UseActive = DefaultOperation;
+				E->NewOperation = NewOperation;
+
+				IntelliSenseShow(this, E);
+			}
+
+			void AvalonEditTextEditor::OnIntelliSenseHide(bool Reset)
+			{
+				if (IsFocused == false)
+					return;
+
+				IntelliSenseHideEventArgs^ E = gcnew IntelliSenseHideEventArgs;
+				E->Reset = Reset;
+
+				IntelliSenseHide(this, E);
+			}
+
+			void AvalonEditTextEditor::OnIntelliSenseRelocate()
+			{
+				if (IsFocused == false)
+					return;
+
+				IntelliSenseShowEventArgs^ E = gcnew IntelliSenseShowEventArgs;
+				E->WindowHandle = WindowHandle;
+				Point DisplayLocation = PointToScreen(GetPositionFromCharIndex(Caret, true));
+				DisplayLocation.X += 5;
+
+				VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
+				if (CurrentLine)
+					DisplayLocation.Y += Current->Height + 5;
+				else
+					DisplayLocation.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance") + 3;
+
+				E->Location = DisplayLocation;
+
+				IntelliSenseRelocate(this, E);
+			}
+
 			void AvalonEditTextEditor::OnScriptModified(bool ModificationState)
 			{
 				ScriptModified(this, gcnew TextEditorScriptModifiedEventArgs(ModificationState));
@@ -803,15 +904,13 @@ namespace ConstructionSetExtender
 			{
 				if (TextField->TextArea->Caret->Line != PreviousLineBuffer)
 				{
-					IntelliSenseBox->Enabled = true;
-					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
-					IntelliSenseBox->OverrideThresholdCheck = false;
-
 					TextField->TextArea->TextView->Redraw(TextField->TextArea->TextView->GetVisualLine(PreviousLineBuffer),
 														  Windows::Threading::DispatcherPriority::Normal);
 
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
+
+					OnIntelliSenseHide(true);
 				}
 
 				if (TextField->TextArea->Selection->IsEmpty)
@@ -832,12 +931,9 @@ namespace ConstructionSetExtender
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
 				if (GetLineVisible(CurrentLine))
-					IntelliSenseBox->Hide();
+					OnIntelliSenseHide(true);
 				else
-				{
-					IntelliSenseBox->MoveToCaret(false);
-					IntelliSenseBox->HideQuickViewToolTip();
-				}
+					OnIntelliSenseRelocate();
 			}
 
 			void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
@@ -858,188 +954,85 @@ namespace ConstructionSetExtender
 				LastKeyThatWentDown = E->Key;
 
 				if (IsMiddleMouseScrolling)
-				{
 					StopMiddleMouseScroll();
-				}
 
-				int SelStart = TextField->SelectionStart, SelLength = TextField->SelectionLength;
-
-				if (IntelliSenseInterface::GetTriggered(E->Key))
+				bool IntelliSenseHandled = OnIntelliSenseKeyDown(E);
+				if (IntelliSenseHandled == false)
 				{
-					IntelliSenseBox->Enabled = true;
-
-					if (TextField->SelectionStart - 1 >= 0 &&
-						GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) == false &&
-						GetCharIndexInsideStringSegment(TextField->SelectionStart - 1) == false)
+					switch (E->Key)
 					{
-						try
+					case System::Windows::Input::Key::B:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
-							switch (E->Key)
-							{
-							case System::Windows::Input::Key::OemPeriod:
-								{
-									IntelliSenseBox->Show(IntelliSenseInterface::Operation::Dot, false, true);
-									SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-									break;
-								}
-							case System::Windows::Input::Key::Space:
-								{
-									String^ Token = GetTextAtLocation(TextField->SelectionStart - 1, false)->Replace("\n", "");
+							AddBookmark(TextField->SelectionStart);
 
-									if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Call)
-									{
-										IntelliSenseBox->Show(IntelliSenseInterface::Operation::Call, false, true);
-										SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-									}
-									else if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Set ||
-											 ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Let)
-									{
-										IntelliSenseBox->Show(IntelliSenseInterface::Operation::Assign, false, true);
-										SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-									}
-									else
-										IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
-
-									break;
-								}
-							case System::Windows::Input::Key::OemTilde:
-								if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::None)
-								{
-									IntelliSenseBox->Show(IntelliSenseInterface::Operation::Snippet, false, true);
-									SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-								}
-
-								break;
-							default:
-								{
-									IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
-									break;
-								}
-							}
-
-							IntelliSenseBox->OverrideThresholdCheck = false;
+							HandleKeyEventForKey(E->Key);
+							E->Handled = true;
 						}
-						catch (Exception^ E)
+
+						break;
+					case System::Windows::Input::Key::Q:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
-							DebugPrint("IntelliSenseInterface raised an exception while initializing.\n\tException: " + E->Message, true);
+							ToggleComment(TextField->SelectionStart);
+
+							HandleKeyEventForKey(E->Key);
+							E->Handled = true;
 						}
+
+						break;
+					case System::Windows::Input::Key::Escape:
+						ClearFindResultIndicators();
+
+						break;
+					case System::Windows::Input::Key::Up:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+						{
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
+
+							MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Up);
+
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
+
+							HandleKeyEventForKey(E->Key);
+							E->Handled = true;
+						}
+
+						break;
+					case System::Windows::Input::Key::Down:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+						{
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
+
+							MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Down);
+
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
+
+							HandleKeyEventForKey(E->Key);
+							E->Handled = true;
+						}
+
+						break;
+					case System::Windows::Input::Key::Z:
+					case System::Windows::Input::Key::Y:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+							SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
+
+						break;
+					case System::Windows::Input::Key::PageUp:
+					case System::Windows::Input::Key::PageDown:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+						{
+							HandleKeyEventForKey(E->Key);
+							E->Handled = true;
+						}
+
+						break;
 					}
 				}
 
-				switch (E->Key)
-				{
-				case System::Windows::Input::Key::B:
-					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-					{
-						AddBookmark(TextField->SelectionStart);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				case System::Windows::Input::Key::Q:
-					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-					{
-						ToggleComment(TextField->SelectionStart);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				case System::Windows::Input::Key::Enter:
-					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-					{
-						if (!IntelliSenseBox->Visible)
-							IntelliSenseBox->Show(IntelliSenseInterface::Operation::Default, true, false);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				case System::Windows::Input::Key::Escape:
-					if (IntelliSenseBox->Visible)
-					{
-						IntelliSenseBox->Hide();
-						IntelliSenseBox->Enabled = false;
-						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
-						IntelliSenseBox->OverrideThresholdCheck = false;
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-
-					ClearFindResultIndicators();
-					break;
-				case System::Windows::Input::Key::Tab:
-					if (IntelliSenseBox->Visible)
-					{
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-						IntelliSenseBox->PickSelection();
-						FocusTextArea();
-
-						IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
-						IntelliSenseBox->OverrideThresholdCheck = false;
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				case System::Windows::Input::Key::Up:
-					if (IntelliSenseBox->Visible)
-					{
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Up);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-					{
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
-
-						MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Up);
-
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				case System::Windows::Input::Key::Down:
-					if (IntelliSenseBox->Visible)
-					{
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Down);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					else if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-					{
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
-
-						MoveTextSegment(TextField->Document->GetLineByOffset(Caret), MoveSegmentDirection::Down);
-
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
-
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				case System::Windows::Input::Key::Z:
-				case System::Windows::Input::Key::Y:
-					if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-						SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
-					break;
-				case System::Windows::Input::Key::PageUp:
-				case System::Windows::Input::Key::PageDown:
-					if (IntelliSenseBox->Visible || E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
-					{
-						HandleKeyEventForKey(E->Key);
-						E->Handled = true;
-					}
-					break;
-				}
-
-				OnKeyDown(E);
+				if (E->Handled == false)
+					OnKeyDown(E);
 			}
 
 			void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
@@ -1056,13 +1049,9 @@ namespace ConstructionSetExtender
 			{
 				Nullable<AvalonEdit::TextViewPosition> Location = TextField->GetPositionFromPoint(E->GetPosition(TextField));
 				if (Location.HasValue)
-				{
 					LastKnownMouseClickOffset = TextField->Document->GetOffset(Location.Value.Line, Location.Value.Column);
-				}
 				else
-				{
 					Caret = GetTextLength();
-				}
 			}
 
 			void AvalonEditTextEditor::TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E)
@@ -1076,36 +1065,15 @@ namespace ConstructionSetExtender
 						Caret = LastKnownMouseClickOffset;
 				}
 				else
-				{
 					Caret = GetTextLength();
-				}
 
-				if (IntelliSenseBox->Visible)
-				{
-					IntelliSenseBox->Hide();
-	//				IntelliSenseBox->Enabled = false;		why disable it?
-					IntelliSenseBox->LastOperation = IntelliSenseInterface::Operation::Default;
-					IntelliSenseBox->OverrideThresholdCheck = false;
-				}
-
-				IntelliSenseBox->HideQuickViewToolTip();
-
+				OnIntelliSenseHide(true);
 				OnMouseClick(E);
 			}
 
 			void AvalonEditTextEditor::TextField_MouseWheel(Object^ Sender, System::Windows::Input::MouseWheelEventArgs^ E)
 			{
-				if (IntelliSenseBox->Visible)
-				{
-					if (E->Delta < 0)
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Down);
-					else
-						IntelliSenseBox->ChangeSelection(IntelliSenseInterface::MoveDirection::Up);
-
-					E->Handled = true;
-				}
-				else
-					IntelliSenseBox->HideQuickViewToolTip();
+				;//
 			}
 
 			void AvalonEditTextEditor::TextField_MouseHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
@@ -1114,20 +1082,13 @@ namespace ConstructionSetExtender
 				if (ViewLocation.HasValue)
 				{
 					int Offset = TextField->Document->GetOffset(ViewLocation.Value.Line, ViewLocation.Value.Column);
-					Point Location = GetPositionFromCharIndex(Offset, true);
-
-					if (TextField->Text->Length > 0)
-					{
-						array<String^>^ Tokens = GetTextAtLocation(Offset);
-						if (!GetCharIndexInsideCommentSegment(Offset))
-							IntelliSenseBox->ShowQuickViewTooltip(Tokens[1], Tokens[0], Location);
-					}
+					ShowInsightPopup(Offset, E->GetPosition(TextField));
 				}
 			}
 
 			void AvalonEditTextEditor::TextField_MouseHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
 			{
-				IntelliSenseBox->HideQuickViewToolTip();
+				HideInsightPopup();
 			}
 
 			void AvalonEditTextEditor::TextField_SelectionChanged(Object^ Sender, EventArgs^ E)
@@ -1504,7 +1465,7 @@ namespace ConstructionSetExtender
 				TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
 				TextField = gcnew AvalonEdit::TextEditor();
 				AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
-				IntelliSenseBox = gcnew IntelliSenseInterface(this);
+				IntelliSenseModel = gcnew IntelliSenseInterfaceModel(this);
 				CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 				CodeFoldingStrategy = nullptr;
 
@@ -1615,7 +1576,6 @@ namespace ConstructionSetExtender
 				LastKnownMouseClickOffset = 0;
 
 				ScrollBarSyncTimer->Interval = 200;
-		//		ScrollBarSyncTimer->Start();
 
 				ExternalVerticalScrollBar->Dock = DockStyle::Right;
 				ExternalVerticalScrollBar->SmallChange = 30;
@@ -1633,11 +1593,17 @@ namespace ConstructionSetExtender
 				SetTextPrologAnimationCache = nullptr;
 
 				SemanticAnalysisTimer->Interval = 5000;
-		//		SemanticAnalysisTimer->Start();
 
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
 				SemanticAnalysisCache = gcnew ObScriptSemanticAnalysis::AnalysisData();
+
+				InsightPopup = gcnew ToolTip;
+				InsightPopup->AutoPopDelay = 500;
+				InsightPopup->InitialDelay = 500;
+				InsightPopup->ReshowDelay = 0;
+				InsightPopup->ToolTipIcon = ToolTipIcon::None;
+				InsightPopup->Tag = nullptr;
 
 				TextEditorContextMenu = gcnew ContextMenuStrip();
 				ContextMenuCopy = gcnew ToolStripMenuItem();
@@ -1798,6 +1764,8 @@ namespace ConstructionSetExtender
 				ParentModel = nullptr;
 				JumpScriptDelegate = nullptr;
 
+				HideInsightPopup();
+
 				TextField->Clear();
 				MiddleMouseScrollTimer->Stop();
 				ScrollBarSyncTimer->Stop();
@@ -1811,6 +1779,8 @@ namespace ConstructionSetExtender
 				TextField->TextArea->TextView->BackgroundRenderers->Clear();
 
 				delete LineTracker;
+				delete InsightPopup;
+				delete IntelliSenseModel;
 
 				TextField->TextChanged -= TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
@@ -1895,7 +1865,6 @@ namespace ConstructionSetExtender
 				delete TextField->TextArea->TextView;
 				delete TextField->TextArea;
 				delete TextField;
-				delete IntelliSenseBox;
 				delete MiddleMouseScrollTimer;
 				delete BraceColorizer;
 				delete CodeFoldingManager;
@@ -1905,21 +1874,13 @@ namespace ConstructionSetExtender
 				delete ExternalVerticalScrollBar;
 				delete ExternalHorizontalScrollBar;
 
-				IntelliSenseBox = nullptr;
+				IntelliSenseModel = nullptr;
 				TextField->TextArea->IndentationStrategy = nullptr;
 				TextField->SyntaxHighlighting = nullptr;
 				TextField->Document = nullptr;
 				CodeFoldingStrategy = nullptr;
 				CodeFoldingManager = nullptr;
 				BraceColorizer = nullptr;
-			}
-
-			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
-			{
-				if (UpdateVars || UpdateControlBlocks)
-					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false, false);
-
-				return SemanticAnalysisCache;
 			}
 
 			void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
@@ -2036,8 +1997,108 @@ namespace ConstructionSetExtender
 				LineTracker->DeserializeBookmarks(ExtractedBlock, true);
 			}
 
+			void AvalonEditTextEditor::ShowInsightPopup(int Offset, Windows::Point Location)
+			{
+				int Line = GetLineNumberFromCharIndex(Offset);
+				bool DisplayPopup = false;
+
+				if (GetTextLength() > 0)
+				{
+					String^ DisplayText = "";
+					String^ DisplayTitle = "";
+					List<ScriptMessage^>^ Messages = gcnew List < ScriptMessage^ >;
+					if (LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Compiler, Messages))
+					{
+						LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Validator, Messages);
+						for each (ScriptMessage^ Itr in Messages)
+						{
+							String^ Str = Itr->Message();
+							DisplayText += Str + "\n";
+						}
+
+						DisplayText->Remove(DisplayText->Length - 1);
+						DisplayTitle = "Error" + (Messages->Count > 1 ? "s" : "");
+						InsightPopup->ToolTipIcon = ToolTipIcon::Error;
+						DisplayPopup = true;
+					}
+					else if(GetCharIndexInsideCommentSegment(Offset) == false &&
+							PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense"))
+					{
+						array<String^>^ Tokens = GetTextAtLocation(Offset);
+						String^ Main = Tokens[1];
+						String^ Previous = Tokens[0];
+
+						CString CStr(Previous);
+						ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+						if (Data && Data->IsValid())
+						{
+							Previous = "" + gcnew String(Data->ParentID);
+							ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
+						}
+						NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+
+						IntelliSenseItem^ Item = ISDB->LookupRemoteScriptVariable(Previous, Main);
+
+						bool LocalVar = false;
+						if (Item == nullptr)
+						{
+							ObScriptSemanticAnalysis::Variable^ Var = SemanticAnalysisCache->LookupVariable(Main);
+							if (Var)
+							{
+								LocalVar = true;
+								Item = gcnew IntelliSenseItemVariable(Var->Name,
+																	Var->Comment,
+																	Var->Type,
+																	IntelliSense::IntelliSenseItem::IntelliSenseItemType::LocalVar);
+							}
+						}
+
+						if (LocalVar == false && Item == nullptr)
+						{
+							for each (IntelliSenseItem^ Itr in ISDB->ItemRegistry)
+							{
+								if (Itr->GetIsQuickViewable(Main))
+								{
+									Item = Itr;
+									break;
+								}
+							}
+						}
+
+						if (Item)
+						{
+							DisplayText = Item->Describe();
+							DisplayTitle = Item->GetItemTypeID();
+							InsightPopup->ToolTipIcon = ToolTipIcon::Info;
+							DisplayPopup = true;
+						}
+					}
+
+					if (DisplayPopup)
+					{
+						Point DisplayLocation;
+						DisplayLocation.X = Location.X;
+						DisplayLocation.Y = Location.Y;
+
+						VisualLine^ Current = TextField->TextArea->TextView->GetVisualLine(CurrentLine);
+						if (CurrentLine)
+							DisplayLocation.Y += Current->Height;
+						else
+							DisplayLocation.Y += PREFERENCES->FetchSettingAsInt("FontSize", "Appearance");
+
+						InsightPopup->ToolTipTitle = DisplayTitle;
+						InsightPopup->Show(DisplayText, Control::FromHandle(WindowHandle), DisplayLocation, 8000);
+					}
+				}
+			}
+
+			void AvalonEditTextEditor::HideInsightPopup()
+			{
+				InsightPopup->Hide(Control::FromHandle(WindowHandle));
+			}
+
 #pragma region Interface
-			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
+			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList, IIntelliSenseInterfaceView^ IntelliSenseView)
 			{
 				FocusTextArea();
 				IsFocused = true;
@@ -2045,6 +2106,7 @@ namespace ConstructionSetExtender
 				ScrollBarSyncTimer->Start();
 
 				LineTracker->Bind(MessageList, BookmarkList, FindResultList);
+				IntelliSenseModel->Bind(IntelliSenseView);
 			}
 
 			void AvalonEditTextEditor::Unbind()
@@ -2052,9 +2114,10 @@ namespace ConstructionSetExtender
 				IsFocused = false;
 				SemanticAnalysisTimer->Stop();
 				ScrollBarSyncTimer->Stop();
-				IntelliSenseBox->Hide();
+				HideInsightPopup();
 
 				LineTracker->Unbind();
+				IntelliSenseModel->Unbind();
 			}
 
 			void DummyOutputWrapper(int Line, String^ Message)
@@ -2574,6 +2637,14 @@ namespace ConstructionSetExtender
 				LineTracker->TrackMessage(Line,
 										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
 										  TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
+			}
+
+			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
+			{
+				if (UpdateVars || UpdateControlBlocks)
+					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false, false);
+
+				return SemanticAnalysisCache;
 			}
 #pragma endregion
 		}

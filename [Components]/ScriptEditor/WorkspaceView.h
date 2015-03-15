@@ -241,6 +241,8 @@ namespace ConstructionSetExtender
 			ScriptListDialog^						ScriptListBox;
 			FindReplaceDialog^						FindReplaceBox;
 
+			IntelliSense::IIntelliSenseInterfaceView^	IntelliSenseView;
+
 			ConcreteWorkspaceViewController^		ViewController;
 			ConcreteWorkspaceViewFactory^			ViewFactory;
 
@@ -303,7 +305,6 @@ namespace ConstructionSetExtender
 			~ConcreteWorkspaceView();
 
 #pragma region Interfaces
-			// IWorkspaceViewBindableListView
 			property ListView^						ListViewMessages
 			{
 				virtual ListView^ get() { return MessageList; }
@@ -319,7 +320,11 @@ namespace ConstructionSetExtender
 				virtual ListView^ get() { return FindList; }
 				virtual void set(ListView^ e) {}
 			}
-
+			property IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseInterfaceView
+			{
+				virtual IntelliSense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
+				virtual void set(IntelliSense::IIntelliSenseInterfaceView^ e) {}
+			}
 			property IWorkspaceViewController^		Controller
 			{
 				virtual IWorkspaceViewController^ get() { return ViewController; }

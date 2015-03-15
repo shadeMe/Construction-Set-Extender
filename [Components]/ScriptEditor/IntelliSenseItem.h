@@ -1,16 +1,11 @@
 #pragma once
 
 #include "[Common]\HandShakeStructs.h"
-#include "..\SemanticAnalysis.h"
-#include "..\ScriptTextEditorInterface.h"
+#include "SemanticAnalysis.h"
+#include "ScriptTextEditorInterface.h"
 
 namespace ConstructionSetExtender
 {
-	namespace ScriptEditor
-	{
-		ref class Workspace;
-	}
-
 	namespace IntelliSense
 	{
 		ref class IntelliSenseInterface;
@@ -50,7 +45,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
 
 			virtual String^										Describe();
-			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface);
+			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor);
 
 																// returns true if the item can be enumerated in the interface
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);
@@ -224,26 +219,24 @@ namespace ConstructionSetExtender
 		public:
 			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface) override;
+			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor) override;
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual bool										GetIsQuickViewable(String^ Token) override;
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
 		};
 
-		ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<ListViewItem^>
+		ref class IntelliSenseItemSorter : public System::Collections::Generic::IComparer<IntelliSenseItem^>
 		{
 		protected:
 			SortOrder	Order;
 		public:
 			IntelliSenseItemSorter(SortOrder Order) : Order(Order) {}
 
-			virtual int Compare(ListViewItem^ X, ListViewItem^ Y)
+			virtual int Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y)
 			{
 				int Result = -1;
-				Result = String::Compare(((IntelliSenseItem^)X->Tag)->GetIdentifier(),
-										 ((IntelliSenseItem^)Y->Tag)->GetIdentifier(),
-										 true);
+				Result = String::Compare(X->GetIdentifier(), Y->GetIdentifier(), true);
 
 				if (Order == SortOrder::Descending)
 					Result *= -1;

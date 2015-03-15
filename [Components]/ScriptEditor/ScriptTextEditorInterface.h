@@ -1,19 +1,15 @@
 #pragma once
 #include "SemanticAnalysis.h"
+#include "IIntelliSenseInterface.h"
 
 namespace ConstructionSetExtender
 {
-	namespace IntelliSense
-	{
-		ref class IntelliSenseInterface;
-	}
-
 	namespace TextEditors
 	{
 		ref class TextEditorScriptModifiedEventArgs : public EventArgs
 		{
 		public:
-			property bool							ModifiedStatus;
+			property bool ModifiedStatus;
 
 			TextEditorScriptModifiedEventArgs(bool ModifiedStatus) : EventArgs()
 			{
@@ -24,7 +20,7 @@ namespace ConstructionSetExtender
 		ref class TextEditorMouseClickEventArgs : public MouseEventArgs
 		{
 		public:
-			property int							ScriptTextOffset;
+			property int ScriptTextOffset;
 
 			TextEditorMouseClickEventArgs(MouseButtons Button, int Clicks, int X, int Y, int ScriptTextOffset) : MouseEventArgs(Button, Clicks, X, Y, 0)
 			{
@@ -32,8 +28,69 @@ namespace ConstructionSetExtender
 			}
 		};
 
-		delegate void									TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
-		delegate void									TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
+		ref class IntelliSenseKeyEventArgs : public KeyEventArgs
+		{
+		public:
+			property bool AllowForDisplay;
+
+			// results
+			property bool PreventNextTextChangeEvent;
+			property bool Display;
+			property IntelliSense::IIntelliSenseInterfaceModel::Operation DisplayOperation;
+
+			IntelliSenseKeyEventArgs(Keys Data) : KeyEventArgs(Data)
+			{
+				Handled = false;
+				AllowForDisplay = true;
+				PreventNextTextChangeEvent = false;
+				Display = false;
+				DisplayOperation = IntelliSense::IIntelliSenseInterfaceModel::Operation::Default;
+			}
+		};
+
+		ref class IntelliSensePositionEventArgs : public EventArgs
+		{
+		public:
+			property Point	Location;			// screen coords
+			property IntPtr	WindowHandle;		// parent
+
+			IntelliSensePositionEventArgs() : EventArgs()
+			{
+				Location = Point(0, 0);
+				WindowHandle = IntPtr::Zero;
+			}
+		};
+
+		ref class IntelliSenseShowEventArgs : public IntelliSensePositionEventArgs
+		{
+		public:
+			property bool UseActive;			// continue with the previous/active operation
+			property IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation;
+
+			IntelliSenseShowEventArgs() : IntelliSensePositionEventArgs()
+			{
+				UseActive = true;
+				NewOperation = IntelliSense::IIntelliSenseInterfaceModel::Operation::Default;
+			}
+		};
+
+		ref class IntelliSenseHideEventArgs : public EventArgs
+		{
+		public:
+			property bool Reset;
+
+			IntelliSenseHideEventArgs() : EventArgs()
+			{
+				Reset = false;
+			}
+		};
+
+		delegate void TextEditorScriptModifiedEventHandler(Object^ Sender, TextEditorScriptModifiedEventArgs^ E);
+		delegate void TextEditorMouseClickEventHandler(Object^ Sender, TextEditorMouseClickEventArgs^ E);
+		delegate void IntelliSenseKeyEventHandler(Object^ Sender, IntelliSenseKeyEventArgs^ E);
+		delegate void IntelliSensePositionEventHandler(Object^ Sender, IntelliSensePositionEventArgs^ E);
+		delegate void IntelliSenseShowEventHandler(Object^ Sender, IntelliSenseShowEventArgs^ E);
+		delegate void IntelliSenseHideEventHandler(Object^ Sender, IntelliSenseHideEventArgs^ E);
 
 		interface class IScriptTextEditor
 		{
@@ -67,12 +124,17 @@ namespace ConstructionSetExtender
 				RegEx			=		1 << 3
 			};
 
-			// events
+			event IntelliSenseKeyEventHandler^						IntelliSenseKeyDown;		// this has to be a separate event as we need to reliably return values from the handler
+
+			// these events are raised as requests
+			event IntelliSenseShowEventHandler^						IntelliSenseShow;
+			event IntelliSenseHideEventHandler^						IntelliSenseHide;
+			event IntelliSensePositionEventHandler^					IntelliSenseRelocate;
+
 			event TextEditorScriptModifiedEventHandler^				ScriptModified;
 			event KeyEventHandler^									KeyDown;
 			event TextEditorMouseClickEventHandler^					MouseClick;
 
-			// properties
 			property Control^							Container;
 			property IntPtr								WindowHandle;
 			property bool								Enabled;
@@ -84,7 +146,10 @@ namespace ConstructionSetExtender
 			property bool								Modified;
 
 			// methods
-			void										Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);		// called when the parent model is bound to a view, i.e., when the text editor is activated
+			void										Bind(ListView^ MessageList,
+															 ListView^ BookmarkList,
+															 ListView^ FindResultList,
+															 IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseView);		// called when the parent model is bound to a view, i.e., when the text editor is activated
 			void										Unbind();	// opposite of the above
 
 			String^										GetText();
@@ -133,6 +198,7 @@ namespace ConstructionSetExtender
 																		 bool Bookmarks,
 																		 bool FindResults);
 			void										TrackCompilerError(int Line, String^ Message);
+			ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 		};
 }
 }

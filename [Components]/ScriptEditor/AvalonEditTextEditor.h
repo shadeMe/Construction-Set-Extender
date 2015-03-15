@@ -3,7 +3,7 @@
 #include "AvalonEditDefs.h"
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
-#include "IntelliSense\IntelliSenseInterface.h"
+#include "IntelliSenseInterface.h"
 #include "WorkspaceModelInterface.h"
 
 #define AvalonEditTextEditorDeclareClickHandler(Name)		EventHandler^ Name##ClickHandler; \
@@ -62,7 +62,6 @@ namespace ConstructionSetExtender
 				bool												ModifiedFlag;
 				PreventTextChangeFlagState							PreventTextChangedEventFlag;
 				System::Windows::Input::Key							KeyToPreventHandling;
-				IntelliSense::IntelliSenseInterface^				IntelliSenseBox;
 				int													LastKnownMouseClickOffset;
 				System::Windows::Input::Key							LastKeyThatWentDown;
 
@@ -92,6 +91,8 @@ namespace ConstructionSetExtender
 				ScriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
 				JumpToScriptHandler^								JumpScriptDelegate;
+				IntelliSense::IntelliSenseInterfaceModel^			IntelliSenseModel;
+				ToolTip^											InsightPopup;
 
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
@@ -151,17 +152,21 @@ namespace ConstructionSetExtender
 				CancelEventHandler^							TextEditorContextMenuOpeningHandler;
 				void                                        TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
-				virtual void								OnScriptModified(bool ModificationState);
-				virtual void								OnKeyDown(System::Windows::Input::KeyEventArgs^ E);
-				virtual void								OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
+				bool										OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E);
+				void										OnIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation);
+				void										OnIntelliSenseHide(bool Reset);
+				void										OnIntelliSenseRelocate();
+				void										OnScriptModified(bool ModificationState);
+				void										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);
+				void										OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
 
 				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_TextCopied(Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E);
 
-				void										TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
 				void										TextField_KeyDown(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
+				void										TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E);
 				void										TextField_MouseDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 				void										TextField_MouseUp(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 				void										TextField_MouseWheel(Object^ Sender, System::Windows::Input::MouseWheelEventArgs^ E);
@@ -249,13 +254,18 @@ namespace ConstructionSetExtender
 				void                                        SerializeBookmarks(String^% Result);
 				void                                        DeserializeCaretPos(String^ ExtractedBlock);
 				void                                        DeserializeBookmarks(String^ ExtractedBlock);
+
+				void										ShowInsightPopup(int Offset, Windows::Point Location);
+				void										HideInsightPopup();
 			public:
 				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
 
-				ObScriptSemanticAnalysis::AnalysisData^						GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
-
 #pragma region Interfaces
+				virtual event IntelliSenseKeyEventHandler^					IntelliSenseKeyDown;
+				virtual event IntelliSenseShowEventHandler^					IntelliSenseShow;
+				virtual event IntelliSenseHideEventHandler^					IntelliSenseHide;
+				virtual event IntelliSensePositionEventHandler^				IntelliSenseRelocate;
 				virtual event TextEditorScriptModifiedEventHandler^			ScriptModified;
 				virtual event KeyEventHandler^								KeyDown;
 				virtual event TextEditorMouseClickEventHandler^				MouseClick;
@@ -312,7 +322,10 @@ namespace ConstructionSetExtender
 					}
 				}
 
-				virtual void								Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);
+				virtual void								Bind(ListView^ MessageList,
+																 ListView^ BookmarkList,
+																 ListView^ FindResultList,
+																 IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseView);
 				virtual void								Unbind();
 
 				virtual String^								GetText();
@@ -359,6 +372,8 @@ namespace ConstructionSetExtender
 																			 bool Bookmarks,
 																			 bool FindResults);
 				virtual void								TrackCompilerError(int Line, String^ Message);
+
+				virtual ObScriptSemanticAnalysis::AnalysisData^ GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 #pragma endregion
 			};
 		}

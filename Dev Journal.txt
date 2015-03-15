@@ -61,8 +61,7 @@ SE		---->
 		
 
 	ENHANCEMENT		=
-		> Bookmark indicator margin
-		> Mouse-over on error segments displays errors
+		> Icon margin to indicate bookmarks, etc (IconBarMargin in #develop)
 		> Document minimap
 
 

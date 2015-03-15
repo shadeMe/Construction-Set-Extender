@@ -1,7 +1,8 @@
 #include "WorkspaceView.h"
 #include "[Common]\CustomInputBox.h"
-#include "IntelliSense\IntelliSenseDatabase.h"
+#include "IntelliSenseDatabase.h"
 #include "ScriptEditorPreferences.h"
+#include "IntelliSenseInterface.h"
 #include "[Common]/ListViewUtilities.h"
 
 using namespace GlobalInputMonitor;
@@ -285,6 +286,7 @@ namespace ConstructionSetExtender
 
 			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
 			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForeColor, BackColor, HighlightColor, WorkspaceSplitter->Panel1);
+			IntelliSenseView = gcnew IntelliSense::IntelliSenseInterfaceView;
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -851,11 +853,13 @@ namespace ConstructionSetExtender
 			delete PreprocessorTextViewer;
 			delete ScriptListBox;
 			delete FindReplaceBox;
+			delete IntelliSenseView;
 
 			ScriptListBox = nullptr;
 			FindReplaceBox = nullptr;
 			OffsetTextViewer = nullptr;
 			PreprocessorTextViewer = nullptr;
+			IntelliSenseView = nullptr;
 
 			delete AttachPanel;
 

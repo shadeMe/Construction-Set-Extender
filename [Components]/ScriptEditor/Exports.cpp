@@ -1,5 +1,5 @@
 #include "Exports.h"
-#include "IntelliSense\IntelliSenseDatabase.h"
+#include "IntelliSenseDatabase.h"
 #include "Globals.h"
 #include "WorkspaceModel.h"
 #include "WorkspaceView.h"

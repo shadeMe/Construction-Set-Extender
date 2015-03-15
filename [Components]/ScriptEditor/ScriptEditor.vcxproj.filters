@@ -55,15 +55,6 @@
     <ClCompile Include="..\..\[Common]\AuxiliaryWindowsForm.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="IntelliSense\IntelliSenseInterface.cpp">
-      <Filter>Components\IntelliSense</Filter>
-    </ClCompile>
-    <ClCompile Include="IntelliSense\IntelliSenseItem.cpp">
-      <Filter>Components\IntelliSense</Filter>
-    </ClCompile>
-    <ClCompile Include="IntelliSense\IntelliSenseDatabase.cpp">
-      <Filter>Components\IntelliSense</Filter>
-    </ClCompile>
     <ClCompile Include="AvalonEditComponents.cpp">
       <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClCompile>
@@ -90,6 +81,15 @@
     </ClCompile>
     <ClCompile Include="WorkspaceView.cpp" />
     <ClCompile Include="WorkspaceModel.cpp" />
+    <ClCompile Include="IntelliSenseDatabase.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSenseInterface.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
+    <ClCompile Include="IntelliSenseItem.cpp">
+      <Filter>Components\IntelliSense</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -128,15 +128,6 @@
     <ClInclude Include="..\..\[Common]\IncludesCLR.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="IntelliSense\IntelliSenseInterface.h">
-      <Filter>Components\IntelliSense</Filter>
-    </ClInclude>
-    <ClInclude Include="IntelliSense\IntelliSenseItem.h">
-      <Filter>Components\IntelliSense</Filter>
-    </ClInclude>
-    <ClInclude Include="IntelliSense\IntelliSenseDatabase.h">
-      <Filter>Components\IntelliSense</Filter>
-    </ClInclude>
     <ClInclude Include="AvalonEditXSHD.h">
       <Filter>Components\TextEditors\AvalonEdit</Filter>
     </ClInclude>
@@ -171,6 +162,18 @@
     <ClInclude Include="WorkspaceModelInterface.h" />
     <ClInclude Include="WorkspaceView.h" />
     <ClInclude Include="WorkspaceModel.h" />
+    <ClInclude Include="IntelliSenseDatabase.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSenseInterface.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="IntelliSenseItem.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="IIntelliSenseInterface.h">
+      <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images.resx">

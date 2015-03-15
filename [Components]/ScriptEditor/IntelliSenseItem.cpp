@@ -2,8 +2,8 @@
 #include "IntelliSenseDatabase.h"
 #include "IntelliSenseInterface.h"
 
-#include "..\ScriptTextEditorInterface.h"
-#include "..\SnippetManager.h"
+#include "ScriptTextEditorInterface.h"
+#include "SnippetManager.h"
 
 #include "[Common]\NativeWrapper.h"
 
@@ -38,7 +38,7 @@ namespace ConstructionSetExtender
 			return Description;
 		}
 
-		void IntelliSenseItem::Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface)
+		void IntelliSenseItem::Insert(TextEditors::IScriptTextEditor^ Editor)
 		{
 			Editor->SetTokenAtCaretPos(GetSubstitution());
 		}
@@ -388,7 +388,7 @@ namespace ConstructionSetExtender
 				(Parent->Variables->Count ? "\n\nVariables: " + Parent->Variables->Count.ToString() : "");
 		}
 
-		void IntelliSenseItemCodeSnippet::Insert(TextEditors::IScriptTextEditor^ Editor, IntelliSenseInterface^ Interface)
+		void IntelliSenseItemCodeSnippet::Insert(TextEditors::IScriptTextEditor^ Editor)
 		{
 			for each (CodeSnippet::VariableInfo^ Itr in Parent->Variables)
 				Editor->InsertVariable(Itr->Name, Itr->Type);
@@ -397,11 +397,9 @@ namespace ConstructionSetExtender
 			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->CurrentLine);
 			Code = ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
-			Interface->Enabled = false;			// don't want it popping up when indenting the snippet
 			Editor->BeginUpdate();
 			Editor->SetTokenAtCaretPos(Code);
 			Editor->EndUpdate(false);
-			Interface->Enabled = true;
 
 			Editor->ScrollToCaret();
 		}

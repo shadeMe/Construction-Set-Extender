@@ -314,13 +314,15 @@ namespace ConstructionSetExtender
 			else
 				SelectBox->Text = "Select Script(s)";
 
-			if (GetListViewSelectedItem(ScriptList) == nullptr)
-				return;
+			if (ScriptList->SelectedIndices->Count == 1)
+			{
+				ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)GetListViewSelectedItem(ScriptList)->Tag);
+				String^ ScriptText = gcnew String(Data->Text);
 
-			ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)GetListViewSelectedItem(ScriptList)->Tag);
-			String^ ScriptText = gcnew String(Data->Text);
-
-			PreviewBox->Text = ScriptText->Replace("\n", "\r\n");
+				PreviewBox->Text = ScriptText->Replace("\n", "\r\n");
+			}
+			else
+				PreviewBox->Text = "";
 		}
 
 		void ScriptListDialog::ScriptList_KeyDown(Object^ Sender, KeyEventArgs^ E)

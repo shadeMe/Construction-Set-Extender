@@ -1,7 +1,7 @@
 #include "WorkspaceModel.h"
 #include "[Common]\CustomInputBox.h"
 #include "ScriptEditorPreferences.h"
-#include "IntelliSense\IntelliSenseDatabase.h"
+#include "IntelliSenseDatabase.h"
 #include "RefactorTools.h"
 
 namespace ConstructionSetExtender
@@ -256,8 +256,12 @@ namespace ConstructionSetExtender
 			BoundParent->Controller->AttachModelInternalView(BoundParent, this);
 			SetType(CurrentScriptType);
 			CheckAutoRecovery();
+			BoundParent->Enabled = Initialized;
 
-			TextEditor->Bind(BoundParent->ListViewMessages, BoundParent->ListViewBookmarks, BoundParent->ListViewFindResults);
+			TextEditor->Bind(BoundParent->ListViewMessages,
+							 BoundParent->ListViewBookmarks,
+							 BoundParent->ListViewFindResults,
+							 BoundParent->IntelliSenseInterfaceView);
 		}
 
 		void ConcreteWorkspaceModel::Unbind()

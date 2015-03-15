@@ -271,6 +271,9 @@ namespace ConstructionSetExtender
 																		 IScriptTextEditor::ScriptMessageSource Source,
 																		 String^ Message);
 				void										ClearMessages(IScriptTextEditor::ScriptMessageSource Filter);		// pass None to clear all
+				bool										GetMessages(UInt32 Line,
+																		IScriptTextEditor::ScriptMessageSource Filter,
+																		List<ScriptMessage^>^% OutMessages);					// returns false when there are no messages
 
 				void										AddBookmark(UInt32 Line, String^ Description);
 				void										ClearBookmarks();

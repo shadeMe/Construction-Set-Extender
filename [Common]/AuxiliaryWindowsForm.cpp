@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 	{
 		RemainingTime -= FadeTimer->Interval / 1000.0;
 
-		if (FadeOperation == FadeOperationType::e_FadeIn)
+		if (FadeOperation == FadeOperationType::FadeIn)
 			this->Opacity += FadeTimer->Interval / (RemainingTime * 1000.0);
 		else
 			this->Opacity -= FadeTimer->Interval / (RemainingTime * 1000.0);
@@ -16,7 +16,7 @@ namespace ConstructionSetExtender
 		{
 			FadeTimer->Stop();
 
-			if (FadeOperation == FadeOperationType::e_FadeOut)
+			if (FadeOperation == FadeOperationType::FadeOut)
 			{
 				if (CloseOnFadeOut)
 					Form::Close();
@@ -32,7 +32,7 @@ namespace ConstructionSetExtender
 		RemainingTime = FadeDuration;
 		Form::Show();
 
-		FadeOperation = FadeOperationType::e_FadeIn;
+		FadeOperation = FadeOperationType::FadeIn;
 		FadeTimer->Start();
 	}
 
@@ -42,7 +42,7 @@ namespace ConstructionSetExtender
 		RemainingTime = FadeDuration;
 		Form::Show(Parent);
 
-		FadeOperation = FadeOperationType::e_FadeIn;
+		FadeOperation = FadeOperationType::FadeIn;
 		FadeTimer->Start();
 	}
 
@@ -51,7 +51,7 @@ namespace ConstructionSetExtender
 		this->Opacity = 0.0;
 		RemainingTime = FadeDuration;
 
-		FadeOperation = FadeOperationType::e_FadeIn;
+		FadeOperation = FadeOperationType::FadeIn;
 		FadeTimer->Start();
 
 		return Form::ShowDialog();
@@ -61,7 +61,7 @@ namespace ConstructionSetExtender
 	{
 		if (this->Visible)
 		{
-			FadeOperation = FadeOperationType::e_FadeOut;
+			FadeOperation = FadeOperationType::FadeOut;
 			this->Opacity = 1.0;
 			FadeTimer->Start();
 			RemainingTime = FadeDuration;
@@ -71,7 +71,7 @@ namespace ConstructionSetExtender
 	AnimatedForm::AnimatedForm( double FadeDuration ) : System::Windows::Forms::Form()
 	{
 		this->FadeDuration = FadeDuration;
-		FadeOperation = FadeOperationType::e_None;
+		FadeOperation = FadeOperationType::None;
 		CloseOnFadeOut = false;
 		RemainingTime = 0.0;
 
@@ -85,7 +85,7 @@ namespace ConstructionSetExtender
 	void AnimatedForm::Close()
 	{
 		CloseOnFadeOut = true;
-		FadeOperation = FadeOperationType::e_FadeOut;
+		FadeOperation = FadeOperationType::FadeOut;
 		this->Opacity = 1.0;
 		RemainingTime = FadeDuration;
 		FadeTimer->Start();
@@ -105,7 +105,7 @@ namespace ConstructionSetExtender
 
 	void NonActivatingImmovableAnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
 	{
-		if (FadeOperation == FadeOperationType::e_FadeIn)
+		if (FadeOperation == FadeOperationType::FadeIn)
 			this->Opacity += FadeTimer->Interval / (0.6 * 0.15 * 1000);
 		else
 			this->Opacity -= FadeTimer->Interval / (0.6 * 0.15 * 1000);
@@ -114,7 +114,7 @@ namespace ConstructionSetExtender
 		{
 			FadeTimer->Stop();
 
-			if (FadeOperation == FadeOperationType::e_FadeOut)
+			if (FadeOperation == FadeOperationType::FadeOut)
 				this->Hide();
 		}
 	}
@@ -151,7 +151,7 @@ namespace ConstructionSetExtender
 
 			if (Animate)
 			{
-				FadeOperation = FadeOperationType::e_FadeIn;
+				FadeOperation = FadeOperationType::FadeIn;
 				FadeTimer->Start();
 			}
 		}
@@ -204,7 +204,7 @@ namespace ConstructionSetExtender
 	NonActivatingImmovableAnimatedForm::NonActivatingImmovableAnimatedForm() : Form()
 	{
 		AllowMove = false;
-		FadeOperation = FadeOperationType::e_None;
+		FadeOperation = FadeOperationType::None;
 
 		FadeTimer = gcnew Timer();
 		FadeTimerTickHandler = gcnew EventHandler(this, &NonActivatingImmovableAnimatedForm::FadeTimer_Tick);
@@ -221,7 +221,7 @@ namespace ConstructionSetExtender
 		{
 			if (Animate)
 			{
-				FadeOperation = FadeOperationType::e_FadeOut;
+				FadeOperation = FadeOperationType::FadeOut;
 				this->Opacity = 1.0;
 				FadeTimer->Start();
 			}

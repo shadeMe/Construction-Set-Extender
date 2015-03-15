@@ -538,10 +538,11 @@ namespace ConstructionSetExtender
 			List<ColorizerSegment^>^ LineTrackingManager::GetErrorColorizerSegments()
 			{
 				List<ColorizerSegment^>^ Result = gcnew List < ColorizerSegment^ > ;
+				List<int>^ ParsedLines = gcnew List < int > ;
 
 				for each (ScriptMessage^ Itr in Messages)
 				{
-					if (Itr->Deleted() == false)
+					if (Itr->Deleted() == false && ParsedLines->Contains(Itr->Line()) == false)
 					{
 						DocumentLine^ Line = Parent->TextArea->Document->GetLineByNumber(Itr->Line());
 						ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(Parent->TextArea->Document, Line);
@@ -551,8 +552,7 @@ namespace ConstructionSetExtender
 						Segment->Start = WhitespaceLeading->EndOffset;
 						Segment->End = WhitespaceTrailing->Offset;
 						Result->Add(Segment);
-
-						TODO("will this throw an exception if there's no whitespace? check");
+						ParsedLines->Add(Itr->Line());
 					}
 				}
 
@@ -721,6 +721,22 @@ namespace ConstructionSetExtender
 
 					EndUpdate();
 				}
+			}
+
+			bool LineTrackingManager::GetMessages(UInt32 Line, IScriptTextEditor::ScriptMessageSource Filter, List<ScriptMessage^>^% OutMessages)
+			{
+				bool Result = false;
+				for each (ScriptMessage^ Itr in Messages)
+				{
+					if (Itr->Line() == Line &&
+						(Filter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == Filter))
+					{
+						OutMessages->Add(Itr);
+						Result = true;
+					}
+				}
+
+				return Result;
 			}
 
 			void LineTrackingManager::AddBookmark(UInt32 Line, String^ Description)

@@ -1,7 +1,7 @@
 #include "ScriptEditorPreferences.h"
 #include "[Common]\NativeWrapper.h"
 #include "Globals.h"
-#include "IntelliSense\IntelliSenseDatabase.h"
+#include "IntelliSenseDatabase.h"
 
 namespace ConstructionSetExtender
 {

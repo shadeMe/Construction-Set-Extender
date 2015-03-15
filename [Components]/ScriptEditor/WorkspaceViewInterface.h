@@ -11,15 +11,17 @@ namespace ConstructionSetExtender
 		interface class IWorkspaceModel;
 		interface class IWorkspaceViewController;
 
-		interface class IWorkspaceViewBindableListView
+		interface class IWorkspaceViewBindableData
 		{
 		public:
 			property ListView^		ListViewMessages;
 			property ListView^		ListViewBookmarks;
 			property ListView^		ListViewFindResults;
+
+			property IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseInterfaceView;
 		};
 
-		interface class IWorkspaceView : public	IWorkspaceViewBindableListView
+		interface class IWorkspaceView : public	IWorkspaceViewBindableData
 		{
 		public:
 			property IWorkspaceViewController^			Controller;
