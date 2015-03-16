@@ -22,6 +22,32 @@ namespace ConstructionSetExtender
 	{
 		ref class ConcreteWorkspaceView;
 
+		ref class WorkspaceViewTabTearing
+		{
+			static void							TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
+
+			static MouseEventHandler^			TearingEventDelegate = gcnew MouseEventHandler(&TearingEventHandler);
+
+			static IWorkspaceModel^				Torn = nullptr;
+			static ConcreteWorkspaceView^		Source = nullptr;
+
+			static void							End();
+		public:
+			static bool							InProgress = false;
+
+			static void							Begin(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From);
+		};
+
+		ref class WorkspaceViewTabFilter : public NonActivatingImmovableAnimatedForm
+		{
+			System::ComponentModel::Container^			components;
+
+			BrightIdeasSoftware::ObjectListView^		TabList;
+			TextBox^									SearchBox;
+
+			DotNetBar::SuperTabControl^					Parent;
+		};
+
 		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
 		{
 			List<ConcreteWorkspaceView^>^				Allocations;
@@ -63,22 +89,6 @@ namespace ConstructionSetExtender
 			virtual void	NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
 
 			virtual DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
-		};
-
-		ref class WorkspaceViewTabTearing
-		{
-			static void							TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
-
-			static MouseEventHandler^			TearingEventDelegate = gcnew MouseEventHandler(&TearingEventHandler);
-
-			static IWorkspaceModel^				Torn = nullptr;
-			static ConcreteWorkspaceView^		Source = nullptr;
-
-			static void							End();
-		public:
-			static bool							InProgress = false;
-
-			static void							Begin(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From);
 		};
 
 		ref class ConcreteWorkspaceView : public IWorkspaceView

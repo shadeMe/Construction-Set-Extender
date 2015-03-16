@@ -940,9 +940,12 @@ namespace ConstructionSetExtender
 		{
 			E->Cancel = true;
 
-			IWorkspaceModel^ Active = GetModel((DotNetBar::SuperTabItem^)E->Tab);	// clicking on the close button doesn't change the active tab
-			if (Active->Controller->Close(Active))
-				DissociateModel(Active, true);
+			IWorkspaceModel^ Model = GetModel((DotNetBar::SuperTabItem^)E->Tab);	// clicking on the close button doesn't change the active tab
+			if (Model->Dirty)
+				SelectTab(GetTab(Model));
+
+			if (Model->Controller->Close(Model))
+				DissociateModel(Model, true);
 		}
 
 		void ConcreteWorkspaceView::ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E)
@@ -992,6 +995,9 @@ namespace ConstructionSetExtender
 					if (MouseOverTab)
 					{
 						IWorkspaceModel^ Model = GetModel(MouseOverTab);
+						if (Model->Dirty)
+							SelectTab(GetTab(Model));
+
 						if (ModelController()->Close(Model))
 							DissociateModel(Model, true);
 					}

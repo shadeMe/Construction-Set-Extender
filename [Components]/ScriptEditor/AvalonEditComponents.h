@@ -38,7 +38,7 @@ namespace ConstructionSetExtender
 
 				virtual void								Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext) abstract;
 
-				property KnownLayer							Layer
+				property KnownLayer Layer
 				{
 					virtual KnownLayer get() { return RenderLayer; }
 				}
@@ -102,6 +102,7 @@ namespace ConstructionSetExtender
 				virtual bool								Deleted() override;
 
 				IScriptTextEditor::ScriptMessageSource		Source();
+				IScriptTextEditor::ScriptMessageType		Type();
 			};
 
 			ref class ScriptBookmark : public TrackingMessage
@@ -276,9 +277,11 @@ namespace ConstructionSetExtender
 																		 IScriptTextEditor::ScriptMessageType Type,
 																		 IScriptTextEditor::ScriptMessageSource Source,
 																		 String^ Message);
-				void										ClearMessages(IScriptTextEditor::ScriptMessageSource Filter);		// pass None to clear all
+				void										ClearMessages(IScriptTextEditor::ScriptMessageSource SourceFilter,
+																		  IScriptTextEditor::ScriptMessageType TypeFilter);		// pass None to clear all
 				bool										GetMessages(UInt32 Line,
-																		IScriptTextEditor::ScriptMessageSource Filter,
+																		IScriptTextEditor::ScriptMessageSource SourceFilter,
+																		IScriptTextEditor::ScriptMessageType TypeFilter,
 																		List<ScriptMessage^>^% OutMessages);					// returns false when there are no messages
 
 				void										AddBookmark(UInt32 Line, String^ Description);

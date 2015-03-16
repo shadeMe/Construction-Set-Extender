@@ -103,6 +103,11 @@ namespace ConstructionSetExtender
 				return Anchor->IsDeleted;
 			}
 
+			IScriptTextEditor::ScriptMessageType ScriptMessage::Type()
+			{
+				return MessageType;
+			}
+
 			ScriptBookmark::ScriptBookmark(LineTrackingManager^ Parent, TextAnchor^ Location, String^ Text)
 			{
 				Manager = Parent;
@@ -521,6 +526,7 @@ namespace ConstructionSetExtender
 
 				if (GetMessages(Parent->Document->GetLineByOffset(Caret)->LineNumber,
 								TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
+								TextEditors::IScriptTextEditor::ScriptMessageType::Error,
 								CompilerErrors))
 				{
 					for each (auto Itr in CompilerErrors)
@@ -560,7 +566,10 @@ namespace ConstructionSetExtender
 
 				for each (ScriptMessage^ Itr in Messages)
 				{
-					if (Itr->Deleted() == false && Itr->IndicatorDisabled == false && ParsedLines->Contains(Itr->Line()) == false)
+					if (Itr->Deleted() == false &&
+						Itr->IndicatorDisabled == false &&
+						Itr->Type() == IScriptTextEditor::ScriptMessageType::Error &&
+						ParsedLines->Contains(Itr->Line()) == false)
 					{
 						DocumentLine^ Line = Parent->TextArea->Document->GetLineByNumber(Itr->Line());
 						ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(Parent->TextArea->Document, Line);
@@ -625,7 +634,7 @@ namespace ConstructionSetExtender
 
 				Unbind();
 
-				ClearMessages(IScriptTextEditor::ScriptMessageSource::None);
+				ClearMessages(IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::None);
 				ClearBookmarks();
 				ClearFindResults();
 
@@ -720,42 +729,43 @@ namespace ConstructionSetExtender
 				RefreshBackgroundRenderers(false);
 			}
 
-			void LineTrackingManager::ClearMessages(IScriptTextEditor::ScriptMessageSource Filter)
+			void LineTrackingManager::ClearMessages(IScriptTextEditor::ScriptMessageSource SourceFilter,
+													IScriptTextEditor::ScriptMessageType TypeFilter)
 			{
-				if (Filter == IScriptTextEditor::ScriptMessageSource::None)
-				{
-					// remove all
-					Messages->Clear();
-					RefreshBackgroundRenderers(false);
-				}
-				else
-				{
-					List<ScriptMessage^>^ Buffer = gcnew List < ScriptMessage^ > ;
+				List<ScriptMessage^>^ Buffer = gcnew List < ScriptMessage^ > ;
 
-					BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-					for each (ScriptMessage^ Itr in Messages)
+				BeginUpdate(LineTrackingManager::UpdateSource::Messages);
+				for each (ScriptMessage^ Itr in Messages)
+				{
+					if ((SourceFilter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == SourceFilter) &&
+						(TypeFilter == IScriptTextEditor::ScriptMessageType::None || Itr->Type() == TypeFilter))
 					{
-						if (Itr->Source() == Filter)
-							Buffer->Add(Itr);
+						Buffer->Add(Itr);
 					}
-
-					for each (ScriptMessage^ Itr in Buffer)
-						Messages->Remove(Itr);
-
-					EndUpdate();
 				}
+
+				for each (ScriptMessage^ Itr in Buffer)
+					Messages->Remove(Itr);
+
+				EndUpdate();
 			}
 
-			bool LineTrackingManager::GetMessages(UInt32 Line, IScriptTextEditor::ScriptMessageSource Filter, List<ScriptMessage^>^% OutMessages)
+			bool LineTrackingManager::GetMessages(UInt32 Line,
+												  IScriptTextEditor::ScriptMessageSource SourceFilter,
+												  IScriptTextEditor::ScriptMessageType TypeFilter,
+												  List<ScriptMessage^>^% OutMessages)
 			{
 				bool Result = false;
 				for each (ScriptMessage^ Itr in Messages)
 				{
-					if (Itr->Line() == Line &&
-						(Filter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == Filter))
+					if (Itr->Line() == Line)
 					{
-						OutMessages->Add(Itr);
-						Result = true;
+						if ((SourceFilter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == SourceFilter) &&
+							(TypeFilter == IScriptTextEditor::ScriptMessageType::None || Itr->Type() == TypeFilter))
+						{
+							OutMessages->Add(Itr);
+							Result = true;
+						}
 					}
 				}
 

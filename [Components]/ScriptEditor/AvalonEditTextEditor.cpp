@@ -1970,7 +1970,8 @@ namespace ConstructionSetExtender
 													   gcnew ObScriptSemanticAnalysis::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator);
+				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
+										   (FullValidation ? TextEditors::IScriptTextEditor::ScriptMessageType::None : TextEditors::IScriptTextEditor::ScriptMessageType::Error));
 
 				for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
 				{
@@ -2050,8 +2051,14 @@ namespace ConstructionSetExtender
 					String^ DisplayText = "";
 					String^ DisplayTitle = "";
 					List<ScriptMessage^>^ Messages = gcnew List < ScriptMessage^ >;
-					LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Validator, Messages);
-					LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::Compiler, Messages);
+					LineTracker->GetMessages(Line,
+											 IScriptTextEditor::ScriptMessageSource::Validator,
+											 IScriptTextEditor::ScriptMessageType::Error,
+											 Messages);
+					LineTracker->GetMessages(Line,
+											 IScriptTextEditor::ScriptMessageSource::Compiler,
+											 IScriptTextEditor::ScriptMessageType::Error,
+											 Messages);
 
 					if (Messages->Count)
 					{
@@ -2061,7 +2068,9 @@ namespace ConstructionSetExtender
 							DisplayText += Str + "\n";
 						}
 
-						DisplayText->Remove(DisplayText->Length - 1);
+						if (DisplayText->Length)
+							DisplayText->Remove(DisplayText->Length - 1);
+
 						DisplayTitle = "Error" + (Messages->Count > 1 ? "s" : "");
 						InsightPopup->ToolTipIcon = ToolTipIcon::Error;
 						DisplayPopup = true;
@@ -2188,7 +2197,8 @@ namespace ConstructionSetExtender
 				{
 					ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(this, &AvalonEditTextEditor::RoutePreprocessorMessages);
 					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
+											   TextEditors::IScriptTextEditor::ScriptMessageType::None);
 				}
 
 				bool Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
@@ -2200,9 +2210,7 @@ namespace ConstructionSetExtender
 																			 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 
 				if (SuppressErrors == false)
-				{
 					LineTracker->EndUpdate();
-				}
 
 				OutPreprocessResult = Result;
 				return Preprocessed;
@@ -2640,7 +2648,8 @@ namespace ConstructionSetExtender
 				UpdateSemanticAnalysisCache(true, true, true, true);
 				if (SemanticAnalysisCache->HasCriticalMessages == false && SemanticAnalysisCache->MalformedStructure == false)
 				{
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
+											   TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
 					Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
 																			Preprocessed,
@@ -2658,13 +2667,13 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::ClearTrackedData(bool CompilerMessages, bool PreprocessorMessages, bool ValidatorMessages, bool Bookmarks, bool FindResults)
 			{
 				if (CompilerMessages)
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler);
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
 				if (PreprocessorMessages)
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor);
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
 				if (ValidatorMessages)
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator);
+					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
 				if (Bookmarks)
 					LineTracker->ClearBookmarks();

@@ -216,7 +216,10 @@ namespace ConstructionSetExtender
 				void										StartMiddleMouseScroll(System::Windows::Input::MouseButtonEventArgs^ E);
 				void										StopMiddleMouseScroll();
 
-				void										UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool BasicValidation, bool FullValidation);
+				void										UpdateSemanticAnalysisCache(bool FillVariables,
+																						bool FillControlBlocks,
+																						bool BasicValidation,
+																						bool FullValidation);
 				void										UpdateCodeFoldings();
 				void										UpdateSyntaxHighlighting(bool Regenerate);
 				void										SynchronizeExternalScrollBars();

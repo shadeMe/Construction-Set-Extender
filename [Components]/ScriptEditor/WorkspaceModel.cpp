@@ -173,6 +173,23 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate)
 		{
+			if (Data == nullptr)
+			{
+				CurrentScript = nullptr;
+				CurrentScriptType = IWorkspaceModel::ScriptType::Object;
+				CurrentScriptEditorID = FIRSTRUNSCRIPTID;
+				CurrentScriptFormID = 0;
+				CurrentScriptBytecode = 0;
+				CurrentScriptBytecodeLength = 0;
+				NewScriptFlag = false;
+				Closed = false;
+
+				if (Bound)
+					BoundParent->Enabled = false;
+
+				return;
+			}
+
 			String^ ScriptText = gcnew String(Data->Text);
 			UInt16 ScriptType = Data->Type;
 			String^ ScriptName = gcnew String(Data->EditorID);
@@ -389,7 +406,6 @@ namespace ConstructionSetExtender
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(CurrentScript);
 				if (Data)
 					Setup(Data, false);
-
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}
@@ -401,7 +417,6 @@ namespace ConstructionSetExtender
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(CurrentScript);
 				if (Data)
 					Setup(Data, false);
-
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}

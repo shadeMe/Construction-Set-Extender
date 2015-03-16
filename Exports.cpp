@@ -411,24 +411,65 @@ void DeleteScript(const char* EditorID)
 	}
 }
 
+enum
+{
+	kDirection_Forward = 0,
+	kDirection_Backward,
+};
+
+Script* GetScriptNeighbour(Script* Current, UInt8 Direction)
+{
+	SME_ASSERT(_DATAHANDLER->scripts.Count());
+
+	int Index = _DATAHANDLER->scripts.IndexOf(Current);
+	Script* Result = NULL;
+
+	switch (Direction)
+	{
+	case kDirection_Forward:
+		if (Index + 1 < _DATAHANDLER->scripts.Count())
+			Result = _DATAHANDLER->scripts.GetNthItem(Index + 1);
+		else
+			Result = _DATAHANDLER->scripts.GetNthItem(0);
+
+		break;
+	case kDirection_Backward:
+		if (Index - 1 > -1)
+			Result = _DATAHANDLER->scripts.GetNthItem(Index - 1);
+		else
+			Result = _DATAHANDLER->scripts.GetLastItem();
+
+		break;
+	}
+
+	if (Result->GetEditorID() == NULL)
+		Result = GetScriptNeighbour(Result, Direction);
+
+	return Result;
+}
+
 ScriptData* GetPreviousScriptInList(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptData* Result = NULL;
+	Script* Switch = NULL;
 
 	if (_DATAHANDLER->scripts.Count())
 	{
-		Result = new ScriptData();
-		if (ScriptForm)
+		if (ScriptForm == NULL)
 		{
-			int Index = _DATAHANDLER->scripts.IndexOf(ScriptForm);
-			if (--Index < 0)
-				Result->FillScriptData(_DATAHANDLER->scripts.GetLastItem());
-			else
-				Result->FillScriptData(_DATAHANDLER->scripts.GetNthItem(Index));
+			Switch = _DATAHANDLER->scripts.GetLastItem();
+			if (Switch->GetEditorID() == NULL)
+				Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
 		}
 		else
-			Result->FillScriptData(_DATAHANDLER->scripts.GetLastItem());
+			Switch = GetScriptNeighbour(ScriptForm, kDirection_Backward);
+	}
+
+	if (Switch && Switch->GetEditorID())
+	{
+		Result = new ScriptData();
+		Result->FillScriptData(Switch);
 	}
 
 	return Result;
@@ -438,20 +479,24 @@ ScriptData* GetNextScriptInList(void* CurrentScript)
 {
 	Script* ScriptForm = CS_CAST(CurrentScript, TESForm, Script);
 	ScriptData* Result = NULL;
+	Script* Switch = NULL;
 
 	if (_DATAHANDLER->scripts.Count())
 	{
-		Result = new ScriptData();
-		if (ScriptForm)
+		if (ScriptForm == NULL)
 		{
-			int Index = _DATAHANDLER->scripts.IndexOf(ScriptForm);
-			if (++Index < _DATAHANDLER->scripts.Count())
-				Result->FillScriptData(_DATAHANDLER->scripts.GetNthItem(Index));
-			else
-				Result->FillScriptData(_DATAHANDLER->scripts.GetNthItem(0));
+			Switch = _DATAHANDLER->scripts.GetNthItem(0);
+			if (Switch->GetEditorID() == NULL)
+				Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
 		}
 		else
-			Result->FillScriptData(_DATAHANDLER->scripts.GetNthItem(0));
+			Switch = GetScriptNeighbour(ScriptForm, kDirection_Forward);
+	}
+
+	if (Switch && Switch->GetEditorID())
+	{
+		Result = new ScriptData();
+		Result->FillScriptData(Switch);
 	}
 
 	return Result;

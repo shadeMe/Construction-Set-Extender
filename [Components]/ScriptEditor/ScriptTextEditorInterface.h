@@ -96,6 +96,7 @@ namespace ConstructionSetExtender
 		{
 			static enum class ScriptMessageType
 			{
+				None = -1,
 				Warning = 0,
 				Error = 1,
 			};
