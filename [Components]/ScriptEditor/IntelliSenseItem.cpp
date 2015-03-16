@@ -56,13 +56,21 @@ namespace ConstructionSetExtender
 			return !String::Compare(GetIdentifier(), Token, true);
 		}
 
-		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^ Name, String^ Desc, String^ Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source) :
-				IntelliSenseItem(String::Format("{0}{1}\n{2} parameter(s)\nReturn Type: {3}\n\n{4}{5}",
+		IntelliSenseItemScriptCommand::IntelliSenseItemScriptCommand(String^ Name,
+																	 String^ Desc,
+																	 String^ Shorthand,
+																	 UInt16 NoOfParams,
+																	 bool RequiresParent,
+																	 UInt16 ReturnType,
+																	 IntelliSenseCommandItemSourceType Source,
+																	 String^ Params) :
+			IntelliSenseItem(String::Format("{0}{1}\n\n{4}\n\n{2} parameter(s){6}\nReturn Type: {3}{5}",
 												Name,
-												(Shorthand == "None")?"":("\t[ " + Shorthand + " ]"),
+												(Shorthand == "None")?"":(" [ " + Shorthand + " ]"),
 												NoOfParams.ToString(),
 												IntelliSenseItemScriptCommand::IntelliSenseItemCommandReturnTypeID[(int)ReturnType],
-												Desc, (RequiresParent)?"\n\nRequires a calling reference":""),
+												Desc, (RequiresParent)?"\n\nRequires a calling reference":"",
+												Params),
 								IntelliSenseItemType::Command),
 				Name(Name),
 				CmdDescription(Desc),

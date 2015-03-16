@@ -93,6 +93,8 @@ namespace ConstructionSetExtender
 							  String^ Text);
 				~ScriptMessage();
 
+				property bool								IndicatorDisabled;
+
 				virtual int									Line() override;
 				virtual String^								Message() override;
 				virtual int									ImageIndex() override;
@@ -250,6 +252,10 @@ namespace ConstructionSetExtender
 				ScriptErrorIndicator^						ErrorColorizer;
 				ScriptFindResultIndicator^					FindResultColorizer;
 
+				EventHandler^								ParentTextChangedHandler;
+
+				void										Parent_TextChanged(Object^ Sender, EventArgs^ E);
+
 				TextAnchor^									CreateAnchor(UInt32 Offset);
 				void										RefreshBackgroundRenderers(bool IgnoreBatchUpdate);
 				void										GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out);
@@ -375,7 +381,12 @@ namespace ConstructionSetExtender
 			ref class StructureVisualizerRenderer : public VisualLineElementGenerator
 			{
 			protected:
-				static void									OnMouseClick(Object^ Sender, Windows::Input::MouseButtonEventArgs^ E);
+				static void											OnMouseClick(Object^ Sender, Windows::Input::MouseButtonEventArgs^ E);
+
+				static Windows::Media::Imaging::BitmapSource^		ElementIcon = nullptr;
+				static int											InstanceCounter = 0;
+
+				static Windows::Media::Imaging::BitmapSource^		GetIconSource();
 
 				ref class AdornmentData
 				{
@@ -385,7 +396,6 @@ namespace ConstructionSetExtender
 				};
 
 				AvalonEditTextEditor^						ParentEditor;
-				Windows::Media::Imaging::BitmapSource^		IconSource;
 
 				Windows::UIElement^							GenerateAdornment(UInt32 JumpLine, String^ ElementText);
 			public:

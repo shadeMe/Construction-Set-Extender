@@ -115,6 +115,7 @@ namespace ConstructionSetExtender
 				EventHandler^										SetTextAnimationCompletedHandler;
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
 				AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
+				EventHandler<VisualLineConstructionStartEventArgs^>^	TextFieldVisualLineConstructionStartingHandler;
 
 				ContextMenuStrip^									TextEditorContextMenu;
 				ToolStripMenuItem^									ContextMenuCopy;
@@ -179,6 +180,8 @@ namespace ConstructionSetExtender
 
 				void										TextField_MiddleMouseScrollMove(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
 				void										TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
+
+				void										TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E);
 
 				void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
 				void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
@@ -248,8 +251,6 @@ namespace ConstructionSetExtender
 
 				void										UpdateIntelliSenseLocalDatabase(void);
 
-				bool										GetLineVisible(UInt32 LineNumber);	// inside the text field's viewable area
-
 				void                                        SerializeCaretPos(String^% Result);
 				void                                        SerializeBookmarks(String^% Result);
 				void                                        DeserializeCaretPos(String^ ExtractedBlock);
@@ -257,9 +258,17 @@ namespace ConstructionSetExtender
 
 				void										ShowInsightPopup(int Offset, Windows::Point Location);
 				void										HideInsightPopup();
+
+				bool										GetLineVisible(UInt32 LineNumber, bool CheckVisualLine);	// inside the text field's viewable area
+				UInt32										GetFirstVisibleLine();
 			public:
 				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
+
+				property UInt32								FirstVisibleLine
+				{
+					UInt32 get() { return GetFirstVisibleLine(); }
+				}
 
 #pragma region Interfaces
 				virtual event IntelliSenseKeyEventHandler^					IntelliSenseKeyDown;

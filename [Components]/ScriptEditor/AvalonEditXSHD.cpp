@@ -451,7 +451,7 @@ namespace ConstructionSetExtender
 			{
 				String^ OutDefs = StableDefinitions;
 
-				if (LocalVariables == nullptr || LocalVariables->Count)
+				if (LocalVariables && LocalVariables->Count)
 				{
 					bool Bold = PREFERENCES->FetchSettingAsInt("BoldFacedHighlighting", "Appearance");
 					XSHDKeywords^ HighlightKeywords = gcnew XSHDKeywords(LocalVarsColor, Color::GhostWhite, Color::GhostWhite, Bold);

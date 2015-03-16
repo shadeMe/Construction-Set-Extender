@@ -184,9 +184,13 @@ namespace ConstructionSetExtender
 
 		UInt32 IntelliSenseDatabase::InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data)
 		{
-			String^ Name, ^Desc, ^SH, ^PluginName;
+			String^ Name;
+			String^ Description;
+			String^ ShortHand;
+			String^ PluginName;
 			int Count = 0, ReturnType = 0, CSCount = 0;
 			IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType Source;
+			System::Globalization::TextInfo^ Locale = (gcnew System::Globalization::CultureInfo("en-US", false))->TextInfo;
 
 			for (const ComponentDLLInterface::ObScriptCommandInfo* Itr = Data->CommandTableStart; Itr != Data->CommandTableEnd; ++Itr)
 			{
@@ -198,7 +202,7 @@ namespace ConstructionSetExtender
 
 				if (CSCount < 370)
 				{
-					Desc = "[CS] ";				// 369 vanilla commands
+					Description = "[CS] ";				// 369 vanilla commands
 					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::Vanilla;
 				}
 				else if (Info)
@@ -209,31 +213,49 @@ namespace ConstructionSetExtender
 					else if (!String::Compare(PluginName, "OBSE_Elys_Pluggy", true))
 						PluginName = "Pluggy";
 
-					Desc = "[" + PluginName + " v" + Info->version + "] ";
+					Description = "[" + PluginName + " v" + Info->version + "] ";
 					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::OBSE;
 				}
 				else
 				{
 					UInt32 OBSEVersion = Data->GetRequiredOBSEVersion(Itr);
-					Desc = "[OBSE v" + OBSEVersion + "] ";
+					Description = "[OBSE v" + OBSEVersion + "] ";
 					Source = IntelliSenseItemScriptCommand::IntelliSenseCommandItemSourceType::OBSE;
 				}
 
 				if (!String::Compare(gcnew String(Itr->helpText), "", true))
-					Desc += "No description";
+					Description += "No description";
 				else
-					Desc += gcnew String(Itr->helpText);
+					Description += gcnew String(Itr->helpText);
 
 				if (!String::Compare(gcnew String(Itr->shortName), "", true))
-					SH = "None";
+					ShortHand = "None";
 				else
-					SH = gcnew String(Itr->shortName);
+					ShortHand = gcnew String(Itr->shortName);
 
 				ReturnType = Data->GetCommandReturnType(Itr);
 				if (ReturnType == 6)
 					ReturnType = 0;
 
-				ScriptCommands->AddLast(gcnew IntelliSenseItemScriptCommand(Name, Desc, SH, Itr->numParams, Itr->needsParent, ReturnType, Source));
+				String^ Params = "";
+				for (int i = 0; i < Itr->numParams; i++)
+				{
+					if (i == 0)
+						Params += "\n";
+
+					ComponentDLLInterface::ObScriptCommandInfo::ParamInfo* Param = &Itr->params[i];
+					Params += "\t" + Locale->ToTitleCase(gcnew String(Param->typeStr)) + " [" + gcnew String(Param->TypeIDString()) + "]"
+																					+ (Param->isOptional ? " (Optional) " : "") + "\n";
+				}
+
+				ScriptCommands->AddLast(gcnew IntelliSenseItemScriptCommand(Name,
+					Description,
+					ShortHand,
+					Itr->numParams,
+					Itr->needsParent,
+					ReturnType,
+					Source,
+					Params));
 
 				CSCount++;
 				Count++;

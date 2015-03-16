@@ -14,6 +14,10 @@ MISC	---->
 CSE		---->
 
 	BUGFIX			=
+		> When using Replace Base Form from the Cell View Objects context menu, if the placed object is not already edited by the active ESP, then while the change is shown in the Render window and you see the base object name change in the Cell View window, the record does not get added into the active ESP, so upon save the edit is lost.
+		> The Landscape Textures Quad window does not correctly handle right-click Replace of a texture. It is supposed to replace the clicked texture with the one you double-click from the list it offers, and it appears to do this, but when you save the file, reloading reveals that it has instead replaced it with the quad's Default texture
+		> With PreventTimeStampChanges enabled, if you save a new ESP, it gets a timestamp of 01/01/2008 00:02. That is identical to my Oblivion.esm so I don't know whether it sets it to match Oblivion.esm or if that's just the date/time it will always use. This is inconvenient if the new ESP is dependent on other ESM/P files, as I have to change the timestamp before I can load this new ESP in xEdit. Can the timestamp instead be set to be after the date/time of the last-loaded master file?
+		> QQuix's coda script
 		> Render window selection loses NiLines after a copy operation (works after moving them around)
 		> Fix the global clipboard's to correctly paste refs in place
 		> Partial black tex hasn't been fixed yet
@@ -32,6 +36,7 @@ CSE		---->
 		> Filters for topic lists and other misc listviews
 		> Allow render window rightclick on objects
 		> Object palette (check how the copy paste function works to save the relative positions (or doesit?))
+		> Print out HRESULT for the LOD tex CTD check hooks
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
@@ -40,6 +45,7 @@ CSE		---->
 
 
 	CODA			=
+		> DeleteRef
 		> EffectItem commands
 	
 
@@ -50,15 +56,17 @@ CSE		---->
 SE		---->
 
 	IMMEDIATE		=
-		> Add script command param data to intellisense
-		> Predict the correct delinquent block for mismatches
+		> Run mem profiler
 
 
 	BUGFIX			=
-		
+		> Editor doesn't acquire focus after switching scripts/on opening
+		> ObjectListView deadlock issues?
+
 
 	ENHANCEMENT		=
 		> Icon margin to indicate bookmarks, etc (IconBarMargin in #develop)
+		> Filter for view's open tabs
 		> Document minimap
 
 

@@ -137,7 +137,7 @@ namespace ConstructionSetExtender
 			EditorTabStrip = gcnew DotNetBar::SuperTabControl();
 			EditorTabStrip->SuspendLayout();
 			EditorTabStrip->Dock = DockStyle::Top;
-			EditorTabStrip->MaximumSize = Size(2000, 26);
+			EditorTabStrip->MaximumSize = Size(32000, 26);
 	//		EditorTabStrip->Size = Size(500, 26);
 	//		EditorTabStrip->Anchor = AnchorStyles::Top | AnchorStyles::Right;
 			EditorTabStrip->Location = Point(0, 0);
@@ -316,6 +316,7 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarEditMenuContentsFindReplace);
 			SetupControlImage(ToolBarEditMenuContentsGotoLine);
 			SetupControlImage(ToolBarEditMenuContentsGotoOffset);
+			ToolBarEditMenuContentsGotoOffset->ImageTransparentColor = Color::White;
 
 			SetupControlImage(ToolBarRefactorMenu);
 			SetupControlImage(ToolBarRefactorMenuContentsDocumentScript);
@@ -970,6 +971,7 @@ namespace ConstructionSetExtender
 
 			if (Old)
 				Old->Controller->Unbind(Old);
+
 			New->Controller->Bind(New, this);
 
 			EndUpdate();

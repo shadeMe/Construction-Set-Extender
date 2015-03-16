@@ -217,6 +217,9 @@ namespace ConstructionSetExtender
 
 			if (PREFERENCES->FetchSettingAsInt("UseAutoRecovery", "Backup") && PartialUpdate == false && Bound)
 				CheckAutoRecovery();
+
+			if (Bound)
+				TextEditor->FocusTextArea();
 		}
 
 		bool ConcreteWorkspaceModel::DoHouseKeeping()
@@ -268,6 +271,9 @@ namespace ConstructionSetExtender
 							 BoundParent->ListViewBookmarks,
 							 BoundParent->ListViewFindResults,
 							 BoundParent->IntelliSenseInterfaceView);
+
+	//		TextEditor->FocusTextArea();
+	//		TextEditor->ScrollToCaret();
 		}
 
 		void ConcreteWorkspaceModel::Unbind()

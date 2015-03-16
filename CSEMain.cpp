@@ -653,7 +653,7 @@ extern "C"
 #else
 														  true,
 #endif
-														  false,
+														  false,		// wait for debugger
 #ifdef NDEBUG
 														  true);
 		TODO("Save debug symbols, dammit!")

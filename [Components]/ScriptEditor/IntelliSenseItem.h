@@ -102,7 +102,14 @@ namespace ConstructionSetExtender
 			UInt16												ReturnType;
 			IntelliSenseCommandItemSourceType					Source;
 		public:
-			IntelliSenseItemScriptCommand(String^ Name, String^ Desc, String^ Shorthand, UInt16 NoOfParams, bool RequiresParent, UInt16 ReturnType, IntelliSenseCommandItemSourceType Source);
+			IntelliSenseItemScriptCommand(String^ Name,
+										  String^ Desc,
+										  String^ Shorthand,
+										  UInt16 NoOfParams,
+										  bool RequiresParent,
+										  UInt16 ReturnType,
+										  IntelliSenseCommandItemSourceType Source,
+										  String^ Params);
 
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual String^										GetIdentifier() override;

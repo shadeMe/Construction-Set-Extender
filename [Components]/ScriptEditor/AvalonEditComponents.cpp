@@ -65,6 +65,7 @@ namespace ConstructionSetExtender
 				MessageType = Type;
 				MessageSource = Source;
 				MessageString = Text;
+				IndicatorDisabled = false;
 			}
 
 			int ScriptMessage::Line()
@@ -512,6 +513,21 @@ namespace ConstructionSetExtender
 				}
 			}
 
+			void LineTrackingManager::Parent_TextChanged(Object^ Sender, EventArgs^ E)
+			{
+				// disable compiler error indicators for the changed line
+				int Caret = Parent->TextArea->Caret->Offset;
+				List<ScriptMessage^>^ CompilerErrors = gcnew List < ScriptMessage^ > ;
+
+				if (GetMessages(Parent->Document->GetLineByOffset(Caret)->LineNumber,
+								TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
+								CompilerErrors))
+				{
+					for each (auto Itr in CompilerErrors)
+						Itr->IndicatorDisabled = true;
+				}
+			}
+
 			TextAnchor^ LineTrackingManager::CreateAnchor(UInt32 Offset)
 			{
 				if (Offset >= Parent->Document->TextLength)
@@ -544,7 +560,7 @@ namespace ConstructionSetExtender
 
 				for each (ScriptMessage^ Itr in Messages)
 				{
-					if (Itr->Deleted() == false && ParsedLines->Contains(Itr->Line()) == false)
+					if (Itr->Deleted() == false && Itr->IndicatorDisabled == false && ParsedLines->Contains(Itr->Line()) == false)
 					{
 						DocumentLine^ Line = Parent->TextArea->Document->GetLineByNumber(Itr->Line());
 						ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(Parent->TextArea->Document, Line);
@@ -598,6 +614,9 @@ namespace ConstructionSetExtender
 
 				Parent->TextArea->TextView->BackgroundRenderers->Add(ErrorColorizer);
 				Parent->TextArea->TextView->BackgroundRenderers->Add(FindResultColorizer);
+
+				ParentTextChangedHandler = gcnew EventHandler(this, &LineTrackingManager::Parent_TextChanged);
+				Parent->TextChanged += ParentTextChangedHandler;
 			}
 
 			LineTrackingManager::~LineTrackingManager()
@@ -612,6 +631,8 @@ namespace ConstructionSetExtender
 
 				Parent->TextArea->TextView->BackgroundRenderers->Remove(ErrorColorizer);
 				Parent->TextArea->TextView->BackgroundRenderers->Remove(FindResultColorizer);
+
+				Parent->TextChanged -= ParentTextChangedHandler;
 
 				delete ErrorColorizer;
 				delete FindResultColorizer;
@@ -694,7 +715,7 @@ namespace ConstructionSetExtender
 					Line = Parent->LineCount;
 
 				ScriptMessage^ New = gcnew ScriptMessage(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset),
-														 Type, Source, Message);
+														 Type, Source, Message->Replace("\t", "")->Replace("\r", "")->Replace("\n", ""));
 				Messages->Add(New);
 				RefreshBackgroundRenderers(false);
 			}
@@ -1204,28 +1225,9 @@ namespace ConstructionSetExtender
 
 			StructureVisualizerRenderer::StructureVisualizerRenderer(AvalonEditTextEditor^ Parent) :
 				VisualLineElementGenerator(),
-				ParentEditor(Parent),
-				IconSource(nullptr)
+				ParentEditor(Parent)
 			{
-				Drawing::Bitmap^ OrgResource = (Drawing::Bitmap^)Globals::ScriptEditorImageResourceManager->CreateImageFromResource("AvalonEditStructureVisualizer");
-
-				try
-				{
-					IconSource = System::Windows::Interop::Imaging::CreateBitmapSourceFromHBitmap(OrgResource->GetHbitmap(),
-																								  IntPtr::Zero,
-																								  Windows::Int32Rect::Empty,
-																								  Windows::Media::Imaging::BitmapSizeOptions::FromEmptyOptions());
-				}
-				catch (...)
-				{
-					IconSource = nullptr;
-				}
-				finally
-				{
-					NativeWrapper::DeleteObject(OrgResource->GetHbitmap());
-				}
-
-				delete OrgResource;
+				InstanceCounter++;
 			}
 
 			int StructureVisualizerRenderer::GetFirstInterestedOffset(Int32 startOffset)
@@ -1243,15 +1245,15 @@ namespace ConstructionSetExtender
 				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(offset);
 				ObScriptSemanticAnalysis::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
 
-				if (Block && Block->BasicBlock)
+				if (Block)
 				{
-				//	if (ParentEditor->GetLineVisible(Block->StartLine))
-				//	if (ParentEditor->GetCurrentLineNumber() != CurrentLine->LineNumber && ParentEditor->GetInSelection(offset) == false)
+					if (Block->StartLine < ParentEditor->FirstVisibleLine)
 					{
 						DocumentLine^ BlockStart = CurrentContext->Document->GetLineByNumber(Block->StartLine);
 						if (BlockStart)
 						{
-							return gcnew InlineObjectElement(0, GenerateAdornment(Block->StartLine, CurrentContext->Document->GetText(BlockStart)));
+							return gcnew InlineObjectElement(0,
+															 GenerateAdornment(Block->StartLine, CurrentContext->Document->GetText(BlockStart)));
 						}
 					}
 				}
@@ -1264,9 +1266,7 @@ namespace ConstructionSetExtender
 				E->Handled = true;
 				AdornmentData^ Data = (AdornmentData^)((Windows::Controls::StackPanel^)Sender)->Tag;
 				if (Data)
-				{
 					Data->Parent->ScrollToLine(Data->JumpLine);
-				}
 			}
 
 			Windows::UIElement^ StructureVisualizerRenderer::GenerateAdornment(UInt32 JumpLine, String^ ElementText)
@@ -1276,7 +1276,10 @@ namespace ConstructionSetExtender
 											  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
 											  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 
-				Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100, ForegroundColor.R, ForegroundColor.G, ForegroundColor.B));
+				Windows::Media::Brush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(100,
+																ForegroundColor.R,
+																ForegroundColor.G,
+																ForegroundColor.B));
 				Windows::Media::Brush^ BackgroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(0, 0, 0, 0));
 
 				ElementText = ElementText->Replace("\t", "");
@@ -1288,15 +1291,16 @@ namespace ConstructionSetExtender
 				Windows::Controls::StackPanel^ Panel = gcnew Windows::Controls::StackPanel();
 				Panel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 				Panel->Orientation = Windows::Controls::Orientation::Horizontal;
-				Panel->Margin = Windows::Thickness(15, 0, 15, 0);
+				Panel->Margin = Windows::Thickness(20, 0, 20, 0);
 				Panel->Cursor = Windows::Input::Cursors::Hand;
 				Panel->Tag = Data;
 				Panel->PreviewMouseDown += gcnew System::Windows::Input::MouseButtonEventHandler(OnMouseClick);
 
-				if (IconSource)
+				Windows::Media::Imaging::BitmapSource^ IconData = GetIconSource();
+				if (IconData)
 				{
 					Windows::Controls::Image^ Icon = gcnew Windows::Controls::Image();
-					Icon->Source = IconSource;
+					Icon->Source = IconData;
 					Icon->Width = 12;
 					Icon->Height = 12;
 					Icon->HorizontalAlignment = Windows::HorizontalAlignment::Center;
@@ -1311,7 +1315,7 @@ namespace ConstructionSetExtender
 				AdornmentLabel->Background = BackgroundBrush;
 				AdornmentLabel->Content = ElementText;
 				AdornmentLabel->Padding = Windows::Thickness(0, 0, 0, 0);
-				AdornmentLabel->Margin = Windows::Thickness(4, 0, 0, 0);
+				AdornmentLabel->Margin = Windows::Thickness(5, 0, 0, 0);
 				AdornmentLabel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 				AdornmentLabel->VerticalAlignment = Windows::VerticalAlignment::Bottom;
 				Panel->Children->Add(AdornmentLabel);
@@ -1321,10 +1325,43 @@ namespace ConstructionSetExtender
 
 			StructureVisualizerRenderer::~StructureVisualizerRenderer()
 			{
-				delete IconSource;
+				InstanceCounter--;
+				Debug::Assert(InstanceCounter >= 0);
 
-				IconSource = nullptr;
 				ParentEditor = nullptr;
+
+				if (InstanceCounter == 0)
+				{
+					delete ElementIcon;
+					ElementIcon = nullptr;
+				}
+			}
+
+			Windows::Media::Imaging::BitmapSource^ StructureVisualizerRenderer::GetIconSource()
+			{
+				if (ElementIcon)
+					return ElementIcon;
+
+				Drawing::Bitmap^ OrgResource = (Drawing::Bitmap^)Globals::ScriptEditorImageResourceManager->CreateImageFromResource("AvalonEditStructureVisualizer");
+
+				try
+				{
+					ElementIcon = System::Windows::Interop::Imaging::CreateBitmapSourceFromHBitmap(OrgResource->GetHbitmap(),
+																								  IntPtr::Zero,
+																								  Windows::Int32Rect::Empty,
+																								  Windows::Media::Imaging::BitmapSizeOptions::FromEmptyOptions());
+				}
+				catch (...)
+				{
+					ElementIcon = nullptr;
+				}
+				finally
+				{
+					NativeWrapper::DeleteObject(OrgResource->GetHbitmap());
+				}
+
+				delete OrgResource;
+				return ElementIcon;
 			}
 		}
 	}

@@ -372,7 +372,7 @@ namespace ConstructionSetExtender
 	}
 
 	ObScriptSemanticAnalysis::ControlBlock::ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent) :
-		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent), BasicBlock(true)
+		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent), BasicBlock(true), OuterEndLine(0)
 	{
 	}
 
@@ -606,7 +606,6 @@ namespace ConstructionSetExtender
 		ControlBlocks = gcnew List<ControlBlock^>();
 		MalformedStructure = false;
 		FirstStructuralErrorLine = 0;
-		HasCriticalMessages = false;
 		UDF = false;
 		UDFResult = nullptr;
 		AnalysisMessages = gcnew List<UserMessage^>();
@@ -618,6 +617,7 @@ namespace ConstructionSetExtender
 		CSEStringReader^ Reader = gcnew CSEStringReader(ScriptText);
 		Stack<ControlBlock::ControlBlockType>^ StructureStack = gcnew Stack<ControlBlock::ControlBlockType>();
 		Stack<ControlBlock^>^ BlockStack = gcnew Stack<ControlBlock^>();
+		Stack<ControlBlock^>^ IfStack = gcnew Stack<ControlBlock^>();
 		bool SaveDefinitionComments = false;
 
 		Name = "";
@@ -876,7 +876,15 @@ namespace ConstructionSetExtender
 
 							StructureStack->Push(ControlBlock::ControlBlockType::If);
 							BlockStack->Push(NewBlock);
+							IfStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
+
+							if (Operations.HasFlag(Operation::PerformBasicValidation))
+							{
+								String^ Condition = ReadLine->Substring(Parser->Indices[0] + Parser->Tokens[0]->Length);
+								if (ParseConditionExpression(CurrentLine, Condition) == false)
+									EncounteredProblem = true;
+							}
 						}
 					}
 
@@ -918,6 +926,13 @@ namespace ConstructionSetExtender
 							StructureStack->Push(BlockType);
 							BlockStack->Push(NewBlock);
 							ControlBlocks->Add(NewBlock);
+
+							if (BlockType == ControlBlock::ControlBlockType::ElseIf && Operations.HasFlag(Operation::PerformBasicValidation))
+							{
+								String^ Condition = ReadLine->Substring(Parser->Indices[0] + Parser->Tokens[0]->Length);
+								if (ParseConditionExpression(CurrentLine, Condition) == false)
+									EncounteredProblem = true;
+							}
 						}
 					}
 
@@ -947,6 +962,9 @@ namespace ConstructionSetExtender
 
 							StructureStack->Pop();
 							Block->EndLine = CurrentLine;
+
+							if (IfStack->Count)
+								IfStack->Pop()->OuterEndLine = CurrentLine;
 						}
 					}
 
@@ -1005,7 +1023,7 @@ namespace ConstructionSetExtender
 			{
 				MalformedStructure = true;
 				if (Operations.HasFlag(Operation::PerformBasicValidation))
-					LogCriticalAnalysisMessage(Itr->StartLine, "Mismatching block.");
+					LogCriticalAnalysisMessage(Itr->StartLine, "Missing block end specifier.");
 			}
 		}
 
@@ -1043,6 +1061,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		IfStack->Clear();
 #ifndef NDEBUG
 		Profiler->Stop();
 	//	DebugPrint("Analysis of script '" + Name + "' complete. Time = " + Profiler->ElapsedMilliseconds + " ms, Flags = " + Operations.ToString());
@@ -1067,7 +1086,6 @@ namespace ConstructionSetExtender
 
 	void ObScriptSemanticAnalysis::AnalysisData::LogCriticalAnalysisMessage(UInt32 Line, String^ Message)
 	{
-		HasCriticalMessages = true;
 		AnalysisMessages->Add(gcnew UserMessage(Line, Message, true));
 	}
 
@@ -1162,11 +1180,44 @@ namespace ConstructionSetExtender
 	{
 		for each (ControlBlock^ Itr in ControlBlocks)
 		{
-			if (Itr->EndLine == Line)
+			if ((Itr->BasicBlock && Itr->EndLine == Line) ||
+				(Itr->BasicBlock == false && Itr->OuterEndLine == Line))
+			{
 				return Itr;
+			}
 		}
 
 		return nullptr;
+	}
+
+	bool ObScriptSemanticAnalysis::AnalysisData::GetHasCriticalMessages()
+	{
+		for each (auto Itr in AnalysisMessages)
+		{
+			if (Itr->Critical)
+				return true;
+		}
+
+		return false;
+	}
+
+	bool ObScriptSemanticAnalysis::AnalysisData::ParseConditionExpression(UInt32 Line, String^ Expression)
+	{
+		bool Result = true;
+
+		// catch errors that the vanilla expression parser doesn't handle
+		Tokenizer^ Parser = gcnew Tokenizer;
+		if (Parser->Tokenize(Expression, false))
+		{
+			int InvalidOperator = Expression->IndexOf("<>");
+			if (InvalidOperator != -1 && Parser->GetIndexInsideString(Expression, InvalidOperator) == false)
+			{
+				Result = false;
+				LogCriticalAnalysisMessage(Line, "Invalid operator '<>'");
+			}
+		}
+
+		return Result;
 	}
 
 	ObScriptSemanticAnalysis::Sanitizer::Sanitizer(String^ Source) :

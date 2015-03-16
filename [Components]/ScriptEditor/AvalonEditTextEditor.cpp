@@ -723,10 +723,33 @@ namespace ConstructionSetExtender
 				IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
 			}
 
-			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber)
+			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber, bool CheckVisualLine)
 			{
-				TODO("inconsistent");
-				return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
+				if (CheckVisualLine)
+					return TextField->TextArea->TextView->GetVisualLine(LineNumber) != nullptr;
+
+				if (TextField->TextArea->TextView->IsMeasureValid == false)
+					throw gcnew InvalidOperationException("GetLineVisible was called inside a Measure operation");
+
+				System::Nullable< AvalonEdit::TextViewPosition> Start = TextField->TextArea->TextView->GetPosition(Windows::Point(0, 0) + TextField->TextArea->TextView->ScrollOffset);
+				System::Nullable< AvalonEdit::TextViewPosition> End = TextField->TextArea->TextView->GetPosition(Windows::Point(TextField->TextArea->TextView->ActualWidth, TextField->TextArea->TextView->ActualHeight) + TextField->TextArea->TextView->ScrollOffset);
+
+				if (Start.HasValue == false)
+					return false;
+
+				int StartLine = Start.Value.Line;
+				int EndLine = (End.HasValue ? End.Value.Line : LineCount);
+
+				return LineNumber >= StartLine && LineNumber <= EndLine;
+			}
+
+			UInt32 AvalonEditTextEditor::GetFirstVisibleLine()
+			{
+				DocumentLine^ Top = TextField->TextArea->TextView->GetDocumentLineByVisualTop(TextField->TextArea->TextView->ScrollOffset.Y);
+				if (Top == nullptr)
+					return 1;
+				else
+					return Top->LineNumber;
 			}
 
 			void AvalonEditTextEditor::AddBookmark(int Index)
@@ -904,9 +927,6 @@ namespace ConstructionSetExtender
 			{
 				if (TextField->TextArea->Caret->Line != PreviousLineBuffer)
 				{
-					TextField->TextArea->TextView->Redraw(TextField->TextArea->TextView->GetVisualLine(PreviousLineBuffer),
-														  Windows::Threading::DispatcherPriority::Normal);
-
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
 
@@ -915,10 +935,6 @@ namespace ConstructionSetExtender
 
 				if (TextField->TextArea->Selection->IsEmpty)
 					SearchBracesForHighlighting(Caret);
-
-				// redraw caret line to update VisualLineGenerators
-				TextField->TextArea->TextView->Redraw(TextField->TextArea->TextView->GetVisualLine(PreviousLineBuffer),
-													Windows::Threading::DispatcherPriority::Normal);
 			}
 
 			void AvalonEditTextEditor::TextField_ScrollOffsetChanged(Object^ Sender, EventArgs^ E)
@@ -930,7 +946,7 @@ namespace ConstructionSetExtender
 				System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
-				if (GetLineVisible(CurrentLine))
+				if (GetLineVisible(CurrentLine, true))
 					OnIntelliSenseHide(true);
 				else
 					OnIntelliSenseRelocate();
@@ -1274,6 +1290,22 @@ namespace ConstructionSetExtender
 				RefreshTextView();
 			}
 
+			void AvalonEditTextEditor::TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E)
+			{
+				// invalidate block end lines to update the structural analysis visual element generator
+				// this allows the skipping of blocks with visible starting lines
+
+				for each (auto Itr in SemanticAnalysisCache->ControlBlocks)
+				{
+					if (Itr->IsMalformed() == false)
+					{
+						VisualLine^ Line = TextField->TextArea->TextView->GetVisualLine(Itr->EndLine);
+						if (Line)
+							TextField->TextArea->TextView->Redraw(Line, Windows::Threading::DispatcherPriority::Normal);
+					}
+				}
+			}
+
 			void AvalonEditTextEditor::TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
 			{
 				array<String^>^ Tokens = GetTokensAtMouseLocation();
@@ -1502,6 +1534,7 @@ namespace ConstructionSetExtender
 				ExternalScrollBarValueChangedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ExternalScrollBar_ValueChanged);
 				SetTextAnimationCompletedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SetTextAnimation_Completed);
 				ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScriptEditorPreferences_Saved);
+				TextFieldVisualLineConstructionStartingHandler = gcnew EventHandler<VisualLineConstructionStartEventArgs^>(this, &AvalonEditTextEditor::TextField_VisualLineConstructionStarting);
 
 				System::Windows::NameScope::SetNameScope(TextFieldPanel, gcnew System::Windows::NameScope());
 				TextFieldPanel->Background = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, 255, 255, 255));
@@ -1547,6 +1580,7 @@ namespace ConstructionSetExtender
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew SelectionBGColorizer(TextField, KnownLayer::Background));
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew LineLimitBGColorizer(TextField, KnownLayer::Background));
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew CurrentLineBGColorizer(TextField, KnownLayer::Background));
+				TextField->TextArea->TextView->ElementGenerators->Add(gcnew StructureVisualizerRenderer(this));
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
@@ -1554,9 +1588,6 @@ namespace ConstructionSetExtender
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
 
-#ifndef NDEBUG
-				TextField->TextArea->TextView->ElementGenerators->Add(gcnew StructureVisualizerRenderer(this));
-#endif
 				AnimationPrimitive->Name = "AnimationPrimitive";
 
 				TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
@@ -1742,6 +1773,7 @@ namespace ConstructionSetExtender
 				ExternalHorizontalScrollBar->ValueChanged += ExternalScrollBarValueChangedHandler;
 				SemanticAnalysisTimer->Tick += SemanticAnalysisTimerTickHandler;
 				PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
+				TextField->TextArea->TextView->VisualLineConstructionStarting += TextFieldVisualLineConstructionStartingHandler;
 
 				TextEditorContextMenu->Opening += TextEditorContextMenuOpeningHandler;
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuCopy);
@@ -1778,10 +1810,15 @@ namespace ConstructionSetExtender
 				CodeFoldingManager->Clear();
 				AvalonEdit::Folding::FoldingManager::Uninstall(CodeFoldingManager);
 
-				for each (AvalonEdit::Rendering::IBackgroundRenderer^ Itr in TextField->TextArea->TextView->BackgroundRenderers)
+				for each (auto Itr in TextField->TextArea->TextView->BackgroundRenderers)
 					delete Itr;
 
 				TextField->TextArea->TextView->BackgroundRenderers->Clear();
+
+				for each (auto Itr in TextField->TextArea->TextView->ElementGenerators)
+					delete Itr;
+
+				TextField->TextArea->TextView->ElementGenerators->Clear();
 
 				delete LineTracker;
 				delete InsightPopup;
@@ -1808,6 +1845,7 @@ namespace ConstructionSetExtender
 				ExternalHorizontalScrollBar->ValueChanged -= ExternalScrollBarValueChangedHandler;
 				SemanticAnalysisTimer->Tick -= SemanticAnalysisTimerTickHandler;
 				PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+				TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
 
 				TextEditorContextMenu->Opening -= TextEditorContextMenuOpeningHandler;
 				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuCopy);
@@ -2573,13 +2611,14 @@ namespace ConstructionSetExtender
 				if (Result != "")
 					Result = Result->Substring(1);
 
-				DeserializeCaretPos(CSEBlock);
-
-				// not very pretty but we need to set the text before deserializing bookmarks to correctly create the text anchors
+				// not very pretty but we need to set the text before deserializing bookmarks/caret to correctly create the text anchors, etc
 				if (SetText)
 					this->SetText(Result, true, true);
 
+				DeserializeCaretPos(CSEBlock);
 				DeserializeBookmarks(CSEBlock);
+
+				FocusTextArea();
 
 				return Result;
 			}
@@ -2653,6 +2692,7 @@ namespace ConstructionSetExtender
 
 				return SemanticAnalysisCache;
 			}
+
 #pragma endregion
 		}
 	}

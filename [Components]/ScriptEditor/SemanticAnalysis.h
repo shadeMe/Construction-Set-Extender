@@ -140,7 +140,8 @@ namespace ConstructionSetExtender
 			UInt32					EndLine;				// line with the block end specifier
 			UInt32					IndentLevel;			// indent count for the block's contents
 			ControlBlock^			Parent;					// nullptr for script blocks
-			bool					BasicBlock;				// set to true for all blocks except IF's with ELSE/ELSEIF clauses
+			bool					BasicBlock;				// set to true for all blocks except IFs with ELSE/ELSEIF clauses
+			UInt32					OuterEndLine;			// set to the ENDIF line for IF's with ELSE/ELSEIF clauses
 
 			ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent);
 
@@ -223,10 +224,13 @@ namespace ConstructionSetExtender
 			List<ControlBlock^>^						ControlBlocks;
 			bool										MalformedStructure;
 			UInt32										FirstStructuralErrorLine;
-			bool										HasCriticalMessages;
 			bool										UDF;
 			Variable^									UDFResult;					// nullptr if ambiguous
 			List<UserMessage^>^							AnalysisMessages;
+			property bool								HasCriticalMessages
+			{
+				virtual bool get() { return GetHasCriticalMessages(); }
+			}
 
 			[Flags]
 			static enum class Operation
@@ -258,6 +262,8 @@ namespace ConstructionSetExtender
 		private:
 			void								LogAnalysisMessage(UInt32 Line, String^ Message);
 			void								LogCriticalAnalysisMessage(UInt32 Line, String^ Message);
+			bool								GetHasCriticalMessages();
+			bool								ParseConditionExpression(UInt32 Line, String^ Expression);
 		};
 
 		ref class Sanitizer

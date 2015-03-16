@@ -206,9 +206,6 @@
     <ClCompile Include="CSEHallOfFame.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="CSEMain.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="CSERenderWindowPainter.cpp">
       <Filter>Components</Filter>
     </ClCompile>
@@ -299,6 +296,7 @@
     <ClCompile Include="EditorAPI\MagicItem.cpp">
       <Filter>EditorAPI\Forms\Magic</Filter>
     </ClCompile>
+    <ClCompile Include="CSEMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -663,9 +661,6 @@
     <ClInclude Include="CSEHallOfFame.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEMain.h">
-      <Filter>Components</Filter>
-    </ClInclude>
     <ClInclude Include="CSERenderWindowPainter.h">
       <Filter>Components</Filter>
     </ClInclude>
@@ -738,6 +733,7 @@
     <ClInclude Include="CSEDialogImposterManager.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="CSEMain.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\Splash.bmp">

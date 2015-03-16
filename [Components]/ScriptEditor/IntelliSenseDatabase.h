@@ -34,17 +34,17 @@ namespace ConstructionSetExtender
 
 			void												UpdateDatabase();
 		public:
+			~IntelliSenseDatabase();
+
+			static IntelliSenseDatabase^						GetSingleton();
+
 			property LinkedList<IntelliSenseItem^>^		ItemRegistry
 			{
-				virtual LinkedList<IntelliSenseItem^>^ get() { return Enumerables; }
+				LinkedList<IntelliSenseItem^>^ get() { return Enumerables; }
 			}
-
-			virtual ~IntelliSenseDatabase();
 
 			virtual UInt32										InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);
 			virtual void										InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
-
-			static IntelliSenseDatabase^						GetSingleton();
 
 			void												RegisterDeveloperURL(String^ CmdName, String^ URL);
 			String^												LookupDeveloperURLByCommand(String^ CmdName);
@@ -57,7 +57,8 @@ namespace ConstructionSetExtender
 			bool												GetIsIdentifierUserFunction(String^ Name);
 			bool												GetIsIdentifierScriptCommand(String^ Name);
 			bool												GetIsIdentifierScriptableForm(String^ Name);
-			bool												GetIsIdentifierScriptableForm(String^ Name, ComponentDLLInterface::ScriptData** OutScriptData);	// caller takes ownership of pointer
+			bool												GetIsIdentifierScriptableForm(String^ Name,
+																							  ComponentDLLInterface::ScriptData** OutScriptData);	// caller takes ownership of pointer
 			bool												GetIsIdentifierForm(String^ Name);
 
 			void												ForceUpdateDatabase();
