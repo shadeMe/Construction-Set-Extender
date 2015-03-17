@@ -146,6 +146,7 @@ namespace ConstructionSetExtender
 				AnchorStart = Start;
 				AnchorEnd = End;
 				Description = Text;
+				IndicatorDisabled = false;
 			}
 
 			int ScriptFindResult::Line()
@@ -181,6 +182,29 @@ namespace ConstructionSetExtender
 			int ScriptFindResult::EndOffset()
 			{
 				return AnchorEnd->Offset;
+			}
+
+			int TrackingMessageSorter::Compare(TrackingMessage^ X, TrackingMessage^ Y)
+			{
+				switch (CompareField)
+				{
+				case ConstructionSetExtender::TextEditors::AvalonEditor::TrackingMessageSorter::ComparisonField::Line:
+					return X->Line() < Y->Line();
+				case ConstructionSetExtender::TextEditors::AvalonEditor::TrackingMessageSorter::ComparisonField::Message:
+					return String::Compare(X->Message(), Y->Message(), true);
+				case ConstructionSetExtender::TextEditors::AvalonEditor::TrackingMessageSorter::ComparisonField::ImageIndex:
+					{
+						TrackingImageMessage^ XImage = (TrackingImageMessage^)X;
+						TrackingImageMessage^ YImage = (TrackingImageMessage^)Y;
+
+						if (XImage == nullptr || YImage == nullptr)
+							throw gcnew ArgumentException("Object is not a TrackingImageMessage");
+
+						return XImage->ImageIndex() < YImage->ImageIndex();
+					}
+				default:
+					return 0;
+				}
 			}
 
 			int TrackingMessageListViewSorter::Compare(Object^ X, Object^ Y)
@@ -239,7 +263,7 @@ namespace ConstructionSetExtender
 				Line->Width = 50;
 				ColumnHeader^ Message = gcnew ColumnHeader();
 				Message->Text = "Description";
-				Message->Width = 300;
+				Message->Width = 720;
 
 				Control->Columns->Add(Line);
 				Control->Columns->Add(Message);
@@ -291,6 +315,16 @@ namespace ConstructionSetExtender
 				}
 			}
 
+			UInt32 ScriptBookmarkBinder::GetDefaultSortColumn()
+			{
+				return 0;
+			}
+
+			System::Windows::Forms::SortOrder ScriptBookmarkBinder::GetDefaultSortOrder()
+			{
+				return SortOrder::Ascending;
+			}
+
 			void ScriptMessageBinder::InitializeListView(ListView^ Control)
 			{
 				ColumnHeader^ Dummy = gcnew ColumnHeader();
@@ -301,7 +335,7 @@ namespace ConstructionSetExtender
 				Line->Width = 50;
 				ColumnHeader^ Message = gcnew ColumnHeader();
 				Message->Text = "Message";
-				Message->Width = 300;
+				Message->Width = 720;
 
 				Control->Columns->Add(Dummy);
 				Control->Columns->Add(Line);
@@ -352,6 +386,17 @@ namespace ConstructionSetExtender
 				}
 			}
 
+			UInt32 ScriptMessageBinder::GetDefaultSortColumn()
+			{
+				return 0;
+			}
+
+			System::Windows::Forms::SortOrder ScriptMessageBinder::GetDefaultSortOrder()
+			{
+				// errors first
+				return SortOrder::Descending;
+			}
+
 			bool ScriptFindResultBinder::HasLine(ScriptFindResult^ Check)
 			{
 				for each (ListViewItem^ Itr in Sink->Items)
@@ -379,7 +424,7 @@ namespace ConstructionSetExtender
 				Line->Width = 50;
 				ColumnHeader^ Message = gcnew ColumnHeader();
 				Message->Text = "Result";
-				Message->Width = 300;
+				Message->Width = 720;
 
 				Control->Columns->Add(Line);
 				Control->Columns->Add(Message);
@@ -421,6 +466,16 @@ namespace ConstructionSetExtender
 				default:
 					return "<unknown>";
 				}
+			}
+
+			UInt32 ScriptFindResultBinder::GetDefaultSortColumn()
+			{
+				return 0;
+			}
+
+			System::Windows::Forms::SortOrder ScriptFindResultBinder::GetDefaultSortOrder()
+			{
+				return SortOrder::Ascending;
 			}
 
 			void ScriptErrorIndicator::RenderSquiggly(TextView^ Destination,
@@ -592,7 +647,7 @@ namespace ConstructionSetExtender
 
 				for each (ScriptFindResult^ Itr in FindResults)
 				{
-					if (Itr->Deleted() == false)
+					if (Itr->Deleted() == false && Itr->IndicatorDisabled == false)
 					{
 						ColorizerSegment^ Segment = gcnew ColorizerSegment;
 						Segment->Start = Itr->StartOffset();
@@ -636,7 +691,7 @@ namespace ConstructionSetExtender
 
 				ClearMessages(IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::None);
 				ClearBookmarks();
-				ClearFindResults();
+				ClearFindResults(false);
 
 				Parent->TextArea->TextView->BackgroundRenderers->Remove(ErrorColorizer);
 				Parent->TextArea->TextView->BackgroundRenderers->Remove(FindResultColorizer);
@@ -686,7 +741,7 @@ namespace ConstructionSetExtender
 				CurrentBatchUpdate = Source;
 			}
 
-			void LineTrackingManager::EndUpdate()
+			void LineTrackingManager::EndUpdate(bool Sort)
 			{
 				Debug::Assert(CurrentBatchUpdate != UpdateSource::None);
 
@@ -698,13 +753,13 @@ namespace ConstructionSetExtender
 					switch (CurrentBatchUpdate)
 					{
 					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Messages:
-						Messages->EndUpdate();
+						Messages->EndUpdate(Sort, gcnew ScriptMessageSorter(TrackingMessageSorter::ComparisonField::ImageIndex));
 						break;
 					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
-						Bookmarks->EndUpdate();
+						Bookmarks->EndUpdate(Sort, gcnew ScriptBookmarkSorter(TrackingMessageSorter::ComparisonField::Line));
 						break;
 					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::FindResults:
-						FindResults->EndUpdate();
+						FindResults->EndUpdate(Sort, gcnew ScriptFindResultSorter(TrackingMessageSorter::ComparisonField::Line));
 						break;
 					}
 
@@ -718,8 +773,10 @@ namespace ConstructionSetExtender
 												   IScriptTextEditor::ScriptMessageSource Source,
 												   String^ Message)
 			{
+				Debug::Assert(Type != IScriptTextEditor::ScriptMessageType::None);
 				Debug::Assert(Source != IScriptTextEditor::ScriptMessageSource::None);
 				Debug::Assert(Line > 0);
+
 				if (Line > Parent->LineCount)
 					Line = Parent->LineCount;
 
@@ -747,7 +804,7 @@ namespace ConstructionSetExtender
 				for each (ScriptMessage^ Itr in Buffer)
 					Messages->Remove(Itr);
 
-				EndUpdate();
+				EndUpdate(false);
 			}
 
 			bool LineTrackingManager::GetMessages(UInt32 Line,
@@ -770,6 +827,26 @@ namespace ConstructionSetExtender
 				}
 
 				return Result;
+			}
+
+			UInt32 LineTrackingManager::GetMessageCount(UInt32 Line,
+														IScriptTextEditor::ScriptMessageSource SourceFilter,
+														IScriptTextEditor::ScriptMessageType TypeFilter)
+			{
+				int Count = 0;
+				for each (ScriptMessage^ Itr in Messages)
+				{
+					if (Line == 0 || Itr->Line() == Line)
+					{
+						if ((SourceFilter == IScriptTextEditor::ScriptMessageSource::None || Itr->Source() == SourceFilter) &&
+							(TypeFilter == IScriptTextEditor::ScriptMessageType::None || Itr->Type() == TypeFilter))
+						{
+							Count++;
+						}
+					}
+				}
+
+				return Count;
 			}
 
 			void LineTrackingManager::AddBookmark(UInt32 Line, String^ Description)
@@ -838,7 +915,7 @@ namespace ConstructionSetExtender
 					ReadLine = StringParser->ReadLine();
 				}
 
-				EndUpdate();
+				EndUpdate(true);
 			}
 
 			void LineTrackingManager::TrackFindResult(UInt32 Start, UInt32 End, String^ Text)
@@ -849,9 +926,16 @@ namespace ConstructionSetExtender
 				RefreshBackgroundRenderers(false);
 			}
 
-			void LineTrackingManager::ClearFindResults()
+			void LineTrackingManager::ClearFindResults(bool IndicatorOnly)
 			{
-				FindResults->Clear();
+				if (IndicatorOnly)
+				{
+					for each (ScriptFindResult^ Itr in FindResults)
+						Itr->IndicatorDisabled = true;
+				}
+				else
+					FindResults->Clear();
+
 				RefreshBackgroundRenderers(false);
 			}
 
@@ -888,7 +972,7 @@ namespace ConstructionSetExtender
 						Messages->Remove(Itr);
 
 					if (RemovedMessages->Count > BatchUpdateThreshold)
-						EndUpdate();
+						EndUpdate(false);
 				}
 
 				{
@@ -899,7 +983,7 @@ namespace ConstructionSetExtender
 						Bookmarks->Remove(Itr);
 
 					if (RemovedBookmarks->Count > BatchUpdateThreshold)
-						EndUpdate();
+						EndUpdate(false);
 				}
 
 				{
@@ -910,7 +994,7 @@ namespace ConstructionSetExtender
 						FindResults->Remove(Itr);
 
 					if (RemovedFindResults->Count > BatchUpdateThreshold)
-						EndUpdate();
+						EndUpdate(false);
 				}
 
 				RemovedMessages->Clear();
@@ -930,7 +1014,6 @@ namespace ConstructionSetExtender
 					Parent->Focus();
 				}
 			}
-
 			void CurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				if (ParentEditor->TextArea->Selection->IsEmpty)

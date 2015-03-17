@@ -205,8 +205,7 @@ namespace ConstructionSetExtender
 				CurrentScript = Data->ParentForm;
 				NewScriptFlag = false;
 
-				TextEditor->ClearTrackedData(true, true, true, true, true);
-				TextEditor->DeserializeMetadata(ScriptText, true);
+				TextEditor->InitializeState(ScriptText);
 
 				if (Bound)
 					BoundParent->Enabled = true;
@@ -222,7 +221,11 @@ namespace ConstructionSetExtender
 			SetType((IWorkspaceModel::ScriptType)ScriptType);
 			TextEditor->Modified = false;
 
-			if (PartialUpdate == false && Data->Compiled == false && PREFERENCES->FetchSettingAsInt("WarnUncompiledScripts", "General"))
+			if (PartialUpdate == false &&
+				NewScriptFlag == false &&
+				Data->Compiled == false &&
+				Data->FormID >= 0x800 &&			// skip default forms
+				PREFERENCES->FetchSettingAsInt("WarnUncompiledScripts", "General"))
 			{
 				if (Bound)
 				{
@@ -247,9 +250,9 @@ namespace ConstructionSetExtender
 				DialogResult Result = BoundParent->Controller->MessageBox("The current script '" + CurrentScriptEditorID + "' has unsaved changes.\n\nDo you wish to save them?",
 													   MessageBoxButtons::YesNoCancel,
 													   MessageBoxIcon::Exclamation);
-
+				bool HasWarnings = false;
 				if (Result == DialogResult::Yes)
-					return SaveScript(IWorkspaceModel::SaveOperation::Default);
+					return SaveScript(IWorkspaceModel::SaveOperation::Default, HasWarnings);
 				else if (Result == DialogResult::No)
 				{
 					if (NewScriptFlag)
@@ -309,10 +312,10 @@ namespace ConstructionSetExtender
 			if (DoHouseKeeping())
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript();
+				NewScriptFlag = true;
 				Setup(Data, false);
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
-				NewScriptFlag = true;
 				TextEditor->Modified = true;
 			}
 		}
@@ -327,59 +330,50 @@ namespace ConstructionSetExtender
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
 
-		bool ConcreteWorkspaceModel::SaveScript(IWorkspaceModel::SaveOperation Operation)
+		bool ConcreteWorkspaceModel::SaveScript(IWorkspaceModel::SaveOperation Operation, bool% HasWarnings)
 		{
 			bool Result = false;
-			String^ Preprocessed = "";
-			String^ Unpreprocessed = "";
-			bool HasDirectives = false;
 
-			if (CurrentScript && TextEditor->CanCompile(HasDirectives))
+			if (CurrentScript)
 			{
-				bool Throwaway = false;
-				Preprocessed = TextEditor->GetPreprocessedText(Throwaway, true);
-				Unpreprocessed = TextEditor->GetText();
-
-				if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+				TextEditors::CompilationData^ Data = TextEditor->BeginScriptCompilation();
+				ComponentDLLInterface::ScriptCompileData* CompileData = nullptr;
+				if (Data->CanCompile)
 				{
-					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-				}
+					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
 
-				ComponentDLLInterface::ScriptCompileData* CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
+					CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
 
-				CString ScriptText(Preprocessed->Replace("\n", "\r\n"));
-				CompileData->Script.Text = ScriptText.c_str();
-				CompileData->Script.Type = (int)Type;
-				CompileData->Script.ParentForm = (TESForm*)CurrentScript;
+					CString ScriptText(Data->PreprocessedScriptText->Replace("\n", "\r\n"));
+					CompileData->Script.Text = ScriptText.c_str();
+					CompileData->Script.Type = (int)Type;
+					CompileData->Script.ParentForm = (TESForm*)CurrentScript;
 
-				TextEditor->ClearTrackedData(true, false, false, false, false);
-				if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
-				{
-					Setup(&CompileData->Script, true);
-
-					String^ OriginalText = Unpreprocessed + TextEditor->SerializeMetadata(HasDirectives);
-					CString OrgScriptText(OriginalText);
-					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
-					Result = true;
-				}
-				else
-				{
-					for (int i = 0; i < CompileData->CompileErrorData.Count; i++)
+					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
 					{
-						TextEditor->TrackCompilerError(CompileData->CompileErrorData.ErrorListHead[i].Line,
-														gcnew String(CompileData->CompileErrorData.ErrorListHead[i].Message));
+						Setup(&CompileData->Script, true);
+
+						String^ OriginalText = Data->UnpreprocessedScriptText + Data->SerializedMetadata;
+						CString OrgScriptText(OriginalText);
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
+						Result = true;
 					}
-				}
+					else
+						Data->CompileResult = CompileData;
 
-				if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-				{
-					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
-					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
+					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+					{
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
+						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
+					}
+					else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
+						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
 				}
-				else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
-					NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
-
+				TextEditor->EndScriptCompilation(Data);
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
+
+				HasWarnings = Data->HasWarnings;
 			}
 
 			if (Result)
@@ -578,12 +572,12 @@ namespace ConstructionSetExtender
 			Concrete->OpenScript(Data);
 		}
 
-		bool ConcreteWorkspaceModelController::Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation)
+		bool ConcreteWorkspaceModelController::Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			return Concrete->SaveScript(Operation);
+			return Concrete->SaveScript(Operation, HasWarnings);
 		}
 
 		bool ConcreteWorkspaceModelController::Close(IWorkspaceModel^ Model)

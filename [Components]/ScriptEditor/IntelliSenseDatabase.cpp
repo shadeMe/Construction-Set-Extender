@@ -244,8 +244,9 @@ namespace ConstructionSetExtender
 						Params += "\n";
 
 					ComponentDLLInterface::ObScriptCommandInfo::ParamInfo* Param = &Itr->params[i];
-					Params += "\t" + Locale->ToTitleCase(gcnew String(Param->typeStr)) + " [" + gcnew String(Param->TypeIDString()) + "]"
-																					+ (Param->isOptional ? " (Optional) " : "") + "\n";
+					Params += "\t" + Locale->ToTitleCase(gcnew String((Param->typeStr ? Param->typeStr : "")) +
+																	" [" + gcnew String(Param->TypeIDString()) + "]" +
+																	(Param->isOptional ? " (Optional) " : "") + "\n");
 				}
 
 				ScriptCommands->AddLast(gcnew IntelliSenseItemScriptCommand(Name,

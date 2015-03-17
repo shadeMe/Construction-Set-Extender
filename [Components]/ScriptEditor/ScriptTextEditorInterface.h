@@ -1,6 +1,7 @@
 #pragma once
 #include "SemanticAnalysis.h"
 #include "IIntelliSenseInterface.h"
+#include "[Common]\NativeWrapper.h"
 
 namespace ConstructionSetExtender
 {
@@ -91,6 +92,22 @@ namespace ConstructionSetExtender
 		delegate void IntelliSensePositionEventHandler(Object^ Sender, IntelliSensePositionEventArgs^ E);
 		delegate void IntelliSenseShowEventHandler(Object^ Sender, IntelliSenseShowEventArgs^ E);
 		delegate void IntelliSenseHideEventHandler(Object^ Sender, IntelliSenseHideEventArgs^ E);
+
+		ref struct CompilationData
+		{
+			String^			UnpreprocessedScriptText;
+			String^			PreprocessedScriptText;
+			String^			SerializedMetadata;
+
+			bool			CanCompile;
+			bool			HasDirectives;
+			bool			HasWarnings;
+
+			ComponentDLLInterface::ScriptCompileData* CompileResult;
+
+			CompilationData() : UnpreprocessedScriptText(""), PreprocessedScriptText(""), SerializedMetadata(""),
+								CanCompile(false), HasDirectives(false), HasWarnings(false), CompileResult(nullptr) {}
+		};
 
 		interface class IScriptTextEditor
 		{
@@ -187,19 +204,11 @@ namespace ConstructionSetExtender
 			UInt32										GetIndentLevel(UInt32 LineNumber);
 			void										InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
-			String^										SerializeMetadata(bool AddPreprocessorSigil);			// returns the metadata block for the current script, if any. includes caret pos, bookmarks, etc
-			String^										DeserializeMetadata(String^ Input, bool SetText);		// extracts and processes the metadata block from the script text, after clearing the current state
-																												// returns the rest of the text
-
-			bool										CanCompile(bool% OutContainsPreprocessorDirectives);	// preprocesses and validates the script text, returns true if successful
-
-			void										ClearTrackedData(bool CompilerMessages,
-																		 bool PreprocessorMessages,
-																		 bool ValidatorMessages,
-																		 bool Bookmarks,
-																		 bool FindResults);
-			void										TrackCompilerError(int Line, String^ Message);
 			ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+
+			CompilationData^							BeginScriptCompilation();
+			void										EndScriptCompilation(CompilationData^ Data);
+			void										InitializeState(String^ RawScriptText);			// clears tracked data and deserializes any metadata found in the script text
 		};
 }
 }

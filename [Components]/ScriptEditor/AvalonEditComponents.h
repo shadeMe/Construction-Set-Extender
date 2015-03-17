@@ -62,6 +62,22 @@ namespace ConstructionSetExtender
 				virtual int					ImageIndex() abstract;
 			};
 
+			ref struct TrackingMessageSorter abstract
+			{
+				static enum class ComparisonField
+				{
+					Line,
+					Message,
+					ImageIndex
+				};
+			protected:
+				ComparisonField				CompareField;
+			public:
+				TrackingMessageSorter(ComparisonField Field) : CompareField(Field) {}
+
+				int							Compare(TrackingMessage^ X, TrackingMessage^ Y);
+			};
+
 			ref class TrackingMessageListViewSorter : public ListViewGenericSorter, public System::Collections::IComparer
 			{
 			public:
@@ -105,6 +121,16 @@ namespace ConstructionSetExtender
 				IScriptTextEditor::ScriptMessageType		Type();
 			};
 
+			ref struct ScriptMessageSorter : public System::Collections::Generic::IComparer < ScriptMessage^ >, TrackingMessageSorter
+			{
+				ScriptMessageSorter(ComparisonField Field) : TrackingMessageSorter(Field) {}
+
+				virtual int Compare(ScriptMessage^ X, ScriptMessage^ Y)
+				{
+					return TrackingMessageSorter::Compare(X, Y);
+				}
+			};
+
 			ref class ScriptBookmark : public TrackingMessage
 			{
 				LineTrackingManager^						Manager;
@@ -121,6 +147,16 @@ namespace ConstructionSetExtender
 				virtual bool								Deleted() override;
 			};
 
+			ref struct ScriptBookmarkSorter : public System::Collections::Generic::IComparer < ScriptBookmark^ >, TrackingMessageSorter
+			{
+				ScriptBookmarkSorter(ComparisonField Field) : TrackingMessageSorter(Field) {}
+
+				virtual int Compare(ScriptBookmark^ X, ScriptBookmark^ Y)
+				{
+					return TrackingMessageSorter::Compare(X, Y);
+				}
+			};
+
 			ref class ScriptFindResult : public TrackingMessage
 			{
 				LineTrackingManager^						Manager;
@@ -132,6 +168,8 @@ namespace ConstructionSetExtender
 				ScriptFindResult(LineTrackingManager^ Parent, TextAnchor^ Start, TextAnchor^ End, String^ Text);
 				~ScriptFindResult();
 
+				property bool								IndicatorDisabled;
+
 				virtual int									Line() override;
 				virtual String^								Message() override;
 				virtual void								Jump() override;
@@ -139,6 +177,16 @@ namespace ConstructionSetExtender
 
 				int											StartOffset();
 				int											EndOffset();
+			};
+
+			ref struct ScriptFindResultSorter : public System::Collections::Generic::IComparer < ScriptFindResult^ >, TrackingMessageSorter
+			{
+				ScriptFindResultSorter(ComparisonField Field) : TrackingMessageSorter(Field) {}
+
+				virtual int Compare(ScriptFindResult^ X, ScriptFindResult^ Y)
+				{
+					return TrackingMessageSorter::Compare(X, Y);
+				}
 			};
 
 			ref class ScriptBookmarkBinder : public SimpleListViewBinder < ScriptBookmark^ >
@@ -152,6 +200,8 @@ namespace ConstructionSetExtender
 				virtual void	ActivateItem(ScriptBookmark^ Item) override;
 				virtual void	KeyPress(KeyEventArgs^ E) override;
 				virtual UInt32	GetColumnCount() override;
+				virtual UInt32	GetDefaultSortColumn() override;
+				virtual SortOrder GetDefaultSortOrder() override;
 			};
 
 			ref class ScriptMessageBinder : public SimpleListViewBinder < ScriptMessage^ >
@@ -165,6 +215,8 @@ namespace ConstructionSetExtender
 				virtual void	ActivateItem(ScriptMessage^ Item) override;
 				virtual void	KeyPress(KeyEventArgs^ E) override;
 				virtual UInt32	GetColumnCount() override;
+				virtual UInt32	GetDefaultSortColumn() override;
+				virtual SortOrder GetDefaultSortOrder() override;
 			};
 
 			ref class ScriptFindResultBinder : public SimpleListViewBinder < ScriptFindResult^ >
@@ -182,6 +234,8 @@ namespace ConstructionSetExtender
 				virtual void	ActivateItem(ScriptFindResult^ Item) override;
 				virtual void	KeyPress(KeyEventArgs^ E) override;
 				virtual UInt32	GetColumnCount() override;
+				virtual UInt32	GetDefaultSortColumn() override;
+				virtual SortOrder GetDefaultSortOrder() override;
 			};
 
 			ref struct ColorizerSegment
@@ -271,7 +325,7 @@ namespace ConstructionSetExtender
 				void										Unbind();
 
 				void										BeginUpdate(UpdateSource Source);
-				void										EndUpdate();
+				void										EndUpdate(bool Sort);
 
 				void										TrackMessage(UInt32 Line,
 																		 IScriptTextEditor::ScriptMessageType Type,
@@ -283,6 +337,9 @@ namespace ConstructionSetExtender
 																		IScriptTextEditor::ScriptMessageSource SourceFilter,
 																		IScriptTextEditor::ScriptMessageType TypeFilter,
 																		List<ScriptMessage^>^% OutMessages);					// returns false when there are no messages
+				UInt32										GetMessageCount(UInt32 Line,
+																			IScriptTextEditor::ScriptMessageSource SourceFilter,
+																			IScriptTextEditor::ScriptMessageType TypeFilter);	// pass zero as line to count all lines
 
 				void										AddBookmark(UInt32 Line, String^ Description);
 				void										ClearBookmarks();
@@ -290,7 +347,7 @@ namespace ConstructionSetExtender
 				void										DeserializeBookmarks(String^ Serialized, bool ClearExisting);
 
 				void										TrackFindResult(UInt32 Start, UInt32 End, String^ Text);
-				void										ClearFindResults();
+				void										ClearFindResults(bool IndicatorOnly);
 
 				void										Cleanup();						// removes deleted anchors
 				void										Jump(TrackingMessage^ To);

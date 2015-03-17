@@ -360,11 +360,6 @@ namespace ConstructionSetExtender
 				return Bitmap;
 			}
 
-			void AvalonEditTextEditor::ClearFindResultIndicators()
-			{
-				LineTracker->ClearFindResults();
-			}
-
 			void AvalonEditTextEditor::MoveTextSegment( AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction )
 			{
 				int StartOffset = Segment->Offset, EndOffset = Segment->EndOffset;
@@ -765,6 +760,75 @@ namespace ConstructionSetExtender
 
 				LineTracker->AddBookmark(LineNo, BookmarkDesc);
 			}
+
+			String^ AvalonEditTextEditor::SerializeMetadata(bool AddPreprocessorSigil)
+			{
+				String^ Block = "";
+				String^ Result = "";
+
+				SerializeCaretPos(Block);
+				SerializeBookmarks(Block);
+
+				if (AddPreprocessorSigil)
+					Block += Preprocessor::kPreprocessorSigil + "\n";
+
+				if (Block != "")
+				{
+					Result += "\n;<" + kMetadataBlockMarker + ">\n";
+					Result += Block;
+					Result += ";</" + kMetadataBlockMarker + ">";
+				}
+
+				return Result;
+			}
+
+			void AvalonEditTextEditor::DeserializeMetadata(String^ Input, String^% OutMetadataBlock, String^% OutScriptText)
+			{
+				ScriptParser^ TextParser = gcnew ScriptParser();
+				StringReader^ StringParser = gcnew StringReader(Input);
+				String^ ReadLine = StringParser->ReadLine();
+				String^ CSEBlock = "";
+				String^ Result = "";
+				bool ExtractingBlock = false;
+
+				while (ReadLine != nullptr)
+				{
+					TextParser->Tokenize(ReadLine, false);
+
+					if (ExtractingBlock)
+					{
+						if (!TextParser->GetTokenIndex(";</" + kMetadataBlockMarker + ">"))
+							ExtractingBlock = false;
+						else
+							CSEBlock += ReadLine + "\n";
+
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					if (!TextParser->Valid)
+					{
+						Result += "\n" + ReadLine;
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+					else if (!TextParser->GetTokenIndex(";<" + kMetadataBlockMarker + ">"))
+					{
+						ExtractingBlock = true;
+						ReadLine = StringParser->ReadLine();
+						continue;
+					}
+
+					Result += "\n" + ReadLine;
+					ReadLine = StringParser->ReadLine();
+				}
+
+				if (Result != "")
+					Result = Result->Substring(1);
+
+				OutScriptText = Result;
+				OutMetadataBlock = CSEBlock;
+			}
 #pragma region Events
 			bool AvalonEditTextEditor::OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E)
 			{
@@ -1001,7 +1065,7 @@ namespace ConstructionSetExtender
 
 						break;
 					case System::Windows::Input::Key::Escape:
-						ClearFindResultIndicators();
+						LineTracker->ClearFindResults(true);
 
 						break;
 					case System::Windows::Input::Key::Up:
@@ -1639,6 +1703,8 @@ namespace ConstructionSetExtender
 				InsightPopup->ToolTipIcon = ToolTipIcon::None;
 				InsightPopup->Tag = nullptr;
 
+				CompilationInProgress = false;
+
 				TextEditorContextMenu = gcnew ContextMenuStrip();
 				ContextMenuCopy = gcnew ToolStripMenuItem();
 				ContextMenuPaste = gcnew ToolStripMenuItem();
@@ -1980,7 +2046,7 @@ namespace ConstructionSetExtender
 											  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
 				}
 
-				LineTracker->EndUpdate();
+				LineTracker->EndUpdate(false);
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -2210,7 +2276,7 @@ namespace ConstructionSetExtender
 																			 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 
 				if (SuppressErrors == false)
-					LineTracker->EndUpdate();
+					LineTracker->EndUpdate(false);
 
 				OutPreprocessResult = Result;
 				return Preprocessed;
@@ -2391,8 +2457,8 @@ namespace ConstructionSetExtender
 
 				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
 				{
-					ClearFindResultIndicators();
 					BeginUpdate();
+					LineTracker->ClearFindResults(false);
 					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::FindResults);
 				}
 
@@ -2474,7 +2540,7 @@ namespace ConstructionSetExtender
 					SetSelectionLength(0);
 					RefreshBGColorizerLayer();
 					EndUpdate(false);
-					LineTracker->EndUpdate();
+					LineTracker->EndUpdate(true);
 				}
 
 				if (Hits == -1)
@@ -2554,90 +2620,24 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			String^ AvalonEditTextEditor::SerializeMetadata(bool AddPreprocessorSigil)
+			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
-				String^ Block = "";
-				String^ Result = "";
+				if (UpdateVars || UpdateControlBlocks)
+					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false, false);
 
-				SerializeCaretPos(Block);
-				SerializeBookmarks(Block);
-
-				if (AddPreprocessorSigil)
-					Block += Preprocessor::kPreprocessorSigil + "\n";
-
-				if (Block != "")
-				{
-					Result += "\n;<" + kMetadataBlockMarker + ">\n";
-					Result += Block;
-					Result += ";</" + kMetadataBlockMarker + ">";
-				}
-
-				return Result;
+				return SemanticAnalysisCache;
 			}
 
-			String^ AvalonEditTextEditor::DeserializeMetadata(String^ Input, bool SetText)
+			CompilationData^ AvalonEditTextEditor::BeginScriptCompilation()
 			{
-				ScriptParser^ TextParser = gcnew ScriptParser();
-				StringReader^ StringParser = gcnew StringReader(Input);
-				String^ ReadLine = StringParser->ReadLine();
-				String^ CSEBlock = "";
-				String^ Result = "";
-				bool ExtractingBlock = false;
+				Debug::Assert(CompilationInProgress == false);
+				CompilationInProgress = true;
 
-				while (ReadLine != nullptr)
-				{
-					TextParser->Tokenize(ReadLine, false);
-
-					if (ExtractingBlock)
-					{
-						if (!TextParser->GetTokenIndex(";</" + kMetadataBlockMarker + ">"))
-							ExtractingBlock = false;
-						else
-							CSEBlock += ReadLine + "\n";
-
-						ReadLine = StringParser->ReadLine();
-						continue;
-					}
-
-					if (!TextParser->Valid)
-					{
-						Result += "\n" + ReadLine;
-						ReadLine = StringParser->ReadLine();
-						continue;
-					}
-					else if (!TextParser->GetTokenIndex(";<" + kMetadataBlockMarker + ">"))
-					{
-						ExtractingBlock = true;
-						ReadLine = StringParser->ReadLine();
-						continue;
-					}
-
-					Result += "\n" + ReadLine;
-					ReadLine = StringParser->ReadLine();
-				}
-
-				if (Result != "")
-					Result = Result->Substring(1);
-
-				// not very pretty but we need to set the text before deserializing bookmarks/caret to correctly create the text anchors, etc
-				if (SetText)
-					this->SetText(Result, true, true);
-
-				DeserializeCaretPos(CSEBlock);
-				DeserializeBookmarks(CSEBlock);
-
-				FocusTextArea();
-
-				return Result;
-			}
-
-			bool AvalonEditTextEditor::CanCompile(bool% OutContainsPreprocessorDirectives)
-			{
-				bool Result = false;
+				CompilationData^ Result = gcnew CompilationData;
 
 				String^ Preprocessed = "";
 				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(this,
-																								&AvalonEditTextEditor::RoutePreprocessorMessages);
+																													 &AvalonEditTextEditor::RoutePreprocessorMessages);
 
 				ScriptEditorPreprocessorData^ Data = gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
 																						gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
@@ -2651,55 +2651,70 @@ namespace ConstructionSetExtender
 					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
 											   TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
-					Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
+					Result->CanCompile = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
 																			Preprocessed,
 																			ErrorOutput,
 																			Data);
 
-					if (Result)
-						OutContainsPreprocessorDirectives = Data->ContainsDirectives;
+					if (Result->CanCompile)
+					{
+						Result->PreprocessedScriptText = Preprocessed;
+						Result->UnpreprocessedScriptText = GetText();
+						Result->HasDirectives = Data->ContainsDirectives;
+						Result->SerializedMetadata = SerializeMetadata(Result->HasDirectives);
+
+						LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
+												   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+					}
 				}
-				LineTracker->EndUpdate();
+
+				// doesn't include compiler warnings for obvious reasons but it's okay since all compiler messages are errors
+				Result->HasWarnings = LineTracker->GetMessageCount(0,
+															  TextEditors::IScriptTextEditor::ScriptMessageSource::None,
+															  TextEditors::IScriptTextEditor::ScriptMessageType::Warning);
 
 				return Result;
 			}
 
-			void AvalonEditTextEditor::ClearTrackedData(bool CompilerMessages, bool PreprocessorMessages, bool ValidatorMessages, bool Bookmarks, bool FindResults)
+			void AvalonEditTextEditor::EndScriptCompilation(CompilationData^ Data)
 			{
-				if (CompilerMessages)
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, TextEditors::IScriptTextEditor::ScriptMessageType::None);
+				Debug::Assert(CompilationInProgress == true);
+				CompilationInProgress = false;
 
-				if (PreprocessorMessages)
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, TextEditors::IScriptTextEditor::ScriptMessageType::None);
+				if (Data->CompileResult)
+				{
+					for (int i = 0; i < Data->CompileResult->CompileErrorData.Count; i++)
+					{
+						String^ Message = gcnew String(Data->CompileResult->CompileErrorData.ErrorListHead[i].Message);
+						int Line = Data->CompileResult->CompileErrorData.ErrorListHead[i].Line;
+						if (Line < 1)
+							Line = 1;
 
-				if (ValidatorMessages)
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, TextEditors::IScriptTextEditor::ScriptMessageType::None);
+						LineTracker->TrackMessage(Line,
+												  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
+												  TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
+					}
+				}
 
-				if (Bookmarks)
-					LineTracker->ClearBookmarks();
-
-				if (FindResults)
-					LineTracker->ClearFindResults();
-
-				RefreshBGColorizerLayer();
+				LineTracker->EndUpdate(true);
 			}
 
-			void AvalonEditTextEditor::TrackCompilerError(int Line, String^ Message)
+			void AvalonEditTextEditor::InitializeState(String^ RawScriptText)
 			{
-				if (Line < 1)
-					Line = 1;
+				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::None, TextEditors::IScriptTextEditor::ScriptMessageType::None);
+				LineTracker->ClearBookmarks();
+				LineTracker->ClearFindResults(false);
 
-				LineTracker->TrackMessage(Line,
-										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
-										  TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
-			}
+				String^ Extracted = "";
+				String^ Metadata = "";
 
-			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
-			{
-				if (UpdateVars || UpdateControlBlocks)
-					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false, false);
+				DeserializeMetadata(RawScriptText, Metadata, Extracted);
+				SetText(Extracted, true, true);
+				DeserializeCaretPos(Metadata);
+				DeserializeBookmarks(Metadata);
+				Modified = false;
 
-				return SemanticAnalysisCache;
+				FocusTextArea();
 			}
 
 #pragma endregion

@@ -55,7 +55,7 @@ namespace ConstructionSetExtender
 
 			virtual void					New(IWorkspaceModel^ Model);
 			virtual void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
-			virtual bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation);
+			virtual bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
 			virtual bool					Close(IWorkspaceModel^ Model);
 			virtual void					Next(IWorkspaceModel^ Model);
 			virtual void					Previous(IWorkspaceModel^ Model);
@@ -128,7 +128,7 @@ namespace ConstructionSetExtender
 
 			void					NewScript();
 			void					OpenScript(ComponentDLLInterface::ScriptData* Data);
-			bool					SaveScript(IWorkspaceModel::SaveOperation Operation);
+			bool					SaveScript(IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
 			bool					CloseScript();
 			void					NextScript();
 			void					PreviousScript();

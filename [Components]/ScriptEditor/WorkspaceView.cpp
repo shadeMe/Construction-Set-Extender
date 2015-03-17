@@ -1246,7 +1246,8 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ToolBarSaveScript_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::Default) == false)
+			bool HasWarnings = false;
+			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::Default, HasWarnings) == false || HasWarnings)
 				ShowMessageList();
 		}
 
@@ -1263,13 +1264,15 @@ namespace ConstructionSetExtender
 				return;
 			}
 
-			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::NoCompile) == false)
+			bool HasWarnings = false;
+			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::NoCompile, HasWarnings) == false || HasWarnings)
 				ShowMessageList();
 		}
 
 		void ConcreteWorkspaceView::ToolBarSaveScriptAndPlugin_Click(Object^ Sender, EventArgs^ E)
 		{
-			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::SavePlugin) == false)
+			bool HasWarnings = false;
+			if (ModelController()->Save(GetActiveModel(), IWorkspaceModel::SaveOperation::SavePlugin, HasWarnings) == false || HasWarnings)
 				ShowMessageList();
 		}
 
@@ -1825,8 +1828,15 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::SaveAll()
 		{
+			bool HasWarnings = false;
 			for each (auto Itr in AssociatedModels)
-				ModelController()->Save(Itr.Key, IWorkspaceModel::SaveOperation::Default);
+			{
+				if (ModelController()->Save(Itr.Key, IWorkspaceModel::SaveOperation::Default, HasWarnings) == false || HasWarnings)
+				{
+					if (Itr.Key == GetActiveModel())
+						ShowMessageList();
+				}
+			}
 		}
 
 		void ConcreteWorkspaceView::CloseAll()
@@ -2197,7 +2207,8 @@ namespace ConstructionSetExtender
 			case Keys::S:
 				if (E->Modifiers == Keys::Control)
 				{
-					if (Concrete->ModelController()->Save(Active, IWorkspaceModel::SaveOperation::Default) == false)
+					bool HasWarnings = false;
+					if (Concrete->ModelController()->Save(Active, IWorkspaceModel::SaveOperation::Default, HasWarnings) == false || HasWarnings)
 						Concrete->ShowMessageList();
 				}
 				else if (E->Control && E->Shift)

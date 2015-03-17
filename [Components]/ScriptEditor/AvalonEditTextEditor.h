@@ -94,6 +94,8 @@ namespace ConstructionSetExtender
 				IntelliSense::IntelliSenseInterfaceModel^			IntelliSenseModel;
 				ToolTip^											InsightPopup;
 
+				bool												CompilationInProgress;
+
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
 				EventHandler^										TextFieldScrollOffsetChangedHandler;
@@ -227,7 +229,6 @@ namespace ConstructionSetExtender
 				void										MoveTextSegment(AvalonEdit::Document::ISegment^ Segment, MoveSegmentDirection Direction);
 
 				RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
-				void										ClearFindResultIndicators(void);
 				void										SearchBracesForHighlighting(int CaretPos);
 				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(bool UpdateStableDefs);
 				String^										SanitizeUnicodeString(String^ In);			// removes unsupported characters
@@ -264,6 +265,9 @@ namespace ConstructionSetExtender
 
 				bool										GetLineVisible(UInt32 LineNumber, bool CheckVisualLine);	// inside the text field's viewable area
 				UInt32										GetFirstVisibleLine();
+
+				String^										SerializeMetadata(bool AddPreprocessorSigil);
+				void										DeserializeMetadata(String^ Input, String^% OutMetadataBlock, String^% OutScriptText);
 			public:
 				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
@@ -374,18 +378,11 @@ namespace ConstructionSetExtender
 				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
 				virtual void								InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
 
-				virtual String^								SerializeMetadata(bool AddPreprocessorSigil);
-				virtual String^								DeserializeMetadata(String^ Input, bool SetText);
-				virtual bool								CanCompile(bool% OutContainsPreprocessorDirectives);
-
-				virtual void								ClearTrackedData(bool CompilerMessages,
-																			 bool PreprocessorMessages,
-																			 bool ValidatorMessages,
-																			 bool Bookmarks,
-																			 bool FindResults);
-				virtual void								TrackCompilerError(int Line, String^ Message);
-
 				virtual ObScriptSemanticAnalysis::AnalysisData^ GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+
+				virtual CompilationData^					BeginScriptCompilation();
+				virtual void								EndScriptCompilation(CompilationData^ Data);
+				virtual void								InitializeState(String^ RawScriptText);
 #pragma endregion
 			};
 		}

@@ -67,6 +67,7 @@ SE		---->
 	ENHANCEMENT		=
 		> Icon margin to indicate bookmarks, etc (IconBarMargin in #develop)
 		> Filter for view's open tabs
+		> Notepad++ like Find/Replace All results
 		> Document minimap
 
 
