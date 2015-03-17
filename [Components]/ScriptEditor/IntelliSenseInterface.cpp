@@ -68,7 +68,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Bound == true);
 			Enabled = true;
 
-			if (E->AllowForDisplay)
+			if (E->AllowForDisplay && E->Control == false && E->Shift == false && E->Alt == false)
 			{
 				switch (E->KeyCode)
 				{

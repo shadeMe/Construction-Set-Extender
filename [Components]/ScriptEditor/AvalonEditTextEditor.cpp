@@ -630,92 +630,67 @@ namespace ConstructionSetExtender
 			{
 				if (LastKnownMouseClickOffset == -1)
 					LastKnownMouseClickOffset = 0;
+				else if (LastKnownMouseClickOffset >= GetTextLength())
+					LastKnownMouseClickOffset = 0;
 
 				return LastKnownMouseClickOffset;
 			}
 
-			void AvalonEditTextEditor::ToggleComment(int StartIndex)
+			void AvalonEditTextEditor::ToggleComment(int Line, ToggleCommentOperation Operation)
 			{
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::ManualReset);
+				if (GetTextLength() == 0)
+					return;
+
+				AvalonEdit::Document::DocumentLine^ LineSegment = TextField->TextArea->Document->GetLineByNumber(Line);
+				ISegment^ WhitespaceLeading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(TextField->TextArea->Document, LineSegment);
+
+				char FirstChar = TextField->TextArea->Document->GetCharAt(WhitespaceLeading->EndOffset);
+
+				switch (Operation)
+				{
+				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Add:
+					if (FirstChar != ';')
+						TextField->TextArea->Document->Insert(LineSegment->Offset, ";");
+
+					break;
+				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Remove:
+					if (FirstChar == ';')
+						TextField->TextArea->Document->Replace(WhitespaceLeading->EndOffset, 1, "");
+
+					break;
+				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Toggle:
+					if (FirstChar == ';')
+						TextField->TextArea->Document->Replace(WhitespaceLeading->EndOffset, 1, "");
+					else if (FirstChar != ';')
+						TextField->TextArea->Document->Insert(LineSegment->Offset, ";");
+
+					break;
+				}
+			}
+
+			void AvalonEditTextEditor::CommentLines(ToggleCommentOperation Operation)
+			{
 				BeginUpdate();
 
 				AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
-				if (TextSelection->IsEmpty)
+				if (TextSelection->IsEmpty == false)
 				{
-					AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(StartIndex);
-					if (Line != nullptr)
+					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
 					{
-						int FirstOffset = -1;
-						for (int i = Line->Offset; i <= Line->EndOffset; i++)
-						{
-							char FirstChar = TextField->TextArea->Document->GetCharAt(i);
-							if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
-								AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
-							{
-								FirstOffset = i;
-								break;
-							}
-						}
+						AvalonEdit::Document::DocumentLine^ FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
+						AvalonEdit::Document::DocumentLine^ LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
 
-						if (FirstOffset != -1)
-						{
-							char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
-							if (FirstChar == ';')
-								TextField->TextArea->Document->Replace(FirstOffset, 1, "");
-							else
-								TextField->TextArea->Document->Insert(FirstOffset, ";");
-						}
+						for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
+							ToggleComment(Itr->LineNumber, Operation);
 					}
 				}
 				else
 				{
-					AvalonEdit::Document::DocumentLine ^FirstLine = nullptr, ^LastLine = nullptr;
-
-					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
-					{
-						FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
-						LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
-
-						for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
-						{
-							int FirstOffset = -1;
-							for (int i = Itr->Offset; i < TextField->Text->Length && i <= Itr->EndOffset; i++)
-							{
-								char FirstChar = TextField->TextArea->Document->GetCharAt(i);
-								if (AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::Whitespace &&
-									AvalonEdit::Document::TextUtilities::GetCharacterClass(FirstChar) != AvalonEdit::Document::CharacterClass::LineTerminator)
-								{
-									FirstOffset = i;
-									break;
-								}
-							}
-
-							if (FirstOffset != -1)
-							{
-								char FirstChar = TextField->TextArea->Document->GetCharAt(FirstOffset);
-
-								if (FirstChar == ';')
-								{
-									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-									TextField->TextArea->Document->Replace(FirstOffset, 1, "");
-								}
-								else
-								{
-									AvalonEdit::Document::DocumentLine^ Line = TextField->TextArea->Document->GetLineByOffset(FirstOffset);
-									TextField->TextArea->Document->Insert(FirstOffset, ";");
-								}
-							}
-						}
-					}
+					// always toggle single lines
+					ToggleComment(TextField->TextArea->Document->GetLineByOffset(Caret)->LineNumber, ToggleCommentOperation::Toggle);
 				}
 
 				EndUpdate(false);
-				SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
-			}
-
-			void AvalonEditTextEditor::UpdateIntelliSenseLocalDatabase(void)
-			{
-				IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
 			}
 
 			bool AvalonEditTextEditor::GetLineVisible(UInt32 LineNumber, bool CheckVisualLine)
@@ -935,7 +910,7 @@ namespace ConstructionSetExtender
 				ScriptModified(this, gcnew TextEditorScriptModifiedEventArgs(ModificationState));
 			}
 
-			void AvalonEditTextEditor::OnKeyDown(System::Windows::Input::KeyEventArgs^ E)
+			bool AvalonEditTextEditor::OnKeyDown(System::Windows::Input::KeyEventArgs^ E)
 			{
 				Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
 
@@ -948,6 +923,7 @@ namespace ConstructionSetExtender
 
 				KeyEventArgs^ TunneledArgs = gcnew KeyEventArgs((Keys)KeyState);
 				KeyDown(this, TunneledArgs);
+				return TunneledArgs->Handled;
 			}
 
 			void AvalonEditTextEditor::OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E)
@@ -1055,9 +1031,13 @@ namespace ConstructionSetExtender
 
 						break;
 					case System::Windows::Input::Key::Q:
+					case System::Windows::Input::Key::W:
 						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
-							ToggleComment(TextField->SelectionStart);
+							if (E->Key == System::Windows::Input::Key::Q)
+								CommentLines(ToggleCommentOperation::Add);
+							else
+								CommentLines(ToggleCommentOperation::Remove);
 
 							HandleKeyEventForKey(E->Key);
 							E->Handled = true;
@@ -1113,9 +1093,20 @@ namespace ConstructionSetExtender
 						break;
 					}
 				}
+				else
+				{
+					HandleKeyEventForKey(E->Key);
+					E->Handled = true;
+				}
 
 				if (E->Handled == false)
-					OnKeyDown(E);
+				{
+					if (OnKeyDown(E))
+					{
+						HandleKeyEventForKey(E->Key);
+						E->Handled = true;
+					}
+				}
 			}
 
 			void AvalonEditTextEditor::TextField_KeyUp(Object^ Sender, System::Windows::Input::KeyEventArgs^ E)
@@ -1240,10 +1231,10 @@ namespace ConstructionSetExtender
 					return;
 
 				UpdateSemanticAnalysisCache(true, true, true, false);
-				UpdateIntelliSenseLocalDatabase();
 				UpdateCodeFoldings();
-				UpdateSyntaxHighlighting(false);
 				LineTracker->Cleanup();
+				IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
+				UpdateSyntaxHighlighting(false);
 			}
 
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
@@ -1477,7 +1468,9 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::ContextMenuToggleComment_Click(Object^ Sender, EventArgs^ E)
 			{
-				ToggleComment(GetLastKnownMouseClickOffset());
+				SetPreventTextChangedFlag(PreventTextChangeFlagState::AutoReset);
+				ToggleComment(TextField->TextArea->Document->GetLineByOffset(GetLastKnownMouseClickOffset())->LineNumber,
+							  ToggleCommentOperation::Toggle);
 			}
 
 			void AvalonEditTextEditor::ContextMenuAddBookmark_Click(Object^ Sender, EventArgs^ E)

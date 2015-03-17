@@ -577,15 +577,28 @@ namespace ConstructionSetExtender
 			{
 				// disable compiler error indicators for the changed line
 				int Caret = Parent->TextArea->Caret->Offset;
+				int Line = Parent->Document->GetLineByOffset(Caret)->LineNumber;
+
 				List<ScriptMessage^>^ CompilerErrors = gcnew List < ScriptMessage^ > ;
 
-				if (GetMessages(Parent->Document->GetLineByOffset(Caret)->LineNumber,
+				if (GetMessages(Line,
 								TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
 								TextEditors::IScriptTextEditor::ScriptMessageType::Error,
 								CompilerErrors))
 				{
 					for each (auto Itr in CompilerErrors)
 						Itr->IndicatorDisabled = true;
+				}
+
+				// disable find result indicators for modified segments
+				List<ScriptFindResult^>^ CurrentResults = gcnew List < ScriptFindResult^ > ;
+				if (GetFindResults(Line, CurrentResults))
+				{
+					for each (auto Itr in CurrentResults)
+					{
+						if (Caret >= Itr->StartOffset() && Caret <= Itr->EndOffset())
+							Itr->IndicatorDisabled = true;
+					}
 				}
 			}
 
@@ -605,13 +618,32 @@ namespace ConstructionSetExtender
 					Parent->TextArea->TextView->InvalidateLayer(KnownLayer::Background);
 			}
 
-			void LineTrackingManager::GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out)
+			UInt32 LineTrackingManager::GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out)
 			{
+				int Count = 0;
 				for each (ScriptBookmark^ Itr in Bookmarks)
 				{
 					if (Itr->Line() == At)
+					{
 						Out->Add(Itr);
+						Count++;
+					}
 				}
+				return Count;
+			}
+
+			UInt32 LineTrackingManager::GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out)
+			{
+				int Count = 0;
+				for each (ScriptFindResult^ Itr in FindResults)
+				{
+					if (Itr->Line() == At)
+					{
+						Out->Add(Itr);
+						Count++;
+					}
+				}
+				return Count;
 			}
 
 			List<ColorizerSegment^>^ LineTrackingManager::GetErrorColorizerSegments()
@@ -1014,6 +1046,7 @@ namespace ConstructionSetExtender
 					Parent->Focus();
 				}
 			}
+
 			void CurrentLineBGColorizer::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
 			{
 				if (ParentEditor->TextArea->Selection->IsEmpty)

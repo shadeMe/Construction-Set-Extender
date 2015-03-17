@@ -100,7 +100,7 @@ namespace ConstructionSetExtender
 			ScriptBox->AcceptButton = nullptr;
 
 			ScriptBox->Hide();
-			ScriptList->Tag = (int)0;
+			ScriptList->Tag = int(0);
 			ScriptList->Sorting = SortOrder::Descending;
 			ScriptList->Sort();
 			ScriptList->ListViewItemSorter = gcnew ListViewImgSorter((int)ScriptList->Tag, ScriptList->Sorting);
@@ -423,7 +423,7 @@ namespace ConstructionSetExtender
 				return;
 			}
 
-			ScriptListDialog::ScriptList_KeyDown(nullptr, E);
+			ScriptListDialog::ScriptList_KeyDown(ScriptList, E);
 		}
 	}
 }

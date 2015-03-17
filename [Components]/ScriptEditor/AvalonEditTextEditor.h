@@ -160,7 +160,7 @@ namespace ConstructionSetExtender
 				void										OnIntelliSenseHide(bool Reset);
 				void										OnIntelliSenseRelocate();
 				void										OnScriptModified(bool ModificationState);
-				void										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);
+				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);		// returns true if handled
 				void										OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
 
 				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
@@ -250,10 +250,7 @@ namespace ConstructionSetExtender
 				String^										GetTokenAtMouseLocation();
 				array<String^>^								GetTokensAtMouseLocation();	// gets three of the closest tokens surrounding the mouse loc
 				int											GetLastKnownMouseClickOffset(void);
-				void										ToggleComment(int StartIndex);
 				void										AddBookmark(int Index);
-
-				void										UpdateIntelliSenseLocalDatabase(void);
 
 				void                                        SerializeCaretPos(String^% Result);
 				void                                        SerializeBookmarks(String^% Result);
@@ -268,6 +265,16 @@ namespace ConstructionSetExtender
 
 				String^										SerializeMetadata(bool AddPreprocessorSigil);
 				void										DeserializeMetadata(String^ Input, String^% OutMetadataBlock, String^% OutScriptText);
+
+				static enum class ToggleCommentOperation
+				{
+					Add,
+					Remove,
+					Toggle,
+				};
+
+				void										ToggleComment(int Line, ToggleCommentOperation Operation);
+				void										CommentLines(ToggleCommentOperation Operation);
 			public:
 				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();

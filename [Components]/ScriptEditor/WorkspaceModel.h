@@ -120,7 +120,7 @@ namespace ConstructionSetExtender
 
 			IWorkspaceView^							BoundParent;
 
-			void					Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate);
+			void					Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript);
 			bool					DoHouseKeeping();
 
 			void					Bind(IWorkspaceView^ To);

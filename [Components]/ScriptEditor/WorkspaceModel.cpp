@@ -56,7 +56,7 @@ namespace ConstructionSetExtender
 			AutoSaveTimer->Start();
 
 			if (Data && Data->ParentForm)
-				Setup(Data, false);
+				Setup(Data, false, false);
 
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
@@ -171,7 +171,7 @@ namespace ConstructionSetExtender
 				BoundParent->Controller->Jump(BoundParent, this, TargetEditorID);
 		}
 
-		void ConcreteWorkspaceModel::Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate)
+		void ConcreteWorkspaceModel::Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript)
 		{
 			if (Data == nullptr)
 			{
@@ -203,13 +203,15 @@ namespace ConstructionSetExtender
 			if (PartialUpdate == false)
 			{
 				CurrentScript = Data->ParentForm;
-				NewScriptFlag = false;
+				NewScriptFlag = NewScript;
 
 				TextEditor->InitializeState(ScriptText);
 
 				if (Bound)
 					BoundParent->Enabled = true;
 			}
+			else
+				Debug::Assert(NewScript == false);
 
 			CurrentScriptEditorID = ScriptName;
 			CurrentScriptFormID = FormID;
@@ -312,8 +314,7 @@ namespace ConstructionSetExtender
 			if (DoHouseKeeping())
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript();
-				NewScriptFlag = true;
-				Setup(Data, false);
+				Setup(Data, false, true);
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				TextEditor->Modified = true;
@@ -325,7 +326,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Data != nullptr);
 
 			if (DoHouseKeeping())
-				Setup(Data, false);
+				Setup(Data, false, false);
 
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		}
@@ -352,7 +353,7 @@ namespace ConstructionSetExtender
 
 					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
 					{
-						Setup(&CompileData->Script, true);
+						Setup(&CompileData->Script, true, false);
 
 						String^ OriginalText = Data->UnpreprocessedScriptText + Data->SerializedMetadata;
 						CString OrgScriptText(OriginalText);
@@ -399,7 +400,7 @@ namespace ConstructionSetExtender
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(CurrentScript);
 				if (Data)
-					Setup(Data, false);
+					Setup(Data, false, false);
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}
@@ -410,7 +411,7 @@ namespace ConstructionSetExtender
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(CurrentScript);
 				if (Data)
-					Setup(Data, false);
+					Setup(Data, false, false);
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 		}

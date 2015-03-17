@@ -100,6 +100,237 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void WorkspaceViewTabFilter::ListView_KeyDown(Object^ Sender, KeyEventArgs^ E)
+		{
+			switch (E->KeyCode)
+			{
+			case Keys::Enter:
+				CompleteSelection();
+				break;
+			case Keys::Escape:
+				Hide();
+				break;
+			case Keys::Back:
+				if (SearchBox->Text->Length >= 1)
+				{
+					SearchBox->Text = SearchBox->Text->Remove(SearchBox->Text->Length - 1);
+					ListView->Focus();
+				}
+
+				E->Handled = true;
+				break;
+			}
+		}
+
+		void WorkspaceViewTabFilter::ListView_KeyPress(Object^ Sender, KeyPressEventArgs^ E)
+		{
+			if ((E->KeyChar > 0x29 && E->KeyChar < 0x3A) ||
+				(E->KeyChar > 0x60 && E->KeyChar < 0x7B))
+			{
+				SearchBox->Text += E->KeyChar.ToString();
+				ListView->Focus();
+				E->Handled = true;
+			}
+		}
+
+		void WorkspaceViewTabFilter::ListView_ItemActivate(Object^ Sender, EventArgs^ E)
+		{
+			CompleteSelection();
+		}
+
+		void WorkspaceViewTabFilter::SearchBox_TextChanged(Object^ Sender, EventArgs^ E)
+		{
+			UpdateFilterResults();
+		}
+
+		void WorkspaceViewTabFilter::SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E)
+		{
+			switch (E->KeyCode)
+			{
+			case Keys::Back:
+				return;
+			}
+
+			ListView_KeyDown(ListView, E);
+		}
+
+		void WorkspaceViewTabFilter::Form_Deactivate(Object^ Sender, EventArgs^ E)
+		{
+			Hide();
+		}
+
+		void WorkspaceViewTabFilter::UpdateFilterResults()
+		{
+			FilterResults->Clear();
+			ListView->ClearObjects();
+
+			String^ Check = SearchBox->Text;
+
+			for each (DotNetBar::SuperTabItem^ Itr in Parent->EditorTabStrip->Tabs)
+			{
+				if (Itr->Text->IndexOf(Check, System::StringComparison::CurrentCultureIgnoreCase) != -1)
+					FilterResults->Add(Itr);
+			}
+
+			ListView->SetObjects(FilterResults);
+			if (ListView->GetItemCount())
+				ListView->SelectedIndex = 0;
+		}
+
+		void WorkspaceViewTabFilter::CompleteSelection()
+		{
+			if (ListView->SelectedObject)
+			{
+				DotNetBar::SuperTabItem^ Selected = (DotNetBar::SuperTabItem^)ListView->SelectedObject;
+				Parent->SelectTab(Selected);
+
+				Hide();
+			}
+		}
+
+		Object^ WorkspaceViewTabFilter::ListViewAspectGetter(Object^ RowObject)
+		{
+			if (RowObject)
+			{
+				DotNetBar::SuperTabItem^ Item = (DotNetBar::SuperTabItem^)RowObject;
+				Debug::Assert(Item != nullptr);
+
+				return Item->Text;
+			}
+			else
+				return nullptr;
+		}
+
+		Object^ WorkspaceViewTabFilter::ListViewImageGetter(Object^ RowObject)
+		{
+			if (RowObject)
+			{
+				DotNetBar::SuperTabItem^ Item = (DotNetBar::SuperTabItem^)RowObject;
+				Debug::Assert(Item != nullptr);
+
+				return (int)Item->ImageIndex;
+			}
+			else
+				return nullptr;
+		}
+
+		WorkspaceViewTabFilter::WorkspaceViewTabFilter(ConcreteWorkspaceView^ ParentView)
+		{
+			Debug::Assert(ParentView != nullptr);
+
+			Parent = ParentView;
+
+			Form = gcnew AnimatedForm(0.15);
+			ListView = gcnew BrightIdeasSoftware::FastObjectListView;
+			SearchBox = gcnew TextBox;
+			FilterResults = gcnew List < DotNetBar::SuperTabItem^ > ;
+
+			ListViewKeyDownHandler = gcnew KeyEventHandler(this, &WorkspaceViewTabFilter::ListView_KeyDown);
+			ListViewKeyPressHandler = gcnew KeyPressEventHandler(this, &WorkspaceViewTabFilter::ListView_KeyPress);
+			ListViewItemActivateHandler = gcnew EventHandler(this, &WorkspaceViewTabFilter::ListView_ItemActivate);
+			SearchBoxTextChangedHandler = gcnew EventHandler(this, &WorkspaceViewTabFilter::SearchBox_TextChanged);
+			SearchBoxKeyDownHandler = gcnew KeyEventHandler(this, &WorkspaceViewTabFilter::SearchBox_KeyDown);
+			FormDeactivateHandler = gcnew EventHandler(this, &WorkspaceViewTabFilter::Form_Deactivate);
+
+			SearchBox->Font = gcnew Font("Lucida Grande", 14.25F, FontStyle::Regular);
+			SearchBox->MaxLength = 512;
+			SearchBox->BorderStyle = BorderStyle::None;
+			SearchBox->Dock = DockStyle::Bottom;
+			SearchBox->Location = Point(0, 88);
+			SearchBox->Size = Size(285, 32);
+			SearchBox->Text = "";
+			SearchBox->TextAlign = HorizontalAlignment::Center;
+
+			ListView->View = View::Details;
+			ListView->Dock = DockStyle::Fill;
+			ListView->MultiSelect = false;
+			ListView->BorderStyle = BorderStyle::None;
+			ListView->Size = Size(285, 89);
+			ListView->SmallImageList = gcnew ImageList();
+			ListView->SmallImageList->TransparentColor = Color::White;
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOff"));
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOn"));
+			ListView->Location = Point(0, 0);
+			ListView->Font = gcnew Font("Lucida Grande", 10, FontStyle::Regular);
+			ListView->LabelEdit = false;
+			ListView->CheckBoxes = false;
+			ListView->FullRowSelect = true;
+			ListView->GridLines = false;
+			ListView->HeaderStyle = ColumnHeaderStyle::None;
+			ListView->HideSelection = false;
+
+			BrightIdeasSoftware::OLVColumn^ Column = gcnew BrightIdeasSoftware::OLVColumn;
+			Column->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&WorkspaceViewTabFilter::ListViewAspectGetter);
+			Column->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&WorkspaceViewTabFilter::ListViewImageGetter);
+			Column->Text = "Tabs";
+			Column->Width = 250;
+			Column->TextAlign = HorizontalAlignment::Center;
+			ListView->AllColumns->Add(Column);
+			ListView->Columns->Add(Column);
+
+			Form->FormBorderStyle = FormBorderStyle::SizableToolWindow;
+			Form->StartPosition = FormStartPosition::Manual;
+			Form->ShowInTaskbar = false;
+			Form->ShowIcon = false;
+			Form->ControlBox = false;
+			Form->Controls->Add(ListView);
+			Form->Controls->Add(SearchBox);
+
+			Form->Location = Point(-1000, -1000);
+			Form->Size = Size(1, 1);
+			Form->Show();
+			Form->Hide();
+			Form->Size = Size(285, 120);
+			Form->MaximumSize = Size(285, 120);
+
+			ListView->KeyDown += ListViewKeyDownHandler;
+			ListView->ItemActivate += ListViewItemActivateHandler;
+			ListView->KeyPress += ListViewKeyPressHandler;
+			SearchBox->TextChanged += SearchBoxTextChangedHandler;
+			SearchBox->KeyDown += SearchBoxKeyDownHandler;
+			Form->Deactivate += FormDeactivateHandler;
+		}
+
+		WorkspaceViewTabFilter::~WorkspaceViewTabFilter()
+		{
+			FilterResults->Clear();
+
+			ListView->KeyDown -= ListViewKeyDownHandler;
+			ListView->ItemActivate -= ListViewItemActivateHandler;
+			ListView->KeyPress -= ListViewKeyPressHandler;
+			SearchBox->TextChanged -= SearchBoxTextChangedHandler;
+			SearchBox->KeyDown -= SearchBoxKeyDownHandler;
+			Form->Deactivate -= FormDeactivateHandler;
+
+			for each (Image^ Itr in ListView->SmallImageList->Images)
+				delete Itr;
+
+			Form->ForceClose();
+
+			delete Form;
+			delete ListView;
+
+			Parent = nullptr;
+		}
+
+		void WorkspaceViewTabFilter::Show()
+		{
+			Point DisplayLocation = Point(Parent->EditorForm->Location.X + (Parent->EditorForm->Width - Form->Width) / 2,
+										  Parent->EditorForm->Location.Y + (Parent->EditorForm->Height - Form->Height) / 2);
+
+			Form->Location = DisplayLocation;
+			Form->Show(gcnew WindowHandleWrapper(Parent->WindowHandle));
+			UpdateFilterResults();
+			Form->Focus();
+		}
+
+		void WorkspaceViewTabFilter::Hide()
+		{
+			FilterResults->Clear();
+			ListView->ClearObjects();
+			Form->Hide();
+		}
+
 		ConcreteWorkspaceView::ConcreteWorkspaceView(ConcreteWorkspaceViewController^ Controller, ConcreteWorkspaceViewFactory^ Factory, Rectangle Bounds)
 		{
 			Application::EnableVisualStyles();
@@ -111,6 +342,7 @@ namespace ConstructionSetExtender
 			EditorFormKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceView::EditorForm_KeyDown);
 			EditorFormPositionChangedHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::EditorForm_PositionChanged);
 			EditorFormSizeChangedHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::EditorForm_SizeChanged);
+			EditorFormActivated = gcnew EventHandler(this, &ConcreteWorkspaceView::EditorForm_Activated);
 
 			ScriptStripTabItemCloseHandler = gcnew EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>(this, &ConcreteWorkspaceView::ScriptStrip_TabItemClose);
 			ScriptStripSelectedTabChangedHandler = gcnew EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>(this, &ConcreteWorkspaceView::ScriptStrip_SelectedTabChanged);
@@ -209,6 +441,7 @@ namespace ConstructionSetExtender
 			EditorForm->Move += EditorFormPositionChangedHandler;
 			EditorForm->SizeChanged += EditorFormSizeChangedHandler;
 			EditorForm->MaximizedBoundsChanged += EditorFormSizeChangedHandler;
+			EditorForm->Activated += EditorFormActivated;
 			EditorTabStrip->TabItemClose += ScriptStripTabItemCloseHandler;
 			EditorTabStrip->SelectedTabChanged += ScriptStripSelectedTabChangedHandler;
 			EditorTabStrip->TabRemoved += ScriptStripTabRemovedHandler;
@@ -291,6 +524,7 @@ namespace ConstructionSetExtender
 			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
 			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
 			IntelliSenseView = gcnew IntelliSense::IntelliSenseInterfaceView;
+			TabStripFilter = gcnew WorkspaceViewTabFilter(this);
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -721,6 +955,7 @@ namespace ConstructionSetExtender
 			EditorForm->Move -= EditorFormPositionChangedHandler;
 			EditorForm->SizeChanged -= EditorFormSizeChangedHandler;
 			EditorForm->MaximizedBoundsChanged -= EditorFormSizeChangedHandler;
+			EditorForm->Activated -= EditorFormActivated;
 			EditorTabStrip->TabItemClose -= ScriptStripTabItemCloseHandler;
 			EditorTabStrip->SelectedTabChanged -= ScriptStripSelectedTabChangedHandler;
 			EditorTabStrip->TabRemoved -= ScriptStripTabRemovedHandler;
@@ -863,12 +1098,14 @@ namespace ConstructionSetExtender
 			delete ScriptListBox;
 			delete FindReplaceBox;
 			delete IntelliSenseView;
+			delete TabStripFilter;
 
 			ScriptListBox = nullptr;
 			FindReplaceBox = nullptr;
 			OffsetTextViewer = nullptr;
 			PreprocessorTextViewer = nullptr;
 			IntelliSenseView = nullptr;
+			TabStripFilter = nullptr;
 
 			delete AttachPanel;
 
@@ -932,6 +1169,11 @@ namespace ConstructionSetExtender
 		}
 
 		void ConcreteWorkspaceView::EditorForm_PositionChanged(Object^ Sender, EventArgs^ E)
+		{
+			;//
+		}
+
+		void ConcreteWorkspaceView::EditorForm_Activated(Object^ Sender, EventArgs^ E)
 		{
 			;//
 		}
@@ -1090,7 +1332,6 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ToolBarOptions_Click(Object^ Sender, EventArgs^ E)
 		{
-			PREFERENCES->LoadINI();
 			PREFERENCES->Show();
 		}
 
@@ -1722,7 +1963,7 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceView::ShowOpenDialog()
 		{
 			List<String^>^ Selection = gcnew List < String^ > ;
-			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Open, GetActiveModel()->LongDescription, Selection))
+			if (ScriptListBox->Show(ScriptListDialog::ShowOperation::Open, "", Selection))
 			{
 				BeginUpdate();
 				NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
@@ -2288,6 +2529,14 @@ namespace ConstructionSetExtender
 			case Keys::D9:
 				if (E->Modifiers == Keys::Control)
 					Concrete->SelectTab(E->KeyCode);
+
+				break;
+			case Keys::Space:
+				if (E->Modifiers == Keys::Control)
+				{
+					Concrete->TabStripFilter->Show();
+					E->Handled = true;
+				}
 
 				break;
 			}

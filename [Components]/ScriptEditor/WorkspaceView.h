@@ -38,14 +38,43 @@ namespace ConstructionSetExtender
 			static void							Begin(IWorkspaceModel^ Tearing, ConcreteWorkspaceView^ From);
 		};
 
-		ref class WorkspaceViewTabFilter : public NonActivatingImmovableAnimatedForm
+		ref class WorkspaceViewTabFilter
 		{
-			System::ComponentModel::Container^			components;
+			ConcreteWorkspaceView^						Parent;
 
-			BrightIdeasSoftware::ObjectListView^		TabList;
+			AnimatedForm^								Form;
+			BrightIdeasSoftware::ObjectListView^		ListView;
 			TextBox^									SearchBox;
 
-			DotNetBar::SuperTabControl^					Parent;
+			List<DotNetBar::SuperTabItem^>^				FilterResults;
+
+			void										ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
+			void										ListView_KeyPress(Object^ Sender, KeyPressEventArgs^ E);
+			void										ListView_ItemActivate(Object^ Sender, EventArgs^ E);
+
+			void										SearchBox_TextChanged(Object^ Sender, EventArgs^ E);
+			void										SearchBox_KeyDown(Object^ Sender, KeyEventArgs^ E);
+
+			void										Form_Deactivate(Object^ Sender, EventArgs^ E);
+
+			KeyEventHandler^							ListViewKeyDownHandler;
+			KeyPressEventHandler^						ListViewKeyPressHandler;
+			EventHandler^								ListViewItemActivateHandler;
+			EventHandler^								SearchBoxTextChangedHandler;
+			KeyEventHandler^							SearchBoxKeyDownHandler;
+			EventHandler^								FormDeactivateHandler;
+
+			void										UpdateFilterResults();
+			void										CompleteSelection();
+
+			static Object^								ListViewAspectGetter(Object^ RowObject);
+			static Object^								ListViewImageGetter(Object^ RowObject);
+		public:
+			WorkspaceViewTabFilter(ConcreteWorkspaceView^ ParentView);
+			~WorkspaceViewTabFilter();
+
+			void										Show();
+			void										Hide();
 		};
 
 		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
@@ -99,6 +128,7 @@ namespace ConstructionSetExtender
 			KeyEventHandler^						EditorFormKeyDownHandler;
 			EventHandler^							EditorFormPositionChangedHandler;
 			EventHandler^							EditorFormSizeChangedHandler;
+			EventHandler^							EditorFormActivated;
 
 			EventHandler<DotNetBar::SuperTabStripTabItemCloseEventArgs^>^			ScriptStripTabItemCloseHandler;
 			EventHandler<DotNetBar::SuperTabStripSelectedTabChangedEventArgs^>^		ScriptStripSelectedTabChangedHandler;
@@ -112,6 +142,7 @@ namespace ConstructionSetExtender
 			void									EditorForm_KeyDown(Object^ Sender, KeyEventArgs^ E);
 			void									EditorForm_SizeChanged(Object^ Sender, EventArgs^ E);
 			void									EditorForm_PositionChanged(Object^ Sender, EventArgs^ E);
+			void									EditorForm_Activated(Object^ Sender, EventArgs^ E);
 
 			void									ScriptStrip_TabItemClose(Object^ Sender, DotNetBar::SuperTabStripTabItemCloseEventArgs ^ E);
 			void									ScriptStrip_SelectedTabChanged(Object^ Sender, DotNetBar::SuperTabStripSelectedTabChangedEventArgs^ E);
@@ -258,6 +289,8 @@ namespace ConstructionSetExtender
 			FindReplaceDialog^						FindReplaceBox;
 
 			IntelliSense::IIntelliSenseInterfaceView^	IntelliSenseView;
+
+			WorkspaceViewTabFilter^					TabStripFilter;
 
 			ConcreteWorkspaceViewController^		ViewController;
 			ConcreteWorkspaceViewFactory^			ViewFactory;

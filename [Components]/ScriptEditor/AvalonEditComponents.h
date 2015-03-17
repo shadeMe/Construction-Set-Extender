@@ -313,7 +313,8 @@ namespace ConstructionSetExtender
 
 				TextAnchor^									CreateAnchor(UInt32 Offset);
 				void										RefreshBackgroundRenderers(bool IgnoreBatchUpdate);
-				void										GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out);
+				UInt32										GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out);
+				UInt32										GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out);
 
 				List<ColorizerSegment^>^					GetErrorColorizerSegments();
 				List<ColorizerSegment^>^					GetFindResultColorizerSegments();
