@@ -93,6 +93,7 @@ namespace ConstructionSetExtender
 				JumpToScriptHandler^								JumpScriptDelegate;
 				IntelliSense::IntelliSenseInterfaceModel^			IntelliSenseModel;
 				ToolTip^											InsightPopup;
+				DefaultIconMargin^									IconBarMargin;
 
 				bool												CompilationInProgress;
 

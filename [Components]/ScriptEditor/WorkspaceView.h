@@ -320,6 +320,7 @@ namespace ConstructionSetExtender
 			void									UpdateScriptTypeControls(IWorkspaceModel::ScriptType Type);
 
 			void									ShowMessageList();
+			void									ShowFindResultList();
 			void									ToggleMessageList(bool State);
 			void									ToggleBookmarkList(bool State);
 			void									ToggleFindResultList(bool State);

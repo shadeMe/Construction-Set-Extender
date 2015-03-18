@@ -5,6 +5,31 @@
 
 namespace ConstructionSetExtender
 {
+	System::Windows::Media::Imaging::BitmapSource^ WPFImageResourceGenerator::CreateImageSource(String^ ResourceIdentifier)
+	{
+		Drawing::Bitmap^ OrgResource = (Drawing::Bitmap^)Globals::ScriptEditorImageResourceManager->CreateImage(ResourceIdentifier);
+		System::Windows::Media::Imaging::BitmapSource^ Result = nullptr;
+
+		try
+		{
+			Result = System::Windows::Interop::Imaging::CreateBitmapSourceFromHBitmap(OrgResource->GetHbitmap(),
+																					  IntPtr::Zero,
+																					  Windows::Int32Rect::Empty,
+																					  Windows::Media::Imaging::BitmapSizeOptions::FromEmptyOptions());
+		}
+		catch (...)
+		{
+			Result = nullptr;
+		}
+		finally
+		{
+			NativeWrapper::DeleteObject(OrgResource->GetHbitmap());
+		}
+
+		delete OrgResource;
+		return Result;
+	}
+
 	namespace TextEditors
 	{
 		namespace AvalonEditor
@@ -342,8 +367,8 @@ namespace ConstructionSetExtender
 				Control->Columns->Add(Message);
 
 				Control->SmallImageList = gcnew ImageList();
-				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListWarning"));
-				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("MessageListError"));
+				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("MessageListWarning"));
+				Control->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("MessageListError"));
 			}
 
 			System::Collections::IComparer^ ScriptMessageBinder::GetSorter(int Column, SortOrder Order)
@@ -618,20 +643,6 @@ namespace ConstructionSetExtender
 					Parent->TextArea->TextView->InvalidateLayer(KnownLayer::Background);
 			}
 
-			UInt32 LineTrackingManager::GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out)
-			{
-				int Count = 0;
-				for each (ScriptBookmark^ Itr in Bookmarks)
-				{
-					if (Itr->Line() == At)
-					{
-						Out->Add(Itr);
-						Count++;
-					}
-				}
-				return Count;
-			}
-
 			UInt32 LineTrackingManager::GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out)
 			{
 				int Count = 0;
@@ -689,6 +700,12 @@ namespace ConstructionSetExtender
 				}
 
 				return Result;
+			}
+
+			void LineTrackingManager::OnTrackedDataUpdated()
+			{
+				if (CurrentUpdateCounter == 0)
+					TrackedDataUpdated(this, EventArgs::Empty);
 			}
 
 			LineTrackingManager::LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor) :
@@ -797,6 +814,7 @@ namespace ConstructionSetExtender
 
 					CurrentBatchUpdate = UpdateSource::None;
 					RefreshBackgroundRenderers(false);
+					OnTrackedDataUpdated();
 				}
 			}
 
@@ -816,6 +834,7 @@ namespace ConstructionSetExtender
 														 Type, Source, Message->Replace("\t", "")->Replace("\r", "")->Replace("\n", ""));
 				Messages->Add(New);
 				RefreshBackgroundRenderers(false);
+				OnTrackedDataUpdated();
 			}
 
 			void LineTrackingManager::ClearMessages(IScriptTextEditor::ScriptMessageSource SourceFilter,
@@ -893,12 +912,28 @@ namespace ConstructionSetExtender
 
 				Bookmarks->Add(New);
 				RefreshBackgroundRenderers(false);
+				OnTrackedDataUpdated();
+			}
+
+			UInt32 LineTrackingManager::GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% Out)
+			{
+				int Count = 0;
+				for each (ScriptBookmark^ Itr in Bookmarks)
+				{
+					if (Itr->Line() == Line)
+					{
+						Out->Add(Itr);
+						Count++;
+					}
+				}
+				return Count;
 			}
 
 			void LineTrackingManager::ClearBookmarks()
 			{
 				Bookmarks->Clear();
 				RefreshBackgroundRenderers(false);
+				OnTrackedDataUpdated();
 			}
 
 			String^ LineTrackingManager::SerializeBookmarks()
@@ -936,7 +971,7 @@ namespace ConstructionSetExtender
 						array<String^>^ Splits = ReadLine->Substring(TextParser->Indices[0])->Split((String("\t")).ToCharArray());
 						try	{
 							LineNo = int::Parse(Splits[1]);
-						} catch (...){
+						} catch (...) {
 							LineNo = 1;
 						}
 
@@ -956,6 +991,7 @@ namespace ConstructionSetExtender
 
 				FindResults->Add(New);
 				RefreshBackgroundRenderers(false);
+				OnTrackedDataUpdated();
 			}
 
 			void LineTrackingManager::ClearFindResults(bool IndicatorOnly)
@@ -969,6 +1005,7 @@ namespace ConstructionSetExtender
 					FindResults->Clear();
 
 				RefreshBackgroundRenderers(false);
+				OnTrackedDataUpdated();
 			}
 
 			void LineTrackingManager::Cleanup()
@@ -1032,6 +1069,9 @@ namespace ConstructionSetExtender
 				RemovedMessages->Clear();
 				RemovedBookmarks->Clear();
 				RemovedFindResults->Clear();
+
+				RefreshBackgroundRenderers(false);
+				OnTrackedDataUpdated();
 			}
 
 			void LineTrackingManager::Jump(TrackingMessage^ To)
@@ -1295,11 +1335,7 @@ namespace ConstructionSetExtender
 																									InvalidBraceColor.G,
 																									InvalidBraceColor.B)),
 													gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(
-															System::Windows::Media::Color::FromArgb(150,
-																									0,
-																									0,
-																									0)),
-																					0),
+															System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0),
 													HighlightGeometry);
 					}
 					else
@@ -1309,11 +1345,7 @@ namespace ConstructionSetExtender
 																									ValidBraceColor.G,
 																									ValidBraceColor.B)),
 													gcnew System::Windows::Media::Pen(gcnew System::Windows::Media::SolidColorBrush(
-															System::Windows::Media::Color::FromArgb(150,
-																									0,
-																									0,
-																									0)),
-																					0),
+															System::Windows::Media::Color::FromArgb(150, 0, 0, 0)), 0),
 													HighlightGeometry);
 					}
 				}
@@ -1456,7 +1488,7 @@ namespace ConstructionSetExtender
 
 				ParentEditor = nullptr;
 
-				if (InstanceCounter == 0)
+				if (InstanceCounter == 0 && ElementIcon)
 				{
 					delete ElementIcon;
 					ElementIcon = nullptr;
@@ -1465,29 +1497,299 @@ namespace ConstructionSetExtender
 
 			Windows::Media::Imaging::BitmapSource^ StructureVisualizerRenderer::GetIconSource()
 			{
-				if (ElementIcon)
-					return ElementIcon;
+				if (ElementIcon == nullptr)
+					ElementIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditStructureVisualizer");
 
-				Drawing::Bitmap^ OrgResource = (Drawing::Bitmap^)Globals::ScriptEditorImageResourceManager->CreateImageFromResource("AvalonEditStructureVisualizer");
-
-				try
-				{
-					ElementIcon = System::Windows::Interop::Imaging::CreateBitmapSourceFromHBitmap(OrgResource->GetHbitmap(),
-																								  IntPtr::Zero,
-																								  Windows::Int32Rect::Empty,
-																								  Windows::Media::Imaging::BitmapSizeOptions::FromEmptyOptions());
-				}
-				catch (...)
-				{
-					ElementIcon = nullptr;
-				}
-				finally
-				{
-					NativeWrapper::DeleteObject(OrgResource->GetHbitmap());
-				}
-
-				delete OrgResource;
 				return ElementIcon;
+			}
+
+			void IconMargin::OnHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
+			{
+				int Line = GetLineFromMousePosition(E);
+				if (Line < 1)
+					return;
+
+				HandleHoverStart(Line, E);
+			}
+
+			void IconMargin::OnHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E)
+			{
+				HandleHoverStop();
+			}
+
+			void IconMargin::OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextView, AvalonEdit::Rendering::TextView^ newTextView)
+			{
+				if (oldTextView)
+					oldTextView->VisualLinesChanged -= HandlerTextViewChanged;
+
+				AbstractMargin::OnTextViewChanged(oldTextView, newTextView);
+
+				if (newTextView)
+					newTextView->VisualLinesChanged += HandlerTextViewChanged;
+
+				InvalidateVisual();
+			}
+
+			void IconMargin::OnRedrawRequested(Object^ sender, EventArgs^ E)
+			{
+				if (this->TextView && this->TextView->VisualLinesValid)
+					InvalidateVisual();
+			}
+
+			Windows::Media::HitTestResult^ IconMargin::HitTestCore(Windows::Media::PointHitTestParameters^ hitTestParameters)
+			{
+				return gcnew Windows::Media::PointHitTestResult(this, hitTestParameters->HitPoint);
+			}
+
+			Windows::Size IconMargin::MeasureOverride(Windows::Size availableSize)
+			{
+				return Windows::Size(18, 0);
+			}
+
+			void IconMargin::OnRender(Windows::Media::DrawingContext^ drawingContext)
+			{
+				Windows::Size renderSize = this->RenderSize;
+				drawingContext->DrawRectangle(Windows::SystemColors::ControlBrush, nullptr, Windows::Rect(0, 0, renderSize.Width, renderSize.Height));
+				drawingContext->DrawLine(gcnew Windows::Media::Pen(Windows::SystemColors::ControlDarkBrush, 1),
+										Windows::Point(renderSize.Width - 0.5, 0),
+										Windows::Point(renderSize.Width - 0.5, renderSize.Height));
+
+				AvalonEdit::Rendering::TextView^ textView = this->TextView;
+
+				if (textView && textView->VisualLinesValid)
+				{
+					Windows::Size pixelSize = PixelSnapHelpers::GetPixelSize(this);
+					for each (VisualLine^ line in textView->VisualLines)
+					{
+						int lineNumber = line->FirstDocumentLine->LineNumber;
+						Windows::Media::Imaging::BitmapSource^ icon = nullptr;
+						double opacity = 1.0;
+						if (GetRenderData(lineNumber, icon, opacity))
+						{
+							double lineMiddle = line->GetTextLineVisualYPosition(line->TextLines[0], VisualYPosition::TextMiddle) - textView->VerticalOffset;
+							Windows::Rect rect(0, PixelSnapHelpers::Round(lineMiddle - 8, pixelSize.Height), 16, 16);
+							drawingContext->PushOpacity(opacity);
+							drawingContext->DrawImage(icon, rect);
+							drawingContext->Pop();
+						}
+					}
+				}
+			}
+
+			void IconMargin::OnMouseDown(System::Windows::Input::MouseButtonEventArgs^ e)
+			{
+				AbstractMargin::OnMouseDown(e);
+				if (e->ChangedButton == System::Windows::Input::MouseButton::Left)
+					e->Handled = true;
+			}
+
+			void IconMargin::OnMouseMove(System::Windows::Input::MouseEventArgs^ e)
+			{
+				AbstractMargin::OnMouseMove(e);
+			}
+
+			void IconMargin::OnMouseUp(System::Windows::Input::MouseButtonEventArgs^ e)
+			{
+				AbstractMargin::OnMouseUp(e);
+				int line = GetLineFromMousePosition(e);
+				if (e->ChangedButton == System::Windows::Input::MouseButton::Left && TextView)
+					HandleClick(line);
+			}
+
+			void IconMargin::OnMouseLeave(System::Windows::Input::MouseEventArgs^ e)
+			{
+				AbstractMargin::OnMouseLeave(e);
+			}
+
+			int IconMargin::GetLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e)
+			{
+				VisualLine^ vl = GetVisualLineFromMousePosition(e);
+				if (vl == nullptr)
+					return 0;
+
+				return vl->FirstDocumentLine->LineNumber;
+			}
+
+			VisualLine^ IconMargin::GetVisualLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e)
+			{
+				AvalonEdit::Rendering::TextView^ textView = this->TextView;
+				if (textView == nullptr)
+					return nullptr;
+
+				VisualLine^ vl = textView->GetVisualLineFromVisualTop(e->GetPosition(textView).Y + textView->ScrollOffset.Y);
+				return vl;
+			}
+
+			IconMargin::IconMargin()
+			{
+				HoverLogic = gcnew MouseHoverLogic(this);
+
+				HandlerHover = gcnew EventHandler<System::Windows::Input::MouseEventArgs^>(this, &IconMargin::OnHover);
+				HandlerHoverStopped = gcnew EventHandler<System::Windows::Input::MouseEventArgs^>(this, &IconMargin::OnHoverStopped);
+				HandlerTextViewChanged = gcnew EventHandler(this, &IconMargin::OnRedrawRequested);
+
+				HoverLogic->MouseHover += HandlerHover;
+				HoverLogic->MouseHoverStopped += HandlerHoverStopped;
+			}
+
+			IconMargin::~IconMargin()
+			{
+				this->TextView = nullptr;
+
+				HoverLogic->MouseHover -= HandlerHover;
+				HoverLogic->MouseHoverStopped -= HandlerHoverStopped;
+
+				delete HoverLogic;
+			}
+
+			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
+			{
+				if (WarningIcon == nullptr)
+					WarningIcon = WPFImageResourceGenerator::CreateImageSource("MessageListWarning");
+
+				return WarningIcon;
+			}
+
+			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetBookmarkIcon()
+			{
+				if (BookmarkIcon == nullptr)
+					BookmarkIcon = WPFImageResourceGenerator::CreateImageSource("ContextMenuAddMessage");
+
+				return BookmarkIcon;
+			}
+
+			void DefaultIconMargin::HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E)
+			{
+				bool DisplayPopup = false;
+				ToolTipIcon PopupIcon = ToolTipIcon::None;
+				String^ PopupTitle = "";
+				String^ PopupText = "";
+				Windows::Point DisplayLocation = E->GetPosition(Parent);
+				DisplayLocation.Y += GetVisualLineFromMousePosition(E)->Height;
+
+				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
+				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
+				if (LineTracker->GetMessages(Line,
+										 IScriptTextEditor::ScriptMessageSource::None,
+										 IScriptTextEditor::ScriptMessageType::Warning,
+										 Warnings))
+				{
+					DisplayPopup = true;
+					PopupIcon = ToolTipIcon::Warning;
+					PopupTitle = Warnings->Count + " Warning" + (Warnings->Count == 1 ? "" : "s");
+
+					for each (auto Itr in Warnings)
+						PopupText = Itr->Message() + "\n";
+
+					if (PopupText->Length)
+						PopupText->Remove(PopupText->Length - 1);
+				}
+				else if (LineTracker->GetBookmarks(Line,Bookmarks))
+				{
+					DisplayPopup = true;
+					PopupIcon = ToolTipIcon::Info;
+					PopupTitle = Bookmarks->Count + " Bookmark" + (Bookmarks->Count == 1 ? "" : "s");
+
+					for each (auto Itr in Bookmarks)
+						PopupText = Itr->Message() + "\n";
+
+					if (PopupText->Length)
+						PopupText->Remove(PopupText->Length - 1);
+				}
+
+				if (DisplayPopup)
+					ShowPopup(PopupTitle, PopupText, PopupIcon, Point(DisplayLocation.X, DisplayLocation.Y));
+			}
+
+			void DefaultIconMargin::HandleHoverStop()
+			{
+				HidePopup();
+			}
+
+			void DefaultIconMargin::HandleClick(int Line)
+			{
+				;//
+			}
+
+			bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapSource^% OutIcon, double% OutOpacity)
+			{
+				// warnings override bookmarks
+				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
+				List<ScriptBookmark^>^ Bookmarks = gcnew List < ScriptBookmark^ >;
+				LineTracker->GetMessages(Line, IScriptTextEditor::ScriptMessageSource::None, IScriptTextEditor::ScriptMessageType::Warning, Warnings);
+				LineTracker->GetBookmarks(Line, Bookmarks);
+
+				if (Warnings->Count == 0 && Bookmarks->Count == 0)
+					return false;
+
+				if (Warnings->Count)
+					OutIcon = GetWarningIcon();
+				else
+					OutIcon = GetBookmarkIcon();
+
+				OutOpacity = 1.0;
+				return true;
+			}
+
+			DefaultIconMargin::DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, LineTrackingManager^ ParentLineTracker, IntPtr ToolTipParent)
+			{
+				InstanceCounter++;
+
+				Debug::Assert(ParentEditor != nullptr);
+				Debug::Assert(ParentLineTracker != nullptr);
+
+				Parent = ParentEditor;
+				LineTracker = ParentLineTracker;
+				PopupParentHandle = ToolTipParent;
+
+				Popup = gcnew Windows::Forms::ToolTip;
+				Popup->AutoPopDelay = 500;
+				Popup->InitialDelay = 500;
+				Popup->ReshowDelay = 0;
+				Popup->ToolTipIcon = ToolTipIcon::None;
+
+				LineTracker->TrackedDataUpdated += HandlerTextViewChanged;
+			}
+
+			DefaultIconMargin::~DefaultIconMargin()
+			{
+				InstanceCounter--;
+				Debug::Assert(InstanceCounter >= 0);
+
+				LineTracker->TrackedDataUpdated -= HandlerTextViewChanged;
+
+				HidePopup();
+				delete Popup;
+
+				Parent = nullptr;
+				LineTracker = nullptr;
+
+				if (InstanceCounter == 0)
+				{
+					if (WarningIcon)
+					{
+						delete WarningIcon;
+						WarningIcon = nullptr;
+					}
+
+					if (BookmarkIcon)
+					{
+						delete BookmarkIcon;
+						BookmarkIcon = nullptr;
+					}
+				}
+			}
+
+			void DefaultIconMargin::ShowPopup(String^ Title, String^ Message, ToolTipIcon Icon, Drawing::Point Location)
+			{
+				Popup->ToolTipIcon = Icon;
+				Popup->ToolTipTitle = Title;
+				Popup->Show(Message, Control::FromHandle(PopupParentHandle), Location, 6000);
+			}
+
+			void DefaultIconMargin::HidePopup()
+			{
+				Popup->Hide(Control::FromHandle(PopupParentHandle));
 			}
 		}
 	}

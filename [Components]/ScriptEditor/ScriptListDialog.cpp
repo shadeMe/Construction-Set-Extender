@@ -56,9 +56,9 @@ namespace ConstructionSetExtender
 			ScriptList->HideSelection = false;
 			ScriptList->SmallImageList = gcnew ImageList();
 			ScriptList->SmallImageList->TransparentColor = Color::White;
-			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagDeleted"));
-			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagUncompiled"));
-			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ScriptListDialogFlagActive"));
+			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogFlagDeleted"));
+			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogFlagUncompiled"));
+			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogFlagActive"));
 			ScriptList->Anchor = AnchorStyles::Top|AnchorStyles::Left|AnchorStyles::Bottom;
 
 			ScriptListCFlags->Text = "";

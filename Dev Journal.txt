@@ -62,10 +62,10 @@ SE		---->
 	BUGFIX			=
 		> Editor doesn't acquire focus after switching scripts/on opening
 		> ObjectListView deadlock issues?
+		> Message list updated by analysis resets listview scrollpos/selection
 
 
 	ENHANCEMENT		=
-		> Icon margin to indicate bookmarks, etc (IconBarMargin in #develop)
 		> Notepad++ like Find/Replace All results
 		> Document minimap
 

@@ -287,8 +287,6 @@ namespace ConstructionSetExtender
 			OnStateChangedDescription();
 			OnStateChangedDirty(TextEditor->Modified);
 
-			CheckAutoRecovery();
-
 			TextEditor->Bind(BoundParent->ListViewMessages,
 							 BoundParent->ListViewBookmarks,
 							 BoundParent->ListViewFindResults,

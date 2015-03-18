@@ -293,15 +293,18 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::UpdateCodeFoldings()
 			{
-				if (IsFocused && CodeFoldingStrategy != nullptr)
+				if (IsFocused)
 				{
+					if (CodeFoldingStrategy != nullptr)
+					{
 #if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
-					int FirstErrorOffset = 0;
-					IEnumerable<AvalonEdit::Folding::NewFolding^>^ Foldings = CodeFoldingStrategy->CreateNewFoldings(TextField->Document, FirstErrorOffset);
-					CodeFoldingManager->UpdateFoldings(Foldings, FirstErrorOffset);
+						int FirstErrorOffset = 0;
+						IEnumerable<AvalonEdit::Folding::NewFolding^>^ Foldings = CodeFoldingStrategy->CreateNewFoldings(TextField->Document, FirstErrorOffset);
+						CodeFoldingManager->UpdateFoldings(Foldings, FirstErrorOffset);
 #else
-					CodeFoldingStrategy->UpdateFoldings(CodeFoldingManager, TextField->Document);
+						CodeFoldingStrategy->UpdateFoldings(CodeFoldingManager, TextField->Document);
 #endif
+					}
 				}
 			}
 
@@ -1287,6 +1290,7 @@ namespace ConstructionSetExtender
 				{
 					delete CodeFoldingStrategy;
 					CodeFoldingStrategy = nullptr;
+					CodeFoldingManager->Clear();
 				}
 				if (TextField->TextArea->IndentationStrategy != nullptr)
 				{
@@ -1349,7 +1353,6 @@ namespace ConstructionSetExtender
 			{
 				// invalidate block end lines to update the structural analysis visual element generator
 				// this allows the skipping of blocks with visible starting lines
-
 				for each (auto Itr in SemanticAnalysisCache->ControlBlocks)
 				{
 					if (Itr->IsMalformed() == false)
@@ -1696,6 +1699,10 @@ namespace ConstructionSetExtender
 				InsightPopup->ToolTipIcon = ToolTipIcon::None;
 				InsightPopup->Tag = nullptr;
 
+				LineTracker = gcnew LineTrackingManager(TextField);
+				IconBarMargin = gcnew DefaultIconMargin(TextField, LineTracker, WindowHandle);
+				TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
+
 				CompilationInProgress = false;
 
 				TextEditorContextMenu = gcnew ContextMenuStrip();
@@ -1809,8 +1816,6 @@ namespace ConstructionSetExtender
 				if (TabSize)
 					SetTabCharacterSize(TabSize);
 
-				LineTracker = gcnew LineTrackingManager(TextField);
-
 				TextField->TextChanged += TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged += TextFieldCaretPositionChangedHandler;
 				TextField->TextArea->SelectionChanged += TextFieldSelectionChangedHandler;
@@ -1878,6 +1883,9 @@ namespace ConstructionSetExtender
 					delete Itr;
 
 				TextField->TextArea->TextView->ElementGenerators->Clear();
+
+				TextField->TextArea->LeftMargins->Remove(IconBarMargin);
+				delete IconBarMargin;
 
 				delete LineTracker;
 				delete InsightPopup;

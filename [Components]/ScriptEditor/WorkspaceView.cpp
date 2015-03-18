@@ -182,9 +182,10 @@ namespace ConstructionSetExtender
 			if (ListView->SelectedObject)
 			{
 				DotNetBar::SuperTabItem^ Selected = (DotNetBar::SuperTabItem^)ListView->SelectedObject;
-				Parent->SelectTab(Selected);
+				if (Selected->IsSelected == false)
+					Parent->SelectTab(Selected);
 
-				Hide();
+				Parent->Focus();
 			}
 		}
 
@@ -248,8 +249,8 @@ namespace ConstructionSetExtender
 			ListView->Size = Size(285, 89);
 			ListView->SmallImageList = gcnew ImageList();
 			ListView->SmallImageList->TransparentColor = Color::White;
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOff"));
-			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOn"));
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOff"));
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOn"));
 			ListView->Location = Point(0, 0);
 			ListView->Font = gcnew Font("Lucida Grande", 10, FontStyle::Regular);
 			ListView->LabelEdit = false;
@@ -282,6 +283,7 @@ namespace ConstructionSetExtender
 			Form->Hide();
 			Form->Size = Size(285, 120);
 			Form->MaximumSize = Size(285, 120);
+			Form->MinimumSize = Size(285, 120);
 
 			ListView->KeyDown += ListViewKeyDownHandler;
 			ListView->ItemActivate += ListViewItemActivateHandler;
@@ -389,8 +391,8 @@ namespace ConstructionSetExtender
 			EditorTabStrip->AntiAlias = true;
 			EditorTabStrip->TabStop = false;
 			EditorTabStrip->ImageList = gcnew ImageList;
-			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOff"));
-			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImageFromResource("ModifiedFlagOn"));
+			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOff"));
+			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOn"));
 			EditorTabStrip->ImageList->ImageSize = Size(12, 12);
 			EditorTabStrip->ImageList->TransparentColor = Color::White;
 			EditorTabStrip->ReorderTabsEnabled = true;
@@ -401,7 +403,7 @@ namespace ConstructionSetExtender
 			EditorTabStrip->TabStrip->Tag = this;
 
 			NewTabButton = gcnew DotNetBar::ButtonItem();
-			NewTabButton->Image = Globals::ScriptEditorImageResourceManager->CreateImageFromResource("NewTabButton");
+			NewTabButton->Image = Globals::ScriptEditorImageResourceManager->CreateImage("NewTabButton");
 			NewTabButton->ButtonStyle = DotNetBar::eButtonStyle::Default;
 			NewTabButton->Style = DotNetBar::eDotNetBarStyle::Office2007;
 			NewTabButton->ColorTable = DotNetBar::eButtonColor::Office2007WithBackground;
@@ -2406,6 +2408,15 @@ namespace ConstructionSetExtender
 			ToggleSecondaryPanel(true);
 		}
 
+		void ConcreteWorkspaceView::ShowFindResultList()
+		{
+			ToggleBookmarkList(false);
+			ToggleMessageList(false);
+
+			ToggleFindResultList(true);
+			ToggleSecondaryPanel(true);
+		}
+
 		// ConcreteWorkspaceViewController
 		void ConcreteWorkspaceViewController::AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
 		{
@@ -2579,8 +2590,8 @@ namespace ConstructionSetExtender
 			else
 			{
 				int Hits = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(), Operation, Query, Replacement, Options);
-				if (Hits)
-					Concrete->ToolBarFindList->PerformClick();
+				if (Hits && Operation != TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches)
+					Concrete->ShowFindResultList();
 
 				return Hits;
 			}

@@ -30,21 +30,18 @@ namespace ConstructionSetExtender
 		Manager = gcnew ResourceManager(BaseName, Assembly::GetExecutingAssembly());
 	}
 
-	Image^ ImageResourceManager::CreateImageFromResource(String^ ResourceIdentifier)
+	Image^ ImageResourceManager::CreateImage(String^ ResourceIdentifier)
 	{
-		try
-		{
+		try {
 			return dynamic_cast<Image^>(Manager->GetObject(ResourceIdentifier));
-		}
-		catch (...)
-		{
+		} catch (...) {
 			return nullptr;
 		}
 	}
 
 	void ImageResourceManager::SetupImageForToolStripButton(ToolStripButton^ Control)
 	{
-		Control->Image = CreateImageFromResource(Control->Name);
+		Control->Image = CreateImage(Control->Name);
 	}
 
 	CSEControlDisposer::CSEControlDisposer( Control^ Source )

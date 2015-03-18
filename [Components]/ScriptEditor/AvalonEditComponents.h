@@ -8,11 +8,18 @@ using namespace ICSharpCode;
 using namespace ICSharpCode::AvalonEdit::Rendering;
 using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
+using namespace ICSharpCode::AvalonEdit::Utils;
 
 /* http://danielgrunwald.de/coding/AvalonEdit/rendering.php */
 
 namespace ConstructionSetExtender
 {
+	ref class WPFImageResourceGenerator
+	{
+	public:
+		static System::Windows::Media::Imaging::BitmapSource^		CreateImageSource(String^ ResourceIdentifier);
+	};
+
 	namespace TextEditors
 	{
 		namespace AvalonEditor
@@ -313,14 +320,17 @@ namespace ConstructionSetExtender
 
 				TextAnchor^									CreateAnchor(UInt32 Offset);
 				void										RefreshBackgroundRenderers(bool IgnoreBatchUpdate);
-				UInt32										GetBookmarks(UInt32 At, List<ScriptBookmark^>^% Out);
 				UInt32										GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out);
 
 				List<ColorizerSegment^>^					GetErrorColorizerSegments();
 				List<ColorizerSegment^>^					GetFindResultColorizerSegments();
+
+				void										OnTrackedDataUpdated();
 			public:
 				LineTrackingManager(AvalonEdit::TextEditor^ ParentEditor);
 				~LineTrackingManager();
+
+				event EventHandler^							TrackedDataUpdated;
 
 				void										Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList);
 				void										Unbind();
@@ -343,6 +353,7 @@ namespace ConstructionSetExtender
 																			IScriptTextEditor::ScriptMessageType TypeFilter);	// pass zero as line to count all lines
 
 				void										AddBookmark(UInt32 Line, String^ Description);
+				UInt32										GetBookmarks(UInt32 Line, List<ScriptBookmark^>^% Out);
 				void										ClearBookmarks();
 				String^										SerializeBookmarks();
 				void										DeserializeBookmarks(String^ Serialized, bool ClearExisting);
@@ -465,6 +476,73 @@ namespace ConstructionSetExtender
 
 				StructureVisualizerRenderer(AvalonEditTextEditor^ Parent);
 				~StructureVisualizerRenderer();
+			};
+
+			// derived from ICSharpCode.AvalonEdit.AddIn.IconBarMargin
+			ref class IconMargin : public AbstractMargin
+			{
+			protected:
+				MouseHoverLogic^	HoverLogic;
+
+				EventHandler<System::Windows::Input::MouseEventArgs^>^		HandlerHover;
+				EventHandler<System::Windows::Input::MouseEventArgs^>^		HandlerHoverStopped;
+				EventHandler^												HandlerTextViewChanged;
+
+				void	OnHover(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void	OnHoverStopped(Object^ Sender, System::Windows::Input::MouseEventArgs^ E);
+				void	OnRedrawRequested(Object^ sender, EventArgs^ E);
+
+				virtual void								OnTextViewChanged(AvalonEdit::Rendering::TextView^ oldTextView,
+																			  AvalonEdit::Rendering::TextView^ newTextView) override;
+				virtual Windows::Media::HitTestResult^		HitTestCore(Windows::Media::PointHitTestParameters^ hitTestParameters) override;
+				virtual Windows::Size						MeasureOverride(Windows::Size availableSize) override;
+				virtual void								OnRender(Windows::Media::DrawingContext^ drawingContext) override;
+				virtual void								OnMouseDown(System::Windows::Input::MouseButtonEventArgs^ e) override;
+				virtual void								OnMouseMove(System::Windows::Input::MouseEventArgs^ e) override;
+				virtual void								OnMouseUp(System::Windows::Input::MouseButtonEventArgs^ e) override;
+				virtual void								OnMouseLeave(System::Windows::Input::MouseEventArgs^ e) override;
+
+				int											GetLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e);
+				VisualLine^									GetVisualLineFromMousePosition(System::Windows::Input::MouseEventArgs^ e);
+
+				virtual void								HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E) abstract;
+				virtual void								HandleHoverStop() abstract;
+				virtual void								HandleClick(int Line) abstract;
+				virtual bool								GetRenderData(int Line,
+																		  Windows::Media::Imaging::BitmapSource^% OutIcon,
+																		  double% OutOpacity) abstract;		// return false to skip rendering the line
+			public:
+				IconMargin();
+				~IconMargin();
+			};
+
+			ref class DefaultIconMargin : public IconMargin
+			{
+				static int											InstanceCounter = 0;
+				static Windows::Media::Imaging::BitmapSource^		WarningIcon = nullptr;
+				static Windows::Media::Imaging::BitmapSource^		BookmarkIcon = nullptr;
+
+				static Windows::Media::Imaging::BitmapSource^		GetWarningIcon();
+				static Windows::Media::Imaging::BitmapSource^		GetBookmarkIcon();
+
+			protected:
+				AvalonEdit::TextEditor^		Parent;
+				LineTrackingManager^		LineTracker;
+				Windows::Forms::ToolTip^	Popup;
+				IntPtr						PopupParentHandle;
+
+				virtual void				HandleHoverStart(int Line, System::Windows::Input::MouseEventArgs^ E) override;
+				virtual void				HandleHoverStop() override;
+				virtual void				HandleClick(int Line) override;
+				virtual bool				GetRenderData(int Line,
+														Windows::Media::Imaging::BitmapSource^% OutIcon,
+														double% OutOpacity) override;
+
+				void						ShowPopup(String^ Title, String^ Message, ToolTipIcon Icon, Drawing::Point Location);
+				void						HidePopup();
+			public:
+				DefaultIconMargin(AvalonEdit::TextEditor^ ParentEditor, LineTrackingManager^ ParentLineTracker, IntPtr ToolTipParent);
+				~DefaultIconMargin();
 			};
 		}
 	}

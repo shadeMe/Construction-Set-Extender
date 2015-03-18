@@ -33,8 +33,8 @@ namespace ConstructionSetExtender
 	public:
 		ImageResourceManager(String^ BaseName);
 
-		Image^								CreateImageFromResource(String^ ResourceIdentifier);
-		void								SetupImageForToolStripButton(ToolStripButton^ Control);
+		Image^												CreateImage(String^ ResourceIdentifier);
+		void												SetupImageForToolStripButton(ToolStripButton^ Control);
 	};
 
 	ref class CSEControlDisposer
