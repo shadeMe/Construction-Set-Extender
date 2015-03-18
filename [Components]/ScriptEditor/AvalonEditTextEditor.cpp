@@ -807,6 +807,158 @@ namespace ConstructionSetExtender
 				OutScriptText = Result;
 				OutMetadataBlock = CSEBlock;
 			}
+
+			void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
+			{
+				HasCommandCollision = ISDB->GetIsIdentifierScriptCommand(VarName);
+				HasFormCollision = ISDB->GetIsIdentifierForm(VarName);
+			}
+
+			void AvalonEditTextEditor::QueueBackgroundTask()
+			{
+				if (BackgroundTask)
+				{
+					// skip if the previous task is still executing
+					if (BackgroundTask->Status == TaskStatus::Running ||
+						BackgroundTask->Status == TaskStatus::WaitingForActivation ||
+						BackgroundTask->Status == TaskStatus::WaitingToRun)
+					{
+						return;
+					}
+					else if (BackgroundTask->Status == TaskStatus::WaitingForChildrenToComplete)
+						BackgroundTask->Wait();
+					else if (BackgroundTask->Status == TaskStatus::RanToCompletion)
+					{
+						;//
+					}
+					else
+						throw gcnew InvalidOperationException("Background task state = " + BackgroundTask->Status.ToString());
+				}
+
+				// the completion task clears the handle, so this should be true
+				Debug::Assert(BackgroundTask == nullptr);
+
+				BackgroundTaskInput^ DataIn = gcnew BackgroundTaskInput();
+				DataIn->ScriptText = TextField->Document->CreateSnapshot();
+				DataIn->ScriptType = ParentModel->Type;
+				DataIn->CheckVarNameCollisionCommands = PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator");
+				DataIn->CheckVarNameCollisionForms = PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator");
+				DataIn->CountVarReferences = PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator");
+				DataIn->SkipVarRefCountsForQuests = PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator");
+
+				System::Func<Object^, BackgroundTaskOutput^>^ TaskDelegate = gcnew System::Func<Object^, BackgroundTaskOutput^>(&AvalonEditTextEditor::PerformBackgroundTask);
+				System::Action<Task<BackgroundTaskOutput^>^>^ ContinueDelegate = gcnew System::Action<Task<BackgroundTaskOutput^>^>(this,
+																																	&AvalonEditTextEditor::ProcessBackgroundTaskOutput);
+
+				BackgroundTask = Task<BackgroundTaskOutput^>::Factory->StartNew(TaskDelegate, DataIn);
+				// the completion task must be executed in th UI thread, so we need to use its task scheduler
+				BackgroundTask->ContinueWith(ContinueDelegate, Task<BackgroundTaskOutput^>::Factory->CancellationToken,
+											 TaskContinuationOptions::AttachedToParent | TaskContinuationOptions::ExecuteSynchronously,
+											 Globals::MainThreadTaskScheduler);
+			}
+
+			BackgroundTaskOutput^ AvalonEditTextEditor::PerformBackgroundTask(Object^ Input)
+			{
+				BackgroundTaskInput^ Data = (BackgroundTaskInput^)Input;
+				Debug::Assert(Data != nullptr);
+
+				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::None;
+				ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
+
+				AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables;
+				AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
+				AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
+
+				if (Data->CheckVarNameCollisionCommands)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+
+				if (Data->CheckVarNameCollisionForms)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameFormCollisions;
+
+				if (Data->CountVarReferences)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CountVariableReferences;
+
+				if (Data->SkipVarRefCountsForQuests)
+					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::SuppressQuestVariableRefCount;
+
+				if (Data->ScriptType == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
+					Type = ObScriptSemanticAnalysis::ScriptType::MagicEffect;
+				else if (Data->ScriptType == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
+					Type = ObScriptSemanticAnalysis::ScriptType::Quest;
+
+				BackgroundTaskOutput^ Out = gcnew BackgroundTaskOutput;
+				Out->AnalysisOutput = gcnew ObScriptSemanticAnalysis::AnalysisData;
+				// ### ISDB is not thread-safe, so no var name collision checking
+				Out->AnalysisOutput->PerformAnalysis(Data->ScriptText->Text, Type, AnalysisOps, nullptr);
+
+				return Out;
+			}
+
+			void AvalonEditTextEditor::ProcessBackgroundTaskOutput(Task<BackgroundTaskOutput^>^ Completed)
+			{
+				Debug::Assert(Completed->IsCompleted == true);
+				Debug::Assert(Completed->IsCanceled == false);
+
+				if (Completed->Status == TaskStatus::RanToCompletion)
+				{
+					if (Threading::Thread::CurrentThread->ManagedThreadId == OwnerThreadID)
+					{
+						if (SemanticAnalysisCache)
+						{
+							delete SemanticAnalysisCache;
+							SemanticAnalysisCache = nullptr;
+						}
+
+						SemanticAnalysisCache = (ObScriptSemanticAnalysis::AnalysisData^)Completed->Result->AnalysisOutput;
+
+						IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
+						LineTracker->Cleanup();
+						UpdateCodeFoldings();
+						UpdateSyntaxHighlighting(false);
+
+						LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
+						LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
+												   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+
+						for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+						{
+							LineTracker->TrackMessage(Itr->Line,
+													  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
+													  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
+						}
+
+						LineTracker->EndUpdate(false);
+					}
+					else
+					{
+						// why the heck is this happening?
+						Debugger::Log(1, "Error", "Background processing completion task " + Completed->Id + " called in a worker thread");
+						Debugger::Break();
+						return;
+					}
+				}
+				else
+					DebugPrint("BackgroundTask " + Completed->Id + " failed to complete successfully. Error Message - " + Completed->Exception->ToString());
+
+				BackgroundTask = nullptr;
+			}
+
+			void AvalonEditTextEditor::WaitForBackgroundTask()
+			{
+				if (BackgroundTask)
+					BackgroundTask->Wait();
+			}
+
+			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
+			{
+				if (Line < 1)
+					Line = 1;
+
+				LineTracker->TrackMessage(Line,
+										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
+										  TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
+			}
+
 #pragma region Events
 			bool AvalonEditTextEditor::OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E)
 			{
@@ -1233,11 +1385,7 @@ namespace ConstructionSetExtender
 				if (IsFocused == false)
 					return;
 
-				UpdateSemanticAnalysisCache(true, true, true, false);
-				UpdateCodeFoldings();
-				LineTracker->Cleanup();
-				IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
-				UpdateSyntaxHighlighting(false);
+				QueueBackgroundTask();
 			}
 
 			void AvalonEditTextEditor::ExternalScrollBar_ValueChanged( Object^ Sender, EventArgs^ E )
@@ -1555,6 +1703,9 @@ namespace ConstructionSetExtender
 				this->ParentModel = ParentModel;
 				this->JumpScriptDelegate = JumpScriptDelegate;
 
+				OwnerThreadID = Threading::Thread::CurrentThread->ManagedThreadId;
+				Debug::Assert(Globals::MainThreadID == OwnerThreadID);
+
 				WinFormsContainer = gcnew Panel();
 				WPFHost = gcnew ElementHost();
 				TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
@@ -1704,6 +1855,8 @@ namespace ConstructionSetExtender
 				TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
 
 				CompilationInProgress = false;
+
+				BackgroundTask = nullptr;
 
 				TextEditorContextMenu = gcnew ContextMenuStrip();
 				ContextMenuCopy = gcnew ToolStripMenuItem();
@@ -1860,6 +2013,8 @@ namespace ConstructionSetExtender
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()
 			{
+				WaitForBackgroundTask();
+
 				ParentModel = nullptr;
 
 				delete JumpScriptDelegate;
@@ -1993,13 +2148,7 @@ namespace ConstructionSetExtender
 				BraceColorizer = nullptr;
 			}
 
-			void CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision)
-			{
-				HasCommandCollision = ISDB->GetIsIdentifierScriptCommand(VarName);
-				HasFormCollision = ISDB->GetIsIdentifierForm(VarName);
-			}
-
-			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool BasicValidation, bool FullValidation)
+			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool Validate)
 			{
 				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::None;
 				ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
@@ -2010,11 +2159,10 @@ namespace ConstructionSetExtender
 				if (FillControlBlocks)
 					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
 
-				if (BasicValidation)
+				if (Validate)
+				{
 					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
 
-				if (FullValidation)
-				{
 					if (PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
 						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameCommandCollisions;
 
@@ -2035,19 +2183,6 @@ namespace ConstructionSetExtender
 
 				SemanticAnalysisCache->PerformAnalysis(GetText(), Type, AnalysisOps,
 													   gcnew ObScriptSemanticAnalysis::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
-
-				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
-										   (FullValidation ? TextEditors::IScriptTextEditor::ScriptMessageType::None : TextEditors::IScriptTextEditor::ScriptMessageType::Error));
-
-				for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
-				{
-					LineTracker->TrackMessage(Itr->Line,
-											  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
-											  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
-				}
-
-				LineTracker->EndUpdate(false);
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -2232,6 +2367,8 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::Unbind()
 			{
+				WaitForBackgroundTask();
+
 				IsFocused = false;
 				SemanticAnalysisTimer->Stop();
 				ScrollBarSyncTimer->Stop();
@@ -2244,16 +2381,6 @@ namespace ConstructionSetExtender
 			void DummyOutputWrapper(int Line, String^ Message)
 			{
 				;//
-			}
-
-			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
-			{
-				if (Line < 1)
-					Line = 1;
-
-				LineTracker->TrackMessage(Line,
-										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
-										  TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
 			}
 
 			String^ AvalonEditTextEditor::GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors)
@@ -2290,6 +2417,8 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack)
 			{
+				WaitForBackgroundTask();
+
 				Text = SanitizeUnicodeString(Text);
 
 				if (PreventTextChangedEventHandling)
@@ -2307,7 +2436,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache(true, true, false, false);
+					UpdateSemanticAnalysisCache(true, true, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
 				}
@@ -2346,7 +2475,7 @@ namespace ConstructionSetExtender
 						SetSelectionLength(0);
 					}
 
-					UpdateSemanticAnalysisCache(true, true, false, false);
+					UpdateSemanticAnalysisCache(true, true, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
 				}
@@ -2593,7 +2722,7 @@ namespace ConstructionSetExtender
 			UInt32 AvalonEditTextEditor::GetIndentLevel(UInt32 LineNumber)
 			{
 				if (Modified)
-					UpdateSemanticAnalysisCache(false, true, false, false);
+					UpdateSemanticAnalysisCache(false, true, false);
 
 				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
@@ -2601,7 +2730,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
 			{
 				if (Modified)
-					UpdateSemanticAnalysisCache(true, false, false, false);
+					UpdateSemanticAnalysisCache(true, false, false);
 
 				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
@@ -2624,7 +2753,7 @@ namespace ConstructionSetExtender
 			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
 				if (UpdateVars || UpdateControlBlocks)
-					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false, false);
+					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false);
 
 				return SemanticAnalysisCache;
 			}
@@ -2646,7 +2775,18 @@ namespace ConstructionSetExtender
 																						PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor"));
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-				UpdateSemanticAnalysisCache(true, true, true, true);
+
+				UpdateSemanticAnalysisCache(true, true, true);
+				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
+										   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+
+				for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+				{
+					LineTracker->TrackMessage(Itr->Line,
+											  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
+											  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
+				}
+
 				if (SemanticAnalysisCache->HasCriticalMessages == false && SemanticAnalysisCache->MalformedStructure == false)
 				{
 					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
@@ -2702,6 +2842,8 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::InitializeState(String^ RawScriptText)
 			{
+				WaitForBackgroundTask();
+
 				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::None, TextEditors::IScriptTextEditor::ScriptMessageType::None);
 				LineTracker->ClearBookmarks();
 				LineTracker->ClearFindResults(false);

@@ -1564,10 +1564,11 @@ namespace ConstructionSetExtender
 						int lineNumber = line->FirstDocumentLine->LineNumber;
 						Windows::Media::Imaging::BitmapSource^ icon = nullptr;
 						double opacity = 1.0;
-						if (GetRenderData(lineNumber, icon, opacity))
+						int W = 16, H = 16;
+						if (GetRenderData(lineNumber, icon, opacity, W, H))
 						{
 							double lineMiddle = line->GetTextLineVisualYPosition(line->TextLines[0], VisualYPosition::TextMiddle) - textView->VerticalOffset;
-							Windows::Rect rect(0, PixelSnapHelpers::Round(lineMiddle - 8, pixelSize.Height), 16, 16);
+							Windows::Rect rect((16 - W)/2, PixelSnapHelpers::Round(lineMiddle - H/2, pixelSize.Height), W, H);
 							drawingContext->PushOpacity(opacity);
 							drawingContext->DrawImage(icon, rect);
 							drawingContext->Pop();
@@ -1645,7 +1646,7 @@ namespace ConstructionSetExtender
 			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
 			{
 				if (WarningIcon == nullptr)
-					WarningIcon = WPFImageResourceGenerator::CreateImageSource("MessageListWarning");
+					WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarning");
 
 				return WarningIcon;
 			}
@@ -1711,7 +1712,7 @@ namespace ConstructionSetExtender
 				;//
 			}
 
-			bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapSource^% OutIcon, double% OutOpacity)
+			bool DefaultIconMargin::GetRenderData(int Line, Windows::Media::Imaging::BitmapSource^% OutIcon, double% OutOpacity, int% Width, int% Height)
 			{
 				// warnings override bookmarks
 				List<ScriptMessage^>^ Warnings = gcnew List < ScriptMessage^ >;
@@ -1723,9 +1724,15 @@ namespace ConstructionSetExtender
 					return false;
 
 				if (Warnings->Count)
+				{
 					OutIcon = GetWarningIcon();
+					Width = Height = 12;
+				}
 				else
+				{
 					OutIcon = GetBookmarkIcon();
+					Width = Height = 16;
+				}
 
 				OutOpacity = 1.0;
 				return true;

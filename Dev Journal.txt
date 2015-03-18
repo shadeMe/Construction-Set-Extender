@@ -66,6 +66,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
+		> Jump to script at caret keyboard shortcut
 		> Notepad++ like Find/Replace All results
 		> Document minimap
 

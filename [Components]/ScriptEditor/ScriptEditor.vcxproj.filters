@@ -488,5 +488,8 @@
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Namespace.png">
       <Filter>Resources\Images</Filter>
     </Image>
+    <Image Include="AvalonEditIconMarginWarning.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
   </ItemGroup>
 </Project>

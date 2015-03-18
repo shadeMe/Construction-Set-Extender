@@ -65,6 +65,9 @@ UInt32 InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMST
 	ISDB->InitializeGMSTDatabase(GMSTData);
 	ISDB->ForceUpdateDatabase();
 
+	Globals::MainThreadID = Threading::Thread::CurrentThread->ManagedThreadId;
+	Globals::MainThreadTaskScheduler = Threading::Tasks::TaskScheduler::FromCurrentSynchronizationContext();
+
 	System::Windows::Media::RenderOptions::ProcessRenderMode = System::Windows::Interop::RenderMode::Default;
 
 	return NonVanillaCommandCount;

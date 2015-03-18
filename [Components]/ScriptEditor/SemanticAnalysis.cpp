@@ -611,6 +611,14 @@ namespace ConstructionSetExtender
 		AnalysisMessages = gcnew List<UserMessage^>();
 	}
 
+	ObScriptSemanticAnalysis::AnalysisData::~AnalysisData()
+	{
+		Variables->Clear();
+		ControlBlocks->Clear();
+		UDFResult = nullptr;
+		AnalysisMessages->Clear();
+	}
+
 	void ObScriptSemanticAnalysis::AnalysisData::PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate)
 	{
 		Tokenizer^ Parser = gcnew Tokenizer();
@@ -898,6 +906,11 @@ namespace ConstructionSetExtender
 						{
 							LogCriticalAnalysisMessage(CurrentLine, "Invalid condition.");
 							EncounteredProblem = true;
+						}
+						if (Operations.HasFlag(Operation::PerformBasicValidation) && FirstTokenType == ScriptTokenType::Else &&
+							(Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';'))
+						{
+							LogAnalysisMessage(CurrentLine, "Redundant expression beyond Else specifier.");
 						}
 
 						if (StructureStack->Peek() != ControlBlock::ControlBlockType::If && StructureStack->Peek() != ControlBlock::ControlBlockType::ElseIf)

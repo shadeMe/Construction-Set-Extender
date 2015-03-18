@@ -248,6 +248,7 @@ namespace ConstructionSetExtender
 			};
 
 			AnalysisData();
+			~AnalysisData();
 
 			delegate void						CheckVariableNameCollision(String^ VarName, bool% HasCommandCollision, bool% HasFormCollision);
 

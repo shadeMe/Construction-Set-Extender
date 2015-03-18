@@ -20,11 +20,27 @@ namespace ConstructionSetExtender
 		{
 			using namespace ICSharpCode;
 			using namespace System::Windows::Forms::Integration;
+			using namespace System::Threading::Tasks;
 
 			typedef System::Windows::Media::Imaging::RenderTargetBitmap			RTBitmap;
 			typedef System::EventHandler<AvalonEdit::Editing::TextEventArgs^>	AvalonEditTextEventHandler;
 
 			delegate void JumpToScriptHandler(String^ TargetEditorID);
+
+			ref struct BackgroundTaskInput
+			{
+				ITextSource^										ScriptText;
+				ScriptEditor::IWorkspaceModel::ScriptType			ScriptType;
+				bool												CheckVarNameCollisionCommands;
+				bool												CheckVarNameCollisionForms;
+				bool												CountVarReferences;
+				bool												SkipVarRefCountsForQuests;
+			};
+
+			ref struct BackgroundTaskOutput
+			{
+				ObScriptSemanticAnalysis::AnalysisData^			AnalysisOutput;
+			};
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
@@ -96,6 +112,9 @@ namespace ConstructionSetExtender
 				DefaultIconMargin^									IconBarMargin;
 
 				bool												CompilationInProgress;
+
+				Task<BackgroundTaskOutput^>^						BackgroundTask;
+				int													OwnerThreadID;
 
 				EventHandler^										TextFieldTextChangedHandler;
 				EventHandler^										TextFieldCaretPositionChangedHandler;
@@ -196,6 +215,11 @@ namespace ConstructionSetExtender
 
 				void										RoutePreprocessorMessages(int Line, String^ Message);
 
+				void										QueueBackgroundTask();
+				static BackgroundTaskOutput^				PerformBackgroundTask(Object^ Input);
+				void										ProcessBackgroundTaskOutput(Task<BackgroundTaskOutput^>^ Completed);
+				void										WaitForBackgroundTask();
+
 				String^										GetTokenAtIndex(int Index, bool SelectText, int% StartIndexOut, int% EndIndexOut);
 				String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
 				String^										GetTextAtLocation(int Index, bool SelectText);
@@ -221,8 +245,7 @@ namespace ConstructionSetExtender
 
 				void										UpdateSemanticAnalysisCache(bool FillVariables,
 																						bool FillControlBlocks,
-																						bool BasicValidation,
-																						bool FullValidation);
+																						bool Validate);
 				void										UpdateCodeFoldings();
 				void										UpdateSyntaxHighlighting(bool Regenerate);
 				void										SynchronizeExternalScrollBars();

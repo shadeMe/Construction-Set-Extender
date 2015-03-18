@@ -9,6 +9,8 @@ namespace ConstructionSetExtender
 	public:
 		static String^												AppPath = gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetAppPath());
 		static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("ScriptEditor.Images");
+		static int													MainThreadID = -1;
+		static System::Threading::Tasks::TaskScheduler^				MainThreadTaskScheduler = nullptr;
 	};
 
 #define SetupControlImage(Identifier)							Identifier##->Name = #Identifier;	\

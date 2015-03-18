@@ -510,7 +510,9 @@ namespace ConstructionSetExtender
 				virtual void								HandleClick(int Line) abstract;
 				virtual bool								GetRenderData(int Line,
 																		  Windows::Media::Imaging::BitmapSource^% OutIcon,
-																		  double% OutOpacity) abstract;		// return false to skip rendering the line
+																		  double% OutOpacity,
+																		  int% Width,
+																		  int% Height) abstract;		// return false to skip rendering the line
 			public:
 				IconMargin();
 				~IconMargin();
@@ -536,7 +538,9 @@ namespace ConstructionSetExtender
 				virtual void				HandleClick(int Line) override;
 				virtual bool				GetRenderData(int Line,
 														Windows::Media::Imaging::BitmapSource^% OutIcon,
-														double% OutOpacity) override;
+														double% OutOpacity,
+														int% Width,
+														int% Height) override;
 
 				void						ShowPopup(String^ Title, String^ Message, ToolTipIcon Icon, Drawing::Point Location);
 				void						HidePopup();
