@@ -2581,9 +2581,9 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			int AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
+			IScriptTextEditor::FindReplaceResult^ AvalonEditTextEditor::FindReplace(IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
 			{
-				int Hits = 0;
+				IScriptTextEditor::FindReplaceResult^ Result = gcnew IScriptTextEditor::FindReplaceResult;
 
 				if (Operation != IScriptTextEditor::FindReplaceOperation::CountMatches)
 				{
@@ -2633,13 +2633,13 @@ namespace ConstructionSetExtender
 								for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
 								{
 									int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Itr, Replacement, Options);
-									Hits += Matches;
-
 									if (Matches == -1)
 									{
-										Hits = -1;
+										Result->HasError = true;
 										break;
 									}
+									else if (Matches)
+										Result->Add(Itr->LineNumber, TextField->Document->GetText(Itr), Matches);
 								}
 							}
 						}
@@ -2649,19 +2649,19 @@ namespace ConstructionSetExtender
 						for each (DocumentLine^ Line in TextField->Document->Lines)
 						{
 							int Matches = PerformFindReplaceOperationOnSegment(Parser, Operation, Line, Replacement, Options);
-							Hits += Matches;
-
 							if (Matches == -1)
 							{
-								Hits = -1;
+								Result->HasError = true;
 								break;
 							}
+							else if (Matches)
+								Result->Add(Line->LineNumber, TextField->Document->GetText(Line), Matches);
 						}
 					}
 				}
 				catch (Exception^ E)
 				{
-					Hits = -1;
+					Result->HasError = true;
 					DebugPrint("Couldn't perform find/replace operation!\n\tException: " + E->Message);
 				}
 
@@ -2673,15 +2673,15 @@ namespace ConstructionSetExtender
 					LineTracker->EndUpdate(true);
 				}
 
-				if (Hits == -1)
+				if (Result->HasError)
 				{
-					MessageBox::Show("An error was encountered while performing the find/replace operation. Please recheck your search and/or replacement strings.",
+					MessageBox::Show("An error occurred while performing the find/replace operation. Please recheck your search and/or replacement strings.",
 									 SCRIPTEDITOR_TITLE,
 									 MessageBoxButtons::OK,
 									 MessageBoxIcon::Exclamation);
 				}
 
-				return Hits;
+				return Result;
 			}
 
 			void AvalonEditTextEditor::ScrollToLine(UInt32 LineNumber)

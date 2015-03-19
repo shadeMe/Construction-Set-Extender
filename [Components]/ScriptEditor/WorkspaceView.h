@@ -22,6 +22,49 @@ namespace ConstructionSetExtender
 	{
 		ref class ConcreteWorkspaceView;
 
+		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
+		{
+			List<ConcreteWorkspaceView^>^				Allocations;
+
+			ConcreteWorkspaceViewFactory();
+		public:
+			~ConcreteWorkspaceViewFactory();
+
+			property UInt32								Count
+			{
+				virtual UInt32 get() { return Allocations->Count; }
+				virtual void set(UInt32 e) {}
+			}
+
+			static ConcreteWorkspaceViewFactory^		Instance = gcnew ConcreteWorkspaceViewFactory;
+
+			void										Remove(ConcreteWorkspaceView^ Allocation);
+			void										Clear();
+
+			// IWorkspaceViewFactory
+			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height);
+			virtual IWorkspaceViewController^			CreateController();
+		};
+
+		ref class ConcreteWorkspaceViewController : public IWorkspaceViewController
+		{
+		public:
+			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+
+			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
+
+			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
+			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+										String^ Query, String^ Replacement, UInt32 Options, bool Global);
+
+			virtual void	Redraw(IWorkspaceView^ View);
+
+			virtual void	NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
+
+			virtual DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
+		};
+
 		ref class WorkspaceViewTabTearing
 		{
 			static void							TearingEventHandler(Object^ Sender, MouseEventArgs^ E);
@@ -77,47 +120,52 @@ namespace ConstructionSetExtender
 			void										Hide();
 		};
 
-		ref class ConcreteWorkspaceViewFactory : public IWorkspaceViewFactory
+		ref struct FindReplaceAllResults
 		{
-			List<ConcreteWorkspaceView^>^				Allocations;
-
-			ConcreteWorkspaceViewFactory();
-		public:
-			~ConcreteWorkspaceViewFactory();
-
-			property UInt32								Count
+			ref struct HitData
 			{
-				virtual UInt32 get() { return Allocations->Count; }
-				virtual void set(UInt32 e) {}
+				IWorkspaceModel^										Parent;
+				String^													ParentDescription;
+				TextEditors::IScriptTextEditor::FindReplaceResult^		Hits;
+
+				HitData(IWorkspaceModel^ Parent, TextEditors::IScriptTextEditor::FindReplaceResult^ Data) :
+						Parent(Parent),
+						ParentDescription(Parent->LongDescription),
+						Hits(Data) {}
+			};
+
+			TextEditors::IScriptTextEditor::FindReplaceOperation		Operation;
+			String^														Query;
+			String^														Replacement;
+			UInt32														Options;
+
+			List<HitData^>^												Hits;
+
+			FindReplaceAllResults() : Operation(TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches),
+				Query(""), Replacement(""), Options(0), Hits(gcnew List<HitData^>) {}
+
+			void Add(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceResult^ Data)
+			{
+				Debug::Assert(Data->HasError == false);
+				Hits->Add(gcnew HitData(Model, Data));
 			}
 
-			static ConcreteWorkspaceViewFactory^		Instance = gcnew ConcreteWorkspaceViewFactory;
+			property int TotalHitCount
+			{
+				int get()
+				{
+					int Count = 0;
 
-			void										Remove(ConcreteWorkspaceView^ Allocation);
-			void										Clear();
+					for each (auto Instance in Hits)
+						Count += Instance->Hits->TotalHitCount;
 
-			// IWorkspaceViewFactory
-			virtual IWorkspaceView^						CreateView(int X, int Y, int Width, int Height);
-			virtual IWorkspaceViewController^			CreateController();
-		};
+					return Count;
+				}
+			}
 
-		ref class ConcreteWorkspaceViewController : public IWorkspaceViewController
-		{
-		public:
-			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-
-			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
-
-			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
-										String^ Query, String^ Replacement, UInt32 Options, bool Global);
-
-			virtual void	Redraw(IWorkspaceView^ View);
-
-			virtual void	NewTab(IWorkspaceView^ View, NewTabOperationArgs^ E);
-
-			virtual DialogResult	MessageBox(String^ Message, MessageBoxButtons Buttons, MessageBoxIcon Icon);
+			static bool							GenericCanExpandGetter(Object^ E);
+			static Collections::IEnumerable^	GenericChildrenGetter(Object^ E);
+			static Object^						GenericAspectGetter(Object^ E);
 		};
 
 		ref class ConcreteWorkspaceView : public IWorkspaceView
@@ -158,6 +206,7 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarNavigationBack);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarNavigationForward);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarSaveAll);
+			ConcreteWorkspaceViewDeclareClickHandler(ToolBarGlobalFindList);
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarOptions);
 
 			ConcreteWorkspaceViewDeclareClickHandler(ToolBarDumpAllScripts);
@@ -216,6 +265,10 @@ namespace ConstructionSetExtender
 			bool									FreezeNavigationStacks;
 
 			void									RemoveFromNavigationStacks(IWorkspaceModel^ Model);
+			void									RemoveFromFindReplaceAllResultCache(IWorkspaceModel^ Model);
+
+			EventHandler^							GlobalFindListItemActivate;
+			void									GlobalFindList_ItemActivate(Object^ Sender, EventArgs^ E);
 		public:
 			AnimatedForm^							EditorForm;
 			DotNetBar::SuperTabControl^				EditorTabStrip;
@@ -237,6 +290,7 @@ namespace ConstructionSetExtender
 			ToolStripButton^						ToolBarNavigationBack;
 			ToolStripButton^						ToolBarNavigationForward;
 			ToolStripButton^						ToolBarSaveAll;
+			ToolStripButton^						ToolBarGlobalFindList;
 			ToolStripButton^						ToolBarOptions;
 
 			ToolStrip^								WorkspaceSecondaryToolBar;
@@ -280,6 +334,7 @@ namespace ConstructionSetExtender
 			ListView^								MessageList;
 			ListView^								FindList;
 			ListView^								BookmarkList;
+			BrightIdeasSoftware::TreeListView^		GlobalFindList;
 			Label^									SpoilerText;
 
 			TextEditors::ScriptOffsetViewer^		OffsetTextViewer;
@@ -291,6 +346,7 @@ namespace ConstructionSetExtender
 			IntelliSense::IIntelliSenseInterfaceView^	IntelliSenseView;
 
 			WorkspaceViewTabFilter^					TabStripFilter;
+			List<FindReplaceAllResults^>^			CachedFindReplaceAllResults;
 
 			ConcreteWorkspaceViewController^		ViewController;
 			ConcreteWorkspaceViewFactory^			ViewFactory;
@@ -321,9 +377,13 @@ namespace ConstructionSetExtender
 
 			void									ShowMessageList();
 			void									ShowFindResultList();
+			void									ShowBookmarkList();
+			void									ShowGlobalFindResultList();
 			void									ToggleMessageList(bool State);
 			void									ToggleBookmarkList(bool State);
 			void									ToggleFindResultList(bool State);
+			void									ToggleGlobalFindResultList(bool State);
+			void									HideAllLists();
 
 			void									ShowOpenDialog();
 			void									ShowDeleteDialog();

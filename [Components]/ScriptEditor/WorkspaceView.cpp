@@ -248,7 +248,6 @@ namespace ConstructionSetExtender
 			ListView->BorderStyle = BorderStyle::None;
 			ListView->Size = Size(285, 89);
 			ListView->SmallImageList = gcnew ImageList();
-			ListView->SmallImageList->TransparentColor = Color::White;
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOff"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOn"));
 			ListView->Location = Point(0, 0);
@@ -333,6 +332,56 @@ namespace ConstructionSetExtender
 			Form->Hide();
 		}
 
+		bool FindReplaceAllResults::GenericCanExpandGetter(Object^ E)
+		{
+			if (E->GetType() == FindReplaceAllResults::typeid)
+				return true;
+			else if (E->GetType() == FindReplaceAllResults::HitData::typeid)
+				return true;
+			else
+				return false;
+		}
+
+		Collections::IEnumerable^ FindReplaceAllResults::GenericChildrenGetter(Object^ E)
+		{
+			if (E->GetType() == FindReplaceAllResults::typeid)
+				return ((FindReplaceAllResults^)E)->Hits;
+			else if (E->GetType() == FindReplaceAllResults::HitData::typeid)
+				return ((FindReplaceAllResults::HitData^)E)->Hits->Hits;
+			else
+				return nullptr;
+		}
+
+		Object^ FindReplaceAllResults::GenericAspectGetter(Object^ E)
+		{
+			String^ Result = "<unknown>";
+			if (E->GetType() == FindReplaceAllResults::typeid)
+			{
+				FindReplaceAllResults^ Data = (FindReplaceAllResults^)E;
+				switch (Data->Operation)
+				{
+				case TextEditors::IScriptTextEditor::FindReplaceOperation::Replace:
+					Result = "Replace \"" + Data->Query + "\" with \"" + Data->Replacement + "\" (" + Data->TotalHitCount + " hits in " + Data->Hits->Count + " script(s))";
+					break;
+				default:
+					Result = "Search \"" + Data->Query + "\" (" + Data->TotalHitCount + " hits in " + Data->Hits->Count + " script(s))";
+					break;
+				}
+			}
+			else if (E->GetType() == FindReplaceAllResults::HitData::typeid)
+			{
+				FindReplaceAllResults::HitData^ Data = (FindReplaceAllResults::HitData^)E;
+				Result = "Script " + Data->ParentDescription + " (" + Data->Hits->TotalHitCount + " hits)";
+			}
+			else if (E->GetType() == TextEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			{
+				TextEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (TextEditors::IScriptTextEditor::FindReplaceResult::HitData^)E;
+				Result = "Line " + Data->Line + " (" + Data->Hits + " hit(s)): " + Data->Text;
+			}
+
+			return Result;
+		}
+
 		ConcreteWorkspaceView::ConcreteWorkspaceView(ConcreteWorkspaceViewController^ Controller, ConcreteWorkspaceViewFactory^ Factory, Rectangle Bounds)
 		{
 			Application::EnableVisualStyles();
@@ -368,23 +417,22 @@ namespace ConstructionSetExtender
 			EditorForm->KeyPreview = true;
 			EditorForm->Tag = nullptr;
 
+			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
+
 			EditorTabStrip = gcnew DotNetBar::SuperTabControl();
 			EditorTabStrip->SuspendLayout();
 			EditorTabStrip->Dock = DockStyle::Top;
 			EditorTabStrip->MaximumSize = Size(32000, 26);
-	//		EditorTabStrip->Size = Size(500, 26);
-	//		EditorTabStrip->Anchor = AnchorStyles::Top | AnchorStyles::Right;
 			EditorTabStrip->Location = Point(0, 0);
 			EditorTabStrip->TabAlignment = DotNetBar::eTabStripAlignment::Top;
 			EditorTabStrip->TabLayoutType = DotNetBar::eSuperTabLayoutType::SingleLine;
 			EditorTabStrip->TextAlignment = DotNetBar::eItemAlignment::Far;
-			EditorTabStrip->Font = gcnew Font("Segoe UI", 10, FontStyle::Regular);
-			EditorTabStrip->TabFont = gcnew Font("Segoe UI", 9, FontStyle::Bold);
-			EditorTabStrip->SelectedTabFont = gcnew Font("Segoe UI", 9, FontStyle::Bold);
+			EditorTabStrip->TabFont = gcnew Font(SystemFonts::MessageBoxFont->FontFamily->Name, 9, FontStyle::Bold);
+			EditorTabStrip->SelectedTabFont = gcnew Font(SystemFonts::MessageBoxFont->FontFamily->Name, 9, FontStyle::Bold);
 			EditorTabStrip->FixedTabSize = Size(0, 23);
 
-			Color TabStripGradientColorStart = Color::FromArgb(/*255, 59, 59, 59*/255, 85, 85, 85);
-			Color TabStripGradientColorEnd = Color::FromArgb(/*255, 60, 60, 60*/255, 70, 70, 70);
+			Color TabStripGradientColorStart = Color::FromArgb(255, 25, 25, 25);
+			Color TabStripGradientColorEnd = Color::FromArgb(255, 25, 25, 25);
 
 			EditorTabStrip->CloseButtonOnTabsVisible = true;
 			EditorTabStrip->CloseButtonOnTabsAlwaysDisplayed = false;
@@ -394,7 +442,6 @@ namespace ConstructionSetExtender
 			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOff"));
 			EditorTabStrip->ImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ModifiedFlagOn"));
 			EditorTabStrip->ImageList->ImageSize = Size(12, 12);
-			EditorTabStrip->ImageList->TransparentColor = Color::White;
 			EditorTabStrip->ReorderTabsEnabled = true;
 			EditorTabStrip->TabStyle = DotNetBar::eSuperTabStyle::Office2010BackstageBlue;
 			EditorTabStrip->TabStripColor->OuterBorder = TabStripGradientColorStart;
@@ -405,8 +452,8 @@ namespace ConstructionSetExtender
 			NewTabButton = gcnew DotNetBar::ButtonItem();
 			NewTabButton->Image = Globals::ScriptEditorImageResourceManager->CreateImage("NewTabButton");
 			NewTabButton->ButtonStyle = DotNetBar::eButtonStyle::Default;
-			NewTabButton->Style = DotNetBar::eDotNetBarStyle::Office2007;
-			NewTabButton->ColorTable = DotNetBar::eButtonColor::Office2007WithBackground;
+			NewTabButton->Style = DotNetBar::eDotNetBarStyle::Office2010;
+			NewTabButton->ColorTable = DotNetBar::eButtonColor::Flat;
 			NewTabButton->Text = "New Tab";
 			NewTabButton->Tooltip = "New Tab";
 
@@ -422,7 +469,6 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewDefineClickHandler(NewTabButton);
 			ConcreteWorkspaceViewDefineClickHandler(SortTabsButton);
 
-			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
 			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(TabStripGradientColorStart,
 																													 TabStripGradientColorEnd);
 			TODO("remove tabs on left");
@@ -457,7 +503,10 @@ namespace ConstructionSetExtender
 			MessageList = gcnew DoubleBufferedListView();
 			FindList = gcnew DoubleBufferedListView();
 			BookmarkList = gcnew DoubleBufferedListView();
+			GlobalFindList = gcnew BrightIdeasSoftware::TreeListView;
 			SpoilerText = gcnew Label();
+
+			GlobalFindListItemActivate = gcnew EventHandler(this, &ConcreteWorkspaceView::GlobalFindList_ItemActivate);
 
 			AttachPanel = gcnew Panel();
 			AttachPanel->Dock = DockStyle::Fill;
@@ -478,6 +527,7 @@ namespace ConstructionSetExtender
 			ToolBarNavigationBack = gcnew ToolStripButton();
 			ToolBarNavigationForward = gcnew ToolStripButton();
 			ToolBarSaveAll = gcnew ToolStripButton();
+			ToolBarGlobalFindList = gcnew ToolStripButton;
 			ToolBarOptions = gcnew ToolStripButton();
 
 			ToolBarScriptType = gcnew ToolStripDropDownButton();
@@ -528,20 +578,20 @@ namespace ConstructionSetExtender
 			IntelliSenseView = gcnew IntelliSense::IntelliSenseInterfaceView;
 			TabStripFilter = gcnew WorkspaceViewTabFilter(this);
 
+			CachedFindReplaceAllResults = gcnew List < FindReplaceAllResults^ > ;
+
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
 			SetupControlImage(ToolBarPreviousScript);
 			SetupControlImage(ToolBarNextScript);
 			SetupControlImage(ToolBarSaveScript);
-			SetupControlImage(ToolBarSaveScriptNoCompile);
-			SetupControlImage(ToolBarSaveScriptAndPlugin);
 			SetupControlImage(ToolBarRecompileScripts);
 			SetupControlImage(ToolBarCompileDependencies);
-			ToolBarCompileDependencies->ImageTransparentColor = Color::White;
 			SetupControlImage(ToolBarDeleteScript);
 			SetupControlImage(ToolBarNavigationBack);
 			SetupControlImage(ToolBarNavigationForward);
 			SetupControlImage(ToolBarSaveAll);
+			SetupControlImage(ToolBarGlobalFindList);
 			SetupControlImage(ToolBarOptions);
 
 			SetupControlImage(ToolBarScriptTypeContentsObject);
@@ -552,7 +602,6 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarEditMenuContentsFindReplace);
 			SetupControlImage(ToolBarEditMenuContentsGotoLine);
 			SetupControlImage(ToolBarEditMenuContentsGotoOffset);
-			ToolBarEditMenuContentsGotoOffset->ImageTransparentColor = Color::White;
 
 			SetupControlImage(ToolBarRefactorMenu);
 			SetupControlImage(ToolBarRefactorMenuContentsDocumentScript);
@@ -563,9 +612,7 @@ namespace ConstructionSetExtender
 			SetupControlImage(ToolBarFindList);
 			SetupControlImage(ToolBarBookmarkList);
 			SetupControlImage(ToolBarDumpScript);
-			SetupControlImage(ToolBarDumpAllScripts);
 			SetupControlImage(ToolBarLoadScript);
-			SetupControlImage(ToolBarLoadScriptsToTabs);
 			SetupControlImage(ToolBarShowOffsets);
 			SetupControlImage(ToolBarShowPreprocessedText);
 			SetupControlImage(ToolBarSanitizeScriptText);
@@ -578,6 +625,7 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarNavigationBack);
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarNavigationForward);
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarSaveAll);
+			ConcreteWorkspaceViewDefineClickHandler(ToolBarGlobalFindList);
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarOptions);
 
 			ConcreteWorkspaceViewDefineClickHandler(ToolBarDumpAllScripts);
@@ -671,6 +719,11 @@ namespace ConstructionSetExtender
 			ToolBarDeleteScript->AutoSize = true;
 			ToolBarDeleteScript->Margin = ToolBarButtonPaddingLarge;
 
+			ToolBarGlobalFindList->ToolTipText = "Global Find Result List";
+			ToolBarGlobalFindList->AutoSize = true;
+			ToolBarGlobalFindList->Margin = ToolBarButtonPaddingLarge;
+			ToolBarGlobalFindList->Alignment = ToolStripItemAlignment::Right;
+
 			ToolBarSaveAll->ToolTipText = "Save All Open Scripts";
 			ToolBarSaveAll->AutoSize = true;
 			ToolBarSaveAll->Margin = ToolBarButtonPaddingLarge;
@@ -757,10 +810,9 @@ namespace ConstructionSetExtender
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsObject);
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsQuest);
 			ToolBarScriptTypeContents->Items->Add(ToolBarScriptTypeContentsMagicEffect);
-			//	ToolBarScriptType->ImageTransparentColor = Color::White;
 			ToolBarScriptType->DropDown = ToolBarScriptTypeContents;
 			ToolBarScriptType->Alignment = ToolStripItemAlignment::Right;
-			ToolBarScriptType->Padding = ToolBarButtonPaddingLarge;
+		//	ToolBarScriptType->Padding = ToolBarButtonPaddingLarge;
 
 			UpdateScriptTypeControls(IWorkspaceModel::ScriptType::Object);
 
@@ -783,7 +835,7 @@ namespace ConstructionSetExtender
 			ToolBarRefactorMenuContents->Items->Add(ToolBarRefactorMenuContentsModifyVariableIndices);
 			ToolBarRefactorMenu->Text = "Refactor";
 			ToolBarRefactorMenu->DropDown = ToolBarRefactorMenuContents;
-			ToolBarRefactorMenu->Padding = Padding(0);
+			ToolBarRefactorMenu->Margin = Padding(20, 0, 3, 0);
 			ToolBarRefactorMenu->Alignment = ToolStripItemAlignment::Right;
 
 			WorkspaceMainToolBar->Dock = DockStyle::Top;
@@ -799,6 +851,7 @@ namespace ConstructionSetExtender
 			WorkspaceMainToolBar->Items->Add(ToolBarOptions);
 			WorkspaceMainToolBar->Items->Add(ToolBarNavigationForward);
 			WorkspaceMainToolBar->Items->Add(ToolBarNavigationBack);
+			WorkspaceMainToolBar->Items->Add(ToolBarGlobalFindList);
 			WorkspaceMainToolBar->Items->Add(ToolBarSaveAll);
 			WorkspaceMainToolBar->ShowItemToolTips = true;
 
@@ -853,6 +906,28 @@ namespace ConstructionSetExtender
 			BookmarkList->FullRowSelect = true;
 			BookmarkList->HideSelection = false;
 
+			GlobalFindList->Dock = DockStyle::Fill;
+			GlobalFindList->BorderStyle = BorderStyle::Fixed3D;
+			GlobalFindList->Visible = false;
+			GlobalFindList->View = View::Details;
+			GlobalFindList->MultiSelect = false;
+			GlobalFindList->CheckBoxes = false;
+			GlobalFindList->FullRowSelect = true;
+			GlobalFindList->HideSelection = false;
+			GlobalFindList->LabelEdit = false;
+			GlobalFindList->GridLines = false;
+			GlobalFindList->HeaderStyle = ColumnHeaderStyle::Nonclickable;
+			GlobalFindList->CanExpandGetter = gcnew BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate(&FindReplaceAllResults::GenericCanExpandGetter);
+			GlobalFindList->ChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(&FindReplaceAllResults::GenericChildrenGetter);
+			GlobalFindList->ItemActivate += GlobalFindListItemActivate;
+
+			BrightIdeasSoftware::OLVColumn^ Column = gcnew BrightIdeasSoftware::OLVColumn;
+			Column->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&FindReplaceAllResults::GenericAspectGetter);
+			Column->Text = "Find/Replace Results";
+			Column->Width = Bounds.Width;
+			GlobalFindList->AllColumns->Add(Column);
+			GlobalFindList->Columns->Add(Column);
+
 			// ideally, the main toolbar should be the main form's child but that screws with the tab strip's layout
 			WorkspaceSplitter->Panel1->Controls->Add(AttachPanel);
 			WorkspaceSplitter->Panel1->Controls->Add(WorkspaceMainToolBar);
@@ -861,6 +936,7 @@ namespace ConstructionSetExtender
 			WorkspaceSplitter->Panel2->Controls->Add(MessageList);
 			WorkspaceSplitter->Panel2->Controls->Add(FindList);
 			WorkspaceSplitter->Panel2->Controls->Add(BookmarkList);
+			WorkspaceSplitter->Panel2->Controls->Add(GlobalFindList);
 			WorkspaceSplitter->Panel2->Controls->Add(SpoilerText);
 
 			EditorForm->Controls->Add(WorkspaceSplitter);
@@ -879,6 +955,7 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarNavigationBack);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarNavigationForward);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarSaveAll);
+			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarGlobalFindList);
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarOptions);
 
 			ConcreteWorkspaceViewSubscribeClickEvent(ToolBarEditMenuContentsFindReplace);
@@ -931,6 +1008,8 @@ namespace ConstructionSetExtender
 
 		ConcreteWorkspaceView::~ConcreteWorkspaceView()
 		{
+			CachedFindReplaceAllResults->Clear();
+
 			NavigationStackBackward->Clear();
 			NavigationStackForward->Clear();
 			FreezeNavigationStacks = true;
@@ -985,6 +1064,7 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarNavigationBack);
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarNavigationForward);
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSaveAll);
+			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarGlobalFindList);
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarOptions);
 
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarEditMenuContentsFindReplace);
@@ -1013,19 +1093,20 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarBindScript);
 			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSnippetManager);
 
+			GlobalFindList->ItemActivate -= GlobalFindListItemActivate;
+
 			DisposeControlImage(ToolBarNewScript);
 			DisposeControlImage(ToolBarOpenScript);
 			DisposeControlImage(ToolBarPreviousScript);
 			DisposeControlImage(ToolBarNextScript);
 			DisposeControlImage(ToolBarSaveScript);
-			DisposeControlImage(ToolBarSaveScriptNoCompile);
-			DisposeControlImage(ToolBarSaveScriptAndPlugin);
 			DisposeControlImage(ToolBarRecompileScripts);
 			DisposeControlImage(ToolBarCompileDependencies);
 			DisposeControlImage(ToolBarDeleteScript);
 			DisposeControlImage(ToolBarNavigationBack);
 			DisposeControlImage(ToolBarNavigationForward);
 			DisposeControlImage(ToolBarSaveAll);
+			DisposeControlImage(ToolBarGlobalFindList);
 			DisposeControlImage(ToolBarOptions);
 
 			DisposeControlImage(ToolBarEditMenu);
@@ -1037,9 +1118,7 @@ namespace ConstructionSetExtender
 			DisposeControlImage(ToolBarFindList);
 			DisposeControlImage(ToolBarBookmarkList);
 			DisposeControlImage(ToolBarDumpScript);
-			DisposeControlImage(ToolBarDumpAllScripts);
 			DisposeControlImage(ToolBarLoadScript);
-			DisposeControlImage(ToolBarLoadScriptsToTabs);
 			DisposeControlImage(ToolBarShowOffsets);
 			DisposeControlImage(ToolBarShowPreprocessedText);
 			DisposeControlImage(ToolBarSanitizeScriptText);
@@ -1118,6 +1197,7 @@ namespace ConstructionSetExtender
 			delete MessageList;
 			delete FindList;
 			delete BookmarkList;
+			delete GlobalFindList;
 			delete SpoilerText;
 
 			ViewFactory->Remove(this);
@@ -1387,48 +1467,39 @@ namespace ConstructionSetExtender
 			LoadManager->RestoreDirectory = true;
 
 			if (LoadManager->ShowDialog() == DialogResult::OK && LoadManager->FileNames->Length > 0)
-			{
 				LoadAllFromDisk(LoadManager->FileNames);
-			}
 		}
 
 		void ConcreteWorkspaceView::ToolBarMessageList_Click(Object^ Sender, EventArgs^ E)
 		{
-			BeginUpdate();
-
-			ToggleBookmarkList(false);
-			ToggleFindResultList(false);
-
-			ToggleMessageList(MessageList->Visible == false);
-			ToggleSecondaryPanel(MessageList->Visible);
-
-			EndUpdate();
+			if (ToolBarMessageList->Checked == false)
+				ShowMessageList();
+			else
+				HideAllLists();
 		}
 
 		void ConcreteWorkspaceView::ToolBarFindList_Click(Object^ Sender, EventArgs^ E)
 		{
-			BeginUpdate();
-
-			ToggleBookmarkList(false);
-			ToggleMessageList(false);
-
-			ToggleFindResultList(FindList->Visible == false);
-			ToggleSecondaryPanel(FindList->Visible);
-
-			EndUpdate();
+			if (ToolBarFindList->Checked == false)
+				ShowFindResultList();
+			else
+				HideAllLists();
 		}
 
 		void ConcreteWorkspaceView::ToolBarBookmarkList_Click(Object^ Sender, EventArgs^ E)
 		{
-			BeginUpdate();
+			if (ToolBarBookmarkList->Checked == false)
+				ShowBookmarkList();
+			else
+				HideAllLists();
+		}
 
-			ToggleFindResultList(false);
-			ToggleMessageList(false);
-
-			ToggleBookmarkList(BookmarkList->Visible == false);
-			ToggleSecondaryPanel(BookmarkList->Visible);
-
-			EndUpdate();
+		void ConcreteWorkspaceView::ToolBarGlobalFindList_Click(Object^ Sender, EventArgs^ E)
+		{
+			if (ToolBarGlobalFindList->Checked == false)
+				ShowGlobalFindResultList();
+			else
+				HideAllLists();
 		}
 
 		void ConcreteWorkspaceView::ToolBarNewScript_Click(Object^ Sender, EventArgs^ E)
@@ -1810,6 +1881,32 @@ namespace ConstructionSetExtender
 				EditorForm->Text = E->LongDescription + " - " + SCRIPTEDITOR_TITLE;
 		}
 
+		void ConcreteWorkspaceView::GlobalFindList_ItemActivate(Object^ Sender, EventArgs^ E)
+		{
+			Object^ Selection = GlobalFindList->SelectedObject;
+			if (Selection)
+			{
+				if (Selection->GetType() == TextEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+				{
+					TextEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (TextEditors::IScriptTextEditor::FindReplaceResult::HitData^)Selection;
+					FindReplaceAllResults::HitData^ ParentData = (FindReplaceAllResults::HitData^)GlobalFindList->GetParent(Selection);
+
+					if (ParentData->Parent)
+					{
+						SelectTab(GetTab(ParentData->Parent));
+						ParentData->Parent->Controller->GotoLine(ParentData->Parent, Data->Line);
+					}
+				}
+				else if (GlobalFindList->CanExpand(Selection))
+				{
+					if (GlobalFindList->IsExpanded(Selection) == false)
+						GlobalFindList->Expand(Selection);
+					else
+						GlobalFindList->Collapse(Selection);
+				}
+			}
+		}
+
 		IWorkspaceModelController^ ConcreteWorkspaceView::ModelController()
 		{
 			Debug::Assert(AssociatedModels->Count != 0);
@@ -1860,6 +1957,7 @@ namespace ConstructionSetExtender
 			Model->Controller->Unbind(Model);
 
 			RemoveFromNavigationStacks(Model);
+			RemoveFromFindReplaceAllResultCache(Model);
 			ModelUnsubscribeEvents(Model);
 
 			DotNetBar::SuperTabItem^ Tab = GetTab(Model);
@@ -2346,6 +2444,18 @@ namespace ConstructionSetExtender
 				NavigationStackForward->Push(Buffer->Pop());
 		}
 
+		void ConcreteWorkspaceView::RemoveFromFindReplaceAllResultCache(IWorkspaceModel^ Model)
+		{
+			for each (auto Itr in CachedFindReplaceAllResults)
+			{
+				for each (auto Data in Itr->Hits)
+				{
+					if (Data->Parent == Model)
+						Data->Parent = nullptr;
+				}
+			}
+		}
+
 		void ConcreteWorkspaceView::Focus()
 		{
 			EditorForm->Focus();
@@ -2399,22 +2509,89 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void ConcreteWorkspaceView::ToggleGlobalFindResultList(bool State)
+		{
+			if (State)
+			{
+				ToolBarGlobalFindList->Checked = true;
+				GlobalFindList->Visible = true;
+				GlobalFindList->BringToFront();
+			}
+			else
+			{
+				ToolBarGlobalFindList->Checked = false;
+				GlobalFindList->Visible = false;
+				GlobalFindList->SendToBack();
+			}
+		}
+
 		void ConcreteWorkspaceView::ShowMessageList()
 		{
+			BeginUpdate();
+
 			ToggleBookmarkList(false);
 			ToggleFindResultList(false);
+			ToggleGlobalFindResultList(false);
 
 			ToggleMessageList(true);
 			ToggleSecondaryPanel(true);
+
+			EndUpdate();
+		}
+
+		void ConcreteWorkspaceView::ShowGlobalFindResultList()
+		{
+			BeginUpdate();
+
+			ToggleBookmarkList(false);
+			ToggleMessageList(false);
+			ToggleFindResultList(false);
+
+			ToggleGlobalFindResultList(true);
+			ToggleSecondaryPanel(true);
+
+			EndUpdate();
 		}
 
 		void ConcreteWorkspaceView::ShowFindResultList()
 		{
+			BeginUpdate();
+
 			ToggleBookmarkList(false);
 			ToggleMessageList(false);
+			ToggleGlobalFindResultList(false);
 
 			ToggleFindResultList(true);
 			ToggleSecondaryPanel(true);
+
+			EndUpdate();
+		}
+
+		void ConcreteWorkspaceView::ShowBookmarkList()
+		{
+			BeginUpdate();
+
+			ToggleFindResultList(false);
+			ToggleMessageList(false);
+			ToggleGlobalFindResultList(false);
+
+			ToggleBookmarkList(true);
+			ToggleSecondaryPanel(true);
+
+			EndUpdate();
+		}
+
+		void ConcreteWorkspaceView::HideAllLists()
+		{
+			BeginUpdate();
+
+			ToggleMessageList(false);
+			ToggleFindResultList(false);
+			ToggleGlobalFindResultList(false);
+			ToggleBookmarkList(false);
+			ToggleSecondaryPanel(false);
+
+			EndUpdate();
 		}
 
 		// ConcreteWorkspaceViewController
@@ -2582,18 +2759,52 @@ namespace ConstructionSetExtender
 
 			if (Global)
 			{
+				FindReplaceAllResults^ GlobalResult = gcnew FindReplaceAllResults;
+				GlobalResult->Operation = Operation;
+				GlobalResult->Query = Query;
+				GlobalResult->Replacement = Replacement;
+				GlobalResult->Options = Options;
+
 				for each (auto Itr in Concrete->AssociatedModels)
-					Concrete->ModelController()->FindReplace(Itr.Key, Operation, Query, Replacement, Options);
+				{
+					IWorkspaceModel^ Model = Itr.Key;
+					TextEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
+																														 Operation,
+																														 Query,
+																														 Replacement,
+																														 Options);
+					if (Result->HasError)
+						break;
+
+					if (Result->TotalHitCount)
+						GlobalResult->Add(Model, Result);
+				}
+
+				if (GlobalResult->TotalHitCount)
+				{
+					// we want the newest result to show first
+					Concrete->CachedFindReplaceAllResults->Insert(0, GlobalResult);
+					Concrete->GlobalFindList->SetObjects(Concrete->CachedFindReplaceAllResults);
+					Concrete->ShowGlobalFindResultList();
+				}
+				else
+				{
+					MessageBox("No matches were found.", MessageBoxButtons::OK, MessageBoxIcon::Information);
+				}
 
 				return -1;
 			}
 			else
 			{
-				int Hits = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(), Operation, Query, Replacement, Options);
-				if (Hits && Operation != TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches)
+				TextEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
+																																Operation,
+																																Query,
+																																Replacement,
+																																Options);
+				if (Result->TotalHitCount && Operation != TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches)
 					Concrete->ShowFindResultList();
 
-				return Hits;
+				return Result->TotalHitCount;
 			}
 		}
 

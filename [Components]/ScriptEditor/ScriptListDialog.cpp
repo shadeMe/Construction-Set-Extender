@@ -44,7 +44,6 @@ namespace ConstructionSetExtender
 				ScriptListCScriptName,
 				ScriptListCFormID,
 				ScriptListCScriptType});
-		//	ScriptList->Font = gcnew Font("Consolas", 9, FontStyle::Regular);
 			ScriptList->Location = System::Drawing::Point(12, 12);
 			ScriptList->Size = System::Drawing::Size(444, 485);
 			ScriptList->UseCompatibleStateImageBehavior = false;
@@ -55,7 +54,6 @@ namespace ConstructionSetExtender
 			ScriptList->FullRowSelect = true;
 			ScriptList->HideSelection = false;
 			ScriptList->SmallImageList = gcnew ImageList();
-			ScriptList->SmallImageList->TransparentColor = Color::White;
 			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogFlagDeleted"));
 			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogFlagUncompiled"));
 			ScriptList->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("ScriptListDialogFlagActive"));
@@ -79,7 +77,6 @@ namespace ConstructionSetExtender
 			SearchBox->Size = System::Drawing::Size(312, 30);
 			SearchBox->Anchor = AnchorStyles::Left|AnchorStyles::Bottom;
 
-		//	SelectBox->Font = gcnew Font("Segoe UI", 10);
 			SelectBox->Location = System::Drawing::Point(330, 503);
 			SelectBox->Text = "Select Script(s)";
 			SelectBox->Size = System::Drawing::Size(126, 29);
@@ -87,7 +84,6 @@ namespace ConstructionSetExtender
 
 			ScriptBox->ClientSize = System::Drawing::Size(916, 541);
 			ScriptBox->MinimumSize = System::Drawing::Size(935, 320);
-		//	ScriptBox->MaximumSize = System::Drawing::Size(935, 2000);
 			ScriptBox->Controls->Add(ScriptList);
 			ScriptBox->Controls->Add(PreviewBox);
 			ScriptBox->Controls->Add(SelectBox);

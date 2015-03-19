@@ -35,7 +35,7 @@ CSE		---->
 		> Save edit dialog bounds to INI and load
 		> Filters for topic lists and other misc listviews
 		> Allow render window rightclick on objects
-		> Object palette (check how the copy paste function works to save the relative positions (or doesit?))
+		> Object palette (check how the copy paste function works to save the relative positions)
 		> Print out HRESULT for the LOD tex CTD check hooks
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
@@ -61,13 +61,11 @@ SE		---->
 
 	BUGFIX			=
 		> Editor doesn't acquire focus after switching scripts/on opening
-		> ObjectListView deadlock issues?
 		> Message list updated by analysis resets listview scrollpos/selection
 
 
 	ENHANCEMENT		=
 		> Jump to script at caret keyboard shortcut
-		> Notepad++ like Find/Replace All results
 		> Document minimap
 
 

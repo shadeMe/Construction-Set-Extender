@@ -111,7 +111,7 @@ namespace ConstructionSetExtender
 			String^		Comment;
 			DataType	Type;
 			bool		UDFParameter;
-			UInt32		ParameterIndex;		// index of the variable in the UDF parameter list
+			UInt32		ParameterIndex;		// index of the variable in the UDF parameter list (0-9)
 			UInt32		Line;
 			UInt32		RefCount;
 

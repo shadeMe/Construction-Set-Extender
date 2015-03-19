@@ -103,7 +103,8 @@ namespace ConstructionSetExtender
 			void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			TextEditors::IScriptTextEditor::FindReplaceResult^
+									FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 														String^ Query, String^ Replacement, UInt32 Options);
 
 											// returns false if the operation's invalid (unsaved changes)

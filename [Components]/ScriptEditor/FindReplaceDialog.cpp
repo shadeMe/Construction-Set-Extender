@@ -106,7 +106,7 @@ namespace ConstructionSetExtender
 			//
 			this->FindInTabsButton->Location = System::Drawing::Point(487, 19);
 			this->FindInTabsButton->Name = L"FindInTabsButton";
-			this->FindInTabsButton->Size = System::Drawing::Size(106, 24);
+			this->FindInTabsButton->Size = System::Drawing::Size(106, 21);
 			this->FindInTabsButton->TabIndex = 6;
 			this->FindInTabsButton->Text = L"In All Open Scripts";
 			this->FindInTabsButton->UseVisualStyleBackColor = true;
@@ -115,7 +115,7 @@ namespace ConstructionSetExtender
 			//
 			this->ReplaceInTabsButton->Location = System::Drawing::Point(487, 46);
 			this->ReplaceInTabsButton->Name = L"ReplaceInTabsButton";
-			this->ReplaceInTabsButton->Size = System::Drawing::Size(106, 24);
+			this->ReplaceInTabsButton->Size = System::Drawing::Size(106, 21);
 			this->ReplaceInTabsButton->TabIndex = 7;
 			this->ReplaceInTabsButton->Text = L"In All Open Scripts";
 			this->ReplaceInTabsButton->UseVisualStyleBackColor = true;
@@ -123,9 +123,9 @@ namespace ConstructionSetExtender
 			//
 			// CountMatchesButton
 			//
-			this->CountMatchesButton->Location = System::Drawing::Point(487, 73);
+			this->CountMatchesButton->Location = System::Drawing::Point(409, 73);
 			this->CountMatchesButton->Name = L"CountMatchesButton";
-			this->CountMatchesButton->Size = System::Drawing::Size(106, 26);
+			this->CountMatchesButton->Size = System::Drawing::Size(72, 35);
 			this->CountMatchesButton->TabIndex = 8;
 			this->CountMatchesButton->Text = L"Count Matches";
 			this->CountMatchesButton->UseVisualStyleBackColor = true;
@@ -154,7 +154,7 @@ namespace ConstructionSetExtender
 			// InSelection
 			//
 			this->InSelection->AutoSize = true;
-			this->InSelection->Location = System::Drawing::Point(321, 73);
+			this->InSelection->Location = System::Drawing::Point(170, 73);
 			this->InSelection->Name = L"InSelection";
 			this->InSelection->Size = System::Drawing::Size(82, 17);
 			this->InSelection->TabIndex = 11;
@@ -164,7 +164,7 @@ namespace ConstructionSetExtender
 			// UseRegEx
 			//
 			this->UseRegEx->AutoSize = true;
-			this->UseRegEx->Location = System::Drawing::Point(161, 96);
+			this->UseRegEx->Location = System::Drawing::Point(170, 96);
 			this->UseRegEx->Name = L"UseRegEx";
 			this->UseRegEx->Size = System::Drawing::Size(144, 17);
 			this->UseRegEx->TabIndex = 12;

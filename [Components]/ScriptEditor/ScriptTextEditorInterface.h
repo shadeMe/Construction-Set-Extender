@@ -142,6 +142,42 @@ namespace ConstructionSetExtender
 				RegEx			=		1 << 3
 			};
 
+			ref struct FindReplaceResult
+			{
+				ref struct HitData
+				{
+					UInt32				Line;
+					String^				Text;		// the line's text after replacement
+					UInt32				Hits;		// no of hits in the line
+
+					HitData(UInt32 Line, String^ Text, UInt32 Hits) : Line(Line), Text(Text), Hits(Hits) {}
+				};
+
+				List<HitData^>^		Hits;
+				bool				HasError;
+
+				FindReplaceResult() : Hits(gcnew List<HitData^>), HasError(false) {}
+
+				void Add(UInt32 Line, String^ Text, UInt32 HitsInLine)
+				{
+					Text->Replace("\t", "")->Replace("\r\n", "")->Replace("\n", "");
+					Hits->Add(gcnew HitData(Line, Text, HitsInLine));
+				}
+
+				property int TotalHitCount
+				{
+					int get()
+					{
+						int Count = 0;
+
+						for each (auto Itr in Hits)
+							Count += Itr->Hits;
+
+						return Count;
+					}
+				}
+			};
+
 			event IntelliSenseKeyEventHandler^						IntelliSenseKeyDown;		// this has to be a separate event as we need to reliably return values from the handler
 
 			// these events are raised as requests
@@ -190,10 +226,10 @@ namespace ConstructionSetExtender
 			void										LoadFileFromDisk(String^ Path);
 			void										SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
-			int											FindReplace(FindReplaceOperation Operation,
+			FindReplaceResult^							FindReplace(FindReplaceOperation Operation,
 																	String^ Query,
 																	String^ Replacement,
-																	UInt32 Options);		// returns the number of matches, -1 if an error was encountered
+																	UInt32 Options);
 
 			void										ScrollToLine(UInt32 LineNumber);
 			Point										PointToScreen(Point Location);

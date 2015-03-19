@@ -1448,6 +1448,7 @@ namespace ConstructionSetExtender
 
 				Windows::Controls::StackPanel^ Panel = gcnew Windows::Controls::StackPanel();
 				Panel->HorizontalAlignment = Windows::HorizontalAlignment::Center;
+				Panel->VerticalAlignment = Windows::VerticalAlignment::Bottom;
 				Panel->Orientation = Windows::Controls::Orientation::Horizontal;
 				Panel->Margin = Windows::Thickness(20, 0, 20, 0);
 				Panel->Cursor = Windows::Input::Cursors::Hand;
@@ -1459,8 +1460,8 @@ namespace ConstructionSetExtender
 				{
 					Windows::Controls::Image^ Icon = gcnew Windows::Controls::Image();
 					Icon->Source = IconData;
-					Icon->Width = 12;
-					Icon->Height = 12;
+					Icon->Width = 16;
+					Icon->Height = 16;
 					Icon->HorizontalAlignment = Windows::HorizontalAlignment::Center;
 					Icon->VerticalAlignment = Windows::VerticalAlignment::Bottom;
 					Panel->Children->Add(Icon);
@@ -1646,7 +1647,13 @@ namespace ConstructionSetExtender
 			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
 			{
 				if (WarningIcon == nullptr)
-					WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarning");
+				{
+					Color Current = SystemColors::Control;
+					if (Current.R < 100 && Current.B < 100 && Current.G < 100)
+						WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarningColor");
+					else
+						WarningIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginWarningDark");
+				}
 
 				return WarningIcon;
 			}
@@ -1654,7 +1661,7 @@ namespace ConstructionSetExtender
 			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetBookmarkIcon()
 			{
 				if (BookmarkIcon == nullptr)
-					BookmarkIcon = WPFImageResourceGenerator::CreateImageSource("ContextMenuAddMessage");
+					BookmarkIcon = WPFImageResourceGenerator::CreateImageSource("AvalonEditIconMarginBookmark");
 
 				return BookmarkIcon;
 			}
@@ -1726,7 +1733,7 @@ namespace ConstructionSetExtender
 				if (Warnings->Count)
 				{
 					OutIcon = GetWarningIcon();
-					Width = Height = 12;
+					Width = Height = 16;
 				}
 				else
 				{

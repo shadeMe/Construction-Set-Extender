@@ -70,7 +70,8 @@ namespace ConstructionSetExtender
 			virtual void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			virtual void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			virtual int						FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			virtual TextEditors::IScriptTextEditor::FindReplaceResult^
+											FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 														String^ Query, String^ Replacement, UInt32 Options);
 
 			virtual bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);

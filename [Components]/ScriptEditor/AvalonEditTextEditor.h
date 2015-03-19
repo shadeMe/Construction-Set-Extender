@@ -395,7 +395,7 @@ namespace ConstructionSetExtender
 				virtual void								LoadFileFromDisk(String^ Path);
 				virtual void								SaveScriptToDisk(String^ Path, bool PathIncludesFileName, String^ DefaultName, String^ DefaultExtension);
 
-				virtual int									FindReplace(IScriptTextEditor::FindReplaceOperation Operation,
+				virtual IScriptTextEditor::FindReplaceResult^	FindReplace(IScriptTextEditor::FindReplaceOperation Operation,
 																		String^ Query,
 																		String^ Replacement,
 																		UInt32 Options);

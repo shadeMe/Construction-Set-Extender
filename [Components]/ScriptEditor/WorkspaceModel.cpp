@@ -672,13 +672,16 @@ namespace ConstructionSetExtender
 			Concrete->TextEditor->SaveScriptToDisk(PathToFile, PathIncludesFileName, Concrete->LongDescription, Extension);
 		}
 
-		int ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation, String^ Query, String^ Replacement, UInt32 Options)
+		TextEditors::IScriptTextEditor::FindReplaceResult^ ConcreteWorkspaceModelController::FindReplace(IWorkspaceModel^ Model,
+																						TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+																						String^ Query,
+																						String^ Replacement,
+																						UInt32 Options)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			int Hits = Concrete->TextEditor->FindReplace(Operation, Query, Replacement, Options);
-			return Hits;
+			return Concrete->TextEditor->FindReplace(Operation, Query, Replacement, Options);
 		}
 
 		bool ConcreteWorkspaceModelController::GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength)

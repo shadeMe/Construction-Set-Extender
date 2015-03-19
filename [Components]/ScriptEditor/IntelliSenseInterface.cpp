@@ -505,7 +505,6 @@ namespace ConstructionSetExtender
 			ListView->Dock = DockStyle::Fill;
 			ListView->MultiSelect = false;
 			ListView->SmallImageList = gcnew ImageList();
-			ListView->SmallImageList->TransparentColor = Color::White;
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemEmpty"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemCommand"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemLocalVar"));
@@ -517,7 +516,6 @@ namespace ConstructionSetExtender
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemForm"));
 			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("IntelliSenseItemSnippet"));
 			ListView->Location = Point(0, 0);
-			ListView->Font = gcnew Font("Lucida Grande", 9, FontStyle::Regular);
 			ListView->LabelEdit = false;
 			ListView->CheckBoxes = false;
 			ListView->FullRowSelect = true;
@@ -710,8 +708,9 @@ namespace ConstructionSetExtender
 				int ItemCount = AttachedModel->DataStore->Count;
 				if (ItemCount > MaximumVisibleItemCount)
 					ItemCount = MaximumVisibleItemCount;
+				int ItemHeight = ListView->Items[0]->Bounds.Height;
 
-				Size DisplaySize = Size(240, (MaximumVisibleItemCount * 19) + 17 - ((MaximumVisibleItemCount - ItemCount) * 19));
+				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight / 2) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
 				Form->SetSize(DisplaySize);
 
 				ListView->SelectedIndex = 0;
