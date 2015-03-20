@@ -164,7 +164,7 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("ShowTabs", "Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("ShowSpaces", "Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("CodeFolding", "Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
-			SettingCollection->Add(gcnew INISetting("TabsOnTop", "Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+	//		SettingCollection->Add(gcnew INISetting("TabsOnTop", "Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("BoldFacedHighlighting", "Appearance", "0"), gcnew BoundControl(BoldFacedHighlighting, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			RegisterColorSetting("SyntaxCommentsColor", Color::Green, CmDlgSyntaxCommentsColor);
@@ -1116,6 +1116,9 @@ namespace ConstructionSetExtender
 			this->TabsOnTop->TabIndex = 31;
 			this->TabsOnTop->Text = L"Tabs on top";
 			this->TabsOnTop->UseVisualStyleBackColor = true;
+			this->TabsOnTop->Checked = true;
+			this->TabsOnTop->Enabled = false;
+			this->TabsOnTop->Visible = false;
 			//
 			// BoldFacedHighlighting
 			//

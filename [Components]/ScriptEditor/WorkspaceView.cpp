@@ -470,7 +470,6 @@ namespace ConstructionSetExtender
 
 			EditorTabStrip->TabStripColor->Background = gcnew DotNetBar::Rendering::SuperTabLinearGradientColorTable(TabStripGradientColorStart,
 																													 TabStripGradientColorEnd);
-			TODO("remove tabs on left");
 
 			EditorForm->HelpButton = false;
 			EditorForm->Text = SCRIPTEDITOR_TITLE;
