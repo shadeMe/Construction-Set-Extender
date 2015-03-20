@@ -27,3 +27,5 @@ typedef unsigned char		UInt8;
 
 #define		SCRIPTEDITOR_TITLE			"CSE Script Editor"
 #define		COMPONENTDLLFOLDER			"Data\\OBSE\\Plugins\\CSE\\"
+
+#define SAFEDELETE_CLR(Identifier)		delete Identifier; Identifier = nullptr

@@ -124,6 +124,16 @@ namespace ConstructionSetExtender
 			SelectBox->Click -= SelectBoxClickHandler;
 			ScriptBox->Closing -= ScriptBoxCancelHandler;
 
+			SAFEDELETE_CLR(ScriptListSelectedIndexChangedHandler);
+			SAFEDELETE_CLR(ScriptListKeyDownHandler);
+			SAFEDELETE_CLR(ScriptListItemActivateHandler);
+			SAFEDELETE_CLR(ScriptListColumnClickHandler);
+			SAFEDELETE_CLR(ScriptListKeyPressHandler);
+			SAFEDELETE_CLR(SearchBoxTextChangedHandler);
+			SAFEDELETE_CLR(SearchBoxKeyDownHandler);
+			SAFEDELETE_CLR(SelectBoxClickHandler);
+			SAFEDELETE_CLR(ScriptBoxCancelHandler);
+
 			CleanupDialog(false);
 
 			for each (Image^ Itr in ScriptList->SmallImageList->Images)
@@ -132,15 +142,15 @@ namespace ConstructionSetExtender
 			ScriptList->SmallImageList->Images->Clear();
 			ScriptList->SmallImageList = nullptr;
 
-			delete ScriptBox;
-			delete PreviewBox;
-			delete ScriptList;
-			delete ScriptListCFlags;
-			delete ScriptListCScriptName;
-			delete ScriptListCFormID;
-			delete ScriptListCScriptType;
-			delete SearchBox;
-			delete SelectBox;
+			SAFEDELETE_CLR(ScriptBox);
+			SAFEDELETE_CLR(PreviewBox);
+			SAFEDELETE_CLR(ScriptList);
+			SAFEDELETE_CLR(ScriptListCFlags);
+			SAFEDELETE_CLR(ScriptListCScriptName);
+			SAFEDELETE_CLR(ScriptListCFormID);
+			SAFEDELETE_CLR(ScriptListCScriptType);
+			SAFEDELETE_CLR(SearchBox);
+			SAFEDELETE_CLR(SelectBox);
 
 			SelectedEditorIDs->Clear();
 		}

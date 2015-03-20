@@ -56,16 +56,15 @@ CSE		---->
 SE		---->
 
 	IMMEDIATE		=
-		> Run mem profiler
 
 
 	BUGFIX			=
 		> Editor doesn't acquire focus after switching scripts/on opening
+			>> Seems like a bug in the WPF/Winforms interop code; strangely, using SuperTabControl::SelectPreviousTab() correctly assigns focus, while SelectNextTab() only assigns the correct focus for every other tab
 		> Message list updated by analysis resets listview scrollpos/selection
 
 
 	ENHANCEMENT		=
-		> Jump to script at caret keyboard shortcut
 		> Document minimap
 
 

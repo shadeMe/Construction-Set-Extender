@@ -27,6 +27,8 @@ namespace ConstructionSetExtender
 		IntPtr											GetActiveWindow();
 		[DllImport("user32.dll")]
 		IntPtr											GetForegroundWindow();
+		[DllImport("user32.dll")]
+		IntPtr											GetFocus();
 		[DllImport("gdi32.dll")]
 		int												DeleteObject(IntPtr hObject);
 

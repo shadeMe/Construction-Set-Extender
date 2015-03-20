@@ -69,8 +69,8 @@ namespace ConstructionSetExtender
 			switch (m.Msg)
 			{
 			case 0x0F: // WM_PAINT
-		//		if (NativeWrapper::GetForegroundWindow() == m.HWnd ||
-		//			NativeWrapper::GetActiveWindow() == m.HWnd)
+				if (NativeWrapper::GetForegroundWindow() == m.HWnd ||
+					NativeWrapper::GetActiveWindow() == m.HWnd)
 				{
 					PaintInProgress = true;
 					ListView::WndProc(m);
@@ -310,6 +310,20 @@ namespace ConstructionSetExtender
 		~SimpleListViewBinder()
 		{
 			Unbind();
+
+			SAFEDELETE_CLR(SourceAdd);
+			SAFEDELETE_CLR(SourceRemove);
+			SAFEDELETE_CLR(SourceClear);
+			SAFEDELETE_CLR(SourceBeginUpdate);
+			SAFEDELETE_CLR(SourceEndUpdate);
+			SAFEDELETE_CLR(SourceSort);
+
+			SAFEDELETE_CLR(SinkDrawItem);
+			SAFEDELETE_CLR(SinkDrawSubItem);
+			SAFEDELETE_CLR(SinkDrawColumnHeader);
+			SAFEDELETE_CLR(SinkColumnClick);
+			SAFEDELETE_CLR(SinkItemActivate);
+			SAFEDELETE_CLR(SinkKeyUp);
 		}
 
 		void Bind(ListView^ To, SimpleBindingList<T>^ With)

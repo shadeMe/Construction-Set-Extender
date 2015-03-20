@@ -211,19 +211,27 @@ namespace ConstructionSetExtender
 			FindReplaceBox->Closing -= FindReplaceBoxCancelHandler;
 			FindReplaceBox->KeyDown -= FindReplaceBoxKeyDownHandler;
 
-			delete FindReplaceBox;
-			delete LabelFind;
-			delete LabelReplace;
-			delete QueryBox;
-			delete ReplacementBox;
-			delete FindButton;
-			delete ReplaceButton;
-			delete FindInTabsButton;
-			delete ReplaceInTabsButton;
-			delete CountMatchesButton;
-			delete MatchWholeWord;
-			delete CaseInsensitiveSearch;
-			delete InSelection;
+			SAFEDELETE_CLR(FindButtonClickHandler);
+			SAFEDELETE_CLR(ReplaceButtonClickHandler);
+			SAFEDELETE_CLR(FindInTabsButtonClickHandler);
+			SAFEDELETE_CLR(ReplaceInTabsButtonClickHandler);
+			SAFEDELETE_CLR(CountMatchesButtonClickHandler);
+			SAFEDELETE_CLR(FindReplaceBoxCancelHandler);
+			SAFEDELETE_CLR(FindReplaceBoxKeyDownHandler);
+
+			SAFEDELETE_CLR(FindReplaceBox);
+			SAFEDELETE_CLR(LabelFind);
+			SAFEDELETE_CLR(LabelReplace);
+			SAFEDELETE_CLR(QueryBox);
+			SAFEDELETE_CLR(ReplacementBox);
+			SAFEDELETE_CLR(FindButton);
+			SAFEDELETE_CLR(ReplaceButton);
+			SAFEDELETE_CLR(FindInTabsButton);
+			SAFEDELETE_CLR(ReplaceInTabsButton);
+			SAFEDELETE_CLR(CountMatchesButton);
+			SAFEDELETE_CLR(MatchWholeWord);
+			SAFEDELETE_CLR(CaseInsensitiveSearch);
+			SAFEDELETE_CLR(InSelection);
 
 			ParentView = nullptr;
 		}

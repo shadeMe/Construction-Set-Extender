@@ -447,6 +447,11 @@ namespace ConstructionSetExtender
 				;//
 			}
 
+			AvalonEditXSHDManager::~AvalonEditXSHDManager()
+			{
+				SAFEDELETE_CLR(LocalVarsColor);
+			}
+
 			AvalonEditHighlightingDefinition^ AvalonEditXSHDManager::GenerateHighlightingDefinition(List<String^>^ LocalVariables)
 			{
 				String^ OutDefs = StableDefinitions;
@@ -475,6 +480,6 @@ namespace ConstructionSetExtender
 
 				return AvalonEdit::Highlighting::Xshd::HighlightingLoader::Load(Reader, AvalonEdit::Highlighting::HighlightingManager::Instance);
 			}
-		}
+}
 	}
 }

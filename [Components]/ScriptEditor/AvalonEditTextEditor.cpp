@@ -511,6 +511,9 @@ namespace ConstructionSetExtender
 						CloseBraceOffset += CurrentLine->Offset;
 
 					BraceColorizer->SetHighlight(OpenBraceOffset, CloseBraceOffset);
+
+					BracketStack->Clear();
+					ParsedBracketList->Clear();
 				}
 
 				TextField->TextArea->TextView->InvalidateLayer(BraceColorizer->Layer);
@@ -904,10 +907,7 @@ namespace ConstructionSetExtender
 					if (Threading::Thread::CurrentThread->ManagedThreadId == OwnerThreadID)
 					{
 						if (SemanticAnalysisCache)
-						{
-							delete SemanticAnalysisCache;
-							SemanticAnalysisCache = nullptr;
-						}
+							SAFEDELETE_CLR(SemanticAnalysisCache);
 
 						SemanticAnalysisCache = (ObScriptSemanticAnalysis::AnalysisData^)Completed->Result->AnalysisOutput;
 
@@ -1246,6 +1246,19 @@ namespace ConstructionSetExtender
 						}
 
 						break;
+					case System::Windows::Input::Key::OemPipe:
+						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
+						{
+							CString CStr(GetTokenAtCaretPos());
+							ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+							if (Data && Data->IsValid())
+								JumpScriptDelegate(GetTokenAtCaretPos());
+
+							HandleKeyEventForKey(E->Key);
+							E->Handled = true;
+						}
+
+						break;
 					}
 				}
 				else
@@ -1436,15 +1449,11 @@ namespace ConstructionSetExtender
 			{
 				if (CodeFoldingStrategy != nullptr)
 				{
-					delete CodeFoldingStrategy;
-					CodeFoldingStrategy = nullptr;
+					SAFEDELETE_CLR(CodeFoldingStrategy);
 					CodeFoldingManager->Clear();
 				}
 				if (TextField->TextArea->IndentationStrategy != nullptr)
-				{
-					delete TextField->TextArea->IndentationStrategy;
-					TextField->TextArea->IndentationStrategy = nullptr;
-				}
+					SAFEDELETE_CLR(TextField->TextArea->IndentationStrategy);
 
 				UpdateSyntaxHighlighting(true);
 
@@ -1754,8 +1763,8 @@ namespace ConstructionSetExtender
 				TextField->Name = "AvalonEditTextEditorInstance";
 				TextField->Options->AllowScrollBelowDocument = false;
 				TextField->Options->EnableEmailHyperlinks = false;
-				TextField->Options->EnableHyperlinks = true;
-				TextField->Options->RequireControlModifierForHyperlinkClick = true;
+				TextField->Options->EnableHyperlinks = false;
+				TextField->Options->RequireControlModifierForHyperlinkClick = false;
 				TextField->Options->CutCopyWholeLine = PREFERENCES->FetchSettingAsInt("CutCopyEntireLine", "General");
 				TextField->Options->ShowSpaces = PREFERENCES->FetchSettingAsInt("ShowSpaces", "Appearance");
 				TextField->Options->ShowTabs = PREFERENCES->FetchSettingAsInt("ShowTabs", "Appearance");
@@ -1770,8 +1779,10 @@ namespace ConstructionSetExtender
 
 				WPFHost->ForeColor = ForegroundColor;
 				WPFHost->BackColor = BackgroundColor;
+				WPFHost->TabStop = false;
 				WinFormsContainer->ForeColor = ForegroundColor;
 				WinFormsContainer->BackColor = BackgroundColor;
+				WinFormsContainer->TabStop = false;
 
 				System::Windows::Media::SolidColorBrush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
 																													ForegroundColor.R,
@@ -2017,9 +2028,6 @@ namespace ConstructionSetExtender
 
 				ParentModel = nullptr;
 
-				delete JumpScriptDelegate;
-				JumpScriptDelegate = nullptr;
-
 				HideInsightPopup();
 
 				TextField->Clear();
@@ -2040,11 +2048,6 @@ namespace ConstructionSetExtender
 				TextField->TextArea->TextView->ElementGenerators->Clear();
 
 				TextField->TextArea->LeftMargins->Remove(IconBarMargin);
-				delete IconBarMargin;
-
-				delete LineTracker;
-				delete InsightPopup;
-				delete IntelliSenseModel;
 
 				TextField->TextChanged -= TextFieldTextChangedHandler;
 				TextField->TextArea->Caret->PositionChanged -= TextFieldCaretPositionChangedHandler;
@@ -2069,23 +2072,49 @@ namespace ConstructionSetExtender
 				PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 				TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
 
+				SAFEDELETE_CLR(TextFieldTextChangedHandler);
+				SAFEDELETE_CLR(TextFieldCaretPositionChangedHandler);
+				SAFEDELETE_CLR(TextFieldSelectionChangedHandler);
+				SAFEDELETE_CLR(TextFieldTextCopiedHandler);
+				SAFEDELETE_CLR(TextFieldLostFocusHandler);
+				SAFEDELETE_CLR(TextFieldScrollOffsetChangedHandler);
+				SAFEDELETE_CLR(TextFieldKeyUpHandler);
+				SAFEDELETE_CLR(TextFieldKeyDownHandler);
+				SAFEDELETE_CLR(TextFieldMouseDownHandler);
+				SAFEDELETE_CLR(TextFieldMouseUpHandler);
+				SAFEDELETE_CLR(TextFieldMouseWheelHandler);
+				SAFEDELETE_CLR(TextFieldMouseHoverHandler);
+				SAFEDELETE_CLR(TextFieldMouseHoverStoppedHandler);
+				SAFEDELETE_CLR(TextFieldMiddleMouseScrollMoveHandler);
+				SAFEDELETE_CLR(TextFieldMiddleMouseScrollDownHandler);
+				SAFEDELETE_CLR(MiddleMouseScrollTimerTickHandler);
+				SAFEDELETE_CLR(ScrollBarSyncTimerTickHandler);
+				SAFEDELETE_CLR(ExternalScrollBarValueChangedHandler);
+				SAFEDELETE_CLR(SemanticAnalysisTimerTickHandler);
+				SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
+				SAFEDELETE_CLR(TextFieldVisualLineConstructionStartingHandler);
+				SAFEDELETE_CLR(SetTextAnimationCompletedHandler);
+
 				TextEditorContextMenu->Opening -= TextEditorContextMenuOpeningHandler;
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuCopy);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuPaste);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuToggleComment);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuAddBookmark);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuWikiLookup);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuOBSEDocLookup);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuDirectLink);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuJumpToScript);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuGoogleLookup);
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuOpenImportFile);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuCopy);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuPaste);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuToggleComment);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuAddBookmark);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuWikiLookup);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuOBSEDocLookup);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuDirectLink);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuJumpToScript);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuGoogleLookup);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuOpenImportFile);
 				ContextMenuRefactorAddVariableInt->Click -= ContextMenuRefactorAddVariableClickHandler;
 				ContextMenuRefactorAddVariableFloat->Click -= ContextMenuRefactorAddVariableClickHandler;
 				ContextMenuRefactorAddVariableRef->Click -= ContextMenuRefactorAddVariableClickHandler;
 				ContextMenuRefactorAddVariableString->Click -= ContextMenuRefactorAddVariableClickHandler;
 				ContextMenuRefactorAddVariableArray->Click -= ContextMenuRefactorAddVariableClickHandler;
-				AvalonEditTextEditorUnsubscribeClickEvent(ContextMenuRefactorCreateUDFImplementation);
+				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuRefactorCreateUDFImplementation);
+
+				SAFEDELETE_CLR(TextEditorContextMenuOpeningHandler);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariableClickHandler);
 
 				DisposeControlImage(ContextMenuCopy);
 				DisposeControlImage(ContextMenuPaste);
@@ -2104,48 +2133,47 @@ namespace ConstructionSetExtender
 				WinFormsContainer->Controls->Clear();
 				WinFormsContainer->ContextMenu = nullptr;
 
-				delete TextEditorContextMenu;
-				delete ContextMenuCopy;
-				delete ContextMenuPaste;
-				delete ContextMenuToggleComment;
-				delete ContextMenuAddBookmark;
-				delete ContextMenuWord;
-				delete ContextMenuWikiLookup;
-				delete ContextMenuOBSEDocLookup;
-				delete ContextMenuDirectLink;
-				delete ContextMenuJumpToScript;
-				delete ContextMenuGoogleLookup;
-				delete ContextMenuRefactorAddVariable;
-				delete ContextMenuRefactorAddVariableInt;
-				delete ContextMenuRefactorAddVariableFloat;
-				delete ContextMenuRefactorAddVariableRef;
-				delete ContextMenuRefactorAddVariableString;
-				delete ContextMenuRefactorAddVariableArray;
-				delete ContextMenuRefactorCreateUDFImplementation;
+				SAFEDELETE_CLR(IconBarMargin);
+				SAFEDELETE_CLR(LineTracker);
+				SAFEDELETE_CLR(InsightPopup);
+				SAFEDELETE_CLR(IntelliSenseModel);
+				SAFEDELETE_CLR(JumpScriptDelegate);
 
-				delete WinFormsContainer;
-				delete WPFHost;
-				delete TextFieldPanel;
-				delete AnimationPrimitive;
-				delete TextField->TextArea->TextView;
-				delete TextField->TextArea;
-				delete TextField;
-				delete MiddleMouseScrollTimer;
-				delete BraceColorizer;
-				delete CodeFoldingManager;
-				delete CodeFoldingStrategy;
-				delete ScrollBarSyncTimer;
-				delete SemanticAnalysisTimer;
-				delete ExternalVerticalScrollBar;
-				delete ExternalHorizontalScrollBar;
+				SAFEDELETE_CLR(TextEditorContextMenu);
+				SAFEDELETE_CLR(ContextMenuCopy);
+				SAFEDELETE_CLR(ContextMenuPaste);
+				SAFEDELETE_CLR(ContextMenuToggleComment);
+				SAFEDELETE_CLR(ContextMenuAddBookmark);
+				SAFEDELETE_CLR(ContextMenuWord);
+				SAFEDELETE_CLR(ContextMenuWikiLookup);
+				SAFEDELETE_CLR(ContextMenuOBSEDocLookup);
+				SAFEDELETE_CLR(ContextMenuDirectLink);
+				SAFEDELETE_CLR(ContextMenuJumpToScript);
+				SAFEDELETE_CLR(ContextMenuGoogleLookup);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariable);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariableInt);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariableFloat);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariableRef);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariableString);
+				SAFEDELETE_CLR(ContextMenuRefactorAddVariableArray);
+				SAFEDELETE_CLR(ContextMenuRefactorCreateUDFImplementation);
 
-				IntelliSenseModel = nullptr;
-				TextField->TextArea->IndentationStrategy = nullptr;
-				TextField->SyntaxHighlighting = nullptr;
-				TextField->Document = nullptr;
-				CodeFoldingStrategy = nullptr;
-				CodeFoldingManager = nullptr;
-				BraceColorizer = nullptr;
+				SAFEDELETE_CLR(TextField->TextArea->IndentationStrategy);
+
+				SAFEDELETE_CLR(WinFormsContainer);
+				SAFEDELETE_CLR(WPFHost);
+				SAFEDELETE_CLR(TextFieldPanel);
+				SAFEDELETE_CLR(AnimationPrimitive);
+				SAFEDELETE_CLR(MiddleMouseScrollTimer);
+				SAFEDELETE_CLR(BraceColorizer);
+				SAFEDELETE_CLR(CodeFoldingManager);
+				SAFEDELETE_CLR(CodeFoldingStrategy);
+				SAFEDELETE_CLR(ScrollBarSyncTimer);
+				SAFEDELETE_CLR(SemanticAnalysisTimer);
+				SAFEDELETE_CLR(ExternalVerticalScrollBar);
+				SAFEDELETE_CLR(ExternalHorizontalScrollBar);
+				SAFEDELETE_CLR(SemanticAnalysisCache);
+				SAFEDELETE_CLR(TextField);
 			}
 
 			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool Validate)
@@ -2356,13 +2384,14 @@ namespace ConstructionSetExtender
 #pragma region Interface
 			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList, IIntelliSenseInterfaceView^ IntelliSenseView)
 			{
-				FocusTextArea();
 				IsFocused = true;
 				SemanticAnalysisTimer->Start();
 				ScrollBarSyncTimer->Start();
 
 				LineTracker->Bind(MessageList, BookmarkList, FindResultList);
 				IntelliSenseModel->Bind(IntelliSenseView);
+
+				FocusTextArea();
 			}
 
 			void AvalonEditTextEditor::Unbind()
@@ -2376,6 +2405,8 @@ namespace ConstructionSetExtender
 
 				LineTracker->Unbind();
 				IntelliSenseModel->Unbind();
+
+				Windows::Input::Keyboard::ClearFocus();
 			}
 
 			void DummyOutputWrapper(int Line, String^ Message)
@@ -2546,6 +2577,9 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::FocusTextArea()
 			{
+				WinFormsContainer->Focus();
+				WPFHost->Focus();
+				TextFieldPanel->Focus();
 				TextField->Focus();
 			}
 

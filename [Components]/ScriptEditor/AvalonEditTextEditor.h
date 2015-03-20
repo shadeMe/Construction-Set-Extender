@@ -6,11 +6,12 @@
 #include "IntelliSenseInterface.h"
 #include "WorkspaceModelInterface.h"
 
-#define AvalonEditTextEditorDeclareClickHandler(Name)		EventHandler^ Name##ClickHandler; \
-															void AvalonEditTextEditor::##Name##_Click(Object^ Sender, EventArgs^ E)
-#define AvalonEditTextEditorDefineClickHandler(Name)		Name##ClickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::##Name##_Click)
-#define AvalonEditTextEditorSubscribeClickEvent(Name)		Name##->Click += Name##ClickHandler
-#define AvalonEditTextEditorUnsubscribeClickEvent(Name)		Name##->Click -= Name##ClickHandler
+#define AvalonEditTextEditorDeclareClickHandler(Name)				EventHandler^ Name##ClickHandler; \
+																	void AvalonEditTextEditor::##Name##_Click(Object^ Sender, EventArgs^ E)
+#define AvalonEditTextEditorDefineClickHandler(Name)				Name##ClickHandler = gcnew EventHandler(this, &AvalonEditTextEditor::##Name##_Click)
+#define AvalonEditTextEditorSubscribeClickEvent(Name)				Name##->Click += Name##ClickHandler
+#define AvalonEditTextEditorUnsubscribeClickEvent(Name)				Name##->Click -= Name##ClickHandler
+#define AvalonEditTextEditorUnsubscribeDeleteClickEvent(Name)		Name##->Click -= Name##ClickHandler; delete Name##ClickHandler; Name##ClickHandler = nullptr
 
 namespace ConstructionSetExtender
 {

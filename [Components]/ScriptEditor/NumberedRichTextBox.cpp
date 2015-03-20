@@ -248,6 +248,13 @@ namespace ConstructionSetExtender
 			this->LineChanged -= NumberedRichTextBoxLineChangedHandler;
 			LineField->MouseDown -= LineFieldMouseDownHandler;
 
+			SAFEDELETE_CLR(LineFieldMouseDownHandler);
+			SAFEDELETE_CLR(UpdateLineNumbersEventHandlerHandler);
+			SAFEDELETE_CLR(TextFieldMouseDownAndUpHandler);
+			SAFEDELETE_CLR(TextFieldKeyDownAndUpHandler);
+			SAFEDELETE_CLR(NumberedRichTextBoxLineChangedHandler);
+			SAFEDELETE_CLR(TextFieldTextChangedHandler);
+
 			Splitter->Panel1->Controls->Clear();
 			Splitter->Panel2->Controls->Clear();
 

@@ -51,8 +51,7 @@ namespace ConstructionSetExtender
 			DatabaseUpdateTimer->Stop();
 
 			CodeSnippets->Save(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetSnippetCachePath()));
-			delete CodeSnippets;
-			CodeSnippets = nullptr;
+			SAFEDELETE_CLR(CodeSnippets);
 
 			Enumerables->Clear();
 			UserFunctionList->Clear();

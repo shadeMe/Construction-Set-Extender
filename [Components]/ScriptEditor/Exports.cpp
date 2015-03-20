@@ -60,6 +60,7 @@ UInt32 InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMST
 	AppDomain^ CurrentDomain = AppDomain::CurrentDomain;
 	CurrentDomain->AssemblyResolve += gcnew ResolveEventHandler(&ResolvePreprocessorAssemblyLoad);
 	CurrentDomain->UnhandledException += gcnew UnhandledExceptionEventHandler(&CLRUnhandledExceptionFilter);
+	Application::EnableVisualStyles();
 
 	UInt32 NonVanillaCommandCount = ISDB->InitializeCommandTableDatabase(Data);
 	ISDB->InitializeGMSTDatabase(GMSTData);

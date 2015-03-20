@@ -14,7 +14,7 @@ namespace ConstructionSetExtender
 			ScriptOffsetViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent);
 			virtual ~ScriptOffsetViewer()
 			{
-				delete Viewer;
+				SAFEDELETE_CLR(Viewer);
 			}
 
 			virtual bool							InitializeViewer(String^ ScriptText, UInt32 Data, UInt32 Length);
@@ -35,7 +35,7 @@ namespace ConstructionSetExtender
 			SimpleTextViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent);
 			virtual ~SimpleTextViewer()
 			{
-				delete Viewer;
+				SAFEDELETE_CLR(Viewer);
 			}
 
 			void									Show(String^ Text, int CaretPosition);

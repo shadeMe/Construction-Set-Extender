@@ -552,8 +552,7 @@ namespace ConstructionSetExtender
 
 			ScriptErrorIndicator::~ScriptErrorIndicator()
 			{
-				delete Delegate;
-				Delegate = nullptr;
+				SAFEDELETE_CLR(Delegate);
 			}
 
 			void ScriptErrorIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
@@ -573,8 +572,7 @@ namespace ConstructionSetExtender
 
 			ScriptFindResultIndicator::~ScriptFindResultIndicator()
 			{
-				delete Delegate;
-				Delegate = nullptr;
+				SAFEDELETE_CLR(Delegate);
 			}
 
 			void ScriptFindResultIndicator::Draw(TextView^ textView, System::Windows::Media::DrawingContext^ drawingContext)
@@ -747,8 +745,20 @@ namespace ConstructionSetExtender
 
 				Parent->TextChanged -= ParentTextChangedHandler;
 
-				delete ErrorColorizer;
-				delete FindResultColorizer;
+				SAFEDELETE_CLR(FindResultColorizer);
+				SAFEDELETE_CLR(ErrorColorizer);
+
+				SAFEDELETE_CLR(Messages);
+				SAFEDELETE_CLR(FindResults);
+				SAFEDELETE_CLR(Bookmarks);
+
+				SAFEDELETE_CLR(BinderMessages);
+				SAFEDELETE_CLR(BinderBookmarks);
+				SAFEDELETE_CLR(BinderFindResults);
+
+				SAFEDELETE_CLR(ParentTextChangedHandler);
+
+				Parent = nullptr;
 			}
 
 			void LineTrackingManager::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
@@ -1232,7 +1242,7 @@ namespace ConstructionSetExtender
 
 			ObScriptIndentStrategy::~ObScriptIndentStrategy()
 			{
-				;//
+				Parent = nullptr;
 			}
 
 			ObScriptIndentStrategy::ObScriptIndentStrategy( AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines ) :
@@ -1281,6 +1291,7 @@ namespace ConstructionSetExtender
 
 			ObScriptCodeFoldingStrategy::~ObScriptCodeFoldingStrategy()
 			{
+				Parent = nullptr;
 			}
 
 			ObScriptCodeFoldingStrategy::ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent) :
@@ -1490,10 +1501,7 @@ namespace ConstructionSetExtender
 				ParentEditor = nullptr;
 
 				if (InstanceCounter == 0 && ElementIcon)
-				{
-					delete ElementIcon;
-					ElementIcon = nullptr;
-				}
+					SAFEDELETE_CLR(ElementIcon);
 			}
 
 			Windows::Media::Imaging::BitmapSource^ StructureVisualizerRenderer::GetIconSource()
@@ -1641,7 +1649,7 @@ namespace ConstructionSetExtender
 				HoverLogic->MouseHover -= HandlerHover;
 				HoverLogic->MouseHoverStopped -= HandlerHoverStopped;
 
-				delete HoverLogic;
+				SAFEDELETE_CLR(HoverLogic);
 			}
 
 			Windows::Media::Imaging::BitmapSource^ DefaultIconMargin::GetWarningIcon()
@@ -1773,7 +1781,7 @@ namespace ConstructionSetExtender
 				LineTracker->TrackedDataUpdated -= HandlerTextViewChanged;
 
 				HidePopup();
-				delete Popup;
+				SAFEDELETE_CLR(Popup);
 
 				Parent = nullptr;
 				LineTracker = nullptr;
@@ -1781,16 +1789,10 @@ namespace ConstructionSetExtender
 				if (InstanceCounter == 0)
 				{
 					if (WarningIcon)
-					{
-						delete WarningIcon;
-						WarningIcon = nullptr;
-					}
+						SAFEDELETE_CLR(WarningIcon);
 
 					if (BookmarkIcon)
-					{
-						delete BookmarkIcon;
-						BookmarkIcon = nullptr;
-					}
+						SAFEDELETE_CLR(BookmarkIcon);
 				}
 			}
 

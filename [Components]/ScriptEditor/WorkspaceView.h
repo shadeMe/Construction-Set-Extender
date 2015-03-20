@@ -10,11 +10,12 @@
 using namespace DevComponents;
 using namespace DevComponents::DotNetBar::Events;
 
-#define ConcreteWorkspaceViewDeclareClickHandler(Name)		EventHandler^ Name##ClickHandler; \
-															void ConcreteWorkspaceView::##Name##_Click(Object^ Sender, EventArgs^ E)
-#define ConcreteWorkspaceViewDefineClickHandler(Name)		Name##ClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::##Name##_Click)
-#define ConcreteWorkspaceViewSubscribeClickEvent(Name)		Name##->Click += Name##ClickHandler
-#define ConcreteWorkspaceViewUnsubscribeClickEvent(Name)	Name##->Click -= Name##ClickHandler
+#define ConcreteWorkspaceViewDeclareClickHandler(Name)				EventHandler^ Name##ClickHandler; \
+																	void ConcreteWorkspaceView::##Name##_Click(Object^ Sender, EventArgs^ E)
+#define ConcreteWorkspaceViewDefineClickHandler(Name)				Name##ClickHandler = gcnew EventHandler(this, &ConcreteWorkspaceView::##Name##_Click)
+#define ConcreteWorkspaceViewSubscribeClickEvent(Name)				Name##->Click += Name##ClickHandler
+#define ConcreteWorkspaceViewUnsubscribeClickEvent(Name)			Name##->Click -= Name##ClickHandler
+#define ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(Name)		Name##->Click -= Name##ClickHandler; delete Name##ClickHandler; Name##ClickHandler = nullptr
 
 namespace ConstructionSetExtender
 {

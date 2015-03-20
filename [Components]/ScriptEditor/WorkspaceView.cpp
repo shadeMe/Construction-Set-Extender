@@ -308,8 +308,8 @@ namespace ConstructionSetExtender
 
 			Form->ForceClose();
 
-			delete Form;
-			delete ListView;
+			SAFEDELETE_CLR(Form);
+			SAFEDELETE_CLR(ListView);
 
 			Parent = nullptr;
 		}
@@ -384,8 +384,6 @@ namespace ConstructionSetExtender
 
 		ConcreteWorkspaceView::ConcreteWorkspaceView(ConcreteWorkspaceViewController^ Controller, ConcreteWorkspaceViewFactory^ Factory, Rectangle Bounds)
 		{
-			Application::EnableVisualStyles();
-
 			ViewController = Controller;
 			ViewFactory = Factory;
 
@@ -415,6 +413,7 @@ namespace ConstructionSetExtender
 			EditorForm->AutoScaleMode = AutoScaleMode::Font;
 			EditorForm->Size = Size(Bounds.Width, Bounds.Height);
 			EditorForm->KeyPreview = true;
+			EditorForm->TabStop = false;
 			EditorForm->Tag = nullptr;
 
 			DotNetBar::RibbonPredefinedColorSchemes::ChangeOffice2010ColorTable(EditorForm, DotNetBar::Rendering::eOffice2010ColorScheme::Black);
@@ -500,10 +499,17 @@ namespace ConstructionSetExtender
 			ConcreteWorkspaceViewSubscribeClickEvent(SortTabsButton);
 
 			WorkspaceSplitter = gcnew SplitContainer();
+			WorkspaceSplitter->TabStop = false;
+			WorkspaceSplitter->Panel1->TabStop = false;
+			WorkspaceSplitter->Panel2->TabStop = false;
 			MessageList = gcnew DoubleBufferedListView();
+			MessageList->TabStop = false;
 			FindList = gcnew DoubleBufferedListView();
+			FindList->TabStop = false;
 			BookmarkList = gcnew DoubleBufferedListView();
+			BookmarkList->TabStop = false;
 			GlobalFindList = gcnew BrightIdeasSoftware::TreeListView;
+			GlobalFindList->TabStop = false;
 			SpoilerText = gcnew Label();
 
 			GlobalFindListItemActivate = gcnew EventHandler(this, &ConcreteWorkspaceView::GlobalFindList_ItemActivate);
@@ -511,8 +517,10 @@ namespace ConstructionSetExtender
 			AttachPanel = gcnew Panel();
 			AttachPanel->Dock = DockStyle::Fill;
 			AttachPanel->BorderStyle = BorderStyle::None;
+			AttachPanel->TabStop = false;
 
 			WorkspaceMainToolBar = gcnew ToolStrip();
+			WorkspaceMainToolBar->TabStop = false;
 			ToolBarNewScript = gcnew ToolStripButton();
 			ToolBarOpenScript = gcnew ToolStripButton();
 			ToolBarPreviousScript = gcnew ToolStripButton();
@@ -549,6 +557,7 @@ namespace ConstructionSetExtender
 			ToolBarRefactorMenuContentsModifyVariableIndices = gcnew ToolStripButton();
 
 			WorkspaceSecondaryToolBar = gcnew ToolStrip();
+			WorkspaceSecondaryToolBar->TabStop = false;
 			ToolBarMessageList = gcnew ToolStripButton();
 			ToolBarFindList = gcnew ToolStripButton();
 			ToolBarBookmarkList = gcnew ToolStripButton();
@@ -1023,6 +1032,11 @@ namespace ConstructionSetExtender
 
 			AssociatedModels->Clear();
 
+			SAFEDELETE_CLR(ModelStateChangedDirty);
+			SAFEDELETE_CLR(ModelStateChangedByteCodeSize);
+			SAFEDELETE_CLR(ModelStateChangedType);
+			SAFEDELETE_CLR(ModelStateChangedDescription);
+
 			for each (Image^ Itr in EditorTabStrip->ImageList->Images)
 				delete Itr;
 
@@ -1042,58 +1056,74 @@ namespace ConstructionSetExtender
 			EditorTabStrip->TabRemoved -= ScriptStripTabRemovedHandler;
 			EditorTabStrip->TabStripMouseClick -= ScriptStripMouseClickHandler;
 			EditorTabStrip->TabMoving -= ScriptStripTabMovingHandler;
-			ConcreteWorkspaceViewUnsubscribeClickEvent(NewTabButton);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(SortTabsButton);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(NewTabButton);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(SortTabsButton);
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 
-			delete EditorTabStrip;
-			delete NewTabButton->Image;
-			delete NewTabButton;
-			delete SortTabsButton;
+			SAFEDELETE_CLR(EditorFormCancelHandler);
+			SAFEDELETE_CLR(EditorFormKeyDownHandler);
+			SAFEDELETE_CLR(EditorFormPositionChangedHandler);
+			SAFEDELETE_CLR(EditorFormSizeChangedHandler);
+			SAFEDELETE_CLR(EditorFormActivated);
+			SAFEDELETE_CLR(ScriptStripTabItemCloseHandler);
+			SAFEDELETE_CLR(ScriptStripSelectedTabChangedHandler);
+			SAFEDELETE_CLR(ScriptStripTabRemovedHandler);
+			SAFEDELETE_CLR(ScriptStripMouseClickHandler);
+			SAFEDELETE_CLR(ScriptStripTabMovingHandler);
+			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarNewScript);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarOpenScript);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarPreviousScript);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarNextScript);
+			SAFEDELETE_CLR(EditorTabStrip);
+			SAFEDELETE_CLR(NewTabButton->Image);
+			SAFEDELETE_CLR(NewTabButton);
+			SAFEDELETE_CLR(SortTabsButton);
+
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarNewScript);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarOpenScript);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarPreviousScript);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarNextScript);
 			ToolBarSaveScript->ButtonClick -= ToolBarSaveScriptClickHandler;
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSaveScriptNoCompile);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSaveScriptAndPlugin);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarRecompileScripts);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarDeleteScript);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarCompileDependencies);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarNavigationBack);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarNavigationForward);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSaveAll);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarGlobalFindList);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarOptions);
+			SAFEDELETE_CLR(ToolBarSaveScriptClickHandler);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSaveScriptNoCompile);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSaveScriptAndPlugin);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarRecompileScripts);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarDeleteScript);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarCompileDependencies);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarNavigationBack);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarNavigationForward);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSaveAll);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarGlobalFindList);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarOptions);
 
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarEditMenuContentsFindReplace);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarEditMenuContentsGotoLine);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarEditMenuContentsGotoOffset);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarEditMenuContentsFindReplace);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarEditMenuContentsGotoLine);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarEditMenuContentsGotoOffset);
 
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarScriptTypeContentsObject);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarScriptTypeContentsQuest);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarScriptTypeContentsMagicEffect);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarScriptTypeContentsObject);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarScriptTypeContentsQuest);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarScriptTypeContentsMagicEffect);
 
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarRefactorMenuContentsDocumentScript);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarRefactorMenuContentsRenameVariables);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarRefactorMenuContentsModifyVariableIndices);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarRefactorMenuContentsDocumentScript);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarRefactorMenuContentsRenameVariables);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarRefactorMenuContentsModifyVariableIndices);
 
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarMessageList);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarFindList);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarBookmarkList);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarMessageList);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarFindList);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarBookmarkList);
 
 			ToolBarDumpScript->ButtonClick -= ToolBarDumpScriptClickHandler;
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarDumpAllScripts);
+			SAFEDELETE_CLR(ToolBarDumpScriptClickHandler);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarDumpAllScripts);
 			ToolBarLoadScript->ButtonClick -= ToolBarLoadScriptClickHandler;
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarLoadScriptsToTabs);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarShowOffsets);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarShowPreprocessedText);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSanitizeScriptText);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarBindScript);
-			ConcreteWorkspaceViewUnsubscribeClickEvent(ToolBarSnippetManager);
+			SAFEDELETE_CLR(ToolBarLoadScriptClickHandler);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarLoadScriptsToTabs);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarShowOffsets);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarShowPreprocessedText);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSanitizeScriptText);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarBindScript);
+			ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(ToolBarSnippetManager);
 
 			GlobalFindList->ItemActivate -= GlobalFindListItemActivate;
+			SAFEDELETE_CLR(GlobalFindListItemActivate);
 
 			DisposeControlImage(ToolBarNewScript);
 			DisposeControlImage(ToolBarOpenScript);
@@ -1129,76 +1159,69 @@ namespace ConstructionSetExtender
 			DisposeControlImage(ToolBarScriptTypeContentsQuest);
 			DisposeControlImage(ToolBarScriptTypeContentsMagicEffect);
 
-			delete WorkspaceMainToolBar;
-			delete ToolBarNewScript;
-			delete ToolBarOpenScript;
-			delete ToolBarPreviousScript;
-			delete ToolBarNextScript;
-			delete ToolBarSaveScript;
-			delete ToolBarSaveScriptDropDown;
-			delete ToolBarSaveScriptNoCompile;
-			delete ToolBarSaveScriptAndPlugin;
-			delete ToolBarRecompileScripts;
-			delete ToolBarCompileDependencies;
-			delete ToolBarDeleteScript;
-			delete ToolBarNavigationBack;
-			delete ToolBarNavigationForward;
-			delete ToolBarSaveAll;
-			delete ToolBarOptions;
+			SAFEDELETE_CLR(WorkspaceMainToolBar);
+			SAFEDELETE_CLR(ToolBarNewScript);
+			SAFEDELETE_CLR(ToolBarOpenScript);
+			SAFEDELETE_CLR(ToolBarPreviousScript);
+			SAFEDELETE_CLR(ToolBarNextScript);
+			SAFEDELETE_CLR(ToolBarSaveScript);
+			SAFEDELETE_CLR(ToolBarSaveScriptDropDown);
+			SAFEDELETE_CLR(ToolBarSaveScriptNoCompile);
+			SAFEDELETE_CLR(ToolBarSaveScriptAndPlugin);
+			SAFEDELETE_CLR(ToolBarRecompileScripts);
+			SAFEDELETE_CLR(ToolBarCompileDependencies);
+			SAFEDELETE_CLR(ToolBarDeleteScript);
+			SAFEDELETE_CLR(ToolBarNavigationBack);
+			SAFEDELETE_CLR(ToolBarNavigationForward);
+			SAFEDELETE_CLR(ToolBarSaveAll);
+			SAFEDELETE_CLR(ToolBarOptions);
 
-			delete ToolBarScriptType;
-			delete ToolBarScriptTypeContents;
-			delete ToolBarScriptTypeContentsObject;
-			delete ToolBarScriptTypeContentsQuest;
-			delete ToolBarScriptTypeContentsMagicEffect;
+			SAFEDELETE_CLR(ToolBarScriptType);
+			SAFEDELETE_CLR(ToolBarScriptTypeContents);
+			SAFEDELETE_CLR(ToolBarScriptTypeContentsObject);
+			SAFEDELETE_CLR(ToolBarScriptTypeContentsQuest);
+			SAFEDELETE_CLR(ToolBarScriptTypeContentsMagicEffect);
 
-			delete WorkspaceSecondaryToolBar;
-			delete ToolBarEditMenu;
-			delete ToolBarEditMenuContents;
-			delete ToolBarEditMenuContentsFindReplace;
-			delete ToolBarEditMenuContentsGotoLine;
-			delete ToolBarEditMenuContentsGotoOffset;
-			delete ToolBarMessageList;
-			delete ToolBarFindList;
-			delete ToolBarBookmarkList;
-			delete ToolBarDumpScript;
-			delete ToolBarDumpScriptDropDown;
-			delete ToolBarDumpAllScripts;
-			delete ToolBarLoadScript;
-			delete ToolBarLoadScriptDropDown;
-			delete ToolBarLoadScriptsToTabs;
-			delete ToolBarShowOffsets;
-			delete ToolBarShowPreprocessedText;
-			delete ToolBarSanitizeScriptText;
-			delete ToolBarBindScript;
-			delete ToolBarSnippetManager;
-			delete ToolBarByteCodeSize;
+			SAFEDELETE_CLR(WorkspaceSecondaryToolBar);
+			SAFEDELETE_CLR(ToolBarEditMenu);
+			SAFEDELETE_CLR(ToolBarEditMenuContents);
+			SAFEDELETE_CLR(ToolBarEditMenuContentsFindReplace);
+			SAFEDELETE_CLR(ToolBarEditMenuContentsGotoLine);
+			SAFEDELETE_CLR(ToolBarEditMenuContentsGotoOffset);
+			SAFEDELETE_CLR(ToolBarMessageList);
+			SAFEDELETE_CLR(ToolBarFindList);
+			SAFEDELETE_CLR(ToolBarBookmarkList);
+			SAFEDELETE_CLR(ToolBarDumpScript);
+			SAFEDELETE_CLR(ToolBarDumpScriptDropDown);
+			SAFEDELETE_CLR(ToolBarDumpAllScripts);
+			SAFEDELETE_CLR(ToolBarLoadScript);
+			SAFEDELETE_CLR(ToolBarLoadScriptDropDown);
+			SAFEDELETE_CLR(ToolBarLoadScriptsToTabs);
+			SAFEDELETE_CLR(ToolBarShowOffsets);
+			SAFEDELETE_CLR(ToolBarShowPreprocessedText);
+			SAFEDELETE_CLR(ToolBarSanitizeScriptText);
+			SAFEDELETE_CLR(ToolBarBindScript);
+			SAFEDELETE_CLR(ToolBarSnippetManager);
+			SAFEDELETE_CLR(ToolBarByteCodeSize);
 
-			delete OffsetTextViewer;
-			delete PreprocessorTextViewer;
-			delete ScriptListBox;
-			delete FindReplaceBox;
-			delete IntelliSenseView;
-			delete TabStripFilter;
+			SAFEDELETE_CLR(OffsetTextViewer);
+			SAFEDELETE_CLR(PreprocessorTextViewer);
+			SAFEDELETE_CLR(ScriptListBox);
+			SAFEDELETE_CLR(FindReplaceBox);
+			SAFEDELETE_CLR(IntelliSenseView);
+			SAFEDELETE_CLR(TabStripFilter);
 
-			ScriptListBox = nullptr;
-			FindReplaceBox = nullptr;
-			OffsetTextViewer = nullptr;
-			PreprocessorTextViewer = nullptr;
-			IntelliSenseView = nullptr;
-			TabStripFilter = nullptr;
-
-			delete AttachPanel;
+			SAFEDELETE_CLR(AttachPanel);
 
 			WorkspaceSplitter->Panel1->Controls->Clear();
 			WorkspaceSplitter->Panel2->Controls->Clear();
 
-			delete WorkspaceSplitter;
-			delete MessageList;
-			delete FindList;
-			delete BookmarkList;
-			delete GlobalFindList;
-			delete SpoilerText;
+			SAFEDELETE_CLR(WorkspaceSplitter);
+			SAFEDELETE_CLR(MessageList);
+			SAFEDELETE_CLR(FindList);
+			SAFEDELETE_CLR(BookmarkList);
+			SAFEDELETE_CLR(GlobalFindList);
+			SAFEDELETE_CLR(SpoilerText);
 
 			ViewFactory->Remove(this);
 
@@ -1208,6 +1231,7 @@ namespace ConstructionSetExtender
 			PREFERENCES->SaveINI();
 
 			EditorForm->ForceClose();
+			SAFEDELETE_CLR(EditorForm);
 		}
 
 		void ConcreteWorkspaceView::EditorForm_Cancel(Object^ Sender, CancelEventArgs^ E)
@@ -1301,6 +1325,19 @@ namespace ConstructionSetExtender
 
 			New->Controller->Bind(New, this);
 
+#if 0
+			IntPtr FocusCtrl = NativeWrapper::GetFocus();
+			if (FocusCtrl == IntPtr::Zero)
+				DebugPrint("no focus");
+			else
+			{
+				Control^ Focus = Control::FromHandle(FocusCtrl);
+				if (Focus == nullptr)
+					DebugPrint("handle found but no control - " + FocusCtrl.ToString("X8"));
+				else
+					DebugPrint("focus control = " + Focus->GetType()->ToString() + ", handle = " + FocusCtrl.ToString("X8"));
+			}
+#endif
 			EndUpdate();
 		}
 

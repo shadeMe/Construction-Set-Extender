@@ -52,9 +52,17 @@ namespace ConstructionSetExtender
 			ParentEditor->IntelliSenseHide -= ParentEditorHideInterface;
 			ParentEditor->IntelliSenseRelocate -= ParentEditorRelocateInterface;
 
+			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
+			SAFEDELETE_CLR(ParentEditorKeyDown);
+			SAFEDELETE_CLR(ParentEditorShowInterface);
+			SAFEDELETE_CLR(ParentEditorHideInterface);
+			SAFEDELETE_CLR(ParentEditorRelocateInterface);
+
 			RemoteScript = nullptr;
 
 			LocalVariables->Clear();
+
+			ParentEditor = nullptr;
 		}
 
 		void IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
@@ -554,6 +562,11 @@ namespace ConstructionSetExtender
 			ListView->ItemActivate -= ListViewItemActivateHandler;
 			ListView->SelectedIndexChanged -= ListViewSelectionChangedHandler;
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
+
+			SAFEDELETE_CLR(ListViewKeyDownHandler);
+			SAFEDELETE_CLR(ListViewItemActivateHandler);
+			SAFEDELETE_CLR(ListViewSelectionChangedHandler);
+			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 
 			for each (Image^ Itr in ListView->SmallImageList->Images)
 				delete Itr;

@@ -240,6 +240,7 @@ namespace ConstructionSetExtender
 				AvalonEditHighlightingDefinition^						GenerateHighlightingDefinition(List<String^>^ LocalVariables);
 
 				AvalonEditXSHDManager();
+				~AvalonEditXSHDManager();
 			};
 		}
 	}

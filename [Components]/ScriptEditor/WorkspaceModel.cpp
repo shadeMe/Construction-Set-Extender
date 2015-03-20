@@ -74,9 +74,14 @@ namespace ConstructionSetExtender
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 			AutoSaveTimer->Tick -= AutoSaveTimerTickHandler;
 
-			delete TextEditor;
-			delete AutoSaveTimer;
-			TextEditor = nullptr;
+			SAFEDELETE_CLR(TextEditorKeyDownHandler);
+			SAFEDELETE_CLR(TextEditorScriptModifiedHandler);
+			SAFEDELETE_CLR(TextEditorMouseClickHandler);
+			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
+			SAFEDELETE_CLR(AutoSaveTimerTickHandler);
+
+			SAFEDELETE_CLR(AutoSaveTimer);
+			SAFEDELETE_CLR(TextEditor);
 
 			ModelFactory->Remove(this);
 
