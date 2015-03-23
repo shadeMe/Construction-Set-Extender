@@ -1,4 +1,5 @@
 #include "CSEWrappers.h"
+#include "CSEGlobalClipboard.h"
 
 namespace ConstructionSetExtender
 {
@@ -159,4 +160,47 @@ namespace ConstructionSetExtender
 		return WrappedPlugin;
 	}
 
+	CSEFormListBuilder::CSEFormListBuilder() :
+		FormList()
+	{
+		;//
+	}
+
+	CSEFormListBuilder::~CSEFormListBuilder()
+	{
+		for (BGSEditorExtender::BGSEEFormListT::iterator Itr = FormList.begin(); Itr != FormList.end(); Itr++)
+			delete *Itr;
+
+		FormList.clear();
+	}
+
+	void CSEFormListBuilder::Add(TESForm* Form)
+	{
+		SME_ASSERT(Form);
+
+		if (Form->IsReference())
+		{
+			TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+			if (Ref->baseForm)
+			{
+				if (Ref->baseForm->formType == TESForm::kFormType_Door ||
+					Ref->baseForm == TESForm::LookupByEditorID("DoorMarker"))
+				{
+					return;
+				}
+			}
+		}
+
+		FormList.push_back(new CSEFormWrapper(Form));
+	}
+
+	bool CSEFormListBuilder::Copy(void)
+	{
+		bool Result = false;
+
+		if (FormList.size())
+			Result = BGSEECLIPBOARD->Copy(FormList);
+
+		return Result;
+	}
 }

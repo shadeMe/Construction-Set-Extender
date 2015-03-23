@@ -308,7 +308,7 @@ namespace ConstructionSetExtender
 			else
 				CommentDescription = "\n";
 
-			Description += Name + CommentDescription + "\n" + ParamIdx + " Parameters" + Scratch + "\n\n";
+			Description += Name + CommentDescription + "\n" + ParamIdx + " Parameter(s)" + Scratch + "\n\n";
 			if (ReturnVar == -1)			Description += "Does not return a value";
 			else if (ReturnVar == -9)		Description += "Return Type: Ambiguous";
 			else							Description += "Return Type: " + (dynamic_cast<IntelliSenseItemVariable^>(VarList[ReturnVar]))->GetDataTypeID();

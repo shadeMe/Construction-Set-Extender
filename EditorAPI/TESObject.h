@@ -74,6 +74,10 @@ public:
 	/*3C*/ Vector3					center;				// filled in as requested
 	/*48*/ Vector3					extents;			// filled in as requested
 	/*54*/ UInt32					objectRefrCount;	// count of TESObjectREFR using this form
+
+	// methods
+	UInt32							IncrementObjectRefCount();
+	UInt32							DecrementObjectRefCount();
 };
 STATIC_ASSERT(sizeof(TESBoundObject) == 0x58);
 

@@ -48,7 +48,7 @@ namespace ConstructionSetExtender
 		RegisterRelease(6, 2, "Talkative Badger");
 		RegisterRelease(6, 3, "Drunken Glaswegian");
 		RegisterRelease(6, 4, "Subterranean Homesick Alien");
-		RegisterRelease(6, 5, "Bloody Bull-buggering Bollock");
+		RegisterRelease(7, 0, "Bull-buggering Bollock");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
@@ -456,7 +456,7 @@ namespace ConstructionSetExtender
 		if ((PanicSaved = _DATAHANDLER->PanicSave()))
 			BGSEECONSOLE_MESSAGE("Yup, we're good! Look for the panic save file in the Backup directory");
 		else
-			BGSEECONSOLE_MESSAGE("BollocksBollocksBollocks! No can do...");
+			BGSEECONSOLE_MESSAGE("Bollocks-bollocks-bollocks! No can do...");
 
 		if (BGSEEMAIN->Daemon()->GetFullInitComplete())
 			BGSEEACHIEVEMENTS->Unlock(Achievements::kSaboteur, false, true);
@@ -464,7 +464,7 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->Exdent();
 		BGSEECONSOLE->Exdent();
 
-		// it's highly inadvisable to do anything inside handler apart from the bare minimum of diagnostics
+		// it's highly inadvisable to do anything inside the handler apart from the bare minimum of diagnostics
 		// memory allocations are a big no-no as the CRT state can potentially be corrupted...
 		// ... but sod that! Achievements are more important, obviously.
 		CR_CRASH_CALLBACK_INFO* CrashInfo = (CR_CRASH_CALLBACK_INFO*)Parameter;
@@ -501,18 +501,15 @@ namespace ConstructionSetExtender
 			{
 			case IDYES:
 				ResumeExecution = true;
-
 				break;
 			case IDNO:
 				ResumeExecution = false;
-
 				break;
 			case IDCANCEL:
 				if (BGSEEMAIN->Daemon()->GetFullInitComplete())
 					BGSEEACHIEVEMENTS->Unlock(Achievements::kFunnyGuy, false, true);
 
 				MessageBox(NULL, "Hah! Nice try, Bob.", BGSEEMAIN->ExtenderGetDisplayName(), MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
-
 				break;
 			}
 		}
@@ -544,9 +541,7 @@ namespace ConstructionSetExtender
 				BGSEECONSOLE->Exdent();
 			}
 			else if (strlen(PluginName) >= 1)
-			{
 				BGSEECONSOLE_MESSAGE("Non-existent startup plugin '%s'", PluginName);
-			}
 
 			Hooks::_MemHdlr(AutoLoadActivePluginOnStartup).WriteBuffer();
 		}
@@ -572,9 +567,7 @@ namespace ConstructionSetExtender
 		const char* WorkspacePath = Settings::Startup::kWorkspacePath.GetData().s;
 
 		if (Load)
-		{
 			BGSEEWORKSPACE->SelectCurrentWorkspace(WorkspacePath);
-		}
 	}
 
 	void CSEInteropHandler(OBSEMessagingInterface::Message* Msg)
@@ -621,9 +614,7 @@ extern "C"
 		XSEPluginHandle = obse->GetPluginHandle();
 
 		if (obse->isEditor == false)
-		{
 			return false;
-		}
 
 		SME::MersenneTwister::init_genrand(GetTickCount());
 		if (SME::MersenneTwister::genrand_real1() < 0.1)
@@ -651,7 +642,7 @@ extern "C"
 #ifdef NDEBUG
 														  false,
 #else
-														  true,
+														  false,		// clr memory profiling
 #endif
 														  false,		// wait for debugger
 #ifdef NDEBUG
@@ -673,7 +664,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
 		{
 			MessageBox(NULL,
-					   "The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
+					   "The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",
 					   "The Cyrodiil Bunny Ranch",
 					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
 
@@ -689,7 +680,7 @@ extern "C"
 		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
 		{
 			MessageBox(NULL,
-					   "The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. The plugin's log will now open.",
+					   "The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",
 					   "Rumpy-Pumpy!!",
 					   MB_TASKMODAL | MB_SETFOREGROUND | MB_ICONERROR | MB_OK);
 

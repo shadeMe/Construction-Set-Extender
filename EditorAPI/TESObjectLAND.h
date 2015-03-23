@@ -20,10 +20,16 @@ public:
 		/*04*/ float			minHeight;
 	};
 
+	enum
+	{
+		kLandFlags_Unk03	= 1 << 3,
+		kLandFlags_Unk0A	= 1 << 10,		// set when the parent cell's worldspace has a parent (worldspace)
+	};
+
 	// members
 	//     /*00*/ TESForm
 	//     /*24*/ TESChildCell
-	/*28*/ UInt8				unk28;			// flags of some sort
+	/*28*/ UInt8				landFlags;
 	/*29*/ UInt8				pad29[3];
 	/*2C*/ TESObjectCELL*		parentCell;
 	/*30*/ void*				unk30;			// heightfield data

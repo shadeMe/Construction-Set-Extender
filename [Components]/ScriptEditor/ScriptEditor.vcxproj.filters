@@ -176,9 +176,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Images.resx">
-      <Filter>Resources</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="ImagesModern.resx">
       <Filter>Resources</Filter>
     </EmbeddedResource>

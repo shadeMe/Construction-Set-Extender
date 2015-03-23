@@ -55,9 +55,7 @@ namespace ConstructionSetExtender
 
 			bool ThrowAway = false;
 			if (CODAVM->RunScript(ScriptName, NULL, NULL, ThrowAway, (RunInBackground == "1" ? true : false)))
-			{
 				BGSEEACHIEVEMENTS->Unlock(Achievements::kAutomaton);
-			}
 		}
 
 		DEFINE_BGSEECONSOLECMD(RunCodaScript, 2);

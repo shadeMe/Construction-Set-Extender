@@ -565,6 +565,7 @@ public:
 
 	static const char*						INIFilePath;
 	static HIMAGELIST*						BoundObjectIcons;
+	static char**							FileSelectionBuffer;
 
 	enum
 	{
@@ -731,6 +732,7 @@ public:
 	void								ClearSelection(bool RemoveSelectionBox = false);
 	void								CalculatePositionVectorSum(void);
 	bool								HasObject(TESForm* Form);
+	void								CalculateBounds(void);
 
 	static TESObjectSelection*			CreateInstance(TESObjectSelection* Source = NULL);
 	void								DeleteInstance();

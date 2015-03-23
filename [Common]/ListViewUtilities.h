@@ -69,8 +69,8 @@ namespace ConstructionSetExtender
 			switch (m.Msg)
 			{
 			case 0x0F: // WM_PAINT
-				if (NativeWrapper::GetForegroundWindow() == m.HWnd ||
-					NativeWrapper::GetActiveWindow() == m.HWnd)
+		//		if (NativeWrapper::GetForegroundWindow() == m.HWnd ||
+		//			NativeWrapper::GetActiveWindow() == m.HWnd)
 				{
 					PaintInProgress = true;
 					ListView::WndProc(m);

@@ -556,17 +556,20 @@ namespace ConstructionSetExtender
 			else
 			{
 				if (s_SavedTimestamp.dwHighDateTime || s_SavedTimestamp.dwLowDateTime)
-				{
 					SetFileTime(SaveFile, NULL, NULL, &s_SavedTimestamp);
-				}
 			}
 
 			CloseHandle(SaveFile);
 		}
 
-		void __stdcall DoDataHandlerSavePluginRetainTimeStampsHook(bool State)
+		bool __stdcall DoDataHandlerSavePluginRetainTimeStampsHook(bool State)
 		{
-			PreserveTESFileTimeStamp(_DATAHANDLER->activeFile, State);
+			if (_DATAHANDLER->activeFile == NULL)
+				return false;
+			else
+				PreserveTESFileTimeStamp(_DATAHANDLER->activeFile, State);
+
+			return true;
 		}
 
 		#define	_hhName		DataHandlerSavePluginRetainTimeStamps
@@ -579,6 +582,8 @@ namespace ConstructionSetExtender
 				pushad
 				push	1		// save
 				call	DoDataHandlerSavePluginRetainTimeStampsHook
+				test	al, al
+				jz		NEWFILE
 				popad
 
 				call	_hhGetVar(Call)
@@ -588,6 +593,10 @@ namespace ConstructionSetExtender
 				call	DoDataHandlerSavePluginRetainTimeStampsHook
 				popad
 
+				jmp		_hhGetVar(Retn)
+			NEWFILE:
+				popad
+				call	_hhGetVar(Call)
 				jmp		_hhGetVar(Retn)
 			}
 		}

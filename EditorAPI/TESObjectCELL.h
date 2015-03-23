@@ -104,6 +104,7 @@ public:
 	bool						GetIsInterior();
 	TESObjectREFR*				FindFirstRef(TESForm* BaseForm, bool MustHaveEditorID = false);
 	void						SetPathGrid(TESPathGrid* PathGrid);
+	TESObjectLAND*				GetLand();
 
 	void						AddObjectReference(TESObjectREFR* Ref);
 	void						RemoveObjectReference(TESObjectREFR* Ref);

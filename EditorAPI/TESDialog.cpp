@@ -18,6 +18,7 @@ UInt8*						TESCSMain::AllowAutoSaveFlag = (UInt8*)0x00A0B628;
 UInt8*						TESCSMain::ExittingCSFlag = (UInt8*)0x00A0B63C;
 const char*					TESCSMain::INIFilePath = (const char*)0x00A0ABB8;
 HIMAGELIST*					TESCSMain::BoundObjectIcons = (HIMAGELIST*)0x00A0B158;
+char**						TESCSMain::FileSelectionBuffer = (char**)0x00A0AF00;
 
 HWND*						TESObjectWindow::WindowHandle = (HWND*)0x00A0AF44;
 HWND*						TESObjectWindow::FormListHandle = (HWND*)0x00A0BAA0;
@@ -453,6 +454,11 @@ void TESObjectSelection::CalculatePositionVectorSum(void)
 bool TESObjectSelection::HasObject(TESForm* Form)
 {
 	return thisCall<bool>(0x00511CC0, this, Form);
+}
+
+void TESObjectSelection::CalculateBounds(void)
+{
+	thisCall<void>(0x00511B20, this);
 }
 
 void TESFileFormListWindow::Show(HWND Parent, TESFile* File)

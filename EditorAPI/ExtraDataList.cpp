@@ -40,6 +40,11 @@ void ExtraDataList::ModExtraCount( UInt32 Count )
 	thisCall<UInt32>(0x0045E2A0, this, Count);
 }
 
+void ExtraDataList::ModExtraDistantData(TESObjectLAND* Land, Vector3* Position)
+{
+	thisCall<void>(0x0045F1D0, this, Land, Position);
+}
+
 void BaseExtraList::AddExtra( BSExtraData* xData )
 {
 	thisCall<void>(0x0045B0D0, this, xData);

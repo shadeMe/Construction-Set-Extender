@@ -265,6 +265,19 @@ public:
 };
 STATIC_ASSERT(sizeof(DialogExtraQuestStageData) == 0x20);
 
+// 1C
+class DialogExtraPopupMenu: public BSExtraData
+{
+public:
+	// members
+	//     /*00*/ BSExtraData
+	/*0C*/ HMENU		menuRoot;
+	/*10*/ HMENU		popupMenu;			// first submenu in menuRoot
+	/*14*/ int			menuID;
+	/*18*/ int			controlID;			// set to the ID of the control that handled the mouse r.click message
+};
+STATIC_ASSERT(sizeof(DialogExtraPopupMenu) == 0x1C);
+
 // cell and position where the current package was started?
 // 20
 class ExtraPackageStartLocation : public BSExtraData
@@ -339,7 +352,7 @@ class ExtraLight : public BSExtraData
 {
 public:
 	// 08
-	struct ExtraLightData
+	struct Data
 	{
 		/*00*/ NiAVObject*		light;	// probably NiLight*
 		/*04*/ float			unk4;	// intensity? only seen 1.0f
@@ -347,7 +360,7 @@ public:
 
 	// members
 	//     /*00*/ BSExtraData
-	/*0C*/ ExtraLightData*		data;
+	/*0C*/ Data*		data;
 };
 STATIC_ASSERT(sizeof(ExtraLight) == 0x10);
 
@@ -406,7 +419,7 @@ public:
 	};
 
 	// 0C
-	struct ExtraLockData
+	struct Data
 	{
 		/*00*/ UInt32			lockLevel;
 		/*04*/ TESKey*			key;
@@ -415,7 +428,7 @@ public:
 	};
 	// members
 	//     /*00*/ BSExtraData
-	/*0C*/ ExtraLockData*		data;
+	/*0C*/ Data*		data;
 };
 STATIC_ASSERT(sizeof(ExtraLock) == 0x10);
 
@@ -459,7 +472,7 @@ public:
 	~ExtraTeleport();
 
 	// 1C
-	struct ExtraTeleportData
+	struct Data
 	{
 		/*00*/ TESObjectREFR*	linkedDoor;
 		/*04*/ Vector3			markerPosition;
@@ -468,7 +481,7 @@ public:
 
 	// members
 	//     /*00*/ BSExtraData
-	/*0C*/ ExtraTeleportData*	data;
+	/*0C*/ Data*	data;
 };
 STATIC_ASSERT(sizeof(ExtraTeleport) == 0x10);
 
@@ -591,7 +604,7 @@ public:
 	};
 
 	// 10
-	struct ExtraMapMarkerData
+	struct Data
 	{
 		/*00*/ TESFullName				fullName;
 		/*0C*/ UInt16					flags;
@@ -600,7 +613,7 @@ public:
 
 	// members
 	//     /*00*/ BSExtraData
-	/*0C*/ ExtraMapMarkerData*	data;
+	/*0C*/ Data*	data;
 };
 STATIC_ASSERT(sizeof(ExtraMapMarker) == 0x10);
 
@@ -619,7 +632,7 @@ class ExtraRagDollData : public BSExtraData
 {
 public:
 	// 08
-	struct ExtraRagDollDataData
+	struct Data
 	{
 		/*00*/ UInt32		unk00;
 		/*04*/ UInt32		unk04;
@@ -627,7 +640,7 @@ public:
 
 	// members
 	//     /*00*/ BSExtraData
-	/*0C*/ ExtraRagDollDataData*	data;
+	/*0C*/ Data*	data;
 };
 STATIC_ASSERT(sizeof(ExtraRagDollData) == 0x10);
 

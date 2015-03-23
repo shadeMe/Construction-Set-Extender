@@ -71,7 +71,7 @@ namespace ConstructionSetExtender
 					break;
 				case TVN_SELCHANGED:
 					{
-						// (ugly)workaround for the non-sorting form list
+						// (hack)workaround for the non-sorting form list
 						SetTimer(hWnd, ID_OBJECTWIDOWIMPOSTER_COLUMNRESIZETIMERID, 500, NULL);
 						break;
 					}
@@ -276,9 +276,7 @@ namespace ConstructionSetExtender
 	void ObjectWindowImposterManager::RefreshImposters(void) const
 	{
 		for each (auto Itr  in ImposterRegistry)
-		{
 			SendMessage(Itr.first, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
-		}
 	}
 
 	void ObjectWindowImposterManager::DestroyImposters(void)

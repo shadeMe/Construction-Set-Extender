@@ -974,6 +974,7 @@ namespace ConstructionSetExtender
 							NewBaseForm->editorID.c_str(),
 							NewBaseForm->formID) == IDYES)
 						{
+							Ref->SetFromActiveFile(true);
 							Ref->SetBaseForm(NewBaseForm);
 							Ref->GenerateNiNode();
 							TESRenderWindow::Refresh3D();

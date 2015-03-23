@@ -55,3 +55,8 @@ const char* TESObjectCELL::GetEditorID() const
 {
 	return thisVirtualCall<const char*>(0xC8, this);
 }
+
+TESObjectLAND* TESObjectCELL::GetLand()
+{
+	return thisCall<TESObjectLAND*>(0x005340A0, this);
+}

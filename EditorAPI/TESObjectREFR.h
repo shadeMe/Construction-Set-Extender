@@ -55,6 +55,7 @@ public:
 
 	void						ChangeCell(TESObjectCELL* Cell);
 	void						Floor();
+	void						Delete();
 
 	void						SetPosition(float X, float Y, float Z);
 	void						SetRotation(float X, float Y, float Z, bool Radians = false);

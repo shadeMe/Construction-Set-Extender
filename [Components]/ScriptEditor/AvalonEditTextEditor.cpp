@@ -1936,14 +1936,19 @@ namespace ConstructionSetExtender
 
 				ContextMenuRefactorAddVariableInt->Text = "Integer";
 				ContextMenuRefactorAddVariableInt->Tag = ObScriptSemanticAnalysis::Variable::DataType::Integer;
+				ContextMenuRefactorAddVariableInt->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableFloat->Text = "Float";
 				ContextMenuRefactorAddVariableFloat->Tag = ObScriptSemanticAnalysis::Variable::DataType::Float;
+				ContextMenuRefactorAddVariableFloat->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableRef->Text = "Reference";
 				ContextMenuRefactorAddVariableRef->Tag = ObScriptSemanticAnalysis::Variable::DataType::Ref;
+				ContextMenuRefactorAddVariableRef->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableString->Text = "String";
 				ContextMenuRefactorAddVariableString->Tag = ObScriptSemanticAnalysis::Variable::DataType::StringVar;
+				ContextMenuRefactorAddVariableString->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableArray->Text = "Array";
 				ContextMenuRefactorAddVariableArray->Tag = ObScriptSemanticAnalysis::Variable::DataType::ArrayVar;
+				ContextMenuRefactorAddVariableArray->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
 				ContextMenuRefactorCreateUDFImplementation->Visible = false;
 

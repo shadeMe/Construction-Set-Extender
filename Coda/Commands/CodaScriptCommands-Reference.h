@@ -203,6 +203,14 @@ namespace ConstructionSetExtender
 					1,
 					OneForm,
 					ICodaScriptDataStore::kDataType_Invalid);
+
+				CodaScriptParametricCommandPrototype(DeleteRef,
+					0,
+					"Permanently removes the reference from its parent cell.",
+					0,
+					1,
+					OneForm,
+					ICodaScriptDataStore::kDataType_Invalid);
 			}
 		}
 	}

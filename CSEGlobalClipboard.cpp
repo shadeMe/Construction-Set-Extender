@@ -281,17 +281,31 @@ namespace ConstructionSetExtender
 
 						if (RefEditorIDMap.size())
 						{
-							// we attempt to instantiate the refs in place
-							TESObjectREFR* FirstRef = RefEditorIDMap.begin()->first;
-							Vector3 RelativeOrigin(FirstRef->position.x, FirstRef->position.y, FirstRef->position.z);
+							// the refs are instantiated in the same configuration
 							NiNode* CameraNode = _PRIMARYRENDERER->primaryCameraParentNode;
+							TESObjectSelection* Buffer = TESObjectSelection::CreateInstance();
+							for each (auto Itr in RefEditorIDMap)
+							{
+								// need to generate the ref's 3D first, otherwise it won't get added to the selection
+								Itr.first->GenerateNiNode();
+								Buffer->AddToSelection(Itr.first);
+								Itr.first->SetNiNode(NULL);
+							}
 
-							static const float kMultiplier = 15.0f;
-							Vector3 NewOrigin(CameraNode->m_localTranslate.x, CameraNode->m_localTranslate.y, CameraNode->m_localTranslate.z);
+							Buffer->CalculatePositionVectorSum();
+							Buffer->CalculateBounds();
 
-							NewOrigin.x += CameraNode->m_worldRotate.data[1] * kMultiplier;
-							NewOrigin.y += CameraNode->m_worldRotate.data[4] * kMultiplier;
-							NewOrigin.z += CameraNode->m_worldRotate.data[7] * kMultiplier;
+							float Multiplier = Buffer->selectionBounds + 60.f;
+							if (Multiplier > 2048)
+								Multiplier = 2048.f;
+
+							Vector3 PosVecSum(Buffer->selectionPositionVectorSum);
+							Vector3 NewOrigin(CameraNode->m_worldTranslate.x, CameraNode->m_worldTranslate.y, CameraNode->m_worldTranslate.z);
+							Vector3 MatRot(CameraNode->m_localRotate.data[1], CameraNode->m_localRotate.data[4], CameraNode->m_localRotate.data[7]);
+
+							MatRot.Scale(Multiplier);
+							NewOrigin += MatRot;
+							NewOrigin -= PosVecSum;
 
 							bool RefreshRenderWindow = false;
 							TESObjectCELL* Interior = _TES->currentInteriorCell;
@@ -306,16 +320,9 @@ namespace ConstructionSetExtender
 								const char* EditorID = Itr->second;
 								SME_ASSERT(Base);
 
-								Vector3 NewPosition(0.f, 0.f, 0.f);
-								NewPosition.x = RelativeOrigin.x - TempRef->position.x;
-								NewPosition.y = RelativeOrigin.y - TempRef->position.y;
-								NewPosition.z = RelativeOrigin.z - TempRef->position.z;
+								Vector3 NewPosition(TempRef->position);
+								Vector3 NewRotation(TempRef->rotation);
 								NewPosition += NewOrigin;
-
-								Vector3 NewRotation(TempRef->GetRotation()->x, TempRef->GetRotation()->y, TempRef->GetRotation()->z);
-								NewRotation.Scale(180.0f / PI);
-								NewRotation.z += 180.0f;
-								NewRotation.Scale(PI / 180.0f);
 
 								TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
 								if (NewRef == NULL)
@@ -364,52 +371,6 @@ namespace ConstructionSetExtender
 				(*Itr)->DeleteInstance();
 
 			LoadedFormBuffer.clear();
-		}
-
-		CSEFormListBuilder::CSEFormListBuilder() :
-			FormList()
-		{
-			;//
-		}
-
-		CSEFormListBuilder::~CSEFormListBuilder()
-		{
-			for (BGSEditorExtender::BGSEEFormListT::iterator Itr = FormList.begin(); Itr != FormList.end(); Itr++)
-				delete *Itr;
-
-			FormList.clear();
-		}
-
-		void CSEFormListBuilder::Add( TESForm* Form )
-		{
-			SME_ASSERT(Form);
-
-			if (Form->IsReference())
-			{
-				TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
-				if (Ref->baseForm)
-				{
-					if (Ref->baseForm->formType == TESForm::kFormType_Door ||
-						Ref->baseForm == TESForm::LookupByEditorID("DoorMarker"))
-					{
-						return;
-					}
-				}
-			}
-
-			FormList.push_back(new CSEFormWrapper(Form));
-		}
-
-		bool CSEFormListBuilder::Copy( void )
-		{
-			bool Result = false;
-
-			if (FormList.size())
-			{
-				Result = BGSEECLIPBOARD->Copy(FormList);
-			}
-
-			return Result;
 		}
 
 		void Initialize( void )

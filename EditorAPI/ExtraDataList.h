@@ -14,6 +14,7 @@
 class	TESForm;
 class	TESObjectREFR;
 class	TESGlobal;
+class	TESObjectLAND;
 
 // 14
 class BaseExtraList
@@ -50,5 +51,6 @@ public:
 	void							ModExtraGlobal(TESGlobal* Global);
 	void							ModExtraRank(int Rank);
 	void							ModExtraCount(UInt32 Count);
+	void							ModExtraDistantData(TESObjectLAND* Land, Vector3* Position);
 };
 STATIC_ASSERT(sizeof(ExtraDataList) == 0x14);

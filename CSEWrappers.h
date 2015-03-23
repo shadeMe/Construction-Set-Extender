@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 		virtual bool						Construct(const char* FileName);
 		virtual void						Purge(void);
 
-		virtual bool						Open(bool ForWriting);  
+		virtual bool						Open(bool ForWriting);
 		virtual bool						SaveHeader(void);
 		virtual bool						CorrectHeader(UInt32 RecordCount);
 		virtual bool						Close(void);
@@ -48,5 +48,16 @@ namespace ConstructionSetExtender
 		virtual int							GetErrorState(void) const;
 
 		TESFile*							GetWrappedPlugin(void) const;
+	};
+
+	class CSEFormListBuilder
+	{
+		BGSEditorExtender::BGSEEFormListT		FormList;
+	public:
+		CSEFormListBuilder();
+		~CSEFormListBuilder();
+
+		void									Add(TESForm* Form);
+		bool									Copy(void);
 	};
 }

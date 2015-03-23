@@ -38,6 +38,7 @@ namespace ConstructionSetExtender
 				CodaScriptCommandPrototypeDef(DissolveRenderWindowSelectionGroup);
 				CodaScriptCommandPrototypeDef(FloorRef);
 				CodaScriptCommandPrototypeDef(LoadRefIntoRenderWindow);
+				CodaScriptCommandPrototypeDef(DeleteRef);
 
 				CodaScriptCommandParamData(CreateRef, 9)
 				{
@@ -306,14 +307,15 @@ namespace ConstructionSetExtender
 					if (!Reference)
 						return false;
 
+					Vector3 Pos(Reference->position);
 					if (!_stricmp(Buffer, "x"))
-						Reference->position.x = Value;
+						Pos.x = Value;
 					else if (!_stricmp(Buffer, "y"))
-						Reference->position.y = Value;
+						Pos.y = Value;
 					else
-						Reference->position.z = Value;
+						Pos.z = Value;
 
-					Reference->UpdateNiNode();
+					Reference->SetPosition(Pos.x, Pos.y, Pos.z);
 					return true;
 				}
 
@@ -333,14 +335,15 @@ namespace ConstructionSetExtender
 					if (!Reference)
 						return false;
 
+					Vector3 Rot(Reference->rotation);
 					if (!_stricmp(Buffer, "x"))
-						Reference->rotation.x = Value * 0.01745329238474369;
+						Rot.x = Value * 0.01745329238474369;
 					else if (!_stricmp(Buffer, "y"))
-						Reference->rotation.y = Value * 0.01745329238474369;
+						Rot.y = Value * 0.01745329238474369;
 					else
-						Reference->rotation.z = Value * 0.01745329238474369;
+						Rot.z = Value * 0.01745329238474369;
 
-					Reference->UpdateNiNode();
+					Reference->SetRotation(Rot.x, Rot.y, Rot.z, true);
 					return true;
 				}
 
@@ -359,9 +362,7 @@ namespace ConstructionSetExtender
 					if (!Reference)
 						return false;
 
-					Reference->scale = Value;
-
-					Reference->UpdateNiNode();
+					Reference->SetScale(Value);
 					return true;
 				}
 
@@ -681,6 +682,24 @@ namespace ConstructionSetExtender
 					// clean up the selection buffer as the above call selects the ref
 					_RENDERSEL->ClearSelection(true);
 
+					return true;
+				}
+
+				CodaScriptCommandHandler(DeleteRef)
+				{
+					TESForm* Form = NULL;
+
+					CodaScriptCommandExtractArgs(&Form);
+					ExtractFormArguments(1, &Form);
+
+					if (Form == NULL)
+						return false;
+
+					TESObjectREFR* Reference = CS_CAST(Form, TESForm, TESObjectREFR);
+					if (!Reference || Reference->formType != TESForm::kFormType_REFR)
+						return false;
+
+					Reference->Delete();
 					return true;
 				}
 			}

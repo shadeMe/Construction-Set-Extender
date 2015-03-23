@@ -723,7 +723,8 @@ namespace ConstructionSetExtender
 					ItemCount = MaximumVisibleItemCount;
 				int ItemHeight = ListView->Items[0]->Bounds.Height;
 
-				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight / 2) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
+				// mucking about with the CS' compatibility settings (setting it to Windows 7, for instance) yields a different result than when the setting's disabled
+				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
 				Form->SetSize(DisplaySize);
 
 				ListView->SelectedIndex = 0;

@@ -72,9 +72,7 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 	TESObjectCELL* ExteriorAtCoordsEpilog = NULL;
 
 	if (parentCell->GetIsInterior() == false)
-	{
 		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
-	}
 
 	thisCall<void>(0x00544250, this, X, Y, Z);									// TESObjectREFR::SetPosition
 	thisCall<void>(0x0053FD10, this, position.x, position.y, position.z);		// TESObjectREFR::SetExtraEditorMoveDataPosition
@@ -96,7 +94,7 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 		cdeclCall<void>(0x00609F60, Node3D, true);		// NiNode::UpdateCollision?
 		TESRender::UpdateAVObject(Node3D);
 
-		ExtraLight::ExtraLightData* xLight = thisCall<ExtraLight::ExtraLightData*>(0x00540110, this);	// TESObjectREFR::GetExtraLight
+		ExtraLight::Data* xLight = thisCall<ExtraLight::Data*>(0x00540110, this);	// TESObjectREFR::GetExtraLight
 		if (xLight && xLight->light && baseForm && baseForm->formType == kFormType_Light)
 		{
 			NiNode* SceneNode = cdeclCall<NiNode*>(0x007662E0, 0);										// TESRender::GetSceneNode
@@ -173,6 +171,8 @@ void TESObjectREFR::SetFrozenState( bool State )
 void TESObjectREFR::SetAlpha( float Alpha /*= -1.0f*/ )
 {
 	// doesn't blend correctly with other objects, or itself
+	if (baseForm && baseForm->formType == kFormType_Tree)
+		return;
 
 	BSFadeNode* FadeNode = (BSFadeNode*)GetNiNode();
 	if (FadeNode == NULL)
@@ -207,6 +207,9 @@ bool TESObjectREFR::GetFrozen( void ) const
 
 float TESObjectREFR::GetAlpha( void )
 {
+	if (baseForm && baseForm->formType == kFormType_Tree)
+		return 1.f;
+
 	BSFadeNode* FadeNode = (BSFadeNode*)GetNiNode();
 
 	if (FadeNode && (FadeNode->m_flags & kNiNodeSpecialFlags_SpecialFade))
@@ -238,4 +241,17 @@ void TESObjectREFR::SetNiNode( NiNode* Node )
 void TESObjectREFR::Floor()
 {
 	cdeclCall<void>(0x00426E50, 0x00A0BC64, this);
+}
+
+void TESObjectREFR::Delete()
+{
+	SetDeleted(true);
+	if (IsDeleted())
+	{
+		SetFromActiveFile(true);
+		TESBoundObject* BaseForm = CS_CAST(baseForm, TESForm, TESBoundObject);
+		if (BaseForm)
+			BaseForm->DecrementObjectRefCount();
+		SetNiNode(NULL);
+	}
 }
