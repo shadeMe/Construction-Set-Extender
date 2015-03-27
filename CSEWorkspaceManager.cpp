@@ -58,7 +58,7 @@ namespace ConstructionSetExtender
 				kDefaultDirectories.push_back("Data\\Trees\\");
 				kDefaultDirectories.push_back("Data\\Backup\\");
 
-				kDefaultDirectories.push_back(BGSEditorExtender::BGSEEResourceLocation::kBasePath);
+				kDefaultDirectories.push_back(BGSEditorExtender::BGSEEResourceLocation::GetBasePath());
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_CODADEPOT)()));
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_CODABGDEPOT)()));
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEDEPOT)()));
@@ -66,6 +66,7 @@ namespace ConstructionSetExtender
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)()));
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)()));
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)()));
+				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_OPALDEPOT)()));
 			}
 
 			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(),

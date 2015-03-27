@@ -286,10 +286,10 @@ public:
 	virtual void				HandleDeviceReset(void) = 0;
 	virtual void				Dtor(bool ReleaseMemory) = 0;
 	virtual void				SetPreviewNode(NiNode* Node) = 0;
-	virtual void				VFn18(void* Unk01) = 0;
+	virtual void				VFn18(NiNode* Unk01) = 0;
 	virtual void				CenterCamera(void) = 0;
 	virtual void				HandleResize(void) = 0;
-	virtual void				Present(float Time) = 0;
+	virtual void				Present(float Time = 0.f) = 0;
 	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR OutUnk05);		// OutUnk05 set to 1 inside the WM_DRAWITEM callback, whenin the method call Render()
 };
 STATIC_ASSERT(sizeof(TESRenderControl) == 0x48);

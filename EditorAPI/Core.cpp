@@ -405,3 +405,8 @@ void TESLODTextureGenerator::ReleaseTextureBuffers( void )
 {
 	cdeclCall<void>(0x00410A30);
 }
+
+void BSTexturePalette::ReleaseTextures()
+{
+	thisCall<void>(0x004BD5B0, this);
+}

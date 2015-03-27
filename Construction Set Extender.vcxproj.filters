@@ -297,6 +297,9 @@
       <Filter>EditorAPI\Forms\Magic</Filter>
     </ClCompile>
     <ClCompile Include="CSEMain.cpp" />
+    <ClCompile Include="CSEObjectPaletteManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -734,6 +737,9 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="CSEMain.h" />
+    <ClInclude Include="CSEObjectPaletteManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\Splash.bmp">

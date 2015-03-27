@@ -4,6 +4,7 @@
 #include "..\CSEGlobalClipboard.h"
 #include "[Common]\CLIWrapper.h"
 #include "..\CSEDialogImposterManager.h"
+#include "..\CSEObjectPaletteManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -920,7 +921,7 @@ namespace ConstructionSetExtender
 				break;
 			case IDC_CSE_POPUP_GLOBALCOPY:
 				{
-					GlobalClipboard::CSEFormListBuilder Buffer;
+					CSEFormListBuilder Buffer;
 
 					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{
@@ -1897,6 +1898,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoTESDialogCloseAllDialogsHook(void)
 		{
 			PreviewWindowImposterManager::Instance.DestroyImposters();
+			ObjectPalette::CSEObjectPaletteManager::Instance.Close();
 		}
 
 		#define _hhName		TESDialogCloseAllDialogs

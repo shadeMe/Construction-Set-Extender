@@ -655,9 +655,7 @@ namespace ConstructionSetExtender
 				switch (Operation)
 				{
 				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Add:
-					if (FirstChar != ';')
-						TextField->TextArea->Document->Insert(LineSegment->Offset, ";");
-
+					TextField->TextArea->Document->Insert(LineSegment->Offset, ";");
 					break;
 				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Remove:
 					if (FirstChar == ';')

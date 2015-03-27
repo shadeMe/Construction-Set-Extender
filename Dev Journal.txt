@@ -32,7 +32,9 @@ CSE		---->
 		> Save edit dialog bounds to INI and load
 		> Filters for topic lists and other misc listviews
 		> Object palette (check how the copy paste function works to save the relative positions)
+		> Object prefab - consider parent-child relations
 		> Print out HRESULT for the LOD tex CTD check hooks
+		> Expand the various combobox dropdown sizes in the AI package editor
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
@@ -59,6 +61,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
+		> Option to disable icon margin/structure viz
 		> Document minimap
 
 

@@ -70,7 +70,6 @@ class	QueuedAnimIdle;
 class	QueuedHelmet;
 class	AttachDistant3DTask;
 
-
 // 1220
 class TESDataHandler
 {
@@ -157,7 +156,6 @@ public:
 STATIC_ASSERT(sizeof(TESDataHandler) == 0x1220);
 
 #define _DATAHANDLER			(*TESDataHandler::Singleton)
-
 
 // AC
 class TES
@@ -363,8 +361,13 @@ public:
 	/*08*/ ConstructionSetExtender_OverriddenClasses::NiTPointerMap<BSFileEntry*, NiPointer<NiTexture>>*		archivedTextures;
 	/*0C*/ ConstructionSetExtender_OverriddenClasses::NiTStringPointerMap<NiPointer<NiTexture>>*				looseTextures;
 
+	// members
+	void							ReleaseTextures();
+
 	static BSTexturePalette**		Singleton;
 };
+
+#define _TEXTUREPALETTE				(*BSTexturePalette::Singleton)
 
 // 48
 class BSTextureManager

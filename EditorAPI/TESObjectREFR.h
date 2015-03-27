@@ -58,7 +58,9 @@ public:
 	void						Delete();
 
 	void						SetPosition(float X, float Y, float Z);
+	void						SetPosition(const Vector3& Pos);
 	void						SetRotation(float X, float Y, float Z, bool Radians = false);
+	void						SetRotation(const Vector3& Rot, bool Radians = false);
 	void						SetScale(float Scale);
 
 	void						ModExtraHealth(float Health);

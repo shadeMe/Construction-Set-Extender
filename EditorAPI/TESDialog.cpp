@@ -44,7 +44,7 @@ ResponseEditorData**		ResponseEditorData::EditorCache = (ResponseEditorData**)0x
 HWND*						TESPreviewWindow::WindowHandle = (HWND*)0x00A0A71C;
 TESPreviewControl**			TESPreviewWindow::PreviewControl = (TESPreviewControl**)0x00A0A730;
 DLGPROC						TESPreviewWindow::DialogProc = (DLGPROC)0x00402F30;
-TESObjectSTAT**				TESPreviewWindow::PreviewGround = (TESObjectSTAT**)0x00A0A728;
+TESObjectSTAT**				TESPreviewWindow::PreviewStatic = (TESObjectSTAT**)0x00A0A728;
 TESObjectREFR**				TESPreviewWindow::PreviewRef = (TESObjectREFR**)0x00A0A72C;
 DWORD*						TESPreviewWindow::InitialTickCount = (DWORD*)0x00A0A724;
 HWND*						TESPreviewWindow::AnimationListHandle = (HWND*)0x00A0A720;
@@ -314,6 +314,11 @@ void TESDialog::DestroyDialogExtraDataList(HWND Dialog)
 	cdeclCall<void>(0x00442950, Dialog);
 }
 
+bool TESDialog::ShowFileSelect(HWND parent, const char* relativePath, const char* filter, const char* title, const char* defaultExtension, LPOFNHOOKPROC proc, bool fileMustExist, bool saveVsOpen, char* filenameBuffer, UInt32 bufferSize)
+{
+	return cdeclCall<bool>(0x00446A30, parent, relativePath, filter, title, defaultExtension, proc, fileMustExist, saveVsOpen, filenameBuffer, bufferSize);
+}
+
 void TESComboBox::AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth)
 {
 	cdeclCall<UInt32>(0x00403540, hWnd, Text, Data, ResizeDroppedWidth);
@@ -327,6 +332,16 @@ void* TESComboBox::GetSelectedItemData(HWND hWnd)
 void TESComboBox::PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem)
 {
 	cdeclCall<UInt32>(0x004456F0, hWnd, FormType, ClearItems, AddDefaultItem);
+}
+
+void TESComboBox::SetSelectedItemByData(HWND hWnd, void* Data)
+{
+	cdeclCall<void>(0x004036E0, hWnd, Data);
+}
+
+void TESComboBox::ClearItems(HWND hWnd)
+{
+	ComboBox_ResetContent(hWnd);
 }
 
 void* TESListView::GetSelectedItemData(HWND hWnd)
@@ -359,6 +374,35 @@ void TESListView::InsertItem(HWND hWnd, void* Data, bool ImageCallback /*= false
 	cdeclCall<void>(0x004038F0, hWnd, Data, ImageCallback, Index);
 }
 
+void TESListView::AddColumnHeader(HWND hWnd, int Index, const char* Name, int Width, UInt32 Format /*= LVCFMT_LEFT*/)
+{
+	cdeclCall<void>(0x00403810, hWnd, Index, Name, Width, Format);
+}
+
+void TESListView::ClearColumnHeaders(HWND hWnd)
+{
+	ClearItems(hWnd);
+	while (ListView_DeleteColumn(hWnd, 0))
+		;//
+}
+
+void TESListView::ClearItems(HWND hWnd)
+{
+	ListView_DeleteAllItems(hWnd);
+}
+
+UInt32 TESListView::GetSelectedItemCount(HWND hWnd)
+{
+	int Selection = -1, Count = 0;
+	do
+	{
+		Selection = ListView_GetNextItem(hWnd, Selection, LVNI_SELECTED);
+		if (Selection != -1)
+			Count++;
+	} while (Selection != -1);
+
+	return Count;
+}
 void TESPreviewWindow::SetSourceObject(TESBoundObject* Object)
 {
 	if (Object)

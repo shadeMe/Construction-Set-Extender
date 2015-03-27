@@ -436,6 +436,11 @@ public:
 		kStandardButton_Cancel = 2,
 	};
 
+	enum
+	{
+		kWindowMessage_HandleDragDrop = 0x407,		// lParam = POINT* mousePos
+	};
+
 	// methods
 	static UInt32							WritePositionToINI(HWND Handle, const char* WindowClassName);
 	static bool								GetPositionFromINI(const char* WindowClassName, LPRECT OutRect);
@@ -469,6 +474,12 @@ public:
 	static void								AddDialogToOpenList(HWND Dialog);
 	static void								RemoveDialogFromOpenList(HWND Dialog);
 
+	// Display an open/save file dialog.  relativePath is relative to Oblivion/ directory
+	// returns false if canceled, or selected file is invalid
+	static bool								ShowFileSelect(HWND parent, const char* relativePath, const char* filter,
+												const char* title, const char* defaultExtension, LPOFNHOOKPROC proc,
+												bool fileMustExist, bool saveVsOpen, char* filenameBuffer, UInt32 bufferSize);
+
 	static tList<HWND>*						OpenDialogWindows;
 
 	static UInt8*							ObjectWindowDragDropInProgress;
@@ -484,8 +495,10 @@ public:
 	// methods
 	static void								AddItem(HWND hWnd, const char* Text, void* Data, bool ResizeDroppedWidth = true);
 	static void*							GetSelectedItemData(HWND hWnd);
+	static void								SetSelectedItemByData(HWND hWnd, void* Data);
 
 	static void								PopulateWithForms(HWND hWnd, UInt8 FormType, bool ClearItems, bool AddDefaultItem);
+	static void								ClearItems(HWND hWnd);
 };
 
 class TESListView
@@ -498,6 +511,11 @@ public:
 	static int								GetItemByData(HWND hWnd, void* Data);
 	static void								ScrollToItem(HWND hWnd, int Index);
 	static void								InsertItem(HWND hWnd, void* Data, bool ImageCallback = false, int Index = -1);
+	static UInt32							GetSelectedItemCount(HWND hWnd);
+
+	static void								AddColumnHeader(HWND hWnd, int Index, const char* Name, int Width, UInt32 Format = LVCFMT_LEFT);
+	static void								ClearColumnHeaders(HWND hWnd);
+	static void								ClearItems(HWND hWnd);
 };
 
 class TESTreeView
@@ -533,7 +551,7 @@ public:
 	static TESPreviewControl**				PreviewControl;
 	static DWORD*							InitialTickCount;
 	static TESObjectREFR**					PreviewRef;
-	static TESObjectSTAT**					PreviewGround;
+	static TESObjectSTAT**					PreviewStatic;
 
 	static DLGPROC							DialogProc;
 

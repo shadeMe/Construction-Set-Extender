@@ -71,13 +71,13 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 	TESObjectCELL* ExteriorAtCoordsProlog = NULL;
 	TESObjectCELL* ExteriorAtCoordsEpilog = NULL;
 
-	if (parentCell->GetIsInterior() == false)
+	if (parentCell && parentCell->GetIsInterior() == false)
 		ExteriorAtCoordsProlog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
 
 	thisCall<void>(0x00544250, this, X, Y, Z);									// TESObjectREFR::SetPosition
 	thisCall<void>(0x0053FD10, this, position.x, position.y, position.z);		// TESObjectREFR::SetExtraEditorMoveDataPosition
 
-	if (parentCell->GetIsInterior() == false)
+	if (parentCell && parentCell->GetIsInterior() == false)
 	{
 		ExteriorAtCoordsEpilog = _DATAHANDLER->GetExteriorCell(position.x, position.y, position.z, false, parentCell->GetParentWorldSpace());
 		if (ExteriorAtCoordsProlog != ExteriorAtCoordsEpilog)
@@ -103,6 +103,11 @@ void TESObjectREFR::SetPosition( float X, float Y, float Z )
 
 		TESRenderWindow::Redraw();
 	}
+}
+
+void TESObjectREFR::SetPosition(const Vector3& Pos)
+{
+	SetPosition(Pos.x, Pos.y, Pos.z);
 }
 
 void TESObjectREFR::SetRotation( float X, float Y, float Z, bool Radians /*= false*/ )
@@ -135,6 +140,11 @@ void TESObjectREFR::SetRotation( float X, float Y, float Z, bool Radians /*= fal
 
 		TESRenderWindow::Redraw();
 	}
+}
+
+void TESObjectREFR::SetRotation(const Vector3& Rot, bool Radians /*= false*/)
+{
+	SetRotation(Rot.x, Rot.y, Rot.z, Radians);
 }
 
 const Vector3* TESObjectREFR::GetPosition() const

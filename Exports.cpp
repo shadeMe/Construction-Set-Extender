@@ -1302,9 +1302,9 @@ void InstantiateObjects(TagBrowserInstantiationData* Data)
 
 			HWND Parent = GetParent(Window);
 			if (!Parent || Parent == *TESCSMain::WindowHandle)
-				SendMessage(Window, 0x407, NULL, (LPARAM)&Data->InsertionPoint);
+				SendMessage(Window, TESDialog::kWindowMessage_HandleDragDrop, NULL, (LPARAM)&Data->InsertionPoint);
 			else
-				SendMessage(Parent, 0x407, NULL, (LPARAM)&Data->InsertionPoint);
+				SendMessage(Parent, TESDialog::kWindowMessage_HandleDragDrop, NULL, (LPARAM)&Data->InsertionPoint);
 		}
 	}
 }

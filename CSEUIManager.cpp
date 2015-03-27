@@ -18,6 +18,7 @@
 #include "CSEGlobalClipboard.h"
 #include "CSEFormUndoStack.h"
 #include "CSEDialogImposterManager.h"
+#include "CSEObjectPaletteManager.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -826,12 +827,10 @@ namespace ConstructionSetExtender
 							if (Parent == NULL || Parent == *TESCSMain::WindowHandle)
 								Parent = Window;
 
-							SendMessage(Parent, 0x407, NULL, (LPARAM)&Pos);
+							SendMessage(Parent, TESDialog::kWindowMessage_HandleDragDrop, NULL, (LPARAM)&Pos);
 						}
 						else
-						{
 							_RENDERSEL->ClearSelection();
-						}
 
 						kDraggingForms = false;
 						SetCursor(LoadCursor(NULL, IDC_ARROW));
@@ -1120,6 +1119,7 @@ namespace ConstructionSetExtender
 					{
 						CSEFormEnumerationManager::Instance.ResetVisibility();
 						CLIWrapper::Interfaces::SE->CloseAllOpenEditors();
+						ObjectPalette::CSEObjectPaletteManager::Instance.Close();
 
 						if (ActiveTESFile)
 							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
@@ -1668,6 +1668,10 @@ namespace ConstructionSetExtender
 						PreviewWindowImposterManager::Instance.SetEnabled(true);
 						Settings::Dialogs::kMultiplePreviewWindows.SetInt(1);
 					}
+
+					break;
+				case IDC_MAINMENU_OBJECTPALETTE:
+					ObjectPalette::CSEObjectPaletteManager::Instance.Show();
 
 					break;
 				default:
@@ -2416,7 +2420,7 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_RENDERWINDOWCONTEXT_COPYTOGLOBALCLIPBOARD:
 					{
-						GlobalClipboard::CSEFormListBuilder Buffer;
+						CSEFormListBuilder Buffer;
 
 						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 							Buffer.Add(Itr->Data);
@@ -2696,6 +2700,13 @@ namespace ConstructionSetExtender
 			case WM_LBUTTONDOWN:
 				TESRenderWindow::CurrentMouseLBDragCoordDelta.x = GET_X_LPARAM(lParam);
 				TESRenderWindow::CurrentMouseLBDragCoordDelta.y = GET_Y_LPARAM(lParam);
+
+				if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+				{
+					// place palette object, if any
+					Return = true;
+					ObjectPalette::CSEObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				}
 
 				break;
 			case WM_LBUTTONUP:
@@ -4562,7 +4573,9 @@ namespace ConstructionSetExtender
 						{
 							NMLISTVIEW* ChangeData = (NMLISTVIEW*)lParam;
 
-							if ((ChangeData->uChanged & 8) && (ChangeData->uOldState & LVIS_FOCUSED) && (ChangeData->uNewState & LVIS_FOCUSED) == false)
+							if ((ChangeData->uChanged & LVIF_STATE) &&
+								(ChangeData->uOldState & LVIS_FOCUSED) &&
+								(ChangeData->uNewState & LVIS_FOCUSED) == false)
 							{
 								// before the new listview item is selected
 
@@ -4582,7 +4595,9 @@ namespace ConstructionSetExtender
 								Return = true;
 								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
 							}
-							else if ((ChangeData->uChanged & 8) && (ChangeData->uOldState & LVIS_FOCUSED) == false && (ChangeData->uNewState & LVIS_FOCUSED) == false)
+							else if ((ChangeData->uChanged & LVIF_STATE) &&
+									 (ChangeData->uOldState & LVIS_FOCUSED) == false &&
+									 (ChangeData->uNewState & LVIS_FOCUSED) == false)
 							{
 								// after the new listview item is selected
 

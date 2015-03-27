@@ -14,38 +14,91 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// German (Germany) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_OBJECTPALETTE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 446
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 384
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OBJECTPALETTE DIALOGEX 0, 0, 453, 391
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Object Palette"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Filter",IDC_STATIC,7,7,32,13
+    EDITTEXT        IDC_FILTERBOX,42,6,122,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_PALETTEOBJECTS_LOADED,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,21,156,237,WS_EX_RIGHT
+    LTEXT           "Objects To Create From",IDC_STATIC,7,259,102,11
+    CONTROL         "",IDC_PALETTEOBJECTS_SELECTION,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,7,271,155,72,WS_EX_RIGHT
+    PUSHBUTTON      "New",IDC_OBJECTPALETTE_NEW,8,359,46,14
+    PUSHBUTTON      "Save",IDC_OBJECTPALETTE_SAVE,63,351,46,14
+    PUSHBUTTON      "Save As",IDC_OBJECTPALETTE_SAVEAS,116,351,46,14
+    PUSHBUTTON      "Merge",IDC_OBJECTPALETTE_MERGE,116,368,46,14
+    PUSHBUTTON      "Load",IDC_OBJECTPALETTE_LOAD,63,368,46,14
+    CONTROL         "IMAGE",IDC_OBJECTPALETTE_PREVIEW,"Button",BS_OWNERDRAW | BS_CENTER | BS_VCENTER | WS_TABSTOP,167,7,271,233,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Apply Settings To Preview",IDC_OBJECTPALETTE_APPLYPREVIEW,167,244,271,17
+    LTEXT           "Name",IDC_STATIC,172,273,25,13
+    LTEXT           "Object",IDC_STATIC,172,291,25,13
+    EDITTEXT        IDC_OBJECTPALETTE_NAME,200,272,239,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_OBJECTPALETTE_BASEOBJECT,200,290,240,100,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Angle",IDC_STATIC,172,308,129,74
+    LTEXT           "X:",IDC_STATIC,185,321,11,9
+    LTEXT           "Y:",IDC_STATIC,185,337,11,9
+    LTEXT           "Z:",IDC_STATIC,185,352,11,9
+    LTEXT           "+/-",IDC_STATIC,238,321,11,9
+    LTEXT           "+/-",IDC_STATIC,238,352,11,9
+    LTEXT           "+/-",IDC_STATIC,238,337,11,9
+    CONTROL         "Conform to Slope",IDC_OBJECTPALETTE_CONFORMSLOPE,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,198,368,78,10
+    LTEXT           "+/-",IDC_STATIC,369,325,11,9
+    LTEXT           "+/-",IDC_STATIC,369,352,11,9
+    EDITTEXT        IDC_OBJECTPALETTE_ANGLEOFFSET_X,251,319,33,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_ANGLEOFFSET_Y,251,334,33,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_ANGLEOFFSET_Z,251,350,33,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_ANGLEBASE_X,198,318,33,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_ANGLEBASE_Y,198,334,33,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_ANGLEBASE_Z,198,350,33,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_SINKBASE,336,323,32,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_SCALEBASE,336,349,32,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_SCALEOFFSET,384,349,32,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_OBJECTPALETTE_SINKOFFSET,384,323,32,15,ES_AUTOHSCROLL
+    LTEXT           "Sink:",IDC_STATIC,311,325,22,12
+    LTEXT           "Scale:",IDC_STATIC,312,351,22,12
+END
+
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "Construction Set Extender_Resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-    "#include ""VersionInfo.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -289,6 +342,33 @@ BEGIN
 END
 
 
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "Construction Set Extender_Resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""VersionInfo.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
@@ -425,6 +505,9 @@ BEGIN
         MENUITEM "&World Spaces...",            283
         MENUITEM "&Regions...",                 247
         MENUITEM "&Cells...",                   40035
+        MENUITEM SEPARATOR
+        MENUITEM "Object Palette...",           IDC_MAINMENU_OBJECTPALETTE
+        MENUITEM "Object Prefabs...",           IDC_MAINMENU_OBJECTPREFABS
         MENUITEM SEPARATOR
         POPUP "World Testing"
         BEGIN

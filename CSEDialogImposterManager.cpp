@@ -496,14 +496,14 @@ namespace ConstructionSetExtender
 		AnimationList = *TESPreviewWindow::AnimationListHandle;
 		InitTicks = *TESPreviewWindow::InitialTickCount;
 		PreviewRef = *TESPreviewWindow::PreviewRef;
-		PreviewGround = *TESPreviewWindow::PreviewGround;
+		PreviewGround = *TESPreviewWindow::PreviewStatic;
 		Renderer = *TESPreviewWindow::PreviewControl;
 
 		*TESPreviewWindow::WindowHandle = Imposter;
 		*TESPreviewWindow::AnimationListHandle = GetDlgItem(Imposter, TESPreviewWindow::kAnimListCtrlID);
 		*TESPreviewWindow::InitialTickCount = ParentData->InitTickCount;
 		*TESPreviewWindow::PreviewRef = ParentData->PreviewRef;
-		*TESPreviewWindow::PreviewGround = ParentData->PreviewGround;
+		*TESPreviewWindow::PreviewStatic = ParentData->PreviewGround;
 		*TESPreviewWindow::PreviewControl = ParentData->Renderer;
 	}
 
@@ -513,7 +513,7 @@ namespace ConstructionSetExtender
 		*TESPreviewWindow::AnimationListHandle = AnimationList;
 		*TESPreviewWindow::InitialTickCount = InitTicks;
 		*TESPreviewWindow::PreviewRef = PreviewRef;
-		*TESPreviewWindow::PreviewGround = PreviewGround;
+		*TESPreviewWindow::PreviewStatic = PreviewGround;
 		*TESPreviewWindow::PreviewControl = Renderer;
 	}
 
