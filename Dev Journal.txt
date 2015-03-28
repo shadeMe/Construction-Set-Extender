@@ -24,17 +24,7 @@ CSE		---->
 
 
 	ENHANCEMENT		=
-		> Data dialog - All active plugins, plugin list filter
-		> Global form visibility toggles (active/deleted), in list views, combo boxes, etc
-		> Increment version to 7
-		> Render window list for invisible refs/children in the active grid
-		> List/visual indicator for frozen refs
-		> Save edit dialog bounds to INI and load
-		> Filters for topic lists and other misc listviews
-		> Object palette (check how the copy paste function works to save the relative positions)
 		> Object prefab - consider parent-child relations
-		> Print out HRESULT for the LOD tex CTD check hooks
-		> Expand the various combobox dropdown sizes in the AI package editor
 		> Option to disable asymmetry when generating a new NPC face
 		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)

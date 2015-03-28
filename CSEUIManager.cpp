@@ -921,7 +921,8 @@ namespace ConstructionSetExtender
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
 
-			TESFile* ActiveTESFile = *((TESFile**)0x00A0AA7C);
+			TESFile** ActiveTESFilePtr = (TESFile**)0x00A0AA7C;
+			TESFile* ActiveTESFile = *ActiveTESFilePtr;
 			HWND PluginList = GetDlgItem(hWnd, kDataDlg_PluginFileList);
 
 			switch (uMsg)
@@ -1064,10 +1065,44 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
-				case IDC_CSE_DATA_LOADSTARTUPPLUGIN:
+				case IDC_CSE_DATA_SELECTLOADORDER:
 					{
-						Settings::Startup::kLoadPlugin.SetInt((IsDlgButtonChecked(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN) == BST_CHECKED));
+						std::string PluginListPath(TESCSMain::ProfileFolderPath);
+						PluginListPath += "Plugins.txt";
+
+						std::fstream Read(PluginListPath.c_str(), std::ios::in);
+						if (Read.good())
+						{
+							char Buffer[0x100] = { 0 };
+							while (Read.eof() == false)
+							{
+								Read.getline(Buffer, sizeof(Buffer));
+								if (Buffer[0] != '#' && Buffer[0] != NULL && Buffer[0] != '\n')
+								{
+									TESFile* Plugin = _DATAHANDLER->LookupPluginByName(Buffer);
+									if (Plugin)
+										Plugin->SetLoaded(true);
+								}
+							}
+						}
+
+						BGSEEUI->GetInvalidationManager()->Redraw(PluginList);
 					}
+
+					break;
+				case IDC_CSE_DATA_SELECTNONE:
+					{
+						for (tList<TESFile>::Iterator Itr = _DATAHANDLER->fileList.Begin(); Itr.Get() && Itr.End() == false; ++Itr)
+							Itr.Get()->SetLoaded(false);
+
+						ActiveTESFilePtr = NULL;
+						ActiveTESFile = NULL;
+						BGSEEUI->GetInvalidationManager()->Redraw(PluginList);
+					}
+
+					break;
+				case IDC_CSE_DATA_LOADSTARTUPPLUGIN:
+					Settings::Startup::kLoadPlugin.SetInt((IsDlgButtonChecked(hWnd, IDC_CSE_DATA_LOADSTARTUPPLUGIN) == BST_CHECKED));
 
 					break;
 				case IDC_CSE_DATA_SETSTARTUPPLUGIN:
@@ -1119,7 +1154,6 @@ namespace ConstructionSetExtender
 					{
 						CSEFormEnumerationManager::Instance.ResetVisibility();
 						CLIWrapper::Interfaces::SE->CloseAllOpenEditors();
-						ObjectPalette::CSEObjectPaletteManager::Instance.Close();
 
 						if (ActiveTESFile)
 							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
@@ -2703,9 +2737,8 @@ namespace ConstructionSetExtender
 
 				if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
 				{
-					// place palette object, if any
+					// handle it for the button up event
 					Return = true;
-					ObjectPalette::CSEObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 				}
 
 				break;
@@ -2715,6 +2748,13 @@ namespace ConstructionSetExtender
 
 				TESRenderWindow::CurrentMouseLBDragCoordDelta.x = abs(TESRenderWindow::CurrentMouseLBDragCoordDelta.x);
 				TESRenderWindow::CurrentMouseLBDragCoordDelta.y = abs(TESRenderWindow::CurrentMouseLBDragCoordDelta.y);
+
+				if (GetAsyncKeyState(VK_MENU) && GetAsyncKeyState(VK_CONTROL))
+				{
+					// place palette object, if any
+					Return = true;
+					ObjectPalette::CSEObjectPaletteManager::Instance.PlaceObject(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				}
 
 				break;
 			case WM_KEYUP:
@@ -4312,6 +4352,7 @@ namespace ConstructionSetExtender
 			Return = false;
 
 			HWND FormList = GetDlgItem(hWnd, kFormList_Generic);
+			HWND FilterEditBox = GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTEREDIT);
 
 			switch (uMsg)
 			{
@@ -4324,7 +4365,15 @@ namespace ConstructionSetExtender
 					ListView_SetColumn(FormList, 0, &ColumnData);
 
 					SetWindowLongPtr(FormList, GWL_USERDATA, NULL);
+
+					SME_ASSERT(FilterEditBox);
+					CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
+																	FormList, hWnd);
 				}
+
+				break;
+			case WM_DESTROY:
+				CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 
 				break;
 			case WM_NOTIFY:
@@ -4351,6 +4400,14 @@ namespace ConstructionSetExtender
 				}
 
 				break;
+			}
+
+			if (Return == false && CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
+			{
+				if (BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd) == TESDialog::kDialogTemplate_SelectTopic)
+					(*SelectTopicWindowData::Singleton)->RefreshListView(hWnd);
+				else
+					(*SelectQuestWindowData::Singleton)->RefreshListView(hWnd);
 			}
 
 			return DlgProcResult;

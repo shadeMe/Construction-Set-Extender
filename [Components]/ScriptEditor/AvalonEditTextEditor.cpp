@@ -1501,6 +1501,11 @@ namespace ConstructionSetExtender
 				TextField->LineNumbersForeground = ForegroundBrush;
 				TextFieldPanel->Background = BackgroundBrush;
 
+				TextField->TextArea->TextView->ElementGenerators->Remove(StructureVisualizer);
+
+				if (PREFERENCES->FetchSettingAsInt("EnableStructuralAnalysis", "Appearance"))
+					TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
+
 				RefreshTextView();
 			}
 
@@ -1800,7 +1805,6 @@ namespace ConstructionSetExtender
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew SelectionBGColorizer(TextField, KnownLayer::Background));
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew LineLimitBGColorizer(TextField, KnownLayer::Background));
 				TextField->TextArea->TextView->BackgroundRenderers->Add(gcnew CurrentLineBGColorizer(TextField, KnownLayer::Background));
-				TextField->TextArea->TextView->ElementGenerators->Add(gcnew StructureVisualizerRenderer(this));
 
 				TextField->TextArea->IndentationStrategy = nullptr;
 				if (PREFERENCES->FetchSettingAsInt("AutoIndent", "General"))
@@ -1862,6 +1866,11 @@ namespace ConstructionSetExtender
 				LineTracker = gcnew LineTrackingManager(TextField);
 				IconBarMargin = gcnew DefaultIconMargin(TextField, LineTracker, WindowHandle);
 				TextField->TextArea->LeftMargins->Insert(0, IconBarMargin);
+
+				StructureVisualizer = gcnew StructureVisualizerRenderer(this);
+
+				if (PREFERENCES->FetchSettingAsInt("EnableStructuralAnalysis", "Appearance"))
+					TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
 				CompilationInProgress = false;
 
@@ -2045,9 +2054,6 @@ namespace ConstructionSetExtender
 
 				TextField->TextArea->TextView->BackgroundRenderers->Clear();
 
-				for each (auto Itr in TextField->TextArea->TextView->ElementGenerators)
-					delete Itr;
-
 				TextField->TextArea->TextView->ElementGenerators->Clear();
 
 				TextField->TextArea->LeftMargins->Remove(IconBarMargin);
@@ -2141,6 +2147,7 @@ namespace ConstructionSetExtender
 				SAFEDELETE_CLR(InsightPopup);
 				SAFEDELETE_CLR(IntelliSenseModel);
 				SAFEDELETE_CLR(JumpScriptDelegate);
+				SAFEDELETE_CLR(StructureVisualizer);
 
 				SAFEDELETE_CLR(TextEditorContextMenu);
 				SAFEDELETE_CLR(ContextMenuCopy);

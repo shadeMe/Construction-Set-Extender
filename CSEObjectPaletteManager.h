@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 			PaletteObject(const SerializedData& Data);
 			~PaletteObject();
 
-			TESObjectREFR*		Instantiate(const Vector3& Position) const;
+			TESObjectREFR*		Instantiate(const Vector3& Position, bool MarkAsTemporary) const;
 		};
 
 		typedef boost::shared_ptr<PaletteObject>	PaletteObjectHandleT;
@@ -67,8 +67,8 @@ namespace ConstructionSetExtender
 			void					InitializeDialog(HWND Dialog);
 			void					DeinitializeDialog(HWND Dialog);
 
-			void					RefreshObjectList(HWND Dialog);
-			void					UpdateSelectionList(HWND Dialog);
+			void					RefreshObjectList();
+			void					UpdateSelectionList();
 
 			void					SaveObjects(const PaletteObjectListT& Objects, const char* Path) const;
 			bool					LoadObjects(PaletteObjectListT& OutObjects, const char* Path) const;			// returns false if an error was encountered

@@ -617,7 +617,7 @@ extern "C"
 			return false;
 
 		SME::MersenneTwister::init_genrand(GetTickCount());
-		if (SME::MersenneTwister::genrand_real1() < 0.1)
+		if (SME::MersenneTwister::genrand_real1() < 0.05)
 			IsWarholAGenius = true;
 
 		BGSEditorExtender::INISettingDepotT CSEINISettings;

@@ -152,6 +152,45 @@ enum
 	kFindTextListView_Objects = 1018,			// displays scripts and quests too
 };
 
+// 18
+class SelectTopicWindowData
+{
+public:
+	typedef tList<TESTopic>				TopicListT;
+
+	// members
+	/*00*/ TopicListT					selectedTopics;		// topics selected in the window are added to this list
+	/*08*/ TESQuest*					currentQuest;
+	/*0C*/ TESTopicInfo*				currentTopicInfo;
+	/*10*/ UInt32						topicType;
+	/*14*/ UInt32						triggerCtrlID;		// ID of the list view that invoked the window
+
+	static SelectTopicWindowData**		Singleton;
+
+	// method
+	void								RefreshListView(HWND Dialog);
+};
+STATIC_ASSERT(sizeof(SelectTopicWindowData) == 0x18);
+
+// 10
+class SelectQuestWindowData
+{
+public:
+	typedef tList<TESQuest>				QuestListT;
+
+	// members
+	/*00*/ TESQuest*					currentQuest;
+	/*04*/ UInt8						unk04;
+	/*05*/ UInt8						pad05[3];
+	/*08*/ QuestListT					selectedQuests;		// teh default selection is also passed in this member
+
+	static SelectQuestWindowData**		Singleton;
+
+	// method
+	void								RefreshListView(HWND Dialog);
+};
+STATIC_ASSERT(sizeof(SelectQuestWindowData) == 0x10);
+
 // control IDs of listview controls that are populated with TESForm instances
 enum
 {
@@ -363,8 +402,7 @@ public:
 		kDialogTemplate_CellLightingData = 283,
 		kDialogTemplate_CellGeneral = 284,
 		kDialogTemplate_NPCStatsData = 288,
-		kDialogTemplate_RegionEditorObjectsExtraData
-		= 309,
+		kDialogTemplate_RegionEditorObjectsExtraData = 309,
 		kDialogTemplate_WeatherGeneral = 311,
 		kDialogTemplate_WeatherPecipitationData = 312,
 		kDialogTemplate_WeatherSoundData = 313,
@@ -403,8 +441,7 @@ public:
 		kDialogTemplate_NPCFaceData = 3218,
 		kDialogTemplate_NPCFaceAdvancedData = 3256,
 		kDialogTemplate_WeatherHDRData = 3257,
-		kDialogTemplate_ReferenceLeveledCreatureData
-		= 3259,
+		kDialogTemplate_ReferenceLeveledCreatureData = 3259,
 
 		// Deprecated
 		kDialogTemplate_SelectModel = 110,
@@ -584,6 +621,7 @@ public:
 	static const char*						INIFilePath;
 	static HIMAGELIST*						BoundObjectIcons;
 	static char**							FileSelectionBuffer;
+	static char*							ProfileFolderPath;
 
 	enum
 	{

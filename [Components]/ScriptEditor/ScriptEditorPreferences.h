@@ -124,7 +124,7 @@ namespace ConstructionSetExtender
 			CheckBox^									ShowTabs;
 			CheckBox^									ShowSpaces;
 			CheckBox^									CodeFolding;
-			CheckBox^									TabsOnTop;
+			CheckBox^									EnableStructuralAnalysis;
 			CheckBox^									BoldFacedHighlighting;
 			TabPage^									TabSanitize;
 			CheckBox^									IndentLines;

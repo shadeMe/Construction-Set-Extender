@@ -164,7 +164,7 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("ShowTabs", "Appearance", "0"), gcnew BoundControl(ShowTabs, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("ShowSpaces", "Appearance", "0"), gcnew BoundControl(ShowSpaces, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("CodeFolding", "Appearance", "1"), gcnew BoundControl(CodeFolding, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
-	//		SettingCollection->Add(gcnew INISetting("TabsOnTop", "Appearance", "1"), gcnew BoundControl(TabsOnTop, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("EnableStructuralAnalysis", "Appearance", "1"), gcnew BoundControl(EnableStructuralAnalysis, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("BoldFacedHighlighting", "Appearance", "0"), gcnew BoundControl(BoldFacedHighlighting, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			RegisterColorSetting("SyntaxCommentsColor", Color::Green, CmDlgSyntaxCommentsColor);
@@ -382,7 +382,7 @@ namespace ConstructionSetExtender
 			LabelNoOfPasses = gcnew Label();
 			NoOfPasses = gcnew NumericUpDown();
 			CodeFolding = gcnew CheckBox();
-			TabsOnTop = gcnew CheckBox();
+			EnableStructuralAnalysis = gcnew CheckBox();
 			LabelMaxVisibleItems = gcnew Label();
 			MaxVisibleItems = gcnew NumericUpDown();
 			BoldFacedHighlighting = gcnew CheckBox();
@@ -698,7 +698,7 @@ namespace ConstructionSetExtender
 			TabAppearance->Controls->Add(LabelTabSize);
 			TabAppearance->Controls->Add(TabSize);
 			TabAppearance->Controls->Add(CodeFolding);
-			TabAppearance->Controls->Add(TabsOnTop);
+			TabAppearance->Controls->Add(EnableStructuralAnalysis);
 			TabAppearance->Controls->Add(BoldFacedHighlighting);
 			TabAppearance->Location = System::Drawing::Point(4, 22);
 			TabAppearance->Name = L"TabAppearance";
@@ -1099,7 +1099,7 @@ namespace ConstructionSetExtender
 			//
 			// CodeFolding
 			//
-			this->CodeFolding->AutoSize = true;
+			this->CodeFolding->AutoSize = false;
 			this->CodeFolding->Location = System::Drawing::Point(328, 240);
 			this->CodeFolding->Name = L"CodeFolding";
 			this->CodeFolding->Size = System::Drawing::Size(88, 17);
@@ -1109,16 +1109,16 @@ namespace ConstructionSetExtender
 			//
 			// TabsOnTop
 			//
-			this->TabsOnTop->AutoSize = true;
-			this->TabsOnTop->Location = System::Drawing::Point(328, 262);
-			this->TabsOnTop->Name = L"TabsOnTop";
-			this->TabsOnTop->Size = System::Drawing::Size(89, 17);
-			this->TabsOnTop->TabIndex = 31;
-			this->TabsOnTop->Text = L"Tabs on top";
-			this->TabsOnTop->UseVisualStyleBackColor = true;
-			this->TabsOnTop->Checked = true;
-			this->TabsOnTop->Enabled = false;
-			this->TabsOnTop->Visible = false;
+			this->EnableStructuralAnalysis->AutoSize = false;
+			this->EnableStructuralAnalysis->Location = System::Drawing::Point(328, 262);
+			this->EnableStructuralAnalysis->Name = L"EnableStructuralAnalysis";
+			this->EnableStructuralAnalysis->Size = System::Drawing::Size(89, 30);
+			this->EnableStructuralAnalysis->TabIndex = 31;
+			this->EnableStructuralAnalysis->Text = L"Block Visualizer";
+			this->EnableStructuralAnalysis->UseVisualStyleBackColor = true;
+			this->EnableStructuralAnalysis->Checked = true;
+		//	this->EnableStructuralAnalysis->Enabled = false;
+		//	this->EnableStructuralAnalysis->Visible = false;
 			//
 			// BoldFacedHighlighting
 			//

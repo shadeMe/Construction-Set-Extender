@@ -19,6 +19,7 @@ UInt8*						TESCSMain::ExittingCSFlag = (UInt8*)0x00A0B63C;
 const char*					TESCSMain::INIFilePath = (const char*)0x00A0ABB8;
 HIMAGELIST*					TESCSMain::BoundObjectIcons = (HIMAGELIST*)0x00A0B158;
 char**						TESCSMain::FileSelectionBuffer = (char**)0x00A0AF00;
+char*						TESCSMain::ProfileFolderPath = (char*)0x00A89E68;
 
 HWND*						TESObjectWindow::WindowHandle = (HWND*)0x00A0AF44;
 HWND*						TESObjectWindow::FormListHandle = (HWND*)0x00A0BAA0;
@@ -50,6 +51,9 @@ DWORD*						TESPreviewWindow::InitialTickCount = (DWORD*)0x00A0A724;
 HWND*						TESPreviewWindow::AnimationListHandle = (HWND*)0x00A0A720;
 
 TESObjectSelection**		TESObjectSelection::PrimaryInstance = (TESRenderSelection**)0x00A0AF60;
+
+SelectTopicWindowData**		SelectTopicWindowData::Singleton = (SelectTopicWindowData**)0x00A10EF0;
+SelectQuestWindowData**		SelectQuestWindowData::Singleton = (SelectQuestWindowData**)0x00A10988;
 
 FormEditParam::FormEditParam(const char* EditorID)
 {
@@ -618,4 +622,14 @@ bool TESObjectWindow::IsMinimized(void)
 void* TESTreeView::GetItemData(HWND hWnd, HTREEITEM Item)
 {
 	return cdeclCall<void*>(0x0041F990, hWnd, Item);
+}
+
+void SelectTopicWindowData::RefreshListView(HWND Dialog)
+{
+	cdeclCall<void>(0x004EFFB0, Dialog, this, NULL);
+}
+
+void SelectQuestWindowData::RefreshListView(HWND Dialog)
+{
+	cdeclCall<void>(0x004DEE30, Dialog, this, NULL);
 }

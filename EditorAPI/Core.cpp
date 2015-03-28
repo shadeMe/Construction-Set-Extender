@@ -275,9 +275,7 @@ void TES::LoadCellIntoViewPort(const Vector3* CameraCoordData, TESObjectREFR* Re
 void TES::SetSkyTOD( float TOD )
 {
 	if (sky)
-	{
 		thisCall<void>(0x00422720, sky, TOD);
-	}
 }
 
 float TES::GetSkyTOD( void )

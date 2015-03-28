@@ -253,11 +253,14 @@ namespace ConstructionSetExtender
 			BaseObject = Base;
 		}
 
-		TESObjectREFR* PaletteObject::Instantiate(const Vector3& Position) const
+		TESObjectREFR* PaletteObject::Instantiate(const Vector3& Position, bool MarkAsTemporary) const
 		{
 			SME_ASSERT(BaseObject);
 
 			TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
+			if (MarkAsTemporary)
+				NewRef->MarkAsTemporary();
+
 			NewRef->SetBaseForm(BaseObject);
 
 			Vector3 Pos(Position);
@@ -342,7 +345,7 @@ namespace ConstructionSetExtender
 					Result = TRUE;
 					if (Instance.TimeCounter && Instance.TimeCounter != -1 && Instance.TimeCounter >= 500 * 1.5)
 					{
-						Instance.RefreshObjectList(hWnd);
+						Instance.RefreshObjectList();
 						Instance.TimeCounter = -1;
 					}
 					else if (Instance.TimeCounter != -1)
@@ -365,7 +368,7 @@ namespace ConstructionSetExtender
 
 						Instance.ActiveObject = NULL;
 						Instance.EnableControls(false);
-						Instance.UpdateSelectionList(hWnd);
+						Instance.UpdateSelectionList();
 						Instance.UpdatePreview();
 					}
 
@@ -439,7 +442,7 @@ namespace ConstructionSetExtender
 									else
 										Instance.EnableControls(false);
 
-									Instance.UpdateSelectionList(hWnd);
+									Instance.UpdateSelectionList();
 									Instance.UpdatePreview();
 								}
 							}
@@ -481,8 +484,8 @@ namespace ConstructionSetExtender
 			HWND SelectedObjectsList = GetDlgItem(Dialog, IDC_PALETTEOBJECTS_SELECTION);
 			HWND BaseFormList = GetDlgItem(Dialog, IDC_OBJECTPALETTE_BASEOBJECT);
 
-			TESListView::AddColumnHeader(LoadedObjectsList, 0, "Palette Objects", 250);
-			TESListView::AddColumnHeader(SelectedObjectsList, 0, "Selection", 250);
+			TESListView::AddColumnHeader(LoadedObjectsList, 0, "Palette Objects", 225);
+			TESListView::AddColumnHeader(SelectedObjectsList, 0, "Selection", 225);
 
 			TESComboBox::PopulateWithForms(BaseFormList, TESForm::kFormType_Activator, true, false);
 			TESComboBox::PopulateWithForms(BaseFormList, TESForm::kFormType_Apparatus, false, false);
@@ -551,10 +554,12 @@ namespace ConstructionSetExtender
 			KillTimer(Dialog, IDC_OBJECTPALETTE_LISTSTATETIMERID);
 		}
 
-		void CSEObjectPaletteManager::RefreshObjectList(HWND Dialog)
+		void CSEObjectPaletteManager::RefreshObjectList()
 		{
-			HWND LoadedObjectsList = GetDlgItem(Dialog, IDC_PALETTEOBJECTS_LOADED);
-			HWND FilterBox = GetDlgItem(Dialog, IDC_FILTERBOX);
+			SME_ASSERT(MainDialog);
+
+			HWND LoadedObjectsList = GetDlgItem(MainDialog, IDC_PALETTEOBJECTS_LOADED);
+			HWND FilterBox = GetDlgItem(MainDialog, IDC_FILTERBOX);
 
 			SME_ASSERT(RefreshingList == false);
 			RefreshingList = true;
@@ -591,10 +596,12 @@ namespace ConstructionSetExtender
 			BGSEEUI->GetInvalidationManager()->Redraw(LoadedObjectsList);
 		}
 
-		void CSEObjectPaletteManager::UpdateSelectionList(HWND Dialog)
+		void CSEObjectPaletteManager::UpdateSelectionList()
 		{
-			HWND LoadedObjectsList = GetDlgItem(Dialog, IDC_PALETTEOBJECTS_LOADED);
-			HWND SelectedObjectsList = GetDlgItem(Dialog, IDC_PALETTEOBJECTS_SELECTION);
+			SME_ASSERT(MainDialog);
+
+			HWND LoadedObjectsList = GetDlgItem(MainDialog, IDC_PALETTEOBJECTS_LOADED);
+			HWND SelectedObjectsList = GetDlgItem(MainDialog, IDC_PALETTEOBJECTS_SELECTION);
 
 			SME_ASSERT(RefreshingList == false);
 			RefreshingList = true;
@@ -704,8 +711,8 @@ namespace ConstructionSetExtender
 			LoadedObjects.clear();
 			CurrentSelection.clear();
 
-			RefreshObjectList(MainDialog);
-			UpdateSelectionList(MainDialog);
+			RefreshObjectList();
+			UpdateSelectionList();
 
 			CurrentPaletteFilename = "";
 
@@ -748,7 +755,7 @@ namespace ConstructionSetExtender
 				if (LoadObjects(LoadedObjects, FilePath.c_str()) == false)
 					BGSEEUI->MsgBoxW(MainDialog, MB_OK, "Errors were encountered when loading the object palette file. Check the console for more information.");
 
-				RefreshObjectList(MainDialog);
+				RefreshObjectList();
 
 				std::string Title("Object Palette");
 				Title += ": " + CurrentPaletteFilename;
@@ -772,7 +779,7 @@ namespace ConstructionSetExtender
 					for each (auto Itr in Temp)
 						LoadedObjects.push_back(Itr);
 
-					RefreshObjectList(MainDialog);
+					RefreshObjectList();
 					BGSEEUI->MsgBoxI(MainDialog, MB_OK, "The merge operation will be complete upon saving the current file.");
 				}
 			}
@@ -797,12 +804,15 @@ namespace ConstructionSetExtender
 				_TEXTUREPALETTE->ReleaseTextures();
 
 				Vector3 Zero(0, 0, 0);
-				PreviewRef = ActiveObject->Instantiate(Zero);
-				PreviewRef->MarkAsTemporary();
-
+				PreviewRef = ActiveObject->Instantiate(Zero, true);
 				NiNode* Node = PreviewRef->GenerateNiNode();
 				if (Node)
 					Renderer->SetPreviewNode(Node);
+				else
+				{
+					PreviewRef->DeleteInstance();
+					PreviewRef = NULL;
+				}
 			}
 
 			Renderer->Present();
@@ -820,7 +830,7 @@ namespace ConstructionSetExtender
 
 			_RENDERSEL->ClearSelection();
 
-			RefreshObjectList(MainDialog);
+			RefreshObjectList();
 		}
 
 		void CSEObjectPaletteManager::EnableControls(bool State) const
@@ -918,7 +928,7 @@ namespace ConstructionSetExtender
 					int Index = SME::MersenneTwister::genrand_real2() * (CurrentSelection.size() - 1);
 					if (Index < CurrentSelection.size())
 					{
-						TESObjectREFR* NewRef = CurrentSelection.at(Index)->Instantiate(Position);
+						TESObjectREFR* NewRef = CurrentSelection.at(Index)->Instantiate(Position, false);
 						NewRef->SetFromActiveFile(true);
 						Rotation = NewRef->rotation;
 

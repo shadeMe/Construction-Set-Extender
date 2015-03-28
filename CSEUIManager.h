@@ -315,6 +315,8 @@ namespace ConstructionSetExtender
 // custom control IDs, as baked into the dialog templates
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906
 #define IDC_CSE_DATA_LOADSTARTUPPLUGIN          9907
+#define IDC_CSE_DATA_SELECTLOADORDER		    9908
+#define IDC_CSE_DATA_SELECTNONE					9909
 
 #define IDC_CSE_RACE_COPYHAIR                   9915
 #define IDC_CSE_RACE_COPYEYES                   9916

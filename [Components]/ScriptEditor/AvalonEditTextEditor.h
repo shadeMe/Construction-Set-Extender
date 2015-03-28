@@ -111,6 +111,7 @@ namespace ConstructionSetExtender
 				IntelliSense::IntelliSenseInterfaceModel^			IntelliSenseModel;
 				ToolTip^											InsightPopup;
 				DefaultIconMargin^									IconBarMargin;
+				StructureVisualizerRenderer^						StructureVisualizer;
 
 				bool												CompilationInProgress;
 
