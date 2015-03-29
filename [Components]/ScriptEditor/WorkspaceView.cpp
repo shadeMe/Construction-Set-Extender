@@ -2697,7 +2697,7 @@ namespace ConstructionSetExtender
 				break;
 			case Keys::F:
 			case Keys::H:
-				if (E->Modifiers == Keys::Control)
+				if (E->Control)
 					Concrete->ShowFindReplaceDialog(true);
 
 				break;

@@ -112,6 +112,7 @@ namespace ConstructionSetExtender
 				ToolTip^											InsightPopup;
 				DefaultIconMargin^									IconBarMargin;
 				StructureVisualizerRenderer^						StructureVisualizer;
+				AvalonEdit::Search::SearchPanel^					InlineSearchPanel;
 
 				bool												CompilationInProgress;
 
@@ -140,6 +141,7 @@ namespace ConstructionSetExtender
 				EventHandler^										ScriptEditorPreferencesSavedHandler;
 				AvalonEditTextEventHandler^							TextFieldTextCopiedHandler;
 				EventHandler<VisualLineConstructionStartEventArgs^>^	TextFieldVisualLineConstructionStartingHandler;
+				EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>^	SearchPanelSearchOptionsChangedHandler;
 
 				ContextMenuStrip^									TextEditorContextMenu;
 				ToolStripMenuItem^									ContextMenuCopy;
@@ -206,6 +208,7 @@ namespace ConstructionSetExtender
 				void										TextField_MiddleMouseScrollDown(Object^ Sender, System::Windows::Input::MouseButtonEventArgs^ E);
 
 				void										TextField_VisualLineConstructionStarting(Object^ Sender, VisualLineConstructionStartEventArgs^ E);
+				void										SearchPanel_SearchOptionsChanged(Object^ Sender, AvalonEdit::Search::SearchOptionsChangedEventArgs^ E);
 
 				void										MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E);
 				void										ScrollBarSyncTimer_Tick(Object^ Sender, EventArgs^ E);
@@ -301,6 +304,8 @@ namespace ConstructionSetExtender
 
 				void										ToggleComment(int Line, ToggleCommentOperation Operation);
 				void										CommentLines(ToggleCommentOperation Operation);
+
+				void										ToggleSearchPanel(bool State);
 			public:
 				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();

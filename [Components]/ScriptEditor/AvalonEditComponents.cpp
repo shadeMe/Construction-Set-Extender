@@ -30,6 +30,23 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
+	void WPFFocusHelper::DispatcherCallback(Windows::UIElement^ Element)
+	{
+		Element->Focus();
+		Windows::Input::Keyboard::Focus(Element);
+	}
+
+	void WPFFocusHelper::ThreadCallback(Object^ Element)
+	{
+		Windows::UIElement^ UIE = (Windows::UIElement^)Element;
+		UIE->Dispatcher->Invoke(System::Windows::Threading::DispatcherPriority::Normal, gcnew InvokeDelegate(&DispatcherCallback), UIE);
+	}
+
+	void WPFFocusHelper::Focus(Windows::UIElement^ Element)
+	{
+		System::Threading::ThreadPool::QueueUserWorkItem(gcnew System::Threading::WaitCallback(&ThreadCallback), Element);
+	}
+
 	namespace TextEditors
 	{
 		namespace AvalonEditor

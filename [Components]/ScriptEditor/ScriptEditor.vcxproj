@@ -450,6 +450,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Member_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\method_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\module_16xLG.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\paperclip_5159_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\pencil_005_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\save_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\script_16xLG.png" />

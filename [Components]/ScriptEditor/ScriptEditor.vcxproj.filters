@@ -770,5 +770,8 @@
     <Image Include="Images\transparent_16.png">
       <Filter>Resources\Images</Filter>
     </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\paperclip_5159_16xLG.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
   </ItemGroup>
 </Project>

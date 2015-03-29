@@ -20,6 +20,17 @@ namespace ConstructionSetExtender
 		static System::Windows::Media::Imaging::BitmapSource^		CreateImageSource(String^ ResourceIdentifier);
 	};
 
+	// lovely hack, this - http://apocryph.org/archives/275
+	ref class WPFFocusHelper
+	{
+		static void		DispatcherCallback(Windows::UIElement^ Element);
+		static void		ThreadCallback(Object^ Element);
+
+		delegate void	InvokeDelegate(Windows::UIElement^ Element);
+	public:
+		static void		Focus(Windows::UIElement^ Element);
+	};
+
 	namespace TextEditors
 	{
 		namespace AvalonEditor

@@ -297,8 +297,8 @@ namespace ConstructionSetExtender
 							 BoundParent->ListViewFindResults,
 							 BoundParent->IntelliSenseInterfaceView);
 
-	//		TextEditor->FocusTextArea();
-	//		TextEditor->ScrollToCaret();
+			TextEditor->FocusTextArea();
+			TextEditor->ScrollToCaret();
 		}
 
 		void ConcreteWorkspaceModel::Unbind()

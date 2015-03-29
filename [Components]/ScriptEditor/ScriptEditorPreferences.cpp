@@ -193,6 +193,7 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("WarnUncompiledScripts", "General", "1"), gcnew BoundControl(WarnUncompiledScripts, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("LoadScriptUpdateExistingScripts", "General", "0"), gcnew BoundControl(LoadScriptUpdateExistingScripts, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("CutCopyEntireLine", "General", "0"), gcnew BoundControl(CutCopyEntireLine, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("DefaultInlineSearch", "General", "0"), gcnew BoundControl(DefaultInlineSearch, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// IntelliSense
 			SettingCollection->Add(gcnew INISetting("ThresholdLength", "IntelliSense", "4"), gcnew BoundControl(ThresholdLength, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
@@ -405,6 +406,7 @@ namespace ConstructionSetExtender
 			this->SubstringSearch = (gcnew System::Windows::Forms::CheckBox());
 			this->LabelLocalVars = (gcnew System::Windows::Forms::Label());
 			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
+			DefaultInlineSearch = gcnew CheckBox;
 			//
 			// Hidden Controls
 			//
@@ -540,6 +542,7 @@ namespace ConstructionSetExtender
 			TabGeneral->Controls->Add(RecompileVarIdx);
 			TabGeneral->Controls->Add(AutoIndent);
 			TabGeneral->Controls->Add(UseCSParent);
+			TabGeneral->Controls->Add(DefaultInlineSearch);
 			TabGeneral->Location = System::Drawing::Point(4, 22);
 			TabGeneral->Name = L"TabGeneral";
 			TabGeneral->Padding = Padding(3);
@@ -1249,6 +1252,14 @@ namespace ConstructionSetExtender
 			this->CmDlgSyntaxLocalVarsColor->TabIndex = 20;
 			this->CmDlgSyntaxLocalVarsColor->UseVisualStyleBackColor = true;
 			CmDlgSyntaxLocalVarsColor->Click += gcnew System::EventHandler(this, &ScriptEditorPreferences::CmDlgColor_Click);
+
+			DefaultInlineSearch->AutoSize = true;
+			DefaultInlineSearch->Location = System::Drawing::Point(22, 161);
+			DefaultInlineSearch->Name = L"DefaultInlineSearch";
+			DefaultInlineSearch->Size = System::Drawing::Size(242, 17);
+			DefaultInlineSearch->TabIndex = 29;
+			DefaultInlineSearch->Text = L"'Ctrl + F' displays inline search panel";
+			DefaultInlineSearch->UseVisualStyleBackColor = true;
 
 			//
 			// ScriptEditorPreferences

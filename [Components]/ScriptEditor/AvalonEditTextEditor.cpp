@@ -957,6 +957,31 @@ namespace ConstructionSetExtender
 										  TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
 			}
 
+			void AvalonEditTextEditor::ToggleSearchPanel(bool State)
+			{
+				if (State)
+				{
+					if (InlineSearchPanel->IsClosed)
+						InlineSearchPanel->Open();
+
+					InlineSearchPanel->Reactivate();
+
+					// cache beforehand as changing the search panel's property directly updates the preferences
+					bool CaseInsensitive = PREFERENCES->FetchSettingAsInt("CaseInsensitive", "FindReplace");
+					bool MatchWholeWord = PREFERENCES->FetchSettingAsInt("MatchWholeWord", "FindReplace");
+					bool UseRegEx = PREFERENCES->FetchSettingAsInt("UseRegEx", "FindReplace");
+
+					InlineSearchPanel->MatchCase = CaseInsensitive == false;
+					InlineSearchPanel->WholeWords = MatchWholeWord;
+					InlineSearchPanel->UseRegex = UseRegEx;
+				}
+				else
+				{
+					if (InlineSearchPanel->IsClosed == false)
+						InlineSearchPanel->Close();
+				}
+			}
+
 #pragma region Events
 			bool AvalonEditTextEditor::OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E)
 			{
@@ -1173,6 +1198,22 @@ namespace ConstructionSetExtender
 				{
 					switch (E->Key)
 					{
+					case System::Windows::Input::Key::F:
+						{
+							bool Default = PREFERENCES->FetchSettingAsInt("DefaultInlineSearch", "General");
+							if (Default && E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control ||
+								(Default == false && E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Control) &&
+								E->KeyboardDevice->Modifiers.HasFlag(System::Windows::Input::ModifierKeys::Shift)))
+							{
+								HandleKeyEventForKey(E->Key);
+								E->Handled = true;
+							}
+
+							if (E->Handled)
+								ToggleSearchPanel(true);
+						}
+
+						break;
 					case System::Windows::Input::Key::B:
 						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
@@ -1199,6 +1240,7 @@ namespace ConstructionSetExtender
 						break;
 					case System::Windows::Input::Key::Escape:
 						LineTracker->ClearFindResults(true);
+						ToggleSearchPanel(false);
 
 						break;
 					case System::Windows::Input::Key::Up:
@@ -1506,6 +1548,9 @@ namespace ConstructionSetExtender
 				if (PREFERENCES->FetchSettingAsInt("EnableStructuralAnalysis", "Appearance"))
 					TextField->TextArea->TextView->ElementGenerators->Add(StructureVisualizer);
 
+				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
+				InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
+
 				RefreshTextView();
 			}
 
@@ -1522,6 +1567,13 @@ namespace ConstructionSetExtender
 							TextField->TextArea->TextView->Redraw(Line, Windows::Threading::DispatcherPriority::Normal);
 					}
 				}
+			}
+
+			void AvalonEditTextEditor::SearchPanel_SearchOptionsChanged(Object^ Sender, AvalonEdit::Search::SearchOptionsChangedEventArgs^ E)
+			{
+				PREFERENCES->FetchSetting("CaseInsensitive", "FindReplace")->SetValue(((int)(E->MatchCase == false)).ToString());
+				PREFERENCES->FetchSetting("MatchWholeWord", "FindReplace")->SetValue(((int)E->WholeWords).ToString());
+				PREFERENCES->FetchSetting("UseRegEx", "FindReplace")->SetValue(((int)E->UseRegex).ToString());
 			}
 
 			void AvalonEditTextEditor::TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E)
@@ -1758,6 +1810,7 @@ namespace ConstructionSetExtender
 				SetTextAnimationCompletedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::SetTextAnimation_Completed);
 				ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &AvalonEditTextEditor::ScriptEditorPreferences_Saved);
 				TextFieldVisualLineConstructionStartingHandler = gcnew EventHandler<VisualLineConstructionStartEventArgs^>(this, &AvalonEditTextEditor::TextField_VisualLineConstructionStarting);
+				SearchPanelSearchOptionsChangedHandler = gcnew EventHandler<AvalonEdit::Search::SearchOptionsChangedEventArgs^>(this, &AvalonEditTextEditor::SearchPanel_SearchOptionsChanged);
 
 				System::Windows::NameScope::SetNameScope(TextFieldPanel, gcnew System::Windows::NameScope());
 				TextFieldPanel->Background = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255, 255, 255, 255));
@@ -1811,6 +1864,11 @@ namespace ConstructionSetExtender
 					TextField->TextArea->IndentationStrategy = gcnew ObScriptIndentStrategy(this, true, true);
 				else
 					TextField->TextArea->IndentationStrategy = gcnew AvalonEdit::Indentation::DefaultIndentationStrategy();
+
+				Color Buffer = PREFERENCES->LookupColorByKey("FindResultsHighlightColor");
+				InlineSearchPanel = AvalonEdit::Search::SearchPanel::Install(TextField);
+				InlineSearchPanel->MarkerBrush = gcnew Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(150, Buffer.R, Buffer.G, Buffer.B));
+				InlineSearchPanel->SearchOptionsChanged += SearchPanelSearchOptionsChangedHandler;
 
 				AnimationPrimitive->Name = "AnimationPrimitive";
 
@@ -2048,6 +2106,7 @@ namespace ConstructionSetExtender
 				SemanticAnalysisTimer->Stop();
 				CodeFoldingManager->Clear();
 				AvalonEdit::Folding::FoldingManager::Uninstall(CodeFoldingManager);
+				InlineSearchPanel->Uninstall();
 
 				for each (auto Itr in TextField->TextArea->TextView->BackgroundRenderers)
 					delete Itr;
@@ -2080,6 +2139,7 @@ namespace ConstructionSetExtender
 				SemanticAnalysisTimer->Tick -= SemanticAnalysisTimerTickHandler;
 				PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 				TextField->TextArea->TextView->VisualLineConstructionStarting -= TextFieldVisualLineConstructionStartingHandler;
+				InlineSearchPanel->SearchOptionsChanged -= SearchPanelSearchOptionsChangedHandler;
 
 				SAFEDELETE_CLR(TextFieldTextChangedHandler);
 				SAFEDELETE_CLR(TextFieldCaretPositionChangedHandler);
@@ -2103,6 +2163,7 @@ namespace ConstructionSetExtender
 				SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 				SAFEDELETE_CLR(TextFieldVisualLineConstructionStartingHandler);
 				SAFEDELETE_CLR(SetTextAnimationCompletedHandler);
+				SAFEDELETE_CLR(SearchPanelSearchOptionsChangedHandler);
 
 				TextEditorContextMenu->Opening -= TextEditorContextMenuOpeningHandler;
 				AvalonEditTextEditorUnsubscribeDeleteClickEvent(ContextMenuCopy);
@@ -2148,6 +2209,7 @@ namespace ConstructionSetExtender
 				SAFEDELETE_CLR(IntelliSenseModel);
 				SAFEDELETE_CLR(JumpScriptDelegate);
 				SAFEDELETE_CLR(StructureVisualizer);
+				SAFEDELETE_CLR(InlineSearchPanel);
 
 				SAFEDELETE_CLR(TextEditorContextMenu);
 				SAFEDELETE_CLR(ContextMenuCopy);
@@ -2591,6 +2653,8 @@ namespace ConstructionSetExtender
 				WPFHost->Focus();
 				TextFieldPanel->Focus();
 				TextField->Focus();
+
+				WPFFocusHelper::Focus(TextField);
 			}
 
 			void AvalonEditTextEditor::LoadFileFromDisk(String^ Path)

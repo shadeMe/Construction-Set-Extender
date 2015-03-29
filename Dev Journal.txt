@@ -45,13 +45,10 @@ SE		---->
 
 	BUGFIX			=
 		> Editor doesn't acquire focus after switching scripts/on opening
-			>> Seems like a bug in the WPF/Winforms interop code; strangely, using SuperTabControl::SelectPreviousTab() correctly assigns focus, while SelectNextTab() only assigns the correct focus for every other tab
-			>> http://community.sharpdevelop.net/forums/p/11754/32131.aspx
-		> Message list updated by analysis resets listview scrollpos/selection
+			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 
 
 	ENHANCEMENT		=
-		> Option to disable icon margin/structure viz
 		> Document minimap
 
 
