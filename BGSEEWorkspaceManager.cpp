@@ -153,8 +153,6 @@ namespace BGSEditorExtender
 		return DefaultDirectory.c_str();
 	}
 
-	const std::string			BGSEEResourceLocation::kBasePath = "Data\\BGSEE\\";
-
 	BGSEEResourceLocation::BGSEEResourceLocation( std::string Path ) :
 		RelativePath(Path)
 	{
@@ -174,7 +172,7 @@ namespace BGSEditorExtender
 
 	std::string BGSEEResourceLocation::GetFullPath() const
 	{
-		return kBasePath + RelativePath;
+		return GetBasePath() + RelativePath;
 	}
 
 	std::string BGSEEResourceLocation::GetRelativePath() const
@@ -197,18 +195,25 @@ namespace BGSEditorExtender
 		return *this;
 	}
 
-	std::string BGSEEResourceLocation::operator()()
+	std::string BGSEEResourceLocation::operator()() const
 	{
 		return GetFullPath();
 	}
 
 	bool BGSEEResourceLocation::CheckPath( void )
 	{
-		std::string PathB(RelativePath), BaseB(kBasePath);
+		std::string PathB(RelativePath), BaseB(GetBasePath());
 
 		SME::StringHelpers::MakeLower(PathB);
 		SME::StringHelpers::MakeLower(BaseB);
 
 		return PathB.find(BaseB) == std::string::npos;
+	}
+
+	const std::string& BGSEEResourceLocation::GetBasePath(void)
+	{
+		// initialized here to ensure statically allocated BGSEEResourceLocation instances never trigger assertions inside CRTMain
+		static const std::string kBasePath = "Data\\BGSEE\\";
+		return kBasePath;
 	}
 }

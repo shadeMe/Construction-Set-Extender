@@ -79,10 +79,9 @@ namespace BGSEditorExtender
 		BGSEEConsoleWarningManager(BGSEEINIManagerGetterFunctor Getter, BGSEEINIManagerSetterFunctor Setter);
 		~BGSEEConsoleWarningManager();
 
-
 		void								RegisterWarning(BGSEEConsoleWarning* Warning);								// takes ownership of the pointer
 		bool								GetWarningEnabled(BGSEEConsoleWarning::WarningCallSiteT CallSite) const;	// returns true if enabled, false otherwise
-		
+
 		void								ShowGUI(HINSTANCE ResourceInstance, HWND Parent);
 	};
 
@@ -213,7 +212,7 @@ namespace BGSEditorExtender
 			MessageLogContext*					SelectedContext;
 			HFONT								MessageLogFont;
 			HFONT								CommandLineFont;
-			
+
 			RECT								DialogInitBounds;
 			RECT								MessageLogInitBounds;
 			RECT								CommandLineInitBounds;
@@ -286,6 +285,7 @@ namespace BGSEditorExtender
 		void						FlushDebugLog(void);
 
 		bool								GetLogsWarnings(void);
+		void								ToggleWarningLogging(bool State);
 		BGSEEConsoleWarningManager*			GetWarningManager(void) const;
 
 		static void							RegisterINISettings(INISettingDepotT& Depot);

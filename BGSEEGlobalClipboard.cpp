@@ -7,7 +7,6 @@ namespace BGSEditorExtender
 	BGSEEGlobalClipboard*		BGSEEGlobalClipboard::Singleton = NULL;
 	const char*					BGSEEGlobalClipboard::kClipboardBufferPath = "bgseegc";
 
-	
 	BGSEEGlobalClipboard::BGSEEGlobalClipboard() :
 		Operator(NULL),
 		Buffer(NULL),
@@ -63,22 +62,9 @@ namespace BGSEditorExtender
 			bool FormCheck = true;
 			for (BGSEEFormListT::iterator Itr = Forms.begin(); Itr != Forms.end(); Itr++)
 			{
-				if ((*Itr)->GetEditorID() && strlen((*Itr)->GetEditorID()) < 1)
+				if (Operator->GetIsFormTypeReplicable((*Itr)->GetType()) == false)
 				{
-					BGSEECONSOLE_MESSAGE("Form editorID error! Invalid editorID");
-					FormCheck = false;
-					break;
-				}
-				else if (Operator->GetIsFormTypeReplicable((*Itr)->GetType()) == false || 
-					(*Itr)->GetType() != (*Forms.begin())->GetType())
-				{
-					BGSEECONSOLE_MESSAGE("Form type error! Possible reasons: Selection contains multiple types, or type '%s' is not replicable", (*Itr)->GetTypeString());
-					FormCheck = false;
-					break;
-				}
-				else if ((*Itr)->GetIsDeleted())
-				{
-					BGSEECONSOLE_MESSAGE("Attempting to copy deleted form %08X!", (*Itr)->GetFormID());
+					BGSEECONSOLE_MESSAGE("Form type error! Type '%s' is not replicable", (*Itr)->GetTypeString());
 					FormCheck = false;
 					break;
 				}
@@ -86,67 +72,25 @@ namespace BGSEditorExtender
 
 			if (FormCheck)
 			{
-				bool Failed = false;
-
-				while (true)
+				BGSEEFormCollectionSerializer* Serializer = Operator->GetSerializer(Forms);
+				if (Serializer)
 				{
-					Buffer->Purge();
-					
-					if (Buffer->Open(true) == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to open buffer!");
-						Failed = true;
-						break;
-					}
-
-					if (Buffer->SaveHeader() == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to save header!");
-						Failed = true;
-						break;
-					}
-
-					Operator->PreSaveCallback(Forms, Buffer);
-
-					// we can skip the form sorting as they are all of a single type
-					for (BGSEEFormListT::iterator Itr = Forms.begin(); Itr != Forms.end(); Itr++)
-						Operator->SaveForm(Buffer, *Itr);
-
-					Operator->PostSaveCallback();
-
-					if (Buffer->CorrectHeader(Forms.size()) == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to correct header!");
-						Failed = true;
-						break;
-					}
-
-					if (Buffer->Close() == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to close buffer!");
-						Failed = true;
-						break;
-					}
-
-					Result = true;
-					break;
+					Operator->PreCopyCallback(Forms, Buffer);
+					Result = Serializer->Serialize(Forms, Buffer);
+					Operator->PostCopyCallback(Result);
 				}
 
-				if (Failed)
-					BGSEECONSOLE_MESSAGE("Buffer Error state = %d", Buffer->GetErrorState());
-
-				BGSEECONSOLE_MESSAGE("Copied %d forms", Forms.size());
-
-				for (BGSEEFormListT::iterator Itr = Forms.begin(); Itr != Forms.end(); Itr++)
-					delete *Itr;
-
-				Forms.clear();
+				if (Result)
+					BGSEECONSOLE_MESSAGE("Copied %d forms", Forms.size());
 			}
 
 			if (Result == false)
-			{
 				BGSEEUI->MsgBoxE(NULL, MB_TASKMODAL|MB_SETFOREGROUND, "Global copy operation failed! Check the console for more information.");
-			}
+
+			for (BGSEEFormListT::iterator Itr = Forms.begin(); Itr != Forms.end(); Itr++)
+				delete *Itr;
+
+			Forms.clear();
 		}
 
 		BGSEECONSOLE->Exdent();
@@ -163,43 +107,25 @@ namespace BGSEditorExtender
 		BGSEECONSOLE_MESSAGE("Pasting forms from global clipboard...");
 		BGSEECONSOLE->Indent();
 
-		while (true)
+		BGSEEFormCollectionSerializer* Deserializer = Operator->GetDeserializer(Buffer);
+		if (Deserializer == NULL)
+			BGSEECONSOLE_MESSAGE("Unrecognized clipboard buffer serializer/deserializer!");
+		else
 		{
-			if (Buffer->Open(false) == false)
-			{
-				BGSEECONSOLE_MESSAGE("Failed to open buffer!");
-				break;
-			}
+			int Count = 0;
+			Operator->PrePasteCallback(Buffer);
+			Result = Deserializer->Deserialize(Buffer, Count);
+			Operator->PostPasteCallback(Result, Deserializer);
 
-			Operator->PreLoadCallback();
-
-			do
-			{
-				Operator->LoadForm(Buffer);
-			} 
-			while (Buffer->GetNextRecord(true));
-			
-			Operator->PostLoadCallback();
-
-			if (Buffer->Close() == false)
-			{
-				BGSEECONSOLE_MESSAGE("Failed to close buffer!");
-				break;
-			}
-
-			Result = true;
-
-			if (ClearIfSuccessful)
-				Buffer->Purge();
-
-			break;
+			if (Result)
+				BGSEECONSOLE_MESSAGE("Pasted %d forms", Count);
 		}
+
+		if (Result && ClearIfSuccessful)
+			Buffer->Purge();
 
 		if (Result == false)
-		{
-			BGSEECONSOLE_MESSAGE("Buffer Error state = %d", Buffer->GetErrorState());
 			BGSEEUI->MsgBoxE(NULL, MB_TASKMODAL|MB_SETFOREGROUND, "Global paste operation failed! Check the console for more information.");
-		}
 
 		BGSEECONSOLE->Exdent();
 

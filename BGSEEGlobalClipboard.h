@@ -13,15 +13,16 @@ namespace BGSEditorExtender
 			;//
 		}
 
-		virtual bool						GetIsFormTypeReplicable(UInt8 Type) = 0;
-		virtual void						LoadForm(BGSEEPluginFileWrapper* File) = 0;
-		virtual void						SaveForm(BGSEEPluginFileWrapper* File, BGSEEFormWrapper* Form) = 0;
-		virtual void						DisplayClipboardContents(BGSEEPluginFileWrapper* File) = 0;
+		virtual bool								GetIsFormTypeReplicable(UInt8 Type) = 0;
+		virtual void								DisplayClipboardContents(BGSEEPluginFileWrapper* File) = 0;
 
-		virtual void						PreSaveCallback(BGSEEFormListT& SaveForms, BGSEEPluginFileWrapper* File) = 0;
-		virtual void						PostSaveCallback(void) = 0;
-		virtual void						PreLoadCallback(void) = 0;
-		virtual void						PostLoadCallback(void) = 0;
+		virtual BGSEEFormCollectionSerializer*		GetSerializer(BGSEEFormListT& Forms) = 0;
+		virtual BGSEEFormCollectionSerializer*		GetDeserializer(BGSEEPluginFileWrapper* File) = 0;
+
+		virtual void								PreCopyCallback(BGSEEFormListT& CopyForms, BGSEEPluginFileWrapper* File) = 0;		// before serialization begins
+		virtual void								PostCopyCallback(bool Successful) = 0;	// after serialization is complete
+		virtual void								PrePasteCallback(BGSEEPluginFileWrapper* File) = 0;	// before deserialization begins
+		virtual void								PostPasteCallback(bool Successful, BGSEEFormCollectionSerializer* Deserializer) = 0;	// after deserialization is complete
 	};
 
 	class BGSEEGlobalClipboard

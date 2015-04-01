@@ -20,7 +20,7 @@ namespace BGSEditorExtender
 		virtual bool						GetIsDeleted(void) const = 0;
 	};
 
-	typedef std::list<BGSEEFormWrapper*>	BGSEEFormListT;
+	typedef std::vector<BGSEEFormWrapper*>	BGSEEFormListT;
 
 	// wraps around the BGS plugin file class (TESFile)
 	class BGSEEPluginFileWrapper
@@ -43,5 +43,19 @@ namespace BGSEditorExtender
 		virtual bool						GetNextRecord(bool SkipIgnoredRecords) = 0;
 
 		virtual int							GetErrorState(void) const = 0;
+		virtual const char*					GetFileName(void) const = 0;
+	};
+
+	// serialize/deserialize forms to/from a plugin file
+	class BGSEEFormCollectionSerializer
+	{
+	public:
+		virtual ~BGSEEFormCollectionSerializer() = 0
+		{
+			;//
+		}
+
+		virtual bool						Serialize(BGSEEFormListT& Forms, BGSEEPluginFileWrapper* OutputStream) = 0;		// doesn't clear the formlist, returns true if successful
+		virtual bool						Deserialize(BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount) = 0;	// returns true if successful
 	};
 }

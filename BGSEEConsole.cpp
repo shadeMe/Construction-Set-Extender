@@ -6,7 +6,7 @@ namespace BGSEditorExtender
 {
 	const char*								BGSEEConsole::kCommandLinePrefix = "CMD";
 	const char*								BGSEEConsole::kWindowTitle       = "Console Window";
-	
+
 #define BGSEECONSOLE_INISECTION				"Console"
 	SME::INI::INISetting					BGSEEConsole::kINI_Top("Top", BGSEECONSOLE_INISECTION,
 																"Dialog Rect Top",
@@ -23,7 +23,7 @@ namespace BGSEditorExtender
 	SME::INI::INISetting					BGSEEConsole::kINI_Visible("Visible", BGSEECONSOLE_INISECTION,
 																"Dialog Visibility State",
 																(SInt32)1);
-	
+
 	SME::INI::INISetting					BGSEEConsole::kINI_FontFace("FontFace", BGSEECONSOLE_INISECTION,
 																		"Message log font type",
 																		"Consolas");
@@ -69,7 +69,7 @@ namespace BGSEditorExtender
 				for (int i = 0; i < FileCount; i++)
 				{
 					if (DragQueryFile(DropData, i, Buffer, sizeof(Buffer)))
-					{						
+					{
 						char* Extension = strrchr(Buffer, '.');
 						if (Extension && !_stricmp(Extension, BGSEEScript::CodaScriptVM::kSourceExtension.c_str()))
 						{
@@ -964,7 +964,6 @@ namespace BGSEditorExtender
 		SetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE),
 					GWL_WNDPROC,
 					GetWindowLongPtr(GetDlgItem(DialogHandle, IDC_BGSEE_CONSOLE_COMMANDLINE), GWL_USERDATA));
-
 	}
 
 	void BGSEEConsole::InitializeUI( HWND Parent, HINSTANCE Resource )
@@ -1152,7 +1151,7 @@ namespace BGSEditorExtender
 		SME_ASSERT(PrimaryContext);
 		return PrimaryContext->LogPath.c_str();
 	}
-	
+
 	bool BGSEEConsole::GetLogsWarnings( void )
 	{
 		return kINI_LogWarnings.GetData().i != 0;
@@ -1190,7 +1189,11 @@ namespace BGSEditorExtender
 
 		return WarningManager;
 	}
-	
+
+	void BGSEEConsole::ToggleWarningLogging(bool State)
+	{
+		kINI_LogWarnings.SetInt(int(State));
+	}
 
 	BGSEEConsoleWarning::BGSEEConsoleWarning( const char* GUID, const char* Desc, UInt32 CallSiteCount, ... ) :
 		BaseIDString(GUID),
@@ -1229,9 +1232,7 @@ namespace BGSEditorExtender
 		return Enabled;
 	}
 
-
 	const char* BGSEEConsoleWarningManager::kINISection = "ConsoleWarnings";
-
 
 	BOOL CALLBACK BGSEEConsoleWarningManager::GUIDlgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
@@ -1314,7 +1315,6 @@ namespace BGSEditorExtender
 				ColumnData.pszText = "Warning";
 				ColumnData.iSubItem = 1;
 				ListView_InsertColumn(ListView, ColumnData.iSubItem, &ColumnData);
-
 
 				ListView_SetExtendedListViewStyle(ListView, LVS_EX_FULLROWSELECT);
 				Instance->EnumerateWarningsInListView(ListView);

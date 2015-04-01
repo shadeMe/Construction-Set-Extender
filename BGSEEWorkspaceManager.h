@@ -53,7 +53,7 @@ namespace BGSEditorExtender
 
 #define BGSEEWORKSPACE						BGSEditorExtender::BGSEEWorkspaceManager::GetSingleton()
 
-	// Always relative to kBasePath
+	// Always relative to BasePath, which is Data\BGSEE
 	class BGSEEResourceLocation
 	{
 		std::string							RelativePath;
@@ -66,11 +66,11 @@ namespace BGSEditorExtender
 
 		BGSEEResourceLocation&				operator=(const BGSEEResourceLocation& rhs);
 		BGSEEResourceLocation&				operator=(std::string rhs);
-		std::string							operator()();					// returns the full path
+		std::string							operator()() const;				// returns the full path
 
 		std::string							GetFullPath() const;			// returns BasePath + RelativePath
 		std::string							GetRelativePath() const;		// return RelativePath
 
-		static const std::string			kBasePath;
+		static const std::string&			GetBasePath(void);
 	};
 }
