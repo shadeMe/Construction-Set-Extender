@@ -2454,7 +2454,7 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_RENDERWINDOWCONTEXT_COPYTOGLOBALCLIPBOARD:
 					{
-						CSEFormListBuilder Buffer;
+						GlobalClipboard::CSEGlobalCopyBuffer Buffer;
 
 						for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 							Buffer.Add(Itr->Data);

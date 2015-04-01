@@ -225,6 +225,8 @@ public:
 };
 STATIC_ASSERT(sizeof(TESForm) == 0x24);
 
+typedef std::vector<TESForm*>	TESFormListT;
+
 /*
 	This class is apparently used to centralize code for certain types of dialog windows in the CS.
 	It does not appear in the RTTI structure of the game code.

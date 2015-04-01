@@ -921,7 +921,7 @@ namespace ConstructionSetExtender
 				break;
 			case IDC_CSE_POPUP_GLOBALCOPY:
 				{
-					CSEFormListBuilder Buffer;
+					GlobalClipboard::CSEGlobalCopyBuffer Buffer;
 
 					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{

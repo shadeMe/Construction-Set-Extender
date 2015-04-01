@@ -185,6 +185,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="CSEMain.cpp" />
     <ClCompile Include="CSEDialogImposterManager.cpp" />
     <ClCompile Include="CSEObjectPaletteManager.cpp" />
+    <ClCompile Include="CSEObjectPrefabManager.cpp" />
     <ClCompile Include="CSEPathGridUndoManager.cpp" />
     <ClCompile Include="CSERenderSelectionGroupManager.cpp" />
     <ClCompile Include="CSERenderWindowFlyCamera.cpp" />
@@ -284,6 +285,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="CSEMain.h" />
     <ClInclude Include="CSEDialogImposterManager.h" />
     <ClInclude Include="CSEObjectPaletteManager.h" />
+    <ClInclude Include="CSEObjectPrefabManager.h" />
     <ClInclude Include="CSEPathGridUndoManager.h" />
     <ClInclude Include="CSERenderSelectionGroupManager.h" />
     <ClInclude Include="CSERenderWindowFlyCamera.h" />

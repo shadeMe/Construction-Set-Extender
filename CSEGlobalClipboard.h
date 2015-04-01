@@ -6,27 +6,37 @@ namespace ConstructionSetExtender
 {
 	namespace GlobalClipboard
 	{
+		class CSEGlobalCopyBuffer
+		{
+			BGSEditorExtender::BGSEEFormListT		FormList;
+		public:
+			CSEGlobalCopyBuffer();
+			~CSEGlobalCopyBuffer();
+
+			void									Add(TESForm* Form);
+			bool									Copy(void);
+		};
+
 		class CSEGlobalClipboardOperator : public BGSEditorExtender::BGSEEGlobalClipboardOperator
 		{
 		protected:
-			typedef std::list<TESForm*>			FormListT;
-
-			FormListT							LoadedFormBuffer;		// stores loaded forms for deferred linking
-
-			void								FreeBuffer(void);
+			CSEDefaultFormCollectionSerializer*			DefaultFormSerializer;
+			CSEObjectRefCollectionSerializer*			ObjectRefSerializer;
 		public:
 			CSEGlobalClipboardOperator();
 			virtual ~CSEGlobalClipboardOperator();
 
-			virtual bool						GetIsFormTypeReplicable(UInt8 Type);
-			virtual void						LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File);
-			virtual void						SaveForm(BGSEditorExtender::BGSEEPluginFileWrapper* File, BGSEditorExtender::BGSEEFormWrapper* Form);
-			virtual void						DisplayClipboardContents(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+			virtual bool								GetIsFormTypeReplicable(UInt8 Type);
+			virtual void								DisplayClipboardContents(BGSEditorExtender::BGSEEPluginFileWrapper* File);
 
-			virtual void						PreSaveCallback(BGSEditorExtender::BGSEEFormListT& SaveForms, BGSEditorExtender::BGSEEPluginFileWrapper* File);
-			virtual void						PostSaveCallback(void);
-			virtual void						PreLoadCallback(void);
-			virtual void						PostLoadCallback(void);
+			virtual BGSEditorExtender::BGSEEFormCollectionSerializer*		GetSerializer(BGSEditorExtender::BGSEEFormListT& Forms);
+			virtual BGSEditorExtender::BGSEEFormCollectionSerializer*		GetDeserializer(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+
+			virtual void								PreCopyCallback(BGSEditorExtender::BGSEEFormListT& CopyForms,
+																		BGSEditorExtender::BGSEEPluginFileWrapper* File);
+			virtual void								PostCopyCallback(bool Successful);
+			virtual void								PrePasteCallback(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+			virtual void								PostPasteCallback(bool Successful, BGSEditorExtender::BGSEEFormCollectionSerializer* Deserializer);
 		};
 
 		void Initialize(void);

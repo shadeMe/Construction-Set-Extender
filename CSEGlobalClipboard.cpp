@@ -1,21 +1,65 @@
 #include "CSEGlobalClipboard.h"
 #include "CSEWorkspaceManager.h"
-#include "Hooks\Hooks-Plugins.h"
 
 namespace ConstructionSetExtender
 {
 	namespace GlobalClipboard
 	{
-		CSEGlobalClipboardOperator::CSEGlobalClipboardOperator() :
-			BGSEditorExtender::BGSEEGlobalClipboardOperator(),
-			LoadedFormBuffer()
+		CSEGlobalCopyBuffer::CSEGlobalCopyBuffer() :
+			FormList()
 		{
 			;//
 		}
 
+		CSEGlobalCopyBuffer::~CSEGlobalCopyBuffer()
+		{
+			for (BGSEditorExtender::BGSEEFormListT::iterator Itr = FormList.begin(); Itr != FormList.end(); Itr++)
+				delete *Itr;
+
+			FormList.clear();
+		}
+
+		void CSEGlobalCopyBuffer::Add(TESForm* Form)
+		{
+			SME_ASSERT(Form);
+
+			if (Form->IsReference())
+			{
+				TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
+				if (Ref->baseForm)
+				{
+					if (Ref->baseForm->formType == TESForm::kFormType_Door ||
+						Ref->baseForm == TESForm::LookupByEditorID("DoorMarker"))
+					{
+						return;
+					}
+				}
+			}
+
+			FormList.push_back(new CSEFormWrapper(Form));
+		}
+
+		bool CSEGlobalCopyBuffer::Copy(void)
+		{
+			bool Result = false;
+
+			if (FormList.size())
+				Result = BGSEECLIPBOARD->Copy(FormList);
+
+			return Result;
+		}
+
+		CSEGlobalClipboardOperator::CSEGlobalClipboardOperator() :
+			BGSEditorExtender::BGSEEGlobalClipboardOperator()
+		{
+			DefaultFormSerializer = new CSEDefaultFormCollectionSerializer;
+			ObjectRefSerializer = new CSEObjectRefCollectionSerializer;
+		}
+
 		CSEGlobalClipboardOperator::~CSEGlobalClipboardOperator()
 		{
-			FreeBuffer();
+			SAFEDELETE(DefaultFormSerializer);
+			SAFEDELETE(ObjectRefSerializer);
 		}
 
 		bool CSEGlobalClipboardOperator::GetIsFormTypeReplicable( UInt8 Type )
@@ -91,72 +135,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void CSEGlobalClipboardOperator::LoadForm( BGSEditorExtender::BGSEEPluginFileWrapper* File )
-		{
-			CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
-
-			SME_ASSERT(Wrapper && Wrapper->GetWrappedPlugin());
-
-			switch (Wrapper->GetRecordType())
-			{
-			case TESForm::kFormType_None:
-			case TESForm::kFormType_TES4:
-			case TESForm::kFormType_Group:
-			case TESForm::kFormType_TOFT:
-				break;
-			default:
-				{
-					TESForm* TempForm = NULL;
-
-					switch (Wrapper->GetRecordType())
-					{
-					case TESForm::kFormType_REFR:
-					case TESForm::kFormType_ACHR:
-					case TESForm::kFormType_ACRE:
-						TempForm = TESForm::CreateInstance(TESForm::kFormType_REFR);
-						break;
-					default:
-						TempForm = TESForm::CreateInstance(Wrapper->GetRecordType());
-						break;
-					}
-
-					SME_ASSERT(TempForm);
-
-					TempForm->MarkAsTemporary();
-					if (TempForm->LoadForm(Wrapper->GetWrappedPlugin()) == false)
-					{
-						BGSEECONSOLE_MESSAGE("Couldn't load form %08X!", Wrapper->GetWrappedPlugin()->currentRecord.recordID);
-						TempForm->DeleteInstance();
-					}
-					else
-					{
-#ifdef _DEBUG
-						BGSEECONSOLE_MESSAGE("Read form %s %08X from buffer", TempForm->GetEditorID(), TempForm->formID);
-#endif
-						// save it later, for ze Precious...
-						LoadedFormBuffer.push_back(TempForm);
-					}
-				}
-
-				break;
-			}
-		}
-
-		void CSEGlobalClipboardOperator::SaveForm( BGSEditorExtender::BGSEEPluginFileWrapper* File, BGSEditorExtender::BGSEEFormWrapper* Form )
-		{
-			CSEFormWrapper* FormW = dynamic_cast<CSEFormWrapper*>(Form);
-			CSEPluginFileWrapper* FileW = dynamic_cast<CSEPluginFileWrapper*>(File);
-
-			SME_ASSERT(FormW && FormW->GetWrappedForm() && FileW && FileW->GetWrappedPlugin());
-
-			FormW->GetWrappedForm()->SaveFormRecord(FileW->GetWrappedPlugin());
-
-#ifdef _DEBUG
-			BGSEECONSOLE_MESSAGE("Wrote form %s %08X to buffer", Form->GetEditorID(), Form->GetFormID());
-#endif
-		}
-
-		void CSEGlobalClipboardOperator::DisplayClipboardContents( BGSEditorExtender::BGSEEPluginFileWrapper* File )
+		void CSEGlobalClipboardOperator::DisplayClipboardContents(BGSEditorExtender::BGSEEPluginFileWrapper* File)
 		{
 			CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
 
@@ -165,212 +144,81 @@ namespace ConstructionSetExtender
 			TESFileFormListWindow::Show(NULL, Wrapper->GetWrappedPlugin());
 		}
 
-		void CSEGlobalClipboardOperator::PreSaveCallback( BGSEditorExtender::BGSEEFormListT& SaveForms, BGSEditorExtender::BGSEEPluginFileWrapper* File )
+		BGSEditorExtender::BGSEEFormCollectionSerializer* CSEGlobalClipboardOperator::GetSerializer(BGSEditorExtender::BGSEEFormListT& Forms)
 		{
-			// get rid of the "Failed to CreateGroupData..." warning
-			Hooks::_MemHdlr(TESFileUpdateOpenGroups).WriteJump();
+			bool ExpectedRefs = false;
+			SME_ASSERT(Forms.size());
+
+			TESForm* Wrapped = dynamic_cast<CSEFormWrapper*>(Forms.at(0))->GetWrappedForm();
+			if (Wrapped->IsReference())
+				ExpectedRefs = true;
+
+			BGSEditorExtender::BGSEEFormCollectionSerializer* Out = DefaultFormSerializer;
+			if (ExpectedRefs)
+				Out = ObjectRefSerializer;
+
+			for each (auto Itr in Forms)
+			{
+				TESForm* Wrapped = dynamic_cast<CSEFormWrapper*>(Itr)->GetWrappedForm();
+				if ((Wrapped->IsReference() && ExpectedRefs == false) ||
+					(Wrapped->IsReference() == false && ExpectedRefs))
+				{
+					BGSEECONSOLE_MESSAGE("Selection type mismatch! Selection can be either base forms of the same type or object references");
+					Out = NULL;
+				}
+			}
+
+			return Out;
 		}
 
-		void CSEGlobalClipboardOperator::PostSaveCallback( void )
+		BGSEditorExtender::BGSEEFormCollectionSerializer* CSEGlobalClipboardOperator::GetDeserializer(BGSEditorExtender::BGSEEPluginFileWrapper* File)
 		{
-			// restore the warning
-			Hooks::_MemHdlr(TESFileUpdateOpenGroups).WriteBuffer();
+			switch (ICSEFormCollectionSerializer::GetFileSerializerType(File))
+			{
+			case ICSEFormCollectionSerializer::kSerializer_DefaultForm:
+				return DefaultFormSerializer;
+			case ICSEFormCollectionSerializer::kSerializer_ObjectRef:
+				return ObjectRefSerializer;
+			default:
+				return NULL;
+			}
 		}
 
-		void CSEGlobalClipboardOperator::PreLoadCallback( void )
+		void CSEGlobalClipboardOperator::PreCopyCallback(BGSEditorExtender::BGSEEFormListT& CopyForms, BGSEditorExtender::BGSEEPluginFileWrapper* File)
 		{
 			;//
 		}
 
-		void CSEGlobalClipboardOperator::PostLoadCallback( void )
+		void CSEGlobalClipboardOperator::PostCopyCallback(bool Successful)
 		{
-			bool CopyingRefs = false;
-			UInt32 CopiedForms = 0;
-
-			if (LoadedFormBuffer.size())
-			{
-				CopyingRefs = (*LoadedFormBuffer.begin())->IsReference();
-				if (CopyingRefs == false)
-				{
-					bool ReplaceAll = false;
-					for (FormListT::iterator Itr = LoadedFormBuffer.begin(); Itr != LoadedFormBuffer.end(); Itr++)
-					{
-						TESForm* TempForm = *Itr;
-						bool FormExists = false;
-
-						TempForm->LinkForm();
-						TESForm* CurrentForm = TESForm::LookupByEditorID(TempForm->GetEditorID());
-
-						if (CurrentForm == NULL)
-						{
-							CurrentForm = TESForm::CreateInstance(TempForm->formType);
-						}
-						else
-						{
-							FormExists = true;
-
-							if (TempForm->formType != CurrentForm->formType)
-							{
-								BGSEECONSOLE_MESSAGE("Couldn't copy form %s %08X from clipboard - A form with the same editorID but different type exists!",
-													 TempForm->GetEditorID(), TempForm->formID);
-								continue;
-							}
-							else if (ReplaceAll == false)
-							{
-								bool Skip = false;
-								switch (BGSEEUI->MsgBoxI(NULL,
-									MB_TASKMODAL | MB_SETFOREGROUND | MB_YESNOCANCEL,
-									"Form %s already exists. Do you wish to replace it?\n\n\"Cancel\" will replace all existing forms.", CurrentForm->GetEditorID()))
-								{
-								case IDNO:
-									Skip = true;
-									break;
-								case IDCANCEL:
-									ReplaceAll = true;
-									break;
-								}
-
-								if (Skip)
-									continue;
-							}
-						}
-
-						CurrentForm->CopyFrom(TempForm);
-						CurrentForm->SetFromActiveFile(true);
-
-						if (FormExists == false)
-						{
-							if (TempForm->GetEditorID())
-								CurrentForm->SetEditorID(TempForm->GetEditorID());
-
-							_DATAHANDLER->AddForm(CurrentForm);
-						}
-
-						CopiedForms++;
-					}
-				}
-				else
-				{
-					if ((*TESRenderWindow::ActiveCell == NULL && _TES->currentInteriorCell == NULL) ||
-						*TESRenderWindow::PathGridEditFlag ||
-						*TESRenderWindow::LandscapeEditFlag)
-					{
-						BGSEECONSOLE_MESSAGE("Cannot copy references! Possible reasons: No cell loaded in the render window, pathgrid/landscape edit mode enabled");
-					}
-					else
-					{
-						std::map<TESObjectREFR*, const char*> RefEditorIDMap;
-						for (FormListT::iterator Itr = LoadedFormBuffer.begin(); Itr != LoadedFormBuffer.end(); Itr++)
-						{
-							TESForm* TempForm = *Itr;
-							bool FormExists = false;
-
-							TempForm->LinkForm();
-							TESObjectREFR* Ref = CS_CAST(TempForm, TESForm, TESObjectREFR);
-							SME_ASSERT(Ref);
-
-							if (Ref->baseForm == NULL)
-							{
-								BGSEECONSOLE_MESSAGE("Couldn't copy reference %08X '%s' - Unresolved base form", TempForm->formID, TempForm->GetEditorID());
-								continue;
-							}
-
-							RefEditorIDMap[Ref] = TempForm->GetEditorID();
-							CopiedForms++;
-						}
-
-						if (RefEditorIDMap.size())
-						{
-							// the refs are instantiated in the same configuration
-							NiNode* CameraNode = _PRIMARYRENDERER->primaryCameraParentNode;
-							TESObjectSelection* Buffer = TESObjectSelection::CreateInstance();
-							for each (auto Itr in RefEditorIDMap)
-							{
-								// need to generate the ref's 3D first, otherwise it won't get added to the selection
-								Itr.first->GenerateNiNode();
-								Buffer->AddToSelection(Itr.first);
-								Itr.first->SetNiNode(NULL);
-							}
-
-							Buffer->CalculatePositionVectorSum();
-							Buffer->CalculateBounds();
-
-							float Multiplier = Buffer->selectionBounds + 60.f;
-							if (Multiplier > 2048)
-								Multiplier = 2048.f;
-
-							Vector3 PosVecSum(Buffer->selectionPositionVectorSum);
-							Vector3 NewOrigin(CameraNode->m_worldTranslate.x, CameraNode->m_worldTranslate.y, CameraNode->m_worldTranslate.z);
-							Vector3 MatRot(CameraNode->m_localRotate.data[1], CameraNode->m_localRotate.data[4], CameraNode->m_localRotate.data[7]);
-
-							MatRot.Scale(Multiplier);
-							NewOrigin += MatRot;
-							NewOrigin -= PosVecSum;
-
-							bool RefreshRenderWindow = false;
-							TESObjectCELL* Interior = _TES->currentInteriorCell;
-							TESWorldSpace* Worldspace = _TES->currentWorldSpace;
-							if (Interior)
-								Worldspace = NULL;
-
-							for (std::map<TESObjectREFR*, const char*>::iterator Itr = RefEditorIDMap.begin(); Itr != RefEditorIDMap.end(); Itr++)
-							{
-								TESObjectREFR* TempRef = Itr->first;
-								TESObject* Base = CS_CAST(Itr->first->baseForm, TESForm, TESObject);
-								const char* EditorID = Itr->second;
-								SME_ASSERT(Base);
-
-								Vector3 NewPosition(TempRef->position);
-								Vector3 NewRotation(TempRef->rotation);
-								NewPosition += NewOrigin;
-
-								TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
-								if (NewRef == NULL)
-								{
-									BGSEECONSOLE_MESSAGE("Couldn't create reference @ %0.3f, %0.3f, %0.3f, Cell = %08X, Worldspace = %08X",
-														 NewPosition.x, NewPosition.y, NewPosition.z,
-														 (Interior ? Interior->formID : 0),
-														 (Worldspace ? Worldspace->formID : 0));
-								}
-								else
-								{
-									RefreshRenderWindow = true;
-
-									if (EditorID && TESForm::LookupByEditorID(EditorID))
-									{
-										BGSEECONSOLE_MESSAGE("Couldn't set editorID '%s' on copied reference %08X - It's already in use", EditorID, NewRef->formID);
-										EditorID = NULL;
-										TempRef->SetEditorID(NULL);
-									}
-
-									NewRef->CopyFrom(TempRef);
-									NewRef->SetFromActiveFile(true);
-									_DATAHANDLER->PlaceObjectRef(Base, &NewPosition, &NewRotation, Interior, Worldspace, NewRef);
-
-									if (EditorID)
-										NewRef->SetEditorID(EditorID);
-								}
-							}
-
-							if (RefreshRenderWindow)
-								TESRenderWindow::Redraw();
-						}
-					}
-				}
-			}
-
-			if (CopiedForms)
-				BGSEECONSOLE_MESSAGE("Pasted %d forms", CopiedForms);
-
-			FreeBuffer();
+			;//
 		}
 
-		void CSEGlobalClipboardOperator::FreeBuffer( void )
+		void CSEGlobalClipboardOperator::PrePasteCallback(BGSEditorExtender::BGSEEPluginFileWrapper* File)
 		{
-			for (FormListT::iterator Itr = LoadedFormBuffer.begin(); Itr != LoadedFormBuffer.end(); Itr++)
-				(*Itr)->DeleteInstance();
+			;//
+		}
 
-			LoadedFormBuffer.clear();
+		void CSEGlobalClipboardOperator::PostPasteCallback(bool Successful, BGSEditorExtender::BGSEEFormCollectionSerializer* Deserializer)
+		{
+			if (Successful)
+			{
+				ICSEFormCollectionSerializer* CSESerializer = dynamic_cast<ICSEFormCollectionSerializer*>(Deserializer);
+				SME_ASSERT(CSESerializer);
+
+				CSEDefaultFormCollectionInstantiator DefaultInit;
+				CSEObjectRefCollectionInstantiator ObjRefInit;
+
+				switch (CSESerializer->GetType())
+				{
+				case ICSEFormCollectionSerializer::kSerializer_DefaultForm:
+					DefaultInit.Instantiate(CSESerializer);
+					break;
+				case ICSEFormCollectionSerializer::kSerializer_ObjectRef:
+					ObjRefInit.Instantiate(CSESerializer);
+					break;
+				}
+			}
 		}
 
 		void Initialize( void )

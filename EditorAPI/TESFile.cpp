@@ -98,3 +98,18 @@ void TESFile::SetFileIndex( UInt8 Index )
 {
 	thisCall<void>(0x00485CA0, this, Index);
 }
+
+UInt32 TESFile::JumpToBeginningOfRecord()
+{
+	return thisCall<UInt32>(0x004880E0, this);
+}
+
+void TESFile::GetChunkData4Bytes(UInt32* Out)
+{
+	thisCall<void>(0x00487FC0, this, Out);
+}
+
+bool TESFile::GetNextChunk()
+{
+	return thisCall<bool>(0x00486420, this);
+}

@@ -82,3 +82,5 @@ public:
 	float						GetAlpha(void);
 	bool						GetDisabled(void) const;
 };
+
+typedef std::vector<TESObjectREFR*>	TESObjectREFRListT;

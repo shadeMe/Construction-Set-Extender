@@ -216,6 +216,23 @@ TESObjectREFR* TESRender::PickAtCoords( int X, int Y )
 	return cdeclCall<TESObjectREFR*>(0x00426BB0, X, Y);
 }
 
+NiNode* TESRender::CreateNiNode()
+{
+	NiNode* New = (NiNode*)FormHeap_Allocate(sizeof(NiNode));
+	thisCall<void>(0x006F5830, New, 0);
+	return New;
+}
+
+void TESRender::AddToNiNode(NiNode* To, NiAVObject* Child)
+{
+	thisVirtualCall<void>(0x84, To, Child, 0);
+}
+
+void TESRender::DeleteNiNode(NiNode* Node)
+{
+	thisVirtualCall<void>(0x0, Node, true);
+}
+
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,
 																	HWND Parent,
 																	NiNode* Node,

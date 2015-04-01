@@ -848,8 +848,7 @@ namespace ConstructionSetExtender
 				DataIn->SkipVarRefCountsForQuests = PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator");
 
 				System::Func<Object^, BackgroundTaskOutput^>^ TaskDelegate = gcnew System::Func<Object^, BackgroundTaskOutput^>(&AvalonEditTextEditor::PerformBackgroundTask);
-				System::Action<Task<BackgroundTaskOutput^>^>^ ContinueDelegate = gcnew System::Action<Task<BackgroundTaskOutput^>^>(this,
-																																	&AvalonEditTextEditor::ProcessBackgroundTaskOutput);
+				System::Action<Task<BackgroundTaskOutput^>^>^ ContinueDelegate = gcnew System::Action<Task<BackgroundTaskOutput^>^>(this, &AvalonEditTextEditor::ProcessBackgroundTaskOutput);
 
 				BackgroundTask = Task<BackgroundTaskOutput^>::Factory->StartNew(TaskDelegate, DataIn);
 				// the completion task must be executed in th UI thread, so we need to use its task scheduler

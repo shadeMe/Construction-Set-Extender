@@ -84,7 +84,11 @@ public:
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
 	static TESObjectREFR*					PickAtCoords(int X, int Y);
 
-	static void								UpdateAVObject(NiAVObject* Object);		// this should be moved to a better location, actually a NiAVObject method
+	// misc methods that belong elswhere
+	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method
+	static NiNode*							CreateNiNode();
+	static void								DeleteNiNode(NiNode* Node);
+	static void								AddToNiNode(NiNode* To, NiAVObject* Child);
 
 	static NiDX9Renderer**					NiRendererSingleton;
 };

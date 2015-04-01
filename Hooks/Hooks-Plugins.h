@@ -37,6 +37,5 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(DataHandlerAutoSaveA, "prevents the active file from being added as a master to the autosave backup");
 		_DeclareMemHdlr(DataHandlerAutoSaveB, "");
 		_DeclareMemHdlr(DataDlgCancelled, "fixes a bug that causes the editor to reset the 'dirty' flag on closing the data dialog");
-		_DeclareMemHdlr(TESFileUpdateOpenGroups, "temporary patch used to suppress a warning when force-saving object ref records to the global clipboard");
 	}
 }

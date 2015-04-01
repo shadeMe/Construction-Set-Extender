@@ -46,18 +46,112 @@ namespace ConstructionSetExtender
 		virtual bool						GetNextRecord(bool SkipIgnoredRecords);
 
 		virtual int							GetErrorState(void) const;
+		virtual const char*					GetFileName(void) const;
 
 		TESFile*							GetWrappedPlugin(void) const;
 	};
 
-	class CSEFormListBuilder
+	class ICSEFormCollectionSerializer : public BGSEditorExtender::BGSEEFormCollectionSerializer
 	{
-		BGSEditorExtender::BGSEEFormListT		FormList;
-	public:
-		CSEFormListBuilder();
-		~CSEFormListBuilder();
+	protected:
+		TESFormListT					LoadedFormBuffer;		// stores loaded forms for deferred linking
 
-		void									Add(TESForm* Form);
-		bool									Copy(void);
+		void							FreeBuffer(void);
+
+		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File) = 0;		// returns false if an error was encountered
+		virtual void					SaveForm(BGSEditorExtender::BGSEEPluginFileWrapper* File, BGSEditorExtender::BGSEEFormWrapper* Form);
+	public:
+		ICSEFormCollectionSerializer();
+		virtual ~ICSEFormCollectionSerializer();
+
+		enum
+		{
+			kSerializer_Unknown = 0,
+			kSerializer_DefaultForm,
+			kSerializer_ObjectRef,
+
+			kSerializer__MAX
+		};
+
+		static UInt8					GetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File);				// returns the type of serializer used to create the file
+		static void						SetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File, UInt8 Type);	// tags the file with the serializer type
+
+		virtual UInt8					GetType() = 0;
+	};
+
+	class ICSEFormCollectionInstantiator
+	{
+	public:
+		virtual ~ICSEFormCollectionInstantiator() = 0
+		{
+			;//
+		}
+
+		virtual bool					Instantiate(ICSEFormCollectionSerializer* Data, bool FreeTempData) = 0;		// returns false if an error occurred
+	};
+
+	// creates non-temp copies of the loaded forms and adds them to the datahandler
+	class CSEDefaultFormCollectionInstantiator : public ICSEFormCollectionInstantiator
+	{
+	public:
+		virtual ~CSEDefaultFormCollectionInstantiator();
+
+		virtual bool					Instantiate(ICSEFormCollectionSerializer* Data, bool FreeTempData = true);
+	};
+
+	// for non-TESObjectREFR forms
+	class CSEDefaultFormCollectionSerializer : public ICSEFormCollectionSerializer
+	{
+		friend class CSEDefaultFormCollectionInstantiator;
+	protected:
+		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File);		// returns false if an error was encountered
+	public:
+		virtual ~CSEDefaultFormCollectionSerializer();
+
+		virtual bool					Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream);
+		virtual bool					Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount);
+
+		virtual UInt8					GetType();
+	};
+
+	class CSEObjectRefCollectionSerializer;
+
+	class CSEObjectRefCollectionInstantiator : public ICSEFormCollectionInstantiator
+	{
+	protected:
+		void							GetPositionOffset(TESObjectREFRListT& InData, NiNode* CameraNode, Vector3& OutOffset);
+	public:
+		virtual ~CSEObjectRefCollectionInstantiator();
+
+										// creates references at the render window camera position
+		virtual bool					Instantiate(ICSEFormCollectionSerializer* Data, bool FreeTempData = true);
+
+										// generates 3D data for the loaded refs, returns false on error
+		bool							CreatePreviewNode(CSEObjectRefCollectionSerializer* Data,
+														  TESPreviewControl* PreviewControl,
+														  TESObjectREFRListT& OutPreviewRefs,
+														  NiNode** OutPreviewNode);
+	};
+
+	class CSEObjectRefCollectionSerializer : public ICSEFormCollectionSerializer
+	{
+		friend class CSEObjectRefCollectionInstantiator;
+	protected:
+		typedef std::map<TESObjectREFR*, TESObjectREFR*>		RefParentTableT;
+
+		TESFormListT					BaseFormDeserializatonBuffer;
+		RefParentTableT					ParentDeserializationBuffer;				// maps (loaded) refs to their parents
+
+		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+
+		void							FreeDeserializationBuffers();
+	public:
+		CSEObjectRefCollectionSerializer();
+		virtual ~CSEObjectRefCollectionSerializer();
+
+		virtual bool					Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream);
+		virtual bool					Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount);
+
+		virtual UInt8					GetType();
 	};
 }

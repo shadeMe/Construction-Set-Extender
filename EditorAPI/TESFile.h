@@ -161,7 +161,7 @@ public:
 	bool						SetActive(bool State);
 	bool						SetMaster(bool State);
 
-	UInt32						Open(); 
+	UInt32						Open();
 	bool						CreateTempFile(UInt32 Arg1 = 1);
 	bool						InitializeBSFile(UInt32 Arg1 = 0, bool Arg2 = false);
 	UInt32						SaveHeader();
@@ -170,12 +170,16 @@ public:
 
 	UInt8						GetRecordType();	// returns zero if invalid or no record
 	bool						GetNextRecord(bool SkipIgnoredRecords);
+	UInt32						JumpToBeginningOfRecord(); // move first chunk in current record, returns chunk type
+
+	bool						GetNextChunk();
+	void						GetChunkData4Bytes(UInt32* Out);
 
 	void						OpenGroupRecord(RecordInfo* GroupRecord);
 	void						CloseGroupRecord();
 
 	void						SetFileIndex(UInt8 Index);
-	
+
 	static TESFile*				CreateInstance(const char* WorkingDirectory, const char* FileName, UInt8 OpenMode = NiFile::kFileMode_ReadOnly);
 	void						DeleteInstance(bool ReleaseMemory = true);
 };

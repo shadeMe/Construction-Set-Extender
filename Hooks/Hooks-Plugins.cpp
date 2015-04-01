@@ -41,7 +41,6 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(DataHandlerAutoSaveA, 0x00481F81);
 		_DefineHookHdlr(DataHandlerAutoSaveB, 0x00481FC1);
 		_DefineHookHdlr(DataDlgCancelled, 0x0041A289);
-		_DefineJumpHdlrWithBuffer(TESFileUpdateOpenGroups, 0x004876F6, 0x00487723, 5, 0x0F, 0xB6, 0x46, 0x04, 0x8B);
 
 		void PatchTESFileHooks(void)
 		{
