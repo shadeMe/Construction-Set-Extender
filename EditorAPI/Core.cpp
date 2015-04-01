@@ -41,6 +41,7 @@ LPDIRECT3DTEXTURE9					TESLODTextureGenerator::D3DTexture6144x = NULL;
 BSRenderedTexture*					TESLODTextureGenerator::BSTexture6144x = NULL;
 
 ModelLoader**						ModelLoader::Singleton = (ModelLoader**)0x00A0DEAC;
+DWORD*								ThreadLocalData::TLSIndex = (DWORD*)0x00A95534;
 
 TESFile* TESDataHandler::LookupPluginByName(const char* PluginName)
 {
@@ -407,4 +408,28 @@ void TESLODTextureGenerator::ReleaseTextureBuffers( void )
 void BSTexturePalette::ReleaseTextures()
 {
 	thisCall<void>(0x004BD5B0, this);
+}
+
+ThreadLocalData* ThreadLocalData::Get(void)
+{
+	ThreadLocalData* OutLocal;
+	__asm
+	{
+		// since the MSVC++ inline assembler is useless
+		// get TLS array (mov ecx, large fs:0x2C)
+		_emit	0x64
+		_emit	0x8B
+		_emit	0x0D
+		_emit	0x2C
+		_emit	0x0
+		_emit	0x0
+		_emit	0x0
+
+		mov		eax, TLSIndex
+		mov		eax, [eax]
+		mov		eax, [ecx + eax * 4]
+		mov		OutLocal, eax
+	}
+
+	return OutLocal;
 }

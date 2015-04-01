@@ -138,9 +138,11 @@ namespace ConstructionSetExtender
 		friend class CSEObjectRefCollectionInstantiator;
 	protected:
 		typedef std::map<TESObjectREFR*, TESObjectREFR*>		RefParentTableT;
+		typedef std::map<TESObjectREFR*, bool>					RefParentStateTableT;
 
 		TESFormListT					BaseFormDeserializatonBuffer;
 		RefParentTableT					ParentDeserializationBuffer;				// maps (loaded) refs to their parents
+		RefParentStateTableT			ParentStateDeserializationBuffer;			// maps (loaded) refs to their ESP opposite state
 
 		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File);
 

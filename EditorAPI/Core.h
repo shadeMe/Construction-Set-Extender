@@ -457,3 +457,17 @@ public:
 	static ModelLoader**										Singleton;
 };
 #define _MODELLOADER			(*ModelLoader::Singleton)
+
+// 188+
+struct ThreadLocalData
+{
+	// members
+	/*000*/ UInt32				unk00[0x184 >> 2];
+	/*184*/ UInt8				saveLoadInProgress;		// this flag must be set when saving/loading TESFiles and linking loaded forms
+	/*185*/ UInt8				unk185[3];				// more flags or padding
+
+	static ThreadLocalData*		Get();
+
+	static DWORD*				TLSIndex;
+};
+STATIC_ASSERT(sizeof(ThreadLocalData) == 0x188);

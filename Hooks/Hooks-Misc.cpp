@@ -1001,7 +1001,9 @@ namespace ConstructionSetExtender
 			{
 				if (kExtraDataList_InitErrorState == true)
 				{
-					BGSEECONSOLE_MESSAGE("ExtraData initialization encountered errors for form %08X {%s}...", LinkedForm->formID, LinkedForm->GetEditorID());
+					BGSEECONSOLE->LogWarning("CS", "ExtraData initialization encountered errors for form %08X {%s}...",
+											 LinkedForm->formID,
+											 LinkedForm->GetEditorID());
 				}
 
 				kExtraDataList_InitErrorState = false;

@@ -1,6 +1,4 @@
 #include "CSEWrappers.h"
-#include "CSEGlobalClipboard.h"
-#include "Hooks\Hooks-Plugins.h"
 
 namespace ConstructionSetExtender
 {
@@ -109,7 +107,9 @@ namespace ConstructionSetExtender
 		if (ForWriting)
 			WrappedPlugin->CreateTempFile();
 
-		UInt8 ErrorState = WrappedPlugin->Open();
+		WrappedPlugin->Open();
+
+		UInt8 ErrorState = WrappedPlugin->errorState;
 		return (ErrorState == TESFile::kFileState_None || ErrorState == TESFile::kFileState_NoHeader);
 	}
 
@@ -171,7 +171,11 @@ namespace ConstructionSetExtender
 	void ICSEFormCollectionSerializer::FreeBuffer(void)
 	{
 		for each (auto Itr in LoadedFormBuffer)
+		{
+			// clean up any cross refs that may have accumulated to suppress the deletion conformation dialog
+			Itr->CleanupCrossReferenceList();
 			Itr->DeleteInstance();
+		}
 
 		LoadedFormBuffer.clear();
 	}
@@ -209,6 +213,12 @@ namespace ConstructionSetExtender
 
 		TESFile* Wrapped = CSEFile->GetWrappedPlugin();
 		SME_ASSERT(Wrapped);
+
+		// refresh the file header
+		SME_ASSERT(Wrapped->bsFile == NULL);
+
+		CSEFile->Open(false);
+		CSEFile->Close();
 
 		UInt8 Result = kSerializer_Unknown;
 		if (Wrapped->authorName.c_str())
@@ -373,6 +383,9 @@ namespace ConstructionSetExtender
 		bool FoundRefs = false;
 		bool Result = false;
 
+		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
+		ThreadLocalData::Get()->saveLoadInProgress = 1;
+
 		for each (auto Itr in Forms)
 		{
 			if (Itr->GetType() == TESForm::kFormType_REFR ||
@@ -471,6 +484,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
 
@@ -478,15 +492,18 @@ namespace ConstructionSetExtender
 	{
 		bool Result = false;
 
+		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
+		ThreadLocalData::Get()->saveLoadInProgress = 1;
+
 		while (true)
 		{
+			SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_DefaultForm);
+
 			if (InputStream->Open(false) == false)
 			{
 				BGSEECONSOLE_MESSAGE("Failed to open buffer!");
 				break;
 			}
-
-			SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_DefaultForm);
 
 			FreeBuffer();
 			Result = true;
@@ -512,6 +529,7 @@ namespace ConstructionSetExtender
 		if (Result == false)
 			BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
 
+		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
 
@@ -828,6 +846,7 @@ namespace ConstructionSetExtender
 									{
 										Result = true;
 										((TESObjectREFR*)TempForm)->SetBaseForm(Itr);
+										break;
 									}
 								}
 							}
@@ -858,11 +877,15 @@ namespace ConstructionSetExtender
 			Itr->DeleteInstance();
 
 		BaseFormDeserializatonBuffer.clear();
+		ParentDeserializationBuffer.clear();
+		ParentStateDeserializationBuffer.clear();
 	}
 
 	CSEObjectRefCollectionSerializer::CSEObjectRefCollectionSerializer() :
 		ICSEFormCollectionSerializer(),
-		BaseFormDeserializatonBuffer()
+		BaseFormDeserializatonBuffer(),
+		ParentDeserializationBuffer(),
+		ParentStateDeserializationBuffer()
 	{
 		;//
 	}
@@ -876,6 +899,9 @@ namespace ConstructionSetExtender
 	{
 		bool FoundNoneRefs = false;
 		bool Result = true;
+
+		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
+		ThreadLocalData::Get()->saveLoadInProgress = 1;
 
 		for each (auto Itr in Forms)
 		{
@@ -920,7 +946,9 @@ namespace ConstructionSetExtender
 					break;
 				}
 
-				TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
+				CSEFormWrapper* Wrapped = dynamic_cast<CSEFormWrapper*>(Itr);
+				SME_ASSERT(Wrapped);
+				TESObjectREFR* ThisRef = (TESObjectREFR*)Wrapped->GetWrappedForm();
 				if (ThisRef->baseForm == NULL)
 				{
 					BGSEECONSOLE_MESSAGE("Reference %08X has no base form!", Itr->GetFormID());
@@ -1050,22 +1078,30 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
 
 	bool CSEObjectRefCollectionSerializer::Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount)
 	{
 		bool Result = false;
+		bool WarningState = BGSEECONSOLE->GetLogsWarnings();
+		BGSEECONSOLE->ToggleWarningLogging(false);			// skip linking/loading errors
+		bool PluginError = false;
+
+		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
+		ThreadLocalData::Get()->saveLoadInProgress = 1;
 
 		while (true)
 		{
+			SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_ObjectRef);
+
 			if (InputStream->Open(false) == false)
 			{
 				BGSEECONSOLE_MESSAGE("Failed to open buffer!");
+				PluginError = true;
 				break;
 			}
-
-			SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_ObjectRef);
 
 			FreeBuffer();
 			FreeDeserializationBuffers();
@@ -1090,6 +1126,7 @@ namespace ConstructionSetExtender
 						if ((j->formID & 0xFFFFFF) == FormID)
 						{
 							ParentDeserializationBuffer[ThisRef] = (TESObjectREFR*)j;
+							ParentStateDeserializationBuffer[ThisRef] = xParent->oppositeState;
 							break;
 						}
 					}
@@ -1101,11 +1138,11 @@ namespace ConstructionSetExtender
 				Itr->LinkForm();
 
 			// update extra data
+			// invalid extradata would've been stripped during linking, so re-add
 			for each (auto Itr in ParentDeserializationBuffer)
 			{
-				ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)Itr.first->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				SME_ASSERT(xParent && xParent->parent != Itr.second);
-				xParent->parent = Itr.second;
+				Itr.first->extraData.ModExtraEnableStateParent(ParentDeserializationBuffer[Itr.first]);
+				Itr.first->SetExtraEnableStateParentOppositeState(ParentStateDeserializationBuffer[Itr.first]);
 			}
 
 			// finally, check and update the refs' base forms
@@ -1138,7 +1175,10 @@ namespace ConstructionSetExtender
 					Validated.push_back(ThisRef);
 				}
 				else
+				{
 					ThisRef->DeleteInstance();
+					Result = false;
+				}
 			}
 
 			LoadedFormBuffer.clear();
@@ -1150,15 +1190,18 @@ namespace ConstructionSetExtender
 			{
 				BGSEECONSOLE_MESSAGE("Failed to close buffer!");
 				Result = false;
+				PluginError = true;
 				break;
 			}
 
 			break;
 		}
 
-		if (Result == false)
+		if (PluginError == false)
 			BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
 
+		BGSEECONSOLE->ToggleWarningLogging(WarningState);
+		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
 
