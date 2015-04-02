@@ -75,7 +75,7 @@ namespace ConstructionSetExtender
 			WrappedPlugin->DeleteInstance();
 	}
 
-	bool CSEPluginFileWrapper::Construct( const char* FileName )
+	bool CSEPluginFileWrapper::Construct(const char* FileName, bool OverwriteExisting)
 	{
 		SME_ASSERT(WrappedPlugin == NULL);
 
@@ -83,7 +83,9 @@ namespace ConstructionSetExtender
 		FORMAT_STR(Buffer, "%s\\%s", BGSEEWORKSPACE->GetCurrentWorkspace(), FileName);
 		PluginPath = Buffer;
 
-		CreateTempFile();
+		if (OverwriteExisting)
+			CreateTempFile();
+
 		WrappedPlugin = TESFile::CreateInstance(BGSEEWORKSPACE->GetCurrentWorkspace(), FileName);
 		if (WrappedPlugin)
 			WrappedPlugin->SetFileIndex(0);
@@ -564,9 +566,12 @@ namespace ConstructionSetExtender
 		for each (auto Itr in InData)
 		{
 			// need to generate the ref's 3D first, otherwise it won't get added to the selection
-			Itr->GenerateNiNode();
+			TESBoundObject* BaseForm = CS_CAST(Itr->baseForm, TESForm, TESBoundObject);
+			SME_ASSERT(BaseForm);
+
+			NiNode* Node3D = Itr->GenerateNiNode();
+			BaseForm->CalculateBounds(Node3D);
 			Buffer->AddToSelection(Itr);
-			Itr->SetNiNode(NULL);
 		}
 
 		Buffer->CalculatePositionVectorSum();
@@ -595,8 +600,15 @@ namespace ConstructionSetExtender
 
 		TESForm* TempBase = Ref->baseForm;
 		TESForm* Existing = TESForm::LookupByEditorID(TempBase->GetEditorID());
-		SME_ASSERT(Existing == NULL);
 
+		if (Existing)
+		{
+			// the base form was instantiated for an earlier ref
+			return dynamic_cast<TESObject*>(Existing);
+		}
+#ifdef _DEBUG
+		BGSEECONSOLE_MESSAGE("Instantiating base form for reference %08X", Ref->formID);
+#endif
 		TESForm* NewBase = TESForm::CreateInstance(TempBase->formType);
 		NewBase->CopyFrom(TempBase);
 		NewBase->SetFromActiveFile(true);
@@ -678,9 +690,6 @@ namespace ConstructionSetExtender
 						if (Serializer->IsBaseFormTemporary(Base))
 						{
 							// instantiate base form
-#ifdef _DEBUG
-							BGSEECONSOLE_MESSAGE("Instantiating base form for reference %08X", TempRef->formID);
-#endif
 							Base = InstantiateBaseForm(TempRef);
 							SME_ASSERT(Base);
 							NewBaseForm = true;
@@ -725,11 +734,17 @@ namespace ConstructionSetExtender
 						}
 					}
 
+					if (AllocationMap.size())
+						_RENDERSEL->ClearSelection(true);
+
 					// update extra data ref pointers to the allocated instances
 					for each (auto i in AllocationMap)
 					{
 						TESObjectREFR* NewRef = i.second;
 						TESObjectREFR* TempRef = i.first;
+
+						NewRef->GenerateNiNode();
+						_RENDERSEL->AddToSelection(NewRef, true);
 
 						ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)TempRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 						if (xParent && xParent->parent)
@@ -791,8 +806,6 @@ namespace ConstructionSetExtender
 
 		if (Result)
 		{
-			Vector3 PosOffset;
-			GetPositionOffset(RefBuffer, PreviewControl->cameraNode, PosOffset);
 			NiNode* Root = *OutPreviewNode = TESRender::CreateNiNode();
 
 			for each (auto Itr in RefBuffer)
@@ -806,10 +819,7 @@ namespace ConstructionSetExtender
 				SME_ASSERT(NewBase);
 				NewBase->MarkAsTemporary();
 				NewBase->CopyFrom(Itr->baseForm);
-
 				NewRef->SetBaseForm(NewBase);
-				PosOffset += NewRef->position;
-				NewRef->SetPosition(PosOffset);
 
 				NiNode* Ref3D = NewRef->GenerateNiNode();
 				if (Ref3D == NULL)
@@ -832,10 +842,30 @@ namespace ConstructionSetExtender
 					Result = false;
 					break;
 				}
+				else
+					NewRef->SetNiNode(NULL);
 
 				OutPreviewRefs.push_back(NewRef);
 				OutPreviewBaseForms.push_back(NewBase);
-				TESRender::AddToNiNode(Root, Ref3D);
+			}
+
+			if (Result)
+			{
+				PreviewControl->CenterCamera();
+
+				Vector3 PosOffset;
+				GetPositionOffset(OutPreviewRefs, PreviewControl->sceneRoot, PosOffset);
+				for each (auto Itr in OutPreviewRefs)
+				{
+					Vector3 NewPos(PosOffset);
+					NewPos += Itr->position;
+					Itr->SetPosition(NewPos);
+
+					Itr->SetNiNode(NULL);
+					NiNode* Ref3D = Itr->GenerateNiNode();
+					SME_ASSERT(Ref3D);
+					TESRender::AddToNiNode(Root, Ref3D);
+				}
 			}
 		}
 
@@ -891,6 +921,7 @@ namespace ConstructionSetExtender
 #endif
 					// manually resolve base form fields for refs
 					// at this point, all base forms must be loaded as they are serialized before the refs
+					// also, reload the position/rotation data since they are discarded when the base form is invalid
 					if (BaseForm == false)
 					{
 						UInt32 BaseFormID = 0;
@@ -898,10 +929,23 @@ namespace ConstructionSetExtender
 						Result = false;
 						if (Plugin->JumpToBeginningOfRecord())
 						{
+							TESObjectREFR* ThisRef = (TESObjectREFR*)TempForm;
 							do
 							{
 								if (BaseFormID == 0 && Plugin->currentChunk.chunkType == 'EMAN')
 									Plugin->GetChunkData4Bytes(&BaseFormID);
+								else if (Plugin->currentChunk.chunkType == 'ATAD')
+								{
+									struct {
+										Vector3 Position;
+										Vector3 Rotation;
+									} Buffer;
+
+									Plugin->GetChunkData(&Buffer, 0x18);
+
+									ThisRef->position = Buffer.Position;
+									ThisRef->rotation = Buffer.Rotation;
+								}
 							} while (Plugin->GetNextChunk());
 
 							SME_ASSERT(Plugin->GetNextChunk() == false);
@@ -913,7 +957,7 @@ namespace ConstructionSetExtender
 									if ((Itr->formID & 0xFFFFFF) == (BaseFormID & 0xFFFFFF))
 									{
 										Result = true;
-										((TESObjectREFR*)TempForm)->SetBaseForm(Itr);
+										ThisRef->SetBaseForm(Itr);
 										break;
 									}
 								}
@@ -929,7 +973,11 @@ namespace ConstructionSetExtender
 							LoadedFormBuffer.push_back(TempForm);
 					}
 					else
+					{
+						// there can only be one instance of each base form
+						SME_ASSERT(IsBaseFormTemporary(TempForm->formID) == false);
 						BaseFormDeserializatonBuffer.push_back(TempForm);
+					}
 				}
 			}
 
@@ -955,6 +1003,18 @@ namespace ConstructionSetExtender
 		for each (auto Itr in BaseFormDeserializatonBuffer)
 		{
 			if (Form == Itr)
+				return true;
+		}
+
+		return false;
+	}
+
+	bool CSEObjectRefCollectionSerializer::IsBaseFormTemporary(UInt32 FormID) const
+	{
+		SME_ASSERT(FormID);
+		for each (auto Itr in BaseFormDeserializatonBuffer)
+		{
+			if (FormID == Itr->formID)
 				return true;
 		}
 
@@ -1074,6 +1134,8 @@ namespace ConstructionSetExtender
 
 	CSEObjectRefCollectionSerializer::~CSEObjectRefCollectionSerializer()
 	{
+		// refs must be freed before their base forms
+		FreeBuffer();
 		FreeDeserializationBuffers();
 	}
 
@@ -1149,13 +1211,14 @@ namespace ConstructionSetExtender
 					FormCheck = false;
 					break;
 				}
+#ifdef NDEBUG
 				else if (ThisRef->baseForm->formID < 0x800)
 				{
 					BGSEECONSOLE_MESSAGE("Reference %08X's base form is a default object!", Itr->GetFormID());
 					FormCheck = false;
 					break;
 				}
-
+#endif
 				ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 				if (xParent && xParent->parent)
 				{
@@ -1177,7 +1240,19 @@ namespace ConstructionSetExtender
 					}
 				}
 
-				RefBaseForms.push_back(ThisRef->baseForm);
+				bool FoundBase = false;
+				for each (auto ExtantBase in RefBaseForms)
+				{
+					if (ExtantBase == ThisRef->baseForm)
+					{
+						FoundBase = true;
+						break;
+					}
+				}
+
+				// prevent the same base from being serialized multiple times
+				if (FoundBase == false)
+					RefBaseForms.push_back(ThisRef->baseForm);
 			}
 
 			for each (auto Base in RefBaseForms)
@@ -1319,8 +1394,12 @@ namespace ConstructionSetExtender
 			for each (auto Itr in LoadedFormBuffer)
 				Itr->LinkForm();
 
+			// link the base forms
+			for each (auto Itr in BaseFormDeserializatonBuffer)
+				Itr->LinkForm();
+
 			// update extra data
-			// invalid extradata would've been stripped during linking, so re-add
+			// invalid extradata would've been stripped away during linking, so re-add
 			for each (auto Itr in ParentDeserializationBuffer)
 			{
 				Itr.first->extraData.ModExtraEnableStateParent(ParentDeserializationBuffer[Itr.first]);
@@ -1342,7 +1421,7 @@ namespace ConstructionSetExtender
 			break;
 		}
 
-		if (PluginError == false)
+		if (PluginError)
 			BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
 
 		BGSEECONSOLE->ToggleWarningLogging(WarningState);

@@ -289,8 +289,8 @@ public:
 	virtual void				Reset(void) = 0;
 	virtual void				HandleDeviceReset(void) = 0;
 	virtual void				Dtor(bool ReleaseMemory) = 0;
-	virtual void				SetPreviewNode(NiNode* Node) = 0;
-	virtual void				VFn18(NiNode* Unk01) = 0;
+	virtual void				AddPreviewNode(NiNode* Node) = 0;			// adds the node to the scene root and increments its ref count
+	virtual void				RemovePreviewNode(NiNode* Node) = 0;		// removes the node from the scene root and decrements its ref count
 	virtual void				CenterCamera(void) = 0;
 	virtual void				HandleResize(void) = 0;
 	virtual void				Present(float Time = 0.f) = 0;
@@ -315,6 +315,11 @@ public:
 	/*64*/ ShadowSceneNode*			previewSceneRoot;		// smart ptr, shared by all preview controls, destroyed with the last one and created with the first
 
 	// methods
+	void							RemovePreviewNode(NiNode* Node);	// this override appears to be bugged in the editor code as it calls AddPreviewNode
+																		// so manually call the correct TESRenderControl method
+																		// probably the root cause for the vanilla ModelLoader NIF leakage
+	void							RemoveGroundPlane();
+
 	static TESPreviewControl*		CreatePreviewControl(HWND Dialog, const TESRenderControl::Parameters* Params);
 	static void						UpdatePreviewWindows(bool RefreshRenderWindow = true);
 

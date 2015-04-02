@@ -14,3 +14,8 @@ UInt32 TESBoundObject::DecrementObjectRefCount()
 {
 	return thisVirtualCall<UInt32>(0x154, this);
 }
+
+void TESBoundObject::CalculateBounds(NiNode* Object3D)
+{
+	thisCall<void>(0x00513A80, this, Object3D);
+}

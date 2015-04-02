@@ -78,6 +78,7 @@ public:
 	// methods
 	UInt32							IncrementObjectRefCount();
 	UInt32							DecrementObjectRefCount();
+	void							CalculateBounds(NiNode* Object3D);
 };
 STATIC_ASSERT(sizeof(TESBoundObject) == 0x58);
 

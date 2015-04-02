@@ -19,7 +19,8 @@ namespace ConstructionSetExtender
 		{
 			Detach();
 
-			TESRender::DeleteNiNode(RootNode);
+			if (RootNode)
+				TESRender::DeleteNiNode(RootNode);
 
 			for each (auto Itr in References)
 				Itr->DeleteInstance();
@@ -38,16 +39,21 @@ namespace ConstructionSetExtender
 			SME_ASSERT(RootNode);
 
 			Parent = To;
-			Parent->SetPreviewNode(RootNode);
+			Parent->AddPreviewNode(RootNode);
+			Parent->CenterCamera();
 		}
 
 		void PrefabObjectPreviewData::Detach()
 		{
 			if (Parent)
 			{
-				Parent->VFn18(RootNode);
+				SME_ASSERT(RootNode->m_uiRefCount == 1);
+				Parent->TESPreviewControl::RemovePreviewNode(RootNode);
+				Parent->CenterCamera();
+				Parent->Present();
 
 				Parent = NULL;
+				RootNode = NULL;
 			}
 		}
 
@@ -171,23 +177,35 @@ namespace ConstructionSetExtender
 			return SerializationState;
 		}
 
-		PrefabObject::PrefabObject(const char* FilePath) :
+		PrefabObject::PrefabObject(const char* SourceFilePath, const char* RepositoryPath, bool OverwriteExisting) :
 			SourceFile(new CSEPluginFileWrapper),
 			Serializer(new CSEObjectRefCollectionSerializer(false)),
 			Instantiator(new CSEObjectRefCollectionInstantiator),
 			SerializationState(kState_None),
 			DeserializationState(kState_None),
-			FileName("")
+			FileName(""),
+			FilePath("")
 		{
-			SME_ASSERT(FilePath);
+			SME_ASSERT(SourceFilePath && RepositoryPath);
 
-			if (SourceFile->Construct(FilePath) == false)
+			if (SourceFile->Construct(SourceFilePath, OverwriteExisting) == false)
 			{
 				DeserializationState = kState_Bad;
 				SerializationState = kState_Bad;
 			}
 
-			FileName = SourceFile->GetWrappedPlugin()->fileName;
+			FilePath = SourceFilePath;
+
+			while (FilePath.find("\\\\") != -1)
+				FilePath.replace(FilePath.find("\\\\"), 2, "\\");
+
+			std::string RepoPath(RepositoryPath);
+			while (RepoPath.find("\\\\") != -1)
+				RepoPath.replace(RepoPath.find("\\\\"), 2, "\\");
+
+			SME_ASSERT(FilePath.find(RepoPath) == 0);
+			FileName = FilePath.substr(RepoPath.length());
+			FileName = FileName.substr(0, FileName.rfind("."));
 		}
 
 		PrefabObject::~PrefabObject()
@@ -277,7 +295,7 @@ namespace ConstructionSetExtender
 				case IDC_OBJECTPREFAB_PREVIEWTIMERID:
 					Result = TRUE;
 					if (Instance.PreviewData)
-						Instance.Renderer->Present(0.0);
+						Instance.Renderer->Present();
 
 					break;
 				}
@@ -319,8 +337,7 @@ namespace ConstructionSetExtender
 
 									int NewIndex = ChangeData->iItem;
 									Instance.CurrentSelection = NULL;
-									if (Instance.PreviewData)
-										SAFEDELETE(Instance.PreviewData);
+									SAFEDELETE(Instance.PreviewData);
 
 									PrefabObject* NewSelection = (PrefabObject*)ChangeData->lParam;
 									if (NewIndex != -1 && NewSelection)
@@ -334,8 +351,10 @@ namespace ConstructionSetExtender
 										else
 											Instance.PreviewData->Attach(Instance.Renderer);
 									}
+									else
+										TESListView::ClearItems(PrefabDetailsList);
 
-									Instance.UpdatePreview();
+									Instance.Renderer->Present();
 								}
 							}
 						}
@@ -369,17 +388,17 @@ namespace ConstructionSetExtender
 			HWND LoadedPrefabsList = GetDlgItem(Dialog, IDC_OBJECTPREFAB_LOADEDPREFABSLIST);
 			HWND PrefabDetailsList = GetDlgItem(Dialog, IDC_OBJECTPREFAB_CURRENTDETAILSLIST);
 
-			TESListView::AddColumnHeader(LoadedPrefabsList, 0, "Prefab Collection", 225);
+			TESListView::AddColumnHeader(LoadedPrefabsList, 0, "Prefab Collection", 200);
 
-			TESListView::AddColumnHeader(PrefabDetailsList, 0, "Reference", 75);
-			TESListView::AddColumnHeader(PrefabDetailsList, 1, "Position", 75);
-			TESListView::AddColumnHeader(PrefabDetailsList, 2, "Rotation", 75);
-			TESListView::AddColumnHeader(PrefabDetailsList, 3, "Scale", 30);
-			TESListView::AddColumnHeader(PrefabDetailsList, 4, "Base Form", 75);
-			TESListView::AddColumnHeader(PrefabDetailsList, 5, "Type", 60);
-			TESListView::AddColumnHeader(PrefabDetailsList, 6, "Existing Base Form", 50);
-			TESListView::AddColumnHeader(PrefabDetailsList, 7, "Enable State Parent", 75);
-			TESListView::AddColumnHeader(PrefabDetailsList, 8, "Parent Opposite State", 30);
+			TESListView::AddColumnHeader(PrefabDetailsList, 0, "Reference", 100);
+			TESListView::AddColumnHeader(PrefabDetailsList, 1, "Position", 1);
+			TESListView::AddColumnHeader(PrefabDetailsList, 2, "Rotation", 1);
+			TESListView::AddColumnHeader(PrefabDetailsList, 3, "Scale", 1);
+			TESListView::AddColumnHeader(PrefabDetailsList, 4, "Base Form", 150);
+			TESListView::AddColumnHeader(PrefabDetailsList, 5, "Type", 100);
+			TESListView::AddColumnHeader(PrefabDetailsList, 6, "Existing Base Form", 25);
+			TESListView::AddColumnHeader(PrefabDetailsList, 7, "Enable State Parent", 100);
+			TESListView::AddColumnHeader(PrefabDetailsList, 8, "Parent Opposite State", 25);
 
 			MainDialog = Dialog;
 
@@ -388,6 +407,8 @@ namespace ConstructionSetExtender
 			Params.previewOutputCtrlID = IDC_OBJECTPREFAB_PREVIEW;
 			Params.renderTargetWidth = Params.renderTargetHeight = 1024.f;
 			Renderer = TESPreviewControl::CreatePreviewControl(Dialog, &Params);
+			TimeCounter = -1;
+			Renderer->RemoveGroundPlane();
 
 			SetTimer(Dialog, IDC_OBJECTPREFAB_FILTERINPUTTIMERID, 500, NULL);
 			SetTimer(Dialog, IDC_OBJECTPREFAB_PREVIEWTIMERID, 5, NULL);
@@ -408,7 +429,7 @@ namespace ConstructionSetExtender
 
 			MainDialog = NULL;
 
-			TimeCounter = 0;
+			TimeCounter = -1;
 			Renderer = NULL;
 			ExtraDataList = NULL;
 
@@ -474,7 +495,7 @@ namespace ConstructionSetExtender
 					std::string FilePath(Itr.GetFullPath());
 					if (FilePath.rfind(kPrefabFileExtension) == FilePath.length() - strlen(kPrefabFileExtension))
 					{
-						PrefabObjectHandleT Prefab(new PrefabObject(FilePath.c_str()));
+						PrefabObjectHandleT Prefab(new PrefabObject(FilePath.c_str(), kRepositoryPath().c_str(), false));
 						if (Prefab->DeserializationState == PrefabObject::kState_Bad || Prefab->Deserialize() == PrefabObject::kState_Bad)
 							BGSEECONSOLE_MESSAGE("Couldn't load prefab collection at %s", FilePath.c_str());
 						else
@@ -488,8 +509,10 @@ namespace ConstructionSetExtender
 		{
 			SME_ASSERT(MainDialog);
 
+			SAFEDELETE(PreviewData);
+
 			LoadedPrefabs.clear();
-			LoadPrefabsInDirectory(kRepositoryPath.GetFullPath().c_str());
+			LoadPrefabsInDirectory(kRepositoryPath().c_str());
 
 			RefreshPrefabList();
 		}
@@ -498,43 +521,77 @@ namespace ConstructionSetExtender
 		{
 			SME_ASSERT(MainDialog);
 
+			if (_RENDERSEL->selectionCount == 0)
+			{
+				BGSEEUI->MsgBoxE(MainDialog, MB_OK, "The Render Window Selection is empty.");
+				return;
+			}
+
 			std::string FilePath, FileName;
 			if (ShowFileDialog(true, FilePath, FileName))
 			{
-				PrefabObjectHandleT Prefab(new PrefabObject(FilePath.c_str()));
 				BGSEditorExtender::BGSEEFormListT Selection;
-
-				bool SelectionCheck = true;
+				bool Result = true;
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
 					TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
 					if (Ref == NULL)
 					{
-						SelectionCheck = false;
-						break;
+						BGSEECONSOLE_MESSAGE("Object %08X is not a reference!", Itr->Data->formID);
+						Result = false;
 					}
 
-					Selection.push_back(new CSEFormWrapper(Ref));
+					if (Result)
+						Selection.push_back(new CSEFormWrapper(Ref));
 				}
 
-				if (SelectionCheck)
+				if (Result)
 				{
-					if (Prefab->Serialize(Selection))
+					PrefabObjectHandleT ExistingPrefab;
+					PrefabObjectHandleT NewPrefab;
+					bool PrefabExists = false;
+
+					if ((PrefabExists = GetExistingPrefab(FilePath.c_str(), ExistingPrefab)) == false)
+						NewPrefab = PrefabObjectHandleT(new PrefabObject(FilePath.c_str(), kRepositoryPath().c_str(), false));
+					else
 					{
-						LoadedPrefabs.push_back(Prefab);
+						// create a temp file to check if the serialization works out
+						// so the old file will not get overwritten if there are errors
+						std::string TempFilePath(kRepositoryPath());
+						TempFilePath += "TempPrefab.";
+						TempFilePath += kPrefabFileExtension;
+
+						NewPrefab = PrefabObjectHandleT(new PrefabObject(TempFilePath.c_str(), kRepositoryPath().c_str(), true));
+					}
+
+					if (NewPrefab->Serialize(Selection, true) == PrefabObject::kState_Good)
+					{
+						if (PrefabExists)
+						{
+							// delete temp file and update the existing prefab
+							NewPrefab->SourceFile->Delete();
+							ExistingPrefab->Serialize(Selection, true);
+							SME_ASSERT(ExistingPrefab->SerializationState == PrefabObject::kState_Good);
+							ExistingPrefab->Deserialize(true);
+							SME_ASSERT(ExistingPrefab->DeserializationState == PrefabObject::kState_Good);
+						}
+						else
+							LoadedPrefabs.push_back(NewPrefab);
+
 						RefreshPrefabList();
 					}
 					else
 					{
-						SelectionCheck = false;
-						Prefab->SourceFile->Delete();
+						Result = false;
+						if (PrefabExists)
+							NewPrefab->SourceFile->Delete();
 					}
 				}
 
-				if (SelectionCheck == false)
+				if (Result == false)
 				{
 					BGSEEUI->MsgBoxE(MainDialog, MB_OK,
-									 "Couldn't create a prefab collection from the current Render Window selection. Check the console for more information.");
+									 "Couldn't create a prefab collection from the current Render Window selection.\n\nCheck the console for more information.");
 				}
 
 				for each (auto Itr in Selection)
@@ -551,14 +608,8 @@ namespace ConstructionSetExtender
 			if (CurrentSelection)
 			{
 				if (CurrentSelection->Instantiate() == false)
-					BGSEEUI->MsgBoxE(MainDialog, MB_OK, "Couldn't instantiate the current selection. Check the console for more information.");
+					BGSEEUI->MsgBoxE(MainDialog, MB_OK, "Couldn't instantiate the current selection.\n\nCheck the console for more information.");
 			}
-		}
-
-		void CSEObjectPrefabManager::UpdatePreview()
-		{
-			SME_ASSERT(MainDialog);
-			Instance.Renderer->Present(0.0);
 		}
 
 		bool CSEObjectPrefabManager::ShowFileDialog(bool Save, std::string& OutPath, std::string& OutName)
@@ -591,6 +642,20 @@ namespace ConstructionSetExtender
 			}
 			else
 				return false;
+		}
+
+		bool CSEObjectPrefabManager::GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out)
+		{
+			for each (auto Itr in LoadedPrefabs)
+			{
+				if (!_stricmp(Itr->FilePath.c_str(), FilePath))
+				{
+					Out = Itr;
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		CSEObjectPrefabManager::CSEObjectPrefabManager() :

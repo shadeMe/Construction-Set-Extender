@@ -252,3 +252,13 @@ TESPreviewControl* TESPreviewControl::CreatePreviewControl( HWND Dialog, const T
 {
 	return cdeclCall<TESPreviewControl*>(0x00446440, Dialog, Params);
 }
+
+void TESPreviewControl::RemovePreviewNode(NiNode* Node)
+{
+	thisCall<void>(0x0044D960, this, Node);
+}
+
+void TESPreviewControl::RemoveGroundPlane()
+{
+	thisCall<void>(0x0044BCF0, this);
+}

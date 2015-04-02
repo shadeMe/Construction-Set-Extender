@@ -113,3 +113,8 @@ bool TESFile::GetNextChunk()
 {
 	return thisCall<bool>(0x00486420, this);
 }
+
+void TESFile::GetChunkData(void* OutBuffer, UInt32 BufferLength)
+{
+	thisCall<void>(0x004879D0, this, OutBuffer, BufferLength);
+}

@@ -793,7 +793,7 @@ namespace ConstructionSetExtender
 			if (PreviewRef)
 			{
 				NiNode* Node = PreviewRef->GetNiNode();
-				Renderer->VFn18(Node);
+				Renderer->TESPreviewControl::RemovePreviewNode(Node);
 				PreviewRef->SetNiNode(NULL);
 
 				PreviewRef->DeleteInstance();
@@ -808,7 +808,7 @@ namespace ConstructionSetExtender
 				PreviewRef = ActiveObject->Instantiate(Zero, true);
 				NiNode* Node = PreviewRef->GenerateNiNode();
 				if (Node)
-					Renderer->SetPreviewNode(Node);
+					Renderer->AddPreviewNode(Node);
 				else
 				{
 					PreviewRef->DeleteInstance();

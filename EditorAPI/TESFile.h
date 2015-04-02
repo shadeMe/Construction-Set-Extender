@@ -174,6 +174,7 @@ public:
 
 	bool						GetNextChunk();
 	void						GetChunkData4Bytes(UInt32* Out);
+	void						GetChunkData(void* OutBuffer, UInt32 BufferLength);
 
 	void						OpenGroupRecord(RecordInfo* GroupRecord);
 	void						CloseGroupRecord();

@@ -34,7 +34,7 @@ namespace ConstructionSetExtender
 		CSEPluginFileWrapper();
 		virtual ~CSEPluginFileWrapper();
 
-		virtual bool						Construct(const char* FileName);
+		virtual bool						Construct(const char* FileName, bool OverwriteExisting);
 		virtual void						Purge(void);
 
 		virtual bool						Open(bool ForWriting);
@@ -47,9 +47,9 @@ namespace ConstructionSetExtender
 
 		virtual int							GetErrorState(void) const;
 		virtual const char*					GetFileName(void) const;
+		virtual void						Delete(void);
 
 		TESFile*							GetWrappedPlugin(void) const;
-		void								Delete(void);
 	};
 
 	class ICSEFormCollectionSerializer : public BGSEditorExtender::BGSEEFormCollectionSerializer
@@ -179,6 +179,7 @@ namespace ConstructionSetExtender
 
 		void							FreeDeserializationBuffers();
 		bool							IsBaseFormTemporary(TESForm* Form) const;	// returns true if the form is found in the deserialization buffer
+		bool							IsBaseFormTemporary(UInt32 FormID) const;
 		bool							ResolveBaseForms();							// returns false if the resolution wasn't successful
 
 		CSEObjectRefDescriptor*			GetDescriptor(TESForm* Form) const;

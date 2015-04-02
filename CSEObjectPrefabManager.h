@@ -41,13 +41,14 @@ namespace ConstructionSetExtender
 			UInt8										SerializationState;
 			UInt8										DeserializationState;
 			std::string									FileName;
+			std::string									FilePath;			// as passed to the c'tor
 
 			void										SetInDialog(HWND Dialog);
 
 			UInt8										Deserialize(bool Force = false);				// returns the state
 			UInt8										Serialize(BGSEditorExtender::BGSEEFormListT& Forms, bool Force = false);
 		public:
-			PrefabObject(const char* FilePath);
+			PrefabObject(const char* SourceFilePath, const char* RepositoryPath, bool OverwriteExisting);
 			~PrefabObject();
 
 			PrefabObjectPreviewData*					GeneratePreviewData(TESPreviewControl* PreviewControl);		// caller takes ownership of pointer
@@ -86,9 +87,8 @@ namespace ConstructionSetExtender
 			void						NewPrefab();
 			void						InstatiateSelection();
 
-			void						UpdatePreview();
-
 			bool						ShowFileDialog(bool Save, std::string& OutPath, std::string& OutName);
+			bool						GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out);
 		public:
 			CSEObjectPrefabManager();
 			~CSEObjectPrefabManager();
