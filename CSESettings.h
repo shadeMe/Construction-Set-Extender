@@ -32,6 +32,7 @@ namespace ConstructionSetExtender
 			extern INISetting					kFormOverrideLevel3BackColor;
 
 			extern INISetting					kMultiplePreviewWindows;
+			extern INISetting					kPreserveEditorDialogLocations;
 		}
 
 		namespace General

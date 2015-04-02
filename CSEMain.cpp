@@ -48,7 +48,7 @@ namespace ConstructionSetExtender
 		RegisterRelease(6, 2, "Talkative Badger");
 		RegisterRelease(6, 3, "Drunken Glaswegian");
 		RegisterRelease(6, 4, "Subterranean Homesick Alien");
-		RegisterRelease(7, 0, "Bull-buggering Bollock");
+		RegisterRelease(7, 0, "Bull-buggering Bollocks");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
@@ -349,10 +349,10 @@ namespace ConstructionSetExtender
 
 	bool CSEDeinitCallback::Handle(void* Parameter)
 	{
-		TESDialog::WritePositionToINI(*TESCSMain::WindowHandle, NULL);
-		TESDialog::WritePositionToINI(*TESCellViewWindow::WindowHandle, "Cell View");
-		TESDialog::WritePositionToINI(*TESObjectWindow::WindowHandle, "Object Window");
-		TESDialog::WritePositionToINI(*TESRenderWindow::WindowHandle, "Render Window");
+		TESDialog::WriteBoundsToINI(*TESCSMain::WindowHandle, NULL);
+		TESDialog::WriteBoundsToINI(*TESCellViewWindow::WindowHandle, "Cell View");
+		TESDialog::WriteBoundsToINI(*TESObjectWindow::WindowHandle, "Object Window");
+		TESDialog::WriteBoundsToINI(*TESRenderWindow::WindowHandle, "Render Window");
 
 		BGSEECONSOLE_MESSAGE("Flushed CS INI Settings");
 

@@ -25,6 +25,7 @@ namespace ConstructionSetExtender
 			Depot.push_back(&Dialogs::kFormOverrideLevel3ForeColor);
 			Depot.push_back(&Dialogs::kFormOverrideLevel3BackColor);
 			Depot.push_back(&Dialogs::kMultiplePreviewWindows);
+			Depot.push_back(&Dialogs::kPreserveEditorDialogLocations);
 
 			Depot.push_back(&General::kShowNumericEditorIDWarning);
 			Depot.push_back(&General::kCrashHandlerMode);
@@ -106,6 +107,7 @@ namespace ConstructionSetExtender
 			INISetting		kFormOverrideLevel3BackColor("FormOverrideLevel3BackColor", DIALOGS_INISECTION, "Background color of overridden form items (RGB)", "0,0,0");
 
 			INISetting		kMultiplePreviewWindows("MultiplePreviewWindows", DIALOGS_INISECTION, "Allow multiple preview windows", (SInt32)1);
+			INISetting		kPreserveEditorDialogLocations("PreserveEditorDialogLocations", DIALOGS_INISECTION, "Save/Load the desktop locations of editor dialogs to/from the INI file", (SInt32)1);
 		}
 
 		namespace General

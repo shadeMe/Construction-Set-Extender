@@ -292,6 +292,8 @@ namespace ConstructionSetExtender
 		LRESULT CALLBACK		LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 
+		LRESULT CALLBACK		WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+
 		BOOL CALLBACK			AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TESFileSaveDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -311,6 +313,8 @@ namespace ConstructionSetExtender
 #define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
 // wParam = CSEFaceGenVoicePreviewData*
 #define WM_FACEGENPREVIEW_PLAYVOICE				(WM_USER + 2020)
+// wParam = std::string* Out
+#define WM_WINDOWPOS_GETCLASSNAME				(WM_USER + 2021)
 
 // custom control IDs, as baked into the dialog templates
 #define IDC_CSE_DATA_SETSTARTUPPLUGIN           9906

@@ -73,12 +73,12 @@ FormEditParam::FormEditParam(TESForm* Form)
 	typeID = Form->formType;
 }
 
-UInt32 TESDialog::WritePositionToINI(HWND Handle, const char* WindowClassName)
+UInt32 TESDialog::WriteBoundsToINI(HWND Handle, const char* WindowClassName)
 {
 	return cdeclCall<UInt32>(0x00417510, Handle, WindowClassName);
 }
 
-bool TESDialog::GetPositionFromINI(const char* WindowClassName, LPRECT OutRect)
+bool TESDialog::ReadBoundsFromINI(const char* WindowClassName, LPRECT OutRect)
 {
 	return cdeclCall<bool>(0x004176D0, WindowClassName, OutRect);
 }
@@ -180,14 +180,18 @@ HWND TESDialog::ShowFormEditDialog(TESForm* Form)
 void TESDialog::ShowScriptEditorDialog(TESForm* InitScript)
 {
 	Script* AuxScript = CS_CAST(InitScript, TESForm, Script);
-	RECT ScriptEditorLoc;
 	ComponentDLLInterface::ScriptData* Data = NULL;
 
 	if (AuxScript)
 		Data = new ComponentDLLInterface::ScriptData(AuxScript);
 
-	TESDialog::GetPositionFromINI("Script Edit", &ScriptEditorLoc);
-	ConstructionSetExtender::CLIWrapper::Interfaces::SE->InstantiateEditor(Data, ScriptEditorLoc.left, ScriptEditorLoc.top, ScriptEditorLoc.right, ScriptEditorLoc.bottom);
+	RECT ScriptEditorLoc;
+	TESDialog::ReadBoundsFromINI("Script Edit", &ScriptEditorLoc);
+	ConstructionSetExtender::CLIWrapper::Interfaces::SE->InstantiateEditor(Data,
+																		   ScriptEditorLoc.left,
+																		   ScriptEditorLoc.top,
+																		   ScriptEditorLoc.right,
+																		   ScriptEditorLoc.bottom);
 }
 
 DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)

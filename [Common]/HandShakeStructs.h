@@ -337,6 +337,7 @@ namespace ComponentDLLInterface
 				case kOBSEParamType_FormOrNumber: return "Form or Number";
 				case kOBSEParamType_StringOrNumber: return "String or Number";
 				case kOBSEParamType_Pair: return "Pair";
+				case kOBSEParamType_ArrayIndex | kOBSEParamType_Slice: return "Array Index or Slice";
 
 				case kParamType_String: return "String";
 				case kParamType_Integer: return "Integer";

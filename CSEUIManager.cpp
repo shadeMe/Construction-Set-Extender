@@ -3155,7 +3155,7 @@ namespace ConstructionSetExtender
 						SME::UIHelpers::GetClientRectInitBounds(CellFilterEditBox, hWnd, &xData->CellFilterEditBox);
 						SME::UIHelpers::GetClientRectInitBounds(CellFilterLabel, hWnd, &xData->CellFilterLabel);
 
-						TESDialog::GetPositionFromINI("Cell View", &Bounds);
+						TESDialog::ReadBoundsFromINI("Cell View", &Bounds);
 						SetWindowPos(hWnd, NULL, Bounds.left, Bounds.top, Bounds.right, Bounds.bottom, SWP_NOZORDER);
 					}
 
@@ -4585,7 +4585,7 @@ namespace ConstructionSetExtender
 					case LVN_BEGINLABELEDIT:
 						{
 							// prevent the modification of GMST editorIDs, they aren't meant to be modified
-							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, 0), BSExtraData, DialogExtraParam);
+							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param), BSExtraData, DialogExtraParam);
 							SME_ASSERT(xParam);
 
 							if (xParam->formType == TESForm::kFormType_GMST)
@@ -5395,6 +5395,156 @@ namespace ConstructionSetExtender
 			return DlgProcResult;
 		}
 
+		LRESULT CALLBACK WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+												  bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData)
+		{
+			LRESULT DlgProcResult = FALSE;
+			Return = false;
+
+			switch (uMsg)
+			{
+			case WM_WINDOWPOS_GETCLASSNAME:
+				{
+					Return = true;
+					DlgProcResult = TRUE;
+
+					BGSEditorExtender::ResourceTemplateT Template = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
+					std::string* OutClassName = (std::string*)wParam;
+
+					switch (Template)
+					{
+					// TESBoundObject/FormEdit Dialogs
+					case TESDialog::kDialogTemplate_Weapon:
+					case TESDialog::kDialogTemplate_Armor:
+					case TESDialog::kDialogTemplate_Clothing:
+					case TESDialog::kDialogTemplate_MiscItem:
+					case TESDialog::kDialogTemplate_Static:
+					case TESDialog::kDialogTemplate_Reference:
+					case TESDialog::kDialogTemplate_Apparatus:
+					case TESDialog::kDialogTemplate_Book:
+					case TESDialog::kDialogTemplate_Container:
+					case TESDialog::kDialogTemplate_Activator:
+					case TESDialog::kDialogTemplate_AIForm:
+					case TESDialog::kDialogTemplate_Light:
+					case TESDialog::kDialogTemplate_Potion:
+					case TESDialog::kDialogTemplate_Enchantment:
+					case TESDialog::kDialogTemplate_LeveledCreature:
+					case TESDialog::kDialogTemplate_Sound:
+					case TESDialog::kDialogTemplate_Door:
+					case TESDialog::kDialogTemplate_LeveledItem:
+					case TESDialog::kDialogTemplate_LandTexture:
+					case TESDialog::kDialogTemplate_SoulGem:
+					case TESDialog::kDialogTemplate_Ammo:
+					case TESDialog::kDialogTemplate_Spell:
+					case TESDialog::kDialogTemplate_Flora:
+					case TESDialog::kDialogTemplate_Tree:
+					case TESDialog::kDialogTemplate_CombatStyle:
+					case TESDialog::kDialogTemplate_Water:
+					case TESDialog::kDialogTemplate_NPC:
+					case TESDialog::kDialogTemplate_Creature:
+					case TESDialog::kDialogTemplate_Grass:
+					case TESDialog::kDialogTemplate_Furniture:
+					case TESDialog::kDialogTemplate_LoadingScreen:
+					case TESDialog::kDialogTemplate_Ingredient:
+					case TESDialog::kDialogTemplate_LeveledSpell:
+					case TESDialog::kDialogTemplate_AnimObject:
+					case TESDialog::kDialogTemplate_Subspace:
+					case TESDialog::kDialogTemplate_EffectShader:
+					case TESDialog::kDialogTemplate_SigilStone:
+					// TESFormIDListView Dialogs
+					case TESDialog::kDialogTemplate_Faction:
+					case TESDialog::kDialogTemplate_Race:
+					case TESDialog::kDialogTemplate_Class:
+					case TESDialog::kDialogTemplate_Skill:
+					case TESDialog::kDialogTemplate_EffectSetting:
+					case TESDialog::kDialogTemplate_GameSetting:
+					case TESDialog::kDialogTemplate_Globals:
+					case TESDialog::kDialogTemplate_Birthsign:
+					case TESDialog::kDialogTemplate_Climate:
+					case TESDialog::kDialogTemplate_Worldspace:
+					case TESDialog::kDialogTemplate_Hair:
+					case TESDialog::kDialogTemplate_Eyes:
+					case TESDialog::kDialogTemplate_Weather:
+						{
+							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param),
+															   BSExtraData, DialogExtraParam);
+							SME_ASSERT(xParam);
+
+							*OutClassName = TESForm::GetFormTypeIDLongName(xParam->formType);
+						}
+						break;
+					// Misc Dialogs
+					case TESDialog::kDialogTemplate_CellEdit:
+						*OutClassName = "Cell Edit";
+						break;
+					case TESDialog::kDialogTemplate_SearchReplace:
+						*OutClassName = "Search Replace";
+						break;
+					case TESDialog::kDialogTemplate_LandscapeEdit:
+						*OutClassName = "Landscape Edit";
+						break;
+					case TESDialog::kDialogTemplate_FindText:
+						*OutClassName = "Find Text";
+						break;
+					case TESDialog::kDialogTemplate_RegionEditor:
+						*OutClassName = "Region Editor";
+						break;
+					case TESDialog::kDialogTemplate_HeightMapEditor:
+						*OutClassName = "Height Map Editor";
+						break;
+					case TESDialog::kDialogTemplate_IdleAnimations:
+						*OutClassName = "Idle Anims";
+						break;
+					case TESDialog::kDialogTemplate_AIPackages:
+						*OutClassName = "AI Packages";
+						break;
+					case TESDialog::kDialogTemplate_TextureUse:
+						*OutClassName = "Texture Use";
+						break;
+					case TESDialog::kDialogTemplate_Package:
+						*OutClassName = "Package";
+						break;
+					case TESDialog::kDialogTemplate_ChooseReference:
+						*OutClassName = "Choose Ref";
+						break;
+					default:
+						*OutClassName = "";
+						break;
+					}
+				}
+
+				break;
+			case WM_INITDIALOG:
+				if (Settings::Dialogs::kPreserveEditorDialogLocations().i)
+				{
+					std::string ClassName = "";
+					SendMessage(hWnd, WM_WINDOWPOS_GETCLASSNAME, (WPARAM)&ClassName, NULL);
+
+					if (ClassName.length())
+					{
+						RECT Bounds = { 0 };
+						if (TESDialog::ReadBoundsFromINI(ClassName.c_str(), &Bounds))
+							SetWindowPos(hWnd, HWND_TOP, Bounds.left, Bounds.top, 0, 0, SWP_NOSIZE);
+					}
+				}
+
+				break;
+			case WM_DESTROY:
+				if (Settings::Dialogs::kPreserveEditorDialogLocations().i)
+				{
+					std::string ClassName = "";
+					SendMessage(hWnd, WM_WINDOWPOS_GETCLASSNAME, (WPARAM)&ClassName, NULL);
+
+					if (ClassName.length())
+						TESDialog::WriteBoundsToINI(hWnd, ClassName.c_str());
+				}
+
+				break;
+			}
+
+			return DlgProcResult;
+		}
+
 		BOOL CALLBACK AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			switch (uMsg)
@@ -6099,6 +6249,72 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectTopic, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SelectQuests, CommonDialogExtraFittingsSubClassProc);
 				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_UseReport, CommonDialogExtraFittingsSubClassProc);
+			}
+
+			// window pos saver subclass
+			{
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandTexture, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Enchantment, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Spell, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Sound, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Activator, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Apparatus, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Armor, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Book, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Clothing, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Container, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Door, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ingredient, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Light, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_MiscItem, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Static, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Grass, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Tree, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Flora, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Furniture, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weapon, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Ammo, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_NPC, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Creature, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledCreature, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SoulGem, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Potion, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Subspace, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SigilStone, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledItem, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Package, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CombatStyle, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LoadingScreen, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LeveledSpell, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AnimObject, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Water, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectShader, WindowPosDlgSubClassProc);
+
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Faction, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Race, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Class, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Skill, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_EffectSetting, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_GameSetting, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Globals, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Birthsign, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Climate, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Worldspace, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Hair, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Eyes, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Weather, WindowPosDlgSubClassProc);
+
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_SearchReplace, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_LandscapeEdit, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RegionEditor, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_HeightMapEditor, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_IdleAnimations, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_AIPackages, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_TextureUse, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_Package, WindowPosDlgSubClassProc);
+				BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ChooseReference, WindowPosDlgSubClassProc);
 			}
 
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_FindText, FindTextDlgSubclassProc);

@@ -479,8 +479,8 @@ public:
 	};
 
 	// methods
-	static UInt32							WritePositionToINI(HWND Handle, const char* WindowClassName);
-	static bool								GetPositionFromINI(const char* WindowClassName, LPRECT OutRect);
+	static UInt32							WriteBoundsToINI(HWND Handle, const char* WindowClassName);
+	static bool								ReadBoundsFromINI(const char* WindowClassName, LPRECT OutRect);
 
 	static UInt32							GetDialogTemplateForFormType(UInt8 FormTypeID);
 	static TESObjectREFR*					ShowSelectReferenceDialog(HWND Parent, TESObjectREFR* DefaultSelection);
