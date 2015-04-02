@@ -43,7 +43,7 @@ namespace BGSEditorExtender
 		this->Operator = Operator;
 		this->Buffer = PluginWrapper;
 
-		Initialized = Buffer->Construct(kClipboardBufferPath);
+		Initialized = Buffer->Construct(kClipboardBufferPath, true);
 
 		return Initialized;
 	}

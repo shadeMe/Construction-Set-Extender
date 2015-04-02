@@ -31,8 +31,8 @@ namespace BGSEditorExtender
 			;//
 		}
 
-		virtual bool						Construct(const char* FileName) = 0;			// creates and initializes an instance of the wrapped class
-		virtual void						Purge(void) = 0;								// deletes the file
+		virtual bool						Construct(const char* FileName, bool OverwriteExisting) = 0;			// creates and initializes an instance of the wrapped class, overwrite deletes the existing file and creates a zero-byte replacement in its place
+		virtual void						Purge(void) = 0;								// deletes the contents of the file
 
 		virtual bool						Open(bool ForWriting) = 0;						// these return false on error
 		virtual bool						SaveHeader(void) = 0;
@@ -44,6 +44,7 @@ namespace BGSEditorExtender
 
 		virtual int							GetErrorState(void) const = 0;
 		virtual const char*					GetFileName(void) const = 0;
+		virtual void						Delete(void) = 0;								// removes the file from disk
 	};
 
 	// serialize/deserialize forms to/from a plugin file
