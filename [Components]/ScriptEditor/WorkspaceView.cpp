@@ -2642,7 +2642,7 @@ namespace ConstructionSetExtender
 			Concrete->AttachPanel->Controls->Add(Model->InternalView);
 		}
 
-		void ConcreteWorkspaceViewController::DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
+		void ConcreteWorkspaceViewController::DetachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model)
 		{
 			Debug::Assert(View != nullptr);
 			Debug::Assert(Model != nullptr);

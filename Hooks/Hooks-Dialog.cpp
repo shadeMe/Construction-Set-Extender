@@ -5,6 +5,7 @@
 #include "[Common]\CLIWrapper.h"
 #include "..\CSEDialogImposterManager.h"
 #include "..\CSEObjectPaletteManager.h"
+#include "..\CSEObjectPrefabManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
@@ -1899,6 +1900,7 @@ namespace ConstructionSetExtender
 		{
 			PreviewWindowImposterManager::Instance.DestroyImposters();
 			ObjectPalette::CSEObjectPaletteManager::Instance.Close();
+			ObjectPrefabs::CSEObjectPrefabManager::Instance.Close();
 		}
 
 		#define _hhName		TESDialogCloseAllDialogs

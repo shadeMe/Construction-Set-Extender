@@ -128,7 +128,9 @@ public:
 	void											ClearPluginArray();
 	void											AddTESObject(TESObject* Object);
 	bool											MoveReference(TESObjectCELL* Cell, TESObjectREFR* Reference);
-	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject, const Vector3* Position, const Vector3* Rotation, TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
+	TESObjectREFR*									PlaceObjectRef(TESObject* BaseObject,
+																   const Vector3* Position, const Vector3* Rotation,
+																   TESObjectCELL* Cell, TESWorldSpace* WorldSpace, TESObjectREFR* ExistingRef);
 													// places an object ref at the specified position in the specified cell/worldspace, with the specified base form.
 													// if existingRef is provided, it is used as the ref, otherwise a new ref is created.  returns null on failure
 	void											AutoSave(void);

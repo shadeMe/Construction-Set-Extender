@@ -19,6 +19,7 @@
 #include "CSEFormUndoStack.h"
 #include "CSEDialogImposterManager.h"
 #include "CSEObjectPaletteManager.h"
+#include "CSEObjectPrefabManager.h"
 
 #include <BGSEEToolBox.h>
 #include <BGSEEScript\CodaVM.h>
@@ -1706,6 +1707,10 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_OBJECTPALETTE:
 					ObjectPalette::CSEObjectPaletteManager::Instance.Show();
+
+					break;
+				case IDC_MAINMENU_OBJECTPREFABS:
+					ObjectPrefabs::CSEObjectPrefabManager::Instance.Show();
 
 					break;
 				default:

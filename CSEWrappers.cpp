@@ -86,9 +86,7 @@ namespace ConstructionSetExtender
 		CreateTempFile();
 		WrappedPlugin = TESFile::CreateInstance(BGSEEWORKSPACE->GetCurrentWorkspace(), FileName);
 		if (WrappedPlugin)
-		{
 			WrappedPlugin->SetFileIndex(0);
-		}
 
 		return WrappedPlugin != NULL;
 	}
@@ -166,6 +164,14 @@ namespace ConstructionSetExtender
 		SME_ASSERT(WrappedPlugin);
 
 		return PluginPath.c_str();
+	}
+
+	void CSEPluginFileWrapper::Delete(void)
+	{
+		SME_ASSERT(WrappedPlugin);
+
+		Close();
+		DeleteFile(PluginPath.c_str());
 	}
 
 	void ICSEFormCollectionSerializer::FreeBuffer(void)
@@ -252,6 +258,19 @@ namespace ConstructionSetExtender
 		}
 	}
 
+	bool ICSEFormCollectionSerializer::GetFormInBuffer(TESForm* Form) const
+	{
+		SME_ASSERT(Form);
+
+		for each (auto Itr in LoadedFormBuffer)
+		{
+			if (Itr == Form)
+				return true;
+		}
+
+		return false;
+	}
+
 	CSEDefaultFormCollectionInstantiator::~CSEDefaultFormCollectionInstantiator()
 	{
 		;//
@@ -275,6 +294,7 @@ namespace ConstructionSetExtender
 				TESForm* TempForm = Itr;
 				bool FormExists = false;
 				TESForm* CurrentForm = TESForm::LookupByEditorID(TempForm->GetEditorID());
+				SME_ASSERT(TempForm->IsReference() == false);
 
 				if (CurrentForm == NULL)
 					CurrentForm = TESForm::CreateInstance(TempForm->formType);
@@ -569,6 +589,23 @@ namespace ConstructionSetExtender
 		OutOffset = NewOrigin;
 	}
 
+	TESObject* CSEObjectRefCollectionInstantiator::InstantiateBaseForm(TESObjectREFR* Ref)
+	{
+		SME_ASSERT(Ref && Ref->baseForm);
+
+		TESForm* TempBase = Ref->baseForm;
+		TESForm* Existing = TESForm::LookupByEditorID(TempBase->GetEditorID());
+		SME_ASSERT(Existing == NULL);
+
+		TESForm* NewBase = TESForm::CreateInstance(TempBase->formType);
+		NewBase->CopyFrom(TempBase);
+		NewBase->SetFromActiveFile(true);
+		NewBase->SetEditorID(TempBase->GetEditorID());
+		_DATAHANDLER->AddForm(NewBase);
+
+		return dynamic_cast<TESObject*>(NewBase);
+	}
+
 	CSEObjectRefCollectionInstantiator::~CSEObjectRefCollectionInstantiator()
 	{
 		;//
@@ -634,9 +671,20 @@ namespace ConstructionSetExtender
 					for (std::map<TESObjectREFR*, const char*>::iterator Itr = RefEditorIDMap.begin(); Itr != RefEditorIDMap.end(); Itr++)
 					{
 						TESObjectREFR* TempRef = Itr->first;
-						TESObject* Base = CS_CAST(Itr->first->baseForm, TESForm, TESObject);
 						const char* EditorID = Itr->second;
-						SME_ASSERT(Base);
+						TESObject* Base = dynamic_cast<TESObject*>(TempRef->baseForm);
+						bool NewBaseForm = false;
+
+						if (Serializer->IsBaseFormTemporary(Base))
+						{
+							// instantiate base form
+#ifdef _DEBUG
+							BGSEECONSOLE_MESSAGE("Instantiating base form for reference %08X", TempRef->formID);
+#endif
+							Base = InstantiateBaseForm(TempRef);
+							SME_ASSERT(Base);
+							NewBaseForm = true;
+						}
 
 						Vector3 NewPosition(TempRef->position);
 						Vector3 NewRotation(TempRef->rotation);
@@ -665,6 +713,9 @@ namespace ConstructionSetExtender
 
 							NewRef->CopyFrom(TempRef);
 							NewRef->SetFromActiveFile(true);
+							if (NewBaseForm)
+								NewRef->SetBaseForm(Base);
+
 							_DATAHANDLER->PlaceObjectRef(Base, &NewPosition, &NewRotation, Interior, Worldspace, NewRef);
 
 							AllocationMap[TempRef] = NewRef;
@@ -717,6 +768,7 @@ namespace ConstructionSetExtender
 
 	bool CSEObjectRefCollectionInstantiator::CreatePreviewNode(CSEObjectRefCollectionSerializer* Data,
 															  TESPreviewControl* PreviewControl,
+															  TESFormListT& OutPreviewBaseForms,
 															  TESObjectREFRListT& OutPreviewRefs,
 															  NiNode** OutPreviewNode)
 	{
@@ -747,19 +799,34 @@ namespace ConstructionSetExtender
 			{
 				TESObjectREFR* NewRef = CS_CAST(TESForm::CreateInstance(TESForm::kFormType_REFR), TESForm, TESObjectREFR);
 				SME_ASSERT(NewRef);
-
 				NewRef->MarkAsTemporary();
 				NewRef->CopyFrom(Itr);
 
+				TESForm* NewBase = TESForm::CreateInstance(Itr->baseForm->formType);
+				SME_ASSERT(NewBase);
+				NewBase->MarkAsTemporary();
+				NewBase->CopyFrom(Itr->baseForm);
+
+				NewRef->SetBaseForm(NewBase);
 				PosOffset += NewRef->position;
 				NewRef->SetPosition(PosOffset);
+
 				NiNode* Ref3D = NewRef->GenerateNiNode();
 				if (Ref3D == NULL)
 				{
+					NewRef->DeleteInstance();
+					NewBase->DeleteInstance();
+
 					TESRender::DeleteNiNode(Root);
+
+					for each (auto Itr in OutPreviewBaseForms)
+						Itr->DeleteInstance();
+					OutPreviewBaseForms.clear();
+
 					for each (auto Itr in OutPreviewRefs)
 						Itr->DeleteInstance();
 					OutPreviewRefs.clear();
+
 					*OutPreviewNode = NULL;
 
 					Result = false;
@@ -767,6 +834,7 @@ namespace ConstructionSetExtender
 				}
 
 				OutPreviewRefs.push_back(NewRef);
+				OutPreviewBaseForms.push_back(NewBase);
 				TESRender::AddToNiNode(Root, Ref3D);
 			}
 		}
@@ -881,11 +949,125 @@ namespace ConstructionSetExtender
 		ParentStateDeserializationBuffer.clear();
 	}
 
-	CSEObjectRefCollectionSerializer::CSEObjectRefCollectionSerializer() :
+	bool CSEObjectRefCollectionSerializer::IsBaseFormTemporary(TESForm* Form) const
+	{
+		SME_ASSERT(Form);
+		for each (auto Itr in BaseFormDeserializatonBuffer)
+		{
+			if (Form == Itr)
+				return true;
+		}
+
+		return false;
+	}
+
+	bool CSEObjectRefCollectionSerializer::ResolveBaseForms()
+	{
+		bool Result = true;
+
+		TESFormListT Validated;
+		for each (auto Itr in LoadedFormBuffer)
+		{
+			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
+			SME_ASSERT(ThisRef->baseForm && ThisRef->baseForm->GetEditorID());
+			SME_ASSERT(IsBaseFormTemporary(ThisRef->baseForm) == true);
+
+			TESForm* Existing = TESForm::LookupByEditorID(ThisRef->baseForm->GetEditorID());
+			bool Delinquent = false;
+			if (Existing == NULL)
+			{
+				if (StrictBaseFormResolution)
+				{
+					BGSEECONSOLE_MESSAGE("Reference %08X requires base form '%s' of type '%s'!", ThisRef->formID,
+										 ThisRef->baseForm->GetEditorID(),
+										 ThisRef->baseForm->GetTypeIDString());
+					Delinquent = true;
+				}
+			}
+			else if (Existing->formType != ThisRef->baseForm->formType)
+			{
+				BGSEECONSOLE_MESSAGE("Reference %08X base form type mismatch - Found '%s', expected '%s'!", ThisRef->formID,
+									 Existing->GetTypeIDString(),
+									 ThisRef->baseForm->GetTypeIDString());
+				Delinquent = true;
+			}
+
+			if (Delinquent == false)
+			{
+				if (Existing)
+					ThisRef->SetBaseForm(Existing);
+
+				Validated.push_back(ThisRef);
+			}
+			else
+			{
+				ThisRef->DeleteInstance();
+				Result = false;
+			}
+		}
+
+		LoadedFormBuffer.clear();
+		LoadedFormBuffer = Validated;
+
+		return Result;
+	}
+
+	CSEObjectRefDescriptor* CSEObjectRefCollectionSerializer::GetDescriptor(TESForm* Form) const
+	{
+		TESObjectREFR* For = (TESObjectREFR*)Form;
+
+		SME_ASSERT(For && For->baseForm);
+		SME_ASSERT(GetFormInBuffer(For));
+
+		CSEObjectRefDescriptor* Descriptor = new CSEObjectRefDescriptor;
+		char Buffer[0x100] = { 0 };
+
+		FORMAT_STR(Buffer, "%08X", For->formID);
+		Descriptor->FormID = Buffer;
+
+		Descriptor->EditorID = "";
+		if (For->GetEditorID())
+			Descriptor->EditorID = For->GetEditorID();
+
+		FORMAT_STR(Buffer, "(%f, %f, %f)", For->position.x, For->position.y, For->position.z);
+		Descriptor->Position = Buffer;
+
+		FORMAT_STR(Buffer, "(%f, %f, %f)", For->rotation.x * 57.2957763671875, For->rotation.y * 57.2957763671875, For->rotation.z * 57.2957763671875);
+		Descriptor->Rotation = Buffer;
+
+		FORMAT_STR(Buffer, "%f", For->scale);
+		Descriptor->Scale = Buffer;
+
+		Descriptor->BaseFormEditorID = For->baseForm->GetEditorID();
+		Descriptor->BaseFormType = For->baseForm->GetTypeIDString();
+		Descriptor->TemporaryBaseForm = IsBaseFormTemporary(For->baseForm);
+
+		Descriptor->EnableStateParentFormID = "";
+		Descriptor->EnableStateParentEditorID = "";
+		Descriptor->ParentOppositeState = false;
+		Descriptor->HasEnableStateParent = false;
+		ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)For->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+		if (xParent && xParent->parent)
+		{
+			Descriptor->HasEnableStateParent = true;
+			FORMAT_STR(Buffer, "%08X", xParent->parent->formID);
+			Descriptor->EnableStateParentFormID = Buffer;
+
+			if (xParent->parent->GetEditorID())
+				Descriptor->EnableStateParentEditorID = xParent->parent->GetEditorID();
+
+			Descriptor->ParentOppositeState = xParent->oppositeState;
+		}
+
+		return Descriptor;
+	}
+
+	CSEObjectRefCollectionSerializer::CSEObjectRefCollectionSerializer(bool StrictBaseFormResolution) :
 		ICSEFormCollectionSerializer(),
 		BaseFormDeserializatonBuffer(),
 		ParentDeserializationBuffer(),
-		ParentStateDeserializationBuffer()
+		ParentStateDeserializationBuffer(),
+		StrictBaseFormResolution(StrictBaseFormResolution)
 	{
 		;//
 	}
@@ -1146,44 +1328,7 @@ namespace ConstructionSetExtender
 			}
 
 			// finally, check and update the refs' base forms
-			TESFormListT Validated;
-			for each (auto Itr in LoadedFormBuffer)
-			{
-				TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
-				SME_ASSERT(ThisRef->baseForm && ThisRef->baseForm->GetEditorID());
-
-				TESForm* Existing = TESForm::LookupByEditorID(ThisRef->baseForm->GetEditorID());
-				bool Delinquent = false;
-				if (Existing == NULL)
-				{
-					BGSEECONSOLE_MESSAGE("Reference %08X requires base form '%s' of type '%s'!", ThisRef->formID,
-										 ThisRef->baseForm->GetEditorID(),
-										 ThisRef->baseForm->GetTypeIDString());
-					Delinquent = true;
-				}
-				else if (Existing->formType != ThisRef->baseForm->formType)
-				{
-					BGSEECONSOLE_MESSAGE("Reference %08X base form type mismatch - Found '%s', expected '%s'!", ThisRef->formID,
-										 Existing->GetTypeIDString(),
-										 ThisRef->baseForm->GetTypeIDString());
-					Delinquent = true;
-				}
-
-				if (Delinquent == false)
-				{
-					ThisRef->SetBaseForm(Existing);
-					Validated.push_back(ThisRef);
-				}
-				else
-				{
-					ThisRef->DeleteInstance();
-					Result = false;
-				}
-			}
-
-			LoadedFormBuffer.clear();
-			LoadedFormBuffer = Validated;
-
+			Result = ResolveBaseForms();
 			OutDeserializedFormCount = LoadedFormBuffer.size();
 
 			if (InputStream->Close() == false)
@@ -1208,5 +1353,28 @@ namespace ConstructionSetExtender
 	UInt8 CSEObjectRefCollectionSerializer::GetType()
 	{
 		return kSerializer_ObjectRef;
+	}
+
+	bool CSEObjectRefCollectionSerializer::GetHasTemporaryBaseForms() const
+	{
+		for each (auto Itr in LoadedFormBuffer)
+		{
+			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
+			if (IsBaseFormTemporary(ThisRef->baseForm))
+				return true;
+		}
+
+		return false;
+	}
+
+	void CSEObjectRefCollectionSerializer::GetDescription(ObjectRefCollectionDescriptorListT& Out) const
+	{
+		Out.clear();
+
+		for each (auto Itr in LoadedFormBuffer)
+		{
+			ObjectRefDescriptorHandleT Item(GetDescriptor(Itr));
+			Out.push_back(Item);
+		}
 	}
 }

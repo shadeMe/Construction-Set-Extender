@@ -14,10 +14,10 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// German (Germany) resources
+// English (United States) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -35,50 +35,7 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 336
     END
-END
-#endif    // APSTUDIO_INVOKED
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_OBJECTPREFAB DIALOGEX 0, 0, 467, 343
-STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Object Prefabs"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LTEXT           "Filter",IDC_STATIC,7,8,27,9
-    EDITTEXT        IDC_FILTERBOX,37,7,107,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_OBJECTPREFAB_CURRENTDETAILSLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,151,225,309,111
-    CONTROL         "IMAGE",IDC_OBJECTPREFAB_PREVIEW,"Button",BS_OWNERDRAW | BS_CENTER | BS_VCENTER | WS_TABSTOP,151,7,309,204,WS_EX_CLIENTEDGE | WS_EX_STATICEDGE
-    PUSHBUTTON      "Instantiate in Render Window",IDC_OBJECTPREFAB_INSTANTIATE,7,305,137,15
-    PUSHBUTTON      "Create from Render Window selection",IDC_OBJECTPREFAB_CREATE,7,322,137,15
-    CONTROL         "",IDC_OBJECTPREFAB_LOADEDPREFABSLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,23,137,200
-    LTEXT           "Prefab Details:",IDC_STATIC,152,214,60,8
-    PUSHBUTTON      "Refresh",IDC_OBJECTPREFAB_REFRESH,7,226,137,15
-END
-
-#endif    // German (Germany) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
     IDD_OBJECTPALETTE, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -175,6 +132,22 @@ END
 //
 // Dialog
 //
+
+IDD_OBJECTPREFAB DIALOGEX 0, 0, 467, 343
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Object Prefabs"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Filter",IDC_STATIC,7,8,27,9
+    EDITTEXT        IDC_FILTERBOX,37,7,107,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_OBJECTPREFAB_CURRENTDETAILSLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,151,225,309,111
+    CONTROL         "IMAGE",IDC_OBJECTPREFAB_PREVIEW,"Button",BS_OWNERDRAW | BS_CENTER | BS_VCENTER | WS_TABSTOP,151,7,309,204,WS_EX_CLIENTEDGE | WS_EX_STATICEDGE
+    PUSHBUTTON      "Instantiate in Render Window",IDC_OBJECTPREFAB_INSTANTIATE,7,305,137,15
+    PUSHBUTTON      "Create from Render Window selection",IDC_OBJECTPREFAB_CREATE,7,322,137,15
+    CONTROL         "",IDC_OBJECTPREFAB_LOADEDPREFABSLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,23,137,200
+    LTEXT           "Prefab Details:",IDC_STATIC,152,214,60,8
+    PUSHBUTTON      "Refresh",IDC_OBJECTPREFAB_REFRESH,7,226,137,15
+END
 
 IDD_OBJECTPALETTE DIALOGEX 0, 0, 453, 391
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU

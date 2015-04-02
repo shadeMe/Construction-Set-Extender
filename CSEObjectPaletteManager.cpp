@@ -1,5 +1,6 @@
 #include "CSEObjectPaletteManager.h"
 #include "Construction Set Extender_Resource.h"
+#include "CSEMain.h"
 
 namespace ConstructionSetExtender
 {
@@ -289,7 +290,7 @@ namespace ConstructionSetExtender
 
 		CSEObjectPaletteManager							CSEObjectPaletteManager::Instance;
 		const char*										CSEObjectPaletteManager::kPaletteFileExtension = "cseopal";
-		const BGSEditorExtender::BGSEEResourceLocation	CSEObjectPaletteManager::kRepositoryPath("OPAL\\");
+		const BGSEditorExtender::BGSEEResourceLocation	CSEObjectPaletteManager::kRepositoryPath(CSE_OPALDEPOT);
 
 #define IDC_OBJECTPALETTE_FILTERINPUTTIMERID		0x200
 #define IDC_OBJECTPALETTE_PREVIEWTIMERID			0x201

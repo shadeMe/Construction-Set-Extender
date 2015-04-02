@@ -53,7 +53,7 @@ namespace ConstructionSetExtender
 			BGSEditorExtender::BGSEEGlobalClipboardOperator()
 		{
 			DefaultFormSerializer = new CSEDefaultFormCollectionSerializer;
-			ObjectRefSerializer = new CSEObjectRefCollectionSerializer;
+			ObjectRefSerializer = new CSEObjectRefCollectionSerializer(true);
 		}
 
 		CSEGlobalClipboardOperator::~CSEGlobalClipboardOperator()

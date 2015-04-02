@@ -67,6 +67,7 @@ namespace ConstructionSetExtender
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)()));
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)()));
 				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_OPALDEPOT)()));
+				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_PREFABDEPOT)()));
 			}
 
 			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(),

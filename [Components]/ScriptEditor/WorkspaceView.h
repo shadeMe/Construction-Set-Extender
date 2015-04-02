@@ -51,7 +51,7 @@ namespace ConstructionSetExtender
 		{
 		public:
 			virtual void	AttachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
-			virtual void	DettachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
+			virtual void	DetachModelInternalView(IWorkspaceView^ View, IWorkspaceModel^ Model);
 
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 

@@ -97,6 +97,7 @@ namespace ConstructionSetExtender
 #define CSE_SESNIPPETDEPOT				"Script Editor\\Snippets\\"
 #define CSE_SEAUTORECDEPOT				"Script Editor\\Auto-Recovery Cache\\"
 #define CSE_OPALDEPOT					"OPAL\\"
+#define CSE_PREFABDEPOT					"Object Prefabs\\"
 }
 
 extern "C"

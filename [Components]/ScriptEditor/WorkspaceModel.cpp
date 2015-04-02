@@ -307,7 +307,7 @@ namespace ConstructionSetExtender
 			{
 				TextEditor->Unbind();
 
-				BoundParent->Controller->DettachModelInternalView(BoundParent, this);
+				BoundParent->Controller->DetachModelInternalView(BoundParent, this);
 				BoundParent = nullptr;
 			}
 		}
