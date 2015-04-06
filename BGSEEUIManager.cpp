@@ -72,7 +72,8 @@ namespace BGSEditorExtender
 
 	int				BGSEEWindowExtraData::GIC = 0;
 
-	BGSEEWindowExtraData::BGSEEWindowExtraData()
+	BGSEEWindowExtraData::BGSEEWindowExtraData(WindowExtraDataIDT Type) :
+		TypeID(Type)
 	{
 		GIC++;
 	}
@@ -81,6 +82,11 @@ namespace BGSEditorExtender
 	{
 		GIC--;
 		SME_ASSERT(GIC >= 0);
+	}
+
+	const WindowExtraDataIDT BGSEEWindowExtraData::GetTypeID(void) const
+	{
+		return TypeID;
 	}
 
 	BGSEEWindowExtraDataCollection::BGSEEWindowExtraDataCollection() :

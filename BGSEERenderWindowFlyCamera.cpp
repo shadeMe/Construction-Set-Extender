@@ -18,7 +18,7 @@ namespace BGSEditorExtender
 	bool BGSEERenderWindowFlyCamera::FlyCamModeActive = false;
 
 	BGSEERenderWindowFlyCamera::BGSEERenderWindowFlyCamera( BGSEERenderWindowFlyCameraOperator* Operator ) :
-		BGSEEWindowExtraData()
+		BGSEEWindowExtraData(kTypeID)
 	{
 		this->Operator = Operator;
 

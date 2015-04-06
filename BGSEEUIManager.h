@@ -28,17 +28,18 @@ namespace BGSEditorExtender
 	typedef UInt32 ResourceTemplateT;
 	typedef UInt32 WindowExtraDataIDT;
 
-	// subclass me!!
 	class BGSEEWindowExtraData
 	{
 		friend class BGSEEWindowSubclasser;
 
 		static int								GIC;
+	protected:
+		WindowExtraDataIDT						TypeID;
 	public:
-		BGSEEWindowExtraData();
+		BGSEEWindowExtraData(WindowExtraDataIDT Type);
 		virtual ~BGSEEWindowExtraData() = 0;
 
-		virtual const WindowExtraDataIDT		GetTypeID(void) const = 0;
+		virtual const WindowExtraDataIDT		GetTypeID(void) const;
 	};
 
 	class BGSEEWindowExtraDataCollection
@@ -55,11 +56,9 @@ namespace BGSEditorExtender
 		BGSEEWindowExtraData*	Lookup(WindowExtraDataIDT ID);
 	};
 
-// not very elegant, is it?
-#define BGSEE_GETWINDOWXDATA(xDataClass, xDataCollection)	\
-		dynamic_cast< xDataClass * >(xDataCollection->Lookup(xDataClass::kTypeID))
-#define BGSEE_GETWINDOWXDATA_QUICK(xDataClass, xDataCollection)	\
-		(xDataClass *)xDataCollection->Lookup(xDataClass::kTypeID)
+// yikes...
+#define BGSEE_GETWINDOWXDATA(xDataClass, xDataCollection)			dynamic_cast<xDataClass*>(xDataCollection->Lookup(xDataClass::kTypeID))
+#define BGSEE_GETWINDOWXDATA_QUICK(xDataClass, xDataCollection)		(xDataClass*)xDataCollection->Lookup(xDataClass::kTypeID)
 
 	class BGSEEWindowSubclasser
 	{
