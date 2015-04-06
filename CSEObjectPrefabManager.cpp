@@ -307,6 +307,16 @@ namespace ConstructionSetExtender
 
 					switch (NotificationData->code)
 					{
+					case LVN_COLUMNCLICK:
+						if (NotificationData->hwndFrom == LoadedPrefabsList)
+						{
+							LONG_PTR SortOrder = GetWindowLongPtr(LoadedPrefabsList, GWL_USERDATA);
+							ListView_SortItems(LoadedPrefabsList, SortComparator, SortOrder);
+							SortOrder = SortOrder == NULL;
+							SetWindowLongPtr(LoadedPrefabsList, GWL_USERDATA, SortOrder);
+						}
+
+						break;
 					case LVN_GETDISPINFO:
 						if (Instance.RefreshingList == false)
 						{
@@ -381,6 +391,20 @@ namespace ConstructionSetExtender
 				Instance.Renderer->DialogMessageCallback(hWnd, uMsg, wParam, lParam, (LONG_PTR)&Throwaway);
 
 			return Result;
+		}
+
+		int CALLBACK CSEObjectPrefabManager::SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+		{
+			PrefabObject* One = (PrefabObject*)lParam1;
+			PrefabObject* Two = (PrefabObject*)lParam2;
+
+			SME_ASSERT(One && Two);
+
+			int Compare = _stricmp(One->FileName.c_str(), Two->FileName.c_str());
+			if (lParamSort)
+				Compare *= -1;
+
+			return Compare;
 		}
 
 		void CSEObjectPrefabManager::InitializeDialog(HWND Dialog)

@@ -84,6 +84,11 @@ namespace ConstructionSetExtender
 			extern INISetting					kMouseRefCtrlModified;
 			extern INISetting					kFontFace;
 			extern INISetting					kFontSize;
+
+			extern INISetting					kColorSelectionStats;
+			extern INISetting					kColorRAMUsage;
+			extern INISetting					kColorMouseRef;
+			extern INISetting					kColorNotifications;
 		}
 
 		namespace RenderWindowFlyCamera

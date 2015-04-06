@@ -317,7 +317,7 @@ public:
 	// methods
 	void							RemovePreviewNode(NiNode* Node);	// this override appears to be bugged in the editor code as it calls AddPreviewNode
 																		// so manually call the correct TESRenderControl method
-																		// probably the root cause for the vanilla ModelLoader NIF leakage
+																		// could have something to do with the vanilla ModelLoader NIF leakage
 	void							RemoveGroundPlane();
 
 	static TESPreviewControl*		CreatePreviewControl(HWND Dialog, const TESRenderControl::Parameters* Params);

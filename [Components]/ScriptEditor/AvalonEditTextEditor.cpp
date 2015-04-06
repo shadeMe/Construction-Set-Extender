@@ -1163,7 +1163,7 @@ namespace ConstructionSetExtender
 				System::Windows::Vector Delta = CurrentOffset - PreviousScrollOffsetBuffer;
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
-				if (GetLineVisible(CurrentLine, true))
+				if (GetLineVisible(CurrentLine, true) == false)
 					OnIntelliSenseHide(true);
 				else
 					OnIntelliSenseRelocate();
@@ -2555,8 +2555,8 @@ namespace ConstructionSetExtender
 					TextFieldPanel->Children->Remove(TextField);
 
 					System::Windows::Media::Animation::DoubleAnimation^ FadeOutAnimation = gcnew System::Windows::Media::Animation::DoubleAnimation(1.0,
-																																					0.0,
-																																					System::Windows::Duration(System::TimeSpan::FromSeconds(kSetTextFadeAnimationDuration)),
+																							0.0,
+																							System::Windows::Duration(System::TimeSpan::FromSeconds(kSetTextFadeAnimationDuration)),
 																																					System::Windows::Media::Animation::FillBehavior::Stop);
 					SetTextPrologAnimationCache = FadeOutAnimation;
 

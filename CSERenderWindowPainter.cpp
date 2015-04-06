@@ -70,7 +70,7 @@ namespace ConstructionSetExtender
 
 		CSESelectionInfoRenderChannel::CSESelectionInfoRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect) :
 			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-														D3DCOLOR_ARGB(220, 189, 237, 99),
+														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorSelectionStats().s, 255),
 														DrawRect,
 														DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP)
 		{
@@ -127,7 +127,7 @@ namespace ConstructionSetExtender
 
 		CSERAMUsageRenderChannel::CSERAMUsageRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect) :
 			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-														D3DCOLOR_ARGB(230, 230, 230, 0),
+														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorRAMUsage().s, 255),
 														DrawRect,
 														DT_WORDBREAK|DT_RIGHT|DT_TOP|DT_NOCLIP,
 														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned),
@@ -158,7 +158,8 @@ namespace ConstructionSetExtender
 
 		CSEMouseRefRenderChannel::CSEMouseRefRenderChannel(const char* FontFace, UInt32 FontSize) :
 			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-														D3DCOLOR_ARGB(255, 255, 128, 0), NULL,
+														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorMouseRef().s, 255),
+														NULL,
 														DT_SINGLELINE|DT_LEFT|DT_TOP|DT_NOCLIP,
 														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_Default)
 		{
@@ -242,10 +243,10 @@ namespace ConstructionSetExtender
 			DrawRect.right = 800;
 			DrawRect.bottom = 200;
 			RenderChannelNotifications = new BGSEditorExtender::BGSEEDynamicRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-																						D3DCOLOR_ARGB(230, 230, 230, 0),
-																						&DrawRect,
-																						DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
-																						BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_BottomAligned);
+										SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorNotifications().s, 255),
+										&DrawRect,
+										DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
+										BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_BottomAligned);
 
 			BGSEERWPAINTER->RegisterRenderChannel(CSESelectionInfoRenderChannel::GetInstance(FontFace, FontSize));
 			BGSEERWPAINTER->RegisterRenderChannel(CSERAMUsageRenderChannel::GetInstance(FontFace, FontSize));

@@ -62,6 +62,10 @@ namespace ConstructionSetExtender
 			Depot.push_back(&RenderWindowPainter::kMouseRefCtrlModified);
 			Depot.push_back(&RenderWindowPainter::kFontFace);
 			Depot.push_back(&RenderWindowPainter::kFontSize);
+			Depot.push_back(&RenderWindowPainter::kColorSelectionStats);
+			Depot.push_back(&RenderWindowPainter::kColorRAMUsage);
+			Depot.push_back(&RenderWindowPainter::kColorMouseRef);
+			Depot.push_back(&RenderWindowPainter::kColorNotifications);
 
 			Depot.push_back(&RenderWindowFlyCamera::kMovementSpeed);
 			Depot.push_back(&RenderWindowFlyCamera::kSprintMultiplier);
@@ -169,6 +173,11 @@ namespace ConstructionSetExtender
 			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWPAINTER_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
 			INISetting		kFontFace("FontFace", RWPAINTER_INISECTION, "Font face of the rendered text", "Arial");
 			INISetting		kFontSize("FontSize", RWPAINTER_INISECTION, "Size of the rendered text", (SInt32)20);
+
+			INISetting		kColorSelectionStats("ColorSelectionStats", DIALOGS_INISECTION, "Foreground color", "189,237,99");
+			INISetting		kColorRAMUsage("ColorRAMUsage", DIALOGS_INISECTION, "Foreground color", "230,230,0");
+			INISetting		kColorMouseRef("ColorMouseRef", DIALOGS_INISECTION, "Foreground color", "255,128,0");
+			INISetting		kColorNotifications("ColorNotifications", DIALOGS_INISECTION, "Foreground color", "230,230,0");
 		}
 
 		namespace RenderWindowFlyCamera

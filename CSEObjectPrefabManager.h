@@ -60,6 +60,7 @@ namespace ConstructionSetExtender
 		class CSEObjectPrefabManager
 		{
 			static INT_PTR CALLBACK				DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+			static int CALLBACK					SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
 			typedef std::vector<PrefabObjectHandleT>			PrefabObjectListT;
 

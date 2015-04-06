@@ -45,6 +45,7 @@ namespace ConstructionSetExtender
 		class CSEObjectPaletteManager
 		{
 			static INT_PTR CALLBACK				DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+			static int CALLBACK					SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
 			typedef std::vector<PaletteObjectHandleT>			PaletteObjectListT;
 
@@ -69,6 +70,7 @@ namespace ConstructionSetExtender
 
 			void					RefreshObjectList();
 			void					UpdateSelectionList();
+			void					RemoveSelection();
 
 			void					SaveObjects(const PaletteObjectListT& Objects, const char* Path) const;
 			bool					LoadObjects(PaletteObjectListT& OutObjects, const char* Path) const;			// returns false if an error was encountered
@@ -85,6 +87,7 @@ namespace ConstructionSetExtender
 			bool					GetFormTypeAllowed(UInt8 Type) const;
 			bool					ShowFileDialog(bool Save, std::string& OutPath, std::string& OutName);
 			bool					GetBaseHandle(PaletteObject* Data, PaletteObjectHandleT& Out) const;
+			bool					RemoveLoadedObject(PaletteObject* Data);
 		public:
 			CSEObjectPaletteManager();
 			~CSEObjectPaletteManager();

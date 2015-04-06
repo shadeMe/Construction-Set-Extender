@@ -2704,28 +2704,24 @@ namespace ConstructionSetExtender
 
 					if (GetCapture() != hWnd)
 					{
-						HCURSOR* Icon = TESRenderWindow::CursorArrow;
+						HCURSOR Icon = *TESRenderWindow::CursorArrow;
 
 						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
 							TESObjectREFR* MouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
 							if (MouseRef)
 							{
-								if (_RENDERSEL->HasObject(MouseRef))
-								{
-									Icon = TESRenderWindow::CursorMove;
-								}
+								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+									Icon = LoadCursor(NULL, IDC_NO);
+								else if (_RENDERSEL->HasObject(MouseRef))
+									Icon = *TESRenderWindow::CursorMove;
 								else
-								{
-									Icon = TESRenderWindow::CursorSelect;
-								}
+									Icon = *TESRenderWindow::CursorSelect;
 							}
 						}
 
-						if (Icon && GetCursor() != *Icon)
-						{
-							SetCursor(*Icon);
-						}
+						if (Icon && GetCursor() != Icon)
+							SetCursor(Icon);
 					}
 				}
 

@@ -384,6 +384,30 @@ namespace ConstructionSetExtender
 
 					switch (NotificationData->code)
 					{
+					case LVN_COLUMNCLICK:
+						if (NotificationData->hwndFrom == LoadedObjectsList)
+						{
+							LONG_PTR SortOrder = GetWindowLongPtr(LoadedObjectsList, GWL_USERDATA);
+							ListView_SortItems(LoadedObjectsList, SortComparator, SortOrder);
+							SortOrder = SortOrder == NULL;
+							SetWindowLongPtr(LoadedObjectsList, GWL_USERDATA, SortOrder);
+						}
+
+						break;
+					case LVN_KEYDOWN:
+						if (NotificationData->hwndFrom == LoadedObjectsList)
+						{
+							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
+
+							switch (KeyData->wVKey)
+							{
+							case VK_DELETE:
+								Instance.RemoveSelection();
+								break;
+							}
+						}
+
+						break;
 					case LVN_GETDISPINFO:
 						if (Instance.RefreshingList == false)
 						{
@@ -479,6 +503,28 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
+		int CALLBACK CSEObjectPaletteManager::SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+		{
+			PaletteObject* One = (PaletteObject*)lParam1;
+			PaletteObject* Two = (PaletteObject*)lParam2;
+
+			SME_ASSERT(One && Two);
+			SME_ASSERT(One->BaseObject && Two->BaseObject);
+
+			const char* NameOne = One->Name.c_str();
+			if (One->Name.length() == 0)
+				NameOne = One->BaseObject->GetEditorID();
+			const char* NameTwo = Two->Name.c_str();
+			if (Two->Name.length() == 0)
+				NameTwo = Two->BaseObject->GetEditorID();
+
+			int Compare = _stricmp(NameOne, NameTwo);
+			if (lParamSort)
+				Compare *= -1;
+
+			return Compare;
+		}
+
 		void CSEObjectPaletteManager::InitializeDialog(HWND Dialog)
 		{
 			HWND LoadedObjectsList = GetDlgItem(Dialog, IDC_PALETTEOBJECTS_LOADED);
@@ -545,7 +591,10 @@ namespace ConstructionSetExtender
 			CurrentSelection.clear();
 
 			if (PreviewRef)
+			{
 				PreviewRef->DeleteInstance();
+				PreviewRef = NULL;
+			}
 
 			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Remove(LoadedObjectsList);
 			TESDialog::DestroyDialogExtraDataList(Dialog);
@@ -593,6 +642,8 @@ namespace ConstructionSetExtender
 			RefreshingList = false;
 			if (SelectDefault)
 				TESListView::SetSelectedItem(LoadedObjectsList, 0);
+			else
+				EnableControls(false);
 
 			BGSEEUI->GetInvalidationManager()->Redraw(LoadedObjectsList);
 		}
@@ -633,6 +684,27 @@ namespace ConstructionSetExtender
 
 			RefreshingList = false;
 			BGSEEUI->GetInvalidationManager()->Redraw(SelectedObjectsList);
+		}
+
+		void CSEObjectPaletteManager::RemoveSelection()
+		{
+			HWND LoadedObjectsList = GetDlgItem(MainDialog, IDC_PALETTEOBJECTS_LOADED);
+			ActiveObject = NULL;
+			int Selection = -1;
+			do
+			{
+				Selection = ListView_GetNextItem(LoadedObjectsList, Selection, LVNI_SELECTED);
+				if (Selection != -1)
+				{
+					PaletteObject* Data = (PaletteObject*)TESListView::GetItemData(LoadedObjectsList, Selection);
+					if (Data)
+						RemoveLoadedObject(Data);
+				}
+			} while (Selection != -1);
+
+			RefreshObjectList();
+			UpdateSelectionList();
+			UpdatePreview();
 		}
 
 		void CSEObjectPaletteManager::SaveObjects(const PaletteObjectListT& Objects, const char* Path) const
@@ -1054,6 +1126,22 @@ namespace ConstructionSetExtender
 				if (Itr.get() == Data)
 				{
 					Out = Itr;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		bool CSEObjectPaletteManager::RemoveLoadedObject(PaletteObject* Data)
+		{
+			SME_ASSERT(Data);
+
+			for (PaletteObjectListT::iterator Itr = LoadedObjects.begin(); Itr != LoadedObjects.end(); Itr++)
+			{
+				if ((*Itr).get() == Data)
+				{
+					LoadedObjects.erase(Itr);
 					return true;
 				}
 			}
