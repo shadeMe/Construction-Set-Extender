@@ -476,6 +476,8 @@ public:
 	enum
 	{
 		kWindowMessage_HandleDragDrop = 0x407,		// lParam = POINT* mousePos
+		kWindowMessage_Destroy = 0x417,
+		kWindowMessage_Refresh = 0x41A,
 	};
 
 	// methods
@@ -641,6 +643,8 @@ public:
 		kToolbar_PathGridEdit = 40195,
 		kToolbar_DataFiles = 40145,
 		kToolbar_Save = 40146,
+
+		kWindowMessage_Save = 0x40C,
 	};
 };
 

@@ -129,11 +129,6 @@ namespace ConstructionSetExtender
 
 			enum { kTypeID = 'XCVD' };
 
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
-
 			enum
 			{
 				kExtraRefListColumn_Persistent = 5,
@@ -143,7 +138,7 @@ namespace ConstructionSetExtender
 				kExtraRefListColumn_Count
 			};
 
-			static int CALLBACK											CustomFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+			static int CALLBACK CustomFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		};
 
 		class CSEDialogExtraFittingsData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -162,11 +157,6 @@ namespace ConstructionSetExtender
 			virtual ~CSEDialogExtraFittingsData();
 
 			enum { kTypeID = 'XDEF' };
-
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
 		};
 
 		class CSEMainWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -178,11 +168,6 @@ namespace ConstructionSetExtender
 			virtual ~CSEMainWindowMiscData();
 
 			enum { kTypeID = 'XMWM' };
-
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
 		};
 
 		class CSEMainWindowToolbarData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -194,11 +179,6 @@ namespace ConstructionSetExtender
 			virtual ~CSEMainWindowToolbarData();
 
 			enum { kTypeID = 'XMTD' };
-
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
 		};
 
 		class CSERenderWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -210,11 +190,6 @@ namespace ConstructionSetExtender
 			virtual ~CSERenderWindowMiscData();
 
 			enum { kTypeID = 'XRWM' };
-
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
 		};
 
 		class CSETESFormEditData : public BGSEditorExtender::BGSEEWindowExtraData
@@ -226,11 +201,6 @@ namespace ConstructionSetExtender
 			virtual ~CSETESFormEditData();
 
 			enum { kTypeID = 'XFED' };
-
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
 
 			void							FillBuffer(TESForm* Parent);
 			bool							HasChanges(TESForm* Parent);
@@ -247,11 +217,6 @@ namespace ConstructionSetExtender
 			virtual ~CSEFaceGenWindowData();
 
 			enum { kTypeID = 'XFGD' };
-
-			virtual const BGSEditorExtender::WindowExtraDataIDT			GetTypeID(void) const
-			{
-				return kTypeID;
-			}
 		};
 
 		struct CSEFaceGenVoicePreviewData

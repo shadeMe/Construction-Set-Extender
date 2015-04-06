@@ -562,7 +562,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSECellViewExtraData::CSECellViewExtraData() :
-			BGSEditorExtender::BGSEEWindowExtraData(),
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID),
 			RefFilterEditBox(),
 			RefFilterLabel(),
 			XLabel(),
@@ -683,7 +683,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEDialogExtraFittingsData::CSEDialogExtraFittingsData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
 		{
 			LastCursorPos.x = LastCursorPos.y = 0;
 			LastCursorPosWindow = NULL;
@@ -707,7 +707,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEMainWindowMiscData::CSEMainWindowMiscData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
 		{
 			ToolbarExtras = Subwindow::CreateInstance();
 		}
@@ -722,7 +722,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEMainWindowToolbarData::CSEMainWindowToolbarData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
 		{
 			SettingTODSlider = false;
 		}
@@ -733,7 +733,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSERenderWindowMiscData::CSERenderWindowMiscData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
 		{
 			TunnelingKeyMessage = false;
 		}
@@ -744,7 +744,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSETESFormEditData::CSETESFormEditData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
 		{
 			Buffer = NULL;
 		}
@@ -770,7 +770,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEFaceGenWindowData::CSEFaceGenWindowData() :
-			BGSEditorExtender::BGSEEWindowExtraData()
+			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
 		{
 			TunnelingTabSelectMessage = false;
 			AllowPreviewUpdates = true;
@@ -802,13 +802,9 @@ namespace ConstructionSetExtender
 					if (_RENDERSEL->selectionList && _RENDERSEL->selectionList->Data)
 					{
 						if (TESDialog::GetIsWindowDragDropRecipient(_RENDERSEL->selectionList->Data->formType, Window))
-						{
 							SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xBA));
-						}
 						else
-						{
 							SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
-						}
 					}
 				}
 
@@ -1182,8 +1178,9 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_DESTROY:
-				TESFile* ActiveFile = _DATAHANDLER->activeFile;					// required for correct ESM handling
+				TESFile* ActiveFile = _DATAHANDLER->activeFile;
 
+				// required for correct ESM handling
 				if (ActiveFile)
 					ActiveFile->SetMaster(false);
 
@@ -1387,10 +1384,8 @@ namespace ConstructionSetExtender
 
 							_DATAHANDLER->activeFile = NULL;
 
-							if (SendMessage(hWnd, 0x40C, NULL, (LPARAM)FileName))
-							{
+							if (SendMessage(hWnd, TESCSMain::kWindowMessage_Save, NULL, (LPARAM)FileName))
 								TESCSMain::SetTitleModified(false);
-							}
 							else
 							{
 								_DATAHANDLER->activeFile = SaveAsBuffer;
@@ -1803,11 +1798,10 @@ namespace ConstructionSetExtender
 
 				switch (wParam)
 				{
-				case TESCSMain::kTimer_Autosave:				// autosave timer, needs to be handled here as the org wndproc doesn't compare the timerID
-					if ((*TESCSMain::AllowAutoSaveFlag) != 0 && (*TESCSMain::ExittingCSFlag) == 0)
-					{
+				case TESCSMain::kTimer_Autosave:
+					// autosave timer, needs to be handled here as the org wndproc doesn't compare the timerID
+					if (*TESCSMain::AllowAutoSaveFlag != 0 && *TESCSMain::ExittingCSFlag == 0)
 						TESCSMain::AutoSave();
-					}
 
 					break;
 				case ID_PATHGRIDTOOLBARBUTTION_TIMERID:
@@ -1827,8 +1821,6 @@ namespace ConstructionSetExtender
 					break;
 				}
 
-				break;
-			case 0x40C:				// save handler
 				break;
 			}
 
@@ -1901,9 +1893,7 @@ namespace ConstructionSetExtender
 					case TB_THUMBTRACK:
 					case TB_TOP:
 						if ((HWND)lParam == TODSlider)
-						{
 							BreakOut = false;
-						}
 
 						break;
 					}
@@ -2650,7 +2640,6 @@ namespace ConstructionSetExtender
 					if (TESPreviewControl::ActivePreviewControls->Count())
 					{
 						BGSEEUI->MsgBoxW(hWnd, 0, "Please close any dialogs with preview controls before attempting to resize the render window.");
-
 						Return = true;
 					}
 				}
@@ -2780,9 +2769,7 @@ namespace ConstructionSetExtender
 					{
 						int SwitchEnabled = Settings::Renderer::kSwitchCAndY.GetData().i;
 						if (SwitchEnabled)
-						{
 							Return = true;
-						}
 					}
 
 					break;
@@ -2793,9 +2780,7 @@ namespace ConstructionSetExtender
 				switch (wParam)
 				{
 				case VK_SHIFT:
-					{
-						_PRIMARYRENDERER->GetCameraPivot(&kCameraStaticPivot, 0.18);
-					}
+					_PRIMARYRENDERER->GetCameraPivot(&kCameraStaticPivot, 0.18);
 
 					break;
 				case VK_F1:		// F1
@@ -2891,6 +2876,7 @@ namespace ConstructionSetExtender
 								Itr.Get()->HideSelectionRing();
 							}
 
+							// remove from selection
 							for (std::list<TESPathGridPoint*>::iterator Itr = Delinquents.begin(); Itr != Delinquents.end(); Itr++)
 								thisCall<void>(0x00452AE0, TESRenderWindow::SelectedPathGridPoints, *Itr);
 						}
@@ -3030,7 +3016,7 @@ namespace ConstructionSetExtender
 
 					Return = true;
 					ObjectWindowImposterManager::Instance.RefreshImposters();
-					SendMessage(hWnd, 0x41A, NULL, NULL);
+					SendMessage(hWnd, TESDialog::kWindowMessage_Refresh, NULL, NULL);
 				}
 			case WM_ACTIVATE:
 				ObjectWindowImposterManager::Instance.HandleObjectWindowActivating(hWnd, uMsg, wParam, lParam);
@@ -3042,7 +3028,7 @@ namespace ConstructionSetExtender
 				Return = true;
 
 				break;
-			case 0x417:		// destroy window
+			case TESDialog::kWindowMessage_Destroy:
 			case WM_DESTROY:
 				{
 					CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
@@ -3126,7 +3112,7 @@ namespace ConstructionSetExtender
 						delete xData;
 					}
 				}
-			case 0x417:		// destroy window
+			case TESDialog::kWindowMessage_Destroy:
 				CSEFilterableFormListManager::Instance.Unregister(RefFilterEditBox);
 				CSEFilterableFormListManager::Instance.Unregister(CellFilterEditBox);
 
@@ -3464,7 +3450,7 @@ namespace ConstructionSetExtender
 
 					switch (NotificationData->idFrom)
 					{
-					case ResponseEditorData::kVoiceFileListView:		// voice file listview
+					case ResponseEditorData::kVoiceFileListView:
 						{
 							if (NotificationData->code == LVN_ITEMACTIVATE)
 							{
@@ -3539,7 +3525,7 @@ namespace ConstructionSetExtender
 						}
 
 						break;
-					case ResponseEditorData::kCopyExternalFileButton:					// Copy external file
+					case ResponseEditorData::kCopyExternalFileButton:
 						{
 							if (ListView_GetItem(VoiceList, &SelectedVoiceItem) != TRUE)
 							{
@@ -3603,9 +3589,7 @@ namespace ConstructionSetExtender
 						HWND IdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 
 						if (CSIOM->GenerateLIPSyncFile(Path.c_str(), (*ResponseEditorData::EditorCache)->responseLocalCopy->responseText.c_str()) == false)
-						{
 							BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't generate LIP file for the selected voice.\n\nCheck the console for more information.");
-						}
 						else
 						{
 							BGSEECONSOLE_MESSAGE("Successfully generated LIP file for the selected voice");
@@ -3648,8 +3632,8 @@ namespace ConstructionSetExtender
 					if (Texture)
 					{
 						*TESRenderWindow::ActiveLandscapeTexture = CS_CAST(Texture, TESForm, TESLandTexture);
-
-						SendMessage(*TESObjectLAND::WindowHandle, 0x41A, NULL, NULL);			// select the new texture in the landscape edit dialog
+						// select the new texture in the landscape edit dialog
+						SendMessage(*TESObjectLAND::WindowHandle, TESDialog::kWindowMessage_Refresh, NULL, NULL);
 						SetForegroundWindow(*TESRenderWindow::WindowHandle);
 
 						RenderWindowPainter::RenderChannelNotifications->Queue(3, "Active landscape texture changed");
@@ -4008,9 +3992,7 @@ namespace ConstructionSetExtender
 								}
 							}
 							else
-							{
 								GetWindowText(WindowAtPoint, Buffer, sizeof(Buffer));
-							}
 
 							if (strlen(Buffer) < 2)
 								break;
@@ -4024,7 +4006,6 @@ namespace ConstructionSetExtender
 								PotentialEditorID.erase(StatusIndicatorOffset, 2);
 
 							Form = TESForm::LookupByEditorID(PotentialEditorID.c_str());
-
 							xData->LastCursorPosWindow = NULL;
 
 							if (Form)
@@ -4282,9 +4263,7 @@ namespace ConstructionSetExtender
 					else if (uMsg == WM_SETCURSOR)
 					{
 						if (HIWORD(lParam) != WM_MOUSEMOVE)
-						{
 							break;
-						}
 					}
 
 					POINT Coords = {0};
@@ -4674,13 +4653,9 @@ namespace ConstructionSetExtender
 
 									char WindowTitle[0x100] = {0};
 									if (NewSelection->editorID.Size())
-									{
 										FORMAT_STR(WindowTitle, "%s : %s", NewSelection->GetTypeIDString(), NewSelection->GetEditorID());
-									}
 									else
-									{
 										FORMAT_STR(WindowTitle, "%s : EMPTY", NewSelection->GetTypeIDString());
-									}
 
 									SetWindowText(hWnd, WindowTitle);
 									if (IsWindowEnabled(GetDlgItem(hWnd, TESDialog::kStandardButton_Ok)) == FALSE)
@@ -4728,13 +4703,13 @@ namespace ConstructionSetExtender
 			case WM_INITDIALOG:
 				{
 					if (*TESRenderWindow::ActiveCell == NULL)		// immediately close the dialog if you haven't got any cell loaded
-						SendMessage(hWnd, WM_COMMAND, 2, NULL);			// otherwise, the editor will crash as soon as the render window acquires input focus
+						SendMessage(hWnd, WM_COMMAND, TESDialog::kStandardButton_Cancel, NULL);		// otherwise, the editor will crash as soon as the render window acquires input focus
 					else
 						SendDlgItemMessage(hWnd, kFormList_LandTextures, LVM_SORTITEMS, 0, (LPARAM)TESDialog::LandscapeTextureSortComparator);
 				}
 
 				break;
-			case 0x41A:		// update active landscape texture
+			case TESDialog::kWindowMessage_Refresh:		// update active landscape texture
 				{
 					Return = true;
 
@@ -4795,9 +4770,7 @@ namespace ConstructionSetExtender
 			}
 
 			if (CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
-			{
-				SendMessage(hWnd, 0x41A, 0, 0);
-			}
+				SendMessage(hWnd, TESDialog::kWindowMessage_Refresh, 0, 0);
 
 			return DlgProcResult;
 		}
@@ -4852,9 +4825,7 @@ namespace ConstructionSetExtender
 						{
 							HWND Trackbar = GetDlgItem(Parent, kFaceGenControl_AdvancedTrackbar);
 							if (Trackbar)
-							{
 								SendMessage(Trackbar, uMsg, wParam, lParam);
-							}
 						}
 					}
 				}
@@ -5015,14 +4986,10 @@ namespace ConstructionSetExtender
 										BGSEEUI->MsgBoxE(hWnd, 0, "Invalid extension '%s' - Must be one of the following: mp3, wav, lip.", Extension);
 								}
 								else
-								{
 									BGSEEUI->MsgBoxE(hWnd, 0, "Path '%s' is invalid - Must be inside the Data\\Sound\\Voice directory.", Buffer);
-								}
 							}
 							else
-							{
 								BGSEEUI->MsgBoxE(hWnd, 0, "Couldn't retrieve dropped file path at index %d.", i);
-							}
 						}
 
 						if (strlen(FilePathLip))
@@ -5036,9 +5003,7 @@ namespace ConstructionSetExtender
 						}
 					}
 					else if (FileCount)
-					{
 						BGSEEUI->MsgBoxW(hWnd, 0, "No more than two files may be dropped into the preview control.");
-					}
 
 					DragFinish(DropData);
 				}
@@ -5116,7 +5081,7 @@ namespace ConstructionSetExtender
 							LOWORD(wParam) == kFaceGenControl_AdvancedEditCtrl)
 						{
 							// refresh the preview control
-							SendMessage(hWnd, 0x41A, NULL, NULL);
+							SendMessage(hWnd, TESDialog::kWindowMessage_Refresh, NULL, NULL);
 						}
 					}
 
@@ -5148,9 +5113,7 @@ namespace ConstructionSetExtender
 						ExtraData->Add(xData);
 
 						if (WorkingCopy)		// can be NULL when creating new forms
-						{
 							xData->FillBuffer(WorkingCopy);
-						}
 					}
 
 					if (WorkingCopy)
@@ -5306,7 +5269,7 @@ namespace ConstructionSetExtender
 			case WM_COMMAND:
 				switch (LOWORD(wParam))
 				{
-				case TESDialog::kStandardButton_Ok:			// OK button
+				case TESDialog::kStandardButton_Ok:
 					{
 						// validate list
 						TESForm* LocalCopy = TESDialog::GetDialogExtraLocalCopy(hWnd);
@@ -5685,21 +5648,21 @@ namespace ConstructionSetExtender
 
 		BOOL CALLBACK CopyPathDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
-			static bool s_DraggingMouse = false;
+			static bool kDraggingMouse = false;
 
 			switch (uMsg)
 			{
 			case WM_LBUTTONDOWN:
-				if (!s_DraggingMouse)
+				if (!kDraggingMouse)
 				{
-					s_DraggingMouse = true;
+					kDraggingMouse = true;
 					Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), "Dragging...");
 					SetCapture(hWnd);
 				}
 
 				break;
 			case WM_LBUTTONUP:
-				if (s_DraggingMouse)
+				if (kDraggingMouse)
 				{
 					POINT Location = {0};
 					Location.x = GET_X_LPARAM(lParam);
@@ -5717,7 +5680,7 @@ namespace ConstructionSetExtender
 						Edit_SetText(GetDlgItem(hWnd, IDC_COPYPATH_ASSETPATH), NULL);
 
 					ReleaseCapture();
-					s_DraggingMouse = false;
+					kDraggingMouse = false;
 				}
 
 				break;
@@ -5827,9 +5790,7 @@ namespace ConstructionSetExtender
 						}
 
 						if (strlen(ScriptID) < 1)
-						{
 							FORMAT_STR(ScriptID, "%sScript", QuestID);
-						}
 
 						Form = TESForm::LookupByEditorID(ScriptID);
 
@@ -5934,9 +5895,7 @@ namespace ConstructionSetExtender
 
 							Edit_GetText(EditorIDBox, BaseEditorID, 0x200);
 							if (TESForm::LookupByEditorID(BaseEditorID))
-							{
 								BGSEEUI->MsgBoxE(hWnd, 0, "EditorID '%s' is already in use.", BaseEditorID);
-							}
 							else
 							{
 								if (IsDlgButtonChecked(hWnd, IDC_BINDSCRIPT_QUESTFORM))
@@ -5979,18 +5938,14 @@ namespace ConstructionSetExtender
 									{
 										Edit_GetText(RefIDBox, RefEditorID, 0x200);
 										if (TESForm::LookupByEditorID(RefEditorID))
-										{
 											BGSEEUI->MsgBoxE(hWnd, 0, "EditorID '%s' is already in use.", BaseEditorID);
-										}
 										else
 										{
 											bool InitiallyDisabled = IsDlgButtonChecked(hWnd, IDC_BINDSCRIPT_OBJECTREFERENCEDISABLED);
 											TESObjectCELL* ParentCell = CS_CAST(GetWindowLongPtr(SelParentCellBtn, GWL_USERDATA), TESForm, TESObjectCELL);
 
 											if (!ParentCell || ParentCell->GetIsInterior() == 0)
-											{
 												BGSEEUI->MsgBoxE(hWnd, 0, "Invalid/exterior cell selected as parent.");
-											}
 											else
 											{
 												TESObjectACTI* Activator =  CS_CAST(TESForm::CreateInstance(TESForm::kFormType_Activator), TESForm, TESObjectACTI);

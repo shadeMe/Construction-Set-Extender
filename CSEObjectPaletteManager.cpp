@@ -567,6 +567,8 @@ namespace ConstructionSetExtender
 			EnableControls(false);
 			SetTimer(Dialog, IDC_OBJECTPALETTE_FILTERINPUTTIMERID, 500, NULL);
 			SetTimer(Dialog, IDC_OBJECTPALETTE_PREVIEWTIMERID, 5, NULL);
+
+			TESDialog::AddDialogToOpenList(Dialog);
 		}
 
 		void CSEObjectPaletteManager::DeinitializeDialog(HWND Dialog)
@@ -602,6 +604,8 @@ namespace ConstructionSetExtender
 			KillTimer(Dialog, IDC_OBJECTPALETTE_FILTERINPUTTIMERID);
 			KillTimer(Dialog, IDC_OBJECTPALETTE_PREVIEWTIMERID);
 			KillTimer(Dialog, IDC_OBJECTPALETTE_LISTSTATETIMERID);
+
+			TESDialog::RemoveDialogFromOpenList(Dialog);
 		}
 
 		void CSEObjectPaletteManager::RefreshObjectList()

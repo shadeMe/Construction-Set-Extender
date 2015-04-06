@@ -438,6 +438,8 @@ namespace ConstructionSetExtender
 			SetTimer(Dialog, IDC_OBJECTPREFAB_PREVIEWTIMERID, 5, NULL);
 
 			ReloadPrefabs();
+
+			TESDialog::AddDialogToOpenList(Dialog);
 		}
 
 		void CSEObjectPrefabManager::DeinitializeDialog(HWND Dialog)
@@ -463,6 +465,8 @@ namespace ConstructionSetExtender
 
 			KillTimer(Dialog, IDC_OBJECTPREFAB_FILTERINPUTTIMERID);
 			KillTimer(Dialog, IDC_OBJECTPREFAB_PREVIEWTIMERID);
+
+			TESDialog::RemoveDialogFromOpenList(Dialog);
 		}
 
 		void CSEObjectPrefabManager::RefreshPrefabList()

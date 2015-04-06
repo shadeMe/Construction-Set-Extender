@@ -233,7 +233,7 @@ namespace ConstructionSetExtender
 		BGSEEScript::Initialize();
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Initializing Tools");
+		BGSEECONSOLE_MESSAGE("Initializing Toolbox");
 		BGSEECONSOLE->Indent();
 		BGSEETOOLBOX->Initialize(BGSEEMAIN->INIGetter(), BGSEEMAIN->INISetter());
 		BGSEECONSOLE->Exdent();
