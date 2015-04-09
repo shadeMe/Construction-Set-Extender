@@ -84,11 +84,14 @@ public:
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
 	static TESObjectREFR*					PickAtCoords(int X, int Y);
 
-	// misc methods that belong elswhere
+	// misc methods that belong elsewhere
 	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method
 	static NiNode*							CreateNiNode();
-	static void								DeleteNiNode(NiNode* Node);
+	static void								DeleteNiAVObject(NiAVObject* Object);
 	static void								AddToNiNode(NiNode* To, NiAVObject* Child);
+	static bool								RemoveFromNiNode(NiNode* From, NiAVObject* Child);	// decrements the child's ref count and deletes if zero (returns true if deleted)
+	static ShadowSceneNode*					GetSceneGraphRoot();
+	static void								AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState = true);
 
 	static NiDX9Renderer**					NiRendererSingleton;
 };

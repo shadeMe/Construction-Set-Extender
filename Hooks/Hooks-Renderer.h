@@ -65,7 +65,10 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(RenderWindowCameraRotationPivot, "allows the viewport camera to be rotated around an arbitrary pivot");
 		_DeclareMemHdlr(CellViewSetCurrentCell, "temporary hook to prevent the cell window from gaining focus during render window exterior cell switches");
 		_DeclareMemHdlr(RenderWindowCursorSwap, "prevents the cursor icon changes from screwing themselves up");
+		_DeclareMemHdlr(RenderWindowCopySelection, "prevents the selection's bounding box from being cleared after a copy operation");
+		_DeclareMemHdlr(TESRenderRenderSceneGraph, "allows changes to the scenegraph before its rendered");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
+		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);
 	}
 }

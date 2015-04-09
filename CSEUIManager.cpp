@@ -1292,6 +1292,11 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_PARENTCHILDINDICATORS:
+									if (Settings::Renderer::kParentChildVisualIndicator().i)
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1706,6 +1711,10 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_OBJECTPREFABS:
 					ObjectPrefabs::CSEObjectPrefabManager::Instance.Show();
+
+					break;
+				case IDC_MAINMENU_PARENTCHILDINDICATORS:
+					Settings::Renderer::kParentChildVisualIndicator.ToggleData();
 
 					break;
 				default:

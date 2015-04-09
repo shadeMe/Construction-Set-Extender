@@ -228,9 +228,39 @@ void TESRender::AddToNiNode(NiNode* To, NiAVObject* Child)
 	thisVirtualCall<void>(0x84, To, Child, 0);
 }
 
-void TESRender::DeleteNiNode(NiNode* Node)
+void TESRender::DeleteNiAVObject(NiAVObject* Object)
 {
-	thisVirtualCall<void>(0x0, Node, true);
+	thisVirtualCall<void>(0x0, Object, true);
+}
+
+bool TESRender::RemoveFromNiNode(NiNode* From, NiAVObject* Child)
+{
+	NiAVObject* Out = NULL;
+	thisVirtualCall<void>(0x88, From, &Out, Child);
+	if (Out)
+	{
+		SME_ASSERT(Out == Child);
+		SME_ASSERT(Out->m_uiRefCount > 0);
+		if (InterlockedDecrement(&Out->m_uiRefCount) == 0)
+		{
+			DeleteNiAVObject(Out);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+ShadowSceneNode* TESRender::GetSceneGraphRoot()
+{
+	return cdeclCall<ShadowSceneNode*>(0x007662E0, 0);
+}
+
+void TESRender::AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState /*= true*/)
+{
+	thisCall<void>(0x00411190, To, Property);
+	if (InitializeState)
+		thisCall<void>(0x006F28A0, To);
 }
 
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,

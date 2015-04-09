@@ -74,6 +74,7 @@ namespace ConstructionSetExtender
 			extern INISetting					kCameraFOV;
 			extern INISetting					kExteriorSnapshotResolution;
 			extern INISetting					kZOffsetDuplicatedRefs;
+			extern INISetting					kParentChildVisualIndicator;
 		}
 
 		namespace RenderWindowPainter

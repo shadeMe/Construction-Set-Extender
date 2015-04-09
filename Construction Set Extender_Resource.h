@@ -172,13 +172,15 @@
 #define ID_WORLD_OBJECTPREFABS          50117
 #define IDC_MAINMENU_OBJECTPALETTE      50118
 #define IDC_MAINMENU_OBJECTPREFABS      50119
+#define ID_VIEW_PARENT                  50120
+#define IDC_MAINMENU_PARENTCHILDINDICATORS 50121
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        6036
-#define _APS_NEXT_COMMAND_VALUE         50120
+#define _APS_NEXT_COMMAND_VALUE         50122
 #define _APS_NEXT_CONTROL_VALUE         1068
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -71,6 +71,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(RenderWindowCameraRotationPivot, 0x0042CBFD);
 		_DefinePatchHdlrWithBuffer(CellViewSetCurrentCell, 0x00409170, 1, 0x53);
 		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
+		_DefinePatchHdlr(RenderWindowCopySelection, 0x0042E8A6 + 1);
+		_DefineCallHdlr(TESRenderRenderSceneGraph, 0x0040643A, OverrideSceneGraphRendering);
 
 		void PatchRendererHooks(void)
 		{
@@ -128,6 +130,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESRubberBandSelectionSkipInvisibleRefs).WriteJump();
 			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
+			_MemHdlr(RenderWindowCopySelection).WriteUInt8(0x0);
+			_MemHdlr(TESRenderRenderSceneGraph).WriteCall();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -177,6 +181,93 @@ namespace ConstructionSetExtender
 						_RENDERSEL->RemoveFromSelection(*Itr, true);
 				}
 			}
+		}
+
+		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
+		{
+			NiNode* ExtraFittingsNode = TESRender::CreateNiNode();
+			TESRender::AddToNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
+
+			// generate and update parent-child links
+			if (Settings::Renderer::kParentChildVisualIndicator().i)
+			{
+				CellObjectListT CurrentRefs;
+				if (TESRenderWindow::GetActiveCellObjects(CurrentRefs))
+				{
+					for each (auto Itr in CurrentRefs)
+					{
+						NiNode* RefNode = Itr->GetNiNode();
+						if (RefNode)
+						{
+							ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)Itr->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+							if (xParent && xParent->parent)
+							{
+								bool FoundParent = false;
+								for each (auto j in CurrentRefs)
+								{
+									if (j == xParent->parent)
+									{
+										FoundParent = true;
+										break;
+									}
+								}
+
+								if (FoundParent)
+								{
+									NiVertexColorProperty* VertexColor = (NiVertexColorProperty*)FormHeap_Allocate(sizeof(NiVertexColorProperty));
+									thisCall<void>(0x00410C50, VertexColor);
+									VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
+
+									NiWireframeProperty* Wireframe = (NiWireframeProperty*)FormHeap_Allocate(sizeof(NiWireframeProperty));
+									thisCall<void>(0x00417BE0, Wireframe);
+									Wireframe->m_bWireframe = 0;
+
+									NiColorAlpha ColorConnector = { 0 }, ColorIndicator = { 0 };
+									ColorConnector.r = ColorIndicator.r = 0.5f;
+									ColorConnector.b = ColorIndicator.b = 0.7f;
+									ColorConnector.g = ColorIndicator.g = 1.0f;
+
+									if (xParent->oppositeState)
+									{
+										ColorConnector.r = ColorConnector.b = 1.0f;
+										ColorConnector.g = 0.f;
+									}
+
+									Vector3 Point(xParent->parent->position);
+									Point -= Itr->position;
+									Vector3 Zero(0, 0, 0);
+
+									NiLines* NodeLineConnector = cdeclCall<NiLines*>(0x004AD0C0, &Point, &ColorConnector, &Zero, &ColorConnector);
+									SME_ASSERT(NodeLineConnector);
+									NodeLineConnector->m_localTranslate.x = NodeLineConnector->m_worldTranslate.x = Itr->position.x;
+									NodeLineConnector->m_localTranslate.y = NodeLineConnector->m_worldTranslate.y = Itr->position.y;
+									NodeLineConnector->m_localTranslate.z = NodeLineConnector->m_worldTranslate.z = Itr->position.z;
+
+									TESRender::AddProperty(NodeLineConnector, VertexColor);
+									TESRender::AddToNiNode(ExtraFittingsNode, NodeLineConnector);
+									thisCall<void>(0x006F2C10, NodeLineConnector);
+
+									NiTriShape* ParentIndicator = cdeclCall<NiTriShape*>(0x004AE0F0, 10.f, &ColorIndicator);
+									SME_ASSERT(ParentIndicator);
+									ParentIndicator->m_localTranslate.x = ParentIndicator->m_worldTranslate.x = xParent->parent->position.x;
+									ParentIndicator->m_localTranslate.y = ParentIndicator->m_worldTranslate.y = xParent->parent->position.y;
+									ParentIndicator->m_localTranslate.z = ParentIndicator->m_worldTranslate.z = xParent->parent->position.z;
+									TESRender::AddProperty(ParentIndicator, Wireframe);
+									TESRender::AddProperty(ParentIndicator, VertexColor);
+									TESRender::AddToNiNode(ExtraFittingsNode, ParentIndicator);
+									thisCall<void>(0x006F2C10, ParentIndicator);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			TESRender::UpdateAVObject(ExtraFittingsNode);
+			cdeclCall<void>(0x00700240, Camera, SceneGraph, CullingProc, RenderTarget);
+
+			bool Freed = TESRender::RemoveFromNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
+			SME_ASSERT(Freed == true);
 		}
 
 		#define _hhName		DoorMarkerProperties

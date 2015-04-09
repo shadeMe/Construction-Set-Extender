@@ -16,7 +16,6 @@ CSE		---->
 	BUGFIX			=
 		> The Landscape Textures Quad is supposed to replace the clicked texture with the one you double-click from the list it offers, but when you save the file, reloading reveals that it has instead replaced it with the quad's Default texture
 			>> Needs extensive decoding of land data
-		> Render window selection loses NiLines after a copy operation (works after moving them around)
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C
 			>> Need to get working repro steps
@@ -25,7 +24,6 @@ CSE		---->
 
 	ENHANCEMENT		=
 		> Option to disable asymmetry when generating a new NPC face
-		> Reference parent-child visual aid (similar to path grid points and their linked refs)
 		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
 		> Add a random "roughness" factor to the landscape sculpting brush

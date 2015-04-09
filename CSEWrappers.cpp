@@ -743,9 +743,6 @@ namespace ConstructionSetExtender
 						TESObjectREFR* NewRef = i.second;
 						TESObjectREFR* TempRef = i.first;
 
-						NewRef->GenerateNiNode();
-						_RENDERSEL->AddToSelection(NewRef, true);
-
 						ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)TempRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 						if (xParent && xParent->parent)
 						{
@@ -763,7 +760,11 @@ namespace ConstructionSetExtender
 							ExtraEnableStateParent* xParentNew = (ExtraEnableStateParent*)NewRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 							SME_ASSERT(xParentNew && xParentNew->parent == xParent->parent);
 							xParentNew->parent = NewParent;
+							NewParent->AddCrossReference(NewRef);
 						}
+
+						NewRef->GenerateNiNode();
+						_RENDERSEL->AddToSelection(NewRef, true);
 					}
 
 					if (RefreshRenderWindow)
@@ -827,7 +828,7 @@ namespace ConstructionSetExtender
 					NewRef->DeleteInstance();
 					NewBase->DeleteInstance();
 
-					TESRender::DeleteNiNode(Root);
+					TESRender::DeleteNiAVObject(Root);
 
 					for each (auto Itr in OutPreviewBaseForms)
 						Itr->DeleteInstance();
