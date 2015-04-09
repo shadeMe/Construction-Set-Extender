@@ -2989,6 +2989,13 @@ namespace ConstructionSetExtender
 					}
 
 					break;
+				case 0x4B:		// K
+					Return = true;
+
+					Settings::Renderer::kParentChildVisualIndicator.ToggleData();
+					TESRenderWindow::Redraw();
+
+					break;
 				}
 
 				break;

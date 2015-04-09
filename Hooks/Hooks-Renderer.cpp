@@ -189,7 +189,9 @@ namespace ConstructionSetExtender
 			TESRender::AddToNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
 
 			// generate and update parent-child links
-			if (Settings::Renderer::kParentChildVisualIndicator().i)
+			if (Settings::Renderer::kParentChildVisualIndicator().i &&
+				*TESRenderWindow::PathGridEditFlag == 0 &&
+				*TESRenderWindow::LandscapeEditFlag == 0)
 			{
 				CellObjectListT CurrentRefs;
 				if (TESRenderWindow::GetActiveCellObjects(CurrentRefs))
