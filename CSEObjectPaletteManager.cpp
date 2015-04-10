@@ -1,6 +1,7 @@
 #include "CSEObjectPaletteManager.h"
 #include "Construction Set Extender_Resource.h"
 #include "CSEMain.h"
+#include "CSEAchievements.h"
 
 namespace ConstructionSetExtender
 {
@@ -1019,6 +1020,7 @@ namespace ConstructionSetExtender
 						_RENDERSEL->ClearSelection(true);
 						_RENDERSEL->AddToSelection(NewRef, true);
 
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_ObjectPalette);
 						TESRenderWindow::Redraw();
 						return true;
 					}

@@ -708,6 +708,7 @@ namespace ConstructionSetExtender
 						}
 					}
 
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 					break;
 				}
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
@@ -745,6 +746,7 @@ namespace ConstructionSetExtender
 					Form->SetFromActiveFile(false);
 				}
 
+				Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 				break;
 			case IDC_CSE_POPUP_JUMPTOUSEINFOLIST:
 				{
@@ -758,6 +760,7 @@ namespace ConstructionSetExtender
 						CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(Buffer);
 					}
 
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_UseInfoListing);
 					break;
 				}
 			case IDC_CSE_POPUP_UNDELETE:
@@ -796,6 +799,7 @@ namespace ConstructionSetExtender
 						Form->SetDeleted(false);
 					}
 
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 					break;
 				}
 			case IDC_CSE_POPUP_EDITBASEFORM:
@@ -803,6 +807,7 @@ namespace ConstructionSetExtender
 					TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
 					if (BaseForm)
 						TESDialog::ShowFormEditDialog(BaseForm);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 
 					break;
 				}
@@ -821,6 +826,7 @@ namespace ConstructionSetExtender
 					{
 						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
 						Ref->ToggleInvisiblity();
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefVisibility);
 					}
 
 					break;
@@ -833,6 +839,7 @@ namespace ConstructionSetExtender
 					{
 						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
 						Ref->ToggleChildrenInvisibility();
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefVisibility);
 					}
 
 					break;
@@ -852,6 +859,7 @@ namespace ConstructionSetExtender
 					}
 
 					BGSEEUI->MsgBoxI(hWnd, 0, STLBuffer.c_str());
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 
 					break;
 				}
@@ -879,6 +887,7 @@ namespace ConstructionSetExtender
 								}
 							}
 						} while (Selection != -1);
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 					}
 				}
 
@@ -917,6 +926,7 @@ namespace ConstructionSetExtender
 
 					BGSEEUI->MsgBoxI(hWnd, 0, "FaceGen textures for NPC %s (%08X) has been exported to the Textures\\Faces directory.",
 									(NPC->editorID.c_str() ? NPC->editorID.c_str() : ""), NPC->formID);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 				}
 
 				break;
@@ -945,11 +955,13 @@ namespace ConstructionSetExtender
 						Buffer.Add(Form);
 
 					Buffer.Copy();
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
 				}
 
 				break;
 			case IDC_CSE_POPUP_REPLACEBASEFORM:
 				{
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
 					FORMAT_STR(Buffer, "Enter the editorID of the new base form");
 
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
@@ -987,12 +999,12 @@ namespace ConstructionSetExtender
 				break;
 			case IDC_CSE_POPUP_GLOBALPASTE:
 				BGSEECLIPBOARD->Paste();
+				Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
 
 				break;
 			}
 
 			BGSEEUI->GetInvalidationManager()->Redraw(hWnd);
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 		}
 
 		void __stdcall InsertFormListPopupMenuItems(HMENU Menu, TESForm* SelectedForm)

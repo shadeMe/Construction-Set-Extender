@@ -1,6 +1,7 @@
 #include "CSEObjectPrefabManager.h"
 #include "Construction Set Extender_Resource.h"
 #include "CSEMain.h"
+#include "CSEAchievements.h"
 
 namespace ConstructionSetExtender
 {
@@ -635,6 +636,7 @@ namespace ConstructionSetExtender
 
 			if (CurrentSelection)
 			{
+				Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_ObjectPrefabs);
 				if (CurrentSelection->Instantiate() == false)
 					BGSEEUI->MsgBoxE(MainDialog, MB_OK, "Couldn't instantiate the current selection.\n\nCheck the console for more information.");
 			}

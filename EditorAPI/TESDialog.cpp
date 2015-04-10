@@ -2,6 +2,7 @@
 #include "TESDialog.h"
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Hooks-Dialog.h"
+#include "CSEAchievements.h"
 
 tList<HWND>*				TESDialog::OpenDialogWindows = (tList<HWND>*)0x00A0B55C;
 bool						TESDialog::PackageCellDragDropInProgress = false;
@@ -192,6 +193,8 @@ void TESDialog::ShowScriptEditorDialog(TESForm* InitScript)
 																		   ScriptEditorLoc.top,
 																		   ScriptEditorLoc.right,
 																		   ScriptEditorLoc.bottom);
+
+	ConstructionSetExtender::Achievements::kPowerUser->UnlockTool(ConstructionSetExtender::Achievements::CSEAchievementPowerUser::kTool_ScriptEditor);
 }
 
 DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)

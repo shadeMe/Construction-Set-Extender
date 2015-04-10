@@ -281,6 +281,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
+			Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormListFilter);
 			return CanAdd;
 		}
 
@@ -1122,7 +1123,7 @@ namespace ConstructionSetExtender
 								Settings::Startup::kPluginName.SetString(PluginNameBuffer);
 
 								BGSEEUI->MsgBoxI(hWnd, 0, "Startup plugin set to '%s'.", PluginNameBuffer);
-								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+								Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_StartupLoad);
 							}
 						}
 					}
@@ -1398,8 +1399,7 @@ namespace ConstructionSetExtender
 								SaveAsBuffer->SetActive(true);
 								SaveAsBuffer->SetLoaded(true);
 							}
-
-							BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+							Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_SaveAs);
 						}
 
 						*TESCSMain::AllowAutoSaveFlag = 1;
@@ -1412,12 +1412,10 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_HIDEDELETEDFORMS:
 					CSEFormEnumerationManager::Instance.ToggleVisibilityDeletedForms();
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 					break;
 				case IDC_MAINMENU_HIDEUNMODIFIEDFORMS:
 					CSEFormEnumerationManager::Instance.ToggleVisibilityUnmodifiedForms();
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 					break;
 				case IDC_MAINMENU_CSEPREFERENCES:
@@ -1442,22 +1440,21 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_CREATEGLOBALSCRIPT:
 					BGSEEUI->ModelessDialog(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_GLOBALSCRIPT), hWnd, (DLGPROC)CreateGlobalScriptDlgProc);
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 					break;
 				case IDC_MAINMENU_TAGBROWSER:
 					CLIWrapper::Interfaces::TAG->ShowTagBrowserDialog(NULL);
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_TagBrowser);
 
 					break;
 				case IDC_MAINMENU_SETWORKSPACE:
 					BGSEEWORKSPACE->SelectCurrentWorkspace();
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_Workspace);
 
 					break;
 				case IDC_MAINMENU_TOOLS:
 					BGSEETOOLBOX->ShowToolListMenu(BGSEEMAIN->GetExtenderHandle(), hWnd);
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_Toolbox);
 
 					break;
 				case IDC_MAINMENU_CODAMANAGEGLOBALDATASTORE:
@@ -1482,6 +1479,7 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_USEINFOLISTING:
 					CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(NULL);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_UseInfoListing);
 
 					break;
 				case IDC_MAINMENU_BATCHLIPGENERATOR:
@@ -1598,8 +1596,8 @@ namespace ConstructionSetExtender
 							}
 						}
 
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GenerateLIP);
 						DestroyWindow(IdleWindow);
-						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 						if (HasError)
 							BGSEEUI->MsgBoxW("Batch generation completed with some errors!\n\nGenerated: %d files\nFailed: %d Files", BatchGenCounter, FailedCounter);
@@ -1630,14 +1628,17 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_PASTEFROMGLOBALCLIPBOARD:
 					BGSEECLIPBOARD->Paste();
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
 
 					break;
 				case IDC_MAINMENU_GLOBALUNDO:
 					BGSEEUNDOSTACK->PerformUndo();
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalUndo);
 
 					break;
 				case IDC_MAINMENU_GLOBALREDO:
 					BGSEEUNDOSTACK->PerformRedo();
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalUndo);
 
 					break;
 				case IDC_MAINMENU_PURGELOADEDRESOURCES:
@@ -1690,6 +1691,7 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_SPAWNEXTRAOBJECTWINDOW:
 					ObjectWindowImposterManager::Instance.SpawnImposter();
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_MultipleObjectWindows);
 
 					break;
 				case IDC_MAINMENU_MULTIPLEPREVIEWWINDOWS:
@@ -2076,6 +2078,7 @@ namespace ConstructionSetExtender
 						else
 							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Using alternate movement settings");
 
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AlternateRenderWindowMovement);
 						Return = true;
 					}
 
@@ -2278,12 +2281,10 @@ namespace ConstructionSetExtender
 									}
 
 									if (Modified)
-									{
 										ThisRef->SetFromActiveFile(true);
-									}
-								}
 
-								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+									Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_BatchEditor);
+								}
 							}
 
 							delete BatchData;
@@ -2330,7 +2331,6 @@ namespace ConstructionSetExtender
 							break;
 						}
 
-						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 						TESRenderWindow::Redraw();
 						Return = true;
 					}
@@ -2348,24 +2348,27 @@ namespace ConstructionSetExtender
 						{
 						case IDC_RENDERWINDOWCONTEXT_TOGGLEVISIBILITY:
 							Ref->ToggleInvisiblity();
+							Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefVisibility);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_TOGGLECHILDRENVISIBILITY:
 							Ref->ToggleChildrenInvisibility();
+							Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefVisibility);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_FREEZE:
 							Ref->SetFrozenState(true);
+							Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefFreezing);
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_THAW:
 							Ref->SetFrozenState(false);
+							Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefFreezing);
 
 							break;
 						}
 					}
 
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 					TESRenderWindow::Redraw();
 					Return = true;
 
@@ -2398,7 +2401,7 @@ namespace ConstructionSetExtender
 							break;
 						}
 
-						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefGrouping);
 						Return = true;
 					}
 
@@ -2436,7 +2439,7 @@ namespace ConstructionSetExtender
 						}
 
 						RenderWindowPainter::RenderChannelNotifications->Queue(2, "Selection aligned to %08X", AlignRef->formID);
-						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefAlignment);
 						TESRenderWindow::Redraw();
 
 						Return = true;
@@ -2464,6 +2467,7 @@ namespace ConstructionSetExtender
 							Buffer.Add(Itr->Data);
 
 						Buffer.Copy();
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
 						Return = true;
 					}
 
@@ -2471,6 +2475,7 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_PASTEFROMGLOBALCLIPBOARD:
 					{
 						BGSEECLIPBOARD->Paste();
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
 						Return = true;
 					}
 
@@ -2805,6 +2810,7 @@ namespace ConstructionSetExtender
 				case 0x5A:		// Z
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_PathGridAdditions);
 						CSEPathGridUndoManager::Instance.PerformUndo();
 						Return = true;
 					}
@@ -2813,6 +2819,7 @@ namespace ConstructionSetExtender
 				case 0x59:		// Y
 					if (*TESRenderWindow::PathGridEditFlag && GetAsyncKeyState(VK_CONTROL))
 					{
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_PathGridAdditions);
 						CSEPathGridUndoManager::Instance.PerformRedo();
 						Return = true;
 					}
@@ -2866,10 +2873,10 @@ namespace ConstructionSetExtender
 								TESPathGridPoint* Point = Itr.Get();
 								Point->UnlinkFromReference();
 								Point->HideSelectionRing();
+								Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_PathGridAdditions);
 							}
 
 							TESRenderWindow::Redraw(true);
-							BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 							Return = true;
 						}
@@ -2896,7 +2903,6 @@ namespace ConstructionSetExtender
 					if (GetAsyncKeyState(VK_CONTROL))
 					{
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_USEALTERNATEMOVEMENTSETTINGS, NULL);
-						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 
 						Return = true;
 					}
@@ -2907,6 +2913,7 @@ namespace ConstructionSetExtender
 						else
 							RenderWindowPainter::RenderChannelNotifications->Queue(3, "Released auxiliary viewport camera");
 
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AuxViewPort);
 						Return = true;
 					}
 
@@ -2963,6 +2970,7 @@ namespace ConstructionSetExtender
 																															TESDialog::kDialogTemplate_RenderWindow));
 						ExtraData->Add(xFreeCamData);
 
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FlyCamera);
 						Return = true;
 					}
 
@@ -3584,8 +3592,6 @@ namespace ConstructionSetExtender
 								}
 								else
 									BGSEECONSOLE_MESSAGE("Copied external audio file '%s' to '%s'", FilePath, Destination.c_str());
-
-								BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 							}
 
 							Return = true;
@@ -3610,11 +3616,11 @@ namespace ConstructionSetExtender
 						{
 							BGSEECONSOLE_MESSAGE("Successfully generated LIP file for the selected voice");
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kSoprano);
+							Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GenerateLIP);
 						}
 
 						DestroyWindow(IdleWindow);
 
-						BGSEEACHIEVEMENTS->Unlock(Achievements::kPowerUser);
 						Return = true;
 					}
 
@@ -4026,6 +4032,7 @@ namespace ConstructionSetExtender
 
 							if (Form)
 							{
+								Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_QuickLookup);
 								switch (Form->formType)
 								{
 								case TESForm::kFormType_Script:
@@ -5540,22 +5547,27 @@ namespace ConstructionSetExtender
 
 					return TRUE;
 				case IDC_ASSETSELECTOR_ARCHIVEBROWSER:
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AssetSelection);
 					EndDialog(hWnd, Hooks::e_BSABrowser);
 
 					return TRUE;
 				case IDC_ASSETSELECTOR_PATHEDITOR:
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AssetSelection);
 					EndDialog(hWnd, Hooks::e_EditPath);
 
 					return TRUE;
 				case IDC_ASSETSELECTOR_PATHCOPIER:
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AssetSelection);
 					EndDialog(hWnd, Hooks::e_CopyPath);
 
 					return TRUE;
 				case IDC_ASSETSELECTOR_CLEARPATH:
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AssetSelection);
 					EndDialog(hWnd, Hooks::e_ClearPath);
 
 					return TRUE;
 				case IDC_ASSETSELECTOR_ASSETEXTRACTOR:
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_AssetSelection);
 					EndDialog(hWnd, Hooks::e_ExtractPath);
 
 					return TRUE;
@@ -5620,6 +5632,7 @@ namespace ConstructionSetExtender
 
 					return TRUE;
 				case IDC_TESFILESAVE_SAVEESM:
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_SaveAsESM);
 					EndDialog(hWnd, 1);
 
 					return TRUE;
@@ -5843,6 +5856,7 @@ namespace ConstructionSetExtender
 						QuestScript->UpdateUsageInfo();
 						QuestScript->AddCrossReference(Quest);
 
+						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalScript);
 						TESDialog::ShowScriptEditorDialog(TESForm::LookupByEditorID(ScriptID));
 						DestroyWindow(hWnd);
 

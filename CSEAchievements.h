@@ -96,19 +96,70 @@ namespace ConstructionSetExtender
 		class CSEAchievementHappypotamus : public CSEAchievementTimeTriggered
 		{
 		protected:
-			UInt16							GeborenJahre;
+			UInt16							GeborenJahr;
 
 			virtual void					GetName(std::string& OutBuffer) const;
+			virtual bool					GetUnlockable(void) const;
 		public:
 			CSEAchievementHappypotamus(const char* Name, const char* Desc, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear);
 			virtual ~CSEAchievementHappypotamus();
+		};
+
+		class CSEAchievementPowerUser : public CSEAchievementBase
+		{
+		protected:
+			UInt8							ThresholdCount;
+
+			UInt8							GetUnlockedToolCount() const;
+		public:
+			CSEAchievementPowerUser(UInt8 Threshold);
+			virtual ~CSEAchievementPowerUser();
+
+			enum
+			{
+				kTool__BEING = -1,
+
+				kTool_SaveAs = 0,
+				kTool_SaveAsESM,
+				kTool_StartupLoad,
+				kTool_Workspace,
+				kTool_AssetSelection,
+				kTool_FormContextMenu,
+				kTool_LiveChangeLog,
+				kTool_QuickLookup,
+				kTool_GlobalScript,
+				kTool_GenerateLIP,
+				kTool_FormListFilter,
+				kTool_AuxViewPort,
+				kTool_AlternateRenderWindowMovement,
+				kTool_PathGridAdditions,
+				kTool_FlyCamera,
+				kTool_RefGrouping,
+				kTool_RefFreezing,
+				kTool_RefVisibility,
+				kTool_RefAlignment,
+				kTool_BatchEditor,
+				kTool_GlobalClipboard,
+				kTool_GlobalUndo,
+				kTool_Toolbox,
+				kTool_UseInfoListing,
+				kTool_TagBrowser,
+				kTool_ScriptEditor,
+				kTool_MultipleObjectWindows,
+				kTool_ObjectPalette,
+				kTool_ObjectPrefabs,
+
+				kTool__MAX
+			};
+
+			void							UnlockTool(UInt8 Tool);
 		};
 
 		extern CSEAchievementBase*			kTheWiseOne;
 		extern CSEAchievementBase*			kFearless;
 		extern CSEAchievementBase*			kAutomaton;
 		extern CSEAchievementBase*			kHeretic;
-		extern CSEAchievementIncremented*  	kPowerUser;
+		extern CSEAchievementPowerUser*  	kPowerUser;
 		extern CSEAchievementBase*  		kAntiChrist;
 		extern CSEAchievementBase*  		kLazyBum;
 		extern CSEAchievementBase*  		kMadScientist;

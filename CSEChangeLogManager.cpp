@@ -1,5 +1,6 @@
 #include "CSEChangeLogManager.h"
 #include "Hooks\Hooks-VersionControl.h"
+#include "CSEAchievements.h"
 
 namespace ConstructionSetExtender
 {
@@ -92,6 +93,7 @@ namespace ConstructionSetExtender
 					char Buffer[0x200] = {0};
 					FORMAT_STR(Buffer, "Data\\Backup\\%s\\%s - [%s].log", Name.c_str(), Name.c_str(), TimeString);
 					BGSEECHANGELOG->CopyActiveLog(Buffer);
+					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_LiveChangeLog);
 				}
 			}
 

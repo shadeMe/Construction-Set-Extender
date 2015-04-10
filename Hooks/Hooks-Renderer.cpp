@@ -1400,9 +1400,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoInitPathGridNodeSelectionRingHook(void)
 		{
 			for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
-			{
 				Itr.Get()->selected = 0;
-			}
 		}
 
 		#define _hhName		InitPathGridNodeSelectionRing

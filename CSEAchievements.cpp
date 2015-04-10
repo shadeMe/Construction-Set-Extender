@@ -10,9 +10,7 @@ namespace ConstructionSetExtender
 		bool CSEAchievementBase::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
 		{
 			if (Parameter->GetTotalAchievements() - 1 == Parameter->GetUnlockedAchievements())
-			{
 				Parameter->Unlock(AllClearAchievement, false, true);
-			}
 
 			return true;
 		}
@@ -86,9 +84,7 @@ namespace ConstructionSetExtender
 			CSEAchievementCheat::GetSingleton()->InitTickCount = dwTime;
 
 			if (CSEAchievementCheat::GetSingleton()->ElapsedTicks / (3600 * 1000) >= CSEAchievementCheat::GetSingleton()->HoursRequired)
-			{
 				BGSEEACHIEVEMENTS->Unlock(CSEAchievementCheat::GetSingleton());
-			}
 		}
 
 		CSEAchievementCheat::CSEAchievementCheat() :
@@ -196,10 +192,10 @@ namespace ConstructionSetExtender
 		{
 			time_t CurrentTime = time(NULL);
 			tm Now = {0};
-			
+
 			if (localtime_s(&Now, &CurrentTime))
 				return false;
-			
+
 			if (Day == Now.tm_mday && Month == Now.tm_mon + 1 && (Year == 0 || Year == Now.tm_year + 1900))
 			{
 				if (Year == 0 || Year == Now.tm_year)
@@ -254,7 +250,7 @@ namespace ConstructionSetExtender
 
 		CSEAchievementHappypotamus::CSEAchievementHappypotamus( const char* Name, const char* Desc, const char* GUID, UInt8 EventDay, UInt8 EventMonth, UInt16 EventYear ) :
 			CSEAchievementTimeTriggered(Name, Desc, IDB_ACHIEVEMENT_CAKE, GUID, EventDay, EventMonth, 0),
-			GeborenJahre(EventYear)
+			GeborenJahr(EventYear)
 		{
 			;//
 		}
@@ -274,8 +270,53 @@ namespace ConstructionSetExtender
 			else
 			{
 				char Buffer[0x200] = {0};
-				FORMAT_STR(Buffer, "%u years on and still alive! Go %s!", Now.tm_year + 1900 - GeborenJahre, Name.c_str());
+				FORMAT_STR(Buffer, "%u years on and still alive! Go %s!", Now.tm_year + 1900 - GeborenJahr, Name.c_str());
 				OutBuffer = Buffer;
+			}
+		}
+
+		bool CSEAchievementHappypotamus::GetUnlockable(void) const
+		{
+			return false;
+		}
+
+		UInt8 CSEAchievementPowerUser::GetUnlockedToolCount() const
+		{
+			UINT8 Count = 0;
+			for (int i = kTool__BEING + 1; i < kTool__MAX; i++)
+			{
+				if ((ExtraData & (UInt64)(1 << i)))
+					Count++;
+			}
+
+			return Count;
+		}
+
+		CSEAchievementPowerUser::CSEAchievementPowerUser(UInt8 Threshold) :
+			CSEAchievementBase("Power User",
+			"Sampled most of the new tools the CSE adds",
+			IDB_ACHIEVEMENT_POWERUSER,
+			"1F87BA7E-317F-4252-9D03-67A51F6A4E24"),
+			ThresholdCount(Threshold)
+		{
+			SME_ASSERT(ThresholdCount > 0 && ThresholdCount <= kTool__MAX);
+			SME_ASSERT(kTool__MAX < 64);
+		}
+
+		CSEAchievementPowerUser::~CSEAchievementPowerUser()
+		{
+			;//
+		}
+
+		void CSEAchievementPowerUser::UnlockTool(UInt8 Tool)
+		{
+			SME_ASSERT(Tool > kTool__BEING && Tool < kTool__MAX);
+
+			ExtraData |= (UInt64)(1 << Tool);
+			if (GetUnlockedToolCount() > ThresholdCount)
+			{
+				if (GetUnlocked() == false)
+					BGSEEACHIEVEMENTS->Unlock(this);
 			}
 		}
 
@@ -283,7 +324,7 @@ namespace ConstructionSetExtender
 		CSEAchievementBase*			kFearless				= NULL;
 		CSEAchievementBase*			kAutomaton				= NULL;
 		CSEAchievementBase*			kHeretic				= NULL;
-		CSEAchievementIncremented*  kPowerUser				= NULL;
+		CSEAchievementPowerUser*	kPowerUser				= NULL;
 		CSEAchievementBase*  		kAntiChrist				= NULL;
 		CSEAchievementBase*  		kLazyBum				= NULL;
 		CSEAchievementBase*  		kMadScientist			= NULL;
@@ -308,7 +349,7 @@ namespace ConstructionSetExtender
 		void Initialize()
 		{
 			CSEAchievementBase::AllClearAchievement = new BGSEditorExtender::Extras::BGSEEAchievement("Totally Jobless", "Collected all achievements",
-																									IDB_ACHIEVEMENT_TOTALLYJOBLESS, "B43425BE-323A-42C5-90ED-DE9CE014D842");
+																					IDB_ACHIEVEMENT_TOTALLYJOBLESS, "B43425BE-323A-42C5-90ED-DE9CE014D842");
 
 			kTheWiseOne				= new CSEAchievementBase("The Wise One", "Installed the Construction Set Extender",
 															IDB_ACHIEVEMENT_THEWISEONE, "F6B59632-FD01-4762-866C-25A91AB5157D");
@@ -322,8 +363,7 @@ namespace ConstructionSetExtender
 			kHeretic				= new CSEAchievementBase("Heretic", "Defiled the awesomeness of our Lord shadeMe",
 															IDB_ACHIEVEMENT_HERECTIC, "7C70C6BB-5872-43DF-BD2C-1362081C2379");
 
-			kPowerUser				= new CSEAchievementIncremented("Power User", "Sampled much of the new tools CSE adds",
-															IDB_ACHIEVEMENT_POWERUSER, "1F87BA7E-317F-4252-9D03-67A51F6A4E24", 400);
+			kPowerUser				= new CSEAchievementPowerUser(CSEAchievementPowerUser::kTool__MAX - 4);
 
 			kAntiChrist				= new CSEAchievementBase("Anti-Christ", "Attempted to remove our Lord shadeMe from this plane of existence",
 															IDB_ACHIEVEMENT_ANTICHRIST, "5ECDC14F-FE88-49AD-8F3D-BF761E95D527");
