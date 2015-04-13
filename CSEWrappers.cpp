@@ -828,7 +828,7 @@ namespace ConstructionSetExtender
 					NewRef->DeleteInstance();
 					NewBase->DeleteInstance();
 
-					TESRender::DeleteNiAVObject(Root);
+					TESRender::DeleteNiRefObject(Root);
 
 					for each (auto Itr in OutPreviewBaseForms)
 						Itr->DeleteInstance();

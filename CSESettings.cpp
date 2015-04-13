@@ -162,7 +162,7 @@ namespace ConstructionSetExtender
 			INISetting		kCameraFOV("CameraFOV", RENDERER_INISECTION, "Default camera field of vision", (float)90);
 			INISetting		kExteriorSnapshotResolution("ExteriorSnapshotResolution", RENDERER_INISECTION, "Resolution of the exterior cell snapshot texture. Size must be a power of 2", (SInt32)1024);
 			INISetting		kZOffsetDuplicatedRefs("ZOffsetDuplicatedRefs", RENDERER_INISECTION, "Moves duplicated refs slightly in the positive Z axis after creation", (SInt32)0);
-			INISetting		kParentChildVisualIndicator("ParentChildVisualIndicator", RENDERER_INISECTION, "Display connectors between linked references", (SInt32)1);
+			INISetting		kParentChildVisualIndicator("ParentChildVisualIndicator", RENDERER_INISECTION, "Display connectors between linked references", (SInt32)0);
 		}
 
 		namespace RenderWindowPainter

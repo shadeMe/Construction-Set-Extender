@@ -21,7 +21,7 @@ namespace ConstructionSetExtender
 			Detach();
 
 			if (RootNode)
-				TESRender::DeleteNiAVObject(RootNode);
+				TESRender::DeleteNiRefObject(RootNode);
 
 			for each (auto Itr in References)
 				Itr->DeleteInstance();

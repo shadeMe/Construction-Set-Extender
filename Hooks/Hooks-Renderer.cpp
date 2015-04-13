@@ -183,10 +183,27 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		bool CellObjectListEnableParentIndicatorVisitor(TESObjectREFR* Ref)
+		{
+			ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+			if (xParent && xParent->parent)
+				return true;
+			else
+				return false;
+		}
+
 		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
 		{
 			NiNode* ExtraFittingsNode = TESRender::CreateNiNode();
 			TESRender::AddToNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
+
+			NiVertexColorProperty* VertexColor = (NiVertexColorProperty*)FormHeap_Allocate(sizeof(NiVertexColorProperty));
+			thisCall<void>(0x00410C50, VertexColor);
+			VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
+
+			NiWireframeProperty* Wireframe = (NiWireframeProperty*)FormHeap_Allocate(sizeof(NiWireframeProperty));
+			thisCall<void>(0x00417BE0, Wireframe);
+			Wireframe->m_bWireframe = 0;
 
 			// generate and update parent-child links
 			if (Settings::Renderer::kParentChildVisualIndicator().i &&
@@ -194,61 +211,53 @@ namespace ConstructionSetExtender
 				*TESRenderWindow::LandscapeEditFlag == 0)
 			{
 				CellObjectListT CurrentRefs;
-				if (TESRenderWindow::GetActiveCellObjects(CurrentRefs))
+				if (TESRenderWindow::GetActiveCellObjects(CurrentRefs, &CellObjectListEnableParentIndicatorVisitor))
 				{
+					std::vector<TESObjectREFR*> EnumeratedParents;
 					for each (auto Itr in CurrentRefs)
 					{
 						NiNode* RefNode = Itr->GetNiNode();
 						if (RefNode)
 						{
 							ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)Itr->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-							if (xParent && xParent->parent)
+							SME_ASSERT(xParent && xParent->parent);
+
+							if (TESRenderWindow::GetCellInActiveGrid(xParent->parent->parentCell))
 							{
-								bool FoundParent = false;
-								for each (auto j in CurrentRefs)
+								bool ExistingParent = false;
+								if (std::find(EnumeratedParents.begin(), EnumeratedParents.end(), xParent->parent) == EnumeratedParents.end())
 								{
-									if (j == xParent->parent)
-									{
-										FoundParent = true;
-										break;
-									}
+									EnumeratedParents.push_back(xParent->parent);
+									ExistingParent = true;
 								}
 
-								if (FoundParent)
+								NiColorAlpha ColorConnector = { 0 }, ColorIndicator = { 0 };
+								ColorConnector.r = ColorIndicator.r = 0.5f;
+								ColorConnector.b = ColorIndicator.b = 0.7f;
+								ColorConnector.g = ColorIndicator.g = 1.0f;
+
+								if (xParent->oppositeState)
 								{
-									NiVertexColorProperty* VertexColor = (NiVertexColorProperty*)FormHeap_Allocate(sizeof(NiVertexColorProperty));
-									thisCall<void>(0x00410C50, VertexColor);
-									VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
+									ColorConnector.r = ColorConnector.b = 1.0f;
+									ColorConnector.g = 0.f;
+								}
 
-									NiWireframeProperty* Wireframe = (NiWireframeProperty*)FormHeap_Allocate(sizeof(NiWireframeProperty));
-									thisCall<void>(0x00417BE0, Wireframe);
-									Wireframe->m_bWireframe = 0;
+								Vector3 Point(xParent->parent->position);
+								Point -= Itr->position;
+								Vector3 Zero(0, 0, 0);
 
-									NiColorAlpha ColorConnector = { 0 }, ColorIndicator = { 0 };
-									ColorConnector.r = ColorIndicator.r = 0.5f;
-									ColorConnector.b = ColorIndicator.b = 0.7f;
-									ColorConnector.g = ColorIndicator.g = 1.0f;
+								NiLines* NodeLineConnector = cdeclCall<NiLines*>(0x004AD0C0, &Point, &ColorConnector, &Zero, &ColorConnector);
+								SME_ASSERT(NodeLineConnector);
+								NodeLineConnector->m_localTranslate.x = NodeLineConnector->m_worldTranslate.x = Itr->position.x;
+								NodeLineConnector->m_localTranslate.y = NodeLineConnector->m_worldTranslate.y = Itr->position.y;
+								NodeLineConnector->m_localTranslate.z = NodeLineConnector->m_worldTranslate.z = Itr->position.z;
 
-									if (xParent->oppositeState)
-									{
-										ColorConnector.r = ColorConnector.b = 1.0f;
-										ColorConnector.g = 0.f;
-									}
+								TESRender::AddProperty(NodeLineConnector, VertexColor);
+								TESRender::AddToNiNode(ExtraFittingsNode, NodeLineConnector);
+								thisCall<void>(0x006F2C10, NodeLineConnector);
 
-									Vector3 Point(xParent->parent->position);
-									Point -= Itr->position;
-									Vector3 Zero(0, 0, 0);
-
-									NiLines* NodeLineConnector = cdeclCall<NiLines*>(0x004AD0C0, &Point, &ColorConnector, &Zero, &ColorConnector);
-									SME_ASSERT(NodeLineConnector);
-									NodeLineConnector->m_localTranslate.x = NodeLineConnector->m_worldTranslate.x = Itr->position.x;
-									NodeLineConnector->m_localTranslate.y = NodeLineConnector->m_worldTranslate.y = Itr->position.y;
-									NodeLineConnector->m_localTranslate.z = NodeLineConnector->m_worldTranslate.z = Itr->position.z;
-
-									TESRender::AddProperty(NodeLineConnector, VertexColor);
-									TESRender::AddToNiNode(ExtraFittingsNode, NodeLineConnector);
-									thisCall<void>(0x006F2C10, NodeLineConnector);
-
+								if (ExistingParent == false)
+								{
 									NiTriShape* ParentIndicator = cdeclCall<NiTriShape*>(0x004AE0F0, 10.f, &ColorIndicator);
 									SME_ASSERT(ParentIndicator);
 									ParentIndicator->m_localTranslate.x = ParentIndicator->m_worldTranslate.x = xParent->parent->position.x;
@@ -266,7 +275,14 @@ namespace ConstructionSetExtender
 			}
 
 			TESRender::UpdateAVObject(ExtraFittingsNode);
+
 			cdeclCall<void>(0x00700240, Camera, SceneGraph, CullingProc, RenderTarget);
+
+			if (Wireframe->m_uiRefCount == 0)
+				TESRender::DeleteNiRefObject(Wireframe);
+
+			if (VertexColor->m_uiRefCount == 0)
+				TESRender::DeleteNiRefObject(VertexColor);
 
 			bool Freed = TESRender::RemoveFromNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
 			SME_ASSERT(Freed == true);

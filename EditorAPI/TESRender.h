@@ -87,7 +87,7 @@ public:
 	// misc methods that belong elsewhere
 	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method
 	static NiNode*							CreateNiNode();
-	static void								DeleteNiAVObject(NiAVObject* Object);
+	static void								DeleteNiRefObject(NiRefObject* Object);
 	static void								AddToNiNode(NiNode* To, NiAVObject* Child);
 	static bool								RemoveFromNiNode(NiNode* From, NiAVObject* Child);	// decrements the child's ref count and deletes if zero (returns true if deleted)
 	static ShadowSceneNode*					GetSceneGraphRoot();
@@ -180,7 +180,10 @@ public:
 	static void							Redraw(bool RefreshPathGrid = false);
 	static void							Refresh3D();
 	static void							TogglePathGridEditMode();
-	static UInt32						GetActiveCellObjects(CellObjectListT& OutList);		// enumerates refs in the current interior/exterior grid and returns the count
+
+	typedef bool						(*CellObjectListVisitor)(TESObjectREFR* Ref);
+	static UInt32						GetActiveCellObjects(CellObjectListT& OutList, CellObjectListVisitor Visitor = NULL);		// enumerates refs in the current interior/exterior grid and returns the count
+	static bool							GetCellInActiveGrid(TESObjectCELL* Cell);	// returns true if the cell is loaded/visible in the render window
 
 	static HWND*						WindowHandle;
 	static TESRenderSelection**			ClipboardSelection;

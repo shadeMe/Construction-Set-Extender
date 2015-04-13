@@ -95,7 +95,7 @@ void TESRenderWindow::Refresh3D()
 	SendMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);
 }
 
-UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
+UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList, CellObjectListVisitor Visitor)
 {
 	OutList.clear();
 
@@ -103,8 +103,12 @@ UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
 	{
 		for (TESObjectCELL::ObjectREFRList::Iterator Itr = _TES->currentInteriorCell->objectList.Begin(); !Itr.End(); ++Itr)
 		{
-			if (Itr.Get())
-				OutList.push_back(Itr.Get());
+			TESObjectREFR* Ref = Itr.Get();
+			if (Ref)
+			{
+				if (Visitor == NULL || Visitor(Ref) == true)
+					OutList.push_back(Ref);
+			}
 		}
 	}
 	else
@@ -120,8 +124,12 @@ UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
 				{
 					for (TESObjectCELL::ObjectREFRList::Iterator Itr = Data->cell->objectList.Begin(); !Itr.End(); ++Itr)
 					{
-						if (Itr.Get())
-							OutList.push_back(Itr.Get());
+						TESObjectREFR* Ref = Itr.Get();
+						if (Ref)
+						{
+							if (Visitor == NULL || Visitor(Ref) == true)
+								OutList.push_back(Ref);
+						}
 					}
 				}
 			}
@@ -129,6 +137,31 @@ UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList)
 	}
 
 	return OutList.size();
+}
+
+bool TESRenderWindow::GetCellInActiveGrid(TESObjectCELL* Cell)
+{
+	if (_TES->currentInteriorCell)
+		return Cell == _TES->currentInteriorCell;
+	else
+	{
+		GridCellArray* CellGrid = _TES->gridCellArray;
+
+		for (int i = 0; i < CellGrid->size; i++)
+		{
+			for (int j = 0; j < CellGrid->size; j++)
+			{
+				GridCellArray::GridEntry* Data = CellGrid->GetCellEntry(i, j);
+				if (Data && Data->cell)
+				{
+					if (Data->cell == Cell)
+						return true;
+				}
+			}
+		}
+
+		return false;
+	}
 }
 
 void TESRenderWindow::UndoStack::RecordReference( UInt32 Operation, TESRenderSelection::SelectedObjectsEntry* Selection )
@@ -228,7 +261,7 @@ void TESRender::AddToNiNode(NiNode* To, NiAVObject* Child)
 	thisVirtualCall<void>(0x84, To, Child, 0);
 }
 
-void TESRender::DeleteNiAVObject(NiAVObject* Object)
+void TESRender::DeleteNiRefObject(NiRefObject* Object)
 {
 	thisVirtualCall<void>(0x0, Object, true);
 }
@@ -243,7 +276,7 @@ bool TESRender::RemoveFromNiNode(NiNode* From, NiAVObject* Child)
 		SME_ASSERT(Out->m_uiRefCount > 0);
 		if (InterlockedDecrement(&Out->m_uiRefCount) == 0)
 		{
-			DeleteNiAVObject(Out);
+			DeleteNiRefObject(Out);
 			return true;
 		}
 	}

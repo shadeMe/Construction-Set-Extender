@@ -2670,6 +2670,7 @@ namespace ConstructionSetExtender
 				catch (Exception^ E)
 				{
 					DebugPrint("Error encountered when opening file for read operation!\n\tError Message: " + E->Message);
+					SetPreventTextChangedFlag(PreventTextChangeFlagState::Disabled);
 				}
 			}
 
