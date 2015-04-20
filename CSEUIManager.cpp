@@ -1010,9 +1010,7 @@ namespace ConstructionSetExtender
 											DrawData->clrText = RGB(0, 0, 0);
 										}
 										else
-										{
 											Update = false;
-										}
 
 										if (Update)
 										{
@@ -1137,9 +1135,15 @@ namespace ConstructionSetExtender
 					}
 					else if (ActiveTESFile != NULL && !_stricmp(ActiveTESFile->fileName, "oblivion.esm"))
 					{
-						if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world?") == IDNO)
+						if (BGSEEUI->MsgBoxW(hWnd,
+							MB_YESNO,
+							"You have set Oblvion.esm as an active file. Are you absolutely sure this is the end of the world?") == IDNO)
+						{
 							Return = true;
-						else if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "What you're about to do is akin to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
+						}
+						else if (BGSEEUI->MsgBoxW(hWnd,
+										MB_YESNO,
+										"What you're about to do is akin to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
 						{
 							Return = true;
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kChicken);
@@ -1374,7 +1378,6 @@ namespace ConstructionSetExtender
 						}
 
 						*TESCSMain::AllowAutoSaveFlag = 0;
-
 						char FileName[0x104] = {0};
 
 						if (TESDialog::SelectTESFileCommonDialog(hWnd,
@@ -1600,7 +1603,8 @@ namespace ConstructionSetExtender
 						DestroyWindow(IdleWindow);
 
 						if (HasError)
-							BGSEEUI->MsgBoxW("Batch generation completed with some errors!\n\nGenerated: %d files\nFailed: %d Files", BatchGenCounter, FailedCounter);
+							BGSEEUI->MsgBoxW("Batch generation completed with some errors!\n\nGenerated: %d files\nFailed: %d Files",
+											BatchGenCounter, FailedCounter);
 						else
 							BGSEEUI->MsgBoxI("Batch generation completed successfully!\n\nGenerated: %d files.", BatchGenCounter);
 					}
@@ -1778,9 +1782,7 @@ namespace ConstructionSetExtender
 						xData->ToolbarExtras->position.y = 0;
 
 						if (xData->ToolbarExtras->Build(IDD_TOOLBAREXTRAS) == false)
-						{
 							BGSEECONSOLE_ERROR("Couldn't build main window toolbar subwindow!");
-						}
 						else
 						{
 							BGSEEUI->GetSubclasser()->RegisterRegularWindowSubclass(*TESCSMain::MainToolbarHandle, MainWindowToolbarSubClassProc);
@@ -3448,9 +3450,7 @@ namespace ConstructionSetExtender
 			switch (uMsg)
 			{
 			case WM_DESTROY:
-				{
-					Settings::General::kFaceGenPreviewVoiceDelay.SetInt(TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY));
-				}
+				Settings::General::kFaceGenPreviewVoiceDelay.SetInt(TESDialog::GetDlgItemFloat(hWnd, IDC_CSE_RESPONSEWINDOW_VOICEDELAY));
 
 				break;
 			case WM_INITDIALOG:
@@ -4448,9 +4448,7 @@ namespace ConstructionSetExtender
 							LocalCopy->GetDataFromDialog(hWnd);
 
 							if (WorkingCopy->CompareTo(LocalCopy))
-							{
 								DlgProcResult = TRUE;
-							}
 						}
 					}
 
@@ -4514,9 +4512,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case WM_DESTROY:
-				{
-					CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
-				}
+				CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
 
 				break;
 			case WM_COMMAND:
@@ -5200,9 +5196,7 @@ namespace ConstructionSetExtender
 					switch (NotificationData->code)
 					{
 					case LVN_COLUMNCLICK:
-						{
-							Return = true;				// no sorting!
-						}
+						Return = true;				// no sorting!
 
 						break;
 					case LVN_KEYDOWN:
@@ -5392,6 +5386,7 @@ namespace ConstructionSetExtender
 
 					BGSEditorExtender::ResourceTemplateT Template = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
 					std::string* OutClassName = (std::string*)wParam;
+					OutClassName->clear();
 
 					switch (Template)
 					{
@@ -5450,9 +5445,8 @@ namespace ConstructionSetExtender
 						{
 							DialogExtraParam* xParam = CS_CAST(TESDialog::GetDialogExtraByType(hWnd, BSExtraData::kDialogExtra_Param),
 															   BSExtraData, DialogExtraParam);
-							SME_ASSERT(xParam);
-
-							*OutClassName = TESForm::GetFormTypeIDLongName(xParam->formType);
+							if (xParam)
+								*OutClassName = TESForm::GetFormTypeIDLongName(xParam->formType);
 						}
 						break;
 					// Misc Dialogs
@@ -5794,8 +5788,10 @@ namespace ConstructionSetExtender
 						{
 							if (Form->formType == TESForm::kFormType_Quest)
 							{
-								if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO,
-													"Quest '%s' already exists. Do you want to replace its script with a newly created one?", QuestID) != IDYES)
+								if (BGSEEUI->MsgBoxW(hWnd,
+													MB_YESNO,
+													"Quest '%s' already exists. Do you want to replace its script with a newly created one?",
+													QuestID) != IDYES)
 								{
 									return TRUE;
 								}
@@ -5978,7 +5974,8 @@ namespace ConstructionSetExtender
 												BGSEEUI->MsgBoxE(hWnd, 0, "Invalid/exterior cell selected as parent.");
 											else
 											{
-												TESObjectACTI* Activator =  CS_CAST(TESForm::CreateInstance(TESForm::kFormType_Activator), TESForm, TESObjectACTI);
+												TESObjectACTI* Activator =  CS_CAST(TESForm::CreateInstance(TESForm::kFormType_Activator),
+																					TESForm, TESObjectACTI);
 												Activator->SetFromActiveFile(true);
 												Activator->SetEditorID(BaseEditorID);
 												_DATAHANDLER->AddTESObject(Activator);

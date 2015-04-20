@@ -145,7 +145,7 @@ namespace ConstructionSetExtender
 			break;
 		}
 
-		if (DlgProcResult == FALSE)
+		if (DlgProcResult == FALSE && GetWindowLongPtr(FormList, GWL_USERDATA) != NULL)
 		{
 			if (UIManager::CSEFilterableFormListManager::Instance.HandleMessages(FilterEditBox, uMsg, wParam, lParam))
 			{

@@ -48,7 +48,8 @@ namespace ConstructionSetExtender
 		RegisterRelease(6, 2, "Talkative Badger");
 		RegisterRelease(6, 3, "Drunken Glaswegian");
 		RegisterRelease(6, 4, "Subterranean Homesick Alien");
-		RegisterRelease(7, 0, "Bull-buggering Bollocks");
+		RegisterRelease(7, 0, "Patagonian Petticoat");
+		RegisterRelease(7, 1, "Bull-buggering Bollocks");
 	}
 
 	CSEReleaseNameTable::~CSEReleaseNameTable()
