@@ -87,9 +87,11 @@ namespace ConstructionSetExtender
 			void						ReloadPrefabs();
 			void						NewPrefab();
 			void						InstatiateSelection();
+			void						RemoveSelection();
 
 			bool						ShowFileDialog(bool Save, std::string& OutPath, std::string& OutName);
 			bool						GetExistingPrefab(const char* FilePath, PrefabObjectHandleT& Out);
+			bool						RemoveLoadedPrefab(PrefabObject* Data);
 		public:
 			CSEObjectPrefabManager();
 			~CSEObjectPrefabManager();

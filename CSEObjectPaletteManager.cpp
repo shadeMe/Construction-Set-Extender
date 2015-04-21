@@ -693,6 +693,13 @@ namespace ConstructionSetExtender
 
 		void CSEObjectPaletteManager::RemoveSelection()
 		{
+			if (BGSEEUI->MsgBoxW(MainDialog,
+				MB_YESNO,
+				"Delete the selection from the current palette? This operation cannot be undone.") == IDNO)
+			{
+				return;
+			}
+
 			HWND LoadedObjectsList = GetDlgItem(MainDialog, IDC_PALETTEOBJECTS_LOADED);
 			ActiveObject = NULL;
 			int Selection = -1;

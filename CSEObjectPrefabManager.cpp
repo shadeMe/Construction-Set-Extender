@@ -318,6 +318,20 @@ namespace ConstructionSetExtender
 						}
 
 						break;
+					case LVN_KEYDOWN:
+						if (NotificationData->hwndFrom == LoadedPrefabsList)
+						{
+							NMLVKEYDOWN* KeyData = (NMLVKEYDOWN*)lParam;
+
+							switch (KeyData->wVKey)
+							{
+							case VK_DELETE:
+								Instance.RemoveSelection();
+								break;
+							}
+						}
+
+						break;
 					case LVN_GETDISPINFO:
 						if (Instance.RefreshingList == false)
 						{
@@ -539,6 +553,7 @@ namespace ConstructionSetExtender
 			SME_ASSERT(MainDialog);
 
 			SAFEDELETE(PreviewData);
+			CurrentSelection = NULL;
 
 			LoadedPrefabs.clear();
 			LoadPrefabsInDirectory(kRepositoryPath().c_str());
@@ -686,6 +701,45 @@ namespace ConstructionSetExtender
 			}
 
 			return false;
+		}
+
+		bool CSEObjectPrefabManager::RemoveLoadedPrefab(PrefabObject* Data)
+		{
+			SME_ASSERT(Data);
+
+			for (PrefabObjectListT::iterator Itr = LoadedPrefabs.begin(); Itr != LoadedPrefabs.end(); Itr++)
+			{
+				if ((*Itr).get() == Data)
+				{
+					if (DeleteFile((*Itr)->FilePath.c_str()) == FALSE)
+					{
+						BGSEECONSOLE_ERROR("Couldn't delete prefab file %s", (*Itr)->FileName.c_str());
+						return false;
+					}
+
+					LoadedPrefabs.erase(Itr);
+					if (CurrentSelection == Data)
+						CurrentSelection = NULL;
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		void CSEObjectPrefabManager::RemoveSelection()
+		{
+			if (CurrentSelection)
+			{
+				if (BGSEEUI->MsgBoxW(MainDialog,
+					MB_YESNO,
+					"Delete prefab file '%s'? This operation cannot be undone.", CurrentSelection->FileName.c_str()) == IDYES)
+				{
+					if (RemoveLoadedPrefab(CurrentSelection))
+						ReloadPrefabs();
+				}
+			}
 		}
 
 		CSEObjectPrefabManager::CSEObjectPrefabManager() :
