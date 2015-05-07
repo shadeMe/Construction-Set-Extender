@@ -1,5 +1,6 @@
 #pragma once
 #include "obse\NiNodes.h"
+#include "obse\NiExtraData.h"
 
 //	EditorAPI: Misc. NetImmerse classes.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding

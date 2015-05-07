@@ -6,12 +6,15 @@ using namespace ConstructionSetExtender;
 
 NiDX9Renderer**						TESRender::NiRendererSingleton = (NiDX9Renderer**)0x00A0F87C;
 TESRender::PrimaryRenderer**		TESRender::PrimaryRenderer::Singleton = (TESRender::PrimaryRenderer**)0x00A0BACC;
+TESRender::Scenegraph**				TESRender::Scenegraph::Singleton = (TESRender::Scenegraph**)0x00A0B634;
+NiNode**							TESRender::PathGridSceneRoot = (NiNode**)0x00A1358C;
 
 HWND*								TESRenderWindow::WindowHandle = (HWND*)0x00A0AF28;
 TESRenderSelection**				TESRenderWindow::ClipboardSelection = (TESRenderSelection**)0x00A0AF64;
 TESRenderWindow::UndoStack**		TESRenderWindow::UndoBuffer = (TESRenderWindow::UndoStack**)0x00A0B124;
 TESRenderWindow::RubberBandSelection**
 									TESRenderWindow::RubberBandSelector = (TESRenderWindow::RubberBandSelection**)0x00A0BC48;
+TESRender::PickData*				TESRenderWindow::PickBuffer = (TESRender::PickData*)0x00A0BC64;
 
 PathGridPointListT*					TESRenderWindow::SelectedPathGridPoints = (PathGridPointListT*)0x00A0AF68;
 
@@ -41,6 +44,7 @@ bool								TESRenderWindow::FreezeInactiveRefs = false;
 NiFrustum							TESRenderWindow::CameraFrustumBuffer = {0};
 POINT								TESRenderWindow::CurrentMouseCoord = {0};
 TESObjectREFR*						TESRenderWindow::CurrentMouseRef = NULL;
+TESPathGridPoint*					TESRenderWindow::CurrentMousePathGridPoint = NULL;
 bool								TESRenderWindow::ShowInitiallyDisabledRefs = true;
 bool								TESRenderWindow::ShowInitiallyDisabledRefChildren = true;
 
@@ -242,7 +246,7 @@ void TESRender::SetCameraFOV( NiCamera* Camera, float FOV, float Width /*= -1*/,
 	UpdateAVObject(Camera);
 }
 
-TESObjectREFR* TESRender::PickAtCoords( int X, int Y )
+TESObjectREFR* TESRender::PickRefAtCoords( int X, int Y )
 {
 	return cdeclCall<TESObjectREFR*>(0x00426BB0, X, Y);
 }
@@ -299,6 +303,36 @@ NiProperty* TESRender::GetProperty(NiAVObject* In, UInt16 ID)
 	return thisCall<NiProperty*>(0x006F27C0, In, ID);
 }
 
+TESPathGridPoint* TESRender::PickPathGridPointAtCoords(int X, int Y)
+{
+	if (*TESRenderWindow::PathGridEditFlag == 0 || *PathGridSceneRoot == NULL)
+		return NULL;
+
+	TESPathGridPoint* Result = NULL;
+	Vector3 Arg1(0, 0, 0), Arg2(Arg1);
+
+	TESRenderWindow::PickBuffer->SetRoot(*PathGridSceneRoot);
+	thisCall<void>(0x006FF1A0, _PRIMARYRENDERER->primaryCamera, X, Y, &Arg1, &Arg2);
+	if (TESRenderWindow::PickBuffer->PerformPick(&Arg1, &Arg2))
+	{
+		if (TESRenderWindow::PickBuffer->pickRecords.numObjs > 0)
+		{
+			NiAVObject* Pick = TESRenderWindow::PickBuffer->pickRecords.data[0]->picked;
+			if (Pick && Pick->m_parent)
+			{
+				if (Pick->m_parent->m_extraDataListLen)
+				{
+					NiIntegerExtraData* xData = NI_CAST(Pick->m_parent->m_extraDataList[0], NiIntegerExtraData);
+					if (xData)
+						Result = (TESPathGridPoint*)xData->m_iValue;
+				}
+			}
+		}
+	}
+
+	return Result;
+}
+
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,
 																	HWND Parent,
 																	NiNode* Node,
@@ -327,4 +361,14 @@ void TESPreviewControl::RemovePreviewNode(NiNode* Node)
 void TESPreviewControl::RemoveGroundPlane()
 {
 	thisCall<void>(0x0044BCF0, this);
+}
+
+void TESRender::PickData::SetRoot(NiNode* To)
+{
+	thisCall<void>(0x00417C40, this, To);
+}
+
+bool TESRender::PickData::PerformPick(Vector3* Arg1, Vector3* Arg2, bool KeepExisting /*= false*/)
+{
+	return thisCall<bool>(0x005E6030, this, Arg1, Arg2, KeepExisting);
 }

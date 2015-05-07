@@ -2670,7 +2670,7 @@ namespace ConstructionSetExtender
 				{
 					if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0 && GetAsyncKeyState(VK_MENU) == 0)
 					{
-						TESObjectREFR* Ref = TESRender::PickAtCoords(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+						TESObjectREFR* Ref = TESRender::PickRefAtCoords(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 						if (Ref)
 						{
 							if (Ref->GetFrozen() || (Ref->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
@@ -2691,23 +2691,40 @@ namespace ConstructionSetExtender
 					TESObjectREFR* LastMouseRef = TESRenderWindow::CurrentMouseRef;
 					TESRenderWindow::CurrentMouseRef = NULL;
 
-					if (GetActiveWindow() == hWnd && GetCapture() != hWnd && *TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
+					TESPathGridPoint* LastPathGridPoint = TESRenderWindow::CurrentMousePathGridPoint;
+					TESRenderWindow::CurrentMousePathGridPoint = NULL;
+
+					if (GetActiveWindow() == hWnd && GetCapture() != hWnd && *TESRenderWindow::LandscapeEditFlag == 0)
 					{
 						int Enabled = Settings::RenderWindowPainter::kShowMouseRef.GetData().i;
 						int ControlModified = Settings::RenderWindowPainter::kMouseRefCtrlModified.GetData().i;
 
 						if (Enabled && (ControlModified == false || GetAsyncKeyState(VK_CONTROL)))
 						{
-							TESRenderWindow::CurrentMouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x,
-								TESRenderWindow::CurrentMouseCoord.y);
-
-							if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
-								TESRenderWindow::CurrentMouseRef = NULL;
-
-							if (TESRenderWindow::CurrentMouseRef ||
-								(LastMouseRef && TESRenderWindow::CurrentMouseRef == NULL))
+							if (*TESRenderWindow::PathGridEditFlag == 0)
 							{
-								TESRenderWindow::Redraw();
+								TESRenderWindow::CurrentMouseRef = TESRender::PickRefAtCoords(TESRenderWindow::CurrentMouseCoord.x,
+																							  TESRenderWindow::CurrentMouseCoord.y);
+
+								if (_RENDERSEL->selectionCount == 1 && _RENDERSEL->selectionList->Data == TESRenderWindow::CurrentMouseRef)
+									TESRenderWindow::CurrentMouseRef = NULL;
+
+								if (TESRenderWindow::CurrentMouseRef ||
+									(LastMouseRef && TESRenderWindow::CurrentMouseRef == NULL))
+								{
+									TESRenderWindow::Redraw();
+								}
+							}
+							else
+							{
+								TESRenderWindow::CurrentMousePathGridPoint = TESRender::PickPathGridPointAtCoords(TESRenderWindow::CurrentMouseCoord.x,
+																												TESRenderWindow::CurrentMouseCoord.y);
+
+								if (TESRenderWindow::CurrentMousePathGridPoint ||
+									(LastPathGridPoint && TESRenderWindow::CurrentMousePathGridPoint == NULL))
+								{
+									TESRenderWindow::Redraw();
+								}
 							}
 						}
 					}
@@ -2718,7 +2735,7 @@ namespace ConstructionSetExtender
 
 						if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 						{
-							TESObjectREFR* MouseRef = TESRender::PickAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
+							TESObjectREFR* MouseRef = TESRender::PickRefAtCoords(TESRenderWindow::CurrentMouseCoord.x, TESRenderWindow::CurrentMouseCoord.y);
 							if (MouseRef)
 							{
 								if (MouseRef->GetFrozen() || (MouseRef->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
@@ -3074,6 +3091,12 @@ namespace ConstructionSetExtender
 						for each (auto Itr in Delinquents)
 							Itr->SetCulled(false);
 					}
+
+					break;
+				case VK_DELETE:
+					// clear the picked objects just in case they are about to be deleted
+					TESRenderWindow::CurrentMouseRef = NULL;
+					TESRenderWindow::CurrentMousePathGridPoint = NULL;
 
 					break;
 				}

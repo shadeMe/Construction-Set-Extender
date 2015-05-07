@@ -7,6 +7,7 @@
 
 class	TESForm;
 class	TESObjectREFR;
+class	Sky;
 
 // 4
 class Renderer
@@ -78,11 +79,66 @@ public:
 		kNodeUpdate_Unk011,
 	};
 
+	// 30
+	struct PickData
+	{
+		// actually NiPick::Record
+		// 14+?
+		struct Record
+		{
+			// members
+			/*00*/ NiAVObject*				picked;
+			/*04*/ UInt32					unk04;
+			/*08*/ Vector3					unk08;
+		};
+
+		// members
+		/*00*/ UInt32						unk00;
+		/*04*/ UInt32						unk04;
+		/*08*/ UInt32						unk08;				// init to 1
+		/*0C*/ UInt32						unk0C;				// init to 1
+		/*10*/ UInt8						unk10;				// init to 1
+		/*11*/ UInt8						unk11;
+		/*12*/ UInt16						pad12;
+		/*14*/ NiNode*						root;				// smart ptr, picking is done on its children
+		/*18*/ NiTArray<Record*>			pickRecords;		// NiTArray<NiPick::Record*>
+		/*28*/ UInt32						unk28;
+		/*2C*/ UInt8						unk2C;
+		/*2D*/ UInt8						unk2D;
+		/*2E*/ UInt8						unk2E;
+		/*2F*/ UInt8						unk2F;
+
+		// methods
+		void								SetRoot(NiNode* To);
+		bool								PerformPick(Vector3* Arg1, Vector3* Arg2, bool KeepExisting = false);
+	};
+	STATIC_ASSERT(sizeof(PickData) == 0x30);
+	STATIC_ASSERT(sizeof(PickData::Record) == 0x14);
+
+	// 20
+	struct Scenegraph
+	{
+		// members
+		/*00*/ ShadowSceneNode*				sceneRoot;
+		/*04*/ NiNode*						objectRoot;
+		/*08*/ NiNode*						lodRoot;
+		/*0C*/ NiZBufferProperty*			zBuffer;
+		/*10*/ NiWireframeProperty*			wireFrame;
+		/*14*/ PickData*					pickData;			// used when picking refs
+		/*18*/ PickData*					pickData2;
+		/*1C*/ Sky*							sky;
+
+		static Scenegraph**					Singleton;			// there are actually 2 pointers to this struct, one global (main window) and the other owned by the render window
+																// this pointer points to the former
+	};
+	STATIC_ASSERT(sizeof(Scenegraph) == 0x20);
+
 	// methods
 	static bool								UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier);
 	static void								RotateNode(NiNode* Node, Vector3* Pivot, int XOffset, int YOffset, float SpeedMultiplier);
 	static void								SetCameraFOV(NiCamera* Camera, float FOV, float Width = -1, float Height = -1);		// horizontal FOV
-	static TESObjectREFR*					PickAtCoords(int X, int Y);
+	static TESObjectREFR*					PickRefAtCoords(int X, int Y);
+	static TESPathGridPoint*				PickPathGridPointAtCoords(int X, int Y);
 
 	// misc methods that belong elsewhere
 	static void								UpdateAVObject(NiAVObject* Object);		// NiAVObject method
@@ -95,6 +151,7 @@ public:
 	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
 
 	static NiDX9Renderer**					NiRendererSingleton;
+	static NiNode**							PathGridSceneRoot;
 };
 
 #define _NIRENDERER				(*TESRender::NiRendererSingleton)
@@ -190,6 +247,7 @@ public:
 	static TESRenderSelection**			ClipboardSelection;
 	static UndoStack**					UndoBuffer;
 	static RubberBandSelection**		RubberBandSelector;
+	static TESRender::PickData*			PickBuffer;
 
 	static UInt32*						StateFlags;
 
@@ -219,6 +277,7 @@ public:
 	static POINT						CurrentMouseLBDragCoordDelta;
 	static NiFrustum					CameraFrustumBuffer;
 	static TESObjectREFR*				CurrentMouseRef;
+	static TESPathGridPoint*			CurrentMousePathGridPoint;
 	static POINT						CurrentMouseCoord;
 	static bool							ShowInitiallyDisabledRefs;
 	static bool							ShowInitiallyDisabledRefChildren;

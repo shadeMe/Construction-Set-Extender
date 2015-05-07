@@ -160,7 +160,7 @@ namespace ConstructionSetExtender
 			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorMouseRef().s, 255),
 														NULL,
-														DT_SINGLELINE|DT_LEFT|DT_TOP|DT_NOCLIP,
+														DT_WORDBREAK | DT_LEFT | DT_TOP | DT_NOCLIP,
 														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_Default)
 		{
 			;//
@@ -173,24 +173,67 @@ namespace ConstructionSetExtender
 
 		bool CSEMouseRefRenderChannel::DrawText(std::string& OutText)
 		{
-			if (TESRenderWindow::CurrentMouseRef == NULL)
+			if (*TESRenderWindow::PathGridEditFlag == 0 && TESRenderWindow::CurrentMouseRef == NULL)
+				return false;
+			else if (*TESRenderWindow::PathGridEditFlag && TESRenderWindow::CurrentMousePathGridPoint == NULL)
 				return false;
 
+			SME_ASSERT((TESRenderWindow::CurrentMouseRef && TESRenderWindow::CurrentMousePathGridPoint == NULL) ||
+					   (TESRenderWindow::CurrentMouseRef == NULL && TESRenderWindow::CurrentMousePathGridPoint));
+
 			char Buffer[0x200] = { 0 }, BaseBuffer[0x100] = { 0 };
-			TESObjectREFR* Ref = TESRenderWindow::CurrentMouseRef;
-			TESForm* Base = Ref->baseForm;
-			SME_ASSERT(Base);
+			if (TESRenderWindow::CurrentMouseRef)
+			{
+				TESObjectREFR* Ref = TESRenderWindow::CurrentMouseRef;
+				TESForm* Base = Ref->baseForm;
+				SME_ASSERT(Base);
 
-			if (Base->GetEditorID())
-				FORMAT_STR(BaseBuffer, "BASE(%s)", Base->GetEditorID());
+				if (Base->GetEditorID())
+					FORMAT_STR(BaseBuffer, "BASE(%s)", Base->GetEditorID());
+				else
+					FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
+
+				BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+				char xBuffer[0x50] = { 0 };
+				if (xData)
+				{
+					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
+					FORMAT_STR(xBuffer, "\nPARENT[%s%s%08X%s] OPPOSITE(%d)",
+							   ((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
+							   (xParent->parent->editorID.Size() ? "(" : ""),
+							   xParent->parent->formID,
+							   (xParent->parent->editorID.Size() ? ")" : ""),
+							   xParent->oppositeState);
+				}
+
+				FORMAT_STR(Buffer, "%s%s%08X) %s%s",
+						   (Ref->GetEditorID() ? Ref->GetEditorID() : ""),
+						   (Ref->GetEditorID() ? "(" : "REF("),
+						   Ref->formID,
+						   BaseBuffer,
+						   xBuffer);
+			}
 			else
-				FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
+			{
+				TESObjectREFR* Ref = TESRenderWindow::CurrentMousePathGridPoint->linkedRef;
+				if (Ref == NULL)
+					return false;
 
-			FORMAT_STR(Buffer, "%s%s%08X) %s",
-					   (Ref->GetEditorID() ? Ref->GetEditorID() : ""),
-					   (Ref->GetEditorID() ? "(" : "REF("),
-					   Ref->formID,
-					   BaseBuffer);
+				TESForm* Base = Ref->baseForm;
+				SME_ASSERT(Base);
+
+				if (Base->GetEditorID())
+					FORMAT_STR(BaseBuffer, "BASE(%s)", Base->GetEditorID());
+				else
+					FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
+
+				FORMAT_STR(Buffer, "LINKED REF[%s%s%08X%s %s]",
+						   (Ref->GetEditorID() ? Ref->GetEditorID() : ""),
+						   (Ref->GetEditorID() ? "(" : ""),
+						   Ref->formID,
+						   (Ref->GetEditorID() ? ")" : ""),
+						   BaseBuffer);
+			}
 
 			OutText = Buffer;
 			RenderArea.left = TESRenderWindow::CurrentMouseCoord.x + 25;

@@ -1038,6 +1038,8 @@ namespace ConstructionSetExtender
 			CSEPathGridUndoManager::Instance.HandlePathGridPointDeletion(DeletionList);
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
+
+			TESRenderWindow::CurrentMousePathGridPoint = NULL;
 		}
 
 		#define _hhName		TESPathGridPointDtor
