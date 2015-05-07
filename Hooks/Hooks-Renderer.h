@@ -67,6 +67,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(RenderWindowCursorSwap, "prevents the cursor icon changes from screwing themselves up");
 		_DeclareMemHdlr(RenderWindowCopySelection, "prevents the selection's bounding box from being cleared after a copy operation");
 		_DeclareMemHdlr(TESRenderRenderSceneGraph, "allows changes to the scenegraph before it's rendered");
+		_DeclareMemHdlr(TESPathGridPointGenerateNiNode, "allows linked ref indicators to be toggled");
+		_DeclareMemHdlr(TESPathGridGenerateNiNode, "");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);

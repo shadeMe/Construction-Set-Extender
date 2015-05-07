@@ -97,9 +97,7 @@ namespace ConstructionSetExtender
 			{
 			case WM_COMMAND:
 				if (HIWORD(wParam) == EN_CHANGE && (HWND)lParam == FilterEditBox)
-				{
 					TimeCounter = 0;
-				}
 
 				break;
 			case WM_RBUTTONUP:
@@ -130,17 +128,13 @@ namespace ConstructionSetExtender
 								SME::StringHelpers::MakeLower(FilterString);
 						}
 						else
-						{
 							FilterString = "";
-						}
 
 						TimeCounter = -1;
 						return true;
 					}
 					else if (TimeCounter != -1)
-					{
 						TimeCounter += TimerPeriod;
-					}
 
 					break;
 				}
@@ -450,9 +444,7 @@ namespace ConstructionSetExtender
 
 			FilterableWindowData* Data = Lookup(FilterEdit);
 			if (Data)
-			{
 				return Data->HandleMessages(uMsg, wParam, lParam);
-			}
 
 			return false;
 		}
@@ -463,9 +455,7 @@ namespace ConstructionSetExtender
 
 			FilterableWindowData* Data = Lookup(FilterEdit);
 			if (Data)
-			{
-				return Data->SetEnabledState(State);
-			}
+				Data->SetEnabledState(State);
 		}
 
 		CSEFilterableFormListManager::FilterableWindowData* CSEFilterableFormListManager::Lookup(HWND FilterEdit)
@@ -1038,8 +1028,12 @@ namespace ConstructionSetExtender
 									TESFile* Selection = (TESFile*)TESListView::GetSelectedItemData(KeyData->hdr.hwndFrom);
 									if (Selection)
 									{
-										if (BGSEEUI->MsgBoxW(hWnd, MB_YESNO, "You are about to remove a master file from the selected plugin.\n\nAre you sure you'd like to proceed?") == IDNO)
+										if (BGSEEUI->MsgBoxW(hWnd,
+											MB_YESNO,
+											"You are about to remove a master file from the selected plugin.\n\nAre you sure you'd like to proceed?") == IDNO)
+										{
 											Return = true;
+										}
 									}
 								}
 
@@ -1299,6 +1293,11 @@ namespace ConstructionSetExtender
 									break;
 								case IDC_MAINMENU_PARENTCHILDINDICATORS:
 									if (Settings::Renderer::kParentChildVisualIndicator().i)
+										CheckItem = true;
+
+									break;
+								case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORS:
+									if (Settings::Renderer::kPathGridLinkedRefIndicator().i)
 										CheckItem = true;
 
 									break;
@@ -1721,6 +1720,12 @@ namespace ConstructionSetExtender
 					break;
 				case IDC_MAINMENU_PARENTCHILDINDICATORS:
 					Settings::Renderer::kParentChildVisualIndicator.ToggleData();
+					TESRenderWindow::Redraw();
+
+					break;
+				case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORS:
+					Settings::Renderer::kPathGridLinkedRefIndicator.ToggleData();
+					TESRenderWindow::Redraw(true);
 
 					break;
 				default:
@@ -2707,7 +2712,7 @@ namespace ConstructionSetExtender
 						}
 					}
 
-					if (GetCapture() != hWnd)
+					if (GetCapture() != hWnd && BGSEditorExtender::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
 					{
 						HCURSOR Icon = *TESRenderWindow::CursorArrow;
 
@@ -2944,6 +2949,27 @@ namespace ConstructionSetExtender
 
 					Return = true;
 					break;
+				case 0x33:		// 3
+				case 0x34:		// 4
+					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
+					{
+						TESObjectREFR* Ref = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
+						if (wParam == 0x33)
+						{
+							float Alpha = Settings::Renderer::kRefToggleOpacityAlpha().f;
+							if (Alpha < 0.1)
+								Alpha = 0.1;
+
+							Ref->SetAlpha(Alpha);
+						}
+						else
+							Ref->SetAlpha();
+					}
+
+					TESRenderWindow::Redraw();
+
+					Return = true;
+					break;
 				case 0x47:		// G
 					SendMessage(BGSEEUI->GetMainWindow(), WM_COMMAND, TESCSMain::kToolbar_PathGridEdit, NULL);
 
@@ -2953,6 +2979,12 @@ namespace ConstructionSetExtender
 					{
 						SendMessage(hWnd, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
+
+						// reset opacity
+						CellObjectListT Refs;
+						TESRenderWindow::GetActiveCellObjects(Refs);
+						for each (auto Itr in Refs)
+							Itr->SetAlpha();
 					}
 
 					break;
@@ -3002,8 +3034,46 @@ namespace ConstructionSetExtender
 				case 0x4B:		// K
 					Return = true;
 
-					Settings::Renderer::kParentChildVisualIndicator.ToggleData();
-					TESRenderWindow::Redraw();
+					if (*TESRenderWindow::PathGridEditFlag == 0)
+						Settings::Renderer::kParentChildVisualIndicator.ToggleData();
+					else
+						Settings::Renderer::kPathGridLinkedRefIndicator.ToggleData();
+
+					TESRenderWindow::Redraw(*TESRenderWindow::PathGridEditFlag);
+
+					break;
+				case 0x46:		// F
+					if (*TESRenderWindow::PathGridEditFlag)
+					{
+						// prevent the linked ref indicator trishape from interfering with the fall operation
+						Return = true;
+						std::vector<NiAVObject*> Delinquents;
+
+						for (tList<TESPathGridPoint>::Iterator Itr = TESRenderWindow::SelectedPathGridPoints->Begin(); !Itr.End() && Itr.Get(); ++Itr)
+						{
+							NiNode* Node = Itr.Get()->pointNiNode;
+							if (Node)
+							{
+								for (int i = 0; i < Node->m_children.numObjs; i++)
+								{
+									NiAVObject* Child = Node->m_children.data[i];
+									if (Child && TESRender::GetProperty(Child, NiWireframeProperty::kType))
+									{
+										// the bounding box trishape is the only child with the wireframe property
+										Delinquents.push_back(Child);
+										Child->SetCulled(true);
+									}
+								}
+							}
+						}
+
+						// execute the operation
+						BGSEEUI->GetSubclasser()->TunnelDialogMessage(hWnd, uMsg, wParam, lParam);
+
+						// reset culled state
+						for each (auto Itr in Delinquents)
+							Itr->SetCulled(false);
+					}
 
 					break;
 				}

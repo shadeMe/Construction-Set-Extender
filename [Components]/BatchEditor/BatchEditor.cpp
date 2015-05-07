@@ -731,6 +731,7 @@ namespace ConstructionSetExtender
 		this->NPCList->Name = L"NPCList";
 		this->NPCList->Size = System::Drawing::Size(138, 21);
 		this->NPCList->TabIndex = 3;
+		NPCList->Sorted = false;
 		NPCList->Tag = gcnew List<UInt32>();
 		//
 		// FactionList
@@ -741,6 +742,7 @@ namespace ConstructionSetExtender
 		this->FactionList->Name = L"FactionList";
 		this->FactionList->Size = System::Drawing::Size(138, 21);
 		this->FactionList->TabIndex = 4;
+		FactionList->Sorted = false;
 		FactionList->Tag = gcnew List<UInt32>();
 		//
 		// LabelGlobal
@@ -760,6 +762,7 @@ namespace ConstructionSetExtender
 		this->GlobalList->Name = L"GlobalList";
 		this->GlobalList->Size = System::Drawing::Size(138, 21);
 		this->GlobalList->TabIndex = 6;
+		GlobalList->Sorted = false;
 		GlobalList->Tag = gcnew List<UInt32>();
 		//
 		// LabelRank
@@ -777,6 +780,7 @@ namespace ConstructionSetExtender
 		this->Rank->Name = L"Rank";
 		this->Rank->Size = System::Drawing::Size(82, 20);
 		this->Rank->TabIndex = 8;
+		this->Rank->Text = "-1";
 		//
 		// UseNPCOwner
 		//
@@ -857,10 +861,9 @@ namespace ConstructionSetExtender
 			{
 				GroupBox^ Box = dynamic_cast<GroupBox^>(Itr);
 				if (Box != nullptr)
-				{
 					SanitizeControls(Box);
-				}
 			}
+
 			SanitizeControls(Tab);
 		}
 
@@ -873,14 +876,11 @@ namespace ConstructionSetExtender
 		{
 			TextBox^ TB = dynamic_cast<TextBox^>(Itr);
 			if (TB != nullptr)
-			{
 				TB->Text = "";
-			}
+
 			CheckBox^ CB = dynamic_cast<CheckBox^>(Itr);
 			if (CB != nullptr)
-			{
 				CB->Checked = false;
-			}
 		}
 	}
 
@@ -916,6 +916,18 @@ namespace ConstructionSetExtender
 		GlobalList->BeginUpdate();
 		FactionList->BeginUpdate();
 
+		NPCList->Items->Clear();
+		NPCList->Items->Add("NONE");
+		((List<UInt32>^)NPCList->Tag)->Add((UInt32)0);
+
+		GlobalList->Items->Clear();
+		GlobalList->Items->Add("NONE");
+		((List<UInt32>^)GlobalList->Tag)->Add((UInt32)0);
+
+		FactionList->Items->Clear();
+		FactionList->Items->Add("NONE");
+		((List<UInt32>^)FactionList->Tag)->Add((UInt32)0);
+
 		for (int i = 0; i < Data->FormCount; i++)
 		{
 			FormData* ThisForm = &Data->FormListHead[i];
@@ -932,13 +944,7 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			List<UInt32>^ PtrList = dynamic_cast < List<UInt32>^ >(FormList->Tag);
-			if (i == 0)
-			{
-				FormList->Items->Add("NONE");
-				PtrList->Add((UInt32)0);
-			}
-
+			List<UInt32>^ PtrList = (List<UInt32>^)FormList->Tag;
 			FormList->Items->Add(gcnew String(ThisForm->EditorID));
 			PtrList->Add((UInt32)ThisForm->ParentForm);
 		}

@@ -2376,7 +2376,7 @@ namespace ConstructionSetExtender
 						InsightPopup->ToolTipIcon = ToolTipIcon::Error;
 						DisplayPopup = true;
 					}
-					else if(GetCharIndexInsideCommentSegment(Offset) == false &&
+					else if (GetCharIndexInsideCommentSegment(Offset) == false &&
 							PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense"))
 					{
 						array<String^>^ Tokens = GetTextAtLocation(Offset);

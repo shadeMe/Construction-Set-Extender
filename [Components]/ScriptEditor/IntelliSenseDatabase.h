@@ -30,7 +30,7 @@ namespace ConstructionSetExtender
 			UInt32												UpdateTimerInterval;		// in minutes
 			LinkedList<IntelliSenseItemScriptCommand^>^			ScriptCommands;
 			LinkedList<IntelliSenseItemVariable^>^				GameSettings;
-			LinkedList<IntelliSenseItem^>^						Enumerables;
+			List<IntelliSenseItem^>^							Enumerables;
 
 			void												UpdateDatabase();
 		public:
@@ -38,9 +38,9 @@ namespace ConstructionSetExtender
 
 			static IntelliSenseDatabase^						GetSingleton();
 
-			property LinkedList<IntelliSenseItem^>^		ItemRegistry
+			property List<IntelliSenseItem^>^					ItemRegistry
 			{
-				LinkedList<IntelliSenseItem^>^ get() { return Enumerables; }
+				List<IntelliSenseItem^>^ get() { return Enumerables; }
 			}
 
 			virtual UInt32										InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);

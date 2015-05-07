@@ -92,6 +92,7 @@ public:
 	static bool								RemoveFromNiNode(NiNode* From, NiAVObject* Child);	// decrements the child's ref count and deletes if zero (returns true if deleted)
 	static ShadowSceneNode*					GetSceneGraphRoot();
 	static void								AddProperty(NiAVObject* To, NiProperty* Property, bool InitializeState = true);
+	static NiProperty*						GetProperty(NiAVObject* In, UInt16 ID);
 
 	static NiDX9Renderer**					NiRendererSingleton;
 };

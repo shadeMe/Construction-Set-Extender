@@ -75,6 +75,8 @@ namespace ConstructionSetExtender
 			extern INISetting					kExteriorSnapshotResolution;
 			extern INISetting					kZOffsetDuplicatedRefs;
 			extern INISetting					kParentChildVisualIndicator;
+			extern INISetting					kRefToggleOpacityAlpha;
+			extern INISetting					kPathGridLinkedRefIndicator;
 		}
 
 		namespace RenderWindowPainter

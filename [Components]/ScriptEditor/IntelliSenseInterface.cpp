@@ -405,8 +405,6 @@ namespace ConstructionSetExtender
 				break;
 			}
 
-			EnumeratedItems->Sort(gcnew IntelliSenseItemSorter(SortOrder::Ascending));
-
 			if (EnumeratedItems->Count == 1)
 			{
 				IntelliSenseItem^ Item = EnumeratedItems->ToArray()[0];

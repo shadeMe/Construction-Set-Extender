@@ -73,6 +73,8 @@ namespace ConstructionSetExtender
 		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
 		_DefinePatchHdlr(RenderWindowCopySelection, 0x0042E8A6 + 1);
 		_DefineCallHdlr(TESRenderRenderSceneGraph, 0x0040643A, OverrideSceneGraphRendering);
+		_DefineHookHdlr(TESPathGridPointGenerateNiNode, 0x00556700);
+		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EDE6);
 
 		void PatchRendererHooks(void)
 		{
@@ -132,6 +134,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
 			_MemHdlr(RenderWindowCopySelection).WriteUInt8(0x0);
 			_MemHdlr(TESRenderRenderSceneGraph).WriteCall();
+			_MemHdlr(TESPathGridPointGenerateNiNode).WriteJump();
+			_MemHdlr(TESPathGridGenerateNiNode).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -224,11 +228,11 @@ namespace ConstructionSetExtender
 
 							if (TESRenderWindow::GetCellInActiveGrid(xParent->parent->parentCell))
 							{
-								bool ExistingParent = false;
+								bool NewParentNode = false;
 								if (std::find(EnumeratedParents.begin(), EnumeratedParents.end(), xParent->parent) == EnumeratedParents.end())
 								{
 									EnumeratedParents.push_back(xParent->parent);
-									ExistingParent = true;
+									NewParentNode = true;
 								}
 
 								NiColorAlpha ColorConnector = { 0 }, ColorIndicator = { 0 };
@@ -256,7 +260,7 @@ namespace ConstructionSetExtender
 								TESRender::AddToNiNode(ExtraFittingsNode, NodeLineConnector);
 								thisCall<void>(0x006F2C10, NodeLineConnector);
 
-								if (ExistingParent == false)
+								if (NewParentNode)
 								{
 									NiTriShape* ParentIndicator = cdeclCall<NiTriShape*>(0x004AE0F0, 10.f, &ColorIndicator);
 									SME_ASSERT(ParentIndicator);
@@ -1490,9 +1494,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoBSFadeNodeDrawTransparencyHook(BSFadeNode* FadeNode, float* OutAlpha)
 		{
 			if ((FadeNode->m_flags & TESObjectREFR::kNiNodeSpecialFlags_SpecialFade))
-			{
 				*OutAlpha = FadeNode->fCurrentAlpha;
-			}
 		}
 
 		#define _hhName		BSFadeNodeDrawTransparency
@@ -1571,6 +1573,61 @@ namespace ConstructionSetExtender
 				cmp		byte ptr [eax], 0
 				jmp		_hhGetVar(Retn)
 			USECUSTOMPIVOT:
+				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		bool __stdcall DoTESPathGridPointGenerateNiNode()
+		{
+			return Settings::Renderer::kPathGridLinkedRefIndicator().i != 0;
+		}
+
+		#define _hhName		TESPathGridPointGenerateNiNode
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0055670B);
+			_hhSetVar(Jump, 0x00556866);
+			__asm
+			{
+				mov		ecx, [esi + 0x20]
+				test	ecx, ecx
+				jz		SKIP
+
+				pushad
+				call	DoTESPathGridPointGenerateNiNode
+				test	al, al
+				jz		POPCONT
+
+				popad
+				jmp		_hhGetVar(Retn)
+			POPCONT:
+				popad
+			SKIP:
+				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		#define _hhName		TESPathGridGenerateNiNode
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x0054EDEC);
+			_hhSetVar(Jump, 0x0054EE45);
+			__asm
+			{
+				test	ebp, ebp
+				jz		SKIP
+
+				pushad
+				call	DoTESPathGridPointGenerateNiNode
+				test	al, al
+				jz		POPCONT
+
+				popad
+				fld1
+				jmp		_hhGetVar(Retn)
+			POPCONT:
+				popad
+			SKIP:
 				jmp		_hhGetVar(Jump)
 			}
 		}

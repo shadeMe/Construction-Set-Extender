@@ -56,6 +56,8 @@ namespace ConstructionSetExtender
 			Depot.push_back(&Renderer::kExteriorSnapshotResolution);
 			Depot.push_back(&Renderer::kZOffsetDuplicatedRefs);
 			Depot.push_back(&Renderer::kParentChildVisualIndicator);
+			Depot.push_back(&Renderer::kRefToggleOpacityAlpha);
+			Depot.push_back(&Renderer::kPathGridLinkedRefIndicator);
 
 			Depot.push_back(&RenderWindowPainter::kShowSelectionStats);
 			Depot.push_back(&RenderWindowPainter::kShowRAMUsage);
@@ -162,7 +164,9 @@ namespace ConstructionSetExtender
 			INISetting		kCameraFOV("CameraFOV", RENDERER_INISECTION, "Default camera field of vision", (float)90);
 			INISetting		kExteriorSnapshotResolution("ExteriorSnapshotResolution", RENDERER_INISECTION, "Resolution of the exterior cell snapshot texture. Size must be a power of 2", (SInt32)1024);
 			INISetting		kZOffsetDuplicatedRefs("ZOffsetDuplicatedRefs", RENDERER_INISECTION, "Moves duplicated refs slightly in the positive Z axis after creation", (SInt32)0);
-			INISetting		kParentChildVisualIndicator("ParentChildVisualIndicator", RENDERER_INISECTION, "Display connectors between linked references", (SInt32)0);
+			INISetting		kParentChildVisualIndicator("ParentChildVisualIndicator", RENDERER_INISECTION, "Display connectors between enable-state linked references", (SInt32)0);
+			INISetting		kRefToggleOpacityAlpha("RefToggleOpacityAlpha", RENDERER_INISECTION, "Reference transparency lower-bound (0-1)", (float)0.4);
+			INISetting		kPathGridLinkedRefIndicator("PathGridLinkedRefIndicator", RENDERER_INISECTION, "Display connectors between path grid points and their linked references", (SInt32)1);
 		}
 
 		namespace RenderWindowPainter

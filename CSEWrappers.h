@@ -54,6 +54,8 @@ namespace ConstructionSetExtender
 
 	class ICSEFormCollectionSerializer : public BGSEditorExtender::BGSEEFormCollectionSerializer
 	{
+		static const char*				kSigilDefaultForm;
+		static const char*				kSigilObjectRef;
 	protected:
 		TESFormListT					LoadedFormBuffer;		// stores loaded forms for deferred linking
 

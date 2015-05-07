@@ -5,7 +5,7 @@
 //	EditorAPI: TESHair class.
 
 /*
-    ...
+	...
 */
 
 // 70

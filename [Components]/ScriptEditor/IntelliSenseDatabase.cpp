@@ -24,7 +24,7 @@ namespace ConstructionSetExtender
 		{
 			DebugPrint("Initializing IntelliSense");
 
-			Enumerables = gcnew LinkedList<IntelliSenseItem^>();
+			Enumerables = gcnew List<IntelliSenseItem^>();
 			UserFunctionList = gcnew LinkedList<UserFunction^>();
 			DeveloperURLMap = gcnew Dictionary<String^, String^>();
 			RemoteScripts = gcnew Dictionary<String^, Script^>();
@@ -101,7 +101,7 @@ namespace ConstructionSetExtender
 						if (!Itr->IsValid())
 							continue;
 
-						Enumerables->AddLast(gcnew IntelliSenseItemQuest(gcnew String(Itr->EditorID),
+						Enumerables->Add(gcnew IntelliSenseItemQuest(gcnew String(Itr->EditorID),
 																			gcnew String(Itr->FullName),
 																			gcnew String(Itr->ScriptName)));
 					}
@@ -115,21 +115,21 @@ namespace ConstructionSetExtender
 
 						if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
 						{
-							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+							Enumerables->Add(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
 																			ObScriptSemanticAnalysis::Variable::DataType::Integer,
 																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 						else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 						{
-							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+							Enumerables->Add(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
 																			ObScriptSemanticAnalysis::Variable::DataType::Float,
 																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 						else
 						{
-							Enumerables->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
+							Enumerables->Add(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
 																			ObScriptSemanticAnalysis::Variable::DataType::StringVar,
 																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
@@ -137,15 +137,13 @@ namespace ConstructionSetExtender
 					}
 
 					for each (IntelliSenseItem^ Itr in ScriptCommands)
-						Enumerables->AddLast(Itr);
+						Enumerables->Add(Itr);
 
 					for each (IntelliSenseItem^ Itr in GameSettings)
-						Enumerables->AddLast(Itr);
+						Enumerables->Add(Itr);
 
 					for each (UserFunction^ Itr in UserFunctionList)
-					{
-						Enumerables->AddLast(gcnew IntelliSenseItemUserFunction(Itr));
-					}
+						Enumerables->Add(gcnew IntelliSenseItemUserFunction(Itr));
 
 					for (ComponentDLLInterface::FormData* Itr = DataHandlerData->EditorIDListHead;
 						 Itr != DataHandlerData->EditorIDListHead + DataHandlerData->EditorIDCount;
@@ -154,11 +152,13 @@ namespace ConstructionSetExtender
 						if (!Itr->IsValid())
 							continue;
 
-						Enumerables->AddLast(gcnew IntelliSenseItemEditorIDForm(Itr));
+						Enumerables->Add(gcnew IntelliSenseItemEditorIDForm(Itr));
 					}
 
 					for each (CodeSnippet^ Itr in CodeSnippets->LoadedSnippets)
-						Enumerables->AddLast(gcnew IntelliSenseItemCodeSnippet(Itr));
+						Enumerables->Add(gcnew IntelliSenseItemCodeSnippet(Itr));
+
+					Enumerables->Sort(gcnew IntelliSenseItemSorter(SortOrder::Ascending));
 
 					NativeWrapper::WriteToMainWindowStatusBar(2, "IntelliSense DB updated.");
 					NativeWrapper::WriteToMainWindowStatusBar(3, "[" +

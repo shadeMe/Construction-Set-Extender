@@ -19,9 +19,9 @@ namespace ConstructionSetExtender
 				"Command",
 				"Local Variable",
 				"Remote Variable",
-				"User Defined Function",
-				"Quest",
 				"Global Variable",
+				"Quest",
+				"User Defined Function",
 				"Game Setting",
 				"Object",
 				"Code Snippet"
@@ -33,9 +33,9 @@ namespace ConstructionSetExtender
 				Command,
 				LocalVar,
 				RemoteVar,
-				UserFunction,
-				Quest,
 				GlobalVar,
+				Quest,
+				UserFunction,
 				GMST,
 				Form,
 				Snippet,
@@ -242,8 +242,9 @@ namespace ConstructionSetExtender
 
 			virtual int Compare(IntelliSenseItem^ X, IntelliSenseItem^ Y)
 			{
-				int Result = -1;
-				Result = String::Compare(X->GetIdentifier(), Y->GetIdentifier(), true);
+				int Result = X->GetItemType() < Y->GetItemType();
+				if (X->GetItemType() == Y->GetItemType());
+					Result = String::Compare(X->GetIdentifier(), Y->GetIdentifier(), true);
 
 				if (Order == SortOrder::Descending)
 					Result *= -1;

@@ -80,9 +80,7 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 		CSEPathGridUndoManager::Instance.SetCanReset(true);
 	}
 	else
-	{
 		*RefreshFlag = 1;
-	}
 }
 
 void TESRenderWindow::TogglePathGridEditMode()
@@ -294,6 +292,11 @@ void TESRender::AddProperty(NiAVObject* To, NiProperty* Property, bool Initializ
 	thisCall<void>(0x00411190, To, Property);
 	if (InitializeState)
 		thisCall<void>(0x006F28A0, To);
+}
+
+NiProperty* TESRender::GetProperty(NiAVObject* In, UInt16 ID)
+{
+	return thisCall<NiProperty*>(0x006F27C0, In, ID);
 }
 
 TESSceneNodeDebugData* TESSceneNodeDebugData::Initialize( HINSTANCE Instance,

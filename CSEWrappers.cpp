@@ -213,6 +213,8 @@ namespace ConstructionSetExtender
 	{
 		FreeBuffer();
 	}
+	const char* ICSEFormCollectionSerializer::kSigilDefaultForm = "CSE_SERIALIZER_DEFAULTFORM";
+	const char* ICSEFormCollectionSerializer::kSigilObjectRef = "CSE_SERIALIZER_OBJECTREF";
 
 	UInt8 ICSEFormCollectionSerializer::GetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File)
 	{
@@ -231,9 +233,9 @@ namespace ConstructionSetExtender
 		UInt8 Result = kSerializer_Unknown;
 		if (Wrapped->authorName.c_str())
 		{
-			if (_stricmp(Wrapped->authorName.c_str(), "CSE_SERIALIZER_DEFAULTFORM") == 0)
+			if (_stricmp(Wrapped->authorName.c_str(), kSigilDefaultForm) == 0)
 				Result = kSerializer_DefaultForm;
-			else if (_stricmp(Wrapped->authorName.c_str(), "CSE_SERIALIZER_OBJECTREF") == 0)
+			else if (_stricmp(Wrapped->authorName.c_str(), kSigilObjectRef) == 0)
 				Result = kSerializer_ObjectRef;
 		}
 
@@ -252,10 +254,10 @@ namespace ConstructionSetExtender
 		switch (Type)
 		{
 		case kSerializer_DefaultForm:
-			Wrapped->authorName.Set("CSE_SERIALIZER_DEFAULTFORM");
+			Wrapped->authorName.Set(kSigilDefaultForm);
 			break;
 		case kSerializer_ObjectRef:
-			Wrapped->authorName.Set("CSE_SERIALIZER_OBJECTREF");
+			Wrapped->authorName.Set(kSigilObjectRef);
 			break;
 		}
 	}

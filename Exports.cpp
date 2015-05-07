@@ -1226,35 +1226,66 @@ UseInfoListCellItemListData* GetCellRefDataForForm(const char* EditorID)
 
 /**** BEGIN BATCHREFEDITOR SUBINTERFACE ****/
 #pragma region BatchRefEditor
+bool OwnershipDataSortComparator(TESForm* First, TESForm* Second)
+{
+	if (First->GetEditorID() == NULL || Second->GetEditorID() == NULL)
+		return false;
+
+	return _stricmp(First->GetEditorID(), Second->GetEditorID()) < 0;
+}
+
 BatchRefOwnerFormData* GetOwnershipData(void)
 {
 	BatchRefOwnerFormData* Result = new BatchRefOwnerFormData();
+	std::list<TESForm*> SortedNPCs, SortedFactions, SortedGlobals;
 
 	UInt32 TotalFormCount = 0;
 	TotalFormCount += _DATAHANDLER->factions.Count();
 	TotalFormCount += _DATAHANDLER->globals.Count();
+
+	for (tList<TESFaction>::Iterator Itr = _DATAHANDLER->factions.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+		SortedFactions.push_back(Itr.Get());
+
+	for (tList<TESGlobal>::Iterator Itr = _DATAHANDLER->globals.Begin(); !Itr.End() && Itr.Get(); ++Itr)
+		SortedGlobals.push_back(Itr.Get());
+
 	for (TESObject* Itr = _DATAHANDLER->objects->first; Itr; Itr = Itr->next)
 	{
 		if (Itr->formType == TESForm::kFormType_NPC)
+		{
+			SortedNPCs.push_back(Itr);
 			TotalFormCount++;
+		}
 	}
+
+	SortedNPCs.sort(OwnershipDataSortComparator);
+	SortedFactions.sort(OwnershipDataSortComparator);
+	SortedGlobals.sort(OwnershipDataSortComparator);
 
 	Result->FormCount = TotalFormCount;
 	Result->FormListHead = new FormData[Result->FormCount];
 
 	UInt32 Index = 0;
-	for (TESObject* Itr = _DATAHANDLER->objects->first; Itr; Itr = Itr->next)
+	for each (auto Itr in SortedNPCs)
 	{
-		if (Itr->formType == TESForm::kFormType_NPC)
-		{
-			FormData* ThisForm = &Result->FormListHead[Index];
-			ThisForm->FillFormData(Itr);
-			Index++;
-		}
+		FormData* ThisForm = &Result->FormListHead[Index];
+		ThisForm->FillFormData(Itr);
+		Index++;
 	}
 
-	AddLinkedListContentsToFormList(&_DATAHANDLER->factions, (FormListData*)Result, Index);
-	AddLinkedListContentsToFormList(&_DATAHANDLER->globals, (FormListData*)Result, Index);
+	for each (auto Itr in SortedFactions)
+	{
+		FormData* ThisForm = &Result->FormListHead[Index];
+		ThisForm->FillFormData(Itr);
+		Index++;
+	}
+
+	for each (auto Itr in SortedGlobals)
+	{
+		FormData* ThisForm = &Result->FormListHead[Index];
+		ThisForm->FillFormData(Itr);
+		Index++;
+	}
 
 	return Result;
 }
