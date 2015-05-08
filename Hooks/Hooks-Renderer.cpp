@@ -73,8 +73,9 @@ namespace ConstructionSetExtender
 		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
 		_DefinePatchHdlr(RenderWindowCopySelection, 0x0042E8A6 + 1);
 		_DefineCallHdlr(TESRenderRenderSceneGraph, 0x0040643A, OverrideSceneGraphRendering);
-		_DefineHookHdlr(TESPathGridPointGenerateNiNode, 0x00556700);
-		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EDE6);
+		_DefineHookHdlr(TESPathGridPointGenerateNiNodeA, 0x00556779);
+		_DefineHookHdlr(TESPathGridPointGenerateNiNodeB, 0x005567DB);
+		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EE0D);
 
 		void PatchRendererHooks(void)
 		{
@@ -134,7 +135,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
 			_MemHdlr(RenderWindowCopySelection).WriteUInt8(0x0);
 			_MemHdlr(TESRenderRenderSceneGraph).WriteCall();
-			_MemHdlr(TESPathGridPointGenerateNiNode).WriteJump();
+			_MemHdlr(TESPathGridPointGenerateNiNodeA).WriteJump();
+			_MemHdlr(TESPathGridPointGenerateNiNodeB).WriteJump();
 			_MemHdlr(TESPathGridGenerateNiNode).WriteJump();
 
 			for (int i = 0; i < 4; i++)
@@ -1579,58 +1581,84 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		bool __stdcall DoTESPathGridPointGenerateNiNode()
+		void __stdcall DoTESPathGridPointGenerateNiNodeA(NiLines* Connector)
 		{
-			return Settings::Renderer::kPathGridLinkedRefIndicator().i != 0;
+			if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+			{
+				if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u & Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector))
+					Connector->SetCulled(true);
+			}
 		}
 
-		#define _hhName		TESPathGridPointGenerateNiNode
+		#define _hhName		TESPathGridPointGenerateNiNodeA
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x0055670B);
-			_hhSetVar(Jump, 0x00556866);
+			_hhSetVar(Retn, 0x0055677E);
+			_hhSetVar(Call, 0x004AD0C0);
 			__asm
 			{
-				mov		ecx, [esi + 0x20]
-				test	ecx, ecx
-				jz		SKIP
+				call	_hhGetVar(Call)
 
 				pushad
-				call	DoTESPathGridPointGenerateNiNode
-				test	al, al
-				jz		POPCONT
+				push	eax
+				call	DoTESPathGridPointGenerateNiNodeA
+				popad
 
-				popad
 				jmp		_hhGetVar(Retn)
-			POPCONT:
+			}
+		}
+
+		void __stdcall DoTESPathGridPointGenerateNiNodeB(NiTriShape* BoundingBox)
+		{
+			if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+			{
+				if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u & Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox))
+					BoundingBox->SetCulled(true);
+			}
+		}
+
+		#define _hhName		TESPathGridPointGenerateNiNodeB
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x005567E0);
+			_hhSetVar(Call, 0x004ACC30);
+			__asm
+			{
+				call	_hhGetVar(Call)
+
+				pushad
+				push	eax
+				call	DoTESPathGridPointGenerateNiNodeB
 				popad
-			SKIP:
-				jmp		_hhGetVar(Jump)
+
+				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		void __stdcall DoTESPathGridGenerateNiNode(NiTriShape* RefNode)
+		{
+			if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+			{
+				if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u & Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode))
+					RefNode->SetCulled(true);
 			}
 		}
 
 		#define _hhName		TESPathGridGenerateNiNode
 		_hhBegin()
 		{
-			_hhSetVar(Retn, 0x0054EDEC);
-			_hhSetVar(Jump, 0x0054EE45);
+			_hhSetVar(Retn, 0x0054EE12);
+			_hhSetVar(Call, 0x004AE0F0);
 			__asm
 			{
-				test	ebp, ebp
-				jz		SKIP
+				call	_hhGetVar(Call)
 
 				pushad
-				call	DoTESPathGridPointGenerateNiNode
-				test	al, al
-				jz		POPCONT
+				push	eax
+				call	DoTESPathGridGenerateNiNode
+				popad
 
-				popad
-				fld1
 				jmp		_hhGetVar(Retn)
-			POPCONT:
-				popad
-			SKIP:
-				jmp		_hhGetVar(Jump)
 			}
 		}
 	}

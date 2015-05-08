@@ -77,6 +77,14 @@ namespace ConstructionSetExtender
 			extern INISetting					kParentChildVisualIndicator;
 			extern INISetting					kRefToggleOpacityAlpha;
 			extern INISetting					kPathGridLinkedRefIndicator;
+			extern INISetting					kPathGridLinkedRefIndicatorFlags;
+
+			enum
+			{
+				kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox	=	1 << 0,
+				kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode		=	1 << 1,
+				kPathGridLinkedRefIndicatorFlag_HideLineConnector		=	1 << 2,
+			};
 		}
 
 		namespace RenderWindowPainter

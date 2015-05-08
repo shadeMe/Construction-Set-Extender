@@ -224,7 +224,7 @@ namespace ConstructionSetExtender
 			Inductees.push_back(new CSEHallOfFameStaff("DragoonWraith",					"The Mighty ARSE"));
 			Inductees.push_back(new CSEHallOfFameMGEF('HSRJ',							"The Constant Physicist"));
 			Inductees.push_back(new CSEHallOfFameEntry("Arthmoor",						"Bollocks-Breaker",				TESForm::kFormType_SoulGem));
-			Inductees.push_back(new CSEHallOfFameEntry("Vorians",						"Mr. Aux Viewport",				TESForm::kFormType_Activator));
+			Inductees.push_back(new CSEHallOfFameEntry("Vorians",						"Ser Nitpick",				TESForm::kFormType_Activator));
 			Inductees.push_back(new CSEHallOfFameScript("QQuix",						"scn QQuix\n\nbegin function {}\n\tsetFunctionValue \"I was the one who brought up the idea for Coda, CSE's scripting language for the CS environment! Woohoo!!\"\nend"));
 
 			Inductees.push_back(new CSEHallOfFameShadeMe());		// oh yeah!

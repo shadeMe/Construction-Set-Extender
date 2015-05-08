@@ -732,6 +732,8 @@ namespace ConstructionSetExtender
 		this->NPCList->Size = System::Drawing::Size(138, 21);
 		this->NPCList->TabIndex = 3;
 		NPCList->Sorted = false;
+		NPCList->DropDownHeight = 500;
+		NPCList->DropDownWidth = 250;
 		NPCList->Tag = gcnew List<UInt32>();
 		//
 		// FactionList
@@ -743,6 +745,8 @@ namespace ConstructionSetExtender
 		this->FactionList->Size = System::Drawing::Size(138, 21);
 		this->FactionList->TabIndex = 4;
 		FactionList->Sorted = false;
+		FactionList->DropDownHeight = 500;
+		FactionList->DropDownWidth = 250;
 		FactionList->Tag = gcnew List<UInt32>();
 		//
 		// LabelGlobal
@@ -763,6 +767,8 @@ namespace ConstructionSetExtender
 		this->GlobalList->Size = System::Drawing::Size(138, 21);
 		this->GlobalList->TabIndex = 6;
 		GlobalList->Sorted = false;
+		GlobalList->DropDownHeight = 500;
+		GlobalList->DropDownWidth = 250;
 		GlobalList->Tag = gcnew List<UInt32>();
 		//
 		// LabelRank

@@ -1301,6 +1301,30 @@ namespace ConstructionSetExtender
 										CheckItem = true;
 
 									break;
+								case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDEBOUNDINGBOX:
+									if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u &
+										Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox))
+									{
+										CheckItem = true;
+									}
+
+									break;
+								case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINKEDREFNODE:
+									if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u &
+										Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode))
+									{
+										CheckItem = true;
+									}
+
+									break;
+								case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINECONNECTOR:
+									if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u &
+										Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector))
+									{
+										CheckItem = true;
+									}
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -1726,6 +1750,37 @@ namespace ConstructionSetExtender
 				case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORS:
 					Settings::Renderer::kPathGridLinkedRefIndicator.ToggleData();
 					TESRenderWindow::Redraw(true);
+
+					break;
+				case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDEBOUNDINGBOX:
+				case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINKEDREFNODE:
+				case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINECONNECTOR:
+					{
+						UInt32 Flags = Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u;
+						UInt32 Comperand = 0;
+
+						switch (LOWORD(wParam))
+						{
+						case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDEBOUNDINGBOX:
+							Comperand = Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox;
+							break;
+						case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINKEDREFNODE:
+							Comperand = Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode;
+							break;
+						case IDC_MAINMENU_PATHGRIDLINKEDREFINDICATORSETTINGS_HIDELINECONNECTOR:
+							Comperand = Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector;
+							break;
+						}
+
+						if ((Flags & Comperand))
+							Flags &= ~Comperand;
+						else
+							Flags |= Comperand;
+
+						Settings::Renderer::kPathGridLinkedRefIndicatorFlags.SetUInt(Flags);
+						if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+							TESRenderWindow::Redraw(true);
+					}
 
 					break;
 				default:
@@ -3074,7 +3129,7 @@ namespace ConstructionSetExtender
 								for (int i = 0; i < Node->m_children.numObjs; i++)
 								{
 									NiAVObject* Child = Node->m_children.data[i];
-									if (Child && TESRender::GetProperty(Child, NiWireframeProperty::kType))
+									if (Child && Child->IsCulled() == false && TESRender::GetProperty(Child, NiWireframeProperty::kType))
 									{
 										// the bounding box trishape is the only child with the wireframe property
 										Delinquents.push_back(Child);

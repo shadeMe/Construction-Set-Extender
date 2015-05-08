@@ -58,6 +58,7 @@ namespace ConstructionSetExtender
 			Depot.push_back(&Renderer::kParentChildVisualIndicator);
 			Depot.push_back(&Renderer::kRefToggleOpacityAlpha);
 			Depot.push_back(&Renderer::kPathGridLinkedRefIndicator);
+			Depot.push_back(&Renderer::kPathGridLinkedRefIndicatorFlags);
 
 			Depot.push_back(&RenderWindowPainter::kShowSelectionStats);
 			Depot.push_back(&RenderWindowPainter::kShowRAMUsage);
@@ -167,6 +168,8 @@ namespace ConstructionSetExtender
 			INISetting		kParentChildVisualIndicator("ParentChildVisualIndicator", RENDERER_INISECTION, "Display connectors between enable-state linked references", (SInt32)0);
 			INISetting		kRefToggleOpacityAlpha("RefToggleOpacityAlpha", RENDERER_INISECTION, "Reference transparency lower-bound (0-1)", (float)0.4);
 			INISetting		kPathGridLinkedRefIndicator("PathGridLinkedRefIndicator", RENDERER_INISECTION, "Display connectors between path grid points and their linked references", (SInt32)1);
+			INISetting		kPathGridLinkedRefIndicatorFlags("PathGridLinkedRefIndicatorFlags", RENDERER_INISECTION, "Indicator visibility flags",
+							(UInt32)kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox | kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode | kPathGridLinkedRefIndicatorFlag_HideLineConnector);
 		}
 
 		namespace RenderWindowPainter

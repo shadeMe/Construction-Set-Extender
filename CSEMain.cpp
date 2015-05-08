@@ -643,11 +643,11 @@ extern "C"
 #ifdef NDEBUG
 														  false,
 #else
-														  false,		// clr memory profiling
+														  false,		// CLR memory profiling
 #endif
 														  false,		// wait for debugger
 #ifdef NDEBUG
-														  true);
+														  true);		// CrashRpt support
 		TODO("Save debug symbols, dammit!")
 #else
 														  false);
