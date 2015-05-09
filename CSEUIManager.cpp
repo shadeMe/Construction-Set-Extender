@@ -2079,6 +2079,11 @@ namespace ConstructionSetExtender
 									}
 
 									break;
+								case IDC_RENDERWINDOWCONTEXT_OFFSETDUPLICATEDREFSINTHEZAXIS:
+									if (Settings::Renderer::kZOffsetDuplicatedRefs().i)
+										CheckItem = true;
+
+									break;
 								default:
 									UpdateItem = false;
 									break;
@@ -2159,6 +2164,13 @@ namespace ConstructionSetExtender
 				case IDC_RENDERWINDOWCONTEXT_SWITCHCNY:
 					{
 						Settings::Renderer::kSwitchCAndY.ToggleData();
+						Return = true;
+					}
+
+					break;
+				case IDC_RENDERWINDOWCONTEXT_OFFSETDUPLICATEDREFSINTHEZAXIS:
+					{
+						Settings::Renderer::kZOffsetDuplicatedRefs.ToggleData();
 						Return = true;
 					}
 

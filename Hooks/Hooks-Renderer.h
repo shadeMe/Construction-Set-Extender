@@ -70,6 +70,8 @@ namespace ConstructionSetExtender
 		_DeclareMemHdlr(TESPathGridPointGenerateNiNodeA, "allows linked ref indicators to be toggled");
 		_DeclareMemHdlr(TESPathGridPointGenerateNiNodeB, "");
 		_DeclareMemHdlr(TESPathGridGenerateNiNode, "");
+		_DeclareMemHdlr(CenterCameraOnRefSelection, "adds a sanity check for non-reference forms in the selection when centering or 'topping' the camera");
+		_DeclareMemHdlr(TopCameraOnRefSelection, "");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
 		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);

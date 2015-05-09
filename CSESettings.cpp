@@ -183,10 +183,10 @@ namespace ConstructionSetExtender
 			INISetting		kFontFace("FontFace", RWPAINTER_INISECTION, "Font face of the rendered text", "Arial");
 			INISetting		kFontSize("FontSize", RWPAINTER_INISECTION, "Size of the rendered text", (SInt32)20);
 
-			INISetting		kColorSelectionStats("ColorSelectionStats", DIALOGS_INISECTION, "Foreground color", "189,237,99");
-			INISetting		kColorRAMUsage("ColorRAMUsage", DIALOGS_INISECTION, "Foreground color", "230,230,0");
-			INISetting		kColorMouseRef("ColorMouseRef", DIALOGS_INISECTION, "Foreground color", "255,128,0");
-			INISetting		kColorNotifications("ColorNotifications", DIALOGS_INISECTION, "Foreground color", "230,230,0");
+			INISetting		kColorSelectionStats("ColorSelectionStats", RWPAINTER_INISECTION, "Foreground color", "189,237,99");
+			INISetting		kColorRAMUsage("ColorRAMUsage", RWPAINTER_INISECTION, "Foreground color", "230,230,0");
+			INISetting		kColorMouseRef("ColorMouseRef", RWPAINTER_INISECTION, "Foreground color", "255,128,0");
+			INISetting		kColorNotifications("ColorNotifications", RWPAINTER_INISECTION, "Foreground color", "230,230,0");
 		}
 
 		namespace RenderWindowFlyCamera

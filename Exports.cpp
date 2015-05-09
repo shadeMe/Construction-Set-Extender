@@ -836,10 +836,15 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 			EditorIDFormCount = 0;
 
 	ScriptData TestData;
+	std::vector<UInt32> UDFFormIDs;
 	for (tList<Script>::Iterator Itr = _DATAHANDLER->scripts.Begin(); !Itr.End() && Itr.Get(); ++Itr)
 	{
 		TestData.FillScriptData(Itr.Get());
-		if (TestData.UDF)	ScriptCount++;
+		if (TestData.UDF)
+		{
+			ScriptCount++;
+			UDFFormIDs.push_back(TestData.FormID);
+		}
 	}
 
 	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
@@ -852,9 +857,16 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		{
 			if (Form->formType != TESForm::kFormType_GMST &&
 				Form->formType != TESForm::kFormType_Global &&
-				Form->formType != TESForm::kFormType_Quest)
+				Form->formType != TESForm::kFormType_Quest &&
+				Form->formType != TESForm::kFormType_LandTexture &&
+				Form->formType != TESForm::kFormType_Tree &&
+				Form->formType != TESForm::kFormType_Grass &&
+				Form->formType != TESForm::kFormType_Region &&
+				Form->formType != TESForm::kFormType_LoadScreen &&
+				Form->formType != TESForm::kFormType_AnimObject)
 			{
-				EditorIDFormCount++;
+				if (std::find(UDFFormIDs.begin(), UDFFormIDs.end(), Form->formID) == UDFFormIDs.end())
+					EditorIDFormCount++;
 			}
 		}
 	}
@@ -913,11 +925,13 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 				Form->formType != TESForm::kFormType_Grass &&
 				Form->formType != TESForm::kFormType_Region &&
 				Form->formType != TESForm::kFormType_LoadScreen &&
-				Form->formType != TESForm::kFormType_AnimObject
-				)
+				Form->formType != TESForm::kFormType_AnimObject)
 			{
-				Data->EditorIDListHead[EditorIDFormCount].FillFormData(Form);
-				EditorIDFormCount++;
+				if (std::find(UDFFormIDs.begin(), UDFFormIDs.end(), Form->formID) == UDFFormIDs.end())
+				{
+					Data->EditorIDListHead[EditorIDFormCount].FillFormData(Form);
+					EditorIDFormCount++;
+				}
 			}
 		}
 	}

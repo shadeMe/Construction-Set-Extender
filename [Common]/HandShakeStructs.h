@@ -116,7 +116,7 @@ namespace ComponentDLLInterface
 
 	struct IntelliSenseUpdateData : public IDisposableData
 	{
-		ScriptData*										ScriptListHead;
+		ScriptData*										ScriptListHead;		// user-defined functions
 		UInt32											ScriptCount;
 
 		QuestData*										QuestListHead;

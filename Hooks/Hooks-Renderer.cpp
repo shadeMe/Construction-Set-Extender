@@ -76,6 +76,8 @@ namespace ConstructionSetExtender
 		_DefineHookHdlr(TESPathGridPointGenerateNiNodeA, 0x00556779);
 		_DefineHookHdlr(TESPathGridPointGenerateNiNodeB, 0x005567DB);
 		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EE0D);
+		_DefineHookHdlr(CenterCameraOnRefSelection, 0x00428E35);
+		_DefineHookHdlr(TopCameraOnRefSelection, 0x00428FB8);
 
 		void PatchRendererHooks(void)
 		{
@@ -138,6 +140,8 @@ namespace ConstructionSetExtender
 			_MemHdlr(TESPathGridPointGenerateNiNodeA).WriteJump();
 			_MemHdlr(TESPathGridPointGenerateNiNodeB).WriteJump();
 			_MemHdlr(TESPathGridGenerateNiNode).WriteJump();
+			_MemHdlr(CenterCameraOnRefSelection).WriteJump();
+			_MemHdlr(TopCameraOnRefSelection).WriteJump();
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -1659,6 +1663,44 @@ namespace ConstructionSetExtender
 				popad
 
 				jmp		_hhGetVar(Retn)
+			}
+		}
+
+		#define _hhName		CenterCameraOnRefSelection
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00428E3A);
+			_hhSetVar(Call, 0x0088DC0C);
+			_hhSetVar(Jump, 0x0042EF86);
+			__asm
+			{
+				call	_hhGetVar(Call)
+
+				test	eax, eax
+				jz		SKIP
+
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				jmp		_hhGetVar(Jump)
+			}
+		}
+
+		#define _hhName		TopCameraOnRefSelection
+		_hhBegin()
+		{
+			_hhSetVar(Retn, 0x00428FBD);
+			_hhSetVar(Call, 0x0088DC0C);
+			_hhSetVar(Jump, 0x0042EF86);
+			__asm
+			{
+				call	_hhGetVar(Call)
+
+				test	eax, eax
+				jz		SKIP
+
+				jmp		_hhGetVar(Retn)
+			SKIP:
+				jmp		_hhGetVar(Jump)
 			}
 		}
 	}
