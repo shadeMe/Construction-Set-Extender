@@ -7,15 +7,14 @@ IMMEDIATE  >>
 NOTE	---->
 
 
-MISC	---->
-	> Mention the ResizeEnable tool in the readMe
-	> Mention the admin privileges requirement in the readMe
 
 CSE		---->
 
 	BUGFIX			=
+		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 		> The Landscape Textures Quad is supposed to replace the clicked texture with the one you double-click from the list it offers, but when you save the file, reloading reveals that it has instead replaced it with the quad's Default texture
 			>> Needs extensive decoding of land data
+		>  If you edit a land record, then switch to either a parent or child worldspace which contains that same cell, frequently the edits are not displayed in the render window, instead you see the unedited land height (however collision is handled correctly so Fing an object will drop it to where the land should be) - additionally, when editing a land record in a child worldspace, sometimes these edits get saved into a NEW land record for the child worldspace instead of being allocated to the existing land record of the parent worldspace. I believe the land record from the parent landscape is the one which gets displayed in-game when such an overlap exists.
 		> Partial black tex hasn't been fixed yet
 		> Look into the activator bug at 0x00511D8C
 			>> Need to get working repro steps

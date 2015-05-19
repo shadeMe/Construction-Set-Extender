@@ -467,13 +467,9 @@ namespace ConstructionSetExtender
 										BracketSearchData Buffer(Delimiter, DelimiterIndex);
 
 										if (CurrentBracket->GetType() == Buffer.GetType() && CurrentBracket->GetKind() == BracketSearchData::BracketKind::Opening)
-										{
 											CurrentBracket->EndOffset = DelimiterIndex;
-										}
 										else
-										{
 											CurrentBracket->Mismatching = true;
-										}
 
 										ParsedBracketList->Add(CurrentBracket);
 									}
@@ -817,6 +813,9 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::QueueBackgroundTask()
 			{
+				if (CompilationInProgress)
+					return;
+
 				if (BackgroundTask)
 				{
 					// skip if the previous task is still executing
@@ -851,7 +850,7 @@ namespace ConstructionSetExtender
 				System::Action<Task<BackgroundTaskOutput^>^>^ ContinueDelegate = gcnew System::Action<Task<BackgroundTaskOutput^>^>(this, &AvalonEditTextEditor::ProcessBackgroundTaskOutput);
 
 				BackgroundTask = Task<BackgroundTaskOutput^>::Factory->StartNew(TaskDelegate, DataIn);
-				// the completion task must be executed in th UI thread, so we need to use its task scheduler
+				// the completion task must be executed in the UI thread, so we need to use its task scheduler
 				BackgroundTask->ContinueWith(ContinueDelegate, Task<BackgroundTaskOutput^>::Factory->CancellationToken,
 											 TaskContinuationOptions::AttachedToParent | TaskContinuationOptions::ExecuteSynchronously,
 											 Globals::MainThreadTaskScheduler);
@@ -2293,9 +2292,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::SerializeCaretPos(String^% Result)
 			{
 				if (PREFERENCES->FetchSettingAsInt("SaveLastKnownPos", "General"))
-				{
 					Result += String::Format(";<" + kMetadataSigilCaret + "> {0} </" + kMetadataSigilCaret + ">\n", Caret);
-				}
 			}
 			void AvalonEditTextEditor::SerializeBookmarks(String^% Result)
 			{
@@ -2870,6 +2867,8 @@ namespace ConstructionSetExtender
 			{
 				Debug::Assert(CompilationInProgress == false);
 				CompilationInProgress = true;
+
+				WaitForBackgroundTask();
 
 				CompilationData^ Result = gcnew CompilationData;
 

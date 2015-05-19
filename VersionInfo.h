@@ -29,29 +29,49 @@
 #if defined(CSE)
 	#define VER_PRODUCTNAME_STR         "Construction Set Extender"
 #elif defined(CSE_SE)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.ScriptEditor"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender Script Editor"
 #elif defined(CSE_SEPREPROC)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.ScriptEditor.Preprocessor"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender Script Editor Preprocessor"
 #elif defined(CSE_BATCHEDITOR)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.BatchEditor"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender Batch Reference Editor"
 #elif defined(CSE_BSAVIEWER)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.BSAViewer"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender BSA Viewer"
 #elif defined(CSE_LIPSYNC)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.LipSyncPipeClient"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender Lip Sync Interop Client"
 #elif defined(CSE_TAGBROWSER)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.TagBrowser"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender Tag Browser"
 #elif defined(CSE_USEINFOLIST)
-	#define VER_PRODUCTNAME_STR         "ConstructionSetExtender.UseInfoList"
+	#define VER_PRODUCTNAME_STR         "Construction Set Extender Centralized Use Info Listing"
 #else
 	#define VER_PRODUCTNAME_STR         "<Unknown>"
 #endif
 
 #define VER_PRODUCT_VERSION         VER_FILE_VERSION
 #define VER_PRODUCT_VERSION_STR     VER_FILE_VERSION_STR
-#define VER_ORIGINAL_FILENAME_STR	VER_PRODUCTNAME_STR ".dll"
-#define VER_INTERNAL_NAME_STR       VER_ORIGINAL_FILENAME_STR
 
-#define VER_COPYRIGHT_STR           "Copyright shadeMe (C) 2010-2020"
+#if defined(CSE)
+	#define VER_ORIGINAL_FILENAME		"Construction Set Extender"
+#elif defined(CSE_SE)
+	#define VER_ORIGINAL_FILENAME       "ScriptEditor"
+#elif defined(CSE_SEPREPROC)
+	#define VER_ORIGINAL_FILENAME       "ScriptEditor.Preprocessor"
+#elif defined(CSE_BATCHEDITOR)
+	#define VER_ORIGINAL_FILENAME       "BatchEditor"
+#elif defined(CSE_BSAVIEWER)
+	#define VER_ORIGINAL_FILENAME       "BSAViewer"
+#elif defined(CSE_LIPSYNC)
+	#define VER_ORIGINAL_FILENAME       "LipSyncPipeClient"
+#elif defined(CSE_TAGBROWSER)
+	#define VER_ORIGINAL_FILENAME       "TagBrowser"
+#elif defined(CSE_USEINFOLIST)
+	#define VER_ORIGINAL_FILENAME       "UseInfoList"
+#else
+	#define VER_ORIGINAL_FILENAME       "<Unknown>"
+#endif
+#define VER_ORIGINAL_FILENAME_STR	VER_ORIGINAL_FILENAME ".dll"
+#define VER_INTERNAL_NAME_STR       VER_ORIGINAL_FILENAME
+
+#define VER_COPYRIGHT_STR           "Copyright shadeMe (C) 2010"
 
 #ifdef _DEBUG
   #define VER_VER_DEBUG             VS_FF_DEBUG
