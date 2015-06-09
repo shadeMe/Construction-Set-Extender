@@ -988,10 +988,12 @@ namespace ConstructionSetExtender
 							NewBaseForm->editorID.c_str(),
 							NewBaseForm->formID) == IDYES)
 						{
-							Ref->SetFromActiveFile(true);
 							Ref->SetBaseForm(NewBaseForm);
+							Ref->SetNiNode(NULL);
 							Ref->GenerateNiNode();
-							TESRenderWindow::Refresh3D();
+							Ref->parentCell->AddObjectReference(Ref);
+							Ref->SetFromActiveFile(true);
+							TESRenderWindow::Redraw();
 						}
 					}
 				}

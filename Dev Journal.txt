@@ -11,7 +11,11 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Render window F5 CTD
+		> QQuix default form being injected into plugins/ESMs?
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
+		> Render window fixed camera pivot bug
+			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=23984155
 		> The Landscape Textures Quad is supposed to replace the clicked texture with the one you double-click from the list it offers, but when you save the file, reloading reveals that it has instead replaced it with the quad's Default texture
 			>> Needs extensive decoding of land data
 		>  If you edit a land record, then switch to either a parent or child worldspace which contains that same cell, frequently the edits are not displayed in the render window, instead you see the unedited land height (however collision is handled correctly so Fing an object will drop it to where the land should be) - additionally, when editing a land record in a child worldspace, sometimes these edits get saved into a NEW land record for the child worldspace instead of being allocated to the existing land record of the parent worldspace. I believe the land record from the parent landscape is the one which gets displayed in-game when such an overlap exists.
@@ -22,6 +26,9 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Show Target NPCs context menu tool
+			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
+		> Option to change referencing records for any base object, like in TES4Edit
 		> Copy From Template tool
 			>> Batch editor for base forms
 		> Option to disable asymmetry when generating a new NPC face
@@ -49,6 +56,7 @@ SE		---->
 
 	ENHANCEMENT		=
 		> Document minimap
+		> Change margin
 
 
 	MISC			=

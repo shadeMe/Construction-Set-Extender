@@ -234,7 +234,7 @@ namespace ConstructionSetExtender
 				}
 				catch (std::exception& e)
 				{
-					BGSEECONSOLE_MESSAGE("An error occurred while matching the regular expresssion filter string. Exception - %s", e.what());
+					BGSEECONSOLE_MESSAGE("An error occurred while matching the regular expression filter string. Exception - %s", e.what());
 					FilterString.clear();
 				}
 			}
@@ -2672,9 +2672,7 @@ namespace ConstructionSetExtender
 						if (CurrentCell)
 						{
 							if (CurrentCell->GetIsInterior())
-							{
 								FORMAT_STR(Buffer, "%s (%08X)", CurrentCell->GetEditorID(), CurrentCell->formID);
-							}
 							else
 							{
 								FORMAT_STR(Buffer, "%s %d,%d (%08X)", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
@@ -5188,8 +5186,8 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case WM_NOTIFY:
 				{
+			case WM_NOTIFY:
 					NMHDR* NotificationData = (NMHDR*)lParam;
 
 					switch (NotificationData->idFrom)
@@ -5297,7 +5295,10 @@ namespace ConstructionSetExtender
 
 					if (WorkingCopy)
 					{
-						std::string Desc = std::string(WorkingCopy->GetTypeIDString()) + " [" + std::string(WorkingCopy->GetEditorID()) + "]";
+						std::string Desc(WorkingCopy->GetTypeIDString());
+						if (WorkingCopy->GetEditorID())
+							Desc += " [" + std::string(WorkingCopy->GetEditorID()) + "]";
+
 						std::string WndTitle = Desc;
 
 						if (Settings::General::kShowHallOfFameMembersInTitleBar().i == HallOfFame::kDisplayESMember_ObjectPreviewEdit)

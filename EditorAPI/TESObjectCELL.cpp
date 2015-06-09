@@ -60,3 +60,8 @@ TESObjectLAND* TESObjectCELL::GetLand()
 {
 	return thisCall<TESObjectLAND*>(0x005340A0, this);
 }
+
+void TESObjectCELL::AddReferenceNiNode(TESObjectREFR* Ref)
+{
+	thisCall<void>(0x00534460, this, Ref);
+}

@@ -105,6 +105,7 @@ public:
 	TESObjectREFR*				FindFirstRef(TESForm* BaseForm, bool MustHaveEditorID = false);
 	void						SetPathGrid(TESPathGrid* PathGrid);
 	TESObjectLAND*				GetLand();
+	void						AddReferenceNiNode(TESObjectREFR* Ref);
 
 	void						AddObjectReference(TESObjectREFR* Ref);
 	void						RemoveObjectReference(TESObjectREFR* Ref);
