@@ -11,6 +11,8 @@ NOTE	---->
 CSE		---->
 
 	BUGFIX			=
+		> Script compiler bug
+			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=24047482
 		> Render window F5 CTD
 		> QQuix default form being injected into plugins/ESMs?
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
@@ -60,6 +62,7 @@ SE		---->
 
 
 	MISC			=
+		> Toggle for the IntelliSense popup
 
 
 USE		---->

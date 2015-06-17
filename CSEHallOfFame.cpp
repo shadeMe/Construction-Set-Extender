@@ -362,6 +362,7 @@ namespace ConstructionSetExtender
 				kESMembers.push_back("Vagrant0");
 				kESMembers.push_back("Maegfaer");
 				kESMembers.push_back("Sigurd Stormhand");
+				kESMembers.push_back("Alenet");
 				kESMembers.push_back("Todd Howard");
 			}
 
