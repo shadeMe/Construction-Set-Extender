@@ -52,6 +52,7 @@ SE		---->
 
 
 	BUGFIX			=
+		> Toggle comment on the rectangle selection adds multiple ;s
 		> Editor doesn't acquire focus after switching scripts/on opening
 			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 

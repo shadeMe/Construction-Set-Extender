@@ -723,7 +723,9 @@ namespace ConstructionSetExtender
 
 				// mucking about with the CS' compatibility settings (setting it to Windows 7, for instance) yields a different result than when the setting's disabled
 				Size DisplaySize = Size(240, (MaximumVisibleItemCount * ItemHeight + ItemHeight) - ((MaximumVisibleItemCount - ItemCount) * ItemHeight));
-				Form->SetSize(DisplaySize);
+
+				array<Object^>^ Params = gcnew array < Object^ > { Form, DisplaySize };
+				Form->BeginInvoke(gcnew UIInvokeDelegate_FormSetSize(&IntelliSenseInterfaceView::UIInvoke_FormSetSize), Params);
 
 				ListView->SelectedIndex = 0;
 			}
@@ -731,15 +733,61 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterfaceView::Show(Point Location, IntPtr Parent)
 		{
-			Form->ShowForm(Location, Parent, (Form->Visible == false));
+			array<Object^>^ Params = gcnew array < Object^ > { Form, Location, Parent };
+			Form->BeginInvoke(gcnew UIInvokeDelegate_FormShow(&IntelliSenseInterfaceView::UIInvoke_FormShow), Params);
 		}
 
 		void IntelliSenseInterfaceView::Hide()
 		{
 			if (Form->Visible)
 			{
-				Form->HideForm(true);
+				array<Object^>^ Params = gcnew array < Object^ > { Form };
+				Form->BeginInvoke(gcnew UIInvokeDelegate_FormHide(&IntelliSenseInterfaceView::UIInvoke_FormHide), Params);
+
 				HideToolTip();
+			}
+		}
+
+		// The SetSize call crashes consistently under certain conditions (which are yet to be decoded) due to an invalid window handle
+		// methinks it has something to do with how the call is invoked (multiple levels of interop b'ween WinForms and WPF)
+		// delegating it to the UI thread through BeginInvoke seems to fix the issue
+
+		void IntelliSenseInterfaceView::UIInvoke_FormShow(NonActivatingImmovableAnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
+		{
+			try {
+				ToInvoke->ShowForm(Location, Parent, (ToInvoke->Visible == false));
+			}
+			catch (Exception^ E) {
+				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormShow Exception! Message - " + E->Message);
+#ifndef NDEBUG
+				Debugger::Break();
+#endif // !NDEBUG
+			}
+		}
+
+		void IntelliSenseInterfaceView::UIInvoke_FormSetSize(NonActivatingImmovableAnimatedForm^ ToInvoke, Size ToSet)
+		{
+			try {
+				ToInvoke->SetSize(ToSet);
+			}
+			catch (Exception^ E) {
+				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormSetSize Exception! Message - " + E->Message);
+#ifndef NDEBUG
+				Debugger::Break();
+#endif // !NDEBUG
+			}
+		}
+
+		void IntelliSenseInterfaceView::UIInvoke_FormHide(NonActivatingImmovableAnimatedForm^ ToInvoke)
+		{
+			try {
+				ToInvoke->HideForm(true);
+			}
+			catch (Exception^ E) {
+				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormHide Exception! Message - " + E->Message);
+#ifndef NDEBUG
+				Debugger::Break();
+#endif // !NDEBUG
 			}
 		}
 	}

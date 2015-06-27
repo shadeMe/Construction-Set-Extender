@@ -125,6 +125,6 @@ void Script::RemoveCompiledData(void)
 	info.refCount = 0;
 	compileResult = 0;
 
-	thisCall<void>(0x004FF831, this);		// cleanup ref var list
+	thisCall<void>(0x004FF830, this);		// cleanup ref var list
 	thisCall<void>(0x004FF7D0, this);		// cleanup var list
 }

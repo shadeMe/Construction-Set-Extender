@@ -108,6 +108,14 @@ namespace ConstructionSetExtender
 																		   IntPtr ParentHandle,
 																		   UInt32 Duration);
 			void											HideToolTip();
+
+			delegate void									UIInvokeDelegate_FormShow(NonActivatingImmovableAnimatedForm^, Point, IntPtr);
+			delegate void									UIInvokeDelegate_FormSetSize(NonActivatingImmovableAnimatedForm^, Size);
+			delegate void									UIInvokeDelegate_FormHide(NonActivatingImmovableAnimatedForm^);
+
+			static void										UIInvoke_FormShow(NonActivatingImmovableAnimatedForm^ ToInvoke, Point Location, IntPtr Parent);
+			static void										UIInvoke_FormSetSize(NonActivatingImmovableAnimatedForm^ ToInvoke, Size ToSet);
+			static void										UIInvoke_FormHide(NonActivatingImmovableAnimatedForm^ ToInvoke);
 		public:
 			IntelliSenseInterfaceView();
 			~IntelliSenseInterfaceView();

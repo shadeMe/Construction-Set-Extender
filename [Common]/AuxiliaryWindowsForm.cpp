@@ -139,13 +139,9 @@ namespace ConstructionSetExtender
 				this->Opacity = 0.0;
 
 			if (ParentHandle != IntPtr::Zero)
-			{
 				Show(gcnew WindowHandleWrapper(ParentHandle));
-			}
 			else
-			{
 				Show();
-			}
 
 			BringToFront();
 
