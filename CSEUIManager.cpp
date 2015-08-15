@@ -3061,12 +3061,6 @@ namespace ConstructionSetExtender
 					{
 						SendMessage(hWnd, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 						SendMessage(hWnd, WM_COMMAND, IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL, NULL);
-
-						// reset opacity
-						CellObjectListT Refs;
-						TESRenderWindow::GetActiveCellObjects(Refs);
-						for each (auto Itr in Refs)
-							Itr->SetAlpha();
 					}
 
 					break;

@@ -13,7 +13,7 @@ CSE		---->
 	BUGFIX			=
 		> Script compiler bug
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=24047482
-		> Render window F5 CTD
+			>> This one is pretty deep-rooted in the compiler, suggested workaround - add a parenthesis escape format specifier to OBSE
 		> QQuix default form being injected into plugins/ESMs?
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
 		> Render window fixed camera pivot bug

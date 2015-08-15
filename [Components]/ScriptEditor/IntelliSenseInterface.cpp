@@ -748,9 +748,10 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		// HACK!
 		// The SetSize call crashes consistently under certain conditions (which are yet to be decoded) due to an invalid window handle
 		// methinks it has something to do with how the call is invoked (multiple levels of interop b'ween WinForms and WPF)
-		// delegating it to the UI thread through BeginInvoke seems to fix the issue
+		// delegating it to the UI thread through BeginInvoke seems to help apparently but we still need to wrap it in SEH
 
 		void IntelliSenseInterfaceView::UIInvoke_FormShow(NonActivatingImmovableAnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
 		{
@@ -758,8 +759,8 @@ namespace ConstructionSetExtender
 				ToInvoke->ShowForm(Location, Parent, (ToInvoke->Visible == false));
 			}
 			catch (Exception^ E) {
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormShow Exception! Message - " + E->Message);
 #ifndef NDEBUG
+				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormShow Exception! Message - " + E->Message);
 				Debugger::Break();
 #endif // !NDEBUG
 			}
@@ -771,8 +772,8 @@ namespace ConstructionSetExtender
 				ToInvoke->SetSize(ToSet);
 			}
 			catch (Exception^ E) {
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormSetSize Exception! Message - " + E->Message);
 #ifndef NDEBUG
+				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormSetSize Exception! Message - " + E->Message);
 				Debugger::Break();
 #endif // !NDEBUG
 			}
@@ -784,8 +785,8 @@ namespace ConstructionSetExtender
 				ToInvoke->HideForm(true);
 			}
 			catch (Exception^ E) {
-				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormHide Exception! Message - " + E->Message);
 #ifndef NDEBUG
+				DebugPrint("IntelliSenseInterfaceView::UIInvoke_FormHide Exception! Message - " + E->Message);
 				Debugger::Break();
 #endif // !NDEBUG
 			}

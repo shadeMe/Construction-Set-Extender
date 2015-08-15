@@ -182,7 +182,7 @@ public:
 	/*00*/ TESQuest*					currentQuest;
 	/*04*/ UInt8						unk04;
 	/*05*/ UInt8						pad05[3];
-	/*08*/ QuestListT					selectedQuests;		// teh default selection is also passed in this member
+	/*08*/ QuestListT					selectedQuests;		// the default selection is also passed in this member
 
 	static SelectQuestWindowData**		Singleton;
 
