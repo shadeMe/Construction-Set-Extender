@@ -21,6 +21,7 @@ namespace ConstructionSetExtender
 			RemoteScript = Script::NullScript;
 			LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
 
+			AutomaticallyPopup = PREFERENCES->FetchSettingAsInt("AutoSuggest", "IntelliSense") != 0;
 			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 
@@ -67,6 +68,15 @@ namespace ConstructionSetExtender
 
 		void IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E)
 		{
+			Reset();
+			if (Bound)
+				BoundParent->Hide();
+
+			LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
+			OverrideThresholdCheck = false;
+			Enabled = true;
+
+			AutomaticallyPopup = PREFERENCES->FetchSettingAsInt("AutoSuggest", "IntelliSense") != 0;
 			PopupThresholdLength = PREFERENCES->FetchSettingAsInt("ThresholdLength", "IntelliSense");
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 		}
@@ -82,30 +92,36 @@ namespace ConstructionSetExtender
 				{
 				case Keys::OemPeriod:
 					{
-						E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Dot;
-						E->Display = true;
-						E->PreventNextTextChangeEvent = true;
+						if (AutomaticallyPopup)
+						{
+							E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Dot;
+							E->Display = true;
+							E->PreventNextTextChangeEvent = true;
+						}
 						break;
 					}
 				case Keys::Space:
 					{
-						String^ Token = ParentEditor->GetTokenAtCaretPos()->Replace("\n", "");
+						if (AutomaticallyPopup)
+						{
+							String^ Token = ParentEditor->GetTokenAtCaretPos()->Replace("\n", "");
 
-						if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Call)
-						{
-							E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Call;
-							E->Display = true;
-							E->PreventNextTextChangeEvent = true;
+							if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Call)
+							{
+								E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Call;
+								E->Display = true;
+								E->PreventNextTextChangeEvent = true;
+							}
+							else if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Set ||
+									 ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Let)
+							{
+								E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Assign;
+								E->Display = true;
+								E->PreventNextTextChangeEvent = true;
+							}
+							else
+								LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
 						}
-						else if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Set ||
-									ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Let)
-						{
-							E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Assign;
-							E->Display = true;
-							E->PreventNextTextChangeEvent = true;
-						}
-						else
-							LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
 
 						break;
 					}
@@ -116,11 +132,14 @@ namespace ConstructionSetExtender
 
 					break;
 				default:
-					LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
+					if (AutomaticallyPopup)
+						LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
+
 					break;
 				}
 
-				OverrideThresholdCheck = false;
+				if (AutomaticallyPopup)
+					OverrideThresholdCheck = false;
 			}
 
 			switch (E->KeyCode)
@@ -285,7 +304,7 @@ namespace ConstructionSetExtender
 			switch (O)
 			{
 			case IIntelliSenseInterfaceModel::Operation::Default:
-				if (OverrideThresholdCheck || CurrentToken->Length >= PopupThresholdLength)
+				if (OverrideThresholdCheck || (AutomaticallyPopup && CurrentToken->Length >= PopupThresholdLength))
 				{
 					for each (IntelliSenseItem^ Itr in LocalVariables)
 					{

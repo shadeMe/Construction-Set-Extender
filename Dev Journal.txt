@@ -63,7 +63,7 @@ SE		---->
 
 
 	MISC			=
-		> Toggle for the IntelliSense popup
+
 
 
 USE		---->

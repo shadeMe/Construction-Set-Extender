@@ -20,6 +20,7 @@ namespace ConstructionSetExtender
 			Script^												RemoteScript;
 			IIntelliSenseInterfaceModel::Operation				LastOperation;
 
+			property bool										AutomaticallyPopup;
 			property UInt32										PopupThresholdLength;
 			property bool										UseSubstringFiltering;
 

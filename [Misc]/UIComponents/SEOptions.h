@@ -142,6 +142,8 @@ private: System::Windows::Forms::Label^  LabelBackgroundColor;
 private: System::Windows::Forms::Label^  LabelForegroundColor;
 private: System::Windows::Forms::Button^  CmDlgSyntaxLocalVarsColor;
 private: System::Windows::Forms::Label^  LabelLocalVars;
+private: System::Windows::Forms::CheckBox^  AutoSuggest;
+
 
 	protected:
 
@@ -207,6 +209,8 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->WordWrap = (gcnew System::Windows::Forms::CheckBox());
 			this->LabelSelectionHighlight = (gcnew System::Windows::Forms::Label());
 			this->GroupBoxSyntaxHighlighting = (gcnew System::Windows::Forms::GroupBox());
+			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
+			this->LabelLocalVars = (gcnew System::Windows::Forms::Label());
 			this->CmDlgSyntaxCommentsColor = (gcnew System::Windows::Forms::Button());
 			this->CmDlgSyntaxDigitsColor = (gcnew System::Windows::Forms::Button());
 			this->CmDlgSyntaxPreprocessorColor = (gcnew System::Windows::Forms::Button());
@@ -235,8 +239,7 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->CountVarRefs = (gcnew System::Windows::Forms::CheckBox());
 			this->SuppressRefCountForQuestScripts = (gcnew System::Windows::Forms::CheckBox());
 			this->VarFormNameCollisions = (gcnew System::Windows::Forms::CheckBox());
-			this->LabelLocalVars = (gcnew System::Windows::Forms::Label());
-			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
+			this->AutoSuggest = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ThresholdLength))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->TabSize))->BeginInit();
 			this->TabContainer->SuspendLayout();
@@ -265,11 +268,11 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			// 
 			// LabelISThreshold
 			// 
-			this->LabelISThreshold->Location = System::Drawing::Point(30, 51);
+			this->LabelISThreshold->Location = System::Drawing::Point(30, 70);
 			this->LabelISThreshold->Name = L"LabelISThreshold";
 			this->LabelISThreshold->Size = System::Drawing::Size(148, 31);
 			this->LabelISThreshold->TabIndex = 1;
-			this->LabelISThreshold->Text = L"IntelliSense Interface Pop-up Threshold";
+			this->LabelISThreshold->Text = L"Character Threshold For Automatic Suggestions";
 			// 
 			// ThresholdLength
 			// 
@@ -415,6 +418,7 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			// 
 			// TabIntelliSense
 			// 
+			this->TabIntelliSense->Controls->Add(this->AutoSuggest);
 			this->TabIntelliSense->Controls->Add(this->SubstringSearch);
 			this->TabIntelliSense->Controls->Add(this->ForceDatabaseUpdate);
 			this->TabIntelliSense->Controls->Add(this->NoFocusUI);
@@ -439,7 +443,7 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->SubstringSearch->Name = L"SubstringSearch";
 			this->SubstringSearch->Size = System::Drawing::Size(167, 36);
 			this->SubstringSearch->TabIndex = 11;
-			this->SubstringSearch->Text = L"Use Substring Search While Filtering";
+			this->SubstringSearch->Text = L"Filter Suggestions Using Substrings";
 			this->SubstringSearch->UseVisualStyleBackColor = true;
 			// 
 			// ForceDatabaseUpdate
@@ -457,7 +461,7 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->NoFocusUI->Name = L"NoFocusUI";
 			this->NoFocusUI->Size = System::Drawing::Size(167, 46);
 			this->NoFocusUI->TabIndex = 9;
-			this->NoFocusUI->Text = L"Prevent IntelliSense Interface From Acquiring Focus";
+			this->NoFocusUI->Text = L"Prevent Suggestion List From Acquiring Focus";
 			this->NoFocusUI->UseVisualStyleBackColor = true;
 			// 
 			// LabelMaxVisibleItems
@@ -466,7 +470,7 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
 			this->LabelMaxVisibleItems->Size = System::Drawing::Size(170, 46);
 			this->LabelMaxVisibleItems->TabIndex = 8;
-			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Items Visible In IntelliSense Interface";
+			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Suggestions That Can Be Displayed";
 			// 
 			// MaxVisibleItems
 			// 
@@ -481,11 +485,11 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			// UseQuickView
 			// 
 			this->UseQuickView->AutoSize = true;
-			this->UseQuickView->Location = System::Drawing::Point(231, 51);
+			this->UseQuickView->Location = System::Drawing::Point(231, 37);
 			this->UseQuickView->Name = L"UseQuickView";
-			this->UseQuickView->Size = System::Drawing::Size(86, 17);
+			this->UseQuickView->Size = System::Drawing::Size(154, 17);
 			this->UseQuickView->TabIndex = 6;
-			this->UseQuickView->Text = L"QuickView™";
+			this->UseQuickView->Text = L"Show Mouse-Over Tooltips";
 			this->UseQuickView->UseVisualStyleBackColor = true;
 			// 
 			// LabelISDBUpdatePeriod
@@ -494,7 +498,7 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->LabelISDBUpdatePeriod->Name = L"LabelISDBUpdatePeriod";
 			this->LabelISDBUpdatePeriod->Size = System::Drawing::Size(148, 46);
 			this->LabelISDBUpdatePeriod->TabIndex = 3;
-			this->LabelISDBUpdatePeriod->Text = L"IntelliSense Database Update Period (In Earth Minutes)";
+			this->LabelISDBUpdatePeriod->Text = L"Database Update Period (In Earth Minutes)";
 			// 
 			// DatabaseUpdateInterval
 			// 
@@ -776,6 +780,23 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->GroupBoxSyntaxHighlighting->TabStop = false;
 			this->GroupBoxSyntaxHighlighting->Text = L"Syntax Highlighting";
 			// 
+			// CmDlgSyntaxLocalVarsColor
+			// 
+			this->CmDlgSyntaxLocalVarsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+			this->CmDlgSyntaxLocalVarsColor->Location = System::Drawing::Point(103, 243);
+			this->CmDlgSyntaxLocalVarsColor->Name = L"CmDlgSyntaxLocalVarsColor";
+			this->CmDlgSyntaxLocalVarsColor->Size = System::Drawing::Size(34, 21);
+			this->CmDlgSyntaxLocalVarsColor->TabIndex = 20;
+			this->CmDlgSyntaxLocalVarsColor->UseVisualStyleBackColor = true;
+			// 
+			// LabelLocalVars
+			// 
+			this->LabelLocalVars->Location = System::Drawing::Point(6, 247);
+			this->LabelLocalVars->Name = L"LabelLocalVars";
+			this->LabelLocalVars->Size = System::Drawing::Size(91, 25);
+			this->LabelLocalVars->TabIndex = 19;
+			this->LabelLocalVars->Text = L"Local Variables";
+			// 
 			// CmDlgSyntaxCommentsColor
 			// 
 			this->CmDlgSyntaxCommentsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
@@ -1043,22 +1064,15 @@ private: System::Windows::Forms::Label^  LabelLocalVars;
 			this->VarFormNameCollisions->Text = L"Check For Variable-Form Name Collisions (Recommended)";
 			this->VarFormNameCollisions->UseVisualStyleBackColor = true;
 			// 
-			// LabelLocalVars
+			// AutoSuggest
 			// 
-			this->LabelLocalVars->Location = System::Drawing::Point(6, 247);
-			this->LabelLocalVars->Name = L"LabelLocalVars";
-			this->LabelLocalVars->Size = System::Drawing::Size(91, 25);
-			this->LabelLocalVars->TabIndex = 19;
-			this->LabelLocalVars->Text = L"Local Variables";
-			// 
-			// CmDlgSyntaxLocalVarsColor
-			// 
-			this->CmDlgSyntaxLocalVarsColor->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-			this->CmDlgSyntaxLocalVarsColor->Location = System::Drawing::Point(103, 243);
-			this->CmDlgSyntaxLocalVarsColor->Name = L"CmDlgSyntaxLocalVarsColor";
-			this->CmDlgSyntaxLocalVarsColor->Size = System::Drawing::Size(34, 21);
-			this->CmDlgSyntaxLocalVarsColor->TabIndex = 20;
-			this->CmDlgSyntaxLocalVarsColor->UseVisualStyleBackColor = true;
+			this->AutoSuggest->AutoSize = true;
+			this->AutoSuggest->Location = System::Drawing::Point(30, 37);
+			this->AutoSuggest->Name = L"AutoSuggest";
+			this->AutoSuggest->Size = System::Drawing::Size(186, 17);
+			this->AutoSuggest->TabIndex = 12;
+			this->AutoSuggest->Text = L"Automatically Display Suggestions";
+			this->AutoSuggest->UseVisualStyleBackColor = true;
 			// 
 			// OptionsDialog
 			// 

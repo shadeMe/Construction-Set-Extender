@@ -333,10 +333,6 @@ namespace ConstructionSetExtender
 				StringSpan->AddChild(gcnew XSHDBegin(nullptr, "\""));
 				StringSpan->AddChild(gcnew XSHDEnd("\""));
 
-				XSHDRuleset^ StringRulesetInner = gcnew XSHDRuleset("StringInner");
-				StringRulesetInner->AddChild(gcnew XSHDArbitrary("<Span begin=\"\\\\\" end=\".\"/>"));
-				StringSpan->AddChild(StringRulesetInner);
-
 				SerializedColors->AddLast(StringColor);
 				Contents->AddLast(StringSpan);
 

@@ -143,6 +143,7 @@ namespace ConstructionSetExtender
 			Button^										CmDlgSyntaxLocalVarsColor;
 			Label^										LabelLocalVars;
 			CheckBox^									DefaultInlineSearch;
+			CheckBox^									AutoSuggest;
 			// hidden controls, for settings that aren't displayed in the preferences window
 
 			// Find/Replace

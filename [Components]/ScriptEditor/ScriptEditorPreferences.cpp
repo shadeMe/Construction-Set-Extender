@@ -202,6 +202,7 @@ namespace ConstructionSetExtender
 			SettingCollection->Add(gcnew INISetting("MaxVisibleItems", "IntelliSense", "5"), gcnew BoundControl(MaxVisibleItems, BoundControl::ControlType::NumericUpDown, BoundControl::ValueType::Value));
 			SettingCollection->Add(gcnew INISetting("NoFocusUI", "IntelliSense", "0"), gcnew BoundControl(NoFocusUI, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 			SettingCollection->Add(gcnew INISetting("SubstringSearch", "IntelliSense", "1"), gcnew BoundControl(SubstringSearch, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
+			SettingCollection->Add(gcnew INISetting("AutoSuggest", "IntelliSense", "1"), gcnew BoundControl(AutoSuggest, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
 
 			// Preprocessor
 			SettingCollection->Add(gcnew INISetting("AllowRedefinitions", "Preprocessor", "0"), gcnew BoundControl(AllowRedefinitions, BoundControl::ControlType::Checkbox, BoundControl::ValueType::Checked));
@@ -407,6 +408,7 @@ namespace ConstructionSetExtender
 			this->LabelLocalVars = (gcnew System::Windows::Forms::Label());
 			this->CmDlgSyntaxLocalVarsColor = (gcnew System::Windows::Forms::Button());
 			DefaultInlineSearch = gcnew CheckBox;
+			AutoSuggest = gcnew CheckBox;
 			//
 			// Hidden Controls
 			//
@@ -573,6 +575,7 @@ namespace ConstructionSetExtender
 			TabIntelliSense->Controls->Add(NoFocusUI);
 			TabIntelliSense->Controls->Add(ForceDatabaseUpdate);
 			TabIntelliSense->Controls->Add(SubstringSearch);
+			TabIntelliSense->Controls->Add(AutoSuggest);
 			TabIntelliSense->Location = System::Drawing::Point(4, 22);
 			TabIntelliSense->Name = L"TabIntelliSense";
 			TabIntelliSense->Padding = Padding(3);
@@ -583,11 +586,11 @@ namespace ConstructionSetExtender
 			//
 			// LabelISThreshold
 			//
-			this->LabelISThreshold->Location = System::Drawing::Point(30, 51);
+			this->LabelISThreshold->Location = System::Drawing::Point(30, 70);
 			this->LabelISThreshold->Name = L"LabelISThreshold";
 			this->LabelISThreshold->Size = System::Drawing::Size(148, 31);
 			this->LabelISThreshold->TabIndex = 1;
-			this->LabelISThreshold->Text = L"IntelliSense interface pop-up threshold";
+			this->LabelISThreshold->Text = L"Character Threshold For Automatic Suggestions";
 			//
 			// ThresholdLength
 			//
@@ -605,7 +608,7 @@ namespace ConstructionSetExtender
 			this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
 			this->LabelMaxVisibleItems->Size = System::Drawing::Size(170, 26);
 			this->LabelMaxVisibleItems->TabIndex = 8;
-			this->LabelMaxVisibleItems->Text = L"Maximum number of items visible in IntelliSense interface";
+			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Suggestions To Display";
 			//
 			// MaxVisibleItems
 			//
@@ -620,11 +623,11 @@ namespace ConstructionSetExtender
 			// UseQuickView
 			//
 			this->UseQuickView->AutoSize = true;
-			this->UseQuickView->Location = System::Drawing::Point(231, 51);
+			this->UseQuickView->Location = System::Drawing::Point(231, 37);
 			this->UseQuickView->Name = L"UseQuickView";
-			this->UseQuickView->Size = System::Drawing::Size(86, 17);
+			this->UseQuickView->Size = System::Drawing::Size(154, 17);
 			this->UseQuickView->TabIndex = 6;
-			this->UseQuickView->Text = L"QuickView";
+			this->UseQuickView->Text = L"Show Mouse-Over Tooltips";
 			this->UseQuickView->UseVisualStyleBackColor = true;
 			//
 			// LabelISDBUpdatePeriod
@@ -633,7 +636,7 @@ namespace ConstructionSetExtender
 			this->LabelISDBUpdatePeriod->Name = L"LabelISDBUpdatePeriod";
 			this->LabelISDBUpdatePeriod->Size = System::Drawing::Size(148, 46);
 			this->LabelISDBUpdatePeriod->TabIndex = 3;
-			this->LabelISDBUpdatePeriod->Text = L"IntelliSense database update period (in Earth minutes)";
+			this->LabelISDBUpdatePeriod->Text = L"Database update period (in Earth minutes)";
 			//
 			// DatabaseUpdateInterval
 			//
@@ -651,7 +654,7 @@ namespace ConstructionSetExtender
 			this->NoFocusUI->Name = L"NoFocusUI";
 			this->NoFocusUI->Size = System::Drawing::Size(167, 46);
 			this->NoFocusUI->TabIndex = 9;
-			this->NoFocusUI->Text = L"Prevent IntelliSense interface from acquiring focus";
+			this->NoFocusUI->Text = L"Prevent Suggestion List From Acquiring Focus";
 			this->NoFocusUI->UseVisualStyleBackColor = true;
 			//
 			// ForceDatabaseUpdate
@@ -1232,7 +1235,7 @@ namespace ConstructionSetExtender
 			this->SubstringSearch->Name = L"SubstringSearch";
 			this->SubstringSearch->Size = System::Drawing::Size(167, 36);
 			this->SubstringSearch->TabIndex = 11;
-			this->SubstringSearch->Text = L"Use substring search while filtering";
+			this->SubstringSearch->Text = L"Filter Suggestions Using Substrings";
 			this->SubstringSearch->UseVisualStyleBackColor = true;
 			//
 			// LabelLocalVars
@@ -1260,6 +1263,17 @@ namespace ConstructionSetExtender
 			DefaultInlineSearch->TabIndex = 29;
 			DefaultInlineSearch->Text = L"'Ctrl + F' displays inline search panel";
 			DefaultInlineSearch->UseVisualStyleBackColor = true;
+
+			// 
+			// AutoSuggest
+			// 
+			this->AutoSuggest->AutoSize = true;
+			this->AutoSuggest->Location = System::Drawing::Point(30, 37);
+			this->AutoSuggest->Name = L"AutoSuggest";
+			this->AutoSuggest->Size = System::Drawing::Size(186, 17);
+			this->AutoSuggest->TabIndex = 12;
+			this->AutoSuggest->Text = L"Automatically Display Suggestions";
+			this->AutoSuggest->UseVisualStyleBackColor = true;
 
 			//
 			// ScriptEditorPreferences
