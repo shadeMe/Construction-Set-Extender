@@ -2409,9 +2409,7 @@ namespace ConstructionSetExtender
 								ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
 
 								if (Data)
-								{
 									New = ModelFactory()->CreateModel(Data);
-								}
 								else
 								{
 									New = ModelFactory()->CreateModel(nullptr);

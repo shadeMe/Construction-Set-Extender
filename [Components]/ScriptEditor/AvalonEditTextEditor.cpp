@@ -675,13 +675,20 @@ namespace ConstructionSetExtender
 				AvalonEdit::Editing::Selection^ TextSelection = TextField->TextArea->Selection;
 				if (TextSelection->IsEmpty == false)
 				{
+					List<UInt32>^ ProcessedLines = gcnew List<UInt32>;
 					for each (AvalonEdit::Document::ISegment^ Itr in TextSelection->Segments)
 					{
 						AvalonEdit::Document::DocumentLine^ FirstLine = TextField->TextArea->Document->GetLineByOffset(Itr->Offset);
 						AvalonEdit::Document::DocumentLine^ LastLine = TextField->TextArea->Document->GetLineByOffset(Itr->EndOffset);
 
 						for (AvalonEdit::Document::DocumentLine^ Itr = FirstLine; Itr != LastLine->NextLine && Itr != nullptr; Itr = Itr->NextLine)
-							ToggleComment(Itr->LineNumber, Operation);
+						{
+							if (ProcessedLines->Contains(Itr->LineNumber) == false)
+							{
+								ToggleComment(Itr->LineNumber, Operation);
+								ProcessedLines->Add(Itr->LineNumber);
+							}
+						}
 					}
 				}
 				else
@@ -962,8 +969,6 @@ namespace ConstructionSetExtender
 					if (InlineSearchPanel->IsClosed)
 						InlineSearchPanel->Open();
 
-					InlineSearchPanel->Reactivate();
-
 					// cache beforehand as changing the search panel's property directly updates the preferences
 					bool CaseInsensitive = PREFERENCES->FetchSettingAsInt("CaseInsensitive", "FindReplace");
 					bool MatchWholeWord = PREFERENCES->FetchSettingAsInt("MatchWholeWord", "FindReplace");
@@ -972,6 +977,14 @@ namespace ConstructionSetExtender
 					InlineSearchPanel->MatchCase = CaseInsensitive == false;
 					InlineSearchPanel->WholeWords = MatchWholeWord;
 					InlineSearchPanel->UseRegex = UseRegEx;
+
+					String^ Query = GetSelectedText();
+					if (Query == "")
+						Query = GetTokenAtCaretPos();
+
+					Query->Replace("\r\n", "")->Replace("\n", "");
+					InlineSearchPanel->SearchPattern = Query;
+					InlineSearchPanel->Reactivate();
 				}
 				else
 				{
@@ -2344,7 +2357,8 @@ namespace ConstructionSetExtender
 				int Line = GetLineNumberFromCharIndex(Offset);
 				bool DisplayPopup = false;
 
-				if (GetTextLength() > 0)
+				if (PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense") &&
+					GetTextLength() > 0)
 				{
 					String^ DisplayText = "";
 					String^ DisplayTitle = "";
@@ -2373,8 +2387,7 @@ namespace ConstructionSetExtender
 						InsightPopup->ToolTipIcon = ToolTipIcon::Error;
 						DisplayPopup = true;
 					}
-					else if (GetCharIndexInsideCommentSegment(Offset) == false &&
-							PREFERENCES->FetchSettingAsInt("UseQuickView", "IntelliSense"))
+					else if (GetCharIndexInsideCommentSegment(Offset) == false)
 					{
 						array<String^>^ Tokens = GetTextAtLocation(Offset);
 						String^ Main = Tokens[1];

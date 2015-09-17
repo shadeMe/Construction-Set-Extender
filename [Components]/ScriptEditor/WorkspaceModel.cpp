@@ -249,7 +249,7 @@ namespace ConstructionSetExtender
 				TextEditor->FocusTextArea();
 		}
 
-		bool ConcreteWorkspaceModel::DoHouseKeeping()
+		bool ConcreteWorkspaceModel::PerformHouseKeeping()
 		{
 			if (TextEditor->Modified)
 			{
@@ -314,7 +314,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::NewScript()
 		{
-			if (DoHouseKeeping())
+			if (PerformHouseKeeping())
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CreateNewScript();
 				Setup(Data, false, true);
@@ -328,7 +328,7 @@ namespace ConstructionSetExtender
 		{
 			Debug::Assert(Data != nullptr);
 
-			if (DoHouseKeeping())
+			if (PerformHouseKeeping())
 				Setup(Data, false, false);
 
 			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
@@ -340,39 +340,41 @@ namespace ConstructionSetExtender
 
 			if (CurrentScript)
 			{
-				TextEditors::CompilationData^ Data = TextEditor->BeginScriptCompilation();
 				ComponentDLLInterface::ScriptCompileData* CompileData = nullptr;
-				if (Data->CanCompile)
+				TextEditors::CompilationData^ Data = TextEditor->BeginScriptCompilation();
 				{
-					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
-
-					CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
-
-					CString ScriptText(Data->PreprocessedScriptText->Replace("\n", "\r\n"));
-					CompileData->Script.Text = ScriptText.c_str();
-					CompileData->Script.Type = (int)Type;
-					CompileData->Script.ParentForm = (TESForm*)CurrentScript;
-
-					if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
+					if (Data->CanCompile)
 					{
-						Setup(&CompileData->Script, true, false);
+						if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+							NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(false);
 
-						String^ OriginalText = Data->UnpreprocessedScriptText + Data->SerializedMetadata;
-						CString OrgScriptText(OriginalText);
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
-						Result = true;
-					}
-					else
-						Data->CompileResult = CompileData;
+						CompileData = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.AllocateCompileData();
 
-					if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
-					{
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
-						NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
+						CString ScriptText(Data->PreprocessedScriptText->Replace("\n", "\r\n"));
+						CompileData->Script.Text = ScriptText.c_str();
+						CompileData->Script.Type = (int)Type;
+						CompileData->Script.ParentForm = (TESForm*)CurrentScript;
+
+						if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.CompileScript(CompileData))
+						{
+							Setup(&CompileData->Script, true, false);
+
+							String^ OriginalText = Data->UnpreprocessedScriptText + Data->SerializedMetadata;
+							CString OrgScriptText(OriginalText);
+							NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SetScriptText(CurrentScript, OrgScriptText.c_str());
+							Result = true;
+						}
+						else
+							Data->CompileResult = CompileData;
+
+						if (Operation == IWorkspaceModel::SaveOperation::NoCompile)
+						{
+							NativeWrapper::g_CSEInterfaceTable->ScriptEditor.ToggleScriptCompilation(true);
+							NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RemoveScriptBytecode(CurrentScript);
+						}
+						else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
+							NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
 					}
-					else if (Operation == IWorkspaceModel::SaveOperation::SavePlugin)
-						NativeWrapper::g_CSEInterfaceTable->EditorAPI.SaveActivePlugin();
 				}
 				TextEditor->EndScriptCompilation(Data);
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(CompileData, false);
@@ -388,7 +390,7 @@ namespace ConstructionSetExtender
 
 		bool ConcreteWorkspaceModel::CloseScript()
 		{
-			if (DoHouseKeeping())
+			if (PerformHouseKeeping())
 			{
 				Closed = true;
 				return true;
@@ -399,7 +401,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::NextScript()
 		{
-			if (DoHouseKeeping())
+			if (PerformHouseKeeping())
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetNextScriptInList(CurrentScript);
 				if (Data)
@@ -410,7 +412,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::PreviousScript()
 		{
-			if (DoHouseKeeping())
+			if (PerformHouseKeeping())
 			{
 				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreviousScriptInList(CurrentScript);
 				if (Data)

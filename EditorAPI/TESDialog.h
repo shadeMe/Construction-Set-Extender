@@ -710,6 +710,76 @@ public:
 	};
 	STATIC_ASSERT(sizeof(SplitterData) == 0x1C);
 
+	// column indices for the formlist
+	enum
+	{
+		kColumn_EditorID	= 0,
+		kColumn_FormID,
+		kColumn_Count,
+		kColumn_Users,			// not handled by the vanilla sort comparator
+		kColumn_Model,
+		kColumn_Size,
+		kColumn_Name,
+		kColumn_Race,
+		kColumn_Class,
+		kColumn_Faction,
+		kColumn_Script,
+		kColumn_Rank,
+		kColumn_Type,
+		kColumn_Weight,
+		kColumn_Value,
+		kColumn_Health,
+		kColumn_Quality,
+		kColumn_Icon,
+		kColumn_Enchantment,
+		kColumn_Rating,
+		kColumn_Speed,
+		kColumn_Reach,
+		kColumn_AttackDamage,
+		kColumn_IgnoresResist,
+		kColumn_Part,			// not handled by the vanilla sort comparator
+		kColumn_Female,
+		kColumn_Scroll,
+		kColumn_Teaches,
+		kColumn_Level,
+		kColumn_Effect1,
+		kColumn_Effect2,
+		kColumn_Effect3,
+		kColumn_Effect4,
+		kColumn_Time,
+		kColumn_Radius,
+		kColumn_Uses,
+		kColumn_Cost,
+		kColumn_Animation,
+		kColumn_LeveledList,
+		kColumn_Inventory,
+		kColumn_Enchanting,
+		kColumn_Playable,		// not handled by the vanilla sort comparator
+		kColumn_Charge,
+		kColumn_WeightClass,
+		kColumn_AutoCalc,
+		kColumn_Essential,
+		kColumn_Respawns,
+		kColumn_MovementType,
+		kColumn_WeaponShield,
+		kColumn_BipedAnim,
+		kColumn_AllPC,
+		kColumn_QuestObject,
+		kColumn_PCStartSpell,
+		kColumn_Sound,
+		kColumn_Texture,		// not handled by the vanilla sort comparator
+		kColumn_LevelSchool,
+		kColumn_Poison,
+		kColumn_FlickerEffect,
+		kColumn_Material,
+		kColumn_IdleAnim,
+		kColumn_OpenSound,
+		kColumn_CloseSound,
+		kColumn_Text,
+
+		kColumn__MAX
+	};
+
 	static void						RefreshFormList(void);
 	static void						SetSplitterEnabled(HWND Splitter, bool State);
 	static bool						IsMinimized(void);

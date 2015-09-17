@@ -211,9 +211,20 @@ namespace ConstructionSetExtender
 		void SinkHandlerDrawSubItem(Object^ Sender, DrawListViewSubItemEventArgs^ E)
 		{
 			T Data = (T)E->Item->Tag;
+			SolidBrush^ TextBrush = nullptr;
+			StringFormat^ Format = gcnew StringFormat;
 
-			if (E->ItemState.HasFlag(ListViewItemStates::Selected) == false)
-				E->DrawBackground();
+			if (Sink->SelectedIndices->Contains(E->ItemIndex) == false)
+			{
+				TextBrush = gcnew SolidBrush(E->SubItem->ForeColor);
+				E->Graphics->FillRectangle(gcnew SolidBrush(E->SubItem->BackColor), E->SubItem->Bounds);
+			}
+			else
+			{
+				TextBrush = gcnew SolidBrush(Drawing::SystemColors::HighlightText);
+				E->Graphics->FillRectangle(Drawing::SystemBrushes::Highlight, E->SubItem->Bounds);
+				E->DrawFocusRectangle(E->SubItem->Bounds);
+			}
 
 			int ImageIndex = GetImageIndex(Data);
 			if (ImageIndex != -1 && E->ColumnIndex == 0)
@@ -221,11 +232,8 @@ namespace ConstructionSetExtender
 				E->Graphics->SmoothingMode = Drawing2D::SmoothingMode::AntiAlias;
 				E->Graphics->DrawImage(E->Item->ImageList->Images[ImageIndex], E->SubItem->Bounds.Location);
 			}
-
-			SolidBrush^ TextBrush = gcnew SolidBrush(E->SubItem->ForeColor);
-			StringFormat^ Format = gcnew StringFormat;
+			
 			RectangleF Layout(E->Bounds.X + E->Bounds.Height, E->Bounds.Y, E->Bounds.Width - E->Bounds.Height, E->Bounds.Height);
-
 			E->Graphics->DrawString(GetSubItemText(Data, E->ColumnIndex), E->SubItem->Font, TextBrush, Layout, Format);
 
 			delete Format;

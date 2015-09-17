@@ -337,7 +337,7 @@ namespace ConstructionSetExtender
 			{
 				BGSEEUI->MsgBoxW(NULL,
 								MB_TASKMODAL|MB_TOPMOST|MB_SETFOREGROUND|MB_OK,
-								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\n\nConsider beginning the editorID with an alphabet.",
+								"The editorID '%s' begins with an integer.\n\nWhile this is generally accepted by the engine, scripts referring this form might fail to run or compile as the script compiler might attempt to parse it as an integer.\nConsider beginning the editorID with an alphabet.\n\nThis warning can be disabled in the 'CSE Preferences' dialog (File menu).",
 								EditorID);
 			}
 		}

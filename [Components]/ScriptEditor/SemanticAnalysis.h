@@ -199,7 +199,7 @@ namespace ConstructionSetExtender
 
 			ScriptBlock(UInt32 Start, UInt32 Indents, ScriptBlockType Type, bool Override);
 
-			bool					IsBlockValid(ScriptType Type);
+			bool							IsBlockValid(ScriptType Type);
 
 			static ScriptBlockType			GetScriptBlockType(String^ TypeToken);
 			static String^					GetScriptBlockTypeToken(ScriptBlockType Type);

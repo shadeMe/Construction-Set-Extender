@@ -479,7 +479,8 @@ namespace ConstructionSetExtender
 			ResumeExecution = true;
 		else if (CrashHandlerMode == kCrashHandlerMode_Ask)
 		{
-			bool FunnyGuyUnlocked = BGSEEMAIN->Daemon()->GetFullInitComplete() && (Achievements::kFunnyGuy->GetUnlocked() || Achievements::kFunnyGuy->GetTriggered());
+			bool FunnyGuyUnlocked = BGSEEMAIN->Daemon()->GetFullInitComplete() &&
+				(Achievements::kFunnyGuy->GetUnlocked() || Achievements::kFunnyGuy->GetTriggered());
 			int MBFlags = MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR;
 
 			if (FunnyGuyUnlocked == false)

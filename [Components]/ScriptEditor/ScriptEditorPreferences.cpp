@@ -457,7 +457,7 @@ namespace ConstructionSetExtender
 			UseCSParent->Name = L"UseCSParent";
 			UseCSParent->Size = System::Drawing::Size(166, 17);
 			UseCSParent->TabIndex = 10;
-			UseCSParent->Text = L"Show editor as child window";
+			UseCSParent->Text = L"Hide from taskbar and task-switcher";
 			UseCSParent->UseVisualStyleBackColor = true;
 			//
 			// RecompileVarIdx
@@ -590,7 +590,7 @@ namespace ConstructionSetExtender
 			this->LabelISThreshold->Name = L"LabelISThreshold";
 			this->LabelISThreshold->Size = System::Drawing::Size(148, 31);
 			this->LabelISThreshold->TabIndex = 1;
-			this->LabelISThreshold->Text = L"Character Threshold For Automatic Suggestions";
+			this->LabelISThreshold->Text = L"Character threshold for automatic suggestions";
 			//
 			// ThresholdLength
 			//
@@ -608,7 +608,7 @@ namespace ConstructionSetExtender
 			this->LabelMaxVisibleItems->Name = L"LabelMaxVisibleItems";
 			this->LabelMaxVisibleItems->Size = System::Drawing::Size(170, 26);
 			this->LabelMaxVisibleItems->TabIndex = 8;
-			this->LabelMaxVisibleItems->Text = L"Maximum Number Of Suggestions To Display";
+			this->LabelMaxVisibleItems->Text = L"Maximum number of suggestions to display";
 			//
 			// MaxVisibleItems
 			//
@@ -627,7 +627,7 @@ namespace ConstructionSetExtender
 			this->UseQuickView->Name = L"UseQuickView";
 			this->UseQuickView->Size = System::Drawing::Size(154, 17);
 			this->UseQuickView->TabIndex = 6;
-			this->UseQuickView->Text = L"Show Mouse-Over Tooltips";
+			this->UseQuickView->Text = L"Show details on mouse hover";
 			this->UseQuickView->UseVisualStyleBackColor = true;
 			//
 			// LabelISDBUpdatePeriod
@@ -654,7 +654,7 @@ namespace ConstructionSetExtender
 			this->NoFocusUI->Name = L"NoFocusUI";
 			this->NoFocusUI->Size = System::Drawing::Size(167, 46);
 			this->NoFocusUI->TabIndex = 9;
-			this->NoFocusUI->Text = L"Prevent Suggestion List From Acquiring Focus";
+			this->NoFocusUI->Text = L"Prevent suggestion list from acquiring focus";
 			this->NoFocusUI->UseVisualStyleBackColor = true;
 			//
 			// ForceDatabaseUpdate
@@ -945,7 +945,7 @@ namespace ConstructionSetExtender
 			this->LabelSelectionHighlight->Name = L"LabelSelectionHighlight";
 			this->LabelSelectionHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelSelectionHighlight->TabIndex = 18;
-			this->LabelSelectionHighlight->Text = L"Selection Highlight";
+			this->LabelSelectionHighlight->Text = L"Selection highlight";
 			//
 			// CmDlgErrorHighlightColor
 			//
@@ -963,7 +963,7 @@ namespace ConstructionSetExtender
 			this->LabelErrorHighlight->Name = L"LabelErrorHighlight";
 			this->LabelErrorHighlight->Size = System::Drawing::Size(108, 20);
 			this->LabelErrorHighlight->TabIndex = 20;
-			this->LabelErrorHighlight->Text = L"Error Highlight";
+			this->LabelErrorHighlight->Text = L"Error highlight";
 			//
 			// CmDlgCharLimitColor
 			//
@@ -981,7 +981,7 @@ namespace ConstructionSetExtender
 			this->LabelCharLimitHighlight->Name = L"LabelCharLimitHighlight";
 			this->LabelCharLimitHighlight->Size = System::Drawing::Size(108, 30);
 			this->LabelCharLimitHighlight->TabIndex = 22;
-			this->LabelCharLimitHighlight->Text = L"Character Limit Highlight";
+			this->LabelCharLimitHighlight->Text = L"Character limit highlight";
 			//
 			// CmDlgCurrentLineHighlightColor
 			//
@@ -999,7 +999,7 @@ namespace ConstructionSetExtender
 			this->LabelCurrentLineHighlight->Name = L"LabelCurrentLineHighlight";
 			this->LabelCurrentLineHighlight->Size = System::Drawing::Size(108, 26);
 			this->LabelCurrentLineHighlight->TabIndex = 24;
-			this->LabelCurrentLineHighlight->Text = L"Current Line Highlight";
+			this->LabelCurrentLineHighlight->Text = L"Current line highlight";
 			//
 			// CmDlgFindResultsHighlightColor
 			//
@@ -1017,7 +1017,7 @@ namespace ConstructionSetExtender
 			this->LabelFindResultsHighlight->Name = L"LabelFindResultsHighlight";
 			this->LabelFindResultsHighlight->Size = System::Drawing::Size(108, 33);
 			this->LabelFindResultsHighlight->TabIndex = 26;
-			this->LabelFindResultsHighlight->Text = L"Find Results Highlight";
+			this->LabelFindResultsHighlight->Text = L"Find Results highlight";
 			//
 			// LabelForegroundColor
 			//
@@ -1120,7 +1120,7 @@ namespace ConstructionSetExtender
 			this->EnableStructuralAnalysis->Name = L"EnableStructuralAnalysis";
 			this->EnableStructuralAnalysis->Size = System::Drawing::Size(89, 30);
 			this->EnableStructuralAnalysis->TabIndex = 31;
-			this->EnableStructuralAnalysis->Text = L"Block Visualizer";
+			this->EnableStructuralAnalysis->Text = L"Block visualizer";
 			this->EnableStructuralAnalysis->UseVisualStyleBackColor = true;
 			this->EnableStructuralAnalysis->Checked = true;
 		//	this->EnableStructuralAnalysis->Enabled = false;
@@ -1235,7 +1235,7 @@ namespace ConstructionSetExtender
 			this->SubstringSearch->Name = L"SubstringSearch";
 			this->SubstringSearch->Size = System::Drawing::Size(167, 36);
 			this->SubstringSearch->TabIndex = 11;
-			this->SubstringSearch->Text = L"Filter Suggestions Using Substrings";
+			this->SubstringSearch->Text = L"Filter suggestions using substring search";
 			this->SubstringSearch->UseVisualStyleBackColor = true;
 			//
 			// LabelLocalVars
@@ -1272,7 +1272,7 @@ namespace ConstructionSetExtender
 			this->AutoSuggest->Name = L"AutoSuggest";
 			this->AutoSuggest->Size = System::Drawing::Size(186, 17);
 			this->AutoSuggest->TabIndex = 12;
-			this->AutoSuggest->Text = L"Automatically Display Suggestions";
+			this->AutoSuggest->Text = L"Automatically display suggestions";
 			this->AutoSuggest->UseVisualStyleBackColor = true;
 
 			//

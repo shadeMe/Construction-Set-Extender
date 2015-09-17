@@ -1291,7 +1291,7 @@ namespace ConstructionSetExtender
 			{
 				if (CurrentBlock && CurrentBlock->Type == ControlBlock::ControlBlockType::ScriptBlock)
 				{
-					ScriptBlock^ BeginBlock = dynamic_cast<ScriptBlock^>(CurrentBlock);
+					ScriptBlock^ BeginBlock = (ScriptBlock^)CurrentBlock;
 					if (BeginBlock->CompilerOverride == false)
 					{
 						if (Parser->Tokenize(SanitizedLine, false))

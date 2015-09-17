@@ -16,6 +16,7 @@ CSE		---->
 			>> This one is pretty deep-rooted in the compiler, suggested workaround - add a parenthesis escape format specifier to OBSE
 		> QQuix default form being injected into plugins/ESMs?
 		> Object window columns like Auto calc, Enchantment type, Count don't sort consistently
+			>> Columns not handled by default = 3, 24, 41, 54. Some others are incorrectly handled
 		> Render window fixed camera pivot bug
 			>> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=23984155
 		> The Landscape Textures Quad is supposed to replace the clicked texture with the one you double-click from the list it offers, but when you save the file, reloading reveals that it has instead replaced it with the quad's Default texture
@@ -52,8 +53,7 @@ SE		---->
 
 
 	BUGFIX			=
-		> Toggle comment on the rectangle selection adds multiple ;s
-		> Editor doesn't acquire focus after switching scripts/on opening
+		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness 
 			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 
 
