@@ -105,7 +105,7 @@ namespace BGSEditorExtender
 			struct ParameterInfo
 			{
 				const char*							Name;
-				UInt8								Type;
+				UInt8								Type;		// kType_Multi or ICodaScriptDataStore::DataType
 
 				enum
 				{

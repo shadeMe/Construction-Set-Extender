@@ -90,7 +90,7 @@ namespace BGSEditorExtender
 
 			BGSEECONSOLE_MESSAGE("Couldn't register console message log context");
 		}
-		
+
 		return Initialized;
 	}
 
@@ -99,7 +99,7 @@ namespace BGSEditorExtender
 		bool Result = false;
 
 		SME_ASSERT(Initialized && Proxy && Operator && WalkingStacks == false);
-		
+
 		// reset any pending proxies on the redo stack
 		ResetStack(RedoStack);
 
@@ -160,7 +160,7 @@ namespace BGSEditorExtender
 														Proxy->GetEditorID(), Proxy->GetFormID(), AlternateStack.size(), Stack.size());
 
 					break;
-				}				
+				}
 			}
 			else
 			{
@@ -201,7 +201,7 @@ namespace BGSEditorExtender
 	void BGSEEFormUndoStack::Print( const char* Format, ... )
 	{
 		SME_ASSERT(Initialized);
-		
+
 		char Buffer[0x512] = {0};
 
 		va_list Args;
