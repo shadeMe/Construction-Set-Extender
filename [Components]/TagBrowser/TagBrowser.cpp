@@ -394,10 +394,10 @@ namespace ConstructionSetExtender
 		//
 		// SaveTags
 		//
-		SaveTags->BackColor = System::Drawing::SystemColors::Control;
-		SaveTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-			static_cast<System::Byte>(0)));
-		SaveTags->ForeColor = System::Drawing::Color::Black;
+// 		SaveTags->BackColor = System::Drawing::SystemColors::Control;
+// 		SaveTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+// 			static_cast<System::Byte>(0)));
+// 		SaveTags->ForeColor = System::Drawing::Color::Black;
 		SaveTags->Location = System::Drawing::Point(870, 624);
 		SaveTags->Name = L"SaveTags";
 		SaveTags->Size = System::Drawing::Size(40, 33);
@@ -408,10 +408,10 @@ namespace ConstructionSetExtender
 		//
 		// LoadTags
 		//
-		LoadTags->BackColor = System::Drawing::SystemColors::Control;
-		LoadTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-			static_cast<System::Byte>(0)));
-		LoadTags->ForeColor = System::Drawing::Color::Black;
+// 		LoadTags->BackColor = System::Drawing::SystemColors::Control;
+// 		LoadTags->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+// 			static_cast<System::Byte>(0)));
+// 		LoadTags->ForeColor = System::Drawing::Color::Black;
 		LoadTags->Location = System::Drawing::Point(916, 624);
 		LoadTags->Name = L"LoadTags";
 		LoadTags->Size = System::Drawing::Size(40, 33);

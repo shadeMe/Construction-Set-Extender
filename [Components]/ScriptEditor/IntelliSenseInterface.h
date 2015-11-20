@@ -66,7 +66,7 @@ namespace ConstructionSetExtender
 			virtual void				Bind(IIntelliSenseInterfaceView^ To);
 			virtual void				Unbind();
 			virtual	bool				GetTriggered(System::Windows::Input::Key E);
-			virtual void				UpdateLocalVars(ObScriptSemanticAnalysis::AnalysisData^ Data);
+			virtual void				UpdateLocalVars(ObScriptParsing::AnalysisData^ Data);
 #pragma endregion
 		};
 

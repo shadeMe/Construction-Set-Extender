@@ -646,7 +646,13 @@ extern "C"
 #else
 														  false,		// CLR memory profiling
 #endif
+
+#ifdef WAIT_FOR_DEBUGGER
+														  true,
+#else
 														  false,		// wait for debugger
+#endif
+
 #ifdef NDEBUG
 														  true);		// CrashRpt support
 		TODO("Save debug symbols, dammit!")

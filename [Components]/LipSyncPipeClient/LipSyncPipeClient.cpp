@@ -165,6 +165,8 @@ void __stdcall ProcessServerMessage(void)
 			DebugPrint("Pipe idle loop operation caused an error!");
 			LogWinAPIErrorMessage(GetLastError());
 		}
+
+		Sleep(100);
 	}
 }
 

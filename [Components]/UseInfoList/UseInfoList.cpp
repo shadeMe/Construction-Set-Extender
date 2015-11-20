@@ -155,8 +155,8 @@ namespace ConstructionSetExtender
 		ExportDataButton->Click += gcnew EventHandler(this, &UseInfoList::ExportDataButton_Click);
 
 		UseInfoListBox = gcnew Form();
-		UseInfoListBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-		UseInfoListBox->AutoScaleMode = AutoScaleMode::Font;
+//		UseInfoListBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+//		UseInfoListBox->AutoScaleMode = AutoScaleMode::Font;
 		UseInfoListBox->ClientSize = System::Drawing::Size(974, 697);
 		UseInfoListBox->Controls->Add(ExportDataButton);
 		UseInfoListBox->Controls->Add(SearchBox);

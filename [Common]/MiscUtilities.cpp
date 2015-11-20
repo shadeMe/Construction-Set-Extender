@@ -88,9 +88,7 @@ namespace ConstructionSetExtender
 			void DebugPrint(String^ Message, bool Achtung)
 			{
 				if (Achtung)
-				{
 					Media::SystemSounds::Hand->Play();
-				}
 
 				DebugDump(e_SE, Message);
 			}
@@ -100,9 +98,7 @@ namespace ConstructionSetExtender
 			void DebugPrint(String^ Message, bool Achtung)
 			{
 				if (Achtung)
-				{
 					Media::SystemSounds::Hand->Play();
-				}
 
 				DebugDump(e_UL, Message);
 			}
@@ -112,9 +108,7 @@ namespace ConstructionSetExtender
 			void DebugPrint(String^ Message, bool Achtung)
 			{
 				if (Achtung)
-				{
 					Media::SystemSounds::Hand->Play();
-				}
 
 				DebugDump(e_BE, Message);
 			}
@@ -124,9 +118,7 @@ namespace ConstructionSetExtender
 			void DebugPrint(String^ Message, bool Achtung)
 			{
 				if (Achtung)
-				{
 					Media::SystemSounds::Hand->Play();
-				}
 
 				DebugDump(e_BSA, Message);
 			}
@@ -136,9 +128,7 @@ namespace ConstructionSetExtender
 			void DebugPrint(String^ Message, bool Achtung)
 			{
 				if (Achtung)
-				{
 					Media::SystemSounds::Hand->Play();
-				}
 
 				DebugDump(e_TAG, Message);
 			}

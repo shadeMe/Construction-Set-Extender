@@ -3911,7 +3911,7 @@ namespace ConstructionSetExtender
 						GetFileVersionInfo(BGSEEMAIN->GetDLLPath(), FileVersionHandle, FileVersionSize, Buffer);
 						VerQueryValue(Buffer, "\\StringFileInfo\\040904b0\\ProductVersion", &VersionStringPtr, (PUINT)FileVersionHandle);
 						FORMAT_STR(VersionString, "%s v%s\r\n\"%s\"", BGSEEMAIN->ExtenderGetDisplayName(),
-																	VersionStringPtr, BGSEEMAIN->ExtenderGetReleaseName());
+																	(char*)VersionStringPtr, BGSEEMAIN->ExtenderGetReleaseName());
 
 						std::string ReplacedString(VersionString);
 						std::replace(ReplacedString.begin(), ReplacedString.end(), ',', '.');

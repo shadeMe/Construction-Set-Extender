@@ -35,13 +35,13 @@ CSE		---->
 		> Copy From Template tool
 			>> Batch editor for base forms
 		> Option to disable asymmetry when generating a new NPC face
-		> Add CK-like Move Reference command (special case harcoded markers, such as north/door/travel markers)
-		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released		
+		> Add CK-like Move Reference command (special case hardcoded markers, such as north/door/travel markers)
+		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released
 		> Add a random "roughness" factor to the landscape sculpting brush
 		> Region node editing in render window
 
 	CODA			=
-	
+
 
 	MISC			=
 
@@ -53,7 +53,7 @@ SE		---->
 
 
 	BUGFIX			=
-		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness 
+		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness
 			>> Even with the FocusHelper, the Tab key needs to be pressed to relinquish focus to the text editor. Not sure what else to do
 
 
@@ -69,7 +69,7 @@ SE		---->
 USE		---->
 
 	BUGFIX			=
-		
+
 
 	ENHANCEMENT		=
 		> Export all data to CSV

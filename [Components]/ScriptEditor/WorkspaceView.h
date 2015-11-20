@@ -58,6 +58,7 @@ namespace ConstructionSetExtender
 			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
 			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 										String^ Query, String^ Replacement, UInt32 Options, bool Global);
+			virtual void	ShowOutline(IWorkspaceView^ View, ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			virtual void	Redraw(IWorkspaceView^ View);
 
@@ -118,6 +119,39 @@ namespace ConstructionSetExtender
 			~WorkspaceViewTabFilter();
 
 			void										Show();
+			void										Hide();
+		};
+
+		ref class WorkspaceViewOutlineView
+		{
+			ConcreteWorkspaceView^						Parent;
+
+			AnimatedForm^								Form;
+			BrightIdeasSoftware::TreeListView^			ListView;
+			ObScriptParsing::Structurizer^		StructureData;
+			IWorkspaceModel^							AssociatedModel;
+
+			void										ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
+			void										ListView_ItemActivate(Object^ Sender, EventArgs^ E);
+
+			void										Form_Deactivate(Object^ Sender, EventArgs^ E);
+
+			KeyEventHandler^							ListViewKeyDownHandler;
+			EventHandler^								ListViewItemActivateHandler;
+			EventHandler^								FormDeactivateHandler;
+
+			void										JumpToLine(UInt32 Line);
+			void										ResetState();
+
+			static Object^								ListViewAspectGetter(Object^ RowObject);
+			static Object^								ListViewImageGetter(Object^ RowObject);
+			static bool									ListViewCanExpandGetter(Object^ E);
+			static Collections::IEnumerable^			ListViewChildrenGetter(Object^ E);
+		public:
+			WorkspaceViewOutlineView(ConcreteWorkspaceView^ ParentView);
+			~WorkspaceViewOutlineView();
+
+			void										Show(ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 			void										Hide();
 		};
 
@@ -348,6 +382,7 @@ namespace ConstructionSetExtender
 
 			WorkspaceViewTabFilter^					TabStripFilter;
 			List<FindReplaceAllResults^>^			CachedFindReplaceAllResults;
+			WorkspaceViewOutlineView^				OutlineView;
 
 			ConcreteWorkspaceViewController^		ViewController;
 			ConcreteWorkspaceViewFactory^			ViewFactory;

@@ -18,7 +18,7 @@ namespace ConstructionSetExtender
 		try
 		{
 			String^ ExpandedToken = "";
-			ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+			ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 			LocalParser->Tokenize(Token, true);
 			if (!LocalParser->Valid)
@@ -69,7 +69,7 @@ namespace ConstructionSetExtender
 	{
 		String^ Result = "";
 		bool SliceStartFound = false, SliceEndFound = false;
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		String^ ReadLine = TextReader->ReadLine();
 		while (ReadLine != nullptr)
@@ -161,7 +161,7 @@ namespace ConstructionSetExtender
 		this->Type = DirectiveType::Define;
 		this->Encoding = EncodingType::SingleLine;
 
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		try
 		{
@@ -205,7 +205,7 @@ namespace ConstructionSetExtender
 		this->Type = DirectiveType::Define;
 		this->Encoding = EncodingType::MultiLine;
 
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		try
 		{
@@ -320,7 +320,7 @@ namespace ConstructionSetExtender
 		this->Type = DirectiveType::Import;
 		this->Encoding = EncodingType::SingleLine;
 
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		try
 		{
@@ -379,7 +379,7 @@ namespace ConstructionSetExtender
 
 	void EnumDirective::ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
 
 		LocalParser->Tokenize(Source, false);
 		float PreviousValue = 0;
@@ -418,7 +418,7 @@ namespace ConstructionSetExtender
 		this->Encoding = EncodingType::SingleLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		try
 		{
@@ -460,7 +460,7 @@ namespace ConstructionSetExtender
 		this->Encoding = EncodingType::MultiLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		try
 		{
@@ -715,7 +715,7 @@ namespace ConstructionSetExtender
 			String^ PostFixExpression = "";
 			Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
 
-			ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+			ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 			LocalParser->Tokenize(InfixExpression, true);
 
 			if (LocalParser->Valid)
@@ -814,7 +814,7 @@ namespace ConstructionSetExtender
 			if (ConvertInfixExpressionToPostFix(Base, PostFixExpression, ErrorOutput, PreprocessorInstance))
 			{
 				Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
-				ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+				ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 				LocalParser->Tokenize(PostFixExpression, true);
 
@@ -879,7 +879,7 @@ namespace ConstructionSetExtender
 		this->Type = DirectiveType::If;
 		this->Encoding = EncodingType::MultiLine;
 
-		ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 		try
 		{
@@ -1009,7 +1009,7 @@ namespace ConstructionSetExtender
 		{
 			LinkedList<CSEPreprocessorToken^>^ TokenList = gcnew LinkedList<CSEPreprocessorToken^>();
 			CSEStringReader^ TextReader = gcnew CSEStringReader(Source);
-			ObScriptSemanticAnalysis::Tokenizer^ LocalParser = gcnew ObScriptSemanticAnalysis::Tokenizer();
+			ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 			{

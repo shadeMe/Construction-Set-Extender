@@ -14,7 +14,7 @@ namespace ConstructionSetExtender
 		static UInt32										GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
 	};
 
-	namespace ObScriptSemanticAnalysis
+	namespace ObScriptParsing
 	{
 		static enum	class ScriptType
 		{
@@ -142,6 +142,7 @@ namespace ConstructionSetExtender
 			ControlBlock^			Parent;					// nullptr for script blocks
 			bool					BasicBlock;				// set to true for all blocks except IFs with ELSE/ELSEIF clauses
 			UInt32					OuterEndLine;			// set to the ENDIF line for IF's with ELSE/ELSEIF clauses
+			List<ControlBlock^>^	ChildBlocks;
 
 			ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent);
 
@@ -310,10 +311,54 @@ namespace ConstructionSetExtender
 
 			void								Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions);
 		};
+
+		ref class Structurizer
+		{
+		public:
+			ref struct Node
+			{
+				enum class NodeType
+				{
+					VariableDeclaration,
+					ScriptBlock,
+					BasicConditionalBlock,
+					LoopBlock
+				};
+
+				String^							Description;
+				NodeType						Type;
+				UInt32							Line;
+				List<Node^>^					Children;
+
+				Node(NodeType Type, UInt32 Line, String^ Desc);
+			};
+
+			delegate String^					GetLineText(UInt32 Line);
+		private:
+			AnalysisData^						InputData;
+			List<Node^>^						ParsedTree;
+			GetLineText^						FetchLineText;
+			UInt32								CurrentLine;
+
+			void								ParseStructure();
+			void								ParseControlBlock(ControlBlock^ Block, Node^ Parent);
+		public:
+			Structurizer(AnalysisData^ Input, GetLineText^ Delegate, UInt32 CurrentLine);
+
+
+			property List<Node^>^				Output
+			{
+				virtual List<Node^>^ get() { return ParsedTree; }
+			}
+
+			property bool						Valid;
+			property Node^						CurrentScope;
+
+		};
 	};
 
 #ifdef CSE_SE
-	typedef ObScriptSemanticAnalysis::Tokenizer						ScriptParser;
-	typedef ObScriptSemanticAnalysis::AnalysisData::UserMessage		ScriptErrorMessage;
+	typedef ObScriptParsing::Tokenizer						ScriptParser;
+	typedef ObScriptParsing::AnalysisData::UserMessage		ScriptErrorMessage;
 #endif
 }

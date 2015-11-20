@@ -332,6 +332,210 @@ namespace ConstructionSetExtender
 			Form->Hide();
 		}
 
+
+		void WorkspaceViewOutlineView::ListView_KeyDown(Object^ Sender, KeyEventArgs^ E)
+		{
+			ObScriptParsing::Structurizer::Node^ Selection = (ObScriptParsing::Structurizer::Node^)ListView->SelectedObject;
+			if (Selection == nullptr)
+				return;
+
+			switch (E->KeyCode)
+			{
+			case Keys::Enter:
+				JumpToLine(Selection->Line);
+				break;
+			case Keys::Escape:
+				Hide();
+				break;
+			}
+		}
+
+		void WorkspaceViewOutlineView::ListView_ItemActivate(Object^ Sender, EventArgs^ E)
+		{
+			ObScriptParsing::Structurizer::Node^ Selection = (ObScriptParsing::Structurizer::Node^)ListView->SelectedObject;
+			if (Selection == nullptr)
+				return;
+
+			JumpToLine(Selection->Line);
+		}
+
+		void WorkspaceViewOutlineView::Form_Deactivate(Object^ Sender, EventArgs^ E)
+		{
+			Hide();
+		}
+
+		void WorkspaceViewOutlineView::JumpToLine(UInt32 Line)
+		{
+			Debug::Assert(AssociatedModel != nullptr);
+			AssociatedModel->Controller->GotoLine(AssociatedModel, Line);
+			Hide();
+		}
+
+		void WorkspaceViewOutlineView::ResetState()
+		{
+			StructureData = nullptr;
+			AssociatedModel = nullptr;
+			ListView->ClearObjects();
+		}
+
+		Object^ WorkspaceViewOutlineView::ListViewAspectGetter(Object^ RowObject)
+		{
+			if (RowObject)
+			{
+				ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)RowObject;
+				Debug::Assert(Item != nullptr);
+
+				return Item->Description;
+			}
+			else
+				return nullptr;
+		}
+
+		Object^ WorkspaceViewOutlineView::ListViewImageGetter(Object^ RowObject)
+		{
+			if (RowObject)
+			{
+				ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)RowObject;
+				Debug::Assert(Item != nullptr);
+
+				return (int)Item->Type;
+			}
+			else
+				return nullptr;
+		}
+
+		bool WorkspaceViewOutlineView::ListViewCanExpandGetter(Object^ E)
+		{
+			ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)E;
+			Debug::Assert(Item != nullptr);
+
+			return Item->Children->Count > 0;
+		}
+
+		Collections::IEnumerable^ WorkspaceViewOutlineView::ListViewChildrenGetter(Object^ E)
+		{
+			ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)E;
+			Debug::Assert(Item != nullptr);
+
+			return Item->Children;
+		}
+
+		WorkspaceViewOutlineView::WorkspaceViewOutlineView(ConcreteWorkspaceView^ ParentView)
+		{
+			Debug::Assert(ParentView != nullptr);
+
+			Parent = ParentView;
+
+			Form = gcnew AnimatedForm(0.15);
+			ListView = gcnew BrightIdeasSoftware::TreeListView;
+
+			ListViewKeyDownHandler = gcnew KeyEventHandler(this, &WorkspaceViewOutlineView::ListView_KeyDown);
+			ListViewItemActivateHandler = gcnew EventHandler(this, &WorkspaceViewOutlineView::ListView_ItemActivate);
+			FormDeactivateHandler = gcnew EventHandler(this, &WorkspaceViewOutlineView::Form_Deactivate);
+
+			ListView->View = View::Details;
+			ListView->Dock = DockStyle::Fill;
+			ListView->MultiSelect = false;
+			ListView->BorderStyle = BorderStyle::None;
+			ListView->Size = Size(285, 89);
+			ListView->SmallImageList = gcnew ImageList();
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewVariables"));
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewScriptBlock"));
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewConditionalBlock"));
+			ListView->SmallImageList->Images->Add(Globals::ScriptEditorImageResourceManager->CreateImage("OutlineViewLoopBlock"));
+			ListView->Location = Point(0, 0);
+			ListView->LabelEdit = false;
+			ListView->CheckBoxes = false;
+			ListView->FullRowSelect = true;
+			ListView->GridLines = false;
+			ListView->HeaderStyle = ColumnHeaderStyle::None;
+			ListView->HideSelection = false;
+			ListView->CanExpandGetter = gcnew BrightIdeasSoftware::TreeListView::CanExpandGetterDelegate(&WorkspaceViewOutlineView::ListViewCanExpandGetter);
+			ListView->ChildrenGetter = gcnew BrightIdeasSoftware::TreeListView::ChildrenGetterDelegate(&WorkspaceViewOutlineView::ListViewChildrenGetter);
+
+			BrightIdeasSoftware::OLVColumn^ Column = gcnew BrightIdeasSoftware::OLVColumn;
+			Column->AspectGetter = gcnew BrightIdeasSoftware::AspectGetterDelegate(&WorkspaceViewOutlineView::ListViewAspectGetter);
+			Column->ImageGetter = gcnew BrightIdeasSoftware::ImageGetterDelegate(&WorkspaceViewOutlineView::ListViewImageGetter);
+			Column->Text = "Structure";
+			Column->TextAlign = HorizontalAlignment::Center;
+			Column->Width = 400;
+			ListView->AllColumns->Add(Column);
+			ListView->Columns->Add(Column);
+
+			Form->FormBorderStyle = FormBorderStyle::SizableToolWindow;
+			Form->StartPosition = FormStartPosition::Manual;
+			Form->ShowInTaskbar = false;
+			Form->ShowIcon = false;
+			Form->ControlBox = false;
+			Form->Controls->Add(ListView);
+
+			Form->Location = Point(-1000, -1000);
+			Form->Size = Size(1, 1);
+			Form->Show();
+			Form->Hide();
+			Form->Size = Size(400, 400);
+			Form->MaximumSize = Size(400, 400);
+			Form->MinimumSize = Size(400, 400);
+
+			ListView->KeyDown += ListViewKeyDownHandler;
+			ListView->ItemActivate += ListViewItemActivateHandler;
+			Form->Deactivate += FormDeactivateHandler;
+		}
+
+		WorkspaceViewOutlineView::~WorkspaceViewOutlineView()
+		{
+			ResetState();
+
+			ListView->KeyDown -= ListViewKeyDownHandler;
+			ListView->ItemActivate -= ListViewItemActivateHandler;
+			Form->Deactivate -= FormDeactivateHandler;
+
+			for each (Image^ Itr in ListView->SmallImageList->Images)
+				delete Itr;
+
+			Form->ForceClose();
+
+			SAFEDELETE_CLR(Form);
+			SAFEDELETE_CLR(ListView);
+
+			Parent = nullptr;
+		}
+
+		void WorkspaceViewOutlineView::Show(ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model)
+		{
+			Debug::Assert(AssociatedModel == nullptr && StructureData == nullptr);
+
+			Point DisplayLocation = Point(Parent->EditorForm->Location.X + (Parent->EditorForm->Width - Form->Width) / 2,
+										  Parent->EditorForm->Location.Y + (Parent->EditorForm->Height - Form->Height) / 2);
+
+			Form->Location = DisplayLocation;
+			Form->Show(gcnew WindowHandleWrapper(Parent->WindowHandle));
+
+			AssociatedModel = Model;
+			StructureData = Data;
+
+			ListView->ClearObjects();
+			ListView->SetObjects(StructureData->Output);
+			Debug::Assert(ListView->GetItemCount() != 0);
+
+			ListView->ExpandAll();
+	//		ListView->Columns[0]->AutoResize(ColumnHeaderAutoResizeStyle::ColumnContent);
+			if (StructureData->CurrentScope)
+			{
+				ListView->SelectObject(StructureData->CurrentScope, true);
+				ListView->SelectedItem->EnsureVisible();
+			}
+
+			Form->Focus();
+		}
+
+		void WorkspaceViewOutlineView::Hide()
+		{
+			ResetState();
+			Form->Hide();
+		}
+
+
 		bool FindReplaceAllResults::GenericCanExpandGetter(Object^ E)
 		{
 			if (E->GetType() == FindReplaceAllResults::typeid)
@@ -409,8 +613,8 @@ namespace ConstructionSetExtender
 			EditorForm->SuspendLayout();
 
 			EditorForm->FormBorderStyle = FormBorderStyle::Sizable;
-			EditorForm->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-			EditorForm->AutoScaleMode = AutoScaleMode::Font;
+	//		EditorForm->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+	//		EditorForm->AutoScaleMode = AutoScaleMode::Font;
 			EditorForm->Size = Size(Bounds.Width, Bounds.Height);
 			EditorForm->KeyPreview = true;
 			EditorForm->TabStop = false;
@@ -587,6 +791,7 @@ namespace ConstructionSetExtender
 			TabStripFilter = gcnew WorkspaceViewTabFilter(this);
 
 			CachedFindReplaceAllResults = gcnew List < FindReplaceAllResults^ > ;
+			OutlineView = gcnew WorkspaceViewOutlineView(this);
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -1209,6 +1414,7 @@ namespace ConstructionSetExtender
 			SAFEDELETE_CLR(FindReplaceBox);
 			SAFEDELETE_CLR(IntelliSenseView);
 			SAFEDELETE_CLR(TabStripFilter);
+			SAFEDELETE_CLR(OutlineView);
 
 			SAFEDELETE_CLR(AttachPanel);
 
@@ -2399,9 +2605,9 @@ namespace ConstructionSetExtender
 							String^ Contents = FileParser->ReadToEnd()->Replace("\r\n", "\n");
 							FileParser->Close();
 
-							ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData;
-							Data->PerformAnalysis(Contents, ObScriptSemanticAnalysis::ScriptType::None,
-												  ObScriptSemanticAnalysis::AnalysisData::Operation::None, nullptr);
+							ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData;
+							Data->PerformAnalysis(Contents, ObScriptParsing::ScriptType::None,
+												  ObScriptParsing::AnalysisData::Operation::None, nullptr);
 
 							if (Data->Name != "")
 							{
@@ -2754,7 +2960,7 @@ namespace ConstructionSetExtender
 
 				break;
 			case Keys::Space:
-				if (E->Modifiers == Keys::Control)
+				if (E->Control && E->Alt == false)
 				{
 					Concrete->TabStripFilter->Show();
 					E->Handled = true;
@@ -2842,6 +3048,13 @@ namespace ConstructionSetExtender
 			}
 		}
 
+		void ConcreteWorkspaceViewController::ShowOutline(IWorkspaceView^ View, ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model)
+		{
+			Debug::Assert(View != nullptr && Model != nullptr);
+			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;
+			Concrete->OutlineView->Show(Data, Model);
+		}
+
 		void ConcreteWorkspaceViewController::Redraw(IWorkspaceView^ View)
 		{
 			Debug::Assert(View != nullptr);
@@ -2905,5 +3118,6 @@ namespace ConstructionSetExtender
 			Debug::Assert(Allocations->Count == 0);
 			Buffer->Clear();
 		}
+
 	}
 }

@@ -106,14 +106,14 @@ namespace ConstructionSetExtender
 						{
 							String^ Token = ParentEditor->GetTokenAtCaretPos()->Replace("\n", "");
 
-							if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Call)
+							if (ScriptParser::GetScriptTokenType(Token) == ObScriptParsing::ScriptTokenType::Call)
 							{
 								E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Call;
 								E->Display = true;
 								E->PreventNextTextChangeEvent = true;
 							}
-							else if (ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Set ||
-									 ScriptParser::GetScriptTokenType(Token) == ObScriptSemanticAnalysis::ScriptTokenType::Let)
+							else if (ScriptParser::GetScriptTokenType(Token) == ObScriptParsing::ScriptTokenType::Set ||
+									 ScriptParser::GetScriptTokenType(Token) == ObScriptParsing::ScriptTokenType::Let)
 							{
 								E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Assign;
 								E->Display = true;
@@ -342,9 +342,9 @@ namespace ConstructionSetExtender
 				if (IgnoreFilter)
 				{
 					IntelliSenseItemVariable^ RefVar = GetLocalVar(CurrentToken);
-					if (RefVar && RefVar->GetDataType() == ObScriptSemanticAnalysis::Variable::DataType::Ref)
+					if (RefVar && RefVar->GetDataType() == ObScriptParsing::Variable::DataType::Ref)
 						CallingObjectIsRef = true;
-					else if (ScriptParser::GetScriptTokenType(CurrentToken) == ObScriptSemanticAnalysis::ScriptTokenType::Player)
+					else if (ScriptParser::GetScriptTokenType(CurrentToken) == ObScriptParsing::ScriptTokenType::Player)
 						CallingObjectIsRef = true;
 					else
 					{
@@ -488,13 +488,13 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseInterfaceModel::UpdateLocalVars(ObScriptSemanticAnalysis::AnalysisData^ Data)
+		void IntelliSenseInterfaceModel::UpdateLocalVars(ObScriptParsing::AnalysisData^ Data)
 		{
 			if (Data)
 			{
 				LocalVariables->Clear();
 
-				for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+				for each (ObScriptParsing::Variable^ Itr in Data->Variables)
 				{
 					IntelliSenseItemVariable^ NewVar = gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment,
 																					  Itr->Type, IntelliSenseItem::IntelliSenseItemType::LocalVar);
@@ -520,6 +520,8 @@ namespace ConstructionSetExtender
 			ListView->SelectedIndexChanged += ListViewSelectionChangedHandler;
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
 
+			Form->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+			Form->AutoScaleMode = AutoScaleMode::Font;
 			Form->FormBorderStyle = FormBorderStyle::SizableToolWindow;
 			Form->ShowInTaskbar = false;
 			Form->ShowIcon = false;

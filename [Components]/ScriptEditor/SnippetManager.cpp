@@ -11,7 +11,7 @@ namespace ConstructionSetExtender
 {
 	namespace IntelliSense
 	{
-		CodeSnippet::VariableInfo::VariableInfo(String^ Name, ObScriptSemanticAnalysis::Variable::DataType Type)
+		CodeSnippet::VariableInfo::VariableInfo(String^ Name, ObScriptParsing::Variable::DataType Type)
 		{
 			this->Name = Name;
 			this->Type = Type;
@@ -53,7 +53,7 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		void CodeSnippet::AddVariable(String^ Name, ObScriptSemanticAnalysis::Variable::DataType Type)
+		void CodeSnippet::AddVariable(String^ Name, ObScriptParsing::Variable::DataType Type)
 		{
 			if (LookupVariable(Name) == nullptr)
 				Variables->Add(gcnew VariableInfo(Name, Type));
@@ -419,7 +419,7 @@ namespace ConstructionSetExtender
 			this->VarListCMAddVarInt->Name = L"VarListCMAddVarInt";
 			this->VarListCMAddVarInt->Size = System::Drawing::Size(152, 22);
 			this->VarListCMAddVarInt->Text = L"Integer";
-			this->VarListCMAddVarInt->Tag = ObScriptSemanticAnalysis::Variable::DataType::Integer;
+			this->VarListCMAddVarInt->Tag = ObScriptParsing::Variable::DataType::Integer;
 			this->VarListCMAddVarInt->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 			this->VarListCMAddVarInt->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 			//
@@ -429,7 +429,7 @@ namespace ConstructionSetExtender
 			this->VarListCMAddVarFloat->Name = L"VarListCMAddVarFloat";
 			this->VarListCMAddVarFloat->Size = System::Drawing::Size(152, 22);
 			this->VarListCMAddVarFloat->Text = L"Float";
-			this->VarListCMAddVarFloat->Tag = ObScriptSemanticAnalysis::Variable::DataType::Float;
+			this->VarListCMAddVarFloat->Tag = ObScriptParsing::Variable::DataType::Float;
 			this->VarListCMAddVarFloat->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 			this->VarListCMAddVarFloat->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 
@@ -440,7 +440,7 @@ namespace ConstructionSetExtender
 			this->VarListCMAddVarRef->Name = L"VarListCMAddVarRef";
 			this->VarListCMAddVarRef->Size = System::Drawing::Size(152, 22);
 			this->VarListCMAddVarRef->Text = L"Reference";
-			this->VarListCMAddVarRef->Tag = ObScriptSemanticAnalysis::Variable::DataType::Ref;
+			this->VarListCMAddVarRef->Tag = ObScriptParsing::Variable::DataType::Ref;
 			this->VarListCMAddVarRef->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 			this->VarListCMAddVarRef->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 			//
@@ -450,7 +450,7 @@ namespace ConstructionSetExtender
 			this->VarListCMAddVarString->Name = L"VarListCMAddVarString";
 			this->VarListCMAddVarString->Size = System::Drawing::Size(152, 22);
 			this->VarListCMAddVarString->Text = L"String";
-			this->VarListCMAddVarString->Tag = ObScriptSemanticAnalysis::Variable::DataType::StringVar;
+			this->VarListCMAddVarString->Tag = ObScriptParsing::Variable::DataType::StringVar;
 			this->VarListCMAddVarString->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 			this->VarListCMAddVarString->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 			//
@@ -460,7 +460,7 @@ namespace ConstructionSetExtender
 			this->VarListCMAddVarArray->Name = L"VarListCMAddVarArray";
 			this->VarListCMAddVarArray->Size = System::Drawing::Size(152, 22);
 			this->VarListCMAddVarArray->Text = L"Array";
-			this->VarListCMAddVarArray->Tag = ObScriptSemanticAnalysis::Variable::DataType::ArrayVar;
+			this->VarListCMAddVarArray->Tag = ObScriptParsing::Variable::DataType::ArrayVar;
 			this->VarListCMAddVarArray->TextImageRelation = System::Windows::Forms::TextImageRelation::TextBeforeImage;
 			this->VarListCMAddVarArray->Click += gcnew EventHandler(this, &CodeSnippetManagerDialog::VarListCMAddVariable_Click);
 			//
@@ -593,7 +593,7 @@ namespace ConstructionSetExtender
 				for each (CodeSnippet::VariableInfo^ Itr in Snippet->Variables)
 				{
 					ListViewItem^ Item = gcnew ListViewItem(Itr->Name);
-					Item->SubItems->Add(ObScriptSemanticAnalysis::Variable::GetVariableDataTypeDescription(Itr->Type));
+					Item->SubItems->Add(ObScriptParsing::Variable::GetVariableDataTypeDescription(Itr->Type));
 					Item->Tag = Itr;
 
 					SnippetVarList->Items->Add(Item);
@@ -662,7 +662,7 @@ namespace ConstructionSetExtender
 		void CodeSnippetManagerDialog::VarListCMAddVariable_Click( Object^ Sender, EventArgs^ E )
 		{
 			ToolStripMenuItem^ MenuItem = dynamic_cast<ToolStripMenuItem^>(Sender);
-			ObScriptSemanticAnalysis::Variable::DataType VarType = (ObScriptSemanticAnalysis::Variable::DataType)MenuItem->Tag;
+			ObScriptParsing::Variable::DataType VarType = (ObScriptParsing::Variable::DataType)MenuItem->Tag;
 
 			InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable");
 			if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
@@ -674,7 +674,7 @@ namespace ConstructionSetExtender
 				CodeSnippet::VariableInfo^ NewVar = gcnew CodeSnippet::VariableInfo(VarName, VarType);
 
 				ListViewItem^ Item = gcnew ListViewItem(VarName);
-				Item->SubItems->Add(ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VarType));
+				Item->SubItems->Add(ObScriptParsing::Variable::GetVariableDataTypeToken(VarType));
 				Item->Tag = NewVar;
 
 				SnippetVarList->Items->Add(Item);

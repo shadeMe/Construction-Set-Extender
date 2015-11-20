@@ -523,7 +523,7 @@ namespace ConstructionSetExtender
 				List<String^>^ LocalVars = gcnew List<String^>();
 				if (SemanticAnalysisCache)
 				{
-					for each (ObScriptSemanticAnalysis::Variable^ Itr in SemanticAnalysisCache->Variables)
+					for each (ObScriptParsing::Variable^ Itr in SemanticAnalysisCache->Variables)
 						LocalVars->Add(Itr->Name);
 				}
 
@@ -868,32 +868,32 @@ namespace ConstructionSetExtender
 				BackgroundTaskInput^ Data = (BackgroundTaskInput^)Input;
 				Debug::Assert(Data != nullptr);
 
-				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::None;
-				ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
+				ObScriptParsing::AnalysisData::Operation AnalysisOps = ObScriptParsing::AnalysisData::Operation::None;
+				ObScriptParsing::ScriptType Type = ObScriptParsing::ScriptType::Object;
 
-				AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables;
-				AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
-				AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
+				AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillVariables;
+				AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillControlBlocks;
+				AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::PerformBasicValidation;
 
 				if (Data->CheckVarNameCollisionCommands)
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
 
 				if (Data->CheckVarNameCollisionForms)
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameFormCollisions;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
 
 				if (Data->CountVarReferences)
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CountVariableReferences;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CountVariableReferences;
 
 				if (Data->SkipVarRefCountsForQuests)
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::SuppressQuestVariableRefCount;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
 
 				if (Data->ScriptType == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
-					Type = ObScriptSemanticAnalysis::ScriptType::MagicEffect;
+					Type = ObScriptParsing::ScriptType::MagicEffect;
 				else if (Data->ScriptType == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
-					Type = ObScriptSemanticAnalysis::ScriptType::Quest;
+					Type = ObScriptParsing::ScriptType::Quest;
 
 				BackgroundTaskOutput^ Out = gcnew BackgroundTaskOutput;
-				Out->AnalysisOutput = gcnew ObScriptSemanticAnalysis::AnalysisData;
+				Out->AnalysisOutput = gcnew ObScriptParsing::AnalysisData;
 				// ### ISDB is not thread-safe, so no var name collision checking
 				Out->AnalysisOutput->PerformAnalysis(Data->ScriptText->Text, Type, AnalysisOps, nullptr);
 
@@ -912,7 +912,7 @@ namespace ConstructionSetExtender
 						if (SemanticAnalysisCache)
 							SAFEDELETE_CLR(SemanticAnalysisCache);
 
-						SemanticAnalysisCache = (ObScriptSemanticAnalysis::AnalysisData^)Completed->Result->AnalysisOutput;
+						SemanticAnalysisCache = (ObScriptParsing::AnalysisData^)Completed->Result->AnalysisOutput;
 
 						IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
 						LineTracker->Cleanup();
@@ -923,7 +923,7 @@ namespace ConstructionSetExtender
 						LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
 												   TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
-						for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+						for each (ObScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
 						{
 							LineTracker->TrackMessage(Itr->Line,
 													  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
@@ -949,7 +949,10 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::WaitForBackgroundTask()
 			{
 				if (BackgroundTask)
+				{
 					BackgroundTask->Wait();
+					Debug::Assert(BackgroundTask == nullptr);		// the task completion action ought to completed at this point
+				}
 			}
 
 			void AvalonEditTextEditor::RoutePreprocessorMessages(int Line, String^ Message)
@@ -1633,8 +1636,8 @@ namespace ConstructionSetExtender
 				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				ContextMenuRefactorCreateUDFImplementation->Visible = false;
-				if ((ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptSemanticAnalysis::ScriptTokenType::Call ||
-					(ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptSemanticAnalysis::ScriptTokenType::Call) &&
+				if ((ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptParsing::ScriptTokenType::Call ||
+					(ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptParsing::ScriptTokenType::Call) &&
 					GetCharIndexInsideCommentSegment(GetLastKnownMouseClickOffset()) == false))
 				{
 					if (ISDB->GetIsIdentifierUserFunction(MidToken) == false)
@@ -1748,7 +1751,7 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::ContextMenuRefactorAddVariable_Click(Object^ Sender, EventArgs^ E)
 			{
 				ToolStripMenuItem^ MenuItem = (ToolStripMenuItem^)Sender;
-				ObScriptSemanticAnalysis::Variable::DataType VarType = (ObScriptSemanticAnalysis::Variable::DataType)MenuItem->Tag;
+				ObScriptParsing::Variable::DataType VarType = (ObScriptParsing::Variable::DataType)MenuItem->Tag;
 				String^ VarName = ContextMenuWord->Text;
 
 				if (VarName->Length == 0)
@@ -1923,7 +1926,7 @@ namespace ConstructionSetExtender
 
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
-				SemanticAnalysisCache = gcnew ObScriptSemanticAnalysis::AnalysisData();
+				SemanticAnalysisCache = gcnew ObScriptParsing::AnalysisData();
 
 				InsightPopup = gcnew ToolTip;
 				InsightPopup->AutoPopDelay = 500;
@@ -2011,19 +2014,19 @@ namespace ConstructionSetExtender
 				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableArray);
 
 				ContextMenuRefactorAddVariableInt->Text = "Integer";
-				ContextMenuRefactorAddVariableInt->Tag = ObScriptSemanticAnalysis::Variable::DataType::Integer;
+				ContextMenuRefactorAddVariableInt->Tag = ObScriptParsing::Variable::DataType::Integer;
 				ContextMenuRefactorAddVariableInt->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableFloat->Text = "Float";
-				ContextMenuRefactorAddVariableFloat->Tag = ObScriptSemanticAnalysis::Variable::DataType::Float;
+				ContextMenuRefactorAddVariableFloat->Tag = ObScriptParsing::Variable::DataType::Float;
 				ContextMenuRefactorAddVariableFloat->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableRef->Text = "Reference";
-				ContextMenuRefactorAddVariableRef->Tag = ObScriptSemanticAnalysis::Variable::DataType::Ref;
+				ContextMenuRefactorAddVariableRef->Tag = ObScriptParsing::Variable::DataType::Ref;
 				ContextMenuRefactorAddVariableRef->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableString->Text = "String";
-				ContextMenuRefactorAddVariableString->Tag = ObScriptSemanticAnalysis::Variable::DataType::StringVar;
+				ContextMenuRefactorAddVariableString->Tag = ObScriptParsing::Variable::DataType::StringVar;
 				ContextMenuRefactorAddVariableString->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableArray->Text = "Array";
-				ContextMenuRefactorAddVariableArray->Tag = ObScriptSemanticAnalysis::Variable::DataType::ArrayVar;
+				ContextMenuRefactorAddVariableArray->Tag = ObScriptParsing::Variable::DataType::ArrayVar;
 				ContextMenuRefactorAddVariableArray->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
 				ContextMenuRefactorCreateUDFImplementation->Visible = false;
@@ -2261,39 +2264,39 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool Validate)
 			{
-				ObScriptSemanticAnalysis::AnalysisData::Operation AnalysisOps = ObScriptSemanticAnalysis::AnalysisData::Operation::None;
-				ObScriptSemanticAnalysis::ScriptType Type = ObScriptSemanticAnalysis::ScriptType::Object;
+				ObScriptParsing::AnalysisData::Operation AnalysisOps = ObScriptParsing::AnalysisData::Operation::None;
+				ObScriptParsing::ScriptType Type = ObScriptParsing::ScriptType::Object;
 
 				if (FillVariables)
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillVariables;
 
 				if (FillControlBlocks)
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillControlBlocks;
 
 				if (Validate)
 				{
-					AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::PerformBasicValidation;
+					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::PerformBasicValidation;
 
 					if (PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
 
 					if (PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CheckVariableNameFormCollisions;
+						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
 
 					if (PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::CountVariableReferences;
+						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CountVariableReferences;
 
 					if (PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptSemanticAnalysis::AnalysisData::Operation::SuppressQuestVariableRefCount;
+						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
 				}
 
 				if (ParentModel->Type == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
-					Type = ObScriptSemanticAnalysis::ScriptType::MagicEffect;
+					Type = ObScriptParsing::ScriptType::MagicEffect;
 				else if (ParentModel->Type == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
-					Type = ObScriptSemanticAnalysis::ScriptType::Quest;
+					Type = ObScriptParsing::ScriptType::Quest;
 
 				SemanticAnalysisCache->PerformAnalysis(GetText(), Type, AnalysisOps,
-													   gcnew ObScriptSemanticAnalysis::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
+													   gcnew ObScriptParsing::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -2407,7 +2410,7 @@ namespace ConstructionSetExtender
 						bool LocalVar = false;
 						if (Item == nullptr)
 						{
-							ObScriptSemanticAnalysis::Variable^ Var = SemanticAnalysisCache->LookupVariable(Main);
+							ObScriptParsing::Variable^ Var = SemanticAnalysisCache->LookupVariable(Main);
 							if (Var)
 							{
 								LocalVar = true;
@@ -2525,6 +2528,14 @@ namespace ConstructionSetExtender
 			String^ AvalonEditTextEditor::GetText(void)
 			{
 				return SanitizeUnicodeString(TextField->Text);
+			}
+
+			String^ AvalonEditTextEditor::GetText(UInt32 LineNumber)
+			{
+				if (LineNumber >= LineCount || LineNumber == 0)
+					return "";
+				else
+					return SanitizeUnicodeString(TextField->Document->GetText(TextField->Document->GetLineByNumber(LineNumber)));
 			}
 
 			void AvalonEditTextEditor::SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack)
@@ -2845,12 +2856,12 @@ namespace ConstructionSetExtender
 				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
 
-			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType)
+			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType)
 			{
 				if (Modified)
 					UpdateSemanticAnalysisCache(true, false, false);
 
-				String^ Declaration = ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
+				String^ Declaration = ObScriptParsing::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
 				if (InsertionLine == 0)
 					InsertText(Declaration, TextField->Document->GetOffset(TextField->Document->LineCount, 1), true);
@@ -2868,7 +2879,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			ObScriptSemanticAnalysis::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
+			ObScriptParsing::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
 				if (UpdateVars || UpdateControlBlocks)
 					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false);
@@ -2900,7 +2911,7 @@ namespace ConstructionSetExtender
 				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
 										   TextEditors::IScriptTextEditor::ScriptMessageType::None);
 
-				for each (ObScriptSemanticAnalysis::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+				for each (ObScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
 				{
 					LineTracker->TrackMessage(Itr->Line,
 											  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),

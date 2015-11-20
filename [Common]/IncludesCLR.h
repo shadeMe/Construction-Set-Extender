@@ -2,7 +2,7 @@
 
 #include "SME_Prefix.h"
 
-#pragma warning(disable : 4800 4244 4390 4018 4570)
+#pragma warning(disable : 4800 4244 4390 4018 4570 4091)
 
 #using <mscorlib.dll>
 #using <System.DLL>

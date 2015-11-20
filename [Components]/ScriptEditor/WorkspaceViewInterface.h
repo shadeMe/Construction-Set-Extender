@@ -63,6 +63,7 @@ namespace ConstructionSetExtender
 			void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
 			int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
 																	String^ Query, String^ Replacement, UInt32 Options, bool Global);
+			void	ShowOutline(IWorkspaceView^ View, ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			void	Redraw(IWorkspaceView^ View);
 

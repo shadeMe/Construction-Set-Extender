@@ -462,5 +462,23 @@
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\paperclip_5159_16xLG.png">
       <Filter>Resources\Images</Filter>
     </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ConditionalRule_13134.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\DisassemblyWindow_6536.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\list_16xLG.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xLG.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xMD.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png">
+      <Filter>Resources\Images</Filter>
+    </Image>
   </ItemGroup>
 </Project>

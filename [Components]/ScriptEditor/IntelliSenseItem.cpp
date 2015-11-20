@@ -132,10 +132,10 @@ namespace ConstructionSetExtender
 			return Shorthand;
 		}
 
-		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptSemanticAnalysis::Variable::DataType Type, IntelliSenseItemType Scope) :
+		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope) :
 			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
 											Name,
-											ObScriptSemanticAnalysis::Variable::GetVariableDataTypeDescription(Type),
+											ObScriptParsing::Variable::GetVariableDataTypeDescription(Type),
 											(Comment != "")?"\n\n":"",
 											Comment),
 							Scope),
@@ -158,10 +158,10 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemVariable::GetDataTypeID()
 		{
-			return ObScriptSemanticAnalysis::Variable::GetVariableDataTypeDescription(DataType);
+			return ObScriptParsing::Variable::GetVariableDataTypeDescription(DataType);
 		}
 
-		ObScriptSemanticAnalysis::Variable::DataType IntelliSenseItemVariable::GetDataType()
+		ObScriptParsing::Variable::DataType IntelliSenseItemVariable::GetDataType()
 		{
 			return DataType;
 		}
@@ -199,14 +199,14 @@ namespace ConstructionSetExtender
 		{
 			VarList = gcnew VarListT;
 
-			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
-			Data->PerformAnalysis(ScriptText, ObScriptSemanticAnalysis::ScriptType::None,
-								ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
-								ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
-								ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData,
+			ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData();
+			Data->PerformAnalysis(ScriptText, ObScriptParsing::ScriptType::None,
+								ObScriptParsing::AnalysisData::Operation::FillVariables |
+								ObScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								ObScriptParsing::AnalysisData::Operation::FillUDFData,
 								nullptr);
 
-			for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+			for each (ObScriptParsing::Variable^ Itr in Data->Variables)
 				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
 
 			Name = Data->Name;
@@ -217,14 +217,14 @@ namespace ConstructionSetExtender
 		{
 			VarList = gcnew VarListT;
 
-			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
-			Data->PerformAnalysis(ScriptText, ObScriptSemanticAnalysis::ScriptType::None,
-								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
-								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
-								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData,
+			ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData();
+			Data->PerformAnalysis(ScriptText, ObScriptParsing::ScriptType::None,
+								  ObScriptParsing::AnalysisData::Operation::FillVariables |
+								  ObScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								  ObScriptParsing::AnalysisData::Operation::FillUDFData,
 								  nullptr);
 
-			for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+			for each (ObScriptParsing::Variable^ Itr in Data->Variables)
 				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
 
 			this->Name = Name;
@@ -263,15 +263,15 @@ namespace ConstructionSetExtender
 			Parameters->SetValue(-1, 9);
 			ReturnVar = -1;
 
-			ObScriptSemanticAnalysis::AnalysisData^ Data = gcnew ObScriptSemanticAnalysis::AnalysisData();
-			Data->PerformAnalysis(ScriptText, ObScriptSemanticAnalysis::ScriptType::None,
-								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillVariables |
-								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillControlBlocks |
-								  ObScriptSemanticAnalysis::AnalysisData::Operation::FillUDFData,
+			ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData();
+			Data->PerformAnalysis(ScriptText, ObScriptParsing::ScriptType::None,
+								  ObScriptParsing::AnalysisData::Operation::FillVariables |
+								  ObScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								  ObScriptParsing::AnalysisData::Operation::FillUDFData,
 								  nullptr);
 
 			int VarIdx = 0;
-			for each (ObScriptSemanticAnalysis::Variable^ Itr in Data->Variables)
+			for each (ObScriptParsing::Variable^ Itr in Data->Variables)
 			{
 				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
 				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
@@ -403,7 +403,7 @@ namespace ConstructionSetExtender
 
 			String^ Code = GetSubstitution();
 			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->CurrentLine);
-			Code = ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
+			Code = ObScriptParsing::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
 			Editor->BeginUpdate();
 			Editor->SetTokenAtCaretPos(Code);

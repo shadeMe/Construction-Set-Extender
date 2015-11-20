@@ -32,7 +32,7 @@ public:
 	/*28*/ UInt8				landFlags;
 	/*29*/ UInt8				pad29[3];
 	/*2C*/ TESObjectCELL*		parentCell;
-	/*30*/ void*				unk30;			// heightfield data
+	/*30*/ void*				unk30;			// height field data
 
 	// methods
 	const HeightLimitData*		GetHeightLimits(HeightLimitData* Out);

@@ -91,7 +91,29 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceModel::TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		{
-			BoundParent->Controller->BubbleKeyDownEvent(BoundParent, E);
+			Debug::Assert(Bound == true);
+
+			switch (E->KeyCode)
+			{
+			case Keys::Space:
+				if (E->Control && E->Alt)
+				{
+					ObScriptParsing::AnalysisData^ CurrentData = TextEditor->GetSemanticAnalysisCache(false, false);
+					ObScriptParsing::Structurizer^ Parser = gcnew ObScriptParsing::Structurizer(CurrentData,
+																												  gcnew ObScriptParsing::Structurizer::GetLineText(this, &ConcreteWorkspaceModel::GetLineText),
+																												  TextEditor->CurrentLine);
+
+					if (Parser->Valid)
+						BoundParent->Controller->ShowOutline(BoundParent, Parser, this);
+
+					E->Handled = true;
+				}
+
+				break;
+			}
+
+			if (E->Handled == false)
+				BoundParent->Controller->BubbleKeyDownEvent(BoundParent, E);
 		}
 
 		void ConcreteWorkspaceModel::TextEditor_ScriptModified(Object^ Sender, TextEditors::TextEditorScriptModifiedEventArgs^ E)
@@ -174,6 +196,11 @@ namespace ConstructionSetExtender
 		{
 			if (String::Compare(TargetEditorID, CurrentScriptEditorID, true) && Bound)
 				BoundParent->Controller->Jump(BoundParent, this, TargetEditorID);
+		}
+
+		String^ ConcreteWorkspaceModel::GetLineText(UInt32 Line)
+		{
+			return TextEditor->GetText(Line);
 		}
 
 		void ConcreteWorkspaceModel::Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript)
@@ -434,22 +461,22 @@ namespace ConstructionSetExtender
 
 		bool ConcreteWorkspaceModel::Sanitize()
 		{
-			ObScriptSemanticAnalysis::Sanitizer^ Agent = gcnew ObScriptSemanticAnalysis::Sanitizer(TextEditor->GetText());
-			ObScriptSemanticAnalysis::Sanitizer::Operation Operation;
+			ObScriptParsing::Sanitizer^ Agent = gcnew ObScriptParsing::Sanitizer(TextEditor->GetText());
+			ObScriptParsing::Sanitizer::Operation Operation;
 
 			if (PREFERENCES->FetchSettingAsInt("AnnealCasing", "Sanitize"))
-				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::AnnealCasing;
+				Operation = Operation | ObScriptParsing::Sanitizer::Operation::AnnealCasing;
 
 			if (PREFERENCES->FetchSettingAsInt("EvalifyIfs", "Sanitize"))
-				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::EvalifyIfs;
+				Operation = Operation | ObScriptParsing::Sanitizer::Operation::EvalifyIfs;
 
 			if (PREFERENCES->FetchSettingAsInt("CompilerOverrideBlocks", "Sanitize"))
-				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::CompilerOverrideBlocks;
+				Operation = Operation | ObScriptParsing::Sanitizer::Operation::CompilerOverrideBlocks;
 
 			if (PREFERENCES->FetchSettingAsInt("IndentLines", "Sanitize"))
-				Operation = Operation | ObScriptSemanticAnalysis::Sanitizer::Operation::IndentLines;
+				Operation = Operation | ObScriptParsing::Sanitizer::Operation::IndentLines;
 
-			bool Result = Agent->SanitizeScriptText(Operation, gcnew ObScriptSemanticAnalysis::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
+			bool Result = Agent->SanitizeScriptText(Operation, gcnew ObScriptParsing::Sanitizer::GetSanitizedIdentifier(GetSanitizedIdentifier));
 			if (Result)
 				TextEditor->SetText(Agent->Output, false, false);
 
@@ -731,7 +758,7 @@ namespace ConstructionSetExtender
 					{
 						String^ Description = "";
 						DocumentScriptData.ResultData->LookupEditDataByName("Script Description", Description);
-						ObScriptSemanticAnalysis::Documenter^ Agent = gcnew ObScriptSemanticAnalysis::Documenter(Concrete->TextEditor->GetText());
+						ObScriptParsing::Documenter^ Agent = gcnew ObScriptParsing::Documenter(Concrete->TextEditor->GetText());
 						Agent->Document(Description, DocumentScriptData.ResultData->AsTable());
 
 						Concrete->TextEditor->SetText(Agent->Output, false, false);

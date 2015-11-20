@@ -98,6 +98,7 @@ namespace ConstructionSetExtender
 			void									CheckAutoRecovery();
 			void									ClearAutoRecovery();
 			void									JumpToScript(String^ TargetEditorID);
+			String^									GetLineText(UInt32 Line);
 
 			void									OnStateChangedDirty(bool Modified);
 			void									OnStateChangedByteCodeSize(UInt32 Size);

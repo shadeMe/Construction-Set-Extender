@@ -14,9 +14,8 @@ namespace ConstructionSetExtender
 	BSAReader^% BSAReader::GetSingleton()
 	{
 		if (Singleton == nullptr)
-		{
 			Singleton = gcnew BSAReader();
-		}
+
 		return Singleton;
 	}
 
@@ -27,7 +26,8 @@ namespace ConstructionSetExtender
 		do
 		{
 			B = Stream->ReadChar();
-			if (!B)		break;
+			if (!B)
+				break;
 			Result += B;
 		}
 		while (true);
@@ -38,9 +38,8 @@ namespace ConstructionSetExtender
 	{
 		String^ Result;
 		for (UInt32 i = 0; i < Length; i++)
-		{
 			Result += (Char)Stream->ReadByte();
-		}
+
 		return Result;
 	}
 

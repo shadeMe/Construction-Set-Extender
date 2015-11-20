@@ -25,7 +25,7 @@ namespace ConstructionSetExtender
 		if (Extract == "")
 			return false;
 
-		if (ObScriptSemanticAnalysis::Variable::GetVariableDataType(Extract) != ObScriptSemanticAnalysis::Variable::DataType::None)
+		if (ObScriptParsing::Variable::GetVariableDataType(Extract) != ObScriptParsing::Variable::DataType::None)
 			return false;
 
 		else
@@ -68,7 +68,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	ObScriptSemanticAnalysis::Tokenizer::Tokenizer()
+	ObScriptParsing::Tokenizer::Tokenizer()
 	{
 		Tokens = gcnew List<String^>();
 		Indices = gcnew List<UInt32>();
@@ -79,7 +79,7 @@ namespace ConstructionSetExtender
 		this->ReferenceControlChars = gcnew String(DefaultControlChars);
 	}
 
-	ObScriptSemanticAnalysis::Tokenizer::Tokenizer(String^ InputDelimiters, String^ InputControlChars)
+	ObScriptParsing::Tokenizer::Tokenizer(String^ InputDelimiters, String^ InputControlChars)
 	{
 		Tokens = gcnew List<String^>();
 		Indices = gcnew List<UInt32>();
@@ -90,7 +90,7 @@ namespace ConstructionSetExtender
 		this->ReferenceControlChars = gcnew String(InputControlChars);
 	}
 
-	ObScriptSemanticAnalysis::Tokenizer::Tokenizer(String^ InputDelimiters)
+	ObScriptParsing::Tokenizer::Tokenizer(String^ InputDelimiters)
 	{
 		Tokens = gcnew List<String^>();
 		Indices = gcnew List<UInt32>();
@@ -101,7 +101,7 @@ namespace ConstructionSetExtender
 		this->ReferenceControlChars = gcnew String(DefaultControlChars);
 	}
 
-	bool ObScriptSemanticAnalysis::Tokenizer::Tokenize(String^ Source, bool CollectEmptyTokens)
+	bool ObScriptParsing::Tokenizer::Tokenize(String^ Source, bool CollectEmptyTokens)
 	{
 		if (Source->Length && Source[Source->Length - 1] != '\n')
 			Source += "\n";
@@ -156,7 +156,7 @@ namespace ConstructionSetExtender
 		return Good;
 	}
 
-	void ObScriptSemanticAnalysis::Tokenizer::ResetState()
+	void ObScriptParsing::Tokenizer::ResetState()
 	{
 		Tokens->Clear();
 		Delimiters->Clear();
@@ -164,7 +164,7 @@ namespace ConstructionSetExtender
 		Good = false;
 	}
 
-	ObScriptSemanticAnalysis::ScriptTokenType ObScriptSemanticAnalysis::Tokenizer::GetFirstTokenType(void)
+	ObScriptParsing::ScriptTokenType ObScriptParsing::Tokenizer::GetFirstTokenType(void)
 	{
 		if (Good)
 			return GetScriptTokenType(Tokens[0]);
@@ -172,7 +172,7 @@ namespace ConstructionSetExtender
 			return ScriptTokenType::None;
 	}
 
-	int ObScriptSemanticAnalysis::Tokenizer::GetCommentTokenIndex(int SearchEndIndex)
+	int ObScriptParsing::Tokenizer::GetCommentTokenIndex(int SearchEndIndex)
 	{
 		int Pos = 0;
 		int Result = -1;
@@ -192,7 +192,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	int ObScriptSemanticAnalysis::Tokenizer::GetTokenIndex(String^ Source)
+	int ObScriptParsing::Tokenizer::GetTokenIndex(String^ Source)
 	{
 		int Result = -1, Count = 0;
 
@@ -209,7 +209,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	ObScriptSemanticAnalysis::ScriptTokenType ObScriptSemanticAnalysis::Tokenizer::GetScriptTokenType(String^ ScriptToken)
+	ObScriptParsing::ScriptTokenType ObScriptParsing::Tokenizer::GetScriptTokenType(String^ ScriptToken)
 	{
 		ScriptTokenType Result = ScriptTokenType::None;
 		if (ScriptToken->Length)
@@ -261,7 +261,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	bool ObScriptSemanticAnalysis::Tokenizer::GetIndexInsideString(String^ Source, int Index)
+	bool ObScriptParsing::Tokenizer::GetIndexInsideString(String^ Source, int Index)
 	{
 		if (Index >= Source->Length)
 			return false;
@@ -289,7 +289,7 @@ namespace ConstructionSetExtender
 		return false;
 	}
 
-	bool ObScriptSemanticAnalysis::Tokenizer::HasIllegalChar(String^ Source, String^ Includes, String^ Excludes)
+	bool ObScriptParsing::Tokenizer::HasIllegalChar(String^ Source, String^ Includes, String^ Excludes)
 	{
 		bool Result = false;
 
@@ -310,12 +310,12 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	ObScriptSemanticAnalysis::Variable::Variable(String^ Name, DataType Type, String^ Comment, UInt32 Line) :
+	ObScriptParsing::Variable::Variable(String^ Name, DataType Type, String^ Comment, UInt32 Line) :
 		Name(Name), Comment(Comment), Type(Type), UDFParameter(false), ParameterIndex(0), Line(Line), RefCount(0)
 	{
 	}
 
-	ObScriptSemanticAnalysis::Variable::DataType ObScriptSemanticAnalysis::Variable::GetVariableDataType(String^ TypeToken)
+	ObScriptParsing::Variable::DataType ObScriptParsing::Variable::GetVariableDataType(String^ TypeToken)
 	{
 		DataType VarType = DataType::None;
 
@@ -333,7 +333,7 @@ namespace ConstructionSetExtender
 		return VarType;
 	}
 
-	String^ ObScriptSemanticAnalysis::Variable::GetVariableDataTypeToken(Variable::DataType Type)
+	String^ ObScriptParsing::Variable::GetVariableDataTypeToken(Variable::DataType Type)
 	{
 		switch (Type)
 		{
@@ -352,7 +352,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	String^ ObScriptSemanticAnalysis::Variable::GetVariableDataTypeDescription(Variable::DataType Type)
+	String^ ObScriptParsing::Variable::GetVariableDataTypeDescription(Variable::DataType Type)
 	{
 		switch (Type)
 		{
@@ -371,50 +371,53 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	ObScriptSemanticAnalysis::ControlBlock::ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent) :
-		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent), BasicBlock(true), OuterEndLine(0)
+	ObScriptParsing::ControlBlock::ControlBlock(ControlBlockType Type, UInt32 Start, UInt32 Indents, ControlBlock^ Parent) :
+		Type(Type), StartLine(Start), EndLine(0), IndentLevel(Indents), Parent(Parent), BasicBlock(true), OuterEndLine(0),
+		ChildBlocks(gcnew List<ControlBlock^>)
 	{
+		if (Parent)
+			Parent->ChildBlocks->Add(this);
 	}
 
-	bool ObScriptSemanticAnalysis::ControlBlock::IsMalformed()
+	bool ObScriptParsing::ControlBlock::IsMalformed()
 	{
 		return EndLine == 0;
 	}
 
-	ObScriptSemanticAnalysis::ScriptBlock::ScriptBlock(UInt32 Start, UInt32 Indents, ScriptBlockType Type, bool Override) :
+	ObScriptParsing::ScriptBlock::ScriptBlock(UInt32 Start, UInt32 Indents, ScriptBlockType Type, bool Override) :
 		ControlBlock(ControlBlockType::ScriptBlock, Start, Indents, nullptr), SBAttribute(ScriptBlockAttribute::None), SBType(Type), CompilerOverride(Override)
 	{
 		switch (SBType)
 		{
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActivate:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActorEquip:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActorUnequip:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAdd:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAlarm:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAlarmVictim:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnDeath:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnDrop:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnEquip:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnHit:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnHitWith:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnKnockout:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnLoad:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnMurder:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageChange:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageDone:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageStart:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnReset:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnSell:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTrigger:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTriggerActor:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTriggerMob:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnUnequip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnActivate:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnActorEquip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnActorUnequip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnAdd:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnAlarm:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnAlarmVictim:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnDeath:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnDrop:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnEquip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnHit:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnHitWith:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnKnockout:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnLoad:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnMurder:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnPackageChange:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnPackageDone:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnPackageStart:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnReset:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnSell:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnTrigger:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerActor:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerMob:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnUnequip:
 			SBAttribute = ScriptBlockAttribute::ReferenceSpecific;
 			break;
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectStart:
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectStart:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
 			SBAttribute = ScriptBlockAttribute::MagicEffect;
 			break;
 		default:
@@ -423,7 +426,7 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	bool ObScriptSemanticAnalysis::ScriptBlock::IsBlockValid(ScriptType Type)
+	bool ObScriptParsing::ScriptBlock::IsBlockValid(ScriptType Type)
 	{
 		bool Result = true;
 
@@ -446,7 +449,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType ObScriptSemanticAnalysis::ScriptBlock::GetScriptBlockType(String^ TypeToken)
+	ObScriptParsing::ScriptBlock::ScriptBlockType ObScriptParsing::ScriptBlock::GetScriptBlockType(String^ TypeToken)
 	{
 		if (TypeToken->Length && TypeToken[0] == '_')
 			TypeToken = TypeToken->Substring(1);
@@ -515,7 +518,7 @@ namespace ConstructionSetExtender
 			return ScriptBlockType::None;
 	}
 
-	bool ObScriptSemanticAnalysis::ScriptBlock::HasCompilerOverride(String^ TypeToken)
+	bool ObScriptParsing::ScriptBlock::HasCompilerOverride(String^ TypeToken)
 	{
 		if (TypeToken->Length && TypeToken[0] == '_')
 			return true;
@@ -523,81 +526,81 @@ namespace ConstructionSetExtender
 			return false;
 	}
 
-	String^ ObScriptSemanticAnalysis::ScriptBlock::GetScriptBlockTypeToken(ScriptBlockType Type)
+	String^ ObScriptParsing::ScriptBlock::GetScriptBlockTypeToken(ScriptBlockType Type)
 	{
 		switch (Type)
 		{
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::GameMode:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::GameMode:
 			return "GameMode";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::MenuMode:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::MenuMode:
 			return "MenuMode";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActivate:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnActivate:
 			return "OnActivate";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActorEquip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnActorEquip:
 			return "OnActorEquip";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnActorUnequip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnActorUnequip:
 			return "OnActorUnequip";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAdd:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnAdd:
 			return "OnAdd";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAlarm:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnAlarm:
 			return "OnAlarm";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnAlarmVictim:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnAlarmVictim:
 			return "OnAlarmVictim";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnDeath:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnDeath:
 			return "OnDeath";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnDrop:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnDrop:
 			return "OnDrop";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnEquip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnEquip:
 			return "OnEquip";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnHit:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnHit:
 			return "OnHit";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnHitWith:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnHitWith:
 			return "OnHitWith";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnKnockout:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnKnockout:
 			return "OnKnockout";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnLoad:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnLoad:
 			return "OnLoad";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnMagicEffectHit:
 			return "OnMagicEffectHit";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnMurder:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnMurder:
 			return "OnMurder";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageChange:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnPackageChange:
 			return "OnPackageChange";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageDone:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnPackageDone:
 			return "OnPackageDone";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnPackageStart:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnPackageStart:
 			return "OnPackageStart";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnReset:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnReset:
 			return "OnReset";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnSell:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnSell:
 			return "OnSell";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTrigger:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnTrigger:
 			return "OnTrigger";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTriggerActor:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerActor:
 			return "OnTriggerActor";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnTriggerMob:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnTriggerMob:
 			return "OnTriggerMob";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::OnUnequip:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::OnUnequip:
 			return "OnUnequip";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectFinish:
 			return "ScriptEffectFinish";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectStart:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectStart:
 			return "ScriptEffectStart";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::ScriptEffectUpdate:
 			return "ScriptEffectUpdate";
-		case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptBlock::ScriptBlockType::Function:
+		case ConstructionSetExtender::ObScriptParsing::ScriptBlock::ScriptBlockType::Function:
 			return "Function";
 		default:
 			return "None";
 		}
 	}
 
-	ObScriptSemanticAnalysis::AnalysisData::UserMessage::UserMessage(UInt32 Line, String^ Message, bool Critical) :
+	ObScriptParsing::AnalysisData::UserMessage::UserMessage(UInt32 Line, String^ Message, bool Critical) :
 		Line(Line), Message(Message), Critical(Critical)
 	{
 	}
 
-	ObScriptSemanticAnalysis::AnalysisData::AnalysisData()
+	ObScriptParsing::AnalysisData::AnalysisData()
 	{
 		Name = "Unknown";
 		Description = "";
@@ -611,7 +614,7 @@ namespace ConstructionSetExtender
 		AnalysisMessages = gcnew List<UserMessage^>();
 	}
 
-	ObScriptSemanticAnalysis::AnalysisData::~AnalysisData()
+	ObScriptParsing::AnalysisData::~AnalysisData()
 	{
 		Variables->Clear();
 		ControlBlocks->Clear();
@@ -619,7 +622,7 @@ namespace ConstructionSetExtender
 		AnalysisMessages->Clear();
 	}
 
-	void ObScriptSemanticAnalysis::AnalysisData::PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate)
+	void ObScriptParsing::AnalysisData::PerformAnalysis(String^ ScriptText, ScriptType Type, Operation Operations, CheckVariableNameCollision^ Delegate)
 	{
 		Tokenizer^ Parser = gcnew Tokenizer();
 		CSEStringReader^ Reader = gcnew CSEStringReader(ScriptText);
@@ -679,7 +682,7 @@ namespace ConstructionSetExtender
 
 				switch (FirstTokenType)
 				{
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::ScriptName:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::ScriptName:
 					SaveDefinitionComments = true;
 
 					if (Operations.HasFlag(Operation::PerformBasicValidation))
@@ -696,7 +699,7 @@ namespace ConstructionSetExtender
 					NextVariableLine = CurrentLine + 1;
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Variable:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::Variable:
 					SaveDefinitionComments = false;
 
 					if (SecondToken != "")
@@ -737,7 +740,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Begin:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::Begin:
 					SaveDefinitionComments = false;
 					NextVariableLine = CurrentLine - 1;
 
@@ -784,7 +787,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::End:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::End:
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
 						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
@@ -807,8 +810,8 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::While:
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::ForEach:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::While:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::ForEach:
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
 						if (StructureStack->Peek() == ControlBlock::ControlBlockType::None)
@@ -837,7 +840,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Loop:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::Loop:
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
 						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
@@ -861,7 +864,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::If:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::If:
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
 						if (StructureStack->Peek() == ControlBlock::ControlBlockType::None)
@@ -897,8 +900,8 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::ElseIf:
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Else:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::ElseIf:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::Else:
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
 						if (Operations.HasFlag(Operation::PerformBasicValidation) && FirstTokenType == ScriptTokenType::ElseIf &&
@@ -950,7 +953,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::EndIf:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::EndIf:
 					if (Operations.HasFlag(Operation::FillControlBlocks))
 					{
 						if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
@@ -982,12 +985,12 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Return:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::Return:
 					if (Operations.HasFlag(Operation::PerformBasicValidation) && Parser->TokenCount > 1 && Parser->Tokens[1][0] != ';')
 						LogAnalysisMessage(CurrentLine, "Redundant expression beyond block end specifier.");
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::SetFunctionValue:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::SetFunctionValue:
 					if (Operations.HasFlag(Operation::FillUDFData))
 					{
 						Variable^ Existing = LookupVariable(SecondToken);
@@ -996,7 +999,7 @@ namespace ConstructionSetExtender
 					}
 
 					break;
-				case ConstructionSetExtender::ObScriptSemanticAnalysis::ScriptTokenType::Comment:
+				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::Comment:
 					// break early to save the script description
 					break;
 				default:
@@ -1081,7 +1084,7 @@ namespace ConstructionSetExtender
 #endif // !NDEBUG
 	}
 
-	ObScriptSemanticAnalysis::Variable^ ObScriptSemanticAnalysis::AnalysisData::LookupVariable(String^ VarName)
+	ObScriptParsing::Variable^ ObScriptParsing::AnalysisData::LookupVariable(String^ VarName)
 	{
 		for each (Variable^ Itr in Variables)
 		{
@@ -1092,17 +1095,17 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	void ObScriptSemanticAnalysis::AnalysisData::LogAnalysisMessage(UInt32 Line, String^ Message)
+	void ObScriptParsing::AnalysisData::LogAnalysisMessage(UInt32 Line, String^ Message)
 	{
 		AnalysisMessages->Add(gcnew UserMessage(Line, Message, false));
 	}
 
-	void ObScriptSemanticAnalysis::AnalysisData::LogCriticalAnalysisMessage(UInt32 Line, String^ Message)
+	void ObScriptParsing::AnalysisData::LogCriticalAnalysisMessage(UInt32 Line, String^ Message)
 	{
 		AnalysisMessages->Add(gcnew UserMessage(Line, Message, true));
 	}
 
-	UInt32 ObScriptSemanticAnalysis::AnalysisData::GetLineIndentLevel(UInt32 Line)
+	UInt32 ObScriptParsing::AnalysisData::GetLineIndentLevel(UInt32 Line)
 	{
 		int IndentCount = 0;
 		for each (ControlBlock^ Itr in ControlBlocks)
@@ -1122,7 +1125,7 @@ namespace ConstructionSetExtender
 		return IndentCount;
 	}
 
-	ObScriptSemanticAnalysis::ControlBlock^ ObScriptSemanticAnalysis::AnalysisData::GetBlockStartingAt(UInt32 Line)
+	ObScriptParsing::ControlBlock^ ObScriptParsing::AnalysisData::GetBlockStartingAt(UInt32 Line)
 	{
 		for each (ControlBlock^ Itr in ControlBlocks)
 		{
@@ -1133,7 +1136,7 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	String^ ObScriptSemanticAnalysis::AnalysisData::PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel)
+	String^ ObScriptParsing::AnalysisData::PerformLocalizedIndenting(String^ Source, UInt32 DefaultIndentLevel)
 	{
 		int IndentCount = DefaultIndentLevel;
 		String^ Result = "";
@@ -1189,7 +1192,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	ObScriptSemanticAnalysis::ControlBlock^ ObScriptSemanticAnalysis::AnalysisData::GetBlockEndingAt(UInt32 Line)
+	ObScriptParsing::ControlBlock^ ObScriptParsing::AnalysisData::GetBlockEndingAt(UInt32 Line)
 	{
 		for each (ControlBlock^ Itr in ControlBlocks)
 		{
@@ -1203,7 +1206,7 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	bool ObScriptSemanticAnalysis::AnalysisData::GetHasCriticalMessages()
+	bool ObScriptParsing::AnalysisData::GetHasCriticalMessages()
 	{
 		for each (auto Itr in AnalysisMessages)
 		{
@@ -1214,7 +1217,7 @@ namespace ConstructionSetExtender
 		return false;
 	}
 
-	bool ObScriptSemanticAnalysis::AnalysisData::ParseConditionExpression(UInt32 Line, String^ Expression)
+	bool ObScriptParsing::AnalysisData::ParseConditionExpression(UInt32 Line, String^ Expression)
 	{
 		bool Result = true;
 
@@ -1233,7 +1236,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	ObScriptSemanticAnalysis::Sanitizer::Sanitizer(String^ Source) :
+	ObScriptParsing::Sanitizer::Sanitizer(String^ Source) :
 		InputText(Source),
 		Data(gcnew AnalysisData()),
 		SanitizedText("")
@@ -1241,7 +1244,7 @@ namespace ConstructionSetExtender
 		Data->PerformAnalysis(InputText, ScriptType::None, AnalysisData::Operation::FillControlBlocks, nullptr);
 	}
 
-	bool ObScriptSemanticAnalysis::Sanitizer::SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate)
+	bool ObScriptParsing::Sanitizer::SanitizeScriptText(Operation Operations, GetSanitizedIdentifier^ Delegate)
 	{
 		if (Data->MalformedStructure)
 			return false;
@@ -1342,14 +1345,14 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	ObScriptSemanticAnalysis::Documenter::Documenter(String^ Source) :
+	ObScriptParsing::Documenter::Documenter(String^ Source) :
 		InputText(Source),
 		DocumentedText("")
 	{
 		;//
 	}
 
-	String^ ObScriptSemanticAnalysis::Documenter::GetVariableDescription(String^ Identifier, Dictionary<String^, String^>^ Descriptions)
+	String^ ObScriptParsing::Documenter::GetVariableDescription(String^ Identifier, Dictionary<String^, String^>^ Descriptions)
 	{
 		for each (auto Itr in Descriptions)
 		{
@@ -1360,7 +1363,7 @@ namespace ConstructionSetExtender
 		return "";
 	}
 
-	void ObScriptSemanticAnalysis::Documenter::Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions)
+	void ObScriptParsing::Documenter::Document(String^ ScriptDescription, Dictionary<String^, String^>^ VariableDescriptions)
 	{
 		Tokenizer^ Parser = gcnew Tokenizer();
 		CSEStringReader^ Reader = gcnew CSEStringReader(InputText);
@@ -1394,11 +1397,11 @@ namespace ConstructionSetExtender
 			String^ FirstToken = Parser->Tokens[0];
 			String^ SecondToken = (Parser->Tokens->Count > 1) ? Parser->Tokens[1] : "";
 
-			ObScriptSemanticAnalysis::ScriptTokenType Type = Parser->GetScriptTokenType(FirstToken);
+			ObScriptParsing::ScriptTokenType Type = Parser->GetScriptTokenType(FirstToken);
 
 			switch (Type)
 			{
-			case ObScriptSemanticAnalysis::ScriptTokenType::Variable:
+			case ObScriptParsing::ScriptTokenType::Variable:
 				{
 					if (SkippedDescription == false)
 					{
@@ -1417,15 +1420,15 @@ namespace ConstructionSetExtender
 				}
 
 				break;
-			case ObScriptSemanticAnalysis::ScriptTokenType::ScriptName:
+			case ObScriptParsing::ScriptTokenType::ScriptName:
 				ScriptName = SecondToken;
 				break;
-			case ObScriptSemanticAnalysis::ScriptTokenType::Comment:
+			case ObScriptParsing::ScriptTokenType::Comment:
 				if (SkippedDescription)
 					DocumentedText += ReadLine + "\n";
 
 				break;
-			case ObScriptSemanticAnalysis::ScriptTokenType::Begin:
+			case ObScriptParsing::ScriptTokenType::Begin:
 				if (SkippedDescription == false)
 				{
 					SkippedDescription = true;
@@ -1452,4 +1455,85 @@ namespace ConstructionSetExtender
 
 		DocumentedText = DocumentedText->Substring(0, DocumentedText->Length - 1);
 	}
+
+	ObScriptParsing::Structurizer::Node::Node(NodeType Type, UInt32 Line, String^ Desc) :
+		Type(Type), Line(Line), Children(gcnew List<Node^>)
+	{
+		Description = "   " + Desc;
+	}
+
+	ObScriptParsing::Structurizer::Structurizer(AnalysisData^ Input, GetLineText^ Delegate, UInt32 CurrentLine) :
+		InputData(Input),
+		ParsedTree(gcnew List<Node^>),
+		FetchLineText(Delegate),
+		CurrentLine(CurrentLine)
+	{
+		Debug::Assert(FetchLineText != nullptr);
+		ParseStructure();
+	}
+
+	void ObScriptParsing::Structurizer::ParseStructure()
+	{
+		Valid = false;
+		CurrentScope = nullptr;
+		if (InputData->MalformedStructure == false)
+		{
+			if (InputData->Variables->Count)
+			{
+				Variable^ First = InputData->Variables[0];
+				ParsedTree->Add(gcnew Node(Node::NodeType::VariableDeclaration, First->Line, "Variable Declarations"));
+			}
+
+			for each (auto Itr in InputData->ControlBlocks)
+			{
+				if (Itr->GetType() != ScriptBlock::typeid)
+					continue;
+
+				ScriptBlock^ BeginBlock = (ScriptBlock^)Itr;
+				if (BeginBlock)
+				{
+					Node^ MainBlock = gcnew Node(Node::NodeType::ScriptBlock,
+												 BeginBlock->StartLine,
+												 FetchLineText(BeginBlock->StartLine));
+
+					ParsedTree->Add(MainBlock);
+					ParseControlBlock(BeginBlock, MainBlock);
+				}
+			}
+
+			if (ParsedTree->Count)
+				Valid = true;
+		}
+	}
+
+	void ObScriptParsing::Structurizer::ParseControlBlock(ControlBlock^ Block, Node^ Parent)
+	{
+		Node^ CurrentBlock = nullptr;
+		switch (Block->Type)
+		{
+		case ObScriptParsing::ControlBlock::ControlBlockType::ScriptBlock:
+			CurrentBlock = Parent;
+			break;
+		case ObScriptParsing::ControlBlock::ControlBlockType::If:
+		case ObScriptParsing::ControlBlock::ControlBlockType::ElseIf:
+		case ObScriptParsing::ControlBlock::ControlBlockType::Else:
+			CurrentBlock = gcnew Node(Node::NodeType::BasicConditionalBlock, Block->StartLine, FetchLineText(Block->StartLine));
+			Parent->Children->Add(CurrentBlock);
+			break;
+		case ObScriptParsing::ControlBlock::ControlBlockType::While:
+		case ObScriptParsing::ControlBlock::ControlBlockType::ForEach:
+			CurrentBlock = gcnew Node(Node::NodeType::LoopBlock, Block->StartLine, FetchLineText(Block->StartLine));
+			Parent->Children->Add(CurrentBlock);
+			break;
+		default:
+			break;
+		}
+
+		if (CurrentLine >= Block->StartLine && CurrentLine <= Block->EndLine)
+			CurrentScope = CurrentBlock;
+
+		for each (auto Itr in Block->ChildBlocks)
+			ParseControlBlock(Itr, CurrentBlock);
+	}
+
 }

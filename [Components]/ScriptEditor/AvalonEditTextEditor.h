@@ -40,7 +40,7 @@ namespace ConstructionSetExtender
 
 			ref struct BackgroundTaskOutput
 			{
-				ObScriptSemanticAnalysis::AnalysisData^			AnalysisOutput;
+				ObScriptParsing::AnalysisData^			AnalysisOutput;
 			};
 
 			ref class AvalonEditTextEditor : public IScriptTextEditor
@@ -103,7 +103,7 @@ namespace ConstructionSetExtender
 				bool												TextFieldInUpdateFlag;
 
 				int													PreviousLineBuffer;
-				ObScriptSemanticAnalysis::AnalysisData^				SemanticAnalysisCache;
+				ObScriptParsing::AnalysisData^				SemanticAnalysisCache;
 
 				ScriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
@@ -383,6 +383,7 @@ namespace ConstructionSetExtender
 				virtual void								Unbind();
 
 				virtual String^								GetText();
+				virtual String^								GetText(UInt32 LineNumber);
 				virtual String^								GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
 				virtual void								SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
 
@@ -414,9 +415,9 @@ namespace ConstructionSetExtender
 				virtual void								EndUpdate(bool FlagModification);
 
 				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
-				virtual void								InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
+				virtual void								InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType);
 
-				virtual ObScriptSemanticAnalysis::AnalysisData^ GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+				virtual ObScriptParsing::AnalysisData^ GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 				virtual CompilationData^					BeginScriptCompilation();
 				virtual void								EndScriptCompilation(CompilationData^ Data);

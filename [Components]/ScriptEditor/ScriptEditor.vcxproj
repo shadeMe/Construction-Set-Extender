@@ -282,6 +282,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Compile_191.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Copy_6524.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\CubePreview.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\DisassemblyWindow_6536.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\FindinFiles_6299.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\FindResults1_6264.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Actions\png\Find_5650.png" />
@@ -307,6 +308,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Annotations\png\PendingDelete_13298.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\BindingSource_6844.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Class_489.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ConditionalRule_13134.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Constant_495.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_540.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\Delegate_8339.png" />
@@ -347,6 +349,9 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\gear_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\gear_32xMD.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\globe_16xLG.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\list_16xLG.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xLG.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xMD.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Member_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\method_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\module_16xLG.png" />
@@ -362,6 +367,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xMD_color.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\StatusAnnotations_Warning_16xSM_color.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Symbols_Required_16xLG.png" />
+    <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\type_16xLG.png" />
     <Image Include="..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\wizard_16xLG.png" />
   </ItemGroup>

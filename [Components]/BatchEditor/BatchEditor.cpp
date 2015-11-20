@@ -810,8 +810,8 @@ namespace ConstructionSetExtender
 		//
 		// BatchEditor_Reference
 		//
-		BatchEditBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-		BatchEditBox->AutoScaleMode = AutoScaleMode::Font;
+	//	BatchEditBox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+	//	BatchEditBox->AutoScaleMode = AutoScaleMode::Font;
 		BatchEditBox->ClientSize = System::Drawing::Size(686, 482);
 		BatchEditBox->ControlBox = false;
 		BatchEditBox->FormBorderStyle = FormBorderStyle::FixedDialog;

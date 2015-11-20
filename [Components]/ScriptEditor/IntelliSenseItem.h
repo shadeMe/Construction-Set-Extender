@@ -123,15 +123,15 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemVariable : public IntelliSenseItem
 		{
 			String^												Name;
-			ObScriptSemanticAnalysis::Variable::DataType		DataType;
+			ObScriptParsing::Variable::DataType		DataType;
 			String^												Comment;
 		public:
-			IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptSemanticAnalysis::Variable::DataType Type, IntelliSenseItemType Scope);
+			IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope);
 
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
 			String^												GetComment();
-			ObScriptSemanticAnalysis::Variable::DataType		GetDataType();
+			ObScriptParsing::Variable::DataType		GetDataType();
 			String^												GetDataTypeID();
 		};
 

@@ -117,21 +117,21 @@ namespace ConstructionSetExtender
 						{
 							Enumerables->Add(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			ObScriptSemanticAnalysis::Variable::DataType::Integer,
+																			ObScriptParsing::Variable::DataType::Integer,
 																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 						else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 						{
 							Enumerables->Add(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			ObScriptSemanticAnalysis::Variable::DataType::Float,
+																			ObScriptParsing::Variable::DataType::Float,
 																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 						else
 						{
 							Enumerables->Add(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
 																			gcnew String(""),
-																			ObScriptSemanticAnalysis::Variable::DataType::StringVar,
+																			ObScriptParsing::Variable::DataType::StringVar,
 																			IntelliSenseItem::IntelliSenseItemType::GlobalVar));
 						}
 					}
@@ -279,13 +279,13 @@ namespace ConstructionSetExtender
 
 				if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Int)
 					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
-										gcnew String(""), ObScriptSemanticAnalysis::Variable::DataType::Integer, IntelliSenseItem::IntelliSenseItemType::GMST));
+										gcnew String(""), ObScriptParsing::Variable::DataType::Integer, IntelliSenseItem::IntelliSenseItemType::GMST));
 				else if (Itr->Type == ComponentDLLInterface::GlobalData::kType_Float)
 					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
-										gcnew String(""), ObScriptSemanticAnalysis::Variable::DataType::Float, IntelliSenseItem::IntelliSenseItemType::GMST));
+										gcnew String(""), ObScriptParsing::Variable::DataType::Float, IntelliSenseItem::IntelliSenseItemType::GMST));
 				else
 					GameSettings->AddLast(gcnew IntelliSenseItemVariable(gcnew String(Itr->EditorID),
-										gcnew String(""), ObScriptSemanticAnalysis::Variable::DataType::StringVar, IntelliSenseItem::IntelliSenseItemType::GMST));
+										gcnew String(""), ObScriptParsing::Variable::DataType::StringVar, IntelliSenseItem::IntelliSenseItemType::GMST));
 			}
 
 			DebugPrint(String::Format("\tParsed {0} Game Settings", GMSTCollection->GMSTCount));

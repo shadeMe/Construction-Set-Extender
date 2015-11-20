@@ -313,4 +313,16 @@
   <data name="ToolBarBindScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\paperclip_5159_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="OutlineViewConditionalBlock" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\Objects\png\ConditionalRule_13134.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OutlineViewLoopBlock" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\Loop_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OutlineViewScriptBlock" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\tracepoint_Off_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OutlineViewVariables" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\..\..\..\..\..\Pictures\VS2012 Modern Image Library\_Common Elements\PNG\list_16xLG.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

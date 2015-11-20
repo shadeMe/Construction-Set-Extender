@@ -1218,7 +1218,7 @@ namespace ConstructionSetExtender
 
 			void ObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
 			{
-				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
+				ObScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
 				UInt32 CurrIndent = Data->GetLineIndentLevel(line->LineNumber);
 
 				AvalonEdit::Document::DocumentLine^ previousLine = line->PreviousLine;
@@ -1238,15 +1238,15 @@ namespace ConstructionSetExtender
 				{
 					AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
 
-					if (Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::ElseIf ||
-						Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Else)
+					if (Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::ElseIf ||
+						Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::Else)
 					{
 						if (CurrIndent)
 							document->Replace(Leading, gcnew String('\t', CurrIndent - 1));
 					}
-					else if	(Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::EndIf ||
-							Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::End ||
-							Parser->GetFirstTokenType() == ObScriptSemanticAnalysis::ScriptTokenType::Loop)
+					else if	(Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::EndIf ||
+							Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::End ||
+							Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::Loop)
 					{
 						document->Replace(Leading, gcnew String('\t', CurrIndent));
 					}
@@ -1281,8 +1281,8 @@ namespace ConstructionSetExtender
 
 				List<AvalonEdit::Folding::NewFolding^>^ Foldings = gcnew List<AvalonEdit::Folding::NewFolding^>();
 
-				ObScriptSemanticAnalysis::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, false);
-				for each (ObScriptSemanticAnalysis::ControlBlock^ Itr in Data->ControlBlocks)
+				ObScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, false);
+				for each (ObScriptParsing::ControlBlock^ Itr in Data->ControlBlocks)
 				{
 					if (Itr->IsMalformed() == false &&
 						Itr->StartLine <= document->LineCount && Itr->StartLine > 0 &&
@@ -1429,7 +1429,7 @@ namespace ConstructionSetExtender
 			VisualLineElement^ StructureVisualizerRenderer::ConstructElement(Int32 offset)
 			{
 				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(offset);
-				ObScriptSemanticAnalysis::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
+				ObScriptParsing::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
 
 				if (Block)
 				{

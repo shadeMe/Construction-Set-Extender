@@ -207,6 +207,7 @@ namespace ConstructionSetExtender
 			void										Unbind();	// opposite of the above
 
 			String^										GetText();
+			String^										GetText(UInt32 LineNumber);
 			String^										GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors);
 			void										SetText(String^ Text, bool PreventTextChangedEventHandling, bool ResetUndoStack);
 
@@ -238,9 +239,9 @@ namespace ConstructionSetExtender
 			void										EndUpdate(bool FlagModification);
 
 			UInt32										GetIndentLevel(UInt32 LineNumber);
-			void										InsertVariable(String^ VariableName, ObScriptSemanticAnalysis::Variable::DataType VariableType);
+			void										InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType);
 
-			ObScriptSemanticAnalysis::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+			ObScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 			CompilationData^							BeginScriptCompilation();
 			void										EndScriptCompilation(CompilationData^ Data);

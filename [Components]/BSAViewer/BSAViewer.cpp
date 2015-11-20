@@ -113,8 +113,8 @@ namespace ConstructionSetExtender
 		ToolBarArchiveName->Alignment = ToolStripItemAlignment::Right;
 
 		BSABox = gcnew Form();
-		BSABox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
-		BSABox->AutoScaleMode = AutoScaleMode::Font;
+//		BSABox->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
+//		BSABox->AutoScaleMode = AutoScaleMode::Font;
 		BSABox->ClientSize = System::Drawing::Size(632, 371);
 		BSABox->Controls->Add(ContentList);
 		BSABox->Controls->Add(ToolBar);
