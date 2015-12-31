@@ -509,7 +509,6 @@ namespace ConstructionSetExtender
 										  Parent->EditorForm->Location.Y + (Parent->EditorForm->Height - Form->Height) / 2);
 
 			Form->Location = DisplayLocation;
-			Form->Show(gcnew WindowHandleWrapper(Parent->WindowHandle));
 
 			AssociatedModel = Model;
 			StructureData = Data;
@@ -518,14 +517,15 @@ namespace ConstructionSetExtender
 			ListView->SetObjects(StructureData->Output);
 			Debug::Assert(ListView->GetItemCount() != 0);
 
-			ListView->ExpandAll();
 	//		ListView->Columns[0]->AutoResize(ColumnHeaderAutoResizeStyle::ColumnContent);
+			ListView->ExpandAll();
 			if (StructureData->CurrentScope)
 			{
 				ListView->SelectObject(StructureData->CurrentScope, true);
 				ListView->SelectedItem->EnsureVisible();
 			}
 
+			Form->Show(gcnew WindowHandleWrapper(Parent->WindowHandle));
 			Form->Focus();
 		}
 

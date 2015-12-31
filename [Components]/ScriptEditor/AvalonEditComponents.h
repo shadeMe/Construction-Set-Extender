@@ -329,7 +329,7 @@ namespace ConstructionSetExtender
 
 				void										Parent_TextChanged(Object^ Sender, EventArgs^ E);
 
-				TextAnchor^									CreateAnchor(UInt32 Offset);
+				TextAnchor^									CreateAnchor(UInt32 Offset, bool AllowDeletion);
 				void										RefreshBackgroundRenderers(bool IgnoreBatchUpdate);
 				UInt32										GetFindResults(UInt32 At, List<ScriptFindResult^>^% Out);
 
@@ -414,7 +414,7 @@ namespace ConstructionSetExtender
 				ObScriptIndentStrategy(AvalonEditTextEditor^ Parent, bool TrimTrailingWhitespace, bool CullEmptyLines);
 			};
 
-#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
+#if BUILD_AVALONEDIT_VERSION >= AVALONEDIT_5_0_1
 			ref class ObScriptCodeFoldingStrategy
 #else
 			ref class ObScriptCodeFoldingStrategy : public AvalonEdit::Folding::XmlFoldingStrategy
@@ -431,7 +431,7 @@ namespace ConstructionSetExtender
 			public:
 				virtual ~ObScriptCodeFoldingStrategy();
 
-#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
+#if BUILD_AVALONEDIT_VERSION >= AVALONEDIT_5_0_1
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset);
 #else
 				virtual IEnumerable<AvalonEdit::Folding::NewFolding^>^			CreateNewFoldings(AvalonEdit::Document::TextDocument^ document, int% firstErrorOffset) override;

@@ -159,7 +159,10 @@ namespace ConstructionSetExtender
 
 			int ScriptBookmark::Line()
 			{
-				return Anchor->Line;
+				if (Anchor->IsDeleted)
+					return 0;
+				else
+					return Anchor->Line;
 			}
 
 			String^ ScriptBookmark::Message()
@@ -642,13 +645,13 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			TextAnchor^ LineTrackingManager::CreateAnchor(UInt32 Offset)
+			TextAnchor^ LineTrackingManager::CreateAnchor(UInt32 Offset, bool AllowDeletion)
 			{
 				if (Offset >= Parent->Document->TextLength)
 					Offset = 0;
 
 				TextAnchor^ New = Parent->Document->CreateAnchor(Offset);
-				New->SurviveDeletion = true;
+				New->SurviveDeletion = AllowDeletion == false;
 				return New;
 			}
 
@@ -857,7 +860,7 @@ namespace ConstructionSetExtender
 				if (Line > Parent->LineCount)
 					Line = Parent->LineCount;
 
-				ScriptMessage^ New = gcnew ScriptMessage(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset),
+				ScriptMessage^ New = gcnew ScriptMessage(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset, false),
 														 Type, Source, Message->Replace("\t", "")->Replace("\r", "")->Replace("\n", ""));
 				Messages->Add(New);
 				RefreshBackgroundRenderers(false);
@@ -929,13 +932,12 @@ namespace ConstructionSetExtender
 
 			void LineTrackingManager::AddBookmark(UInt32 Line, String^ Description)
 			{
-				TODO("how do we handle deleted bookmark anchors?");
 				Debug::Assert(Line > 0);
 				if (Line > Parent->LineCount)
 					Line = Parent->LineCount;
 
 				Description->Replace("\t", " ");
-				ScriptBookmark^ New = gcnew ScriptBookmark(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset), Description);
+				ScriptBookmark^ New = gcnew ScriptBookmark(this, CreateAnchor(Parent->Document->GetLineByNumber(Line)->Offset, true), Description);
 
 				Bookmarks->Add(New);
 				RefreshBackgroundRenderers(false);
@@ -947,7 +949,7 @@ namespace ConstructionSetExtender
 				int Count = 0;
 				for each (ScriptBookmark^ Itr in Bookmarks)
 				{
-					if (Itr->Line() == Line)
+					if (Itr->Deleted() == false && Itr->Line() == Line)
 					{
 						Out->Add(Itr);
 						Count++;
@@ -1014,7 +1016,7 @@ namespace ConstructionSetExtender
 
 			void LineTrackingManager::TrackFindResult(UInt32 Start, UInt32 End, String^ Text)
 			{
-				ScriptFindResult^ New = gcnew ScriptFindResult(this, CreateAnchor(Start), CreateAnchor(End), Text);
+				ScriptFindResult^ New = gcnew ScriptFindResult(this, CreateAnchor(Start, false), CreateAnchor(End, false), Text);
 
 				FindResults->Add(New);
 				RefreshBackgroundRenderers(false);
@@ -1312,7 +1314,7 @@ namespace ConstructionSetExtender
 			}
 
 			ObScriptCodeFoldingStrategy::ObScriptCodeFoldingStrategy(AvalonEditTextEditor^ Parent) :
-#if BUILD_AVALONEDIT_VERSION != AVALONEDIT_5_0_1
+#if BUILD_AVALONEDIT_VERSION < AVALONEDIT_5_0_1
 				AvalonEdit::Folding::AbstractFoldingStrategy(),
 #endif
 				Parent(Parent),
@@ -1712,7 +1714,7 @@ namespace ConstructionSetExtender
 					PopupTitle = Warnings->Count + " Warning" + (Warnings->Count == 1 ? "" : "s");
 
 					for each (auto Itr in Warnings)
-						PopupText = Itr->Message() + "\n";
+						PopupText += Itr->Message() + "\n";
 
 					if (PopupText->Length)
 						PopupText->Remove(PopupText->Length - 1);
@@ -1724,7 +1726,7 @@ namespace ConstructionSetExtender
 					PopupTitle = Bookmarks->Count + " Bookmark" + (Bookmarks->Count == 1 ? "" : "s");
 
 					for each (auto Itr in Bookmarks)
-						PopupText = Itr->Message() + "\n";
+						PopupText += Itr->Message() + "\n";
 
 					if (PopupText->Length)
 						PopupText->Remove(PopupText->Length - 1);

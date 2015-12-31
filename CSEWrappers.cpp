@@ -606,7 +606,7 @@ namespace ConstructionSetExtender
 		if (Existing)
 		{
 			// the base form was instantiated for an earlier ref
-			return dynamic_cast<TESObject*>(Existing);
+			return CS_CAST(Existing, TESForm, TESObject);
 		}
 #ifdef _DEBUG
 		BGSEECONSOLE_MESSAGE("Instantiating base form for reference %08X", Ref->formID);
@@ -617,7 +617,7 @@ namespace ConstructionSetExtender
 		NewBase->SetEditorID(TempBase->GetEditorID());
 		_DATAHANDLER->AddForm(NewBase);
 
-		return dynamic_cast<TESObject*>(NewBase);
+		return CS_CAST(NewBase, TESForm, TESObject);
 	}
 
 	CSEObjectRefCollectionInstantiator::~CSEObjectRefCollectionInstantiator()
@@ -686,7 +686,7 @@ namespace ConstructionSetExtender
 					{
 						TESObjectREFR* TempRef = Itr->first;
 						const char* EditorID = Itr->second;
-						TESObject* Base = dynamic_cast<TESObject*>(TempRef->baseForm);
+						TESObject* Base = CS_CAST(TempRef->baseForm, TESForm, TESObject);
 						bool NewBaseForm = false;
 
 						if (Serializer->IsBaseFormTemporary(Base))

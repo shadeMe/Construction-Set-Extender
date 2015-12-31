@@ -393,8 +393,8 @@ namespace ConstructionSetExtender
 			bool									AllowDisposal;								// when false, the form's closing is canceled
 			bool									DisallowBinding;							// when true, prevents models from binding to the view
 
-			IWorkspaceModelController^				ModelController();
-			IWorkspaceModelFactory^					ModelFactory();
+			IWorkspaceModelController^				ModelController();							// yeah, not nice
+			IWorkspaceModelFactory^					ModelFactory();								// not nice at all...
 
 			void									AssociateModel(IWorkspaceModel^ Model, bool Bind);			// assign model a tab item and add it to the table
 			void									DissociateModel(IWorkspaceModel^ Model, bool Destroy);		// remove model from table and dissociate from the view

@@ -297,7 +297,7 @@ namespace ConstructionSetExtender
 				{
 					if (CodeFoldingStrategy != nullptr)
 					{
-#if BUILD_AVALONEDIT_VERSION == AVALONEDIT_5_0_1
+#if BUILD_AVALONEDIT_VERSION >= AVALONEDIT_5_0_1
 						int FirstErrorOffset = 0;
 						IEnumerable<AvalonEdit::Folding::NewFolding^>^ Foldings = CodeFoldingStrategy->CreateNewFoldings(TextField->Document, FirstErrorOffset);
 						CodeFoldingManager->UpdateFoldings(Foldings, FirstErrorOffset);
@@ -1427,7 +1427,7 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::MiddleMouseScrollTimer_Tick(Object^ Sender, EventArgs^ E)
 			{
-				static double AccelerateScrollFactor = 0.0;
+				static double AccelerateScrollFactor = 0.01;
 
 				if (IsMiddleMouseScrolling)
 				{
@@ -2104,6 +2104,15 @@ namespace ConstructionSetExtender
 				ContextMenuRefactorAddVariableString->Click += ContextMenuRefactorAddVariableClickHandler;
 				ContextMenuRefactorAddVariableArray->Click += ContextMenuRefactorAddVariableClickHandler;
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuRefactorCreateUDFImplementation);
+
+// 				System::Windows::PresentationSource^ src = System::Windows::PresentationSource::FromVisual(TextField);
+// 				if (src)
+// 				{
+// 					double dpix = 96.0 * src->CompositionTarget->TransformToDevice.M11;
+// 					double dpiy = 96.0 * src->CompositionTarget->TransformToDevice.M22;
+// 					DebugPrint("WPF DPI (X|Y) = " + dpix + "|" + dpiy);
+// 
+// 				}
 			}
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()
