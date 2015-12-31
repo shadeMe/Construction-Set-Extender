@@ -50,7 +50,7 @@ namespace BGSEditorExtender
 	{
 		static BGSEEFormUndoStack*			Singleton;
 		static const char*					kMessageLogContextName;
-		
+
 		BGSEEFormUndoStack();
 
 		typedef boost::shared_ptr<BGSEEFormUndoProxy>		UndoProxyHandleT;
@@ -74,7 +74,7 @@ namespace BGSEditorExtender
 		void								WalkUndoStack(UInt8 Operation, UndoProxyStackT& Stack, UndoProxyStackT& AlternateStack);
 	public:
 		~BGSEEFormUndoStack();
-		
+
 		static BGSEEFormUndoStack*			GetSingleton(void);
 
 		bool								Initialize(BGSEEFormUndoStackOperator* Operator);			// takes ownership of the pointer
@@ -82,7 +82,7 @@ namespace BGSEditorExtender
 											// takes ownership of the pointer, automatically resets the redo stack
 											// returns true if the proxy was recorded successfully, false otherwise
 		bool								Record(BGSEEFormUndoProxy* Proxy);
-		
+
 		void								PerformUndo(void);
 		void								PerformRedo(void);
 
