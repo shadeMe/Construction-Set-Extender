@@ -409,105 +409,106 @@ namespace ConstructionSetExtender
 
 		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
 		ThreadLocalData::Get()->saveLoadInProgress = 1;
-
-		for each (auto Itr in Forms)
 		{
-			if (Itr->GetType() == TESForm::kFormType_REFR ||
-				Itr->GetType() == TESForm::kFormType_ACHR ||
-				Itr->GetType() == TESForm::kFormType_ACRE)
-			{
-				FoundRefs = true;
-				break;
-			}
-		}
 
-		if (FoundRefs)
-			BGSEECONSOLE_MESSAGE("Form type mismatch! Selection contains object reference forms");
-		else
-			Result = true;
-
-		if (Result && Forms.size())
-		{
-			bool FormCheck = true;
 			for each (auto Itr in Forms)
 			{
-				if (Itr->GetEditorID() && strlen(Itr->GetEditorID()) < 1)
+				if (Itr->GetType() == TESForm::kFormType_REFR ||
+					Itr->GetType() == TESForm::kFormType_ACHR ||
+					Itr->GetType() == TESForm::kFormType_ACRE)
 				{
-					BGSEECONSOLE_MESSAGE("Form editorID error! Invalid editorID");
-					FormCheck = false;
-					break;
-				}
-				else if (Itr->GetType() != (*Forms.begin())->GetType())
-				{
-					BGSEECONSOLE_MESSAGE("Form type error! Selection contains multiple types");
-					FormCheck = false;
-					break;
-				}
-				else if (Itr->GetIsDeleted())
-				{
-					BGSEECONSOLE_MESSAGE("Attempting to serialize deleted form %08X!", Itr->GetFormID());
-					FormCheck = false;
+					FoundRefs = true;
 					break;
 				}
 			}
 
-			Result = FormCheck;
-			if (FormCheck)
+			if (FoundRefs)
+				BGSEECONSOLE_MESSAGE("Form type mismatch! Selection contains object reference forms");
+			else
+				Result = true;
+
+			if (Result && Forms.size())
 			{
-				bool Failed = false;
-
-				while (true)
+				bool FormCheck = true;
+				for each (auto Itr in Forms)
 				{
-					OutputStream->Purge();
-
-					if (OutputStream->Open(true) == false)
+					if (Itr->GetEditorID() && strlen(Itr->GetEditorID()) < 1)
 					{
-						BGSEECONSOLE_MESSAGE("Failed to open buffer!");
-						Failed = true;
+						BGSEECONSOLE_MESSAGE("Form editorID error! Invalid editorID");
+						FormCheck = false;
 						break;
 					}
-
-					SetFileSerializerType(OutputStream, kSerializer_DefaultForm);
-					if (OutputStream->SaveHeader() == false)
+					else if (Itr->GetType() != (*Forms.begin())->GetType())
 					{
-						BGSEECONSOLE_MESSAGE("Failed to save header!");
-						Failed = true;
+						BGSEECONSOLE_MESSAGE("Form type error! Selection contains multiple types");
+						FormCheck = false;
 						break;
 					}
-
-					// we can skip the form sorting as they are all of a single type
-					for each (auto Itr in Forms)
-						SaveForm(OutputStream, Itr);
-
-					if (OutputStream->CorrectHeader(Forms.size()) == false)
+					else if (Itr->GetIsDeleted())
 					{
-						BGSEECONSOLE_MESSAGE("Failed to correct header!");
-						Failed = true;
+						BGSEECONSOLE_MESSAGE("Attempting to serialize deleted form %08X!", Itr->GetFormID());
+						FormCheck = false;
 						break;
 					}
-
-					if (OutputStream->Close() == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to close buffer!");
-						Failed = true;
-						break;
-					}
-
-					break;
 				}
 
-				if (Failed)
+				Result = FormCheck;
+				if (FormCheck)
 				{
-					Result = false;
-					BGSEECONSOLE_MESSAGE("Buffer Error state = %d", OutputStream->GetErrorState());
-				}
+					bool Failed = false;
+
+					while (true)
+					{
+						OutputStream->Purge();
+
+						if (OutputStream->Open(true) == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to open buffer!");
+							Failed = true;
+							break;
+						}
+
+						SetFileSerializerType(OutputStream, kSerializer_DefaultForm);
+						if (OutputStream->SaveHeader() == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to save header!");
+							Failed = true;
+							break;
+						}
+
+						// we can skip the form sorting as they are all of a single type
+						for each (auto Itr in Forms)
+							SaveForm(OutputStream, Itr);
+
+						if (OutputStream->CorrectHeader(Forms.size()) == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to correct header!");
+							Failed = true;
+							break;
+						}
+
+						if (OutputStream->Close() == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to close buffer!");
+							Failed = true;
+							break;
+						}
+
+						break;
+					}
+
+					if (Failed)
+					{
+						Result = false;
+						BGSEECONSOLE_MESSAGE("Buffer Error state = %d", OutputStream->GetErrorState());
+					}
 
 #ifdef _DEBUG
-				BGSEECONSOLE_MESSAGE("Serialized %d forms to %s", Forms.size(), OutputStream->GetFileName());
+					BGSEECONSOLE_MESSAGE("Serialized %d forms to %s", Forms.size(), OutputStream->GetFileName());
 #endif
+				}
 			}
 		}
-
 		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
@@ -518,41 +519,40 @@ namespace ConstructionSetExtender
 
 		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
 		ThreadLocalData::Get()->saveLoadInProgress = 1;
-
-		while (true)
 		{
-			SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_DefaultForm);
-
-			if (InputStream->Open(false) == false)
+			while (true)
 			{
-				BGSEECONSOLE_MESSAGE("Failed to open buffer!");
-				break;
-			}
+				SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_DefaultForm);
 
-			FreeBuffer();
-			Result = true;
-			do
-			{
-				if (LoadForm(InputStream) == false)
+				if (InputStream->Open(false) == false)
+				{
+					BGSEECONSOLE_MESSAGE("Failed to open buffer!");
+					break;
+				}
+
+				FreeBuffer();
+				Result = true;
+				do
+				{
+					if (LoadForm(InputStream) == false)
+						Result = false;
+				} while (InputStream->GetNextRecord(true));
+
+				OutDeserializedFormCount = LoadedFormBuffer.size();
+
+				if (InputStream->Close() == false)
+				{
+					BGSEECONSOLE_MESSAGE("Failed to close buffer!");
 					Result = false;
-			}
-			while (InputStream->GetNextRecord(true));
+					break;
+				}
 
-			OutDeserializedFormCount = LoadedFormBuffer.size();
-
-			if (InputStream->Close() == false)
-			{
-				BGSEECONSOLE_MESSAGE("Failed to close buffer!");
-				Result = false;
 				break;
 			}
 
-			break;
+			if (Result == false)
+				BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
 		}
-
-		if (Result == false)
-			BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
-
 		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
@@ -1144,200 +1144,201 @@ namespace ConstructionSetExtender
 
 	bool CSEObjectRefCollectionSerializer::Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream)
 	{
-		bool FoundNoneRefs = false;
+		bool FoundNonRefs = false;
 		bool Result = true;
 
 		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
 		ThreadLocalData::Get()->saveLoadInProgress = 1;
-
-		for each (auto Itr in Forms)
 		{
-			if (Itr->GetType() != TESForm::kFormType_REFR &&
-				Itr->GetType() != TESForm::kFormType_ACHR &&
-				Itr->GetType() != TESForm::kFormType_ACRE)
-			{
-				FoundNoneRefs = true;
-				break;
-			}
-		}
-
-		if (FoundNoneRefs)
-		{
-			BGSEECONSOLE_MESSAGE("Form type mismatch! Selection contains non-object reference forms");
-			Result = false;
-		}
-
-		if (Result && Forms.size())
-		{
-			bool FormCheck = true;
-			TESFormListT RefBaseForms;
 
 			for each (auto Itr in Forms)
 			{
-				if (Itr->GetEditorID() && strlen(Itr->GetEditorID()) < 1)
+				if (Itr->GetType() != TESForm::kFormType_REFR &&
+					Itr->GetType() != TESForm::kFormType_ACHR &&
+					Itr->GetType() != TESForm::kFormType_ACRE)
 				{
-					BGSEECONSOLE_MESSAGE("Form editorID error! Invalid editorID");
-					FormCheck = false;
+					FoundNonRefs = true;
 					break;
 				}
-				else if (Itr->GetType() != (*Forms.begin())->GetType())
-				{
-					BGSEECONSOLE_MESSAGE("Form type error! Selection contains multiple types");
-					FormCheck = false;
-					break;
-				}
-				else if (Itr->GetIsDeleted())
-				{
-					BGSEECONSOLE_MESSAGE("Attempting to serialize deleted form %08X!", Itr->GetFormID());
-					FormCheck = false;
-					break;
-				}
+			}
 
-				CSEFormWrapper* Wrapped = dynamic_cast<CSEFormWrapper*>(Itr);
-				SME_ASSERT(Wrapped);
-				TESObjectREFR* ThisRef = (TESObjectREFR*)Wrapped->GetWrappedForm();
-				if (ThisRef->baseForm == NULL)
+			if (FoundNonRefs)
+			{
+				BGSEECONSOLE_MESSAGE("Form type mismatch! Selection contains non-object reference forms");
+				Result = false;
+			}
+
+			if (Result && Forms.size())
+			{
+				bool FormCheck = true;
+				TESFormListT RefBaseForms;
+
+				for each (auto Itr in Forms)
 				{
-					BGSEECONSOLE_MESSAGE("Reference %08X has no base form!", Itr->GetFormID());
-					FormCheck = false;
-					break;
-				}
-				else if (ThisRef->baseForm->GetEditorID() == NULL || strlen(ThisRef->baseForm->GetEditorID()) < 1)
-				{
-					BGSEECONSOLE_MESSAGE("Reference %08X's base form has no editorID!", Itr->GetFormID());
-					FormCheck = false;
-					break;
-				}
-				else if (ThisRef->baseForm->formType == TESForm::kFormType_Door)
-				{
-					BGSEECONSOLE_MESSAGE("Reference %08X is a door!", Itr->GetFormID());
-					FormCheck = false;
-					break;
-				}
-#ifdef NDEBUG
-				else if (ThisRef->baseForm->formID < 0x800)
-				{
-					BGSEECONSOLE_MESSAGE("Reference %08X's base form is a default object!", Itr->GetFormID());
-					FormCheck = false;
-					break;
-				}
-#endif
-				ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				if (xParent && xParent->parent)
-				{
-					bool MissingParent = true;
-					for each (auto j in Forms)
+					if (Itr->GetEditorID() && strlen(Itr->GetEditorID()) < 1)
 					{
-						if (j->GetFormID() == xParent->parent->formID)
+						BGSEECONSOLE_MESSAGE("Form editorID error! Invalid editorID");
+						FormCheck = false;
+						break;
+					}
+					else if (Itr->GetType() != (*Forms.begin())->GetType())
+					{
+						BGSEECONSOLE_MESSAGE("Form type error! Selection contains multiple types");
+						FormCheck = false;
+						break;
+					}
+					else if (Itr->GetIsDeleted())
+					{
+						BGSEECONSOLE_MESSAGE("Attempting to serialize deleted form %08X!", Itr->GetFormID());
+						FormCheck = false;
+						break;
+					}
+
+					CSEFormWrapper* Wrapped = dynamic_cast<CSEFormWrapper*>(Itr);
+					SME_ASSERT(Wrapped);
+					TESObjectREFR* ThisRef = (TESObjectREFR*)Wrapped->GetWrappedForm();
+					if (ThisRef->baseForm == NULL)
+					{
+						BGSEECONSOLE_MESSAGE("Reference %08X has no base form!", Itr->GetFormID());
+						FormCheck = false;
+						break;
+					}
+					else if (ThisRef->baseForm->GetEditorID() == NULL || strlen(ThisRef->baseForm->GetEditorID()) < 1)
+					{
+						BGSEECONSOLE_MESSAGE("Reference %08X's base form has no editorID!", Itr->GetFormID());
+						FormCheck = false;
+						break;
+					}
+					else if (ThisRef->baseForm->formType == TESForm::kFormType_Door)
+					{
+						BGSEECONSOLE_MESSAGE("Reference %08X is a door!", Itr->GetFormID());
+						FormCheck = false;
+						break;
+					}
+#ifdef NDEBUG
+					else if (ThisRef->baseForm->formID < 0x800)
+					{
+						BGSEECONSOLE_MESSAGE("Reference %08X's base form is a default object!", Itr->GetFormID());
+						FormCheck = false;
+						break;
+					}
+#endif
+					ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+					if (xParent && xParent->parent)
+					{
+						bool MissingParent = true;
+						for each (auto j in Forms)
 						{
-							MissingParent = false;
+							if (j->GetFormID() == xParent->parent->formID)
+							{
+								MissingParent = false;
+								break;
+							}
+						}
+
+						if (MissingParent)
+						{
+							BGSEECONSOLE_MESSAGE("Reference %08X's enable state parent is not a part of the selection!", Itr->GetFormID());
+							FormCheck = false;
 							break;
 						}
 					}
 
-					if (MissingParent)
+					bool FoundBase = false;
+					for each (auto ExtantBase in RefBaseForms)
 					{
-						BGSEECONSOLE_MESSAGE("Reference %08X's enable state parent is not a part of the selection!", Itr->GetFormID());
-						FormCheck = false;
-						break;
+						if (ExtantBase == ThisRef->baseForm)
+						{
+							FoundBase = true;
+							break;
+						}
 					}
+
+					// prevent the same base from being serialized multiple times
+					if (FoundBase == false)
+						RefBaseForms.push_back(ThisRef->baseForm);
 				}
 
-				bool FoundBase = false;
-				for each (auto ExtantBase in RefBaseForms)
+				for each (auto Base in RefBaseForms)
 				{
-					if (ExtantBase == ThisRef->baseForm)
+					for each (auto Ref in Forms)
 					{
-						FoundBase = true;
-						break;
+						if ((Ref->GetFormID() & 0xFFFFFF) == (Base->formID & 0xFFFFFF))
+						{
+							BGSEECONSOLE_MESSAGE("FormID collision between reference %08X and base form %08X (ignoring mod index)!", Ref->GetFormID(), Base->formID);
+							FormCheck = false;
+							break;
+						}
 					}
 				}
 
-				// prevent the same base from being serialized multiple times
-				if (FoundBase == false)
-					RefBaseForms.push_back(ThisRef->baseForm);
-			}
-
-			for each (auto Base in RefBaseForms)
-			{
-				for each (auto Ref in Forms)
+				Result = FormCheck;
+				if (FormCheck)
 				{
-					if ((Ref->GetFormID() & 0xFFFFFF) == (Base->formID & 0xFFFFFF))
+					bool Failed = false;
+					bool WarningState = BGSEECONSOLE->GetLogsWarnings();
+					BGSEECONSOLE->ToggleWarningLogging(false);			// get rid of the Failed to CreateGroupData warning
+
+					while (true)
 					{
-						BGSEECONSOLE_MESSAGE("FormID collision between reference %08X and base form %08X (ignoring mod index)!", Ref->GetFormID(), Base->formID);
-						FormCheck = false;
-						break;
-					}
-				}
-			}
+						OutputStream->Purge();
 
-			Result = FormCheck;
-			if (FormCheck)
-			{
-				bool Failed = false;
-				bool WarningState = BGSEECONSOLE->GetLogsWarnings();
-				BGSEECONSOLE->ToggleWarningLogging(false);			// get rid of the Failed to CreateGroupData warning
+						if (OutputStream->Open(true) == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to open buffer!");
+							Failed = true;
+							break;
+						}
 
-				while (true)
-				{
-					OutputStream->Purge();
+						SetFileSerializerType(OutputStream, kSerializer_ObjectRef);
+						if (OutputStream->SaveHeader() == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to save header!");
+							Failed = true;
+							break;
+						}
 
-					if (OutputStream->Open(true) == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to open buffer!");
-						Failed = true;
-						break;
-					}
+						// serialize base forms first
+						for each (auto Itr in RefBaseForms)
+						{
+							CSEFormWrapper Box(Itr);
+							SaveForm(OutputStream, &Box);
+						}
 
-					SetFileSerializerType(OutputStream, kSerializer_ObjectRef);
-					if (OutputStream->SaveHeader() == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to save header!");
-						Failed = true;
-						break;
-					}
+						// save the refs next
+						for each (auto Itr in Forms)
+							SaveForm(OutputStream, Itr);
 
-					// serialize base forms first
-					for each (auto Itr in RefBaseForms)
-					{
-						CSEFormWrapper Box(Itr);
-						SaveForm(OutputStream, &Box);
-					}
+						if (OutputStream->CorrectHeader(Forms.size()) == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to correct header!");
+							Failed = true;
+							break;
+						}
 
-					// save the refs next
-					for each (auto Itr in Forms)
-						SaveForm(OutputStream, Itr);
+						if (OutputStream->Close() == false)
+						{
+							BGSEECONSOLE_MESSAGE("Failed to close buffer!");
+							Failed = true;
+							break;
+						}
 
-					if (OutputStream->CorrectHeader(Forms.size()) == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to correct header!");
-						Failed = true;
-						break;
-					}
-
-					if (OutputStream->Close() == false)
-					{
-						BGSEECONSOLE_MESSAGE("Failed to close buffer!");
-						Failed = true;
 						break;
 					}
 
-					break;
-				}
-
-				if (Failed)
-				{
-					Result = false;
-					BGSEECONSOLE_MESSAGE("Buffer Error state = %d", OutputStream->GetErrorState());
-				}
+					if (Failed)
+					{
+						Result = false;
+						BGSEECONSOLE_MESSAGE("Buffer Error state = %d", OutputStream->GetErrorState());
+					}
 
 #ifdef _DEBUG
-				BGSEECONSOLE_MESSAGE("Serialized %d forms to %s", Forms.size() * 2, OutputStream->GetFileName());
+					BGSEECONSOLE_MESSAGE("Serialized %d forms to %s", Forms.size() * 2, OutputStream->GetFileName());
 #endif
-				BGSEECONSOLE->ToggleWarningLogging(WarningState);
+					BGSEECONSOLE->ToggleWarningLogging(WarningState);
+				}
 			}
 		}
-
 		ThreadLocalData::Get()->saveLoadInProgress = 0;
 		return Result;
 	}
@@ -1351,84 +1352,86 @@ namespace ConstructionSetExtender
 
 		SME_ASSERT(ThreadLocalData::Get()->saveLoadInProgress == 0);
 		ThreadLocalData::Get()->saveLoadInProgress = 1;
-
-		while (true)
 		{
-			SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_ObjectRef);
 
-			if (InputStream->Open(false) == false)
+			while (true)
 			{
-				BGSEECONSOLE_MESSAGE("Failed to open buffer!");
-				PluginError = true;
-				break;
-			}
+				SME_ASSERT(GetFileSerializerType(InputStream) == kSerializer_ObjectRef);
 
-			FreeBuffer();
-			FreeDeserializationBuffers();
-			Result = true;
-
-			do
-			{
-				if (LoadForm(InputStream) == false)
-					Result = false;
-			} while (InputStream->GetNextRecord(true));
-
-			// resolve extra data with formID fields
-			for each (auto Itr in LoadedFormBuffer)
-			{
-				TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
-				ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-				if (xParent && xParent->parent)
+				if (InputStream->Open(false) == false)
 				{
-					UInt32 FormID = (UInt32)xParent->parent & 0xFFFFFF;
-					for each (auto j in LoadedFormBuffer)
+					BGSEECONSOLE_MESSAGE("Failed to open buffer!");
+					PluginError = true;
+					break;
+				}
+
+				FreeBuffer();
+				FreeDeserializationBuffers();
+				Result = true;
+
+				do
+				{
+					if (LoadForm(InputStream) == false)
+						Result = false;
+				} while (InputStream->GetNextRecord(true));
+
+				// resolve extra data with formID fields
+				for each (auto Itr in LoadedFormBuffer)
+				{
+					TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
+					ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)ThisRef->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
+					if (xParent && xParent->parent)
 					{
-						if ((j->formID & 0xFFFFFF) == FormID)
+						UInt32 FormID = (UInt32)xParent->parent & 0xFFFFFF;
+						for each (auto j in LoadedFormBuffer)
 						{
-							ParentDeserializationBuffer[ThisRef] = (TESObjectREFR*)j;
-							ParentStateDeserializationBuffer[ThisRef] = xParent->oppositeState;
-							break;
+							if ((j->formID & 0xFFFFFF) == FormID)
+							{
+								ParentDeserializationBuffer[ThisRef] = (TESObjectREFR*)j;
+								ParentStateDeserializationBuffer[ThisRef] = xParent->oppositeState;
+								break;
+							}
 						}
 					}
 				}
-			}
 
-			// link the refs
-			for each (auto Itr in LoadedFormBuffer)
-				Itr->LinkForm();
+				// link the refs
+				for each (auto Itr in LoadedFormBuffer)
+					Itr->LinkForm();
 
-			// link the base forms
-			for each (auto Itr in BaseFormDeserializatonBuffer)
-				Itr->LinkForm();
+				// link the base forms
+				for each (auto Itr in BaseFormDeserializatonBuffer)
+					Itr->LinkForm();
 
-			// update extra data
-			// invalid extradata would've been stripped away during linking, so re-add
-			for each (auto Itr in ParentDeserializationBuffer)
-			{
-				Itr.first->extraData.ModExtraEnableStateParent(ParentDeserializationBuffer[Itr.first]);
-				Itr.first->SetExtraEnableStateParentOppositeState(ParentStateDeserializationBuffer[Itr.first]);
-			}
+				// update extra data
+				// invalid extradata would've been stripped away during linking, so re-add
+				for each (auto Itr in ParentDeserializationBuffer)
+				{
+					Itr.first->extraData.ModExtraEnableStateParent(ParentDeserializationBuffer[Itr.first]);
+					Itr.first->SetExtraEnableStateParentOppositeState(ParentStateDeserializationBuffer[Itr.first]);
+				}
 
-			// finally, check and update the refs' base forms
-			Result = ResolveBaseForms();
-			OutDeserializedFormCount = LoadedFormBuffer.size();
+				// finally, check and update the refs' base forms
+				Result = ResolveBaseForms();
+				OutDeserializedFormCount = LoadedFormBuffer.size();
 
-			if (InputStream->Close() == false)
-			{
-				BGSEECONSOLE_MESSAGE("Failed to close buffer!");
-				Result = false;
-				PluginError = true;
+				if (InputStream->Close() == false)
+				{
+					BGSEECONSOLE_MESSAGE("Failed to close buffer!");
+					Result = false;
+					PluginError = true;
+					break;
+				}
+
 				break;
 			}
 
-			break;
+			if (PluginError)
+				BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
+
 		}
-
-		if (PluginError)
-			BGSEECONSOLE_MESSAGE("Buffer Error state = %d", InputStream->GetErrorState());
-
-		BGSEECONSOLE->ToggleWarningLogging(WarningState);
 		ThreadLocalData::Get()->saveLoadInProgress = 0;
+		BGSEECONSOLE->ToggleWarningLogging(WarningState);
 		return Result;
 	}
 

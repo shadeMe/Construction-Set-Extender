@@ -128,7 +128,7 @@ namespace ConstructionSetExtender
 
 			AnimatedForm^								Form;
 			BrightIdeasSoftware::TreeListView^			ListView;
-			ObScriptParsing::Structurizer^		StructureData;
+			ObScriptParsing::Structurizer^				StructureData;
 			IWorkspaceModel^							AssociatedModel;
 
 			void										ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
