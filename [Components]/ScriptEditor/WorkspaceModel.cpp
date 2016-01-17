@@ -278,6 +278,12 @@ namespace ConstructionSetExtender
 
 		bool ConcreteWorkspaceModel::PerformHouseKeeping()
 		{
+			bool Throwaway = false;
+			return PerformHouseKeeping(Throwaway);
+		}
+
+		bool ConcreteWorkspaceModel::PerformHouseKeeping(bool% OperationCancelled)
+		{
 			if (TextEditor->Modified)
 			{
 				Debug::Assert(Bound == true);
@@ -299,7 +305,10 @@ namespace ConstructionSetExtender
 					return true;
 				}
 				else
+				{
+					OperationCancelled = true;
 					return false;
+				}
 			}
 
 			return true;
@@ -415,9 +424,9 @@ namespace ConstructionSetExtender
 			return Result;
 		}
 
-		bool ConcreteWorkspaceModel::CloseScript()
+		bool ConcreteWorkspaceModel::CloseScript(bool% OperationCancelled)
 		{
-			if (PerformHouseKeeping())
+			if (PerformHouseKeeping(OperationCancelled))
 			{
 				Closed = true;
 				return true;
@@ -613,12 +622,12 @@ namespace ConstructionSetExtender
 			return Concrete->SaveScript(Operation, HasWarnings);
 		}
 
-		bool ConcreteWorkspaceModelController::Close(IWorkspaceModel^ Model)
+		bool ConcreteWorkspaceModelController::Close(IWorkspaceModel^ Model, bool% OperationCancelled)
 		{
 			Debug::Assert(Model != nullptr);
 			ConcreteWorkspaceModel^ Concrete = (ConcreteWorkspaceModel^)Model;
 
-			return Concrete->CloseScript();
+			return Concrete->CloseScript(OperationCancelled);
 		}
 
 		void ConcreteWorkspaceModelController::Next(IWorkspaceModel^ Model)

@@ -840,10 +840,10 @@ namespace ConstructionSetExtender
 					}
 					else
 						throw gcnew InvalidOperationException("Background task state = " + BackgroundTask->Status.ToString());
+
+					Debug::Assert(BackgroundTask->IsCompleted == true);
 				}
 
-				// the completion task clears the handle, so this should be true
-				Debug::Assert(BackgroundTask == nullptr);
 
 				BackgroundTaskInput^ DataIn = gcnew BackgroundTaskInput();
 				DataIn->ScriptText = TextField->Document->CreateSnapshot();
@@ -942,8 +942,6 @@ namespace ConstructionSetExtender
 				}
 				else
 					DebugPrint("BackgroundTask " + Completed->Id + " failed to complete successfully. Error Message - " + Completed->Exception->ToString());
-
-				BackgroundTask = nullptr;
 			}
 
 			void AvalonEditTextEditor::WaitForBackgroundTask()
@@ -951,7 +949,6 @@ namespace ConstructionSetExtender
 				if (BackgroundTask)
 				{
 					BackgroundTask->Wait();
-					Debug::Assert(BackgroundTask == nullptr);		// the task completion action ought to completed at this point
 				}
 			}
 

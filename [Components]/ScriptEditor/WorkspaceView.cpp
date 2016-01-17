@@ -1497,7 +1497,8 @@ namespace ConstructionSetExtender
 			if (Model->Dirty)
 				SelectTab(GetTab(Model));
 
-			if (Model->Controller->Close(Model))
+			bool Cancelled = false;
+			if (Model->Controller->Close(Model, Cancelled))
 				DissociateModel(Model, true);
 		}
 
@@ -1564,7 +1565,8 @@ namespace ConstructionSetExtender
 						if (Model->Dirty)
 							SelectTab(GetTab(Model));
 
-						if (ModelController()->Close(Model))
+						bool Cancelled = false;
+						if (ModelController()->Close(Model, Cancelled))
 							DissociateModel(Model, true);
 					}
 
@@ -2425,15 +2427,18 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceView::CloseAll()
 		{
 			List<IWorkspaceModel^>^ Dissociate = gcnew List < IWorkspaceModel^ > ;
-
+			bool Cancelled = false;
 			for each (auto Itr in AssociatedModels)
 			{
 				// switch to dirty models to enable user interaction
 				if (Itr.Key->Dirty)
 					SelectTab(GetTab(Itr.Key));
 
-				if (ModelController()->Close(Itr.Key))
+				if (ModelController()->Close(Itr.Key, Cancelled))
 					Dissociate->Add(Itr.Key);
+
+				if (Cancelled)
+					break;
 			}
 
 			DisallowBinding = true;
@@ -2465,12 +2470,15 @@ namespace ConstructionSetExtender
 		void ConcreteWorkspaceView::LoadAllFromDisk(array<String^>^ FilePaths)
 		{
 			NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
+			BeginUpdate();
 			for each (auto Path in FilePaths)
 			{
 				E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::LoadFromDisk;
 				E->PathToFile = Path;
+				E->BindPostCreation = false;
 				NewTab(E);
 			}
+			EndUpdate();
 		}
 
 		void ConcreteWorkspaceView::BeginUpdate()
@@ -2941,7 +2949,8 @@ namespace ConstructionSetExtender
 				if (E->Modifiers == Keys::Control)
 				{
 					IWorkspaceModel^ Active = Concrete->GetActiveModel();
-					if (Active->Controller->Close(Active))
+					bool Cancelled = false;
+					if (Active->Controller->Close(Active, Cancelled))
 						Concrete->DissociateModel(Active, true);
 				}
 

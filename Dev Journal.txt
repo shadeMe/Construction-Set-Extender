@@ -50,7 +50,7 @@ CSE		---->
 SE		---->
 
 	IMMEDIATE		=
-
+		> Background task threading issues in the editor
 
 	BUGFIX			=
 		> Editor doesn't acquire focus after switching scripts/on opening and general focus related wonkiness

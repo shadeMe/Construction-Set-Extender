@@ -157,6 +157,17 @@ namespace ConstructionSetExtender
 
 					E->Handled = true;
 				}
+				else if (BoundParent->Visible)
+				{
+					PickSelection();
+					LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
+					OverrideThresholdCheck = false;
+					BoundParent->Hide();
+
+					E->PreventNextTextChangeEvent = true;
+					E->Handled = true;
+				}
+
 				break;
 			case Keys::Escape:
 				if (BoundParent->Visible)
