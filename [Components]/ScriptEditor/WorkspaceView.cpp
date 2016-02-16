@@ -783,7 +783,9 @@ namespace ConstructionSetExtender
 			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 			Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
 			Color HighlightColor = Color::Maroon;
-			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"), (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
+			Font^ CustomFont = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"),
+										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
+										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 
 			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
 			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
@@ -2607,6 +2609,7 @@ namespace ConstructionSetExtender
 					}
 					else
 					{
+						ComponentDLLInterface::ScriptData* ScriptData = nullptr;
 						try
 						{
 							StreamReader^ FileParser = gcnew StreamReader(E->PathToFile);
@@ -2620,10 +2623,10 @@ namespace ConstructionSetExtender
 							if (Data->Name != "")
 							{
 								CString CEID(Data->Name);
-								ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
+								ScriptData = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
 
-								if (Data)
-									New = ModelFactory()->CreateModel(Data);
+								if (ScriptData)
+									New = ModelFactory()->CreateModel(ScriptData);
 								else
 								{
 									New = ModelFactory()->CreateModel(nullptr);
@@ -2636,6 +2639,9 @@ namespace ConstructionSetExtender
 							DebugPrint("Couldn't read script name from file " + E->PathToFile + " for script updating!\n\tException: " + Excp->Message, true);
 							New = ModelFactory()->CreateModel(nullptr);
 							ModelController()->New(New);
+
+							if (ScriptData)
+								NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptData, false);
 						}
 
 						ModelController()->LoadFromDisk(New, E->PathToFile);

@@ -264,10 +264,10 @@ namespace ConstructionSetExtender
 						if ((LastKeyThatWentDown != System::Windows::Input::Key::Back || GetTokenAtCaretPos() != "") &&
 							TextField->TextArea->Selection->IsMultiline == false)
 						{
-							OnIntelliSenseShow(true, IIntelliSenseInterfaceModel::Operation::Default);
+							RaiseIntelliSenseShow(true, IIntelliSenseInterfaceModel::Operation::Default);
 						}
 						else
-							OnIntelliSenseHide(false);
+							RaiseIntelliSenseHide(false);
 					}
 				}
 			}
@@ -317,12 +317,12 @@ namespace ConstructionSetExtender
 				int VerticalOffset = TextField->VerticalOffset;
 				int HorizontalOffset = TextField->HorizontalOffset;
 
-				if (ScrollBarHeight <= 0)
+				if (ScrollBarHeight <= 0 || VerticalOffset <= 0 || VerticalOffset >= ScrollBarHeight)
 					ExternalVerticalScrollBar->Enabled = false;
 				else if (!ExternalVerticalScrollBar->Enabled)
 					ExternalVerticalScrollBar->Enabled = true;
 
-				if (ScrollBarWidth <= 0)
+				if (ScrollBarWidth <= 0 || HorizontalOffset <= 0 || HorizontalOffset >= ScrollBarWidth)
 					ExternalHorizontalScrollBar->Enabled = false;
 				else if (!ExternalHorizontalScrollBar->Enabled)
 					ExternalHorizontalScrollBar->Enabled = true;
@@ -994,7 +994,7 @@ namespace ConstructionSetExtender
 			}
 
 #pragma region Events
-			bool AvalonEditTextEditor::OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E)
+			bool AvalonEditTextEditor::RaiseIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E)
 			{
 				Debug::Assert(IsFocused == true);
 				Int32 KeyState = System::Windows::Input::KeyInterop::VirtualKeyFromKey(E->Key);
@@ -1033,13 +1033,13 @@ namespace ConstructionSetExtender
 				if (TunneledArgs->Display)
 				{
 					// new operation, show all valid items
-					OnIntelliSenseShow(false, TunneledArgs->DisplayOperation);
+					RaiseIntelliSenseShow(false, TunneledArgs->DisplayOperation);
 				}
 
 				return TunneledArgs->Handled;
 			}
 
-			void AvalonEditTextEditor::OnIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation)
+			void AvalonEditTextEditor::RaiseIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation)
 			{
 				if (IsFocused == false)
 					return;
@@ -1062,7 +1062,7 @@ namespace ConstructionSetExtender
 				IntelliSenseShow(this, E);
 			}
 
-			void AvalonEditTextEditor::OnIntelliSenseHide(bool Reset)
+			void AvalonEditTextEditor::RaiseIntelliSenseHide(bool Reset)
 			{
 				if (IsFocused == false)
 					return;
@@ -1073,7 +1073,7 @@ namespace ConstructionSetExtender
 				IntelliSenseHide(this, E);
 			}
 
-			void AvalonEditTextEditor::OnIntelliSenseRelocate()
+			void AvalonEditTextEditor::RaiseIntelliSenseRelocate()
 			{
 				if (IsFocused == false)
 					return;
@@ -1159,7 +1159,7 @@ namespace ConstructionSetExtender
 					PreviousLineBuffer = TextField->TextArea->Caret->Line;
 					RefreshBGColorizerLayer();
 
-					OnIntelliSenseHide(true);
+					RaiseIntelliSenseHide(true);
 				}
 
 				if (TextField->TextArea->Selection->IsEmpty)
@@ -1176,9 +1176,9 @@ namespace ConstructionSetExtender
 				PreviousScrollOffsetBuffer = CurrentOffset;
 
 				if (GetLineVisible(CurrentLine, true) == false)
-					OnIntelliSenseHide(true);
+					RaiseIntelliSenseHide(true);
 				else
-					OnIntelliSenseRelocate();
+					RaiseIntelliSenseRelocate();
 			}
 
 			void AvalonEditTextEditor::TextField_TextCopied( Object^ Sender, AvalonEdit::Editing::TextEventArgs^ E )
@@ -1204,7 +1204,7 @@ namespace ConstructionSetExtender
 				if (IsMiddleMouseScrolling)
 					StopMiddleMouseScroll();
 
-				bool IntelliSenseHandled = OnIntelliSenseKeyDown(E);
+				bool IntelliSenseHandled = RaiseIntelliSenseKeyDown(E);
 				if (IntelliSenseHandled == false)
 				{
 					switch (E->Key)
@@ -1360,7 +1360,7 @@ namespace ConstructionSetExtender
 				else
 					Caret = GetTextLength();
 
-				OnIntelliSenseHide(true);
+				RaiseIntelliSenseHide(true);
 				OnMouseClick(E);
 			}
 
@@ -1844,12 +1844,6 @@ namespace ConstructionSetExtender
 				Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 				Color BackgroundColor = PREFERENCES->LookupColorByKey("BackgroundColor");
 
-				WPFHost->ForeColor = ForegroundColor;
-				WPFHost->BackColor = BackgroundColor;
-				WPFHost->TabStop = false;
-				WinFormsContainer->ForeColor = ForegroundColor;
-				WinFormsContainer->BackColor = BackgroundColor;
-				WinFormsContainer->TabStop = false;
 
 				System::Windows::Media::SolidColorBrush^ ForegroundBrush = gcnew System::Windows::Media::SolidColorBrush(Windows::Media::Color::FromArgb(255,
 																													ForegroundColor.R,
@@ -2047,6 +2041,9 @@ namespace ConstructionSetExtender
 				TextEditorContextMenu->Items->Add(ContextMenuRefactorAddVariable);
 				TextEditorContextMenu->Items->Add(ContextMenuRefactorCreateUDFImplementation);
 
+				WinFormsContainer->ForeColor = ForegroundColor;
+				WinFormsContainer->BackColor = BackgroundColor;
+				WinFormsContainer->TabStop = false;
 				WinFormsContainer->Dock = DockStyle::Fill;
 				WinFormsContainer->BorderStyle = BorderStyle::FixedSingle;
 				WinFormsContainer->ContextMenuStrip = TextEditorContextMenu;
@@ -2056,6 +2053,9 @@ namespace ConstructionSetExtender
 
 				WPFHost->Dock = DockStyle::Fill;
 				WPFHost->Child = TextFieldPanel;
+				WPFHost->ForeColor = ForegroundColor;
+				WPFHost->BackColor = BackgroundColor;
+				WPFHost->TabStop = false;
 
 				SetFont(Font);
 				if (TabSize)
@@ -2102,14 +2102,16 @@ namespace ConstructionSetExtender
 				ContextMenuRefactorAddVariableArray->Click += ContextMenuRefactorAddVariableClickHandler;
 				AvalonEditTextEditorSubscribeClickEvent(ContextMenuRefactorCreateUDFImplementation);
 
-// 				System::Windows::PresentationSource^ src = System::Windows::PresentationSource::FromVisual(TextField);
-// 				if (src)
-// 				{
-// 					double dpix = 96.0 * src->CompositionTarget->TransformToDevice.M11;
-// 					double dpiy = 96.0 * src->CompositionTarget->TransformToDevice.M22;
-// 					DebugPrint("WPF DPI (X|Y) = " + dpix + "|" + dpiy);
-// 
-// 				}
+#if 0
+				System::Windows::PresentationSource^ src = System::Windows::PresentationSource::FromVisual(TextField);
+				if (src)
+				{
+					double dpix = 96.0 * src->CompositionTarget->TransformToDevice.M11;
+					double dpiy = 96.0 * src->CompositionTarget->TransformToDevice.M22;
+					DebugPrint("WPF DPI (X|Y) = " + dpix + "|" + dpiy);
+
+				}
+#endif // 0
 			}
 
 			AvalonEditTextEditor::~AvalonEditTextEditor()

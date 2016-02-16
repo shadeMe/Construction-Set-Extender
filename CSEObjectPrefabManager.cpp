@@ -381,6 +381,24 @@ namespace ConstructionSetExtender
 
 									Instance.Renderer->Present();
 								}
+								else if (ChangeData->hdr.hwndFrom == PrefabDetailsList)
+								{
+									// toggle the selection box the ref
+									Result = TRUE;
+									int NewIndex = ChangeData->iItem;
+									if (NewIndex != -1 && Instance.PreviewData)
+									{
+										if (NewIndex < Instance.PreviewData->References.size())
+										{
+											TESObjectREFR* Selection = Instance.PreviewData->References[NewIndex];
+											for each (auto Itr in Instance.PreviewData->References)
+												Itr->ToggleSelectionBox(false);
+
+											Selection->ToggleSelectionBox(true);
+											Instance.Renderer->Present();
+										}
+									}
+								}
 							}
 						}
 

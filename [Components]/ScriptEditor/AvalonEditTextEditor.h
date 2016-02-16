@@ -103,7 +103,7 @@ namespace ConstructionSetExtender
 				bool												TextFieldInUpdateFlag;
 
 				int													PreviousLineBuffer;
-				ObScriptParsing::AnalysisData^				SemanticAnalysisCache;
+				ObScriptParsing::AnalysisData^						SemanticAnalysisCache;
 
 				ScriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
@@ -179,10 +179,11 @@ namespace ConstructionSetExtender
 				CancelEventHandler^							TextEditorContextMenuOpeningHandler;
 				void                                        TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
-				bool										OnIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E);
-				void										OnIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation);
-				void										OnIntelliSenseHide(bool Reset);
-				void										OnIntelliSenseRelocate();
+				bool										RaiseIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E);
+				void										RaiseIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation);
+				void										RaiseIntelliSenseHide(bool Reset);
+				void										RaiseIntelliSenseRelocate();
+
 				void										OnScriptModified(bool ModificationState);
 				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);		// returns true if handled
 				void										OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);

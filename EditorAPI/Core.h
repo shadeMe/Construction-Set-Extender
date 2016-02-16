@@ -145,7 +145,7 @@ public:
 
 	void											RemoveInvalidScripts(void);			// destroys any empty scripts, i.e., scripts without script text/editorID
 	void											CleanCellWaterExtraData(void);		// removes instances of ExtraCellWaterHeight/Type from all cell objects that don't need it
-	void											FixInteriorCellFogPlane(void);		// applys the "nVidia fog" fix
+	void											FixInteriorCellFogPlane(void);		// applies the "nVidia fog" fix
 
 	void											PerformPostLoadTasks(void);
 

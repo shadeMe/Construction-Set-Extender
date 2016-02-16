@@ -232,7 +232,7 @@ namespace ConstructionSetExtender
 				E->Graphics->SmoothingMode = Drawing2D::SmoothingMode::AntiAlias;
 				E->Graphics->DrawImage(E->Item->ImageList->Images[ImageIndex], E->SubItem->Bounds.Location);
 			}
-			
+
 			RectangleF Layout(E->Bounds.X + E->Bounds.Height, E->Bounds.Y, E->Bounds.Width - E->Bounds.Height, E->Bounds.Height);
 			E->Graphics->DrawString(GetSubItemText(Data, E->ColumnIndex), E->SubItem->Font, TextBrush, Layout, Format);
 

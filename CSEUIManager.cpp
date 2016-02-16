@@ -149,7 +149,7 @@ namespace ConstructionSetExtender
 		{
 			SME_ASSERT(Form);
 
-			// fallthrough if no filters are active
+			// fall through if no filters are active
 			if (HasEditorID() == false && HasName() == false && HasDescription() == false && HasFormID() == false)
 				return true;
 			else if (FilterString.length() == 0)

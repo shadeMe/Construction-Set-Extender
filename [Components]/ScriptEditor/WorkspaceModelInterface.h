@@ -89,7 +89,7 @@ namespace ConstructionSetExtender
 			void					New(IWorkspaceModel^ Model);
 			void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
 			bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
-			bool					Close(IWorkspaceModel^ Model, bool% OperationCancelled);							// returns true if successful,
+			bool					Close(IWorkspaceModel^ Model, bool% OperationCancelled);							// returns true if successful
 			void					Next(IWorkspaceModel^ Model);
 			void					Previous(IWorkspaceModel^ Model);
 			void					CompileDepends(IWorkspaceModel^ Model);
