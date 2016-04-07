@@ -329,7 +329,8 @@ namespace ConstructionSetExtender
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Quest ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::GlobalVar ||
 							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::GMST ||
-							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Form)
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::Form ||
+							Itr->GetItemType() == IntelliSenseItem::IntelliSenseItemType::UserFunction)
 						{
 							if (Itr->GetShouldEnumerate(CurrentToken, UseSubstringFiltering))
 								EnumerateItem(Itr);

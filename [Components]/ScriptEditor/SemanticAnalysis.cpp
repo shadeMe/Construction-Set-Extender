@@ -611,6 +611,7 @@ namespace ConstructionSetExtender
 		FirstStructuralErrorLine = 0;
 		UDF = false;
 		UDFResult = nullptr;
+		UDFAmbiguousResult = false;
 		AnalysisMessages = gcnew List<UserMessage^>();
 	}
 
@@ -643,6 +644,7 @@ namespace ConstructionSetExtender
 		{
 			Variables->Clear();
 			UDFResult = nullptr;
+			UDFAmbiguousResult = false;
 			NextVariableLine = 0;
 		}
 
@@ -993,6 +995,7 @@ namespace ConstructionSetExtender
 				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::SetFunctionValue:
 					if (Operations.HasFlag(Operation::FillUDFData))
 					{
+						UDFReturnsValue = true;
 						Variable^ Existing = LookupVariable(SecondToken);
 						if (Existing)
 							UDFResult = Existing;

@@ -226,7 +226,8 @@ namespace ConstructionSetExtender
 			bool										MalformedStructure;
 			UInt32										FirstStructuralErrorLine;
 			bool										UDF;
-			Variable^									UDFResult;					// nullptr if ambiguous
+			Variable^									UDFResult;
+			bool										UDFReturnsValue;
 			List<UserMessage^>^							AnalysisMessages;
 			property bool								HasCriticalMessages
 			{
