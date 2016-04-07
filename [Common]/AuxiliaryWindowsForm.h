@@ -5,11 +5,16 @@ namespace ConstructionSetExtender
 	ref class AnimatedForm : public System::Windows::Forms::Form
 	{
 	protected:
+		virtual property bool DoubleBuffered
+		{
+			bool get() override { return true; }
+		}
+
 		static enum class					FadeOperationType
 		{
-			e_None = 0,
-			e_FadeIn,
-			e_FadeOut
+			None = 0,
+			FadeIn,
+			FadeOut
 		};
 
 		FadeOperationType					FadeOperation;
@@ -20,26 +25,26 @@ namespace ConstructionSetExtender
 		double								RemainingTime;
 
 		void								FadeTimer_Tick(Object^ Sender, EventArgs^ E);
-
-		void								Destroy();
 	public:
 		AnimatedForm(double FadeDuration);
-		virtual ~AnimatedForm()
-		{
-			Destroy();
-		}
+		~AnimatedForm();
 
-		void										Show();
-		void										Show(IWin32Window^ Parent);
-		System::Windows::Forms::DialogResult		ShowDialog();
-		void										Hide();
-		void										Close();
-		void										ForceClose();
+		void												Show();
+		void												Show(IWin32Window^ Parent);
+		System::Windows::Forms::DialogResult				ShowDialog();
+		void												Hide();
+		void												Close();
+		virtual void										ForceClose();
 	};
 
 	ref class NonActivatingImmovableAnimatedForm : public Form
 	{
 	protected:
+		virtual property bool DoubleBuffered
+		{
+			bool get() override { return true; }
+		}
+
 		property bool										ShowWithoutActivation
 		{
 			virtual bool									get() override { return true; }
@@ -49,9 +54,9 @@ namespace ConstructionSetExtender
 
 		static enum class									FadeOperationType
 		{
-			e_None = 0,
-			e_FadeIn,
-			e_FadeOut
+			None = 0,
+			FadeIn,
+			FadeOut
 		};
 
 		bool												AllowMove;
@@ -60,20 +65,18 @@ namespace ConstructionSetExtender
 		EventHandler^										FadeTimerTickHandler;
 
 		void												FadeTimer_Tick(Object^ Sender, EventArgs^ E);
-
-		void												Destroy();
 	public:
-		virtual ~NonActivatingImmovableAnimatedForm()
-		{
-			Destroy();
-		}
+		NonActivatingImmovableAnimatedForm();
+		~NonActivatingImmovableAnimatedForm();
 
 		property bool										PreventActivation;
+		property bool										FadingIn
+		{
+			bool get() { return FadeOperation == FadeOperationType::FadeIn;  }
+		}
 
 		void												SetSize(Drawing::Size WindowSize);
 		void												ShowForm(Drawing::Point Position, IntPtr ParentHandle, bool Animate);
 		void												HideForm(bool Animate);
-
-		NonActivatingImmovableAnimatedForm();
 	};
 }
