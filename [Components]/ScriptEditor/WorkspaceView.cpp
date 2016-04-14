@@ -342,7 +342,7 @@ namespace ConstructionSetExtender
 			switch (E->KeyCode)
 			{
 			case Keys::Enter:
-				JumpToLine(Selection->Line);
+				JumpToLine(Selection->StartLine);
 				break;
 			case Keys::Escape:
 				Hide();
@@ -356,7 +356,7 @@ namespace ConstructionSetExtender
 			if (Selection == nullptr)
 				return;
 
-			JumpToLine(Selection->Line);
+			JumpToLine(Selection->StartLine);
 		}
 
 		void WorkspaceViewOutlineView::Form_Deactivate(Object^ Sender, EventArgs^ E)
@@ -795,6 +795,25 @@ namespace ConstructionSetExtender
 			CachedFindReplaceAllResults = gcnew List < FindReplaceAllResults^ > ;
 			OutlineView = gcnew WorkspaceViewOutlineView(this);
 
+			ScopeCrumbBar = gcnew DotNetBar::CrumbBar();
+			ScopeCrumbBar->AutoSize = false;
+			ScopeCrumbBar->Dock = DockStyle::Top;
+			ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
+			ScopeCrumbBar->BackgroundStyle->BorderBottom = DevComponents::DotNetBar::eStyleBorderType::DashDotDot;
+			ScopeCrumbBar->BackgroundStyle->BorderBottomWidth = 2;
+			ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+			ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+			ScopeCrumbBar->BackgroundStyle->BorderLeft = DevComponents::DotNetBar::eStyleBorderType::None;
+			ScopeCrumbBar->BackgroundStyle->BorderRight = DevComponents::DotNetBar::eStyleBorderType::None;
+			ScopeCrumbBar->BackgroundStyle->BorderTop = DevComponents::DotNetBar::eStyleBorderType::None;
+			ScopeCrumbBar->FadeEffect = false;
+			ScopeCrumbBar->Font = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), 9);
+			ScopeCrumbBar->Margin = Padding(20, 0, 20, 0);
+			ScopeCrumbBar->Padding = Padding(20, 0, 20, 0);
+	//		ScopeCrumbBar->ResetBackgroundStyle();
+
+			ScopeCrumbManager = gcnew TextEditors::ScopeBreadcrumbManager(ScopeCrumbBar);
+
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
 			SetupControlImage(ToolBarPreviousScript);
@@ -1145,6 +1164,7 @@ namespace ConstructionSetExtender
 
 			// ideally, the main toolbar should be the main form's child but that screws with the tab strip's layout
 			WorkspaceSplitter->Panel1->Controls->Add(AttachPanel);
+			WorkspaceSplitter->Panel1->Controls->Add(ScopeCrumbBar);
 			WorkspaceSplitter->Panel1->Controls->Add(WorkspaceMainToolBar);
 
 			WorkspaceSplitter->Panel2->Controls->Add(WorkspaceSecondaryToolBar);
@@ -1417,6 +1437,8 @@ namespace ConstructionSetExtender
 			SAFEDELETE_CLR(IntelliSenseView);
 			SAFEDELETE_CLR(TabStripFilter);
 			SAFEDELETE_CLR(OutlineView);
+			SAFEDELETE_CLR(ScopeCrumbManager);
+			SAFEDELETE_CLR(ScopeCrumbBar);
 
 			SAFEDELETE_CLR(AttachPanel);
 

@@ -227,7 +227,7 @@ namespace ConstructionSetExtender
 			UInt32										FirstStructuralErrorLine;
 			bool										UDF;
 			Variable^									UDFResult;
-			bool										UDFReturnsValue;
+			bool										UDFAmbiguousResult;
 			List<UserMessage^>^							AnalysisMessages;
 			property bool								HasCriticalMessages
 			{
@@ -320,6 +320,8 @@ namespace ConstructionSetExtender
 			{
 				enum class NodeType
 				{
+					Invalid,
+
 					VariableDeclaration,
 					ScriptBlock,
 					BasicConditionalBlock,
@@ -328,10 +330,11 @@ namespace ConstructionSetExtender
 
 				String^							Description;
 				NodeType						Type;
-				UInt32							Line;
+				UInt32							StartLine;
+				UInt32							EndLine;
 				List<Node^>^					Children;
 
-				Node(NodeType Type, UInt32 Line, String^ Desc);
+				Node(NodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc);
 			};
 
 			delegate String^					GetLineText(UInt32 Line);
@@ -343,6 +346,7 @@ namespace ConstructionSetExtender
 
 			void								ParseStructure();
 			void								ParseControlBlock(ControlBlock^ Block, Node^ Parent);
+			Node^								GetContainingNode(Node^ Source, UInt32 Line, Node^ LastHit);
 		public:
 			Structurizer(AnalysisData^ Input, GetLineText^ Delegate, UInt32 CurrentLine);
 
@@ -355,6 +359,7 @@ namespace ConstructionSetExtender
 			property bool						Valid;
 			property Node^						CurrentScope;
 
+			Node^								GetContainingNode(UInt32 Line);
 		};
 	};
 

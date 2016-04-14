@@ -2,6 +2,7 @@
 
 #include "Globals.h"
 #include "ScriptTextEditorInterface.h"
+#include "TextEditorAdornments.h"
 
 namespace ConstructionSetExtender
 {
@@ -18,7 +19,8 @@ namespace ConstructionSetExtender
 			property ListView^		ListViewBookmarks;
 			property ListView^		ListViewFindResults;
 
-			property IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseInterfaceView;
+			property IntelliSense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView;
+			property TextEditors::ScopeBreadcrumbManager^			BreadcrumbManager;
 		};
 
 		interface class IWorkspaceView : public	IWorkspaceViewBindableData

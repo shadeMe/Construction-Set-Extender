@@ -6,6 +6,7 @@
 #include "WorkspaceModelInterface.h"
 #include "ScriptListDialog.h"
 #include "FindReplaceDialog.h"
+#include "TextEditorAdornments.h"
 
 using namespace DevComponents;
 using namespace DevComponents::DotNetBar::Events;
@@ -203,6 +204,9 @@ namespace ConstructionSetExtender
 			static Object^						GenericAspectGetter(Object^ E);
 		};
 
+
+
+
 		ref class ConcreteWorkspaceView : public IWorkspaceView
 		{
 			static Rectangle LastUsedBounds = Rectangle(100, 100, 100, 100);
@@ -375,6 +379,9 @@ namespace ConstructionSetExtender
 			TextEditors::ScriptOffsetViewer^		OffsetTextViewer;
 			TextEditors::SimpleTextViewer^			PreprocessorTextViewer;
 
+			DotNetBar::CrumbBar^					ScopeCrumbBar;
+			TextEditors::ScopeBreadcrumbManager^	ScopeCrumbManager;
+
 			ScriptListDialog^						ScriptListBox;
 			FindReplaceDialog^						FindReplaceBox;
 
@@ -467,10 +474,15 @@ namespace ConstructionSetExtender
 				virtual ListView^ get() { return FindList; }
 				virtual void set(ListView^ e) {}
 			}
-			property IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseInterfaceView
+			property IntelliSense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView
 			{
 				virtual IntelliSense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
 				virtual void set(IntelliSense::IIntelliSenseInterfaceView^ e) {}
+			}
+			property TextEditors::ScopeBreadcrumbManager^			BreadcrumbManager
+			{
+				virtual TextEditors::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
+				virtual void set(TextEditors::ScopeBreadcrumbManager^ e) {}
 			}
 			property IWorkspaceViewController^		Controller
 			{

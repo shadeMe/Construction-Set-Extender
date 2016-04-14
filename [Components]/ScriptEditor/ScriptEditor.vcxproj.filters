@@ -90,6 +90,9 @@
     <ClCompile Include="IntelliSenseItem.cpp">
       <Filter>Components\IntelliSense</Filter>
     </ClCompile>
+    <ClCompile Include="TextEditorAdornments.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\[Common]\NativeWrapper.h">
@@ -173,6 +176,9 @@
     </ClInclude>
     <ClInclude Include="IIntelliSenseInterface.h">
       <Filter>Components\IntelliSense</Filter>
+    </ClInclude>
+    <ClInclude Include="TextEditorAdornments.h">
+      <Filter>Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

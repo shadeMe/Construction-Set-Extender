@@ -104,7 +104,7 @@
 #include <MersenneTwister.h>
 
 // OBSE
-#include "obse_common/obse_version.h"
+#include "obse_common\obse_version.h"
 #include "obse\PluginAPI.h"
 #include "obse\GameTypes.h"
 #include "obse\Utilities.h"
@@ -119,6 +119,7 @@ using namespace SME::Functors;
 #include <BGSEEUIManager.h>
 
 // CSE
+#include "EditorAPI\TESEditorAPI.h"
 #include "CSESettings.h"
 #include "CSEUIManager.h"
 

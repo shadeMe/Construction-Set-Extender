@@ -931,6 +931,8 @@ namespace ConstructionSetExtender
 						}
 
 						LineTracker->EndUpdate(false);
+
+						OnBackgroundAnalysisComplete();
 					}
 					else
 					{
@@ -1143,6 +1145,21 @@ namespace ConstructionSetExtender
 																	E->GetPosition(TextField).Y,
 																	LastKnownMouseClickOffset));
 			}
+
+			void AvalonEditTextEditor::OnLineChanged()
+			{
+				LineChanged(this, EventArgs::Empty);
+			}
+
+			void AvalonEditTextEditor::OnBackgroundAnalysisComplete()
+			{
+				BackgroundAnalysisComplete(this, EventArgs::Empty);
+			}
+
+			void AvalonEditTextEditor::OnTextUpdated()
+			{
+				TextUpdated(this, EventArgs::Empty);
+			}
 #pragma endregion
 
 #pragma region Event Handlers
@@ -1160,6 +1177,7 @@ namespace ConstructionSetExtender
 					RefreshBGColorizerLayer();
 
 					RaiseIntelliSenseHide(true);
+					OnLineChanged();
 				}
 
 				if (TextField->TextArea->Selection->IsEmpty)
@@ -1880,7 +1898,6 @@ namespace ConstructionSetExtender
 				TextFieldPanel->RegisterName(AnimationPrimitive->Name, AnimationPrimitive);
 				TextFieldPanel->RegisterName(TextField->Name, TextField);
 				TextFieldPanel->Background = BackgroundBrush;
-
 				TextFieldPanel->Children->Add(TextField);
 
 				InitializingFlag = false;
@@ -2045,7 +2062,7 @@ namespace ConstructionSetExtender
 				WinFormsContainer->BackColor = BackgroundColor;
 				WinFormsContainer->TabStop = false;
 				WinFormsContainer->Dock = DockStyle::Fill;
-				WinFormsContainer->BorderStyle = BorderStyle::FixedSingle;
+				WinFormsContainer->BorderStyle = BorderStyle::None;
 				WinFormsContainer->ContextMenuStrip = TextEditorContextMenu;
 				WinFormsContainer->Controls->Add(WPFHost);
 				WinFormsContainer->Controls->Add(ExternalVerticalScrollBar);
@@ -2570,6 +2587,7 @@ namespace ConstructionSetExtender
 					UpdateSemanticAnalysisCache(true, true, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
+					OnTextUpdated();
 				}
 				else
 				{
@@ -2609,6 +2627,7 @@ namespace ConstructionSetExtender
 					UpdateSemanticAnalysisCache(true, true, false);
 					UpdateCodeFoldings();
 					UpdateSyntaxHighlighting(false);
+					OnTextUpdated();
 				}
 			}
 

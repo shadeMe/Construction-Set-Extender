@@ -537,7 +537,6 @@ namespace ConstructionSetExtender
 
 				static Windows::Media::Imaging::BitmapSource^		GetWarningIcon();
 				static Windows::Media::Imaging::BitmapSource^		GetBookmarkIcon();
-
 			protected:
 				AvalonEdit::TextEditor^		Parent;
 				LineTrackingManager^		LineTracker;

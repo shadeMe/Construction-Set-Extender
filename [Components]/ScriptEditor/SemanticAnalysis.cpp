@@ -995,10 +995,11 @@ namespace ConstructionSetExtender
 				case ConstructionSetExtender::ObScriptParsing::ScriptTokenType::SetFunctionValue:
 					if (Operations.HasFlag(Operation::FillUDFData))
 					{
-						UDFReturnsValue = true;
 						Variable^ Existing = LookupVariable(SecondToken);
 						if (Existing)
 							UDFResult = Existing;
+						else
+							UDFAmbiguousResult = true;
 					}
 
 					break;
@@ -1459,10 +1460,10 @@ namespace ConstructionSetExtender
 		DocumentedText = DocumentedText->Substring(0, DocumentedText->Length - 1);
 	}
 
-	ObScriptParsing::Structurizer::Node::Node(NodeType Type, UInt32 Line, String^ Desc) :
-		Type(Type), Line(Line), Children(gcnew List<Node^>)
+	ObScriptParsing::Structurizer::Node::Node(NodeType Type, UInt32 StartLine, UInt32 EndLine, String^ Desc) :
+		Type(Type), StartLine(StartLine), EndLine(EndLine), Children(gcnew List<Node^>)
 	{
-		Description = "   " + Desc;
+		Description = Desc;
 	}
 
 	ObScriptParsing::Structurizer::Structurizer(AnalysisData^ Input, GetLineText^ Delegate, UInt32 CurrentLine) :
@@ -1475,6 +1476,35 @@ namespace ConstructionSetExtender
 		ParseStructure();
 	}
 
+	ObScriptParsing::Structurizer::Node ^ ObScriptParsing::Structurizer::GetContainingNode(Node ^ Source, UInt32 Line, Node^ LastHit)
+	{
+		Node^ Result = LastHit;
+		if (Line >= Source->StartLine && Line <= Source->EndLine)
+		{
+			if (LastHit == nullptr || Source->StartLine < LastHit->EndLine)
+				Result = Source;
+		}
+
+		for each (auto Itr in Source->Children)
+			Result = GetContainingNode(Itr, Line, Result);
+
+		return Result;
+	}
+
+	ObScriptParsing::Structurizer::Node^ ObScriptParsing::Structurizer::GetContainingNode(UInt32 Line)
+	{
+		Node^ Result = nullptr;
+		for each (auto Itr in ParsedTree)
+		{
+			Result = GetContainingNode(Itr, Line, Result);
+
+			for each (auto Itr in Itr->Children)
+				Result = GetContainingNode(Itr, Line, Result);
+		}
+
+		return Result;
+	}
+
 	void ObScriptParsing::Structurizer::ParseStructure()
 	{
 		Valid = false;
@@ -1484,7 +1514,8 @@ namespace ConstructionSetExtender
 			if (InputData->Variables->Count)
 			{
 				Variable^ First = InputData->Variables[0];
-				ParsedTree->Add(gcnew Node(Node::NodeType::VariableDeclaration, First->Line, "Variable Declarations"));
+				Variable^ Last = InputData->Variables[InputData->Variables->Count - 1];
+				ParsedTree->Add(gcnew Node(Node::NodeType::VariableDeclaration, First->Line, Last->Line, "Variable Declarations"));
 			}
 
 			for each (auto Itr in InputData->ControlBlocks)
@@ -1497,6 +1528,7 @@ namespace ConstructionSetExtender
 				{
 					Node^ MainBlock = gcnew Node(Node::NodeType::ScriptBlock,
 												 BeginBlock->StartLine,
+												 BeginBlock->EndLine,
 												 FetchLineText(BeginBlock->StartLine));
 
 					ParsedTree->Add(MainBlock);
@@ -1520,12 +1552,12 @@ namespace ConstructionSetExtender
 		case ObScriptParsing::ControlBlock::ControlBlockType::If:
 		case ObScriptParsing::ControlBlock::ControlBlockType::ElseIf:
 		case ObScriptParsing::ControlBlock::ControlBlockType::Else:
-			CurrentBlock = gcnew Node(Node::NodeType::BasicConditionalBlock, Block->StartLine, FetchLineText(Block->StartLine));
+			CurrentBlock = gcnew Node(Node::NodeType::BasicConditionalBlock, Block->StartLine, Block->EndLine, FetchLineText(Block->StartLine));
 			Parent->Children->Add(CurrentBlock);
 			break;
 		case ObScriptParsing::ControlBlock::ControlBlockType::While:
 		case ObScriptParsing::ControlBlock::ControlBlockType::ForEach:
-			CurrentBlock = gcnew Node(Node::NodeType::LoopBlock, Block->StartLine, FetchLineText(Block->StartLine));
+			CurrentBlock = gcnew Node(Node::NodeType::LoopBlock, Block->StartLine, Block->EndLine, FetchLineText(Block->StartLine));
 			Parent->Children->Add(CurrentBlock);
 			break;
 		default:
@@ -1538,5 +1570,7 @@ namespace ConstructionSetExtender
 		for each (auto Itr in Block->ChildBlocks)
 			ParseControlBlock(Itr, CurrentBlock);
 	}
+
+
 
 }

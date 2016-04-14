@@ -188,6 +188,9 @@ namespace ConstructionSetExtender
 			event TextEditorScriptModifiedEventHandler^				ScriptModified;
 			event KeyEventHandler^									KeyDown;
 			event TextEditorMouseClickEventHandler^					MouseClick;
+			event EventHandler^										LineChanged;					// raised when the current line changes
+			event EventHandler^										BackgroundAnalysisComplete;		// raised after a background semantic analysis task is successfully completed
+			event EventHandler^										TextUpdated;					// raised after the editor's entire text has been updated
 
 			property Control^							Container;
 			property IntPtr								WindowHandle;
@@ -241,7 +244,7 @@ namespace ConstructionSetExtender
 			UInt32										GetIndentLevel(UInt32 LineNumber);
 			void										InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType);
 
-			ObScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+			ObScriptParsing::AnalysisData^				GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 			CompilationData^							BeginScriptCompilation();
 			void										EndScriptCompilation(CompilationData^ Data);

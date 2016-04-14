@@ -395,7 +395,6 @@ namespace ConstructionSetExtender
 												Itr->ToggleSelectionBox(false);
 
 											Selection->ToggleSelectionBox(true);
-											Instance.Renderer->Present();
 										}
 									}
 								}

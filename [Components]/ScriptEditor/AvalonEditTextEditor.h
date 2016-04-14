@@ -43,6 +43,7 @@ namespace ConstructionSetExtender
 				ObScriptParsing::AnalysisData^			AnalysisOutput;
 			};
 
+
 			ref class AvalonEditTextEditor : public IScriptTextEditor
 			{
 				static const double									kSetTextFadeAnimationDuration = 0.1;		// in seconds
@@ -185,8 +186,11 @@ namespace ConstructionSetExtender
 				void										RaiseIntelliSenseRelocate();
 
 				void										OnScriptModified(bool ModificationState);
-				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);		// returns true if handled
+				bool										OnKeyDown(System::Windows::Input::KeyEventArgs^ E);			// returns true if handled
 				void										OnMouseClick(System::Windows::Input::MouseButtonEventArgs^ E);
+				void										OnLineChanged();
+				void										OnBackgroundAnalysisComplete();
+				void										OnTextUpdated();
 
 				void										TextField_TextChanged(Object^ Sender, EventArgs^ E);
 				void										TextField_CaretPositionChanged(Object^ Sender, EventArgs^ E);
@@ -227,9 +231,9 @@ namespace ConstructionSetExtender
 				void										WaitForBackgroundTask();
 
 				String^										GetTokenAtIndex(int Index, bool SelectText, int% StartIndexOut, int% EndIndexOut);
-				String^										GetTextAtLocation(Point Location, bool SelectText);		// line breaks need to be replaced by the caller
+				String^										GetTextAtLocation(Point Location, bool SelectText);			// line breaks need to be replaced by the caller
 				String^										GetTextAtLocation(int Index, bool SelectText);
-				array<String^>^								GetTextAtLocation(int Index);							// gets three of the closest tokens surrounding the offset
+				array<String^>^								GetTextAtLocation(int Index);								// gets three of the closest tokens surrounding the offset
 
 				bool										GetCharIndexInsideStringSegment(int Index);
 
@@ -237,7 +241,7 @@ namespace ConstructionSetExtender
 				void										HandleKeyEventForKey(System::Windows::Input::Key Key) { KeyToPreventHandling = Key; }
 
 				void										HandleTextChangeEvent();
-				void										GotoLine(int Line);										// line numbers start at 1
+				void										GotoLine(int Line);											// line numbers start at 1
 
 				void										RefreshBGColorizerLayer();
 				void										RefreshTextView();
@@ -261,10 +265,10 @@ namespace ConstructionSetExtender
 				RTBitmap^									RenderFrameworkElement(System::Windows::FrameworkElement^ Element);
 				void										SearchBracesForHighlighting(int CaretPos);
 				AvalonEditHighlightingDefinition^			CreateSyntaxHighlightDefinitions(bool UpdateStableDefs);
-				String^										SanitizeUnicodeString(String^ In);			// removes unsupported characters
+				String^										SanitizeUnicodeString(String^ In);							// removes unsupported characters
 
 				void										SetFont(Font^ FontObject);
-				void										SetTabCharacterSize(int PixelWidth);	// AvalonEdit uses character lengths
+				void										SetTabCharacterSize(int PixelWidth);						// AvalonEdit uses character lengths
 
 				String^										GetTextAtLine(int LineNumber);
 				UInt32										GetTextLength(void);
@@ -278,7 +282,7 @@ namespace ConstructionSetExtender
 				bool										GetCharIndexInsideCommentSegment(int Index);
 
 				String^										GetTokenAtMouseLocation();
-				array<String^>^								GetTokensAtMouseLocation();	// gets three of the closest tokens surrounding the mouse loc
+				array<String^>^								GetTokensAtMouseLocation();									// gets three of the closest tokens surrounding the mouse loc
 				int											GetLastKnownMouseClickOffset(void);
 				void										AddBookmark(int Index);
 
@@ -324,6 +328,9 @@ namespace ConstructionSetExtender
 				virtual event TextEditorScriptModifiedEventHandler^			ScriptModified;
 				virtual event KeyEventHandler^								KeyDown;
 				virtual event TextEditorMouseClickEventHandler^				MouseClick;
+				virtual event EventHandler^									LineChanged;
+				virtual event EventHandler^									BackgroundAnalysisComplete;
+				virtual event EventHandler^									TextUpdated;
 
 				property Control^							Container
 				{
@@ -418,7 +425,7 @@ namespace ConstructionSetExtender
 				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
 				virtual void								InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType);
 
-				virtual ObScriptParsing::AnalysisData^ GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+				virtual ObScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 				virtual CompilationData^					BeginScriptCompilation();
 				virtual void								EndScriptCompilation(CompilationData^ Data);

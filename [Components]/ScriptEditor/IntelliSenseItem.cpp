@@ -279,7 +279,7 @@ namespace ConstructionSetExtender
 
 				if (Data->UDFResult == Itr)
 					ReturnVar = VarIdx;
-				else if (Data->UDFReturnsValue)
+				else if (Data->UDFAmbiguousResult)
 					ReturnVar = -9;
 
 				VarIdx++;

@@ -100,8 +100,8 @@ namespace ConstructionSetExtender
 				{
 					ObScriptParsing::AnalysisData^ CurrentData = TextEditor->GetSemanticAnalysisCache(false, false);
 					ObScriptParsing::Structurizer^ Parser = gcnew ObScriptParsing::Structurizer(CurrentData,
-																												  gcnew ObScriptParsing::Structurizer::GetLineText(this, &ConcreteWorkspaceModel::GetLineText),
-																												  TextEditor->CurrentLine);
+																								gcnew ObScriptParsing::Structurizer::GetLineText(this, &ConcreteWorkspaceModel::GetLineText),
+																								TextEditor->CurrentLine);
 
 					if (Parser->Valid)
 						BoundParent->Controller->ShowOutline(BoundParent, Parser, this);
@@ -333,6 +333,8 @@ namespace ConstructionSetExtender
 							 BoundParent->ListViewFindResults,
 							 BoundParent->IntelliSenseInterfaceView);
 
+			BoundParent->BreadcrumbManager->Bind(TextEditor);
+
 			TextEditor->FocusTextArea();
 			TextEditor->ScrollToCaret();
 		}
@@ -341,6 +343,7 @@ namespace ConstructionSetExtender
 		{
 			if (Bound)
 			{
+				BoundParent->BreadcrumbManager->Unbind();
 				TextEditor->Unbind();
 
 				BoundParent->Controller->DetachModelInternalView(BoundParent, this);
