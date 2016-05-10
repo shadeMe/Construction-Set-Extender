@@ -260,9 +260,9 @@ namespace ConstructionSetExtender
 
 		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
-			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
+			bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
-			RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+			RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 			BGSEEUI->GetWindowStyler()->StyleWindow(Imposter, RegularAppWindow);
 		}
@@ -569,9 +569,9 @@ namespace ConstructionSetExtender
 
 			if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 			{
-				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
+				bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
 				RegularAppWindow.Extended = WS_EX_APPWINDOW;
-				RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+				RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 				BGSEEUI->GetWindowStyler()->StyleWindow(Imposter, RegularAppWindow);
 			}

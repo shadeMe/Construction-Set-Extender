@@ -2,8 +2,8 @@
 
 #include "..\CSECoda.h"
 
-using namespace BGSEditorExtender::BGSEEScript;
-using namespace BGSEditorExtender::BGSEEScript::Commands;
+using namespace bgsee::BGSEEScript;
+using namespace bgsee::BGSEEScript::Commands;
 
 namespace ConstructionSetExtender
 {

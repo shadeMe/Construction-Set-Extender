@@ -13,7 +13,7 @@ namespace ConstructionSetExtender
 
 		CSEGlobalCopyBuffer::~CSEGlobalCopyBuffer()
 		{
-			for (BGSEditorExtender::BGSEEFormListT::iterator Itr = FormList.begin(); Itr != FormList.end(); Itr++)
+			for (bgsee::BGSEEFormListT::iterator Itr = FormList.begin(); Itr != FormList.end(); Itr++)
 				delete *Itr;
 
 			FormList.clear();
@@ -50,7 +50,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEGlobalClipboardOperator::CSEGlobalClipboardOperator() :
-			BGSEditorExtender::BGSEEGlobalClipboardOperator()
+			bgsee::BGSEEGlobalClipboardOperator()
 		{
 			DefaultFormSerializer = new CSEDefaultFormCollectionSerializer;
 			ObjectRefSerializer = new CSEObjectRefCollectionSerializer(true);
@@ -135,7 +135,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void CSEGlobalClipboardOperator::DisplayClipboardContents(BGSEditorExtender::BGSEEPluginFileWrapper* File)
+		void CSEGlobalClipboardOperator::DisplayClipboardContents(bgsee::BGSEEPluginFileWrapper* File)
 		{
 			CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
 
@@ -144,7 +144,7 @@ namespace ConstructionSetExtender
 			TESFileFormListWindow::Show(NULL, Wrapper->GetWrappedPlugin());
 		}
 
-		BGSEditorExtender::BGSEEFormCollectionSerializer* CSEGlobalClipboardOperator::GetSerializer(BGSEditorExtender::BGSEEFormListT& Forms)
+		bgsee::BGSEEFormCollectionSerializer* CSEGlobalClipboardOperator::GetSerializer(bgsee::BGSEEFormListT& Forms)
 		{
 			bool ExpectedRefs = false;
 			SME_ASSERT(Forms.size());
@@ -153,7 +153,7 @@ namespace ConstructionSetExtender
 			if (Wrapped->IsReference())
 				ExpectedRefs = true;
 
-			BGSEditorExtender::BGSEEFormCollectionSerializer* Out = DefaultFormSerializer;
+			bgsee::BGSEEFormCollectionSerializer* Out = DefaultFormSerializer;
 			if (ExpectedRefs)
 				Out = ObjectRefSerializer;
 
@@ -171,7 +171,7 @@ namespace ConstructionSetExtender
 			return Out;
 		}
 
-		BGSEditorExtender::BGSEEFormCollectionSerializer* CSEGlobalClipboardOperator::GetDeserializer(BGSEditorExtender::BGSEEPluginFileWrapper* File)
+		bgsee::BGSEEFormCollectionSerializer* CSEGlobalClipboardOperator::GetDeserializer(bgsee::BGSEEPluginFileWrapper* File)
 		{
 			switch (ICSEFormCollectionSerializer::GetFileSerializerType(File))
 			{
@@ -184,7 +184,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void CSEGlobalClipboardOperator::PreCopyCallback(BGSEditorExtender::BGSEEFormListT& CopyForms, BGSEditorExtender::BGSEEPluginFileWrapper* File)
+		void CSEGlobalClipboardOperator::PreCopyCallback(bgsee::BGSEEFormListT& CopyForms, bgsee::BGSEEPluginFileWrapper* File)
 		{
 			;//
 		}
@@ -194,12 +194,12 @@ namespace ConstructionSetExtender
 			;//
 		}
 
-		void CSEGlobalClipboardOperator::PrePasteCallback(BGSEditorExtender::BGSEEPluginFileWrapper* File)
+		void CSEGlobalClipboardOperator::PrePasteCallback(bgsee::BGSEEPluginFileWrapper* File)
 		{
 			;//
 		}
 
-		void CSEGlobalClipboardOperator::PostPasteCallback(bool Successful, BGSEditorExtender::BGSEEFormCollectionSerializer* Deserializer)
+		void CSEGlobalClipboardOperator::PostPasteCallback(bool Successful, bgsee::BGSEEFormCollectionSerializer* Deserializer)
 		{
 			if (Successful)
 			{

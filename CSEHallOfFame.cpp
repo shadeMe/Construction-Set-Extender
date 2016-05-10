@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 	namespace HallOfFame
 	{
 		CSEHallOfFameEntry::CSEHallOfFameEntry( const char* Name, const char* Title, UInt8 Type ) :
-			BGSEditorExtender::Extras::BGSEEHallOfFameEntry(Name, Title),
+			bgsee::Extras::BGSEEHallOfFameEntry(Name, Title),
 			Instance(NULL),
 			FormType(Type)
 		{
@@ -198,7 +198,7 @@ namespace ConstructionSetExtender
 			if (TESForm::LookupByEditorID("TheShadeMeRef"))
 				return;
 
-			BGSEditorExtender::Extras::ExtenderHOFEntryListT Inductees;
+			bgsee::Extras::ExtenderHOFEntryListT Inductees;
 
 			Inductees.push_back(new CSEHallOfFameEntry("ianpat",						"The Overlord",					TESForm::kFormType_Armor));
 			Inductees.push_back(new CSEHallOfFameEntry("ScruggsywuggsyTheFerret",		"Cthulu-like Being",			TESForm::kFormType_SigilStone));

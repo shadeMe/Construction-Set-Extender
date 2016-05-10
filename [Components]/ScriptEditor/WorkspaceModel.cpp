@@ -38,6 +38,8 @@ namespace ConstructionSetExtender
 			TextEditor = gcnew TextEditors::AvalonEditor::AvalonEditTextEditor(this,
 																			   gcnew TextEditors::AvalonEditor::JumpToScriptHandler(this, &ConcreteWorkspaceModel::JumpToScript),
 																			   CustomFont, TabSize);
+			IntelliSenseModel = gcnew IntelliSense::IntelliSenseInterfaceModel(TextEditor);
+
 
 			TextEditorKeyDownHandler = gcnew KeyEventHandler(this, &ConcreteWorkspaceModel::TextEditor_KeyDown);
 			TextEditorScriptModifiedHandler = gcnew TextEditors::TextEditorScriptModifiedEventHandler(this, &ConcreteWorkspaceModel::TextEditor_ScriptModified);
@@ -81,6 +83,7 @@ namespace ConstructionSetExtender
 			SAFEDELETE_CLR(AutoSaveTimerTickHandler);
 
 			SAFEDELETE_CLR(AutoSaveTimer);
+			SAFEDELETE_CLR(IntelliSenseModel);
 			SAFEDELETE_CLR(TextEditor);
 
 			ModelFactory->Remove(this);
@@ -330,10 +333,10 @@ namespace ConstructionSetExtender
 
 			TextEditor->Bind(BoundParent->ListViewMessages,
 							 BoundParent->ListViewBookmarks,
-							 BoundParent->ListViewFindResults,
-							 BoundParent->IntelliSenseInterfaceView);
+							 BoundParent->ListViewFindResults);
 
 			BoundParent->BreadcrumbManager->Bind(TextEditor);
+			IntelliSenseModel->Bind(BoundParent->IntelliSenseInterfaceView);
 
 			TextEditor->FocusTextArea();
 			TextEditor->ScrollToCaret();
@@ -343,6 +346,7 @@ namespace ConstructionSetExtender
 		{
 			if (Bound)
 			{
+				IntelliSenseModel->Unbind();
 				BoundParent->BreadcrumbManager->Unbind();
 				TextEditor->Unbind();
 

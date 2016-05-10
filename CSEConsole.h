@@ -5,12 +5,12 @@ namespace ConstructionSetExtender
 {
 	namespace Console
 	{
-		class CSEConsoleWarningRegistrar : public BGSEditorExtender::BGSEEConsoleWarningRegistrar
+		class CSEConsoleWarningRegistrar : public bgsee::BGSEEConsoleWarningRegistrar
 		{
 		public:
 			virtual ~CSEConsoleWarningRegistrar();
 
-			virtual void						operator()(BGSEditorExtender::BGSEEConsoleWarningManager* Manager);
+			virtual void						operator()(bgsee::BGSEEConsoleWarningManager* Manager);
 		}; 
 
 		void Initialize(void);

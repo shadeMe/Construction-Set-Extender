@@ -74,7 +74,7 @@ namespace ConstructionSetExtender
 		BGSEECONSOLE->RegisterPrintCallback(CSEConsolePrintCallbackPrototype);
 	}
 
-	void CSEInterfaceManager::ConsumeScriptInterface( BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT& Registrars )
+	void CSEInterfaceManager::ConsumeScriptInterface( bgsee::BGSEEScript::CodaScriptRegistrarListT& Registrars )
 	{
 		SME_ASSERT(Initialized);
 
@@ -147,7 +147,7 @@ namespace ConstructionSetExtender
 		Instance.ConsolePrintCallbacks.push_back(Handler);
 	}
 
-	void CSEInterfaceManager::RegisterScriptCommand(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command)
+	void CSEInterfaceManager::RegisterScriptCommand(bgsee::BGSEEScript::ICodaScriptCommand* Command)
 	{
 		SME_ASSERT(Instance.Initialized);
 

@@ -118,6 +118,8 @@ using namespace SME::Functors;
 #include <BGSEEConsole.h>
 #include <BGSEEUIManager.h>
 
+namespace bgsee = BGSEditorExtender;
+
 // CSE
 #include "EditorAPI\TESEditorAPI.h"
 #include "CSESettings.h"

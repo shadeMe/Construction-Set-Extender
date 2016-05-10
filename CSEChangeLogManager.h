@@ -6,7 +6,7 @@ namespace ConstructionSetExtender
 {
 	namespace ChangeLogManager
 	{
-		class CSEChangeEntry : public BGSEditorExtender::BGSEEChangeEntry
+		class CSEChangeEntry : public bgsee::BGSEEChangeEntry
 		{
 		protected:
 			std::string						Buffer;

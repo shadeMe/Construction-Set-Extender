@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 {
 	namespace RenderWindowPainter
 	{
-		BGSEditorExtender::BGSEEDynamicRenderChannel*	RenderChannelNotifications = NULL;
+		bgsee::BGSEEDynamicRenderChannel*	RenderChannelNotifications = NULL;
 
 		bool CSESelectionInfoRenderChannel::DrawText(std::string& OutText)
 		{
@@ -69,7 +69,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSESelectionInfoRenderChannel::CSESelectionInfoRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect) :
-			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+			bgsee::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorSelectionStats().s, 255),
 														DrawRect,
 														DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP)
@@ -126,11 +126,11 @@ namespace ConstructionSetExtender
 		}
 
 		CSERAMUsageRenderChannel::CSERAMUsageRenderChannel(const char* FontFace, UInt32 FontSize, RECT* DrawRect) :
-			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+			bgsee::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorRAMUsage().s, 255),
 														DrawRect,
 														DT_WORDBREAK|DT_RIGHT|DT_TOP|DT_NOCLIP,
-														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned),
+														bgsee::BGSEERenderChannelBase::kDrawAreaFlags_RightAligned),
 			TimerID(0),
 			RAMCounter(0)
 		{
@@ -157,11 +157,11 @@ namespace ConstructionSetExtender
 		}
 
 		CSEMouseRefRenderChannel::CSEMouseRefRenderChannel(const char* FontFace, UInt32 FontSize) :
-			BGSEditorExtender::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+			bgsee::BGSEEStaticRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 														SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorMouseRef().s, 255),
 														NULL,
 														DT_WORDBREAK | DT_LEFT | DT_TOP | DT_NOCLIP,
-														BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_Default)
+														bgsee::BGSEERenderChannelBase::kDrawAreaFlags_Default)
 		{
 			;//
 		}
@@ -285,11 +285,11 @@ namespace ConstructionSetExtender
 			DrawRect.top = -150;
 			DrawRect.right = 800;
 			DrawRect.bottom = 200;
-			RenderChannelNotifications = new BGSEditorExtender::BGSEEDynamicRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
+			RenderChannelNotifications = new bgsee::BGSEEDynamicRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
 										SME::StringHelpers::GetRGBD3D(Settings::RenderWindowPainter::kColorNotifications().s, 255),
 										&DrawRect,
 										DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
-										BGSEditorExtender::BGSEERenderChannelBase::kDrawAreaFlags_BottomAligned);
+										bgsee::BGSEERenderChannelBase::kDrawAreaFlags_BottomAligned);
 
 			BGSEERWPAINTER->RegisterRenderChannel(CSESelectionInfoRenderChannel::GetInstance(FontFace, FontSize));
 			BGSEERWPAINTER->RegisterRenderChannel(CSERAMUsageRenderChannel::GetInstance(FontFace, FontSize));

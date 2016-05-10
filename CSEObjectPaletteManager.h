@@ -49,7 +49,7 @@ namespace ConstructionSetExtender
 
 			typedef std::vector<PaletteObjectHandleT>			PaletteObjectListT;
 
-			static const BGSEditorExtender::BGSEEResourceLocation		kRepositoryPath;
+			static const bgsee::BGSEEResourceLocation		kRepositoryPath;
 			static const char*		kPaletteFileExtension;
 
 			PaletteObjectListT		LoadedObjects;

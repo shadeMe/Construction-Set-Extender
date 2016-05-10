@@ -125,7 +125,7 @@ public:
 		/*0C*/ NiZBufferProperty*			zBuffer;
 		/*10*/ NiWireframeProperty*			wireFrame;
 		/*14*/ PickData*					pickData;			// used when picking refs
-		/*18*/ PickData*					pickData2;
+		/*18*/ PickData*					pickData2;			// used when picking land data
 		/*1C*/ Sky*							sky;
 
 		static Scenegraph**					Singleton;			// there are actually 2 pointers to this struct, one global (main window) and the other owned by the render window
@@ -360,7 +360,7 @@ public:
 	virtual void				CenterCamera(void) = 0;
 	virtual void				HandleResize(void) = 0;
 	virtual void				Present(float Time = 0.f) = 0;
-	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR OutUnk05);		// OutUnk05 set to 1 inside the WM_DRAWITEM callback, whenin the method call Render()
+	virtual LRESULT				DialogMessageCallback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPARAM, LONG_PTR OutUnk05) = 0;		// OutUnk05 set to 1 inside the WM_DRAWITEM callback, whenin the method call Render()
 };
 STATIC_ASSERT(sizeof(TESRenderControl) == 0x48);
 

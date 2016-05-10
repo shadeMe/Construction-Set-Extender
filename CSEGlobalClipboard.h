@@ -8,7 +8,7 @@ namespace ConstructionSetExtender
 	{
 		class CSEGlobalCopyBuffer
 		{
-			BGSEditorExtender::BGSEEFormListT		FormList;
+			bgsee::BGSEEFormListT		FormList;
 		public:
 			CSEGlobalCopyBuffer();
 			~CSEGlobalCopyBuffer();
@@ -17,7 +17,7 @@ namespace ConstructionSetExtender
 			bool									Copy(void);
 		};
 
-		class CSEGlobalClipboardOperator : public BGSEditorExtender::BGSEEGlobalClipboardOperator
+		class CSEGlobalClipboardOperator : public bgsee::BGSEEGlobalClipboardOperator
 		{
 		protected:
 			CSEDefaultFormCollectionSerializer*			DefaultFormSerializer;
@@ -27,16 +27,16 @@ namespace ConstructionSetExtender
 			virtual ~CSEGlobalClipboardOperator();
 
 			virtual bool								GetIsFormTypeReplicable(UInt8 Type);
-			virtual void								DisplayClipboardContents(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+			virtual void								DisplayClipboardContents(bgsee::BGSEEPluginFileWrapper* File);
 
-			virtual BGSEditorExtender::BGSEEFormCollectionSerializer*		GetSerializer(BGSEditorExtender::BGSEEFormListT& Forms);
-			virtual BGSEditorExtender::BGSEEFormCollectionSerializer*		GetDeserializer(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+			virtual bgsee::BGSEEFormCollectionSerializer*		GetSerializer(bgsee::BGSEEFormListT& Forms);
+			virtual bgsee::BGSEEFormCollectionSerializer*		GetDeserializer(bgsee::BGSEEPluginFileWrapper* File);
 
-			virtual void								PreCopyCallback(BGSEditorExtender::BGSEEFormListT& CopyForms,
-																		BGSEditorExtender::BGSEEPluginFileWrapper* File);
+			virtual void								PreCopyCallback(bgsee::BGSEEFormListT& CopyForms,
+																		bgsee::BGSEEPluginFileWrapper* File);
 			virtual void								PostCopyCallback(bool Successful);
-			virtual void								PrePasteCallback(BGSEditorExtender::BGSEEPluginFileWrapper* File);
-			virtual void								PostPasteCallback(bool Successful, BGSEditorExtender::BGSEEFormCollectionSerializer* Deserializer);
+			virtual void								PrePasteCallback(bgsee::BGSEEPluginFileWrapper* File);
+			virtual void								PostPasteCallback(bool Successful, bgsee::BGSEEFormCollectionSerializer* Deserializer);
 		};
 
 		void Initialize(void);

@@ -553,7 +553,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSECellViewExtraData::CSECellViewExtraData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID),
+			bgsee::BGSEEWindowExtraData(kTypeID),
 			RefFilterEditBox(),
 			RefFilterLabel(),
 			XLabel(),
@@ -674,7 +674,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEDialogExtraFittingsData::CSEDialogExtraFittingsData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
+			bgsee::BGSEEWindowExtraData(kTypeID)
 		{
 			LastCursorPos.x = LastCursorPos.y = 0;
 			LastCursorPosWindow = NULL;
@@ -698,7 +698,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEMainWindowMiscData::CSEMainWindowMiscData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
+			bgsee::BGSEEWindowExtraData(kTypeID)
 		{
 			ToolbarExtras = Subwindow::CreateInstance();
 		}
@@ -713,7 +713,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEMainWindowToolbarData::CSEMainWindowToolbarData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
+			bgsee::BGSEEWindowExtraData(kTypeID)
 		{
 			SettingTODSlider = false;
 		}
@@ -724,7 +724,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSERenderWindowMiscData::CSERenderWindowMiscData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
+			bgsee::BGSEEWindowExtraData(kTypeID)
 		{
 			TunnelingKeyMessage = false;
 		}
@@ -735,7 +735,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSETESFormEditData::CSETESFormEditData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
+			bgsee::BGSEEWindowExtraData(kTypeID)
 		{
 			Buffer = NULL;
 		}
@@ -761,7 +761,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEFaceGenWindowData::CSEFaceGenWindowData() :
-			BGSEditorExtender::BGSEEWindowExtraData(kTypeID)
+			bgsee::BGSEEWindowExtraData(kTypeID)
 		{
 			TunnelingTabSelectMessage = false;
 			AllowPreviewUpdates = true;
@@ -773,8 +773,19 @@ namespace ConstructionSetExtender
 			;//
 		}
 
+		CSETESFormIDListViewData::CSETESFormIDListViewData() :
+			bgsee::BGSEEWindowExtraData(kTypeID)
+		{
+			DisableDragHandling = false;
+		}
+
+		CSETESFormIDListViewData::~CSETESFormIDListViewData()
+		{
+			;//
+		}
+
 		LRESULT CALLBACK FindTextDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -904,7 +915,7 @@ namespace ConstructionSetExtender
 		// lParam = TESFile*
 
 		LRESULT CALLBACK DataDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+											bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1137,7 +1148,7 @@ namespace ConstructionSetExtender
 						}
 						else if (BGSEEUI->MsgBoxW(hWnd,
 										MB_YESNO,
-										"What you're about to do is akin to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
+										"What you're about to do is tantamount to using the Osterhagen Key.\n\nThis is the Point Of No Return. Proceed?") == IDNO)
 						{
 							Return = true;
 							BGSEEACHIEVEMENTS->Unlock(Achievements::kChicken);
@@ -1190,7 +1201,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK MainWindowMenuInitSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+														bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1360,7 +1371,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK MainWindowMenuSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+														bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1801,7 +1812,7 @@ namespace ConstructionSetExtender
 		// wParam = position
 
 		LRESULT CALLBACK MainWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -1901,7 +1912,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK MainWindowToolbarSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -2003,7 +2014,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK RenderWindowMenuInitSelectSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-																bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+																bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
@@ -2589,7 +2600,7 @@ namespace ConstructionSetExtender
 #define IDT_RENDERWINDOW_TITLEBARUPDATE			0x154
 
 		LRESULT CALLBACK RenderWindowMiscSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = TRUE;
 			Return = false;
@@ -2704,7 +2715,7 @@ namespace ConstructionSetExtender
 						SetThreadExecutionState(ES_CONTINUOUS|ES_DISPLAY_REQUIRED|ES_SYSTEM_REQUIRED);
 					}
 
-					if (BGSEditorExtender::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
+					if (bgsee::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
 					{
 						// the primary camera's view frustum gets updated ever so often, resetting its horizontal FOV
 						// we update it here in case it has changed
@@ -2794,7 +2805,7 @@ namespace ConstructionSetExtender
 						}
 					}
 
-					if (GetCapture() != hWnd && BGSEditorExtender::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
+					if (GetCapture() != hWnd && bgsee::BGSEERenderWindowFlyCamera::FlyCamModeActive == false)
 					{
 						HCURSOR Icon = *TESRenderWindow::CursorArrow;
 
@@ -3073,10 +3084,10 @@ namespace ConstructionSetExtender
 
 						TESRenderWindow::CurrentMouseRef = NULL;
 
-						BGSEditorExtender::BGSEERenderWindowFlyCamera* xFreeCamData = BGSEE_GETWINDOWXDATA(BGSEditorExtender::BGSEERenderWindowFlyCamera, ExtraData);
+						bgsee::BGSEERenderWindowFlyCamera* xFreeCamData = BGSEE_GETWINDOWXDATA(bgsee::BGSEERenderWindowFlyCamera, ExtraData);
 						SME_ASSERT(xFreeCamData == NULL);
 
-						xFreeCamData = new BGSEditorExtender::BGSEERenderWindowFlyCamera(new CSERenderWindowFlyCameraOperator(hWnd,
+						xFreeCamData = new bgsee::BGSEERenderWindowFlyCamera(new CSERenderWindowFlyCameraOperator(hWnd,
 																															TESDialog::kDialogTemplate_RenderWindow));
 						ExtraData->Add(xFreeCamData);
 
@@ -3167,7 +3178,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK ObjectWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -3251,7 +3262,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK CellViewWindowSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -3592,7 +3603,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK ResponseDlgSubclassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -3786,7 +3797,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK LandscapeTextureUseDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+															bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -3823,7 +3834,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK FilteredDialogQuestDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+															bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -3874,7 +3885,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK AboutDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+											bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -3944,7 +3955,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK RaceDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-											bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+											bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -4027,7 +4038,7 @@ namespace ConstructionSetExtender
 #define ID_COMMONDLGEXTRAFITTINGS_ASSETTOOLTIPTIMERID					0x109
 
 		LRESULT CALLBACK CommonDialogExtraFittingsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-															bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+															bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -4291,7 +4302,7 @@ namespace ConstructionSetExtender
 										break;
 									case kFormList_ClimateWeatherRaceHairFindTextTopics:
 										{
-											BGSEditorExtender::ResourceTemplateT TemplateID = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
+											bgsee::ResourceTemplateT TemplateID = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
 
 											switch (TemplateID)
 											{
@@ -4501,7 +4512,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK SelectTopicsQuestsSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+														bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -4572,9 +4583,10 @@ namespace ConstructionSetExtender
 #define WM_TESFORMIDLISTVIEW_HASCHANGES							(WM_USER + 2006)
 // lParam = NMLISTVIEW*
 #define WM_TESFORMIDLISTVIEW_SAVECHANGES						(WM_USER + 2007)
+#define ID_TESFORMIDLISTVIEW_DRAGTIMER							(WM_USER + 2008)
 
 		LRESULT CALLBACK TESFormIDListViewDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+														bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 
@@ -4654,17 +4666,48 @@ namespace ConstructionSetExtender
 
 					// ideally, we'd be changing the form listview's style to allow multiple selections
 					// unfortunately, adding/removing the LVS_SINGLESEL style post-window creation has no effect
-					// so we tuck in our tails and create replacement templates for all TESFormIDListView forms
+					// so we tuck in our tail and create replacement templates for all TESFormIDListView forms
 					// PS: Dammit!
 
 					SME_ASSERT(FilterEditBox);
 					CSEFilterableFormListManager::Instance.Register(FilterEditBox, GetDlgItem(hWnd, IDC_CSEFILTERABLEFORMLIST_FILTERLBL),
 																	GetDlgItem(hWnd, kFormList_TESFormIDListView), hWnd);
+
+					CSETESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(CSETESFormIDListViewData, ExtraData);
+					if (xData == NULL)
+					{
+						xData = new CSETESFormIDListViewData();
+						ExtraData->Add(xData);
+					}
 				}
 
 				break;
 			case WM_DESTROY:
-				CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
+				{
+					CSEFilterableFormListManager::Instance.Unregister(FilterEditBox);
+					CSETESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(CSETESFormIDListViewData, ExtraData);
+					if (xData)
+					{
+						ExtraData->Remove(CSETESFormIDListViewData::kTypeID);
+						delete xData;
+					}
+				}
+
+				break;
+			case WM_TIMER:
+				switch (wParam)
+				{
+				case ID_TESFORMIDLISTVIEW_DRAGTIMER:
+					{
+						// reenable dragging after a single tick
+						KillTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER);
+						CSETESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(CSETESFormIDListViewData, ExtraData);
+						SME_ASSERT(xData);
+						xData->DisableDragHandling = false;
+					}
+
+					break;
+				}
 
 				break;
 			case WM_COMMAND:
@@ -4746,34 +4789,41 @@ namespace ConstructionSetExtender
 						break;
 					case LVN_BEGINDRAG:
 						{
-							// override the vanilla handler to allow multiple selections
-							NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
-							std::list<TESForm*> Selection;
-
-							int Index = -1;
-							while ((Index = ListView_GetNextItem(Data->hdr.hwndFrom, Index, LVNI_SELECTED)) != -1)
+							CSETESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(CSETESFormIDListViewData, ExtraData);
+							SME_ASSERT(xData);
+							if (xData->DisableDragHandling == false)
 							{
-								TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Index);
-								SME_ASSERT(Form);
+								// override the vanilla handler to allow multiple selections
+								NMLISTVIEW* Data = (NMLISTVIEW*)lParam;
+								std::list<TESForm*> Selection;
 
-								Selection.push_back(Form);
+								int Index = -1;
+								while ((Index = ListView_GetNextItem(Data->hdr.hwndFrom, Index, LVNI_SELECTED)) != -1)
+								{
+									TESForm* Form = (TESForm*)TESListView::GetItemData(Data->hdr.hwndFrom, Index);
+									SME_ASSERT(Form);
+
+									Selection.push_back(Form);
+								}
+
+								if (Selection.size())
+								{
+									*TESDialog::TESFormIDListViewDragDropInProgress = 1;
+
+									_RENDERSEL->ClearSelection(true);
+									TESObjectWindow::SetSplitterEnabled(*TESObjectWindow::SplitterHandle, false);
+
+									for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
+										_RENDERSEL->AddToSelection(*Itr);
+
+									SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
+									SetCapture(hWnd);
+
+									Return = true;
+								}
 							}
-
-							if (Selection.size())
-							{
-								*TESDialog::TESFormIDListViewDragDropInProgress = 1;
-
-								_RENDERSEL->ClearSelection(true);
-								TESObjectWindow::SetSplitterEnabled(*TESObjectWindow::SplitterHandle, false);
-
-								for (std::list<TESForm*>::iterator Itr = Selection.begin(); Itr != Selection.end(); ++Itr)
-									_RENDERSEL->AddToSelection(*Itr);
-
-								SetCursor(LoadCursor(*TESCSMain::Instance, (LPCSTR)0xB8));
-								SetCapture(hWnd);
-
+							else
 								Return = true;
-							}
 						}
 
 						break;
@@ -4799,6 +4849,12 @@ namespace ConstructionSetExtender
 										break;
 									}
 								}
+
+								// we need to disable the listview begin drag handler for a bit to prevent it from getting triggered after the selection
+								CSETESFormIDListViewData* xData = BGSEE_GETWINDOWXDATA(CSETESFormIDListViewData, ExtraData);
+								SME_ASSERT(xData);
+								xData->DisableDragHandling = true;
+								SetTimer(hWnd, ID_TESFORMIDLISTVIEW_DRAGTIMER, 1000, NULL);
 
 								Return = true;
 								SetWindowLongPtr(hWnd, DWL_MSGRESULT, DlgProcResult);
@@ -4864,7 +4920,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK LandscapeEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -4900,7 +4956,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK AIPackagesDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -4947,7 +5003,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK AIFormDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -4977,7 +5033,7 @@ namespace ConstructionSetExtender
 #define IDT_FACEGENPREVIEW_PREVIEWUPDATE			0x7FF
 
 		LRESULT CALLBACK FaceGenParamListSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-													bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+													bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5008,7 +5064,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK FaceGenDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5266,7 +5322,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK TESFormEditDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5333,7 +5389,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK MagicItemFormDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+												bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5431,7 +5487,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK LeveledItemFormDlgSubClassProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-														bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData )
+														bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData )
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5469,7 +5525,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												   bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData)
+												   bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5527,7 +5583,7 @@ namespace ConstructionSetExtender
 		}
 
 		LRESULT CALLBACK WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-												  bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData)
+												  bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData)
 		{
 			LRESULT DlgProcResult = FALSE;
 			Return = false;
@@ -5539,7 +5595,7 @@ namespace ConstructionSetExtender
 					Return = true;
 					DlgProcResult = TRUE;
 
-					BGSEditorExtender::ResourceTemplateT Template = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
+					bgsee::ResourceTemplateT Template = BGSEEUI->GetSubclasser()->GetDialogTemplate(hWnd);
 					std::string* OutClassName = (std::string*)wParam;
 					OutClassName->clear();
 
@@ -6478,14 +6534,14 @@ namespace ConstructionSetExtender
 
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellEdit, TESObjectCELLDlgSubClassProc);
 
-			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
+			BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(
 																								CLIWrapper::Interfaces::TAG->GetFormDropWindowHandle());
 
 			if (Settings::Dialogs::kShowEditDialogsInTaskbar.GetData().i)
 			{
-				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+				bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 				RegularAppWindow.Extended = WS_EX_APPWINDOW;
-				RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+				RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_CellEdit, RegularAppWindow);
 				BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_LandscapeEdit, RegularAppWindow);

@@ -219,7 +219,7 @@ namespace ConstructionSetExtender
 
 			_MemHdlr(CSInit).WriteBuffer();
 
-			BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Epilog);
+			BGSEEMAIN->Daemon()->ExecuteInitCallbacks(bgsee::BGSEEDaemon::kInitCallback_Epilog);
 		}
 
 		#define _hhName	CSInit

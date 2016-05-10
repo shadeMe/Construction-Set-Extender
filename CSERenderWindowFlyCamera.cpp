@@ -3,8 +3,8 @@
 
 namespace ConstructionSetExtender
 {
-	CSERenderWindowFlyCameraOperator::CSERenderWindowFlyCameraOperator( HWND Parent, BGSEditorExtender::ResourceTemplateT TemplateID ) :
-		BGSEditorExtender::BGSEERenderWindowFlyCameraOperator(Parent, TemplateID)
+	CSERenderWindowFlyCameraOperator::CSERenderWindowFlyCameraOperator( HWND Parent, bgsee::ResourceTemplateT TemplateID ) :
+		bgsee::BGSEERenderWindowFlyCameraOperator(Parent, TemplateID)
 	{
 		ZeroMemory(&ViewportFrustumBuffer, sizeof(NiFrustum));
 	}
@@ -73,30 +73,30 @@ namespace ConstructionSetExtender
 
 		switch (Direction)
 		{
-		case BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Forward:
-		case BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Backward:
+		case bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Forward:
+		case bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Backward:
 			{
-				if (Direction == BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Backward)
+				if (Direction == bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Backward)
 					Velocity *= -1;
 
 				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk04, Velocity);
 			}
 
 			break;
-		case BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Left:
-		case BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Right:
+		case bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Left:
+		case bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Right:
 			{
-				if (Direction == BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Right)
+				if (Direction == bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Right)
 					Velocity *= -1;
 
 				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk02, Velocity);
 			}
 
 			break;
-		case BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Up:
-		case BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Down:
+		case bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Up:
+		case bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Down:
 			{
-				if (Direction == BGSEditorExtender::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Down)
+				if (Direction == bgsee::BGSEERenderWindowFlyCameraOperator::kMoveDirection_Down)
 					Velocity *= -1;
 
 				TESRender::UpdateNode(_PRIMARYRENDERER->primaryCameraParentNode, TESRender::kNodeUpdate_Unk00, Velocity);

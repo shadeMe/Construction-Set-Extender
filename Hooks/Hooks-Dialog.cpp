@@ -460,7 +460,7 @@ namespace ConstructionSetExtender
 		}
 		bool __stdcall DoCustomCSWindowPatchHook(HWND Window)
 		{
-			if (BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_MainWindowChildren)->GetExists(Window))
+			if (BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_MainWindowChildren)->GetExists(Window))
 				return false;
 			else
 				return true;
@@ -1190,7 +1190,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoTESDialogGetIsWindowDragDropRecipientHook(HWND Handle)
 		{
-			return BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->GetExists(Handle);
+			return BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_DragDropableWindows)->GetExists(Handle);
 		}
 
 		#define _hhName		TESDialogGetIsWindowDragDropRecipient

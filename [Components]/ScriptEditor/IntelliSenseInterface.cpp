@@ -33,6 +33,7 @@ namespace ConstructionSetExtender
 			ParentEditorShowInterface = gcnew TextEditors::IntelliSenseShowEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_ShowInterface);
 			ParentEditorHideInterface = gcnew TextEditors::IntelliSenseHideEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_HideInterface);
 			ParentEditorRelocateInterface = gcnew TextEditors::IntelliSensePositionEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_RelocateInterface);
+			ParentEditorBGAnalysisCompleteHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_BackgroundAnalysisComplete);
 			BoundParentItemSelectedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundParent_ItemSelected);
 
 			PREFERENCES->PreferencesSaved += ScriptEditorPreferencesSavedHandler;
@@ -40,6 +41,7 @@ namespace ConstructionSetExtender
 			ParentEditor->IntelliSenseShow += ParentEditorShowInterface;
 			ParentEditor->IntelliSenseHide += ParentEditorHideInterface;
 			ParentEditor->IntelliSenseRelocate += ParentEditorRelocateInterface;
+			ParentEditor->BackgroundAnalysisComplete += ParentEditorBGAnalysisCompleteHandler;
 		}
 
 		IntelliSenseInterfaceModel::~IntelliSenseInterfaceModel()
@@ -52,12 +54,14 @@ namespace ConstructionSetExtender
 			ParentEditor->IntelliSenseShow -= ParentEditorShowInterface;
 			ParentEditor->IntelliSenseHide -= ParentEditorHideInterface;
 			ParentEditor->IntelliSenseRelocate -= ParentEditorRelocateInterface;
+			ParentEditor->BackgroundAnalysisComplete -= ParentEditorBGAnalysisCompleteHandler;
 
 			SAFEDELETE_CLR(ScriptEditorPreferencesSavedHandler);
 			SAFEDELETE_CLR(ParentEditorKeyDown);
 			SAFEDELETE_CLR(ParentEditorShowInterface);
 			SAFEDELETE_CLR(ParentEditorHideInterface);
 			SAFEDELETE_CLR(ParentEditorRelocateInterface);
+			SAFEDELETE_CLR(ParentEditorBGAnalysisCompleteHandler);
 
 			RemoteScript = nullptr;
 
@@ -86,7 +90,7 @@ namespace ConstructionSetExtender
 			Debug::Assert(Bound == true);
 			Enabled = true;
 
-			if (E->AllowForDisplay && E->Control == false && E->Shift == false && E->Alt == false)
+			if (GetTriggered(E->KeyCode) && E->AllowForDisplay && E->Control == false && E->Shift == false && E->Alt == false)
 			{
 				switch (E->KeyCode)
 				{
@@ -271,6 +275,11 @@ namespace ConstructionSetExtender
 				BoundParent->Show(E->Location, E->WindowHandle);
 				ParentEditor->FocusTextArea();
 			}
+		}
+
+		void IntelliSenseInterfaceModel::ParentEditor_BackgroundAnalysisComplete(Object^ Sender, EventArgs^ E)
+		{
+			UpdateLocalVars(ParentEditor->GetSemanticAnalysisCache(false, false));
 		}
 
 		void IntelliSenseInterfaceModel::BoundParent_ItemSelected(Object^ Sender, EventArgs^ E)
@@ -482,18 +491,18 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		bool IntelliSenseInterfaceModel::GetTriggered(System::Windows::Input::Key E)
+		bool IntelliSenseInterfaceModel::GetTriggered(Keys E)
 		{
 			switch (E)
 			{
-			case System::Windows::Input::Key::OemTilde:
-			case System::Windows::Input::Key::OemPeriod:
-			case System::Windows::Input::Key::OemComma:
-			case System::Windows::Input::Key::Space:
-			case System::Windows::Input::Key::OemOpenBrackets:
-			case System::Windows::Input::Key::OemCloseBrackets:
-			case System::Windows::Input::Key::Tab:
-			case System::Windows::Input::Key::Enter:
+			case Keys::Oemtilde:
+			case Keys::OemPeriod:
+			case Keys::Oemcomma:
+			case Keys::Space:
+			case Keys::OemOpenBrackets:
+			case Keys::OemCloseBrackets:
+			case Keys::Tab:
+			case Keys::Enter:
 				return true;
 			default:
 				return false;
@@ -784,7 +793,7 @@ namespace ConstructionSetExtender
 		// HACK!
 		// The SetSize call crashes consistently under certain conditions (which are yet to be decoded) due to an invalid window handle
 		// methinks it has something to do with how the call is invoked (multiple levels of interop b'ween WinForms and WPF)
-		// delegating it to the UI thread through BeginInvoke seems to help apparently but we still need to wrap it in SEH
+		// delegating it to the UI thread through BeginInvoke seems to help apparently but we still need to wrap it in an exception handler
 
 		void IntelliSenseInterfaceView::UIInvoke_FormShow(NonActivatingImmovableAnimatedForm^ ToInvoke, Point Location, IntPtr Parent)
 		{

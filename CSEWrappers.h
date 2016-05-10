@@ -4,7 +4,7 @@
 
 namespace ConstructionSetExtender
 {
-	class CSEFormWrapper : public BGSEditorExtender::BGSEEFormWrapper
+	class CSEFormWrapper : public bgsee::BGSEEFormWrapper
 	{
 	protected:
 		TESForm*							WrappedForm;
@@ -23,7 +23,7 @@ namespace ConstructionSetExtender
 		TESForm*							GetWrappedForm(void) const;
 	};
 
-	class CSEPluginFileWrapper : public BGSEditorExtender::BGSEEPluginFileWrapper
+	class CSEPluginFileWrapper : public bgsee::BGSEEPluginFileWrapper
 	{
 	protected:
 		TESFile*							WrappedPlugin;
@@ -52,7 +52,7 @@ namespace ConstructionSetExtender
 		TESFile*							GetWrappedPlugin(void) const;
 	};
 
-	class ICSEFormCollectionSerializer : public BGSEditorExtender::BGSEEFormCollectionSerializer
+	class ICSEFormCollectionSerializer : public bgsee::BGSEEFormCollectionSerializer
 	{
 		static const char*				kSigilDefaultForm;
 		static const char*				kSigilObjectRef;
@@ -61,8 +61,8 @@ namespace ConstructionSetExtender
 
 		void							FreeBuffer(void);
 
-		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File) = 0;		// returns false if an error was encountered
-		virtual void					SaveForm(BGSEditorExtender::BGSEEPluginFileWrapper* File, BGSEditorExtender::BGSEEFormWrapper* Form);
+		virtual bool					LoadForm(bgsee::BGSEEPluginFileWrapper* File) = 0;		// returns false if an error was encountered
+		virtual void					SaveForm(bgsee::BGSEEPluginFileWrapper* File, bgsee::BGSEEFormWrapper* Form);
 
 		bool							GetFormInBuffer(TESForm* Form) const;
 	public:
@@ -78,8 +78,8 @@ namespace ConstructionSetExtender
 			kSerializer__MAX
 		};
 
-		static UInt8					GetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File);				// returns the type of serializer used to create the file
-		static void						SetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File, UInt8 Type);	// tags the file with the serializer type
+		static UInt8					GetFileSerializerType(bgsee::BGSEEPluginFileWrapper* File);				// returns the type of serializer used to create the file
+		static void						SetFileSerializerType(bgsee::BGSEEPluginFileWrapper* File, UInt8 Type);	// tags the file with the serializer type
 
 		virtual UInt8					GetType() = 0;
 	};
@@ -109,12 +109,12 @@ namespace ConstructionSetExtender
 	{
 		friend class CSEDefaultFormCollectionInstantiator;
 	protected:
-		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File);		// returns false if an error was encountered
+		virtual bool					LoadForm(bgsee::BGSEEPluginFileWrapper* File);		// returns false if an error was encountered
 	public:
 		virtual ~CSEDefaultFormCollectionSerializer();
 
-		virtual bool					Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream);
-		virtual bool					Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount);
+		virtual bool					Serialize(bgsee::BGSEEFormListT& Forms, bgsee::BGSEEPluginFileWrapper* OutputStream);
+		virtual bool					Deserialize(bgsee::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount);
 
 		virtual UInt8					GetType();
 	};
@@ -177,7 +177,7 @@ namespace ConstructionSetExtender
 		bool							StrictBaseFormResolution;					// if true, loaded refs' baseforms must resolve to an existing form; if not, they are discarded
 																					// if false, loaded refs are allowed dependencies on the deserialized baseforms; new baseform instances must be created and linked during the instantiation
 
-		virtual bool					LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File);
+		virtual bool					LoadForm(bgsee::BGSEEPluginFileWrapper* File);
 
 		void							FreeDeserializationBuffers();
 		bool							IsBaseFormTemporary(TESForm* Form) const;	// returns true if the form is found in the deserialization buffer
@@ -189,8 +189,8 @@ namespace ConstructionSetExtender
 		CSEObjectRefCollectionSerializer(bool StrictBaseFormResolution);
 		virtual ~CSEObjectRefCollectionSerializer();
 
-		virtual bool					Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream);
-		virtual bool					Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount);
+		virtual bool					Serialize(bgsee::BGSEEFormListT& Forms, bgsee::BGSEEPluginFileWrapper* OutputStream);
+		virtual bool					Deserialize(bgsee::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount);
 
 		virtual UInt8					GetType();
 

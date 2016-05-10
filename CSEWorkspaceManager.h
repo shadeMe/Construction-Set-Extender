@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 {
 	namespace WorkspaceManager
 	{
-		class CSEWorkspaceManagerOperator : public BGSEditorExtender::BGSEEWorkspaceManagerOperator
+		class CSEWorkspaceManagerOperator : public bgsee::BGSEEWorkspaceManagerOperator
 		{
 		public:
 			virtual ~CSEWorkspaceManagerOperator();

@@ -41,7 +41,7 @@ namespace ConstructionSetExtender
 	bool										IsWarholAGenius = false;
 
 	CSEReleaseNameTable::CSEReleaseNameTable() :
-		BGSEditorExtender::BGSEEReleaseNameTable()
+		bgsee::BGSEEReleaseNameTable()
 	{
 		RegisterRelease(6, 0, "Konniving Kelpie");
 		RegisterRelease(6, 1, "Cretinous Codpiece");
@@ -58,7 +58,7 @@ namespace ConstructionSetExtender
 	}
 
 	CSEInitCallbackQuery::CSEInitCallbackQuery(const OBSEInterface* OBSE) :
-		BGSEditorExtender::BGSEEDaemonCallback(),
+		bgsee::BGSEEDaemonCallback(),
 		OBSE(OBSE)
 	{
 		;//
@@ -97,7 +97,7 @@ namespace ConstructionSetExtender
 	}
 
 	CSEInitCallbackLoad::CSEInitCallbackLoad(const OBSEInterface* OBSE) :
-		BGSEditorExtender::BGSEEDaemonCallback(),
+		bgsee::BGSEEDaemonCallback(),
 		OBSE(OBSE)
 	{
 		;//
@@ -160,9 +160,9 @@ namespace ConstructionSetExtender
 
 		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
-			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
+			bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
-			RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+			RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_ObjectWindow, RegularAppWindow);
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_CellView, RegularAppWindow);
@@ -622,7 +622,7 @@ extern "C"
 		if (SME::MersenneTwister::genrand_real1() < 0.05)
 			IsWarholAGenius = true;
 
-		BGSEditorExtender::INISettingDepotT CSEINISettings;
+		bgsee::INISettingDepotT CSEINISettings;
 
 		Settings::Register(CSEINISettings);
 		CSEAuxiliaryViewport::RegisterINISettings(CSEINISettings);
@@ -632,7 +632,7 @@ extern "C"
 														  BGSEEMAIN_EXTENDERSHORTNAME,
 														  CSEReleaseNameTable::Instance.LookupRelease(VERSION_MAJOR, VERSION_MINOR),
 														  PACKED_SME_VERSION,
-														  BGSEditorExtender::BGSEEMain::kExtenderParentEditor_TES4CS,
+														  bgsee::BGSEEMain::kExtenderParentEditor_TES4CS,
 														  CS_VERSION_1_2,
 														  obse->editorVersion,
 														  obse->GetOblivionDirectory(),
@@ -662,14 +662,14 @@ extern "C"
 
 		SME_ASSERT(ComponentInitialized);
 
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query, new CSEInitCallbackQuery(obse));
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load, new CSEInitCallbackLoad(obse));
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_PostMainWindowInit, new CSEInitCallbackPostMainWindowInit());
-		BGSEEMAIN->Daemon()->RegisterInitCallback(BGSEditorExtender::BGSEEDaemon::kInitCallback_Epilog, new CSEInitCallbackEpilog());
+		BGSEEMAIN->Daemon()->RegisterInitCallback(bgsee::BGSEEDaemon::kInitCallback_Query, new CSEInitCallbackQuery(obse));
+		BGSEEMAIN->Daemon()->RegisterInitCallback(bgsee::BGSEEDaemon::kInitCallback_Load, new CSEInitCallbackLoad(obse));
+		BGSEEMAIN->Daemon()->RegisterInitCallback(bgsee::BGSEEDaemon::kInitCallback_PostMainWindowInit, new CSEInitCallbackPostMainWindowInit());
+		BGSEEMAIN->Daemon()->RegisterInitCallback(bgsee::BGSEEDaemon::kInitCallback_Epilog, new CSEInitCallbackEpilog());
 		BGSEEMAIN->Daemon()->RegisterDeinitCallback(new CSEDeinitCallback());
 		BGSEEMAIN->Daemon()->RegisterCrashCallback(new CSECrashCallback());
 
-		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Query) == false)
+		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(bgsee::BGSEEDaemon::kInitCallback_Query) == false)
 		{
 			MessageBox(NULL,
 					   "The Construction Set Extender failed to initialize correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",
@@ -685,7 +685,7 @@ extern "C"
 
 	__declspec(dllexport) bool OBSEPlugin_Load(const OBSEInterface * obse)
 	{
-		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(BGSEditorExtender::BGSEEDaemon::kInitCallback_Load) == false)
+		if (BGSEEMAIN->Daemon()->ExecuteInitCallbacks(bgsee::BGSEEDaemon::kInitCallback_Load) == false)
 		{
 			MessageBox(NULL,
 					   "The Construction Set Extender failed to load correctly!\n\nIt's highly advised that you close the CS right away. More information can be found in the log file (Construction Set Extender.log in the root game directory).",

@@ -1022,31 +1022,31 @@ bool CanUpdateIntelliSenseDatabase(void)
 
 const char* GetDefaultCachePath(void)
 {
-	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEDEPOT)();
+	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetAutoRecoveryCachePath(void)
 {
-	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)();
+	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetPreprocessorBasePath(void)
 {
-	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCDEPOT)();
+	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEPREPROCDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetPreprocessorStandardPath(void)
 {
-	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)();
+	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetSnippetCachePath(void)
 {
-	static const std::string kBuffer = BGSEditorExtender::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)();
+	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)();
 	return kBuffer.c_str();
 }
 

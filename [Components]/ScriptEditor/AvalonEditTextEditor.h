@@ -3,7 +3,6 @@
 #include "AvalonEditDefs.h"
 #include "AvalonEditXSHD.h"
 #include "AvalonEditComponents.h"
-#include "IntelliSenseInterface.h"
 #include "WorkspaceModelInterface.h"
 
 #define AvalonEditTextEditorDeclareClickHandler(Name)				EventHandler^ Name##ClickHandler; \
@@ -109,7 +108,6 @@ namespace ConstructionSetExtender
 				ScriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
 				JumpToScriptHandler^								JumpScriptDelegate;
-				IntelliSense::IntelliSenseInterfaceModel^			IntelliSenseModel;
 				ToolTip^											InsightPopup;
 				DefaultIconMargin^									IconBarMargin;
 				StructureVisualizerRenderer^						StructureVisualizer;
@@ -237,8 +235,8 @@ namespace ConstructionSetExtender
 
 				bool										GetCharIndexInsideStringSegment(int Index);
 
-				void										SetPreventTextChangedFlag(PreventTextChangeFlagState State) { PreventTextChangedEventFlag = State; }
-				void										HandleKeyEventForKey(System::Windows::Input::Key Key) { KeyToPreventHandling = Key; }
+				void										SetPreventTextChangedFlag(PreventTextChangeFlagState State);
+				void										HandleKeyEventForKey(System::Windows::Input::Key Key);
 
 				void										HandleTextChangeEvent();
 				void										GotoLine(int Line);											// line numbers start at 1
@@ -386,8 +384,7 @@ namespace ConstructionSetExtender
 
 				virtual void								Bind(ListView^ MessageList,
 																 ListView^ BookmarkList,
-																 ListView^ FindResultList,
-																 IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseView);
+																 ListView^ FindResultList);
 				virtual void								Unbind();
 
 				virtual String^								GetText();

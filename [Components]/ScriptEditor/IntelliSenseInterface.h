@@ -32,6 +32,7 @@ namespace ConstructionSetExtender
 			void												ParentEditor_ShowInterface(Object^ Sender, TextEditors::IntelliSenseShowEventArgs^ E);
 			void												ParentEditor_HideInterface(Object^ Sender, TextEditors::IntelliSenseHideEventArgs^ E);
 			void												ParentEditor_RelocateInterface(Object^ Sender, TextEditors::IntelliSensePositionEventArgs^ E);
+			void												ParentEditor_BackgroundAnalysisComplete(Object^ Sender, EventArgs^ E);
 			void												BoundParent_ItemSelected(Object^ Sender, EventArgs^ E);
 
 			EventHandler^										ScriptEditorPreferencesSavedHandler;
@@ -40,6 +41,7 @@ namespace ConstructionSetExtender
 			TextEditors::IntelliSenseHideEventHandler^			ParentEditorHideInterface;
 			TextEditors::IntelliSensePositionEventHandler^		ParentEditorRelocateInterface;
 			EventHandler^										BoundParentItemSelectedHandler;
+			EventHandler^										ParentEditorBGAnalysisCompleteHandler;
 
 			property bool Bound
 			{
@@ -50,8 +52,10 @@ namespace ConstructionSetExtender
 			void						EnumerateItem(IntelliSenseItem^ Item);
 			void						PickSelection();
 			void						PopulateDataStore(IIntelliSenseInterfaceModel::Operation O, bool IgnoreFilter);
+			bool						GetTriggered(Keys E);
 
 			IntelliSenseItemVariable^	GetLocalVar(String^ Identifier);
+			void						UpdateLocalVars(ObScriptParsing::AnalysisData^ Data);
 		public:
 			IntelliSenseInterfaceModel(TextEditors::IScriptTextEditor^ Parent);
 			~IntelliSenseInterfaceModel();
@@ -65,8 +69,6 @@ namespace ConstructionSetExtender
 
 			virtual void				Bind(IIntelliSenseInterfaceView^ To);
 			virtual void				Unbind();
-			virtual	bool				GetTriggered(System::Windows::Input::Key E);
-			virtual void				UpdateLocalVars(ObScriptParsing::AnalysisData^ Data);
 #pragma endregion
 		};
 

@@ -22,7 +22,7 @@ public:
 
 	enum
 	{
-		kLandFlags_Unk03	= 1 << 3,
+		kLandFlags_Unk03	= 1 << 3,		// set when 3D is loaded?
 		kLandFlags_Unk0A	= 1 << 10,		// set when the parent cell's worldspace has a parent (worldspace)
 	};
 

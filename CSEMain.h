@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 	extern bool								shadeMeMode;
 	extern bool								IsWarholAGenius;
 
-	class CSEReleaseNameTable : public BGSEditorExtender::BGSEEReleaseNameTable
+	class CSEReleaseNameTable : public bgsee::BGSEEReleaseNameTable
 	{
 	protected:
 		CSEReleaseNameTable();
@@ -17,7 +17,7 @@ namespace ConstructionSetExtender
 		static CSEReleaseNameTable						Instance;
 	};
 
-	class CSEInitCallbackQuery : public BGSEditorExtender::BGSEEDaemonCallback
+	class CSEInitCallbackQuery : public bgsee::BGSEEDaemonCallback
 	{
 		const OBSEInterface*				OBSE;
 	public:
@@ -27,7 +27,7 @@ namespace ConstructionSetExtender
 		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class CSEInitCallbackLoad : public BGSEditorExtender::BGSEEDaemonCallback
+	class CSEInitCallbackLoad : public bgsee::BGSEEDaemonCallback
 	{
 		const OBSEInterface*				OBSE;
 	public:
@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class CSEInitCallbackPostMainWindowInit : public BGSEditorExtender::BGSEEDaemonCallback
+	class CSEInitCallbackPostMainWindowInit : public bgsee::BGSEEDaemonCallback
 	{
 	public:
 		virtual ~CSEInitCallbackPostMainWindowInit();
@@ -45,7 +45,7 @@ namespace ConstructionSetExtender
 		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class CSEInitCallbackEpilog : public BGSEditorExtender::BGSEEDaemonCallback
+	class CSEInitCallbackEpilog : public bgsee::BGSEEDaemonCallback
 	{
 	public:
 		virtual ~CSEInitCallbackEpilog();
@@ -53,7 +53,7 @@ namespace ConstructionSetExtender
 		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class CSEDeinitCallback : public BGSEditorExtender::BGSEEDaemonCallback
+	class CSEDeinitCallback : public bgsee::BGSEEDaemonCallback
 	{
 	public:
 		virtual ~CSEDeinitCallback();
@@ -61,7 +61,7 @@ namespace ConstructionSetExtender
 		virtual bool						Handle(void* Parameter = NULL);
 	};
 
-	class CSECrashCallback : public BGSEditorExtender::BGSEEDaemonCallback
+	class CSECrashCallback : public bgsee::BGSEEDaemonCallback
 	{
 		enum
 		{

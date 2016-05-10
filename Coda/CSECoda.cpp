@@ -62,14 +62,14 @@ namespace ConstructionSetExtender
 
 		void Initialize()
 		{
-			BGSEditorExtender::BGSEEScript::CodaScriptRegistrarListT ScriptCommands;
+			bgsee::BGSEEScript::CodaScriptRegistrarListT ScriptCommands;
 
 			CSEInterfaceManager::Instance.ConsumeScriptInterface(ScriptCommands);
 			ScriptCommands.push_back(Commands::Form::GetRegistrar());
 			ScriptCommands.push_back(Commands::Reference::GetRegistrar());
 			ScriptCommands.push_back(Commands::BaseFormComponent::GetRegistrar());
 
-			bool ComponentInitialized = CODAVM->Initialize(BGSEditorExtender::BGSEEResourceLocation("Coda"),
+			bool ComponentInitialized = CODAVM->Initialize(bgsee::BGSEEResourceLocation("Coda"),
 														"http://cs.elderscrolls.com/index.php/",
 														BGSEEMAIN->INIGetter(),
 														BGSEEMAIN->INISetter(),

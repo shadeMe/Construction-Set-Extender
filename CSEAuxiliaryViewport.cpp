@@ -59,7 +59,7 @@ namespace ConstructionSetExtender
 	}
 
 	CSEAuxiliaryViewport::CSEAuxiliaryViewport() :
-		BGSEditorExtender::BGSEEGenericModelessDialog(BGSEEUI->GetMainWindow(),
+		bgsee::BGSEEGenericModelessDialog(BGSEEUI->GetMainWindow(),
 													BGSEEMAIN->GetExtenderHandle(),
 													IDD_AUXVIEWPORT,
 													IDR_BGSEE_GENERIC_CONTEXTMENU,
@@ -85,9 +85,9 @@ namespace ConstructionSetExtender
 	{
 		if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
-			BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+			bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 			RegularAppWindow.Extended = WS_EX_APPWINDOW;
-			RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+			RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 			BGSEEUI->GetWindowStyler()->RegisterStyle(IDD_AUXVIEWPORT, RegularAppWindow);
 		}
@@ -151,7 +151,7 @@ namespace ConstructionSetExtender
 		return Frozen;
 	}
 
-	void CSEAuxiliaryViewport::RegisterINISettings( BGSEditorExtender::INISettingDepotT& Depot )
+	void CSEAuxiliaryViewport::RegisterINISettings( bgsee::INISettingDepotT& Depot )
 	{
 		Depot.push_back(&kINI_Top);
 		Depot.push_back(&kINI_Left);

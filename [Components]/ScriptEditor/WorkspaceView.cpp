@@ -1701,6 +1701,11 @@ namespace ConstructionSetExtender
 			PreprocessorTextViewer->SetForegroundColor(ForegroundColor);
 			PreprocessorTextViewer->SetBackgroundColor(BackgroundColor);
 
+			ScopeCrumbBar->BackgroundStyle->BackColor = BackgroundColor;
+			ScopeCrumbBar->BackgroundStyle->BorderColor = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+			ScopeCrumbBar->BackgroundStyle->BorderColor2 = System::Drawing::Color::FromArgb(200, BackgroundColor.R, BackgroundColor.G, BackgroundColor.B);
+			ScopeCrumbBar->Font = gcnew Font(PREFERENCES->FetchSettingAsString("Font", "Appearance"), 9);
+
 			Redraw();
 		}
 
@@ -2349,7 +2354,7 @@ namespace ConstructionSetExtender
 					{
 						E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::Open;
 						E->OpenArgs = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
-						E->BindPostCreation = false;
+						E->BindAfterCreation = false;
 						Debug::Assert(E->OpenArgs != nullptr);
 						NewTab(E);
 					}
@@ -2499,7 +2504,7 @@ namespace ConstructionSetExtender
 			{
 				E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::LoadFromDisk;
 				E->PathToFile = Path;
-				E->BindPostCreation = false;
+				E->BindAfterCreation = false;
 				NewTab(E);
 			}
 			EndUpdate();
@@ -2605,7 +2610,7 @@ namespace ConstructionSetExtender
 			if (E->PostCreationOperation != NewTabOperationArgs::PostNewTabOperation::LoadFromDisk)
 			{
 				New = ModelFactory()->CreateModel(E->OpenArgs);
-				AssociateModel(New, E->BindPostCreation);
+				AssociateModel(New, E->BindAfterCreation);
 			}
 
 			switch (E->PostCreationOperation)
@@ -2627,7 +2632,7 @@ namespace ConstructionSetExtender
 					{
 						New = ModelFactory()->CreateModel(nullptr);
 						ModelController()->New(New);
-						AssociateModel(New, E->BindPostCreation);
+						AssociateModel(New, E->BindAfterCreation);
 					}
 					else
 					{
@@ -2667,7 +2672,7 @@ namespace ConstructionSetExtender
 						}
 
 						ModelController()->LoadFromDisk(New, E->PathToFile);
-						AssociateModel(New, E->BindPostCreation);
+						AssociateModel(New, E->BindAfterCreation);
 					}
 				}
 

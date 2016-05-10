@@ -291,7 +291,7 @@ namespace ConstructionSetExtender
 
 		CSEObjectPaletteManager							CSEObjectPaletteManager::Instance;
 		const char*										CSEObjectPaletteManager::kPaletteFileExtension = "cseopal";
-		const BGSEditorExtender::BGSEEResourceLocation	CSEObjectPaletteManager::kRepositoryPath(CSE_OPALDEPOT);
+		const bgsee::BGSEEResourceLocation	CSEObjectPaletteManager::kRepositoryPath(CSE_OPALDEPOT);
 
 #define IDC_OBJECTPALETTE_FILTERINPUTTIMERID		0x200
 #define IDC_OBJECTPALETTE_PREVIEWTIMERID			0x201
@@ -563,7 +563,7 @@ namespace ConstructionSetExtender
 			Params.renderTargetWidth = Params.renderTargetHeight = 1024.f;
 			Renderer = TESPreviewControl::CreatePreviewControl(Dialog, &Params);
 
-			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(LoadedObjectsList);
+			BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Add(LoadedObjectsList);
 
 			EnableControls(false);
 			SetTimer(Dialog, IDC_OBJECTPALETTE_FILTERINPUTTIMERID, 500, NULL);
@@ -599,7 +599,7 @@ namespace ConstructionSetExtender
 				PreviewRef = NULL;
 			}
 
-			BGSEEUI->GetWindowHandleCollection(BGSEditorExtender::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Remove(LoadedObjectsList);
+			BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_DragDropableWindows)->Remove(LoadedObjectsList);
 			TESDialog::DestroyDialogExtraDataList(Dialog);
 
 			KillTimer(Dialog, IDC_OBJECTPALETTE_FILTERINPUTTIMERID);
@@ -990,7 +990,7 @@ namespace ConstructionSetExtender
 					// get initial click position and rotation
 					thisCall<bool>(0x006FF1A0, MainCamera, X, Y, &Position, &Rotation);
 
-					// I really need to decode this stuff...
+					// PickData stuff, see TESRenderWindow
 					thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
 					if (thisCall<bool>(0x005E6030, 0x00A0BC64, &Position, &Rotation, 0))
 					{
@@ -1052,9 +1052,9 @@ namespace ConstructionSetExtender
 
 				if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 				{
-					BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
+					bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
 					RegularAppWindow.Extended = WS_EX_APPWINDOW;
-					RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+					RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 					BGSEEUI->GetWindowStyler()->StyleWindow(Dialog, RegularAppWindow);
 				}

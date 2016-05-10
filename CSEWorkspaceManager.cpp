@@ -44,7 +44,7 @@ namespace ConstructionSetExtender
 
 		void Initialize()
 		{
-			static BGSEditorExtender::BGSEEWorkspaceManager::DefaultDirectoryListT kDefaultDirectories;
+			static bgsee::BGSEEWorkspaceManager::DefaultDirectoryListT kDefaultDirectories;
 			if (kDefaultDirectories.size() == 0)
 			{
 				kDefaultDirectories.push_back("Data\\");
@@ -58,16 +58,16 @@ namespace ConstructionSetExtender
 				kDefaultDirectories.push_back("Data\\Trees\\");
 				kDefaultDirectories.push_back("Data\\Backup\\");
 
-				kDefaultDirectories.push_back(BGSEditorExtender::BGSEEResourceLocation::GetBasePath());
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_CODADEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_CODABGDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_OPALDEPOT)()));
-				kDefaultDirectories.push_back((BGSEditorExtender::BGSEEResourceLocation(CSE_PREFABDEPOT)()));
+				kDefaultDirectories.push_back(bgsee::BGSEEResourceLocation::GetBasePath());
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_CODADEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_CODABGDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_SEDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_SEPREPROCDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_OPALDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::BGSEEResourceLocation(CSE_PREFABDEPOT)()));
 			}
 
 			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(),

@@ -225,6 +225,16 @@ namespace ConstructionSetExtender
 				return Result;
 			}
 
+			void AvalonEditTextEditor::SetPreventTextChangedFlag(PreventTextChangeFlagState State)
+			{
+				PreventTextChangedEventFlag = State;
+			}
+
+			void AvalonEditTextEditor::HandleKeyEventForKey(System::Windows::Input::Key Key)
+			{
+				KeyToPreventHandling = Key;
+			}
+
 			void AvalonEditTextEditor::GotoLine(int Line)
 			{
 				if (Line > 0 && Line <= TextField->LineCount)
@@ -914,7 +924,6 @@ namespace ConstructionSetExtender
 
 						SemanticAnalysisCache = (ObScriptParsing::AnalysisData^)Completed->Result->AnalysisOutput;
 
-						IntelliSenseModel->UpdateLocalVars(SemanticAnalysisCache);
 						LineTracker->Cleanup();
 						UpdateCodeFoldings();
 						UpdateSyntaxHighlighting(false);
@@ -1009,17 +1018,12 @@ namespace ConstructionSetExtender
 					KeyState |= (int)Keys::Shift;
 
 				IntelliSenseKeyEventArgs^ TunneledArgs = gcnew IntelliSenseKeyEventArgs((Keys)KeyState);
-				if (IntelliSenseModel->GetTriggered(E->Key))
+				if (TextField->SelectionStart - 1 < 0 ||
+					GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) ||
+					GetCharIndexInsideStringSegment(TextField->SelectionStart - 1))
 				{
-					if (TextField->SelectionStart - 1 < 0 ||
-						GetCharIndexInsideCommentSegment(TextField->SelectionStart - 1) ||
-						GetCharIndexInsideStringSegment(TextField->SelectionStart - 1))
-					{
-						TunneledArgs->AllowForDisplay = false;
-					}
-				}
-				else
 					TunneledArgs->AllowForDisplay = false;
+				}
 
 				IntelliSenseKeyDown(this, TunneledArgs);
 
@@ -1804,7 +1808,6 @@ namespace ConstructionSetExtender
 				TextFieldPanel = gcnew System::Windows::Controls::DockPanel();
 				TextField = gcnew AvalonEdit::TextEditor();
 				AnimationPrimitive = gcnew System::Windows::Shapes::Rectangle();
-				IntelliSenseModel = gcnew IntelliSenseInterfaceModel(this);
 				CodeFoldingManager = AvalonEdit::Folding::FoldingManager::Install(TextField->TextArea);
 				CodeFoldingStrategy = nullptr;
 
@@ -2245,7 +2248,6 @@ namespace ConstructionSetExtender
 				SAFEDELETE_CLR(IconBarMargin);
 				SAFEDELETE_CLR(LineTracker);
 				SAFEDELETE_CLR(InsightPopup);
-				SAFEDELETE_CLR(IntelliSenseModel);
 				SAFEDELETE_CLR(JumpScriptDelegate);
 				SAFEDELETE_CLR(StructureVisualizer);
 				SAFEDELETE_CLR(InlineSearchPanel);
@@ -2491,15 +2493,13 @@ namespace ConstructionSetExtender
 			}
 
 #pragma region Interface
-			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList, IIntelliSenseInterfaceView^ IntelliSenseView)
+			void AvalonEditTextEditor::Bind(ListView^ MessageList, ListView^ BookmarkList, ListView^ FindResultList)
 			{
 				IsFocused = true;
 				SemanticAnalysisTimer->Start();
 				ScrollBarSyncTimer->Start();
 
 				LineTracker->Bind(MessageList, BookmarkList, FindResultList);
-				IntelliSenseModel->Bind(IntelliSenseView);
-
 				FocusTextArea();
 			}
 
@@ -2513,8 +2513,6 @@ namespace ConstructionSetExtender
 				HideInsightPopup();
 
 				LineTracker->Unbind();
-				IntelliSenseModel->Unbind();
-
 				Windows::Input::Keyboard::ClearFocus();
 			}
 

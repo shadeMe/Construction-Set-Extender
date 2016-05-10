@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 	namespace FormUndoStack
 	{
 		CSEFormUndoProxy::CSEFormUndoProxy( TESForm* ParentForm, TESForm* CopySource ) :
-			BGSEditorExtender::BGSEEFormUndoProxy(),
+			bgsee::BGSEEFormUndoProxy(),
 			Parent(ParentForm),
 			Buffer(NULL)
 		{
@@ -162,7 +162,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		bool CSEFormUndoStackOperator::PreUndoRedoCallback( BGSEditorExtender::BGSEEFormUndoProxy* Proxy, BGSEditorExtender::BGSEEFormUndoProxy** OutAltProxy )
+		bool CSEFormUndoStackOperator::PreUndoRedoCallback( bgsee::BGSEEFormUndoProxy* Proxy, bgsee::BGSEEFormUndoProxy** OutAltProxy )
 		{
 			SME_ASSERT(Proxy && OutAltProxy);
 

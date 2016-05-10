@@ -111,7 +111,7 @@ namespace ConstructionSetExtender
 			static CSEFormEnumerationManager				Instance;
 		};
 
-		class CSECellViewExtraData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSECellViewExtraData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			RECT	RefFilterEditBox;		// init bounds of the new controls
@@ -141,7 +141,7 @@ namespace ConstructionSetExtender
 			static int CALLBACK CustomFormListComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 		};
 
-		class CSEDialogExtraFittingsData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSEDialogExtraFittingsData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			POINT		LastCursorPos;
@@ -159,7 +159,7 @@ namespace ConstructionSetExtender
 			enum { kTypeID = 'XDEF' };
 		};
 
-		class CSEMainWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSEMainWindowMiscData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			Subwindow*			ToolbarExtras;
@@ -170,7 +170,7 @@ namespace ConstructionSetExtender
 			enum { kTypeID = 'XMWM' };
 		};
 
-		class CSEMainWindowToolbarData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSEMainWindowToolbarData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			bool				SettingTODSlider;
@@ -181,7 +181,7 @@ namespace ConstructionSetExtender
 			enum { kTypeID = 'XMTD' };
 		};
 
-		class CSERenderWindowMiscData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSERenderWindowMiscData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			bool				TunnelingKeyMessage;
@@ -192,7 +192,7 @@ namespace ConstructionSetExtender
 			enum { kTypeID = 'XRWM' };
 		};
 
-		class CSETESFormEditData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSETESFormEditData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			TESForm*						Buffer;		// stores a temp copy of the form being edited
@@ -206,7 +206,7 @@ namespace ConstructionSetExtender
 			bool							HasChanges(TESForm* Parent);
 		};
 
-		class CSEFaceGenWindowData : public BGSEditorExtender::BGSEEWindowExtraData
+		class CSEFaceGenWindowData : public bgsee::BGSEEWindowExtraData
 		{
 		public:
 			bool				TunnelingTabSelectMessage;
@@ -226,38 +226,50 @@ namespace ConstructionSetExtender
 			UInt32				DelayTime;
 		};
 
-		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+		class CSETESFormIDListViewData : public bgsee::BGSEEWindowExtraData
+		{
+		public:
+			bool				DisableDragHandling;
 
-		LRESULT CALLBACK		MainWindowMenuInitSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		MainWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		MainWindowToolbarSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+			CSETESFormIDListViewData();
+			virtual ~CSETESFormIDListViewData();
 
-		LRESULT CALLBACK		RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		RenderWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+			enum { kTypeID = 'XFLV' };
+		};
 
-		LRESULT CALLBACK		ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		LandscapeTextureUseDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		FilteredDialogQuestDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		AboutDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		RaceDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
 
-		LRESULT CALLBACK		CommonDialogExtraFittingsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		SelectTopicsQuestsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		TESFormIDListViewDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		LandscapeEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		AIPackagesDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		AIFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		FaceGenDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		TESFormEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		MagicItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		FindTextDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		DataDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
 
-		LRESULT CALLBACK		WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, BGSEditorExtender::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		MainWindowMenuInitSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		MainWindowMenuSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		MainWindowToolbarSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+
+		LRESULT CALLBACK		RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		RenderWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+
+		LRESULT CALLBACK		ResponseDlgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		LandscapeTextureUseDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		FilteredDialogQuestDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		AboutDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		RaceDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+
+		LRESULT CALLBACK		CommonDialogExtraFittingsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		SelectTopicsQuestsSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		TESFormIDListViewDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		LandscapeEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		AIPackagesDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		AIFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		FaceGenDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		TESFormEditDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		MagicItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		LeveledItemFormDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+		LRESULT CALLBACK		TESObjectCELLDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
+
+		LRESULT CALLBACK		WindowPosDlgSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::BGSEEWindowExtraDataCollection* ExtraData);
 
 		BOOL CALLBACK			AssetSelectorDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		BOOL CALLBACK			TextEditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

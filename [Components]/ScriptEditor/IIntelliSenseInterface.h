@@ -26,9 +26,6 @@ namespace ConstructionSetExtender
 
 			void									Bind(IIntelliSenseInterfaceView^ To);
 			void									Unbind();
-
-			bool									GetTriggered(System::Windows::Input::Key E);
-			void									UpdateLocalVars(ObScriptParsing::AnalysisData^ Data);
 		};
 
 		interface class IIntelliSenseInterfaceView

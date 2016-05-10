@@ -5,9 +5,9 @@ namespace ConstructionSetExtender
 {
 	namespace Achievements
 	{
-		BGSEditorExtender::Extras::BGSEEAchievement*		CSEAchievementBase::AllClearAchievement = NULL;
+		bgsee::Extras::BGSEEAchievement*		CSEAchievementBase::AllClearAchievement = NULL;
 
-		bool CSEAchievementBase::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		bool CSEAchievementBase::UnlockCallback( bgsee::Extras::BGSEEAchievementManager* Parameter )
 		{
 			if (Parameter->GetTotalAchievements() - 1 == Parameter->GetUnlockedAchievements())
 				Parameter->Unlock(AllClearAchievement, false, true);
@@ -16,7 +16,7 @@ namespace ConstructionSetExtender
 		}
 
 		CSEAchievementBase::CSEAchievementBase( const char* Name, const char* Desc, UInt32 IconID, const char* GUID ) :
-			BGSEditorExtender::Extras::BGSEEAchievement(Name, Desc, IconID, GUID)
+			bgsee::Extras::BGSEEAchievement(Name, Desc, IconID, GUID)
 		{
 			;//
 		}
@@ -160,14 +160,14 @@ namespace ConstructionSetExtender
 			return ExtraData / (3600.0 * 1000.0);
 		}
 
-		bool CSEAchievementLost::SaveCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		bool CSEAchievementLost::SaveCallback( bgsee::Extras::BGSEEAchievementManager* Parameter )
 		{
 			ExtraData += ElapsedTicks;
 
 			return true;
 		}
 
-		bool CSEAchievementIncremented::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		bool CSEAchievementIncremented::UnlockCallback( bgsee::Extras::BGSEEAchievementManager* Parameter )
 		{
 			if (++CurrentCount >= CountRequired)
 				return CSEAchievementBase::UnlockCallback(Parameter);
@@ -188,7 +188,7 @@ namespace ConstructionSetExtender
 			;//
 		}
 
-		bool CSEAchievementTimeTriggered::UnlockCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		bool CSEAchievementTimeTriggered::UnlockCallback( bgsee::Extras::BGSEEAchievementManager* Parameter )
 		{
 			time_t CurrentTime = time(NULL);
 			tm Now = {0};
@@ -229,7 +229,7 @@ namespace ConstructionSetExtender
 			;//
 		}
 
-		bool CSEAchievementTimeTriggered::SaveCallback( BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter )
+		bool CSEAchievementTimeTriggered::SaveCallback( bgsee::Extras::BGSEEAchievementManager* Parameter )
 		{
 			if (Year == 0)
 			{
@@ -348,7 +348,7 @@ namespace ConstructionSetExtender
 
 		void Initialize()
 		{
-			CSEAchievementBase::AllClearAchievement = new BGSEditorExtender::Extras::BGSEEAchievement("Totally Jobless", "Collected all achievements",
+			CSEAchievementBase::AllClearAchievement = new bgsee::Extras::BGSEEAchievement("Totally Jobless", "Collected all achievements",
 																					IDB_ACHIEVEMENT_TOTALLYJOBLESS, "B43425BE-323A-42C5-90ED-DE9CE014D842");
 
 			kTheWiseOne				= new CSEAchievementBase("The Wise One", "Installed the Construction Set Extender",
@@ -426,7 +426,7 @@ namespace ConstructionSetExtender
 			kChicken				= new CSEAchievementBase("Chicken", "Well, at least the Daleks will be grateful for that...",
 															IDB_ACHIEVEMENT_CHICKEN, "D1A90233-3F6A-4F28-9B45-598070913B6A");
 
-			BGSEditorExtender::Extras::ExtenderAchievementListT AchievementDepot;
+			bgsee::Extras::ExtenderAchievementListT AchievementDepot;
 
 			AchievementDepot.push_back(CSEAchievementBase::AllClearAchievement);
 

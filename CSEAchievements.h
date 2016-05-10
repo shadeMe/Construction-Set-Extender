@@ -5,10 +5,10 @@ namespace ConstructionSetExtender
 {
 	namespace Achievements
 	{
-		class CSEAchievementBase : public BGSEditorExtender::Extras::BGSEEAchievement
+		class CSEAchievementBase : public bgsee::Extras::BGSEEAchievement
 		{
 		protected:
-			virtual bool				UnlockCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+			virtual bool				UnlockCallback(bgsee::Extras::BGSEEAchievementManager* Parameter);
 		public:
 			CSEAchievementBase(const char* Name, const char* Desc, UInt32 IconID, const char* GUID);
 			virtual ~CSEAchievementBase();
@@ -54,7 +54,7 @@ namespace ConstructionSetExtender
 
 			static VOID CALLBACK			TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
-			virtual bool					SaveCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+			virtual bool					SaveCallback(bgsee::Extras::BGSEEAchievementManager* Parameter);
 
 			CSEAchievementLost(UInt32 ReqdHours);
 		public:
@@ -71,7 +71,7 @@ namespace ConstructionSetExtender
 			UInt32							CountRequired;
 			UInt32							CurrentCount;
 
-			virtual bool					UnlockCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+			virtual bool					UnlockCallback(bgsee::Extras::BGSEEAchievementManager* Parameter);
 		public:
 			CSEAchievementIncremented(const char* Name, const char* Desc, UInt32 IconID, const char* GUID, UInt32 ReqdCount);
 			virtual ~CSEAchievementIncremented();
@@ -84,8 +84,8 @@ namespace ConstructionSetExtender
 			UInt8							Month;
 			UInt16							Year;
 
-			virtual bool					UnlockCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
-			virtual bool					SaveCallback(BGSEditorExtender::Extras::BGSEEAchievementManager* Parameter);
+			virtual bool					UnlockCallback(bgsee::Extras::BGSEEAchievementManager* Parameter);
+			virtual bool					SaveCallback(bgsee::Extras::BGSEEAchievementManager* Parameter);
 
 			virtual bool					GetUnlockable(void) const;
 		public:

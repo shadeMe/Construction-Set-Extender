@@ -3,11 +3,11 @@
 
 namespace ConstructionSetExtender
 {
-	class CSERenderWindowFlyCameraOperator : public BGSEditorExtender::BGSEERenderWindowFlyCameraOperator
+	class CSERenderWindowFlyCameraOperator : public bgsee::BGSEERenderWindowFlyCameraOperator
 	{
 		NiFrustum								ViewportFrustumBuffer;
 	public:
-		CSERenderWindowFlyCameraOperator(HWND Parent, BGSEditorExtender::ResourceTemplateT TemplateID);
+		CSERenderWindowFlyCameraOperator(HWND Parent, bgsee::ResourceTemplateT TemplateID);
 		virtual ~CSERenderWindowFlyCameraOperator();
 
 		virtual void							PrologCallback(void);

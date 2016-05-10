@@ -2,7 +2,7 @@
 
 namespace ConstructionSetExtender
 {
-	class CSEAuxiliaryViewport : public BGSEditorExtender::BGSEEGenericModelessDialog
+	class CSEAuxiliaryViewport : public bgsee::BGSEEGenericModelessDialog
 	{
 		static CSEAuxiliaryViewport*			Singleton;
 	protected:
@@ -36,7 +36,7 @@ namespace ConstructionSetExtender
 		void								Redraw();
 		void								ClearScreen();
 
-		static void							RegisterINISettings(BGSEditorExtender::INISettingDepotT& Depot);
+		static void							RegisterINISettings(bgsee::INISettingDepotT& Depot);
 	};
 #define AUXVIEWPORT							CSEAuxiliaryViewport::GetSingleton()
 }

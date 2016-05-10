@@ -3,7 +3,7 @@
 namespace ConstructionSetExtender
 {
 	CSEFormWrapper::CSEFormWrapper( TESForm* Form ) :
-		BGSEditorExtender::BGSEEFormWrapper(),
+		bgsee::BGSEEFormWrapper(),
 		WrappedForm(Form)
 	{
 		SME_ASSERT(WrappedForm);
@@ -62,7 +62,7 @@ namespace ConstructionSetExtender
 	}
 
 	CSEPluginFileWrapper::CSEPluginFileWrapper() :
-		BGSEditorExtender::BGSEEPluginFileWrapper(),
+		bgsee::BGSEEPluginFileWrapper(),
 		WrappedPlugin(NULL),
 		PluginPath("")
 	{
@@ -188,7 +188,7 @@ namespace ConstructionSetExtender
 		LoadedFormBuffer.clear();
 	}
 
-	void ICSEFormCollectionSerializer::SaveForm(BGSEditorExtender::BGSEEPluginFileWrapper* File, BGSEditorExtender::BGSEEFormWrapper* Form)
+	void ICSEFormCollectionSerializer::SaveForm(bgsee::BGSEEPluginFileWrapper* File, bgsee::BGSEEFormWrapper* Form)
 	{
 		CSEFormWrapper* FormW = dynamic_cast<CSEFormWrapper*>(Form);
 		CSEPluginFileWrapper* FileW = dynamic_cast<CSEPluginFileWrapper*>(File);
@@ -203,7 +203,7 @@ namespace ConstructionSetExtender
 	}
 
 	ICSEFormCollectionSerializer::ICSEFormCollectionSerializer() :
-		BGSEditorExtender::BGSEEFormCollectionSerializer(),
+		bgsee::BGSEEFormCollectionSerializer(),
 		LoadedFormBuffer()
 	{
 		;//
@@ -216,7 +216,7 @@ namespace ConstructionSetExtender
 	const char* ICSEFormCollectionSerializer::kSigilDefaultForm = "CSE_SERIALIZER_DEFAULTFORM";
 	const char* ICSEFormCollectionSerializer::kSigilObjectRef = "CSE_SERIALIZER_OBJECTREF";
 
-	UInt8 ICSEFormCollectionSerializer::GetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File)
+	UInt8 ICSEFormCollectionSerializer::GetFileSerializerType(bgsee::BGSEEPluginFileWrapper* File)
 	{
 		CSEPluginFileWrapper* CSEFile = dynamic_cast<CSEPluginFileWrapper*>(File);
 		SME_ASSERT(CSEFile);
@@ -242,7 +242,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	void ICSEFormCollectionSerializer::SetFileSerializerType(BGSEditorExtender::BGSEEPluginFileWrapper* File, UInt8 Type)
+	void ICSEFormCollectionSerializer::SetFileSerializerType(bgsee::BGSEEPluginFileWrapper* File, UInt8 Type)
 	{
 		CSEPluginFileWrapper* CSEFile = dynamic_cast<CSEPluginFileWrapper*>(File);
 		SME_ASSERT(CSEFile);
@@ -351,7 +351,7 @@ namespace ConstructionSetExtender
 		return true;
 	}
 
-	bool CSEDefaultFormCollectionSerializer::LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File)
+	bool CSEDefaultFormCollectionSerializer::LoadForm(bgsee::BGSEEPluginFileWrapper* File)
 	{
 		CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
 		bool Result = true;
@@ -402,7 +402,7 @@ namespace ConstructionSetExtender
 		;//
 	}
 
-	bool CSEDefaultFormCollectionSerializer::Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream)
+	bool CSEDefaultFormCollectionSerializer::Serialize(bgsee::BGSEEFormListT& Forms, bgsee::BGSEEPluginFileWrapper* OutputStream)
 	{
 		bool FoundRefs = false;
 		bool Result = false;
@@ -513,7 +513,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	bool CSEDefaultFormCollectionSerializer::Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount)
+	bool CSEDefaultFormCollectionSerializer::Deserialize(bgsee::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount)
 	{
 		bool Result = false;
 
@@ -875,7 +875,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	bool CSEObjectRefCollectionSerializer::LoadForm(BGSEditorExtender::BGSEEPluginFileWrapper* File)
+	bool CSEObjectRefCollectionSerializer::LoadForm(bgsee::BGSEEPluginFileWrapper* File)
 	{
 		CSEPluginFileWrapper* Wrapper = dynamic_cast<CSEPluginFileWrapper*>(File);
 		bool Result = true;
@@ -1142,7 +1142,7 @@ namespace ConstructionSetExtender
 		FreeDeserializationBuffers();
 	}
 
-	bool CSEObjectRefCollectionSerializer::Serialize(BGSEditorExtender::BGSEEFormListT& Forms, BGSEditorExtender::BGSEEPluginFileWrapper* OutputStream)
+	bool CSEObjectRefCollectionSerializer::Serialize(bgsee::BGSEEFormListT& Forms, bgsee::BGSEEPluginFileWrapper* OutputStream)
 	{
 		bool FoundNonRefs = false;
 		bool Result = true;
@@ -1343,7 +1343,7 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	bool CSEObjectRefCollectionSerializer::Deserialize(BGSEditorExtender::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount)
+	bool CSEObjectRefCollectionSerializer::Deserialize(bgsee::BGSEEPluginFileWrapper* InputStream, int& OutDeserializedFormCount)
 	{
 		bool Result = false;
 		bool WarningState = BGSEECONSOLE->GetLogsWarnings();

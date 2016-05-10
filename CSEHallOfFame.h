@@ -5,7 +5,7 @@ namespace ConstructionSetExtender
 {
 	namespace HallOfFame
 	{
-		class CSEHallOfFameEntry : public BGSEditorExtender::Extras::BGSEEHallOfFameEntry
+		class CSEHallOfFameEntry : public bgsee::Extras::BGSEEHallOfFameEntry
 		{
 		protected:
 			TESForm*				Instance;

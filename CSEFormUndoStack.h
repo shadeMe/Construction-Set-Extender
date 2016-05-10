@@ -8,7 +8,7 @@ namespace ConstructionSetExtender
 	{
 		class CSEFormUndoStackOperator;
 
-		class CSEFormUndoProxy : public BGSEditorExtender::BGSEEFormUndoProxy
+		class CSEFormUndoProxy : public bgsee::BGSEEFormUndoProxy
 		{
 		protected:
 			TESForm*			Parent;
@@ -25,14 +25,14 @@ namespace ConstructionSetExtender
 			virtual void							Undo(void);
 		};
 
-		class CSEFormUndoStackOperator : public BGSEditorExtender::BGSEEFormUndoStackOperator
+		class CSEFormUndoStackOperator : public bgsee::BGSEEFormUndoStackOperator
 		{
 		public:
 			virtual ~CSEFormUndoStackOperator();
 
 			virtual bool							GetIsFormTypeUndoable(UInt8 Type);
 
-			virtual bool							PreUndoRedoCallback(BGSEditorExtender::BGSEEFormUndoProxy* Proxy, BGSEditorExtender::BGSEEFormUndoProxy** OutAltProxy);
+			virtual bool							PreUndoRedoCallback(bgsee::BGSEEFormUndoProxy* Proxy, bgsee::BGSEEFormUndoProxy** OutAltProxy);
 			virtual void							PostUndoRedoCallback(void);
 		};
 

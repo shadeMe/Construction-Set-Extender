@@ -46,7 +46,7 @@ namespace ConstructionSetExtender
 			void										SetInDialog(HWND Dialog);
 
 			UInt8										Deserialize(bool Force = false);				// returns the state
-			UInt8										Serialize(BGSEditorExtender::BGSEEFormListT& Forms, bool Force = false);
+			UInt8										Serialize(bgsee::BGSEEFormListT& Forms, bool Force = false);
 		public:
 			PrefabObject(const char* SourceFilePath, const char* RepositoryPath, bool OverwriteExisting);
 			~PrefabObject();
@@ -64,7 +64,7 @@ namespace ConstructionSetExtender
 
 			typedef std::vector<PrefabObjectHandleT>			PrefabObjectListT;
 
-			static const BGSEditorExtender::BGSEEResourceLocation		kRepositoryPath;
+			static const bgsee::BGSEEResourceLocation		kRepositoryPath;
 			static const char*			kPrefabFileExtension;
 
 			PrefabObjectListT			LoadedPrefabs;

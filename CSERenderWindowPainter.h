@@ -6,9 +6,9 @@ namespace ConstructionSetExtender
 {
 	namespace RenderWindowPainter
 	{
-		extern BGSEditorExtender::BGSEEDynamicRenderChannel*	RenderChannelNotifications;
+		extern bgsee::BGSEEDynamicRenderChannel*	RenderChannelNotifications;
 
-		class CSESelectionInfoRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
+		class CSESelectionInfoRenderChannel : public bgsee::BGSEEStaticRenderChannel
 		{
 		protected:
 			virtual bool							DrawText(std::string& OutText);
@@ -20,7 +20,7 @@ namespace ConstructionSetExtender
 			static CSESelectionInfoRenderChannel*	GetInstance(const char* FontFace = NULL, UInt32 FontSize = NULL);
 		};
 
-		class CSERAMUsageRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
+		class CSERAMUsageRenderChannel : public bgsee::BGSEEStaticRenderChannel
 		{
 		protected:
 			static VOID CALLBACK					TimerCallback(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 			static CSERAMUsageRenderChannel*		GetInstance(const char* FontFace = NULL, UInt32 FontSize = NULL);
 		};
 
-		class CSEMouseRefRenderChannel : public BGSEditorExtender::BGSEEStaticRenderChannel
+		class CSEMouseRefRenderChannel : public bgsee::BGSEEStaticRenderChannel
 		{
 		protected:
 			virtual bool							DrawText(std::string& OutText);
@@ -49,7 +49,7 @@ namespace ConstructionSetExtender
 			static CSEMouseRefRenderChannel*	GetInstance(const char* FontFace = NULL, UInt32 FontSize = NULL);
 		};
 
-		class CSERenderWindowPainterOperator : public BGSEditorExtender::BGSEERenderWindowPainterOperator
+		class CSERenderWindowPainterOperator : public bgsee::BGSEERenderWindowPainterOperator
 		{
 		public:
 			virtual ~CSERenderWindowPainterOperator();

@@ -156,6 +156,7 @@ namespace ConstructionSetExtender
 		{
 			Debug::Assert(Bound == false);
 
+			Bar->Items->Clear();
 			PREFERENCES->PreferencesSaved -= ScriptEditorPreferencesSavedHandler;
 
 			SAFEDELETE_CLR(Root);
@@ -229,6 +230,7 @@ namespace ConstructionSetExtender
 			Parent(Parent),
 			Scope(Scope)
 		{
+			;//
 		}
 
 		void ScopeBreadcrumbManager::CrumbData::Jump()

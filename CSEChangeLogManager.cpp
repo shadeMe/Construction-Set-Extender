@@ -7,7 +7,7 @@ namespace ConstructionSetExtender
 	namespace ChangeLogManager
 	{
 		CSEChangeEntry::CSEChangeEntry() :
-			BGSEditorExtender::BGSEEChangeEntry(),
+			bgsee::BGSEEChangeEntry(),
 			Buffer()
 		{
 			;//

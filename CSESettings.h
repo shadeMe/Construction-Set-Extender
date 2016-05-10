@@ -4,7 +4,7 @@ namespace ConstructionSetExtender
 {
 	namespace Settings
 	{
-		void									Register(BGSEditorExtender::INISettingDepotT& Depot);
+		void									Register(bgsee::INISettingDepotT& Depot);
 
 		namespace Dialogs
 		{

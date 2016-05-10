@@ -156,37 +156,37 @@ namespace ConstructionSetExtender
 			;//
 		}
 
-		void CSEConsoleWarningRegistrar::operator()( BGSEditorExtender::BGSEEConsoleWarningManager* Manager )
+		void CSEConsoleWarningRegistrar::operator()( bgsee::BGSEEConsoleWarningManager* Manager )
 		{
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("28976C49-8975-49BD-83C5-871B224504A7",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("28976C49-8975-49BD-83C5-871B224504A7",
 									"Magic Item has no effects defined",
 									2, 0x0056DF1D, 0x0056E32D));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("0240B41A-C1DF-4641-AF1C-858A32013333",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("0240B41A-C1DF-4641-AF1C-858A32013333",
 									"Armor/Clothing needs to have biped slots selected in the editor",
 									2, 0x005162F7, 0x00517CB7));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("C39EB363-D4D0-4CF6-8B9F-90D57E2B5E93",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("C39EB363-D4D0-4CF6-8B9F-90D57E2B5E93",
 									"NiControllerSequence::StoreTargets failed to find target",
 									4, 0x007379D3, 0x00737B75, 0x00737CF4, 0x00737E1B));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("2A7BBE4C-492B-4085-8DF7-62A89F393B8A",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("2A7BBE4C-492B-4085-8DF7-62A89F393B8A",
 									"Duplicate base anim group in files",
 									2, 0x004A7E0D, 0x004A7E31));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("02A85697-A602-41E1-BBDC-20871BE0EC3D",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("02A85697-A602-41E1-BBDC-20871BE0EC3D",
 									"File should/NOT be a looping animation",
 									1, 0x004C9E5F));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("7F709F5D-999D-40FF-B86A-FF17203C5676",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("7F709F5D-999D-40FF-B86A-FF17203C5676",
 									"Controller priority less than 0 found in sequence on bone",
 									1, 0x0046C7D0));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("9B986781-814C-478A-9D12-1BAD354F7193",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("9B986781-814C-478A-9D12-1BAD354F7193",
 									"Pathgrid for cell contains inter-grid connections",
 									1, 0x0054F6BE));
 
-			Manager->RegisterWarning(new BGSEditorExtender::BGSEEConsoleWarning("2B3B0430-3C6B-40D9-9A8E-FED0B377CC5B",
+			Manager->RegisterWarning(new bgsee::BGSEEConsoleWarning("2B3B0430-3C6B-40D9-9A8E-FED0B377CC5B",
 									"Bad note string in animation frame",
 									2, 0x004C9EBD, 0x004CA03A));
 		}
@@ -197,9 +197,9 @@ namespace ConstructionSetExtender
 		{
 			if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 			{
-				BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
+				bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = {0};
 				RegularAppWindow.Extended = WS_EX_APPWINDOW;
-				RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+				RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 				BGSEEUI->GetWindowStyler()->RegisterStyle(IDD_BGSEE_CONSOLE, RegularAppWindow);
 			}

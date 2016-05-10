@@ -163,7 +163,7 @@ namespace ConstructionSetExtender
 			return DeserializationState;
 		}
 
-		UInt8 PrefabObject::Serialize(BGSEditorExtender::BGSEEFormListT& Forms, bool Force)
+		UInt8 PrefabObject::Serialize(bgsee::BGSEEFormListT& Forms, bool Force)
 		{
 			if (Force || SerializationState == kState_None)
 			{
@@ -247,7 +247,7 @@ namespace ConstructionSetExtender
 
 		CSEObjectPrefabManager							CSEObjectPrefabManager::Instance;
 		const char*										CSEObjectPrefabManager::kPrefabFileExtension = "cseprefab";
-		const BGSEditorExtender::BGSEEResourceLocation	CSEObjectPrefabManager::kRepositoryPath(CSE_PREFABDEPOT);
+		const bgsee::BGSEEResourceLocation	CSEObjectPrefabManager::kRepositoryPath(CSE_PREFABDEPOT);
 
 #define IDC_OBJECTPREFAB_FILTERINPUTTIMERID		0x200
 #define IDC_OBJECTPREFAB_PREVIEWTIMERID			0x201
@@ -591,7 +591,7 @@ namespace ConstructionSetExtender
 			std::string FilePath, FileName;
 			if (ShowFileDialog(true, FilePath, FileName))
 			{
-				BGSEditorExtender::BGSEEFormListT Selection;
+				bgsee::BGSEEFormListT Selection;
 				bool Result = true;
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
@@ -792,9 +792,9 @@ namespace ConstructionSetExtender
 
 				if (Settings::Dialogs::kShowMainWindowsInTaskbar.GetData().i)
 				{
-					BGSEditorExtender::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
+					bgsee::BGSEEWindowStyler::StyleData RegularAppWindow = { 0 };
 					RegularAppWindow.Extended = WS_EX_APPWINDOW;
-					RegularAppWindow.ExtendedOp = BGSEditorExtender::BGSEEWindowStyler::StyleData::kOperation_OR;
+					RegularAppWindow.ExtendedOp = bgsee::BGSEEWindowStyler::StyleData::kOperation_OR;
 
 					BGSEEUI->GetWindowStyler()->StyleWindow(Dialog, RegularAppWindow);
 				}

@@ -49,9 +49,9 @@ namespace ConstructionSetExtender
 			ComponentDLLInterface::ScriptData*			OpenArgs;
 			String^										NewText;
 
-			bool										BindPostCreation;
+			bool										BindAfterCreation;
 
-			NewTabOperationArgs() : PostCreationOperation(PostNewTabOperation::None), PathToFile(""), OpenArgs(nullptr), NewText(""), BindPostCreation(true) {}
+			NewTabOperationArgs() : PostCreationOperation(PostNewTabOperation::None), PathToFile(""), OpenArgs(nullptr), NewText(""), BindAfterCreation(true) {}
 		};
 
 		interface class IWorkspaceViewController

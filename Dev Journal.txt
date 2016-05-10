@@ -5,7 +5,7 @@ IMMEDIATE  >>
 
 
 NOTE	---->
-
+		> http://www.creationkit.com/fallout4/index.php?title=New_Editor_Features
 
 
 CSE		---->
@@ -29,6 +29,23 @@ CSE		---->
 
 
 	ENHANCEMENT		=
+		> Render window layers
+		> Show snapped ref in status bar
+		> Wildcard find/replace
+		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
+		> Render window gizmos
+		> Overhaul of the Region Editor, with a larger (adjustable?) window, a larger rendering area and greater control of node placement and repositioning.
+		> Align rotation/position
+		> Clear current snap reference
+		> Drag deselect refs
+		> Recent cells list
+		> Filter what shows up in the cell list
+		> Local rotation w/t multiple objects
+		> Select all refs in use info window
+		> Select all links to/from selected refs
+		> Quick linked refs
+		> Selection mask
+		> Grass overlay
 		> Show Target NPCs context menu tool
 			>> Would it be possible to have the option to view the list of NPCs, a sort of Use Info option just for NPCs who meet the conditions for speaking a response?
 		> Option to change referencing records for any base object, like in TES4Edit
@@ -64,6 +81,8 @@ SE		---->
 
 
 	MISC			=
+		> Move the global find list icon to the lower toolbar
+		> http://forums.bethsoft.com/topic/1517431-rel-construction-set-extender/?p=25140390
 
 
 

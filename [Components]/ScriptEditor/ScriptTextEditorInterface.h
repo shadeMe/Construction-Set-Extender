@@ -205,8 +205,7 @@ namespace ConstructionSetExtender
 			// methods
 			void										Bind(ListView^ MessageList,
 															 ListView^ BookmarkList,
-															 ListView^ FindResultList,
-															 IntelliSense::IIntelliSenseInterfaceView^ IntelliSenseView);		// called when the parent model is bound to a view, i.e., when the text editor is activated
+															 ListView^ FindResultList);		// called when the parent model is bound to a view, i.e., when the text editor is activated
 			void										Unbind();	// opposite of the above
 
 			String^										GetText();

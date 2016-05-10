@@ -63,7 +63,7 @@ struct CSEScriptInterface
 {
 	// Registers a Coda command with the VM
 	// The caller retains ownership of the script command pointer
-	void			(* RegisterCommand)(BGSEditorExtender::BGSEEScript::ICodaScriptCommand* Command);
+	void			(* RegisterCommand)(bgsee::BGSEEScript::ICodaScriptCommand* Command);
 };
 #endif
 

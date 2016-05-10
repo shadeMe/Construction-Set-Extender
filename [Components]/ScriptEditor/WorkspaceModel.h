@@ -3,6 +3,7 @@
 #include "WorkspaceModelInterface.h"
 #include "WorkspaceViewInterface.h"
 #include "AvalonEditTextEditor.h"
+#include "IntelliSenseInterface.h"
 
 #define NEWSCRIPTID					"New Script"
 #define FIRSTRUNSCRIPTID			"New Workspace"
@@ -105,8 +106,9 @@ namespace ConstructionSetExtender
 			void									OnStateChangedType(IWorkspaceModel::ScriptType Type);
 			void									OnStateChangedDescription();
 		public:
-			TextEditors::IScriptTextEditor^			TextEditor;
-			Timer^									AutoSaveTimer;
+			TextEditors::IScriptTextEditor^					TextEditor;
+			IntelliSense::IntelliSenseInterfaceModel^		IntelliSenseModel;
+			Timer^											AutoSaveTimer;
 
 			void*									CurrentScript;
 			IWorkspaceModel::ScriptType				CurrentScriptType;
