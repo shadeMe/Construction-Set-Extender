@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c14ea559-08c8-46ab-804b-8d39a847a479}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{da4d2155-20df-412a-a388-bb11fdc43676}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules">
+      <UniqueIdentifier>{bd215ac1-7919-49cd-8c12-b4928c1b80b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Images">
+      <UniqueIdentifier>{b7b24d34-2b33-42a2-a3ac-e11129d2a46b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Coda">
+      <UniqueIdentifier>{18caafc4-0c2a-40be-ae8c-18df1cae3184}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Coda\CodaScriptExpressionParser">
+      <UniqueIdentifier>{e5d54a12-44f9-418e-a344-b1680baf6813}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Coda\CodaScriptExpressionParser\MUP">
+      <UniqueIdentifier>{c7428aa6-2e00-4288-9b89-61534d8c846a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Coda\CodaScriptExpressionParser\MUP\Base">
+      <UniqueIdentifier>{f4afc994-3bde-4095-8c4c-025658f5c872}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Coda\CodaScriptExpressionParser\MUP\Implementation">
+      <UniqueIdentifier>{6b11a226-da20-4518-95a8-843843bf0cd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Modules\Coda\Commands">
+      <UniqueIdentifier>{c9aa8d7f-5f11-44e2-8714-2aacea57bb63}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="DetectSIMD.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="BGSEditorExtenderBase_Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolBox.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="UIManager.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceManager.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Wrappers.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowPainter.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowFlyCamera.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalClipboard.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="FormUndoStack.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="HallOfFame.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Achievements.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Console.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="ChangeLogManager.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpDefines.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpError.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpFuncCmplx.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpFuncCommon.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpFuncMatrix.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpFuncNonCmplx.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpFuncStr.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpFwdDecl.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpICallback.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIfThenElse.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIOprt.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIPackage.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIPrecedence.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIToken.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIValReader.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpIValue.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpOprtBinAssign.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpOprtBinCommon.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpOprtIndex.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpOprtMatrix.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpOprtNonCmplx.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpRPN.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpScriptTokens.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpStack.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpTokenReader.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpTypes.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpValReader.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpValueCache.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpVariable.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\suSortPred.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\utGeneric.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Implementation\CodaMUPArrayDataType.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Implementation\CodaMUPExpressionParser.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Implementation\CodaMUPScriptCommand.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Implementation\CodaMUPValue.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\Commands\CodaScriptCommand.h">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\Commands\CodaScriptCommands-Array.h">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\Commands\CodaScriptCommands-General.h">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\Commands\CodaScriptCommands-String.h">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaDataTypes.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaInterpreter.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaIntrinsics.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaPublicAPI.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CodaVM.h">
+      <Filter>Modules\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpPackageCommon.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpPackageMatrix.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpPackageNonCmplx.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpPackageStr.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MUP Base\mpPackageUnit.h">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\SME Sundries\INIEditGUI_Res.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="StdAfx.cpp" />
+    <ClCompile Include="ToolBox.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="UIManager.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceManager.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowPainter.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowFlyCamera.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalClipboard.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="FormUndoStack.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="HallOfFame.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Achievements.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Console.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="ChangeLogManager.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpError.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpFuncCmplx.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpFuncCommon.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpFuncMatrix.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpFuncNonCmplx.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpFuncStr.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpICallback.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpIfThenElse.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpIOprt.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpIPackage.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpIToken.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpIValReader.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpIValue.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpOprtBinAssign.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpOprtBinCommon.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpOprtIndex.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpOprtMatrix.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpOprtNonCmplx.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpRPN.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpScriptTokens.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpTokenReader.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpValReader.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpValueCache.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpVariable.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Implementation\CodaMUPArrayDataType.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Implementation\CodaMUPExpressionParser.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Implementation\CodaMUPScriptCommand.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Implementation\CodaMUPValue.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\Commands\CodaScriptCommand.cpp">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\Commands\CodaScriptCommands-Array.cpp">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\Commands\CodaScriptCommands-General.cpp">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\Commands\CodaScriptCommands-String.cpp">
+      <Filter>Modules\Coda\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaDataTypes.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaInterpreter.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CodaVM.cpp">
+      <Filter>Modules\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpPackageCommon.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpPackageMatrix.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpPackageNonCmplx.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpPackageStr.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MUP Base\mpPackageUnit.cpp">
+      <Filter>Modules\Coda\CodaScriptExpressionParser\MUP\Base</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BGSEditorExtenderBase.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\..\SME Sundries\INIEditGUI_Res.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="[Resources]\generic.bmp">
+      <Filter>Resources\Images</Filter>
+    </None>
+    <None Include="Script\CodaBaseInterfaces.inl">
+      <Filter>Modules\Coda</Filter>
+    </None>
+    <None Include="Script\CodaForwardDecls.inl">
+      <Filter>Modules\Coda</Filter>
+    </None>
+  </ItemGroup>
+</Project>
