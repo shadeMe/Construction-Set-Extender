@@ -2,14 +2,14 @@
 #include "Globals.h"
 #include "ScriptEditorPreferences.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	using namespace System::Xml;
 	using namespace ICSharpCode;
 
-	namespace TextEditors
+	namespace textEditors
 	{
-		namespace AvalonEditor
+		namespace avalonEditor
 		{
 			String^ IXSHDElement::SerializeNameProperty(String^ Name)
 			{

@@ -1,13 +1,13 @@
 #include "MiscUtilities.h"
 #include "NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace NativeWrapper
+	namespace nativeWrapper
 	{
-		ComponentDLLInterface::CSEInterfaceTable*		g_CSEInterfaceTable = (ComponentDLLInterface::CSEInterfaceTable*)NativeWrapper::QueryInterface();
+		componentDLLInterface::CSEInterfaceTable*		g_CSEInterfaceTable = (componentDLLInterface::CSEInterfaceTable*)nativeWrapper::QueryInterface();
 
-		void NativeWrapper::ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle)
+		void nativeWrapper::ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle)
 		{
 			const int SW_SHOWNOACTIVATE = 4;
 			const int HWND_TOPMOST = -1;
@@ -20,7 +20,7 @@ namespace ConstructionSetExtender
 				SetWindowPos(Window->Handle, 0, Window->Left, Window->Top, Window->Width, Window->Height, SWP_NOACTIVATE);
 		}
 
-		void NativeWrapper::WriteToMainWindowStatusBar(int PanelIndex, String^ Message)
+		void nativeWrapper::WriteToMainWindowStatusBar(int PanelIndex, String^ Message)
 		{
 			CString CStr(Message);
 			g_CSEInterfaceTable->EditorAPI.WriteToStatusBar(PanelIndex, CStr.c_str());

@@ -1,8 +1,8 @@
 #pragma once
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		void PatchCompilerErrorDetours();
 

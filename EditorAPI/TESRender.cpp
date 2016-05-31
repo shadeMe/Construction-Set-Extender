@@ -1,8 +1,8 @@
 #include "TESRender.h"
 #include "Core.h"
-#include "CSEPathGridUndoManager.h"
+#include "PathGridUndoManager.h"
 
-using namespace ConstructionSetExtender;
+using namespace cse;
 
 NiDX9Renderer**						TESRender::NiRendererSingleton = (NiDX9Renderer**)0x00A0F87C;
 TESRender::PrimaryRenderer**		TESRender::PrimaryRenderer::Singleton = (TESRender::PrimaryRenderer**)0x00A0BACC;
@@ -74,14 +74,14 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 {
 	if (RefreshPathGrid && *PathGridEditFlag)
 	{
-		CSEPathGridUndoManager::Instance.SetCanReset(false);
+		PathGridUndoManager::Instance.SetCanReset(false);
 
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, NULL, NULL);
 		TogglePathGridEditMode();
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, 2, NULL);
 		TogglePathGridEditMode();
 
-		CSEPathGridUndoManager::Instance.SetCanReset(true);
+		PathGridUndoManager::Instance.SetCanReset(true);
 	}
 	else
 		*RefreshFlag = 1;

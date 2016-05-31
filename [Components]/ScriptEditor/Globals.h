@@ -2,12 +2,12 @@
 
 #include "[Common]\NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ref class Globals
 	{
 	public:
-		static String^												AppPath = gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetAppPath());
+		static String^												AppPath = gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetAppPath());
 		static ImageResourceManager^								ScriptEditorImageResourceManager = gcnew ImageResourceManager("ScriptEditor.ImagesModern");
 		static int													MainThreadID = -1;
 		static System::Threading::Tasks::TaskScheduler^				MainThreadTaskScheduler = nullptr;

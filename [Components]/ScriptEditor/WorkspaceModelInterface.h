@@ -3,9 +3,9 @@
 #include "ScriptTextEditorInterface.h"
 #include "RefactorTools.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		interface class IWorkspaceView;
 		interface class IWorkspaceModelFactory;
@@ -87,7 +87,7 @@ namespace ConstructionSetExtender
 			void					AcquireInputFocus(IWorkspaceModel^ Model);
 
 			void					New(IWorkspaceModel^ Model);
-			void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
+			void					Open(IWorkspaceModel^ Model, componentDLLInterface::ScriptData* Data);
 			bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
 			bool					Close(IWorkspaceModel^ Model, bool% OperationCancelled);							// returns true if successful
 			void					Next(IWorkspaceModel^ Model);
@@ -103,8 +103,8 @@ namespace ConstructionSetExtender
 			void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			TextEditors::IScriptTextEditor::FindReplaceResult^
-									FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			textEditors::IScriptTextEditor::FindReplaceResult^
+									FindReplace(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
 														String^ Query, String^ Replacement, UInt32 Options);
 
 											// returns false if the operation's invalid (unsaved changes)
@@ -117,7 +117,7 @@ namespace ConstructionSetExtender
 		interface class IWorkspaceModelFactory
 		{
 		public:
-			IWorkspaceModel^				CreateModel(ComponentDLLInterface::ScriptData* Data);
+			IWorkspaceModel^				CreateModel(componentDLLInterface::ScriptData* Data);
 			IWorkspaceModelController^		CreateController();
 		};
 	}

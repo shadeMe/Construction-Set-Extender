@@ -2,9 +2,9 @@
 #include "[Common]\HandShakeStructs.h"
 #include "[Common]\AuxiliaryWindowsForm.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		ref class ScriptListDialog
 		{
@@ -39,7 +39,7 @@ namespace ConstructionSetExtender
 			void												CleanupDialog(bool SaveBoundsToINI);
 
 			ShowOperation										CurrentOperation;
-			ComponentDLLInterface::ScriptListData*				ScriptListCache;
+			componentDLLInterface::ScriptListData*				ScriptListCache;
 			List<String^>^										SelectedEditorIDs;
 			bool												Closing;
 			bool												SelectionComplete;		// stoopid workaround for the form's obsession with an accept button

@@ -1,9 +1,9 @@
 #include "BatchEditor.h"
 #include "[Common]\ListViewUtilities.h"
 
-using namespace ComponentDLLInterface;
+using namespace componentDLLInterface;
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	void BatchEditor::ApplyButton_Click(Object^ Sender, EventArgs^ E)
 	{
@@ -901,7 +901,7 @@ namespace ConstructionSetExtender
 
 			ListViewItem^ NewItem = gcnew ListViewItem(gcnew String(Itr->EditorID));
 			NewItem->SubItems->Add(Itr->FormID.ToString("X8"));
-			NewItem->SubItems->Add(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(Itr->TypeID)));
+			NewItem->SubItems->Add(gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(Itr->TypeID)));
 			NewItem->Tag = (UInt32)Itr;
 
 			if (Itr->Selected)
@@ -917,7 +917,7 @@ namespace ConstructionSetExtender
 	{
 		ComboBox^ FormList = nullptr;
 
-		BatchRefOwnerFormData* Data = NativeWrapper::g_CSEInterfaceTable->BatchRefEditor.GetOwnershipData();
+		BatchRefOwnerFormData* Data = nativeWrapper::g_CSEInterfaceTable->BatchRefEditor.GetOwnershipData();
 		NPCList->BeginUpdate();
 		GlobalList->BeginUpdate();
 		FactionList->BeginUpdate();
@@ -959,7 +959,7 @@ namespace ConstructionSetExtender
 		GlobalList->EndUpdate();
 		FactionList->EndUpdate();
 
-		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 	}
 
 	bool RefBatchEditor::InitializeBatchEditor(BatchRefData* Data)
@@ -1147,7 +1147,7 @@ namespace ConstructionSetExtender
 
 	void RefBatchEditor::SetParent_Click(Object^ Sender, EventArgs^ E)
 	{
-		ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowPickReferenceDialog((HWND)BatchEditBox->Handle);
+		componentDLLInterface::FormData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowPickReferenceDialog((HWND)BatchEditBox->Handle);
 		BatchData->EnableParent.Parent = 0;
 
 		if (Data)
@@ -1161,6 +1161,6 @@ namespace ConstructionSetExtender
 		else
 			SetParent->Text = "Set Parent to NONE";
 
-		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 	}
 }

@@ -1,9 +1,9 @@
 #pragma once
 #include "Hooks-Common.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		// hooks that put a spike up the vanilla script editor's bottom
 		void PatchScriptEditorHooks(void);

@@ -1,8 +1,8 @@
 #pragma once
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
 		ref class LineChangedEventArgs : public EventArgs
 		{

@@ -3,7 +3,7 @@
 #include "[Common]\HandshakeStructs.h"
 #include "[Common]\NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	UseInfoList^% UseInfoList::GetSingleton()
 	{
@@ -244,18 +244,18 @@ namespace ConstructionSetExtender
 		FormList->Items->Clear();
 		FormList->BeginUpdate();
 
-		ComponentDLLInterface::UseInfoListFormData* Data = NativeWrapper::g_CSEInterfaceTable->UseInfoList.GetLoadedForms();
-		UInt32 ActiveForeColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
-		UInt32 ActiveBackColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
-		bool ColorizeActiveForms = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+		componentDLLInterface::UseInfoListFormData* Data = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetLoadedForms();
+		UInt32 ActiveForeColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+		bool ColorizeActiveForms = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
 
 		if (Data)
 		{
 			for (int i = 0; i < Data->FormCount; i++)
 			{
-				ComponentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
+				componentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
 
-				ListViewItem^ Item = gcnew ListViewItem(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
+				ListViewItem^ Item = gcnew ListViewItem(gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
 				if (ThisForm->IsActive() && ColorizeActiveForms)
@@ -272,7 +272,7 @@ namespace ConstructionSetExtender
 				FormList->Items->Add(Item);
 			}
 		}
-		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		FormList->EndUpdate();
 	}
 
@@ -281,18 +281,18 @@ namespace ConstructionSetExtender
 		ClearLists();
 
 		UseListObject->BeginUpdate();
-		ComponentDLLInterface::UseInfoListCrossRefData* Data = NativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCrossRefDataForForm(EditorID);
-		UInt32 ActiveForeColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
-		UInt32 ActiveBackColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
-		bool ColorizeActiveForms = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+		componentDLLInterface::UseInfoListCrossRefData* Data = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCrossRefDataForForm(EditorID);
+		UInt32 ActiveForeColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+		bool ColorizeActiveForms = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
 
 		if (Data)
 		{
 			for (int i = 0; i < Data->FormCount; i++)
 			{
-				ComponentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
+				componentDLLInterface::FormData* ThisForm = &Data->FormListHead[i];
 
-				ListViewItem^ Item = gcnew ListViewItem(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
+				ListViewItem^ Item = gcnew ListViewItem(gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(ThisForm->TypeID)));
 				Item->SubItems->Add(gcnew String(ThisForm->EditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
 				if (ThisForm->IsActive() && ColorizeActiveForms)
@@ -309,16 +309,16 @@ namespace ConstructionSetExtender
 				UseListObject->Items->Add(Item);
 			}
 		}
-		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 		UseListObject->EndUpdate();
 
 		UseListCell->BeginUpdate();
-		ComponentDLLInterface::UseInfoListCellItemListData* DataEx = NativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCellRefDataForForm(EditorID);
+		componentDLLInterface::UseInfoListCellItemListData* DataEx = nativeWrapper::g_CSEInterfaceTable->UseInfoList.GetCellRefDataForForm(EditorID);
 		if (DataEx)
 		{
 			for (int i = 0; i < DataEx->UseInfoListCellItemListCount; i++)
 			{
-				ComponentDLLInterface::UseInfoListCellItemData* ThisForm = &DataEx->UseInfoListCellItemListHead[i];
+				componentDLLInterface::UseInfoListCellItemData* ThisForm = &DataEx->UseInfoListCellItemListHead[i];
 
 				ListViewItem^ Item = gcnew ListViewItem(gcnew String(ThisForm->WorldEditorID));
 				Item->SubItems->Add(ThisForm->FormID.ToString("X8"));
@@ -340,7 +340,7 @@ namespace ConstructionSetExtender
 				UseListCell->Items->Add(Item);
 			}
 		}
-		NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(DataEx, false);
+		nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(DataEx, false);
 		UseListCell->EndUpdate();
 	}
 
@@ -429,7 +429,7 @@ namespace ConstructionSetExtender
 
 		CString CEID(GetListViewSelectedItem(FormList)->SubItems[1]->Text);
 
-		NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
 	}
 
 	void UseInfoList::UseListObject_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -439,7 +439,7 @@ namespace ConstructionSetExtender
 
 		CString CEID(GetListViewSelectedItem(UseListObject)->SubItems[1]->Text);
 
-		NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID(CEID.c_str());
 	}
 
 	void UseInfoList::UseListCell_MouseDoubleClick(Object^ Sender, MouseEventArgs^ E)
@@ -450,7 +450,7 @@ namespace ConstructionSetExtender
 		UInt32 FormID = 0;
 		UInt32::TryParse(GetListViewSelectedItem(UseListCell)->SubItems[4]->Text, System::Globalization::NumberStyles::HexNumber, nullptr, FormID);
 		if (FormID)
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByFormID(FormID);
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByFormID(FormID);
 	}
 
 	void UseInfoList::ExportDataButton_Click( Object^ Sender, EventArgs^ E )

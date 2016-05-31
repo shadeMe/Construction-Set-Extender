@@ -1,8 +1,8 @@
 #pragma once
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
 		ref class Script;
 		ref class IntelliSenseItem;
@@ -43,8 +43,8 @@ namespace ConstructionSetExtender
 				List<IntelliSenseItem^>^ get() { return Enumerables; }
 			}
 
-			virtual UInt32										InitializeCommandTableDatabase(ComponentDLLInterface::CommandTableData* Data);
-			virtual void										InitializeGMSTDatabase(ComponentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
+			virtual UInt32										InitializeCommandTableDatabase(componentDLLInterface::CommandTableData* Data);
+			virtual void										InitializeGMSTDatabase(componentDLLInterface::IntelliSenseUpdateData* GMSTCollection);
 
 			void												RegisterDeveloperURL(String^ CmdName, String^ URL);
 			String^												LookupDeveloperURLByCommand(String^ CmdName);
@@ -58,7 +58,7 @@ namespace ConstructionSetExtender
 			bool												GetIsIdentifierScriptCommand(String^ Name);
 			bool												GetIsIdentifierScriptableForm(String^ Name);
 			bool												GetIsIdentifierScriptableForm(String^ Name,
-																							  ComponentDLLInterface::ScriptData** OutScriptData);	// caller takes ownership of pointer
+																							  componentDLLInterface::ScriptData** OutScriptData);	// caller takes ownership of pointer
 			bool												GetIsIdentifierForm(String^ Name);
 
 			void												ForceUpdateDatabase();

@@ -1,13 +1,13 @@
 #include "Hooks-LOD.h"
-#include "..\CSEAuxiliaryViewport.h"
+#include "..\AuxiliaryViewport.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		#define SAFERELEASE_BSR(X)		if (X)	{ X->DeleteInstance(); X = NULL; }
 
@@ -439,7 +439,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetInvalidationManager()->Push(*TESCSMain::WindowHandle);
 				BGSEEUI->GetInvalidationManager()->Push(*TESRenderWindow::WindowHandle);
 
-				s_LODDiffuseMapPartialResolution = Settings::LOD::kPartialTextureResolution.GetData().i;
+				s_LODDiffuseMapPartialResolution = settings::lod::kPartialTextureResolution.GetData().i;
 
 				if (s_LODDiffuseMapPartialResolution % 2 || s_LODDiffuseMapPartialResolution < 32)
 					s_LODDiffuseMapPartialResolution = 32;
@@ -483,7 +483,7 @@ namespace ConstructionSetExtender
 				BGSEEUI->GetInvalidationManager()->Pop(*TESCSMain::WindowHandle);
 				BGSEEUI->GetInvalidationManager()->Pop(*TESRenderWindow::WindowHandle);
 
-				if (Settings::LOD::kDeletePartialsAfterGeneration.GetData().i)
+				if (settings::lod::kDeletePartialsAfterGeneration.GetData().i)
 				{
 					char Buffer[MAX_PATH + 1] = {0};
 					SHFILEOPSTRUCT DeleteFolderData = {0};

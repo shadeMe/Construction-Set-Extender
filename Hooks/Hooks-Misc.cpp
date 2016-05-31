@@ -2,21 +2,21 @@
 #include "Hooks-Dialog.h"
 #include "Hooks-Plugins.h"
 #include "Hooks-Renderer.h"
-#include "..\CSERenderSelectionGroupManager.h"
-#include "..\CSEAuxiliaryViewport.h"
-#include "..\CSEAchievements.h"
-#include "..\CSEHallOfFame.h"
-#include "..\CSEWorkspaceManager.h"
-#include "..\CSEFormUndoStack.h"
-#include "..\CSEConsole.h"
+#include "..\RenderWindowGroupManager.h"
+#include "..\AuxiliaryViewport.h"
+#include "..\Achievements.h"
+#include "..\HallOfFame.h"
+#include "..\WorkspaceManager.h"
+#include "..\FormUndoStack.h"
+#include "..\Console.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		_DefineHookHdlrWithBuffer(CSInit, 0x00419260, 5, 0xE8, 0xEB, 0xC5, 0x2C, 0x0);
 		_DefineHookHdlr(CSExit, 0x0041936E);
@@ -219,7 +219,7 @@ namespace ConstructionSetExtender
 
 			_MemHdlr(CSInit).WriteBuffer();
 
-			BGSEEMAIN->Daemon()->ExecuteInitCallbacks(bgsee::BGSEEDaemon::kInitCallback_Epilog);
+			BGSEEMAIN->GetDaemon()->ExecuteInitCallbacks(bgsee::Daemon::kInitCallback_Epilog);
 		}
 
 		#define _hhName	CSInit
@@ -252,7 +252,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoAssertOverrideHook(UInt32 EIP)
 		{
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kWTF);
+			BGSEEACHIEVEMENTS->Unlock(achievements::kWTF);
 
 			BGSEECONSOLE->Indent();
 			BGSEECONSOLE->LogAssertion("CS", "ASSERTION FAILED: 0x%08X", EIP);
@@ -282,7 +282,7 @@ namespace ConstructionSetExtender
 		void __stdcall DoDataHandlerClearDataHook(void)
 		{
 			delete BGSEEHALLOFFAME;
-			CSERenderSelectionGroupManager::Instance.Clear();
+			RenderWindowGroupManager::Instance.Clear();
 			GameSettingCollection::Instance->ResetCollection();
 			BGSEEUNDOSTACK->Reset();
 		}
@@ -325,11 +325,11 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoNumericEditorIDHook(TESForm* Form, const char* EditorID)
 		{
-			bool ShowWarning = Settings::General::kShowNumericEditorIDWarning.GetData().i;
+			bool ShowWarning = settings::general::kShowNumericEditorIDWarning.GetData().i;
 
 			if (TESDataHandler::PluginLoadSaveInProgress == false &&
 				ShowWarning &&
-				BGSEEMAIN->Daemon()->GetFullInitComplete() &&
+				BGSEEMAIN->GetDaemon()->GetFullInitComplete() &&
 				EditorID &&
 				strlen(EditorID) > 0 &&
 				isdigit((int)*EditorID) &&
@@ -371,7 +371,7 @@ namespace ConstructionSetExtender
 			__asm
 			{
 				pushad
-				call	HallOfFame::Initialize
+				call	hallOfFame::Initialize
 				popad
 
 				call	_hhGetVar(Call)
@@ -567,7 +567,7 @@ namespace ConstructionSetExtender
 			{
 				if (Parent->editorID.c_str() && !_stricmp(Parent->editorID.c_str(), "GREETING"))
 				{
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kCardinalSin);
+					BGSEEACHIEVEMENTS->Unlock(achievements::kCardinalSin);
 				}
 			}
 		}
@@ -614,7 +614,7 @@ namespace ConstructionSetExtender
 				jz		EXIT
 			}
 
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kAntiChrist);
+			BGSEEACHIEVEMENTS->Unlock(achievements::kAntiChrist);
 
 			__asm
 			{
@@ -639,7 +639,7 @@ namespace ConstructionSetExtender
 				jz		EXIT
 			}
 
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kHeretic);
+			BGSEEACHIEVEMENTS->Unlock(achievements::kHeretic);
 
 			__asm
 			{
@@ -674,7 +674,7 @@ namespace ConstructionSetExtender
 				jz		EXIT
 			}
 
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kMadScientist);
+			BGSEEACHIEVEMENTS->Unlock(achievements::kMadScientist);
 
 			__asm
 			{
@@ -709,7 +709,7 @@ namespace ConstructionSetExtender
 					Line.find("version=") != -1 ||
 					Line.find("version =") != -1)
 				{
-					BGSEEACHIEVEMENTS->Unlock(Achievements::kPedantic);
+					BGSEEACHIEVEMENTS->Unlock(achievements::kPedantic);
 					break;
 				}
 			}
@@ -737,7 +737,7 @@ namespace ConstructionSetExtender
 		{
 			_hhSetVar(Retn, 0x00563D04);
 			__asm	pushad
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kBobTheBuilder);
+			BGSEEACHIEVEMENTS->Unlock(achievements::kBobTheBuilder);
 			__asm	popad
 
 			__asm
@@ -753,7 +753,7 @@ namespace ConstructionSetExtender
 			_hhSetVar(Retn, 0x004F2CC8);
 			_hhSetVar(Call, 0x004EA510);
 			__asm	pushad
-			BGSEEACHIEVEMENTS->Unlock(Achievements::kLoquacious);
+			BGSEEACHIEVEMENTS->Unlock(achievements::kLoquacious);
 			__asm	popad
 
 			__asm
@@ -929,7 +929,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall CheckWithWarningManager(UInt32 CallSite)
 		{
-			if (Console::Initialized == false)
+			if (console::Initialized == false)
 				return true;
 			else
 				return BGSEECONSOLE->GetWarningManager()->GetWarningEnabled(CallSite);
@@ -1103,7 +1103,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDisableSplashScreenHook(HWND SplashScreen)
 		{
-			if (Settings::General::kDisableSplashScreen().i)
+			if (settings::general::kDisableSplashScreen().i)
 				ShowWindow(SplashScreen, SW_HIDE);
 			else
 			{

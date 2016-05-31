@@ -90,7 +90,7 @@ public:
 class SettingCollectionMap : public SettingCollection   // actually SettingCollectionMap<Setting*>
 {
 public:
-	typedef ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<Setting*>	SettingMapT;
+	typedef cseOverride::BSTCaseInsensitiveStringMap<Setting*>	SettingMapT;
 
 	// members
 	//     /*000*/ SettingCollection
@@ -120,7 +120,7 @@ public:
 	void					CreateDefaultCopy();	// creates a copy of the collection
 	void					ResetCollection();		// resets the collection with data from the default copy
 	UInt32					GetGMSTCount();
-	void					SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData);
+	void					SerializeGMSTDataForHandShake(componentDLLInterface::GMSTData* HandShakeData);
 
 	static GameSettingCollection*		Instance;
 	static DefaultGMSTMapT				DefaultCopy;

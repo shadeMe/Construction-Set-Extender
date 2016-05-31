@@ -12,11 +12,11 @@
 #define AvalonEditTextEditorUnsubscribeClickEvent(Name)				Name##->Click -= Name##ClickHandler
 #define AvalonEditTextEditorUnsubscribeDeleteClickEvent(Name)		Name##->Click -= Name##ClickHandler; delete Name##ClickHandler; Name##ClickHandler = nullptr
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
-		namespace AvalonEditor
+		namespace avalonEditor
 		{
 			using namespace ICSharpCode;
 			using namespace System::Windows::Forms::Integration;
@@ -30,7 +30,7 @@ namespace ConstructionSetExtender
 			ref struct BackgroundTaskInput
 			{
 				ITextSource^										ScriptText;
-				ScriptEditor::IWorkspaceModel::ScriptType			ScriptType;
+				scriptEditor::IWorkspaceModel::ScriptType			ScriptType;
 				bool												CheckVarNameCollisionCommands;
 				bool												CheckVarNameCollisionForms;
 				bool												CountVarReferences;
@@ -39,7 +39,7 @@ namespace ConstructionSetExtender
 
 			ref struct BackgroundTaskOutput
 			{
-				ObScriptParsing::AnalysisData^			AnalysisOutput;
+				obScriptParsing::AnalysisData^			AnalysisOutput;
 			};
 
 
@@ -103,9 +103,9 @@ namespace ConstructionSetExtender
 				bool												TextFieldInUpdateFlag;
 
 				int													PreviousLineBuffer;
-				ObScriptParsing::AnalysisData^						SemanticAnalysisCache;
+				obScriptParsing::AnalysisData^						SemanticAnalysisCache;
 
-				ScriptEditor::IWorkspaceModel^						ParentModel;
+				scriptEditor::IWorkspaceModel^						ParentModel;
 				LineTrackingManager^								LineTracker;
 				JumpToScriptHandler^								JumpScriptDelegate;
 				ToolTip^											InsightPopup;
@@ -179,7 +179,7 @@ namespace ConstructionSetExtender
 				void                                        TextEditorContextMenu_Opening(Object^ Sender, CancelEventArgs^ E);
 
 				bool										RaiseIntelliSenseKeyDown(System::Windows::Input::KeyEventArgs^ E);
-				void										RaiseIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation);
+				void										RaiseIntelliSenseShow(bool DefaultOperation, intellisense::IIntelliSenseInterfaceModel::Operation NewOperation);
 				void										RaiseIntelliSenseHide(bool Reset);
 				void										RaiseIntelliSenseRelocate();
 
@@ -310,7 +310,7 @@ namespace ConstructionSetExtender
 
 				void										ToggleSearchPanel(bool State);
 			public:
-				AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
+				AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize);
 				~AvalonEditTextEditor();
 
 				property UInt32								FirstVisibleLine
@@ -420,9 +420,9 @@ namespace ConstructionSetExtender
 				virtual void								EndUpdate(bool FlagModification);
 
 				virtual UInt32								GetIndentLevel(UInt32 LineNumber);
-				virtual void								InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType);
+				virtual void								InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
 
-				virtual ObScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+				virtual obScriptParsing::AnalysisData^		GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 				virtual CompilationData^					BeginScriptCompilation();
 				virtual void								EndScriptCompilation(CompilationData^ Data);

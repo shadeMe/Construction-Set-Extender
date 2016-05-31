@@ -1,9 +1,9 @@
 #pragma once
 #include "Hooks-Common.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		// hooks that modify LOD related code
 		void PatchLODHooks(void);

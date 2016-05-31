@@ -220,8 +220,8 @@ public:
 	static TESForm*					CreateTemporaryCopy(TESForm* Source, bool CopyModifiedState = true);
 
 	static FormTypeInfo*																			FormTypeInfoTable;
-	static ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		EditorIDMap;
-	static ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*					FormIDMap;
+	static cseOverride::BSTCaseInsensitiveStringMap<TESForm*>*		EditorIDMap;
+	static cseOverride::NiTMapBase<UInt32, TESForm*>*					FormIDMap;
 };
 STATIC_ASSERT(sizeof(TESForm) == 0x24);
 

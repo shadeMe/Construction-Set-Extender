@@ -1,10 +1,10 @@
 #include "Exports.h"
 #include "UseInfoList.h"
 
-using namespace ComponentDLLInterface;
-using namespace ConstructionSetExtender;
+using namespace componentDLLInterface;
+using namespace cse;
 
-extern ComponentDLLInterface::UseInfoListInterface g_InteropInterface;
+extern componentDLLInterface::UseInfoListInterface g_InteropInterface;
 
 extern "C"
 {
@@ -24,7 +24,7 @@ void ShowUseInfoListDialog(const char* FilterString)
 	USELST->Open(FilterString);
 }
 
-ComponentDLLInterface::UseInfoListInterface g_InteropInterface =
+componentDLLInterface::UseInfoListInterface g_InteropInterface =
 {
 	InitializeComponents,
 	ShowUseInfoListDialog

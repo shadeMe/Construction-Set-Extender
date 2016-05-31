@@ -4,11 +4,11 @@
 #include "Globals.h"
 #include "ScriptEditorPreferences.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
-		IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(TextEditors::IScriptTextEditor^ Parent)
+		IntelliSenseInterfaceModel::IntelliSenseInterfaceModel(textEditors::IScriptTextEditor^ Parent)
 		{
 			Debug::Assert(Parent != nullptr);
 
@@ -29,10 +29,10 @@ namespace ConstructionSetExtender
 			Enabled = true;
 
 			ScriptEditorPreferencesSavedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::ScriptEditorPreferences_Saved);
-			ParentEditorKeyDown = gcnew TextEditors::IntelliSenseKeyEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_KeyDown);
-			ParentEditorShowInterface = gcnew TextEditors::IntelliSenseShowEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_ShowInterface);
-			ParentEditorHideInterface = gcnew TextEditors::IntelliSenseHideEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_HideInterface);
-			ParentEditorRelocateInterface = gcnew TextEditors::IntelliSensePositionEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_RelocateInterface);
+			ParentEditorKeyDown = gcnew textEditors::IntelliSenseKeyEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_KeyDown);
+			ParentEditorShowInterface = gcnew textEditors::IntelliSenseShowEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_ShowInterface);
+			ParentEditorHideInterface = gcnew textEditors::IntelliSenseHideEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_HideInterface);
+			ParentEditorRelocateInterface = gcnew textEditors::IntelliSensePositionEventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_RelocateInterface);
 			ParentEditorBGAnalysisCompleteHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::ParentEditor_BackgroundAnalysisComplete);
 			BoundParentItemSelectedHandler = gcnew EventHandler(this, &IntelliSenseInterfaceModel::BoundParent_ItemSelected);
 
@@ -85,7 +85,7 @@ namespace ConstructionSetExtender
 			UseSubstringFiltering = PREFERENCES->FetchSettingAsInt("SubstringSearch", "IntelliSense") != 0;
 		}
 
-		void IntelliSenseInterfaceModel::ParentEditor_KeyDown(Object^ Sender, TextEditors::IntelliSenseKeyEventArgs^ E)
+		void IntelliSenseInterfaceModel::ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyEventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 			Enabled = true;
@@ -110,14 +110,14 @@ namespace ConstructionSetExtender
 						{
 							String^ Token = ParentEditor->GetTokenAtCaretPos()->Replace("\n", "");
 
-							if (ScriptParser::GetScriptTokenType(Token) == ObScriptParsing::ScriptTokenType::Call)
+							if (ScriptParser::GetScriptTokenType(Token) == obScriptParsing::ScriptTokenType::Call)
 							{
 								E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Call;
 								E->Display = true;
 								E->PreventNextTextChangeEvent = true;
 							}
-							else if (ScriptParser::GetScriptTokenType(Token) == ObScriptParsing::ScriptTokenType::Set ||
-									 ScriptParser::GetScriptTokenType(Token) == ObScriptParsing::ScriptTokenType::Let)
+							else if (ScriptParser::GetScriptTokenType(Token) == obScriptParsing::ScriptTokenType::Set ||
+									 ScriptParser::GetScriptTokenType(Token) == obScriptParsing::ScriptTokenType::Let)
 							{
 								E->DisplayOperation = IIntelliSenseInterfaceModel::Operation::Assign;
 								E->Display = true;
@@ -225,7 +225,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseInterfaceModel::ParentEditor_ShowInterface(Object^ Sender, TextEditors::IntelliSenseShowEventArgs^ E)
+		void IntelliSenseInterfaceModel::ParentEditor_ShowInterface(Object^ Sender, textEditors::IntelliSenseShowEventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 			if (Enabled == false)
@@ -249,7 +249,7 @@ namespace ConstructionSetExtender
 				BoundParent->Hide();
 		}
 
-		void IntelliSenseInterfaceModel::ParentEditor_HideInterface(Object^ Sender, TextEditors::IntelliSenseHideEventArgs^ E)
+		void IntelliSenseInterfaceModel::ParentEditor_HideInterface(Object^ Sender, textEditors::IntelliSenseHideEventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 
@@ -266,7 +266,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseInterfaceModel::ParentEditor_RelocateInterface(Object^ Sender, TextEditors::IntelliSensePositionEventArgs^ E)
+		void IntelliSenseInterfaceModel::ParentEditor_RelocateInterface(Object^ Sender, textEditors::IntelliSensePositionEventArgs^ E)
 		{
 			Debug::Assert(Bound == true);
 
@@ -363,14 +363,14 @@ namespace ConstructionSetExtender
 				if (IgnoreFilter)
 				{
 					IntelliSenseItemVariable^ RefVar = GetLocalVar(CurrentToken);
-					if (RefVar && RefVar->GetDataType() == ObScriptParsing::Variable::DataType::Ref)
+					if (RefVar && RefVar->GetDataType() == obScriptParsing::Variable::DataType::Ref)
 						CallingObjectIsRef = true;
-					else if (ScriptParser::GetScriptTokenType(CurrentToken) == ObScriptParsing::ScriptTokenType::Player)
+					else if (ScriptParser::GetScriptTokenType(CurrentToken) == obScriptParsing::ScriptTokenType::Player)
 						CallingObjectIsRef = true;
 					else
 					{
 						CString CStr(CurrentToken);						// extract = calling ref
-						ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+						componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 						if (Data && Data->IsValid() == false)
 						{
 							LastOperation = IIntelliSenseInterfaceModel::Operation::Default;
@@ -379,14 +379,14 @@ namespace ConstructionSetExtender
 						else if (Data)
 						{
 							RemoteScript = ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
-							CallingObjectIsRef = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetIsFormReference(CStr.c_str());
+							CallingObjectIsRef = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetIsFormReference(CStr.c_str());
 						}
 						else
 						{
 							CallingObjectIsRef = false;
 							RemoteScript = Script::NullScript;
 						}
-						NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 					}
 				}
 
@@ -509,13 +509,13 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void IntelliSenseInterfaceModel::UpdateLocalVars(ObScriptParsing::AnalysisData^ Data)
+		void IntelliSenseInterfaceModel::UpdateLocalVars(obScriptParsing::AnalysisData^ Data)
 		{
 			if (Data)
 			{
 				LocalVariables->Clear();
 
-				for each (ObScriptParsing::Variable^ Itr in Data->Variables)
+				for each (obScriptParsing::Variable^ Itr in Data->Variables)
 				{
 					IntelliSenseItemVariable^ NewVar = gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment,
 																					  Itr->Type, IntelliSenseItem::IntelliSenseItemType::LocalVar);

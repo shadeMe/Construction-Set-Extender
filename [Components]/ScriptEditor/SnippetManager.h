@@ -2,9 +2,9 @@
 
 #include "SemanticAnalysis.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
 		using namespace System::Runtime::Serialization;
 
@@ -18,9 +18,9 @@ namespace ConstructionSetExtender
 				[DataMember]
 				String^													Name;
 				[DataMember]
-				ObScriptParsing::Variable::DataType			Type;
+				obScriptParsing::Variable::DataType			Type;
 
-				VariableInfo(String^ Name, ObScriptParsing::Variable::DataType Type);
+				VariableInfo(String^ Name, obScriptParsing::Variable::DataType Type);
 			};
 
 			[DataMember]
@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 			CodeSnippet();
 			~CodeSnippet();
 
-			void						AddVariable(String^ Name, ObScriptParsing::Variable::DataType Type);
+			void						AddVariable(String^ Name, obScriptParsing::Variable::DataType Type);
 			void						AddVariable(VariableInfo^ Var);
 			void						RemoveVariable(VariableInfo^ Var);
 			VariableInfo^				LookupVariable(String^ Name);

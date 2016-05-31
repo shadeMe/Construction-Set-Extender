@@ -3,7 +3,7 @@
 
 #pragma warning(disable: 4677)
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ref class CString
 	{
@@ -59,11 +59,11 @@ namespace ConstructionSetExtender
 		};
 	};
 
-	ref class CSEStringReader : public System::IO::StringReader
+	ref class LineTrackingStringReader : public System::IO::StringReader
 	{
 		UInt32					CurrentLine;
 	public:
-		CSEStringReader(String^% In) : StringReader(In), CurrentLine(0) {}
+		LineTrackingStringReader(String^% In) : StringReader(In), CurrentLine(0) {}
 
 		virtual String^			ReadLine() override
 		{
@@ -211,7 +211,7 @@ namespace ConstructionSetExtender
 		}
 	};
 
-	namespace Log
+	namespace log
 	{
 		enum MessageSource
 		{
@@ -224,23 +224,23 @@ namespace ConstructionSetExtender
 			e_TAG
 		};
 
-		namespace ScriptEditor
+		namespace scriptEditor
 		{
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}
-		namespace UseInfoList
+		namespace useInfoList
 		{
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}
-		namespace BatchEditor
+		namespace batchEditor
 		{
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}
-		namespace BSAViewer
+		namespace bsaViewer
 		{
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}
-		namespace TagBrowser
+		namespace tagBrowser
 		{
 			void DebugPrint(String^ Message, bool Achtung = false);
 		}

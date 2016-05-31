@@ -18,9 +18,9 @@ using namespace DevComponents::DotNetBar::Events;
 #define ConcreteWorkspaceViewUnsubscribeClickEvent(Name)			Name##->Click -= Name##ClickHandler
 #define ConcreteWorkspaceViewUnsubscribeDeleteClickEvent(Name)		Name##->Click -= Name##ClickHandler; delete Name##ClickHandler; Name##ClickHandler = nullptr
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		ref class ConcreteWorkspaceView;
 
@@ -57,9 +57,9 @@ namespace ConstructionSetExtender
 			virtual void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
 			virtual void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			virtual int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			virtual int		FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
 										String^ Query, String^ Replacement, UInt32 Options, bool Global);
-			virtual void	ShowOutline(IWorkspaceView^ View, ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
+			virtual void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			virtual void	Redraw(IWorkspaceView^ View);
 
@@ -129,7 +129,7 @@ namespace ConstructionSetExtender
 
 			AnimatedForm^								Form;
 			BrightIdeasSoftware::TreeListView^			ListView;
-			ObScriptParsing::Structurizer^				StructureData;
+			obScriptParsing::Structurizer^				StructureData;
 			IWorkspaceModel^							AssociatedModel;
 
 			void										ListView_KeyDown(Object^ Sender, KeyEventArgs^ E);
@@ -152,7 +152,7 @@ namespace ConstructionSetExtender
 			WorkspaceViewOutlineView(ConcreteWorkspaceView^ ParentView);
 			~WorkspaceViewOutlineView();
 
-			void										Show(ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
+			void										Show(obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 			void										Hide();
 		};
 
@@ -162,25 +162,25 @@ namespace ConstructionSetExtender
 			{
 				IWorkspaceModel^										Parent;
 				String^													ParentDescription;
-				TextEditors::IScriptTextEditor::FindReplaceResult^		Hits;
+				textEditors::IScriptTextEditor::FindReplaceResult^		Hits;
 
-				HitData(IWorkspaceModel^ Parent, TextEditors::IScriptTextEditor::FindReplaceResult^ Data) :
+				HitData(IWorkspaceModel^ Parent, textEditors::IScriptTextEditor::FindReplaceResult^ Data) :
 						Parent(Parent),
 						ParentDescription(Parent->LongDescription),
 						Hits(Data) {}
 			};
 
-			TextEditors::IScriptTextEditor::FindReplaceOperation		Operation;
+			textEditors::IScriptTextEditor::FindReplaceOperation		Operation;
 			String^														Query;
 			String^														Replacement;
 			UInt32														Options;
 
 			List<HitData^>^												Hits;
 
-			FindReplaceAllResults() : Operation(TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches),
+			FindReplaceAllResults() : Operation(textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches),
 				Query(""), Replacement(""), Options(0), Hits(gcnew List<HitData^>) {}
 
-			void Add(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceResult^ Data)
+			void Add(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceResult^ Data)
 			{
 				Debug::Assert(Data->HasError == false);
 				Hits->Add(gcnew HitData(Model, Data));
@@ -376,16 +376,16 @@ namespace ConstructionSetExtender
 			BrightIdeasSoftware::TreeListView^		GlobalFindList;
 			Label^									SpoilerText;
 
-			TextEditors::ScriptOffsetViewer^		OffsetTextViewer;
-			TextEditors::SimpleTextViewer^			PreprocessorTextViewer;
+			textEditors::ScriptOffsetViewer^		OffsetTextViewer;
+			textEditors::SimpleTextViewer^			PreprocessorTextViewer;
 
 			DotNetBar::CrumbBar^					ScopeCrumbBar;
-			TextEditors::ScopeBreadcrumbManager^	ScopeCrumbManager;
+			textEditors::ScopeBreadcrumbManager^	ScopeCrumbManager;
 
 			ScriptListDialog^						ScriptListBox;
 			FindReplaceDialog^						FindReplaceBox;
 
-			IntelliSense::IIntelliSenseInterfaceView^	IntelliSenseView;
+			intellisense::IIntelliSenseInterfaceView^	IntelliSenseView;
 
 			WorkspaceViewTabFilter^					TabStripFilter;
 			List<FindReplaceAllResults^>^			CachedFindReplaceAllResults;
@@ -474,15 +474,15 @@ namespace ConstructionSetExtender
 				virtual ListView^ get() { return FindList; }
 				virtual void set(ListView^ e) {}
 			}
-			property IntelliSense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView
+			property intellisense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView
 			{
-				virtual IntelliSense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
-				virtual void set(IntelliSense::IIntelliSenseInterfaceView^ e) {}
+				virtual intellisense::IIntelliSenseInterfaceView^ get() { return IntelliSenseView; }
+				virtual void set(intellisense::IIntelliSenseInterfaceView^ e) {}
 			}
-			property TextEditors::ScopeBreadcrumbManager^			BreadcrumbManager
+			property textEditors::ScopeBreadcrumbManager^			BreadcrumbManager
 			{
-				virtual TextEditors::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
-				virtual void set(TextEditors::ScopeBreadcrumbManager^ e) {}
+				virtual textEditors::ScopeBreadcrumbManager^ get() { return ScopeCrumbManager; }
+				virtual void set(textEditors::ScopeBreadcrumbManager^ e) {}
 			}
 			property IWorkspaceViewController^		Controller
 			{

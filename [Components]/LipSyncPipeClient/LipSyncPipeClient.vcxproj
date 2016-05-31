@@ -152,11 +152,11 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\C
   <ItemGroup>
     <ClInclude Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.h" />
     <ClInclude Include="..\..\..\[Libraries]\SME Sundries\SME_Prefix.h" />
-    <ClInclude Include="..\..\[Common]\CSInteropData.h" />
+    <ClInclude Include="..\..\[Common]\OldCSInteropData.h" />
     <ClInclude Include="LipSyncPipeClient.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
+    <ClCompile Include="..\..\[Common]\OldCSInteropData.cpp" />
     <ClCompile Include="LipSyncPipeClient.cpp" />
   </ItemGroup>
   <ItemGroup>

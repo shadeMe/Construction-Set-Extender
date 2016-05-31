@@ -1,18 +1,18 @@
 #pragma once
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ref class ScriptParser;
 	ref class Preprocessor;
 
-	namespace ScriptPreprocessor
+	namespace scriptPreprocessor
 	{
 		public delegate void StandardOutputError(int Line, String^ Message);
 
 		void DummyStandardErrorOutput(int Line, String^ Message);
 	}
 
-	using namespace ScriptPreprocessor;
+	using namespace scriptPreprocessor;
 
 	public ref struct ScriptEditorPreprocessorData
 	{
@@ -90,7 +90,7 @@ namespace ConstructionSetExtender
 		String^												SliceStart;
 		String^												SliceEnd;
 
-		String^												GetMultilineValue(CSEStringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
+		String^												GetMultilineValue(LineTrackingStringReader^% TextReader, String^% SliceStart, String^% SliceEnd);
 		String^												ObfuscateToCompiler(String^ Token);
 	public:
 		CSEPreprocessorDirective() : CSEPreprocessorToken(nullptr, nullptr, nullptr), Type(DirectiveType::Invalid), Encoding(EncodingType::Invalid), ErrorFlag(false), SliceStart(""), SliceEnd("") {}
@@ -121,7 +121,7 @@ namespace ConstructionSetExtender
 		};
 
 		DefineDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
-		DefineDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
+		DefineDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 		String^												GetName() { return Name; }
 		String^												GetValue(String^ Prefix, AccessoryOperatorType ActiveOperator);
@@ -153,7 +153,7 @@ namespace ConstructionSetExtender
 		void												ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);
 	public:
 		EnumDirective(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber);						// used for single line definitions
-		EnumDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
+		EnumDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);			// used for multi line definitions
 
 		virtual	String^										GetToken() override;
 	};
@@ -248,7 +248,7 @@ namespace ConstructionSetExtender
 
 		bool												CheckBaseCondition(String^ Base, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 	public:
-		IfDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
+		IfDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance);
 
 		virtual	String^										GetToken() override;
 	};
@@ -263,7 +263,7 @@ namespace ConstructionSetExtender
 		bool												Busy;
 
 		void												ProcessStandardDirectives(String^ Path, StandardOutputError^ ErrorOutput);
-		CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, CSEStringReader^ TextReader, StandardOutputError^ ErrorOutput);
+		CSEPreprocessorToken^								CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, LineTrackingStringReader^ TextReader, StandardOutputError^ ErrorOutput);
 	public:
 		static Preprocessor^								GetSingleton();
 

@@ -1,12 +1,12 @@
 #include "CodaScriptCommands-BFC.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace BGSEEScript
+	namespace script
 	{
-		namespace Commands
+		namespace commands
 		{
-			namespace BaseFormComponent
+			namespace baseFormComponent
 			{
 				CodaScriptCommandRegistrarDef("Base Form Component");
 

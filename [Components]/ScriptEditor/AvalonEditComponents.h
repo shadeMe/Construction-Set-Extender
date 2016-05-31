@@ -12,7 +12,7 @@ using namespace ICSharpCode::AvalonEdit::Utils;
 
 /* http://danielgrunwald.de/coding/AvalonEdit/rendering.php */
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ref class WPFImageResourceGenerator
 	{
@@ -31,9 +31,9 @@ namespace ConstructionSetExtender
 		static void		Focus(Windows::UIElement^ Element);
 	};
 
-	namespace TextEditors
+	namespace textEditors
 	{
-		namespace AvalonEditor
+		namespace avalonEditor
 		{
 			ref class AvalonEditTextEditor;
 			ref class LineTrackingManager;

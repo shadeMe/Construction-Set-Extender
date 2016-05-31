@@ -3,18 +3,18 @@
 #include "RefactorTools.h"
 #include "Globals.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
-		namespace Refactoring
+		namespace refactoring
 		{
 			ModifyVariableIndicesDialog::ModifyVariableIndicesDialog( IntPtr ParentHandle, String^ ScriptName )
 			{
 				InitializeComponent();
 
 				VarIndexList->BeginUpdate();
-				ComponentDLLInterface::ScriptVarListData* Data = NativeWrapper::g_CSEInterfaceTable->
+				componentDLLInterface::ScriptVarListData* Data = nativeWrapper::g_CSEInterfaceTable->
 																ScriptEditor.GetScriptVarList((CString(ScriptName)).c_str());
 
 				if (Data)
@@ -23,7 +23,7 @@ namespace ConstructionSetExtender
 
 					for (int i = 0; i < Data->ScriptVarListCount; i++)
 					{
-						ComponentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
+						componentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
 						String^ VarType;
 						switch (VarInfo->Type)
 						{
@@ -134,9 +134,9 @@ namespace ConstructionSetExtender
 			void ModifyVariableIndicesDialog::UpdateIndicesButton_Click( Object^ Sender, EventArgs^ E )
 			{
 				CString CScriptName(ScriptName);
-				ComponentDLLInterface::ScriptVarListData* Data = (ComponentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
+				componentDLLInterface::ScriptVarListData* Data = (componentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
 
-				if (NativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarIndices(CScriptName.c_str(), Data) == false)
+				if (nativeWrapper::g_CSEInterfaceTable->ScriptEditor.UpdateScriptVarIndices(CScriptName.c_str(), Data) == false)
 					DebugPrint("Couldn't successfully update all variable indices of script '" + ScriptName + "'");
 
 				IndicesUpdated = true;
@@ -204,7 +204,7 @@ namespace ConstructionSetExtender
 				if (Index != "" && GetListViewSelectedItem(VarIndexList) != nullptr)
 				{
 					ListViewItem^ Item = GetListViewSelectedItem(VarIndexList);
-					ComponentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = (ComponentDLLInterface::ScriptVarListData::ScriptVarInfo*)((UInt32)Item->Tag);
+					componentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = (componentDLLInterface::ScriptVarListData::ScriptVarInfo*)((UInt32)Item->Tag);
 
 					try
 					{
@@ -219,8 +219,8 @@ namespace ConstructionSetExtender
 			{
 				if (this->Tag != nullptr)
 				{
-					ComponentDLLInterface::ScriptVarListData* Data = (ComponentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
-					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+					componentDLLInterface::ScriptVarListData* Data = (componentDLLInterface::ScriptVarListData*)((UInt32)this->Tag);
+					nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 				}
 			}
 
@@ -333,13 +333,13 @@ namespace ConstructionSetExtender
 
 				if (Selection != nullptr)
 				{
-					InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Parameter Name", "Create UDF Implementation");
+					inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Enter Parameter Name", "Create UDF Implementation");
 					if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 						return;
 					else
 						Selection->Text = Result->Text;
 
-					Result = InputBoxes::InputBox::Show("Enter Parameter Type", "Create UDF Implementation");
+					Result = inputBoxes::InputBox::Show("Enter Parameter Type", "Create UDF Implementation");
 					if (Result->ReturnCode == System::Windows::Forms::DialogResult::Cancel || Result->Text == "")
 						return;
 					else
@@ -405,19 +405,19 @@ namespace ConstructionSetExtender
 					}
 				}
 
-				ComponentDLLInterface::ScriptVarListData* Data = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptVarList((CString(ScriptEditorID)).c_str());
+				componentDLLInterface::ScriptVarListData* Data = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptVarList((CString(ScriptEditorID)).c_str());
 				if (Data)
 				{
 					for (int i = 0; i < Data->ScriptVarListCount; i++)
 					{
-						ComponentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
+						componentDLLInterface::ScriptVarListData::ScriptVarInfo* VarInfo = &Data->ScriptVarListHead[i];
 
 						ListViewItem^ Item = gcnew ListViewItem(gcnew String(VarInfo->Name));
 						Item->SubItems->Add("");
 						ElementList->Items->Add(Item);
 					}
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				this->Hide();
 				this->ShowDialog();

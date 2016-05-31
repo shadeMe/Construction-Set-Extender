@@ -1,8 +1,8 @@
 #include "TESForm.h"
 #include "Core.h"
 
-ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*				TESForm::FormIDMap = (ConstructionSetExtender_OverriddenClasses::NiTMapBase<UInt32, TESForm*>*)0x009EE164;
-ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*		TESForm::EditorIDMap = (ConstructionSetExtender_OverriddenClasses::BSTCaseInsensitiveStringMap<TESForm*>*)0x009EE18C;
+cseOverride::NiTMapBase<UInt32, TESForm*>*				TESForm::FormIDMap = (cseOverride::NiTMapBase<UInt32, TESForm*>*)0x009EE164;
+cseOverride::BSTCaseInsensitiveStringMap<TESForm*>*		TESForm::EditorIDMap = (cseOverride::BSTCaseInsensitiveStringMap<TESForm*>*)0x009EE18C;
 TESForm::FormTypeInfo*																	TESForm::FormTypeInfoTable = (TESForm::FormTypeInfo*)0x009EDE28;
 
 const char* TESForm::FormTypeIDLongNames[kFormType__MAX] =

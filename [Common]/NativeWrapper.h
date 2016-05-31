@@ -2,9 +2,9 @@
 #include "IncludesCLR.h"
 #include "ComponentDLLInterface.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace NativeWrapper
+	namespace nativeWrapper
 	{
 		[DllImport("Construction Set Extender.dll")]
 		void*											QueryInterface(void);
@@ -35,6 +35,6 @@ namespace ConstructionSetExtender
 		void											WriteToMainWindowStatusBar(int PanelIndex, String^ Message);
 		void											ShowNonActivatingWindow(Control^ Window, IntPtr ParentHandle);
 
-		extern ComponentDLLInterface::CSEInterfaceTable*		g_CSEInterfaceTable;
+		extern componentDLLInterface::CSEInterfaceTable*		g_CSEInterfaceTable;
 	};
 }

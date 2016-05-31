@@ -1,14 +1,14 @@
 #include "Hooks-AssetSelector.h"
-#include "CSEWorkspaceManager.h"
+#include "WorkspaceManager.h"
 #include "Construction Set Extender_Resource.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		static char						s_AssetSelectorReturnPath[MAX_PATH] = {0};
 		static BaseFormComponent*		s_AssetFormComponent = NULL;
@@ -161,19 +161,19 @@ namespace ConstructionSetExtender
 			switch (Filter)
 			{
 			case e_NIF:
-				CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "nif", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "nif", Buffer, sizeof(Buffer));
 				break;
 			case e_KF:
-				CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "kf", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "kf", Buffer, sizeof(Buffer));
 				break;
 			case e_WAV:
-				CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "wav", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "wav", Buffer, sizeof(Buffer));
 				break;
 			case e_DDS:
-				CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "dds", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "dds", Buffer, sizeof(Buffer));
 				break;
 			case e_SPT:
-				CLIWrapper::Interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "spt", Buffer, sizeof(Buffer));
+				cliWrapper::interfaces::BSA->ShowBSAViewerDialog(BGSEEMAIN->GetAPPPath(), "spt", Buffer, sizeof(Buffer));
 				break;
 			}
 
@@ -188,7 +188,7 @@ namespace ConstructionSetExtender
 
 		UInt32 __stdcall InitPathEditor(UInt32 Filter, int ID, const char* ExistingPath, HWND Dialog)
 		{
-			UIManager::InitDialogMessageParamT<UInt32> PathEditorParam = { {0}, 0 };
+			uiManager::InitDialogMessageParamT<UInt32> PathEditorParam = { {0}, 0 };
 
 			if (!ExistingPath)
 				GetDlgItemText(Dialog, ID, PathEditorParam.Buffer, sizeof(PathEditorParam.Buffer));
@@ -198,7 +198,7 @@ namespace ConstructionSetExtender
 			if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 								MAKEINTRESOURCE(IDD_TEXTEDIT),
 								Dialog,
-								(DLGPROC)UIManager::TextEditDlgProc,
+								(DLGPROC)uiManager::TextEditDlgProc,
 								(LPARAM)&PathEditorParam) == 0 ||
 				strlen(PathEditorParam.Buffer) < 2)
 			{
@@ -232,12 +232,12 @@ namespace ConstructionSetExtender
 
 		UInt32 __stdcall InitPathCopier(UInt32 Filter, HWND Dialog)
 		{
-			UIManager::InitDialogMessageParamT<UInt32> PathCopierParam = { {0}, Filter };
+			uiManager::InitDialogMessageParamT<UInt32> PathCopierParam = { {0}, Filter };
 
 			if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 								MAKEINTRESOURCE(IDD_COPYPATH),
 								Dialog,
-								(DLGPROC)UIManager::CopyPathDlgProc,
+								(DLGPROC)uiManager::CopyPathDlgProc,
 								(LPARAM)&PathCopierParam) == 0 ||
 				strlen(PathCopierParam.Buffer) == 0)
 			{
@@ -252,7 +252,7 @@ namespace ConstructionSetExtender
 
 		UInt32 __stdcall InitAssetSelectorDlg(HWND Dialog)
 		{
-			return DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_ASSETSELECTOR), Dialog, (DLGPROC)UIManager::AssetSelectorDlgProc);
+			return DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_ASSETSELECTOR), Dialog, (DLGPROC)uiManager::AssetSelectorDlgProc);
 		}
 
 		void __stdcall InitAssetExtractor(UInt32 Filter, UInt32 PathID, const char* DefaultLookupDir, HWND Dialog)

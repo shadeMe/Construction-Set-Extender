@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef CSEAPI_NO_CODA
-#include <BGSEEScript\CodaPublicAPI.h>
+#include <bgsee\Script\CodaPublicAPI.h>
 #endif
 
 /********** CSE Interface API ******************************************************************
@@ -63,7 +63,7 @@ struct CSEScriptInterface
 {
 	// Registers a Coda command with the VM
 	// The caller retains ownership of the script command pointer
-	void			(* RegisterCommand)(bgsee::BGSEEScript::ICodaScriptCommand* Command);
+	void			(* RegisterCommand)(bgsee::script::ICodaScriptCommand* Command);
 };
 #endif
 

@@ -1,14 +1,14 @@
 #include "ScriptPreprocessor.h"
 #include "..\SemanticAnalysis.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	void ScriptPreprocessor::DummyStandardErrorOutput(int Line, String^ Message)
+	void scriptPreprocessor::DummyStandardErrorOutput(int Line, String^ Message)
 	{
 		;//
 	}
 
-	using namespace ScriptPreprocessor;
+	using namespace scriptPreprocessor;
 
 	CSEPreprocessorToken::CSEPreprocessorToken(String^ Token, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
@@ -18,7 +18,7 @@ namespace ConstructionSetExtender
 		try
 		{
 			String^ ExpandedToken = "";
-			ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+			obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 			LocalParser->Tokenize(Token, true);
 			if (!LocalParser->Valid)
@@ -65,11 +65,11 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	String^ CSEPreprocessorDirective::GetMultilineValue(CSEStringReader^% TextReader, String^% SliceStart, String^% SliceEnd)
+	String^ CSEPreprocessorDirective::GetMultilineValue(LineTrackingStringReader^% TextReader, String^% SliceStart, String^% SliceEnd)
 	{
 		String^ Result = "";
 		bool SliceStartFound = false, SliceEndFound = false;
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		String^ ReadLine = TextReader->ReadLine();
 		while (ReadLine != nullptr)
@@ -129,7 +129,7 @@ namespace ConstructionSetExtender
 	String^ CSEPreprocessorDirective::ObfuscateToCompiler(String^ Token)
 	{
 		String^ Result = "";
-		CSEStringReader^ TextReader = gcnew CSEStringReader(Token);
+		LineTrackingStringReader^ TextReader = gcnew LineTrackingStringReader(Token);
 
 		for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 		{
@@ -161,7 +161,7 @@ namespace ConstructionSetExtender
 		this->Type = DirectiveType::Define;
 		this->Encoding = EncodingType::SingleLine;
 
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		try
 		{
@@ -199,13 +199,13 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	DefineDirective::DefineDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	DefineDirective::DefineDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		this->Token = Token;
 		this->Type = DirectiveType::Define;
 		this->Encoding = EncodingType::MultiLine;
 
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		try
 		{
@@ -253,7 +253,7 @@ namespace ConstructionSetExtender
 
 		if (Encoding == EncodingType::MultiLine)
 		{
-			CSEStringReader^ TextReader = gcnew CSEStringReader(this->Value);
+			LineTrackingStringReader^ TextReader = gcnew LineTrackingStringReader(this->Value);
 			Result += "\n" + TextReader->ReadLine();
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
@@ -320,7 +320,7 @@ namespace ConstructionSetExtender
 		this->Type = DirectiveType::Import;
 		this->Encoding = EncodingType::SingleLine;
 
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		try
 		{
@@ -379,7 +379,7 @@ namespace ConstructionSetExtender
 
 	void EnumDirective::ParseComponentDefineDirectives(String^ Source, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance, UInt32 LineNumber)
 	{
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer(", (){}[]\t\n");		// don't use the decimal separator as a delimiter as we're parsing FP numbers
 
 		LocalParser->Tokenize(Source, false);
 		float PreviousValue = 0;
@@ -418,7 +418,7 @@ namespace ConstructionSetExtender
 		this->Encoding = EncodingType::SingleLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		try
 		{
@@ -453,14 +453,14 @@ namespace ConstructionSetExtender
 		}
 	}
 
-	EnumDirective::EnumDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	EnumDirective::EnumDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		this->Token = Token;
 		this->Type = DirectiveType::Enum;
 		this->Encoding = EncodingType::MultiLine;
 		ComponentDefineDirectives = gcnew LinkedList<DefineDirective^>();
 
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		try
 		{
@@ -480,7 +480,7 @@ namespace ConstructionSetExtender
 				Value = GetMultilineValue(TextReader, SliceStart, SliceEnd);
 
 				String^ CondensedValue = "";
-				CSEStringReader^ NewTextReader = gcnew CSEStringReader(Value);
+				LineTrackingStringReader^ NewTextReader = gcnew LineTrackingStringReader(Value);
 				for (String^ ReadLine = NewTextReader->ReadLine(); ReadLine != nullptr; ReadLine = NewTextReader->ReadLine())
 					CondensedValue += ReadLine + " ";
 
@@ -532,7 +532,7 @@ namespace ConstructionSetExtender
 
 			switch (Type)
 			{
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::Equal:
+			case cse::IfDirective::Operator::BuiltInOperators::Equal:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt == RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -541,21 +541,21 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching operand types.");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LessThanOrEqual:
+			case cse::IfDirective::Operator::BuiltInOperators::LessThanOrEqual:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt <= RHSInt);
 				else
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::GreaterThanOrEqual:
+			case cse::IfDirective::Operator::BuiltInOperators::GreaterThanOrEqual:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt >= RHSInt);
 				else
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LessThan:
+			case cse::IfDirective::Operator::BuiltInOperators::LessThan:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt < RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -564,7 +564,7 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::GreaterThan:
+			case cse::IfDirective::Operator::BuiltInOperators::GreaterThan:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt > RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -573,7 +573,7 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::NotEqual:
+			case cse::IfDirective::Operator::BuiltInOperators::NotEqual:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt != RHSInt);
 				else if (!LHSNumeric && !RHSNumeric)
@@ -582,14 +582,14 @@ namespace ConstructionSetExtender
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LogicalAND:
+			case cse::IfDirective::Operator::BuiltInOperators::LogicalAND:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt && RHSInt);
 				else
 					throw gcnew CSEGeneralException("Mismatching/invalid operand type(s).");
 
 				break;
-			case ConstructionSetExtender::IfDirective::Operator::BuiltInOperators::LogicalOR:
+			case cse::IfDirective::Operator::BuiltInOperators::LogicalOR:
 				if (LHSNumeric && RHSNumeric)
 					Result = (LHSInt || RHSInt);
 				else
@@ -715,7 +715,7 @@ namespace ConstructionSetExtender
 			String^ PostFixExpression = "";
 			Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
 
-			ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+			obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 			LocalParser->Tokenize(InfixExpression, true);
 
 			if (LocalParser->Valid)
@@ -814,7 +814,7 @@ namespace ConstructionSetExtender
 			if (ConvertInfixExpressionToPostFix(Base, PostFixExpression, ErrorOutput, PreprocessorInstance))
 			{
 				Stack<String^>^ ExpressionStack = gcnew Stack<String^>();
-				ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+				obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 				LocalParser->Tokenize(PostFixExpression, true);
 
@@ -873,13 +873,13 @@ namespace ConstructionSetExtender
 		return Result;
 	}
 
-	IfDirective::IfDirective(String^ Token, CSEStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
+	IfDirective::IfDirective(String^ Token, LineTrackingStringReader^% TextReader, StandardOutputError^ ErrorOutput, Preprocessor^ PreprocessorInstance)
 	{
 		this->Token = Token;
 		this->Type = DirectiveType::If;
 		this->Encoding = EncodingType::MultiLine;
 
-		ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+		obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 		try
 		{
@@ -965,7 +965,7 @@ namespace ConstructionSetExtender
 		return nullptr;
 	}
 
-	CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, CSEStringReader^ TextReader, StandardOutputError^ ErrorOutput)
+	CSEPreprocessorToken^ Preprocessor::CreateDirectiveFromIdentifier(CSEPreprocessorDirective::EncodingType Encoding, String^ Identifier, String^ Token, LineTrackingStringReader^ TextReader, StandardOutputError^ ErrorOutput)
 	{
 		UInt32 LineNumber = 0;
 		if (TextReader)
@@ -1008,8 +1008,8 @@ namespace ConstructionSetExtender
 		try
 		{
 			LinkedList<CSEPreprocessorToken^>^ TokenList = gcnew LinkedList<CSEPreprocessorToken^>();
-			CSEStringReader^ TextReader = gcnew CSEStringReader(Source);
-			ObScriptParsing::Tokenizer^ LocalParser = gcnew ObScriptParsing::Tokenizer();
+			LineTrackingStringReader^ TextReader = gcnew LineTrackingStringReader(Source);
+			obScriptParsing::Tokenizer^ LocalParser = gcnew obScriptParsing::Tokenizer();
 
 			for (String^ ReadLine = TextReader->ReadLine(); ReadLine != nullptr; ReadLine = TextReader->ReadLine())
 			{

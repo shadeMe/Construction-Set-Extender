@@ -1,7 +1,7 @@
 #pragma once
 #include "../[Common]/CLIWrapper.h"
 #include "../[Common]/HandshakeStructs.h"
-#include "../CSEUIManager.h"
+#include "../UIManager.h"
 #include "../Construction Set Extender_Resource.h"
 #include "../Exports.h"
 
@@ -11,9 +11,9 @@ class TESWorldSpace;
 
 using namespace	MemoryHandler;
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		extern FARPROC		IATProcBuffer;
 

@@ -3,9 +3,9 @@
 #include "IIntelliSenseInterface.h"
 #include "[Common]\NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
 		ref class TextEditorScriptModifiedEventArgs : public EventArgs
 		{
@@ -37,7 +37,7 @@ namespace ConstructionSetExtender
 			// results
 			property bool PreventNextTextChangeEvent;
 			property bool Display;
-			property IntelliSense::IIntelliSenseInterfaceModel::Operation DisplayOperation;
+			property intellisense::IIntelliSenseInterfaceModel::Operation DisplayOperation;
 
 			IntelliSenseKeyEventArgs(Keys Data) : KeyEventArgs(Data)
 			{
@@ -45,7 +45,7 @@ namespace ConstructionSetExtender
 				AllowForDisplay = true;
 				PreventNextTextChangeEvent = false;
 				Display = false;
-				DisplayOperation = IntelliSense::IIntelliSenseInterfaceModel::Operation::Default;
+				DisplayOperation = intellisense::IIntelliSenseInterfaceModel::Operation::Default;
 			}
 		};
 
@@ -66,12 +66,12 @@ namespace ConstructionSetExtender
 		{
 		public:
 			property bool UseActive;			// continue with the previous/active operation
-			property IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation;
+			property intellisense::IIntelliSenseInterfaceModel::Operation NewOperation;
 
 			IntelliSenseShowEventArgs() : IntelliSensePositionEventArgs()
 			{
 				UseActive = true;
-				NewOperation = IntelliSense::IIntelliSenseInterfaceModel::Operation::Default;
+				NewOperation = intellisense::IIntelliSenseInterfaceModel::Operation::Default;
 			}
 		};
 
@@ -103,7 +103,7 @@ namespace ConstructionSetExtender
 			bool			HasDirectives;
 			bool			HasWarnings;
 
-			ComponentDLLInterface::ScriptCompileData* CompileResult;
+			componentDLLInterface::ScriptCompileData* CompileResult;
 
 			CompilationData() : UnpreprocessedScriptText(""), PreprocessedScriptText(""), SerializedMetadata(""),
 								CanCompile(false), HasDirectives(false), HasWarnings(false), CompileResult(nullptr) {}
@@ -241,9 +241,9 @@ namespace ConstructionSetExtender
 			void										EndUpdate(bool FlagModification);
 
 			UInt32										GetIndentLevel(UInt32 LineNumber);
-			void										InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType);
+			void										InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType);
 
-			ObScriptParsing::AnalysisData^				GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
+			obScriptParsing::AnalysisData^				GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks);
 
 			CompilationData^							BeginScriptCompilation();
 			void										EndScriptCompilation(CompilationData^ Data);

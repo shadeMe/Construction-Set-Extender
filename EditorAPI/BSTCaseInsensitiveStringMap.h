@@ -4,7 +4,7 @@
 //	EditorAPI: BSTCaseInsensitiveStringMap class.
 //	A number of class definitions are directly derived from the COEF API; Credit to JRoush for his comprehensive decoding
 
-namespace ConstructionSetExtender_OverriddenClasses
+namespace cseOverride
 {
 	template <class TVAL> class BSTCaseInsensitiveStringMap : public NiTStringMap<TVAL>
 	{// size 14

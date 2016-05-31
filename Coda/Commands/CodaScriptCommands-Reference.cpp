@@ -1,15 +1,15 @@
 #include "CodaScriptCommands-Reference.h"
-#include "CSERenderSelectionGroupManager.h"
+#include "RenderWindowGroupManager.h"
 
 #define PI	3.151592653589793
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace BGSEEScript
+	namespace script
 	{
-		namespace Commands
+		namespace commands
 		{
-			namespace Reference
+			namespace reference
 			{
 				CodaScriptCommandRegistrarDef("Reference")
 
@@ -589,7 +589,7 @@ namespace ConstructionSetExtender
 						for (int i = 0, j = Members.size(); i < j; i++)
 							Buffer->AddToSelection(Members[i], false);
 
-						if (CSERenderSelectionGroupManager::Instance.AddGroup(Buffer))
+						if (RenderWindowGroupManager::Instance.AddGroup(Buffer))
 							Result->SetNumber(1);
 
 						Buffer->DeleteInstance();
@@ -635,7 +635,7 @@ namespace ConstructionSetExtender
 						for (int i = 0, j = Members.size(); i < j; i++)
 							Buffer->AddToSelection(Members[i], false);
 
-						if (CSERenderSelectionGroupManager::Instance.RemoveGroup(Buffer))
+						if (RenderWindowGroupManager::Instance.RemoveGroup(Buffer))
 							Result->SetNumber(1);
 
 						Buffer->DeleteInstance();

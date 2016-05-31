@@ -1,6 +1,6 @@
 #include "HandShakeStructs.h"
 
-namespace ComponentDLLInterface
+namespace componentDLLInterface
 {
 	enum
 	{

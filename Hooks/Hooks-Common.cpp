@@ -1,8 +1,8 @@
 #include "Hooks-Common.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		FARPROC								IATProcBuffer = NULL;			// used to call WndMgmt functions
 

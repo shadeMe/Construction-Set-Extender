@@ -7,9 +7,9 @@
 
 #include "[Common]\NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
 		IntelliSenseItem::IntelliSenseItem()
 		{
@@ -38,7 +38,7 @@ namespace ConstructionSetExtender
 			return Description;
 		}
 
-		void IntelliSenseItem::Insert(TextEditors::IScriptTextEditor^ Editor)
+		void IntelliSenseItem::Insert(textEditors::IScriptTextEditor^ Editor)
 		{
 			Editor->SetTokenAtCaretPos(GetSubstitution());
 		}
@@ -132,10 +132,10 @@ namespace ConstructionSetExtender
 			return Shorthand;
 		}
 
-		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope) :
+		IntelliSenseItemVariable::IntelliSenseItemVariable(String^ Name, String^ Comment, obScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope) :
 			IntelliSenseItem(String::Format("{0} [{1}]{2}{3}",
 											Name,
-											ObScriptParsing::Variable::GetVariableDataTypeDescription(Type),
+											obScriptParsing::Variable::GetVariableDataTypeDescription(Type),
 											(Comment != "")?"\n\n":"",
 											Comment),
 							Scope),
@@ -158,10 +158,10 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemVariable::GetDataTypeID()
 		{
-			return ObScriptParsing::Variable::GetVariableDataTypeDescription(DataType);
+			return obScriptParsing::Variable::GetVariableDataTypeDescription(DataType);
 		}
 
-		ObScriptParsing::Variable::DataType IntelliSenseItemVariable::GetDataType()
+		obScriptParsing::Variable::DataType IntelliSenseItemVariable::GetDataType()
 		{
 			return DataType;
 		}
@@ -199,14 +199,14 @@ namespace ConstructionSetExtender
 		{
 			VarList = gcnew VarListT;
 
-			ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData();
-			Data->PerformAnalysis(ScriptText, ObScriptParsing::ScriptType::None,
-								ObScriptParsing::AnalysisData::Operation::FillVariables |
-								ObScriptParsing::AnalysisData::Operation::FillControlBlocks |
-								ObScriptParsing::AnalysisData::Operation::FillUDFData,
+			obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData();
+			Data->PerformAnalysis(ScriptText, obScriptParsing::ScriptType::None,
+								obScriptParsing::AnalysisData::Operation::FillVariables |
+								obScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								obScriptParsing::AnalysisData::Operation::FillUDFData,
 								nullptr);
 
-			for each (ObScriptParsing::Variable^ Itr in Data->Variables)
+			for each (obScriptParsing::Variable^ Itr in Data->Variables)
 				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
 
 			Name = Data->Name;
@@ -217,14 +217,14 @@ namespace ConstructionSetExtender
 		{
 			VarList = gcnew VarListT;
 
-			ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData();
-			Data->PerformAnalysis(ScriptText, ObScriptParsing::ScriptType::None,
-								  ObScriptParsing::AnalysisData::Operation::FillVariables |
-								  ObScriptParsing::AnalysisData::Operation::FillControlBlocks |
-								  ObScriptParsing::AnalysisData::Operation::FillUDFData,
+			obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData();
+			Data->PerformAnalysis(ScriptText, obScriptParsing::ScriptType::None,
+								  obScriptParsing::AnalysisData::Operation::FillVariables |
+								  obScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								  obScriptParsing::AnalysisData::Operation::FillUDFData,
 								  nullptr);
 
-			for each (ObScriptParsing::Variable^ Itr in Data->Variables)
+			for each (obScriptParsing::Variable^ Itr in Data->Variables)
 				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
 
 			this->Name = Name;
@@ -263,15 +263,15 @@ namespace ConstructionSetExtender
 			Parameters->SetValue(-1, 9);
 			ReturnVar = -1;
 
-			ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData();
-			Data->PerformAnalysis(ScriptText, ObScriptParsing::ScriptType::None,
-								  ObScriptParsing::AnalysisData::Operation::FillVariables |
-								  ObScriptParsing::AnalysisData::Operation::FillControlBlocks |
-								  ObScriptParsing::AnalysisData::Operation::FillUDFData,
+			obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData();
+			Data->PerformAnalysis(ScriptText, obScriptParsing::ScriptType::None,
+								  obScriptParsing::AnalysisData::Operation::FillVariables |
+								  obScriptParsing::AnalysisData::Operation::FillControlBlocks |
+								  obScriptParsing::AnalysisData::Operation::FillUDFData,
 								  nullptr);
 
 			int VarIdx = 0;
-			for each (ObScriptParsing::Variable^ Itr in Data->Variables)
+			for each (obScriptParsing::Variable^ Itr in Data->Variables)
 			{
 				VarList->Add(gcnew IntelliSenseItemVariable(Itr->Name, Itr->Comment, Itr->Type, IntelliSenseItem::IntelliSenseItemType::RemoteVar));
 				if (Itr->UDFParameter && Itr->ParameterIndex < 10)
@@ -338,10 +338,10 @@ namespace ConstructionSetExtender
 
 		String^ IntelliSenseItemEditorIDForm::GetFormTypeIdentifier()
 		{
-			return gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(TypeID));
+			return gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(TypeID));
 		}
 
-		IntelliSenseItemEditorIDForm::IntelliSenseItemEditorIDForm( ComponentDLLInterface::FormData* Data ) : IntelliSenseItem()
+		IntelliSenseItemEditorIDForm::IntelliSenseItemEditorIDForm( componentDLLInterface::FormData* Data ) : IntelliSenseItem()
 		{
 			this->Type = IntelliSenseItem::IntelliSenseItemType::Form;
 
@@ -359,13 +359,13 @@ namespace ConstructionSetExtender
 				((Flags & (UInt32)FormFlags::VisibleWhenDistant)?"   Visible When Distant\n":"");
 
 			String^ ScriptDescription = "";
-			ComponentDLLInterface::ScriptData* ScriptableData = 0;
+			componentDLLInterface::ScriptData* ScriptableData = 0;
 			if (TypeID != 13 && ISDB->GetIsIdentifierScriptableForm(Name, &ScriptableData))
 			{
 				if (ScriptableData && ScriptableData->IsValid())
 					ScriptDescription += "\nScript: " + gcnew String(ScriptableData->EditorID);
 
-				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptableData, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptableData, false);
 			}
 
 			this->Description = Name +
@@ -398,14 +398,14 @@ namespace ConstructionSetExtender
 				(Parent->Variables->Count ? "\n\nVariables: " + Parent->Variables->Count.ToString() : "");
 		}
 
-		void IntelliSenseItemCodeSnippet::Insert(TextEditors::IScriptTextEditor^ Editor)
+		void IntelliSenseItemCodeSnippet::Insert(textEditors::IScriptTextEditor^ Editor)
 		{
 			for each (CodeSnippet::VariableInfo^ Itr in Parent->Variables)
 				Editor->InsertVariable(Itr->Name, Itr->Type);
 
 			String^ Code = GetSubstitution();
 			UInt32 CurrentLineIndents = Editor->GetIndentLevel(Editor->CurrentLine);
-			Code = ObScriptParsing::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
+			Code = obScriptParsing::AnalysisData::PerformLocalizedIndenting(Code, CurrentLineIndents);
 
 			Editor->BeginUpdate();
 			Editor->SetTokenAtCaretPos(Code);

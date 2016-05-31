@@ -2,7 +2,7 @@
 
 #include "[Common]\HandshakeStructs.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	public ref class UseInfoList
 	{

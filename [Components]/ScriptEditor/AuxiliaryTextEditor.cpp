@@ -1,9 +1,9 @@
 #include "AuxiliaryTextEditor.h"
 #include "NumberedRichTextBox.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
 		ScriptOffsetViewer::ScriptOffsetViewer(Font^ FontData, Color ForegroundColor, Color BackgroundColor, Color HighlightColor, Control^% Parent)
 		{

@@ -4,11 +4,11 @@
 
 using namespace DevComponents;
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
-		Image^ ScopeBreadcrumbManager::GetScopeIcon(ObScriptParsing::Structurizer::Node::NodeType Type)
+		Image^ ScopeBreadcrumbManager::GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType Type)
 		{
 			if (DefaultIcon == nullptr)
 				DefaultIcon = Globals::ScriptEditorImageResourceManager->CreateImage("AvalonEditStructureVisualizer");
@@ -46,14 +46,14 @@ namespace ConstructionSetExtender
 				RefreshCrumbs();
 		}
 
-		void ScopeBreadcrumbManager::GenerateCrumbs(ObScriptParsing::AnalysisData^ Data)
+		void ScopeBreadcrumbManager::GenerateCrumbs(obScriptParsing::AnalysisData^ Data)
 		{
 			ResetCrumbs();
-			DataStore = gcnew ObScriptParsing::Structurizer(Data, gcnew ObScriptParsing::Structurizer::GetLineText(BoundParent, &IScriptTextEditor::GetText), BoundParent->CurrentLine);
+			DataStore = gcnew obScriptParsing::Structurizer(Data, gcnew obScriptParsing::Structurizer::GetLineText(BoundParent, &IScriptTextEditor::GetText), BoundParent->CurrentLine);
 			if (DataStore->Valid)
 			{
 				Root->Text = Data->Name;
-				Root->Tag = gcnew CrumbData(BoundParent, gcnew ObScriptParsing::Structurizer::Node(ObScriptParsing::Structurizer::Node::NodeType::Invalid, 1, 1, Data->Name));
+				Root->Tag = gcnew CrumbData(BoundParent, gcnew obScriptParsing::Structurizer::Node(obScriptParsing::Structurizer::Node::NodeType::Invalid, 1, 1, Data->Name));
 
 				for each (auto Itr in DataStore->Output)
 					CreateNewCrumb(Itr, Root, false);
@@ -83,7 +83,7 @@ namespace ConstructionSetExtender
 				return;
 
 			int CurrentLine = BoundParent->CurrentLine;
-			ObScriptParsing::Structurizer::Node^ ContainingNode = DataStore->GetContainingNode(CurrentLine);
+			obScriptParsing::Structurizer::Node^ ContainingNode = DataStore->GetContainingNode(CurrentLine);
 			if (ContainingNode)
 			{
 				for each (auto Itr in ActiveCrumbs)
@@ -97,7 +97,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		void ScopeBreadcrumbManager::CreateNewCrumb(ObScriptParsing::Structurizer::Node^ Source, DevComponents::DotNetBar::CrumbBarItem^ Parent, bool EnumerateChildren)
+		void ScopeBreadcrumbManager::CreateNewCrumb(obScriptParsing::Structurizer::Node^ Source, DevComponents::DotNetBar::CrumbBarItem^ Parent, bool EnumerateChildren)
 		{
 			DotNetBar::CrumbBarItem^ NewItem = gcnew DotNetBar::CrumbBarItem();
 			NewItem->Text = Source->Description;
@@ -131,14 +131,14 @@ namespace ConstructionSetExtender
 			BoundParent(nullptr),
 			Bar(Bar),
 			DataStore(nullptr),
-			ActiveCrumbs(gcnew Dictionary<ObScriptParsing::Structurizer::Node^, DotNetBar::CrumbBarItem^>)
+			ActiveCrumbs(gcnew Dictionary<obScriptParsing::Structurizer::Node^, DotNetBar::CrumbBarItem^>)
 		{
 			InstanceCounter++;
 
 			Root = gcnew DotNetBar::CrumbBarItem();
 			Color ForegroundColor = PREFERENCES->LookupColorByKey("ForegroundColor");
 			Root->ForeColor = ForegroundColor;
-			Root->Image = GetScopeIcon(ObScriptParsing::Structurizer::Node::NodeType::Invalid);
+			Root->Image = GetScopeIcon(obScriptParsing::Structurizer::Node::NodeType::Invalid);
 
 			ParentLineChangedHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_LineChanged);
 			ParentBGAnalysisCompleteHandler = gcnew EventHandler(this, &ScopeBreadcrumbManager::Parent_BackgroundAnalysisComplete);
@@ -204,7 +204,7 @@ namespace ConstructionSetExtender
 		{
 			Debug::Assert(Bound == true);
 
-			ObScriptParsing::AnalysisData^ ParsedData = BoundParent->GetSemanticAnalysisCache(true, true);
+			obScriptParsing::AnalysisData^ ParsedData = BoundParent->GetSemanticAnalysisCache(true, true);
 			GenerateCrumbs(ParsedData);
 		}
 
@@ -226,7 +226,7 @@ namespace ConstructionSetExtender
 			}
 		}
 
-		ScopeBreadcrumbManager::CrumbData::CrumbData(IScriptTextEditor ^ Parent, ObScriptParsing::Structurizer::Node ^ Scope) :
+		ScopeBreadcrumbManager::CrumbData::CrumbData(IScriptTextEditor ^ Parent, obScriptParsing::Structurizer::Node ^ Scope) :
 			Parent(Parent),
 			Scope(Scope)
 		{

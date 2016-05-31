@@ -77,11 +77,11 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BGSEEBaseLibPath_DEBUG);$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">$(BGSEEBaseLibPath_DEBUG);$(DirectXLibPath);$(CrashRptLibPath);$(LibraryPath)</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BGSEEBaseIncludePath);$(BGSEEBaseIncludePath)\BGSEEScript\;$(XSECommonIncludePath);$(DirectXIncludePath);$(SMESundriesIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">$(BGSEEBaseIncludePath);$(BGSEEBaseIncludePath)\BGSEEScript\;$(XSECommonIncludePath);$(DirectXIncludePath);$(SMESundriesIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BGSEEBaseIncludePath);$(XSECommonIncludePath);$(DirectXIncludePath);$(SMESundriesIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">$(BGSEEBaseIncludePath);$(XSECommonIncludePath);$(DirectXIncludePath);$(SMESundriesIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SourcePath)</SourcePath>
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">$(SourcePath)</SourcePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(BGSEEBaseIncludePath);$(BGSEEBaseIncludePath)\BGSEEScript\;$(XSECommonIncludePath);$(DirectXIncludePath);$(SMESundriesIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(BGSEEBaseIncludePath);$(XSECommonIncludePath);$(DirectXIncludePath);$(SMESundriesIncludePath);$(BoostIncludePath);$(CrashRptIncludePath);$(IncludePath)</IncludePath>
     <SourcePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SourcePath)</SourcePath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EnableManagedIncrementalBuild>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'">false</EnableManagedIncrementalBuild>
@@ -259,25 +259,26 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp" />
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Reference.cpp" />
-    <ClCompile Include="Coda\CSECoda.cpp" />
-    <ClCompile Include="CSEAchievements.cpp" />
-    <ClCompile Include="CSEAuxiliaryViewport.cpp" />
-    <ClCompile Include="CSEConsole.cpp" />
-    <ClCompile Include="CSEFormUndoStack.cpp" />
-    <ClCompile Include="CSEGlobalClipboard.cpp" />
-    <ClCompile Include="CSEHallOfFame.cpp" />
-    <ClCompile Include="CSEMain.cpp" />
-    <ClCompile Include="CSEDialogImposterManager.cpp" />
-    <ClCompile Include="CSEObjectPaletteManager.cpp" />
-    <ClCompile Include="CSEObjectPrefabManager.cpp" />
-    <ClCompile Include="CSEPathGridUndoManager.cpp" />
-    <ClCompile Include="CSERenderSelectionGroupManager.cpp" />
-    <ClCompile Include="CSERenderWindowFlyCamera.cpp" />
-    <ClCompile Include="CSERenderWindowPainter.cpp" />
-    <ClCompile Include="CSESettings.cpp" />
-    <ClCompile Include="CSEUIManager.cpp" />
-    <ClCompile Include="CSEWorkspaceManager.cpp" />
-    <ClCompile Include="CSEWrappers.cpp" />
+    <ClCompile Include="Coda\Coda.cpp" />
+    <ClCompile Include="Achievements.cpp" />
+    <ClCompile Include="AuxiliaryViewport.cpp" />
+    <ClCompile Include="Console.cpp" />
+    <ClCompile Include="FormUndoStack.cpp" />
+    <ClCompile Include="GlobalClipboard.cpp" />
+    <ClCompile Include="HallOfFame.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="DialogImposterManager.cpp" />
+    <ClCompile Include="ObjectPaletteManager.cpp" />
+    <ClCompile Include="ObjectPrefabManager.cpp" />
+    <ClCompile Include="PathGridUndoManager.cpp" />
+    <ClCompile Include="RenderWindowGroupManager.cpp" />
+    <ClCompile Include="RenderWindowFlyCamera.cpp" />
+    <ClCompile Include="RenderWindowManager.cpp" />
+    <ClCompile Include="RenderWindowPainter.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="UIManager.cpp" />
+    <ClCompile Include="WorkspaceManager.cpp" />
+    <ClCompile Include="Wrappers.cpp" />
     <ClCompile Include="EditorAPI\Archive.cpp" />
     <ClCompile Include="EditorAPI\BaseFormComponent.cpp" />
     <ClCompile Include="EditorAPI\BSFile.cpp" />
@@ -311,7 +312,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="EditorAPI\TESRender.cpp" />
     <ClCompile Include="EditorAPI\TESSound.cpp" />
     <ClCompile Include="Hooks\Hooks-VersionControl.cpp" />
-    <ClCompile Include="CSEChangeLogManager.cpp" />
+    <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -328,13 +329,13 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Hooks\Hooks-Renderer.cpp" />
     <ClCompile Include="Hooks\Hooks-ScriptEditor.cpp" />
     <ClCompile Include="Hooks\Hooks-Plugins.cpp" />
-    <ClCompile Include="CSEInterfaceManager.cpp" />
-    <ClCompile Include="CSInterop.cpp" />
-    <ClCompile Include="[Common]\CSInteropData.cpp" />
+    <ClCompile Include="PluginAPIManager.cpp" />
+    <ClCompile Include="OldCSInteropManager.cpp" />
+    <ClCompile Include="[Common]\OldCSInteropData.cpp" />
     <ClCompile Include="Exports.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase_Resource.h" />
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase_Resource.h" />
     <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h" />
     <ClInclude Include="..\OBSE\obse\HavokBase.h" />
     <ClInclude Include="..\OBSE\obse\HavokCharacters.h" />
@@ -360,25 +361,26 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Form.h" />
     <ClInclude Include="Coda\Commands\CodaScriptCommands-Reference.h" />
-    <ClInclude Include="Coda\CSECoda.h" />
-    <ClInclude Include="CSEAchievements.h" />
-    <ClInclude Include="CSEAuxiliaryViewport.h" />
-    <ClInclude Include="CSEConsole.h" />
-    <ClInclude Include="CSEFormUndoStack.h" />
-    <ClInclude Include="CSEGlobalClipboard.h" />
-    <ClInclude Include="CSEHallOfFame.h" />
-    <ClInclude Include="CSEMain.h" />
-    <ClInclude Include="CSEDialogImposterManager.h" />
-    <ClInclude Include="CSEObjectPaletteManager.h" />
-    <ClInclude Include="CSEObjectPrefabManager.h" />
-    <ClInclude Include="CSEPathGridUndoManager.h" />
-    <ClInclude Include="CSERenderSelectionGroupManager.h" />
-    <ClInclude Include="CSERenderWindowFlyCamera.h" />
-    <ClInclude Include="CSERenderWindowPainter.h" />
-    <ClInclude Include="CSESettings.h" />
-    <ClInclude Include="CSEUIManager.h" />
-    <ClInclude Include="CSEWorkspaceManager.h" />
-    <ClInclude Include="CSEWrappers.h" />
+    <ClInclude Include="Coda\Coda.h" />
+    <ClInclude Include="Achievements.h" />
+    <ClInclude Include="AuxiliaryViewport.h" />
+    <ClInclude Include="Console.h" />
+    <ClInclude Include="FormUndoStack.h" />
+    <ClInclude Include="GlobalClipboard.h" />
+    <ClInclude Include="HallOfFame.h" />
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="DialogImposterManager.h" />
+    <ClInclude Include="ObjectPaletteManager.h" />
+    <ClInclude Include="ObjectPrefabManager.h" />
+    <ClInclude Include="PathGridUndoManager.h" />
+    <ClInclude Include="RenderWindowGroupManager.h" />
+    <ClInclude Include="RenderWindowFlyCamera.h" />
+    <ClInclude Include="RenderWindowManager.h" />
+    <ClInclude Include="RenderWindowPainter.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="UIManager.h" />
+    <ClInclude Include="WorkspaceManager.h" />
+    <ClInclude Include="Wrappers.h" />
     <ClInclude Include="EditorAPI\ActorValues.h" />
     <ClInclude Include="EditorAPI\Archive.h" />
     <ClInclude Include="EditorAPI\BaseFormComponent.h" />
@@ -462,7 +464,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="EditorAPI\TESWeather.h" />
     <ClInclude Include="EditorAPI\TESWorldSpace.h" />
     <ClInclude Include="Hooks\Hooks-VersionControl.h" />
-    <ClInclude Include="CSEChangeLogManager.h" />
+    <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="VersionInfo.h" />
     <ClInclude Include="[Common]\CLIWrapper.h" />
@@ -479,9 +481,9 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Hooks\Hooks-ScriptEditor.h" />
     <ClInclude Include="Hooks\Hooks-Plugins.h" />
     <ClInclude Include="CSEInterfaceAPI.h" />
-    <ClInclude Include="CSEInterfaceManager.h" />
-    <ClInclude Include="CSInterop.h" />
-    <ClInclude Include="[Common]\CSInteropData.h" />
+    <ClInclude Include="PluginAPIManager.h" />
+    <ClInclude Include="OldCSInteropManager.h" />
+    <ClInclude Include="[Common]\OldCSInteropData.h" />
     <ClInclude Include="Exports.h" />
   </ItemGroup>
   <ItemGroup>
@@ -518,7 +520,7 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <None Include="Images\wtf.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase.rc" />
+    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc" />
     <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>

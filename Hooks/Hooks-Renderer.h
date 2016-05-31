@@ -1,9 +1,9 @@
 #pragma once
 #include "Hooks-Common.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		// hooks that do stuff to the renderer and the render window
 		void PatchRendererHooks(void);

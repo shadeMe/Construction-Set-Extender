@@ -1,6 +1,6 @@
 #include "BSAReader.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	BSAReader::BSAReader()
 	{

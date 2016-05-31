@@ -11,7 +11,7 @@ struct PluginInfo;
 typedef int HWND;
 #endif
 
-namespace ComponentDLLInterface
+namespace componentDLLInterface
 {
 	void DumpInstanceCounters(void);
 

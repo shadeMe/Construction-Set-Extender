@@ -2,17 +2,17 @@
 #include "ComponentDLLInterface.h"
 
 struct OBSEInterface;
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace CLIWrapper
+	namespace cliWrapper
 	{
-		namespace Interfaces
+		namespace interfaces
 		{
-			extern ComponentDLLInterface::ScriptEditorInterface*	SE;
-			extern ComponentDLLInterface::UseInfoListInterface*		USE;
-			extern ComponentDLLInterface::BSAViewerInterface*		BSA;
-			extern ComponentDLLInterface::BatchEditorInterface*		BE;
-			extern ComponentDLLInterface::TagBrowserInterface*		TAG;
+			extern componentDLLInterface::ScriptEditorInterface*	SE;
+			extern componentDLLInterface::UseInfoListInterface*		USE;
+			extern componentDLLInterface::BSAViewerInterface*		BSA;
+			extern componentDLLInterface::BatchEditorInterface*		BE;
+			extern componentDLLInterface::TagBrowserInterface*		TAG;
 		}
 
 		bool														ImportInterfaces(const OBSEInterface* obse);

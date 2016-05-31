@@ -4,14 +4,14 @@
 
 #using "Microsoft.VisualBasic.dll"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	void DragonDropForm::WndProc( Message% m )
 	{
 		switch(m.Msg)
 		{
 		case 0x407:
-			NativeWrapper::g_CSEInterfaceTable->TagBrowser.InitiateDragonDrop();
+			nativeWrapper::g_CSEInterfaceTable->TagBrowser.InitiateDragonDrop();
 			return;
 		}
 
@@ -58,7 +58,7 @@ namespace ConstructionSetExtender
 		ParentTree->DeselectNode(nullptr, AdvTree::eTreeAction::Code);
 		ParentTree->EndUpdate();
 	}
-	bool TagDatabase::TagItem(AdvTree::Node^ Tag, ComponentDLLInterface::FormData* Data)
+	bool TagDatabase::TagItem(AdvTree::Node^ Tag, componentDLLInterface::FormData* Data)
 	{
 		if (GetItemExistsInTag(Tag,  gcnew String(Data->EditorID)) == false)
 		{
@@ -74,7 +74,7 @@ namespace ConstructionSetExtender
 			return false;
 		}
 	}
-	bool TagDatabase::TagItem(String^% TagName, ComponentDLLInterface::FormData* Data)
+	bool TagDatabase::TagItem(String^% TagName, componentDLLInterface::FormData* Data)
 	{
 		AdvTree::Node^ Tag = ParentTree->FindNodeByText(TagName);
 		return TagItem(Tag, Data);
@@ -183,7 +183,7 @@ namespace ConstructionSetExtender
 					String^ Token = Tokens[i];
 					if (Token != "")
 					{
-						ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(Token)).c_str());
+						componentDLLInterface::FormData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(Token)).c_str());
 						if (Data)
 							TagItem(Tag, Data);
 						else
@@ -191,7 +191,7 @@ namespace ConstructionSetExtender
 							BadItems = true;
 							DebugPrint("Couldn't find form '" + Token + "'");
 						}
-						NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 					}
 				}
 			}
@@ -466,10 +466,10 @@ namespace ConstructionSetExtender
 			HookManager::MouseUp -= GlobalMouseHook_MouseUpHandler;
 			if (MouseDragInProgress)
 			{
-				IntPtr Window = NativeWrapper::WindowFromPoint(E->Location);
+				IntPtr Window = nativeWrapper::WindowFromPoint(E->Location);
 				if (Window != GetFormListHandle() && Window != GetWindowHandle())
 				{
-					ComponentDLLInterface::TagBrowserInstantiationData* InteropData = NativeWrapper::g_CSEInterfaceTable->TagBrowser.AllocateInstantionData(FormList->SelectedItems->Count);
+					componentDLLInterface::TagBrowserInstantiationData* InteropData = nativeWrapper::g_CSEInterfaceTable->TagBrowser.AllocateInstantionData(FormList->SelectedItems->Count);
 					InteropData->InsertionPoint = E->Location;
 
 					UInt32 Index = 0;
@@ -479,8 +479,8 @@ namespace ConstructionSetExtender
 						Index++;
 					}
 
-					NativeWrapper::g_CSEInterfaceTable->TagBrowser.InstantiateObjects(InteropData);
-					NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData, false);
+					nativeWrapper::g_CSEInterfaceTable->TagBrowser.InstantiateObjects(InteropData);
+					nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(InteropData, false);
 				}
 			}
 			else
@@ -513,7 +513,7 @@ namespace ConstructionSetExtender
 		ListViewItem^ Selected = GetListViewSelectedItem(List);
 		if (Selected != nullptr)
 		{
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID((CString(Selected->Text)).c_str());
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.LoadFormForEditByEditorID((CString(Selected->Text)).c_str());
 		}
 	}
 	void TagBrowser::FormSelectionList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E)
@@ -709,7 +709,7 @@ namespace ConstructionSetExtender
 			bool BadItems = false;
 			for each (String^ Itr in TagItems)
 			{
-				ComponentDLLInterface::FormData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(Itr)).c_str());
+				componentDLLInterface::FormData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupFormByEditorID((CString(Itr)).c_str());
 				if (Data)
 				{
 					AddItemToFormList(Data);
@@ -719,7 +719,7 @@ namespace ConstructionSetExtender
 					BadItems = true;
 					DebugPrint("Couldn't find form '" + Itr + "'");
 				}
-				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 			}
 
 			FormList->EndUpdate();
@@ -728,18 +728,18 @@ namespace ConstructionSetExtender
 				MessageBox::Show("Some forms were found missing while populating the tag list.\n\nDetails logged to the console.", "Tag Browser", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 		}
 	}
-	void TagBrowser::AddItemToFormList(ComponentDLLInterface::FormData* Data)
+	void TagBrowser::AddItemToFormList(componentDLLInterface::FormData* Data)
 	{
 		ListViewItem^ Item = gcnew ListViewItem(gcnew String(Data->EditorID));
 		Item->SubItems->Add(Data->FormID.ToString("X8"));
 		if (Data->TypeID < 0x45)
-			Item->SubItems->Add(gcnew String(NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(Data->TypeID)));
+			Item->SubItems->Add(gcnew String(nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormTypeIDLongName(Data->TypeID)));
 		else
 			Item->SubItems->Add("<Unknown>");
 
-		UInt32 ActiveForeColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
-		UInt32 ActiveBackColor = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
-		bool ColorizeActiveForms = NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
+		UInt32 ActiveForeColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemForegroundColor();
+		UInt32 ActiveBackColor = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetFormListActiveItemBackgroundColor();
+		bool ColorizeActiveForms = nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetShouldColorizeActiveForms();
 		if (Data->IsActive() && ColorizeActiveForms)
 		{
 			Item->ForeColor = System::Drawing::Color::FromArgb(ActiveForeColor & 0xFF,
@@ -754,7 +754,7 @@ namespace ConstructionSetExtender
 		FormList->Items->Add(Item);
 	}
 
-	bool TagBrowser::AddItemToActiveTag(ComponentDLLInterface::FormData* Data)
+	bool TagBrowser::AddItemToActiveTag(componentDLLInterface::FormData* Data)
 	{
 		AdvTree::Node^ SelectedNode = TagTree->SelectedNode;
 		if (SelectedNode != nullptr)

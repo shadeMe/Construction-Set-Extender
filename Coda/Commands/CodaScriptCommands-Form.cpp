@@ -1,12 +1,12 @@
 #include "CodaScriptCommands-Form.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace BGSEEScript
+	namespace script
 	{
-		namespace Commands
+		namespace commands
 		{
-			namespace Form
+			namespace form
 			{
 				CodaScriptCommandRegistrarDef("Form")
 
@@ -163,7 +163,7 @@ namespace ConstructionSetExtender
 					ICodaScriptDataStore* Array = Utilities->ArrayAllocate(200);
 					SME_ASSERT(Array);
 
-					for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+					for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 					{
 						UInt32 FormID = NULL;
 						TESForm* Form = NULL;

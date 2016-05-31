@@ -6,7 +6,7 @@
 using namespace DevComponents;
 using namespace GlobalInputMonitor;
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ref class DragonDropForm : public Form
 	{
@@ -21,14 +21,14 @@ namespace ConstructionSetExtender
 		AdvTree::AdvTree^									ParentTree;
 
 		void												AddTagNodeToDatabase(AdvTree::Node^ Tag);
-		bool												TagItem(String^% TagName, ComponentDLLInterface::FormData* Data);
+		bool												TagItem(String^% TagName, componentDLLInterface::FormData* Data);
 	public:
 		TagDatabase(AdvTree::AdvTree^ Tree);
 
 		void												AddTag(AdvTree::Node^ ParentTag, String^% Name);
 		void												RemoveTag(AdvTree::Node^ Tag);
 
-		bool												TagItem(AdvTree::Node^ Tag, ComponentDLLInterface::FormData* Data);
+		bool												TagItem(AdvTree::Node^ Tag, componentDLLInterface::FormData* Data);
 		void												UntagItem(AdvTree::Node^ Tag, String^% Name);
 
 		bool												GetItemExistsInTag(AdvTree::Node^ Tag, String^% Name);
@@ -93,13 +93,13 @@ namespace ConstructionSetExtender
 		bool												MouseDragInProgress;
 
 		void												UpdateFormListForTag(AdvTree::Node^ Tag);
-		void												AddItemToFormList(ComponentDLLInterface::FormData* Data);
+		void												AddItemToFormList(componentDLLInterface::FormData* Data);
 	public:
 		static TagBrowser^%									GetSingleton();
 
 		void												Show(IntPtr Handle);
 		void												Hide();
-		bool												AddItemToActiveTag(ComponentDLLInterface::FormData* Data);
+		bool												AddItemToActiveTag(componentDLLInterface::FormData* Data);
 		IntPtr												GetFormListHandle();
 		IntPtr												GetWindowHandle();
 		bool												GetDragInProgress();

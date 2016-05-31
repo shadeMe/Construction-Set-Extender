@@ -3,7 +3,7 @@
 #include "ScriptEditorPreferences.h"
 #include "Globals.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	System::Windows::Media::Imaging::BitmapSource^ WPFImageResourceGenerator::CreateImageSource(String^ ResourceIdentifier)
 	{
@@ -23,7 +23,7 @@ namespace ConstructionSetExtender
 		}
 		finally
 		{
-			NativeWrapper::DeleteObject(OrgResource->GetHbitmap());
+			nativeWrapper::DeleteObject(OrgResource->GetHbitmap());
 		}
 
 		delete OrgResource;
@@ -47,9 +47,9 @@ namespace ConstructionSetExtender
 		System::Threading::ThreadPool::QueueUserWorkItem(gcnew System::Threading::WaitCallback(&ThreadCallback), Element);
 	}
 
-	namespace TextEditors
+	namespace textEditors
 	{
-		namespace AvalonEditor
+		namespace avalonEditor
 		{
 			void ILineBackgroundColorizer::RenderBackground(TextView^ Destination,
 															System::Windows::Media::DrawingContext^ DrawingContext,
@@ -233,11 +233,11 @@ namespace ConstructionSetExtender
 			{
 				switch (CompareField)
 				{
-				case ConstructionSetExtender::TextEditors::AvalonEditor::TrackingMessageSorter::ComparisonField::Line:
+				case cse::textEditors::avalonEditor::TrackingMessageSorter::ComparisonField::Line:
 					return X->Line() < Y->Line();
-				case ConstructionSetExtender::TextEditors::AvalonEditor::TrackingMessageSorter::ComparisonField::Message:
+				case cse::textEditors::avalonEditor::TrackingMessageSorter::ComparisonField::Message:
 					return String::Compare(X->Message(), Y->Message(), true);
-				case ConstructionSetExtender::TextEditors::AvalonEditor::TrackingMessageSorter::ComparisonField::ImageIndex:
+				case cse::textEditors::avalonEditor::TrackingMessageSorter::ComparisonField::ImageIndex:
 					{
 						TrackingImageMessage^ XImage = (TrackingImageMessage^)X;
 						TrackingImageMessage^ YImage = (TrackingImageMessage^)Y;
@@ -625,8 +625,8 @@ namespace ConstructionSetExtender
 				List<ScriptMessage^>^ CompilerErrors = gcnew List < ScriptMessage^ > ;
 
 				if (GetMessages(Line,
-								TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
-								TextEditors::IScriptTextEditor::ScriptMessageType::Error,
+								textEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
+								textEditors::IScriptTextEditor::ScriptMessageType::Error,
 								CompilerErrors))
 				{
 					for each (auto Itr in CompilerErrors)
@@ -804,13 +804,13 @@ namespace ConstructionSetExtender
 				{
 					switch (Source)
 					{
-					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Messages:
+					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Messages:
 						Messages->BeginUpdate();
 						break;
-					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
+					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
 						Bookmarks->BeginUpdate();
 						break;
-					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::FindResults:
+					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::FindResults:
 						FindResults->BeginUpdate();
 						break;
 					}
@@ -831,13 +831,13 @@ namespace ConstructionSetExtender
 				{
 					switch (CurrentBatchUpdate)
 					{
-					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Messages:
+					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Messages:
 						Messages->EndUpdate(Sort, gcnew ScriptMessageSorter(TrackingMessageSorter::ComparisonField::ImageIndex));
 						break;
-					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
+					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::Bookmarks:
 						Bookmarks->EndUpdate(Sort, gcnew ScriptBookmarkSorter(TrackingMessageSorter::ComparisonField::Line));
 						break;
-					case ConstructionSetExtender::TextEditors::AvalonEditor::LineTrackingManager::UpdateSource::FindResults:
+					case cse::textEditors::avalonEditor::LineTrackingManager::UpdateSource::FindResults:
 						FindResults->EndUpdate(Sort, gcnew ScriptFindResultSorter(TrackingMessageSorter::ComparisonField::Line));
 						break;
 					}
@@ -1220,7 +1220,7 @@ namespace ConstructionSetExtender
 
 			void ObScriptIndentStrategy::IndentLine(AvalonEdit::Document::TextDocument^ document, AvalonEdit::Document::DocumentLine^ line)
 			{
-				ObScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
+				obScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, true);
 				UInt32 CurrIndent = Data->GetLineIndentLevel(line->LineNumber);
 
 				AvalonEdit::Document::DocumentLine^ previousLine = line->PreviousLine;
@@ -1240,15 +1240,15 @@ namespace ConstructionSetExtender
 				{
 					AvalonEdit::Document::ISegment^ Leading = AvalonEdit::Document::TextUtilities::GetLeadingWhitespace(document, previousLine);
 
-					if (Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::ElseIf ||
-						Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::Else)
+					if (Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::ElseIf ||
+						Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::Else)
 					{
 						if (CurrIndent)
 							document->Replace(Leading, gcnew String('\t', CurrIndent - 1));
 					}
-					else if	(Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::EndIf ||
-							Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::End ||
-							Parser->GetFirstTokenType() == ObScriptParsing::ScriptTokenType::Loop)
+					else if	(Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::EndIf ||
+							Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::End ||
+							Parser->GetFirstTokenType() == obScriptParsing::ScriptTokenType::Loop)
 					{
 						document->Replace(Leading, gcnew String('\t', CurrIndent));
 					}
@@ -1283,8 +1283,8 @@ namespace ConstructionSetExtender
 
 				List<AvalonEdit::Folding::NewFolding^>^ Foldings = gcnew List<AvalonEdit::Folding::NewFolding^>();
 
-				ObScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, false);
-				for each (ObScriptParsing::ControlBlock^ Itr in Data->ControlBlocks)
+				obScriptParsing::AnalysisData^ Data = Parent->GetSemanticAnalysisCache(false, false);
+				for each (obScriptParsing::ControlBlock^ Itr in Data->ControlBlocks)
 				{
 					if (Itr->IsMalformed() == false &&
 						Itr->StartLine <= document->LineCount && Itr->StartLine > 0 &&
@@ -1431,7 +1431,7 @@ namespace ConstructionSetExtender
 			VisualLineElement^ StructureVisualizerRenderer::ConstructElement(Int32 offset)
 			{
 				DocumentLine^ CurrentLine = CurrentContext->Document->GetLineByOffset(offset);
-				ObScriptParsing::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
+				obScriptParsing::ControlBlock^ Block = ParentEditor->GetSemanticAnalysisCache(false, false)->GetBlockEndingAt(CurrentLine->LineNumber);
 
 				if (Block)
 				{

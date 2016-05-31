@@ -1,5 +1,5 @@
 #include "Archive.h"
-#include <BGSEEMain.h>
+#include <bgsee\Main.h>
 
 ArchiveListT**			ArchiveManager::LoadedArchives = (ArchiveListT**)0x00A0DD8C;
 

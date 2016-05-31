@@ -1,6 +1,6 @@
 #include "ListViewUtilities.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ListViewItem^ GetListViewSelectedItem(ListView^ Source)
 	{

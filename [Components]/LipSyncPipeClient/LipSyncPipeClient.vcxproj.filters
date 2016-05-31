@@ -9,7 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\[Common]\CSInteropData.h" />
     <ClInclude Include="LipSyncPipeClient.h" />
     <ClInclude Include="..\..\..\[Libraries]\SME Sundries\MemoryHandler.h">
       <Filter>Utilities</Filter>
@@ -17,10 +16,11 @@
     <ClInclude Include="..\..\..\[Libraries]\SME Sundries\SME_Prefix.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\[Common]\OldCSInteropData.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\[Common]\CSInteropData.cpp" />
     <ClCompile Include="LipSyncPipeClient.cpp" />
+    <ClCompile Include="..\..\[Common]\OldCSInteropData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc">

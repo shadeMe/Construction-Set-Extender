@@ -1,9 +1,9 @@
 #pragma once
 #include "SemanticAnalysis.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
 		ref class IntelliSenseItem;
 		ref class Script;

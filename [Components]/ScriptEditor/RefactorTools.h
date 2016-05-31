@@ -2,11 +2,11 @@
 
 #include "[Common]\HandShakeStructs.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
-		namespace Refactoring
+		namespace refactoring
 		{
 			ref class ModifyVariableIndicesDialog : public System::Windows::Forms::Form
 			{

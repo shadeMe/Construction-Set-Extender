@@ -1,16 +1,16 @@
 #include "Hooks-Plugins.h"
 #include "Hooks-Misc.h"
 #include "Hooks-Dialog.h"
-#include "..\CSEUIManager.h"
-#include "..\CSEWorkspaceManager.h"
+#include "..\UIManager.h"
+#include "..\WorkspaceManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		_DefineHookHdlr(SavePluginMasterEnum, 0x0047ECC6);
 		_DefineNopHdlr(CheckIsActivePluginAnESM, 0x0040B65E, 2);
@@ -79,7 +79,7 @@ namespace ConstructionSetExtender
 			return BGSEEUI->ModalDialog(BGSEEMAIN->GetExtenderHandle(),
 										MAKEINTRESOURCE(IDD_TESFILESAVE),
 										BGSEEUI->GetMainWindow(),
-										(DLGPROC)UIManager::TESFileSaveDlgProc);
+										(DLGPROC)uiManager::TESFileSaveDlgProc);
 		}
 
 		#define _hhName		SavePluginCommonDialog
@@ -162,7 +162,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoPostPluginSaveHook(void)
 		{
-			CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+			cliWrapper::interfaces::SE->UpdateIntelliSenseDatabase();
 		}
 
 		#define _hhName	PostPluginSave
@@ -192,7 +192,7 @@ namespace ConstructionSetExtender
 				if (TESObjectWindow::IsMinimized() == false)
 					BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::WindowHandle);
 
-				CLIWrapper::Interfaces::SE->UpdateIntelliSenseDatabase();
+				cliWrapper::interfaces::SE->UpdateIntelliSenseDatabase();
 				SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 
 				SetActiveWindow(*TESCSMain::WindowHandle);				// to make sure none of its child dialogs are hidden behind it
@@ -226,7 +226,7 @@ namespace ConstructionSetExtender
 		{
 			if ((CurrentFile->fileFlags & TESFile::kFileFlag_Loaded) == 0)
 				return false;
-			else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && Settings::Plugins::kSaveLoadedESPsAsMasters.GetData().i == 0)
+			else if ((CurrentFile->fileFlags & TESFile::kFileFlag_Master) == 0 && settings::plugins::kSaveLoadedESPsAsMasters.GetData().i == 0)
 				return false;
 			else
 				return true;
@@ -530,7 +530,7 @@ namespace ConstructionSetExtender
 
 			if (File == NULL)
 				return;
-			else if (Settings::Plugins::kPreventTimeStampChanges.GetData().i == 0)
+			else if (settings::plugins::kPreventTimeStampChanges.GetData().i == 0)
 				return;
 
 			char Buffer[0x200] = {0};

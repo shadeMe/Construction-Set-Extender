@@ -3,9 +3,9 @@
 #include "[Common]\AuxiliaryWindowsForm.h"
 #include "WorkspaceViewInterface.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		ref class FindReplaceDialog
 		{

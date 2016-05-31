@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ref class AnimatedForm : public System::Windows::Forms::Form
 	{

@@ -3,9 +3,9 @@
 #include "Globals.h"
 #include "IntelliSenseDatabase.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Preferences
+	namespace preferences
 	{
 		String^ BoundControl::GetValue()
 		{
@@ -238,7 +238,7 @@ namespace ConstructionSetExtender
 				BoundControl^ Control = Itr.Value;
 
 				char Buffer[0x200] = {0};
-				NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI((CString(INI->Key)).c_str(),
+				nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI((CString(INI->Key)).c_str(),
 					(CString(INI->Section)).c_str(),
 					(CString(INI->DefaultValue)).c_str(), Buffer, sizeof(Buffer));
 
@@ -253,7 +253,7 @@ namespace ConstructionSetExtender
 				INISetting^ INI = Itr.Key;
 				BoundControl^ Control = Itr.Value;
 
-				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI((CString(INI->Key)).c_str(),
+				nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI((CString(INI->Key)).c_str(),
 					(CString(INI->Section)).c_str(),
 					(CString(Control->GetValue())).c_str());
 			}
@@ -1372,7 +1372,7 @@ namespace ConstructionSetExtender
 
 		void ScriptEditorPreferences::ForceDatabaseUpdate_Click( Object^ Sender, EventArgs^ E )
 		{
-			ConstructionSetExtender::IntelliSense::ISDB->ForceUpdateDatabase();
+			cse::intellisense::ISDB->ForceUpdateDatabase();
 		}
 	}
 }

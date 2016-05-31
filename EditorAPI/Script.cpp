@@ -1,7 +1,7 @@
 #include "Script.h"
 #include "Hooks\Hooks-ScriptEditor.h"
 
-using namespace ConstructionSetExtender;
+using namespace cse;
 
 TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
 bool									TESScriptCompiler::PreventErrorDetours = false;
@@ -76,16 +76,16 @@ bool Script::IsMagicScript() const
 void TESScriptCompiler::ToggleScriptCompilation( bool State )
 {
 	if (!State)
-		Hooks::_MemHdlr(ToggleScriptCompilingNewData).WriteBuffer();
+		hooks::_MemHdlr(ToggleScriptCompilingNewData).WriteBuffer();
 	else
-		Hooks::_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
+		hooks::_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
 }
 
 UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefListT& OutList)
 {
 	OutList.clear();
 
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
 		UInt32 FormID = NULL;
 		TESForm* Form = NULL;

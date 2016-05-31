@@ -1,8 +1,8 @@
 #include "Hooks-Renderer.h"
-#include "CSERenderSelectionGroupManager.h"
-#include "CSERenderWindowPainter.h"
-#include "CSEPathGridUndoManager.h"
-#include "CSEAuxiliaryViewport.h"
+#include "RenderWindowGroupManager.h"
+#include "RenderWindowPainter.h"
+#include "PathGridUndoManager.h"
+#include "AuxiliaryViewport.h"
 #include "Hooks-LOD.h"
 
 #pragma warning(push)
@@ -10,9 +10,9 @@
 #pragma warning(disable: 4005 4748)
 #pragma warning (disable: 4410)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
 		_DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
@@ -172,7 +172,7 @@ namespace ConstructionSetExtender
 				else
 				{
 					// add the parent group to the selection, if any
-					if (CSERenderSelectionGroupManager::Instance.SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
+					if (RenderWindowGroupManager::Instance.SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
 						_RENDERSEL->AddToSelection(Ref, ShowSelectionBox);
 
 					// recheck the selection for frozen refs that may have been a part of the group
@@ -216,7 +216,7 @@ namespace ConstructionSetExtender
 			Wireframe->m_bWireframe = 0;
 
 			// generate and update parent-child links
-			if (Settings::Renderer::kParentChildVisualIndicator().i &&
+			if (settings::renderer::kParentChildVisualIndicator().i &&
 				*TESRenderWindow::PathGridEditFlag == 0 &&
 				*TESRenderWindow::LandscapeEditFlag == 0)
 			{
@@ -488,7 +488,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoRenderWindowUpdateViewportHook(void)
 		{
-			if (Settings::Renderer::kUpdateViewPortAsync.GetData().i)
+			if (settings::renderer::kUpdateViewPortAsync.GetData().i)
 				return true;
 			else
 				return false;
@@ -629,49 +629,49 @@ namespace ConstructionSetExtender
 			{
 			case kMovementSetting_RefMovementSpeed:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltRefMovementSpeed.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltRefMovementSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefMovementSpeed;
 
 				break;
 			case kMovementSetting_RefSnapGrid:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltRefSnapGrid.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltRefSnapGrid.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::SnapGridDistance;
 
 				break;
 			case kMovementSetting_RefRotationSpeed:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltRefRotationSpeed.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltRefRotationSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::RefRotationSpeed;
 
 				break;
 			case kMovementSetting_RefSnapAngle:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltRefSnapAngle.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltRefSnapAngle.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::SnapAngle;
 
 				break;
 			case kMovementSetting_CamRotationSpeed:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltCamRotationSpeed.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltCamRotationSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraRotationSpeed;
 
 				break;
 			case kMovementSetting_CamZoomSpeed:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltCamZoomSpeed.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltCamZoomSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraZoomSpeed;
 
 				break;
 			case kMovementSetting_CamPanSpeed:
 				if (TESRenderWindow::UseAlternateMovementSettings)
-					s_MovementSettingBuffer = Settings::Renderer::kAltCamPanSpeed.GetData().f;
+					s_MovementSettingBuffer = settings::renderer::kAltCamPanSpeed.GetData().f;
 				else
 					s_MovementSettingBuffer = *TESRenderWindow::CameraPanSpeed;
 
@@ -938,10 +938,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridRecordOperation(void)
 		{
-			CSEPathGridUndoManager::Instance.ResetRedoStack();
+			PathGridUndoManager::Instance.ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		void __stdcall DoTESPathGridRecordOperationMoveBHook(void)
@@ -1015,11 +1015,11 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridDeletePointHook(void)
 		{
-			CSEPathGridUndoManager::Instance.ResetRedoStack();
-			CSEPathGridUndoManager::Instance.HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
+			PathGridUndoManager::Instance.ResetRedoStack();
+			PathGridUndoManager::Instance.HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
+				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridDeletePoint
@@ -1041,7 +1041,7 @@ namespace ConstructionSetExtender
 		{
 			PathGridPointListT* DeletionList = (PathGridPointListT*)PathGridPointListT::Create(&FormHeap_Allocate);
 			DeletionList->AddAt(Point, eListEnd);
-			CSEPathGridUndoManager::Instance.HandlePathGridPointDeletion(DeletionList);
+			PathGridUndoManager::Instance.HandlePathGridPointDeletion(DeletionList);
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
 
@@ -1079,8 +1079,8 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridToggleEditModeHook(void)
 		{
-			CSEPathGridUndoManager::Instance.ResetRedoStack();
-			CSEPathGridUndoManager::Instance.ResetUndoStack();
+			PathGridUndoManager::Instance.ResetRedoStack();
+			PathGridUndoManager::Instance.ResetUndoStack();
 		}
 
 		#define _hhName		TESPathGridToggleEditMode
@@ -1100,10 +1100,10 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridCreateNewLinkedPointHook(void)
 		{
-			CSEPathGridUndoManager::Instance.ResetRedoStack();
+			PathGridUndoManager::Instance.ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				CSEPathGridUndoManager::Instance.RecordOperation(CSEPathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
+				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridCreateNewLinkedPoint
@@ -1236,7 +1236,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDuplicateReferencesHook(void)
 		{
-			if (Settings::Renderer::kZOffsetDuplicatedRefs().i)
+			if (settings::renderer::kZOffsetDuplicatedRefs().i)
 			{
 				for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 				{
@@ -1379,7 +1379,7 @@ namespace ConstructionSetExtender
 			thisCall<bool>(0x006FF1A0, Camera, XCoord, YCoord, OutPosition, OutRotation);
 			Vector3 PosBuf(*OutPosition), RotBuf(*OutRotation);
 
-			if (Settings::Renderer::kCoplanarRefDrops.GetData().i)
+			if (settings::renderer::kCoplanarRefDrops.GetData().i)
 			{
 				// perform the necessary (nose)picking nonsense
 				thisCall<void>(0x00417C40, 0x00A0BC64, _TES->sceneGraphObjectRoot);
@@ -1549,7 +1549,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoRenderWindowCameraRotationPivotHook(Vector3* OutPivot, UInt8* AlternatePivot)
 		{
-			bool Enabled = _RENDERSEL->selectionCount == 0 && Settings::Renderer::kFixedCameraPivot.GetData().i;
+			bool Enabled = _RENDERSEL->selectionCount == 0 && settings::renderer::kFixedCameraPivot.GetData().i;
 
 			if (Enabled && GetAsyncKeyState(VK_CONTROL) == FALSE ||
 				(Enabled == false && GetAsyncKeyState(VK_CONTROL)))
@@ -1587,9 +1587,9 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridPointGenerateNiNodeA(NiLines* Connector)
 		{
-			if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+			if (settings::renderer::kPathGridLinkedRefIndicator().i == 0)
 			{
-				if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u & Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector))
+				if ((settings::renderer::kPathGridLinkedRefIndicatorFlags().u & settings::renderer::kPathGridLinkedRefIndicatorFlag_HideLineConnector))
 					Connector->SetCulled(true);
 			}
 		}
@@ -1614,9 +1614,9 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridPointGenerateNiNodeB(NiTriShape* BoundingBox)
 		{
-			if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+			if (settings::renderer::kPathGridLinkedRefIndicator().i == 0)
 			{
-				if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u & Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox))
+				if ((settings::renderer::kPathGridLinkedRefIndicatorFlags().u & settings::renderer::kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox))
 					BoundingBox->SetCulled(true);
 			}
 		}
@@ -1641,9 +1641,9 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoTESPathGridGenerateNiNode(NiTriShape* RefNode)
 		{
-			if (Settings::Renderer::kPathGridLinkedRefIndicator().i == 0)
+			if (settings::renderer::kPathGridLinkedRefIndicator().i == 0)
 			{
-				if ((Settings::Renderer::kPathGridLinkedRefIndicatorFlags().u & Settings::Renderer::kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode))
+				if ((settings::renderer::kPathGridLinkedRefIndicatorFlags().u & settings::renderer::kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode))
 					RefNode->SetCulled(true);
 			}
 		}

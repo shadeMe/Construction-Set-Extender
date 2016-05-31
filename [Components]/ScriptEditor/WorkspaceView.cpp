@@ -7,9 +7,9 @@
 
 using namespace GlobalInputMonitor;
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		void WorkspaceViewTabTearing::End()
 		{
@@ -46,7 +46,7 @@ namespace ConstructionSetExtender
 
 					bool Relocated = false;
 					bool SameTabStrip = false;
-					IntPtr Wnd = NativeWrapper::WindowFromPoint(E->Location);
+					IntPtr Wnd = nativeWrapper::WindowFromPoint(E->Location);
 					if (Wnd != IntPtr::Zero)
 					{
 						Control^ UnderMouse = Control::FromHandle(Wnd);
@@ -335,7 +335,7 @@ namespace ConstructionSetExtender
 
 		void WorkspaceViewOutlineView::ListView_KeyDown(Object^ Sender, KeyEventArgs^ E)
 		{
-			ObScriptParsing::Structurizer::Node^ Selection = (ObScriptParsing::Structurizer::Node^)ListView->SelectedObject;
+			obScriptParsing::Structurizer::Node^ Selection = (obScriptParsing::Structurizer::Node^)ListView->SelectedObject;
 			if (Selection == nullptr)
 				return;
 
@@ -352,7 +352,7 @@ namespace ConstructionSetExtender
 
 		void WorkspaceViewOutlineView::ListView_ItemActivate(Object^ Sender, EventArgs^ E)
 		{
-			ObScriptParsing::Structurizer::Node^ Selection = (ObScriptParsing::Structurizer::Node^)ListView->SelectedObject;
+			obScriptParsing::Structurizer::Node^ Selection = (obScriptParsing::Structurizer::Node^)ListView->SelectedObject;
 			if (Selection == nullptr)
 				return;
 
@@ -382,7 +382,7 @@ namespace ConstructionSetExtender
 		{
 			if (RowObject)
 			{
-				ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)RowObject;
+				obScriptParsing::Structurizer::Node^ Item = (obScriptParsing::Structurizer::Node^)RowObject;
 				Debug::Assert(Item != nullptr);
 
 				return Item->Description;
@@ -395,7 +395,7 @@ namespace ConstructionSetExtender
 		{
 			if (RowObject)
 			{
-				ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)RowObject;
+				obScriptParsing::Structurizer::Node^ Item = (obScriptParsing::Structurizer::Node^)RowObject;
 				Debug::Assert(Item != nullptr);
 
 				return (int)Item->Type;
@@ -406,7 +406,7 @@ namespace ConstructionSetExtender
 
 		bool WorkspaceViewOutlineView::ListViewCanExpandGetter(Object^ E)
 		{
-			ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)E;
+			obScriptParsing::Structurizer::Node^ Item = (obScriptParsing::Structurizer::Node^)E;
 			Debug::Assert(Item != nullptr);
 
 			return Item->Children->Count > 0;
@@ -414,7 +414,7 @@ namespace ConstructionSetExtender
 
 		Collections::IEnumerable^ WorkspaceViewOutlineView::ListViewChildrenGetter(Object^ E)
 		{
-			ObScriptParsing::Structurizer::Node^ Item = (ObScriptParsing::Structurizer::Node^)E;
+			obScriptParsing::Structurizer::Node^ Item = (obScriptParsing::Structurizer::Node^)E;
 			Debug::Assert(Item != nullptr);
 
 			return Item->Children;
@@ -501,7 +501,7 @@ namespace ConstructionSetExtender
 			Parent = nullptr;
 		}
 
-		void WorkspaceViewOutlineView::Show(ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model)
+		void WorkspaceViewOutlineView::Show(obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model)
 		{
 			Debug::Assert(AssociatedModel == nullptr && StructureData == nullptr);
 
@@ -564,7 +564,7 @@ namespace ConstructionSetExtender
 				FindReplaceAllResults^ Data = (FindReplaceAllResults^)E;
 				switch (Data->Operation)
 				{
-				case TextEditors::IScriptTextEditor::FindReplaceOperation::Replace:
+				case textEditors::IScriptTextEditor::FindReplaceOperation::Replace:
 					Result = "Replace \"" + Data->Query + "\" with \"" + Data->Replacement + "\" (" + Data->TotalHitCount + " hits in " + Data->Hits->Count + " script(s))";
 					break;
 				default:
@@ -577,9 +577,9 @@ namespace ConstructionSetExtender
 				FindReplaceAllResults::HitData^ Data = (FindReplaceAllResults::HitData^)E;
 				Result = "Script " + Data->ParentDescription + " (" + Data->Hits->TotalHitCount + " hits)";
 			}
-			else if (E->GetType() == TextEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+			else if (E->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
 			{
-				TextEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (TextEditors::IScriptTextEditor::FindReplaceResult::HitData^)E;
+				textEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (textEditors::IScriptTextEditor::FindReplaceResult::HitData^)E;
 				Result = "Line " + Data->Line + " (" + Data->Hits + " hit(s)): " + Data->Text;
 			}
 
@@ -787,9 +787,9 @@ namespace ConstructionSetExtender
 										  PREFERENCES->FetchSettingAsInt("FontSize", "Appearance"),
 										  (FontStyle)PREFERENCES->FetchSettingAsInt("FontStyle", "Appearance"));
 
-			OffsetTextViewer = gcnew TextEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
-			PreprocessorTextViewer = gcnew TextEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
-			IntelliSenseView = gcnew IntelliSense::IntelliSenseInterfaceView;
+			OffsetTextViewer = gcnew textEditors::ScriptOffsetViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
+			PreprocessorTextViewer = gcnew textEditors::SimpleTextViewer(CustomFont, ForegroundColor, BackgroundColor, HighlightColor, WorkspaceSplitter->Panel1);
+			IntelliSenseView = gcnew intellisense::IntelliSenseInterfaceView;
 			TabStripFilter = gcnew WorkspaceViewTabFilter(this);
 
 			CachedFindReplaceAllResults = gcnew List < FindReplaceAllResults^ > ;
@@ -812,7 +812,7 @@ namespace ConstructionSetExtender
 			ScopeCrumbBar->Padding = Padding(20, 0, 20, 0);
 	//		ScopeCrumbBar->ResetBackgroundStyle();
 
-			ScopeCrumbManager = gcnew TextEditors::ScopeBreadcrumbManager(ScopeCrumbBar);
+			ScopeCrumbManager = gcnew textEditors::ScopeBreadcrumbManager(ScopeCrumbBar);
 
 			SetupControlImage(ToolBarNewScript);
 			SetupControlImage(ToolBarOpenScript);
@@ -1222,7 +1222,7 @@ namespace ConstructionSetExtender
 			if (PREFERENCES->FetchSettingAsInt("UseCSParent", "General"))
 			{
 				EditorForm->ShowInTaskbar = false;
-				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)NativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle()));
+				EditorForm->Show(gcnew WindowHandleWrapper((IntPtr)nativeWrapper::g_CSEInterfaceTable->EditorAPI.GetMainWindowHandle()));
 			}
 			else
 				EditorForm->Show();
@@ -1470,7 +1470,7 @@ namespace ConstructionSetExtender
 				Debug::Assert(EditorTabStrip == nullptr || GetTabCount() == 0);
 
 				Rectangle Bounds = GetBounds(true);
-				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
+				nativeWrapper::g_CSEInterfaceTable->ScriptEditor.SaveEditorBoundsToINI(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 
 				// yuck!
 				delete this;
@@ -1715,12 +1715,12 @@ namespace ConstructionSetExtender
 
 			SaveManager->Description = "All open scripts in this window will be dumped to the selected folder.";
 			SaveManager->ShowNewFolderButton = true;
-			SaveManager->SelectedPath = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetDefaultCachePath());
+			SaveManager->SelectedPath = gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetDefaultCachePath());
 
 			if (SaveManager->ShowDialog() == DialogResult::OK && SaveManager->SelectedPath->Length > 0)
 			{
 				String^ FileExtension = "txt";
-				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter The File Extension To Use", "Dump Scripts", FileExtension);
+				inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Enter The File Extension To Use", "Dump Scripts", FileExtension);
 				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
 					return;
 				else
@@ -1870,7 +1870,7 @@ namespace ConstructionSetExtender
 				MessageBoxButtons::YesNo,
 				MessageBoxIcon::Exclamation) == DialogResult::Yes)
 			{
-				NativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileScripts();
+				nativeWrapper::g_CSEInterfaceTable->ScriptEditor.RecompileScripts();
 				MessageBox::Show("All active scripts recompiled. Results have been logged to the console.",
 								 SCRIPTEDITOR_TITLE,
 								 MessageBoxButtons::OK,
@@ -2052,7 +2052,7 @@ namespace ConstructionSetExtender
 
 		void ConcreteWorkspaceView::ToolBarSnippetManager_Click(Object^ Sender, EventArgs^ E)
 		{
-			IntelliSense::ISDB->ShowCodeSnippetManager();
+			intellisense::ISDB->ShowCodeSnippetManager();
 		}
 
 		void ConcreteWorkspaceView::ToolBarRefactorMenuContentsDocumentScript_Click(Object^ Sender, EventArgs^ E)
@@ -2159,9 +2159,9 @@ namespace ConstructionSetExtender
 			Object^ Selection = GlobalFindList->SelectedObject;
 			if (Selection)
 			{
-				if (Selection->GetType() == TextEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
+				if (Selection->GetType() == textEditors::IScriptTextEditor::FindReplaceResult::HitData::typeid)
 				{
-					TextEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (TextEditors::IScriptTextEditor::FindReplaceResult::HitData^)Selection;
+					textEditors::IScriptTextEditor::FindReplaceResult::HitData^ Data = (textEditors::IScriptTextEditor::FindReplaceResult::HitData^)Selection;
 					FindReplaceAllResults::HitData^ ParentData = (FindReplaceAllResults::HitData^)GlobalFindList->GetParent(Selection);
 
 					if (ParentData->Parent)
@@ -2348,12 +2348,12 @@ namespace ConstructionSetExtender
 					if (i == 0)
 					{
 						ModelController()->Open(GetActiveModel(),
-												NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
+												nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str()));
 					}
 					else
 					{
 						E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::Open;
-						E->OpenArgs = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+						E->OpenArgs = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
 						E->BindAfterCreation = false;
 						Debug::Assert(E->OpenArgs != nullptr);
 						NewTab(E);
@@ -2373,7 +2373,7 @@ namespace ConstructionSetExtender
 				for each (auto Itr in Selection)
 				{
 					CString EID(Itr);
-					NativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
+					nativeWrapper::g_CSEInterfaceTable->ScriptEditor.DeleteScript(EID.c_str());
 				}
 			}
 		}
@@ -2406,7 +2406,7 @@ namespace ConstructionSetExtender
 				else
 					LineCount = ModelController()->GetLineCount(Active);
 
-				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Line Number (1 - " + LineCount + ")", "Go To Line");
+				inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Line Number (1 - " + LineCount + ")", "Go To Line");
 				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
 					return;
 
@@ -2425,7 +2425,7 @@ namespace ConstructionSetExtender
 		{
 			if (ToolBarShowOffsets->Checked)
 			{
-				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Offset (0000 - " + OffsetTextViewer->GetLastOffset().ToString("X4") + ")", "Go To Offset");
+				inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Offset (0000 - " + OffsetTextViewer->GetLastOffset().ToString("X4") + ")", "Go To Offset");
 				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
 					return;
 
@@ -2636,21 +2636,21 @@ namespace ConstructionSetExtender
 					}
 					else
 					{
-						ComponentDLLInterface::ScriptData* ScriptData = nullptr;
+						componentDLLInterface::ScriptData* ScriptData = nullptr;
 						try
 						{
 							StreamReader^ FileParser = gcnew StreamReader(E->PathToFile);
 							String^ Contents = FileParser->ReadToEnd()->Replace("\r\n", "\n");
 							FileParser->Close();
 
-							ObScriptParsing::AnalysisData^ Data = gcnew ObScriptParsing::AnalysisData;
-							Data->PerformAnalysis(Contents, ObScriptParsing::ScriptType::None,
-												  ObScriptParsing::AnalysisData::Operation::None, nullptr);
+							obScriptParsing::AnalysisData^ Data = gcnew obScriptParsing::AnalysisData;
+							Data->PerformAnalysis(Contents, obScriptParsing::ScriptType::None,
+												  obScriptParsing::AnalysisData::Operation::None, nullptr);
 
 							if (Data->Name != "")
 							{
 								CString CEID(Data->Name);
-								ScriptData = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
+								ScriptData = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CEID.c_str());
 
 								if (ScriptData)
 									New = ModelFactory()->CreateModel(ScriptData);
@@ -2668,7 +2668,7 @@ namespace ConstructionSetExtender
 							ModelController()->New(New);
 
 							if (ScriptData)
-								NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptData, false);
+								nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptData, false);
 						}
 
 						ModelController()->LoadFromDisk(New, E->PathToFile);
@@ -3026,14 +3026,14 @@ namespace ConstructionSetExtender
 				NewTabOperationArgs^ E = gcnew NewTabOperationArgs;
 
 				E->PostCreationOperation = NewTabOperationArgs::PostNewTabOperation::Open;
-				E->OpenArgs = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
+				E->OpenArgs = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(EID.c_str());
 
 				if (E->OpenArgs);
 					Concrete->NewTab(E);
 			}
 		}
 
-		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+		int ConcreteWorkspaceViewController::FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
 														  String^ Query, String^ Replacement, UInt32 Options, bool Global)
 		{
 			Debug::Assert(View != nullptr);
@@ -3050,7 +3050,7 @@ namespace ConstructionSetExtender
 				for each (auto Itr in Concrete->AssociatedModels)
 				{
 					IWorkspaceModel^ Model = Itr.Key;
-					TextEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
+					textEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->ModelController()->FindReplace(Model,
 																														 Operation,
 																														 Query,
 																														 Replacement,
@@ -3078,19 +3078,19 @@ namespace ConstructionSetExtender
 			}
 			else
 			{
-				TextEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
+				textEditors::IScriptTextEditor::FindReplaceResult^ Result = Concrete->GetActiveModel()->Controller->FindReplace(Concrete->GetActiveModel(),
 																																Operation,
 																																Query,
 																																Replacement,
 																																Options);
-				if (Result->TotalHitCount && Operation != TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches)
+				if (Result->TotalHitCount && Operation != textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches)
 					Concrete->ShowFindResultList();
 
 				return Result->TotalHitCount;
 			}
 		}
 
-		void ConcreteWorkspaceViewController::ShowOutline(IWorkspaceView^ View, ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model)
+		void ConcreteWorkspaceViewController::ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model)
 		{
 			Debug::Assert(View != nullptr && Model != nullptr);
 			ConcreteWorkspaceView^ Concrete = (ConcreteWorkspaceView^)View;

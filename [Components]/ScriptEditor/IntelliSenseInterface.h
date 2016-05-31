@@ -3,15 +3,15 @@
 #include "[Common]\AuxiliaryWindowsForm.h"
 #include "ScriptTextEditorInterface.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
 		ref class IntelliSenseItemVariable;
 
 		ref class IntelliSenseInterfaceModel : public IIntelliSenseInterfaceModel
 		{
-			TextEditors::IScriptTextEditor^						ParentEditor;
+			textEditors::IScriptTextEditor^						ParentEditor;
 			IIntelliSenseInterfaceView^							BoundParent;
 
 			List<IntelliSenseItem^>^							LocalVariables;
@@ -28,18 +28,18 @@ namespace ConstructionSetExtender
 			property bool										Enabled;
 
 			void												ScriptEditorPreferences_Saved(Object^ Sender, EventArgs^ E);
-			void												ParentEditor_KeyDown(Object^ Sender, TextEditors::IntelliSenseKeyEventArgs^ E);
-			void												ParentEditor_ShowInterface(Object^ Sender, TextEditors::IntelliSenseShowEventArgs^ E);
-			void												ParentEditor_HideInterface(Object^ Sender, TextEditors::IntelliSenseHideEventArgs^ E);
-			void												ParentEditor_RelocateInterface(Object^ Sender, TextEditors::IntelliSensePositionEventArgs^ E);
+			void												ParentEditor_KeyDown(Object^ Sender, textEditors::IntelliSenseKeyEventArgs^ E);
+			void												ParentEditor_ShowInterface(Object^ Sender, textEditors::IntelliSenseShowEventArgs^ E);
+			void												ParentEditor_HideInterface(Object^ Sender, textEditors::IntelliSenseHideEventArgs^ E);
+			void												ParentEditor_RelocateInterface(Object^ Sender, textEditors::IntelliSensePositionEventArgs^ E);
 			void												ParentEditor_BackgroundAnalysisComplete(Object^ Sender, EventArgs^ E);
 			void												BoundParent_ItemSelected(Object^ Sender, EventArgs^ E);
 
 			EventHandler^										ScriptEditorPreferencesSavedHandler;
-			TextEditors::IntelliSenseKeyEventHandler^			ParentEditorKeyDown;
-			TextEditors::IntelliSenseShowEventHandler^			ParentEditorShowInterface;
-			TextEditors::IntelliSenseHideEventHandler^			ParentEditorHideInterface;
-			TextEditors::IntelliSensePositionEventHandler^		ParentEditorRelocateInterface;
+			textEditors::IntelliSenseKeyEventHandler^			ParentEditorKeyDown;
+			textEditors::IntelliSenseShowEventHandler^			ParentEditorShowInterface;
+			textEditors::IntelliSenseHideEventHandler^			ParentEditorHideInterface;
+			textEditors::IntelliSensePositionEventHandler^		ParentEditorRelocateInterface;
 			EventHandler^										BoundParentItemSelectedHandler;
 			EventHandler^										ParentEditorBGAnalysisCompleteHandler;
 
@@ -55,9 +55,9 @@ namespace ConstructionSetExtender
 			bool						GetTriggered(Keys E);
 
 			IntelliSenseItemVariable^	GetLocalVar(String^ Identifier);
-			void						UpdateLocalVars(ObScriptParsing::AnalysisData^ Data);
+			void						UpdateLocalVars(obScriptParsing::AnalysisData^ Data);
 		public:
-			IntelliSenseInterfaceModel(TextEditors::IScriptTextEditor^ Parent);
+			IntelliSenseInterfaceModel(textEditors::IScriptTextEditor^ Parent);
 			~IntelliSenseInterfaceModel();
 
 #pragma region Interfaces

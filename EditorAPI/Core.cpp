@@ -2,7 +2,7 @@
 #include "Hooks\Hooks-Renderer.h"
 #include "Hooks\Hooks-LOD.h"
 
-using namespace ConstructionSetExtender;
+using namespace cse;
 
 TESDataHandler**					TESDataHandler::Singleton = (TESDataHandler **)0x00A0E064;
 bool								TESDataHandler::PluginLoadSaveInProgress = false;
@@ -102,7 +102,7 @@ void TESDataHandler::ClearPluginArray()
 
 void TESDataHandler::CleanCellWaterExtraData( void )
 {
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
 		UInt32 FormID = NULL;
 		TESForm* Form = NULL;
@@ -235,7 +235,7 @@ void TESDataHandler::RemoveInvalidScripts( void )
 
 void TESDataHandler::FixInteriorCellFogPlane( void )
 {
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = TESForm::FormIDMap->GetFirstPos(); Itr;)
 	{
 		UInt32 FormID = NULL;
 		TESForm* Form = NULL;
@@ -321,9 +321,9 @@ LPDIRECT3DTEXTURE9 BSRenderedTexture::ConvertToD3DTexture(UInt32 Width, UInt32 H
 		Height = this->renderedTexture->unk030->height;
 
 	D3DXCreateTexture(_NIRENDERER->device, Width, Height, 1, 0, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM, &D3DTexture);
-	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteJump();
+	hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteJump();
 	Result = cdeclCall<LPDIRECT3DTEXTURE9>(0x004113E0, this->renderedTexture, 0, 0, Width, D3DTexture, 0, 1, NULL);
-	Hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteBuffer();
+	hooks::_MemHdlr(ConvertNiRenderedTexToD3DBaseTex).WriteBuffer();
 	SAFERELEASE_D3D(D3DTexture);
 
 	return Result;
@@ -384,11 +384,11 @@ void TESLODTextureGenerator::SaveExteriorSnapshot( TESObjectCELL* Exterior, UInt
 	else
 		ExteriorSnapshotPathBuffer = SavePath;
 
-	Hooks::_MemHdlr(GeneratePartialLODFilePath).WriteJump();
+	hooks::_MemHdlr(GeneratePartialLODFilePath).WriteJump();
 	CreateTextureBuffers();
 	cdeclCall<void>(0x00412480, XCoord, YCoord, Resolution);
 	ReleaseTextureBuffers();
-	Hooks::_MemHdlr(GeneratePartialLODFilePath).WriteBuffer();
+	hooks::_MemHdlr(GeneratePartialLODFilePath).WriteBuffer();
 	BGSEECONSOLE_MESSAGE("Saved exterior cell %i,%i snapshot to %s", XCoord, YCoord, ExteriorSnapshotPathBuffer);
 
 	ExteriorSnapshotPathBuffer = NULL;

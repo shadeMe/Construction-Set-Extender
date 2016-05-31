@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	// adapted from Timeslip's BSA reading code
 

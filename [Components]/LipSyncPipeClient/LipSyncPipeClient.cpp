@@ -1,7 +1,7 @@
 #include <fstream>
 #include "Windows.h"
 #include "LipSyncPipeClient.h"
-#include "[Common]\CSInteropData.h"
+#include "[Common]\OldCSInteropData.h"
 
 bool				g_HandleDebugText		=	false;
 HANDLE				g_InteropPipeHandle		=	INVALID_HANDLE_VALUE;
@@ -110,7 +110,7 @@ void ConnectToInteropPipe(void)
 
 void __stdcall ProcessServerMessage(void)
 {
-	CSECSInteropData InteropDataIn(CSECSInteropData::kMessageType_Wait), InteropDataOut(CSECSInteropData::kMessageType_OperationResult);
+	OldCSInteropData InteropDataIn(OldCSInteropData::kMessageType_Wait), InteropDataOut(OldCSInteropData::kMessageType_OperationResult);
 	DWORD BytesReadWriteBuffer = 0;
 
 	if (g_InteropPipeHandle == INVALID_HANDLE_VALUE)
@@ -125,7 +125,7 @@ void __stdcall ProcessServerMessage(void)
 		{
 			switch (InteropDataIn.MessageType)
 			{
-			case CSECSInteropData::kMessageType_Quit:
+			case OldCSInteropData::kMessageType_Quit:
 				DebugPrint("Lip Sync Pipe Client received a Quit message!");
 
 				if (g_DebugLog)
@@ -136,13 +136,13 @@ void __stdcall ProcessServerMessage(void)
 				CloseHandle(g_InteropPipeHandle);
 				ExitProcess(0);
 				break;
-			case CSECSInteropData::kMessageType_GenerateLIP:
+			case OldCSInteropData::kMessageType_GenerateLIP:
 				DebugPrint("Lip Sync Pipe Client received a GenerateLip message!");
 
-				InteropDataOut.MessageType = CSECSInteropData::kMessageType_Wait;
+				InteropDataOut.MessageType = OldCSInteropData::kMessageType_Wait;
 				PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &BytesReadWriteBuffer);
 
-				InteropDataOut.MessageType = CSECSInteropData::kMessageType_OperationResult;
+				InteropDataOut.MessageType = OldCSInteropData::kMessageType_OperationResult;
 				InteropDataOut.OperationResult = GenerateLIPFile(InteropDataIn.StringBufferA, InteropDataIn.StringBufferB);
 				PerformPipeOperation(g_InteropPipeHandle, kPipeOperation_Write, &InteropDataOut, &BytesReadWriteBuffer);
 				break;
@@ -216,7 +216,7 @@ void __stdcall HandleDebugText(const char* Message)
 	if (!g_HandleDebugText)
 		return;
 
-	CSECSInteropData InteropDataOut(CSECSInteropData::kMessageType_DebugPrint);
+	OldCSInteropData InteropDataOut(OldCSInteropData::kMessageType_DebugPrint);
 	DWORD BytesReadWriteBuffer = 0;
 
 	sprintf_s(InteropDataOut.StringBufferA, sizeof (InteropDataOut.StringBufferA), "%s", Message);

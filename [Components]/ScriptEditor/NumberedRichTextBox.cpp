@@ -2,9 +2,9 @@
 #include "SemanticAnalysis.h"
 #include "[Common]\NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
 		void NumberedRichTextBox::SimpleScrollRTB::WndProc(Message% e)
 		{
@@ -175,13 +175,13 @@ namespace ConstructionSetExtender
 
 			try
 			{
-				NativeWrapper::LockWindowUpdate(LineField->Handle);
+				nativeWrapper::LockWindowUpdate(LineField->Handle);
 				DrawLineNumbers();
 				HighlightLineNumbers();
 			}
 			finally
 			{
-				NativeWrapper::LockWindowUpdate(IntPtr::Zero);
+				nativeWrapper::LockWindowUpdate(IntPtr::Zero);
 			}
 		}
 
@@ -373,7 +373,7 @@ namespace ConstructionSetExtender
 
 		void OffsetRichTextBox::DrawLineNumbers(void)
 		{
-			NativeWrapper::LockWindowUpdate(LineField->Handle);
+			nativeWrapper::LockWindowUpdate(LineField->Handle);
 			int FirstLine = TextField->GetLineFromCharIndex(TextField->GetCharIndexFromPosition(Point(5, 5))) + 1;
 			int LastLine = TextField->GetLineFromCharIndex(TextField->GetCharIndexFromPosition(Point(TextField->Width, TextField->Height))) + 2;
 

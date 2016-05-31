@@ -1,17 +1,17 @@
 #pragma once
 
-#include "..\CSECoda.h"
+#include "..\Coda.h"
 
-using namespace bgsee::BGSEEScript;
-using namespace bgsee::BGSEEScript::Commands;
+using namespace bgsee::script;
+using namespace bgsee::script::commands;
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace BGSEEScript
+	namespace script
 	{
-		namespace Commands
+		namespace commands
 		{
-			namespace BaseFormComponent
+			namespace baseFormComponent
 			{
 				CodaScriptCommandRegistrarDecl;
 

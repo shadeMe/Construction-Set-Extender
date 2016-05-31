@@ -1,9 +1,9 @@
 #pragma once
 #include "[Common]\AuxiliaryWindowsForm.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Preferences
+	namespace preferences
 	{
 		ref class INISetting
 		{
@@ -178,6 +178,6 @@ namespace ConstructionSetExtender
 			static ScriptEditorPreferences^%			GetSingleton();
 		};
 
-#define PREFERENCES									Preferences::ScriptEditorPreferences::GetSingleton()
+#define PREFERENCES									preferences::ScriptEditorPreferences::GetSingleton()
 	}
 }

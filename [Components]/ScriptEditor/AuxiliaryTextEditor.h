@@ -2,9 +2,9 @@
 
 #include "NumberedRichTextBox.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
 		ref class ScriptOffsetViewer
 		{

@@ -1,25 +1,25 @@
 #include "CLIWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace CLIWrapper
+	namespace cliWrapper
 	{
-		namespace Interfaces
+		namespace interfaces
 		{
-			ComponentDLLInterface::ScriptEditorInterface*			SE = NULL;
-			ComponentDLLInterface::UseInfoListInterface*			USE = NULL;
-			ComponentDLLInterface::BSAViewerInterface*				BSA = NULL;
-			ComponentDLLInterface::BatchEditorInterface*			BE = NULL;
-			ComponentDLLInterface::TagBrowserInterface*				TAG = NULL;
+			componentDLLInterface::ScriptEditorInterface*			SE = NULL;
+			componentDLLInterface::UseInfoListInterface*			USE = NULL;
+			componentDLLInterface::BSAViewerInterface*				BSA = NULL;
+			componentDLLInterface::BatchEditorInterface*			BE = NULL;
+			componentDLLInterface::TagBrowserInterface*				TAG = NULL;
 		}
 
-		ComponentDLLInterface::QueryInterface SEQueryInterfaceProc = NULL;
-		ComponentDLLInterface::QueryInterface USEQueryInterfaceProc = NULL;
-		ComponentDLLInterface::QueryInterface BSAQueryInterfaceProc = NULL;
-		ComponentDLLInterface::QueryInterface BEQueryInterfaceProc = NULL;
-		ComponentDLLInterface::QueryInterface TAGQueryInterfaceProc = NULL;
+		componentDLLInterface::QueryInterface SEQueryInterfaceProc = NULL;
+		componentDLLInterface::QueryInterface USEQueryInterfaceProc = NULL;
+		componentDLLInterface::QueryInterface BSAQueryInterfaceProc = NULL;
+		componentDLLInterface::QueryInterface BEQueryInterfaceProc = NULL;
+		componentDLLInterface::QueryInterface TAGQueryInterfaceProc = NULL;
 
-		bool CLIWrapper::ImportInterfaces(const OBSEInterface * obse)
+		bool cliWrapper::ImportInterfaces(const OBSEInterface * obse)
 		{
 			SetErrorMode(0);
 			std::string DLLName = "";
@@ -60,7 +60,7 @@ namespace ConstructionSetExtender
 					return false;
 				}
 
-				ComponentDLLInterface::QueryInterface ExportedProc = (ComponentDLLInterface::QueryInterface)GetProcAddress(hMod, "QueryInterface");
+				componentDLLInterface::QueryInterface ExportedProc = (componentDLLInterface::QueryInterface)GetProcAddress(hMod, "QueryInterface");
 				if (ExportedProc == NULL)
 				{
 					BGSEECONSOLE_ERROR("Couldn't import interface from %s", DLLName.c_str());
@@ -75,23 +75,23 @@ namespace ConstructionSetExtender
 
 		void QueryInterfaces( void )
 		{
-			Interfaces::SE = (ComponentDLLInterface::ScriptEditorInterface*)SEQueryInterfaceProc();
-			Interfaces::USE = (ComponentDLLInterface::UseInfoListInterface*)USEQueryInterfaceProc();
-			Interfaces::BSA = (ComponentDLLInterface::BSAViewerInterface*)BSAQueryInterfaceProc();
-			Interfaces::BE = (ComponentDLLInterface::BatchEditorInterface*)BEQueryInterfaceProc();
-			Interfaces::TAG = (ComponentDLLInterface::TagBrowserInterface*)TAGQueryInterfaceProc();
+			interfaces::SE = (componentDLLInterface::ScriptEditorInterface*)SEQueryInterfaceProc();
+			interfaces::USE = (componentDLLInterface::UseInfoListInterface*)USEQueryInterfaceProc();
+			interfaces::BSA = (componentDLLInterface::BSAViewerInterface*)BSAQueryInterfaceProc();
+			interfaces::BE = (componentDLLInterface::BatchEditorInterface*)BEQueryInterfaceProc();
+			interfaces::TAG = (componentDLLInterface::TagBrowserInterface*)TAGQueryInterfaceProc();
 
-			SME_ASSERT(Interfaces::SE);
-			SME_ASSERT(Interfaces::USE);
-			SME_ASSERT(Interfaces::BSA);
-			SME_ASSERT(Interfaces::BE);
-			SME_ASSERT(Interfaces::TAG);
+			SME_ASSERT(interfaces::SE);
+			SME_ASSERT(interfaces::USE);
+			SME_ASSERT(interfaces::BSA);
+			SME_ASSERT(interfaces::BE);
+			SME_ASSERT(interfaces::TAG);
 
 			// the script editor is initialized elsewhere
-			Interfaces::USE->InitializeComponents();
-			Interfaces::BSA->InitializeComponents();
-			Interfaces::BE->InitializeComponents();
-			Interfaces::TAG->InitializeComponents();
+			interfaces::USE->InitializeComponents();
+			interfaces::BSA->InitializeComponents();
+			interfaces::BE->InitializeComponents();
+			interfaces::TAG->InitializeComponents();
 		}
 	}
 }

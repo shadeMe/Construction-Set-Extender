@@ -9,7 +9,7 @@
 // To edit it in Window Form Designer you must withdraw the first class (InputBoxResult) to another
 // location of the code and after replace it again where it was. Or you can just comment it.
 
-namespace InputBoxes
+namespace inputBoxes
 {
 	using namespace System;
 	using namespace System::Drawing;

@@ -91,6 +91,9 @@
     <Filter Include="Components\Coda\Commands">
       <UniqueIdentifier>{d2b0fdf6-6089-45bb-bde4-d47867937e1f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\Render Window">
+      <UniqueIdentifier>{178bc5a9-5ba4-4326-8133-931864d24253}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="[Common]\CLIWrapper.cpp">
@@ -98,15 +101,6 @@
     </ClCompile>
     <ClCompile Include="[Common]\HandshakeStructs.cpp">
       <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEInterfaceManager.cpp">
-      <Filter>Interop\Plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="CSInterop.cpp">
-      <Filter>Interop\CS 1.0</Filter>
-    </ClCompile>
-    <ClCompile Include="[Common]\CSInteropData.cpp">
-      <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
     <ClCompile Include="Exports.cpp" />
     <ClCompile Include="StdAfx.cpp" />
@@ -185,9 +179,6 @@
     <ClCompile Include="EditorAPI\BSString.cpp">
       <Filter>EditorAPI\Types\Bethesda</Filter>
     </ClCompile>
-    <ClCompile Include="Coda\CSECoda.cpp">
-      <Filter>Components\Coda</Filter>
-    </ClCompile>
     <ClCompile Include="Coda\Commands\CodaScriptCommands-Form.cpp">
       <Filter>Components\Coda\Commands</Filter>
     </ClCompile>
@@ -197,32 +188,8 @@
     <ClCompile Include="Coda\Commands\CodaScriptCommands-BFC.cpp">
       <Filter>Components\Coda\Commands</Filter>
     </ClCompile>
-    <ClCompile Include="CSEAchievements.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEConsole.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEHallOfFame.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSERenderWindowPainter.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEUIManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEWorkspaceManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSERenderWindowFlyCamera.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\TESPackage.cpp">
       <Filter>EditorAPI\Forms\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="Hooks\Hooks-AssetSelector.cpp">
-      <Filter>Hooks</Filter>
     </ClCompile>
     <ClCompile Include="Hooks\Hooks-Common.cpp">
       <Filter>Hooks</Filter>
@@ -263,45 +230,84 @@
     <ClCompile Include="EditorAPI\TESObjectLAND.cpp">
       <Filter>EditorAPI\Forms\World</Filter>
     </ClCompile>
-    <ClCompile Include="CSEGlobalClipboard.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSESettings.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEWrappers.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEFormUndoStack.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEChangeLogManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEAuxiliaryViewport.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEPathGridUndoManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
-    <ClCompile Include="CSERenderSelectionGroupManager.cpp">
-      <Filter>Components</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\Setting.cpp">
       <Filter>EditorAPI\System\Settings</Filter>
-    </ClCompile>
-    <ClCompile Include="CSEDialogImposterManager.cpp">
-      <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="EditorAPI\MagicItem.cpp">
       <Filter>EditorAPI\Forms\Magic</Filter>
     </ClCompile>
-    <ClCompile Include="CSEMain.cpp" />
-    <ClCompile Include="CSEObjectPaletteManager.cpp">
+    <ClCompile Include="Achievements.cpp">
       <Filter>Components</Filter>
     </ClCompile>
-    <ClCompile Include="CSEObjectPrefabManager.cpp">
+    <ClCompile Include="AuxiliaryViewport.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ChangeLogManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Console.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogImposterManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="FormUndoStack.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalClipboard.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="HallOfFame.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectPaletteManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectPrefabManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Settings.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="UIManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkspaceManager.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Wrappers.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Coda\Coda.cpp">
+      <Filter>Components\Coda</Filter>
+    </ClCompile>
+    <ClCompile Include="PathGridUndoManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowFlyCamera.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowPainter.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-AssetSelector.cpp">
+      <Filter>Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="PluginAPIManager.cpp">
+      <Filter>Interop\Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowGroupManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="OldCSInteropManager.cpp">
+      <Filter>Interop\CS 1.0</Filter>
+    </ClCompile>
+    <ClCompile Include="[Common]\OldCSInteropData.cpp">
+      <Filter>Interop\CS 1.0</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -334,15 +340,6 @@
     </ClInclude>
     <ClInclude Include="CSEInterfaceAPI.h">
       <Filter>Interop\Plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEInterfaceManager.h">
-      <Filter>Interop\Plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="CSInterop.h">
-      <Filter>Interop\CS 1.0</Filter>
-    </ClInclude>
-    <ClInclude Include="[Common]\CSInteropData.h">
-      <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
     <ClInclude Include="Exports.h" />
     <ClInclude Include="EditorAPI\TESEditorAPI.h">
@@ -631,17 +628,11 @@
     <ClInclude Include="..\OBSE\obse\NiRenderer.h">
       <Filter>OBSE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase_Resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Construction Set Extender_Resource.h">
       <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Coda\CSECoda.h">
-      <Filter>Components\Coda</Filter>
     </ClInclude>
     <ClInclude Include="VersionInfo.h">
       <Filter>Resources</Filter>
@@ -654,30 +645,6 @@
     </ClInclude>
     <ClInclude Include="Coda\Commands\CodaScriptCommands-BFC.h">
       <Filter>Components\Coda\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEWorkspaceManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEAchievements.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEConsole.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEHallOfFame.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSERenderWindowPainter.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSEUIManager.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="CSERenderWindowFlyCamera.h">
-      <Filter>Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Hooks\Hooks-AssetSelector.h">
-      <Filter>Hooks</Filter>
     </ClInclude>
     <ClInclude Include="Hooks\Hooks-Common.h">
       <Filter>Hooks</Filter>
@@ -712,39 +679,81 @@
     <ClInclude Include="EditorAPI\TESObjectLAND.h">
       <Filter>EditorAPI\Forms\World</Filter>
     </ClInclude>
-    <ClInclude Include="CSEGlobalClipboard.h">
+    <ClInclude Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase_Resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Achievements.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSESettings.h">
+    <ClInclude Include="AuxiliaryViewport.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEWrappers.h">
+    <ClInclude Include="ChangeLogManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEFormUndoStack.h">
+    <ClInclude Include="Console.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEChangeLogManager.h">
+    <ClInclude Include="DialogImposterManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEAuxiliaryViewport.h">
+    <ClInclude Include="FormUndoStack.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEPathGridUndoManager.h">
+    <ClInclude Include="GlobalClipboard.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSERenderSelectionGroupManager.h">
+    <ClInclude Include="HallOfFame.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEDialogImposterManager.h">
+    <ClInclude Include="ObjectPaletteManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEMain.h" />
-    <ClInclude Include="CSEObjectPaletteManager.h">
+    <ClInclude Include="ObjectPrefabManager.h">
       <Filter>Components</Filter>
     </ClInclude>
-    <ClInclude Include="CSEObjectPrefabManager.h">
+    <ClInclude Include="Settings.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="UIManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkspaceManager.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Wrappers.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Coda\Coda.h">
+      <Filter>Components\Coda</Filter>
+    </ClInclude>
+    <ClInclude Include="PathGridUndoManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowFlyCamera.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowPainter.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-AssetSelector.h">
+      <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="PluginAPIManager.h">
+      <Filter>Interop\Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowGroupManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="OldCSInteropManager.h">
+      <Filter>Interop\CS 1.0</Filter>
+    </ClInclude>
+    <ClInclude Include="[Common]\OldCSInteropData.h">
+      <Filter>Interop\CS 1.0</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -846,13 +855,13 @@
     <ResourceCompile Include="Construction Set Extender.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\BGSEditorExtenderBase.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
     <ResourceCompile Include="..\..\[Libraries]\SME Sundries\INIEditGUI_Res.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
     <ResourceCompile Include="VersionInfo.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\..\[Libraries]\BGSEditorExtenderBase\bgsee\BGSEditorExtenderBase.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

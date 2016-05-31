@@ -1,19 +1,19 @@
 #include "[Common]\CLIWrapper.h"
 
-#include "CSEMain.h"
+#include "Main.h"
 #include "Hooks\Hooks-CompilerErrorDetours.h"
 #include "Hooks\Hooks-Misc.h"
 #include "Hooks\Hooks-ScriptEditor.h"
 #include "Hooks\Hooks-Plugins.h"
 #include "Hooks\Hooks-Dialog.h"
 
-#include <BGSEEWorkspaceManager.h>
+#include <bgsee\WorkspaceManager.h>
 
-using namespace ComponentDLLInterface;
-using namespace ConstructionSetExtender;
-using namespace ConstructionSetExtender::Hooks;
+using namespace componentDLLInterface;
+using namespace cse;
+using namespace cse::hooks;
 
-extern ComponentDLLInterface::CSEInterfaceTable g_InteropInterface;
+extern componentDLLInterface::CSEInterfaceTable g_InteropInterface;
 
 extern "C"
 {
@@ -238,22 +238,22 @@ void WriteToINI(const char* Setting, const char* Section, const char* Value)
 
 UInt32 GetFormListActiveItemForegroundColor(void)
 {
-	 return SME::StringHelpers::GetRGB(Settings::Dialogs::kActiveFormForeColor.GetData().s);
+	 return SME::StringHelpers::GetRGB(settings::dialogs::kActiveFormForeColor.GetData().s);
 }
 
 UInt32 GetFormListActiveItemBackgroundColor(void)
 {
-	return SME::StringHelpers::GetRGB(Settings::Dialogs::kActiveFormBackColor.GetData().s);
+	return SME::StringHelpers::GetRGB(settings::dialogs::kActiveFormBackColor.GetData().s);
 }
 
 bool GetShouldColorizeActiveForms(void)
 {
-	return Settings::Dialogs::kColorizeActiveForms.GetData().i;
+	return settings::dialogs::kColorizeActiveForms.GetData().i;
 }
 
 bool GetShouldSortActiveFormsFirst(void)
 {
-	return Settings::Dialogs::kSortFormListsByActiveForm.GetData().i;
+	return settings::dialogs::kSortFormListsByActiveForm.GetData().i;
 }
 #pragma endregion
 /**** END EDITORAPI SUBINTERFACE ****/
@@ -363,7 +363,7 @@ void RecompileScripts(void)
 			Static_SetText(GetDlgItem(NotificationDialog, -1), Buffer);
 
 			ZeroMemory(PreprocessedTextBuffer, kPreprocessorBufferSize);
-			bool PreprocessResult = CLIWrapper::Interfaces::SE->PreprocessScript(ScriptForm->text, PreprocessedTextBuffer, kPreprocessorBufferSize);
+			bool PreprocessResult = cliWrapper::interfaces::SE->PreprocessScript(ScriptForm->text, PreprocessedTextBuffer, kPreprocessorBufferSize);
 			if (PreprocessResult)
 			{
 				BSString* OldText = BSString::CreateInstance(ScriptForm->text);
@@ -847,7 +847,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		}
 	}
 
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
@@ -909,7 +909,7 @@ IntelliSenseUpdateData* GetIntelliSenseUpdateData(void)
 		GlobalCount++;
 	}
 
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = TESForm::EditorIDMap->GetFirstPos(); Itr;)
 	{
 		const char*	 EditorID = NULL;
 		TESForm* Form = NULL;
@@ -949,7 +949,7 @@ void BindScript(const char* EditorID, HWND Parent)
 	if (ScriptForm == NULL)
 		return;
 
-	Form = (TESForm*)DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_BINDSCRIPT), Parent, (DLGPROC)UIManager::BindScriptDlgProc);
+	Form = (TESForm*)DialogBox(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_BINDSCRIPT), Parent, (DLGPROC)uiManager::BindScriptDlgProc);
 
 	if (Form)
 	{
@@ -981,7 +981,7 @@ void SetScriptText(void* CurrentScript, const char* ScriptText)
 	ScriptForm->SetText(ScriptText);
 }
 
-void UpdateScriptVarNames(const char* EditorID, ComponentDLLInterface::ScriptVarRenameData* Data)
+void UpdateScriptVarNames(const char* EditorID, componentDLLInterface::ScriptVarRenameData* Data)
 {
 	TESForm* Form = TESForm::LookupByEditorID(EditorID);
 
@@ -1022,31 +1022,31 @@ bool CanUpdateIntelliSenseDatabase(void)
 
 const char* GetDefaultCachePath(void)
 {
-	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEDEPOT)();
+	static const std::string kBuffer = bgsee::ResourceLocation(CSE_SEDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetAutoRecoveryCachePath(void)
 {
-	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEAUTORECDEPOT)();
+	static const std::string kBuffer = bgsee::ResourceLocation(CSE_SEAUTORECDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetPreprocessorBasePath(void)
 {
-	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEPREPROCDEPOT)();
+	static const std::string kBuffer = bgsee::ResourceLocation(CSE_SEPREPROCDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetPreprocessorStandardPath(void)
 {
-	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SEPREPROCSTDDEPOT)();
+	static const std::string kBuffer = bgsee::ResourceLocation(CSE_SEPREPROCSTDDEPOT)();
 	return kBuffer.c_str();
 }
 
 const char* GetSnippetCachePath(void)
 {
-	static const std::string kBuffer = bgsee::BGSEEResourceLocation(CSE_SESNIPPETDEPOT)();
+	static const std::string kBuffer = bgsee::ResourceLocation(CSE_SESNIPPETDEPOT)();
 	return kBuffer.c_str();
 }
 
@@ -1359,8 +1359,8 @@ void InitiateDragonDrop(void)
 	for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
 	{
 		TESForm* Form = Itr->Data;
-		ComponentDLLInterface::FormData Data(Form);
-		if (!CLIWrapper::Interfaces::TAG->AddFormToActiveTag(&Data))
+		componentDLLInterface::FormData Data(Form);
+		if (!cliWrapper::interfaces::TAG->AddFormToActiveTag(&Data))
 			break;
 	}
 
@@ -1369,7 +1369,7 @@ void InitiateDragonDrop(void)
 
 TagBrowserInstantiationData* AllocateInstantionData(UInt32 FormCount)
 {
-	ComponentDLLInterface::TagBrowserInstantiationData* Data = new ComponentDLLInterface::TagBrowserInstantiationData();
+	componentDLLInterface::TagBrowserInstantiationData* Data = new componentDLLInterface::TagBrowserInstantiationData();
 	Data->FormCount = FormCount;
 	Data->FormListHead = new FormData[FormCount];
 
@@ -1378,7 +1378,7 @@ TagBrowserInstantiationData* AllocateInstantionData(UInt32 FormCount)
 #pragma endregion
 /**** END TAGBROWSER SUBINTERFACE ****/
 
-ComponentDLLInterface::CSEInterfaceTable g_InteropInterface =
+componentDLLInterface::CSEInterfaceTable g_InteropInterface =
 {
 	DeleteInterOpData,
 	{

@@ -2,12 +2,12 @@
 
 #include "AvalonEditDefs.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace TextEditors
+	namespace textEditors
 	{
 		// in retrospect, directly using AvalonEdit's XSHD interfaces would have taken less effort
-		namespace AvalonEditor
+		namespace avalonEditor
 		{
 			ref class XSHDColor;
 

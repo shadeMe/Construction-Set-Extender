@@ -5,9 +5,9 @@
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		const UInt32						kMaxScriptDataSize = 0x8000;
 

@@ -11,13 +11,13 @@ using namespace ICSharpCode::AvalonEdit::Document;
 using namespace ICSharpCode::AvalonEdit::Editing;
 using namespace System::Text::RegularExpressions;
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	using namespace IntelliSense;
+	using namespace intellisense;
 
-	namespace TextEditors
+	namespace textEditors
 	{
-		namespace AvalonEditor
+		namespace avalonEditor
 		{
 			ref class BracketSearchData
 			{
@@ -533,7 +533,7 @@ namespace ConstructionSetExtender
 				List<String^>^ LocalVars = gcnew List<String^>();
 				if (SemanticAnalysisCache)
 				{
-					for each (ObScriptParsing::Variable^ Itr in SemanticAnalysisCache->Variables)
+					for each (obScriptParsing::Variable^ Itr in SemanticAnalysisCache->Variables)
 						LocalVars->Add(Itr->Name);
 				}
 
@@ -660,15 +660,15 @@ namespace ConstructionSetExtender
 
 				switch (Operation)
 				{
-				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Add:
+				case cse::textEditors::avalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Add:
 					TextField->TextArea->Document->Insert(LineSegment->Offset, ";");
 					break;
-				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Remove:
+				case cse::textEditors::avalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Remove:
 					if (FirstChar == ';')
 						TextField->TextArea->Document->Replace(WhitespaceLeading->EndOffset, 1, "");
 
 					break;
-				case ConstructionSetExtender::TextEditors::AvalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Toggle:
+				case cse::textEditors::avalonEditor::AvalonEditTextEditor::ToggleCommentOperation::Toggle:
 					if (FirstChar == ';')
 						TextField->TextArea->Document->Replace(WhitespaceLeading->EndOffset, 1, "");
 					else if (FirstChar != ';')
@@ -744,7 +744,7 @@ namespace ConstructionSetExtender
 				int LineNo = GetLineNumberFromCharIndex(Index), Count = 0;
 
 				String^ BookmarkDesc = "";
-				InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter A Description For The Bookmark", "Place Bookmark");
+				inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Enter A Description For The Bookmark", "Place Bookmark");
 				if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
 					return;
 				else
@@ -878,32 +878,32 @@ namespace ConstructionSetExtender
 				BackgroundTaskInput^ Data = (BackgroundTaskInput^)Input;
 				Debug::Assert(Data != nullptr);
 
-				ObScriptParsing::AnalysisData::Operation AnalysisOps = ObScriptParsing::AnalysisData::Operation::None;
-				ObScriptParsing::ScriptType Type = ObScriptParsing::ScriptType::Object;
+				obScriptParsing::AnalysisData::Operation AnalysisOps = obScriptParsing::AnalysisData::Operation::None;
+				obScriptParsing::ScriptType Type = obScriptParsing::ScriptType::Object;
 
-				AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillVariables;
-				AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillControlBlocks;
-				AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::PerformBasicValidation;
+				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillVariables;
+				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillControlBlocks;
+				AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
 
 				if (Data->CheckVarNameCollisionCommands)
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
 
 				if (Data->CheckVarNameCollisionForms)
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
 
 				if (Data->CountVarReferences)
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CountVariableReferences;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
 
 				if (Data->SkipVarRefCountsForQuests)
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
 
-				if (Data->ScriptType == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
-					Type = ObScriptParsing::ScriptType::MagicEffect;
-				else if (Data->ScriptType == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
-					Type = ObScriptParsing::ScriptType::Quest;
+				if (Data->ScriptType == scriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
+					Type = obScriptParsing::ScriptType::MagicEffect;
+				else if (Data->ScriptType == scriptEditor::IWorkspaceModel::ScriptType::Quest)
+					Type = obScriptParsing::ScriptType::Quest;
 
 				BackgroundTaskOutput^ Out = gcnew BackgroundTaskOutput;
-				Out->AnalysisOutput = gcnew ObScriptParsing::AnalysisData;
+				Out->AnalysisOutput = gcnew obScriptParsing::AnalysisData;
 				// ### ISDB is not thread-safe, so no var name collision checking
 				Out->AnalysisOutput->PerformAnalysis(Data->ScriptText->Text, Type, AnalysisOps, nullptr);
 
@@ -922,21 +922,21 @@ namespace ConstructionSetExtender
 						if (SemanticAnalysisCache)
 							SAFEDELETE_CLR(SemanticAnalysisCache);
 
-						SemanticAnalysisCache = (ObScriptParsing::AnalysisData^)Completed->Result->AnalysisOutput;
+						SemanticAnalysisCache = (obScriptParsing::AnalysisData^)Completed->Result->AnalysisOutput;
 
 						LineTracker->Cleanup();
 						UpdateCodeFoldings();
 						UpdateSyntaxHighlighting(false);
 
 						LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-						LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
-												   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+						LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
+												   textEditors::IScriptTextEditor::ScriptMessageType::None);
 
-						for each (ObScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+						for each (obScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
 						{
 							LineTracker->TrackMessage(Itr->Line,
-													  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
-													  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
+													  (Itr->Critical == false ? textEditors::IScriptTextEditor::ScriptMessageType::Warning : textEditors::IScriptTextEditor::ScriptMessageType::Error),
+													  textEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
 						}
 
 						LineTracker->EndUpdate(false);
@@ -969,8 +969,8 @@ namespace ConstructionSetExtender
 					Line = 1;
 
 				LineTracker->TrackMessage(Line,
-										  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
-										  TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
+										  textEditors::IScriptTextEditor::ScriptMessageType::Error,
+										  textEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor, Message);
 			}
 
 			void AvalonEditTextEditor::ToggleSearchPanel(bool State)
@@ -1045,7 +1045,7 @@ namespace ConstructionSetExtender
 				return TunneledArgs->Handled;
 			}
 
-			void AvalonEditTextEditor::RaiseIntelliSenseShow(bool DefaultOperation, IntelliSense::IIntelliSenseInterfaceModel::Operation NewOperation)
+			void AvalonEditTextEditor::RaiseIntelliSenseShow(bool DefaultOperation, intellisense::IIntelliSenseInterfaceModel::Operation NewOperation)
 			{
 				if (IsFocused == false)
 					return;
@@ -1323,7 +1323,7 @@ namespace ConstructionSetExtender
 						if (E->KeyboardDevice->Modifiers == System::Windows::Input::ModifierKeys::Control)
 						{
 							CString CStr(GetTokenAtCaretPos());
-							ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+							componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 							if (Data && Data->IsValid())
 								JumpScriptDelegate(GetTokenAtCaretPos());
 
@@ -1631,18 +1631,18 @@ namespace ConstructionSetExtender
 				ContextMenuJumpToScript->Visible = true;
 
 				CString CTUM(MidToken);
-				ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CTUM.c_str());
+				componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CTUM.c_str());
 				if (Data && Data->IsValid())
 				{
 					switch (Data->Type)
 					{
-					case ComponentDLLInterface::ScriptData::kScriptType_Object:
+					case componentDLLInterface::ScriptData::kScriptType_Object:
 						if (Data->UDF)
 							ContextMenuJumpToScript->Text = "Jump to Function script";
 						else
 							ContextMenuJumpToScript->Text = "Jump to Object script";
 						break;
-					case ComponentDLLInterface::ScriptData::kScriptType_Quest:
+					case componentDLLInterface::ScriptData::kScriptType_Quest:
 						ContextMenuJumpToScript->Text = "Jump to Quest script";
 						break;
 					}
@@ -1652,11 +1652,11 @@ namespace ConstructionSetExtender
 				else
 					ContextMenuJumpToScript->Visible = false;
 
-				NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+				nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 				ContextMenuRefactorCreateUDFImplementation->Visible = false;
-				if ((ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptParsing::ScriptTokenType::Call ||
-					(ScriptParser::GetScriptTokenType(Tokens[0]) == ObScriptParsing::ScriptTokenType::Call) &&
+				if ((ScriptParser::GetScriptTokenType(Tokens[0]) == obScriptParsing::ScriptTokenType::Call ||
+					(ScriptParser::GetScriptTokenType(Tokens[0]) == obScriptParsing::ScriptTokenType::Call) &&
 					GetCharIndexInsideCommentSegment(GetLastKnownMouseClickOffset()) == false))
 				{
 					if (ISDB->GetIsIdentifierUserFunction(MidToken) == false)
@@ -1670,8 +1670,8 @@ namespace ConstructionSetExtender
 				String^ Line = GetTextAtLine(GetLineNumberFromCharIndex(GetLastKnownMouseClickOffset()));
 
 				bool IsImportDirective = Preprocessor::GetSingleton()->GetImportFilePath(Line, ImportFile,
-																						 gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
-																						 gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																						 gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																						 gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 																						 PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
 																						 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 				ContextMenuOpenImportFile->Visible = false;
@@ -1770,12 +1770,12 @@ namespace ConstructionSetExtender
 			void AvalonEditTextEditor::ContextMenuRefactorAddVariable_Click(Object^ Sender, EventArgs^ E)
 			{
 				ToolStripMenuItem^ MenuItem = (ToolStripMenuItem^)Sender;
-				ObScriptParsing::Variable::DataType VarType = (ObScriptParsing::Variable::DataType)MenuItem->Tag;
+				obScriptParsing::Variable::DataType VarType = (obScriptParsing::Variable::DataType)MenuItem->Tag;
 				String^ VarName = ContextMenuWord->Text;
 
 				if (VarName->Length == 0)
 				{
-					InputBoxes::InputBoxResult^ Result = InputBoxes::InputBox::Show("Enter Variable Name", "Add Variable", VarName);
+					inputBoxes::InputBoxResult^ Result = inputBoxes::InputBox::Show("Enter Variable Name", "Add Variable", VarName);
 					if (Result->ReturnCode == DialogResult::Cancel || Result->Text == "")
 						return;
 					else
@@ -1789,12 +1789,12 @@ namespace ConstructionSetExtender
 			{
 				// ugly
 				ParentModel->Controller->ApplyRefactor(ParentModel,
-												  ScriptEditor::IWorkspaceModel::RefactorOperation::CreateUDF,
+												  scriptEditor::IWorkspaceModel::RefactorOperation::CreateUDF,
 												  ContextMenuRefactorCreateUDFImplementation->Tag);
 			}
 #pragma endregion
 
-			AvalonEditTextEditor::AvalonEditTextEditor(ScriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize)
+			AvalonEditTextEditor::AvalonEditTextEditor(scriptEditor::IWorkspaceModel^ ParentModel, JumpToScriptHandler^ JumpScriptDelegate, Font^ Font, int TabSize)
 			{
 				Debug::Assert(ParentModel != nullptr);
 				this->ParentModel = ParentModel;
@@ -1937,7 +1937,7 @@ namespace ConstructionSetExtender
 
 				TextFieldInUpdateFlag = false;
 				PreviousLineBuffer = -1;
-				SemanticAnalysisCache = gcnew ObScriptParsing::AnalysisData();
+				SemanticAnalysisCache = gcnew obScriptParsing::AnalysisData();
 
 				InsightPopup = gcnew ToolTip;
 				InsightPopup->AutoPopDelay = 500;
@@ -2025,19 +2025,19 @@ namespace ConstructionSetExtender
 				ContextMenuRefactorAddVariable->DropDownItems->Add(ContextMenuRefactorAddVariableArray);
 
 				ContextMenuRefactorAddVariableInt->Text = "Integer";
-				ContextMenuRefactorAddVariableInt->Tag = ObScriptParsing::Variable::DataType::Integer;
+				ContextMenuRefactorAddVariableInt->Tag = obScriptParsing::Variable::DataType::Integer;
 				ContextMenuRefactorAddVariableInt->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableFloat->Text = "Float";
-				ContextMenuRefactorAddVariableFloat->Tag = ObScriptParsing::Variable::DataType::Float;
+				ContextMenuRefactorAddVariableFloat->Tag = obScriptParsing::Variable::DataType::Float;
 				ContextMenuRefactorAddVariableFloat->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableRef->Text = "Reference";
-				ContextMenuRefactorAddVariableRef->Tag = ObScriptParsing::Variable::DataType::Ref;
+				ContextMenuRefactorAddVariableRef->Tag = obScriptParsing::Variable::DataType::Ref;
 				ContextMenuRefactorAddVariableRef->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableString->Text = "String";
-				ContextMenuRefactorAddVariableString->Tag = ObScriptParsing::Variable::DataType::StringVar;
+				ContextMenuRefactorAddVariableString->Tag = obScriptParsing::Variable::DataType::StringVar;
 				ContextMenuRefactorAddVariableString->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorAddVariableArray->Text = "Array";
-				ContextMenuRefactorAddVariableArray->Tag = ObScriptParsing::Variable::DataType::ArrayVar;
+				ContextMenuRefactorAddVariableArray->Tag = obScriptParsing::Variable::DataType::ArrayVar;
 				ContextMenuRefactorAddVariableArray->DisplayStyle = ToolStripItemDisplayStyle::Text;
 				ContextMenuRefactorCreateUDFImplementation->Text = "Create UFD Implementation";
 				ContextMenuRefactorCreateUDFImplementation->Visible = false;
@@ -2291,39 +2291,39 @@ namespace ConstructionSetExtender
 
 			void AvalonEditTextEditor::UpdateSemanticAnalysisCache(bool FillVariables, bool FillControlBlocks, bool Validate)
 			{
-				ObScriptParsing::AnalysisData::Operation AnalysisOps = ObScriptParsing::AnalysisData::Operation::None;
-				ObScriptParsing::ScriptType Type = ObScriptParsing::ScriptType::Object;
+				obScriptParsing::AnalysisData::Operation AnalysisOps = obScriptParsing::AnalysisData::Operation::None;
+				obScriptParsing::ScriptType Type = obScriptParsing::ScriptType::Object;
 
 				if (FillVariables)
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillVariables;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillVariables;
 
 				if (FillControlBlocks)
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::FillControlBlocks;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::FillControlBlocks;
 
 				if (Validate)
 				{
-					AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::PerformBasicValidation;
+					AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::PerformBasicValidation;
 
 					if (PREFERENCES->FetchSettingAsInt("VarCmdNameCollisions", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
+						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameCommandCollisions;
 
 					if (PREFERENCES->FetchSettingAsInt("VarFormNameCollisions", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
+						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CheckVariableNameFormCollisions;
 
 					if (PREFERENCES->FetchSettingAsInt("CountVarRefs", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::CountVariableReferences;
+						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::CountVariableReferences;
 
 					if (PREFERENCES->FetchSettingAsInt("SuppressRefCountForQuestScripts", "Validator"))
-						AnalysisOps = AnalysisOps | ObScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
+						AnalysisOps = AnalysisOps | obScriptParsing::AnalysisData::Operation::SuppressQuestVariableRefCount;
 				}
 
-				if (ParentModel->Type == ScriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
-					Type = ObScriptParsing::ScriptType::MagicEffect;
-				else if (ParentModel->Type == ScriptEditor::IWorkspaceModel::ScriptType::Quest)
-					Type = ObScriptParsing::ScriptType::Quest;
+				if (ParentModel->Type == scriptEditor::IWorkspaceModel::ScriptType::MagicEffect)
+					Type = obScriptParsing::ScriptType::MagicEffect;
+				else if (ParentModel->Type == scriptEditor::IWorkspaceModel::ScriptType::Quest)
+					Type = obScriptParsing::ScriptType::Quest;
 
 				SemanticAnalysisCache->PerformAnalysis(GetText(), Type, AnalysisOps,
-													   gcnew ObScriptParsing::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
+													   gcnew obScriptParsing::AnalysisData::CheckVariableNameCollision(CheckVariableNameCollision));
 			}
 
 			void AvalonEditTextEditor::UpdateSyntaxHighlighting(bool Regenerate)
@@ -2424,27 +2424,27 @@ namespace ConstructionSetExtender
 						String^ Previous = Tokens[0];
 
 						CString CStr(Previous);
-						ComponentDLLInterface::ScriptData* Data = NativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
+						componentDLLInterface::ScriptData* Data = nativeWrapper::g_CSEInterfaceTable->EditorAPI.LookupScriptableFormByEditorID(CStr.c_str());
 						if (Data && Data->IsValid())
 						{
 							Previous = "" + gcnew String(Data->ParentID);
 							ISDB->CacheRemoteScript(gcnew String(Data->ParentID), gcnew String(Data->Text));
 						}
-						NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
+						nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(Data, false);
 
 						IntelliSenseItem^ Item = ISDB->LookupRemoteScriptVariable(Previous, Main);
 
 						bool LocalVar = false;
 						if (Item == nullptr)
 						{
-							ObScriptParsing::Variable^ Var = SemanticAnalysisCache->LookupVariable(Main);
+							obScriptParsing::Variable^ Var = SemanticAnalysisCache->LookupVariable(Main);
 							if (Var)
 							{
 								LocalVar = true;
 								Item = gcnew IntelliSenseItemVariable(Var->Name,
 																	Var->Comment,
 																	Var->Type,
-																	IntelliSense::IntelliSenseItem::IntelliSenseItemType::LocalVar);
+																	intellisense::IntelliSenseItem::IntelliSenseItemType::LocalVar);
 							}
 						}
 
@@ -2524,20 +2524,20 @@ namespace ConstructionSetExtender
 			String^ AvalonEditTextEditor::GetPreprocessedText(bool% OutPreprocessResult, bool SuppressErrors)
 			{
 				String^ Preprocessed = "";
-				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
+				scriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(&DummyOutputWrapper);
 				if (SuppressErrors == false)
 				{
-					ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(this, &AvalonEditTextEditor::RoutePreprocessorMessages);
+					ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(this, &AvalonEditTextEditor::RoutePreprocessorMessages);
 					LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
-											   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+					LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
+											   textEditors::IScriptTextEditor::ScriptMessageType::None);
 				}
 
 				bool Result = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
 																			 Preprocessed,
 																			 ErrorOutput,
-																			 gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
-																			 gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+																			 gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																			 gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 																			 PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
 																			 PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 
@@ -2881,12 +2881,12 @@ namespace ConstructionSetExtender
 				return SemanticAnalysisCache->GetLineIndentLevel(LineNumber);
 			}
 
-			void AvalonEditTextEditor::InsertVariable(String^ VariableName, ObScriptParsing::Variable::DataType VariableType)
+			void AvalonEditTextEditor::InsertVariable(String^ VariableName, obScriptParsing::Variable::DataType VariableType)
 			{
 				if (Modified)
 					UpdateSemanticAnalysisCache(true, false, false);
 
-				String^ Declaration = ObScriptParsing::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
+				String^ Declaration = obScriptParsing::Variable::GetVariableDataTypeToken(VariableType) + " " + VariableName + "\n";
 				UInt32 InsertionLine = SemanticAnalysisCache->NextVariableLine;
 				if (InsertionLine == 0)
 					InsertText(Declaration, TextField->Document->GetOffset(TextField->Document->LineCount, 1), true);
@@ -2904,7 +2904,7 @@ namespace ConstructionSetExtender
 				}
 			}
 
-			ObScriptParsing::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
+			obScriptParsing::AnalysisData^ AvalonEditTextEditor::GetSemanticAnalysisCache(bool UpdateVars, bool UpdateControlBlocks)
 			{
 				if (UpdateVars || UpdateControlBlocks)
 					UpdateSemanticAnalysisCache(UpdateVars, UpdateControlBlocks, false);
@@ -2922,31 +2922,31 @@ namespace ConstructionSetExtender
 				CompilationData^ Result = gcnew CompilationData;
 
 				String^ Preprocessed = "";
-				ScriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew ScriptPreprocessor::StandardOutputError(this,
+				scriptPreprocessor::StandardOutputError^ ErrorOutput = gcnew scriptPreprocessor::StandardOutputError(this,
 																													 &AvalonEditTextEditor::RoutePreprocessorMessages);
 
-				ScriptEditorPreprocessorData^ Data = gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
-																						gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+				ScriptEditorPreprocessorData^ Data = gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+																						gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 																						PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
 																						PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor"));
 
 				LineTracker->BeginUpdate(LineTrackingManager::UpdateSource::Messages);
 
 				UpdateSemanticAnalysisCache(true, true, true);
-				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Validator,
-										   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Validator,
+										   textEditors::IScriptTextEditor::ScriptMessageType::None);
 
-				for each (ObScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
+				for each (obScriptParsing::AnalysisData::UserMessage^ Itr in SemanticAnalysisCache->AnalysisMessages)
 				{
 					LineTracker->TrackMessage(Itr->Line,
-											  (Itr->Critical == false ? TextEditors::IScriptTextEditor::ScriptMessageType::Warning : TextEditors::IScriptTextEditor::ScriptMessageType::Error),
-											  TextEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
+											  (Itr->Critical == false ? textEditors::IScriptTextEditor::ScriptMessageType::Warning : textEditors::IScriptTextEditor::ScriptMessageType::Error),
+											  textEditors::IScriptTextEditor::ScriptMessageSource::Validator, Itr->Message);
 				}
 
 				if (SemanticAnalysisCache->HasCriticalMessages == false && SemanticAnalysisCache->MalformedStructure == false)
 				{
-					LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
-											   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+					LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Preprocessor,
+											   textEditors::IScriptTextEditor::ScriptMessageType::None);
 
 					Result->CanCompile = Preprocessor::GetSingleton()->PreprocessScript(GetText(),
 																			Preprocessed,
@@ -2960,15 +2960,15 @@ namespace ConstructionSetExtender
 						Result->HasDirectives = Data->ContainsDirectives;
 						Result->SerializedMetadata = SerializeMetadata(Result->HasDirectives);
 
-						LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
-												   TextEditors::IScriptTextEditor::ScriptMessageType::None);
+						LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::Compiler,
+												   textEditors::IScriptTextEditor::ScriptMessageType::None);
 					}
 				}
 
 				// doesn't include compiler warnings for obvious reasons but it's okay since all compiler messages are errors
 				Result->HasWarnings = LineTracker->GetMessageCount(0,
-															  TextEditors::IScriptTextEditor::ScriptMessageSource::None,
-															  TextEditors::IScriptTextEditor::ScriptMessageType::Warning);
+															  textEditors::IScriptTextEditor::ScriptMessageSource::None,
+															  textEditors::IScriptTextEditor::ScriptMessageType::Warning);
 
 				return Result;
 			}
@@ -2988,8 +2988,8 @@ namespace ConstructionSetExtender
 							Line = 1;
 
 						LineTracker->TrackMessage(Line,
-												  TextEditors::IScriptTextEditor::ScriptMessageType::Error,
-												  TextEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
+												  textEditors::IScriptTextEditor::ScriptMessageType::Error,
+												  textEditors::IScriptTextEditor::ScriptMessageSource::Compiler, Message);
 					}
 				}
 
@@ -3000,7 +3000,7 @@ namespace ConstructionSetExtender
 			{
 				WaitForBackgroundTask();
 
-				LineTracker->ClearMessages(TextEditors::IScriptTextEditor::ScriptMessageSource::None, TextEditors::IScriptTextEditor::ScriptMessageType::None);
+				LineTracker->ClearMessages(textEditors::IScriptTextEditor::ScriptMessageSource::None, textEditors::IScriptTextEditor::ScriptMessageType::None);
 				LineTracker->ClearBookmarks();
 				LineTracker->ClearFindResults(false);
 

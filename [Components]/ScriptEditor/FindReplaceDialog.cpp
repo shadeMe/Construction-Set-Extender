@@ -1,9 +1,9 @@
 #include "FindReplaceDialog.h"
 #include "ScriptEditorPreferences.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		FindReplaceDialog::FindReplaceDialog(IWorkspaceView^ Parent)
 		{
@@ -244,7 +244,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												TextEditors::IScriptTextEditor::FindReplaceOperation::Find,
+												textEditors::IScriptTextEditor::FindReplaceOperation::Find,
 												Query,
 												"",
 												GetSelectedOptions(),
@@ -260,7 +260,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												TextEditors::IScriptTextEditor::FindReplaceOperation::Replace,
+												textEditors::IScriptTextEditor::FindReplaceOperation::Replace,
 												Query,
 												Replacement,
 												GetSelectedOptions(),
@@ -275,7 +275,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												TextEditors::IScriptTextEditor::FindReplaceOperation::Find,
+												textEditors::IScriptTextEditor::FindReplaceOperation::Find,
 												Query,
 												"",
 												GetSelectedOptions(),
@@ -291,7 +291,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			ParentView->Controller->FindReplace(ParentView,
-												TextEditors::IScriptTextEditor::FindReplaceOperation::Replace,
+												textEditors::IScriptTextEditor::FindReplaceOperation::Replace,
 												Query,
 												Replacement,
 												GetSelectedOptions(),
@@ -306,7 +306,7 @@ namespace ConstructionSetExtender
 
 			CacheComboBoxStrings();
 			int Hits = ParentView->Controller->FindReplace(ParentView,
-														   TextEditors::IScriptTextEditor::FindReplaceOperation::CountMatches,
+														   textEditors::IScriptTextEditor::FindReplaceOperation::CountMatches,
 														   Query,
 														   "",
 														   GetSelectedOptions(),
@@ -424,13 +424,13 @@ namespace ConstructionSetExtender
 		{
 			UInt32 Options = 0;
 			if (CaseInsensitiveSearch->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive;
+				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::CaseInsensitive;
 			if (MatchWholeWord->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::MatchWholeWord;
+				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::MatchWholeWord;
 			if (UseRegEx->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::RegEx;
+				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::RegEx;
 			if (InSelection->Checked)
-				Options |= (UInt32)TextEditors::IScriptTextEditor::FindReplaceOptions::InSelection;
+				Options |= (UInt32)textEditors::IScriptTextEditor::FindReplaceOptions::InSelection;
 
 			return Options;
 		}

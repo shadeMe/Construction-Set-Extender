@@ -63,7 +63,7 @@
 		 }
 
 */
-namespace ConstructionSetExtender_OverriddenClasses			// can't be in the global namespace as it conflicts with OBSE's definition of the classes
+namespace cseOverride			// can't be in the global namespace as it conflicts with OBSE's definition of the classes
 {
 	typedef void* NiTMapIterator;
 

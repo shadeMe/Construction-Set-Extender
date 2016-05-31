@@ -1,19 +1,19 @@
 #include "Hooks-Dialog.h"
-#include "..\CSEAchievements.h"
-#include "..\CSEUIManager.h"
-#include "..\CSEGlobalClipboard.h"
+#include "..\Achievements.h"
+#include "..\UIManager.h"
+#include "..\GlobalClipboard.h"
 #include "[Common]\CLIWrapper.h"
-#include "..\CSEDialogImposterManager.h"
-#include "..\CSEObjectPaletteManager.h"
-#include "..\CSEObjectPrefabManager.h"
+#include "..\DialogImposterManager.h"
+#include "..\ObjectPaletteManager.h"
+#include "..\ObjectPrefabManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		_DefineNopHdlr(ResponseEditorMic, 0x00407F3D, 5);
 		_DefineJumpHdlr(TopicResultScriptReset, 0x004F49A0, 0x004F49FA);
@@ -364,7 +364,7 @@ namespace ConstructionSetExtender
 			TESForm* FormA = (TESForm*)lParam1;
 			TESForm* FormB = (TESForm*)lParam2;
 
-			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+			Result = uiManager::FormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
 
 			return Result;
 		}
@@ -407,7 +407,7 @@ namespace ConstructionSetExtender
 			TESForm* FormA = *(TESForm**)lParam1;
 			TESForm* FormB = *(TESForm**)lParam2;
 
-			Result = UIManager::CSEFormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
+			Result = uiManager::FormEnumerationManager::Instance.CompareActiveForms(FormA, FormB, Result);
 
 			return Result;
 		}
@@ -460,7 +460,7 @@ namespace ConstructionSetExtender
 		}
 		bool __stdcall DoCustomCSWindowPatchHook(HWND Window)
 		{
-			if (BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_MainWindowChildren)->GetExists(Window))
+			if (BGSEEUI->GetWindowHandleCollection(bgsee::UIManager::kHandleCollection_MainWindowChildren)->GetExists(Window))
 				return false;
 			else
 				return true;
@@ -529,8 +529,8 @@ namespace ConstructionSetExtender
 				mov		eax, [esp + 8]
 				pushad
 				push	eax
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 
 				test	al, al
 				jz		EXIT
@@ -555,8 +555,8 @@ namespace ConstructionSetExtender
 			{
 				pushad
 				push	[esp + 0xC]
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 				test	al, al
 				jz		EXIT
 				popad
@@ -581,8 +581,8 @@ namespace ConstructionSetExtender
 				mov		eax, [esp + 8]
 				pushad
 				push	eax
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 				test	al, al
 				jz		EXIT2
 				popad
@@ -618,8 +618,8 @@ namespace ConstructionSetExtender
 
 				pushad
 				push	eax
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 				test	al, al
 				jz		EXIT1
 				popad
@@ -676,7 +676,7 @@ namespace ConstructionSetExtender
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 									MAKEINTRESOURCE(IDD_TEXTEDIT),
 									hWnd,
-									(DLGPROC)UIManager::TextEditDlgProc,
+									(DLGPROC)uiManager::TextEditDlgProc,
 									(LPARAM)Buffer))
 					{
 						UInt32 FormID = 0;
@@ -708,7 +708,7 @@ namespace ConstructionSetExtender
 						}
 					}
 
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 					break;
 				}
 			case IDC_CSE_POPUP_MARKUNMODIFIED:
@@ -746,21 +746,21 @@ namespace ConstructionSetExtender
 					Form->SetFromActiveFile(false);
 				}
 
-				Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 				break;
 			case IDC_CSE_POPUP_JUMPTOUSEINFOLIST:
 				{
 					const char* EditorID = Form->editorID.c_str();
 
 					if (EditorID)
-						CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(EditorID);
+						cliWrapper::interfaces::USE->ShowUseInfoListDialog(EditorID);
 					else
 					{
 						FORMAT_STR(Buffer, "%08X", Form->formID);
-						CLIWrapper::Interfaces::USE->ShowUseInfoListDialog(Buffer);
+						cliWrapper::interfaces::USE->ShowUseInfoListDialog(Buffer);
 					}
 
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_UseInfoListing);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_UseInfoListing);
 					break;
 				}
 			case IDC_CSE_POPUP_UNDELETE:
@@ -799,7 +799,7 @@ namespace ConstructionSetExtender
 						Form->SetDeleted(false);
 					}
 
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 					break;
 				}
 			case IDC_CSE_POPUP_EDITBASEFORM:
@@ -807,14 +807,14 @@ namespace ConstructionSetExtender
 					TESForm* BaseForm = (CS_CAST(Form, TESForm, TESObjectREFR))->baseForm;
 					if (BaseForm)
 						TESDialog::ShowFormEditDialog(BaseForm);
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 
 					break;
 				}
 			case IDC_CSE_POPUP_ADDTOTAG:
 				{
-					ComponentDLLInterface::FormData Data(Form);
-					CLIWrapper::Interfaces::TAG->AddFormToActiveTag(&Data);
+					componentDLLInterface::FormData Data(Form);
+					cliWrapper::interfaces::TAG->AddFormToActiveTag(&Data);
 
 					break;
 				}
@@ -826,7 +826,7 @@ namespace ConstructionSetExtender
 					{
 						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
 						Ref->ToggleInvisiblity();
-						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefVisibility);
+						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefVisibility);
 					}
 
 					break;
@@ -839,7 +839,7 @@ namespace ConstructionSetExtender
 					{
 						TESObjectREFR* Ref = CS_CAST(Form, TESForm, TESObjectREFR);
 						Ref->ToggleChildrenInvisibility();
-						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_RefVisibility);
+						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefVisibility);
 					}
 
 					break;
@@ -859,7 +859,7 @@ namespace ConstructionSetExtender
 					}
 
 					BGSEEUI->MsgBoxI(hWnd, 0, STLBuffer.c_str());
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 
 					break;
 				}
@@ -887,7 +887,7 @@ namespace ConstructionSetExtender
 								}
 							}
 						} while (Selection != -1);
-						Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 					}
 				}
 
@@ -926,13 +926,13 @@ namespace ConstructionSetExtender
 
 					BGSEEUI->MsgBoxI(hWnd, 0, "FaceGen textures for NPC %s (%08X) has been exported to the Textures\\Faces directory.",
 									(NPC->editorID.c_str() ? NPC->editorID.c_str() : ""), NPC->formID);
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 				}
 
 				break;
 			case IDC_CSE_POPUP_GLOBALCOPY:
 				{
-					GlobalClipboard::CSEGlobalCopyBuffer Buffer;
+					globalClipboard::GlobalCopyBuffer Buffer;
 
 					if (hWnd == *TESObjectWindow::WindowHandle && ListView_GetSelectedCount(*TESObjectWindow::FormListHandle) > 1)
 					{
@@ -955,19 +955,19 @@ namespace ConstructionSetExtender
 						Buffer.Add(Form);
 
 					Buffer.Copy();
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GlobalClipboard);
 				}
 
 				break;
 			case IDC_CSE_POPUP_REPLACEBASEFORM:
 				{
-					Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_FormContextMenu);
+					achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_FormContextMenu);
 					FORMAT_STR(Buffer, "Enter the editorID of the new base form");
 
 					if (DialogBoxParam(BGSEEMAIN->GetExtenderHandle(),
 						MAKEINTRESOURCE(IDD_TEXTEDIT),
 						hWnd,
-						(DLGPROC)UIManager::TextEditDlgProc,
+						(DLGPROC)uiManager::TextEditDlgProc,
 						(LPARAM)Buffer))
 					{
 						TESForm* NewBaseForm = TESForm::LookupByEditorID(Buffer);
@@ -1001,7 +1001,7 @@ namespace ConstructionSetExtender
 				break;
 			case IDC_CSE_POPUP_GLOBALPASTE:
 				BGSEECLIPBOARD->Paste();
-				Achievements::kPowerUser->UnlockTool(Achievements::CSEAchievementPowerUser::kTool_GlobalClipboard);
+				achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_GlobalClipboard);
 
 				break;
 			}
@@ -1190,7 +1190,7 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoTESDialogGetIsWindowDragDropRecipientHook(HWND Handle)
 		{
-			return BGSEEUI->GetWindowHandleCollection(bgsee::BGSEEUIManager::kHandleCollection_DragDropableWindows)->GetExists(Handle);
+			return BGSEEUI->GetWindowHandleCollection(bgsee::UIManager::kHandleCollection_DragDropableWindows)->GetExists(Handle);
 		}
 
 		#define _hhName		TESDialogGetIsWindowDragDropRecipient
@@ -1433,8 +1433,8 @@ namespace ConstructionSetExtender
 				mov		ecx, esi
 				pushad
 				push	eax
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 				test	al, al
 				jz		SKIP
 
@@ -1458,8 +1458,8 @@ namespace ConstructionSetExtender
 
 				pushad
 				push	eax
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 				test	al, al
 				jz		SKIP
 
@@ -1484,8 +1484,8 @@ namespace ConstructionSetExtender
 
 				pushad
 				push	eax
-				lea		ecx, UIManager::CSEFormEnumerationManager::Instance
-				call	UIManager::CSEFormEnumerationManager::GetShouldEnumerate
+				lea		ecx, uiManager::FormEnumerationManager::Instance
+				call	uiManager::FormEnumerationManager::GetShouldEnumerate
 				test	al, al
 				jz		SKIP
 
@@ -1536,13 +1536,13 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoHideCSMainDialogsStartupHook(void)
 		{
-			if (Settings::Dialogs::kRenderWindowState.GetData().i == 0)
+			if (settings::dialogs::kRenderWindowState.GetData().i == 0)
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_RenderWindow, NULL);
 
-			if (Settings::Dialogs::kObjectWindowState.GetData().i == 0)
+			if (settings::dialogs::kObjectWindowState.GetData().i == 0)
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_ObjectWindow, NULL);
 
-			if (Settings::Dialogs::kCellViewWindowState.GetData().i == 0)
+			if (settings::dialogs::kCellViewWindowState.GetData().i == 0)
 				SendMessage(*TESCSMain::WindowHandle, WM_COMMAND, TESCSMain::kMainMenu_View_CellViewWindow, NULL);
 		}
 
@@ -1784,7 +1784,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoCellViewOnCellSelectionHook(void)
 		{
-			if (abs(*TESCellViewWindow::ObjectListSortColumn) < UIManager::CSECellViewExtraData::kExtraRefListColumn_Persistent)
+			if (abs(*TESCellViewWindow::ObjectListSortColumn) < uiManager::CellViewExtraData::kExtraRefListColumn_Persistent)
 			{
 				SendMessage(*TESCellViewWindow::ObjectListHandle,
 							LVM_SORTITEMS,
@@ -1796,7 +1796,7 @@ namespace ConstructionSetExtender
 				SendMessage(*TESCellViewWindow::ObjectListHandle,
 							LVM_SORTITEMS,
 							*TESCellViewWindow::ObjectListSortColumn,
-							(LPARAM)UIManager::CSECellViewExtraData::CustomFormListComparator);
+							(LPARAM)uiManager::CellViewExtraData::CustomFormListComparator);
 			}
 		}
 
@@ -1869,12 +1869,12 @@ namespace ConstructionSetExtender
 
 		bool __stdcall DoObjectWindowSplitterWndProcDisableHook(void)
 		{
-			if (BGSEEMAIN->Daemon()->GetFullInitComplete())
+			if (BGSEEMAIN->GetDaemon()->GetFullInitComplete())
 			{
 				if (*TESDialog::ObjectWindowDragDropInProgress ||
 					*TESDialog::TESFormIDListViewDragDropInProgress ||
 					TESDialog::PackageCellDragDropInProgress ||
-					CLIWrapper::Interfaces::TAG->GetDragOpInProgress())
+					cliWrapper::interfaces::TAG->GetDragOpInProgress())
 				{
 					return true;
 				}
@@ -1913,8 +1913,8 @@ namespace ConstructionSetExtender
 		void __stdcall DoTESDialogCloseAllDialogsHook(void)
 		{
 			PreviewWindowImposterManager::Instance.DestroyImposters();
-			ObjectPalette::CSEObjectPaletteManager::Instance.Close();
-			ObjectPrefabs::CSEObjectPrefabManager::Instance.Close();
+			objectPalette::ObjectPaletteManager::Instance.Close();
+			objectPrefabs::ObjectPrefabManager::Instance.Close();
 		}
 
 		#define _hhName		TESDialogCloseAllDialogs

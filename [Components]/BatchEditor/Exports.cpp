@@ -1,9 +1,9 @@
 #include "BatchEditor.h"
 
-using namespace ComponentDLLInterface;
-using namespace ConstructionSetExtender;
+using namespace componentDLLInterface;
+using namespace cse;
 
-extern ComponentDLLInterface::BatchEditorInterface g_InteropInterface;
+extern componentDLLInterface::BatchEditorInterface g_InteropInterface;
 
 extern "C"
 {
@@ -23,7 +23,7 @@ bool ShowBatchRefEditorDialog(BatchRefData* Data)
 	return REFBE->InitializeBatchEditor(Data);
 }
 
-ComponentDLLInterface::BatchEditorInterface g_InteropInterface =
+componentDLLInterface::BatchEditorInterface g_InteropInterface =
 {
 	InitializeComponents,
 	ShowBatchRefEditorDialog

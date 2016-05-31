@@ -1,7 +1,7 @@
 #include "TESObjectREFR.h"
 #include "..\Hooks\Hooks-Renderer.h"
 
-using namespace ConstructionSetExtender;
+using namespace cse;
 
 void TESObjectREFR::UpdateNiNode()
 {

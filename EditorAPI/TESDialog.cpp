@@ -2,7 +2,7 @@
 #include "TESDialog.h"
 #include "[Common]\CLIWrapper.h"
 #include "Hooks\Hooks-Dialog.h"
-#include "CSEAchievements.h"
+#include "Achievements.h"
 
 tList<HWND>*				TESDialog::OpenDialogWindows = (tList<HWND>*)0x00A0B55C;
 bool						TESDialog::PackageCellDragDropInProgress = false;
@@ -181,20 +181,20 @@ HWND TESDialog::ShowFormEditDialog(TESForm* Form)
 void TESDialog::ShowScriptEditorDialog(TESForm* InitScript)
 {
 	Script* AuxScript = CS_CAST(InitScript, TESForm, Script);
-	ComponentDLLInterface::ScriptData* Data = NULL;
+	componentDLLInterface::ScriptData* Data = NULL;
 
 	if (AuxScript)
-		Data = new ComponentDLLInterface::ScriptData(AuxScript);
+		Data = new componentDLLInterface::ScriptData(AuxScript);
 
 	RECT ScriptEditorLoc;
 	TESDialog::ReadBoundsFromINI("Script Edit", &ScriptEditorLoc);
-	ConstructionSetExtender::CLIWrapper::Interfaces::SE->InstantiateEditor(Data,
+	cse::cliWrapper::interfaces::SE->InstantiateEditor(Data,
 																		   ScriptEditorLoc.left,
 																		   ScriptEditorLoc.top,
 																		   ScriptEditorLoc.right,
 																		   ScriptEditorLoc.bottom);
 
-	ConstructionSetExtender::Achievements::kPowerUser->UnlockTool(ConstructionSetExtender::Achievements::CSEAchievementPowerUser::kTool_ScriptEditor);
+	cse::achievements::kPowerUser->UnlockTool(cse::achievements::AchievementPowerUser::kTool_ScriptEditor);
 }
 
 DLGPROC TESDialog::GetFormEditDlgProc(TESForm* Form, bool& FormIDListViewForm)
@@ -562,7 +562,7 @@ void TESObjectWindow::PerformLimitedInit(HWND ObjectWindow)
 					0, 0, 0);
 	SendMessage(*TESObjectWindow::TreeViewHandle, TVM_SELECTITEM, 9u, TreeIndex);
 	thisCall<void>(0x00414C90, TESObjectWindow::TreeEntryArray[0], 0);
-	SendMessage(*TESObjectWindow::FormListHandle, LVM_SORTITEMS, 1, (LPARAM)ConstructionSetExtender::Hooks::ObjectWindowFormListComparator);
+	SendMessage(*TESObjectWindow::FormListHandle, LVM_SORTITEMS, 1, (LPARAM)cse::hooks::ObjectWindowFormListComparator);
 	SetWindowLong(*TESObjectWindow::FormListHandle,
 				  GWL_STYLE,
 				  GetWindowLong(*TESObjectWindow::FormListHandle, GWL_STYLE) | LVS_SHAREIMAGELISTS);

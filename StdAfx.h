@@ -115,14 +115,13 @@ using namespace SME::MemoryHandler;
 using namespace SME::Functors;
 
 // BGSEEBASE
-#include <BGSEEConsole.h>
-#include <BGSEEUIManager.h>
+#include <bgsee\Console.h>
+#include <bgsee\UIManager.h>
 
-namespace bgsee = BGSEditorExtender;
 
 // CSE
 #include "EditorAPI\TESEditorAPI.h"
-#include "CSESettings.h"
-#include "CSEUIManager.h"
+#include "Settings.h"
+#include "UIManager.h"
 
 #define PI					3.151592653589793

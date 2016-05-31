@@ -1,14 +1,14 @@
 #include "Hooks-VersionControl.h"
 #include "Hooks-Plugins.h"
-#include "..\CSEChangeLogManager.h"
+#include "..\ChangeLogManager.h"
 
 #pragma warning(push)
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		_DefineHookHdlr(DataHandlerSavePluginProlog, 0x0047EC8D);
 		_DefineHookHdlr(DataHandlerLoadPluginsWrapper, 0x0041BD98);
@@ -52,9 +52,9 @@ namespace ConstructionSetExtender
 		void __stdcall DoDataHandlerLoadPluginsWrapperHook(bool State)
 		{
 			if (State)
-				ChangeLogManager::HandlePluginLoadProlog();
+				changeLogManager::HandlePluginLoadProlog();
 			else
-				ChangeLogManager::HandlePluginLoadEpilog();
+				changeLogManager::HandlePluginLoadEpilog();
 		}
 
 		#define _hhName		DataHandlerLoadPluginsWrapper
@@ -82,7 +82,7 @@ namespace ConstructionSetExtender
 
 		void __stdcall DoDataHandlerSavePluginPrologHook(TESFile* SaveFile)
 		{
-			ChangeLogManager::HandlePluginSave(SaveFile);
+			changeLogManager::HandlePluginSave(SaveFile);
 			TESDataHandler::PluginLoadSaveInProgress = true;
 		}
 
@@ -104,7 +104,7 @@ namespace ConstructionSetExtender
 		{
 			if ((Form->formFlags & TESForm::kFormFlags_Temporary) == 0 && TESDataHandler::PluginLoadSaveInProgress == false)
 			{
-				BGSEECHANGELOG->RecordChange(ChangeLogManager::CSEBasicFormChangeEntry(ChangeType, Form, Value));
+				BGSEECHANGELOG->RecordChange(changeLogManager::BasicFormChangeEntry(ChangeType, Form, Value));
 			}
 		}
 
@@ -121,7 +121,7 @@ namespace ConstructionSetExtender
 				movzx	eax, byte ptr [esp + 0x4]
 				pushad
 				push	eax
-				push	0		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetActive
+				push	0		// ChangeLogManager::BasicFormChangeEntry::kFormChange_SetActive
 				push	ecx
 				call	DoTESFormChangeHook
 				popad
@@ -143,7 +143,7 @@ namespace ConstructionSetExtender
 				movzx	eax, bl
 				pushad
 				push	eax
-				push	1		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetDeleted
+				push	1		// ChangeLogManager::BasicFormChangeEntry::kFormChange_SetDeleted
 				push	esi
 				call	DoTESFormChangeHook
 				popad
@@ -167,7 +167,7 @@ namespace ConstructionSetExtender
 			{
 				pushad
 				push	edi
-				push	2		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetFormID
+				push	2		// ChangeLogManager::BasicFormChangeEntry::kFormChange_SetFormID
 				push	esi
 				call	DoTESFormChangeHook
 				popad
@@ -186,7 +186,7 @@ namespace ConstructionSetExtender
 			{
 				pushad
 				push	esi
-				push	3		// ChangeLogManager::CSEBasicFormChangeEntry::kFormChange_SetEditorID
+				push	3		// ChangeLogManager::BasicFormChangeEntry::kFormChange_SetEditorID
 				push	edi
 				call	DoTESFormChangeHook
 				popad

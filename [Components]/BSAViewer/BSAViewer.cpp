@@ -2,7 +2,7 @@
 #include "BSAReader.h"
 #include "[Common]\ListViewUtilities.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	String^ FileSystemObject::GetPath(bool WithRoot)
 	{

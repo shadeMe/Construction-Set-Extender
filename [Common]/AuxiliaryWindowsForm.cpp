@@ -1,7 +1,7 @@
 #include "AuxiliaryWindowsForm.h"
 #include "NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	void AnimatedForm::FadeTimer_Tick( Object^ Sender, EventArgs^ E )
 	{
@@ -183,12 +183,12 @@ namespace ConstructionSetExtender
 			{
 				if (m.LParam != IntPtr::Zero)
 				{
-					NativeWrapper::SetActiveWindow(m.LParam);
+					nativeWrapper::SetActiveWindow(m.LParam);
 				}
 				else
 				{
 					// Could not find sender, just in-activate it.
-					NativeWrapper::SetActiveWindow(IntPtr::Zero);
+					nativeWrapper::SetActiveWindow(IntPtr::Zero);
 				}
 			}
 			break;

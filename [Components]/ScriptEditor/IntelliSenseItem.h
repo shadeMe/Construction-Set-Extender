@@ -4,9 +4,9 @@
 #include "SemanticAnalysis.h"
 #include "ScriptTextEditorInterface.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace IntelliSense
+	namespace intellisense
 	{
 		ref class IntelliSenseInterface;
 		ref class CodeSnippet;
@@ -45,7 +45,7 @@ namespace ConstructionSetExtender
 			IntelliSenseItem(String^ Desc, IntelliSenseItemType Type);
 
 			virtual String^										Describe();
-			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor);
+			virtual void										Insert(textEditors::IScriptTextEditor^ Editor);
 
 																// returns true if the item can be enumerated in the interface
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch);
@@ -123,15 +123,15 @@ namespace ConstructionSetExtender
 		ref class IntelliSenseItemVariable : public IntelliSenseItem
 		{
 			String^												Name;
-			ObScriptParsing::Variable::DataType					DataType;
+			obScriptParsing::Variable::DataType					DataType;
 			String^												Comment;
 		public:
-			IntelliSenseItemVariable(String^ Name, String^ Comment, ObScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope);
+			IntelliSenseItemVariable(String^ Name, String^ Comment, obScriptParsing::Variable::DataType Type, IntelliSenseItemType Scope);
 
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
 			String^												GetComment();
-			ObScriptParsing::Variable::DataType					GetDataType();
+			obScriptParsing::Variable::DataType					GetDataType();
 			String^												GetDataTypeID();
 		};
 
@@ -213,7 +213,7 @@ namespace ConstructionSetExtender
 
 			String^												GetFormTypeIdentifier();
 		public:
-			IntelliSenseItemEditorIDForm(ComponentDLLInterface::FormData* Data);
+			IntelliSenseItemEditorIDForm(componentDLLInterface::FormData* Data);
 
 			virtual String^										GetIdentifier() override;
 			virtual String^										GetSubstitution() override;
@@ -226,7 +226,7 @@ namespace ConstructionSetExtender
 		public:
 			IntelliSenseItemCodeSnippet(CodeSnippet^ Source);
 
-			virtual void										Insert(TextEditors::IScriptTextEditor^ Editor) override;
+			virtual void										Insert(textEditors::IScriptTextEditor^ Editor) override;
 			virtual bool										GetShouldEnumerate(String^ Token, bool SubstringSearch) override;
 			virtual bool										GetIsQuickViewable(String^ Token) override;
 			virtual String^										GetIdentifier() override;

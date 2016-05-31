@@ -5,9 +5,9 @@
 #pragma optimize("", off)
 #pragma warning(disable: 4005 4748)
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace Hooks
+	namespace hooks
 	{
 		UInt32								ScriptCompileResultBuffer = 0;	// saves the result of a compile operation so as to allow it to go on unhindered
 

@@ -4,9 +4,9 @@
 #include "WorkspaceModelInterface.h"
 #include "[Common]\ListViewUtilities.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		ScriptListDialog::ScriptListDialog()
 		{
@@ -161,12 +161,12 @@ namespace ConstructionSetExtender
 
 			ScriptList->BeginUpdate();
 
-			ComponentDLLInterface::ScriptListData* Data = ScriptListCache = NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptList();
+			componentDLLInterface::ScriptListData* Data = ScriptListCache = nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetScriptList();
 			if (Data)
 			{
 				for (int i = 0; i < Data->ScriptCount; i++)
 				{
-					ComponentDLLInterface::ScriptData* ThisScript = &Data->ScriptListHead[i];
+					componentDLLInterface::ScriptData* ThisScript = &Data->ScriptListHead[i];
 					if (ThisScript->IsValid() == false)
 						continue;
 
@@ -219,13 +219,13 @@ namespace ConstructionSetExtender
 
 			char Buffer[0x200] = { 0 };
 			int X, Y, W, H;
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("W", "ScriptEditor::ScriptListDialog", "916", Buffer, sizeof(Buffer));
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("W", "ScriptEditor::ScriptListDialog", "916", Buffer, sizeof(Buffer));
 			W = Int32::Parse(gcnew String(Buffer));
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("H", "ScriptEditor::ScriptListDialog", "541", Buffer, sizeof(Buffer));
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("H", "ScriptEditor::ScriptListDialog", "541", Buffer, sizeof(Buffer));
 			H = Int32::Parse(gcnew String(Buffer));
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("X", "ScriptEditor::ScriptListDialog", "0", Buffer, sizeof(Buffer));
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("X", "ScriptEditor::ScriptListDialog", "0", Buffer, sizeof(Buffer));
 			X = Int32::Parse(gcnew String(Buffer));
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("Y", "ScriptEditor::ScriptListDialog", "0", Buffer, sizeof(Buffer));
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.ReadFromINI("Y", "ScriptEditor::ScriptListDialog", "0", Buffer, sizeof(Buffer));
 			Y = Int32::Parse(gcnew String(Buffer));
 
 			ScriptBox->ClientSize = Size(W, H);
@@ -256,15 +256,15 @@ namespace ConstructionSetExtender
 			SearchBox->Enabled = true;
 			PreviewBox->Text = "";
 			SearchBox->Text = "";
-			NativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptListCache, false);
+			nativeWrapper::g_CSEInterfaceTable->DeleteInterOpData(ScriptListCache, false);
 			ScriptListCache = 0;
 
 			if (SaveBoundsToINI)
 			{
-				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("W", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->ClientSize.Width.ToString())).c_str());
-				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("H", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->ClientSize.Height.ToString())).c_str());
-				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("X", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->DesktopLocation.X.ToString())).c_str());
-				NativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("Y", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->DesktopLocation.Y.ToString())).c_str());
+				nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("W", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->ClientSize.Width.ToString())).c_str());
+				nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("H", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->ClientSize.Height.ToString())).c_str());
+				nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("X", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->DesktopLocation.X.ToString())).c_str());
+				nativeWrapper::g_CSEInterfaceTable->EditorAPI.WriteToINI("Y", "ScriptEditor::ScriptListDialog", (CString(ScriptBox->DesktopLocation.Y.ToString())).c_str());
 			}
 		}
 
@@ -276,7 +276,7 @@ namespace ConstructionSetExtender
 			for (UInt32 i = 0; i < ScriptList->SelectedItems->Count; i++)
 			{
 				ListViewItem^ Itr = ScriptList->SelectedItems[i];
-				ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)Itr->Tag);
+				componentDLLInterface::ScriptData* Data = (componentDLLInterface::ScriptData*)((UInt32)Itr->Tag);
 
 				SelectedEditorIDs->Add(gcnew String(Data->EditorID));
 			}
@@ -292,8 +292,8 @@ namespace ConstructionSetExtender
 			if (First == nullptr)
 				return;
 
-			ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)First->Tag);
-			NativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowUseReportDialog(Data->EditorID);
+			componentDLLInterface::ScriptData* Data = (componentDLLInterface::ScriptData*)((UInt32)First->Tag);
+			nativeWrapper::g_CSEInterfaceTable->EditorAPI.ShowUseReportDialog(Data->EditorID);
 		}
 
 		void ScriptListDialog::ScriptBox_Cancel(Object^ Sender, CancelEventArgs^ E)
@@ -322,7 +322,7 @@ namespace ConstructionSetExtender
 
 			if (ScriptList->SelectedIndices->Count == 1)
 			{
-				ComponentDLLInterface::ScriptData* Data = (ComponentDLLInterface::ScriptData*)((UInt32)GetListViewSelectedItem(ScriptList)->Tag);
+				componentDLLInterface::ScriptData* Data = (componentDLLInterface::ScriptData*)((UInt32)GetListViewSelectedItem(ScriptList)->Tag);
 				String^ ScriptText = gcnew String(Data->Text);
 
 				PreviewBox->Text = ScriptText->Replace("\n", "\r\n");

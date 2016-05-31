@@ -1,9 +1,9 @@
 #include "Exports.h"
 #include "BSAViewer.h"
 
-extern ComponentDLLInterface::BSAViewerInterface g_InteropInterface;
+extern componentDLLInterface::BSAViewerInterface g_InteropInterface;
 
-using namespace ConstructionSetExtender;
+using namespace cse;
 
 extern "C"
 {
@@ -23,7 +23,7 @@ void ShowBSAViewerDialog(const char* WorkingDir, const char* ExtensionFilter, ch
 	CopyStringToCharBuffer(BSAV->InitializeViewer(gcnew String(WorkingDir), gcnew String(ExtensionFilter)), ReturnPathOut, BufferSize);
 }
 
-ComponentDLLInterface::BSAViewerInterface g_InteropInterface =
+componentDLLInterface::BSAViewerInterface g_InteropInterface =
 {
 	InitializeComponents,
 	ShowBSAViewerDialog

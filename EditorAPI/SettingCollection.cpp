@@ -20,7 +20,7 @@ Setting* SettingCollectionList::LookupByName( const char* Name )
 
 void GameSettingCollection::CreateDefaultCopy()
 {
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
 		const char* Name = NULL;
 		Setting* Data = NULL;
@@ -42,7 +42,7 @@ void GameSettingCollection::CreateDefaultCopy()
 
 void GameSettingCollection::ResetCollection()
 {
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
 		const char* Name = NULL;
 		Setting* Data = NULL;
@@ -69,10 +69,10 @@ UInt32 GameSettingCollection::GetGMSTCount()
 	return settingMap.GetCount();
 }
 
-void GameSettingCollection::SerializeGMSTDataForHandShake(ComponentDLLInterface::GMSTData* HandShakeData)
+void GameSettingCollection::SerializeGMSTDataForHandShake(componentDLLInterface::GMSTData* HandShakeData)
 {
 	UInt32 Index = 0;
-	for (ConstructionSetExtender_OverriddenClasses::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
+	for (cseOverride::NiTMapIterator Itr = settingMap.GetFirstPos(); Itr;)
 	{
 		const char* Name = NULL;
 		Setting* Data = NULL;

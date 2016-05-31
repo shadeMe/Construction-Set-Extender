@@ -4,9 +4,9 @@
 #include "ScriptTextEditorInterface.h"
 #include "TextEditorAdornments.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		// not a real/proper MVC implementation, obviously
 		interface class IWorkspaceModel;
@@ -19,8 +19,8 @@ namespace ConstructionSetExtender
 			property ListView^		ListViewBookmarks;
 			property ListView^		ListViewFindResults;
 
-			property IntelliSense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView;
-			property TextEditors::ScopeBreadcrumbManager^			BreadcrumbManager;
+			property intellisense::IIntelliSenseInterfaceView^		IntelliSenseInterfaceView;
+			property textEditors::ScopeBreadcrumbManager^			BreadcrumbManager;
 		};
 
 		interface class IWorkspaceView : public	IWorkspaceViewBindableData
@@ -46,7 +46,7 @@ namespace ConstructionSetExtender
 
 			PostNewTabOperation							PostCreationOperation;
 			String^										PathToFile;
-			ComponentDLLInterface::ScriptData*			OpenArgs;
+			componentDLLInterface::ScriptData*			OpenArgs;
 			String^										NewText;
 
 			bool										BindAfterCreation;
@@ -63,9 +63,9 @@ namespace ConstructionSetExtender
 			void	BubbleKeyDownEvent(IWorkspaceView^ View, KeyEventArgs^ E);
 
 			void	Jump(IWorkspaceView^ View, IWorkspaceModel^ From, String^ ScriptEditorID);
-			int		FindReplace(IWorkspaceView^ View, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			int		FindReplace(IWorkspaceView^ View, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
 																	String^ Query, String^ Replacement, UInt32 Options, bool Global);
-			void	ShowOutline(IWorkspaceView^ View, ObScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
+			void	ShowOutline(IWorkspaceView^ View, obScriptParsing::Structurizer^ Data, IWorkspaceModel^ Model);
 
 			void	Redraw(IWorkspaceView^ View);
 

@@ -1,9 +1,9 @@
 #include "TagBrowser.h"
 
-using namespace ComponentDLLInterface;
-using namespace ConstructionSetExtender;
+using namespace componentDLLInterface;
+using namespace cse;
 
-extern ComponentDLLInterface::TagBrowserInterface g_InteropInterface;
+extern componentDLLInterface::TagBrowserInterface g_InteropInterface;
 
 extern "C"
 {
@@ -28,7 +28,7 @@ void HideTagBrowserDialog(void)
 	TAGBRWR->Hide();
 }
 
-bool AddFormToActiveTag(ComponentDLLInterface::FormData* Data)
+bool AddFormToActiveTag(componentDLLInterface::FormData* Data)
 {
 	return TAGBRWR->AddItemToActiveTag(Data);
 }
@@ -48,7 +48,7 @@ bool GetDragOpInProgress()
 	return TAGBRWR->GetDragInProgress();
 }
 
-ComponentDLLInterface::TagBrowserInterface g_InteropInterface =
+componentDLLInterface::TagBrowserInterface g_InteropInterface =
 {
 	InitializeComponents,
 	ShowTagBrowserDialog,

@@ -8,9 +8,9 @@
 #define NEWSCRIPTID					"New Script"
 #define FIRSTRUNSCRIPTID			"New Workspace"
 
-namespace ConstructionSetExtender
+namespace cse
 {
-	namespace ScriptEditor
+	namespace scriptEditor
 	{
 		ref class ConcreteWorkspaceModel;
 
@@ -33,7 +33,7 @@ namespace ConstructionSetExtender
 			void										Remove(ConcreteWorkspaceModel^ Allocation);
 
 			// IWorkspaceModelFactory
-			virtual IWorkspaceModel^				CreateModel(ComponentDLLInterface::ScriptData* Data);
+			virtual IWorkspaceModel^				CreateModel(componentDLLInterface::ScriptData* Data);
 			virtual IWorkspaceModelController^		CreateController();
 		};
 
@@ -55,7 +55,7 @@ namespace ConstructionSetExtender
 			virtual void					AcquireInputFocus(IWorkspaceModel^ Model);
 
 			virtual void					New(IWorkspaceModel^ Model);
-			virtual void					Open(IWorkspaceModel^ Model, ComponentDLLInterface::ScriptData* Data);
+			virtual void					Open(IWorkspaceModel^ Model, componentDLLInterface::ScriptData* Data);
 			virtual bool					Save(IWorkspaceModel^ Model, IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
 			virtual bool					Close(IWorkspaceModel^ Model, bool% OperationCancelled);
 			virtual void					Next(IWorkspaceModel^ Model);
@@ -71,8 +71,8 @@ namespace ConstructionSetExtender
 			virtual void					LoadFromDisk(IWorkspaceModel^ Model, String^ PathToFile);
 			virtual void					SaveToDisk(IWorkspaceModel^ Model, String^ PathToFile, bool PathIncludesFileName, String^ Extension);
 
-			virtual TextEditors::IScriptTextEditor::FindReplaceResult^
-											FindReplace(IWorkspaceModel^ Model, TextEditors::IScriptTextEditor::FindReplaceOperation Operation,
+			virtual textEditors::IScriptTextEditor::FindReplaceResult^
+											FindReplace(IWorkspaceModel^ Model, textEditors::IScriptTextEditor::FindReplaceOperation Operation,
 														String^ Query, String^ Replacement, UInt32 Options);
 
 			virtual bool					GetOffsetViewerData(IWorkspaceModel^ Model, String^% OutText, UInt32% OutBytecode, UInt32% OutLength);
@@ -83,12 +83,12 @@ namespace ConstructionSetExtender
 		ref class ConcreteWorkspaceModel : public IWorkspaceModel
 		{
 			KeyEventHandler^									TextEditorKeyDownHandler;
-			TextEditors::TextEditorScriptModifiedEventHandler^	TextEditorScriptModifiedHandler;
-			TextEditors::TextEditorMouseClickEventHandler^		TextEditorMouseClickHandler;
+			textEditors::TextEditorScriptModifiedEventHandler^	TextEditorScriptModifiedHandler;
+			textEditors::TextEditorMouseClickEventHandler^		TextEditorMouseClickHandler;
 
 			void									TextEditor_KeyDown(Object^ Sender, KeyEventArgs^ E);
-			void									TextEditor_ScriptModified(Object^ Sender, TextEditors::TextEditorScriptModifiedEventArgs^ E);
-			void									TextEditor_MouseClick(Object^ Sender, TextEditors::TextEditorMouseClickEventArgs^ E);
+			void									TextEditor_ScriptModified(Object^ Sender, textEditors::TextEditorScriptModifiedEventArgs^ E);
+			void									TextEditor_MouseClick(Object^ Sender, textEditors::TextEditorMouseClickEventArgs^ E);
 
 			EventHandler^							AutoSaveTimerTickHandler;
 			EventHandler^							ScriptEditorPreferencesSavedHandler;
@@ -106,8 +106,8 @@ namespace ConstructionSetExtender
 			void									OnStateChangedType(IWorkspaceModel::ScriptType Type);
 			void									OnStateChangedDescription();
 		public:
-			TextEditors::IScriptTextEditor^					TextEditor;
-			IntelliSense::IntelliSenseInterfaceModel^		IntelliSenseModel;
+			textEditors::IScriptTextEditor^					TextEditor;
+			intellisense::IntelliSenseInterfaceModel^		IntelliSenseModel;
 			Timer^											AutoSaveTimer;
 
 			void*									CurrentScript;
@@ -124,7 +124,7 @@ namespace ConstructionSetExtender
 
 			IWorkspaceView^							BoundParent;
 
-			void					Setup(ComponentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript);
+			void					Setup(componentDLLInterface::ScriptData* Data, bool PartialUpdate, bool NewScript);
 			bool					PerformHouseKeeping();
 			bool					PerformHouseKeeping(bool% OperationCancelled);
 
@@ -132,7 +132,7 @@ namespace ConstructionSetExtender
 			void					Unbind();
 
 			void					NewScript();
-			void					OpenScript(ComponentDLLInterface::ScriptData* Data);
+			void					OpenScript(componentDLLInterface::ScriptData* Data);
 			bool					SaveScript(IWorkspaceModel::SaveOperation Operation, bool% HasWarnings);
 			bool					CloseScript(bool% OperationCancelled);
 			void					NextScript();
@@ -141,7 +141,7 @@ namespace ConstructionSetExtender
 			void					SetType(IWorkspaceModel::ScriptType New);
 			bool					Sanitize();
 
-			ConcreteWorkspaceModel(ConcreteWorkspaceModelController^ Controller, ConcreteWorkspaceModelFactory^ Factory, ComponentDLLInterface::ScriptData* Data);
+			ConcreteWorkspaceModel(ConcreteWorkspaceModelController^ Controller, ConcreteWorkspaceModelFactory^ Factory, componentDLLInterface::ScriptData* Data);
 			~ConcreteWorkspaceModel();
 
 #pragma region Interfaces

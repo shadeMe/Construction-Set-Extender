@@ -1,7 +1,7 @@
 #include "MiscUtilities.h"
 #include "NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	CString::CString(System::String^% Source)
 	{
@@ -16,7 +16,7 @@ namespace ConstructionSetExtender
 	void DebugDump(UInt8 Source, String^% Message)
 	{
 		CString CStr(Message);
-		NativeWrapper::g_CSEInterfaceTable->EditorAPI.DebugPrint(Source, CStr.c_str());
+		nativeWrapper::g_CSEInterfaceTable->EditorAPI.DebugPrint(Source, CStr.c_str());
 	}
 
 	void ToggleFlag(UInt32* Flag, UInt32 Mask, bool State)
@@ -81,9 +81,9 @@ namespace ConstructionSetExtender
 			Buffer[Size - 1] = '\0';
 	}
 
-	namespace Log
+	namespace log
 	{
-		namespace ScriptEditor
+		namespace scriptEditor
 		{
 			void DebugPrint(String^ Message, bool Achtung)
 			{
@@ -93,7 +93,7 @@ namespace ConstructionSetExtender
 				DebugDump(e_SE, Message);
 			}
 		}
-		namespace UseInfoList
+		namespace useInfoList
 		{
 			void DebugPrint(String^ Message, bool Achtung)
 			{
@@ -103,7 +103,7 @@ namespace ConstructionSetExtender
 				DebugDump(e_UL, Message);
 			}
 		}
-		namespace BatchEditor
+		namespace batchEditor
 		{
 			void DebugPrint(String^ Message, bool Achtung)
 			{
@@ -113,7 +113,7 @@ namespace ConstructionSetExtender
 				DebugDump(e_BE, Message);
 			}
 		}
-		namespace BSAViewer
+		namespace bsaViewer
 		{
 			void DebugPrint(String^ Message, bool Achtung)
 			{
@@ -123,7 +123,7 @@ namespace ConstructionSetExtender
 				DebugDump(e_BSA, Message);
 			}
 		}
-		namespace TagBrowser
+		namespace tagBrowser
 		{
 			void DebugPrint(String^ Message, bool Achtung)
 			{

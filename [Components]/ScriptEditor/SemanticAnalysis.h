@@ -3,7 +3,7 @@
 
 using namespace System::Runtime::Serialization;
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	class ByteCodeParser
 	{
@@ -14,7 +14,7 @@ namespace ConstructionSetExtender
 		static UInt32										GetOffsetForLine(String^% Line, Array^% Data, UInt32% CurrentOffset);
 	};
 
-	namespace ObScriptParsing
+	namespace obScriptParsing
 	{
 		static enum	class ScriptType
 		{
@@ -364,7 +364,7 @@ namespace ConstructionSetExtender
 	};
 
 #ifdef CSE_SE
-	typedef ObScriptParsing::Tokenizer						ScriptParser;
-	typedef ObScriptParsing::AnalysisData::UserMessage		ScriptErrorMessage;
+	typedef obScriptParsing::Tokenizer						ScriptParser;
+	typedef obScriptParsing::AnalysisData::UserMessage		ScriptErrorMessage;
 #endif
 }

@@ -360,8 +360,8 @@ class BSTexturePalette : public NiRefObject
 public:
 	// members
 	///*00*/ NiRefObject
-	/*08*/ ConstructionSetExtender_OverriddenClasses::NiTPointerMap<BSFileEntry*, NiPointer<NiTexture>>*		archivedTextures;
-	/*0C*/ ConstructionSetExtender_OverriddenClasses::NiTStringPointerMap<NiPointer<NiTexture>>*				looseTextures;
+	/*08*/ cseOverride::NiTPointerMap<BSFileEntry*, NiPointer<NiTexture>>*		archivedTextures;
+	/*0C*/ cseOverride::NiTStringPointerMap<NiPointer<NiTexture>>*				looseTextures;
 
 	// members
 	void							ReleaseTextures();

@@ -7,13 +7,13 @@
 
 #include <memory.h>
 
-using namespace ComponentDLLInterface;
+using namespace componentDLLInterface;
 using namespace System::Reflection;
-using namespace ConstructionSetExtender;
-using namespace ConstructionSetExtender::IntelliSense;
-using namespace ConstructionSetExtender::ScriptEditor;
+using namespace cse;
+using namespace cse::intellisense;
+using namespace cse::scriptEditor;
 
-extern ComponentDLLInterface::ScriptEditorInterface g_InteropInterface;
+extern componentDLLInterface::ScriptEditorInterface g_InteropInterface;
 
 extern "C"
 {
@@ -74,7 +74,7 @@ UInt32 InitializeComponents(CommandTableData* Data, IntelliSenseUpdateData* GMST
 	return NonVanillaCommandCount;
 }
 
-void InstantiateEditor(ComponentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
+void InstantiateEditor(componentDLLInterface::ScriptData* InitializerScript, UInt32 Top, UInt32 Left, UInt32 Width, UInt32 Height)
 {
 	ConcreteWorkspaceView^ New = (ConcreteWorkspaceView^)ConcreteWorkspaceViewFactory::Instance->CreateView(Left, Top, Width, Height);
 	IWorkspaceModel^ Model = ConcreteWorkspaceModelFactory::Instance->CreateModel(InitializerScript);
@@ -112,9 +112,9 @@ bool PreprocessScript(const char* ScriptText, char* OutPreprocessed, UInt32 Buff
 	String^ PreprocessedResult = "";
 	bool OperationResult = Preprocessor::GetSingleton()->PreprocessScript(gcnew String(ScriptText),
 								PreprocessedResult,
-								gcnew ScriptPreprocessor::StandardOutputError(&DummyPreprocessorErrorOutputWrapper),
-								gcnew ScriptEditorPreprocessorData(gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
-								gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
+								gcnew scriptPreprocessor::StandardOutputError(&DummyPreprocessorErrorOutputWrapper),
+								gcnew ScriptEditorPreprocessorData(gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorBasePath()),
+								gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetPreprocessorStandardPath()),
 								PREFERENCES->FetchSettingAsInt("AllowRedefinitions", "Preprocessor"),
 								PREFERENCES->FetchSettingAsInt("NoOfPasses", "Preprocessor")));
 
@@ -132,7 +132,7 @@ void Deinitalize(void)
 {
 	try
 	{
-		String^ Cache = gcnew String(NativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
+		String^ Cache = gcnew String(nativeWrapper::g_CSEInterfaceTable->ScriptEditor.GetAutoRecoveryCachePath());
 
 		for each (String^ Path in System::IO::Directory::GetFiles(Cache))
 			System::IO::File::Delete(Path);
@@ -145,7 +145,7 @@ void Deinitalize(void)
 	delete ISDB;
 }
 
-ComponentDLLInterface::ScriptEditorInterface g_InteropInterface =
+componentDLLInterface::ScriptEditorInterface g_InteropInterface =
 {
 	InitializeComponents,
 	InstantiateEditor,

@@ -3,7 +3,7 @@
 #include "NativeWrapper.h"
 #include "MiscUtilities.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	ListViewItem^											GetListViewSelectedItem(ListView^ Source);
 	int														GetListViewSelectedItemIndex(ListView^ Source);

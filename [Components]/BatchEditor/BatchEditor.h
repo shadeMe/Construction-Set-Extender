@@ -2,7 +2,7 @@
 
 #include "[Common]\NativeWrapper.h"
 
-namespace ConstructionSetExtender
+namespace cse
 {
 	public ref class BatchEditor
 	{
@@ -103,13 +103,13 @@ namespace ConstructionSetExtender
 		CheckBox^						UseSoulLevel;
 		CheckBox^						UseCharge;
 
-		ComponentDLLInterface::BatchRefData*	BatchData;
+		componentDLLInterface::BatchRefData*	BatchData;
 
 		void								ObjectList_ColumnClick(Object^ Sender, ColumnClickEventArgs^ E);
 		void								SetParent_Click(Object^ Sender, EventArgs^ E);
 
 		virtual void						Cleanup() override;
-		void								PopulateObjectList(ComponentDLLInterface::BatchRefData* Data);
+		void								PopulateObjectList(componentDLLInterface::BatchRefData* Data);
 		void								PopulateFormLists();
 		virtual bool						ScrubData() override;
 
@@ -120,7 +120,7 @@ namespace ConstructionSetExtender
 	public:
 		static RefBatchEditor^%				GetSingleton();
 
-		bool								InitializeBatchEditor(ComponentDLLInterface::BatchRefData* Data);
+		bool								InitializeBatchEditor(componentDLLInterface::BatchRefData* Data);
 	};
 
 #define REFBE							RefBatchEditor::GetSingleton()

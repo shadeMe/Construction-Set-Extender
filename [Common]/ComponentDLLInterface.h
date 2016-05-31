@@ -6,7 +6,7 @@
 #define QUERYINTERFACE_EXPORT						__declspec(dllexport) void* QueryInterface(void)
 #define QUERYINTERFACE_FWD							typedef void* (* QueryInterface)(void)
 
-namespace ComponentDLLInterface
+namespace componentDLLInterface
 {
 	QUERYINTERFACE_FWD;
 

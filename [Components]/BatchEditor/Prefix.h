@@ -2,4 +2,4 @@
 #include "[Common]\IncludesCLR.h"
 #include "[Common]\MiscUtilities.h"
 
-using namespace ConstructionSetExtender::Log::BatchEditor;
+using namespace cse::log::batchEditor;
