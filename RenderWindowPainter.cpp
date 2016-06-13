@@ -3,7 +3,7 @@
 
 namespace cse
 {
-	namespace renderWindowPainter
+	namespace renderWindow
 	{
 		bgsee::DynamicRenderChannel*	RenderChannelNotifications = NULL;
 
@@ -269,38 +269,6 @@ namespace cse
 		void RenderWindowPainterOperator::RedrawRenderWindow(void)
 		{
 			TESRenderWindow::Redraw();
-		}
-
-		void renderWindowPainter::Initialize( void )
-		{
-			bool ComponentInitialized = BGSEERWPAINTER->Initialize(new RenderWindowPainterOperator());
-
-			SME_ASSERT(ComponentInitialized);
-
-			int FontSize = settings::renderWindowPainter::kFontSize.GetData().i;
-			const char* FontFace = settings::renderWindowPainter::kFontFace.GetData().s;
-
-			RECT DrawRect;
-			DrawRect.left = 3;
-			DrawRect.top = -150;
-			DrawRect.right = 800;
-			DrawRect.bottom = 200;
-			RenderChannelNotifications = new bgsee::DynamicRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-										SME::StringHelpers::GetRGBD3D(settings::renderWindowPainter::kColorNotifications().s, 255),
-										&DrawRect,
-										DT_WORDBREAK|DT_LEFT|DT_TOP|DT_NOCLIP,
-										bgsee::RenderChannelBase::kDrawAreaFlags_BottomAligned);
-
-			BGSEERWPAINTER->RegisterRenderChannel(SelectionInfoRenderChannel::GetInstance(FontFace, FontSize));
-			BGSEERWPAINTER->RegisterRenderChannel(RAMUsageRenderChannel::GetInstance(FontFace, FontSize));
-			BGSEERWPAINTER->RegisterRenderChannel(MouseRefRenderChannel::GetInstance(FontFace, FontSize));
-			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelNotifications);
-		}
-
-		void Deinitialize(void)
-		{
-			delete BGSEERWPAINTER;
-			delete RenderChannelNotifications;
 		}
 	}
 };

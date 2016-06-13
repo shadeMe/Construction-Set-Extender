@@ -272,6 +272,7 @@ public:
 	static HCURSOR*						CursorSelect;
 	static HCURSOR*						CursorMove;
 
+	// CSE-specific
 	static bool							FreezeInactiveRefs;
 	static bool							UseAlternateMovementSettings;
 	static POINT						CurrentMouseLBDragCoordDelta;

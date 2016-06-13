@@ -1,6 +1,6 @@
 #include "[Common]\CLIWrapper.h"
 #include "PluginAPIManager.h"
-#include "RenderWindowPainter.h"
+#include "RenderWindowManager.h"
 
 namespace cse
 {
@@ -174,9 +174,7 @@ namespace cse
 		if (Instance.Initialized == false)
 			return;
 
-		if (renderWindowPainter::RenderChannelNotifications)
-		{
-			renderWindowPainter::RenderChannelNotifications->Queue(DisplayDuration, "%s", Message);
-		}
+		if (renderWindow::RenderChannelNotifications)
+			renderWindow::RenderChannelNotifications->Queue(DisplayDuration, "%s", Message);
 	}
 }

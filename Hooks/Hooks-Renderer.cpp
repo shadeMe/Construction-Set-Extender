@@ -1,8 +1,7 @@
 #include "Hooks-Renderer.h"
-#include "RenderWindowGroupManager.h"
-#include "RenderWindowPainter.h"
-#include "PathGridUndoManager.h"
+#include "RenderWindowManager.h"
 #include "AuxiliaryViewport.h"
+#include "PathGridUndoManager.h"
 #include "Hooks-LOD.h"
 
 #pragma warning(push)
@@ -10,17 +9,18 @@
 #pragma warning(disable: 4005 4748)
 #pragma warning (disable: 4410)
 
+
 namespace cse
 {
+	using namespace renderWindow;
+
 	namespace hooks
 	{
 		_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
-		_DefineHookHdlr(TESObjectREFRGet3DData, 0x00542950);
 		_DefineHookHdlr(NiWindowRender, 0x00406442);
 		_DefineHookHdlr(NiDX9RendererRecreateA, 0x006D79E8);
 		_DefineHookHdlr(NiDX9RendererRecreateB, 0x006D7A0D);
 		_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
-		_DefineHookHdlr(RenderWindowUpdateViewport, 0x0042CE70);
 		_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 		_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 		_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
@@ -82,12 +82,10 @@ namespace cse
 		void PatchRendererHooks(void)
 		{
 			_MemHdlr(DoorMarkerProperties).WriteJump();
-			_MemHdlr(TESObjectREFRGet3DData).WriteJump();
 			_MemHdlr(NiWindowRender).WriteJump();
 			_MemHdlr(NiDX9RendererRecreateA).WriteJump();
 			_MemHdlr(NiDX9RendererRecreateB).WriteJump();
 			_MemHdlr(NiDX9RendererRecreateC).WriteJump();
-			_MemHdlr(RenderWindowUpdateViewport).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
 			_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
 			_MemHdlr(TESRenderControlPerformFallVoid).WriteJump();
@@ -158,144 +156,12 @@ namespace cse
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
 		{
-			Ref->ToggleSelectionBox(false);
-
-			if (GetAsyncKeyState(VK_MENU))
-			{
-				// if the alt key is held down, fallback to regular handling
-				_RENDERSEL->AddToSelection(Ref, ShowSelectionBox);
-			}
-			else
-			{
-				if (Ref->GetFrozen() || (Ref->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
-					;// ref's frozen, don't select
-				else
-				{
-					// add the parent group to the selection, if any
-					if (RenderWindowGroupManager::Instance.SelectAffiliatedGroup(Ref, _RENDERSEL, false) == false)
-						_RENDERSEL->AddToSelection(Ref, ShowSelectionBox);
-
-					// recheck the selection for frozen refs that may have been a part of the group
-					std::list<TESForm*> FrozenRefs;
-
-					for (TESRenderSelection::SelectedObjectsEntry* Itr = _RENDERSEL->selectionList; Itr && Itr->Data; Itr = Itr->Next)
-					{
-						TESObjectREFR* Selection = CS_CAST(Itr->Data, TESForm, TESObjectREFR);
-						SME_ASSERT(Selection);
-
-						if (Selection->GetFrozen() || (Selection->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
-							FrozenRefs.push_back(Itr->Data);
-					}
-
-					for (std::list<TESForm*>::const_iterator Itr = FrozenRefs.begin(); Itr != FrozenRefs.end(); Itr++)
-						_RENDERSEL->RemoveFromSelection(*Itr, true);
-				}
-			}
-		}
-
-		bool CellObjectListEnableParentIndicatorVisitor(TESObjectREFR* Ref)
-		{
-			ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-			if (xParent && xParent->parent)
-				return true;
-			else
-				return false;
+			RenderWindowManager::Instance.GetSelectionManager()->AddToSelection(Ref, ShowSelectionBox);
 		}
 
 		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
 		{
-			NiNode* ExtraFittingsNode = TESRender::CreateNiNode();
-			TESRender::AddToNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
-
-			NiVertexColorProperty* VertexColor = (NiVertexColorProperty*)FormHeap_Allocate(sizeof(NiVertexColorProperty));
-			thisCall<void>(0x00410C50, VertexColor);
-			VertexColor->flags |= NiVertexColorProperty::kSrcMode_Emissive;
-
-			NiWireframeProperty* Wireframe = (NiWireframeProperty*)FormHeap_Allocate(sizeof(NiWireframeProperty));
-			thisCall<void>(0x00417BE0, Wireframe);
-			Wireframe->m_bWireframe = 0;
-
-			// generate and update parent-child links
-			if (settings::renderer::kParentChildVisualIndicator().i &&
-				*TESRenderWindow::PathGridEditFlag == 0 &&
-				*TESRenderWindow::LandscapeEditFlag == 0)
-			{
-				CellObjectListT CurrentRefs;
-				if (TESRenderWindow::GetActiveCellObjects(CurrentRefs, &CellObjectListEnableParentIndicatorVisitor))
-				{
-					std::vector<TESObjectREFR*> EnumeratedParents;
-					for each (auto Itr in CurrentRefs)
-					{
-						NiNode* RefNode = Itr->GetNiNode();
-						if (RefNode)
-						{
-							ExtraEnableStateParent* xParent = (ExtraEnableStateParent*)Itr->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-							SME_ASSERT(xParent && xParent->parent);
-
-							if (TESRenderWindow::GetCellInActiveGrid(xParent->parent->parentCell))
-							{
-								bool NewParentNode = false;
-								if (std::find(EnumeratedParents.begin(), EnumeratedParents.end(), xParent->parent) == EnumeratedParents.end())
-								{
-									EnumeratedParents.push_back(xParent->parent);
-									NewParentNode = true;
-								}
-
-								NiColorAlpha ColorConnector = { 0 }, ColorIndicator = { 0 };
-								ColorConnector.r = ColorIndicator.r = 0.5f;
-								ColorConnector.b = ColorIndicator.b = 0.7f;
-								ColorConnector.g = ColorIndicator.g = 1.0f;
-
-								if (xParent->oppositeState)
-								{
-									ColorConnector.r = ColorConnector.b = 1.0f;
-									ColorConnector.g = 0.f;
-								}
-
-								Vector3 Point(xParent->parent->position);
-								Point -= Itr->position;
-								Vector3 Zero(0, 0, 0);
-
-								NiLines* NodeLineConnector = cdeclCall<NiLines*>(0x004AD0C0, &Point, &ColorConnector, &Zero, &ColorConnector);
-								SME_ASSERT(NodeLineConnector);
-								NodeLineConnector->m_localTranslate.x = NodeLineConnector->m_worldTranslate.x = Itr->position.x;
-								NodeLineConnector->m_localTranslate.y = NodeLineConnector->m_worldTranslate.y = Itr->position.y;
-								NodeLineConnector->m_localTranslate.z = NodeLineConnector->m_worldTranslate.z = Itr->position.z;
-
-								TESRender::AddProperty(NodeLineConnector, VertexColor);
-								TESRender::AddToNiNode(ExtraFittingsNode, NodeLineConnector);
-								thisCall<void>(0x006F2C10, NodeLineConnector);
-
-								if (NewParentNode)
-								{
-									NiTriShape* ParentIndicator = cdeclCall<NiTriShape*>(0x004AE0F0, 10.f, &ColorIndicator);
-									SME_ASSERT(ParentIndicator);
-									ParentIndicator->m_localTranslate.x = ParentIndicator->m_worldTranslate.x = xParent->parent->position.x;
-									ParentIndicator->m_localTranslate.y = ParentIndicator->m_worldTranslate.y = xParent->parent->position.y;
-									ParentIndicator->m_localTranslate.z = ParentIndicator->m_worldTranslate.z = xParent->parent->position.z;
-									TESRender::AddProperty(ParentIndicator, Wireframe);
-									TESRender::AddProperty(ParentIndicator, VertexColor);
-									TESRender::AddToNiNode(ExtraFittingsNode, ParentIndicator);
-									thisCall<void>(0x006F2C10, ParentIndicator);
-								}
-							}
-						}
-					}
-				}
-			}
-
-			TESRender::UpdateAVObject(ExtraFittingsNode);
-
-			cdeclCall<void>(0x00700240, Camera, SceneGraph, CullingProc, RenderTarget);
-
-			if (Wireframe->m_uiRefCount == 0)
-				TESRender::DeleteNiRefObject(Wireframe);
-
-			if (VertexColor->m_uiRefCount == 0)
-				TESRender::DeleteNiRefObject(VertexColor);
-
-			bool Freed = TESRender::RemoveFromNiNode(TESRender::GetSceneGraphRoot(), ExtraFittingsNode);
-			SME_ASSERT(Freed == true);
+			RenderWindowManager::Instance.GetSceneGraphManager()->HandleRender(Camera, SceneGraph, CullingProc, RenderTarget);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -325,70 +191,6 @@ namespace cse
 			}
 		}
 
-		void __stdcall DoTESObjectREFRGet3DDataHook(TESObjectREFR* Object, NiNode* Node)
-		{
-			if ((Node->m_flags & TESObjectREFR::kNiNodeSpecialFlags_DontUncull))
-				return;
-
-			bool CullState = Node->IsCulled();
-			SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, false);
-
-			if (TESRenderWindow::ShowInitiallyDisabledRefs == false && Object->GetDisabled())
-				SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
-
-			BSExtraData* xData = Object->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
-			if (xData)
-			{
-				ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-				if (xParent->parent->GetChildrenInvisible() ||
-					(xParent->parent->GetDisabled() &&
-					TESRenderWindow::ShowInitiallyDisabledRefs == false &&
-					TESRenderWindow::ShowInitiallyDisabledRefChildren == false))
-				{
-					SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
-				}
-			}
-
-			if (Object->GetInvisible())
-				SME::MiscGunk::ToggleFlag(&Node->m_flags, NiNode::kFlag_AppCulled, true);
-
-			if (Node->IsCulled() == false && CullState)
-				TESRender::UpdateAVObject(Node);
-		}
-
-		#define _hhName		TESObjectREFRGet3DData
-		_hhBegin()
-		{
-			_hhSetVar(Call, 0x0045B1B0);
-			__asm
-			{
-				push	esi
-				push	ecx		// store
-				push	0x56
-				add		ecx, 0x4C
-				xor		esi, esi
-				call	_hhGetVar(Call)
-				test	eax, eax
-				jz		NO3DDATA
-
-				mov		eax, [eax + 0xC]
-				pop		ecx		// restore
-				push	ecx		// store again for epilog
-
-				pushad
-				push	eax
-				push	ecx
-				call	DoTESObjectREFRGet3DDataHook
-				popad
-				jmp		EXIT
-			NO3DDATA:
-				mov		eax, esi
-			EXIT:
-				pop		ecx
-				pop		esi
-				retn
-			}
-		}
 
 		void __stdcall NiWindowRenderDrawHook(void)
 		{
@@ -486,46 +288,8 @@ namespace cse
 			}
 		}
 
-		bool __stdcall DoRenderWindowUpdateViewportHook(void)
-		{
-			if (settings::renderer::kUpdateViewPortAsync.GetData().i)
-				return true;
-			else
-				return false;
-		}
-
-		#define _hhName		RenderWindowUpdateViewport
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0042EF86);
-			_hhSetVar(Jump, 0x0042CE7D);
-			__asm
-			{
-				mov		eax, [TESRenderWindow::RefreshFlag]
-				mov		eax, [eax]
-				cmp		al, 0
-				jz		DONTUPDATE
-
-				jmp		_hhGetVar(Jump)
-			DONTUPDATE:
-				pushad
-				xor		eax, eax
-				call	DoRenderWindowUpdateViewportHook
-				test	al, al
-				jz		EXIT
-
-				popad
-				jmp		_hhGetVar(Jump)
-			EXIT:
-				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
 		void __stdcall DoTESObjectREFREditDialogHook(NiNode* Node, bool State)
 		{
-			SME::MiscGunk::ToggleFlag(&Node->m_flags, TESObjectREFR::kNiNodeSpecialFlags_DontUncull, State);
-
 			// reset the current mouse-over ref, just in case it happens to be the temp ref the edit dlg created
 			TESRenderWindow::CurrentMouseRef = NULL;
 		}
@@ -938,10 +702,10 @@ namespace cse
 
 		void __stdcall DoTESPathGridRecordOperation(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
+			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
+				RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_DataChange, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		void __stdcall DoTESPathGridRecordOperationMoveBHook(void)
@@ -1015,11 +779,11 @@ namespace cse
 
 		void __stdcall DoTESPathGridDeletePointHook(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
-			PathGridUndoManager::Instance.HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
+			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
+			RenderWindowManager::Instance.GetPathGridUndoManager()->HandlePathGridPointDeletion(TESRenderWindow::SelectedPathGridPoints);
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
+				RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_PointDeletion, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridDeletePoint
@@ -1041,7 +805,7 @@ namespace cse
 		{
 			PathGridPointListT* DeletionList = (PathGridPointListT*)PathGridPointListT::Create(&FormHeap_Allocate);
 			DeletionList->AddAt(Point, eListEnd);
-			PathGridUndoManager::Instance.HandlePathGridPointDeletion(DeletionList);
+			RenderWindowManager::Instance.GetPathGridUndoManager()->HandlePathGridPointDeletion(DeletionList);
 			DeletionList->RemoveAll();
 			FormHeap_Free(DeletionList);
 
@@ -1079,8 +843,8 @@ namespace cse
 
 		void __stdcall DoTESPathGridToggleEditModeHook(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
-			PathGridUndoManager::Instance.ResetUndoStack();
+			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
+			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetUndoStack();
 		}
 
 		#define _hhName		TESPathGridToggleEditMode
@@ -1100,10 +864,10 @@ namespace cse
 
 		void __stdcall DoTESPathGridCreateNewLinkedPointHook(void)
 		{
-			PathGridUndoManager::Instance.ResetRedoStack();
+			RenderWindowManager::Instance.GetPathGridUndoManager()->ResetRedoStack();
 
 			if (TESRenderWindow::SelectedPathGridPoints->Count())
-				PathGridUndoManager::Instance.RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
+				RenderWindowManager::Instance.GetPathGridUndoManager()->RecordOperation(PathGridUndoManager::kOperation_PointCreation, TESRenderWindow::SelectedPathGridPoints);
 		}
 
 		#define _hhName		TESPathGridCreateNewLinkedPoint

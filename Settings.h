@@ -60,7 +60,6 @@ namespace cse
 		namespace renderer
 		{
 			extern INISetting					kUpdatePeriod;
-			extern INISetting					kUpdateViewPortAsync;
 			extern INISetting					kAltRefMovementSpeed;
 			extern INISetting					kAltRefSnapGrid;
 			extern INISetting					kAltRefRotationSpeed;

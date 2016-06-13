@@ -287,6 +287,20 @@ float TES::GetSkyTOD( void )
 		return 0.0;
 }
 
+void TES::PurgeLoadedResources()
+{
+	TESRenderWindow::Reset();
+
+	thisCall<void>(0x004763A0, _TES, 0, 0);
+	thisCall<void>(0x00476190, _TES, 0);
+
+	thisCall<void>(0x00474760, _MODELLOADER);
+	FormHeap_Free(_MODELLOADER);
+
+	_MODELLOADER = (ModelLoader*)FormHeap_Allocate(0x1C);
+	thisCall<void>(0x00474CD0, _MODELLOADER);
+}
+
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)
 {
 	return thisVirtualCall<UInt8>(0x4, this, Path, Unk02, Unk03, Unk04);

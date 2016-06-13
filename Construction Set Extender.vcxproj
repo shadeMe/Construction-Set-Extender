@@ -272,7 +272,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="ObjectPrefabManager.cpp" />
     <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="RenderWindowGroupManager.cpp" />
-    <ClCompile Include="RenderWindowFlyCamera.cpp" />
     <ClCompile Include="RenderWindowManager.cpp" />
     <ClCompile Include="RenderWindowPainter.cpp" />
     <ClCompile Include="Settings.cpp" />
@@ -374,7 +373,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="ObjectPrefabManager.h" />
     <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="RenderWindowGroupManager.h" />
-    <ClInclude Include="RenderWindowFlyCamera.h" />
     <ClInclude Include="RenderWindowManager.h" />
     <ClInclude Include="RenderWindowPainter.h" />
     <ClInclude Include="Settings.h" />

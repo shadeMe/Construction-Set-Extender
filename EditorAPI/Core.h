@@ -254,6 +254,8 @@ public:
 	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
 	float							GetSkyTOD(void);		// this one too
 
+	void							PurgeLoadedResources();
+
 	static TES**					Singleton;
 };
 STATIC_ASSERT(sizeof(TES) == 0xAC);

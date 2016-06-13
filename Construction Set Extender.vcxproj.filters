@@ -284,9 +284,6 @@
     <ClCompile Include="PathGridUndoManager.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindowFlyCamera.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="RenderWindowManager.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
@@ -728,9 +725,6 @@
       <Filter>Components\Coda</Filter>
     </ClInclude>
     <ClInclude Include="PathGridUndoManager.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindowFlyCamera.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
     <ClInclude Include="RenderWindowManager.h">

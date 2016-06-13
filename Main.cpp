@@ -13,8 +13,7 @@
 
 #include "Achievements.h"
 #include "Console.h"
-#include "RenderWindowPainter.h"
-#include "RenderWindowFlyCamera.h"
+#include "RenderWindowManager.h"
 #include "HallOfFame.h"
 #include "UIManager.h"
 #include "WorkspaceManager.h"
@@ -50,6 +49,7 @@ namespace cse
 		RegisterRelease(6, 4, "Subterranean Homesick Alien");
 		RegisterRelease(7, 0, "Patagonian Petticoat");
 		RegisterRelease(7, 1, "Bull-buggering Bollocks");
+		RegisterRelease(8, 0, "Dead Dove");
 	}
 
 	ReleaseNameTable::~ReleaseNameTable()
@@ -155,8 +155,12 @@ namespace cse
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_ObjectWindow, uiManager::CommonDialogExtraFittingsSubClassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, uiManager::CellViewWindowSubclassProc);
 		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_CellView, uiManager::CommonDialogExtraFittingsSubClassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, uiManager::RenderWindowMenuInitSelectSubclassProc);
-		BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, uiManager::RenderWindowMiscSubclassProc);
+
+		BGSEECONSOLE_MESSAGE("Initializing Render Window Manager");
+		BGSEECONSOLE->Indent();
+		bool ComponentInitialized = renderWindow::RenderWindowManager::Instance.Initialize();
+		SME_ASSERT(ComponentInitialized);
+		BGSEECONSOLE->Exdent();
 
 		if (settings::dialogs::kShowMainWindowsInTaskbar.GetData().i)
 		{
@@ -171,7 +175,6 @@ namespace cse
 			BGSEEUI->GetWindowStyler()->RegisterStyle(TESDialog::kDialogTemplate_SearchReplace, RegularAppWindow);
 		}
 
-		BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
 
 		return true;
 	}
@@ -249,6 +252,11 @@ namespace cse
 		uiManager::Initialize();
 		BGSEECONSOLE->Exdent();
 
+		BGSEECONSOLE_MESSAGE("Initializing Render Window");
+		BGSEECONSOLE->Indent();
+		renderWindow::Initialize();
+		BGSEECONSOLE->Exdent();
+
 		BGSEECONSOLE_MESSAGE("Initializing GMST Default Copy");
 		BGSEECONSOLE->Indent();
 		GameSettingCollection::Instance->CreateDefaultCopy();
@@ -262,11 +270,6 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Initializing Archive Manager");
 		BGSEECONSOLE->Indent();
 		ArchiveManager::LoadSkippedArchives((std::string(std::string(BGSEEMAIN->GetAPPPath()) + "Data\\")).c_str());
-		BGSEECONSOLE->Exdent();
-
-		BGSEECONSOLE_MESSAGE("Initializing Render Window Painter");
-		BGSEECONSOLE->Indent();
-		renderWindowPainter::Initialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing Change Log Manager");
@@ -369,9 +372,9 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Deinitializing Plugin Interface Manager");
 		PluginAPIManager::Instance.Deinitailize();
 
-		BGSEECONSOLE_MESSAGE("Deinitializing Render Window Painter");
+		BGSEECONSOLE_MESSAGE("Deinitializing Render Window");
 		BGSEECONSOLE->Indent();
-		renderWindowPainter::Deinitialize();
+		renderWindow::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Achievements Manager");

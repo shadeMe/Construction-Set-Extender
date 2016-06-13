@@ -1,8 +1,9 @@
 #include "TESRender.h"
 #include "Core.h"
-#include "PathGridUndoManager.h"
+#include "RenderWindowManager.h"
 
 using namespace cse;
+using namespace cse::renderWindow;
 
 NiDX9Renderer**						TESRender::NiRendererSingleton = (NiDX9Renderer**)0x00A0F87C;
 TESRender::PrimaryRenderer**		TESRender::PrimaryRenderer::Singleton = (TESRender::PrimaryRenderer**)0x00A0BACC;
@@ -41,8 +42,8 @@ HCURSOR*							TESRenderWindow::CursorArrow = (HCURSOR*)0x00A0BABC;
 POINT								TESRenderWindow::CurrentMouseLBDragCoordDelta = { 0, 0 };
 bool								TESRenderWindow::UseAlternateMovementSettings = false;
 bool								TESRenderWindow::FreezeInactiveRefs = false;
-NiFrustum							TESRenderWindow::CameraFrustumBuffer = {0};
-POINT								TESRenderWindow::CurrentMouseCoord = {0};
+NiFrustum							TESRenderWindow::CameraFrustumBuffer = { 0 };
+POINT								TESRenderWindow::CurrentMouseCoord = { 0 };
 TESObjectREFR*						TESRenderWindow::CurrentMouseRef = NULL;
 TESPathGridPoint*					TESRenderWindow::CurrentMousePathGridPoint = NULL;
 bool								TESRenderWindow::ShowInitiallyDisabledRefs = true;
@@ -74,14 +75,14 @@ void TESRenderWindow::Redraw( bool RefreshPathGrid )
 {
 	if (RefreshPathGrid && *PathGridEditFlag)
 	{
-		PathGridUndoManager::Instance.SetCanReset(false);
+		RenderWindowManager::Instance.GetPathGridUndoManager()->SetCanReset(false);
 
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, NULL, NULL);
 		TogglePathGridEditMode();
 		SendMessage(*TESRenderWindow::WindowHandle, 0x419, 2, NULL);
 		TogglePathGridEditMode();
 
-		PathGridUndoManager::Instance.SetCanReset(true);
+		RenderWindowManager::Instance.GetPathGridUndoManager()->SetCanReset(true);
 	}
 	else
 		*RefreshFlag = 1;

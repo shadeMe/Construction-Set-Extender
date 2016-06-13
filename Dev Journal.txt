@@ -34,7 +34,6 @@ CSE		---->
 		> Wildcard find/replace
 		> Add an option to restore a saved backup for some esp/esm, instead of manually recover it from Data/Backup folder and moving it back to Data folder.
 		> Render window gizmos
-		> Overhaul of the Region Editor, with a larger (adjustable?) window, a larger rendering area and greater control of node placement and repositioning.
 		> Align rotation/position
 		> Clear current snap reference
 		> Drag deselect refs
@@ -56,6 +55,7 @@ CSE		---->
 		> Investigate into the ModelLoader/IOManager's workings to see if loaded resources can be manually released
 		> Add a random "roughness" factor to the landscape sculpting brush
 		> Region node editing in render window
+		> Overhaul of the Region Editor, with a larger (adjustable?) window, a larger rendering area and greater control of node placement and repositioning.
 
 	CODA			=
 

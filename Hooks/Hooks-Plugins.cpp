@@ -1,7 +1,6 @@
 #include "Hooks-Plugins.h"
 #include "Hooks-Misc.h"
 #include "Hooks-Dialog.h"
-#include "..\UIManager.h"
 #include "..\WorkspaceManager.h"
 
 #pragma warning(push)
@@ -193,7 +192,6 @@ namespace cse
 					BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::WindowHandle);
 
 				cliWrapper::interfaces::SE->UpdateIntelliSenseDatabase();
-				SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 
 				SetActiveWindow(*TESCSMain::WindowHandle);				// to make sure none of its child dialogs are hidden behind it
 			}

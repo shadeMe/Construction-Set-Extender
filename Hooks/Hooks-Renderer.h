@@ -9,12 +9,10 @@ namespace cse
 		void PatchRendererHooks(void);
 
 		_DeclareMemHdlr(DoorMarkerProperties, "allows the displaying of reference properties for door markers");
-		_DeclareMemHdlr(TESObjectREFRGet3DData, "selectively culls reference nodes depending on the presence of various visibility flags");
 		_DeclareMemHdlr(NiWindowRender, "allows various obscenities to be written to the render window");
 		_DeclareMemHdlr(NiDX9RendererRecreateA, "used to release any renderer owned D3D resources");
 		_DeclareMemHdlr(NiDX9RendererRecreateB, "");
 		_DeclareMemHdlr(NiDX9RendererRecreateC, "");
-		_DeclareMemHdlr(RenderWindowUpdateViewport, "updates the render window viewport regardless of user activity");
 		_DeclareMemHdlr(TESObjectREFRSetupDialog, "flag temp nodes to prevent them from being unculled unnecessarily");
 		_DeclareMemHdlr(TESObjectREFRCleanDialog, "");
 		_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");

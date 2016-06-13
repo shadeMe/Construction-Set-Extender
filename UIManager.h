@@ -181,16 +181,7 @@ namespace cse
 			enum { kTypeID = 'XMTD' };
 		};
 
-		class RenderWindowMiscData : public bgsee::WindowExtraData
-		{
-		public:
-			bool				TunnelingKeyMessage;
-
-			RenderWindowMiscData();
-			virtual ~RenderWindowMiscData();
-
-			enum { kTypeID = 'XRWM' };
-		};
+		
 
 		class TESFormEditData : public bgsee::WindowExtraData
 		{
@@ -246,8 +237,6 @@ namespace cse
 		LRESULT CALLBACK		MainWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		MainWindowToolbarSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 
-		LRESULT CALLBACK		RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
-		LRESULT CALLBACK		RenderWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		ObjectWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 		LRESULT CALLBACK		CellViewWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 
@@ -285,9 +274,6 @@ namespace cse
 }
 
 // custom window messages
-// result = Vector3*
-#define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
-#define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
 // wParam = CSEFaceGenVoicePreviewData*
 #define WM_FACEGENPREVIEW_PLAYVOICE				(WM_USER + 2020)
 // wParam = std::string* Out

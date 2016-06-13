@@ -41,7 +41,6 @@ namespace cse
 			Depot.push_back(&plugins::kSaveLoadedESPsAsMasters);
 
 			Depot.push_back(&renderer::kUpdatePeriod);
-			Depot.push_back(&renderer::kUpdateViewPortAsync);
 			Depot.push_back(&renderer::kAltRefMovementSpeed);
 			Depot.push_back(&renderer::kAltRefSnapGrid);
 			Depot.push_back(&renderer::kAltRefRotationSpeed);
@@ -151,7 +150,6 @@ namespace cse
 #define RENDERER_INISECTION					"Renderer"
 
 			INISetting		kUpdatePeriod("UpdatePeriod", RENDERER_INISECTION, "Duration, in milliseconds, between render window updates", (SInt32)8);
-			INISetting		kUpdateViewPortAsync("UpdateViewPortAsync", RENDERER_INISECTION, "Constantly update the render window in the background", (SInt32)0);
 			INISetting		kAltRefMovementSpeed("AltRefMovementSpeed", RENDERER_INISECTION, "Alternate render window reference movement speed", (float)0.8);
 			INISetting		kAltRefSnapGrid("AltRefSnapGrid", RENDERER_INISECTION, "Alternate render window reference snap to grid", (float)2);
 			INISetting		kAltRefRotationSpeed("AltRefRotationSpeed", RENDERER_INISECTION, "Alternate render window reference rotation speed", (float)1.0);

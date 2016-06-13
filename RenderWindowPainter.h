@@ -1,12 +1,11 @@
 #pragma once
 #include <bgsee\RenderWindowPainter.h>
-#include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
 {
-	namespace renderWindowPainter
+	namespace renderWindow
 	{
-		extern bgsee::DynamicRenderChannel*	RenderChannelNotifications;
+		extern bgsee::DynamicRenderChannel*		RenderChannelNotifications;
 
 		class SelectionInfoRenderChannel : public bgsee::StaticRenderChannel
 		{
@@ -58,8 +57,5 @@ namespace cse
 			virtual HWND							GetD3DWindow(void);
 			virtual void							RedrawRenderWindow(void);
 		};
-
-		void Initialize(void);
-		void Deinitialize(void);
 	}
 };

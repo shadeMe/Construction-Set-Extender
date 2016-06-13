@@ -2,7 +2,7 @@
 #include "Hooks-Dialog.h"
 #include "Hooks-Plugins.h"
 #include "Hooks-Renderer.h"
-#include "..\RenderWindowGroupManager.h"
+#include "..\RenderWindowManager.h"
 #include "..\AuxiliaryViewport.h"
 #include "..\Achievements.h"
 #include "..\HallOfFame.h"
@@ -282,7 +282,7 @@ namespace cse
 		void __stdcall DoDataHandlerClearDataHook(void)
 		{
 			delete BGSEEHALLOFFAME;
-			RenderWindowGroupManager::Instance.Clear();
+			renderWindow::RenderWindowManager::Instance.GetReferenceGroupManager()->Clear();
 			GameSettingCollection::Instance->ResetCollection();
 			BGSEEUNDOSTACK->Reset();
 		}
