@@ -744,7 +744,7 @@ namespace bgsee
 				}
 				catch (ParserError& E)
 				{
-					throw CodaScriptException(SourceCode, "P[%d] %s", E.GetPos(), E.GetMsg().c_str());
+					throw CodaScriptException(SourceCode, "Position[%d] %s", E.GetPos(), E.GetMsg().c_str());
 				}
 			}
 

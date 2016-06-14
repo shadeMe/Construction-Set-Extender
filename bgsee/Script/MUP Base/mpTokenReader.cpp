@@ -276,7 +276,7 @@ namespace bgsee { namespace script { namespace mup {
 			switch(m_sExpr[m_nPos])
 			{
 				// skip comments
-			case  '#':
+			case  ';':
 				{
 					std::size_t i = m_sExpr.find_first_of('\n', m_nPos+1);
 					m_nPos = (i!=string_type::npos) ? i : m_sExpr.length();

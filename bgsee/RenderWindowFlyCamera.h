@@ -58,12 +58,14 @@ namespace bgsee
 
 		static LRESULT CALLBACK					RenderWindowSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 																		bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
+
+		static bool								FlyCamModeActive;
 	public:
 		RenderWindowFlyCamera(RenderWindowFlyCameraOperator* Operator);	// takes ownership of the pointer
 		virtual ~RenderWindowFlyCamera();
 
 		enum { kTypeID = 'XRFC' };
 
-		static bool								FlyCamModeActive;
+		static bool								IsActive();
 	};
 }

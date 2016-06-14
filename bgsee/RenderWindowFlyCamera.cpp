@@ -39,6 +39,11 @@ namespace bgsee
 		delete Operator;
 	}
 
+	bool RenderWindowFlyCamera::IsActive()
+	{
+		return FlyCamModeActive;
+	}
+
 	void RenderWindowFlyCamera::EnterFlyCamMode()
 	{
 		SME_ASSERT(FlyCamModeActive == false);

@@ -1243,7 +1243,7 @@ namespace bgsee
 			{
 				Validity = kValidity_Ended;
 			}
-			
+
 			if (Agent->GetResult() && Result)
 			{
 				ReturnedResult = true;
@@ -1411,7 +1411,7 @@ namespace bgsee
 			va_end(Args);
 
 			if (Source)
-				sprintf_s(ErrorString, sizeof(ErrorString), "L[%d] T[%s] - %s", Source->GetLine(), Source->GetTypeString(), Buffer);
+				sprintf_s(ErrorString, sizeof(ErrorString), "Line[%d] Type[%s] - %s", Source->GetLine(), Source->GetTypeString(), Buffer);
 			else
 				sprintf_s(ErrorString, sizeof(ErrorString), "%s", Buffer);
 		}

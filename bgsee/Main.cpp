@@ -343,14 +343,10 @@ namespace bgsee
 		GetVersionEx((LPOSVERSIONINFO)&OSInfo);
 		GetSystemInfo(&SysInfo);
 
-		if (OSInfo.dwMajorVersion < 5 || (OSInfo.dwMajorVersion == 5 && OSInfo.dwMinorVersion == 1 && OSInfo.wServicePackMajor < 3))
+		if (OSInfo.dwMajorVersion < 6 && OSInfo.dwMinorVersion < 1)
 		{
-			BGSEECONSOLE_MESSAGE("OS version too old - Windows XP SP3 or greater required");
+			BGSEECONSOLE_MESSAGE("OS version too old - Windows 7 or greater required");
 			return false;
-		}
-		else if (OSInfo.dwMajorVersion == 5 && OSInfo.dwMinorVersion == 2 && SysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
-		{
-			BGSEECONSOLE_MESSAGE("Windows XP 64-bit is not officially supported - Expect general weirdness such as collapsing time vortexes and code cannibalism");
 		}
 		else if (OSInfo.dwMajorVersion >= 6 && OSInfo.dwMinorVersion > 3)
 		{
