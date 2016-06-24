@@ -42,7 +42,7 @@ namespace bgsee
 			bool						GetTriggered(void) const;
 		};
 
-		typedef std::list<Achievement*>			ExtenderAchievementListT;
+		typedef std::vector<Achievement*>				ExtenderAchievementArrayT;
 
 		class AchievementManager
 		{
@@ -60,7 +60,7 @@ namespace bgsee
 
 			std::string									RegistryKeyRoot;
 			std::string									RegistryKeyExtraData;
-			ExtenderAchievementListT					AchievementDepot;
+			ExtenderAchievementArrayT					AchievementDepot;
 			HINSTANCE									ResourceInstance;
 			bool										Initialized;
 
@@ -79,7 +79,7 @@ namespace bgsee
 			static AchievementManager*					GetSingleton(void);
 
 														// takes ownership of achievement instances
-			bool										Initialize(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementListT& Achievements);
+			bool										Initialize(const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements);
 
 			void										Unlock(Achievement* Achievement, bool ForceUnlock = false, bool TriggerOnly = false, bool PreserveUnlockState = false);
 			UInt32										GetTotalAchievements(void) const;

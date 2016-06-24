@@ -21,13 +21,13 @@ namespace bgsee
 			virtual UInt32			GetFormID(void) const = 0;
 		};
 
-		typedef std::list<HallOfFameEntry*>		ExtenderHOFEntryListT;
+		typedef std::vector<HallOfFameEntry*>		ExtenderHOFEntryArrayT;
 
 		class HallOfFameManager
 		{
 			static HallOfFameManager*				Singleton;
 
-			ExtenderHOFEntryListT						Inductees;
+			ExtenderHOFEntryArrayT						Inductees;
 			UInt32										BaseFormID;
 			bool										Initialized;
 
@@ -37,7 +37,7 @@ namespace bgsee
 
 			static HallOfFameManager*					GetSingleton(void);
 
-			bool										Initialize(ExtenderHOFEntryListT& Entries, UInt32 StartingFormID = 0x450);
+			bool										Initialize(ExtenderHOFEntryArrayT& Entries, UInt32 StartingFormID = 0x450);
 														// takes ownership of the entries
 
 			UInt32										GetBaseFormID(void) const;

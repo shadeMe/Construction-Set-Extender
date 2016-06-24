@@ -23,32 +23,35 @@ namespace bgsee
 
 	class Daemon
 	{
-		Daemon();
-		typedef std::list<DaemonCallback*>	DaemonCallbackListT;
-
-		DaemonCallbackListT			InitCallbacks[4];
-		DaemonCallbackListT			DeinitCallbacks;
-		DaemonCallbackListT			CrashHandlerCallbacks;
-
-		bool						FullInitComplete;
-
-		bool						ExecuteDeinitCallbacks(void);
-		bool						ExecuteCrashCallbacks(CR_CRASH_CALLBACK_INFO* Data);
-		void						ReleaseCallbacks(DaemonCallbackListT& CallbackList);
-
-		friend class				Main;
 	public:
-		virtual ~Daemon();
-
 		enum
 		{
-			kInitCallback_Query		=	0,
+			kInitCallback_Query = 0,
 			kInitCallback_Load,
 			kInitCallback_PostMainWindowInit,		// the WM_INITDIALOG msg will be dispatched to the main window after this event is handled
 			kInitCallback_Epilog,
 
 			kInitCallback__MAX
 		};
+	private:
+		Daemon();
+		typedef std::vector<DaemonCallback*>	DaemonCallbackArrayT;
+
+		DaemonCallbackArrayT		InitCallbacks[kInitCallback__MAX];
+		DaemonCallbackArrayT		DeinitCallbacks;
+		DaemonCallbackArrayT		CrashHandlerCallbacks;
+
+		bool						FullInitComplete;
+
+		bool						ExecuteDeinitCallbacks(void);
+		bool						ExecuteCrashCallbacks(CR_CRASH_CALLBACK_INFO* Data);
+		void						ReleaseCallbacks(DaemonCallbackArrayT& CallbackList);
+
+		friend class				Main;
+	public:
+		virtual ~Daemon();
+
+
 
 		void						RegisterInitCallback(UInt8 CallbackType, DaemonCallback* Callback);		// takes ownership of pointer, no parameter
 		void						RegisterDeinitCallback(DaemonCallback* Callback);							// takes ownership of pointer, no parameter

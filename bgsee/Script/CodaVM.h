@@ -103,7 +103,7 @@ namespace bgsee
 
 			static VOID CALLBACK						CallbackProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
-			typedef std::list<CodaScriptExecutionContext*>	CodaScriptBackgroundExecutionCacheT;
+			typedef std::vector<CodaScriptExecutionContext*>	CodaScriptBackgroundExecutionCacheT;
 
 			ResourceLocation							SourceDepot;
 			CodaScriptBackgroundExecutionCacheT			DepotCache;		// stores the contexts for scripts in the depot
@@ -142,7 +142,7 @@ namespace bgsee
 
 			static BOOL CALLBACK						EditDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-			CodaScriptVariableListT						Cache;
+			CodaScriptVariableArrayT						Cache;
 			INIManagerGetterFunctor						INISettingGetter;
 			INIManagerSetterFunctor						INISettingSetter;
 
@@ -155,7 +155,7 @@ namespace bgsee
 
 			void										Remove(CodaScriptVariable* Variable);
 			CodaScriptVariable*							Lookup(const char* Name);
-			bool										Lookup(CodaScriptVariable* Variable, CodaScriptVariableListT::iterator& Match);
+			bool										Lookup(CodaScriptVariable* Variable, CodaScriptVariableArrayT::iterator& Match);
 			void										Clear(void);
 
 			void										INILoadState(void);
@@ -165,7 +165,7 @@ namespace bgsee
 			~CodaScriptGlobalDataStore();
 
 			void										ShowEditDialog(HINSTANCE ResourceInstance, HWND Parent);
-			CodaScriptVariableListT&					GetCache(void);
+			CodaScriptVariableArrayT&					GetCache(void);
 		};
 
 		// A virtual machine? Hah! Fat chance!
@@ -212,7 +212,7 @@ namespace bgsee
 
 			void										ShowGlobalStoreEditDialog(HINSTANCE ResourceInstance, HWND Parent);
 			CodaScriptVariable*							GetGlobal(const char* Name);
-			CodaScriptVariableListT&					GetGlobals(void) const;
+			CodaScriptVariableArrayT&					GetGlobals(void) const;
 
 			bool										GetBackgrounderState(void) const;
 			bool										ToggleBackgrounderState(void);

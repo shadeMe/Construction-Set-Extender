@@ -20,17 +20,17 @@ namespace bgsee
 	class WorkspaceManager
 	{
 	public:
-		typedef std::list<std::string>		DefaultDirectoryListT;
+		typedef std::vector<std::string>	DefaultDirectoryArrayT;
 	private:
 		static WorkspaceManager*		Singleton;
 
 		WorkspaceManager();
 
-		typedef std::list<std::string>		DirectoryListT;
+		typedef std::vector<std::string>	DirectoryArrayT;
 
 		std::string							CurrentDirectory;
 		std::string							DefaultDirectory;
-		DirectoryListT						DefaultDirectories;
+		DirectoryArrayT						DefaultDirectories;
 
 		WorkspaceManagerOperator*			Operator;
 		bool								Initialized;
@@ -44,7 +44,7 @@ namespace bgsee
 
 		bool								Initialize(const char* DefaultDirectory,
 													WorkspaceManagerOperator* Operator,
-													DefaultDirectoryListT& DefaultDirectoryData);	// manager takes ownership of the operator
+													DefaultDirectoryArrayT& DefaultDirectoryData);	// manager takes ownership of the operator
 
 		bool								SelectCurrentWorkspace(const char* DefaultWorkspacePath = NULL);
 		const char*							GetCurrentWorkspace(void) const;

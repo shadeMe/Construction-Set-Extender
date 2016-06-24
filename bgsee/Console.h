@@ -156,18 +156,18 @@ namespace bgsee
 		class DefaultDebugLogContext : public MessageLogContext
 		{
 		protected:
-			typedef std::list<ConsolePrintCallback>	PrintCallbackListT;
+			typedef std::vector<ConsolePrintCallback>	PrintCallbackArrayT;
 
 			friend class			Console;
 
 			Console*				Parent;
 			FILE*					DebugLog;
 			UInt32					IndentLevel;
-			PrintCallbackListT		PrintCallbacks;
+			PrintCallbackArrayT		PrintCallbacks;
 			bool					ExecutingCallbacks;
 
 			void					ExecutePrintCallbacks(const char* Prefix, const char* Message);
-			bool					LookupPrintCallback(ConsolePrintCallback Callback, PrintCallbackListT::iterator& Match);
+			bool					LookupPrintCallback(ConsolePrintCallback Callback, PrintCallbackArrayT::iterator& Match);
 
 			bool					Open(const char* Path);
 			void					Close();
@@ -192,12 +192,12 @@ namespace bgsee
 
 		class ConsoleCommandTable
 		{
-			typedef std::list<ConsoleCommandInfo*>		ConsoleCommandListT;
+			typedef std::vector<ConsoleCommandInfo*>		ConsoleCommandArrayT;
 
-			ConsoleCommandListT					CommandList;
+			ConsoleCommandArrayT					CommandList;
 
-			bool								LookupCommandByName(const char* Name, ConsoleCommandListT::iterator& Match);
-			bool								LookupCommandByInstance(ConsoleCommandInfo* Command, ConsoleCommandListT::iterator& Match);
+			bool								LookupCommandByName(const char* Name, ConsoleCommandArrayT::iterator& Match);
+			bool								LookupCommandByInstance(ConsoleCommandInfo* Command, ConsoleCommandArrayT::iterator& Match);
 		public:
 			ConsoleCommandTable();
 			~ConsoleCommandTable();
@@ -221,7 +221,7 @@ namespace bgsee
 			~UIExtraData();
 		};
 
-		typedef std::list<MessageLogContext*>	ContextListT;
+		typedef std::vector<MessageLogContext*>	ContextArrayT;
 		typedef std::stack<std::string>			CommandHistoryStackT;
 
 		friend class							DefaultDebugLogContext;
@@ -230,7 +230,7 @@ namespace bgsee
 		DWORD									OwnerThreadID;
 		MessageLogContext*						ActiveContext;
 		DefaultDebugLogContext*					PrimaryContext;
-		ContextListT							SecondaryContexts;
+		ContextArrayT							SecondaryContexts;
 		ConsoleCommandTable						CommandTable;
 		CommandHistoryStackT					CommandLineHistory;
 		CommandHistoryStackT					CommandLineHistoryAuxiliary;
@@ -245,8 +245,8 @@ namespace bgsee
 
 		void						ExecuteCommand(const char* CommandExpression);
 
-		bool						LookupSecondaryContextByName(const char* Name, ContextListT::iterator& Match);
-		bool						LookupSecondaryContextByInstance(MessageLogContext* Context, ContextListT::iterator& Match);
+		bool						LookupSecondaryContextByName(const char* Name, ContextArrayT::iterator& Match);
+		bool						LookupSecondaryContextByInstance(MessageLogContext* Context, ContextArrayT::iterator& Match);
 		void						ReleaseSecondaryContexts(void);
 	public:
 		static const UInt32			kMessageLogCharLimit = 0x8000;

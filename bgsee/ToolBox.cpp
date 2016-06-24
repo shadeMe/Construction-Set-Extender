@@ -291,7 +291,7 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized);
 
-		ToolListT::iterator Match;
+		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Title, Match))
 			return NULL;
 
@@ -304,7 +304,7 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized);
 
-		ToolListT::iterator Match;
+		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Tool->Title.c_str(), Match))
 			return;
 
@@ -315,7 +315,7 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized);
 
-		ToolListT::iterator Match;
+		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Title, Match) == false)
 			return;
 
@@ -329,7 +329,7 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized);
 
-		ToolListT::iterator Match;
+		ToolArrayT::iterator Match;
 		if (LookupToolByTitle(Tool->Title.c_str(), Match) == false)
 			return;
 
@@ -343,7 +343,7 @@ namespace bgsee
 	{
 		if (ReleaseMemory)
 		{
-			for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
+			for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 				delete *Itr;
 		}
 
@@ -354,7 +354,7 @@ namespace bgsee
 	{
 		INISetter(kINISection, NULL);
 
-		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
+		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			INISetter((*Itr)->Title.c_str(),
 					kINISection,
@@ -391,20 +391,20 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized);
 
-		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
+		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			int Index = SendMessage(ListBox, LB_INSERTSTRING, -1, (LPARAM)(*Itr)->Title.c_str());
 			SendMessage(ListBox, LB_SETITEMDATA, Index, (LPARAM)*Itr);
 		}
 	}
 
-	bool ToolBox::LookupToolByTitle( const char* Title, ToolListT::iterator& Match )
+	bool ToolBox::LookupToolByTitle( const char* Title, ToolArrayT::iterator& Match )
 	{
 		SME_ASSERT(Initialized);
 
 		bool Result = false;
 
-		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
+		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++)
 		{
 			if (!_stricmp((*Itr)->Title.c_str(), Title))
 			{
@@ -477,7 +477,7 @@ namespace bgsee
 		AppendMenu(ToolMenu, MF_SEPARATOR, NULL, NULL);
 
 		int i = 1;
-		for (ToolListT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++, i++)
+		for (ToolArrayT::iterator Itr = RegisteredTools.begin(); Itr != RegisteredTools.end(); Itr++, i++)
 		{
 			MENUITEMINFO ToolMenuItem = {0};
 			ToolMenuItem.cbSize = sizeof(MENUITEMINFO);

@@ -85,7 +85,7 @@ namespace bgsee
 			virtual void									RegisterCommand(ICodaScriptCommand* Command) = 0;
 			virtual void									RegisterConstant(const char* Name, CodaScriptBackingStore& Value) = 0;
 
-			virtual void									RegisterVariables(CodaScriptExecutionContext* ParentContext, CodaScriptVariableListT& VariableList) = 0;
+			virtual void									RegisterVariables(CodaScriptExecutionContext* ParentContext, CodaScriptVariableArrayT& VariableList) = 0;
 			virtual void									UnregisterVariables(CodaScriptExecutionContext* ParentContext) = 0;
 
 			virtual void									Compile(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
@@ -118,9 +118,9 @@ namespace bgsee
 			friend class CodaScriptExecutionContext;
 		protected:
 			ICodaScriptSyntaxTreeNode*						Parent;
-			CodaScriptSyntaxTreeNodeListT					Children;
+			CodaScriptSyntaxTreeNodeArrayT					Children;
 
-			bool											LookupChild(ICodaScriptSyntaxTreeNode* Child, CodaScriptSyntaxTreeNodeListT::iterator& Match);
+			bool											LookupChild(ICodaScriptSyntaxTreeNode* Child, CodaScriptSyntaxTreeNodeArrayT::iterator& Match);
 
 			bool											Attach(ICodaScriptSyntaxTreeNode* NewParent);
 			void											Detach(bool UpdateParent = true);
@@ -297,9 +297,9 @@ namespace bgsee
 			friend class CodaScriptSyntaxTreeCompileVisitor;
 			friend class CodaScriptSyntaxTreeExecuteVisitor;
 		protected:
-			typedef std::list<CodaScriptELSEIFBlock*>		ElseIfBlockListT;
+			typedef std::vector<CodaScriptELSEIFBlock*>		ElseIfBlockArrayT;
 
-			ElseIfBlockListT								BranchELSEIF;
+			ElseIfBlockArrayT								BranchELSEIF;
 			CodaScriptELSEBlock*							BranchELSE;
 		public:
 			CodaScriptIFBlock(CodaScriptSourceCodeT& Source, UInt32 Line);
@@ -367,7 +367,7 @@ namespace bgsee
 			};
 
 			CodaScriptSourceCodeT							ScriptName;
-			CodaScriptVariableListT							Variables;
+			CodaScriptVariableArrayT							Variables;
 			UInt8											Validity;
 			ICodaScriptExpressionParser*					BoundParser;
 			double											PollingInterval;			// only used by backgrounded scripts
@@ -481,9 +481,9 @@ namespace bgsee
 		class CodaScriptCommandHandlerUtilities : public ICodaScriptCommandHandlerHelper
 		{
 		protected:
-			typedef std::list<CodaScriptScopedHandleDataStoreT>		DataStoreAllocationTableT;
+			typedef std::vector<CodaScriptScopedHandleDataStoreT>		DataStoreAllocationArrayT;
 
-			DataStoreAllocationTableT							AllocatedWrappers;
+			DataStoreAllocationArrayT							AllocatedWrappers;
 
 			CodaScriptBackingStore*								CreateWrapper(CodaScriptSharedHandleArrayT Array);
 			CodaScriptBackingStore*								CreateWrapper(CodaScriptBackingStore* Source);

@@ -162,9 +162,9 @@ namespace bgsee
 
 		RenderWindowPainter();
 
-		typedef std::list<RenderChannelBase*>	RenderChannelListT;
+		typedef std::vector<RenderChannelBase*>	RenderChannelArrayT;
 
-		RenderChannelListT						RegisteredChannels;
+		RenderChannelArrayT						RegisteredChannels;
 		RenderWindowPainterOperator*			Operator;
 		LPD3DXSPRITE							OutputSprite;
 		bool									Enabled;

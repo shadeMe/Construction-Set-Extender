@@ -9,7 +9,7 @@ namespace bgsee
 
 	class WindowHandleCollection
 	{
-		typedef std::list<HWND>					HandleCollectionT;
+		typedef std::vector<HWND>				HandleCollectionT;
 		HandleCollectionT						HandleList;
 
 		HandleCollectionT::iterator				Find(HWND Handle);
@@ -66,13 +66,13 @@ namespace bgsee
 	public:
 		typedef LRESULT							(CALLBACK* SubclassProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 																		bool& Return, WindowExtraDataCollection* ExtraData);
-		typedef std::list<SubclassProc>			SubclassProcListT;
+		typedef std::vector<SubclassProc>		SubclassProcArrayT;
 	private:
 		struct DialogSubclassData
 		{
 			DLGPROC								Original;
 			WindowHandleCollection				ActiveHandles;				// open windows using the parent templateID
-			SubclassProcListT					Subclasses;
+			SubclassProcArrayT					Subclasses;
 
 			DialogSubclassData();
 
@@ -96,7 +96,7 @@ namespace bgsee
 		struct WindowSubclassData
 		{
 			WNDPROC								Original;
-			SubclassProcListT					Subclasses;
+			SubclassProcArrayT					Subclasses;
 			WindowSubclassUserData*				UserData;
 
 			WindowSubclassData();

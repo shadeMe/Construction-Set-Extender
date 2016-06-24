@@ -52,7 +52,7 @@ namespace bgsee
 
 		bool Result = true;
 
-		for (DaemonCallbackListT::const_iterator Itr = InitCallbacks[CallbackType].begin(); Itr != InitCallbacks[CallbackType].end(); Itr++)
+		for (DaemonCallbackArrayT::const_iterator Itr = InitCallbacks[CallbackType].begin(); Itr != InitCallbacks[CallbackType].end(); Itr++)
 		{
 			if ((*Itr)->Handle() == false)
 			{
@@ -71,7 +71,7 @@ namespace bgsee
 
 	bool Daemon::ExecuteDeinitCallbacks( void )
 	{
-		for (DaemonCallbackListT::const_iterator Itr = DeinitCallbacks.begin(); Itr != DeinitCallbacks.end(); Itr++)
+		for (DaemonCallbackArrayT::const_iterator Itr = DeinitCallbacks.begin(); Itr != DeinitCallbacks.end(); Itr++)
 			(*Itr)->Handle();
 
 		return true;
@@ -81,7 +81,7 @@ namespace bgsee
 	{
 		bool Result = false;
 
-		for (DaemonCallbackListT::const_iterator Itr = CrashHandlerCallbacks.begin(); Itr != CrashHandlerCallbacks.end(); Itr++)
+		for (DaemonCallbackArrayT::const_iterator Itr = CrashHandlerCallbacks.begin(); Itr != CrashHandlerCallbacks.end(); Itr++)
 		{
 			if ((*Itr)->Handle(Data) && Result == false)
 				Result = true;
@@ -100,9 +100,9 @@ namespace bgsee
 		ReleaseCallbacks(CrashHandlerCallbacks);
 	}
 
-	void Daemon::ReleaseCallbacks( DaemonCallbackListT& CallbackList )
+	void Daemon::ReleaseCallbacks( DaemonCallbackArrayT& CallbackList )
 	{
-		for (DaemonCallbackListT::const_iterator Itr = CallbackList.begin(); Itr != CallbackList.end(); Itr++)
+		for (DaemonCallbackArrayT::const_iterator Itr = CallbackList.begin(); Itr != CallbackList.end(); Itr++)
 			delete (*Itr);
 
 		CallbackList.clear();

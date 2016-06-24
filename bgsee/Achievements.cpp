@@ -163,7 +163,7 @@ namespace bgsee
 
 		AchievementManager::~AchievementManager()
 		{
-			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
 				SaveAchievementState(*Itr);
 				delete *Itr;
@@ -183,7 +183,7 @@ namespace bgsee
 			return Singleton;
 		}
 
-		bool AchievementManager::Initialize( const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementListT& Achievements )
+		bool AchievementManager::Initialize( const char* ExtenderLongName, HINSTANCE ResourceInstance, ExtenderAchievementArrayT& Achievements )
 		{
 			if (Initialized)
 				return false;
@@ -220,7 +220,7 @@ namespace bgsee
 			}
 
 			UInt32 UnlockedCount = 0;
-			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
 				LoadAchievementState(*Itr);
 
@@ -235,7 +235,7 @@ namespace bgsee
 
 			BGSEECONSOLE_MESSAGE("Unlocked Achievements: %d/%d", UnlockedCount, GetTotalAchievements());
 			BGSEECONSOLE->Indent();
-			for (ExtenderAchievementListT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			for (ExtenderAchievementArrayT::iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
 				if ((*Itr)->GetUnlocked())
 					BGSEECONSOLE_MESSAGE((*Itr)->Name.c_str());
@@ -412,7 +412,7 @@ namespace bgsee
 		{
 			UInt32 Result = 0;
 
-			for (ExtenderAchievementListT::const_iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			for (ExtenderAchievementArrayT::const_iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
 				if ((*Itr)->GetUnlockable())
 					Result++;
@@ -425,7 +425,7 @@ namespace bgsee
 		{
 			UInt32 Result = 0;
 
-			for (ExtenderAchievementListT::const_iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
+			for (ExtenderAchievementArrayT::const_iterator Itr = AchievementDepot.begin(); Itr != AchievementDepot.end(); Itr++)
 			{
 				if ((*Itr)->GetUnlocked())
 					Result++;

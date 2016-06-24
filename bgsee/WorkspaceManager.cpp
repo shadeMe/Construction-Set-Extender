@@ -28,7 +28,7 @@ namespace bgsee
 	{
 		char Buffer[0x200] = {0};
 
-		for (DirectoryListT::const_iterator Itr = DefaultDirectories.begin(); Itr != DefaultDirectories.end(); Itr++)
+		for (DirectoryArrayT::const_iterator Itr = DefaultDirectories.begin(); Itr != DefaultDirectories.end(); Itr++)
 		{
 			FORMAT_STR(Buffer, "%s%s", WorkspacePath, Itr->c_str());
 
@@ -59,7 +59,7 @@ namespace bgsee
 
 	bool WorkspaceManager::Initialize( const char* DefaultDirectory,
 											WorkspaceManagerOperator* Operator,
-											DefaultDirectoryListT& DefaultDirectoryData )
+											DefaultDirectoryArrayT& DefaultDirectoryData )
 	{
 		if (Initialized)
 			return false;
@@ -70,7 +70,7 @@ namespace bgsee
 		this->CurrentDirectory = DefaultDirectory;
 		this->Operator = Operator;
 
-		for (DefaultDirectoryListT::iterator Itr = DefaultDirectoryData.begin(); Itr != DefaultDirectoryData.end(); Itr++)
+		for (DefaultDirectoryArrayT::iterator Itr = DefaultDirectoryData.begin(); Itr != DefaultDirectoryData.end(); Itr++)
 			DefaultDirectories.push_back(*Itr);
 
 		CreateDefaultDirectories(DefaultDirectory);

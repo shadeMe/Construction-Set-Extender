@@ -148,9 +148,9 @@ namespace bgsee
 
 		// work on a buffer as the subclass list can change inside a callback
 		// since the number of subclasses for any dialog isn't gonna be very large at any given time, the performance hit should be negligible
-		SubclassProcListT SubclassBuffer(Subclasses);
+		SubclassProcArrayT SubclassBuffer(Subclasses);
 
-		for (SubclassProcListT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
+		for (SubclassProcArrayT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
 		{
 			DialogSubclassUserData* UserData = (DialogSubclassUserData*)GetWindowLongPtr(hWnd, DWL_USER);
 			if (UserData == NULL)
@@ -185,9 +185,9 @@ namespace bgsee
 		bool ReturnMark = Return;
 
 		// work on a buffer, same as before
-		SubclassProcListT SubclassBuffer(Subclasses);
+		SubclassProcArrayT SubclassBuffer(Subclasses);
 
-		for (SubclassProcListT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
+		for (SubclassProcArrayT::iterator Itr = SubclassBuffer.begin(); Itr != SubclassBuffer.end(); Itr++)
 		{
 			WindowSubclassUserData* UserData = (WindowSubclassUserData*)GetWindowLongPtr(hWnd, GWL_USERDATA);
 			if (UserData == NULL)
@@ -392,16 +392,12 @@ namespace bgsee
 	WindowSubclasser::~WindowSubclasser()
 	{
 		for (DialogSubclassMapT::iterator Itr = DialogSubclasses.begin(); Itr != DialogSubclasses.end(); Itr++)
-		{
 			Itr->second.ActiveHandles.SendMessage(WM_SUBCLASSER_RELEASE, NULL, NULL);
-		}
 
 		DialogSubclasses.clear();
 
 		for (WindowSubclassMapT::iterator Itr = RegularWindowSubclasses.begin(); Itr != RegularWindowSubclasses.end(); Itr++)
-		{
 			SendMessage(Itr->first, WM_SUBCLASSER_RELEASE, NULL, NULL);
-		}
 
 		RegularWindowSubclasses.clear();
 
@@ -431,7 +427,7 @@ namespace bgsee
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 		{
-			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
 				if (*Itr == Proc)
 					return false;
@@ -453,7 +449,7 @@ namespace bgsee
 		DialogSubclassMapT::iterator Match = DialogSubclasses.find(TemplateID);
 		if (Match != DialogSubclasses.end())
 		{
-			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
 				if (*Itr == Proc)
 				{
@@ -480,7 +476,7 @@ namespace bgsee
 		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
 		if (Match != RegularWindowSubclasses.end())
 		{
-			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
 				if (*Itr == Proc)
 					return false;
@@ -513,7 +509,7 @@ namespace bgsee
 		WindowSubclassMapT::iterator Match = RegularWindowSubclasses.find(Handle);
 		if (Match != RegularWindowSubclasses.end())
 		{
-			for (SubclassProcListT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
+			for (SubclassProcArrayT::iterator Itr = Match->second.Subclasses.begin(); Itr != Match->second.Subclasses.end(); Itr++)
 			{
 				if (*Itr == Proc)
 				{

@@ -46,8 +46,8 @@ namespace bgsee
 		typedef std::string												CodaScriptSourceCodeT;
 		typedef UInt32													CodaScriptKeywordT;
 		typedef std::vector<CodaScriptBackingStore>						CodaScriptMutableDataArrayT;
-		typedef std::list<ICodaScriptSyntaxTreeNode*>					CodaScriptSyntaxTreeNodeListT;
-		typedef std::list<CodaScriptVariable*>							CodaScriptVariableListT;
+		typedef std::vector<ICodaScriptSyntaxTreeNode*>					CodaScriptSyntaxTreeNodeArrayT;
+		typedef std::vector<CodaScriptVariable*>						CodaScriptVariableArrayT;
 		typedef std::stack<CodaScriptKeywordT>							CodaScriptKeywordStackT;
 		typedef std::stack<ICodaScriptLoopBlock*>						CodaScriptLoopBlockStackT;
 		typedef std::stack<CodaScriptExecutionContext*>					CodaScriptExecutionContextStackT;

@@ -374,7 +374,7 @@ namespace bgsee
 	{
 		SME_ASSERT(Initialized && Channel);
 
-		for (RenderChannelListT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
+		for (RenderChannelArrayT::const_iterator Itr = RegisteredChannels.begin(); Itr != RegisteredChannels.end(); Itr++)
 		{
 			if (*Itr == Channel)
 			{

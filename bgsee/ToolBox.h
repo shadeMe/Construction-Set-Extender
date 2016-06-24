@@ -43,15 +43,15 @@ namespace bgsee
 		void								INISaveToolList(void);
 		void								INILoadToolList(void);
 
-		typedef std::list<Tool*>			ToolListT;
+		typedef std::vector<Tool*>			ToolArrayT;
 
-		ToolListT							RegisteredTools;
+		ToolArrayT							RegisteredTools;
 		INIManagerGetterFunctor				INIGetter;
 		INIManagerSetterFunctor				INISetter;
 		bool								Initialized;
 
 		void								EnumerateToolsInListBox(HWND ListBox);
-		bool								LookupToolByTitle(const char* Title, ToolListT::iterator& Match);
+		bool								LookupToolByTitle(const char* Title, ToolArrayT::iterator& Match);
 	public:
 		~ToolBox();
 

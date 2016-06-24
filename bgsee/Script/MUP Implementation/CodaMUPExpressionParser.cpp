@@ -667,7 +667,7 @@ namespace bgsee
 				DefineConst(Name, CodaScriptMUPValue(Value));
 			}
 
-			void CodaScriptMUPExpressionParser::RegisterVariables( CodaScriptExecutionContext* ParentContext, CodaScriptVariableListT& VariableList )
+			void CodaScriptMUPExpressionParser::RegisterVariables( CodaScriptExecutionContext* ParentContext, CodaScriptVariableArrayT& VariableList )
 			{
 				SME_ASSERT(ParentContext);
 
@@ -675,7 +675,7 @@ namespace bgsee
 				if (Match == m_CSVarDef.end())
 					m_CSVarDef[ParentContext] = m_varDef;
 
-				for (CodaScriptVariableListT::const_iterator Itr = VariableList.begin(); Itr != VariableList.end(); Itr++)
+				for (CodaScriptVariableArrayT::const_iterator Itr = VariableList.begin(); Itr != VariableList.end(); Itr++)
 				{
 					CodaScriptVariable* Var = *Itr;
 					CodaScriptMUPValue* Bound = dynamic_cast<CodaScriptMUPValue*>(Var->GetStoreOwner());

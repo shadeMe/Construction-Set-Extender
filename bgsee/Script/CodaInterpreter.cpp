@@ -210,13 +210,13 @@ namespace bgsee
 			;//
 		}
 
-		bool ICodaScriptSyntaxTreeNode::LookupChild( ICodaScriptSyntaxTreeNode* Child, CodaScriptSyntaxTreeNodeListT::iterator& Match )
+		bool ICodaScriptSyntaxTreeNode::LookupChild( ICodaScriptSyntaxTreeNode* Child, CodaScriptSyntaxTreeNodeArrayT::iterator& Match )
 		{
 			bool Result = false;
 
 			SME_ASSERT(Child && Child != this && Child != Parent);
 
-			for (CodaScriptSyntaxTreeNodeListT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
+			for (CodaScriptSyntaxTreeNodeArrayT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
 			{
 				if ((*Itr) == Child)
 				{
@@ -252,7 +252,7 @@ namespace bgsee
 		{
 			if (Parent)
 			{
-				CodaScriptSyntaxTreeNodeListT::iterator Match;
+				CodaScriptSyntaxTreeNodeArrayT::iterator Match;
 				bool Result = Parent->LookupChild(this, Match);
 				SME_ASSERT(Result);
 
@@ -265,7 +265,7 @@ namespace bgsee
 
 		void ICodaScriptSyntaxTreeNode::Purge( void )
 		{
-			for (CodaScriptSyntaxTreeNodeListT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
+			for (CodaScriptSyntaxTreeNodeArrayT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
 				delete (*Itr);
 
 			Children.clear();
@@ -296,7 +296,7 @@ namespace bgsee
 
 		void ICodaScriptSyntaxTreeNode::Traverse( ICodaScriptSyntaxTreeVisitor* Visitor )
 		{
-			for (CodaScriptSyntaxTreeNodeListT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
+			for (CodaScriptSyntaxTreeNodeArrayT::iterator Itr = Children.begin(); Itr != Children.end(); Itr++)
 				(*Itr)->Accept(Visitor);
 		}
 
@@ -584,7 +584,7 @@ namespace bgsee
 		{
 			SAFEDELETE(BranchELSE);
 
-			for (ElseIfBlockListT::iterator Itr = BranchELSEIF.begin(); Itr != BranchELSEIF.end(); Itr++)
+			for (ElseIfBlockArrayT::iterator Itr = BranchELSEIF.begin(); Itr != BranchELSEIF.end(); Itr++)
 				delete (*Itr);
 		}
 
@@ -749,7 +749,7 @@ namespace bgsee
 
 		CodaScriptVariable* CodaScriptExecutionContext::GetVariable( const char* Name )
 		{
-			for (CodaScriptVariableListT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
+			for (CodaScriptVariableArrayT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
 			{
 				if (!_stricmp(Name, (*Itr)->GetName()))
 					return *Itr;
@@ -760,7 +760,7 @@ namespace bgsee
 
 		void CodaScriptExecutionContext::ReleaseVariables( void )
 		{
-			for (CodaScriptVariableListT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
+			for (CodaScriptVariableArrayT::iterator Itr = Variables.begin(); Itr != Variables.end(); Itr++)
 				delete *Itr;
 
 			Variables.clear();
@@ -1348,7 +1348,7 @@ namespace bgsee
 			if (Node->BranchELSE)
 				Node->BranchELSE->Accept(this);
 
-			for (CodaScriptIFBlock::ElseIfBlockListT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
+			for (CodaScriptIFBlock::ElseIfBlockArrayT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
 				(*Itr)->Accept(this);
 
 			Node->Traverse(this);
@@ -1535,7 +1535,7 @@ namespace bgsee
 			}
 			else
 			{
-				for (CodaScriptIFBlock::ElseIfBlockListT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
+				for (CodaScriptIFBlock::ElseIfBlockArrayT::iterator Itr = Node->BranchELSEIF.begin(); Itr != Node->BranchELSEIF.end(); Itr++)
 				{
 					CodaScriptELSEIFBlock* Block = *Itr;
 

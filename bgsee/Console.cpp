@@ -116,7 +116,7 @@ namespace bgsee
 						InsertMenu(ContextsMenu, -1, MF_BYPOSITION|MF_SEPARATOR, NULL, NULL);
 
 					int i = 1;
-					for (ContextListT::const_iterator Itr = Instance->SecondaryContexts.begin(); Itr != Instance->SecondaryContexts.end(); Itr++, i++)
+					for (ContextArrayT::const_iterator Itr = Instance->SecondaryContexts.begin(); Itr != Instance->SecondaryContexts.end(); Itr++, i++)
 					{
 						MENUITEMINFO ContextMenuItem = {0};
 						ContextMenuItem.cbSize = sizeof(MENUITEMINFO);
@@ -599,17 +599,17 @@ namespace bgsee
 	{
 		ExecutingCallbacks = true;
 
-		for (PrintCallbackListT::const_iterator Itr = PrintCallbacks.begin(); Itr != PrintCallbacks.end(); Itr++)
+		for (PrintCallbackArrayT::const_iterator Itr = PrintCallbacks.begin(); Itr != PrintCallbacks.end(); Itr++)
 			(*Itr)(Prefix, Message);
 
 		ExecutingCallbacks = false;
 	}
 
-	bool Console::DefaultDebugLogContext::LookupPrintCallback( ConsolePrintCallback Callback, PrintCallbackListT::iterator& Match )
+	bool Console::DefaultDebugLogContext::LookupPrintCallback( ConsolePrintCallback Callback, PrintCallbackArrayT::iterator& Match )
 	{
 		bool Result = false;
 
-		for (PrintCallbackListT::iterator Itr = PrintCallbacks.begin(); Itr != PrintCallbacks.end(); Itr++)
+		for (PrintCallbackArrayT::iterator Itr = PrintCallbacks.begin(); Itr != PrintCallbacks.end(); Itr++)
 		{
 			if (*Itr == Callback)
 			{
@@ -627,7 +627,7 @@ namespace bgsee
 		if (ExecutingCallbacks)
 			return false;
 
-		PrintCallbackListT::iterator Match;
+		PrintCallbackArrayT::iterator Match;
 		if (LookupPrintCallback(Callback, Match) == false)
 		{
 			PrintCallbacks.push_back(Callback);
@@ -642,7 +642,7 @@ namespace bgsee
 		if (ExecutingCallbacks)
 			return;
 
-		PrintCallbackListT::iterator Match;
+		PrintCallbackArrayT::iterator Match;
 		if (LookupPrintCallback(Callback, Match))
 		{
 			PrintCallbacks.erase(Match);
@@ -690,11 +690,11 @@ namespace bgsee
 		CommandList.clear();
 	}
 
-	bool Console::ConsoleCommandTable::LookupCommandByName( const char* Name, ConsoleCommandListT::iterator& Match )
+	bool Console::ConsoleCommandTable::LookupCommandByName( const char* Name, ConsoleCommandArrayT::iterator& Match )
 	{
 		bool Result = false;
 
-		for (ConsoleCommandListT::iterator Itr = CommandList.begin(); Itr != CommandList.end(); Itr++)
+		for (ConsoleCommandArrayT::iterator Itr = CommandList.begin(); Itr != CommandList.end(); Itr++)
 		{
 			if (!_stricmp((*Itr)->Name, Name))
 			{
@@ -707,11 +707,11 @@ namespace bgsee
 		return Result;
 	}
 
-	bool Console::ConsoleCommandTable::LookupCommandByInstance( ConsoleCommandInfo* Command, ConsoleCommandListT::iterator& Match )
+	bool Console::ConsoleCommandTable::LookupCommandByInstance( ConsoleCommandInfo* Command, ConsoleCommandArrayT::iterator& Match )
 	{
 		bool Result = false;
 
-		for (ConsoleCommandListT::iterator Itr = CommandList.begin(); Itr != CommandList.end(); Itr++)
+		for (ConsoleCommandArrayT::iterator Itr = CommandList.begin(); Itr != CommandList.end(); Itr++)
 		{
 			if ((*Itr) == Command)
 			{
@@ -726,7 +726,7 @@ namespace bgsee
 
 	bool Console::ConsoleCommandTable::AddCommand( ConsoleCommandInfo* Command )
 	{
-		ConsoleCommandListT::iterator Match;
+		ConsoleCommandArrayT::iterator Match;
 		if (LookupCommandByName(Command->Name, Match) == false)
 		{
 			CommandList.push_back(Command);
@@ -738,7 +738,7 @@ namespace bgsee
 
 	void Console::ConsoleCommandTable::RemoveCommand( ConsoleCommandInfo* Command )
 	{
-		ConsoleCommandListT::iterator Match;
+		ConsoleCommandArrayT::iterator Match;
 		SME_ASSERT(LookupCommandByName(Command->Name, Match));
 
 		CommandList.erase(Match);
@@ -746,7 +746,7 @@ namespace bgsee
 
 	ConsoleCommandInfo* Console::ConsoleCommandTable::GetCommand( const char* Name )
 	{
-		ConsoleCommandListT::iterator Match;
+		ConsoleCommandArrayT::iterator Match;
 		if (LookupCommandByName(Name, Match) == false)
 			return NULL;
 
@@ -885,11 +885,11 @@ namespace bgsee
 		Exdent();
 	}
 
-	bool Console::LookupSecondaryContextByName( const char* Name, ContextListT::iterator& Match )
+	bool Console::LookupSecondaryContextByName( const char* Name, ContextArrayT::iterator& Match )
 	{
 		bool Result = false;
 
-		for (ContextListT::iterator Itr = SecondaryContexts.begin(); Itr != SecondaryContexts.end(); Itr++)
+		for (ContextArrayT::iterator Itr = SecondaryContexts.begin(); Itr != SecondaryContexts.end(); Itr++)
 		{
 			if (!_stricmp((*Itr)->GetName(), Name))
 			{
@@ -902,11 +902,11 @@ namespace bgsee
 		return Result;
 	}
 
-	bool Console::LookupSecondaryContextByInstance( MessageLogContext* Context, ContextListT::iterator& Match )
+	bool Console::LookupSecondaryContextByInstance( MessageLogContext* Context, ContextArrayT::iterator& Match )
 	{
 		bool Result = false;
 
-		for (ContextListT::iterator Itr = SecondaryContexts.begin(); Itr != SecondaryContexts.end(); Itr++)
+		for (ContextArrayT::iterator Itr = SecondaryContexts.begin(); Itr != SecondaryContexts.end(); Itr++)
 		{
 			if ((*Itr) == Context)
 			{
@@ -921,7 +921,7 @@ namespace bgsee
 
 	void Console::ReleaseSecondaryContexts( void )
 	{
-		for (ContextListT::iterator Itr = SecondaryContexts.begin(); Itr != SecondaryContexts.end(); Itr++)
+		for (ContextArrayT::iterator Itr = SecondaryContexts.begin(); Itr != SecondaryContexts.end(); Itr++)
 			delete (*Itr);
 
 		SecondaryContexts.clear();
@@ -1090,7 +1090,7 @@ namespace bgsee
 
 	void* Console::RegisterMessageLogContext( const char* Name, const char* LogPath /*= NULL*/ )
 	{
-		ContextListT::iterator Match;
+		ContextArrayT::iterator Match;
 		if (LookupSecondaryContextByName(Name, Match))
 			return NULL;
 
@@ -1101,7 +1101,7 @@ namespace bgsee
 
 	void Console::UnregisterMessageLogContext( void* Context )
 	{
-		ContextListT::iterator Match;
+		ContextArrayT::iterator Match;
 		SME_ASSERT(LookupSecondaryContextByInstance((MessageLogContext*)Context, Match));
 
 		if (Context == GetActiveContext())

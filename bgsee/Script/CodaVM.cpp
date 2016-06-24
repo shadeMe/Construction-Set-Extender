@@ -610,7 +610,7 @@ namespace bgsee
 					SendMessage(GlobaList, LB_RESETCONTENT, NULL, NULL);
 
 					char Buffer[0x100] = {0};
-					for (CodaScriptVariableListT::const_iterator Itr = Instance->Cache.begin(); Itr != Instance->Cache.end(); Itr++)
+					for (CodaScriptVariableArrayT::const_iterator Itr = Instance->Cache.begin(); Itr != Instance->Cache.end(); Itr++)
 					{
 						CodaScriptVariable* GlobalVar = *Itr;
 
@@ -799,7 +799,7 @@ namespace bgsee
 
 		void CodaScriptGlobalDataStore::Remove( CodaScriptVariable* Variable )
 		{
-			CodaScriptVariableListT::iterator Match;
+			CodaScriptVariableArrayT::iterator Match;
 			if (Lookup(Variable, Match))
 			{
 				delete Variable;
@@ -809,7 +809,7 @@ namespace bgsee
 
 		CodaScriptVariable* CodaScriptGlobalDataStore::Lookup( const char* Name )
 		{
-			for (CodaScriptVariableListT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 			{
 				CodaScriptVariable* Global = *Itr;
 				if (!_stricmp(Global->GetName(), Name))
@@ -819,9 +819,9 @@ namespace bgsee
 			return NULL;
 		}
 
-		bool CodaScriptGlobalDataStore::Lookup( CodaScriptVariable* Variable, CodaScriptVariableListT::iterator& Match )
+		bool CodaScriptGlobalDataStore::Lookup( CodaScriptVariable* Variable, CodaScriptVariableArrayT::iterator& Match )
 		{
-			for (CodaScriptVariableListT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 			{
 				CodaScriptVariable* Global = *Itr;
 				if (Global == Variable)
@@ -836,7 +836,7 @@ namespace bgsee
 
 		void CodaScriptGlobalDataStore::Clear( void )
 		{
-			for (CodaScriptVariableListT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 				delete *Itr;
 
 			Cache.clear();
@@ -881,7 +881,7 @@ namespace bgsee
 			INISettingSetter(CODASCRIPTGLOBALDATASTORE_INISECTION, NULL);
 			char Buffer[0x512] = {0};
 
-			for (CodaScriptVariableListT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
+			for (CodaScriptVariableArrayT::iterator Itr = Cache.begin(); Itr != Cache.end(); Itr++)
 			{
 				CodaScriptVariable* Global = *Itr;
 
@@ -930,7 +930,7 @@ namespace bgsee
 			BGSEEUI->ModalDialog(ResourceInstance, MAKEINTRESOURCE(IDD_BGSEE_CODAGLOBALDATASTORE), Parent, EditDlgProc, (LPARAM)this);
 		}
 
-		CodaScriptVariableListT& CodaScriptGlobalDataStore::GetCache( void )
+		CodaScriptVariableArrayT& CodaScriptGlobalDataStore::GetCache( void )
 		{
 			return Cache;
 		}
@@ -1133,7 +1133,7 @@ namespace bgsee
 			return GlobalStore->Lookup(Name);
 		}
 
-		CodaScriptVariableListT& CodaScriptVM::GetGlobals( void ) const
+		CodaScriptVariableArrayT& CodaScriptVM::GetGlobals( void ) const
 		{
 			SME_ASSERT(Initialized);
 

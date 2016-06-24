@@ -133,7 +133,7 @@ namespace bgsee
 				virtual void									RegisterConstant(const char* Name, CodaScriptBackingStore& Value);
 
 				virtual void									RegisterVariables(CodaScriptExecutionContext* ParentContext,
-																				CodaScriptVariableListT& VariableList);
+																				CodaScriptVariableArrayT& VariableList);
 				virtual void									UnregisterVariables(CodaScriptExecutionContext* ParentContext);
 
 				virtual void									Compile(ICodaScriptSyntaxTreeEvaluator* EvaluationAgent,
