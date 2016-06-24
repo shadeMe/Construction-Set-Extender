@@ -17,10 +17,6 @@ namespace cse
 	namespace hooks
 	{
 		_DefineHookHdlr(DoorMarkerProperties, 0x00429EA1);
-		_DefineHookHdlr(NiWindowRender, 0x00406442);
-		_DefineHookHdlr(NiDX9RendererRecreateA, 0x006D79E8);
-		_DefineHookHdlr(NiDX9RendererRecreateB, 0x006D7A0D);
-		_DefineHookHdlr(NiDX9RendererRecreateC, 0x006D7CFA);
 		_DefineHookHdlr(TESObjectREFRSetupDialog, 0x005499FB);
 		_DefineHookHdlr(TESObjectREFRCleanDialog, 0x00549B52);
 		_DefineHookHdlr(TESRenderControlPerformFallVoid, 0x004270C2);
@@ -72,7 +68,6 @@ namespace cse
 		_DefinePatchHdlrWithBuffer(CellViewSetCurrentCell, 0x00409170, 1, 0x53);
 		_DefineJumpHdlr(RenderWindowCursorSwap, 0x0042CA34, 0x0042CAA3);
 		_DefinePatchHdlr(RenderWindowCopySelection, 0x0042E8A6 + 1);
-		_DefineCallHdlr(TESRenderRenderSceneGraph, 0x0040643A, OverrideSceneGraphRendering);
 		_DefineHookHdlr(TESPathGridPointGenerateNiNodeA, 0x00556779);
 		_DefineHookHdlr(TESPathGridPointGenerateNiNodeB, 0x005567DB);
 		_DefineHookHdlr(TESPathGridGenerateNiNode, 0x0054EE0D);
@@ -82,10 +77,6 @@ namespace cse
 		void PatchRendererHooks(void)
 		{
 			_MemHdlr(DoorMarkerProperties).WriteJump();
-			_MemHdlr(NiWindowRender).WriteJump();
-			_MemHdlr(NiDX9RendererRecreateA).WriteJump();
-			_MemHdlr(NiDX9RendererRecreateB).WriteJump();
-			_MemHdlr(NiDX9RendererRecreateC).WriteJump();
 			_MemHdlr(TESObjectREFRSetupDialog).WriteJump();
 			_MemHdlr(TESObjectREFRCleanDialog).WriteJump();
 			_MemHdlr(TESRenderControlPerformFallVoid).WriteJump();
@@ -134,7 +125,6 @@ namespace cse
 			_MemHdlr(RenderWindowCameraRotationPivot).WriteJump();
 			_MemHdlr(RenderWindowCursorSwap).WriteJump();
 			_MemHdlr(RenderWindowCopySelection).WriteUInt8(0x0);
-			_MemHdlr(TESRenderRenderSceneGraph).WriteCall();
 			_MemHdlr(TESPathGridPointGenerateNiNodeA).WriteJump();
 			_MemHdlr(TESPathGridPointGenerateNiNodeB).WriteJump();
 			_MemHdlr(TESPathGridGenerateNiNode).WriteJump();
@@ -156,12 +146,7 @@ namespace cse
 
 		void __stdcall RenderWindowReferenceSelectionDetour( TESObjectREFR* Ref, bool ShowSelectionBox )
 		{
-			RenderWindowManager::Instance.GetSelectionManager()->AddToSelection(Ref, ShowSelectionBox);
-		}
-
-		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
-		{
-			RenderWindowManager::Instance.GetSceneGraphManager()->HandleRender(Camera, SceneGraph, CullingProc, RenderTarget);
+			_RENDERWIN_MGR.GetSelectionManager()->AddToSelection(Ref, ShowSelectionBox);
 		}
 
 		#define _hhName		DoorMarkerProperties
@@ -188,103 +173,6 @@ namespace cse
 				popad
 
 				jmp		_hhGetVar(Properties)
-			}
-		}
-
-
-		void __stdcall NiWindowRenderDrawHook(void)
-		{
-			BGSEERWPAINTER->Render();
-		}
-
-		#define _hhName		NiWindowRender
-		_hhBegin()
-		{
-			_hhSetVar(Call, 0x0076A3B0);
-			_hhSetVar(Retn, 0x00406447);
-			__asm
-			{
-				call	_hhGetVar(Call)
-
-				pushad
-				call	NiWindowRenderDrawHook
-				popad
-
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		void __stdcall DoNiDX9RendererRecreateHook(bool State)
-		{
-			if (State == false)
-				BGSEERWPAINTER->HandleReset(true, false);
-			else
-				BGSEERWPAINTER->HandleReset(false, true);
-		}
-
-		#define _hhName		NiDX9RendererRecreateA
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x006D79ED);
-			_hhSetVar(Call, 0x006D7260);
-			__asm
-			{
-				pushad
-				push	0
-				call	DoNiDX9RendererRecreateHook
-				popad
-
-				call	_hhGetVar(Call)
-
-				pushad
-				push	1
-				call	DoNiDX9RendererRecreateHook
-				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName		NiDX9RendererRecreateB
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x006D7A12);
-			_hhSetVar(Call, 0x006D7260);
-			__asm
-			{
-				pushad
-				push	0
-				call	DoNiDX9RendererRecreateHook
-				popad
-
-				call	_hhGetVar(Call)
-
-				pushad
-				push	1
-				call	DoNiDX9RendererRecreateHook
-				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
-		#define _hhName		NiDX9RendererRecreateC
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x006D7CFF);
-			_hhSetVar(Call, 0x006D7260);
-			__asm
-			{
-				pushad
-				push	0
-				call	DoNiDX9RendererRecreateHook
-				popad
-
-				call	_hhGetVar(Call)
-
-				pushad
-				push	1
-				call	DoNiDX9RendererRecreateHook
-				popad
-				jmp		_hhGetVar(Retn)
 			}
 		}
 

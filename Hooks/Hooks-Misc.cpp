@@ -25,7 +25,6 @@ namespace cse
 		_DefinePatchHdlr(TextureMipMapCheck, 0x0044F49B);
 		_DefinePatchHdlr(UnnecessaryDialogEdits, 0x004EDFF7);
 		_DefinePatchHdlr(UnnecessaryCellEdits, 0x005349A5);
-		_DefineHookHdlr(DataHandlerClearData, 0x0047AE76);
 		_DefineJumpHdlr(TopicInfoCopyProlog, 0x004F0738, 0x004F07C4);
 		_DefineHookHdlr(TopicInfoCopyEpilog, 0x004F1280);
 		_DefineHookHdlr(NumericEditorID, 0x00497670);
@@ -75,7 +74,6 @@ namespace cse
 			_MemHdlr(UnnecessaryCellEdits).WriteUInt8(0xEB);
 			_MemHdlr(UnnecessaryDialogEdits).WriteUInt8(0xEB);
 			_MemHdlr(AssertOverride).WriteJump();
-			_MemHdlr(DataHandlerClearData).WriteJump();
 			_MemHdlr(TopicInfoCopyProlog).WriteJump();
 			_MemHdlr(TopicInfoCopyEpilog).WriteJump();
 			_MemHdlr(NumericEditorID).WriteJump();
@@ -279,30 +277,6 @@ namespace cse
 			}
 		}
 
-		void __stdcall DoDataHandlerClearDataHook(void)
-		{
-			delete BGSEEHALLOFFAME;
-			renderWindow::RenderWindowManager::Instance.GetReferenceGroupManager()->Clear();
-			GameSettingCollection::Instance->ResetCollection();
-			BGSEEUNDOSTACK->Reset();
-		}
-
-		#define _hhName	DataHandlerClearData
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0047AE7B);
-			__asm
-			{
-				lea     edi, [ebx + 0x44]
-				mov     ecx, edi
-				pushad
-				call	DoDataHandlerClearDataHook
-				popad
-
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
 		#define _hhName	TopicInfoCopyEpilog
 		_hhBegin()
 		{
@@ -424,9 +398,7 @@ namespace cse
 		{
 			FormCrossReferenceData* Data = FormCrossReferenceData::LookupFormInCrossReferenceList(ReferenceList, Form);
 			if (Data)
-			{
 				Data->IncrementRefCount();
-			}
 			else
 			{
 				FormCrossReferenceData* NewNode = FormCrossReferenceData::CreateInstance(Form);
@@ -566,9 +538,7 @@ namespace cse
 			if (Parent)
 			{
 				if (Parent->editorID.c_str() && !_stricmp(Parent->editorID.c_str(), "GREETING"))
-				{
 					BGSEEACHIEVEMENTS->Unlock(achievements::kCardinalSin);
-				}
 			}
 		}
 

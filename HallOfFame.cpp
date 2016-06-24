@@ -198,7 +198,7 @@ namespace cse
 			if (TESForm::LookupByEditorID("TheShadeMeRef"))
 				return;
 
-			bgsee::extras::ExtenderHOFEntryListT Inductees;
+			bgsee::extras::ExtenderHOFEntryArrayT Inductees;
 
 			Inductees.push_back(new HallOfFameEntry("ianpat",						"The Overlord",					TESForm::kFormType_Armor));
 			Inductees.push_back(new HallOfFameEntry("ScruggsywuggsyTheFerret",		"Cthulu-like Being",			TESForm::kFormType_SigilStone));

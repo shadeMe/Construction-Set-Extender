@@ -11,6 +11,8 @@ TESRender::Scenegraph**				TESRender::Scenegraph::Singleton = (TESRender::Sceneg
 NiNode**							TESRender::PathGridSceneRoot = (NiNode**)0x00A1358C;
 
 HWND*								TESRenderWindow::WindowHandle = (HWND*)0x00A0AF28;
+int*								TESRenderWindow::ScreeWidth = (int*)0x00A0F870;
+int*								TESRenderWindow::ScreeHeight = (int*)0x00A0F874;
 TESRenderSelection**				TESRenderWindow::ClipboardSelection = (TESRenderSelection**)0x00A0AF64;
 TESRenderWindow::UndoStack**		TESRenderWindow::UndoBuffer = (TESRenderWindow::UndoStack**)0x00A0B124;
 TESRenderWindow::RubberBandSelection**
@@ -199,7 +201,12 @@ void TESRender::PrimaryRenderer::GetCameraPivot( Vector3* OutPivot, float ScaleF
 	*OutPivot += Buffer;
 }
 
-bool TESRender::UpdateNode( NiNode* Node, UInt32 UpdateType, float Multiplier )
+void TESRender::PrimaryRenderer::MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ)
+{
+	cdeclCall<void>(0x00425670, this, XOffset, YOffset, AxisX, AxisY, AxisZ);
+}
+
+bool TESRender::UpdateNode(NiNode* Node, UInt32 UpdateType, float Multiplier)
 {
 	bool Result = cdeclCall<bool>(0x00430080, Node, UpdateType, Multiplier);
 

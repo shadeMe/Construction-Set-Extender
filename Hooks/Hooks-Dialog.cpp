@@ -74,7 +74,6 @@ namespace cse
 		_DefineHookHdlr(TESObjectCELLWndProcBeginDrag, 0x0053AA0C);
 		_DefineHookHdlr(TESObjectCELLWndProcEndDrag, 0x0053B501);
 		_DefineHookHdlr(ObjectWindowSplitterWndProcDisable, 0x00404502);
-		_DefineHookHdlr(TESDialogCloseAllDialogs, 0x00431182);
 
 		void PatchDialogHooks(void)
 		{
@@ -315,7 +314,6 @@ namespace cse
 			_MemHdlr(TESObjectCELLWndProcBeginDrag).WriteJump();
 			_MemHdlr(TESObjectCELLWndProcEndDrag).WriteJump();
 			_MemHdlr(ObjectWindowSplitterWndProcDisable).WriteJump();
-			_MemHdlr(TESDialogCloseAllDialogs).WriteJump();
 		}
 
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex)
@@ -1391,9 +1389,7 @@ namespace cse
 				return;
 
 			if (ArchiveManager::ExtractArchiveFile(FilePath, "tempsf"))
-			{
 				sprintf_s(s_SoundSamplerTempPath, sizeof(s_SoundSamplerTempPath), "tempsf");
-			}
 		}
 
 		#define _hhName		TESSoundPlayFile
@@ -1649,9 +1645,7 @@ namespace cse
 			HINSTANCE Alternate = BGSEEUI->GetDialogHotSwapper()->GetAlternateResourceInstance(TemplateID);
 
 			if (Alternate)
-			{
 				Subwindow->hInstance = Alternate;
-			}
 		}
 
 		#define _hhName		SubwindowTemplateHotSwap
@@ -1907,29 +1901,6 @@ namespace cse
 			SKIP:
 				popad
 				jmp		_hhGetVar(Skip)
-			}
-		}
-
-		void __stdcall DoTESDialogCloseAllDialogsHook(void)
-		{
-			PreviewWindowImposterManager::Instance.DestroyImposters();
-			objectPalette::ObjectPaletteManager::Instance.Close();
-			objectPrefabs::ObjectPrefabManager::Instance.Close();
-		}
-
-		#define _hhName		TESDialogCloseAllDialogs
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x00431187);
-			_hhSetVar(Call, 0x005A7C40);
-			__asm
-			{
-				pushad
-				call	DoTESDialogCloseAllDialogsHook
-				popad
-
-				call	_hhGetVar(Call)
-				jmp		_hhGetVar(Retn)
 			}
 		}
 	}

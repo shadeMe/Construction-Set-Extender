@@ -67,7 +67,6 @@ namespace cse
 		_DeclareMemHdlr(TESObjectCELLWndProcBeginDrag, "");
 		_DeclareMemHdlr(TESObjectCELLWndProcEndDrag, "");
 		_DeclareMemHdlr(ObjectWindowSplitterWndProcDisable, "disables the splitter when a drag-drop op is in progress, regardless of its enabled state");
-		_DeclareMemHdlr(TESDialogCloseAllDialogs, "adds support for CSE-added dialogs");
 
 		bool __cdecl TESDialogBuildSubwindowDetour(UInt16 TemplateID, Subwindow* DialogSubwindow);
 		void __stdcall TESTopicEnumerateDialogDataDetour(HWND Dialog, int SubItemIndex);

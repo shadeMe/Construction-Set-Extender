@@ -28,7 +28,6 @@ public:
 
 	enum
 	{
-		kNiNodeSpecialFlags_DontUncull			= 1 << 15,
 		kNiNodeSpecialFlags_SpecialFade			= 1 << 14,
 	};
 

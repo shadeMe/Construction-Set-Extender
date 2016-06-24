@@ -1145,7 +1145,6 @@ namespace cse
 					if (Return == false)
 					{
 						FormEnumerationManager::Instance.ResetVisibility();
-						cliWrapper::interfaces::SE->CloseAllOpenEditors();
 
 						if (ActiveTESFile)
 							SendMessage(hWnd, WM_DATADLG_RECURSEMASTERS, NULL, (LPARAM)ActiveTESFile);
@@ -2626,7 +2625,7 @@ namespace cse
 						SendMessage(*TESObjectLAND::WindowHandle, TESDialog::kWindowMessage_Refresh, NULL, NULL);
 						SetForegroundWindow(*TESRenderWindow::WindowHandle);
 
-						renderWindow::RenderChannelNotifications->Queue(3, "Active landscape texture changed");
+						renderWindow::NotificationOSDLayer::ShowNotification("Active landscape texture changed");
 					}
 
 					break;
@@ -5408,8 +5407,14 @@ namespace cse
 
 			SendMessage(*TESCSMain::WindowHandle, WM_MAINWINDOW_INITEXTRADATA, NULL, NULL);
 
-
 			PreviewWindowImposterManager::Instance.SetEnabled(settings::dialogs::kMultiplePreviewWindows().i == 1);
+
+			// thanks to UAC and its rather lovely UIPI component on Vista+,
+			// Win32 drag-drop operations don't work when the editor is running with elevated privileges
+			// we fix this by add the corresponding messages to the UIPI filter (using the process-wide filter to make things easier for me)
+			ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
+			ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
+			ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);
 		}
 	}
 }

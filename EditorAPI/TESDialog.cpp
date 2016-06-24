@@ -621,7 +621,7 @@ void TESObjectWindow::UpdateTreeChildren(HWND ObjectWindow)
 	}
 }
 
-bool TESObjectWindow::IsMinimized(void)
+bool TESObjectWindow::GetMinimized(void)
 {
 	return (GetMenuState(*TESCSMain::MainMenuHandle, 40199, MF_BYCOMMAND) & MF_CHECKED) == false;
 }

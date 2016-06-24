@@ -10,6 +10,7 @@
 #include "Hooks\Hooks-ScriptEditor.h"
 #include "Hooks\Hooks-Renderer.h"
 #include "Hooks\Hooks-Misc.h"
+#include "Hooks\Hooks-Events.h"
 
 #include "Achievements.h"
 #include "Console.h"
@@ -121,6 +122,13 @@ namespace cse
 		hooks::PatchRendererHooks();
 		hooks::PatchMiscHooks();
 		hooks::PatchMessageHanders();
+		hooks::PatchEventHooks();
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Initializing Events");
+		BGSEECONSOLE->Indent();
+		events::InitializeSinks();
+		events::InitializeSources();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Initializing UI Manager");
@@ -158,7 +166,7 @@ namespace cse
 
 		BGSEECONSOLE_MESSAGE("Initializing Render Window Manager");
 		BGSEECONSOLE->Indent();
-		bool ComponentInitialized = renderWindow::RenderWindowManager::Instance.Initialize();
+		bool ComponentInitialized = _RENDERWIN_MGR.Initialize();
 		SME_ASSERT(ComponentInitialized);
 		BGSEECONSOLE->Exdent();
 
@@ -430,6 +438,12 @@ namespace cse
 		BGSEECONSOLE_MESSAGE("Deinitializing CSInterop Manager");
 		BGSEECONSOLE->Indent();
 		delete CSIOM;
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Deinitializing Events");
+		BGSEECONSOLE->Indent();
+		events::DeinitializeSinks();
+		events::DeinitializeSources();
 		BGSEECONSOLE->Exdent();
 
 #ifndef NDEBUG

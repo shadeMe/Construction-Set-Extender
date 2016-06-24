@@ -12,7 +12,9 @@
 // 4312 - pointer extension
 #pragma warning(disable: 4018 4244 4267 4305 4288 4312 4311 4800)
 
-#define _WIN32_WINNT	0x0501
+// Header Version - Win7+
+#define _WIN32_WINNT	0x0601
+#define DIRECTINPUT_VERSION 0x0800
 #define DPSAPI_VERSION	1
 
 // WIN32
@@ -122,6 +124,7 @@ using namespace SME::Functors;
 // CSE
 #include "EditorAPI\TESEditorAPI.h"
 #include "Settings.h"
-#include "UIManager.h"
+#include "EventSources.h"
+#include "EventSinks.h"
 
 #define PI					3.151592653589793

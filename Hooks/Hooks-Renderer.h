@@ -9,10 +9,6 @@ namespace cse
 		void PatchRendererHooks(void);
 
 		_DeclareMemHdlr(DoorMarkerProperties, "allows the displaying of reference properties for door markers");
-		_DeclareMemHdlr(NiWindowRender, "allows various obscenities to be written to the render window");
-		_DeclareMemHdlr(NiDX9RendererRecreateA, "used to release any renderer owned D3D resources");
-		_DeclareMemHdlr(NiDX9RendererRecreateB, "");
-		_DeclareMemHdlr(NiDX9RendererRecreateC, "");
 		_DeclareMemHdlr(TESObjectREFRSetupDialog, "flag temp nodes to prevent them from being unculled unnecessarily");
 		_DeclareMemHdlr(TESObjectREFRCleanDialog, "");
 		_DeclareMemHdlr(TESRenderControlPerformFallVoid, "fixes a bug that causes a CTD when performing the fall operation under certain conditions");
@@ -64,7 +60,6 @@ namespace cse
 		_DeclareMemHdlr(CellViewSetCurrentCell, "temporary hook to prevent the cell window from gaining focus during render window exterior cell switches");
 		_DeclareMemHdlr(RenderWindowCursorSwap, "prevents the cursor icon changes from screwing themselves up");
 		_DeclareMemHdlr(RenderWindowCopySelection, "prevents the selection's bounding box from being cleared after a copy operation");
-		_DeclareMemHdlr(TESRenderRenderSceneGraph, "allows changes to the scenegraph before it's rendered");
 		_DeclareMemHdlr(TESPathGridPointGenerateNiNodeA, "allows linked ref indicators to be toggled");
 		_DeclareMemHdlr(TESPathGridPointGenerateNiNodeB, "");
 		_DeclareMemHdlr(TESPathGridGenerateNiNode, "");
@@ -72,6 +67,5 @@ namespace cse
 		_DeclareMemHdlr(TopCameraOnRefSelection, "");
 
 		void __stdcall RenderWindowReferenceSelectionDetour(TESObjectREFR* Ref, bool ShowSelectionBox);
-		void __cdecl OverrideSceneGraphRendering(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);
 	}
 }

@@ -1,6 +1,5 @@
 #include "AuxiliaryViewport.h"
 #include "Construction Set Extender_Resource.h"
-#include "RenderWindowPainter.h"
 #include "Hooks\Hooks-Renderer.h"
 #include "Hooks\Hooks-Dialog.h"
 
@@ -133,9 +132,7 @@ namespace cse
 		if (Camera == NULL)
 			Camera = ViewportCamera;
 
-		BGSEERWPAINTER->SetEnabled(false);
 		_PRIMARYRENDERER->RenderNode(Camera, NodeToRender);
-		BGSEERWPAINTER->SetEnabled(true);
 		hooks::_MemHdlr(NiDX9RendererPresent).WriteBuffer();
 
 		DrawBackBuffer();

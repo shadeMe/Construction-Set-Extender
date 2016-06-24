@@ -196,7 +196,7 @@ namespace cse
 				{
 					NiNode* Node = Itr->GetNiNode();
 					// skip culled nodes as their visibility is controlled by edit dialogs
-					if (Node->IsCulled() == false)
+					if (Node && Node->IsCulled() == false)
 					{
 						bool ShouldCull = false;
 						if (TESRenderWindow::ShowInitiallyDisabledRefs == false && Itr->GetDisabled())
@@ -250,7 +250,7 @@ namespace cse
 			ReferenceGroupManager = NULL;
 		}
 
-		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool SelectionBox)
+		void RenderWindowSelectionManager::AddToSelection(TESObjectREFR* Ref, bool SelectionBox) const
 		{
 			Ref->ToggleSelectionBox(false);
 
@@ -285,6 +285,18 @@ namespace cse
 						_RENDERSEL->RemoveFromSelection(*Itr, true);
 				}
 			}
+		}
+
+		bool RenderWindowSelectionManager::IsSelectable(TESObjectREFR* Ref) const
+		{
+			if (GetAsyncKeyState(VK_MENU))		// alt key is down
+				return true;
+			else if (Ref->GetFrozen())
+				return false;
+			else if (Ref->IsActive() && TESRenderWindow::FreezeInactiveRefs)
+				return false;
+			else
+				return true;
 		}
 
 		RenderWindowFlyCameraOperator::RenderWindowFlyCameraOperator(HWND ParentWindow, bgsee::ResourceTemplateT TemplateID) :
@@ -396,21 +408,54 @@ namespace cse
 		}
 
 
+
+
 		RenderWindowManager				RenderWindowManager::Instance;
 
 
-		RenderWindowManager::RenderWindowDialogExtraData::RenderWindowDialogExtraData() :
+		RenderWindowManager::DialogExtraData::DialogExtraData() :
 			bgsee::WindowExtraData(kTypeID)
 		{
 			TunnelingKeyMessage = false;
 		}
 
-		RenderWindowManager::RenderWindowDialogExtraData::~RenderWindowDialogExtraData()
+		RenderWindowManager::DialogExtraData::~DialogExtraData()
 		{
 			;//
 		}
 
+		RenderWindowManager::GlobalEventSink::GlobalEventSink(RenderWindowManager* Parent) :
+			Parent(Parent)
+		{
+			SME_ASSERT(Parent);
+		}
 
+		void RenderWindowManager::GlobalEventSink::Handle(SME::MiscGunk::IEventData* Data)
+		{
+			const events::TypedEventSource* Source = dynamic_cast<const events::TypedEventSource*>(Data->Source);
+			SME_ASSERT(Source);
+
+			switch (Source->GetTypeID())
+			{
+			case events::TypedEventSource::kType_Renderer_Release:
+				Parent->HandleD3DRelease();
+				break;
+			case events::TypedEventSource::kType_Renderer_Renew:
+				Parent->HandleD3DRenew();
+				break;
+			case events::TypedEventSource::kType_Renderer_PreMainSceneGraphRender:
+				{
+					events::renderer::PreSceneGraphRenderData* Args = dynamic_cast<events::renderer::PreSceneGraphRenderData*>(Data);
+					SME_ASSERT(Args);
+
+					Parent->HandleSceneGraphRender(Args->Camera, Args->SceneGraph, Args->CullingProc, Args->RenderTarget);
+					break;
+				}
+			case events::TypedEventSource::kType_Renderer_PostMainSceneGraphRender:
+				Parent->HandlePostSceneGraphRender();
+				break;
+			}
+		}
 
 		LRESULT CALLBACK RenderWindowManager::RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 																bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
@@ -551,9 +596,9 @@ namespace cse
 						TESRenderWindow::UseAlternateMovementSettings = (TESRenderWindow::UseAlternateMovementSettings == false);
 
 						if (TESRenderWindow::UseAlternateMovementSettings == false)
-							RenderChannelNotifications->Queue(3, "Using vanilla movement settings");
+							NotificationOSDLayer::ShowNotification("Using vanilla movement settings");
 						else
-							RenderChannelNotifications->Queue(3, "Using alternate movement settings");
+							NotificationOSDLayer::ShowNotification("Using alternate movement settings");
 
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AlternateRenderWindowMovement);
 						Return = true;
@@ -589,9 +634,9 @@ namespace cse
 					TESRenderWindow::FreezeInactiveRefs = (TESRenderWindow::FreezeInactiveRefs == false);
 
 					if (TESRenderWindow::FreezeInactiveRefs)
-						RenderChannelNotifications->Queue(4, "Inactive references frozen");
+						NotificationOSDLayer::ShowNotification("Inactive references frozen");
 					else
-						RenderChannelNotifications->Queue(4, "Inactive references thawed");
+						NotificationOSDLayer::ShowNotification("Inactive references thawed");
 
 					break;
 				case IDC_RENDERWINDOWCONTEXT_INVERTSELECTION:
@@ -806,11 +851,11 @@ namespace cse
 						switch (LOWORD(wParam))
 						{
 						case IDC_RENDERWINDOWCONTEXT_REVEALALLINCELL:
-							RenderChannelNotifications->Queue(3, "Reset visibility flags on the active cell's references");
+							NotificationOSDLayer::ShowNotification("Reset visibility flags on the active cell's references");
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_THAWALLINCELL:
-							RenderChannelNotifications->Queue(3, "Thawed all of the active cell's references");
+							NotificationOSDLayer::ShowNotification("Thawed all of the active cell's references");
 
 							break;
 						}
@@ -870,7 +915,7 @@ namespace cse
 												 "Couldn't add current selection to a new group.\n\nCheck the console for more details.");
 							}
 							else
-								RenderChannelNotifications->Queue(4, "Created new selection group");
+								NotificationOSDLayer::ShowNotification("Created new selection group");
 
 							break;
 						case IDC_RENDERWINDOWCONTEXT_UNGROUP:
@@ -880,7 +925,7 @@ namespace cse
 												 "Couldn't dissolve the current selection's group.\n\nCheck the console for more details.");
 							}
 							else
-								RenderChannelNotifications->Queue(4, "Removed selection group");
+								NotificationOSDLayer::ShowNotification("Removed selection group");
 
 							break;
 						}
@@ -922,7 +967,7 @@ namespace cse
 							ThisRef->UpdateNiNode();
 						}
 
-						RenderChannelNotifications->Queue(2, "Selection aligned to %08X", AlignRef->formID);
+						NotificationOSDLayer::ShowNotification("Selection aligned to %08X", AlignRef->formID);
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_RefAlignment);
 						TESRenderWindow::Redraw();
 
@@ -935,9 +980,9 @@ namespace cse
 						settings::renderer::kCoplanarRefDrops.ToggleData();
 
 						if (settings::renderer::kCoplanarRefDrops.GetData().i)
-							RenderChannelNotifications->Queue(6, "Enabled co-planar dropping");
+							NotificationOSDLayer::ShowNotification("Enabled co-planar dropping");
 						else
-							RenderChannelNotifications->Queue(6, "Disabled co-planar dropping");
+							NotificationOSDLayer::ShowNotification("Disabled co-planar dropping");
 
 						Return = true;
 					}
@@ -996,9 +1041,8 @@ namespace cse
 			return DlgProcResult;
 		}
 
-#define IDT_RENDERWINDOW_TITLEBARUPDATE			0x154
 
-		LRESULT CALLBACK RenderWindowManager::RenderWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+		LRESULT CALLBACK RenderWindowManager::RenderWindowMasterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 													  bool& Return, bgsee::WindowExtraDataCollection* ExtraData)
 		{
 			LRESULT DlgProcResult = TRUE;
@@ -1009,9 +1053,14 @@ namespace cse
 
 			static Vector3 kCameraStaticPivot;
 
-			if (bgsee::RenderWindowFlyCamera::IsActive())
+			if (bgsee::RenderWindowFlyCamera::IsActive() && uMsg != WM_DESTROY)
 			{
 				// do nothing if the fly camera is active
+				return DlgProcResult;
+			}
+			else if (_RENDERWIN_MGR.OSD->NeedsInput() && uMsg != WM_DESTROY)
+			{
+				// defer to the OSD window proc
 				return DlgProcResult;
 			}
 
@@ -1034,27 +1083,24 @@ namespace cse
 				break;
 			case WM_INITDIALOG:
 				{
-					RenderWindowDialogExtraData* xData = BGSEE_GETWINDOWXDATA(RenderWindowDialogExtraData, ExtraData);
+					DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
 					if (xData == NULL)
 					{
-						xData = new RenderWindowDialogExtraData();
+						xData = new DialogExtraData();
 						ExtraData->Add(xData);
 					}
 
-					SetTimer(hWnd, IDT_RENDERWINDOW_TITLEBARUPDATE, 2000, NULL);
 				}
 
 				break;
 			case WM_DESTROY:
 				{
-					RenderWindowDialogExtraData* xData = BGSEE_GETWINDOWXDATA(RenderWindowDialogExtraData, ExtraData);
+					DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
 					if (xData)
 					{
-						ExtraData->Remove(RenderWindowDialogExtraData::kTypeID);
+						ExtraData->Remove(DialogExtraData::kTypeID);
 						delete xData;
 					}
-
-					KillTimer(hWnd, IDT_RENDERWINDOW_TITLEBARUPDATE);
 				}
 
 				break;
@@ -1074,34 +1120,6 @@ namespace cse
 			case WM_TIMER:
 				switch (wParam)
 				{
-				case IDT_RENDERWINDOW_TITLEBARUPDATE:
-					{
-						char Buffer[0x100] = { 0 };
-						GetWindowText(hWnd, Buffer, sizeof(Buffer));
-						if (!_stricmp("Render Window", Buffer))
-							break;
-
-						TESObjectCELL* CurrentCell = _TES->currentInteriorCell;
-						if (CurrentCell == NULL)
-							CurrentCell = *TESRenderWindow::ActiveCell;
-
-						if (CurrentCell)
-						{
-							if (CurrentCell->GetIsInterior())
-								FORMAT_STR(Buffer, "%s (%08X)", CurrentCell->GetEditorID(), CurrentCell->formID);
-							else
-							{
-								FORMAT_STR(Buffer, "%s %d,%d (%08X)", CurrentCell->GetEditorID(), CurrentCell->cellData.coords->x,
-										   CurrentCell->cellData.coords->y, CurrentCell->formID);
-							}
-
-							SetWindowText(hWnd, Buffer);
-						}
-
-						Return = true;
-					}
-
-					break;
 				case TESRenderWindow::kTimer_ViewportUpdate:			// update timer
 					static bool SetTimerPeriod = true;
 					if (SetTimerPeriod)
@@ -1109,7 +1127,7 @@ namespace cse
 						SetTimerPeriod = false;
 						UInt32 Period = settings::renderer::kUpdatePeriod.GetData().i;
 						if (Period == 0 || Period >= 100)
-							Period = 50;
+							Period = 10;
 
 						SetTimer(hWnd, TESRenderWindow::kTimer_ViewportUpdate, Period, NULL);
 					}
@@ -1147,14 +1165,14 @@ namespace cse
 				break;
 			case WM_LBUTTONDBLCLK:
 				{
-					if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0 && GetAsyncKeyState(VK_MENU) == 0)
+					if (*TESRenderWindow::PathGridEditFlag == 0 && *TESRenderWindow::LandscapeEditFlag == 0)
 					{
 						TESObjectREFR* Ref = TESRender::PickRefAtCoords(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 						if (Ref)
 						{
-							if (Ref->GetFrozen() || (Ref->IsActive() == false && TESRenderWindow::FreezeInactiveRefs))
+							if (_RENDERWIN_MGR.GetSelectionManager()->IsSelectable(Ref) == false)
 							{
-								// ref's frozen, preempt the vanilla handler
+								// preempt the vanilla handler
 								Return = true;
 							}
 						}
@@ -1208,7 +1226,7 @@ namespace cse
 						}
 					}
 
-					if (GetCapture() != hWnd && bgsee::RenderWindowFlyCamera::IsActive() == false)
+					if (GetCapture() != hWnd)
 					{
 						HCURSOR Icon = *TESRenderWindow::CursorArrow;
 
@@ -1226,7 +1244,8 @@ namespace cse
 							}
 						}
 
-						if (Icon && GetCursor() != Icon)
+						HCURSOR CurrentCursor = GetCursor();
+						if (Icon && CurrentCursor != Icon)
 							SetCursor(Icon);
 					}
 				}
@@ -1329,7 +1348,7 @@ namespace cse
 					else
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						RenderWindowDialogExtraData* xData = BGSEE_GETWINDOWXDATA(RenderWindowDialogExtraData, ExtraData);
+						DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
 						SME_ASSERT(xData);
 
 						if (SwitchEnabled)
@@ -1346,7 +1365,7 @@ namespace cse
 				case 0x43:		// C
 					{
 						int SwitchEnabled = settings::renderer::kSwitchCAndY.GetData().i;
-						RenderWindowDialogExtraData* xData = BGSEE_GETWINDOWXDATA(RenderWindowDialogExtraData, ExtraData);
+						DialogExtraData* xData = BGSEE_GETWINDOWXDATA(DialogExtraData, ExtraData);
 						SME_ASSERT(xData);
 
 						if (SwitchEnabled && xData->TunnelingKeyMessage == false)
@@ -1412,9 +1431,9 @@ namespace cse
 					else if (GetAsyncKeyState(VK_SHIFT) && AUXVIEWPORT->GetVisible())
 					{
 						if (AUXVIEWPORT->ToggleFrozenState())
-							RenderChannelNotifications->Queue(3, "Froze auxiliary viewport camera");
+							NotificationOSDLayer::ShowNotification("Froze auxiliary viewport camera");
 						else
-							RenderChannelNotifications->Queue(3, "Released auxiliary viewport camera");
+							NotificationOSDLayer::ShowNotification("Released auxiliary viewport camera");
 
 						achievements::kPowerUser->UnlockTool(achievements::AchievementPowerUser::kTool_AuxViewPort);
 						Return = true;
@@ -1588,6 +1607,8 @@ namespace cse
 			SelectionManager = NULL;
 			PGUndoManager = NULL;
 			GroupManager = NULL;
+			OSD = NULL;
+			EventSink = new GlobalEventSink(this);
 
 			Initialized = false;
 		}
@@ -1599,24 +1620,41 @@ namespace cse
 			SAFEDELETE(SelectionManager);
 			SAFEDELETE(PGUndoManager);
 			SAFEDELETE(GroupManager);
+			SAFEDELETE(OSD);
+			SAFEDELETE(EventSink);
 
 			Initialized = false;
 		}
 
 		bool RenderWindowManager::Initialize()
 		{
+			SME_ASSERT(Initialized == false);
+
 			SceneGraphManager = new RenderWindowSceneGraphManager();
 			PGUndoManager = new PathGridUndoManager();
 			GroupManager = new RenderWindowGroupManager();
 			SelectionManager = new RenderWindowSelectionManager(GroupManager);
+			OSD = new RenderWindowOSD();
 
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, RenderWindowMenuInitSelectSubclassProc);
-			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, RenderWindowMiscSubclassProc);
+			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, RenderWindowMasterSubclassProc);
 			BGSEEUI->GetMenuHotSwapper()->RegisterTemplateReplacer(IDR_RENDERWINDOWCONTEXT, BGSEEMAIN->GetExtenderHandle());
+
+			events::renderer::kRelease.AddSink(EventSink);
+			events::renderer::kRenew.AddSink(EventSink);
+			events::renderer::kPreSceneGraphRender.AddSink(EventSink);
+			events::renderer::kPostSceneGraphRender.AddSink(EventSink);
 
 			Initialized = true;
 
 			return Initialized;
+		}
+
+		bool RenderWindowManager::InitializeOSD()
+		{
+			SME_ASSERT(Initialized);
+			bool OSDReady = OSD->Initialize();
+			return OSDReady;
 		}
 
 		RenderWindowGroupManager* RenderWindowManager::GetReferenceGroupManager() const
@@ -1643,42 +1681,57 @@ namespace cse
 			return SelectionManager;
 		}
 
+		RenderWindowOSD* RenderWindowManager::GetOSD() const
+		{
+			SME_ASSERT(Initialized);
+			return OSD;
+		}
+
+		void RenderWindowManager::HandleD3DRelease()
+		{
+			SME_ASSERT(Initialized);
+			BGSEERWPAINTER->HandleReset(true, false);
+			OSD->HandleD3DRelease();
+		}
+
+		void RenderWindowManager::HandleD3DRenew()
+		{
+			SME_ASSERT(Initialized);
+			BGSEERWPAINTER->HandleReset(false, true);
+			OSD->HandleD3DRenew();
+		}
+
+		void RenderWindowManager::HandleSceneGraphRender(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget)
+		{
+			SME_ASSERT(Initialized);
+			SceneGraphManager->HandleRender(Camera, SceneGraph, CullingProc, RenderTarget);
+		}
+
+		void RenderWindowManager::HandlePostSceneGraphRender()
+		{
+			SME_ASSERT(Initialized);
+			OSD->Render();
+			BGSEERWPAINTER->Render();
+		}
+
+
 		void Initialize()
 		{
-			_RENDERWIN_MGR.GetSceneGraphManager()->AddModifier(new ReferenceParentChildIndicator());
-			_RENDERWIN_MGR.GetSceneGraphManager()->AddModifier(new ReferenceVisibilityModifier());
-
-			bool ComponentInitialized = BGSEERWPAINTER->Initialize(new RenderWindowPainterOperator());
+			bool ComponentInitialized = _RENDERWIN_MGR.InitializeOSD();
 			SME_ASSERT(ComponentInitialized);
 
-			int FontSize = settings::renderWindowPainter::kFontSize.GetData().i;
-			const char* FontFace = settings::renderWindowPainter::kFontFace.GetData().s;
-
-			RECT DrawRect;
-			DrawRect.left = 3;
-			DrawRect.top = -150;
-			DrawRect.right = 800;
-			DrawRect.bottom = 200;
-			RenderChannelNotifications = new bgsee::DynamicRenderChannel(FontSize, 0, FW_MEDIUM, FontFace,
-																		 SME::StringHelpers::GetRGBD3D(settings::renderWindowPainter::kColorNotifications().s, 255),
-																		 &DrawRect,
-																		 DT_WORDBREAK | DT_LEFT | DT_TOP | DT_NOCLIP,
-																		 bgsee::RenderChannelBase::kDrawAreaFlags_BottomAligned);
-
-			BGSEERWPAINTER->RegisterRenderChannel(SelectionInfoRenderChannel::GetInstance(FontFace, FontSize));
-			BGSEERWPAINTER->RegisterRenderChannel(RAMUsageRenderChannel::GetInstance(FontFace, FontSize));
-			BGSEERWPAINTER->RegisterRenderChannel(MouseRefRenderChannel::GetInstance(FontFace, FontSize));
-			BGSEERWPAINTER->RegisterRenderChannel(RenderChannelNotifications);
+			_RENDERWIN_MGR.GetSceneGraphManager()->AddModifier(new ReferenceParentChildIndicator());
+			_RENDERWIN_MGR.GetSceneGraphManager()->AddModifier(new ReferenceVisibilityModifier());
 
 			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOW_UPDATEFOV, NULL, NULL);
 		}
 
 		void Deinitialize(void)
 		{
-			delete BGSEERWPAINTER;
-			SAFEDELETE(RenderChannelNotifications);
+			;//
 		}
 
-	}
 
+
+	}
 }

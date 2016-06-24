@@ -24,8 +24,14 @@ void ShowUseInfoListDialog(const char* FilterString)
 	USELST->Open(FilterString);
 }
 
+void HideUseInfoListDialog(void)
+{
+	USELST->Close();
+}
+
 componentDLLInterface::UseInfoListInterface g_InteropInterface =
 {
 	InitializeComponents,
-	ShowUseInfoListDialog
+	ShowUseInfoListDialog,
+	HideUseInfoListDialog
 };

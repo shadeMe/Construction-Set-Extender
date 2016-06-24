@@ -11,7 +11,7 @@
 *
 *	All sub-interfaces need to be initialized with InitializeInterface().
 *	All RegisterXXX type calls must be made inside the OBSE Post-Post-Load message handler.
-*	
+*
 *	The Coda related headers can be found in the BGSEditorExtenderBase project. Include file
 *	paths will need to be correctly defined to use the script interface.
 ***********************************************************************************************/
@@ -54,6 +54,7 @@ struct CSEConsoleInterface
 
 struct CSERendererInterface
 {
+	// OBSOLETE SINCE INTERFACE VERSION 3
 	// Queues a text message for display in the render window
 	void			(* PrintToRenderWindow)(const char* Message, float DisplayDuration);
 };

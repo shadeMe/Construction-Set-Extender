@@ -26,7 +26,7 @@
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug - Attach Debugger|Win32'" Label="Configuration">
@@ -42,7 +42,7 @@
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CLRSupport>false</CLRSupport>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -263,17 +263,24 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="Achievements.cpp" />
     <ClCompile Include="AuxiliaryViewport.cpp" />
     <ClCompile Include="Console.cpp" />
+    <ClCompile Include="EventSinks.cpp" />
+    <ClCompile Include="EventSources.cpp" />
     <ClCompile Include="FormUndoStack.cpp" />
     <ClCompile Include="GlobalClipboard.cpp" />
     <ClCompile Include="HallOfFame.cpp" />
+    <ClCompile Include="Hooks\Hooks-Events.cpp" />
+    <ClCompile Include="IMGUI\imgui.cpp" />
+    <ClCompile Include="IMGUI\imgui_demo.cpp" />
+    <ClCompile Include="IMGUI\imgui_draw.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="DialogImposterManager.cpp" />
     <ClCompile Include="ObjectPaletteManager.cpp" />
     <ClCompile Include="ObjectPrefabManager.cpp" />
     <ClCompile Include="PathGridUndoManager.cpp" />
     <ClCompile Include="RenderWindowGroupManager.cpp" />
+    <ClCompile Include="RenderWindowLayerManager.cpp" />
     <ClCompile Include="RenderWindowManager.cpp" />
-    <ClCompile Include="RenderWindowPainter.cpp" />
+    <ClCompile Include="RenderWindowOSD.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="UIManager.cpp" />
     <ClCompile Include="WorkspaceManager.cpp" />
@@ -310,7 +317,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClCompile Include="EditorAPI\TESQuest.cpp" />
     <ClCompile Include="EditorAPI\TESRender.cpp" />
     <ClCompile Include="EditorAPI\TESSound.cpp" />
-    <ClCompile Include="Hooks\Hooks-VersionControl.cpp" />
     <ClCompile Include="ChangeLogManager.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -364,17 +370,27 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="Achievements.h" />
     <ClInclude Include="AuxiliaryViewport.h" />
     <ClInclude Include="Console.h" />
+    <ClInclude Include="EventSinks.h" />
+    <ClInclude Include="EventSources.h" />
     <ClInclude Include="FormUndoStack.h" />
     <ClInclude Include="GlobalClipboard.h" />
     <ClInclude Include="HallOfFame.h" />
+    <ClInclude Include="Hooks\Hooks-Events.h" />
+    <ClInclude Include="IMGUI\imconfig.h" />
+    <ClInclude Include="IMGUI\imgui.h" />
+    <ClInclude Include="IMGUI\imgui_internal.h" />
+    <ClInclude Include="IMGUI\stb_rect_pack.h" />
+    <ClInclude Include="IMGUI\stb_textedit.h" />
+    <ClInclude Include="IMGUI\stb_truetype.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="DialogImposterManager.h" />
     <ClInclude Include="ObjectPaletteManager.h" />
     <ClInclude Include="ObjectPrefabManager.h" />
     <ClInclude Include="PathGridUndoManager.h" />
     <ClInclude Include="RenderWindowGroupManager.h" />
+    <ClInclude Include="RenderWindowLayerManager.h" />
     <ClInclude Include="RenderWindowManager.h" />
-    <ClInclude Include="RenderWindowPainter.h" />
+    <ClInclude Include="RenderWindowOSD.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="UIManager.h" />
     <ClInclude Include="WorkspaceManager.h" />
@@ -461,7 +477,6 @@ copy "$(TargetPath)" "$(DropboxPath)\CSE Once-In-Awhile'lies\Data\OBSE\Plugins\$
     <ClInclude Include="EditorAPI\TESWaterForm.h" />
     <ClInclude Include="EditorAPI\TESWeather.h" />
     <ClInclude Include="EditorAPI\TESWorldSpace.h" />
-    <ClInclude Include="Hooks\Hooks-VersionControl.h" />
     <ClInclude Include="ChangeLogManager.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="VersionInfo.h" />

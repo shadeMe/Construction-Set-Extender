@@ -1,5 +1,4 @@
 #include "ChangeLogManager.h"
-#include "Hooks\Hooks-VersionControl.h"
 #include "Achievements.h"
 
 namespace cse
@@ -57,8 +56,61 @@ namespace cse
 			;//
 		}
 
-		void HandlePluginSave(TESFile* SaveFile)
+		DEFINE_BASIC_EVENT_SINK(ChangeLogTESForm);
+		DEFINE_BASIC_EVENT_SINK_HANDLER(ChangeLogTESForm)
 		{
+			events::form::TESFormEventData* Args = dynamic_cast<events::form::TESFormEventData*>(Data);
+			SME_ASSERT(Args);
+
+			TESForm* Form = Args->Form;
+			UInt32 Value = 0;
+			UInt8 ChangeType = BasicFormChangeEntry::kFormChange_SetActive;
+
+			switch (Args->EventType)
+			{
+			case events::form::TESFormEventData::kType_Instantiation:
+				BGSEECHANGELOG->RecordChange("%s\t[%08X]\t%s\tInstantiated", Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
+				break;
+			case events::form::TESFormEventData::kType_SetActive:
+			case events::form::TESFormEventData::kType_SetDeleted:
+			case events::form::TESFormEventData::kType_SetFormID:
+			case events::form::TESFormEventData::kType_SetEditorID:
+				if (Form->IsTemporary() == false && TESDataHandler::PluginLoadSaveInProgress == false)
+				{
+					switch (Args->EventType)
+					{
+					case events::form::TESFormEventData::kType_SetActive:
+						ChangeType = BasicFormChangeEntry::kFormChange_SetActive;
+						Value = Args->ActiveState;
+						break;
+					case events::form::TESFormEventData::kType_SetDeleted:
+						ChangeType = BasicFormChangeEntry::kFormChange_SetDeleted;
+						Value = Args->DeletedState;
+						break;
+					case events::form::TESFormEventData::kType_SetFormID:
+						ChangeType = BasicFormChangeEntry::kFormChange_SetFormID;
+						Value = Args->NewFormID;
+						break;
+					case events::form::TESFormEventData::kType_SetEditorID:
+						ChangeType = BasicFormChangeEntry::kFormChange_SetEditorID;
+						Value = (UInt32)Args->NewEditorID;
+						break;
+					}
+
+					BGSEECHANGELOG->RecordChange(changeLogManager::BasicFormChangeEntry(ChangeType, Form, Value));
+				}
+
+				break;
+			}
+		}
+
+		DEFINE_BASIC_EVENT_SINK(ChangeLogPreSave);
+		DEFINE_BASIC_EVENT_SINK_HANDLER(ChangeLogPreSave)
+		{
+			events::plugin::TESFileEventData* Args = dynamic_cast<events::plugin::TESFileEventData*>(Data);
+			SME_ASSERT(Args);
+
+			TESFile* SaveFile = Args->File;
 			if (!_stricmp(SaveFile->filePath, "Data\\Backup\\"))		// skip autosaves
 				return;
 
@@ -100,14 +152,16 @@ namespace cse
 			BGSEECHANGELOG->PushNewActiveLog();
 		}
 
-		void HandlePluginLoadProlog()
+		DEFINE_BASIC_EVENT_SINK(ChangeLogPreLoad);
+		DEFINE_BASIC_EVENT_SINK_HANDLER(ChangeLogPreLoad)
 		{
 			BGSEECHANGELOG->Pad(1);
 			BGSEECHANGELOG->RecordChange("Reloading plugins...");
 			BGSEECHANGELOG->Pad(1);
 		}
 
-		void HandlePluginLoadEpilog(void)
+		DEFINE_BASIC_EVENT_SINK(ChangeLogPostLoad);
+		DEFINE_BASIC_EVENT_SINK_HANDLER(ChangeLogPostLoad)
 		{
 			BGSEECHANGELOG->Pad(1);
 
@@ -125,7 +179,16 @@ namespace cse
 			bool ComponentInitialized = BGSEECHANGELOG->Initialize();
 			SME_ASSERT(ComponentInitialized);
 
-			hooks::PatchVersionControlHooks();		// version control hooks are patched here to prevent the premature init of the manager
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogTESForm, events::form::kInstantiation);
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogTESForm, events::form::kSetActive);
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogTESForm, events::form::kSetDeleted);
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogTESForm, events::form::kSetEditorID);
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogTESForm, events::form::kSetFormID);
+
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogPreSave, events::plugin::kPreSave);
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogPreLoad, events::plugin::kPreLoad);
+			ADD_BASIC_SINK_TO_SOURCE(ChangeLogPostLoad, events::plugin::kPostLoad);
+
 		}
 	}
 }

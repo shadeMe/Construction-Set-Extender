@@ -16,7 +16,6 @@ namespace cse
 		_DefineNopHdlr(TESFormGetUnUsedFormID, 0x00486C08, 2);
 		_DefineHookHdlr(LoadPluginsProlog, 0x00485252);
 		_DefineHookHdlr(LoadPluginsEpilog, 0x004856B2);
-		_DefineHookHdlr(PostPluginSave, 0x0041BBCD);
 		_DefineHookHdlr(PostPluginLoad, 0x0041BEFA);
 		_DefinePatchHdlr(DataDialogPluginDescription, 0x0040CAB6);
 		_DefinePatchHdlr(DataDialogPluginAuthor, 0x0040CAFE);
@@ -45,7 +44,6 @@ namespace cse
 		{
 			_MemHdlr(LoadPluginsProlog).WriteJump();
 			_MemHdlr(LoadPluginsEpilog).WriteJump();
-			_MemHdlr(PostPluginSave).WriteJump();
 			_MemHdlr(PostPluginLoad).WriteJump();
 			_MemHdlr(SavePluginCommonDialog).WriteJump();
 			_MemHdlr(SavePluginMasterEnum).WriteJump();
@@ -107,16 +105,11 @@ namespace cse
 		void __stdcall DoLoadPluginsPrologHook(void)
 		{
 			TESFile* ActiveFile = _DATAHANDLER->activeFile;
-
 			if (ActiveFile && (ActiveFile->fileFlags & TESFile::kFileFlag_Master))
-			{
 				SME::MiscGunk::ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
-			}
 
 			s_LoadIdleWindow = CreateDialogParam(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDD_IDLE), BGSEEUI->GetMainWindow(), NULL, NULL);
 			Static_SetText(GetDlgItem(s_LoadIdleWindow, -1), "Loading Plugins\nPlease Wait");
-
-			TESDataHandler::PluginLoadSaveInProgress = true;
 		}
 
 		#define _hhName		LoadPluginsProlog
@@ -137,10 +130,7 @@ namespace cse
 
 		void __stdcall DoLoadPluginsEpilogHook(void)
 		{
-			_DATAHANDLER->PerformPostLoadTasks();
-
 			DestroyWindow(s_LoadIdleWindow);
-			TESDataHandler::PluginLoadSaveInProgress = false;
 		}
 
 		#define _hhName		LoadPluginsEpilog
@@ -159,39 +149,17 @@ namespace cse
 			}
 		}
 
-		void __stdcall DoPostPluginSaveHook(void)
-		{
-			cliWrapper::interfaces::SE->UpdateIntelliSenseDatabase();
-		}
-
-		#define _hhName	PostPluginSave
-		_hhBegin()
-		{
-			_hhSetVar(Retn, 0x0041BBD3);
-			__asm
-			{
-				call	IATCacheSetWindowTextAddress
-				call	[IATProcBuffer]				// SetWindowTextA
-				pushad
-				call	DoPostPluginSaveHook
-				popad
-				jmp		_hhGetVar(Retn)
-			}
-		}
-
 		void __stdcall DoPostPluginLoadHook(bool State)
 		{
 			if (State == false)
 			{
-				if (TESObjectWindow::IsMinimized() == false)
+				if (TESObjectWindow::GetMinimized() == false)
 					BGSEEUI->GetInvalidationManager()->Push(*TESObjectWindow::WindowHandle);
 			}
 			else
 			{
-				if (TESObjectWindow::IsMinimized() == false)
+				if (TESObjectWindow::GetMinimized() == false)
 					BGSEEUI->GetInvalidationManager()->Pop(*TESObjectWindow::WindowHandle);
-
-				cliWrapper::interfaces::SE->UpdateIntelliSenseDatabase();
 
 				SetActiveWindow(*TESCSMain::WindowHandle);				// to make sure none of its child dialogs are hidden behind it
 			}
@@ -310,7 +278,6 @@ namespace cse
 		{
 			TESFile* ActiveFile = _DATAHANDLER->activeFile;
 			SME::MiscGunk::ToggleFlag(&ActiveFile->fileFlags, TESFile::kFileFlag_Master, 0);
-			TESDataHandler::PluginLoadSaveInProgress = false;
 		}
 
 		#define _hhName		DataHandlerSavePluginEpilog

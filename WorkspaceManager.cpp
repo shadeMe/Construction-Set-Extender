@@ -44,7 +44,7 @@ namespace cse
 
 		void Initialize()
 		{
-			static bgsee::WorkspaceManager::DefaultDirectoryListT kDefaultDirectories;
+			static bgsee::WorkspaceManager::DefaultDirectoryArrayT kDefaultDirectories;
 			if (kDefaultDirectories.size() == 0)
 			{
 				kDefaultDirectories.push_back("Data\\");

@@ -16,7 +16,6 @@ namespace cse
 		_DeclareMemHdlr(TextureMipMapCheck, "allows the preview of textures with mipmaps");
 		_DeclareMemHdlr(UnnecessaryDialogEdits, "prevents unnecessary dialog edits in active plugins should its master have a DIAL record");
 		_DeclareMemHdlr(UnnecessaryCellEdits, "prevents unnecessary cell/worldspace edits in active plugins should its master have a CELL/WRLD record");
-		_DeclareMemHdlr(DataHandlerClearData, "event hook to perform various cleanup operations");
 		_DeclareMemHdlr(TopicInfoCopyEpilog, "fixes the bug that causes the wrong topic info to be flagged as active when using the copy popup menu option");
 		_DeclareMemHdlr(TopicInfoCopyProlog, "");
 		_DeclareMemHdlr(NumericEditorID, "displays a warning when editorIDs start with an integer");

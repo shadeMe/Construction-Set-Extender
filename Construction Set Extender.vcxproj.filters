@@ -94,6 +94,9 @@
     <Filter Include="Components\Render Window">
       <UniqueIdentifier>{178bc5a9-5ba4-4326-8133-931864d24253}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Components\IMGUI">
+      <UniqueIdentifier>{840e81b2-3d8d-49a1-a634-94193d0753c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="[Common]\CLIWrapper.cpp">
@@ -215,9 +218,6 @@
     <ClCompile Include="Hooks\Hooks-Plugins.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="Hooks\Hooks-VersionControl.cpp">
-      <Filter>Hooks</Filter>
-    </ClCompile>
     <ClCompile Include="EditorAPI\TESFile.cpp">
       <Filter>EditorAPI\System\I/O</Filter>
     </ClCompile>
@@ -287,9 +287,6 @@
     <ClCompile Include="RenderWindowManager.cpp">
       <Filter>Components\Render Window</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindowPainter.cpp">
-      <Filter>Components\Render Window</Filter>
-    </ClCompile>
     <ClCompile Include="Hooks\Hooks-AssetSelector.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
@@ -305,6 +302,30 @@
     </ClCompile>
     <ClCompile Include="[Common]\OldCSInteropData.cpp">
       <Filter>Interop\CS 1.0</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowLayerManager.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowOSD.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui_demo.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="IMGUI\imgui_draw.cpp">
+      <Filter>Components\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="EventSources.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="EventSinks.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Hooks-Events.cpp">
+      <Filter>Hooks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -667,9 +688,6 @@
     <ClInclude Include="Hooks\Hooks-Plugins.h">
       <Filter>Hooks</Filter>
     </ClInclude>
-    <ClInclude Include="Hooks\Hooks-VersionControl.h">
-      <Filter>Hooks</Filter>
-    </ClInclude>
     <ClInclude Include="EditorAPI\TESRender.h">
       <Filter>EditorAPI\System\CS Interfaces</Filter>
     </ClInclude>
@@ -730,9 +748,6 @@
     <ClInclude Include="RenderWindowManager.h">
       <Filter>Components\Render Window</Filter>
     </ClInclude>
-    <ClInclude Include="RenderWindowPainter.h">
-      <Filter>Components\Render Window</Filter>
-    </ClInclude>
     <ClInclude Include="Hooks\Hooks-AssetSelector.h">
       <Filter>Hooks</Filter>
     </ClInclude>
@@ -748,6 +763,39 @@
     </ClInclude>
     <ClInclude Include="[Common]\OldCSInteropData.h">
       <Filter>Interop\CS 1.0</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowLayerManager.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowOSD.h">
+      <Filter>Components\Render Window</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imconfig.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imgui.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\imgui_internal.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\stb_rect_pack.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\stb_textedit.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="IMGUI\stb_truetype.h">
+      <Filter>Components\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="EventSources.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="EventSinks.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooks\Hooks-Events.h">
+      <Filter>Hooks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

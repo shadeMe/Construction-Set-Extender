@@ -32,7 +32,7 @@ namespace cse
 	};
 
 	PluginAPIManager						PluginAPIManager::Instance;
-	const UInt8								PluginAPIManager::kInterfaceVersion = 2;
+	const UInt8								PluginAPIManager::kInterfaceVersion = 3;
 
 	PluginAPIManager::PluginAPIManager() :
 		ConsolePrintCallbacks(),
@@ -171,10 +171,6 @@ namespace cse
 
 	void PluginAPIManager::PrintToRenderWindow(const char* Message, float DisplayDuration)
 	{
-		if (Instance.Initialized == false)
-			return;
-
-		if (renderWindow::RenderChannelNotifications)
-			renderWindow::RenderChannelNotifications->Queue(DisplayDuration, "%s", Message);
+		;// not supported anymore
 	}
 }

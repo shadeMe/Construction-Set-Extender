@@ -426,7 +426,7 @@ namespace cse
 			kChicken				= new AchievementBase("Chicken", "Well, at least the Daleks will be grateful for that...",
 															IDB_ACHIEVEMENT_CHICKEN, "D1A90233-3F6A-4F28-9B45-598070913B6A");
 
-			bgsee::extras::ExtenderAchievementListT AchievementDepot;
+			bgsee::extras::ExtenderAchievementArrayT AchievementDepot;
 
 			AchievementDepot.push_back(AchievementBase::AllClearAchievement);
 

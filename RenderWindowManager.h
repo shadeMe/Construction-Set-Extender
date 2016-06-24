@@ -1,16 +1,14 @@
 #pragma once
 #include "RenderWindowGroupManager.h"
 #include "PathGridUndoManager.h"
-#include "RenderWindowPainter.h"
+#include "RenderWindowOSD.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
 {
 	namespace renderWindow
 	{
-		class RenderWindowGroupManager;
 		class RenderWindowManager;
-		class PathGridUndoManager;
 
 		// modifes the scenegraph before rendering to the RW frame buffer
 		class IRenderWindowSceneGraphModifier
@@ -36,18 +34,21 @@ namespace cse
 
 		class RenderWindowSceneGraphManager
 		{
+			friend class RenderWindowManager;
 			typedef std::vector<IRenderWindowSceneGraphModifier*>		ModifierListT;
 
 			ModifierListT					Modifiers;
+
+			void							HandleRender(NiCamera* Camera,
+														 NiNode* SceneGraph,
+														 NiCullingProcess* CullingProc,
+														 BSRenderedTexture* RenderTarget);
 		public:
 			RenderWindowSceneGraphManager();
 			~RenderWindowSceneGraphManager();
 
 			void							AddModifier(IRenderWindowSceneGraphModifier* Mod);		// takes ownership of pointer
-			void							HandleRender(NiCamera* Camera,
-														 NiNode* SceneGraph,
-														 NiCullingProcess* CullingProc,
-														 BSRenderedTexture* RenderTarget);
+
 		};
 
 		class ReferenceParentChildIndicator : public IRenderWindowSceneGraphModifier
@@ -85,7 +86,8 @@ namespace cse
 			RenderWindowSelectionManager(RenderWindowGroupManager* GroupMan);
 			~RenderWindowSelectionManager();
 
-			void							AddToSelection(TESObjectREFR* Ref, bool SelectionBox);
+			void							AddToSelection(TESObjectREFR* Ref, bool SelectionBox) const;
+			bool							IsSelectable(TESObjectREFR* Ref) const;
 		};
 
 		class RenderWindowFlyCameraOperator : public bgsee::RenderWindowFlyCameraOperator
@@ -104,49 +106,73 @@ namespace cse
 			virtual void							RefreshRenderWindow(void);
 		};
 
+		class RenderWindowRecentCells;
+
 		// result = Vector3*
 #define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
 #define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
 
 
+
 		class RenderWindowManager
 		{
-			class RenderWindowDialogExtraData : public bgsee::WindowExtraData
+			class DialogExtraData : public bgsee::WindowExtraData
 			{
 			public:
 				bool				TunnelingKeyMessage;
 
-				RenderWindowDialogExtraData();
-				virtual ~RenderWindowDialogExtraData();
+				DialogExtraData();
+				virtual ~DialogExtraData();
 
 				enum { kTypeID = 'XRWM' };
 			};
 
-			static LRESULT CALLBACK		RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
-			static LRESULT CALLBACK		RenderWindowMiscSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
+			class GlobalEventSink : public SME::MiscGunk::IEventSink
+			{
+				RenderWindowManager*			Parent;
+			public:
+				GlobalEventSink(RenderWindowManager* Parent);
+
+				virtual void					Handle(SME::MiscGunk::IEventData* Data);
+			};
+
+			friend class GlobalEventSink;
+
+			static LRESULT CALLBACK						RenderWindowMenuInitSelectSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
+			static LRESULT CALLBACK						RenderWindowMasterSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool& Return, bgsee::WindowExtraDataCollection* ExtraData);
 
 			RenderWindowSceneGraphManager*				SceneGraphManager;
 			RenderWindowGroupManager*					GroupManager;
 			PathGridUndoManager*						PGUndoManager;
 			RenderWindowSelectionManager*				SelectionManager;
+			RenderWindowOSD*							OSD;
+			GlobalEventSink*							EventSink;
 
 			bool										Initialized;
+
+			void										HandleD3DRelease();
+			void										HandleD3DRenew();
+			void										HandleSceneGraphRender(NiCamera* Camera, NiNode* SceneGraph, NiCullingProcess* CullingProc, BSRenderedTexture* RenderTarget);
+			void										HandlePostSceneGraphRender();
 		public:
 			RenderWindowManager();
 			~RenderWindowManager();
 
-
-			bool										Initialize();
+			bool										Initialize();			// called before the render window is created
+			bool										InitializeOSD();		// separate as the renderer is only initialized after the main windows are created
 
 			RenderWindowSceneGraphManager*				GetSceneGraphManager() const;
 			RenderWindowGroupManager*					GetReferenceGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
+			RenderWindowOSD*							GetOSD() const;
 
 			static RenderWindowManager					Instance;
 		};
 
-#define _RENDERWIN_MGR				RenderWindowManager::Instance
+#define _RENDERWIN_MGR				renderWindow::RenderWindowManager::Instance
+
+
 
 		void Initialize(void);
 		void Deinitialize(void);

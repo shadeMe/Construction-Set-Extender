@@ -52,7 +52,6 @@ namespace cse
 		Form^												UseInfoListBox;
 
 		void												ClearLists();
-		void												Close();
 
 		void												PopulateFormList();
 		void												PopulateUseLists(const char* EditorID);
@@ -61,6 +60,7 @@ namespace cse
 		static UseInfoList^%								GetSingleton(void);
 
 		void												Open(const char* FilterString);
+		void												Close();
 	};
 
 #define USELST											UseInfoList::GetSingleton()

@@ -59,6 +59,8 @@ public:
 		void								RenderNode(NiCamera* Camera = NULL, NiNode* NodeToRender = NULL, BSRenderedTexture* RenderToTexture = NULL);
 		void								GetCameraPivot(Vector3* OutPivot, float ScaleFactor);
 
+		void								MoveReferenceSelection(int XOffset, int YOffset, bool AxisX, bool AxisY, bool AxisZ);
+
 		static PrimaryRenderer**			Singleton;
 	};
 	STATIC_ASSERT(sizeof(PrimaryRenderer) == 0x0C);
@@ -244,6 +246,8 @@ public:
 	static bool							GetCellInActiveGrid(TESObjectCELL* Cell);	// returns true if the cell is loaded/visible in the render window
 
 	static HWND*						WindowHandle;
+	static int*							ScreeWidth;
+	static int*							ScreeHeight;
 	static TESRenderSelection**			ClipboardSelection;
 	static UndoStack**					UndoBuffer;
 	static RubberBandSelection**		RubberBandSelector;

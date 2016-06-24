@@ -132,6 +132,7 @@ namespace componentDLLInterface
 		void										(* InitializeComponents)(void);
 
 		void										(* ShowUseInfoListDialog)(const char* FilterString);
+		void										(* HideUseInfoListDialog)(void);
 	};
 
 	class BSAViewerInterface

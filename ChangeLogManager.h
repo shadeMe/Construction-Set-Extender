@@ -31,10 +31,11 @@ namespace cse
 			BasicFormChangeEntry(UInt8 ChangeType, TESForm* Form, UInt32 Value);
 			virtual ~BasicFormChangeEntry();
 		};
-		
-		void							HandlePluginSave(TESFile* SaveFile);
-		void							HandlePluginLoadProlog();
-		void							HandlePluginLoadEpilog();
+
+		DECLARE_BASIC_EVENT_SINK(ChangeLogTESForm);
+		DECLARE_BASIC_EVENT_SINK(ChangeLogPreSave);
+		DECLARE_BASIC_EVENT_SINK(ChangeLogPreLoad);
+		DECLARE_BASIC_EVENT_SINK(ChangeLogPostLoad);
 
 		void Initialize(void);
 	}

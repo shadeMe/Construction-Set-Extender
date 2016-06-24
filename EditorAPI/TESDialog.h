@@ -782,7 +782,7 @@ public:
 
 	static void						RefreshFormList(void);
 	static void						SetSplitterEnabled(HWND Splitter, bool State);
-	static bool						IsMinimized(void);
+	static bool						GetMinimized(void);
 
 	// object window imposter wrappers
 	// caches must point to the calling imposter's child controls
