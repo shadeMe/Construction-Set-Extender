@@ -344,11 +344,12 @@ namespace cse
 			_hhSetVar(Call, 0x00505070);
 			__asm
 			{
+				call	_hhGetVar(Call)
+
 				pushad
 				call	hallOfFame::Initialize
 				popad
 
-				call	_hhGetVar(Call)
 				jmp		_hhGetVar(Retn)
 			}
 		}
@@ -1106,18 +1107,18 @@ namespace cse
 			if (Form->formType == TESForm::kFormType_Script)
 			{
 				Script* ThisScript = CS_CAST(Form, TESForm, Script);
-				ScriptMagicItemCrossRefListT EffectRefs;
+				ScriptMagicItemCrossRefArrayT EffectRefs;
 
 				ThisScript->GetEffectItemReferences(EffectRefs);
-				for (ScriptMagicItemCrossRefListT::iterator Itr = EffectRefs.begin(); Itr != EffectRefs.end(); ++Itr)
+				for (ScriptMagicItemCrossRefArrayT::iterator Itr = EffectRefs.begin(); Itr != EffectRefs.end(); ++Itr)
 					TESListView::InsertItem(ListView, *Itr);
 			}
 			else if ((Item = CS_CAST(Form, TESForm, MagicItem)))
 			{
-				MagicItemScriptCrossRefListT ScriptRefs;
+				MagicItemScriptCrossRefArrayT ScriptRefs;
 
 				Item->GetScriptReferences(ScriptRefs);
-				for (MagicItemScriptCrossRefListT::iterator Itr = ScriptRefs.begin(); Itr != ScriptRefs.end(); ++Itr)
+				for (MagicItemScriptCrossRefArrayT::iterator Itr = ScriptRefs.begin(); Itr != ScriptRefs.end(); ++Itr)
 					TESListView::InsertItem(ListView, *Itr);
 			}
 		}

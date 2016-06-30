@@ -64,7 +64,7 @@ namespace cse
 
 			if (Deserialize() == kState_Good)
 			{
-				ObjectRefCollectionDescriptorListT Description;
+				ObjectRefCollectionDescriptorArrayT Description;
 				Serializer->GetDescription(Description);
 
 				UInt32 Index = 0;
@@ -724,7 +724,7 @@ namespace cse
 		{
 			SME_ASSERT(Data);
 
-			for (PrefabObjectListT::iterator Itr = LoadedPrefabs.begin(); Itr != LoadedPrefabs.end(); Itr++)
+			for (PrefabObjectArrayT::iterator Itr = LoadedPrefabs.begin(); Itr != LoadedPrefabs.end(); Itr++)
 			{
 				if ((*Itr).get() == Data)
 				{

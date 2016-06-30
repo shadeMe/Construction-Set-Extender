@@ -562,7 +562,7 @@ namespace cse
 		return kSerializer_DefaultForm;
 	}
 
-	void ObjectRefCollectionInstantiator::GetPositionOffset(TESObjectREFRListT& InData, NiNode* CameraNode, Vector3& OutOffset)
+	void ObjectRefCollectionInstantiator::GetPositionOffset(TESObjectREFRArrayT& InData, NiNode* CameraNode, Vector3& OutOffset)
 	{
 		TESObjectSelection* Buffer = TESObjectSelection::CreateInstance();
 		for each (auto Itr in InData)
@@ -646,7 +646,7 @@ namespace cse
 			else
 			{
 				std::map<TESObjectREFR*, const char*> RefEditorIDMap;
-				TESObjectREFRListT RefBuffer;
+				TESObjectREFRArrayT RefBuffer;
 
 				for each (auto Itr in Serializer->LoadedFormBuffer)
 				{
@@ -786,13 +786,13 @@ namespace cse
 
 	bool ObjectRefCollectionInstantiator::CreatePreviewNode(ObjectRefCollectionSerializer* Data,
 															  TESPreviewControl* PreviewControl,
-															  TESFormListT& OutPreviewBaseForms,
-															  TESObjectREFRListT& OutPreviewRefs,
+															  TESFormArrayT& OutPreviewBaseForms,
+															  TESObjectREFRArrayT& OutPreviewRefs,
 															  NiNode** OutPreviewNode)
 	{
 		SME_ASSERT(Data && PreviewControl);
 
-		TESObjectREFRListT RefBuffer;
+		TESObjectREFRArrayT RefBuffer;
 		bool Result = true;
 
 		for each (auto Itr in Data->LoadedFormBuffer)
@@ -1028,7 +1028,7 @@ namespace cse
 	{
 		bool Result = true;
 
-		TESFormListT Validated;
+		TESFormArrayT Validated;
 		for each (auto Itr in LoadedFormBuffer)
 		{
 			TESObjectREFR* ThisRef = (TESObjectREFR*)Itr;
@@ -1171,7 +1171,7 @@ namespace cse
 			if (Result && Forms.size())
 			{
 				bool FormCheck = true;
-				TESFormListT RefBaseForms;
+				TESFormArrayT RefBaseForms;
 
 				for each (auto Itr in Forms)
 				{
@@ -1452,7 +1452,7 @@ namespace cse
 		return false;
 	}
 
-	void ObjectRefCollectionSerializer::GetDescription(ObjectRefCollectionDescriptorListT& Out) const
+	void ObjectRefCollectionSerializer::GetDescription(ObjectRefCollectionDescriptorArrayT& Out) const
 	{
 		Out.clear();
 

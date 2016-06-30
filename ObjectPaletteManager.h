@@ -47,13 +47,13 @@ namespace cse
 			static INT_PTR CALLBACK				DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 			static int CALLBACK					SortComparator(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
-			typedef std::vector<PaletteObjectHandleT>			PaletteObjectListT;
+			typedef std::vector<PaletteObjectHandleT>			PaletteObjectArrayT;
 
 			static const bgsee::ResourceLocation		kRepositoryPath;
 			static const char*							kPaletteFileExtension;
 
-			PaletteObjectListT		LoadedObjects;
-			PaletteObjectListT		CurrentSelection;
+			PaletteObjectArrayT		LoadedObjects;
+			PaletteObjectArrayT		CurrentSelection;
 
 			TESObjectREFR*			PreviewRef;
 
@@ -72,8 +72,8 @@ namespace cse
 			void					UpdateSelectionList();
 			void					RemoveSelection();
 
-			void					SaveObjects(const PaletteObjectListT& Objects, const char* Path) const;
-			bool					LoadObjects(PaletteObjectListT& OutObjects, const char* Path) const;			// returns false if an error was encountered
+			void					SaveObjects(const PaletteObjectArrayT& Objects, const char* Path) const;
+			bool					LoadObjects(PaletteObjectArrayT& OutObjects, const char* Path) const;			// returns false if an error was encountered
 
 			void					NewPalette();
 			void					SavePalette(bool NewFile);

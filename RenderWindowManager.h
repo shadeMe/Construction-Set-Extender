@@ -2,6 +2,7 @@
 #include "RenderWindowGroupManager.h"
 #include "PathGridUndoManager.h"
 #include "RenderWindowOSD.h"
+#include "RenderWindowCellLists.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
@@ -23,7 +24,7 @@ namespace cse
 			{
 				NiNode*				SceneGraph;
 				NiNode*				ExtraNode;			// default root node new geom can be added to
-				CellObjectListT		LoadedRefs;			// all the references in the current cell(grid)
+				TESObjectREFRArrayT		LoadedRefs;			// all the references in the current cell(grid)
 
 				RenderData(NiNode* SceneGraph, NiNode* ExtraNode);
 			};
@@ -35,9 +36,9 @@ namespace cse
 		class RenderWindowSceneGraphManager
 		{
 			friend class RenderWindowManager;
-			typedef std::vector<IRenderWindowSceneGraphModifier*>		ModifierListT;
+			typedef std::vector<IRenderWindowSceneGraphModifier*>		ModifierArrayT;
 
-			ModifierListT					Modifiers;
+			ModifierArrayT					Modifiers;
 
 			void							HandleRender(NiCamera* Camera,
 														 NiNode* SceneGraph,
@@ -47,7 +48,8 @@ namespace cse
 			RenderWindowSceneGraphManager();
 			~RenderWindowSceneGraphManager();
 
-			void							AddModifier(IRenderWindowSceneGraphModifier* Mod);		// takes ownership of pointer
+			void							AddModifier(IRenderWindowSceneGraphModifier* Mod);
+			void							RemoveModifier(IRenderWindowSceneGraphModifier* Mod);
 
 		};
 
@@ -63,19 +65,23 @@ namespace cse
 
 			virtual void					PreRender(RenderData& Data);
 			virtual void					PostRender(RenderData& Data);
+
+			static ReferenceParentChildIndicator			Instance;
 		};
 
 		class ReferenceVisibilityModifier : public IRenderWindowSceneGraphModifier
 		{
-			typedef std::vector<NiNode*>			NiNodeListT;
+			typedef std::vector<NiNode*>			NiNodeArrayT;
 
-			NiNodeListT								CulledRefBuffer;
+			NiNodeArrayT							CulledRefBuffer;
 		public:
 			ReferenceVisibilityModifier();
 			virtual ~ReferenceVisibilityModifier();
 
 			virtual void					PreRender(RenderData& Data);
 			virtual void					PostRender(RenderData& Data);
+
+			static ReferenceVisibilityModifier			Instance;
 		};
 
 
@@ -106,12 +112,11 @@ namespace cse
 			virtual void							RefreshRenderWindow(void);
 		};
 
-		class RenderWindowRecentCells;
+
 
 		// result = Vector3*
 #define WM_RENDERWINDOW_GETCAMERASTATICPIVOT	(WM_USER + 2005)
 #define WM_RENDERWINDOW_UPDATEFOV				(WM_USER + 2010)
-
 
 
 		class RenderWindowManager
@@ -146,6 +151,7 @@ namespace cse
 			PathGridUndoManager*						PGUndoManager;
 			RenderWindowSelectionManager*				SelectionManager;
 			RenderWindowOSD*							OSD;
+			RenderWindowCellLists*						CellLists;
 			GlobalEventSink*							EventSink;
 
 			bool										Initialized;
@@ -160,12 +166,11 @@ namespace cse
 
 			bool										Initialize();			// called before the render window is created
 			bool										InitializeOSD();		// separate as the renderer is only initialized after the main windows are created
+			void										Deinitialize();
 
-			RenderWindowSceneGraphManager*				GetSceneGraphManager() const;
 			RenderWindowGroupManager*					GetReferenceGroupManager() const;
 			PathGridUndoManager*						GetPathGridUndoManager() const;
 			RenderWindowSelectionManager*				GetSelectionManager() const;
-			RenderWindowOSD*							GetOSD() const;
 
 			static RenderWindowManager					Instance;
 		};

@@ -7,7 +7,7 @@ namespace cse
 		class PathGridUndoManager
 		{
 		public:
-			typedef std::vector<TESPathGridPoint*>		PathGridPointVectorT;
+			typedef std::vector<TESPathGridPoint*>		PathGridPointArrayT;
 
 			struct PathGridPointUndoProxy
 			{
@@ -16,7 +16,7 @@ namespace cse
 				TESPathGridPoint*						Parent;
 				Vector3									Position;
 				TESObjectREFR*							LinkedRef;
-				PathGridPointVectorT					LinkedPoints;
+				PathGridPointArrayT					LinkedPoints;
 				TESPathGrid*							ParentPathGrid;
 				TESObjectCELL*							ParentCell;
 				UInt8									Operation;
@@ -33,8 +33,8 @@ namespace cse
 			};
 		private:
 			typedef boost::shared_ptr<PathGridPointUndoProxy>		UndoProxyHandleT;
-			typedef std::vector<UndoProxyHandleT>					UndoProxyListT;
-			typedef std::stack<UndoProxyListT*>						UndoProxyStackT;
+			typedef std::vector<UndoProxyHandleT>					UndoProxyArrayT;
+			typedef std::stack<UndoProxyArrayT*>					UndoProxyStackT;
 
 			UndoProxyStackT								UndoStack;
 			UndoProxyStackT								RedoStack;

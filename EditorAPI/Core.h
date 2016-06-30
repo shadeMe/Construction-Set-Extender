@@ -253,8 +253,10 @@ public:
 																													// coord format: (x << 12) + 2048, (y << 12) + 2048
 	void							SetSkyTOD(float TOD);	// actually belongs to the Sky class
 	float							GetSkyTOD(void);		// this one too
+	void							SetCurrentWorldspace(TESWorldSpace* Worldspace);
 
 	void							PurgeLoadedResources();
+	TESObjectCELL*					GetCurrentCell() const;
 
 	static TES**					Singleton;
 };

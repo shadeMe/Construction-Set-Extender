@@ -122,3 +122,5 @@ public:
 
 	virtual TESObjectCELL*		GetChildCell() = 0;
 };
+
+typedef std::vector<TESObjectCELL*>		TESObjectCELLArrayT;

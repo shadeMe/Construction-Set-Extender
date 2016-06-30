@@ -2,7 +2,7 @@ To-Do
 =====
 
 IMMEDIATE  >>
-
+		> Update to C++11/14
 
 NOTE	---->
 		> http://www.creationkit.com/fallout4/index.php?title=New_Editor_Features
@@ -76,6 +76,7 @@ SE		---->
 
 
 	ENHANCEMENT		=
+		> Search/replace ignore comments toggle
 		> Document minimap
 		> Change margin
 

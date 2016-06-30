@@ -57,7 +57,7 @@ namespace cse
 		static const char*				kSigilDefaultForm;
 		static const char*				kSigilObjectRef;
 	protected:
-		TESFormListT					LoadedFormBuffer;		// stores loaded forms for deferred linking
+		TESFormArrayT					LoadedFormBuffer;		// stores loaded forms for deferred linking
 
 		void							FreeBuffer(void);
 
@@ -124,7 +124,7 @@ namespace cse
 	class ObjectRefCollectionInstantiator : public IFormCollectionInstantiator
 	{
 	protected:
-		void							GetPositionOffset(TESObjectREFRListT& InData, NiNode* CameraNode, Vector3& OutOffset);
+		void							GetPositionOffset(TESObjectREFRArrayT& InData, NiNode* CameraNode, Vector3& OutOffset);
 		TESObject*						InstantiateBaseForm(TESObjectREFR* Ref);
 	public:
 		virtual ~ObjectRefCollectionInstantiator();
@@ -136,8 +136,8 @@ namespace cse
 										// caller takes ownership of the output
 		bool							CreatePreviewNode(ObjectRefCollectionSerializer* Data,
 														  TESPreviewControl* PreviewControl,
-														  TESFormListT& OutPreviewBaseForms,
-														  TESObjectREFRListT& OutPreviewRefs,
+														  TESFormArrayT& OutPreviewBaseForms,
+														  TESObjectREFRArrayT& OutPreviewRefs,
 														  NiNode** OutPreviewNode);
 	};
 
@@ -161,7 +161,7 @@ namespace cse
 	};
 
 	typedef boost::shared_ptr<ObjectRefDescriptor>				ObjectRefDescriptorHandleT;
-	typedef std::vector<ObjectRefDescriptorHandleT>				ObjectRefCollectionDescriptorListT;
+	typedef std::vector<ObjectRefDescriptorHandleT>				ObjectRefCollectionDescriptorArrayT;
 
 	// includes a shallow copy of the refs' baseforms (dependencies are ignored)
 	class ObjectRefCollectionSerializer : public IFormCollectionSerializer
@@ -171,7 +171,7 @@ namespace cse
 		typedef std::map<TESObjectREFR*, TESObjectREFR*>		RefParentTableT;
 		typedef std::map<TESObjectREFR*, bool>					RefParentStateTableT;
 
-		TESFormListT					BaseFormDeserializatonBuffer;
+		TESFormArrayT					BaseFormDeserializatonBuffer;
 		RefParentTableT					ParentDeserializationBuffer;				// maps (loaded) refs to their parents
 		RefParentStateTableT			ParentStateDeserializationBuffer;			// maps (loaded) refs to their ESP opposite state
 		bool							StrictBaseFormResolution;					// if true, loaded refs' baseforms must resolve to an existing form; if not, they are discarded
@@ -195,6 +195,6 @@ namespace cse
 		virtual UInt8					GetType();
 
 		bool							GetHasTemporaryBaseForms() const;			// returns true if any of the loaded refs are dependent on a temp baseform
-		void							GetDescription(ObjectRefCollectionDescriptorListT& Out) const;
+		void							GetDescription(ObjectRefCollectionDescriptorArrayT& Out) const;
 	};
 }

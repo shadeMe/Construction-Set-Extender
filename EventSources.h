@@ -7,16 +7,26 @@ namespace cse
 	{
 		class TypedEventSource : public SME::MiscGunk::IEventSource
 		{
+			typedef std::vector<TypedEventSource*>		EventSourceArrayT;
+
+			static EventSourceArrayT&	GetRegistry();
+			static void					Unregister(TypedEventSource* Source);
+			static void					Register(TypedEventSource* Source);
 		protected:
 			UInt32					TypeID;
 		public:
 			TypedEventSource(UInt32 TypeID);
+			virtual ~TypedEventSource();
 
 			const UInt32			GetTypeID() const;
+
+			static void				Deinitialize();
 
 			enum
 			{
 				kType__BEGIN  = 0,
+
+				kType_Shutdown,										// when the editor shuts down
 
 				kType_Plugin_PreLoad,								// before a load plugins op
 				kType_Plugin_PostLoad,								// after a load plugins opp
@@ -29,13 +39,19 @@ namespace cse
 				kType_Renderer_PreMainSceneGraphRender,				// before the render window's viewport is rendered
 				kType_Renderer_PostMainSceneGraphRender,			// after the render window's viewport is rendered
 
-				kType_Dialog_CloseAll,								// when the editor's child dialogs are being closed
-
 				kType_Form_Instantiation,							// when a TESForm object is instantiated
 				kType_Form_SetActive,
 				kType_Form_SetDeleted,
 				kType_Form_SetFormID,
 				kType_Form_SetEditorID,
+
+				kType_Dialog_CloseAll,								// when the editor's child dialogs are being closed
+
+				kType__BEGIN_CELLVIEW,
+
+				kType_CellView_SelectCell,							// when a cell is selected in the cell list
+
+				kType__END_CELLVIEW,
 
 				kType__END
 			};
@@ -50,24 +66,66 @@ namespace cse
 			void				RaiseEvent() const;
 		};
 
+		class BasicTESFileEventSource : public TypedEventSource
+		{
+			BasicTESFileEventSource();
+		public:
+			BasicTESFileEventSource(UInt32 Type);
+
+			void				RaiseEvent(TESFile* File) const;
+		};
+
+		struct TESFileEventData : public SME::MiscGunk::IEventData
+		{
+			TESFile*			File;
+
+			TESFileEventData(const BasicTESFileEventSource* Source, TESFile* File);
+		};
+
+		class BasicTESFormEventSource : public TypedEventSource
+		{
+			BasicTESFormEventSource();
+		public:
+			BasicTESFormEventSource(UInt32 Type);
+
+			void						HandleInstantiation(TESForm* Form) const;
+			void						HandleSetActive(TESForm* Form, bool State) const;
+			void						HandleSetDeleted(TESForm* Form, bool State) const;
+			void						HandleSetFormID(TESForm* Form, UInt32 FormID) const;
+			void						HandleSetEditorID(TESForm* Form, const char* EditorID) const;
+		};
+
+		struct TESFormEventData : public SME::MiscGunk::IEventData
+		{
+			enum
+			{
+				kType_Instantiation = 0,
+				kType_SetActive,
+				kType_SetDeleted,
+				kType_SetFormID,
+				kType_SetEditorID
+			};
+
+			TESForm*			Form;
+			UInt8				EventType;
+			union
+			{
+				bool			ActiveState;
+				bool			DeletedState;
+				UInt32			NewFormID;
+				const char*		NewEditorID;
+			};
+
+			TESFormEventData(const BasicTESFormEventSource* Source, TESForm* Form, UInt8 Type);
+		};
+
+		namespace general
+		{
+			extern BasicEventSource					kShutdown;
+		}
+
 		namespace plugin
 		{
-			class BasicTESFileEventSource : public TypedEventSource
-			{
-				BasicTESFileEventSource();
-			public:
-				BasicTESFileEventSource(UInt32 Type);
-
-				void				RaiseEvent(TESFile* File) const;
-			};
-
-			struct TESFileEventData : public SME::MiscGunk::IEventData
-			{
-				TESFile*			File;
-
-				TESFileEventData(const BasicTESFileEventSource* Source, TESFile* File);
-			};
-
 			extern BasicEventSource					kPreLoad;
 			extern BasicEventSource					kPostLoad;
 			extern BasicTESFileEventSource			kPreSave;
@@ -107,48 +165,38 @@ namespace cse
 
 		namespace dialog
 		{
-			extern BasicEventSource			kCloseAll;
+			extern BasicEventSource						kCloseAll;
+
+			namespace cellView
+			{
+				class CellViewDialogEventSource : public TypedEventSource
+				{
+					CellViewDialogEventSource();
+				public:
+					CellViewDialogEventSource(UInt32 Type);
+
+					void				HandleSelectCell(TESObjectCELL* Cell) const;
+				};
+
+				struct CellViewDialogEventData : public SME::MiscGunk::IEventData
+				{
+					enum
+					{
+						kType_SelectCell = 0,
+					};
+
+					TESObjectCELL*			Cell;
+					UInt32					EventType;
+
+					CellViewDialogEventData(const CellViewDialogEventSource* Source, TESObjectCELL* Cell, UInt32 Type);
+				};
+
+				extern CellViewDialogEventSource		kSelectCell;
+			}
 		}
 
 		namespace form
 		{
-			class BasicTESFormEventSource : public TypedEventSource
-			{
-				BasicTESFormEventSource();
-			public:
-				BasicTESFormEventSource(UInt32 Type);
-
-				void						HandleInstantiation(TESForm* Form) const;
-				void						HandleSetActive(TESForm* Form, bool State) const;
-				void						HandleSetDeleted(TESForm* Form, bool State) const;
-				void						HandleSetFormID(TESForm* Form, UInt32 FormID) const;
-				void						HandleSetEditorID(TESForm* Form, const char* EditorID) const;
-			};
-
-			struct TESFormEventData : public SME::MiscGunk::IEventData
-			{
-				enum
-				{
-					kType_Instantiation = 0,
-					kType_SetActive,
-					kType_SetDeleted,
-					kType_SetFormID,
-					kType_SetEditorID
-				};
-
-				TESForm*			Form;
-				UInt8				EventType;
-				union
-				{
-					bool			ActiveState;
-					bool			DeletedState;
-					UInt32			NewFormID;
-					const char*		NewEditorID;
-				};
-
-				TESFormEventData(const BasicTESFormEventSource* Source, TESForm* Form, UInt8 Type);
-			};
-
 			extern BasicTESFormEventSource			kInstantiation;
 			extern BasicTESFormEventSource			kSetActive;
 			extern BasicTESFormEventSource			kSetDeleted;

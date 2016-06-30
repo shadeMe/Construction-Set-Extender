@@ -541,6 +541,11 @@ void TESCellViewWindow::RefreshCellList(bool RefreshWorldspaces /*= false*/)
 	SendMessage(*WindowHandle, 0x40E, RefreshWorldspaces, NULL);
 }
 
+void TESCellViewWindow::UpdateCurrentWorldspace()
+{
+	cdeclCall<void>(0x004086E0);
+}
+
 void TESObjectWindow::RefreshFormList(void)
 {
 	SendMessage(*TESObjectWindow::WindowHandle, 0x41A, NULL, NULL);

@@ -1,5 +1,4 @@
 #include "RenderWindowOSD.h"
-#include "IMGUI\imgui.h"
 #include <bgsee\RenderWindowFlyCamera.h>
 
 namespace cse
@@ -525,7 +524,7 @@ namespace cse
 		void RenderWindowOSD::GUILogic()
 		{
 			for each (auto Itr in AttachedLayers)
-				Itr->Draw();
+				Itr->Draw(this, Pipeline);
 
 			RenderSelectionControls();
 
@@ -555,36 +554,46 @@ namespace cse
 
 		RenderWindowOSD::~RenderWindowOSD()
 		{
+			DEBUG_ASSERT(Initialized == false);
+			DEBUG_ASSERT(AttachedLayers.size() == 0);
+
 			SAFEDELETE(Pipeline);
-
-			for each (auto Itr in AttachedLayers)
-				delete Itr;
-
 			AttachedLayers.clear();
-			Initialized = false;
 		}
 
 		bool RenderWindowOSD::Initialize()
 		{
 			SME_ASSERT(Initialized == false);
+			SME_ASSERT(_NIRENDERER);
 
 			Pipeline->Initialize(*TESRenderWindow::WindowHandle, _NIRENDERER->device);
 			BGSEEUI->GetSubclasser()->RegisterDialogSubclass(TESDialog::kDialogTemplate_RenderWindow, OSDSubclassProc);
 			SendMessage(*TESRenderWindow::WindowHandle, WM_RENDERWINDOWOSD_INITXDATA, NULL, (LPARAM)new DialogExtraData(this));
 
-			AttachLayer(new DefaultOverlayOSDLayer());
-			AttachLayer(new MouseOverTooltipOSDLayer());
-			AttachLayer(new NotificationOSDLayer());
+			AttachLayer(&DefaultOverlayOSDLayer::Instance);
+			AttachLayer(&MouseOverTooltipOSDLayer::Instance);
+			AttachLayer(&NotificationOSDLayer::Instance);
 
 			Initialized = true;
 
 			return Initialized;
 		}
 
+		void RenderWindowOSD::Deinitialize()
+		{
+			SME_ASSERT(Initialized);
+
+			DetachLayer(&DefaultOverlayOSDLayer::Instance);
+			DetachLayer(&MouseOverTooltipOSDLayer::Instance);
+			DetachLayer(&NotificationOSDLayer::Instance);
+
+			Initialized = false;
+		}
+
 		void RenderWindowOSD::Render()
 		{
 			if (Initialized)
-			{;
+			{
 				ImGui::Render();
 			}
 		}
@@ -597,6 +606,15 @@ namespace cse
 				BGSEECONSOLE_MESSAGE("Attempting to re-add the same OSD layer");
 			else
 				AttachedLayers.push_back(Layer);
+		}
+
+		void RenderWindowOSD::DetachLayer(IRenderWindowOSDLayer* Layer)
+		{
+			SME_ASSERT(Layer);
+
+			LayerArrayT::iterator Match = std::find(AttachedLayers.begin(), AttachedLayers.end(), Layer);
+			if (Match != AttachedLayers.end())
+				AttachedLayers.erase(Match);
 		}
 
 		void RenderWindowOSD::HandleD3DRelease()
@@ -618,14 +636,14 @@ namespace cse
 				return Pipeline->NeedsInput();
 		}
 
-
+		DefaultOverlayOSDLayer		DefaultOverlayOSDLayer::Instance;
 
 		DefaultOverlayOSDLayer::~DefaultOverlayOSDLayer()
 		{
 			;//
 		}
 
-		void DefaultOverlayOSDLayer::Draw()
+		void DefaultOverlayOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			ImGui::SetNextWindowPos(ImVec2(10, 10));
 			if (!ImGui::Begin("Default Info Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBringToFrontOnFocus))
@@ -653,10 +671,10 @@ namespace cse
 				ImGui::Separator();
 			}
 
-			if (settings::renderWindowPainter::kShowSelectionStats.GetData().i && _RENDERSEL->selectionCount)
+			if (settings::renderWindowOSD::kShowSelectionStats.GetData().i && _RENDERSEL->selectionCount)
 			{
 				int R, G, B;
-				SME::StringHelpers::GetRGB(settings::renderWindowPainter::kColorSelectionStats().s, R, G, B);
+				SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorSelectionStats().s, R, G, B);
 				char Buffer[0x200] = { 0 };
 
 				if (_RENDERSEL->selectionCount > 1)
@@ -690,7 +708,7 @@ namespace cse
 									   Selection->parentCell->cellData.coords->x, Selection->parentCell->cellData.coords->y);
 						}
 
-						FORMAT_STR(Buffer, "%s(%08X) BASE[%s(%08X)]\nP[%.04f, %.04f, %.04f]\nR[%.04f, %.04f, %.04f]\nS[%.04f]\nFlags: %s %s %s %s %s %s%s%s",
+						FORMAT_STR(Buffer, "%s(%08X) Base Form: %s(%08X)\nPosition: %.04f, %.04f, %.04f\nRotation: %.04f, %.04f, %.04f\nScale: %.04f\nFlags: %s %s %s %s %s %s%s%s",
 							((Selection->editorID.Size()) ? (Selection->editorID.c_str()) : ("")), Selection->formID,
 								   ((Selection->baseForm->editorID.Size()) ? (Selection->baseForm->editorID.c_str()) : ("")), Selection->baseForm->formID,
 								   Selection->position.x, Selection->position.y, Selection->position.z,
@@ -714,10 +732,10 @@ namespace cse
 				ImGui::Separator();
 			}
 
-			if (settings::renderWindowPainter::kShowRAMUsage.GetData().i)
+			if (settings::renderWindowOSD::kShowRAMUsage.GetData().i)
 			{
 				int R, G, B;
-				SME::StringHelpers::GetRGB(settings::renderWindowPainter::kColorRAMUsage().s, R, G, B);
+				SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorRAMUsage().s, R, G, B);
 
 				PROCESS_MEMORY_COUNTERS_EX MemCounter = { 0 };
 				if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&MemCounter, sizeof(MemCounter)))
@@ -727,6 +745,7 @@ namespace cse
 				}
 			}
 
+			ImGui::Text("Avg. %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::End();
 		}
 
@@ -735,14 +754,18 @@ namespace cse
 			return false;
 		}
 
+		MouseOverTooltipOSDLayer	MouseOverTooltipOSDLayer::Instance;
+
 		MouseOverTooltipOSDLayer::~MouseOverTooltipOSDLayer()
 		{
 			;//
 		}
 
-		void MouseOverTooltipOSDLayer::Draw()
+		void MouseOverTooltipOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
-			if (*TESRenderWindow::PathGridEditFlag == 0 && TESRenderWindow::CurrentMouseRef == NULL)
+			if (OSD->NeedsInput())
+				return;
+			else if (*TESRenderWindow::PathGridEditFlag == 0 && TESRenderWindow::CurrentMouseRef == NULL)
 				return;
 			else if (*TESRenderWindow::PathGridEditFlag && TESRenderWindow::CurrentMousePathGridPoint == NULL)
 				return;
@@ -758,27 +781,28 @@ namespace cse
 				SME_ASSERT(Base);
 
 				if (Base->GetEditorID())
-					FORMAT_STR(BaseBuffer, "BASE(%s)", Base->GetEditorID());
+					FORMAT_STR(BaseBuffer, "Base Form: %s", Base->GetEditorID());
 				else
-					FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
+					FORMAT_STR(BaseBuffer, "Base Form: %08X", Base->formID);
 
 				BSExtraData* xData = Ref->extraData.GetExtraDataByType(BSExtraData::kExtra_EnableStateParent);
 				char xBuffer[0x50] = { 0 };
 				if (xData)
 				{
 					ExtraEnableStateParent* xParent = CS_CAST(xData, BSExtraData, ExtraEnableStateParent);
-					FORMAT_STR(xBuffer, "\nPARENT[%s%s%08X%s] OPPOSITE(%d)",
-						((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
-							   (xParent->parent->editorID.Size() ? "(" : ""),
-							   xParent->parent->formID,
-							   (xParent->parent->editorID.Size() ? ")" : ""),
-							   xParent->oppositeState);
+					FORMAT_STR(xBuffer, "\nEnable-state Parent: %s%s%08X%s, Opposite State: %d",
+							((xParent->parent->editorID.Size()) ? (xParent->parent->editorID.c_str()) : ("")),
+							(xParent->parent->editorID.Size() ? "(" : ""),
+							xParent->parent->formID,
+							(xParent->parent->editorID.Size() ? ")" : ""),
+							xParent->oppositeState);
 				}
 
-				FORMAT_STR(Buffer, "%s%s%08X) %s%s",
+				FORMAT_STR(Buffer, "%s%s%08X%s %s%s",
 					(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
-						   (Ref->GetEditorID() ? "(" : "REF("),
+						   (Ref->GetEditorID() ? "(" : ""),
 						   Ref->formID,
+						   (Ref->GetEditorID() ? ")" : ""),
 						   BaseBuffer,
 						   xBuffer);
 			}
@@ -792,11 +816,11 @@ namespace cse
 				SME_ASSERT(Base);
 
 				if (Base->GetEditorID())
-					FORMAT_STR(BaseBuffer, "BASE(%s)", Base->GetEditorID());
+					FORMAT_STR(BaseBuffer, "Base Form: %s", Base->GetEditorID());
 				else
-					FORMAT_STR(BaseBuffer, "BASE(%08X)", Base->formID);
+					FORMAT_STR(BaseBuffer, "Base Form: %08X", Base->formID);
 
-				FORMAT_STR(Buffer, "LINKED REF[%s%s%08X%s %s]",
+				FORMAT_STR(Buffer, "Linked Reference: %s%s%08X%s %s",
 					(Ref->GetEditorID() ? Ref->GetEditorID() : ""),
 						   (Ref->GetEditorID() ? "(" : ""),
 						   Ref->formID,
@@ -812,7 +836,8 @@ namespace cse
 			return false;
 		}
 
-		NotificationOSDLayer*		NotificationOSDLayer::Singleton = NULL;
+
+		NotificationOSDLayer		NotificationOSDLayer::Instance;
 
 		NotificationOSDLayer::Notification::Notification(std::string Message) :
 			Message(Message),
@@ -839,17 +864,17 @@ namespace cse
 		NotificationOSDLayer::NotificationOSDLayer() :
 			Notifications()
 		{
-			SME_ASSERT(Singleton == NULL);
-			Singleton = this;
+			;//
 		}
 
 
 		NotificationOSDLayer::~NotificationOSDLayer()
 		{
-			Singleton = NULL;
+			while (Notifications.size())
+				Notifications.pop();
 		}
 
-		void NotificationOSDLayer::Draw()
+		void NotificationOSDLayer::Draw(RenderWindowOSD* OSD, ImGuiDX9* GUI)
 		{
 			if (HasNotifications() == false)
 				return;
@@ -863,7 +888,7 @@ namespace cse
 			}
 
 			int R, G, B;
-			SME::StringHelpers::GetRGB(settings::renderWindowPainter::kColorNotifications().s, R, G, B);
+			SME::StringHelpers::GetRGB(settings::renderWindowOSD::kColorNotifications().s, R, G, B);
 			ImGui::TextColored(ImColor(R, G, B), "%s", GetNextNotification().Message.c_str());
 			ImGui::End();
 		}
@@ -896,7 +921,6 @@ namespace cse
 
 		void NotificationOSDLayer::ShowNotification(const char* Format, ...)
 		{
-			SME_ASSERT(Singleton);
 			if (Format == NULL)
 				return;
 
@@ -907,8 +931,9 @@ namespace cse
 			va_end(Args);
 
 			if (strlen(Buffer))
-				Singleton->Notifications.push(Notification(Buffer));
+				Notifications.push(Notification(Buffer));
 		}
+
 
 
 	}

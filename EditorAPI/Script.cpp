@@ -5,7 +5,7 @@ using namespace cse;
 
 TESScriptCompiler::_ShowMessage			TESScriptCompiler::ShowMessage = (TESScriptCompiler::_ShowMessage)0x004FFF40;
 bool									TESScriptCompiler::PreventErrorDetours = false;
-TESScriptCompiler::CompilerErrorListT	TESScriptCompiler::AuxiliaryErrorDepot;
+TESScriptCompiler::CompilerErrorArrayT	TESScriptCompiler::AuxiliaryErrorDepot;
 
 Script::VariableInfo* Script::LookupVariableInfoByName(const char* Name)
 {
@@ -81,7 +81,7 @@ void TESScriptCompiler::ToggleScriptCompilation( bool State )
 		hooks::_MemHdlr(ToggleScriptCompilingOriginalData).WriteBuffer();
 }
 
-UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefListT& OutList)
+UInt32 Script::GetEffectItemReferences(ScriptMagicItemCrossRefArrayT& OutList)
 {
 	OutList.clear();
 

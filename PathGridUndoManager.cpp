@@ -48,7 +48,7 @@ namespace cse
 		{
 			SME_ASSERT(Deleted == false);
 
-			for (PathGridPointVectorT::iterator Itr = LinkedPoints.begin(); Itr != LinkedPoints.end(); Itr++)
+			for (PathGridPointArrayT::iterator Itr = LinkedPoints.begin(); Itr != LinkedPoints.end(); Itr++)
 			{
 				if (*Itr == Point)
 				{
@@ -71,7 +71,7 @@ namespace cse
 				if (LinkedRef)
 					Point->LinkToReference(LinkedRef);
 
-				for (PathGridPointVectorT::iterator Itr = LinkedPoints.begin(); Itr != LinkedPoints.end(); Itr++)
+				for (PathGridPointArrayT::iterator Itr = LinkedPoints.begin(); Itr != LinkedPoints.end(); Itr++)
 				{
 					Point->LinkPoint(*Itr);
 				}
@@ -174,7 +174,7 @@ namespace cse
 
 			while (Stack->size())
 			{
-				UndoProxyListT* ProxyList = Stack->top();
+				UndoProxyArrayT* ProxyList = Stack->top();
 				Stack->pop();
 
 				ProxyList->clear();
@@ -184,14 +184,14 @@ namespace cse
 
 		void PathGridUndoManager::HandlePointDeletionOnStack(UndoProxyStackT* Stack, PathGridPointListT* Selection)
 		{
-			std::list<UndoProxyListT*> StackBuffer;
+			std::list<UndoProxyArrayT*> StackBuffer;
 
 			while (Stack->size())
 			{
-				UndoProxyListT* ProxyList = Stack->top();
+				UndoProxyArrayT* ProxyList = Stack->top();
 				Stack->pop();
 
-				for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
+				for (UndoProxyArrayT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
 				{
 					UndoProxyHandleT Proxy(*Itr);
 
@@ -207,13 +207,13 @@ namespace cse
 				StackBuffer.push_back(ProxyList);
 			}
 
-			for (std::list<UndoProxyListT*>::reverse_iterator Itr = StackBuffer.rbegin(); Itr != StackBuffer.rend(); Itr++)
+			for (std::list<UndoProxyArrayT*>::reverse_iterator Itr = StackBuffer.rbegin(); Itr != StackBuffer.rend(); Itr++)
 				Stack->push(*Itr);
 		}
 
 		void PathGridUndoManager::RecordOperation(UInt8 Operation, PathGridPointListT* Selection)
 		{
-			UndoProxyListT* ProxyList = new UndoProxyListT();
+			UndoProxyArrayT* ProxyList = new UndoProxyArrayT();
 
 			for (PathGridPointListT::Iterator Itr = Selection->Begin(); !Itr.End() && Itr.Get(); ++Itr)
 			{
@@ -231,14 +231,14 @@ namespace cse
 
 			if (Stack->size())
 			{
-				UndoProxyListT* ProxyList = NULL;
+				UndoProxyArrayT* ProxyList = NULL;
 
 				do
 				{
 					ProxyList = Stack->top();
 					Stack->pop();
 
-					for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end();)
+					for (UndoProxyArrayT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end();)
 					{
 						if ((*Itr)->Deleted)
 							Itr = ProxyList->erase(Itr);
@@ -261,9 +261,9 @@ namespace cse
 				if (ProxyList == NULL)
 					return;
 
-				UndoProxyListT* AltProxyList = new UndoProxyListT();
+				UndoProxyArrayT* AltProxyList = new UndoProxyArrayT();
 
-				for (UndoProxyListT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
+				for (UndoProxyArrayT::iterator Itr = ProxyList->begin(); Itr != ProxyList->end(); Itr++)
 				{
 					SME_ASSERT((*Itr)->Deleted == false);
 

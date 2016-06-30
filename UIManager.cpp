@@ -2625,7 +2625,7 @@ namespace cse
 						SendMessage(*TESObjectLAND::WindowHandle, TESDialog::kWindowMessage_Refresh, NULL, NULL);
 						SetForegroundWindow(*TESRenderWindow::WindowHandle);
 
-						renderWindow::NotificationOSDLayer::ShowNotification("Active landscape texture changed");
+						renderWindow::NotificationOSDLayer::Instance.ShowNotification("Active landscape texture changed");
 					}
 
 					break;

@@ -86,6 +86,9 @@
 #include <boost\shared_array.hpp>
 #include <boost\intrusive_ptr.hpp>
 #include <boost\weak_ptr.hpp>
+#include <boost\filesystem.hpp>
+
+namespace bfs = boost::filesystem;
 
 // xSE Common
 #include <ITypes.h>
@@ -105,16 +108,16 @@
 #include <MiscGunk.h>
 #include <MersenneTwister.h>
 
+using namespace SME;
+using namespace SME::INI;
+using namespace SME::MemoryHandler;
+using namespace SME::Functors;
+
 // OBSE
 #include "obse_common\obse_version.h"
 #include "obse\PluginAPI.h"
 #include "obse\GameTypes.h"
 #include "obse\Utilities.h"
-
-using namespace SME;
-using namespace SME::INI;
-using namespace SME::MemoryHandler;
-using namespace SME::Functors;
 
 // BGSEEBASE
 #include <bgsee\Console.h>
@@ -122,9 +125,18 @@ using namespace SME::Functors;
 
 
 // CSE
+#include "Main.h"
 #include "EditorAPI\TESEditorAPI.h"
 #include "Settings.h"
 #include "EventSources.h"
 #include "EventSinks.h"
+#include "Serialization.h"
 
-#define PI					3.151592653589793
+#define PI						3.151592653589793
+
+// required for assertions in d'tors (for static instances) as we don't want it to trigger the crash handler recursively
+#ifdef NDEBUG
+#define DEBUG_ASSERT(expr)		(void)( (!!(expr)) || (BGSEECONSOLE_MESSAGE("Debug assertion failed in %s, line %s!", __FILE__, __LINE__)) )
+#else
+#define DEBUG_ASSERT(expr)		SME_ASSERT(expr)
+#endif

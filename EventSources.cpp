@@ -12,11 +12,58 @@ namespace cse
 			TypeID(TypeID)
 		{
 			SME_ASSERT(TypeID > kType__BEGIN && TypeID < kType__END);
+			Register(this);
 		}
 
 		const UInt32 TypedEventSource::GetTypeID() const
 		{
 			return TypeID;
+		}
+
+		TypedEventSource::~TypedEventSource()
+		{
+			DEBUG_ASSERT(Sinks.size() == 0);
+			Unregister(this);
+		}
+
+		TypedEventSource::EventSourceArrayT& TypedEventSource::GetRegistry()
+		{
+			static EventSourceArrayT kRegistry;
+			return kRegistry;
+		}
+
+		void TypedEventSource::Register(TypedEventSource* Source)
+		{
+			EventSourceArrayT& Registry = GetRegistry();
+			EventSourceArrayT::iterator Match = std::find(Registry.begin(), Registry.end(), Source);
+			DEBUG_ASSERT(Match == Registry.end());
+
+			GetRegistry().push_back(Source);
+		}
+
+		void TypedEventSource::Unregister(TypedEventSource * Source)
+		{
+			EventSourceArrayT& Registry = GetRegistry();
+			EventSourceArrayT::iterator Match = std::find(Registry.begin(), Registry.end(), Source);
+			DEBUG_ASSERT(Match != Registry.end());
+
+			Registry.erase(Match);
+		}
+
+		void TypedEventSource::Deinitialize()
+		{
+			EventSourceArrayT& Registry = GetRegistry();
+			bool HasActiveSinks = false;
+			for each (auto Itr in Registry)
+			{
+				if (Itr->Sinks.size())
+				{
+					HasActiveSinks = true;
+					BGSEECONSOLE_MESSAGE("TypedEventSource %d has %d active sinks at shutdown", (UInt32)Itr->TypeID, Itr->Sinks.size());
+				}
+			}
+
+			SME_ASSERT(HasActiveSinks == false);
 		}
 
 		BasicEventSource::BasicEventSource(UInt32 Type) :
@@ -31,28 +78,83 @@ namespace cse
 			Dispatch(&Data);
 		}
 
-		namespace plugin
+		BasicTESFileEventSource::BasicTESFileEventSource(UInt32 Type) :
+			TypedEventSource(Type)
+		{
+			;//
+		}
+
+		void BasicTESFileEventSource::RaiseEvent(TESFile* File) const
+		{
+			TESFileEventData Data(this, File);
+			Dispatch(&Data);
+		}
+
+		TESFileEventData::TESFileEventData(const BasicTESFileEventSource* Source, TESFile* File) :
+			IEventData(Source),
+			File(File)
+		{
+			;//
+		}
+
+		TESFormEventData::TESFormEventData(const BasicTESFormEventSource* Source, TESForm* Form, UInt8 Type) :
+			IEventData(Source),
+			Form(Form),
+			EventType(Type)
+		{
+			NewEditorID = NULL;
+			NewFormID = 0;
+			ActiveState = false;
+			DeletedState = false;
+		}
+
+		BasicTESFormEventSource::BasicTESFormEventSource(UInt32 Type) :
+			TypedEventSource(Type)
 		{
 
-			BasicTESFileEventSource::BasicTESFileEventSource(UInt32 Type) :
-				TypedEventSource(Type)
-			{
-				;//
-			}
+		}
 
-			void BasicTESFileEventSource::RaiseEvent(TESFile* File) const
-			{
-				TESFileEventData Data(this, File);
-				Dispatch(&Data);
-			}
+		void BasicTESFormEventSource::HandleInstantiation(TESForm* Form) const
+		{
+			TESFormEventData Data(this, Form, TESFormEventData::kType_Instantiation);
+			Dispatch(&Data);
+		}
 
-			TESFileEventData::TESFileEventData(const BasicTESFileEventSource* Source, TESFile* File) :
-				IEventData(Source),
-				File(File)
-			{
-				;//
-			}
+		void BasicTESFormEventSource::HandleSetActive(TESForm* Form, bool State) const
+		{
+			TESFormEventData Data(this, Form, TESFormEventData::kType_SetActive);
+			Data.ActiveState = State;
+			Dispatch(&Data);
+		}
 
+		void BasicTESFormEventSource::HandleSetDeleted(TESForm* Form, bool State) const
+		{
+			TESFormEventData Data(this, Form, TESFormEventData::kType_SetDeleted);
+			Data.DeletedState = State;
+			Dispatch(&Data);
+		}
+
+		void BasicTESFormEventSource::HandleSetFormID(TESForm* Form, UInt32 FormID) const
+		{
+			TESFormEventData Data(this, Form, TESFormEventData::kType_SetFormID);
+			Data.NewFormID = FormID;
+			Dispatch(&Data);
+		}
+
+		void BasicTESFormEventSource::HandleSetEditorID(TESForm* Form, const char* EditorID) const
+		{
+			TESFormEventData Data(this, Form, TESFormEventData::kType_SetEditorID);
+			Data.NewEditorID = EditorID;
+			Dispatch(&Data);
+		}
+
+		namespace general
+		{
+			BasicEventSource					kShutdown(TypedEventSource::kType_Shutdown);
+		}
+
+		namespace plugin
+		{
 			BasicEventSource					kPreLoad(TypedEventSource::kType_Plugin_PreLoad);
 			BasicEventSource					kPostLoad(TypedEventSource::kType_Plugin_PostLoad);
 			BasicTESFileEventSource				kPreSave(TypedEventSource::kType_Plugin_PreSave);
@@ -92,65 +194,37 @@ namespace cse
 
 		namespace dialog
 		{
+			namespace cellView
+			{
+
+				CellViewDialogEventSource::CellViewDialogEventSource(UInt32 Type) :
+					TypedEventSource(Type)
+				{
+					SME_ASSERT(Type > kType__BEGIN_CELLVIEW && Type < kType__END_CELLVIEW);
+				}
+
+				void CellViewDialogEventSource::HandleSelectCell(TESObjectCELL* Cell) const
+				{
+					CellViewDialogEventData Data(this, Cell, CellViewDialogEventData::kType_SelectCell);
+					Dispatch(&Data);
+				}
+
+				CellViewDialogEventData::CellViewDialogEventData(const CellViewDialogEventSource* Source, TESObjectCELL* Cell, UInt32 Type) :
+					IEventData(Source),
+					Cell(Cell),
+					EventType(Type)
+				{
+					SME_ASSERT(Cell);
+				}
+
+				CellViewDialogEventSource			kSelectCell(TypedEventSource::kType_CellView_SelectCell);
+			}
+
 			BasicEventSource						kCloseAll(TypedEventSource::kType_Dialog_CloseAll);
 		}
 
 		namespace form
 		{
-
-			TESFormEventData::TESFormEventData(const BasicTESFormEventSource* Source, TESForm* Form, UInt8 Type) :
-				IEventData(Source),
-				Form(Form),
-				EventType(Type)
-			{
-				NewEditorID = NULL;
-				NewFormID = 0;
-				ActiveState = false;
-				DeletedState = false;
-			}
-
-			BasicTESFormEventSource::BasicTESFormEventSource(UInt32 Type) :
-				TypedEventSource(Type)
-			{
-
-			}
-
-			void BasicTESFormEventSource::HandleInstantiation(TESForm* Form) const
-			{
-				TESFormEventData Data(this, Form, TESFormEventData::kType_Instantiation);
-				Dispatch(&Data);
-			}
-
-			void BasicTESFormEventSource::HandleSetActive(TESForm* Form, bool State) const
-			{
-				TESFormEventData Data(this, Form, TESFormEventData::kType_SetActive);
-				Data.ActiveState = State;
-				Dispatch(&Data);
-			}
-
-			void BasicTESFormEventSource::HandleSetDeleted(TESForm* Form, bool State) const
-			{
-				TESFormEventData Data(this, Form, TESFormEventData::kType_SetDeleted);
-				Data.DeletedState = State;
-				Dispatch(&Data);
-			}
-
-			void BasicTESFormEventSource::HandleSetFormID(TESForm* Form, UInt32 FormID) const
-			{
-				TESFormEventData Data(this, Form, TESFormEventData::kType_SetFormID);
-				Data.NewFormID = FormID;
-				Dispatch(&Data);
-			}
-
-			void BasicTESFormEventSource::HandleSetEditorID(TESForm* Form, const char* EditorID) const
-			{
-				TESFormEventData Data(this, Form, TESFormEventData::kType_SetEditorID);
-				Data.NewEditorID = EditorID;
-				Dispatch(&Data);
-			}
-
-
-
 			BasicTESFormEventSource			kInstantiation(TypedEventSource::kType_Form_Instantiation);
 			BasicTESFormEventSource			kSetActive(TypedEventSource::kType_Form_SetActive);
 			BasicTESFormEventSource			kSetDeleted(TypedEventSource::kType_Form_SetDeleted);
@@ -165,26 +239,7 @@ namespace cse
 
 		void DeinitializeSources()
 		{
-			plugin::kPreLoad.ClearSinks();
-			plugin::kPostLoad.ClearSinks();
-			plugin::kPreSave.ClearSinks();
-			plugin::kPostSave.ClearSinks();
-			plugin::kClearData.ClearSinks();
-
-			renderer::kRelease.ClearSinks();
-			renderer::kRenew.ClearSinks();
-			renderer::kPreSceneGraphRender.ClearSinks();
-			renderer::kPostSceneGraphRender.ClearSinks();
-
-			dialog::kCloseAll.ClearSinks();
-
-			form::kInstantiation.ClearSinks();
-			form::kSetActive.ClearSinks();
-			form::kSetDeleted.ClearSinks();
-			form::kSetFormID.ClearSinks();
-			form::kSetEditorID.ClearSinks();
+			TypedEventSource::Deinitialize();
 		}
-
-
 	}
 }

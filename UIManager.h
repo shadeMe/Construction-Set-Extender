@@ -71,9 +71,9 @@ namespace cse
 				bool					operator==(HWND FilterEditBox);
 			};
 
-			typedef std::vector<FilterableWindowData*>	FilterDataListT;
+			typedef std::vector<FilterableWindowData*>	FilterDataArrayT;
 
-			FilterDataListT				ActiveFilters;
+			FilterDataArrayT				ActiveFilters;
 
 			FilterableWindowData*		Lookup(HWND FilterEdit);
 		public:
@@ -181,7 +181,7 @@ namespace cse
 			enum { kTypeID = 'XMTD' };
 		};
 
-		
+
 
 		class TESFormEditData : public bgsee::WindowExtraData
 		{

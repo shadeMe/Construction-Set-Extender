@@ -100,7 +100,7 @@ void TESRenderWindow::Refresh3D()
 	SendMessage(*WindowHandle, WM_KEYDOWN, VK_F5, NULL);
 }
 
-UInt32 TESRenderWindow::GetActiveCellObjects(CellObjectListT& OutList, CellObjectListVisitor Visitor)
+UInt32 TESRenderWindow::GetActiveCellObjects(TESObjectREFRArrayT& OutList, CellObjectListVisitor Visitor)
 {
 	OutList.clear();
 

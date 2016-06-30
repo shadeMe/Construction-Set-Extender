@@ -59,7 +59,6 @@ namespace cse
 
 		namespace renderer
 		{
-			extern INISetting					kUpdatePeriod;
 			extern INISetting					kAltRefMovementSpeed;
 			extern INISetting					kAltRefSnapGrid;
 			extern INISetting					kAltRefRotationSpeed;
@@ -86,14 +85,12 @@ namespace cse
 			};
 		}
 
-		namespace renderWindowPainter
+		namespace renderWindowOSD
 		{
 			extern INISetting					kShowSelectionStats;
 			extern INISetting					kShowRAMUsage;
 			extern INISetting					kShowMouseRef;
 			extern INISetting					kMouseRefCtrlModified;
-			extern INISetting					kFontFace;
-			extern INISetting					kFontSize;
 
 			extern INISetting					kColorSelectionStats;
 			extern INISetting					kColorRAMUsage;

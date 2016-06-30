@@ -89,6 +89,7 @@ namespace cse
 #define BGSEEMAIN_EXTENDERLONGNAME		"Construction Set Extender"
 #define BGSEEMAIN_EXTENDERSHORTNAME		"CSE"
 
+// bgsee::ResourceLocation paths
 #define CSE_CODADEPOT					"Coda\\"
 #define CSE_CODABGDEPOT					"Coda\\Background\\"
 #define CSE_SEDEPOT						"Script Editor\\"
@@ -98,6 +99,7 @@ namespace cse
 #define CSE_SEAUTORECDEPOT				"Script Editor\\Auto-Recovery Cache\\"
 #define CSE_OPALDEPOT					"OPAL\\"
 #define CSE_PREFABDEPOT					"Object Prefabs\\"
+#define CSE_COSAVEDEPOT					"Plugin Cosaves\\"
 }
 
 extern "C"

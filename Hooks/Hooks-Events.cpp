@@ -38,6 +38,7 @@ namespace cse
 			events::renderer::_MemHdlr(PostSceneGraphRender).WriteJump();
 
 			events::dialog::_MemHdlr(CloseAll).WriteJump();
+			events::dialog::cellView::_MemHdlr(SelectCell).WriteJump();
 		}
 
 		namespace events
@@ -180,7 +181,7 @@ namespace cse
 						push	eax
 						push	ecx
 						lea		ecx, cse::events::form::kSetActive
-						call	cse::events::form::BasicTESFormEventSource::HandleSetActive
+						call	cse::events::BasicTESFormEventSource::HandleSetActive
 						popad
 					EXIT:
 						cmp     byte ptr [esp + 0x4], 0
@@ -202,7 +203,7 @@ namespace cse
 						push	eax
 						push	esi
 						lea		ecx, cse::events::form::kSetDeleted
-						call	cse::events::form::BasicTESFormEventSource::HandleSetDeleted
+						call	cse::events::BasicTESFormEventSource::HandleSetDeleted
 						popad
 
 						test	bl, bl
@@ -226,7 +227,7 @@ namespace cse
 						push	edi
 						push	esi
 						lea		ecx, cse::events::form::kSetFormID
-						call	cse::events::form::BasicTESFormEventSource::HandleSetFormID
+						call	cse::events::BasicTESFormEventSource::HandleSetFormID
 						popad
 
 						call	_hhGetVar(Call)
@@ -245,7 +246,7 @@ namespace cse
 						push	esi
 						push	edi
 						lea		ecx, cse::events::form::kSetFormID
-						call	cse::events::form::BasicTESFormEventSource::HandleSetEditorID
+						call	cse::events::BasicTESFormEventSource::HandleSetEditorID
 						popad
 
 						call	_hhGetVar(Call)
@@ -549,11 +550,6 @@ namespace cse
 			{
 				_DefineHookHdlr(CloseAll, 0x00431182);
 
-				void __stdcall DoCloseAll(void)
-				{
-					cse::events::dialog::kCloseAll.RaiseEvent();
-				}
-
 				#define _hhName		CloseAll
 				_hhBegin()
 				{
@@ -562,11 +558,40 @@ namespace cse
 					__asm
 					{
 						pushad
-						call	DoCloseAll
+						lea		ecx, cse::events::dialog::kCloseAll
+						call	cse::events::BasicEventSource::RaiseEvent
 						popad
 
 						call	_hhGetVar(Call)
 						jmp		_hhGetVar(Retn)
+					}
+				}
+
+				namespace cellView
+				{
+					_DefineHookHdlr(SelectCell, 0x0040A8E7);
+
+					void __stdcall DoSelectCell()
+					{
+						TESObjectCELL* CurrenCell = _TES->currentInteriorCell;
+						if (CurrenCell == NULL)
+							CurrenCell = _TES->currentExteriorCell;
+
+						cse::events::dialog::cellView::kSelectCell.HandleSelectCell(CurrenCell);
+					}
+
+					#define _hhName		SelectCell
+					_hhBegin()
+					{
+						_hhSetVar(Retn, 0x0040AFC3);
+						__asm
+						{
+							pushad
+							call	DoSelectCell
+							popad
+
+							jmp		_hhGetVar(Retn)
+						}
 					}
 				}
 			}

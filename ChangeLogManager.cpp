@@ -59,7 +59,7 @@ namespace cse
 		DEFINE_BASIC_EVENT_SINK(ChangeLogTESForm);
 		DEFINE_BASIC_EVENT_SINK_HANDLER(ChangeLogTESForm)
 		{
-			events::form::TESFormEventData* Args = dynamic_cast<events::form::TESFormEventData*>(Data);
+			events::TESFormEventData* Args = dynamic_cast<events::TESFormEventData*>(Data);
 			SME_ASSERT(Args);
 
 			TESForm* Form = Args->Form;
@@ -68,30 +68,30 @@ namespace cse
 
 			switch (Args->EventType)
 			{
-			case events::form::TESFormEventData::kType_Instantiation:
+			case events::TESFormEventData::kType_Instantiation:
 				BGSEECHANGELOG->RecordChange("%s\t[%08X]\t%s\tInstantiated", Form->GetTypeIDString(), Form->formID, Form->editorID.c_str());
 				break;
-			case events::form::TESFormEventData::kType_SetActive:
-			case events::form::TESFormEventData::kType_SetDeleted:
-			case events::form::TESFormEventData::kType_SetFormID:
-			case events::form::TESFormEventData::kType_SetEditorID:
+			case events::TESFormEventData::kType_SetActive:
+			case events::TESFormEventData::kType_SetDeleted:
+			case events::TESFormEventData::kType_SetFormID:
+			case events::TESFormEventData::kType_SetEditorID:
 				if (Form->IsTemporary() == false && TESDataHandler::PluginLoadSaveInProgress == false)
 				{
 					switch (Args->EventType)
 					{
-					case events::form::TESFormEventData::kType_SetActive:
+					case events::TESFormEventData::kType_SetActive:
 						ChangeType = BasicFormChangeEntry::kFormChange_SetActive;
 						Value = Args->ActiveState;
 						break;
-					case events::form::TESFormEventData::kType_SetDeleted:
+					case events::TESFormEventData::kType_SetDeleted:
 						ChangeType = BasicFormChangeEntry::kFormChange_SetDeleted;
 						Value = Args->DeletedState;
 						break;
-					case events::form::TESFormEventData::kType_SetFormID:
+					case events::TESFormEventData::kType_SetFormID:
 						ChangeType = BasicFormChangeEntry::kFormChange_SetFormID;
 						Value = Args->NewFormID;
 						break;
-					case events::form::TESFormEventData::kType_SetEditorID:
+					case events::TESFormEventData::kType_SetEditorID:
 						ChangeType = BasicFormChangeEntry::kFormChange_SetEditorID;
 						Value = (UInt32)Args->NewEditorID;
 						break;
@@ -107,7 +107,7 @@ namespace cse
 		DEFINE_BASIC_EVENT_SINK(ChangeLogPreSave);
 		DEFINE_BASIC_EVENT_SINK_HANDLER(ChangeLogPreSave)
 		{
-			events::plugin::TESFileEventData* Args = dynamic_cast<events::plugin::TESFileEventData*>(Data);
+			events::TESFileEventData* Args = dynamic_cast<events::TESFileEventData*>(Data);
 			SME_ASSERT(Args);
 
 			TESFile* SaveFile = Args->File;
@@ -189,6 +189,21 @@ namespace cse
 			ADD_BASIC_SINK_TO_SOURCE(ChangeLogPreLoad, events::plugin::kPreLoad);
 			ADD_BASIC_SINK_TO_SOURCE(ChangeLogPostLoad, events::plugin::kPostLoad);
 
+		}
+
+		void Deinitialize()
+		{
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogTESForm, events::form::kInstantiation);
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogTESForm, events::form::kSetActive);
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogTESForm, events::form::kSetDeleted);
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogTESForm, events::form::kSetEditorID);
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogTESForm, events::form::kSetFormID);
+
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogPreSave, events::plugin::kPreSave);
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogPreLoad, events::plugin::kPreLoad);
+			REMOVE_BASIC_SINK_FROM_SOURCE(ChangeLogPostLoad, events::plugin::kPostLoad);
+
+			delete BGSEECHANGELOG;
 		}
 	}
 }

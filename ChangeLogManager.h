@@ -38,5 +38,6 @@ namespace cse
 		DECLARE_BASIC_EVENT_SINK(ChangeLogPostLoad);
 
 		void Initialize(void);
+		void Deinitialize();
 	}
 }

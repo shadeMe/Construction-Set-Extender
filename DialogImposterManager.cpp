@@ -135,6 +135,9 @@ namespace cse
 				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_INITIALIZEXTRA, NULL, NULL);
 				SetWindowLongPtr(FormList, GWL_USERDATA, 1);
 
+				TreeView_SelectItem(TreeList, TreeView_GetFirstVisible(TreeList));
+				SendMessage(hWnd, WM_OBJECTWINDOWIMPOSTER_REFRESHFORMLIST, NULL, NULL);
+
 				DlgProcResult = TRUE;
 				break;
 			}

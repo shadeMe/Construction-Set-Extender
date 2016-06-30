@@ -49,6 +49,11 @@ namespace cse
 			namespace dialog
 			{
 				_DeclareMemHdlr(CloseAll, "");
+
+				namespace cellView
+				{
+					_DeclareMemHdlr(SelectCell, "");
+				}
 			}
 		}
 

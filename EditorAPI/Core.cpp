@@ -287,6 +287,11 @@ float TES::GetSkyTOD( void )
 		return 0.0;
 }
 
+void TES::SetCurrentWorldspace(TESWorldSpace* Worldspace)
+{
+	thisCall<void>(0x004773B0, this, Worldspace);
+}
+
 void TES::PurgeLoadedResources()
 {
 	TESRenderWindow::Reset();
@@ -299,6 +304,14 @@ void TES::PurgeLoadedResources()
 
 	_MODELLOADER = (ModelLoader*)FormHeap_Allocate(0x1C);
 	thisCall<void>(0x00474CD0, _MODELLOADER);
+}
+
+TESObjectCELL* TES::GetCurrentCell() const
+{
+	if (currentInteriorCell)
+		return currentInteriorCell;
+	else
+		return currentExteriorCell;
 }
 
 UInt8 FileFinder::FindFile(const char* Path, UInt32 Unk02, UInt32 Unk03, int Unk04)

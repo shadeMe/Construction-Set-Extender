@@ -131,6 +131,11 @@ namespace cse
 		events::InitializeSources();
 		BGSEECONSOLE->Exdent();
 
+		BGSEECONSOLE_MESSAGE("Initializing Serialization");
+		BGSEECONSOLE->Indent();
+		serialization::Initialize();
+		BGSEECONSOLE->Exdent();
+
 		BGSEECONSOLE_MESSAGE("Initializing UI Manager");
 		BGSEECONSOLE->Indent();
 		bool ComponentInitialized = BGSEEUI->Initialize("TES Construction Set", LoadMenu(BGSEEMAIN->GetExtenderHandle(), MAKEINTRESOURCE(IDR_MAINMENU)));
@@ -233,7 +238,6 @@ namespace cse
 		GMSTCollectionData.GMSTListHead = new componentDLLInterface::GMSTData[GMSTCollectionData.GMSTCount];
 		GameSettingCollection::Instance->SerializeGMSTDataForHandShake(GMSTCollectionData.GMSTListHead);
 		cliWrapper::interfaces::SE->InitializeComponents(&XSECommandTableData, &GMSTCollectionData);
-
 		BGSEECONSOLE->Indent();
 		BGSEECONSOLE_MESSAGE("Bound %d developer URLs", PluginAPIManager::Instance.ConsumeIntelliSenseInterface());
 		BGSEECONSOLE->Exdent();
@@ -255,7 +259,7 @@ namespace cse
 		workspaceManager::Initialize();
 		BGSEECONSOLE->Exdent();
 
-		BGSEECONSOLE_MESSAGE("Initializing UI Manager, again");
+		BGSEECONSOLE_MESSAGE("Initializing Dialogs");
 		BGSEECONSOLE->Indent();
 		uiManager::Initialize();
 		BGSEECONSOLE->Exdent();
@@ -376,6 +380,7 @@ namespace cse
 			TESCSMain::kMainMenu_View_ObjectWindow, MF_BYCOMMAND) & MF_CHECKED) != 0);
 
 		TESCSMain::DeinitializeCSWindows();
+		cse::events::general::kShutdown.RaiseEvent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Plugin Interface Manager");
 		PluginAPIManager::Instance.Deinitailize();
@@ -432,12 +437,17 @@ namespace cse
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Change Log Manager");
 		BGSEECONSOLE->Indent();
-		delete BGSEECHANGELOG;
+		changeLogManager::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing CSInterop Manager");
 		BGSEECONSOLE->Indent();
 		delete CSIOM;
+		BGSEECONSOLE->Exdent();
+
+		BGSEECONSOLE_MESSAGE("Deinitializing Serialization");
+		BGSEECONSOLE->Indent();
+		serialization::Deinitialize();
 		BGSEECONSOLE->Exdent();
 
 		BGSEECONSOLE_MESSAGE("Deinitializing Events");
@@ -671,8 +681,12 @@ extern "C"
 #endif
 
 #ifdef NDEBUG
+#ifndef WAIT_FOR_DEBUGGER
 														  true);		// CrashRpt support
 		TODO("Save debug symbols, dammit!")
+#else
+														  false);
+#endif
 #else
 														  false);
 #endif

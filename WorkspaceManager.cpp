@@ -68,14 +68,15 @@ namespace cse
 				kDefaultDirectories.push_back((bgsee::ResourceLocation(CSE_SEAUTORECDEPOT)()));
 				kDefaultDirectories.push_back((bgsee::ResourceLocation(CSE_OPALDEPOT)()));
 				kDefaultDirectories.push_back((bgsee::ResourceLocation(CSE_PREFABDEPOT)()));
+				kDefaultDirectories.push_back((bgsee::ResourceLocation(CSE_COSAVEDEPOT)()));
 			}
 
-			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(),
-				new WorkspaceManagerOperator(),
-				kDefaultDirectories);
+			bool ComponentInitialized = BGSEEWORKSPACE->Initialize(BGSEEMAIN->GetAPPPath(), new WorkspaceManagerOperator(), kDefaultDirectories);
 			SME_ASSERT(ComponentInitialized);
 
 			_FILEFINDER->AddSearchPath((std::string(std::string(BGSEEWORKSPACE->GetCurrentWorkspace()) + "Data")).c_str());
+
 		}
+
 	}
 }

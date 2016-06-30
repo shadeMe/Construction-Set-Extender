@@ -13,7 +13,7 @@
 
 class   TESFile;
 
-typedef std::vector<TESForm*>	MagicItemScriptCrossRefListT;
+typedef std::vector<TESForm*>	MagicItemScriptCrossRefArrayT;
 
 // E8
 class MagicItem : public TESFullName, public EffectItemList
@@ -25,6 +25,6 @@ public:
 	//     /*0C/0C*/ EffectItemList
 
 	// methods
-	UInt32								GetScriptReferences(MagicItemScriptCrossRefListT& OutList);
+	UInt32								GetScriptReferences(MagicItemScriptCrossRefArrayT& OutList);
 };
 STATIC_ASSERT(sizeof(MagicItem) == 0xE8);

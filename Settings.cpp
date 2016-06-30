@@ -40,7 +40,6 @@ namespace cse
 			Depot.push_back(&plugins::kPreventTimeStampChanges);
 			Depot.push_back(&plugins::kSaveLoadedESPsAsMasters);
 
-			Depot.push_back(&renderer::kUpdatePeriod);
 			Depot.push_back(&renderer::kAltRefMovementSpeed);
 			Depot.push_back(&renderer::kAltRefSnapGrid);
 			Depot.push_back(&renderer::kAltRefRotationSpeed);
@@ -59,16 +58,14 @@ namespace cse
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicator);
 			Depot.push_back(&renderer::kPathGridLinkedRefIndicatorFlags);
 
-			Depot.push_back(&renderWindowPainter::kShowSelectionStats);
-			Depot.push_back(&renderWindowPainter::kShowRAMUsage);
-			Depot.push_back(&renderWindowPainter::kShowMouseRef);
-			Depot.push_back(&renderWindowPainter::kMouseRefCtrlModified);
-			Depot.push_back(&renderWindowPainter::kFontFace);
-			Depot.push_back(&renderWindowPainter::kFontSize);
-			Depot.push_back(&renderWindowPainter::kColorSelectionStats);
-			Depot.push_back(&renderWindowPainter::kColorRAMUsage);
-			Depot.push_back(&renderWindowPainter::kColorMouseRef);
-			Depot.push_back(&renderWindowPainter::kColorNotifications);
+			Depot.push_back(&renderWindowOSD::kShowSelectionStats);
+			Depot.push_back(&renderWindowOSD::kShowRAMUsage);
+			Depot.push_back(&renderWindowOSD::kShowMouseRef);
+			Depot.push_back(&renderWindowOSD::kMouseRefCtrlModified);
+			Depot.push_back(&renderWindowOSD::kColorSelectionStats);
+			Depot.push_back(&renderWindowOSD::kColorRAMUsage);
+			Depot.push_back(&renderWindowOSD::kColorMouseRef);
+			Depot.push_back(&renderWindowOSD::kColorNotifications);
 
 			Depot.push_back(&renderWindowFlyCamera::kMovementSpeed);
 			Depot.push_back(&renderWindowFlyCamera::kSprintMultiplier);
@@ -149,7 +146,6 @@ namespace cse
 		{
 #define RENDERER_INISECTION					"Renderer"
 
-			INISetting		kUpdatePeriod("UpdatePeriod", RENDERER_INISECTION, "Duration, in milliseconds, between render window updates", (SInt32)8);
 			INISetting		kAltRefMovementSpeed("AltRefMovementSpeed", RENDERER_INISECTION, "Alternate render window reference movement speed", (float)0.8);
 			INISetting		kAltRefSnapGrid("AltRefSnapGrid", RENDERER_INISECTION, "Alternate render window reference snap to grid", (float)2);
 			INISetting		kAltRefRotationSpeed("AltRefRotationSpeed", RENDERER_INISECTION, "Alternate render window reference rotation speed", (float)1.0);
@@ -170,21 +166,19 @@ namespace cse
 							(UInt32)kPathGridLinkedRefIndicatorFlag_HidePointBoundingBox | kPathGridLinkedRefIndicatorFlag_HideLinkedRefNode | kPathGridLinkedRefIndicatorFlag_HideLineConnector);
 		}
 
-		namespace renderWindowPainter
+		namespace renderWindowOSD
 		{
-#define RWPAINTER_INISECTION				"RenderWindowPainter"
+#define RWOSD_INISECTION				"RenderWindowOSD"
 
-			INISetting		kShowSelectionStats("ShowSelectionStats", RWPAINTER_INISECTION, "Displays selection details", (SInt32)1);
-			INISetting		kShowRAMUsage("ShowRAMUsage", RWPAINTER_INISECTION, "Displays the editor's RAM usage", (SInt32)1);
-			INISetting		kShowMouseRef("ShowMouseRef", RWPAINTER_INISECTION, "Displays details about the reference under the mouse pointer", (SInt32)1);
-			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWPAINTER_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
-			INISetting		kFontFace("FontFace", RWPAINTER_INISECTION, "Font face of the rendered text", "Arial");
-			INISetting		kFontSize("FontSize", RWPAINTER_INISECTION, "Size of the rendered text", (SInt32)20);
+			INISetting		kShowSelectionStats("ShowSelectionStats", RWOSD_INISECTION, "Displays selection details", (SInt32)1);
+			INISetting		kShowRAMUsage("ShowRAMUsage", RWOSD_INISECTION, "Displays the editor's RAM usage", (SInt32)1);
+			INISetting		kShowMouseRef("ShowMouseRef", RWOSD_INISECTION, "Displays details about the reference under the mouse pointer", (SInt32)1);
+			INISetting		kMouseRefCtrlModified("MouseRefCtrlModified", RWOSD_INISECTION, "The control key must be held down to display the mouse ref's details", (SInt32)0);
 
-			INISetting		kColorSelectionStats("ColorSelectionStats", RWPAINTER_INISECTION, "Foreground color", "189,237,99");
-			INISetting		kColorRAMUsage("ColorRAMUsage", RWPAINTER_INISECTION, "Foreground color", "230,230,0");
-			INISetting		kColorMouseRef("ColorMouseRef", RWPAINTER_INISECTION, "Foreground color", "255,128,0");
-			INISetting		kColorNotifications("ColorNotifications", RWPAINTER_INISECTION, "Foreground color", "230,230,0");
+			INISetting		kColorSelectionStats("ColorSelectionStats", RWOSD_INISECTION, "Foreground color", "189,237,99");
+			INISetting		kColorRAMUsage("ColorRAMUsage", RWOSD_INISECTION, "Foreground color", "230,230,0");
+			INISetting		kColorMouseRef("ColorMouseRef", RWOSD_INISECTION, "Foreground color", "255,128,0");
+			INISetting		kColorNotifications("ColorNotifications", RWOSD_INISECTION, "Foreground color", "230,230,0");
 		}
 
 		namespace renderWindowFlyCamera

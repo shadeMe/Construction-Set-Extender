@@ -719,7 +719,7 @@ namespace cse
 			UpdatePreview();
 		}
 
-		void ObjectPaletteManager::SaveObjects(const PaletteObjectListT& Objects, const char* Path) const
+		void ObjectPaletteManager::SaveObjects(const PaletteObjectArrayT& Objects, const char* Path) const
 		{
 			DeleteFile(Path);
 
@@ -746,7 +746,7 @@ namespace cse
 				File.WriteBuf(FileBuffer.c_str(), FileBuffer.length());
 		}
 
-		bool ObjectPaletteManager::LoadObjects(PaletteObjectListT& OutObjects, const char* Path) const
+		bool ObjectPaletteManager::LoadObjects(PaletteObjectArrayT& OutObjects, const char* Path) const
 		{
 			OutObjects.clear();
 
@@ -856,7 +856,7 @@ namespace cse
 			std::string FilePath, Filename;
 			if (ShowFileDialog(false, FilePath, Filename))
 			{
-				PaletteObjectListT Temp;
+				PaletteObjectArrayT Temp;
 				if (LoadObjects(Temp, FilePath.c_str()) == false)
 					BGSEEUI->MsgBoxW(MainDialog, MB_OK, "Errors were encountered when loading the object palette file. Check the console for more information.\n\nThe merge operation did not complete successfully.");
 				else
@@ -1150,7 +1150,7 @@ namespace cse
 		{
 			SME_ASSERT(Data);
 
-			for (PaletteObjectListT::iterator Itr = LoadedObjects.begin(); Itr != LoadedObjects.end(); Itr++)
+			for (PaletteObjectArrayT::iterator Itr = LoadedObjects.begin(); Itr != LoadedObjects.end(); Itr++)
 			{
 				if ((*Itr).get() == Data)
 				{

@@ -327,6 +327,12 @@
     <ClCompile Include="Hooks\Hooks-Events.cpp">
       <Filter>Hooks</Filter>
     </ClCompile>
+    <ClCompile Include="Serialization.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderWindowCellLists.cpp">
+      <Filter>Components\Render Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\obse\obse\NiExtraData.h">
@@ -796,6 +802,12 @@
     </ClInclude>
     <ClInclude Include="Hooks\Hooks-Events.h">
       <Filter>Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialization.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderWindowCellLists.h">
+      <Filter>Components\Render Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -60,7 +60,11 @@ namespace cse
 
 		void DeinitializeSinks()
 		{
-			;//
+			REMOVE_BASIC_SINK_FROM_SOURCE(DestroyCustomDialogs, dialog::kCloseAll);
+			REMOVE_BASIC_SINK_FROM_SOURCE(DataHandlerClearData, plugin::kClearData);
+			REMOVE_BASIC_SINK_FROM_SOURCE(PostPluginSaveTasks, plugin::kPostSave);
+			REMOVE_BASIC_SINK_FROM_SOURCE(PrePluginLoadTasks, plugin::kPreLoad);
+			REMOVE_BASIC_SINK_FROM_SOURCE(PostPluginLoadTasks, plugin::kPostLoad);
 		}
 
 	}

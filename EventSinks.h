@@ -10,14 +10,10 @@
 			static name##EventSink			Instance;								\
 		}
 
-#define DEFINE_BASIC_EVENT_SINK_HANDLER(name)					\
-		void name##EventSink::Handle(SME::MiscGunk::IEventData* Data)
-
-#define DEFINE_BASIC_EVENT_SINK(name)		\
-		name##EventSink				name##EventSink::Instance
-
-#define ADD_BASIC_SINK_TO_SOURCE(sink, source)					\
-		source.AddSink(&sink##EventSink::Instance)
+#define DEFINE_BASIC_EVENT_SINK_HANDLER(name)				void name##EventSink::Handle(SME::MiscGunk::IEventData* Data)
+#define DEFINE_BASIC_EVENT_SINK(name)						name##EventSink				name##EventSink::Instance
+#define ADD_BASIC_SINK_TO_SOURCE(sink, source)				source.AddSink(&sink##EventSink::Instance)
+#define REMOVE_BASIC_SINK_FROM_SOURCE(sink, source)			source.RemoveSink(&sink##EventSink::Instance)
 
 namespace cse
 {

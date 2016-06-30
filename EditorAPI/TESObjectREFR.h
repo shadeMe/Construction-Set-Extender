@@ -82,4 +82,4 @@ public:
 	bool						GetDisabled(void) const;
 };
 
-typedef std::vector<TESObjectREFR*>	TESObjectREFRListT;
+typedef std::vector<TESObjectREFR*>	TESObjectREFRArrayT;

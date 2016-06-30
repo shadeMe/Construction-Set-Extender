@@ -1,6 +1,6 @@
 #include "MagicItem.h"
 
-UInt32 MagicItem::GetScriptReferences(MagicItemScriptCrossRefListT& OutList)
+UInt32 MagicItem::GetScriptReferences(MagicItemScriptCrossRefArrayT& OutList)
 {
 	OutList.clear();
 
